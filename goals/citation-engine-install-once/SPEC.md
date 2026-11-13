@@ -178,6 +178,14 @@ The round-1 hosted logs exposed more dependent-fixture gaps. XmlWorker and HtmlC
 
 Reverse: Restore the previous fixture installation captures if stages again own operation admission.
 
+### Keep fixture admission refusals typed and replacement explicit, 2026-11-13
+
+Direct-stage bindings now retain a supplied closed operation admission and expose CitationAdmissionFailure in their typed error channel. Tests may opt into replacing a known scaffold admission through the explicit binding flag. Legacy fixture adapters explicitly select makeCitationTestScaffoldBinding, which wraps that flag and retains every real supplied owner. This mechanical opt-in restores the independent calls that previously relied on the implicit scaffold replacement; their primary test files are replayed individually. The HtmlCaseName lifetime control again checks extract(null) reaches the closed admission before input decoding; an additional fresh invocation isolates the closed native-owner refusal. Internal annotation composition receives the raw XML stage inside its existing invocation rather than an independently admitted direct-call adapter.
+
+The tokenizer closed-install-view control installs the raw stage under its intentionally refusing owner, then opens a fresh invocation at call time. This tests the production stage rather than the fixture fallback and retains its original empty-token and zero-child assertions.
+
+Reverse: Restore automatic scaffold and closed-owner replacement and defect conversion
+
 ### Keep stage finalizers in the request Scope, 2026-11-13
 
 Review round 1 confirms a deliberate Scope lifetime difference from main: metadata stages use the invocation Scope instead of opening a fresh Scope around each prepare call. Per-call native owners therefore register owner finalizers until request end. Physical processes still retire and acknowledge exit per job before returning results; leases, quarantine and limits remain unchanged. The invocation Scope closes before admission releases its permit, retaining the final safety cleanup. This follows design section 3.4; it is an ownership-finalizer timing change, not strict Scope neutrality.
@@ -190,11 +198,35 @@ The operator clarified on 2026-11-13 that file-by-file local tests govern becaus
 
 Reverse: Run full package-verify locally when the operator permits a whole-package suite.
 
+### Keep unrelated inventory positions at the clean main baseline, 2026-11-13
+
+The syntax-only effect-vitest check passes with zero introduced and resolved findings on a clean detached origin/main worktree at 8b405079b69466e27babc5dff27c06292a8cc4e2. Both named source files are byte-identical to the lane. The writer updates positional metadata even though check accepts the existing occurrence identities; restore all six changed rows in those two files to main, including the additional row beyond the review count. No inherited red needs routing. The check was repeated successfully on clean main at 49a2d768f64803883bcc9b64c9a54c97b1f26c40 after #3251: 3838 files, 516 findings, zero introduced/resolved. The writer also shifted fourteen other unrelated positional rows, all restored to main as well. A third clean audit at e7852920d2e975fa909b0574831ff30d828af35f also passes with the same counts. The throwaway sibling-root worktree was removed after every audit.
+
+Reverse: Regenerate and adopt the unrelated line-position rows
+
+### Log extraction and annotation refusal once at the public engine, 2026-11-13
+
+The engine normalizes and logs every typed extract or annotate refusal after the invocation timer and admission boundary, so deadlines, admission refusals and stage refusals each emit exactly one fixed boundary-refused debug message. Inner normalizers remain silent and idempotent. Manual-clock tests on both runtime configurations count one deadline log and one subsequent source-stage refusal log, with zero native children.
+
+Reverse: Restore logging to the inner boundary normalizers
+
 ### Preserve boundary-specific deadline placement around admission, 2026-11-13
 
 Review round 1 identified that engine queue wait must count against each stage deadline, while the public six-form extractor historically starts that deadline after admission. CitationInvocationPolicy now has a schema-backed deadlineStarts literal with explicit values at both public boundaries. There remains one invocation constructor: engine timing wraps admission.run; extractor timing wraps its body inside admission.run. The request Scope remains inside admission in both cases, so cleanup precedes permit release. Manual-clock public boundary tests cover queue plus work and refusal labels without native children.
 
 Reverse: Remove deadlineStarts and restore the previous invocation ordering only with an explicit behavior change.
+
+### Remove only the deleted cleaner adapter coverage row, 2026-11-13
+
+Remove the orphan CleanerOperation.ts file row by hand. The baseline writer exists as coverage:baseline:write, but it consumes complete measured package snapshots and has no file-row deletion command. Regenerating law-practice-server would run its whole suite, which the task explicitly forbids locally. Keep every other coverage floor unchanged and leave frozen proof references under goals/citation-extraction-engine and the eyecite fixture untouched.
+
+Reverse: Restore CleanerOperation.ts and its coverage baseline row
+
+### Update the existing draft without starting a readiness monitor, 2026-11-13
+
+Publish this review wave through Yeet publish --staged-only --no-pr. PR #3265 already exists, so the push still raises its normal synchronize event and keeps its draft state. The no-pr option skips the PR tail (creation, label changes, provenance restamping and the automatic readiness monitor); cheap gates and the head-install preflight remain mandatory. The existing provenance footer describes the same branch, workspace and agent and has no head-SHA field. Replace the existing body separately through Yeet gh pr body, preserving its provenance footer. This honors the task's explicit no-watch instruction without launching and then interrupting a monitor.
+
+Reverse: Use the default Yeet PR tail to submit a readiness monitor
 
 <!-- beep:decisions:end -->
 

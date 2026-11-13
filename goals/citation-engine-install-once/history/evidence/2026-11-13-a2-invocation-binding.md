@@ -226,7 +226,7 @@ introduced fixture failures; there are no outstanding local test failures).
 | `CitationLiteralUnicodeComposition.test.ts` | Pass |
 | `CitationMetadataYear.test.ts` | Pass |
 | `CitationNativeSlices.test.ts` | Pass |
-| `CitationOccurrenceProjectionCoverage.test.ts` | Pass |
+| `packages/law-practice/server/test/CitationOccurrenceProjectionCoverage.test.ts` | Pass |
 | `CitationPairedSource.test.ts` | Pass |
 | `CitationPinExtraction.test.ts` | Pass |
 | `CitationPostCaseMetadata.test.ts` | Pass |
@@ -287,7 +287,7 @@ length notice is advisory, not a lock failure.
 
 | Review item | Fix in the commit above | Proof |
 | --- | --- | --- |
-| 1: stage deadline placement | Schema-backed `CitationInvocationDeadlineStarts` and required `deadlineStarts` policy field. Engine calls use `before-admission`; extractor uses `after-admission`. Scope remains inside admission in both cases. Section 3.1 and its amendment now state both orders. | Four engine cases in `CitationEngineLayer.test.ts` cover Bun and Node, queued refusal and 800 ms queue + 9500 ms work under a 10 s stage deadline. The mirrored extractor case stays pending at 10 s total and reaches the controlled source-evidence refusal at 10.3 s. Every new case proves zero native children. |
+| 1: stage deadline placement | Schema-backed `CitationInvocationDeadlineStarts` and required `deadlineStarts` policy field. Engine calls use `before-admission`; extractor uses `after-admission`. Scope remains inside admission in both cases. Section 3.1 and its amendment now state both orders. | Four extract timing cases in `CitationEngineLayer.test.ts` cover Bun and Node, queued refusal and 800 ms queue + 9500 ms work under a 10 s stage deadline. These covered one engine method; round 2 expands queued refusal to all four methods. The mirrored extractor case stays pending at 10 s total and reaches the controlled source-evidence refusal at 10.3 s. Every new case proves zero native children. |
 | 2: duplicate boundary logs | Engine extract and annotate outer handlers catch only `CitationAdmissionFailure`; existing inner normalizers handle other refusals once. | Closed public source/test typecheck; engine and extractor controls pass. |
 | 3: Scope ownership | Record the intentional finalizer-lifetime difference: metadata prepares share the request Scope rather than closing a per-stage Scope. Native processes still retire and acknowledge physical exit per job. Owner finalizers run at request end, before permit release. | Scope decision with reversal `Restore per-stage Effect.scoped around prepare(request)`; no claim of strict Scope neutrality. |
 | 4: optional-lookup law | Forbid all three authority names in bare/member-qualified `serviceOption` and `getOption` forms. Summary explicitly states named-import aliases need semantic linting. | 12 invalid pattern fixtures, valid native-admission controls; full lint-rules package verification passes. The test-only optional invocation read remains necessary for standalone versus explicitly shared-ledger fixture calls. |
@@ -335,24 +335,24 @@ valid request and the actual installed native owner, as explained in its decisio
 The round ran the following server files individually; all passed on the final
 version of their fixtures:
 
-| File under `packages/law-practice/server/` | Result |
+| File | Result |
 | --- | --- |
-| `test/CitationCanonicalFullSpan.test.ts` | Pass |
-| `test/CitationCaseMetadata.test.ts` | Pass |
-| `test/CitationDiffWorker.test.ts` | Pass |
-| `test/CitationEngineLayer.test.ts` | Pass |
-| `test/CitationExtractionLoop.test.ts` | Pass |
-| `test/CitationExtractorControls.test.ts` | Pass |
-| `test/CitationFullLawMetadata.test.ts` | Pass |
-| `test/CitationHtmlCaseName.test.ts` | Pass |
-| `test/CitationInvocation.test.ts` | Pass |
-| `test/CitationJournalMetadata.test.ts` | Pass |
-| `test/CitationLawMetadata.test.ts` | Pass |
-| `test/CitationXmlWorker.test.ts` | Pass |
-| `test/integration/CitationHtmlUnicode.test.ts` | Pass |
-| `test/integration/CitationRegexTranslator.test.ts` | Pass |
-| `test/integration/CitationRegexTranslatorNode.test.ts` | Pass |
-| `test/vitest-shards-plan.test.ts` | Pass |
+| `packages/law-practice/server/test/CitationCanonicalFullSpan.test.ts` | Pass |
+| `packages/law-practice/server/test/CitationCaseMetadata.test.ts` | Pass |
+| `packages/law-practice/server/test/CitationDiffWorker.test.ts` | Pass |
+| `packages/law-practice/server/test/CitationEngineLayer.test.ts` | Pass |
+| `packages/law-practice/server/test/CitationExtractionLoop.test.ts` | Pass |
+| `packages/law-practice/server/test/CitationExtractorControls.test.ts` | Pass |
+| `packages/law-practice/server/test/CitationFullLawMetadata.test.ts` | Pass |
+| `packages/law-practice/server/test/CitationHtmlCaseName.test.ts` | Pass |
+| `packages/law-practice/server/test/CitationInvocation.test.ts` | Pass |
+| `packages/law-practice/server/test/CitationJournalMetadata.test.ts` | Pass |
+| `packages/law-practice/server/test/CitationLawMetadata.test.ts` | Pass |
+| `packages/law-practice/server/test/CitationXmlWorker.test.ts` | Pass |
+| `packages/law-practice/server/test/integration/CitationHtmlUnicode.test.ts` | Pass |
+| `packages/law-practice/server/test/integration/CitationRegexTranslator.test.ts` | Pass |
+| `packages/law-practice/server/test/integration/CitationRegexTranslatorNode.test.ts` | Pass |
+| `packages/law-practice/server/test/vitest-shards-plan.test.ts` | Pass |
 
 - `CitationCanonicalFullSpan.test.ts`: 11 passed in 94.54 s after the second main merge; every original A1
   count row is unchanged (totals 140 / 80 / 10 / 56 / 291 / 291).
@@ -370,3 +370,171 @@ The full law-practice audit is still not run locally because it invokes the whol
 suite, contrary to the operator's file-by-file shared-host rule. The newly affected
 integration files above were run individually; hosted CI remains authoritative for
 the full suite. The PR remains a draft; no ready, merge or watch is performed.
+
+
+## Review round 2
+
+All seven findings are addressed in `f12ebd95da1d8cdd061e7048d88201c4ac1eab91` (one publication wave; PR stays draft).
+Main advanced with #3251 during verification. Merge commit
+`15bddfe9db2f397a2b2eeb36a6bf05d82b3aa5d2` incorporates
+`49a2d768f64803883bcc9b64c9a54c97b1f26c40` before final package checks.
+That update changes Yeet and skills, with no Citation source or test changes.
+Skills update and its check were rerun after the merge. Main then advanced
+with #3266, #3268 and #3269. Merge commit
+`638306a9563a8897d99d298aa8302575426d2638` incorporates
+`e7852920d2e975fa909b0574831ff30d828af35f` before the last package checks and
+full-span replay. Those commits also change no Citation source or test files.
+
+| Item | Change and evidence |
+| --- | --- |
+| 1: four engine methods | The queued-refusal control runs extract, annotate, clean and resolve on Bun and Node. All four retain their operation-specific stage-deadline label. The injected resolver never returns in these controls; clean traverses its own outer handler. The two extract queue-plus-work controls remain. The file now has ten deadline cases, rather than four extract timing cases. All ten spawn zero native children. |
+| 2: lint forms | Add data-last `getOption`, data-first and data-last `getOrUndefined`, and bare named-import `serviceOption`. Each form is tested for all three names and bare/member-qualified authority names: 36 invalid fixtures total. Summary states both local aliases and aliased named imports require semantic linting. Full lint-rules verification passes. |
+| 3: independent stage ceiling | ExtractionLoop installs the control stage with full `limits` and binds only its invocation with `tightLimits`. The entire file passes all 15 cases with the original expectations. The refusal is still the cumulative request's `producedTextUtf16` budget; no stage ceiling was tightened. The stop condition does not trigger. |
+| 4: closed admission | Pass a supplied closed admission through unchanged and return typed `CitationAdmissionFailure`. Scaffold replacement is an explicit third binding argument, tested alongside the default retained closed owner. Legacy fixtures now explicitly call `makeCitationTestScaffoldBinding` for independent calls inside an untimed scaffold; it retains real supplied owners. Restore HtmlCaseName's `extract(null)` closed-admission control, and retain a separate fresh-invocation control proving the native owner refuses a valid request after closure. Test contracts include the typed failure; internal annotation composition uses the raw XML stage in its current invocation. |
+| 5: single refusal log | Inner extraction/annotation normalizers no longer log. Their engine handlers normalize every typed refusal and log once outside both timer and admission. Bun/Node engine controls capture exactly one boundary-refused line for each deadline refusal, then exactly one more for a controlled source-stage refusal. No child is started. |
+| 6: deleted adapter row | Remove only the orphan `CleanerOperation.ts` row from `standards/coverage.regression-baseline.jsonc` by hand. The baseline writer consumes complete measured package snapshots and has no file-only deletion command; invoking it for this package would violate the explicit prohibition on locally running the whole law-practice suite. Every other coverage floor and frozen proof reference remains unchanged. |
+| 7: unrelated inventory rows | A clean detached `origin/main` worktree under the sibling worktree root passes `bun run beep lint effect-vitest`: 3838 files, 516 findings, zero introduced/resolved. Both named source files are byte-identical. This is unnecessary positional churn, not an inherited red. Restore all six shifted rows across the two named files to main (the review described five). The writer has no path filter, so restore those rows after regeneration. Remove the clean audit worktree afterward. Fourteen additional unrelated positional rows found during regeneration are also restored to main. The audit is repeated successfully on clean main at `49a2d768f64803883bcc9b64c9a54c97b1f26c40` after #3251, with the same counts. A third clean audit on `e7852920d2e975fa909b0574831ff30d828af35f` also passes with those counts after #3266/#3268/#3269. |
+
+The expanded individual verification initially exposed wrap composition and rendering
+waiting behind the scaffold permit after implicit replacement was removed.
+Explicit scaffold binding restores their intended independent-call setup; no
+production admission behavior or test expectation changes. Tokenizer's closed-install-view control also exposed its reliance on the removed closed-owner
+fallback. It now installs the raw tokenizer under the closed service and opens an
+explicit fresh invocation only at the call boundary; all seven tokenizer tests pass
+with their original output expectations. One initial runner
+selector used a nonexistent occurrence-projection filename; the actual primary
+file is `packages/law-practice/server/test/CitationOccurrenceProjectionCoverage.test.ts` and is selected in
+the corrected receipt list.
+
+Existing request-lifetime EV003 judgments are retained for 22 controls whose
+mechanical helper rename or typed error annotation changed their occurrence
+fingerprints. Each existing exception already has the same owned rationale;
+resource lifetimes and the judgment itself are unchanged. No new resource
+policy exception is introduced.
+
+Decisions:
+
+- `goals/citation-engine-install-once/decisions/2026-11-13-keep-fixture-admission-refusals-typed-and-replacement-explicit.md`
+- `goals/citation-engine-install-once/decisions/2026-11-13-log-extraction-and-annotation-refusal-once-at-the-public-engine.md`
+- `goals/citation-engine-install-once/decisions/2026-11-13-keep-unrelated-inventory-positions-at-the-clean-main-baseline.md`
+- `goals/citation-engine-install-once/decisions/2026-11-13-remove-only-the-deleted-cleaner-adapter-coverage-row.md`
+- `goals/citation-engine-install-once/decisions/2026-11-13-update-the-existing-draft-without-starting-a-readiness-monitor.md`
+
+The A1 table is unchanged: ten Bun calls still total **140 metadata installs,
+80 detaches, 10 tokenizer builds, 56 regex constructions, 291 evaluations and
+291 processes**; Node call 1 matches Bun call 1. No source site in either design
+table was added or removed in this review. The explicit process-boundary
+reservation contract and worker entrypoints are unchanged.
+
+### Round-2 verification receipts
+
+- `bun run beep quality package-verify @beep/law-practice-server --quick`: lint and source/test check pass after the last main merge and tokenizer control repair. Upstream declaration builds were resolved by Turbo before package checking.
+- `bun run beep quality package-verify @beep/lint-rules`: full lint, audit and docgen pass after the last main merge; all 36 forbidden-pattern fixtures pass.
+- `bun run docgen:local`: passes for the touched package and selected dependents; current package proof manifests are reused where inputs are unchanged.
+- `bun run beep skills update`, then `bun run beep skills update --check`: current after the skill-changing main merge; the check is repeated after the subsequent merge. The 541-line Yeet skill notice is advisory.
+- `bun run beep lint policy-fingerprint`: current.
+- `bun run beep lint effect-vitest`: zero introduced/resolved; all non-Citation rows equal main exactly after restoring writer-only positional churn.
+- `bun run beep knowledge semantic-delta --base origin/main --json`: passes on the code-fix commit with 0 introduced, 0 resolved and 194 unchanged findings.
+- Node-hosted replay of `packages/law-practice/server/test/CitationEngineLayer.test.ts`, filtered by `engine deadline admission ordering`, passes ten deadline cases; five unrelated cases are filtered out. The complete Bun-hosted engine file passes all 15 cases in the table below.
+- Source acceptance ripgrep queries have no matches; both capture helpers remain absent.
+- The unchanged full-span replay passes all 11 tests again after the last main merge in 82.28 s. Timing is informational. The fixture and its A1 table have no diff against main.
+
+All 87 focused files below passed individually via `bunx --bun vitest run <file>` from the server package. Integration files additionally select `--project native-wallclock`. The original tokenizer failure receipt is retained locally; the repaired file passes on its individual rerun. No whole law-practice suite command was run.
+
+| File | Tests passed | Seconds |
+| --- | ---: | ---: |
+| `packages/law-practice/server/test/CitationAnnotationCallback.test.ts` | 2 | 15.03 |
+| `packages/law-practice/server/test/CitationAnnotationEntry.test.ts` | 5 | 4.46 |
+| `packages/law-practice/server/test/CitationAnnotationEntryCoverage.test.ts` | 3 | 4.02 |
+| `packages/law-practice/server/test/CitationAnnotationSkip.test.ts` | 1 | 10.90 |
+| `packages/law-practice/server/test/CitationAnnotationWrap.test.ts` | 2 | 7.56 |
+| `packages/law-practice/server/test/CitationBuiltinCleaners.test.ts` | 2 | 3.53 |
+| `packages/law-practice/server/test/CitationCanonicalDump.test.ts` | 2 | 35.62 |
+| `packages/law-practice/server/test/CitationCanonicalFullRendering.test.ts` | 2 | 34.23 |
+| `packages/law-practice/server/test/CitationCanonicalFullSpan.test.ts` | 11 | 99.65 |
+| `packages/law-practice/server/test/CitationCanonicalPageCorrection.test.ts` | 2 | 48.01 |
+| `packages/law-practice/server/test/CitationCaseMetadata.test.ts` | 2 | 37.36 |
+| `packages/law-practice/server/test/CitationCaseName.test.ts` | 2 | 12.70 |
+| `packages/law-practice/server/test/CitationCaseNameCoverage.test.ts` | 2 | 2.07 |
+| `packages/law-practice/server/test/CitationCaseNameProcess.test.ts` | 5 | 17.33 |
+| `packages/law-practice/server/test/CitationCaseNameScan.test.ts` | 4 | 24.76 |
+| `packages/law-practice/server/test/CitationCaseNameSelection.test.ts` | 1 | 13.10 |
+| `packages/law-practice/server/test/CitationCleanerCustomCorpus.test.ts` | 3 | 4.14 |
+| `packages/law-practice/server/test/CitationCleanerNamedCorpus.test.ts` | 1 | 4.17 |
+| `packages/law-practice/server/test/CitationCleanerOwnedInput.test.ts` | 4 | 2.25 |
+| `packages/law-practice/server/test/CitationCleanerParentBudget.test.ts` | 4 | 2.66 |
+| `packages/law-practice/server/test/CitationCleanerPipeline.test.ts` | 17 | 2.55 |
+| `packages/law-practice/server/test/CitationCleanerPipelineCoverage.test.ts` | 5 | 2.43 |
+| `packages/law-practice/server/test/CitationCleanerRegistry.test.ts` | 13 | 3.72 |
+| `packages/law-practice/server/test/CitationContextMatcher.test.ts` | 2 | 7.26 |
+| `packages/law-practice/server/test/CitationCourtLookup.test.ts` | 8 | 10.77 |
+| `packages/law-practice/server/test/CitationDiffWorker.test.ts` | 14 | 3.01 |
+| `packages/law-practice/server/test/CitationDocumentCleanerProtocols.test.ts` | 10 | 2.25 |
+| `packages/law-practice/server/test/CitationDocumentExtraction.test.ts` | 1 | 39.85 |
+| `packages/law-practice/server/test/CitationDocumentExtractionCoverage.test.ts` | 1 | 4.93 |
+| `packages/law-practice/server/test/CitationDump.test.ts` | 9 | 4.71 |
+| `packages/law-practice/server/test/CitationDumpCoverage.test.ts` | 4 | 2.36 |
+| `packages/law-practice/server/test/CitationEngineLayer.test.ts` | 15 | 95.61 |
+| `packages/law-practice/server/test/CitationExtractionEntry.test.ts` | 1 | 46.02 |
+| `packages/law-practice/server/test/CitationExtractionEntryCoverage.test.ts` | 3 | 11.05 |
+| `packages/law-practice/server/test/CitationExtractionLoop.test.ts` | 15 | 124.00 |
+| `packages/law-practice/server/test/CitationExtractionReport.test.ts` | 1 | 9.97 |
+| `packages/law-practice/server/test/CitationExtractionSelection.test.ts` | 1 | 2.97 |
+| `packages/law-practice/server/test/CitationFullExtraction.test.ts` | 2 | 17.08 |
+| `packages/law-practice/server/test/CitationFullExtractionCoverage.test.ts` | 1 | 2.69 |
+| `packages/law-practice/server/test/CitationGeneratedReferences.test.ts` | 2 | 36.61 |
+| `packages/law-practice/server/test/CitationHtmlCaseName.test.ts` | 3 | 11.03 |
+| `packages/law-practice/server/test/CitationHtmlCleanerStage.test.ts` | 3 | 3.72 |
+| `packages/law-practice/server/test/CitationHtmlDiscovery.test.ts` | 2 | 8.42 |
+| `packages/law-practice/server/test/CitationHtmlDiscoveryCoverage.test.ts` | 2 | 2.47 |
+| `packages/law-practice/server/test/CitationHtmlGeometryPreparation.test.ts` | 3 | 3.83 |
+| `packages/law-practice/server/test/CitationHtmlNativeInput.test.ts` | 5 | 2.70 |
+| `packages/law-practice/server/test/CitationInputDocument.test.ts` | 1 | 5.49 |
+| `packages/law-practice/server/test/CitationInputDocumentCoverage.test.ts` | 1 | 6.26 |
+| `packages/law-practice/server/test/CitationInvocation.test.ts` | 4 | 1.97 |
+| `packages/law-practice/server/test/CitationJournalMetadata.test.ts` | 4 | 8.12 |
+| `packages/law-practice/server/test/CitationLawMetadata.test.ts` | 6 | 5.43 |
+| `packages/law-practice/server/test/CitationLiteralUnicodeComposition.test.ts` | 4 | 5.19 |
+| `packages/law-practice/server/test/CitationMetadataStrings.test.ts` | 3 | 5.43 |
+| `packages/law-practice/server/test/CitationMetadataYear.test.ts` | 4 | 2.46 |
+| `packages/law-practice/server/test/CitationOccurrenceProjectionCoverage.test.ts` | 5 | 2.59 |
+| `packages/law-practice/server/test/CitationPairedSource.test.ts` | 2 | 44.20 |
+| `packages/law-practice/server/test/CitationPinExtraction.test.ts` | 4 | 8.64 |
+| `packages/law-practice/server/test/CitationPostCaseMetadata.test.ts` | 5 | 9.64 |
+| `packages/law-practice/server/test/CitationPreCaseMetadata.test.ts` | 4 | 4.87 |
+| `packages/law-practice/server/test/CitationPythonRepr.test.ts` | 5 | 2.74 |
+| `packages/law-practice/server/test/CitationPythonReprCoverage.test.ts` | 2 | 1.90 |
+| `packages/law-practice/server/test/CitationReferenceNames.test.ts` | 1 | 2.08 |
+| `packages/law-practice/server/test/CitationReferencePatternsCoverage.test.ts` | 3 | 2.10 |
+| `packages/law-practice/server/test/CitationReferenceToken.test.ts` | 2 | 23.43 |
+| `packages/law-practice/server/test/CitationReferenceTokenExtractionCoverage.test.ts` | 2 | 7.54 |
+| `packages/law-practice/server/test/CitationRegexWorker.test.ts` | 17 | 6.93 |
+| `packages/law-practice/server/test/CitationRendering.test.ts` | 5 | 23.87 |
+| `packages/law-practice/server/test/CitationRenderingOperation.test.ts` | 1 | 3.21 |
+| `packages/law-practice/server/test/CitationResolverBoundary.test.ts` | 6 | 4.09 |
+| `packages/law-practice/server/test/CitationResourceCorrection.test.ts` | 9 | 8.46 |
+| `packages/law-practice/server/test/CitationSemanticExtraction.test.ts` | 1 | 47.53 |
+| `packages/law-practice/server/test/CitationShortMissingPage.test.ts` | 3 | 35.19 |
+| `packages/law-practice/server/test/CitationSourceAnnotation.test.ts` | 6 | 4.73 |
+| `packages/law-practice/server/test/CitationSourceAnnotationTiming.test.ts` | 2 | 2.62 |
+| `packages/law-practice/server/test/CitationSourceCleaning.test.ts` | 3 | 2.41 |
+| `packages/law-practice/server/test/CitationSourceDocument.test.ts` | 4 | 34.58 |
+| `packages/law-practice/server/test/CitationStopWords.test.ts` | 3 | 12.44 |
+| `packages/law-practice/server/test/CitationTextBudget.test.ts` | 6 | 2.04 |
+| `packages/law-practice/server/test/CitationTokenContext.test.ts` | 3 | 2.92 |
+| `packages/law-practice/server/test/CitationTokenizedExtraction.test.ts` | 1 | 42.42 |
+| `packages/law-practice/server/test/CitationTokenizedExtractionCoverage.test.ts` | 4 | 3.74 |
+| `packages/law-practice/server/test/CitationTokenizer.test.ts` | 7 | 2.92 |
+| `packages/law-practice/server/test/CitationVerifiedExtraction.test.ts` | 1 | 46.04 |
+| `packages/law-practice/server/test/CitationXmlWorker.test.ts` | 3 | 4.91 |
+| `packages/law-practice/server/test/integration/CitationCleanerNamedHtml.test.ts` | 1 | 55.45 |
+| `packages/law-practice/server/test/integration/CitationCleanerNativeCustom.test.ts` | 1 | 3.50 |
+| `packages/law-practice/server/test/integration/CitationHtmlUnicode.test.ts` | 1 | 52.44 |
+
+
+The full law-practice audit was not run locally because it executes the entire
+suite, contrary to the operator's file-by-file shared-host rule. Hosted CI is the
+full audit proof. No ready transition, merge, final declaration or PR watch is
+part of this wave.
+
+A one-shot pre-publish metadata read found the unchanged published head `2b2f93a1565ec8d6246883bfb18f0dc29950ab8f` marked ready. It was explicitly restored to draft with `gh pr ready 3265 --undo`; no ready transition was made by this review wave. Publication uses the existing PR with the no-PR-tail option so no readiness monitor starts, and the body is replaced through the provenance-preserving Yeet command.
