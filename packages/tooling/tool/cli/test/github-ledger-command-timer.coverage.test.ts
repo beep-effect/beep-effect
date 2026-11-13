@@ -127,7 +127,7 @@ const spend = (command: string, estimatedPoints: number) =>
 
 const rollup = (keys: ReadonlyArray<LedgerHourKey>, complete = true) =>
   LedgerHourRollup.make({
-    schemaVersion: "github-ledger-rollup/v2",
+    schemaVersion: "github-ledger-rollup/v3",
     hour,
     host,
     complete,
@@ -363,7 +363,7 @@ describe("github ledger commands with the ledger bound", () => {
         // A host label that breaks HostLabel's pattern only surfaces at encode time.
         const malformed = LedgerHourRollup.make(
           {
-            schemaVersion: "github-ledger-rollup/v2",
+            schemaVersion: "github-ledger-rollup/v3",
             hour,
             host: "Not A Host" as HostLabel,
             complete: true,
@@ -413,7 +413,7 @@ describe("github ledger commands with the ledger bound", () => {
           ]),
           summary: Effect.succeedSome(
             LedgerSummary.make({
-              schemaVersion: "github-ledger-summary/v2",
+              schemaVersion: "github-ledger-summary/v3",
               generatedAt: at,
               spenders: [],
               unattributedLastHour: [],
