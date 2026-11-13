@@ -435,6 +435,7 @@ export const RunnerFleet = <E, R>(props: RunnerFleetProps<E, R>) =>
                 functionName: jobRetry.functionName,
                 eventSourceArn: jobRetryQueue.value.queueArn,
                 batchSize: 10,
+                functionResponseTypes: ["ReportBatchItemFailures"],
               });
               yield* jobRetry.bind(
                 "JobRetry",
@@ -602,6 +603,7 @@ export const RunnerFleet = <E, R>(props: RunnerFleetProps<E, R>) =>
         functionName: watcher.functionName,
         eventSourceArn: deregisterRetry.queueArn,
         batchSize: 1,
+        functionResponseTypes: ["ReportBatchItemFailures"],
       });
       yield* Effect.forEach(
         [

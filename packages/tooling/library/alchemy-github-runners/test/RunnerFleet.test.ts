@@ -149,6 +149,13 @@ onePool.test.provider("one pool declares the whole fleet from shipped primitives
       ["ReportBatchItemFailures"],
     ]);
 
+    const sources = A.map(recorder.ofType("Lambda.EventSourceMapping"), (entry) => entry.news.functionResponseTypes);
+    expect(sources).toStrictEqual([
+      ["ReportBatchItemFailures"],
+      ["ReportBatchItemFailures"],
+      ["ReportBatchItemFailures"],
+    ]);
+
     expect(fn(recorder, "Runners/Webhook").news.functionUrl).toBe(true);
     expect(out.webhookUrl).toBe("https://runners-webhook.lambda-url.on.aws/");
     const webhook = yield* decodeWebhook(
