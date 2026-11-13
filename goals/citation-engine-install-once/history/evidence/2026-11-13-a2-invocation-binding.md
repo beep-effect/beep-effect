@@ -474,7 +474,7 @@ All 87 focused files below passed individually via `bunx --bun vitest run <file>
 | `packages/law-practice/server/test/CitationDocumentExtractionCoverage.test.ts` | 1 | 4.93 |
 | `packages/law-practice/server/test/CitationDump.test.ts` | 9 | 4.71 |
 | `packages/law-practice/server/test/CitationDumpCoverage.test.ts` | 4 | 2.36 |
-| `packages/law-practice/server/test/CitationEngineLayer.test.ts` | 15 | 95.61 |
+| `packages/law-practice/server/test/CitationEngineLayer.test.ts` | 15 | 82.41 |
 | `packages/law-practice/server/test/CitationExtractionEntry.test.ts` | 1 | 46.02 |
 | `packages/law-practice/server/test/CitationExtractionEntryCoverage.test.ts` | 3 | 11.05 |
 | `packages/law-practice/server/test/CitationExtractionLoop.test.ts` | 15 | 124.00 |
@@ -553,3 +553,7 @@ zero resolved and 194 unchanged findings. The single publication push follows
 these checks; no readiness monitor is started.
 
 A second pre-push main advance was also merged before publication: `d039f0cf38213bc87e03835061e56721aadfb3d0` incorporates `0fb1ae722b2d09534004a7f744bee74738176c0a` (#3254). Its changes concern stack conflict remedies and skills, with no Citation or package-proof input changes relative to the verified tree. Skills update/check and policy fingerprint pass again. Package and file receipts are retained for the identical inputs; the final pre-push gates follow this merge. No preparatory attempt pushed.
+
+### Pre-push lint cleanup
+
+The collected gates passed every lane except `lint:oxlint`, which rejected two inline schema compilations in the new log assertions. Commit `c58c8a48a9281000df3632a4eeab24e524a7ce56` replaces those guards with reference-checked `A.isArray`, preserving the assertions and avoiding a fresh schema parser per call. Oxlint then passes. The complete engine file passes all 15 tests again on Bun (82.41 s), and its Node-hosted deadline filter passes ten tests (50.59 s; five unrelated tests filtered out). Quick server verification and the Effect/Vitest check pass again. No earlier attempt pushed.
