@@ -46,8 +46,8 @@
       "action": "create",
       "ownership": "generated-seed",
       "path": "goals/full-example-goal/research/SOURCES.md",
-      "payload": "# Full Example Goal — Sources & Provenance\n\n- **Source exploration:** `explorations/plan-compiler-exploration` — primary ledger:\n  `explorations/plan-compiler-exploration/research/SOURCES.md`.\n\n## 1. Mined source corpus\n\n| Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |\n|--------|-------|-----------------|------------------------|-------|-------------|\n\n## 2. Upstream repositories & licenses\n\n| Repo | License | Port discipline | What we take |\n|------|---------|-----------------|--------------|\n\n## 3. External research sources\n\n## 4. In-repo capability references\n\n## 5. Cross-links & provenance\n",
-      "payloadDigest": "4b2138b7cb2fd500a5b84bd4501aacb21c23edb43da0f4497b5f112ff9a1181c",
+      "payload": "# Full Example Goal — Sources & Provenance\n\n- **Source exploration:** `explorations/plan-compiler-exploration` — primary ledger:\n  `explorations/plan-compiler-exploration/research/SOURCES.md`.\n\n## 1. Mined source corpus\n\n| Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |\n|--------|-------|-----------------|------------------------|-------|-------------|\n\n## 2. Upstream repositories & licenses\n\n| Repo | License | Port discipline | What we take |\n|------|---------|-----------------|--------------|\n\n## 3. External research sources\n\n## 4. In-repo capability references\n\n## 5. Cross-links & provenance\n\n- Source exploration packet: `explorations/plan-compiler-exploration/RESEARCH.md`,\n  `explorations/plan-compiler-exploration/DECISIONS.md`,\n  `explorations/plan-compiler-exploration/MAP.md`.\n- Write each backticked path in this file from the repo root. A Markdown link\n  target resolves from this file's directory instead, so point it three levels\n  up to the repo root first; never copy a relative link out of the\n  exploration's ledger unchanged.\n",
+      "payloadDigest": "831e7b9e0e41a289851befe60a055d74661b310f9847db729d61eccdeb86d263",
       "reason": "Written once from provenance inputs; human-owned immediately after."
     },
     {
@@ -83,7 +83,7 @@
   ],
   "mode": "bootstrap",
   "packetPath": "goals/full-example-goal",
-  "planId": "goal-plan/v1:eb9e5441dc9344bef63b4397e555f2b97b9d963b8398b7fcdf87ed77100a7d70",
+  "planId": "goal-plan/v1:efb940dff7858b515f9bed295c9e536fea44750916c665ec555071d04ff76b77",
   "preservations": [],
   "schemaVersion": "goal-materialization-plan/v1",
   "slug": "full-example-goal",

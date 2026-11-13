@@ -18,13 +18,14 @@ import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import { A, O, pipe, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { dual } from "effect/Function";
+import { constFalse, dual } from "effect/Function";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { ExplorationPacketFile } from "./Bootstrap.schemas.ts";
 import type { GoalManifest, GoalPhase } from "./Goals.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Goals/Inventory");
@@ -173,6 +174,41 @@ const scanGoalPackets = Effect.fn("Goals.scanGoalPackets")(function* (repoRoot: 
   );
   const records = yield* Effect.forEach(slugs, (slug) => scanGoalPacket(goalsDir, slug, mode), { concurrency: 1 });
   return pipe(records, A.getSomes, A.sort(recordBySlug));
+});
+
+/**
+ * Lists the stage artifacts an exploration packet has on disk, in stage order.
+ *
+ * **Details**
+ *
+ * An unreadable or absent file counts as missing, so a goal ledger never
+ * cites a path this scan could not confirm.
+ *
+ * **Example** (List an exploration's packet files)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { listExplorationPacketFiles } from "@beep/repo-cli/commands/Goals/Inventory"
+ *
+ * console.log(Effect.isEffect(listExplorationPacketFiles("typed-agent-skill-contracts"))) // true
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const listExplorationPacketFiles = Effect.fn("Goals.listExplorationPacketFiles")(function* (
+  exploration: string,
+  repoRoot = "."
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const present = yield* Effect.forEach(ExplorationPacketFile.literals, (file) =>
+    fs.exists(path.join(repoRoot, "explorations", exploration, file)).pipe(
+      Effect.orElseSucceed(constFalse),
+      Effect.map((exists) => (exists ? O.some(file) : O.none<ExplorationPacketFile>()))
+    )
+  );
+  return A.getSomes(present);
 });
 
 /**
