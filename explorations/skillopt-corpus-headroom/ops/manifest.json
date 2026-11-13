@@ -6,7 +6,7 @@
     "status": "active",
     "stage": "decompose",
     "openQuestions": [
-      "goals/skill-effect-probe reported Insensitive (the corpus cannot measure the skill without tools) and a fired rate of 17/24 (0.71) below the 0.8 gate: decompose skill-activation-probe, and decide whether a corpus whose prompts name the required packages, or runs with a type checker, is worth a new probe."
+      "goals/skill-effect-probe reported Insensitive: the archived completion contract is unreachable for toolless runs. Its fired rate (17 of 24, 0.71, pilot evidence) fired the activation gate. Decompose skill-activation-probe, and decide whether the gated skill-lane-probe (same tooling, a lane-level primary fixed before any run) is worth a goal."
     ],
     "sources": ["research/SOURCES.md"],
     "links": {

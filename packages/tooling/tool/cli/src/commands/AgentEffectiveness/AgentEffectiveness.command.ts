@@ -788,10 +788,7 @@ const probeReportCommand = Command.make(
     primary: Flag.ChoiceWithValue("primary", [
       ["all-lanes", "all-lanes" as const],
       ["law-pass", "law-pass" as const],
-    ]).pipe(
-      Flag.withDefault("all-lanes" as const),
-      Flag.withDescription("Primary measure the verdict reads (selected from the pilot)")
-    ),
+    ]).pipe(Flag.withDescription("Primary measure the verdict reads, as selected by probe select (required)")),
   },
   ({ records, preflight, primary }) => runSkillProbeReport(records, preflight, primary).pipe(Effect.asVoid)
 ).pipe(Command.withDescription("Report cell means, paired differences and the verdict as JSON"));

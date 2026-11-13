@@ -3292,6 +3292,7 @@
     {"name":"SkillProbe.directoryDigest","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SkillProbe.fileDigests","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SkillProbe.filesUnder","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"SkillProbe.guardStageOutDir","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SkillProbe.preflight","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SkillProbe.readRecords","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SkillProbe.readTasks","owner":"@beep/repo-cli","family":"tooling","conforms":true},

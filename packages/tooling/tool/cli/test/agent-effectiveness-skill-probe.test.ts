@@ -5,6 +5,7 @@ import {
   codeLawsSection,
   estimateClusteredMean,
   estimateMean,
+  isSkillProbeFormatterFinding,
   PluginEvalResult,
   readSkillProbeRecords,
   redactSkillProbePath,
@@ -14,11 +15,13 @@ import {
   SkillProbeOutcome,
   SkillProbeRunRecord,
   SkillProbeScoreOptions,
+  SkillProbeStageOptions,
   SkillProbeVerdict,
   scoreSkillProbeRuns,
   selectSkillProbePrimary,
   skillProbeFamily,
   skillProbePrompt,
+  stageSkillProbe,
   tCritical975,
   traceExclusionReason,
   validateSkillProbeRecords,
@@ -509,6 +512,16 @@ describe("skill probe primary selection", () => {
   });
 });
 
+describe("skill probe formatter findings", () => {
+  it("ignores only the findings a formatter satisfies", () => {
+    expect(isSkillProbeFormatterFinding("format")).toBe(true);
+    expect(isSkillProbeFormatterFinding("assist/source/organizeImports")).toBe(true);
+    expect(isSkillProbeFormatterFinding("assist/source/useSortedInterfaceMembers")).toBe(true);
+    expect(isSkillProbeFormatterFinding("lint/suspicious/noExplicitAny")).toBe(false);
+    expect(isSkillProbeFormatterFinding("formatter")).toBe(false);
+  });
+});
+
 describe("skill probe path redaction", () => {
   it("replaces every occurrence of the repository root", () => {
     expect(redactSkillProbePath("/work/repo")('import("/work/repo/a") and "/work/repo/b"')).toBe(
@@ -730,6 +743,33 @@ it.layer(TestLayer, { timeout: "30 seconds" })("skill probe scoring", (it) => {
         score(tooMany, "too-many.jsonl", { with: "C" }, [path.join(root, "laws.jsonl")])
       );
       expect(refused.message).toBe("Rerun has 3 runs for t-1 cell C but only 2 excluded slots.");
+    })
+  );
+
+  it.effect("refuses to stage over a non-stage directory or one that overlaps an input", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "skill-probe-stage-" });
+      const archive = path.join(root, "archive");
+      yield* fs.makeDirectory(archive, { recursive: true });
+      const stage = (outDir: string) =>
+        Effect.flip(
+          stageSkillProbe(
+            SkillProbeStageOptions.make({ archiveRoot: archive, outDir, runs: 1, maxTurns: 1, timeoutSeconds: 1 })
+          )
+        );
+      const overlap = yield* stage(root);
+      expect(overlap.message).toContain("overlaps");
+      const inside = yield* stage(path.join(archive, "suite"));
+      expect(inside.message).toContain("overlaps");
+      const occupied = path.join(root, "occupied");
+      yield* fs.makeDirectory(occupied, { recursive: true });
+      yield* fs.writeFileString(path.join(occupied, "keep.txt"), "keep");
+      const refused = yield* stage(occupied);
+      expect(refused.message).toContain("holds no prior stage.json");
+      const kept = yield* fs.exists(path.join(occupied, "keep.txt"));
+      expect(kept).toBe(true);
     })
   );
 

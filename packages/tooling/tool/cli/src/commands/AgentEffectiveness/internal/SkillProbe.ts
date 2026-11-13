@@ -144,9 +144,28 @@ export const repairSkillProbeTask = (task: SkillOptTaskManifest): SkillOptTaskMa
     }),
   });
 
-// Biome findings only a formatter satisfies; no cell has one.
-const isIgnoredBiomeViolation = (ruleId: string): boolean =>
+/**
+ * Whether a Biome finding is one only a formatter satisfies (`format`,
+ * `assist/source/*`); scorer profile v3 ignores these in every cell.
+ *
+ * **Example** (Formatter-only findings)
+ *
+ * ```ts
+ * import { isSkillProbeFormatterFinding } from "@beep/repo-cli/test/AgentEffectiveness"
+ *
+ * console.log(isSkillProbeFormatterFinding("assist/source/organizeImports")) // true
+ * console.log(isSkillProbeFormatterFinding("lint/suspicious/noExplicitAny")) // false
+ * ```
+ *
+ * @param ruleId - Biome diagnostic category.
+ * @returns True for findings the probe does not score.
+ * @category models
+ * @since 0.0.0
+ */
+export const isSkillProbeFormatterFinding = (ruleId: string): boolean =>
   ruleId === "format" || Str.startsWith("assist/source/")(ruleId);
+
+const isIgnoredBiomeViolation = isSkillProbeFormatterFinding;
 
 /**
  * Replace the repository root in a scorer diagnostic with `<repo>`, so run
@@ -367,6 +386,30 @@ export class SkillProbeStageOptions extends S.Opaque<SkillProbeStageOptions, { r
   )
 ) {}
 
+const isWithin = (parent: string, child: string, separator: string): boolean =>
+  child === parent || Str.startsWith(Str.endsWith(separator)(parent) ? parent : `${parent}${separator}`)(child);
+
+// Staging replaces its output directory, so it refuses one that holds or sits
+// inside an input, and one that exists with content but is not a prior stage.
+const guardStageOutDir = Effect.fn("SkillProbe.guardStageOutDir")(function* (
+  outDir: string,
+  inputs: ReadonlyArray<string>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const clash = A.findFirst(inputs, (input) => isWithin(outDir, input, path.sep) || isWithin(input, outDir, path.sep));
+  if (O.isSome(clash)) {
+    return yield* fail(`Refusing to stage into ${outDir}: it overlaps ${clash.value}.`, outDir);
+  }
+  const exists = yield* fs.exists(outDir).pipe(Effect.orElseSucceed(() => false));
+  if (!exists) return;
+  const entries = yield* fs.readDirectory(outDir).pipe(Effect.mapError(mapFail(`Cannot list ${outDir}.`, outDir)));
+  const priorStage = yield* fs.exists(path.join(outDir, "stage.json")).pipe(Effect.orElseSucceed(() => false));
+  if (A.isReadonlyArrayNonEmpty(entries) && !priorStage) {
+    return yield* fail(`Refusing to replace ${outDir}: it is not empty and holds no prior stage.json.`, outDir);
+  }
+});
+
 /**
  * Stage two plugins for `claude plugin eval`: `sep-empty` (no skills, archived
  * prompts; cell A under `--ablation none`) and `sep-skill` (the live skill,
@@ -377,7 +420,9 @@ export class SkillProbeStageOptions extends S.Opaque<SkillProbeStageOptions, { r
  * Each case's scaffold copies the archived fixture into the run workspace at
  * the path the prompt names. The archive path is written into the scaffold
  * because the harness passes no `EVAL_*` variables to it. `stage.json`
- * records the skill and laws hashes every run record carries.
+ * records the skill and laws hashes every run record carries. The output
+ * directory is replaced, so staging refuses one that overlaps the repository,
+ * the archive or the skill, or that holds content but no prior `stage.json`.
  *
  * **Example** (Stage a suite)
  *
@@ -408,6 +453,7 @@ export const stageSkillProbe = Effect.fn("SkillProbe.stage")(function* (
     onSome: Effect.succeed,
   });
   const skillRoot = path.join(repoRoot, SKILL_DIR);
+  yield* guardStageOutDir(outDir, [repoRoot, archiveRoot, skillRoot]);
   const skillSha256 = yield* directoryDigest(skillRoot);
   const lawsDigest = yield* sha256Hex(laws);
   const lawsSha256 = Sha256Hex.make(lawsDigest);

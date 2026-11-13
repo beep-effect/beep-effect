@@ -1,103 +1,139 @@
 # Findings, 2026-11-13
 
-## Verdict: Insensitive
+## 1. Verdict against the rule: Insensitive
 
-Under the decision rule as amended
-([amendment](../research/2026-11-13-analysis-rule-amendment.md),
-[amendment 2](../research/2026-11-13-analysis-rule-amendment-2.md)), neither
-primary candidate qualified on the laws-prompt pilot: no task had a single
-all-lanes pass or law pass among its 4 pooled B and C runs
+The rule is the [analysis rule](../research/2026-11-12-analysis-rule.md) as
+amended by the [first](../research/2026-11-13-analysis-rule-amendment.md) and
+[second](../research/2026-11-13-analysis-rule-amendment-2.md) amendments.
+Under it, the primary measure is chosen on the laws-prompt pilot. Neither
+candidate qualified, so there is no scored run and the verdict is
+**Insensitive**
 ([selection](./p1-laws-pilot/selection.json),
-[note](../research/2026-11-13-primary-selection.md)). There is no scored
-run, and the verdict is Insensitive.
+[note](../research/2026-11-13-primary-selection.md)).
 
-**This corpus cannot measure the `schema-first-development` skill at Opus
-5.5 without tools.**
+| Candidate (in order) | Tasks with a pass among 4 pooled B and C runs | Families | Qualifies (≥ 4 tasks from ≥ 2 families) |
+| --- | ---: | ---: | --- |
+| all-lanes pass | 0 | 0 | no |
+| law pass (completion and schema-first both 1) | 0 | 0 | no |
 
-Consequences, as the rule fixes them:
+Consequences fixed by the rule:
 
-- No verdict on the trainer question. The SkillOpt tombstones and the
-  retirement disposition are unchanged.
-- No prune proposal for the skill.
-- The source exploration's map records the outcome; see "Gates" below.
+- no verdict on the trainer question;
+- the SkillOpt tombstones and the retirement disposition are unchanged;
+- no prune proposal.
 
-## Evidence
+## 2. Main finding: the completion contract is unreachable for runs without tools
 
-| Step | Runs | Cells | Profile | Result |
-| --- | ---: | --- | --- | --- |
-| [P0 slice](./p0-slice/README.md) | 6 | A, B, C on one task | v1 | Pipeline proven; run-to-kept-directory mapping through `tracePath`; all six runs at 0 on all-lanes. |
-| [Preflight](./preflight.json) | — | — | v3 | 12 of 12 tasks pass: each untouched fixture fails its task and each known-good solution scores 1 on every lane. |
-| [P2 attempt 1](./p2-attempt-1/README.md) | 180 requested | A, B, C | v1 | Void: 178 runs ended on the seven-day plan limit; 2 completed runs left unscored. |
-| [Cell A headroom pilot](./p1-headroom-pilot/README.md) | 24 | A | v2 | No-go: 0 of 12 tasks with an all-lanes pass; completion 0 in every run. Judged the wrong proxy, because the bare prompt names no package. |
-| [Laws-prompt pilot](./p1-laws-pilot/README.md) | 48 | B, C | v3 | 0 of 12 tasks with an all-lanes or law pass; completion 1 in 1 of 48 runs. |
+Completion reached 1 in 1 of 48 laws-prompt runs (cells B and C) and in 0 of
+24 cell A runs. The cause is a conflict inside the archived tasks:
 
-The model, Claude Code version and skill and laws hashes were the same for
-every pilot run: `claude-opus-5-5`, 2.1.323, skill
-`78e11cec…c61813d`, laws `0d1e86e4…ee680142`.
+- **The prompts:** each says to keep the fixture standalone and
+  typechecking. A run with only Read, Write, Edit, Glob, Grep and Skill
+  cannot check whether a package import resolves.
+- **The contracts require `@beep/*` imports and exact idioms:**
+  - fn-schema: `Fn(...).implementSync` from `@beep/schema`;
+  - getsomes-struct: `import { O } from "@beep/utils"` with `O.getSomesStruct(`;
+  - normalization: `S.decodeUnknownOption(X)`;
+  - null-return: the literal `O.some(` and `O.none(`.
+- **What the runs did:** of 72 pilot runs, one imported a `@beep/*` package
+  (`@beep/identity`, cell C on `sfv4-fn-schema-002`), and none imported
+  `@beep/schema` or `@beep/utils`. Cell A runs mostly hand-rolled their own
+  `Option` and `Schema` types.
 
-## Why the measure cannot move
+These APIs exist under those names today, and the skill names
+`O.getSomesStruct`, so this is not scorer drift. This answers the source
+exploration's question: **this corpus cannot measure the
+`schema-first-development` skill at Opus 5.5 in this harness**. The earlier
+SkillOpt scores came from a different regime: the retired runner, which
+injected the skill rather than letting the model choose it.
 
-The completion contract of every task names repository APIs that a run must
-import from `@beep/*` packages or spell exactly: `Fn(...).implementSync`
-from `@beep/schema` (fn-schema), `import { O } from "@beep/utils"` and
-`O.getSomesStruct` (getsomes-struct), `S.decodeUnknownOption(X)`
-(normalization), and the literal `O.some(` and `O.none(` (null-return). Of
-the 72 pilot runs, one imported a `@beep/*` package (`@beep/identity`, in a
-cell C fn-schema run) and none imported `@beep/schema` or `@beep/utils`. Each prompt that
-names a contract also says to keep the fixture standalone and typechecking,
-and with Read, Write, Edit, Glob, Grep and Skill only, a run cannot check
-whether such an import resolves. The APIs exist under those names today and
-the skill names `O.getSomesStruct`, so this is a property of the corpus and
-the toolless run configuration, not scorer drift.
+Before the pilots, four lane requirements that no cell could satisfy were
+repaired for this probe:
 
-Three scorer-drift items and one formatter-only floor were repaired for this
-probe before the pilot ([amendment](../research/2026-11-13-analysis-rule-amendment.md),
-[amendment 2](../research/2026-11-13-analysis-rule-amendment-2.md)): tsgo
-`missingPipeableSignature`, the `S.Class` and `S.decode(` patterns, and the
-Biome `format` and `assist/source` findings. With them, Biome passed in
-most B and C runs and schema-first passed in both runs of 8 of 12 cell C tasks. The
-completion lane stayed at the floor.
+- tsgo `missingPipeableSignature`;
+- the `S.Class` and `S.decode(` completion patterns;
+- Biome `format` and `assist/source/*` findings.
 
-## Secondary measures (pilot, descriptive)
+With them repaired, completion stayed at the floor.
 
-Two runs per task and cell. These are not a test of C against B: the rule
-reads only pooled passes from the pilot, and no scored run followed.
+## 3. Lane census
 
-| Family | B lane fraction | C lane fraction |
-| --- | ---: | ---: |
-| fn-schema | 0.422 | 0.675 |
-| getsomes-struct | 0.201 | 0.299 |
-| normalization | 0.647 | 0.611 |
-| null-return | 0.692 | 0.728 |
-| all 12 tasks | 0.490 | 0.578 |
+The share of each task and cell's two pilot runs that scored 1 on each lane,
+written as completion / schema-first / tsgo / Biome. Cell A was scored under
+profile v2, which still scored the Biome formatter findings. Cells B and C
+use profile v3. Per-cell detail:
+[cell A](./p1-headroom-pilot/README.md), [cells B and C](./p1-laws-pilot/README.md).
 
-Per task and cell means with intervals, turns and wall seconds are in the
-[pilot report](./p1-laws-pilot/report.json) and its
-[lane census](./p1-laws-pilot/README.md). Cell A was piloted under profile
-v2 and is not comparable with these numbers.
+| Task | A (v2) | B (v3) | C (v3) |
+| --- | --- | --- | --- |
+| `sfv4-fn-schema-001` | 0 / 1 / 0 / 0 | 0 / 0 / 0 / 1 | 0 / 1 / 0 / 1 |
+| `sfv4-fn-schema-002` | 0 / 1 / 0 / 0.5 | 0 / 0 / 0 / 1 | 0 / 1 / 0.5 / 1 |
+| `sfv4-fn-schema-003` | 0 / 1 / 0.5 / 1 | 0 / 0 / 0 / 1 | 0 / 1 / 0 / 1 |
+| `sfv4-getsomes-struct-001` | 0 / 0.5 / 0 / 0 | 0 / 0 / 0 / 1 | 0 / 0 / 0 / 1 |
+| `sfv4-getsomes-struct-002` | 0 / 0 / 0.5 / 0.5 | 0 / 0 / 1 / 1 | 0 / 0 / 0.5 / 0.5 |
+| `sfv4-getsomes-struct-003` | 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0.5 | 0 / 0 / 0 / 1 |
+| `sfv4-normalization-001` | 0 / 1 / 0 / 0 | 0 / 1 / 0 / 1 | 0 / 1 / 0.5 / 1 |
+| `sfv4-normalization-002` | 0 / 1 / 0 / 0 | 0 / 1 / 0 / 1 | 0 / 1 / 0 / 1 |
+| `sfv4-normalization-003` | 0 / 0.5 / 0 / 0.5 | 0 / 1 / 0 / 1 | 0 / 1 / 0 / 1 |
+| `sfv4-null-return-001` | 0 / 0.5 / 0.5 / 0 | 0 / 1 / 1 / 1 | 0 / 1 / 0.5 / 1 |
+| `sfv4-null-return-002` | 0 / 0 / 0 / 0.5 | 0 / 0 / 0 / 1 | 0.5 / 0 / 1 / 1 |
+| `sfv4-null-return-003` | 0 / 0.5 / 0 / 0 | 0 / 1 / 1 / 1 | 0 / 1 / 1 / 1 |
 
-## Fired rate
+## 4. Exploratory observations
 
-The skill fired in 17 of 24 cell C pilot runs: 0.708 [0.523, 0.894]. The rule
-reports the fired-rate gate whichever way the decision falls. The rate is
-below 0.8, so the gate fires: activation is a measurable problem for this
-skill's description on these prompts, independent of the Insensitive
-verdict.
+These are unscored pilot data, with 2 runs per task and cell. No inference is
+drawn from them, and none feeds the verdict.
 
-## Gates
+- **Schema-first lane on fn-schema:** 6 of 6 cell C runs against 0 of 6
+  cell B runs.
+- **Lane fraction by family (profile v3):**
 
-- **Activation probe (`skill-activation-probe`):** fired by the fired rate
-  above. The exploration map marks it and the exploration reopens at
-  `decompose`.
-- **Corpus sizing (`skill-corpus-sizing`):** not fired; no effect was
-  measured.
-- **A re-run of this probe** would need a corpus whose prompts name the
-  packages their contracts require, or a run configuration that gives the
-  agent a type checker. Either is a new goal decision, not a rerun of this
-  one.
+  | Family | B | C |
+  | --- | ---: | ---: |
+  | fn-schema | 0.422 | 0.675 |
+  | getsomes-struct | 0.201 | 0.299 |
+  | normalization | 0.647 | 0.611 |
+  | null-return | 0.692 | 0.728 |
+  | all 12 tasks | 0.490 | 0.578 |
 
-## Ledger
+- **The one completion pass:** a cell C run on `sfv4-null-return-002`. It
+  failed the schema-first lane, so it was not a law pass.
 
-The Insensitive verdict is recorded as a harness-ledger chain: a `proposed`
-row for the hypothesis, superseded by a `deferred` disposition that carries
-this evidence and the condition to resume. No prune proposal row is written.
+## 5. Fired rate
+
+The skill fired in 17 of 24 cell C pilot runs: 0.708 [0.523, 0.894]. That is
+below the 0.8 gate, which is reported whichever way the decision falls. The
+activation-probe gate in the exploration map is marked **fired on pilot
+evidence**. No scored cell C runs exist.
+
+## 6. Run accounting
+
+Costs are as the harness reports them, in USD-equivalent on the existing
+plan; nothing was purchased.
+
+| Step | Runs | Scored evidence | Cost |
+| --- | ---: | --- | ---: |
+| [P0 slice](./p0-slice/README.md) | 6 | no | 1.01 |
+| [P2 attempt 1](./p2-attempt-1/README.md) (void) | 2 completed, 178 rejected by the plan limit | no | 0.71 |
+| [Cell A headroom pilot](./p1-headroom-pilot/README.md) | 24 | no | 4.09 |
+| [Laws-prompt pilot](./p1-laws-pilot/README.md) | 48 (24 B, 24 C) | no | 10.59 |
+| Scored run | 0 | — | 0 |
+
+Two harness-format checks cost under 0.10 more. Every run used the same
+setup:
+
+- model `claude-opus-5-5` on Claude Code 2.1.323;
+- skill hash `78e11cec…c61813d`;
+- laws hash `0d1e86e4…ee680142`.
+
+## Ledger and gates
+
+- Harness-ledger chain `hl-20261113-2588ca8f` (proposed), superseded by
+  `hl-20261113-8caf2f44` (deferred, with this evidence). There is no prune
+  proposal row.
+- [Exploration map](../../explorations/skillopt-corpus-headroom/MAP.md):
+  - the activation gate is fired on pilot evidence;
+  - the corpus-sizing gate is not fired;
+  - a lane-level probe on the same tooling is named as a gated candidate
+    and not started;
+  - the exploration is reopened at `decompose`.

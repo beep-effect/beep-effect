@@ -289,6 +289,12 @@ Packet-author decision 2026-11-13: Biome format and assist/source findings fail 
 
 Reverse: Score with profile v2 in a new dated amendment before any further scored run.
 
+### The 180-run criterion is met through the no-scored-run branch, 2026-11-13
+
+SPEC budgets about 180 scored runs, but amendment 2 makes the scored run conditional on a qualifying primary. Neither candidate qualified on the laws-prompt pilot, so the scored-run acceptance criteria are met by that branch: run records exist for every piloted cell with fingerprints, the excluded count (178 void) is reported, and the verdict is Insensitive with no scored run.
+
+Reverse: Run the 180 scored runs under a new goal whose primary is reachable; this packet's records stay as they are.
+
 ### Void the first P2 attempt, 2026-11-13
 
 178 of 180 runs ended on the seven-day plan limit; the two that completed are not scored because the rule was amended before any scored record and scoring them would expose C-B before the headroom pilot.
