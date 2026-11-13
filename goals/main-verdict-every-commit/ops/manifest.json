@@ -6,7 +6,7 @@
     "title": "Main Verdict Every Commit",
     "status": "active",
     "created": "2026-11-09",
-    "updated": "2026-11-09",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/main-verdict-every-commit",
@@ -34,7 +34,10 @@
     "goals/main-verdict-every-commit/GOAL.md",
     "goals/main-verdict-every-commit/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/2026-11-13-check-run-queue-day-measure.md",
+    "research/SOURCES.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -50,7 +53,7 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P1",
@@ -85,5 +88,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Slice 1 landed 2026-11-10 (HOST-01 a): AGENTS.md and the orchestrate skill forbid cancelling any refs/heads/main run, queued or running; the ban's start date is the anchor for the before/after verdict reads and the first zero-agent-cancel window (checkpoint cancel-ban-start-anchor). P0 in progress. The merge-timestamp replay (slice 2) and the main throughput layout wait for certainty-scorecard (ci/certainty-scorecard) to report the main verdict rate, per-run job counts and the hosted and heavy queue numbers; re-dispatch of missing verdicts reads its main census and comes after them. ci/main-verdict means the landed throughput layout, which merge-queue-activation (explorations/github-merge-queue) waits on; the merge-timestamp replay, published as input for that candidate's owner (D28); and the interim main verdict rate after the layout and re-dispatch; per-SHA verdicts are that candidate's, not this goal's (D28)."
+  "statusNote": "P0 complete 2026-11-13. Slice 1 (HOST-01 a, #3111) landed 2026-11-10: AGENTS.md and the orchestrate skill forbid cancelling any refs/heads/main run, queued or running, and #3140 enforces it in yeet gh checks cancel-queued and the merge gate; the ban's start date anchors the before/after verdict reads (checkpoint cancel-ban-start-anchor). beep ci certainty (#3118) is on main and reports the main verdict rate (CiCertaintyMainStat, CiCertaintyMainRow), but not PR first-wave pickup p95, heavy-wait p95, hosted jobs per run or the main cancel actor, and no certainty-scorecard slice builds them (decision scorecard-field-census); the pre-ban read for 2026-11-03..10 was refused as api-partial (history/2026-11-13-pre-ban-main-verdict-rate.md). The re-run API documents no conclusion restriction for cancelled push runs; whether a re-run re-enters the shared main group is undocumented, so re-dispatch fires only when no main run is queued or pending (decision rerun-api-cancelled-push-runs). Two measured days of Check runs (research/2026-11-13-check-run-queue-day-measure.md, decision check-run-queue-measurements) observe a hosted peak of 60 and 70 jobs per full run. P1 (the replay, the throughput layout, re-dispatch) is held under the SPEC stop condition until the scorecard reports first-wave pickup and heavy wait. ci/main-verdict means the landed throughput layout, which merge-queue-activation (explorations/github-merge-queue) waits on; the merge-timestamp replay, published as input for that candidate's owner (D28); and the interim main verdict rate after the layout and re-dispatch; per-SHA verdicts are that candidate's, not this goal's (D28)."
 }

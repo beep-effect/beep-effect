@@ -279,7 +279,10 @@ export const ciBinaryClosureCommand = Command.make(
       Flag.optional,
       Flag.withDescription("Also write the closure as JSON to this path (the release's .closure.json asset)")
     ),
-    list: Flag.Boolean("list").pipe(Flag.withDescription("Print every closure file after the digest")),
+    list: Flag.Boolean("list").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Print every closure file after the digest")
+    ),
   },
   ({ out, list }) =>
     Effect.gen(function* () {

@@ -12,7 +12,8 @@
       "docs": [],
       "supersededBy": null
     },
+    "retentionReason": "Retained while its gated candidates are open: MAP.md holds merge-group-parity, yeet-queue-states, merge-queue-activation and pr-head-slimming, and the packet reopens at decompose when a gate fires. goals/merge-queue-lab and goals/main-verdict-every-commit link DECISIONS.md, MAP.md, BRIEF.md and research/github-semantics.md here. Archive with bun run beep goals archive --kind explorations once merge-queue-activation has graduated or the packet is killed.",
     "created": "2026-09-16",
-    "updated": "2026-11-09"
+    "updated": "2026-11-12"
   }
 }
