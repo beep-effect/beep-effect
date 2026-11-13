@@ -12,7 +12,7 @@ import { $AlchemyAwsExtrasId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as ec2 from "@distilled.cloud/aws/ec2";
 import { Unowned } from "alchemy/AdoptPolicy";
-import { isResolved } from "alchemy/Diff";
+import { deepEqual, isResolved } from "alchemy/Diff";
 import { createPhysicalName } from "alchemy/PhysicalName";
 import * as Provider from "alchemy/Provider";
 import { Resource } from "alchemy/Resource";
@@ -757,7 +757,7 @@ export const RunnerLaunchTemplateProvider = Provider.effect(
             )
           )
         ),
-      reconcile: Effect.fn("RunnerLaunchTemplate.reconcile")(function* ({ id, news, output, session }) {
+      reconcile: Effect.fn("RunnerLaunchTemplate.reconcile")(function* ({ id, news, olds, output, session }) {
         const props = yield* decodeProps({ resourceType: RunnerLaunchTemplateType, schema: RunnerLaunchTemplateProps })(
           news
         );
@@ -784,8 +784,22 @@ export const RunnerLaunchTemplateProvider = Provider.effect(
         }
 
         const launchTemplateId = existing.LaunchTemplateId;
-        yield* publishVersion(launchTemplateId, props);
-        yield* syncTags(launchTemplateId, toTagRecord(existing.Tags), desiredTags);
+        const observedTags = toTagRecord(existing.Tags);
+        // Publish a version only when the launch data changed. A tag-only change
+        // edits the template resource, not its versions. An adopted template (no
+        // ownership tags yet) always gets our data: adoption records `olds = news`.
+        const previous =
+          olds === undefined
+            ? undefined
+            : yield* decodeProps({ resourceType: RunnerLaunchTemplateType, schema: RunnerLaunchTemplateProps })(olds);
+        const dataUnchanged =
+          previous !== undefined &&
+          hasTags(internalTags, observedTags) &&
+          deepEqual(toLaunchTemplateData(previous), toLaunchTemplateData(props));
+        if (!dataUnchanged) {
+          yield* publishVersion(launchTemplateId, props);
+        }
+        yield* syncTags(launchTemplateId, observedTags, desiredTags);
         const refreshed = yield* describeById(launchTemplateId);
         if (refreshed === undefined) {
           return yield* LaunchTemplateUnexpectedResponse.make({

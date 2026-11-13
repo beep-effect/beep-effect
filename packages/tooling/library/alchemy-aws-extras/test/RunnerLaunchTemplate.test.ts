@@ -91,6 +91,15 @@ describe("RunnerLaunchTemplate", () => {
       expect(unchanged.launchTemplateId).toBe(created.launchTemplateId);
       expect(FakeAws.operations(account)).not.toContain("CreateLaunchTemplateVersion");
 
+      account.calls.length = 0;
+      const retagged = yield* stack.deploy(
+        RunnerLaunchTemplate("Runners", { ...fleetProps, tags: { ...fleetProps.tags, Owner: "ci" } })
+      );
+      expect(FakeAws.operations(account)).not.toContain("CreateLaunchTemplateVersion");
+      expect(FakeAws.operations(account)).toContain("CreateTags");
+      expect(retagged.defaultVersionNumber).toBe(1);
+      expect(retagged.tags).toMatchObject({ Owner: "ci" });
+
       const updated = yield* stack.deploy(
         RunnerLaunchTemplate("Runners", {
           ...fleetProps,
