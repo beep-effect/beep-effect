@@ -64,3 +64,16 @@ identifiers are redacted.
   plain push to a branch whose packet carries a `proposedCloseout`, and a
   merge gate that refuses a goal final without a current-head
   `merge-ready: yes`.
+
+## 2026-11-13: goal finals merged inside the review window
+
+- **Doing:** the closeout of #3167 and its re-final #3207.
+- **Evidence:** #3167 merged at 04:33Z before the readiness monitor printed
+  `merge-ready: yes`. #3207 was marked ready at 04:41:01Z and merged at
+  04:47:41Z, while the review window was still open. `goals completion
+  refresh` then reported `unknown` on the merge-ready yeet verdict and
+  `unsatisfied` on the review window. A third re-final was opened under the
+  `owner-merge-hold` label, which the merge gate honours.
+- **Would have prevented it:** a merge gate that refuses a PR carrying a
+  packet's `proposedCloseout` until a current-head `merge-ready: yes`
+  exists, without relying on the owner remembering the hold label.

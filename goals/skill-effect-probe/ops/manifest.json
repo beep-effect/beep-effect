@@ -12,7 +12,7 @@
   "packetPath": "goals/skill-effect-probe",
   "lifecycle": "active",
   "mission": "Measure whether the schema-first-development skill changes Opus 5.5 output on the 12 archived SkillOpt tasks across bare, code-laws and code-laws-plus-skill cells, and return a verdict against a rule fixed before any scored run.",
-  "statusNote": "Verdict Insensitive (2026-11-13): on the laws-prompt pilot no task had an all-lanes or law pass among pooled B and C runs, so no scored run; the corpus cannot measure the skill at Opus 5.5 without tools. Fired rate 0.71 fired the activation gate; the exploration reopened at decompose. Implementation in PR 3167; closeout re-finaled in PR 3207.",
+  "statusNote": "Verdict Insensitive (2026-11-13): on the laws-prompt pilot no task had an all-lanes or law pass among pooled B and C runs, so no scored run; the corpus cannot measure the skill at Opus 5.5 without tools. Fired rate 0.71 fired the activation gate; the exploration reopened at decompose. Implementation in PR 3167; closeout re-finaled in PR 3210 (owner-held after 3207 merged early).",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -32,6 +32,10 @@
       },
       {
         "number": 3207,
+        "role": "supporting"
+      },
+      {
+        "number": 3210,
         "role": "final"
       }
     ],
@@ -43,7 +47,7 @@
       },
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/claude_skill-effect-probe-closeout-98b6287b7fc0/verdict.json",
+        "ref": ".beep/yeet/runs/claude_skill-effect-probe-refinal-2-c8b0a2cfe042/verdict.json",
         "gating": true
       }
     ]
@@ -123,6 +127,6 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 3207
+    "finalPullRequest": 3210
   }
 }
