@@ -46,7 +46,7 @@ import * as Flag from "effect/cli/Flag";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { dual, flow, pipe } from "effect/Function";
+import { constant, dual, flow, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as Path from "effect/Path";
@@ -1957,7 +1957,7 @@ const storiesCheck = (scripts: Readonly<Record<string, string>>): string =>
   pipe(
     R.get(scripts, "beep:build"),
     O.flatMap((build) => buildServedCheck(STORIES_CHECK, build)),
-    O.getOrElse(() => STORIES_CHECK)
+    O.getOrElse(constant(STORIES_CHECK))
   );
 
 const packageScripts = (kind: PackageScriptsKind, withStoriesTsconfig: boolean) => {
