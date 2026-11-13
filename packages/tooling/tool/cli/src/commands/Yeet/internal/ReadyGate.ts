@@ -91,8 +91,8 @@ import { YEET_READY_COMMAND } from "./MonitorPolicy.ts";
 import { findLiveReadyMonitorJob } from "./ProofJob.ts";
 import { ProofJobLauncher } from "./ProofJobLauncher.ts";
 import { admitPullRequestToHeavy } from "./PullRequest.ts";
-import { ReviewLaneFlipRow, YEET_REVIEW_LANE_SCHEMA_VERSION } from "./ReviewLane.schemas.ts";
-import { recordYeetReviewLaneRows } from "./ReviewLane.ts";
+import { ReviewLaneFlipRow, ReviewLaneReadyTransition, YEET_REVIEW_LANE_SCHEMA_VERSION } from "./ReviewLane.schemas.ts";
+import { readYeetReviewLaneLedger, recordYeetReviewLaneRows } from "./ReviewLane.ts";
 import { YEET_REVIEW_WINDOW_DEFAULT } from "./ReviewWindow.ts";
 import { readSquashCommitlintForPullRequest, renderSquashCommitlintVerdict } from "./SquashCommitlint.ts";
 import { YeetStatusRemote } from "./Status.schemas.ts";
@@ -1038,10 +1038,10 @@ const requestReviewerReview = Effect.fn("Yeet.requestReviewerReview")(function* 
       ? yield* pushReviewerRequest(context, prNumber, confirmedHead)
       : `[yeet] no comment routine configured for this pull request author/repository; no repeated review-trigger push`;
   }
-  // The open time may anchor only when no flip just happened: at a ready open,
-  // or for a pull request found already ready. Right after a flip the timeline
-  // can lag, and a pull request created as a draft records no convert_to_draft
-  // event, so its open time would validate a draft-era request.
+  // The open time may anchor only for a pull request known to have opened
+  // ready: at the ready open, or later when the ledger recorded that open. After
+  // a flip the timeline can lag, and a pull request created as a draft records
+  // no convert_to_draft event, so its open time would validate a draft-era request.
   return yield* requestReviewerComment(
     context,
     prNumber,
@@ -1090,7 +1090,8 @@ const recordReadyTransition = Effect.fn("Yeet.recordReadyTransition")(function* 
   context: RepoRunContext,
   dependencies: YeetReadyGateDependencies,
   prNumber: number,
-  headSha: string
+  headSha: string,
+  transition: ReviewLaneReadyTransition
 ) {
   const at = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   const author = yield* (dependencies.readAuthor ?? readPullRequestAuthor)(context, prNumber);
@@ -1103,8 +1104,25 @@ const recordReadyTransition = Effect.fn("Yeet.recordReadyTransition")(function* 
       headSha,
       at,
       author,
+      transition,
     }),
   ]);
+});
+
+// Whether this checkout's ledger shows the pull request was opened ready and
+// never flipped. Only then may its open time anchor a reviewer request when
+// the timeline shows no ready event: a pull request created as a draft records
+// no convert_to_draft event, and a retry right after its flip can still read a
+// lagging timeline. A ledger without the row (another checkout) answers no.
+const openedReadyPerLedger = Effect.fn("Yeet.openedReadyPerLedger")(function* (
+  context: RepoRunContext,
+  prNumber: number
+) {
+  const ledger = yield* readYeetReviewLaneLedger(context.repoRoot);
+  const transitions = A.flatMap(ledger.rows, (row) =>
+    row._tag === "flip" && row.prNumber === prNumber ? [row.transition] : []
+  );
+  return A.isReadonlyArrayNonEmpty(transitions) && A.every(transitions, ReviewLaneReadyTransition.is.open);
 });
 
 const admitHeavyForReady = (context: RepoRunContext, prNumber: number) =>
@@ -1624,9 +1642,9 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
       yield* adviseSquashCommitlint(context, dependencies, prNumber);
       // Repairs a ready pull request whose label edit failed at the open or the flip.
       yield* ensureHeavyAdmission(context, dependencies, prNumber, read.remote.labels);
-      // No flip just happened here, so a timeline with no ready event means the
-      // pull request was opened ready: its open may anchor the request.
-      yield* ensureReviewerRequest(context, dependencies, prNumber, currentHead, false, true);
+      // The open may anchor the request only for a pull request this checkout opened ready.
+      const openedReady = yield* openedReadyPerLedger(context, prNumber);
+      yield* ensureReviewerRequest(context, dependencies, prNumber, currentHead, false, openedReady);
     }),
     flip: Effect.fnUntraced(function* ({ prNumber, headSha }) {
       yield* requireFinalCheck(
@@ -1668,7 +1686,7 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
       yield* ensureHeavyAdmission(context, dependencies, prNumber, value2.remote.labels);
       // The flip opens the rounds-to-ready window (ruling 81); a failed
       // record is one warning and never touches the flip.
-      yield* recordReadyTransition(context, dependencies, prNumber, sameHead);
+      yield* recordReadyTransition(context, dependencies, prNumber, sameHead, "flip");
       // Draft pushes are ignored by the reviewer. Request the proven head by
       // comment where configured, otherwise retain S32 off a stack layer; a failure warns.
       yield* ensureReviewerRequest(context, dependencies, prNumber, sameHead, true);
@@ -1737,7 +1755,7 @@ export const yeetOpenReadyHooks = (dependencies: YeetReadyGateDependencies = {})
       )
     ),
   afterOpen: Effect.fnUntraced(function* (context, prNumber, headSha) {
-    yield* recordReadyTransition(context, dependencies, prNumber, headSha);
+    yield* recordReadyTransition(context, dependencies, prNumber, headSha, "open");
     yield* ensureReviewerRequest(context, dependencies, prNumber, headSha, false, true);
     yield* Console.log(
       `[yeet] the review window starts now: the merge gate opens no sooner than the review window (default ${Duration.toMinutes(YEET_REVIEW_WINDOW_DEFAULT)} minutes) after this open or the last push, whichever is later`

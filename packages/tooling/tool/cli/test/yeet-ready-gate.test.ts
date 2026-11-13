@@ -27,9 +27,11 @@ import {
   parseYeetReadyInheritedRed,
   pushReviewerRequestForTesting,
   RepoRunContext,
+  ReviewLaneFlipRow,
   readPullRequestForReadyStampingFooterForTesting,
   readYeetReviewLaneLedger,
   recordInheritedRedsWithRest,
+  recordYeetReviewLaneRows,
   reviewerRequestPushable,
   runYeetReady,
   runYeetReadyGate,
@@ -528,6 +530,53 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       })
     );
 
+    // Review r2 on #3251: the open may anchor a request only for a pull request
+    // this checkout's ledger shows was opened ready and never flipped.
+    it.effect("anchors an already-ready request on the open only when the ledger recorded a ready open", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        // One pull request per case: the ledger keys a row by its pull request and instant.
+        const anchorFor = Effect.fnUntraced(function* (prNumber: number, transitions: ReadonlyArray<"flip" | "open">) {
+          const work = yield* fs.makeTempDirectoryScoped({ prefix: "ready-gate-anchor-" });
+          const lane = RepoRunContext.make({ ...context, repoRoot: work, cwd: work });
+          yield* recordYeetReviewLaneRows(
+            work,
+            A.map(transitions, (transition, index) =>
+              ReviewLaneFlipRow.make({
+                schemaVersion: "yeet-review-lane/v1",
+                prNumber,
+                branch: lane.branch,
+                recordedAt: `2026-11-13T09:0${index}:00.000Z`,
+                // The ledger keys a flip row by pull request and head.
+                headSha: `${headSha}${index}`,
+                at: `2026-11-13T09:0${index}:00.000Z`,
+                transition,
+              })
+            )
+          );
+          const anchors = yield* Ref.make<ReadonlyArray<boolean | undefined>>([]);
+          yield* runYeetReadyGate(lane, {
+            rewriteCarry: () => Effect.succeedNone,
+            finalCheck: passingFinalCheck,
+            squashCommitlint: passingSquashCommitlint,
+            read: () => Effect.succeed(prView({ isDraft: false, number: prNumber })),
+            requestReview: (_context, _prNumber, _head, _allowPush, openedReady) =>
+              Ref.update(anchors, A.append(openedReady)).pipe(Effect.as("[yeet] requested")),
+          });
+          return yield* Ref.get(anchors);
+        });
+        const opened = yield* anchorFor(101, ["open"]);
+        expect(opened).toEqual([true]);
+        // A flipped draft, a pull request flipped after its open, and one this checkout never recorded.
+        const flipped = yield* anchorFor(102, ["flip"]);
+        expect(flipped).toEqual([false]);
+        const both = yield* anchorFor(103, ["open", "flip"]);
+        expect(both).toEqual([false]);
+        const unknown = yield* anchorFor(104, []);
+        expect(unknown).toEqual([false]);
+      })
+    );
+
     it.effect("repairs a ready pull request that lacks the heavy-admission label", () =>
       Effect.gen(function* () {
         const admitted = yield* Ref.make<ReadonlyArray<number>>([]);
@@ -538,7 +587,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           squashCommitlint: passingSquashCommitlint,
           read: () => Effect.succeed(prView({ isDraft: false, labels: [] })),
           admitHeavy: (_context, prNumber) => Ref.update(admitted, A.append(prNumber)),
-          // An already-ready pull request may anchor its request on the open; a flip may not.
           requestReview: (_context, _prNumber, _head, allowPush, openedReady) =>
             Ref.update(anchors, A.append([allowPush, openedReady] as const)).pipe(Effect.as("[yeet] requested")),
         });
@@ -546,7 +594,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const got = yield* Ref.get(admitted);
         expect(got).toEqual([42]);
         const asked = yield* Ref.get(anchors);
-        expect(asked).toEqual([[false, true]]);
+        // This checkout's ledger has no ready open for #42, so the open does not anchor.
+        expect(asked).toEqual([[false, false]]);
       })
     );
 

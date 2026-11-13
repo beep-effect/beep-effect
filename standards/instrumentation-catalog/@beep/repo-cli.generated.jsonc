@@ -3864,6 +3864,7 @@
     {"name":"Yeet.observeSweepGitState","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.observeSweepPullRequest","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.openWatchCommentSession","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Yeet.openedReadyPerLedger","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.originPushOwner","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.overrideSweepBranch","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.parseFinalCheckGates","owner":"@beep/repo-cli","family":"tooling","conforms":true},
