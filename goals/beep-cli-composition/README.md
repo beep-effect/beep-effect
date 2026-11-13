@@ -2,7 +2,9 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `paused`
+
+**Paused by operator ruling (finish board, 2026-11-13).** It is a large refactor that touches the CLI everything else depends on. With no owner active it should not stay active, and it would collide with other repo-cli lanes. No lane is working on it; resume with `bun run beep goals set-status beep-cli-composition active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

@@ -43,6 +43,7 @@ import { enforceReviewerGate, withReviewerOperatorClient } from "../../Reviewer/
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { renderYeetMergeSettlement, settleYeetMerge, YeetMergeSettlement } from "./AsyncMerge.ts";
 import { provideYeetGhLogin, withYeetGithubCredentialHint } from "./GhOps.ts";
+import { readYeetStackUngatedRefusal } from "./StackGate.ts";
 import { SweepReport } from "./Sweep.schemas.ts";
 import { executeSweep } from "./Sweep.ts";
 import type { Git } from "@beep/git/Git";
@@ -189,6 +190,23 @@ const confirmMerged = Effect.fn("Yeet.confirmPullRequestMerged")(function* (
   return view;
 });
 
+// `gh pr view` carries no stack, so the REST pull request is read once for it.
+const readMergeStackRefusal = Effect.fn("Yeet.readMergeStackRefusal")(function* (
+  pullRequestNumber: number
+): Effect.fn.Return<O.Option<string>, YeetCommandError, YeetGithubServices> {
+  const pull = yield* GithubRest.use((rest) => rest.pullRequest(pullRequestNumber)).pipe(
+    Effect.mapError((error) =>
+      YeetCommandError.make({
+        message: `Failed to read pull request "${pullRequestNumber}" (${error.message}).`,
+        command: `gh api repos/{owner}/{repo}/pulls/${pullRequestNumber}`,
+        exitCode: 1,
+        cause: error,
+      })
+    )
+  );
+  return yield* readYeetStackUngatedRefusal(pull);
+});
+
 /**
  * Squash-merge one pull request pinned to its viewed head, then confirm it merged.
  *
@@ -258,7 +276,10 @@ export const mergeYeetPullRequestAtHead = Effect.fn("Yeet.mergePullRequestAtHead
  * until the REST pull request read reports it merged; then
  * {@link executeSweep}, which owns every ref update and deletion under its own
  * worktree-aware safety rails. A merge that cannot be confirmed fails here, so no
- * deletion is ever attempted against an unconfirmed merge.
+ * deletion is ever attempted against an unconfirmed merge. A pull request in a
+ * native stack whose merge would land anything but itself, or whose stack cannot
+ * be read, is refused before anything is sent: it merges through
+ * `yeet merge-gate`, which gates every layer.
  *
  * **Gotchas**
  *
@@ -322,6 +343,15 @@ export const mergePr = Effect.fn("Yeet.mergePr")(function* (
     return yield* YeetCommandError.make({
       message: `yeet merge refuses to merge #${view.number} without a head oid to pin the merge to.`,
       command: `gh pr view ${context.branch} --json ${pullRequestViewFields}`,
+      exitCode: 1,
+    });
+  }
+  // This path gates one pull request; a stacked one merges through `yeet merge-gate`.
+  const stackRefusal = yield* readMergeStackRefusal(view.number).pipe(provideYeetGhLogin(context.repoRoot));
+  if (O.isSome(stackRefusal)) {
+    return yield* YeetCommandError.make({
+      message: `yeet merge refuses #${view.number}: ${stackRefusal.value}`,
+      command: `gh api repos/{owner}/{repo}/pulls/${view.number}`,
       exitCode: 1,
     });
   }

@@ -15,6 +15,21 @@
  * a commitlint run that gave no verdict, and, in strict mode, a required
  * context with no check run.
  *
+ * The read also lists the head's workflow runs, because the base ruleset reads
+ * only the newest run's check suite per workflow file and event: a check run in
+ * an older run's suite does not count there, however new its id (#3133,
+ * 2026-11-12). The gate drops a required context's runs there before it takes
+ * the newest run per name, so red, pending and green are judged on the run
+ * GitHub reads; an optional check, which the ruleset does not read, keeps its
+ * newest run over every suite, so a red in a replaced suite still holds in
+ * strict mode and is recorded in relaxed mode. A
+ * required check left with no counted run is judged by its newest hidden copy
+ * (`SuiteShadow.ts`), never dropped: a red copy is a red, held in strict mode
+ * and sent through the own-red check in relaxed mode like a live one; a green
+ * copy reads as "expected", so strict mode holds it as `required-shadowed` and
+ * `--relaxed` records it with an attribution and requests the rules bypass;
+ * a copy or replacing run still going is pending.
+ *
  * The read predicts GitHub's default squash message, folds its body, and lints
  * the exact explicit header/body the merge sends (`SquashCommitlint.ts`): `main`
  * is squash-only and its Commitlint range is previous-main..new-main, so a
@@ -82,7 +97,7 @@ import {
 } from "./GhOps.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { provideYeetHeadMoveClassifier } from "./HeadMove.ts";
-import { MergeGateCheckRun } from "./MergeGate.schemas.ts";
+import { MergeGateCheckRun, mergeGateGoodConclusion } from "./MergeGate.schemas.ts";
 import { readYeetReviewWindow, renderYeetReviewWindow, YeetReviewWindow } from "./ReviewWindow.ts";
 import { readYeetRulesetRequiredContexts } from "./Settle.ts";
 import { broadcastPacketSiblings } from "./Siblings.ts";
@@ -92,14 +107,40 @@ import {
   SquashCommitlintReport,
   SquashPullRequestFacts,
 } from "./SquashCommitlint.ts";
+import { yeetStackRulesBranch } from "./Stack.ts";
+import {
+  readYeetStackContainment,
+  readYeetStackGatePlan,
+  renderYeetStackLayerSuffix,
+  YeetStackGatePlan,
+  YeetStackMergedLayer,
+  yeetStackLowerHeadDrift,
+  yeetStackLowerMergeCommit,
+} from "./StackGate.ts";
+import {
+  gateCountsCheck,
+  HeadWorkflowSuitesField,
+  headWorkflowSuites,
+  hiddenRequiredAttribution,
+  hiddenRequiredChecksOf,
+  renderHiddenRequiredChecks,
+  SHADOWED_REQUIRED_REMEDY,
+} from "./SuiteShadow.ts";
 import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { GithubCheckRunRecord, GithubWorkflowRunRecord } from "../../../internal/github/index.ts";
+import type {
+  GithubCheckRunRecord,
+  GithubPullRequestRecord,
+  GithubWorkflowRunRecord,
+} from "../../../internal/github/index.ts";
 import type { YeetGithubServices } from "./GhOps.ts";
+import type { SquashCommitlintTarget } from "./SquashCommitlint.ts";
+import type { YeetStackGateRefused, YeetStackGroup } from "./StackGate.ts";
+import type { HeadCheckVerdict, HiddenRequiredCheck, HiddenRequiredState } from "./SuiteShadow.ts";
 
-export { MergeGateCheckRun } from "./MergeGate.schemas.ts";
+export { MergeGateCheckRun, mergeGateGoodConclusion } from "./MergeGate.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/MergeGate");
 
@@ -231,7 +272,9 @@ export const decodeAttributedCheckFlags = Effect.fnUntraced(function* <A>(
 });
 
 /**
- * Whether a check that did not hold an S11 merge was red or still pending.
+ * Whether a check that did not hold an S11 merge was red, still pending, or
+ * shadowed: green only in a check suite a newer run of the same workflow and
+ * event replaced, so the base ruleset reads it as expected.
  *
  * **Example** (Narrow a state)
  *
@@ -239,19 +282,21 @@ export const decodeAttributedCheckFlags = Effect.fnUntraced(function* <A>(
  * import { MergeGateCheckState } from "@beep/repo-cli/test/Yeet"
  *
  * console.log(MergeGateCheckState.is.red("red")) // true
+ * console.log(MergeGateCheckState.is.shadowed("shadowed")) // true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const MergeGateCheckState = LiteralKit(["red", "pending"]).pipe(
+export const MergeGateCheckState = LiteralKit(["red", "pending", "shadowed"]).pipe(
   $I.annoteSchema("MergeGateCheckState", {
-    description: "Whether a check that was not green at an S11 merge was red or still pending.",
+    description: "Whether a check that was not green at an S11 merge was red, still pending, or shadowed.",
   })
 );
 
 /**
- * Whether a check that was not green at an S11 merge was red or still pending.
+ * Whether a check that was not green at an S11 merge was red, still pending,
+ * or shadowed.
  *
  * @category models
  * @since 0.0.0
@@ -264,7 +309,10 @@ export type MergeGateCheckState = typeof MergeGateCheckState.Type;
  * **Details**
  *
  * `required` is membership in the base ruleset's contexts; `attribution` is
- * the matching `--tolerate` text, else {@link MERGE_GATE_S11_DEFAULT_ATTRIBUTION}.
+ * the matching `--tolerate` text, else the evidence the gate has (the base
+ * runs for a red, the newest hidden copy and the run that replaced its suite
+ * for a shadowed or pending hidden check), else
+ * {@link MERGE_GATE_S11_DEFAULT_ATTRIBUTION}.
  *
  * **Example** (A required red recorded at merge)
  *
@@ -423,7 +471,10 @@ export class MergeGateBaseEvidence extends S.Opaque<MergeGateBaseEvidence, { rea
  * the PR's label names and `attributedChecks` the check names its body
  * attributes in the "Inherited reds (S11)" section, counted only when that
  * section is stamped with this head; both feed the relaxed gate's
- * inherited-versus-own distinction.
+ * inherited-versus-own distinction. `workflowSuites` are the head's workflow
+ * runs with their check suites, from which the gate finds required checks a
+ * newer run of the same workflow and event shadows; it defaults to none
+ * listed, which shadows nothing.
  *
  * **Example** (Build a read)
  *
@@ -473,6 +524,7 @@ export class MergeGateRead extends S.Opaque<MergeGateRead, { readonly brand: uni
     unresolvedThreads: S.Option(S.Finite),
     squashCommitlint: SquashCommitlintReport,
     readAt: S.DateTimeUtcFromString,
+    workflowSuites: HeadWorkflowSuitesField,
   }).pipe($I.annoteSchema("MergeGateRead", { description: "The pull request facts the merge gate decides on." }))
 ) {}
 
@@ -499,6 +551,7 @@ export const MergeGateHoldReason = LiteralKit([
   "required-contexts-unknown",
   "required-pending",
   "required-red",
+  "required-shadowed",
   "own-red",
   "base-runs-unknown",
   "pending",
@@ -509,6 +562,11 @@ export const MergeGateHoldReason = LiteralKit([
   "threads-unresolved",
   "merge-failed",
   "merge-unsettled",
+  "stack-unknown",
+  "stack-too-deep",
+  "stack-below-top",
+  "stack-relaxed",
+  "stack-out-of-date",
 ]).pipe($I.annoteSchema("MergeGateHoldReason", { description: "The first unmet merge-gate criterion." }));
 
 /**
@@ -673,27 +731,6 @@ export class MergeGateInput extends S.Opaque<MergeGateInput, { readonly brand: u
 ) {}
 
 /**
- * Whether a check run conclusion counts as green for the gate: success,
- * skipped, or neutral. A pending run (no conclusion) is not green.
- *
- * **Example** (Classify conclusions)
- *
- * ```ts
- * import { mergeGateGoodConclusion } from "@beep/repo-cli/test/Yeet"
- *
- * console.log(mergeGateGoodConclusion("skipped")) // true
- * console.log(mergeGateGoodConclusion(null)) // false
- * ```
- *
- * @param conclusion - The run's conclusion, `null` while it runs.
- * @returns Whether the run is green.
- * @category predicates
- * @since 0.0.0
- */
-export const mergeGateGoodConclusion = (conclusion: string | null): boolean =>
-  conclusion === "success" || conclusion === "skipped" || conclusion === "neutral";
-
-/**
  * The newest run per check name (highest run id), the run a re-run replaced dropped.
  *
  * **Example** (A re-run replaces the first attempt)
@@ -787,6 +824,77 @@ const runsHold = (
 
 const isPending = (run: MergeGateCheckRun): boolean => run.status !== "completed";
 const isRed = (run: MergeGateCheckRun): boolean => !mergeGateGoodConclusion(run.conclusion);
+const isGreen = (run: MergeGateCheckRun): boolean => !isPending(run) && !isRed(run);
+
+// The check runs the gate counts: a required context's only in a suite the
+// base ruleset reads (none a newer run of the same workflow and event
+// replaced), every other check's wherever it reported.
+const countedRuns = (read: MergeGateRead, contexts: ReadonlyArray<string>): ReadonlyArray<MergeGateCheckRun> => {
+  const counts = gateCountsCheck(read.workflowSuites, contexts);
+  return A.filter(read.checkRuns, (run) => counts(run.name, run.checkSuiteId));
+};
+
+const verdictOf = (run: MergeGateCheckRun): HeadCheckVerdict =>
+  isPending(run) ? "pending" : isRed(run) ? "red" : "green";
+
+// Required contexts with no run the ruleset reads, each judged by its newest
+// copy in a suite a newer run of the same workflow and event replaced.
+const hiddenOf = (read: MergeGateRead, contexts: ReadonlyArray<string>): ReadonlyArray<HiddenRequiredCheck> =>
+  hiddenRequiredChecksOf({ requiredContexts: contexts, runs: read.checkRuns, suites: read.workflowSuites, verdictOf });
+
+const hiddenIn = (
+  hidden: ReadonlyArray<HiddenRequiredCheck>,
+  state: HiddenRequiredState
+): ReadonlyArray<HiddenRequiredCheck> => A.filter(hidden, (entry) => entry.state === state);
+
+const isHidden = (hidden: ReadonlyArray<HiddenRequiredCheck>, context: string): boolean =>
+  A.some(hidden, (entry) => entry.context === context);
+
+// A hidden red is judged like a live one: its newest hidden copy stands in as
+// the context's run, so the own-red check, the base evidence and the S11
+// record all read it, and nothing records it as shadowed or pending.
+const withHiddenReds = (
+  read: MergeGateRead,
+  live: HashMap.HashMap<string, MergeGateCheckRun>,
+  hidden: ReadonlyArray<HiddenRequiredCheck>
+): HashMap.HashMap<string, MergeGateCheckRun> => {
+  // Every hidden copy is one of the read's own check runs, so select them directly; a copy
+  // reports its own context, so the run's name is the context it judges.
+  const redCopies = HashSet.fromIterable(A.map(hiddenIn(hidden, "red"), (entry) => entry.copy.id));
+  return A.reduce(
+    A.filter(read.checkRuns, (run) => HashSet.has(redCopies, run.id)),
+    live,
+    (judged, run) => HashMap.set(judged, run.name, run)
+  );
+};
+
+// A hidden red holds as a red; a passing copy whose replacing run finished
+// needs a person; a copy or replacing run still going may yet report it.
+const hiddenHold = (read: MergeGateRead, hidden: ReadonlyArray<HiddenRequiredCheck>): O.Option<MergeGateHold> => {
+  const red = hiddenIn(hidden, "red");
+  const shadowed = hiddenIn(hidden, "shadowed");
+  const pending = hiddenIn(hidden, "pending");
+  return O.firstSomeOf([
+    holdWhen(
+      A.isReadonlyArrayNonEmpty(red),
+      read.prNumber,
+      "required-red",
+      `required red in a replaced check suite: ${renderHiddenRequiredChecks(red)}`
+    ),
+    holdWhen(
+      A.isReadonlyArrayNonEmpty(shadowed),
+      read.prNumber,
+      "required-shadowed",
+      `required context(s) the ruleset reads as expected: ${renderHiddenRequiredChecks(shadowed)}; ${SHADOWED_REQUIRED_REMEDY}`
+    ),
+    holdWhen(
+      A.isReadonlyArrayNonEmpty(pending),
+      read.prNumber,
+      "required-pending",
+      `required context(s) hidden until the newest run reports them: ${renderHiddenRequiredChecks(pending)}`
+    ),
+  ]);
+};
 
 // The ruleset is how the gate tells required from optional, so an unreadable
 // or empty one holds in both modes, relaxed included.
@@ -808,19 +916,23 @@ const requiredContextsStep = (read: MergeGateRead): Result.Result<ReadonlyArray<
           ),
   });
 
-// Required contexts must be registered, complete and green; every other check
-// must be too unless the caller attributed it with --tolerate.
+// Required contexts must be registered, complete and green in a suite the
+// ruleset reads (`latest` holds only such runs for them), and a hidden one
+// holds by its newest hidden copy; every other check's newest run on the head,
+// whatever suite it sits in, must be complete and green too unless the caller
+// attributed it with --tolerate.
 const checksHold = (
   { read, options }: MergeGateInput,
   latest: HashMap.HashMap<string, MergeGateCheckRun>,
-  contexts: ReadonlyArray<string>
+  contexts: ReadonlyArray<string>,
+  hidden: ReadonlyArray<HiddenRequiredCheck>
 ): O.Option<MergeGateHold> => {
   const required = HashSet.fromIterable(contexts);
   const tolerated = HashSet.fromIterable(A.map(options.tolerate, (tolerance) => tolerance.check));
   const runs = latest.pipe(HashMap.values, A.fromIterable);
   const requiredRuns = A.filter(runs, (run) => HashSet.has(required, run.name));
   const optionalRuns = A.filter(runs, (run) => !HashSet.has(required, run.name) && !HashSet.has(tolerated, run.name));
-  const missing = A.filter(contexts, (context) => !HashMap.has(latest, context));
+  const missing = A.filter(contexts, (context) => !HashMap.has(latest, context) && !isHidden(hidden, context));
   return O.firstSomeOf([
     holdWhen(
       A.isReadonlyArrayNonEmpty(missing),
@@ -830,6 +942,7 @@ const checksHold = (
     ),
     runsHold(A.filter(requiredRuns, isPending), read.prNumber, "required-pending", "required still running"),
     runsHold(A.filter(requiredRuns, isRed), read.prNumber, "required-red", "required red"),
+    hiddenHold(read, hidden),
     runsHold(
       A.filter(optionalRuns, isPending),
       read.prNumber,
@@ -842,20 +955,20 @@ const checksHold = (
 
 // S11 merges over failing jobs, never without CI evidence: when not one
 // required context has registered a run on the head (CI never fired, as on an
-// informally stacked PR), relaxed mode holds like strict mode does.
+// informally stacked PR), relaxed mode holds like strict mode does. A context
+// whose only runs sit in a replaced suite did run, so it counts as evidence.
 const relaxedEvidenceHold = (
   { read }: MergeGateInput,
   latest: HashMap.HashMap<string, MergeGateCheckRun>,
-  contexts: ReadonlyArray<string>
+  contexts: ReadonlyArray<string>,
+  hidden: ReadonlyArray<HiddenRequiredCheck>
 ): O.Option<MergeGateHold> =>
   holdWhen(
-    !A.some(contexts, (context) => HashMap.has(latest, context)),
+    !A.some(contexts, (context) => HashMap.has(latest, context)) && A.isReadonlyArrayEmpty(hidden),
     read.prNumber,
     "required-pending",
     `no required context has run on the head (${A.join(contexts, ", ")}); S11 merges over failing jobs, never without CI evidence`
   );
-
-const baseRunIsGreen = (run: MergeGateCheckRun): boolean => !isPending(run) && !isRed(run);
 
 const isUnblocksMain = (read: MergeGateRead): boolean => A.contains(read.labels, MERGE_GATE_UNBLOCKS_MAIN_LABEL);
 
@@ -892,7 +1005,7 @@ const greenBaseRun = (
         O.map(latestBaseRun(base, check), (run) => [label, base, run] as const)
       )
     ),
-    ([, , run]) => baseRunIsGreen(run)
+    ([, , run]) => isGreen(run)
   );
 
 // S11 as amended 2026-11-02: a relaxed merge still holds on a red required
@@ -971,15 +1084,42 @@ const atMergeOrder = Order.combine(
   Order.mapInput(Order.String, (entry: MergeGateCheckAtMerge) => entry.check)
 );
 
+const toleranceAttribution = (options: MergeGateOptions, check: string): O.Option<string> =>
+  A.findFirst(options.tolerate, (tolerance) => tolerance.check === check).pipe(
+    O.map((tolerance) => tolerance.attribution)
+  );
+
+// A hidden required check that is not red (a red is in `latest`): shadowed
+// when its passing copy's replacing run finished, else pending. --tolerate
+// attributes it, else its newest hidden copy and the run that replaced it do.
+const hiddenAtMerge = (
+  options: MergeGateOptions,
+  hidden: ReadonlyArray<HiddenRequiredCheck>
+): ReadonlyArray<MergeGateCheckAtMerge> =>
+  A.map(
+    A.filter(hidden, (entry) => entry.state !== "red"),
+    (entry) =>
+      MergeGateCheckAtMerge.make({
+        check: entry.context,
+        state: entry.state,
+        required: true,
+        attribution: O.getOrElse(toleranceAttribution(options, entry.context), () => hiddenRequiredAttribution(entry)),
+      })
+  );
+
 // S11: no inherited check holds, so record every one that is not green. An
 // unregistered required context and a run still going are pending; a completed
-// run with a bad conclusion is red. --tolerate supplies the attribution for
-// required and optional checks alike; a red without one carries the evidence
-// that made it inherited when the gate has any.
+// run with a bad conclusion is red, a hidden red included (`latest` holds its
+// newest hidden copy), and so is an optional check's newest run in a replaced
+// suite; any other hidden required check is shadowed or pending.
+// --tolerate supplies the attribution for required and optional checks alike;
+// a red without one carries the evidence that made it inherited when the gate
+// has any.
 const checksAtMerge = (
   { read, options }: MergeGateInput,
   latest: HashMap.HashMap<string, MergeGateCheckRun>,
-  contexts: ReadonlyArray<string>
+  contexts: ReadonlyArray<string>,
+  hidden: ReadonlyArray<HiddenRequiredCheck>
 ): ReadonlyArray<MergeGateCheckAtMerge> => {
   const required = HashSet.fromIterable(contexts);
   const atMerge = (check: string, state: MergeGateCheckState) =>
@@ -987,13 +1127,15 @@ const checksAtMerge = (
       check,
       state,
       required: HashSet.has(required, check),
-      attribution: A.findFirst(options.tolerate, (tolerance) => tolerance.check === check).pipe(
-        O.map((tolerance) => tolerance.attribution),
+      attribution: toleranceAttribution(options, check).pipe(
         O.orElse(() => (state === "red" ? inheritedAttribution(read, check) : O.none())),
         O.getOrElse(() => MERGE_GATE_S11_DEFAULT_ATTRIBUTION)
       ),
     });
-  const unregistered = A.filter(A.dedupe(contexts), (context) => !HashMap.has(latest, context));
+  const unregistered = A.filter(
+    A.dedupe(contexts),
+    (context) => !HashMap.has(latest, context) && !isHidden(hidden, context)
+  );
   const notGreen = latest.pipe(
     HashMap.values,
     A.fromIterable,
@@ -1003,6 +1145,7 @@ const checksAtMerge = (
     [
       ...A.map(unregistered, (context) => atMerge(context, "pending")),
       ...A.map(notGreen, (run) => atMerge(run.name, isPending(run) ? "pending" : "red")),
+      ...hiddenAtMerge(options, hidden),
     ],
     atMergeOrder
   );
@@ -1044,10 +1187,24 @@ const threadsHold = (read: MergeGateRead): O.Option<MergeGateHold> =>
  *
  * **Details**
  *
+ * Every criterion judges a required context on the check runs the base
+ * ruleset reads: its run in a check suite a newer run of the same workflow and
+ * event replaced is dropped before the newest run per name is taken, so a live
+ * red stays red however green an older suite's copy is. An optional check is
+ * judged on its newest run over every suite, as before #3133, so its red in a
+ * replaced suite still holds or is recorded. A required context left with no such run is
+ * judged by its newest hidden copy, never dropped: a completed red is a red in
+ * both modes (strict `required-red`, relaxed the own-red check below), a green
+ * copy whose replacing run finished is shadowed, and a copy or replacing run
+ * still going is pending.
+ *
  * Criteria in order, first failure wins: head unchanged since the caller
  * looked; not draft; not labelled `owner-merge-hold`; not conflicting; the predicted squash commit message
  * passes commitlint; base ruleset readable; every required
- * context registered, complete and green; every other check complete and
+ * context registered, complete and green; no hidden required context
+ * (`required-red` for a red copy, `required-shadowed` for a green one whose
+ * replacing run finished, `required-pending` otherwise); every other
+ * check complete and
  * green unless tolerated with an attribution; review window known and
  * elapsed unless forced; thread count known and zero. The order puts
  * the cheap structural refusals first and the two judgment calls (window,
@@ -1058,8 +1215,11 @@ const threadsHold = (read: MergeGateRead): O.Option<MergeGateHold> =>
  * on the merge-base commit or on the base tip, that neither `--tolerate` nor
  * the PR body (on this head) attributes, on a PR without the `unblocks-main`
  * label (`own-red`, amendment of 2026-11-02). An unattributed red with no readable merge-base runs holds
- * as `base-runs-unknown`. Every other check that is not green is recorded in
- * `atMerge` instead. Relaxed mode still holds when not one required context
+ * as `base-runs-unknown`. A hidden red goes through the same check on its
+ * newest hidden copy and is attributed only as inherited, never as shadowed.
+ * Every other check that is not green is recorded in
+ * `atMerge` instead, a shadowed or pending hidden required context included,
+ * with its hidden copy as the attribution. Relaxed mode still holds when not one required context
  * has registered a run on the head (no CI evidence). Every other criterion,
  * the ruleset included, holds exactly as it does without it.
  *
@@ -1103,8 +1263,12 @@ const threadsHold = (read: MergeGateRead): O.Option<MergeGateHold> =>
  */
 export const decideMergeGate = (input: MergeGateInput): MergeGateDecision => {
   const { read, options } = input;
-  const latest = mergeGateLatestRunPerName(read.checkRuns);
   const contexts = requiredContextsStep(read);
+  const ruleset = Result.getOrElse(contexts, A.empty<string>);
+  const live = mergeGateLatestRunPerName(countedRuns(read, ruleset));
+  const hidden = hiddenOf(read, ruleset);
+  // The live runs plus each hidden red's newest copy: what relaxed mode and the S11 record judge.
+  const judged = withHiddenReds(read, live, hidden);
   const window = windowStep(input);
   return O.firstSomeOf([
     structuralHold(input),
@@ -1114,8 +1278,8 @@ export const decideMergeGate = (input: MergeGateInput): MergeGateDecision => {
       onFailure: O.some,
       onSuccess: (required) =>
         options.relaxed
-          ? O.orElse(relaxedEvidenceHold(input, latest, required), () => ownRedHold(input, latest, required))
-          : checksHold(input, latest, required),
+          ? O.orElse(relaxedEvidenceHold(input, judged, required, hidden), () => ownRedHold(input, judged, required))
+          : checksHold(input, live, required, hidden),
     }),
     Result.getFailure(window),
     threadsHold(read),
@@ -1129,9 +1293,9 @@ export const decideMergeGate = (input: MergeGateInput): MergeGateDecision => {
           commitMessage: read.squashCommitlint.message.body,
           // Every hold above is None here, so the ruleset and window steps succeeded.
           windowAgeSeconds: Result.getOrThrow(window),
-          tolerated: A.filter(options.tolerate, (tolerance) => HashMap.has(latest, tolerance.check)),
+          tolerated: A.filter(options.tolerate, (tolerance) => HashMap.has(judged, tolerance.check)),
           relaxed: options.relaxed,
-          atMerge: options.relaxed ? checksAtMerge(input, latest, Result.getOrThrow(contexts)) : [],
+          atMerge: options.relaxed ? checksAtMerge(input, judged, Result.getOrThrow(contexts), hidden) : [],
         })
     )
   );
@@ -1150,7 +1314,7 @@ const attributedList = (
       )
     : O.none();
 
-// The non-empty "reds at merge" and "pending at merge" lists, in that order.
+// The non-empty "reds at merge", "pending at merge" and "shadowed at merge" lists, in that order.
 const atMergeLists = (atMerge: ReadonlyArray<MergeGateCheckAtMerge>): ReadonlyArray<string> =>
   A.getSomes([
     attributedList(
@@ -1160,6 +1324,10 @@ const atMergeLists = (atMerge: ReadonlyArray<MergeGateCheckAtMerge>): ReadonlyAr
     attributedList(
       "pending at merge",
       A.filter(atMerge, (entry) => entry.state === "pending")
+    ),
+    attributedList(
+      "shadowed at merge",
+      A.filter(atMerge, (entry) => entry.state === "shadowed")
     ),
   ]);
 
@@ -1211,7 +1379,13 @@ const GhCompare = S.Struct({
 const COMPARE_ROUTE = "GET /repos/{owner}/{repo}/compare/{basehead}";
 
 const toMergeGateCheckRun = (run: GithubCheckRunRecord): MergeGateCheckRun =>
-  MergeGateCheckRun.make({ id: run.id, name: run.name, status: run.status, conclusion: O.getOrNull(run.conclusion) });
+  MergeGateCheckRun.make({
+    id: run.id,
+    name: run.name,
+    status: run.status,
+    conclusion: O.getOrNull(run.conclusion),
+    checkSuiteId: run.checkSuiteId,
+  });
 
 const readBaseCommitRuns = (sha: string) =>
   GithubRest.use((rest) => rest.checkRuns(sha)).pipe(
@@ -1219,6 +1393,11 @@ const readBaseCommitRuns = (sha: string) =>
       onFailure: yeetGithubFailure(`gh api base check-runs ${sha10(sha)}`),
       onSuccess: (runs) => MergeGateBaseRuns.make({ sha, checkRuns: A.map(runs, toMergeGateCheckRun) }),
     })
+  );
+
+const readMergeGatePull = (prNumber: number) =>
+  GithubRest.use((rest) => rest.pullRequest(prNumber)).pipe(
+    Effect.mapError(yeetGithubFailure(`gh api pulls/${prNumber}`))
   );
 
 // The inherited-red evidence: one compare of base...head names the merge-base
@@ -1257,13 +1436,16 @@ const readMergeBaseRuns = Effect.fnUntraced(function* (
  *
  * **Details**
  *
- * REST for the pull request and check runs (core quota); the review window
+ * REST for the pull request, its head's check runs and workflow runs (core
+ * quota; a failed read fails the gate like the check runs do); the review window
  * and the base ruleset through the same readers `yeet monitor` uses; one
  * GraphQL query for the unresolved thread count; REST again for the
  * repository's squash defaults and the PR commits, from which the squash
  * message is predicted and linted. The thread read is the only call allowed to
  * fail softly, and it fails to `None`, which the decision treats as a hold; a
  * commitlint run that cannot happen is an `unavailable` verdict, held the same way.
+ * `squash` picks the message linted: the one the merge sends, or GitHub's own
+ * default for a stack's lower layer, which the stack merge sends none for.
  *
  * **Example** (Build the read effect)
  *
@@ -1276,10 +1458,11 @@ const readMergeBaseRuns = Effect.fnUntraced(function* (
  * @category workflows
  * @since 0.0.0
  */
-const readMergeGateUsing = Effect.fn("Yeet.readMergeGate")(function* (
+const readMergeGateForPull = Effect.fn("Yeet.readMergeGateForPull")(function* (
   context: RepoRunContext,
-  prNumber: number,
-  authenticatedRules: boolean
+  pull: GithubPullRequestRecord,
+  authenticatedRules: boolean,
+  squash: SquashCommitlintTarget
 ): Effect.fn.Return<
   MergeGateRead,
   YeetCommandError,
@@ -1287,28 +1470,35 @@ const readMergeGateUsing = Effect.fn("Yeet.readMergeGate")(function* (
 > {
   const rest = yield* GithubRest;
   const reviewThreads = yield* ReviewThread;
-  const pull = yield* rest.pullRequest(prNumber).pipe(Effect.mapError(yeetGithubFailure(`gh api pulls/${prNumber}`)));
+  const prNumber = pull.number;
   const checkRuns = yield* rest.checkRuns(pull.headSha).pipe(Effect.mapError(yeetGithubFailure("gh api check-runs")));
+  // The suites the check runs report into, so a check only an older run's suite reports is not read as green.
+  const workflowRuns = yield* rest
+    .workflowRunsForSha(pull.headSha)
+    .pipe(Effect.mapError(yeetGithubFailure("gh api workflow runs")));
   // Every page of threads is read; a read that fails is unknown, never zero.
   const unresolvedThreads = yield* reviewThreads.list(prNumber).pipe(
     Effect.map((read) => O.some(outstanding(read))),
     Effect.orElseSucceed(O.none<number>)
   );
   const body = O.liftPredicate(pull.body, Str.isNonEmpty);
-  // The PR's own base decides the required contexts, not the caller's --base.
+  // The PR's own base decides the required contexts, not the caller's --base;
+  // a stack layer is gated on its trunk's rules, which GitHub evaluates at merge.
+  const rulesBranch = yeetStackRulesBranch(pull);
   const legacyRules = authenticatedRules
     ? O.none()
-    : yield* readYeetRulesetRequiredContexts(RepoRunContext.make({ ...context, base: `origin/${pull.baseRef}` }));
+    : yield* readYeetRulesetRequiredContexts(RepoRunContext.make({ ...context, base: `origin/${rulesBranch}` }));
   const nativeRules = authenticatedRules
     ? yield* rest
-        .requiredStatusContexts(pull.baseRef)
+        .requiredStatusContexts(rulesBranch)
         .pipe(Effect.mapError(yeetGithubFailure("read authenticated branch rules")))
     : undefined;
   const requiredContexts =
     nativeRules === undefined ? O.map(legacyRules, (rules) => rules.contexts) : O.some(nativeRules);
   const squashCommitlint = yield* readSquashCommitlint(
     context,
-    SquashPullRequestFacts.make({ number: pull.number, title: pull.title, body })
+    SquashPullRequestFacts.make({ number: pull.number, title: pull.title, body }),
+    squash
   );
   const baseRuns = yield* readMergeBaseRuns(pull.baseRef, pull.headSha);
   return MergeGateRead.make({
@@ -1333,7 +1523,17 @@ const readMergeGateUsing = Effect.fn("Yeet.readMergeGate")(function* (
     unresolvedThreads,
     squashCommitlint,
     readAt: yield* DateTime.now,
+    workflowSuites: headWorkflowSuites(workflowRuns, pull.headSha),
   });
+});
+
+const readMergeGateUsing = Effect.fn("Yeet.readMergeGate")(function* (
+  context: RepoRunContext,
+  prNumber: number,
+  authenticatedRules: boolean
+) {
+  const pull = yield* readMergeGatePull(prNumber);
+  return yield* readMergeGateForPull(context, pull, authenticatedRules, "merge-request");
 });
 
 /**
@@ -1378,7 +1578,9 @@ export const readAuthenticatedMergeGate = Effect.fn("Yeet.readAuthenticatedMerge
  * **Details**
  *
  * `bypassRequested` is true only for an S11 merge that asked GitHub to bypass
- * the base's rules over the reds it recorded.
+ * the base's rules over the reds it recorded. `layers` is present only for a
+ * stack merge: every layer the one request landed, bottom to top, each with its
+ * own squash commit; the top fields then describe the top layer.
  *
  * **Example** (A confirmed merge)
  *
@@ -1403,6 +1605,7 @@ export class MergeGateMerged extends S.Opaque<MergeGateMerged, { readonly brand:
     mergeSha: S.String,
     commitTitle: S.NonEmptyString,
     bypassRequested: S.Boolean,
+    layers: YeetStackMergedLayer.pipe(S.Array, S.optionalKey),
   }).pipe($I.annoteSchema("MergeGateMerged", { description: "The squash merge GitHub confirmed." }))
 ) {}
 
@@ -1412,8 +1615,9 @@ export class MergeGateMerged extends S.Opaque<MergeGateMerged, { readonly brand:
  * **Details**
  *
  * Strict merges never bypass. A relaxed (S11) merge asks for a bypass only when
- * it records at least one check that was not green, so the bypass always
- * travels with the attributed reds the S11 comment lists.
+ * it records at least one check that was not green or that the ruleset reads
+ * as expected (shadowed), so the bypass always travels with the attributed
+ * checks the S11 comment lists.
  *
  * **Example** (A strict merge sends no bypass)
  *
@@ -1440,6 +1644,13 @@ export class MergeGateMerged extends S.Opaque<MergeGateMerged, { readonly brand:
  */
 export const mergeGateRequestsBypass = (decision: MergeGateMerge): boolean =>
   decision.relaxed && A.isReadonlyArrayNonEmpty(decision.atMerge);
+
+// The fleet reviewer gate for one pinned head, as the operator login.
+const enforceMergeGateReviewer = (prNumber: number, headSha: string) =>
+  enforceReviewerGate(prNumber, headSha).pipe(
+    withReviewerOperatorClient(process.cwd()),
+    Effect.mapError((error) => YeetCommandError.make({ message: error.message, exitCode: 1 }))
+  );
 
 /**
  * Squash-merge at the pinned head with `<title> (#n)` as the commit title,
@@ -1480,10 +1691,7 @@ export const executeMergeGate = Effect.fn("Yeet.executeMergeGate")(function* (
   YeetCommandError,
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | GithubRest | FileSystem.FileSystem
 > {
-  yield* enforceReviewerGate(decision.prNumber, decision.headSha).pipe(
-    withReviewerOperatorClient(process.cwd()),
-    Effect.mapError((error) => YeetCommandError.make({ message: error.message, exitCode: 1 }))
-  );
+  yield* enforceMergeGateReviewer(decision.prNumber, decision.headSha);
   const bypassRequested = mergeGateRequestsBypass(decision);
   // Send the exact header/body whose commitlint verdict admitted this decision.
   const settled = yield* settleYeetMerge(
@@ -1511,8 +1719,55 @@ export const executeMergeGate = Effect.fn("Yeet.executeMergeGate")(function* (
   });
 });
 
+// A stack merge: the reviewer gate on the lower layer, then the top's own merge
+// (its reviewer gate and ONE strict request, which lands both layers), then the
+// lower layer read back for its own squash commit. The poll names the top's
+// commit only, and a lower layer that did not land is a loud failure.
+const executeMergeGateStack = Effect.fnUntraced(function* (
+  group: YeetStackGroup,
+  lower: MergeGateMerge,
+  top: MergeGateMerge
+) {
+  yield* enforceMergeGateReviewer(lower.prNumber, lower.headSha);
+  const executed = yield* executeMergeGate(top);
+  if (S.is(MergeGateHold)(executed)) return executed;
+  const unsettled = (detail: string): MergeGateHold =>
+    hold(
+      lower.prNumber,
+      "merge-unsettled",
+      `#${top.prNumber} merged as ${sha10(executed.mergeSha)} through stack #${group.stackNumber}, but ${detail}; check stack #${group.stackNumber} by hand before anything else merges`
+    );
+  const readBack = yield* readMergeGatePull(lower.prNumber).pipe(Effect.result);
+  if (Result.isFailure(readBack))
+    return unsettled(`#${lower.prNumber} could not be read back (${readBack.failure.message})`);
+  const lowerCommit = yeetStackLowerMergeCommit(group.lower, readBack.success);
+  if (Result.isFailure(lowerCommit)) return unsettled(lowerCommit.failure);
+  const drift = yeetStackLowerHeadDrift(group.lower, readBack.success);
+  if (O.isSome(drift)) yield* Console.error(`[yeet] WARNING: ${drift.value}`);
+  const layer = (gated: MergeGateMerge, position: number, mergeSha: string) =>
+    YeetStackMergedLayer.make({
+      stackNumber: group.stackNumber,
+      position,
+      prNumber: gated.prNumber,
+      mergeSha,
+      commitTitle: gated.commitTitle,
+    });
+  return MergeGateMerged.make({
+    ...executed,
+    layers: [
+      layer(lower, group.lower.position, lowerCommit.success),
+      layer(top, group.top.position, executed.mergeSha),
+    ],
+  });
+});
+
 /**
  * Options for one `yeet merge-gate` run.
+ *
+ * **Details**
+ *
+ * `alone` (default false) lets a stack layer with an open layer above it merge
+ * by itself; GitHub then force-pushes the layer above onto the trunk.
  *
  * **Example** (Describe one run)
  *
@@ -1541,6 +1796,7 @@ export class MergeGateRunOptions extends S.Opaque<MergeGateRunOptions, { readonl
     forceWindow: S.Boolean,
     relaxed: S.Boolean,
     dryRun: S.Boolean,
+    alone: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
   }).pipe($I.annoteSchema("MergeGateRunOptions", { description: "One merge-gate invocation." }))
 ) {}
 
@@ -1578,6 +1834,52 @@ export const renderMergeGateMergedLine = (merged: MergeGateMerged): string =>
   `MERGED #${merged.prNumber} -> ${Str.slice(0, 10)(merged.mergeSha)} "${merged.commitTitle}" via ${YEET_MERGE_ENDPOINT_NAME}${
     merged.bypassRequested ? ", rules bypass requested (S11)" : ""
   }`;
+
+/**
+ * The lines `yeet merge-gate` prints for a confirmed merge: one for a single
+ * pull request, one per layer for a stack merge, lower layer first.
+ *
+ * **Details**
+ *
+ * Each layer's line names its own squash commit and ends with its place in the
+ * stack; the bypass flag is the one request's.
+ *
+ * **Example** (A single pull request prints one line)
+ *
+ * ```ts
+ * import { MergeGateMerged, renderMergeGateMergedLines } from "@beep/repo-cli/test/Yeet"
+ *
+ * const lines = renderMergeGateMergedLines(
+ *   MergeGateMerged.make({
+ *     prNumber: 7,
+ *     mergeSha: "feedfacefeedface",
+ *     commitTitle: "fix: x (#7)",
+ *     bypassRequested: false,
+ *   })
+ * )
+ * console.log(lines.length) // 1
+ * ```
+ *
+ * @param merged - The confirmed merge.
+ * @returns The rendered lines, without the `[yeet]` prefix.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderMergeGateMergedLines = (merged: MergeGateMerged): ReadonlyArray<string> =>
+  O.match(O.fromUndefinedOr(merged.layers), {
+    onNone: () => [renderMergeGateMergedLine(merged)],
+    onSome: A.map(
+      (layer) =>
+        `${renderMergeGateMergedLine(
+          MergeGateMerged.make({
+            prNumber: layer.prNumber,
+            mergeSha: layer.mergeSha,
+            commitTitle: layer.commitTitle,
+            bypassRequested: merged.bypassRequested,
+          })
+        )}${renderYeetStackLayerSuffix(layer)}`
+    ),
+  });
 
 const s11MergeComment = (decision: MergeGateMerge, merged: MergeGateMerged, windowForced: boolean): string =>
   A.join(
@@ -1653,6 +1955,14 @@ const cancelMergedHeadRuns = Effect.fn("Yeet.cancelMergedHeadRuns")(function* (h
  * files (B2, 2026-11-05). All three are best effort, so a failure prints a
  * warning and the command still succeeds. A dry run does none of them.
  *
+ * A stacked pull request is gated by its merge scope first. A layer with an
+ * open layer above it holds as `stack-below-top` unless `alone` is set; the top
+ * of a two-layer group gates the lower layer too (trunk rules, GitHub's default
+ * squash message, the head the stack listed), then the top, then that the top
+ * contains the lower head, and lands both with one strict request on the top,
+ * printing one merged line per layer. `relaxed` on a group holds as
+ * `stack-relaxed`; an unknown or too deep stack holds too.
+ *
  * **Example** (Build the gate effect)
  *
  * ```ts
@@ -1675,11 +1985,93 @@ export const runMergeGate = Effect.fn("Yeet.runMergeGate")(function* (
   return yield* runMergeGateAsGhLogin(context, options).pipe(provideYeetGhLogin(context.repoRoot));
 });
 
+const failMergeGateHold = Effect.fnUntraced(function* (held: MergeGateHold) {
+  yield* Console.log(`[yeet] ${renderMergeGateDecision(held)}`);
+  return yield* YeetCommandError.make({ message: renderMergeGateDecision(held), exitCode: 1 });
+});
+
+// A stacked pull request the gate does not merge as a single one. A refused
+// layout holds before any layer is decided. A group reads the lower layer with
+// the same reader (trunk rules, GitHub's default squash message), decides both
+// layers strictly with the same clock and flags, lower layer first, requires
+// the top to contain the lower head, and lands both with one request on the top.
+// `gated` is the read of the pull request the caller named: the top of a group.
+const runMergeGateStack = Effect.fnUntraced(function* (
+  context: RepoRunContext,
+  options: MergeGateRunOptions,
+  gated: MergeGateRead,
+  plan: YeetStackGateRefused | YeetStackGroup
+) {
+  if (YeetStackGatePlan.guards.Refused(plan)) {
+    return yield* failMergeGateHold(hold(gated.prNumber, plan.reason, plan.detail));
+  }
+  const group = plan;
+  const lowerRead = yield* readMergeGatePull(group.lower.number).pipe(
+    Effect.flatMap((pull) => readMergeGateForPull(context, pull, false, "github-default"))
+  );
+  yield* Console.log(
+    `[yeet] squash-commitlint #${lowerRead.prNumber} (GitHub's default, stack #${group.stackNumber} layer ${group.lower.position}): ${renderSquashCommitlintVerdict(lowerRead.squashCommitlint.verdict)} (header "${lowerRead.squashCommitlint.message.header}")`
+  );
+  const decide = (read: MergeGateRead, wantSha: string) =>
+    decideMergeGate(
+      MergeGateInput.make({
+        read,
+        options: MergeGateOptions.make({
+          wantSha,
+          now: gated.readAt,
+          tolerate: options.tolerate,
+          forceWindow: options.forceWindow,
+          relaxed: false,
+        }),
+      })
+    );
+  const lower = decide(lowerRead, group.lower.headSha);
+  const top = decide(gated, options.wantSha);
+  const forced = options.forceWindow ? " (review window forced)" : "";
+  yield* Console.log(`[yeet] ${renderMergeGateDecision(lower)}${forced}`);
+  yield* Console.log(`[yeet] ${renderMergeGateDecision(top)}${forced}`);
+  if (lower._tag === "hold") {
+    return yield* YeetCommandError.make({ message: renderMergeGateDecision(lower), exitCode: 1 });
+  }
+  if (top._tag === "hold") {
+    return yield* YeetCommandError.make({ message: renderMergeGateDecision(top), exitCode: 1 });
+  }
+  const outOfDate = yield* readYeetStackContainment(group, gated.headSha);
+  if (O.isSome(outOfDate)) {
+    return yield* failMergeGateHold(hold(top.prNumber, outOfDate.value.reason, outOfDate.value.detail));
+  }
+  if (options.dryRun) {
+    yield* Console.log(
+      `[yeet] dry run: would squash-merge stack #${group.stackNumber} with one request on #${top.prNumber}: #${lower.prNumber} as "${lower.commitTitle}" (GitHub's default) and #${top.prNumber} as "${top.commitTitle}"`
+    );
+    return top;
+  }
+  const executed = yield* executeMergeGateStack(group, lower, top);
+  if (S.is(MergeGateHold)(executed)) return yield* failMergeGateHold(executed);
+  yield* Effect.forEach(renderMergeGateMergedLines(executed), (line) => Console.log(`[yeet] ${line}`), {
+    discard: true,
+  });
+  // B2 (2026-11-05), once per layer the stack merge landed.
+  yield* Effect.forEach(
+    O.getOrElse(O.fromUndefinedOr(executed.layers), A.empty<YeetStackMergedLayer>),
+    (layer) =>
+      broadcastPacketSiblings(context, layer.prNumber, layer.mergeSha).pipe(
+        Effect.catch(warnAfterMerge("the packet sibling broadcast"))
+      ),
+    { discard: true }
+  );
+  return top;
+});
+
 const runMergeGateAsGhLogin = Effect.fnUntraced(function* (context: RepoRunContext, options: MergeGateRunOptions) {
-  const read = yield* readMergeGate(context, options.prNumber);
+  const pull = yield* readMergeGatePull(options.prNumber);
+  const read = yield* readMergeGateForPull(context, pull, false, "merge-request");
   yield* Console.log(
     `[yeet] squash-commitlint #${read.prNumber}: ${renderSquashCommitlintVerdict(read.squashCommitlint.verdict)} (header "${read.squashCommitlint.message.header}")`
   );
+  // A stacked pull request may not be a single merge; a failed stack read is a hold, never `Single`.
+  const plan = yield* readYeetStackGatePlan(pull, { alone: options.alone, relaxed: options.relaxed });
+  if (!YeetStackGatePlan.guards.Single(plan)) return yield* runMergeGateStack(context, options, read, plan);
   const decision = decideMergeGate(
     MergeGateInput.make({
       read,
@@ -1758,6 +2150,7 @@ export class MergeGateCommandOptions extends S.Opaque<MergeGateCommandOptions, {
     forceWindow: S.Boolean,
     relaxed: S.Boolean,
     dryRun: S.Boolean,
+    alone: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
   }).pipe(
     $I.annoteSchema("MergeGateCommandOptions", {
       description: "Parsed yeet merge-gate flags before tolerances are decoded.",
@@ -1834,6 +2227,7 @@ export const runYeetMergeGate = Effect.fn("Yeet.runMergeGateCommand")(function* 
       forceWindow: options.forceWindow,
       relaxed: options.relaxed,
       dryRun: options.dryRun,
+      alone: options.alone,
     })
   );
 });

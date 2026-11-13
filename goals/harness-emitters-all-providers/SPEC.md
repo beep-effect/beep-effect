@@ -76,6 +76,23 @@ them and record each in the Decision Log.
 | --- | --- | --- | --- |
 | 2026-10-14 | Inherit exploration decisions D1–D9 and the align/agent-decided entries in `explorations/observability-palantiri/DECISIONS.md`. | Graduated from `explorations/observability-palantiri`. | Reopen the exploration at `decompose`. |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug harness-emitters-all-providers`; add a `kind: decision` file there, never edit this block._
+
+### Paused by operator ruling (finish board, 2026-11-13): It depends on the observability foundation and enrollment work and has never started, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
+
+Triage rationale: It depends on the observability foundation and enrollment work and has never started.
+
+No lane is working on it. Resume with `bun run beep goals set-status harness-emitters-all-providers active` when it is picked up.
+
+Lane chore/finish-board-pause-b2
+
+Reverse: goals set-status harness-emitters-all-providers active when it is picked up
+
+<!-- beep:decisions:end -->
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |
