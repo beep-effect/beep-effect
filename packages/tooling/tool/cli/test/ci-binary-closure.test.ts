@@ -89,6 +89,9 @@ describe("ci binary closure", () => {
         expect(paths).toContain(".bun-version");
         expect(paths).toContain(".github/workflows/beep-ci-binary.yml");
         expect(paths).toContain(PATCH_FILE);
+        expect(paths).toContain("tsconfig.json");
+        expect(paths).toContain("tsconfig.base.json");
+        expect(paths).toContain("packages/tooling/tool/cli/tsconfig.json");
         expect(paths).not.toContain(PATTERNS_JSON);
         expect(A.some(paths, Str.startsWith("goals/"))).toBe(false);
       })
@@ -108,6 +111,9 @@ describe("ci binary closure", () => {
           ".bun-version",
           ".github/workflows/beep-ci-binary.yml",
           PATCH_FILE,
+          // Bun reads `compilerOptions.paths` and emit options when it bundles.
+          "tsconfig.base.json",
+          "tsconfig.json",
         ]) {
           const edited = yield* digestWith(root, [[file, "\n// closure mutation fixture\n"]]);
           expect(edited.digest, file).not.toBe(base.digest);

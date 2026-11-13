@@ -9,7 +9,7 @@ import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import { dual } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { canonicalJson } from "../internal/CanonicalJson.ts";
+import { canonicalJson, canonicalJsonResult } from "../internal/CanonicalJson.ts";
 import type { ContradictionVocabulary } from "../Contradiction/index.ts";
 import type { FieldSchema } from "../Factory/index.ts";
 
@@ -42,6 +42,31 @@ import type { FieldSchema } from "../Factory/index.ts";
 export const canonicalDetectionJson = canonicalJson;
 
 /**
+ * {@link canonicalDetectionJson} returning a `Result`, for digest helpers that
+ * already carry a `SchemaError` channel.
+ *
+ * **Details**
+ *
+ * The owner's refusal of a value outside plain JSON becomes an `S.SchemaError`
+ * whose message names the owner's code and JSON pointer, instead of a thrown
+ * `JsoncCanonicalizeError`.
+ *
+ * **Example** (Refuse an unpaired surrogate without throwing)
+ *
+ * ```ts
+ * import * as Result from "effect/Result"
+ * import { canonicalDetectionJsonResult } from "@beep/epistemics/ContradictionDetection"
+ *
+ * console.log(Result.getOrThrow(canonicalDetectionJsonResult({ b: 1, a: 2 }))) // {"a":2,"b":1}
+ * console.log(Result.isFailure(canonicalDetectionJsonResult({ a: "\ud800" }))) // true
+ * ```
+ *
+ * @category encoding
+ * @since 0.0.0
+ */
+export const canonicalDetectionJsonResult = canonicalJsonResult;
+
+/**
  * Build `detectionProposalId` over a caller-bound belief reference class.
  *
  * **Details**
@@ -49,7 +74,8 @@ export const canonicalDetectionJson = canonicalJson;
  * `detectionProposalId` (dual) hashes the encoded losing belief reference and
  * the complete replacement fact as canonical JSON, so one losing belief and fact
  * always yield one proposal id. It fails with the reference encoder's
- * `SchemaError`.
+ * `SchemaError`, or with a `SchemaError` naming the canonical JSON owner's
+ * refusal when the fact is not plain JSON (an unpaired surrogate, say).
  *
  * **Example** (Hash a proposal over a local belief reference)
  *
@@ -85,9 +111,9 @@ export const makeDetectionProposalId = <Ref, RefEncoded, RefMake, Fact>(config: 
     (losingBelief: Ref, fact: Fact): Result.Result<ProposalId, S.SchemaError>;
     (fact: Fact): (losingBelief: Ref) => Result.Result<ProposalId, S.SchemaError>;
   } = dual(2, (losingBelief: Ref, fact: Fact) =>
-    Result.map(encodeRef(losingBelief), (ref) =>
-      contradiction.ContradictionProposalId.make(
-        bytesToHex(sha256(utf8ToBytes(canonicalJson({ losingBelief: ref, fact }))))
+    Result.flatMap(encodeRef(losingBelief), (ref) =>
+      Result.map(canonicalJsonResult({ losingBelief: ref, fact }), (canonical) =>
+        contradiction.ContradictionProposalId.make(bytesToHex(sha256(utf8ToBytes(canonical))))
       )
     )
   );
