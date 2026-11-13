@@ -5,7 +5,7 @@ returns a credential to the assistant. Exit codes: 0 delivered, 1 cancelled or
 rejected by dialog, 2 unavailable/invalid/error, 3 timeout. Treat every nonzero
 exit as no usable answer. Never display captured stderr or exception details.
 
-Use the checkout's `scripts/transport.ts` `requestCode(title, label, timeout,
+Use the checkout's [transport.ts](../scripts/transport.ts) `requestCode(title, label, timeout,
 env)` Effect from a trusted adapter. It creates a real Linux FIFO with
 `pipe2(O_CLOEXEC)`, launches `bun scripts/prompt.ts --write-fd 3` with only the
 write end inherited as descriptor 3, closes the parent's write end, and drains
