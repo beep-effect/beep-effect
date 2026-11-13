@@ -12,6 +12,7 @@ import {
   RouteCorpusReceipt,
   RouteError,
   RouteRedOrigin,
+  RouteStepClass,
   routeFootprintCanonicalJson,
   VerificationRoute,
 } from "@beep/repo-cli/commands/Ci";
@@ -26,6 +27,7 @@ import {
   missingFromBatchCheck,
   orderSelectedLanes,
   prePushLaneId,
+  ROUTE_SETUP_STEP_NAMES,
   RouteCensusReaderLive,
   RouteGit,
   routeJobMinutes,
@@ -42,6 +44,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
@@ -54,6 +57,7 @@ import * as Str from "effect/String";
 import censusRunsJson from "./fixtures/ci-route/census/census-runs.json" with { type: "json" };
 import partitionRunsJson from "./fixtures/ci-route/census/partition-runs-2026-11-12.json" with { type: "json" };
 import replayRunsJson from "./fixtures/ci-route/census/replay-runs.json" with { type: "json" };
+import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
 import type {
   ChangeAtomKind,
   CiLaneId,
@@ -429,6 +433,228 @@ describe("route red origins", () => {
       ["unattributed", true],
     ]);
   });
+});
+
+// The step-class contract reads the workflows the way GitHub lists their jobs. GitHub lists a job's own steps
+// only: a composite action's steps (setup-monorepo-ci, fetch-beep-ci) run inside the step that calls it and are
+// never listed, so the workflow files hold every step name the jobs API can report. A job of a reusable workflow
+// reports as `<caller> / <job>`.
+const WorkflowStepDoc = S.Struct({
+  name: S.String.pipe(S.optionalKey),
+  uses: S.String.pipe(S.optionalKey),
+  run: S.String.pipe(S.optionalKey),
+});
+type WorkflowStepDoc = typeof WorkflowStepDoc.Type;
+const WorkflowJobDoc = S.Struct({
+  name: S.String.pipe(S.optionalKey),
+  uses: S.String.pipe(S.optionalKey),
+  steps: WorkflowStepDoc.pipe(S.Array, S.optionalKey),
+});
+const decodeWorkflowJobs = S.decodeUnknownEffect(S.Record(S.String, WorkflowJobDoc));
+
+// Every workflow, read as text at import time, keyed by its path relative to this file.
+const WORKFLOW_TEXTS = import.meta.glob<string>("../../../../../.github/workflows/*.yml", {
+  eager: true,
+  import: "default",
+  query: "?raw",
+});
+const CHECK_WORKFLOW = ".github/workflows/check.yml";
+const REUSABLE_WORKFLOW = /\.github\/workflows\/[^@\s]+/u;
+const MATRIX_EXPRESSION = /\$\{\{\s*matrix\.[^}]*\}\}/gu;
+const QUOTED_LITERAL = /'([^']*)'/gu;
+
+// GitHub adds these steps itself; no workflow names them.
+const GITHUB_IMPLICIT_STEPS: ReadonlyArray<string> = ["Set up job", "Set up runner"];
+// The step that starts each lane's own work; an aggregate job's `Require every …` step starts it too.
+const LANE_WORK_ENTRY_STEPS: ReadonlyArray<string> = [
+  "Compare coverage evidence",
+  "Gitleaks",
+  "OSV vulnerability scan",
+  "Run JSDoc inventory ratchet",
+  "Run Fallow envelopes",
+  "Run Labs lane",
+  "Run Lint shard",
+  "Run Nix checks",
+  "Run SAST",
+  "Run Test Integration partition",
+  "Run Test Unit shard",
+  "Run commitlint",
+  "Run desktop IPC stdio proof",
+  "Run docs policy lane",
+  "Run property laws lane",
+  "Run verification lane",
+];
+// Steps that run before a lane's entry step and are classified as the lane's own work on purpose, so their reds
+// stay on the lane: Repo Sanity's documentation and merge-driver checks, and the coverage comparison's
+// evidence authentication and download (missing evidence is that lane's verdict).
+const LANE_WORK_PRELUDE_STEPS: ReadonlyArray<string> = [
+  "Authenticate latest Labs execution",
+  "Check documentation sanity",
+  "Download coverage evidence",
+  "Verify regenerate merge-driver bootstrap",
+];
+
+type ContractJob = {
+  readonly job: string;
+  readonly lanes: ReadonlyArray<CiLaneId>;
+  readonly steps: ReadonlyArray<string>;
+};
+
+// An unnamed step is listed as `Run <action>` or `Run <first command line>`.
+const listedStepName = (step: WorkflowStepDoc): string =>
+  O.getOrElse(
+    O.fromUndefinedOr(step.name),
+    () =>
+      `Run ${O.getOrElse(O.fromUndefinedOr(step.uses), () =>
+        A.headNonEmpty(
+          Str.split(
+            O.getOrElse(O.fromUndefinedOr(step.run), () => ""),
+            "\n"
+          )
+        )
+      )}`
+  );
+
+// A matrix leg reports its partition (`p` stands in); a conditional name reports one of the literals it quotes.
+const hostedNamesOf = (prefix: string, name: string): ReadonlyArray<string> => {
+  const expanded = Str.replace(MATRIX_EXPRESSION, "p")(name);
+  const names = Str.includes("${{")(expanded)
+    ? A.getSomes(A.map(A.fromIterable(Str.matchAll(QUOTED_LITERAL)(expanded)), (match) => O.fromUndefinedOr(match[1])))
+    : [expanded];
+  return A.map(names, (candidate) => `${prefix}${candidate}`);
+};
+
+const contractJobsOf = (
+  workflow: string,
+  prefix: string,
+  jobs: Readonly<Record<string, typeof WorkflowJobDoc.Type>>
+): ReadonlyArray<ContractJob> =>
+  A.map(R.toEntries(jobs), ([key, job]) => ({
+    job: `${workflow}#${key}`,
+    lanes: A.dedupe(
+      A.getSomes(
+        A.map(
+          hostedNamesOf(
+            prefix,
+            O.getOrElse(O.fromUndefinedOr(job.name), () => key)
+          ),
+          (name) => hostedJobAttribution(name).lane
+        )
+      )
+    ),
+    steps: A.map(O.getOrElse(O.fromUndefinedOr(job.steps), A.empty<WorkflowStepDoc>), listedStepName),
+  }));
+
+const readWorkflowJobs = Effect.fnUntraced(function* (file: string) {
+  const text = yield* Effect.fromOption(
+    O.map(
+      A.findFirst(R.toEntries(WORKFLOW_TEXTS), ([key]) => Str.endsWith(file)(key)),
+      ([, workflow]) => workflow
+    )
+  );
+  return yield* decodeWorkflowJobs(yamlAt(parseWorkflowYaml(text), ["jobs"]));
+});
+
+// Every lane job of check.yml and of each reusable workflow a check.yml job calls (heavy.yml).
+const workflowLaneJobs = Effect.fnUntraced(function* () {
+  const check = yield* readWorkflowJobs(CHECK_WORKFLOW);
+  const callers = A.getSomes(
+    A.map(R.toEntries(check), ([key, job]) =>
+      pipe(
+        O.fromUndefinedOr(job.uses),
+        O.flatMap(Str.match(REUSABLE_WORKFLOW)),
+        O.map((match) => [`${O.getOrElse(O.fromUndefinedOr(job.name), () => key)} / `, match[0]] as const)
+      )
+    )
+  );
+  const called = yield* Effect.forEach(callers, ([prefix, file]) =>
+    Effect.map(readWorkflowJobs(file), (jobs) => contractJobsOf(file, prefix, jobs))
+  );
+  return A.filter(A.appendAll(contractJobsOf(CHECK_WORKFLOW, "", check), A.flatten(called)), (job) =>
+    A.isReadonlyArrayNonEmpty(job.lanes)
+  );
+});
+
+const startsLaneWork = (name: string): boolean =>
+  RouteStepClass.is.aggregate(routeStepClass(name)) || A.contains(LANE_WORK_ENTRY_STEPS, name);
+const isSetupStep = (name: string): boolean => RouteStepClass.is.setup(routeStepClass(name));
+
+// Every step before a lane job's own work is a setup step or declared lane work, and no setup step follows it,
+// so a renamed or new setup step fails here instead of charging the lane in silence.
+const stepContractViolations = (job: ContractJob): ReadonlyArray<string> =>
+  O.match(A.findFirstIndex(job.steps, startsLaneWork), {
+    onNone: () => [`${job.job}: no step starts the lane's own work`],
+    onSome: (entry) =>
+      A.appendAll(
+        A.map(
+          A.filter(
+            A.take(job.steps, entry),
+            (name) => !isSetupStep(name) && !A.contains(LANE_WORK_PRELUDE_STEPS, name)
+          ),
+          (name) => `${job.job}: "${name}" runs before the lane's work and is neither setup nor declared lane work`
+        ),
+        A.map(
+          A.filter(A.drop(job.steps, entry + 1), isSetupStep),
+          (name) => `${job.job}: setup step "${name}" runs after the lane's work`
+        )
+      ),
+  });
+
+describe("route step contract", () => {
+  it("names a step that breaks the contract", () => {
+    const job = (steps: ReadonlyArray<string>): ContractJob => ({
+      job: "check.yml#lint-shard",
+      lanes: ["lint"],
+      steps,
+    });
+    expect(
+      A.flatMap(
+        [
+          job(["Checkout repository", "Setup monorepo CI", "Run Lint shard", "Skip lane"]),
+          job(["Checkout repository", "Setup Python", "Run Lint shard"]),
+          job(["Checkout repository", "Prepare monorepo CI"]),
+          job(["Run Lint shard", "Setup monorepo CI"]),
+        ],
+        stepContractViolations
+      )
+    ).toEqual([
+      'check.yml#lint-shard: "Setup Python" runs before the lane\'s work and is neither setup nor declared lane work',
+      "check.yml#lint-shard: no step starts the lane's own work",
+      'check.yml#lint-shard: setup step "Setup monorepo CI" runs after the lane\'s work',
+    ]);
+  });
+});
+
+describe("route step contract over the workflows", () => {
+  it.effect("keeps the setup step names in step with the lane jobs of check.yml and the workflows it calls", () =>
+    Effect.gen(function* () {
+      const jobs = yield* workflowLaneJobs();
+      const listed = HashSet.fromIterable(A.flatMap(jobs, (job) => job.steps));
+      const covered = HashSet.fromIterable(A.flatMap(jobs, (job) => job.lanes));
+      // The reusable heavy.yml call, the shards and their aggregates are all read.
+      assertTrue(
+        A.every(["check", "lint-policy", "lint", "test-unit", "test-integration", "property", "coverage"], (lane) =>
+          HashSet.has(covered, lane)
+        )
+      );
+      // Every listed setup name is GitHub's own or still a step of a lane job.
+      expect(
+        A.filter(
+          ROUTE_SETUP_STEP_NAMES,
+          (name) => !A.contains(GITHUB_IMPLICIT_STEPS, name) && !HashSet.has(listed, name)
+        )
+      ).toEqual([]);
+      expect(A.filter(GITHUB_IMPLICIT_STEPS, (name) => !A.contains(ROUTE_SETUP_STEP_NAMES, name))).toEqual([]);
+      // The declared lane work exists and is classed as the lane's own.
+      expect(
+        A.filter(
+          A.appendAll(LANE_WORK_ENTRY_STEPS, LANE_WORK_PRELUDE_STEPS),
+          (name) => !HashSet.has(listed, name) || !RouteStepClass.is.task(routeStepClass(name))
+        )
+      ).toEqual([]);
+      expect(A.flatMap(jobs, stepContractViolations)).toEqual([]);
+    })
+  );
 });
 
 describe("route head fetch", () => {

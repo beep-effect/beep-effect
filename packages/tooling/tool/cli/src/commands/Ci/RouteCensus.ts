@@ -170,10 +170,32 @@ const SUPPORT_JOB_NAMES: HashSet.HashSet<string> = HashSet.fromIterable([
   "Test Plan",
 ]);
 
-// Steps that prepare the runner or the environment before a lane's own work: GitHub's implicit first
-// step and the named preparation steps of the lane jobs in check.yml and heavy.yml (at 4f247da7a78).
-// A name not listed is the lane's own work, so an unlisted or renamed step keeps its red on the lane.
-const SETUP_STEP_NAMES: HashSet.HashSet<string> = HashSet.fromIterable([
+/**
+ * The names of the steps that prepare the runner or the environment before a
+ * lane's own work: GitHub's implicit first step and the named preparation
+ * steps of the lane jobs in check.yml and heavy.yml.
+ *
+ * **Details**
+ *
+ * {@link routeStepClass} classes these names `setup`; a name not listed is
+ * the lane's own work, so an unlisted or renamed step keeps its red on the
+ * lane. A contract test reads the workflows and fails when a listed name no
+ * longer exists there, or when a lane job runs an unclassified step before
+ * its own work.
+ *
+ * **Example** (The list holds GitHub's implicit first step)
+ *
+ * ```ts import.meta.vitest name="The list holds GitHub's implicit first step"
+ * import { ROUTE_SETUP_STEP_NAMES } from "@beep/repo-cli/commands/Ci/RouteCensus"
+ * import * as A from "effect/Array"
+ *
+ * A.contains(ROUTE_SETUP_STEP_NAMES, "Set up job") // => true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const ROUTE_SETUP_STEP_NAMES: ReadonlyArray<string> = [
   "Authenticate Docker Hub when configured",
   "Checkout repository",
   "Determine audit base",
@@ -201,7 +223,8 @@ const SETUP_STEP_NAMES: HashSet.HashSet<string> = HashSet.fromIterable([
   "Setup Rust toolchain",
   "Setup monorepo CI",
   "Verify coverage runtime features",
-]);
+];
+const SETUP_STEP_NAMES: HashSet.HashSet<string> = HashSet.fromIterable(ROUTE_SETUP_STEP_NAMES);
 // An aggregate job checks its shards' results in one step: `Require every Lint shard`, `Require every
 // planned Test Unit shard`, `Require every planned Test Integration partition`, `Require every Property
 // Laws slice`.
