@@ -59,7 +59,7 @@ Never inspect another UID's session or print a user-manager environment dump.
 ```ts
 import * as Fs from "node:fs";
 import * as Effect from "effect/Effect";
-// Import runOwned from the reviewed checkout's scripts/prompt.ts.
+import { runOwned } from "../scripts/prompt.ts";
 
 const currentUserGuiEnv = Effect.gen(function* () {
   const uid = process.geteuid?.();

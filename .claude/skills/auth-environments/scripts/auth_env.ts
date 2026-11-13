@@ -3,6 +3,8 @@
 import * as Fs from "node:fs";
 import * as Os from "node:os";
 import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { requestCode, runAdapter } from "../../plasma-sensitive-entry/scripts/transport.ts";
 import { runOwned } from "../../plasma-sensitive-entry/scripts/prompt.ts";
@@ -53,18 +55,40 @@ const status = Effect.fn("Auth.status")(function* (host: string) {
   return yield* Effect.gen(function* () {
     const result = yield* runOwned([...sshArgv(host), `${REMOTE_PATH} claude auth status`], process.env, 120);
     const text = result.output.toString("utf8");
-    const data: unknown = yield* Effect.try(() => JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)));
-    if (data && typeof data === "object")
+    const data: unknown = yield* S.decodeEffect(S.fromJsonString(S.Unknown))(
+      text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)
+    );
+    if (P.isObject(data))
       return {
-        email: "email" in data && typeof data.email === "string" ? data.email : undefined,
+        email: "email" in data && P.isString(data.email) ? data.email : undefined,
         ok: "loggedIn" in data && Boolean(data.loggedIn),
       };
     return { email: undefined, ok: false };
   }).pipe(Effect.catchCause(() => Effect.succeed({ email: undefined, ok: false })));
 });
 const guiEnv = Effect.fn("Auth.guiEnv")(function* () {
-  const runtime = `/run/user/${process.geteuid?.()}`;
-  const env = { ...process.env, XDG_RUNTIME_DIR: runtime, DBUS_SESSION_BUS_ADDRESS: `unix:path=${runtime}/bus` };
+  let env: NodeJS.ProcessEnv = { ...process.env };
+  // A complete selected session remains intact. Discovery is current-user-only.
+  if (!(env.DBUS_SESSION_BUS_ADDRESS && (env.DISPLAY || env.WAYLAND_DISPLAY))) {
+    const uid = process.geteuid?.();
+    if (!uid || uid !== process.getuid?.()) return undefined;
+    const runtime = `/run/user/${uid}`,
+      bus = `${runtime}/bus`;
+    const ownership = yield* Effect.try(() => [Fs.lstatSync(runtime), Fs.lstatSync(bus)]).pipe(Effect.option);
+    if (ownership._tag === "None") return undefined;
+    const [directory, socket] = ownership.value;
+    if (
+      !directory?.isDirectory() ||
+      directory.uid !== uid ||
+      directory.mode & 0o077 ||
+      !socket?.isSocket() ||
+      socket.uid !== uid
+    )
+      return undefined;
+    const metadata = { XDG_RUNTIME_DIR: runtime, DBUS_SESSION_BUS_ADDRESS: `unix:path=${bus}` };
+    if (Object.entries(metadata).some(([key, value]) => env[key] !== undefined && env[key] !== value)) return undefined;
+    env = { ...env, ...metadata };
+  }
   const result = yield* runOwned(["busctl", "--user", "status"], env, 5);
   return result.status === 0 ? env : undefined;
 });
@@ -123,7 +147,7 @@ const login = Effect.fn("Auth.login")((host: string, email: string) =>
         }
         for (let attempt = 1; attempt <= 3; attempt++) {
           // xdg-open is intentionally short-lived; scoped process cleanup covers cancellation.
-          const browser = yield* Effect.forkChild(runOwned(["xdg-open", url], env, 30));
+          yield* Effect.forkChild(runOwned(["xdg-open", url], env, 30));
           log(host, `browser + KDE code dialog opened (attempt ${attempt})`);
           const result = yield* requestCode(
             `${host}: Claude Code sign-in`,

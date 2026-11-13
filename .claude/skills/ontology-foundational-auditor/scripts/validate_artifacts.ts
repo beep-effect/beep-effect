@@ -1,4 +1,7 @@
 #!/usr/bin/env bun
+import * as A from "effect/Array";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 /** Artifact contract v15. Direct TypeScript lowering preserves check order and diagnostics.
  * Run with bun; The local semantics namespace preserves dynamic YAML and regex behavior.
  * Source provenance: validate_artifacts.py at the parent commit; all former self-tests are retained.
@@ -10,6 +13,93 @@ import { spawnSync as runtimeSpawnSync } from "node:child_process";
 import * as RuntimePath from "effect/Path";
 import * as RuntimeEffect from "effect/Effect";
 import * as RuntimeYAML from "yaml";
+/** The validation consumer receives the same nullable repo operand as the original CLI. */
+export const ValidationOptions = S.Struct({ gate: S.Boolean, repo: S.NullOr(S.String) });
+export type ValidationOptions = typeof ValidationOptions.Type;
+const ArgumentBoundary = S.TaggedUnion({
+  Validate: { root: S.String, gate: S.Boolean, repo: S.Option(S.String) },
+  SelfTest: {},
+  PrintRunId: { root: S.String },
+  Usage: { message: S.String, stderr: S.Boolean },
+});
+
+/** Inject only the CLI's side effects; tests can stop at the validation boundary. */
+export interface ArgumentBoundaryHandlers {
+  readonly validate: (root: string, options: ValidationOptions) => void;
+  readonly selfTest: () => void;
+  readonly printRunId: (root: string) => number;
+  readonly writeUsage: (message: string, stderr: boolean) => void;
+}
+
+/** Dispatch arguments without reading ontology artifacts.
+ * **Example** (Missing operand)
+ * A trailing --repo returns status 2 through writeUsage and never calls validate.
+ */
+export function runArgumentBoundary(
+  args: readonly string[],
+  usage: string,
+  handlers: ArgumentBoundaryHandlers
+): number | undefined {
+  const first = O.getOrUndefined(A.head(args));
+  const repoIndex = args.indexOf("--repo");
+  const parsed =
+    first === "--self-test"
+      ? ArgumentBoundary.cases.SelfTest.make({})
+      : first === "--print-run-id"
+        ? args.length === 2
+          ? ArgumentBoundary.cases.PrintRunId.make({ root: args[1] ?? "" })
+          : ArgumentBoundary.cases.Usage.make({ message: "usage: --print-run-id <ontology-root>", stderr: true })
+        : first === undefined
+          ? ArgumentBoundary.cases.Usage.make({ message: usage, stderr: false })
+          : repoIndex >= 0 && repoIndex + 1 >= args.length
+            ? ArgumentBoundary.cases.Usage.make({ message: "usage: --repo requires a repository path", stderr: true })
+            : ArgumentBoundary.cases.Validate.make({
+                root: first,
+                gate: args.includes("--gate"),
+                repo: repoIndex >= 0 ? O.fromUndefinedOr(args[repoIndex + 1]) : O.none(),
+              });
+  return ArgumentBoundary.match(parsed, {
+    SelfTest: () => {
+      handlers.selfTest();
+      return 0;
+    },
+    PrintRunId: ({ root }) => handlers.printRunId(root),
+    Usage: ({ message, stderr }) => {
+      handlers.writeUsage(message, stderr);
+      return 2;
+    },
+    Validate: ({ root, gate, repo }) => {
+      handlers.validate(root, { gate, repo: O.getOrNull(repo) });
+      return undefined;
+    },
+  });
+}
+
+/** Escape C0/C1 authority controls while preserving ordinary and already-escaped text.
+ * **Example** (Terminal controls)
+ * escapeAuthorityText("evidence\nFORGED") returns "evidence\\x0aFORGED".
+ */
+export const escapeAuthorityText = (value: string): string =>
+  A.join(
+    A.map(A.fromIterable(value), (character) => {
+      const code = character.codePointAt(0) ?? 0;
+      return code >= 0x20 && !(code >= 0x7f && code <= 0x9f) ? character : `\\x${code.toString(16).padStart(2, "0")}`;
+    }),
+    ""
+  );
+/** Render one flag through the shared authority-text escape boundary. */
+export const renderFlag = (value: string): string => `FLAGGED - ${escapeAuthorityText(value)}`;
+/** Render one violation through the shared authority-text escape boundary. */
+export const renderDiagnostic = (value: string): string => ` - ${escapeAuthorityText(value)}`;
+/** Render a manifest-read failure without allowing it to forge terminal output. */
+export const renderUnreadableManifest = (value: string): string =>
+  `refusing: manifest unreadable (${escapeAuthorityText(value)})`;
+
+/** Write the escaped read failure to the stderr channel of an injected sink. */
+export function reportUnreadableManifest(value: string, write: (message: string, stderr: boolean) => void): void {
+  write(renderUnreadableManifest(value), true);
+}
+
 namespace rt {
   const Fs = RuntimeFs;
   const Os = RuntimeOs;
@@ -1569,28 +1659,8 @@ skey = rt.fn("skey", (args, kwargs) => {
   return rt.truth(rt.compare("is", rt.invoke(type, x), str)) ? x : null;
   return null;
 });
-safe_text = rt.fn("safe_text", (args, kwargs) => {
-  let c: unknown;
-  let s: unknown;
-  s = rt.argument(args, kwargs, 0, "s", undefined);
-  return rt.method(
-    "",
-    "join",
-    rt.comprehend(s, (item: unknown) => {
-      let c: unknown;
-      c = item;
-      return rt.truth(
-        rt.and(
-          rt.compare("ge", rt.invoke(ord, c), 32),
-          () => !rt.truth(rt.compare("le", 127, rt.invoke(ord, c)) && rt.compare("le", rt.invoke(ord, c), 159))
-        )
-      )
-        ? c
-        : ["\\x", rt.format(rt.invoke(ord, c), -1, ["02x"].join(""))].join("");
-    })
-  );
-  return null;
-});
+safe_text = rt.fn("safe_text", (args) => escapeAuthorityText(rt.format(args[0], -1, null)));
+
 join_key = rt.fn("join_key", (args, kwargs) => {
   let path: unknown;
   let what: unknown;
@@ -11733,17 +11803,9 @@ print_run_id = rt.fn("print_run_id", (args, kwargs) => {
   } catch (caught) {
     if (rt.catches(caught, Exception)) {
       ex = caught;
-      rt.call(
-        print,
-        [
-          ["refusing: manifest unreadable (", rt.format(rt.invoke(safe_text, rt.invoke(str, ex)), -1, null), ")"].join(
-            ""
-          ),
-        ],
-        {
-          file: rt.attr(sys, "stderr"),
-        }
-      );
+      reportUnreadableManifest(rt.format(ex, -1, null), (message, stderr) => {
+        rt.call(print, [message], stderr ? { file: rt.attr(sys, "stderr") } : {});
+      });
       return 1;
     } else {
       throw caught;
@@ -11769,53 +11831,33 @@ print_run_id = rt.fn("print_run_id", (args, kwargs) => {
   return null;
 });
 rt.boundary(() => {
-  if (rt.truth(rt.compare("eq", __name__, "__main__"))) {
-    argv = rt.item(rt.attr(sys, "argv"), rt.slice(1, undefined, undefined));
-    if (rt.truth(rt.and(argv, () => rt.compare("eq", rt.item(argv, 0), "--self-test")))) {
-      rt.invoke(self_test);
-      rt.method(sys, "exit", 0);
+  if (import.meta.main) {
+    const status = runArgumentBoundary(process.argv.slice(2), __doc__, {
+      selfTest: () => {
+        rt.invoke(self_test);
+      },
+      printRunId: (root) => Number(rt.invoke(print_run_id, root)),
+      writeUsage: (message, stderr) => {
+        rt.call(print, [message], stderr ? { file: rt.attr(sys, "stderr") } : {});
+      },
+      validate: (root, options) => {
+        rt.call(validate_dir, [rt.invoke(Path, root)], options);
+      },
+    });
+    if (status !== undefined) {
+      process.exitCode = status;
+      return;
     }
-    if (rt.truth(rt.and(argv, () => rt.compare("eq", rt.item(argv, 0), "--print-run-id")))) {
-      if (rt.truth(rt.compare("ne", rt.invoke(len, argv), 2))) {
-        rt.call(print, ["usage: --print-run-id <ontology-root>"], { file: rt.attr(sys, "stderr") });
-        rt.method(sys, "exit", 2);
-      }
-      rt.method(sys, "exit", rt.invoke(print_run_id, rt.item(argv, 1)));
-    }
-    if (rt.truth(!rt.truth(argv))) {
-      rt.invoke(print, __doc__);
-      rt.method(sys, "exit", 2);
-    }
-    if (
-      rt.truth(
-        rt.and(rt.compare("in", "--repo", argv), () =>
-          rt.compare("ge", rt.op("add", rt.method(argv, "index", "--repo"), 1), rt.invoke(len, argv))
-        )
-      )
-    ) {
-      rt.call(print, ["usage: --repo requires a repository path"], { file: rt.attr(sys, "stderr") });
-      rt.method(sys, "exit", 2);
-    }
-    gate = rt.compare("in", "--gate", argv);
-    repo = rt.truth(rt.compare("in", "--repo", argv))
-      ? rt.item(argv, rt.op("add", rt.method(argv, "index", "--repo"), 1))
-      : null;
-    rt.call(validate_dir, [rt.invoke(Path, rt.item(argv, 0))], { gate: gate, repo: repo });
-    for (const loop122 of rt.iter(flags)) {
-      fl = loop122;
-      rt.invoke(print, "FLAGGED -", rt.invoke(safe_text, rt.invoke(str, fl)));
-    }
+    for (const flag of rt.iter(flags)) rt.invoke(print, renderFlag(rt.format(flag, -1, null)));
     if (rt.truth(errors)) {
-      rt.invoke(print, ["VIOLATIONS (", rt.format(rt.invoke(len, errors), -1, null), "):"].join(""));
-      for (const loop123 of rt.iter(errors)) {
-        e = loop123;
-        rt.invoke(print, " -", rt.invoke(safe_text, rt.invoke(str, e)));
-      }
-      rt.method(sys, "exit", 1);
+      rt.invoke(print, `VIOLATIONS (${rt.iter(errors).length}):`);
+      for (const error of rt.iter(errors)) rt.invoke(print, renderDiagnostic(rt.format(error, -1, null)));
+      process.exitCode = 1;
+      return;
     }
     rt.invoke(
       print,
-      rt.op("add", "ARTIFACTS VALID", rt.truth(gate) ? " — GATE PASSED (flags above go to the steward)" : "")
+      "ARTIFACTS VALID" + (process.argv.includes("--gate") ? " — GATE PASSED (flags above go to the steward)" : "")
     );
   }
 });
