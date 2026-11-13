@@ -14,7 +14,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { DegradedKind } from "@/schema/Degraded";
-import { sha256CanonicalSync } from "@/schema/Digest";
+import { sha256CanonicalResult } from "@/schema/Digest";
 import { BatchId, ChunkId, ClaimId, DocumentId } from "@/schema/Ids";
 import { ModelIdentity } from "@/schema/Model";
 
@@ -471,7 +471,7 @@ export const claimIdPreimage = (claim: ClaimIdSource): Result.Result<typeof Clai
  * @since 0.0.0
  */
 export const makeClaimId = (claim: ClaimIdSource): Result.Result<ClaimId, S.SchemaError> =>
-  Result.map(claimIdPreimage(claim), (preimage) => ClaimId.make(sha256CanonicalSync(preimage)));
+  Result.flatMap(claimIdPreimage(claim), (preimage) => Result.map(sha256CanonicalResult(preimage), ClaimId.make));
 
 const EvidenceClaimReceiptCheck = S.makeFilter(
   (claim: typeof EvidenceClaimFields.Type) =>
@@ -623,7 +623,7 @@ export const batchIdPreimage = (batch: BatchIdSource): Result.Result<typeof Batc
  * @since 0.0.0
  */
 export const makeBatchId = (batch: BatchIdSource): Result.Result<BatchId, S.SchemaError> =>
-  Result.map(batchIdPreimage(batch), (preimage) => BatchId.make(sha256CanonicalSync(preimage)));
+  Result.flatMap(batchIdPreimage(batch), (preimage) => Result.map(sha256CanonicalResult(preimage), BatchId.make));
 
 const claimIdsAreUnique = (batch: EvidenceBatchFields): boolean =>
   Equal.equals(HashSet.size(HashSet.fromIterable(A.map(batch.claims, (claim) => claim.id))), A.length(batch.claims));
@@ -924,7 +924,7 @@ const ConflictWitnessChecks = S.makeFilterGroup(
           right: witness.right,
           basis: witness.basis,
         }).pipe(
-          Result.map(sha256CanonicalSync),
+          Result.flatMap(sha256CanonicalResult),
           Result.match({
             onFailure: () => false,
             onSuccess: (id) => Str.Equivalence(id, witness.id),

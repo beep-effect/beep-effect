@@ -771,6 +771,73 @@ describe("yeet economics first failure", () => {
     ]);
   });
 
+  it("classifies refusals before lanes and keeps every red attempt a row of the mix", () => {
+    const preflight = "publish:00-head-install-preflight";
+    const handlerError = (message: string): Partial<Parameters<typeof EconomicsAttempt.make>[0]> => ({
+      failureKind: O.some("handler-error"),
+      failedStepId: O.some(preflight),
+      message,
+    });
+    const economics = report([
+      journal("run-1", [
+        // The scheduler refused admission before any step ran.
+        red("admission", 0, 1, {
+          ...handlerError("Yeet scheduler admission timed out before the proof started."),
+          lanes: [lane(preflight, "not-run", O.none(), "wrapper")],
+        }),
+        // A handler error after a lane passed is not the preflight's failure.
+        red("handler-error", 2, 3, {
+          ...handlerError("The pull request is not open."),
+          lanes: [lane("publish:01-cheap-gates", "passed", O.some(1_000), "wrapper")],
+        }),
+        red("lock-bounce", 4, 5, handlerError("Another Yeet full proof for this repository is active.")),
+        red(
+          "stale-base",
+          6,
+          7,
+          handlerError("yeet publish refuses a stale base: files changed on this branch were also changed.")
+        ),
+        red("closeout", 8, 9, { ...handlerError("The pull request is not merged."), mode: O.some("closeout") }),
+        red("install", 10, 11, {
+          failedStepId: O.some(preflight),
+          lanes: [lane(preflight, "failed", O.some(4_000), "wrapper")],
+        }),
+        red("inner", 12, 13, {
+          failedStepId: O.some("full:01-pre-push"),
+          lanes: [
+            lane("full:01-pre-push", "failed", O.some(5_000), "wrapper"),
+            lane("quality:coverage", "failed", O.some(300), "inner"),
+          ],
+        }),
+        red("missing-receipt", 14, 15, { outcome: O.none(), failureKind: O.none(), verdictSchemaVersion: O.none() }),
+        red("interrupted", 16, 17, {
+          outcome: O.none(),
+          failureKind: O.none(),
+          verdictSchemaVersion: O.none(),
+          terminationReason: O.some("interrupted"),
+        }),
+        green("green", 18, 19),
+      ]),
+    ]);
+    const failure = economics.firstFailure;
+    expect(failure.redAttempts).toBe(9);
+    expect(Num.sumAll(A.map(failure.actionableLaneMix, (row) => row.count))).toBe(failure.redAttempts);
+    expect(
+      A.sort(
+        failure.actionableLaneMix,
+        Order.mapInput(Order.String, (row: { readonly key: string }) => row.key)
+      )
+    ).toEqual([
+      { key: preflight, count: 1 },
+      { key: "quality:coverage", count: 1 },
+      { key: "refusal:closeout", count: 1 },
+      { key: "refusal:lock-bounce", count: 1 },
+      { key: "refusal:stale-base", count: 1 },
+      { key: "unexecuted", count: 1 },
+      { key: "unlocated", count: 3 },
+    ]);
+  });
+
   it("classifies each receipt proxy by its own sentinel", () => {
     const sentinels: ReadonlyArray<readonly [string, Partial<Parameters<typeof EconomicsAttempt.make>[0]>]> = [
       ["scheduler-lock-bounce", { message: "Another Yeet full proof for this repository is active." }],
@@ -905,6 +972,47 @@ describe("yeet economics unchanged fingerprint", () => {
       byActionableLane: [],
       byReceiptProxy: [],
     });
+  });
+
+  it("keys a handler-error repeat by its refusal class, never by the unexecuted preflight", () => {
+    const preflight = "publish:00-head-install-preflight";
+    const economics = report([
+      journal("run-1", [
+        red("stale", 0, 1, {
+          failureKind: O.some("handler-error"),
+          failedStepId: O.some(preflight),
+          message: "yeet publish refuses a stale base: files changed on this branch were also changed.",
+          diffFingerprint: O.some("f6"),
+        }),
+        green("after-stale", 2, 3, { diffFingerprint: O.some("f6") }),
+        red("refused", 4, 5, {
+          failureKind: O.some("handler-error"),
+          failedStepId: O.some(preflight),
+          message: "The pull request is not open.",
+          diffFingerprint: O.some("f7"),
+        }),
+        green("after-refused", 6, 7, { diffFingerprint: O.some("f7") }),
+        red("install", 8, 9, {
+          failedStepId: O.some(preflight),
+          lanes: [lane(preflight, "failed", O.some(4_000), "wrapper")],
+          diffFingerprint: O.some("f8"),
+        }),
+        green("after-install", 10, 11, { diffFingerprint: O.some("f8") }),
+      ]),
+    ]);
+    const fingerprint = economics.unchangedFingerprint;
+    expect(fingerprint.failedUnchangedFingerprintThenGreen).toBe(3);
+    expect(Num.sumAll(A.map(fingerprint.byActionableLane, (row) => row.count))).toBe(3);
+    expect(
+      A.sort(
+        fingerprint.byActionableLane,
+        Order.mapInput(Order.String, (row: { readonly key: string }) => row.key)
+      )
+    ).toEqual([
+      { key: preflight, count: 1 },
+      { key: "refusal:stale-base", count: 1 },
+      { key: "unexecuted", count: 1 },
+    ]);
   });
 
   it("never counts an interrupted red or a closeout pair", () => {

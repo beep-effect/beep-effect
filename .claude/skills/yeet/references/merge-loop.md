@@ -14,9 +14,25 @@ turbo work, so they are cheap to run mid-loop.
   is a PR that already existed before the publish, or one whose label edit
   failed. Only then run `bun run beep yeet gh pr label add <n> ready-for-heavy` (REST) yourself;
   the held `monitor --until-ready` loop prints that exact command and does not
-  burn its settle budget. Never remove and re-add the label.
+  burn its settle budget. Never remove and re-add the label, with one
+  exception: a `required-shadowed` hold from `yeet merge-gate` or `yeet gh`
+  (a required `Heavy / *` check green only in a Heavy Admit suite a newer run
+  replaced). Re-apply the label once: that admission label event runs the
+  heavy matrix again, so the newest run reports the check itself.
   The label triggers `heavy-admit.yml`, which runs only the admission job and
-  the heavy matrix for that head; tier 1 is neither cancelled nor re-run.
+  the heavy matrix for that head; tier 1 is neither cancelled nor re-run. On a
+  same-repository PR that already carries the label, any later label re-reports
+  a passing heavy proof on that head as passed without work (no EC2 run),
+  because the base ruleset reads only the newest Heavy Admit run's suite. With
+  no passing proof, a proof that ran a different `heavy.yml` file than the
+  later run calls (the same commit, or two commits whose `heavy.yml` blobs
+  match, still re-reports; a changed file may add lanes), or a newer copy
+  of a heavy lane (Check's own suite on a reopened head) that is red or
+  unfinished, the later run skips, and the gates judge each hidden required
+  check by its newest copy: a red one is still `required-red` (relaxed mode
+  runs the own-red check on it), a green one is `required-shadowed`. An
+  optional check is judged on its newest run in any suite, so its red there
+  still holds strict mode and is recorded by a relaxed merge.
   Docs-only PRs (`docs/**`, `explorations/**`, `research/**`, `.changeset/*.md`,
   any `*.md`, packet prose) need no label: every heavy lane passes without work on
   a hosted runner and satisfies the ruleset. Removing the label changes nothing already reported;
@@ -123,13 +139,17 @@ inventory is an own change, the lane's net count per finding status (head minus
 its merge base) must also match between R and F: taking main's copy and
 re-running `--write` must not reopen or drop findings. A pass prints R, the own
 changes with their allowance, and R's skipped gates; report it to the
-orchestrator as `final <F> #N receipt <R>`, where F is the sha after the S32
-re-request push. A refusal names R and the files or statuses that broke it.
+orchestrator as `final <F> #N receipt <R>`, where F is the head `yeet ready`
+reports. A refusal names R and the files or statuses that broke it.
 
-It then pushes one empty `chore: re-request beep-reviewer (S32)` commit (beep-reviewer
-ignores heads pushed while draft), only from the flipped head, else it prints the manual
-command; a failed push only warns. Send the sha it prints as the final. Run that printed
-fallback only when `yeet ready` could not push; never push an unprompted S32 by hand.
+It then asks `beep-reviewer` for the review, because the reviewer ignores heads
+pushed while draft. For a PR the shared login authored it posts an exact-head
+request comment and pushes nothing, so the flipped head is the final. Only a PR
+the comment routine does not cover gets one empty
+`chore: re-request beep-reviewer (S32)` commit, pushed from the flipped head
+(else the manual command is printed; a failed push only warns), and then the
+sha it prints is the final. A stack layer never gets that commit
+([`stacks.md`](stacks.md#ready)). Never push an unprompted S32 by hand.
 
 The merge gate carries the wait instead. `merge-ready: yes` needs the
 `review-window-elapsed` criterion: 20 minutes since the later of the latest

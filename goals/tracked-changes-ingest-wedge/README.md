@@ -2,7 +2,11 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `paused`
+
+**Paused by operator ruling (finish board, 2026-11-13).** Product-relevant but unstarted; nothing in flight, so park until text-knowledge foundation direction settles. No lane is working on it; resume with `bun run beep goals set-status tracked-changes-ingest-wedge active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
+
+Its blocker goals/effect-native-legal-eval was closed by the same ruling; resuming this packet must first decide whether to re-open that packet or drop the dependency.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

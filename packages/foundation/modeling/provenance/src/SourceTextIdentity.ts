@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ProvenanceId } from "@beep/identity/packages";
-import { PosixPath, Sha256Hex } from "@beep/schema";
+import { PosixPath, Sha256PrefixedDigest } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $ProvenanceId.create("SourceTextIdentity");
@@ -27,7 +27,7 @@ const $I = $ProvenanceId.create("SourceTextIdentity");
  * @category schemas
  * @since 0.0.0
  */
-export const SourceTextDigest = S.TemplateLiteral(["sha256:", Sha256Hex]).pipe(
+export const SourceTextDigest = Sha256PrefixedDigest.pipe(
   S.brand("SourceTextDigest"),
   $I.annoteSchema("SourceTextDigest", {
     description: "A canonical SHA-256 digest using the sha256:<lowercase hex> representation.",

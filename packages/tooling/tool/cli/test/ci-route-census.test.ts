@@ -15,12 +15,16 @@ import {
 import {
   ciLaneOfPrePushLaneId,
   ensureRouteHeads,
+  hostedJobAttribution,
+  hostedJobCostMs,
+  hostedLaneJobs,
   jobNameToLane,
   missingFromBatchCheck,
   orderSelectedLanes,
   prePushLaneId,
   RouteCensusReaderLive,
   RouteGit,
+  routeJobMinutes,
   verificationRouteLayer,
 } from "@beep/repo-cli/commands/Ci/RouteCensus";
 import { sha256Hex } from "@beep/repo-cli/test/Goals";
@@ -34,12 +38,14 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import censusRunsJson from "./fixtures/ci-route/census/census-runs.json" with { type: "json" };
+import partitionRunsJson from "./fixtures/ci-route/census/partition-runs-2026-11-12.json" with { type: "json" };
 import replayRunsJson from "./fixtures/ci-route/census/replay-runs.json" with { type: "json" };
 import type { ChangeAtomKind, CiLaneId, RouteCensus, RouteLaneCost, RouteReplay } from "@beep/repo-cli/commands/Ci";
 
@@ -162,7 +168,14 @@ const REPLAY_ANCESTORS: ReadonlyArray<readonly [string, string]> = [["m0", "m9"]
 // Lanes a change with no atoms skips: every lane but the external security lane.
 const SKIPPED_WITHOUT_ATOMS = CI_LANE_ID_VALUES.length - 1;
 
-const LANES_WITHOUT_PRE_PUSH_TWIN: ReadonlyArray<CiLaneId> = ["ecosystem", "fallow", "labs", "property", "repo-sanity"];
+const LANES_WITHOUT_PRE_PUSH_TWIN: ReadonlyArray<CiLaneId> = [
+  "docs-policy",
+  "ecosystem",
+  "fallow",
+  "labs",
+  "property",
+  "repo-sanity",
+];
 
 describe("route joins", () => {
   it("joins hosted job names to lanes through the descriptor context", () => {
@@ -171,7 +184,18 @@ describe("route joins", () => {
     assertSome(jobNameToLane("Test Unit (repo-cli-1)"), "test-unit");
     assertSome(jobNameToLane("Security"), "security");
     assertNone(jobNameToLane("PR Size Label"));
-    assertNone(jobNameToLane("Coverage Artifact Migration"));
+  });
+
+  it("joins Test Integration partitions and earlier or conditional context names to their lane", () => {
+    assertSome(jobNameToLane("Test Integration (lps-int-1)"), "test-integration");
+    assertSome(jobNameToLane("Test Integration (int-rest)"), "test-integration");
+    assertSome(jobNameToLane("Heavy / Test Integration"), "test-integration");
+    assertSome(jobNameToLane("Test Integration Partitions"), "test-integration");
+    assertSome(jobNameToLane("Coverage Artifact Migration"), "coverage");
+    assertSome(jobNameToLane("Build"), "build");
+    assertSome(jobNameToLane("Property Laws (property-a)"), "property");
+    assertNone(jobNameToLane("Test Integration"));
+    assertNone(jobNameToLane("Test Plan"));
   });
 
   it("joins quality:<lane> pre-push ids to lanes both ways", () => {
@@ -194,6 +218,89 @@ describe("route joins", () => {
       "cc",
       "dd",
     ]);
+  });
+});
+
+describe("route job attribution", () => {
+  it.effect("maps every job of a post-#3046 Check run and conserves its machine time", () =>
+    Effect.gen(function* () {
+      // Check run 43322847791 (2026-11-12), every attempt-1 job: 20 Test Integration and 24 Test Unit
+      // partitions, four Property Laws slices, their aggregates, Test Plan and the producer pilot.
+      const runs = yield* decodeRuns(partitionRunsJson);
+      const minutes = routeJobMinutes(runs);
+
+      expect(minutes.jobs).toBe(80);
+      expect(minutes.unknownJobs).toBe(0);
+      expect(minutes.unknownNames).toEqual([]);
+      // The guard is the literal per-class time, re-derived from the fixture's raw timestamps: 336.67 min of
+      // machine time, 4 min of it support jobs, all the rest on lanes.
+      const rawMs = Num.sumAll(
+        A.getSomes(
+          A.map(
+            A.flatMap(runs, (run) => run.jobs),
+            hostedJobCostMs
+          )
+        )
+      );
+      expect(rawMs).toBe(20_200_000);
+      expect([minutes.totalMs, minutes.laneMs, minutes.supportMs, minutes.unknownMs]).toEqual([
+        20_200_000, 19_960_000, 240_000, 0,
+      ]);
+
+      const lanes = A.map(hostedLaneJobs(runs), ([lane]) => lane);
+      const jobsOf = (lane: CiLaneId): number =>
+        A.filter(lanes, (candidate) => Str.Equivalence(candidate, lane)).length;
+      expect(lanes.length).toBe(minutes.laneJobs);
+      expect(jobsOf("test-integration")).toBe(21);
+      expect(jobsOf("test-unit")).toBe(25);
+      expect(jobsOf("property")).toBe(5);
+      expect(jobsOf("lint")).toBe(3);
+      expect(minutes.supportJobs).toBe(8);
+      expect(hostedJobAttribution("Test Plan").jobClass).toBe("support");
+    })
+  );
+
+  it("reports a job no rule matches as unknown, with its time, never dropped", () => {
+    const run = HostedRun.make({
+      runId: 7,
+      workflow: "Check",
+      event: "pull_request",
+      headBranch: "feat/x",
+      headSha: "u1",
+      createdAt: "2026-10-01T00:00:00Z",
+      attempt: 1,
+      jobs: [
+        HostedJob.make({
+          name: "Knip",
+          startedAt: O.some("2026-10-01T00:00:00Z"),
+          completedAt: O.some("2026-10-01T00:02:00Z"),
+        }),
+        HostedJob.make({
+          name: "Knip",
+          startedAt: O.some("2026-10-01T00:00:00Z"),
+          completedAt: O.some("2026-10-01T00:01:00Z"),
+        }),
+        HostedJob.make({
+          name: "Heavy Admission",
+          startedAt: O.some("2026-10-01T00:00:00Z"),
+          completedAt: O.some("2026-10-01T00:00:10Z"),
+        }),
+        HostedJob.make({ name: "Shadcn Lint" }),
+        HostedJob.make({
+          name: "Test Integration (lps-int-2)",
+          startedAt: O.some("2026-10-01T00:00:00Z"),
+          completedAt: O.some("2026-10-01T00:05:00Z"),
+        }),
+      ],
+    });
+    const minutes = routeJobMinutes([run]);
+
+    expect([minutes.laneJobs, minutes.supportJobs, minutes.unknownJobs, minutes.jobs]).toEqual([1, 1, 3, 5]);
+    expect([minutes.laneMs, minutes.supportMs, minutes.unknownMs, minutes.totalMs]).toEqual([
+      300_000, 10_000, 180_000, 490_000,
+    ]);
+    expect(minutes.unknownNames).toEqual(["Knip", "Shadcn Lint"]);
+    assertNone(hostedJobAttribution("Knip").lane);
   });
 });
 
@@ -328,6 +435,19 @@ it.layer(NodeCrypto.layer)("route census", (it) => {
         ["docs:markdown", "lint", 0, 0, 1, 50_000],
         ["unknown", "lint", 0, 0, 1, 50_000],
       ]);
+      // Every corpus job, the main push run's included: PR Size Label is support, the untimed
+      // Test Unit shard counts with no time.
+      expect(census.jobMinutes).toMatchObject({
+        jobs: 10,
+        laneJobs: 9,
+        supportJobs: 1,
+        unknownJobs: 0,
+        totalMs: 390_000,
+        laneMs: 385_000,
+        supportMs: 5_000,
+        unknownMs: 0,
+        unknownNames: [],
+      });
     })
   );
 
@@ -463,6 +583,39 @@ describe("route replay", () => {
       })
     );
   }
+
+  it.effect("marks recall uncertain when a skipping head has a failed job no rule maps", () =>
+    Effect.gen(function* () {
+      const original = yield* decodeRuns(replayRunsJson);
+      // A renamed check job fails on a1, whose route skips check: the replay cannot see it as a skipped red.
+      const runs = A.map(original, (run) =>
+        run.headSha === "a1"
+          ? HostedRun.make({
+              ...run,
+              jobs: A.append(run.jobs, HostedJob.make({ name: "Heavy / Typecheck", conclusion: O.some("failure") })),
+            })
+          : run
+      );
+      const ensured = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const clean = yield* runReplay(
+        original,
+        classifierLayer(noAtoms),
+        gitLayer(REPLAY_MERGE_BASES, REPLAY_ANCESTORS, ensured)
+      );
+      const marked = yield* runReplay(
+        runs,
+        classifierLayer(noAtoms),
+        gitLayer(REPLAY_MERGE_BASES, REPLAY_ANCESTORS, ensured)
+      );
+      expect([clean.recallCertain, clean.unknownRedHeads]).toEqual([true, 0]);
+      expect([marked.recallCertain, marked.unknownRedHeads, marked.unknownRedJobNames]).toEqual([
+        false,
+        1,
+        ["Heavy / Typecheck"],
+      ]);
+      expect(marked.recall).toBe(clean.recall);
+    })
+  );
 
   it.effect("has recall 1 at all-unknown", () =>
     Effect.gen(function* () {

@@ -177,10 +177,14 @@ const renderCensus = (census: RouteCensus): ReadonlyArray<string> => [
     (cost) =>
       `    ${Str.padEnd(18)(cost.lane)} ${Str.padEnd(16)(cost.basis)} ${O.match(cost.p50Ms, { onNone: () => "-", onSome: minutes })}${O.match(cost.source, { onNone: () => "", onSome: (s) => `  ${s}` })}`
   ),
+  `  job time: ${minutes(census.jobMinutes.totalMs)} over ${census.jobMinutes.jobs} job(s); lane ${minutes(census.jobMinutes.laneMs)} (${census.jobMinutes.laneJobs}), support ${minutes(census.jobMinutes.supportMs)} (${census.jobMinutes.supportJobs}), unknown ${minutes(census.jobMinutes.unknownMs)} (${census.jobMinutes.unknownJobs})`,
+  ...(A.isReadonlyArrayNonEmpty(census.jobMinutes.unknownNames)
+    ? [`  unknown job names: ${A.join(census.jobMinutes.unknownNames, ", ")}`]
+    : []),
 ];
 
 const renderReplay = (replay: RouteReplay): ReadonlyArray<string> => [
-  `[ci route] replay over ${replay.heads} pull-request heads: recall ${(replay.recall * 100).toFixed(2)}% (${replay.skippedReds} skipped red(s) of ${replay.skippedLaneRuns} skipped lane run(s); base unknown on ${replay.baseUnknownHeads} head(s); ${replay.unresolvedHeads} unresolved head(s); footprint ${Str.slice(0, 12)(replay.footprintDigest)})`,
+  `[ci route] replay over ${replay.heads} pull-request heads: recall ${(replay.recall * 100).toFixed(2)}% (${replay.skippedReds} skipped red(s) of ${replay.skippedLaneRuns} skipped lane run(s); base unknown on ${replay.baseUnknownHeads} head(s); ${replay.unresolvedHeads} unresolved head(s); footprint ${Str.slice(0, 12)(replay.footprintDigest)})${replay.recallCertain ? "" : ` — recall is an upper bound: ${replay.unknownRedHeads} skipping head(s) have failed jobs no rule maps (${A.join(replay.unknownRedJobNames, ", ")})`}`,
   ...pipe(
     replay.perHead,
     A.filter((head) => head.skippedReds.length > 0),

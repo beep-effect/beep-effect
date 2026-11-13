@@ -41,6 +41,7 @@ const isolatedSuites = [
   "test/catalog-shard-scope.test.ts",
   "test/catalog-usage.test.ts",
   "test/changeset-changelog.test.ts",
+  "test/check-census-build-equivalence.test.ts",
   "test/check-census-command.test.ts",
   "test/ci-cache-pilot-in-process.test.ts",
   "test/ci-command.test.ts",

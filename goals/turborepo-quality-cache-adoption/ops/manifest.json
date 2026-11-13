@@ -5,7 +5,7 @@
     "title": "Turborepo quality cache adoption",
     "status": "paused",
     "created": "2026-09-08",
-    "updated": "2026-11-08",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-quality-cache-adoption",
@@ -300,5 +300,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Paused by operator 2026-11-08 after preserving in-flight PRs. Operational six-gate scope adopted; exhaustive assurance remains unfinished. Resume with OPERATIONAL-SCOPE.md and PAUSED-HANDOFF.md evidence audit; no pilot or rollout automatically restarts."
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): Depends on cache-trust work; stays paused alongside it. Resume with `bun run beep goals set-status turborepo-quality-cache-adoption active` when it is picked up. Before the ruling: Paused by operator 2026-11-08 after preserving in-flight PRs. Operational six-gate scope adopted; exhaustive assurance remains unfinished. Resume with OPERATIONAL-SCOPE.md and PAUSED-HANDOFF.md evidence audit; no pilot or rollout automatically restarts."
 }

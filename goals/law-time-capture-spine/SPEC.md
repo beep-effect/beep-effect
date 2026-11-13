@@ -127,6 +127,23 @@ with back-links rather than copied discussion.
 | 2026-07-14 | Ratified FreshBooks-wins reconciliation, no post-export Beep edits, boundary idempotency, and attorney-reviewed discrepancies only. | [`Reconciliation firewall`](../../explorations/ip-attorney-time-tracking/DECISIONS.md#2026-07-14--reconciliation-firewall-locked) |
 | 2026-07-14 | Ratified a small native prosecution task set from Tom's real matters; UTBMS/LEDES remains client-triggered and separate. | [`Patent-prosecution task taxonomy`](../../explorations/ip-attorney-time-tracking/DECISIONS.md#2026-07-14--patent-prosecution-task-taxonomy-locked) |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug law-time-capture-spine`; add a `kind: decision` file there, never edit this block._
+
+### Paused by operator ruling (finish board, 2026-11-13): Blocked on external human input; nothing in flight, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
+
+Triage rationale: Blocked on external human input; nothing in flight.
+
+No lane is working on it. Resume with `bun run beep goals set-status law-time-capture-spine active` when it is picked up.
+
+Lane chore/finish-board-pause-b1
+
+Reverse: goals set-status law-time-capture-spine active when it is picked up
+
+<!-- beep:decisions:end -->
+
 ## Acceptance Criteria
 
 - [ ] A redacted real-matter fixture traverses visible explicit timer start,

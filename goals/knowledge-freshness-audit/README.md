@@ -2,7 +2,9 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `superseded`
+
+**Closed by operator ruling (finish board, 2026-11-13).** Four phases half-open with unresolved holds and no activity for days; the promotional cloud phase ended and value is already merged. The packet is `superseded` without meeting its completion gate. To resume, run `bun run beep goals set-status knowledge-freshness-audit active` and re-graduate the next slice. Decision: [`decisions/2026-11-13-finish-board-ruling-close.md`](./decisions/2026-11-13-finish-board-ruling-close.md).
 
 Source: [ops/manifest.json](./ops/manifest.json)
 

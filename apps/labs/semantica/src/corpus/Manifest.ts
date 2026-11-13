@@ -4,13 +4,15 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
 import * as Hex from "effect/encoding/Hex";
+import { constFalse } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as N from "effect/Number";
 import * as Order from "effect/Order";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { canonicalJson } from "@/corpus/Canonical";
+import { canonicalJsonResult } from "@/corpus/Canonical";
 
 const $I = $SemanticaId.create("corpus/Manifest");
 
@@ -202,8 +204,14 @@ const rowIdsAreUnique = (manifest: CorpusManifestFields): boolean =>
 const rowCountMatchesSelection = (manifest: CorpusManifestFields): boolean =>
   Equal.equals(A.length(manifest.rows), manifest.selection.take);
 
+// Rows the canonical JSON owner refuses have no canonical bytes, so no hash
+// matches them: the check fails typed instead of throwing.
 const manifestHashMatchesRows = (manifest: CorpusManifestFields): boolean =>
-  Str.Equivalence(manifest.corpusHash, Hex.encode(sha256(new TextEncoder().encode(canonicalJson(manifest.rows)))));
+  Result.match(canonicalJsonResult(manifest.rows), {
+    onFailure: constFalse,
+    onSuccess: (canonical) =>
+      Str.Equivalence(manifest.corpusHash, Hex.encode(sha256(new TextEncoder().encode(canonical)))),
+  });
 
 const CorpusManifestChecks = S.makeFilterGroup([
   S.makeFilter(

@@ -2,7 +2,9 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `paused`
+
+**Paused by operator ruling (finish board, 2026-11-13).** Unstarted and coupled to the paused patent spine. No lane is working on it; resume with `bun run beep goals set-status law-docketing-reliability active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

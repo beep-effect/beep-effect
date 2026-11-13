@@ -36,14 +36,13 @@ A park or kill verdict from the lab ends the packet instead. The lab ended
 in **go** on 2026-11-10 (`DECISIONS.md`, `lab-verdict`), so the gates above
 that name it are met on that count.
 
-Updated outside this packet in the same change: the "Per-SHA main groups"
-and "Merge queue, stacked PRs" rows in
-`explorations/ten-minute-certainty/MAP.md` and the matching no-go in its
-`BRIEF.md` now point at the rulings here. Its D7 text and candidate goal
-`main-verdict-every-commit` still describe per-SHA groups as the last step;
-their owner amends them when that goal is written.
-`explorations/stacked-pr-adoption` cites the old 80% bar for its own
-stacks-reopen gate and keeps it until it is reopened.
+Gate state read on 2026-11-12: none has fired. `route-soundness-repair`,
+`heavy-pool-diet` and `hosted-setup-tax` are active with work in progress,
+and `goals/github-state-worker` has not started.
+
+`goals/main-verdict-every-commit` carries the `verdict-placement` ruling in
+its `SPEC.md`: it lands the cancel ban and the throughput layout and does not
+build per-SHA concurrency groups; that stage is `merge-queue-activation` here.
 
 ## Read This First
 
@@ -97,3 +96,7 @@ stacks-reopen gate and keeps it until it is reopened.
   `enqueuePullRequest`, `dequeuePullRequest` and `mergeQueueEntry`. Findings
   ledger: `goals/merge-queue-lab/research/findings.md`. The four gated
   candidates keep their other gates.
+- 2026-11-12: declared `retentionReason` in the manifest; the packet stays on
+  `main` while its gated candidates are open. Read the gates: the lab is go,
+  no other gate has fired. `goals/merge-queue-lab` merged its closeout
+  (#3146) and awaits completion refresh and status adoption.

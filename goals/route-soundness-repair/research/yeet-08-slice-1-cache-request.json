@@ -1,0 +1,15 @@
+{
+  "previous": "08918ea0e5b9a92f527c3f22e8e57066f91ee300b4b8d27ae00b8546f7f6306e",
+  "review": {
+    "reviewer": "Claude Opus 5.5 medium, claude/stoic-torvalds-00017b",
+    "reason": "Record the @beep/repo-cli test and test:property input growth from YEET-08 slice 1: packages/tooling/tool/cli/turbo.json declares AGENTS.md, the yeet SKILL.md and its gates-and-proof reference as inputs because the new final-check docs-drift test reads them. Re-stamp // only for origin/main's unchanged root turbo.json bytes, which gained one CheckCensusBuildEquivalence.ts input on six root tasks in #3178. Preserve commands, cache flags, outputs, environment, epoch and qualification scope; inputs only grow; no qualification or exception.",
+    "basis": {
+      "path": "goals/route-soundness-repair/research/yeet-08-slice-1-cache-review.md",
+      "sha256": "b571d130d75a31d03cfc2ccb400cc5a11fbda64dd89fef100fa17c52748647c9"
+    }
+  },
+  "subjects": ["//", "@beep/repo-cli"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

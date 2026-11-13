@@ -80,6 +80,8 @@ describe("ci certainty fixture replay", () => {
         assertTrue(report.certified);
         strictEqual(A.length(report.requiredContexts), 15);
         // SLO statistic: code heads with misses counted; most misses are cancellations, not reds.
+        // f6c4a648 went red before its successor's push, so it counts as a miss; ecc04921 was cancelled in
+        // the same second its successor's run was created, so it is superseded.
         strictEqual(report.slo.n, 17);
         strictEqual(report.slo.misses, 6);
         strictEqual(report.slo.censoredSuperseded, 14);
@@ -91,14 +93,17 @@ describe("ci certainty fixture replay", () => {
         // The green-only diagnostic reproduces the recorded 101.9-minute p95 (facc14a6, three attempts).
         strictEqual(report.greenOnly.n, 11);
         assertSome(report.greenOnly.p95Minutes, 101.9);
-        // Four heads finished under ten minutes: one code head and three docs heads.
-        strictEqual(report.slo.withinTen + report.docsHeads.withinTen, 4);
+        // The recorded "4 of 30 under ten minutes" is not reproduced: one code head is under ten, and the
+        // three docs heads under ten are their own class (decision fixture-corpus-real-captures).
+        strictEqual(report.docsHeads.withinTen, 3);
         strictEqual(report.docsHeads.n, 4);
         strictEqual(report.docsHeads.misses, 1);
-        // Runner-minutes per producer run and the superseded share.
-        strictEqual(report.runnerMinutes.runs, 40);
-        assertSome(report.runnerMinutes.meanTotal, 219.7);
-        assertSome(report.supersededRunnerMinuteShare, 0.4083);
+        // Runner-minutes per head attempt (check.yml run plus its admitted heavy-admit.yml runs).
+        strictEqual(report.runnerMinutes.runs, 35);
+        assertSome(report.runnerMinutes.meanTotal, 251.08);
+        assertSome(report.runnerMinutes.greenCodeRunP50, 278.85);
+        assertSome(report.runnerMinutes.greenCodeRunP95, 385.35);
+        assertSome(report.supersededRunnerMinuteShare, 0.42);
         // The plan's spot check: 9f30182f ran 40.2 min to every required green on 315 runner-minutes.
         const spotCheck = headStartingWith(report.heads, "9f30182f");
         assertSome(spotCheck.requiredGreenMinutes, 40.18);
@@ -140,10 +145,20 @@ describe("ci certainty fixture replay", () => {
         assertSome(docs.requiredGreenMinutes, 2.77);
 
         // Cancelled without a successor: counted, and a miss.
-        const cancelled = headStartingWith(report.heads, "ecc04921");
+        const cancelled = headStartingWith(report.heads, "9294d40e");
         strictEqual(cancelled.state, "cancelled");
         assertNone(cancelled.censor);
         assertNone(cancelled.requiredGreenMinutes);
+
+        // Cancelled by cancel-in-progress in the same second cf49be58's run was created: superseded.
+        const cancelledByTie = headStartingWith(report.heads, "ecc04921");
+        strictEqual(cancelledByTie.state, "cancelled");
+        assertSome(cancelledByTie.censor, "superseded");
+
+        // Red before the branch's next push started: counted as a miss, although later jobs ran past it.
+        const redBeforeSuccessor = headStartingWith(report.heads, "f6c4a648");
+        strictEqual(redBeforeSuccessor.state, "red");
+        assertNone(redBeforeSuccessor.censor);
 
         // Cancelled because a newer head of the branch arrived: censored, cost counted in the share.
         const superseded = headStartingWith(report.heads, "93ef8b3a");
@@ -156,8 +171,11 @@ describe("ci certainty fixture replay", () => {
         const report = yield* loadCorpus(PLANNED).pipe(Effect.flatMap(buildCiCertaintyReport));
 
         assertTrue(report.certified);
+        // Heavy Admission to the first beep-ec2-heavy job of the same run, across both producers.
         strictEqual(report.admissionToHeavy.n, 15);
-        assertSome(report.admissionToHeavy.p50Minutes, 6.45);
+        assertSome(report.admissionToHeavy.p50Minutes, 1.22);
+        strictEqual(report.runnerMinutes.runs, 29);
+        assertSome(report.runnerMinutes.greenCodeRunP50, 222.62);
         strictEqual(report.testUnitConversion.fullLayoutJobs, 24);
         strictEqual(report.testUnitConversion.plannedRuns, 15);
         strictEqual(report.testUnitConversion.ownerScopedRuns, 2);
@@ -191,6 +209,158 @@ const failCriticalContext = (corpus: CiCertaintyCorpus, head: CiCertaintyHeadRow
   });
 };
 
+const FIRST_PUSH = Str.repeat(40)("a");
+const SECOND_PUSH = Str.repeat(40)("b");
+
+const producerRun = (
+  workflow: "check.yml" | "heavy-admit.yml",
+  id: number,
+  headSha: string,
+  createdAt: string,
+  jobs: ReadonlyArray<Partial<CiWorkflowJob>>
+) =>
+  CiCertaintyRun.make({
+    jobs: A.map(jobs, (job, index) =>
+      CiWorkflowJob.make({
+        completed_at: null,
+        conclusion: "success",
+        created_at: createdAt,
+        id: id * 100 + index,
+        labels: ["ubuntu-24.04"],
+        name: "Lint",
+        run_attempt: 1,
+        run_id: id,
+        started_at: null,
+        status: "completed",
+        ...job,
+      })
+    ),
+    run: CiWorkflowWindowRun.make({
+      conclusion: O.some("success"),
+      created_at: DateTime.makeUnsafe(createdAt),
+      event: "pull_request",
+      head_branch: O.some("feat/one-branch"),
+      head_sha: headSha,
+      id,
+      run_attempt: 1,
+      status: O.some("completed"),
+    }),
+    workflow,
+  });
+
+// Two pushes to one branch: the first's Test Unit decides at 10:40, a non-required Property Laws job
+// runs to 10:55, and the second push starts at 10:45.
+const supersessionCorpus = (testUnit: "success" | "failure") =>
+  CiCertaintyCorpus.make({
+    capturedAt: DateTime.makeUnsafe("2026-11-10T03:00:00Z"),
+    mainCommits: [],
+    pullRequestRuns: [
+      producerRun("check.yml", 301, FIRST_PUSH, "2026-11-09T10:00:00Z", [
+        { completed_at: "2026-11-09T10:05:00Z", started_at: "2026-11-09T10:01:00Z" },
+        {
+          completed_at: "2026-11-09T10:40:00Z",
+          conclusion: testUnit,
+          name: "Test Unit",
+          started_at: "2026-11-09T10:01:00Z",
+        },
+        { completed_at: "2026-11-09T10:55:00Z", name: "Property Laws", started_at: "2026-11-09T10:01:00Z" },
+      ]),
+      producerRun("check.yml", 302, SECOND_PUSH, "2026-11-09T10:45:00Z", [
+        { completed_at: "2026-11-09T10:50:00Z", started_at: "2026-11-09T10:46:00Z" },
+        { completed_at: "2026-11-09T10:52:00Z", name: "Test Unit", started_at: "2026-11-09T10:46:00Z" },
+      ]),
+    ],
+    requestCount: 0,
+    requiredContexts: ["Lint", "Test Unit"],
+    since: SYNTHETIC_WINDOW_SINCE,
+    until: SYNTHETIC_WINDOW_UNTIL,
+  });
+
+const SYNTHETIC_WINDOW_SINCE = DateTime.makeUnsafe("2026-11-09T00:00:00Z");
+const SYNTHETIC_WINDOW_UNTIL = DateTime.makeUnsafe("2026-11-10T00:00:00Z");
+
+// One code head admitted by label: check.yml runs only hosted jobs (its Heavy / Test Integration aggregate
+// included), one heavy-admit.yml run executes Heavy / Check on the heavy pool, and a second one admitted
+// nothing.
+const labelAdmittedCorpus = CiCertaintyCorpus.make({
+  capturedAt: DateTime.makeUnsafe("2026-11-10T03:00:00Z"),
+  mainCommits: [],
+  pullRequestRuns: [
+    producerRun("check.yml", 401, FIRST_PUSH, "2026-11-09T12:00:00Z", [
+      { completed_at: "2026-11-09T12:04:00Z", started_at: "2026-11-09T12:01:00Z" },
+      { completed_at: "2026-11-09T12:01:00Z", name: "Heavy Admission", started_at: "2026-11-09T12:00:10Z" },
+      {
+        completed_at: "2026-11-09T12:30:00Z",
+        name: "Heavy / Test Integration",
+        started_at: "2026-11-09T12:20:00Z",
+      },
+    ]),
+    producerRun("heavy-admit.yml", 402, FIRST_PUSH, "2026-11-09T12:05:00Z", [
+      { completed_at: "2026-11-09T12:06:00Z", name: "Heavy Admission", started_at: "2026-11-09T12:05:00Z" },
+      {
+        completed_at: "2026-11-09T12:17:00Z",
+        labels: ["beep-ec2-heavy"],
+        name: "Heavy / Check",
+        started_at: "2026-11-09T12:07:00Z",
+      },
+    ]),
+    producerRun("heavy-admit.yml", 403, FIRST_PUSH, "2026-11-09T12:06:00Z", [
+      { conclusion: "skipped", name: "Heavy Admission" },
+      { conclusion: "skipped", name: "Heavy" },
+    ]),
+  ],
+  requestCount: 0,
+  requiredContexts: ["Lint"],
+  since: SYNTHETIC_WINDOW_SINCE,
+  until: SYNTHETIC_WINDOW_UNTIL,
+});
+
+// A heavy-admit.yml run created before the head's first check.yml run joins that first run.
+const earlyAdmitCorpus = CiCertaintyCorpus.make({
+  ...labelAdmittedCorpus,
+  pullRequestRuns: [
+    producerRun("heavy-admit.yml", 501, FIRST_PUSH, "2026-11-09T11:58:00Z", [
+      { completed_at: "2026-11-09T11:59:00Z", name: "Heavy Admission", started_at: "2026-11-09T11:58:00Z" },
+      {
+        completed_at: "2026-11-09T12:10:00Z",
+        labels: ["beep-ec2-heavy"],
+        name: "Heavy / Check",
+        started_at: "2026-11-09T12:00:00Z",
+      },
+    ]),
+    producerRun("check.yml", 502, FIRST_PUSH, "2026-11-09T12:00:00Z", [
+      { completed_at: "2026-11-09T12:04:00Z", started_at: "2026-11-09T12:01:00Z" },
+    ]),
+  ],
+});
+
+describe("ci certainty producer pairing", () => {
+  it.layer(testLayer)((it) => {
+    it.effect("attaches a heavy-admit run that predates every check.yml run to the head's first attempt", () =>
+      Effect.gen(function* () {
+        const report = yield* buildCiCertaintyReport(earlyAdmitCorpus);
+        strictEqual(report.runnerMinutes.runs, 1);
+        assertSome(report.runnerMinutes.meanManaged, 10);
+      })
+    );
+
+    it.effect("times admission to the heavy pool and bills heavy-admit minutes to the head attempt", () =>
+      Effect.gen(function* () {
+        const report = yield* buildCiCertaintyReport(labelAdmittedCorpus);
+        // Only heavy-admit run 402 reaches the heavy pool: 12:05 to 12:07. check.yml's hosted
+        // Heavy / Test Integration aggregate (12:20) is not pickup.
+        strictEqual(report.admissionToHeavy.n, 1);
+        assertSome(report.admissionToHeavy.p50Minutes, 2);
+        // One head attempt: check.yml run 401 with run 402 attached; run 403 admitted nothing.
+        strictEqual(report.runnerMinutes.runs, 1);
+        assertSome(report.runnerMinutes.meanManaged, 10);
+        // 3 + 0.83 + 10 GitHub-hosted (Lint, Heavy Admission, the aggregate), 1 more for 402's admission, 10 managed.
+        assertSome(report.runnerMinutes.greenCodeRunP50, 24.83);
+      })
+    );
+  });
+});
+
 describe("ci certainty monotonicity", () => {
   it.layer(testLayer)((it) => {
     it.effect("never improves the SLO statistic when a green head turns red", () =>
@@ -218,6 +388,24 @@ describe("ci certainty monotonicity", () => {
             expect(flipped.slo.withinTen).toBeLessThanOrEqual(baseline.slo.withinTen);
           })
         );
+      })
+    );
+
+    it.effect("counts a head that turned red before its successor's push, whatever ran after", () =>
+      Effect.gen(function* () {
+        const green = yield* buildCiCertaintyReport(supersessionCorpus("success"));
+        const red = yield* buildCiCertaintyReport(supersessionCorpus("failure"));
+        const greenHead = headStartingWith(green.heads, FIRST_PUSH);
+        const redHead = headStartingWith(red.heads, FIRST_PUSH);
+        // Required green at 40 min, the next push at 45 and a non-required job running to 55.
+        strictEqual(greenHead.state, "green");
+        assertNone(greenHead.censor);
+        assertSome(greenHead.requiredGreenMinutes, 40);
+        strictEqual(redHead.state, "red");
+        assertNone(redHead.censor);
+        strictEqual(red.slo.n, green.slo.n);
+        strictEqual(red.slo.misses, green.slo.misses + 1);
+        expect(percentileValue(red.slo.p95Minutes)).toBeGreaterThanOrEqual(percentileValue(green.slo.p95Minutes));
       })
     );
 
@@ -287,6 +475,13 @@ describe("ci certainty certification", () => {
           "> **Not certified, not acceptance evidence.** Refused: api-partial, empty-population."
         );
         expect(rendered).not.toContain("partial job reads");
+        // An incomplete push listing leaves every main commit unread: no rate, and never a no-run verdict.
+        expect(A.length(report.mainRows)).toBeGreaterThan(0);
+        assertTrue(A.every(report.mainRows, (row) => row.verdict === "unread"));
+        assertNone(report.main.rate);
+        strictEqual(report.main.noRun, 0);
+        strictEqual(report.main.unread, report.main.commits);
+        expect(rendered).toContain("rate —");
       })
     );
   });
@@ -491,6 +686,54 @@ describe("ci certainty head states", () => {
   });
 });
 
+// A later label on a proven head makes heavy-admit.yml re-report the proof: every `Heavy / <lane>`
+// skipped, hours after the lane ran green. The green instant stays at the run that did the work.
+const REREPORT_HEAD = Str.repeat(40)("5");
+
+describe("ci certainty re-reported heavy lanes", () => {
+  it.layer(testLayer)((it) => {
+    it.effect("never takes a later re-report's skipped lane as the context's completion", () =>
+      Effect.gen(function* () {
+        const heavyAdmit = (id: number, createdAt: string, job: Partial<CiWorkflowJob>) =>
+          CiCertaintyRun.make({
+            ...foldRun(id, REREPORT_HEAD, createdAt, O.some("completed"), [foldJob({ name: "Heavy / Check", ...job })]),
+            workflow: "heavy-admit.yml",
+          });
+        const report = yield* buildCiCertaintyReport(
+          CiCertaintyCorpus.make({
+            ...syntheticCorpus([]),
+            pullRequestRuns: [
+              foldRun(301, REREPORT_HEAD, "2026-11-09T10:00:00Z", O.some("completed"), [foldJob({ id: 51 })]),
+              // The admitted run proves Heavy / Check twelve minutes after the push.
+              heavyAdmit(302, "2026-11-09T10:01:00Z", {
+                id: 52,
+                started_at: "2026-11-09T10:02:00Z",
+                completed_at: "2026-11-09T10:12:00Z",
+              }),
+              // Three hours later an unrelated label re-reports it without work.
+              heavyAdmit(303, "2026-11-09T13:00:00Z", {
+                id: 53,
+                conclusion: "skipped",
+                created_at: "2026-11-09T13:00:10Z",
+                started_at: "2026-11-09T13:00:20Z",
+                completed_at: "2026-11-09T13:00:21Z",
+              }),
+            ],
+            requiredContexts: ["Lint", "Heavy / Check"],
+          })
+        );
+
+        const head = headStartingWith(report.heads, REREPORT_HEAD);
+        strictEqual(head.state, "green");
+        assertSome(head.requiredGreenMinutes, 12);
+        assertSome(head.criticalContext, "Heavy / Check");
+        const check = O.getOrThrow(A.findFirst(head.contexts, (row) => row.context === "Heavy / Check"));
+        assertSome(check.runId, 302);
+      })
+    );
+  });
+});
+
 // The live capture through the command: a fake GitHub API and a scripted `git`.
 const LIVE_HEAD = Str.repeat(40)("a");
 const LATER_HEAD = Str.repeat(40)("c");
@@ -604,7 +847,7 @@ const liveGit = (
   });
 
 const withLiveCapture =
-  (calls: Array<GithubFetchCall>, spawner: ScriptedSpawner) =>
+  (calls: Array<GithubFetchCall>, spawner: ScriptedSpawner, github: (call: GithubFetchCall) => unknown = liveGithub) =>
   <A, E, R>(program: Effect.Effect<A, E, R>) =>
     program.pipe(
       Effect.provideService(
@@ -612,7 +855,7 @@ const withLiveCapture =
         O.some(
           githubFetch((call) => {
             A.appendInPlace(calls, call);
-            return liveGithub(call);
+            return github(call);
           }).fetch
         )
       ),
@@ -703,6 +946,38 @@ describe("ci certainty command", () => {
       }).pipe(withLiveCapture(calls, spawner));
     });
 
+    it.effect("marks main unread when the push listing cannot be read, and still reads the heads", () => {
+      const calls = A.empty<GithubFetchCall>();
+      const spawner = liveGit();
+      const pushListingRefused = (call: GithubFetchCall): unknown =>
+        Str.includes("/actions/workflows/check.yml/runs")(call.url.pathname) &&
+        call.url.searchParams.get("event") === "push"
+          ? reply(404)({ message: "Not Found" })
+          : liveGithub(call);
+      return Effect.gen(function* () {
+        const repoRoot = yield* seedRequiredContexts();
+        const corpusFile = `${repoRoot}/certainty-corpus.json`;
+        yield* runCertaintyCommand([...LIVE_WINDOW, "--preview", "--write-corpus", corpusFile]);
+        const markdown = yield* lastCertaintyLog();
+
+        const fs = yield* FileSystem.FileSystem;
+        const corpus = yield* fs.readFileString(corpusFile).pipe(Effect.flatMap(decodeCiCertaintyCorpus));
+        assertTrue(corpus.mainListingPartial);
+        assertTrue(A.every(corpus.mainCommits, (commit) => A.isReadonlyArrayEmpty(commit.runs)));
+        // The pull-request heads are still read in full.
+        deepStrictEqual(
+          A.map(corpus.pullRequestRuns, (run) => [run.run.id, A.length(run.jobs)]),
+          [
+            [11, 2],
+            [13, 0],
+            [12, 1],
+          ]
+        );
+        expect(markdown).toContain("> **Not certified, not acceptance evidence.** Refused: api-partial.");
+        expect(markdown).toContain("rate —; cancelled 0; no run 0; open 0; unread 2");
+      }).pipe(withLiveCapture(calls, spawner, pushListingRefused));
+    });
+
     it.effect("writes the captured corpus and replays it without reading anything", () => {
       const calls = A.empty<GithubFetchCall>();
       const spawner = liveGit();
@@ -753,7 +1028,8 @@ describe("ci certainty command", () => {
       const spawner = liveGit();
       return Effect.gen(function* () {
         yield* seedRequiredContexts();
-        // Two listings and three job reads fit; the main push listing is refused at the bound.
+        // The main push listing is read first, so the bound refuses a pull-request job read instead: the
+        // head is stamped partial while main keeps its real verdicts.
         const error = yield* Effect.flip(runCertaintyCommand(["--max-requests", "5"]));
         assertInstanceOf(error, CiCommandError);
         strictEqual(
@@ -761,7 +1037,10 @@ describe("ci certainty command", () => {
           "Certification refused: api-partial. Pass --preview to accept an uncertified report."
         );
         const refused = yield* lastCertaintyLog();
-        expect(refused).toContain("> **Not certified, not acceptance evidence.** Refused: api-partial.");
+        expect(refused).toContain(
+          "> **Not certified, not acceptance evidence.** Refused: api-partial (partial job reads: run 12 attempt 1)."
+        );
+        expect(refused).toContain("completed verdicts 1; rate 50.0%; cancelled 0; no run 1; open 0; unread 0");
         strictEqual(A.length(calls), 5);
         expect(gitLogArgs(spawner)).toContain("--since=2026-11-09T03:00:00.000Z");
         expect(gitLogArgs(spawner)).toContain("--until=2026-11-10T03:00:00.000Z");

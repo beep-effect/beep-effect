@@ -1,11 +1,10 @@
-import { RateLimitObservation, RateLimitSnapshot } from "@beep/github/Resilience";
+import { CredentialFingerprint, RateLimitObservation, RateLimitSnapshot } from "@beep/github/Resilience";
 import {
   anchorsOf,
   BucketKey,
   BucketReading,
   BucketReadingJson,
   configStringOption,
-  epochsOf,
   GhSpawnObservation,
   GITHUB_LEDGER_MAX_LINE_BYTES,
   GithubBudgetLedger,
@@ -29,6 +28,7 @@ import {
   LedgerSummaryJson,
   LedgerWindow,
   LedgerWindowJson,
+  lanesOf,
   layerGithubBudgetLedger,
   layerGithubLedgerStoreLive,
   layerGithubLedgerStoreMemory,
@@ -217,6 +217,7 @@ describe("GithubLedger schemas", () => {
     Effect.gen(function* () {
       const window = LedgerWindow.make({
         key: key(alice, "core"),
+        lane: 0,
         from: at(0),
         to: at(5 * MINUTE),
         anchor: "sample",
@@ -360,13 +361,13 @@ describe("GithubLedger reserve", () => {
 describe("GithubLedger windows", () => {
   const coreAlice = key(alice, "core");
 
-  it("keeps an idle bucket in one epoch and flags a real reset with a peak-bounded lower bound", () => {
+  it("keeps ambiguous idle and busy readings separate and flags a confirmed reset with a peak-bounded lower bound", () => {
     const idle = [
       sampleRow({ at: at(0), used: 0, reset: T0 + HOUR }),
       sampleRow({ at: at(5 * MINUTE), used: 0, reset: T0 + HOUR + 5 * MINUTE }),
       sampleRow({ at: at(10 * MINUTE), used: 4, reset: T0 + HOUR + 10 * MINUTE }),
     ];
-    expect(epochsOf(anchorsOf({ key: coreAlice, rows: idle, admitGraphqlSamples: false })).length).toBe(1);
+    expect(lanesOf(anchorsOf({ key: coreAlice, rows: idle, admitGraphqlSamples: false })).length).toBe(3);
     expect(
       A.some(windowsOf({ key: coreAlice, rows: idle, admitGraphqlSamples: false }), (window) => window.crossesReset)
     ).toBe(false);
@@ -375,19 +376,23 @@ describe("GithubLedger windows", () => {
       sampleRow({ at: at(0), used: 10, reset: T0 + HOUR }),
       sampleRow({ at: at(5 * MINUTE), used: 20, reset: T0 + HOUR + 3000 }),
     ];
-    expect(epochsOf(anchorsOf({ key: coreAlice, rows: jitter, admitGraphqlSamples: false })).length).toBe(1);
+    expect(lanesOf(anchorsOf({ key: coreAlice, rows: jitter, admitGraphqlSamples: false })).length).toBe(1);
 
     const reset = [
       sampleRow({ at: at(0), used: 100, reset: T0 + 10 * MINUTE }),
       transportRow({ at: at(4 * MINUTE), resource: "core", kind: "rest", used: 130, reset: T0 + 10 * MINUTE + 2000 }),
       sampleRow({ at: at(15 * MINUTE), used: 7, reset: T0 + 70 * MINUTE }),
     ];
-    const [window] = windowsOf({ key: coreAlice, rows: reset, admitGraphqlSamples: false });
+    const resetWithCredential = A.map(reset, (row) => ({
+      ...row,
+      credential: O.some(CredentialFingerprint.make("aaaaaaaaaaaa")),
+    }));
+    const [window] = windowsOf({ key: coreAlice, rows: resetWithCredential, admitGraphqlSamples: false });
     expect(window?.crossesReset).toBe(true);
     expect(window?.resetLowerBound).toBe(7 + 30);
   });
 
-  it("telescopes an hour instead of summing floored deltas, and counts a window in the hour of its end", () => {
+  it("telescopes each instance with its in-hour start and a before-hour baseline", () => {
     const rows = [
       sampleRow({ at: at(0), used: 100 }),
       sampleRow({ at: at(5 * MINUTE), used: 140 }),
@@ -397,7 +402,7 @@ describe("GithubLedger windows", () => {
     ];
     const windows = windowsOf({ key: coreAlice, rows, admitGraphqlSamples: false });
     const first = hourOf({ hour: at(0), key: coreAlice, rows, windows, costs: [] });
-    assertSome(first.fleetUsed, 47);
+    assertSome(first.fleetUsed, 147);
     const second = hourOf({ hour: at(HOUR), key: coreAlice, rows, windows, costs: [] });
     assertSome(second.fleetUsed, 3);
   });
@@ -451,10 +456,10 @@ describe("GithubLedger windows", () => {
     ];
     const windows = windowsOf({ key: coreAlice, rows, admitGraphqlSamples: false });
     const hour = hourOf({ hour: at(0), key: coreAlice, rows, windows, costs: operationCostsOf(rows) });
-    assertSome(hour.fleetUsed, 10);
+    assertSome(hour.fleetUsed, 110);
     expect(hour.estimatedPoints).toBe(2);
     expect(hour.ghEstimated).toBe(1);
-    assertSome(hour.unattributed, 7);
+    assertSome(hour.unattributed, 107);
     expect(hour.overAttributed).toBe(false);
     expect(A.map(hour.byCommand, (spend) => [spend.command, spend.requests, spend.ghSpawns])).toStrictEqual([
       ["yeet monitor", 2, 1],

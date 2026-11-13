@@ -46,6 +46,7 @@ import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter, RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetPublishIntent, YeetRunOptions } from "../Yeet.schemas.ts";
+import type { YeetStackPublishDecision } from "./Stack.schemas.ts";
 
 const protectedPublishBranches: ReadonlyArray<string> = ["main", "master", "HEAD"];
 
@@ -705,13 +706,17 @@ export const restorePublishStashOnFailure =
  * ```
  *
  * @param context - Repo context containing the base ref and worktree root.
+ * @param since - For a stack layer, its parent's head: the branch's own paths
+ * are then the layer's changes since its fork from the parent, not everything
+ * since the merge-base with the base ref.
  * @returns Base freshness metadata including overlap paths when the branch is
  * behind.
  * @category diagnostics
  * @since 0.0.0
  */
 export const assessBaseFreshness = Effect.fn("Yeet.assessBaseFreshness")(function* (
-  context: RepoRunContext
+  context: RepoRunContext,
+  since: O.Option<string> = O.none()
 ): Effect.fn.Return<
   YeetBaseFreshness,
   YeetCommandError,
@@ -729,9 +734,14 @@ export const assessBaseFreshness = Effect.fn("Yeet.assessBaseFreshness")(functio
     return YeetBaseFreshness.make({ behindCount: 0, mergeBase, overlappingPaths: [] });
   }
 
+  // A layer's own changes are measured from its fork point with the parent's
+  // head (`<parent>...HEAD`), so a parent that moved since adds no paths.
   const committedPaths = yield* changedYeetPaths(
     context.repoRoot,
-    YeetChangedPathsQuery.make({ base: mergeBase, head: "HEAD" })
+    O.match(since, {
+      onNone: () => YeetChangedPathsQuery.make({ base: mergeBase, head: "HEAD" }),
+      onSome: (parentHead) => YeetChangedPathsQuery.make({ base: parentHead, head: "HEAD", mergeBaseRange: true }),
+    })
   );
   const stagedFreshnessPaths = yield* collectStagedPublishPaths(context.repoRoot);
   const branchPaths = sortedUniquePaths([...committedPaths, ...stagedFreshnessPaths]);
@@ -803,19 +813,26 @@ export const assessBaseFreshnessForTesting = assessBaseFreshness;
  *
  * @param context - Repo context containing base and branch identity.
  * @param options - Yeet runtime options controlling the stale-base override.
+ * @param stackLayer - The stack layer this branch publishes as, if any: only
+ * the layer's own paths are compared, and the refusal names the parent layer
+ * as the one to bring up to date first.
  * @returns Base freshness metadata when publishing may proceed.
  * @category validation
  * @since 0.0.0
  */
 export const enforceBaseFreshness = Effect.fn("Yeet.enforceBaseFreshness")(function* (
   context: RepoRunContext,
-  options: YeetRunOptions
+  options: YeetRunOptions,
+  stackLayer: O.Option<typeof YeetStackPublishDecision.cases.Layer.Type> = O.none()
 ): Effect.fn.Return<
   YeetBaseFreshness,
   YeetCommandError,
   SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
-  const freshness = yield* assessBaseFreshness(context);
+  const freshness = yield* assessBaseFreshness(
+    context,
+    O.map(stackLayer, (layer) => layer.parentHeadSha)
+  );
   if (freshness.behindCount === 0) {
     return freshness;
   }
@@ -835,8 +852,14 @@ export const enforceBaseFreshness = Effect.fn("Yeet.enforceBaseFreshness")(funct
     message: `yeet publish refuses a stale base: files changed on this branch were also changed on ${context.base} since the merge-base, so the PR would conflict or silently regress them.`,
     paths: freshness.overlappingPaths,
     // Merge, never rebase: rebasing a published branch demands a force-push
-    // this repository denies, and hosted CI proves the merge result anyway.
-    remediation: `git fetch origin && git merge ${context.base}, resolve conflicts, re-run bun run beep yeet verify, then publish again. Pass --allow-stale-base to proceed anyway.`,
+    // this repository denies, and hosted CI proves the merge result anyway. A
+    // layer takes the trunk through its parent, which is the layer below it.
+    remediation: O.match(stackLayer, {
+      onNone: () =>
+        `git fetch origin && git merge ${context.base}, resolve conflicts, re-run bun run beep yeet verify, then publish again. Pass --allow-stale-base to proceed anyway.`,
+      onSome: (layer) =>
+        `merge ${context.base} into the parent layer (#${layer.parentNumber}, ${layer.parentHeadRef}) and publish it first, then git fetch origin && git merge origin/${layer.parentHeadRef} into this branch, resolve conflicts, re-run bun run beep yeet verify, then publish again. Pass --allow-stale-base to proceed anyway.`,
+    }),
     subCategory: "stale-base",
   });
 });

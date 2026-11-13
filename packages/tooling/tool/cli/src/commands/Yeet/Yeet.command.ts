@@ -272,6 +272,13 @@ const bodyFileFlag = Flag.String("body-file").pipe(
   )
 );
 
+const stackOnFlag = Flag.Int("stack-on").pipe(
+  Flag.optional,
+  Flag.withDescription(
+    "Publish this branch as a layer on this open pull request (a two-layer native stack); the PR is created on that pull request's branch and linked"
+  )
+);
+
 const titleFlag = Flag.String("title").pipe(
   Flag.withDefault(""),
   Flag.withDescription("Pull request title (default: the branch's first non-merge commit subject)")
@@ -478,6 +485,7 @@ const publishFlags = {
   proveFirst: proveFirstFlag,
   pushOnly: pushOnlyFlag,
   reuseVerified: reuseVerifiedFlag,
+  stackOn: stackOnFlag,
   stagedOnly: stagedOnlyFlag,
   stateRoot: yeetStateRootFlag,
   summary: summaryFlag,
@@ -500,6 +508,7 @@ const openFlags = {
   monitor: monitorFlag,
   packetDir: packetDirFlag,
   plan: planFlag,
+  stackOn: stackOnFlag,
   stateRoot: yeetStateRootFlag,
   title: titleFlag,
 } as const;
@@ -720,6 +729,7 @@ class SharedOptions extends S.Opaque<SharedOptions, { readonly brand: unique sym
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
     ),
+    stackOn: S.Option(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)),
     stagedOnly: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
@@ -774,6 +784,7 @@ const runYeetMode = (mode: YeetRunMode, options: SharedOptionsInput & { readonly
       resolveThreads: sharedOptions.resolveThreads,
       retriggerGreptile: sharedOptions.retriggerGreptile,
       reuseVerified: sharedOptions.reuseVerified,
+      stackOn: sharedOptions.stackOn,
       stagedOnly: sharedOptions.stagedOnly,
       summary: sharedOptions.summary,
       tier: sharedOptions.tier,
@@ -1307,6 +1318,12 @@ const mergeGateDryRunFlag = Flag.Boolean("dry-run").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Decide and print, never merge")
 );
+const mergeGateAloneFlag = Flag.Boolean("alone").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
+    "Land a stack layer that has an open layer above it by itself (GitHub then force-pushes the layer above onto the trunk); no effect on the top layer, whose merge always lands the layer below it"
+  )
+);
 
 const yeetMergeGateCommand = Command.make(
   "merge-gate",
@@ -1318,6 +1335,7 @@ const yeetMergeGateCommand = Command.make(
     forceWindow: mergeGateForceWindowFlag,
     relaxed: mergeGateRelaxedFlag,
     dryRun: mergeGateDryRunFlag,
+    alone: mergeGateAloneFlag,
   },
   flow(MergeGateCommandOptions.make, runYeetMergeGate)
 ).pipe(

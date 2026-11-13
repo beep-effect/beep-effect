@@ -661,8 +661,16 @@ const quarantineEntry = Effect.fnUntraced(function* (
  * **Details**
  *
  * The reap pass moves quarantine entries older than
- * {@link QUARANTINE_ARCHIVE_MIN_AGE_MILLIS} here instead of deleting them, so a
- * quarantined lease or ticket can still be restored by moving it back.
+ * {@link QUARANTINE_ARCHIVE_MIN_AGE_MILLIS} here instead of deleting them.
+ * Nothing scans this directory, so archived entries are never re-read.
+ *
+ * **Gotchas**
+ *
+ * Restoring an entry means moving it into its live directory (`leases/` for
+ * `*.lease.json`, `queue/` for `*.ticket.json`) under its original name, with
+ * the `.<nowMillis>` quarantine suffix stripped. Moving it back into
+ * `quarantine/` does not restore it: the name keeps its aged suffix, so the
+ * next reap pass archives it again.
  *
  * **Example** (Name the archive directory)
  *
@@ -725,24 +733,65 @@ export const quarantinedAtMillisOf = (entryPath: string): O.Option<number> =>
     O.filter(Number.isSafeInteger)
   );
 
+/**
+ * Whether a quarantine entry is old enough for the reap pass to archive it.
+ *
+ * **Details**
+ *
+ * An entry is aged once its quarantine instant is at least
+ * {@link QUARANTINE_ARCHIVE_MIN_AGE_MILLIS} old. The reap pass and the dry-run
+ * preview share this predicate, so `quality scheduler reap` without `--apply`
+ * reports exactly the entries that `--apply` would move. An entry without a
+ * quarantine suffix is never aged.
+ *
+ * **Example** (Check the archive age gate)
+ *
+ * ```ts
+ * import { isAgedQuarantineEntry, QUARANTINE_ARCHIVE_MIN_AGE_MILLIS } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const now = 1_700_000_000_000 + QUARANTINE_ARCHIVE_MIN_AGE_MILLIS
+ * console.log(isAgedQuarantineEntry("garbage.lease.json.1700000000000", now)) // true
+ * console.log(isAgedQuarantineEntry(now)("garbage.lease.json")) // false
+ * ```
+ *
+ * @category admission
+ * @since 0.0.0
+ */
+export const isAgedQuarantineEntry: {
+  /**
+   * @param nowMillis - Current instant in epoch milliseconds.
+   * @returns A predicate over quarantine file names or paths.
+   */
+  (nowMillis: number): (entryPath: string) => boolean;
+  /**
+   * @param entryPath - Quarantine file name or path.
+   * @param nowMillis - Current instant in epoch milliseconds.
+   * @returns `true` when the entry carries a quarantine instant at least the archive age gate old.
+   */
+  (entryPath: string, nowMillis: number): boolean;
+} = dual(2, (entryPath: string, nowMillis: number): boolean =>
+  O.exists(
+    quarantinedAtMillisOf(entryPath),
+    (quarantinedAt) => nowMillis - quarantinedAt >= QUARANTINE_ARCHIVE_MIN_AGE_MILLIS
+  )
+);
+
 const QUARANTINE_ARCHIVE_LOCK_NAME = "quarantine-archive.lock";
 
 // Archive, never delete: aged quarantine entries move under the admission
-// root's archive directory so a needed lease or ticket can be restored by a
-// plain move back. Runs only in the reap pass (never in the status snapshot)
-// and under an exclusive claims lock so concurrent reapers do not interleave.
-// Leases, tickets and claims are never touched.
+// root's archive directory, from where a needed lease or ticket is restored
+// into its live directory with the quarantine suffix stripped. Runs only in
+// the reap pass (never in the status snapshot) and under an exclusive lock in
+// claims/ so concurrent reapers do not interleave. Leases, tickets and reap
+// claims are never touched; the lock is the archive's only write in claims/.
 const archiveAgedQuarantine = Effect.fnUntraced(function* (
-  directories: AdmissionDirectories,
-  minAgeMillis: number
+  directories: AdmissionDirectories
 ): Effect.fn.Return<number, never, SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const nowMillis = yield* Clock.currentTimeMillis;
   const names = yield* fs.readDirectory(directories.quarantine).pipe(Effect.orElseSucceed(A.empty<string>));
-  const aged = A.filter(names, (name) =>
-    O.exists(quarantinedAtMillisOf(name), (quarantinedAt) => nowMillis - quarantinedAt >= minAgeMillis)
-  );
+  const aged = A.filter(names, isAgedQuarantineEntry(nowMillis));
   if (A.isReadonlyArrayEmpty(aged)) {
     return 0;
   }
@@ -754,10 +803,9 @@ const archiveAgedQuarantine = Effect.fnUntraced(function* (
   const archiveDirectory = path.join(directories.root, QUARANTINE_ARCHIVE_DIRECTORY_NAME);
   return yield* Effect.ensuring(
     Effect.gen(function* () {
-      const ready = yield* fs.makeDirectory(archiveDirectory, { recursive: true, mode: 0o700 }).pipe(
-        Effect.as(true),
-        Effect.orElseSucceed(() => false)
-      );
+      const ready = yield* fs
+        .makeDirectory(archiveDirectory, { recursive: true, mode: 0o700 })
+        .pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
       if (!ready) {
         yield* Console.error(`[yeet] could not create quarantine archive ${archiveDirectory}; nothing archived.`);
         return 0;
@@ -767,13 +815,12 @@ const archiveAgedQuarantine = Effect.fnUntraced(function* (
         Effect.fnUntraced(function* (name: string) {
           const destination = path.join(archiveDirectory, name);
           // Never overwrite an archived entry: a collision keeps both copies.
-          if (yield* fs.exists(destination).pipe(Effect.orElseSucceed(() => true))) {
+          if (yield* fs.exists(destination).pipe(Effect.orElseSucceed(constant(true)))) {
             return false;
           }
-          return yield* fs.rename(path.join(directories.quarantine, name), destination).pipe(
-            Effect.as(true),
-            Effect.orElseSucceed(() => false)
-          );
+          return yield* fs
+            .rename(path.join(directories.quarantine, name), destination)
+            .pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
         })
       );
       const count = A.length(A.filter(moved, identity));
@@ -1316,7 +1363,7 @@ const repairDeadAdmissionState = Effect.fnUntraced(function* (
   yield* Effect.forEach(readReapClaims5, ({ claimPath, claim }) => processReapClaim(directories, claimPath, claim), {
     discard: true,
   });
-  yield* archiveAgedQuarantine(directories, QUARANTINE_ARCHIVE_MIN_AGE_MILLIS);
+  yield* archiveAgedQuarantine(directories);
 });
 
 const promotionTransitionPath = (path: Path.Path, directories: AdmissionDirectories, nonce: string): string =>

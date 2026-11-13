@@ -45,6 +45,9 @@ import {
   RouteCensus,
   RouteCensusRow,
   RouteError,
+  RouteJobAttribution,
+  RouteJobClass,
+  RouteJobMinutes,
   RouteLaneCost,
   RoutePlan,
   RouteReplay,
@@ -138,6 +141,41 @@ const LANE_BY_CONTEXT: HashMap.HashMap<string, CiLaneId> = HashMap.fromIterable(
   )
 );
 
+// Earlier and conditional names of a lane's context: the build lane's context before it
+// moved under Heavy (until 2026-09-09), and the conditional names of the Test Integration
+// aggregate and of the coverage job (`check.yml` at a0c7f356af3).
+const LANE_JOB_ALIASES: ReadonlyArray<readonly [string, CiLaneId]> = [
+  ["Build", "build"],
+  ["Coverage Artifact Migration", "coverage"],
+  ["Test Integration Partitions", "test-integration"],
+];
+// Partition families whose base name is not the lane's context: `Test Integration
+// (<partition>)` jobs belong to the `Heavy / Test Integration` lane.
+const PARTITION_FAMILY_LANES: ReadonlyArray<readonly [string, CiLaneId]> = [["Test Integration", "test-integration"]];
+// Known jobs outside every lane: the change profile, heavy admission and its reusable-call
+// placeholder, the test plan that selects partitions for several lanes, the size label and
+// the producer pilot jobs of `heavy.yml`.
+const SUPPORT_JOB_NAMES: HashSet.HashSet<string> = HashSet.fromIterable([
+  "Change Profile",
+  "Heavy",
+  "Heavy / Build candidate producer adapter",
+  "Heavy / Execute approved signed producer",
+  "Heavy / Inspect producer sources and tools",
+  "Heavy / Observe local cache pilot",
+  "Heavy Admission",
+  "PR Size Label",
+  "Test Plan",
+]);
+
+const LANE_BY_JOB_NAME: HashMap.HashMap<string, CiLaneId> = HashMap.union(
+  LANE_BY_CONTEXT,
+  HashMap.fromIterable(LANE_JOB_ALIASES)
+);
+const LANE_BY_PARTITION_FAMILY: HashMap.HashMap<string, CiLaneId> = HashMap.union(
+  LANE_BY_CONTEXT,
+  HashMap.fromIterable(PARTITION_FAMILY_LANES)
+);
+
 /**
  * The lane a hosted job belongs to, joined on the lane descriptor's
  * `contextName`.
@@ -145,7 +183,10 @@ const LANE_BY_CONTEXT: HashMap.HashMap<string, CiLaneId> = HashMap.fromIterable(
  * **Details**
  *
  * A partition job (`Lint (lint-a)`) joins through its context without the
- * partition suffix. Descriptors whose id is not a {@link CiLaneId}
+ * partition suffix; a `Test Integration (<partition>)` job joins the
+ * `Heavy / Test Integration` lane. Earlier and conditional context names
+ * (`Build`, `Coverage Artifact Migration`, `Test Integration Partitions`)
+ * join their lane. Descriptors whose id is not a {@link CiLaneId}
  * (`pr-size`, `dependency-review`) never match, so `Security` is the
  * `security` lane.
  *
@@ -157,6 +198,7 @@ const LANE_BY_CONTEXT: HashMap.HashMap<string, CiLaneId> = HashMap.fromIterable(
  *
  * O.getOrNull(jobNameToLane("Heavy / Check")) // => "check"
  * O.getOrNull(jobNameToLane("Lint (lint-a)")) // => "lint"
+ * O.getOrNull(jobNameToLane("Test Integration (lps-int-1)")) // => "test-integration"
  * O.isNone(jobNameToLane("PR Size Label")) // => true
  * ```
  *
@@ -167,8 +209,49 @@ const LANE_BY_CONTEXT: HashMap.HashMap<string, CiLaneId> = HashMap.fromIterable(
  */
 export const jobNameToLane = (name: string): O.Option<CiLaneId> =>
   pipe(
-    HashMap.get(LANE_BY_CONTEXT, name),
-    O.orElse(() => HashMap.get(LANE_BY_CONTEXT, Str.replace(PARTITION_SUFFIX, "")(name)))
+    HashMap.get(LANE_BY_JOB_NAME, name),
+    O.orElse(() =>
+      pipe(
+        O.liftPredicate(Str.replace(PARTITION_SUFFIX, "")(name), (family) => !Str.Equivalence(family, name)),
+        O.flatMap((family) => HashMap.get(LANE_BY_PARTITION_FAMILY, family))
+      )
+    )
+  );
+
+/**
+ * Attribute a hosted job name to a lane, to a known support job, or to
+ * nothing.
+ *
+ * **Details**
+ *
+ * A name {@link jobNameToLane} joins is a `lane` job; a known job outside
+ * every lane (`Change Profile`, `Heavy Admission`, `Test Plan`,
+ * `PR Size Label`, the producer pilot) is `support`; any other name is
+ * `unknown`.
+ *
+ * **Example** (Attribute three jobs)
+ *
+ * ```ts import.meta.vitest name="Attribute three jobs"
+ * import { hostedJobAttribution } from "@beep/repo-cli/commands/Ci/RouteCensus"
+ *
+ * hostedJobAttribution("Test Unit (unit-a)").jobClass // => "lane"
+ * hostedJobAttribution("Test Plan").jobClass // => "support"
+ * hostedJobAttribution("Knip").jobClass // => "unknown"
+ * ```
+ *
+ * @param name - A job name as GitHub lists it, partition suffix included.
+ * @returns The job's class and, for a lane job, its lane.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const hostedJobAttribution = (name: string): RouteJobAttribution =>
+  pipe(
+    jobNameToLane(name),
+    O.match({
+      onSome: (lane) => RouteJobAttribution.make({ jobClass: "lane", lane: O.some(lane) }),
+      onNone: () =>
+        RouteJobAttribution.make({ jobClass: HashSet.has(SUPPORT_JOB_NAMES, name) ? "support" : "unknown" }),
+    })
   );
 
 /**
@@ -234,6 +317,67 @@ export const hostedLaneJobs = (runs: ReadonlyArray<HostedRun>): ReadonlyArray<re
   A.flatMap(runs, (run) =>
     A.getSomes(A.map(run.jobs, (job) => O.map(jobNameToLane(job.name), (lane) => [lane, job] as const)))
   );
+
+/**
+ * The conservation census of every job of the given runs: jobs and machine
+ * time split into lane, support and unknown.
+ *
+ * **Details**
+ *
+ * Each job is attributed by {@link hostedJobAttribution}; an untimed job
+ * counts with no time. The three parts sum to the totals, so a job no lane
+ * claims is reported, never dropped.
+ *
+ * **Example** (One lane job and one unknown job)
+ *
+ * ```ts import.meta.vitest name="One lane job and one unknown job"
+ * import { routeJobMinutes } from "@beep/repo-cli/commands/Ci/RouteCensus"
+ * import { HostedJob, HostedRun } from "@beep/repo-cli/commands/Ci"
+ *
+ * const run = HostedRun.make({
+ *   runId: 1,
+ *   workflow: "Check",
+ *   event: "pull_request",
+ *   headBranch: "feat/x",
+ *   headSha: "abcd",
+ *   createdAt: "2026-10-28T00:00:00Z",
+ *   attempt: 1,
+ *   jobs: [HostedJob.make({ name: "Lint" }), HostedJob.make({ name: "Knip" })],
+ * })
+ * const minutes = routeJobMinutes([run])
+ * minutes.laneJobs // => 1
+ * minutes.unknownNames // => ["Knip"]
+ * ```
+ *
+ * @param runs - Captured runs whose jobs are attributed.
+ * @returns The job and machine-time census by class.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const routeJobMinutes = (runs: ReadonlyArray<HostedRun>): RouteJobMinutes => {
+  const attributed = A.map(
+    A.flatMap(runs, (run) => run.jobs),
+    (job) => [hostedJobAttribution(job.name).jobClass, job.name, O.getOrElse(hostedJobCostMs(job), () => 0)] as const
+  );
+  const ofClass = (jobClass: RouteJobClass) =>
+    A.filter(attributed, ([candidate]) => Str.Equivalence(candidate, jobClass));
+  const msOf = (rows: ReadonlyArray<readonly [RouteJobClass, string, number]>): number =>
+    Num.sumAll(A.map(rows, ([, , ms]) => ms));
+  const lane = ofClass("lane");
+  const support = ofClass("support");
+  const unknown = ofClass("unknown");
+  return RouteJobMinutes.make({
+    jobs: attributed.length,
+    laneJobs: lane.length,
+    supportJobs: support.length,
+    unknownJobs: unknown.length,
+    totalMs: msOf(attributed),
+    laneMs: msOf(lane),
+    supportMs: msOf(support),
+    unknownMs: msOf(unknown),
+    unknownNames: A.sort(A.dedupe(A.map(unknown, ([, name]) => name)), Order.String),
+  });
+};
 
 /**
  * Order a selected lane set for execution without reordering beyond
@@ -864,7 +1008,22 @@ type HeadEvidence = {
   readonly atoms: ReadonlyArray<ChangeAtom>;
   readonly jobs: ReadonlyArray<readonly [CiLaneId, HostedJob]>;
   readonly resolved: boolean;
+  readonly unknownRedNames: ReadonlyArray<string>;
 };
+
+// Failed jobs no rule maps to a lane: a replay cannot tell whether one hid a skipped red.
+const unknownRedJobNames = (runs: ReadonlyArray<HostedRun>): ReadonlyArray<string> =>
+  A.dedupe(
+    A.map(
+      A.filter(
+        A.flatMap(runs, (run) => run.jobs),
+        (job) =>
+          RouteJobClass.is.unknown(hostedJobAttribution(job.name).jobClass) &&
+          O.exists(job.conclusion, (conclusion) => Str.Equivalence(conclusion, "failure"))
+      ),
+      (job) => job.name
+    )
+  );
 
 // Sound by totality: `unknown` reaches every lane, so the route runs everything for the head.
 const unresolvedHeadAtom = (headSha: string): ChangeAtom =>
@@ -1019,6 +1178,7 @@ export const makeRouteCensusReader: Effect.Effect<
       heads,
       Effect.fnUntraced(function* ([headSha, runs]: readonly [string, ReadonlyArray<HostedRun>]) {
         const jobs = hostedLaneJobs(runs);
+        const unknownRedNames = unknownRedJobNames(runs);
         if (HashSet.has(unresolved, headSha)) {
           const evidence: HeadEvidence = {
             headSha,
@@ -1026,6 +1186,7 @@ export const makeRouteCensusReader: Effect.Effect<
             atoms: [unresolvedHeadAtom(headSha)],
             jobs,
             resolved: false,
+            unknownRedNames,
           };
           return evidence;
         }
@@ -1033,7 +1194,14 @@ export const makeRouteCensusReader: Effect.Effect<
         const changeSet = yield* classifier.classify(
           ClassifyInput.make({ repoRoot: yield* git.repoRoot, base: mergeBase, head: headSha })
         );
-        const evidence: HeadEvidence = { headSha, mergeBase, atoms: changeSet.atoms, jobs, resolved: true };
+        const evidence: HeadEvidence = {
+          headSha,
+          mergeBase,
+          atoms: changeSet.atoms,
+          jobs,
+          resolved: true,
+          unknownRedNames,
+        };
         return evidence;
       }),
       { concurrency: ROUTE_HEAD_CONCURRENCY }
@@ -1053,6 +1221,7 @@ export const makeRouteCensusReader: Effect.Effect<
       unresolvedHeads: A.filter(heads, (head) => !head.resolved).length,
       rows: censusRows(heads),
       costs: routeLaneCosts(corpus.runs),
+      jobMinutes: routeJobMinutes(corpus.runs),
     });
     yield* Effect.logDebug("Route census computed").pipe(
       Effect.annotateLogs({ "route.heads": report.heads, "route.rows": report.rows.length })
@@ -1112,6 +1281,17 @@ export const makeRouteCensusReader: Effect.Effect<
 
     const skippedLaneRuns = Num.sumAll(A.map(perHead, (head) => head.skipped.length));
     const skippedReds = Num.sumAll(A.map(perHead, (head) => head.skippedReds.length));
+    // Only a head that skipped lanes can hide a skipped red behind an unmatched job name.
+    const skippingHeads = HashSet.fromIterable(
+      A.map(
+        A.filter(perHead, (head) => A.isReadonlyArrayNonEmpty(head.skipped)),
+        (head) => head.headSha
+      )
+    );
+    const unknownRedHeads = A.filter(
+      heads,
+      (head) => HashSet.has(skippingHeads, head.headSha) && A.isReadonlyArrayNonEmpty(head.unknownRedNames)
+    );
     const report = RouteReplay.make({
       schemaVersion: "route-replay/v1",
       corpusSha256: corpus.receipt.sha256,
@@ -1122,6 +1302,9 @@ export const makeRouteCensusReader: Effect.Effect<
       baseUnknownHeads: A.filter(perHead, (head) => head.baseUnknown).length,
       unresolvedHeads: A.filter(heads, (head) => !head.resolved).length,
       recall: 1 - shareOf(skippedReds, skippedLaneRuns),
+      unknownRedHeads: unknownRedHeads.length,
+      unknownRedJobNames: A.sort(A.dedupe(A.flatMap(unknownRedHeads, (head) => head.unknownRedNames)), Order.String),
+      recallCertain: A.isReadonlyArrayEmpty(unknownRedHeads),
       perHead,
     });
     yield* Effect.logDebug("Route replay computed").pipe(

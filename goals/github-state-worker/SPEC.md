@@ -254,6 +254,18 @@ Source: exploration `explorations/github-api-quota/DECISIONS.md`.
 
 Reverse: Reopen explorations/github-api-quota at decompose when the github-webhook-intake gate fires.
 
+### Paused by operator ruling (finish board, 2026-11-13): It is the second of three goals in a sequence and should wait for the budget ledger to land, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
+
+Triage rationale: It is the second of three goals in a sequence and should wait for the budget ledger to land.
+
+No lane is working on it. Resume with `bun run beep goals set-status github-state-worker active` when it is picked up.
+
+Lane chore/finish-board-pause-b2
+
+Reverse: goals set-status github-state-worker active when it is picked up
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

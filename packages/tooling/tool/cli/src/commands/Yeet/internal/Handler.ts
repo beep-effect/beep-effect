@@ -162,13 +162,9 @@ import {
   validatePublishBranch,
   warnOnMismatchedPublishUpstream,
 } from "./PublishScope.ts";
-import {
-  applyComputeProfileLabel,
-  applyHeavyAdmissionLabel,
-  ensurePullRequest,
-  YeetPrBodyRequest,
-} from "./PullRequest.ts";
+import { applyPublishLabels, ensurePullRequest, YeetPrBodyRequest } from "./PullRequest.ts";
 import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
+import { linkYeetStackLayer, resolveYeetPublishStackLayer, YeetPublishStackLayer } from "./StackPublish.ts";
 import { collectRemoteChecks, collectYeetStatus, renderYeetStatusSummary, writeYeetStatusSnapshot } from "./Status.ts";
 import { collectTurboPlanSnapshot } from "./TurboQuery.ts";
 import { BuildYeetVerdictInput, buildYeetVerdict, YeetExecutedStep, YeetVerdictJson } from "./Verdict.ts";
@@ -183,6 +179,7 @@ import type { YeetPublishIntent, YeetRunOptions, YeetRunResult } from "../Yeet.s
 import type { ParityLaneDecision, ProofEnvironment } from "./ParityReuse.ts";
 import type { ProofEnvProfile, ProofStage } from "./ProofFact.ts";
 import type { ProofJobLauncherShape } from "./ProofJobLauncher.ts";
+import type { YeetStackLayerDecision } from "./StackPublish.ts";
 import type { YeetStatusReviewThread } from "./Status.schemas.ts";
 import type { YeetStatusSnapshot } from "./Status.ts";
 import type { YeetBaseFreshness, YeetMergeReady, YeetStashState, YeetVerdict } from "./Verdict.ts";
@@ -773,13 +770,15 @@ const runRequiredPhase = Effect.fn("Yeet.runRequiredPhase")(function* (
 
 // The `--message` first line titles the pull request (and so its squash-merge
 // commit); without one the branch's first non-merge commit subject does. The
-// body request carries `--body-file` and the `yeet open` proof route.
+// body request carries `--body-file` and the `yeet open` proof route; a stack
+// layer opens on its parent's branch.
 const ensureRequestedPullRequest = Effect.fn("Yeet.ensureRequestedPullRequest")(function* (
   context: RepoRunContext,
   steps: ReadonlyArray<RepoPlanStep>,
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
   message: O.Option<string> = O.none(),
-  bodyRequest: YeetPrBodyRequest = YeetPrBodyRequest.make({})
+  bodyRequest: YeetPrBodyRequest = YeetPrBodyRequest.make({}),
+  stackLayer: O.Option<YeetStackLayerDecision> = O.none()
 ) {
   return yield* ensurePullRequest(
     context,
@@ -788,7 +787,8 @@ const ensureRequestedPullRequest = Effect.fn("Yeet.ensureRequestedPullRequest")(
     A.findFirst(steps, (step) => step.id === "publish:03-pr-provenance-stamp"),
     {},
     message,
-    bodyRequest
+    bodyRequest,
+    stackLayer
   );
 });
 
@@ -1269,22 +1269,34 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
   }
   const message = yield* validateRequiredMessage(options);
   const bodyRequest = yield* prBodyRequestFor(plan.context, options);
-  // One gh login for the pull request create (or reuse), its provenance stamp and its label.
+  const stackLayer = yield* YeetPublishStackLayer;
+  // One gh login for the pull request create (or reuse), its provenance stamp, its label and its stack link.
   const pullRequest = yield* Effect.gen(function* () {
     const ensured = yield* (dependencies.ensurePullRequest ?? ensureRequestedPullRequest)(
       plan.context,
       plan.steps,
       recorder,
       message,
-      bodyRequest
+      bodyRequest,
+      stackLayer
     );
-    yield* applyHeavyAdmissionLabel(
+    // The worker label goes first, so the ready-for-heavy run is the newest Heavy Admit run and no later
+    // label run queues behind its matrix only to re-report it.
+    yield* applyPublishLabels(
       plan.context,
       recorder,
       A.findFirst(plan.steps, (step) => step.id === PR_HEAVY_ADMISSION_LABEL_STEP_ID),
-      ensured
+      ensured,
+      options.hostedProof
     );
-    if (options.hostedProof) yield* applyComputeProfileLabel(ensured);
+    // A layer not yet in a stack (just created, or a link that failed after its create) is linked now.
+    yield* O.match(
+      O.filter(stackLayer, (layer) => O.isNone(layer.stackNumber)),
+      {
+        onNone: () => Effect.void,
+        onSome: (layer) => Effect.asVoid(linkYeetStackLayer(layer.parentNumber, ensured.number)),
+      }
+    );
     return ensured;
   }).pipe(provideYeetGhLogin(plan.context.repoRoot));
   const submitSteps = A.filter(monitorSteps, (step) => step.id === MONITOR_READY_SUBMIT_STEP_ID);
@@ -1564,6 +1576,8 @@ export const runPushFirstPublishPhasesForTesting = runPushFirstPublishPhases;
  * Refreshes the published branch, requires two ordered parents and compares the
  * tree with Git's merge result. A merge carrying extra edits fails closed.
  * Conflicted merges whose resolutions cannot be reproduced require verified reuse.
+ * A stack layer's merge of its parent's branch (`origin/<parent branch>`)
+ * counts as a base merge too.
  *
  * **Example** (Reference the merge guard)
  *
@@ -1576,7 +1590,8 @@ export const runPushFirstPublishPhasesForTesting = runPushFirstPublishPhases;
  * @since 0.0.0
  */
 export const assertMergeOnlyPublish = Effect.fn("Yeet.assertMergeOnlyPublish")(function* (
-  context: RepoRunContext
+  context: RepoRunContext,
+  stackLayer: O.Option<YeetStackLayerDecision> = O.none()
 ): Effect.fn.Return<void, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner | Git> {
   const refuse = () =>
     Effect.fail(
@@ -1607,7 +1622,14 @@ export const assertMergeOnlyPublish = Effect.fn("Yeet.assertMergeOnlyPublish")(f
     );
   const published = yield* resolveYeetRev(context.repoRoot, "FETCH_HEAD");
   const baseAncestor = yield* resolveYeetMergeBase(context.repoRoot, second.value, context.base);
-  if (first.value !== published || baseAncestor !== second.value) return yield* refuse();
+  // A stack layer may instead have merged its parent's branch.
+  const parentMerge =
+    baseAncestor !== second.value &&
+    O.isSome(stackLayer) &&
+    (yield* git
+      .isAncestor(context.repoRoot, second.value, `origin/${stackLayer.value.parentHeadRef}`)
+      .pipe(Effect.orElseSucceed(() => false)));
+  if (first.value !== published || (baseAncestor !== second.value && !parentMerge)) return yield* refuse();
   const merged = yield* git.mergeTree(context.repoRoot, first.value, second.value).pipe(Effect.option);
   const tree = yield* resolveYeetRev(context.repoRoot, "HEAD^{tree}");
   const clean = O.flatMap(merged, (result) => (result._tag === "clean" ? O.some(result.tree) : O.none()));
@@ -1697,8 +1719,10 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
   const reusableSkipCommit = yield* shouldSkipCommitForReusablePublish(plan.context, options);
   if (options.reuseVerified) yield* assertReusableVerifiedState(plan.context);
 
-  const freshness = yield* enforceBaseFreshness(plan.context, options);
-  if (options.pushOnly && !options.reuseVerified) yield* assertMergeOnlyPublish(plan.context);
+  // Resolved before any commit or push, so a refused --stack-on changes nothing.
+  const stackLayer = yield* resolveYeetPublishStackLayer(plan.context, options);
+  const freshness = yield* enforceBaseFreshness(plan.context, options, stackLayer);
+  if (options.pushOnly && !options.reuseVerified) yield* assertMergeOnlyPublish(plan.context, stackLayer);
   yield* Ref.update(extras, (state) => ({ ...state, baseFreshness: O.some(freshness) }));
   const [skipCommit, stash] = yield* preparePublishCommit(
     plan,
@@ -1727,7 +1751,7 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
     extras,
     skipCommit,
     committedAttempt
-  );
+  ).pipe(Effect.provideService(YeetPublishStackLayer, stackLayer));
 
   return yield* pipe(
     stash,

@@ -58,6 +58,7 @@ import {
   YeetReadyOptions,
   YeetReadyPullRequestRead,
   YeetRetirePlan,
+  YeetStackPublishDecision,
   YeetStatusArtifact,
   YeetStatusRemote,
 } from "@beep/repo-cli/test/Yeet";
@@ -95,7 +96,6 @@ const PR_URL = "https://github.com/o/r/pull/7";
 const passingFinalCheck = (_context: RepoRunContext, head: string) =>
   Effect.succeedSome(
     FinalCheckReceipt.make({
-      schemaVersion: "yeet-final-check/v1",
       headSha: head,
       mergeBase: Str.repeat(40)("0"),
       base: "origin/main",
@@ -768,6 +768,60 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         const issued = commandLines(commands);
         expect(A.some(issued, Str.includes("base=trunk"))).toBe(true);
         expect(A.some(issued, Str.includes("base=goals/push-first-publish"))).toBe(false);
+      })
+    );
+
+    it.effect("opens a stack layer on its parent's branch, titled from the layer's own commits", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-pr-stack-layer-" });
+        const commands = yield* makeCommands;
+        const recorder = yield* makeRecorder;
+        const parentHead = Str.repeat(40)("d");
+        const layer = YeetStackPublishDecision.cases.Layer.make({
+          parentNumber: 41,
+          parentHeadRef: "feat/parent",
+          parentHeadSha: parentHead,
+          trunk: "main",
+          stackNumber: O.none(),
+          parentMoved: false,
+        });
+        const pullRequest = yield* ensurePullRequest(
+          contextAt(root),
+          recorder,
+          O.some(draftCreateStep),
+          O.none(),
+          { findOpen: () => Effect.succeedNone },
+          O.none(),
+          YeetPrBodyRequest.make({}),
+          O.some(layer)
+        ).pipe(
+          withProcesses(
+            [
+              [`${TITLE_LOG} ${parentHead}..HEAD`, 0, titleLog("feat(repo-cli): the layer")],
+              [`${BODY_LOG} ${parentHead}..HEAD`, 0, bodyLog(["feat(repo-cli): the layer", ""])],
+              [ORIGIN, 0, ORIGIN_URL],
+              [PULL_CREATE, 0, restPullJson({ draft: true })],
+            ],
+            commands
+          )
+        );
+        expect(pullRequest.created).toBe(true);
+        const issued = commandLines(commands);
+        const create = A.findFirst(issued, Str.startsWith(PULL_CREATE));
+        assertSome(
+          O.map(
+            create,
+            Str.startsWith(
+              `${PULL_CREATE} title=feat(repo-cli): the layer head=beep-effect:${BRANCH} base=feat/parent body=`
+            )
+          ),
+          true
+        );
+        expect(O.exists(create, Str.includes("body=## feat(repo-cli): the layer"))).toBe(true);
+        // The parent's branch is the base: no default-branch read and no merge-base with the trunk.
+        expect(A.some(issued, (line) => line === DEFAULT_BRANCH_READ)).toBe(false);
+        expect(A.some(issued, Str.includes("merge-base"))).toBe(false);
       })
     );
 

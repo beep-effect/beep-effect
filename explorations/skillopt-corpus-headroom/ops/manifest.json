@@ -8,12 +8,12 @@
     "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": ["goals/skill-effect-probe"],
+      "goals": ["goals/skill-effect-probe", "goals/skill-lane-probe"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-10-01",
-    "updated": "2026-11-10",
-    "retentionReason": "MAP.md holds three gated candidates; the packet reopens at decompose when goals/skill-effect-probe reports."
+    "updated": "2026-11-13",
+    "retentionReason": "Graduated into goals/skill-effect-probe (2026-11-10) and goals/skill-lane-probe (2026-11-13). MAP.md holds the first probe's outcome and three gated candidates as re-entry points."
   }
 }

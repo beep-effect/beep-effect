@@ -4,6 +4,8 @@
 
 Lifecycle: `paused`
 
+**Paused by operator ruling (finish board, 2026-11-13).** Depends on cache-trust work; stays paused alongside it. No lane is working on it; resume with `bun run beep goals set-status turborepo-quality-cache-adoption active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
+
 Source: [ops/manifest.json](./ops/manifest.json).
 Launched 2026-10-28. See [PLAN.md](./PLAN.md) for the current audit and milestone
 dependencies.

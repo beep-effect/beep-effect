@@ -9,7 +9,8 @@
  * covers every pull-request read and write that has a REST endpoint: the pull
  * request itself, labels, issue comments, check runs, the base ruleset's
  * required contexts, the review timeline, the head's first check-suite receipt,
- * the squash merge, workflow re-runs and cancels, and the rate limit.
+ * the squash merge, native stacks (read and create), workflow re-runs and
+ * cancels, and the rate limit.
  * The GraphQL-only operations (review-thread resolution state, the
  * draft-to-ready flip) live behind `GraphqlBudget`.
  *
@@ -42,8 +43,50 @@ import * as Str from "effect/String";
 const $I = $RepoCliId.create("internal/github/GithubRest");
 
 /**
+ * Where a pull request sits in a native GitHub stack.
+ *
+ * **Details**
+ *
+ * `position` counts from 1 at the bottom layer, `size` counts every layer the
+ * stack ever held (GitHub does not renumber after a layer merges), and
+ * `baseRef` is the trunk the stack lands on, not the layer's own base: an
+ * upper layer's `baseRef` on its pull record is the branch of the layer below.
+ *
+ * **Example** (The top of a two-layer stack)
+ *
+ * ```ts
+ * import { GithubPullRequestStackRef } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * const ref = GithubPullRequestStackRef.make({ number: 3150, position: 2, size: 2, baseRef: "main" })
+ * console.log(ref.position === ref.size) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GithubPullRequestStackRef extends S.Opaque<GithubPullRequestStackRef, { readonly brand: unique symbol }>()(
+  S.Struct({
+    number: S.Int,
+    position: S.Int,
+    size: S.Int,
+    baseRef: S.String,
+  }).pipe(
+    $I.annoteSchema("GithubPullRequestStackRef", {
+      description: "Where a pull request sits in a native GitHub stack.",
+    })
+  )
+) {}
+
+/**
  * A pull request as the REST `pulls/{n}` endpoint reports it, reduced to what
  * the CLI reads.
+ *
+ * **Details**
+ *
+ * `stack` is none for a pull request outside a native stack. `mergeCommitSha`
+ * is the commit GitHub wrote when it merged the pull request and is none until
+ * then: on an open pull request GitHub reports a test-merge commit under the
+ * same key, which is not carried.
  *
  * **Example** (Build a record)
  *
@@ -96,8 +139,17 @@ export class GithubPullRequestRecord extends S.Opaque<GithubPullRequestRecord, {
     labels: S.Array(S.String),
     createdAt: S.DateTimeUtc,
     updatedAt: S.DateTimeUtc,
+    stack: S.Option(GithubPullRequestStackRef).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    mergeCommitSha: S.Option(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe($I.annoteSchema("GithubPullRequestRecord", { description: "A pull request read over GitHub REST." }))
 ) {}
+
+const PullStackWire = S.Struct({
+  number: S.Int,
+  position: S.Int,
+  size: S.Int,
+  base: S.Struct({ ref: S.String }),
+});
 
 const PullWire = S.Struct({
   number: S.Int,
@@ -108,6 +160,7 @@ const PullWire = S.Struct({
   draft: S.optionalKey(S.Boolean),
   merged: S.optionalKey(S.Boolean),
   merged_at: S.NullOr(S.String),
+  merge_commit_sha: S.String.pipe(S.NullOr, S.optionalKey),
   mergeable_state: S.String.pipe(S.NullOr, S.optionalKey),
   head: S.Struct({ ref: S.String, sha: S.String }),
   base: S.Struct({ ref: S.String, sha: S.String }),
@@ -116,19 +169,21 @@ const PullWire = S.Struct({
   labels: S.Array(S.Struct({ name: S.String })),
   created_at: S.DateTimeUtcFromString,
   updated_at: S.DateTimeUtcFromString,
+  stack: PullStackWire.pipe(S.NullOr, S.optionalKey),
 });
 
 const PullFileWire = S.Struct({ filename: S.String });
 
-const toPullRequestRecord = (wire: typeof PullWire.Type): GithubPullRequestRecord =>
-  GithubPullRequestRecord.make({
+const toPullRequestRecord = (wire: typeof PullWire.Type): GithubPullRequestRecord => {
+  const merged = wire.merged ?? wire.merged_at !== null;
+  return GithubPullRequestRecord.make({
     number: wire.number,
     nodeId: wire.node_id,
     title: wire.title,
     body: wire.body ?? "",
     state: wire.state,
     draft: wire.draft ?? false,
-    merged: wire.merged ?? wire.merged_at !== null,
+    merged,
     mergeableState: O.fromNullishOr(wire.mergeable_state),
     headRef: wire.head.ref,
     headSha: wire.head.sha,
@@ -139,10 +194,175 @@ const toPullRequestRecord = (wire: typeof PullWire.Type): GithubPullRequestRecor
     labels: A.map(wire.labels, (label) => label.name),
     createdAt: wire.created_at,
     updatedAt: wire.updated_at,
+    stack: O.map(O.fromNullishOr(wire.stack), (stack) =>
+      GithubPullRequestStackRef.make({
+        number: stack.number,
+        position: stack.position,
+        size: stack.size,
+        baseRef: stack.base.ref,
+      })
+    ),
+    // An open pull request reports a test-merge commit under the same key.
+    mergeCommitSha: merged ? O.filter(O.fromNullishOr(wire.merge_commit_sha), Str.isNonEmpty) : O.none(),
   });
+};
 
 /**
- * One check run on a commit.
+ * One layer of a native stack, as the Stacks endpoints list it.
+ *
+ * **Example** (An open lower layer)
+ *
+ * ```ts
+ * import { GithubStackLayerRecord } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * const layer = GithubStackLayerRecord.make({
+ *   number: 41,
+ *   state: "open",
+ *   draft: false,
+ *   merged: false,
+ *   headRef: "feat/parent",
+ *   headSha: "abc",
+ * })
+ * console.log(layer.merged) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GithubStackLayerRecord extends S.Opaque<GithubStackLayerRecord, { readonly brand: unique symbol }>()(
+  S.Struct({
+    number: S.Int,
+    state: S.String,
+    draft: S.Boolean,
+    merged: S.Boolean,
+    headRef: S.String,
+    headSha: S.String,
+  }).pipe($I.annoteSchema("GithubStackLayerRecord", { description: "One layer of a native GitHub stack." }))
+) {}
+
+/**
+ * A native GitHub stack: pull requests chained base to head on one trunk.
+ *
+ * **Details**
+ *
+ * `layers` runs bottom to top and keeps merged layers, so a layer's index plus
+ * one is its `position`. `baseRef` is the trunk. `open` turns false once no
+ * layer is open.
+ *
+ * **Example** (Count the open layers)
+ *
+ * ```ts
+ * import { GithubStackLayerRecord, GithubStackRecord } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * const layer = (number: number, headRef: string) =>
+ *   GithubStackLayerRecord.make({ number, state: "open", draft: false, merged: false, headRef, headSha: "abc" })
+ * const stack = GithubStackRecord.make({
+ *   number: 43,
+ *   open: true,
+ *   baseRef: "main",
+ *   layers: [layer(41, "feat/parent"), layer(42, "feat/child")],
+ * })
+ * console.log(stack.layers.length) // 2
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GithubStackRecord extends S.Opaque<GithubStackRecord, { readonly brand: unique symbol }>()(
+  S.Struct({
+    number: S.Int,
+    open: S.Boolean,
+    baseRef: S.String,
+    layers: S.Array(GithubStackLayerRecord),
+  }).pipe($I.annoteSchema("GithubStackRecord", { description: "A native GitHub stack, layers bottom to top." }))
+) {}
+
+/**
+ * What GitHub answered to a request to link pull requests into a stack.
+ *
+ * **Details**
+ *
+ * - `Linked`: GitHub created the stack (HTTP 201).
+ * - `Refused`: GitHub understood and declined (HTTP 422); `message` is its
+ *   sentence, such as "Pull requests must form a stack, where each PR's base
+ *   ref is the previous PR's head ref" or "Pull requests #41, #42 are already
+ *   part of a stack". Nothing was linked.
+ *
+ * **Example** (Branch on a refusal)
+ *
+ * ```ts
+ * import { GithubStackLinkOutcome } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * const outcome = GithubStackLinkOutcome.cases.Refused.make({ message: "Pull request #42 is already part of a stack" })
+ * console.log(GithubStackLinkOutcome.guards.Refused(outcome)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GithubStackLinkOutcome = S.TaggedUnion({
+  Linked: { stack: GithubStackRecord },
+  Refused: { message: S.String },
+}).pipe(
+  $I.annoteSchema("GithubStackLinkOutcome", {
+    description: "What GitHub answered to a stack link request: linked, or refused with its sentence.",
+  })
+);
+
+/**
+ * What GitHub answered to a request to link pull requests into a stack.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GithubStackLinkOutcome = typeof GithubStackLinkOutcome.Type;
+
+// The Stacks endpoints' shared body: the list form carries these fields and the
+// create and get forms add more (observed 2026-11-13:
+// goals/yeet-async-merge-and-stacks/research/stack-p0-probes-2026-11.md).
+const StackWire = S.Struct({
+  number: S.Int,
+  open: S.Boolean,
+  base: S.Struct({ ref: S.String }),
+  pull_requests: S.Array(
+    S.Struct({
+      number: S.Int,
+      state: S.String,
+      draft: S.optionalKey(S.Boolean),
+      merged_at: S.NullOr(S.String),
+      head: S.Struct({ ref: S.String, sha: S.String }),
+    })
+  ),
+});
+
+const toStackRecord = (wire: typeof StackWire.Type): GithubStackRecord =>
+  GithubStackRecord.make({
+    number: wire.number,
+    open: wire.open,
+    baseRef: wire.base.ref,
+    layers: A.map(wire.pull_requests, (layer) =>
+      GithubStackLayerRecord.make({
+        number: layer.number,
+        state: layer.state,
+        draft: layer.draft ?? false,
+        merged: layer.merged_at !== null,
+        headRef: layer.head.ref,
+        headSha: layer.head.sha,
+      })
+    ),
+  });
+
+const CompareWire = S.Struct({ behind_by: S.Int });
+
+/**
+ * One check run on a commit, with the check suite it reports into.
+ *
+ * **Details**
+ *
+ * `checkSuiteId` is the REST `check_suite.id`, none when GitHub sends no
+ * suite. The merge gates map each suite to the workflow run that owns it,
+ * because the base ruleset reads only the newest run's suite per workflow and
+ * event.
  *
  * **Example** (A green run)
  *
@@ -152,18 +372,33 @@ const toPullRequestRecord = (wire: typeof PullWire.Type): GithubPullRequestRecor
  *
  * const run = GithubCheckRunRecord.make({ id: 1, name: "Lint", status: "completed", conclusion: O.some("success") })
  * console.log(run.name) // "Lint"
+ * console.log(O.isNone(run.checkSuiteId)) // true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export class GithubCheckRunRecord extends S.Opaque<GithubCheckRunRecord, { readonly brand: unique symbol }>()(
-  S.Struct({ id: S.Int, name: S.String, status: S.String, conclusion: S.Option(S.String) }).pipe(
-    $I.annoteSchema("GithubCheckRunRecord", { description: "One check run on a commit, read over GitHub REST." })
+  S.Struct({
+    id: S.Int,
+    name: S.String,
+    status: S.String,
+    conclusion: S.Option(S.String),
+    checkSuiteId: S.Int.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  }).pipe(
+    $I.annoteSchema("GithubCheckRunRecord", {
+      description: "One check run on a commit and its check suite, read over GitHub REST.",
+    })
   )
 ) {}
 
-const CheckRunWire = S.Struct({ id: S.Int, name: S.String, status: S.String, conclusion: S.NullOr(S.String) });
+const CheckRunWire = S.Struct({
+  id: S.Int,
+  name: S.String,
+  status: S.String,
+  conclusion: S.NullOr(S.String),
+  check_suite: S.Struct({ id: S.Int }).pipe(S.NullOr, S.optionalKey),
+});
 
 /**
  * One commit status context (the legacy statuses API that deploy previews
@@ -195,12 +430,20 @@ const CombinedStatusWire = S.Struct({
 });
 
 /**
- * One GitHub Actions workflow run.
+ * One GitHub Actions workflow run, with the check suite it reports into.
+ *
+ * **Details**
+ *
+ * `path` is the workflow file (`.github/workflows/heavy-admit.yml`) and
+ * `event` the triggering event (`pull_request`, `push`). Together they key the
+ * runs the base ruleset compares: per key it reads only the newest run's
+ * suite, the one `checkSuiteId` names (none when GitHub sends no suite id).
  *
  * **Example** (A failed run)
  *
  * ```ts
  * import { GithubWorkflowRunRecord } from "@beep/repo-cli/test/SharedInternals"
+ * import * as DateTime from "effect/DateTime"
  * import * as O from "effect/Option"
  *
  * const run = GithubWorkflowRunRecord.make({
@@ -209,8 +452,11 @@ const CombinedStatusWire = S.Struct({
  *   status: "completed",
  *   conclusion: O.some("failure"),
  *   headSha: "abc",
+ *   checkSuiteId: O.some(90),
+ *   path: ".github/workflows/check.yml",
  *   event: "pull_request",
  *   headBranch: O.some("feat/x"),
+ *   createdAt: DateTime.makeUnsafe("2026-11-12T23:27:45Z"),
  * })
  * console.log(run.id) // 9
  * ```
@@ -225,9 +471,16 @@ export class GithubWorkflowRunRecord extends S.Opaque<GithubWorkflowRunRecord, {
     status: S.String,
     conclusion: S.Option(S.String),
     headSha: S.String,
+    checkSuiteId: S.Option(S.Int),
+    path: S.String,
     event: S.String,
     headBranch: S.Option(S.String),
-  }).pipe($I.annoteSchema("GithubWorkflowRunRecord", { description: "One workflow run, read over GitHub REST." }))
+    createdAt: S.DateTimeUtc,
+  }).pipe(
+    $I.annoteSchema("GithubWorkflowRunRecord", {
+      description: "One workflow run and its check suite, read over GitHub REST.",
+    })
+  )
 ) {}
 
 /**
@@ -302,21 +555,12 @@ const WorkflowRunWire = S.Struct({
   status: S.NullOr(S.String),
   conclusion: S.NullOr(S.String),
   head_sha: S.String,
+  check_suite_id: S.Int.pipe(S.NullOr, S.optionalKey),
+  path: S.String,
   event: S.String.pipe(S.NullOr, S.optionalKey),
   head_branch: S.String.pipe(S.NullOr, S.optionalKey),
+  created_at: S.DateTimeUtcFromString,
 });
-
-/**
- * The outcome of a REST squash merge.
- *
- * @category models
- * @since 0.0.0
- */
-export class GithubMergeRecord extends S.Opaque<GithubMergeRecord, { readonly brand: unique symbol }>()(
-  S.Struct({ merged: S.Boolean, sha: S.String, message: S.String }).pipe(
-    $I.annoteSchema("GithubMergeRecord", { description: "The REST merge response." })
-  )
-) {}
 
 /**
  * What an async merge request asks GitHub to do.
@@ -598,7 +842,6 @@ const TimelineEventWire = S.Struct({
 const CheckSuitesWire = S.Struct({ check_suites: S.Array(S.Struct({ created_at: S.String })) });
 const CommentWire = S.Struct({ id: S.Int, html_url: S.String });
 const LabelWire = S.Struct({ name: S.String });
-const MergeWire = S.Struct({ merged: S.Boolean, sha: S.String, message: S.String });
 
 // The one body `merge-async` and its poll answer with, on 202, 200, 400 and 409 alike
 // (observed 2026-11-10: goals/yeet-async-merge-and-stacks/research/merge-async-p0-probes-2026-11.md).
@@ -648,30 +891,30 @@ export interface GithubRestShape {
   /** Post an issue comment on a pull request; returns its URL. */
   readonly createIssueComment: (number: number, body: string) => Effect.Effect<string, GitHubError>;
   /**
+   * Link pull requests, bottom to top, into a native stack
+   * (`POST /repos/{owner}/{repo}/stacks`). Each pull request's base ref must be
+   * the head ref of the one before it. An HTTP 201 answers `Linked`; a 422
+   * answers `Refused` with GitHub's sentence (out of order, fewer than two,
+   * already stacked). Every other failure stays a `GitHubError`.
+   */
+  readonly createStack: (pullRequests: ReadonlyArray<number>) => Effect.Effect<GithubStackLinkOutcome, GitHubError>;
+  /**
    * Whether the pull request has any inline review comment (one-item REST page).
    * No comment proves zero review threads; any comment says nothing about their
    * resolution, which only GraphQL reports.
    */
   readonly hasReviewComments: (number: number) => Effect.Effect<boolean, GitHubError>;
   /**
+   * Whether `headSha` contains every commit of `baseSha` (the compare
+   * endpoint's `behind_by` is zero). Read from GitHub, so neither commit has
+   * to exist locally.
+   */
+  readonly headContains: (baseSha: string, headSha: string) => Effect.Effect<boolean, GitHubError>;
+  /**
    * First GitHub check-suite receipt for the head (its first 100 suites),
    * unknown when none exists.
    */
   readonly headFirstReceivedAt: (sha: string) => Effect.Effect<O.Option<DateTime.Utc>, GitHubError>;
-  /**
-   * Squash-merge (or another method) pinned to a head sha. Without a
-   * `commitTitle` or `commitMessage` GitHub writes the subject or body its
-   * merge settings prescribe.
-   */
-  readonly mergePullRequest: (
-    number: number,
-    options: {
-      readonly sha: string;
-      readonly commitTitle?: string | undefined;
-      readonly commitMessage?: string | undefined;
-      readonly method: "merge" | "squash" | "rebase";
-    }
-  ) => Effect.Effect<GithubMergeRecord, GitHubError>;
   /** The open pull request whose head is `owner:branch`, if any. */
   readonly openPullRequestForBranch: (
     headOwner: string,
@@ -722,12 +965,17 @@ export interface GithubRestShape {
     },
     GitHubError
   >;
+  /**
+   * One native stack by number (`GET /repos/{owner}/{repo}/stacks/{n}`), layers
+   * bottom to top with merged layers kept.
+   */
+  readonly stack: (stackNumber: number) => Effect.Effect<GithubStackRecord, GitHubError>;
   /** Replace the title and/or body. */
   readonly updatePullRequest: (
     number: number,
     patch: { readonly title?: string | undefined; readonly body?: string | undefined }
   ) => Effect.Effect<GithubPullRequestRecord, GitHubError>;
-  /** Every workflow run for a head sha (all pages). */
+  /** Every workflow run for a head sha (all pages), with each run's workflow file, event and check suite. */
   readonly workflowRunsForSha: (sha: string) => Effect.Effect<ReadonlyArray<GithubWorkflowRunRecord>, GitHubError>;
 }
 
@@ -867,6 +1115,7 @@ const makeGithubRest = Effect.gen(function* () {
             name: run.name,
             status: run.status,
             conclusion: O.fromNullishOr(run.conclusion),
+            checkSuiteId: O.fromNullishOr(run.check_suite?.id),
           })
         )
       )
@@ -982,30 +1231,6 @@ const makeGithubRest = Effect.gen(function* () {
         )
       );
 
-  const mergePullRequest = (
-    number: number,
-    options: {
-      readonly sha: string;
-      readonly commitTitle?: string | undefined;
-      readonly commitMessage?: string | undefined;
-      readonly method: "merge" | "squash" | "rebase";
-    }
-  ) =>
-    client
-      .requestDecoded(
-        "PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge",
-        {
-          ...at,
-          pull_number: number,
-          sha: options.sha,
-          merge_method: options.method,
-          ...OptionUtils.getSomesStruct({ commit_title: O.fromUndefinedOr(options.commitTitle) }),
-          ...OptionUtils.getSomesStruct({ commit_message: O.fromUndefinedOr(options.commitMessage) }),
-        },
-        MergeWire
-      )
-      .pipe(Effect.map((merge) => GithubMergeRecord.make(merge)));
-
   const toAsyncMergeOutcome =
     (operation: string, inFlight: boolean) =>
     (wire: typeof AsyncMergeWire.Type): Effect.Effect<GithubAsyncMergeOutcome, GitHubError> => {
@@ -1092,6 +1317,33 @@ const makeGithubRest = Effect.gen(function* () {
       )
     );
 
+  const stackOperation = "GET /repos/{owner}/{repo}/stacks/{stack_number}";
+  const stack = (stackNumber: number) =>
+    client
+      .requestDecoded(stackOperation, { ...at, stack_number: stackNumber }, StackWire)
+      .pipe(Effect.map(toStackRecord));
+
+  // GitHub declines a link it understood with a 422 and a sentence; the caller
+  // shows that sentence, so it is an outcome and not an error.
+  const createStackOperation = "POST /repos/{owner}/{repo}/stacks";
+  const createStack = (pullRequests: ReadonlyArray<number>) =>
+    client.requestDecoded(createStackOperation, { ...at, pull_requests: pullRequests }, StackWire).pipe(
+      Effect.map((wire) => GithubStackLinkOutcome.cases.Linked.make({ stack: toStackRecord(wire) })),
+      Effect.catchIf(
+        (error) => error.status === 422,
+        (error) => Effect.succeed(GithubStackLinkOutcome.cases.Refused.make({ message: error.reason }))
+      )
+    );
+
+  const headContains = (baseSha: string, headSha: string) =>
+    client
+      .requestDecoded(
+        "GET /repos/{owner}/{repo}/compare/{basehead}",
+        { ...at, basehead: `${baseSha}...${headSha}`, per_page: 1 },
+        CompareWire
+      )
+      .pipe(Effect.map((wire) => wire.behind_by === 0));
+
   const workflowRunsForSha = (sha: string) =>
     client.paginate("GET /repos/{owner}/{repo}/actions/runs", { ...at, head_sha: sha }).pipe(
       Effect.flatMap(decodeWith(S.Array(WorkflowRunWire), "GET /repos/{owner}/{repo}/actions/runs")),
@@ -1103,8 +1355,11 @@ const makeGithubRest = Effect.gen(function* () {
             status: run.status ?? "unknown",
             conclusion: O.fromNullishOr(run.conclusion),
             headSha: run.head_sha,
+            checkSuiteId: O.fromNullishOr(run.check_suite_id),
+            path: run.path,
             event: run.event ?? "unknown",
             headBranch: O.fromNullishOr(run.head_branch),
+            createdAt: run.created_at,
           })
         )
       )
@@ -1139,9 +1394,10 @@ const makeGithubRest = Effect.gen(function* () {
     cancelWorkflowRun,
     checkRuns,
     commitStatuses,
+    headContains,
     headFirstReceivedAt,
     createIssueComment,
-    mergePullRequest,
+    createStack,
     openPullRequestForBranch,
     openPullRequests,
     pullRequest,
@@ -1154,6 +1410,7 @@ const makeGithubRest = Effect.gen(function* () {
     removeLabel,
     rerunFailedJobs,
     requiredStatusContexts,
+    stack,
     updatePullRequest,
     workflowRunsForSha,
   });

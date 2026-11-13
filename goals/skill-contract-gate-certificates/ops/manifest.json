@@ -4,13 +4,13 @@
     "id": "skill-contract-gate-certificates",
     "packetId": "goal-packet/v1:2d786567d221f96a9ff9d82336df5c3be963cb26f283b52027861e198ccf07f0",
     "title": "Skill Contract Gate Certificates",
-    "status": "active",
+    "status": "paused",
     "created": "2026-10-14",
-    "updated": "2026-11-02",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/skill-contract-gate-certificates",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "Skill Contract Gate Certificates (graduated from explorations/typed-agent-skill-contracts).",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -105,5 +105,6 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): Mid-phase but no recent motion and skill-effect-probe evidence should inform whether certificates are worth it; park cleanly. Resume with `bun run beep goals set-status skill-contract-gate-certificates active` when it is picked up."
 }

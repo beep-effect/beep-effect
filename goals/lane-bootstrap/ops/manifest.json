@@ -3,13 +3,13 @@
   "initiative": {
     "id": "lane-bootstrap",
     "title": "Lane Bootstrap",
-    "status": "active",
+    "status": "paused",
     "created": "2026-10-05",
-    "updated": "2026-11-06",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/lane-bootstrap",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "`beep worktree add` creates, registers and wires a lane under the fleet lanes dir with shared caches; desktop-app and Codex lanes are adopted on sight.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -92,5 +92,6 @@
   ],
   "dependsOn": ["goals/fleet-root-registry"],
   "provides": ["fleet/lane-bootstrap"],
-  "requires": ["fleet/root-config", "fleet/registry"]
+  "requires": ["fleet/root-config", "fleet/registry"],
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): P1 is recorded blocked and nothing is moving. Resume with `bun run beep goals set-status lane-bootstrap active` when it is picked up."
 }

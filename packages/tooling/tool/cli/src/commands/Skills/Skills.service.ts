@@ -60,7 +60,7 @@ import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { canonicalJsonText } from "../Goals/PacketCore/PacketDigest.ts";
+import { canonicalJsonTextResult } from "../Goals/PacketCore/PacketDigest.ts";
 import { readSkillsLockText, SKILLS_LOCK_PATH } from "./internal/LockFile.ts";
 import { PATCH_ROOT } from "./internal/PatchStaging.ts";
 import {
@@ -1694,7 +1694,9 @@ const sealSkillsLockMigrationPlan = Effect.fn("SkillsLock.sealSkillsLockMigratio
   const encodedRows = yield* encodeMigrationRows(rows).pipe(
     SkillsCommandError.mapError("Failed to encode the skills lock migration plan rows.")
   );
-  const preimage = canonicalJsonText({ schemaVersion: PLAN_SCHEMA_VERSION, lockSha256, rows: encodedRows });
+  const preimage = yield* Effect.fromResult(
+    canonicalJsonTextResult({ schemaVersion: PLAN_SCHEMA_VERSION, lockSha256, rows: encodedRows })
+  ).pipe(SkillsCommandError.mapError("Failed to canonicalize the skills lock migration plan."));
   const planDigest = yield* hashBytes(textEncoder.encode(preimage), "skills-lock-migration-plan");
   return SkillsLockMigrationPlan.make({ planDigest, lockSha256, rows });
 });

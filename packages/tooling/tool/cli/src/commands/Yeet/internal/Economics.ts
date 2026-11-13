@@ -100,7 +100,6 @@ const FLEET_READ_CONCURRENCY = 8;
 const COMPARABLE_EPISODE_CUT = Duration.hours(24);
 const UNKNOWN_KEY = "unknown";
 const VERDICT_V2 = "yeet-verdict/v2";
-const UNLOCATED_LANE = "unlocated";
 const TOP_LANE_ROWS = 10;
 
 // Ruling 74: the wrapper phase prefixes for verdicts written before inner
@@ -126,6 +125,33 @@ const EconomicsComparableMode = YeetRunMode.pick(["verify", "repair", "publish"]
   })
 );
 const isComparableMode = S.is(EconomicsComparableMode);
+
+// MEAS-02: the non-lane rows of `actionableLaneMix`. Refusals are classified
+// before any lane or step id, and stay rows of the same mix so its total
+// equals `redAttempts`; `unexecuted` is a handler-error red that ran no lane,
+// `unlocated` any other red with no failed lane and no step-exit step.
+const EconomicsActionableClass = LiteralKit([
+  "refusal:lock-bounce",
+  "refusal:stale-base",
+  "refusal:closeout",
+  "unexecuted",
+  "unlocated",
+]).pipe(
+  $I.annoteSchema("EconomicsActionableClass", {
+    description: "The actionable-lane mix rows that name a refusal or an unlocated red instead of a lane.",
+  })
+);
+
+// Lane statuses that mean the lane actually ran.
+const EconomicsExecutedLaneStatus = YeetLaneStatus.pick(["passed", "reused", "failed"]).pipe(
+  $I.annoteSchema("EconomicsExecutedLaneStatus", {
+    description: "Yeet lane statuses that mean the lane ran in the attempt.",
+  })
+);
+const isExecutedLaneStatus = S.is(EconomicsExecutedLaneStatus);
+
+// The publish stale-base refusal (`PublishScope.ts`), matched lowercased.
+const STALE_BASE_REFUSAL = /refuses a stale base/u;
 
 const EconomicsReceiptProxyClass = LiteralKit([
   "scheduler-lock-bounce",
@@ -1151,13 +1177,43 @@ const failureOffsets = (attempt: EconomicsAttempt): O.Option<FailureOffsets> => 
   );
 };
 
+const isHandlerError = (attempt: EconomicsAttempt): boolean =>
+  O.exists(attempt.failureKind, YeetFailureKind.is["handler-error"]);
+
+// A refusal class, checked before any lane: the scheduler lock bounce, the
+// publish stale-base refusal, and any red closeout.
+const refusalClass = (attempt: EconomicsAttempt): O.Option<typeof EconomicsActionableClass.Type> => {
+  if (isLockBounce(attempt)) {
+    return O.some(EconomicsActionableClass.Enum["refusal:lock-bounce"]);
+  }
+  if (isHandlerError(attempt) && STALE_BASE_REFUSAL.test(Str.toLowerCase(attempt.message))) {
+    return O.some(EconomicsActionableClass.Enum["refusal:stale-base"]);
+  }
+  return O.exists(attempt.mode, YeetRunMode.is.closeout)
+    ? O.some(EconomicsActionableClass.Enum["refusal:closeout"])
+    : O.none();
+};
+
+// A handler-error verdict names the first unexecuted planned step as its
+// failed step (`Handler.ts`), so only a step-exit failed step is a lane.
 const actionableLane = (attempt: EconomicsAttempt): string =>
   pipe(
-    A.findFirst(attempt.lanes, (lane) => isInnerLane(lane) && isFailedLane(lane)),
-    O.map((lane) => lane.id),
-    O.orElse(() => attempt.failedStepId),
+    refusalClass(attempt),
+    O.orElse(() =>
+      O.map(
+        A.findFirst(attempt.lanes, (lane) => isInnerLane(lane) && isFailedLane(lane)),
+        (lane) => lane.id
+      )
+    ),
+    O.orElse(() =>
+      O.filter(attempt.failedStepId, () => O.exists(attempt.failureKind, YeetFailureKind.is["step-exit"]))
+    ),
     O.orElse(() => O.map(A.findFirst(attempt.lanes, isFailedLane), (lane) => lane.id)),
-    O.getOrElse(() => UNLOCATED_LANE)
+    O.getOrElse(() =>
+      isHandlerError(attempt) && !A.some(attempt.lanes, (lane) => isExecutedLaneStatus(lane.status))
+        ? EconomicsActionableClass.Enum.unexecuted
+        : EconomicsActionableClass.Enum.unlocated
+    )
   );
 
 const receiptProxyClass = (attempt: EconomicsAttempt): string => {

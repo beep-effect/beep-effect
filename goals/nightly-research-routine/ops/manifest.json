@@ -3,14 +3,14 @@
   "initiative": {
     "id": "nightly-research-routine",
     "title": "Nightly Research Routine",
-    "status": "active",
+    "status": "superseded",
     "created": "2026-08-08",
-    "updated": "2026-08-08",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/nightly-research-routine",
-  "lifecycle": "active",
-  "statusNote": "2026-10-02 roadmap re-eval: P0 shipped and the routine runs on its timer (packets 2026-09-22, 09-23, 09-25, 09-27, 09-30, 10-02). P1 to P4 are Lane 3 queue fillers, not stalled work.",
+  "lifecycle": "superseded",
+  "statusNote": "Closed (superseded) 2026-11-13 by operator ruling (finish board): It has been stale for about three weeks with no next step, and the research/ surface already covers the intake need; close it by ruling and keep only the P0 laws. Re-open with `bun run beep goals set-status nightly-research-routine active` and re-graduate the next slice. Before the ruling: 2026-10-02 roadmap re-eval: P0 shipped and the routine runs on its timer (packets 2026-09-22, 09-23, 09-25, 09-27, 09-30, 10-02). P1 to P4 are Lane 3 queue fillers, not stalled work.",
   "mission": "Ship an unattended nightly research routine that lands delta-first, sanitized, novelty-gated intel packets under top-level research/ as mergeable PRs — native x.com search and cross-provider verify running entirely on non-Anthropic quota pools — with per-packet claims truth and machine-proposes/human-admits actioning.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -85,5 +85,7 @@
     "A hard rule (sanitize-at-write, blinding, single-writer ledger, PR-only) cannot be satisfied mechanically. Report rather than weaken.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "supersededNote": "Closed by operator ruling (finish board, 2026-11-13) without meeting its completion gate; see goals/nightly-research-routine/decisions/2026-11-13-finish-board-ruling-close.md.",
+  "retentionReason": "Closed by operator ruling (finish board, 2026-11-13) with a re-open path: the full packet stays on main so `bun run beep goals set-status nightly-research-routine active` can resume it or re-graduate the next slice without restoring from the archive."
 }

@@ -1167,6 +1167,49 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
 
+    it.effect("previews the aged-quarantine archive in the reap dry run and reports it on --apply", () =>
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        {
+          const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
+          return yield* Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* withQualityAdmission(request(), noAdmissionOriginGate, Effect.void, fastConfig);
+            const nowMillis = yield* Clock.currentTimeMillis;
+            const agedName = "previewed.lease.json.1700000000000";
+            const youngName = `young.lease.json.${nowMillis}`;
+            yield* fs.writeFileString(path.join(tempRoot.quarantine, agedName), "{aged");
+            yield* fs.writeFileString(path.join(tempRoot.quarantine, youngName), "{young");
+            const archiveLine = (verb: string) =>
+              `${verb} 1 quarantine entry older than 7d 0h -> ${tempRoot.root}/${QUARANTINE_ARCHIVE_DIRECTORY_NAME}`;
+
+            yield* runQualityCommand(["scheduler", "reap", "--no-apply"]);
+            const dryRunLines = yield* TestConsole.logLines;
+            expect(A.map(dryRunLines, String)).toContain(archiveLine("would archive"));
+            const keptByDryRun = yield* listDirectory(tempRoot.quarantine);
+            expect([...keptByDryRun].sort()).toStrictEqual([agedName, youngName].sort());
+
+            yield* runQualityCommand(["scheduler", "reap", "--apply"]);
+            const applyLines = yield* TestConsole.logLines;
+            const applyOutput = A.map(A.drop(applyLines, A.length(dryRunLines)), String);
+            expect(applyOutput).toContain(archiveLine("archived"));
+            const keptByApply = yield* listDirectory(tempRoot.quarantine);
+            expect(keptByApply).toStrictEqual([youngName]);
+
+            yield* runQualityCommand(["scheduler", "reap", "--no-apply"]);
+            const finalLines = yield* TestConsole.logLines;
+            const finalOutput = A.map(A.drop(finalLines, A.length(applyLines)), String);
+            expect(finalOutput).toContain("would archive no aged quarantine entries");
+          }).pipe(
+            provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+            Effect.provideService(MemoryStats, memoryStats(gibRef))
+          );
+        }
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
+
     it.effect("admits immediately at free capacity and cleans up every artifact", () =>
       Effect.gen(function* () {
         const gibRef = yield* Ref.make(50);
@@ -5930,7 +5973,7 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
       ]);
       expect(lines).toHaveLength(2);
       expect(O.getOrNull(quarantinedAtMillisOf(quarantined[1] ?? ""))).toBe(nowMillis - 3_600_000);
-      expect(O.isNone(quarantinedAtMillisOf(quarantined[2] ?? ""))).toBe(true);
+      assertNone(quarantinedAtMillisOf(quarantined[2] ?? ""));
     });
 
     it("renders no quarantine line for an empty quarantine", () => {
@@ -6226,14 +6269,16 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const youngName = `young.lease.json.${nowMillis - 60_000}`;
             const agedName = `aged.lease.json.${nowMillis - QUARANTINE_ARCHIVE_MIN_AGE_MILLIS - 60_000}`;
             yield* fs.writeFileString(path.join(tempRoot.quarantine, youngName), "{young");
+            const agedTicketName = `aged.ticket.json.${nowMillis - QUARANTINE_ARCHIVE_MIN_AGE_MILLIS - 120_000}`;
             yield* fs.writeFileString(path.join(tempRoot.quarantine, agedName), "{aged");
+            yield* fs.writeFileString(path.join(tempRoot.quarantine, agedTicketName), "{aged ticket");
             const archiveDirectory = path.join(tempRoot.root, QUARANTINE_ARCHIVE_DIRECTORY_NAME);
 
             // Status is read-only: it reports both entries and archives nothing.
             const before = yield* admissionStatus(fastConfig);
             expect(before.leases).toHaveLength(1);
             expect(A.map(before.quarantined, (entry) => path.basename(entry)).sort()).toStrictEqual(
-              [agedName, youngName].sort()
+              [agedName, agedTicketName, youngName].sort()
             );
             const archivedBefore = yield* listDirectory(archiveDirectory);
             expect(archivedBefore).toHaveLength(0);
@@ -6242,7 +6287,7 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const quarantineAfter = yield* listDirectory(tempRoot.quarantine);
             expect(quarantineAfter).toStrictEqual([youngName]);
             const archivedAfter = yield* listDirectory(archiveDirectory);
-            expect(archivedAfter).toStrictEqual([agedName]);
+            expect([...archivedAfter].sort()).toStrictEqual([agedName, agedTicketName].sort());
             const archivedText = yield* fs.readFileString(path.join(archiveDirectory, agedName));
             expect(archivedText).toBe("{aged");
             expect(A.map(after.quarantined, (entry) => path.basename(entry))).toStrictEqual([youngName]);
@@ -6259,7 +6304,7 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
       }).pipe(TestClock.withLive)
     );
 
-    it.effect("restores an archived quarantine entry by moving it back", () =>
+    it.effect("keeps aged quarantine entries in place when the archive cannot take them", () =>
       Effect.gen(function* () {
         const gibRef = yield* Ref.make(50);
         {
@@ -6268,19 +6313,178 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
             yield* withQualityAdmission(request(), noAdmissionOriginGate, Effect.void, fastConfig);
-            const agedName = "restorable.lease.json.1700000000000";
-            const original = "{restorable lease bytes";
-            yield* fs.writeFileString(path.join(tempRoot.quarantine, agedName), original);
-            yield* reapAdmissionState({ apply: true });
-            const archived = path.join(tempRoot.root, QUARANTINE_ARCHIVE_DIRECTORY_NAME, agedName);
-            const archivedText = yield* fs.readFileString(archived);
-            expect(archivedText).toBe(original);
+            const agedName = "stuck.lease.json.1700000000000";
+            const agedPath = path.join(tempRoot.quarantine, agedName);
+            yield* fs.writeFileString(agedPath, "{stuck");
+            const archiveDirectory = path.join(tempRoot.root, QUARANTINE_ARCHIVE_DIRECTORY_NAME);
 
-            yield* fs.rename(archived, path.join(tempRoot.quarantine, agedName));
-            const restored = yield* admissionStatus(fastConfig);
-            expect(restored.quarantined).toContain(path.join(tempRoot.quarantine, agedName));
-            const restoredText = yield* fs.readFileString(path.join(tempRoot.quarantine, agedName));
-            expect(restoredText).toBe(original);
+            // A live holder of the archive lock defers the archive to a later reap.
+            const lockPath = path.join(tempRoot.claims, "quarantine-archive.lock");
+            const procStart = yield* ownProcStart();
+            const liveGeneration = yield* encodeJournalLockGeneration(
+              AdmissionJournalLockGeneration.make({
+                schemaVersion: "yeet-admission-journal-lock/v1",
+                pid: process.pid,
+                procStart,
+                ownerToken: `${process.pid}:quarantine-archive-holder`,
+              })
+            );
+            yield* fs.writeFileString(lockPath, liveGeneration);
+            yield* reapAdmissionState({ apply: true });
+            const keptWhileLocked = yield* fs.exists(agedPath);
+            expect(keptWhileLocked).toBe(true);
+            const archiveWhileLocked = yield* fs.exists(archiveDirectory);
+            expect(archiveWhileLocked).toBe(false);
+            yield* fs.remove(lockPath, { force: true });
+
+            // An archive path that cannot become a directory archives nothing.
+            yield* fs.writeFileString(archiveDirectory, "not a directory");
+            yield* reapAdmissionState({ apply: true });
+            const keptWithoutArchive = yield* fs.exists(agedPath);
+            expect(keptWithoutArchive).toBe(true);
+            yield* fs.remove(archiveDirectory, { force: true });
+
+            // An existing archived copy is never overwritten.
+            yield* fs.makeDirectory(archiveDirectory, { recursive: true, mode: 0o700 });
+            yield* fs.writeFileString(path.join(archiveDirectory, agedName), "{earlier copy");
+            yield* reapAdmissionState({ apply: true });
+            const keptOnCollision = yield* fs.readFileString(agedPath);
+            expect(keptOnCollision).toBe("{stuck");
+            const earlierCopy = yield* fs.readFileString(path.join(archiveDirectory, agedName));
+            expect(earlierCopy).toBe("{earlier copy");
+            yield* fs.remove(path.join(archiveDirectory, agedName), { force: true });
+
+            // A failed move leaves the entry in quarantine.
+            yield* fs.chmod(archiveDirectory, 0o500);
+            yield* reapAdmissionState({ apply: true }).pipe(
+              Effect.ensuring(fs.chmod(archiveDirectory, 0o700).pipe(Effect.ignore))
+            );
+            const keptOnFailedMove = yield* fs.exists(agedPath);
+            expect(keptOnFailedMove).toBe(true);
+          }).pipe(
+            provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+            Effect.provideService(MemoryStats, memoryStats(gibRef))
+          );
+        }
+      }).pipe(TestClock.withLive)
+    );
+
+    it.effect("refuses an admission root that is not private before reading or archiving it", () =>
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        {
+          const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
+          return yield* Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* withQualityAdmission(request(), noAdmissionOriginGate, Effect.void, fastConfig);
+            yield* fs.chmod(tempRoot.root, 0o755);
+            const failure = yield* reapAdmissionState({ apply: true }).pipe(
+              Effect.flip,
+              Effect.ensuring(fs.chmod(tempRoot.root, 0o700).pipe(Effect.ignore))
+            );
+            expect(failure.message).toContain("has mode 755; expected 0700");
+          }).pipe(
+            provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+            Effect.provideService(MemoryStats, memoryStats(gibRef))
+          );
+        }
+      }).pipe(TestClock.withLive)
+    );
+
+    it.effect("keeps waiting behind a live lease with a fresh heartbeat until it is released", () =>
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        {
+          const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
+          return yield* Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            // A live owner with a fresh heartbeat is reported without the suspect marker.
+            const nowMillis = yield* Clock.currentTimeMillis;
+            const heldLease = yield* writeFakeLease(tempRoot, {
+              weightTokens: 9,
+              originKey: "origin-fresh",
+              heartbeatAtMillis: nowMillis + 60_000,
+            });
+            const fiber = yield* Effect.forkChild(
+              withQualityAdmission(request(), noAdmissionOriginGate, Effect.succeed("ran"), fastConfig)
+            );
+            // Past one 0.4 s progress interval, so the waiter reports its owner.
+            yield* Effect.sleep("600 millis");
+            expect(fiber.pollUnsafe()).toBeUndefined();
+            const progressLines = yield* TestConsole.logLines;
+            const holderLines = A.filter(A.map(progressLines, String), Str.includes("holders: pid"));
+            expect(A.some(holderLines, Str.includes("@ feat/other"))).toBe(true);
+            expect(A.some(holderLines, Str.includes("[suspect: heartbeat stale]"))).toBe(false);
+            const heldLeaseKept = yield* fs.exists(heldLease);
+            expect(heldLeaseKept).toBe(true);
+            yield* fs.remove(heldLease, { force: true });
+            const result = yield* Fiber.join(fiber);
+            expect(result).toBe("ran");
+          }).pipe(
+            provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+            Effect.provideService(MemoryStats, memoryStats(gibRef))
+          );
+        }
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
+
+    it.effect("restores an archived lease into leases/ with the quarantine suffix stripped", () =>
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        {
+          const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
+          return yield* Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            // Hold the admission past a few 20 ms heartbeats and read the lease it holds.
+            const heldLease = yield* withQualityAdmission(
+              request(),
+              noAdmissionOriginGate,
+              Effect.gen(function* () {
+                yield* Effect.sleep("80 millis");
+                const leaseNames = yield* listDirectory(tempRoot.leases);
+                const leaseName = O.getOrThrow(A.head(A.filter(leaseNames, Str.endsWith(".json"))));
+                const leaseText = yield* fs.readFileString(path.join(tempRoot.leases, leaseName));
+                return yield* decodeLease(leaseText);
+              }),
+              fastConfig
+            );
+            expect(heldLease.heartbeatAtMillis).toBeGreaterThan(heldLease.admittedAtMillis);
+
+            const archiveDirectory = path.join(tempRoot.root, QUARANTINE_ARCHIVE_DIRECTORY_NAME);
+            // A lease that was quarantined once, then repaired by hand while archived.
+            const liveLeasePath = yield* writeFakeLease(tempRoot, { weightTokens: 1, originKey: "origin-restored" });
+            const leaseName = path.basename(liveLeasePath);
+            const quarantinedName = `${leaseName}.1700000000000`;
+            yield* fs.rename(liveLeasePath, path.join(tempRoot.quarantine, quarantinedName));
+            const leaseBytes = yield* fs.readFileString(path.join(tempRoot.quarantine, quarantinedName));
+            yield* reapAdmissionState({ apply: true });
+            const archivedOnce = yield* listDirectory(archiveDirectory);
+            expect(archivedOnce).toStrictEqual([quarantinedName]);
+
+            // Moving it back into quarantine/ keeps the aged suffix, so the next reap archives it again.
+            yield* fs.rename(
+              path.join(archiveDirectory, quarantinedName),
+              path.join(tempRoot.quarantine, quarantinedName)
+            );
+            yield* reapAdmissionState({ apply: true });
+            const quarantineAfterMoveBack = yield* listDirectory(tempRoot.quarantine);
+            expect(quarantineAfterMoveBack).toStrictEqual([]);
+            const archivedAgain = yield* listDirectory(archiveDirectory);
+            expect(archivedAgain).toStrictEqual([quarantinedName]);
+
+            // Restore: move into leases/ under the original name; a second reap leaves it live.
+            yield* fs.rename(path.join(archiveDirectory, quarantinedName), path.join(tempRoot.leases, leaseName));
+            const afterRestore = yield* reapAdmissionState({ apply: true });
+            const restoredBytes = yield* fs.readFileString(path.join(tempRoot.leases, leaseName));
+            expect(restoredBytes).toBe(leaseBytes);
+            const archivedAfterRestore = yield* listDirectory(archiveDirectory);
+            expect(archivedAfterRestore).toStrictEqual([]);
+            expect(A.map(afterRestore.leases, (lease) => lease.originKey)).toStrictEqual(["origin-restored"]);
+            expect(afterRestore.quarantined).toStrictEqual([]);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),

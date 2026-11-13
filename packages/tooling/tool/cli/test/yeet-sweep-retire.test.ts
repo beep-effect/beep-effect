@@ -36,6 +36,7 @@ import {
   runYeetSweep,
   StoppedLaneJob,
   SweepGitState,
+  sweepAdoptionOwnCommitsArgs,
   withStoppedLaneJobs,
   YeetCommandError,
   YeetLocalShardOutcome,
@@ -633,6 +634,41 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         expect(readFileString12).toBe('{"ok":true}\n');
         const exists13 = yield* fs.exists(path.join(laneRoot, "beep-material", "quality"));
         expect(exists13).toBe(false);
+      })
+    )
+  );
+
+  it.effect("lists no commit of the lane's own after a real rewrite, and lists one the pull request head lacks", () =>
+    withScratchRepo(({ repoRoot }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const commit = Effect.fnUntraced(function* (file: string, subject: string) {
+          yield* fs.writeFileString(path.join(repoRoot, file), `${subject}\n`);
+          yield* runGit(repoRoot, ["add", file]);
+          yield* runGit(repoRoot, ["commit", "-m", subject]);
+          return yield* runGitText(repoRoot, ["rev-parse", "HEAD"]);
+        });
+        yield* runGit(repoRoot, ["switch", "-c", "adopted"]);
+        const local = yield* commit("adopted.txt", "feat: the lane's change");
+        yield* runGit(repoRoot, ["switch", "main"]);
+        yield* commit("main.txt", "feat: main moved");
+        // GitHub's rewrite: the same patch replayed onto the moved base under a new sha.
+        yield* runGit(repoRoot, ["switch", "-c", "rewritten"]);
+        yield* runGit(repoRoot, ["cherry-pick", local]);
+        const head = yield* runGitText(repoRoot, ["rev-parse", "HEAD"]);
+        expect(head).not.toBe(local);
+        // A plain range lists the replayed commit; the patch comparison does not.
+        const byAncestry = yield* runGitText(repoRoot, ["log", "--format=%s", `${head}..${local}`]);
+        expect(byAncestry).toBe("feat: the lane's change");
+        const afterRewrite = yield* runGitText(repoRoot, sweepAdoptionOwnCommitsArgs(head, local));
+        expect(afterRewrite).toBe("");
+        // A commit the lane never pushed sits on the old tip and is listed.
+        yield* runGit(repoRoot, ["switch", "adopted"]);
+        const ahead = yield* commit("own.txt", "fix: never pushed");
+        const withOwnWork = yield* runGitText(repoRoot, sweepAdoptionOwnCommitsArgs(head, ahead));
+        expect(withOwnWork).toContain("fix: never pushed");
+        expect(withOwnWork).not.toContain("feat: the lane's change");
       })
     )
   );

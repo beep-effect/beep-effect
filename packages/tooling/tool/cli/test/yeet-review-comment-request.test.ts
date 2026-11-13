@@ -1,6 +1,11 @@
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
-import { RepoRunContext, requestReviewerReviewForTesting, runRepoCommandCapture } from "@beep/repo-cli/test/Yeet";
+import {
+  RepoRunContext,
+  requestReviewerReviewForTesting,
+  runRepoCommandCapture,
+  YEET_REVIEWER_REQUEST_SUBJECT,
+} from "@beep/repo-cli/test/Yeet";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
@@ -299,6 +304,82 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
       expect(message).toContain("checkout is at local-other-head");
       expect(message).toContain("git commit --allow-empty --only");
       expect(runner.spawns).toHaveLength(1);
+    })
+  );
+
+  // Every pull record of a stacked PR carries this key over REST (`null` when unstacked).
+  const stackOf = (position: number) => ({
+    id: 9001,
+    number: 3150,
+    position,
+    size: 2,
+    base: { ref: "main", sha: Str.repeat(40)("c") },
+  });
+
+  for (const allowPush of [true, false]) {
+    it.effect(`never pushes on an uncovered stack layer (allowPush ${allowPush})`, () =>
+      Effect.gen(function* () {
+        const runner = ScriptedSpawner.make((command) => {
+          expect(command).toBe("gh");
+          return { stdout: json(pull({ user: { login: "other-author" }, stack: stackOf(1) })) };
+        });
+        // An unstubbed Git double dies on any call, so a `git commit` cannot pass silently.
+        const message = yield* requestReviewerReviewForTesting(context, 42, sha, allowPush).pipe(
+          provideSpawner(runner),
+          Effect.provideService(Git, Git.makeTest())
+        );
+        expect(message).toBe(
+          `[yeet] warning: #42 is layer 1 of stack #3150 (2 layers); no review-trigger commit was pushed because a push on a stack layer moves the head the stack is built on; retry \`bun run beep yeet ready\` or, as kriegcloud, post this canonical request body: ${body} on #42 after confirming it is open, ready, and still at ${sha}`
+        );
+        expect(A.map(runner.spawns, (spawn) => spawn.command)).toEqual(["gh"]);
+      })
+    );
+  }
+
+  it.effect("still takes the S32 fallback for an uncovered pull request outside a stack", () =>
+    Effect.gen(function* () {
+      let committed = "";
+      const runner = ScriptedSpawner.make((command, args) => {
+        if (command === "git") return { stdout: "" };
+        expect(command).toBe("gh");
+        expect(A.contains(args, "POST")).toBe(false);
+        return { stdout: json(pull({ user: { login: "other-author" }, stack: null })) };
+      });
+      const message = yield* requestReviewerReviewForTesting(context, 42, sha, true).pipe(
+        provideSpawner(runner),
+        Effect.provideService(
+          Git,
+          Git.makeTest({
+            revParse: () => Effect.succeed(sha),
+            commit: (_cwd, subject) =>
+              Effect.sync(() => {
+                committed = subject;
+              }),
+          })
+        )
+      );
+      expect(committed).toBe(YEET_REVIEWER_REQUEST_SUBJECT);
+      expect(message).toContain(`(${YEET_REVIEWER_REQUEST_SUBJECT}) so beep-reviewer reviews #42`);
+      expect(
+        A.filter(runner.spawns, (spawn) => spawn.command === "git" && A.contains(spawn.args, "push"))
+      ).toHaveLength(1);
+    })
+  );
+
+  it.effect("still posts the request comment on a covered stack layer", () =>
+    Effect.gen(function* () {
+      const runner = ScriptedSpawner.make((command, args) => {
+        expect(command).toBe("gh");
+        return {
+          stdout: requestStage(args) === "pull" ? json(pull({ stack: stackOf(2) })) : scriptedOutput(args, [[]]),
+        };
+      });
+      const message = yield* requestReviewerReviewForTesting(context, 42, sha, true).pipe(
+        provideSpawner(runner),
+        Effect.provideService(Git, Git.makeTest())
+      );
+      expect(message).toBe(`[yeet] posted beep-reviewer request for #42 at ${sha}; checkout and head unchanged`);
+      expect(A.filter(runner.spawns, (spawn) => A.contains(spawn.args, "POST"))).toHaveLength(1);
     })
   );
 

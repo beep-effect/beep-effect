@@ -31,7 +31,21 @@ enters the heavy matrix only with the `ready-for-heavy` label, or as a main
 push / merge group; a docs-only diff is called with `admitted: false` so every
 lane passes without work on a hosted runner; an unlabelled code PR holds outside the queue), and
 `heavy-admit.yml` runs the same job plus the heavy caller when the label is
-applied, so labelling never cancels or re-runs tier 1. Throughput is
+applied, so labelling never cancels or re-runs tier 1. On a same-repository
+PR that carries the label, a later label re-reports: the base ruleset reads
+only the newest Heavy Admit run's check suite, so a run that skipped would hide
+the heavy checks. When the newest earlier Heavy Admit run on the head that
+reported heavy lanes succeeded, the later run calls the heavy caller with
+`admitted: false` and every lane is reported skipped without an EC2 runner,
+provided that proof ran the same `heavy.yml` file the later run calls (the
+same commit, or two commits whose `heavy.yml` blobs match; a lane main added
+since never ran on the head) and every newer copy of those
+lanes on the head (Check's own suite re-runs them on a reopened head) has
+passed. Otherwise it skips, and `yeet merge-gate`, `yeet gh` and
+`yeet gate-table` judge each hidden required check by its newest copy: a red
+one stays `required-red`, a green one is `required-shadowed`. Optional checks
+keep their newest run in any suite, so their reds still count. Fork admission
+still needs the admission label event itself. Throughput is
 still heavy duration times queue depth. Pool sizing — `runners_maximum_count`,
 Spot versus On-Demand, the two-worker cap above — remains the operator's lever
 and is unchanged by admission (time-to-certainty ruling 57).
@@ -39,27 +53,73 @@ and is unchanged by admission (time-to-certainty ruling 57).
 ## Documentation and planning changes
 
 A PR confined to `docs/`, goal packet folders (`goals/<packet>/`),
-`explorations/` and `research/` takes the
-shared documentation route. Goal diagrams, attachments, temporary helper scripts
-and verifier data belong to that route too; they do not trigger product tests,
-builds, code lint or coverage collection. This folder policy avoids treating a
-new document format as a product change. The narrower `goals_only` profile still
-controls packet-specific repository checks independently. Root-level goal doctor
-baselines, leases, promotions and compiler configuration retain verification: they
-are shared enforcement inputs rather than packet helpers.
+`explorations/` and `research/` takes the shared documentation route
+(`docs_only`). Markdown outside `packages/`, `apps/` and `infra/` takes it too,
+including `standards/ARCHITECTURE.md` and `.changeset/*.md`. Goal diagrams,
+attachments, prose and data files belong to that route. Root-level goal doctor
+baselines, leases, promotions and compiler configuration keep verification,
+because they are shared enforcement inputs rather than packet helpers. The
+`standards/` tree is not exempt as a whole: its inventory JSON/JSONC and
+configuration files can change verification.
 
-Markdown outside `packages/`, `apps/` and `infra/` also takes this route, including
-`standards/ARCHITECTURE.md`. The entire `standards/` tree is not exempt: inventory
-JSON/JSONC and configuration can alter verification and retain applicable checks.
-A mixed PR containing product code or CI configuration retains verification.
-Missing or unreadable diff evidence never grants the documentation exemption.
-Security checks and required aggregate contexts remain in place.
+Some files stay on the code route wherever they sit, including inside a docs
+root (`ciCodeShapedPathPatterns`):
+
+- JavaScript and TypeScript in every module variant. SAST, oxlint and
+  effect-imports read them.
+- Dependency manifests and lockfiles: every file GitHub's dependency graph recognizes
+  (npm, Composer, Maven, Gradle, NuGet, pip, Poetry, RubyGems, Cargo, Go, pub, Swift, Bazel,
+  OpenTofu and others). Dependency review and OSV read them.
+- Tool configuration that repo-wide globs read: `tsconfig*.json`,
+  `.gitignore`, `.gitattributes`, Biome, Turbo, docgen, `components.json` and
+  oxlintrc files.
+
+Goal paths that tests read, spawn or import (`ciGoalDataConsumers`) also stay on
+the code route. A mixed PR with product code or CI configuration keeps full
+verification, and missing or unreadable diff evidence never grants the
+documentation exemption.
+
+A `docs_only` pull request runs only the checks a documentation diff can fail:
+
+| Job | What it checks |
+| --- | --- |
+| Repo Sanity (required) | `beep ci lane repo-sanity --docs-only`: the private home path law, the changeset graph and the changeset status |
+| Docs Policy | The knowledge, packet and Markdown root tasks listed in `DocsPolicy.ts`, plus `knowledge doctor ci --base` |
+| Secret Scanning, Commitlint | The commit range, as on every head |
+
+Four kinds of job still allocate a runner, each doing only a few seconds of work:
+Change Profile, Heavy Admission and Test Plan classify the change and stop; PR
+Size Label sets its label; and the required-context aggregators (Lint, Test
+Unit, Property Laws, Heavy / Test Integration) report the skipped shards. The
+heavy matrix completes with `admitted: false` and allocates no runner, and
+Security, SAST, the code lanes and the test shards skip before runner
+allocation. The non-required Storybook and Vercel Deploy workflows each run a
+short planner that finds nothing to build. `packages/tooling/tool/cli/test/ci-docs-policy.test.ts` derives Docs
+Policy's obligations from `turbo.json`: every root task whose inputs match a
+docs-classified path, and every uncached root task, either runs in the lane or
+has a written reason in `DOCS_POLICY_EXCLUSIONS`.
+
+On code pull requests, Change Profile also reports per-lane relevance
+(`codegen_relevant`, `ecosystem_relevant`, `nix_relevant`,
+`desktop_ipc_relevant`, `sast_relevant`, `security_relevant`) from the `lanes`
+rows of the same pattern data. Each job's guard reads `!= 'false'`, so a pinned
+binary that predates an output leaves the lane running. The jobs' own path gates
+read the same rows with `jq` and `grep -E`. Every relevance lane runs when its gate
+sources change: the lane bodies, the pattern data, `check.yml` and the shared setup
+actions. Security, SAST and Codegen also run whenever the `@beep/repo-cli` workspace
+closure changes. That closure implements their dispatch and GitHub policy reads, and
+contains the driver generators' dependencies. A census test checks each lane's row
+against the closure of the workspaces its job executes. Security's live-advisory and
+GitHub-settings verdicts stay on every main push, because a push always gets
+the full profile.
 
 The schema-owned patterns in `CiOperational.schemas.ts`, their generated JSON
 projection, the pre-install change profile and Yeet's publication classifier use
 the same path policy. Regenerate the projection with `bun run beep ci patterns
 --write` after changing that policy. A compiled CI binary reads the checkout's
-projection, so this routing update does not require a new binary release.
+projection, so a change to the pattern data does not need a new binary release.
+A new output field (such as a new relevance lane) does, through a pin bump of
+`.github/actions/fetch-beep-ci`.
 
 ## Attribute a runner loss
 

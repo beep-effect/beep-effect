@@ -2,7 +2,9 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `superseded`
+
+**Closed by operator ruling (finish board, 2026-11-13).** An eight-phase plan has been stuck in P2 since September and its value has already been captured, while the remaining phases overlap ten-minute-certainty and the verification work. The packet is `superseded` without meeting its completion gate. To resume, run `bun run beep goals set-status coding-agent-effectiveness-evidence-loop active` and re-graduate the next slice. Decision: [`decisions/2026-11-13-finish-board-ruling-close.md`](./decisions/2026-11-13-finish-board-ruling-close.md).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

@@ -3,6 +3,8 @@
 ## Status
 
 Lifecycle: `paused`. Ready admission completed 2026-10-06; implementation not started.
+
+**Paused by operator ruling (finish board, 2026-11-13).** It is a scoped child of agentic-professional-runtime and should be sequenced by that parent, not started now. No lane is working on it; resume with `bun run beep goals set-status oa-evidence-consumer-conformance active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
 Source: [manifest](ops/manifest.json). Parent owner:
 [agentic-professional-runtime](../agentic-professional-runtime/README.md).
 
