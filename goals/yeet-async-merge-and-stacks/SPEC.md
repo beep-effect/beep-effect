@@ -262,6 +262,22 @@ Lane feat/yeet-rewrite-stable-proof
 
 Reverse: Restore the exploration rule: any new sha voids the old proof and receipts.
 
+### yeet ready never pushes on a stack layer; the request comment is the wake, 2026-11-13
+
+Since #2791 `yeet ready` wakes beep-reviewer with an exact-head issue comment for a PR the shared login authored, and pushes the empty S32 commit only as the fallback for an author or repository the comment routine does not cover. The P0 probes showed the comment waking the reviewer on a layer with no push: #3154 (position 1 of 2) sat ready for four minutes unreviewed, then got its summary 2 minutes 32 seconds after the comment, on an unchanged head. So slice C adds no new wake. It removes the fallback on every stack layer, top included, because a push below the top moves the head off the base of the layer above and a push on the top restarts a window the gate is about to read. An uncovered layer gets a warning with the manual comment body.
+
+Lane feat/yeet-two-layer-stacks
+
+Reverse: Allow the S32 fallback on the top layer only, where a push cannot strand a layer above.
+
+### Layers are linked through the Stacks REST API, not gh stack, 2026-11-13
+
+The P0 probes (research/stack-p0-probes-2026-11.md) created three two-layer stacks with `POST /repos/{owner}/{repo}/stacks` and a bottom-to-top list of PR numbers: 201 in under a second, drafts accepted, refusals as 422 with a sentence. Yeet already creates the PR through REST with its title, body, footer and label, so the link is one more call on the same client. `gh stack` v0.3.0 calls the same endpoints, but `submit` and `push` push every branch with `--force-with-lease`, `link` pushes branch arguments, `init` keeps per-clone tracking state, and `submit` refuses with three remotes unless `remote.pushDefault` is injected. A lane's only push stays the one Yeet proves. The CLI is not a dependency of any Yeet command.
+
+Lane feat/yeet-two-layer-stacks
+
+Reverse: Wrap gh stack link with remote.pushDefault injected through the environment, and drop createStack from GithubRest.
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

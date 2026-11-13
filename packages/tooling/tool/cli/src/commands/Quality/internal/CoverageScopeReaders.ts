@@ -10,21 +10,30 @@
  * a string token whose path segments include the file's basename. Comments
  * never count, a basename embedded in a longer segment never counts, and a
  * name split across `path.join` arguments or `+` concatenation of literals
- * still counts. The live drift check in the repo-cli tests compares this scan
- * with the rows in `CoverageScope.ts`.
+ * still counts. `bun run beep lint coverage-owners` compares this scan with
+ * the rows in `CoverageScope.ts` in the Repo Sanity lane, so the pull request
+ * that adds or removes a reader is the one that fails.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { FsUtils } from "@beep/repo-utils/FsUtils";
 import { A, Str } from "@beep/utils";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { ts } from "ts-morph";
-import { coverageDependentOwners } from "./CoverageScope.ts";
+import {
+  COVERAGE_GENERATED_STANDARDS_OWNER_ROWS,
+  coverageDependentOwners,
+  workspaceCoverageScopeOwners,
+} from "./CoverageScope.ts";
 import type { CoverageScopeOwner } from "./CoverageScope.ts";
 
 const $I = $RepoCliId.create("commands/Quality/internal/CoverageScopeReaders");
@@ -255,3 +264,189 @@ export const coverageReaderOwners: {
     return pipe(A.appendAll(readers, coverageDependentOwners(owners, sourceReaders)), A.dedupe, A.sort(Order.String));
   }
 );
+
+/**
+ * One generated standards path whose owner rows disagree with the reader scan.
+ *
+ * **Example** (Describe one drift row)
+ *
+ * ```ts
+ * import { CoverageOwnerDrift } from "@beep/repo-cli/test/Quality"
+ *
+ * const drift = CoverageOwnerDrift.make({ readerPath: "standards/x.json", rowOwners: [], scannedOwners: ["@beep/a"] })
+ * console.log(drift.scannedOwners) // ["@beep/a"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CoverageOwnerDrift extends S.Opaque<CoverageOwnerDrift, { readonly brand: unique symbol }>()(
+  S.Struct({
+    readerPath: S.String,
+    rowOwners: S.Array(S.String),
+    scannedOwners: S.Array(S.String),
+  }).pipe(
+    $I.annoteSchema("CoverageOwnerDrift", {
+      description: "A generated standards path whose coverage owner rows differ from the reader scan.",
+    })
+  )
+) {}
+
+/**
+ * Result of one live owner drift scan.
+ *
+ * **Example** (Describe a clean scan)
+ *
+ * ```ts
+ * import { CoverageOwnerDriftReport } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(CoverageOwnerDriftReport.make({ sourceCount: 4200, drift: [] }).drift.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CoverageOwnerDriftReport extends S.Opaque<CoverageOwnerDriftReport, { readonly brand: unique symbol }>()(
+  S.Struct({
+    sourceCount: S.Finite,
+    drift: S.Array(CoverageOwnerDrift),
+  }).pipe(
+    $I.annoteSchema("CoverageOwnerDriftReport", {
+      description: "Scanned workspace source count and every owner row that disagrees with the reader scan.",
+    })
+  )
+) {}
+
+const rowOwnersFor = (readerPath: string): ReadonlyArray<string> =>
+  pipe(
+    COVERAGE_GENERATED_STANDARDS_OWNER_ROWS,
+    A.filter(([path]) => path === readerPath),
+    A.map(([, , owner]) => owner),
+    A.dedupe,
+    A.sort(Order.String)
+  );
+
+/**
+ * Compare every generated standards owner row with the reader scan.
+ *
+ * **Details**
+ *
+ * The comparison runs in both directions: a reader with no row and a row
+ * with no reader are both drift. An empty result means the rows equal the
+ * scan.
+ *
+ * **Example** (Find a reader the rows miss)
+ *
+ * ```ts
+ * import { CoverageReaderSource, CoverageScopeOwner, coverageOwnerDriftRows } from "@beep/repo-cli/test/Quality"
+ *
+ * const owners = [CoverageScopeOwner.make({ packageName: "@beep/a", packagePath: "packages/a", hasCoverage: true })]
+ * const sources = [CoverageReaderSource.make({ filePath: "packages/a/test/A.test.ts", text: '"standards/schema-first.inventory.jsonc"' })]
+ * console.log(coverageOwnerDriftRows(owners, sources).length > 0) // true
+ * ```
+ *
+ * @param owners - Workspace packages with their workspace-internal dependencies.
+ * @param sources - Workspace sources to scan.
+ * @returns One drift row per reader path whose rows and scan differ.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const coverageOwnerDriftRows: {
+  (
+    sources: ReadonlyArray<CoverageReaderSource>
+  ): (owners: ReadonlyArray<CoverageScopeOwner>) => ReadonlyArray<CoverageOwnerDrift>;
+  (
+    owners: ReadonlyArray<CoverageScopeOwner>,
+    sources: ReadonlyArray<CoverageReaderSource>
+  ): ReadonlyArray<CoverageOwnerDrift>;
+} = dual(
+  2,
+  (
+    owners: ReadonlyArray<CoverageScopeOwner>,
+    sources: ReadonlyArray<CoverageReaderSource>
+  ): ReadonlyArray<CoverageOwnerDrift> =>
+    pipe(
+      COVERAGE_GENERATED_STANDARDS_OWNER_ROWS,
+      A.map(([readerPath]) => readerPath),
+      A.dedupe,
+      A.flatMap((readerPath) => {
+        const rowOwners = rowOwnersFor(readerPath);
+        const scannedOwners = coverageReaderOwners(owners, sources, readerPath);
+        return A.makeEquivalence(Str.Equivalence)(rowOwners, scannedOwners)
+          ? A.empty<CoverageOwnerDrift>()
+          : [CoverageOwnerDrift.make({ readerPath, rowOwners, scannedOwners })];
+      })
+    )
+);
+
+const COVERAGE_READER_SOURCE_GLOBS = ["packages/**/*.{ts,tsx,mts,cts}", "apps/**/*.{ts,tsx,mts,cts}"] as const;
+const COVERAGE_READER_SOURCE_IGNORES = [
+  "**/node_modules/**",
+  "**/dist/**",
+  "**/build/**",
+  "**/.turbo/**",
+  "**/coverage/**",
+] as const;
+
+/**
+ * Read every workspace TypeScript source the reader scan covers.
+ *
+ * **Example** (Check the loader is an Effect function)
+ *
+ * ```ts
+ * import { workspaceCoverageReaderSources } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(typeof workspaceCoverageReaderSources) // "function"
+ * ```
+ *
+ * @param repoRoot - Absolute repository root.
+ * @returns Repository-relative sources under `packages/**` and `apps/**`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const workspaceCoverageReaderSources = Effect.fn("CoverageScopeReaders.workspaceCoverageReaderSources")(
+  function* (repoRoot: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const fsUtils = yield* FsUtils;
+    const path = yield* Path.Path;
+    const files = yield* fsUtils.globFiles(COVERAGE_READER_SOURCE_GLOBS, {
+      cwd: repoRoot,
+      ignore: COVERAGE_READER_SOURCE_IGNORES,
+    });
+    return yield* Effect.forEach(
+      files,
+      (file) =>
+        Effect.map(fs.readFileString(path.join(repoRoot, file)), (text) =>
+          CoverageReaderSource.make({ filePath: path.relative(repoRoot, path.resolve(repoRoot, file)), text })
+        ),
+      { concurrency: 32 }
+    );
+  }
+);
+
+/**
+ * Scan the live workspace and compare it with the generated standards owner rows.
+ *
+ * **Example** (Check the drift scan is an Effect function)
+ *
+ * ```ts
+ * import { workspaceCoverageOwnerDrift } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(typeof workspaceCoverageOwnerDrift) // "function"
+ * ```
+ *
+ * @param repoRoot - Absolute repository root.
+ * @returns The scanned source count and every drift row.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const workspaceCoverageOwnerDrift = Effect.fn("CoverageScopeReaders.workspaceCoverageOwnerDrift")(function* (
+  repoRoot: string
+) {
+  const owners = yield* workspaceCoverageScopeOwners(repoRoot);
+  const sources = yield* workspaceCoverageReaderSources(repoRoot);
+  return CoverageOwnerDriftReport.make({
+    sourceCount: A.length(sources),
+    drift: coverageOwnerDriftRows(owners, sources),
+  });
+});

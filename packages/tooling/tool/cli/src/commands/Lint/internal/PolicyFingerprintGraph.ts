@@ -461,7 +461,8 @@ interface PolicyGraphOptions {
  * ```
  *
  * @param options - The source tree and the workspaces specifiers may enter.
- * @returns The graph reader: workspace lookup, command-path walk and closures.
+ * @returns The graph reader: workspace lookup, command-path walk, and the shell,
+ *   command and whole-module closures.
  * @internal
  * @category constructors
  * @since 0.0.0
@@ -785,7 +786,16 @@ export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
     return yield* walk(entries, followAll);
   });
 
-  return { workspaceOf, commandPath, shellClosure, commandClosure, resolve, syntaxOf } as const;
+  // The full static runtime closure of entry modules: every edge is followed,
+  // with no command-tree pruning. The CI binary closure digest walks
+  // `bin-ci.ts` this way, since `bun build` bundles every module it reaches.
+  const moduleClosure = (entries: ReadonlyArray<string>) =>
+    walk(
+      A.map(entries, (module): WalkItem => ({ module, follow: followAll, transitive: false })),
+      followAll
+    );
+
+  return { workspaceOf, commandPath, shellClosure, commandClosure, moduleClosure, resolve, syntaxOf } as const;
 };
 
 /**
