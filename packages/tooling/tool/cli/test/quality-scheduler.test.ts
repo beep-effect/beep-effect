@@ -147,6 +147,7 @@ const decodeLegacyAdmissionProtocol = S.decodeUnknownOption(
 );
 
 const decodeAdmissionJournalEventJsonEffect = S.decodeEffect(S.fromJsonString(AdmissionJournalEvent));
+const decodeAdmissionJournalHistoryJson = S.decodeEffect(S.fromJsonString(AdmissionJournalHistory));
 const encodeAdmissionJournalEventJsonEffect = S.encodeEffect(S.fromJsonString(AdmissionJournalEvent));
 
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
@@ -1987,7 +1988,7 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             yield* runQualityCommand(["scheduler", "history", "--json"]);
             const jsonLines = yield* TestConsole.logLines;
             const rendered = A.join(A.map(A.drop(jsonLines, A.length(textLines)), String), "\n");
-            const decoded = yield* S.decodeEffect(S.fromJsonString(AdmissionJournalHistory))(rendered);
+            const decoded = yield* decodeAdmissionJournalHistoryJson(rendered);
             const expected = yield* readAdmissionJournalHistory(tempRoot.root);
             deepStrictEqual(decoded, expected);
             deepStrictEqual(decoded.events, [...archived, today, ...journalV3Events()]);

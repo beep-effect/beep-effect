@@ -123,14 +123,12 @@ const archiveSegmentNameFor = (nowMillis: number): string =>
   `${DateTime.formatIsoDateUtc(DateTime.makeUnsafe(nowMillis))}.ndjson`;
 
 // Start of the UTC day a `<YYYY-MM-DD>.ndjson` segment covers; any other name is not a segment.
-const archiveSegmentDayStartMillis = (name: string): O.Option<number> =>
-  pipe(
-    name,
-    Str.match(/^(\d{4}-\d{2}-\d{2})\.ndjson$/u),
-    O.flatMap((match) => O.fromUndefinedOr(match[1])),
-    O.flatMap(DateTime.make),
-    O.map(DateTime.toEpochMillis)
-  );
+const archiveSegmentDayStartMillis: (name: string) => O.Option<number> = flow(
+  Str.match(/^(\d{4}-\d{2}-\d{2})\.ndjson$/u),
+  O.flatMap((match) => O.fromUndefinedOr(match[1])),
+  O.flatMap(DateTime.make),
+  O.map(DateTime.toEpochMillis)
+);
 
 const isAdmissionJournalArchiveSegmentName = flow(archiveSegmentDayStartMillis, O.isSome);
 
