@@ -120,6 +120,13 @@ const respond = (fixture: GithubFixture, call: GithubFetchCall, priorCalls: Read
   const key = callKey(call);
   if (key === `GET ${ROOT}/pulls/7`)
     return { head: { sha: Str.repeat(40)("a") }, base: { sha: Str.repeat(40)("b"), ref: "main" } };
+  // The upper layer of a native stack: its own base is the branch below it, the stack's trunk is main.
+  if (key === `GET ${ROOT}/pulls/8`)
+    return {
+      head: { sha: Str.repeat(40)("a") },
+      base: { sha: Str.repeat(40)("b"), ref: "feat/parent" },
+      stack: { number: 9, position: 2, size: 2, base: { ref: "main", sha: null } },
+    };
   if (key === "GET /user") return { login: fixture.login };
   if (key === `GET ${ROOT}`) return { default_branch: "main" };
   if (key === `GET ${ROOT}/rules/branches/main`) return fixture.branchRules;
@@ -214,6 +221,26 @@ describe("reviewer ruleset workflow", () => {
       );
       yield* result.exit;
       expect(callKeys(result.calls)).toEqual([`GET ${ROOT}/pulls/7`, `GET ${ROOT}/rules/branches/main`]);
+    })
+  );
+
+  it.effect("a stack layer reads the trunk's ruleset, not its parent branch's", () =>
+    Effect.gen(function* () {
+      // The fake answers 404 for any branch but main, so a read of the parent branch would fail the gate.
+      const result = yield* withFakeGithub(
+        {
+          ...defaults,
+          branchRules: [
+            {
+              type: "required_status_checks",
+              parameters: { required_status_checks: [{ context: "Heavy / Check", integration_id: 15368 }] },
+            },
+          ],
+        },
+        enforceReviewerGate(8, Str.repeat(40)("a"))
+      );
+      yield* result.exit;
+      expect(callKeys(result.calls)).toEqual([`GET ${ROOT}/pulls/8`, `GET ${ROOT}/rules/branches/main`]);
     })
   );
 
