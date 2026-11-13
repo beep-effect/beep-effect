@@ -78,6 +78,13 @@ export * from "./CiCachePilotHost.ts";
 export * from "./CiCachePilotInputs.ts";
 export * from "./CiCompileBinary.ts";
 /**
+ * The base a coverage lane diffs against, resolved from the workflow event.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiEventBase.ts";
+/**
  * Hosted CI governance commands and policy checks.
  *
  * @category cli-commands

@@ -17,9 +17,14 @@ permissions:
   contents: read
 
 env:
-  # The event payload is fixed across jobs and partial reruns. Never bind
-  # coverage identity or affected scope to a freshly fetched moving ref.
-  BEEP_COVERAGE_BASE_SHA: ${{ github.event.pull_request.base.sha || github.sha }}
+  # Event facts only. The coverage lanes (Test Plan's unit plan, Test Unit,
+  # Labs, Coverage Regression) pass --event-base: the CLI diffs a pull request
+  # against the first parent of the checked-out merge commit once HEAD is
+  # proven to be it (GITHUB_SHA, two parents, the second the PR head), keeps
+  # pull_request.base.sha when the proof fails, and uses GITHUB_SHA on push.
+  # GITHUB_SHA and the payload are fixed across jobs and partial reruns, so
+  # producers and comparator resolve one base. Never bind coverage identity
+  # or affected scope to a freshly fetched moving ref.
   # Classify the PR itself; HEAD remains the synthetic merge used for proof.
   BEEP_CI_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
   BEEP_CI_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -564,7 +569,7 @@ jobs:
             return "$status"
           }
 
-          shape_args=(--base "$BEEP_COVERAGE_BASE_SHA")
+          shape_args=(--event-base)
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             shape_args+=(--affected)
           fi
@@ -819,7 +824,7 @@ jobs:
         id: unit
         if: github.event_name == 'pull_request' && steps.profile.outputs.docs_only != 'true'
         shell: bash
-        run: bun run beep ci lane test-unit --plan-partitions --affected --base "$BEEP_COVERAGE_BASE_SHA"
+        run: bun run beep ci lane test-unit --plan-partitions --affected --event-base
 
       - name: Plan Test Integration partitions
         id: integration
@@ -975,7 +980,7 @@ jobs:
             return "$status"
           }
 
-          shape_args=(--base "$BEEP_COVERAGE_BASE_SHA")
+          shape_args=(--event-base)
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             shape_args+=(--affected)
           fi
@@ -1383,7 +1388,7 @@ jobs:
           jq -e --arg run "$GITHUB_RUN_ID" --argjson attempt "$LABS_PRODUCER_ATTEMPT" '
             .partitionId == "labs" and .identity.runId == $run and .identity.runAttempt == $attempt
           ' "$labs_manifest" > /dev/null
-          shape_args=(--base "$BEEP_COVERAGE_BASE_SHA")
+          shape_args=(--event-base)
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             shape_args+=(--affected)
           fi
