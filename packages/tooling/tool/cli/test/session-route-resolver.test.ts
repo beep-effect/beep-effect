@@ -11,8 +11,10 @@ import {
   layerSessionPresenceStoreMemory,
   layerSessionResolver,
   layerSessionRouteProbeLive,
+  makeSessionPresenceStoreLive,
   PrRepository,
   RouteReading,
+  recordPresence,
   renderPeerSend,
   renderSessionResolution,
   renderT3Send,
@@ -427,6 +429,28 @@ describe("session presence", () => {
       })
     );
 
+    it.effect("fails a presence write it cannot make instead of reporting no session", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeFixture({});
+        const blocked = path.join(fixture.root, "state-is-a-file");
+        yield* fs.writeFileString(blocked, "");
+        const config = ConfigProvider.fromEnv({
+          env: { ...fixture.env, BEEP_SESSION_STATE_ROOT: blocked, CLAUDE_CODE_SESSION_ID: "claude-1" },
+        });
+        const store = yield* makeSessionPresenceStoreLive().pipe(
+          Effect.provideService(ConfigProvider.ConfigProvider, config)
+        );
+        const error = yield* recordPresence(facts).pipe(
+          Effect.provideService(SessionPresenceStore, store),
+          Effect.provideService(ConfigProvider.ConfigProvider, config),
+          Effect.flip
+        );
+        expect(error._tag).toBe("SessionLedgerError");
+      })
+    );
+
     it.effect("keeps the newest presence row per session", () =>
       Effect.sync(() => {
         const older = presenceRow("s", [], "codex");
@@ -606,13 +630,39 @@ describe("session resolve", () => {
           ["t3-thread", "dead"],
           ["t3-thread", "dead"],
           ["t3-thread", "unknown"],
-          ["t3-thread", "dormant"],
           ["via-parent", "live"],
+          ["t3-thread", "dormant"],
         ]);
-        expect(resolution.routes[5]?.route).toStrictEqual(
+        expect(resolution.routes[4]?.route).toStrictEqual(
           ViaParentRoute.make({ parent: routeOf("running"), childKind: "t3-child" })
         );
         expect(A.map(resolution.steps, (step) => step.rung)).toStrictEqual(["send"]);
+      })
+    );
+
+    it.effect("wakes an idle parent rather than a finished child thread", () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeFixture({
+          threads: [
+            { id: "parent", status: "idle", archived: false },
+            { id: "child", status: "completed", archived: false, parent: "parent" },
+          ],
+        });
+        const child = T3ThreadRoute.make({ environmentId: LOCAL_ENV, threadId: "child", provider: "codex" });
+        const parent = T3ThreadRoute.make({ environmentId: LOCAL_ENV, threadId: "parent", provider: "codex" });
+        const resolution = yield* resolveWith({
+          env: fixture.env,
+          rows: [ledgerRow({ checkout: "/work/t3", at: 1, pr: 8, sessionId: "codex-9", harness: "codex" })],
+          presence: [presenceRow("codex-9", [child], "codex")],
+          query: "8",
+        });
+        expect(liveness(resolution)).toStrictEqual([
+          ["via-parent", "dormant"],
+          ["t3-thread", "dormant"],
+        ]);
+        expect(A.map(resolution.steps, (step) => [step.rung, step.instruction])).toStrictEqual([
+          ["wake", `${renderT3Send(parent)}  # wakes the idle thread`],
+        ]);
       })
     );
 

@@ -319,9 +319,10 @@ export const capturePresence = Effect.fn("SessionPresence.capture")(function* (f
 });
 
 /**
- * Capture this process's presence and append it, best effort: a process with
- * no session id or an unwritable state directory writes nothing and never
- * fails the caller.
+ * Capture this process's presence and append it. A process with no session
+ * id writes nothing and returns none; a failed write fails with the session
+ * error, so the caller decides whether to report it (`session presence`) or
+ * ignore it (`session note`).
  *
  * **Example** (Build the record effect)
  *
@@ -340,7 +341,7 @@ export const capturePresence = Effect.fn("SessionPresence.capture")(function* (f
  * ```
  *
  * @param facts - The checkout the session is working in.
- * @returns The row written, if any.
+ * @returns The row written, or none when the process has no session id.
  * @category commands
  * @since 0.0.0
  */
@@ -348,5 +349,6 @@ export const recordPresence = Effect.fn("SessionPresence.record")(function* (fac
   const presence = yield* capturePresence(facts);
   if (O.isNone(presence)) return presence;
   const store = yield* SessionPresenceStore;
-  return yield* store.append(presence.value).pipe(Effect.as(presence), Effect.orElseSucceed(O.none<SessionPresence>));
+  yield* store.append(presence.value);
+  return presence;
 });

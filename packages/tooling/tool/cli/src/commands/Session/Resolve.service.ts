@@ -249,7 +249,8 @@ const readRoute = (probe: SessionRouteProbeShape, route: SessionRoute): Effect.E
         send: probed.liveness === "dead" ? O.none() : O.some(renderT3Send(route)),
       });
       // A T3 child thread's working route is its parent: a send to a
-      // finished child starts a fresh task instead of reaching the work.
+      // finished child starts a fresh task instead of reaching the work, so
+      // the parent's reading comes first and wins a tie on liveness.
       const parent = yield* O.match(probed.parentThreadId, {
         onNone: () => Effect.succeed(A.empty<RouteReading>()),
         onSome: (threadId) =>
@@ -261,7 +262,7 @@ const readRoute = (probe: SessionRouteProbeShape, route: SessionRoute): Effect.E
             })
           ),
       });
-      return A.prepend(parent, own);
+      return A.append(parent, own);
     }),
     "claude-peer": (route) =>
       probe.claudePeer(route.sessionId).pipe(
