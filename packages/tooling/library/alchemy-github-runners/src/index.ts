@@ -92,6 +92,13 @@ export * from "./RunnerBinariesSyncer.program.ts";
  */
 export * from "./RunnerFleet.errors.ts";
 /**
+ * The runner fleet composite.
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export * from "./RunnerFleet.ts";
+/**
  * Runner EC2 tag vocabulary and inventory models.
  *
  * @category models
@@ -119,6 +126,20 @@ export * from "./RunnerPool.models.ts";
  * @since 0.0.0
  */
 export * from "./RunnerRuntime.models.ts";
+/**
+ * The delete-only runtime sweep resource.
+ *
+ * @category resources
+ * @since 0.0.0
+ */
+export * from "./RunnerSweep.ts";
+/**
+ * Runner instance user data.
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export * from "./RunnerUserData.ts";
 /**
  * Scale-down Lambda program.
  *
