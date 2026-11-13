@@ -5930,7 +5930,7 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
       ]);
       expect(lines).toHaveLength(2);
       expect(O.getOrNull(quarantinedAtMillisOf(quarantined[1] ?? ""))).toBe(nowMillis - 3_600_000);
-      expect(O.isNone(quarantinedAtMillisOf(quarantined[2] ?? ""))).toBe(true);
+      assertNone(quarantinedAtMillisOf(quarantined[2] ?? ""));
     });
 
     it("renders no quarantine line for an empty quarantine", () => {
