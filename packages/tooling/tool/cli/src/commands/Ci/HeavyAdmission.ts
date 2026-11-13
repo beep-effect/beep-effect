@@ -263,6 +263,18 @@ const heavyAdmissionLaneSkipsDefault = A.empty<CiLaneId>();
 const RouteReceiptJson = S.fromJsonString(S.Unknown);
 const decodeRouteSentinel = S.decodeUnknownEffect(S.fromJsonString(RouteSentinel));
 
+// An admission read never blocks Heavy: a stall past the bound or any failure falls back to running
+// every lane, and the cause goes to stderr (stdout carries the admission JSON) so a read that breaks
+// on every PR stays visible in the job log.
+const failOpenWithin =
+  <A>(readTimeout: Duration.Input, label: string, fallback: A) =>
+  <E, R>(read: Effect.Effect<A, E, R>): Effect.Effect<A, never, R> =>
+    read.pipe(
+      Effect.timeout(readTimeout),
+      Effect.tapCause((cause) => Console.error(`${label}; every heavy lane runs: ${Cause.pretty(cause)}`)),
+      Effect.catchCause(() => Effect.succeed(fallback))
+    );
+
 /**
  * The admission decision as data: verdict, its sources, and the docs-only flag.
  *
@@ -670,16 +682,7 @@ export const readHeavyAdmissionRoute = Effect.fn("Ci.readHeavyAdmissionRoute")(f
       ),
     });
     return receipt.length > 8192 ? unavailableRoute : HeavyAdmissionRoute.make({ lanes, receipt });
-  }).pipe(
-    // The route never blocks Heavy: a stall past the bound or any failure falls back to running
-    // every lane, and the cause goes to stderr (stdout carries the admission JSON) so a route
-    // that breaks on every PR stays visible in the job log.
-    Effect.timeout(readTimeout),
-    Effect.tapCause((cause) =>
-      Console.error(`verification route unavailable; every heavy lane runs: ${Cause.pretty(cause)}`)
-    ),
-    Effect.catchCause(() => Effect.succeed(unavailableRoute))
-  );
+  }).pipe(failOpenWithin(readTimeout, "verification route unavailable", unavailableRoute));
 });
 
 /**
@@ -860,11 +863,7 @@ export const readHeavyLaneSkips = Effect.fn("Ci.readHeavyLaneSkips")(function* (
     );
     return decideHeavyLaneSkips(input.eventName, paths, patterns);
   }).pipe(
-    Effect.timeout(readTimeout),
-    Effect.tapCause((cause) =>
-      Console.error(`heavy lane skips unavailable; every heavy lane runs: ${Cause.pretty(cause)}`)
-    ),
-    Effect.catchCause(() => Effect.succeed(heavyAdmissionLaneSkipsDefault))
+    failOpenWithin<ReadonlyArray<CiLaneId>>(readTimeout, "heavy lane skips unavailable", heavyAdmissionLaneSkipsDefault)
   );
 });
 
