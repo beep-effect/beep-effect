@@ -54,3 +54,26 @@ Receipts recorded while the work happened, newest last.
 - Would have prevented it: a final-check that reports which gate it is on,
   so a stuck one is visible, and the merge gate waiting for the owner's
   ready flip.
+
+## 2026-11-13: both pull requests left draft within minutes of opening
+
+- Doing: publishing #3137 and #3172 as drafts while more pushes were
+  planned (the second one waits on the tenant proof).
+- Evidence: the timeline shows `ready_for_review` two minutes after #3137
+  opened and 16 seconds after #3172 was labelled, by the shared account,
+  not by this lane. #3137 then merged before the lane's final-check ended.
+  #3172 is held only by the `owner-merge-hold` label, which the merge gate
+  honours and a manual merge does not.
+- Would have prevented it: knowing what flips drafts. Until then, a lane
+  that must hold a pull request labels it at creation, not after.
+
+## 2026-11-13: the coverage check failed on files this goal never touched
+
+- Doing: reading hosted checks on #3172, which changes `@beep/m365-mcp`,
+  one runbook and this packet.
+- Evidence: `Heavy / Coverage Regression` listed twelve rows, all in
+  `@beep/repo-cli` files added on `main` without baseline rows (#3138,
+  #3144, #3165 and two files #3171 has since fixed). No `m365-mcp` row was
+  listed. The inbox row was waived with that attribution.
+- Would have prevented it: the ratchet judging only packages a pull
+  request can change, or new files landing with their baseline rows.

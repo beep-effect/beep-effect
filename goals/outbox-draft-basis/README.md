@@ -94,6 +94,12 @@ tenant proof is recorded.
 HTTP 502 or 504 for mail reads on two mailboxes of the tenant, through the
 outbox app and through the Microsoft 365 connector, for over an hour.
 
+2026-11-13: #3172 finished hosted checks with 47 passed and one red,
+`Heavy / Coverage Regression`, which is not required on `main`. Every row
+it lists is a `@beep/repo-cli` file added on `main` without a baseline row
+(#3138, #3144, #3165); none is under `m365-mcp`. No review thread was
+opened. The session was paused there, with tenant mail still down.
+
 ## Notes
 
 - `m365_outbox_send_draft` refuses every send with `version-unbound`. The
