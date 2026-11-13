@@ -53,20 +53,21 @@ jobs:
         uses: ./.github/actions/setup-monorepo-ci
 
       # Same scope as the lefthook commands: ACMD with --no-renames, so a
-      # deleted or moved module drops its entries too.
+      # deleted or moved module drops its entries too. The globs are regexes,
+      # not git pathspecs: Fallow's workflow plugin reads a `'packages/**'`
+      # argument as an entry-point glob and marks every matched file as used.
       - name: Regenerate catalog shards
         shell: bash
         run: |
           set -euo pipefail
           merge_base="$(git merge-base "origin/${GITHUB_BASE_REF:-main}" HEAD)"
+          changed="$(git diff --name-only --no-renames --diff-filter=ACMD "${merge_base}...HEAD")"
           mapfile -t schema_files < <(
-            git diff --name-only --no-renames --diff-filter=ACMD "${merge_base}...HEAD" -- 'apps/**' 'packages/**' 'infra/**' \
-              | grep -E '\.(ts|tsx)$' \
+            grep -E '^(apps|packages|infra)/.+\.tsx?$' <<<"$changed" \
               | grep -Ev '(/docs/|\.d\.ts$|/node_modules/)' || true
           )
           mapfile -t instrumentation_files < <(
-            git diff --name-only --no-renames --diff-filter=ACMD "${merge_base}...HEAD" -- 'apps/**' 'packages/**' \
-              | grep -E '/src/.*\.(ts|tsx)$' \
+            grep -E '^(apps|packages)/(.+/)?src/.+\.tsx?$' <<<"$changed" \
               | grep -Ev '(/test/|\.d\.ts$|/node_modules/)' || true
           )
           if (( ${#schema_files[@]} > 0 )); then
