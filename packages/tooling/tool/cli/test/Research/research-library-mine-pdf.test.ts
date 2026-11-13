@@ -153,6 +153,8 @@ const services = Layer.mergeAll(
   Path.layer,
   NodeCrypto.layer,
   ShaclValidationServiceLive,
+  // Own double: dies on any spawn, so a PDF mining path that spawns fails loudly;
+  // `ScriptedSpawner` records and answers every spawn instead.
   Layer.succeed(
     ChildProcessSpawner.ChildProcessSpawner,
     ChildProcessSpawner.make(() => Effect.die("the research library mine PDF suite must not spawn a process"))

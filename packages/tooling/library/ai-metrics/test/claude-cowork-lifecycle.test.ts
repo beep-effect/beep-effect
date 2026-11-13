@@ -363,6 +363,8 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
             let releases = 0;
             const response = yield* syntheticCoworkOutput(fault, f.policy);
             const output = policySeen.pipe(Deferred.await, Stream.fromEffect, Stream.drain, Stream.concat(response));
+            // Own double: reads the helper's stdin stream to release the scripted output only after the
+            // policy frame and counts acknowledgements and releases; `ScriptedSpawner` answers statically.
             const spawner = ChildProcessSpawner.make((command) =>
               Effect.gen(function* () {
                 const input = command._tag === "StandardCommand" ? command.options.stdin : undefined;
@@ -487,6 +489,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, platformLayer), 
           ),
         });
         const output = Stream.make(new TextEncoder().encode("not-json\n"));
+        // Own double: decorates the real platform spawner, stubbing only the second (helper) spawn.
         const spawner = ChildProcessSpawner.make((command) => {
           calls++;
           if (calls === 1) return original.spawn(command);

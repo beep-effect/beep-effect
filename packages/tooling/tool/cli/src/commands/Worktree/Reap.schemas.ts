@@ -47,6 +47,14 @@ export type WorktreeReapClass = typeof WorktreeReapClass.Type;
 /**
  * Precise reason a registered worktree was not retired.
  *
+ * **Details**
+ *
+ * `self-retire-only` marks a lane outside the clone's sibling and nested
+ * worktree roots, such as a T3 Code lane. A T3 thread stays bound to its
+ * worktree with no process standing in it, so liveness cannot see it; such a
+ * lane is retired only by its own session (`yeet sweep --retire`) or by an
+ * explicit `worktree remove`.
+ *
  * **Example** (Recognize a dirty-tree refusal)
  *
  * ```ts
@@ -74,6 +82,7 @@ export const WorktreeReapSkipReason = LiteralKit([
   "live-session",
   "liveness-unknown",
   "retirement-failed",
+  "self-retire-only",
 ]).pipe(
   $I.annoteSchema("WorktreeReapSkipReason", {
     description: "Fail-closed reason that prevented automatic worktree retirement.",
