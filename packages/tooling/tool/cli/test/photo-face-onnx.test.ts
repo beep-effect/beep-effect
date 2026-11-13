@@ -186,7 +186,7 @@ describe("generated ONNX graphs on the native CPU runtime", () => {
         expect(A.every(A.fromIterable(data), Number.isFinite)).toBe(true);
         expect(Number(outputs.output?.data[6])).toBeCloseTo(0.5, 5);
         expect(Number(outputs.output?.data[4])).toBe(0);
-      }).pipe(Effect.scoped),
+      }),
     { timeout: 30_000 }
   );
   it.effect(
@@ -205,7 +205,7 @@ describe("generated ONNX graphs on the native CPU runtime", () => {
         expect(data).toBeInstanceOf(Float32Array);
         if (!(data instanceof Float32Array)) return yield* Effect.die("Expected float output");
         expect(A.fromIterable(data)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
-      }).pipe(Effect.scoped),
+      }),
     { timeout: 30_000 }
   );
 });

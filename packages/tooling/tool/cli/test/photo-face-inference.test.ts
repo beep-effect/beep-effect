@@ -9,6 +9,7 @@ import {
 } from "@beep/repo-cli/test/Files";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -62,7 +63,7 @@ describe("model-free inference boundary cases", () => {
   it.effect("returns None for an unreadable image and a typed native model load error", () =>
     Effect.gen(function* () {
       const decoded = yield* decodeFaceImage("/missing-photo-face-fixture.png");
-      expect(O.isNone(decoded)).toBe(true);
+      assertNone(decoded);
       const error = yield* openFaceSession("/missing-photo-face-model.onnx").pipe(Effect.scoped, Effect.flip);
       expect(error.message).toBe("Could not load ONNX model.");
       const version = yield* faceRuntimeVersion();
@@ -128,7 +129,8 @@ describe("model-free inference boundary cases", () => {
         expect(faces.length).toBe(32);
         expect(faces[0]?.box.x1).toBeCloseTo(7.2, 5);
         expect(faces[31]?.box.x1).toBeCloseTo(255.2, 5);
-        expect(O.isSome(faces[0]?.embedding ?? O.none())).toBe(true);
+        const hasEmbedding = O.isSome(faces[0]?.embedding ?? O.none());
+        assertTrue(hasEmbedding);
       }),
     { timeout: 30_000 }
   );
