@@ -20,6 +20,7 @@ import {
   collectCiWorkflowRunAttemptJobs,
   decodeCiCertaintyCorpus,
   renderCiCertaintyMarkdown,
+  renderCiCertaintySummaryMarkdown,
 } from "@beep/repo-cli/commands/Ci";
 import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
 import { findRepoRoot } from "@beep/repo-utils";
@@ -1025,7 +1026,7 @@ describe("ci certainty command", () => {
       const calls = A.empty<GithubFetchCall>();
       const spawner = liveGit();
       return Effect.gen(function* () {
-        const { corpusFile } = yield* captureLiveWindow();
+        const { corpusFile, repoRoot } = yield* captureLiveWindow();
 
         const fs = yield* FileSystem.FileSystem;
         const corpus = yield* fs.readFileString(corpusFile).pipe(Effect.flatMap(decodeCiCertaintyCorpus));
@@ -1063,6 +1064,20 @@ describe("ci certainty command", () => {
         assertSome(replayed.slo.p50Minutes, 12);
         strictEqual(A.length(calls), readsBeforeReplay);
         strictEqual(A.length(spawner.spawns), spawnsBeforeReplay);
+
+        // The aggregates-only summary is the full report with the per-head table replaced by a count.
+        const summaryFile = `${repoRoot}/certainty-summary.md`;
+        yield* runCertaintyCommand(["--corpus", corpusFile, "--summary-out", summaryFile]);
+        const full = yield* lastCertaintyLog();
+        const summary = yield* fs.readFileString(summaryFile);
+        strictEqual(summary, `${renderCiCertaintySummaryMarkdown(replayed)}\n`);
+        expect(full).toContain(`| ${Str.slice(0, 10)(O.getOrThrow(A.head(replayed.heads)).headSha)} |`);
+        expect(summary).not.toContain("| Head |");
+        expect(summary).toContain(
+          `- heads judged: ${A.length(replayed.heads)} (per-head rows are left out of the summary)`
+        );
+        deepStrictEqual(A.headNonEmpty(Str.split(summary, "## Heads")), A.headNonEmpty(Str.split(full, "## Heads")));
+        strictEqual(A.length(calls), readsBeforeReplay);
       }).pipe(withLiveCapture(calls, spawner));
     });
 
@@ -1070,7 +1085,7 @@ describe("ci certainty command", () => {
       const calls = A.empty<GithubFetchCall>();
       const spawner = liveGit();
       return Effect.gen(function* () {
-        yield* seedRequiredContexts();
+        const repoRoot = yield* seedRequiredContexts();
         // The main push listing is read first, so the bound refuses a pull-request job read instead: the
         // head is stamped partial while main keeps its real verdicts.
         const error = yield* Effect.flip(runCertaintyCommand(["--max-requests", "5"]));
@@ -1087,6 +1102,16 @@ describe("ci certainty command", () => {
         strictEqual(A.length(calls), 5);
         expect(gitLogArgs(spawner)).toContain("--since=2026-11-09T03:00:00.000Z");
         expect(gitLogArgs(spawner)).toContain("--until=2026-11-10T03:00:00.000Z");
+
+        // The aggregates-only summary is written before the refusal and keeps its stamp.
+        const fs = yield* FileSystem.FileSystem;
+        const summaryFile = `${repoRoot}/certainty-summary.md`;
+        yield* Effect.flip(runCertaintyCommand(["--max-requests", "5", "--json", "--summary-out", summaryFile]));
+        const summary = yield* fs.readFileString(summaryFile);
+        expect(summary).toContain(
+          "> **Not certified, not acceptance evidence.** Refused: api-partial (partial job reads: run 12 attempt 1)."
+        );
+        expect(summary).not.toContain("| Head |");
 
         // A preview accepts the same uncertified report, stamp and all, and prints it exactly once.
         const logsBeforePreview = yield* TestConsole.logLines;

@@ -1,5 +1,6 @@
 import {
   CHECK_CENSUS_BASELINE_PATH,
+  CHECK_CENSUS_BASELINE_WRITE_COMMAND,
   CHECK_CENSUS_DEFAULT_TARGETS,
   CheckCensusBaseline,
   CheckCensusBaselineRow,
@@ -227,6 +228,89 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census command", (it) => {
       const error = yield* exit.cause.pipe(Cause.findErrorOption, Effect.fromOption);
       expect(error._tag).toBe("QualityScriptCommandError");
       expect(error.message).toContain("--version output: tsc development build");
+    })
+  );
+
+  // No `tsgo` and a metric-less sample: an overlay census or a sampled program would fail the run.
+  it.effect("checks only the compiler stamp under --stamp-only, ignoring --filter and writing no report", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      yield* fixtureRepo;
+      yield* fs.remove("node_modules/.bin/tsgo");
+      yield* writeProjectFile("packages/consumer/no-metrics", "");
+      const mark = yield* logMark;
+
+      yield* runCheckCensusCommand(["--stamp-only", "--filter", "__no_such_row__", "--output-json", REPORT_PATH]);
+
+      const logged = yield* loggedSince(mark);
+      expect(logged).toBe(`check-census stamp: baseline and installed compiler agree (${FIXTURE_COMPILER})`);
+      const reportExists = yield* fs.exists(REPORT_PATH);
+      expect(reportExists).toBe(false);
+    })
+  );
+
+  it.effect("fails --stamp-only naming both compilers and the re-measure command when the baseline is stale", () =>
+    Effect.gen(function* () {
+      yield* fixtureRepo;
+      const stalePath = "custom/stale-baseline.jsonc";
+      yield* writeCheckCensusBaseline(
+        stalePath,
+        CheckCensusBaseline.make({ ...fixtureBaseline, compiler: "7.0.1+fixture" })
+      );
+
+      const error = yield* runCheckCensusCommand(["--stamp-only", "--baseline", stalePath]).pipe(Effect.flip);
+
+      expect(error._tag).toBe("QualityScriptCommandError");
+      expect(error.message).toBe(
+        `check-census stamp: baseline ${stalePath} was measured with 7.0.1+fixture, but the installed compiler is ${FIXTURE_COMPILER}; re-measure with \`${CHECK_CENSUS_BASELINE_WRITE_COMMAND}\` (the write needs a built tree).`
+      );
+    })
+  );
+
+  it.effect("fails --stamp-only on a missing or undecodable baseline exactly as the gate does", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      yield* fixtureRepo;
+      const failureMessage = (args: ReadonlyArray<string>) =>
+        runCheckCensusCommand(args).pipe(
+          Effect.flip,
+          Effect.map((error) => error.message)
+        );
+
+      yield* fs.remove(CHECK_CENSUS_BASELINE_PATH);
+      const missing = yield* failureMessage(["--stamp-only"]);
+      const gateMissing = yield* failureMessage(["--gate-only", "--output-json", REPORT_PATH]);
+      expect(missing).toContain(`; create it with \`${CHECK_CENSUS_BASELINE_WRITE_COMMAND}\`.`);
+      expect(missing).toBe(gateMissing);
+
+      yield* writeProjectFile(CHECK_CENSUS_BASELINE_PATH, "{}\n");
+      const undecodable = yield* failureMessage(["--stamp-only"]);
+      const gateUndecodable = yield* failureMessage(["--gate-only", "--output-json", REPORT_PATH]);
+      expect(undecodable).toContain("as check-census-baseline/v1.");
+      expect(undecodable).toBe(gateUndecodable);
+    })
+  );
+
+  it.effect("rejects --stamp-only combined with any other mode flag before measuring anything", () =>
+    Effect.gen(function* () {
+      yield* fixtureRepo;
+      const others: ReadonlyArray<ReadonlyArray<string>> = [
+        ["--write-baseline"],
+        ["--gate-only"],
+        ["--build-equivalence"],
+        ["--seed"],
+        ["--initial-state", "restored"],
+        ["--equivalence-output-json", "out/equivalence.json"],
+      ];
+
+      const errors = yield* Effect.forEach(others, (flags) =>
+        runCheckCensusCommand(["--stamp-only", ...flags]).pipe(Effect.flip)
+      );
+
+      expect(A.map(errors, (error) => error._tag)).toStrictEqual(A.map(others, () => "QualityScriptCommandError"));
+      expect(A.dedupe(A.map(errors, (error) => error.message))).toStrictEqual([
+        "--stamp-only runs alone (not with --write-baseline, --gate-only, --build-equivalence, --seed, --initial-state or --equivalence-output-json).",
+      ]);
     })
   );
 
