@@ -233,8 +233,9 @@ export const handleScaleDown = Effect.fn("ScaleDown.handle")(function* (config: 
   const groups = A.groupBy(runners, (runner) => O.getOrElse(runner.owner, () => ""));
 
   const idleBudget = yield* Ref.make(config.pool.idleCount);
-  const decisions = yield* Effect.forEach(R.values(groups), (group) =>
-    Effect.gen(function* () {
+  const decisions = yield* Effect.forEach(
+    R.values(groups),
+    Effect.fnUntraced(function* (group) {
       const owner = O.getOrThrow(ownerOfRunner(group[0]));
       const registry = yield* installationTokenFor(owner, 0).pipe(
         Effect.flatMap((token) => github.listRunners(token, owner).pipe(Effect.map((list) => ({ token, list })))),
