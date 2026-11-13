@@ -261,6 +261,23 @@ describe("yeet final-check command", () => {
         assertInclude(affected, "lint-policy: bun run beep lint deprecated-apis --full");
       })
     );
+
+    it.effect(
+      "plans a coverage gate whose affected scope is noop without its command",
+      Effect.fnUntraced(function* () {
+        const root = yield* temporaryWorkingDirectory;
+        yield* runFixtureGit(root, ["init", "-q"]);
+        yield* commit(root, ".gitignore", ".beep/\n", "ignore yeet state");
+        yield* commit(root, "package.json", '{"name":"final-check-scratch","private":true}\n', "workspace root");
+        yield* commit(root, "README.md", "head\n", "head");
+        const before = yield* TestConsole.logLines;
+        yield* finalCheck(["--base", "HEAD~1", "--gates", "coverage", "--dry-run"]);
+        const after = yield* TestConsole.logLines;
+        const planned = A.join(A.map(A.drop(after, A.length(before)), String), "\n");
+        assertInclude(planned, "coverage: no affected packages (planner noop); nothing runs");
+        expect(planned).not.toContain("bun run coverage --affected");
+      })
+    );
   });
 });
 

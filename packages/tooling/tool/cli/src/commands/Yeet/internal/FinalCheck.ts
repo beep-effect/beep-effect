@@ -40,6 +40,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
@@ -59,7 +60,7 @@ import {
 } from "../../Quality/internal/LaneProofReuse.ts";
 import { resolveLintPolicyScope } from "../../Quality/internal/LintPolicyScope.ts";
 import { GithubCheckLaneSpec } from "../../Quality/Quality.schemas.ts";
-import { readLintPolicySweeps } from "../../Quality/Tasks.ts";
+import { readLintPolicySweeps, resolveAffectedCoverageScope } from "../../Quality/Tasks.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { readYeetComputeProfile } from "./ComputeProfileRead.ts";
 import { collectExpectationRewrites, verifyExpectationRewrites } from "./ExpectationRewrite.ts";
@@ -93,6 +94,7 @@ import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { ComputeProfile } from "../../../internal/repo-run/ComputeProfile.schemas.ts";
 import type { CiLaneId } from "../../Ci/CiLane.ts";
 import type { ChangeAtom } from "../../Ci/Route.schemas.ts";
+import type { CoverageAffectedScope } from "../../Quality/internal/CoverageScope.ts";
 import type { LaneProofSession } from "../../Quality/internal/LaneProofReuse.ts";
 import type { LintPolicySweeps } from "../../Quality/Quality.schemas.ts";
 import type { ExpectationRewriteVerdict, YeetFinalCheckOptions } from "./FinalCheck.schemas.ts";
@@ -435,6 +437,25 @@ const resolveFullLintPolicySweeps = Effect.fn("Yeet.resolveFullLintPolicySweeps"
     Console.log(
       `[yeet] final-check lint-policy: scope probe unavailable; retaining standalone root sweeps (${error.message})`
     ).pipe(Effect.as(O.none<LintPolicySweeps>()))
+  )
+);
+
+// The receipt reason for a coverage gate whose affected plan is noop. The step passes rather
+// than skips: `yeet ready` requires every skipped gate to be named in the PR body.
+const FINAL_CHECK_COVERAGE_NOOP_REASON = "no affected packages";
+
+// Same planner, base and changed-file collection as the coverage subprocess (Tasks.ts), so a
+// noop here is the subprocess's noop. Never pass final-check's own changedFiles: they drop
+// deletions. A failed probe leaves the subprocess to plan for itself.
+const resolveFinalCheckCoverageScope = Effect.fn("Yeet.resolveFinalCheckCoverageScope")(
+  function* (repoRoot: string, base: string) {
+    const scope = yield* resolveAffectedCoverageScope(repoRoot, base);
+    return O.some(scope);
+  },
+  Effect.catch((error) =>
+    Console.log(
+      `[yeet] final-check coverage: scope probe unavailable; the coverage step plans for itself (${error.message})`
+    ).pipe(Effect.as(O.none<CoverageAffectedScope>()))
   )
 );
 
@@ -993,6 +1014,7 @@ type FinalCheckRun = {
   readonly resume: boolean;
   readonly route?: FinalCheckRoute;
   readonly headSha?: string;
+  readonly coverageScope?: CoverageAffectedScope;
 };
 
 type GateOutcome = {
@@ -1024,15 +1046,40 @@ const skipFor = (run: FinalCheckRun, gate: FinalCheckGate) =>
     )
   );
 
+// The coverage gate's affected plan selected nothing: the step passes without spawning. A skip
+// is decided before this (C5), so it only applies when `skipFor` returned None.
+const plansNoCoverage = (run: FinalCheckRun, gate: FinalCheckGate): boolean =>
+  gate === "coverage" && run.coverageScope?._tag === "noop";
+
+const noopCoverageStep = (entry: FinalCheckPlannedStep): FinalCheckStepResult =>
+  FinalCheckStepResult.make({
+    gate: entry.gate,
+    label: entry.step.label,
+    hostedContext: entry.hostedContext,
+    command: renderCommand(entry.step),
+    status: "passed",
+    durationMs: 0,
+    reason: FINAL_CHECK_COVERAGE_NOOP_REASON,
+  });
+
 const printGatePlan = (run: FinalCheckRun, gate: FinalCheckGate) =>
   O.match(skipFor(run, gate), {
     onSome: (skip) => Console.log(`  skip ${gate}: ${skip.reason}`),
     onNone: () =>
-      gate === "expectation-rewrite"
-        ? Console.log(`  ${gate}: scan the diff's test files and snapshots; replay rewritten tests on the merge base`)
-        : Effect.forEach(plannedFor(run, gate), (entry) => Console.log(`  ${gate}: ${renderCommand(entry.step)}`), {
+      Match.value(gate).pipe(
+        Match.when("expectation-rewrite", () =>
+          Console.log(`  ${gate}: scan the diff's test files and snapshots; replay rewritten tests on the merge base`)
+        ),
+        Match.when(
+          (candidate: FinalCheckGate) => plansNoCoverage(run, candidate),
+          () => Console.log(`  ${gate}: ${FINAL_CHECK_COVERAGE_NOOP_REASON} (planner noop); nothing runs`)
+        ),
+        Match.orElse(() =>
+          Effect.forEach(plannedFor(run, gate), (entry) => Console.log(`  ${gate}: ${renderCommand(entry.step)}`), {
             discard: true,
-          }),
+          })
+        )
+      ),
   });
 
 const runGate = (run: FinalCheckRun, gate: FinalCheckGate, runner: ReturnType<typeof makeFinalCheckStepRunner>) =>
@@ -1040,20 +1087,41 @@ const runGate = (run: FinalCheckRun, gate: FinalCheckGate, runner: ReturnType<ty
     onSome: (skip): Effect.Effect<GateOutcome> =>
       Effect.succeed({ steps: [skippedStep(skip, hostedContextFor(run, gate))], verdicts: [], shadowMisses: [] }),
     onNone: () =>
-      gate === "expectation-rewrite"
-        ? Effect.map(
+      Match.value(gate).pipe(
+        Match.when("expectation-rewrite", () =>
+          Effect.map(
             runner.invalidate.pipe(Effect.andThen(runExpectationRewriteGate(run.repoRoot, run.mergeBase))),
-            (result) => ({
+            (result): GateOutcome => ({
               steps: [result.step],
               verdicts: result.verdicts,
               shadowMisses: [],
             })
           )
-        : Effect.map(Effect.forEach(plannedFor(run, gate), runner.execute), (steps) => ({
-            steps,
-            verdicts: [],
-            shadowMisses: [],
-          })),
+        ),
+        // Spawns nothing and moves no tree, so it writes no lane proof and needs no invalidate;
+        // a `--resume` run probes again.
+        Match.when(
+          (candidate: FinalCheckGate) => plansNoCoverage(run, candidate),
+          () =>
+            Console.log(`[yeet] final-check ${gate}: ${FINAL_CHECK_COVERAGE_NOOP_REASON} (planner noop)`).pipe(
+              Effect.as<GateOutcome>({
+                steps: A.map(plannedFor(run, gate), noopCoverageStep),
+                verdicts: [],
+                shadowMisses: [],
+              })
+            )
+        ),
+        Match.orElse(() =>
+          Effect.map(
+            Effect.forEach(plannedFor(run, gate), runner.execute),
+            (steps): GateOutcome => ({
+              steps,
+              verdicts: [],
+              shadowMisses: [],
+            })
+          )
+        )
+      ),
   });
 
 const hasFailure = (steps: ReadonlyArray<FinalCheckStepResult>): boolean =>
@@ -1241,7 +1309,7 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
       )
     )
   );
-  const run: FinalCheckRun = {
+  const plannedRun: FinalCheckRun = {
     repoRoot,
     mergeBase,
     planned: routeFinalCheckStepsForProfile({
@@ -1254,6 +1322,16 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
     route,
     headSha,
   };
+  // Every skip (operator, compute profile, route) decides before the probe (C5), so a skipped
+  // coverage gate stays skipped. The probe runs before `--dry-run` returns, so the plan matches.
+  const coverageScope =
+    A.contains(gates, "coverage") && O.isNone(skipFor(plannedRun, "coverage"))
+      ? yield* resolveFinalCheckCoverageScope(repoRoot, mergeBase)
+      : O.none<CoverageAffectedScope>();
+  const run: FinalCheckRun = O.match(coverageScope, {
+    onNone: () => plannedRun,
+    onSome: (scope) => ({ ...plannedRun, coverageScope: scope }),
+  });
 
   if (options.dryRun) {
     yield* Console.log(

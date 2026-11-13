@@ -108,6 +108,12 @@ fits a 4-core worker. By default every gate runs and every red is collected;
 | `fallow` | Fallow Advisory Envelopes | `beep ci lane fallow --validate-envelopes` | #2215 |
 | `coverage` | Coverage Regression, Test Unit | `TURBO_SCM_BASE=<merge-base> beep-cli coverage --affected` | #2215, #2221 |
 
+Coverage selects owners through the planner hosted CI shares: a goal or
+exploration path selects only the readers its `ciGoalDataConsumers` row names,
+and a packet document (prose, `ops/manifest.json`, `.gitkeep`) selects none.
+When nothing is selected, the receipt's coverage step passes with reason
+`no affected packages` and nothing runs; `--dry-run` prints the same plan.
+
 `expectation-rewrite` lists the modified and renamed `*.test.ts`/`*.spec.ts`
 and `__snapshots__` files, diffs each one on its own (added and deleted files
 cannot hold a rewrite, and one whole-tree diff of a moved test directory
