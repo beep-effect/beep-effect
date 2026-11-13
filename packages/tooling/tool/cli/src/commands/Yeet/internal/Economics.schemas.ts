@@ -1,8 +1,8 @@
 /**
- * Schemas for the `yeet economics` surface: the `yeet-economics/v2` report
+ * Schemas for the `yeet economics` surface: the `yeet-economics/v3` report
  * document, the normalized attempt model its fold consumes, the review lane
  * section, and the command options (time-to-certainty A3, rulings 73–75 and
- * 81).
+ * 81; certainty-scorecard MEAS-03).
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -27,7 +27,13 @@ const $I = $RepoCliId.create("commands/Yeet/internal/Economics.schemas");
 
 /**
  * Schema version of the economics report document (ruling 73; bumped to v2
- * by ruling 81, which added the review lane section).
+ * by ruling 81, which added the review lane section, and to v3 by MEAS-03).
+ *
+ * **Details**
+ *
+ * v3 counts a terminated attempt apart from reds: `firstFailure.redAttempts`,
+ * its mixes and `failureKindMix` no longer include it, so a v2 red count is
+ * the v3 `red` plus `terminated` rows of `attempts.all.classMix`.
  *
  * **Example** (Tell an economics document from an A1 one)
  *
@@ -41,7 +47,7 @@ const $I = $RepoCliId.create("commands/Yeet/internal/Economics.schemas");
  * @category constants
  * @since 0.0.0
  */
-export const YEET_ECONOMICS_SCHEMA_VERSION = "yeet-economics/v2";
+export const YEET_ECONOMICS_SCHEMA_VERSION = "yeet-economics/v3";
 
 /**
  * How reviewer precision is computed (ruling 81), stated on the surface so a
@@ -309,20 +315,64 @@ export class EconomicsLanePopulation extends S.Opaque<EconomicsLanePopulation, {
 ) {}
 
 /**
- * Outcome, mode and failure-kind mixes over a set of attempts.
+ * How an attempt counts in the economics fold (MEAS-03): `green`, `red`, or
+ * `terminated` apart from reds.
  *
  * **Details**
  *
- * A missing outcome, mode or failure kind counts as `unknown`; the
- * failure-kind mix covers non-success attempts only.
+ * A verdict decides when there is one: `success` is green, `failure` red. A
+ * verdict-less attempt (an `attempt-terminated` row) is classed by its
+ * termination reason: `unrecorded-failure` and the legacy `failure` name a
+ * failure of the attempt itself and are red; every other reason (an
+ * interrupt, a signal, a timeout, an OOM kill, a dead owner, an eviction, a
+ * lost or legacy terminal record) means the attempt was cut off or its
+ * outcome was never recorded, so it is `terminated`. A verdict without an
+ * outcome and with no reason stays red, as before.
+ *
+ * **Example** (Recognise a termination)
+ *
+ * ```ts
+ * import { EconomicsAttemptClass } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(EconomicsAttemptClass.is.terminated("terminated")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const EconomicsAttemptClass = LiteralKit(["green", "red", "terminated"]).pipe(
+  $I.annoteSchema("EconomicsAttemptClass", {
+    description:
+      "How an attempt counts: green or red by its verdict; a verdict-less attempt is red when its termination reason names a failure, else terminated apart from reds.",
+  })
+);
+
+/**
+ * How an attempt counts in the economics fold: green, red, or terminated.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type EconomicsAttemptClass = typeof EconomicsAttemptClass.Type;
+
+/**
+ * Outcome, attempt-class, mode and failure-kind mixes over a set of attempts.
+ *
+ * **Details**
+ *
+ * A missing outcome, mode or failure kind counts as `unknown`. `classMix`
+ * counts each attempt's {@link EconomicsAttemptClass}, so its `red` row is
+ * the first-failure denominator and its `terminated` row the attempts kept
+ * apart from it. The failure-kind mix covers red attempts only: a terminated
+ * attempt has no failure kind.
  *
  * **Example** (An empty mix)
  *
  * ```ts
  * import { EconomicsAttemptMix } from "@beep/repo-cli/test/Yeet"
  *
- * const mix = EconomicsAttemptMix.make({ outcomeMix: [], modeMix: [], failureKindMix: [] })
- * console.log(mix.outcomeMix.length) // 0
+ * const mix = EconomicsAttemptMix.make({ outcomeMix: [], classMix: [], modeMix: [], failureKindMix: [] })
+ * console.log(mix.classMix.length) // 0
  * ```
  *
  * @category models
@@ -331,12 +381,13 @@ export class EconomicsLanePopulation extends S.Opaque<EconomicsLanePopulation, {
 export class EconomicsAttemptMix extends S.Opaque<EconomicsAttemptMix, { readonly brand: unique symbol }>()(
   S.Struct({
     outcomeMix: S.Array(EconomicsCountRow),
+    classMix: S.Array(EconomicsCountRow),
     modeMix: S.Array(EconomicsCountRow),
     failureKindMix: S.Array(EconomicsCountRow),
   }).pipe(
     $I.annoteSchema("EconomicsAttemptMix", {
       description:
-        "Outcome, mode, and non-success failure-kind mixes over a set of attempts; missing values are unknown.",
+        "Outcome, green/red/terminated class, mode, and red failure-kind mixes over a set of attempts; missing values are unknown.",
     })
   )
 ) {}
@@ -354,7 +405,7 @@ export class EconomicsAttemptMix extends S.Opaque<EconomicsAttemptMix, { readonl
  * ```ts
  * import { EconomicsAttemptMix, EconomicsAttempts } from "@beep/repo-cli/test/Yeet"
  *
- * const empty = EconomicsAttemptMix.make({ outcomeMix: [], modeMix: [], failureKindMix: [] })
+ * const empty = EconomicsAttemptMix.make({ outcomeMix: [], classMix: [], modeMix: [], failureKindMix: [] })
  * console.log(EconomicsAttempts.make({ all: empty, comparable: empty }).all.modeMix.length) // 0
  * ```
  *
@@ -374,22 +425,78 @@ export class EconomicsAttempts extends S.Opaque<EconomicsAttempts, { readonly br
 ) {}
 
 /**
+ * Attempt counts and elapsed-time percentiles of one run mode (MEAS-03).
+ *
+ * **Details**
+ *
+ * `attempts` counts every attempt of the mode (a missing mode is `unknown`);
+ * `redAttempts` and `terminatedAttempts` count its {@link EconomicsAttemptClass}
+ * rows, so the green attempts are the rest. The percentile sample is the
+ * green and red attempts that carry a non-negative `elapsedMs`
+ * (`measuredAttempts`): a terminated attempt's elapsed time is how long it ran
+ * before it was cut off, not how long the mode takes, so it is counted beside
+ * the percentiles and never inside them. `final-check` runs are one row here,
+ * which reports their p50 and p95; nothing is gated on them.
+ *
+ * **Example** (A mode with no measured attempt)
+ *
+ * ```ts
+ * import { EconomicsModeDurationRow } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const row = EconomicsModeDurationRow.make({
+ *   mode: "final-check",
+ *   attempts: 1,
+ *   redAttempts: 0,
+ *   terminatedAttempts: 1,
+ *   measuredAttempts: 0,
+ *   p50ElapsedMs: O.none(),
+ *   p95ElapsedMs: O.none(),
+ * })
+ * console.log(row.terminatedAttempts) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class EconomicsModeDurationRow extends S.Opaque<EconomicsModeDurationRow, { readonly brand: unique symbol }>()(
+  S.Struct({
+    mode: S.String,
+    attempts: EconomicsCount,
+    redAttempts: EconomicsCount,
+    terminatedAttempts: EconomicsCount,
+    measuredAttempts: EconomicsCount,
+    p50ElapsedMs: OptionalMs,
+    p95ElapsedMs: OptionalMs,
+  }).pipe(
+    $I.annoteSchema("EconomicsModeDurationRow", {
+      description:
+        "One run mode's attempts, red and terminated counts, and nearest-rank elapsed p50/p95 over its green and red attempts.",
+    })
+  )
+) {}
+
+/**
  * First actionable failure economics over red attempts (M2, ruling 74).
  *
  * **Details**
  *
- * The failing lane is the first failed inner lane that carries a duration,
- * else the first failed wrapper that carries one; an attempt with neither is
- * not reconstructable. The start offset sums the non-negative durations of
+ * The red attempts are those of class `red` ({@link EconomicsAttemptClass}):
+ * since v3 a terminated attempt is counted apart and appears in none of these
+ * figures. The failing lane is the first failed inner lane that carries a
+ * duration, else the first failed wrapper that carries one; an attempt with
+ * neither is not reconstructable. The start offset sums the non-negative durations of
  * the wrappers before the failing lane's parent wrapper (its `parentLaneId`,
  * else the first failed timed wrapper; every wrapper when neither is found)
  * and of that wrapper's inner lanes before the failing one; a failing wrapper
  * counts only the wrappers before it. The completion offset adds the failing
  * lane's own duration. `offsetMethod` states this one definition.
  * `actionableLaneMix` first classifies refusals (`refusal:lock-bounce`,
- * `refusal:stale-base`, `refusal:closeout`), then names the first failed inner
- * lane, else the failed step of a `step-exit` failure, else the first failed
- * lane, else `unexecuted` (a handler error that ran no lane) or `unlocated`.
+ * `refusal:stale-base`, `refusal:moved-tree` for a final-check run whose
+ * checkout changed while the gates ran, `refusal:closeout`), then names the
+ * first failed inner lane, else the failed step of a `step-exit` failure, else
+ * the first failed lane, else `unrecorded` (a red with no verdict), else
+ * `unexecuted` (a handler error that ran no lane) or `unlocated`.
  * Every red attempt is one row, so the mix total equals `redAttempts`;
  * `receiptProxyMix` classifies every red attempt with the A1 script's seven
  * proxy classes.
@@ -545,6 +652,13 @@ export class EconomicsRedToGreen extends S.Opaque<EconomicsRedToGreen, { readonl
 
 /**
  * Journaled starts, starts without a terminal row, and terminal reasons (M5).
+ *
+ * **Details**
+ *
+ * `reasonMix` counts the reason of every attempt that ended in an
+ * `attempt-terminated` row. `unrecorded-failure` and the legacy `failure` are
+ * red attempts; every other reason is a termination, counted apart from reds
+ * in the `terminated` row of `attempts.all.classMix`.
  *
  * **Example** (No terminations)
  *
@@ -1133,8 +1247,11 @@ export class EconomicsReviewLane extends S.Opaque<EconomicsReviewLane, { readonl
  * **Details**
  *
  * Fields shared with the A1 script's `verification-economics/v1` keep its
- * spelling so rows compare by name. Wrapper and inner lanes are separate
- * populations with separate denominators (ruling 74); the review lane is a
+ * spelling so rows compare by name; since v3 `firstFailure.redAttempts` leaves
+ * terminated attempts out, where the A1 script counts them, and
+ * `modeDurations` reports each run mode's elapsed p50 and p95. Wrapper and
+ * inner lanes are separate populations with separate denominators (ruling
+ * 74); the review lane is a
  * third section with its own denominators and is never summed with them.
  * Nothing here is written to disk; the committed A1 `economics.json` stays
  * owned by the script.
@@ -1144,7 +1261,7 @@ export class EconomicsReviewLane extends S.Opaque<EconomicsReviewLane, { readonl
  * ```ts
  * import { YEET_ECONOMICS_SCHEMA_VERSION } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YEET_ECONOMICS_SCHEMA_VERSION) // "yeet-economics/v2"
+ * console.log(YEET_ECONOMICS_SCHEMA_VERSION) // "yeet-economics/v3"
  * ```
  *
  * @category models
@@ -1156,6 +1273,7 @@ export class YeetEconomicsReport extends S.Opaque<YeetEconomicsReport, { readonl
     scope: EconomicsScope,
     measurementAsOf: S.String,
     attempts: EconomicsAttempts,
+    modeDurations: S.Array(EconomicsModeDurationRow),
     wrapperLanes: EconomicsLanePopulation,
     innerLanes: EconomicsLanePopulation,
     reviewLane: EconomicsReviewLane,
@@ -1167,7 +1285,7 @@ export class YeetEconomicsReport extends S.Opaque<YeetEconomicsReport, { readonl
   }).pipe(
     $I.annoteSchema("YeetEconomicsReport", {
       description:
-        "Checkout economics over live attempt journals: attempt mixes, wrapper and inner lane populations, the review lane (rounds to ready, reviewer precision), first failure (M2), red-to-green episodes (M1), unchanged fingerprint (M4), terminations (M5), and data quality.",
+        "Checkout economics over live attempt journals: attempt mixes with terminations apart from reds, per-mode durations, wrapper and inner lane populations, the review lane (rounds to ready, reviewer precision), first failure (M2), red-to-green episodes (M1), unchanged fingerprint (M4), terminations (M5), and data quality.",
     })
   )
 ) {}
@@ -1283,8 +1401,9 @@ export class EconomicsLane extends S.Opaque<EconomicsLane, { readonly brand: uni
  * `startedAt` comes from the verdict, then the start row; `endedAt` from the
  * verdict's `endedAt`, then its `createdAt`, then the terminal row's
  * `recordedAt`; `elapsedMs` from the verdict, else `endedAt − startedAt`. A
- * terminated attempt has no verdict, so its `outcome` is none (red) and it
- * has no lanes. A termination the reconciler wrote later
+ * terminated attempt has no verdict, so its `outcome` is none and it has no
+ * lanes; its `terminationReason` decides its {@link EconomicsAttemptClass}.
+ * A termination the reconciler wrote later
  * (`legacy-unowned-start`, `owner-dead`, `stale-unverifiable-owner`) is
  * stamped when the reconciler ran, not when the attempt died, so its
  * `elapsedMs` is none; its `endedAt` still orders it but never bounds a

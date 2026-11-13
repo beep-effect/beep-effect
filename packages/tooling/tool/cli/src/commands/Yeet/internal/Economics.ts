@@ -6,7 +6,7 @@
  *
  * {@link YeetEconomicsSource} reads `.beep/yeet/runs/<runId>/attempts.ndjson`
  * and orphan `verdict.json` files into normalized journals; the pure fold
- * {@link buildYeetEconomicsReport} turns them into the `yeet-economics/v1`
+ * {@link buildYeetEconomicsReport} turns them into the `yeet-economics/v3`
  * document. Nothing is written to disk.
  *
  * @packageDocumentation
@@ -28,7 +28,7 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { constTrue, dual, flow, pipe } from "effect/Function";
+import { constant, constTrue, dual, flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
@@ -51,6 +51,7 @@ import {
 import { CLAUDE_WORKTREES_RELATIVE_ROOT, WORKTREES_ROOT_SUFFIX } from "../../Worktree/Worktree.constants.ts";
 import {
   EconomicsAttempt,
+  EconomicsAttemptClass,
   EconomicsAttemptMix,
   EconomicsAttempts,
   EconomicsDataQuality,
@@ -63,6 +64,7 @@ import {
   EconomicsLaneKind,
   EconomicsLanePopulation,
   EconomicsLaneRow,
+  EconomicsModeDurationRow,
   EconomicsRedToGreen,
   EconomicsScope,
   EconomicsScopeKind,
@@ -126,14 +128,18 @@ const EconomicsComparableMode = YeetRunMode.pick(["verify", "repair", "publish"]
 );
 const isComparableMode = S.is(EconomicsComparableMode);
 
-// MEAS-02: the non-lane rows of `actionableLaneMix`. Refusals are classified
-// before any lane or step id, and stay rows of the same mix so its total
-// equals `redAttempts`; `unexecuted` is a handler-error red that ran no lane,
-// `unlocated` any other red with no failed lane and no step-exit step.
+// MEAS-02 and MEAS-03: the non-lane rows of `actionableLaneMix`. Refusals are
+// classified before any lane or step id, and stay rows of the same mix so its
+// total equals `redAttempts`; `unrecorded` is a red with no verdict (its
+// writer stamped `unrecorded-failure`), `unexecuted` a handler-error red that
+// ran no lane, `unlocated` any other red with no failed lane and no step-exit
+// step.
 const EconomicsActionableClass = LiteralKit([
   "refusal:lock-bounce",
   "refusal:stale-base",
+  "refusal:moved-tree",
   "refusal:closeout",
+  "unrecorded",
   "unexecuted",
   "unlocated",
 ]).pipe(
@@ -152,6 +158,10 @@ const isExecutedLaneStatus = S.is(EconomicsExecutedLaneStatus);
 
 // The publish stale-base refusal (`PublishScope.ts`), matched lowercased.
 const STALE_BASE_REFUSAL = /refuses a stale base/u;
+
+// The final-check moved-tree refusal (`FinalCheck.ts` `refuseMovedTree`): the
+// gates ran, but the checkout changed under them, so no receipt was written.
+const MOVED_TREE_SENTENCE = "the checkout changed while the gates ran";
 
 const EconomicsReceiptProxyClass = LiteralKit([
   "scheduler-lock-bounce",
@@ -1035,8 +1045,92 @@ export class YeetReviewLaneSource extends Context.Service<YeetReviewLaneSource, 
 // ---------------------------------------------------------------------------
 
 const orUnknown: (value: O.Option<string>) => string = O.getOrElse(() => UNKNOWN_KEY);
+
+const asGreen = constant(EconomicsAttemptClass.Enum.green);
+const asRed = constant(EconomicsAttemptClass.Enum.red);
+const asTerminated = constant(EconomicsAttemptClass.Enum.terminated);
+
+const outcomeClass = YeetOutcome.match({ success: asGreen, failure: asRed });
+
+// MEAS-03: a verdict-less attempt's class, by its termination reason. Only a
+// reason that names a failure of the attempt itself is red; every other one
+// means the attempt was cut off or its outcome was never recorded. The match
+// is exhaustive, so a new reason is classed where it is added.
+const terminationReasonClass = YeetAttemptTerminationReason.match({
+  success: asTerminated,
+  failure: asRed,
+  interrupted: asTerminated,
+  signal: asTerminated,
+  "queued-submitter-death": asTerminated,
+  "lease-eviction": asTerminated,
+  "owner-dead": asTerminated,
+  "legacy-unowned-start": asTerminated,
+  "stale-unverifiable-owner": asTerminated,
+  "terminal-row-missing": asTerminated,
+  "unrecorded-failure": asRed,
+  "oom-killed": asTerminated,
+  timeout: asTerminated,
+  "job-start-failed": asTerminated,
+  cancelled: asTerminated,
+  "finalizer-missing": asTerminated,
+});
+
+/**
+ * Class one normalized attempt as green, red, or terminated apart from reds
+ * (MEAS-03).
+ *
+ * **Details**
+ *
+ * The verdict's outcome decides when there is one. A verdict-less attempt is
+ * red only when its termination reason names a failure of the attempt itself
+ * (`unrecorded-failure`, the legacy `failure`); any other reason is a
+ * termination. An attempt with neither an outcome nor a reason stays red.
+ *
+ * **Example** (An interrupted attempt is not a red)
+ *
+ * ```ts
+ * import { EconomicsAttempt, economicsAttemptClass } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const interrupted = EconomicsAttempt.make({
+ *   checkout: "beep-effect",
+ *   runId: "feat-0123456789ab",
+ *   attemptId: "attempt-1",
+ *   branch: "feat",
+ *   mode: O.some("final-check"),
+ *   outcome: O.none(),
+ *   failureKind: O.none(),
+ *   failedStepId: O.none(),
+ *   message: "",
+ *   startedAt: O.some("2026-11-13T00:00:00.000Z"),
+ *   endedAt: O.some("2026-11-13T00:04:00.000Z"),
+ *   elapsedMs: O.some(240000),
+ *   diffFingerprint: O.none(),
+ *   terminationReason: O.some("interrupted"),
+ *   verdictSchemaVersion: O.none(),
+ *   lanes: [],
+ * })
+ * console.log(economicsAttemptClass(interrupted)) // "terminated"
+ * ```
+ *
+ * @param attempt - A loader-normalized row with its outcome and termination reason.
+ * @returns `green`, `red` or `terminated`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const economicsAttemptClass = (attempt: EconomicsAttempt): EconomicsAttemptClass =>
+  pipe(
+    O.map(attempt.outcome, outcomeClass),
+    O.orElse(() => O.map(attempt.terminationReason, terminationReasonClass)),
+    O.getOrElse(asRed)
+  );
+
 const isGreen = (attempt: EconomicsAttempt): boolean => O.exists(attempt.outcome, YeetOutcome.is.success);
-const isRed = P.not(isGreen);
+const isRed = flow(economicsAttemptClass, EconomicsAttemptClass.is.red);
+const isTerminated = flow(economicsAttemptClass, EconomicsAttemptClass.is.terminated);
+// Ruling 75's red-to-green walk is unchanged by MEAS-03: every attempt that is
+// not green, terminations included, joins a streak.
+const isNotGreen = P.not(isGreen);
 const isLockBounce = (attempt: EconomicsAttempt): boolean =>
   O.exists(attempt.failureKind, YeetFailureKind.is["handler-error"]) &&
   Str.includes(LOCK_BOUNCE_SENTENCE)(attempt.message);
@@ -1048,9 +1142,40 @@ const attemptKey = (attempt: EconomicsAttempt): string =>
 const attemptMix = (attempts: ReadonlyArray<EconomicsAttempt>): EconomicsAttemptMix =>
   EconomicsAttemptMix.make({
     outcomeMix: economicsCountMix(A.map(attempts, (attempt) => orUnknown(attempt.outcome))),
+    classMix: economicsCountMix(A.map(attempts, economicsAttemptClass)),
     modeMix: economicsCountMix(A.map(attempts, (attempt) => orUnknown(attempt.mode))),
     failureKindMix: economicsCountMix(A.map(A.filter(attempts, isRed), (attempt) => orUnknown(attempt.failureKind))),
   });
+
+const modeDurationOrder = Order.combine(
+  Order.mapInput(Order.flip(Order.Number), (row: EconomicsModeDurationRow) => row.attempts),
+  Order.mapInput(Order.String, (row: EconomicsModeDurationRow) => row.mode)
+);
+
+// MEAS-03: one row per run mode. The elapsed sample is the green and red
+// attempts that carry a non-negative elapsed time; a terminated attempt ran
+// only until it was cut off, so it is counted beside the sample.
+const modeDurationRow = ([mode, members]: readonly [string, ReadonlyArray<EconomicsAttempt>]) => {
+  const sample = A.filter(
+    A.getSomes(A.map(A.filter(members, P.not(isTerminated)), (attempt) => attempt.elapsedMs)),
+    Num.isGreaterThanOrEqualTo(0)
+  );
+  return EconomicsModeDurationRow.make({
+    mode,
+    attempts: A.length(members),
+    redAttempts: A.countBy(members, isRed),
+    terminatedAttempts: A.countBy(members, isTerminated),
+    measuredAttempts: A.length(sample),
+    p50ElapsedMs: roundedRank(sample, 0.5),
+    p95ElapsedMs: roundedRank(sample, 0.95),
+  });
+};
+
+const modeDurations = (attempts: ReadonlyArray<EconomicsAttempt>): ReadonlyArray<EconomicsModeDurationRow> =>
+  A.sort(
+    A.map(R.toEntries(A.groupBy(attempts, (attempt) => orUnknown(attempt.mode))), modeDurationRow),
+    modeDurationOrder
+  );
 
 interface LaneObservation {
   readonly attemptKey: string;
@@ -1180,19 +1305,42 @@ const failureOffsets = (attempt: EconomicsAttempt): O.Option<FailureOffsets> => 
 const isHandlerError = (attempt: EconomicsAttempt): boolean =>
   O.exists(attempt.failureKind, YeetFailureKind.is["handler-error"]);
 
-// A refusal class, checked before any lane: the scheduler lock bounce, the
-// publish stale-base refusal, and any red closeout.
-const refusalClass = (attempt: EconomicsAttempt): O.Option<typeof EconomicsActionableClass.Type> => {
-  if (isLockBounce(attempt)) {
-    return O.some(EconomicsActionableClass.Enum["refusal:lock-bounce"]);
-  }
-  if (isHandlerError(attempt) && STALE_BASE_REFUSAL.test(Str.toLowerCase(attempt.message))) {
-    return O.some(EconomicsActionableClass.Enum["refusal:stale-base"]);
-  }
-  return O.exists(attempt.mode, YeetRunMode.is.closeout)
-    ? O.some(EconomicsActionableClass.Enum["refusal:closeout"])
-    : O.none();
-};
+// The refusal classes in match order, checked before any lane: the scheduler
+// lock bounce, the publish stale-base refusal, the final-check moved-tree
+// refusal, and any red closeout.
+const REFUSAL_CLASSES: ReadonlyArray<
+  readonly [typeof EconomicsActionableClass.Type, (attempt: EconomicsAttempt) => boolean]
+> = [
+  [EconomicsActionableClass.Enum["refusal:lock-bounce"], isLockBounce],
+  [
+    EconomicsActionableClass.Enum["refusal:stale-base"],
+    (attempt) => isHandlerError(attempt) && STALE_BASE_REFUSAL.test(Str.toLowerCase(attempt.message)),
+  ],
+  [
+    EconomicsActionableClass.Enum["refusal:moved-tree"],
+    (attempt) => isHandlerError(attempt) && Str.includes(MOVED_TREE_SENTENCE)(attempt.message),
+  ],
+  [EconomicsActionableClass.Enum["refusal:closeout"], (attempt) => O.exists(attempt.mode, YeetRunMode.is.closeout)],
+];
+
+const refusalClass = (attempt: EconomicsAttempt): O.Option<typeof EconomicsActionableClass.Type> =>
+  O.map(
+    A.findFirst(REFUSAL_CLASSES, ([, matches]) => matches(attempt)),
+    ([refusal]) => refusal
+  );
+
+// A red no lane locates: a verdict-less one (its writer stamped a failure) is
+// `unrecorded`, a handler error that ran no lane `unexecuted`, any other red
+// `unlocated`.
+const unlocatedClass = Match.type<EconomicsAttempt>().pipe(
+  Match.when({ terminationReason: O.isSome }, () => EconomicsActionableClass.Enum.unrecorded),
+  Match.when(
+    (attempt: EconomicsAttempt) =>
+      isHandlerError(attempt) && !A.some(attempt.lanes, (lane) => isExecutedLaneStatus(lane.status)),
+    () => EconomicsActionableClass.Enum.unexecuted
+  ),
+  Match.orElse(() => EconomicsActionableClass.Enum.unlocated)
+);
 
 // A handler-error verdict names the first unexecuted planned step as its
 // failed step (`Handler.ts`), so only a step-exit failed step is a lane.
@@ -1209,11 +1357,7 @@ const actionableLane = (attempt: EconomicsAttempt): string =>
       O.filter(attempt.failedStepId, () => O.exists(attempt.failureKind, YeetFailureKind.is["step-exit"]))
     ),
     O.orElse(() => O.map(A.findFirst(attempt.lanes, isFailedLane), (lane) => lane.id)),
-    O.getOrElse(() =>
-      isHandlerError(attempt) && !A.some(attempt.lanes, (lane) => isExecutedLaneStatus(lane.status))
-        ? EconomicsActionableClass.Enum.unexecuted
-        : EconomicsActionableClass.Enum.unlocated
-    )
+    O.getOrElse(() => unlocatedClass(attempt))
   );
 
 const receiptProxyClass = (attempt: EconomicsAttempt): string => {
@@ -1322,15 +1466,16 @@ interface JournalEpisodes {
   readonly openStreak: O.Option<OpenStreak>;
 }
 
-// Ruling 75: a red attempt joins the streak, a green one closes it; a green with
-// no streak closes nothing. Episodes never span two runs.
+// Ruling 75: an attempt that is not green (a termination too) joins the
+// streak, a green one closes it; a green with no streak closes nothing.
+// Episodes never span two runs.
 const journalEpisodes = (journal: EconomicsJournal): JournalEpisodes => {
   const cutoffMs = O.flatMap(journal.cutoff, parseMillis);
   const walk = A.reduce(
     comparableSequence(journal),
     emptyEpisodeWalk,
     (state: EpisodeWalk, timed: TimedAttempt): EpisodeWalk =>
-      isRed(timed.attempt)
+      isNotGreen(timed.attempt)
         ? { ...state, streak: A.append(state.streak, timed) }
         : A.match(state.streak, {
             onEmpty: () => state,
@@ -1507,12 +1652,14 @@ const dataQuality = (
 
 /**
  * Fold normalized journals and review lane ledgers into the
- * `yeet-economics/v2` report.
+ * `yeet-economics/v3` report.
  *
  * **Details**
  *
  * Pure: the same journals, ledgers, scope and instant always give the same
- * document. Lanes and first failure fold every attempt; red-to-green folds
+ * document. Lanes and the per-mode durations fold every attempt; first
+ * failure folds the red attempts, never a terminated one
+ * ({@link economicsAttemptClass}); red-to-green folds
  * the comparable attempts of each run separately; the review lane folds the
  * ledgers, narrowed to the scope's branch when it has one (ruling 81);
  * percentiles are nearest rank rounded with `Math.round`.
@@ -1570,6 +1717,7 @@ export const buildYeetEconomicsReport: {
         all: attemptMix(attempts),
         comparable: attemptMix(A.filter(attempts, isComparable)),
       }),
+      modeDurations: modeDurations(attempts),
       wrapperLanes: lanePopulation(attempts, EconomicsLaneKind.Enum.wrapper),
       innerLanes: lanePopulation(attempts, EconomicsLaneKind.Enum.inner),
       reviewLane: buildYeetEconomicsReviewLane(ledgers, scope.branch),
@@ -1650,6 +1798,18 @@ const renderEpisodes = (title: string, summary: EconomicsEpisodeSummary): string
 
 const totalCount = (rows: ReadonlyArray<EconomicsCountRow>): number => sumOf(rows, (row) => row.count);
 
+const terminatedCount = (report: YeetEconomicsReport): number =>
+  totalCount(A.filter(report.attempts.all.classMix, (row) => EconomicsAttemptClass.is.terminated(row.key)));
+
+const renderModeDurations = (rows: ReadonlyArray<EconomicsModeDurationRow>): ReadonlyArray<string> => [
+  "durations by mode (elapsed of green and red attempts; terminated ones counted apart, outside the percentiles):",
+  ...A.map(
+    rows,
+    (row) =>
+      `  ${row.mode}: ${row.attempts} attempt(s), ${row.redAttempts} red, ${row.terminatedAttempts} terminated; ${row.measuredAttempts} measured, p50 ${formatOptionalMs(row.p50ElapsedMs)}, p95 ${formatOptionalMs(row.p95ElapsedMs)}`
+  ),
+];
+
 const inFlightNote = (excluded: number): string => (excluded > 0 ? ` (${excluded} in flight)` : "");
 
 const scopeLine = (report: YeetEconomicsReport): string =>
@@ -1693,22 +1853,25 @@ export const renderYeetEconomicsReport = (report: YeetEconomicsReport): string =
     dataQuality: quality,
   } = report;
   const diagnostics = quality.diagnostics;
+  const terminated = terminatedCount(report);
   return A.join(
     [
       scopeLine(report),
       `attempts: ${totalCount(attempts.all.outcomeMix)} — ${formatMix(attempts.all.outcomeMix)}; comparable ${totalCount(attempts.comparable.outcomeMix)} — ${formatMix(attempts.comparable.outcomeMix)}`,
+      `  classes (terminations apart from reds): ${formatMix(attempts.all.classMix)}; comparable ${formatMix(attempts.comparable.classMix)}`,
       `  modes: ${formatMix(attempts.all.modeMix)}`,
-      `  failure kinds: ${formatMix(attempts.all.failureKindMix)}`,
+      `  failure kinds (red attempts): ${formatMix(attempts.all.failureKindMix)}`,
+      ...renderModeDurations(report.modeDurations),
       ...renderPopulation("wrapper lanes", report.wrapperLanes),
       ...renderPopulation("inner lanes", report.innerLanes),
       ...renderYeetEconomicsReviewLane(report.reviewLane),
-      `first failure (M2): ${failure.redAttempts} red attempt(s), ${failure.attemptsWithReconstructableOuterFailure} reconstructable, ${failure.attemptsWithoutReconstructableOuterFailure} not; start p50 ${formatOptionalMs(failure.startOffsetP50Ms)} p95 ${formatOptionalMs(failure.startOffsetP95Ms)}; completion p50 ${formatOptionalMs(failure.completionOffsetP50Ms)} p95 ${formatOptionalMs(failure.completionOffsetP95Ms)}`,
+      `first failure (M2): ${failure.redAttempts} red attempt(s) (${terminated} terminated, counted apart), ${failure.attemptsWithReconstructableOuterFailure} reconstructable, ${failure.attemptsWithoutReconstructableOuterFailure} not; start p50 ${formatOptionalMs(failure.startOffsetP50Ms)} p95 ${formatOptionalMs(failure.startOffsetP95Ms)}; completion p50 ${formatOptionalMs(failure.completionOffsetP50Ms)} p95 ${formatOptionalMs(failure.completionOffsetP95Ms)}`,
       `  actionable lanes: ${formatMix(failure.actionableLaneMix, TOP_LANE_ROWS)}`,
       `  receipt proxies: ${formatMix(failure.receiptProxyMix)}`,
       renderEpisodes("red to green (M1) comparable24h", episodes.comparable24h),
       renderEpisodes("red to green (M1) uncut", episodes.uncut),
       `  censoring: left ${episodes.uncut.leftCensoredEpisodesExcluded} episode(s) (${episodes.uncut.leftCensoredObservedAttempts} attempt(s)), right ${episodes.uncut.rightCensoredStreaks} streak(s) (${episodes.uncut.rightCensoredRedAttempts} red attempt(s), observed at least ${episodes.uncut.rightCensoredObservedSpanMinutes} min)`,
-      `terminations (M5): ${report.terminations.starts} start(s), ${report.terminations.startsWithoutFinish} without a terminal row; reasons: ${formatMix(report.terminations.reasonMix)}`,
+      `terminations (M5): ${report.terminations.starts} start(s), ${report.terminations.startsWithoutFinish} without a terminal row; ${terminated} terminated apart from reds; reasons: ${formatMix(report.terminations.reasonMix)}`,
       `unchanged fingerprint (M4 fingerprint-repeat proxy; the ack-resolution join is not on this surface): ${fingerprint.classification}; ${fingerprint.attemptsWithFingerprint} attempt(s) carry a fingerprint; ${fingerprint.failedUnchangedFingerprintThenGreen} verdict red then green on the same fingerprint`,
       `  by actionable lane: ${formatMix(fingerprint.byActionableLane, TOP_LANE_ROWS)}; by receipt proxy: ${formatMix(fingerprint.byReceiptProxy)}`,
       `data quality: window ${O.getOrElse(quality.attemptWindowStartUtc, () => "n/a")} .. ${O.getOrElse(quality.attemptWindowEndUtc, () => "n/a")}; journals ${diagnostics.journalsObserved} read, ${diagnostics.unreadableJournals} unreadable; invalid rows ${diagnostics.invalidRows}; compaction receipts ${diagnostics.compactionReceipts} (${diagnostics.leftCensoredJournals} left-censored journal(s))`,
@@ -1727,9 +1890,10 @@ export const renderYeetEconomicsReport = (report: YeetEconomicsReport): string =
  *
  * The lines cover attempts and outcomes, the comparable closed-episode span
  * p50, the first-failure completion offset p50, the top wrapper lane by
- * minutes, and terminations. An empty report still renders every line. The
- * terminations line ends ` (N in flight)` when the caller's own running
- * attempt was dropped from the starts.
+ * minutes, and terminations, with the attempts counted apart from reds. An
+ * empty report still renders every line. The terminations line ends
+ * ` (N in flight)` when the caller's own running attempt was dropped from the
+ * starts.
  *
  * **Example** (Summarize an empty report)
  *
@@ -1767,7 +1931,7 @@ export const renderYeetEconomicsCloseoutSummary = (report: YeetEconomicsReport):
     onSome: (row) =>
       `economics: top wrapper lane ${laneName(row)} ${formatDurationMs(row.totalDurationMs)} (${formatPercent(row.sharePct)} of wrapper time)`,
   }),
-  `economics: terminations ${report.terminations.starts} start(s), ${report.terminations.startsWithoutFinish} without a terminal row; reasons ${formatMix(report.terminations.reasonMix)}${inFlightNote(report.dataQuality.diagnostics.inFlightStartsExcluded)}`,
+  `economics: terminations ${report.terminations.starts} start(s), ${report.terminations.startsWithoutFinish} without a terminal row; ${terminatedCount(report)} terminated apart from reds; reasons ${formatMix(report.terminations.reasonMix)}${inFlightNote(report.dataQuality.diagnostics.inFlightStartsExcluded)}`,
 ];
 
 // ---------------------------------------------------------------------------

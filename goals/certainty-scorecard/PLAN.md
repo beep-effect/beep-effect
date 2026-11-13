@@ -110,6 +110,22 @@ Reverse: Delete this checkpoint and restore the slice-1 checkpoint as the latest
 
 Reverse: Delete this checkpoint; it records a fact about main and changes no behaviour.
 
+### Check-lane baselines before 3e822c71c5 are not comparable (check once), 2026-11-13
+
+#3242 merged at 3e822c71c5 (2026-11-13). The root Turbo `check` task now depends on the package's own `build` for declaration-only packages, and their `beep:check` runs the declaration-only build command. Every `check` hash misses once, and the first cold run is not a regression. Build minutes now sit inside the check lane (Heavy / Check and Heavy / Build start together on separate VMs and both compute the build on a cold hash), so a check-lane wall-time or runner-minute baseline from before that commit is not comparable, and the first certified nightly must be taken after it. The cache-qualification and check-census baselines were re-recorded in that PR. `TSRS_FAST` is a global Turbo input and part of tsrs incremental state, so each baseline records whether it was set.
+
+Lane fix/certainty-meas-03-terminations
+
+Reverse: Delete this checkpoint; it records a fact about main and changes no behaviour.
+
+### Slice 6 merged; slice 10 (MEAS-03) reports terminations apart from reds, 2026-11-13
+
+Slice 6 (MEAS-07) merged as #3228. Slice 10 (MEAS-03) classes every economics attempt green, red or terminated in `packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.ts`: a terminated attempt leaves `firstFailure.redAttempts` and its mixes, `attempts.*.classMix` reports the classes, `modeDurations` reports each run mode's elapsed p50 and p95 (final-check included), and a final-check moved-tree refusal is typed `refusal:moved-tree`. The report is `yeet-economics/v3` (decision `terminations-apart-from-reds`, which states the denominator before and after). The admission gate is `packages/tooling/tool/cli/test/yeet-economics-adjudicated.test.ts` over the committed journal `test/fixtures/yeet-economics/adjudicated-terminations.ndjson`, every attempt classified by hand with its reason. Other second- and third-wave slices run in their own lanes.
+
+Lane fix/certainty-meas-03-terminations
+
+Reverse: Delete this checkpoint so the slice-6 checkpoint is the latest PLAN status note, and revert the slice-10 PR.
+
 ### Slice 2 merged; slice 3 (MEAS-02 with DEPS-10) attributes refusals by failure kind, 2026-11-13
 
 Slice 2 (ROUT-05 slice 1) merged as #3141. Slice 3 fixes `actionableLane` in `packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.ts` on the read side: a handler-error verdict names the first unexecuted planned step as `failedStepId` (`Handler.ts`), so refusals were charged to `publish:00-head-install-preflight`. Refusals are now classified first, as rows of the same `actionableLaneMix`: `refusal:lock-bounce`, `refusal:stale-base` (the publish stale-base refusal sentence) and `refusal:closeout` (any red closeout). Then the first failed inner lane, then `failedStepId` only for a `step-exit` failure, then the first failed lane, then `unexecuted` (a handler error that ran no lane) or `unlocated`. Every red attempt stays one row, so the mix total equals `redAttempts` and the WaveOrder `mixSum` check keeps holding; `unchangedFingerprint.byActionableLane` uses the same classes. The writer in `Handler.ts`, `WaveOrder.ts`, `EconomicsSeedSourceView` and the frozen `goals/time-to-certainty/research/economics.json` are unchanged; the re-seed belongs to local-proof-under-ten (YEET-07). Rejected: filtering refusals out of the mix (breaks the `redAttempts` invariant and the seed check) and changing the writer (old journal rows would still carry the preflight id).
