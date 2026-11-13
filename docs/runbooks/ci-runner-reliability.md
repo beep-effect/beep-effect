@@ -69,7 +69,7 @@ A `docs_only` pull request runs only the checks a documentation diff can fail:
 
 | Job | What it checks |
 | --- | --- |
-| Repo Sanity (required) | `beep ci lane repo-sanity --docs-only`: the private home path law, the changeset graph and the changeset status |
+| Repo Sanity (required) | `beep ci lane repo-sanity --docs-only`: the private home path law, the changeset graph, the changeset status and the skills lock (`beep skills update --check`) |
 | Docs Policy | The knowledge, packet and Markdown root tasks listed in `DocsPolicy.ts`, plus `knowledge doctor ci --base` |
 | Secret Scanning, Commitlint | The commit range, as on every head |
 
@@ -84,6 +84,16 @@ short planner that finds nothing to build. `packages/tooling/tool/cli/test/ci-do
 Policy's obligations from `turbo.json`: every root task whose inputs match a
 docs-classified path, and every uncached root task, either runs in the lane or
 has a written reason in `DOCS_POLICY_EXCLUSIONS`.
+
+Repo Sanity is the one hosted owner of the skills lock check, on its
+documentation path and its full path alike, because a `SKILL.md` edit is a
+documentation diff. The check compares the installed skill trees, their
+`.agents` mirror and the Codex skill configuration with `skills-lock.json`; it
+reads tracked files only and takes about a second. On a pull request the job's
+lane gate reads the `skills` row of the change-profile pattern data and passes
+`--skip-skills-lock` when the diff touches none of its paths (skills, mirror,
+patch series, lock, Codex configuration, the `skills` command and the gate's
+own sources). Pushes, local replays and `yeet final-check` always run it.
 
 On code pull requests, Change Profile also reports per-lane relevance
 (`codegen_relevant`, `ecosystem_relevant`, `nix_relevant`,

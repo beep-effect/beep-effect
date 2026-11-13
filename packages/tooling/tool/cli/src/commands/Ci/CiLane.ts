@@ -451,9 +451,9 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     required: true,
     laneClass: "cli-runnable",
     replay: "exact",
-    flags: ["--changeset-status", "--docs-only"],
+    flags: ["--changeset-status", "--docs-only", "--skip-skills-lock"],
     notes:
-      "Always validates the changeset graph and runs the private home path law; CI also passes --changeset-status on pull requests. A docs_only pull request runs --docs-only: the law, the changeset graph and the changeset status, and nothing that reads code-route paths.",
+      "Always validates the changeset graph and runs the private home path law; CI also passes --changeset-status on pull requests. A docs_only pull request runs --docs-only: the law, the changeset graph and the changeset status, and nothing that reads code-route paths. Both shapes run `beep skills update --check` (installed skills, their .agents mirror and Codex configuration against skills-lock.json); CI passes --skip-skills-lock on a pull request that changes none of the `skills` pattern row's paths.",
   }),
   CiLaneDescriptor.make({
     id: "docs-policy",
@@ -746,6 +746,7 @@ export class CiLaneRunOptions extends S.Opaque<CiLaneRunOptions, { readonly bran
     dryRun: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     force: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     docsOnly: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    skipSkillsLock: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
   }).pipe(
     $I.annoteSchema("CiLaneRunOptions", {
       description: "Shape and optional Turbo scope for running one CI lane body.",
@@ -2017,11 +2018,20 @@ export const ciLaneStepsForTesting: {
         // checks; every other step reads code-route paths (sources, manifests,
         // tool configuration, workflows). Docs Policy runs the knowledge and
         // packet policy on the same diffs.
+        // No other hosted lane compared the installed skills with skills-lock.json, and six pull
+        // requests merged over a stale lock (fixed in #3225). A SKILL.md edit is a documentation
+        // diff, so the step sits on both paths. It reads tracked files only (a v2 lock has no
+        // floating source to fetch) and takes about a second; check.yml skips it on a pull request
+        // that changes none of the `skills` pattern row's paths.
+        const skillsLock = options.skipSkillsLock
+          ? A.empty<QualityTaskStep>()
+          : [bunRunStep(repoRoot, "ci:repo-sanity:skills-lock", ["beep", "skills", "update", "--check"])];
         if (options.docsOnly) {
           return [
             homePaths,
             bunRunStep(repoRoot, "ci:repo-sanity:changeset-graph", ["beep", "quality", "changeset-graph"]),
             changesetStatus,
+            ...skillsLock,
           ];
         }
         return [
@@ -2051,6 +2061,7 @@ export const ciLaneStepsForTesting: {
           // step and fails with all reds, so an earlier red cannot hide it.
           rootTaskStep(repoRoot, "ci:repo-sanity:shadcn", "lint:shadcn"),
           ...(options.changesetStatus ? [changesetStatus] : A.empty<QualityTaskStep>()),
+          ...skillsLock,
         ];
       },
       sast: () => [bunRunStep(repoRoot, "ci:sast", ["beep", "quality", "github-checks", "sast"])],
@@ -2979,6 +2990,12 @@ export const ciLaneCommand = Command.make(
         "repo-sanity: run only the checks a documentation-only diff can fail (home path law, changeset graph and status)"
       )
     ),
+    skipSkillsLock: Flag.Boolean("skip-skills-lock").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "repo-sanity: leave out the skills lock check (CI passes this when a pull request changes no skill, lock or checker path)"
+      )
+    ),
     validateEnvelopes: Flag.Boolean("validate-envelopes").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Also replay the fallow envelope validation steps locally")
@@ -3059,6 +3076,7 @@ export const ciLaneCommand = Command.make(
     base,
     changesetStatus,
     docsOnly,
+    skipSkillsLock,
     coverageOutput,
     coverageInput,
     compareOnly,
@@ -3129,6 +3147,7 @@ export const ciLaneCommand = Command.make(
       dryRun,
       force,
       docsOnly,
+      skipSkillsLock,
     });
 
     if (list) {
