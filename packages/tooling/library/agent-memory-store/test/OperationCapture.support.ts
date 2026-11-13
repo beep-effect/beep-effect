@@ -148,7 +148,7 @@ export interface CaptureCost {
   readonly kept: number;
   /** Sum over changed runs of max(base run, edited run): no capture can use fewer operations. */
   readonly lowerBound: number;
-  /** Operations capture emits for the file. */
+  /** Alignment steps that are no `Keep`: one per changed node pairing, insert or retire. */
   readonly operations: number;
   /** Changed runs whose base and edited sides have the same length. */
   readonly pairedRuns: number;

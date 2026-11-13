@@ -8,7 +8,8 @@
  * sample (`fixtures/goals-markdown-sample.json.gz`) under the same seeded
  * edits. The agent-memory-store-p2 lane wrote the generators and is their
  * only labeller. Set `BEEP_TEST_AGENT_MEMORY_REPORT` to a file path to append
- * the measured operation counts there; the tests assert them either way.
+ * the measured operation counts there; the sample's counts are asserted
+ * exactly either way.
  */
 import { captureBatch, FileEdit, isWellFormedText, partition, seededNodeIdMinter } from "@beep/agent-memory-store";
 import { describe, expect, it } from "@effect/vitest";
@@ -29,16 +30,18 @@ const Seed = S.Int.check(S.isBetween({ minimum: 0, maximum: 2_147_483_647 }));
 // `FileEdit` refuses a lone surrogate, which no file decoded from UTF-8 holds.
 const WellFormedText = S.String.check(isWellFormedText);
 
-// Checks the invariant for one base text and one edited text.
-const assertCaptures = (filePath: string, baseText: string, editedText: string): void => {
+// Checks the invariant for one base text and one edited text, and returns
+// how many operations the captured batch holds.
+const assertCaptures = (filePath: string, baseText: string, editedText: string): number => {
   const base = baseOf([[filePath, baseText]]);
-  const { files } = roundTrip(base, [FileEdit.cases.edited.make({ path: filePath, text: editedText })]);
+  const { files, operations } = roundTrip(base, [FileEdit.cases.edited.make({ path: filePath, text: editedText })]);
   const file = appliedAt(files, filePath);
   expect(file.text).toBe(editedText);
   deepStrictEqual(
     A.map(file.nodes, (node) => node.text),
     A.map(partition(editedText).nodes, (node) => node.text)
   );
+  return operations.length;
 };
 
 // A base text and an edited text drawn from one seed.
@@ -98,6 +101,9 @@ const addCost = (total: CaptureCost, cost: CaptureCost): CaptureCost => ({
 
 const zero: CaptureCost = { kept: 0, lowerBound: 0, operations: 0, pairedRuns: 0, runs: 0 };
 
+// Operations in the batches capture emitted for the 516 sample edits.
+const CAPTURED_OPERATIONS = 3_659;
+
 describe("op capture on the goals Markdown sample", () => {
   it.layer(TestPlatform)("goals Markdown sample", (it) => {
     it.effect(
@@ -106,25 +112,33 @@ describe("op capture on the goals Markdown sample", () => {
         const sample = yield* loadGoalsMarkdownSample;
         const random = seededRandom(20261112);
         let edits = 0;
+        let captured = 0;
         let total = zero;
         for (const file of sample.files) {
           for (let round = 0; round < 3; round += 1) {
             const editedText = mutate({ text: file.text, random, count: 1 + round });
-            assertCaptures(file.path, file.text, editedText);
+            captured += assertCaptures(file.path, file.text, editedText);
             const [base] = baseOf([[file.path, file.text]]).files;
             total = addCost(total, costOf(base?.nodes ?? [], editedText));
             edits += 1;
           }
         }
         yield* report(
-          `op capture goals sample: edits=${edits} operations=${total.operations} lowerBound=${total.lowerBound} ` +
+          `op capture goals sample: edits=${edits} captured=${captured} operations=${total.operations} lowerBound=${total.lowerBound} ` +
             `ratio=${(total.operations / total.lowerBound).toFixed(4)} runs=${total.runs} pairedRuns=${total.pairedRuns} kept=${total.kept}`
         );
-        expect(edits).toBe(sample.files.length * 3);
-        // Every operation touches at most one base and one edited node, so the
-        // lower bound is the floor; unpaired runs cost at most twice it.
-        expect(total.operations).toBeGreaterThanOrEqual(total.lowerBound);
-        expect(total.operations).toBeLessThanOrEqual(2 * total.lowerBound);
+        // The batches capture emitted and the alignment's changed runs, pinned
+        // exactly (decision op-capture-pairs-only-equal-count-runs), so a
+        // change that pairs fewer runs or emits more operations shows. The
+        // lower bound is the sum over changed runs of max(base run, edited
+        // run), which no capture can beat.
+        expect({ edits, captured, alignmentSteps: total.operations, lowerBound: total.lowerBound }).toEqual({
+          edits: 516,
+          captured: CAPTURED_OPERATIONS,
+          alignmentSteps: 3_659,
+          lowerBound: 3_051,
+        });
+        expect({ runs: total.runs, pairedRuns: total.pairedRuns }).toEqual({ runs: 1_143, pairedRuns: 534 });
       })
     );
   });

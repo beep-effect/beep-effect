@@ -39,12 +39,16 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as O from "effect/Option";
 import { buildAdversarialFixture, fixtureStatusFields, phaseStatus, strata } from "./admission-fixture.ts";
 import { prepareReplay, replayOnce, verdictOf } from "./admission-replay.ts";
 import { loadGoalsMarkdownSample } from "./fixtures/goals-markdown-sample.ts";
 import { isBunRuntime, report, TestPlatform, tempDirectory } from "./projector-support.ts";
+import type { NodeId, NodeOperation } from "@beep/agent-memory-store";
 import type { AdversarialFixture } from "./admission-fixture.ts";
-import type { RunVerdict } from "./admission-replay.ts";
+import type { CapturedWriter, ReplayRun, RunVerdict } from "./admission-replay.ts";
 
 /** Runs of the fixture: the same clusters in 100 seeded admission orders. */
 const runs = 100;
@@ -54,7 +58,9 @@ const resolverBar = { held: 26, writes: 279 } as const;
 const perOpBarPercent = 95;
 
 // The counts this replay measured over its 100 runs (11,800 writes, 15,600
-// operations), pinned so a change in admission or in the fixture shows.
+// operations), pinned so a change in admission or in the fixture shows. They
+// were read from a run of the code under test, so they detect drift; they are
+// not independent evidence of what admission should do.
 const MEASURED_FLOOR = 912;
 const MEASURED_RESOLVER_NEEDED = 1_912;
 const MEASURED_LANDED = 12_178;
@@ -62,8 +68,36 @@ const MEASURED_BACKWARD = 744;
 
 class AdversarialReplay extends Context.Service<
   AdversarialReplay,
-  { readonly fixture: AdversarialFixture; readonly verdicts: ReadonlyArray<RunVerdict> }
+  {
+    readonly baseNodes: number;
+    readonly fixture: AdversarialFixture;
+    readonly firstRun: ReplayRun;
+    readonly sharedClusters: number;
+    readonly verdicts: ReadonlyArray<RunVerdict>;
+  }
 >()("@beep/agent-memory-store/test/Admission.acceptance.test/AdversarialReplay") {}
+
+// What one writer's operations touch: the nodes they name and the nodes their inserts follow.
+const touchedBy = (operations: ReadonlyArray<NodeOperation>): ReadonlyArray<NodeId> =>
+  A.flatMap(operations, (operation) =>
+    operation.op === "insert" ? A.fromOption(operation.afterNodeId) : [operation.nodeId]
+  );
+
+// Clusters where two writers touch one node or one anchor.
+const sharedClustersOf = (writers: ReadonlyArray<CapturedWriter>): number => {
+  const byCluster = MutableHashMap.empty<number, Array<ReadonlyArray<NodeId>>>();
+  for (const { batch, cluster } of writers) {
+    const touched = O.getOrElse(MutableHashMap.get(byCluster, cluster.id), (): Array<ReadonlyArray<NodeId>> => []);
+    touched.push(A.dedupe(touchedBy(batch.operations)));
+    MutableHashMap.set(byCluster, cluster.id, touched);
+  }
+  let shared = 0;
+  for (const [, touched] of byCluster) {
+    const all = A.flatten(touched);
+    shared += MutableHashSet.size(MutableHashSet.fromIterable(all)) < all.length ? 1 : 0;
+  }
+  return shared;
+};
 
 const replayLayer = Layer.effect(
   AdversarialReplay,
@@ -72,10 +106,15 @@ const replayLayer = Layer.effect(
     const fixture = buildAdversarialFixture(sample.files);
     const workspace = yield* tempDirectory("beep-ac2-ac3-");
     const prepared = yield* prepareReplay(fixture, workspace, { fields: fixtureStatusFields, lifecycle: phaseStatus });
-    const verdicts = yield* Effect.forEach(A.range(1, runs), (seed) =>
-      Effect.map(replayOnce(prepared, seed), verdictOf)
-    );
-    return AdversarialReplay.of({ fixture, verdicts });
+    const replayed = yield* Effect.forEach(A.range(1, runs), (seed) => replayOnce(prepared, seed));
+    const firstRun = yield* Effect.fromOption(A.head(replayed));
+    return AdversarialReplay.of({
+      baseNodes: A.reduce(prepared.base.files, 0, (total, file) => total + file.nodes.length),
+      fixture,
+      firstRun,
+      sharedClusters: sharedClustersOf(prepared.writers),
+      verdicts: A.map(replayed, verdictOf),
+    });
   })
 ).pipe(Layer.provide(TestPlatform));
 
@@ -104,7 +143,60 @@ describe.skipIf(!isBunRuntime)("admission on the adversarial fixture (Bun runtim
         expect(byStratum).toEqual(A.map(strata, ({ stratum, clusters }) => [stratum, clusters]));
         expect(fixture.files).toHaveLength(14);
         expect(A.flatMap(fixture.clusters, (cluster) => cluster.writers)).toHaveLength(118);
+        const { baseNodes, sharedClusters } = yield* AdversarialReplay;
+        expect({ baseNodes, clusters: fixture.clusters.length, sharedClusters }).toEqual({
+          baseNodes: 1_710,
+          clusters: 57,
+          sharedClusters: 41,
+        });
       })
+    );
+
+    it.effect(
+      "the oracle reports a misordered export, a node exported twice, a held delete whose node is gone and a delete neither applied nor held",
+      () =>
+        Effect.gen(function* () {
+          const { firstRun } = yield* AdversarialReplay;
+          const [first, second, ...others] = firstRun.exported.files;
+          const firstFile = yield* Effect.fromOption(O.fromUndefinedOr(first));
+          const secondFile = yield* Effect.fromOption(O.fromUndefinedOr(second));
+          const [one, two, ...rest] = firstFile.nodes;
+          const head = yield* Effect.fromOption(O.all([O.fromUndefinedOr(one), O.fromUndefinedOr(two)]));
+          const heldDelete = yield* Effect.fromOption(
+            A.findFirst(firstRun.held, (conflict) => conflict.operation.op === "delete")
+          );
+          const withFiles = (files: ReplayRun["exported"]["files"]): ReplayRun => ({
+            ...firstRun,
+            exported: { ...firstRun.exported, files },
+          });
+          const lossesOf = (run: ReplayRun) => verdictOf(run).losses;
+
+          const swapped = lossesOf(
+            withFiles([{ ...firstFile, nodes: [head[1], head[0], ...rest] }, secondFile, ...others])
+          );
+          const twice = lossesOf(
+            withFiles([firstFile, { ...secondFile, nodes: [...secondFile.nodes, head[0]] }, ...others])
+          );
+          const dropped = lossesOf(
+            withFiles(
+              A.map(firstRun.exported.files, (file) => ({
+                ...file,
+                nodes: A.filter(file.nodes, (node) => node.nodeId !== heldDelete.nodeId),
+              }))
+            )
+          );
+          const unheld = verdictOf({
+            ...firstRun,
+            held: A.filter(firstRun.held, (conflict) => conflict !== heldDelete),
+          });
+
+          expect(verdictOf(firstRun).losses).toEqual([]);
+          expect(swapped).toEqual([`file ${firstFile.path} exports its nodes out of order or in the wrong file`]);
+          expect(twice).toContain("1 exported nodes appear twice");
+          expect(dropped).toContain(`node ${heldDelete.nodeId} retired while every delete of it is held`);
+          expect(unheld.losses).toContain(`${heldDelete.author} delete ${heldDelete.nodeId} neither applied nor held`);
+          expect(unheld.deleteVersusEditHeld).toBe(verdictOf(firstRun).deleteVersusEditHeld - 1);
+        })
     );
 
     it.effect(
@@ -141,7 +233,7 @@ describe.skipIf(!isBunRuntime)("admission on the adversarial fixture (Bun runtim
           const floor = sum(verdicts, (verdict) => verdict.structuralFloorWrites);
           const resolverNeeded = sum(verdicts, (verdict) => verdict.resolverNeededWrites);
           const landed = sum(verdicts, (verdict) => verdict.landedOperations);
-          const statusConflicts = sum(verdicts, (verdict) => verdict.statusConflicts);
+          const statusNodes = sum(verdicts, (verdict) => verdict.statusNodes);
           const statusHeld = sum(verdicts, (verdict) => verdict.statusHeld);
           const statusWrong = sum(verdicts, (verdict) => verdict.statusWrong);
           const backward = sum(verdicts, (verdict) => verdict.backwardMoves);
@@ -158,11 +250,12 @@ describe.skipIf(!isBunRuntime)("admission on the adversarial fixture (Bun runtim
             `AC-3 perOpLanded=${landed}/${operations} against ${perOpBarPercent}%: bar met=${meetsPerOpBar}`
           );
           yield* logged(
-            `AC-3 statusConflicts=${statusConflicts} held=${statusHeld} wrong=${statusWrong} backwardMoves=${backward} rejected=${backwardRejected}`
+            `AC-3 statusNodes=${statusNodes} held=${statusHeld} wrong=${statusWrong} backwardMoves=${backward} rejected=${backwardRejected}`
           );
 
-          // Typed status fields: never held, never wrong, every backward move refused.
-          expect(statusConflicts).toBe(10 * runs);
+          // Typed status fields: never held, never wrong, every backward move
+          // refused. Ten fixture nodes carry status moves in every run.
+          expect(statusNodes).toBe(10 * runs);
           expect(statusHeld).toBe(0);
           expect(statusWrong).toBe(0);
           expect(backward).toBeGreaterThan(0);
@@ -176,12 +269,31 @@ describe.skipIf(!isBunRuntime)("admission on the adversarial fixture (Bun runtim
             backward: MEASURED_BACKWARD,
           });
           // Per run the floor and the resolver-needed count stay inside the
-          // ranges the strata allow: at least the 16 writes that must hold in
-          // every order, at most every contested cluster holding.
-          expect(resolverSpan.min).toBeGreaterThanOrEqual(16);
-          expect(resolverSpan.max).toBeLessThanOrEqual(16 + 4 + 3);
-          expect(floorSpan.min).toBeGreaterThanOrEqual(6);
-          expect(floorSpan.max).toBeLessThanOrEqual(6 + 4 + 3);
+          // ranges the strata allow (at least the 16 writes that must hold in
+          // every order, at most every contested cluster holding), and their
+          // measured spans are pinned exactly.
+          expect({ floorSpan, resolverSpan }).toEqual({
+            floorSpan: { min: 6, max: 12 },
+            resolverSpan: { min: 16, max: 22 },
+          });
+          // In every run: the 16 writes that need a resolver in every order are
+          // held, and the strata that must land hold nothing and land whole.
+          const strataOf = (verdict: RunVerdict) =>
+            MutableHashMap.fromIterable(
+              A.map(verdict.writesByStratum, ([stratum, count, held, landed]) => [stratum, { count, held, landed }])
+            );
+          for (const verdict of verdicts) {
+            const byStratum = strataOf(verdict);
+            const held = (stratum: string) => O.map(MutableHashMap.get(byStratum, stratum), (counts) => counts.held);
+            expect([held("reviseVersusRevise"), held("reviseVersusRetire"), held("mixedCleanAndContested")]).toEqual([
+              O.some(6),
+              O.some(6),
+              O.some(4),
+            ]);
+            expect(MutableHashMap.get(byStratum, "differentNodesOneFile")).toEqual(
+              O.some({ count: 12, held: 0, landed: 12 })
+            );
+          }
           // On this upper-bound fixture neither ratio bar is met; the SPEC bars
           // stay, and AC-3 is not ticked on this fixture.
           expect([meetsResolverBar, meetsPerOpBar]).toEqual([false, false]);

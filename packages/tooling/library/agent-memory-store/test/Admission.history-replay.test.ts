@@ -187,7 +187,7 @@ const countsOf = (verdict: RunVerdict, order: string) => ({
   resolverNeeded: verdict.resolverNeededWrites,
   landed: verdict.landedOperations,
   operations: verdict.operations,
-  statusNodes: verdict.statusConflicts,
+  statusNodes: verdict.statusNodes,
   statusHeld: verdict.statusHeld,
   statusWrong: verdict.statusWrong,
   backward: verdict.backwardMoves,

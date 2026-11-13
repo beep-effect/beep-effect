@@ -1,25 +1,38 @@
 /**
  * The replay behind AC-2 and AC-3: each run admits every writer of a fixture
  * in submission order or in a seeded order on a fresh store, then exports,
- * and an oracle that never reads admission's own judgment checks the result.
- * Two fixtures use it: the adversarial strata (`admission-fixture.ts`) and the
- * goals history replay (`history-replay-fixture.ts`); each names the typed
- * status fields its admission applies and the lifecycle the oracle models.
+ * and an oracle checks the result. Two fixtures use it: the adversarial
+ * strata (`admission-fixture.ts`) and the goals history replay
+ * (`history-replay-fixture.ts`); each names the typed status fields its
+ * admission applies and the lifecycle the oracle models.
  *
- * The loss oracle, independent of the admission code: a writer's submitted
- * text for a node is kept when (a) the final export holds exactly that text
- * for the node, or (b) a later admitted write by another lineage, whose base
- * held that text for the node, superseded it, or (c) `Admission.held` returns
- * a hold of that writer on that node whose `theirs` is the text and whose
- * other side is retrievable (`ours` present, or the node retired, or the
- * write is an insert, which has no other side). Anything else is a silent
- * loss. The oracle also counts as a loss a base node that no writer retired
- * but the export lacks, a base node no writer touched whose text changed, and
- * an exported text that no writer and no base ever held. Status moves are
- * checked against a sequential model of the lifecycle that the oracle runs
- * itself: a move to a value outside the lifecycle or behind the model's
- * current value must be refused with the matching code, every other move
- * must land, and the exported cell must hold the model's final value.
+ * The loss oracle reads the base, the batches the writers submitted, the
+ * final export and `Admission.held`; it never reads the outcomes admission
+ * returned. Every writer of a replay edits the one imported base
+ * (`prepareReplay`), so no writer's text is ever another writer's base text
+ * and no write can supersede another. A writer's submitted text for a node is
+ * kept when (a) the final export holds exactly that text for the node, or
+ * (b) `Admission.held` returns a hold of that writer on that node whose
+ * `theirs` is the text and whose other side is retrievable (`ours` present,
+ * or the node retired, or the write is an insert, which has no other side).
+ * A delete is kept when its node is gone from the export, or when
+ * `Admission.held` returns a delete hold of that writer on that node; a node
+ * gone from the export while every delete of it is held, and a base node that
+ * no writer deletes but the export lacks, are losses. Anything else is a
+ * silent loss. The oracle also counts as a loss a base node no writer touched
+ * whose text changed, an exported text that no writer and no base ever held,
+ * a node exported twice, and a file whose exported node order differs from
+ * the order the oracle builds itself: the base order, with each exported
+ * insert right after its predecessor in its own file, newest first among one
+ * predecessor's successors.
+ *
+ * The counts the AC-3 budget reports (held, landed, resolver-needed and
+ * floor writes) are admission's own outcomes, measured here, not judged.
+ * Status moves are scored against admission's outcomes: the oracle runs a
+ * sequential model of the lifecycle itself, and a move to a value outside
+ * the lifecycle or behind the model's current value must come back refused
+ * with the matching code, every other move must land, and the exported cell
+ * must hold the model's final value.
  *
  * Labeller: the agent-memory-store-p2 integration lane, which built both
  * fixtures and this oracle.
@@ -244,12 +257,14 @@ export interface RunVerdict {
   readonly losses: ReadonlyArray<string>;
   readonly operations: number;
   readonly resolverNeededWrites: number;
-  readonly statusConflicts: number;
   readonly statusHeld: number;
+  /** Nodes of the fixture that carry a `setStatus`: a fixture count, not a measurement. */
+  readonly statusNodes: number;
   readonly statusWrong: number;
   readonly structuralFloorWrites: number;
   readonly writes: number;
-  readonly writesByStratum: ReadonlyArray<readonly [string, number, number]>;
+  /** Per stratum: its writes, those with a held operation and those whose every operation landed. */
+  readonly writesByStratum: ReadonlyArray<readonly [string, number, number, number]>;
 }
 
 const textsOf = (exportOf: Pick<BaseExport, "files">): MutableHashMap.MutableHashMap<NodeId, string> =>
@@ -278,48 +293,23 @@ const positionIn = (lifecycle: StatusLifecycle, value: StatusValue): number =>
 
 const sameText = O.makeEquivalence((self: string, that: string) => self === that);
 
-// The node operations of the run in admission order, with their outcomes.
+const sameNodeIds = A.makeEquivalence((self: NodeId, that: NodeId) => self === that);
+
+// The node operations of the run in admission order, with their outcomes;
+// only the status scoring reads an outcome.
 interface Judged {
   readonly author: LineageId;
-  // The text the writer's base exported for the node, when it had one.
-  readonly baseText: O.Option<string>;
   readonly operation: NodeOperation;
   readonly outcome: O.Option<AdmissionOutcome>;
-  readonly position: number;
 }
 
-const judgedOf = (run: ReplayRun): ReadonlyArray<Judged> => {
-  // Every write of a run edits one base; its texts are read once per base.
-  let lastBase: OperationBatch["base"] = run.base;
-  let lastTexts = textsOf(run.base);
-  const baseTextsOf = (base: OperationBatch["base"]) => {
-    if (base !== lastBase) {
-      lastBase = base;
-      lastTexts = textsOf(base);
-    }
-    return lastTexts;
-  };
-  return A.flatMap(run.writes, (write) =>
+const judgedOf = (run: ReplayRun): ReadonlyArray<Judged> =>
+  A.flatMap(run.writes, (write) =>
     A.map(write.batch.operations, (operation, index) => ({
       author: write.writer.author,
-      baseText: MutableHashMap.get(baseTextsOf(write.batch.base), operation.nodeId),
       operation,
       outcome: A.get(write.outcomes, index),
-      position: write.position,
     }))
-  );
-};
-
-// Whether a later write by another lineage landed on the node from a base that held `text` for it.
-const supersededBy = (judged: ReadonlyArray<Judged>, write: Judged, text: string): boolean =>
-  A.some(
-    judged,
-    (later) =>
-      later.position > write.position &&
-      later.author !== write.author &&
-      later.operation.nodeId === write.operation.nodeId &&
-      O.exists(later.outcome, (outcome) => outcome.outcome === "landed") &&
-      O.contains(later.baseText, text)
   );
 
 // Whether `held` keeps the writer's text for the node with its other side retrievable.
@@ -456,21 +446,48 @@ const writtenTexts = (judged: ReadonlyArray<Judged>) => {
   return written;
 };
 
-// Every writer's text: in the export, superseded or held with both texts.
+// Every writer's text: in the export or held with both texts.
 const writerLosses = ({ final, judged, run }: Oracle): ReadonlyArray<string> =>
   A.flatMap(judged, (write) =>
     O.match(textOf(write.operation), {
       onNone: (): ReadonlyArray<string> => [],
       onSome: (text) =>
         O.contains(MutableHashMap.get(final, write.operation.nodeId), text) ||
-        supersededBy(judged, write, text) ||
         heldWithBothTexts(run, final, write, text)
           ? []
           : [`${write.author} ${write.operation.op} ${write.operation.nodeId}`],
     })
   );
 
-// Base nodes: kept unless retired, unchanged unless written.
+// Whether `held` keeps a delete of the node by the writer.
+const deleteHeld = (run: ReplayRun, write: Judged): boolean =>
+  A.some(
+    run.held,
+    (conflict) =>
+      conflict.nodeId === write.operation.nodeId &&
+      conflict.author === write.author &&
+      conflict.operation.op === "delete"
+  );
+
+// Every delete: its node gone from the export, or the delete held. A node is
+// gone only when some delete of it was not held.
+const deleteLosses = ({ final, judged, run }: Oracle): ReadonlyArray<string> => {
+  const losses: Array<string> = [];
+  for (const [nodeId, deletes] of byNode(judged, "delete")) {
+    const unheld = A.filter(deletes, (write) => !deleteHeld(run, write));
+    if (MutableHashMap.has(final, nodeId)) {
+      for (const write of unheld) {
+        losses.push(`${write.author} delete ${nodeId} neither applied nor held`);
+      }
+    } else if (unheld.length === 0) {
+      losses.push(`node ${nodeId} retired while every delete of it is held`);
+    }
+  }
+  return losses;
+};
+
+// Base nodes: kept unless some writer deletes them (`deleteLosses` checks
+// that delete), unchanged unless written.
 const baseNodeLosses = (
   { baseTexts, final, judged }: Oracle,
   written: ReturnType<typeof writtenTexts>
@@ -574,10 +591,87 @@ const statusCounts = ({ baseTexts, final, judged, run }: Oracle) => {
   return {
     backwardMoves,
     backwardRejected,
-    statusConflicts: MutableHashMap.size(statusMoves),
+    statusNodes: MutableHashMap.size(statusMoves),
     statusHeld,
     statusWrong,
   };
+};
+
+// The node ids each file must export, in order, from the base and the run's
+// own inserts, never from admission's outcomes: every base file's nodes as a
+// chain in base order, each insert after its predecessor (or opening its
+// file) in its own file, newest first among one predecessor's successors as
+// the projection orders them, then only the nodes the export holds.
+const expectedOrder = (run: ReplayRun, exported: MutableHashSet.MutableHashSet<NodeId>) => {
+  const roots = MutableHashMap.empty<string, Array<NodeId>>();
+  const successors = MutableHashMap.empty<NodeId, Array<NodeId>>();
+  const push = <K>(map: MutableHashMap.MutableHashMap<K, Array<NodeId>>, key: K, nodeId: NodeId): void => {
+    const list = O.getOrElse(MutableHashMap.get(map, key), (): Array<NodeId> => []);
+    list.push(nodeId);
+    MutableHashMap.set(map, key, list);
+  };
+  const place = (path: string, after: O.Option<NodeId>, nodeId: NodeId): void =>
+    O.match(after, {
+      onNone: () => push(roots, path, nodeId),
+      onSome: (predecessor) => push(successors, predecessor, nodeId),
+    });
+  const paths = MutableHashSet.empty<string>();
+  for (const file of run.base.files) {
+    MutableHashSet.add(paths, file.path);
+    A.forEach(file.nodes, (node, index) =>
+      place(
+        file.path,
+        O.map(A.get(file.nodes, index - 1), (previous) => previous.nodeId),
+        node.nodeId
+      )
+    );
+  }
+  for (const write of run.writes) {
+    for (const operation of write.batch.operations) {
+      if (operation.op === "insert") {
+        MutableHashSet.add(paths, operation.filePath);
+        place(operation.filePath, operation.afterNodeId, operation.nodeId);
+      }
+    }
+  }
+  for (const file of run.exported.files) {
+    MutableHashSet.add(paths, file.path);
+  }
+  return A.map(A.fromIterable(paths), (path) => {
+    // Depth first, newest successor first: a stack pushed oldest first pops the newest.
+    const stack = A.copy(O.getOrElse(MutableHashMap.get(roots, path), (): Array<NodeId> => []));
+    const order: Array<NodeId> = [];
+    for (let next = stack.pop(); next !== undefined; next = stack.pop()) {
+      if (MutableHashSet.has(exported, next)) {
+        order.push(next);
+      }
+      stack.push(...O.getOrElse(MutableHashMap.get(successors, next), (): Array<NodeId> => []));
+    }
+    return [path, order] as const;
+  });
+};
+
+// Every exported node once, and every file in the order the oracle builds.
+const placementLosses = ({ run }: Oracle): ReadonlyArray<string> => {
+  const ids = A.flatMap(run.exported.files, (file) => A.map(file.nodes, (node) => node.nodeId));
+  const exported = MutableHashSet.fromIterable(ids);
+  const losses: Array<string> = [];
+  if (MutableHashSet.size(exported) !== ids.length) {
+    losses.push(`${ids.length - MutableHashSet.size(exported)} exported nodes appear twice`);
+  }
+  for (const [path, order] of expectedOrder(run, exported)) {
+    const actual = O.match(
+      A.findFirst(run.exported.files, (file) => file.path === path),
+      {
+        onNone: (): ReadonlyArray<NodeId> => [],
+        onSome: (file) => A.map(file.nodes, (node) => node.nodeId),
+      }
+    );
+    if (!sameNodeIds(actual, order)) {
+      losses.push(`file ${path} exports its nodes out of order or in the wrong file`);
+    }
+  }
+  return losses;
 };
 
 // Whether every file on disk holds exactly the joined texts of its exported nodes.
@@ -595,11 +689,20 @@ const exportMatchesDisk = (run: ReplayRun): boolean =>
 
 const holdsAny = (write: AdmittedFixtureWrite): boolean => A.some(write.outcomes, isHeld);
 
-// Per stratum, in first-admission order: its writes and those with a held operation.
+const landsAll = (write: AdmittedFixtureWrite): boolean =>
+  A.every(write.outcomes, (outcome) => outcome.outcome === "landed");
+
+// Per stratum, in first-admission order: its writes, those with a held
+// operation and those whose every operation landed.
 const writesByStratum = (run: ReplayRun): RunVerdict["writesByStratum"] =>
   A.map(A.dedupe(A.map(run.writes, (write) => write.cluster.stratum)), (stratum) => {
     const inStratum = A.filter(run.writes, (write) => write.cluster.stratum === stratum);
-    return [stratum, inStratum.length, A.filter(inStratum, holdsAny).length] as const;
+    return [
+      stratum,
+      inStratum.length,
+      A.filter(inStratum, holdsAny).length,
+      A.filter(inStratum, landsAll).length,
+    ] as const;
   });
 
 /** Checks one run with the oracle. */
@@ -610,11 +713,19 @@ export const verdictOf = (run: ReplayRun): RunVerdict => {
   return {
     ...contestedCounts(oracle),
     ...statusCounts(oracle),
-    deleteVersusEditHeld: A.filter(outcomes, (outcome) => A.contains(codesOf(outcome), "deleteVersusEdit")).length,
+    deleteVersusEditHeld: A.filter(run.held, (conflict) =>
+      A.some(conflict.violations, (violation) => violation.code === "deleteVersusEdit")
+    ).length,
     exportMatchesDisk: exportMatchesDisk(run),
     heldOperations: A.filter(outcomes, isHeld).length,
     landedOperations: A.filter(outcomes, (outcome) => outcome.outcome === "landed").length,
-    losses: [...writerLosses(oracle), ...baseNodeLosses(oracle, written), ...exportedLosses(oracle, written)],
+    losses: [
+      ...writerLosses(oracle),
+      ...deleteLosses(oracle),
+      ...baseNodeLosses(oracle, written),
+      ...exportedLosses(oracle, written),
+      ...placementLosses(oracle),
+    ],
     operations: oracle.judged.length,
     resolverNeededWrites: A.filter(run.writes, holdsAny).length,
     structuralFloorWrites: A.filter(run.writes, (write) => A.some(write.outcomes, structural)).length,
