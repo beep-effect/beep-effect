@@ -66,6 +66,15 @@ outside `@beep/jsonc` except the census rows" is checked against.
 | E11 | `packages/foundation/modeling/yaml/src/internal/stringifier.ts` (`sortKeys` option) | renderer | YAML | Not JSON. No source caller turns the option on. |
 | E12 | One-level sorts that shape a record before an indented file is written: `mcpb-kit` manifest env, cache policy baseline reviews, skills lock map, root package projection, shard timings, coverage baseline, policy fingerprint turbo edit (rows LB4, LB8, S3, S6, T1, Ci2, Q7, L4, L5 in the tooling file) | renderer | indented | Committed or generated files. Where a digest exists it is a file-content digest. |
 
+Guarded by `no-hand-rolled-canonical-json` (slice D), a Biome GritQL rule in
+`@beep/lint-rules` that runs over `**/src/**` outside `@beep/jsonc` and
+rejects JSON object text built as braces around a join of members. Seven rows
+build their text that way and carry an in-source suppression naming the row:
+E5, E6, E7, E8, E9, E11 and E12 (tooling L4). E10 and the other E12 rows
+shape a record that a JSON codec renders, so the rule does not see them; a
+new encoder of that kind still needs a row here. `PLAN.md`, "Slice D
+evidence", has the `rg` check of this table.
+
 `packages/tooling/tool/cli/src/commands/Quality/internal/CoverageArtifacts.ts`
 `normalizedRaw` sorts only the top-level keys of a compact document and hashes
 it as the sealed coverage report's content digest. It is `outside`: a shallow
