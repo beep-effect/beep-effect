@@ -18,7 +18,7 @@ name: Heavy Admit
 # same-repository pull request that carries `ready-for-heavy`, a later label
 # re-reports instead of re-running. The admission job lists this head's
 # earlier Heavy Admit runs; when the newest one that reported heavy lanes
-# succeeded, ran the same heavy.yml commit this run calls (a lane main added
+# succeeded, ran the same heavy.yml file this run calls (a lane main added
 # or renamed since then never ran on this head), and every other copy of
 # those lanes on the head that is newer than that proof has passed (a
 # reopened head's Check suite re-runs them), it
@@ -28,8 +28,9 @@ name: Heavy Admit
 # matrix instead would repeat every affected heavy task on EC2, because
 # pull-request runs only read the Turbo main cache. Otherwise the label skips,
 # as before: no proof on this head to repeat (none yet, a red or cancelled
-# matrix, or one still running), a proof that ran another heavy.yml commit
-# (any later commit on main, since `@main` resolves per run), or a newer copy
+# matrix, or one still running), a proof that ran a different heavy.yml file
+# (`@main` resolves per run; a later main commit that left heavy.yml alone
+# still re-reports, because the job compares the file's blobs), or a newer copy
 # that is red or unfinished, so a skipped re-report never masks a red or a
 # lane the proof never ran. What remains: fork admission is
 # event-label-only, and a label on a head without passing proof records a
@@ -151,15 +152,27 @@ jobs:
           fi
           # The re-report emits the lanes of the heavy.yml this run calls (`@main`, resolved when the
           # run was created). A lane main added or renamed since the proof never ran on this head, so
-          # re-report only when the proof ran the same heavy.yml commit.
+          # re-report only when the proof ran the same heavy.yml file: the same commit, or two commits
+          # whose heavy.yml blobs match (main moving on without touching heavy.yml changes nothing).
           if ! self_heavy="$(gh api "repos/${GH_REPO}/actions/runs/${RUN_ID}" </dev/null \
             | jq -r "${heavy_def} heavy_sha")"; then
             echo "::warning::Could not read which heavy.yml this run calls; skipping without a re-report."
             exit 0
           fi
-          if [[ "$proof_heavy" == "none" || "$self_heavy" == "none" || "$proof_heavy" != "$self_heavy" ]]; then
-            echo "The proof ran heavy.yml at ${proof_heavy}, this run calls it at ${self_heavy}: its lanes may differ, so the heavy caller skips without a re-report."
+          if [[ "$proof_heavy" == "none" || "$self_heavy" == "none" ]]; then
+            echo "The proof or this run names no heavy.yml commit (${proof_heavy}, ${self_heavy}): the heavy caller skips without a re-report."
             exit 0
+          fi
+          if [[ "$proof_heavy" != "$self_heavy" ]]; then
+            if ! proof_blob="$(gh api "repos/${GH_REPO}/contents/.github/workflows/heavy.yml?ref=${proof_heavy}" </dev/null | jq -r '.sha // ""')" \
+              || ! self_blob="$(gh api "repos/${GH_REPO}/contents/.github/workflows/heavy.yml?ref=${self_heavy}" </dev/null | jq -r '.sha // ""')"; then
+              echo "::warning::Could not compare heavy.yml at ${proof_heavy} and ${self_heavy}; skipping without a re-report."
+              exit 0
+            fi
+            if [[ -z "$proof_blob" || "$proof_blob" != "$self_blob" ]]; then
+              echo "heavy.yml changed between ${proof_heavy} and ${self_heavy}: its lanes may differ, so the heavy caller skips without a re-report."
+              exit 0
+            fi
           fi
           # The re-report adds newer skipped copies of the proof's `Heavy / <lane>` checks. Every
           # other copy of those lanes newer than the proof's own (a reopened head's Check suite

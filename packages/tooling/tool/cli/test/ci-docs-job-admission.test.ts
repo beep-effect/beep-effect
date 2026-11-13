@@ -375,12 +375,24 @@ interface HeavyAdmitRoutingRow {
   readonly copies?: ReadonlyArray<HeavyLaneCopy> | "unreadable";
   readonly event: string;
   readonly head: string;
+  /** heavy.yml's blob at {@link LATER_HEAVY_COMMIT}: the proof's file, a changed one, or a failed read. */
+  readonly heavyBlob?: "same" | "changed" | "unreadable";
   readonly labels: ReadonlyArray<string>;
   readonly route: string;
   readonly runs: ReadonlyArray<HeavyAdmitPriorRun> | "unreadable";
   /** The heavy.yml commit this run calls; every prior run called {@link HEAVY_COMMIT}. */
   readonly selfHeavy?: string | "unreadable";
 }
+
+// heavy.yml's blob at each commit, as the fake contents API serves it.
+const HEAVY_BLOB = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+const blobEnv = (heavyBlob: "same" | "changed" | "unreadable") => ({
+  HEAVY_COMMIT_SHA: HEAVY_COMMIT,
+  LATER_COMMIT_SHA: LATER_HEAVY_COMMIT,
+  HEAVY_BLOB,
+  LATER_BLOB:
+    heavyBlob === "same" ? HEAVY_BLOB : heavyBlob === "changed" ? "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" : "",
+});
 
 // This run as the fake `gh` serves it: the heavy.yml commit it calls, or a read that fails.
 const selfRunEnv = (selfHeavy: string | "unreadable") =>
@@ -399,7 +411,8 @@ const runReReport = (
   script: string,
   runs: ReadonlyArray<HeavyAdmitPriorRun> | "unreadable",
   copies: ReadonlyArray<HeavyLaneCopy> | "unreadable" = [],
-  selfHeavy: string | "unreadable" = HEAVY_COMMIT
+  selfHeavy: string | "unreadable" = HEAVY_COMMIT,
+  heavyBlob: "same" | "changed" | "unreadable" = "changed"
 ) => {
   const workflowRuns: ReadonlyArray<HeavyAdmitPriorRun> = runs === "unreadable" ? [] : runs;
   const fixture = `gh() {
@@ -417,6 +430,12 @@ const runReReport = (
     "repos/\${GH_REPO}/actions/runs/"*/jobs)
       local id="\${path#repos/\${GH_REPO}/actions/runs/}"
       jq -c --arg id "\${id%/jobs}" '{jobs: (.[$id] // [])}' <<< "$JOBS_JSON" ;;
+    "repos/\${GH_REPO}/contents/.github/workflows/heavy.yml?ref="*)
+      local ref="\${path##*ref=}"
+      if [[ "$ref" == "$HEAVY_COMMIT_SHA" ]]; then printf '{"sha":"%s"}\\n' "$HEAVY_BLOB"
+      elif [[ "$ref" == "$LATER_COMMIT_SHA" && -n "$LATER_BLOB" ]]; then printf '{"sha":"%s"}\\n' "$LATER_BLOB"
+      else return 1
+      fi ;;
     "repos/\${GH_REPO}/commits/\${HEAD_SHA}/check-runs")
       [[ "$*" == *'filter=all'* ]] || return 95
       [[ -z "\${CHECKS_UNREADABLE:-}" ]] || return 1
@@ -454,6 +473,7 @@ ${script}`;
         ],
       }),
       ...selfRunEnv(selfHeavy),
+      ...blobEnv(heavyBlob),
       CHECKS_UNREADABLE: copies === "unreadable" ? "1" : "",
       CHECKS_JSON: encodeJson({
         check_runs: [
@@ -635,9 +655,13 @@ it.effect(
       { ...reopened, copies: [laneCopy(2001, "Heavy / Check", "completed", "failure")], route: "skip" },
       { ...reopened, copies: [laneCopy(2002, "Heavy / Docgen", "in_progress", null)], route: "skip" },
       { ...reopened, copies: "unreadable", route: "skip" },
-      // The proof ran another heavy.yml commit (main moved since, perhaps adding a lane), or this run's
-      // own heavy.yml commit cannot be read: skip, since the re-report would emit lanes the proof never ran.
+      // The proof ran another heavy.yml commit whose file changed (perhaps adding a lane), the file
+      // cannot be compared, or this run's own heavy.yml commit cannot be read: skip, since the
+      // re-report would emit lanes the proof never ran. A later main commit that left heavy.yml
+      // alone still re-reports.
       { ...reopened, selfHeavy: LATER_HEAVY_COMMIT, route: "skip" },
+      { ...reopened, selfHeavy: LATER_HEAVY_COMMIT, heavyBlob: "unreadable", route: "skip" },
+      { ...reopened, selfHeavy: LATER_HEAVY_COMMIT, heavyBlob: "same", route: "re-report" },
       { ...reopened, selfHeavy: "unreadable", route: "skip" },
       {
         ...reopened,
@@ -685,7 +709,7 @@ it.effect(
                 changedPaths: ["packages/a/src/index.ts"],
               })
             ).verdict
-          : runReReport(script, row.runs, row.copies, row.selfHeavy);
+          : runReReport(script, row.runs, row.copies, row.selfHeavy, row.heavyBlob);
       assert.strictEqual(route, row.route, `${row.head} ${row.event} ${encodeJson([row.runs, row.copies])}`);
     }
   })
