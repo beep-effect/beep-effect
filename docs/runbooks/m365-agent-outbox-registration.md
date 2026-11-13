@@ -33,7 +33,7 @@ id, client id, mailbox address and key out of chat, issues and pull requests.
 
 | Exchange application role | Used for |
 | --- | --- |
-| `Application Mail.ReadWrite` | Create a draft, attach files to it, read it back before sending, delete it. |
+| `Application Mail.ReadWrite` | Create a draft, attach files to it, read it back before sending, delete it, and set or clear the stale-draft category on it (`m365_outbox_check_drafts`). |
 | `Application Mail.Send` | Send a draft from the attorney's address. The message lands in Sent Items. |
 | `Application Calendars.ReadWrite` | Create and update calendar events. |
 
@@ -274,6 +274,42 @@ the `--`). Never list the home directory or a working tree.
 The audit log is under
 `${XDG_STATE_HOME:-$HOME/.local/state}/beep/m365-outbox/audit`, one
 `YYYY-MM.jsonl` file per month.
+
+## 9. One-time: the stale-draft category (attorney's Outlook)
+
+`m365_outbox_check_drafts` marks a draft whose basis changed with the Outlook
+category `Draft - recheck before sending`. The outbox application has no
+`MailboxSettings` role, so it cannot add an entry to the mailbox's category
+list or give the category a colour; it only writes the name on the draft, and
+Outlook shows it in the colour of the entry with the same name. Create that
+entry once, signed in as the attorney:
+
+1. In Outlook, open **Categorize > All categories** (Outlook on the web:
+   **Settings > Accounts > Categories**) and add a category named exactly
+   `Draft - recheck before sending`.
+2. Give it the colour red.
+
+Without this step the category still appears on a stale draft, but without
+a colour, which is easy to miss.
+
+## Draft basis checks: who calls them and what they promise
+
+`m365_outbox_check_drafts` writes a category on a draft, so treat it like
+the tools that write drafts (`create_draft`), not like the read-only ones: it
+changes the draft's category list and nothing else, keeps every category a
+person set, and never changes a subject or body. Do not call it against the
+attorney's mailbox until the tenant proof recorded in `goals/outbox-draft-basis`
+shows that a category on a draft does not reach the recipients; the tool
+itself has no switch that holds the write back.
+
+Nothing runs it on a schedule. A session that prepares or reviews outbox
+drafts calls `m365_outbox_check_drafts` first; that call is what keeps the
+marks current.
+
+The mark is advisory. The attorney's Send in Outlook is never blocked, and a
+draft that goes stale between two calls stays unmarked until the next call,
+so the mark is only as fresh as the last session that touched the outbox.
+Sending through the outbox itself stays disabled (`version-unbound`).
 
 ## Rotation and removal
 

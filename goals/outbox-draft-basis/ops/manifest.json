@@ -6,7 +6,7 @@
     "title": "Outbox Draft Basis",
     "status": "active",
     "created": "2026-11-10",
-    "updated": "2026-11-12",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/outbox-draft-basis",
@@ -91,5 +91,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "P1 in progress since 2026-11-12: first pull request (schemas, comparison, audit field, create_draft and get_draft). P0 decided the schemas, the time-zone rule, the message pin (ships on one conversation list call), the caller-view check at creation and the slice 3 sequencing. Open in P0: the tenant category proof, which waits on one message sent by a person; no category is written before it. Shares files with m365-agent-outbox slice 3."
+  "statusNote": "P1 in progress: the first pull request merged as #3137 on 2026-11-13; the second (check-drafts tool, category mark, README, runbook) is being built. Open in P0: the tenant category proof. Its route is chosen (a test draft in the attorney's mailbox, sent by a person) and the first attempt was blocked by Graph gateway errors; no category is written before the proof is recorded. Shares files with m365-agent-outbox slice 3."
 }

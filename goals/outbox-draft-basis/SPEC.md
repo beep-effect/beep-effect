@@ -131,9 +131,12 @@ BasisReport  = unpinned | pinned-current | pinned-stale | pinned-unverified,
   `checkSendExpectation`, with its statuses as a named literal domain.
 - The stale reason word is `basis-changed`, the word
   `ClaimEvidenceReviewStatus.Stale` already uses in `@beep/epistemics`.
-- The mark is one Outlook category written through the driver's
-  `updateMessageCategories`, conditional on the draft's current
-  `changeKey`, keeping every category the server did not add.
+- The mark is one Outlook category, `Draft - recheck before sending`,
+  written through the driver's `updateMessageCategories`, conditional on
+  the draft's current `changeKey`, keeping every category the server did
+  not add. The server clears only a mark its own audit log records.
+- The check-drafts tool retires a draft it finds sent or missing with one
+  `draft-closed` audit record, so later calls skip it.
 
 ## Constraints
 
@@ -184,7 +187,7 @@ BasisReport  = unpinned | pinned-current | pinned-stale | pinned-unverified,
       moving a pinned event's start yields `pinned-stale` naming `start`,
       editing only its reminder yields `pinned-current`, and a failed read
       yields `pinned-unverified`.
-- [ ] The check-drafts tool rechecks every draft this server created that
+- [x] The check-drafts tool rechecks every draft this server created that
       has no terminal audit record, sets the category on a stale draft,
       clears it when the basis is current again, leaves it unchanged when a
       read failed, skips and reports missing
@@ -195,9 +198,9 @@ BasisReport  = unpinned | pinned-current | pinned-stale | pinned-unverified,
       change.
 - [x] The message pin is either shipped under the one-list-call rule or cut
       by decision file. Shipped: decision file of 2026-11-10.
-- [ ] `m365_outbox_send_draft` still returns `version-unbound`; its existing
+- [x] `m365_outbox_send_draft` still returns `version-unbound`; its existing
       tests are unchanged and green.
-- [ ] The `@beep/m365-mcp` README and the registration runbook describe
+- [x] The `@beep/m365-mcp` README and the registration runbook describe
       pins, the report, the category and the advisory limit.
 - [ ] `bun run beep quality package-verify @beep/m365-mcp` passes and no
       coverage ratchet row for the package is lowered.
@@ -289,6 +292,30 @@ A review of #3120 found a gap: an agent reads an event at A, the event changes t
 Lane @chore/organizing-goal-packets · PR #3120
 
 Reverse: Drop the caller view from the create_draft pin parameter and pin the server's read alone; no record with pins exists before the first pull request merges, so nothing migrates.
+
+### check-drafts retires a sent or missing draft with one draft-closed record, 2026-11-13
+
+Operator ruling, 2026-11-13 (grill session). The attorney sends prepared drafts from Outlook, so the audit log never learns that a draft was sent, and without a closing record check-drafts would re-read every draft the server ever created on every call. When check-drafts finds a draft missing, or no longer a draft, it reports it and appends one draft-closed record with the reason; later calls skip it. A draft is open while it has a draft-created record and no draft-deleted, sent send-outcome or draft-closed record. The audit journal gains a record kind and no existing record changes, as the m365-agent-outbox packet's D-28 requires. Rejected: an age cutoff (a draft older than the cutoff would silently stop being checked while still unsent) and re-reading everything (cost grows without bound).
+
+Lane feat/outbox-draft-basis-check
+
+Reverse: Stop appending draft-closed and bound the check by draft age instead; recorded draft-closed lines stay readable and are ignored.
+
+### Sessions call check-drafts; this goal ships no scheduled caller, 2026-11-13
+
+Operator ruling, 2026-11-13 (grill session). SPEC.md forbids a timer inside the server, and a scheduled caller needs an entry point that is not an MCP tool call, which is a third pull request and so outside the appetite. The second pull request ships the tool and a runbook line: a session that prepares or reviews outbox drafts calls check-drafts first. Known limit, accepted: a draft that goes stale between calls stays unmarked until the next call, and the mark is as fresh as the last session that touched the outbox.
+
+Lane feat/outbox-draft-basis-check
+
+Reverse: Record a decision file that raises the appetite to a third pull request with a command-line entry and a workstation timer, and rule there whether the message pin stays.
+
+### The stale mark is the category 'Draft - recheck before sending', coloured by hand once, 2026-11-13
+
+Operator ruling, 2026-11-13 (grill session). The attorney reads this label on a draft in his Drafts folder, so it says what to do and uses no system word; the internal reason word stays basis-changed. Rejected: 'Draft - basis changed' (our term, not his) and 'Draft - source changed'. Colour: the outbox app holds Mail.ReadWrite, Mail.Send and Calendars.ReadWrite on the one mailbox and cannot create an entry in the mailbox's category list, which needs MailboxSettings.ReadWrite. The runbook therefore gains one manual step: create the category once in the attorney's Outlook, in red. The server only writes the name and Outlook matches it to the coloured entry. Rejected: an uncoloured label (easy to miss) and a fourth Exchange role for the app (it would also let the app change other mailbox settings).
+
+Lane feat/outbox-draft-basis-check
+
+Reverse: Rename the category constant and the runbook step; drafts already carrying the old name keep it until check-drafts next clears them, so rename only while no draft is marked.
 
 <!-- beep:decisions:end -->
 

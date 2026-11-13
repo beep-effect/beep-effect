@@ -50,7 +50,7 @@ import type { M365McpServerConfig } from "./Server.ts";
  * @since 0.1.0
  */
 export const M365_OUTBOX_MCP_INSTRUCTIONS =
-  "Microsoft 365 outbox for one configured mailbox: prepare a mail draft with attachments from local paths, read or delete that draft, and create or update calendar events. Automated sending is disabled: m365_outbox_send_draft checks the draft but refuses even a matching expectation with version-unbound, without calling Graph's send action. A person can review and send the draft in Outlook. Clients may open with an initialize handshake or call tools directly; both work.";
+  "Microsoft 365 outbox for one configured mailbox: prepare a mail draft with attachments from local paths, read or delete that draft, and create or update calendar events. A draft can be pinned to the calendar events and messages it was written from (basis on create_draft); get_draft reports whether they changed, and m365_outbox_check_drafts rechecks every open draft and marks a stale one with an Outlook category. Call check_drafts before preparing or reviewing outbox drafts. Automated sending is disabled: m365_outbox_send_draft checks the draft but refuses even a matching expectation with version-unbound, without calling Graph's send action. A person can review and send the draft in Outlook. Clients may open with an initialize handshake or call tools directly; both work.";
 
 /**
  * Services the outbox handlers need: the driver, the attachment source, the

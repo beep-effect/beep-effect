@@ -36,6 +36,7 @@ import {
   M365MailBody,
   M365MailDraft,
   M365UpdateEventRequest,
+  M365UpdateMessageCategoriesRequest,
 } from "@beep/m365";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
@@ -45,6 +46,7 @@ import { pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import {
   OUTBOX_DEFAULT_MAX_ATTACHMENT_BYTES,
@@ -53,20 +55,28 @@ import {
 } from "./OutboxAttachmentSource.ts";
 import {
   OutboxAuditLog,
+  OutboxDraftBasisClearedRecord,
+  OutboxDraftBasisMarkedRecord,
+  OutboxDraftClosedRecord,
   OutboxDraftCreatedRecord,
   OutboxDraftDeletedRecord,
   OutboxEventCreatedRecord,
   OutboxEventUpdatedRecord,
   OutboxSendOutcomeRecord,
 } from "./OutboxAuditLog.ts";
-import { makeBasisReport } from "./OutboxBasis.ts";
+import { makeBasisReport, OutboxBasisStatus } from "./OutboxBasis.ts";
 import { OutboxBasisReader } from "./OutboxBasisReader.ts";
 import { checkEventUpdate, OutboxEventUpdateCheck, storedAttendeeCount } from "./OutboxEventGuard.ts";
 import { checkSendExpectation, OutboxSendCheck, sameAttachments, storedRecipientAddresses } from "./OutboxSendGuard.ts";
 import { OutboxStoredAttachmentsRequest, readStoredAttachments } from "./OutboxStoredAttachments.ts";
 import {
+  OUTBOX_BASIS_STALE_CATEGORY,
+  OutboxDraftCheck,
+  OutboxDraftClosed,
   OutboxDraftCreated,
   OutboxDraftRef,
+  OutboxDraftsChecked,
+  OutboxDraftUnreadable,
   OutboxDraftView,
   OutboxEventCreated,
   OutboxEventUpdated,
@@ -78,12 +88,27 @@ import type { M365Error, M365EventDraft } from "@beep/m365";
 import type * as Tool from "effect/ai/Tool";
 import type * as Layer from "effect/Layer";
 import type { OutboxAttachmentError } from "./OutboxAttachmentSource.ts";
-import type { OutboxAuditError, OutboxSendOutcome } from "./OutboxAuditLog.ts";
-import type { OutboxBasisError } from "./OutboxBasis.ts";
+import type {
+  OutboxAuditError,
+  OutboxDraftClosedReason,
+  OutboxOpenDraft,
+  OutboxSendOutcome,
+} from "./OutboxAuditLog.ts";
+import type {
+  OutboxBasisChangedField,
+  OutboxBasisError,
+  OutboxBasisReport,
+  OutboxBasisVerdict,
+} from "./OutboxBasis.ts";
 import type { OutboxEventUpdateRefusalReason } from "./OutboxEventGuard.ts";
 import type { OutboxSendMismatchField } from "./OutboxSendGuard.ts";
 import type { OutboxStoredAttachmentError } from "./OutboxStoredAttachments.ts";
-import type { OutboxCreateDraftParams, OutboxSendDraftParams, OutboxUpdateEventParams } from "./OutboxTools.ts";
+import type {
+  OutboxCreateDraftParams,
+  OutboxDraftMarkOutcome,
+  OutboxSendDraftParams,
+  OutboxUpdateEventParams,
+} from "./OutboxTools.ts";
 
 const $I = $M365McpId.create("OutboxHandlers");
 
@@ -164,6 +189,66 @@ const EVENT_UPDATE_REFUSAL_MESSAGE: Readonly<Record<OutboxEventUpdateRefusalReas
 const decodeIdempotencyKey = S.decodeUnknownOption(M365IdempotencyKey);
 
 const STORED_BYTES_ALLOWANCE = 2;
+
+const PRECONDITION_FAILED_STATUS = 412;
+
+// The fields check_drafts reads from a draft: never a body, a subject or a recipient.
+const CHECK_DRAFT_SELECT = "id,isDraft,categories,changeKey";
+
+const decodeSegment = S.decodeUnknownEffect(GraphPathSegment);
+
+const nonEmpty = O.filter(Str.isNonEmpty);
+
+// What check_drafts does to one draft's categories: write a new list, or keep the draft as it is.
+type MarkPlan =
+  | { readonly _tag: "Keep"; readonly outcome: OutboxDraftMarkOutcome }
+  | { readonly _tag: "Write"; readonly categories: ReadonlyArray<string>; readonly kind: "set" | "cleared" };
+
+const keep = (outcome: OutboxDraftMarkOutcome): MarkPlan => ({ _tag: "Keep", outcome });
+
+// The category is set on a stale draft and removed from a current one only when this server set it.
+// Every other category stays, in order.
+const planMark = (verdict: OutboxBasisVerdict, categories: ReadonlyArray<string>, basisMarked: boolean): MarkPlan => {
+  const carries = A.contains(categories, OUTBOX_BASIS_STALE_CATEGORY);
+  return Match.value(verdict).pipe(
+    Match.when(
+      "pinned-stale",
+      (): MarkPlan =>
+        carries
+          ? keep("already-set")
+          : { _tag: "Write", categories: A.append(categories, OUTBOX_BASIS_STALE_CATEGORY), kind: "set" }
+    ),
+    Match.when(
+      "pinned-current",
+      (): MarkPlan =>
+        carries && basisMarked
+          ? {
+              _tag: "Write",
+              categories: A.filter(categories, (category) => category !== OUTBOX_BASIS_STALE_CATEGORY),
+              kind: "cleared",
+            }
+          : keep("none")
+    ),
+    Match.orElse(() => keep("none"))
+  );
+};
+
+// The changed view fields across a draft's pins, each once.
+const changedFieldsOf = (report: OutboxBasisReport): ReadonlyArray<OutboxBasisChangedField> =>
+  pipe(
+    report.pins,
+    A.flatMap(({ status }) => (OutboxBasisStatus.guards.Changed(status) ? status.fields : [])),
+    A.dedupe
+  );
+
+// Where one open draft ends up in the check_drafts result.
+const DraftOutcome = S.TaggedUnion({
+  Checked: { entry: OutboxDraftCheck },
+  Closed: { entry: OutboxDraftClosed },
+  Unreadable: { entry: OutboxDraftUnreadable },
+});
+
+const entryOf = <Entry>(outcome: { readonly entry: Entry }): Entry => outcome.entry;
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" })).annotate({
   title: "PosInt",
@@ -258,6 +343,112 @@ export const makeOutboxToolkitHandlers = (
 
       const deleteDraft = (draftId: string) =>
         m365.deleteDraftMessage(M365DeleteDraftMessageRequest.make({ messageId: draftId, userId }));
+
+      const closeDraft = Effect.fnUntraced(function* (open: OutboxOpenDraft, reason: OutboxDraftClosedReason) {
+        const { draftId, subject } = open.created;
+        const recorded = yield* Effect.isSuccess(
+          audit.append(
+            OutboxDraftClosedRecord.make({
+              at: yield* DateTime.now,
+              auditId: yield* audit.nextAuditId,
+              draftId,
+              reason,
+            })
+          )
+        );
+        return OutboxDraftClosed.make({ draftId, reason, recorded, subject });
+      });
+
+      // The only Graph write check_drafts makes, always conditional on the change key just read.
+      const writeMark = Effect.fnUntraced(function* (
+        messageId: GraphPathSegment,
+        changeKey: O.Option<string>,
+        plan: Extract<MarkPlan, { readonly _tag: "Write" }>,
+        fields: ReadonlyArray<OutboxBasisChangedField>
+      ) {
+        const failed = (markFailure: string) => ({ mark: "failed" as const, markFailure: O.some(markFailure) });
+        if (O.isNone(changeKey)) {
+          return failed("no-change-key");
+        }
+        const written = yield* m365
+          .updateMessageCategories(
+            M365UpdateMessageCategoriesRequest.make({
+              categories: plan.categories,
+              changeKey,
+              messageId,
+              userId,
+            })
+          )
+          .pipe(
+            Effect.map(() => O.none<string>()),
+            Effect.catch((error) =>
+              Effect.succeedSome(
+                O.contains(error.status, PRECONDITION_FAILED_STATUS) ? "changed-since-read" : error.reason
+              )
+            )
+          );
+        if (O.isSome(written)) {
+          return failed(written.value);
+        }
+        const at = yield* DateTime.now;
+        const auditId = yield* audit.nextAuditId;
+        const recorded = yield* Effect.isSuccess(
+          audit.append(
+            plan.kind === "set"
+              ? OutboxDraftBasisMarkedRecord.make({ at, auditId, draftId: messageId, fields })
+              : OutboxDraftBasisClearedRecord.make({ at, auditId, draftId: messageId })
+          )
+        );
+        const mark: OutboxDraftMarkOutcome = recorded ? plan.kind : `${plan.kind}-unrecorded`;
+        return { mark, markFailure: O.none<string>() };
+      });
+
+      // One open draft: closed when sent or missing, unreadable when Graph could not be asked,
+      // otherwise rechecked and marked.
+      const checkOpenDraft = Effect.fnUntraced(function* (open: OutboxOpenDraft) {
+        const { basis, draftId, subject } = open.created;
+        const unreadable = (reason: string) => OutboxDraftUnreadable.make({ draftId, reason, subject });
+        const closed = (reason: OutboxDraftClosedReason) =>
+          closeDraft(open, reason).pipe(Effect.map((entry) => DraftOutcome.cases.Closed.make({ entry })));
+        const read = yield* decodeSegment(draftId).pipe(
+          Effect.mapError(() => "invalid-id"),
+          Effect.flatMap((messageId) =>
+            m365.getMessage(M365GetMessageRequest.make({ messageId, select: O.some(CHECK_DRAFT_SELECT), userId })).pipe(
+              Effect.map((message) => O.some({ message, messageId })),
+              Effect.catch((error) =>
+                O.contains(error.status, NOT_FOUND_STATUS) && error.reason === "response status"
+                  ? Effect.succeedNone
+                  : Effect.fail(error.reason)
+              )
+            )
+          ),
+          Effect.result
+        );
+        if (read._tag === "Failure") {
+          return DraftOutcome.cases.Unreadable.make({ entry: unreadable(read.failure) });
+        }
+        if (O.isNone(read.success)) {
+          return yield* closed("missing");
+        }
+        const { message, messageId } = read.success.value;
+        if (!O.contains(message.isDraft, true)) {
+          return yield* closed("sent");
+        }
+        const statuses = yield* Effect.forEach(basis, reader.recheck);
+        const report = makeBasisReport(basis, statuses);
+        const plan = planMark(
+          report.verdict,
+          A.filter(O.getOrElse(message.categories, A.empty), Str.isNonEmpty),
+          open.basisMarked
+        );
+        const marked =
+          plan._tag === "Keep"
+            ? { mark: plan.outcome, markFailure: O.none<string>() }
+            : yield* writeMark(messageId, nonEmpty(message.changeKey), plan, changedFieldsOf(report));
+        return DraftOutcome.cases.Checked.make({
+          entry: OutboxDraftCheck.make({ draftId, ...marked, subject, verdict: report.verdict }),
+        });
+      });
 
       return OutboxToolkit.of({
         m365_outbox_create_draft: Effect.fn("M365Outbox.m365_outbox_create_draft")(
@@ -479,6 +670,33 @@ export const makeOutboxToolkitHandlers = (
             return yield* refused(["version-unbound"]);
           },
           finalizeOutboxTool("m365_outbox_send_draft", "sendDraft", false)
+        ),
+        m365_outbox_check_drafts: Effect.fn("M365Outbox.m365_outbox_check_drafts")(
+          function* () {
+            const open = yield* audit.openDrafts;
+            const outcomes = yield* Effect.forEach(open, checkOpenDraft);
+            const drafts = A.map(A.filter(outcomes, DraftOutcome.guards.Checked), entryOf);
+            const closed = A.map(A.filter(outcomes, DraftOutcome.guards.Closed), entryOf);
+            const unreadable = A.map(A.filter(outcomes, DraftOutcome.guards.Unreadable), entryOf);
+            const countOf = (verdict: OutboxBasisVerdict): number =>
+              A.length(A.filter(drafts, (draft) => draft.verdict === verdict));
+            const counts = {
+              "pinned-current": countOf("pinned-current"),
+              "pinned-stale": countOf("pinned-stale"),
+              "pinned-unverified": countOf("pinned-unverified"),
+              unpinned: countOf("unpinned"),
+            };
+            yield* Effect.annotateCurrentSpan({
+              m365_outbox_closed_count: A.length(closed),
+              m365_outbox_draft_count: A.length(open),
+              m365_outbox_marked_count: A.length(A.filter(drafts, (draft) => draft.mark === "set")),
+              m365_outbox_stale_count: counts["pinned-stale"],
+              m365_outbox_unreadable_count: A.length(unreadable),
+            });
+
+            return OutboxDraftsChecked.make({ closed, counts, drafts, unreadable });
+          },
+          finalizeOutboxTool("m365_outbox_check_drafts", "checkDrafts")
         ),
         m365_outbox_update_event: Effect.fn("M365Outbox.m365_outbox_update_event")(
           function* (params: OutboxUpdateEventParams) {

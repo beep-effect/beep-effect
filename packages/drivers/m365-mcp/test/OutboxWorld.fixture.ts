@@ -25,6 +25,7 @@ import {
   OutboxDraftCreatedRecord,
   OutboxEventCreatedRecord,
   OutboxHandlerSettings,
+  openOutboxDrafts,
 } from "@beep/m365-mcp";
 import { Sha256Hex } from "@beep/schema";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
@@ -122,6 +123,12 @@ type WorldState = {
   readonly knownDraftIds: ReadonlyArray<string>;
   /** When set, `listMessages` fails with it. */
   readonly listFailure: O.Option<M365Error>;
+  /** Message ids whose read fails with a transport error. */
+  readonly failingMessageIds: ReadonlyArray<string>;
+  /** Message ids the mailbox no longer has: their read answers 404. */
+  readonly missingMessageIds: ReadonlyArray<string>;
+  /** When set, a category write fails with it, such as a 412 for a message changed since it was read. */
+  readonly categoryFailure: O.Option<M365Error>;
   /** Mail other than the draft: `getMessage` finds it by id, `listMessages` by conversation. */
   readonly messages: ReadonlyArray<GraphMessage>;
   readonly nextId: number;
@@ -145,6 +152,9 @@ const initialState: WorldState = {
   files: [fixtureFile],
   knownDraftIds: [DRAFT_ID],
   listFailure: O.none(),
+  failingMessageIds: [],
+  missingMessageIds: [],
+  categoryFailure: O.none(),
   messages: [],
   nextId: 1,
   pagedConversation: false,
@@ -265,6 +275,12 @@ const StubM365Layer = Layer.effect(
       getMessage: Effect.fn("StubM365.getMessage")(function* (request) {
         yield* called("getMessage", request);
         const current = yield* Ref.get(state);
+        if (A.contains(current.missingMessageIds, request.messageId)) {
+          return yield* M365Error.fromReason("response status", { resource: "messages", status: 404 });
+        }
+        if (A.contains(current.failingMessageIds, request.messageId)) {
+          return yield* M365Error.fromReason("transport", { resource: "messages" });
+        }
         return pipe(
           A.findFirst(current.messages, (message) => message.id === request.messageId),
           O.getOrElse(() => current.draft)
@@ -320,7 +336,32 @@ const StubM365Layer = Layer.effect(
         yield* called("updateEvent", request);
         return GraphEvent.make({ id: request.eventId });
       }),
-      updateMessageCategories: notScripted,
+      // Like Graph with If-Match: the write answers 412 unless the change key is the stored one.
+      updateMessageCategories: Effect.fn("StubM365.updateMessageCategories")(function* (request) {
+        yield* called("updateMessageCategories", request);
+        const current = yield* Ref.get(state);
+        const stored = A.findFirst(current.messages, (message) => message.id === request.messageId);
+        const matches = O.exists(stored, (message) =>
+          O.exists(request.changeKey, (changeKey) => O.contains(message.changeKey, changeKey))
+        );
+        yield* pipe(current.categoryFailure, O.match({ onNone: () => Effect.void, onSome: Effect.fail }));
+        if (!matches) {
+          return yield* M365Error.fromReason("response status", { resource: "messages", status: 412 });
+        }
+        const updated = (message: GraphMessage) =>
+          GraphMessage.make({
+            ...message,
+            categories: O.some(request.categories),
+            changeKey: O.map(message.changeKey, (changeKey) => `${changeKey}+`),
+          });
+        yield* Ref.update(state, (latest) => ({
+          ...latest,
+          messages: A.map(latest.messages, (message) =>
+            message.id === request.messageId ? updated(message) : message
+          ),
+        }));
+        return yield* Effect.fromOption(stored, () => M365Error.fromReason("transport")).pipe(Effect.map(updated));
+      }),
     });
   })
 );
@@ -357,6 +398,7 @@ const StubAuditLogLayer = Layer.effect(
         const current = yield* Ref.get(state);
         return A.some(current.records, (record) => isEventCreated(record) && record.eventId === eventId);
       }),
+      openDrafts: Ref.get(state).pipe(Effect.map((current) => openOutboxDrafts(current.records))),
       nextAuditId: Ref.modify(state, (current) => [
         `audit-${current.nextId}`,
         { ...current, nextId: current.nextId + 1 },

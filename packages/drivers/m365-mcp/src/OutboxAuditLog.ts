@@ -23,8 +23,11 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
-import { flow, pipe } from "effect/Function";
+import { constFalse, flow, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
@@ -32,9 +35,8 @@ import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
 import { emptyByDefault } from "./internal/OutboxFields.ts";
 import { OutboxAttachmentDigest } from "./OutboxAttachmentSource.ts";
-import { basisField } from "./OutboxBasis.ts";
+import { basisField, OutboxBasisChangedField } from "./OutboxBasis.ts";
 import { OutboxSendMismatchField } from "./OutboxSendGuard.ts";
-import type * as O from "effect/Option";
 
 const $I = $M365McpId.create("OutboxAuditLog");
 
@@ -325,6 +327,168 @@ export class OutboxEventUpdatedRecord extends S.Opaque<OutboxEventUpdatedRecord,
 ) {}
 
 /**
+ * Why `check_drafts` retired a draft.
+ *
+ * **Details**
+ *
+ * `sent`: the message is no longer a draft, because a person sent it from
+ * Outlook. `missing`: the mailbox has no such message any more.
+ *
+ * **Example** (Guard a closing reason)
+ *
+ * ```ts
+ * import { OutboxDraftClosedReason } from "@beep/m365-mcp/OutboxAuditLog"
+ *
+ * console.log(OutboxDraftClosedReason.is.missing("missing"))
+ * // true
+ * ```
+ *
+ * @category models
+ * @since 0.1.0
+ */
+export const OutboxDraftClosedReason = LiteralKit(["sent", "missing"]).pipe(
+  $I.annoteSchema("OutboxDraftClosedReason", { description: "Why check_drafts retired a draft." })
+);
+
+/**
+ * Type for {@link OutboxDraftClosedReason}.
+ *
+ * **Example** (Type a closing reason)
+ *
+ * ```ts
+ * import type { OutboxDraftClosedReason } from "@beep/m365-mcp/OutboxAuditLog"
+ *
+ * const reason: OutboxDraftClosedReason = "sent"
+ * console.log(reason)
+ * ```
+ *
+ * @category models
+ * @since 0.1.0
+ */
+export type OutboxDraftClosedReason = typeof OutboxDraftClosedReason.Type;
+
+/**
+ * Audit record of the stale-basis category being set on a draft.
+ *
+ * **Details**
+ *
+ * Its existence, as the latest mark or clear record of the draft, is how the
+ * server knows the category on the draft is one it added and may remove.
+ * `fields` names the view fields that changed across the draft's pins; it is
+ * empty when only a pinned item is gone.
+ *
+ * **Example** (Record a mark)
+ *
+ * ```ts
+ * import { OutboxDraftBasisMarkedRecord } from "@beep/m365-mcp/OutboxAuditLog"
+ * import * as DateTime from "effect/DateTime"
+ *
+ * const record = OutboxDraftBasisMarkedRecord.make({
+ *   at: DateTime.makeUnsafe("2030-01-15T00:00:00Z"),
+ *   auditId: "audit-7",
+ *   draftId: "message-id",
+ *   fields: ["start"]
+ * })
+ * console.log(record._tag)
+ * // "draft-basis-marked"
+ * ```
+ *
+ * @category models
+ * @since 0.1.0
+ */
+export class OutboxDraftBasisMarkedRecord extends S.Opaque<
+  OutboxDraftBasisMarkedRecord,
+  { readonly brand: unique symbol }
+>()(
+  S.TaggedStruct("draft-basis-marked", {
+    ...stamp,
+    draftId: S.NonEmptyString.annotateKey({ description: "Graph id of the draft." }),
+    fields: S.Array(OutboxBasisChangedField).annotateKey({
+      description: "View fields that changed across the draft's pins; empty when only a pinned item is gone.",
+    }),
+  }).pipe(
+    $I.annoteSchema("OutboxDraftBasisMarkedRecord", {
+      description: "Audit record of the stale-basis category being set on a draft.",
+    })
+  )
+) {}
+
+/**
+ * Audit record of the stale-basis category being removed from a draft.
+ *
+ * **Example** (Record a clear)
+ *
+ * ```ts
+ * import { OutboxDraftBasisClearedRecord } from "@beep/m365-mcp/OutboxAuditLog"
+ * import * as DateTime from "effect/DateTime"
+ *
+ * const record = OutboxDraftBasisClearedRecord.make({
+ *   at: DateTime.makeUnsafe("2030-01-15T00:00:00Z"),
+ *   auditId: "audit-8",
+ *   draftId: "message-id"
+ * })
+ * console.log(record._tag)
+ * // "draft-basis-cleared"
+ * ```
+ *
+ * @category models
+ * @since 0.1.0
+ */
+export class OutboxDraftBasisClearedRecord extends S.Opaque<
+  OutboxDraftBasisClearedRecord,
+  { readonly brand: unique symbol }
+>()(
+  S.TaggedStruct("draft-basis-cleared", {
+    ...stamp,
+    draftId: S.NonEmptyString.annotateKey({ description: "Graph id of the draft." }),
+  }).pipe(
+    $I.annoteSchema("OutboxDraftBasisClearedRecord", {
+      description: "Audit record of the stale-basis category being removed from a draft.",
+    })
+  )
+) {}
+
+/**
+ * Audit record of `check_drafts` retiring a draft that was sent or is
+ * missing.
+ *
+ * **Details**
+ *
+ * A closed draft is no longer checked. The attorney sends drafts from
+ * Outlook, so this record is how the log learns that a draft left Drafts.
+ *
+ * **Example** (Record a closed draft)
+ *
+ * ```ts
+ * import { OutboxDraftClosedRecord } from "@beep/m365-mcp/OutboxAuditLog"
+ * import * as DateTime from "effect/DateTime"
+ *
+ * const record = OutboxDraftClosedRecord.make({
+ *   at: DateTime.makeUnsafe("2030-01-15T00:00:00Z"),
+ *   auditId: "audit-9",
+ *   draftId: "message-id",
+ *   reason: "sent"
+ * })
+ * console.log(record.reason)
+ * // "sent"
+ * ```
+ *
+ * @category models
+ * @since 0.1.0
+ */
+export class OutboxDraftClosedRecord extends S.Opaque<OutboxDraftClosedRecord, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("draft-closed", {
+    ...stamp,
+    draftId: S.NonEmptyString.annotateKey({ description: "Graph id of the draft." }),
+    reason: OutboxDraftClosedReason.annotateKey({ description: "Why the draft was retired." }),
+  }).pipe(
+    $I.annoteSchema("OutboxDraftClosedRecord", {
+      description: "Audit record of check_drafts retiring a sent or missing draft.",
+    })
+  )
+) {}
+
+/**
  * One line of the outbox audit log.
  *
  * **Example** (Match a record by tag)
@@ -351,6 +515,9 @@ export const OutboxAuditRecord = S.Union([
   OutboxSendOutcomeRecord,
   OutboxEventCreatedRecord,
   OutboxEventUpdatedRecord,
+  OutboxDraftBasisMarkedRecord,
+  OutboxDraftBasisClearedRecord,
+  OutboxDraftClosedRecord,
 ]).pipe(
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("OutboxAuditRecord", { description: "One versioned line of the outbox audit log." })
@@ -372,6 +539,118 @@ export const OutboxAuditRecord = S.Union([
  * @since 0.1.0
  */
 export type OutboxAuditRecord = typeof OutboxAuditRecord.Type;
+
+/**
+ * A draft this server created and has not seen leave Drafts, with whether
+ * the stale-basis category on it is one the server added.
+ *
+ * **Example** (Describe an open draft)
+ *
+ * ```ts
+ * import { OutboxDraftCreatedRecord, OutboxOpenDraft } from "@beep/m365-mcp/OutboxAuditLog"
+ * import * as DateTime from "effect/DateTime"
+ *
+ * const open = OutboxOpenDraft.make({
+ *   basisMarked: false,
+ *   created: OutboxDraftCreatedRecord.make({
+ *     at: DateTime.makeUnsafe("2030-01-15T00:00:00Z"),
+ *     attachments: [],
+ *     auditId: "audit-1",
+ *     bcc: [],
+ *     cc: [],
+ *     draftId: "message-id",
+ *     subject: "Filing receipt",
+ *     to: ["counsel@example.test"]
+ *   })
+ * })
+ * console.log(open.created.draftId)
+ * // "message-id"
+ * ```
+ *
+ * @category models
+ * @since 0.1.0
+ */
+export class OutboxOpenDraft extends S.Opaque<OutboxOpenDraft, { readonly brand: unique symbol }>()(
+  S.Struct({
+    basisMarked: S.Boolean.annotateKey({
+      description: "Whether the latest mark or clear record of the draft is a mark.",
+    }),
+    created: OutboxDraftCreatedRecord.annotateKey({ description: "The latest draft-created record of the draft." }),
+  }).pipe(
+    $I.annoteSchema("OutboxOpenDraft", {
+      description: "A draft the server created and has not seen deleted, sent or closed.",
+    })
+  )
+) {}
+
+const isDraftCreated = S.is(OutboxDraftCreatedRecord);
+const isBasisMarked = S.is(OutboxDraftBasisMarkedRecord);
+const isBasisCleared = S.is(OutboxDraftBasisClearedRecord);
+const isDraftDeleted = S.is(OutboxDraftDeletedRecord);
+const isDraftClosed = S.is(OutboxDraftClosedRecord);
+const isSendOutcome = S.is(OutboxSendOutcomeRecord);
+
+const isTerminal = (
+  record: OutboxAuditRecord
+): record is OutboxDraftDeletedRecord | OutboxDraftClosedRecord | OutboxSendOutcomeRecord =>
+  isDraftDeleted(record) || isDraftClosed(record) || (isSendOutcome(record) && record.outcome === "sent");
+
+const isMarkOrClear = (
+  record: OutboxAuditRecord
+): record is OutboxDraftBasisMarkedRecord | OutboxDraftBasisClearedRecord =>
+  isBasisMarked(record) || isBasisCleared(record);
+
+/**
+ * The open drafts in a log, in the order of their latest `draft-created`
+ * record.
+ *
+ * **Details**
+ *
+ * A draft is open while it has a `draft-created` record and no
+ * `draft-deleted`, `draft-closed` or `sent` `send-outcome` record. Its
+ * `basisMarked` flag is true when its latest `draft-basis-marked` or
+ * `draft-basis-cleared` record is a mark.
+ *
+ * **Example** (A deleted draft is not open)
+ *
+ * ```ts
+ * import { OutboxDraftCreatedRecord, OutboxDraftDeletedRecord, openOutboxDrafts } from "@beep/m365-mcp/OutboxAuditLog"
+ * import * as DateTime from "effect/DateTime"
+ *
+ * const at = DateTime.makeUnsafe("2030-01-15T00:00:00Z")
+ * const created = (draftId: string) =>
+ *   OutboxDraftCreatedRecord.make({ at, attachments: [], auditId: "a", bcc: [], cc: [], draftId, subject: "S", to: [] })
+ * const open = openOutboxDrafts([
+ *   created("kept"),
+ *   created("gone"),
+ *   OutboxDraftDeletedRecord.make({ at, auditId: "b", draftId: "gone" })
+ * ])
+ * console.log(open.map((draft) => draft.created.draftId))
+ * // ["kept"]
+ * ```
+ *
+ * @category models
+ * @since 0.1.0
+ */
+export const openOutboxDrafts = (records: ReadonlyArray<OutboxAuditRecord>): ReadonlyArray<OutboxOpenDraft> => {
+  const closed = HashSet.fromIterable(A.map(A.filter(records, isTerminal), (record) => record.draftId));
+  const marked = A.reduce(A.filter(records, isMarkOrClear), HashMap.empty<string, boolean>(), (states, record) =>
+    HashMap.set(states, record.draftId, isBasisMarked(record))
+  );
+  return pipe(
+    A.filter(records, isDraftCreated),
+    A.reverse,
+    A.dedupeWith((left, right) => left.draftId === right.draftId),
+    A.reverse,
+    A.filter((created) => !HashSet.has(closed, created.draftId)),
+    A.map((created) =>
+      OutboxOpenDraft.make({
+        basisMarked: O.getOrElse(HashMap.get(marked, created.draftId), constFalse),
+        created,
+      })
+    )
+  );
+};
 
 /**
  * Which audit log step failed.
@@ -521,13 +800,13 @@ export type OutboxAuditLogShape = {
   readonly createdDraft: (draftId: string) => Effect.Effect<O.Option<OutboxDraftCreatedRecord>, OutboxAuditError>;
   readonly hasCreatedDraft: (draftId: string) => Effect.Effect<boolean, OutboxAuditError>;
   readonly hasCreatedEvent: (eventId: string) => Effect.Effect<boolean, OutboxAuditError>;
+  readonly openDrafts: Effect.Effect<ReadonlyArray<OutboxOpenDraft>, OutboxAuditError>;
   readonly nextAuditId: Effect.Effect<string>;
 };
 
 const AuditLine = S.fromJsonString(OutboxAuditRecord);
 const encodeLine = S.encodeEffect(AuditLine);
 const decodeLine = S.decodeUnknownOption(AuditLine);
-const isDraftCreated = S.is(OutboxDraftCreatedRecord);
 const isEventCreated = S.is(OutboxEventCreatedRecord);
 
 const failure = (reason: OutboxAuditErrorReason, message: string) => (): OutboxAuditError =>
@@ -624,6 +903,7 @@ const makeLog = Effect.fnUntraced(function* (directory: string) {
       hasRecord((record) => isEventCreated(record) && record.eventId === eventId)
     ),
     nextAuditId: ids.next,
+    openDrafts: Effect.withSpan(fromRecords(openOutboxDrafts), "OutboxAuditLog.openDrafts"),
   });
 });
 

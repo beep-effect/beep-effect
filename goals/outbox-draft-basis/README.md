@@ -36,15 +36,14 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement, in progress, with one P0 item still open. Decided in P0: the
-schemas and the time-zone rule (frozen), the message pin (it ships, on one
-conversation list call), the caller-view check at creation, and the
-sequencing with `m365-agent-outbox` slice 3 (not started, so this goal
-opens first). Still open in P0: the tenant proof that a draft category does
-not reach recipients, which waits on one message sent by a person. Next
-action: merge the first pull request (schemas, comparison, audit field,
-`create_draft` and `get_draft`); the second pull request writes no category
-until the proof is recorded.
+P1 Implement, in progress, with one P0 item still open. The first pull
+request merged as #3137. The second is being built: the check-drafts tool,
+the category mark, the package README and the runbook. Still open in P0:
+the tenant proof that a draft category does not reach recipients. Its route
+is chosen (a test draft in the attorney's mailbox, sent by a person); the
+first attempt was blocked by Microsoft Graph gateway errors on that
+mailbox. Next action: run the proof, record it as a decision file, then
+merge the second pull request. No category is written before that.
 
 ## Latest Evidence
 
@@ -73,6 +72,27 @@ creation with `basis-changed`. `bun run beep quality package-verify
 100% coverage. The caller-view check is proven in the stub world only: a
 live re-run was blocked, see
 [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md).
+
+2026-11-13: the first pull request merged as #3137 (`fe9d360e92c`) with
+all 15 required checks green and no review thread. It was marked ready and
+merged by the operator's account before the lane's own `yeet final-check`
+finished, so there is no final-check receipt for that head; hosted CI is
+the proof.
+
+2026-11-13: the operator ruled the category name, its colour route, the
+check cadence, the closing record and the proof route in a grill session;
+each is a decision file of that date.
+
+2026-11-13: second pull request built: the `m365_outbox_check_drafts`
+tool, the category mark, three audit record kinds (`draft-basis-marked`,
+`draft-basis-cleared`, `draft-closed`), the package README and the
+runbook. `bun run beep quality package-verify @beep/m365-mcp` passed; 126
+package tests pass. It is held as a draft: it does not merge until the
+tenant proof is recorded.
+
+2026-11-13: the tenant proof could not start. Microsoft Graph answered
+HTTP 502 or 504 for mail reads on two mailboxes of the tenant, through the
+outbox app and through the Microsoft 365 connector, for over an hour.
 
 ## Notes
 

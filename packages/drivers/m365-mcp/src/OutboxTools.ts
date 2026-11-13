@@ -3,13 +3,13 @@
  *
  * **Details**
  *
- * Six tools: prepare, read and delete a mail draft; check a send request;
- * create and update a calendar event. A draft can be pinned to the Graph
- * items it rests on, as the caller read them; creation refuses a pin whose
- * item changed since, and `get_draft` reports later changes. Sending is
- * fail-closed while Graph's draft-send action cannot bind the checked
- * version. None takes a mailbox,
- * and none takes attendees. `get_draft` reads any draft id; deleting is
+ * Seven tools: prepare, read and delete a mail draft; check a send request;
+ * create and update a calendar event; recheck every open draft. A draft can
+ * be pinned to the Graph items it rests on, as the caller read them;
+ * creation refuses a pin whose item changed since, `get_draft` reports later
+ * changes, and `check_drafts` marks a stale draft with one Outlook category.
+ * Sending is fail-closed while Graph's draft-send action cannot bind the
+ * checked version. None takes a mailbox, and none takes attendees. `get_draft` reads any draft id; deleting is
  * limited to drafts this server created, and updating to events it created
  * that have no attendee.
  *
@@ -20,14 +20,15 @@
 import { $M365McpId } from "@beep/identity/packages";
 import { GraphBodyContentType, GraphPathSegment, M365EventDraft, M365EventPatch, M365MailAddress } from "@beep/m365";
 import { annotateFourHints, destructiveWriteToolHints, FourHintAnnotations, readOnlyToolHints } from "@beep/mcp-kit";
+import { LiteralKit } from "@beep/schema";
 import * as Tool from "effect/ai/Tool";
 import * as Toolkit from "effect/ai/Toolkit";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { emptyByDefault } from "./internal/OutboxFields.ts";
 import { OutboxAttachmentDigest } from "./OutboxAttachmentSource.ts";
-import { OutboxSendOutcome } from "./OutboxAuditLog.ts";
-import { OutboxBasisPin, OutboxBasisPinRef, OutboxBasisReport } from "./OutboxBasis.ts";
+import { OutboxDraftClosedReason, OutboxSendOutcome } from "./OutboxAuditLog.ts";
+import { OutboxBasisPin, OutboxBasisPinRef, OutboxBasisReport, OutboxBasisVerdict } from "./OutboxBasis.ts";
 import { OutboxSendExpectation, OutboxSendMismatchField } from "./OutboxSendGuard.ts";
 
 const $I = $M365McpId.create("OutboxTools");
@@ -378,6 +379,225 @@ export class OutboxEventUpdated extends S.Opaque<OutboxEventUpdated, { readonly 
 ) {}
 
 /**
+ * The Outlook category `check_drafts` sets on a draft whose basis changed.
+ *
+ * **Details**
+ *
+ * The attorney reads this label in the Drafts folder, so it says what to do.
+ * Its colour comes from a category of the same name created once by hand in
+ * the attorney's Outlook; the server only writes the name.
+ *
+ * **Example** (Read the category name)
+ *
+ * ```ts
+ * import { OUTBOX_BASIS_STALE_CATEGORY } from "@beep/m365-mcp/OutboxTools"
+ *
+ * console.log(OUTBOX_BASIS_STALE_CATEGORY)
+ * // "Draft - recheck before sending"
+ * ```
+ *
+ * @category constants
+ * @since 0.1.0
+ */
+export const OUTBOX_BASIS_STALE_CATEGORY = "Draft - recheck before sending";
+
+/**
+ * What `check_drafts` did to the stale-basis category of one draft.
+ *
+ * **Details**
+ *
+ * `set`: the category was added. `cleared`: the category this server added
+ * was removed. `already-set`: the draft is stale and already carries it.
+ * `none`: nothing was written. `failed`: the category write was refused or
+ * failed; the next call retries. `set-unrecorded` and `cleared-unrecorded`:
+ * the category was written but its audit record could not be appended.
+ *
+ * **Example** (Guard a mark outcome)
+ *
+ * ```ts
+ * import { OutboxDraftMarkOutcome } from "@beep/m365-mcp/OutboxTools"
+ *
+ * console.log(OutboxDraftMarkOutcome.is["already-set"]("already-set"))
+ * // true
+ * ```
+ *
+ * @category tool-schemas
+ * @since 0.1.0
+ */
+export const OutboxDraftMarkOutcome = LiteralKit([
+  "set",
+  "cleared",
+  "already-set",
+  "none",
+  "failed",
+  "set-unrecorded",
+  "cleared-unrecorded",
+]).pipe(
+  $I.annoteSchema("OutboxDraftMarkOutcome", {
+    description: "What check_drafts did to the stale-basis category of one draft.",
+  })
+);
+
+/**
+ * Type for {@link OutboxDraftMarkOutcome}.
+ *
+ * **Example** (Type a mark outcome)
+ *
+ * ```ts
+ * import type { OutboxDraftMarkOutcome } from "@beep/m365-mcp/OutboxTools"
+ *
+ * const outcome: OutboxDraftMarkOutcome = "set"
+ * console.log(outcome)
+ * ```
+ *
+ * @category tool-schemas
+ * @since 0.1.0
+ */
+export type OutboxDraftMarkOutcome = typeof OutboxDraftMarkOutcome.Type;
+
+// A draft id as the audit log recorded it; check_drafts reports it even when it is not a valid Graph path.
+const recordedDraftId = S.NonEmptyString.annotateKey({
+  description: "Graph id of the draft, as create_draft returned it.",
+});
+
+const recordedSubject = S.String.annotateKey({
+  description: "Subject as this server recorded it when it created the draft; never read from the mailbox.",
+});
+
+/**
+ * One open draft as `check_drafts` found it.
+ *
+ * **Example** (Read a checked draft)
+ *
+ * ```ts
+ * import { OutboxDraftCheck } from "@beep/m365-mcp/OutboxTools"
+ *
+ * const check = OutboxDraftCheck.make({ draftId: "message-id", mark: "set", subject: "Filing receipt", verdict: "pinned-stale" })
+ * console.log(check.mark)
+ * // "set"
+ * ```
+ *
+ * @category tool-schemas
+ * @since 0.1.0
+ */
+export class OutboxDraftCheck extends S.Opaque<OutboxDraftCheck, { readonly brand: unique symbol }>()(
+  S.Struct({
+    draftId: recordedDraftId,
+    markFailure: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
+      description:
+        "Why the category write failed when mark is failed: changed-since-read (the draft was edited after it was read), no-change-key, or a driver failure reason.",
+    }),
+    mark: OutboxDraftMarkOutcome.annotateKey({ description: "What was done to the stale-basis category." }),
+    subject: recordedSubject,
+    verdict: OutboxBasisVerdict.annotateKey({ description: "Basis verdict of the draft now." }),
+  }).pipe($I.annoteSchema("OutboxDraftCheck", { description: "One open draft as check_drafts found it." }))
+) {}
+
+/**
+ * A draft `check_drafts` retired because it was sent or is missing.
+ *
+ * **Example** (Read a closed draft)
+ *
+ * ```ts
+ * import { OutboxDraftClosed } from "@beep/m365-mcp/OutboxTools"
+ *
+ * const closed = OutboxDraftClosed.make({ draftId: "message-id", reason: "sent", recorded: true, subject: "Filing receipt" })
+ * console.log(closed.reason)
+ * // "sent"
+ * ```
+ *
+ * @category tool-schemas
+ * @since 0.1.0
+ */
+export class OutboxDraftClosed extends S.Opaque<OutboxDraftClosed, { readonly brand: unique symbol }>()(
+  S.Struct({
+    draftId: recordedDraftId,
+    reason: OutboxDraftClosedReason.annotateKey({
+      description: "`sent`: no longer a draft. `missing`: no such message in the mailbox.",
+    }),
+    recorded: S.Boolean.annotateKey({
+      description: "False when the closing record could not be appended; the draft is checked again next call.",
+    }),
+    subject: recordedSubject,
+  }).pipe($I.annoteSchema("OutboxDraftClosed", { description: "A draft check_drafts retired." }))
+) {}
+
+/**
+ * A draft `check_drafts` could not read this time.
+ *
+ * **Example** (Read an unreadable draft)
+ *
+ * ```ts
+ * import { OutboxDraftUnreadable } from "@beep/m365-mcp/OutboxTools"
+ *
+ * const unreadable = OutboxDraftUnreadable.make({ draftId: "message-id", reason: "throttled", subject: "Filing receipt" })
+ * console.log(unreadable.reason)
+ * // "throttled"
+ * ```
+ *
+ * @category tool-schemas
+ * @since 0.1.0
+ */
+export class OutboxDraftUnreadable extends S.Opaque<OutboxDraftUnreadable, { readonly brand: unique symbol }>()(
+  S.Struct({
+    draftId: recordedDraftId,
+    reason: S.NonEmptyString.annotateKey({ description: "Redacted reason the draft could not be read." }),
+    subject: recordedSubject,
+  }).pipe(
+    $I.annoteSchema("OutboxDraftUnreadable", {
+      description: "A draft check_drafts could not read; nothing was marked, cleared or closed.",
+    })
+  )
+) {}
+
+const verdictCount = (description: string) => S.Natural.annotateKey({ description });
+
+/**
+ * Result of `m365_outbox_check_drafts`.
+ *
+ * **Example** (Read an empty check)
+ *
+ * ```ts
+ * import { OutboxDraftsChecked } from "@beep/m365-mcp/OutboxTools"
+ *
+ * const result = OutboxDraftsChecked.make({
+ *   closed: [],
+ *   counts: { "pinned-current": 0, "pinned-stale": 0, "pinned-unverified": 0, unpinned: 0 },
+ *   drafts: [],
+ *   unreadable: []
+ * })
+ * console.log(result.drafts.length)
+ * // 0
+ * ```
+ *
+ * @category tool-schemas
+ * @since 0.1.0
+ */
+export class OutboxDraftsChecked extends S.Opaque<OutboxDraftsChecked, { readonly brand: unique symbol }>()(
+  S.Struct({
+    closed: S.Array(OutboxDraftClosed).annotateKey({
+      description: "Drafts found sent or missing; they are retired and not checked again.",
+    }),
+    counts: S.Struct({
+      "pinned-current": verdictCount("Checked drafts whose pinned items are as they were."),
+      "pinned-stale": verdictCount("Checked drafts with a pinned item that changed or is gone."),
+      "pinned-unverified": verdictCount("Checked drafts with a pinned item that could not be read."),
+      unpinned: verdictCount("Checked drafts created without pins."),
+    }).annotateKey({ description: "Checked drafts per basis verdict." }),
+    drafts: S.Array(OutboxDraftCheck).annotateKey({
+      description: "Every open draft that was read, with its verdict and what was done to its category.",
+    }),
+    unreadable: S.Array(OutboxDraftUnreadable).annotateKey({
+      description: "Drafts that could not be read this time; they are checked again next call.",
+    }),
+  }).pipe(
+    $I.annoteSchema("OutboxDraftsChecked", {
+      description: "What check_drafts found for every unsent draft this server created.",
+    })
+  )
+) {}
+
+/**
  * Prepares a mail draft with attachments. Sends nothing.
  *
  * **Example** (Read the create draft tool name)
@@ -542,6 +762,32 @@ export const OutboxUpdateEventTool = annotateFourHints(
 );
 
 /**
+ * Rechecks every unsent draft this server created and sets or clears the
+ * stale-basis category on it.
+ *
+ * **Example** (Read the check drafts tool name)
+ *
+ * ```ts
+ * import { OutboxCheckDraftsTool } from "@beep/m365-mcp/OutboxTools"
+ *
+ * console.log(OutboxCheckDraftsTool.name)
+ * // "m365_outbox_check_drafts"
+ * ```
+ *
+ * @category tools
+ * @since 0.1.0
+ */
+export const OutboxCheckDraftsTool = annotateFourHints(
+  Tool.make("m365_outbox_check_drafts", {
+    description: `Recheck every unsent draft this server created against the calendar events and messages it was pinned to, and mark it in Outlook: a draft whose basis changed gets the category "${OUTBOX_BASIS_STALE_CATEGORY}", and the category this server set is removed once the basis is current again. A draft whose pinned item could not be read keeps its category as it is; an unpinned draft is never touched. Categories a person added are kept, and no subject or body is changed. Drafts found sent or missing are reported and retired. The mark is advisory: Outlook's Send is not blocked, and a draft that changes between calls is marked only on the next call. Call this before preparing or reviewing outbox drafts; use get_draft for one draft's per-pin detail.`,
+    failure: OutboxToolError,
+    failureMode: "return",
+    success: OutboxDraftsChecked,
+  }),
+  additiveWriteToolHints
+);
+
+/**
  * The Microsoft 365 outbox toolkit.
  *
  * **Example** (Count the outbox tools)
@@ -550,7 +796,7 @@ export const OutboxUpdateEventTool = annotateFourHints(
  * import { OutboxToolkit } from "@beep/m365-mcp/OutboxTools"
  *
  * console.log(Object.keys(OutboxToolkit.tools).length)
- * // 6
+ * // 7
  * ```
  *
  * @category tools
@@ -562,7 +808,8 @@ export const OutboxToolkit = Toolkit.make(
   OutboxDeleteDraftTool,
   OutboxSendDraftTool,
   OutboxCreateEventTool,
-  OutboxUpdateEventTool
+  OutboxUpdateEventTool,
+  OutboxCheckDraftsTool
 );
 
 /**
