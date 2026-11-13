@@ -243,15 +243,18 @@ export const decodeCitationMetadataConfiguration = Effect.fn("Citation.decodeMet
  * @internal @category operations @since 0.0.0
  */
 export const installCitationMetadataConfigurationStage = Effect.fn("Citation.installMetadataConfigurationStage")(
-  function* <A, I, E, B, InstallError, InstallEnv>(
+  function* <A, I, E, B, Eff extends Effect.Effect<unknown, unknown, unknown>>(
     policy: unknown,
     input: unknown,
     schema: S.Codec<A, I>,
     invalid: () => E,
-    install: (limits: CitationEngineLimits, configuration: A) => Effect.Effect<B, InstallError, InstallEnv>
+    install: (limits: CitationEngineLimits, configuration: A) => Generator<Eff, B, never>
   ) {
     const { limits, configuration } = yield* decodeCitationMetadataConfiguration(policy, input, schema, invalid);
-    return yield* provideCitationStageAdmission(limits, install(limits, configuration));
+    return yield* provideCitationStageAdmission(
+      limits,
+      Effect.gen(() => install(limits, configuration))
+    );
   }
 );
 /** Decode and snapshot the shared trusted runtime/configuration boundary.
