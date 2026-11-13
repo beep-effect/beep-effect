@@ -105,6 +105,42 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("cleaner par
       })
     )
   );
+  it.effect("caps a producer at the cleaner ceiling when its invocation has more capacity", () =>
+    withCitationTestTextBudget(
+      12,
+      Effect.gen(function* () {
+        const { h, pipeline, budget } = yield* install(12);
+        yield* budget.reserve(1);
+        const value = yield* h.values.sourceText("");
+        const callback = yield* h.values.retainHost("local-capacity-callback");
+        h.hooks({
+          hash: () => Effect.succeed(123456789n),
+          equal: () => Effect.succeed(false),
+          callable: () => Effect.succeed(true),
+          invoke: Effect.fnUntraced(function* (_fn, _value, work) {
+            const produced = yield* work.withTextCapacity((remaining) =>
+              Effect.gen(function* () {
+                expect(remaining).toBe(8);
+                const text = yield* h.values.text("12345678");
+                return { value: text, units: 8 };
+              })
+            );
+            return CitationCleanerProduced.make(produced);
+          }),
+        });
+        h.select([callback]);
+        const result = yield* pipeline.runOwned({ value, plan: "local-capacity" });
+        expect(result.producedTextUtf16).toBe(8);
+        const output = yield* h.values.getUnicode(result.value);
+        expect(O.map(output, (text) => text.text)).toEqual(O.some("12345678"));
+        const used = yield* budget.snapshot;
+        expect(used).toBe(9);
+        const work = yield* h.work;
+        const snapshot = yield* work.snapshot;
+        expect(snapshot).toEqual({ producedTextUtf16: 8, closed: true });
+      })
+    )
+  );
   it.effect("settles bounded real builtin output in both ledgers exactly once", () =>
     withCitationTestTextBudget(
       5,

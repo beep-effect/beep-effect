@@ -95,6 +95,29 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("reference p
     )
   );
 
+  it.effect("rejects an oversized enclosing ledger before allocating and owns copied templates", () =>
+    withCitationTestInvocation(
+      Effect.gen(function* () {
+        const { budget, configuration, limits } = yield* install();
+        const refused = yield* makeCitationReferencePatterns(
+          { ...limits, producedTextUtf16: budget.maximum - 1 },
+          configuration
+        ).pipe(Effect.provideService(CitationTextBudget, budget), Effect.flip);
+        expect(refused).toMatchObject({ _tag: "CitationReferencePatternFailure", reason: "invalid-policy" });
+        const used = yield* budget.snapshot;
+        expect(used).toBe(0);
+        const owned = yield* copyCitationReferencePatternConfiguration(
+          limits,
+          CitationReferencePatternConfiguration.make(configuration)
+        );
+        expect(owned).toEqual(configuration);
+        expect(owned.patterns.pinPrefix).not.toBe(configuration.patterns.pinPrefix);
+        expect(owned.patterns.pinPrefix.bytes).not.toBe(configuration.patterns.pinPrefix.bytes);
+        expect(owned.disallowedNames).not.toBe(configuration.disallowedNames);
+      })
+    )
+  );
+
   it.effect("escapes a leading metacharacter word and refuses an oversized literal before assembly", () =>
     withCitationTestInvocation(
       Effect.gen(function* () {

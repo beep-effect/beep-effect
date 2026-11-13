@@ -195,6 +195,12 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
               yield* Scope.close(engineScope, Exit.void);
               const closed = yield* engine.clean(cleanInput).pipe(Effect.flip);
               expect(closed).toMatchObject({ _tag: "CitationInputError", operation: "clean" });
+              const closedExtract = yield* engine.extract(extractionInput).pipe(Effect.flip);
+              expect(closedExtract).toMatchObject({ _tag: "CitationInputError", operation: "extract" });
+              const closedResolve = yield* engine.resolve(resolutionInput).pipe(Effect.flip);
+              expect(closedResolve).toMatchObject({ _tag: "CitationInputError", operation: "resolve" });
+              const closedAnnotate = yield* engine.annotate(annotationInput).pipe(Effect.flip);
+              expect(closedAnnotate).toMatchObject({ _tag: "CitationAnnotationError" });
               expect(sourceCalls).toBe(4);
               const operationState = yield* built.operation.snapshot;
               const nativeState = yield* built.admission.snapshot;

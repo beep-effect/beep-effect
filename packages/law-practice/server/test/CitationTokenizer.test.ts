@@ -4,13 +4,18 @@ import {
   CitationOperationAdmission,
 } from "@beep/law-practice-server/internal/Citation/Admission";
 import { makeCitationTokenizer } from "@beep/law-practice-server/internal/Citation/Tokenizer";
+import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
-import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
+import {
+  makeCitationTestScaffoldBinding,
+  withCitationTestInvocation,
+  withCitationTestTextBudget,
+} from "./CitationInvocation.fixtures.ts";
 import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import {
   assertCitationTokenizerCase,
@@ -112,6 +117,43 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
       const observed = yield* setup.observed.snapshot;
       expect(observed).toEqual({ spawned: 0, confirmed: 0 });
       yield* assertCitationTokenizerCase(setup, A.getUnsafe(controls.cases, 0));
+    })
+  );
+  it.effect("preserves source and ordering refusals before worker execution", () =>
+    Effect.gen(function* () {
+      const controls = yield* loadCitationTokenizerControls();
+      const source = A.getUnsafe(controls.cases, 2).source;
+      for (const [overrides, limit] of [
+        [{ sourceUtf16: 1 }, "sourceUtf16"],
+        [{ patternEvaluations: 1 }, "patternEvaluations"],
+      ] as const) {
+        const setup = yield* setupCitationTokenizer("bun", controls.configuration, overrides);
+        const refused = yield* setup.tokenizer.port.tokenize(source).pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", operation: "extract", limit });
+        const observed = yield* setup.observed.snapshot;
+        expect(observed).toEqual({ spawned: 0, confirmed: 0 });
+      }
+    })
+  );
+  it.effect("enforces its own produced-text ceiling under a larger invocation without partial output", () =>
+    Effect.gen(function* () {
+      const controls = yield* loadCitationTokenizerControls();
+      const setup = yield* setupCitationTokenizer("bun", controls.configuration, { producedTextUtf16: 13 });
+      const maximum = (yield* defaultCitationEnginePolicy).limits.producedTextUtf16;
+      const refused = yield* withCitationTestTextBudget(
+        maximum,
+        setup.tokenizer.port.tokenize({ width: 1, bytes: new TextEncoder().encode("Id. x") })
+      ).pipe(Effect.flip);
+      expect(refused).toMatchObject({
+        _tag: "CitationSafetyLimitExceeded",
+        operation: "extract",
+        limit: "producedTextUtf16",
+      });
+      const observed = yield* setup.observed.snapshot;
+      expect(observed.spawned).toBeGreaterThan(0);
+      expect(observed.confirmed).toBe(observed.spawned);
+      const admission = yield* setup.admission.snapshot;
+      expect(admission).toMatchObject({ active: 0, queued: 0 });
     })
   );
   it.effect("owns edition binding rows and rejects duplicate source edition identities", () =>

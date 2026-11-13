@@ -201,3 +201,33 @@ it.effect("rolls the cleaner reservation back when the parent refuses or the wai
     })
   )
 );
+
+it.effect("preserves empty owned text without charging and refuses a non-callable step", () =>
+  withCitationTestTextBudget(
+    8,
+    Effect.gen(function* () {
+      const h = yield* setup();
+      const empty = yield* h.values.sourceText("");
+      h.select([]);
+      const unchanged = yield* h.pipeline.runOwned({ value: empty, plan: "empty-text" });
+      strictEqual(unchanged.value, empty);
+      strictEqual(unchanged.producedTextUtf16, 0);
+      const parent = (yield* CitationInvocation).budget;
+      const spent = yield* parent.snapshot;
+      strictEqual(spent, 0);
+      h.hooks({
+        hash: () => Effect.succeed(123456789n),
+        equal: () => Effect.succeed(false),
+        callable: () => Effect.succeed(false),
+      });
+      const unknown = yield* h.values.retainHost("not-a-cleaner");
+      h.select([unknown]);
+      const refused = yield* h.pipeline.runOwned({ value: empty, plan: "unknown-step" }).pipe(Effect.flip);
+      deepStrictEqual(refused, failure("unknown-step"));
+      const work = yield* h.work;
+      const snapshot = yield* work.snapshot;
+      strictEqual(snapshot.producedTextUtf16, 0);
+      strictEqual(snapshot.closed, true);
+    })
+  )
+);

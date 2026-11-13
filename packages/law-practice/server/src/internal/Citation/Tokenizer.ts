@@ -184,7 +184,7 @@ export const makeCitationTokenizer = Effect.fn("Citation.makeTokenizer")(functio
       .prepareUnicode(sourceInput, () => Effect.void)
       .pipe(Effect.mapError((error) => (S.is(CitationSafetyLimitExceeded)(error) ? error : failure("invalid-source"))));
     const selected = yield* ordering.ordered(source.value.storage).pipe(Effect.mapError(preserveSafety));
-    if (selected.indices.length > limits.patternEvaluations) return yield* safety("patternEvaluations");
+    // Ordering already enforces the set-work ceiling and returns only installed ids.
     const objects = yield* makeCitationTokenObjects(limits, editions).pipe(Effect.mapError(preserveSafety));
     const gaps = yield* text.prepare(source.value.storage).pipe(Effect.mapError(preserveSafety));
     const produced = yield* TxRef.make(0);
@@ -196,9 +196,8 @@ export const makeCitationTokenizer = Effect.fn("Citation.makeTokenizer")(functio
     const ids = MutableList.make<number>();
     let rawMatches = 0;
     for (const id of selected.indices) {
-      const row = yield* Effect.fromOption(HashMap.get(entries, id)).pipe(
-        Effect.mapError(() => failure("invalid-configuration"))
-      );
+      // A missing id would violate the private ordering/installation invariant, not caller configuration.
+      const row = yield* Effect.fromOption(HashMap.get(entries, id)).pipe(Effect.orDie);
       const remainingMatches = limits.patternMatches - rawMatches;
       const remainingCandidates = limits.candidates - ids.length;
       const maximum = Num.min(remainingMatches, remainingCandidates);
