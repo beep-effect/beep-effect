@@ -19,6 +19,7 @@ import {
   renderResidueReportLinesForTesting,
   runResidueReap,
 } from "@beep/repo-cli/test/Worktree";
+import { AttemptJournalStore } from "@beep/repo-cli/test/Yeet";
 import { it } from "@beep/test-runner";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, vi } from "@effect/vitest";
@@ -52,9 +53,12 @@ const pidAlive = (alive: HashSet.HashSet<string>) => (pid: string) => Effect.suc
 const noLivePid = pidAlive(HashSet.empty());
 
 // Every suite runs without a terminal-lane authority unless a test provides one.
-const ResidueReapTestLayer = Layer.merge(
-  Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)),
-  layerResidueTerminalLaneProbeTest(() => Effect.succeedNone)
+const ResidueReapTestLayer = Layer.provideMerge(
+  Layer.mergeAll(
+    layerResidueTerminalLaneProbeTest(() => Effect.succeedNone),
+    AttemptJournalStore.layer
+  ),
+  Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
 );
 
 const makeTempDirectory = FileSystem.FileSystem.use((fs) => fs.makeTempDirectory({ prefix: "residue-reap-test-" }));
@@ -2345,6 +2349,7 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("archive interruption 
                 const script = `
             import { Git } from "@beep/git/Git";
             import { layerResidueTerminalLaneProbeTest, runResidueReap } from "@beep/repo-cli/test/Worktree";
+            import { AttemptJournalStore } from "@beep/repo-cli/test/Yeet";
             import { NodeCrypto, NodeServices } from "@effect/platform-node";
             import * as Effect from "effect/Effect";
             import * as Layer from "effect/Layer";
@@ -2352,7 +2357,7 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("archive interruption 
             await Effect.runPromise(runResidueReap({ ...options, classes: ["checkout-generated"], apply: true,
               probeLiveCwd: () => Effect.succeedSome(false), probePidAlive: () => Effect.succeedSome(false),
               archiveCheckpoint: (at) => Effect.sync(() => { if (at === "${phase}") process.kill(process.pid, "SIGKILL"); }),
-            }).pipe(Effect.provide(Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, layerResidueTerminalLaneProbeTest(() => Effect.succeedNone))))));
+            }).pipe(Effect.provide(Layer.provideMerge(Layer.mergeAll(layerResidueTerminalLaneProbeTest(() => Effect.succeedNone), AttemptJournalStore.layer), Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))))));
           `;
                 const killed = yield* runRepoCommandCapture("bun", ["--eval", script], process.cwd()).pipe(
                   Effect.match({ onFailure: () => true, onSuccess: (capture) => !N.Equivalence(capture.exitCode, 0) })

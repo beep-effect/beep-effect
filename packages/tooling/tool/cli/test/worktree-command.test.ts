@@ -43,6 +43,7 @@ import {
   procProcessTable,
 } from "@beep/repo-cli/test/RepoRun";
 import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
+import { AttemptJournalStore } from "@beep/repo-cli/test/Yeet";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { it } from "@beep/test-runner";
 import { A, O, P, Str } from "@beep/utils";
@@ -2393,7 +2394,7 @@ describe("worktree git operations", () => {
               WorktreeRemovalService,
               WorktreeRemovalServiceLayer.pipe(
                 Layer.fresh,
-                Layer.provide([platformLayer, probe]),
+                Layer.provide([platformLayer, probe, AttemptJournalStore.layer]),
                 Layer.build,
                 Effect.map(Context.get(WorktreeRemovalService))
               )

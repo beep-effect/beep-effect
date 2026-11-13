@@ -42,6 +42,7 @@ import {
 import { HistoryNotes, HistoryNotesLive, renderHistoryNotesSync } from "../History/index.ts";
 import { ReferenceWorkspace, referenceWorkspaceLayer } from "../Refs/index.ts";
 import { recordSweepDone } from "../Session/SessionLedger.service.ts";
+import { renderAttemptJournalExport } from "../Yeet/internal/AttemptJournalStore.ts";
 import { worktreeFleetCommand } from "./Fleet.command.ts";
 import { worktreeReapCommand } from "./Reap.command.ts";
 import { CLAUDE_WORKTREES_RELATIVE_ROOT, WORKTREES_ROOT_SUFFIX } from "./Worktree.constants.ts";
@@ -988,8 +989,10 @@ const renderRemovalReceipt = Effect.fn("Worktree.renderRemovalReceipt")(function
   receipt: WorktreeRemovalReceipt,
   archive: boolean
 ) {
+  const attemptJournals = O.map(receipt.attemptJournals, renderAttemptJournalExport);
   if (!archive) {
     yield* Console.log(`Removed worktree ${receipt.targetPath}`);
+    yield* O.match(attemptJournals, { onNone: () => Effect.void, onSome: (line) => Console.log(line) });
     yield* Console.log(
       O.match(receipt.branch, {
         onNone: () => "Branch retained; delete it manually when ready.",
@@ -1039,6 +1042,7 @@ const renderRemovalReceipt = Effect.fn("Worktree.renderRemovalReceipt")(function
       }
     }),
   });
+  yield* O.match(attemptJournals, { onNone: () => Effect.void, onSome: (line) => Console.log(`  ${line}`) });
   yield* Console.log(`  removed: ${receipt.targetPath}`);
   yield* Effect.forEach(
     receipt.idleTerminalShells,

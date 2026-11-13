@@ -100,6 +100,7 @@ const contextFor = (root: string) =>
   });
 
 interface SnapshotInput {
+  readonly baseRefName?: string;
   readonly bound?: boolean;
   readonly checks: ReadonlyArray<YeetWatchCheck>;
   readonly mergeable?: string;
@@ -150,6 +151,7 @@ const snapshot = (root: string, input: SnapshotInput) => {
       state,
       failingCheckCount: 0,
       unresolvedThreads: O.some([]),
+      ...(input.baseRefName === undefined ? {} : { baseRefName: input.baseRefName }),
       ...(input.mergeStateStatus === undefined ? {} : { mergeStateStatus: input.mergeStateStatus }),
       ...(input.mergeable === undefined ? {} : { mergeable: input.mergeable }),
     }),
@@ -643,6 +645,47 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
       const errorLines36 = yield* TestConsole.errorLines;
       const errors = A.join(A.map(errorLines36, String), "\n");
       expect(errors).toContain("head moved to bbbbbbb; the 1-capsule wave for aaaaaaa is superseded.");
+    })
+  );
+
+  it.effect("names the parent's branch in a stack layer's row, remedy and wait line", () =>
+    Effect.gen(function* () {
+      const root = yield* tempRoot();
+      const polls = yield* Ref.make(0);
+      // A layer: GitHub reports the parent's branch as the pull request's base,
+      // while the run's base (`contextFor`) is still the trunk. The console is
+      // shared across this file's tests, so only this row's own lines are asserted.
+      const layerConflicted = snapshot(root, {
+        baseRefName: "feat/parent",
+        checks: [pendingCheck],
+        mergeStateStatus: "DIRTY",
+        mergeable: "CONFLICTING",
+        sha: head,
+      });
+      // Polls 0-1: the layer conflicts with its parent. Poll 2: the push that
+      // merged the parent's branch is mergeable; the closeout reread binds it.
+      const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
+        ...loopOptions,
+        policy: YeetUntilReadyPolicy.make({}),
+        collectStatus: () =>
+          Ref.getAndUpdate(polls, (n) => n + 1).pipe(
+            Effect.map((n) => (n <= 1 ? layerConflicted : mergeable(root, fixHead, n >= 3)))
+          ),
+        closeout: () => Effect.succeed(report(fixHead)),
+      });
+      expect(terminal).toBe("ready");
+      const written = yield* conflictRows(root);
+      expect(A.map(written, (row) => row.capsule.base)).toStrictEqual(["origin/feat/parent"]);
+      expect(describeYeetInboxRow(A.getUnsafe(written, 0))).toBe(
+        "base conflict with origin/feat/parent (pr #7 @ aaaaaaa)"
+      );
+      const errorLines = yield* TestConsole.errorLines;
+      const errors = A.join(A.map(errorLines, String), "\n");
+      expect(errors).toContain("[yeet] base conflict with origin/feat/parent on head aaaaaaa");
+      expect(errors).toContain("merge origin/feat/parent and push");
+      const logLines = yield* TestConsole.logLines;
+      const printed = A.join(A.map(logLines, String), "\n");
+      expect(printed).toContain("settle: base-conflict; merge origin/feat/parent and push");
     })
   );
 

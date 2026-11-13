@@ -54,6 +54,9 @@ bun run beep yeet publish --stack-on <parent-pr> --message "type(scope): summary
    finds the PR and links it.
 5. Later pushes are plain `bun run beep yeet publish --message "..."`. Yeet
    reads the stack from the branch's PR; the flag is not repeated.
+6. Until the pilot's verdict (due 2026-11-27), add the stack's row to
+   `goals/yeet-async-merge-and-stacks/research/stack-pilot-2026-11.md` in the
+   layer's PR before you gate the top; that file names the fields.
 
 ## Keep the layer on the parent
 
@@ -72,8 +75,11 @@ bun run beep yeet publish --push-only
 
   The merge gate holds as `stack-out-of-date` until the layer contains the
   parent's head.
-- A base-conflict row on the layer means "merge the parent's branch", not
-  "merge `origin/main`".
+- A base-conflict row on the layer names the parent's branch
+  (`base conflict with origin/<parent-branch>`), and so does the settle
+  line. Merge that branch, never `origin/main`. A "sibling merged" comment on
+  a layer says the same, and after the parent merged alone it tells the
+  layer to adopt the cascade instead of merging anything.
 
 ## Ready
 
@@ -132,11 +138,13 @@ A cascade or a restack replaces the layer's commits with GitHub's replay.
 The local branch is then behind a head it cannot fast-forward to.
 
 ```bash
-git fetch origin && git switch -C <branch> origin/<branch>
+git fetch origin && git branch -f pre-cascade/<branch> HEAD && git switch -C <branch> origin/<branch>
 ```
 
-- Do this before any further commit. Unpushed local commits are replayed on
-  top by cherry-pick, then pushed as a fast-forward.
+- Do this before any further commit. `git switch -C` resets the branch, so
+  `pre-cascade/<branch>` keeps the old tip: cherry-pick from it any commit of
+  your own that was never pushed, then push as a fast-forward. The name is per
+  branch because linked worktrees share `refs/heads`.
 - A rewrite that changed nothing keeps the review window and the final-check
   receipt (`yeet ready` and the gate say so). A rewrite that changed a patch
   restarts both.

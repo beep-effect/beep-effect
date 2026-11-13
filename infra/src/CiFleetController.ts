@@ -15,11 +15,14 @@ import { O, Str } from "@beep/utils";
 import * as aws from "@pulumi/aws";
 import * as ghaRunners from "@pulumi/gharunners";
 import * as pulumi from "@pulumi/pulumi";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { flow, identity } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { ciHeavyRunnerPool } from "./CiRunnerPool.ts";
 import { resolveInfraArtifactPath } from "./internal/InfraArtifactPath.ts";
+import type { CiRunnerPool } from "./CiRunnerPool.ts";
 import type { InfraPathEnv } from "./internal/InfraArtifactPath.ts";
 
 const $I = $InfraId.create("CiFleetController");
@@ -28,32 +31,18 @@ const defaultAmiSsmParameterName = "/aws/service/ami-amazon-linux-latest/al2023-
 const defaultRunnerLabel = "beep-ec2-heavy";
 const githubAppIdSsmParameterName = "/github-action-runners/app/github_app_id";
 const githubAppKeyBase64SsmParameterName = "/github-action-runners/app/github_app_key_base64";
-const githubAppWebhookSecretSsmParameterName = "/github-action-runners/app/github_app_webhook_secret";
 
-/**
- * Keeps every runner at 64 GB so the build-mode census peaks of 47.59 GiB for
- * professional-desktop and 24.77 GiB for epistemic-server fit with headroom.
- * See `goals/ci-fleet-endgame/research/build-mode-typecheck-census.md`.
- *
- * Seven interchangeable shapes (all x86_64, ENA and NVMe, 64 GiB, 8 or 16
- * vCPU) across five subnets give the Spot fleet 35 capacity pools. On
- * 2026-09-30 every lost heavy job was a Spot reclaim, concentrated in the
- * one cheap r7i.2xlarge pool in us-east-1a, so breadth here is the
- * reliability lever. On 2026-10-05 the reclaims moved to r6a.2xlarge: 20 of
- * its 69 launches ended `instance-terminated-no-capacity` across three AZs
- * while the other seven shapes lost 6 of 86, so that shape is dropped. Order
- * carries no priority: `capacity-optimized` ignores it, and only the
- * `-prioritized` strategies read override priorities.
- */
-const runnerInstanceTypes = [
-  "r7a.2xlarge",
-  "r7i.2xlarge",
-  "r6i.2xlarge",
-  "m7a.4xlarge",
-  "m7i.4xlarge",
-  "m6a.4xlarge",
-  "m6i.4xlarge",
-];
+// Instance types, the VM cap, the resource prefix, the runner group and the
+// webhook secret come from the pool profile (`CiRunnerPool.ts`). The heavy
+// profile keeps every runner at 64 GB so the build-mode census peaks of
+// 47.59 GiB for professional-desktop and 24.77 GiB for epistemic-server fit
+// with headroom (`goals/ci-fleet-endgame/research/build-mode-typecheck-census.md`),
+// across seven interchangeable shapes and five subnets: 35 Spot capacity
+// pools. On 2026-09-30 every lost heavy job was a Spot reclaim concentrated in
+// the one cheap r7i.2xlarge pool in us-east-1a, so breadth is the reliability
+// lever; on 2026-10-05 the reclaims moved to r6a.2xlarge (20 of 69 launches
+// `instance-terminated-no-capacity` against 6 of 86 for the rest), so that
+// shape is dropped. Order carries no priority: `capacity-optimized` ignores it.
 
 // The runner agent and every job step both run as this user, so the two cannot
 // be told apart by uid at agent-start time — the reason the post-install IMDS
@@ -808,6 +797,8 @@ export const loadCiFleetControllerConfig = (env: InfraPathEnv = process.env): Ci
 
 type CiFleetControllerArgs = {
   readonly config: CiFleetControllerConfig;
+  /** The pool profile; the heavy-lane pool when absent. */
+  readonly pool?: CiRunnerPool | undefined;
   readonly region: pulumi.Input<string>;
   readonly subnetIds: pulumi.Input<pulumi.Input<string>[]>;
   readonly vpcId: pulumi.Input<string>;
@@ -857,6 +848,11 @@ type CiFleetControllerArgs = {
  * not-queued branch consumes the scale-up message with no retry, so GitHub
  * API propagation lag would strand a genuinely queued job forever — a wasted
  * VM on a cancelled job is the cheaper failure.
+ *
+ * One controller is one pool. `pool` selects the profile (resource prefix,
+ * runner group, runner name prefix, instance types, VM cap and webhook secret
+ * parameter); every rail above is shared. The heavy-lane profile is the
+ * default and reproduces the controller's inputs from before pools existed.
  *
  * **Example** (Provision the heavy-lane fleet controller)
  *
@@ -909,6 +905,8 @@ export class CiFleetController extends pulumi.ComponentResource {
 
   public constructor(name: string, args: CiFleetControllerArgs, opts?: pulumi.ComponentResourceOptions) {
     super("beep:infra:CiFleetController", name, {}, opts);
+    const pool = args.pool ?? ciHeavyRunnerPool;
+    const runnerAmiParameterName = `/${pool.prefix}/controller/runner-ami-id`;
 
     const resolvedAmiId = O.match(args.config.amiId, {
       onNone: () =>
@@ -925,7 +923,7 @@ export class CiFleetController extends pulumi.ComponentResource {
     const runnerAmiParameter = new aws.ssm.Parameter(
       `${name}-runner-ami`,
       {
-        name: "/beep-ci/controller/runner-ami-id",
+        name: runnerAmiParameterName,
         dataType: "aws:ec2:image",
         region: args.region,
         tags: {
@@ -943,8 +941,8 @@ export class CiFleetController extends pulumi.ComponentResource {
       `${name}-runner-imds-disable`,
       {
         description: "Allow a CI runner to disable IMDS on only its own instance.",
-        name: "beep-ci-runner-imds-disable",
-        path: "/beep-ci/",
+        name: `${pool.prefix}-runner-imds-disable`,
+        path: `/${pool.prefix}/`,
         policy: runnerImdsDisablePolicyDocument,
         tags: {
           App: "ci-runners",
@@ -968,7 +966,7 @@ export class CiFleetController extends pulumi.ComponentResource {
     // name instead of the parameter resource's own output.
     const runnerAmiParameterArn = pulumi.interpolate`arn:aws:ssm:${args.region}:${
       aws.getCallerIdentityOutput({}, { parent: this }).accountId
-    }:parameter/beep-ci/controller/runner-ami-id`;
+    }:parameter${runnerAmiParameterName}`;
 
     const controller = new ghaRunners.Module(
       name,
@@ -1009,7 +1007,7 @@ export class CiFleetController extends pulumi.ComponentResource {
          * `Default` also rejects public repositories in this organization.
          */
         enable_organization_runners: true,
-        runner_group_name: "beep-ec2-heavy",
+        runner_group_name: pool.runnerGroupName,
         /**
          * Require an exact label-set match so ordinary `self-hosted` jobs
          * cannot reach the fleet without naming its dedicated label.
@@ -1034,7 +1032,7 @@ export class CiFleetController extends pulumi.ComponentResource {
           },
           webhook_secret_ssm: {
             arn: args.config.githubAppWebhookSecretSsmParameterArn,
-            name: githubAppWebhookSecretSsmParameterName,
+            name: pool.webhookSecretSsmParameterName,
           },
         },
         // Pick Spot pools by spare capacity alone. `price-capacity-optimized`
@@ -1055,7 +1053,7 @@ export class CiFleetController extends pulumi.ComponentResource {
           },
           zip: args.config.terminationWatcherLambdaZip,
         },
-        instance_types: runnerInstanceTypes,
+        instance_types: A.copy(pool.instanceTypes),
         // Rescues a job whose runner died between launch and pickup (spot
         // reclaim, boot failure) by re-checking the still-queued job and
         // scaling up again; a runner lost mid-job is out of its reach and
@@ -1069,7 +1067,7 @@ export class CiFleetController extends pulumi.ComponentResource {
         kms_key_arn: args.config.githubAppKmsKeyArn,
         logging_retention_in_days: 14,
         minimum_running_time_in_minutes: 5,
-        prefix: "beep-ci",
+        prefix: pool.prefix,
         repository_white_list: ["beep-effect/beep-effect"],
         role_permissions_boundary: args.config.runnerRolePermissionsBoundaryArn,
         runner_additional_security_group_ids: [args.workerSecurityGroupId],
@@ -1085,16 +1083,16 @@ export class CiFleetController extends pulumi.ComponentResource {
           http_tokens: "required",
           instance_metadata_tags: "enabled",
         },
-        runner_name_prefix: "beep-ci-",
+        runner_name_prefix: pool.runnerNamePrefix,
         runner_os: "linux",
         runner_run_as: runnerRunAs,
         userdata_post_install: runnerPostInstall,
         runners_ebs_optimized: true,
         runners_lambda_zip: args.config.runnersLambdaZip,
-        // September 15 cost policy: keep CI available with two concurrent
+        // The heavy profile keeps the September 15 cost policy: two concurrent
         // workers. Excess jobs retry from SQS as capacity becomes available.
         // This limits simultaneous spending, not aggregate monthly worker hours.
-        runners_maximum_count: 2,
+        runners_maximum_count: pool.maximumCount,
         runners_ssm_housekeeper: {
           config: { dryRun: false, minimumDaysOld: 1 },
           enabled: true,
@@ -1124,9 +1122,9 @@ export class CiFleetController extends pulumi.ComponentResource {
     // The notification function also handles ordinary instance termination,
     // so these credentials remain necessary for the on-demand fleet.
     for (const functionName of [
-      "beep-ci-spot-termination-notification",
-      "beep-ci-spot-termination-handler",
-      "beep-ci-deregister-retry",
+      `${pool.prefix}-spot-termination-notification`,
+      `${pool.prefix}-spot-termination-handler`,
+      `${pool.prefix}-deregister-retry`,
     ]) {
       const watcher = aws.lambda.getFunctionOutput(
         { functionName, region: args.region },
