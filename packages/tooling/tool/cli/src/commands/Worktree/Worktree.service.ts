@@ -90,8 +90,8 @@ import {
   sessionRootOf,
 } from "../../internal/repo-run/index.ts";
 import { AttemptJournalStore } from "../Yeet/internal/AttemptJournalStore.ts";
+import { resolveWorktreeRemovalRoots, worktreeRemovalCandidates } from "./internal/RemovalRoots.ts";
 import { isRetainedCheckoutResidueName } from "./internal/ResidueReap.ts";
-import { CLAUDE_WORKTREES_RELATIVE_ROOT } from "./Worktree.constants.ts";
 import { WorktreeCommandError, WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";
 import {
   WorktreeArchivePlan,
@@ -1549,18 +1549,22 @@ const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemoval
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const target = path.resolve(request.targetPath);
-  const managedRoot = path.join(path.dirname(request.mainCheckout), `${path.basename(request.mainCheckout)}-worktrees`);
-  // Claude Code's desktop app nests its lanes under the clone itself; both
-  // roots are retirement-eligible, and the target must sit in exactly one.
-  const nestedRoot = path.join(request.mainCheckout, CLAUDE_WORKTREES_RELATIVE_ROOT);
-  const root = target === path.resolve(nestedRoot, request.name) ? nestedRoot : managedRoot;
+  // A lane sits directly under one of its clone's worktree roots: the sibling
+  // `-worktrees` directory, the Claude Code nested root, the T3 Code root, or a
+  // root the fleet roots registry lists. A root only says where a lane may sit;
+  // registration and the Git common directory below decide whether it is one.
+  const roots = yield* resolveWorktreeRemovalRoots(request.mainCheckout);
   const invalid = () =>
     WorktreeCommandError.make({
       message:
-        "Removal target must be an exact registered worktree beneath the managed or nested worktrees root with the same Git common directory.",
+        "Removal target must be an exact registered worktree beneath a declared worktree root (managed, nested, T3 or fleet roots registry) with the same Git common directory.",
       path: request.targetPath,
     });
-  if (!isWorktreeRemovalName(request.name) || target !== path.resolve(root, request.name)) {
+  const candidates = A.filter(
+    isWorktreeRemovalName(request.name) ? worktreeRemovalCandidates({ path, roots, name: request.name }) : A.empty(),
+    (candidate) => candidate.target === target
+  );
+  if (!A.isReadonlyArrayNonEmpty(candidates) || target === path.resolve(request.mainCheckout)) {
     return yield* invalid();
   }
   const git = yield* Git;
@@ -1577,9 +1581,11 @@ const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemoval
   if (!A.some(entries, (entry) => path.resolve(entry.path) === target)) {
     return yield* invalid();
   }
-  const canonicalRoot = yield* fs.realPath(root).pipe(Effect.mapError(invalid));
   const canonicalTarget = yield* fs.realPath(target).pipe(Effect.mapError(invalid));
-  if (canonicalTarget !== path.join(canonicalRoot, request.name)) {
+  const canonicalRoots = yield* Effect.forEach(candidates, (candidate) =>
+    fs.realPath(candidate.root.path).pipe(Effect.option)
+  );
+  if (!A.some(A.getSomes(canonicalRoots), (root) => canonicalTarget === path.join(root, request.name))) {
     return yield* invalid();
   }
   const expectedCommon = yield* git
@@ -1598,7 +1604,15 @@ const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemoval
     );
   const expectedReal = yield* fs.realPath(Str.trim(expectedCommon)).pipe(Effect.mapError(invalid));
   const targetReal = yield* fs.realPath(Str.trim(targetCommon)).pipe(Effect.mapError(invalid));
-  if (expectedReal !== targetReal) {
+  // The primary checkout is registered and shares the common directory; a root
+  // that happens to hold it (a fleet root over the projects directory) must not
+  // make the clone itself removable.
+  const primaryReal = yield* fs.realPath(request.mainCheckout).pipe(Effect.mapError(invalid));
+  if (
+    expectedReal !== targetReal ||
+    canonicalTarget === primaryReal ||
+    canonicalTarget === path.dirname(expectedReal)
+  ) {
     return yield* invalid();
   }
 });

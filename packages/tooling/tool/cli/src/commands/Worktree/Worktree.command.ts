@@ -44,8 +44,9 @@ import { ReferenceWorkspace, referenceWorkspaceLayer } from "../Refs/index.ts";
 import { recordSweepDone } from "../Session/SessionLedger.service.ts";
 import { renderAttemptJournalExport } from "../Yeet/internal/AttemptJournalStore.ts";
 import { worktreeFleetCommand } from "./Fleet.command.ts";
+import { resolveWorktreeRemovalRoots, worktreeRemovalCandidates } from "./internal/RemovalRoots.ts";
 import { worktreeReapCommand } from "./Reap.command.ts";
-import { CLAUDE_WORKTREES_RELATIVE_ROOT, WORKTREES_ROOT_SUFFIX } from "./Worktree.constants.ts";
+import { WORKTREES_ROOT_SUFFIX } from "./Worktree.constants.ts";
 import { WorktreeCommandError, WorktreeExistsError } from "./Worktree.errors.ts";
 import {
   WorktreeInvokerExemption,
@@ -1133,19 +1134,18 @@ const runWorktreeRemove = Effect.fn("Worktree.runWorktreeRemove")(function* (opt
       WorktreeCommandError.new("Worktree name must be one non-empty path component without control characters.")
     )
   );
-  // A lane lives under the sibling root or, for Claude Code's desktop app,
-  // nested inside the clone. Only registered worktrees count, in the order the
-  // standard documents (sibling first), so a stale directory never shadows a
-  // registered lane and a name that is registered in both places is refused
-  // rather than guessed.
+  // A lane lives under one of the clone's worktree roots: the sibling root,
+  // Claude Code's nested root, the T3 Code root, or a fleet roots registry
+  // entry. Only registered worktrees count, in that order (sibling first), so a
+  // stale directory never shadows a registered lane and a name that is
+  // registered in two places is refused rather than guessed.
+  const roots = yield* resolveWorktreeRemovalRoots(context.mainCheckout);
+  const candidates = A.map(worktreeRemovalCandidates({ path, roots, name }), (candidate) => candidate.target);
   const managedTarget = path.join(context.worktreesRoot, name);
-  const nestedTarget = path.join(context.mainCheckout, CLAUDE_WORKTREES_RELATIVE_ROOT, name);
-  const registered = A.filter([managedTarget, nestedTarget], (candidate) =>
-    A.some(context.entries, (entry) => entry.path === candidate)
-  );
+  const registered = A.filter(candidates, (candidate) => A.some(context.entries, (entry) => entry.path === candidate));
   if (A.length(registered) > 1) {
     return yield* WorktreeCommandError.make({
-      message: `Both ${managedTarget} and ${nestedTarget} are registered worktrees named ${name}; retire the nested lane by path with \`bun run beep yeet sweep --retire --lane ${nestedTarget}\` or rename one.`,
+      message: `${A.join(registered, " and ")} are registered worktrees named ${name}; retire the one you mean by path with \`bun run beep yeet sweep --retire --lane <path>\` or rename one.`,
       path: managedTarget,
     });
   }
@@ -1153,7 +1153,7 @@ const runWorktreeRemove = Effect.fn("Worktree.runWorktreeRemove")(function* (opt
   const exists = yield* fs.exists(targetPath).pipe(Effect.orElseSucceed(constFalse));
   if (!exists) {
     return yield* WorktreeCommandError.make({
-      message: `No worktree found at ${managedTarget} or ${nestedTarget}.`,
+      message: `No worktree found at ${A.join(candidates, " or ")}.`,
       path: managedTarget,
     });
   }
@@ -1281,7 +1281,7 @@ const worktreeRemoveCommand = Command.make(
   })
 ).pipe(
   Command.withDescription(
-    "Remove a sibling or nested worktree, optionally preserving dirty or unpushed residue first; the archive fence exempts the invoking session the way yeet sweep --retire does"
+    "Remove a sibling, nested or T3 worktree, optionally preserving dirty or unpushed residue first; the archive fence exempts the invoking session the way yeet sweep --retire does"
   ),
   Command.provide(WorktreeRemovalServiceLive)
 );
