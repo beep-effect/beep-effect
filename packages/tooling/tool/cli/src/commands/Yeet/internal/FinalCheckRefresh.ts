@@ -358,7 +358,9 @@ const isAncestor = (repoRoot: string, ancestor: string, head: string) =>
  * by a strict ancestor of `finalHead`, and returns the head with the fewest
  * commits to `finalHead`. The choice is made by file name before any decode,
  * so a nearer failing, partial or malformed receipt is the one judged and
- * refuses; an older passing receipt never stands in for it.
+ * refuses; an older passing receipt never stands in for it. Subset-run
+ * receipts sit under the `subsets/` directory, which is not a `.json` entry,
+ * so they are never candidates.
  *
  * **Example** (Build the receipt search)
  *
