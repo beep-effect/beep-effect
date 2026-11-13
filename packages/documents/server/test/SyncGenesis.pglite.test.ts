@@ -219,10 +219,10 @@ const assertBindings = Effect.fnUntraced(function* () {
   const rebound = yield* workspaceDestinationId(9);
   expect(rebound).toBe(workspace9);
   const destinations = yield* V.SyncDestination;
-  const state = yield* destinations.state(workspace9);
+  const state = yield* destinations.get(workspace9);
   expect(state).toMatchObject({ orgId: 17, paused: true, cursor: null });
   // The selected legacy error cursor's free text becomes the closed `pollEvents` literal in state.
-  const selected = yield* destinations.state(workspace10);
+  const selected = yield* destinations.get(workspace10);
   expect(selected).toMatchObject({ cursor: "selected-old", cursorError: "pollEvents", paused: false });
   return { workspace9, workspace10 };
 });

@@ -8,7 +8,7 @@ import * as Domain from "@alchemy.run/domain";
 import * as H from "effect/HashMap";
 import * as S from "effect/Schema";
 import { ScopeDenied } from "./Session.context.ts";
-import { authorizeVaultSync, Session } from "./Session.middleware.ts";
+import { Session } from "./Session.middleware.ts";
 import { SyncDestination } from "./SyncDestination.aggregate.ts";
 import { OperationState } from "./SyncOperation.command.ts";
 import { SyncOperationSnapshot } from "./SyncOperationSnapshot.view.ts";
@@ -27,7 +27,6 @@ import * as V from "./Values.ts";
 export class OperationQueue extends Domain.View("OperationQueue", {
   middleware: [Session],
   rejects: [ScopeDenied],
-  validate: (request) => authorizeVaultSync(`OperationQueue.${request.mode}`, { key: request.key }),
   from: [SyncOperationSnapshot],
   key: SyncDestination,
   state: S.HashMap(V.OperationId, OperationState),

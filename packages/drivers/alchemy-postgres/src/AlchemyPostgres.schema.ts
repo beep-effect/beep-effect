@@ -319,6 +319,7 @@ export class StoredSendMeta extends S.Opaque<StoredSendMeta, { readonly brand: u
  *   command: { _tag: "Remind" },
  *   meta: { commandId: "remind", context: {} },
  *   status: "pending",
+ *   due_at: 1000,
  * })
  * Effect.runPromise(program).then((row) => console.log(row.status)) // "pending"
  * ```
@@ -332,6 +333,7 @@ export class ScheduleRow extends S.Opaque<ScheduleRow, { readonly brand: unique 
     command_id: S.String,
     command: S.Unknown,
     meta: StoredSendMeta,
+    due_at: S.Finite,
     status: ScheduleStatus,
   }).pipe(
     $I.annoteSchema("ScheduleRow", {

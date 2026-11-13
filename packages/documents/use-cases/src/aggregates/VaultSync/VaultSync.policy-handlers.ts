@@ -9,6 +9,7 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import { VaultSyncReadAccess } from "./VaultSync.access.ts";
 import {
   ConflictRegistration,
   ConflictReviews,
@@ -39,7 +40,7 @@ const itemOperationSlots = Effect.gen(function* () {
     reason: V.SupersedeReason,
     commandId: string
   ) {
-    const current = yield* operations.state(id);
+    const current = yield* operations.get(id);
     if (O.exists(O.fromNullOr(current), (record) => record.input.itemId === itemId))
       yield* operations.send(id, V.SupersedeOperation.make({ reason }), { commandId });
   });
@@ -73,7 +74,7 @@ const itemOperationSlots = Effect.gen(function* () {
 });
 
 /**
- * Pure aggregate-dispatch handlers; no Box or filesystem adapter is called here.
+ * Aggregate-dispatch handlers and public read authorization; no Box or filesystem adapter is called here.
  *
  * **Example** (Inspect declaration)
  * ```ts
@@ -84,6 +85,7 @@ const itemOperationSlots = Effect.gen(function* () {
  * @since 0.0.0
  */
 export const VaultSyncPolicies = Layer.mergeAll(
+  VaultSyncReadAccess,
   ConflictRegistration.toLayer(
     Effect.gen(function* () {
       const conflicts = yield* V.SyncConflict;
@@ -116,7 +118,7 @@ export const VaultSyncPolicies = Layer.mergeAll(
           Effect.matchEffect({
             onSuccess: () => Effect.succeed(true),
             onFailure: Effect.fnUntraced(function* () {
-              const current = yield* destinations.state(c.destinationId);
+              const current = yield* destinations.get(c.destinationId);
               const currentKey = current._tag === "Registered" ? V.reservationKey(current) : null;
               if (currentKey !== source.id)
                 yield* claims.send(source.id, V.ReleaseDestinationName.make({ destinationId: c.destinationId }), {
@@ -180,7 +182,7 @@ export const VaultSyncPolicies = Layer.mergeAll(
           // review request, in `OpenConflicts` for another review instead of closing it unapplied.
           if (!queued) return;
           // A tracked item takes the correction as its slot so the next pass pumps it.
-          const tracked = yield* items.state(correction.input.itemId);
+          const tracked = yield* items.get(correction.input.itemId);
           if (tracked !== null)
             yield* items.send(
               correction.input.itemId,
@@ -256,7 +258,7 @@ export const VaultSyncPolicies = Layer.mergeAll(
       const queue = yield* V.OperationQueue;
       const operations = yield* V.SyncOperation;
       return Effect.fn(function* ({ source, envelope }) {
-        const rows = yield* queue.query(source);
+        const rows = yield* queue.get(source);
         if (O.isNone(rows)) return;
         for (const [id, s] of rows.value)
           if (s?.status === "failed")

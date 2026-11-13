@@ -2,7 +2,9 @@ import * as Domain from "@alchemy.run/domain";
 import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import { layer } from "@effect/vitest";
 import { assertTrue, strictEqual } from "@effect/vitest/utils";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
+import { constant } from "effect/Function";
 import * as H from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -27,7 +29,15 @@ class PureVault extends Domain.Model("PureVault", {
     V.OperationQueue,
   ],
 }) {}
-const hosted = PureVault.layer(Layer.empty).pipe(Layer.provide(Domain.InMemory));
+const allowReads = Effect.succeed(constant(Effect.void));
+const hosted = PureVault.layer(
+  Layer.mergeAll(
+    V.DestinationList.toLayer(allowReads),
+    V.OpenConflicts.toLayer(allowReads),
+    V.OperationQueue.toLayer(allowReads),
+    V.VaultSyncStatus.toLayer(allowReads)
+  )
+).pipe(Layer.provide(Domain.InMemory), Layer.provide(SecureRandom.layerWebCrypto));
 const destination = V.DestinationId.make("documents_sync_destination_avaultdomainmodel");
 const item = V.ItemId.make("documents_sync_item_a1");
 const operation = V.OperationId.make("documents_sync_operation_a1");
@@ -179,7 +189,7 @@ layer(hosted, { excludeTestServices: true, timeout: "20 seconds" })("pure read c
       });
       yield* registry.send(destination, V.RecordConflict.make({ record }));
       yield* conflicts.send(conflict, V.ConfirmConflict.make({ record }));
-      yield* eventually(open.query(V.SyncDestination.ref(destination)), (s) => O.isSome(s) && H.size(s.value) === 1);
+      yield* eventually(open.get(V.SyncDestination.ref(destination)), (s) => O.isSome(s) && H.size(s.value) === 1);
       // A correction keyed off its own operation id could never queue; review refuses it up front.
       const unreachable = yield* conflicts
         .send(
@@ -208,14 +218,14 @@ layer(hosted, { excludeTestServices: true, timeout: "20 seconds" })("pure read c
         conflict,
         V.ConfirmConflictReview.make({ remoteEventId: "event1", workspaceId: 1, destinationId: destination })
       );
-      yield* eventually(open.query(V.SyncDestination.ref(destination)), (s) => O.isSome(s) && H.size(s.value) === 0);
+      yield* eventually(open.get(V.SyncDestination.ref(destination)), (s) => O.isSome(s) && H.size(s.value) === 0);
       yield* eventually(
-        queue.query(V.SyncDestination.ref(destination)),
+        queue.get(V.SyncDestination.ref(destination)),
         (s) => O.isSome(s) && O.exists(H.get(s.value, superseded), (v) => v?.status === "superseded")
       );
-      yield* eventually(list.query(V.WorkspaceKey.make("1:1")), (s) => O.isSome(s) && H.size(s.value) === 1);
+      yield* eventually(list.get(V.WorkspaceKey.make("1:1")), (s) => O.isSome(s) && H.size(s.value) === 1);
       const summary = yield* eventually(
-        status.query(V.SyncDestination.ref(destination)),
+        status.get(V.SyncDestination.ref(destination)),
         (s) => O.isSome(s) && H.size(s.value.items) === 1 && H.size(s.value.operations) === 2
       );
       const present = O.isSome(summary);

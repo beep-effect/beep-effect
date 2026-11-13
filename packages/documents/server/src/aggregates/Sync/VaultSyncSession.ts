@@ -120,14 +120,14 @@ const makeResolver = Effect.fnUntraced(function* (sourceKind: V.TransportKind, b
     return yield* memberships.read(request.principal.userId, V.VaultSyncScope.make(request));
   }, annotateVaultSyncOutcome);
   const registered = Effect.fn("VaultSyncSession.registered", traced)(function* (destinationId: V.DestinationId) {
-    const state = yield* destinations.state(destinationId);
+    const state = yield* destinations.get(destinationId);
     if (state._tag !== "Registered") return yield* V.ScopeDenied.make({});
     return V.VaultSyncScope.make(state);
   }, annotateVaultSyncOutcome);
   // A conflict's scope is its destination's, and the two must agree on the workspace.
   const conflictScope = Effect.fn("VaultSyncSession.conflictScope")(function* (id: string) {
     const conflictId = yield* decode(V.ConflictId, id);
-    const conflict = yield* conflicts.state(conflictId);
+    const conflict = yield* conflicts.get(conflictId);
     if (conflict === null) return yield* V.ScopeDenied.make({});
     const owner = yield* registered(conflict.destinationId);
     if (owner.workspaceId !== conflict.workspaceId) return yield* V.ScopeDenied.make({});

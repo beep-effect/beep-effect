@@ -109,12 +109,12 @@ describe("VaultSyncPass SQL durability", () => {
             Effect.timeout("20 seconds")
           );
           if (phase === "before-poll") {
-            const destination = yield* Context.get(old, V.SyncDestination).state(destinationId);
+            const destination = yield* Context.get(old, V.SyncDestination).get(destinationId);
             if (destination._tag !== "Registered") return;
             const file = yield* Effect.fromOption(H.get(destination.paths, V.VaultRelPath.make("folder/file.txt")));
             const folder = yield* Effect.fromOption(H.get(destination.paths, V.VaultRelPath.make("folder")));
-            const item = yield* Context.get(old, V.SyncItem).state(file);
-            const parent = yield* Context.get(old, V.SyncItem).state(folder);
+            const item = yield* Context.get(old, V.SyncItem).get(file);
+            const parent = yield* Context.get(old, V.SyncItem).get(folder);
             const remoteId = yield* Effect.fromOption(O.fromNullishOr(item?.remoteId));
             const parentRemoteId = yield* Effect.fromOption(O.fromNullishOr(parent?.remoteId));
             yield* fixture.injectRemoteEvent(
@@ -164,7 +164,7 @@ describe("VaultSyncPass SQL durability", () => {
           // Measure this run against the suite fixture counts captured before starting.
           expect(counts.ensureFolder - beforeCounts.ensureFolder).toBe(1);
           expect(counts.uploadFile - beforeCounts.uploadFile).toBe(2);
-          const state = yield* Context.get(fresh, V.SyncDestination).state(destinationId);
+          const state = yield* Context.get(fresh, V.SyncDestination).get(destinationId);
           expect(state._tag).toBe("Registered");
           if (state._tag !== "Registered") return;
           const fileId = yield* Effect.fromOption(H.get(state.paths, V.VaultRelPath.make("folder/file.txt")));
@@ -218,7 +218,7 @@ describe("VaultSyncPass SQL durability", () => {
         const failed = yield* Context.get(runtime, VaultSyncPass).start("failing-pass", { destinationId: failing });
         const failedResult = yield* failed.result.pipe(Effect.timeout("20 seconds"));
         expect(failedResult).toEqual({ operationsSucceeded: 0, conflicts: 0 });
-        const state = yield* destinations.state(failing);
+        const state = yield* destinations.get(failing);
         expect(state._tag === "Registered" ? state.cursorError : null).not.toBeNull();
         const paused = V.DestinationId.make("documents_sync_destination_apaused");
         yield* destinations.send(paused, V.RegisterDestination.make({ orgId: 1, workspaceId: 1, name: "paused" }));
