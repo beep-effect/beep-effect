@@ -8,6 +8,7 @@ import {
   ResidueDrainJournalEntry,
   ResidueDrainLivenessReadings,
   ResidueDrainProbe,
+  renderResidueReportLinesForTesting,
   runResidueReap,
 } from "@beep/repo-cli/test/Worktree";
 import { AttemptJournalStore } from "@beep/repo-cli/test/Yeet";
@@ -63,11 +64,6 @@ const DrainTestLayer = Layer.provideMerge(
   Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
 );
 
-const makeTempDirectory = FileSystem.FileSystem.use((fs) => fs.makeTempDirectory({ prefix: "residue-drain-test-" }));
-
-const removeTempDirectory = (root: string) =>
-  FileSystem.FileSystem.use((fs) => fs.remove(root, { force: true, recursive: true }));
-
 const run = Effect.fn("ResidueDrainTest.run")(function* (cwd: string, command: string, args: ReadonlyArray<string>) {
   const result = yield* runRepoCommandCapture(command, args, cwd);
   expect(result.exitCode, result.output).toBe(0);
@@ -90,9 +86,10 @@ const cloneOrigin = Effect.fn("ResidueDrainTest.cloneOrigin")(function* (project
 
 // home/projects holds a bare origin, the invoking clone, a clone with one linked lane, and a
 // clone carrying an unpushed branch and a stash.
-const makeFleet = Effect.fn("ResidueDrainTest.makeFleet")(function* (root: string) {
+const makeFleet = Effect.fn("ResidueDrainTest.makeFleet")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "residue-drain-test-" });
   const home = path.join(root, "home");
   const projects = path.join(home, "projects");
   const state = path.join(home, "state", "fleet", "github.com__o__r");
@@ -201,200 +198,197 @@ const journal = Effect.fn("ResidueDrainTest.journal")(function* (fleet: Fleet) {
   return yield* Effect.forEach(A.filter(Str.split("\n")(text), Str.isNonEmpty), (line) => decodeJournalLine(line));
 });
 
-const withFleet = <A, E, R>(body: (fleet: Fleet) => Effect.Effect<A, E, R>) =>
-  Effect.acquireUseRelease(makeTempDirectory, (root) => Effect.flatMap(makeFleet(root), body), removeTempDirectory);
-
 describe("residue reap drainable class", () => {
   it.layer(DrainTestLayer, { timeout: "60 seconds" })("drain predicate", (it) => {
     it.effect("reports per-checkout drain reasons on a dry run and starts the grace window", () =>
-      withFleet((fleet) =>
-        Effect.gen(function* () {
-          const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
-          const report = yield* reap(fleet, fleetProbe(fleet, registry), { nowMillis: NOW, classes: ["drainable"] });
-          expect(report.applied).toBe(false);
-          expect(report.drainGraceDays).toBe(7);
-          expect(report.drainDiskBefore?.legacyClones).toBe(3);
+      Effect.gen(function* () {
+        const fleet = yield* makeFleet();
+        const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
+        const report = yield* reap(fleet, fleetProbe(fleet, registry), { nowMillis: NOW, classes: ["drainable"] });
+        expect(report.applied).toBe(false);
+        expect(report.drainGraceDays).toBe(7);
+        expect(report.drainDiskBefore?.legacyClones).toBe(3);
 
-          const lane = drainRow(report, fleet.lane);
-          expect(lane.action).toBe("skip");
-          expect(lane.skipReason).toBe("drain-grace");
-          expect(lane.drain?.drainable).toBe(true);
-          expect(lane.drain?.seatRole).toBe("adopted");
-          expect(outcomeOf(lane, "liveness")).toBe("pass");
-          expect(outcomeOf(lane, "clean-tree")).toBe("pass");
-          expect(outcomeOf(lane, "grace-window")).toBe("fail");
+        const lane = drainRow(report, fleet.lane);
+        expect(lane.action).toBe("skip");
+        expect(lane.skipReason).toBe("drain-grace");
+        expect(lane.drain?.drainable).toBe(true);
+        expect(lane.drain?.seatRole).toBe("adopted");
+        expect(outcomeOf(lane, "liveness")).toBe("pass");
+        expect(outcomeOf(lane, "clean-tree")).toBe("pass");
+        expect(outcomeOf(lane, "grace-window")).toBe("fail");
 
-          const clone = drainRow(report, fleet.clone);
-          expect(clone.skipReason).toBe("drain-blocked");
-          expect(clone.drain?.seatRole).toBe("legacy");
-          expect(outcomeOf(clone, "owned-worktrees")).toBe("fail");
-          expect(outcomeOf(clone, "clean-tree")).toBe("not-evaluated");
+        const clone = drainRow(report, fleet.clone);
+        expect(clone.skipReason).toBe("drain-blocked");
+        expect(clone.drain?.seatRole).toBe("legacy");
+        expect(outcomeOf(clone, "owned-worktrees")).toBe("fail");
+        expect(outcomeOf(clone, "clean-tree")).toBe("not-evaluated");
 
-          expect(outcomeOf(drainRow(report, fleet.invoker), "invoking-checkout")).toBe("fail");
-          expect(outcomeOf(drainRow(report, fleet.stray), "local-only-work")).toBe("bundle-required");
+        expect(outcomeOf(drainRow(report, fleet.invoker), "invoking-checkout")).toBe("fail");
+        expect(outcomeOf(drainRow(report, fleet.stray), "local-only-work")).toBe("bundle-required");
 
-          const rows = yield* Ref.get(registry);
-          expect(rowFor(rows, fleet.lane).drainStatus).toBe("draining");
-          expect(rowFor(rows, fleet.clone).drainStatus).toBe("active");
-          yield* expectExists(fleet.lane, true);
-        })
-      )
+        const rows = yield* Ref.get(registry);
+        expect(rowFor(rows, fleet.lane).drainStatus).toBe("draining");
+        expect(rowFor(rows, fleet.clone).drainStatus).toBe("active");
+        yield* expectExists(fleet.lane, true);
+      })
     );
 
     it.effect("removes a lane only after its grace window and only when drainable is named", () =>
-      withFleet((fleet) =>
-        Effect.gen(function* () {
-          const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
-          const probe = fleetProbe(fleet, registry);
-          yield* reap(fleet, probe, { nowMillis: NOW, classes: ["drainable"] });
+      Effect.gen(function* () {
+        const fleet = yield* makeFleet();
+        const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
+        const probe = fleetProbe(fleet, registry);
+        yield* reap(fleet, probe, { nowMillis: NOW, classes: ["drainable"] });
 
-          const early = yield* reap(fleet, probe, { nowMillis: NOW + 3 * DAY, apply: true, classes: ["drainable"] });
-          expect(drainRow(early, fleet.lane).skipReason).toBe("drain-grace");
+        const early = yield* reap(fleet, probe, { nowMillis: NOW + 3 * DAY, apply: true, classes: ["drainable"] });
+        expect(drainRow(early, fleet.lane).skipReason).toBe("drain-grace");
 
-          const unnamed = yield* reap(fleet, probe, { nowMillis: NOW + 8 * DAY, apply: true });
-          expect(drainRow(unnamed, fleet.lane).skipReason).toBe("drain-opt-in");
-          yield* expectExists(fleet.lane, true);
+        const unnamed = yield* reap(fleet, probe, { nowMillis: NOW + 8 * DAY, apply: true });
+        expect(drainRow(unnamed, fleet.lane).skipReason).toBe("drain-opt-in");
+        yield* expectExists(fleet.lane, true);
 
-          const wave = yield* reap(fleet, probe, { nowMillis: NOW + 8 * DAY, apply: true, classes: ["drainable"] });
-          // The stray clone met the predicate over the same window, so the wave bundles and drains it too.
-          expect(drainRow(wave, fleet.lane).action).toBe("worktree-remove");
-          expect(drainRow(wave, fleet.stray).action).toBe("remove-dir");
-          expect(wave.reapedCount).toBe(2);
-          yield* expectExists(fleet.lane, false);
-          expect(wave.drainDiskBefore?.legacyClones).toBe(3);
-          expect(wave.drainDiskAfter?.legacyClones).toBe(2);
-          const worktrees = yield* run(fleet.clone, "git", ["worktree", "list", "--porcelain"]);
-          expect(Str.includes(fleet.lane)(worktrees)).toBe(false);
+        const wave = yield* reap(fleet, probe, { nowMillis: NOW + 8 * DAY, apply: true, classes: ["drainable"] });
+        // The stray clone met the predicate over the same window, so the wave bundles and drains it too.
+        expect(drainRow(wave, fleet.lane).action).toBe("worktree-remove");
+        expect(drainRow(wave, fleet.stray).action).toBe("remove-dir");
+        expect(wave.reapedCount).toBe(2);
+        yield* expectExists(fleet.lane, false);
+        expect(wave.drainDiskBefore?.legacyClones).toBe(3);
+        expect(wave.drainDiskAfter?.legacyClones).toBe(2);
+        const rendered = A.join(renderResidueReportLinesForTesting(wave), "\n");
+        expect(rendered).toContain("== fleet drain ==");
+        expect(rendered).toContain("drain grace window: 7d");
+        expect(rendered).toContain("legacy clones before: 3 clone(s)");
+        expect(rendered).toContain("legacy clones after: 2 clone(s)");
+        expect(rendered).toContain("blocked-by=invoking-checkout");
+        const worktrees = yield* run(fleet.clone, "git", ["worktree", "list", "--porcelain"]);
+        expect(Str.includes(fleet.lane)(worktrees)).toBe(false);
 
-          const entries = yield* journal(fleet);
-          const entry = O.getOrUndefined(A.findFirst(entries, (line) => line.checkout === fleet.lane));
-          expect(entry?.outcome).toBe("removed");
-          const passed = A.map(
-            A.filter(entry?.checks ?? [], (result) => result.outcome === "pass"),
-            (result) => result.check
-          );
-          expect(passed).toEqual(
-            expect.arrayContaining([
-              "open-pr",
-              "proof-unit",
-              "liveness",
-              "clean-tree",
-              "local-only-work",
-              "owned-worktrees",
-              "grace-window",
-            ])
-          );
-          const retired = yield* Ref.get(registry);
-          expect(rowFor(retired, fleet.lane).drainStatus).toBe("retired");
+        const entries = yield* journal(fleet);
+        const entry = O.getOrUndefined(A.findFirst(entries, (line) => line.checkout === fleet.lane));
+        expect(entry?.outcome).toBe("removed");
+        const passed = A.map(
+          A.filter(entry?.checks ?? [], (result) => result.outcome === "pass"),
+          (result) => result.check
+        );
+        expect(passed).toEqual(
+          expect.arrayContaining([
+            "open-pr",
+            "proof-unit",
+            "liveness",
+            "clean-tree",
+            "local-only-work",
+            "owned-worktrees",
+            "grace-window",
+          ])
+        );
+        const retired = yield* Ref.get(registry);
+        expect(rowFor(retired, fleet.lane).drainStatus).toBe("retired");
 
-          // With its lane gone the clone starts its own grace window.
-          const next = yield* reap(fleet, probe, { nowMillis: NOW + 9 * DAY, classes: ["drainable"] });
-          expect(outcomeOf(drainRow(next, fleet.clone), "owned-worktrees")).toBe("pass");
-          expect(drainRow(next, fleet.clone).skipReason).toBe("drain-grace");
-        })
-      )
+        // With its lane gone the clone starts its own grace window.
+        const next = yield* reap(fleet, probe, { nowMillis: NOW + 9 * DAY, classes: ["drainable"] });
+        expect(outcomeOf(drainRow(next, fleet.clone), "owned-worktrees")).toBe("pass");
+        expect(drainRow(next, fleet.clone).skipReason).toBe("drain-grace");
+      })
     );
 
     it.effect("bundles an unpushed branch and a stash before removing a clone, never without a bundle", () =>
-      withFleet((fleet) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
-          const probe = fleetProbe(fleet, registry);
-          yield* reap(fleet, probe, { nowMillis: NOW, classes: ["drainable"] });
+      Effect.gen(function* () {
+        const fleet = yield* makeFleet();
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
+        const probe = fleetProbe(fleet, registry);
+        yield* reap(fleet, probe, { nowMillis: NOW, classes: ["drainable"] });
 
-          // A file where the bundle directory belongs makes the bundle unwritable.
-          const bundles = path.join(fleet.state, "drain-bundles");
-          yield* fs.writeFileString(bundles, "not a directory\n");
-          const refused = yield* reap(fleet, probe, { nowMillis: NOW + 8 * DAY, apply: true, classes: ["drainable"] });
-          expect(drainRow(refused, fleet.stray).skipReason).toBe("drain-bundle-failed");
-          yield* expectExists(fleet.stray, true);
+        // A file where the bundle directory belongs makes the bundle unwritable.
+        const bundles = path.join(fleet.state, "drain-bundles");
+        yield* fs.writeFileString(bundles, "not a directory\n");
+        const refused = yield* reap(fleet, probe, { nowMillis: NOW + 8 * DAY, apply: true, classes: ["drainable"] });
+        expect(drainRow(refused, fleet.stray).skipReason).toBe("drain-bundle-failed");
+        yield* expectExists(fleet.stray, true);
 
-          yield* fs.remove(bundles);
-          const wave = yield* reap(fleet, probe, { nowMillis: NOW + 8 * DAY, apply: true, classes: ["drainable"] });
-          const removed = drainRow(wave, fleet.stray);
-          expect(removed.action).toBe("remove-dir");
-          yield* expectExists(fleet.stray, false);
-          const bundle = O.getOrThrow(O.fromNullishOr(removed.drain?.bundle));
-          yield* expectExists(bundle, true);
-          yield* run(fleet.clone, "git", ["bundle", "verify", bundle]);
-          const heads = yield* run(fleet.clone, "git", ["bundle", "list-heads", bundle]);
-          expect(Str.includes("refs/heads/unpushed")(heads)).toBe(true);
-          expect(Str.includes("refs/beep-drain/stash-0")(heads)).toBe(true);
+        yield* fs.remove(bundles);
+        const wave = yield* reap(fleet, probe, { nowMillis: NOW + 8 * DAY, apply: true, classes: ["drainable"] });
+        const removed = drainRow(wave, fleet.stray);
+        expect(removed.action).toBe("remove-dir");
+        yield* expectExists(fleet.stray, false);
+        const bundle = O.getOrThrow(O.fromNullishOr(removed.drain?.bundle));
+        yield* expectExists(bundle, true);
+        yield* run(fleet.clone, "git", ["bundle", "verify", bundle]);
+        const heads = yield* run(fleet.clone, "git", ["bundle", "list-heads", bundle]);
+        expect(Str.includes("refs/heads/unpushed")(heads)).toBe(true);
+        expect(Str.includes("refs/beep-drain/stash-0")(heads)).toBe(true);
 
-          const entries = yield* journal(fleet);
-          const outcomes = A.map(
-            A.filter(entries, (entry) => entry.checkout === fleet.stray),
-            (entry) => [entry.outcome, entry.reason, entry.bundle] as const
-          );
-          expect(outcomes).toEqual([
-            ["refused", "drain-bundle-failed", null],
-            ["removed", null, bundle],
-          ]);
-        })
-      )
+        const entries = yield* journal(fleet);
+        const outcomes = A.map(
+          A.filter(entries, (entry) => entry.checkout === fleet.stray),
+          (entry) => [entry.outcome, entry.reason, entry.bundle] as const
+        );
+        expect(outcomes).toEqual([
+          ["refused", "drain-bundle-failed", null],
+          ["removed", null, bundle],
+        ]);
+      })
     );
 
     it.effect("refuses unknown liveness and a clone whose objects another clone borrows", () =>
-      withFleet((fleet) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          yield* fs.writeFileString(
-            path.join(fleet.invoker, ".git", "objects", "info", "alternates"),
-            `${path.join(fleet.stray, ".git", "objects")}\n`
-          );
-          const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
-          const probe = fleetProbe(fleet, registry, (checkout) =>
-            Str.Equivalence(checkout, fleet.lane) ? UNREADABLE_MTIME : DORMANT
-          );
-          yield* reap(fleet, probe, { nowMillis: NOW, classes: ["drainable"] });
-          const report = yield* reap(fleet, probe, { nowMillis: NOW + 30 * DAY, apply: true, classes: ["drainable"] });
+      Effect.gen(function* () {
+        const fleet = yield* makeFleet();
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* fs.writeFileString(
+          path.join(fleet.invoker, ".git", "objects", "info", "alternates"),
+          `${path.join(fleet.stray, ".git", "objects")}\n`
+        );
+        const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
+        const probe = fleetProbe(fleet, registry, (checkout) =>
+          Str.Equivalence(checkout, fleet.lane) ? UNREADABLE_MTIME : DORMANT
+        );
+        yield* reap(fleet, probe, { nowMillis: NOW, classes: ["drainable"] });
+        const report = yield* reap(fleet, probe, { nowMillis: NOW + 30 * DAY, apply: true, classes: ["drainable"] });
 
-          const lane = drainRow(report, fleet.lane);
-          expect(lane.skipReason).toBe("drain-blocked");
-          expect(outcomeOf(lane, "liveness")).toBe("probe-failed");
-          const stray = drainRow(report, fleet.stray);
-          expect(stray.skipReason).toBe("drain-blocked");
-          expect(outcomeOf(stray, "object-borrowers")).toBe("fail");
-          expect(report.reapedCount).toBe(0);
-          yield* expectExists(fleet.lane, true);
-          yield* expectExists(fleet.stray, true);
-          const observed = yield* Ref.get(registry);
-          expect(rowFor(observed, fleet.lane).drainingSince).toBeNull();
-        })
-      )
+        const lane = drainRow(report, fleet.lane);
+        expect(lane.skipReason).toBe("drain-blocked");
+        expect(outcomeOf(lane, "liveness")).toBe("probe-failed");
+        const stray = drainRow(report, fleet.stray);
+        expect(stray.skipReason).toBe("drain-blocked");
+        expect(outcomeOf(stray, "object-borrowers")).toBe("fail");
+        expect(report.reapedCount).toBe(0);
+        yield* expectExists(fleet.lane, true);
+        yield* expectExists(fleet.stray, true);
+        const observed = yield* Ref.get(registry);
+        expect(rowFor(observed, fleet.lane).drainingSince).toBeNull();
+      })
     );
 
     it.effect("restarts the grace window when HEAD moves", () =>
-      withFleet((fleet) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
-          const probe = fleetProbe(fleet, registry);
-          yield* reap(fleet, probe, { nowMillis: NOW, classes: ["drainable"] });
-          yield* configure(fleet.lane);
-          yield* fs.writeFileString(path.join(fleet.lane, "lane.txt"), "moved\n");
-          yield* run(fleet.lane, "git", ["add", "lane.txt"]);
-          yield* run(fleet.lane, "git", ["commit", "--quiet", "-m", "lane work"]);
+      Effect.gen(function* () {
+        const fleet = yield* makeFleet();
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
+        const probe = fleetProbe(fleet, registry);
+        yield* reap(fleet, probe, { nowMillis: NOW, classes: ["drainable"] });
+        yield* configure(fleet.lane);
+        yield* fs.writeFileString(path.join(fleet.lane, "lane.txt"), "moved\n");
+        yield* run(fleet.lane, "git", ["add", "lane.txt"]);
+        yield* run(fleet.lane, "git", ["commit", "--quiet", "-m", "lane work"]);
 
-          const report = yield* reap(fleet, probe, { nowMillis: NOW + 8 * DAY, apply: true, classes: ["drainable"] });
-          expect(drainRow(report, fleet.lane).skipReason).toBe("drain-grace");
-          yield* expectExists(fleet.lane, true);
-        })
-      )
+        const report = yield* reap(fleet, probe, { nowMillis: NOW + 8 * DAY, apply: true, classes: ["drainable"] });
+        expect(drainRow(report, fleet.lane).skipReason).toBe("drain-grace");
+        yield* expectExists(fleet.lane, true);
+      })
     );
 
     it.effect("assesses nothing and warns when the fleet facts are unreadable", () =>
-      withFleet((fleet) =>
-        Effect.gen(function* () {
-          const report = yield* reap(fleet, UNREADABLE_FACTS, { nowMillis: NOW, classes: ["drainable"] });
-          expect(A.filter(report.candidates, (candidate) => candidate.reapClass === "drainable")).toEqual([]);
-          expect(A.some(report.warnings, Str.includes("drainable was not assessed"))).toBe(true);
-        })
-      )
+      Effect.gen(function* () {
+        const fleet = yield* makeFleet();
+        const report = yield* reap(fleet, UNREADABLE_FACTS, { nowMillis: NOW, classes: ["drainable"] });
+        expect(A.filter(report.candidates, (candidate) => candidate.reapClass === "drainable")).toEqual([]);
+        expect(A.some(report.warnings, Str.includes("drainable was not assessed"))).toBe(true);
+      })
     );
   });
 });

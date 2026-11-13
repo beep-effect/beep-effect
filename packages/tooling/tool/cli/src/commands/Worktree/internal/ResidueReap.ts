@@ -94,7 +94,6 @@ import type { BoundRemovalOutcome, DirectoryHandleError } from "../../../interna
 import type { QualitySchedulerError } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import type { ResidueReapSkipReason, ResidueTerminalLaneAuthority } from "./ResidueReap.schemas.ts";
 import type { ResidueDrainAssessment, ResidueDrainDisk } from "./ResidueReapDrain.schemas.ts";
-import type { ResidueDrainContext } from "./ResidueReapDrain.ts";
 import type { ResidueTerminalLaneProbeShape } from "./ResidueTerminalLane.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/internal/ResidueReap");
@@ -2768,6 +2767,8 @@ const applyResidue = (
         { concurrency: 1 }
       )
     : Effect.succeed(A.map(candidates, unapplied));
+
+type ResidueDrainContext = Parameters<typeof prepareResidueDrainRemoval>[0];
 
 type DrainRefusal = {
   readonly reason: ResidueReapSkipReason;

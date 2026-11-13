@@ -145,19 +145,10 @@ type Borrowing = {
   readonly objects: string;
 };
 
-/**
- * Everything one drain pass reads once and every checkout's checks share.
- *
- * **Details**
- *
- * `borrowings` lists every alternates entry of every fleet clone, or `None`
- * when one could not be read; `invoker` is the real path of the checkout
- * running the reap; `cwdProbe` is the reap's process-cwd probe.
- *
- * @category models
- * @since 0.0.0
- */
-export type ResidueDrainContext = {
+// Everything one drain pass reads once and every checkout's checks share: the fleet facts, the
+// invoker's real path, every fleet clone's alternates entries (`None` when one is unreadable),
+// the clock, the grace window and the reap's process-cwd probe.
+type ResidueDrainContext = {
   readonly facts: ResidueDrainFleetFacts;
   readonly invoker: string;
   readonly borrowings: O.Option<ReadonlyArray<{ readonly borrower: string; readonly objects: string }>>;
