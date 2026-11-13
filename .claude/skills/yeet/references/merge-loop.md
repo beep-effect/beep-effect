@@ -139,13 +139,17 @@ inventory is an own change, the lane's net count per finding status (head minus
 its merge base) must also match between R and F: taking main's copy and
 re-running `--write` must not reopen or drop findings. A pass prints R, the own
 changes with their allowance, and R's skipped gates; report it to the
-orchestrator as `final <F> #N receipt <R>`, where F is the sha after the S32
-re-request push. A refusal names R and the files or statuses that broke it.
+orchestrator as `final <F> #N receipt <R>`, where F is the head `yeet ready`
+reports. A refusal names R and the files or statuses that broke it.
 
-It then pushes one empty `chore: re-request beep-reviewer (S32)` commit (beep-reviewer
-ignores heads pushed while draft), only from the flipped head, else it prints the manual
-command; a failed push only warns. Send the sha it prints as the final. Run that printed
-fallback only when `yeet ready` could not push; never push an unprompted S32 by hand.
+It then asks `beep-reviewer` for the review, because the reviewer ignores heads
+pushed while draft. For a PR the shared login authored it posts an exact-head
+request comment and pushes nothing, so the flipped head is the final. Only a PR
+the comment routine does not cover gets one empty
+`chore: re-request beep-reviewer (S32)` commit, pushed from the flipped head
+(else the manual command is printed; a failed push only warns), and then the
+sha it prints is the final. A stack layer never gets that commit
+([`stacks.md`](stacks.md#ready)). Never push an unprompted S32 by hand.
 
 The merge gate carries the wait instead. `merge-ready: yes` needs the
 `review-window-elapsed` criterion: 20 minutes since the later of the latest

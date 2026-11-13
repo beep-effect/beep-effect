@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "citation-engine-install-and-worker-reuse",
+    "title": "Citation Engine Install And Worker Reuse",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": [
+      "research/SOURCES.md",
+      "research/design-2026-11-12.md",
+      "research/design-review-2026-11-12.md"
+    ],
+    "links": {
+      "goals": [
+        "goals/citation-engine-install-once",
+        "goals/citation-regex-worker-v3"
+      ],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-11-12",
+    "updated": "2026-11-12",
+    "retentionReason": "Both graduated goals read research/design-2026-11-12.md and its review as source of truth; keep the packet whole until citation-regex-worker-v3 closes."
+  }
+}

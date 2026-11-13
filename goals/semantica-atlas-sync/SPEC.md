@@ -165,6 +165,25 @@ The rows below are the ones this lane executes against, one line each.
 | R3.f | Verdict map cell amended: positive values written by this packet. |
 | R3.g | Facts lane queued; extractor home deferred to it; verdict lane first. |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug semantica-atlas-sync`; add a `kind: decision` file there, never edit this block._
+
+### Closed by operator ruling (finish board, 2026-11-13): Untouched for more than two months since scaffolding, with an external gate, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling closes this packet without completion: its status becomes `superseded`, the goal schema's terminal non-completion status. It is not `completed-retained`, because the completion gate was not met.
+
+Triage rationale: Untouched for more than two months since scaffolding, with an external gate.
+
+To resume, run `bun run beep goals set-status semantica-atlas-sync active` and re-graduate the next slice.
+
+The packet keeps its full evidence on main instead of being archived (`retentionReason` in `ops/manifest.json`), so re-opening it needs no restore.
+
+Lane chore/finish-board-ruling
+
+Reverse: Re-open with goals set-status semantica-atlas-sync active and re-graduate the next slice
+
+<!-- beep:decisions:end -->
+
 ## Acceptance Criteria
 
 - [ ] **P0** — a one-catalog Notion read succeeds from the operating session;

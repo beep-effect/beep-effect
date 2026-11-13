@@ -101,7 +101,7 @@ Higher sources outrank lower sources when they conflict.
       the review-window start and carries the final-check receipt; a
       changed patch-id or a lane push restarts both. The rewritten heads of
       #3050 and #3051 from the test record are fixtures.
-- [ ] Slice C: one lane publishes a second layer on an open PR through
+- [x] Slice C: one lane publishes a second layer on an open PR through
       Yeet, with the footer, label and monitor; readies it without a push;
       merges both layers from the top through the gate; and retires both
       lanes with `yeet sweep --retire`. The Yeet skill's step 2c says how.
@@ -304,6 +304,22 @@ Lane feat/yeet-two-layer-stacks
 
 Reverse: Allow the S32 fallback on the top layer only, where a push cannot strand a layer above.
 
+### Slice C lands as a proving stack of two small PRs plus the tooling PR, 2026-11-13
+
+The acceptance row needs a real two-layer stack landed through the new code, and its evidence belongs in the PR that flips the row. So the stack is run with the lane's unmerged CLI on two small slice C changes that stand alone, and the tooling PR carries the code, the skill text, the evidence and the flips. The layers are code changes, not docs, so Yeet applies `ready-for-heavy` and the Heavy lanes run on a layer. The first parent, #3170 (the P0 record), could not serve: the shared login flipped it ready one minute after it opened as a draft and merged it ten minutes later, before a layer existed. The layers therefore open with their final-check receipts already written, are flipped by `yeet ready` at once, and carry one unresolved hold thread each until the top is gated. An `owner-merge-hold` label was tried as well and removed within two minutes: any label added after `ready-for-heavy` starts an empty Heavy Admit run, so `ready-for-heavy` had to be re-applied on both layers.
+
+Lane feat/yeet-two-layer-stacks
+
+Reverse: None needed after the fact; a later slice returns to one PR per slice.
+
+### The gate on the top gates both layers and sends one request, 2026-11-13
+
+`yeet merge-gate <pr> <sha>` reads the pull request's merge scope before it decides. On the top of a two-layer stack it gates the lower layer first and then the top with the same strict criteria, clock, tolerances and window flag, pins the lower layer to the head the stack listing gave, requires the top to contain that head (`GET compare`, `behind_by` zero), and sends one `merge-async` request for the top with `bypass_rules: false`. The top keeps its computed squash title and body, which the probes showed reach the top layer only; the lower layer's own default message is predicted and linted instead. After `merged` the lower layer is read back for its own squash commit: a lower layer that does not read merged fails as `merge-unsettled`, and one that merged at another head than the gated one prints a warning, because `sha` pins only the top. `--relaxed` on a group holds as `stack-relaxed`, since a bypass reaches only the lowest layer. A pull request with an open layer above it holds as `stack-below-top` unless the caller passes `--alone`: that protects a stack from a gate loop that merges whatever is met, and keeps bottom-up landing a decision somebody made. More than two open layers, an unlisted pull request and a failed stack or containment read all hold; none is read as a single pull request. A layer's required contexts and its reviewer requirement come from the trunk's ruleset, because its own base is a branch no ruleset targets. `yeet merge`, `yeet gh merge` and the owner checkpoint refuse any pull request whose scope is not single.
+
+Lane feat/yeet-two-layer-stacks
+
+Reverse: Delete StackGate.ts and its call in MergeGate.ts; a stacked pull request then holds on its parent branch's empty ruleset, as before.
+
 ### Layers are linked through the Stacks REST API, not gh stack, 2026-11-13
 
 The P0 probes (research/stack-p0-probes-2026-11.md) created three two-layer stacks with `POST /repos/{owner}/{repo}/stacks` and a bottom-to-top list of PR numbers: 201 in under a second, drafts accepted, refusals as 422 with a sentence. Yeet already creates the PR through REST with its title, body, footer and label, so the link is one more call on the same client. `gh stack` v0.3.0 calls the same endpoints, but `submit` and `push` push every branch with `--force-with-lease`, `link` pushes branch arguments, `init` keeps per-clone tracking state, and `submit` refuses with three remotes unless `remote.pushDefault` is injected. A lane's only push stays the one Yeet proves. The CLI is not a dependency of any Yeet command.
@@ -311,6 +327,22 @@ The P0 probes (research/stack-p0-probes-2026-11.md) created three two-layer stac
 Lane feat/yeet-two-layer-stacks
 
 Reverse: Wrap gh stack link with remote.pushDefault injected through the environment, and drop createStack from GithubRest.
+
+### A layer is published with --stack-on; Yeet's --base stays the trunk, 2026-11-13
+
+`yeet publish --stack-on <pr>` and `yeet open --stack-on <pr>` create the pull request on the parent's branch and link the two through `POST stacks`. `--base` keeps meaning the trunk, so affected planning, final-check and the ruleset read stay on `origin/main` and cover a superset. Only what must see the layer alone changes: the title and body summary come from the commits above the parent's head, base freshness measures the layer's own paths (three-dot from the parent's head, so a parent that moved does not count as the layer's change), and a `--push-only` merge of the parent's branch is accepted. The decision is taken before any commit or push, so a refusal changes nothing: the parent must be open, on the trunk and unstacked, the branch must contain its head, and the trunk must be green. A later publish of the same layer needs no flag: Yeet reads the branch's pull request, finds the open layer below it in the stack, and skips the trunk read because that stack is already open. Yeet never retargets an existing pull request. A link that fails after the create is repaired by running the command again. The label step keeps reading the whole range from the trunk, so a docs-only layer on a code parent is still labelled; that errs toward more CI, never less.
+
+Lane feat/yeet-two-layer-stacks
+
+Reverse: Remove the flag and StackPublish.ts; every Yeet pull request targets the default branch again.
+
+### main is green when each required check's newest completed run passed, 2026-11-13
+
+`yeet publish --stack-on` opens a stack only on a green trunk (decision 2026-11-10-stack-only-on-green-main), so green needs a definition a command can read. main lands a pull request every few minutes and each push cancels the previous Check run: on 2026-11-13 the head and the nine commits under it carried no completed run for eleven of the fifteen required contexts. Yeet therefore reads the newest 30 first-parent commits and, per required context, takes the newest completed run that was not cancelled. Every context passing is green; any context whose newest evidence failed is red and names it; a context with no completed run in those commits is unknown. Red and unknown both refuse, and there is no override flag: the reversal is this file. The read runs only when a lane opens a new layer, never on a later push of an existing one, because that stack is already open.
+
+Lane feat/yeet-two-layer-stacks
+
+Reverse: Judge the trunk by its head commit alone, or drop the read and let the lane assert green.
 
 <!-- beep:decisions:end -->
 

@@ -3,15 +3,15 @@
   "initiative": {
     "id": "thread-virtualization",
     "title": "Thread Virtualization",
-    "status": "active",
+    "status": "superseded",
     "created": "2026-08-13",
-    "updated": "2026-08-13",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/thread-virtualization",
-  "lifecycle": "active",
+  "lifecycle": "superseded",
   "mission": "Deliver exact-height virtualization for the editor-stack thread renderer by consuming the @beep/pretext root surface plus a capture pass in the client.",
-  "statusNote": "Editor-stack ownership was confirmed clear by the operator on 2026-08-13. The 2026-07-14 beep-effect6 gate release covered only the desktop shell; this confirmation covers the thread renderer surface.",
+  "statusNote": "Closed (superseded) 2026-11-13 by operator ruling (finish board): Stale since August with nothing started and only bulk-touch activity; close by ruling and re-graduate if UI work resumes. Re-open with `bun run beep goals set-status thread-virtualization active` and re-graduate the next slice. Before the ruling: Editor-stack ownership was confirmed clear by the operator on 2026-08-13. The 2026-07-14 beep-effect6 gate release covered only the desktop shell; this confirmation covers the thread renderer surface.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -68,5 +68,7 @@
     "The @beep/pretext root surface cannot provide the required exact-height contract.",
     "The implementation would absorb dock-kernel residue or unrelated editor work.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval."
-  ]
+  ],
+  "supersededNote": "Closed by operator ruling (finish board, 2026-11-13) without meeting its completion gate; see goals/thread-virtualization/decisions/2026-11-13-finish-board-ruling-close.md.",
+  "retentionReason": "Closed by operator ruling (finish board, 2026-11-13) with a re-open path: the full packet stays on main so `bun run beep goals set-status thread-virtualization active` can resume it or re-graduate the next slice without restoring from the archive."
 }

@@ -225,3 +225,22 @@ Higher sources outrank lower sources when they conflict.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | Proof divergences are baseline rows | `architecture-lab` rows in `architecture.audit-baseline.jsonc` | `canonical-proof-reconciliation` | the proof is fixed in the next packet, not here | that packet's manifest + lab PR burns the rows to zero |
+
+## Decision log
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug slice-topology-audit`; add a `kind: decision` file there, never edit this block._
+
+### Paused by operator ruling (finish board, 2026-11-13): Worthwhile but unstarted and not in flight; pausing reduces open active goals, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
+
+Triage rationale: Worthwhile but unstarted and not in flight; pausing reduces open active goals.
+
+No lane is working on it. Resume with `bun run beep goals set-status slice-topology-audit active` when it is picked up.
+
+Lane chore/finish-board-pause-b2
+
+Reverse: goals set-status slice-topology-audit active when it is picked up
+
+<!-- beep:decisions:end -->

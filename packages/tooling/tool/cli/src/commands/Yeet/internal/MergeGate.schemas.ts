@@ -47,3 +47,24 @@ export class MergeGateCheckRun extends S.Opaque<MergeGateCheckRun, { readonly br
     })
   )
 ) {}
+
+/**
+ * Whether a check run conclusion counts as green for the gate: success,
+ * skipped, or neutral. A pending run (no conclusion) is not green.
+ *
+ * **Example** (Classify conclusions)
+ *
+ * ```ts
+ * import { mergeGateGoodConclusion } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(mergeGateGoodConclusion("skipped")) // true
+ * console.log(mergeGateGoodConclusion(null)) // false
+ * ```
+ *
+ * @param conclusion - The run's conclusion, `null` while it runs.
+ * @returns Whether the run is green.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const mergeGateGoodConclusion = (conclusion: string | null): boolean =>
+  conclusion === "success" || conclusion === "skipped" || conclusion === "neutral";

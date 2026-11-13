@@ -108,6 +108,23 @@ these summaries seed implementation without copying that discussion.
 | 2026-07-14 | Assigned rule-fixture approval to the attorney and made upstream change a reviewed new version. | [`rule-validation-change-control`](../../explorations/solo-firm-docketing/DECISIONS.md#2026-07-14--rule-validation-change-control-locked) |
 | 2026-07-14 | Recorded overlay now and a deliberate doctrine re-vote only after reliability is proven in practice. | [`docket-of-record-trajectory`](../../explorations/solo-firm-docketing/DECISIONS.md#2026-07-14--docket-of-record-trajectory-locked) |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug law-docketing-patent-spine`; add a `kind: decision` file there, never edit this block._
+
+### Paused by operator ruling (finish board, 2026-11-13): Real product value but nothing started and paired with an unstarted reliability goal, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
+
+Triage rationale: Real product value but nothing started and paired with an unstarted reliability goal.
+
+No lane is working on it. Resume with `bun run beep goals set-status law-docketing-patent-spine active` when it is picked up.
+
+Lane chore/finish-board-pause-b1
+
+Reverse: goals set-status law-docketing-patent-spine active when it is picked up
+
+<!-- beep:decisions:end -->
+
 ## Acceptance Criteria
 
 - [ ] One fixture-backed ODP office-action or ingested e-OA case traverses

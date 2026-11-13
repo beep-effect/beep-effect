@@ -72,6 +72,25 @@ Seeded from the exploration; entries here cover only decisions taken inside this
 | --- | --- | --- |
 | 2026-10-05 | Scope, non-goals and constraints inherited from the exploration brief, rabbit holes and no-gos. | `explorations/agent-fleet-layout/DECISIONS.md` |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug ai-metrics-raw-retention`; add a `kind: decision` file there, never edit this block._
+
+### Paused by operator ruling (finish board, 2026-11-13): It is low urgency, blocked on a dependency, and has not started, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
+
+Triage rationale: It is low urgency, blocked on a dependency, and has not started.
+
+Its dependency goals/ops-seat-timers (the `fleet/ops-seat` provider) was closed by the same ruling; resuming this packet means re-opening or re-graduating that work first.
+
+No lane is working on it. Resume with `bun run beep goals set-status ai-metrics-raw-retention active` when it is picked up.
+
+Lane chore/finish-board-pause-b2
+
+Reverse: goals set-status ai-metrics-raw-retention active when it is picked up
+
+<!-- beep:decisions:end -->
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |

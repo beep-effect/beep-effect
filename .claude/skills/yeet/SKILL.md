@@ -57,20 +57,20 @@ git fetch origin && git merge origin/main
    repository denies `git push --force*`. GitHub squash-merge erases
    feature-branch merge commits at land time anyway. `--allow-stale-base` is
    the explicit override when proceeding despite overlap is intended.
-2c. Dependent lanes (`explorations/stacked-pr-adoption`, ruled 2026-10-13).
-   When the change needs another open PR's code:
-   - fold it into that PR while it is still open, coordinating with its
-     owner;
-   - otherwise build on its branch locally, and after it lands replay only
-     your commits onto `origin/main`
-     (`git rebase --onto origin/main <parent-head-sha>`, allowed because
-     your branch is not published yet), then publish.
-
-   Never open a PR against a non-`main` base: no workflow fires on it.
-   Never merge an unlanded PR's branch into yours. A lane blocked by red
-   `main` waits for the declared `unblocks-main` PR, then merges `main`
-   once. Native stacks stay off until that packet's supervised stack test
-   passes (reopened 2026-11-09); the test's own PRs are the one exception.
+2c. Dependent lanes (`goals/yeet-async-merge-and-stacks`, 2026-11-13). When
+   the change needs another open PR's code, fold it into that PR while it is
+   open, or publish it as the second layer of a native stack on it: cut the
+   lane from the parent's branch, then run
+   `bun run beep yeet publish --stack-on <parent-pr> --message "..."`
+   (needs a green `main` and an unstacked parent on `main`). `yeet ready`
+   pushes nothing on a layer, `yeet merge-gate <top-pr> <sha>` gates and
+   merges both layers from the top, and `yeet sweep --retire` retires each
+   lane: [`references/stacks.md`](references/stacks.md). Never open a PR on a
+   non-`main` base any other way (no workflow fires on it), never force-push,
+   rebase or `gh stack rebase|sync|modify` a published branch (adopt a
+   GitHub rewrite with `git switch -C <branch> origin/<branch>`), and never
+   merge an unlanded PR's branch into a lane that is not its layer. A lane
+   blocked by red `main` waits for the `unblocks-main` PR, then merges `main` once.
 3. If the worktree contains unrelated changes, stage only the intended files.
    Never publish unrelated paths silently.
 4. Check for already-running heavyweight quality commands before starting a
@@ -483,7 +483,7 @@ comments exist). Deep review is on-demand:
 passing `yeet final-check` receipt, no required check is red, and every thread
 is answered; refusals name `pr-open`, `no-required-red`, `threads-resolved` or
 `final-check`. A main-merge head that only refreshed inventories or packet files carries an
-ancestor's receipt (`final <F> #N receipt <R>`); that rule, S32, the review window: [`references/merge-loop.md`](references/merge-loop.md#ready).
+ancestor's receipt (`final <F> #N receipt <R>`); that rule, the reviewer request, the review window: [`references/merge-loop.md`](references/merge-loop.md#ready).
 
 ## References
 
@@ -498,5 +498,6 @@ Load these on demand; `SKILL.md` keeps the path, the references keep the depth.
 | [`references/merge-loop.md`](references/merge-loop.md) | heavy admission label, job triage, branch-deletion contract, base-conflict rows, `yeet siblings` |
 | [`references/gh-rest.md`](references/gh-rest.md) | any GitHub call: `yeet gh` instead of `gh pr` |
 | [`references/sweep-retire.md`](references/sweep-retire.md) | `sweep --retire` refusals and holders |
+| [`references/stacks.md`](references/stacks.md) | a two-layer stack: `--stack-on`, `stack-*` holds, adopting a rewritten layer |
 | [`references/run-artifacts.md`](references/run-artifacts.md) | verdict, packets, proof ledger, changeset gate |
 | [`references/failure-handling.md`](references/failure-handling.md) | any failed publish, proof, or hosted job, reading a red job's log mid-run |

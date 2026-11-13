@@ -97,7 +97,7 @@ import {
 } from "./GhOps.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { provideYeetHeadMoveClassifier } from "./HeadMove.ts";
-import { MergeGateCheckRun } from "./MergeGate.schemas.ts";
+import { MergeGateCheckRun, mergeGateGoodConclusion } from "./MergeGate.schemas.ts";
 import { readYeetReviewWindow, renderYeetReviewWindow, YeetReviewWindow } from "./ReviewWindow.ts";
 import { readYeetRulesetRequiredContexts } from "./Settle.ts";
 import { broadcastPacketSiblings } from "./Siblings.ts";
@@ -107,6 +107,16 @@ import {
   SquashCommitlintReport,
   SquashPullRequestFacts,
 } from "./SquashCommitlint.ts";
+import { yeetStackRulesBranch } from "./Stack.ts";
+import {
+  readYeetStackContainment,
+  readYeetStackGatePlan,
+  renderYeetStackLayerSuffix,
+  YeetStackGatePlan,
+  YeetStackMergedLayer,
+  yeetStackLowerHeadDrift,
+  yeetStackLowerMergeCommit,
+} from "./StackGate.ts";
 import {
   gateCountsCheck,
   HeadWorkflowSuitesField,
@@ -120,11 +130,17 @@ import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { GithubCheckRunRecord, GithubWorkflowRunRecord } from "../../../internal/github/index.ts";
+import type {
+  GithubCheckRunRecord,
+  GithubPullRequestRecord,
+  GithubWorkflowRunRecord,
+} from "../../../internal/github/index.ts";
 import type { YeetGithubServices } from "./GhOps.ts";
+import type { SquashCommitlintTarget } from "./SquashCommitlint.ts";
+import type { YeetStackGateRefused, YeetStackGroup } from "./StackGate.ts";
 import type { HeadCheckVerdict, HiddenRequiredCheck, HiddenRequiredState } from "./SuiteShadow.ts";
 
-export { MergeGateCheckRun } from "./MergeGate.schemas.ts";
+export { MergeGateCheckRun, mergeGateGoodConclusion } from "./MergeGate.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/MergeGate");
 
@@ -546,6 +562,11 @@ export const MergeGateHoldReason = LiteralKit([
   "threads-unresolved",
   "merge-failed",
   "merge-unsettled",
+  "stack-unknown",
+  "stack-too-deep",
+  "stack-below-top",
+  "stack-relaxed",
+  "stack-out-of-date",
 ]).pipe($I.annoteSchema("MergeGateHoldReason", { description: "The first unmet merge-gate criterion." }));
 
 /**
@@ -708,27 +729,6 @@ export class MergeGateInput extends S.Opaque<MergeGateInput, { readonly brand: u
     $I.annoteSchema("MergeGateInput", { description: "The read and the caller's assertions the gate decides from." })
   )
 ) {}
-
-/**
- * Whether a check run conclusion counts as green for the gate: success,
- * skipped, or neutral. A pending run (no conclusion) is not green.
- *
- * **Example** (Classify conclusions)
- *
- * ```ts
- * import { mergeGateGoodConclusion } from "@beep/repo-cli/test/Yeet"
- *
- * console.log(mergeGateGoodConclusion("skipped")) // true
- * console.log(mergeGateGoodConclusion(null)) // false
- * ```
- *
- * @param conclusion - The run's conclusion, `null` while it runs.
- * @returns Whether the run is green.
- * @category predicates
- * @since 0.0.0
- */
-export const mergeGateGoodConclusion = (conclusion: string | null): boolean =>
-  conclusion === "success" || conclusion === "skipped" || conclusion === "neutral";
 
 /**
  * The newest run per check name (highest run id), the run a re-run replaced dropped.
@@ -1395,6 +1395,11 @@ const readBaseCommitRuns = (sha: string) =>
     })
   );
 
+const readMergeGatePull = (prNumber: number) =>
+  GithubRest.use((rest) => rest.pullRequest(prNumber)).pipe(
+    Effect.mapError(yeetGithubFailure(`gh api pulls/${prNumber}`))
+  );
+
 // The inherited-red evidence: one compare of base...head names the merge-base
 // commit and the base tip; then every check run on each (one read when they
 // are the same commit). Any read failing yields None, which holds an
@@ -1439,6 +1444,8 @@ const readMergeBaseRuns = Effect.fnUntraced(function* (
  * message is predicted and linted. The thread read is the only call allowed to
  * fail softly, and it fails to `None`, which the decision treats as a hold; a
  * commitlint run that cannot happen is an `unavailable` verdict, held the same way.
+ * `squash` picks the message linted: the one the merge sends, or GitHub's own
+ * default for a stack's lower layer, which the stack merge sends none for.
  *
  * **Example** (Build the read effect)
  *
@@ -1451,10 +1458,11 @@ const readMergeBaseRuns = Effect.fnUntraced(function* (
  * @category workflows
  * @since 0.0.0
  */
-const readMergeGateUsing = Effect.fn("Yeet.readMergeGate")(function* (
+const readMergeGateForPull = Effect.fn("Yeet.readMergeGateForPull")(function* (
   context: RepoRunContext,
-  prNumber: number,
-  authenticatedRules: boolean
+  pull: GithubPullRequestRecord,
+  authenticatedRules: boolean,
+  squash: SquashCommitlintTarget
 ): Effect.fn.Return<
   MergeGateRead,
   YeetCommandError,
@@ -1462,7 +1470,7 @@ const readMergeGateUsing = Effect.fn("Yeet.readMergeGate")(function* (
 > {
   const rest = yield* GithubRest;
   const reviewThreads = yield* ReviewThread;
-  const pull = yield* rest.pullRequest(prNumber).pipe(Effect.mapError(yeetGithubFailure(`gh api pulls/${prNumber}`)));
+  const prNumber = pull.number;
   const checkRuns = yield* rest.checkRuns(pull.headSha).pipe(Effect.mapError(yeetGithubFailure("gh api check-runs")));
   // The suites the check runs report into, so a check only an older run's suite reports is not read as green.
   const workflowRuns = yield* rest
@@ -1474,20 +1482,23 @@ const readMergeGateUsing = Effect.fn("Yeet.readMergeGate")(function* (
     Effect.orElseSucceed(O.none<number>)
   );
   const body = O.liftPredicate(pull.body, Str.isNonEmpty);
-  // The PR's own base decides the required contexts, not the caller's --base.
+  // The PR's own base decides the required contexts, not the caller's --base;
+  // a stack layer is gated on its trunk's rules, which GitHub evaluates at merge.
+  const rulesBranch = yeetStackRulesBranch(pull);
   const legacyRules = authenticatedRules
     ? O.none()
-    : yield* readYeetRulesetRequiredContexts(RepoRunContext.make({ ...context, base: `origin/${pull.baseRef}` }));
+    : yield* readYeetRulesetRequiredContexts(RepoRunContext.make({ ...context, base: `origin/${rulesBranch}` }));
   const nativeRules = authenticatedRules
     ? yield* rest
-        .requiredStatusContexts(pull.baseRef)
+        .requiredStatusContexts(rulesBranch)
         .pipe(Effect.mapError(yeetGithubFailure("read authenticated branch rules")))
     : undefined;
   const requiredContexts =
     nativeRules === undefined ? O.map(legacyRules, (rules) => rules.contexts) : O.some(nativeRules);
   const squashCommitlint = yield* readSquashCommitlint(
     context,
-    SquashPullRequestFacts.make({ number: pull.number, title: pull.title, body })
+    SquashPullRequestFacts.make({ number: pull.number, title: pull.title, body }),
+    squash
   );
   const baseRuns = yield* readMergeBaseRuns(pull.baseRef, pull.headSha);
   return MergeGateRead.make({
@@ -1514,6 +1525,15 @@ const readMergeGateUsing = Effect.fn("Yeet.readMergeGate")(function* (
     readAt: yield* DateTime.now,
     workflowSuites: headWorkflowSuites(workflowRuns, pull.headSha),
   });
+});
+
+const readMergeGateUsing = Effect.fn("Yeet.readMergeGate")(function* (
+  context: RepoRunContext,
+  prNumber: number,
+  authenticatedRules: boolean
+) {
+  const pull = yield* readMergeGatePull(prNumber);
+  return yield* readMergeGateForPull(context, pull, authenticatedRules, "merge-request");
 });
 
 /**
@@ -1558,7 +1578,9 @@ export const readAuthenticatedMergeGate = Effect.fn("Yeet.readAuthenticatedMerge
  * **Details**
  *
  * `bypassRequested` is true only for an S11 merge that asked GitHub to bypass
- * the base's rules over the reds it recorded.
+ * the base's rules over the reds it recorded. `layers` is present only for a
+ * stack merge: every layer the one request landed, bottom to top, each with its
+ * own squash commit; the top fields then describe the top layer.
  *
  * **Example** (A confirmed merge)
  *
@@ -1583,6 +1605,7 @@ export class MergeGateMerged extends S.Opaque<MergeGateMerged, { readonly brand:
     mergeSha: S.String,
     commitTitle: S.NonEmptyString,
     bypassRequested: S.Boolean,
+    layers: YeetStackMergedLayer.pipe(S.Array, S.optionalKey),
   }).pipe($I.annoteSchema("MergeGateMerged", { description: "The squash merge GitHub confirmed." }))
 ) {}
 
@@ -1621,6 +1644,13 @@ export class MergeGateMerged extends S.Opaque<MergeGateMerged, { readonly brand:
  */
 export const mergeGateRequestsBypass = (decision: MergeGateMerge): boolean =>
   decision.relaxed && A.isReadonlyArrayNonEmpty(decision.atMerge);
+
+// The fleet reviewer gate for one pinned head, as the operator login.
+const enforceMergeGateReviewer = (prNumber: number, headSha: string) =>
+  enforceReviewerGate(prNumber, headSha).pipe(
+    withReviewerOperatorClient(process.cwd()),
+    Effect.mapError((error) => YeetCommandError.make({ message: error.message, exitCode: 1 }))
+  );
 
 /**
  * Squash-merge at the pinned head with `<title> (#n)` as the commit title,
@@ -1661,10 +1691,7 @@ export const executeMergeGate = Effect.fn("Yeet.executeMergeGate")(function* (
   YeetCommandError,
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | GithubRest | FileSystem.FileSystem
 > {
-  yield* enforceReviewerGate(decision.prNumber, decision.headSha).pipe(
-    withReviewerOperatorClient(process.cwd()),
-    Effect.mapError((error) => YeetCommandError.make({ message: error.message, exitCode: 1 }))
-  );
+  yield* enforceMergeGateReviewer(decision.prNumber, decision.headSha);
   const bypassRequested = mergeGateRequestsBypass(decision);
   // Send the exact header/body whose commitlint verdict admitted this decision.
   const settled = yield* settleYeetMerge(
@@ -1692,8 +1719,55 @@ export const executeMergeGate = Effect.fn("Yeet.executeMergeGate")(function* (
   });
 });
 
+// A stack merge: the reviewer gate on the lower layer, then the top's own merge
+// (its reviewer gate and ONE strict request, which lands both layers), then the
+// lower layer read back for its own squash commit. The poll names the top's
+// commit only, and a lower layer that did not land is a loud failure.
+const executeMergeGateStack = Effect.fnUntraced(function* (
+  group: YeetStackGroup,
+  lower: MergeGateMerge,
+  top: MergeGateMerge
+) {
+  yield* enforceMergeGateReviewer(lower.prNumber, lower.headSha);
+  const executed = yield* executeMergeGate(top);
+  if (S.is(MergeGateHold)(executed)) return executed;
+  const unsettled = (detail: string): MergeGateHold =>
+    hold(
+      lower.prNumber,
+      "merge-unsettled",
+      `#${top.prNumber} merged as ${sha10(executed.mergeSha)} through stack #${group.stackNumber}, but ${detail}; check stack #${group.stackNumber} by hand before anything else merges`
+    );
+  const readBack = yield* readMergeGatePull(lower.prNumber).pipe(Effect.result);
+  if (Result.isFailure(readBack))
+    return unsettled(`#${lower.prNumber} could not be read back (${readBack.failure.message})`);
+  const lowerCommit = yeetStackLowerMergeCommit(group.lower, readBack.success);
+  if (Result.isFailure(lowerCommit)) return unsettled(lowerCommit.failure);
+  const drift = yeetStackLowerHeadDrift(group.lower, readBack.success);
+  if (O.isSome(drift)) yield* Console.error(`[yeet] WARNING: ${drift.value}`);
+  const layer = (gated: MergeGateMerge, position: number, mergeSha: string) =>
+    YeetStackMergedLayer.make({
+      stackNumber: group.stackNumber,
+      position,
+      prNumber: gated.prNumber,
+      mergeSha,
+      commitTitle: gated.commitTitle,
+    });
+  return MergeGateMerged.make({
+    ...executed,
+    layers: [
+      layer(lower, group.lower.position, lowerCommit.success),
+      layer(top, group.top.position, executed.mergeSha),
+    ],
+  });
+});
+
 /**
  * Options for one `yeet merge-gate` run.
+ *
+ * **Details**
+ *
+ * `alone` (default false) lets a stack layer with an open layer above it merge
+ * by itself; GitHub then force-pushes the layer above onto the trunk.
  *
  * **Example** (Describe one run)
  *
@@ -1722,6 +1796,7 @@ export class MergeGateRunOptions extends S.Opaque<MergeGateRunOptions, { readonl
     forceWindow: S.Boolean,
     relaxed: S.Boolean,
     dryRun: S.Boolean,
+    alone: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
   }).pipe($I.annoteSchema("MergeGateRunOptions", { description: "One merge-gate invocation." }))
 ) {}
 
@@ -1759,6 +1834,52 @@ export const renderMergeGateMergedLine = (merged: MergeGateMerged): string =>
   `MERGED #${merged.prNumber} -> ${Str.slice(0, 10)(merged.mergeSha)} "${merged.commitTitle}" via ${YEET_MERGE_ENDPOINT_NAME}${
     merged.bypassRequested ? ", rules bypass requested (S11)" : ""
   }`;
+
+/**
+ * The lines `yeet merge-gate` prints for a confirmed merge: one for a single
+ * pull request, one per layer for a stack merge, lower layer first.
+ *
+ * **Details**
+ *
+ * Each layer's line names its own squash commit and ends with its place in the
+ * stack; the bypass flag is the one request's.
+ *
+ * **Example** (A single pull request prints one line)
+ *
+ * ```ts
+ * import { MergeGateMerged, renderMergeGateMergedLines } from "@beep/repo-cli/test/Yeet"
+ *
+ * const lines = renderMergeGateMergedLines(
+ *   MergeGateMerged.make({
+ *     prNumber: 7,
+ *     mergeSha: "feedfacefeedface",
+ *     commitTitle: "fix: x (#7)",
+ *     bypassRequested: false,
+ *   })
+ * )
+ * console.log(lines.length) // 1
+ * ```
+ *
+ * @param merged - The confirmed merge.
+ * @returns The rendered lines, without the `[yeet]` prefix.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderMergeGateMergedLines = (merged: MergeGateMerged): ReadonlyArray<string> =>
+  O.match(O.fromUndefinedOr(merged.layers), {
+    onNone: () => [renderMergeGateMergedLine(merged)],
+    onSome: A.map(
+      (layer) =>
+        `${renderMergeGateMergedLine(
+          MergeGateMerged.make({
+            prNumber: layer.prNumber,
+            mergeSha: layer.mergeSha,
+            commitTitle: layer.commitTitle,
+            bypassRequested: merged.bypassRequested,
+          })
+        )}${renderYeetStackLayerSuffix(layer)}`
+    ),
+  });
 
 const s11MergeComment = (decision: MergeGateMerge, merged: MergeGateMerged, windowForced: boolean): string =>
   A.join(
@@ -1834,6 +1955,14 @@ const cancelMergedHeadRuns = Effect.fn("Yeet.cancelMergedHeadRuns")(function* (h
  * files (B2, 2026-11-05). All three are best effort, so a failure prints a
  * warning and the command still succeeds. A dry run does none of them.
  *
+ * A stacked pull request is gated by its merge scope first. A layer with an
+ * open layer above it holds as `stack-below-top` unless `alone` is set; the top
+ * of a two-layer group gates the lower layer too (trunk rules, GitHub's default
+ * squash message, the head the stack listed), then the top, then that the top
+ * contains the lower head, and lands both with one strict request on the top,
+ * printing one merged line per layer. `relaxed` on a group holds as
+ * `stack-relaxed`; an unknown or too deep stack holds too.
+ *
  * **Example** (Build the gate effect)
  *
  * ```ts
@@ -1856,11 +1985,93 @@ export const runMergeGate = Effect.fn("Yeet.runMergeGate")(function* (
   return yield* runMergeGateAsGhLogin(context, options).pipe(provideYeetGhLogin(context.repoRoot));
 });
 
+const failMergeGateHold = Effect.fnUntraced(function* (held: MergeGateHold) {
+  yield* Console.log(`[yeet] ${renderMergeGateDecision(held)}`);
+  return yield* YeetCommandError.make({ message: renderMergeGateDecision(held), exitCode: 1 });
+});
+
+// A stacked pull request the gate does not merge as a single one. A refused
+// layout holds before any layer is decided. A group reads the lower layer with
+// the same reader (trunk rules, GitHub's default squash message), decides both
+// layers strictly with the same clock and flags, lower layer first, requires
+// the top to contain the lower head, and lands both with one request on the top.
+// `gated` is the read of the pull request the caller named: the top of a group.
+const runMergeGateStack = Effect.fnUntraced(function* (
+  context: RepoRunContext,
+  options: MergeGateRunOptions,
+  gated: MergeGateRead,
+  plan: YeetStackGateRefused | YeetStackGroup
+) {
+  if (YeetStackGatePlan.guards.Refused(plan)) {
+    return yield* failMergeGateHold(hold(gated.prNumber, plan.reason, plan.detail));
+  }
+  const group = plan;
+  const lowerRead = yield* readMergeGatePull(group.lower.number).pipe(
+    Effect.flatMap((pull) => readMergeGateForPull(context, pull, false, "github-default"))
+  );
+  yield* Console.log(
+    `[yeet] squash-commitlint #${lowerRead.prNumber} (GitHub's default, stack #${group.stackNumber} layer ${group.lower.position}): ${renderSquashCommitlintVerdict(lowerRead.squashCommitlint.verdict)} (header "${lowerRead.squashCommitlint.message.header}")`
+  );
+  const decide = (read: MergeGateRead, wantSha: string) =>
+    decideMergeGate(
+      MergeGateInput.make({
+        read,
+        options: MergeGateOptions.make({
+          wantSha,
+          now: gated.readAt,
+          tolerate: options.tolerate,
+          forceWindow: options.forceWindow,
+          relaxed: false,
+        }),
+      })
+    );
+  const lower = decide(lowerRead, group.lower.headSha);
+  const top = decide(gated, options.wantSha);
+  const forced = options.forceWindow ? " (review window forced)" : "";
+  yield* Console.log(`[yeet] ${renderMergeGateDecision(lower)}${forced}`);
+  yield* Console.log(`[yeet] ${renderMergeGateDecision(top)}${forced}`);
+  if (lower._tag === "hold") {
+    return yield* YeetCommandError.make({ message: renderMergeGateDecision(lower), exitCode: 1 });
+  }
+  if (top._tag === "hold") {
+    return yield* YeetCommandError.make({ message: renderMergeGateDecision(top), exitCode: 1 });
+  }
+  const outOfDate = yield* readYeetStackContainment(group, gated.headSha);
+  if (O.isSome(outOfDate)) {
+    return yield* failMergeGateHold(hold(top.prNumber, outOfDate.value.reason, outOfDate.value.detail));
+  }
+  if (options.dryRun) {
+    yield* Console.log(
+      `[yeet] dry run: would squash-merge stack #${group.stackNumber} with one request on #${top.prNumber}: #${lower.prNumber} as "${lower.commitTitle}" (GitHub's default) and #${top.prNumber} as "${top.commitTitle}"`
+    );
+    return top;
+  }
+  const executed = yield* executeMergeGateStack(group, lower, top);
+  if (S.is(MergeGateHold)(executed)) return yield* failMergeGateHold(executed);
+  yield* Effect.forEach(renderMergeGateMergedLines(executed), (line) => Console.log(`[yeet] ${line}`), {
+    discard: true,
+  });
+  // B2 (2026-11-05), once per layer the stack merge landed.
+  yield* Effect.forEach(
+    O.getOrElse(O.fromUndefinedOr(executed.layers), A.empty<YeetStackMergedLayer>),
+    (layer) =>
+      broadcastPacketSiblings(context, layer.prNumber, layer.mergeSha).pipe(
+        Effect.catch(warnAfterMerge("the packet sibling broadcast"))
+      ),
+    { discard: true }
+  );
+  return top;
+});
+
 const runMergeGateAsGhLogin = Effect.fnUntraced(function* (context: RepoRunContext, options: MergeGateRunOptions) {
-  const read = yield* readMergeGate(context, options.prNumber);
+  const pull = yield* readMergeGatePull(options.prNumber);
+  const read = yield* readMergeGateForPull(context, pull, false, "merge-request");
   yield* Console.log(
     `[yeet] squash-commitlint #${read.prNumber}: ${renderSquashCommitlintVerdict(read.squashCommitlint.verdict)} (header "${read.squashCommitlint.message.header}")`
   );
+  // A stacked pull request may not be a single merge; a failed stack read is a hold, never `Single`.
+  const plan = yield* readYeetStackGatePlan(pull, { alone: options.alone, relaxed: options.relaxed });
+  if (!YeetStackGatePlan.guards.Single(plan)) return yield* runMergeGateStack(context, options, read, plan);
   const decision = decideMergeGate(
     MergeGateInput.make({
       read,
@@ -1939,6 +2150,7 @@ export class MergeGateCommandOptions extends S.Opaque<MergeGateCommandOptions, {
     forceWindow: S.Boolean,
     relaxed: S.Boolean,
     dryRun: S.Boolean,
+    alone: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
   }).pipe(
     $I.annoteSchema("MergeGateCommandOptions", {
       description: "Parsed yeet merge-gate flags before tolerances are decoded.",
@@ -2015,6 +2227,7 @@ export const runYeetMergeGate = Effect.fn("Yeet.runMergeGateCommand")(function* 
       forceWindow: options.forceWindow,
       relaxed: options.relaxed,
       dryRun: options.dryRun,
+      alone: options.alone,
     })
   );
 });
