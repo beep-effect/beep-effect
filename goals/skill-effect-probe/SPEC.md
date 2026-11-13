@@ -210,6 +210,36 @@ Laws against laws plus skill is the production question because the code laws lo
 
 Reverse: Drop cell A in a later run if B minus A proves uninformative; the records for B and C stay comparable.
 
+### Cell A from an empty plugin, B and C from one with-without run, 2026-11-13
+
+Cell A runs the archived prompt against a skill-less plugin under --ablation none; B and C are the without and with arms of one laws-prompt invocation. No fourth cell.
+
+Reverse: Add a fourth cell (skill without laws) in a new dated analysis rule if the arms prove unequal.
+
+### Known-good solutions stay out of the repository, 2026-11-13
+
+Preflight solutions are fixture TypeScript; they live beside the archive checkout and history records their sha256 and score reports only.
+
+Reverse: Commit them under a lint-excluded path if a reviewer needs to reproduce preflight without the cache.
+
+### Probe records are a new schema next to AgentConventionTrial, 2026-11-13
+
+AgentConventionTrial compares one declared pair of receipts with digest controls; a three-cell, five-run, twelve-task probe needs run records and a clustered report. Run records reuse AgentEffectivenessEvalScoreReport.
+
+Reverse: Fold the probe into AgentConventionTrial if a later comparison needs one shape for both.
+
+### Run to kept directory through tracePath, 2026-11-13
+
+Each --json run entry carries tracePath = <kept dir>/out/trace.jsonl, so case, arm and index tie to the kept directory in one invocation (P0 slice).
+
+Reverse: If a later harness drops tracePath, fall back to one case and one arm per invocation.
+
+### Runs get no Bash and a 40-turn, 900-second budget, 2026-11-13
+
+Allowed tools Read, Write, Edit, Glob, Grep, Skill in every cell; the P0 maximum was 12 turns and 55 seconds.
+
+Reverse: Grant Bash in a later run through a new dated analysis rule; records stay comparable only within one rule.
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

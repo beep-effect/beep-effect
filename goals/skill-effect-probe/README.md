@@ -37,12 +37,19 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started. Next action: launch the goal and run the first
-vertical slice (one task, three cells, two runs each).
+P1 Implement — in progress. P0 passed on 2026-11-12: six runs on
+`sfv4-normalization-003` were scored and tied to case, cell and run through
+the harness `tracePath` ([receipt](./history/p0-slice/README.md)). The probe
+commands (`beep agent-effectiveness evals probe stage|preflight|score|report`),
+the preflight ([12 of 12 pass](./history/preflight.json)) and the
+[analysis rule](./research/2026-11-12-analysis-rule.md) are in. Next: the P2
+scored run.
 
 ## Latest Evidence
 
-Not started.
+- [P0 slice receipt](./history/p0-slice/README.md)
+- [Preflight](./history/preflight.json)
+- [Analysis rule](./research/2026-11-12-analysis-rule.md)
 
 ## Notes
 

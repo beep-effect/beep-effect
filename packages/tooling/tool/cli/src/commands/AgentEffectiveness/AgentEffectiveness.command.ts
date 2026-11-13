@@ -53,6 +53,15 @@ import {
   RunAgentEffectivenessEvalScoreCommandOptions,
   runAgentEffectivenessEvalScoreCommand,
 } from "./internal/EvalScorer.ts";
+import {
+  preflightSkillProbe,
+  runSkillProbeReport,
+  SkillProbePreflightOptions,
+  SkillProbeScoreOptions,
+  SkillProbeStageOptions,
+  scoreSkillProbeRuns,
+  stageSkillProbe,
+} from "./internal/SkillProbe.ts";
 import type {
   AgentEffectivenessAnnotationCheckReport,
   AgentEffectivenessAnnotationPlan,
@@ -683,11 +692,107 @@ const evalsCompareCommand = Command.make(
     runAgentConventionComparison(baseline, candidate, failIncomparable).pipe(Effect.asVoid)
 ).pipe(Command.withDescription("Compare declared convention controls and separate measured outcomes as JSON"));
 
+const probeArchiveFlag = Flag.Directory("archive", { mustExist: true }).pipe(
+  Flag.withDescription("Goals-archive checkout holding goals/skillopt-training-pilot/corpus at the pinned commit")
+);
+const probeStageFlag = Flag.File("stage", { mustExist: true }).pipe(
+  Flag.withDescription("stage.json written by `probe stage`")
+);
+
+const probeStageCommand = Command.make(
+  "stage",
+  {
+    archiveRoot: probeArchiveFlag,
+    outDir: Flag.String("out").pipe(Flag.withDescription("Directory for the staged plugins and stage.json")),
+    runs: Flag.Int("runs").pipe(Flag.withDefault(5), Flag.withDescription("Runs per case and arm")),
+    maxTurns: Flag.Int("max-turns").pipe(Flag.withDefault(40), Flag.withDescription("Agent turn budget")),
+    timeoutSeconds: Flag.Int("timeout-seconds").pipe(
+      Flag.withDefault(900),
+      Flag.withDescription("Agent wall-time budget per run")
+    ),
+  },
+  flow(
+    SkillProbeStageOptions.make,
+    stageSkillProbe,
+    Effect.flatMap((stage) =>
+      printLines([`staged ${stage.tasks.length} tasks; skill ${stage.skillSha256}; laws ${stage.lawsSha256}`])
+    )
+  )
+).pipe(Command.withDescription("Stage the skill effect probe plugins and eval cases for claude plugin eval"));
+
+const probePreflightCommand = Command.make(
+  "preflight",
+  {
+    archiveRoot: probeArchiveFlag,
+    knownGoodRoot: Flag.Directory("known-good", { mustExist: true }).pipe(
+      Flag.withDescription("Directory holding one known-good solution directory per task id")
+    ),
+    stagePath: probeStageFlag,
+    out: Flag.String("out").pipe(Flag.withDescription("Preflight receipt JSON path")),
+  },
+  flow(
+    SkillProbePreflightOptions.make,
+    preflightSkillProbe,
+    Effect.flatMap((preflight) =>
+      printLines(
+        A.map(
+          preflight.rows,
+          (row) => `${row.taskId}: ${row.passed ? "pass" : "DROP"} fixture=${row.fixture.score} ${row.reason}`
+        )
+      )
+    )
+  )
+).pipe(Command.withDescription("Score each untouched fixture and known-good solution before any scored run"));
+
+const probeScoreCommand = Command.make(
+  "score",
+  {
+    archiveRoot: probeArchiveFlag,
+    stagePath: probeStageFlag,
+    resultPath: Flag.File("result", { mustExist: true }).pipe(
+      Flag.withDescription("claude plugin eval --json result file")
+    ),
+    invocation: Flag.String("invocation").pipe(Flag.withDescription("Name of this harness invocation")),
+    withCell: Flag.String("with-cell").pipe(
+      Flag.withDescription("Cell the with arm measures (A, B or C)"),
+      Flag.optional
+    ),
+    withoutCell: Flag.String("without-cell").pipe(
+      Flag.withDescription("Cell the without arm measures (A, B or C)"),
+      Flag.optional
+    ),
+    out: Flag.String("out").pipe(Flag.withDescription("Run records JSON Lines path")),
+  },
+  flow(
+    SkillProbeScoreOptions.make,
+    scoreSkillProbeRuns,
+    Effect.flatMap((records) => printLines([`scored ${records.length} runs`]))
+  )
+).pipe(Command.withDescription("Score kept run directories of one claude plugin eval result into run records"));
+
+const probeReportCommand = Command.make(
+  "report",
+  {
+    records: Flag.String("records").pipe(
+      Flag.atLeast(1),
+      Flag.withDescription("Run records JSON Lines file (repeatable)")
+    ),
+  },
+  ({ records }) => runSkillProbeReport(records).pipe(Effect.asVoid)
+).pipe(Command.withDescription("Report cell means, paired differences and the verdict as JSON"));
+
+const probeCommand = Command.make("probe", {}, () =>
+  printLines(["Skill effect probe commands:", "- stage", "- preflight", "- score", "- report"])
+).pipe(
+  Command.withDescription("Skill effect probe: stage, preflight, score kept runs, report"),
+  Command.withSubcommands([probeStageCommand, probePreflightCommand, probeScoreCommand, probeReportCommand])
+);
+
 const evalsCommand = Command.make("evals", {}, () =>
-  printLines(["Agent-effectiveness eval commands:", "- score", "- compare"])
+  printLines(["Agent-effectiveness eval commands:", "- score", "- compare", "- probe"])
 ).pipe(
   Command.withDescription("Run SkillOpt eval scorer commands"),
-  Command.withSubcommands([evalsScoreCommand, evalsCompareCommand])
+  Command.withSubcommands([evalsScoreCommand, evalsCompareCommand, probeCommand])
 );
 
 /**
@@ -725,6 +830,7 @@ export const agentEffectivenessCommand = Command.make("agent-effectiveness", {},
     "- experiments bundle",
     "- evals score",
     "- evals compare",
+    "- evals probe",
     "- phoenix sync",
   ])
 ).pipe(
