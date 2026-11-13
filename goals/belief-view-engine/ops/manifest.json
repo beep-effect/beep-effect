@@ -3,13 +3,13 @@
   "initiative": {
     "id": "belief-view-engine",
     "title": "Belief View Engine",
-    "status": "paused",
+    "status": "superseded",
     "created": "2026-08-17",
-    "updated": "2026-08-17",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/belief-view-engine",
-  "lifecycle": "paused",
+  "lifecycle": "superseded",
   "mission": "One working belief per contention set, on demand: BeliefContentionKey v1, the total selection-policy contract, the content-addressed BeliefViewRevision with digest-encoding v1, the same-policy typed delta, and the capped, indexed scope-wide EdgeAuthority read.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -17,7 +17,7 @@
     "exploration": "explorations/epistemic-belief-view-revision",
     "graduated": "2026-08-17"
   },
-  "statusNote": "Paused at scaffold (queue goal): authored-but-not-started; no free program-lane slot at graduation. Resume when a lane slot frees or the roadmap pulls it.",
+  "statusNote": "Closed (superseded) 2026-11-13 by operator ruling (finish board): It has sat unstarted at scaffold for three months, no lane is pulling it, and the text-knowledge stack rebuild probably redefines this layer. Re-open with `bun run beep goals set-status belief-view-engine active` and re-graduate the next slice. Before the ruling: Paused at scaffold (queue goal): authored-but-not-started; no free program-lane slot at graduation. Resume when a lane slot frees or the roadmap pulls it.",
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
@@ -76,5 +76,7 @@
     "The digest cannot be replay-stable without storing state.",
     "The scope read cannot meet the cap contract under the new index.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval."
-  ]
+  ],
+  "supersededNote": "Closed by operator ruling (finish board, 2026-11-13) without meeting its completion gate; see goals/belief-view-engine/decisions/2026-11-13-finish-board-ruling-close.md.",
+  "retentionReason": "Closed by operator ruling (finish board, 2026-11-13) with a re-open path: the full packet stays on main so `bun run beep goals set-status belief-view-engine active` can resume it or re-graduate the next slice without restoring from the archive."
 }

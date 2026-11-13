@@ -3,14 +3,14 @@
   "initiative": {
     "id": "oppold-corpus-salvage-restoration",
     "title": "Oppold Corpus Salvage Restoration",
-    "status": "active",
+    "status": "paused",
     "created": "2026-08-24",
-    "updated": "2026-10-14",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/oppold-corpus-salvage-restoration",
-  "lifecycle": "active",
-  "statusNote": "2026-10-14: P0/P1/P4 complete; P2 in-progress. Recovery ordinal 5 sealed failure: TikaSecondPassFailure, unsupported recovery disposition, never a third attempt. Main merged; JSDoc-only changes in Corpus.service.ts violate the frozen launcher source-byte check (exit 71). Ordinals 7/8/9 unstarted pending orchestrator execution-identity resolution; manifests and launcher unchanged. First-wave evidence retained; eighteen larger occurrences and estate/recycle/DOC gates open for P3; P3 pending, lifecycle active.",
+  "lifecycle": "paused",
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): It still has data value, but it is blocked on the execution-identity question, and the 11-05 consolidation already did most of the recovery. Set it to paused so nothing claims to be in flight. Resume with `bun run beep goals set-status oppold-corpus-salvage-restoration active` when it is picked up. Before the ruling: 2026-10-14: P0/P1/P4 complete; P2 in-progress. Recovery ordinal 5 sealed failure: TikaSecondPassFailure, unsupported recovery disposition, never a third attempt. Main merged; JSDoc-only changes in Corpus.service.ts violate the frozen launcher source-byte check (exit 71). Ordinals 7/8/9 unstarted pending orchestrator execution-identity resolution; manifests and launcher unchanged. First-wave evidence retained; eighteen larger occurrences and estate/recycle/DOC gates open for P3; P3 pending, lifecycle active.",
   "mission": "Preserve and verify the current T7 salvage state, then restore mail, reconcile all three recycle volumes, and convert distinct legacy-Word digests with originals retained.",
   "executionCapable": true,
   "reflectionRequired": true,

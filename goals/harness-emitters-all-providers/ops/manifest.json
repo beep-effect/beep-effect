@@ -4,13 +4,13 @@
     "id": "harness-emitters-all-providers",
     "packetId": "goal-packet/v1:b323838eee84f5b10e1a65d3f4d262f03da00dc9ed49cb603fa23992eea5d964",
     "title": "Harness Emitters for All Providers",
-    "status": "active",
+    "status": "paused",
     "created": "2026-10-14",
-    "updated": "2026-10-14",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/harness-emitters-all-providers",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "Every agent harness emits beep.* v2 attributed telemetry (native, hook, wrapper, proxy, transcript) with a completeness check.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -89,5 +89,6 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): It depends on the observability foundation and enrollment work and has never started. Resume with `bun run beep goals set-status harness-emitters-all-providers active` when it is picked up."
 }

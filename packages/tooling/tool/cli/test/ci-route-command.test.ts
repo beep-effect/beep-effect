@@ -3,6 +3,7 @@ import {
   ChangeClassifier,
   ChangeSet,
   CI_LANE_ID_VALUES,
+  HostedJob,
   HostedRun,
   makeCiRouteCommandForTesting,
   ROUTE_CORPUS_DEFAULT_DIR,
@@ -25,6 +26,7 @@ import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -122,8 +124,12 @@ const services = (recorded: Recorded, runs: ReadonlyArray<HostedRun>, atoms: Rea
   ).pipe(Layer.provideMerge(leaves));
 };
 
-const harness = Effect.fn("RouteCommandTest.harness")(function* (atoms: ReadonlyArray<ChangeAtom>) {
-  const runs = yield* decodeRuns(replayRunsJson);
+const harness = Effect.fn("RouteCommandTest.harness")(function* (
+  atoms: ReadonlyArray<ChangeAtom>,
+  editRuns: (runs: ReadonlyArray<HostedRun>) => ReadonlyArray<HostedRun> = identity
+) {
+  const decoded = yield* decodeRuns(replayRunsJson);
+  const runs = editRuns(decoded);
   const recorded: Recorded = {
     captures: yield* Ref.make<ReadonlyArray<RouteCorpusCaptureOptions>>([]),
     loads: yield* Ref.make<ReadonlyArray<string>>([]),
@@ -278,6 +284,41 @@ it.layer(CliLayer, { timeout: "30 seconds" })("beep ci route command", (it) => {
         const fromOption9 = yield* Effect.fromOption(A.last(json));
         const replay = yield* decodeReplay(fromOption9);
         expect([replay.heads, replay.skippedReds, replay.baseUnknownHeads]).toEqual([3, 3, 1]);
+      })
+    )
+  );
+
+  it.effect("names unmapped failed jobs in the census and bounds an uncertain replay recall", () =>
+    withConsole(
+      Effect.gen(function* () {
+        // Head a1, whose route skips check, also fails two jobs no rule maps to a lane.
+        const unmappedReds = (runs: ReadonlyArray<HostedRun>) =>
+          A.map(runs, (run) =>
+            run.headSha === "a1"
+              ? HostedRun.make({
+                  ...run,
+                  jobs: A.appendAll(run.jobs, [
+                    HostedJob.make({ name: "Heavy / Typecheck", conclusion: O.some("failure") }),
+                    HostedJob.make({ name: "Knip", conclusion: O.some("failure") }),
+                  ]),
+                })
+              : run
+          );
+        const { run } = yield* harness([], unmappedReds);
+        yield* run(["census"]);
+        const censusLog = yield* TestConsole.logLines;
+        const census = A.map(censusLog, String);
+        expect(census).toContain("  unknown job names: Heavy / Typecheck, Knip");
+
+        yield* run(["replay"]);
+        const replayLog = yield* TestConsole.logLines;
+        const replay = A.map(replayLog, String);
+        const recallLine = yield* Effect.fromOption(
+          A.findFirst(replay, (line) => Str.startsWith("[ci route] replay over")(line))
+        );
+        expect(recallLine).toContain(
+          " — recall is an upper bound: 1 skipping head(s) have failed jobs no rule maps (Heavy / Typecheck, Knip)"
+        );
       })
     )
   );

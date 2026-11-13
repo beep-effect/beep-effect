@@ -2,7 +2,9 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `superseded`
+
+**Closed by operator ruling (finish board, 2026-11-13).** It has had zero execution since August and depends on three other goals. The text-knowledge stack rebuild is likely to reshape it, so it is better re-graduated than kept. The packet is `superseded` without meeting its completion gate. To resume, run `bun run beep goals set-status patent-drafting-episode-ledger active` and re-graduate the next slice. Decision: [`decisions/2026-11-13-finish-board-ruling-close.md`](./decisions/2026-11-13-finish-board-ruling-close.md).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

@@ -4,13 +4,13 @@
     "id": "python-free-repo",
     "packetId": "goal-packet/v1:e03830a545f730500b63ddcb49c2a7c591ae16c4435af3e10eb7cc6a403e3b16",
     "title": "Remove Python from the repo, port photo-face to onnxruntime-node, and ban Python in tracked source",
-    "status": "active",
+    "status": "paused",
     "created": "2026-11-06",
-    "updated": "2026-11-06",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/python-free-repo",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "Remove Python from the repo, port photo-face to onnxruntime-node, and ban Python in tracked source (graduated from explorations/pulumi-to-alchemy).",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -84,5 +84,6 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): Hygiene work with no execution yet and no urgency. Resume with `bun run beep goals set-status python-free-repo active` when it is picked up."
 }

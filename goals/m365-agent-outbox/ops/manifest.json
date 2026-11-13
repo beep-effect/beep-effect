@@ -4,13 +4,13 @@
     "id": "m365-agent-outbox",
     "packetId": "goal-packet/v1:799c30b692f48938eb2b307e025e0c3fe2d7c4a74348048b9b101c8e7d5c9055",
     "title": "M365 Agent Outbox",
-    "status": "active",
+    "status": "paused",
     "created": "2026-10-06",
-    "updated": "2026-10-06",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/m365-agent-outbox",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "Give agent sessions a firm-owned Microsoft 365 route that drafts mail, sends it with attachments, and writes calendar events, with every send explicit and audited.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -88,5 +88,6 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "dependsOn": ["goals/m365-driver", "goals/m365-mcp"]
+  "dependsOn": ["goals/m365-driver", "goals/m365-mcp"],
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): Progress is blocked on the tenant mail proof, so it should be paused rather than shown as active. Resume with `bun run beep goals set-status m365-agent-outbox active` when it is picked up."
 }

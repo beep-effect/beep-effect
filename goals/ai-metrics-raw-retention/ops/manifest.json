@@ -3,13 +3,13 @@
   "initiative": {
     "id": "ai-metrics-raw-retention",
     "title": "AI Metrics Raw Retention",
-    "status": "active",
+    "status": "paused",
     "created": "2026-10-05",
-    "updated": "2026-10-05",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/ai-metrics-raw-retention",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "Age-based compress or offload of the ai-metrics `raw` archive once `derived` is proven reproducible from it; raw stays the source of record.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -88,5 +88,6 @@
   ],
   "provides": ["telemetry/raw-retention"],
   "dependsOn": ["goals/ops-seat-timers"],
-  "requires": ["fleet/ops-seat"]
+  "requires": ["fleet/ops-seat"],
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): It is low urgency, blocked on a dependency, and has not started. Resume with `bun run beep goals set-status ai-metrics-raw-retention active` when it is picked up. Its dependency goals/ops-seat-timers (the `fleet/ops-seat` provider) was closed by the same ruling; resuming this packet means re-opening or re-graduating that work first."
 }
