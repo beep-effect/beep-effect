@@ -33,10 +33,17 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Slice A (census and proof) is done; slice B (owner surface) is next. The work
-is four slices, A to D, listed in [`PLAN.md`](./PLAN.md).
+Slices A (census and proof) and B (owner surface) are done; slice C (swaps)
+is next. The work is four slices, A to D, listed in [`PLAN.md`](./PLAN.md).
 
 ## Latest Evidence
+
+Slice B, 2026-11-12: `@beep/schema` exports `Sha256PrefixedDigest`, the one
+`sha256:` grammar, and `ContentDigest` and `SourceTextDigest` are defined from
+it with their encoded strings unchanged. `JsoncFingerprint` takes
+`JsoncCanonicalizeOptions`, whose `omitUndefinedMembers` leaves out an object
+member read as `undefined` and nothing else; a refusal table in the package's
+tests fixes what the owner answers for every other value outside plain JSON.
 
 Slice A, 2026-11-12: the census
 ([`research/encoder-census.md`](./research/encoder-census.md)) classes 157
