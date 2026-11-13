@@ -325,9 +325,13 @@
       <excludeFolder url="file://$MODULE_DIR$/goals/history-message-overlay" />
       <excludeFolder url="file://$MODULE_DIR$/goals/merge-queue-lab" />
       <excludeFolder url="file://$MODULE_DIR$/goals/orchestrator-handoff" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/repository-simplification-residue" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/research-intake-2026-11" />
       <excludeFolder url="file://$MODULE_DIR$/goals/research-library-ontology-core" />
       <excludeFolder url="file://$MODULE_DIR$/goals/research-library-routes" />
       <excludeFolder url="file://$MODULE_DIR$/goals/runner-trust-boundary" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/scripts-to-beep-cli" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/skill-effect-probe" />
       <excludeFolder url="file://$MODULE_DIR$/goals/t3-native-orchestration" />
       <excludeFolder url="file://$MODULE_DIR$/goals/t3code-fleet-rollout" />
       <excludeFolder url="file://$MODULE_DIR$/goals/t3code-harness-mcp" />
