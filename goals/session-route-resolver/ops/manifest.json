@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "session-route-resolver",
+    "title": "Session Route Resolver",
+    "status": "active",
+    "created": "2026-11-12",
+    "updated": "2026-11-12",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/session-route-resolver",
+  "lifecycle": "active",
+  "mission": "Any agent runs one command with a PR, branch, lane or checkout and gets the owning session, its message routes, their liveness and the exact send call.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/session-addressing",
+    "graduated": "2026-11-12"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/session-route-resolver/README.md",
+    "goals/session-route-resolver/SPEC.md",
+    "goals/session-route-resolver/PLAN.md",
+    "goals/session-route-resolver/GOAL.md",
+    "goals/session-route-resolver/research/SOURCES.md"
+  ],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/session-route-resolver/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/session-route-resolver/GOAL.md)\" -le 4000",
+    "jq . goals/session-route-resolver/ops/manifest.json",
+    "rg -n \"session-route-resolver|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/session-route-resolver",
+    "git diff --check -- goals/session-route-resolver",
+    "bun run beep quality package-verify @beep/repo-cli",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
