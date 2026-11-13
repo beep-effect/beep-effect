@@ -58,13 +58,14 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 Admission — in progress. P1 completed in PR #3058 (merged as 6fc960063d4):
-the live `MemoryLog`, the Markdown node partition with its reparse check and
-the live `MarkdownProjector`. P2 builds op capture against the exported base,
-live store-side admission (per-node compare-and-set at row and list-item
-granularity, the whole-node three-way merge, held writes as log events with
-both texts, per-op admission, typed status fields with the lifecycle guard)
-and the capture-admit-export write path (`admitEdits`, `writeEdits`).
+P3 Identity and observation — next, not started. P2 completed in PR #3184
+(merged as f25ed5ed30b): op capture against the exported base, live store-side
+admission (per-node compare-and-set at row and list-item granularity, the
+whole-node three-way merge, held writes as log events with both texts, per-op
+admission, typed status fields with the lifecycle guard) and the
+capture-admit-export write path (`admitEdits`, `writeEdits`). P1 completed in
+PR #3058 (merged as 6fc960063d4). AC-3's resolver-needed ratio is judged at
+P5's exit (decision `ac3-resolver-needed-bar-is-judged-in-p5`).
 
 ## Latest Evidence
 
