@@ -45,7 +45,7 @@ import {
   wrappedLinkDestination,
 } from "./Archive.schemas.ts";
 import { ArchiveError } from "./Goals.errors.ts";
-import { decodeGoalManifest, renderGoalCloseoutRecord, renderGoalProposedCloseout } from "./Goals.schemas.ts";
+import { decodeGoalManifest, renderGoalCloseoutRecord } from "./Goals.schemas.ts";
 import { parseGoalManifestText, readmeMissionLine } from "./Inventory.ts";
 import { GoalManifestFormatter } from "./Manifest.service.ts";
 import { biomeManifestFormatter } from "./Manifest.ts";
@@ -756,11 +756,7 @@ const stubFor = Effect.fnUntraced(function* (
         O.orElse(() => readmeMissionLine(readmeText)),
         O.getOrNull
       ),
-      closeout: pipe(
-        O.map(O.fromUndefinedOr(manifest.closeout), renderGoalCloseoutRecord),
-        O.orElse(() => O.map(O.fromUndefinedOr(manifest.proposedCloseout), renderGoalProposedCloseout)),
-        O.getOrNull
-      ),
+      closeout: pipe(O.fromUndefinedOr(manifest.closeout), O.map(renderGoalCloseoutRecord), O.getOrNull),
       provides: A.map(manifest.provides, (capability) => `${capability}`),
       headlineFinding: finding,
       archiveUrl,

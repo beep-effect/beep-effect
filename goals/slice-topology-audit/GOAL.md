@@ -1,8 +1,6 @@
 # GOAL: Slice Topology Audit
 
-Repo root: the current working directory — the `beep-effect` checkout you are
-running in. Do not assume an absolute path; several checkouts exist. All paths
-below are repo-relative.
+Repo root: the current `beep-effect` checkout; all paths below are repo-relative.
 
 Outcome: make the slice grammar mechanical — land the locked doctrine
 amendments, then ship `beep architecture audit` (closed `LiteralKit`
@@ -72,10 +70,11 @@ git diff --check -- goals/slice-topology-audit
 bun run beep quality package-verify @beep/repo-cli
 ```
 
-Stop and report before changing public API, schema, data migration, auth, infra,
-security behavior, dependencies, lockfiles, generated files, or destructive
-state unless `SPEC.md` explicitly requires it. Never overturn a locked
-exploration decision here — reopen the exploration at `align` instead.
+Never overturn a locked exploration decision here — reopen the exploration at
+`align` instead.
 
-Done only when acceptance passes and verification is complete, or when a blocker
-is reported with file/command evidence.
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug slice-topology-audit` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/slice-topology-audit/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

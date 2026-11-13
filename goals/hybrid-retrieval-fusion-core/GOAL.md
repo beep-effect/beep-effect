@@ -65,5 +65,10 @@ git diff --check -- goals/hybrid-retrieval-fusion-core
 ```
 
 Stop before widening into a satellite, a new package, external dependency,
-public contract beyond the spec, or weakened admission. Done only when the PR
-is mergeable through Yeet or a blocker is reported with file/command evidence.
+public contract beyond the spec, or weakened admission.
+
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug hybrid-retrieval-fusion-core` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/hybrid-retrieval-fusion-core/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

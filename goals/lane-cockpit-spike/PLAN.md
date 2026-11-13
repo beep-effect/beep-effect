@@ -23,9 +23,13 @@ Before marking the packet closed:
    validate against `ReflectionFrontmatter`.
 2. Run `bun run beep lint reflection-artifacts`.
 3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase
-   statuses and a typed `proposedCloseout` with status `completed-retained`
-   and finalPullRequest. Keep `initiative.status` operative until completion
-   evidence verifies; do not close the external execution/session ledger from a proposal.
+   statuses. Once the final PR is open, run
+   `bun run beep goals set-status lane-cockpit-spike completed-retained`: it writes
+   `closeout` naming that PR with the matching `initiative.status`, and the
+   commit ships in the final PR. After the merge,
+   `bun run beep goals completion refresh --slug lane-cockpit-spike` must print verified;
+   name any red required check in a committed decision file
+   (`redAttribution`).
 
 ## Execution Notes
 

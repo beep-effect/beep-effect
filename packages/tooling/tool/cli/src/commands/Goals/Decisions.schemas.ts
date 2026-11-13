@@ -12,7 +12,9 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { GoalOperatorRuling, GoalRedAttributionBlock } from "./Goals.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Goals/Decisions.schemas");
 
@@ -156,6 +158,21 @@ const SingleLine = S.String.check(
   )
 );
 
+const GoalDecisionClaimKind = S.makeFilter(
+  (frontmatter: {
+    readonly kind: GoalDecisionKind;
+    readonly redAttribution?: GoalRedAttributionBlock;
+    readonly operatorRuling?: GoalOperatorRuling;
+  }) =>
+    GoalDecisionKind.is.decision(frontmatter.kind) ||
+    (P.isUndefined(frontmatter.redAttribution) && P.isUndefined(frontmatter.operatorRuling)),
+  $I.annote("GoalDecisionClaimKind", {
+    title: "Goal Decision Claim Kind",
+    description: "redAttribution and operatorRuling blocks appear only on kind: decision files.",
+    message: "redAttribution and operatorRuling are allowed only on kind: decision",
+  })
+);
+
 /**
  * YAML frontmatter of a decision file.
  *
@@ -166,7 +183,15 @@ const SingleLine = S.String.check(
  * `lane` (branch) and `pullRequest` attribute the decision to the lane that
  * took it. `kind` defaults to `decision`. Decision files decode this schema
  * with `onExcessProperty: "error"`, so a misspelled key (`pr` for
- * `pullRequest`) fails `goals decisions check` instead of being dropped.
+ * `pullRequest`), nested keys included, fails `goals decisions check` instead
+ * of being dropped.
+ *
+ * Two optional blocks make completion claims for a goal final, and both are
+ * allowed only on `kind: decision`: `redAttribution`
+ * ({@link GoalRedAttributionBlock}) names each red required check the final
+ * merged over with its cause and fix PR, and `operatorRuling`
+ * ({@link GoalOperatorRuling}) records the operator closing a final that
+ * hosted facts cannot verify. Either counts only once the file is committed.
  *
  * **Example** (Construct frontmatter)
  *
@@ -182,6 +207,24 @@ const SingleLine = S.String.check(
  * console.log(frontmatter.kind) // "decision"
  * ```
  *
+ * **Example** (Attribute a final's reds)
+ *
+ * ```ts
+ * import { GoalDecisionFrontmatter } from "@beep/repo-cli/commands/Goals/Decisions.schemas"
+ *
+ * const frontmatter = GoalDecisionFrontmatter.make({
+ *   title: "Final #2966 merged over a cancelled Heavy check",
+ *   date: "2026-11-14",
+ *   reversal: "Delete this file; goals completion refresh reports #2966 unsatisfied again.",
+ *   kind: "decision",
+ *   redAttribution: {
+ *     finalPullRequest: 2966,
+ *     reds: [{ context: "Heavy / Check", attribution: "inherited", fixPullRequest: 2994 }],
+ *   },
+ * })
+ * console.log(frontmatter.redAttribution?.finalPullRequest) // 2966
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -193,11 +236,15 @@ export class GoalDecisionFrontmatter extends S.Opaque<GoalDecisionFrontmatter, {
     kind: GoalDecisionKind.pipe(S.withDecodingDefaultKey(Effect.succeed(GoalDecisionKind.Enum.decision))),
     lane: S.optionalKey(SingleLine),
     pullRequest: S.optionalKey(S.Int.check(S.isGreaterThan(0))),
-  }).pipe(
-    $I.annoteSchema("GoalDecisionFrontmatter", {
-      description: "Schema-validated YAML frontmatter of a goal-packet decision file.",
-    })
-  )
+    redAttribution: S.optionalKey(GoalRedAttributionBlock),
+    operatorRuling: S.optionalKey(GoalOperatorRuling),
+  })
+    .check(GoalDecisionClaimKind)
+    .pipe(
+      $I.annoteSchema("GoalDecisionFrontmatter", {
+        description: "Schema-validated YAML frontmatter of a goal-packet decision file.",
+      })
+    )
 ) {}
 
 /**

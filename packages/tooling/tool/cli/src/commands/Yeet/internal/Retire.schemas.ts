@@ -8,8 +8,10 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { GitObjectId } from "@beep/schema/Conformance";
+import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import { GoalCloseoutCheck } from "../../Goals/CloseoutCheck.ts";
 import { WorktreeRemovalReceipt } from "../../Worktree/Worktree.schemas.ts";
 import { ProofJobCancelOutcome } from "./ProofJob.ts";
 import { SweepPlan, SweepReport } from "./Sweep.schemas.ts";
@@ -174,6 +176,13 @@ export const YeetRetireSweepPlanJson = JsonStringCodec(YeetRetireSweepPlan);
 /**
  * The `--json` document of an executed `yeet sweep --retire`: the retirement receipt and the clone sweep report.
  *
+ * **Details**
+ *
+ * `closeoutChecks` holds the online classification of every touched packet
+ * whose `origin/<main>` manifest commits a `closeout`; a report written before
+ * the key existed decodes with it empty, so the tag stays
+ * `yeet-retire-sweep-report/v2`.
+ *
  * **Example** (Encode a report document)
  *
  * ```ts
@@ -197,10 +206,11 @@ export class YeetRetireSweepReport extends S.Opaque<YeetRetireSweepReport, { rea
       S.withConstructorDefault(Effect.succeed([])),
       S.withDecodingDefaultKey(Effect.succeed([]))
     ),
+    closeoutChecks: ArrayKeyDefaultEmpty(GoalCloseoutCheck),
   }).pipe(
     $I.annoteSchema("YeetRetireSweepReport", {
       description:
-        "Result document for a retirement: the lane plan, the verdict that opened the gate, the worktree removal receipt, the touched packets still active, the owning clone's sweep report, and the lane's detached jobs stopped before the fence.",
+        "Result document for a retirement: the lane plan, the verdict that opened the gate, the worktree removal receipt, the touched packets still active, the owning clone's sweep report, the lane's detached jobs stopped before the fence, and the online closeout checks of the touched packets.",
     })
   )
 ) {}

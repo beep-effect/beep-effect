@@ -4,13 +4,13 @@
     "id": "canonical-digest-owner",
     "packetId": "goal-packet/v1:73bb856d1a550694f85d5d2b5120e0ee36eb9c86a765d74b2d07bfce0221e0f2",
     "title": "Canonical Digest Owner",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-10",
     "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/canonical-digest-owner",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "RFC 8785 is the one canonical byte form, @beep/jsonc owns it, digests share one sha256: grammar, and the hand-rolled encoders are replaced with proof that no stored digest changes.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -61,10 +61,6 @@
         "gating": true
       }
     ]
-  },
-  "proposedCloseout": {
-    "status": "completed-retained",
-    "finalPullRequest": 3209
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -135,5 +131,9 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3209
+  }
 }

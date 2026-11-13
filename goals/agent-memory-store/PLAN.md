@@ -22,8 +22,8 @@ bars are green on `main`. Nothing here changes the 2026-11-09 rulings.
 | P3 Identity and observation | pending | Tiered identity with abstention and link capture at write time; observation log with typed events and distinct-lineage counts; exact-hash deferral; near-duplicate flags. | AC-4, AC-5 and AC-7 green. |
 | P4 Retrieval | pending | Exact record, FTS5, optional vector index, convex fusion, optional cross-encoder, admissibility gate with typed findings and typed identity lookup, budgets. | AC-6 green; tests pass with the optional models absent. |
 | P5 Agent loop | pending | planned `memory` command family on `@beep/repo-cli`; `MEMORY.md` index as a generated projection; `## Current Phase` owner rule; operator runbook. | AC-8 green; `memory doctor` reports 0 drift on a fixture folder; AC-3's resolver-needed ratio at or below 26/279 on the goals history replay, re-measured after the `## Current Phase` owner rule lands (decision `ac3-resolver-needed-bar-is-judged-in-p5`). |
-| P6 Yeet: final PR to mergeable | pending | Publish the last phase through yeet with the closeout reflection, the gating `yeet-verdict` acceptance evidence and a typed `proposedCloseout`, and drive it to mergeable per `AGENTS.md` "Mergeable". | Mergeable per `AGENTS.md`: no outstanding review thread, no own-red check, squash commitlint passes, review window elapsed; `bun run beep lint reflection-artifacts` passes. |
-| P7 Close | pending | Verify completion after the merge and adopt the status in a packet-state PR. | `bun run beep goals completion refresh --slug agent-memory-store` verifies; `set-status` adopted on `origin/main` (`closeout.status == initiative.status`). |
+| P6 Yeet: final PR to mergeable | pending | Publish the last phase through yeet with the closeout reflection and the `closeout` record (`goals set-status agent-memory-store completed-retained`), and drive it to mergeable per `AGENTS.md` "Mergeable". | Mergeable per `AGENTS.md`: no outstanding review thread, no own-red check, squash commitlint passes, review window elapsed; `bun run beep lint reflection-artifacts` passes. |
+| P7 Close | pending | Verify the closeout after the merge from hosted facts; name any red required check in a committed `redAttribution` decision file. | `bun run beep goals completion refresh --slug agent-memory-store` prints verified; `origin/main` has `closeout.status == initiative.status`. |
 
 ## Decomposition Rule
 
@@ -41,11 +41,13 @@ Before marking the packet closed:
    validate against `ReflectionFrontmatter`.
 2. Run `bun run beep lint reflection-artifacts`.
 3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase
-   statuses and a typed `proposedCloseout` with status `completed-retained`,
-   finalPullRequest and the gating `yeet-verdict` acceptance evidence the
-   Completion gate requires. Keep `initiative.status` operative until
-   completion evidence verifies; do not close the external execution/session
-   ledger from a proposal.
+   statuses. Once the final PR is open, run
+   `bun run beep goals set-status agent-memory-store completed-retained`: it writes
+   `closeout` naming that PR with the matching `initiative.status`, and the
+   commit ships in the final PR. After the merge,
+   `bun run beep goals completion refresh --slug agent-memory-store` must print verified;
+   name any red required check in a committed decision file
+   (`redAttribution`).
 
 ## Execution Notes
 
