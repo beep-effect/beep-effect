@@ -166,6 +166,7 @@ import {
   YeetSettleInput,
   yeetBaseConflictFor,
   yeetBaseMergeableFor,
+  yeetConflictBaseFor,
   yeetGatedFamiliesFor,
   yeetSettleClockReset,
 } from "./Settle.ts";
@@ -1532,6 +1533,11 @@ const monitorBaseConflict = (snapshot: YeetStatusSnapshot): boolean =>
     O.fromUndefinedOr(snapshot.remote.mergeStateStatus)
   );
 
+// The ref that conflict is with: the pull request's own base, which for a stack
+// layer is the parent's branch and not the run's trunk.
+const monitorConflictBase = (context: RepoRunContext, snapshot: YeetStatusSnapshot): string =>
+  yeetConflictBaseFor(O.fromUndefinedOr(snapshot.remote.baseRefName), context.base);
+
 // The settle rule reads only name, outcome, and required; the status snapshot
 // carries each check's whole record for the inbox capsule.
 const settleChecksOf = (snapshot: YeetStatusSnapshot): ReadonlyArray<YeetSettleCheck> =>
@@ -1808,7 +1814,7 @@ const convergeMonitorBaseConflict = Effect.fn("YeetMonitorLoop.convergeBaseConfl
       ? yield* dispatchYeetBaseConflict(
           context.repoRoot,
           YeetBaseConflictCapsule.make({
-            base: context.base,
+            base: monitorConflictBase(context, snapshot),
             generation: walk.value.generation,
             headSha: observed.headSha,
             link: snapshot.remote.url ?? null,
@@ -1987,6 +1993,7 @@ const admitMonitorHead = Effect.fn("YeetMonitorLoop.admitHead")(function* (
 });
 
 const settleMonitorHead = (
+  context: RepoRunContext,
   observation: MonitorObservation,
   current: MonitorHeadState,
   policy: YeetMonitorLoopPolicy
@@ -2001,6 +2008,7 @@ const settleMonitorHead = (
       families: current.families,
       admission: current.admission,
       baseConflict: monitorBaseConflict(observation.snapshot),
+      conflictBase: O.some(monitorConflictBase(context, observation.snapshot)),
     })
   );
 
@@ -2009,12 +2017,13 @@ const settleMonitorHead = (
 // and the verdict is derived again from zero. An admission flip already reset
 // the clock this poll, in which case there is nothing further to resume.
 const resumeMonitorSettleClock = Effect.fn("YeetMonitorLoop.resumeSettleClock")(function* (
+  context: RepoRunContext,
   observation: MonitorObservation,
   current: MonitorHeadState,
   policy: YeetMonitorLoopPolicy
 ) {
   if (current.settleClockMs === observation.millis) return current;
-  if (!yeetSettleClockReset(current.verdict, settleMonitorHead(observation, current, policy))) return current;
+  if (!yeetSettleClockReset(current.verdict, settleMonitorHead(context, observation, current, policy))) return current;
   yield* Console.log("[yeet] settle budget resumed; clock reset");
   return MonitorHeadState.make({ ...current, settleClockMs: observation.millis });
 });
@@ -2104,8 +2113,8 @@ const settleAndCloseoutMonitorHead = Effect.fn("YeetMonitorLoop.settleAndCloseou
   if (O.isNone(observation.snapshot.remote.headSha)) return Result.succeed(observation);
   const admitted = yield* admitMonitorHead(observation, O.getOrThrow(observation.poll.head));
   const policy = options.policy ?? YeetUntilMergedPolicy.make({});
-  const current = yield* resumeMonitorSettleClock(observation, admitted, policy);
-  let verdict = settleMonitorHead(observation, current, policy);
+  const current = yield* resumeMonitorSettleClock(context, observation, admitted, policy);
+  let verdict = settleMonitorHead(context, observation, current, policy);
   const timeline = verdict.settled
     ? yeetHeadTimelineStamp(current.timeline, "settledAt", observation.at)
     : current.timeline;
@@ -2121,7 +2130,7 @@ const settleAndCloseoutMonitorHead = Effect.fn("YeetMonitorLoop.settleAndCloseou
     const closedOut = yield* closeoutMonitorHead(context, options, next, current);
     if (Result.isFailure(closedOut)) return closedOut;
     next = closedOut.success;
-    verdict = settleMonitorHead(next, current, policy);
+    verdict = settleMonitorHead(context, next, current, policy);
   }
   const stampMonitorReadiness4 = yield* stampMonitorReadiness(next, current, verdict);
   return Result.succeed(stampMonitorReadiness4);

@@ -393,6 +393,8 @@ const yeetWatchSnapshotLabelsDefault = A.empty<string>();
 export class YeetWatchSnapshot extends S.Opaque<YeetWatchSnapshot, { readonly brand: unique symbol }>()(
   S.Struct({
     settle: YeetSettleVerdict.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    // The branch the pull request merges into: the trunk, or the parent's branch for a stack layer.
+    baseRefName: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     checks: S.Array(YeetWatchCheck),
     headSha: S.NonEmptyString,
     isCrossRepository: S.Boolean.pipe(
