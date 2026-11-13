@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-13T01:12:54.769Z",
+  "generatedAt": "2026-11-13T01:21:43.142Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 179,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
-    "publicModules": 3902,
-    "publicExports": 27889,
+    "publicModules": 3906,
+    "publicExports": 27937,
     "openModules": 114,
     "openExports": 88,
     "missingExportExamples": 0,
@@ -346356,9 +346356,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 15,
-        "publicModuleCount": 13,
-        "publicExportCount": 109
+        "sourceFileCount": 17,
+        "publicModuleCount": 15,
+        "publicExportCount": 140
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -346483,6 +346483,50 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 18,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "jsdoc",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 1,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-1-module",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 27,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "jsdoc",
+          "filePath": "src/OutboxBasisReader.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasisReader.ts",
+          "line": 1,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasisreader-ts-1-module",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 2,
           "remediationStatus": "resolved"
         },
         {
@@ -346680,7 +346724,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 13,
+          "exportCount": 15,
           "remediationStatus": "resolved"
         }
       ],
@@ -347240,8 +347284,8 @@
           "exportKind": "const",
           "filePath": "src/OutboxAuditLog.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxAuditLog.ts",
-          "line": 68,
-          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-68-outboxsendoutcome",
+          "line": 70,
+          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-70-outboxsendoutcome",
           "currentTags": [
             "@category",
             "@since"
@@ -347262,8 +347306,8 @@
           "exportKind": "type",
           "filePath": "src/OutboxAuditLog.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxAuditLog.ts",
-          "line": 87,
-          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-87-outboxsendoutcome",
+          "line": 89,
+          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-89-outboxsendoutcome",
           "currentTags": [
             "@category",
             "@since"
@@ -347284,8 +347328,8 @@
           "exportKind": "class",
           "filePath": "src/OutboxAuditLog.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxAuditLog.ts",
-          "line": 129,
-          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-129-outboxdraftcreatedrecord",
+          "line": 134,
+          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-134-outboxdraftcreatedrecord",
           "currentTags": [
             "@category",
             "@since"
@@ -347306,8 +347350,8 @@
           "exportKind": "class",
           "filePath": "src/OutboxAuditLog.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxAuditLog.ts",
-          "line": 163,
-          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-163-outboxdraftdeletedrecord",
+          "line": 169,
+          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-169-outboxdraftdeletedrecord",
           "currentTags": [
             "@category",
             "@since"
@@ -347328,8 +347372,8 @@
           "exportKind": "class",
           "filePath": "src/OutboxAuditLog.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxAuditLog.ts",
-          "line": 197,
-          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-197-outboxsendintentrecord",
+          "line": 203,
+          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-203-outboxsendintentrecord",
           "currentTags": [
             "@category",
             "@since"
@@ -347350,8 +347394,8 @@
           "exportKind": "class",
           "filePath": "src/OutboxAuditLog.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxAuditLog.ts",
-          "line": 237,
-          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-237-outboxsendoutcomerecord",
+          "line": 243,
+          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-243-outboxsendoutcomerecord",
           "currentTags": [
             "@category",
             "@since"
@@ -347372,8 +347416,8 @@
           "exportKind": "class",
           "filePath": "src/OutboxAuditLog.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxAuditLog.ts",
-          "line": 279,
-          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-279-outboxeventcreatedrecord",
+          "line": 285,
+          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-285-outboxeventcreatedrecord",
           "currentTags": [
             "@category",
             "@since"
@@ -347394,8 +347438,8 @@
           "exportKind": "class",
           "filePath": "src/OutboxAuditLog.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxAuditLog.ts",
-          "line": 309,
-          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-309-outboxeventupdatedrecord",
+          "line": 315,
+          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-315-outboxeventupdatedrecord",
           "currentTags": [
             "@category",
             "@since"
@@ -347416,8 +347460,8 @@
           "exportKind": "const",
           "filePath": "src/OutboxAuditLog.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxAuditLog.ts",
-          "line": 341,
-          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-341-outboxauditrecord",
+          "line": 347,
+          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-347-outboxauditrecord",
           "currentTags": [
             "@category",
             "@since"
@@ -347438,8 +347482,8 @@
           "exportKind": "type",
           "filePath": "src/OutboxAuditLog.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxAuditLog.ts",
-          "line": 368,
-          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-368-outboxauditrecord",
+          "line": 374,
+          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-374-outboxauditrecord",
           "currentTags": [
             "@category",
             "@since"
@@ -347460,8 +347504,8 @@
           "exportKind": "const",
           "filePath": "src/OutboxAuditLog.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxAuditLog.ts",
-          "line": 385,
-          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-385-outboxauditerrorreason",
+          "line": 391,
+          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-391-outboxauditerrorreason",
           "currentTags": [
             "@category",
             "@since"
@@ -347482,8 +347526,8 @@
           "exportKind": "type",
           "filePath": "src/OutboxAuditLog.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxAuditLog.ts",
-          "line": 404,
-          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-404-outboxauditerrorreason",
+          "line": 410,
+          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-410-outboxauditerrorreason",
           "currentTags": [
             "@category",
             "@since"
@@ -347504,8 +347548,8 @@
           "exportKind": "class",
           "filePath": "src/OutboxAuditLog.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxAuditLog.ts",
-          "line": 422,
-          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-422-outboxauditerror",
+          "line": 428,
+          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-428-outboxauditerror",
           "currentTags": [
             "@category",
             "@since"
@@ -347526,8 +347570,8 @@
           "exportKind": "type",
           "filePath": "src/OutboxAuditLog.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxAuditLog.ts",
-          "line": 450,
-          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-450-outboxauditidsshape",
+          "line": 456,
+          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-456-outboxauditidsshape",
           "currentTags": [
             "@category",
             "@since"
@@ -347548,8 +347592,8 @@
           "exportKind": "class",
           "filePath": "src/OutboxAuditLog.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxAuditLog.ts",
-          "line": 471,
-          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-471-outboxauditids",
+          "line": 477,
+          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-477-outboxauditids",
           "currentTags": [
             "@category",
             "@since"
@@ -347570,8 +347614,8 @@
           "exportKind": "type",
           "filePath": "src/OutboxAuditLog.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxAuditLog.ts",
-          "line": 513,
-          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-513-outboxauditlogshape",
+          "line": 519,
+          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-519-outboxauditlogshape",
           "currentTags": [
             "@category",
             "@since"
@@ -347592,8 +347636,8 @@
           "exportKind": "const",
           "filePath": "src/OutboxAuditLog.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxAuditLog.ts",
-          "line": 549,
-          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-549-outboxauditfilename",
+          "line": 556,
+          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-556-outboxauditfilename",
           "currentTags": [
             "@category",
             "@since"
@@ -347614,8 +347658,646 @@
           "exportKind": "class",
           "filePath": "src/OutboxAuditLog.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxAuditLog.ts",
-          "line": 629,
-          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-629-outboxauditlog",
+          "line": 646,
+          "anchor": "packages-drivers-m365-mcp-src-outboxauditlog-ts-646-outboxauditlog",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxEventInstant",
+          "exportKind": "class",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 60,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-60-outboxeventinstant",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxEventView",
+          "exportKind": "class",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 89,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-89-outboxeventview",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxMessageView",
+          "exportKind": "class",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 122,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-122-outboxmessageview",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxBasisKind",
+          "exportKind": "const",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 146,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-146-outboxbasiskind",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxBasisKind",
+          "exportKind": "type",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 165,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-165-outboxbasiskind",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxBasisPinRef",
+          "exportKind": "const",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 204,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-204-outboxbasispinref",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxBasisPinRef",
+          "exportKind": "type",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 239,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-239-outboxbasispinref",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxBasisObservation",
+          "exportKind": "const",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 268,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-268-outboxbasisobservation",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxBasisObservation",
+          "exportKind": "type",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 289,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-289-outboxbasisobservation",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxBasisPin",
+          "exportKind": "const",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 328,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-328-outboxbasispin",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxBasisPin",
+          "exportKind": "type",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 357,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-357-outboxbasispin",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxBasisChangedField",
+          "exportKind": "const",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 374,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-374-outboxbasischangedfield",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxBasisChangedField",
+          "exportKind": "type",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 399,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-399-outboxbasischangedfield",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxBasisStatus",
+          "exportKind": "const",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 423,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-423-outboxbasisstatus",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxBasisStatus",
+          "exportKind": "type",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 453,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-453-outboxbasisstatus",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxBasisVerdict",
+          "exportKind": "const",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 476,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-476-outboxbasisverdict",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxBasisVerdict",
+          "exportKind": "type",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 495,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-495-outboxbasisverdict",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxBasisReport",
+          "exportKind": "class",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 513,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-513-outboxbasisreport",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "basisField",
+          "exportKind": "const",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 547,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-547-basisfield",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxBasisErrorReason",
+          "exportKind": "const",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 571,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-571-outboxbasiserrorreason",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxBasisErrorReason",
+          "exportKind": "type",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 590,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-590-outboxbasiserrorreason",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxBasisError",
+          "exportKind": "class",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 616,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-616-outboxbasiserror",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "eventViewOf",
+          "exportKind": "const",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 667,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-667-eventviewof",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "messageViewOf",
+          "exportKind": "const",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 763,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-763-messageviewof",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "compareBasisPin",
+          "exportKind": "const",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 878,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-878-comparebasispin",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "basisVerdict",
+          "exportKind": "const",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 922,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-922-basisverdict",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeBasisReport",
+          "exportKind": "const",
+          "filePath": "src/OutboxBasis.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasis.ts",
+          "line": 946,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasis-ts-946-makebasisreport",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxBasisReaderShape",
+          "exportKind": "type",
+          "filePath": "src/OutboxBasisReader.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasisReader.ts",
+          "line": 82,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasisreader-ts-82-outboxbasisreadershape",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OutboxBasisReader",
+          "exportKind": "class",
+          "filePath": "src/OutboxBasisReader.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/OutboxBasisReader.ts",
+          "line": 272,
+          "anchor": "packages-drivers-m365-mcp-src-outboxbasisreader-ts-272-outboxbasisreader",
           "currentTags": [
             "@category",
             "@since"
@@ -347856,8 +348538,8 @@
           "exportKind": "class",
           "filePath": "src/OutboxHandlers.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxHandlers.ts",
-          "line": 178,
-          "anchor": "packages-drivers-m365-mcp-src-outboxhandlers-ts-178-outboxhandlersettings",
+          "line": 190,
+          "anchor": "packages-drivers-m365-mcp-src-outboxhandlers-ts-190-outboxhandlersettings",
           "currentTags": [
             "@category",
             "@since"
@@ -347878,8 +348560,8 @@
           "exportKind": "const",
           "filePath": "src/OutboxHandlers.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxHandlers.ts",
-          "line": 217,
-          "anchor": "packages-drivers-m365-mcp-src-outboxhandlers-ts-217-makeoutboxtoolkithandlers",
+          "line": 229,
+          "anchor": "packages-drivers-m365-mcp-src-outboxhandlers-ts-229-makeoutboxtoolkithandlers",
           "currentTags": [
             "@category",
             "@since"
@@ -348076,8 +348758,8 @@
           "exportKind": "const",
           "filePath": "src/OutboxServer.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxServer.ts",
-          "line": 51,
-          "anchor": "packages-drivers-m365-mcp-src-outboxserver-ts-51-m365-outbox-mcp-instructions",
+          "line": 52,
+          "anchor": "packages-drivers-m365-mcp-src-outboxserver-ts-52-m365-outbox-mcp-instructions",
           "currentTags": [
             "@category",
             "@since"
@@ -348098,8 +348780,8 @@
           "exportKind": "type",
           "filePath": "src/OutboxServer.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxServer.ts",
-          "line": 70,
-          "anchor": "packages-drivers-m365-mcp-src-outboxserver-ts-70-outboxservices",
+          "line": 71,
+          "anchor": "packages-drivers-m365-mcp-src-outboxserver-ts-71-outboxservices",
           "currentTags": [
             "@category",
             "@since"
@@ -348120,8 +348802,8 @@
           "exportKind": "const",
           "filePath": "src/OutboxServer.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxServer.ts",
-          "line": 90,
-          "anchor": "packages-drivers-m365-mcp-src-outboxserver-ts-90-makeoutboxregistrations",
+          "line": 91,
+          "anchor": "packages-drivers-m365-mcp-src-outboxserver-ts-91-makeoutboxregistrations",
           "currentTags": [
             "@category",
             "@since"
@@ -348142,8 +348824,8 @@
           "exportKind": "const",
           "filePath": "src/OutboxServer.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxServer.ts",
-          "line": 124,
-          "anchor": "packages-drivers-m365-mcp-src-outboxserver-ts-124-makeoutboxserverlayer",
+          "line": 125,
+          "anchor": "packages-drivers-m365-mcp-src-outboxserver-ts-125-makeoutboxserverlayer",
           "currentTags": [
             "@category",
             "@since"
@@ -348164,8 +348846,8 @@
           "exportKind": "const",
           "filePath": "src/OutboxServer.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxServer.ts",
-          "line": 166,
-          "anchor": "packages-drivers-m365-mcp-src-outboxserver-ts-166-outboxhandlersettings",
+          "line": 167,
+          "anchor": "packages-drivers-m365-mcp-src-outboxserver-ts-167-outboxhandlersettings",
           "currentTags": [
             "@category",
             "@since"
@@ -348186,8 +348868,8 @@
           "exportKind": "const",
           "filePath": "src/OutboxServer.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxServer.ts",
-          "line": 195,
-          "anchor": "packages-drivers-m365-mcp-src-outboxserver-ts-195-makeoutboxliveservices",
+          "line": 196,
+          "anchor": "packages-drivers-m365-mcp-src-outboxserver-ts-196-makeoutboxliveservices",
           "currentTags": [
             "@category",
             "@since"
@@ -348318,8 +349000,8 @@
           "exportKind": "class",
           "filePath": "src/OutboxTools.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxTools.ts",
-          "line": 64,
-          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-64-outboxtoolerror",
+          "line": 68,
+          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-68-outboxtoolerror",
           "currentTags": [
             "@category",
             "@since"
@@ -348340,8 +349022,8 @@
           "exportKind": "class",
           "filePath": "src/OutboxTools.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxTools.ts",
-          "line": 103,
-          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-103-outboxcreatedraftparams",
+          "line": 107,
+          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-107-outboxcreatedraftparams",
           "currentTags": [
             "@category",
             "@since"
@@ -348362,8 +349044,8 @@
           "exportKind": "class",
           "filePath": "src/OutboxTools.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxTools.ts",
-          "line": 134,
-          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-134-outboxdraftcreated",
+          "line": 142,
+          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-142-outboxdraftcreated",
           "currentTags": [
             "@category",
             "@since"
@@ -348384,8 +349066,8 @@
           "exportKind": "class",
           "filePath": "src/OutboxTools.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxTools.ts",
-          "line": 164,
-          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-164-outboxdraftref",
+          "line": 176,
+          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-176-outboxdraftref",
           "currentTags": [
             "@category",
             "@since"
@@ -348406,8 +349088,8 @@
           "exportKind": "class",
           "filePath": "src/OutboxTools.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxTools.ts",
-          "line": 193,
-          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-193-outboxdraftview",
+          "line": 207,
+          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-207-outboxdraftview",
           "currentTags": [
             "@category",
             "@since"
@@ -348428,8 +349110,8 @@
           "exportKind": "class",
           "filePath": "src/OutboxTools.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxTools.ts",
-          "line": 239,
-          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-239-outboxsenddraftparams",
+          "line": 257,
+          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-257-outboxsenddraftparams",
           "currentTags": [
             "@category",
             "@since"
@@ -348450,8 +349132,8 @@
           "exportKind": "class",
           "filePath": "src/OutboxTools.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxTools.ts",
-          "line": 269,
-          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-269-outboxsendresult",
+          "line": 287,
+          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-287-outboxsendresult",
           "currentTags": [
             "@category",
             "@since"
@@ -348472,8 +349154,8 @@
           "exportKind": "class",
           "filePath": "src/OutboxTools.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxTools.ts",
-          "line": 302,
-          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-302-outboxeventcreated",
+          "line": 320,
+          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-320-outboxeventcreated",
           "currentTags": [
             "@category",
             "@since"
@@ -348494,8 +349176,8 @@
           "exportKind": "class",
           "filePath": "src/OutboxTools.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxTools.ts",
-          "line": 329,
-          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-329-outboxupdateeventparams",
+          "line": 347,
+          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-347-outboxupdateeventparams",
           "currentTags": [
             "@category",
             "@since"
@@ -348516,8 +349198,8 @@
           "exportKind": "class",
           "filePath": "src/OutboxTools.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxTools.ts",
-          "line": 356,
-          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-356-outboxeventupdated",
+          "line": 374,
+          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-374-outboxeventupdated",
           "currentTags": [
             "@category",
             "@since"
@@ -348538,8 +349220,8 @@
           "exportKind": "const",
           "filePath": "src/OutboxTools.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxTools.ts",
-          "line": 377,
-          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-377-outboxcreatedrafttool",
+          "line": 395,
+          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-395-outboxcreatedrafttool",
           "currentTags": [
             "@category",
             "@since"
@@ -348560,8 +349242,8 @@
           "exportKind": "const",
           "filePath": "src/OutboxTools.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxTools.ts",
-          "line": 404,
-          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-404-outboxgetdrafttool",
+          "line": 422,
+          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-422-outboxgetdrafttool",
           "currentTags": [
             "@category",
             "@since"
@@ -348582,8 +349264,8 @@
           "exportKind": "const",
           "filePath": "src/OutboxTools.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxTools.ts",
-          "line": 431,
-          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-431-outboxdeletedrafttool",
+          "line": 449,
+          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-449-outboxdeletedrafttool",
           "currentTags": [
             "@category",
             "@since"
@@ -348604,8 +349286,8 @@
           "exportKind": "const",
           "filePath": "src/OutboxTools.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxTools.ts",
-          "line": 459,
-          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-459-outboxsenddrafttool",
+          "line": 477,
+          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-477-outboxsenddrafttool",
           "currentTags": [
             "@category",
             "@since"
@@ -348626,8 +349308,8 @@
           "exportKind": "const",
           "filePath": "src/OutboxTools.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxTools.ts",
-          "line": 486,
-          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-486-outboxcreateeventtool",
+          "line": 504,
+          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-504-outboxcreateeventtool",
           "currentTags": [
             "@category",
             "@since"
@@ -348648,8 +349330,8 @@
           "exportKind": "const",
           "filePath": "src/OutboxTools.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxTools.ts",
-          "line": 514,
-          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-514-outboxupdateeventtool",
+          "line": 532,
+          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-532-outboxupdateeventtool",
           "currentTags": [
             "@category",
             "@since"
@@ -348670,8 +349352,8 @@
           "exportKind": "const",
           "filePath": "src/OutboxTools.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxTools.ts",
-          "line": 541,
-          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-541-outboxtoolkit",
+          "line": 559,
+          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-559-outboxtoolkit",
           "currentTags": [
             "@category",
             "@since"
@@ -348692,8 +349374,8 @@
           "exportKind": "type",
           "filePath": "src/OutboxTools.ts",
           "repoPath": "packages/drivers/m365-mcp/src/OutboxTools.ts",
-          "line": 566,
-          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-566-outboxtoolkit",
+          "line": 584,
+          "anchor": "packages-drivers-m365-mcp-src-outboxtools-ts-584-outboxtoolkit",
           "currentTags": [
             "@category",
             "@since"
@@ -348886,12 +349568,56 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"./OutboxConfig.ts\";",
+          "symbolName": "export * from \"./OutboxBasis.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/m365-mcp/src/index.ts",
           "line": 66,
-          "anchor": "packages-drivers-m365-mcp-src-index-ts-66-export-from-outboxconfig-ts",
+          "anchor": "packages-drivers-m365-mcp-src-index-ts-66-export-from-outboxbasis-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./OutboxBasisReader.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/index.ts",
+          "line": 73,
+          "anchor": "packages-drivers-m365-mcp-src-index-ts-73-export-from-outboxbasisreader-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./OutboxConfig.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/index.ts",
+          "line": 80,
+          "anchor": "packages-drivers-m365-mcp-src-index-ts-80-export-from-outboxconfig-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -348912,8 +349638,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/m365-mcp/src/index.ts",
-          "line": 73,
-          "anchor": "packages-drivers-m365-mcp-src-index-ts-73-export-from-outboxeventguard-ts",
+          "line": 87,
+          "anchor": "packages-drivers-m365-mcp-src-index-ts-87-export-from-outboxeventguard-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -348934,8 +349660,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/m365-mcp/src/index.ts",
-          "line": 80,
-          "anchor": "packages-drivers-m365-mcp-src-index-ts-80-export-from-outboxhandlers-ts",
+          "line": 94,
+          "anchor": "packages-drivers-m365-mcp-src-index-ts-94-export-from-outboxhandlers-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -348956,8 +349682,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/m365-mcp/src/index.ts",
-          "line": 87,
-          "anchor": "packages-drivers-m365-mcp-src-index-ts-87-export-from-outboxsendguard-ts",
+          "line": 101,
+          "anchor": "packages-drivers-m365-mcp-src-index-ts-101-export-from-outboxsendguard-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -348978,8 +349704,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/m365-mcp/src/index.ts",
-          "line": 94,
-          "anchor": "packages-drivers-m365-mcp-src-index-ts-94-export-from-outboxserver-ts",
+          "line": 108,
+          "anchor": "packages-drivers-m365-mcp-src-index-ts-108-export-from-outboxserver-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -349000,8 +349726,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/m365-mcp/src/index.ts",
-          "line": 101,
-          "anchor": "packages-drivers-m365-mcp-src-index-ts-101-export-from-outboxstoredattachments-ts",
+          "line": 115,
+          "anchor": "packages-drivers-m365-mcp-src-index-ts-115-export-from-outboxstoredattachments-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -349022,8 +349748,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/m365-mcp/src/index.ts",
-          "line": 108,
-          "anchor": "packages-drivers-m365-mcp-src-index-ts-108-export-from-outboxtools-ts",
+          "line": 122,
+          "anchor": "packages-drivers-m365-mcp-src-index-ts-122-export-from-outboxtools-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -349044,8 +349770,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/m365-mcp/src/index.ts",
-          "line": 115,
-          "anchor": "packages-drivers-m365-mcp-src-index-ts-115-export-from-server-ts",
+          "line": 129,
+          "anchor": "packages-drivers-m365-mcp-src-index-ts-129-export-from-server-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -349066,8 +349792,8 @@
           "exportKind": "const",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/m365-mcp/src/index.ts",
-          "line": 137,
-          "anchor": "packages-drivers-m365-mcp-src-index-ts-137-version",
+          "line": 151,
+          "anchor": "packages-drivers-m365-mcp-src-index-ts-151-version",
           "currentTags": [
             "@category",
             "@since"
@@ -509236,9 +509962,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 576,
-        "publicModuleCount": 572,
-        "publicExportCount": 5294
+        "sourceFileCount": 578,
+        "publicModuleCount": 574,
+        "publicExportCount": 5311
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -511155,6 +511881,28 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/commands/Ci/CiBinaryClosure.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiBinaryClosure.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cibinaryclosure-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 5,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/commands/Ci/CiBootstrap.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiBootstrap.command.ts",
           "line": 1,
@@ -511376,7 +512124,7 @@
               "rule": "multiple-description-paragraphs"
             }
           ],
-          "exportCount": 35,
+          "exportCount": 37,
           "remediationStatus": "open"
         },
         {
@@ -511702,7 +512450,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 30,
+          "exportCount": 34,
           "remediationStatus": "resolved"
         },
         {
@@ -511744,7 +512492,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 22,
+          "exportCount": 24,
           "remediationStatus": "resolved"
         },
         {
@@ -516583,6 +517331,28 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/commands/Lint/CoverageOwners.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/CoverageOwners.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-coverageowners-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/commands/Lint/EcosystemPolarity.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/EcosystemPolarity.ts",
           "line": 1,
@@ -517048,7 +517818,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 3,
+          "exportCount": 5,
           "remediationStatus": "resolved"
         },
         {
@@ -536352,8 +537122,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/Ci.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
-          "line": 297,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-ci-command-ts-297-appendturbosummary",
+          "line": 298,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-ci-command-ts-298-appendturbosummary",
           "currentTags": [
             "@param",
             "@returns",
@@ -536377,8 +537147,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/Ci.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
-          "line": 393,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-ci-command-ts-393-cicommand",
+          "line": 394,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-ci-command-ts-394-cicommand",
           "currentTags": [
             "@category",
             "@since"
@@ -536649,6 +537419,120 @@
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiBinary.ts",
           "line": 116,
           "anchor": "packages-tooling-tool-cli-src-commands-ci-cibinary-ts-116-cibinaryrunmainoptions",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiBinaryClosureFile",
+          "exportKind": "class",
+          "filePath": "src/commands/Ci/CiBinaryClosure.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiBinaryClosure.ts",
+          "line": 90,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cibinaryclosure-ts-90-cibinaryclosurefile",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiBinaryClosure",
+          "exportKind": "class",
+          "filePath": "src/commands/Ci/CiBinaryClosure.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiBinaryClosure.ts",
+          "line": 120,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cibinaryclosure-ts-120-cibinaryclosure",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ciBinaryClosureOf",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiBinaryClosure.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiBinaryClosure.ts",
+          "line": 193,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cibinaryclosure-ts-193-cibinaryclosureof",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "computeCiBinaryClosure",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiBinaryClosure.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiBinaryClosure.ts",
+          "line": 236,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cibinaryclosure-ts-236-computecibinaryclosure",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ciBinaryClosureCommand",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiBinaryClosure.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiBinaryClosure.ts",
+          "line": 275,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cibinaryclosure-ts-275-cibinaryclosurecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -537584,8 +538468,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 124,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-124-ci-lane-class-values",
+          "line": 125,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-125-ci-lane-class-values",
           "currentTags": [
             "@category",
             "@since"
@@ -537606,8 +538490,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 140,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-140-cilaneclass",
+          "line": 141,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-141-cilaneclass",
           "currentTags": [
             "@category",
             "@since"
@@ -537628,8 +538512,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 161,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-161-cilaneclass",
+          "line": 162,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-162-cilaneclass",
           "currentTags": [
             "@category",
             "@since"
@@ -537650,8 +538534,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 177,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-177-ci-lane-replay-values",
+          "line": 178,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-178-ci-lane-replay-values",
           "currentTags": [
             "@category",
             "@since"
@@ -537672,8 +538556,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 193,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-193-cilanereplay",
+          "line": 194,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-194-cilanereplay",
           "currentTags": [
             "@category",
             "@since"
@@ -537694,8 +538578,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 214,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-214-cilanereplay",
+          "line": 215,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-215-cilanereplay",
           "currentTags": [
             "@category",
             "@since"
@@ -537716,8 +538600,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 230,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-230-ci-lane-id-values",
+          "line": 231,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-231-ci-lane-id-values",
           "currentTags": [
             "@category",
             "@since"
@@ -537738,8 +538622,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 270,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-270-cilaneid",
+          "line": 271,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-271-cilaneid",
           "currentTags": [
             "@category",
             "@since"
@@ -537760,8 +538644,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 291,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-291-cilaneid",
+          "line": 292,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-292-cilaneid",
           "currentTags": [
             "@category",
             "@since"
@@ -537782,8 +538666,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 309,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-309-docgen-lane-mode-values",
+          "line": 310,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-310-docgen-lane-mode-values",
           "currentTags": [
             "@category",
             "@since"
@@ -537804,8 +538688,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 325,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-325-docgenlanemode",
+          "line": 326,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-326-docgenlanemode",
           "currentTags": [
             "@category",
             "@since"
@@ -537826,8 +538710,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 346,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-346-docgenlanemode",
+          "line": 347,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-347-docgenlanemode",
           "currentTags": [
             "@category",
             "@since"
@@ -537848,8 +538732,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 374,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-374-cilanedescriptor",
+          "line": 375,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-375-cilanedescriptor",
           "currentTags": [
             "@category",
             "@since"
@@ -537870,8 +538754,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 416,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-416-ci-lane-descriptors",
+          "line": 417,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-417-ci-lane-descriptors",
           "currentTags": [
             "@category",
             "@since"
@@ -537896,8 +538780,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 710,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-710-cilanerunoptions",
+          "line": 711,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-711-cilanerunoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -537918,8 +538802,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 919,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-919-cilanepartitionproof",
+          "line": 920,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-920-cilanepartitionproof",
           "currentTags": [
             "@category",
             "@since"
@@ -537940,8 +538824,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1167,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1167-provecilanepartition",
+          "line": 1168,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1168-provecilanepartition",
           "currentTags": [
             "@param",
             "@returns",
@@ -537964,8 +538848,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1262,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1262-plannedcilanepartitions",
+          "line": 1263,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1263-plannedcilanepartitions",
           "currentTags": [
             "@param",
             "@returns",
@@ -537988,8 +538872,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1426,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1426-cilanepartitionsteprequest",
+          "line": 1427,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1427-cilanepartitionsteprequest",
           "currentTags": [
             "@category",
             "@since"
@@ -538010,8 +538894,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1469,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1469-cilanepartitionstepfortesting",
+          "line": 1470,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1470-cilanepartitionstepfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538034,8 +538918,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1494,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1494-cilanepartitionargs",
+          "line": 1495,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1495-cilanepartitionargs",
           "currentTags": [
             "@category",
             "@since"
@@ -538056,8 +538940,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1526,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1526-cilanedefaultplacementlinesfortesting",
+          "line": 1527,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1527-cilanedefaultplacementlinesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538080,8 +538964,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1573,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1573-cilanepartitionargsfortesting",
+          "line": 1574,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1574-cilanepartitionargsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538104,8 +538988,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1787,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1787-cilanestepsfortesting",
+          "line": 1788,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1788-cilanestepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538132,11 +539016,58 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2155,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2155-docgenlanemodeforchangedpaths",
+          "line": 2165,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2165-docgenlanemodeforchangedpaths",
           "currentTags": [
             "@param",
             "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ciLaneFailurePolicy",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiLane.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+          "line": 2289,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2289-cilanefailurepolicy",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "runCiLaneSteps",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiLane.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+          "line": 2314,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2314-runcilanesteps",
+          "currentTags": [
+            "@param",
             "@category",
             "@since"
           ],
@@ -538156,8 +539087,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2647,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2647-plancilanepartitions",
+          "line": 2710,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2710-plancilanepartitions",
           "currentTags": [
             "@param",
             "@returns",
@@ -538180,8 +539111,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2731,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2731-runcilane",
+          "line": 2794,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2794-runcilane",
           "currentTags": [
             "@param",
             "@returns",
@@ -538204,8 +539135,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2815,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2815-cilanecommand",
+          "line": 2878,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2878-cilanecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -538226,8 +539157,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 3068,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3068-ci-local-default-lanes",
+          "line": 3131,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3131-ci-local-default-lanes",
           "currentTags": [
             "@category",
             "@since"
@@ -538248,8 +539179,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 3162,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3162-cilocalstepplan",
+          "line": 3225,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3225-cilocalstepplan",
           "currentTags": [
             "@category",
             "@since"
@@ -538270,8 +539201,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 3243,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3243-cilanedispatchstep",
+          "line": 3306,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3306-cilanedispatchstep",
           "currentTags": [
             "@param",
             "@returns",
@@ -538294,8 +539225,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 3281,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3281-cilocalstepsfortesting",
+          "line": 3344,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3344-cilocalstepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538318,8 +539249,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 3317,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3317-cilocallaneinputsfortesting",
+          "line": 3380,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3380-cilocallaneinputsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538342,8 +539273,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 3348,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3348-runcilocal",
+          "line": 3411,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3411-runcilocal",
           "currentTags": [
             "@param",
             "@returns",
@@ -538366,8 +539297,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 3384,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3384-cilocalcommand",
+          "line": 3447,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3447-cilocalcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -538768,8 +539699,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 219,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-219-cioperationalpatterns",
+          "line": 260,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-260-cioperationalpatterns",
           "currentTags": [
             "@category",
             "@since"
@@ -538790,8 +539721,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 256,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-256-heavydocsonlypattern",
+          "line": 297,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-297-heavydocsonlypattern",
           "currentTags": [
             "@category",
             "@since"
@@ -538812,8 +539743,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 278,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-278-isheavydocsonlypath",
+          "line": 319,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-319-isheavydocsonlypath",
           "currentTags": [
             "@param",
             "@returns",
@@ -538836,8 +539767,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 294,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-294-cigoaldocument",
+          "line": 335,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-335-cigoaldocument",
           "currentTags": [
             "@category",
             "@since"
@@ -538858,8 +539789,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 311,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-311-cigoaldocument",
+          "line": 352,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-352-cigoaldocument",
           "currentTags": [
             "@category",
             "@since"
@@ -538880,8 +539811,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 327,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-327-cidesktopinput",
+          "line": 368,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-368-cidesktopinput",
           "currentTags": [
             "@category",
             "@since"
@@ -538902,8 +539833,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 344,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-344-cidesktopinput",
+          "line": 385,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-385-cidesktopinput",
           "currentTags": [
             "@category",
             "@since"
@@ -538924,8 +539855,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 360,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-360-ciresourcelane",
+          "line": 401,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-401-ciresourcelane",
           "currentTags": [
             "@category",
             "@since"
@@ -538946,8 +539877,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 377,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-377-ciresourcelane",
+          "line": 418,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-418-ciresourcelane",
           "currentTags": [
             "@category",
             "@since"
@@ -538968,8 +539899,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 392,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-392-cichangeprofile",
+          "line": 433,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-433-cichangeprofile",
           "currentTags": [
             "@category",
             "@since"
@@ -538990,8 +539921,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 411,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-411-ciresourcesample",
+          "line": 452,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-452-ciresourcesample",
           "currentTags": [
             "@category",
             "@since"
@@ -539012,8 +539943,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 445,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-445-cienvironmentselection",
+          "line": 486,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-486-cienvironmentselection",
           "currentTags": [
             "@category",
             "@since"
@@ -542694,8 +543625,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/Route.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.command.ts",
-          "line": 341,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-command-ts-341-ciroutecommand",
+          "line": 345,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-command-ts-345-ciroutecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -542716,8 +543647,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/Route.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.command.ts",
-          "line": 359,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-command-ts-359-cirouteservices",
+          "line": 363,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-command-ts-363-cirouteservices",
           "currentTags": [
             "@category",
             "@since"
@@ -542738,8 +543669,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/Route.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.command.ts",
-          "line": 378,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-command-ts-378-makeciroutecommandfortesting",
+          "line": 382,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-command-ts-382-makeciroutecommandfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -543199,12 +544130,100 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "RouteJobClass",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/Route.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.schemas.ts",
+          "line": 645,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-645-routejobclass",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RouteJobClass",
+          "exportKind": "type",
+          "filePath": "src/commands/Ci/Route.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.schemas.ts",
+          "line": 657,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-657-routejobclass",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RouteJobAttribution",
+          "exportKind": "class",
+          "filePath": "src/commands/Ci/Route.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.schemas.ts",
+          "line": 676,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-676-routejobattribution",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RouteJobMinutes",
+          "exportKind": "class",
+          "filePath": "src/commands/Ci/Route.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.schemas.ts",
+          "line": 719,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-719-routejobminutes",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "RouteCostBasis",
           "exportKind": "const",
           "filePath": "src/commands/Ci/Route.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.schemas.ts",
-          "line": 637,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-637-routecostbasis",
+          "line": 753,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-753-routecostbasis",
           "currentTags": [
             "@category",
             "@since"
@@ -543225,8 +544244,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/Route.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.schemas.ts",
-          "line": 649,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-649-routecostbasis",
+          "line": 765,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-765-routecostbasis",
           "currentTags": [
             "@category",
             "@since"
@@ -543247,8 +544266,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/Route.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.schemas.ts",
-          "line": 667,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-667-routelanecost",
+          "line": 783,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-783-routelanecost",
           "currentTags": [
             "@category",
             "@since"
@@ -543269,8 +544288,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/Route.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.schemas.ts",
-          "line": 712,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-712-routecensusrow",
+          "line": 828,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-828-routecensusrow",
           "currentTags": [
             "@category",
             "@since"
@@ -543291,8 +544310,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/Route.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.schemas.ts",
-          "line": 756,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-756-routecensus",
+          "line": 885,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-885-routecensus",
           "currentTags": [
             "@category",
             "@since"
@@ -543313,8 +544332,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/Route.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.schemas.ts",
-          "line": 798,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-798-routereplayhead",
+          "line": 928,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-928-routereplayhead",
           "currentTags": [
             "@category",
             "@since"
@@ -543335,8 +544354,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/Route.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.schemas.ts",
-          "line": 846,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-846-routereplay",
+          "line": 976,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-976-routereplay",
           "currentTags": [
             "@category",
             "@since"
@@ -543357,8 +544376,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/Route.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.schemas.ts",
-          "line": 879,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-879-routeerrorreason",
+          "line": 1009,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-1009-routeerrorreason",
           "currentTags": [
             "@category",
             "@since"
@@ -543379,8 +544398,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/Route.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.schemas.ts",
-          "line": 898,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-898-routeerrorreason",
+          "line": 1028,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-1028-routeerrorreason",
           "currentTags": [
             "@category",
             "@since"
@@ -543401,8 +544420,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/Route.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.schemas.ts",
-          "line": 915,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-915-routeerror",
+          "line": 1045,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-schemas-ts-1045-routeerror",
           "currentTags": [
             "@category",
             "@since"
@@ -543665,8 +544684,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/RouteCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
-          "line": 105,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-105-prepushlaneid",
+          "line": 107,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-107-prepushlaneid",
           "currentTags": [
             "@param",
             "@returns",
@@ -543689,8 +544708,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/RouteCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
-          "line": 126,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-126-cilaneofprepushlaneid",
+          "line": 128,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-128-cilaneofprepushlaneid",
           "currentTags": [
             "@param",
             "@returns",
@@ -543713,8 +544732,32 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/RouteCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
-          "line": 168,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-168-jobnametolane",
+          "line": 209,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-209-jobnametolane",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "hostedJobAttribution",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/RouteCensus.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
+          "line": 246,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-246-hostedjobattribution",
           "currentTags": [
             "@param",
             "@returns",
@@ -543737,8 +544780,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/RouteCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
-          "line": 198,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-198-hostedjobcostms",
+          "line": 280,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-280-hostedjobcostms",
           "currentTags": [
             "@param",
             "@returns",
@@ -543761,8 +544804,32 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/RouteCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
-          "line": 233,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-233-hostedlanejobs",
+          "line": 315,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-315-hostedlanejobs",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "routeJobMinutes",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/RouteCensus.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
+          "line": 356,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-356-routejobminutes",
           "currentTags": [
             "@param",
             "@returns",
@@ -543785,8 +544852,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/RouteCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
-          "line": 273,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-273-orderselectedlanes",
+          "line": 416,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-416-orderselectedlanes",
           "currentTags": [
             "@param",
             "@returns",
@@ -543809,8 +544876,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/RouteCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
-          "line": 315,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-315-routefootprintdigest",
+          "line": 458,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-458-routefootprintdigest",
           "currentTags": [
             "@category",
             "@since"
@@ -543831,8 +544898,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/RouteCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
-          "line": 326,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-326-routeaffectedpackages",
+          "line": 469,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-469-routeaffectedpackages",
           "currentTags": [
             "@category",
             "@since"
@@ -543853,8 +544920,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/RouteCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
-          "line": 351,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-351-changedetectoraffectedpackages",
+          "line": 494,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-494-changedetectoraffectedpackages",
           "currentTags": [
             "@category",
             "@since"
@@ -543875,8 +544942,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/RouteCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
-          "line": 394,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-394-makeverificationroute",
+          "line": 537,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-537-makeverificationroute",
           "currentTags": [
             "@param",
             "@returns",
@@ -543899,8 +544966,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/RouteCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
-          "line": 438,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-438-verificationroutelayer",
+          "line": 581,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-581-verificationroutelayer",
           "currentTags": [
             "@param",
             "@returns",
@@ -543923,8 +544990,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/RouteCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
-          "line": 463,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-463-verificationroutelive",
+          "line": 606,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-606-verificationroutelive",
           "currentTags": [
             "@category",
             "@since"
@@ -543945,8 +545012,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/RouteCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
-          "line": 492,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-492-missingfrombatchcheck",
+          "line": 635,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-635-missingfrombatchcheck",
           "currentTags": [
             "@param",
             "@returns",
@@ -543969,8 +545036,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Ci/RouteCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
-          "line": 517,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-517-routeheadfetchshape",
+          "line": 660,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-660-routeheadfetchshape",
           "currentTags": [
             "@category",
             "@since"
@@ -543991,8 +545058,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/RouteCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
-          "line": 557,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-557-ensurerouteheads",
+          "line": 700,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-700-ensurerouteheads",
           "currentTags": [
             "@param",
             "@returns",
@@ -544015,8 +545082,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Ci/RouteCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
-          "line": 590,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-590-routegitshape",
+          "line": 733,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-733-routegitshape",
           "currentTags": [
             "@category",
             "@since"
@@ -544037,8 +545104,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/RouteCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
-          "line": 623,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-623-routegit",
+          "line": 766,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-766-routegit",
           "currentTags": [
             "@category",
             "@since"
@@ -544059,8 +545126,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/RouteCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
-          "line": 665,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-665-makeroutegit",
+          "line": 808,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-808-makeroutegit",
           "currentTags": [
             "@param",
             "@returns",
@@ -544083,8 +545150,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/RouteCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
-          "line": 780,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-780-routegitlayer",
+          "line": 923,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-923-routegitlayer",
           "currentTags": [
             "@param",
             "@returns",
@@ -544107,8 +545174,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/RouteCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
-          "line": 825,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-825-routelanecosts",
+          "line": 968,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-968-routelanecosts",
           "currentTags": [
             "@param",
             "@returns",
@@ -544131,8 +545198,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/RouteCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
-          "line": 1000,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-1000-makeroutecensusreader",
+          "line": 1143,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-1143-makeroutecensusreader",
           "currentTags": [
             "@category",
             "@since"
@@ -544153,8 +545220,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/RouteCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts",
-          "line": 1156,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-1156-routecensusreaderlive",
+          "line": 1300,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecensus-ts-1300-routecensusreaderlive",
           "currentTags": [
             "@category",
             "@since"
@@ -592545,6 +593612,52 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "runCoverageOwnersLint",
+          "exportKind": "const",
+          "filePath": "src/commands/Lint/CoverageOwners.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/CoverageOwners.ts",
+          "line": 49,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-coverageowners-ts-49-runcoverageownerslint",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "lintCoverageOwnersCommand",
+          "exportKind": "const",
+          "filePath": "src/commands/Lint/CoverageOwners.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/CoverageOwners.ts",
+          "line": 88,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-coverageowners-ts-88-lintcoverageownerscommand",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "EcosystemPolarityOptions",
           "exportKind": "class",
           "filePath": "src/commands/Lint/EcosystemPolarity.ts",
@@ -593788,8 +594901,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts",
-          "line": 94,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-command-ts-94-lintcommand",
+          "line": 96,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-command-ts-96-lintcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -596428,12 +597541,60 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "livePolicySourceTree",
+          "exportKind": "const",
+          "filePath": "src/commands/Lint/PolicyFingerprint.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
+          "line": 332,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-332-livepolicysourcetree",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "readPolicyWorkspaces",
+          "exportKind": "const",
+          "filePath": "src/commands/Lint/PolicyFingerprint.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
+          "line": 352,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-352-readpolicyworkspaces",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "computePolicyFingerprint",
           "exportKind": "const",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 318,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-318-computepolicyfingerprint",
+          "line": 379,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-379-computepolicyfingerprint",
           "currentTags": [
             "@category",
             "@since"
@@ -596454,8 +597615,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 756,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-756-policytoolsfingerprintpolicy",
+          "line": 817,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-817-policytoolsfingerprintpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -596476,8 +597637,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 831,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-831-lintpolicyfingerprintcommand",
+          "line": 892,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-892-lintpolicyfingerprintcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -611356,8 +612517,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 153,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-153-export-testtsgosyntheticconfigtemplate-from-internal-testtsgosyntheticconfig-ts",
+          "line": 156,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-156-export-testtsgosyntheticconfigtemplate-from-internal-testtsgosyntheticconfig-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -611378,8 +612539,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 160,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-160-export-qualityscriptcommanderror-from-quality-errors-ts",
+          "line": 163,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-163-export-qualityscriptcommanderror-from-quality-errors-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -611400,8 +612561,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 167,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-167-export-githubchecklanespec-githubchecklanestage-githubcheckmode-githubchecksfallowfeaturematrix-qualityhardwareprofile-qualityprofileconfig-qualityprofiledetection-from-quality-schemas-ts",
+          "line": 170,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-170-export-githubchecklanespec-githubchecklanestage-githubcheckmode-githubchecksfallowfeaturematrix-qualityhardwareprofile-qualityprofileconfig-qualityprofiledetection-from-quality-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -611422,8 +612583,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 191,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-191-qualityprofiledetectioninput",
+          "line": 194,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-194-qualityprofiledetectioninput",
           "currentTags": [
             "@category",
             "@since"
@@ -611444,8 +612605,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 207,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-207-githubchecklanesformodefortesting",
+          "line": 210,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-210-githubchecklanesformodefortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -611466,8 +612627,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 223,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-223-githubcheckprepushexternallanesfortesting",
+          "line": 226,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-226-githubcheckprepushexternallanesfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -611488,8 +612649,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 239,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-239-githubcheckpromotedfallowlanediagnosticsfortesting",
+          "line": 242,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-242-githubcheckpromotedfallowlanediagnosticsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -611510,8 +612671,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 256,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-256-githubcheckqualitylanesfortesting",
+          "line": 259,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-259-githubcheckqualitylanesfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -611532,8 +612693,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 272,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-272-githubcheckreposanitylanesfortesting",
+          "line": 275,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-275-githubcheckreposanitylanesfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -611554,8 +612715,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 288,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-288-promotedfallowgithubchecklaneidsfortesting",
+          "line": 291,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-291-promotedfallowgithubchecklaneidsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -611576,8 +612737,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 304,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-304-detectqualityprofilefortesting",
+          "line": 307,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-307-detectqualityprofilefortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -611598,8 +612759,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 320,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-320-qualityprofileconfigfortesting",
+          "line": 323,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-323-qualityprofileconfigfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -611620,8 +612781,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 336,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-336-activeosvignoreidsfortesting",
+          "line": 339,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-339-activeosvignoreidsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -611642,8 +612803,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 386,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-386-iseffectdiagnosticsdirectivefortesting",
+          "line": 389,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-389-iseffectdiagnosticsdirectivefortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -611666,8 +612827,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 424,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-424-effectdiagnosticsdirectiveexemption",
+          "line": 427,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-427-effectdiagnosticsdirectiveexemption",
           "currentTags": [
             "@category",
             "@since"
@@ -611688,8 +612849,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 465,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-465-effectdiagnosticsdirectiveexemptions",
+          "line": 468,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-468-effectdiagnosticsdirectiveexemptions",
           "currentTags": [
             "@category",
             "@since"
@@ -611710,8 +612871,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 515,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-515-tsgodisabledrule",
+          "line": 518,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-518-tsgodisabledrule",
           "currentTags": [
             "@category",
             "@since"
@@ -611732,8 +612893,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 557,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-557-tsgodisabledrules",
+          "line": 560,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-560-tsgodisabledrules",
           "currentTags": [
             "@category",
             "@since"
@@ -611754,8 +612915,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 631,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-631-isrejectedeffectdiagnosticsdirectivefortesting",
+          "line": 634,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-634-isrejectedeffectdiagnosticsdirectivefortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -611778,8 +612939,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 880,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-880-qualitycommandprimitivehelpersfortesting",
+          "line": 883,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-883-qualitycommandprimitivehelpersfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -611800,8 +612961,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1080,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1080-ensureoriginmainfortesting",
+          "line": 1083,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1083-ensureoriginmainfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -611822,8 +612983,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1130,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1130-runbunaudit",
+          "line": 1133,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1133-runbunaudit",
           "currentTags": [
             "@param",
             "@returns",
@@ -611850,8 +613011,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1271,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1271-devqualitystepsfortesting",
+          "line": 1274,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1274-devqualitystepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -611874,8 +613035,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1343,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1343-reviewfixdocgenlocalargsfortesting",
+          "line": 1346,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1346-reviewfixdocgenlocalargsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -611898,8 +613059,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1621,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1621-rungithubchecks",
+          "line": 1624,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1624-rungithubchecks",
           "currentTags": [
             "@param",
             "@returns",
@@ -611922,8 +613083,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1873,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1873-testtsgoplanningfortesting",
+          "line": 1876,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1876-testtsgoplanningfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -611944,8 +613105,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2018,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2018-collecteffecttsgodiagnosticlines",
+          "line": 2021,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2021-collecteffecttsgodiagnosticlines",
           "currentTags": [
             "@param",
             "@returns",
@@ -611968,8 +613129,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2051,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2051-missingtesttsgotaskmessagefortesting",
+          "line": 2054,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2054-missingtesttsgotaskmessagefortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -611992,8 +613153,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2164,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2164-extracteffecttsgoreadmepluginoptionnamesfortesting",
+          "line": 2167,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2167-extracteffecttsgoreadmepluginoptionnamesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -612016,8 +613177,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2234,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2234-collecttsgopluginoptionparitydiagnosticsfortesting",
+          "line": 2237,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2237-collecttsgopluginoptionparitydiagnosticsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -612040,8 +613201,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2362,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2362-collecttsgoseveritydiagnosticsfortesting",
+          "line": 2365,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2365-collecttsgoseveritydiagnosticsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -612064,8 +613225,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2650,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2650-collecttsgopluginprofilediagnosticsfortesting",
+          "line": 2653,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2653-collecttsgopluginprofilediagnosticsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -612088,8 +613249,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2672,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2672-collecttsconfiginheritancediagnosticsfortesting",
+          "line": 2675,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2675-collecttsconfiginheritancediagnosticsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -612110,8 +613271,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2859,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2859-collecttsgoworkspacescandiagnosticsfortesting",
+          "line": 2862,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2862-collecttsgoworkspacescandiagnosticsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -612134,8 +613295,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2929,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2929-runtsgorulescheck",
+          "line": 2932,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2932-runtsgorulescheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -612157,8 +613318,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3052,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3052-runtesttsgochecks",
+          "line": 3055,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3055-runtesttsgochecks",
           "currentTags": [
             "@param",
             "@returns",
@@ -612181,8 +613342,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3154,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3154-runtesttsgochecksat",
+          "line": 3157,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3157-runtesttsgochecksat",
           "currentTags": [
             "@param",
             "@returns",
@@ -612205,8 +613366,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3200,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3200-runtsgosmokecheck",
+          "line": 3203,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3203-runtsgosmokecheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -612228,8 +613389,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3313,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3313-ismoduletagscannedpathfortesting",
+          "line": 3316,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3316-ismoduletagscannedpathfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -612252,8 +613413,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3334,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3334-runjsdocmoduletagscheck",
+          "line": 3337,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3337-runjsdocmoduletagscheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -612275,8 +613436,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3408,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3408-runjsdocinventory",
+          "line": 3411,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3411-runjsdocinventory",
           "currentTags": [
             "@returns",
             "@category",
@@ -612298,8 +613459,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3475,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3475-runjsdocquality",
+          "line": 3478,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3478-runjsdocquality",
           "currentTags": [
             "@category",
             "@since"
@@ -612320,8 +613481,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3906,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3906-renderadmissionsnapshotlinesfortesting",
+          "line": 3949,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3949-renderadmissionsnapshotlinesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -612344,8 +613505,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 4067,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-4067-qualitycommand",
+          "line": 4110,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-4110-qualitycommand",
           "currentTags": [
             "@category",
             "@since"

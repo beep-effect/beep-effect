@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-13T01:12:54.769Z
+Generated: 2026-11-13T01:21:43.142Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 179 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 15 |
-| publicModules | 3902 |
-| publicExports | 27889 |
+| publicModules | 3906 |
+| publicExports | 27937 |
 | openModules | 114 |
 | openExports | 88 |
 | missingExportExamples | 0 |
@@ -176,7 +176,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 118 | `@beep/alchemy-postgres` | `packages/drivers/alchemy-postgres` | clean | 8 | 50 | 0 | 0 |
 | 119 | `@beep/editor` | `packages/foundation/ui-system/editor` | clean | 34 | 210 | 0 | 0 |
 | 120 | `@beep/github-actions` | `packages/drivers/github-actions` | clean | 24 | 162 | 0 | 0 |
-| 121 | `@beep/m365-mcp` | `packages/drivers/m365-mcp` | clean | 13 | 109 | 0 | 0 |
+| 121 | `@beep/m365-mcp` | `packages/drivers/m365-mcp` | clean | 15 | 140 | 0 | 0 |
 | 122 | `@beep/n3` | `packages/drivers/n3` | clean | 3 | 11 | 0 | 0 |
 | 123 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | clean | 48 | 312 | 0 | 0 |
 | 124 | `@beep/oip-web` | `apps/oip-web` | clean | 31 | 87 | 0 | 0 |
@@ -221,7 +221,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 163 | `@beep/ontology-server` | `packages/ontology/server` | clean | 8 | 23 | 0 | 0 |
 | 164 | `@beep/party-use-cases` | `packages/party/use-cases` | clean | 6 | 17 | 0 | 0 |
 | 165 | `@beep/practice-claude-mod` | `apps/practice-claude-mod` | clean | 8 | 30 | 0 | 0 |
-| 166 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 572 | 5294 | 45 | 29 |
+| 166 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 574 | 5311 | 45 | 29 |
 | 167 | `@beep/workspace-tables` | `packages/workspace/tables` | clean | 23 | 56 | 0 | 0 |
 | 168 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | clean | 12 | 45 | 0 | 0 |
 | 169 | `@beep/agents-use-cases` | `packages/agents/use-cases` | clean | 31 | 129 | 0 | 0 |
@@ -483,8 +483,8 @@ Export findings:
 - `src/commands/Cache/Cache.command.ts:376` `runCacheWarm` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.command.ts:574` `buildCacheDashboard` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.service.ts:112` `encodeCachePolicyBaselineText` (const) - 1 example import violation(s)
-- `src/commands/Ci/CiLane.ts:416` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
-- `src/commands/Ci/CiLane.ts:1787` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:417` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:1788` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
 - `src/commands/Corpus/Corpus.errors.ts:312` `CorpusArchiveMoveDigestMismatchError` (class) - 1 example import violation(s)
 - `src/commands/CreatePackage/CreatePackage.command.ts:119` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
 - `src/commands/Drawings/Drawings.intake.schemas.ts:304` `MessageFacts` (class) - 1 example import violation(s)
@@ -499,7 +499,7 @@ Export findings:
 - `src/commands/Qa/JudgeCheck.ts:606` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:628` `renderTimeline` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:732` `selectJudgeEvidence` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:1130` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:1133` `runBunAudit` (const) - 1 documentation section/link violation(s)
 - `src/commands/Runners/Runners.schemas.ts:120` `BakeConfig` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.schemas.ts:167` `BakeReport` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.schemas.ts:276` `BakePlan` (class) - 1 example import violation(s)
