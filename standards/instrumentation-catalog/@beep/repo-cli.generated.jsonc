@@ -3316,6 +3316,7 @@
     {"name":"SkillProbe.fileDigests","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SkillProbe.filesUnder","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SkillProbe.guardStageOutDir","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"SkillProbe.laneReport","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SkillProbe.pathExists","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SkillProbe.preflight","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SkillProbe.readPoolableRecords","owner":"@beep/repo-cli","family":"tooling","conforms":true},
