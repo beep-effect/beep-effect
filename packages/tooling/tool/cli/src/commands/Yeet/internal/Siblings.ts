@@ -90,8 +90,10 @@ export type PacketSiblingProbe = typeof PacketSiblingProbe.Type;
  * changes until the parent catches up. `Cascading` is a layer above the
  * subject in the subject's own stack once the subject has merged: GitHub
  * retargets it to the trunk and force-pushes it, so it merges nothing and
- * adopts the rewritten head. `Unknown` is a stacked sibling whose relation to
- * the subject could not be read: it is told both cases and guesses neither.
+ * adopts the rewritten head. `Unknown` is a layer above the bottom of a stack
+ * whose relation to the subject could not be read: it is told both cases and
+ * guesses neither. `onTrunk` says GitHub already retargeted it to the trunk.
+ * The bottom layer of a stack has nothing below it and is always `Trunk`.
  *
  * **Example** (A layer whose parent just merged)
  *
@@ -109,7 +111,7 @@ export const PacketSiblingPlace = S.TaggedUnion({
   Trunk: {},
   Layer: { parentRef: S.NonEmptyString },
   Cascading: { belowPr: S.Int },
-  Unknown: { stackNumber: S.Int },
+  Unknown: { stackNumber: S.Int, onTrunk: S.Boolean },
 }).pipe(
   $I.annoteSchema("PacketSiblingPlace", {
     description:
@@ -291,8 +293,14 @@ const siblingInstruction = (mergedPr: number, sibling: PacketSibling): string =>
       `This pull request is a stack layer on \`${parentRef}\`: do not merge \`origin/main\` into it. Its parent catches up first; once the parent has pushed, merge \`origin/${parentRef}\` into this lane, resolve, regenerate generated files, push once.`,
     Cascading: ({ belowPr }) =>
       `#${belowPr} was the layer below this pull request and merged alone, so GitHub retargets this pull request to \`main\` and force-pushes it (the cascade), usually within seconds. Merge nothing into it: ${adoptRewrite(sibling.headRef)}.`,
-    Unknown: ({ stackNumber }) =>
-      `This pull request is in stack #${stackNumber}, and the gate could not read how #${mergedPr} relates to it. If #${mergedPr} was the layer below it, GitHub is cascading it onto \`main\`: merge nothing, ${adoptRewrite(sibling.headRef)}. Otherwise merge its parent's branch, never \`origin/main\`.`,
+    Unknown: ({ stackNumber, onTrunk }) => {
+      const opening = `This pull request is in stack #${stackNumber}, and the gate could not read how #${mergedPr} relates to it.`;
+      // Already on the trunk: either this merge cascaded it, or an earlier one did and it is an
+      // ordinary pull request now. Adopting first is right in both cases.
+      return onTrunk
+        ? `${opening} If #${mergedPr} was the layer below it, GitHub has cascaded it onto \`main\`: ${adoptRewrite(sibling.headRef)}. Then merge \`origin/main\` into this lane, resolve, regenerate generated files, push once.`
+        : `${opening} If #${mergedPr} was the layer below it, GitHub is cascading it onto \`main\`: merge nothing, ${adoptRewrite(sibling.headRef)}. Otherwise merge its parent's branch, never \`origin/main\`.`;
+    },
   })(sibling.place);
 
 // A cascading layer is not probed, and neither is one whose place is unknown: the head it may be
@@ -444,11 +452,16 @@ const siblingPlace = (
 ): PacketSiblingPlace =>
   O.match(pull.stack, {
     onNone: () => trunkPlace,
-    onSome: (stack) =>
-      // An unread subject places no stacked sibling: a guessed `Layer` would tell a cascading
-      // layer to merge a parent branch that no longer exists.
-      subjectUnread
-        ? PacketSiblingPlace.cases.Unknown.make({ stackNumber: stack.number })
+    onSome: (stack) => {
+      // The bottom layer has nothing below it: an ordinary pull request, whatever was read.
+      if (stack.position <= 1) return trunkPlace;
+      // An unread subject places no upper layer: a guessed `Layer` would tell a cascading layer
+      // to merge a parent branch that no longer exists.
+      return subjectUnread
+        ? PacketSiblingPlace.cases.Unknown.make({
+            stackNumber: stack.number,
+            onTrunk: stack.baseRef === pull.baseRef,
+          })
         : subject.pipe(
             O.filter(
               (below) =>
@@ -462,7 +475,8 @@ const siblingPlace = (
                   ? trunkPlace
                   : PacketSiblingPlace.cases.Layer.make({ parentRef: pull.baseRef }),
             })
-          ),
+          );
+    },
   });
 
 /**

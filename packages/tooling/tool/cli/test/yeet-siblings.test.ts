@@ -215,7 +215,7 @@ describe("renderSiblingBroadcast", () => {
           ...sibling,
           probe: "unavailable",
           conflicts: [],
-          place: PacketSiblingPlace.cases.Unknown.make({ stackNumber: 3244 }),
+          place: PacketSiblingPlace.cases.Unknown.make({ stackNumber: 3244, onTrunk: false }),
         }),
       })
     );
@@ -224,6 +224,23 @@ describe("renderSiblingBroadcast", () => {
     expect(body).toContain("Otherwise merge its parent's branch, never `origin/main`.");
     expect(body).not.toContain("Merge `origin/main` into this lane now");
     expect(body).not.toContain("conflict probe");
+    // Already retargeted to the trunk: adopt first if this merge cascaded it, then catch up on main.
+    const onTrunk = renderSiblingBroadcast(
+      SiblingBroadcast.make({
+        mergedPr: 3241,
+        mergeSha: MERGE_SHA,
+        baseSha: O.some(BASE_SHA),
+        sibling: PacketSibling.make({
+          ...sibling,
+          probe: "unavailable",
+          conflicts: [],
+          place: PacketSiblingPlace.cases.Unknown.make({ stackNumber: 3244, onTrunk: true }),
+        }),
+      })
+    );
+    expect(onTrunk).toContain("GitHub has cascaded it onto `main`: wait for `head_ref_force_pushed`");
+    expect(onTrunk).toContain("Then merge `origin/main` into this lane");
+    expect(onTrunk).not.toContain("never `origin/main`");
   });
 });
 
@@ -334,13 +351,31 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, TestConsole.layer), { timeout: "30 sec
         );
         assertSome(
           O.map(A.head(unread.siblings), (found) => found.place),
-          PacketSiblingPlace.cases.Unknown.make({ stackNumber: 10 })
+          PacketSiblingPlace.cases.Unknown.make({ stackNumber: 10, onTrunk: false })
         );
         expect(A.some(unreadProbes, Str.includes("merge-tree"))).toBe(false);
         const warned = yield* TestConsole.errorLines;
         expect(
           A.some(warned, (line) => Str.includes("could not read #7 to place its stacked siblings")(String(line)))
         ).toBe(true);
+        // The bottom layer of a stack has nothing below it: `Trunk` and probed, read or not.
+        const bottomProbes: Array<string> = [];
+        const bottom = yield* readPacketSiblings(context, 7).pipe(
+          recordedGithub((call) => {
+            if (call.path === "{repo}/pulls/7") return { status: 502, body: { message: "Bad Gateway" } };
+            if (call.path === "{repo}/pulls" && call.query.get("state") === "open") {
+              return { body: [{ ...pull(8, "lane/eight", SIBLING_SHA), stack: { ...stack, position: 1 } }] };
+            }
+            return routes(call);
+          }).provide,
+          Effect.provideServiceEffect(Git, Git.make),
+          provideSpawner(scriptedGit(bottomProbes))
+        );
+        assertSome(
+          O.map(A.head(bottom.siblings), (found) => found.place),
+          PacketSiblingPlace.cases.Trunk.make({})
+        );
+        expect(A.some(bottomProbes, Str.includes("merge-tree"))).toBe(true);
         // A retargeted layer whose parent the subject is not: an ordinary pull request again.
         const unrelated = yield* readPacketSiblings(context, 7).pipe(
           recordedGithub((call) =>
