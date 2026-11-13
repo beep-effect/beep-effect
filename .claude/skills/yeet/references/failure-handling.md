@@ -113,7 +113,7 @@ Read when a publish, proof, or hosted check fails and the summary line is not en
 - Terse-effect output separates `blocking`, `rewritable`, and `informational`
   files. Use `--write` only for the rewritable helper subset; manual candidates
   still need direct edits.
-- If there is no open PR for `yeet monitor`, create the draft PR first or run
+- If there is no open PR for `yeet monitor`, open the PR first (`yeet open`) or run
   `bun run audit:github pre-push` as the full local fallback.
 - If `yeet closeout` reports Greptile score/issues as unknown, Greptile has not
   reviewed the head (often no quota). It is advisory and does not block

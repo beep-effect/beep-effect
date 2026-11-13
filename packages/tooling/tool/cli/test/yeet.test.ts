@@ -142,6 +142,8 @@ import {
   YeetStatusWorktree,
   YeetVerdict,
   yeetPlanPhases,
+  yeetPullRequestOpenModeFor,
+  yeetRequestedOpenMode,
   yeetRerunDecisionText,
   yeetRerunJobListingCommand,
   yeetStatusNextCommandForTesting,
@@ -1060,7 +1062,34 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
       ]);
     });
 
-    it("builds the push-first default as cheap-gates, preflight, push, draft PR, label, stamp, then the detached monitor", () => {
+    // Open ready at content-final (2026-11-13): the create is a draft only for the two draft open modes,
+    // and a `--draft` open plans no heavy-admission label.
+    it("plans a ready create by default, a label-free draft for --draft, and a labelled draft for a stack layer or worker", () => {
+      const tail = (openAs: "ready" | "draft" | "draft-heavy") => {
+        const steps = buildYeetRunPlanForTesting({
+          context,
+          message: O.some("feat(repo-cli): add yeet"),
+          openAs,
+          pr: true,
+        }).steps;
+        return {
+          draft: A.contains(findStep(steps, "publish:pr-create").args, "--draft"),
+          labelled: A.some(steps, (step) => step.label === "publish:pr-ready-for-heavy-label"),
+          monitored: A.some(steps, (step) => step.label === "monitor:until-ready:submit"),
+        };
+      };
+      expect(tail("ready")).toEqual({ draft: false, labelled: true, monitored: true });
+      expect(tail("draft")).toEqual({ draft: true, labelled: false, monitored: true });
+      expect(tail("draft-heavy")).toEqual({ draft: true, labelled: true, monitored: true });
+      expect(yeetPullRequestOpenModeFor({ requested: "ready", stackLayer: true })).toBe("draft-heavy");
+      expect(yeetPullRequestOpenModeFor({ requested: "draft", stackLayer: true })).toBe("draft");
+      expect(yeetPullRequestOpenModeFor({ requested: "ready", stackLayer: false })).toBe("ready");
+      expect(yeetRequestedOpenMode({ draft: false, hostedOnlyProof: false })).toBe("ready");
+      expect(yeetRequestedOpenMode({ draft: false, hostedOnlyProof: true })).toBe("draft-heavy");
+      expect(yeetRequestedOpenMode({ draft: true, hostedOnlyProof: true })).toBe("draft");
+    });
+
+    it("builds the push-first default as cheap-gates, preflight, push, ready PR, label, stamp, then the detached monitor", () => {
       const plan = buildYeetRunPlanForTesting({
         context,
         message: O.some("feat(repo-cli): add yeet"),
@@ -1089,7 +1118,7 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           A.map((step) => step.label)
         )
       ).not.toContain("full:pre-push");
-      expect(findStep(plan.steps, "publish:pr-create").args).toContain("--draft");
+      expect(findStep(plan.steps, "publish:pr-create").args).not.toContain("--draft");
       expect(findStep(plan.steps, "publish:pr-ready-for-heavy-label").args).toEqual([
         "api",
         "-X",
@@ -4401,7 +4430,7 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
       expect(overlappingBasePathsForTesting([], ["src/c.ts"])).toEqual([]);
     });
 
-    it("plans publish --prove-first --pr with the draft create tail after the push", () => {
+    it("plans publish --prove-first --pr with the ready create tail after the push", () => {
       const plan = buildYeetRunPlanForTesting({
         context,
         message: O.some("feat(repo-cli): add yeet"),
@@ -4426,7 +4455,7 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         "monitor:until-ready:submit",
       ]);
       expect(findStep(plan.steps, "publish:pr-create").command).toBe("gh");
-      expect(findStep(plan.steps, "publish:pr-create").args).toContain("--draft");
+      expect(findStep(plan.steps, "publish:pr-create").args).not.toContain("--draft");
     });
 
     it.effect("rejects --prove-first with --push-only before any commit or push", () =>
