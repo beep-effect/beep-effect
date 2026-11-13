@@ -5,7 +5,7 @@ kind: checkpoint
 reversal: "Revert this PR's squash commit; heavy.yml then starts Lint Policy beside the required lanes again and ignores lane_skips."
 ---
 
-PLAN slice 3, the first of the two `heavy.yml` PRs (#PRNUM), landed three changes.
+PLAN slice 3, the first of the two `heavy.yml` PRs (#3302), landed three changes.
 
 - ORDER (ruling D11): `heavy.yml`'s Lint Policy job (`verify`) now has `needs: [check, docgen, doctest]` and an `if:` that starts with `!cancelled()`, so the three required lanes get the cap-2 `beep-ec2-heavy` pool first. Lint Policy still runs and reports when Check is red or when a needed lane skips. Build is not in `needs`.
 - HOST-06 decision: `beep ci admission` publishes `lane_skips` beside `verdict`, `route_skips` and `route_receipt`. It holds the heavy lanes that the in-VM `Determine lane execution` step skips for a reason other than the route: every heavy lane on a goals-only change profile, and `docgen` on a pull request whose pinned diff has no Docgen-relevant path (an empty diff included). It reuses the change profile's pinned-diff reader and the checkout's pattern loader, which are now exported from `CiOperational.service.ts`, and states the Docgen expression once (`HEAVY_DOCGEN_RELEVANT_SOURCE`). A test pins the workflow's grep to that string. Any error falls back to no skip for that reason: a missing SHA, an unreadable base, an unreadable pattern file, or a stall.
