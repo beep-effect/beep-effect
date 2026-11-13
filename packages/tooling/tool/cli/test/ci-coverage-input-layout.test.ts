@@ -200,7 +200,8 @@ const LAYOUTS: ReadonlyArray<Layout> = [
 ];
 
 // Writes the layout read from stdin (NUL-separated path and content pairs) into a scratch directory, runs
-// the normalisation and then the Labs check there, prints the verdict and lists what the input holds.
+// the normalisation and then the Labs check there, prints the verdict and lists what the input holds. The
+// listing strips find's leading `./` instead of using GNU find's `-printf`, so it also runs on BSD find.
 const HARNESS = `set -uo pipefail
 work="$(mktemp -d)"
 trap 'rm -rf -- "$work"' EXIT
@@ -217,7 +218,7 @@ else
   echo accepted
 fi
 if [[ -d ${INPUTS} ]]; then
-  find ${INPUTS} -type f -printf '%P\\n' | LC_ALL=C sort
+  (cd ${INPUTS} && find . -type f) | cut -c3- | LC_ALL=C sort
 fi
 `;
 
