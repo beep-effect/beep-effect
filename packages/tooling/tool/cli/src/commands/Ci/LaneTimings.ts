@@ -2996,53 +2996,54 @@ const isAggregatorSkippedOnSuccess = (
   A.isReadonlyArrayNonEmpty(shardJobs) &&
   A.every(shardJobs, (job) => Str.equivalence(actionConclusion(job), "success"));
 
-const effectiveDurationRow = (
+const effectiveFailureRow = (
   run: CiWorkflowWindowRun,
-  jobs: ReadonlyArray<CiWorkflowAttemptOneJob>,
-  spec: CiEffectiveLaneSpec
-): CiLaneTimingWindowRow => {
-  const layout = effectiveShardLayout(jobs, spec);
-  if (O.isNone(layout)) {
-    return incompleteEffectiveRow(run, spec);
-  }
-  const shards = layout.value;
-  const expectedNames = A.prepend(shards, spec.aggregator);
-  const components = A.getSomes(A.map(expectedNames, (name) => attemptOneJobNamed(jobs, name)));
-  if (A.length(components) !== A.length(expectedNames)) {
-    return incompleteEffectiveRow(run, spec);
-  }
-  const conclusions = A.map(components, actionConclusion);
-  const shardJobs = A.getSomes(A.map(shards, (shardName) => attemptOneJobNamed(jobs, shardName)));
-  const aggregator = attemptOneJobNamed(jobs, spec.aggregator);
-  const skippedOnSuccess = isAggregatorSkippedOnSuccess(aggregator, shardJobs);
-  if (!skippedOnSuccess && !A.every(conclusions, (conclusion) => Str.equivalence(conclusion, "success"))) {
-    const cancelled = A.some(conclusions, (conclusion) => Str.equivalence(conclusion, "cancelled"));
-    return CiLaneTimingAttributionRow.make({
-      attribution: cancelled ? "cancelled" : "failure",
-      conclusion: cancelled ? "cancelled" : "failure",
-      event: run.event,
-      headSha: run.head_sha,
-      jobName: spec.aggregator,
-      lane: spec.lane,
-      runAttempt: 1,
-      runCreatedAt: run.created_at,
-      runId: run.id,
-    });
-  }
-  const shardStartedAtMillis = A.getSomes(A.map(shardJobs, (job) => epochMillis(job.started_at)));
-  const shardCompletedAtMillis = A.getSomes(A.map(shardJobs, (job) => epochMillis(job.completed_at)));
-  // The verdict ends when the aggregator reports, or, for one skipped on success, when the last shard did.
-  const verdictEndMillis = skippedOnSuccess
-    ? pipe(
-        A.last(A.sort(shardCompletedAtMillis, Order.Number)),
-        O.filter(() => A.length(shardCompletedAtMillis) === A.length(shards))
-      )
+  spec: CiEffectiveLaneSpec,
+  conclusions: ReadonlyArray<string>
+): CiLaneTimingAttributionRow => {
+  const cancelled = A.some(conclusions, (conclusion) => Str.equivalence(conclusion, "cancelled"));
+  return CiLaneTimingAttributionRow.make({
+    attribution: cancelled ? "cancelled" : "failure",
+    conclusion: cancelled ? "cancelled" : "failure",
+    event: run.event,
+    headSha: run.head_sha,
+    jobName: spec.aggregator,
+    lane: spec.lane,
+    runAttempt: 1,
+    runCreatedAt: run.created_at,
+    runId: run.id,
+  });
+};
+
+// Every millisecond timestamp the jobs carry, or `None` when any is missing.
+const allEpochMillis = (timestamps: ReadonlyArray<string | null>): O.Option<ReadonlyArray<number>> => {
+  const millis = A.getSomes(A.map(timestamps, epochMillis));
+  return A.length(millis) === A.length(timestamps) ? O.some(A.sort(millis, Order.Number)) : O.none();
+};
+
+// The verdict ends when the aggregator reports, or, for one skipped on success, when the last shard did.
+const effectiveVerdictEndMillis = (
+  aggregator: O.Option<CiWorkflowAttemptOneJob>,
+  shardJobs: ReadonlyArray<CiWorkflowAttemptOneJob>,
+  skippedOnSuccess: boolean
+): O.Option<number> =>
+  skippedOnSuccess
+    ? O.flatMap(allEpochMillis(A.map(shardJobs, (job) => job.completed_at)), A.last)
     : O.flatMap(aggregator, (job) => epochMillis(job.completed_at));
-  const earliestStartedAtMillis = A.head(A.sort(shardStartedAtMillis, Order.Number));
+
+const effectiveSpanRow = (
+  run: CiWorkflowWindowRun,
+  spec: CiEffectiveLaneSpec,
+  shardJobs: ReadonlyArray<CiWorkflowAttemptOneJob>,
+  verdictEndMillis: O.Option<number>
+): CiLaneTimingWindowRow => {
   const durationSeconds = pipe(
-    O.zipWith(earliestStartedAtMillis, verdictEndMillis, (startedAt, completedAt) => (completedAt - startedAt) / 1_000),
-    O.filter((seconds) => seconds >= 0),
-    O.filter(() => A.length(shardStartedAtMillis) === A.length(shards))
+    O.zipWith(
+      O.flatMap(allEpochMillis(A.map(shardJobs, (job) => job.started_at)), A.head),
+      verdictEndMillis,
+      (startedAt, completedAt) => (completedAt - startedAt) / 1_000
+    ),
+    O.filter((seconds) => seconds >= 0)
   );
   return O.match(durationSeconds, {
     onNone: () =>
@@ -3076,6 +3077,25 @@ const effectiveDurationRow = (
         ),
       }),
   });
+};
+
+const effectiveDurationRow = (
+  run: CiWorkflowWindowRun,
+  jobs: ReadonlyArray<CiWorkflowAttemptOneJob>,
+  spec: CiEffectiveLaneSpec
+): CiLaneTimingWindowRow => {
+  const layout = effectiveShardLayout(jobs, spec);
+  const shardJobs = A.getSomes(A.map(O.getOrElse(layout, A.empty), (shardName) => attemptOneJobNamed(jobs, shardName)));
+  const aggregator = attemptOneJobNamed(jobs, spec.aggregator);
+  const complete = O.exists(layout, (shards) => A.length(shardJobs) === A.length(shards)) && O.isSome(aggregator);
+  if (!complete) {
+    return incompleteEffectiveRow(run, spec);
+  }
+  const conclusions = A.map(A.appendAll(O.toArray(aggregator), shardJobs), actionConclusion);
+  const skippedOnSuccess = isAggregatorSkippedOnSuccess(aggregator, shardJobs);
+  return !skippedOnSuccess && !A.every(conclusions, (conclusion) => Str.equivalence(conclusion, "success"))
+    ? effectiveFailureRow(run, spec, conclusions)
+    : effectiveSpanRow(run, spec, shardJobs, effectiveVerdictEndMillis(aggregator, shardJobs, skippedOnSuccess));
 };
 
 // A run created before the lane's first shard layout ran it as the aggregator job alone; with no complete or
