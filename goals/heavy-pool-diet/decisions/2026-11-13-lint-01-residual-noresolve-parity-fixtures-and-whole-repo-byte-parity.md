@@ -2,6 +2,8 @@
 title: "LINT-01 residual: noResolve parity fixtures and whole-repo byte parity"
 date: 2026-11-13
 kind: checkpoint
+lane: "test/heavy-pool-diet-noresolve-fixtures"
+pullRequest: 3301
 reversal: "Revert this PR's squash commit; the fixtures and the parity record disappear and the inventory is unchanged."
 ---
 
