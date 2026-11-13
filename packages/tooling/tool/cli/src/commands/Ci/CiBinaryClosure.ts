@@ -8,8 +8,9 @@
  * workspace module `bun build --compile` bundles, walked from source text by
  * the policy-fingerprint graph reader), the manifest of each workspace it
  * reaches, and the build inputs outside the graph: `bun.lock`, `.bun-version`,
- * `bunfig.toml`, the compile recipe and the release workflow. External
- * packages end the walk; `bun.lock` pins them.
+ * `bunfig.toml`, the dependency patches under `patches/`, the compile recipe
+ * and the release workflow. External packages end the walk; `bun.lock` pins
+ * their versions and the patch files pin what `bun install` applies to them.
  *
  * `CiOperational.patterns.json` is deliberately outside the closure: the
  * binary reads the checkout's copy at run time, and the file is a projection
@@ -62,6 +63,12 @@ const CI_BINARY_BUILD_INPUTS = [
   "bunfig.toml",
   "packages/tooling/tool/cli/src/commands/Ci/CiCompileBinary.ts",
 ] as const;
+
+/**
+ * Dependency patches `bun install` applies. `bun.lock` records each patch's
+ * path, not its content, so every file here is a closure input.
+ */
+const PATCHES_DIRECTORY = "patches";
 
 const isCiCommandError = S.is(CiCommandError);
 
@@ -151,7 +158,12 @@ const closurePaths = Effect.fnUntraced(function* (tree: PolicySourceTree, worksp
   const opaque = yield* Effect.forEach(A.fromIterable(reached.opaqueWorkspaces), (directory) =>
     tree.files(`${directory}/src`)
   );
-  return A.sort(A.dedupe([...modules, ...manifests, ...A.flatten(opaque), ...CI_BINARY_BUILD_INPUTS]), Order.String);
+  // `bun.lock` names each patch by path only, so the patch bytes enter here.
+  const patches = yield* tree.files(PATCHES_DIRECTORY);
+  return A.sort(
+    A.dedupe([...modules, ...manifests, ...A.flatten(opaque), ...patches, ...CI_BINARY_BUILD_INPUTS]),
+    Order.String
+  );
 });
 
 /**

@@ -11,7 +11,7 @@ name: Beep CI Binary
 # The path list below is only a coarse prefilter. A release is cut only when
 # the binary's closure digest (`beep ci binary-closure`: the static import
 # closure of bin-ci.ts, the workspace manifests it reaches, bun.lock,
-# .bun-version, bunfig.toml, the compile recipe and this file) differs from
+# .bun-version, bunfig.toml, patches/, the compile recipe and this file) differs from
 # the digest recorded on the latest `beep-ci-*` release; every release records
 # its digest in its notes and a `beep-linux-x64.closure.json` asset
 # (goals/heavy-pool-diet PERIH-11).
@@ -27,6 +27,7 @@ on:
       - bun.lock
       - .bun-version
       - bunfig.toml
+      - patches/**
       - .github/workflows/beep-ci-binary.yml
   workflow_dispatch:
     inputs:

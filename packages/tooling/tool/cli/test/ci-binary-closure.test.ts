@@ -19,6 +19,8 @@ type SourceTree = Parameters<typeof ciBinaryClosureOf>[0]["tree"];
 const platform = Layer.mergeAll(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)), Digest.layerWebCrypto);
 
 const CI_BINARY = "packages/tooling/tool/cli/src/commands/Ci/CiBinary.ts";
+// bun.lock names a patch by path only, so the patch content is a closure input of its own.
+const PATCH_FILE = "patches/alchemy@2.0.0-beta.85.patch";
 const PATTERNS_JSON = "packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json";
 
 // The live tree with some files' content replaced (an edit) or created (a new file).
@@ -78,6 +80,7 @@ describe("ci binary closure", () => {
         expect(paths).toContain("bun.lock");
         expect(paths).toContain(".bun-version");
         expect(paths).toContain(".github/workflows/beep-ci-binary.yml");
+        expect(paths).toContain(PATCH_FILE);
         expect(paths).not.toContain(PATTERNS_JSON);
         expect(A.some(paths, Str.startsWith("goals/"))).toBe(false);
       })
@@ -93,6 +96,7 @@ describe("ci binary closure", () => {
           "bun.lock",
           ".bun-version",
           ".github/workflows/beep-ci-binary.yml",
+          PATCH_FILE,
         ]) {
           const edited = yield* digestWith([[file, "\n// closure mutation fixture\n"]]);
           expect(edited.digest, file).not.toBe(base.digest);
