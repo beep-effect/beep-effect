@@ -52,6 +52,13 @@ export class AdmittedWrite extends S.Opaque<AdmittedWrite, { readonly brand: uni
  * One agent edit as admission judged it, with the export that projected the
  * log afterwards.
  *
+ * **Details**
+ *
+ * `exported` is a {@link BaseExport} as it is, with no key annotation: a key
+ * annotation rebuilds the opaque schema as its plain struct, whose type is no
+ * `BaseExport`, and the export is the base the agent's next edit is captured
+ * against.
+ *
  * **Example** (Read the fields of an exported write)
  *
  * ```ts
@@ -66,7 +73,7 @@ export class AdmittedWrite extends S.Opaque<AdmittedWrite, { readonly brand: uni
 export class ExportedWrite extends S.Opaque<ExportedWrite, { readonly brand: unique symbol }>()(
   S.Struct({
     write: AdmittedWrite.annotateKey({ description: "The edit as admission judged it." }),
-    exported: BaseExport.annotateKey({ description: "The export of the memory folder after admission." }),
+    exported: BaseExport,
   }).pipe(
     $I.annoteSchema("ExportedWrite", {
       description: "One agent edit as admission judged it, with the export that projected the log afterwards.",

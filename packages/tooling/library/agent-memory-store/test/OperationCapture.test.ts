@@ -197,13 +197,6 @@ describe("captureBatch", () => {
     const [first, ...rest] = operations;
     assertTrue(first !== undefined && NodeOperation.guards.insert(first) && O.isNone(first.afterNodeId));
     assertTrue(A.every(rest, (operation) => NodeOperation.guards.insert(operation) && O.isSome(operation.afterNodeId)));
-    const empty = captureBatch(
-      base,
-      [FileEdit.cases.created.make({ path: created, text: "" })],
-      author,
-      seededNodeIdMinter(1)
-    );
-    empty.pipe(Result.getOrThrow, assertNone);
   });
 
   it("captures edits in path order, whatever order they come in", () => {
@@ -282,6 +275,13 @@ describe("captureBatch refusals", () => {
     deepStrictEqual(
       capture([edited("x"), edited("y")]),
       CaptureEditRefusedError.make({ path, reason: "duplicateEdit" })
+    );
+  });
+
+  it("refuses a created file with an empty text, which holds no node to record", () => {
+    deepStrictEqual(
+      capture([FileEdit.cases.created.make({ path: "empty.md", text: "" })]),
+      CaptureEditRefusedError.make({ path: "empty.md", reason: "emptyCreatedFile" })
     );
   });
 

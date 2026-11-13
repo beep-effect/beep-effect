@@ -27,9 +27,15 @@ const FileEditKind = LiteralKit(["edited", "created", "removed"]).pipe(
  *
  * - `edited`: a file of the base, with its whole new text. An empty text
  *   retires every node of the file.
- * - `created`: a file the base does not have, with its whole text.
+ * - `created`: a file the base does not have, with its whole nonempty text.
+ *   An empty created file has no node to record, so capture refuses it with
+ *   `emptyCreatedFile` rather than dropping it.
  * - `removed`: a file of the base the agent deleted; capture retires every
- *   node of it, the same batch an empty `edited` text produces.
+ *   node of it, the same batch an empty `edited` text produces. The log keeps
+ *   no file-level removal in P2, so the file survives as an empty file: the
+ *   next export writes it with no bytes and lists it in the next base, where
+ *   it is written again with `edited`, never `created` (decision
+ *   `op-capture-refuses-an-empty-created-file-and-a-removed-file-stays-empty`).
  *
  * `path` is a plain string so capture can refuse a path outside the memory
  * file rule with a typed error instead of a decode failure.
@@ -81,7 +87,10 @@ export type FileEdit = typeof FileEdit.Type;
  *   (`MemoryFilePath`).
  * - `unknownBaseFile`: an `edited` or `removed` file the base does not have;
  *   a new file must be declared `created`.
- * - `baseFileExists`: a `created` file the base already has.
+ * - `baseFileExists`: a `created` file the base already has, including one
+ *   a `removed` edit emptied.
+ * - `emptyCreatedFile`: a `created` file with an empty text, which holds no
+ *   node to record.
  * - `duplicateEdit`: two edits name the same path.
  *
  * **Example** (Check an edit refusal)
@@ -99,6 +108,7 @@ export const CaptureEditRefusal = LiteralKit([
   "pathOutsideMemoryFiles",
   "unknownBaseFile",
   "baseFileExists",
+  "emptyCreatedFile",
   "duplicateEdit",
 ]).pipe(
   $I.annoteSchema("CaptureEditRefusal", {

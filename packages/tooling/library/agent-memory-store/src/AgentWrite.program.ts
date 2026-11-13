@@ -90,6 +90,13 @@ export const admitEdits = Effect.fn("AgentWrite.admitEdits")(function* (
  * base of the next edit. Held writes are not in the export; they stay in
  * `Admission.held` with both texts until a resolver settles them.
  *
+ * **Gotchas**
+ *
+ * A `removed` file edit retires the file's nodes but not the file: the export
+ * writes it back as an empty file and the next base lists it, so a later edit
+ * of that path is `edited`, and a `created` edit of it is refused with
+ * `baseFileExists`.
+ *
  * **Example** (Write an agent edit through to the memory folder)
  *
  * ```ts

@@ -139,7 +139,8 @@ const targetOf = (
       }),
     created: ({ text }): Result.Result<CaptureTarget, CaptureEditRefusedError> =>
       O.match(file, {
-        onNone: () => Result.succeed({ path, nodes: [], text }),
+        onNone: () =>
+          Str.isEmpty(text) ? refuse(path, "emptyCreatedFile") : Result.succeed({ path, nodes: [], text }),
         onSome: () => refuse(path, "baseFileExists"),
       }),
   });

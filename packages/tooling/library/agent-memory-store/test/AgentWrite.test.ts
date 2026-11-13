@@ -10,6 +10,7 @@
 import {
   Admission,
   admitEdits,
+  CaptureEditRefusedError,
   FileEdit,
   LineageId,
   MarkdownProjector,
@@ -21,7 +22,7 @@ import {
 } from "@beep/agent-memory-store";
 import { PosixPath } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
+import { assertInstanceOf, assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -169,6 +170,50 @@ describe.skipIf(!isBunRuntime)("agent write path (Bun runtime)", () => {
           A.map(held, (conflict) => [conflict.ours, conflict.theirs]),
           [[O.some(textA), O.some(textB)]]
         );
+      }),
+      { timeout: 60_000 }
+    );
+  });
+
+  it.layer(freshStore(), { timeout: "60 seconds" })("removed and empty created files", (it) => {
+    it.effect(
+      "a removed file stays as an empty file that is edited again, never created; an empty created file is refused",
+      Effect.fnUntraced(function* () {
+        const { base, fs, root } = yield* importedNotes();
+        const removed = yield* writeEdits(
+          root,
+          base,
+          [FileEdit.cases.removed.make({ path: "notes.md" })],
+          options(writerA, 8)
+        );
+        const emptied = yield* fs.readFileString(`${root}/notes.md`);
+        const emptyCreated = yield* Effect.flip(
+          admitEdits(removed.exported, [FileEdit.cases.created.make({ path: "new.md", text: "" })], options(writerA, 9))
+        );
+        const recreated = yield* Effect.flip(
+          admitEdits(
+            removed.exported,
+            [FileEdit.cases.created.make({ path: "notes.md", text: notes })],
+            options(writerA, 10)
+          )
+        );
+        const refilled = yield* writeEdits(
+          root,
+          removed.exported,
+          [FileEdit.cases.edited.make({ path: "notes.md", text: notes })],
+          options(writerA, 11)
+        );
+
+        expect(A.every(removed.write.outcomes, (outcome) => outcome.outcome === "landed")).toBe(true);
+        expect(A.map(removed.exported.files, (file) => [file.path, file.nodes.length])).toEqual([["notes.md", 0]]);
+        assertInstanceOf(emptyCreated, CaptureEditRefusedError);
+        expect(emptyCreated.reason).toBe("emptyCreatedFile");
+        assertInstanceOf(recreated, CaptureEditRefusedError);
+        expect(recreated.reason).toBe("baseFileExists");
+        expect(emptied).toBe("");
+        expect(A.every(refilled.write.outcomes, (outcome) => outcome.outcome === "landed")).toBe(true);
+        const onDisk = yield* fs.readFileString(`${root}/notes.md`);
+        expect(onDisk).toBe(notes);
       }),
       { timeout: 60_000 }
     );
