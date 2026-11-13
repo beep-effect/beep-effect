@@ -37,7 +37,8 @@
   "researchReports": [
     "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
-    "research/merge-async-p0-probes-2026-11.md"
+    "research/merge-async-p0-probes-2026-11.md",
+    "research/stack-p0-probes-2026-11.md"
   ],
   "agentLaunchers": [
     {
