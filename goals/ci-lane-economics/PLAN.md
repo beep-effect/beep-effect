@@ -9,7 +9,7 @@ Status: `active`
 | P0 Cache-warm census | complete | Re-measure every required lane's p50/p95 on cache-warm PR and push waves (attempt-one successful runs only; failures and reruns feed flake attribution, never the percentiles). | Completed 2026-08-13 via the explicit 10-wave alternative; see `research/cache-warm-lane-census.md`. |
 | P1 Placement decisions | complete | Decide fleet vs hosted vs free re-fit per lane from the census plus cost model. | Signed and live-falsified 2026-08-13; see `research/placement-decision.md`. No fleet additions; the one hosted re-fit candidate remains on its existing fleet placement after two runner shutdowns. |
 | P2 Execute moves | complete | Move lanes per the placement table (workflow lane edits; sharding where caching cannot help). | Completed 2026-08-16: every signed zero-expansion move merged through #719. |
-| P3 Evidence + close | in progress: three windows denied, window-5 preview denied, load bound restated | Prove the charter on live waves and close. | Windows 1 to 3 denied (`research/admission-week-p95.md`, `-2-`, `-3-`); window 4 previewed 2026-11-02 and never censused as a full week. The 2026-11-13 preview over `2026-11-10T04:00Z` → `2026-11-13T05:40Z` (`research/window-5-preview-2026-11-13.md`) reads `Test Unit` 24m00s p95, shard pickup 13m32s p95 and 8, 9 and 17 peak CI-active branches: shard bodies hold (slowest 9m05s), hosted runner pickup does not. Operator ruling 2026-11-13 (decision "Judge the charter at 15 to 20 CI-active branches"): no governor; the test shards stay hosted and overflow to the self-hosted pool only past a 10-minute hosted wait (decision "Shards overflow to the self-hosted pool only past a 10-minute hosted wait", routing lands after #3215), the census gains a verdict-wait column and the Test Integration shards, and the short hosted lanes are folded. Window 5 is the first seven days after the last of those merges; close only when every required p95, queue and pickup included, is below 20m00s at 15 to 20 CI-active branches. |
+| P3 Evidence + close | in progress: three windows denied, window-5 preview denied, load bound restated | Prove the charter on live waves and close. | Windows 1 to 3 denied (`research/admission-week-p95.md`, `-2-`, `-3-`); window 4 previewed 2026-11-02 and never censused as a full week. The 2026-11-13 preview over `2026-11-10T04:00Z` → `2026-11-13T05:40Z` (`research/window-5-preview-2026-11-13.md`) reads `Test Unit` 24m00s p95, shard pickup 13m32s p95 and 8, 9 and 17 peak CI-active branches: shard bodies hold (slowest 9m05s), hosted runner pickup does not. Operator rulings 2026-11-13: the charter is judged at 15 to 20 CI-active branches with no governor, and the test shards stay hosted, overflowing to the self-hosted pool only past a 10-minute hosted wait (at most 48 `.2xlarge` VMs). On main: the census fix (#3229: wait from run creation to each required check, Test Integration by its shards, the window-dated 10m00s pickup limit). Open before window 5: aggregates that take no runner when every shard succeeded (#3258), the first-parent diff base (#3249) and owner rows (#3255) in hosted-setup-tax, and the overflow routing (#3256, which ships switched off). Window 5 is the first seven days after the last of them is live, which for #3256 means applied and enabled, not merged; close only when every required p95, queue and pickup included, is below 20m00s at 15 to 20 CI-active branches. |
 
 ## Notes
 
@@ -154,3 +154,24 @@ Status: `active`
   was denied on 2026-09-21 (see the admission verdict above). That 18-context
   expectation applies only to that window; the next window expects the
   17-context population effective 2026-09-12T01:46:53Z once ratified.
+
+## Checkpoints
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug ci-lane-economics`; add a `kind: checkpoint` file there, never edit this block._
+
+### Window 5 waits on four changes; routing alone does not reach 20 minutes at 17 branches, 2026-11-13
+
+State after the first day under the restated bound.
+
+- On main: the load ruling and sizing (#3222, #3230), the census fix (#3229: `Wait p50`/`Wait p95` per required context from run creation to the check reporting, Test Integration measured by its shards, the window-dated 10m00s pickup limit) and #3215 (a documentation-only pull request requests no test, lint or heavy runner).
+- Measured on 2026-11-13 (83 green runs): Test Unit verdict wait p50 19m49s, p95 41m26s, made of three trips through the hosted queue: run created to the planning jobs done p95 11m00s, worst shard pickup p95 16m54s, worst shard body p95 9m21s, last shard done to the aggregate reporting p95 9m13s. On the fixed census nine of the fifteen required contexts breach on wait over the two busiest hours, where the old duration measure showed one.
+- A replay of the whole job graph (it reads that day 17 to 24 percent high) puts Test Unit wait p95 on the 17-branch day at 48m22s today, 34m14s with aggregates that take no runner when every shard succeeded (#3258), 26m31s with that and the overflow as decided (#3256), and 21m15s at best inside 48 VMs with a far lower threshold. Routing alone does not reach 20 minutes on that day.
+- Demand: 100 of 253 pull-request runs allocated the full 24-shard Test Unit matrix. A stale diff base explains 4 of 47 sampled (#3249, hosted-setup-tax); paths with no workspace owner explain about a tenth of those shard jobs (#3255, hosted-setup-tax); the rest edit a global input themselves.
+- Open before window 5: #3258, #3249, #3255, #3256 (ships switched off; the operator applies the pool and a follow-up PR enables it). Window 5 is the first seven days after the last of them is live; its census is scheduled when that date is known. If Test Unit still breaches on measured numbers the choices are a lower overflow threshold, shorter shard bodies and planning hop, or restating the charter for the worst day.
+
+Lane docs/check-lane-baseline-break
+
+Reverse: Delete this checkpoint; it records measurements and open work and changes no behaviour.
+
+<!-- beep:decisions:end -->
