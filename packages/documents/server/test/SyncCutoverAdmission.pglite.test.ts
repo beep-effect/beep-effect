@@ -20,6 +20,7 @@ import {
   LegacySyncItem,
   LegacySyncOperation,
   VaultSyncModel,
+  VaultSyncReadAccess,
 } from "@beep/documents-use-cases/aggregates/VaultSync";
 import { makeLayer as makePgliteLayer } from "@beep/pglite/PgliteClient.service";
 import { makeDrizzle, makeDrizzleLayer, migrate, PostgresDrizzle } from "@beep/postgres";
@@ -28,6 +29,7 @@ import { describe, expect, layer } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import * as Context from "effect/Context";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
@@ -52,7 +54,10 @@ const database = makeDrizzleLayer().pipe(
   Layer.provideMerge(Layer.fresh(makePgliteLayer({ extensions: { btree_gist } }))),
   Layer.provideMerge(Layer.mergeAll(BunServices.layer, audit))
 );
-const runtimeLayer = CutoverModel.layer(LegacySyncProjections).pipe(Layer.provide(AlchemyPostgresPlatform.layer()));
+const runtimeLayer = CutoverModel.layer(Layer.merge(VaultSyncReadAccess, LegacySyncProjections)).pipe(
+  Layer.provide(SecureRandom.layerWebCrypto),
+  Layer.provide(AlchemyPostgresPlatform.layer())
+);
 const options = SyncAdmissionOptions.make({ mirrorRootName: "synthetic-vault" });
 
 /** What an older sidecar executable does on boot: run its bundled drizzle migrations. */

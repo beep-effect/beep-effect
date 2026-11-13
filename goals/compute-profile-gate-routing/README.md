@@ -32,12 +32,15 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 P2 Verify. Implementation slices P0 (#2925), P1 (#2959, fix #2972) and P2 (#3226)
-are merged. The 2026-11-13 dankserver acceptance run (#3267) failed criterion 3;
-this lane fixes its findings. Repeat the worker-host run on dankserver before the goal's
-final PR with the reflection and closeout record.
+are merged. The 2026-11-13 dankserver acceptance run (#3267) failed criterion 3; #3276
+fixed its findings, and the repeat run of 2026-11-13 (#3277) closed findings 1, 2, 4 and 6.
+This lane settles criterion 2b by measurement: a forced gate on a worker completes
+serially or refuses with its measured reason (decision 2026-11-13). Before the goal's
+final PR with the reflection and closeout record: one short dankserver run showing a forced gate (coverage over a small package) completing with forceLocal: true on its receipt, and the lane's own draft-to-ready flip through yeet ready.
 
 ## Latest Evidence
 
+- `research/2026-11-13-worker-host-acceptance-repeat.md`: criteria 1, 2a, 3 (except the lane's own ready flip) and 5 pass; forced fallow and coverage stopped by the slice-pressure watchdog.
 - `research/2026-11-13-worker-host-acceptance.md`: failed criterion 3, forced-gate and admission gaps; repeat on dankserver after these fixes.
 
 - `research/2026-11-08-p0-probe-evidence.md`: probe readings on DankStation and a capped scope.
