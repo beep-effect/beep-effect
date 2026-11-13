@@ -69,4 +69,19 @@ of a resolving build. This is a local reading, not the hosted scorecard reading.
 
 ## Hosted JSDoc Ratchet timing
 
-Recorded after the PR's hosted Check run, below.
+The `JSDoc Ratchet` job of #3301's first hosted Check run, read through
+`gh api repos/beep-effect/beep-effect/actions/jobs/132204368322`:
+
+| Field | Value |
+| --- | --- |
+| Workflow run | 43516491873 (Check, attempt 1) |
+| Job | 132204368322 (`JSDoc Ratchet`, conclusion success) |
+| Head | `092eb706586fc103b653764e953da60448ebf18b` |
+| Runner | `ubuntu-24.04` (GitHub-hosted) |
+| Queued (job created) | 2026-11-13T22:16:12Z |
+| Started | 2026-11-13T22:24:37Z |
+| Completed | 2026-11-13T22:26:58Z |
+| Wall (started to completed) | 2 min 21 s |
+| Queued to completed | 10 min 46 s (8 min 25 s waiting for a runner) |
+
+This is one reading, not a p50. The lever's saving is read from the certainty scorecard.
