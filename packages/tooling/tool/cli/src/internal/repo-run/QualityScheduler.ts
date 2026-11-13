@@ -754,10 +754,9 @@ const archiveAgedQuarantine = Effect.fnUntraced(function* (
   const archiveDirectory = path.join(directories.root, QUARANTINE_ARCHIVE_DIRECTORY_NAME);
   return yield* Effect.ensuring(
     Effect.gen(function* () {
-      const ready = yield* fs.makeDirectory(archiveDirectory, { recursive: true, mode: 0o700 }).pipe(
-        Effect.as(true),
-        Effect.orElseSucceed(() => false)
-      );
+      const ready = yield* fs
+        .makeDirectory(archiveDirectory, { recursive: true, mode: 0o700 })
+        .pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
       if (!ready) {
         yield* Console.error(`[yeet] could not create quarantine archive ${archiveDirectory}; nothing archived.`);
         return 0;
@@ -767,13 +766,12 @@ const archiveAgedQuarantine = Effect.fnUntraced(function* (
         Effect.fnUntraced(function* (name: string) {
           const destination = path.join(archiveDirectory, name);
           // Never overwrite an archived entry: a collision keeps both copies.
-          if (yield* fs.exists(destination).pipe(Effect.orElseSucceed(() => true))) {
+          if (yield* fs.exists(destination).pipe(Effect.orElseSucceed(constant(true)))) {
             return false;
           }
-          return yield* fs.rename(path.join(directories.quarantine, name), destination).pipe(
-            Effect.as(true),
-            Effect.orElseSucceed(() => false)
-          );
+          return yield* fs
+            .rename(path.join(directories.quarantine, name), destination)
+            .pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
         })
       );
       const count = A.length(A.filter(moved, identity));
