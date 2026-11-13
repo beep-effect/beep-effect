@@ -171,7 +171,7 @@ export const makeCitationJournalMetadata = Effect.fn("Citation.makeJournalMetada
         invalidConfiguration
       );
       const preparePatch = yield* installPatch(limits, runtime, config);
-      const installed = yield* makeCitationMetadataOperation(limits, preparePatch);
+      const installed = yield* makeCitationMetadataOperation(preparePatch);
       const inference = yield* makeCitationEditionInference(limits);
       const apply = Effect.fn("Citation.addJournalMetadata")((raw: unknown) =>
         Effect.gen(function* () {

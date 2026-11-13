@@ -43,7 +43,7 @@ import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
-import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
   makeCitationNativeAcknowledgementSpawner,
   makeCitationNativeManualClock,
@@ -522,6 +522,38 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
       })
     );
   }
+
+  it.effect("refuses a later evaluator whose spawner is not the request owner's", () =>
+    Effect.gen(function* () {
+      const fixture = yield* makeCitationNativeWorkerFixture("busy", "regex", "bun");
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const admission = yield* makeCitationNativeProcessAdmission(limits);
+      const first = yield* makeCitationNativeAcknowledgementSpawner(Effect.void);
+      const second = yield* makeCitationNativeAcknowledgementSpawner(Effect.void);
+      const install = (spawner: typeof first.spawner) =>
+        installCitationRegexEvaluator(limits, fixture, [descriptor]).pipe(
+          Effect.provideService(CitationNativeProcessAdmission, admission),
+          Effect.provideService(ChildProcessSpawner, spawner)
+        );
+      const creator = yield* install(first.spawner);
+      const stranger = yield* install(second.spawner);
+      yield* withCitationTestInvocation(
+        Effect.gen(function* () {
+          // An out-of-range quota fails after the request's owner exists, before any child.
+          const invalidQuota = yield* creator.evaluate(pattern, native("b"), 0, -1).pipe(Effect.flip);
+          expect(invalidQuota).toMatchObject({ reason: "invalid-runtime" });
+          const refused = yield* stranger.evaluate(pattern, native("b"), 0).pipe(Effect.flip);
+          expect(refused).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-runtime" });
+        })
+      );
+      const firstExits = yield* first.snapshot;
+      expect(firstExits).toEqual({ spawned: 0, confirmed: 0 });
+      const secondExits = yield* second.snapshot;
+      expect(secondExits).toEqual({ spawned: 0, confirmed: 0 });
+      const released = yield* admission.snapshot;
+      expect(released).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
+    })
+  );
 
   it.effect("rejects missing startup arguments and capture metadata beyond the installation budget", () =>
     Effect.gen(function* () {

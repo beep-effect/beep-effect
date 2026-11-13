@@ -43,8 +43,9 @@ const invalidRuntime = () => failure("invalid-runtime");
  * admission. Each evaluation reads CitationInvocation at call time, reserves its
  * source text on the invocation budget, and uses the invocation's one physical
  * owner, created in the invocation Scope on its first evaluation with that
- * evaluator's Clock, spawner and limits (every evaluator of one engine shares
- * them, so one request is served by one spawner); the owner's
+ * evaluator's Clock, spawner and limits. Every evaluator of one engine shares
+ * them; an evaluator with a different spawner or Clock is refused with
+ * `invalid-runtime` rather than spawning through the first one's. The owner's
  * open/quarantine check runs before job preparation (protocol v2: one child
  * per job). Full job preflight precedes
  * payload/map allocation and native acquisition. A native timer includes
@@ -80,16 +81,19 @@ export const installCitationRegexEvaluator = Effect.fn("Citation.installRegexEva
   // The physical owner captures a Scope, so it belongs to the invocation, never the
   // engine: the request's first evaluation creates it and later ones reuse it.
   const ownerFor = Effect.flatMap(CitationInvocation, ({ scope, regexOwner }) =>
-    SynchronizedRef.modifyEffect(regexOwner, (current) =>
-      O.isSome(current)
-        ? Effect.succeed(Tuple.make(current.value, current))
-        : makeCitationNativeProcessOwner(limits, engineOperation, failure).pipe(
-            Effect.provideService(Scope.Scope, scope),
-            Effect.provideService(Clock.Clock, clock),
-            Effect.provideService(ChildProcessSpawner, spawner),
-            Effect.map((owner) => Tuple.make(owner, O.some(owner)))
-          )
-    )
+    SynchronizedRef.modifyEffect(regexOwner, (current) => {
+      if (O.isNone(current))
+        return makeCitationNativeProcessOwner(limits, engineOperation, failure).pipe(
+          Effect.provideService(Scope.Scope, scope),
+          Effect.provideService(Clock.Clock, clock),
+          Effect.provideService(ChildProcessSpawner, spawner),
+          Effect.map((owner) => Tuple.make(owner, O.some({ owner, spawner, clock })))
+        );
+      // Fail closed: never spawn through another evaluator's spawner or Clock.
+      return current.value.spawner === spawner && current.value.clock === clock
+        ? Effect.succeed(Tuple.make(current.value.owner, current))
+        : Effect.fail(failure("invalid-runtime"));
+    })
   );
   const evaluateWith = (registry: Effect.Success<ReturnType<typeof makeRegistry>>) =>
     Effect.fn("Citation.evaluateRegexProcess")(

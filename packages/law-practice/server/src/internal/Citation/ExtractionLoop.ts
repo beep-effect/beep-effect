@@ -255,7 +255,7 @@ export const makeCitationExtractionLoop = Effect.fn("Citation.makeExtractionLoop
       const children = yield* captureCitationExtractionChildren();
       // Installed once; an install failure surfaces where each request used to install it.
       const stages = yield* Effect.exit(installChildren(limits, runtime, config).pipe(Effect.provideContext(children)));
-      const installed = yield* makeCitationMetadataOperation(limits, (raw: unknown) =>
+      const installed = yield* makeCitationMetadataOperation((raw: unknown) =>
         prepare(limits, stages, raw).pipe(Effect.provideContext(children))
       );
       const extract = Effect.fn("Citation.extractDocumentLoop")((raw: unknown) =>

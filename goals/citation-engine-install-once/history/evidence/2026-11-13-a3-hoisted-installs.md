@@ -368,3 +368,32 @@ Regression`, the proof for every floor, including `MetadataComposition.ts`
 with the new test), `knowledge semantic-delta`, and the whole-repo gates that
 `yeet final-check` replays. A remote-worker wall-time run was not taken.
 
+## Review round 2
+
+Review of `9fa24beb9ce` found nothing blocking and three MINOR items, fixed in
+one commit on top of a merge of `origin/main`.
+
+| # | Finding | Fix |
+| --- | --- | --- |
+| 1 | The per-request owner silently used the first evaluator's spawner and Clock | `CitationInvocation.regexOwner` stores the spawner and Clock beside the owner; a later evaluator with a different spawner or Clock object fails closed with `invalid-runtime` before any job preparation. New test in `CitationRegexWorker.test.ts` (two evaluators, separate observed spawners, one invocation: the second is refused and neither spawns). Decision updated. |
+| 2 | Scope capture by a hoisted install is only partly guarded | The `no-citation-optional-invocation` summary now states what the syntactic rule does not catch: local aliases and aliased named imports, raw context map access, a picked or omitted Context passed along, and any `Scope.Scope` capture. A finalizer-count test on the engine Scope was not added: the public `Scope` API exposes no finalizer count, and the engine Scope also carries the Layer, admission-owner, HTML cleaner worker and temporary-directory finalizers, so such a test would read internal state and break with unrelated owner changes. The probe's construction row (1 process owner, the HTML cleaner worker's; 0 Diff/Xml workers) already fails if a stage install starts a process owner, the Scope-capturing object this slice could hoist. |
+| 3 | Dead `_limits` parameter on `makeCitationMetadataOperation` | Removed, with its eight call sites. The design's contract sketch in section 3.4 still shows a `limits` parameter; the implementation no longer needs it because the stage install provides the admission. |
+
+### Checks in review round 2
+
+Host pressure continued (load average about 75 to 97). By operator ruling only
+package-scoped checks ran locally, one vitest process at a time
+(`bunx --bun vitest run`):
+
+| Check | Result |
+| --- | --- |
+| Full-span replay `CitationCanonicalFullSpan.test.ts`, alone, after the owner change | 12/12, count table unchanged. Bun per call in ms: 12698, 2716, 2904, 3853, 3258, 2586, 10383, 34762, 2194, 2039 (77.4 s; call 8 ran during a load spike); node call 1: 14184; construction 7056; load 92.2 / 82.5 / 91.7 at start, 97.1 / 91.1 / 93.7 at end |
+| `CitationRegexWorker.test.ts` (edited) | 18/18 |
+| `package-verify --quick` for `@beep/law-practice-server` | pass |
+| `@beep/lint-rules`: biome, `check`, its 178 rule tests | pass |
+| Changed-file `bunx biome check` | pass |
+
+Left to hosted CI: the full law-practice suite and integration cohort, `Heavy /
+Coverage Regression` (the coverage floors), `knowledge semantic-delta`, docgen,
+and the whole-repo gates `yeet final-check` replays.
+

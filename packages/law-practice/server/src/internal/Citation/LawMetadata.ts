@@ -203,7 +203,7 @@ const installLawMetadata = Effect.fn("Citation.installLawMetadata")(function* (
     Effect.gen(function* () {
       const { runtime, config } = yield* prepareConfiguration(limits, runtimeInput, configurationInput);
       const preparePatch = yield* installPatch(limits, runtime, config);
-      const installed = yield* makeCitationMetadataOperation(limits, preparePatch);
+      const installed = yield* makeCitationMetadataOperation(preparePatch);
       const run = Effect.fn("Citation.runLawMetadata")(function* (request: CitationLawMetadataInput) {
         const [patch, reservedUnits] = yield* installed.run(request);
         return CitationLawMetadataResult.make({ patch, reservedUnits });

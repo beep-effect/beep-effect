@@ -210,7 +210,6 @@ const captureDependencies = Effect.fn("Citation.captureMetadataDependencies")(fu
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationMetadataOperation = Effect.fn("Citation.makeMetadataOperation")(function* <Request, Patch, E>(
-  _limits: CitationEngineLimits,
   prepare: (request: Request) => Effect.Effect<Patch, E, Dependencies>
 ) {
   const dependencies = yield* captureDependencies();
@@ -297,7 +296,7 @@ export const makeCitationMetadataStage = <
       limits,
       Effect.gen(function* () {
         const config = yield* definition.own(limits, configuration, runtime);
-        const installed = yield* makeCitationMetadataOperation(limits, (raw: unknown) =>
+        const installed = yield* makeCitationMetadataOperation((raw: unknown) =>
           definition.prepare(limits, runtime, config, raw)
         );
         const invoke = Effect.fn("Citation.invokeMetadataStage")((raw: unknown) =>
@@ -492,7 +491,7 @@ export const makeCitationPublicationMetadataOperation = Effect.fn("Citation.make
           invalid
         );
         const prepare = yield* install(limits, runtime, config);
-        return yield* makeCitationMetadataOperation(limits, prepare);
+        return yield* makeCitationMetadataOperation(prepare);
       })
     );
   }

@@ -206,7 +206,7 @@ export const makeCitationPostCaseMetadata = Effect.fn("Citation.makePostCaseMeta
         invalidConfiguration
       );
       const prepare = yield* installCitationPostCaseMetadataExtraction(limits, runtime, config, decoded.courtTable);
-      const installed = yield* makeCitationMetadataOperation(limits, prepare);
+      const installed = yield* makeCitationMetadataOperation(prepare);
       const apply = Effect.fn("Citation.addPostCaseMetadata")((raw: unknown) =>
         Effect.gen(function* () {
           const [patch, reservedUnits] = yield* installed.run(raw);
