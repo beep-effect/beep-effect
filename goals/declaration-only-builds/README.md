@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -38,8 +38,8 @@ Use this command for execution-capable sessions:
 
 P4 Close. The three work PRs are merged: #3178 (baseline and proof harness),
 #3208 (declaration-only build) and #3242 (check once). The final PR, #3259,
-carries the closeout reflection and the closeout proposal; the packet stays
-`active` until the proposal is verified and adopted.
+carried the closeout reflection and is merged. Its `closeout` record names
+#3259, and `goals completion refresh` verifies it from hosted facts.
 
 ## Latest Evidence
 
