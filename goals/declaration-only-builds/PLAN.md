@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `in-progress` (P4, final PR open)
+Status: `complete` (P4 closed; final PR #3259 merged)
 
 ## Phases
 
@@ -12,7 +12,7 @@ Status: `in-progress` (P4, final PR open)
 | P1 Implement | complete | PR 2: remove Babel and JavaScript emit from the generated build and the scaffolds; regenerate every scripts block; extend the build output contract test. PR 3 only if P0 kept it: serve the own-source check from the build. | The "Declaration-only build" criteria are met; the check-once criterion is met or cut by decision. |
 | P2 Verify | complete | Re-measure with the baseline's method; confirm the hosted gate on PR 2 as the proof that nothing reads `dist/*.js`; record any Exception Ledger rows. | After numbers are in `research/`; every red is attributed. |
 | P3 Yeet: PR to mergeable | complete | Publish each PR through yeet and drive it to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | in-progress | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P4 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Pull Requests
 
