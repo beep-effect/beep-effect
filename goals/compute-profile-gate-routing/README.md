@@ -31,7 +31,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement, last slice. Slices P0 (profile probe, gate routing table, scheduler refusal; #2925)
+P2 Verify. Implementation slices P0 (profile probe, gate routing table, scheduler refusal; #2925)
 and P1 (yeet posture, catalog hook skip; #2959) merged on 2026-11-08 with the fix #2972. Slice P2
 (hosted `Catalog Regeneration` workflow, AGENTS.md, runbook and skill docs, Palantiri host-memory
 line) is in the 2026-11-13 takeover PR. Remaining after it: the worker-host end-to-end acceptance
