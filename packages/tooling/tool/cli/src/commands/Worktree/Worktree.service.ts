@@ -1609,9 +1609,9 @@ const makeRemovalReceipt = (
   manifest: O.Option<WorktreeResidueManifest>,
   branchDeleted: boolean,
   unpushedInspection: O.Option<WorktreeUnpushedInspection>,
-  idleTerminalShells: ReadonlyArray<number> = A.empty(),
-  inotifyWatchers: ReadonlyArray<WorktreeInotifyWatcher> = A.empty(),
-  attemptJournals: O.Option<AttemptJournalExport> = O.none()
+  idleTerminalShells: ReadonlyArray<number>,
+  inotifyWatchers: ReadonlyArray<WorktreeInotifyWatcher>,
+  attemptJournals: O.Option<AttemptJournalExport>
 ): WorktreeRemovalReceipt =>
   WorktreeRemovalReceipt.make({
     targetPath: request.targetPath,

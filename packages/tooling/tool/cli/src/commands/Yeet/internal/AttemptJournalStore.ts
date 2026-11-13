@@ -191,8 +191,9 @@ export const attemptJournalStoreRunsDirectory = Effect.fn("AttemptJournalStore.r
   return path.join(root, STORE_DIRECTORY_NAME, fleetRepositoryKey(repository), RUNS_DIRECTORY_NAME);
 });
 
-// Symbolic links a canonical path may follow before the path counts as unresolvable.
-const SYMLINK_FOLLOW_LIMIT = 40;
+// Resolution steps (symbolic links followed plus missing components walked up)
+// before a path counts as unresolvable; a symbolic link loop exhausts them.
+const RESOLUTION_STEP_LIMIT = 64;
 
 // The path `target` names once every symbolic link on it is followed, for a path
 // that may not exist yet: an existing prefix resolves through `realPath`, and a
@@ -200,21 +201,20 @@ const SYMLINK_FOLLOW_LIMIT = 40;
 // points into the checkout is caught before anything is created through it.
 const canonicalPath: (
   target: string,
-  followed?: number
+  steps?: number
 ) => Effect.Effect<O.Option<string>, never, FileSystem.FileSystem | Path.Path> = Effect.fnUntraced(function* (
   target: string,
-  followed = 0
+  steps = 0
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  if (followed > SYMLINK_FOLLOW_LIMIT) return O.none<string>();
+  if (steps > RESOLUTION_STEP_LIMIT) return O.none<string>();
   const real = yield* fs.realPath(target).pipe(Effect.option);
+  if (O.isSome(real)) return real;
   const parent = path.dirname(target);
-  // The filesystem root resolves; comparing it with its parent only ends the walk.
-  if (O.isSome(real) || Str.Equivalence(parent, target)) return O.isSome(real) ? real : O.some(target);
   const link = yield* fs.readLink(target).pipe(Effect.option);
-  if (O.isSome(link)) return yield* canonicalPath(path.resolve(parent, link.value), followed + 1);
-  const canonicalParent = yield* canonicalPath(parent, followed);
+  if (O.isSome(link)) return yield* canonicalPath(path.resolve(parent, link.value), steps + 1);
+  const canonicalParent = yield* canonicalPath(parent, steps + 1);
   return O.map(canonicalParent, (resolved) => path.join(resolved, path.basename(target)));
 });
 
@@ -231,7 +231,7 @@ const assertOutsideCheckout = Effect.fnUntraced(function* (checkout: string, run
   const canonicalStore = yield* canonicalPath(runsDirectory);
   if (O.isNone(canonicalStore)) {
     return yield* AttemptJournalStoreError.make({
-      message: `Could not resolve the attempt-journal store ${runsDirectory}: too many symbolic links.`,
+      message: `Could not resolve the attempt-journal store ${runsDirectory}: too many symbolic links or missing path components.`,
       path: runsDirectory,
     });
   }
