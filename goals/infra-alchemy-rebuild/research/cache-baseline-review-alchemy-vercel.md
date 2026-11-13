@@ -26,5 +26,8 @@ generated `inputs` lists of ten root-declared tasks differ:
 `:quality`, `:quality-bun-audit`, `:quality-changeset-graph`, `:quality-jsdoc-inventory`,
 `:quality-jsdoc-module-tags`, `:quality-jsdoc-ratchet` and `:quality-tsgo-rules`, following source
 files those PRs added, moved or removed. No task was added or removed, and no command, output,
-environment or dependency edge changed. This lane's diff does not touch `turbo.json`; it changes the
-root `package.json` catalog by one pin, which no root task's command, output or environment reads.
+environment or dependency edge changed. This lane adds one line to `turbo.json`: `bun run beep lint policy-fingerprint --write` puts
+`packages/tooling/library/alchemy-vercel/package.json` in the generated `inputs` of the root
+`//#lint:policy-fingerprint` seal task, as for every workspace manifest. No command, output, environment or
+dependency edge changes. The lane also changes the root `package.json` catalog by one pin, which no root
+task's command, output or environment reads.
