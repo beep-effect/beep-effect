@@ -23,6 +23,7 @@ import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { ProcessPid } from "../../internal/repo-run/ProcessTable.ts";
+import { AttemptJournalExport } from "../Yeet/internal/AttemptJournalStore.schemas.ts";
 import { FleetRootEntry } from "./internal/FleetRoots.schemas.ts";
 import type { WorktreeEntry } from "@beep/git/Git";
 
@@ -125,6 +126,7 @@ export const WorktreePreservationStep = LiteralKit([
   "copy-untracked-files",
   "preserve-beep-material",
   "restore-beep-material",
+  "export-attempt-journals",
   "write-manifest",
 ]).pipe(
   $I.annoteSchema("WorktreePreservationStep", {
@@ -722,6 +724,8 @@ export class WorktreeFenceSettlePolicy extends S.Opaque<WorktreeFenceSettlePolic
  * `inotifyWatchers` names the processes the fence found holding only an
  * inotify watch on the checkout, which it left running and warns about
  * instead of refusing.
+ * `attemptJournals` says where the checkout's Yeet attempt journals were
+ * filed before the removal deleted them, and is absent when it held none.
  *
  * **Example** (Represent a clean archive removal)
  *
@@ -755,6 +759,7 @@ export class WorktreeRemovalReceipt extends S.Opaque<WorktreeRemovalReceipt, { r
     ),
     idleTerminalShells: ArrayKeyDefaultEmpty(ProcessPid),
     inotifyWatchers: ArrayKeyDefaultEmpty(WorktreeInotifyWatcher),
+    attemptJournals: AttemptJournalExport.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("WorktreeRemovalReceipt", {
       description: "Completed worktree removal receipt with optional preserved residue manifest.",

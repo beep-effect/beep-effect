@@ -5,7 +5,8 @@
  * **Details**
  *
  * {@link YeetEconomicsSource} reads `.beep/yeet/runs/<runId>/attempts.ndjson`
- * and orphan `verdict.json` files into normalized journals; the pure fold
+ * and orphan `verdict.json` files into normalized journals (with `--fleet`,
+ * also the workstation store of removed checkouts' journals); the pure fold
  * {@link buildYeetEconomicsReport} turns them into the `yeet-economics/v3`
  * document. Nothing is written to disk.
  *
@@ -44,11 +45,13 @@ import * as Str from "effect/String";
 import { YeetAttemptTerminationReason } from "../../../internal/repo-run/AttemptTerminationJournal.ts";
 import { repoRunArtifactId } from "../../../internal/repo-run/RepoRunArtifacts.ts";
 import {
+  readCheckoutClone,
   readCloneFleetOrigin,
   readCloneFleetRepository,
   readConfiguredFleetRoots,
 } from "../../Worktree/internal/FleetRoots.ts";
 import { CLAUDE_WORKTREES_RELATIVE_ROOT, WORKTREES_ROOT_SUFFIX } from "../../Worktree/Worktree.constants.ts";
+import { attemptJournalStoreRunsDirectory } from "./AttemptJournalStore.ts";
 import {
   EconomicsAttempt,
   EconomicsAttemptClass,
@@ -95,14 +98,13 @@ const RUNS_DIRECTORY_NAME = "runs";
 const JOURNAL_FILE_NAME = "attempts.ndjson";
 const VERDICT_FILE_NAME = "verdict.json";
 const CHECKOUT_PREFIX = "beep-effect";
-const GIT_METADATA_NAME = ".git";
-const GIT_WORKTREES_DIRECTORY_NAME = "worktrees";
-const GITDIR_PREFIX = "gitdir:";
 const FLEET_READ_CONCURRENCY = 8;
 const COMPARABLE_EPISODE_CUT = Duration.hours(24);
 const UNKNOWN_KEY = "unknown";
 const VERDICT_V2 = "yeet-verdict/v2";
 const TOP_LANE_ROWS = 10;
+// The checkout label of the attempt-journal store's journals in a fleet read.
+const RETAINED_CHECKOUT_LABEL = "(retained)";
 
 // Ruling 74: the wrapper phase prefixes for verdicts written before inner
 // lanes carried `parentLaneId`.
@@ -532,7 +534,8 @@ interface OrphanVerdict {
 // file that is unreadable, malformed or has no `attemptId` cannot be keyed.
 const applyOrphanVerdict = (
   terminals: HashMap.HashMap<string, TerminalFacts>,
-  read: ContainedFileRead
+  read: ContainedFileRead,
+  excluded: HashSet.HashSet<string>
 ): OrphanVerdict => {
   const keyed = pipe(
     read.contents,
@@ -542,7 +545,7 @@ const applyOrphanVerdict = (
   const unkeyedVerdictFiles = countIf(read.exists && O.isNone(keyed));
   return pipe(
     keyed,
-    O.filter(({ attemptId }) => !HashMap.has(terminals, attemptId)),
+    O.filter(({ attemptId }) => !HashMap.has(terminals, attemptId) && !HashSet.has(excluded, attemptId)),
     O.match({
       onNone: () => ({ terminals, orphanVerdictFilesAdded: 0, unkeyedVerdictFiles }),
       onSome: ({ attemptId, verdict }) => ({
@@ -564,20 +567,49 @@ interface RunIdentity {
   readonly runId: string;
 }
 
+// A folded journal and every attempt id its rows or orphan verdict named, so a
+// fleet read can tell which retained attempts a live journal already holds.
+interface FoldedJournal {
+  readonly attemptIds: HashSet.HashSet<string>;
+  readonly journal: EconomicsJournal;
+}
+
+const rowAttemptId = (row: EconomicsJournalRow): O.Option<string> =>
+  EconomicsJournalRow.match(row, {
+    "attempt-started": (started) => O.some(started.attemptId),
+    "attempt-finished": (finished) => O.some(finished.attemptId),
+    "attempt-terminated": (terminated) => O.some(terminated.attemptId),
+    "journal-compacted": O.none<string>,
+  });
+
+// `excluded` names attempts a live journal of the same run already holds: the
+// retained copy's rows for them are dropped before the fold and counted as
+// duplicates, so live rows win (the A1 loader's "live overwrites" rule) and each
+// (runId, attemptId) is counted once.
 const foldRunJournal = (
   run: RunIdentity,
   inFlightAttemptId: O.Option<string>,
   journalRead: ContainedFileRead,
-  verdictRead: ContainedFileRead
-): EconomicsJournal => {
+  verdictRead: ContainedFileRead,
+  excluded: HashSet.HashSet<string>
+): FoldedJournal => {
   const decoded = journalRead.contents.pipe(
     O.match({
       onNone: (): DecodedJournalText => ({ rows: A.empty(), invalidRows: 0 }),
       onSome: decodeJournalText,
     })
   );
-  const fold = A.reduce(decoded.rows, emptyJournalFold, stepJournalFold);
-  const orphan = applyOrphanVerdict(fold.terminals, verdictRead);
+  const isExcluded = (row: EconomicsJournalRow): boolean =>
+    O.exists(rowAttemptId(row), (attemptId) => HashSet.has(excluded, attemptId));
+  const dropped = A.filter(decoded.rows, isExcluded);
+  const droppedStarts = A.length(A.filter(dropped, EconomicsJournalRow.guards["attempt-started"]));
+  const kept = A.reduce(A.filter(decoded.rows, P.not(isExcluded)), emptyJournalFold, stepJournalFold);
+  const fold: JournalFold = {
+    ...kept,
+    duplicateStarts: kept.duplicateStarts + droppedStarts,
+    duplicateTerminals: kept.duplicateTerminals + A.length(dropped) - droppedStarts,
+  };
+  const orphan = applyOrphanVerdict(fold.terminals, verdictRead, excluded);
   // The caller's own running attempt (a closeout reading its branch) has a
   // start and no terminal row yet; it is dropped, not counted as a death.
   const inFlight = O.filter(
@@ -592,7 +624,7 @@ const foldRunJournal = (
   const terminalIds = orphan.terminals.pipe(HashMap.keys, HashSet.fromIterable);
   const journalReadable = O.isSome(journalRead.contents);
   const inFlightExcluded = O.isSome(inFlight);
-  return EconomicsJournal.make({
+  const journal = EconomicsJournal.make({
     checkout: run.checkout,
     runId: run.runId,
     cutoff: O.flatMap(fold.cutoffMs, formatMillis),
@@ -614,6 +646,7 @@ const foldRunJournal = (
       inFlightStartsExcluded: countIf(inFlightExcluded),
     }),
   });
+  return { journal, attemptIds: fold.starts.pipe(HashMap.keys, HashSet.fromIterable, HashSet.union(terminalIds)) };
 };
 
 // ---------------------------------------------------------------------------
@@ -663,53 +696,13 @@ const realDirectoryNames = Effect.fnUntraced(function* (directory: string, keep:
   return yield* Effect.filter(A.filter(listDirectory3, keep), (name) => isRealDirectory(path.join(directory, name)));
 });
 
-// A linked worktree's `.git` file holds `gitdir: <clone>/.git/worktrees/<name>`.
-const gitDirOfGitFile = (path: Path.Path, checkout: string, content: string): O.Option<string> =>
-  pipe(
-    A.findFirst(A.map(Str.split(content, "\n"), Str.trim), Str.startsWith(GITDIR_PREFIX)),
-    O.map(flow(Str.slice(Str.length(GITDIR_PREFIX)), Str.trim)),
-    O.filter(Str.isNonEmpty),
-    O.map((target) => path.resolve(checkout, target))
-  );
-
-const cloneOfGitDir = (path: Path.Path, gitDir: string): O.Option<string> => {
-  const worktrees = path.dirname(gitDir);
-  const metadata = path.dirname(worktrees);
-  return O.liftPredicate(
-    path.dirname(metadata),
-    () =>
-      Str.Equivalence(path.basename(worktrees), GIT_WORKTREES_DIRECTORY_NAME) &&
-      Str.Equivalence(path.basename(metadata), GIT_METADATA_NAME)
-  );
-};
-
-// The clone that owns a checkout, read from its git metadata without spawning
-// git: a `.git` directory makes the checkout its own clone, a `.git` file
-// names the clone's `.git/worktrees/<name>`. None when `.git` is unreadable.
-const cloneRootOf = Effect.fnUntraced(function* (checkout: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const gitPath = path.join(checkout, GIT_METADATA_NAME);
-  const pipe4 = yield* fs.stat(gitPath).pipe(Effect.option);
-  const kind = O.map(pipe4, (info) => info.type);
-  if (O.contains(kind, "Directory")) {
-    return O.some(checkout);
-  }
-  const content = O.contains(kind, "File") ? yield* fs.readFileString(gitPath).pipe(Effect.option) : O.none<string>();
-  return pipe(
-    content,
-    O.flatMap((text) => gitDirOfGitFile(path, checkout, text)),
-    O.flatMap((gitDir) => cloneOfGitDir(path, gitDir))
-  );
-});
-
 // The projects root is the clone's parent (ruling 73). Only when `.git` is
 // unreadable does the directory name decide: a lane under `<clone>-worktrees/`
 // sits one level deeper than a clone.
 const projectsRootOf = Effect.fnUntraced(function* (repoRoot: string) {
   const path = yield* Path.Path;
   const parent = path.dirname(repoRoot);
-  const cloneRootOf5 = yield* cloneRootOf(repoRoot);
+  const cloneRootOf5 = yield* readCheckoutClone(repoRoot);
   return O.getOrElse(
     O.map(cloneRootOf5, (clone) => path.dirname(clone)),
     () => (Str.endsWith(WORKTREES_ROOT_SUFFIX)(path.basename(parent)) ? path.dirname(parent) : parent)
@@ -748,7 +741,7 @@ const fleetCandidates = Effect.fnUntraced(function* (
 // The fleet's candidates: the configured roots list shared with `worktree fleet`
 // (`BEEP_FLEET_ROOTS`, then `roots.json`) when set, else the derived projects root.
 const fleetScopeCandidates = Effect.fnUntraced(function* (repoRoot: string, projectsRoot: string) {
-  const clone = yield* cloneRootOf(repoRoot);
+  const clone = yield* readCheckoutClone(repoRoot);
   const repository = yield* readCloneFleetRepository(O.getOrElse(clone, () => repoRoot));
   // A report never fails over its scope: an undecodable roots.json warns and falls back to the derived root,
   // where `worktree fleet` refuses it outright.
@@ -770,7 +763,7 @@ const fleetScopeCandidates = Effect.fnUntraced(function* (repoRoot: string, proj
   // the rule the fleet mirror applies. Without a readable origin of our own, nothing else is admitted.
   const ownOrigin = yield* readCloneFleetOrigin(O.getOrElse(clone, () => repoRoot));
   const sharesOrigin = Effect.fnUntraced(function* (candidate: string) {
-    const candidateClone = yield* cloneRootOf(candidate);
+    const candidateClone = yield* readCheckoutClone(candidate);
     const origin = yield* readCloneFleetOrigin(O.getOrElse(candidateClone, () => candidate));
     return O.isSome(ownOrigin) && O.contains(origin, ownOrigin.value);
   });
@@ -834,30 +827,80 @@ const readRunFile = (
 const readRunJournal = Effect.fnUntraced(function* (
   checkout: EconomicsCheckout,
   runId: string,
-  inFlightAttemptId: O.Option<string>
+  inFlightAttemptId: O.Option<string>,
+  excluded: HashSet.HashSet<string>
 ) {
   const path = yield* Path.Path;
   const runDirectory = path.join(checkout.runsDirectory, runId);
   const journalRead = yield* readRunFile(checkout.runsDirectory, path.join(runDirectory, JOURNAL_FILE_NAME));
   const verdictRead = yield* readRunFile(checkout.runsDirectory, path.join(runDirectory, VERDICT_FILE_NAME));
   return journalRead.exists || verdictRead.exists
-    ? O.some(foldRunJournal({ checkout: checkout.label, runId }, inFlightAttemptId, journalRead, verdictRead))
-    : O.none<EconomicsJournal>();
+    ? O.some(foldRunJournal({ checkout: checkout.label, runId }, inFlightAttemptId, journalRead, verdictRead, excluded))
+    : O.none<FoldedJournal>();
 });
+
+const noExcludedAttempts: (runId: string) => HashSet.HashSet<string> = constant(HashSet.empty());
+const orNoExcludedAttempts: (excluded: O.Option<HashSet.HashSet<string>>) => HashSet.HashSet<string> = O.getOrElse(
+  HashSet.empty<string>
+);
 
 // Every real run directory, or only the branch's; a stray file or a symlink
 // under `runs/` is skipped without a diagnostic.
 const readCheckoutJournals = Effect.fnUntraced(function* (
   checkout: EconomicsCheckout,
   runId: O.Option<string>,
-  inFlightAttemptId: O.Option<string>
+  inFlightAttemptId: O.Option<string>,
+  excludedFor: (runId: string) => HashSet.HashSet<string> = noExcludedAttempts
 ) {
   const runIds = yield* realDirectoryNames(
     checkout.runsDirectory,
     (name) => O.isNone(runId) || O.contains(runId, name)
   );
-  const forEach6 = yield* Effect.forEach(runIds, (id) => readRunJournal(checkout, id, inFlightAttemptId));
+  const forEach6 = yield* Effect.forEach(runIds, (id) =>
+    readRunJournal(checkout, id, inFlightAttemptId, excludedFor(id))
+  );
   return A.getSomes(forEach6);
+});
+
+// The attempt-journal store's partition for the clone's repository, read as one
+// more checkout labelled `(retained)` (PERIL-11). Retained rows of an attempt a
+// live journal of the same run holds are dropped (`foldRunJournal`). A clone with
+// no GitHub origin has no partition; an unresolvable state root warns, since a
+// report never fails over its scope.
+const readRetainedJournals = Effect.fnUntraced(function* (
+  repoRoot: string,
+  runId: O.Option<string>,
+  inFlightAttemptId: O.Option<string>,
+  live: ReadonlyArray<FoldedJournal>
+) {
+  const path = yield* Path.Path;
+  const root = path.resolve(repoRoot);
+  const clone = yield* readCheckoutClone(root);
+  const repository = yield* readCloneFleetRepository(O.getOrElse(clone, () => root));
+  const runsDirectory = yield* Effect.transposeOption(O.map(repository, attemptJournalStoreRunsDirectory)).pipe(
+    Effect.catchTag("AttemptJournalStoreError", (error) =>
+      Effect.as(
+        Effect.logWarning(`yeet economics --fleet: ${error.message} Skipping the retained attempt journals.`),
+        O.none<string>()
+      )
+    )
+  );
+  if (O.isNone(runsDirectory)) {
+    return A.empty<FoldedJournal>();
+  }
+  const liveAttempts = A.reduce(live, HashMap.empty<string, HashSet.HashSet<string>>(), (byRun, folded) =>
+    HashMap.set(
+      byRun,
+      folded.journal.runId,
+      HashSet.union(folded.attemptIds, orNoExcludedAttempts(HashMap.get(byRun, folded.journal.runId)))
+    )
+  );
+  return yield* readCheckoutJournals(
+    { label: RETAINED_CHECKOUT_LABEL, runsDirectory: runsDirectory.value },
+    runId,
+    inFlightAttemptId,
+    (id) => orNoExcludedAttempts(HashMap.get(liveAttempts, id))
+  );
 });
 
 const readEconomicsJournals = Effect.fn("Yeet.Economics.read")(function* (
@@ -878,7 +921,11 @@ const readEconomicsJournals = Effect.fn("Yeet.Economics.read")(function* (
     (checkout) => readCheckoutJournals(checkout, runId, request.inFlightAttemptId),
     { concurrency: FLEET_READ_CONCURRENCY }
   );
-  return A.flatten(nested);
+  const live = A.flatten(nested);
+  const retained = request.fleet
+    ? yield* readRetainedJournals(request.repoRoot, runId, request.inFlightAttemptId, live)
+    : A.empty<FoldedJournal>();
+  return A.map(A.appendAll(live, retained), (folded) => folded.journal);
 });
 
 /**
@@ -923,7 +970,12 @@ const makeYeetEconomicsSource: Effect.Effect<
  * `<clone>/.claude/worktrees/*` lane under the projects root, the parent of
  * the clone named by the checkout's `.git` metadata, each labelled by its path
  * relative to that root. Symlinked checkouts and run directories and stray
- * files under `runs/` are skipped without being counted.
+ * files under `runs/` are skipped without being counted. The fleet also reads
+ * the attempt-journal store's partition for the clone's GitHub repository,
+ * where removed checkouts' journals are filed, labelled `(retained)`; a
+ * retained attempt that a live journal of the same run also holds is counted
+ * once, from the live journal, and its retained rows add to the duplicate
+ * counts.
  *
  * A bad journal never fails the read: an unreadable file counts in
  * `unreadableJournals` and a line that fails the row projection counts in

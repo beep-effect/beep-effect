@@ -209,6 +209,8 @@ export class YeetStatusRemote extends S.Opaque<YeetStatusRemote, { readonly bran
     ),
     checkCount: S.optionalKey(S.Finite),
     failingCheckCount: S.optionalKey(S.Finite),
+    // The branch the pull request merges into: the trunk, or the parent's branch for a stack layer.
+    baseRefName: S.optionalKey(S.String),
     isDraft: S.optionalKey(S.Boolean),
     isCrossRepository: S.optionalKey(S.Boolean),
     labels: S.Array(S.String).pipe(

@@ -7,14 +7,17 @@ Read when the heavy matrix holds, when a monitor triages a red job, or when a sw
 the merge-loop porcelain. They read the clone and the PR; none of them plan
 turbo work, so they are cheap to run mid-loop.
 
-- **Heavy admission is applied at creation.** `yeet publish` labels the draft
-  PR `ready-for-heavy` when it creates it (push-first-publish D4), so the heavy
-  matrix starts with tier 1. `Heavy Admission` in `check.yml` still holds any
-  code PR without the label (`Heavy / *` stays "Expected", merge blocked): that
-  is a PR that already existed before the publish, or one whose label edit
-  failed. Only then run `bun run beep yeet gh pr label add <n> ready-for-heavy` (REST) yourself;
-  the held `monitor --until-ready` loop prints that exact command and does not
-  burn its settle budget. Never remove and re-add the label, with one
+- **Heavy admission is applied when the PR is ready.** `yeet publish` and
+  `yeet open` open the PR ready for review and label it `ready-for-heavy` when
+  they create it (open ready at content-final, 2026-11-13), so the heavy
+  matrix starts with tier 1. A `--draft` PR is not labelled: it runs the cheap
+  tier only, and `yeet ready` applies the label when it flips the draft.
+  `Heavy Admission` in `check.yml` holds any code PR without the label
+  (`Heavy / *` stays "Expected", merge blocked): a draft that has not been
+  flipped, or a ready PR whose label edit failed. `bun run beep yeet ready`
+  repairs the second case too; the held `monitor --until-ready` loop prints
+  that command and does not burn its settle budget. A stack layer and a
+  worker-profile open are drafts labelled at creation, as before. Never remove and re-add the label, with one
   exception: a `required-shadowed` hold from `yeet merge-gate` or `yeet gh`
   (a required `Heavy / *` check green only in a Heavy Admit suite a newer run
   replaced). Re-apply the label once: that admission label event runs the
@@ -82,6 +85,17 @@ merge. It does not, and nothing may.
   delegation model overrides it; a lane that may not publish may still merge
   main and push the catch-up. The monitor keeps polling across that push, so
   do not re-submit it.
+- **A stack layer merges its parent's branch.** On a layer both texts name
+  the parent's branch instead: the row reads `base conflict with
+  origin/<parent-branch>`, and the comment tells the layer not to merge
+  `origin/main`. The parent merges `origin/main`; the layer then merges
+  `origin/<parent-branch>` and pushes
+  ([`stacks.md`](stacks.md#keep-the-layer-on-the-parent)). When the merged
+  pull request was the layer's own parent (`--alone`), the comment says so:
+  GitHub is cascading the layer onto `main`, so it merges nothing, waits for
+  `head_ref_force_pushed` on its timeline and then adopts the rewritten head
+  with `git switch -C`. That layer is not probed. A stacked sibling whose
+  relation to the merged pull request could not be read is told both cases.
 - **The broadcast.** When `yeet merge-gate` merges a PR that touched
   `goals/<slug>/**`, it comments on every other open PR touching the same
   packet in the same run, naming the merged sibling, the slug, the base it
@@ -99,9 +113,11 @@ merge. It does not, and nothing may.
 
 ## Ready
 
-`bun run beep yeet ready` flips a draft at content-final (push-first-publish
-D11, which amends D10). It reads the PR with the monitor's own status read and
-flips the draft when, on the current head, the PR is open, no required
+`bun run beep yeet ready` flips an opt-in draft at content-final
+(push-first-publish D11, which amends D10) and applies `ready-for-heavy`. A PR
+that `yeet publish` or `yeet open` opened ready passed the same receipt rule
+before its push and needs no flip. It reads the PR with the monitor's own
+status read and flips the draft when, on the current head, the PR is open, no required
 check is known to be failing, every review thread is answered, and
 `.beep/yeet/final-check/<head>.json` is a complete passing receipt. Pending
 checks and optional lanes (`Heavy / *`) never hold it. Otherwise it refuses
@@ -171,6 +187,6 @@ cannot run (model quota exhausted), drop the requirement with
 (both need `kriegcloud`'s gh login). Runbook: `docs/ops/beep-reviewer-app.md`.
 
 `monitor --until-ready` still ends `ready-pending-flip` (exit 0) when the PR
-is a draft and nothing but the draft flag blocks it. That now means the owner
-flipped late: the window starts at the flip, so submit a new monitor after
+is a draft and nothing but the draft flag blocks it. The window starts at the
+flip (at the open, for a PR opened ready), so submit a new monitor after
 `yeet ready` and wait for `merge-ready: yes`.

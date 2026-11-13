@@ -83,9 +83,10 @@ tier only to reproduce a hosted red locally.
 
 ## Final check: the content-final gate
 
-`bun run beep yeet final-check` runs on the committed head before a lane calls
-a PR final, and `yeet ready` refuses to flip a draft without a complete,
-passing receipt for that exact head (`.beep/yeet/final-check/<sha>.json`).
+`bun run beep yeet final-check` runs on the committed head before a lane opens
+its PR. `yeet publish` and `yeet open` refuse to open a ready PR, and
+`yeet ready` refuses to flip a draft, without a complete, passing receipt for
+that exact head (`.beep/yeet/final-check/<sha>.json`).
 It exists because on 2026-10-23/24 lanes called PRs final after local checks
 that skip gates only hosted CI runs, and each merge redded `main`. Every gate
 below runs the hosted body (`beep ci lane <id>`, through the same
@@ -237,3 +238,12 @@ after the reviewed request. A main merge that adds root tasks adds drifted
 subjects: update the basis to name those tasks and input changes, recompute its
 SHA-256 in the request, and refresh `previous` from the exact current baseline
 text before re-running. Keep scope/profile/epoch and qualification unchanged.
+
+## CI / security fixes: validate against the CI token's permissions
+
+A change that alters CI or security-gate behavior (for example making a `gh api`
+call fail-closed, or tightening a workflow permission) must be validated against
+the **actual CI token's permissions**, not just locally. A gate that reads, say,
+`security_and_analysis` will block every PR if the CI token cannot read it.
+Confirm the token scope (or fail *open* on a genuine permission error, distinct
+from a real security failure) before shipping such a fix.

@@ -28,6 +28,7 @@ import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -44,15 +45,18 @@ import {
 import {
   CHECK_CENSUS_BASELINE_PATH,
   CheckCensusBaselineProvenance,
+  CheckCensusCompilerStamp,
   CheckCensusGateReport,
   CheckCensusSampler,
   CheckCensusSamplerOptions,
+  checkCensusCompilerStampAgrees,
   checkCensusGateFailed,
   checkCensusGateFailureMessage,
   measureCheckCensusBaseline,
   readCheckCensusBaseline,
   readCheckCensusMetrics,
   renderCheckCensusBaselineLines,
+  renderCheckCensusCompilerStampLine,
   renderCheckCensusGateLines,
   resolveCheckCensusTargets,
   runCheckCensusGate,
@@ -988,12 +992,34 @@ const gateCheckCensusCli = Effect.fn("CheckCensus.gateCli")(function* (
   }
 });
 
+// `--stamp-only` reads the baseline through the gate's read path and runs one
+// `tsc --version`; it samples no program, so it needs no built tree.
+const stampCheckCensusCli = Effect.fn("CheckCensus.stampCli")(function* (
+  baselinePath: string,
+  input: CheckCensusCliInput
+) {
+  const baseline = yield* readCheckCensusBaseline(baselinePath);
+  const sampler = yield* CheckCensusSampler;
+  const compiler = yield* sampler.compilerVersion;
+  const stamp = CheckCensusCompilerStamp.make({
+    baselinePath: input.baseline,
+    baselineCompiler: baseline.compiler,
+    compiler,
+  });
+
+  if (!checkCensusCompilerStampAgrees(stamp)) {
+    return yield* QualityScriptCommandError.make({ message: renderCheckCensusCompilerStampLine(stamp) });
+  }
+  yield* Console.log(renderCheckCensusCompilerStampLine(stamp));
+});
+
 type CheckCensusCliInput = {
   readonly outputJson: string;
   readonly filter: O.Option<string>;
   readonly baseline: string;
   readonly writeBaseline: boolean;
   readonly gateOnly: boolean;
+  readonly stampOnly: boolean;
   readonly buildEquivalence: boolean;
   readonly seed: boolean;
   readonly initialState: O.Option<BuildEquivalenceInitialState>;
@@ -1007,6 +1033,17 @@ const mixesBuildEquivalenceFlags = (input: CheckCensusCliInput): boolean =>
     ? input.writeBaseline || input.gateOnly
     : input.seed || O.isSome(input.initialState) || O.isSome(input.equivalenceOutputJson);
 
+// `--stamp-only` runs alone for the same reason; `--filter` and `--output-json`
+// are ignored there, as `--write-baseline` ignores them.
+const mixesStampOnlyFlags = (input: CheckCensusCliInput): boolean =>
+  input.stampOnly &&
+  (input.writeBaseline ||
+    input.gateOnly ||
+    input.buildEquivalence ||
+    input.seed ||
+    O.isSome(input.initialState) ||
+    O.isSome(input.equivalenceOutputJson));
+
 const buildEquivalenceCliOptions = (repoRoot: string, input: CheckCensusCliInput): BuildEquivalenceCliOptions =>
   BuildEquivalenceCliOptions.make({
     repoRoot,
@@ -1019,6 +1056,12 @@ const buildEquivalenceCliOptions = (repoRoot: string, input: CheckCensusCliInput
 const runCheckCensusCli = Effect.fn("CheckCensus.cli")(function* (input: CheckCensusCliInput) {
   const path = yield* Path.Path;
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
+  if (mixesStampOnlyFlags(input)) {
+    return yield* QualityScriptCommandError.make({
+      message:
+        "--stamp-only runs alone (not with --write-baseline, --gate-only, --build-equivalence, --seed, --initial-state or --equivalence-output-json).",
+    });
+  }
   if (mixesBuildEquivalenceFlags(input)) {
     return yield* QualityScriptCommandError.make({
       message:
@@ -1033,11 +1076,12 @@ const runCheckCensusCli = Effect.fn("CheckCensus.cli")(function* (input: CheckCe
     CheckCensusSamplerOptions.make({ repoRoot, tscPath: path.join(repoRoot, "node_modules", ".bin", "tsc") })
   );
 
-  return yield* (
-    input.writeBaseline
-      ? writeCheckCensusBaselineCli(repoRoot, baselinePath)
-      : gateCheckCensusCli(repoRoot, baselinePath, input)
-  ).pipe(Effect.provideService(CheckCensusSampler, sampler));
+  return yield* Match.value(input).pipe(
+    Match.when({ stampOnly: true }, () => stampCheckCensusCli(baselinePath, input)),
+    Match.when({ writeBaseline: true }, () => writeCheckCensusBaselineCli(repoRoot, baselinePath)),
+    Match.orElse(() => gateCheckCensusCli(repoRoot, baselinePath, input)),
+    Effect.provideService(CheckCensusSampler, sampler)
+  );
 });
 
 /**
@@ -1067,6 +1111,17 @@ const runCheckCensusCli = Effect.fn("CheckCensus.cli")(function* (input: CheckCe
  * build-served check that lists files its build does not.
  * `--seed` adds the probe pass and `--initial-state restored` labels the
  * state a caller's Turbo cache restore left.
+ *
+ * `--stamp-only` measures nothing and needs no built tree: it reads the
+ * `--baseline` document the way the gate does (a missing or undecodable file
+ * fails the same way) and runs one `tsc --version`. When the baseline's
+ * `compiler` equals the installed compiler it prints one agreement line and
+ * exits 0; otherwise it fails naming both versions and the
+ * `--write-baseline` re-measure. It runs alone: combining it with
+ * `--write-baseline`, `--gate-only`, `--build-equivalence`, `--seed`,
+ * `--initial-state` or `--equivalence-output-json` is a usage error, while
+ * `--filter` and `--output-json` are ignored, as `--write-baseline` ignores
+ * them.
  *
  * **Example** (Register the subcommand)
  *
@@ -1104,6 +1159,12 @@ export const checkCensusCommand = Command.make(
       Flag.withDefault(false),
       Flag.withDescription("Skip the overlay census; only gate the baselined programs against the baseline")
     ),
+    stampOnly: Flag.Boolean("stamp-only").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "Only check that the baseline's compiler stamp equals the installed tsc --version; samples no program and needs no built tree; runs alone (--filter and --output-json are ignored)"
+      )
+    ),
     buildEquivalence: Flag.Boolean("build-equivalence").pipe(
       Flag.withDefault(false),
       Flag.withDescription(
@@ -1132,6 +1193,6 @@ export const checkCensusCommand = Command.make(
   runCheckCensusCli
 ).pipe(
   Command.withDescription(
-    "Measure check overlays against a reference-keeping overlay, then gate single-checker instantiations against the committed baseline; needs a built tree. --build-equivalence instead proves build and check programs report identical diagnostics"
+    "Measure check overlays against a reference-keeping overlay, then gate single-checker instantiations against the committed baseline; needs a built tree. --build-equivalence instead proves build and check programs report identical diagnostics; --stamp-only only checks the baseline's compiler stamp against the installed compiler"
   )
 );

@@ -25,6 +25,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { shellQuote } from "@beep/repo-utils/Shell";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -45,6 +46,7 @@ import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { GithubPullRequestRecord } from "../../../internal/github/index.ts";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetCommandError } from "../Yeet.errors.ts";
 
@@ -79,6 +81,56 @@ export const PacketSiblingProbe = LiteralKit(["clean", "conflict", "unavailable"
 export type PacketSiblingProbe = typeof PacketSiblingProbe.Type;
 
 /**
+ * Where a packet sibling stands when the subject pull request merges.
+ *
+ * **Details**
+ *
+ * `Trunk` is an ordinary pull request: it catches up by merging the trunk.
+ * `Layer` is a stack layer whose parent is still open: it merges the parent's
+ * branch, never the trunk, because its diff would otherwise carry the trunk's
+ * changes until the parent catches up. `Cascading` is a layer above the
+ * subject in the subject's own stack once the subject has merged: GitHub
+ * retargets it to the trunk and force-pushes it, so it merges nothing and
+ * adopts the rewritten head. `Unknown` is a layer above the bottom of a stack
+ * whose relation to the subject could not be read: it is told both cases and
+ * guesses neither. `onTrunk` says GitHub already retargeted it to the trunk.
+ * The bottom layer of a stack has nothing below it and is always `Trunk`.
+ *
+ * **Example** (A layer whose parent just merged)
+ *
+ * ```ts
+ * import { PacketSiblingPlace } from "@beep/repo-cli/test/Yeet"
+ *
+ * const place = PacketSiblingPlace.cases.Cascading.make({ belowPr: 3241 })
+ * console.log(place._tag) // "Cascading"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const PacketSiblingPlace = S.TaggedUnion({
+  Trunk: {},
+  Layer: { parentRef: S.NonEmptyString },
+  Cascading: { belowPr: S.Int },
+  Unknown: { stackNumber: S.Int, onTrunk: S.Boolean },
+}).pipe(
+  $I.annoteSchema("PacketSiblingPlace", {
+    description:
+      "Where a packet sibling stands when the subject merges: on the trunk, a stack layer on an open parent, a layer GitHub is cascading onto the trunk, or a stacked sibling whose relation to the subject was not read.",
+  })
+);
+
+/**
+ * Where a packet sibling stands when the subject pull request merges.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PacketSiblingPlace = typeof PacketSiblingPlace.Type;
+
+const trunkPlace: PacketSiblingPlace = PacketSiblingPlace.cases.Trunk.make({});
+
+/**
  * One open pull request that shares a goal packet with the subject pull request.
  *
  * **Example** (A sibling with one predicted conflict)
@@ -110,9 +162,12 @@ export class PacketSibling extends S.Opaque<PacketSibling, { readonly brand: uni
     probe: PacketSiblingProbe,
     /** Files `merge-tree` predicts will conflict against the base; empty unless `probe` is `conflict`. */
     conflicts: S.Array(S.String),
+    /** How the sibling catches up: an ordinary pull request unless it is a stack layer. */
+    place: PacketSiblingPlace.pipe(S.withConstructorDefault(Effect.succeed(trunkPlace))),
   }).pipe(
     $I.annoteSchema("PacketSibling", {
-      description: "An open pull request sharing a goal packet with the subject, with its predicted conflicts.",
+      description:
+        "An open pull request sharing a goal packet with the subject, with its predicted conflicts and where it stands relative to the trunk.",
     })
   )
 ) {}
@@ -224,6 +279,42 @@ export class SiblingBroadcast extends S.Opaque<SiblingBroadcast, { readonly bran
   )
 ) {}
 
+const AUTHORITY =
+  'This instruction holds whatever your brief says about acceptance or merge authority (operator ruling 2026-11-05, B1; AGENTS.md "Autonomy").';
+
+// The branch name comes from GitHub and lands in a command a recipient may paste,
+// so both ref arguments are shell-quoted. `git switch -C` resets the branch, so the
+// old tip is kept for any commit the lane had not pushed. The backup is named per
+// branch: linked worktrees share refs/heads, and one merge can cascade several layers.
+const adoptRewrite = (headRef: string): string => {
+  const backup = shellQuote(`pre-cascade/${headRef}`);
+  return `wait for \`head_ref_force_pushed\` on its timeline, then, before any further commit, adopt the rewritten head: \`git fetch origin && git branch -f ${backup} HEAD && git switch -C ${shellQuote(headRef)} ${shellQuote(`origin/${headRef}`)}\`. The switch resets the branch, so the \`pre-cascade/\` branch keeps the old tip: cherry-pick from it any commit of your own that was never pushed`;
+};
+
+// What the sibling does now. A stack layer never merges the trunk: its diff would
+// carry the trunk's changes until its parent catches up.
+const siblingInstruction = (mergedPr: number, sibling: PacketSibling): string =>
+  PacketSiblingPlace.match({
+    Trunk: () => "Merge `origin/main` into this lane now, resolve, regenerate generated files, push once.",
+    Layer: ({ parentRef }) =>
+      `This pull request is a stack layer on \`${parentRef}\`: do not merge \`origin/main\` into it. Its parent catches up first; once the parent has pushed, merge \`origin/${parentRef}\` into this lane, resolve, regenerate generated files, push once.`,
+    Cascading: ({ belowPr }) =>
+      `#${belowPr} was the layer below this pull request and merged alone, so GitHub retargets this pull request to \`main\` and force-pushes it (the cascade), usually within seconds. Merge nothing into it: ${adoptRewrite(sibling.headRef)}.`,
+    Unknown: ({ stackNumber, onTrunk }) => {
+      const opening = `This pull request is in stack #${stackNumber}, and the gate could not read how #${mergedPr} relates to it.`;
+      // Already on the trunk: either this merge cascaded it, or an earlier one did and it is an
+      // ordinary pull request now. Adopting first is right in both cases.
+      return onTrunk
+        ? `${opening} If #${mergedPr} was the layer below it, GitHub has cascaded it onto \`main\`: ${adoptRewrite(sibling.headRef)}. Then merge \`origin/main\` into this lane, resolve, regenerate generated files, push once.`
+        : `${opening} If #${mergedPr} was the layer below it, GitHub is cascading it onto \`main\`: merge nothing, ${adoptRewrite(sibling.headRef)}. Otherwise merge its parent's branch, never \`origin/main\`.`;
+    },
+  })(sibling.place);
+
+// A cascading layer is not probed, and neither is one whose place is unknown: the head it may be
+// leaving predicts conflicts the cascade removes.
+const siblingProbed = (sibling: PacketSibling): boolean =>
+  sibling.place._tag === "Trunk" || sibling.place._tag === "Layer";
+
 /**
  * The comment the merge gate posts on one sibling after a packet pull request merged.
  *
@@ -268,8 +359,8 @@ export const renderSiblingBroadcast = ({ mergedPr, mergeSha, baseSha, sibling }:
   return A.join(
     [
       `yeet merge-gate: sibling #${mergedPr} merged on ${listOf(sibling.slugs)} (${sha10(mergeSha)}).`,
-      `Merge \`origin/main\` into this lane now, resolve, regenerate generated files, push once. This instruction holds whatever your brief says about acceptance or merge authority (operator ruling 2026-11-05, B1; AGENTS.md "Autonomy").`,
-      expectation,
+      `${siblingInstruction(mergedPr, sibling)} ${AUTHORITY}`,
+      ...(siblingProbed(sibling) ? [expectation] : []),
     ],
     "\n\n"
   );
@@ -307,7 +398,13 @@ export const renderPacketSiblingsReport = (report: PacketSiblingsReport): string
       Match.when("unavailable", () => "probe unavailable"),
       Match.exhaustive
     );
-    return `  #${sibling.prNumber} ${sibling.headRef} (${sha10(sibling.headSha)}) shares ${listOf(sibling.slugs)}; ${outcome}`;
+    const layer = PacketSiblingPlace.match({
+      Trunk: () => "",
+      Layer: ({ parentRef }) => `; stack layer on ${parentRef}`,
+      Cascading: ({ belowPr }) => `; cascading onto the trunk after #${belowPr} (not probed)`,
+      Unknown: ({ stackNumber }) => `; in stack #${stackNumber}, relation to the subject not read (not probed)`,
+    })(sibling.place);
+    return `  #${sibling.prNumber} ${sibling.headRef} (${sha10(sibling.headSha)}) shares ${listOf(sibling.slugs)}; ${outcome}${layer}`;
   });
   return A.join([header, ...lines], "\n");
 };
@@ -351,6 +448,43 @@ const probeSibling = Effect.fnUntraced(function* (
       ),
   });
 });
+
+// A layer's own base is the parent's branch while the stack's base is the trunk. Once the layer
+// below has merged, GitHub retargets and force-pushes every layer above it, and the list read can
+// catch such a layer on either base, so a merged subject below it in the same stack decides first.
+const siblingPlace = (
+  subject: O.Option<GithubPullRequestRecord>,
+  subjectUnread: boolean,
+  pull: GithubPullRequestRecord
+): PacketSiblingPlace =>
+  O.match(pull.stack, {
+    onNone: () => trunkPlace,
+    onSome: (stack) => {
+      // The bottom layer has nothing below it: an ordinary pull request, whatever was read.
+      if (stack.position <= 1) return trunkPlace;
+      // An unread subject places no upper layer: a guessed `Layer` would tell a cascading layer
+      // to merge a parent branch that no longer exists.
+      return subjectUnread
+        ? PacketSiblingPlace.cases.Unknown.make({
+            stackNumber: stack.number,
+            onTrunk: stack.baseRef === pull.baseRef,
+          })
+        : subject.pipe(
+            O.filter(
+              (below) =>
+                below.merged &&
+                O.exists(below.stack, (theirs) => theirs.number === stack.number && theirs.position < stack.position)
+            ),
+            O.match({
+              onSome: (below): PacketSiblingPlace => PacketSiblingPlace.cases.Cascading.make({ belowPr: below.number }),
+              onNone: (): PacketSiblingPlace =>
+                stack.baseRef === pull.baseRef
+                  ? trunkPlace
+                  : PacketSiblingPlace.cases.Layer.make({ parentRef: pull.baseRef }),
+            })
+          );
+    },
+  });
 
 /**
  * Read the open pull requests that share a goal packet with `prNumber` and probe each against the base.
@@ -415,8 +549,29 @@ export const readPacketSiblings = Effect.fn("Yeet.readPacketSiblings")(function*
   yield* refreshBaseRef(context.repoRoot, context.base);
   // `Git.revParse` verifies the base commit (W7a, SPEC D-18); an unresolvable base is no sha.
   const baseSha = yield* resolveYeetRev(context.repoRoot, `${context.base}^{commit}`).pipe(Effect.option);
-  const siblings = yield* Effect.forEach(sharing, ({ pull, shared }) =>
-    probeSibling(context, { prNumber: pull.number, headSha: pull.headSha }).pipe(
+  // The subject's own record is read only when a sibling sits in a stack: a layer above a
+  // merged subject is being cascaded, whichever base the list read caught it on.
+  const stacked = A.some(sharing, ({ pull }) => O.isSome(pull.stack));
+  const subject = stacked
+    ? yield* rest.pullRequest(prNumber).pipe(
+        Effect.asSome,
+        Effect.catch((error) =>
+          Console.error(
+            `[yeet] warning: could not read #${prNumber} to place its stacked siblings; each is told to check its stack: ${error.message}`
+          ).pipe(Effect.as(O.none<GithubPullRequestRecord>()))
+        )
+      )
+    : O.none<GithubPullRequestRecord>();
+  const siblings = yield* Effect.forEach(sharing, ({ pull, shared }) => {
+    const place = siblingPlace(subject, stacked && O.isNone(subject), pull);
+    // Only a sibling that will merge something is probed: GitHub replays a cascading layer's
+    // commits onto the squash commit, and a probe of the head it is leaving predicts conflicts
+    // the cascade removes.
+    const probed =
+      place._tag === "Trunk" || place._tag === "Layer"
+        ? probeSibling(context, { prNumber: pull.number, headSha: pull.headSha })
+        : Effect.succeed<ProbeOutcome>({ probe: "unavailable", conflicts: [] });
+    return probed.pipe(
       Effect.map(({ probe, conflicts }) =>
         PacketSibling.make({
           prNumber: pull.number,
@@ -425,12 +580,29 @@ export const readPacketSiblings = Effect.fn("Yeet.readPacketSiblings")(function*
           slugs: shared,
           probe,
           conflicts,
+          place,
         })
       )
-    )
-  );
+    );
+  });
   return PacketSiblingsReport.make({ prNumber, base: context.base, baseSha, slugs, siblings });
 });
+
+// "2 to merge origin/main, 1 to adopt the cascade": what the comments asked for, by place.
+const siblingAsks: ReadonlyArray<readonly [PacketSiblingPlace["_tag"], string]> = [
+  ["Trunk", "to merge origin/main"],
+  ["Layer", "to merge their parent's branch"],
+  ["Cascading", "to adopt the cascade"],
+  ["Unknown", "to check their stack"],
+];
+const renderSiblingAsks = (siblings: ReadonlyArray<PacketSibling>): string =>
+  A.join(
+    A.flatMap(siblingAsks, ([tag, ask]) => {
+      const asked = A.length(A.filter(siblings, (sibling) => sibling.place._tag === tag));
+      return asked === 0 ? [] : [`${asked} ${ask}`];
+    }),
+    ", "
+  );
 
 /**
  * Tell every open sibling of a just-merged packet pull request to merge main now.
@@ -490,7 +662,7 @@ export const broadcastPacketSiblings = Effect.fn("Yeet.broadcastPacketSiblings")
     { discard: true }
   );
   yield* Console.log(
-    `[yeet] told ${A.length(posted)} of ${A.length(report.siblings)} open sibling PR(s) on ${listOf(report.slugs)} to merge origin/main now`
+    `[yeet] told ${A.length(posted)} of ${A.length(report.siblings)} open sibling PR(s) on ${listOf(report.slugs)} to catch up (${renderSiblingAsks(report.siblings)})`
   );
   return report;
 });

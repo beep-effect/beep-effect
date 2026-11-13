@@ -35,7 +35,7 @@ import {
   githubCheckPrePushLanes,
 } from "../../Quality/internal/GithubChecks.ts";
 import { HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
-import { GIT_PUSH_STEP_ID, YeetRunMode } from "./Planner.schemas.ts";
+import { GIT_PUSH_STEP_ID, YeetPullRequestOpenMode, YeetRunMode } from "./Planner.schemas.ts";
 import { DEFAULT_GATE_ORDER_SEED, orderWaveLanes } from "./WaveOrder.ts";
 import type { RepoRunContext, TurboPlanTask } from "../../../internal/repo-run/RepoRun.models.ts";
 import type { GithubCheckLaneSpec } from "../../Quality/Quality.schemas.ts";
@@ -98,6 +98,10 @@ export class YeetRunPlanModeOptions extends S.Opaque<YeetRunPlanModeOptions, { r
     mode: YeetRunMode,
     monitor: S.Boolean,
     noEdit: S.Boolean,
+    openAs: YeetPullRequestOpenMode.pipe(
+      S.withConstructorDefault(Effect.succeed("ready" as const)),
+      S.withDecodingDefaultKey(Effect.succeed("ready" as const))
+    ),
     pushOnly: S.Boolean,
     reuseVerified: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
@@ -541,11 +545,12 @@ const headInstallPreflightStep = (context: RepoRunContext, phase: RepoPlanStep["
     verification: "detached-clean-temp-worktree-of-HEAD",
   });
 
-// Every publish path opens the pull request as a draft (push-first-publish
-// D4), so the planned create always carries `--draft`. The title is resolved
-// at execution: the `--message` first line, else the first non-merge commit
+// A publish opens the pull request ready for review (decision
+// 2026-11-13, open ready at content-final); the planned create carries
+// `--draft` only for the two draft open modes. The title is resolved at
+// execution: the `--message` first line, else the first non-merge commit
 // subject.
-const prCreateStep = (context: RepoRunContext): RepoPlanStep =>
+const prCreateStep = (context: RepoRunContext, openAs: YeetPullRequestOpenMode): RepoPlanStep =>
   RepoPlanStep.make({
     id: "publish:02-pr-create",
     label: "publish:pr-create",
@@ -554,7 +559,7 @@ const prCreateStep = (context: RepoRunContext): RepoPlanStep =>
     args: [
       "pr",
       "create",
-      "--draft",
+      ...(openAs === "ready" ? [] : ["--draft"]),
       "--base",
       "<default-branch>",
       "--title",
@@ -569,13 +574,15 @@ const prCreateStep = (context: RepoRunContext): RepoPlanStep =>
   });
 
 /**
- * Stable plan-step identifier for the heavy-admission label applied when the
- * push-first publish creates its draft pull request.
+ * Stable plan-step identifier for the heavy-admission label applied when a
+ * publish creates its pull request.
  *
  * **Details**
  *
  * The id sorts between the create and the provenance stamp, so the label lands
- * on the pull request the create just opened. The handler skips the edit when
+ * on the pull request the create just opened. A `--draft` open plans no label
+ * step: a draft runs only the cheap hosted tier until `yeet ready` flips it
+ * and applies the label. The handler skips the edit when
  * every changed path is docs-only, because the heavy matrix already treats such
  * a diff as satisfied.
  *
@@ -831,19 +838,26 @@ const statusSteps = (context: RepoRunContext, options: YeetRunPlanModeOptions): 
 ];
 
 // The pull-request tail every publish path shares (push-first-publish D4, D7):
-// a draft pull request with the heavy-admission label and provenance stamp,
-// then the detached readiness monitor unless the operator stays attached.
+// the pull request (ready, or a draft for the draft open modes), the
+// heavy-admission label unless it opens as a cheap-tier `draft`, the provenance
+// stamp, then the detached readiness monitor unless the operator stays attached.
 const pullRequestTailSteps = (
   context: RepoRunContext,
   options: YeetRunPlanModeOptions
 ): ReadonlyArray<RepoPlanStep> => [
-  ...(options.pr ? [prCreateStep(context), prHeavyAdmissionLabelStep(context), prProvenanceStampStep(context)] : []),
+  ...(options.pr
+    ? [
+        prCreateStep(context, options.openAs),
+        ...(options.openAs === "draft" ? [] : [prHeavyAdmissionLabelStep(context)]),
+        prProvenanceStampStep(context),
+      ]
+    : []),
   ...(options.monitor ? monitorSteps(context) : options.pr ? [monitorReadySubmitStep(context)] : []),
 ];
 
 // The push of an already-proven commit, shared by `--prove-first` and
 // `--push-only`: preflight, push carrying the proof-reuse marker, then the
-// same draft-and-monitor tail as the push-first default.
+// same pull-request-and-monitor tail as the push-first default.
 const provenPushSteps = (context: RepoRunContext, options: YeetRunPlanModeOptions): ReadonlyArray<RepoPlanStep> => [
   headInstallPreflightStep(context, "publish"),
   pushStep(context, true),
@@ -865,9 +879,9 @@ const proveFirstPublishSteps = (
 ];
 
 // Push-first (push-first-publish D1-D8): only the cheap-gates tier and the
-// head-install preflight hold the push. The pull request opens as a draft with
-// the heavy-admission label, and the detached readiness monitor is submitted
-// unless the operator asked to stay attached with `--monitor`.
+// head-install preflight hold the push. The pull request opens in the planned
+// open mode, and the detached readiness monitor is submitted unless the
+// operator asked to stay attached with `--monitor`.
 const pushFirstPublishSteps = (
   context: RepoRunContext,
   message: O.Option<string>,
@@ -882,9 +896,9 @@ const pushFirstPublishSteps = (
 ];
 
 // `yeet open` (the constrained-compute escape, operator 2026-10-24): push the
-// committed HEAD and run the shared pull-request tail with no local gate, so
-// the draft, its heavy-admission label and its provenance footer come from Yeet
-// even when local admission is saturated. Hosted CI is the whole proof.
+// committed HEAD and run the shared pull-request tail with no cheap gate, so
+// the pull request, its heavy-admission label and its provenance footer come
+// from Yeet even when local admission is saturated.
 const hostedProofPublishSteps = (
   context: RepoRunContext,
   options: YeetRunPlanModeOptions

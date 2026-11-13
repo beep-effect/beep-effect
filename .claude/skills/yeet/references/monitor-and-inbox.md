@@ -119,8 +119,9 @@ check is queued or running (that wait is GitHub's job timeout, not ours).
 Gate lines name `registration`, `required-pending`, `heavy-not-admitted`,
 `base-conflict`, `closeout-pending`, or `settle-timeout`, including missing and
 pending contexts. `base-conflict` means the base moved under the head (GitHub
-reports `CONFLICTING`/`DIRTY` and empties the check rollup): merge `origin/main`
-and push; the wait never spends the budget. Under `--until-ready` it is also a
+reports `CONFLICTING`/`DIRTY` and empties the check rollup): merge the ref the
+line names and push (`origin/main`, or the parent's branch on a stack layer);
+the wait never spends the budget. Under `--until-ready` it is also a
 P0 `base-conflict` inbox row, and neither it nor a required red ends the loop
 (see Inbox). A context once seen registered for
 a head stays `pending` when one poll omits it, never `missing`. `heavy-not-admitted` is tier-2 admission (B8): the loop computes the
@@ -128,7 +129,7 @@ heavy verdict every poll from the same function CI runs (`ready-for-heavy`
 label, docs-only diff) and, while the verdict is `hold` with `Heavy / *`
 contexts still open, moves them from `missing`/`pending` into a `gated` census
 bucket and prints
-`settle: heavy-not-admitted; gated: …; admit: gh pr edit --add-label ready-for-heavy; waited …`.
+`settle: heavy-not-admitted; gated: …; admit: bun run beep yeet ready (flips a draft at content-final and applies ready-for-heavy); waited …`.
 Held time never counts toward `--settle-timeout`; the settle clock resets when
 the verdict changes, and the label admits within one poll. `skip-satisfied`
 (docs-only) settles once every lane reports a terminal outcome: `pass` when it
@@ -262,10 +263,10 @@ monitor: it writes them as inbox rows and keeps polling, so pass
 `job wait` on the same job; the attached fallback also exits 2, so re-run it
 after the push. Any other non-zero exit ended the job: read its summary,
 fix, and re-submit. A code PR must carry the `ready-for-heavy` label before
-the `Heavy / *` matrix runs (docs-only PRs skip it); `yeet publish` applies
-it when it creates the draft PR, so add it by hand only for a PR that
-already existed or whose label edit failed — `--until-ready` prints the
-`gh pr edit` command while it holds.
+the `Heavy / *` matrix runs (docs-only PRs skip it); `yeet publish` and
+`yeet open` apply it when they open a ready PR, and `yeet ready` applies it
+when it flips a `--draft` PR or finds a ready PR without it —
+`--until-ready` prints that command while it holds.
 Unanswered review threads are a hard merge gate — answer every one and resolve
 every actionable one via `bun run beep yeet reply`
 (drafts in `.beep/yeet/reply-drafts.json`); never ask the operator to relay
