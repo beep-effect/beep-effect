@@ -8,11 +8,11 @@ import {
   canonicalJsonTextPretty,
   compileCapabilityProjection,
   evaluateCapabilityGraph,
+  GoalCloseoutRecord,
   GoalCloseoutView,
   GoalExplainReport,
   GoalFrontierReport,
   GoalManifest,
-  GoalProposedCloseout,
   GoalStatus,
   GraphCapabilityEdge,
   goalsCommand,
@@ -446,28 +446,19 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
       })
     );
 
-    it.effect("explain renders the derived closeout status when a view is attached", () =>
+    it.effect("explain renders the committed closeout and its verification when a view is attached", () =>
       Effect.gen(function* () {
         const { projection, answers } = yield* differential([
-          { id: "pkt-a", status: "active", provides: ["cap/a"], requires: [] },
+          { id: "pkt-a", status: "completed-retained", provides: ["cap/a"], requires: [] },
         ]);
         const base = explain(projection, answers, "pkt-a");
         strictEqual(Str.includes("closeout:")(renderExplainHuman(base)), false);
-        const proposedCloseout = GoalProposedCloseout.make({ status: "completed-retained", finalPullRequest: 2320 });
+        const closeout = GoalCloseoutRecord.make({ status: "completed-retained", finalPullRequest: 2320 });
         const verified = GoalExplainReport.make({
           ...base,
-          closeout: GoalCloseoutView.make({
-            packet: "pkt-a",
-            operativeStatus: "completed-retained",
-            proposedCloseout,
-            verification: "verified",
-          }),
+          closeout: GoalCloseoutView.make({ packet: "pkt-a", closeout, verification: "verified" }),
         });
-        assertTrue(
-          Str.includes("  closeout: completed-retained (verified via #2320, adoption pending)")(
-            renderExplainHuman(verified)
-          )
-        );
+        assertTrue(Str.includes("  closeout: completed-retained (verified via #2320)")(renderExplainHuman(verified)));
         const flatMap7 = yield* Effect.flatMap(
           S.encodeUnknownEffect(GoalExplainReport)(verified),
           S.decodeUnknownEffect(GoalExplainReport)
@@ -475,15 +466,10 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
         deepStrictEqual(flatMap7, verified);
         const unverified = GoalExplainReport.make({
           ...base,
-          closeout: GoalCloseoutView.make({
-            packet: "pkt-a",
-            operativeStatus: "active",
-            proposedCloseout,
-            verification: "unverified",
-          }),
+          closeout: GoalCloseoutView.make({ packet: "pkt-a", closeout, verification: "unverified" }),
         });
         assertTrue(
-          Str.includes("  closeout: completed-retained (proposed via #2320, unverified)")(
+          Str.includes("  closeout: completed-retained (committed via #2320, unverified)")(
             renderExplainHuman(unverified)
           )
         );

@@ -71,5 +71,11 @@ before entering a named non-goal, changing public API/schema/auth/infra,
 adding dependencies or lockfile changes not explicitly approved by `SPEC.md`,
 touching destructive state, or proceeding without required egress/teardown proof.
 
-Done only when acceptance passes and Yeet reports the PR work mergeable, or when
-the packet records a supported reshape/stop or blocker with evidence.
+The final PR needs acceptance passing, or a supported reshape or stop recorded
+in the packet.
+
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug voice-composer-slice` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/voice-composer-slice/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

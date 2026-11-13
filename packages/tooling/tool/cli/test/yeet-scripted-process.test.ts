@@ -9,10 +9,12 @@ import {
   turboTaskForStep,
 } from "@beep/repo-cli/test/RepoRun";
 import {
+  activePacketsAmong,
   activePacketsOnBranch,
   applyHeavyAdmissionLabel,
   buildPrBody,
   buildYeetRunPlan,
+  checkTouchedCloseouts,
   commandTextForStep,
   decideYeetReadyGate,
   defaultYeetRunOptions,
@@ -41,6 +43,7 @@ import {
   shouldMonitorChecks,
   TurboPlanSnapshot,
   titleFromMessage,
+  touchedPacketsOnBranch,
   validateCommitMessage,
   validateMonitorBranch,
   validateMonitorGuards,
@@ -1471,6 +1474,82 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet retire packet 
       );
       expect(slugs).toEqual(["open", "unblocked"]);
       expect(A.some(commandLines(commands), Str.startsWith("gh pr view claude/lane --json files"))).toBe(true);
+    })
+  );
+
+  it.effect("names every packet the branch touched, archived and completed ones included, and filters the active", () =>
+    Effect.gen(function* () {
+      const commands = yield* makeCommands;
+      const plan = YeetRetirePlan.make({
+        worktreePath: "/repo/lane",
+        owningClone: "/repo",
+        name: "lane",
+        branch: "claude/lane",
+      });
+      const state = SweepGitState.make({
+        branch: "claude/lane",
+        mainBranch: "main",
+        headBranch: "claude/lane",
+        worktreeDirty: false,
+        mainCheckedOutElsewhere: false,
+        branchCheckedOutElsewhere: false,
+        branchMergedIntoBase: true,
+        lockfileMovedOnMainUpdate: false,
+        statusProbeUnreliable: false,
+        worktreeProbeUnreliable: false,
+      });
+      const manifest = (slug: string) => `show HEAD:goals/${slug}/ops/manifest.json`;
+      // The pull request's file list and the branch diff are unioned, deduplicated and sorted;
+      // paths outside goals/<slug>/ name no packet.
+      const replies: ReadonlyArray<Reply> = [
+        [
+          "gh pr view claude/lane --json files",
+          0,
+          encodeJson({
+            files: [{ path: "goals/archived/README.md" }, { path: "goals/open/PLAN.md" }, { path: "src/index.ts" }],
+          }),
+        ],
+        ["merge-base main HEAD", 0, "abc123\n"],
+        [
+          "diff --name-only -z --no-relative abc123 HEAD -- goals/",
+          0,
+          "goals/open/ops/manifest.json\0goals/completed/SPEC.md\0goals/INDEX.md\0",
+        ],
+        [manifest("open"), 0, encodeJson({ lifecycle: "active" })],
+        [manifest("completed"), 0, encodeJson({ lifecycle: "completed-retained" })],
+        [manifest("archived"), 0, encodeJson({ lifecycle: "archived" })],
+      ];
+      const touched = yield* touchedPacketsOnBranch(plan, state).pipe(withProcesses(replies, commands));
+      expect(touched).toEqual(["archived", "completed", "open"]);
+      const active = yield* activePacketsAmong(plan, touched).pipe(withProcesses(replies, commands));
+      expect(active).toEqual(["open"]);
+      // Without a readable pull request or merge base nothing is touched.
+      const none = yield* touchedPacketsOnBranch(plan, state).pipe(withProcesses([], commands));
+      expect(none).toEqual([]);
+    })
+  );
+
+  it.effect("checks no closeout when the main ref is unreadable or no touched manifest commits one", () =>
+    Effect.gen(function* () {
+      const commands = yield* makeCommands;
+      const unreadable = yield* checkTouchedCloseouts("/repo", ["demo"], "origin/main").pipe(
+        withProcesses([["rev-parse --verify", 128, ""]], commands)
+      );
+      expect(unreadable).toEqual([]);
+      expect(A.some(commandLines(commands), Str.includes("show origin/main:"))).toBe(false);
+      const show = (slug: string) => `show origin/main:goals/${slug}/ops/manifest.json`;
+      const uncommitted = yield* checkTouchedCloseouts("/repo", ["active", "broken", "gone"], "origin/main").pipe(
+        withProcesses(
+          [
+            ["rev-parse --verify", 0, `${Str.repeat(40)("a")}\n`],
+            [show("active"), 0, encodeJson({ initiative: { id: "active", status: "active" } })],
+            [show("broken"), 0, "not json"],
+          ],
+          commands
+        )
+      );
+      expect(uncommitted).toEqual([]);
+      expect(A.some(commandLines(commands), Str.startsWith("gh "))).toBe(false);
     })
   );
 });

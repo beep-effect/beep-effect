@@ -40,7 +40,7 @@ graduation merges. Lever gates are in `SPEC.md` (Levers).
 | 14 | refactor(ci): consolidate the lane-id maps | MEAS-05 slice 1 | S | One map; existing census and corpus tests unchanged | 2 |
 | 15 | feat(quality): ledger fold with absent-source rows | MEAS-05 slice 2 | M | At least 95% of job-minutes mapped on three reference runs; no umbrella double count; the empty-leg runner-minutes row computed per run, with a fixture for a run that allocated an empty partition | 14, 1 |
 | 16 | feat(yeet): join PSI samples | MEAS-08 | S | None (pure join, no hot-path stamps) | 15 |
-| 17 | docs(goals): certainty-scorecard closeout | evidence | S | 7-night evidence note, fleet census note, reflection, `proposedCloseout` | all |
+| 17 | docs(goals): certainty-scorecard closeout | evidence | S | 7-night evidence note, fleet census note, reflection, `closeout` | all |
 
 Waves under the three-PR limit: {1, 2, 3}, then {4, 5, 6} as each of the first wave merges, then {7, 10, 11},
 {8, 9, 12}, {5b, 13, 14}, then {11b, 15}, then 16, then 17. Slice 10b is unscheduled: it takes a free slot in
@@ -55,9 +55,13 @@ Before marking the packet closed:
    validate against `ReflectionFrontmatter`.
 2. Run `bun run beep lint reflection-artifacts`.
 3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase
-   statuses and a typed `proposedCloseout` with status `completed-retained`
-   and finalPullRequest. Keep `initiative.status` operative until completion
-   evidence verifies; do not close the external execution/session ledger from a proposal.
+   statuses. Once the final PR is open, run
+   `bun run beep goals set-status certainty-scorecard completed-retained`: it writes
+   `closeout` naming that PR with the matching `initiative.status`, and the
+   commit ships in the final PR. After the merge,
+   `bun run beep goals completion refresh --slug certainty-scorecard` must print verified;
+   name any red required check in a committed decision file
+   (`redAttribution`).
 
 ## Execution Notes
 

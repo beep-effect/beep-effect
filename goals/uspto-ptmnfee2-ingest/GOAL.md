@@ -70,6 +70,8 @@ Stop before P1 if the current layout, companion vocabulary, or access behavior
 is unverified; stop before unnamed credentials, cost, destructive state, or a
 fork of the shared generator.
 
-Done only when full-replace, deterministic refresh, fixture attribution,
-patent-spine contract, reflection, and Yeet/GitHub mergeability are green;
-otherwise report blockers with file/command evidence.
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug uspto-ptmnfee2-ingest` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/uspto-ptmnfee2-ingest/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`
