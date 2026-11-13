@@ -168,10 +168,8 @@ export const makeCitationJournalMetadata = Effect.fn("Citation.makeJournalMetada
     "1b0484f822d2762ae3517e7a1152feea80d96791582a126e0bd3f8789cb66200",
     invalidConfiguration
   );
-  const installed = yield* makeCitationMetadataOperation(
-    limits,
-    (request: CitationJournalMetadataInput) => preparePatch(limits, runtime, config, request),
-    invalidConfiguration
+  const installed = yield* makeCitationMetadataOperation(limits, (request: CitationJournalMetadataInput) =>
+    preparePatch(limits, runtime, config, request)
   );
   const inference = yield* makeCitationEditionInference(limits);
   const apply = Effect.fn("Citation.addJournalMetadata")((raw: unknown) =>

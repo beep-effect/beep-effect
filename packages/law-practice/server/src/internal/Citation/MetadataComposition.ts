@@ -194,20 +194,13 @@ const captureDependencies = Effect.fn("Citation.captureMetadataDependencies")(fu
  * The dependency Context contains only installation constants.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationMetadataOperation = Effect.fn("Citation.makeMetadataOperation")(function* <
-  Request,
-  Patch,
-  E,
-  Invalid,
->(
+export const makeCitationMetadataOperation = Effect.fn("Citation.makeMetadataOperation")(function* <Request, Patch, E>(
   limits: CitationEngineLimits,
-  prepare: (request: Request) => Effect.Effect<Patch, E, Dependencies>,
-  _invalid: () => Invalid
+  prepare: (request: Request) => Effect.Effect<Patch, E, Dependencies>
 ) {
   const dependencies = yield* captureDependencies(limits);
   const run = Effect.fn("Citation.runMetadataStage")(function* (request: Request) {
-    const budget = (yield* CitationInvocation).budget;
-    const { scope } = yield* CitationInvocation;
+    const { budget, scope } = yield* CitationInvocation;
     const patch = yield* prepare(request).pipe(
       Effect.provideService(CitationTextBudget, budget),
       Effect.provideService(Scope.Scope, scope)
@@ -281,10 +274,8 @@ export const makeCitationMetadataStage = <
       definition.invalid
     );
     const config = yield* definition.own(limits, configuration);
-    const installed = yield* makeCitationMetadataOperation(
-      limits,
-      (raw: unknown) => definition.prepare(limits, runtime, config, raw),
-      definition.invalid
+    const installed = yield* makeCitationMetadataOperation(limits, (raw: unknown) =>
+      definition.prepare(limits, runtime, config, raw)
     );
     const invoke = Effect.fn("Citation.invokeMetadataStage")((raw: unknown) =>
       Effect.gen(function* () {
@@ -451,11 +442,7 @@ export const makeCitationPublicationMetadataOperation = Effect.fn("Citation.make
       expectedPatternSha256,
       invalid
     );
-    return yield* makeCitationMetadataOperation(
-      limits,
-      (raw: unknown) => prepare(limits, runtime, config, raw),
-      invalid
-    );
+    return yield* makeCitationMetadataOperation(limits, (raw: unknown) => prepare(limits, runtime, config, raw));
   }
 );
 

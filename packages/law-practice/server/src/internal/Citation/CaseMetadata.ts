@@ -291,10 +291,8 @@ export const makeCitationCaseMetadata = Effect.fn("Citation.makeFullCaseMetadata
   });
   const owner = yield* CitationFrozenEditions;
   const editions = yield* makeCitationEditionInference(limits);
-  const installed = yield* makeCitationMetadataOperation(
-    limits,
-    (raw: unknown) => prepare(limits, runtime, config, owner, editions, raw),
-    invalid
+  const installed = yield* makeCitationMetadataOperation(limits, (raw: unknown) =>
+    prepare(limits, runtime, config, owner, editions, raw)
   );
   const extract = Effect.fn("Citation.addFullCaseMetadata")((raw: unknown) =>
     Effect.gen(function* () {

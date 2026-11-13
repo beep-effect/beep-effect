@@ -54,7 +54,7 @@ const controlled = Effect.fn("DiffWorkerTest.controlled")(function* (
   const observed = yield* makeCitationNativeAcknowledgementSpawner(afterKill);
   const worker = yield* makeCitationDiffWorker(limits, fixture).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(limits).pipe(
+      makeCitationTestInvocationBinding({ ...limits, extractDeadline: Duration.millis(1601) }).pipe(
         Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
       )
     ),
@@ -238,8 +238,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned defau
         yield* waitForCitationNativeTest(fixture.fs.exists(fixture.marker));
         yield* timer.trigger;
         const refused = yield* Fiber.join(pending).pipe(Effect.flip);
-        // The admitted invocation deadline wins; native quarantine and late retirement still complete below.
-        expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "extractDeadline" });
+        expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "cleanupDeadline" });
         const held = yield* admission.snapshot;
         expect(held).toMatchObject({ active: 1, regexActive: 0, quarantined: 1 });
         const blocked = yield* worker.evaluate(before, after).pipe(Effect.flip);

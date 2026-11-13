@@ -236,10 +236,8 @@ export const makeCitationExtractionLoop = Effect.fn("Citation.makeExtractionLoop
     fail("invalid-configuration")
   );
   const children = yield* captureCitationExtractionChildren();
-  const installed = yield* makeCitationMetadataOperation(
-    limits,
-    (raw: unknown) => prepare(limits, runtime, config, raw).pipe(Effect.provideContext(children)),
-    () => fail("invalid-configuration")
+  const installed = yield* makeCitationMetadataOperation(limits, (raw: unknown) =>
+    prepare(limits, runtime, config, raw).pipe(Effect.provideContext(children))
   );
   const extract = Effect.fn("Citation.extractDocumentLoop")((raw: unknown) =>
     Effect.gen(function* () {

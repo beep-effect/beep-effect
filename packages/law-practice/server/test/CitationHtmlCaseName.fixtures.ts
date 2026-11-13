@@ -6,18 +6,17 @@ import {
   CitationHtmlCaseNameConfiguration,
   makeCitationHtmlCaseName,
 } from "@beep/law-practice-server/internal/Citation/HtmlCaseName";
-import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
-import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
+import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import { installCitationHtmlGeometryFixture } from "./CitationHtmlGeometryPreparation.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
-  assertCitationWorkerClosedLifetime,
   assertCitationWorkerCompositionReleased,
   readCitationOracleFixture,
   setupCitationMetadataRuntime,
@@ -181,25 +180,36 @@ export const assertCitationHtmlCaseNameRefusal = Effect.fn("HtmlCaseNameTest.ref
   yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 0);
   const row = A.getUnsafe(original.corpus.cases, 0);
   const prepared = yield* prepare.prepare({ plain: row.plain, markup: row.markup });
-  const budget = yield* makeCitationTextBudget({ ...setup.limits, producedTextUtf16: 1 });
-  const tight = yield* makeCitationHtmlCaseName(setup.limits, setup.runtime, original.configuration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
-        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-      )
-    ),
-    Effect.provideContext(setup.provided),
-    Effect.provideService(CitationTextBudget, budget)
+  yield* withCitationTestInvocation(
+    Effect.gen(function* () {
+      const { budget } = yield* CitationInvocation;
+      const tight = yield* makeCitationHtmlCaseName(setup.limits, setup.runtime, original.configuration).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestInvocationBinding(setup.limits).pipe(
+            Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
+          )
+        ),
+        Effect.provideContext(setup.provided)
+      );
+      const refused = yield* tight.extract(requestOf(row, prepared.geometry)).pipe(Effect.flip);
+      expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
+      const used = yield* budget.snapshot;
+      expect(used).toBe(0);
+    }),
+    { ...setup.limits, producedTextUtf16: 1 }
   );
-  const refused = yield* tight.extract(requestOf(row, prepared.geometry)).pipe(Effect.flip);
-  expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
-  const used = yield* budget.snapshot;
-  expect(used).toBe(0);
   yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 4);
 });
-/** Scope closure refuses further operation before any input or worker work. */
+/** A valid prepared request cannot start native work after its installed owner closes. */
 export const assertCitationHtmlCaseNameLifetime = Effect.fn("HtmlCaseNameTest.lifetime")(function* () {
   const owner = yield* Scope.make();
   const installed = yield* install("bun").pipe(Effect.provideService(Scope.Scope, owner));
-  yield* assertCitationWorkerClosedLifetime(owner, installed.stage.extract(null), installed.setup.observed.snapshot);
+  const row = A.getUnsafe(installed.original.corpus.cases, 0);
+  const prepared = yield* installed.prepare.prepare({ plain: row.plain, markup: row.markup });
+  const before = yield* installed.setup.observed.snapshot;
+  yield* Scope.close(owner, Exit.void);
+  const failure = yield* installed.stage.extract(requestOf(row, prepared.geometry)).pipe(Effect.flip);
+  expect(failure).toMatchObject({ reason: "closed" });
+  const after = yield* installed.setup.observed.snapshot;
+  expect(after).toEqual(before);
 });

@@ -5,6 +5,7 @@ import {
   CitationFrozenEditions,
   makeCitationFrozenEditions,
 } from "@beep/law-practice-server/internal/Citation/FrozenEditions";
+import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import {
   CitationJournalMetadataConfiguration,
   CitationJournalMetadataPatch,
@@ -25,7 +26,7 @@ import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationWorkerCapturedDeadline,
   assertCitationWorkerClosedLifetime,
@@ -175,6 +176,18 @@ export const assertCitationJournalMetadataBudget = Effect.fn("JournalMetadataTes
   exact.configuration.highestValidYear = 9999;
   const repeated = yield* exact.metadata.apply(raw);
   expect(repeated.reservedUnits).toBe(41);
+  const outer = yield* install("bun", 44, true);
+  yield* withCitationTestInvocation(
+    Effect.gen(function* () {
+      const { budget } = yield* CitationInvocation;
+      yield* budget.reserve(4);
+      const exhausted = yield* outer.metadata.apply(raw).pipe(Effect.flip);
+      expect(exhausted).toMatchObject({ limit: "producedTextUtf16" });
+      const used = yield* budget.snapshot;
+      expect(used).toBe(36);
+    }),
+    outer.limits
+  );
   const future = A.getUnsafe(exact.corpus.inputs, 63);
   const frozenYear = yield* exact.metadata.apply({ ...future.request, ...A.getUnsafe(exact.corpus.controls, 0) });
   const futurePatch = yield* Effect.fromOption(frozenYear.patch);

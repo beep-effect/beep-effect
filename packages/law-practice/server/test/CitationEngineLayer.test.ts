@@ -1,4 +1,8 @@
 import { ResolvedSourceText, SourceTextResolver, SourceTextResolverError } from "@beep/file-processing/SourceText";
+import {
+  CitationOperationAdmission,
+  makeCitationOperationAdmission,
+} from "@beep/law-practice-server/internal/Citation/Admission";
 import { captureCitationMentionReceiptData } from "@beep/law-practice-server/internal/Citation/Mention";
 import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { CitationEngineDefaultConfiguration } from "@beep/law-practice-server/layer";
@@ -16,15 +20,20 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 import { buildCitationDefaultEngineFixture, buildCitationEngineFixture } from "./CitationEngineLayer.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
@@ -210,4 +219,82 @@ it.effect.prop(
       expect(propertyEquivalent(value, decoded)).toBe(true);
     }),
   { arbitrary: fcRuns(100) }
+);
+
+it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { concurrent: false })(
+  "engine deadline admission ordering",
+  (it) => {
+    it.layer(TestClock.layer())("manual clock", (it) => {
+      for (const kind of ["bun", "node"] as const) {
+        for (const releasePermit of [false, true]) {
+          it.effect(
+            `counts queue wait against the ${kind} extract deadline (${releasePermit ? "queue plus work" : "queued refusal"})`,
+            () =>
+              Effect.gen(function* () {
+                const installed = yield* installCitationDefaultConfigurationFixture(kind);
+                const clock = yield* Clock.Clock;
+                const limits = {
+                  ...installed.setup.limits,
+                  concurrentOperations: 1,
+                  queuedOperations: 1,
+                  extractDeadline: Duration.seconds(releasePermit ? 10 : 1),
+                  queueDeadline: Duration.seconds(5),
+                  operationDeadline: Duration.seconds(30),
+                };
+                const operation = yield* makeCitationOperationAdmission(limits);
+                const provided = installed.provided.pipe(
+                  Context.add(Clock.Clock, clock),
+                  Context.add(CitationOperationAdmission, operation)
+                );
+                const setup = { ...installed.setup, limits, operation, provided };
+                const entered = yield* Deferred.make<void>();
+                const release = yield* Deferred.make<void>();
+                const working = yield* Deferred.make<void>();
+                const proof = yield* citationFixtureSourceProof("deadline probe");
+                const resolver = SourceTextResolver.of({
+                  resolve: Effect.fn("EngineDeadlineTest.resolve")(function* () {
+                    yield* Deferred.succeed(working, undefined);
+                    yield* Effect.sleep(Duration.millis(9500));
+                    return yield* SourceTextResolverError.new("source-unavailable", "controlled refusal after work");
+                  }),
+                });
+                const { engine } = yield* buildCitationEngineFixture({ ...installed, setup, provided }, resolver);
+                const holder = yield* operation
+                  .run("extract", Deferred.succeed(entered, undefined).pipe(Effect.andThen(Deferred.await(release))))
+                  .pipe(Effect.forkChild);
+                yield* Deferred.await(entered);
+                const request = yield* S.decodeEffect(CitationEngineSourcePairInput)({
+                  plain: { source: proof.source, sourceText: proof.sourceText },
+                  cleanSteps: [],
+                });
+                const pending = yield* engine.extract(request).pipe(Effect.forkChild);
+                yield* Effect.repeat(operation.snapshot, { until: (state) => state.queued === 1 });
+                if (releasePermit) {
+                  yield* TestClock.adjust(Duration.millis(800));
+                  yield* Deferred.succeed(release, undefined);
+                  yield* Fiber.join(holder);
+                  yield* Deferred.await(working);
+                  yield* TestClock.adjust(Duration.millis(9200));
+                } else {
+                  yield* TestClock.adjust(Duration.seconds(1));
+                }
+                const failure = yield* Fiber.join(pending).pipe(Effect.flip);
+                expect(failure).toMatchObject({
+                  _tag: "CitationSafetyLimitExceeded",
+                  operation: "extract",
+                  limit: "extractDeadline",
+                });
+                const state = yield* operation.snapshot;
+                expect(state).toMatchObject({ active: releasePermit ? 0 : 1, queued: 0 });
+                yield* Deferred.succeed(release, undefined);
+                yield* Fiber.join(holder);
+                const observed = yield* setup.observed.snapshot;
+                expect(observed).toEqual({ spawned: 0, confirmed: 0 });
+              }),
+            { timeout: 60000 }
+          );
+        }
+      }
+    });
+  }
 );

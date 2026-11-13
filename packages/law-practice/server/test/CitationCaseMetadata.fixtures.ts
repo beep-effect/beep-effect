@@ -11,6 +11,7 @@ import {
   CitationFrozenEditions,
   makeCitationFrozenEditions,
 } from "@beep/law-practice-server/internal/Citation/FrozenEditions";
+import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -25,7 +26,7 @@ import {
   installCitationHtmlGeometryFixture,
   prepareCitationOptionalHtmlGeometry,
 } from "./CitationHtmlGeometryPreparation.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { readCitationPostCaseMetadataCorpus } from "./CitationPostCaseMetadata.fixtures.ts";
 import { readCitationPreCaseMetadataCorpus } from "./CitationPreCaseMetadata.fixtures.ts";
 import {
@@ -240,6 +241,23 @@ export const assertCitationCaseMetadataBudget = Effect.fn("CaseMetadataTest.shar
   const tightRequest = yield* requestOf(tight, row);
   const refused = yield* tight.stage.extract(tightRequest).pipe(Effect.flip);
   expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
+  const spent = yield* tight.setup.budget.snapshot;
+  expect(spent).toBeGreaterThan(0);
+  expect(spent).toBeLessThan(total);
+  const outer = yield* install("bun", total + 3, true);
+  const outerRequest = yield* requestOf(outer, row);
+  yield* withCitationTestInvocation(
+    Effect.gen(function* () {
+      const { budget } = yield* CitationInvocation;
+      yield* budget.reserve(4);
+      const exhausted = yield* outer.stage.extract(outerRequest).pipe(Effect.flip);
+      expect(exhausted).toMatchObject({ limit: "producedTextUtf16" });
+      const used = yield* budget.snapshot;
+      expect(used).toBe(spent + 4);
+      expect(budget.maximum - used).toBe(total - 1 - spent);
+    }),
+    outer.setup.limits
+  ).pipe(Effect.provideService(Clock.Clock, outer.setup.timer.clock));
   yield* assertCitationWorkerCompositionReleased(
     tight.setup.operation,
     tight.setup.admission,

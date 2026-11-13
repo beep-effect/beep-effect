@@ -16,6 +16,6 @@ export const makeCitationNativeRendering = Effect.fn("Citation.makeNativeRenderi
   const limits = yield* decodeCitationRegexPolicy(policy, invalid);
   const timing = yield* makeCitationRegexTiming(limits, true);
   const unicode = yield* makeCitationPythonUnicode(limits, timing.operation);
-  const budget = CitationInvocation.use(({ budget }) => Effect.succeed(budget));
+  const budget = CitationInvocation.useSync(({ budget }) => budget);
   return { limits, timing, unicode, budget };
 });

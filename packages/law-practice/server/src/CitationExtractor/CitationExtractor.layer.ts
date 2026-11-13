@@ -125,7 +125,10 @@ const make = Effect.fn("Citation.makeExtractor")(function* (raw: unknown) {
       });
       return yield* decodeExtractorResult({ source, document, report }).pipe(Effect.mapError(invalidObservation));
     });
-    return openCitationInvocation(CitationInvocationPolicy.make({ limits, operation: "extract" }), body).pipe(
+    return openCitationInvocation(
+      CitationInvocationPolicy.make({ limits, operation: "extract", deadlineStarts: "after-admission" }),
+      body
+    ).pipe(
       Effect.provideService(CitationOperationAdmission, operation),
       Effect.provideService(Clock.Clock, invocationClock),
       Effect.catchCause(normalize)

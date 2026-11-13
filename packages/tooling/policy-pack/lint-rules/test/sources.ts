@@ -19,12 +19,12 @@ export type RuleSource = {
 
 export const SOURCES: { readonly [K in RuleName]: RuleSource } = {
   "no-citation-optional-invocation": {
-    invalidCount: 2,
+    invalidCount: 12,
     messageIncludes: "citation request authority must be explicit",
     invalid:
-      "const a = Effect.serviceOption(CitationTextBudget); const b = Effect.serviceOption(CitationOperationAdmission);",
+      "const v000 = Effect.serviceOption(CitationTextBudget); const v001 = Context.getOption(context, CitationTextBudget); const v010 = Effect.serviceOption(UC.CitationTextBudget); const v011 = Context.getOption(context, UC.CitationTextBudget); const v100 = Effect.serviceOption(CitationOperationAdmission); const v101 = Context.getOption(context, CitationOperationAdmission); const v110 = Effect.serviceOption(UC.CitationOperationAdmission); const v111 = Context.getOption(context, UC.CitationOperationAdmission); const v200 = Effect.serviceOption(CitationInvocation); const v201 = Context.getOption(context, CitationInvocation); const v210 = Effect.serviceOption(UC.CitationInvocation); const v211 = Context.getOption(context, UC.CitationInvocation);",
     valid:
-      "const a = Effect.serviceOption(CitationNativeProcessAdmission); const b = reserveCitationInvocationText(4);",
+      "const a = Effect.serviceOption(CitationNativeProcessAdmission); const b = Context.getOption(context, UC.CitationNativeProcessAdmission); const c = reserveCitationInvocationText(4);",
   },
   "no-file-url-pathname": {
     invalidCount: 4,

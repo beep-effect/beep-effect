@@ -196,10 +196,8 @@ const installLawMetadata = Effect.fn("Citation.installLawMetadata")(function* (
 ) {
   const limits = yield* decodeCitationRegexPolicy(policy, invalidConfiguration);
   const { runtime, config } = yield* prepareConfiguration(limits, runtimeInput, configurationInput);
-  const installed = yield* makeCitationMetadataOperation(
-    limits,
-    (request: CitationLawMetadataInput) => preparePatch(limits, runtime, config, request),
-    invalidConfiguration
+  const installed = yield* makeCitationMetadataOperation(limits, (request: CitationLawMetadataInput) =>
+    preparePatch(limits, runtime, config, request)
   );
   const run = Effect.fn("Citation.runLawMetadata")(function* (request: CitationLawMetadataInput) {
     const [patch, reservedUnits] = yield* installed.run(request);

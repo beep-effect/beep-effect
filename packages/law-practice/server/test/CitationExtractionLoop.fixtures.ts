@@ -13,8 +13,6 @@ import {
 } from "@beep/law-practice-server/internal/Citation/ExtractionLoop";
 import { projectCitationExtractionSelection } from "@beep/law-practice-server/internal/Citation/ExtractionSelection";
 import { CitationGeneratedReference } from "@beep/law-practice-server/internal/Citation/GeneratedReferences";
-import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
-import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -198,14 +196,14 @@ export const replayCitationExtractionLoop = Effect.fn("ExtractionLoopTest.replay
     const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
     const result = yield* closed;
     if (row.id === 2) {
-      const budget = yield* makeCitationTextBudget({ ...limits, producedTextUtf16: result.reservedUnits - 1 });
-      const tight = yield* makeCitationExtractionLoop(limits, setup.runtime, configuration).pipe(
+      const tightLimits = { ...limits, producedTextUtf16: result.reservedUnits - 1 };
+      const tight = yield* makeCitationExtractionLoop(tightLimits, setup.runtime, configuration).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(limits).pipe(
+          makeCitationTestInvocationBinding(tightLimits).pipe(
             Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
           )
         ),
-        Effect.provideContext(Context.add(setup.provided, CitationTextBudget, budget)),
+        Effect.provideContext(setup.provided),
         DateTime.withCurrentZoneOffset(0)
       );
       const before = yield* setup.observed.snapshot;

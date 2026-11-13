@@ -123,7 +123,7 @@ const make = Effect.fn("Citation.makeEngine")(function* (raw: unknown) {
   const invocationClock = yield* Clock.Clock;
   const invoke = <A, E>(operation: CitationEngineOperation, body: Effect.Effect<A, E, CitationInvocation>) =>
     openCitationInvocation(
-      CitationInvocationPolicy.make({ limits, operation }),
+      CitationInvocationPolicy.make({ limits, operation, deadlineStarts: "before-admission" }),
       body.pipe(
         Effect.updateContext((context: Context.Context<CitationInvocation>) =>
           Context.omit(CitationOperationAdmission)(context)
@@ -142,7 +142,7 @@ const make = Effect.fn("Citation.makeEngine")(function* (raw: unknown) {
     extract: Effect.fn("Citation.Engine.extract")((input) =>
       invoke("extract", extraction.extract(input)).pipe(
         Effect.map((result) => result.output),
-        Effect.catch(failCitationExtractionBoundary)
+        Effect.catchTag("CitationAdmissionFailure", failCitationExtractionBoundary)
       )
     ),
     resolve: Effect.fn("Citation.Engine.resolve")((input) =>
@@ -155,7 +155,7 @@ const make = Effect.fn("Citation.makeEngine")(function* (raw: unknown) {
     ),
     annotate: Effect.fn("Citation.Engine.annotate")((input) =>
       invoke("annotate", annotation.annotate(input)).pipe(
-        Effect.catch((error) => failCitationAnnotationBoundary(limits, error))
+        Effect.catchTag("CitationAdmissionFailure", (error) => failCitationAnnotationBoundary(limits, error))
       )
     ),
   });

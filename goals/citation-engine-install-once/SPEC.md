@@ -154,17 +154,47 @@ Operator ruling, 2026-11-13: constructors shared with isolated worker entrypoint
 
 Reverse: Restore the optional budget lookup in RegexInput.
 
+### Advance virtual time to prove the two admission deadline contracts, 2026-11-13
+
+The new public engine and extractor controls deliberately advance virtual time across an 800 ms queue and 9500 ms resolver subject. The resolver sleep is test-subject work under TestClock, not a wall-clock wait, and the separate advances distinguish the exact deadline boundary. Reviewed EV008 and EV015 judgments receive explicit test-owned exceptions with exit conditions. Both native runtime configurations are exercised for the engine; all these boundary controls assert zero spawned children.
+
+Reverse: Replace the manual-clock controls when a harness can assert queue-plus-work deadline placement without advancing virtual time.
+
+### Delete the unused cleaner operation adapter, 2026-11-13
+
+A repository-wide live source and test search found makeCitationCleanerOperation only in its defining module and CitationCleanerOperation.test.ts. No src caller, public engine boundary, or package composition uses it; SourceCleaning uses CleanerPipeline directly. The similarly named replay fixture independently wraps CleanerPipeline and does not call this adapter. Delete the test-only dead production adapter and its test rather than count fixture admission as a production proof. Public engine admission is now proved by the manual-clock engine test. Regenerate the instrumentation catalog and prune the generated shard plan with repository writers.
+
+Reverse: Restore CleanerOperation.ts and its test from head 99bb436ca0fc if a real production caller is introduced.
+
 ### Keep direct invocation fixtures scoped to each request, 2026-11-13
 
 Effect/Vitest EV003 reports 108 unresolved-resource-wrapper judgments at the shared invocation fixture calls (95 withCitationTestInvocation and 13 withCitationTestTextBudget). Each opens request-scoped admission, a fresh budget and cleanup; it.layer sharing would turn independent method calls into one request and change queue, deadline and ledger assertions. These two reviewed wrapper families receive explicit owned inventory exceptions, without changing detector policy. The existing it.layer platform services remain shared.
 
 Reverse: Replace the fixture wrappers with a test Layer when the harness can preserve per-call admission, budget, deadline and cleanup semantics.
 
+### Keep direct-stage lifetime and clock fixtures aligned with their owners, 2026-11-13
+
+The round-1 hosted logs exposed more dependent-fixture gaps. XmlWorker and HtmlCaseName budget controls now reserve the actual invocation ledger. The HtmlCaseName lifetime control uses a valid prepared request after closing the installed native owner, preserving the closed refusal and proving that no further child starts; a malformed null input previously tested admission-before-decode on the removed nested operation. No output identity or state expectation is relaxed. The untimed enclosing scaffold clock is defined beside the existing clock constructors in CitationNativeSpawner.fixtures.ts; bound methods still restore their real captured Clock. This keeps the unchanged shard classifier from mistaking scaffold infrastructure for a native-work clock substitution. The new engine deadline cases live in the existing CitationEngineLayer.test.ts, and the shard plan is pruned by the repository writer after deleting the dead cleaner test.
+
+Reverse: Restore the previous fixture installation captures if stages again own operation admission.
+
+### Keep stage finalizers in the request Scope, 2026-11-13
+
+Review round 1 confirms a deliberate Scope lifetime difference from main: metadata stages use the invocation Scope instead of opening a fresh Scope around each prepare call. Per-call native owners therefore register owner finalizers until request end. Physical processes still retire and acknowledge exit per job before returning results; leases, quarantine and limits remain unchanged. The invocation Scope closes before admission releases its permit, retaining the final safety cleanup. This follows design section 3.4; it is an ownership-finalizer timing change, not strict Scope neutrality.
+
+Reverse: Restore per-stage Effect.scoped around prepare(request).
+
 ### Keep the full law-practice audit on hosted CI, 2026-11-13
 
 The operator clarified on 2026-11-13 that file-by-file local tests govern because the full law-practice package audit runs the whole suite. Run package-verify --quick and docgen:local locally, and leave the full audit to hosted CI. The smaller lint-rules package receives its full package-verify.
 
 Reverse: Run full package-verify locally when the operator permits a whole-package suite.
+
+### Preserve boundary-specific deadline placement around admission, 2026-11-13
+
+Review round 1 identified that engine queue wait must count against each stage deadline, while the public six-form extractor historically starts that deadline after admission. CitationInvocationPolicy now has a schema-backed deadlineStarts literal with explicit values at both public boundaries. There remains one invocation constructor: engine timing wraps admission.run; extractor timing wraps its body inside admission.run. The request Scope remains inside admission in both cases, so cleanup precedes permit release. Manual-clock public boundary tests cover queue plus work and refusal labels without native children.
+
+Reverse: Remove deadlineStarts and restore the previous invocation ordering only with an explicit behavior change.
 
 <!-- beep:decisions:end -->
 

@@ -1,9 +1,25 @@
 language js
 
-`$effect.serviceOption($service)` as $lookup where {
-  $service <: or {
+// Syntactic names only: aliases introduced by named imports require semantic linting.
+pattern citation_authority() {
+  or {
     `CitationTextBudget`,
-    `CitationOperationAdmission`
-  },
+    `CitationOperationAdmission`,
+    `CitationInvocation`,
+    `$_.$name` where {
+      $name <: or {
+        `CitationTextBudget`,
+        `CitationOperationAdmission`,
+        `CitationInvocation`
+      }
+    }
+  }
+}
+
+or {
+  `$effect.serviceOption($service)`,
+  `$context.getOption($_, $service)`
+} as $lookup where {
+  $service <: citation_authority(),
   register_diagnostic(span=$lookup, message="Rule: citation request authority must be explicit. Why: optional install-time lookups silently lose accounting or acquire another permit when installs move. Fix: read CitationInvocation at call time in parent-only stages, or pass an explicit reservation to code shared with a child process.", severity="error")
 }

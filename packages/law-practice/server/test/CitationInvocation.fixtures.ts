@@ -22,7 +22,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import { makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
+import { citationInvocationScaffoldClock } from "./CitationNativeSpawner.fixtures.ts";
 import type { CitationEngineOperation } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("test/CitationInvocation.fixtures");
@@ -50,7 +50,7 @@ export const withCitationTestInvocation = Effect.fn("CitationInvocationTest.run"
   const defaults = yield* defaultCitationEnginePolicy.pipe(Effect.orDie);
   const { limits } = yield* prepareCitationAdmissionPolicy(policy ?? defaults.limits).pipe(Effect.orDie);
   const callerClock = environment === undefined ? yield* Clock.Clock : environment.clock;
-  const clock = policy === undefined ? yield* makeCitationNativeSleepClock(() => Effect.never) : callerClock;
+  const clock = policy === undefined ? yield* citationInvocationScaffoldClock : callerClock;
   return yield* Effect.scoped(
     Effect.gen(function* () {
       const supplied =
@@ -61,7 +61,11 @@ export const withCitationTestInvocation = Effect.fn("CitationInvocationTest.run"
           ? supplied.value
           : yield* makeCitationOperationAdmission(limits).pipe(Effect.provideService(Clock.Clock, clock), Effect.orDie);
       return yield* openCitationInvocation(
-        CitationInvocationPolicy.make({ limits, operation: environment?.operation ?? "extract" }),
+        CitationInvocationPolicy.make({
+          limits,
+          operation: environment?.operation ?? "extract",
+          deadlineStarts: "before-admission",
+        }),
         body.pipe(
           Effect.provideService(Clock.Clock, callerClock),
           Effect.provideService(CitationTestExplicitInvocation, policy !== undefined),
@@ -100,6 +104,8 @@ export const makeCitationTestInvocationBinding = Effect.fn("CitationInvocationTe
     run: (...args: Args) => Effect.Effect<A, E, R | CitationInvocation>
   ) =>
     Effect.fnUntraced(function* (...args: Args) {
+      // Test adapters support both standalone calls and explicit shared-ledger requests.
+      // This optional test-only read reuses the latter instead of admitting a second request.
       const current = yield* Effect.serviceOption(CitationInvocation);
       const explicit = yield* CitationTestExplicitInvocation;
       if (explicit && O.isSome(current)) {

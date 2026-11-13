@@ -1,4 +1,3 @@
-import type { CitationInvocation } from "./Invocation.ts";
 /** Native builtin models to source-ordered dump observations, eyecite 2.7.6.
  * Free Law Project, BSD-2-Clause; see THIRD_PARTY_NOTICES.md.
  * @internal @packageDocumentation @since 0.0.0
@@ -20,6 +19,7 @@ import { CitationExtractionLoopModel } from "./ExtractionLoop.ts";
 import { projectCitationExtractionSelection } from "./ExtractionSelection.ts";
 import { makeCitationNativeRendering } from "./NativeRendering.ts";
 import type { CitationTokenSeed } from "@beep/law-practice-use-cases/server";
+import type { CitationInvocation } from "./Invocation.ts";
 
 const invalid = () => CitationDumpFailure.make({ reason: "invalid-input" });
 const configuration = () => CitationDumpFailure.make({ reason: "invalid-configuration" });

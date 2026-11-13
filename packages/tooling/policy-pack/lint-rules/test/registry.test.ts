@@ -125,7 +125,7 @@ describe("rule registry", () => {
           severity: "error",
           replaces: null,
           summary:
-            "Require explicit citation invocation authority instead of optional install-time budget or admission lookups.",
+            "Require explicit citation authority; reject optional bare or qualified serviceOption/getOption lookups. Named-import aliases require semantic linting.",
           scope: "packages/law-practice/server/src/internal/Citation/**",
         },
         "no-file-url-pathname": {

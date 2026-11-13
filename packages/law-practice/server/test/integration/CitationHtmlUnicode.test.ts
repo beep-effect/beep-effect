@@ -66,7 +66,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
             const operation = {
               run: Effect.fn("HtmlUnicodeTest.run")((input: unknown) =>
                 openCitationInvocation(
-                  CitationInvocationPolicy.make({ limits, operation: "clean" }),
+                  CitationInvocationPolicy.make({ limits, operation: "clean", deadlineStarts: "before-admission" }),
                   pipeline.run(input)
                 ).pipe(Effect.provideService(CitationOperationAdmission, admission))
               ),

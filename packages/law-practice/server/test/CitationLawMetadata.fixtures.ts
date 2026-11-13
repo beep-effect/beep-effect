@@ -8,6 +8,7 @@ import {
   CitationFrozenEditions,
   makeCitationFrozenEditions,
 } from "@beep/law-practice-server/internal/Citation/FrozenEditions";
+import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import {
   CitationLawMetadataConfiguration,
   CitationLawMetadataInput,
@@ -31,7 +32,7 @@ import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
 import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationWorkerCapturedDeadline,
   assertCitationWorkerClosedLifetime,
@@ -149,6 +150,18 @@ export const assertCitationLawMetadataBudget = Effect.fn("LawMetadataTest.budget
   expect(actual.reservedUnits).toBe(41);
   const repeated = yield* exact.metadata.apply(row.request);
   expect(repeated.reservedUnits).toBe(41);
+  const outer = yield* install("bun", corpus.configuration, 44, true);
+  yield* withCitationTestInvocation(
+    Effect.gen(function* () {
+      const { budget } = yield* CitationInvocation;
+      yield* budget.reserve(4);
+      const enclosing = yield* outer.metadata.apply(row.request).pipe(Effect.flip);
+      expect(enclosing).toMatchObject({ limit: "producedTextUtf16" });
+      const reserved = yield* budget.snapshot;
+      expect(reserved).toBe(36);
+    }),
+    outer.limits
+  );
   const ownedConfig = { ...corpus.configuration, highestValidYear: corpus.configuration.highestValidYear };
   const owned = yield* install("bun", ownedConfig);
   ownedConfig.highestValidYear = 9999;
