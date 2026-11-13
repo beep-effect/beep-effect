@@ -499,7 +499,7 @@ const relevance = (...rows: A.NonEmptyReadonlyArray<string>): string => A.join([
  * policy reads; its live-advisory signal stays on every main push, which always gets the full
  * profile.
  *
- * `skills` is the path gate of Repo Sanity's skills lock step (`beep skills update --check`): the
+ * `skills` is the path gate of Repo Sanity's skills lock step (`beep skills update --check --offline`): the
  * installed skill trees and their `.agents` mirror and patch series, the lock, the Codex skill
  * configuration the check compares, and the command that implements it. It is a step inside a
  * required job, not a job of its own, so it is no relevance lane and has no `<lane>_relevant`

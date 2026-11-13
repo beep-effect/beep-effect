@@ -292,7 +292,7 @@ jobs:
                 fi
                 ;;
               repo-sanity)
-                # The skills lock step (`beep skills update --check`) of the lane
+                # The skills lock step (`beep skills update --check --offline`) of the lane
                 # body, on the documentation path too: skipped only when the pull
                 # request changes none of the `skills` row's paths. An absent row,
                 # an unreadable diff and every push keep it.

@@ -453,7 +453,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     replay: "exact",
     flags: ["--changeset-status", "--docs-only", "--skip-skills-lock"],
     notes:
-      "Always validates the changeset graph and runs the private home path law; CI also passes --changeset-status on pull requests. A docs_only pull request runs --docs-only: the law, the changeset graph and the changeset status, and nothing that reads code-route paths. Both shapes run `beep skills update --check` (installed skills, their .agents mirror and Codex configuration against skills-lock.json); CI passes --skip-skills-lock on a pull request that changes none of the `skills` pattern row's paths.",
+      "Always validates the changeset graph and runs the private home path law; CI also passes --changeset-status on pull requests. A docs_only pull request runs --docs-only: the law, the changeset graph and the changeset status, and nothing that reads code-route paths. Both shapes run `beep skills update --check --offline` (installed skills, their .agents mirror and Codex configuration against skills-lock.json, from tracked files only); CI passes --skip-skills-lock on a pull request that changes none of the `skills` pattern row's paths.",
   }),
   CiLaneDescriptor.make({
     id: "docs-policy",
@@ -2018,14 +2018,16 @@ export const ciLaneStepsForTesting: {
         // checks; every other step reads code-route paths (sources, manifests,
         // tool configuration, workflows). Docs Policy runs the knowledge and
         // packet policy on the same diffs.
-        // No other hosted lane compared the installed skills with skills-lock.json, and six pull
-        // requests merged over a stale lock (fixed in #3225). A SKILL.md edit is a documentation
-        // diff, so the step sits on both paths. It reads tracked files only (a v2 lock has no
-        // floating source to fetch) and takes about a second; check.yml skips it on a pull request
-        // that changes none of the `skills` pattern row's paths.
+        // No other hosted lane compared the installed skills with skills-lock.json, and pull
+        // requests kept merging over a stale lock (#3225, #3246). A SKILL.md edit is a
+        // documentation diff, so the step sits on both paths. `--offline` keeps it to tracked
+        // files: the plain check also refetches each floating upstream skill through the
+        // unauthenticated GitHub API, which rate-limits shared runner addresses and would turn an
+        // upstream push into a red on an unrelated pull request. It takes about a second;
+        // check.yml skips it on a pull request that changes none of the `skills` pattern row's paths.
         const skillsLock = options.skipSkillsLock
           ? A.empty<QualityTaskStep>()
-          : [bunRunStep(repoRoot, "ci:repo-sanity:skills-lock", ["beep", "skills", "update", "--check"])];
+          : [bunRunStep(repoRoot, "ci:repo-sanity:skills-lock", ["beep", "skills", "update", "--check", "--offline"])];
         if (options.docsOnly) {
           return [
             homePaths,

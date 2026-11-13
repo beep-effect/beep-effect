@@ -85,7 +85,7 @@ A `docs_only` pull request runs only the checks a documentation diff can fail:
 
 | Job | What it checks |
 | --- | --- |
-| Repo Sanity (required) | `beep ci lane repo-sanity --docs-only`: the private home path law, the changeset graph, the changeset status and the skills lock (`beep skills update --check`) |
+| Repo Sanity (required) | `beep ci lane repo-sanity --docs-only`: the private home path law, the changeset graph, the changeset status and the skills lock (`beep skills update --check --offline`) |
 | Docs Policy | The knowledge, packet and Markdown root tasks listed in `DocsPolicy.ts`, plus `knowledge doctor ci --base` |
 | Secret Scanning, Commitlint | The commit range, as on every head |
 
@@ -113,8 +113,12 @@ has a written reason in `DOCS_POLICY_EXCLUSIONS`.
 Repo Sanity is the one hosted owner of the skills lock check, on its
 documentation path and its full path alike, because a `SKILL.md` edit is a
 documentation diff. The check compares the installed skill trees, their
-`.agents` mirror and the Codex skill configuration with `skills-lock.json`; it
-reads tracked files only and takes about a second. On a pull request the job's
+`.agents` mirror and the Codex skill configuration with `skills-lock.json`. The
+step passes `--offline`, so it reads tracked files only and takes about a
+second: the plain check also refetches each floating upstream skill through the
+unauthenticated GitHub API, which rate-limits shared runner addresses and would
+turn an upstream push into a red on an unrelated pull request. Upstream drift
+stays with the Skills Update Train and local `beep skills update --check`. On a pull request the job's
 lane gate reads the `skills` row of the change-profile pattern data and passes
 `--skip-skills-lock` when the diff touches none of its paths (skills, mirror,
 patch series, lock, Codex configuration, the `skills` command and the gate's

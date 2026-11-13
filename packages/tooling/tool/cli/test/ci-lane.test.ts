@@ -1980,7 +1980,8 @@ describe("ciLaneStepsForTesting", () => {
       ["run", "beep", "quality", "changeset-graph"],
       ["run", "beep", "quality", "changeset-status", "--since", "origin/main"],
       // A SKILL.md edit is a documentation diff, so the lock check sits on this path too.
-      ["run", "beep", "skills", "update", "--check"],
+      // Offline: a hosted required step never calls the unauthenticated GitHub API.
+      ["run", "beep", "skills", "update", "--check", "--offline"],
     ]);
   });
 
