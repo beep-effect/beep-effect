@@ -1,0 +1,961 @@
+{
+  "schema": "hosted-setup-tax/turb-01b-replay/v1",
+  "head": "98c2decbdb3586d9cdbb524a00cd989b8c531628",
+  "beforeRef": "98c2decbdb3586d9cdbb524a00cd989b8c531628",
+  "commitsRequested": 1000,
+  "commitsReplayed": 1000,
+  "corpusSha256": "9503e419cf29c87a91083be03df558f68590a8c6634fc8309b2db17ba964e30d",
+  "ownerCount": 203,
+  "testUnitPartitions": 24,
+  "newRows": [
+    [
+      "standards/check-census.regression-baseline.jsonc",
+      "standards/check-census.regression-baseline.jsonc",
+      "@beep/repo-cli"
+    ],
+    [
+      "standards/root-package.projection.generated.json",
+      "standards/root-package.projection.generated.json",
+      "@beep/repo-cli"
+    ],
+    [".claude", ".claude/skills/**", "@beep/ai-sync"],
+    [".claude", ".claude/skills/**", "@beep/infra"],
+    [".claude", ".claude/skills/**", "@beep/palantiri"],
+    [".claude", ".claude/skills/**", "@beep/repo-ai-metrics"],
+    [".claude", ".claude/skills/**", "@beep/repo-cli"],
+    [".claude", ".claude/skills/**", "@beep/repo-cli-kit"],
+    [".claude", ".claude/skills/**", "@beep/repo-configs"],
+    ["skills-lock.json", "skills-lock.json", "@beep/repo-cli"],
+    ["harness-ledger", "harness-ledger/**", "@beep/infra"],
+    ["harness-ledger", "harness-ledger/**", "@beep/palantiri"],
+    ["harness-ledger", "harness-ledger/**", "@beep/repo-ai-metrics"],
+    ["harness-ledger", "harness-ledger/**", "@beep/repo-cli"],
+    ["biome.identity.jsonc", "biome.identity.jsonc", "@beep/repo-cli"]
+  ],
+  "touchesNewlyMappedFile": 103,
+  "fullBefore": 409,
+  "fullAfter": 369,
+  "shrunk": 40,
+  "shrunkToNoop": 0,
+  "shrunkPartitionsSaved": 424,
+  "stillFullWithFewerReasons": 59,
+  "widened": 2,
+  "widenedPartitionsAdded": 7,
+  "violations": [],
+  "shrunkCommits": [
+    {
+      "sha": "97afc3aeaf944b4af884119e5af5093abbcda66d",
+      "newlyMappedFiles": ["biome.identity.jsonc"],
+      "before": "full",
+      "after": "selected 92+85",
+      "partitionsBefore": 24,
+      "partitionsAfter": 24,
+      "selectedPackages": [
+        "@beep/agent-memory-store",
+        "@beep/agents-client",
+        "@beep/agents-domain",
+        "@beep/agents-server",
+        "@beep/agents-tables",
+        "@beep/agents-use-cases",
+        "@beep/architecture-lab-client",
+        "@beep/architecture-lab-domain",
+        "@beep/architecture-lab-proof",
+        "@beep/architecture-lab-server",
+        "@beep/architecture-lab-tables",
+        "@beep/architecture-lab-ui",
+        "@beep/architecture-lab-use-cases",
+        "@beep/cli-kit",
+        "@beep/config-file",
+        "@beep/db-admin",
+        "@beep/docket-intake",
+        "@beep/documents-domain",
+        "@beep/documents-server",
+        "@beep/documents-tables",
+        "@beep/documents-use-cases",
+        "@beep/editor",
+        "@beep/effect-drizzle",
+        "@beep/epistemic-client",
+        "@beep/epistemic-domain",
+        "@beep/epistemic-server",
+        "@beep/epistemic-tables",
+        "@beep/epistemic-ui",
+        "@beep/epistemic-use-cases",
+        "@beep/execution-authority-config",
+        "@beep/execution-authority-domain",
+        "@beep/execution-authority-server",
+        "@beep/execution-authority-tables",
+        "@beep/execution-authority-use-cases",
+        "@beep/github-reporting",
+        "@beep/gov-legal-mcp",
+        "@beep/infra",
+        "@beep/law-practice-domain",
+        "@beep/law-practice-server",
+        "@beep/law-practice-tables",
+        "@beep/law-practice-use-cases",
+        "@beep/lejeune-bolt-workbench",
+        "@beep/lexical-schema",
+        "@beep/lint-rules",
+        "@beep/lockfiles",
+        "@beep/m365-mcp",
+        "@beep/markdown",
+        "@beep/md",
+        "@beep/n3",
+        "@beep/oip-web",
+        "@beep/onepassword-cli",
+        "@beep/ontology",
+        "@beep/ontology-client",
+        "@beep/ontology-domain",
+        "@beep/ontology-server",
+        "@beep/ontology-ui",
+        "@beep/ontology-use-cases",
+        "@beep/openclaw",
+        "@beep/oxigraph",
+        "@beep/palantiri",
+        "@beep/pandoc-ast",
+        "@beep/party-domain",
+        "@beep/party-server",
+        "@beep/party-use-cases",
+        "@beep/practice-claude-mod",
+        "@beep/practice-gateway",
+        "@beep/practice-identify",
+        "@beep/practice-kg-mcp",
+        "@beep/practice-m365-contacts",
+        "@beep/practice-mail-tagging",
+        "@beep/practice-review-hub",
+        "@beep/professional-desktop",
+        "@beep/rdf",
+        "@beep/rdf-canonize",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-docgen",
+        "@beep/repo-utils",
+        "@beep/repo-workspaces",
+        "@beep/semantic-web",
+        "@beep/semantica",
+        "@beep/shacl",
+        "@beep/shared-domain",
+        "@beep/shared-tables",
+        "@beep/skill-contract",
+        "@beep/workspace-domain",
+        "@beep/workspace-server",
+        "@beep/workspace-tables",
+        "@beep/workspace-use-cases",
+        "@beep/xdg",
+        "@beep/yaml"
+      ]
+    },
+    {
+      "sha": "90f65cef7b0814c369ddc1f93d22661d58c2bf5d",
+      "newlyMappedFiles": [
+        ".claude/skills/orchestrate/SKILL.md",
+        ".claude/skills/yeet/SKILL.md",
+        ".claude/skills/yeet/references/merge-loop.md",
+        ".claude/skills/yeet/references/stacks.md",
+        "skills-lock.json"
+      ],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "67573ba11e32dd39c2fe77e401d029add42220a9",
+      "newlyMappedFiles": ["harness-ledger/rows/2026-11.jsonl"],
+      "before": "full",
+      "after": "selected 5+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 12,
+      "selectedPackages": [
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit"
+      ]
+    },
+    {
+      "sha": "7169830e84631ac72ba11d08b3fc4f14a2d8ec68",
+      "newlyMappedFiles": ["standards/check-census.regression-baseline.jsonc"],
+      "before": "full",
+      "after": "selected 1+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 9,
+      "selectedPackages": ["@beep/repo-cli"]
+    },
+    {
+      "sha": "ce6291ea034a0e9e89d579a82d58605458d97d3d",
+      "newlyMappedFiles": [
+        ".claude/skills/orchestrate/SKILL.md",
+        ".claude/skills/yeet/SKILL.md",
+        ".claude/skills/yeet/references/gh-rest.md"
+      ],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "8c88b74b6027f3533da581b94b8a105d1108756b",
+      "newlyMappedFiles": [".claude/skills/orchestrate/SKILL.md"],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "153a345df4d1c9eba6f5ca82e4c68764092a8956",
+      "newlyMappedFiles": [
+        ".claude/skills/orchestrate/SKILL.md",
+        ".claude/skills/yeet/SKILL.md",
+        ".claude/skills/yeet/references/merge-loop.md"
+      ],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "5b575648835214158f95dde374bbe8401145d591",
+      "newlyMappedFiles": [
+        ".claude/skills/orchestrate/SKILL.md",
+        ".claude/skills/remote-development-agents/references/hosts.md",
+        ".claude/skills/update-harnesses/SKILL.md",
+        ".claude/skills/update-harnesses/references/harnesses.md",
+        ".claude/skills/update-harnesses/scripts/harness_host.sh",
+        ".claude/skills/update-harnesses/scripts/test_update_harnesses.py",
+        ".claude/skills/update-harnesses/scripts/update_harnesses.py",
+        "skills-lock.json"
+      ],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "baf225131bd7a52cc312b91e2521862ca7f2ad9a",
+      "newlyMappedFiles": [
+        ".claude/skills/yeet/references/monitor-and-inbox.md",
+        ".claude/skills/yeet/references/review-threads.md"
+      ],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "fda98a2c4bde1091019a424260b8a9af12074ef1",
+      "newlyMappedFiles": [".claude/skills/yeet/references/detached-jobs.md"],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "809ceb301b58750c3ec44d7d7336bb5aebac5c50",
+      "newlyMappedFiles": [
+        ".claude/skills/browser-qa-loop/SKILL.md",
+        "biome.identity.jsonc"
+      ],
+      "before": "full",
+      "after": "selected 19+8",
+      "partitionsBefore": 24,
+      "partitionsAfter": 24,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/docket-intake",
+        "@beep/infra",
+        "@beep/law-practice-server",
+        "@beep/lint-rules",
+        "@beep/palantiri",
+        "@beep/party-domain",
+        "@beep/party-server",
+        "@beep/party-use-cases",
+        "@beep/practice-gateway",
+        "@beep/practice-identify",
+        "@beep/practice-kg-mcp",
+        "@beep/practice-m365-contacts",
+        "@beep/practice-mail-tagging",
+        "@beep/practice-review-hub",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "412e5da63241ceb0f5973cc3303ce63be6f4a3b5",
+      "newlyMappedFiles": [
+        ".claude/skills/orchestrate/SKILL.md",
+        ".claude/skills/remote-development-agents/references/hosts.md"
+      ],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "fec21db1cf8743b427b1fd0f5f3bb75cff2d0863",
+      "newlyMappedFiles": [
+        ".claude/skills/ontology-foundational-auditor/scripts/validate_artifacts.py"
+      ],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "4766f3b18867e3ce9f04491d8248affae92240f7",
+      "newlyMappedFiles": [
+        ".claude/skills/remote-development-agents/references/hosts.md"
+      ],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "5e7f195a2e5f39645e879b25e206b2caa5aac4aa",
+      "newlyMappedFiles": [
+        ".claude/skills/remote-development-agents/references/hosts.md"
+      ],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "0729e466e20346a2680303756f2ddaaa718ec3c6",
+      "newlyMappedFiles": ["standards/root-package.projection.generated.json"],
+      "before": "full",
+      "after": "selected 1+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 9,
+      "selectedPackages": ["@beep/repo-cli"]
+    },
+    {
+      "sha": "61ace5a1fddcf904ba4978586ae56ee44394b375",
+      "newlyMappedFiles": [
+        ".claude/skills/_shared/anti-patterns.md",
+        ".claude/skills/atom-reactivity-specialist/references/api-reference.md",
+        ".claude/skills/sparql-expert/SKILL.md"
+      ],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "6d99cb00b5f07ea1cc08a1cd64c55e8949150416",
+      "newlyMappedFiles": [
+        ".claude/skills/operator-handoff/SKILL.md",
+        ".claude/skills/orchestrate/HANDOFF.template.md",
+        ".claude/skills/orchestrate/SKILL.md",
+        ".claude/skills/orchestrate/gate.sh"
+      ],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "3c26f4bdb033fee2c76e5d700a47cafe5337c97c",
+      "newlyMappedFiles": [
+        ".claude/skills/remote-development-agents/references/hosts.md"
+      ],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "8ed3daf327925fe8edc6359878ddfb0b5d431922",
+      "newlyMappedFiles": [
+        ".claude/skills/atom-reactivity-specialist/references/service-pattern.md",
+        "skills-lock.json"
+      ],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "1d21c0e0071acc0fa3693208b77ec9b8587b0854",
+      "newlyMappedFiles": ["skills-lock.json"],
+      "before": "full",
+      "after": "selected 1+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 9,
+      "selectedPackages": ["@beep/repo-cli"]
+    },
+    {
+      "sha": "d0b463048baa6e734be52c9a895a4146ff72cc3b",
+      "newlyMappedFiles": [
+        ".claude/skills/yeet/references/monitor-and-inbox.md"
+      ],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "b4ca771b10d3f476dede44d3eefced37902b2347",
+      "newlyMappedFiles": [
+        ".claude/skills/orchestrate/SKILL.md",
+        "skills-lock.json"
+      ],
+      "before": "full",
+      "after": "selected 10+2",
+      "partitionsBefore": 24,
+      "partitionsAfter": 14,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/github",
+        "@beep/github-actions",
+        "@beep/github-reporting",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "d0fd08152add747d7c4b68cfefb0143f401e11e6",
+      "newlyMappedFiles": [
+        ".claude/skills/orchestrate/SKILL.md",
+        "skills-lock.json"
+      ],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "5e3d6d7a1296f7007a7339b15ed61a9a57b7dd3d",
+      "newlyMappedFiles": ["biome.identity.jsonc"],
+      "before": "full",
+      "after": "selected 14+8",
+      "partitionsBefore": 24,
+      "partitionsAfter": 22,
+      "selectedPackages": [
+        "@beep/docket-intake",
+        "@beep/law-practice-server",
+        "@beep/lint-rules",
+        "@beep/occt",
+        "@beep/practice-gateway",
+        "@beep/practice-identify",
+        "@beep/practice-kg-mcp",
+        "@beep/practice-m365-contacts",
+        "@beep/practice-mail-tagging",
+        "@beep/practice-review-hub",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/technical-drawing"
+      ]
+    },
+    {
+      "sha": "43833cd3afd266b7d3bd02acf0de10e5d7851268",
+      "newlyMappedFiles": [
+        ".claude/skills/remote-development-agents/references/hosts.md"
+      ],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "e28f957006e4b860c2055253c8a3d968db2b8e89",
+      "newlyMappedFiles": [
+        ".claude/skills/remote-development-agents/references/hosts.md"
+      ],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "7f538fcd51203cc68cfc6315d4ff2de1832507db",
+      "newlyMappedFiles": [".claude/skills/closeout/SKILL.md"],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "5d82d9232239e1759ea3ac132a793bc1cfc3c504",
+      "newlyMappedFiles": [
+        ".claude/skills/yeet/SKILL.md",
+        ".claude/skills/yeet/references/gh-rest.md"
+      ],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "ff06c7acb80406c72828f89a5cd7e30653d678b7",
+      "newlyMappedFiles": ["biome.identity.jsonc"],
+      "before": "full",
+      "after": "selected 63+60",
+      "partitionsBefore": 24,
+      "partitionsAfter": 24,
+      "selectedPackages": [
+        "@beep/acp",
+        "@beep/agents-client",
+        "@beep/agents-domain",
+        "@beep/agents-server",
+        "@beep/agents-tables",
+        "@beep/agents-use-cases",
+        "@beep/api-docs",
+        "@beep/codegen-kit",
+        "@beep/db-admin",
+        "@beep/docket-intake",
+        "@beep/documents-domain",
+        "@beep/documents-server",
+        "@beep/documents-tables",
+        "@beep/documents-use-cases",
+        "@beep/ecfr",
+        "@beep/editor",
+        "@beep/epistemic-client",
+        "@beep/epistemic-server",
+        "@beep/epistemic-ui",
+        "@beep/epistemic-use-cases",
+        "@beep/gov-legal-mcp",
+        "@beep/govinfo",
+        "@beep/html",
+        "@beep/law-practice-domain",
+        "@beep/law-practice-server",
+        "@beep/law-practice-tables",
+        "@beep/law-practice-use-cases",
+        "@beep/lejeune-bolt-workbench",
+        "@beep/lexical-schema",
+        "@beep/lint-rules",
+        "@beep/md",
+        "@beep/n3",
+        "@beep/occt",
+        "@beep/ontology",
+        "@beep/ontology-client",
+        "@beep/ontology-domain",
+        "@beep/ontology-server",
+        "@beep/ontology-ui",
+        "@beep/ontology-use-cases",
+        "@beep/oxigraph",
+        "@beep/pandoc-ast",
+        "@beep/practice-claude-mod",
+        "@beep/practice-gateway",
+        "@beep/practice-identify",
+        "@beep/practice-kg-mcp",
+        "@beep/practice-m365-contacts",
+        "@beep/practice-mail-tagging",
+        "@beep/practice-review-hub",
+        "@beep/professional-desktop",
+        "@beep/rdf",
+        "@beep/rdf-canonize",
+        "@beep/repo-cli",
+        "@beep/repo-docgen",
+        "@beep/runpod",
+        "@beep/semantic-web",
+        "@beep/semantica",
+        "@beep/shacl",
+        "@beep/skill-contract",
+        "@beep/technical-drawing",
+        "@beep/workspace-domain",
+        "@beep/workspace-server",
+        "@beep/workspace-tables",
+        "@beep/workspace-use-cases"
+      ]
+    },
+    {
+      "sha": "15acb3a7896850c4bdd200cc731acb5aae323549",
+      "newlyMappedFiles": [".claude/skills/orchestrate/SKILL.md"],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "7a267d1ab519241217335d347e2f117c00e49ef3",
+      "newlyMappedFiles": ["biome.identity.jsonc"],
+      "before": "full",
+      "after": "selected 2+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 10,
+      "selectedPackages": ["@beep/lint-rules", "@beep/repo-cli"]
+    },
+    {
+      "sha": "4bcd7ff7bf78b9deca02e8386113ad2da3a30b5f",
+      "newlyMappedFiles": [".claude/skills/yeet/references/detached-jobs.md"],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "41bd434aec4fac5a29ff49248011c8a9880187f3",
+      "newlyMappedFiles": ["biome.identity.jsonc"],
+      "before": "full",
+      "after": "selected 2+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 10,
+      "selectedPackages": ["@beep/lint-rules", "@beep/repo-cli"]
+    },
+    {
+      "sha": "db2e2e2d73549efe106817cb0839930298f62905",
+      "newlyMappedFiles": [
+        ".claude/skills/orchestrate/SKILL.md",
+        ".claude/skills/yeet/SKILL.md",
+        ".claude/skills/yeet/references/merge-loop.md",
+        "skills-lock.json"
+      ],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "3eb5a4a1d65571553d661f90a2d592b4ca2cd13b",
+      "newlyMappedFiles": [".claude/skills/yeet/references/review-threads.md"],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "afc2a4749e9bec82d3513d33e47aaed4cdb25f47",
+      "newlyMappedFiles": ["standards/check-census.regression-baseline.jsonc"],
+      "before": "full",
+      "after": "selected 1+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 9,
+      "selectedPackages": ["@beep/repo-cli"]
+    },
+    {
+      "sha": "9dadba59f37980fe505c4aa35c830eb673f2a1e9",
+      "newlyMappedFiles": [
+        ".claude/skills/yeet/references/gates-and-proof.md",
+        "skills-lock.json"
+      ],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "19dcdc8cc15f01720f6f1b4b4cc3a73ebbd83d54",
+      "newlyMappedFiles": ["skills-lock.json"],
+      "before": "full",
+      "after": "selected 1+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 9,
+      "selectedPackages": ["@beep/repo-cli"]
+    },
+    {
+      "sha": "7bb393452fef2bba59d669b1990ec800695dbea8",
+      "newlyMappedFiles": [
+        ".claude/skills/orchestrate/HANDOFF.template.md",
+        ".claude/skills/orchestrate/SKILL.md"
+      ],
+      "before": "full",
+      "after": "selected 7+0",
+      "partitionsBefore": 24,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    }
+  ],
+  "widenedCommits": [
+    {
+      "sha": "29ccc707fa9c71f7210cec9ffaf8d9f5bc9f6f61",
+      "newlyMappedFiles": [".claude/skills/yeet/SKILL.md"],
+      "before": "selected 2+0",
+      "after": "selected 7+0",
+      "partitionsBefore": 10,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ],
+      "addedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-configs"
+      ]
+    },
+    {
+      "sha": "2096258857f86ece814e5fa131f35a5cad990e2d",
+      "newlyMappedFiles": [".claude/skills/yeet/references/gates-and-proof.md"],
+      "before": "selected 1+0",
+      "after": "selected 7+0",
+      "partitionsBefore": 9,
+      "partitionsAfter": 13,
+      "selectedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ],
+      "addedPackages": [
+        "@beep/ai-sync",
+        "@beep/infra",
+        "@beep/palantiri",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli-kit",
+        "@beep/repo-configs"
+      ]
+    }
+  ]
+}

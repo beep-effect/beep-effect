@@ -67,6 +67,7 @@ import {
   runCiCoveragePartition,
   runCiLabsCoverage,
 } from "./CiCoverage.ts";
+import { CI_LANE_DEFAULT_BASE, resolveCiLaneBase } from "./CiEventBase.ts";
 import {
   CI_LANE_PARTITION_TABLE_PATH,
   CI_LANE_PARTITIONS,
@@ -2034,12 +2035,12 @@ export const ciLaneStepsForTesting: {
           // Required on every head: Heavy / Lint Policy also runs the law on
           // code PRs, but it is not a required context.
           homePaths,
-          // A new reader of a generated standards file in another package does not
-          // select @beep/repo-cli's tests, so the owner rows are checked here, on
-          // the pull request that adds or removes the reader (hosted-setup-tax
-          // TURB-01). Readers are test files and the files they read are generated
-          // standards inventories, both code-route shapes, so the documentation
-          // path never needs it.
+          // A new reader of a scanned repository file (generated standards file or
+          // root tooling input) in another package does not select the row's
+          // owners, so the owner rows are checked here, on the pull request that
+          // adds or removes the reader (hosted-setup-tax TURB-01). Readers are
+          // TypeScript sources, a code-route shape, so the documentation path
+          // never needs it: a documentation-only change cannot add or drop one.
           bunRunStep(repoRoot, "lint:coverage-owners", ["beep", "lint", "coverage-owners"]),
           // `audit:github repo-sanity` runs the changeset graph check (its
           // `repo-sanity:changeset-graph` lane), so this body carries no second
@@ -2951,8 +2952,16 @@ export const ciLaneCommand = Command.make(
       Flag.withDescription("Storybook only: write should_run to GITHUB_OUTPUT without building or testing")
     ),
     base: Flag.String("base").pipe(
-      Flag.withDefault("origin/main"),
-      Flag.withDescription("Base git ref for affected/docgen/fallow/commitlint shapes")
+      Flag.withDescription(
+        `Base git ref for affected/docgen/fallow/commitlint shapes (default ${CI_LANE_DEFAULT_BASE})`
+      ),
+      Flag.optional
+    ),
+    eventBase: Flag.Boolean("event-base").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "Resolve the base from the workflow event instead of --base: a pull request's verified merge commit first parent (else pull_request.base.sha), otherwise GITHUB_SHA"
+      )
     ),
     head: Flag.String("head").pipe(Flag.withDefault("HEAD"), Flag.withDescription("Head git ref for docgen shapes")),
     summarize: Flag.Boolean("summarize").pipe(
@@ -3056,9 +3065,10 @@ export const ciLaneCommand = Command.make(
   },
   Effect.fnUntraced(function* ({
     affected,
-    base,
+    base: baseFlag,
     changesetStatus,
     docsOnly,
+    eventBase,
     coverageOutput,
     coverageInput,
     compareOnly,
@@ -3102,6 +3112,9 @@ export const ciLaneCommand = Command.make(
           Effect.catchTag("CiCommandError", reportCiCommandError)
         ),
     });
+    const base = yield* resolveCiLaneBase(baseFlag, eventBase).pipe(
+      Effect.catchTag("CiCommandError", reportCiCommandError)
+    );
     const options = CiLaneRunOptions.make({
       affected,
       base,
