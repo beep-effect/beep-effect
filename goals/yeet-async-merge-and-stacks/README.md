@@ -33,8 +33,10 @@ Use this command for execution-capable sessions:
 
 Slices A (the async merge port), B (proof that survives an unchanged
 rewrite) and C (two-layer stacks through Yeet) are done. Slice D, the
-measured two-week pilot, is next: its record opens on the first routine
-stack. The four slices are listed in [`PLAN.md`](./PLAN.md).
+measured two-week pilot, is in progress: its record opened on 2026-11-13,
+the clock runs to the end of 2026-11-26, and the continue-or-stop decision
+is due on or after 2026-11-27. The four slices are listed in
+[`PLAN.md`](./PLAN.md).
 
 ## Latest Evidence
 
@@ -48,6 +50,10 @@ stack. The four slices are listed in [`PLAN.md`](./PLAN.md).
   (stack #3190: #3188 and #3189 published, readied without a push, merged
   from the top in one push and retired through Yeet) and the P0 probes in
   [`research/stack-p0-probes-2026-11.md`](./research/stack-p0-probes-2026-11.md).
+- Slice D: [`research/stack-pilot-2026-11.md`](./research/stack-pilot-2026-11.md)
+  (the pilot record: kill criteria, one row per stack, and the probe that
+  found no restack after a trunk move in any case it could reproduce; a
+  layer cascaded onto `main` is still to be watched).
 - The evidence this goal starts from is the stack test record,
   [`explorations/stacked-pr-adoption/research/stack-test-2026-11.md`](../../explorations/stacked-pr-adoption/research/stack-test-2026-11.md).
 
