@@ -19,7 +19,7 @@ variable that the task's env list would need: the suite unsets nothing and needs
 `configuration-drift` on `docgen`: the manifest's scripts block lost `test:turbo-cache-r2` (the module it ran
 moved into the new package) and its `alchemy`, `@alchemy.run/cloudflare` and `@alchemy.run/test` dependencies
 went with it. The census `commandDigest` hashes the whole scripts block, so `docgen` drifts although its own
-command, outputs and environment are unchanged. `scratchpad/turbo-cache-r2/` is deleted; it was inside the
+command, outputs and environment are unchanged. The scratchpad turbo-cache-r2 directory is deleted; it was inside the
 scratchpad's default inputs only.
 
 ## Root subject `//`

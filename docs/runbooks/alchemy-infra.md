@@ -168,6 +168,11 @@ CLOUDFLARE_ACCOUNT_ID=op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_CLOUDFLARE_ACCOUNT_ID
 # ... and the same with `destroy --stage dev_$USER --yes` afterwards.
 ```
 
+`destroy` refuses a bucket that still holds artifacts (`BucketNotEmpty`;
+Alchemy's `R2.Bucket` has no empty-on-delete option): delete the personal
+stage's objects first, through the R2 objects API or the dashboard, and never
+touch another stage's bucket.
+
 Only `prod` pins its names (`beep-turbo-cache` for the bucket and the Worker)
 and retains the bucket and tokens on destroy; a personal stage gets generated
 names and is removed completely.

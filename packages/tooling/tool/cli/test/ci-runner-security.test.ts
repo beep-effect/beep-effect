@@ -2086,8 +2086,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         // Post-merge publisher of the commit-message overlay ref; it proves the
         // ref with `beep history notes --check` and grants no quality verdict.
         "history-notes-publish.yml:Publish refs/notes/history",
-        // Prod deploy of the Alchemy stack; environment-gated, not a local lane.
+        // Prod deploys of the Alchemy stacks; environment-gated, not local lanes.
         "deploy-beep-effect-web.yml:Deploy beep-effect-web (prod)",
+        "deploy-turbo-cache.yml:Deploy turbo cache (prod)",
         "fleet-lane-probe.yml:Lane Probe (${{ inputs.lane }})",
         "fleet-shadow-check.yml:Shadow Probe",
         "heavy-admit.yml:Heavy Admission",

@@ -14,6 +14,7 @@ import * as Provisioning from "alchemy/State/Provisioning";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
@@ -58,7 +59,11 @@ const MissingCredentialsLive = Layer.mergeAll(
   Layer.succeed(AlchemyContext, alchemyContext),
   Interaction.layerNonInteractive().pipe(Layer.provideMerge(PlatformLive)),
   ProfileStoreLive.pipe(Layer.provide(PlatformLive), Layer.orDie)
-).pipe(Layer.provideMerge(ConfigProvider.layer(ConfigProvider.fromUnknown({}))));
+).pipe(
+  // beta.86's state store needs SecureRandom.
+  Layer.provideMerge(SecureRandom.layerWebCrypto),
+  Layer.provideMerge(ConfigProvider.layer(ConfigProvider.fromUnknown({})))
+);
 
 layer(MissingCredentialsLive, { timeout: "30 seconds" })("without AWS credentials", (it) => {
   it.effect("missing AWS credentials fail the state read without blaming the store", () =>
