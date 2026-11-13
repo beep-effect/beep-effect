@@ -39,7 +39,7 @@ Use this command for execution-capable sessions:
 
 P1 Implement — slice 1 (ROUT-03 census, `fix(ci): keep goal ops scripts, fixtures and research inputs on the
 code route`) landed in #3064; slice 2 (COVE-02, bare coverage judges against its planned merge base) landed in #3115; slice 3 (YEET-08
-slice 1, final-check receipts versioned by gate set) completes the first wave; P0 re-checked lever status at
+slice 1, final-check receipts versioned by gate set) landed in #3177 and completes the first wave; P0 re-checked lever status at
 `origin/main` 5e09d90a6da. Slice 4 (ROUT-03 slice 2) is unblocked.
 
 ## Latest Evidence
