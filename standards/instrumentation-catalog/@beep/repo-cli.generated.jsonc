@@ -2505,6 +2505,7 @@
     {"name":"MailExportTreeIndexer.indexTree","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"MarkdownFenceTypechecker.typecheck","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"MarkdownFences.runMarkdownFences","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"MemoryStats.reservationCapacity","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Models.applySpans","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Models.eligibility","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Models.readLocator","owner":"@beep/repo-cli","family":"tooling","conforms":true},
