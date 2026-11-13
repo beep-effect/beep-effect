@@ -12,7 +12,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { canonicalDetectionJson } from "@beep/epistemics/ContradictionDetection";
+import { canonicalDetectionJson, canonicalDetectionJsonResult } from "@beep/epistemics/ContradictionDetection";
+import type * as Result from "effect/Result";
+import type * as S from "effect/Schema";
 
 /**
  * Deterministic canonical JSON over wire-form values: object keys sorted
@@ -23,3 +25,14 @@ import { canonicalDetectionJson } from "@beep/epistemics/ContradictionDetection"
  * @since 0.0.0
  */
 export const canonicalJson: (value: unknown) => string = canonicalDetectionJson;
+
+/**
+ * {@link canonicalJson} returning a `Result`: the canonical JSON owner's
+ * refusal of a value outside plain JSON is an `S.SchemaError` naming its code
+ * and JSON pointer, for digest helpers that already carry that channel.
+ *
+ * @category encoding
+ * @since 0.0.0
+ */
+export const canonicalJsonResult: (value: unknown) => Result.Result<string, S.SchemaError> =
+  canonicalDetectionJsonResult;
