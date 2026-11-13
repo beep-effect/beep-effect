@@ -406,9 +406,14 @@ A saved plan is made before the resources it plans exist. When a resource's depe
 known once another resource exists (for example the overflow pool's KMS decrypt grants, which look
 up Lambda functions the module creates and so depend on the module), `pulumi up --plan` refuses
 that resource with `violates plan: dependencies changed` after creating everything else. Nothing
-is rolled back. Expect a second pass: run a fresh `pulumi preview --diff --refresh --save-plan`,
-confirm it holds only the refused resources, apply it, then `--expect-no-changes`. On 2026-11-13
-the first pass created 136 of 142 resources and the second created the six grants.
+is rolled back. Expect a second pass: run a fresh
+`pulumi preview --diff --refresh --save-plan <new plan file>`, then compare every operation in it
+with the plan that was reviewed. A plan mismatch can stop an update before other planned operations
+run, so the second plan may hold more than the refused resources; each remaining operation must be
+one the reviewed plan already contained, and anything else is a stop. Apply it with
+`pulumi up --plan <new plan file>`, then `pulumi preview --refresh --expect-no-changes`. On
+2026-11-13 the first pass created 136 of 142 resources and the second plan held exactly the six
+refused grants.
 
 
 1. Refresh AWS identity, the source branch, the current fleet cap, and running
