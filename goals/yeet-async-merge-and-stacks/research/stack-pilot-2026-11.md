@@ -37,9 +37,10 @@ slice B.
 `2026-03-10`) is the count of record. A pilot stack is one created inside the
 clock on base `main` whose two layers each carry a lane's own change. The
 test stack (#3052), the probe stacks (#3150, #3156, #3159, #3238, #3239) and
-the acceptance stack (#3190) do not count. A stack that is unstacked or
-closed with nothing merged is listed with its reason and does not count as
-used.
+the acceptance stack (#3190) do not count, and neither does this record's
+own stack, whose two layers are the record itself. A stack that is unstacked
+or closed with nothing merged is listed with its reason and does not count
+as used.
 
 **Window wait.** The minutes during which a review window was the only thing
 holding the stack. It runs from the moment every other gate criterion was met
@@ -82,6 +83,7 @@ None as of 07:00Z on 2026-11-13.
 | Stack | Parent, layer | Opened to merged | Landed | Rewrites (cause) | Window wait | `main` Check runs | Gate holds | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | #3190, slice C's acceptance run | #3188, #3189 | 2026-11-13 03:23Z to 04:40Z, 77 minutes | from the top, one push, `238dc10536` and `b634505651` | 0 | 0: the windows elapsed at 04:05Z and 04:11Z, hosted CI finished at 04:39Z | 1 | `stack-below-top` (a dry run on the parent), `required-pending`, `threads-unresolved` (the lane's own hold threads) | both layers were code; each lane pushed once after review, which restarted both windows; record in [`../history/2026-11-13-slice-c-stack-landed.md`](../history/2026-11-13-slice-c-stack-landed.md) |
+| this record's own stack | #3241 and the layer that carries this row | opened 2026-11-13 07:08Z | bottom-up: the parent merges with `--alone`, so GitHub cascades the layer onto `main` | completed after the cascade | completed at the gate | 2 | completed at the gate | a probe, not a pilot stack: it exists to watch a partially merged stack on `main` while `main` moves |
 
 ## Does GitHub restack a layer when the trunk moves?
 
