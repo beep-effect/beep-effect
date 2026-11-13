@@ -1,3 +1,4 @@
+import * as NodeURL from "node:url";
 import {
   AgentEffectivenessEvalScoreBreakdown,
   AgentEffectivenessEvalScoreReport,
@@ -7,12 +8,14 @@ import {
   estimateMean,
   isSkillProbeFormatterFinding,
   PluginEvalResult,
+  preflightSkillProbe,
   readSkillProbeRecords,
   redactSkillProbePath,
   repairSkillProbeTask,
   SkillOptTaskManifest,
   SkillProbeFingerprint,
   SkillProbeOutcome,
+  SkillProbePreflightOptions,
   SkillProbeRunRecord,
   SkillProbeScoreOptions,
   SkillProbeStageOptions,
@@ -294,6 +297,22 @@ describe("skill probe report", () => {
         reason: "3 counted tasks pass all-lanes at least once among their B and C runs; the floor is 4.",
       })
     );
+  });
+
+  it("returns a null when B passes but no task has counted C runs, and names no profile without records", () => {
+    const probe = buildSkillProbeReport(
+      A.map(["1", "2", "3", "4"], (index) => record(`t-${index}`, "f", "B", true)),
+      "all-lanes"
+    );
+    expect(probe.verdict).toEqual(
+      SkillProbeVerdict.cases.Null.make({
+        difference: 0,
+        lower: 0,
+        harm: false,
+        reason: "No task has counted B and C runs.",
+      })
+    );
+    expect(buildSkillProbeReport([], "all-lanes").scorerProfile).toBe("none");
   });
 
   it("reports the lane census per task and cell", () => {
@@ -789,6 +808,46 @@ it.layer(TestLayer, { timeout: "30 seconds" })("skill probe scoring", (it) => {
     })
   );
 
+  it.effect("counts a run whose trace is unreadable and refuses results or reruns outside the rule", () =>
+    Effect.gen(function* () {
+      const { run, result, score, root, path } = yield* setup();
+      const fs = yield* FileSystem.FileSystem;
+      const missingTrace = path.join(root, "claude-eval-lost", "out", "trace.jsonl");
+      const lost = yield* result("lost", [{ name: "t-1", arms: { with: [run(missingTrace, null, false)] } }]);
+      const records = yield* score(lost, "lost.jsonl", { with: "A" });
+      expect(A.map(records, (entry) => [entry.keptDir, entry.outcome._tag])).toEqual([
+        ["claude-eval-lost", "Excluded"],
+      ]);
+
+      const unmodelled = path.join(root, "unmodelled.json");
+      const unmodelledJson = yield* encodeJson({
+        claudeVersion: "2.1.323",
+        suite: { ablation: "none", modelOverride: null },
+        cases: [],
+      });
+      yield* fs.writeFileString(unmodelled, unmodelledJson);
+      const noModel = yield* Effect.flip(score(unmodelled, "unmodelled.jsonl", {}));
+      expect(noModel.message).toBe("The harness result names no --model override.");
+
+      const priors = path.join(root, "priors.jsonl");
+      const priorLines = yield* Effect.forEach([1, 2, 3], (attempt) =>
+        encodeJson(
+          record("t-1", "fam", "C", false, {
+            excluded: true,
+            invocation: `attempt-${attempt}`,
+            slot: "t-1#C#0",
+            attempt,
+            keptDir: `claude-eval-p${attempt}`,
+          })
+        )
+      );
+      yield* fs.writeFileString(priors, `${A.join(priorLines, "\n")}\n`);
+      const rerun = yield* result("capped", [{ name: "t-1", arms: { with: [run("", "scaffold failed", true)] } }]);
+      const capped = yield* Effect.flip(score(rerun, "capped.jsonl", { with: "C" }, [priors]));
+      expect(capped.message).toBe("Slot t-1#C#0 would reach attempt 4; at most two reruns are allowed.");
+    })
+  );
+
   it.effect("refuses unmapped arms, unstaged cases and an existing output file", () =>
     Effect.gen(function* () {
       const { trace, run, result, score } = yield* setup();
@@ -806,5 +865,125 @@ it.layer(TestLayer, { timeout: "30 seconds" })("skill probe scoring", (it) => {
       const overwrite = yield* Effect.flip(score(empty, "first.jsonl", {}));
       expect(overwrite.message).toContain("Refusing to overwrite");
     })
+  );
+});
+
+const scorerPassFixture = NodeURL.fileURLToPath(
+  new URL("./fixtures/agent-effectiveness/scorer-pass/fixture", import.meta.url)
+);
+const scorerPassTask = NodeURL.fileURLToPath(
+  new URL("./fixtures/agent-effectiveness/scorer-pass/task.json", import.meta.url)
+);
+
+it.layer(TestLayer, { timeout: "180 seconds" })("skill probe scoring with the real law lanes", (it) => {
+  it.effect(
+    "preflights fixtures against known-good solutions and scores a kept run directory",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const archive = yield* fs.makeTempDirectoryScoped({ prefix: "skill-probe-archive-" });
+        const taskText = yield* fs.readFileString(scorerPassTask);
+        yield* fs.makeDirectory(path.join(archive, "tasks"), { recursive: true });
+        yield* fs.writeFileString(path.join(archive, "tasks", "contact.json"), taskText);
+        const failing = "export interface ContactPayload {\n  readonly name: string;\n}\nexport var legacy = 1;\n";
+        for (const name of ["meets", "fails-with-known-good", "fails-without-known-good"]) {
+          yield* fs.makeDirectory(path.join(archive, "fixtures", name, "src"), { recursive: true });
+        }
+        yield* fs.copy(scorerPassFixture, path.join(archive, "fixtures", "meets"), { overwrite: true });
+        yield* fs.writeFileString(
+          path.join(archive, "fixtures", "fails-with-known-good", "src", "Contact.ts"),
+          failing
+        );
+        yield* fs.writeFileString(
+          path.join(archive, "fixtures", "fails-without-known-good", "src", "Contact.ts"),
+          failing
+        );
+        const knownGood = path.join(archive, "known-good");
+        yield* fs.makeDirectory(knownGood, { recursive: true });
+        yield* fs.copy(scorerPassFixture, path.join(knownGood, "fails-with-known-good"));
+        const stagePath = path.join(archive, "stage.json");
+        const stageTasks = A.map(["meets", "fails-with-known-good", "fails-without-known-good"], (name) => ({
+          id: name,
+          family: "fn-schema",
+          fixture: `fixtures/${name}`,
+          taskPath: "tasks/contact.json",
+        }));
+        const stageJson = yield* encodeJson({
+          schemaVersion: "skill-probe-stage/v1",
+          skillSha256: HASH_A,
+          lawsSha256: HASH_B,
+          tasks: stageTasks,
+        });
+        yield* fs.writeFileString(stagePath, stageJson);
+
+        const preflight = yield* preflightSkillProbe(
+          SkillProbePreflightOptions.make({
+            archiveRoot: archive,
+            knownGoodRoot: knownGood,
+            stagePath,
+            out: path.join(archive, "preflight.json"),
+          })
+        );
+        expect(A.map(preflight.rows, (row) => [row.taskId, O.isSome(row.knownGood)])).toEqual([
+          ["meets", false],
+          ["fails-with-known-good", true],
+          ["fails-without-known-good", false],
+        ]);
+        expect(preflight.rows[2]?.reason).toBe("No known-good solution.");
+        expect(A.some(preflight.rows[2]?.fixture.violations ?? [], (violation) => violation.source === "biome")).toBe(
+          true
+        );
+        expect(preflight.dropped).toContain("fails-without-known-good");
+        expect(
+          A.every(preflight.rows, (row) => A.every(row.fixture.violations, (v) => !Str.includes(archive)(v.message)))
+        ).toBe(true);
+
+        const kept = path.join(archive, "runs", "claude-eval-kept");
+        yield* fs.makeDirectory(path.join(kept, "out"), { recursive: true });
+        yield* fs.writeFileString(path.join(kept, "out", "trace.jsonl"), '{"type":"result","is_error":false}\n');
+        yield* fs.makeDirectory(path.join(kept, "sealed", "home", "cwd", "fixtures"), { recursive: true });
+        yield* fs.copy(scorerPassFixture, path.join(kept, "sealed", "home", "cwd", "fixtures", "meets"));
+        const resultJson = yield* encodeJson({
+          claudeVersion: "2.1.323",
+          suite: { ablation: "none", modelOverride: "claude-opus-5-5" },
+          cases: [
+            {
+              name: "meets",
+              arms: {
+                with: [
+                  {
+                    turns: 3,
+                    costUsd: 0.1,
+                    durationSeconds: 10,
+                    startedAt: "2026-11-13T00:00:00.000Z",
+                    error: null,
+                    tracePath: path.join(kept, "out", "trace.jsonl"),
+                    graders: [],
+                  },
+                ],
+              },
+            },
+          ],
+        });
+        const resultPath = path.join(archive, "result.json");
+        yield* fs.writeFileString(resultPath, resultJson);
+        const records = yield* scoreSkillProbeRuns(
+          SkillProbeScoreOptions.make({
+            archiveRoot: archive,
+            stagePath,
+            resultPath,
+            invocation: "real",
+            withCell: O.some("A"),
+            withoutCell: O.none(),
+            priorPaths: [],
+            out: path.join(archive, "runs.jsonl"),
+          })
+        );
+        expect(A.map(records, (entry) => [entry.keptDir, entry.outcome._tag])).toEqual([
+          ["claude-eval-kept", "Scored"],
+        ]);
+      }),
+    { timeout: 180_000 }
   );
 });

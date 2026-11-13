@@ -245,6 +245,23 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })("agent-effecti
       expect(A.map(selection.candidates, (candidate) => candidate.tasks)).toEqual([[task.id], [task.id]]);
       expect(O.isNone(selection.selected)).toBe(true);
 
+      const refused = yield* Effect.flip(
+        run([
+          "evals",
+          "probe",
+          "report",
+          "--records",
+          records,
+          "--records",
+          records,
+          "--preflight",
+          preflight,
+          "--primary",
+          "all-lanes",
+        ])
+      );
+      expect(String(refused)).toContain("Run records cannot be pooled");
+
       yield* run(["evals", "probe", "report", "--records", records, "--preflight", preflight, "--primary", "law-pass"]);
       const reportText = yield* lastLogged();
       const report = yield* decodeReport(reportText);
@@ -254,6 +271,17 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })("agent-effecti
         O.map(A.head(report.laneCensus), (row) => row.taskId),
         task.id
       );
+    }).pipe(withTestConsole)
+  );
+  it.effect("refuses to stage when AGENTS.md has no Code Laws section", () =>
+    Effect.gen(function* () {
+      const path = yield* Path.Path;
+      yield* writeText(path.join(NodeProcess.cwd(), "AGENTS.md"), "# Guide\n\n## Autonomy\n");
+      const archive = path.join(VIRTUAL_ROOT, "archive");
+      const error = yield* Effect.flip(
+        run(["evals", "probe", "stage", "--archive", archive, "--out", path.join(VIRTUAL_ROOT, "suite-no-laws")])
+      );
+      expect(String(error)).toContain("AGENTS.md has no ## Code Laws section.");
     }).pipe(withTestConsole)
   );
 });
