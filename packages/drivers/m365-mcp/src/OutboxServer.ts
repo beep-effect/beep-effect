@@ -20,6 +20,7 @@ import * as Layer from "effect/Layer";
 import { m365McpProtocols } from "./internal/McpProtocols.ts";
 import { OutboxAttachmentPolicy, OutboxAttachmentSource } from "./OutboxAttachmentSource.ts";
 import { OutboxAuditIds, OutboxAuditLog } from "./OutboxAuditLog.ts";
+import { OutboxBasisReader } from "./OutboxBasisReader.ts";
 import { makeOutboxToolkitHandlers, OutboxHandlerSettings } from "./OutboxHandlers.ts";
 import { OutboxToolkit } from "./OutboxTools.ts";
 import type { M365Error } from "@beep/m365";
@@ -52,8 +53,8 @@ export const M365_OUTBOX_MCP_INSTRUCTIONS =
   "Microsoft 365 outbox for one configured mailbox: prepare a mail draft with attachments from local paths, read or delete that draft, and create or update calendar events. Automated sending is disabled: m365_outbox_send_draft checks the draft but refuses even a matching expectation with version-unbound, without calling Graph's send action. A person can review and send the draft in Outlook. Clients may open with an initialize handshake or call tools directly; both work.";
 
 /**
- * Services the outbox handlers need: the driver, the attachment source and the
- * audit log.
+ * Services the outbox handlers need: the driver, the attachment source, the
+ * audit log and the basis reader.
  *
  * **Example** (Name the handler services)
  *
@@ -67,7 +68,7 @@ export const M365_OUTBOX_MCP_INSTRUCTIONS =
  * @category services
  * @since 0.1.0
  */
-export type OutboxServices = M365 | OutboxAttachmentSource | OutboxAuditLog;
+export type OutboxServices = M365 | OutboxAttachmentSource | OutboxAuditLog | OutboxBasisReader;
 
 /**
  * Registrations only: the sanitized outbox toolkit and its handlers for one
@@ -172,8 +173,8 @@ export const outboxHandlerSettings = (config: OutboxConfig): OutboxHandlerSettin
 
 /**
  * Builds the live services of the outbox from its configuration: the app-only
- * driver for the outbox registration, the attachment source and the audit
- * log.
+ * driver for the outbox registration, the attachment source, the audit log
+ * and the basis reader bound to the configured mailbox.
  *
  * **Details**
  *
@@ -200,7 +201,9 @@ export const makeOutboxLiveServices = (
   FileSystem.FileSystem | Path.Path | Digest.Digest | SecureRandom.SecureRandom
 > =>
   Layer.mergeAll(
-    M365.makeAppOnlyLiveLayer(M365AppOnlyConfigInput.make(config.appOnly)),
+    OutboxBasisReader.layer(config.mailbox).pipe(
+      Layer.provideMerge(M365.makeAppOnlyLiveLayer(M365AppOnlyConfigInput.make(config.appOnly)))
+    ),
     OutboxAttachmentSource.layer(OutboxAttachmentPolicy.make(config.attachments)),
     OutboxAuditLog.layer(config.auditDirectory).pipe(Layer.provide(OutboxAuditIds.layer))
   );

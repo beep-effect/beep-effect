@@ -1,7 +1,16 @@
-import { GraphEmailAddress, GraphEvent, GraphEventAttendee } from "@beep/m365";
+import {
+  GraphDateTimeTimeZone,
+  GraphEmailAddress,
+  GraphEvent,
+  GraphEventAttendee,
+  GraphMessage,
+  GraphRecipient,
+  M365Error,
+} from "@beep/m365";
 import {
   makeOutboxToolkitHandlers,
   OutboxDraftCreated,
+  OutboxDraftCreatedRecord,
   OutboxDraftView,
   OutboxSendResult,
   OutboxToolError,
@@ -37,7 +46,7 @@ import {
   storedDraft,
   storedFile,
 } from "./OutboxWorld.fixture.ts";
-import type { OutboxAuditRecord } from "@beep/m365-mcp";
+import type { OutboxAuditRecord, OutboxBasisPinRef } from "@beep/m365-mcp";
 
 const HandlersLayer = makeOutboxToolkitHandlers(SETTINGS).pipe(Layer.provideMerge(OutboxWorldServices));
 
@@ -84,6 +93,92 @@ const eventParams = {
   start: { dateTime: "2030-01-15T00:00:00", timeZone: "UTC" },
   subject: "Fixture event",
 };
+
+const eventAt = (dateTime: string) =>
+  O.some(GraphDateTimeTimeZone.make({ dateTime: O.some(dateTime), timeZone: O.some("UTC") }));
+
+const pinnedEvent = GraphEvent.make({
+  changeKey: O.some("event-key-1"),
+  end: eventAt("2030-01-15T10:00:00.0000000"),
+  id: EVENT_ID,
+  isReminderOn: O.some(true),
+  reminderMinutesBeforeStart: O.some(15),
+  start: eventAt("2030-01-15T09:00:00.0000000"),
+  subject: O.some("Hearing"),
+  type: O.some("singleInstance"),
+});
+
+const sender = (address: string) =>
+  O.some(GraphRecipient.make({ emailAddress: O.some(GraphEmailAddress.make({ address: O.some(address) })) }));
+
+const conversationMessage = (fields: {
+  readonly from: string;
+  readonly id: string;
+  readonly isDraft?: boolean;
+  readonly received: string;
+}) =>
+  GraphMessage.make({
+    changeKey: O.some(`${fields.id}-key`),
+    conversationId: O.some("conversation-1"),
+    from: sender(fields.from),
+    id: fields.id,
+    internetMessageId: O.some(`<${fields.id}@example.test>`),
+    isDraft: O.some(fields.isDraft ?? false),
+    receivedDateTime: O.some(fields.received),
+  });
+
+const requestMessage = conversationMessage({
+  from: "counsel@example.test",
+  id: "request",
+  received: "2030-01-10T09:00:00Z",
+});
+
+type PinRefInput = typeof OutboxBasisPinRef.Encoded;
+
+// What the caller read, as it passes the pins: the view of `pinnedEvent` and `requestMessage`.
+const eventBasis: ReadonlyArray<PinRefInput> = [
+  {
+    id: EVENT_ID,
+    kind: "event",
+    view: {
+      end: { dateTime: "2030-01-15T10:00:00.0000000", timeZone: "UTC" },
+      isAllDay: false,
+      isCancelled: false,
+      start: { dateTime: "2030-01-15T09:00:00.0000000", timeZone: "UTC" },
+      subject: "Hearing",
+    },
+  },
+];
+const messageBasis: ReadonlyArray<PinRefInput> = [
+  { id: "request", kind: "message", view: { internetMessageId: "<request@example.test>" } },
+];
+
+const createWithBasis = Effect.fn("createWithBasis")(function* (basis: ReadonlyArray<PinRefInput>) {
+  const toolkit = yield* OutboxToolkit;
+  const handle = yield* toolkit.handle("m365_outbox_create_draft", {
+    basis,
+    body: "Synthetic body for a fixture.",
+    bodyType: "text",
+    subject: "Fixture subject",
+    to: ["first@example.test"],
+  });
+  return yield* head(handle);
+});
+
+// The verdict, and per pin either the changed fields or the status tag.
+const basisOfDraft = Effect.gen(function* () {
+  const toolkit = yield* OutboxToolkit;
+  const handle = yield* toolkit.handle("m365_outbox_get_draft", { draftId: DRAFT_ID });
+  const output = yield* head(handle);
+  assert.isFalse(output.isFailure);
+  const report = isDraftView(output.result) ? O.some(output.result.basis) : O.none();
+  return O.map(report, (found) => [
+    found.verdict,
+    A.map(found.pins, ({ status }) => (status._tag === "Changed" ? status.fields : status._tag)),
+  ]);
+});
+
+const isDraftCreatedRecord = S.is(OutboxDraftCreatedRecord);
 
 const tags = A.map((record: OutboxAuditRecord) => record._tag);
 const auditIds = A.map((record: OutboxAuditRecord) => record.auditId);
@@ -562,6 +657,207 @@ describe("@beep/m365-mcp outbox handlers", () => {
           A.filter(observed, ([, sent]) => sent > 0),
           []
         );
+      })
+    );
+  });
+
+  it.layer(HandlersLayer, { timeout: "10 seconds" })("create_draft with an event pin", (it) => {
+    it.effect(
+      "records the observed event and reports stale only when a named field changed",
+      Effect.fnUntraced(function* () {
+        const world = yield* OutboxWorld;
+        yield* world.script({ event: pinnedEvent });
+
+        const output = yield* createWithBasis(eventBasis);
+        const records = yield* world.records;
+        const calls = yield* world.calls;
+
+        assert.isFalse(output.isFailure);
+        assert.isTrue(isDraftCreated(output.result));
+        if (isDraftCreated(output.result)) {
+          assert.deepStrictEqual(
+            A.map(output.result.basis, (pin) => pin.kind),
+            ["event"]
+          );
+        }
+        // The pin is read before Graph is asked to create anything.
+        assert.deepStrictEqual(A.take(calls, 2), ["getEvent", "createDraftMessage"]);
+        const record = A.findFirst(records, isDraftCreatedRecord);
+        assertSome(
+          O.map(record, ({ basis }) =>
+            A.map(basis, (pin) =>
+              pin.kind === "event"
+                ? [pin.id, pin.view.subject, pin.view.start.dateTime, pin.view.start.timeZone, pin.changeKey]
+                : []
+            )
+          ),
+          [[EVENT_ID, "Hearing", "2030-01-15T09:00:00.0000000", "UTC", O.some("event-key-1")]]
+        );
+
+        const unchanged = yield* basisOfDraft;
+        // A new reminder and a new change key are outside the view.
+        yield* world.script({
+          event: GraphEvent.make({
+            ...pinnedEvent,
+            changeKey: O.some("event-key-2"),
+            reminderMinutesBeforeStart: O.some(60),
+          }),
+        });
+        const reminderEdited = yield* basisOfDraft;
+        yield* world.script({
+          event: GraphEvent.make({ ...pinnedEvent, start: eventAt("2030-01-15T08:00:00.0000000") }),
+        });
+        const moved = yield* basisOfDraft;
+        yield* world.script({ eventFailure: O.some(M365Error.fromReason("throttled", { status: 429 })) });
+        const failed = yield* basisOfDraft;
+        yield* world.script({
+          eventFailure: O.some(M365Error.fromReason("response status", { resource: "events", status: 404 })),
+        });
+        const deleted = yield* basisOfDraft;
+
+        assertSome(unchanged, ["pinned-current", ["Current"]]);
+        assertSome(reminderEdited, ["pinned-current", ["Current"]]);
+        assertSome(moved, ["pinned-stale", [["start"]]]);
+        assertSome(failed, ["pinned-unverified", ["Unreadable"]]);
+        assertSome(deleted, ["pinned-stale", ["Gone"]]);
+      })
+    );
+  });
+
+  it.layer(HandlersLayer, { timeout: "10 seconds" })("create_draft with a pin it cannot take", (it) => {
+    it.effect(
+      "refuses an unreadable pin and a series master with a typed reason and creates nothing",
+      Effect.fnUntraced(function* () {
+        const world = yield* OutboxWorld;
+        yield* world.script({ eventFailure: O.some(M365Error.fromReason("transport")) });
+        const unreadable = yield* createWithBasis(eventBasis);
+        yield* world.script({
+          event: GraphEvent.make({ ...pinnedEvent, type: O.some("seriesMaster") }),
+          eventFailure: O.none(),
+        });
+        const seriesMaster = yield* createWithBasis(eventBasis);
+
+        assert.isTrue(unreadable.isFailure);
+        assert.isTrue(seriesMaster.isFailure);
+        assert.deepStrictEqual(
+          A.map([unreadable.result, seriesMaster.result], (result) =>
+            isToolError(result) ? O.getOrElse(result.reason, () => "") : ""
+          ),
+          ["basis-unreadable", "basis-series-master"]
+        );
+        const calls = yield* world.calls;
+        assert.deepStrictEqual(calls, ["getEvent", "getEvent"]);
+        const records = yield* world.records;
+        assert.deepStrictEqual(records, []);
+      })
+    );
+  });
+
+  it.layer(HandlersLayer, { timeout: "10 seconds" })("create_draft against an item changed since it was read", (it) => {
+    it.effect(
+      "refuses a moved start or a new reply with basis-changed and accepts an edit outside the view",
+      Effect.fnUntraced(function* () {
+        const world = yield* OutboxWorld;
+        const reasonAndMessage = (result: unknown) =>
+          isToolError(result) ? [O.getOrElse(result.reason, () => ""), result.message] : [];
+
+        // The event moved between the caller's read and creation.
+        yield* world.script({
+          event: GraphEvent.make({ ...pinnedEvent, start: eventAt("2030-01-15T08:00:00.0000000") }),
+        });
+        const moved = yield* createWithBasis(eventBasis);
+        const callsAfterMoved = yield* world.calls;
+        const recordsAfterMoved = yield* world.records;
+        // A reply from another sender arrived between the caller's read and creation.
+        yield* world.script({
+          calls: [],
+          messages: [
+            requestMessage,
+            conversationMessage({ from: "counsel@example.test", id: "reply", received: "2030-01-11T09:00:00Z" }),
+          ],
+        });
+        const replied = yield* createWithBasis(messageBasis);
+        const callsAfterReplied = yield* world.calls;
+        // Only a reminder, a category and the change key changed: outside the named view.
+        yield* world.script({
+          calls: [],
+          event: GraphEvent.make({
+            ...pinnedEvent,
+            categories: O.some(["Docket"]),
+            changeKey: O.some("event-key-2"),
+            reminderMinutesBeforeStart: O.some(60),
+          }),
+        });
+        const outside = yield* createWithBasis(eventBasis);
+        const records = yield* world.records;
+
+        assert.isTrue(moved.isFailure);
+        const [movedReason, movedMessage] = reasonAndMessage(moved.result);
+        assert.strictEqual(movedReason, "basis-changed");
+        assert.include(movedMessage, "start");
+        assert.deepStrictEqual(callsAfterMoved, ["getEvent"]);
+        assert.deepStrictEqual(recordsAfterMoved, []);
+        assert.isTrue(replied.isFailure);
+        const [repliedReason, repliedMessage] = reasonAndMessage(replied.result);
+        assert.strictEqual(repliedReason, "basis-changed");
+        assert.include(repliedMessage, "newestOtherReply");
+        assert.notInclude(callsAfterReplied, "createDraftMessage");
+        assert.isFalse(outside.isFailure);
+        assert.deepStrictEqual(tags(records), ["draft-created"]);
+      })
+    );
+  });
+
+  it.layer(HandlersLayer, { timeout: "10 seconds" })("create_draft with a message pin", (it) => {
+    it.effect(
+      "follows a moved message by its message id and reports a later reply from another sender",
+      Effect.fnUntraced(function* () {
+        const world = yield* OutboxWorld;
+        yield* world.script({ messages: [requestMessage] });
+
+        const output = yield* createWithBasis(messageBasis);
+        assert.isFalse(output.isFailure);
+
+        // Filed into another folder: a new Graph id, the same message id.
+        yield* world.script({ calls: [], messages: [GraphMessage.make({ ...requestMessage, id: "request-moved" })] });
+        const moved = yield* basisOfDraft;
+        const recheckCalls = yield* world.calls;
+
+        const later = (fields: { readonly from: string; readonly isDraft?: boolean }) =>
+          world.script({
+            messages: [
+              requestMessage,
+              conversationMessage({ ...fields, id: "later", received: "2030-01-11T09:00:00Z" }),
+            ],
+          });
+        yield* later({ from: "MAILBOX@example.test" });
+        const ownReply = yield* basisOfDraft;
+        yield* later({ from: "counsel@example.test", isDraft: true });
+        const laterDraft = yield* basisOfDraft;
+        yield* later({ from: "counsel@example.test" });
+        const otherReply = yield* basisOfDraft;
+
+        assertSome(moved, ["pinned-current", ["Current"]]);
+        // The one getMessage is the draft's own read; the pin costs one list call and no get by id.
+        assert.deepStrictEqual(recheckCalls, ["getMessage", "listMessageAttachments", "listMessages"]);
+        assertSome(ownReply, ["pinned-current", ["Current"]]);
+        assertSome(laterDraft, ["pinned-current", ["Current"]]);
+        assertSome(otherReply, ["pinned-stale", [["newestOtherReply"]]]);
+      })
+    );
+  });
+
+  it.layer(HandlersLayer, { timeout: "10 seconds" })("get_draft of a draft without pins", (it) => {
+    it.effect(
+      "reports unpinned for a draft created with no basis and for one with no record",
+      Effect.fnUntraced(function* () {
+        const recordless = yield* basisOfDraft;
+        const output = yield* createWithBasis([]);
+        const created = yield* basisOfDraft;
+
+        assert.isFalse(output.isFailure);
+        assertSome(recordless, ["unpinned", []]);
+        assertSome(created, ["unpinned", []]);
       })
     );
   });
