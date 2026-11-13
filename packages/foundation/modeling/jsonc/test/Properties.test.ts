@@ -16,6 +16,7 @@ import {
   Jsonc,
   JsoncCanonicalizeError,
   JsoncCanonicalizeErrorCode,
+  JsoncCanonicalizeOptions,
   JsoncEdit,
   JsoncEditOverlapError,
   JsoncFingerprint,
@@ -96,6 +97,26 @@ const reverseKeys = (value: unknown): unknown => {
   }
   return value;
 };
+
+// The same JSON value with one extra member, valued `undefined`, on every
+// object that does not already use the key.
+const UNSET_KEY = "unset";
+
+const withUnsetMembers = (value: unknown): unknown => {
+  if (A.isArray(value)) {
+    return A.map(value, (item) => withUnsetMembers(item));
+  }
+  if (P.isObject(value)) {
+    const mapped = R.map(value, (item) => withUnsetMembers(item));
+    return R.has(mapped, UNSET_KEY) ? mapped : { ...mapped, [UNSET_KEY]: undefined };
+  }
+  return value;
+};
+
+// Whether `withUnsetMembers` adds a member anywhere in the value.
+const hasObject = (value: unknown): boolean =>
+  (P.isObject(value) && !A.isArray(value) && !R.has(value, UNSET_KEY)) ||
+  A.some(members(value), ([, item]) => hasObject(item));
 
 // Whether every string and member key is well-formed Unicode: the domain on
 // which RFC 8785 canonicalization is total.
@@ -241,6 +262,7 @@ describe("jsonc property floor", () => {
     roundTrips("JsoncEdit", JsoncEdit);
     roundTrips("JsoncCanonicalizeErrorCode", JsoncCanonicalizeErrorCode);
     roundTrips("JsoncCanonicalizeError", JsoncCanonicalizeError);
+    roundTrips("JsoncCanonicalizeOptions", JsoncCanonicalizeOptions);
     roundTrips("JsoncTextHashOptions", JsoncTextHashOptions);
     roundTrips("JsoncModificationError", JsoncModificationError);
     roundTrips("JsoncModifyOptions", JsoncModifyOptions);
@@ -540,6 +562,23 @@ describe("jsonc property floor", () => {
           assert.strictEqual(canonicalize21, canonical);
           const stringify22 = yield* Jsonc.stringify(value);
           assertTrue(Jsonc.equals(canonical, stringify22));
+        }),
+      runs
+    );
+
+    it.effect.prop(
+      "omitUndefinedMembers changes nothing on JSON and equals deleting the undefined members",
+      [wellFormedJson],
+      ([value]) =>
+        Effect.gen(function* () {
+          const omitting = JsoncCanonicalizeOptions.make({ omitUndefinedMembers: true });
+          const canonical = yield* JsoncFingerprint.canonicalize(value);
+          const unchanged = yield* JsoncFingerprint.canonicalize(value, omitting);
+          assert.strictEqual(unchanged, canonical);
+          const sparse = withUnsetMembers(value);
+          const omitted = yield* JsoncFingerprint.canonicalize(sparse, omitting);
+          assert.strictEqual(omitted, canonical);
+          assert.strictEqual(Result.isFailure(JsoncFingerprint.canonicalizeResult(sparse)), hasObject(value));
         }),
       runs
     );
