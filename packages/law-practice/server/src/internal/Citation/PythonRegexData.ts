@@ -1,7 +1,7 @@
 /**
  * Generated observed CPython 3.11.15 re character classes (Unicode 14).
  * Producer: goals/citation-extraction-engine/ops/probe-regex-characters.py
- * (removed from the tree; recover with git show 05ed8bc6b6cc:<that path>).
+ * (removed from the tree; recover with `git show 05ed8bc6b6cc:<that path>`).
  * No Python implementation source is copied.
  * @internal @packageDocumentation @since 0.0.0
  */

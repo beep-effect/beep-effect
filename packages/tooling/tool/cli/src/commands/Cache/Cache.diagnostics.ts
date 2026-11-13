@@ -499,6 +499,11 @@ const blockLength = (size: number) => Math.ceil(size / blockSize) * blockSize;
 
 /**
  * One raw archive reader: hashes every byte (padding included) with timed, bounded pulls.
+ *
+ * @param pull - Chunk source for the canonical tar stream.
+ * @param deadline - Epoch milliseconds after which every read fails.
+ * @param limits - Stream, entry and header bounds the reader enforces.
+ * @returns The reader's bounded read and digest operations.
  */
 const makeArchiveReader = (
   pull: Pull.Pull<A.NonEmptyReadonlyArray<Uint8Array>, PlatformError.PlatformError>,

@@ -44,6 +44,9 @@ const ByMtime = Order.mapInput(Order.Number, ([, mtime]: readonly [string, numbe
 
 /**
  * Percent-encode one query value like Python's `quote(value, safe="")`.
+ *
+ * @param value - Raw query value.
+ * @returns The value with every reserved character percent-encoded.
  */
 const quote = (value: string) =>
   pipe(

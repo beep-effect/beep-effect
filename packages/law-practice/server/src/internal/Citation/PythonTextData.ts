@@ -2,7 +2,7 @@
  * Generated observable character facts from frozen Python 3.11.15 / Unicode 14.
  * No Python or Unicode implementation source is included. Maintainer producer:
  * goals/citation-extraction-engine/ops/probe-resolver-text.py
- * (removed from the tree; recover with git show 05ed8bc6b6cc:<that path>).
+ * (removed from the tree; recover with `git show 05ed8bc6b6cc:<that path>`).
  * @internal
  * @packageDocumentation
  * @since 0.0.0

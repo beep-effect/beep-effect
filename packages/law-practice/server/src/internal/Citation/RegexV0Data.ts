@@ -1,6 +1,6 @@
 /** Generated regex 2023.12.25 V0 observations, not implementation source.
  * Producer: goals/citation-extraction-engine/ops/probe-regex-engine-characters.py
- * (removed from the tree; recover with git show 05ed8bc6b6cc:<that path>).
+ * (removed from the tree; recover with `git show 05ed8bc6b6cc:<that path>`).
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
