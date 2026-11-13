@@ -15,6 +15,7 @@ import {
   layerGithubLedgerStoreLive,
   makeGithubLedgerStoreMemory,
   readingOfTransport,
+  reserveOf,
   SampleBucket,
   SampleRowJson,
   windowsOf,
@@ -28,6 +29,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
@@ -123,24 +125,24 @@ describe("GitHub ledger second review regressions", () => {
     assertTrue(measured.lanesInferred);
   });
 
-  it("D2d attaches to only the closest fingerprint and breaks ties by earliest known lane", () => {
+  it("D2e leaves multi-candidate instances ambiguous even with a closest reset or tie", () => {
     const first = row(20, 110, 70 * MINUTE, O.some(a));
     const second = row(21, 120, 70 * MINUTE + 6 * SECOND, O.some(b));
     const unknown = row(15, 100, 70 * MINUTE + 5 * SECOND, O.none());
     const grouped = lanesOf(anchorsOf({ key: graphql, rows: [unknown, first, second], admitGraphqlSamples: false }));
     deepStrictEqual(
       A.map(grouped, (lane) => A.map(lane, (anchor) => anchor.source)),
-      [["pid:42", b], [a]]
+      [["pid:42"], [a], [b]]
     );
     const tied = row(15, 100, 70 * MINUTE + 3 * SECOND, O.none());
     const tieGroups = lanesOf(anchorsOf({ key: graphql, rows: [second, tied, first], admitGraphqlSamples: false }));
     deepStrictEqual(
       A.map(tieGroups, (lane) => A.map(lane, (anchor) => anchor.source)),
-      [["pid:42", a], [b]]
+      [["pid:42"], [a], [b]]
     );
   });
 
-  it("D2d breaks a later tie by lane ids after an earlier attachment", () => {
+  it("D2e an earlier single-candidate attachment cannot resolve another ambiguous instance", () => {
     const knownA = row(20, 110, 70 * MINUTE + 2 * SECOND, O.some(a));
     const knownB = row(22, 120, 70 * MINUTE + 8 * SECOND, O.some(b));
     const early = row(10, 90, 70 * MINUTE + 11 * SECOND, O.none());
@@ -150,8 +152,48 @@ describe("GitHub ledger second review regressions", () => {
     );
     deepStrictEqual(
       A.map(grouped, (lane) => A.map(lane, (anchor) => anchor.source)),
-      [["pid:42", "pid:42", b], [a]]
+      [["pid:42", b], ["pid:42"], [a]]
     );
+  });
+
+  it("D2e excludes the ambiguous credential switch and counts 320 as an inferred lower bound", () => {
+    const rows = [
+      row(15, 100, 70 * MINUTE, O.none()),
+      row(20, 110, 70 * MINUTE, O.some(a)),
+      row(25, 200, 70 * MINUTE, O.none()),
+      row(30, 210, 70 * MINUTE, O.some(b)),
+    ];
+    const measured = hour(rows);
+    assertSome(measured.fleetUsed, 320);
+    assertTrue(measured.fleetUsedIsLowerBound);
+    assertTrue(measured.lanesInferred);
+  });
+
+  it("D2e keeps depleted ambiguous readings eligible for reserve", () => {
+    const rows = [
+      row(18, 4900, 70 * MINUTE, O.none()),
+      row(20, 110, 70 * MINUTE, O.some(a)),
+      row(25, 210, 70 * MINUTE, O.some(b)),
+    ];
+    const signal = reserveOf({ now: at(26), admitGraphqlSamples: false })(graphql, A.map(rows, readingOfTransport));
+    expect(signal.state._tag).toBe("Below");
+  });
+
+  it("D2e marks every hour touched by ambiguous anchors without counting their rise", () => {
+    const rows = [
+      row(55, 100, 130 * MINUTE, O.none()),
+      row(56, 110, 130 * MINUTE, O.some(a)),
+      row(65, 200, 130 * MINUTE, O.none()),
+      row(70, 210, 130 * MINUTE, O.some(b)),
+    ];
+    const first = hour(rows);
+    const second = hour(rows, 60);
+    assertSome(first.fleetUsed, 110);
+    assertSome(second.fleetUsed, 210);
+    assertTrue(first.fleetUsedIsLowerBound);
+    assertTrue(second.fleetUsedIsLowerBound);
+    assertTrue(first.lanesInferred);
+    assertTrue(second.lanesInferred);
   });
 
   it("D2d marks a mixed lane's initial contribution even when its ending window is in the next hour", () => {
@@ -349,6 +391,69 @@ it.layer(Layer.merge(MemoryFileSystem.layerWith({}), Path.layer), { timeout: "30
         const readings = yield* store.latestTransport;
         expect(A.length(readings)).toBe(2);
       }).pipe(withLayer(live), root("failed-write"));
+    })
+  );
+});
+
+const verifyDriftingRetention = Effect.gen(function* () {
+  yield* TestClock.setTime(T + 5);
+  const store = yield* GithubLedgerStore;
+  const resets = [100_000, 105_000, 110_000, 100_500];
+  yield* Effect.forEach(resets, (reset, index) =>
+    store.writeLatestTransport({
+      ...readingOfTransport(row(0, 4900, reset, O.none())),
+      asOf: DateTime.makeUnsafe(T + index + 1),
+      remaining: index === 3 ? 4000 : 100,
+      used: O.some(index === 3 ? 1000 : 4900),
+    })
+  );
+  const retained = yield* store.latestTransport;
+  deepStrictEqual(
+    A.sort(
+      A.map(retained, (reading) => DateTime.toEpochMillis(reading.resetAt) - T),
+      Order.Number
+    ),
+    [100_500, 110_000]
+  );
+  yield* checkBelow(graphql);
+});
+
+it.effect("review3 retains distinct drifted instances with unique keys in memory and after restart", () =>
+  Effect.gen(function* () {
+    const store = yield* makeGithubLedgerStoreMemory;
+    yield* verifyDriftingRetention.pipe(ledgerOver(store));
+    yield* checkBelow(graphql).pipe(ledgerOver(store));
+    yield* TestClock.setTime(T + 110_001);
+    yield* Effect.gen(function* () {
+      const ledger = yield* GithubBudgetLedger;
+      yield* ledger.prune;
+      const retained = yield* store.latestTransport;
+      expect(A.length(retained)).toBe(0);
+      const cached = yield* ledger.latest(graphql);
+      assertNone(cached);
+    }).pipe(ledgerOver(store));
+  })
+);
+
+it.layer(Layer.merge(MemoryFileSystem.layerWith({}), Path.layer), { timeout: "30 seconds" })((it) => {
+  it.effect("review3 retains unique live filenames after reset drift and expires suffixed instances", () =>
+    Effect.gen(function* () {
+      yield* verifyDriftingRetention.pipe(withLayer(live), root("drift"));
+      yield* checkBelow(graphql).pipe(withLayer(live), root("drift"));
+      const fs = yield* FileSystem.FileSystem;
+      const files = yield* fs.readDirectory("/review2-drift/latest");
+      assertTrue(A.contains(files, `transport-user_alice-graphql-instance-busy-${T / SECOND + 100}-1.json`));
+      expect(A.length(files)).toBe(2);
+      yield* TestClock.setTime(T + 110_001);
+      yield* Effect.gen(function* () {
+        const ledger = yield* GithubBudgetLedger;
+        yield* ledger.prune;
+        const store = yield* GithubLedgerStore;
+        const retained = yield* store.latestTransport;
+        expect(A.length(retained)).toBe(0);
+      }).pipe(withLayer(live), root("drift"));
+      const expired = yield* fs.readDirectory("/review2-drift/latest");
+      deepStrictEqual(expired, ["summary.json"]);
     })
   );
 });

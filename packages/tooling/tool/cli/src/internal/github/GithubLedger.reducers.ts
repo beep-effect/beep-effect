@@ -347,7 +347,7 @@ const judgedReadingOf = (
       millis(now) - millis(reading.asOf) <= Duration.toMillis(RESERVE_READING_BOUND) &&
       millis(reading.resetAt) > millis(now)
   );
-  const lanes = partitionCredentials(
+  const [lanes] = partitionCredentials(
     usable,
     (reading) => ({
       source: reading.source,
@@ -380,7 +380,9 @@ const judgedReadingOf = (
  *
  * Unknown instances use one-second reset buckets and reuse the lexicographically
  * earliest retained key within five seconds, separately for idle and busy
- * readings. All matching neighbours consolidate into that key. This preserves
+ * readings. Unmatched instances allocate an unused stem or numeric suffix; a
+ * drifting instance never gives up its occupied key. All matching neighbours
+ * consolidate into that key. This preserves
  * distinct windows even when one PID observes both. The last entry is the
  * updated instance, so persistence, cache and throttling share its exact key.
  *
@@ -434,10 +436,14 @@ export const retainLatestReading: {
       A.map(matches, ([key]) => key),
       A.sort(Order.String),
       A.head,
-      O.getOrElse(
-        () =>
-          `${prefix}${known ? reading.source : `instance-${used(reading) === 0 ? "idle" : "busy"}-${Math.floor(millis(reading.resetAt) / 1000)}`}`
-      )
+      O.getOrElse(() => {
+        const stem = `${prefix}${known ? reading.source : `instance-${used(reading) === 0 ? "idle" : "busy"}-${Math.floor(millis(reading.resetAt) / 1000)}`}`;
+        const available = (suffix: number): string => {
+          const candidate = suffix === 0 ? stem : `${stem}-${suffix}`;
+          return A.some(entries, ([retained]) => retained === candidate) ? available(suffix + 1) : candidate;
+        };
+        return available(0);
+      })
     );
     const newest = A.reduce(matches, reading, (newest, [, other]) =>
       millis(other.asOf) > millis(newest.asOf) ? other : newest
@@ -700,7 +706,7 @@ const partitionCredentials = <Item>(
     readonly used: number;
   },
   resource: GitHubRateLimitResource
-): ReadonlyArray<A.NonEmptyReadonlyArray<Item>> => {
+): readonly [ReadonlyArray<A.NonEmptyReadonlyArray<Item>>, ReadonlyArray<A.NonEmptyReadonlyArray<Item>>] => {
   const known = A.filter(items, (item) => isFingerprint(anchorOf(item).source));
   const unknown = A.filter(items, (item) => !isFingerprint(anchorOf(item).source));
   const byReset = Order.mapInput(DateTime.Order, (item: Item) => anchorOf(item).resetAt);
@@ -730,51 +736,39 @@ const partitionCredentials = <Item>(
     const rest = A.filter(pending, (group) => !joins(group));
     return A.isReadonlyArrayNonEmpty(joined) ? merge(rest, A.appendAll(lane, A.flatten(joined))) : A.append(rest, lane);
   };
-  // Attach each unknown GraphQL instance once, using only direct known-anchor
-  // evidence. It can never act as a union edge between known fingerprints.
-  const firstAt = (group: A.NonEmptyReadonlyArray<Item>) =>
-    A.min(
-      A.map(group, (item) => anchorOf(item).at),
-      DateTime.Order
-    );
-  const orderedKnown: ReadonlyArray<A.NonEmptyReadonlyArray<Item>> = A.sort(
-    knownGroups,
-    Order.mapInput(DateTime.Order, firstAt)
-  );
-  const orderedInstances = A.sort(instances, Order.mapInput(DateTime.Order, firstAt));
+  // The second tuple member records ambiguous instances for accounting only.
+  // Reserve keeps every instance eligible; ambiguity never hides depletion.
   const attached = () =>
-    A.reduce(orderedInstances, orderedKnown, (current, instance) => {
-      const lanes = A.sort(current, Order.mapInput(DateTime.Order, firstAt));
-      const candidates = A.flatMap(lanes, (lane, index) => {
-        const gaps = A.flatMap(instance, (a) =>
-          A.flatMap(lane, (b) =>
-            isFingerprint(anchorOf(b).source) && shares(a, b) ? [resetGap(anchorOf(a), anchorOf(b))] : []
-          )
+    A.reduce(
+      instances,
+      Tuple.make<readonly [ReadonlyArray<A.NonEmptyReadonlyArray<Item>>, ReadonlyArray<A.NonEmptyReadonlyArray<Item>>]>(
+        knownGroups,
+        []
+      ),
+      ([lanes, ambiguous], instance) => {
+        const candidates = A.flatMap(lanes, (lane, index) =>
+          A.some(instance, (a) => A.some(lane, (b) => isFingerprint(anchorOf(b).source) && shares(a, b))) ? [index] : []
         );
-        return A.match(gaps, {
-          onEmpty: () => [],
-          onNonEmpty: (present) => [Tuple.make(index, A.min(present, Order.Number))],
+        return A.match(candidates, {
+          onEmpty: () => Tuple.make(A.append(lanes, instance), ambiguous),
+          onNonEmpty: (present) =>
+            A.length(present) === 1
+              ? Tuple.make(
+                  A.map(lanes, (lane, index) =>
+                    index === A.headNonEmpty(present) ? A.appendAll(lane, instance) : lane
+                  ),
+                  ambiguous
+                )
+              : Tuple.make(A.append(lanes, instance), A.append(ambiguous, instance)),
         });
-      });
-      const chosen = A.head(
-        A.sort(
-          candidates,
-          Order.combine(
-            Order.mapInput(Order.Number, (entry: readonly [number, number]) => entry[1]),
-            Order.mapInput(Order.Number, (entry: readonly [number, number]) => entry[0])
-          )
-        )
-      );
-      return O.match(chosen, {
-        onNone: () => A.append(lanes, instance),
-        onSome: ([chosenIndex]) =>
-          A.map(lanes, (lane, index) => (index === chosenIndex ? A.appendAll(lane, instance) : lane)),
-      });
-    });
-  return pipe(
+      }
+    );
+  const [groups, ambiguous] =
     resource === "graphql"
       ? attached()
-      : A.reduce(A.appendAll(knownGroups, instances), A.empty<A.NonEmptyReadonlyArray<Item>>(), merge),
+      : Tuple.make(A.reduce(A.appendAll(knownGroups, instances), A.empty<A.NonEmptyReadonlyArray<Item>>(), merge), []);
+  const lanes = pipe(
+    groups,
     A.map((group) =>
       A.sort(
         group,
@@ -783,6 +777,7 @@ const partitionCredentials = <Item>(
     ),
     A.sort(Order.mapInput(DateTime.Order, (group: A.NonEmptyReadonlyArray<Item>) => anchorOf(A.headNonEmpty(group)).at))
   );
+  return Tuple.make(lanes, ambiguous);
 };
 
 /**
@@ -793,8 +788,10 @@ const partitionCredentials = <Item>(
  * Credential groups merge to a fixed point only when positive readings observed
  * before their reset agree within five seconds. Idle groups never merge. A
  * known credential stays in its lane across resets. GraphQL keeps known
- * fingerprints distinct and attaches an unknown instance to at most one directly
- * co-observed known lane, choosing closest reset then earliest current lane ID. Unknown anchors cluster into reset-scoped
+ * fingerprints distinct and attaches an unknown instance only when exactly one
+ * known lane co-observes it. Ambiguous instances remain standalone reserve
+ * candidates but contribute zero to accounting, with inferred lower-bound flags.
+ * Unknown anchors cluster into reset-scoped
  * instances across sources, with idle and busy instances kept separate. Unknown
  * instances never continue across resets. Lane ids follow first anchor time.
  *
@@ -828,7 +825,10 @@ export const lanesOf: {
       onNone: (): GitHubRateLimitResource => "core",
       onSome: (anchor) => anchor.resource,
     })
-  ) => partitionCredentials(anchors, (anchor) => anchor, resource)
+  ) => {
+    const [lanes] = partitionCredentials(anchors, (anchor) => anchor, resource);
+    return lanes;
+  }
 );
 
 const inWindow = (from: number, to: number) => (row: { readonly at: DateTime.Utc }) =>
@@ -1144,7 +1144,11 @@ export const hourOf = ({
   const hourTransports = A.filter(transports, (row) => inHour(row.at));
   const estimatedPoints = Num.sumAll(A.map(hourTransports, costOfRow(table)));
   const ghSpawns = A.length(A.filter(spawns, (row) => inHour(row.at)));
-  const lanes = lanesOf(anchorsOf({ key, rows, admitGraphqlSamples }), key.resource);
+  const [lanes, ambiguous] = partitionCredentials(
+    anchorsOf({ key, rows, admitGraphqlSamples }),
+    (anchor) => anchor,
+    key.resource
+  );
   const knownLane = (lane: A.NonEmptyReadonlyArray<LedgerAnchor>) =>
     A.some(lane, (anchor) => isFingerprint(anchor.source));
   const inferredIndexes = A.flatMap(lanes, (lane, index) => (knownLane(lane) ? [] : [index]));
@@ -1156,6 +1160,9 @@ export const hourOf = ({
     return A.match(present, {
       onEmpty: () => [],
       onNonEmpty: (anchors) => {
+        if (A.some(ambiguous, (instance) => A.contains(instance, A.headNonEmpty(anchors)))) {
+          return [Tuple.make(0, true)];
+        }
         const before = A.last(A.filter(lane, (anchor) => millis(anchor.at) < start));
         const earliestReset = A.reduce(lane, millis(A.headNonEmpty(lane).resetAt), (reset, anchor) =>
           Math.min(reset, millis(anchor.resetAt))
