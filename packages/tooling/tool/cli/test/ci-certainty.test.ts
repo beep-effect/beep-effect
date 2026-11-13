@@ -315,8 +315,35 @@ const labelAdmittedCorpus = CiCertaintyCorpus.make({
   until: SYNTHETIC_WINDOW_UNTIL,
 });
 
+// A heavy-admit.yml run created before the head's first check.yml run joins that first run.
+const earlyAdmitCorpus = CiCertaintyCorpus.make({
+  ...labelAdmittedCorpus,
+  pullRequestRuns: [
+    producerRun("heavy-admit.yml", 501, FIRST_PUSH, "2026-11-09T11:58:00Z", [
+      { completed_at: "2026-11-09T11:59:00Z", name: "Heavy Admission", started_at: "2026-11-09T11:58:00Z" },
+      {
+        completed_at: "2026-11-09T12:10:00Z",
+        labels: ["beep-ec2-heavy"],
+        name: "Heavy / Check",
+        started_at: "2026-11-09T12:00:00Z",
+      },
+    ]),
+    producerRun("check.yml", 502, FIRST_PUSH, "2026-11-09T12:00:00Z", [
+      { completed_at: "2026-11-09T12:04:00Z", started_at: "2026-11-09T12:01:00Z" },
+    ]),
+  ],
+});
+
 describe("ci certainty producer pairing", () => {
   it.layer(testLayer)((it) => {
+    it.effect("attaches a heavy-admit run that predates every check.yml run to the head's first attempt", () =>
+      Effect.gen(function* () {
+        const report = yield* buildCiCertaintyReport(earlyAdmitCorpus);
+        strictEqual(report.runnerMinutes.runs, 1);
+        assertSome(report.runnerMinutes.meanManaged, 10);
+      })
+    );
+
     it.effect("times admission to the heavy pool and bills heavy-admit minutes to the head attempt", () =>
       Effect.gen(function* () {
         const report = yield* buildCiCertaintyReport(labelAdmittedCorpus);
@@ -448,6 +475,13 @@ describe("ci certainty certification", () => {
           "> **Not certified, not acceptance evidence.** Refused: api-partial, empty-population."
         );
         expect(rendered).not.toContain("partial job reads");
+        // An incomplete push listing leaves every main commit unread: no rate, and never a no-run verdict.
+        expect(A.length(report.mainRows)).toBeGreaterThan(0);
+        assertTrue(A.every(report.mainRows, (row) => row.verdict === "unread"));
+        assertNone(report.main.rate);
+        strictEqual(report.main.noRun, 0);
+        strictEqual(report.main.unread, report.main.commits);
+        expect(rendered).toContain("rate —");
       })
     );
   });
@@ -765,7 +799,7 @@ const liveGit = (
   });
 
 const withLiveCapture =
-  (calls: Array<GithubFetchCall>, spawner: ScriptedSpawner) =>
+  (calls: Array<GithubFetchCall>, spawner: ScriptedSpawner, github: (call: GithubFetchCall) => unknown = liveGithub) =>
   <A, E, R>(program: Effect.Effect<A, E, R>) =>
     program.pipe(
       Effect.provideService(
@@ -773,7 +807,7 @@ const withLiveCapture =
         O.some(
           githubFetch((call) => {
             A.appendInPlace(calls, call);
-            return liveGithub(call);
+            return github(call);
           }).fetch
         )
       ),
@@ -864,6 +898,38 @@ describe("ci certainty command", () => {
       }).pipe(withLiveCapture(calls, spawner));
     });
 
+    it.effect("marks main unread when the push listing cannot be read, and still reads the heads", () => {
+      const calls = A.empty<GithubFetchCall>();
+      const spawner = liveGit();
+      const pushListingRefused = (call: GithubFetchCall): unknown =>
+        Str.includes("/actions/workflows/check.yml/runs")(call.url.pathname) &&
+        call.url.searchParams.get("event") === "push"
+          ? reply(404)({ message: "Not Found" })
+          : liveGithub(call);
+      return Effect.gen(function* () {
+        const repoRoot = yield* seedRequiredContexts();
+        const corpusFile = `${repoRoot}/certainty-corpus.json`;
+        yield* runCertaintyCommand([...LIVE_WINDOW, "--preview", "--write-corpus", corpusFile]);
+        const markdown = yield* lastCertaintyLog();
+
+        const fs = yield* FileSystem.FileSystem;
+        const corpus = yield* fs.readFileString(corpusFile).pipe(Effect.flatMap(decodeCiCertaintyCorpus));
+        assertTrue(corpus.mainListingPartial);
+        assertTrue(A.every(corpus.mainCommits, (commit) => A.isReadonlyArrayEmpty(commit.runs)));
+        // The pull-request heads are still read in full.
+        deepStrictEqual(
+          A.map(corpus.pullRequestRuns, (run) => [run.run.id, A.length(run.jobs)]),
+          [
+            [11, 2],
+            [13, 0],
+            [12, 1],
+          ]
+        );
+        expect(markdown).toContain("> **Not certified, not acceptance evidence.** Refused: api-partial.");
+        expect(markdown).toContain("rate —; cancelled 0; no run 0; open 0; unread 2");
+      }).pipe(withLiveCapture(calls, spawner, pushListingRefused));
+    });
+
     it.effect("writes the captured corpus and replays it without reading anything", () => {
       const calls = A.empty<GithubFetchCall>();
       const spawner = liveGit();
@@ -914,7 +980,8 @@ describe("ci certainty command", () => {
       const spawner = liveGit();
       return Effect.gen(function* () {
         yield* seedRequiredContexts();
-        // Two listings and three job reads fit; the main push listing is refused at the bound.
+        // The main push listing is read first, so the bound refuses a pull-request job read instead: the
+        // head is stamped partial while main keeps its real verdicts.
         const error = yield* Effect.flip(runCertaintyCommand(["--max-requests", "5"]));
         assertInstanceOf(error, CiCommandError);
         strictEqual(
@@ -922,7 +989,10 @@ describe("ci certainty command", () => {
           "Certification refused: api-partial. Pass --preview to accept an uncertified report."
         );
         const refused = yield* lastCertaintyLog();
-        expect(refused).toContain("> **Not certified, not acceptance evidence.** Refused: api-partial.");
+        expect(refused).toContain(
+          "> **Not certified, not acceptance evidence.** Refused: api-partial (partial job reads: run 12 attempt 1)."
+        );
+        expect(refused).toContain("completed verdicts 1; rate 50.0%; cancelled 0; no run 1; open 0; unread 0");
         strictEqual(A.length(calls), 5);
         expect(gitLogArgs(spawner)).toContain("--since=2026-11-09T03:00:00.000Z");
         expect(gitLogArgs(spawner)).toContain("--until=2026-11-10T03:00:00.000Z");

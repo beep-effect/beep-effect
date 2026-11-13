@@ -275,6 +275,7 @@ export type TableOf<M extends AnyModel> = PgTableWithColumns<{
   schema: undefined;
   columns: PgBuildColumns<string, BuildersOf<M["sql"]["fields"]>>;
   dialect: "pg";
+  isAlias: false;
 }>;
 
 // ---------------------------------------------------------------------------

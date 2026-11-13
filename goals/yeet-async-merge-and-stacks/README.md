@@ -31,13 +31,20 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started. The work is four slices, A to D, listed in
-[`PLAN.md`](./PLAN.md); A (the async merge port) is first.
+Slices A (the async merge port) and B (proof that survives an unchanged
+rewrite) are merged. Slice C (two-layer stacks) is next, then the measured
+pilot, slice D. The four slices are listed in [`PLAN.md`](./PLAN.md).
 
 ## Latest Evidence
 
-Not started. The evidence this goal starts from is the stack test record,
-[`explorations/stacked-pr-adoption/research/stack-test-2026-11.md`](../../explorations/stacked-pr-adoption/research/stack-test-2026-11.md).
+- Slice A: [`history/2026-11-10-slice-a-blocked-hold.md`](./history/2026-11-10-slice-a-blocked-hold.md)
+  (a blocked PR holds with GitHub's sentence) and
+  [`history/2026-11-13-slice-a-closed.md`](./history/2026-11-13-slice-a-closed.md)
+  (merges observed on the async path; legacy call deleted).
+- Slice B: the 2026-11-12 decisions under [`decisions/`](./decisions/),
+  merged in #3130.
+- The evidence this goal starts from is the stack test record,
+  [`explorations/stacked-pr-adoption/research/stack-test-2026-11.md`](../../explorations/stacked-pr-adoption/research/stack-test-2026-11.md).
 
 ## Notes
 

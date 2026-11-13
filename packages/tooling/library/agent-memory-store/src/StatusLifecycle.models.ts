@@ -12,6 +12,7 @@ import * as Equal from "effect/Equal";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { isWellFormedText } from "./NodeIdentity.models.ts";
 
 const $I = $AgentMemoryStoreId.create("StatusLifecycle.models");
 
@@ -29,7 +30,7 @@ const $I = $AgentMemoryStoreId.create("StatusLifecycle.models");
  * @category schemas
  * @since 0.0.0
  */
-export const StatusValue = S.NonEmptyString.pipe(
+export const StatusValue = S.NonEmptyString.check(isWellFormedText).pipe(
   S.brand("StatusValue"),
   $I.annoteSchema("StatusValue", {
     description: "One value of a typed status field.",
@@ -71,7 +72,7 @@ export type StatusValue = typeof StatusValue.Type;
  */
 export class StatusLifecycle extends S.Opaque<StatusLifecycle, { readonly brand: unique symbol }>()(
   S.Struct({
-    field: S.NonEmptyString.annotateKey({ description: "Name of the typed status field." }),
+    field: S.NonEmptyString.check(isWellFormedText).annotateKey({ description: "Name of the typed status field." }),
     order: S.NonEmptyArray(StatusValue)
       .check(
         S.isUnique(
@@ -116,7 +117,7 @@ export class StatusLifecycle extends S.Opaque<StatusLifecycle, { readonly brand:
  */
 export class StatusTransition extends S.Opaque<StatusTransition, { readonly brand: unique symbol }>()(
   S.Struct({
-    field: S.NonEmptyString.annotateKey({ description: "Name of the typed status field." }),
+    field: S.NonEmptyString.check(isWellFormedText).annotateKey({ description: "Name of the typed status field." }),
     from: S.OptionFromOptionalKey(StatusValue).annotateKey({
       description: "Current value of the field, absent when the field is unset.",
     }),
