@@ -70,6 +70,24 @@ describe("statusMoveBetween", () => {
     assertNone(statusMoveBetween(status, row, row));
     assertNone(statusMoveBetween(status, row, "| P2 Admission | not done |"));
   });
+
+  it("reads a swap to a lifecycle value of several words as a move, so a backward move meets the guard", () => {
+    const inReview = StatusValue.make("in review");
+    const approved = StatusValue.make("approved");
+    const spaced = StatusLifecycle.make({ field: "status", order: [inReview, approved] });
+    assertSome(
+      statusMoveBetween(spaced, "| P2 | approved |", "| P2 | in review |"),
+      StatusTransition.make({ field: "status", from: O.some(approved), to: inReview })
+    );
+    assertSome(
+      statusMoveBetween(spaced, "| P2 | in review |", "| P2 | approved |"),
+      StatusTransition.make({ field: "status", from: O.some(inReview), to: approved })
+    );
+    // Several words that are no lifecycle value stay free text.
+    assertNone(statusMoveBetween(spaced, "| P2 | approved |", "| P2 | not reviewed |"));
+    const spacedFields = StatusFields.make({ lifecycles: [spaced] });
+    expect(typed("| P2 | approved |\n", "| P2 | in review |\n", spacedFields)).toEqual(["setStatus"]);
+  });
 });
 
 describe("typeStatusMoves", () => {

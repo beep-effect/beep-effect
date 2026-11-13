@@ -805,6 +805,27 @@ describe.skipIf(!isBunRuntime)("Admission layer (Bun runtime)", () => {
         expect(A.map(outcomes, pathsOf)).toEqual([["transition.to"], ["transition.field"], ["nodeId"], ["nodeId"]]);
       })
     );
+    it.effect(
+      "moves a status whose lifecycle values span words and overlap, and rejects a backward move to one",
+      Effect.fnUntraced(function* () {
+        const { log, sql } = yield* openLog();
+        const notStarted = StatusValue.make("not started");
+        const started = StatusValue.make("started");
+        const fields = StatusFields.make({
+          lifecycles: [StatusLifecycle.make({ field: "status", order: [notStarted, started, complete] })],
+        });
+        const admission = yield* openAdmission(log, sql, fields);
+        const [row] = yield* seedFile(log, notes, [statusRow("not started")]);
+
+        const [forward] = yield* admitAll(admission, [setStatus(row, notStarted, "started")]);
+        const [backward] = yield* admitAll(admission, [setStatus(row, notStarted, "not started")]);
+
+        expect(forward.outcome).toBe("landed");
+        expect(codesOf(backward)).toEqual(["backwardStatusMove"]);
+        const head = yield* headOf(log, row.nodeId);
+        assertSome(head.text, statusRow("started"));
+      })
+    );
   });
 
   it.layer(TestPlatform)("held and resolve", (it) => {
@@ -878,13 +899,11 @@ describe.skipIf(!isBunRuntime)("Admission layer (Bun runtime)", () => {
           replace(alpha, alpha.revisionId, "Alpha by A.\n"),
           replace(beta, beta.revisionId, "Beta by A.\n"),
         ]);
-        // The node moves on again after the hold.
-        const [moved] = yield* admitAll(admission, [replace(alpha, landedRevision(alphaB), "Alpha by C.\n")], writerB);
 
         const theirsOutcome = yield* admission.resolve(holdIdOf(heldWrites[0]), theirs);
         const mergedOutcome = yield* admission.resolve(holdIdOf(heldWrites[1]), merged("Beta by A and B.\n"));
 
-        const expected = yield* revisionAfter(alpha.nodeId, landedRevision(moved), "Alpha by A.\n");
+        const expected = yield* revisionAfter(alpha.nodeId, landedRevision(alphaB), "Alpha by A.\n");
         expect(landedRevision(theirsOutcome)).toBe(expected);
         const alphaHead = yield* headOf(log, alpha.nodeId);
         assertSome(alphaHead.text, "Alpha by A.\n");
@@ -908,6 +927,98 @@ describe.skipIf(!isBunRuntime)("Admission layer (Bun runtime)", () => {
         ]);
         const holds = yield* admission.held;
         expect(holds).toEqual([]);
+      })
+    );
+
+    it.effect(
+      "resolve holds a write again when its node moved to another text since the hold, so no resolution overwrites a text its resolver was not shown",
+      Effect.fnUntraced(function* () {
+        const { log, admission } = yield* fresh();
+        const [alpha, beta, gamma, delta] = yield* seedFile(log, notes, [
+          "Alpha.\n",
+          "Beta.\n",
+          statusRow("pending"),
+          "Delta.\n",
+        ]);
+        const landedByB = yield* admitAll(
+          admission,
+          [
+            replace(alpha, alpha.revisionId, "Alpha by B.\n"),
+            replace(beta, beta.revisionId, "Beta by B.\n"),
+            remove(gamma),
+            replace(delta, delta.revisionId, "Delta by B.\n"),
+          ],
+          writerB
+        );
+        const heldWrites = yield* admitAll(admission, [
+          replace(alpha, alpha.revisionId, "Alpha by A.\n"),
+          remove(beta),
+          setStatus(gamma, pending, "active"),
+          replace(delta, delta.revisionId, "Delta by A.\n"),
+        ]);
+        // Two holds on one node: the first resolution moves the node under the second.
+        const [secondOnDelta] = yield* admitAll(
+          admission,
+          [replace(delta, delta.revisionId, "Delta by C.\n")],
+          LineageId.make("agent-memory-store-p2:writer-c")
+        );
+        // Another writer lands on each held node after the hold opened.
+        const writerD = LineageId.make("agent-memory-store-p2:writer-d");
+        const movedOn = yield* admitAll(
+          admission,
+          [
+            replace(alpha, landedRevision(landedByB[0]), "Alpha by D, keep me.\n"),
+            replace(beta, landedRevision(landedByB[1]), "Beta by D, keep me.\n"),
+          ],
+          writerD
+        );
+        // The retired status row is revived outside admission.
+        const revival = yield* reviseEvent(gamma.nodeId, landedRevision(landedByB[2]), statusRow("blocked"));
+        yield* log.append(revival.event);
+        const before = yield* admission.held;
+
+        const alphaTheirs = yield* admission.resolve(holdIdOf(heldWrites[0]), theirs);
+        const betaTheirs = yield* admission.resolve(holdIdOf(heldWrites[1]), theirs);
+        const gammaMerged = yield* admission.resolve(holdIdOf(heldWrites[2]), merged(statusRow("active")));
+        yield* admission.resolve(holdIdOf(heldWrites[3]), theirs);
+        const deltaSecond = yield* admission.resolve(holdIdOf(secondOnDelta), theirs);
+
+        // The hold read model still shows the text the hold recorded.
+        assertSome(before[0]?.ours ?? O.none(), "Alpha by B.\n");
+        // Every write whose node moved is held again under a new hold, with the current text as ours.
+        const reheld = [alphaTheirs, betaTheirs, gammaMerged, deltaSecond];
+        expect(kindsOf(reheld)).toEqual(["held", "held", "held", "held"]);
+        expect(A.map(reheld, codesOf)).toEqual([
+          ["staleExpectedRevision"],
+          ["deleteVersusEdit"],
+          ["staleExpectedRevision"],
+          ["staleExpectedRevision"],
+        ]);
+        expect(A.map(reheld, (outcome) => heldOf(outcome).pipe(O.flatMap((held) => held.ours)))).toEqual([
+          O.some("Alpha by D, keep me.\n"),
+          O.some("Beta by D, keep me.\n"),
+          O.some(statusRow("blocked")),
+          O.some("Delta by A.\n"),
+        ]);
+        expect(holdIdOf(alphaTheirs)).not.toBe(holdIdOf(heldWrites[0]));
+        // Nothing was overwritten: each node still holds the text that moved it on.
+        const heads = yield* Effect.forEach([alpha, beta, gamma, delta], (node) => headOf(log, node.nodeId));
+        expect(A.map(heads, (head) => head.text)).toEqual([
+          O.some("Alpha by D, keep me.\n"),
+          O.some("Beta by D, keep me.\n"),
+          O.some(statusRow("blocked")),
+          O.some("Delta by A.\n"),
+        ]);
+        const open = yield* admission.held;
+        expect(A.map(open, (conflict) => conflict.holdId)).toEqual(A.map(reheld, holdIdOf));
+        assertSome(open[0]?.ours ?? O.none(), "Alpha by D, keep me.\n");
+        assertSome(open[0]?.headRevision ?? O.none(), landedRevision(movedOn[0]));
+        // The old hold is closed; the new one resolves on the head its resolver was shown.
+        const closed = yield* Effect.flip(admission.resolve(holdIdOf(heldWrites[0]), theirs));
+        assertInstanceOf(closed, HoldNotOpenError);
+        const settled = yield* admission.resolve(holdIdOf(alphaTheirs), merged("Alpha by A and D.\n"));
+        const expected = yield* revisionAfter(alpha.nodeId, landedRevision(movedOn[0]), "Alpha by A and D.\n");
+        expect(landedRevision(settled)).toBe(expected);
       })
     );
 
@@ -1067,6 +1178,31 @@ describe.skipIf(!isBunRuntime)("Admission layer (Bun runtime)", () => {
     );
 
     it.effect(
+      "resolve holds a dependent write again once the insert it depends on is created, showing that insert's text",
+      Effect.fnUntraced(function* () {
+        const { log, admission } = yield* fresh();
+        const [alpha, beta] = yield* seedFile(log, notes, ["Alpha.\n", "Beta.\n"]);
+        yield* admitAll(admission, [remove(beta)], writerB);
+        const created = nodeIdOf(98);
+        const [insertHold, dependentHold] = yield* admitAll(admission, [
+          insert(created, O.some(beta.nodeId), "- x\n"),
+          replace({ nodeId: created, revisionId: alpha.revisionId }, alpha.revisionId, "- y\n"),
+        ]);
+
+        const placed = yield* admission.resolve(holdIdOf(insertHold), theirs);
+        const reheld = yield* admission.resolve(holdIdOf(dependentHold), theirs);
+        const applied = yield* admission.resolve(holdIdOf(reheld), theirs);
+
+        expect(codesOf(reheld)).toEqual(["staleExpectedRevision"]);
+        assertSome(heldOf(reheld).pipe(O.flatMap((held) => held.ours)), "- x\n");
+        const expected = yield* revisionAfter(created, landedRevision(placed), "- y\n");
+        expect(landedRevision(applied)).toBe(expected);
+        const holds = yield* admission.held;
+        expect(holds).toEqual([]);
+      })
+    );
+
+    it.effect(
       "two resolvers cannot both settle one hold",
       Effect.fnUntraced(function* () {
         const { log, sql } = yield* openLog();
@@ -1086,6 +1222,36 @@ describe.skipIf(!isBunRuntime)("Admission layer (Bun runtime)", () => {
         expect(A.filter(entries, (entry) => entry.event === WriteHeldEvent.tag)).toHaveLength(1);
         const head = yield* headOf(log, alpha.nodeId);
         expect(head.heads).toEqual([landedRevision(byB)]);
+      })
+    );
+    it.effect(
+      "a resolve whose re-judgment appends nothing fails with HoldNotOpenError when another resolver closed the hold meanwhile",
+      Effect.fnUntraced(function* () {
+        const { log, sql } = yield* openLog();
+        const first = yield* openAdmission(log, sql);
+        const [, beta] = yield* seedFile(log, notes, ["Alpha.\n", "Beta.\n"]);
+        yield* admitAll(first, [remove(beta)], writerB);
+        const underAnchor = nodeIdOf(96);
+        const heldWrites = yield* admitAll(first, [
+          insert(underAnchor, O.some(beta.nodeId), "- Under Beta.\n"),
+          insert(nodeIdOf(97), O.some(underAnchor), "- After that.\n"),
+        ]);
+        const anchorHold = holdIdOf(heldWrites[0]);
+        const missingHold = holdIdOf(heldWrites[1]);
+
+        // Re-judged as held again (its predecessor is still missing) after another resolver closed it.
+        const heldAgain = yield* openAdmission(injectAfterEntries(log, first.resolve(missingHold, ours)), sql);
+        const heldError = yield* Effect.flip(heldAgain.resolve(missingHold, theirs));
+        // Re-judged as refused (its node now exists) after another resolver created it.
+        const refused = yield* openAdmission(injectAfterEntries(log, first.resolve(anchorHold, theirs)), sql);
+        const refusedError = yield* Effect.flip(refused.resolve(anchorHold, theirs));
+
+        assertInstanceOf(heldError, HoldNotOpenError);
+        expect(heldError.holdId).toBe(missingHold);
+        assertInstanceOf(refusedError, HoldNotOpenError);
+        expect(refusedError.holdId).toBe(anchorHold);
+        const holds = yield* first.held;
+        expect(holds).toEqual([]);
       })
     );
   });

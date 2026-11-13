@@ -12,7 +12,11 @@
  * value of that field's lifecycle as a whole token, such as `active` in the
  * table row `| P2 | active |` or the frontmatter line `status: active`. A
  * token is bounded by the text's ends or by characters that are not letters,
- * digits, `_` or `-`, so `progress` is not read inside `in-progress`.
+ * digits, `_` or `-`, so `progress` is not read inside `in-progress`. A
+ * lifecycle value may span several words (`not started`); where one value's
+ * occurrence lies inside a longer value's occurrence, only the longer one is
+ * read, so `started` is not read inside `not started` (decision
+ * `status-values-may-span-words-and-the-longest-occurrence-wins`).
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -113,12 +117,23 @@ const tokenOf = (value: StatusValue): RegExp =>
 const offsetsOf = (text: string, value: StatusValue): ReadonlyArray<number> =>
   A.getSomes(A.map(A.fromIterable(Str.matchAll(tokenOf(value))(text)), (match) => O.fromUndefinedOr(match.index)));
 
-// Every whole-token occurrence of a lifecycle value in the text, with its offset.
-const occurrences = (lifecycle: StatusLifecycle, text: string): ReadonlyArray<readonly [StatusValue, number]> =>
-  A.flatMap(lifecycle.order, (value) => A.map(offsetsOf(text, value), (offset) => [value, offset] as const));
+type Occurrence = readonly [StatusValue, number];
+
+// Whether `inner` lies inside the longer occurrence `outer`.
+const liesInside = ([value, offset]: Occurrence, [other, at]: Occurrence): boolean =>
+  other.length > value.length && at <= offset && offset + value.length <= at + other.length;
+
+// Every whole-token occurrence of a lifecycle value in the text, with its
+// offset, less those inside a longer value's occurrence.
+const occurrences = (lifecycle: StatusLifecycle, text: string): ReadonlyArray<Occurrence> => {
+  const found = A.flatMap(lifecycle.order, (value) =>
+    A.map(offsetsOf(text, value), (offset): Occurrence => [value, offset])
+  );
+  return A.filter(found, (occurrence) => !A.some(found, (other) => liesInside(occurrence, other)));
+};
 
 // The one whole-token occurrence of a lifecycle value in the text.
-const soleOccurrence = (lifecycle: StatusLifecycle, text: string): O.Option<readonly [StatusValue, number]> => {
+const soleOccurrence = (lifecycle: StatusLifecycle, text: string): O.Option<Occurrence> => {
   const found = occurrences(lifecycle, text);
   return found.length === 1 ? A.head(found) : O.none();
 };
@@ -133,7 +148,9 @@ const wholeToken = /^[\p{L}\p{N}_-]+$/u;
  *
  * The text holds a value when exactly one whole token of the text is a value
  * of the lifecycle; no token, or more than one, reads as none, and admission
- * then refuses to move the field.
+ * then refuses to move the field. An occurrence inside a longer value's
+ * occurrence is not counted: with the values `not started` and `started`, the
+ * text `| P2 | not started |` holds `not started`.
  *
  * **Example** (Read the status cell of a table row)
  *
@@ -169,11 +186,13 @@ export const statusValueIn: {
  *
  * The edit is a status move when `before` holds exactly one whole-token value
  * of the lifecycle (as {@link statusValueIn} reads it) and `after` is `before`
- * with exactly that token replaced by another whole token: every other byte
- * is unchanged. The new token need not be a lifecycle value, so a move outside
- * the lifecycle still reads as a move and admission refuses it with
- * `statusOutsideLifecycle` instead of taking it as free text. Any other edit
- * reads as none (decision `op-capture-types-a-status-token-swap`).
+ * with exactly that token replaced by another whole token or by a lifecycle
+ * value: every other byte is unchanged. The new token need not be a
+ * lifecycle value, so a move outside the lifecycle still reads as a move and
+ * admission refuses it with `statusOutsideLifecycle` instead of taking it as
+ * free text; a lifecycle value that spans several words (`in review`) also
+ * reads as a move, so a backward move to it meets the lifecycle guard. Any
+ * other edit reads as none (decision `op-capture-types-a-status-token-swap`).
  *
  * **Example** (Read a status cell edit as a move)
  *
@@ -209,7 +228,7 @@ export const statusMoveBetween: {
         Str.startsWith(prefix)(after) &&
         Str.endsWith(suffix)(after) &&
         token !== from &&
-        wholeToken.test(token);
+        (wholeToken.test(token) || A.some(lifecycle.order, (value) => value === token));
       return spliced
         ? O.some(StatusTransition.make({ field: lifecycle.field, from: O.some(from), to: StatusValue.make(token) }))
         : O.none();

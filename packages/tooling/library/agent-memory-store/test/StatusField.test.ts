@@ -32,6 +32,19 @@ describe("StatusField", () => {
   );
 
   it.effect(
+    "reads a value of several words, never a shorter value inside it",
+    Effect.fnUntraced(function* () {
+      const notStarted = StatusValue.make("not started");
+      const started = StatusValue.make("started");
+      const overlapping = StatusLifecycle.make({ field: "status", order: [notStarted, started, done] });
+      assertSome(statusValueIn(overlapping, "| P2 | not started |"), notStarted);
+      assertSome(statusValueIn(overlapping, "| P2 | started |"), started);
+      assertNone(statusValueIn(overlapping, "| not started | started |"));
+      expect(replaceStatusValue("| P2 | not started |", notStarted, started)).toBe("| P2 | started |");
+    })
+  );
+
+  it.effect(
     "replaces exactly the status token and splices the new value literally",
     Effect.fnUntraced(function* () {
       const dollar = StatusValue.make("$&-$1");

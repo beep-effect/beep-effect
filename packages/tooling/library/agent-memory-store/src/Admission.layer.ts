@@ -28,7 +28,11 @@
  * - `held` rebuilds the open holds from the log's `WriteHeld` and
  *   `HoldResolved` events, and `resolve` settles one with `ours`, `theirs` or
  *   `merged` on the node's heads at resolve time (decision
- *   `held-writes-are-log-events`).
+ *   `held-writes-are-log-events`). A `theirs` or `merged` resolution of a
+ *   write whose node moved on to another text since the hold is not applied:
+ *   the write is held again on the current head under a new hold id, so a
+ *   resolution never overwrites a text its resolver was not shown (decision
+ *   `resolve-re-holds-a-write-whose-node-moved-since-the-hold`).
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -38,6 +42,7 @@ import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import { constTrue } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as MutableHashSet from "effect/MutableHashSet";
@@ -49,7 +54,15 @@ import * as SqlClient from "effect/sql/SqlClient";
 import { AdmissionOutcome, ConflictResolution, HeldConflict, HoldId } from "./Admission.models.ts";
 import { Admission } from "./Admission.service.ts";
 import { AdmissionError, HoldNotOpenError, StaleParentsError } from "./AgentMemoryStore.errors.ts";
-import { catchUpHolds, makeHoldFold, openHold, openHolds, readNodeState, textAt } from "./internal/AdmissionLog.ts";
+import {
+  catchUpHolds,
+  holdClosedAfter,
+  makeHoldFold,
+  openHold,
+  openHolds,
+  readNodeState,
+  textAt,
+} from "./internal/AdmissionLog.ts";
 import { finding, Plan, threeWay } from "./internal/AdmissionPlan.ts";
 import { MemoryLog } from "./MemoryLog.service.ts";
 import {
@@ -69,7 +82,7 @@ import { lifecycleAllows, StatusTransition } from "./StatusLifecycle.models.ts";
 import type { MemoryGateViolation } from "./Admission.models.ts";
 import type { HoldRecord, NodeState } from "./internal/AdmissionLog.ts";
 import type { MemoryEvent } from "./NodeEvent.events.ts";
-import type { NodeId, RevisionId } from "./NodeIdentity.models.ts";
+import type { LogCursor, NodeId, RevisionId } from "./NodeIdentity.models.ts";
 import type { InsertPlacement, OperationBatch } from "./Operation.models.ts";
 import type { StatusFields } from "./StatusField.models.ts";
 import type { StatusLifecycle } from "./StatusLifecycle.models.ts";
@@ -494,19 +507,23 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
         }),
     });
 
-  // Appends a held write as a `WriteHeld` under a store-minted hold id.
+  // Appends a held write as a `WriteHeld` under a store-minted hold id, after
+  // `before` in the same journal transaction.
   const holdWrite = Effect.fnUntraced(function* (
     operation: NodeOperation,
     author: LineageId,
-    hold: Extract<Plan, { readonly _tag: "Hold" }>
+    hold: Extract<Plan, { readonly _tag: "Hold" }>,
+    before: ReadonlyArray<MemoryEvent>
   ) {
     const uuid = yield* random.uuidV7();
     const holdId = HoldId.make(uuid);
     const violations = A.of(hold.violation);
-    yield* log.append({
-      _tag: "WriteHeld",
-      payload: WriteHeld.make({ holdId, operation, author, headRevision: hold.headRevision, violations }),
-    });
+    yield* log.appendMany(
+      A.append(before, {
+        _tag: "WriteHeld",
+        payload: WriteHeld.make({ holdId, operation, author, headRevision: hold.headRevision, violations }),
+      })
+    );
     return AdmissionOutcome.cases.held.make({
       holdId,
       nodeId: operation.nodeId,
@@ -523,7 +540,7 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
       Write: ({ event, nodeId, revisionId }) => Effect.as(log.append(event), landed(nodeId, revisionId)),
       Keep: ({ nodeId, revisionId }) => Effect.succeed(landed(nodeId, revisionId)),
       Refuse: ({ violation }) => Effect.succeed(rejected(violation)),
-      Hold: (hold) => holdWrite(operation, author, hold),
+      Hold: (hold) => holdWrite(operation, author, hold, []),
     });
 
   // One operation, judged and appended in one transaction; a stale append is
@@ -616,6 +633,35 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
         }),
     });
 
+  // Whether the node moved on to another text since the hold, so a resolution
+  // written now would replace a text the hold never showed its resolver. A
+  // hold that recorded no head showed no text: its node had not reached the
+  // log, so a node that holds a text now has moved.
+  const movedSince = (record: HoldRecord, state: NodeState): boolean =>
+    !Equal.equals(
+      O.flatMap(record.held.headRevision, (revision) => O.flatten(textAt(state, revision))),
+      state.headText
+    );
+
+  // Runs `then` when the node still holds the text the hold recorded; when it
+  // moved on, the write is held again on the current head with that text as
+  // `ours`, and the resolution is not applied.
+  const unmoved = (record: HoldRecord, state: NodeState, then: () => Effect.Effect<Plan>) =>
+    movedSince(record, state)
+      ? Effect.succeed(
+          Plan.Hold({
+            headRevision: O.some(state.head),
+            ours: state.headText,
+            violation: finding({
+              code: NodeOperation.guards.delete(record.held.operation) ? "deleteVersusEdit" : "staleExpectedRevision",
+              nodeId: state.nodeId,
+              path: "expectedRevision",
+              message: "The node moved on since the write was held; it is held again on the current head.",
+            }),
+          })
+        )
+      : then();
+
   // What `theirs` (no merged text) or `merged` writes for a held write, judged
   // on the node as the log holds it now. A merged text replaces the held
   // write's text and is the resolver's; `theirs` writes under the held
@@ -635,23 +681,29 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
         ),
       replace: (replace) =>
         onCurrent(replace.nodeId, (state) =>
-          revise(
-            state,
-            O.getOrElse(mergedText, () => replace.text),
-            author
+          unmoved(record, state, () =>
+            revise(
+              state,
+              O.getOrElse(mergedText, () => replace.text),
+              author
+            )
           )
         ),
       delete: (remove) =>
         onCurrent(remove.nodeId, (state) =>
-          O.match(mergedText, {
-            onNone: () => retire(state, author),
-            onSome: (text) => revise(state, text, author),
-          })
+          unmoved(record, state, () =>
+            O.match(mergedText, {
+              onNone: () => retire(state, author),
+              onSome: (text) => revise(state, text, author),
+            })
+          )
         ),
+      // A status move rewrites only the status token of the current text, so
+      // `theirs` needs no unmoved head; a merged text replaces the whole text.
       setStatus: (setStatus) =>
         onCurrent(setStatus.nodeId, (state) =>
           O.match(mergedText, {
-            onSome: (text) => revise(state, text, author),
+            onSome: (text) => unmoved(record, state, () => revise(state, text, author)),
             onNone: () => replayStatus(setStatus, state, author),
           })
         ),
@@ -665,7 +717,9 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
 
   // Carries out a `resolve` plan: a write lands with the `HoldResolved` that
   // settles the hold, in one journal transaction; a refusal or a renewed hold
-  // appends nothing and leaves the hold open.
+  // on the same head appends nothing and leaves the hold open; a hold on a
+  // head that moved since closes this hold and holds the write again under a
+  // new hold id, in one journal transaction.
   const resolvePlan = (record: HoldRecord, resolution: ConflictResolution) =>
     Plan.$match({
       Write: ({ event, nodeId, revisionId }) =>
@@ -676,16 +730,20 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
       Keep: ({ nodeId, revisionId }) =>
         Effect.as(log.append(settled(record.held.holdId, resolution, O.none())), landed(nodeId, revisionId)),
       Refuse: ({ violation }) => Effect.succeed(rejected(violation)),
-      Hold: ({ ours, violation }) =>
-        Effect.succeed(
-          AdmissionOutcome.cases.held.make({
-            holdId: record.held.holdId,
-            nodeId: record.held.operation.nodeId,
-            ours,
-            theirs: theirsOf(record.held.operation),
-            violations: [violation],
-          })
-        ),
+      Hold: (hold) =>
+        Equal.equals(hold.headRevision, record.held.headRevision)
+          ? Effect.succeed(
+              AdmissionOutcome.cases.held.make({
+                holdId: record.held.holdId,
+                nodeId: record.held.operation.nodeId,
+                ours: hold.ours,
+                theirs: theirsOf(record.held.operation),
+                violations: [hold.violation],
+              })
+            )
+          : holdWrite(record.held.operation, record.held.author, hold, [
+              settled(record.held.holdId, resolution, O.none()),
+            ]),
     });
 
   // `ours` keeps what the log holds: the hold closes and the held write ends
@@ -712,17 +770,30 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
         Effect.flatMap(settlePlan(record, O.some(merged.text), merged.placement), resolvePlan(record, resolution)),
     });
 
+  // Fails when a `HoldResolved` for the hold committed after `cursor`: another
+  // resolver closed it since the fold read it open. Run inside the resolve
+  // transaction, which holds the write lock, so it cannot close afterwards.
+  const stillOpen = Effect.fnUntraced(function* (holdId: HoldId, cursor: LogCursor) {
+    const closed = yield* holdClosedAfter(log, cursor, holdId);
+    if (closed) {
+      return yield* HoldNotOpenError.make({ holdId });
+    }
+  });
+
   const resolve = Effect.fn("Admission.resolve")(function* (holdId: HoldId, resolution: ConflictResolution) {
     yield* catchUp.pipe(Effect.mapError(failure("resolve", O.none())));
     const record = openHold(fold, holdId);
+    const cursor = fold.cursor;
     if (O.isNone(record)) {
       return yield* HoldNotOpenError.make({ holdId });
     }
     const open = record.value;
-    // The log refuses a HoldResolved for a hold that closed since the fold
-    // read it, so of two resolvers exactly one settles the hold.
+    // The hold is checked open again inside the transaction, so a re-judgment
+    // that appends nothing never answers for a hold another resolver closed;
+    // the log also refuses a HoldResolved for a closed hold, so of two
+    // resolvers exactly one settles it.
     return yield* sql
-      .withTransaction(settle(open, resolution))
+      .withTransaction(Effect.andThen(stillOpen(holdId, cursor), settle(open, resolution)))
       .pipe(
         Effect.mapError((error) =>
           isHoldNotOpen(error) ? error : failure("resolve", O.some(open.held.operation.nodeId))(error)

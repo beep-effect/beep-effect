@@ -203,3 +203,21 @@ export const catchUpHolds = Effect.fnUntraced(function* (log: MemoryLog["Service
     fold.cursor = LogCursor.make(fold.cursor + 1);
   }
 });
+
+/**
+ * Whether a `HoldResolved` for `holdId` committed after `cursor`. Read inside
+ * a resolve transaction, it tells whether another resolver closed the hold
+ * after the fold read it open.
+ */
+export const holdClosedAfter = Effect.fnUntraced(function* (
+  log: MemoryLog["Service"],
+  cursor: LogCursor,
+  holdId: HoldId
+) {
+  const entries = yield* log.entriesAfter(cursor);
+  const resolved = yield* Effect.forEach(
+    A.filter(entries, (entry) => entry.event === HoldResolvedEvent.tag),
+    (entry) => decodeHoldResolved(entry.payload)
+  );
+  return A.some(resolved, (resolution) => resolution.holdId === holdId);
+});
