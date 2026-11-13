@@ -42,7 +42,7 @@ Inventory at graduation (`git ls-files '*.py'`, 2026-11-06): about 290 files.
 | Location | Count | Default disposition (triage confirms per file) |
 | --- | --- | --- |
 | `packages/tooling/tool/cli/python/photo-face` | 13 | port to `@beep/repo-cli` Files commands over `onnxruntime-node` (new `@beep/face-embedding` if the surface warrants it) |
-| `packages/foundation/modeling/markdown/scripts/extract-gfm-corpora.py` | 1 | port to a package script in TypeScript |
+| `packages/foundation/modeling/markdown/scripts/extract-gfm-corpora.ts` (ported from the former Python script) | 1 | port to a package script in TypeScript |
 | `.claude/skills/plasma-sensitive-entry/scripts/*.py` | 4 | port to TypeScript over `effect/process` driving `kdialog`; the skill's install step updates |
 | `.claude/skills/ontology-foundational-auditor/scripts/validate_artifacts.py` | 1 | port to TypeScript (`bun` runnable from the skill) |
 | `apps/labs/ciops/scripts/*.py` | 2 | port to the app's test or script surface |
