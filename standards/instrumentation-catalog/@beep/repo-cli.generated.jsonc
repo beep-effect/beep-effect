@@ -4104,6 +4104,7 @@
     {"name":"YeetFallowFeedback.resolveRepoPath","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"YeetFallowFeedback.runYeetFallowFeedback","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"YeetFallowFeedback.writeQualityIssueIndex","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"YeetGh.decideAndRenderGate","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"YeetGh.flipPullRequestReady","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"YeetGh.markPullRequestReady","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"YeetGh.readGateFacts","owner":"@beep/repo-cli","family":"tooling","conforms":true},

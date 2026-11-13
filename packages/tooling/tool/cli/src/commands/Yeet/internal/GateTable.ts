@@ -63,14 +63,7 @@ import { provideYeetHeadMoveClassifier } from "./HeadMove.ts";
 import { MergeGateCheckRun } from "./MergeGate.schemas.ts";
 import { MERGE_GATE_OWNER_HOLD_LABEL, mergeGateGoodConclusion, mergeGateLatestRunPerName } from "./MergeGate.ts";
 import { readYeetReviewWindow, YeetReviewWindow } from "./ReviewWindow.ts";
-import {
-  gateCountsCheck,
-  HeadSuiteCheck,
-  HeadWorkflowSuite,
-  headWorkflowSuites,
-  hiddenRequiredChecks,
-  RequiredShadowInput,
-} from "./SuiteShadow.ts";
+import { gateCountsCheck, HeadWorkflowSuitesField, headWorkflowSuites, hiddenRequiredChecksOf } from "./SuiteShadow.ts";
 import type { Git } from "@beep/git/Git";
 import type { Repo } from "@beep/github/Repo";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -184,8 +177,6 @@ export const GateTableThreads = S.Union([
  */
 export type GateTableThreads = typeof GateTableThreads.Type;
 
-const noWorkflowSuites = A.empty<HeadWorkflowSuite>();
-
 /**
  * Everything one gate table row is decided from.
  *
@@ -237,10 +228,7 @@ export class GateTableRead extends S.Opaque<GateTableRead, { readonly brand: uni
     statuses: GithubCommitStatusRecord.pipe(S.Array, S.OptionFromNullOr),
     window: S.OptionFromNullOr(YeetReviewWindow),
     threads: GateTableThreads,
-    workflowSuites: S.Array(HeadWorkflowSuite).pipe(
-      S.withConstructorDefault(Effect.succeed(noWorkflowSuites)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(noWorkflowSuites))
-    ),
+    workflowSuites: HeadWorkflowSuitesField,
   }).pipe($I.annoteSchema("GateTableRead", { description: "The facts one gate table row is decided from." }))
 ) {}
 
@@ -410,21 +398,7 @@ const verdictOf = (run: MergeGateCheckRun): HeadCheckVerdict =>
 // Required contexts with no run the ruleset reads, each judged by its newest
 // copy in a replaced check suite.
 const hiddenOf = (read: GateTableRead, required: ReadonlyArray<string>): ReadonlyArray<HiddenRequiredCheck> =>
-  hiddenRequiredChecks(
-    RequiredShadowInput.make({
-      requiredContexts: required,
-      checks: A.map(read.checkRuns, (run) =>
-        HeadSuiteCheck.make({
-          id: run.id,
-          name: run.name,
-          checkSuiteId: run.checkSuiteId,
-          verdict: verdictOf(run),
-          conclusion: O.fromNullishOr(run.conclusion),
-        })
-      ),
-      suites: read.workflowSuites,
-    })
-  );
+  hiddenRequiredChecksOf({ requiredContexts: required, runs: read.checkRuns, suites: read.workflowSuites, verdictOf });
 
 const hiddenContexts = (
   hidden: ReadonlyArray<HiddenRequiredCheck>,

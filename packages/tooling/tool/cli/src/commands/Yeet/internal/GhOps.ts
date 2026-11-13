@@ -1457,6 +1457,10 @@ const readGateFacts = Effect.fn("YeetGh.readGateFacts")(function* (options: {
   });
 });
 
+// The thread read waits on the GraphQL budget unless `--no-wait` asked it not to.
+const gateThreadPolicy = (noWait: boolean): GraphqlBudgetPolicy =>
+  noWait ? GraphqlBudgetPolicy.noWait : GraphqlBudgetPolicy.default;
+
 const renderVerdictLines = (facts: YeetGhGateFacts, verdict: YeetGhGateVerdict): ReadonlyArray<string> => {
   const pr = facts.pullRequest;
   return [
@@ -1471,6 +1475,13 @@ const renderVerdictLines = (facts: YeetGhGateFacts, verdict: YeetGhGateVerdict):
     `  gate: ${verdict.met ? "MET" : verdict.onlyHolds ? "HOLD" : "REFUSED"}`,
   ];
 };
+
+// Decide the gate from one read and print its verdict lines.
+const decideAndRenderGate = Effect.fn("YeetGh.decideAndRenderGate")(function* (facts: YeetGhGateFacts) {
+  const verdict = decideYeetGhMergeGate(facts);
+  yield* Effect.forEach(renderVerdictLines(facts, verdict), (line) => Console.log(line), { discard: true });
+  return verdict;
+});
 
 /**
  * `yeet gh pr status <n>`: the REST gate view of one pull request.
@@ -1496,10 +1507,9 @@ export const runYeetGhPrStatus = (
         tolerated: [],
         forceWindow: false,
         readThreads: options.threads,
-        policy: options.noWait ? GraphqlBudgetPolicy.noWait : GraphqlBudgetPolicy.default,
+        policy: gateThreadPolicy(options.noWait),
       });
-      const verdict = decideYeetGhMergeGate(facts);
-      yield* Effect.forEach(renderVerdictLines(facts, verdict), (line) => Console.log(line), { discard: true });
+      yield* decideAndRenderGate(facts);
       if (!options.threads) yield* Console.log("  (threads not read; pass --threads to spend GraphQL on them)");
     })
   );
@@ -1614,10 +1624,9 @@ export const runYeetGhMerge = (
         tolerated: options.tolerate,
         forceWindow: options.forceWindow,
         readThreads: true,
-        policy: options.noWait ? GraphqlBudgetPolicy.noWait : GraphqlBudgetPolicy.default,
+        policy: gateThreadPolicy(options.noWait),
       });
-      const verdict = decideYeetGhMergeGate(facts);
-      yield* Effect.forEach(renderVerdictLines(facts, verdict), (line) => Console.log(line), { discard: true });
+      const verdict = yield* decideAndRenderGate(facts);
       if (!verdict.met) {
         return yield* report(verdict.onlyHolds ? YEET_GH_EXIT_HOLD : 1)(
           `[gh] not merging #${options.number}: ${A.join(

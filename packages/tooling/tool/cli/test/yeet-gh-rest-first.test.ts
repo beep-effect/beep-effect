@@ -44,7 +44,7 @@ import {
   YeetReadyInheritedRed,
   YeetReviewWindowUnknown,
 } from "@beep/repo-cli/test/Yeet";
-import { NodeCrypto, NodeFileSystem } from "@effect/platform-node";
+import { NodeCrypto } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertInstanceOf, assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -54,6 +54,7 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
 import { dual, flow } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
@@ -985,9 +986,11 @@ it.layer(NodeCrypto.layer)("the gh-login edge", (it) => {
 it.layer(
   Layer.mergeAll(
     NodeCrypto.layer,
-    NodeFileSystem.layer,
+    // The merge path never touches the filesystem here (the window is forced, nothing is fetched).
+    FileSystem.layerNoop({}),
     layerYeetHeadMoveClassifierTest((request) => YeetHeadMoveUnknown.make({ ...request, reason: "fixture" }))
-  )
+  ),
+  { timeout: "60 seconds" }
 )("yeet gh merge over recorded REST (#3133)", (it) => {
   const headSha = pullPayload.head.sha;
   const required = ["Lint", ...SHADOWED_CONTEXTS];

@@ -1248,6 +1248,8 @@ const lintRun = {
   external_id: null,
 };
 const upstreamReadinessRoute = (call: GithubCall): GithubAnswer | undefined => {
+  // The merge gate lists the head's workflow runs to model the ruleset; this head has none.
+  if (call.path === "{repo}/actions/runs") return { body: { total_count: 0, workflow_runs: [] } };
   if (Str.endsWith("/statuses")(call.path)) return { body: [] };
   if (Str.endsWith("/rules/branches/main")(call.path))
     return {
@@ -1284,7 +1286,6 @@ const upstreamRoute = (call: GithubCall, own = nativeOwn()): GithubAnswer | unde
   const readiness = upstreamReadinessRoute(call);
   if (readiness !== undefined) return readiness;
   if (call.path === `{repo}/commits/${merge}/check-runs`) return { body: { total_count: 1, check_runs: [lintRun] } };
-  if (call.path === "{repo}/actions/runs") return { body: { total_count: 0, workflow_runs: [] } };
   if (Str.endsWith("/timeline")(call.path))
     return { body: [{ event: "ready_for_review", created_at: "2026-11-05T00:00:00Z" }] };
   if (Str.endsWith("/check-suites")(call.path))

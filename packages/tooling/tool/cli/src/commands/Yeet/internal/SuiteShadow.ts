@@ -35,6 +35,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
@@ -560,6 +561,82 @@ const hiddenContext = (
 ): O.Option<HiddenRequiredCheck> =>
   O.all(A.map(runs, hiddenCopy(context, replaced))).pipe(
     O.flatMap(A.match({ onEmpty: O.none, onNonEmpty: (copies) => O.some(A.max(copies, newerCopy)) }))
+  );
+
+/**
+ * A gate read's `workflowSuites` field: the head's workflow suites, where an absent key decodes as,
+ * and an omitted constructor value builds, no suites.
+ *
+ * **Example** (A read that never listed workflow runs)
+ *
+ * ```ts
+ * import { HeadWorkflowSuitesField } from "@beep/repo-cli/test/Yeet"
+ * import * as S from "effect/Schema"
+ *
+ * const Read = S.Struct({ workflowSuites: HeadWorkflowSuitesField })
+ * console.log(S.decodeUnknownSync(Read)({}).workflowSuites.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HeadWorkflowSuitesField = S.Array(HeadWorkflowSuite).pipe(
+  S.withConstructorDefault(Effect.succeed(A.empty<HeadWorkflowSuite>())),
+  S.withDecodingDefaultTypeKey(Effect.succeed(A.empty<HeadWorkflowSuite>()))
+);
+
+/**
+ * Judge a gate's required contexts from its own check-run records: each run becomes a
+ * {@link HeadSuiteCheck} under the gate's verdict, then {@link hiddenRequiredChecks} decides.
+ *
+ * **Example** (No hidden required check without suites)
+ *
+ * ```ts
+ * import { hiddenRequiredChecksOf } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const hidden = hiddenRequiredChecksOf({
+ *   requiredContexts: ["Lint"],
+ *   runs: [{ id: 1, name: "Lint", checkSuiteId: O.some(9), conclusion: "success" }],
+ *   suites: [],
+ *   verdictOf: () => "green",
+ * })
+ * console.log(hidden.length) // 0
+ * ```
+ *
+ * @param read - The required contexts, the gate's check runs, the head's workflow suites and the
+ * gate's verdict for one run.
+ * @returns The required contexts no live run reports, each judged by its newest hidden copy.
+ * @category decisions
+ * @since 0.0.0
+ */
+export const hiddenRequiredChecksOf = <
+  Run extends {
+    readonly id: number;
+    readonly name: string;
+    readonly checkSuiteId: O.Option<number>;
+    readonly conclusion: string | null;
+  },
+>(read: {
+  readonly requiredContexts: ReadonlyArray<string>;
+  readonly runs: ReadonlyArray<Run>;
+  readonly suites: ReadonlyArray<HeadWorkflowSuite>;
+  readonly verdictOf: (run: Run) => HeadCheckVerdict;
+}): ReadonlyArray<HiddenRequiredCheck> =>
+  hiddenRequiredChecks(
+    RequiredShadowInput.make({
+      requiredContexts: read.requiredContexts,
+      checks: A.map(read.runs, (run) =>
+        HeadSuiteCheck.make({
+          id: run.id,
+          name: run.name,
+          checkSuiteId: run.checkSuiteId,
+          verdict: read.verdictOf(run),
+          conclusion: O.fromNullishOr(run.conclusion),
+        })
+      ),
+      suites: read.suites,
+    })
   );
 
 /**

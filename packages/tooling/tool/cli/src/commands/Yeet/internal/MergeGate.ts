@@ -109,12 +109,10 @@ import {
 } from "./SquashCommitlint.ts";
 import {
   gateCountsCheck,
-  HeadSuiteCheck,
-  HeadWorkflowSuite,
+  HeadWorkflowSuitesField,
   headWorkflowSuites,
   hiddenRequiredAttribution,
-  hiddenRequiredChecks,
-  RequiredShadowInput,
+  hiddenRequiredChecksOf,
   renderHiddenRequiredChecks,
   SHADOWED_REQUIRED_REMEDY,
 } from "./SuiteShadow.ts";
@@ -442,8 +440,6 @@ export class MergeGateBaseEvidence extends S.Opaque<MergeGateBaseEvidence, { rea
   )
 ) {}
 
-const noWorkflowSuites = A.empty<HeadWorkflowSuite>();
-
 /**
  * Everything the gate decides on, read once from GitHub at a point in time.
  *
@@ -512,10 +508,7 @@ export class MergeGateRead extends S.Opaque<MergeGateRead, { readonly brand: uni
     unresolvedThreads: S.Option(S.Finite),
     squashCommitlint: SquashCommitlintReport,
     readAt: S.DateTimeUtcFromString,
-    workflowSuites: S.Array(HeadWorkflowSuite).pipe(
-      S.withConstructorDefault(Effect.succeed(noWorkflowSuites)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(noWorkflowSuites))
-    ),
+    workflowSuites: HeadWorkflowSuitesField,
   }).pipe($I.annoteSchema("MergeGateRead", { description: "The pull request facts the merge gate decides on." }))
 ) {}
 
@@ -847,21 +840,7 @@ const verdictOf = (run: MergeGateCheckRun): HeadCheckVerdict =>
 // Required contexts with no run the ruleset reads, each judged by its newest
 // copy in a suite a newer run of the same workflow and event replaced.
 const hiddenOf = (read: MergeGateRead, contexts: ReadonlyArray<string>): ReadonlyArray<HiddenRequiredCheck> =>
-  hiddenRequiredChecks(
-    RequiredShadowInput.make({
-      requiredContexts: contexts,
-      checks: A.map(read.checkRuns, (run) =>
-        HeadSuiteCheck.make({
-          id: run.id,
-          name: run.name,
-          checkSuiteId: run.checkSuiteId,
-          verdict: verdictOf(run),
-          conclusion: O.fromNullishOr(run.conclusion),
-        })
-      ),
-      suites: read.workflowSuites,
-    })
-  );
+  hiddenRequiredChecksOf({ requiredContexts: contexts, runs: read.checkRuns, suites: read.workflowSuites, verdictOf });
 
 const hiddenIn = (
   hidden: ReadonlyArray<HiddenRequiredCheck>,
