@@ -16,10 +16,8 @@ import {
   ShardOverflowQueue,
   shardOverflowQueueOf,
 } from "@beep/repo-cli/commands/Ci";
-import { findRepoRoot } from "@beep/repo-utils/Root";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -27,16 +25,26 @@ import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stdio from "effect/Stdio";
 import * as Str from "effect/String";
+import * as Terminal from "effect/Terminal";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
 
 const REPOSITORY = "beep-effect/beep-effect";
+// Every workflow file as text, through the raw import `ci-repo-sanity-owners.test.ts` uses: no file system.
+const WORKFLOWS = "../../../../../.github/workflows";
+const workflowTexts = import.meta.glob<string>("../../../../../.github/workflows/*.yml", {
+  eager: true,
+  import: "default",
+  query: "?raw",
+});
 // Workflow documents are read as unknown YAML; the schemas live at module scope so each compiles once.
 const isText = S.is(S.String);
 const isStepList = S.is(S.Array(S.Unknown));
@@ -231,13 +239,42 @@ const environment = (values: Readonly<Record<string, string>>) =>
     })
   );
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci shard-overflow", (it) => {
+// What the command appended, by path: `GITHUB_OUTPUT` is the only file it writes, so a file system that
+// records `writeFileString` and refuses everything else stands in for the runner's.
+type Appended = { readonly path: string; readonly data: string; readonly flag: string | undefined };
+const OUTPUT = "/runner/_temp/github-output";
+const recordingOutputs = (appended: Array<Appended>) =>
+  Effect.provideService(
+    FileSystem.FileSystem,
+    FileSystem.makeNoop({
+      writeFileString: (path, data, options) =>
+        Effect.sync(() => {
+          appended.push({ path, data, flag: options?.flag });
+        }),
+    })
+  );
+// `Command.runWith` asks for the platform services; the command reads no terminal input and no file.
+const CommandLayer = Layer.mergeAll(
+  FileSystem.layerNoop({}),
+  Path.layer,
+  Stdio.layerTest({ stdinIsTerminal: Effect.succeed(false), stdoutIsTerminal: Effect.succeed(false) }),
+  Layer.succeed(
+    Terminal.Terminal,
+    Terminal.make({
+      columns: Effect.succeed(80),
+      rows: Effect.succeed(24),
+      size: Effect.die("unused"),
+      readInput: Effect.die("unused"),
+      readLine: Effect.die("unused"),
+      display: () => Effect.void,
+    })
+  )
+);
+
+it.layer(CommandLayer, { timeout: "30 seconds" })("ci shard-overflow", (it) => {
   it.effect("reads the queue, routes into the free VMs and appends the split to GITHUB_OUTPUT", () =>
     Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const directory = yield* fs.makeTempDirectoryScoped();
-      const output = path.join(directory, "github-output");
+      const appended: Array<Appended> = [];
       const spawner = ScriptedSpawner.make(
         ghScript({
           "repos/{owner}/{repo}/actions/runs?status=in_progress": runsAnswer([11, 12]),
@@ -255,14 +292,22 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci shard-overflow", (it
       const decision = yield* runShardOverflow({
         partitions: '["repo-cli-1","repo-cli-2","unit-a"]',
         callee: "pinned",
-      }).pipe(provideSpawner(spawner), environment({ GITHUB_OUTPUT: output, BEEP_SHARD_OVERFLOW_POOL_SIZE: "48" }));
+      }).pipe(
+        provideSpawner(spawner),
+        environment({ GITHUB_OUTPUT: OUTPUT, BEEP_SHARD_OVERFLOW_POOL_SIZE: "48" }),
+        recordingOutputs(appended)
+      );
       expect(decision.reason).toBe("routed");
       expect(decision.overflow).toStrictEqual(["repo-cli-1", "repo-cli-2"]);
       expect(decision.hosted).toStrictEqual(["unit-a"]);
-      const written = yield* fs.readFileString(output);
-      expect(written).toBe(
-        'test_unit_hosted=["unit-a"]\ntest_unit_overflow=["repo-cli-1","repo-cli-2"]\nshard_overflow_reason=routed\n'
-      );
+      // One append to GITHUB_OUTPUT, never a rewrite of what earlier steps wrote there.
+      expect(appended).toStrictEqual([
+        {
+          path: OUTPUT,
+          data: 'test_unit_hosted=["unit-a"]\ntest_unit_overflow=["repo-cli-1","repo-cli-2"]\nshard_overflow_reason=routed\n',
+          flag: "a",
+        },
+      ]);
       // Two run listings and one jobs listing per distinct run.
       expect(A.length(spawner.spawns)).toBe(5);
     })
@@ -357,12 +402,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci shard-overflow", (it
 
   it.effect("reports an output file it cannot append to", () =>
     Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const directory = yield* fs.makeTempDirectoryScoped();
+      // The suite's file system refuses every write, as a missing or read-only output file does.
       const error = yield* Effect.flip(
         runShardOverflow({ partitions: '["unit-a"]', callee: "pinned" }).pipe(
           provideSpawner(ScriptedSpawner.make(ghScript({}))),
-          environment({ BEEP_SHARD_OVERFLOW: "", GITHUB_OUTPUT: directory })
+          environment({ BEEP_SHARD_OVERFLOW: "", GITHUB_OUTPUT: OUTPUT })
         )
       );
       assertInstanceOf(error, CiCommandError);
@@ -380,34 +424,27 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci shard-overflow", (it
 
   it.effect("runs as `beep ci shard-overflow` with its two flags", () =>
     Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const directory = yield* fs.makeTempDirectoryScoped();
-      const output = path.join(directory, "github-output");
+      const appended: Array<Appended> = [];
       const spawner = ScriptedSpawner.make(ghScript({}));
       yield* Command.runWith(ciShardOverflowCommand, { version: "0.0.0" })([
         "--partitions",
         '["unit-a"]',
         "--callee",
         "local",
-      ]).pipe(provideSpawner(spawner), environment({ GITHUB_OUTPUT: output }));
-      const written = yield* fs.readFileString(output);
-      expect(written).toBe(
-        'test_unit_hosted=["unit-a"]\ntest_unit_overflow=[]\nshard_overflow_reason=callee-not-pinned\n'
-      );
+      ]).pipe(provideSpawner(spawner), environment({ GITHUB_OUTPUT: OUTPUT }), recordingOutputs(appended));
+      expect(A.map(appended, (entry) => entry.data)).toStrictEqual([
+        'test_unit_hosted=["unit-a"]\ntest_unit_overflow=[]\nshard_overflow_reason=callee-not-pinned\n',
+      ]);
       expect(spawner.spawns).toStrictEqual([]);
     })
   );
 
   // ---- Workflow contracts -------------------------------------------------------------------------
 
-  const readWorkflow = Effect.fnUntraced(function* (file: string) {
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const root = yield* findRepoRoot();
-    const text = yield* fs.readFileString(path.join(root, ".github/workflows", file));
+  const readWorkflow = (file: string) => {
+    const text = O.getOrThrow(R.get(workflowTexts, `${WORKFLOWS}/${file}`));
     return { text, document: parseWorkflowYaml(text) };
-  });
+  };
   const FORK_GUARD =
     "github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository";
 
@@ -423,15 +460,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci shard-overflow", (it
     });
 
   it.effect("admits the overflow label only to shard-overflow.yml and every other self-hosted label to its pool", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const root = yield* findRepoRoot();
-      const entries = yield* fs.readDirectory(path.join(root, ".github/workflows"));
-      const files = A.filter(entries, Str.endsWith(".yml"));
-      const workflows = yield* Effect.forEach(A.sort(files, Str.Order), (file) =>
-        Effect.map(readWorkflow(file), ({ document }) => ({ file, document }))
-      );
+    Effect.sync(() => {
+      const files = A.map(R.keys(workflowTexts), Str.slice(WORKFLOWS.length + 1));
+      const workflows = A.map(A.sort(files, Str.Order), (file) => ({ file, document: readWorkflow(file).document }));
       const selfHosted = A.flatMap(workflows, ({ file, document }) => selfHostedJobs(file, document));
       // Every runner that is not a GitHub-hosted image, by file, job and label. A new self-hosted job
       // must be added here on purpose; check.yml reaches the overflow pool only through shard-overflow.yml.
@@ -456,8 +487,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci shard-overflow", (it
 
   it.effect("guards the overflow job against forks at main and in the caller", () =>
     Effect.gen(function* () {
-      const { document: overflow } = yield* readWorkflow("shard-overflow.yml");
-      const { document: check } = yield* readWorkflow("check.yml");
+      const { document: overflow } = readWorkflow("shard-overflow.yml");
+      const { document: check } = readWorkflow("check.yml");
       expect(yamlAt(overflow, ["on", "workflow_call", "inputs"])).toBeDefined();
       expect(yamlAt(overflow, ["on", "pull_request"])).toBeUndefined();
       expect(yamlAt(overflow, ["on", "push"])).toBeUndefined();
@@ -474,8 +505,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci shard-overflow", (it
 
   it.effect("keeps the overflow shard identical to the hosted shard but for its runner", () =>
     Effect.gen(function* () {
-      const { document: overflow, text: overflowText } = yield* readWorkflow("shard-overflow.yml");
-      const { document: check } = yield* readWorkflow("check.yml");
+      const { document: overflow, text: overflowText } = readWorkflow("shard-overflow.yml");
+      const { document: check } = readWorkflow("check.yml");
       const asHosted = Str.replaceAll("inputs.partition", "matrix.partition");
       const hostedJob = ["jobs", "test-unit-shard"];
       const overflowSteps = yield* encodeJson(yamlAt(overflow, [...hostedJob, "steps"]));
@@ -503,7 +534,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci shard-overflow", (it
 
   it.effect("routes only while the switch is on, and only as far as the overflow call is pinned", () =>
     Effect.gen(function* () {
-      const { document: check } = yield* readWorkflow("check.yml");
+      const { document: check } = readWorkflow("check.yml");
       const steps = yamlAt(check, ["jobs", "test-plan", "steps"]);
       assertTrue(isStepList(steps));
       const route = yield* Effect.fromOption(A.findFirst(steps, (step) => yamlAt(step, ["id"]) === "overflow"));

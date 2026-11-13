@@ -14,17 +14,20 @@ import {
 } from "@beep/repo-cli/commands/Ci";
 import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
+import * as Stdio from "effect/Stdio";
 import * as Str from "effect/String";
+import * as Terminal from "effect/Terminal";
 import * as TestConsole from "effect/testing/TestConsole";
 import { githubFetch, reply } from "./support/GithubFetch.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
@@ -238,153 +241,168 @@ const printed = Effect.gen(function* () {
   return A.join(A.map([...logs, ...errors], String), "\n");
 });
 
-it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 seconds" })(
-  "ci shard-overflow-preflight",
-  (it) => {
-    it.effect("reads the group, its repositories and the webhooks without decoding a secret", () =>
-      Effect.gen(function* () {
-        const seen: Array<string> = [];
-        const read = yield* readShardOverflowPreflightFacts(ENDPOINT).pipe(withApi(correctRoutes, seen));
-        expect(seen).toStrictEqual([`GET ${GROUPS_PATH}`, `GET ${REPOSITORIES_PATH}`, `GET ${HOOKS_PATH}`]);
-        expect(read.repository).toBe(REPOSITORY);
-        assertSome(
-          O.map(read.group, (found) => found.selected_workflows),
-          [ALLOWED]
-        );
-        expect(read.repositories).toStrictEqual([REPOSITORY]);
-        // Only the active flag, events and payload URL survive the decode; the secret never does.
-        expect(read.hooks).toStrictEqual([hook({ url: HEAVY_ENDPOINT }), hook()]);
-        expect(decideShardOverflowPreflight(read)).toStrictEqual([]);
-      })
-    );
-
-    it.effect("skips the repository read when the group is open to every repository", () =>
-      Effect.gen(function* () {
-        const seen: Array<string> = [];
-        const read = yield* readShardOverflowPreflightFacts(ENDPOINT).pipe(
-          withApi({ ...correctRoutes, [GROUPS_PATH]: groupsRest([groupRest({ visibility: "all" })]) }, seen)
-        );
-        expect(seen).toStrictEqual([`GET ${GROUPS_PATH}`, `GET ${HOOKS_PATH}`]);
-        expect(decideShardOverflowPreflight(read)).toStrictEqual(["visibility-not-selected"]);
-      })
-    );
-
-    it.effect("passes through the command and says what it checked", () =>
-      Effect.gen(function* () {
-        const seen: Array<string> = [];
-        yield* runCommand(["--webhook-url", ENDPOINT]).pipe(withApi(correctRoutes, seen), withEnv);
-        const output = yield* printed;
-        expect(output).toContain(`shard-overflow-preflight: ok; ${SHARD_OVERFLOW_RUNNER_LABEL} admits only ${ALLOWED}`);
-        expect(output).not.toContain(HOOK_SECRET);
-      })
-    );
-
-    it.effect("fails the command on an unrestricted group and names every problem", () =>
-      Effect.gen(function* () {
-        const seen: Array<string> = [];
-        const exit = yield* runCommand(["--webhook-url", ENDPOINT]).pipe(
-          withApi(
-            {
-              ...correctRoutes,
-              [GROUPS_PATH]: groupsRest([groupRest({ restricted_to_workflows: false, selected_workflows: [] })]),
-              [HOOKS_PATH]: [hookRest(HEAVY_ENDPOINT)],
-            },
-            seen
-          ),
-          withEnv,
-          Effect.exit
-        );
-        expect(exit._tag).toBe("Failure");
-        const output = yield* printed;
-        expect(output).toContain("shard-overflow-preflight: workflows-unrestricted:");
-        expect(output).toContain("shard-overflow-preflight: missing-webhook:");
-        expect(output).toContain("2 problem(s); do not switch BEEP_SHARD_OVERFLOW on");
-        expect(output).not.toContain(HOOK_SECRET);
-      })
-    );
-
-    it.effect("fails closed when the group is missing or a listing cannot be read", () =>
-      Effect.gen(function* () {
-        const seen: Array<string> = [];
-        const missing = yield* runCommand(["--webhook-url", ENDPOINT]).pipe(
-          withApi({ ...correctRoutes, [GROUPS_PATH]: groupsRest([defaultGroupRest]) }, seen),
-          withEnv,
-          Effect.exit
-        );
-        expect(missing._tag).toBe("Failure");
-        const forbidden = yield* runCommand(["--webhook-url", ENDPOINT]).pipe(
-          withApi({ ...correctRoutes, [GROUPS_PATH]: reply(403)({ message: "Must have admin rights" }) }, seen),
-          withEnv,
-          Effect.exit
-        );
-        expect(forbidden._tag).toBe("Failure");
-        const malformed = yield* runCommand(["--webhook-url", ENDPOINT]).pipe(
-          withApi(
-            { ...correctRoutes, [GROUPS_PATH]: { runner_groups: [{ name: SHARD_OVERFLOW_RUNNER_LABEL }] } },
-            seen
-          ),
-          withEnv,
-          Effect.exit
-        );
-        expect(malformed._tag).toBe("Failure");
-        const output = yield* printed;
-        expect(output).toContain(`missing-group: no organization runner group is named ${SHARD_OVERFLOW_RUNNER_LABEL}`);
-        expect(output).toContain("the runner group listing did not decode");
-      })
-    );
-
-    it.effect("names every problem it finds, one line each", () =>
-      Effect.gen(function* () {
-        const seen: Array<string> = [];
-        // A group with GitHub's defaults, and a webhook whose payload URL GitHub did not return.
-        const defaults = yield* runCommand(["--webhook-url", ENDPOINT]).pipe(
-          withApi(
-            {
-              ...correctRoutes,
-              [GROUPS_PATH]: groupsRest([
-                groupRest({
-                  visibility: "all",
-                  allows_public_repositories: false,
-                  restricted_to_workflows: false,
-                  selected_workflows: [],
-                }),
-              ]),
-              [HOOKS_PATH]: [{ ...hookRest(ENDPOINT), config: { content_type: "json" } }],
-            },
-            seen
-          ),
-          withEnv,
-          Effect.exit
-        );
-        expect(defaults._tag).toBe("Failure");
-        // A restricted group that admits another workflow, open to a second repository.
-        const widened = yield* runCommand(["--webhook-url", ENDPOINT]).pipe(
-          withApi(
-            {
-              ...correctRoutes,
-              [GROUPS_PATH]: groupsRest([
-                groupRest({
-                  selected_workflows: [ALLOWED, `${REPOSITORY}/.github/workflows/check.yml@refs/heads/main`],
-                }),
-              ]),
-              [REPOSITORIES_PATH]: repositoriesRest([REPOSITORY, "beep-effect/other"]),
-            },
-            seen
-          ),
-          withEnv,
-          Effect.exit
-        );
-        expect(widened._tag).toBe("Failure");
-        const output = yield* printed;
-        for (const problem of ShardOverflowPreflightProblem.literals) {
-          expect(
-            problem === "missing-group" || Str.includes(`shard-overflow-preflight: ${problem}: `)(output),
-            problem
-          ).toBe(true);
-        }
-        expect(output).toContain("4 problem(s)");
-        expect(output).toContain("2 problem(s)");
-      })
-    );
-  }
+// The command reads GitHub only, through the fake client above. Its file system answers the repository
+// root search (`.git` exists in the starting directory) and refuses everything else; it reads no terminal
+// input, and the console is the test console.
+const CommandLayer = Layer.mergeAll(
+  FileSystem.layerNoop({ exists: (file) => Effect.succeed(Str.endsWith("/.git")(file)) }),
+  Path.layer,
+  Stdio.layerTest({ stdinIsTerminal: Effect.succeed(false), stdoutIsTerminal: Effect.succeed(false) }),
+  Layer.succeed(
+    Terminal.Terminal,
+    Terminal.make({
+      columns: Effect.succeed(80),
+      rows: Effect.succeed(24),
+      size: Effect.die("unused"),
+      readInput: Effect.die("unused"),
+      readLine: Effect.die("unused"),
+      display: () => Effect.void,
+    })
+  ),
+  TestConsole.layer
 );
+
+it.layer(CommandLayer, { timeout: "30 seconds" })("ci shard-overflow-preflight", (it) => {
+  it.effect("reads the group, its repositories and the webhooks without decoding a secret", () =>
+    Effect.gen(function* () {
+      const seen: Array<string> = [];
+      const read = yield* readShardOverflowPreflightFacts(ENDPOINT).pipe(withApi(correctRoutes, seen));
+      expect(seen).toStrictEqual([`GET ${GROUPS_PATH}`, `GET ${REPOSITORIES_PATH}`, `GET ${HOOKS_PATH}`]);
+      expect(read.repository).toBe(REPOSITORY);
+      assertSome(
+        O.map(read.group, (found) => found.selected_workflows),
+        [ALLOWED]
+      );
+      expect(read.repositories).toStrictEqual([REPOSITORY]);
+      // Only the active flag, events and payload URL survive the decode; the secret never does.
+      expect(read.hooks).toStrictEqual([hook({ url: HEAVY_ENDPOINT }), hook()]);
+      expect(decideShardOverflowPreflight(read)).toStrictEqual([]);
+    })
+  );
+
+  it.effect("skips the repository read when the group is open to every repository", () =>
+    Effect.gen(function* () {
+      const seen: Array<string> = [];
+      const read = yield* readShardOverflowPreflightFacts(ENDPOINT).pipe(
+        withApi({ ...correctRoutes, [GROUPS_PATH]: groupsRest([groupRest({ visibility: "all" })]) }, seen)
+      );
+      expect(seen).toStrictEqual([`GET ${GROUPS_PATH}`, `GET ${HOOKS_PATH}`]);
+      expect(decideShardOverflowPreflight(read)).toStrictEqual(["visibility-not-selected"]);
+    })
+  );
+
+  it.effect("passes through the command and says what it checked", () =>
+    Effect.gen(function* () {
+      const seen: Array<string> = [];
+      yield* runCommand(["--webhook-url", ENDPOINT]).pipe(withApi(correctRoutes, seen), withEnv);
+      const output = yield* printed;
+      expect(output).toContain(`shard-overflow-preflight: ok; ${SHARD_OVERFLOW_RUNNER_LABEL} admits only ${ALLOWED}`);
+      expect(output).not.toContain(HOOK_SECRET);
+    })
+  );
+
+  it.effect("fails the command on an unrestricted group and names every problem", () =>
+    Effect.gen(function* () {
+      const seen: Array<string> = [];
+      const exit = yield* runCommand(["--webhook-url", ENDPOINT]).pipe(
+        withApi(
+          {
+            ...correctRoutes,
+            [GROUPS_PATH]: groupsRest([groupRest({ restricted_to_workflows: false, selected_workflows: [] })]),
+            [HOOKS_PATH]: [hookRest(HEAVY_ENDPOINT)],
+          },
+          seen
+        ),
+        withEnv,
+        Effect.exit
+      );
+      expect(exit._tag).toBe("Failure");
+      const output = yield* printed;
+      expect(output).toContain("shard-overflow-preflight: workflows-unrestricted:");
+      expect(output).toContain("shard-overflow-preflight: missing-webhook:");
+      expect(output).toContain("2 problem(s); do not switch BEEP_SHARD_OVERFLOW on");
+      expect(output).not.toContain(HOOK_SECRET);
+    })
+  );
+
+  it.effect("fails closed when the group is missing or a listing cannot be read", () =>
+    Effect.gen(function* () {
+      const seen: Array<string> = [];
+      const missing = yield* runCommand(["--webhook-url", ENDPOINT]).pipe(
+        withApi({ ...correctRoutes, [GROUPS_PATH]: groupsRest([defaultGroupRest]) }, seen),
+        withEnv,
+        Effect.exit
+      );
+      expect(missing._tag).toBe("Failure");
+      const forbidden = yield* runCommand(["--webhook-url", ENDPOINT]).pipe(
+        withApi({ ...correctRoutes, [GROUPS_PATH]: reply(403)({ message: "Must have admin rights" }) }, seen),
+        withEnv,
+        Effect.exit
+      );
+      expect(forbidden._tag).toBe("Failure");
+      const malformed = yield* runCommand(["--webhook-url", ENDPOINT]).pipe(
+        withApi({ ...correctRoutes, [GROUPS_PATH]: { runner_groups: [{ name: SHARD_OVERFLOW_RUNNER_LABEL }] } }, seen),
+        withEnv,
+        Effect.exit
+      );
+      expect(malformed._tag).toBe("Failure");
+      const output = yield* printed;
+      expect(output).toContain(`missing-group: no organization runner group is named ${SHARD_OVERFLOW_RUNNER_LABEL}`);
+      expect(output).toContain("the runner group listing did not decode");
+    })
+  );
+
+  it.effect("names every problem it finds, one line each", () =>
+    Effect.gen(function* () {
+      const seen: Array<string> = [];
+      // A group with GitHub's defaults, and a webhook whose payload URL GitHub did not return.
+      const defaults = yield* runCommand(["--webhook-url", ENDPOINT]).pipe(
+        withApi(
+          {
+            ...correctRoutes,
+            [GROUPS_PATH]: groupsRest([
+              groupRest({
+                visibility: "all",
+                allows_public_repositories: false,
+                restricted_to_workflows: false,
+                selected_workflows: [],
+              }),
+            ]),
+            [HOOKS_PATH]: [{ ...hookRest(ENDPOINT), config: { content_type: "json" } }],
+          },
+          seen
+        ),
+        withEnv,
+        Effect.exit
+      );
+      expect(defaults._tag).toBe("Failure");
+      // A restricted group that admits another workflow, open to a second repository.
+      const widened = yield* runCommand(["--webhook-url", ENDPOINT]).pipe(
+        withApi(
+          {
+            ...correctRoutes,
+            [GROUPS_PATH]: groupsRest([
+              groupRest({
+                selected_workflows: [ALLOWED, `${REPOSITORY}/.github/workflows/check.yml@refs/heads/main`],
+              }),
+            ]),
+            [REPOSITORIES_PATH]: repositoriesRest([REPOSITORY, "beep-effect/other"]),
+          },
+          seen
+        ),
+        withEnv,
+        Effect.exit
+      );
+      expect(widened._tag).toBe("Failure");
+      const output = yield* printed;
+      for (const problem of ShardOverflowPreflightProblem.literals) {
+        expect(
+          problem === "missing-group" || Str.includes(`shard-overflow-preflight: ${problem}: `)(output),
+          problem
+        ).toBe(true);
+      }
+      expect(output).toContain("4 problem(s)");
+      expect(output).toContain("2 problem(s)");
+    })
+  );
+});
