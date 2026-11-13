@@ -202,10 +202,11 @@ needed only for the escalation list below.
   that must re-run anyway so the unblocker gets runners and merges first;
   it cancels pull-request runs only, never a `refs/heads/main` run, queued
   or running.
-- A base-conflict P0 inbox row is an unconditional "merge `origin/main` into
-  the lane now" for the lane owner, whatever the acceptance or merge
-  arrangement says; no brief or delegation model may forbid a lane from
-  merging main. A goal packet has at most three concurrently open PRs (a
+- A base-conflict P0 inbox row is an unconditional "merge the ref the row
+  names into the lane now" (`origin/main`; on a stack layer, the parent's
+  branch) for the lane owner, whatever the acceptance or merge arrangement
+  says; no brief or delegation model may forbid a lane from merging its
+  base. A goal packet has at most three concurrently open PRs (a
   fourth is sequenced through one lane), and the gate merges
   finals one at a time as they arrive, telling the remaining siblings to
   merge main between merges (operator 2026-11-05,

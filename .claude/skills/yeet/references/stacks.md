@@ -76,7 +76,8 @@ bun run beep yeet publish --push-only
 - A base-conflict row on the layer names the parent's branch
   (`base conflict with origin/<parent-branch>`), and so does the settle
   line. Merge that branch, never `origin/main`. A "sibling merged" comment on
-  a layer says the same.
+  a layer says the same, and after the parent merged alone it tells the
+  layer to adopt the cascade instead of merging anything.
 
 ## Ready
 

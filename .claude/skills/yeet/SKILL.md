@@ -53,6 +53,8 @@ git fetch origin && git merge origin/main
    A base-conflict P0 inbox row or a merge-gate "sibling #N merged" comment is
    this same merge, now, whatever your brief says about acceptance or merge
    authority (2026-11-05; [`references/merge-loop.md`](references/merge-loop.md#base-conflict-rows-and-packet-siblings)).
+   On a stack layer both name what to do instead of merging `origin/main`:
+   merge the parent's branch, or adopt GitHub's cascade once the parent merged.
    Do not rebase a published branch: rebase implies a force-push, and this
    repository denies `git push --force*`. GitHub squash-merge erases
    feature-branch merge commits at land time anyway. `--allow-stale-base` is

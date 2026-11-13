@@ -3,6 +3,7 @@ import { Git } from "@beep/git/Git";
 import {
   broadcastPacketSiblings,
   PacketSibling,
+  PacketSiblingPlace,
   PacketSiblingsReport,
   packetSlugsOf,
   RepoRunContext,
@@ -167,13 +168,41 @@ describe("renderSiblingBroadcast", () => {
         mergedPr: 2688,
         mergeSha: MERGE_SHA,
         baseSha: O.some(BASE_SHA),
-        sibling: PacketSibling.make({ ...sibling, layerOn: O.some("feat/parent") }),
+        sibling: PacketSibling.make({
+          ...sibling,
+          place: PacketSiblingPlace.cases.Layer.make({ parentRef: "feat/parent" }),
+        }),
       })
     );
     expect(body).toContain("This pull request is a stack layer on `feat/parent`: do not merge `origin/main` into it.");
     expect(body).toContain("merge `origin/feat/parent` into this lane");
     expect(body).not.toContain("Merge `origin/main` into this lane now");
     expect(body).toContain("whatever your brief says about acceptance or merge authority");
+  });
+
+  it("tells a layer whose parent just merged alone to adopt the cascade and merge nothing", () => {
+    const body = renderSiblingBroadcast(
+      SiblingBroadcast.make({
+        mergedPr: 3241,
+        mergeSha: MERGE_SHA,
+        baseSha: O.some(BASE_SHA),
+        sibling: PacketSibling.make({
+          ...sibling,
+          probe: "unavailable",
+          conflicts: [],
+          place: PacketSiblingPlace.cases.Cascading.make({ belowPr: 3241 }),
+        }),
+      })
+    );
+    expect(body).toContain("#3241 was the layer below this pull request and merged alone");
+    expect(body).toContain("Merge nothing into it.");
+    expect(body).toContain(
+      "`git fetch origin && git switch -C codex/cache-creation-mask-identity origin/codex/cache-creation-mask-identity`"
+    );
+    expect(body).not.toContain("Merge `origin/main` into this lane now");
+    // No probe ran, and the comment does not pretend one did.
+    expect(body).not.toContain("conflict probe");
+    expect(body).not.toContain("Expected conflicting files");
   });
 });
 
@@ -232,33 +261,59 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, TestConsole.layer), { timeout: "30 sec
       })
     );
 
-    it.effect("marks a sibling that is a stack layer with its parent's branch", () =>
+    it.effect("places a stacked sibling: a layer on an open parent, then cascading once that parent merged", () =>
       Effect.gen(function* () {
         const stack = { number: 10, position: 2, size: 2, base: { ref: "main" } };
-        const stackedRoutes = (layerBase: string) => (call: GithubCall) =>
-          call.path === "{repo}/pulls" && call.query.get("state") === "open"
-            ? {
-                body: [
-                  pull(7, "lane/seven", "7777777777777777777777777777777777777777"),
-                  { ...pull(8, "lane/eight", SIBLING_SHA), base: { ref: layerBase, sha: "base000000" }, stack },
-                ],
-              }
-            : routes(call);
-        const read = (layerBase: string) =>
+        const subject = (merged: boolean) => ({
+          ...pull(7, "lane/seven", "7777777777777777777777777777777777777777"),
+          merged,
+          stack: { ...stack, position: 1 },
+        });
+        // The list read can catch a layer on either base while GitHub cascades it.
+        const stackedRoutes = (layerBase: string, merged: boolean) => (call: GithubCall) => {
+          if (call.path === "{repo}/pulls/7") return { body: subject(merged) };
+          if (call.path === "{repo}/pulls" && call.query.get("state") === "open") {
+            return {
+              body: [
+                ...(merged ? [] : [subject(false)]),
+                { ...pull(8, "lane/eight", SIBLING_SHA), base: { ref: layerBase, sha: "base000000" }, stack },
+              ],
+            };
+          }
+          return routes(call);
+        };
+        const read = (layerBase: string, merged: boolean, gitCalls: Array<string> = []) =>
           readPacketSiblings(context, 7).pipe(
-            recordedGithub(stackedRoutes(layerBase)).provide,
+            recordedGithub(stackedRoutes(layerBase, merged)).provide,
             Effect.provideServiceEffect(Git, Git.make),
-            provideSpawner(scriptedGit([]))
+            provideSpawner(scriptedGit(gitCalls)),
+            Effect.map((report) => ({ report, place: O.map(A.head(report.siblings), (found) => found.place) }))
           );
-        const layered = yield* read("lane/seven");
-        assertSome(
-          O.flatMap(A.head(layered.siblings), (found) => found.layerOn),
-          "lane/seven"
+        const layered = yield* read("lane/seven", false);
+        assertSome(layered.place, PacketSiblingPlace.cases.Layer.make({ parentRef: "lane/seven" }));
+        expect(renderPacketSiblingsReport(layered.report)).toContain("; stack layer on lane/seven");
+        // The parent merged alone: cascading, whether the list still shows the old base or the trunk.
+        const probes: Array<string> = [];
+        const before = yield* read("lane/seven", true, probes);
+        const after = yield* read("main", true, probes);
+        assertSome(before.place, PacketSiblingPlace.cases.Cascading.make({ belowPr: 7 }));
+        assertSome(after.place, PacketSiblingPlace.cases.Cascading.make({ belowPr: 7 }));
+        expect(A.some(probes, Str.includes("merge-tree"))).toBe(false);
+        expect(renderPacketSiblingsReport(after.report)).toContain("; cascading onto the trunk after #7 (not probed)");
+        // A retargeted layer whose parent the subject is not: an ordinary pull request again.
+        const unrelated = yield* readPacketSiblings(context, 7).pipe(
+          recordedGithub((call) =>
+            call.path === "{repo}/pulls/7"
+              ? { body: { ...pull(7, "lane/seven", "7777777777777777777777777777777777777777"), merged: true } }
+              : stackedRoutes("main", true)(call)
+          ).provide,
+          Effect.provideServiceEffect(Git, Git.make),
+          provideSpawner(scriptedGit([]))
         );
-        expect(renderPacketSiblingsReport(layered)).toContain("; stack layer on lane/seven");
-        // After the parent merges alone GitHub retargets the layer to the trunk: an ordinary pull request again.
-        const cascaded = yield* read("main");
-        assertNone(O.flatMap(A.head(cascaded.siblings), (found) => found.layerOn));
+        assertSome(
+          O.map(A.head(unrelated.siblings), (found) => found.place),
+          PacketSiblingPlace.cases.Trunk.make({})
+        );
       })
     );
 
@@ -297,9 +352,11 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, TestConsole.layer), { timeout: "30 sec
         expect(body.body).toContain("yeet merge-gate: sibling #7 merged on `alpha` (feedfacefe).");
         expect(body.body).toContain("`goals/alpha/PLAN.md`");
         const logged = yield* TestConsole.logLines;
-        expect(A.some(logged, (line) => Str.includes("told 1 of 1 open sibling PR(s) on `alpha`")(String(line)))).toBe(
-          true
-        );
+        expect(
+          A.some(logged, (line) =>
+            Str.includes("told 1 of 1 open sibling PR(s) on `alpha` to catch up (1 to merge origin/main)")(String(line))
+          )
+        ).toBe(true);
       })
     );
 
