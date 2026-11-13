@@ -4,8 +4,11 @@
  * **Details**
  *
  * Six tools: prepare, read and delete a mail draft; check a send request;
- * create and update a calendar event. Sending is fail-closed while Graph's
- * draft-send action cannot bind the checked version. None takes a mailbox,
+ * create and update a calendar event. A draft can be pinned to the Graph
+ * items it rests on, as the caller read them; creation refuses a pin whose
+ * item changed since, and `get_draft` reports later changes. Sending is
+ * fail-closed while Graph's draft-send action cannot bind the checked
+ * version. None takes a mailbox,
  * and none takes attendees. `get_draft` reads any draft id; deleting is
  * limited to drafts this server created, and updating to events it created
  * that have no attendee.
@@ -24,6 +27,7 @@ import * as S from "effect/Schema";
 import { emptyByDefault } from "./internal/OutboxFields.ts";
 import { OutboxAttachmentDigest } from "./OutboxAttachmentSource.ts";
 import { OutboxSendOutcome } from "./OutboxAuditLog.ts";
+import { OutboxBasisPin, OutboxBasisPinRef, OutboxBasisReport } from "./OutboxBasis.ts";
 import { OutboxSendExpectation, OutboxSendMismatchField } from "./OutboxSendGuard.ts";
 
 const $I = $M365McpId.create("OutboxTools");
@@ -106,6 +110,10 @@ export class OutboxCreateDraftParams extends S.Opaque<OutboxCreateDraftParams, {
       S.NonEmptyString,
       "Absolute paths of files to attach. Each must be a regular file under a configured attachment root."
     ),
+    basis: emptyByDefault(
+      OutboxBasisPinRef,
+      "Graph items the draft rests on: the calendar event a date came from, the message being answered. Give each its kind, its Graph id and the view you composed the draft from. For an event: subject, start and end (dateTime and timeZone exactly as Graph returned them with no time-zone preference, so UTC), isAllDay and isCancelled. For a message: its internetMessageId and, if you saw one, the internetMessageId of the newest later message from another sender as newestOtherReply (omit it when you saw none). The server reads each item itself and keeps its own read; if the item no longer matches your view, creation is refused with basis-changed naming the fields, and you should read the item again and redo the draft. get_draft reports when a pinned item changes later. Empty when the draft rests on nothing in Microsoft 365."
+    ),
     bcc: emptyByDefault(M365MailAddress, "Blind-carbon-copy addresses."),
     body: S.String.annotateKey({ description: "Message body." }),
     bodyType: GraphBodyContentType.annotateKey({ description: "Body format: `text` or `html`." }),
@@ -136,6 +144,10 @@ export class OutboxDraftCreated extends S.Opaque<OutboxDraftCreated, { readonly 
     attachments: S.Array(OutboxAttachmentDigest).annotateKey({
       description: "Name, size and sha256 of each attached file. Restate these in send_draft's expect block.",
     }),
+    basis: emptyByDefault(
+      OutboxBasisPin,
+      "Each pinned Graph item as the server observed it before creating the draft."
+    ),
     draftId,
     webLink: S.OptionFromOptionalKey(S.String)
       .pipe(S.withConstructorDefault(Effect.succeedNone))
@@ -171,10 +183,12 @@ export class OutboxDraftRef extends S.Opaque<OutboxDraftRef, { readonly brand: u
  * **Example** (Read a draft view)
  *
  * ```ts
+ * import { OutboxBasisReport } from "@beep/m365-mcp/OutboxBasis"
  * import { OutboxDraftView } from "@beep/m365-mcp/OutboxTools"
  *
  * const view = OutboxDraftView.make({
  *   attachments: [],
+ *   basis: OutboxBasisReport.make({ pins: [], verdict: "unpinned" }),
  *   bcc: [],
  *   bodyLength: 31,
  *   cc: [],
@@ -194,6 +208,10 @@ export class OutboxDraftView extends S.Opaque<OutboxDraftView, { readonly brand:
   S.Struct({
     attachments: S.Array(OutboxAttachmentDigest).annotateKey({
       description: "Attachments as stored: name, byte length and sha256 of the stored bytes.",
+    }),
+    basis: OutboxBasisReport.annotateKey({
+      description:
+        "Each pin recorded by create_draft, rechecked now, and the verdict: unpinned, pinned-current, pinned-stale (a pinned item changed or is gone; review the draft) or pinned-unverified (a pinned item could not be read).",
     }),
     bcc: S.Array(S.String).annotateKey({ description: "Blind-carbon-copy addresses as stored." }),
     bodyLength: S.Natural.annotateKey({
@@ -377,7 +395,7 @@ export class OutboxEventUpdated extends S.Opaque<OutboxEventUpdated, { readonly 
 export const OutboxCreateDraftTool = annotateFourHints(
   Tool.make("m365_outbox_create_draft", {
     description:
-      "Prepare a mail draft in the configured mailbox's Drafts folder, with files attached from absolute local paths under the configured attachment roots. This does not send anything. Automated draft sending is currently disabled because Graph cannot bind the send to the checked draft version. Returns the draft id and the name, size and sha256 of each attachment. The attachments are read back and compared with the local files; if an attachment fails or does not round-trip, the draft is deleted and the call fails.",
+      "Prepare a mail draft in the configured mailbox's Drafts folder, with files attached from absolute local paths under the configured attachment roots. This does not send anything. Automated draft sending is currently disabled because Graph cannot bind the send to the checked draft version. Returns the draft id and the name, size and sha256 of each attachment. The attachments are read back and compared with the local files; if an attachment fails or does not round-trip, the draft is deleted and the call fails. Pass basis to pin the draft to the calendar events and messages it was written from, each with the view you read: each one is read before the draft is created, and a pin that cannot be read (basis-unreadable), names a recurring series master (basis-series-master) or no longer matches your view (basis-changed) refuses the call and creates nothing.",
     failure: OutboxToolError,
     failureMode: "return",
     parameters: OutboxCreateDraftParams,
@@ -404,7 +422,7 @@ export const OutboxCreateDraftTool = annotateFourHints(
 export const OutboxGetDraftTool = annotateFourHints(
   Tool.make("m365_outbox_get_draft", {
     description:
-      "Read a draft as the mailbox stores it: whether it is still a draft, its recipients, subject and attachments (name, size and sha256 of the stored bytes, downloaded and hashed on each call). The body is not returned, only its length. This reads any draft id in the mailbox; only a draft created by this server's create_draft can be deleted through this server. Automated sending is disabled.",
+      "Read a draft as the mailbox stores it: whether it is still a draft, its recipients, subject and attachments (name, size and sha256 of the stored bytes, downloaded and hashed on each call). The body is not returned, only its length. The basis report rechecks every item the draft was pinned to when this server created it and gives a verdict: unpinned, pinned-current, pinned-stale (review the draft before it is sent) or pinned-unverified (a pinned item could not be read). This reads any draft id in the mailbox; only a draft created by this server's create_draft can be deleted through this server. Automated sending is disabled.",
     failure: OutboxToolError,
     failureMode: "return",
     parameters: OutboxDraftRef,

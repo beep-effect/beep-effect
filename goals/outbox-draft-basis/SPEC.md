@@ -100,6 +100,7 @@ Schema first, then the service contract, then handlers.
 
 ```text
 BasisPin     = { kind: "event" | "message", id, view, observedAt, changeKey }
+               a message pin also keeps its conversationId, as a lookup key
 BasisStatus  = Current
              | Changed      which named fields differ, and the fresh view
              | Gone         the item no longer exists
@@ -117,8 +118,12 @@ BasisReport  = unpinned | pinned-current | pinned-stale | pinned-unverified,
   written from.
 - The pin stores the named view, not a digest of it. Event: subject, start,
   end, all-day flag, cancelled flag. Message: its RFC 5322 message id, and
-  the newest message from another sender in the same conversation.
+  the newest later message from another sender in the same conversation.
   Equality is derived from the schema.
+- A message pin is rechecked with one list call on its conversation, which
+  spans folders, and the pinned message is found there by its RFC 5322
+  message id. Design and tenant evidence:
+  [`research/2026-11-10-p0-message-pin-probe.md`](./research/2026-11-10-p0-message-pin-probe.md).
 - `pinned-unverified` means a read failed. It is neither stale nor
   current, and the check-drafts tool leaves the category as it is.
 - `changeKey` is recorded for audit and never compared.
@@ -162,20 +167,20 @@ BasisReport  = unpinned | pinned-current | pinned-stale | pinned-unverified,
 
 ## Acceptance Criteria
 
-- [ ] The pin, status and report schemas and the pure comparison exist in
+- [x] The pin, status and report schemas and the pure comparison exist in
       `@beep/m365-mcp`, with property tests showing: an edit to a field
       outside the named view (a category, a reminder, `changeKey` alone)
       yields `Current`; an edit to any named field yields `Changed`.
-- [ ] `m365_outbox_create_draft` accepts a basis, reads each pinned item
+- [x] `m365_outbox_create_draft` accepts a basis, reads each pinned item
       before creating the draft, and writes the pins into the
       `draft-created` record. An unreadable pin, a series-master pin, and a
       pin whose caller-supplied view differs from the server's read each
       refuse with a typed reason and create no draft; in the stub world,
       moving an event's start between the caller's read and creation
       refuses with `basis-changed` naming `start`.
-- [ ] A `draft-created` record without a basis field decodes with an empty
+- [x] A `draft-created` record without a basis field decodes with an empty
       basis, proven by a test over a fixture of the earlier shape.
-- [ ] `m365_outbox_get_draft` returns the basis report. In the stub world,
+- [x] `m365_outbox_get_draft` returns the basis report. In the stub world,
       moving a pinned event's start yields `pinned-stale` naming `start`,
       editing only its reminder yields `pinned-current`, and a failed read
       yields `pinned-unverified`.
@@ -188,8 +193,8 @@ BasisReport  = unpinned | pinned-current | pinned-stale | pinned-unverified,
 - [ ] The tenant proof for the category is recorded as a decision file. If
       the mark was dropped, the criterion above is amended in the same
       change.
-- [ ] The message pin is either shipped under the one-list-call rule or cut
-      by decision file.
+- [x] The message pin is either shipped under the one-list-call rule or cut
+      by decision file. Shipped: decision file of 2026-11-10.
 - [ ] `m365_outbox_send_draft` still returns `version-unbound`; its existing
       tests are unchanged and green.
 - [ ] The `@beep/m365-mcp` README and the registration runbook describe
@@ -262,6 +267,14 @@ Reverse: Fold the remaining work into m365-agent-outbox as a slice by a decision
 Amends the decision 'A pin compares a digest of named fields'. Its substance stands: named fields are compared and changeKey never is. The digest is dropped. The pin stores the view itself (event: subject, start, end, all-day, cancelled), equality is derived from the schema, and Changed names the differing fields and carries the fresh observation. A digest suits bytes too large to store; five short fields are not that, and the audit log already holds event and draft subjects in clear. A fourth verdict, pinned-unverified, covers a read that failed: unknown is neither stale nor current, and the check-drafts tool leaves the category as it is. Time-zone rule: the basis read never sets a zone preference, so Graph returns UTC both times and the pair is compared as returned. The sketch was type-checked inside @beep/m365-mcp and removed. New hazard recorded for the message pin: a message's Graph id changes when it is moved to another folder. Evidence and the schema listing: research/2026-11-10-p0-basis-schemas.md in this packet. Agent-proposed; the operator, who had picked 'digest of named fields' earlier on 2026-11-10, confirmed the stored view the same day.
 
 Reverse: Replace the view field of the pin with a digest and drop the fields and now members of Changed; no record with pins exists before the first pull request merges, so nothing migrates.
+
+### The message pin ships on one conversation list call, 2026-11-10
+
+Settles the P0 message pin question and the moved-message hazard. A read-only probe on the firm tenant (counts only, no mailbox write) showed that the driver's existing listMessages accepts $filter=conversationId eq '<id>' on the outbox mailbox, and that the page spans folders: 13 messages of one conversation came back from 2 folders, each with from, internetMessageId and receivedDateTime. So 'a later message from another sender' is one list call, and the same call finds a pinned message by its internetMessageId after it was moved and its Graph id changed. The message pin therefore ships. Creation costs one get and one list per message pin; recheck costs one list. The pin stores the conversationId beside the Graph id as a lookup key that is never compared. The view is the pinned message's internetMessageId and newestOtherReply: the newest message in the conversation that is not a draft, arrived after the pinned message and was not sent from the outbox mailbox. A conversation of more than one page (500 messages) reads as Unreadable. The sender test compares the from address with the configured mailbox; a mailbox configured as an object id matches no sender, which over-reports and never under-reports. No change to @beep/m365 is needed. Evidence: research/2026-11-10-p0-message-pin-probe.md. Agent-decided under the packet's cut rule.
+
+Lane feat/outbox-draft-basis
+
+Reverse: Cut the message kind from the pin union by decision file before the first pull request merges; after it, stop accepting message pins in create_draft and keep decoding recorded ones.
 
 ### Appetite is two pull requests, and the message pin is the named cut, 2026-11-10
 
