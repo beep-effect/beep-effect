@@ -35,21 +35,13 @@
     "goals/turborepo-quality-cache-adoption/research/SOURCES.md",
     "explorations/turborepo-quality-cache/DECISIONS.md",
     "explorations/turborepo-quality-cache/MAP.md",
-    "goals/turborepo-quality-cache-adoption/research/native-base-ref-controls.py",
     "goals/turborepo-quality-cache-adoption/research/native-base-ref-controls.json",
     "goals/turborepo-quality-cache-adoption/research/base-ref-feature-review.json",
-    "goals/turborepo-quality-cache-adoption/research/refresh-current-population.py",
     "goals/turborepo-quality-cache-adoption/research/population-refresh-checkpoint-2026-11-02.json",
     "goals/turborepo-quality-cache-adoption/research/current-fresh-disposition-review-2026-11-02.json",
-    "goals/turborepo-quality-cache-adoption/research/native-setup-controls.py",
-    "goals/turborepo-quality-cache-adoption/research/native-signature-key-controls.py",
-    "goals/turborepo-quality-cache-adoption/research/native-global-configuration-controls.py",
-    "goals/turborepo-quality-cache-adoption/research/signature-key-source-binding-controls.py",
-    "goals/turborepo-quality-cache-adoption/research/native-source-family-controls.py",
-    "goals/turborepo-quality-cache-adoption/research/native-boundaries-controls.py",
-    "goals/turborepo-quality-cache-adoption/research/native-worktree-controls.py",
     "goals/turborepo-quality-cache-adoption/OPERATIONAL-SCOPE.md",
-    "goals/turborepo-quality-cache-adoption/PAUSED-HANDOFF.md"
+    "goals/turborepo-quality-cache-adoption/PAUSED-HANDOFF.md",
+    "goals/turborepo-quality-cache-adoption/history/2026-11-13-python-removed.md"
   ],
   "researchReports": [
     "research/OPPORTUNITIES.md",
@@ -291,8 +283,7 @@
     "bun run beep goals doctor",
     "bun run beep explore --check",
     "git diff --check -- goals/turborepo-quality-cache-adoption",
-    "bun run beep lint reflection-artifacts",
-    "python3 -m unittest goals/turborepo-quality-cache-adoption/research/test_selection_invoke_compatibility.py"
+    "bun run beep lint reflection-artifacts"
   ],
   "stopConditions": [
     "Semantic divergence, failed invalidation, sensitive output, or unauthorized read/write/tenant crossing stops affected reuse.",
