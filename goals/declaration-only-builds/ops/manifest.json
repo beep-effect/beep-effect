@@ -4,13 +4,13 @@
     "id": "declaration-only-builds",
     "packetId": "goal-packet/v1:585ff4d7e6367f0e5b61f8b495587b00b2ec5ac07fdf7a63202cfa013822607e",
     "title": "Declaration-Only Builds",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-10",
     "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/declaration-only-builds",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Library package builds emit declarations only: remove the Babel pass and JavaScript emit from generated builds, and type-check each package source once per run if the check-program census proves build and check agree.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -124,7 +124,7 @@
     {
       "id": "P4",
       "name": "Close",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -141,9 +141,10 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "P4 Close: the three work PRs are merged (#3178, #3208, #3242). Library builds emit declarations and declaration maps only; the check of 180 packages runs the build program after the package's own build. Measured: serial build work 80.9 s to 32.9 s, dist 232.5 MB to 147.9 MB, 15.5 s less compiler work per full check run. This final PR carries the reflection and the closeout proposal.",
-  "proposedCloseout": {
+  "statusNote": "Closed 2026-11-13 as completed-retained, verified via #3259. Library builds emit declarations and declaration maps only (#3208); the check of 180 packages runs the build program after the package's own build (#3242). Measured: serial build work 80.9 s to 32.9 s, dist 232.5 MB to 147.9 MB, 15.5 s less compiler work per full check run.",
+  "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 3259
-  }
+  },
+  "retentionReason": "Documents a live system: the declaration-only generated build, the check that runs the build program after the package's own build, the two override lists in the scripts policy, the census build-equivalence mode and the build measurement script under ops/, with the equivalence and timing evidence the contract tests and the toolchain runbook rest on; archive once the two override packages are served by the build and the no-emit check configs are removed."
 }
