@@ -48,6 +48,22 @@
       {
         "number": 3242,
         "role": "supporting"
+      },
+      {
+        "number": 3259,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "hosted-required-checks",
+        "ref": "required",
+        "gating": true
+      },
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/docs_declaration-only-builds-closeout-4daf18b5523b/verdict.json",
+        "gating": true
       }
     ]
   },
@@ -125,5 +141,9 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "P4 Close: the three work PRs are merged (#3178, #3208, #3242). Library builds emit declarations and declaration maps only; the check of 180 packages runs the build program after the package's own build. Measured: serial build work 80.9 s to 32.9 s, dist 232.5 MB to 147.9 MB, 15.5 s less compiler work per full check run. This final PR carries the reflection and the closeout proposal."
+  "statusNote": "P4 Close: the three work PRs are merged (#3178, #3208, #3242). Library builds emit declarations and declaration maps only; the check of 180 packages runs the build program after the package's own build. Measured: serial build work 80.9 s to 32.9 s, dist 232.5 MB to 147.9 MB, 15.5 s less compiler work per full check run. This final PR carries the reflection and the closeout proposal.",
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3259
+  }
 }

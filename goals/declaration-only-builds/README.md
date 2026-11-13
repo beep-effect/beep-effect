@@ -37,9 +37,9 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 P4 Close. The three work PRs are merged: #3178 (baseline and proof harness),
-#3208 (declaration-only build) and #3242 (check once). This final PR carries
-the closeout reflection and the closeout proposal; the packet stays `active`
-until the proposal is verified and adopted.
+#3208 (declaration-only build) and #3242 (check once). The final PR, #3259,
+carries the closeout reflection and the closeout proposal; the packet stays
+`active` until the proposal is verified and adopted.
 
 ## Latest Evidence
 
