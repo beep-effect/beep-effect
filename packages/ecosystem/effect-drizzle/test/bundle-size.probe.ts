@@ -19,7 +19,13 @@ import { build as buildLayer } from "effect/Layer";
 import { isNone, isSome } from "effect/Option";
 import { String as StringSchema, TaggedError, Unknown } from "effect/Schema";
 import * as Str from "effect/String";
-import { buildBundleConsumer, bundleConsumerEntrypointId, esbuildVersion } from "./bundle-build.ts";
+import {
+  buildBundleConsumer,
+  bundleConsumerEntrypointId,
+  esbuildVersion,
+  importBundleConsumer,
+  makeBundleImportDirectory,
+} from "./bundle-build.ts";
 import committedBaseline from "./bundle-size.baseline.json" with { type: "json" };
 import { compareBundleSize, formatBundleSizeLine, minimumBundleRawBytes } from "./bundle-size.ts";
 
@@ -35,12 +41,8 @@ const measureBundleConsumer = fnUntraced(function* () {
     try: buildBundleConsumer,
     catch: (cause) => BundleProbeError.make({ message: "Bundle build rejected", cause }),
   });
-  if (!Str.includes("integer")(artifact.text)) {
-    return yield* BundleProbeError.make({
-      message: "Bundle artifact lost the consumer surface (no integer symbol) — over-shaken stub",
-      cause: { rawBytes: artifact.rawBytes },
-    });
-  }
+  const directory = yield* makeBundleImportDirectory();
+  yield* importBundleConsumer(artifact.text, directory);
   return artifact;
 });
 
