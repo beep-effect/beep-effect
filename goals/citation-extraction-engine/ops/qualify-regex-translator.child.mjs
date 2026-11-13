@@ -10,7 +10,10 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { makeCitationRegexAlphabet } from "../../../packages/law-practice/server/src/internal/Citation/RegexAlphabet.ts";
 import { makeCitationRegexDescriptorRegistry } from "../../../packages/law-practice/server/src/internal/Citation/RegexDescriptors.ts";
-import { citationUnaccountedText, makeCitationRegexInput } from "../../../packages/law-practice/server/src/internal/Citation/RegexInput.ts";
+import {
+  citationUnaccountedText,
+  makeCitationRegexInput,
+} from "../../../packages/law-practice/server/src/internal/Citation/RegexInput.ts";
 import { makeCitationRegexProgram } from "../../../packages/law-practice/server/src/internal/Citation/RegexProgram.ts";
 import { makeCitationRegexResult } from "../../../packages/law-practice/server/src/internal/Citation/RegexResult.ts";
 import { makeCitationRegexTranslator } from "../../../packages/law-practice/server/src/internal/Citation/RegexTranslator.ts";
