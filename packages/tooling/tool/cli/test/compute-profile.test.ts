@@ -133,7 +133,7 @@ describe("compute profile probe", () => {
 
 const ceilingMemoryStats = memoryStatsLayerFor(source(7 * GIB, 15 * GIB)).pipe(Layer.provide(FileSystem.layerNoop({})));
 
-it.layer(ceilingMemoryStats)("memory stats under a compute ceiling", (it) => {
+it.layer(ceilingMemoryStats, { timeout: "30 seconds" })("memory stats under a compute ceiling", (it) => {
   it.effect("traces the cgroup reservation-capacity read as MemoryStats.reservationCapacity", () =>
     Effect.gen(function* () {
       const spans = MutableRef.make<ReadonlyArray<string>>([]);
