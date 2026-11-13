@@ -13,7 +13,7 @@ inside the T3 agents slice. Home paths are written as `~`.
 | 1 | Probe prints `worker`; `--is worker` exits 0/1 in under a second | pass | `worker`, exit 0 / exit 1, 0.73 to 0.76 s wall |
 | 2a | Worker `final-check` refuses hosted-only gates and prints the `yeet open` route | pass | six gates skipped with reason `compute-profile=worker`, route printed, receipt `computeProfile: worker` |
 | 2b | `--force-local` runs them and the receipt records it | not proven | `--force-local --gates fallow` ran for 29.5 min under a 3 GiB cap without finishing; stopped to protect T3; attempt row has `forceLocal: true`, no receipt written |
-| 3 | edit → commit (hooks skipped by profile) → `yeet open` → hosted regeneration commit → hosted green → `yeet ready`, no process above 1.5 GB | fail at "hosted green" | the regeneration commit landed, but every workflow on its head is `action_required`: the bot push needs a maintainer's approval before hosted CI runs. No measured lane process exceeded 1.5 GB. |
+| 3 | edit → commit (hooks skipped by profile) → `yeet open` → hosted regeneration commit → hosted green → `yeet ready`, no process above 1.5 GB | fail | the commit skipped both hooks by profile and the hosted regeneration commit `856a171a7` landed, but every workflow on that head is `action_required` (the bot push needs a maintainer's approval). Hosted CI ran only after a later lane push. The draft-to-ready flip was made by the `kriegcloud` account, not by `yeet ready`. Hosted Check and Lint Policy then went red on the lane's own test, and the worker only learned of it from hosted CI 36 minutes after the push. Core lane commands stayed at 600 MB or less; the optional local test type-check reached 2.59 GB and was stopped. |
 | 5 | Attempt and admission facts carry `computeProfile` beside the env profile; receipts name auto-skipped gates | partial | attempt journal and receipt pass; no admission journal row was written on this host for any run in the lane |
 
 Criterion 4 (workstation commit) belongs to DankStation and was not part of
@@ -165,7 +165,33 @@ rerun used the same item addressed by its ID.
   `7e50645d7..856a171a7`.
 - The lane pulled `856a171a7` fast-forward.
 
-### Hosted green: blocked
+### Every Catalog Regeneration run for this PR
+
+| Run | Event | Head | Conclusion | Committed |
+| --- | --- | --- | --- | --- |
+| 43423378421 | `pull_request` (`labeled`) | `7e50645d71` | cancelled (concurrency group, superseded by the next `labeled` event) | no |
+| [43423380715](https://github.com/beep-effect/beep-effect/actions/runs/43423380715) | `pull_request` (`labeled`) | `7e50645d71` | success | yes: `856a171a7`, 1 file, +1 line |
+| 43423589561 | `pull_request` (`synchronize`, the bot push) | `856a171a7f` | `action_required` (never ran) | no |
+| [43428550233](https://github.com/beep-effect/beep-effect/actions/runs/43428550233) | `pull_request` (`synchronize`, the lane push) | `9d4964d63b` | success | no: `drifted=0`, "Catalog shards are current." |
+
+Shard provenance. The changed line is
+`{"name":"MemoryStats.reservationCapacity",…}` in
+`standards/instrumentation-catalog/@beep/repo-cli.generated.jsonc`:
+
+- it is absent from the lane commit `7e50645d71`, because both catalog hooks
+  were skipped by the profile and nothing else wrote the shard locally;
+- it is absent from `origin/main` (`8b405079b6`);
+- it was added only by the bot commit `856a171a7` (author and committer
+  `github-actions[bot]`), from run 43423380715;
+- it reached the final head `9d4964d63b` through the lane's merge of
+  `origin/main`. Git merged it cleanly next to main's #3248 catalog lines;
+  nothing regenerated it.
+
+So the final run's clean tree means the shard was already right. It does not
+mean a regeneration happened some other way: no local hook wrote the shard,
+and the merge did not regenerate it.
+
+### Hosted green on the bot's head: blocked
 
 All three workflows on `856a171a7` (Check
 [43423589914](https://github.com/beep-effect/beep-effect/actions/runs/43423589914),
@@ -181,11 +207,59 @@ or unavailable to this workflow is unconfirmed.
 
 As built, a single-push worker lane cannot reach hosted green on its
 regenerated head without a maintainer approving the runs or the lane pushing
-again. This run did not approve the held runs. The evidence commit that
-carries this note is a lane push, and it starts fresh runs on a head that
-includes the regenerated shard. Hosted green and `yeet ready` on that head
-are reported on the PR, because this note has to be pushed before `yeet
-ready`.
+again. This run did not approve the held runs.
+
+### Merge of main, evidence push and `yeet ready`
+
+- `yeet open` for the evidence commit refused a stale base: `origin/main`
+  had gained #3248, which also changed
+  `standards/instrumentation-catalog/@beep/repo-cli.generated.jsonc`. The lane
+  merged `origin/main` cleanly (`9d4964d63b`), re-ran `yeet final-check`
+  (pass; the same six gates deferred with `compute-profile=worker`) and pushed
+  with `yeet open`. The push came from the lane identity, so its workflows
+  queued normally rather than landing at `action_required`.
+- `yeet ready` at 12:53Z, PR still a draft, Check queued:
+  `yeet ready refused: blocked on final-check: wait for hosted Repo Sanity
+  (worker profile defers cheap-gates).` Exit 1; the PR stayed a draft.
+- **External event:** at 2026-11-13T13:11:38Z the `kriegcloud` account
+  marked the PR ready for review (`ready_for_review` in
+  `issues/3267/events`). The lane did not do this, and from then on this run
+  cannot observe its own `yeet ready` flipping a draft.
+- `yeet ready` on the already-ready PR, with hosted Repo Sanity green and Lint
+  Policy pending: `yeet ready refused: blocked on final-check: wait for hosted
+  Heavy / Lint Policy (worker profile defers lint-policy).` Exit 1. It does
+  not short-circuit on an already-ready PR: it still checks the
+  worker-deferred gates against hosted results.
+- Hosted Check run
+  [43428550516](https://github.com/beep-effect/beep-effect/actions/runs/43428550516)
+  for `9d4964d63b` came back red on two worker-deferred gates. Both reds were
+  introduced by this lane's test:
+  - `Heavy / Check` (job 131900126318):
+    `test/compute-profile.test.ts(149,7): error TS377032: Effect.provide with
+    a Layer should only be used at application entry points`.
+  - `Heavy / Lint Policy` (job 131900126250): `lint:effect-vitest` reported
+    `1 new finding(s)` in `packages/tooling/tool/cli/test/compute-profile.test.ts`.
+    That is the same per-test `Effect.provide(layer)` (class
+    `per-test-layer-provide`, EV002, replacement `it.layer`).
+- Round trip. Lane push at 12:50:15Z; run created at 12:50:18Z; Check job
+  queued until 13:25:06Z and red at 13:26:15Z; Lint Policy red at 13:31:42Z.
+  The worker learned of a type error in its own test about 36 minutes after
+  pushing, 35 of them spent in the runner queue. Locally the lane had run
+  `vitest` (which does not type-check) and the worker `final-check`, which
+  defers both gates by design.
+- While the gates were red, `yeet ready` printed at 13:33:33Z: `yeet ready
+  refused: blocked on final-check: hosted Heavy / Lint Policy is red (failure)
+  on this head; the worker profile deferred lint-policy to it, fix the red
+  before the flip.` Exit 1.
+- Fix: the test now provides the layer through `it.layer(...)` instead of a
+  per-test `Effect.provide`. `vitest run test/compute-profile.test.ts`: 11
+  passed. A local type check of the test project was attempted:
+  `bunx turbo run package-test-typecheck --filter=@beep/repo-cli` under
+  `systemd-run --user --scope -p MemoryHigh=2G -p MemoryMax=3G`. It was
+  stopped after 30 minutes with no result: `tsc` alone held 2.59 GB RSS, the
+  scope sat at 2.98 GB, and `user-1001.slice` reached `some avg10=89`
+  pressure. The fix was therefore pushed unproven and left to hosted CI.
+- The `yeet ready` result after hosted green is recorded on the PR.
 
 ## Step 7: `--force-local` (criterion 2, second half)
 
@@ -264,10 +338,20 @@ aggregates, page cache included.
 | `yeet publish --plan` | 1.7 s | 321 MB | yes |
 | `yeet open`, first attempt (failed on the token ref) | 7.3 s | 339 MB | yes |
 | `yeet open` | 15.5 s | 380 MB | yes |
+| `git commit` (evidence) | 14.7 s | 185 MB | yes |
+| `yeet final-check` on `28d712638a` / `9d4964d63b` | 32.6 / 55.3 s | 602 MB | yes |
+| `yeet open` (stale-base refusal) / (push) | 3.8 / 14.3 s | 351 / 385 MB | yes |
+| `git merge origin/main` | 4.0 s | 262 MB | yes |
+| `yeet ready` (draft, refused) / (ready PR, refused) / (red gate, refused) | 9.0 / 8.3 / 8.0 s | 386 / 386 / 389 MB | yes |
+| `vitest run test/compute-profile.test.ts` (fix) | 6.3 s | 684 MB | yes |
+| `turbo run package-test-typecheck --filter=@beep/repo-cli` (capped scope, stopped) | 30 min, stopped | `tsc` 2.59 GB; scope 2.98 GB | yes: **exceeds 1.5 GB** |
 | detached readiness monitor unit (cgroup `MemoryPeak`) | running | 337 MB aggregate | yes |
 | `final-check --force-local --gates fallow` (scope) | 29.5 min, stopped | 3.06 GB aggregate; largest process 398 MB | step 7 |
 
-No measured process in the criterion-3 window exceeded 1.5 GB. Yeet's own
+The core lane commands (commit, final-check, open, ready, merge) all stayed
+under 1.5 GB, at 600 MB or less. The one breach is the optional local test
+type-check (`tsc` 2.59 GB), attempted to diagnose the hosted Check red;
+that check is hosted-only on this profile for exactly this reason. Yeet's own
 per-step RSS files under `.beep/yeet/rss/` are transient: they are deleted
 after reading. The final-check steps carried no `peakRssKb`, so the figures
 above come from the external wrapper.
@@ -290,5 +374,13 @@ above come from the external wrapper.
    criterion 5's admission half has no evidence on a worker.
 5. The primary clone's interim `lefthook-local.yml` is now redundant (the
    profile skips both hooks) and can be removed by the host owner.
-6. The host has no git identity; commits need `GIT_AUTHOR_*` and
+6. A worker lane cannot see Check or Lint Policy reds before hosted CI
+   reports them, and the local test type-check alone exceeds the worker
+   budget (`tsc` 2.59 GB for `@beep/repo-cli`). A test-file type error costs
+   one hosted round trip, about 36 minutes here.
+7. Hosted regeneration only covers the first push. When `main` later
+   changes the same shard, the lane must merge `main` by hand (`yeet open`
+   refuses a stale base). Git merged it cleanly here, but nothing guarantees
+   that for a generated file.
+8. The host has no git identity; commits need `GIT_AUTHOR_*` and
    `GIT_COMMITTER_*` set.
