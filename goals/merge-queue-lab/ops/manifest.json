@@ -3,13 +3,13 @@
   "initiative": {
     "id": "merge-queue-lab",
     "title": "Merge Queue Lab",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-09",
-    "updated": "2026-11-10",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/merge-queue-lab",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Run a GitHub merge queue on a lab branch behind a toy required check, record how GitHub behaves where its docs are silent, land enqueue calls in the GitHub driver, and return a go, park or kill verdict.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -34,7 +34,7 @@
       },
       {
         "number": 3146,
-        "role": "final"
+        "role": "supporting"
       }
     ],
     "acceptanceEvidence": [
@@ -44,10 +44,6 @@
         "gating": true
       }
     ]
-  },
-  "proposedCloseout": {
-    "status": "completed-retained",
-    "finalPullRequest": 3146
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -119,7 +115,7 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
