@@ -221,17 +221,41 @@ The primary was chosen after the first probe's pilot contrast was seen. Every sc
 
 Reverse: None inside this goal: pooling pilot runs or changing the scorer after the rule merges would void the verdict.
 
+### Kept run directories go under ~/.cache/beep through TMPDIR, 2026-11-13
+
+claude plugin eval writes --keep-temp directories under TMPDIR, which on this workstation defaults to a cache root outside ~/.cache/beep. The scored run sets TMPDIR to the lane's cache directory so kept directories stay out of /tmp and out of the repository, as GOAL.md requires. Run records carry only the kept directory's basename.
+
+Lane goals/skill-lane-probe-p1
+
+Reverse: Point TMPDIR back at the default temp root; nothing in the analysis depends on the location.
+
 ### Measure skill effect; build no optimizer, 2026-11-13
 
 Carried from the first probe. The goal measures whether a skill changes model output. The SkillOpt retirement disposition (retire the runner, build no replacement optimizer) stands.
 
 Reverse: Needs a new operator decision lifting the SkillOpt retirement disposition; then reopen the source exploration at decompose.
 
+### Permutation test mechanics: shared draws, six-decimal ties, fixed draw order, 2026-11-13
+
+The Decision Rule fixes the statistic, seed, count and p-value formula; these are the choices it leaves open. Every relabeling shuffles every counted task once, in task-id order, by Fisher-Yates over the task's C runs then its B runs, using effect/Random seeded with 20261113 (ISAAC, pure JavaScript, so Node and Bun draw the same sequence; a pinned test checks it). The four family statistics read the same draws as the overall statistic. A draw counts when the rounded absolute statistic is at least the rounded observed one, following the six-decimal rounding rule of the first probe's analysis rule, so tied relabelings of discrete scores count as ties and not as float noise.
+
+Lane goals/skill-lane-probe-p1
+
+Reverse: Change the mechanics in a new dated rule before the scored run starts.
+
 ### Primary measure is lane fraction, 2026-11-13
 
 The scorer's weighted per-run score was defined by the task manifests before any probe data, and it moved in the first probe's pilot where pass-or-fail measures sat at zero. Schema-first lane pass was rejected because a run that writes no schema passes it. New per-task checks were rejected as post hoc and as new corpus work.
 
 Reverse: Pick another primary in a new dated rule before the scored run starts; afterwards only a new goal can.
+
+### The lane rule is its own report route under --primary lane-fraction, 2026-11-13
+
+`probe report --primary lane-fraction` builds a new skill-lane-probe-report/v1 from new SkillLaneProbeSchemas and SkillLaneProbeStats modules. The first probe's rule, schemas and committed report stay as they are, so its records still reproduce. Secondary rows (pass measures, fired-only, turns, wall time, lane census) are taken from the first probe's builder without its verdict, and the 144-attempt cap is checked on top of its pooling checks.
+
+Lane goals/skill-lane-probe-p1
+
+Reverse: Remove the lane-fraction choice and the SkillLaneProbe modules; the first probe's report is untouched.
 
 ### Three outcomes, with the 0.10 threshold kept, 2026-11-13
 
