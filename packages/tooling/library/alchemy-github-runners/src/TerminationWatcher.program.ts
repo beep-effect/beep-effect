@@ -24,6 +24,7 @@ import { GitHubRunners } from "./GitHubApp.service.ts";
 import { RunnerOwner } from "./GitHubRunners.models.ts";
 import { installationTokenFor } from "./internal/Installation.ts";
 import { MessageQueue } from "./MessageQueue.service.ts";
+import { GitHubApiError } from "./RunnerFleet.errors.ts";
 import { RunnerTag } from "./RunnerInstance.models.ts";
 import { DeregisterRetryMessage } from "./RunnerMessages.models.ts";
 import { RunnerType } from "./RunnerPool.models.ts";
@@ -206,8 +207,11 @@ export const handleTerminationEvent = Effect.fn("TerminationWatcher.handleEvent"
  *
  * **Details**
  *
- * A still-busy runner is re-queued with the count incremented; the retry
- * queue's redrive policy sends a message that keeps failing to its DLQ.
+ * A still-busy runner is re-queued with the count incremented, at most
+ * `maxDeregisterRetries` times. Past the cap the program fails with a
+ * `GitHubApiError` (status 422): the Lambda reports the record as a batch item
+ * failure, SQS redelivers it up to the queue's `maxReceiveCount` and the DLQ
+ * takes it.
  *
  * **Example** (Wire the program)
  *
@@ -237,6 +241,14 @@ export const handleDeregisterRetry = Effect.fn("TerminationWatcher.handleRetry")
   if (outcome !== "busy") {
     return outcome;
   }
-  yield* queueRetry(input.config, DeregisterRetryMessage.make({ ...message, retryCount: message.retryCount + 1 }));
+  const retryCount = message.retryCount + 1;
+  if (retryCount >= input.config.maxDeregisterRetries) {
+    return yield* GitHubApiError.make({
+      operation: "deregisterRetry",
+      status: O.some(422),
+      message: `Runner of ${message.instanceId} still busy after ${retryCount} retries`,
+    });
+  }
+  yield* queueRetry(input.config, DeregisterRetryMessage.make({ ...message, retryCount }));
   return "retry-queued" as const;
 });

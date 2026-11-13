@@ -249,7 +249,9 @@ export class HousekeeperRuntimeConfig extends S.Opaque<HousekeeperRuntimeConfig,
  *
  * An instance is the watcher's only when its `ghr:environment` tag starts with
  * `environmentPrefix`, the upstream tag-filter rule. A busy runner is retried
- * through `deregisterRetryQueueUrl` after `retryDelaySeconds`.
+ * through `deregisterRetryQueueUrl` after `retryDelaySeconds`, at most
+ * `maxDeregisterRetries` times (default 5); after that the record fails, SQS
+ * redelivers it up to the queue's `maxReceiveCount` and its DLQ takes it.
  *
  * **Example** (The fleet watcher)
  *
@@ -279,6 +281,10 @@ export class TerminationWatcherRuntimeConfig extends S.Opaque<
     retryDelaySeconds: S.Int.pipe(
       S.withConstructorDefault(Effect.succeed(300)),
       S.withDecodingDefaultKey(Effect.succeed(300))
+    ),
+    maxDeregisterRetries: S.Int.check(S.isGreaterThanOrEqualTo(1)).pipe(
+      S.withConstructorDefault(Effect.succeed(5)),
+      S.withDecodingDefaultKey(Effect.succeed(5))
     ),
     ghesApiUrl: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
