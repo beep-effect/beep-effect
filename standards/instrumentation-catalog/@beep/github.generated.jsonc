@@ -119,6 +119,7 @@
     {"name":"RepositoryVariable.listForEnvironment","owner":"@beep/github","family":"driver","conforms":true},
     {"name":"RepositoryVariable.set","owner":"@beep/github","family":"driver","conforms":true},
     {"name":"RepositoryVariable.setForEnvironment","owner":"@beep/github","family":"driver","conforms":true},
+    {"name":"Resilience.credentialFingerprint","owner":"@beep/github","family":"driver","conforms":true},
     {"name":"ReviewThread.collectPages","owner":"@beep/github","family":"driver","conforms":true},
     {"name":"ReviewThread.list","owner":"@beep/github","family":"driver","conforms":true},
     {"name":"ReviewThread.listByNodeId","owner":"@beep/github","family":"driver","conforms":true},

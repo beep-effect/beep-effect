@@ -21,6 +21,7 @@ import { Octokit } from "@octokit/core";
 import { composePaginateRest } from "@octokit/plugin-paginate-rest";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -34,6 +35,7 @@ import * as Str from "effect/String";
 import { GitHubError, readRateLimitHeaders } from "../GitHubError.ts";
 import { GitHubGraphQLError } from "../GraphQL.ts";
 import {
+  credentialFingerprint,
   RateLimitCredential,
   RateLimitObservation,
   RateLimitOutcome,
@@ -313,6 +315,12 @@ export const makeTransport = Effect.fn("OctokitTransport.make")(function* (
   const policy = options.retry;
   const budgetLabel = O.fromUndefinedOr(options.budgetLabel);
   const credential = options.credential ?? credentialOfToken(options.token);
+  const observed = sink !== Context.get(Context.empty(), RateLimitSink);
+
+  const fingerprint =
+    observed && credential === "token" && !O.exists(budgetLabel, Str.startsWith("app:")) && options.token !== undefined
+      ? yield* credentialFingerprint(options.token).pipe(Effect.asSome)
+      : O.none();
 
   /**
    * Keep the latest snapshot and hand one observation to the sink.
@@ -334,7 +342,7 @@ export const makeTransport = Effect.fn("OctokitTransport.make")(function* (
     yield* Ref.set(snapshot, parsed);
     const at = yield* DateTime.now;
     yield* sink
-      .record(RateLimitObservation.make({ snapshot: parsed.value, budgetLabel, credential, at, ...meta }))
+      .record(RateLimitObservation.make({ snapshot: parsed.value, budgetLabel, credential, fingerprint, at, ...meta }))
       .pipe(
         Effect.timeoutOption(SINK_TIMEOUT),
         Effect.asVoid,

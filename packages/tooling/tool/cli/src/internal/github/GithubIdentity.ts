@@ -22,6 +22,7 @@ import { Git } from "@beep/git/Git";
 import { GitHubApp } from "@beep/github/GitHubApp";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { Repo, RepoRef } from "@beep/github/Repo";
+import { credentialFingerprint } from "@beep/github/Resilience";
 import { $RepoCliId } from "@beep/identity/packages";
 import { configStringOption } from "@beep/repo-cli-kit/cli/EnvConfig";
 import { LiteralKit } from "@beep/schema";
@@ -43,6 +44,7 @@ import { resolveGithubIdentityLabel } from "./GithubIdentityLabel.ts";
 import { ConfiguredGithubIdentity } from "./GithubLedger.schemas.ts";
 import type { CommandFailedError, CommandOutputError } from "@beep/commands/Run";
 import type { GitHubClientOptions } from "@beep/github/GitHubClient";
+import type { CredentialFingerprint } from "@beep/github/Resilience";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GithubIdentityLabel } from "./GithubLedger.schemas.ts";
 
@@ -344,6 +346,24 @@ export const GithubBudgetIdentity: Context.Reference<O.Option<GithubIdentityLabe
 );
 
 /**
+ * Physical token fingerprint carried alongside the client's canonical identity.
+ *
+ * **Example** (Read the default)
+ *
+ * ```ts
+ * import { GithubBudgetCredential } from "@beep/repo-cli/test/SharedInternals"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.runSync(GithubBudgetCredential)._tag) // "None"
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export const GithubBudgetCredential = Context.Reference<O.Option<CredentialFingerprint>>($I`GithubBudgetCredential`, {
+  defaultValue: O.none,
+});
+
+/**
  * The identity to speak as and the working directory for its `gh`/`op` child processes.
  *
  * @category models
@@ -415,9 +435,12 @@ export const layerGithubClientFor: {
           onSome: (fetch) => ({ fetch, ...options }),
         });
         // With a ledger in context, the client carries its bucket owner's label; without one nothing is resolved.
-        const labelled = (label: O.Option<GithubIdentityLabel>) => ({
+        const labelled = (label: O.Option<GithubIdentityLabel>, credential: O.Option<CredentialFingerprint>) => ({
           transport: O.match(label, { onNone: () => base, onSome: (budgetLabel) => ({ ...base, budgetLabel }) }),
-          identityLayer: Layer.succeed(GithubBudgetIdentity, label),
+          identityLayer: Layer.merge(
+            Layer.succeed(GithubBudgetIdentity, label),
+            Layer.succeed(GithubBudgetCredential, credential)
+          ),
         });
         const labelInput = {
           kind: identity.kind,
@@ -437,7 +460,7 @@ export const layerGithubClientFor: {
           );
           const privateKey = yield* readOpReference(keyRef, cwd, "the GitHub App private key");
           const appLabel = yield* resolveGithubIdentityLabel({ ...labelInput, token: O.none() });
-          const { transport, identityLayer } = labelled(appLabel);
+          const { transport, identityLayer } = labelled(appLabel, O.none());
           return GitHubApp.clientLayer({ appId, privateKey, installationId }, transport).pipe(
             Layer.catchTag("GitHubAppError", (error) =>
               Layer.effect(
@@ -459,7 +482,8 @@ export const layerGithubClientFor: {
               )
             : yield* readSecretOutput("gh", ["auth", "token"], cwd, "token-unavailable", "a gh login token");
         const tokenLabel = yield* resolveGithubIdentityLabel({ ...labelInput, token: O.some(token) });
-        const { transport, identityLayer } = labelled(tokenLabel);
+        const fingerprint = yield* credentialFingerprint(token);
+        const { transport, identityLayer } = labelled(tokenLabel, O.some(fingerprint));
         return GitHubClient.layerFromToken({ ...transport, token }).pipe(Layer.merge(identityLayer));
       })
     ).pipe(Layer.provide(Digest.layerWebCrypto))
