@@ -103,7 +103,7 @@ query (PR | branch | lane | checkout)
   -> the exact send call, or the fallback rung
 ```
 
-`bun run beep session resolve <key> [--json]` prints the owner, every route
+The planned `session resolve <key> [--json]` prints the owner, every route
 with its liveness, and the literal call to make (`t3_thread_send` with its
 ids, or `SendMessage` with the current name). It sends nothing.
 

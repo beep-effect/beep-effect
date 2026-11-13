@@ -68,7 +68,7 @@ Claude Code keeps a live index, one file per running process, at
 This session's environment has `CLAUDE_CODE_ENTRYPOINT=t3-code`,
 `CLAUDE_CODE_SESSION_ID` and `T3CODE_THREAD_ID=mcp:launch:78a27e42…`. The T3
 tools report the same value as `currentThreadId`, and
-`~/.t3/userdata/environment-id` holds the environment id (`17d7708d`). So a
+the `environment-id` file in T3's userdata directory holds the environment id (`17d7708d`). So a
 T3-hosted session can read its complete T3 address from its own environment
 and one file, with no tool call.
 
@@ -167,7 +167,7 @@ visible only as a T3 thread. I did not inspect any remote disk.
 - 15 rows have a `sessionId` that is in the Claude live index with a live pid.
 - #3172 has one row (lane `outbox-draft-basis`, harness `claude-code`,
   state `blocked`). #3171, #3122 and #3195 have none.
-- Only 3 live rows sit under `~/.t3/worktrees`. Most T3 threads work from an
+- Only 3 live rows sit under T3's own worktree root. Most T3 threads work from an
   ordinary clone or worktree, so the checkout path does not reveal the thread.
 
 The "open" list is mostly dead rows. Nothing in a row says whether its session
@@ -192,8 +192,7 @@ NOT FOUND in the repo: a route type, any PR or branch to session lookup, any
 liveness check for a ledger row, any cross-host view of ledger rows.
 
 T3's MCP server is registered at user level for Claude Code, Codex, Cursor,
-Grok and Junie on DankStation (`~/.claude.json`, `~/.codex/config.toml`,
-`~/.cursor/mcp.json`, `~/.grok/config.toml`, `~/.junie/mcp/mcp.json`). Every
+Grok and Junie on DankStation (each harness's user-level MCP config names a `t3-code` server). Every
 harness can send to a T3 thread. Only T3 threads and same-host Claude sessions
 can receive.
 

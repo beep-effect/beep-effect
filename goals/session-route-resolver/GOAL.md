@@ -4,7 +4,7 @@ Repo root: the current working directory — the `beep-effect` checkout you are
 running in. Do not assume an absolute path; several checkouts exist. All paths
 below are repo-relative.
 
-Outcome: `bun run beep session resolve <key>` prints the owner, each route, its computed liveness and the send call, and sessions record their routes at start without being asked.
+Outcome: the planned `session resolve <key>` prints the owner, each route, its computed liveness and the send call, and sessions record their routes at start without being asked.
 
 This is a compact `/goal` launcher. Treat the packet files as the detailed
 contract:

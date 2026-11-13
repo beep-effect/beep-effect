@@ -13,7 +13,7 @@ RESEARCH.md section named here:
 | Claim area | RESEARCH.md section | Probe |
 | --- | --- | --- |
 | Claude live index fields and counts | Session Census, 1 and 2 | read of `~/.claude/sessions/*.json`; `ListAgents` |
-| T3 address readable from the environment | Session Census, 3 | process environment; `t3_thread_read`; `~/.t3/userdata/environment-id` |
+| T3 address readable from the environment | Session Census, 3 | process environment; `t3_thread_read`; the `environment-id` file in T3's userdata directory |
 | Thread counts, id shapes, PR links per environment | Session Census, 4 and 5 | `t3_environment_links`; `t3_thread_list` and `t3_thread_search` per environment |
 | Children have no address | Session Census, 6 | `SendMessage` tool contract |
 | Codex thread table and originators | Session Census, 7 | read-only `sqlite3` on `~/.codex/state_5.sqlite` |

@@ -42,7 +42,7 @@ Inside `session-route-resolver`, in this order:
    SessionStart hooks append presence.
 3. `session resolve` over ledger, presence and the Claude live index only.
 
-Proof, on this workstation: `bun run beep session resolve 3172` (or whichever
+Proof, on this workstation: the planned `session resolve 3172` (or whichever
 PR a Desktop session then owns) prints that session's current name and
 `live`; resolving a PR owned by a T3-hosted session prints a `t3_thread_send`
 call with both ids; resolving a PR with no local row prints the per-environment

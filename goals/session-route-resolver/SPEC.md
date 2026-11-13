@@ -2,7 +2,7 @@
 
 ## Objective
 
-Given a PR number, branch, lane or checkout, `bun run beep session resolve`
+Given a PR number, branch, lane or checkout, the planned `session resolve`
 prints the session that owns it, every message route that session exposes,
 the liveness of each route computed at that moment, and the literal tool call
 that reaches it, or the fallback to use when none does. Sessions record their
@@ -108,7 +108,7 @@ Higher sources outrank lower sources when they conflict.
 | Check | Command or evidence | Required result |
 | --- | --- | --- |
 | Package gate | `bun run beep quality package-verify @beep/repo-cli` | Passes |
-| Live proof | `bun run beep session resolve <pr>` for one Desktop-owned and one T3-owned PR, output saved under `history/` with ids cut to eight characters | Matches `ListAgents` and `t3_thread_read` |
+| Live proof | the planned `session resolve <pr>` for one Desktop-owned and one T3-owned PR, output saved under `history/` with ids cut to eight characters | Matches `ListAgents` and `t3_thread_read` |
 | Packet launcher size | `test "$(wc -m < goals/session-route-resolver/GOAL.md)" -le 4000` | Passes |
 | Manifest JSON | `jq . goals/session-route-resolver/ops/manifest.json` | Passes |
 | Whitespace | `git diff --check -- goals/session-route-resolver` | Passes |

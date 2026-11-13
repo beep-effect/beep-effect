@@ -100,7 +100,7 @@ new agent-pool ruling, and still does nothing across hosts), and deferring.
 
 **Answer:** Resolver plus automatic route stamping, as one goal packet:
 `SessionRoute` and `SessionPresence` schemas, capture from the environment,
-and `bun run beep session resolve <pr|branch|lane|checkout>`.
+and the planned `session resolve <pr|branch|lane|checkout>`.
 
 **Rationale:** Operator answer, recommended option. It is the smallest slice
 that turns the four-step #3172 lookup into one command. Rejected: stamping
