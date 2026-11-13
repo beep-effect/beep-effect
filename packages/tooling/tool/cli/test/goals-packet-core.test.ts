@@ -118,6 +118,18 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
       expect(canonicalJsonText({ a: undefined, b: 1 })).toBe('{"b":1}');
     });
 
+    it("pretty-prints empty containers and nested primitive values with stable indentation", () => {
+      expect(canonicalJsonTextPretty({ z: undefined, b: [], a: [null, true, false, 3, "quoted\\text", {}, []] })).toBe(
+        '{\n  "a": [\n    null,\n    true,\n    false,\n    3,\n    "quoted\\\\text",\n    {},\n    []\n  ],\n  "b": []\n}\n'
+      );
+      expect(canonicalJsonTextPretty({ absent: undefined })).toBe("{}\n");
+      expect(canonicalJsonTextPretty([undefined])).toBe("[\n  null\n]\n");
+    });
+
+    it("rejects an unknown event type even when the sequence and digest are valid", () => {
+      parsePacketEventFileName(`00002-unknown-event-${Str.repeat(64)("a")}.json`).pipe(assertNone);
+    });
+
     it("round-trips event file names and rejects non-CAS names", () => {
       const digest = Str.repeat(64)("a");
       const parsed = parsePacketEventFileName(`00002-status-set-${digest}.json`);

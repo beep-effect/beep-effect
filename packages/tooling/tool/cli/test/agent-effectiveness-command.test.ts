@@ -135,6 +135,72 @@ const lastLoggedLine = Effect.fn("AgentEffectivenessCommandTest.lastLoggedLine")
 });
 
 it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("agent-effectiveness command", (it) => {
+  for (const [args, lines] of [
+    [
+      [],
+      [
+        "Agent-effectiveness commands:",
+        "- doctor",
+        "- annotations plan",
+        "- annotations check",
+        "- datasets bundle",
+        "- prompts bundle",
+        "- experiments bundle",
+        "- evals score",
+        "- evals compare",
+        "- evals probe",
+        "- phoenix sync",
+      ],
+    ],
+    [["annotations"], ["Agent-effectiveness annotation commands:", "- plan", "- check"]],
+    [["datasets"], ["Agent-effectiveness dataset commands:", "- bundle"]],
+    [["prompts"], ["Agent-effectiveness prompt commands:", "- bundle"]],
+    [["experiments"], ["Agent-effectiveness experiment commands:", "- bundle"]],
+    [["phoenix"], ["Agent-effectiveness Phoenix commands:", "- sync"]],
+    [["evals"], ["Agent-effectiveness eval commands:", "- score", "- compare", "- probe"]],
+    [
+      ["evals", "probe"],
+      ["Skill effect probe commands:", "- stage", "- preflight", "- score", "- select", "- report"],
+    ],
+  ] as const) {
+    it.effect(`lists commands at ${A.join(args, " ")}`, () =>
+      Effect.gen(function* () {
+        yield* runAgentEffectivenessCommand(args);
+        const output = yield* TestConsole.logLines;
+        expect(output).toEqual(lines);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  }
+
+  for (const [args, expectedLine] of [
+    [["doctor"], "agent-effectiveness doctor: status=warning"],
+    [["annotations", "plan"], "mutation policy: local-only-no-phoenix-mutation"],
+    [["annotations", "check"], "agent-effectiveness annotations check: status=passed"],
+    [["datasets", "bundle"], "agent-effectiveness datasets: 5"],
+    [["prompts", "bundle"], "agent-effectiveness prompts: 2"],
+    [["experiments", "bundle"], "agent-effectiveness experiments: 5"],
+    [["phoenix", "sync", "--confirm-phoenix-write", "unused-dry-run-token"], "dry-run: true"],
+  ] as const) {
+    it.effect(`renders ${A.join(args, " ")} as text`, () =>
+      Effect.gen(function* () {
+        const tmpDir = yield* temporaryDirectory;
+        const path = yield* Path.Path;
+        const workerReportPath = path.join(tmpDir, "worker-eval.json");
+        yield* writeText(workerReportPath, workerReportJson);
+        yield* runAgentEffectivenessCommand([
+          ...args,
+          "--data-root",
+          path.join(tmpDir, "metrics"),
+          "--worker-eval-report",
+          workerReportPath,
+          "--no-phoenix",
+        ]);
+        const output = yield* TestConsole.logLines;
+        expect(output).toContain(expectedLine);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  }
+
   describe("comparable convention receipts", () => {
     it.effect("compares declared convention receipts through CLI flags", () =>
       Effect.gen(function* () {

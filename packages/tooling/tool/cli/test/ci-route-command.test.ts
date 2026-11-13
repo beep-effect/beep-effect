@@ -3,6 +3,7 @@ import {
   ChangeClassifier,
   ChangeSet,
   CI_LANE_ID_VALUES,
+  HostedJob,
   HostedRun,
   makeCiRouteCommandForTesting,
   ROUTE_CORPUS_DEFAULT_DIR,
@@ -122,8 +123,12 @@ const services = (recorded: Recorded, runs: ReadonlyArray<HostedRun>, atoms: Rea
   ).pipe(Layer.provideMerge(leaves));
 };
 
-const harness = Effect.fn("RouteCommandTest.harness")(function* (atoms: ReadonlyArray<ChangeAtom>) {
-  const runs = yield* decodeRuns(replayRunsJson);
+const harness = Effect.fn("RouteCommandTest.harness")(function* (
+  atoms: ReadonlyArray<ChangeAtom>,
+  extraJobs: ReadonlyArray<HostedJob> = []
+) {
+  const decodedRuns = yield* decodeRuns(replayRunsJson);
+  const runs = A.map(decodedRuns, (run) => HostedRun.make({ ...run, jobs: [...run.jobs, ...extraJobs] }));
   const recorded: Recorded = {
     captures: yield* Ref.make<ReadonlyArray<RouteCorpusCaptureOptions>>([]),
     loads: yield* Ref.make<ReadonlyArray<string>>([]),
@@ -278,6 +283,25 @@ it.layer(CliLayer, { timeout: "30 seconds" })("beep ci route command", (it) => {
         const fromOption9 = yield* Effect.fromOption(A.last(json));
         const replay = yield* decodeReplay(fromOption9);
         expect([replay.heads, replay.skippedReds, replay.baseUnknownHeads]).toEqual([3, 3, 1]);
+      })
+    )
+  );
+
+  it.effect("names unmapped failed jobs in the census and qualifies the replay recall", () =>
+    withConsole(
+      Effect.gen(function* () {
+        const { run } = yield* harness(
+          [],
+          [HostedJob.make({ name: "Unmapped validator", conclusion: O.some("failure") })]
+        );
+        yield* run(["census"]);
+        const censusLines = yield* TestConsole.logLines;
+        expect(censusLines).toContain("  unknown job names: Unmapped validator");
+        yield* run(["replay"]);
+        const logLines = yield* TestConsole.logLines;
+        const lines = A.map(logLines, String);
+        expect(A.filter(lines, Str.includes("recall is an upper bound"))).toHaveLength(1);
+        expect(A.filter(lines, Str.includes("failed jobs no rule maps (Unmapped validator)"))).toHaveLength(1);
       })
     )
   );
