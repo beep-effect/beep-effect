@@ -38,7 +38,7 @@ import {
   verifyFrozenGrantSetDigest,
   verifyOutcomeBinding,
 } from "@beep/execution-authority-domain";
-import { JsoncCanonicalizeError, JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
+import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
 import { SystemPrincipal } from "@beep/shared-domain/entity/Principal";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -60,6 +60,7 @@ import type {
   DecisionRecordHash as DecisionRecordHashType,
   ExecutionVerdict,
 } from "@beep/execution-authority-domain";
+import type { JsoncCanonicalizeError } from "@beep/jsonc/JsoncFingerprint";
 
 const decodeFrozenGrantSet = S.decodeEffect(FrozenGrantSet);
 const encodeFrozenGrantSet = S.encodeEffect(FrozenGrantSet);
@@ -195,15 +196,13 @@ const grantSetSealThroughOwner = (set: Pick<FrozenGrantSet, "frozenAt" | "grants
     )
   );
 
-const refusalOf = (failure: JsoncCanonicalizeError): string => `${failure.code} at ${failure.path}`;
+// The owner's refusal as the code-and-pointer phrase its message carries.
+const refusalOf = (failure: JsoncCanonicalizeError): string => `${failure.code} at "${failure.path}"`;
 
-// The domain's seal functions return plain values and throw the owner's typed
-// refusal for a value outside plain JSON; read it back as code and pointer.
-const sealOrRefusal = <A>(seal: () => A): Result.Result<A, string> =>
-  Result.try({
-    try: seal,
-    catch: (thrown) => (S.is(JsoncCanonicalizeError)(thrown) ? refusalOf(thrown) : "not refused"),
-  });
+// `freezeGrantSet` reports a grant the owner refuses in its own `SchemaError`
+// channel; the failure is read back as whether its message names the refusal.
+const freezeNaming = (draft: DraftGrantSet, frozenAt: DateTime.Utc, refusal: string) =>
+  Result.mapError(freezeGrantSet(draft, frozenAt), (error) => Str.includes(refusal)(error.message));
 
 describe("ExecutionAuthority", () => {
   describe("evaluateExecutionRequest", () => {
@@ -621,26 +620,27 @@ describe("ExecutionAuthority", () => {
           const decision = sealExecutionDecision(values.decision);
           const outcome = sealExecutionOutcome(values.outcome);
           const unsealed = { ...values.draft, frozenAt: values.outcome.recordedAt };
-          const grantSet = sealOrRefusal(
-            () => Result.getOrThrow(freezeGrantSet(values.draft, values.outcome.recordedAt)).digest
-          );
 
           assertSuccess(decisionSealThroughOwner(decision), decision.hash);
           assertSuccess(outcomeSealThroughOwner(outcome), outcome.hash);
           // Grants carry free text, which schema-derived values fill with an
-          // unpaired surrogate now and then: the domain then throws the very
-          // refusal the owner returns for the same wire form.
+          // unpaired surrogate now and then: freezing then fails typed with
+          // the very refusal the owner returns for the same wire form.
           Result.match(Result.mapError(grantSetSealThroughOwner(unsealed), refusalOf), {
-            onSuccess: (digest) => assertSuccess(grantSet, digest),
-            onFailure: (refusal) => assertFailure(grantSet, refusal),
+            onSuccess: (digest) =>
+              assertSuccess(
+                Result.map(freezeGrantSet(values.draft, values.outcome.recordedAt), (set) => set.digest),
+                digest
+              ),
+            onFailure: (refusal) => assertFailure(freezeNaming(values.draft, values.outcome.recordedAt, refusal), true),
           });
         }),
       { arbitrary: fcRuns(100) }
     );
 
     // Behaviour change from slice C: the domain sealed a grant whose
-    // destination is not well-formed Unicode; it now throws the owner's typed
-    // refusal, located by JSON pointer, before any digest exists.
+    // destination is not well-formed Unicode; freezing it now fails typed,
+    // naming the owner's refusal and its JSON pointer, before any digest exists.
     it("refuses to freeze a grant with an unpaired surrogate, as the owner does", () => {
       const illFormed = ExecutionGrant.make({
         ...grant,
@@ -652,13 +652,10 @@ describe("ExecutionAuthority", () => {
       const illFormedDraft = Result.getOrThrow(addGrant(emptyDraftGrantSet(revision), illFormed));
       const frozenAt = DateTime.makeUnsafe(0);
 
-      assertFailure(
-        sealOrRefusal(() => freezeGrantSet(illFormedDraft, frozenAt)),
-        "LoneSurrogate at /grants/0/sink/destination"
-      );
+      assertFailure(freezeNaming(illFormedDraft, frozenAt, 'LoneSurrogate at "/grants/0/sink/destination"'), true);
       assertFailure(
         Result.mapError(grantSetSealThroughOwner({ ...illFormedDraft, frozenAt }), refusalOf),
-        "LoneSurrogate at /grants/0/sink/destination"
+        'LoneSurrogate at "/grants/0/sink/destination"'
       );
     });
   });

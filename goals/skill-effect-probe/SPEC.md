@@ -100,15 +100,28 @@ Higher sources outrank lower sources when they conflict.
 
 ## Decision Rule
 
-Primary measure: all-lanes pass per run, averaged per task and cell.
+Primary measure: chosen before the scored run by the fixed selection rule in
+[`research/2026-11-13-analysis-rule-amendment-2.md`](./research/2026-11-13-analysis-rule-amendment-2.md):
+all-lanes pass per run if it qualifies on the laws-prompt pilot, else law
+pass (completion and schema-first lanes both 1), averaged per task and cell
+and scored under the probe's scorer profile (see also
+[`research/2026-11-13-analysis-rule-amendment.md`](./research/2026-11-13-analysis-rule-amendment.md)).
+If neither qualifies there is no scored run and the verdict is Insensitive
+from the pilot. The outcomes are checked in this order.
 
+- **Insensitive.** Fewer than 4 counted tasks have at least one pass on the
+  primary measure among their B and C runs. Consequence: no verdict on the trainer
+  question and no prune proposal; the findings carry the lane census. A task
+  every run passes is not insensitive.
 - **Effect.** Cell C beats cell B by at least 0.10 on the primary measure, and
   the interval on the per-task paired differences excludes zero. Consequence:
   the source exploration reopens at `decompose` to size a corpus from the
   measured effect and variance.
 - **Null.** Anything else. Consequence: the trainer question closes for
   lint-enforceable skills, the tombstones stay as they are, and the findings
-  carry a prune proposal for the skill.
+  carry a prune proposal for the skill. When the clustered interval on C
+  minus B lies wholly below zero, the Null is reported as harm and the prune
+  proposal says so.
 - **Fired rate below 0.8 in cell C.** Reported as its own finding; it fires
   the activation-probe gate in the exploration map whichever way the main
   result falls.
@@ -209,6 +222,90 @@ Reverse: Add a model as a new cell in a later run; the scorer route changes only
 Laws against laws plus skill is the production question because the code laws load in every session. The bare cell tells a redundant skill apart from tasks that respond to no guidance.
 
 Reverse: Drop cell A in a later run if B minus A proves uninformative; the records for B and C stay comparable.
+
+### Add the Insensitive outcome and a harm flag to the decision rule, 2026-11-13
+
+Packet-author review 2026-11-13 (authorised as packet author): fewer than 4 counted tasks with an all-lanes pass in B or C means no verdict and no prune proposal; a C-B interval wholly below zero is a Null reported as harm. SPEC Decision Rule edited with the amendment file.
+
+Reverse: Restore the two-outcome rule in a new dated amendment before any further scored run.
+
+### Cell A from an empty plugin, B and C from one with-without run, 2026-11-13
+
+Cell A runs the archived prompt against a skill-less plugin under --ablation none; B and C are the without and with arms of one laws-prompt invocation. No fourth cell.
+
+Reverse: Add a fourth cell (skill without laws) in a new dated analysis rule if the arms prove unequal.
+
+### Hold the scored run for the plan-limit reset, 2026-11-13
+
+The seven-day limit resets 2026-11-15 23:00 America/Chicago. Per SPEC, no top-up, no runner or model switch: the headroom pilot and P2 resume after the reset.
+
+Reverse: Resume earlier only if the operator assigns plan headroom; that is an operator decision, not an agent one.
+
+### Hold the scored run on the headroom pilot no-go, 2026-11-13
+
+Cell A had no all-lanes pass on 12 of 12 tasks and completion 0 in all 24 runs: the bare prompts name neither Effect nor @beep packages while the completion contract needs @beep/schema Fn and @beep/utils O. Per the amendment the scored run is held and the census goes to the packet author.
+
+Reverse: Start the scored run if the packet author directs a different gate (for example a cell B headroom pilot) in a new dated amendment.
+
+### Known-good solutions stay out of the repository, 2026-11-13
+
+Preflight solutions are fixture TypeScript; they live beside the archive checkout and history records their sha256 and score reports only.
+
+Reverse: Commit them under a lint-excluded path if a reviewer needs to reproduce preflight without the cache.
+
+### Probe records are a new schema next to AgentConventionTrial, 2026-11-13
+
+AgentConventionTrial compares one declared pair of receipts with digest controls; a three-cell, five-run, twelve-task probe needs run records and a clustered report. Run records reuse AgentEffectivenessEvalScoreReport.
+
+Reverse: Fold the probe into AgentConventionTrial if a later comparison needs one shape for both.
+
+### Re-final the closeout through a goals-only PR, 2026-11-13
+
+goals completion refresh marked #3167 unsatisfied on one check: no yeet publish verdict at its accepted head (the last wave was pushed with git push) and it merged before the readiness monitor printed merge-ready. Per the repo's re-final route, a goals-only PR carries the proposedCloseout, is published through yeet and merges only after merge-ready: yes; the packet-state PR follows. This takes the packet to three PRs, one over the two-PR budget, because the closeout cannot be verified otherwise.
+
+Reverse: None needed: the re-final changes only goal metadata; if the operator prefers, adopt the closeout manually after reviewing #3167.
+
+### Repair three scorer-drift items for this probe only, 2026-11-13
+
+Ignore tsgo missingPipeableSignature (enabled 2026-08-10, stated nowhere), accept S.Opaque where tasks require extends S.Class (skill default since 2026-10-14), and accept S.decodeTo( where tasks require S.decode( (the skill's idiom; an author's call, since it fails the post-corpus test). Implemented as scorer profile skill-probe-scorer/v2 in SkillProbe.ts; the shared evals score command is unchanged.
+
+Reverse: Score with profile v1 (drop repairSkillProbeTask and IGNORED_TSGO_RULES) in a new dated analysis rule.
+
+### Replace the cell A gate with a laws-prompt pilot and a fixed primary selection, 2026-11-13
+
+Packet-author decision 2026-11-13: cell A floors by construction. A with-without pilot (24 B, 24 C runs, unscored) feeds a fixed rule: all-lanes pass, else law pass, whichever first has a pooled B or C pass on 4 tasks from 2 families; neither means an Insensitive verdict from the pilot and no scored run. SPEC Decision Rule edited with amendment 2.
+
+Reverse: Restore the all-lanes primary in a new dated amendment before any scored record.
+
+### Run to kept directory through tracePath, 2026-11-13
+
+Each --json run entry carries tracePath = <kept dir>/out/trace.jsonl, so case, arm and index tie to the kept directory in one invocation (P0 slice).
+
+Reverse: If a later harness drops tracePath, fall back to one case and one arm per invocation.
+
+### Runs get no Bash and a 40-turn, 900-second budget, 2026-11-13
+
+Allowed tools Read, Write, Edit, Glob, Grep, Skill in every cell; the P0 maximum was 12 turns and 55 seconds.
+
+Reverse: Grant Bash in a later run through a new dated analysis rule; records stay comparable only within one rule.
+
+### Scorer profile v3 ignores Biome formatter findings, 2026-11-13
+
+Packet-author decision 2026-11-13: Biome format and assist/source findings fail in 10 of 12 tasks and only a formatter satisfies them; no run has one. Biome lint findings and every tsgo finding other than missingPipeableSignature stay scored.
+
+Reverse: Score with profile v2 in a new dated amendment before any further scored run.
+
+### The 180-run criterion is met through the no-scored-run branch, 2026-11-13
+
+SPEC budgets about 180 scored runs, but amendment 2 makes the scored run conditional on a qualifying primary. Neither candidate qualified on the laws-prompt pilot, so the scored-run acceptance criteria are met by that branch: run records exist for every piloted cell with fingerprints, the excluded count (178 void) is reported, and the verdict is Insensitive with no scored run.
+
+Reverse: Run the 180 scored runs under a new goal whose primary is reachable; this packet's records stay as they are.
+
+### Void the first P2 attempt, 2026-11-13
+
+178 of 180 runs ended on the seven-day plan limit; the two that completed are not scored because the rule was amended before any scored record and scoring them would expose C-B before the headroom pilot.
+
+Reverse: Score the two kept runs under v1 from the cached result if a reviewer wants them; they stay outside the evidence.
 
 <!-- beep:decisions:end -->
 

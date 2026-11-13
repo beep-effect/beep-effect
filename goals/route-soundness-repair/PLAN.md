@@ -21,8 +21,8 @@ PR-sized, in landing order. At most three open at once (`goals/README.md`). Size
 | # | Slice (PR title) | Levers | Size | Admission gate | Depends on |
 | --- | --- | --- | --- | --- | --- |
 | 1 | `fix(ci): keep goal ops scripts, fixtures and research inputs on the code route` (landed, #3064) | ROUT-03 | S | Census test (a new goal-data consumer census test under `packages/tooling/tool/cli/test`) finds every `goals/` path a test reads, spawns or imports, or a `turbo.json` declares, and asserts each is non-docs-only; mutations of a citation ops `.py` probe, a `.ts` ops script, the frozen JSON fixture and a ciops research JSON are each selected by change-profile. Edits `CiOperational.schemas.ts` (the `ciGoalDataConsumers` rows joined into `codeRoots`), the generated patterns JSON and `ci-heavy-admission.test.ts`, and adds `goal-data-consumer-census.test.ts`; no workflow or `turbo.json` change, so it lands alone. Merge by 2026-11-16 (D8). | none; first |
-| 2 | `fix(coverage): judge bare affected runs against the merge base they planned from` (landed) | COVE-02 | S | Lowered-row fixture in `quality-tasks.test.ts` fails the bare run with the self-judge line; clean tree passes | none; parallel with 1 |
-| 3 | `fix(yeet): version final-check receipts by gate set; docs name the exact gates` | YEET-08 slice 1 | S | v1 receipt refused on head and ancestor-carry paths; docs-drift test over AGENTS.md and the yeet skill | none; parallel with 1-2 |
+| 2 | `fix(coverage): judge bare affected runs against the merge base they planned from` (landed, #3115) | COVE-02 | S | Lowered-row fixture in `quality-tasks.test.ts` fails the bare run with the self-judge line; clean tree passes | none; parallel with 1 |
+| 3 | `fix(yeet): version final-check receipts by gate set; docs name the exact gates` (landed, #3177) | YEET-08 slice 1 | S | v1 receipt refused on head and ancestor-carry paths, and on the unchanged-rewrite carry #3130 added; docs-drift test over AGENTS.md, the yeet skill and the skill's gate table | none; parallel with 1-2 |
 | 4 | `fix(quality): declare goal-data consumers in CoverageScope and per-package turbo.json inputs` | ROUT-03 slice 2 | S | Census asserts each path is mapped in CoverageScope and a per-package Turbo input; the four mutations turn their consumers red under `--affected`; a coverage scope fixture with only `packages/law-practice/use-cases/test/fixtures/eyecite/authority-identity-cases.json` changed includes `@beep/law-practice-server` (ROUT-09 hole); no root `turbo.json` edit; per-package `turbo.json` change, so coverage rows freeze at base and the cache-qualification baseline is re-recorded in the same PR | 1 |
 | 5 | `ci: fixed coverage comparator context name` | COVE-08 | S | Route replay of context emission (docs, source, main); `ci-runner-security.test.ts` updated for the literal `Heavy / Coverage Regression` name; if PERIH-01's probe deletion landed first, delete the `legacy_coverage` output with its last consumer; workflow change, so coverage rows freeze at base; re-record the cache-policy baseline in the same PR | owns making the job name literal; whichever of COVE-08 and PERIH-01's probe-deletion slice lands second merges `main` first and deletes `legacy_coverage` |
 | 6 | `fix(turbo): key test, test:property and doctest on @beep/glob#transit` | TEST-10 | S | Dry-run hash A/B with control; cache-qualification baseline re-recorded and `standards/policy-tools.fingerprint.json` resealed in the same PR; no other `turbo.json`, lockfile or workflow change in the PR | none; #3041 has merged, so re-record against main |
@@ -128,5 +128,13 @@ Source: verification findings of 2026-11-13; goal-data-consumer-census.test.ts.
 Lane fix/rout-03-src-pinned-consumers
 
 Reverse: Supersede with a later checkpoint; to undo, drop the research consumer row and the pinned-source scan.
+
+### YEET-08 slice 1: final-check receipts versioned by gate set, 2026-11-13
+
+Slice 3 lands. `yeet final-check` writes `yeet-final-check/v2` receipts that record the sorted `FinalCheckGate` set as `gateSetDigest`. `finalCheckRefusal` refuses a v1 receipt or a digest mismatch and names the cause; the ancestor refresh, the unchanged-rewrite carry (#3130) and `requireFinalCheck` refuse a carried one as `receipt-gate-set-mismatch`. The digest is the canonical gate list, not a hash, so a refusal can name the added and removed gates; reordering gates keeps receipts valid. A docs-drift test ties AGENTS.md, the yeet SKILL.md and the gates-and-proof gate table to the literals, and the repo-cli test, test:property and coverage tasks take those three files as Turbo inputs. Consequence: once this merges, every open lane's v1 receipt is refused by `yeet ready` and must be replaced by re-running `yeet final-check`.
+
+Lane claude/stoic-torvalds-00017b
+
+Reverse: Revert the slice PR: receipts go back to yeet-final-check/v1 and lanes re-run yeet final-check once more
 
 <!-- beep:decisions:end -->

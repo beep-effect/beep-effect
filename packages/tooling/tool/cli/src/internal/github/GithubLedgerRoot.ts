@@ -31,7 +31,7 @@ import * as Str from "effect/String";
 import { ROOT_VALUE_FLAG_NAMES } from "../dispatch/RootFlags.ts";
 import { GhSpawnSink } from "../repo-run/GhSpawnSink.ts";
 import { GithubConfiguredIdentities, readGithubIdentityConfig } from "./GithubIdentityConfig.ts";
-import { ghSpawnIdentity } from "./GithubIdentityLabel.ts";
+import { ghSpawnCredential, ghSpawnIdentity } from "./GithubIdentityLabel.ts";
 import { DEFAULT_COMMAND_LABEL, GithubLedgerCommandLabel } from "./GithubLedger.schemas.ts";
 import { GithubBudgetLedger, GithubLedgerCommand, layerGithubBudgetLedger } from "./GithubLedger.service.ts";
 import { layerGithubLedgerStoreLive } from "./GithubLedger.store.ts";
@@ -155,7 +155,9 @@ export const layerGithubLedgerRootLive: Layer.Layer<
     const services = yield* Effect.context<ChildProcessSpawner.ChildProcessSpawner | Digest.Digest>();
     // The env token gh would spend, else its hosts.yml login (design section 2.4's gh-cli label).
     const ghIdentity = ghSpawnIdentity(".").pipe(Effect.provideContext(services));
-    const ledger = layerGithubBudgetLedger({ ghIdentity }).pipe(Layer.provideMerge(layerGithubLedgerStoreLive));
+    const ledger = layerGithubBudgetLedger({ ghIdentity, ghCredential: ghSpawnCredential }).pipe(
+      Layer.provideMerge(layerGithubLedgerStoreLive)
+    );
     const registry = layerGithubIdentityRegistryLive(".").pipe(Layer.provideMerge(ledger));
     return layerGithubRateLimitSampler().pipe(Layer.provideMerge(registry));
   })

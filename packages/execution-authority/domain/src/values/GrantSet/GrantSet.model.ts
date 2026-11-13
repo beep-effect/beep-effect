@@ -31,7 +31,7 @@ import { constFalse, dual } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
-import { canonicalJson } from "../../internal/CanonicalJson.ts";
+import { canonicalJsonResult } from "../../internal/CanonicalJson.ts";
 import { ExecutionGrant, PolicyRevision } from "../ExecutionGrant/index.ts";
 import { ExecutionVerdict } from "../ExecutionVerdict/index.ts";
 import { GrantRevisionMismatch } from "./GrantSet.errors.ts";
@@ -339,9 +339,13 @@ export class GrantSetDigestInput extends S.Opaque<GrantSetDigestInput, { readonl
 
 const encodeDigestInput = S.encodeResult(GrantSetDigestInput);
 
+// A grant the canonical JSON owner refuses (free text with an unpaired
+// surrogate) fails in the same `SchemaError` channel as an encoding failure.
 const computeGrantSetDigest = (input: GrantSetDigestInput): Result.Result<GrantSetDigest, S.SchemaError> =>
-  Result.map(encodeDigestInput(input), (encoded) =>
-    GrantSetDigest.make(bytesToHex(sha256(utf8ToBytes(`${grantSetEncodingVersion}\n${canonicalJson(encoded)}`))))
+  Result.flatMap(encodeDigestInput(input), (encoded) =>
+    Result.map(canonicalJsonResult(encoded), (canonical) =>
+      GrantSetDigest.make(bytesToHex(sha256(utf8ToBytes(`${grantSetEncodingVersion}\n${canonical}`))))
+    )
   );
 
 /**

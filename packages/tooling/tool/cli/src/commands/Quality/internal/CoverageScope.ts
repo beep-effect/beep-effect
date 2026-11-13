@@ -120,6 +120,10 @@ const COVERAGE_REPOSITORY_FIXTURE_OWNER_FILES: ReadonlyArray<readonly [string, s
   ["standards/schema-catalog/**/*.generated.jsonc", "@beep/repo-cli-kit"],
   ["standards/effect-laws.allowlist.jsonc", "@beep/repo-configs"],
   [".claude/skills/effect-first-development/SKILL.md", "@beep/repo-configs"],
+  // The final-check docs-drift test reads these documents (ciTestedDocumentPatterns).
+  ["AGENTS.md", "@beep/repo-cli"],
+  [".claude/skills/yeet/SKILL.md", "@beep/repo-cli"],
+  [".claude/skills/yeet/references/gates-and-proof.md", "@beep/repo-cli"],
   [".claude/hooks/yeet-inbox.sh", "@beep/repo-cli"],
   [".claude/hooks/circuit-breaker.sh", "@beep/repo-ai-metrics"],
   [".claude/hooks/hook-pulse.sh", "@beep/repo-ai-metrics"],

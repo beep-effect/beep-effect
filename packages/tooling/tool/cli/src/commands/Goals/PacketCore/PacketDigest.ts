@@ -24,6 +24,7 @@ import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 import * as Struct from "effect/Struct";
 import { isJsonRecord } from "../Inventory.ts";
 import { PacketEvent, PacketEventType } from "./PacketCore.schemas.ts";
@@ -156,6 +157,37 @@ export const canonicalJsonText = (value: unknown): string =>
   Result.getOrThrowWith(JsoncFingerprint.canonicalizeResult(value, omitUndefinedMembers), identity);
 
 /**
+ * {@link canonicalJsonText} returning a `Result`, for digest helpers that
+ * already carry a `SchemaError` channel.
+ *
+ * **Details**
+ *
+ * Same bytes and the same `omitUndefinedMembers` relaxation. A value the owner
+ * refuses becomes an `S.SchemaError` whose message names the owner's code and
+ * JSON pointer, instead of a thrown `JsoncCanonicalizeError`.
+ *
+ * **Example** (Refuse an unpaired surrogate without throwing)
+ *
+ * ```ts
+ * import { canonicalJsonTextResult } from "@beep/repo-cli/test/Goals"
+ * import * as Result from "effect/Result"
+ *
+ * console.log(Result.getOrThrow(canonicalJsonTextResult({ b: 1, a: undefined }))) // {"b":1}
+ * console.log(Result.isFailure(canonicalJsonTextResult({ actor: "\ud800" }))) // true
+ * ```
+ *
+ * @param value - Plain JSON-encodable value.
+ * @returns The compact canonical text, or the owner's refusal as a `SchemaError`.
+ * @category encoding
+ * @since 0.0.0
+ */
+export const canonicalJsonTextResult = (value: unknown): Result.Result<string, S.SchemaError> =>
+  Result.mapError(
+    JsoncFingerprint.canonicalizeResult(value, omitUndefinedMembers),
+    (error) => new S.SchemaError(new SchemaIssue.InvalidValue({ message: error.message }))
+  );
+
+/**
  * Render a value as pretty canonical JSON: keys recursively sorted, 2-space
  * indentation, trailing newline.
  *
@@ -260,7 +292,8 @@ const encodePacketEvent = S.encodeUnknownEffect(PacketEvent);
 export const packetEventDigest: (event: PacketEvent) => Effect.Effect<PacketEventId, S.SchemaError, Digest.Digest> =
   Effect.fnUntraced(function* (event: PacketEvent) {
     const encoded = yield* encodePacketEvent(event);
-    return yield* sha256Hex(canonicalJsonText(encoded));
+    const canonical = yield* Effect.fromResult(canonicalJsonTextResult(encoded));
+    return yield* sha256Hex(canonical);
   });
 
 /**

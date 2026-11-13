@@ -6,13 +6,13 @@
     "title": "Skill Effect Probe",
     "status": "active",
     "created": "2026-11-10",
-    "updated": "2026-11-10",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/skill-effect-probe",
   "lifecycle": "active",
   "mission": "Measure whether the schema-first-development skill changes Opus 5.5 output on the 12 archived SkillOpt tasks across bare, code-laws and code-laws-plus-skill cells, and return a verdict against a rule fixed before any scored run.",
-  "statusNote": "Authored 2026-11-10, not started. Next: launch and run the P0 slice (one task, three cells, two runs each).",
+  "statusNote": "Verdict Insensitive (2026-11-13): on the laws-prompt pilot no task had an all-lanes or law pass among pooled B and C runs, so no scored run; the corpus cannot measure the skill at Opus 5.5 without tools. Fired rate 0.71 fired the activation gate; the exploration reopened at decompose. Implementation in PR 3167; closeout re-finaled in PR 3210 (owner-held after 3207 merged early).",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -24,7 +24,33 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 3167,
+        "role": "supporting"
+      },
+      {
+        "number": 3207,
+        "role": "supporting"
+      },
+      {
+        "number": 3210,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "hosted-required-checks",
+        "ref": "required",
+        "gating": true
+      },
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/claude_skill-effect-probe-refinal-2-c8b0a2cfe042/verdict.json",
+        "gating": true
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -38,7 +64,14 @@
     "explorations/skillopt-corpus-headroom/DECISIONS.md",
     "explorations/skillopt-corpus-headroom/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/2026-11-12-analysis-rule.md",
+    "research/2026-11-13-analysis-rule-amendment-2.md",
+    "research/2026-11-13-analysis-rule-amendment.md",
+    "research/2026-11-13-primary-selection.md",
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -54,27 +87,27 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -91,5 +124,9 @@
     "The same blocker repeats after reasonable investigation.",
     "The harness cannot tie a kept run directory to its case, cell and run.",
     "claude plugin eval is unavailable or the plan limit blocks the scored run; hold and report, never substitute a runner or model."
-  ]
+  ],
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3210
+  }
 }
