@@ -49,6 +49,8 @@ git rev-list --count "$(git merge-base HEAD origin/main)"..origin/main
 git fetch origin && git merge origin/main
 ```
 
+   A stack layer (2c) catches up on its parent's branch instead: merge
+   `origin/<parent-branch>`, never `origin/main`.
    Resolve conflicts, re-run `bun run beep yeet verify`, then publish again.
    A base-conflict P0 inbox row or a merge-gate "sibling #N merged" comment is
    this same merge, now, whatever your brief says about acceptance or merge

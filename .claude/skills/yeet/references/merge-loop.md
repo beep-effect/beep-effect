@@ -89,8 +89,10 @@ merge. It does not, and nothing may.
   `origin/<parent-branch>` and pushes
   ([`stacks.md`](stacks.md#keep-the-layer-on-the-parent)). When the merged
   pull request was the layer's own parent (`--alone`), the comment says so:
-  GitHub is cascading the layer onto `main`, so it merges nothing and adopts
-  the rewritten head with `git switch -C`. That layer is not probed.
+  GitHub is cascading the layer onto `main`, so it merges nothing, waits for
+  `head_ref_force_pushed` on its timeline and then adopts the rewritten head
+  with `git switch -C`. That layer is not probed. A stacked sibling whose
+  relation to the merged pull request could not be read is told both cases.
 - **The broadcast.** When `yeet merge-gate` merges a PR that touched
   `goals/<slug>/**`, it comments on every other open PR touching the same
   packet in the same run, naming the merged sibling, the slug, the base it

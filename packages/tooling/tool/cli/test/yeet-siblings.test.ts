@@ -195,7 +195,7 @@ describe("renderSiblingBroadcast", () => {
       })
     );
     expect(body).toContain("#3241 was the layer below this pull request and merged alone");
-    expect(body).toContain("Merge nothing into it.");
+    expect(body).toContain("Merge nothing into it: wait for `head_ref_force_pushed` on its timeline");
     expect(body).toContain(
       "`git fetch origin && git switch -C codex/cache-creation-mask-identity origin/codex/cache-creation-mask-identity`"
     );
@@ -203,6 +203,27 @@ describe("renderSiblingBroadcast", () => {
     // No probe ran, and the comment does not pretend one did.
     expect(body).not.toContain("conflict probe");
     expect(body).not.toContain("Expected conflicting files");
+  });
+
+  it("tells a stacked sibling both cases when its relation to the merged pull request was not read", () => {
+    const body = renderSiblingBroadcast(
+      SiblingBroadcast.make({
+        mergedPr: 3241,
+        mergeSha: MERGE_SHA,
+        baseSha: O.some(BASE_SHA),
+        sibling: PacketSibling.make({
+          ...sibling,
+          probe: "unavailable",
+          conflicts: [],
+          place: PacketSiblingPlace.cases.Unknown.make({ stackNumber: 3244 }),
+        }),
+      })
+    );
+    expect(body).toContain("is in stack #3244, and the gate could not read how #3241 relates to it");
+    expect(body).toContain("If #3241 was the layer below it, GitHub is cascading it onto `main`: merge nothing");
+    expect(body).toContain("Otherwise merge its parent's branch, never `origin/main`.");
+    expect(body).not.toContain("Merge `origin/main` into this lane now");
+    expect(body).not.toContain("conflict probe");
   });
 });
 
@@ -300,6 +321,26 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, TestConsole.layer), { timeout: "30 sec
         assertSome(after.place, PacketSiblingPlace.cases.Cascading.make({ belowPr: 7 }));
         expect(A.some(probes, Str.includes("merge-tree"))).toBe(false);
         expect(renderPacketSiblingsReport(after.report)).toContain("; cascading onto the trunk after #7 (not probed)");
+        // The subject read failed: the stacked sibling is placed nowhere, told so, and not probed.
+        const unreadProbes: Array<string> = [];
+        const unread = yield* readPacketSiblings(context, 7).pipe(
+          recordedGithub((call) =>
+            call.path === "{repo}/pulls/7"
+              ? { status: 502, body: { message: "Bad Gateway" } }
+              : stackedRoutes("lane/seven", true)(call)
+          ).provide,
+          Effect.provideServiceEffect(Git, Git.make),
+          provideSpawner(scriptedGit(unreadProbes))
+        );
+        assertSome(
+          O.map(A.head(unread.siblings), (found) => found.place),
+          PacketSiblingPlace.cases.Unknown.make({ stackNumber: 10 })
+        );
+        expect(A.some(unreadProbes, Str.includes("merge-tree"))).toBe(false);
+        const warned = yield* TestConsole.errorLines;
+        expect(
+          A.some(warned, (line) => Str.includes("could not read #7 to place its stacked siblings")(String(line)))
+        ).toBe(true);
         // A retargeted layer whose parent the subject is not: an ordinary pull request again.
         const unrelated = yield* readPacketSiblings(context, 7).pipe(
           recordedGithub((call) =>
