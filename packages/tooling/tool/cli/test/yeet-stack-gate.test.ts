@@ -228,9 +228,11 @@ interface StackScenario {
   /** What `compare/<lower head>...<top head>` answers. */
   readonly contains?: "yes" | "no" | "unreadable";
   /** How the lower layer reads back after the merge request on the top. */
-  readonly lowerAfterMerge?: "merged" | "open" | "moved";
+  readonly lowerAfterMerge?: "merged" | "open" | "moved" | "unreadable";
   /** The lower layer is a draft: its own gate holds. */
   readonly lowerDraft?: boolean;
+  /** GitHub accepts the request on the top and then fails it with this sentence. */
+  readonly mergeFailsWith?: string;
   /** The stack read fails. */
   readonly stackUnreadable?: boolean;
 }
@@ -297,6 +299,14 @@ const mergedResponse: GithubAnswer = {
 
 const badGateway: GithubAnswer = { status: 502, body: { message: "Bad Gateway" } };
 
+const mergeAnswer = (scenario: StackScenario): GithubAnswer =>
+  scenario.mergeFailsWith === undefined
+    ? mergedResponse
+    : { body: { status: "failed", details: { message: scenario.mergeFailsWith } } };
+
+const lowerPullAnswer = (scenario: StackScenario, merged: boolean): GithubAnswer =>
+  merged && scenario.lowerAfterMerge === "unreadable" ? badGateway : { body: lowerPullPayload(scenario, merged) };
+
 const stackAnswer = (scenario: StackScenario): GithubAnswer =>
   scenario.stackUnreadable === true ? badGateway : { body: stackPayload };
 
@@ -309,7 +319,7 @@ const containmentAnswer = (scenario: StackScenario): GithubAnswer => {
 
 // Every REST read either merge path makes, by path; anything else is a 404.
 const stackReadTable = (scenario: StackScenario, merged: boolean): Readonly<Record<string, GithubAnswer>> => ({
-  [`{repo}/pulls/${LOWER}`]: { body: lowerPullPayload(scenario, merged) },
+  [`{repo}/pulls/${LOWER}`]: lowerPullAnswer(scenario, merged),
   [`{repo}/pulls/${TOP}`]: { body: topPullPayload },
   [`{repo}/stacks/${STACK}`]: stackAnswer(scenario),
   [`{repo}/pulls/${LOWER}/commits`]: { body: commits(LOWER_SUBJECT, "Why the lower layer.") },
@@ -337,7 +347,7 @@ const stackRoutes =
     if (O.isSome(call.graphql)) return legacyGhAnswer({ call, exitCode: 0, output: noThreads });
     if (call.method === "PUT" && Str.endsWith("/merge-async")(call.path)) {
       MutableRef.set(mergeSent, true);
-      return mergedResponse;
+      return mergeAnswer(scenario);
     }
     return call.method === "GET" ? stackReadTable(scenario, MutableRef.get(mergeSent))[call.path] : undefined;
   };
@@ -485,7 +495,7 @@ const withStack = Effect.fn("withStack")(function* <A, E, R>(
 const gate = (
   prNumber: number,
   wantSha: string,
-  flags: { relaxed?: boolean; dryRun?: boolean; alone?: boolean } = {}
+  flags: { relaxed?: boolean; dryRun?: boolean; alone?: boolean; forceWindow?: boolean } = {}
 ) =>
   runMergeGate(
     context,
@@ -493,7 +503,7 @@ const gate = (
       prNumber,
       wantSha,
       tolerate: [],
-      forceWindow: false,
+      forceWindow: flags.forceWindow ?? false,
       relaxed: flags.relaxed ?? false,
       dryRun: flags.dryRun ?? false,
       alone: flags.alone ?? false,
@@ -637,6 +647,59 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
         );
         expect(stack[1]).toBe(0);
       })
+    );
+
+    it.effect("the top's own hold stops the group once the lower layer is met", () =>
+      withStack({}, (recording) =>
+        Effect.gen(function* () {
+          const error = yield* gate(TOP, "0000000000").pipe(Effect.flip);
+          expect(error.message).toContain(`#${TOP} HOLD head-moved`);
+          const logLines = yield* recording.logLines;
+          expect(A.some(logLines, Str.includes(`#${LOWER} GATE-MET`))).toBe(true);
+          expect(puts(recording)).toEqual([]);
+        })
+      )
+    );
+
+    it.effect("--force-window is carried to both layers' verdict lines", () =>
+      withStack({}, (recording) =>
+        Effect.gen(function* () {
+          yield* gate(TOP, topHead, { forceWindow: true });
+          const logLines = yield* recording.logLines;
+          const forced = A.filter(logLines, Str.includes("(review window forced)"));
+          expect(A.map(forced, (line) => Str.includes(`#${LOWER} `)(line) || Str.includes(`#${TOP} `)(line))).toEqual([
+            true,
+            true,
+          ]);
+          expect(puts(recording)).toHaveLength(1);
+        })
+      )
+    );
+
+    it.effect("a request GitHub fails after accepting it holds the group with GitHub's sentence", () =>
+      withStack(
+        { mergeFailsWith: "A conversation must be resolved before this pull request can be merged." },
+        (recording) =>
+          Effect.gen(function* () {
+            const error = yield* gate(TOP, topHead).pipe(Effect.flip);
+            expect(error.message).toContain(`#${TOP} HOLD merge-failed`);
+            expect(error.message).toContain("A conversation must be resolved before this pull request can be merged.");
+            // Nothing merged, so the lower layer is never read back.
+            expect(puts(recording)).toHaveLength(1);
+            expect(reads(recording, `{repo}/pulls/${LOWER}`)).toHaveLength(1);
+          })
+      )
+    );
+
+    it.effect("a lower layer that cannot be read back after the merge fails loudly as merge-unsettled", () =>
+      withStack({ lowerAfterMerge: "unreadable" }, (recording) =>
+        Effect.gen(function* () {
+          const error = yield* gate(TOP, topHead).pipe(Effect.flip);
+          expect(error.message).toContain(`#${LOWER} HOLD merge-unsettled`);
+          expect(error.message).toContain(`#${LOWER} could not be read back`);
+          expect(puts(recording)).toHaveLength(1);
+        })
+      )
     );
 
     it.effect("a lower layer that does not read merged after the request fails loudly as merge-unsettled", () =>
