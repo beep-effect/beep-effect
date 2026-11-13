@@ -85,3 +85,27 @@ test("Python Unicode ordering, path ordering and decimal parsing remain compatib
   const sorted = rt.iter(rt.invoke(rt.builtin("sorted"), paths)).map((value) => rt.invoke(rt.builtin("str"), value));
   expect(sorted).toEqual(["a/file", "a.yaml"]);
 });
+test("recorded YAML scalar types preserve exact integer and float checks", async () => {
+  const { rt } = await import("./validate_artifacts.ts");
+  const { default: scalars } = await import("./scalar-fixtures.json");
+  for (const fixture of scalars) {
+    const value = rt.invoke(rt.builtin("yload"), fixture.source);
+    expect(rt.attr(rt.invoke(rt.builtin("type"), value), "__name__")).toBe(fixture.type);
+    expect(rt.invoke(rt.builtin("str"), value)).toBe(fixture.text);
+  }
+});
+test("Python whitespace, escaped regex literals and recursive aliases stay bounded", async () => {
+  const { rt } = await import("./validate_artifacts.ts");
+  expect(rt.method("\x1c \x85", "strip")).toBe("");
+  expect(rt.method("\ufeff", "strip")).toBe("\ufeff");
+  expect(rt.method(rt.builtin("re"), "fullmatch", "\\s+", "\x1c\x85")).not.toBeNull();
+  expect(rt.method(rt.builtin("re"), "fullmatch", "\\S+", "\ufeff")).not.toBeNull();
+  const literal = rt.method(rt.builtin("re"), "escape", "foo\\Z");
+  expect(rt.method(rt.builtin("re"), "search", literal, "foo\\Z")).not.toBeNull();
+  const recursive = rt.invoke(rt.builtin("yload"), "&self [*self]");
+  expect(rt.invoke(rt.builtin("str"), recursive)).toBe("[[...]]");
+  expect(() => rt.invoke(rt.builtin("yload"), "base: &base {a: 1}\ncopy: {<<: *base}\n")).toThrow();
+  expect(() => rt.invoke(rt.builtin("yload"), "!!unknown x")).toThrow();
+  expect(() => rt.invoke(rt.builtin("yload"), "!!unknown [x]")).toThrow();
+  expect(() => rt.invoke(rt.builtin("yload"), "anchor: &a {x: 1}\n? *a\n: 2\n")).toThrow();
+});

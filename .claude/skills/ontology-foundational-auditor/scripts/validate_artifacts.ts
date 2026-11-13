@@ -226,6 +226,9 @@ namespace rt {
   class SystemExit {
     constructor(readonly code: unknown) {}
   }
+  class FloatValue {
+    constructor(readonly value: number) {}
+  }
   class IsoDate {
     constructor(readonly value: string) {}
   }
@@ -267,6 +270,7 @@ namespace rt {
     });
   }
   export function truth(value: unknown): boolean {
+    if (value instanceof FloatValue) return value.value !== 0;
     if (value === null || value === undefined || value === false || value === 0 || value === "") return false;
     if (Array.isArray(value) || Buffer.isBuffer(value)) return value.length > 0;
     if (value instanceof Dict) return value.pairs.length > 0;
@@ -285,6 +289,7 @@ namespace rt {
     });
   }
   function number(value: unknown): number {
+    if (value instanceof FloatValue) return value.value;
     return typeof value === "number"
       ? value
       : typeof value === "boolean"
@@ -341,15 +346,29 @@ namespace rt {
       quote
     );
   }
-  function repr(value: unknown): string {
+  function repr(value: unknown, ancestors: ReadonlySet<unknown> = new Set()): string {
+    if (value instanceof FloatValue)
+      return Number.isNaN(value.value)
+        ? "nan"
+        : value.value === Infinity
+          ? "inf"
+          : value.value === -Infinity
+            ? "-inf"
+            : Object.is(value.value, -0)
+              ? "-0.0"
+              : Number.isInteger(value.value)
+                ? `${value.value}.0`
+                : `${value.value}`;
+    if (ancestors.has(value)) return value instanceof Dict ? "{...}" : value instanceof Tuple ? "(...)" : "[...]";
+    const descend = (child: unknown) => repr(child, new Set([...ancestors, value]));
     if (value === null || value === undefined) return "None";
     if (typeof value === "string") return pyString(value);
     if (typeof value === "number") return `${value}`;
     if (typeof value === "boolean") return value ? "True" : "False";
-    if (value instanceof Tuple) return `(${value.map(repr).join(", ")}${value.length === 1 ? "," : ""})`;
-    if (Array.isArray(value)) return `[${value.map(repr).join(", ")}]`;
-    if (value instanceof Dict) return `{${value.pairs.map(([k, v]) => `${repr(k)}: ${repr(v)}`).join(", ")}}`;
-    if (value instanceof ValueSet) return value.values.length ? `{${value.values.map(repr).join(", ")}}` : "set()";
+    if (value instanceof Tuple) return `(${value.map(descend).join(", ")}${value.length === 1 ? "," : ""})`;
+    if (Array.isArray(value)) return `[${value.map(descend).join(", ")}]`;
+    if (value instanceof Dict) return `{${value.pairs.map(([k, v]) => `${descend(k)}: ${descend(v)}`).join(", ")}}`;
+    if (value instanceof ValueSet) return value.values.length ? `{${value.values.map(descend).join(", ")}}` : "set()";
     if (value instanceof FilePath) return `PosixPath(${pyString(value.value)})`;
     if (Buffer.isBuffer(value)) return "b" + pyString(value.toString("latin1"));
     if (value instanceof IsoDate) return value.value;
@@ -377,6 +396,11 @@ namespace rt {
     return conversion === 114 ? repr(value) : text(value);
   }
   function equal(a: unknown, b: unknown): boolean {
+    if (
+      (a instanceof FloatValue || typeof a === "number" || typeof a === "boolean") &&
+      (b instanceof FloatValue || typeof b === "number" || typeof b === "boolean")
+    )
+      return number(a) === number(b);
     if ((a instanceof TypeToken && b instanceof Callable) || (a instanceof Callable && b instanceof TypeToken))
       return a.name === b.name;
     if (
@@ -413,7 +437,8 @@ namespace rt {
     }
     if (a instanceof FilePath && b instanceof FilePath) return ordering(a.value.split("/"), b.value.split("/"));
     if (a instanceof IsoDate && b instanceof IsoDate) return ordering(a.value, b.value);
-    if (typeof a === "number" && typeof b === "number") return a - b;
+    if ((typeof a === "number" || a instanceof FloatValue) && (typeof b === "number" || b instanceof FloatValue))
+      return number(a) - number(b);
     const left = [...text(a)],
       right = [...text(b)];
     for (let i = 0; i < Math.min(left.length, right.length); i++) {
@@ -535,9 +560,18 @@ namespace rt {
     return fail("TypeError", "not a context manager");
   }
   export const module = (name: string) => new Module(name);
+  const whitespaceBody = "\\x09-\\x0d\\x1c-\\x20\\x85\\xa0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000";
+  const whitespace = `[${whitespaceBody}]`;
   function trim(value: string, chars: unknown, side: "left" | "right" | "both") {
-    if (chars === null || chars === undefined)
-      return side === "left" ? value.trimStart() : side === "right" ? value.trimEnd() : value.trim();
+    if (chars === null || chars === undefined) {
+      const leading = new RegExp(`^${whitespace}+`, "u"),
+        trailing = new RegExp(`${whitespace}+$`, "u");
+      return side === "left"
+        ? value.replace(leading, "")
+        : side === "right"
+          ? value.replace(trailing, "")
+          : value.replace(leading, "").replace(trailing, "");
+    }
     const allowed = new Set([...text(chars)]);
     let start = 0,
       end = value.length;
@@ -548,20 +582,22 @@ namespace rt {
   function regex(source: unknown, flags = 0, mode = "search") {
     let pattern = source instanceof Pattern ? source.source : text(source);
     flags |= source instanceof Pattern ? source.flags : 0;
-    pattern = pattern.replaceAll("\\Z", "(?![\\s\\S])");
     if (pattern.startsWith("(?i)")) {
       flags |= 2;
       pattern = pattern.slice(4);
     }
     if (mode === "match") pattern = `^(?:${pattern})`;
-    if (mode === "fullmatch") pattern = `^(?:${pattern})(?![\\s\\S])`;
+    if (mode === "fullmatch") pattern = `^(?:${pattern})(?![^])`;
     let translated = "",
       inClass = false;
     for (let i = 0; i < pattern.length; i++) {
       const c = pattern[i] ?? "";
       if (c === "\\") {
         const next = pattern[++i] ?? "";
-        if (next === "w") translated += inClass ? "\\p{L}\\p{N}_" : "[\\p{L}\\p{N}_]";
+        if (next === "Z") translated += "(?![^])";
+        else if (next === "s") translated += inClass ? whitespaceBody : whitespace;
+        else if (next === "S") translated += `[^${whitespaceBody}]`;
+        else if (next === "w") translated += inClass ? "\\p{L}\\p{N}_" : "[\\p{L}\\p{N}_]";
         else if (next === "d") translated += "\\p{Nd}";
         else if (next === "b" && !inClass)
           translated += "(?:(?<![\\p{L}\\p{N}_])(?=[\\p{L}\\p{N}_])|(?<=[\\p{L}\\p{N}_])(?![\\p{L}\\p{N}_]))";
@@ -587,13 +623,26 @@ namespace rt {
     if (Buffer.isBuffer(value)) return Buffer.from(value);
     return value;
   }
-  function fromNative(value: unknown): unknown {
-    if (Array.isArray(value)) return value.map(fromNative);
-    if (value instanceof Date) return new IsoDate(value.toISOString());
-    if (value && typeof value === "object") return new Dict(Object.entries(value).map(([k, v]) => [k, fromNative(v)]));
+  function fromNative(value: unknown, memo = new Map<object, unknown>()): unknown {
+    if (value instanceof FloatValue || value instanceof IsoDate) return value;
+    if (value && typeof value === "object") {
+      if (memo.has(value)) return memo.get(value);
+      if (Array.isArray(value)) {
+        const out: unknown[] = [];
+        memo.set(value, out);
+        for (const item of value) out.push(fromNative(item, memo));
+        return out;
+      }
+      if (value instanceof Date) return new IsoDate(value.toISOString());
+      const out = new Dict();
+      memo.set(value, out);
+      for (const [key, item] of Object.entries(value)) out.put(key, fromNative(item, memo));
+      return out;
+    }
     return value;
   }
   function toNative(value: unknown, sort = false): unknown {
+    if (value instanceof FloatValue) return value.value;
     if (value instanceof Dict) {
       const pairs = sort ? value.pairs.toSorted(([a], [b]) => ordering(a, b)) : value.pairs;
       return Object.fromEntries(pairs.map(([k, v]) => [text(k), toNative(v, sort)]));
@@ -601,17 +650,85 @@ namespace rt {
     if (Array.isArray(value)) return value.map((v) => toNative(v, sort));
     return value;
   }
+  const scalarBool = /^(?:yes|Yes|YES|no|No|NO|true|True|TRUE|false|False|FALSE|on|On|ON|off|Off|OFF)$/;
+  const scalarInt =
+    /^(?:[-+]?0b[0-1_]+|[-+]?0[0-7_]+|[-+]?(?:0|[1-9][0-9_]*)|[-+]?0x[0-9a-fA-F_]+|[-+]?[1-9][0-9_]*(?::[0-5]?[0-9])+)$/;
+  const scalarFloat =
+    /^(?:[-+]?(?:[0-9][0-9_]*)\.[0-9_]*(?:[eE][-+][0-9]+)?|\.[0-9][0-9_]*(?:[eE][-+][0-9]+)?|[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+\.[0-9_]*|[-+]?\.(?:inf|Inf|INF)|\.(?:nan|NaN|NAN))$/;
+  function numericScalar(source: string, floating: boolean): unknown {
+    let raw = source.replaceAll("_", "").toLowerCase();
+    const sign = raw.startsWith("-") ? -1 : 1;
+    raw = raw.replace(/^[+-]/, "");
+    let value: number;
+    if (raw === ".inf") value = sign * Infinity;
+    else if (raw === ".nan") value = NaN;
+    else if (raw.includes(":")) value = sign * raw.split(":").reduce((total, part) => total * 60 + Number(part), 0);
+    else if (!floating && /^0[0-7]+$/.test(raw)) value = sign * Number.parseInt(raw, 8);
+    else value = sign * Number(raw);
+    if (Number.isNaN(value) && raw !== ".nan") return fail("ValueError", `invalid numeric scalar ${repr(source)}`);
+    return floating ? new FloatValue(value) : value;
+  }
   function yamlLoad(value: unknown): unknown {
     const data = Buffer.isBuffer(value) ? new TextDecoder("utf-8", { fatal: true }).decode(value) : text(value);
     const doc = YAML.parseDocument(data, { schema: "yaml-1.1", uniqueKeys: false });
+    if (doc.errors.length) fail("ValueError", doc.errors.map((e) => e.message).join("\n"));
+    const visited = new Set<unknown>();
     const visit = (node: unknown): void => {
-      if (YAML.isMap(node)) {
+      if (!node || visited.has(node)) return;
+      visited.add(node);
+      if (YAML.isMap(node) && node.tag && !["tag:yaml.org,2002:map", "tag:yaml.org,2002:set"].includes(node.tag))
+        fail("ValueError", `could not determine a mapping constructor for ${repr(node.tag)}`);
+      if (
+        YAML.isSeq(node) &&
+        node.tag &&
+        !["tag:yaml.org,2002:seq", "tag:yaml.org,2002:omap", "tag:yaml.org,2002:pairs"].includes(node.tag)
+      )
+        fail("ValueError", `could not determine a sequence constructor for ${repr(node.tag)}`);
+      if (YAML.isScalar(node)) {
+        const raw = node.source ?? text(node.value),
+          tag = node.tag?.replace("tag:yaml.org,2002:", "");
+        if (tag && !["str", "bool", "null", "int", "float", "timestamp", "binary"].includes(tag))
+          fail("ValueError", `could not determine a constructor for the tag ${repr(node.tag)}`);
+        if (tag === "str") {
+          node.value = raw;
+          return;
+        }
+        if (tag === "null") {
+          node.value = null;
+          return;
+        }
+        if (tag === "int") {
+          if (!scalarInt.test(raw)) fail("ValueError", `invalid integer scalar ${repr(raw)}`);
+          node.value = numericScalar(raw, false);
+          return;
+        }
+        if (tag === "float") {
+          node.value = numericScalar(raw, true);
+          return;
+        }
+        if (tag === "bool") {
+          if (!scalarBool.test(raw)) fail("ValueError", `invalid boolean scalar ${repr(raw)}`);
+          node.value = ["true", "yes", "on"].includes(raw.toLowerCase());
+          return;
+        }
+        if (node.type !== "PLAIN" || tag) return;
+        if (/^(?:~|null|Null|NULL|)$/.test(raw)) node.value = null;
+        else if (scalarBool.test(raw)) node.value = ["true", "yes", "on"].includes(raw.toLowerCase());
+        else if (scalarInt.test(raw)) node.value = numericScalar(raw, false);
+        else if (scalarFloat.test(raw)) node.value = numericScalar(raw, true);
+        else if (!(node.value instanceof Date)) node.value = raw;
+      } else if (YAML.isMap(node)) {
         const seen = new ValueSet();
         for (const pair of node.items) {
-          const key = YAML.isScalar(pair.key) ? pair.key.value : null;
+          if (YAML.isScalar(pair.key) && pair.key.type === "PLAIN" && pair.key.source === "<<")
+            fail("ValueError", "could not determine a constructor for the tag 'tag:yaml.org,2002:merge'");
+          const keyNode = YAML.isAlias(pair.key) ? pair.key.resolve(doc) : pair.key;
+          visit(keyNode);
+          if (keyNode && !YAML.isScalar(keyNode)) fail("TypeError", "found unhashable key");
+          const key = YAML.isScalar(keyNode) ? keyNode.value : null;
           if (seen.has(key)) {
-            const offset = node.range?.[0] ?? 0;
-            const line = data.slice(0, offset).split("\n").length;
+            const offset = node.range?.[0] ?? 0,
+              line = data.slice(0, offset).split("\n").length;
             fail(
               "_DupKeyError",
               `duplicate mapping key ${repr(key)} (line ${line}) — last-wins YAML lets two verdicts share one file; refused`
@@ -623,8 +740,7 @@ namespace rt {
       } else if (YAML.isSeq(node)) for (const child of node.items) visit(child);
     };
     visit(doc.contents);
-    if (doc.errors.length) fail("ValueError", doc.errors.map((e) => e.message).join("\n"));
-    return fromNative(doc.toJS());
+    return fromNative(doc.toJS({ maxAliasCount: -1 }));
   }
   function iso(value: unknown, dateOnly = false): IsoDate {
     const input = text(value);
@@ -913,7 +1029,12 @@ namespace rt {
         return fn(name, (args) => {
           const sep = args[0],
             maxsplit = args.length > 1 ? number(args[1]) : -1;
-          const parts = sep == null ? value.trim().split(/\s+/) : value.split(text(sep));
+          const parts =
+            sep == null
+              ? trim(value, null, "both")
+                  .split(new RegExp(`${whitespace}+`, "u"))
+                  .filter(Boolean)
+              : value.split(text(sep));
           if (maxsplit < 0 || parts.length <= maxsplit + 1) return parts;
           if (name === "rsplit")
             return [parts.slice(0, parts.length - maxsplit).join(text(sep)), ...parts.slice(-maxsplit)];
@@ -932,6 +1053,7 @@ namespace rt {
     if (value === null || value === undefined) return "NoneType";
     if (typeof value === "boolean") return "bool";
     if (typeof value === "string") return "str";
+    if (value instanceof FloatValue) return "float";
     if (typeof value === "number") return Number.isInteger(value) ? "int" : "float";
     if (value instanceof Dict) return "dict";
     if (value instanceof Tuple) return "tuple";

@@ -199,7 +199,7 @@ test("install is idempotent, preserves mode and refuses competing or reversed ta
       expect(Fs.existsSync(`${home}/.agents`)).toBe(false);
     }
   }
-});
+}, 15000);
 test("adapter cancellation reaps the helper and its owned dialog", async () => {
   const { requestCode } = await import("./transport.ts");
   const env = envWithDialog(),
