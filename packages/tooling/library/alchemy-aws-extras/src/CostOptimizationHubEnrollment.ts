@@ -26,6 +26,14 @@ const $I = $AlchemyAwsExtrasId.create("CostOptimizationHubEnrollment");
 /**
  * Resource type string registered by {@link CostOptimizationHubEnrollment}.
  *
+ * **Example** (Read the registered type)
+ *
+ * ```ts
+ * import { CostOptimizationHubEnrollmentType } from "@beep/alchemy-aws-extras/CostOptimizationHubEnrollment"
+ *
+ * console.log(CostOptimizationHubEnrollmentType) // "BeepAWS.CostOptimizationHub.Enrollment"
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -33,6 +41,8 @@ export const CostOptimizationHubEnrollmentType = "BeepAWS.CostOptimizationHub.En
 
 /**
  * Props of a {@link CostOptimizationHubEnrollment}.
+ *
+ * **Details**
  *
  * `status` defaults to `"Active"`; `includeMemberAccounts` defaults to
  * `false`.
@@ -50,22 +60,35 @@ export const CostOptimizationHubEnrollmentType = "BeepAWS.CostOptimizationHub.En
  * @category models
  * @since 0.0.0
  */
-export const CostOptimizationHubEnrollmentProps = S.Struct({
-  status: S.optionalKey(EnrollmentStatus),
-  includeMemberAccounts: S.optionalKey(S.Boolean),
-}).pipe(
-  $I.annoteSchema("CostOptimizationHubEnrollmentProps", {
-    description: "Desired Cost Optimization Hub enrollment of the deploying account.",
-  })
-);
+export class CostOptimizationHubEnrollmentProps extends S.Opaque<
+  CostOptimizationHubEnrollmentProps,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    status: S.optionalKey(EnrollmentStatus),
+    includeMemberAccounts: S.optionalKey(S.Boolean),
+  }).pipe(
+    $I.annoteSchema("CostOptimizationHubEnrollmentProps", {
+      description: "Desired Cost Optimization Hub enrollment of the deploying account.",
+    })
+  )
+) {}
 
 /**
- * Decoded {@link CostOptimizationHubEnrollmentProps}.
+ * Companion types for {@link CostOptimizationHubEnrollmentProps}.
  *
  * @category models
  * @since 0.0.0
  */
-export type CostOptimizationHubEnrollmentProps = typeof CostOptimizationHubEnrollmentProps.Type;
+export declare namespace CostOptimizationHubEnrollmentProps {
+  /**
+   * The plain, unbranded shape callers pass and attributes report.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  export type Encoded = typeof CostOptimizationHubEnrollmentProps.Encoded;
+}
 
 /**
  * Attributes Cost Optimization Hub reports for the account enrollment.
@@ -86,22 +109,35 @@ export type CostOptimizationHubEnrollmentProps = typeof CostOptimizationHubEnrol
  * @category models
  * @since 0.0.0
  */
-export const CostOptimizationHubEnrollmentAttributes = S.Struct({
-  status: S.String,
-  includeMemberAccounts: S.Boolean,
-}).pipe(
-  $I.annoteSchema("CostOptimizationHubEnrollmentAttributes", {
-    description: "Observed Cost Optimization Hub enrollment of the deploying account.",
-  })
-);
+export class CostOptimizationHubEnrollmentAttributes extends S.Opaque<
+  CostOptimizationHubEnrollmentAttributes,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    status: S.String,
+    includeMemberAccounts: S.Boolean,
+  }).pipe(
+    $I.annoteSchema("CostOptimizationHubEnrollmentAttributes", {
+      description: "Observed Cost Optimization Hub enrollment of the deploying account.",
+    })
+  )
+) {}
 
 /**
- * Decoded {@link CostOptimizationHubEnrollmentAttributes}.
+ * Companion types for {@link CostOptimizationHubEnrollmentAttributes}.
  *
  * @category models
  * @since 0.0.0
  */
-export type CostOptimizationHubEnrollmentAttributes = typeof CostOptimizationHubEnrollmentAttributes.Type;
+export declare namespace CostOptimizationHubEnrollmentAttributes {
+  /**
+   * The plain, unbranded shape callers pass and attributes report.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  export type Encoded = typeof CostOptimizationHubEnrollmentAttributes.Encoded;
+}
 
 /**
  * Alchemy resource contract for {@link CostOptimizationHubEnrollment}.
@@ -109,14 +145,13 @@ export type CostOptimizationHubEnrollmentAttributes = typeof CostOptimizationHub
  * @category resources
  * @since 0.0.0
  */
-export interface CostOptimizationHubEnrollment
-  extends Resource<
-    typeof CostOptimizationHubEnrollmentType,
-    CostOptimizationHubEnrollmentProps,
-    CostOptimizationHubEnrollmentAttributes,
-    never,
-    Providers
-  > {}
+export type CostOptimizationHubEnrollment = Resource<
+  typeof CostOptimizationHubEnrollmentType,
+  CostOptimizationHubEnrollmentProps.Encoded,
+  CostOptimizationHubEnrollmentAttributes.Encoded,
+  never,
+  Providers
+>;
 
 const CostOptimizationHubEnrollmentResource = Resource<CostOptimizationHubEnrollment>(
   CostOptimizationHubEnrollmentType,
@@ -165,7 +200,7 @@ const observe = Effect.fn("CostOptimizationHubEnrollment.observe")(function* () 
   return {
     status,
     includeMemberAccounts: response.includeMemberAccounts ?? false,
-  } satisfies CostOptimizationHubEnrollmentAttributes;
+  } satisfies CostOptimizationHubEnrollmentAttributes.Encoded;
 });
 
 const apply = Effect.fn("CostOptimizationHubEnrollment.apply")(function* (

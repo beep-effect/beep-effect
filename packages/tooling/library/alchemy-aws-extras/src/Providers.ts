@@ -25,6 +25,14 @@ import { RunnerLaunchTemplate, RunnerLaunchTemplateProvider } from "./RunnerLaun
 /**
  * Provider collection service for this package.
  *
+ * **Example** (Read the collection key)
+ *
+ * ```ts
+ * import { Providers } from "@beep/alchemy-aws-extras/Providers"
+ *
+ * console.log(Providers.key) // "BeepAWS"
+ * ```
+ *
  * @category providers
  * @since 0.0.0
  */

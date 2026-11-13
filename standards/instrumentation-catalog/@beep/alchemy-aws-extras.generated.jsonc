@@ -21,13 +21,16 @@
     {"name":"CostOptimizationHubEnrollment.delete","owner":"@beep/alchemy-aws-extras","family":"tooling","conforms":true},
     {"name":"CostOptimizationHubEnrollment.observe","owner":"@beep/alchemy-aws-extras","family":"tooling","conforms":true},
     {"name":"CostOptimizationHubEnrollment.reconcile","owner":"@beep/alchemy-aws-extras","family":"tooling","conforms":true},
+    {"name":"RunnerLaunchTemplate.createTemplate","owner":"@beep/alchemy-aws-extras","family":"tooling","conforms":true},
     {"name":"RunnerLaunchTemplate.delete","owner":"@beep/alchemy-aws-extras","family":"tooling","conforms":true},
     {"name":"RunnerLaunchTemplate.diff","owner":"@beep/alchemy-aws-extras","family":"tooling","conforms":true},
+    {"name":"RunnerLaunchTemplate.needsNewVersion","owner":"@beep/alchemy-aws-extras","family":"tooling","conforms":true},
     {"name":"RunnerLaunchTemplate.observe","owner":"@beep/alchemy-aws-extras","family":"tooling","conforms":true},
     {"name":"RunnerLaunchTemplate.publishVersion","owner":"@beep/alchemy-aws-extras","family":"tooling","conforms":true},
     {"name":"RunnerLaunchTemplate.read","owner":"@beep/alchemy-aws-extras","family":"tooling","conforms":true},
     {"name":"RunnerLaunchTemplate.reconcile","owner":"@beep/alchemy-aws-extras","family":"tooling","conforms":true},
     {"name":"RunnerLaunchTemplate.syncTags","owner":"@beep/alchemy-aws-extras","family":"tooling","conforms":true},
-    {"name":"RunnerLaunchTemplate.toAttributes","owner":"@beep/alchemy-aws-extras","family":"tooling","conforms":true}
+    {"name":"RunnerLaunchTemplate.toAttributes","owner":"@beep/alchemy-aws-extras","family":"tooling","conforms":true},
+    {"name":"RunnerLaunchTemplate.updateTemplate","owner":"@beep/alchemy-aws-extras","family":"tooling","conforms":true}
   ]
 }

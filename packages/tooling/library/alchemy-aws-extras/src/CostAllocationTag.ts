@@ -28,6 +28,14 @@ const $I = $AlchemyAwsExtrasId.create("CostAllocationTag");
 /**
  * Resource type string registered by {@link CostAllocationTag}.
  *
+ * **Example** (Read the registered type)
+ *
+ * ```ts
+ * import { CostAllocationTagType } from "@beep/alchemy-aws-extras/CostAllocationTag"
+ *
+ * console.log(CostAllocationTagType) // "BeepAWS.CostExplorer.CostAllocationTag"
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -64,6 +72,8 @@ export type CostAllocationTagStatus = typeof CostAllocationTagStatus.Type;
 /**
  * Props of a {@link CostAllocationTag}.
  *
+ * **Details**
+ *
  * `tagKey` is the identity: changing it replaces the resource. `status`
  * defaults to `"Active"`.
  *
@@ -80,22 +90,32 @@ export type CostAllocationTagStatus = typeof CostAllocationTagStatus.Type;
  * @category models
  * @since 0.0.0
  */
-export const CostAllocationTagProps = S.Struct({
-  tagKey: S.NonEmptyString,
-  status: S.optionalKey(CostAllocationTagStatus),
-}).pipe(
-  $I.annoteSchema("CostAllocationTagProps", {
-    description: "Desired activation of one cost allocation tag key in the deploying account.",
-  })
-);
+export class CostAllocationTagProps extends S.Opaque<CostAllocationTagProps, { readonly brand: unique symbol }>()(
+  S.Struct({
+    tagKey: S.NonEmptyString,
+    status: S.optionalKey(CostAllocationTagStatus),
+  }).pipe(
+    $I.annoteSchema("CostAllocationTagProps", {
+      description: "Desired activation of one cost allocation tag key in the deploying account.",
+    })
+  )
+) {}
 
 /**
- * Decoded {@link CostAllocationTagProps}.
+ * Companion types for {@link CostAllocationTagProps}.
  *
  * @category models
  * @since 0.0.0
  */
-export type CostAllocationTagProps = typeof CostAllocationTagProps.Type;
+export declare namespace CostAllocationTagProps {
+  /**
+   * The plain, unbranded shape callers pass and attributes report.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  export type Encoded = typeof CostAllocationTagProps.Encoded;
+}
 
 /**
  * Attributes Cost Explorer reports for a cost allocation tag.
@@ -117,23 +137,36 @@ export type CostAllocationTagProps = typeof CostAllocationTagProps.Type;
  * @category models
  * @since 0.0.0
  */
-export const CostAllocationTagAttributes = S.Struct({
-  tagKey: S.String,
-  status: CostAllocationTagStatus,
-  type: S.String,
-}).pipe(
-  $I.annoteSchema("CostAllocationTagAttributes", {
-    description: "Observed state of one cost allocation tag key.",
-  })
-);
+export class CostAllocationTagAttributes extends S.Opaque<
+  CostAllocationTagAttributes,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    tagKey: S.String,
+    status: CostAllocationTagStatus,
+    type: S.String,
+  }).pipe(
+    $I.annoteSchema("CostAllocationTagAttributes", {
+      description: "Observed state of one cost allocation tag key.",
+    })
+  )
+) {}
 
 /**
- * Decoded {@link CostAllocationTagAttributes}.
+ * Companion types for {@link CostAllocationTagAttributes}.
  *
  * @category models
  * @since 0.0.0
  */
-export type CostAllocationTagAttributes = typeof CostAllocationTagAttributes.Type;
+export declare namespace CostAllocationTagAttributes {
+  /**
+   * The plain, unbranded shape callers pass and attributes report.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  export type Encoded = typeof CostAllocationTagAttributes.Encoded;
+}
 
 /**
  * Alchemy resource contract for {@link CostAllocationTag}.
@@ -141,14 +174,13 @@ export type CostAllocationTagAttributes = typeof CostAllocationTagAttributes.Typ
  * @category resources
  * @since 0.0.0
  */
-export interface CostAllocationTag
-  extends Resource<
-    typeof CostAllocationTagType,
-    CostAllocationTagProps,
-    CostAllocationTagAttributes,
-    never,
-    Providers
-  > {}
+export type CostAllocationTag = Resource<
+  typeof CostAllocationTagType,
+  CostAllocationTagProps.Encoded,
+  CostAllocationTagAttributes.Encoded,
+  never,
+  Providers
+>;
 
 const CostAllocationTagResource = Resource<CostAllocationTag>(CostAllocationTagType, {
   defaultRemovalPolicy: "retain",
@@ -185,7 +217,7 @@ const CostAllocationTagResource = Resource<CostAllocationTag>(CostAllocationTagT
  */
 export const CostAllocationTag: ExtrasResource<CostAllocationTag> = CostAllocationTagResource;
 
-const toAttributes = (tag: ce.CostAllocationTag): CostAllocationTagAttributes => ({
+const toAttributes = (tag: ce.CostAllocationTag): CostAllocationTagAttributes.Encoded => ({
   tagKey: tag.TagKey,
   status: tag.Status === "Active" ? "Active" : "Inactive",
   type: tag.Type,

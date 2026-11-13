@@ -25,6 +25,14 @@ const $I = $AlchemyAwsExtrasId.create("ComputeOptimizerEnrollment");
 /**
  * Resource type string registered by {@link ComputeOptimizerEnrollment}.
  *
+ * **Example** (Read the registered type)
+ *
+ * ```ts
+ * import { ComputeOptimizerEnrollmentType } from "@beep/alchemy-aws-extras/ComputeOptimizerEnrollment"
+ *
+ * console.log(ComputeOptimizerEnrollmentType) // "BeepAWS.ComputeOptimizer.Enrollment"
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -32,6 +40,8 @@ export const ComputeOptimizerEnrollmentType = "BeepAWS.ComputeOptimizer.Enrollme
 
 /**
  * Props of a {@link ComputeOptimizerEnrollment}.
+ *
+ * **Details**
  *
  * `status` defaults to `"Active"`; `includeMemberAccounts` defaults to
  * `false` (only an organization management account may set it).
@@ -49,22 +59,35 @@ export const ComputeOptimizerEnrollmentType = "BeepAWS.ComputeOptimizer.Enrollme
  * @category models
  * @since 0.0.0
  */
-export const ComputeOptimizerEnrollmentProps = S.Struct({
-  status: S.optionalKey(EnrollmentStatus),
-  includeMemberAccounts: S.optionalKey(S.Boolean),
-}).pipe(
-  $I.annoteSchema("ComputeOptimizerEnrollmentProps", {
-    description: "Desired Compute Optimizer enrollment of the deploying account.",
-  })
-);
+export class ComputeOptimizerEnrollmentProps extends S.Opaque<
+  ComputeOptimizerEnrollmentProps,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    status: S.optionalKey(EnrollmentStatus),
+    includeMemberAccounts: S.optionalKey(S.Boolean),
+  }).pipe(
+    $I.annoteSchema("ComputeOptimizerEnrollmentProps", {
+      description: "Desired Compute Optimizer enrollment of the deploying account.",
+    })
+  )
+) {}
 
 /**
- * Decoded {@link ComputeOptimizerEnrollmentProps}.
+ * Companion types for {@link ComputeOptimizerEnrollmentProps}.
  *
  * @category models
  * @since 0.0.0
  */
-export type ComputeOptimizerEnrollmentProps = typeof ComputeOptimizerEnrollmentProps.Type;
+export declare namespace ComputeOptimizerEnrollmentProps {
+  /**
+   * The plain, unbranded shape callers pass and attributes report.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ComputeOptimizerEnrollmentProps.Encoded;
+}
 
 /**
  * Attributes Compute Optimizer reports for the account enrollment.
@@ -85,22 +108,35 @@ export type ComputeOptimizerEnrollmentProps = typeof ComputeOptimizerEnrollmentP
  * @category models
  * @since 0.0.0
  */
-export const ComputeOptimizerEnrollmentAttributes = S.Struct({
-  status: S.String,
-  memberAccountsEnrolled: S.Boolean,
-}).pipe(
-  $I.annoteSchema("ComputeOptimizerEnrollmentAttributes", {
-    description: "Observed Compute Optimizer enrollment of the deploying account.",
-  })
-);
+export class ComputeOptimizerEnrollmentAttributes extends S.Opaque<
+  ComputeOptimizerEnrollmentAttributes,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    status: S.String,
+    memberAccountsEnrolled: S.Boolean,
+  }).pipe(
+    $I.annoteSchema("ComputeOptimizerEnrollmentAttributes", {
+      description: "Observed Compute Optimizer enrollment of the deploying account.",
+    })
+  )
+) {}
 
 /**
- * Decoded {@link ComputeOptimizerEnrollmentAttributes}.
+ * Companion types for {@link ComputeOptimizerEnrollmentAttributes}.
  *
  * @category models
  * @since 0.0.0
  */
-export type ComputeOptimizerEnrollmentAttributes = typeof ComputeOptimizerEnrollmentAttributes.Type;
+export declare namespace ComputeOptimizerEnrollmentAttributes {
+  /**
+   * The plain, unbranded shape callers pass and attributes report.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ComputeOptimizerEnrollmentAttributes.Encoded;
+}
 
 /**
  * Alchemy resource contract for {@link ComputeOptimizerEnrollment}.
@@ -108,14 +144,13 @@ export type ComputeOptimizerEnrollmentAttributes = typeof ComputeOptimizerEnroll
  * @category resources
  * @since 0.0.0
  */
-export interface ComputeOptimizerEnrollment
-  extends Resource<
-    typeof ComputeOptimizerEnrollmentType,
-    ComputeOptimizerEnrollmentProps,
-    ComputeOptimizerEnrollmentAttributes,
-    never,
-    Providers
-  > {}
+export type ComputeOptimizerEnrollment = Resource<
+  typeof ComputeOptimizerEnrollmentType,
+  ComputeOptimizerEnrollmentProps.Encoded,
+  ComputeOptimizerEnrollmentAttributes.Encoded,
+  never,
+  Providers
+>;
 
 const ComputeOptimizerEnrollmentResource = Resource<ComputeOptimizerEnrollment>(ComputeOptimizerEnrollmentType, {
   defaultRemovalPolicy: "retain",
@@ -152,7 +187,7 @@ const observe = Effect.fn("ComputeOptimizerEnrollment.observe")(function* () {
   return {
     status: response.status ?? "Inactive",
     memberAccountsEnrolled: response.memberAccountsEnrolled ?? false,
-  } satisfies ComputeOptimizerEnrollmentAttributes;
+  } satisfies ComputeOptimizerEnrollmentAttributes.Encoded;
 });
 
 const settle = Effect.fn("ComputeOptimizerEnrollment.settle")(function* (desired: EnrollmentStatus) {

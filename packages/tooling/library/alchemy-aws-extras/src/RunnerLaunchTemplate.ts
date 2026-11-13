@@ -34,6 +34,14 @@ const $I = $AlchemyAwsExtrasId.create("RunnerLaunchTemplate");
 /**
  * Resource type string registered by {@link RunnerLaunchTemplate}.
  *
+ * **Example** (Read the registered type)
+ *
+ * ```ts
+ * import { RunnerLaunchTemplateType } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ *
+ * console.log(RunnerLaunchTemplateType) // "BeepAWS.EC2.RunnerLaunchTemplate"
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -85,24 +93,34 @@ const PositiveInt = S.Int.check(S.isGreaterThan(0)).pipe(
  * @category models
  * @since 0.0.0
  */
-export const LaunchTemplateEbs = S.Struct({
-  volumeSize: S.optionalKey(PositiveInt),
-  volumeType: S.optionalKey(EbsVolumeType),
-  iops: S.optionalKey(PositiveInt),
-  throughput: S.optionalKey(PositiveInt),
-  encrypted: S.optionalKey(S.Boolean),
-  kmsKeyId: S.optionalKey(S.NonEmptyString),
-  snapshotId: S.optionalKey(S.NonEmptyString),
-  deleteOnTermination: S.optionalKey(S.Boolean),
-}).pipe($I.annoteSchema("LaunchTemplateEbs", { description: "EBS settings of one launch-template block device." }));
+export class LaunchTemplateEbs extends S.Opaque<LaunchTemplateEbs, { readonly brand: unique symbol }>()(
+  S.Struct({
+    volumeSize: S.optionalKey(PositiveInt),
+    volumeType: S.optionalKey(EbsVolumeType),
+    iops: S.optionalKey(PositiveInt),
+    throughput: S.optionalKey(PositiveInt),
+    encrypted: S.optionalKey(S.Boolean),
+    kmsKeyId: S.optionalKey(S.NonEmptyString),
+    snapshotId: S.optionalKey(S.NonEmptyString),
+    deleteOnTermination: S.optionalKey(S.Boolean),
+  }).pipe($I.annoteSchema("LaunchTemplateEbs", { description: "EBS settings of one launch-template block device." }))
+) {}
 
 /**
- * Decoded {@link LaunchTemplateEbs}.
+ * Companion types for {@link LaunchTemplateEbs}.
  *
  * @category models
  * @since 0.0.0
  */
-export type LaunchTemplateEbs = typeof LaunchTemplateEbs.Type;
+export declare namespace LaunchTemplateEbs {
+  /**
+   * The plain, unbranded shape callers pass and attributes report.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  export type Encoded = typeof LaunchTemplateEbs.Encoded;
+}
 
 /**
  * One block device mapping of the launch template.
@@ -123,21 +141,39 @@ export type LaunchTemplateEbs = typeof LaunchTemplateEbs.Type;
  * @category models
  * @since 0.0.0
  */
-export const LaunchTemplateBlockDevice = S.Struct({
-  deviceName: S.NonEmptyString,
-  ebs: LaunchTemplateEbs,
-}).pipe($I.annoteSchema("LaunchTemplateBlockDevice", { description: "One EBS block device mapping." }));
+export class LaunchTemplateBlockDevice extends S.Opaque<LaunchTemplateBlockDevice, { readonly brand: unique symbol }>()(
+  S.Struct({
+    deviceName: S.NonEmptyString,
+    ebs: LaunchTemplateEbs,
+  }).pipe($I.annoteSchema("LaunchTemplateBlockDevice", { description: "One EBS block device mapping." }))
+) {}
 
 /**
- * Decoded {@link LaunchTemplateBlockDevice}.
+ * Companion types for {@link LaunchTemplateBlockDevice}.
  *
  * @category models
  * @since 0.0.0
  */
-export type LaunchTemplateBlockDevice = typeof LaunchTemplateBlockDevice.Type;
+export declare namespace LaunchTemplateBlockDevice {
+  /**
+   * The plain, unbranded shape callers pass and attributes report.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  export type Encoded = typeof LaunchTemplateBlockDevice.Encoded;
+}
 
 /**
  * Spot request type of a launch template.
+ *
+ * **Example** (Read one literal)
+ *
+ * ```ts
+ * import { SpotInstanceType } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ *
+ * console.log(SpotInstanceType.Enum["one-time"]) // "one-time"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -156,6 +192,14 @@ export type SpotInstanceType = typeof SpotInstanceType.Type;
 
 /**
  * What EC2 does to a Spot instance it reclaims.
+ *
+ * **Example** (Read one literal)
+ *
+ * ```ts
+ * import { SpotInterruptionBehavior } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ *
+ * console.log(SpotInterruptionBehavior.Enum["hibernate"]) // "hibernate"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -191,29 +235,50 @@ export type SpotInterruptionBehavior = typeof SpotInterruptionBehavior.Type;
  * @category models
  * @since 0.0.0
  */
-export const LaunchTemplateMarketOptions = S.Struct({
-  marketType: S.tag("spot"),
-  spotOptions: S.optionalKey(
-    S.Struct({
-      maxPrice: S.optionalKey(S.NonEmptyString),
-      spotInstanceType: S.optionalKey(SpotInstanceType),
-      instanceInterruptionBehavior: S.optionalKey(SpotInterruptionBehavior),
-    })
-  ),
-}).pipe(
-  $I.annoteSchema("LaunchTemplateMarketOptions", { description: "Spot purchasing options for launched instances." })
-);
+export class LaunchTemplateMarketOptions extends S.Opaque<
+  LaunchTemplateMarketOptions,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    marketType: S.tag("spot"),
+    spotOptions: S.optionalKey(
+      S.Struct({
+        maxPrice: S.optionalKey(S.NonEmptyString),
+        spotInstanceType: S.optionalKey(SpotInstanceType),
+        instanceInterruptionBehavior: S.optionalKey(SpotInterruptionBehavior),
+      })
+    ),
+  }).pipe(
+    $I.annoteSchema("LaunchTemplateMarketOptions", { description: "Spot purchasing options for launched instances." })
+  )
+) {}
 
 /**
- * Decoded {@link LaunchTemplateMarketOptions}.
+ * Companion types for {@link LaunchTemplateMarketOptions}.
  *
  * @category models
  * @since 0.0.0
  */
-export type LaunchTemplateMarketOptions = typeof LaunchTemplateMarketOptions.Type;
+export declare namespace LaunchTemplateMarketOptions {
+  /**
+   * The plain, unbranded shape callers pass and attributes report.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  export type Encoded = typeof LaunchTemplateMarketOptions.Encoded;
+}
 
 /**
  * An `enabled` / `disabled` switch.
+ *
+ * **Example** (Read one literal)
+ *
+ * ```ts
+ * import { EnabledState } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ *
+ * console.log(EnabledState.Enum["enabled"]) // "enabled"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -232,6 +297,14 @@ export type EnabledState = typeof EnabledState.Type;
 
 /**
  * Whether IMDS requires session tokens (IMDSv2).
+ *
+ * **Example** (Read one literal)
+ *
+ * ```ts
+ * import { HttpTokensState } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ *
+ * console.log(HttpTokensState.Enum["optional"]) // "optional"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -267,24 +340,47 @@ export type HttpTokensState = typeof HttpTokensState.Type;
  * @category models
  * @since 0.0.0
  */
-export const LaunchTemplateMetadataOptions = S.Struct({
-  httpEndpoint: S.optionalKey(EnabledState),
-  httpTokens: S.optionalKey(HttpTokensState),
-  httpPutResponseHopLimit: S.optionalKey(S.Int.check(S.isBetween({ minimum: 1, maximum: 64 }))),
-  httpProtocolIpv6: S.optionalKey(EnabledState),
-  instanceMetadataTags: S.optionalKey(EnabledState),
-}).pipe($I.annoteSchema("LaunchTemplateMetadataOptions", { description: "Instance metadata service (IMDS) options." }));
+export class LaunchTemplateMetadataOptions extends S.Opaque<
+  LaunchTemplateMetadataOptions,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    httpEndpoint: S.optionalKey(EnabledState),
+    httpTokens: S.optionalKey(HttpTokensState),
+    httpPutResponseHopLimit: S.optionalKey(S.Int.check(S.isBetween({ minimum: 1, maximum: 64 }))),
+    httpProtocolIpv6: S.optionalKey(EnabledState),
+    instanceMetadataTags: S.optionalKey(EnabledState),
+  }).pipe(
+    $I.annoteSchema("LaunchTemplateMetadataOptions", { description: "Instance metadata service (IMDS) options." })
+  )
+) {}
 
 /**
- * Decoded {@link LaunchTemplateMetadataOptions}.
+ * Companion types for {@link LaunchTemplateMetadataOptions}.
  *
  * @category models
  * @since 0.0.0
  */
-export type LaunchTemplateMetadataOptions = typeof LaunchTemplateMetadataOptions.Type;
+export declare namespace LaunchTemplateMetadataOptions {
+  /**
+   * The plain, unbranded shape callers pass and attributes report.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  export type Encoded = typeof LaunchTemplateMetadataOptions.Encoded;
+}
 
 /**
  * Resources a launch template may tag at launch.
+ *
+ * **Example** (Read one literal)
+ *
+ * ```ts
+ * import { LaunchTagResourceType } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ *
+ * console.log(LaunchTagResourceType.Enum.instance) // "instance"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -329,18 +425,28 @@ const TagMap = S.Record(S.String, S.String).pipe(
  * @category models
  * @since 0.0.0
  */
-export const LaunchTagSpecification = S.Struct({
-  resourceType: LaunchTagResourceType,
-  tags: TagMap,
-}).pipe($I.annoteSchema("LaunchTagSpecification", { description: "Tags applied to one resource kind at launch." }));
+export class LaunchTagSpecification extends S.Opaque<LaunchTagSpecification, { readonly brand: unique symbol }>()(
+  S.Struct({
+    resourceType: LaunchTagResourceType,
+    tags: TagMap,
+  }).pipe($I.annoteSchema("LaunchTagSpecification", { description: "Tags applied to one resource kind at launch." }))
+) {}
 
 /**
- * Decoded {@link LaunchTagSpecification}.
+ * Companion types for {@link LaunchTagSpecification}.
  *
  * @category models
  * @since 0.0.0
  */
-export type LaunchTagSpecification = typeof LaunchTagSpecification.Type;
+export declare namespace LaunchTagSpecification {
+  /**
+   * The plain, unbranded shape callers pass and attributes report.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  export type Encoded = typeof LaunchTagSpecification.Encoded;
+}
 
 /**
  * Props of a {@link RunnerLaunchTemplate}.
@@ -369,34 +475,44 @@ export type LaunchTagSpecification = typeof LaunchTagSpecification.Type;
  * @category models
  * @since 0.0.0
  */
-export const RunnerLaunchTemplateProps = S.Struct({
-  launchTemplateName: S.optionalKey(S.NonEmptyString),
-  imageId: S.NonEmptyString,
-  instanceType: S.optionalKey(S.NonEmptyString),
-  instanceProfileArn: S.optionalKey(S.NonEmptyString),
-  instanceProfileName: S.optionalKey(S.NonEmptyString),
-  securityGroupIds: S.NonEmptyString.pipe(S.Array, S.optionalKey),
-  associatePublicIpAddress: S.optionalKey(S.Boolean),
-  userData: S.optionalKey(S.String),
-  ebsOptimized: S.optionalKey(S.Boolean),
-  blockDeviceMappings: LaunchTemplateBlockDevice.pipe(S.Array, S.optionalKey),
-  instanceMarketOptions: S.optionalKey(LaunchTemplateMarketOptions),
-  metadataOptions: S.optionalKey(LaunchTemplateMetadataOptions),
-  tagSpecifications: LaunchTagSpecification.pipe(S.Array, S.optionalKey),
-  tags: S.optionalKey(TagMap),
-}).pipe(
-  $I.annoteSchema("RunnerLaunchTemplateProps", {
-    description: "Desired EC2 launch template for self-hosted CI runner instances.",
-  })
-);
+export class RunnerLaunchTemplateProps extends S.Opaque<RunnerLaunchTemplateProps, { readonly brand: unique symbol }>()(
+  S.Struct({
+    launchTemplateName: S.optionalKey(S.NonEmptyString),
+    imageId: S.NonEmptyString,
+    instanceType: S.optionalKey(S.NonEmptyString),
+    instanceProfileArn: S.optionalKey(S.NonEmptyString),
+    instanceProfileName: S.optionalKey(S.NonEmptyString),
+    securityGroupIds: S.NonEmptyString.pipe(S.Array, S.optionalKey),
+    associatePublicIpAddress: S.optionalKey(S.Boolean),
+    userData: S.optionalKey(S.String),
+    ebsOptimized: S.optionalKey(S.Boolean),
+    blockDeviceMappings: LaunchTemplateBlockDevice.pipe(S.Array, S.optionalKey),
+    instanceMarketOptions: S.optionalKey(LaunchTemplateMarketOptions),
+    metadataOptions: S.optionalKey(LaunchTemplateMetadataOptions),
+    tagSpecifications: LaunchTagSpecification.pipe(S.Array, S.optionalKey),
+    tags: S.optionalKey(TagMap),
+  }).pipe(
+    $I.annoteSchema("RunnerLaunchTemplateProps", {
+      description: "Desired EC2 launch template for self-hosted CI runner instances.",
+    })
+  )
+) {}
 
 /**
- * Decoded {@link RunnerLaunchTemplateProps}.
+ * Companion types for {@link RunnerLaunchTemplateProps}.
  *
  * @category models
  * @since 0.0.0
  */
-export type RunnerLaunchTemplateProps = typeof RunnerLaunchTemplateProps.Type;
+export declare namespace RunnerLaunchTemplateProps {
+  /**
+   * The plain, unbranded shape callers pass and attributes report.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  export type Encoded = typeof RunnerLaunchTemplateProps.Encoded;
+}
 
 /**
  * Attributes EC2 reports for the launch template.
@@ -421,24 +537,37 @@ export type RunnerLaunchTemplateProps = typeof RunnerLaunchTemplateProps.Type;
  * @category models
  * @since 0.0.0
  */
-export const RunnerLaunchTemplateAttributes = S.Struct({
-  launchTemplateId: S.String,
-  launchTemplateArn: S.String,
-  launchTemplateName: S.String,
-  defaultVersionNumber: S.Finite,
-  latestVersionNumber: S.Finite,
-  tags: TagMap,
-}).pipe(
-  $I.annoteSchema("RunnerLaunchTemplateAttributes", { description: "Observed state of the EC2 launch template." })
-);
+export class RunnerLaunchTemplateAttributes extends S.Opaque<
+  RunnerLaunchTemplateAttributes,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    launchTemplateId: S.String,
+    launchTemplateArn: S.String,
+    launchTemplateName: S.String,
+    defaultVersionNumber: S.Finite,
+    latestVersionNumber: S.Finite,
+    tags: TagMap,
+  }).pipe(
+    $I.annoteSchema("RunnerLaunchTemplateAttributes", { description: "Observed state of the EC2 launch template." })
+  )
+) {}
 
 /**
- * Decoded {@link RunnerLaunchTemplateAttributes}.
+ * Companion types for {@link RunnerLaunchTemplateAttributes}.
  *
  * @category models
  * @since 0.0.0
  */
-export type RunnerLaunchTemplateAttributes = typeof RunnerLaunchTemplateAttributes.Type;
+export declare namespace RunnerLaunchTemplateAttributes {
+  /**
+   * The plain, unbranded shape callers pass and attributes report.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  export type Encoded = typeof RunnerLaunchTemplateAttributes.Encoded;
+}
 
 /**
  * Alchemy resource contract for {@link RunnerLaunchTemplate}.
@@ -446,14 +575,13 @@ export type RunnerLaunchTemplateAttributes = typeof RunnerLaunchTemplateAttribut
  * @category resources
  * @since 0.0.0
  */
-export interface RunnerLaunchTemplate
-  extends Resource<
-    typeof RunnerLaunchTemplateType,
-    RunnerLaunchTemplateProps,
-    RunnerLaunchTemplateAttributes,
-    never,
-    Providers
-  > {}
+export type RunnerLaunchTemplate = Resource<
+  typeof RunnerLaunchTemplateType,
+  RunnerLaunchTemplateProps.Encoded,
+  RunnerLaunchTemplateAttributes.Encoded,
+  never,
+  Providers
+>;
 
 const RunnerLaunchTemplateResource = Resource<RunnerLaunchTemplate>(RunnerLaunchTemplateType);
 
@@ -529,7 +657,7 @@ const toTagRecord = (tags: ReadonlyArray<ec2.Tag> | undefined): Record<string, s
 const toTagList = (tags: Readonly<Record<string, string>>): Array<ec2.Tag> =>
   A.map(R.toEntries(tags), ([Key, Value]) => ({ Key, Value }));
 
-const toEbs = (ebs: LaunchTemplateEbs): ec2.LaunchTemplateEbsBlockDeviceRequest => ({
+const toEbs = (ebs: LaunchTemplateEbs.Encoded): ec2.LaunchTemplateEbsBlockDeviceRequest => ({
   ...(ebs.volumeSize === undefined ? {} : { VolumeSize: ebs.volumeSize }),
   ...(ebs.volumeType === undefined ? {} : { VolumeType: ebs.volumeType }),
   ...(ebs.iops === undefined ? {} : { Iops: ebs.iops }),
@@ -541,7 +669,7 @@ const toEbs = (ebs: LaunchTemplateEbs): ec2.LaunchTemplateEbsBlockDeviceRequest 
 });
 
 const toMetadataOptions = (
-  options: LaunchTemplateMetadataOptions
+  options: LaunchTemplateMetadataOptions.Encoded
 ): ec2.LaunchTemplateInstanceMetadataOptionsRequest => ({
   ...(options.httpEndpoint === undefined ? {} : { HttpEndpoint: options.httpEndpoint }),
   ...(options.httpTokens === undefined ? {} : { HttpTokens: options.httpTokens }),
@@ -552,7 +680,9 @@ const toMetadataOptions = (
   ...(options.instanceMetadataTags === undefined ? {} : { InstanceMetadataTags: options.instanceMetadataTags }),
 });
 
-const toMarketOptions = (market: LaunchTemplateMarketOptions): ec2.LaunchTemplateInstanceMarketOptionsRequest => ({
+const toMarketOptions = (
+  market: LaunchTemplateMarketOptions.Encoded
+): ec2.LaunchTemplateInstanceMarketOptionsRequest => ({
   MarketType: market.marketType,
   ...(market.spotOptions === undefined
     ? {}
@@ -569,7 +699,7 @@ const toMarketOptions = (market: LaunchTemplateMarketOptions): ec2.LaunchTemplat
       }),
 });
 
-const toNetworking = (props: RunnerLaunchTemplateProps): ec2.RequestLaunchTemplateData =>
+const toNetworking = (props: RunnerLaunchTemplateProps.Encoded): ec2.RequestLaunchTemplateData =>
   props.associatePublicIpAddress === undefined
     ? props.securityGroupIds === undefined
       ? {}
@@ -585,7 +715,7 @@ const toNetworking = (props: RunnerLaunchTemplateProps): ec2.RequestLaunchTempla
         ],
       };
 
-const toInstanceProfile = (props: RunnerLaunchTemplateProps): ec2.RequestLaunchTemplateData =>
+const toInstanceProfile = (props: RunnerLaunchTemplateProps.Encoded): ec2.RequestLaunchTemplateData =>
   props.instanceProfileArn !== undefined
     ? { IamInstanceProfile: { Arn: props.instanceProfileArn } }
     : props.instanceProfileName !== undefined
@@ -610,7 +740,7 @@ const toInstanceProfile = (props: RunnerLaunchTemplateProps): ec2.RequestLaunchT
  * @category utilities
  * @since 0.0.0
  */
-export const toLaunchTemplateData = (props: RunnerLaunchTemplateProps): ec2.RequestLaunchTemplateData => ({
+export const toLaunchTemplateData = (props: RunnerLaunchTemplateProps.Encoded): ec2.RequestLaunchTemplateData => ({
   ImageId: props.imageId,
   ...(props.instanceType === undefined ? {} : { InstanceType: props.instanceType }),
   ...(props.ebsOptimized === undefined ? {} : { EbsOptimized: props.ebsOptimized }),
@@ -675,7 +805,7 @@ export const RunnerLaunchTemplateProvider = Provider.effect(
     const observe = Effect.fn("RunnerLaunchTemplate.observe")(function* (
       id: string,
       props: { readonly launchTemplateName?: string | undefined } | undefined,
-      output: RunnerLaunchTemplateAttributes | undefined
+      output: RunnerLaunchTemplateAttributes.Encoded | undefined
     ) {
       const byId = output === undefined ? undefined : yield* describeById(output.launchTemplateId);
       if (byId !== undefined) return byId;
@@ -697,12 +827,12 @@ export const RunnerLaunchTemplateProvider = Provider.effect(
         defaultVersionNumber: template.DefaultVersionNumber ?? 1,
         latestVersionNumber: template.LatestVersionNumber ?? template.DefaultVersionNumber ?? 1,
         tags: toTagRecord(template.Tags),
-      } satisfies RunnerLaunchTemplateAttributes;
+      } satisfies RunnerLaunchTemplateAttributes.Encoded;
     });
 
     const publishVersion = Effect.fn("RunnerLaunchTemplate.publishVersion")(function* (
       launchTemplateId: string,
-      props: RunnerLaunchTemplateProps
+      props: RunnerLaunchTemplateProps.Encoded
     ) {
       const created = yield* ec2.createLaunchTemplateVersion({
         LaunchTemplateId: launchTemplateId,
@@ -732,12 +862,72 @@ export const RunnerLaunchTemplateProvider = Provider.effect(
       }
     });
 
+    const decodeTemplateProps = decodeProps({
+      resourceType: RunnerLaunchTemplateType,
+      schema: RunnerLaunchTemplateProps,
+    });
+
+    const createTemplate = Effect.fn("RunnerLaunchTemplate.createTemplate")(function* (
+      launchTemplateName: string,
+      props: RunnerLaunchTemplateProps.Encoded,
+      desiredTags: Record<string, string>
+    ) {
+      const created = yield* ec2.createLaunchTemplate({
+        LaunchTemplateName: launchTemplateName,
+        VersionDescription: "alchemy-create",
+        TagSpecifications: [{ ResourceType: "launch-template", Tags: toTagList(desiredTags) }],
+        LaunchTemplateData: toLaunchTemplateData(props),
+      });
+      if (created.LaunchTemplate === undefined) {
+        return yield* LaunchTemplateUnexpectedResponse.make({
+          message: `createLaunchTemplate returned no launch template for '${launchTemplateName}'`,
+        });
+      }
+      return yield* toAttributes(created.LaunchTemplate);
+    });
+
+    // Publish a version only when the launch data changed: a tag-only change edits
+    // the template resource, not its versions. An adopted template (no ownership
+    // tags yet) always gets our data, because adoption records `olds = news`.
+    const needsNewVersion = Effect.fn("RunnerLaunchTemplate.needsNewVersion")(function* (
+      olds: unknown,
+      props: RunnerLaunchTemplateProps.Encoded,
+      owned: boolean
+    ) {
+      if (olds === undefined || !owned) return true;
+      const previous = yield* decodeTemplateProps(olds);
+      return !deepEqual(toLaunchTemplateData(previous), toLaunchTemplateData(props));
+    });
+
+    const updateTemplate = Effect.fn("RunnerLaunchTemplate.updateTemplate")(function* (input: {
+      readonly launchTemplateId: string;
+      readonly launchTemplateName: string;
+      readonly observedTags: Record<string, string>;
+      readonly internalTags: Record<string, string>;
+      readonly desiredTags: Record<string, string>;
+      readonly props: RunnerLaunchTemplateProps.Encoded;
+      readonly olds: unknown;
+    }) {
+      const publish = yield* needsNewVersion(input.olds, input.props, hasTags(input.internalTags, input.observedTags));
+      if (publish) {
+        yield* publishVersion(input.launchTemplateId, input.props);
+      }
+      yield* syncTags(input.launchTemplateId, input.observedTags, input.desiredTags);
+      const refreshed = yield* describeById(input.launchTemplateId);
+      if (refreshed === undefined) {
+        return yield* LaunchTemplateUnexpectedResponse.make({
+          message: `launch template '${input.launchTemplateName}' was not readable after reconcile`,
+        });
+      }
+      return yield* toAttributes(refreshed);
+    });
+
     return {
       stables: ["launchTemplateId", "launchTemplateArn", "launchTemplateName"],
       diff: Effect.fn("RunnerLaunchTemplate.diff")(function* ({ id, olds, news }) {
         if (!isResolved(news)) return undefined;
         const oldName = yield* toName(id, olds);
-        const newName = yield* toName(id, news as RunnerLaunchTemplateProps);
+        const newName = yield* toName(id, news as RunnerLaunchTemplateProps.Encoded);
         return oldName === newName ? undefined : ({ action: "replace" } as const);
       }),
       read: Effect.fn("RunnerLaunchTemplate.read")(function* ({ id, olds, output }) {
@@ -758,55 +948,23 @@ export const RunnerLaunchTemplateProvider = Provider.effect(
           )
         ),
       reconcile: Effect.fn("RunnerLaunchTemplate.reconcile")(function* ({ id, news, olds, output, session }) {
-        const props = yield* decodeProps({ resourceType: RunnerLaunchTemplateType, schema: RunnerLaunchTemplateProps })(
-          news
-        );
+        const props = yield* decodeTemplateProps(news);
         const launchTemplateName = output?.launchTemplateName ?? (yield* toName(id, props));
         const internalTags = yield* createInternalTags(id);
         const desiredTags = { ...internalTags, ...props.tags };
         const existing = yield* observe(id, props, output);
-
-        if (existing?.LaunchTemplateId === undefined) {
-          const created = yield* ec2.createLaunchTemplate({
-            LaunchTemplateName: launchTemplateName,
-            VersionDescription: "alchemy-create",
-            TagSpecifications: [{ ResourceType: "launch-template", Tags: toTagList(desiredTags) }],
-            LaunchTemplateData: toLaunchTemplateData(props),
-          });
-          if (created.LaunchTemplate === undefined) {
-            return yield* LaunchTemplateUnexpectedResponse.make({
-              message: `createLaunchTemplate returned no launch template for '${launchTemplateName}'`,
-            });
-          }
-          const attrs = yield* toAttributes(created.LaunchTemplate);
-          yield* session.note(attrs.launchTemplateId);
-          return attrs;
-        }
-
-        const launchTemplateId = existing.LaunchTemplateId;
-        const observedTags = toTagRecord(existing.Tags);
-        // Publish a version only when the launch data changed. A tag-only change
-        // edits the template resource, not its versions. An adopted template (no
-        // ownership tags yet) always gets our data: adoption records `olds = news`.
-        const previous =
-          olds === undefined
-            ? undefined
-            : yield* decodeProps({ resourceType: RunnerLaunchTemplateType, schema: RunnerLaunchTemplateProps })(olds);
-        const dataUnchanged =
-          previous !== undefined &&
-          hasTags(internalTags, observedTags) &&
-          deepEqual(toLaunchTemplateData(previous), toLaunchTemplateData(props));
-        if (!dataUnchanged) {
-          yield* publishVersion(launchTemplateId, props);
-        }
-        yield* syncTags(launchTemplateId, observedTags, desiredTags);
-        const refreshed = yield* describeById(launchTemplateId);
-        if (refreshed === undefined) {
-          return yield* LaunchTemplateUnexpectedResponse.make({
-            message: `launch template '${launchTemplateName}' was not readable after reconcile`,
-          });
-        }
-        const attrs = yield* toAttributes(refreshed);
+        const attrs =
+          existing?.LaunchTemplateId === undefined
+            ? yield* createTemplate(launchTemplateName, props, desiredTags)
+            : yield* updateTemplate({
+                launchTemplateId: existing.LaunchTemplateId,
+                launchTemplateName,
+                observedTags: toTagRecord(existing.Tags),
+                internalTags,
+                desiredTags,
+                props,
+                olds,
+              });
         yield* session.note(attrs.launchTemplateId);
         return attrs;
       }),
