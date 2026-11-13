@@ -12,7 +12,7 @@
   "packetPath": "goals/citation-engine-install-once",
   "lifecycle": "active",
   "mission": "Install the citation stage tree, tokenizer and regex evaluators once per engine, bind each request's budget, Scope and admission through one invocation service, and own configuration once at the engine boundary, with no change to extraction results.",
-  "statusNote": "A1 merged as #3253. A2 invocation binding is in review: optional request-authority captures and nested admitted-stage wrappers are removed, the worker-boundary amendment is implemented, and all A1 full-span counts remain unchanged. Local proof uses file-by-file citation tests, quick law-practice verification plus docgen, and full lint-rules verification. The full law-practice audit and integration cohort remain for hosted CI. See history/evidence/2026-11-13-a2-invocation-binding.md.",
+  "statusNote": "A1 merged as #3253; A2 remains in review on draft #3265. Review round 1 is fixed in 912a6a96fd2e3cffd98ce42a52202fa39936cfce after merging main: explicit engine/extractor deadline placement, single boundary logging, documented request-Scope finalizers, expanded optional-authority lint law, restored budget/cleanup controls and repaired dependent fixtures/qualification child. Sixteen focused server files and both translator runtimes pass individually; A1 counts remain unchanged. Quick law-practice verification, full lint-rules verification, docgen, policy fingerprint, skills lock and semantic delta pass. The full law-practice audit remains for hosted CI under the file-by-file rule. See history/evidence/2026-11-13-a2-invocation-binding.md.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

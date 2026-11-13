@@ -7,10 +7,12 @@ Recorded 2026-11-13 on `feat/citation-invocation-binding` in lane
 
 `Invocation.ts` defines the policy schema before the service. The only production
 constructor, `openCitationInvocation`, admits the public operation, applies its
-outer stage deadline, opens a request Scope, constructs its budget, and provides
+boundary-selected stage deadline placement, opens a request Scope, constructs its budget, and provides
 the service. The four engine methods and extractor remain closed (`R = never`).
 Children still install per request. No configuration ownership, output, worker
-entrypoint, protocol, process lifecycle, lease, or limit value changes are made.
+entrypoint, wire protocol, physical process retirement, lease, or limit value
+changes are made. Stage-owner finalizer timing differs from main as explicitly
+recorded in Review round 1 below.
 
 The initial stop remains recorded in `2026-11-13-a2-binding-stop.md`. The operator's
 ruling is recorded in `decisions/2026-11-13-a2-worker-input-stop.md` and the design's
@@ -161,6 +163,9 @@ nonblocking under the existing pilot policy.
 | Optional lookup and deleted-helper source queries | No matches. |
 | `git diff --check` | Pass. |
 
+These initial-head receipts cover the listed files, not the whole citation suite.
+The omitted dependent files and their regressions are recorded in Review round 1.
+
 The 77 changed tracked citation unit/replay test files, the new invocation file,
 and nine supporting test files were each invoked separately from the server
 package with `bunx --bun vitest run <one file>`. All pass. No whole law-practice
@@ -257,3 +262,105 @@ introduced fixture failures; there are no outstanding local test failures).
 | `CitationTokenizedExtractionCoverage.test.ts` | Pass |
 | `CitationTokenizer.test.ts` | Pass |
 | `CitationVerifiedExtraction.test.ts` | Pass |
+
+## Review round 1
+
+Reviewed head: `99bb436ca0fcb765bc20e979ec89b13203387724`.
+All source and fixture fixes below are in commit `912a6a96fd2e3cffd98ce42a52202fa39936cfce`
+(`fix(citation): preserve deadline and invocation boundary contracts`).
+The evidence update is a separate local commit in the same publication push.
+
+Before final checks, `origin/main` was merged with merge commit
+`e3a5cdcb37a2d17c007e7aeeb0b55b6dc9e6c94b`, including #3226, #3250 and #3258.
+The merged main tip is `8b405079b69466e27babc5dff27c06292a8cc4e2`.
+There were no generated-file conflicts. Repository writers regenerated schema,
+instrumentation and Effect/Vitest inventories and pruned the shard plan.
+The merge brought skill changes; `bun run beep skills update` and
+`bun run beep skills update --check` both report current. The 503-line Yeet skill
+length notice is advisory, not a lock failure.
+
+| Review item | Fix in the commit above | Proof |
+| --- | --- | --- |
+| 1: stage deadline placement | Schema-backed `CitationInvocationDeadlineStarts` and required `deadlineStarts` policy field. Engine calls use `before-admission`; extractor uses `after-admission`. Scope remains inside admission in both cases. Section 3.1 and its amendment now state both orders. | Four engine cases in `CitationEngineLayer.test.ts` cover Bun and Node, queued refusal and 800 ms queue + 9500 ms work under a 10 s stage deadline. The mirrored extractor case stays pending at 10 s total and reaches the controlled source-evidence refusal at 10.3 s. Every new case proves zero native children. |
+| 2: duplicate boundary logs | Engine extract and annotate outer handlers catch only `CitationAdmissionFailure`; existing inner normalizers handle other refusals once. | Closed public source/test typecheck; engine and extractor controls pass. |
+| 3: Scope ownership | Record the intentional finalizer-lifetime difference: metadata prepares share the request Scope rather than closing a per-stage Scope. Native processes still retire and acknowledge physical exit per job. Owner finalizers run at request end, before permit release. | Scope decision with reversal `Restore per-stage Effect.scoped around prepare(request)`; no claim of strict Scope neutrality. |
+| 4: optional-lookup law | Forbid all three authority names in bare/member-qualified `serviceOption` and `getOption` forms. Summary explicitly states named-import aliases need semantic linting. | 12 invalid pattern fixtures, valid native-admission controls; full lint-rules package verification passes. The test-only optional invocation read remains necessary for standalone versus explicitly shared-ledger fixture calls. |
+| 5a: cleanup refusal | Fixture invocation deadline is 1601 ms while the worker deadline is 800 ms; restore the original `cleanupDeadline` assertion. | All 14 DiffWorker tests pass, retaining quarantine, held capacity and late-confirmation assertions. |
+| 5b: cumulative budgets | Law and Journal pre-reserve four units in the actual invocation budget and retain exact spent value 36. Case compares a precharged invocation against the one-unit-short refusal and proves the exact amount left. | Law, FullLaw, Journal and Case tests pass. The controlled Case budget fixture uses its installed manual Clock. |
+| 5c: dead cleaner adapter | Live source search found no production caller. Delete the unused private adapter and its test; retain the separately implemented replay helper. | Pruned shard plan and instrumentation catalog; genuine public engine admission proof replaces fixture-only active/queued claims. |
+| 6: cleanup | Move BuiltinDump type import below its package header; delete empty AnnotationEntry context/provide; remove unused metadata-operation argument and update every caller; use reference-verified `CitationInvocation.useSync` in NativeRendering. | Quick source/test verification and docgen pass. |
+
+Decisions for these calls are in `decisions/2026-11-13-preserve-boundary-specific-deadline-placement-around-admission.md`,
+`decisions/2026-11-13-keep-stage-finalizers-in-the-request-scope.md`,
+`decisions/2026-11-13-delete-the-unused-cleaner-operation-adapter.md`,
+`decisions/2026-11-13-keep-direct-stage-lifetime-and-clock-fixtures-aligned-with-their-owners.md`
+and `decisions/2026-11-13-advance-virtual-time-to-prove-the-two-admission-deadline-contracts.md`.
+The latter records the reviewed virtual-subject sleep and stepwise TestClock
+judgments; no detector policy or production limit was weakened.
+
+### Hosted regression attribution and reproduction
+
+Logs were read through the REST job-log endpoint, for example
+`gh api --allow-escape-sequences repos/beep-effect/beep-effect/actions/jobs/131868486803/logs`.
+The initial individual reproductions used `bunx vitest run <file>` from the
+server package. Integration files belong to the `native-wallclock` project in
+`packages/law-practice/server/vitest.config.ts`; no separate integration config
+is needed. Subsequent complete verification used Bun's runner form
+`bunx --bun vitest run <one file>` (plus `--project native-wallclock` for integration).
+
+| File / hosted job | Hosted failure | Root cause and fix | Why the earlier receipts missed it |
+| --- | --- | --- | --- |
+| `CitationExtractionLoop.test.ts`, law-practice-1, job 131868486803 | Both Bun and Node cases 0–2 fail because `Effect.flip` receives a successful result with `reservedUnits: 2216` where the tight-budget refusal was expected. Local reproduction: 2 failed, 13 passed. | Row 2 created a tight legacy budget at installation, but its fixture binding opened a full-sized invocation. Bind that control with the same tight policy used by the stage. All original model identity/state/selection and refusal expectations remain unchanged. | The initial selector used changed `.test.ts` paths; only this file's `.fixtures.ts` had changed. It was absent from the 87-file receipt set, not a hosted-only failure. Final isolated run: 15 passed. |
+| `integration/CitationRegexTranslator.test.ts`, lps-int-11, job 131868486648 | Full and smoke tests report `{"outcome":"failure","phase":"program","instance":0}`; child exit 1 where 0 was expected. The same failure reproduces locally in both tests. | The standalone qualification child in the prior citation goal still used the old RegexInput signature: pattern role occupied the reservation argument and source reservation was missing. Pass explicit `citationUnaccountedText` on both constructors, retaining the pattern role as the third argument. No translator output expectation changed. | The full integration cohort was left to hosted CI, and the JavaScript qualification child was outside the TypeScript worker-entrypoint closure checked initially. It was absent from the earlier receipt set. Final isolated run: 2 passed, 155.28 s. |
+| `integration/CitationRegexTranslatorNode.test.ts`, lps-int-14, job 131868486564 | Both Node full and smoke tests show the same program-phase child exit failure. This is the Node twin, not another run of the Bun file. | Same shared qualification-child fix. | Same coverage gap. Final isolated Node run: 2 passed, 140.76 s. |
+| `CitationXmlWorker.test.ts`, law-practice-6, job 131868486782 | `Unknown Error: true` from flipping a successful balance operation instead of a budget refusal. | Pre-reserve the actual invocation budget, preserve the uncharged legacy replacement-ledger assertion and zero-spawn assertion. | Its fixture changed but its test file was not in the original changed-test selector. Final isolated run: 3 passed. |
+| `CitationHtmlCaseName.test.ts`, law-practice-8, job 131868486851 | Budget control returns a successful patch with `reservedUnits: 219`; lifetime control receives `invalid-input` instead of `closed`. | Use the invocation budget. For lifetime, prepare valid geometry before closing the installed owner, retain the `closed` refusal and prove no additional child starts. The old null request exercised the removed nested admission before input decoding; the private stage now relies on outer admission. | Fixture-only changes were omitted from the earlier file selector. Final isolated run: 3 passed. No identity/state output expectation was changed. |
+| `vitest-shards-plan.test.ts`, law-practice-8, same job | The derived wall-clock list omits eight suites present in the declared list. | Define the untimed invocation scaffold clock beside clock infrastructure in the native-spawner fixture, while independently bound methods still restore their real captured Clock. Explicit TestClock Layer in the pure invocation test makes its lack of native work clear. The shard classifier and its expected list are unchanged. | Neither the config-control test nor the full dependent-fixture closure was selected initially. Final isolated run: 2 passed. |
+
+The old hand-back's 78 changed-file / 87 focused-file counts describe its listed
+receipts, not coverage of all dependent tests. This round closes the observed
+selection gaps. No original corpus identity, returned-state, translator or
+extraction-output expectation was edited. The DiffWorker limit assertion is
+restored to its original value. The HtmlCaseName lifetime fixture now targets a
+valid request and the actual installed native owner, as explained in its decision.
+
+### Round-1 verification
+
+The round ran the following server files individually; all passed on the final
+version of their fixtures:
+
+| File under `packages/law-practice/server/` | Result |
+| --- | --- |
+| `test/CitationCanonicalFullSpan.test.ts` | Pass |
+| `test/CitationCaseMetadata.test.ts` | Pass |
+| `test/CitationDiffWorker.test.ts` | Pass |
+| `test/CitationEngineLayer.test.ts` | Pass |
+| `test/CitationExtractionLoop.test.ts` | Pass |
+| `test/CitationExtractorControls.test.ts` | Pass |
+| `test/CitationFullLawMetadata.test.ts` | Pass |
+| `test/CitationHtmlCaseName.test.ts` | Pass |
+| `test/CitationInvocation.test.ts` | Pass |
+| `test/CitationJournalMetadata.test.ts` | Pass |
+| `test/CitationLawMetadata.test.ts` | Pass |
+| `test/CitationXmlWorker.test.ts` | Pass |
+| `test/integration/CitationHtmlUnicode.test.ts` | Pass |
+| `test/integration/CitationRegexTranslator.test.ts` | Pass |
+| `test/integration/CitationRegexTranslatorNode.test.ts` | Pass |
+| `test/vitest-shards-plan.test.ts` | Pass |
+
+- `CitationCanonicalFullSpan.test.ts`: 11 passed in 88.66 s; every original A1
+  count row is unchanged (totals 140 / 80 / 10 / 56 / 291 / 291).
+- `quality package-verify @beep/law-practice-server --quick`: lint and source/test
+  checks pass, with upstream builds completed first.
+- `quality package-verify @beep/lint-rules`: full lint, audit and docgen pass.
+- `docgen:local`: server and selected dependents pass.
+- Policy fingerprint: current, no reseal required.
+- Fallow audit: pass, zero introduced blocking findings.
+- Skills update and check: current after the main merge.
+- `knowledge semantic-delta --base origin/main`: pass on the committed fix;
+  zero introduced findings (195 unchanged inherited findings).
+
+The full law-practice audit is still not run locally because it invokes the whole
+suite, contrary to the operator's file-by-file shared-host rule. The newly affected
+integration files above were run individually; hosted CI remains authoritative for
+the full suite. The PR remains a draft; no ready, merge or watch is performed.
