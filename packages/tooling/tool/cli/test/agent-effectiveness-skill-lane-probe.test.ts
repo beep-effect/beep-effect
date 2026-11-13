@@ -293,6 +293,25 @@ describe("skill lane probe report", () => {
     })
   );
 
+  it.effect("detects nothing when no task is counted", () =>
+    Effect.gen(function* () {
+      const empty = yield* skillLanePermutationTest([], 500).pipe(Random.withSeed(20261113));
+      expect(empty.pValue).toBe(1);
+      expect(R.keys(empty.familyPValues)).toEqual([]);
+      const report = yield* buildSkillLaneProbeReport(
+        [],
+        SkillLaneProbeOptions.make({ data: "scored", seed: 20261113, relabelings: 500 })
+      );
+      expect(report.test.pValue).toBe(1);
+      expect(report.test.detected).toBe(false);
+      expect(report.families).toEqual([]);
+      assertSome(
+        O.map(report.verdict, (verdict) => verdict._tag),
+        "Incomplete"
+      );
+    })
+  );
+
   it.effect("labels pilot data and writes no verdict", () =>
     Effect.gen(function* () {
       const report = yield* buildSkillLaneProbeReport(

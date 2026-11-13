@@ -220,7 +220,8 @@ const countFamilyExceedances = (
  * a family's statistic the mean of its task differences; all share the same
  * relabelings. A relabeling counts when `|D*| >= |D|` after both are rounded
  * to six decimals, and `p = (1 + count) / (1 + relabelings)`. Run it under
- * `Random.withSeed` for a reproducible p-value. The loop is imperative
+ * `Random.withSeed` for a reproducible p-value. With no tasks nothing is
+ * drawn and `p = 1`, with no families. The loop is imperative
  * because it runs about ten million draws.
  *
  * **Example** (Seeded test)
@@ -249,6 +250,8 @@ export const skillLanePermutationTest: {
 } = dual(
   2,
   Effect.fnUntraced(function* (tasks: ReadonlyArray<SkillLaneTaskValues>, relabelings: number) {
+    // No tasks: the statistic is undefined, so nothing is drawn and nothing is detected.
+    if (!A.isReadonlyArrayNonEmpty(tasks)) return SkillLanePermutationResult.make({ pValue: 1, familyPValues: {} });
     const random = yield* Random.Random;
     const families = A.sort(A.dedupe(A.map(tasks, (task) => task.family)), Order.String);
     const familyOf = A.map(tasks, (task) =>
