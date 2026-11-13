@@ -118,6 +118,7 @@ const applyHostTurboCacheDefaults = (defaults: Readonly<Record<string, string>>)
   for (const [name, value] of R.toEntries(defaults)) Bun.env[name] = value;
 };
 
+// KEEP (D-21, X7): read once while the runtime's layers are being assembled, before `Git.layer` exists.
 const currentGitOrigin = (): string =>
   Result.getOrElse(
     Result.map(
