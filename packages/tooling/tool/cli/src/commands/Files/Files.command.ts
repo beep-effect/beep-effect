@@ -119,7 +119,7 @@ const matchPersonBackendFlag = Flag.ChoiceWithValue("backend", [
   ["adaface-kprpe", "adaface-kprpe"],
 ]).pipe(
   Flag.withDescription(
-    "Recognition backend: AdaFace on Linux x64; Buffalo CPU on Linux x64/arm64, macOS x64/arm64, or Windows x64"
+    "Recognition backend: AdaFace on Linux x64; Buffalo CPU on Linux x64/arm64, macOS arm64, or Windows x64"
   ),
   Flag.optional
 );

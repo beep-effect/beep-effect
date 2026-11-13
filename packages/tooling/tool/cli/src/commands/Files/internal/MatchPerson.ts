@@ -1222,12 +1222,12 @@ const isWorkerDispositionCoherent = (
   const couldMeetReviewThreshold = maximumMatchScore >= options.reviewThreshold - workerScoreRoundingTolerance;
   const couldMissReviewThreshold = maximumMatchScore <= options.reviewThreshold + workerScoreRoundingTolerance;
   const hasQualityFlags = A.some(entry.faces, (face) => A.isReadonlyArrayNonEmpty(face.qualityFlags));
-  const hasPartialAlignerRejection = entry.reason === "aligner-confidence-failed";
+  const hasRejectedEmbedding = entry.reason === "aligner-confidence-failed" || entry.reason === "invalid-embedding";
   return Match.value(entry.disposition).pipe(
     Match.when("solo-match", () => entry.faceCount === 1 && couldMeetMatchThreshold && !hasQualityFlags),
     Match.when("low-quality-match", () => entry.faceCount === 1 && couldMeetMatchThreshold && hasQualityFlags),
     Match.when("group-match", () => entry.faceCount > 1 && couldMeetMatchThreshold),
-    Match.when("review", () => hasPartialAlignerRejection || (!mustMeetMatchThreshold && couldMeetReviewThreshold)),
+    Match.when("review", () => hasRejectedEmbedding || (!mustMeetMatchThreshold && couldMeetReviewThreshold)),
     Match.when("no-match", () => couldMissReviewThreshold),
     Match.when("no-face", () => false),
     Match.when("unreadable", () => false),
@@ -1236,7 +1236,9 @@ const isWorkerDispositionCoherent = (
 };
 
 const hasNoComparableWorkerFace = (entry: PersonMatchEntry): boolean =>
-  entry.disposition === "no-face" || entry.disposition === "unreadable";
+  entry.disposition === "no-face" ||
+  entry.disposition === "unreadable" ||
+  (entry.disposition === "review" && entry.reason === "invalid-embedding" && entry.faceCount === 0);
 
 const validateWorkerEntryFaceShape = Effect.fn("Files.validatePersonMatchWorkerEntryFaceShape")(function* (
   entry: PersonMatchEntry,
@@ -1263,7 +1265,13 @@ const validateWorkerEntryReason = Effect.fn("Files.validatePersonMatchWorkerEntr
   const coherent = Match.value(entry.disposition).pipe(
     Match.when("unreadable", () => entry.reason === "image-decode-failed"),
     Match.when("no-face", () => entry.reason === undefined || entry.reason === "aligner-confidence-failed"),
-    Match.when("review", () => entry.reason === undefined || entry.reason === "aligner-confidence-failed"),
+    Match.when(
+      "review",
+      () =>
+        entry.reason === undefined ||
+        entry.reason === "aligner-confidence-failed" ||
+        entry.reason === "invalid-embedding"
+    ),
     Match.orElse(() => entry.reason === undefined)
   );
   if (!coherent) {

@@ -526,7 +526,11 @@ export type PersonMatchReferenceRejectionReason = typeof PersonMatchReferenceRej
  * @category schemas
  * @since 0.0.0
  */
-export const PersonMatchEntryReason = LiteralKit(["aligner-confidence-failed", "image-decode-failed"]).pipe(
+export const PersonMatchEntryReason = LiteralKit([
+  "aligner-confidence-failed",
+  "image-decode-failed",
+  "invalid-embedding",
+]).pipe(
   $I.annoteSchema("PersonMatchEntryReason", {
     description: "A machine-readable diagnostic reason attached to a candidate-image entry.",
   })

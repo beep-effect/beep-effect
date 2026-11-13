@@ -287,6 +287,26 @@ it.layer(nativeLayer)((it) => {
       }
     })
   );
+  it.effect("reviews invalid candidate vectors without inventing comparable face evidence", () =>
+    Effect.gen(function* () {
+      for (const vector of [
+        [0, 0],
+        [Number.MAX_VALUE, Number.MAX_VALUE],
+      ]) {
+        const result = yield* runScan([frame(), frame(1, vector)]);
+        if (result._tag !== "Success") return expect.fail("invalid candidate aborted the scan");
+        expect(result.success.entries[0]).toMatchObject({
+          disposition: "review",
+          reason: "invalid-embedding",
+          faceCount: 0,
+          faces: [],
+        });
+        expect(result.success.entries[0]?.bestScore).toBeUndefined();
+        expect(result.success.summary.reviewCount).toBe(1);
+        expect(result.success.summary.noMatchCount).toBe(0);
+      }
+    })
+  );
   it.effect("distinguishes rejected aligners, partial rejection and unreadable candidates", () =>
     Effect.gen(function* () {
       const none = yield* runScan([frame(), frame(1, [1, 0], [0])], "adaface-kprpe");

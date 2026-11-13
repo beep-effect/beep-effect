@@ -1941,6 +1941,51 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
         disposition: "review",
         reason: "aligner-confidence-failed",
       });
+      const invalidEmbeddingManifestPath = path.join(tmpDir, "invalid-embedding-person-match.json");
+      const invalidEmbeddingWorkerReport = {
+        ...workerReport,
+        entries: A.map(workerReport.entries, (entry) =>
+          entry.disposition === "group-match"
+            ? {
+                sourceName: entry.sourceName,
+                sourcePath: entry.sourcePath,
+                relativePath: entry.relativePath,
+                disposition: "review",
+                reason: "invalid-embedding",
+                faceCount: 0,
+                faces: [],
+              }
+            : entry
+        ),
+        summary: { ...workerReport.summary, groupMatchCount: 0, reviewCount: 1 },
+      };
+      const invalidEmbeddingJson = yield* encodeUnknownJson(invalidEmbeddingWorkerReport);
+      yield* withEnvVar(
+        "BEEP_TEST_MATCH_REPORT",
+        invalidEmbeddingJson,
+        runFilesCommand([
+          "match-person",
+          "--backend",
+          "buffalo-l",
+          "--references",
+          referenceDir,
+          "--dir",
+          candidateDir,
+          "--cache-dir",
+          cacheDir,
+          "--manifest",
+          invalidEmbeddingManifestPath,
+          "--accept-model-license",
+        ])
+      );
+      const invalidEmbeddingReport = yield* readPersonMatchManifest(invalidEmbeddingManifestPath);
+      expect(invalidEmbeddingReport.entries[0]).toMatchObject({
+        disposition: "review",
+        reason: "invalid-embedding",
+        faceCount: 0,
+        faces: [],
+      });
+      expect(invalidEmbeddingReport.summary.reviewCount).toBe(1);
       const incompleteManifestPath = path.join(tmpDir, "incomplete-person-match.json");
       const incompleteWorkerReport = {
         ...workerReport,

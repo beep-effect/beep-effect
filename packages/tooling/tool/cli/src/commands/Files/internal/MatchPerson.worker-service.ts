@@ -54,6 +54,7 @@ import type { FaceImage, InferredFace, PersonMatchInference } from "./MatchPerso
 import type {
   MatchPersonOptions,
   PersonMatchDisposition,
+  PersonMatchEntryReason,
   PersonMatchModel,
   PersonMatchReferenceRejectionReason,
 } from "./MatchPerson.schemas.ts";
@@ -536,6 +537,17 @@ const classifyFaces = (
   if (A.some(scored, (face) => face.score >= options.matchThreshold)) return matchingDisposition(scored);
   return Math.max(...A.map(scored, (face) => face.score)) >= options.reviewThreshold ? "review" : "no-match";
 };
+const ComparableEmbedding = S.NonEmptyArray(S.Finite).pipe(
+  $I.annoteSchema("ComparableEmbedding", {
+    description: "A nonempty finite vector that can participate in candidate scoring.",
+  })
+);
+const isComparableEmbedding = S.is(ComparableEmbedding);
+const candidateRejectionReason = (detected: ReadonlyArray<InferredFace>): O.Option<PersonMatchEntryReason> => {
+  if (A.some(detected, (face) => O.exists(face.embedding, (embedding) => !isComparableEmbedding(embedding))))
+    return O.some("invalid-embedding");
+  return A.some(detected, (face) => O.isNone(face.embedding)) ? O.some("aligner-confidence-failed") : O.none();
+};
 const candidateEntry = Effect.fn("Files.PersonMatch.candidateEntry")(function* (
   sourcePath: string,
   inputs: CanonicalMatchPersonInputs,
@@ -561,19 +573,21 @@ const candidateEntry = Effect.fn("Files.PersonMatch.candidateEntry")(function* (
   const detected = yield* inference.detect(image.value, options.detectionThreshold);
   const scored = A.getSomes(
     A.map(detected, (face) =>
-      O.map(face.embedding, (embedding) => scoreFace(image.value, face, embedding, referenceSet, options))
+      O.map(O.filter(face.embedding, isComparableEmbedding), (embedding) =>
+        scoreFace(image.value, face, embedding, referenceSet, options)
+      )
     )
   );
   const faces = A.map(scored, (s) => s.face);
-  const rejected = A.some(detected, (face) => O.isNone(face.embedding));
+  const reason = candidateRejectionReason(detected);
   const best = faces.length === 0 ? O.none() : O.some(Math.max(...A.map(scored, (s) => s.score)));
   return PersonMatchEntry.make({
     ...base,
-    disposition: classifyFaces(scored, rejected, options),
+    disposition: O.contains(reason, "invalid-embedding") ? "review" : classifyFaces(scored, O.isSome(reason), options),
     faceCount: faces.length,
     faces,
     ...(O.isSome(best) ? { bestScore: round(best.value) } : {}),
-    ...(rejected ? { reason: "aligner-confidence-failed" } : {}),
+    ...O.getSomesStruct({ reason }),
   });
 });
 const scanCandidates = Effect.fn("Files.PersonMatch.scanCandidates")(function* (
