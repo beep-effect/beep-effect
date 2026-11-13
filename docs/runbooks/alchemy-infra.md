@@ -65,7 +65,8 @@ GitHub Actions assumes an IAM role through the account's GitHub OIDC provider
 (`token.actions.githubusercontent.com`). Role `beep-alchemy-state-rw` may read
 and write the state bucket and its bucket configuration, nothing else. Its
 trust policy lists one subject per deploying environment, today
-`repo:beep-effect/beep-effect:environment:beep-effect-web-prod`.
+`repo:beep-effect/beep-effect:environment:beep-effect-web-prod` and
+`repo:beep-effect/beep-effect:environment:storybook-prod`.
 
 Workflow shape (see `.github/workflows/deploy-beep-effect-web.yml`):
 
@@ -96,6 +97,30 @@ Adding a stack's environment: add its subject to the role trust policy and set
 the variable on the environment. Both are bootstrap singletons until
 `@beep/infra-ci-runners` adopts the provider and role (`adopt(true)`, one
 decision file per object).
+
+## Stacks
+
+| Stack | Source | Workflow | Environment | Serves |
+| --- | --- | --- | --- | --- |
+| `BeepEffectWeb` | `apps/beep-effect-web/alchemy.run.ts` | `deploy-beep-effect-web.yml` | `beep-effect-web-prod` | `https://beep-effect.com` (custom domain, `www` redirect) |
+| `Storybook` | `apps/storybook/alchemy.run.ts` | `deploy-storybook.yml` | `storybook-prod` | `https://beep-effect.com/storybook/` (zone routes in front of the apex Worker) |
+
+Storybook is an assets-only Worker. Its build writes to `apps/storybook/site/storybook`
+(`bun run storybook:build:site`), so each asset path carries the `/storybook` prefix the
+route keeps on the request; the Worker has no script. The asset layer redirects
+`/storybook` to `/storybook/` and `iframe.html` to `iframe`, keeping the query string. A
+personal stage serves the same tree from its workers.dev URL under `/storybook/`:
+
+```sh
+eval "$(aws configure export-credentials --profile elpresidank-vault --format env)"
+export AWS_REGION=us-east-1
+cd apps/storybook
+CLOUDFLARE_API_TOKEN=op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_CLOUDFLARE_ALCHEMY_TOKEN \
+CLOUDFLARE_ACCOUNT_ID=op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_CLOUDFLARE_ACCOUNT_ID \
+  op run -- bunx alchemy deploy --stage "dev_$USER" --yes --env-file /dev/null
+```
+
+Destroy it with the same command and `destroy` in place of `deploy`.
 
 ## Acceptance evidence
 
