@@ -224,6 +224,21 @@ Lane fix/ci-applicability-docs-only
 
 Reverse: Revert the pull request: the four aggregates return to `if: !cancelled()`, Heavy Admission regains its documentation step, and the Vercel and Storybook pull_request path filters are removed.
 
+### Skip the four test and lint aggregates at job level when every shard succeeded, 2026-11-13
+
+The aggregates `Test Unit`, `Heavy / Test Integration`, `Lint` and `Property Laws` used to take a hosted runner after their last shard only to print one line. On 2026-11-13 that hop (last shard done to the Test Unit aggregate reported) measured p50 1m39s and p95 9m13s over 83 green runs, because the aggregate queued behind every other run's jobs. Each aggregate is now skipped at job level in exactly two states whose verdict is already a pass, and GitHub reports a job-level skip as a passing required check (live on #3241 after #3215: the four contexts concluded `skipped` and the pull request merged under the ruleset).
+
+- **Documentation diff** (#3215's skip, tightened): Change Profile succeeded with `docs_only` true, the shard matrix was skipped, and for Test Unit and Test Integration a successful Test Plan planned nothing.
+- **Skip on success**: Change Profile succeeded with `docs_only` false, every job the aggregate's script checks succeeded (Test Plan; Heavy Admission for Test Integration; a non-empty plan, one carrying `int-rest` for Test Integration), and the shard matrix concluded `success`, which GitHub reports only when every leg the plan expanded passed.
+
+Every other state runs the aggregate and its unchanged script fails closed. The conditions keep `!cancelled()`, a status function, so GitHub evaluates them whatever the needs concluded rather than skipping on an implicit `success()`, and a cancelled run still reports the aggregate `cancelled` (seen on 45 cancelled runs of 2026-11-10..13). `ci-docs-job-admission.test.ts` runs every combination of the needs results through each condition and its script: the verdict never changes, every passing state is a skip, and no state with a shard that failed, was cancelled or was skipped on a code diff, or with an unsuccessful Change Profile or Test Plan, is skipped. Coverage Regression now also reads the Test Unit shard matrix and accepts a skipped Test Unit verdict only beside a successful one. The lane-timings census reads a skipped aggregator beside shards that all succeeded as a success whose duration and verdict wait end at the last shard's completion; any other skipped aggregator stays a failure, and runs from before the change read as they did.
+
+**Modelled effect** (the job-graph replay of the 378 Check runs of 2026-11-10..13 in #3256's research note; the model frees the aggregate on every outcome, but failing verdicts are outside the charter population): on its own, Test Unit wait p95 43m40s to 31m40s over the window and 48m22s to 34m14s on 2026-11-13; Test Integration 43m42s to 29m29s and Lint 43m23s to 29m19s on that day. With the overflow routing of #3256: Test Unit 26m31s, Test Integration 22m34s and Lint 22m07s on 2026-11-13. No spend: about four fewer hosted jobs per green code run.
+
+Lane perf/ci-aggregate-skip-on-success
+
+Reverse: Revert the PR: the four aggregate conditions and Coverage Regression's Test Unit check return to their #3215 form; the census change only adds a shape old runs never had.
+
 ### The census reports verdict wait per required context and measures Test Integration by its shards, 2026-11-13
 
 The bounded census (`beep ci lane-timings --window`) now records `verdictWaitSeconds` on every attempt-one successful row: the workflow run's `created_at` to the reporting job's `completed_at` (the aggregator for a sharded lane, the job itself otherwise). That is what an author or the merge gate waits for: run-level queueing (main's concurrency group), `needs` chains, runner pickup and the body. The duration table gains `Wait p50` and `Wait p95`. A lane's P3 state is `Breach` when either the duration p95 or the wait p95 is 20m00s or more, and the cell names the measure (`Breach (wait)`, `Breach (duration, wait)`). Like pickup, the wait exists only on attempt-one rows; it reads `created_at`, never the re-dispatch-rewritten `run_started_at`. The duration columns are unchanged, and the TSV adds the column last.

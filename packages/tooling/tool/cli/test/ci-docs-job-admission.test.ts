@@ -76,10 +76,21 @@ const isWorkflowTextList = S.is(S.Array(S.String));
 const isWorkflowRecord = S.is(S.Record(S.String, S.Unknown));
 // A mapping node's entries; anything else (an absent `outputs`, a scalar) has none.
 const workflowRecord = (value: unknown): Readonly<Record<string, unknown>> => (isWorkflowRecord(value) ? value : {});
-// An aggregate is skipped, before it requests a runner, only on a Change Profile that succeeded and
-// reported a documentation-only diff; every other profile runs it and its script fails closed.
-const aggregateGuard =
-  "${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true') }}";
+// An aggregate is skipped, before it requests a runner, only in a state whose verdict is already a
+// pass: a documentation diff whose shards were skipped, or a code diff whose shard matrix succeeded
+// with every other job its script checks (skip on success, goals/ci-lane-economics 2026-11-13).
+// Every other state runs it and its script fails closed. The tests below run each guard over every
+// combination of the needs results.
+const changeProfileOk = "needs.change-profile.result == 'success'";
+const docsTrue = "needs.change-profile.outputs.docs_only == 'true'";
+const docsFalse = "needs.change-profile.outputs.docs_only == 'false'";
+const planOk = "needs.test-plan.result == 'success'";
+const aggregateGuards: Readonly<Record<string, string>> = {
+  lint: `\${{ !cancelled() && !(${changeProfileOk} && ((${docsTrue} && needs.lint-shard.result == 'skipped') || (${docsFalse} && needs.lint-shard.result == 'success'))) }}`,
+  "property-laws": `\${{ !cancelled() && !(${changeProfileOk} && ((${docsTrue} && needs.property-laws-shard.result == 'skipped') || (${docsFalse} && needs.property-laws-shard.result == 'success'))) }}`,
+  "test-unit": `\${{ !cancelled() && !(${changeProfileOk} && ${planOk} && ((${docsTrue} && needs.test-plan.outputs.test_unit == '[]' && needs.test-unit-shard.result == 'skipped') || (${docsFalse} && needs.test-plan.outputs.test_unit != '[]' && needs.test-unit-shard.result == 'success'))) }}`,
+  "test-integration": `\${{ !cancelled() && !(${changeProfileOk} && ${planOk} && ((${docsTrue} && needs.test-plan.outputs.test_integration == '[]' && needs.test-integration-shard.result == 'skipped') || (needs.admission.result == 'success' && ${docsFalse} && contains(needs.test-plan.outputs.test_integration, '"int-rest"') && needs.test-integration-shard.result == 'success'))) }}`,
+};
 const sameRepository = "github.event.pull_request.head.repo.full_name == github.repository";
 const docsOnlyFromThisRepository = `needs.change-profile.outputs.docs_only == 'true' && ${sameRepository}`;
 
@@ -106,23 +117,33 @@ type AggregateState = {
   readonly result: string;
 };
 
-// Runs one aggregate's real script with every `needs` expression rendered and the plan in its env.
+// One bash process judges a batch of entries, each printing its exit status on one line, so the exhaustive
+// suites below spawn once per batch instead of once per state and stay fast on a busy host.
+const bashBatch = (entries: ReadonlyArray<string>): ReadonlyArray<boolean> => {
+  const ran = Bun.spawnSync(["bash"], {
+    stdin: new TextEncoder().encode(`${A.join(entries, "\n")}\n`),
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  const statuses = A.filter(Str.split(ran.stdout.toString(), "\n"), Str.isNonEmpty);
+  assert.strictEqual(A.length(statuses), A.length(entries), "one status per batch entry");
+  return A.map(statuses, (status) => status === "0");
+};
+
+// One aggregate's real script with every `needs` expression rendered, run in a subshell with the plan in its
+// environment; the subshell keeps the script's `set -e` in force and prints its exit status.
+const aggregateScriptEntry = (script: string, shard: string, state: AggregateState): string =>
+  `( export PLANNED_PARTITIONS='${state.planned}'\n${pipe(
+    script,
+    Str.replaceAll("${{ needs.admission.result }}", state.admission),
+    Str.replaceAll("${{ needs.change-profile.result }}", state.classification),
+    Str.replaceAll("${{ needs.test-plan.result }}", state.plan),
+    Str.replaceAll("${{ needs.change-profile.outputs.docs_only }}", state.docs),
+    Str.replaceAll(`\${{ needs.${shard}.result }}`, state.result)
+  )}\n) > /dev/null 2>&1; echo $?`;
+
 const aggregatePasses = (script: string, shard: string, state: AggregateState): boolean =>
-  Bun.spawnSync(
-    [
-      "bash",
-      "-c",
-      pipe(
-        script,
-        Str.replaceAll("${{ needs.admission.result }}", state.admission),
-        Str.replaceAll("${{ needs.change-profile.result }}", state.classification),
-        Str.replaceAll("${{ needs.test-plan.result }}", state.plan),
-        Str.replaceAll("${{ needs.change-profile.outputs.docs_only }}", state.docs),
-        Str.replaceAll(`\${{ needs.${shard}.result }}`, state.result)
-      ),
-    ],
-    { stdout: "pipe", stderr: "pipe", env: { ...Bun.env, PLANNED_PARTITIONS: state.planned } }
-  ).exitCode === 0;
+  O.getOrThrow(A.head(bashBatch([aggregateScriptEntry(script, shard, state)])));
 
 type PlannedLane = {
   readonly emptyPlanSkips: boolean;
@@ -168,24 +189,72 @@ const plannedLaneShouldPass = (lane: PlannedLane, state: AggregateState): boolea
   return healthy && stated;
 };
 
+// What one aggregate does in one state: skipped at job level by its condition (a passing required
+// check), or started, when its script passes or fails.
+type AggregateOutcome = "skipped" | "passed" | "failed";
+const aggregateOutcomes = (
+  workflow: unknown,
+  job: string,
+  shard: string,
+  output: string,
+  states: ReadonlyArray<AggregateState>
+): ReadonlyArray<AggregateOutcome> => {
+  const guard = yamlAt(workflow, ["jobs", job, "if"]);
+  assertTrue(isWorkflowText(guard));
+  const script = aggregateScript(workflow, job);
+  const starts = bashBatch(
+    A.map(states, (state) =>
+      conditionEntry(
+        renderCondition(guard, {
+          "needs.admission.result": state.admission,
+          "needs.change-profile.result": state.classification,
+          "needs.change-profile.outputs.docs_only": state.docs,
+          "needs.test-plan.result": state.plan,
+          [`needs.test-plan.outputs.${output}`]: state.planned,
+          [`needs.${shard}.result`]: state.result,
+        })
+      )
+    )
+  );
+  const passes = bashBatch(A.map(states, (state) => aggregateScriptEntry(script, shard, state)));
+  return A.zipWith(
+    starts,
+    passes,
+    (started, passed): AggregateOutcome => (started ? (passed ? "passed" : "failed") : "skipped")
+  );
+};
+
+// The fail-closed property: an aggregate is skipped only beside a shard matrix that succeeded on a
+// code diff, or one that was skipped on a documentation diff; never beside a failed, cancelled or
+// otherwise skipped matrix, an unsuccessful Change Profile, or (planned lanes) an unsuccessful Test Plan.
+const skipIsSound = (planned: boolean, state: AggregateState): boolean =>
+  state.classification === "success" &&
+  (!planned || state.plan === "success") &&
+  ((state.docs === "true" && state.result === "skipped") || (state.docs === "false" && state.result === "success"));
+
 it.effect(
-  "executes the real unplanned aggregate scripts across classification and shard outcomes",
+  "skips the unplanned aggregates only on a verdict already passed, across classification and shard outcomes",
   Effect.fnUntraced(function* () {
     const workflow = yield* readCheckWorkflow;
     for (const { job, shard } of [
       { job: "lint", shard: "lint-shard" },
       { job: "property-laws", shard: "property-laws-shard" },
     ]) {
-      const script = aggregateScript(workflow, job);
-      for (const { classification, docs, result } of aggregateCases) {
+      assert.strictEqual(yamlAt(workflow, ["jobs", job, "if"]), aggregateGuards[job]);
+      const states = A.map(aggregateCases, (state) => ({ ...state, admission: "", plan: "", planned: "" }));
+      const outcomes = aggregateOutcomes(workflow, job, shard, "unused", states);
+      A.forEach(A.zip(states, outcomes), ([state, outcome]) => {
+        const label = `${job}: ${state.classification}/${state.docs}/${state.result} -> ${outcome}`;
+        // The verdict is the script's, whether or not the job ran.
         assert.strictEqual(
-          aggregatePasses(script, shard, { admission: "", classification, docs, plan: "", planned: "", result }),
-          A.contains(passingStates, `${classification}:${docs}:${result}`),
-          `${job}: ${classification}/${docs}/${result}`
+          outcome !== "failed",
+          A.contains(passingStates, `${state.classification}:${state.docs}:${state.result}`),
+          label
         );
-      }
+        // Every passing state takes no runner, and no failing one is skipped.
+        assert.strictEqual(outcome === "skipped", skipIsSound(false, state), label);
+      });
       assert.deepEqual(yamlAt(workflow, ["jobs", job, "needs"]), ["change-profile", shard]);
-      assert.strictEqual(yamlAt(workflow, ["jobs", job, "if"]), aggregateGuard);
     }
     for (const job of ["lint-shard", "labs", "fallow-advisory"]) {
       assert.deepEqual(yamlAt(workflow, ["jobs", job, "needs"]), afterShardsNeeds);
@@ -210,24 +279,74 @@ it.effect(
   })
 );
 
+// Test Plan publishes only a JSON array its publish step validated (jq, compact output), so a malformed
+// plan exists only beside an unsuccessful Test Plan; the cases pair them that way.
+const validPlans = ["[]", '["int-rest"]', '["unit-a","int-rest"]'];
+const plannedStates = (classifications: ReadonlyArray<string>, docsValues: ReadonlyArray<string>) =>
+  A.flatMap(classifications, (classification) =>
+    A.flatMap(docsValues, (docs) =>
+      A.flatMap(["success", "failure", "skipped", "cancelled"], (result) =>
+        A.flatMap(planCases, ({ plan, planned }) =>
+          plan === "success" && !A.contains(validPlans, planned)
+            ? []
+            : [{ classification, docs, result, plan, planned }]
+        )
+      )
+    )
+  );
+
+// Heavy Admission matters to Test Integration alone; its outcomes multiply that lane's states. Every result but
+// `success` reads the same to a condition and a script, as does every docs value but `true` and `false`, so one
+// of each stands for the rest.
+const plannedLaneStates = (lane: PlannedLane): ReadonlyArray<AggregateState> =>
+  A.flatMap(plannedStates(["success", "failure", ""], ["true", "false", "invalid"]), (state) =>
+    A.map(lane.job === "test-integration" ? ["success", "skipped"] : ["success"], (admission) => ({
+      ...state,
+      admission,
+    }))
+  );
+
+// The documentation diff of #3215: Heavy Admission is skipped there by design, so the integration verdict
+// passes without it.
+const isDocumentationPass = (state: AggregateState): boolean =>
+  state.classification === "success" &&
+  state.docs === "true" &&
+  state.plan === "success" &&
+  state.planned === "[]" &&
+  state.result === "skipped";
+
+const plannedVerdict = (lane: PlannedLane, state: AggregateState): boolean =>
+  isDocumentationPass(state) ||
+  (plannedLaneShouldPass(lane, state) && (lane.job !== "test-integration" || state.admission === "success"));
+
+// One state's outcome against its expected verdict, and a skip only where it is sound.
+const assertPlannedOutcome = (lane: PlannedLane, state: AggregateState, outcome: AggregateOutcome): void => {
+  const label = `${lane.job}: ${state.classification}/${state.docs}/${state.result}/${state.plan}/${state.planned}/${state.admission} -> ${outcome}`;
+  assert.strictEqual(outcome !== "failed", plannedVerdict(lane, state), label);
+  assert.isTrue(outcome !== "skipped" || skipIsSound(true, state), label);
+};
+
+// Skip on success: a code diff whose planned shards all passed takes no aggregate runner.
+const greenCodeState: AggregateState = {
+  admission: "success",
+  classification: "success",
+  docs: "false",
+  plan: "success",
+  planned: '["unit-a","int-rest"]',
+  result: "success",
+};
+
 it.effect(
-  "executes the real planned aggregate scripts across classification, plan and shard outcomes",
+  "skips the planned aggregates only on a verdict already passed, across classification, plan and shard outcomes",
   Effect.fnUntraced(function* () {
     const workflow = yield* readCheckWorkflow;
     for (const lane of plannedLanes) {
-      const script = aggregateScript(workflow, lane.job);
-      const states = A.flatMap(aggregateCases, (aggregateCase) =>
-        A.map(planCases, (planCase): AggregateState => ({ ...aggregateCase, ...planCase, admission: "success" }))
-      );
-      for (const state of states) {
-        assert.strictEqual(
-          aggregatePasses(script, lane.shard, state),
-          plannedLaneShouldPass(lane, state),
-          `${lane.job}: ${state.classification}/${state.docs}/${state.result}/${state.plan}/${state.planned}`
-        );
-      }
+      assert.strictEqual(yamlAt(workflow, ["jobs", lane.job, "if"]), aggregateGuards[lane.job]);
+      const states = A.append(plannedLaneStates(lane), greenCodeState);
+      const outcomes = aggregateOutcomes(workflow, lane.job, lane.shard, lane.output, states);
+      A.forEach(A.zip(states, outcomes), ([state, outcome]) => assertPlannedOutcome(lane, state, outcome));
+      assert.strictEqual(A.last(outcomes).pipe(O.getOrThrow), "skipped", `${lane.job} on green shards`);
       assert.deepEqual(yamlAt(workflow, ["jobs", lane.job, "needs"]), lane.needs);
-      assert.strictEqual(yamlAt(workflow, ["jobs", lane.job, "if"]), aggregateGuard);
       assert.strictEqual(
         yamlAt(workflow, ["jobs", lane.job, "steps", 0, "env", "PLANNED_PARTITIONS"]),
         `\${{ needs.test-plan.outputs.${lane.output} }}`
@@ -391,7 +510,8 @@ const jobNeeds = (job: unknown): ReadonlyArray<string> => {
   return isWorkflowTextList(needs) ? needs : isWorkflowText(needs) ? [needs] : [];
 };
 
-const expressionHolds = (expression: string, context: Readonly<Record<string, string>>): boolean => {
+// A job condition rendered for bash: every context name replaced by its quoted value.
+const renderCondition = (expression: string, context: Readonly<Record<string, string>>): string => {
   const rendered = pipe(
     R.toEntries(context),
     A.sortBy(([left], [right]) => (left.length === right.length ? 0 : left.length > right.length ? -1 : 1)),
@@ -401,6 +521,8 @@ const expressionHolds = (expression: string, context: Readonly<Record<string, st
         Str.replaceAll("${{", ""),
         Str.replaceAll("}}", ""),
         Str.replaceAll("!cancelled()", "'ok' == 'ok'"),
+        // GitHub's `contains(text, 'item')` on a string is a substring test: a bash glob match.
+        Str.replaceAll(/contains\(([a-z0-9_.-]+), ('[^']*')\)/gu, "$1 == *$2*"),
         Str.replaceAll("!(", "! ("),
         Str.trim
       ),
@@ -411,8 +533,13 @@ const expressionHolds = (expression: string, context: Readonly<Record<string, st
   for (const unresolved of ["needs.", "github.", "inputs.", "()"]) {
     assert.isFalse(Str.includes(unresolved)(rendered), `unresolved ${unresolved} in: ${rendered}`);
   }
-  return Bun.spawnSync(["bash", "-c", `[[ ${rendered} ]]`], { stdout: "pipe", stderr: "pipe" }).exitCode === 0;
+  return rendered;
 };
+
+const conditionEntry = (rendered: string): string => `[[ ${rendered} ]]; echo $?`;
+
+const expressionHolds = (expression: string, context: Readonly<Record<string, string>>): boolean =>
+  O.getOrThrow(A.head(bashBatch([conditionEntry(renderCondition(expression, context))])));
 
 // Every admission result paired with a verdict its `decide` step already published.
 const publishedVerdictCases = A.flatMap(["run", "skip-satisfied"], (verdict) =>
@@ -539,18 +666,55 @@ it.effect(
   })
 );
 
+const codeOutputs = {
+  "change-profile.docs_only": "false",
+  "test-plan.test_unit": '["unit-a"]',
+  "test-plan.test_integration": '["int-rest"]',
+  "admission.verdict": "run",
+};
+
+// Which of the four aggregates a simulated code run starts: exactly `started`, every other one skipped.
+const assertAggregatesStarted = (
+  results: Readonly<Record<string, JobResult>>,
+  started: ReadonlyArray<string>,
+  label: string
+): void =>
+  A.forEach(aggregateJobs, (job) =>
+    assert.strictEqual(
+      R.get(results, job).pipe(O.getOrThrow),
+      A.contains(started, job) ? "success" : "skipped",
+      `${job} ${label}`
+    )
+  );
+
+// A red shard, a failed plan or admission and an unreadable profile each start the aggregates they reach,
+// whose scripts (executed above) then fail; an aggregate whose own shards and checks passed still takes no
+// runner. An empty or malformed docs_only output is not a documentation diff.
+const startedAggregateCases: ReadonlyArray<{
+  readonly forced: Readonly<Record<string, JobResult>>;
+  readonly docs: string;
+  readonly started: ReadonlyArray<string>;
+}> = [
+  { forced: { "test-unit-shard": "failure", "lint-shard": "failure" }, docs: "false", started: ["lint", "test-unit"] },
+  {
+    forced: { "test-integration-shard": "failure", "property-laws-shard": "failure" },
+    docs: "false",
+    started: ["property-laws", "test-integration"],
+  },
+  { forced: { "test-plan": "failure" }, docs: "false", started: ["test-integration", "test-unit"] },
+  { forced: { admission: "failure" }, docs: "false", started: ["test-integration"] },
+  { forced: { "change-profile": "failure" }, docs: "false", started: aggregateJobs },
+  { forced: {}, docs: "", started: aggregateJobs },
+  { forced: {}, docs: "invalid", started: aggregateJobs },
+];
+
 it.effect(
-  "runs every aggregate, fail-closed, unless Change Profile succeeded and reported documentation only",
+  "starts an aggregate, fail-closed, unless its verdict already passed on documentation or on green shards",
   Effect.fnUntraced(function* () {
     const workflow = yield* readCheckWorkflow;
-    const codeOutputs = {
-      "change-profile.docs_only": "false",
-      "test-plan.test_unit": '["unit-a"]',
-      "test-plan.test_integration": '["int-rest"]',
-      "admission.verdict": "run",
-    };
     const code = simulateJobs(workflow, { forced: {}, github: thisRepository, outputs: codeOutputs });
-    // A code diff requests every hosted job except Docs Policy.
+    // A green code diff requests every hosted job except Docs Policy and the four aggregates, whose
+    // shards all passed (skip on success).
     const hosted = pipe(
       R.keys(code),
       A.filter((id) => isWorkflowText(yamlAt(workflow, ["jobs", id, "runs-on"]))),
@@ -558,34 +722,21 @@ it.effect(
     );
     assert.deepEqual(
       runnerRequests(workflow, code),
-      A.filter(hosted, (id) => id !== "docs-policy")
+      A.filter(hosted, (id) => id !== "docs-policy" && !A.contains(aggregateJobs, id))
     );
+    assertAggregatesStarted(code, [], "on green shards");
     assert.strictEqual(R.get(code, "heavy").pipe(O.getOrThrow), "success");
-
-    // A red shard, a failed plan and an unreadable profile each still start the aggregate, whose
-    // script (executed above) then fails.
-    const forcedCases: ReadonlyArray<Readonly<Record<string, JobResult>>> = [
-      { "test-unit-shard": "failure", "lint-shard": "failure" },
-      { "test-plan": "failure" },
-      { "change-profile": "failure" },
-    ];
-    for (const forced of forcedCases) {
-      const results = simulateJobs(workflow, { forced, github: thisRepository, outputs: codeOutputs });
-      for (const job of aggregateJobs) {
-        assert.strictEqual(R.get(results, job).pipe(O.getOrThrow), "success", `${job} under ${R.keys(forced)}`);
-      }
-    }
-    // An empty or malformed docs_only output is not a documentation diff.
-    for (const docs of ["", "invalid"]) {
-      const results = simulateJobs(workflow, {
-        forced: {},
-        github: thisRepository,
-        outputs: { ...codeOutputs, "change-profile.docs_only": docs },
-      });
-      for (const job of aggregateJobs) {
-        assert.strictEqual(R.get(results, job).pipe(O.getOrThrow), "success", `${job} for docs_only=${docs}`);
-      }
-    }
+    A.forEach(startedAggregateCases, ({ forced, docs, started }) =>
+      assertAggregatesStarted(
+        simulateJobs(workflow, {
+          forced,
+          github: thisRepository,
+          outputs: { ...codeOutputs, "change-profile.docs_only": docs },
+        }),
+        started,
+        `under ${R.keys(forced)} with docs_only=${docs}`
+      )
+    );
     // A failed Change Profile leaves Heavy Admission and the Heavy caller unstarted, so the heavy
     // contexts stay "Expected" and the pull request stays blocked.
     const unknown = simulateJobs(workflow, {
