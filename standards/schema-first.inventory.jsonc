@@ -1950,6 +1950,14 @@
       "reason": "Keep-as-class allowlist (goals/schema-opaque-default/ops/codemod/keep-class.jsonc): TransformationLedgerRecord member: corpus-command clone-boundary tests model S.is rejecting structuredClone copies of every ledger row (class semantics). Follow-up: rewrite that verdict model for plain-object ledger rows, then drop these entries."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.inference.ts",
+      "symbol": "FaceSession",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Runtime-bound contract over a native onnxruntime-node InferenceSession: run() is a Promise-returning method taking native tensor feeds, which cannot be schema data. It exists so model-free tests can inject fake sessions; the report data it produces is already modeled in MatchPerson.schemas.ts."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
       "symbol": "KnowledgeDocumentLine",
       "kind": "exported-type-literal",
