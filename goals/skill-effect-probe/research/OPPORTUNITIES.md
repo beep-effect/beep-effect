@@ -51,3 +51,16 @@ identifiers are redacted.
 - **Would have prevented it:** a harness option to abort on the first
   plan-limit error, and an accounts view that names the account the CLI is
   signed in to separately from the recommended next one.
+
+## 2026-11-13: a raw push to a goal-final PR leaves completion unverifiable
+
+- **Doing:** the closeout of #3167.
+- **Evidence:** `goals completion refresh --slug skill-effect-probe` returned
+  `unsatisfied` on one check only ("Yeet verdict checked against
+  resolvedHeadSha and mergeReady.ready"). The last review-fix wave was pushed
+  with `git push`, so no publish verdict existed at the accepted head, and the
+  PR merged before the readiness monitor printed `merge-ready: yes`.
+- **Would have prevented it:** a pre-push hook or `yeet` check that refuses a
+  plain push to a branch whose packet carries a `proposedCloseout`, and a
+  merge gate that refuses a goal final without a current-head
+  `merge-ready: yes`.
