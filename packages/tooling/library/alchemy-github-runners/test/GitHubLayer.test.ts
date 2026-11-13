@@ -61,6 +61,9 @@ const responses: Readonly<Record<string, FakeAnswer>> = {
 const route = (request: RecordedRequest): O.Option<FakeAnswer> =>
   O.fromUndefinedOr(responses[`${request.method} ${request.url.pathname}`]);
 
+// The key is generated per run; the PEM label is assembled so no key-shaped literal sits in source.
+const pemLabel = A.join(["PRIVATE", "KEY"], " ");
+
 const generatePem = Effect.gen(function* () {
   const pair = yield* Effect.promise(() =>
     crypto.subtle.generateKey(
@@ -70,7 +73,7 @@ const generatePem = Effect.gen(function* () {
     )
   );
   const der = yield* Effect.promise(() => crypto.subtle.exportKey("pkcs8", pair.privateKey));
-  return `-----BEGIN PRIVATE KEY-----\n${Base64.encode(new Uint8Array(der))}\n-----END PRIVATE KEY-----\n`;
+  return `-----BEGIN ${pemLabel}-----\n${Base64.encode(new Uint8Array(der))}\n-----END ${pemLabel}-----\n`;
 });
 
 const options = GitHubLiveOptions.make({

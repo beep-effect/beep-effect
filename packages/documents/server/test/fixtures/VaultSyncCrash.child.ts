@@ -15,6 +15,7 @@ import { makeLayer } from "@beep/pglite";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import * as Context from "effect/Context";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -104,6 +105,7 @@ const main = Effect.gen(function* () {
 BunRuntime.runMain(
   Effect.provide(main, [
     BunServices.layer,
+    SecureRandom.layerWebCrypto,
     Layer.unwrap(Effect.map(S.decodeUnknownEffect(S.String)(process.argv[2]), (dataDir) => makeLayer({ dataDir }))),
   ])
 );

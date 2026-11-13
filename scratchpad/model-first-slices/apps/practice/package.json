@@ -1,0 +1,20 @@
+{
+  "name": "@proto/practice",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "dependencies": {
+    "@alchemy.run/docker": "2.0.0-beta.87",
+    "@alchemy.run/domain": "2.0.0-beta.87",
+    "@alchemy.run/effect-cluster": "2.0.0-beta.87",
+    "@effect/platform-node": "4.1.4",
+    "@proto/kernel": "workspace:*",
+    "@proto/party": "workspace:*",
+    "@proto/party-host": "workspace:*",
+    "alchemy": "2.0.0-beta.87",
+    "effect": "4.1.4"
+  }
+}

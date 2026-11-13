@@ -148,7 +148,7 @@ const host = Effect.gen(function* () {
   const outOfBand = (command: V.PauseDestination | V.ResumeDestination) =>
     destinations.send(destinationId, command).pipe(Effect.asVoid);
   // The aggregate's authoritative state, independent of View projection lag.
-  const authority = destinations.state(destinationId).pipe(Effect.asSome);
+  const authority = destinations.get(destinationId).pipe(Effect.asSome);
   // Wait until the Api's Views have projected the aggregate's current paused flag.
   const projected = Effect.flatMap(authority, (state) =>
     inner.read(1).pipe(
