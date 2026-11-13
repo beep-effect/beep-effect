@@ -86,9 +86,9 @@ export class VendoredSkillLockEntry extends S.Opaque<VendoredSkillLockEntry, { r
  *
  * A repo-authored skill's entry holds no content hash. Its files are tracked
  * by git, so a committed hash repeated what git already held and made every
- * pull request that edited the skill rewrite the same lock line. `skills
- * update --check` hashes the installed targets on the fly and compares them
- * with each other instead.
+ * pull request that edited the skill rewrite the same lock line. The check
+ * (`skills update --check`) hashes the installed targets on the fly and
+ * compares them with each other instead.
  *
  * **Gotchas**
  *
