@@ -44,6 +44,9 @@ import {
   AttemptJournalExported,
   AttemptJournalExportUnpartitioned,
   AttemptJournalStoreError,
+  AttemptJournalStoreLocation,
+  AttemptJournalStorePartitioned,
+  AttemptJournalStoreUnpartitioned,
 } from "./AttemptJournalStore.schemas.ts";
 import { DEFAULT_YEET_PACKET_DIR } from "./Planner.schemas.ts";
 import type * as PlatformError from "effect/PlatformError";
@@ -188,14 +191,54 @@ export const attemptJournalStoreRunsDirectory = Effect.fn("AttemptJournalStore.r
   return path.join(root, STORE_DIRECTORY_NAME, fleetRepositoryKey(repository), RUNS_DIRECTORY_NAME);
 });
 
-// A store inside the checkout would be deleted with it after reporting success.
+// Symbolic links a canonical path may follow before the path counts as unresolvable.
+const SYMLINK_FOLLOW_LIMIT = 40;
+
+// The path `target` names once every symbolic link on it is followed, for a path
+// that may not exist yet: an existing prefix resolves through `realPath`, and a
+// dangling link resolves through its own target, so a state root that only
+// points into the checkout is caught before anything is created through it.
+const canonicalPath: (
+  target: string,
+  followed?: number
+) => Effect.Effect<O.Option<string>, never, FileSystem.FileSystem | Path.Path> = Effect.fnUntraced(function* (
+  target: string,
+  followed = 0
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  if (followed > SYMLINK_FOLLOW_LIMIT) return O.none<string>();
+  const real = yield* fs.realPath(target).pipe(Effect.option);
+  const parent = path.dirname(target);
+  // The filesystem root resolves; comparing it with its parent only ends the walk.
+  if (O.isSome(real) || Str.Equivalence(parent, target)) return O.isSome(real) ? real : O.some(target);
+  const link = yield* fs.readLink(target).pipe(Effect.option);
+  if (O.isSome(link)) return yield* canonicalPath(path.resolve(parent, link.value), followed + 1);
+  const canonicalParent = yield* canonicalPath(parent, followed);
+  return O.map(canonicalParent, (resolved) => path.join(resolved, path.basename(target)));
+});
+
+// A store inside the checkout would be deleted with it after reporting success,
+// and writing it after the checkout was renamed aside would recreate the
+// checkout's path. Both the store and the checkout are compared lexically and
+// with every symbolic link followed.
 const assertOutsideCheckout = Effect.fnUntraced(function* (checkout: string, runsDirectory: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const realCheckout = yield* fs
     .realPath(checkout)
     .pipe(Effect.mapError(storeError(`Could not resolve the checkout ${checkout}.`, checkout)));
-  if (A.some([path.resolve(checkout), realCheckout], (root) => isWithinRoot(path, root, runsDirectory))) {
+  const canonicalStore = yield* canonicalPath(runsDirectory);
+  if (O.isNone(canonicalStore)) {
+    return yield* AttemptJournalStoreError.make({
+      message: `Could not resolve the attempt-journal store ${runsDirectory}: too many symbolic links.`,
+      path: runsDirectory,
+    });
+  }
+  const inside = A.some([path.resolve(checkout), realCheckout], (root) =>
+    A.some([runsDirectory, canonicalStore.value], (store) => isWithinRoot(path, root, store))
+  );
+  if (inside) {
     return yield* AttemptJournalStoreError.make({
       message: `The attempt-journal store ${runsDirectory} lies inside ${checkout}, which is being removed; set ${yeetStateRootEnvVar} outside it.`,
       path: runsDirectory,
@@ -204,29 +247,50 @@ const assertOutsideCheckout = Effect.fnUntraced(function* (checkout: string, run
 });
 
 // The partition comes from the checkout's own git metadata: a linked worktree's
-// `.git` file names its clone, even for a fenced or nested copy, so no caller can
-// file a lane under another repository. Metadata that exists but cannot be read
-// fails the export rather than passing for "no repository".
-const retainAttemptJournals = Effect.fnUntraced(function* (checkout: string) {
-  const journals = yield* readCheckoutJournals(checkout);
-  if (A.isReadonlyArrayEmpty(journals)) return O.none<AttemptJournalExport>();
+// `.git` file names its clone, so no caller can file a lane under another
+// repository. Metadata that exists but cannot be read fails rather than passing
+// for "no repository".
+const locateAttemptJournalStore = Effect.fnUntraced(function* (checkout: string) {
   const repository = yield* readCheckoutFleetRepository(checkout).pipe(
     Effect.mapError(storeError(`Could not read the git metadata of ${checkout}.`, checkout))
   );
   if (O.isNone(repository)) {
-    return O.some<AttemptJournalExport>(AttemptJournalExportUnpartitioned.make({ journals: A.length(journals) }));
+    return AttemptJournalStoreUnpartitioned.make({});
   }
   const runsDirectory = yield* attemptJournalStoreRunsDirectory(repository.value);
   yield* assertOutsideCheckout(checkout, runsDirectory);
-  const filed = yield* Effect.forEach(journals, (journal) => fileJournal(runsDirectory, journal));
-  return O.some<AttemptJournalExport>(
-    AttemptJournalExported.make({
-      runsDirectory,
-      journals: A.length(journals),
-      appendedRows: Num.sumAll(A.map(filed, (rows) => rows.appendedRows)),
-      retainedRows: Num.sumAll(A.map(filed, (rows) => rows.retainedRows)),
-    })
-  );
+  return AttemptJournalStorePartitioned.make({ runsDirectory });
+});
+
+const fileCheckoutJournals = Effect.fnUntraced(function* (
+  journals: A.NonEmptyReadonlyArray<CheckoutJournal>,
+  location: AttemptJournalStoreLocation
+) {
+  if (AttemptJournalStoreLocation.guards.unpartitioned(location)) {
+    return AttemptJournalExportUnpartitioned.make({ journals: A.length(journals) });
+  }
+  const filed = yield* Effect.forEach(journals, (journal) => fileJournal(location.runsDirectory, journal));
+  return AttemptJournalExported.make({
+    runsDirectory: location.runsDirectory,
+    journals: A.length(journals),
+    appendedRows: Num.sumAll(A.map(filed, (rows) => rows.appendedRows)),
+    retainedRows: Num.sumAll(A.map(filed, (rows) => rows.retainedRows)),
+  });
+});
+
+const retainAttemptJournalsAt = Effect.fnUntraced(function* (checkout: string, location: AttemptJournalStoreLocation) {
+  const journals = yield* readCheckoutJournals(checkout);
+  if (!A.isReadonlyArrayNonEmpty(journals)) return O.none<AttemptJournalExport>();
+  const filed = yield* fileCheckoutJournals(journals, location);
+  return O.some<AttemptJournalExport>(filed);
+});
+
+const retainAttemptJournals = Effect.fnUntraced(function* (checkout: string) {
+  const journals = yield* readCheckoutJournals(checkout);
+  if (!A.isReadonlyArrayNonEmpty(journals)) return O.none<AttemptJournalExport>();
+  const location = yield* locateAttemptJournalStore(checkout);
+  const filed = yield* fileCheckoutJournals(journals, location);
+  return O.some<AttemptJournalExport>(filed);
 });
 
 /**
@@ -246,13 +310,33 @@ const retainAttemptJournals = Effect.fnUntraced(function* (checkout: string) {
  */
 export interface AttemptJournalStoreShape {
   /**
-   * File a checkout's attempt journals in the store before the checkout is removed.
+   * Resolve and validate where a checkout's journals go, before anything is removed or renamed.
    *
-   * @param checkout - The checkout whose `.beep/yeet/runs` journals are exported; the `origin` of the clone its git metadata names is the store partition.
+   * @param checkout - The checkout at its own path; the `origin` of the clone its git metadata names is the partition.
+   * @returns The validated partition, or `unpartitioned` when the clone names no GitHub repository.
+   * @since 0.0.0
+   */
+  readonly locate: (checkout: string) => Effect.Effect<AttemptJournalStoreLocation, AttemptJournalStoreError>;
+  /**
+   * Locate and file in one step, for a checkout that stays at its path until it is removed.
+   *
+   * @param checkout - The checkout whose journals are exported; it is located only when it holds one.
    * @returns What the export did, or `O.none()` when the checkout holds no journal.
    * @since 0.0.0
    */
   readonly retain: (checkout: string) => Effect.Effect<O.Option<AttemptJournalExport>, AttemptJournalStoreError>;
+  /**
+   * File a checkout's attempt journals at a location `locate` validated, wherever the checkout now sits.
+   *
+   * @param checkout - The checkout whose `.beep/yeet/runs` journals are exported, possibly renamed aside.
+   * @param location - The location `locate` returned for the checkout at its original path.
+   * @returns What the export did, or `O.none()` when the checkout holds no journal.
+   * @since 0.0.0
+   */
+  readonly retainAt: (
+    checkout: string,
+    location: AttemptJournalStoreLocation
+  ) => Effect.Effect<O.Option<AttemptJournalExport>, AttemptJournalStoreError>;
 }
 
 /**
@@ -260,8 +344,13 @@ export interface AttemptJournalStoreShape {
  *
  * **Details**
  *
- * `retain` reads every readable `.beep/yeet/runs/<runId>/attempts.ndjson` of
- * the checkout and appends each row its store journal does not hold yet, so
+ * `locate` resolves the checkout's partition and validates that its runs
+ * directory lies outside the checkout, lexically and with every symbolic link
+ * followed; a caller that renames the checkout aside locates it first, at its
+ * original path, and then files with `retainAt`. `retain` locates and files in
+ * one step, and only when the checkout holds a journal. Filing reads every
+ * readable `.beep/yeet/runs/<runId>/attempts.ndjson` of the checkout and
+ * appends each row its store journal does not hold yet, so
  * exporting the same journals twice, or a restored lane's grown journal,
  * stores each row once. The partition is the GitHub repository named by the
  * `origin` of the clone the checkout's git metadata points to; a clone with no
@@ -296,6 +385,12 @@ export class AttemptJournalStore extends Context.Service<AttemptJournalStore, At
     Effect.map(Effect.context<FileSystem.FileSystem | Path.Path>(), (runtime) => {
       const context = Context.pick(FileSystem.FileSystem, Path.Path)(runtime);
       return AttemptJournalStore.of({
+        locate: Effect.fn("AttemptJournalStore.locate")((checkout: string) =>
+          locateAttemptJournalStore(checkout).pipe(Effect.provide(context))
+        ),
+        retainAt: Effect.fn("AttemptJournalStore.retainAt")((checkout: string, location: AttemptJournalStoreLocation) =>
+          retainAttemptJournalsAt(checkout, location).pipe(Effect.provide(context))
+        ),
         retain: Effect.fn("AttemptJournalStore.retain")((checkout: string) =>
           retainAttemptJournals(checkout).pipe(Effect.provide(context))
         ),

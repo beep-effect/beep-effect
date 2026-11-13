@@ -120,6 +120,101 @@ export const AttemptJournalExport = S.Union([AttemptJournalExported, AttemptJour
 export type AttemptJournalExport = typeof AttemptJournalExport.Type;
 
 /**
+ * A store partition validated for one checkout.
+ *
+ * **Details**
+ *
+ * `partitioned` names the runs directory the checkout's journals are filed
+ * under; it was checked to lie outside the checkout (lexically and after
+ * resolving symbolic links) before anything was removed or renamed.
+ *
+ * **Example** (Describe a validated partition)
+ *
+ * ```ts
+ * import { AttemptJournalStorePartitioned } from "@beep/repo-cli/test/Yeet"
+ *
+ * const location = AttemptJournalStorePartitioned.make({ runsDirectory: "/state/attempts/github.com__o__r/runs" })
+ * console.log(location._tag) // "partitioned"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AttemptJournalStorePartitioned extends S.Opaque<
+  AttemptJournalStorePartitioned,
+  { readonly brand: unique symbol }
+>()(
+  S.TaggedStruct("partitioned", {
+    runsDirectory: S.String,
+  }).pipe(
+    $I.annoteSchema("AttemptJournalStorePartitioned", {
+      description: "A store runs directory validated to lie outside the checkout whose journals it receives.",
+    })
+  )
+) {}
+
+/**
+ * A checkout whose clone names no store partition.
+ *
+ * **Example** (Describe a checkout with no partition)
+ *
+ * ```ts
+ * import { AttemptJournalStoreUnpartitioned } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(AttemptJournalStoreUnpartitioned.make({})._tag) // "unpartitioned"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AttemptJournalStoreUnpartitioned extends S.Opaque<
+  AttemptJournalStoreUnpartitioned,
+  { readonly brand: unique symbol }
+>()(
+  S.TaggedStruct("unpartitioned", {}).pipe(
+    $I.annoteSchema("AttemptJournalStoreUnpartitioned", {
+      description: "A checkout whose clone's origin names no GitHub repository, so its journals have no partition.",
+    })
+  )
+) {}
+
+/**
+ * Where a checkout's attempt journals go, resolved and validated before the removal starts.
+ *
+ * **Example** (Match a location)
+ *
+ * ```ts
+ * import { AttemptJournalStoreLocation, AttemptJournalStoreUnpartitioned } from "@beep/repo-cli/test/Yeet"
+ *
+ * const target = AttemptJournalStoreLocation.match({
+ *   partitioned: (location) => location.runsDirectory,
+ *   unpartitioned: () => "(none)",
+ * })
+ * console.log(target(AttemptJournalStoreUnpartitioned.make({}))) // "(none)"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AttemptJournalStoreLocation = S.Union([
+  AttemptJournalStorePartitioned,
+  AttemptJournalStoreUnpartitioned,
+]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("AttemptJournalStoreLocation", {
+    description: "The validated store partition for a checkout's attempt journals, or none.",
+  })
+);
+
+/**
+ * Decoded type of {@link AttemptJournalStoreLocation}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AttemptJournalStoreLocation = typeof AttemptJournalStoreLocation.Type;
+
+/**
  * A journal the store could not read or write.
  *
  * **Details**

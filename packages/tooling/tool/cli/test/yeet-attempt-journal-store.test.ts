@@ -27,6 +27,8 @@ import {
   PrRepository,
   renderAttemptJournalExport,
   renderRetirement,
+  retireInvokingWorktree,
+  SweepGitState,
   YeetAttemptJournalEvent,
   YeetAttemptStarted,
   YeetAttemptTerminated,
@@ -114,8 +116,43 @@ const appendJournal = Effect.fnUntraced(function* (
   yield* fs.writeFileString(path.join(directory, "attempts.ndjson"), `${A.join(lines, "\n")}\n`, { flag: "a" });
 });
 
-const withHome = (home: string) =>
-  Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env: { HOME: home } }));
+const withHome = (home: string, extra: Record<string, string> = {}) =>
+  Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env: { HOME: home, ...extra } }));
+
+// What `yeet sweep --retire` hands the removal for a merged lane.
+const sweepRetire = (clone: string, lane: string) =>
+  retireInvokingWorktree(
+    YeetRetirePlan.make({ worktreePath: lane, owningClone: clone, name: "lane", branch: "feat/lane" }),
+    SweepGitState.make({
+      branch: "feat/lane",
+      mainBranch: "main",
+      headBranch: "feat/lane",
+      worktreeDirty: false,
+      mainCheckedOutElsewhere: false,
+      branchCheckedOutElsewhere: false,
+      branchMergedIntoBase: true,
+      lockfileMovedOnMainUpdate: false,
+      statusProbeUnreliable: false,
+      worktreeProbeUnreliable: false,
+      pullRequestState: O.some("MERGED"),
+      pullRequestHeadBranch: O.some("feat/lane"),
+    })
+  );
+
+// The lane is where it was: its journal and branch are present, nothing was fenced
+// beside it, and nothing was created at the state root inside it.
+const assertLaneUntouched = Effect.fnUntraced(function* (fixture: Fixture, lane: string, stateRoot: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const journalKept = yield* fs.exists(path.join(lane, ".beep", "yeet", "runs", RUN_ID, "attempts.ndjson"));
+  assertTrue(journalKept);
+  const siblings = yield* fs.readDirectory(path.dirname(lane));
+  deepStrictEqual(siblings, ["lane"]);
+  const stateCreated = yield* fs.exists(stateRoot);
+  assertTrue(!stateCreated);
+  const branch = yield* git(fixture.clone, ["rev-parse", "--verify", "refs/heads/feat/lane"]);
+  assertTrue(Str.isNonEmpty(branch));
+});
 
 type Fixture = {
   readonly home: string;
@@ -550,6 +587,49 @@ describe("attempt journal store", () => {
     );
 
     it.effect(
+      "an archive retirement or yeet sweep --retire refuses a state root inside the lane before fencing it",
+      Effect.fnUntraced(function* () {
+        const fixture = yield* scratchClone(O.some(ORIGIN_URL));
+        const path = yield* Path.Path;
+        const lane = yield* addLane(fixture.clone);
+        yield* appendJournal(lane, RUN_ID, attempt(attemptId("f")));
+        const stateRoot = path.join(lane, "state");
+        yield* Effect.gen(function* () {
+          const archived = yield* remove(fixture.clone, true).pipe(Effect.flip);
+          assertInstanceOf(archived, WorktreePreservationError);
+          deepStrictEqual(archived.step, "export-attempt-journals");
+          assertInclude(archived.message, "lies inside");
+          yield* assertLaneUntouched(fixture, lane, stateRoot);
+
+          const swept = yield* sweepRetire(fixture.clone, lane).pipe(Effect.flip);
+          assertInclude(swept.message, "lies inside");
+          yield* assertLaneUntouched(fixture, lane, stateRoot);
+        }).pipe(withHome(fixture.home, { BEEP_YEET_STATE_ROOT: stateRoot }));
+      })
+    );
+
+    it.effect(
+      "an archive retirement refuses a symlinked state root that points into the lane",
+      Effect.fnUntraced(function* () {
+        const fixture = yield* scratchClone(O.some(ORIGIN_URL));
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const lane = yield* addLane(fixture.clone);
+        yield* appendJournal(lane, RUN_ID, attempt(attemptId("10")));
+        // The link dangles: its target inside the lane does not exist yet.
+        const stateRoot = path.join(lane, "state");
+        const link = path.join(fixture.home, "linked-state");
+        yield* fs.symlink(stateRoot, link);
+        yield* Effect.gen(function* () {
+          const refused = yield* remove(fixture.clone, true).pipe(Effect.flip);
+          assertInstanceOf(refused, WorktreePreservationError);
+          assertInclude(refused.message, "lies inside");
+          yield* assertLaneUntouched(fixture, lane, stateRoot);
+        }).pipe(withHome(fixture.home, { BEEP_YEET_STATE_ROOT: link }));
+      })
+    );
+
+    it.effect(
       "a plain removal files the journals before git removes the checkout",
       Effect.fnUntraced(function* () {
         const fixture = yield* scratchClone(O.some(ORIGIN_URL));
@@ -734,6 +814,30 @@ describe("attempt journal store", () => {
         assertInclude(relative.message, "is not absolute");
         const inside = yield* retain(clone).pipe(Effect.flip, withStateRoot(path.join(clone, "state")));
         assertInclude(inside.message, "lies inside");
+      })
+    );
+
+    it.effect(
+      "refuses a state root it cannot resolve through a symbolic link loop",
+      Effect.fnUntraced(function* () {
+        const { home, clone } = yield* checkoutWithOrigin();
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const loopA = path.join(home, "loop-a");
+        const loopB = path.join(home, "loop-b");
+        yield* fs.symlink(loopB, loopA);
+        yield* fs.symlink(loopA, loopB);
+        const store = yield* AttemptJournalStore;
+        const looped = yield* store
+          .locate(clone)
+          .pipe(
+            Effect.flip,
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromEnv({ env: { HOME: home, BEEP_YEET_STATE_ROOT: loopA } })
+            )
+          );
+        assertInclude(looped.message, "too many symbolic links");
       })
     );
 

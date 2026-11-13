@@ -16,8 +16,9 @@
  * removed by compare-and-swap on the archived head.
  * Every removal, plain or archive, first files the checkout's git-ignored Yeet
  * attempt journals in the workstation attempt-journal store (inside the fence
- * for an archive retirement, before any capture); a failed export refuses the
- * removal and deletes nothing.
+ * for an archive retirement, before any capture); the store location is
+ * validated against the checkout's original path before anything is renamed,
+ * and a failed export refuses the removal and deletes nothing.
  * A pruned upstream never fails the retirement: the manifest records the
  * pruned upstream together with the verdict that judged the tip pushed (a tip
  * on the remote default branch, or a merged pull request at exactly that
@@ -114,7 +115,11 @@ import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GithubIdentityError } from "../../internal/github/index.ts";
 import type { GitCommandErrorAdapter, GitKitError, ProcessAttachment } from "../../internal/repo-run/index.ts";
-import type { AttemptJournalExport } from "../Yeet/internal/AttemptJournalStore.schemas.ts";
+import type {
+  AttemptJournalExport,
+  AttemptJournalStoreError,
+  AttemptJournalStoreLocation,
+} from "../Yeet/internal/AttemptJournalStore.schemas.ts";
 import type {
   WorktreeListEntry,
   WorktreeResidueReason as WorktreeResidueReasonType,
@@ -1624,18 +1629,29 @@ const makeRemovalReceipt = (
 // so the lane's attempt journals would be deleted with the checkout (PERIL-11).
 // They are filed in the workstation store first; a failed export refuses the
 // removal before anything is deleted (decision D18: a copy failure blocks deletion).
-const exportAttemptJournals = Effect.fn("WorktreeRemovalService.exportAttemptJournals")(function* (
+const journalStoreFailure = (error: AttemptJournalStoreError): WorktreePreservationError =>
+  WorktreePreservationError.new("export-attempt-journals", error.message, {
+    cause: error,
+    ...O.getSomesStruct({ path: O.fromUndefinedOr(error.path) }),
+  });
+
+// The store location is resolved and validated against the checkout at its
+// ORIGINAL path, before any rename: a store under that path (lexically or through
+// a symbolic link) is refused while there is still nothing to restore, so writing
+// it later can never recreate the vacated lane path.
+const locateAttemptJournals = Effect.fn("WorktreeRemovalService.locateAttemptJournals")(function* (
   checkout: string
+): Effect.fn.Return<AttemptJournalStoreLocation, WorktreePreservationError, AttemptJournalStore> {
+  const store = yield* AttemptJournalStore;
+  return yield* store.locate(checkout).pipe(Effect.mapError(journalStoreFailure));
+});
+
+const exportAttemptJournals = Effect.fn("WorktreeRemovalService.exportAttemptJournals")(function* (
+  checkout: string,
+  location: AttemptJournalStoreLocation
 ): Effect.fn.Return<O.Option<AttemptJournalExport>, WorktreePreservationError, AttemptJournalStore> {
   const store = yield* AttemptJournalStore;
-  return yield* store.retain(checkout).pipe(
-    Effect.mapError((error) =>
-      WorktreePreservationError.new("export-attempt-journals", error.message, {
-        cause: error,
-        ...O.getSomesStruct({ path: O.fromUndefinedOr(error.path) }),
-      })
-    )
-  );
+  return yield* store.retainAt(checkout, location).pipe(Effect.mapError(journalStoreFailure));
 });
 
 const REMOVAL_STATUS_OPTIONS = { untrackedFiles: "all", ignoreSubmodules: "none" } as const;
@@ -1896,7 +1912,8 @@ const removeLegacyWorktree = Effect.fn("WorktreeRemovalService.removeLegacyWorkt
   );
   return yield* A.match(changes, {
     onEmpty: () =>
-      exportAttemptJournals(request.targetPath).pipe(
+      locateAttemptJournals(request.targetPath).pipe(
+        Effect.flatMap((location) => exportAttemptJournals(request.targetPath, location)),
         Effect.flatMap((attemptJournals) =>
           removeWorktree(request, false).pipe(
             Effect.as(
@@ -2306,7 +2323,8 @@ const nameInotifyWatchers = (
 
 const fencedArchivePlan = Effect.fn("WorktreeRemovalService.fencedArchivePlan")(function* (
   request: WorktreeRemovalRequest,
-  fenced: WorktreeRemovalRequest
+  fenced: WorktreeRemovalRequest,
+  journalStore: AttemptJournalStoreLocation
 ): Effect.fn.Return<
   ArchiveRemovalPlan & {
     readonly head: GitObjectId;
@@ -2335,9 +2353,10 @@ const fencedArchivePlan = Effect.fn("WorktreeRemovalService.fencedArchivePlan")(
   // Authority is re-tied to the state actually being archived: the fenced HEAD must
   // still be the object id the caller's decision was made under.
   yield* assertAuthorizedHead(request, head);
-  // Filed before the capture moves any material: a failed export leaves the fenced
-  // copy exactly as it was fenced, so the caller's restore puts the lane back whole.
-  const attemptJournals = yield* exportAttemptJournals(fenced.targetPath);
+  // Filed, at the location validated before the fence, before the capture moves any
+  // material: a failed export leaves the fenced copy exactly as it was fenced, so the
+  // caller's restore puts the lane back whole.
+  const attemptJournals = yield* exportAttemptJournals(fenced.targetPath, journalStore);
   const plan = yield* planArchiveRemoval(fenced, head, A.isReadonlyArrayNonEmpty(changes));
   return { ...plan, head, quietShells, attemptJournals };
 });
@@ -2382,6 +2401,8 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
   // copy carries a different name, so the containment refusal below would no longer
   // recognize a root configured inside the retiring worktree.
   yield* residueBaseRoot(request.targetPath);
+  // The attempt-journal store is located against the ORIGINAL path for the same reason.
+  const journalStore = yield* locateAttemptJournals(request.targetPath);
   // ATOMIC FENCE: rename the checkout aside before capturing anything. After this
   // instant no new file can appear under the original path, while writers holding the
   // directory as cwd or via open descriptors follow the inode into the fenced copy.
@@ -2399,7 +2420,7 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
       )
     );
   const fenced = WorktreeRemovalRequest.make({ ...request, targetPath: retirePath });
-  const planned = yield* Effect.exit(fencedArchivePlan(request, fenced));
+  const planned = yield* Effect.exit(fencedArchivePlan(request, fenced, journalStore));
   if (Exit.isFailure(planned)) {
     // A refusal inside the fence restores the checkout exactly where it was; a failed
     // restore must name the fenced path loudly so nothing is presumed lost.
