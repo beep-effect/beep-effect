@@ -12,6 +12,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FakeVercelLayer } from "./FakeVercel.ts";
+import type * as Provider from "alchemy/Provider";
 import type { ResourceLike } from "alchemy/Resource";
 import type * as Effect from "effect/Effect";
 
@@ -41,7 +42,7 @@ export type TypedRead<R extends ResourceLike> = (input: {
   readonly instanceId: string;
   readonly olds: R["Props"];
   readonly output: R["Attributes"] | undefined;
-}) => Effect.Effect<R["Attributes"] | undefined, StackFailure>;
+}) => Effect.Effect<R["Attributes"] | undefined, Provider.ProviderError>;
 
 /** Per-file test API backed by the fake Vercel layer. */
 export const makeHarness = () =>

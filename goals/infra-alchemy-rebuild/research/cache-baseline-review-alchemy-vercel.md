@@ -11,7 +11,7 @@ Vitest suite); none is hand-edited, and no command, output or environment differ
 tooling library. The package's inputs are its `src/`, `test/`, config files and manifest. Its tests
 run against an in-memory Vercel API and read no environment variable, so the `test` computation has
 no hidden input. Its dependencies are `@beep/identity`, `@beep/schema`, `@beep/utils`, `alchemy`,
-`effect` and the new root catalog pin `@distilled.cloud/vercel@1.0.0-rc.18`.
+`effect` and the new root catalog pin `@distilled.cloud/vercel@1.0.0-rc.19` (the release that shares main's `@distilled.cloud/core@1.0.0-rc.19`).
 
 Recording `@beep/alchemy-vercel` adopts its digest as a new subject. No task becomes cacheable, no
 exception row is added, and scope, profile and epoch are unchanged.
