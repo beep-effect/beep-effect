@@ -614,3 +614,67 @@ D16). "Proven" here means in memory, on `Domain.InMemory`; nothing has run on a 
 Open from phase 4, for the next round: whether a producer's newest fact version may be reported
 retirable; where generated entry modules live; where a browser session's credentials and tenant
 come from. The 15 uncovered authority outcomes are to be covered in the next phase.
+
+## 2026-11-13 — D37 the cluster run
+
+**Question:** Upstream hosts a model on Effect Cluster only inside a Docker swarm; there is no
+lighter route (`research/12-cluster-run-scoping.md`). May the run happen on the workstation?
+
+**Answer:** Yes. `docker swarm init --advertise-addr 127.0.0.1`, deploy the prototype's stack
+(Postgres service and volume, two runners, a front service on one localhost port), run upstream's
+ten Domain conformance cases plus the prototype's own (duplicate sends, kill after commit, lost
+response, projection crash, revocation, two runners on one instance, backup and restore by
+`pg_dump`), then `alchemy destroy` and `docker swarm leave --force`. No cloud account.
+
+**Rationale:** D5 and D16 require the proof on this host, and state is purely local. Rejected:
+leaving the stack up afterwards; preparing the stack and cases without running them here.
+Recommended answer accepted.
+
+## 2026-11-13 — D38 if the two-runners case fails
+
+**Question:** The cluster host's commit does not check the stored version; it relies on
+one-at-a-time execution and a shard lock that expires after 35 seconds (`research/12`, section 5).
+If the two-runners conformance case reproduces an overwrite, what then?
+
+**Answer:** Hold the retirement of the repo-owned Postgres platform (D5). The failing case and a
+proposed fix, a version check inside the commit transaction, go into the upstream proposals. The
+gate item stays open until the host passes.
+
+**Rationale:** D5 already makes conformance the retirement gate. Rejected: carrying a local patch
+and treating a pass with the patch as meeting the gate; deciding only after the run. Recommended
+answer accepted.
+
+## 2026-11-13 — D39 remote gateways (closes D31)
+
+**Question:** How does one context's host call another's on a cluster, and how is the caller
+trusted?
+
+**Answer:** A gateway is the provider's contract Api reached through the pool's own dispatch.
+Contexts in one pool trust each other; a caller from another pool presents that pool's gateway
+token. Hosts get no principal of their own. Every call still carries provenance that authority
+re-admits.
+
+**Rationale:** The pool already authenticates its members, and authority over a domain action
+comes from the provenance, not from which host relays it. Rejected: a service identity with grants
+for every host; one runner with in-process gateways and the remote form left undecided.
+Recommended answer accepted.
+
+## 2026-11-13 — D40 newest fact version; where entry modules live
+
+**Question:** May a producer's newest fact version be reported retirable (D34), and where do
+generated cluster entry modules live (D13)?
+
+**Answer:** A producer's newest fact version is never reported retirable. Entry modules are
+generated into the app, from the composed descriptors, since the app chooses the pool each one
+runs on.
+
+**Rationale:** A newest version with no consumer yet is a fact being introduced, not one to remove.
+The cluster loader accepts a generated module passed as `import.meta.url` (`research/12`, section
+6). Rejected: entry modules generated into each host package; reporting an unconsumed newest
+version. Recommended answer accepted.
+
+## 2026-11-13 — Browser session (DEFERRED, not put to the operator)
+
+Where a browser session's credentials and tenant come from, and what clears atom caches on logout
+or tenant change, is deferred to the browser QA and HTTP wiring work. It is outside the D16 gate.
+The orchestrating session deferred it without asking; the operator may reopen it.

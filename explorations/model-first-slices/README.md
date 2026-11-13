@@ -27,11 +27,14 @@ at the end of `DECISIONS.md`. [`BRIEF.md`](./BRIEF.md) has not been confirmed in
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
 2. [`CAPTURE.md`](./CAPTURE.md) - the operator's brief and ground rules.
 3. [`RESEARCH.md`](./RESEARCH.md) - the proposal, the prototype, the outside reviews.
-4. [`DECISIONS.md`](./DECISIONS.md) - grilling log, D1 to D36.
+4. [`DECISIONS.md`](./DECISIONS.md) - grilling log, D1 to D40.
 5. [`BRIEF.md`](./BRIEF.md) - shaped pitch, awaiting the operator's confirmation.
 
 ## Trail
 
+- 2026-11-13: cluster run scoped (`research/12`): swarm required, the host's commit has no version
+  check, upstream has no backup or restore. D37 to D40 settled; the operator approved
+  `docker swarm init` on the workstation. Phase 5 (cluster conformance) launched.
 - 2026-11-13: phase 4 verified (14 packages type-check, 130 tests pass). Seven of the eight D16
   gate items are proven in memory; the Postgres swarm conformance run is the one left. Notes in
   `research/11`. Committed locally.

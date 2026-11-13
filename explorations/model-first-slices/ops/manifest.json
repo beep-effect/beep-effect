@@ -6,11 +6,8 @@
     "status": "active",
     "stage": "shape",
     "openQuestions": [
-      "Cluster phase go-ahead: `docker swarm init` on the workstation and the Postgres swarm conformance run (D5, D16).",
-      "Remote form of cross-context gateways and host authentication (D31, deferred to the cluster phase).",
-      "May a producer's newest fact version be reported retirable (D34)?",
-      "Where do generated cluster entry modules live: the app or each host (D13)?",
-      "Browser session: where credentials and tenant come from, and what clears atom caches on logout or tenant change (D12).",
+      "Phase 5 result: does the Postgres swarm host pass the conformance suite, restore included (D5, D16, D38)?",
+      "DEFERRED: browser session credentials, tenant and cache clearing (outside the D16 gate).",
       "Shape review: BRIEF.md and the artifact have not been confirmed in words by the operator."
     ],
     "sources": ["research/SOURCES.md"],
