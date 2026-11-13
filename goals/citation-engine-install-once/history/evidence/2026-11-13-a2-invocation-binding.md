@@ -557,3 +557,106 @@ A second pre-push main advance was also merged before publication: `d039f0cf3821
 ### Pre-push lint cleanup
 
 The collected gates passed every lane except `lint:oxlint`, which rejected two inline schema compilations in the new log assertions. Commit `c58c8a48a9281000df3632a4eeab24e524a7ce56` replaces those guards with reference-checked `A.isArray`, preserving the assertions and avoiding a fresh schema parser per call. Oxlint then passes. The complete engine file passes all 15 tests again on Bun (82.41 s), and its Node-hosted deadline filter passes ten tests (50.59 s; five unrelated tests filtered out). Quick server verification and the Effect/Vitest check pass again. No earlier attempt pushed.
+
+
+## Coverage round
+
+The coverage repair is commit `31a3757c82823f1e04cfe8b8badcd58798dd3451`.
+The starting published head was `027869aabcb`. Existing local main refs were
+merged, without pulling or rebasing: `87a0b8ca0bd` brings in `523967074b0`,
+and `1d25164e9ea` brings in `d59751ef59e` (#3267). These main changes do not
+change Citation source or its test inputs. The lane remains A2 in review and
+PR #3265 remains draft.
+
+### Measurements and attribution
+
+Each measurement ran from `packages/law-practice/server` using
+`bunx vitest run <focused files> --coverage --coverage.include='<source file>'
+--coverage.reporter=text --coverage.reporter=json`. The host was Node; the
+engine file also exercises both Bun and Node native runtime configurations.
+No whole-package suite or affected-coverage audit ran locally. Focused cohorts
+are narrower than hosted coverage, so their before percentages need not equal
+the hosted report. All percentages below use lines / statements / branches /
+functions, in that order.
+
+| Source under `packages/law-practice/server/src/` | Focused before | Base floors (unchanged) | Focused after |
+| --- | --- | --- | --- |
+| `CitationEngine/CitationEngine.layer.ts` | 96.29 / 94.64 / 100 / 88 | 97.29 / 95.12 / 100 / 84.61 | **98.14 / 96.42 / 100 / 92** |
+| `internal/Citation/CleanerPipeline.ts` | 98.61 / 98.11 / 87.5 / 100 | 100 / 100 / 98.52 / 100 | **100 / 100 / 100 / 100** |
+| `internal/Citation/ReferencePatterns.ts` | 93.61 / 92.98 / 97.5 / 84.61 | 96.8 / 96.49 / 100 / 84.61 | **96.8 / 96.49 / 100 / 84.61** |
+| `internal/Citation/Tokenizer.ts` | 98.70 / 96.66 / 85.18 / 96.29 | 98.75 / 97.84 / 88.88 / 96.42 | **100 / 100 / 92 / 100** |
+
+- Engine: the uncovered live resolve admission mapper was at line 157. Extend
+  the existing closed-engine control to extract, resolve and annotate, alongside
+  clean. Each asserts the public failure type/operation; the resolver call count
+  stays four, both owners stay closed, and no children are added. The boundary
+  log controls from round 2 still pass. The pre-existing annotation-install
+  failure mapper at line 120 and two functions remain within the base floors.
+- Cleaner: the two no-parent branches (old lines 139 and 165) were remnants of
+  the removed optional lookup. `Some(invocation.budget)` can never be None;
+  remove those fallbacks. The typed charge loop now iterates values directly,
+  removing the artificial out-of-range indexed element path while retaining
+  the issued-ledger refusal for forged/reused/absent charges. Live uncovered
+  paths include selecting the smaller stage allowance, unchanged empty text,
+  and a non-callable unknown step (old lines 166, 204 and 212). Tests assert
+  exact allowance, output and cumulative ledger values, zero charging for empty
+  input, and an unknown-step refusal with closed work. Existing source-overflow,
+  rollback, cancellation, forged/reused charge and owned-input controls pass.
+- Reference patterns: its required installation budget and maximum guard
+  survive on main byte-for-byte; this is not an A2 optional lookup. The earlier
+  blanket fixture removal lost its live invalid-policy branch (line 149).
+  Restore the refusal with a larger enclosing budget and prove no units were
+  charged. Exercise successful configuration copying and assert independent
+  pattern bytes and name-array ownership. No production edit is made to this
+  file. Remaining uncovered helpers are within its unchanged base floors.
+- Tokenizer: the old tight-budget control now encounters the invocation ledger
+  before its own produced-text ceiling. Keep the stage ceiling tight and bind
+  a larger invocation; assert the produced-text refusal and acknowledged native
+  retirement. Add source and ordering refusals that assert the exact limit and
+  zero children. The duplicate selected-count guard at old line 187 cannot
+  refuse: ordering bounds every set insertion/copy with `patternEvaluations`.
+  The missing-ID configuration mapper at old line 200 is also unreachable:
+  the schema checks ordering/recipe ID equality, duplicate IDs are refused,
+  and both private collections are built from the same owned installed rows.
+  Remove the duplicate ceiling and make a missing private ID an invariant
+  defect instead of a caller-configuration refusal. This rationale is in the
+  code commit and the decision file; no floor was lowered to hide it.
+
+Decision: `goals/citation-engine-install-once/decisions/2026-11-13-remove-unreachable-cleaner-and-tokenizer-fallback-paths.md`.
+All public signatures and extraction output remain unchanged. The process-boundary
+reservation ruling and the recorded request-Scope difference remain as before.
+
+### Focused checks
+
+- Engine coverage: `test/CitationEngineLayer.test.ts`, 15 tests pass (296.87 s).
+- Cleaner coverage: `test/CitationCleanerPipeline.test.ts`,
+  `test/CitationCleanerPipelineCoverage.test.ts`,
+  `test/CitationCleanerParentBudget.test.ts`, and
+  `test/CitationCleanerOwnedInput.test.ts`, 32 tests pass (6.20 s).
+- Reference coverage: `test/CitationReferencePatterns.test.ts` and
+  `test/CitationReferencePatternsCoverage.test.ts`, both pass.
+- Tokenizer coverage: `test/CitationTokenizer.test.ts`, all nine tests pass.
+- Every touched test file also passes individually: engine 15, tokenizer nine,
+  parent budget five, cleaner coverage six, reference coverage four.
+- `test/CitationCanonicalFullSpan.test.ts`: all 11 pass (104.69 s).
+  The fixture and its frozen count table are unchanged from `027869aabcb`:
+  Bun ten-call totals remain 140 metadata installs, 80 detaches, ten tokenizer
+  builds, 56 regex constructions, 291 evaluations and 291 processes; Node
+  call one matches Bun call one. No A1 count moved.
+- `bun run beep quality package-verify @beep/law-practice-server --quick`:
+  lint and source/test checks pass. The full audit was not run locally because
+  it runs the whole law-practice suite, contrary to the file-by-file rule on
+  this shared host. Hosted CI remains the full-audit proof.
+- `bun run docgen:local`: pass for all three affected packages.
+- `bun run beep skills update` and `--check`: current; the existing skill-length
+  advisory is unchanged. Policy fingerprint: current.
+- `bunx biome check` covers every changed source, test and goal file;
+  `git diff --check` is clean. The coverage baseline has no delta this round.
+- `bun run beep knowledge semantic-delta`: zero introduced, zero resolved,
+  194 unchanged findings. No new test mentions a goal-data path, so the
+  goal-data consumer census test is not implicated.
+
+The historical Final-check receipt belongs to `027869aabcb`, not this repair.
+A new receipt is needed for the new head. This wave does not declare final,
+start a watch, mark ready or merge. The existing PR body is replaced through
+Yeet, preserving its provenance footer; publication is one push.
