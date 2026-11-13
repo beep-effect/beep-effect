@@ -132,6 +132,23 @@ Higher sources outrank lower sources when they conflict.
 | 2026-08-23 | Which `bun run beep` wrappers are dropped? | The CLI-internal spawn sites: `bunRunStep`/`repoCliStep` in `Tasks.ts` (victim steps) and the separate `bunRunStep` helper in `CiLane.ts` (the middle lane pair). `check.yml`'s `run_lane` invocation stays. | Six bun processes per hung lane become four entirely within CLI-owned code; check.yml keeps its minimal-touch constraint (artifact step only). Rejected: full-chain drop (extra check.yml ownership), victim-path-only (leaves the orchestrator pair's wrapper in the suspect set). (File mapping corrected in review: the two `bunRunStep` helpers live in different files.) |
 | 2026-08-23 | What replaces the canary after PR #769 bumped Bun to 1.4.0 ungated? | Post-bump soak observation: no shadow workflow; main's required-lane runs are the soak, recorded over 7 days AND ≥30 Lint Policy runs. | The gate's premise (repo pinned 1.3.14) was invalidated the same day by the routine deps refresh; observation preserves the gate's confidence intent at zero new infrastructure, and the watchdog — not the bump — is the protection. Rejected: dropping the soak entirely (loses the attribution evidence), inverse 1.3.14 canary (real EC2 cost for marginal science). |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug ci-step-watchdog`; add a `kind: decision` file there, never edit this block._
+
+### Paused by operator ruling (finish board, 2026-11-13): It still has value against the bun busy-spin hangs, but it is not urgent while the timeout caps from ci-lane-economics land, and nothing is in flight, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`. It was already paused; the ruling confirms the pause and records why.
+
+Triage rationale: It still has value against the bun busy-spin hangs, but it is not urgent while the timeout caps from ci-lane-economics land, and nothing is in flight.
+
+No lane is working on it. Resume with `bun run beep goals set-status ci-step-watchdog active` when it is picked up.
+
+Lane chore/finish-board-pause-b1
+
+Reverse: goals set-status ci-step-watchdog active when it is picked up
+
+<!-- beep:decisions:end -->
+
 ## Acceptance criteria
 
 - [ ] W1 emits all required lifecycle markers and independently exposes

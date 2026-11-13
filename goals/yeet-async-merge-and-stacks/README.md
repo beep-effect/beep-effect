@@ -31,9 +31,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Slices A (the async merge port) and B (proof that survives an unchanged
-rewrite) are merged. Slice C (two-layer stacks) is next, then the measured
-pilot, slice D. The four slices are listed in [`PLAN.md`](./PLAN.md).
+Slices A (the async merge port), B (proof that survives an unchanged
+rewrite) and C (two-layer stacks through Yeet) are done. Slice D, the
+measured two-week pilot, is next: its record opens on the first routine
+stack. The four slices are listed in [`PLAN.md`](./PLAN.md).
 
 ## Latest Evidence
 
@@ -43,6 +44,10 @@ pilot, slice D. The four slices are listed in [`PLAN.md`](./PLAN.md).
   (merges observed on the async path; legacy call deleted).
 - Slice B: the 2026-11-12 decisions under [`decisions/`](./decisions/),
   merged in #3130.
+- Slice C: [`history/2026-11-13-slice-c-stack-landed.md`](./history/2026-11-13-slice-c-stack-landed.md)
+  (stack #3190: #3188 and #3189 published, readied without a push, merged
+  from the top in one push and retired through Yeet) and the P0 probes in
+  [`research/stack-p0-probes-2026-11.md`](./research/stack-p0-probes-2026-11.md).
 - The evidence this goal starts from is the stack test record,
   [`explorations/stacked-pr-adoption/research/stack-test-2026-11.md`](../../explorations/stacked-pr-adoption/research/stack-test-2026-11.md).
 

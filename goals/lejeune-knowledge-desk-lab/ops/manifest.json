@@ -6,7 +6,7 @@
     "title": "LeJeune Knowledge Desk Lab",
     "status": "paused",
     "created": "2026-08-26",
-    "updated": "2026-08-26",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/lejeune-knowledge-desk-lab",
@@ -86,5 +86,5 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Paused at scaffold (authored-but-not-started): graduated from explorations/lejeune-bolt-agentic-demo on 2026-08-26; day 1 of the five-day walking-skeleton schedule starts on Benjamin's signal."
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): It waits on an explicit operator start signal and depends on the demo corpus goal finishing first. Resume with `bun run beep goals set-status lejeune-knowledge-desk-lab active` when it is picked up. Before the ruling: Paused at scaffold (authored-but-not-started): graduated from explorations/lejeune-bolt-agentic-demo on 2026-08-26; day 1 of the five-day walking-skeleton schedule starts on Benjamin's signal."
 }

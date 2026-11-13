@@ -5,7 +5,7 @@
     "title": "CI Step Watchdog",
     "status": "paused",
     "created": "2026-08-23",
-    "updated": "2026-08-23",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/ci-step-watchdog",
@@ -113,5 +113,6 @@
   "researchReferences": [
     "../../explorations/ci-hang-observability/RESEARCH.md",
     "../../explorations/ci-hang-observability/research/SOURCES.md"
-  ]
+  ],
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): It still has value against the bun busy-spin hangs, but it is not urgent while the timeout caps from ci-lane-economics land, and nothing is in flight. Resume with `bun run beep goals set-status ci-step-watchdog active` when it is picked up."
 }

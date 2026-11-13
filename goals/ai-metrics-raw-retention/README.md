@@ -2,7 +2,11 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `paused`
+
+**Paused by operator ruling (finish board, 2026-11-13).** It is low urgency, blocked on a dependency, and has not started. No lane is working on it; resume with `bun run beep goals set-status ai-metrics-raw-retention active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
+
+Its dependency goals/ops-seat-timers (the `fleet/ops-seat` provider) was closed by the same ruling; resuming this packet means re-opening or re-graduating that work first.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

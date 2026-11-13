@@ -147,6 +147,23 @@ Binding detail remains in the exploration; these rows identify what this goal ex
 | [Governance and QA](../../explorations/lejeune-bolt-agentic-demo/DECISIONS.md#2026-08-26--governance-tax-and-recorded-qa) | Reserve half a day and record the day-5 rehearsal. |
 | [Disposition date](../../explorations/lejeune-bolt-agentic-demo/DECISIONS.md#2026-08-25--what-deletion-date-governs-the-lab-and-corpus) | Delete or explicitly promote the lab and mutable corpus on 2026-09-30. |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug lejeune-knowledge-desk-lab`; add a `kind: decision` file there, never edit this block._
+
+### Paused by operator ruling (finish board, 2026-11-13): It waits on an explicit operator start signal and depends on the demo corpus goal finishing first, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`. It was already paused; the ruling confirms the pause and records why.
+
+Triage rationale: It waits on an explicit operator start signal and depends on the demo corpus goal finishing first.
+
+No lane is working on it. Resume with `bun run beep goals set-status lejeune-knowledge-desk-lab active` when it is picked up.
+
+Lane chore/finish-board-pause-b2
+
+Reverse: goals set-status lejeune-knowledge-desk-lab active when it is picked up
+
+<!-- beep:decisions:end -->
+
 ## Acceptance Criteria
 
 - [ ] The lab was created through `bun run beep create-package`, passes the Labs lane, obeys

@@ -98,6 +98,23 @@ No actual USPTO filing, legal advice, automated Rule56/materiality judgment, pro
 | D2: three distinct outcomes | Existing correspondence and candor primitives do not prove proposition support or production authority. | Change only after a reviewed consumer contract demonstrates equivalent distinctions. |
 | D3: P8 conditional | In-process synthetic fixture does not use installed KG; product handoff still does. | Add the dependency before any installed lookup or production claim. |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug oa-evidence-consumer-conformance`; add a `kind: decision` file there, never edit this block._
+
+### Paused by operator ruling (finish board, 2026-11-13): It is a scoped child of agentic-professional-runtime and should be sequenced by that parent, not started now, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`. It was already paused; the ruling confirms the pause and records why.
+
+Triage rationale: It is a scoped child of agentic-professional-runtime and should be sequenced by that parent, not started now.
+
+No lane is working on it. Resume with `bun run beep goals set-status oa-evidence-consumer-conformance active` when it is picked up.
+
+Lane chore/finish-board-pause-b2
+
+Reverse: goals set-status oa-evidence-consumer-conformance active when it is picked up
+
+<!-- beep:decisions:end -->
+
 ## Completion and evidence
 
 All eight positive/negative families must exercise the named consumer seam and

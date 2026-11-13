@@ -40,7 +40,9 @@ import {
   YeetAttemptJournalEvent,
   YeetAttemptStarted,
   YeetEnsuredPullRequest,
+  YeetPublishStackLayer,
   YeetRunPlanModeOptions,
+  YeetStackPublishDecision,
   YeetVerdictJson,
 } from "@beep/repo-cli/test/Yeet";
 import { GitObjectId } from "@beep/schema/Conformance";
@@ -71,8 +73,13 @@ import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
-import { offlineGithubLayer } from "./support/YeetGithub.ts";
-import type { YeetExecutedStep, YeetPrBodyRequest, YeetVerdictExtrasForTesting } from "@beep/repo-cli/test/Yeet";
+import { githubCallLine, offlineGithubLayer, recordedGithub } from "./support/YeetGithub.ts";
+import type {
+  YeetExecutedStep,
+  YeetPrBodyRequest,
+  YeetStackLayerDecision,
+  YeetVerdictExtrasForTesting,
+} from "@beep/repo-cli/test/Yeet";
 
 const runYeetCommand = Command.runWith(yeetCommand, { version: "0.0.0" });
 
@@ -1399,6 +1406,76 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
       expect(hosted?.hostedProof).toBe(true);
       assertNone(O.flatMap(O.fromUndefinedOr(fallback), (request) => request.summary));
       expect(fallback?.hostedProof).toBe(false);
+    })
+  );
+
+  it.effect(
+    "hands a stack layer to the pull-request create and links it only while it is not stacked",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-stack-link-" });
+      const fixture = yield* tailFixture(root, "");
+      const handed = yield* Ref.make<ReadonlyArray<O.Option<YeetStackLayerDecision>>>([]);
+      const ensurePullRequest = (
+        _context: RepoRunContext,
+        _steps: ReadonlyArray<RepoPlanStep>,
+        _recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+        _message?: O.Option<string>,
+        _bodyRequest?: YeetPrBodyRequest,
+        stackLayer?: O.Option<YeetStackLayerDecision>
+      ) => Ref.update(handed, A.append(stackLayer ?? O.none())).pipe(Effect.andThen(fixture.ensurePullRequest()));
+      const github = recordedGithub((call) =>
+        call.method === "POST" && call.path === "{repo}/stacks"
+          ? {
+              status: 201,
+              body: {
+                number: 1430,
+                open: true,
+                base: { ref: "main" },
+                pull_requests: [
+                  { number: 1426, state: "open", draft: true, merged_at: null, head: { ref: "feat/parent", sha: "a" } },
+                  {
+                    number: 1427,
+                    state: "open",
+                    draft: true,
+                    merged_at: null,
+                    head: { ref: "feat/push-first", sha: "b" },
+                  },
+                ],
+              },
+            }
+          : undefined
+      );
+      const layer = (stackNumber: O.Option<number>): O.Option<YeetStackLayerDecision> =>
+        O.some(
+          YeetStackPublishDecision.cases.Layer.make({
+            parentNumber: 1426,
+            parentHeadRef: "feat/parent",
+            parentHeadSha: Str.repeat(40)("a"),
+            trunk: "main",
+            stackNumber,
+            parentMoved: false,
+          })
+        );
+      const unlinked = layer(O.none());
+      const linked = layer(O.some(1430));
+      const publishAs = (stackLayer: O.Option<YeetStackLayerDecision>) =>
+        finishPublishWithPullRequestForTesting(
+          fixture.plan,
+          defaultYeetRunOptions({ message: "feat(repo-cli): the layer", pr: true }),
+          [fixture.submit],
+          fixture.recorder,
+          fixture.extras,
+          false,
+          { ensurePullRequest, listJobs: () => Effect.succeed([running]) }
+        ).pipe(Effect.provideService(YeetPublishStackLayer, stackLayer), github.provide);
+      yield* publishAs(unlinked);
+      yield* publishAs(linked);
+      const layers = yield* Ref.get(handed);
+      expect(layers).toEqual([unlinked, linked]);
+      expect(A.map(github.calls, (call) => [githubCallLine(call), call.body])).toEqual([
+        ["POST {repo}/stacks", { pull_requests: [1426, 1427] }],
+      ]);
     })
   );
 
