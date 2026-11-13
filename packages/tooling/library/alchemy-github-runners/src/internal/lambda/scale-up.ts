@@ -11,7 +11,7 @@ import * as S from "effect/Schema";
 import { ActionRequestMessage, QueuedActionRequest } from "../../RunnerMessages.models.ts";
 import { PoolRuntimeConfig } from "../../RunnerRuntime.models.ts";
 import { handleScaleUp } from "../../ScaleUp.program.ts";
-import { fleetLive, lambdaHandler, SqsEvent } from "./Runtime.ts";
+import { defineLambda, fleetLive, lambdaHandler, SqsEvent } from "./Runtime.ts";
 
 const decodeEvent = S.decodeUnknownEffect(SqsEvent);
 const decodeMessage = S.decodeOption(S.fromJsonString(ActionRequestMessage));
@@ -26,7 +26,7 @@ const failures = (ids: ReadonlyArray<string>) => ({
  *
  * @internal
  */
-export const handler = lambdaHandler({
+export const definition = defineLambda({
   config: PoolRuntimeConfig,
   layer: fleetLive,
   run: Effect.fn("ScaleUpLambda.run")(function* (config, raw) {
@@ -54,3 +54,10 @@ export const handler = lambdaHandler({
       })
     ),
 });
+
+/**
+ * The Lambda entry point.
+ *
+ * @internal
+ */
+export const handler = lambdaHandler(definition);

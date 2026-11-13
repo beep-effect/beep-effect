@@ -15,9 +15,11 @@ Status: `in-progress`
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 Implementation slices P0 #2925, P1 #2959 (fix #2972) and P2 #3226 merged. The
-2026-11-13 dankserver acceptance run (#3267) failed SPEC criterion 3 and left forced-run
-and admission evidence incomplete. This lane fixes findings 1–4 and 6 and documents 5,
-7 and 8. Repeat acceptance on dankserver before P4's final PR and reflection.
+2026-11-13 dankserver acceptance run (#3267) failed SPEC criterion 3; #3276 fixed its
+findings and the repeat run of 2026-11-13 (#3277) closed findings 1, 2, 4 and 6. This lane
+settles criterion 2b by measurement (decision 2026-11-13: a forced gate on a worker
+completes serially or refuses with its measured reason). Remaining before P4's final PR
+and reflection: one short dankserver run showing a forced gate (coverage over a small package) completing with forceLocal: true on its receipt, and the lane's own draft-to-ready flip through yeet ready.
 
 ## Closeout Checklist
 

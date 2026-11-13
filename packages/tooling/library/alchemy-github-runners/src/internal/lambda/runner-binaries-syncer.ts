@@ -7,14 +7,14 @@
 import * as Effect from "effect/Effect";
 import { handleRunnerBinariesSync } from "../../RunnerBinariesSyncer.program.ts";
 import { SyncerRuntimeConfig } from "../../RunnerRuntime.models.ts";
-import { awsLive, lambdaHandler } from "./Runtime.ts";
+import { awsLive, defineLambda, lambdaHandler } from "./Runtime.ts";
 
 /**
  * Lambda handler: refresh the S3 mirror of the runner tarball.
  *
  * @internal
  */
-export const handler = lambdaHandler({
+export const definition = defineLambda({
   config: SyncerRuntimeConfig,
   layer: () => awsLive,
   run: (config) =>
@@ -24,3 +24,10 @@ export const handler = lambdaHandler({
     ),
   fallback: (): void => undefined,
 });
+
+/**
+ * The Lambda entry point.
+ *
+ * @internal
+ */
+export const handler = lambdaHandler(definition);

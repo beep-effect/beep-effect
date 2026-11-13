@@ -17,7 +17,7 @@ import { WebhookRuntimeConfig } from "../../RunnerRuntime.models.ts";
 import { SsmStore } from "../../SsmStore.service.ts";
 import { handleWebhook } from "../../Webhook.program.ts";
 import { WebhookRequest } from "../../WorkflowJob.models.ts";
-import { awsLive, FunctionUrlEvent, lambdaHandler } from "./Runtime.ts";
+import { awsLive, defineLambda, FunctionUrlEvent, lambdaHandler } from "./Runtime.ts";
 
 const decodeEvent = S.decodeUnknownEffect(FunctionUrlEvent);
 
@@ -26,7 +26,7 @@ const decodeEvent = S.decodeUnknownEffect(FunctionUrlEvent);
  *
  * @internal
  */
-export const handler = lambdaHandler({
+export const definition = defineLambda({
   config: WebhookRuntimeConfig,
   layer: () => Layer.mergeAll(awsLive, Layer.empty),
   run: Effect.fn("WebhookLambda.run")(function* (config, raw) {
@@ -50,3 +50,10 @@ export const handler = lambdaHandler({
   }),
   fallback: () => ({ statusCode: 500, body: "Check the Lambda logs for the error details." }),
 });
+
+/**
+ * The Lambda entry point.
+ *
+ * @internal
+ */
+export const handler = lambdaHandler(definition);

@@ -2,6 +2,8 @@
  * The termination watcher Lambda's program: deregister a runner whose
  * instance is being reclaimed or stopped.
  *
+ * **Details**
+ *
  * Ported from `lambdas/functions/termination-watcher/src/{termination,termination-warning,deregister}.ts`
  * of github-aws-runners/terraform-aws-github-runner v7.10.1 (MIT); see the
  * package README for the license notice. Metrics are not ported.

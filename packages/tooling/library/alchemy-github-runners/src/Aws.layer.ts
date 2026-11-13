@@ -2,6 +2,8 @@
  * Live AWS layers over `@distilled.cloud/aws`: EC2 fleet, SSM Parameter Store,
  * SQS and the S3 runner-binaries mirror.
  *
+ * **Details**
+ *
  * Request shapes ported from `lambdas/functions/control-plane/src/aws/ec2-runners.ts`
  * and `lambdas/libs/aws-ssm-util` of github-aws-runners/terraform-aws-github-runner
  * v7.10.1 (MIT); see the package README for the license notice.

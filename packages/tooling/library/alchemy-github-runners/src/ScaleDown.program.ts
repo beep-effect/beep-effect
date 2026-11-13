@@ -2,6 +2,8 @@
  * The scale-down Lambda's program: sweep orphans, then deregister and
  * terminate idle runners past their minimum running time.
  *
+ * **Details**
+ *
  * Ported from `lambdas/functions/control-plane/src/scale-runners/scale-down.ts`
  * of github-aws-runners/terraform-aws-github-runner v7.10.1 (MIT); see the
  * package README for the license notice.
@@ -37,7 +39,7 @@ const minuteMillis = 60_000;
 
 const isRunnerType = S.is(RunnerType);
 
-/** Whether `minutes` have passed since launch; a runner without a launch time counts as launched now. */
+// Whether `minutes` have passed since launch; a runner without a launch time counts as launched now.
 const minutesElapsed = (input: {
   readonly launchTime: O.Option<number>;
   readonly minutes: number;
@@ -233,8 +235,9 @@ export const handleScaleDown = Effect.fn("ScaleDown.handle")(function* (config: 
   const groups = A.groupBy(runners, (runner) => O.getOrElse(runner.owner, () => ""));
 
   const idleBudget = yield* Ref.make(config.pool.idleCount);
-  const decisions = yield* Effect.forEach(R.values(groups), (group) =>
-    Effect.gen(function* () {
+  const decisions = yield* Effect.forEach(
+    R.values(groups),
+    Effect.fnUntraced(function* (group) {
       const owner = O.getOrThrow(ownerOfRunner(group[0]));
       const registry = yield* installationTokenFor(owner, 0).pipe(
         Effect.flatMap((token) => github.listRunners(token, owner).pipe(Effect.map((list) => ({ token, list })))),

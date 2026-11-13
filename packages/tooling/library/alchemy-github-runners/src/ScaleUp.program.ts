@@ -2,6 +2,8 @@
  * The scale-up Lambda's program: turn a batch of build-queue messages into
  * Spot runners, within the pool's VM cap.
  *
+ * **Details**
+ *
  * Ported from `lambdas/functions/control-plane/src/scale-runners/{scale-up,ec2,github-runner,job-retry}.ts`
  * and `src/aws/ec2-runners.ts` of github-aws-runners/terraform-aws-github-runner
  * v7.10.1 (MIT); see the package README for the license notice. Not ported:

@@ -209,8 +209,9 @@ export const gateRouteFor: {
  * **Details**
  *
  * `Serial` runs the gate one task at a time (concurrency 1). `Refused` keeps
- * it deferred to hosted CI because one of its processes alone outgrows the
- * worker budget; the reason names the measurement.
+ * it deferred to hosted CI because its measured run did not complete inside
+ * the worker slice, or because it has no measured worker budget; the reason
+ * names the measurement and where it is recorded.
  *
  * **Example** (Build a refusal)
  *
@@ -245,31 +246,30 @@ const forcedSerial = WorkerForcedRoute.cases.Serial.make({});
 const forcedRefused = (reason: string): WorkerForcedRoute => WorkerForcedRoute.cases.Refused.make({ reason });
 
 // Measured on dankserver (15 GiB host, 7 GiB worker slice) and recorded in
-// goals/compute-profile-gate-routing/research/2026-11-13-worker-host-acceptance.md
-// and the agent-pools runbook. The worker bar is 1.5 GB for any one process
-// (SPEC criterion 3); a gate whose single process already outgrows it cannot
-// be made to fit by running fewer of them at once.
+// goals/compute-profile-gate-routing/research/2026-11-13-worker-host-acceptance.md,
+// its -repeat.md sibling and the 2026-11-08 repo-sanity decision. Only coverage, scoped to the
+// diff's own packages, stays forceable; a gate whose measured run did not complete inside the slice
+// refuses, and a gate without a measurement refuses as having no measured worker budget.
+const FIRST_NOTE = "2026-11-13-worker-host-acceptance.md";
+const REPEAT_NOTE = "2026-11-13-worker-host-acceptance-repeat.md";
+const SCHEMA_SCAN_DECISION = "decision 2026-11-08 worker-final-check-runs-only-changeset-status-for-repo-sanity";
+const NO_MEASURED_BUDGET = "no measured worker budget on dankserver";
+const schemaScanReason = `its whole-repo schema catalog scan held 5.2 GB of the 7 GiB worker slice for 25 minutes (${SCHEMA_SCAN_DECISION})`;
+const testTypeCheckReason = `the @beep/repo-cli test type-check's tsc held 2.59 GB for one process and gave no result in 30 minutes under a 3 GiB cap (${FIRST_NOTE})`;
+
 const workerForcedRouteEntries: ReadonlyArray<readonly [GateRouteId, WorkerForcedRoute]> = [
-  [
-    "cheap-gates",
-    forcedRefused("no worker-slice budget is proven for its whole-repo scans; leave this gate to hosted CI"),
-  ],
-  [
-    "lint-policy",
-    forcedRefused(
-      "it owns the test-file type check, whose tsc held 2.59 GB for @beep/repo-cli on dankserver and gave no result in 30 minutes under a 3 GiB cap"
-    ),
-  ],
+  ["cheap-gates", forcedRefused(schemaScanReason)],
+  ["lint-policy", forcedRefused(`it owns the test-file type check: ${testTypeCheckReason}`)],
   // Local on worker as its changeset status check; --force-local does not restore the full lane.
+  ["repo-sanity", forcedRefused(`only its changeset status check runs here; ${schemaScanReason}`)],
+  ["check", forcedRefused(testTypeCheckReason)],
+  ["docgen", forcedRefused(NO_MEASURED_BUDGET)],
   [
-    "repo-sanity",
+    "fallow",
     forcedRefused(
-      "no worker-slice budget is proven for its full catalog lane; only the changeset status check runs here"
+      `run serially, its first sub-lane fallow:audit:check (204 packages) held a 2 GB-capped scope at its ceiling (2.15 GB aggregate) until slice pressure passed 15 at 523 s (${REPEAT_NOTE}); unserialized it reached 3.06 GB and gave no result in 29.5 minutes (${FIRST_NOTE})`
     ),
   ],
-  ["check", forcedRefused("one package's tsgo check held 4.07 GB on dankserver, above the 1.5 GB worker bar")],
-  ["docgen", forcedRefused("it builds the same TypeScript programs as check, whose tsgo held 4.07 GB on dankserver")],
-  ["fallow", forcedSerial],
   ["coverage", forcedSerial],
 ];
 
@@ -278,11 +278,12 @@ const workerForcedRouteEntries: ReadonlyArray<readonly [GateRouteId, WorkerForce
  *
  * **Details**
  *
- * `fallow` (largest process 398 MB) and `coverage` (one Vitest file run
- * 684 MB) run one task at a time; `cheap-gates`, `lint-policy`, `check` and
- * `docgen` are refused because one of their processes alone exceeds the
- * 1.5 GB worker bar. `repo-sanity` keeps its changeset status narrowing: the
- * full lane's catalog scan is refused. Other gates have no row.
+ * Only `coverage` runs, one task at a time, and `yeet final-check` still
+ * refuses it when its affected plan is not a selected set of packages.
+ * `cheap-gates`, `lint-policy`, `check` and `fallow` are refused with the
+ * figure measured on dankserver; `docgen` has no measured worker budget.
+ * `repo-sanity` keeps its changeset status narrowing: the full lane's
+ * catalog scan is refused. Other gates have no row.
  *
  * **Example** (Read the fallow route)
  *
@@ -291,7 +292,7 @@ const workerForcedRouteEntries: ReadonlyArray<readonly [GateRouteId, WorkerForce
  * import * as HashMap from "effect/HashMap"
  * import * as O from "effect/Option"
  *
- * console.log(O.map(HashMap.get(workerForcedRouteTable, "fallow"), (route) => route._tag)) // Some("Serial")
+ * console.log(O.map(HashMap.get(workerForcedRouteTable, "fallow"), (route) => route._tag)) // Some("Refused")
  * ```
  *
  * @category models
@@ -303,14 +304,14 @@ export const workerForcedRouteTable: HashMap.HashMap<GateRouteId, WorkerForcedRo
 /**
  * Why `--force-local` refuses a gate on the `worker` profile, if it does.
  *
- * **Example** (Refuse check, run fallow)
+ * **Example** (Refuse check, run coverage)
  *
  * ```ts
  * import { workerForcedRefusal } from "@beep/repo-cli/test/RepoRun"
  * import * as O from "effect/Option"
  *
  * console.log(O.isSome(workerForcedRefusal("check"))) // true
- * console.log(O.isNone(workerForcedRefusal("fallow"))) // true
+ * console.log(O.isNone(workerForcedRefusal("coverage"))) // true
  * ```
  *
  * @param gate - The gate family to route.

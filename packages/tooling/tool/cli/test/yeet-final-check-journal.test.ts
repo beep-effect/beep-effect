@@ -254,6 +254,8 @@ const SKIP_SUBPROCESS_GATES = A.map(
 
 const commitFile = Effect.fnUntraced(function* (root: string, file: string, content: string) {
   const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs.makeDirectory(path.dirname(`${root}/${file}`), { recursive: true });
   yield* fs.writeFileString(`${root}/${file}`, content);
   yield* git(root, ["add", file]);
   yield* git(root, ["commit", "-q", "-m", `edit ${file}`]);
@@ -269,6 +271,35 @@ const scratchRepository = Effect.fnUntraced(function* () {
   yield* commitFile(root, "README.md", "base\n");
   yield* commitFile(root, "README.md", "head\n");
   return root;
+});
+
+// A one-package workspace whose head commit edits that package's source: the affected coverage
+// plan selects exactly @beep/covered, and the root `coverage` script stands in for the real run.
+const coverageWorkspace = Effect.fnUntraced(function* () {
+  const root = yield* scratchRepository();
+  yield* commitFile(
+    root,
+    "package.json",
+    '{"name":"@beep/root","private":true,"workspaces":["packages/*"],"scripts":{"beep":"echo","coverage":"echo"}}\n'
+  );
+  yield* commitFile(
+    root,
+    "packages/covered/package.json",
+    '{"name":"@beep/covered","private":true,"scripts":{"coverage":"echo"}}\n'
+  );
+  yield* commitFile(root, "packages/covered/src/index.ts", "export const covered = 1;\n");
+  return root;
+});
+
+const admissionRoutes = Effect.fnUntraced(function* (runtimeRoot: RuntimeRootChoice) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const admission = yield* admissionJournalPath(admissionRootFor(path, runtimeRoot));
+  const text = yield* fs.readFileString(admission);
+  const rows = yield* Effect.forEach(A.filter(Str.split(text, "\n"), Str.isNonEmpty), (line) =>
+    decodeAdmissionJournalEvent(line)
+  );
+  return A.filter(rows, AdmissionJournalEvent.guards["admission-routed"]);
 });
 
 const journalEvents = Effect.fnUntraced(function* (root: string) {
@@ -490,28 +521,35 @@ it.layer(JournalTestLayer, { timeout: "60 seconds" })("final-check attempt journ
     })
   );
 
-  // goals/compute-profile-gate-routing P3 (2026-11-13 dankserver acceptance findings 3 and 4): a
-  // forced gate on a worker runs one task at a time and its receipt records forceLocal; a gate the
-  // worker cannot hold stays with hosted CI; and every routing decision leaves an admission row,
-  // because a worker never takes a ticket.
+  // goals/compute-profile-gate-routing (2026-11-13 decision "A forced gate on a worker completes
+  // serially inside its measured budget or refuses with the reason"): forced coverage over the
+  // diff's own package runs one task at a time and its receipt records forceLocal; a gate the worker
+  // cannot hold stays with hosted CI; and every routing decision leaves an admission row, because a
+  // worker never takes a ticket.
   it.effect(
-    "forces fallow serially on a worker, refuses check, and journals each routing decision",
+    "forces coverage serially on a worker, refuses check, and journals each routing decision",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const runtimeDir = yield* fs.makeTempDirectoryScoped();
       const runtimeRoot = RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir });
-      const root = yield* scratchRepository();
-      yield* commitFile(root, "package.json", '{"scripts":{"beep":"echo"}}\n');
+      const root = yield* coverageWorkspace();
       const head = yield* git(root, ["rev-parse", "HEAD"]);
 
       // docgen carries an operator skip: the operator, not the profile, routed it, so it has no row.
-      const options = { gates: ["fallow", "check", "docgen"], skip: ["docgen=hosted CI proves it"], forceLocal: true };
+      const options = {
+        gates: ["coverage", "check", "docgen"],
+        skip: ["docgen=hosted CI proves it"],
+        forceLocal: true,
+      };
       const planned = yield* finalCheck({ ...options, dryRun: true }, WORKER).pipe(
         provideRuntimeRootForTesting(runtimeRoot)
       );
       assertNone(planned);
       const forced = yield* finalCheck(options, WORKER).pipe(provideRuntimeRootForTesting(runtimeRoot));
       const receipt = O.getOrThrow(forced);
+      const probeLines = yield* TestConsole.logLines;
+      const unread = A.filter(A.map(probeLines, String), Str.includes("scope probe unavailable"));
+      expect(A.filter(unread, Str.includes(root))).toEqual([]);
       expect([receipt.computeProfile, receipt.forceLocal, receipt.verdict, receipt.complete]).toEqual([
         "worker",
         true,
@@ -521,11 +559,10 @@ it.layer(JournalTestLayer, { timeout: "60 seconds" })("final-check attempt journ
       expect(A.map(receipt.steps, (row) => [row.gate, row.status, row.reason])).toEqual([
         ["check", "skipped", "compute-profile=worker"],
         ["docgen", "skipped", "hosted CI proves it"],
-        ["fallow", "passed", undefined],
+        ["coverage", "passed", undefined],
       ]);
-      const fallow = O.getOrThrow(A.findFirst(receipt.steps, (row) => row.gate === "fallow"));
-      expect(fallow.command).toContain("bun run beep ci lane fallow --base");
-      expect(Str.endsWith(" --validate-envelopes --serial")(fallow.command)).toBe(true);
+      const coverage = O.getOrThrow(A.findFirst(receipt.steps, (row) => row.gate === "coverage"));
+      expect(Str.endsWith("bun run coverage --affected --concurrency=1")(coverage.command)).toBe(true);
       const onHead = yield* readFinalCheckReceipt(root, head);
       assertSome(
         O.map(onHead, (written) => written.forceLocal),
@@ -533,20 +570,20 @@ it.layer(JournalTestLayer, { timeout: "60 seconds" })("final-check attempt journ
       );
       const logged = yield* TestConsole.logLines;
       const logLines = A.map(logged, String);
+      const runsCoverage =
+        "[yeet] final-check --force-local on the worker profile runs coverage one task at a time (concurrency 1)";
+      const measures =
+        "[yeet] final-check --force-local measures coverage for @beep/covered (this diff's affected plan)";
       expect(A.filter(logLines, Str.startsWith("[yeet] final-check --force-local"))).toEqual([
-        expect.stringContaining("refused check on the worker profile: one package's tsgo check held 4.07 GB"),
-        "[yeet] final-check --force-local on the worker profile runs fallow one task at a time (concurrency 1)",
+        expect.stringContaining("refused check on the worker profile: the @beep/repo-cli test type-check"),
+        runsCoverage,
+        measures,
         expect.stringContaining("refused check on the worker profile"),
-        "[yeet] final-check --force-local on the worker profile runs fallow one task at a time (concurrency 1)",
+        runsCoverage,
+        measures,
       ]);
 
-      const path = yield* Path.Path;
-      const admission = yield* admissionJournalPath(admissionRootFor(path, runtimeRoot));
-      const text = yield* fs.readFileString(admission);
-      const rows = yield* Effect.forEach(A.filter(Str.split(text, "\n"), Str.isNonEmpty), (line) =>
-        decodeAdmissionJournalEvent(line)
-      );
-      const routed = A.filter(rows, AdmissionJournalEvent.guards["admission-routed"]);
+      const routed = yield* admissionRoutes(runtimeRoot);
       expect(
         A.map(routed, (row) => [
           O.getOrUndefined(row.gateRoute),
@@ -559,7 +596,7 @@ it.layer(JournalTestLayer, { timeout: "60 seconds" })("final-check attempt journ
         ])
       ).toEqual([
         ["check", "refusal", "worker", true, "bun run beep yeet final-check", "main", true],
-        ["fallow", "bypass", "worker", true, "bun run beep yeet final-check", "main", true],
+        ["coverage", "bypass", "worker", true, "bun run beep yeet final-check", "main", true],
       ]);
       const events = yield* journalEvents(root);
       // Both rows name the forced run's attempt, beside its attempt-journal row.
@@ -568,6 +605,48 @@ it.layer(JournalTestLayer, { timeout: "60 seconds" })("final-check attempt journ
         A.map(routed, (row) => row.attemptId),
         [attemptId, attemptId]
       );
+    })
+  );
+
+  // The mirror: a forced gate the worker refuses runs nothing. Its refusal is an admission row and a
+  // skipped step, and the receipt does not claim a forced run.
+  it.effect(
+    "refuses forced fallow on a worker with its measured reason and records no forced step",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const runtimeDir = yield* fs.makeTempDirectoryScoped();
+      const runtimeRoot = RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir });
+      const root = yield* coverageWorkspace();
+      const head = yield* git(root, ["rev-parse", "HEAD"]);
+
+      const refused = yield* finalCheck({ gates: ["fallow"], forceLocal: true }, WORKER).pipe(
+        provideRuntimeRootForTesting(runtimeRoot)
+      );
+      const receipt = O.getOrThrow(refused);
+      expect([receipt.computeProfile, receipt.forceLocal, receipt.verdict]).toEqual(["worker", false, "pass"]);
+      expect(A.map(receipt.steps, (row) => [row.gate, row.status, row.reason])).toEqual([
+        ["fallow", "skipped", "compute-profile=worker"],
+      ]);
+      const onHead = yield* readFinalCheckReceipt(root, head);
+      assertSome(
+        O.map(onHead, (written) => written.forceLocal),
+        false
+      );
+      const logged = yield* TestConsole.logLines;
+      const forcedLines = A.filter(
+        A.map(logged, String),
+        Str.startsWith("[yeet] final-check --force-local refused fallow")
+      );
+      expect(forcedLines).toEqual([
+        expect.stringMatching(
+          /^\[yeet\] final-check --force-local refused fallow on the worker profile: .*523 s.*; push with `bun run beep yeet open --body-file <md>` and let hosted CI prove it$/
+        ),
+      ]);
+
+      const routed = yield* admissionRoutes(runtimeRoot);
+      expect(A.map(routed, (row) => [O.getOrUndefined(row.gateRoute), row.outcome, row.forceLocal])).toEqual([
+        ["fallow", "refusal", true],
+      ]);
     })
   );
 });

@@ -1,6 +1,8 @@
 /**
  * The `ghr:*` EC2 tag vocabulary and the runner inventory row.
  *
+ * **Details**
+ *
  * Tag keys are upstream's (github-aws-runners/terraform-aws-github-runner
  * v7.10.1, MIT; see the package README), so tooling written for the upstream
  * module reads these instances unchanged.

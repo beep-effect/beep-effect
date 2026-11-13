@@ -9,7 +9,7 @@ import * as S from "effect/Schema";
 import { handleJobRetry } from "../../JobRetry.program.ts";
 import { ActionRequestMessage } from "../../RunnerMessages.models.ts";
 import { PoolRuntimeConfig } from "../../RunnerRuntime.models.ts";
-import { fleetLive, lambdaHandler, SqsEvent } from "./Runtime.ts";
+import { defineLambda, fleetLive, lambdaHandler, SqsEvent } from "./Runtime.ts";
 
 const decodeEvent = S.decodeUnknownEffect(SqsEvent);
 const decodeMessage = S.decodeEffect(S.fromJsonString(ActionRequestMessage));
@@ -20,7 +20,7 @@ const decodeMessage = S.decodeEffect(S.fromJsonString(ActionRequestMessage));
  *
  * @internal
  */
-export const handler = lambdaHandler({
+export const definition = defineLambda({
   config: PoolRuntimeConfig,
   layer: fleetLive,
   run: Effect.fn("JobRetryLambda.run")(function* (config, raw) {
@@ -37,3 +37,10 @@ export const handler = lambdaHandler({
   }),
   fallback: (): void => undefined,
 });
+
+/**
+ * The Lambda entry point.
+ *
+ * @internal
+ */
+export const handler = lambdaHandler(definition);

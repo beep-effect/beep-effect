@@ -2,6 +2,8 @@
  * The webhook Lambda's program: verify, filter by repository and labels, and
  * enqueue one runner request on the matching pool's build queue.
  *
+ * **Details**
+ *
  * Ported from `lambdas/functions/webhook/src/{webhook,runners}` of
  * github-aws-runners/terraform-aws-github-runner v7.10.1 (MIT); see the
  * package README for the license notice.

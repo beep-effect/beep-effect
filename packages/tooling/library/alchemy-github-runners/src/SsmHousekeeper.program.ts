@@ -1,6 +1,8 @@
 /**
  * The SSM housekeeper Lambda's program: delete runner tokens nobody consumed.
  *
+ * **Details**
+ *
  * Ported from `lambdas/functions/control-plane/src/scale-runners/ssm-housekeeper.ts`
  * of github-aws-runners/terraform-aws-github-runner v7.10.1 (MIT); see the
  * package README for the license notice.

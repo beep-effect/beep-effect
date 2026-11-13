@@ -1,6 +1,8 @@
 /**
  * SSM Parameter Store layout of a runner fleet.
  *
+ * **Details**
+ *
  * The layout follows the `ssm` module of github-aws-runners/terraform-aws-github-runner
  * v7.10.1 (MIT; see the package README): App secrets under `<root>/app/`,
  * one-use runner tokens under `<root>/<pool>/tokens/<instance-id>`, and the
@@ -145,9 +147,9 @@ export const poolConfigPath: {
  * console.log(runnerGroupCacheName("/beep-ci/heavy/config", "beep-ec2-heavy"))
  * ```
  *
- * @param configPath - The pool's config path.
- * @param group - The runner group name.
- * @returns The parameter name.
+ * @param configPath - Where the pool caches runtime-resolved settings.
+ * @param group - The org runner group whose numeric id is cached.
+ * @returns `<configPath>/runner-group/<group>`.
  * @category constructors
  * @since 0.0.0
  */

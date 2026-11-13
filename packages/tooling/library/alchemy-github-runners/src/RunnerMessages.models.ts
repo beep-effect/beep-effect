@@ -2,6 +2,8 @@
  * Queue messages between the webhook, scale-up, job-retry and termination
  * watcher Lambdas.
  *
+ * **Details**
+ *
  * Ported from github-aws-runners/terraform-aws-github-runner v7.10.1 (MIT); the
  * wire shape is upstream's, see the package README for the license notice.
  *

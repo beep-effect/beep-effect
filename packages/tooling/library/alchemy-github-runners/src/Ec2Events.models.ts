@@ -1,6 +1,8 @@
 /**
  * EventBridge events the termination watcher consumes.
  *
+ * **Details**
+ *
  * Ported from `lambdas/functions/termination-watcher` of
  * github-aws-runners/terraform-aws-github-runner v7.10.1 (MIT); see the package
  * README for the license notice.
