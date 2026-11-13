@@ -233,7 +233,7 @@ describe("GithubLedger file store retention and failures", () => {
           const newRollupHour = O.map(newRollup, (rollup) => rollup.hour);
           assertSome(newRollupHour, hour(4));
           const latest = yield* fs.readDirectory(path.join(root, "latest"));
-          expect(latest).toStrictEqual(["sample-user_alice.json"]);
+          expect(latest).toStrictEqual(["sample-user_alice-sample_user_alice.json"]);
           const calibrationText = yield* fs.readFileString(path.join(root, "calibration.jsonl"));
           expect(A.filter(Str.split("\n")(calibrationText), Str.isNonEmpty)).toHaveLength(1);
           const calibrations = yield* store.calibrations;

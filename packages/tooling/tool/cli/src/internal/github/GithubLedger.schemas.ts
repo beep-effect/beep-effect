@@ -1614,9 +1614,11 @@ export class OperationCost extends S.Opaque<OperationCost, { readonly brand: uni
  * **Details**
  *
  * Version 2 computes windows per lane, so concurrent buckets of one key no
- * longer read as resets, and each window carries its `lane`. A rollup file of
- * any other version does not decode, so the store reads it as absent and the
- * hour is recomputed from its rows.
+ * longer read as resets, and each window carries its `lane`. The current
+ * calculation decodes as v2; the store returns valid v1 history as a
+ * separate version-tagged legacy value. Raw-backed legacy hours recompute;
+ * expired raw history remains explicitly legacy-unrecomputable. Unsupported
+ * or unreadable versions are absent.
  *
  * **Example** (Build an empty rollup)
  *

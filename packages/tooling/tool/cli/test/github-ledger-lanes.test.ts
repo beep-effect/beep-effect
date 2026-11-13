@@ -761,14 +761,14 @@ it("R5 signals Below 99 for the exact fingerprinted GraphQL reserve reproduction
   );
 });
 
-it("D2a merges shared core but isolates known GraphQL fingerprints and unknown sources", () => {
+it("D2d merges shared core, isolates known GraphQL fingerprints, and attaches unknown instances once", () => {
   const rows = [observed(1, 100, 50 * MINUTE, tokenA), observed(2, 200, 50 * MINUTE + 3 * SECOND, tokenB)];
   const anchors = anchorsOf({ key: graphqlKey, rows, admitGraphqlSamples: false });
   expect(A.map(lanesOf(anchors, "graphql"), A.length)).toStrictEqual([1, 1]);
   expect(A.map(lanesOf(anchors, "core"), A.length)).toStrictEqual([2]);
   const unknown = { ...O.getOrThrow(A.last(anchors)), source: "pid:42" };
   const mixed = [O.getOrThrow(A.head(anchors)), unknown];
-  expect(A.length(lanesOf(mixed, "graphql"))).toBe(2);
+  expect(A.length(lanesOf(mixed, "graphql"))).toBe(1);
   expect(A.length(lanesOf(mixed, "search"))).toBe(1);
 });
 

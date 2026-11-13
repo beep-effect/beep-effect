@@ -33,6 +33,7 @@ import {
   anchorsOf,
   calibrationOf,
   canonicalRow,
+  expiredUnknownReading,
   ghSpawnFieldsOf,
   hourStartOf,
   identityOfObservation,
@@ -41,6 +42,7 @@ import {
   readingOfTransport,
   readingsOfSample,
   reserveOf,
+  retainLatestReading,
   rollupOf,
   summaryOf,
   usableReadingOf,
@@ -209,9 +211,6 @@ const absorb =
       )
     );
 
-const newer = (self: BucketReading, that: BucketReading): BucketReading =>
-  DateTime.toEpochMillis(that.asOf) >= DateTime.toEpochMillis(self.asOf) ? that : self;
-
 const byAsOf = Order.mapInput(Order.Number, (reading: BucketReading) => DateTime.toEpochMillis(reading.asOf));
 
 /**
@@ -257,17 +256,11 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
   );
 
   const remember = (reading: BucketReading) =>
-    Ref.update(cache, (current) => {
-      const key = `${bucketKeyString(reading.key)}|${reading.source}`;
-      return HashMap.set(
-        current,
-        key,
-        O.match(HashMap.get(current, key), { onNone: () => reading, onSome: (old) => newer(old, reading) })
-      );
-    });
+    Ref.update(cache, (current) => HashMap.fromIterable(retainLatestReading(reading, A.fromIterable(current))));
 
   const writeLatestThrottled = Effect.fnUntraced(function* (reading: BucketReading) {
-    const key = `${bucketKeyString(reading.key)}|${reading.source}`;
+    const cached = yield* Ref.get(cache);
+    const [key] = A.lastNonEmpty(retainLatestReading(reading, A.fromIterable(cached)));
     const now = DateTime.toEpochMillis(reading.asOf);
     const due = yield* Ref.modify(lastLatestWrite, (current) => {
       const last = HashMap.get(current, key);
@@ -608,6 +601,18 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
         latestBefore: DateTime.subtract(now, { milliseconds: Duration.toMillis(LATEST_RETENTION) }),
         calibrationsBefore: DateTime.subtract(now, { milliseconds: Duration.toMillis(CALIBRATION_LOOKBACK) }),
       })
+    );
+    const kept = yield* Ref.updateAndGet(
+      cache,
+      HashMap.filter(
+        (reading) =>
+          !expiredUnknownReading(reading, now) &&
+          DateTime.toEpochMillis(reading.asOf) >= nowMillis - Duration.toMillis(LATEST_RETENTION)
+      )
+    );
+    yield* Ref.update(
+      lastLatestWrite,
+      HashMap.filter((_, key) => HashMap.has(kept, key))
     );
   }).pipe(Effect.withSpan("GithubBudgetLedger.prune"));
 

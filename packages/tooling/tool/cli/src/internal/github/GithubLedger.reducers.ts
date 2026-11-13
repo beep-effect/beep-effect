@@ -39,6 +39,7 @@ import {
   CommandSpend,
   canonicalIdentity,
   DEFAULT_COMMAND_LABEL,
+  fileKeyOf,
   GhSubcommand,
   GithubIdentityLabel,
   GithubLedgerRow,
@@ -373,6 +374,114 @@ const judgedReadingOf = (
 };
 
 /**
+ * Retain one newest reading per credential or unknown reset instance.
+ *
+ * **Details**
+ *
+ * Unknown instances use one-second reset buckets and reuse the lexicographically
+ * earliest retained key within five seconds, separately for idle and busy
+ * readings. All matching neighbours consolidate into that key. This preserves
+ * distinct windows even when one PID observes both. The last entry is the
+ * updated instance, so persistence, cache and throttling share its exact key.
+ *
+ * **Example** (Start a retention table)
+ *
+ * ```ts
+ * import { BucketKey, BucketReading, GithubIdentityLabel, retainLatestReading } from "@beep/repo-cli/test/SharedInternals"
+ * import * as DateTime from "effect/DateTime"
+ * import * as O from "effect/Option"
+ * const reading = BucketReading.make({
+ *   key: BucketKey.make({ identity: GithubIdentityLabel.make("user:octocat"), resource: "core" }),
+ *   source: "pid:42", limit: 5000, remaining: 4990, used: O.some(10),
+ *   asOf: DateTime.makeUnsafe(0), resetAt: DateTime.makeUnsafe(3_600_000), basis: "transport"
+ * })
+ * const retained = retainLatestReading(reading, [])
+ * console.log(retained[0][0]) // "user_octocat-core-instance-busy-3600"
+ * ```
+ *
+ * @param reading - The incoming reading.
+ * @param entries - Existing logical filename stems and their readings.
+ * @returns Consolidated entries, with the updated credential or instance last.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const retainLatestReading: {
+  (
+    reading: BucketReading,
+    entries: ReadonlyArray<readonly [string, BucketReading]>
+  ): A.NonEmptyReadonlyArray<readonly [string, BucketReading]>;
+  (
+    entries: ReadonlyArray<readonly [string, BucketReading]>
+  ): (reading: BucketReading) => A.NonEmptyReadonlyArray<readonly [string, BucketReading]>;
+} = dual(
+  2,
+  (
+    reading: BucketReading,
+    entries: ReadonlyArray<readonly [string, BucketReading]>
+  ): A.NonEmptyReadonlyArray<readonly [string, BucketReading]> => {
+    const used = (value: BucketReading) => O.getOrElse(value.used, () => value.limit - value.remaining);
+    const known = isFingerprint(reading.source);
+    const matches = A.filter(
+      entries,
+      ([, other]) =>
+        bucketKeyString(other.key) === bucketKeyString(reading.key) &&
+        (known
+          ? other.source === reading.source
+          : !isFingerprint(other.source) && (used(other) === 0) === (used(reading) === 0) && sameReset(other, reading))
+    );
+    const prefix = `${fileKeyOf(reading.key.identity)}-${reading.key.resource}-`;
+    const key = pipe(
+      A.map(matches, ([key]) => key),
+      A.sort(Order.String),
+      A.head,
+      O.getOrElse(
+        () =>
+          `${prefix}${known ? reading.source : `instance-${used(reading) === 0 ? "idle" : "busy"}-${Math.floor(millis(reading.resetAt) / 1000)}`}`
+      )
+    );
+    const newest = A.reduce(matches, reading, (newest, [, other]) =>
+      millis(other.asOf) > millis(newest.asOf) ? other : newest
+    );
+    return A.append(
+      A.filter(entries, (entry) => !A.contains(matches, entry)),
+      Tuple.make(key, newest)
+    );
+  }
+);
+
+/**
+ * Whether an unknown retained instance has reached its reset.
+ *
+ * **Example** (Build a retention predicate)
+ *
+ * ```ts
+ * import { BucketKey, BucketReading, GithubIdentityLabel, expiredUnknownReading } from "@beep/repo-cli/test/SharedInternals"
+ * import * as DateTime from "effect/DateTime"
+ * import * as O from "effect/Option"
+ * const reading = BucketReading.make({
+ *   key: BucketKey.make({ identity: GithubIdentityLabel.make("user:octocat"), resource: "core" }),
+ *   source: "pid:42", limit: 5000, remaining: 4990, used: O.some(10),
+ *   asOf: DateTime.makeUnsafe(0), resetAt: DateTime.makeUnsafe(60_000), basis: "transport"
+ * })
+ * console.log(expiredUnknownReading(reading, DateTime.makeUnsafe(60_000))) // true
+ * ```
+ *
+ * @param reading - The retained reading.
+ * @param now - The retention cycle time.
+ * @returns True only for an unknown instance whose reset is at or before now.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const expiredUnknownReading: {
+  (reading: BucketReading, now: DateTime.Utc): boolean;
+  (now: DateTime.Utc): (reading: BucketReading) => boolean;
+} = dual(
+  2,
+  (reading: BucketReading, now: DateTime.Utc): boolean =>
+    !isFingerprint(reading.source) && millis(reading.resetAt) <= millis(now)
+);
+
+/**
  * The reading of a bucket that its reserve verdict rests on.
  *
  * **Details**
@@ -580,8 +689,8 @@ const sameEpoch = (
 ): boolean => earlier.used === 0 || sameReset(earlier, later);
 
 // Only known credentials retain continuity across resets. Unknown observations
-// first form physical window instances; co-observation can attach REST instances
-// to a known shared bucket sequence.
+// first form physical window instances. GraphQL instances attach to one known
+// lane; REST instances may join a shared known bucket sequence.
 const partitionCredentials = <Item>(
   items: ReadonlyArray<Item>,
   anchorOf: (item: Item) => {
@@ -600,12 +709,11 @@ const partitionCredentials = <Item>(
   const instances = A.flatMap(R.values(A.groupBy(unknown, (item): string => `${anchorOf(item).used === 0}`)), (group) =>
     runsOf(A.sort(group, byReset), (last, next) => sameReset(anchorOf(last), anchorOf(next)))
   );
-  const groups = A.appendAll(R.values(A.groupBy(known, (item) => anchorOf(item).source)), instances);
+  const knownGroups = R.values(A.groupBy(known, (item) => anchorOf(item).source));
   const shares = (left: Item, right: Item): boolean => {
     const a = anchorOf(left);
     const b = anchorOf(right);
     return (
-      (resource !== "graphql" || (!isFingerprint(a.source) && !isFingerprint(b.source))) &&
       a.used > 0 &&
       b.used > 0 &&
       sameReset(a, b) &&
@@ -622,8 +730,51 @@ const partitionCredentials = <Item>(
     const rest = A.filter(pending, (group) => !joins(group));
     return A.isReadonlyArrayNonEmpty(joined) ? merge(rest, A.appendAll(lane, A.flatten(joined))) : A.append(rest, lane);
   };
+  // Attach each unknown GraphQL instance once, using only direct known-anchor
+  // evidence. It can never act as a union edge between known fingerprints.
+  const firstAt = (group: A.NonEmptyReadonlyArray<Item>) =>
+    A.min(
+      A.map(group, (item) => anchorOf(item).at),
+      DateTime.Order
+    );
+  const orderedKnown: ReadonlyArray<A.NonEmptyReadonlyArray<Item>> = A.sort(
+    knownGroups,
+    Order.mapInput(DateTime.Order, firstAt)
+  );
+  const orderedInstances = A.sort(instances, Order.mapInput(DateTime.Order, firstAt));
+  const attached = () =>
+    A.reduce(orderedInstances, orderedKnown, (current, instance) => {
+      const lanes = A.sort(current, Order.mapInput(DateTime.Order, firstAt));
+      const candidates = A.flatMap(lanes, (lane, index) => {
+        const gaps = A.flatMap(instance, (a) =>
+          A.flatMap(lane, (b) =>
+            isFingerprint(anchorOf(b).source) && shares(a, b) ? [resetGap(anchorOf(a), anchorOf(b))] : []
+          )
+        );
+        return A.match(gaps, {
+          onEmpty: () => [],
+          onNonEmpty: (present) => [Tuple.make(index, A.min(present, Order.Number))],
+        });
+      });
+      const chosen = A.head(
+        A.sort(
+          candidates,
+          Order.combine(
+            Order.mapInput(Order.Number, (entry: readonly [number, number]) => entry[1]),
+            Order.mapInput(Order.Number, (entry: readonly [number, number]) => entry[0])
+          )
+        )
+      );
+      return O.match(chosen, {
+        onNone: () => A.append(lanes, instance),
+        onSome: ([chosenIndex]) =>
+          A.map(lanes, (lane, index) => (index === chosenIndex ? A.appendAll(lane, instance) : lane)),
+      });
+    });
   return pipe(
-    A.reduce(groups, A.empty<A.NonEmptyReadonlyArray<Item>>(), merge),
+    resource === "graphql"
+      ? attached()
+      : A.reduce(A.appendAll(knownGroups, instances), A.empty<A.NonEmptyReadonlyArray<Item>>(), merge),
     A.map((group) =>
       A.sort(
         group,
@@ -641,8 +792,9 @@ const partitionCredentials = <Item>(
  *
  * Credential groups merge to a fixed point only when positive readings observed
  * before their reset agree within five seconds. Idle groups never merge. A
- * known credential stays in its lane across resets. GraphQL never merges a known
- * fingerprint with another group. Unknown anchors cluster into reset-scoped
+ * known credential stays in its lane across resets. GraphQL keeps known
+ * fingerprints distinct and attaches an unknown instance to at most one directly
+ * co-observed known lane, choosing closest reset then earliest current lane ID. Unknown anchors cluster into reset-scoped
  * instances across sources, with idle and busy instances kept separate. Unknown
  * instances never continue across resets. Lane ids follow first anchor time.
  *
@@ -1055,7 +1207,14 @@ export const hourOf = ({
   return LedgerHourKey.make({
     key,
     fleetUsed,
-    lanesInferred: A.isReadonlyArrayNonEmpty(inferred) || A.some(knownEnding, (window) => window.inferred),
+    lanesInferred:
+      A.isReadonlyArrayNonEmpty(inferred) ||
+      A.some(
+        lanes,
+        (lane) =>
+          knownLane(lane) && inHour(A.headNonEmpty(lane).at) && A.some(lane, (anchor) => !isFingerprint(anchor.source))
+      ) ||
+      A.some(knownEnding, (window) => window.inferred),
     fleetUsedIsLowerBound: A.isReadonlyArrayNonEmpty(crossing) || A.some(contributions, ([, lowerBound]) => lowerBound),
     anchor: pipe(
       A.last(ending),
