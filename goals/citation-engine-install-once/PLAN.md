@@ -78,7 +78,7 @@ Reverse: Return A2 to in progress if the focused proof or hosted acceptance fail
 
 ### A3 is in review with per-call install, tokenizer and evaluator counts at zero, 2026-11-13
 
-A1 merged as #3253 and A2 as #3265. A3 hoists the stage tree, tokenizer and every regex evaluator call site to engine construction: per call 0 metadata-operation installs, 0 detaches, 0 tokenizer builds and 0 evaluator installs, with 291 evaluations and child processes unchanged; construction counts 16, 10, 1 and 26. Local proof is file by file; the full law-practice audit and integration cohort run on hosted CI. Draft PR only; no ready transition, merge or readiness monitor.
+A1 merged as #3253 and A2 as #3265. A3 hoists the stage tree, tokenizer and every regex evaluator call site to engine construction: per call 0 metadata-operation installs, 0 detaches, 0 tokenizer builds and 0 evaluator installs, with 291 evaluations and child processes unchanged; construction counts 16, 10, 1 and 26. Local proof is file by file; the full law-practice audit and integration cohort run on hosted CI. PR #3282 is ready for review; the merge is the orchestrator's gate.
 
 Lane perf/citation-hoist-installs
 
