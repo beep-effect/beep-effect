@@ -67,7 +67,7 @@ the code follows it.
 
 | Service | Operations | Live layer |
 | --- | --- | --- |
-| `GitHubAppAuth` | App JWT (RS256 over WebCrypto, PKCS#1 keys wrapped to PKCS#8), installation lookup for an org or repo, installation access token | distilled GitHub `apps.*` |
+| `GitHubAppAuth` | App JWT, installation lookup for an org or repo, installation access token | distilled GitHub `App.appJwt` and `apps.*` |
 | `GitHubRunners` | job status, runner group by name, JIT config, registration token, get, list and delete a self-hosted runner (org or repo scope) | distilled GitHub `actions.*` |
 | `Ec2Fleet` | `CreateFleet` (instant), list runners by tag filter, terminate, tag, untag, describe by id | distilled `ec2` |
 | `SsmStore` | get (decrypted), put SecureString with tags, delete, list by path | distilled `ssm` |

@@ -4,9 +4,11 @@
  * mapping, an unmapped context leaves the columns NULL, and the single
  * `provenance` mapping behaves as it always has.
  */
+
 import * as Domain from "@alchemy.run/domain";
 import { AlchemyPostgresConfig, AlchemyPostgresPlatform, ProvenanceMapping } from "@beep/alchemy-postgres";
 import { PgliteTestLayer } from "@beep/pglite/Pglite.test-layer";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, layer } from "@effect/vitest";
 import { deepStrictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
@@ -100,7 +102,7 @@ const rowsIn = (table: string) =>
 const hostedWith = (config: AlchemyPostgresConfig) =>
   Notes.layer(Layer.empty).pipe(
     Layer.provideMerge(AlchemyPostgresPlatform.layer(config)),
-    Layer.provideMerge(PgliteTestLayer)
+    Layer.provideMerge(Layer.merge(PgliteTestLayer, NodeCrypto.layer))
   );
 
 const several = hostedWith(

@@ -78,11 +78,17 @@ describe("Lambda entry points", () => {
     })
   );
 
-  it.effect("job-retry re-queues still-queued jobs and drops malformed records", () =>
+  it.effect("job-retry re-queues still-queued jobs and reports failed records for redelivery", () =>
     Effect.gen(function* () {
       const world = new World();
       const event = yield* sqsEvent([message({ id: 3, retryCounter: 0 }), "{"]);
-      yield* JobRetryLambda.definition.run(poolConfig(), event).pipe(Effect.provideContext(worldContext(world)));
+      const out = yield* JobRetryLambda.definition
+        .run(poolConfig(), event)
+        .pipe(Effect.provideContext(worldContext(world)));
+      expect(out).toStrictEqual({ batchItemFailures: [{ itemIdentifier: "m-1" }] });
+      expect(JobRetryLambda.definition.fallback(event)).toStrictEqual({
+        batchItemFailures: [{ itemIdentifier: "m-0" }, { itemIdentifier: "m-1" }],
+      });
       expect(A.map(world.sent, (sent) => sent.queueUrl)).toStrictEqual([
         "https://sqs.us-east-1.amazonaws.com/1/heavy-build",
       ]);
@@ -137,6 +143,30 @@ describe("Lambda entry points", () => {
       ]);
       yield* WatcherLambda.definition.run(watcherConfig, retry).pipe(Effect.provideContext(context));
       expect(world.deletedRunners).toStrictEqual([5, 6]);
+    })
+  );
+
+  it.effect("termination watcher reports a deregister retry past the busy cap as a batch item failure", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      const [instanceId = ""] = world.launch(1, {
+        "ghr:environment": "beep-ci-heavy",
+        "ghr:Owner": "beep-effect",
+        "ghr:Type": "Org",
+      });
+      world.githubRunners.push(
+        SelfHostedRunner.make({ id: 7, name: `beep-ci-${instanceId}`, status: "online", busy: true })
+      );
+      world.busyOnDelete = [7];
+      const retry = yield* sqsEvent([
+        { instanceId, owner: "beep-effect", runnerType: "Org", runnerId: 0, retryCount: 1 },
+        { instanceId, owner: "beep-effect", runnerType: "Org", runnerId: 0, retryCount: 4 },
+      ]);
+      const out = yield* WatcherLambda.definition
+        .run(watcherConfig, retry)
+        .pipe(Effect.provideContext(worldContext(world)));
+      expect(out).toStrictEqual({ batchItemFailures: [{ itemIdentifier: "m-1" }] });
+      expect(A.map(world.sent, (sent) => sent.queueUrl)).toStrictEqual(["https://sqs/deregister-retry"]);
     })
   );
 

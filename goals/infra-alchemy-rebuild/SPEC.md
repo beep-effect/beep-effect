@@ -237,13 +237,13 @@ Lane fix/beep-effect-web-prod-worker-name
 
 Reverse: Remove productionWorkerName from apps/beep-effect-web/alchemy.run.ts once the S3 state holds a completed Website record; the generated name then stays authoritative.
 
-### App JWTs are signed with WebCrypto; @distilled.cloud/github joins the catalog at rc.18, 2026-11-13
+### App JWTs come from distilled GitHub App.appJwt; distilled pins follow main at rc.19, 2026-11-13
 
-`@distilled.cloud/github@1.0.0-rc.18` (the version matching the repo's other distilled pins; `@alchemy.run/github@2.0.0-beta.85` depends on exactly it) has no App-authentication module: its `Credentials` takes a bearer token only. The package signs the RS256 App JWT with `crypto.subtle` (Effect has no RSA module; `node:crypto` is avoided), wrapping GitHub's PKCS#1 keys to PKCS#8, and exchanges it for installation tokens through distilled `apps.*`. Webhook HMAC-SHA256 uses `crypto.subtle` with a constant-time compare. Root catalog pins added at exactly the resolved rc.18: `@distilled.cloud/aws` and `@distilled.cloud/github`.
+The GitHub-facing Lambdas authenticate as the fleet's GitHub App: `GitHubAppAuth` reads the App id and base64 PEM key from SSM once, signs the App JWT with `@distilled.cloud/github/App` `appJwt` (RS256 over WebCrypto, PKCS#1 and PKCS#8 keys), and mints installation tokens through distilled `apps.createInstallationAccessToken`. A first draft signed the JWT itself because `@distilled.cloud/github@1.0.0-rc.18` had no App module; main moved the distilled family to `1.0.0-rc.19` with #3278 (Alchemy beta.86), which ships it, so the hand-rolled signer was deleted. Root catalog pins `@distilled.cloud/aws` and `@distilled.cloud/github` follow the version `bun.lock` resolves on main, `1.0.0-rc.19`. The webhook HMAC-SHA256 check stays on `crypto.subtle` with a constant-time compare: Effect ships no HMAC module.
 
 Lane goals/infra-alchemy-rebuild-p2-github-runners
 
-Reverse: Replace WebCrypto.signAppJwt with distilled's App module once a bump ships it, and drop the PKCS#1 wrapper.
+Reverse: Pin @distilled.cloud/aws and @distilled.cloud/github back to rc.18 and restore a WebCrypto RS256 signer (rc.18 has no App module).
 
 ### github-runners ships as two sequential PRs: Lambdas first, composite second, 2026-11-13
 

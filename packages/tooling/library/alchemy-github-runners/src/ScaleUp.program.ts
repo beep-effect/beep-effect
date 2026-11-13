@@ -443,7 +443,7 @@ const scaleUpGroup = Effect.fn("ScaleUp.group")(function* (
   const allowed =
     config.pool.maximumCount === -1 ? wanted : Math.max(0, Math.min(wanted, config.pool.maximumCount - current));
   const skipped = wanted - allowed;
-  const overCap = config.pool.ephemeral ? A.map(A.take(messages, skipped), ({ messageId }) => messageId) : [];
+  const overCap = config.pool.ephemeral ? A.map(A.take(stillQueued, skipped), ({ messageId }) => messageId) : [];
   const publishRetries = (retrying: ReadonlyArray<string>) =>
     Effect.forEach(
       A.filter(stillQueued, ({ messageId }) => !A.contains(retrying, messageId)),
@@ -483,7 +483,7 @@ const scaleUpGroup = Effect.fn("ScaleUp.group")(function* (
   const retryCount = launched.retryable + failedConfig.length;
   const retrying = A.appendAll(
     overCap,
-    A.map(A.take(A.drop(messages, skipped), retryCount), ({ messageId }) => messageId)
+    A.map(A.take(A.drop(stillQueued, skipped), retryCount), ({ messageId }) => messageId)
   );
   yield* publishRetries(retrying);
   return retrying;

@@ -9,14 +9,23 @@ import * as S from "effect/Schema";
 import { handleJobRetry } from "../../JobRetry.program.ts";
 import { ActionRequestMessage } from "../../RunnerMessages.models.ts";
 import { PoolRuntimeConfig } from "../../RunnerRuntime.models.ts";
-import { defineLambda, fleetLive, lambdaHandler, SqsEvent } from "./Runtime.ts";
+import {
+  allMessageIds,
+  batchItemFailures,
+  defineLambda,
+  fleetLive,
+  lambdaHandler,
+  processRecords,
+  SqsEvent,
+} from "./Runtime.ts";
 
 const decodeEvent = S.decodeUnknownEffect(SqsEvent);
 const decodeMessage = S.decodeEffect(S.fromJsonString(ActionRequestMessage));
 
 /**
- * Lambda handler: re-check each delayed job; a failing record is logged and
- * dropped, as upstream does.
+ * Lambda handler: re-check each delayed job. A record that fails (malformed, or a
+ * GitHub or SQS error) is reported as a batch item failure so SQS redelivers it
+ * and the job-retry queue's DLQ takes it after `maxReceiveCount`.
  *
  * @internal
  */
@@ -25,17 +34,11 @@ export const definition = defineLambda({
   layer: fleetLive,
   run: Effect.fn("JobRetryLambda.run")(function* (config, raw) {
     const event = yield* decodeEvent(raw);
-    yield* Effect.forEach(
-      event.Records,
-      (record) =>
-        decodeMessage(record.body).pipe(
-          Effect.flatMap((message) => handleJobRetry({ config, message })),
-          Effect.catchCause((cause) => Effect.logWarning("job retry failed", cause))
-        ),
-      { discard: true }
+    return yield* processRecords(event, (body) =>
+      decodeMessage(body).pipe(Effect.flatMap((message) => handleJobRetry({ config, message })))
     );
   }),
-  fallback: (): void => undefined,
+  fallback: (raw) => batchItemFailures(allMessageIds(raw)),
 });
 
 /**

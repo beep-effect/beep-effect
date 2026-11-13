@@ -25,6 +25,7 @@
     {"name":"JobRetry.handle","owner":"@beep/alchemy-github-runners","family":"tooling","conforms":true},
     {"name":"JobRetryLambda.run","owner":"@beep/alchemy-github-runners","family":"tooling","conforms":true},
     {"name":"LambdaRuntime.loadRuntimeConfig","owner":"@beep/alchemy-github-runners","family":"tooling","conforms":true},
+    {"name":"LambdaRuntime.processRecords","owner":"@beep/alchemy-github-runners","family":"tooling","conforms":true},
     {"name":"MessageQueue.send","owner":"@beep/alchemy-github-runners","family":"tooling","conforms":true},
     {"name":"RunnerBinaries.cachedName","owner":"@beep/alchemy-github-runners","family":"tooling","conforms":true},
     {"name":"RunnerBinaries.latestAsset","owner":"@beep/alchemy-github-runners","family":"tooling","conforms":true},
@@ -53,7 +54,6 @@
     {"name":"TerminationWatcher.queueRetry","owner":"@beep/alchemy-github-runners","family":"tooling","conforms":true},
     {"name":"TerminationWatcherLambda.run","owner":"@beep/alchemy-github-runners","family":"tooling","conforms":true},
     {"name":"WebCrypto.hmacSha256Hex","owner":"@beep/alchemy-github-runners","family":"tooling","conforms":true},
-    {"name":"WebCrypto.signAppJwt","owner":"@beep/alchemy-github-runners","family":"tooling","conforms":true},
     {"name":"Webhook.handle","owner":"@beep/alchemy-github-runners","family":"tooling","conforms":true},
     {"name":"Webhook.verifySignature","owner":"@beep/alchemy-github-runners","family":"tooling","conforms":true},
     {"name":"WebhookLambda.run","owner":"@beep/alchemy-github-runners","family":"tooling","conforms":true}

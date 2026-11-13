@@ -18,6 +18,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
@@ -120,7 +121,12 @@ const setup = Effect.fn("VaultSyncRpcsTest.setup")(function* (extraRows: Readonl
   );
   const host = VaultSyncSessionLive.pipe(
     Layer.provideMerge(VaultSyncSidecarChannelLive),
-    Layer.provideMerge(VaultSyncModel.layer(VaultSyncPolicies).pipe(Layer.provide(Domain.InMemory))),
+    Layer.provideMerge(
+      VaultSyncModel.layer(VaultSyncPolicies).pipe(
+        Layer.provide(SecureRandom.layerWebCrypto),
+        Layer.provide(Domain.InMemory)
+      )
+    ),
     Layer.provideMerge(Layer.mergeAll(binding, VaultSyncMembershipLive)),
     Layer.provideMerge(Layer.fresh(PgliteTestLayer))
   );
@@ -258,7 +264,7 @@ describe("desktop VaultSyncRpcs served through the vault-sync Api", () => {
       const reviewed = yield* client.MarkVaultSyncConflictReviewed({ conflictId: 43 as never, workspaceId }, headers);
       expect(reviewed.resolutionStatus).toBe("reviewed");
       const conflicts = Context.get(context, V.SyncConflict);
-      const closed = yield* conflicts.state(moveId).pipe(
+      const closed = yield* conflicts.get(moveId).pipe(
         Effect.repeat({
           until: (state) => state?.reviewed === true,
           schedule: Schedule.spaced("10 millis"),
@@ -266,11 +272,11 @@ describe("desktop VaultSyncRpcs served through the vault-sync Api", () => {
         })
       );
       expect(closed?.reviewed).toBe(true);
-      const item = yield* items.state(itemId);
+      const item = yield* items.get(itemId);
       const slot = item === null ? undefined : A.fromIterable(item.slots)[0];
       expect(slot?.[0]).toBe("moveItem");
       const operations = Context.get(context, V.SyncOperation);
-      const correction = slot === undefined ? null : yield* operations.state(slot[1]);
+      const correction = slot === undefined ? null : yield* operations.get(slot[1]);
       expect(correction?.status).toBe("queued");
       expect(correction?.input).toMatchObject({ type: "moveItem", path, itemId, generation: 2 });
     }).pipe(TestClock.withLive)

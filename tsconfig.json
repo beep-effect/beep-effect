@@ -2539,6 +2539,9 @@
       ],
       "@beep/alchemy-github-runners/*": [
         "./packages/tooling/library/alchemy-github-runners/src/*"
+      ],
+      "@beep/alchemy-github-runners/internal/*": [
+        "./packages/tooling/library/alchemy-github-runners/src/internal/*"
       ]
     }
   }

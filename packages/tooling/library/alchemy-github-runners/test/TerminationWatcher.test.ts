@@ -112,6 +112,25 @@ describe("handleTerminationEvent", () => {
 });
 
 describe("handleDeregisterRetry", () => {
+  it.effect("fails the record once the busy-retry cap is reached so SQS can dead-letter it", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      const instanceId = seed(world);
+      world.busyOnDelete = [42];
+      const message = DeregisterRetryMessage.make({
+        instanceId,
+        owner: "beep-effect",
+        runnerType: "Org",
+        runnerId: 0,
+        retryCount: 4,
+      });
+      const error = yield* Effect.flip(
+        handleDeregisterRetry({ config, message }).pipe(Effect.provideContext(worldContext(world)))
+      );
+      expect([error._tag, world.sent]).toStrictEqual(["GitHubApiError", []]);
+    })
+  );
+
   it.effect("re-queues a still-busy runner with the count incremented, and deregisters once free", () =>
     Effect.gen(function* () {
       const world = new World();
