@@ -55,10 +55,9 @@ the conservation census (decision `job-attribution-classes`). Next startable: ME
 
 ## Notes
 
-- First slice, ready now: MEAS-01 slice 1 with MEAS-04, "feat(ci): beep ci certainty head-level
-  required-green and main-verdict report" (M, CLI only). The nightly workflow is its own later PR. ROUT-05
-  slice 1 (partition job mapping) and MEAS-02 (refusal attribution) can open beside it; that is the packet's
-  three-PR limit.
+- Merged: MEAS-01 slice 1 with MEAS-04 (#3118), "feat(ci): beep ci certainty head-level required-green and
+  main-verdict report" (M, CLI only). ROUT-05 slice 1 (partition job mapping) is in review. MEAS-02 (refusal
+  attribution) can open beside it, within the packet's three-PR limit. The nightly workflow is its own later PR.
 - Order constraints: MEAS-02 lands before any WaveOrder re-seed in `local-proof-under-ten`; ROUT-05 lands
   before any census or cost ledger (MEAS-05) is trusted and before any route refinement replay; MEAS-07 lands
   before journal retention (PERIL-11); SCHE-09 is owned here and consumed by `local-proof-under-ten` (D23); nightly reads are budgeted against
