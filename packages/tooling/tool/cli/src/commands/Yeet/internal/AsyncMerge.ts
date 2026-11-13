@@ -11,9 +11,9 @@
  * success, and a request still pending when the poll budget runs out settles as
  * `Unsettled`, never as merged.
  *
- * The legacy `PUT pulls/{n}/merge` call stays reachable for one working day
- * after the async port merges: `BEEP_YEET_MERGE_ENDPOINT=legacy` routes every
- * merge through it (goals/yeet-async-merge-and-stacks, slice A).
+ * It is the only merge call Yeet has: the legacy `PUT pulls/{n}/merge` call and
+ * its environment switch were deleted after their watch day
+ * (goals/yeet-async-merge-and-stacks, slice A).
  *
  * @internal
  * @packageDocumentation
@@ -21,8 +21,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
-import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -41,97 +39,20 @@ import type {
 const $I = $RepoCliId.create("commands/Yeet/internal/AsyncMerge");
 
 /**
- * The environment switch that routes Yeet merges back to the legacy endpoint.
+ * The name a log line or hold gives the endpoint every Yeet merge calls.
  *
- * **Example** (Read the switch name)
+ * **Example** (Read the endpoint name)
  *
  * ```ts
- * import { YEET_MERGE_ENDPOINT_ENV } from "@beep/repo-cli/test/Yeet"
+ * import { YEET_MERGE_ENDPOINT_NAME } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YEET_MERGE_ENDPOINT_ENV) // "BEEP_YEET_MERGE_ENDPOINT"
+ * console.log(YEET_MERGE_ENDPOINT_NAME) // "merge-async"
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
-export const YEET_MERGE_ENDPOINT_ENV = "BEEP_YEET_MERGE_ENDPOINT" as const;
-
-/**
- * Which GitHub endpoint a Yeet merge calls.
- *
- * **Details**
- *
- * `async` is `PUT pulls/{n}/merge-async` and the default. `legacy` is the old
- * `PUT pulls/{n}/merge`, kept for one working day after the async port merged;
- * it ignores `bypassRules`, because the legacy call cannot express one.
- *
- * **Example** (Check an endpoint)
- *
- * ```ts
- * import { YeetMergeEndpoint } from "@beep/repo-cli/test/Yeet"
- *
- * console.log(YeetMergeEndpoint.is.async("async")) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const YeetMergeEndpoint = LiteralKit(["async", "legacy"]).pipe(
-  $I.annoteSchema("YeetMergeEndpoint", { description: "Which GitHub endpoint a Yeet merge calls." })
-);
-
-/**
- * Which GitHub endpoint a Yeet merge calls.
- *
- * @category models
- * @since 0.0.0
- */
-export type YeetMergeEndpoint = typeof YeetMergeEndpoint.Type;
-
-/**
- * The name a log line or hold gives an endpoint: `merge-async`, or
- * `merge (legacy)`.
- *
- * **Example** (Name both endpoints)
- *
- * ```ts
- * import { renderYeetMergeEndpoint } from "@beep/repo-cli/test/Yeet"
- *
- * console.log(renderYeetMergeEndpoint("async")) // "merge-async"
- * console.log(renderYeetMergeEndpoint("legacy")) // "merge (legacy)"
- * ```
- *
- * @param endpoint - The endpoint that merged or refused.
- * @returns Its display name.
- * @category formatting
- * @since 0.0.0
- */
-export const renderYeetMergeEndpoint = (endpoint: YeetMergeEndpoint): string =>
-  YeetMergeEndpoint.match(endpoint, { async: () => "merge-async", legacy: () => "merge (legacy)" });
-
-/**
- * The configured merge endpoint: `BEEP_YEET_MERGE_ENDPOINT`, else `async`.
- *
- * **Example** (Resolve without an override)
- *
- * ```ts
- * import { YeetMergeEndpointConfig } from "@beep/repo-cli/test/Yeet"
- * import * as ConfigProvider from "effect/ConfigProvider"
- * import * as Effect from "effect/Effect"
- *
- * const program = YeetMergeEndpointConfig.pipe(
- *   Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}))
- * )
- * console.log(Effect.runSync(program)) // "async"
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const YeetMergeEndpointConfig: Config.Config<YeetMergeEndpoint> = Config.schema(
-  YeetMergeEndpoint,
-  YEET_MERGE_ENDPOINT_ENV
-).pipe(Config.withDefault("async"));
+export const YEET_MERGE_ENDPOINT_NAME = "merge-async" as const;
 
 /**
  * How long a Yeet merge waits for GitHub to settle an accepted request.
@@ -186,7 +107,7 @@ export const defaultYeetAsyncMergePoll = YeetAsyncMergePoll.make({ attempts: 60,
  *   another request for it was already in flight (HTTP 409) and this merge
  *   waited on that one, whose commit title may differ from the one sent here.
  *   `bypassRules` is whether the merging request asked GitHub to bypass the
- *   base's rules; always false on `legacy`, which cannot send one.
+ *   base's rules.
  * - `Failed`: GitHub refused or abandoned the merge; `message` is GitHub's own
  *   sentence. Nothing merged.
  * - `Unsettled`: GitHub accepted the request but no terminal outcome was seen:
@@ -199,7 +120,6 @@ export const defaultYeetAsyncMergePoll = YeetAsyncMergePoll.make({ attempts: 60,
  * import { YeetMergeSettlement } from "@beep/repo-cli/test/Yeet"
  *
  * const settled = YeetMergeSettlement.cases.Failed.make({
- *   endpoint: "async",
  *   message: "A conversation must be resolved before this pull request can be merged.",
  * })
  * console.log(settled._tag) // "Failed"
@@ -210,14 +130,13 @@ export const defaultYeetAsyncMergePoll = YeetAsyncMergePoll.make({ attempts: 60,
  */
 export const YeetMergeSettlement = S.TaggedUnion({
   Merged: {
-    endpoint: YeetMergeEndpoint,
     sha: S.NonEmptyString,
     message: S.String,
     attached: S.Boolean,
     bypassRules: S.Boolean,
   },
-  Failed: { endpoint: YeetMergeEndpoint, message: S.String },
-  Unsettled: { endpoint: YeetMergeEndpoint, message: S.String, uuid: S.Option(S.String) },
+  Failed: { message: S.String },
+  Unsettled: { message: S.String, uuid: S.Option(S.String) },
 }).pipe(
   $I.annoteSchema("YeetMergeSettlement", {
     description: "How one Yeet merge ended: merged, failed with GitHub's sentence, or unsettled.",
@@ -237,19 +156,16 @@ const Settlement = YeetMergeSettlement.cases;
 // Every non-pending outcome, as the settlement it ends a merge with.
 const settleOutcome = (outcome: AsyncOutcome, attached: boolean, bypassRules: boolean): YeetMergeSettlement =>
   GithubAsyncMergeOutcome.match(outcome, {
-    Merged: ({ sha, message }) => Settlement.Merged.make({ endpoint: "async", sha, message, attached, bypassRules }),
-    Failed: ({ message }) => Settlement.Failed.make({ endpoint: "async", message }),
+    Merged: ({ sha, message }) => Settlement.Merged.make({ sha, message, attached, bypassRules }),
+    Failed: ({ message }) => Settlement.Failed.make({ message }),
     Pending: ({ uuid, message }) =>
       Settlement.Unsettled.make({
-        endpoint: "async",
         message: `still pending when the poll ran out: ${message}`,
         uuid: O.some(uuid),
       }),
-    Enqueued: ({ uuid, message }) =>
-      Settlement.Unsettled.make({ endpoint: "async", message: `enqueued, not merged: ${message}`, uuid }),
+    Enqueued: ({ uuid, message }) => Settlement.Unsettled.make({ message: `enqueued, not merged: ${message}`, uuid }),
     Expired: ({ uuid }) =>
       Settlement.Unsettled.make({
-        endpoint: "async",
         message: "GitHub holds no result for the request (expired after 24 hours, or never this pull request's)",
         uuid: O.some(uuid),
       }),
@@ -276,10 +192,39 @@ const inFlightMismatch = (
   return sameHead && sameBypass ? O.none() : O.some(`${head} and ${bypass}`);
 };
 
-const settleAsync = Effect.fn("Yeet.settleAsyncMerge")(function* (
+/**
+ * Merge one pull request and wait for GitHub to settle it.
+ *
+ * **Details**
+ *
+ * Sends one `merge-async` request (a 409 attaches to the request already in
+ * flight instead of sending another) and polls the result under `poll`. A
+ * `GitHubError` is a request that never reached a verdict (transport, auth, an
+ * unexpected status); the caller decides whether that is a hold or an
+ * uncertain merge.
+ *
+ * **Example** (Build the merge effect)
+ *
+ * ```ts
+ * import { GithubAsyncMergeRequest } from "@beep/repo-cli/test/SharedInternals"
+ * import { settleYeetMerge } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const request = GithubAsyncMergeRequest.make({ action: "direct_merge", method: "squash", sha: "abc" })
+ * console.log(Effect.isEffect(settleYeetMerge(7, request))) // true
+ * ```
+ *
+ * @param pullRequestNumber - The pull request to merge.
+ * @param request - The pinned request, with the bypass it asks for.
+ * @param poll - The settle budget; defaults to {@link defaultYeetAsyncMergePoll}.
+ * @returns How the merge ended.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const settleYeetMerge = Effect.fn("Yeet.settleMerge")(function* (
   pullRequestNumber: number,
   request: GithubAsyncMergeRequest,
-  poll: YeetAsyncMergePoll
+  poll: YeetAsyncMergePoll = defaultYeetAsyncMergePoll
 ): Effect.fn.Return<YeetMergeSettlement, GitHubError, GithubRest> {
   const rest = yield* GithubRest;
   const accepted = yield* rest.requestAsyncMerge(pullRequestNumber, request);
@@ -291,7 +236,6 @@ const settleAsync = Effect.fn("Yeet.settleAsyncMerge")(function* (
     const mismatch = inFlightMismatch(accepted, request);
     if (O.isSome(mismatch)) {
       return Settlement.Unsettled.make({
-        endpoint: "async",
         message: `another merge request is in flight with ${mismatch.value}`,
         uuid: O.some(accepted.uuid),
       });
@@ -312,85 +256,12 @@ const settleAsync = Effect.fn("Yeet.settleAsyncMerge")(function* (
     Effect.catch((error) =>
       Effect.succeed(
         Settlement.Unsettled.make({
-          endpoint: "async",
           message: `accepted, but its result could not be read: ${error.message}`,
           uuid: O.some(accepted.uuid),
         })
       )
     )
   );
-});
-
-const settleLegacy = Effect.fn("Yeet.settleLegacyMerge")(function* (
-  pullRequestNumber: number,
-  request: GithubAsyncMergeRequest
-): Effect.fn.Return<YeetMergeSettlement, GitHubError, GithubRest> {
-  const rest = yield* GithubRest;
-  const merged = yield* rest.mergePullRequest(pullRequestNumber, {
-    sha: request.sha,
-    commitTitle: request.commitTitle,
-    commitMessage: request.commitMessage,
-    method: request.method,
-  });
-  return merged.merged
-    ? Settlement.Merged.make({
-        endpoint: "legacy",
-        sha: merged.sha,
-        message: merged.message,
-        attached: false,
-        bypassRules: false,
-      })
-    : Settlement.Failed.make({ endpoint: "legacy", message: merged.message });
-});
-
-/**
- * Merge one pull request and wait for GitHub to settle it.
- *
- * **Details**
- *
- * Reads {@link YeetMergeEndpointConfig}; a value that does not parse falls back
- * to `async` with a warning, because the async call is the one that holds a
- * failed rule as a failure. On `async` it sends one `merge-async` request
- * (a 409 attaches to the request already in flight instead of sending
- * another) and polls the result under `poll`. On `legacy` it sends the old
- * merge call once. A `GitHubError` is a request that never reached a verdict
- * (transport, auth, an unexpected status); the caller decides whether that
- * is a hold or an uncertain merge.
- *
- * **Example** (Build the merge effect)
- *
- * ```ts
- * import { GithubAsyncMergeRequest } from "@beep/repo-cli/test/SharedInternals"
- * import { settleYeetMerge } from "@beep/repo-cli/test/Yeet"
- * import * as Effect from "effect/Effect"
- *
- * const request = GithubAsyncMergeRequest.make({ action: "direct_merge", method: "squash", sha: "abc" })
- * console.log(Effect.isEffect(settleYeetMerge(7, request))) // true
- * ```
- *
- * @param pullRequestNumber - The pull request to merge.
- * @param request - The pinned request; `bypassRules` is honoured only by `async`.
- * @param poll - The settle budget; defaults to {@link defaultYeetAsyncMergePoll}.
- * @returns How the merge ended.
- * @category workflows
- * @since 0.0.0
- */
-export const settleYeetMerge = Effect.fn("Yeet.settleMerge")(function* (
-  pullRequestNumber: number,
-  request: GithubAsyncMergeRequest,
-  poll: YeetAsyncMergePoll = defaultYeetAsyncMergePoll
-): Effect.fn.Return<YeetMergeSettlement, GitHubError, GithubRest> {
-  const endpoint = yield* YeetMergeEndpointConfig.pipe(
-    Effect.catch((error) =>
-      Console.error(
-        `[yeet] warning: ${YEET_MERGE_ENDPOINT_ENV} is invalid, merging through async: ${error.message}`
-      ).pipe(Effect.as<YeetMergeEndpoint>("async"))
-    )
-  );
-  return yield* YeetMergeEndpoint.match(endpoint, {
-    async: () => settleAsync(pullRequestNumber, request, poll),
-    legacy: () => settleLegacy(pullRequestNumber, request),
-  });
 });
 
 // GitHub's rule sentences arrive multi-line ("Repository rule violations found\n\nA
@@ -408,7 +279,7 @@ const oneLine = flow(Str.replace(/\s+/gu, " "), Str.trim);
  * import * as O from "effect/Option"
  *
  * const line = renderYeetMergeSettlement(
- *   YeetMergeSettlement.cases.Unsettled.make({ endpoint: "async", message: "still pending", uuid: O.none() })
+ *   YeetMergeSettlement.cases.Unsettled.make({ message: "still pending", uuid: O.none() })
  * )
  * console.log(line) // "merge-async unsettled: still pending"
  * ```
@@ -418,17 +289,15 @@ const oneLine = flow(Str.replace(/\s+/gu, " "), Str.trim);
  * @category formatting
  * @since 0.0.0
  */
-export const renderYeetMergeSettlement = (settlement: YeetMergeSettlement): string => {
-  const endpoint = renderYeetMergeEndpoint(settlement.endpoint);
-  return YeetMergeSettlement.match(settlement, {
+export const renderYeetMergeSettlement = (settlement: YeetMergeSettlement): string =>
+  YeetMergeSettlement.match(settlement, {
     Merged: ({ sha, attached }) =>
-      `${endpoint} merged as ${sha}${attached ? " (attached to an in-flight request)" : ""}`,
+      `${YEET_MERGE_ENDPOINT_NAME} merged as ${sha}${attached ? " (attached to an in-flight request)" : ""}`,
     Failed: ({ message }) =>
-      `${endpoint} failed: ${Str.isEmpty(oneLine(message)) ? "GitHub sent no message" : oneLine(message)}`,
+      `${YEET_MERGE_ENDPOINT_NAME} failed: ${Str.isEmpty(oneLine(message)) ? "GitHub sent no message" : oneLine(message)}`,
     Unsettled: ({ message, uuid }) =>
-      `${endpoint} unsettled: ${oneLine(message)}${O.getOrElse(
+      `${YEET_MERGE_ENDPOINT_NAME} unsettled: ${oneLine(message)}${O.getOrElse(
         O.map(uuid, (id) => ` (request ${id})`),
         () => ""
       )}`,
   });
-};
