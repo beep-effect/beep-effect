@@ -18,7 +18,7 @@ import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import { A, O, pipe, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { dual } from "effect/Function";
+import { constFalse, dual } from "effect/Function";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
@@ -204,7 +204,7 @@ export const listExplorationPacketFiles = Effect.fn("Goals.listExplorationPacket
   const path = yield* Path.Path;
   const present = yield* Effect.forEach(ExplorationPacketFile.literals, (file) =>
     fs.exists(path.join(repoRoot, "explorations", exploration, file)).pipe(
-      Effect.orElseSucceed(() => false),
+      Effect.orElseSucceed(constFalse),
       Effect.map((exists) => (exists ? O.some(file) : O.none<ExplorationPacketFile>()))
     )
   );
