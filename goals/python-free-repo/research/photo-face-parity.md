@@ -60,8 +60,8 @@ graph format version; cached bytes must match deterministic compilation.
 
 The normal suite never downloads models. To run parity, set
 `BEEP_PHOTO_FACE_PARITY_MODELS` to a directory containing `det_10g.onnx`,
-`w600k_r50.onnx`, `aligner.safetensors` and `recognizer.safetensors`, then run
-from `packages/tooling/tool/cli`:
+`w600k_r50.onnx`, `aligner.safetensors`, `recognizer.safetensors` and
+`buffalo_l.zip`, then run from `packages/tooling/tool/cli`:
 
 ```sh
 BEEP_PHOTO_FACE_PARITY_MODELS=/path/to/pinned-models \

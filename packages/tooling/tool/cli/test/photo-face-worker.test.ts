@@ -24,6 +24,7 @@ import {
   toFilesCommandError,
   writePersonMatchModelBytes,
 } from "@beep/repo-cli/test/Files";
+import { PosInt } from "@beep/repo-cli-kit/schema/PosInt";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
@@ -182,7 +183,8 @@ const runScanCore = Effect.fn("Test.runScan")(
     corrupt: boolean,
     recursive: boolean,
     missingDirectory: boolean,
-    runtimeVersion: string
+    runtimeVersion: string,
+    batchSize: number
   ) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -208,7 +210,9 @@ const runScanCore = Effect.fn("Test.runScan")(
       let opened = 0;
       let closed = 0;
       const resources = PersonMatchOnnxResources.of({
-        prepare: Effect.fn("Test.prepare")(() => Effect.succeed(prepared)),
+        prepare: Effect.fn("Test.prepare")(() =>
+          batchSize === 1 ? Effect.succeed(prepared) : Effect.die("Model preparation ran before batch-size validation")
+        ),
         graph: Effect.fn("Test.graph")((source: string) => Effect.succeed(source)),
         version: Effect.fn("Test.version")(() => Effect.succeed(runtimeVersion)),
         open: Effect.fn("Test.open")((name) =>
@@ -233,6 +237,7 @@ const runScanCore = Effect.fn("Test.runScan")(
         matchThreshold: 0.7,
         reviewThreshold: 0.3,
         minFaceAreaPct: 0.5,
+        batchSize: PosInt.make(batchSize),
         acceptModelLicense: license,
         recursive,
       });
@@ -265,8 +270,21 @@ const runScan = (
   corrupt = false,
   recursive = false,
   missingDirectory = false,
-  runtimeVersion = "1.31.1"
-) => runScanCore(frames, backend, references, flat, license, corrupt, recursive, missingDirectory, runtimeVersion);
+  runtimeVersion = "1.31.1",
+  batchSize = 1
+) =>
+  runScanCore(
+    frames,
+    backend,
+    references,
+    flat,
+    license,
+    corrupt,
+    recursive,
+    missingDirectory,
+    runtimeVersion,
+    batchSize
+  );
 it.layer(nativeLayer)((it) => {
   it.effect("classifies identity, group, quality and rejection evidence without model files", () =>
     Effect.gen(function* () {
@@ -283,7 +301,21 @@ it.layer(nativeLayer)((it) => {
         if (result._tag === "Success") {
           expect(result.success.entries[0]?.disposition).toBe(expected);
           expect(result.success.model.runtime.packageVersion).toBe("1.31.1");
+          expect(result.success.parameters.batchSize).toBe(1);
         }
+      }
+    })
+  );
+  it.effect("rejects non-unit batch size before model preparation", () =>
+    Effect.gen(function* () {
+      const result = yield* runScan([frame(), frame()], "buffalo-l", 1, false, true, false, false, false, "1.31.1", 2);
+      expect(result._tag).toBe("Failure");
+      if (result._tag === "Failure") {
+        expect(result.failure._tag).toBe("MatchPersonRuntimeError");
+        expect(result.failure).toMatchObject({
+          workerCode: "invalid-arguments",
+          message: "Native person matching supports only batch size 1.",
+        });
       }
     })
   );
@@ -596,3 +628,49 @@ it.effect.prop(
     }),
   { arbitrary: fcRuns(50) }
 );
+
+it.layer(nativeLayer)((it) => {
+  it.effect("uses a valid Buffalo cache despite a pre-existing acquisition lock", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped();
+      const directory = path.join(root, "models", "beep_buffalo_l_v1");
+      yield* fs.makeDirectory(directory, { recursive: true });
+      yield* fs.writeFile(path.join(directory, "det_10g.onnx"), tinyDetector);
+      yield* fs.writeFile(path.join(directory, "w600k_r50.onnx"), tinyRecognizer);
+      const lock = path.join(directory, ".adaface-model-store.lock");
+      yield* fs.writeFileString(lock, "existing-acquisition");
+      const pins = yield* tinyPins;
+      const prepared = yield* preparePersonMatchOnnxModels(root, "buffalo-l").pipe(
+        Effect.provideService(PersonMatchBuffaloPins, pins)
+      );
+      expect(prepared.detectorPath).toBe(path.join(directory, "det_10g.onnx"));
+      const token = yield* fs.readFileString(lock);
+      expect(token).toBe("existing-acquisition");
+    })
+  );
+  it.effect("refuses repair under a held lock with a backend-neutral typed error", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped();
+      const directory = path.join(root, "models", "beep_buffalo_l_v1");
+      yield* fs.makeDirectory(directory, { recursive: true });
+      yield* fs.writeFile(path.join(directory, "det_10g.onnx"), tinyDetector);
+      yield* fs.writeFile(path.join(directory, "w600k_r50.onnx"), Uint8Array.of(0));
+      const lock = path.join(directory, ".adaface-model-store.lock");
+      yield* fs.writeFileString(lock, "held-by-another-run");
+      const pins = yield* tinyPins;
+      const failure = yield* preparePersonMatchOnnxModels(root, "buffalo-l").pipe(
+        Effect.provideService(PersonMatchBuffaloPins, pins),
+        Effect.flip
+      );
+      expect(failure._tag).toBe("MatchPersonModelAcquisitionError");
+      expect(failure.message).toContain("Could not acquire the person-match model-store lock");
+      expect(failure.message).not.toContain("AdaFace");
+      const token = yield* fs.readFileString(lock);
+      expect(token).toBe("held-by-another-run");
+    })
+  );
+});

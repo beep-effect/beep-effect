@@ -384,7 +384,7 @@ const acquireModelStoreLock = Effect.fn("Files.PersonMatchModelStore.acquireLock
     .pipe(
       Effect.mapError((cause) =>
         acquisitionError(
-          `Could not acquire the AdaFace model-store lock at "${lockPath}". Another acquisition may be active; remove the lock only after confirming it is idle.`,
+          `Could not acquire the person-match model-store lock at "${lockPath}". Another acquisition may be active; remove the lock only after confirming it is idle.`,
           cause
         )
       )
@@ -967,18 +967,21 @@ export const preparePersonMatchOnnxModels = Effect.fn("Files.preparePersonMatchO
   const models = yield* ensureCanonicalDirectory(path.join(root, "models"), "ONNX models directory");
   const directory = yield* ensureCanonicalDirectory(path.join(models, "beep_buffalo_l_v1"), "pinned ONNX directory");
   const required = backend === "buffalo-l" ? [pins.detector, pins.recognizer] : [pins.detector];
-  yield* Effect.acquireUseRelease(
-    acquireModelStoreLock(directory),
-    Effect.fnUntraced(function* () {
-      const validation = yield* Effect.forEach(required, (artifact) =>
-        validateArtifactPath(artifact, path.join(directory, artifact.fileName)).pipe(Effect.isSuccess)
-      );
-      const missing = A.filter(required, (_, index) => validation[index] !== true);
-      if (missing.length > 0) yield* installBuffaloArchive(root, directory, missing);
-      for (const artifact of required) yield* validateArtifactPath(artifact, path.join(directory, artifact.fileName));
-    }),
-    releaseModelStoreLock
-  );
+  const missingArtifacts = Effect.forEach(required, (artifact) =>
+    validateArtifactPath(artifact, path.join(directory, artifact.fileName)).pipe(Effect.isSuccess)
+  ).pipe(Effect.map((validation) => A.filter(required, (_, index) => validation[index] !== true)));
+  const missing = yield* missingArtifacts;
+  if (A.isReadonlyArrayNonEmpty(missing)) {
+    yield* Effect.acquireUseRelease(
+      acquireModelStoreLock(directory),
+      Effect.fnUntraced(function* () {
+        const remaining = yield* missingArtifacts;
+        if (A.isReadonlyArrayNonEmpty(remaining)) yield* installBuffaloArchive(root, directory, remaining);
+        for (const artifact of required) yield* validateArtifactPath(artifact, path.join(directory, artifact.fileName));
+      }),
+      releaseModelStoreLock
+    );
+  }
   const ada =
     backend === "adaface-kprpe"
       ? yield* prepareAdaFaceArtifacts(root).pipe(Effect.asSome)

@@ -613,6 +613,8 @@ const runWorker = Effect.fn("Files.PersonMatch.run")(function* (
   inputs: CanonicalMatchPersonInputs
 ) {
   const started = yield* Clock.clockWith((clock) => Effect.succeed(clock.currentTimeMillisUnsafe()));
+  if (options.batchSize !== 1)
+    return yield* error("invalid-arguments", "Native person matching supports only batch size 1.");
   if (!options.acceptModelLicense)
     return yield* MatchPersonError.license("Model terms must be acknowledged before loading weights.");
   const referencePaths = yield* discover(inputs.referenceDirectory, options.recursive, 256);
@@ -671,7 +673,7 @@ const runWorker = Effect.fn("Files.PersonMatch.run")(function* (
       compute: "cpu",
       actualCompute: "cpu",
       devices: [],
-      batchSize: options.batchSize,
+      batchSize: 1,
       precision: "fp32",
       thresholdSource: options.thresholdSource,
       detectionThreshold: options.detectionThreshold,
