@@ -5,13 +5,24 @@
   "type": "module",
   "workspaces": [
     "shared/kernel",
+    "shared/contract-kit",
+    "shared/tooling",
+    "party/contract",
     "party/model",
     "party/host",
+    "authority/contract",
+    "authority/model",
+    "authority/host",
+    "runs/contract",
+    "runs/model",
+    "runs/host",
     "apps/practice"
   ],
   "scripts": {
-    "check": "tsc --noEmit -p shared/kernel && tsc --noEmit -p party/model && tsc --noEmit -p party/host && tsc --noEmit -p apps/practice",
-    "test": "bun run --cwd party/model test && bun run --cwd party/host test"
+    "check": "tsc --noEmit -p shared/kernel && tsc --noEmit -p shared/contract-kit && tsc --noEmit -p shared/tooling && tsc --noEmit -p party/contract && tsc --noEmit -p party/model && tsc --noEmit -p party/host && tsc --noEmit -p authority/contract && tsc --noEmit -p authority/model && tsc --noEmit -p authority/host && tsc --noEmit -p runs/contract && tsc --noEmit -p runs/model && tsc --noEmit -p runs/host && tsc --noEmit -p apps/practice",
+    "test": "bun run --cwd party/contract test && bun run --cwd runs/contract test && bun run --cwd party/model test && bun run --cwd authority/model test && bun run --cwd runs/model test && bun run --cwd authority/host test && bun run --cwd party/host test",
+    "handlers": "bun run --cwd party/model handlers && bun run --cwd authority/model handlers && bun run --cwd runs/model handlers",
+    "handlers:check": "bun run --cwd party/model handlers --check && bun run --cwd authority/model handlers --check && bun run --cwd runs/model handlers --check"
   },
   "devDependencies": {
     "@effect/vitest": "4.1.4",

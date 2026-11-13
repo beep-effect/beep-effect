@@ -7,7 +7,7 @@ import PartyMailboxPollerLive from "./src/cluster/PartyMailboxPoller.ts";
 import PracticeApi from "./src/PracticeApi.ts";
 
 /**
- * The practice deployment: the Party model and its mailbox poller on a local
+ * The practice deployment: the Party and authority models and the mailbox poller on a local
  * Docker swarm. Type-checked only; never deployed by the prototype.
  */
 export default Alchemy.Stack(

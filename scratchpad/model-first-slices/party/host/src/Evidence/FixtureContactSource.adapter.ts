@@ -1,7 +1,7 @@
-import { ClaimId } from "@proto/party/Claim/Claim.id";
-import { ContactSource } from "@proto/party/Evidence/ContactSource.external";
-import { PartyId } from "@proto/party/Party/Party.id";
-import { Proposition } from "@proto/party/Proposition";
+import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
+import { PartyId } from "@proto/party-contract/Party/Party.id";
+import { Proposition } from "@proto/party-contract/Proposition";
+import { ContactSource } from "@proto/party-model/Evidence/ContactSource.external";
 import * as Effect from "effect/Effect";
 
 /**

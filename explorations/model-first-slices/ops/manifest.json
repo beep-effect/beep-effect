@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "model-first-slices",
+    "title": "Model-First Slices",
+    "status": "active",
+    "stage": "shape",
+    "openQuestions": [
+      "Does BRIEF.md and the fourth-draft artifact match the operator's picture (shape review)? The operator started the rework without confirming in words.",
+      "Naming left open by phase 1: `.adapter.ts` for a middleware's server half; contract `.read.ts` beside model `.view.ts`; placement of the contract kit and tooling packages (research/08)."
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [
+        "standards/ARCHITECTURE.md",
+        "explorations/alchemy-domain-adoption/DECISIONS.md"
+      ],
+      "supersededBy": null
+    },
+    "created": "2026-11-13",
+    "updated": "2026-11-13"
+  }
+}

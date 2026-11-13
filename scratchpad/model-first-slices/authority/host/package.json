@@ -1,0 +1,30 @@
+{
+  "name": "@proto/authority-host",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./AuthorityGateway.adapter": "./src/AuthorityGateway.adapter.ts",
+    "./Boundary/Boundary": "./src/Boundary/Boundary.ts",
+    "./Boundary/FixtureCredential": "./src/Boundary/FixtureCredential.ts",
+    "./Host": "./src/Host.ts",
+    "./Session.adapter": "./src/Session.adapter.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@alchemy.run/domain": "2.0.0-beta.87",
+    "@proto/authority-contract": "workspace:*",
+    "@proto/authority-model": "workspace:*",
+    "@proto/kernel": "workspace:*",
+    "effect": "4.1.4"
+  },
+  "devDependencies": {
+    "@effect/platform-node": "4.1.4",
+    "@effect/vitest": "4.1.4",
+    "@proto/tooling": "workspace:*",
+    "vitest": "5.0.4"
+  }
+}

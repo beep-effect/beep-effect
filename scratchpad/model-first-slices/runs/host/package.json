@@ -1,0 +1,20 @@
+{
+  "name": "@proto/runs-host",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./Authority.adapter": "./src/Authority.adapter.ts",
+    "./Host": "./src/Host.ts",
+    "./RunsGateway.adapter": "./src/RunsGateway.adapter.ts"
+  },
+  "dependencies": {
+    "@alchemy.run/domain": "2.0.0-beta.87",
+    "@proto/authority-contract": "workspace:*",
+    "@proto/kernel": "workspace:*",
+    "@proto/runs-contract": "workspace:*",
+    "@proto/runs-model": "workspace:*",
+    "effect": "4.1.4"
+  }
+}

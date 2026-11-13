@@ -3,17 +3,20 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "exports": {
-    "./*": "./src/*.ts"
-  },
+  "exports": {},
   "dependencies": {
     "@alchemy.run/docker": "2.0.0-beta.87",
     "@alchemy.run/domain": "2.0.0-beta.87",
     "@alchemy.run/effect-cluster": "2.0.0-beta.87",
     "@effect/platform-node": "4.1.4",
+    "@proto/authority-host": "workspace:*",
+    "@proto/authority-model": "workspace:*",
     "@proto/kernel": "workspace:*",
-    "@proto/party": "workspace:*",
+    "@proto/party-contract": "workspace:*",
     "@proto/party-host": "workspace:*",
+    "@proto/party-model": "workspace:*",
+    "@proto/runs-host": "workspace:*",
+    "@proto/runs-model": "workspace:*",
     "alchemy": "2.0.0-beta.87",
     "effect": "4.1.4"
   }

@@ -1,41 +1,47 @@
 import { Story } from "@alchemy.run/domain/Story";
 import { expect, it } from "@effect/vitest";
-import { type Actor, agent, human, system } from "@proto/kernel/Actor";
-import { CurrentActor } from "@proto/kernel/CurrentActor.context";
-import { OrgId } from "@proto/kernel/Ids";
-import { AcceptClaim, AdmissionGateUnmet, ClaimAccepted } from "@proto/party/Claim/AcceptClaim.command";
-import { AssertClaim, ClaimAsserted } from "@proto/party/Claim/AssertClaim.command";
-import { Claim } from "@proto/party/Claim/Claim.aggregate";
-import { ClaimReview } from "@proto/party/Claim/ClaimReview.view";
-import { DispositionProposed } from "@proto/party/Claim/ProposeDisposition.command";
-import { FindParties } from "@proto/party/Directory/FindParties.query";
-import { MemoryPartyDirectoryStore } from "@proto/party/Directory/PartyDirectory.store";
-import { EvidenceSignal } from "@proto/party/Evidence";
-import { PartyHandlers } from "@proto/party/Handlers";
-import { EffectiveParty } from "@proto/party/Party/EffectiveParty.view";
-import { PartiesMerged } from "@proto/party/Party/MergeParties.command";
-import { Party } from "@proto/party/Party/Party.aggregate";
-import { PartyRegistered, RegisterParty } from "@proto/party/Party/RegisterParty.command";
-import { PartyModel } from "@proto/party/Party.model";
-import { Proposition } from "@proto/party/Proposition";
-import { Reasoner } from "@proto/party/Review/Reasoner.external";
-import { HumanDecision, ReviewAssist } from "@proto/party/Review/ReviewAssist.saga";
+import { CurrentInvocation } from "@proto/kernel/CurrentInvocation.context";
+import { byProcess, Cause, extend, type Invocation, operatorOf, provenanceOf, Root } from "@proto/kernel/Invocation";
+import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
+import { ReadmissionRefused } from "@proto/kernel/ReadmissionRefused.rejection";
+import { AcceptClaim, AdmissionGateUnmet, ClaimAccepted } from "@proto/party-contract/Claim/AcceptClaim.command";
+import { ClaimAsserted } from "@proto/party-contract/Claim/AssertClaim.command";
+import { MergeRefused } from "@proto/party-contract/Claim/RecordMergeRefused.command";
+import { PartyIntake, PartyPropose, PartyRead, PartyReview } from "@proto/party-contract/Party.capabilities";
+import { PartiesMerged } from "@proto/party-contract/Party/MergeParties.command";
+import { PartyRegistered, RegisterParty } from "@proto/party-contract/Party/RegisterParty.command";
+import { Proposition } from "@proto/party-contract/Proposition";
+import { Authority } from "@proto/party-model/Authority.external";
+import { Claim } from "@proto/party-model/Claim/Claim.aggregate";
+import { ClaimReview } from "@proto/party-model/Claim/ClaimReview.view";
+import { FindParties } from "@proto/party-model/Directory/FindParties.query";
+import { MemoryPartyDirectoryStore } from "@proto/party-model/Directory/PartyDirectory.store";
+import { PartyHandlers } from "@proto/party-model/Party.handlers";
+import { PartyModel } from "@proto/party-model/Party.model";
+import { EffectiveParty } from "@proto/party-model/Party/EffectiveParty.view";
+import { Party } from "@proto/party-model/Party/Party.aggregate";
+import { Reasoner } from "@proto/party-model/Review/Reasoner.external";
+import { ReviewRuns } from "@proto/party-model/Review/ReviewRuns.external";
 import * as Layer from "effect/Layer";
+import { acme, globex, human, onOrg, oneSource, readmitted, twoSources } from "./fixtures.ts";
 
-const { call, given, provide, query, rejected, saga, signal, succeed, then, view, when } = Story;
+const { call, fail, given, provide, query, rejected, succeed, then, view, when } = Story;
 
-/** Act as this actor for the following steps, as the Session middleware would. */
-const as = (actor: Actor) => provide(CurrentActor, actor);
+/** Act under this invocation for the following steps, as the Session middleware would. */
+const as = (invocation: Invocation) => provide(CurrentInvocation, invocation);
 
 const story = Story.make(PartyModel, {
   layer: PartyHandlers.pipe(Layer.provide(MemoryPartyDirectoryStore)),
-  stub: [Reasoner], // faked: the story answers each call
+  stub: [Reasoner, Authority, ReviewRuns], // every outside system answers in the story
 });
 
-const acme = OrgId.make("org_acme");
-const intake = human("p_intake", "org_acme");
-const reviewer = human("p_rev", "org_acme");
-const outsider = human("p_eve", "org_globex");
+const intake = human("p_intake", [
+  onOrg("g_intake", PartyIntake, acme),
+  onOrg("g_intake_read", PartyRead, acme),
+  onOrg("g_intake_propose", PartyPropose, acme),
+]);
+const reviewer = human("p_rev", [onOrg("g_rev", PartyReview, acme), onOrg("g_rev_read", PartyRead, acme)]);
+const outsider = human("p_eve", [onOrg("g_eve", PartyIntake, globex), onOrg("g_eve_read", PartyRead, globex)]);
 
 const claim = Claim.ref("claim_1");
 const dana = Party.ref("party_dana");
@@ -43,89 +49,124 @@ const duplicate = Party.ref("party_dup");
 const otherDana = Party.ref("party_globex_dana");
 
 const sameParty = Proposition.cases.SameParty.make({ survivor: dana.id, absorbed: duplicate.id });
-const hasIdentifier = Proposition.cases.HasIdentifier.make({ party: dana.id, scheme: "email", value: "dana@acme.test" });
 
-const signalFrom = (source: string) => EvidenceSignal.make({ source, excerpt: `${source} says so` });
-const twoSources = [signalFrom("mailbox:intake"), signalFrom("crm")];
-// Two signals, one source: one source for the gate.
-const oneSource = [signalFrom("mailbox:intake"), signalFrom("mailbox:intake")];
+/** The hop the merge policy adds when it reacts to the accept at `seq`. */
+const mergeHop = (seq: number, event = "ClaimAccepted") =>
+  byProcess("MergeOnSameParty", Cause.cases.Event.make({ stream: "Claim/claim_1", seq, event }));
 
-it.effect("an accepted SameParty claim merges the parties, through the policy", () =>
-  story(
-    given(dana, new PartyRegistered({ name: "Dana Smith", by: intake })),
-    given(duplicate, new PartyRegistered({ name: "D. Smith", by: intake })),
-    given(claim, new ClaimAsserted({ proposition: sameParty, signals: twoSources, by: intake })),
+const registered = [
+  given(dana, new PartyRegistered({ org: acme, name: "Dana Smith", provenance: provenanceOf(intake) })),
+  given(duplicate, new PartyRegistered({ org: acme, name: "D. Smith", provenance: provenanceOf(intake) })),
+];
+const asserted = (signals = twoSources) =>
+  given(claim, new ClaimAsserted({ org: acme, proposition: sameParty, signals, provenance: provenanceOf(intake) }));
+
+it.effect("a policy's command runs under the reviewer's root, re-admitted for its hop, never a system", () => {
+  const merging = readmitted(reviewer, mergeHop(2));
+  expect(merging.root).toEqual(Root.cases.Human.make({ principal: reviewer.onBehalfOf }));
+  expect(operatorOf(merging)).toEqual({ _tag: "Process", process: "MergeOnSameParty" });
+  return story(
+    ...registered,
+    asserted(),
     as(reviewer),
     when(claim, new AcceptClaim()),
-    then(claim, new ClaimAccepted({ proposition: sameParty, by: reviewer, corroboration: 2 })),
-    // The policy ran, for real, as the system acting in the claim's org.
-    then(dana, new PartiesMerged({ absorbed: duplicate.id, by: system("MergeOnSameParty", "org_acme") })),
+    then(claim, new ClaimAccepted({ proposition: sameParty, corroboration: 2, provenance: provenanceOf(reviewer) })),
+    // The policy asks the authority context for this hop, and sends under what comes back.
+    call(Authority.readmit, { provenance: provenanceOf(reviewer), hop: mergeHop(2) }),
+    succeed(Authority.readmit, merging),
+    then(dana, new PartiesMerged({ absorbed: duplicate.id, provenance: provenanceOf(merging) })),
     view(EffectiveParty, dana, { org: acme, name: "Dana Smith", absorbed: [duplicate.id] }),
+  );
+});
+
+it.effect("a grant revoked between two hops stops the second hop, and the refusal is recorded", () =>
+  story(
+    ...registered,
+    asserted(),
+    as(reviewer),
+    when(claim, new AcceptClaim()),
+    then(claim, new ClaimAccepted({ proposition: sameParty, corroboration: 2, provenance: provenanceOf(reviewer) })),
+    call(Authority.readmit, { provenance: provenanceOf(reviewer), hop: mergeHop(2) }),
+    // The review grant was revoked after the accept: authority re-admits with the read grant alone.
+    succeed(Authority.readmit, readmitted(reviewer, mergeHop(2), [onOrg("g_rev_read", PartyRead, acme)])),
+    then(
+      claim,
+      new MergeRefused({
+        reason: "missing-grant:party.review",
+        provenance: extend(provenanceOf(reviewer), mergeHop(2)),
+      }),
+    ),
+    then(dana),
+    view(ClaimReview, claim, { notes: [{ _tag: "MergeRefused", reason: "missing-grant:party.review" }] }),
+  ),
+);
+
+it.effect("a refused re-admission and a veto are recorded, never dropped", () =>
+  story(
+    asserted(),
+    as(reviewer),
+    when(claim, new AcceptClaim()),
+    then(claim, new ClaimAccepted({ proposition: sameParty, corroboration: 2, provenance: provenanceOf(reviewer) })),
+    call(Authority.readmit, { provenance: provenanceOf(reviewer), hop: mergeHop(2) }),
+    fail(Authority.readmit, new ReadmissionRefused({ reason: "lapsed", lapsed: [] })),
+    then(claim, new MergeRefused({ reason: "readmission:lapsed", provenance: extend(provenanceOf(reviewer), mergeHop(2)) })),
+  ),
+);
+
+it.effect("a merge the survivor cannot take is a recorded veto", () =>
+  story(
+    // The survivor was never registered.
+    asserted(),
+    as(reviewer),
+    when(claim, new AcceptClaim()),
+    then(claim, new ClaimAccepted({ proposition: sameParty, corroboration: 2, provenance: provenanceOf(reviewer) })),
+    call(Authority.readmit, { provenance: provenanceOf(reviewer), hop: mergeHop(2) }),
+    succeed(Authority.readmit, readmitted(reviewer, mergeHop(2))),
+    then(
+      claim,
+      new MergeRefused({ reason: "vetoed:not-registered", provenance: extend(provenanceOf(reviewer), mergeHop(2)) }),
+    ),
   ),
 );
 
 it.effect("one source is not corroboration", () =>
   story(
-    given(claim, new ClaimAsserted({ proposition: sameParty, signals: oneSource, by: intake })),
+    asserted(oneSource),
     as(reviewer),
     when(claim, new AcceptClaim()),
     rejected(new AdmissionGateUnmet({ gate: "independent-corroboration", have: 1, need: 2 })),
   ),
 );
 
-it.effect("the assistant proposes, a reviewer decides", () => {
-  const assistant = agent({
-    agent: "review-assistant",
-    model: "reasoner",
-    run: "ReviewAssist/claim_1",
-    onBehalfOf: "p_intake",
-    org: "org_acme",
-  });
-  const rationale = "the intake mailbox names the address";
-  return story(
-    as(intake),
-    when(claim, new AssertClaim({ proposition: hasIdentifier, signals: oneSource })),
-    then(claim, new ClaimAsserted({ proposition: hasIdentifier, signals: oneSource, by: intake })),
-    // The run reached the model call; the story answers it.
-    call(Reasoner.assess, { proposition: hasIdentifier }),
-    succeed(Reasoner.assess, { disposition: "accept", rationale }),
-    then(claim, new DispositionProposed({ disposition: "accept", rationale, by: assistant })),
-    view(ClaimReview, claim, { status: "pending", proposal: { disposition: "accept", rationale, by: assistant } }),
-    // Waiting on a person.
-    saga(ReviewAssist, claim.id, { _tag: "Running" }),
-    signal(ReviewAssist, claim.id, HumanDecision, { disposition: "accept", by: reviewer }),
-    then(claim, new ClaimAccepted({ proposition: hasIdentifier, by: reviewer, corroboration: 1 })),
-    saga(ReviewAssist, claim.id, { _tag: "Completed", result: undefined }),
-    view(ClaimReview, claim, { status: "accepted" }),
-  );
-});
-
-it.effect("a party search returns only the caller's org's rows, a page at a time", () =>
+it.effect("a party search returns only a granted org's rows, a page at a time", () =>
   story(
     as(intake),
-    when(dana, new RegisterParty({ name: "Dana Smith" })),
-    then(dana, new PartyRegistered({ name: "Dana Smith", by: intake })),
-    when(duplicate, new RegisterParty({ name: "Dana S." })),
-    then(duplicate, new PartyRegistered({ name: "Dana S.", by: intake })),
+    when(dana, new RegisterParty({ org: acme, name: "Dana Smith" })),
+    then(dana, new PartyRegistered({ org: acme, name: "Dana Smith", provenance: provenanceOf(intake) })),
+    when(duplicate, new RegisterParty({ org: acme, name: "Dana S." })),
+    then(duplicate, new PartyRegistered({ org: acme, name: "Dana S.", provenance: provenanceOf(intake) })),
     as(outsider),
-    when(otherDana, new RegisterParty({ name: "Dana Other" })),
-    then(otherDana, new PartyRegistered({ name: "Dana Other", by: outsider })),
+    when(otherDana, new RegisterParty({ org: globex, name: "Dana Other" })),
+    then(otherDana, new PartyRegistered({ org: globex, name: "Dana Other", provenance: provenanceOf(outsider) })),
     as(reviewer),
-    query(FindParties, { text: "dana" }, [
+    query(FindParties, { org: acme, text: "dana" }, [
       { partyId: dana.id, org: acme, name: "Dana Smith" },
       { partyId: duplicate.id, org: acme, name: "Dana S." },
     ]),
     query(
       FindParties,
-      { text: "dana" },
+      { org: acme, text: "dana" },
       ({ entries, cursor }) => {
         expect(entries.map((row) => row.partyId)).toEqual([dana.id]);
         expect(cursor).toBe(dana.id);
       },
       { take: 1 },
     ),
-    query(FindParties, { text: "dana" }, [{ partyId: duplicate.id }], { take: 1, after: dana.id }),
+    query(FindParties, { org: acme, text: "dana" }, [{ partyId: duplicate.id }], { take: 1, after: dana.id }),
+    // No grant on another org: refused, not an empty page.
+    query(FindParties, { org: globex, text: "dana" }),
+    rejected(new MissingGrant({ capability: PartyRead.id, operation: "FindParties" })),
     as(outsider),
-    query(FindParties, { text: "dana" }, [{ partyId: otherDana.id, name: "Dana Other" }]),
+    query(FindParties, { org: globex, text: "dana" }, [{ partyId: otherDana.id, name: "Dana Other" }]),
   ),
 );

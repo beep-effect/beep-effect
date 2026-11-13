@@ -1,0 +1,18 @@
+{
+  "name": "@proto/tooling",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./HandlerRegistry": "./src/HandlerRegistry.ts",
+    "./ImportGraph": "./src/ImportGraph.ts",
+    "./RpcParity": "./src/RpcParity.ts",
+    "./SourceScan": "./src/SourceScan.ts"
+  },
+  "dependencies": {
+    "@alchemy.run/domain": "2.0.0-beta.87",
+    "@effect/platform-node": "4.1.4",
+    "effect": "4.1.4"
+  }
+}

@@ -1,9 +1,8 @@
 import * as Domain from "@alchemy.run/domain";
-import "@proto/kernel/Audience";
+import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
+import { EvidenceSignal } from "@proto/party-contract/Evidence";
+import { Proposition } from "@proto/party-contract/Proposition";
 import * as S from "effect/Schema";
-import { ClaimId } from "../Claim/Claim.id.ts";
-import { EvidenceSignal } from "../Evidence.ts";
-import { Proposition } from "../Proposition.ts";
 
 /**
  * The mailbox could not be read.

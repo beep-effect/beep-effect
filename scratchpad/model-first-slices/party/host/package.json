@@ -4,7 +4,18 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./*": "./src/*.ts"
+    "./Adapters": "./src/Adapters.ts",
+    "./Authority.adapter": "./src/Authority.adapter.ts",
+    "./Evidence/FixtureContactSource.adapter": "./src/Evidence/FixtureContactSource.adapter.ts",
+    "./Evidence/MailboxPoller.handler": "./src/Evidence/MailboxPoller.handler.ts",
+    "./Evidence/MailboxPoller.singleton": "./src/Evidence/MailboxPoller.singleton.ts",
+    "./Host": "./src/Host.ts",
+    "./Review/FixtureReasoner.adapter": "./src/Review/FixtureReasoner.adapter.ts",
+    "./Review/ReasonerTape": "./src/Review/ReasonerTape.ts",
+    "./Review/RecordingReasoner.adapter": "./src/Review/RecordingReasoner.adapter.ts",
+    "./Review/ReplayReasoner.adapter": "./src/Review/ReplayReasoner.adapter.ts",
+    "./Review/ReviewRuns.adapter": "./src/Review/ReviewRuns.adapter.ts",
+    "./ReviewerApi.http": "./src/ReviewerApi.http.ts"
   },
   "scripts": {
     "test": "vitest run"
@@ -12,13 +23,24 @@
   "dependencies": {
     "@alchemy.run/domain": "2.0.0-beta.87",
     "@alchemy.run/effect-cluster": "2.0.0-beta.87",
+    "@proto/authority-contract": "workspace:*",
     "@proto/kernel": "workspace:*",
-    "@proto/party": "workspace:*",
+    "@proto/party-contract": "workspace:*",
+    "@proto/party-model": "workspace:*",
+    "@proto/runs-contract": "workspace:*",
     "alchemy": "2.0.0-beta.87",
     "effect": "4.1.4"
   },
   "devDependencies": {
+    "@effect/platform-node": "4.1.4",
     "@effect/vitest": "4.1.4",
+    "@proto/authority-contract": "workspace:*",
+    "@proto/authority-host": "workspace:*",
+    "@proto/authority-model": "workspace:*",
+    "@proto/runs-host": "workspace:*",
+    "@proto/runs-model": "workspace:*",
+    "@proto/tooling": "workspace:*",
     "vitest": "5.0.4"
-  }
+  },
+  "sideEffects": false
 }

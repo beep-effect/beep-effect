@@ -1,5 +1,5 @@
 import * as DomainHttp from "@alchemy.run/domain/Http";
-import { ReviewerApi } from "@proto/party/ReviewerApi.api";
+import { ReviewerApi } from "@proto/party-model/ReviewerApi.api";
 import * as Http from "alchemy/Http";
 import * as HttpApiBuilder from "effect/http-api/HttpApiBuilder";
 import * as HttpRouter from "effect/http/HttpRouter";

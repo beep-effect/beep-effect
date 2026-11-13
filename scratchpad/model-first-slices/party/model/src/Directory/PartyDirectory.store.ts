@@ -1,5 +1,7 @@
 import type * as Domain from "@alchemy.run/domain";
 import { OrgId } from "@proto/kernel/Ids";
+import { DirectoryRow } from "@proto/party-contract/Directory/FindParties.read";
+import { PartyId } from "@proto/party-contract/Party/Party.id";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -11,25 +13,6 @@ import * as Order from "effect/Order";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { PartyId } from "../Party/Party.id.ts";
-
-/**
- * One party as the directory lists it. Clients read it through `FindParties`.
- *
- * @category models
- * @since 0.0.0
- */
-export const DirectoryRow = S.Struct({
-  partyId: PartyId,
-  org: OrgId,
-  name: S.String,
-  absorbed: S.Array(PartyId),
-});
-/**
- * @category models
- * @since 0.0.0
- */
-export type DirectoryRow = typeof DirectoryRow.Type;
 
 /**
  * A change the projection writes. A projection from an aggregate sees only
@@ -89,8 +72,8 @@ const apply = (rows: HashMap.HashMap<PartyId, DirectoryRow>, change: DirectoryCh
  *
  * **Example** (A story's store)
  * ```ts
- * import { MemoryPartyDirectoryStore } from "@proto/party/Directory/PartyDirectory.store";
- * import { PartyHandlers } from "@proto/party/Handlers";
+ * import { MemoryPartyDirectoryStore } from "@proto/party-model/Directory/PartyDirectory.store";
+ * import { PartyHandlers } from "@proto/party-model/Party.handlers";
  * import * as Layer from "effect/Layer";
  *
  * const layer = PartyHandlers.pipe(Layer.provide(MemoryPartyDirectoryStore));

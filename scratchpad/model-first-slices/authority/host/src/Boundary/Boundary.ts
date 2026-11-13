@@ -1,0 +1,263 @@
+import { Accountability } from "@proto/authority-model/Accountability/Accountability.aggregate";
+import { Delegation } from "@proto/authority-model/Delegation/Delegation.aggregate";
+import { RunDelegations } from "@proto/authority-model/Delegation/RunDelegations.view";
+import { Grant } from "@proto/authority-model/Grant/Grant.aggregate";
+import { HolderGrants } from "@proto/authority-model/Grant/HolderGrants.view";
+import { CapabilityGrant, type GrantTerms, inForce, ResourceScope, widens } from "@proto/kernel/Capability";
+import {
+  CapabilityId,
+  type DelegationId,
+  GrantId,
+  type OrgId,
+  type PrincipalId,
+  type RunId,
+} from "@proto/kernel/Ids";
+import {
+  byProcess,
+  Cause,
+  GrantRef,
+  type Hop,
+  Invocation,
+  Provenance,
+  Root,
+} from "@proto/kernel/Invocation";
+import { ReadmissionRefused } from "@proto/kernel/ReadmissionRefused.rejection";
+import { Unaccountable } from "@proto/kernel/Session.middleware";
+import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import type * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import { Credential } from "./FixtureCredential.ts";
+
+/**
+ * The trusted boundary: the only code that builds an invocation. It admits a
+ * credential at the edge, and re-admits provenance at every later hop, in
+ * both cases from the grants the authority model holds in force at that moment.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class Boundary extends Context.Service<
+  Boundary,
+  {
+    /**
+     * The invocation a credential may act under now. A human or process gets
+     * the human's grants in force; an agent run gets its delegations whose
+     * every ancestor is still in force and covers them, and only while the
+     * run has a live accountable human.
+     */
+    readonly admit: (credential: Credential, at: DateTime.Utc) => Effect.Effect<Invocation, Unaccountable>;
+    /**
+     * The invocation for the next hop: the provenance's root, re-checked; of
+     * the grants it names, those still in force; its chain plus the hop. It
+     * never adds a grant the provenance did not name.
+     */
+    readonly readmit: (provenance: Provenance, hop: Hop, at: DateTime.Utc) => Effect.Effect<Invocation, ReadmissionRefused>;
+    /**
+     * The provenance a run acts under once its delegation is open: an agent
+     * root naming its accountable human, and the delegation as its only grant.
+     */
+    readonly runProvenance: (
+      run: RunId,
+      accountable: PrincipalId,
+      onBehalfOf: PrincipalId,
+      grant: GrantRef,
+    ) => Provenance;
+  }
+>()("Authority/Boundary") {}
+
+const listed = <S, A>(state: O.Option<S>, items: (state: S) => ReadonlyArray<A>): ReadonlyArray<A> =>
+  O.match(state, { onNone: () => [], onSome: items });
+
+/**
+ * The boundary over the hosted authority model. The views are indexes; each
+ * grant and delegation is confirmed against its aggregate, so a revocation
+ * counts from the moment it commits.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const BoundaryLive = Layer.effect(
+  Boundary,
+  Effect.gen(function* () {
+    const grants = yield* Grant;
+    const delegations = yield* Delegation;
+    const accountability = yield* Accountability;
+    const holderGrants = yield* HolderGrants;
+    const runDelegations = yield* RunDelegations;
+
+    /** A grant's terms, if it is active, held by `holder`, and in force. */
+    const grantInForce = (grant: GrantId, holder: O.Option<PrincipalId>, at: DateTime.Utc) =>
+      Effect.map(grants.get(grant), (state) =>
+        state._tag === "Active" &&
+        O.match(holder, { onNone: () => true, onSome: (principal) => state.holder === principal }) &&
+        inForce(state.terms, at)
+          ? O.some(state.terms)
+          : O.none<GrantTerms>(),
+      );
+
+    /**
+     * A delegation's terms, if it is active, (when given) held by `holder`, in
+     * force, and covered by every ancestor up to its grant.
+     */
+    const delegationInForce = (
+      delegation: DelegationId,
+      holder: O.Option<RunId>,
+      at: DateTime.Utc,
+    ): Effect.Effect<O.Option<{ readonly grant: GrantId; readonly terms: GrantTerms }>> =>
+      Effect.gen(function* () {
+        const held = yield* delegations.get(delegation);
+        const usable =
+          held._tag === "Active" &&
+          O.match(holder, { onNone: () => true, onSome: (run) => held.holder === run }) &&
+          inForce(held.terms, at);
+        if (!usable) return O.none();
+        const parentTerms =
+          held.parentDelegation === null
+            ? yield* grantInForce(held.parent, O.none(), at)
+            : O.map(yield* delegationInForce(held.parentDelegation, O.none(), at), (parent) => parent.terms);
+        return O.flatMap(parentTerms, (parent) =>
+          O.isNone(widens(parent, held.terms)) ? O.some({ grant: held.parent, terms: held.terms }) : O.none(),
+        );
+      });
+
+    const confirm = (ref: GrantRef, root: Root, at: DateTime.Utc): Effect.Effect<O.Option<CapabilityGrant>> =>
+      Root.match(root, {
+        Human: ({ principal }) =>
+          ref.delegation === null
+            ? Effect.map(grantInForce(ref.grant, O.some(principal), at), (terms) =>
+                O.map(terms, (t) => CapabilityGrant.make({ grant: ref.grant, delegation: null, ...t })),
+              )
+            : Effect.succeed(O.none()),
+        Agent: ({ run }) =>
+          ref.delegation === null
+            ? Effect.succeed(O.none())
+            : Effect.map(delegationInForce(ref.delegation, O.some(run), at), (found) =>
+                O.map(found, ({ grant, terms }) => CapabilityGrant.make({ grant, delegation: ref.delegation, ...terms })),
+              ),
+      });
+
+    const heldBy = Effect.fn("Boundary.heldBy")(function* (principal: PrincipalId, at: DateTime.Utc) {
+      const ids = listed(yield* Effect.orDie(holderGrants.get(principal)), (view) => view.grants);
+      const root = Root.cases.Human.make({ principal });
+      return A.getSomes(
+        yield* Effect.forEach(ids, (grant) => confirm(GrantRef.make({ grant, delegation: null }), root, at)),
+      );
+    });
+
+    const answerFor = (run: RunId) =>
+      Effect.map(accountability.get(run), (state) => (state._tag === "Live" ? O.some(state) : O.none()));
+
+    const delegatedTo = Effect.fn("Boundary.delegatedTo")(function* (
+      run: RunId,
+      accountable: PrincipalId,
+      at: DateTime.Utc,
+    ) {
+      const ids = listed(yield* Effect.orDie(runDelegations.get(run)), (view) => view.delegations);
+      const root = Root.cases.Agent.make({ run, accountable });
+      return A.getSomes(
+        yield* Effect.forEach(ids, (delegation: DelegationId) =>
+          Effect.flatMap(delegations.get(delegation), (held) =>
+            held._tag === "Active"
+              ? confirm(GrantRef.make({ grant: held.parent, delegation }), root, at)
+              : Effect.succeed(O.none()),
+          ),
+        ),
+      );
+    });
+
+    const humanRooted = (principal: PrincipalId, at: DateTime.Utc, chain: ReadonlyArray<Hop>) =>
+      Effect.map(heldBy(principal, at), (held) =>
+        Invocation.make({ root: Root.cases.Human.make({ principal }), onBehalfOf: principal, grants: held, chain }),
+      );
+
+    return {
+      admit: (credential, at) =>
+        Credential.match(credential, {
+          Human: ({ principal }) => humanRooted(principal, at, []),
+          // A process acts for a human, and its first hop says so; a process is never a root.
+          Process: ({ process, principal }) =>
+            humanRooted(principal, at, [byProcess(process, Cause.cases.Session.make({ scheme: "fixture" }))]),
+          Agent: ({ run }) =>
+            Effect.gen(function* () {
+              const answerer = yield* answerFor(run);
+              if (O.isNone(answerer)) return yield* new Unaccountable({ run });
+              return Invocation.make({
+                root: Root.cases.Agent.make({ run, accountable: answerer.value.accountable }),
+                onBehalfOf: answerer.value.onBehalfOf,
+                grants: yield* delegatedTo(run, answerer.value.accountable, at),
+                chain: [],
+              });
+            }),
+        }),
+
+      readmit: (provenance, hop, at) =>
+        Effect.gen(function* () {
+          // The root is re-checked, not trusted: an agent root needs a live accountable human now.
+          const onBehalfOf = yield* Root.match(provenance.root, {
+            Human: ({ principal }) => Effect.succeed(principal),
+            Agent: ({ run, accountable }) =>
+              Effect.flatMap(answerFor(run), (answerer) =>
+                O.isSome(answerer) && answerer.value.accountable === accountable
+                  ? Effect.succeed(answerer.value.onBehalfOf)
+                  : Effect.fail(new ReadmissionRefused({ reason: "unaccountable", lapsed: [] })),
+              ),
+          });
+          const confirmed = yield* Effect.forEach(provenance.grants, (ref) =>
+            Effect.map(confirm(ref, provenance.root, at), (live) => ({ ref, live })),
+          );
+          const live = A.getSomes(A.map(confirmed, ({ live }) => live));
+          const lapsed = A.getSomes(A.map(confirmed, ({ ref, live }) => (O.isNone(live) ? O.some(ref) : O.none())));
+          if (A.isReadonlyArrayNonEmpty(provenance.grants) && A.isReadonlyArrayEmpty(live)) {
+            return yield* new ReadmissionRefused({ reason: "lapsed", lapsed });
+          }
+          return Invocation.make({
+            root: provenance.root,
+            onBehalfOf,
+            grants: live,
+            chain: A.append(provenance.chain, hop),
+          });
+        }),
+
+      runProvenance: (run, accountable, onBehalfOf, grant) =>
+        Provenance.make({
+          root: Root.cases.Agent.make({ run, accountable }),
+          onBehalfOf,
+          grants: [grant],
+          chain: [],
+        }),
+    };
+  }),
+);
+
+/**
+ * The invocation that issues an org's first grant: its owner, holding
+ * `authority.grants` on the org with no Grant behind it.
+ *
+ * **Gotchas**
+ *
+ * Break-glass. Every other invocation is admitted from grants the model
+ * holds; this one is not. A real host runs it once, from an operator
+ * ceremony, and records it.
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const bootstrap = (owner: PrincipalId, org: OrgId): Invocation =>
+  Invocation.make({
+    root: Root.cases.Human.make({ principal: owner }),
+    onBehalfOf: owner,
+    grants: [
+      CapabilityGrant.make({
+        grant: GrantId.make(`bootstrap:${org}`),
+        delegation: null,
+        capability: CapabilityId.make("authority.grants"),
+        operations: null,
+        resource: ResourceScope.cases.Org.make({ org }),
+        expires: null,
+      }),
+    ],
+    chain: [],
+  });

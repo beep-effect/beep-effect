@@ -19,11 +19,75 @@
         "@alchemy.run/domain": "2.0.0-beta.87",
         "@alchemy.run/effect-cluster": "2.0.0-beta.87",
         "@effect/platform-node": "4.1.4",
+        "@proto/authority-host": "workspace:*",
+        "@proto/authority-model": "workspace:*",
         "@proto/kernel": "workspace:*",
-        "@proto/party": "workspace:*",
+        "@proto/party-contract": "workspace:*",
         "@proto/party-host": "workspace:*",
+        "@proto/party-model": "workspace:*",
+        "@proto/runs-host": "workspace:*",
+        "@proto/runs-model": "workspace:*",
         "alchemy": "2.0.0-beta.87",
         "effect": "4.1.4",
+      },
+    },
+    "authority/contract": {
+      "name": "@proto/authority-contract",
+      "version": "0.0.0",
+      "dependencies": {
+        "@alchemy.run/domain": "2.0.0-beta.87",
+        "@proto/contract-kit": "workspace:*",
+        "@proto/kernel": "workspace:*",
+        "effect": "4.1.4",
+      },
+    },
+    "authority/host": {
+      "name": "@proto/authority-host",
+      "version": "0.0.0",
+      "dependencies": {
+        "@alchemy.run/domain": "2.0.0-beta.87",
+        "@proto/authority-contract": "workspace:*",
+        "@proto/authority-model": "workspace:*",
+        "@proto/kernel": "workspace:*",
+        "effect": "4.1.4",
+      },
+      "devDependencies": {
+        "@effect/platform-node": "4.1.4",
+        "@effect/vitest": "4.1.4",
+        "@proto/tooling": "workspace:*",
+        "vitest": "5.0.4",
+      },
+    },
+    "authority/model": {
+      "name": "@proto/authority-model",
+      "version": "0.0.0",
+      "dependencies": {
+        "@alchemy.run/domain": "2.0.0-beta.87",
+        "@proto/authority-contract": "workspace:*",
+        "@proto/kernel": "workspace:*",
+        "effect": "4.1.4",
+      },
+      "devDependencies": {
+        "@effect/platform-node": "4.1.4",
+        "@effect/vitest": "4.1.4",
+        "@proto/tooling": "workspace:*",
+        "vitest": "5.0.4",
+      },
+    },
+    "party/contract": {
+      "name": "@proto/party-contract",
+      "version": "0.0.0",
+      "dependencies": {
+        "@alchemy.run/domain": "2.0.0-beta.87",
+        "@proto/contract-kit": "workspace:*",
+        "@proto/kernel": "workspace:*",
+        "effect": "4.1.4",
+      },
+      "devDependencies": {
+        "@effect/platform-node": "4.1.4",
+        "@effect/vitest": "4.1.4",
+        "@proto/tooling": "workspace:*",
+        "vitest": "5.0.4",
       },
     },
     "party/host": {
@@ -32,27 +96,92 @@
       "dependencies": {
         "@alchemy.run/domain": "2.0.0-beta.87",
         "@alchemy.run/effect-cluster": "2.0.0-beta.87",
+        "@proto/authority-contract": "workspace:*",
         "@proto/kernel": "workspace:*",
-        "@proto/party": "workspace:*",
+        "@proto/party-contract": "workspace:*",
+        "@proto/party-model": "workspace:*",
+        "@proto/runs-contract": "workspace:*",
         "alchemy": "2.0.0-beta.87",
         "effect": "4.1.4",
       },
       "devDependencies": {
+        "@effect/platform-node": "4.1.4",
         "@effect/vitest": "4.1.4",
+        "@proto/authority-contract": "workspace:*",
+        "@proto/authority-host": "workspace:*",
+        "@proto/authority-model": "workspace:*",
+        "@proto/runs-host": "workspace:*",
+        "@proto/runs-model": "workspace:*",
+        "@proto/tooling": "workspace:*",
         "vitest": "5.0.4",
       },
     },
     "party/model": {
-      "name": "@proto/party",
+      "name": "@proto/party-model",
       "version": "0.0.0",
       "dependencies": {
         "@alchemy.run/domain": "2.0.0-beta.87",
         "@proto/kernel": "workspace:*",
+        "@proto/party-contract": "workspace:*",
         "effect": "4.1.4",
       },
       "devDependencies": {
+        "@effect/platform-node": "4.1.4",
         "@effect/vitest": "4.1.4",
+        "@proto/tooling": "workspace:*",
         "vitest": "5.0.4",
+      },
+    },
+    "runs/contract": {
+      "name": "@proto/runs-contract",
+      "version": "0.0.0",
+      "dependencies": {
+        "@alchemy.run/domain": "2.0.0-beta.87",
+        "@proto/contract-kit": "workspace:*",
+        "@proto/kernel": "workspace:*",
+        "effect": "4.1.4",
+      },
+      "devDependencies": {
+        "@effect/platform-node": "4.1.4",
+        "@effect/vitest": "4.1.4",
+        "@proto/tooling": "workspace:*",
+        "vitest": "5.0.4",
+      },
+    },
+    "runs/host": {
+      "name": "@proto/runs-host",
+      "version": "0.0.0",
+      "dependencies": {
+        "@alchemy.run/domain": "2.0.0-beta.87",
+        "@proto/authority-contract": "workspace:*",
+        "@proto/kernel": "workspace:*",
+        "@proto/runs-contract": "workspace:*",
+        "@proto/runs-model": "workspace:*",
+        "effect": "4.1.4",
+      },
+    },
+    "runs/model": {
+      "name": "@proto/runs-model",
+      "version": "0.0.0",
+      "dependencies": {
+        "@alchemy.run/domain": "2.0.0-beta.87",
+        "@proto/kernel": "workspace:*",
+        "@proto/runs-contract": "workspace:*",
+        "effect": "4.1.4",
+      },
+      "devDependencies": {
+        "@effect/platform-node": "4.1.4",
+        "@effect/vitest": "4.1.4",
+        "@proto/tooling": "workspace:*",
+        "vitest": "5.0.4",
+      },
+    },
+    "shared/contract-kit": {
+      "name": "@proto/contract-kit",
+      "version": "0.0.0",
+      "dependencies": {
+        "@alchemy.run/domain": "2.0.0-beta.87",
+        "effect": "4.1.4",
       },
     },
     "shared/kernel": {
@@ -60,6 +189,15 @@
       "version": "0.0.0",
       "dependencies": {
         "@alchemy.run/domain": "2.0.0-beta.87",
+        "effect": "4.1.4",
+      },
+    },
+    "shared/tooling": {
+      "name": "@proto/tooling",
+      "version": "0.0.0",
+      "dependencies": {
+        "@alchemy.run/domain": "2.0.0-beta.87",
+        "@effect/platform-node": "4.1.4",
         "effect": "4.1.4",
       },
     },
@@ -102,13 +240,31 @@
 
     "@oxc-project/types": ["@oxc-project/types@0.156.0", "", {}, "sha512-1Duyg48TdJNdyhEB8Xn1L36bT9Pv6GUtlKjHxOys8xkaF/rQq3XJE+bAurSK/AgIz5mGFsb77cn9Pb20+WCScw=="],
 
+    "@proto/authority-contract": ["@proto/authority-contract@workspace:authority/contract"],
+
+    "@proto/authority-host": ["@proto/authority-host@workspace:authority/host"],
+
+    "@proto/authority-model": ["@proto/authority-model@workspace:authority/model"],
+
+    "@proto/contract-kit": ["@proto/contract-kit@workspace:shared/contract-kit"],
+
     "@proto/kernel": ["@proto/kernel@workspace:shared/kernel"],
 
-    "@proto/party": ["@proto/party@workspace:party/model"],
+    "@proto/party-contract": ["@proto/party-contract@workspace:party/contract"],
 
     "@proto/party-host": ["@proto/party-host@workspace:party/host"],
 
+    "@proto/party-model": ["@proto/party-model@workspace:party/model"],
+
     "@proto/practice": ["@proto/practice@workspace:apps/practice"],
+
+    "@proto/runs-contract": ["@proto/runs-contract@workspace:runs/contract"],
+
+    "@proto/runs-host": ["@proto/runs-host@workspace:runs/host"],
+
+    "@proto/runs-model": ["@proto/runs-model@workspace:runs/model"],
+
+    "@proto/tooling": ["@proto/tooling@workspace:shared/tooling"],
 
     "@redis/bloom": ["@redis/bloom@6.3.1", "", { "peerDependencies": { "@redis/client": "^6.3.1" } }, "sha512-dpF9j2yJDoPzSCaZn0MSB3xzmnXQVJeTSAWJcQVcgbmluwhpFeemmII0cF1t+WYfoVS+shEFq79+MmUItgzJLg=="],
 
