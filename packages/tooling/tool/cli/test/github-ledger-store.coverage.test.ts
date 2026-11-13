@@ -346,6 +346,59 @@ describe("GithubLedger file store retention and failures", () => {
       })
     );
 
+    it.effect("leaves a fresh lease to the process holding it", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "github-ledger-lease-fresh-" });
+        const lock = path.join(root, "sampler", "user_alice.lock");
+        yield* fs.makeDirectory(path.dirname(lock), { recursive: true });
+        yield* fs.writeFileString(lock, "holder\n");
+        // The lease was touched one minute before the clock, inside the two-minute staleness bound.
+        yield* fs.utimes(lock, 1, 1);
+        yield* TestClock.setTime(1_000 + 60_000);
+        yield* Effect.gen(function* () {
+          const store = yield* GithubLedgerStore;
+          const won = yield* Effect.scoped(store.acquireSamplerLease(alice));
+          assertFalse(won);
+          const holder = yield* fs.readFileString(lock);
+          expect(holder).toBe("holder\n");
+        }).pipe(withLayer(layerGithubLedgerStoreLive), withStateRoot(root));
+      })
+    );
+
+    it.effect("gives up a stale lease another reclaimer renamed away first", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "github-ledger-lease-lost-" });
+        const lock = path.join(root, "sampler", "user_alice.lock");
+        const competitor = `${lock}.stale.competitor`;
+        // A competitor renames the stale lock away just before this process's own rename, which then finds nothing.
+        const losing: FileSystem.FileSystem = {
+          ...fs,
+          rename: (from, to) => fs.rename(from, competitor).pipe(Effect.andThen(fs.rename(from, to))),
+        };
+        yield* fs.makeDirectory(path.dirname(lock), { recursive: true });
+        yield* fs.writeFileString(lock, "stale\n");
+        yield* fs.utimes(lock, 1, 1);
+        yield* TestClock.setTime(10 * 60_000);
+        yield* Effect.gen(function* () {
+          const store = yield* GithubLedgerStore;
+          const won = yield* Effect.scoped(store.acquireSamplerLease(alice));
+          assertFalse(won);
+          const lockExists = yield* fs.exists(lock);
+          assertFalse(lockExists);
+          const competitorHolds = yield* fs.readFileString(competitor);
+          expect(competitorHolds).toBe("stale\n");
+        }).pipe(
+          withLayer(layerGithubLedgerStoreLive),
+          withStateRoot(root),
+          Effect.provideService(FileSystem.FileSystem, losing)
+        );
+      })
+    );
+
     it.effect("fails a sampler lease it cannot create for a reason other than a holder", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
