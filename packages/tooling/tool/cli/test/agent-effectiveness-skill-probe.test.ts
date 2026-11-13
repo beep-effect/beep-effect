@@ -324,6 +324,8 @@ describe("skill probe report", () => {
       ],
       "all-lanes"
     );
+    const allExcluded = buildSkillProbeReport([record("t-2", "f", "C", true, { excluded: true })], "all-lanes");
+    expect(allExcluded.laneCensus[0]).toMatchObject({ counted: 0, completion: 0, allLanes: 0, lawPass: 0 });
     expect(probe.laneCensus).toHaveLength(1);
     expect(probe.laneCensus[0]).toMatchObject({
       cell: "B",
