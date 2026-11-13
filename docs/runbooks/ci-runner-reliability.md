@@ -28,10 +28,12 @@ Admission bounds what enters the `beep-ec2-heavy` queue; it does not add
 capacity. Two workflows share one decision, `bun run beep ci admission`: the
 `Heavy Admission` job in `check.yml` runs it on every push (a pull request
 enters the heavy matrix only with the `ready-for-heavy` label, or as a main
-push / merge group; a docs-only diff is called with `admitted: false` so every
-lane passes without work on a hosted runner; an unlabelled code PR holds outside the queue), and
-`heavy-admit.yml` runs the same job plus the heavy caller when the label is
-applied, so labelling never cancels or re-runs tier 1. On a same-repository
+push / merge group; an unlabelled code PR holds outside the queue). A docs-only
+diff from this repository skips the job before it requests a runner, and the
+Heavy caller passes `admitted: false` straight from Change Profile so every
+lane context reports without work. `heavy-admit.yml` runs the same job plus the
+heavy caller when the label is applied, so labelling never cancels or re-runs
+tier 1. On a same-repository
 PR that carries the label, a later label re-reports: the base ruleset reads
 only the newest Heavy Admit run's check suite, so a run that skipped would hide
 the heavy checks. When the newest earlier Heavy Admit run on the head that
@@ -87,14 +89,23 @@ A `docs_only` pull request runs only the checks a documentation diff can fail:
 | Docs Policy | The knowledge, packet and Markdown root tasks listed in `DocsPolicy.ts`, plus `knowledge doctor ci --base` |
 | Secret Scanning, Commitlint | The commit range, as on every head |
 
-Four kinds of job still allocate a runner, each doing only a few seconds of work:
-Change Profile, Heavy Admission and Test Plan classify the change and stop; PR
-Size Label sets its label; and the required-context aggregators (Lint, Test
-Unit, Property Laws, Heavy / Test Integration) report the skipped shards. The
-heavy matrix completes with `admitted: false` and allocates no runner, and
-Security, SAST, the code lanes and the test shards skip before runner
-allocation. The non-required Storybook and Vercel Deploy workflows each run a
-short planner that finds nothing to build. `packages/tooling/tool/cli/test/ci-docs-policy.test.ts` derives Docs
+Three more jobs allocate a runner because they run before the classification
+exists or serve every pull request: Change Profile classifies the change, Test
+Plan starts beside it (so a code pull request's test shards never wait one
+more queue turn for a runner) and stops after its own classification, and PR
+Size Label sets its label. Nothing else requests a runner. The required-context
+aggregates (Lint, Test Unit, Property Laws, Heavy / Test Integration) and Heavy
+Admission are skipped at job level once Change Profile has succeeded and
+reported `docs_only`; GitHub reports a job-level skip as a passing required
+check, and any other profile result still runs each aggregate, which fails
+closed. The heavy matrix is called with `admitted: false` and allocates no
+runner, and Security, SAST, the code lanes and the test shards skip the same
+way. Vercel Deploy is created on a pull request only when it changes an app
+root the plan deploys (`pull_request.paths`), and Storybook is not created for
+a pull request confined to `docs/`, `goals/`, `explorations/` and `research/`.
+`packages/tooling/tool/cli/test/ci-docs-job-admission.test.ts` simulates the
+job graph from the checked-in `if` expressions and fails if a documentation
+diff requests any other runner. `packages/tooling/tool/cli/test/ci-docs-policy.test.ts` derives Docs
 Policy's obligations from `turbo.json`: every root task whose inputs match a
 docs-classified path, and every uncached root task, either runs in the lane or
 has a written reason in `DOCS_POLICY_EXCLUSIONS`.

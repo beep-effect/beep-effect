@@ -83,43 +83,39 @@ jobs:
 
   # Tier-2 admission (time-to-certainty B8, rulings 50–57). One hosted job
   # decides, before the reusable workflow is called, whether the heavy matrix
-  # runs (`run`), is called with `admitted: false` so every `Heavy / <lane>`
-  # context passes without work (`skip-satisfied`, docs-only diffs), or is held (`hold`:
-  # the caller job is skipped, the required contexts stay "Expected", and
-  # the PR is merge-blocked until the `ready-for-heavy` label lands). The
-  # decision is `bun run beep ci admission`, unit-tested in the CLI; the
-  # monitor loop evaluates the same function for its `heavy-not-admitted`
-  # settle wait, and heavy-admit.yml runs the same two jobs when the label
-  # is applied, so the label never restarts tier 1.
+  # runs (`run`) or is held (`hold`: the caller job is skipped, the required
+  # contexts stay "Expected", and the PR is merge-blocked until the
+  # `ready-for-heavy` label lands). The decision is `bun run beep ci admission`,
+  # unit-tested in the CLI; the monitor loop evaluates the same function for
+  # its `heavy-not-admitted` settle wait, and heavy-admit.yml runs the same two
+  # jobs when the label is applied, so the label never restarts tier 1.
+  #
+  # A documentation-only diff from this repository has nothing to decide: the
+  # job is skipped before a runner is requested, and `heavy` below calls the
+  # reusable workflow with `admitted: false` straight from Change Profile, so
+  # every `Heavy / <lane>` context still reports. A fork keeps the full
+  # decision (its label rules apply to documentation too), and a failed Change
+  # Profile skips this job, which leaves the heavy contexts "Expected".
   admission:
     name: Heavy Admission
     needs: [change-profile]
+    if: ${{ needs.change-profile.result == 'success' && !(needs.change-profile.outputs.docs_only == 'true' && github.event.pull_request.head.repo.full_name == github.repository) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
       actions: write
     outputs:
-      verdict: ${{ steps.decide.outputs.verdict || steps.docs.outputs.verdict }}
-      admitted: ${{ steps.decide.outputs.admitted || steps.docs.outputs.admitted }}
-      docs_only: ${{ steps.decide.outputs.docs_only || steps.docs.outputs.docs_only }}
+      verdict: ${{ steps.decide.outputs.verdict }}
+      admitted: ${{ steps.decide.outputs.admitted }}
+      docs_only: ${{ steps.decide.outputs.docs_only }}
       route_skips: ${{ steps.decide.outputs.route_skips }}
       route_receipt: ${{ steps.decide.outputs.route_receipt }}
       # heavy.yml@main no longer declares Coverage Regression, so this is a
       # constant until COVE-08 makes that job name a literal and deletes it.
       legacy_coverage: 'false'
     steps:
-      - name: Satisfy documentation-only admission
-        id: docs
-        if: needs.change-profile.outputs.docs_only == 'true' && github.event.pull_request.head.repo.full_name == github.repository
-        shell: bash
-        run: |
-          echo "verdict=skip-satisfied" >> "$GITHUB_OUTPUT"
-          echo "admitted=false" >> "$GITHUB_OUTPUT"
-          echo "docs_only=true" >> "$GITHUB_OUTPUT"
-          echo "Documentation-only diff: no dependency installation or heavy proof needed."
       - name: Checkout repository
-        if: steps.docs.outputs.verdict != 'skip-satisfied'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
@@ -127,19 +123,17 @@ jobs:
           persist-credentials: false
 
       - name: Fetch pull request base
-        if: steps.docs.outputs.verdict != 'skip-satisfied' && github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request'
         shell: bash
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       - name: Setup monorepo CI
-        if: steps.docs.outputs.verdict != 'skip-satisfied'
         uses: ./.github/actions/setup-monorepo-ci
         with:
           free-disk: "false"
 
       - name: Decide heavy admission
-        if: steps.docs.outputs.verdict != 'skip-satisfied'
         id: decide
         shell: bash
         run: bun run beep ci admission --github-output
@@ -202,11 +196,17 @@ jobs:
 
   heavy:
     name: Heavy
-    needs: [admission]
+    needs: [change-profile, admission]
     # `hold` skips the caller so no `Heavy / *` check run exists and the
     # ruleset keeps the PR blocked; never pass `hold` through as
     # `admitted: false`, which would report every lane as passing without work.
-    if: ${{ needs.admission.outputs.verdict == 'run' || needs.admission.outputs.verdict == 'skip-satisfied' }}
+    # The last arm is the documentation-only diff whose admission job was
+    # skipped above: the same three conditions, and `admitted` below is false
+    # because no verdict exists. `!cancelled()` lets the caller start although
+    # a needed job was skipped, so the verdict arms require a successful
+    # admission themselves: a job that fails after its `decide` step (the
+    # cancellation step below it) still publishes the verdict that step wrote.
+    if: ${{ !cancelled() && ((needs.admission.result == 'success' && (needs.admission.outputs.verdict == 'run' || needs.admission.outputs.verdict == 'skip-satisfied')) || (needs.admission.result == 'skipped' && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true' && github.event.pull_request.head.repo.full_name == github.repository)) }}
     permissions:
       contents: read
       # GitHub validates every nested job, including the gated producer.
@@ -723,11 +723,17 @@ jobs:
             infra/r2-cache/adapter.sh stop-ci
           fi
 
+  # Required-context aggregates (Lint, Test Unit, Heavy / Test Integration,
+  # Property Laws). On a confirmed documentation-only diff the shards are never
+  # created (their own guards read the same output), so nothing can fail and
+  # the aggregate is skipped before it requests a runner: GitHub reports a
+  # job-level skip as a passing required check. A Change Profile that failed
+  # or reported anything else still runs the aggregate, which fails closed.
   lint:
     name: Lint
     timeout-minutes: 5
     needs: [change-profile, lint-shard]
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true') }}
     runs-on: ubuntu-24.04
     steps:
       - name: Require every Lint shard
@@ -1001,7 +1007,7 @@ jobs:
     name: Test Unit
     timeout-minutes: 5
     needs: [change-profile, test-plan, test-unit-shard]
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true') }}
     runs-on: ubuntu-24.04
     steps:
       - name: Require every planned Test Unit shard
@@ -1153,7 +1159,7 @@ jobs:
     name: Heavy / Test Integration
     timeout-minutes: 5
     needs: [admission, change-profile, test-plan, test-integration-shard]
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true') }}
     runs-on: ubuntu-24.04
     steps:
       - name: Require every planned Test Integration partition
@@ -1178,8 +1184,8 @@ jobs:
     # legacy producer. After main retires that producer this becomes the exact
     # existing coverage context, without a ruleset edit or duplicate check name.
     name: ${{ needs.admission.outputs.legacy_coverage == 'true' && 'Coverage Artifact Migration' || 'Heavy / Coverage Regression' }}
-    needs: [admission, test-unit, labs]
-    if: ${{ !cancelled() && needs.admission.outputs.docs_only != 'true' }}
+    needs: [change-profile, admission, test-unit, labs]
+    if: ${{ !cancelled() && needs.change-profile.outputs.docs_only != 'true' && needs.admission.outputs.docs_only != 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -1569,7 +1575,7 @@ jobs:
     name: Property Laws
     timeout-minutes: 5
     needs: [change-profile, property-laws-shard]
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true') }}
     runs-on: ubuntu-24.04
     steps:
       - name: Require every Property Laws slice
