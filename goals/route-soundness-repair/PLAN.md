@@ -101,4 +101,22 @@ Lane fix/cove-02-bare-coverage-base
 
 Reverse: Supersede with a later checkpoint.
 
+### Post-merge review: census covers bare-string and exploration reads; COVE-02 judges a baseless run at HEAD, 2026-11-12
+
+A post-merge review of the slice 1 and slice 2 PRs found four gaps, all fixed in one PR. Scope call: ROUT-03 covers exploration packets as well as goal packets, because a test that reads a tracked exploration fixture is the same consumer class; the census now scans both roots. (1) The census missed bare-string reads such as the ci-runner-security test joining the repository root with the speed-loop runner-burst directory; a quoted-literal read shape now runs over test code, counts only literals that resolve to tracked files, skips classifier tables, drops a literal naming a single packet document, and lists each synthetic temp-root literal as an exclusion with its reason. (2) Tests reading the ciops s6 ABox and journal, the s4 run4-fleet corpus and the legal-ontology-landscape asset manifest stayed docs-only; four consumer rows join codeRoots for them and the runner-burst directory. (3) A bare coverage run with no origin/main merge base and TURBO_SCM_BASE unset now judges against the baseline committed at HEAD. (4) The COVE-02 fixture now asserts the withheld-lowering line, the fallback case, and a pinned comparison that passes once the package measures at its floor. Each fix is red on the code before it.
+Source: post-merge review findings of 2026-11-12; goal-data-consumer-census.test.ts and quality-tasks.test.ts.
+
+Lane fix/rout-03-census-gaps
+
+Reverse: Supersede with a later checkpoint; to undo, drop the four new consumer rows and the fallback comparison base.
+
+### Census reads product and lab source path constants; ciops KPI research inputs leave docs-only, 2026-11-13
+
+A read-only verification of the census-gap PR found the ciops KPI change-event ledger and the 2026-10-01 redacted journal snapshot under the beep-ci-operational-ontology research directory still docs-only. The kpi-reading test reads them from the real repository through path constants in apps/labs/ciops/src/kpi/Pins.ts, which the census never scanned, and its temp-root exclusion silenced the one hit the scan did produce. A consumer row now joins codeRoots for both files. The census also scans bare path constants in product and lab src code (comment lines skipped), so a src-held constant a test reads is reported. Repo tooling src stays out: its packet-path constants (route corpus, cache conformance plan, harvest ledger, cache pilot pins) are command targets its tests read from temp roots. The kpi-reading exclusion is kept for its temp-root directory hit, with the reason now naming the pinned-source scan as the route for the real reads. The pinned COVE-02 comparison now asserts an empty error report. Accepted limits, none found live: a bare literal naming one packet Markdown file stays path data, and split-segment or concatenated paths are not scanned.
+Source: verification findings of 2026-11-13; goal-data-consumer-census.test.ts.
+
+Lane fix/rout-03-src-pinned-consumers
+
+Reverse: Supersede with a later checkpoint; to undo, drop the research consumer row and the pinned-source scan.
+
 <!-- beep:decisions:end -->

@@ -53,6 +53,7 @@ import { GithubCommitStatusRecord, GithubRest } from "../../../internal/github/i
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { provideYeetGhLogin, yeetGithubFailure } from "./GhOps.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
+import { provideYeetHeadMoveClassifier } from "./HeadMove.ts";
 import { MergeGateCheckRun } from "./MergeGate.schemas.ts";
 import { MERGE_GATE_OWNER_HOLD_LABEL, mergeGateGoodConclusion, mergeGateLatestRunPerName } from "./MergeGate.ts";
 import { readYeetReviewWindow, YeetReviewWindow } from "./ReviewWindow.ts";
@@ -63,6 +64,7 @@ import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GithubPullRequestRecord } from "../../../internal/github/index.ts";
+import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/GateTable");
 
@@ -627,7 +629,7 @@ const readRow = Effect.fnUntraced(function* (
     const statuses = yield* rest.commitStatuses(pull.headSha).pipe(Effect.option);
     const window = yield* pull.draft
       ? Effect.succeed(O.none<YeetReviewWindow>())
-      : readYeetReviewWindow({ prNumber: pull.number, headSha: pull.headSha }).pipe(Effect.asSome);
+      : readYeetReviewWindow({ prNumber: pull.number, headSha: pull.headSha, pull }).pipe(Effect.asSome);
     const threads = yield* readThreads(pull.number, pull.draft);
     return decideGateTableRow(
       GateTableRead.make({
@@ -697,6 +699,21 @@ export const readGateTable = Effect.fn("Yeet.readGateTable")(function* (): Effec
 });
 
 /**
+ * Read the table under the checkout's gh login and rewrite classifier.
+ *
+ * **Example** (Reference the table boundary)
+ * ```ts
+ * import { readYeetGateTableAsGhLogin } from "@beep/repo-cli/test/Yeet"
+ * console.log(typeof readYeetGateTableAsGhLogin) // "function"
+ * ```
+ * @category workflows
+ * @since 0.0.0
+ */
+export const readYeetGateTableAsGhLogin = Effect.fn("Yeet.readGateTableAsGhLogin")((context: RepoRunContext) =>
+  readGateTable().pipe(provideYeetHeadMoveClassifier(context.repoRoot), provideYeetGhLogin(context.repoRoot))
+);
+
+/**
  * The `yeet gate-table` flags as the CLI parses them.
  *
  * **Example** (Describe an invocation)
@@ -741,7 +758,7 @@ export const runYeetGateTable = Effect.fn("Yeet.runGateTableCommand")(function* 
   SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const context = yield* hydrateYeetReadOnlyContext(options);
-  const report = yield* readGateTable().pipe(provideYeetGhLogin(context.repoRoot));
+  const report = yield* readYeetGateTableAsGhLogin(context);
   if (options.json) {
     const encoded = yield* GateTableReportJson.encode(report).pipe(
       Effect.mapError(YeetCommandError.new("Failed to encode the gate table."))

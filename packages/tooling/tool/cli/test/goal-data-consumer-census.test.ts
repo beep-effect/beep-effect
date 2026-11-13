@@ -26,40 +26,106 @@ import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 
-// ROUT-03 slice 1 (goals/route-soundness-repair): the goal-data consumer census. It regenerates,
-// from the tracked tree, every goals/ path a test reads, spawns or imports, or a package turbo.json
-// declares, and proves each one stays on the code route under the committed CI patterns. The
-// `ciGoalDataConsumers` rows in CiOperational.schemas.ts are the registry it checks; a new consumer
-// that is not registered there fails the first test with its path and the file that reaches it.
+// ROUT-03 (goals/route-soundness-repair): the packet-data consumer census. It regenerates, from
+// the tracked tree, every goals/ and explorations/ path a test reads, spawns or imports, or a
+// package turbo.json declares, and proves each one stays on the code route under the committed CI
+// patterns. The `ciGoalDataConsumers` rows in CiOperational.schemas.ts are the registry it checks;
+// a new consumer that is not registered there fails the first test with its path and the file that
+// reaches it.
 //
 // Root turbo.json `//#` tasks (knowledge, goals doctor, roadmap refs, reflection artifacts) declare
 // goals/** as policy inputs; running that policy on docs-only and goals-only PRs is ROUT-02's
 // docs-policy job, not this census.
 
-// A test source or a package turbo.json: the two places a goal-data consumer is declared.
+// A test source or a package turbo.json: the two places a packet-data consumer is declared.
 const TEST_SOURCE = /^(?:packages|apps|infra)\/.+\/test\/.+\.(?:[cm]?[jt]sx?|jsonc?|py)$/u;
+const TEST_CODE = /\.(?:[cm]?[jt]sx?)$/u;
 const PACKAGE_TURBO = /^(?:packages|apps|infra)\/.+\/turbo\.json$/u;
+// Product and lab source that names packet paths its tests then read from the real repository,
+// such as @beep/ciops pinning its KPI inputs in src/kpi/Pins.ts. Repo tooling under
+// packages/tooling names packet paths as the targets of its own commands (doctor, laws, harvest,
+// route corpus); its tests read them from temp roots, so its src stays out of this scan.
+const PINNED_SOURCE = /^(?:packages|apps|infra)\/.+\/src\/.+\.(?:[cm]?[jt]sx?)$/u;
+const REPO_TOOLING = /^packages\/tooling\//u;
+// JSDoc and line comments mention packet paths as prose, never as reads.
+const COMMENT_LINE = /^\s*(?:\*|\/\/|\/\*)/u;
+const PACKET_ROOT = /^(?:goals|explorations)\//u;
 // The syntactic shapes that reach a real repository file: a path relative to the test file
 // (`new URL("../../../../goals/...")`, `import.meta.glob`), a path joined under an interpolated
 // root (`${root}/goals/...`), and a Turbo input anchored at the repository root.
 const READ_SHAPES: ReadonlyArray<RegExp> = [
-  /(?:\.\.\/)+(goals\/[^"'`\s),]*)/gu,
-  /\$\{[\w.()]+\}\/(goals\/[^"'`\s),]*)/gu,
-  /\$TURBO_ROOT\$\/(goals\/[^"'`\s),]*)/gu,
+  /(?:\.\.\/)+((?:goals|explorations)\/[^"'`\s),]*)/gu,
+  /\$\{[\w.()]+\}\/((?:goals|explorations)\/[^"'`\s),]*)/gu,
+  /\$TURBO_ROOT\$\/((?:goals|explorations)\/[^"'`\s),]*)/gu,
 ];
-const NAMED_PACKET = /^goals\/[^/]+\//u;
+// A bare string literal in test code, as `path.join(repoRoot, "goals/...")` passes it. Test code
+// also names packet paths as data (synthetic temp trees, classifier rows), so this shape only
+// counts a literal that resolves to tracked files, and never one that names a single packet
+// document: prose and manifests are packet policy, which ROUT-02's docs-policy job runs.
+const BARE_LITERAL = /["'`]((?:goals|explorations)\/[^"'`\s),]*)/gu;
+const PACKET_DOCUMENT = /(?:\.md|\/ops\/manifest\.json|\/\.gitkeep)$/u;
+const NAMED_PACKET = /^(?:goals|explorations)\/[^/]+\//u;
 const GLOB_CHARACTER = /[*?[{]/u;
 
-// Census entries every scan finds but that belong to the packet-document route, not this one.
+// Test files whose packet-path literals are classifier inputs, never reads.
+const CLASSIFIER_TABLES: ReadonlyArray<string> = [
+  "packages/tooling/tool/cli/test/ci-heavy-admission.test.ts",
+  "packages/tooling/tool/cli/test/goal-data-consumer-census.test.ts",
+];
+
+// Census entries a scan finds that are not code-route reads, each with the reason.
 class CensusExclusion extends S.Opaque<CensusExclusion, { readonly brand: unique symbol }>()(
-  S.Struct({ reference: S.NonEmptyString, source: S.NonEmptyString, reason: S.NonEmptyString })
+  S.Struct({
+    reference: S.NonEmptyString,
+    source: S.NonEmptyString,
+    kind: S.Literals(["packet-document", "synthetic-fixture"]),
+    reason: S.NonEmptyString,
+  })
 ) {}
 const exclusions: ReadonlyArray<CensusExclusion> = [
   CensusExclusion.make({
     reference: "goals/*/ops/manifest.json",
     source: "packages/tooling/tool/cli/test/goals-ops-typecheck.test.ts",
+    kind: "packet-document",
     reason:
       "packet manifests are goal documents (CiGoalDocument); packet policy on goals-only PRs is ROUT-02's docs-policy job",
+  }),
+  CensusExclusion.make({
+    reference: "goals/_template/",
+    source: "packages/tooling/tool/cli/test/commands/Goals/Harvest.test.ts",
+    kind: "synthetic-fixture",
+    reason: "asserts the harvester skips template rows of a temp tree it builds",
+  }),
+  CensusExclusion.make({
+    reference: "goals/turborepo-quality-cache-adoption/research/errors-only-client-pins.json",
+    source: "packages/tooling/tool/cli/test/ci-cache-pilot.test.ts",
+    kind: "synthetic-fixture",
+    reason: "the test writes its own copy into a temp root",
+  }),
+  CensusExclusion.make({
+    reference: "goals/turborepo-quality-cache-adoption/research/errors-only-client-pins.json",
+    source: "packages/tooling/tool/cli/test/ci-cache-pilot-in-process.test.ts",
+    kind: "synthetic-fixture",
+    reason: "the test writes its own copy into a temp root",
+  }),
+  CensusExclusion.make({
+    reference: "explorations/beep-ci-operational-ontology/research",
+    source: "apps/labs/ciops/test/kpi-reading.test.ts",
+    kind: "synthetic-fixture",
+    reason:
+      "this hit is the directory the test creates under a temp root; its real reads go through the src/kpi/Pins.ts constants, which the pinned-source scan reports",
+  }),
+  CensusExclusion.make({
+    reference: "explorations/beep-ci-operational-ontology/research/control-interventions.yaml",
+    source: "apps/labs/ciops/test/kpi-contract.test.ts",
+    kind: "synthetic-fixture",
+    reason: "contract data with a placeholder digest; the file is never read",
+  }),
+  CensusExclusion.make({
+    reference: "explorations/stacked-pr-adoption/research/",
+    source: "packages/tooling/tool/cli/test/support/YeetHeadMove.ts",
+    kind: "synthetic-fixture",
+    reason: "the head-move harness inits its own temp repository and writes stack-probe files under this prefix",
   }),
 ];
 
@@ -71,23 +137,55 @@ class CensusEntry extends S.Opaque<CensusEntry, { readonly brand: unique symbol 
 // A `${...}` placeholder ends the literal: what precedes it is a directory the consumer reads under.
 const literalPrefix = (reference: string): string => Str.replace(/[^/]*\$\{.*$/u, "")(reference);
 
-const resolveReference = Effect.fnUntraced(function* (reference: string, goalPaths: ReadonlyArray<string>) {
+// A literal is a file, a directory (with or without its trailing slash) or a glob.
+const resolveReference = Effect.fnUntraced(function* (reference: string, packetPaths: ReadonlyArray<string>) {
   const literal = literalPrefix(reference);
   // A placeholder before the packet segment names no packet: a synthetic fixture, not a read.
   if (!NAMED_PACKET.test(literal)) return A.empty<string>();
   if (GLOB_CHARACTER.test(literal)) {
     const globs = yield* GlobSet.compile([literal]);
-    return A.filter(goalPaths, (path) => globs.matches(path));
+    return A.filter(packetPaths, (path) => globs.matches(path));
   }
-  return Str.endsWith("/")(literal)
-    ? A.filter(goalPaths, Str.startsWith(literal))
-    : A.filter(goalPaths, (path) => path === literal);
+  const directory = Str.endsWith("/")(literal) ? literal : `${literal}/`;
+  return A.filter(packetPaths, (path) => path === literal || Str.startsWith(directory)(path));
 });
 
-const scanSource = (text: string): ReadonlyArray<string> =>
-  A.dedupe(
-    A.flatMap(READ_SHAPES, (shape) => A.map(A.fromIterable(Str.matchAll(shape)(text)), (match) => match[1] ?? ""))
+const matches = (shape: RegExp, text: string): ReadonlyArray<string> =>
+  A.map(A.fromIterable(Str.matchAll(shape)(text)), (match) => match[1] ?? "");
+
+const isPinnedSource = (source: string): boolean => PINNED_SOURCE.test(source) && !REPO_TOOLING.test(source);
+
+const codeLines = (text: string): string =>
+  A.join(
+    A.filter(Str.split(text, "\n"), (line) => !COMMENT_LINE.test(line)),
+    "\n"
   );
+
+// Source modules contribute only their bare path constants; tests and turbo.json every shape.
+const scanSource = (source: string, text: string): ReadonlyArray<readonly [string, boolean]> =>
+  isPinnedSource(source)
+    ? A.map(A.dedupe(matches(BARE_LITERAL, codeLines(text))), (reference) => [reference, true] as const)
+    : scanTestSource(source, text);
+
+const scanTestSource = (source: string, text: string): ReadonlyArray<readonly [string, boolean]> =>
+  A.dedupeWith(
+    A.appendAll(
+      A.map(
+        A.flatMap(READ_SHAPES, (shape) => matches(shape, text)),
+        (reference) => [reference, false] as const
+      ),
+      TEST_CODE.test(source) && !A.contains(CLASSIFIER_TABLES, source)
+        ? A.map(matches(BARE_LITERAL, text), (reference) => [reference, true] as const)
+        : A.empty<readonly [string, boolean]>()
+    ),
+    ([left], [right]) => left === right
+  );
+
+// A bare literal that names a single packet document is path data, not a code-route read.
+const keepResolved = (bare: boolean, resolved: ReadonlyArray<string>): ReadonlyArray<string> =>
+  bare && A.length(resolved) === 1 && A.every(resolved, (path) => PACKET_DOCUMENT.test(path))
+    ? A.empty<string>()
+    : resolved;
 
 const isExcluded = (entry: CensusEntry): boolean =>
   A.some(exclusions, (exclusion) => exclusion.reference === entry.reference && exclusion.source === entry.source);
@@ -103,16 +201,16 @@ const census = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const { root, paths } = yield* trackedFiles;
-  const goalPaths = A.filter(paths, Str.startsWith("goals/"));
-  const sources = A.filter(paths, (file) => TEST_SOURCE.test(file) || PACKAGE_TURBO.test(file));
+  const packetPaths = A.filter(paths, (file) => PACKET_ROOT.test(file));
+  const sources = A.filter(paths, (file) => TEST_SOURCE.test(file) || PACKAGE_TURBO.test(file) || isPinnedSource(file));
   const perSource = yield* Effect.forEach(
     sources,
     (source) =>
       fs.readFileString(path.join(root, source)).pipe(
         Effect.flatMap((text) =>
-          Effect.forEach(scanSource(text), (reference) =>
-            Effect.map(resolveReference(reference, goalPaths), (resolved) =>
-              A.map(resolved, (consumed) => CensusEntry.make({ path: consumed, reference, source }))
+          Effect.forEach(scanSource(source, text), ([reference, bare]) =>
+            Effect.map(resolveReference(reference, packetPaths), (resolved) =>
+              A.map(keepResolved(bare, resolved), (consumed) => CensusEntry.make({ path: consumed, reference, source }))
             )
           )
         ),
@@ -126,8 +224,9 @@ const census = Effect.gen(function* () {
 const pathPattern = (pattern: string): RegExp => new RegExp(pattern, "u");
 
 // The mutations the packet names: malform the frozen citation fixture, a citation ops `.py` probe
-// and a ciops research JSON; the fourth, a `.ts` ops script, is the first tracked one the census
-// finds. Each is a one-path pull request diff.
+// and a ciops research JSON (the `.ts` ops script is the first tracked one the census finds), plus
+// the runner-burst script and the two exploration fixtures the post-merge review found. Each is a
+// one-path pull request diff.
 const mutations: ReadonlyArray<readonly [string, string]> = [
   [
     "frozen citation profile fixture",
@@ -135,6 +234,10 @@ const mutations: ReadonlyArray<readonly [string, string]> = [
   ],
   ["citation ops .py probe", "goals/citation-extraction-engine/ops/probe-html-bytes.py"],
   ["ciops research JSON", "goals/time-to-certainty/research/gate-order-handoff.json"],
+  ["runner-burst ops script", "goals/speed-loop/ops/runner-burst/teardown-burst-runners.sh"],
+  ["ciops exploration ABox", "explorations/beep-ci-operational-ontology/ontology/extraction/s6/graphs/abox.ttl"],
+  ["ontology exploration manifest", "explorations/legal-ontology-landscape/assets/manifest.jsonl"],
+  ["ciops KPI change-event ledger", "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"],
 ];
 
 // Before ROUT-03 the code route was the product roots alone; every goal-packet path was docs-only.
@@ -187,17 +290,20 @@ it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { timeout: "120 seco
           expect(HashSet.has(consumedPaths, mutated), mutated).toBe(true);
         }
         expect(A.some(consumed, (entry) => /^goals\/[^/]+\/ops\/.+\.ts$/u.test(entry.path))).toBe(true);
-        // Every exclusion is still found by the scan, and covers only goal documents.
+        // Every exclusion is still found by the scan from its own source; a packet-document
+        // exclusion covers only goal documents.
         for (const exclusion of exclusions) {
-          const excluded = A.filter(entries, isExcluded);
-          expect(
-            A.some(excluded, (entry) => entry.reference === exclusion.reference),
-            exclusion.reference
-          ).toBe(true);
-          expect(
-            A.filter(excluded, (entry) => !pathPattern(ciOperationalPatterns.goals).test(entry.path)),
-            exclusion.reference
-          ).toEqual([]);
+          const excluded = A.filter(
+            entries,
+            (entry) => entry.reference === exclusion.reference && entry.source === exclusion.source
+          );
+          expect(A.isReadonlyArrayNonEmpty(excluded), `${exclusion.source}: ${exclusion.reference}`).toBe(true);
+          if (exclusion.kind === "packet-document") {
+            expect(
+              A.filter(excluded, (entry) => !pathPattern(ciOperationalPatterns.goals).test(entry.path)),
+              exclusion.reference
+            ).toEqual([]);
+          }
         }
       })
     );

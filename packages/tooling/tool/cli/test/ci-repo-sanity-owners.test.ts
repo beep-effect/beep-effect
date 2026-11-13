@@ -1,4 +1,10 @@
-import { CI_LANE_ID_VALUES, CiLaneRunOptions, ciLaneStepsForTesting } from "@beep/repo-cli/commands/Ci";
+import {
+  CI_LANE_ID_VALUES,
+  CiLaneRunOptions,
+  ciLaneFailurePolicy,
+  ciLaneStepsForTesting,
+  runCiLaneSteps,
+} from "@beep/repo-cli/commands/Ci";
 import {
   githubCheckRepoSanityLanesForTesting,
   LintPolicyAffectedTargets,
@@ -6,11 +12,10 @@ import {
   QualityTaskGroupFailed,
   QualityTaskStep,
   rootLintPolicyStagesForTesting,
-  runQualityTaskStreamingStepGroupForTesting,
 } from "@beep/repo-cli/test/Quality";
 import { it } from "@beep/test-runner";
 import { describe, expect, layer } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
@@ -147,6 +152,32 @@ describe("one hosted lint:shadcn owner (PERIH-02)", () => {
     );
     expect(A.some(scripts, Str.includes("shadcn-lint"))).toBe(false);
   });
+
+  // A separate check.yml step that fails before "Run verification lane" skips
+  // the whole lane body. Workflow policy therefore runs inside the body.
+  it("runs workflow policy inside the Repo Sanity body, ahead of the shadcn step", () => {
+    const workflow = readCheckWorkflow();
+    const steps = yamlAt(workflow, ["jobs", "verify", "steps"]);
+    assertTrue(A.isArray(steps));
+    const scripts = A.filter(
+      A.map(steps, (step) => yamlAt(step, ["run"])),
+      isText
+    );
+    expect(A.some(scripts, Str.includes("ci workflow-lint"))).toBe(false);
+    A.forEach([pullRequestOptions, pushOptions], (options) => {
+      const labels = A.map(ciLaneStepsForTesting(REPO_ROOT, "repo-sanity", options), (step) => step.label);
+      assertSome(
+        A.findFirstIndex(labels, (label) => label === "ci:repo-sanity:workflow-lint"),
+        0
+      );
+      expect(A.contains(labels, SHADCN_STEP)).toBe(true);
+    });
+  });
+
+  it("runs the Repo Sanity body under the collecting policy", () => {
+    expect(ciLaneFailurePolicy("repo-sanity")).toBe("collect-all");
+    expect(ciLaneFailurePolicy("jsdoc-ratchet")).toBe("fail-fast");
+  });
 });
 
 describe("one changeset-graph execution in Repo Sanity (PERIL-04)", () => {
@@ -180,9 +211,9 @@ describe("one changeset-graph execution in Repo Sanity (PERIL-04)", () => {
 const testLayer = Layer.mergeAll(NodeTestLayer, TestConsole.layer);
 
 layer(testLayer, { timeout: "60 seconds" })("Repo Sanity step masking (PERIH-02)", (it) => {
-  // The lane body runs through one collecting step group: every step runs and
-  // the group fails with all reds. Replay the real body's labels with every
-  // step before the shadcn step red and prove the shadcn step still ran.
+  // `beep ci lane repo-sanity` hands its planned body to runCiLaneSteps.
+  // Replay the real body's labels through that runner with every step before
+  // the shadcn step red and prove the shadcn step still ran.
   it.effect("runs the shadcn step after every earlier Repo Sanity step fails", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -201,7 +232,7 @@ layer(testLayer, { timeout: "60 seconds" })("Repo Sanity step masking (PERIH-02)
           cwd: dir,
         })
       );
-      const exit = yield* Effect.exit(runQualityTaskStreamingStepGroupForTesting("ci:repo-sanity", replay));
+      const exit = yield* Effect.exit(runCiLaneSteps("repo-sanity", replay));
       const shadcnRan = yield* fs.exists(marker);
       expect(shadcnRan).toBe(true);
       // A success leaves no failure, which the guard below rejects.
@@ -210,6 +241,30 @@ layer(testLayer, { timeout: "60 seconds" })("Repo Sanity step masking (PERIH-02)
       expect(A.map(failure.failures, (step) => step.label)).toEqual(
         A.map(A.take(body, shadcnIndex), (step) => step.label)
       );
+    })
+  );
+
+  // The contrast: the same runner stops a fail-fast lane at its first red, so
+  // the collecting result above comes from Repo Sanity's policy, not the runner.
+  it.effect("stops a fail-fast lane at its first red step", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const dir = yield* fs.makeTempDirectoryScoped({ prefix: "jsdoc-ratchet-stop-" });
+      const steps = [
+        QualityTaskStep.make({ label: "scan", command: "bun", args: ["-e", "process.exit(3)"], cwd: dir }),
+        QualityTaskStep.make({
+          label: "compare",
+          command: "bun",
+          args: ["-e", `await Bun.write("${MARKER_FILE}", "yes")`],
+          cwd: dir,
+        }),
+      ];
+      const exit = yield* Effect.exit(runCiLaneSteps("jsdoc-ratchet", steps));
+      const failed = Exit.isFailure(exit);
+      assertTrue(failed);
+      const compareRan = yield* fs.exists(path.join(dir, MARKER_FILE));
+      expect(compareRan).toBe(false);
     })
   );
 });

@@ -23,10 +23,12 @@ import {
   parseMergeGateTolerance,
   provenanceFooterBeforeMergeForTesting,
   RepoRunContext,
+  readAuthenticatedMergeGate,
   readMergeGate,
   renderMergeGateDecision,
   runMergeGate,
   runYeetGateTable,
+  runYeetGhChecks,
   runYeetMergeGate,
   SquashCommitlintFail,
   SquashCommitlintOffendingLine,
@@ -42,6 +44,7 @@ import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertInclude, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -66,6 +69,7 @@ import timelineFixture from "./fixtures/yeet-merge-gate/timeline.json" with { ty
 import { githubFetch, reply } from "./support/GithubFetch.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { legacyGhAnswer, legacyGhArgs, recordedGithub } from "./support/YeetGithub.ts";
+import { rewriteWindowScenario } from "./support/YeetHeadMove.ts";
 import type { GithubAnswer, GithubCall } from "./support/YeetGithub.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
@@ -912,6 +916,9 @@ interface GhScript {
   /** The first thread page's cursor; a second page (the same threads) follows when it names one. */
   readonly threadsPageInfo?: { readonly hasNextPage: boolean; readonly endCursor: string | null };
   readonly windowExit: number;
+  // Replaces the recorded actions/runs pages (the default pages carry a run on
+  // another head and a duplicate id for the merge gate's own head guard).
+  readonly workflowRuns?: ReadonlyArray<unknown>;
 }
 
 const defaultScript: GhScript = {
@@ -938,12 +945,21 @@ const context = RepoRunContext.make({
 const workflowRunPages = (additionalActiveRuns: GhScript["additionalActiveRuns"]) => [
   {
     workflow_runs: [
-      { id: 11, head_sha: pullFixture.head.sha, status: "queued", conclusion: null },
-      { id: 12, head_sha: pullFixture.head.sha, status: "in_progress", conclusion: null },
-      { id: 12, head_sha: pullFixture.head.sha, status: "in_progress", conclusion: null },
-      { id: 13, head_sha: pullFixture.head.sha, status: "in_progress", conclusion: null },
-      { id: 14, head_sha: Str.repeat(40)("0"), status: "waiting", conclusion: null },
-      { id: 19, head_sha: pullFixture.head.sha, status: "completed", conclusion: "success" },
+      { id: 11, head_sha: pullFixture.head.sha, status: "queued", conclusion: null, event: "pull_request" },
+      { id: 12, head_sha: pullFixture.head.sha, status: "in_progress", conclusion: null, event: "pull_request" },
+      { id: 12, head_sha: pullFixture.head.sha, status: "in_progress", conclusion: null, event: "pull_request" },
+      { id: 13, head_sha: pullFixture.head.sha, status: "in_progress", conclusion: null, event: "pull_request" },
+      { id: 14, head_sha: Str.repeat(40)("0"), status: "waiting", conclusion: null, event: "pull_request" },
+      { id: 19, head_sha: pullFixture.head.sha, status: "completed", conclusion: "success", event: "pull_request" },
+      // A live main push run on the merged head sha is never cancelled (the main cancel ban).
+      {
+        id: 20,
+        head_sha: pullFixture.head.sha,
+        status: "in_progress",
+        conclusion: null,
+        event: "push",
+        head_branch: "main",
+      },
     ],
   },
   ...(additionalActiveRuns === true
@@ -954,6 +970,7 @@ const workflowRunPages = (additionalActiveRuns: GhScript["additionalActiveRuns"]
             head_sha: pullFixture.head.sha,
             status,
             conclusion: null,
+            event: "pull_request",
           })),
         },
       ]
@@ -1036,7 +1053,17 @@ const postMergeAnswers = (script: ResolvedGhScript): ReadonlyArray<GhAnswerRoute
       })
     ),
   ],
-  ["/actions/runs?", answer(script.queuedExit, encodeJson(workflowRunPages(script.additionalActiveRuns)))],
+  [
+    "/actions/runs?",
+    answer(
+      script.queuedExit,
+      encodeJson(
+        script.workflowRuns === undefined
+          ? workflowRunPages(script.additionalActiveRuns)
+          : [{ workflow_runs: script.workflowRuns }]
+      )
+    ),
+  ],
   [`/runs/${script.cancelFailId}/cancel`, answer(1, "cancel refused")],
   ["/cancel", answer(0, "")],
 ];
@@ -1186,6 +1213,14 @@ const githubAnswer = (script: GhScript, call: GithubCall, line: string): GithubA
   });
 };
 
+const oneWorkflowRunPage = (pages: unknown) => {
+  const runs = A.flatMap(
+    pages as ReadonlyArray<{ readonly workflow_runs: ReadonlyArray<unknown> }>,
+    (page) => page.workflow_runs
+  );
+  return { total_count: A.length(runs), workflow_runs: runs };
+};
+
 // The reviewer gate's REST calls arrive through `fetch`; each is recorded and answered as the
 // `gh api <path>` line it replaced, so one answer table serves both transports.
 const decodeAnswer = S.decodeResult(UnknownJson);
@@ -1195,8 +1230,15 @@ const scriptedGithub = (script: GhScript, calls: Ref.Ref<ReadonlyArray<string>>)
     // `fetch` is synchronous here; the Ref is updated in place, as `Ref.update` would.
     MutableRef.update(calls.ref, A.append(line));
     const scripted = answerFor(script, "gh", line);
+    // The recorded pull omits fields GitHub always sends; complete it as the `gh` transport does.
+    // The recorded run listing is the `gh --paginate --slurp` page array; `fetch` reads one page.
+    const complete = Str.endsWith(`/pulls/${pullFixture.number}`)(call.url.pathname)
+      ? restPull
+      : Str.endsWith("/actions/runs")(call.url.pathname)
+        ? oneWorkflowRunPage
+        : identity;
     return scripted.exitCode === 0
-      ? Result.getOrElse(decodeAnswer(scripted.output), () => ({}))
+      ? Result.getOrElse(Result.map(decodeAnswer(scripted.output), complete), () => ({}))
       : reply(404)({ message: scripted.output });
   });
 
@@ -2035,6 +2077,51 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
       })
     );
 
+    it.effect("yeet gh checks cancel-queued cancels the pull-request run and never the main push run on its head", () =>
+      withScriptedGh(
+        {
+          ...defaultScript,
+          workflowRuns: [
+            {
+              id: 20,
+              name: "Check",
+              status: "queued",
+              conclusion: null,
+              head_sha: headSha,
+              event: "pull_request",
+              head_branch: pullFixture.head.ref,
+            },
+            // A branch fast-forwarded to main's tip shares the sha with a live main push run.
+            {
+              id: 21,
+              name: "Check",
+              status: "in_progress",
+              conclusion: null,
+              head_sha: headSha,
+              event: "push",
+              head_branch: "main",
+            },
+            // An event GitHub did not report is never cancelled either.
+            { id: 22, name: "Check", status: "queued", conclusion: null, head_sha: headSha },
+          ],
+        },
+        (calls) =>
+          Effect.gen(function* () {
+            // The repository comes from GH_REPO: the scripted git answers name no origin remote.
+            yield* runYeetGhChecks({ action: "cancel-queued", number: pullFixture.number, tokenRef: O.none() }).pipe(
+              Effect.provideService(
+                ConfigProvider.ConfigProvider,
+                ConfigProvider.fromUnknown({ GH_REPO: "beep-effect/beep-effect" })
+              )
+            );
+            const lines = yield* Ref.get(calls);
+            expect(A.filter(lines, Str.includes("/cancel"))).toEqual([
+              "gh api repos/beep-effect/beep-effect/actions/runs/20/cancel",
+            ]);
+          })
+      )
+    );
+
     it.effect("the command passes --relaxed through to the gate", () =>
       withScriptedGh({ ...defaultScript, checkRuns: lintRed }, () =>
         Effect.gen(function* () {
@@ -2135,6 +2222,29 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
         Effect.flatMap((lines) => GateTableReportJson.decode(O.getOrElse(O.map(A.last(lines), String), () => ""))),
         Effect.map((report) => assertTrue(A.length(report.entries) === 1))
       )
+    );
+  }
+);
+
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "120 seconds" })(
+  "merge-gate classifier seam",
+  (it) => {
+    it.effect("builds the checkout classifier for the gate's window read", () =>
+      Effect.gen(function* () {
+        const scenario = yield* rewriteWindowScenario();
+        yield* DateTime.makeUnsafe("2026-11-10T02:50:00Z").pipe(DateTime.toEpochMillis, TestClock.setTime);
+        const read = yield* readAuthenticatedMergeGate(scenario.context, 3050).pipe(scenario.github.provide);
+        expect(read.window).toMatchObject({
+          _tag: "elapsed",
+          anchor: "ready-for-review",
+          anchoredAt: "2026-11-10T02:25:19.000Z",
+        });
+        if (read.window._tag !== "unknown")
+          assertSome(
+            O.map(read.window.carried, (carry) => carry.rootSha),
+            scenario.s.l2
+          );
+      })
     );
   }
 );

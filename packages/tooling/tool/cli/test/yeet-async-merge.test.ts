@@ -439,6 +439,7 @@ describe("yeet gh merge step", () => {
     headRef: "feat/x",
     headSha: HEAD,
     baseRef: "main",
+    baseSha: "base000000",
     htmlUrl: "https://github.com/o/r/pull/7",
     author: "octocat",
     labels: [],

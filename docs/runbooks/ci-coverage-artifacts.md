@@ -151,16 +151,16 @@ Report consumption does not authorize writing or weakening the baseline.
 ## Rollout and required checks
 
 Check invokes the trusted reusable Heavy workflow at `main`. Editing its file
-in a PR does not change the revision already executing from main. During the
-transition the old Heavy coverage producer therefore remains the required
-`Heavy / Coverage Regression` check, while the new consumer reports
-`Coverage Artifact Migration` for qualification.
-
-The workflow reads GitHub's resolved reusable-workflow SHA for that run to
-select the name. Once main contains the retired Heavy producer, the consumer
-uses the required `Heavy / Coverage Regression` name. A failed lookup stops
-admission rather than guessing from a moving branch. Other Heavy jobs retain
-their parallel execution. Label-triggered heavy admission does not replay unit
+in a PR does not change the revision already executing from main.
+`heavy.yml@main` no longer declares a Coverage Regression job, so the Check
+`coverage-regression` comparator reports `Heavy / Coverage Regression` on
+every code head. Heavy Admission's `legacy_coverage` output is the constant
+`'false'`, and the comparator's name expression keeps its
+`Coverage Artifact Migration` branch only until COVE-08
+(`goals/route-soundness-repair`) makes the name a literal and deletes the
+output. Until then a documentation-only head, where the comparator is skipped,
+shows the unevaluated name expression instead of the context name. Other Heavy
+jobs retain their parallel execution. Label-triggered heavy admission does not replay unit
 tests or create a second artifact comparison.
 
 ## Retained local tooling and rollback

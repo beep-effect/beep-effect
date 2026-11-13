@@ -30,20 +30,24 @@
       },
       {
         "number": 3112,
+        "role": "supporting"
+      },
+      {
+        "number": 3146,
         "role": "final"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/docs_merge-queue-lab-findings-394c47069af5/verdict.json",
+        "ref": ".beep/yeet/runs/docs_merge-queue-lab-refinal-f0cf31bb0578/verdict.json",
         "gating": true
       }
     ]
   },
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 3112
+    "finalPullRequest": 3146
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
