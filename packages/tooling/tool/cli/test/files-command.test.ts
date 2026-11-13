@@ -39,6 +39,7 @@ import {
   runMatchPerson,
   SortableFile,
 } from "@beep/repo-cli/test/Files";
+import { Sha256PrefixedDigest, Sha256PrefixedDigestFromHex } from "@beep/schema/Sha256";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, N, O, Str } from "@beep/utils";
@@ -841,12 +842,14 @@ const fileSize = Effect.fn("FilesTest.fileSize")(function* (filePath: string) {
   return stat.size;
 });
 
+const decodePrefixedDigest = S.decodeEffect(Sha256PrefixedDigestFromHex);
+
 const sha256FileRef = Effect.fn("FilesTest.sha256FileRef")(function* (filePath: string) {
   const fs = yield* FileSystem.FileSystem;
   const crypto = yield* Digest.Digest;
   const bytes = yield* fs.readFile(filePath);
   const digest3 = yield* crypto.digest(Digest.sha256, bytes);
-  return `sha256:${Hex.encode(digest3)}`;
+  return yield* decodePrefixedDigest(Hex.encode(digest3));
 });
 
 it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command", (it) => {
@@ -5349,7 +5352,7 @@ exit 74
               disposition: "active-core",
               reasons: ["clean-current-identity"],
               sourceName: "first.jpg",
-              sourceSha256: `sha256:${Str.repeat(64)("0")}`,
+              sourceSha256: Sha256PrefixedDigest.make(`sha256:${Str.repeat(64)("0")}`),
             },
             {
               disposition: "active-extended",
