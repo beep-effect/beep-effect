@@ -3,20 +3,26 @@ import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import {
   VaultSyncApi,
   VaultSyncDestinationIdAttribute,
+  VaultSyncModel,
   VaultSyncPass,
+  VaultSyncPolicies,
   VaultSyncRequests,
   VaultSyncRequestsLive,
   vaultSyncCli,
   vaultSyncRemoteCli,
 } from "@beep/documents-use-cases/aggregates/VaultSync";
 import { expect, it } from "@effect/vitest";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
+import { identity as passthrough } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Order from "effect/Order";
 import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
+import * as S from "effect/Schema";
 import * as Tracer from "effect/Tracer";
 import * as TestClock from "effect/testing/TestClock";
 
@@ -130,4 +136,70 @@ it.effect("records the destination on each VaultSyncRequests.start span (D17)", 
     const started = A.filter(spans, (span) => span.name === "VaultSyncRequests.start");
     expect(A.map(started, (span) => span.attributes.get(VaultSyncDestinationIdAttribute))).toEqual([id]);
   }).pipe(Effect.withTracer(tracer), TestClock.withLive)
+);
+
+it.effect("public read validators authorize enrolled requests and reject missing identities", () =>
+  Effect.gen(function* () {
+    const context = yield* Layer.build(
+      VaultSyncModel.layer(VaultSyncPolicies).pipe(
+        Layer.provide(Domain.InMemory),
+        Layer.provide(SecureRandom.layerWebCrypto)
+      )
+    );
+    const identity = yield* S.decodeEffect(V.VaultSyncRequest)({
+      principal: { kind: "User", userId: 1 },
+      principalKey: "User:1",
+      actorSourceKind: "User",
+      sourceKind: "http",
+      orgId: 1,
+      workspaceId: 1,
+      correlationId: "read-access-test",
+      sessionRef: "verified",
+    });
+    const resolver = V.SessionResolver.of({
+      resolve: Effect.fn("ReadAccessTest.resolve")(() => Effect.succeed(identity)),
+      scope: Effect.fn("ReadAccessTest.scope")(() =>
+        Effect.succeed(V.VaultSyncScope.make({ orgId: 1, workspaceId: 1 }))
+      ),
+      grants: Effect.fn("ReadAccessTest.grants")(() =>
+        Effect.succeed([V.VaultSyncGrant.make({ orgId: 1, workspaceId: 1, diagnostic: true })])
+      ),
+      revoked: Effect.fn("ReadAccessTest.revoked")(() => Effect.never),
+    });
+    const authenticated = yield* VaultSyncApi.clientInProcess.pipe(
+      Effect.provideContext(context),
+      Effect.provideService(
+        V.Session,
+        V.Session.of((effect) =>
+          effect.pipe(
+            Effect.provideService(V.VaultSyncRequestContext, identity),
+            Effect.provideService(V.SessionResolver, resolver)
+          )
+        )
+      )
+    );
+    const anonymous = yield* VaultSyncApi.clientInProcess.pipe(
+      Effect.provideContext(context),
+      Effect.provideService(V.Session, V.Session.of(passthrough))
+    );
+    const key = V.DestinationId.make("documents_sync_destination_areadaccess");
+    for (const read of [
+      authenticated.DestinationList.get(V.WorkspaceKey.make("1:1")).pipe(Effect.asVoid),
+      authenticated.OpenConflicts.get(key).pipe(Effect.asVoid),
+      authenticated.OperationQueue.get(key).pipe(Effect.asVoid),
+      authenticated.VaultSyncStatus.get(key).pipe(Effect.asVoid),
+    ]) {
+      const allowed = yield* read.pipe(Effect.result);
+      assertSuccess(allowed, undefined);
+    }
+    for (const read of [
+      anonymous.DestinationList.get(V.WorkspaceKey.make("1:1")).pipe(Effect.asVoid),
+      anonymous.OpenConflicts.get(key).pipe(Effect.asVoid),
+      anonymous.OperationQueue.get(key).pipe(Effect.asVoid),
+      anonymous.VaultSyncStatus.get(key).pipe(Effect.asVoid),
+    ]) {
+      const denied = yield* read.pipe(Effect.result);
+      assertFailure(denied, V.ScopeDenied.make({}));
+    }
+  })
 );

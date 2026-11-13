@@ -12,6 +12,7 @@ import {
   AlchemyPostgresPlatform,
   AlchemyPostgresTables,
   migrate,
+  ScheduleRow,
 } from "@beep/alchemy-postgres";
 import { PgliteTestLayer } from "@beep/pglite/Pglite.test-layer";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
@@ -200,6 +201,41 @@ describe("AlchemyPostgresPlatform", () => {
         const rows = yield* sql`SELECT principal, source_kind FROM alchemy_aggregate_event
           WHERE model = 'Unit' AND aggregate = 'Card' AND id = ${id}`.pipe(Effect.flatMap(decodeStoredRows));
         deepStrictEqual(rows, [{ principal: null, source_kind: null }]);
+      })
+    );
+
+    it.effect("replaying an arming preserves its deadline and never recommits an accepted command", () =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const cards = yield* Card;
+        const internals = yield* Internals;
+        const store = yield* Effect.fromOption(O.fromUndefinedOr(internals.aggregates.get("Card")));
+        const id = CardId.make("schedule-replay");
+        const command = { _tag: "IssueCard", holder: "pat" };
+        const meta = { commandId: "accepted-arming", context: {} };
+        yield* store.send(id, command, meta);
+        const due = yield* store.schedule(id, "reminder", command, meta, { afterMillis: 50 });
+        const replayedDue = yield* store.schedule(id, "reminder", { _tag: "IssueCard", holder: "replacement" }, meta, {
+          afterMillis: 60_000,
+        });
+        deepStrictEqual(replayedDue, due);
+        const statuses = yield* sql`SELECT id, command_id, command, meta, due_at, status
+          FROM alchemy_aggregate_schedule WHERE model = 'Unit' AND aggregate = 'Card'
+          AND id = ${id} AND command_id = 'reminder'`.pipe(
+          Effect.flatMap(rowsOf(ScheduleRow)),
+          Effect.map(A.map((row) => row.status)),
+          Effect.repeat({ until: (rows) => A.contains(rows, "executed"), schedule: Schedule.spaced("20 millis") }),
+          Effect.timeout("10 seconds")
+        );
+        deepStrictEqual(statuses, ["executed"]);
+        const state = yield* cards.get(id);
+        deepStrictEqual(state, { _tag: "Issued", holder: "pat" });
+        const events = yield* Effect.fromOption(O.fromUndefinedOr(store.events));
+        const committed = yield* events(id);
+        deepStrictEqual(
+          A.map(committed, ({ envelope }) => envelope.seq),
+          [1]
+        );
       })
     );
 
