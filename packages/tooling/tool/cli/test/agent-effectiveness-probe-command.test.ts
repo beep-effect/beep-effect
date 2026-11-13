@@ -4,10 +4,12 @@ import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { agentEffectivenessCommand } from "@beep/repo-cli/commands/AgentEffectiveness";
 import { SkillProbePrimarySelection, SkillProbeReport, SkillProbeStage } from "@beep/repo-cli/test/AgentEffectiveness";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
@@ -22,6 +24,8 @@ const runCommand = Command.runWith(agentEffectivenessCommand, { version: "0.0.0"
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const decodeStage = S.decodeUnknownEffect(S.fromJsonString(SkillProbeStage));
 const decodeSelection = S.decodeUnknownEffect(S.fromJsonString(SkillProbePrimarySelection));
+const encodeSelection = S.encodeEffect(S.fromJsonString(SkillProbePrimarySelection));
+const SelectionArbitrary = Arbitrary.schema(SkillProbePrimarySelection);
 const decodeReport = S.decodeUnknownEffect(S.fromJsonString(SkillProbeReport));
 const HASH = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
@@ -97,6 +101,19 @@ const record = (cell: "B" | "C", allLanesPass: boolean, runIndex: number) => ({
 });
 
 it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })("agent-effectiveness evals probe command", (it) => {
+  it.effect.prop(
+    "round-trips schema-derived primary selections through the JSON the select command prints",
+    [SelectionArbitrary],
+    ([selection]) =>
+      Effect.gen(function* () {
+        const encoded = yield* encodeSelection(selection);
+        const decoded = yield* decodeSelection(encoded);
+        const reencoded = yield* encodeSelection(decoded);
+        expect(reencoded).toBe(encoded);
+      }),
+    { arbitrary: fcRuns(25) }
+  );
+
   it.effect("lists the probe subcommands", () =>
     Effect.gen(function* () {
       yield* run(["evals", "probe"]);
