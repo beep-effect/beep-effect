@@ -53,11 +53,16 @@ aggregate, setup and harness reds are charged to no lane and reported as unknown
 `step-classes-and-red-origins`); its producer of per-task outcome records is the new slice 11b. Slice 10
 (MEAS-03) merged as #3262: economics classes every attempt green, red or terminated, terminated attempts leave
 the red denominator, and each run mode reports its elapsed p50 and p95 (decision `terminations-apart-from-reds`).
-In short, slices 5 (#3227), 6 (#3228), 10 (#3262) and 11 (#3257) merged; 7 (#3263) and 4 (#3266) are in review.
-Slice 4 (MEAS-01 slice 2) adds `.github/workflows/certainty-nightly.yml`: it scores the previous UTC day each
-night from main's code and turns red when the report is not certified (decision `certainty-nightly-workflow`). It is a workflow change, so the
-operator merges it by hand. Each night is recorded in [`history/certainty-nightly.md`](./history/certainty-nightly.md),
-and P2's seven nights start at 2026-11-14. Wall-time, cache and dist baselines taken before d8326d55935 (#3208,
+Slice 7 (PERIL-11 slice 1) merged as #3263: every removal files the checkout's attempt journals in the
+workstation store, and `yeet economics --fleet` reads them as `(retained)` (decision `attempt-journal-store`).
+Slice 4 (MEAS-01 slice 2) merged as #3266: `.github/workflows/certainty-nightly.yml` scores the previous UTC day
+each night from main's code and turns red when the report is not certified (decision `certainty-nightly-workflow`).
+The nightly is live; its first run (2026-11-12, dispatched by hand, certified) is recorded by #3270 in
+[`history/certainty-nightly.md`](./history/certainty-nightly.md), and P2's seven nights start at 2026-11-14.
+In short, slices 1 to 7, 10 and 11 have merged. Slice 8 (PERIL-11 slice 2) is in review: the T3 Code worktree
+root joins the intended `roots.json` list in the fleet-roots runbook, `yeet economics --fleet` reads a checkout
+reachable through two roots once, and monitor waits are reported apart from local work in `yeet-economics/v4`
+(decision `peril-11-slice-2-t3-root-and-monitor-waits`). Wall-time, cache and dist baselines taken before d8326d55935 (#3208,
 declaration-only builds) are not comparable with later readings (checkpoint
 `baselines-before-d8326d5593-not-comparable`), nor are check-lane baselines taken before 3e822c71c5 (#3242).
 
@@ -85,14 +90,16 @@ declaration-only builds) are not comparable with later readings (checkpoint
   main-verdict report" (M, CLI only), with fixes #3144, #3168 and #3181; ROUT-05 slice 1 (partition job
   mapping, #3141); MEAS-02 (refusal attribution, slice 3, #3176); SCHE-09 slice 1 (admission archive, slice 5,
   #3227); MEAS-07 (final-check attempt journals, slice 6, #3228); ROUT-05 slice 2 (failed-job steps and
-  uncharged reds, slice 11, #3257); MEAS-03 (terminations apart from reds, slice 10, #3262). The nightly
-  workflow (slice 4, #3266) and PERIL-11 slice 1 (slice 7, #3263) are in review.
+  uncharged reds, slice 11, #3257); MEAS-03 (terminations apart from reds, slice 10, #3262); the nightly
+  workflow (slice 4, #3266, first run recorded by #3270); PERIL-11 slice 1 (journal retention, slice 7,
+  #3263). In review: PERIL-11 slice 2 (T3 root row and monitor waits apart, slice 8).
 - Order constraints: MEAS-02 lands before any WaveOrder re-seed in `local-proof-under-ten`; ROUT-05 lands
   before any census or cost ledger (MEAS-05) is trusted and before any route refinement replay; MEAS-07 lands
   before journal retention (PERIL-11); SCHE-09 is owned here and consumed by `local-proof-under-ten` (D23); nightly reads are budgeted against
   `github-budget-ledger`'s reserve signal (D27).
-- No lever is fully landed; MEAS-03 is partly landed (economics already prints a terminations census, but
-  terminated attempts still count as red). The
+- Landed: MEAS-02 (slice 3) and MEAS-07 (slice 6). Partly landed: MEAS-01, MEAS-04, MEAS-03 (terminations
+  apart from reds; slice 10b types the remaining `unlocated` reds), ROUT-05, SCHE-09 (slice 5; 5b adds the
+  pressure fields) and PERIL-11 (slices 1 and 2; host and seat fields are slice 9). The
   #3007 and #3030 edits to `LaneTimings.ts` are shard-layout census upkeep owned by
   [`ci-lane-economics`](../ci-lane-economics/README.md), not MEAS-04.
 - The fixture corpora the plan's MEAS-01 gate names are not in the repository; slice 1 commits its own
