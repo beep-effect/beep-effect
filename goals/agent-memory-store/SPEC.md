@@ -213,6 +213,17 @@ test suite, titled with its id.
       held path with 0 wrong resolutions (S14b: 10/10, 0/14); the lifecycle
       guard rejects every backward move in the fixture (S14b: 12/14 regress
       without it).
+      Judged in two places (decision
+      `ac3-resolver-needed-bar-is-judged-in-p5`): P2's exit takes the floor
+      report, per-op landing, typed status and the lifecycle guard; the
+      resolver-needed ratio is judged at P5's exit, after the
+      `## Current Phase` owner rule lands, and this box stays open until
+      then. Measured in P2 by `test/Admission.history-replay.test.ts` on the
+      goals history replay (118 clusters, 275 writes, 3,364 operations;
+      decision `p2-ac3-history-replay-construction`): floor 11/275; per-op
+      landing 3,267/3,364, met; typed status 0 held and 0 wrong, every
+      backward move rejected, met; resolver-needed 40/275 against 26/279, not
+      met.
 - [ ] **AC-4 Identity tiers (S2, pre-registered).** False continuation at or
       below 1% (`3/n`) on each synthetic stratum (S2: UB95 at or below 0.70%
       on six strata); the similarity tier never transfers a claim without a
@@ -675,6 +686,14 @@ S14b: status cells, counters and pointers leave the held path as typed last-writ
 Lane agent-memory-store-p2
 
 Reverse: Mark status nodes explicitly (a node kind or a manifest-generated node registry) by decision file if token reading misreads a real memory file
+
+### AC-3's resolver-needed bar is judged at P5's exit; P2 judges the other four parts, 2026-11-13
+
+Operator ruling 2026-11-12, taken on the P2 measurement. AC-3 has five parts: the structural floor is reported, writes that need a resolver stay at or below 26/279, per-op admission lands at least 95% of operations, typed status conflicts resolve with 0 wrong, and the lifecycle guard rejects every backward move. On the goals history replay (decision p2-ac3-history-replay-construction; 118 clusters, 275 writes, 3,364 operations) P2 measured the floor at 11/275, per-op landing 3,267/3,364 (met), typed status 0 held and 0 wrong (met), every backward move rejected (met), and resolver-needed writes 40/275 against 26/279 (40 x 279 = 11,160 above 26 x 275 = 7,150, not met). Why the one part moves: 26/279 is S14b's typed-T2 arm, where a node is a skeleton plus slots and the last writer wins on status cells, checkboxes, counters, PR, SHA and date tokens and keyed state lines (14 last-writer nodes; last-writer wrong 4 of 50). The 2026-11-09 ruling kept typed status fields only, said tally lines are one field or derived, and gave the Current Phase paragraph one owner, which PLAN.md schedules in P5. So the store P2 built is narrower than the arm the bar was measured on, and its largest single cause of held writes is the one P5 removes: 11 of the 40 held writes touch nothing but Current Phase prose (13 of the 47 held same-node replaces sit under that heading). The bar's text and its number stay exactly as SPEC.md states them. What changes is where it is judged: P2's exit is AC-2 plus the floor report, per-op landing, typed status and the lifecycle guard; P5's exit adds the resolver-needed ratio at or below 26/279 on the same replay, re-measured after the Current Phase owner rule lands. AC-3's checkbox stays unticked until P5 judges that part. Not chosen: building S14b's token and keyed-line typing in P2 (the lane's estimate with the owner rule pulled forward is 26/275, still 7,254 against 7,150, from regex labels and not a replay, and last-writer on tallies is the behaviour the ruling declined); re-baselining the bar to the measured 40/275 (a bar set to its own measurement proves nothing). If P5's re-measurement still misses, the margin rule in AC-3 applies: a decision file citing that measurement.
+
+Lane agent-memory-store-p2
+
+Reverse: Move the resolver-needed judgment back to P2's exit by decision file, and build the spike arm's token and keyed-line typing there before P3 opens
 
 ### Admission does not run the reparse check; the log's bytes stay exact and capture absorbs a disturbed partition, 2026-11-13
 
