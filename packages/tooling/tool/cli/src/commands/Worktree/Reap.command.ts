@@ -126,7 +126,7 @@ export const worktreeReapCommand = Command.make(
             );
             return;
           }
-          yield* Effect.forEach(renderWorktreeReapReportLines(report), Console.log, { discard: true });
+          yield* Effect.forEach(renderWorktreeReapReportLines(report), (line) => Console.log(line), { discard: true });
         })
       ),
       Effect.catchTag(
