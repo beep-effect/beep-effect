@@ -135,18 +135,20 @@ export const holmAdjust = (pValues: ReadonlyArray<number>): ReadonlyArray<number
     A.map(pValues, (pValue, index) => ({ pValue, index })),
     Order.mapInput(Order.Number, (entry: { readonly pValue: number }) => entry.pValue)
   );
-  const adjustedByIndex = pipe(
-    A.reduce(ranked, { running: 0, entries: A.empty<readonly [string, number]>() }, (state, entry, rank) => {
+  const adjusted = A.reduce(
+    ranked,
+    { running: 0, entries: A.empty<{ readonly index: number; readonly value: number }>() },
+    (state, entry, rank) => {
       const running = Math.min(1, Math.max(state.running, (m - rank) * entry.pValue));
-      return { running, entries: A.append(state.entries, [String(entry.index), roundScore(running)] as const) };
-    }).entries,
-    R.fromEntries
-  );
-  return A.map(pValues, (_pValue, index) =>
-    pipe(
-      R.get(adjustedByIndex, String(index)),
-      O.getOrElse(() => 1)
-    )
+      return { running, entries: A.append(state.entries, { index: entry.index, value: roundScore(running) }) };
+    }
+  ).entries;
+  return A.map(
+    A.sort(
+      adjusted,
+      Order.mapInput(Order.Number, (entry: { readonly index: number }) => entry.index)
+    ),
+    (entry) => entry.value
   );
 };
 
@@ -254,12 +256,8 @@ export const skillLanePermutationTest: {
     if (!A.isReadonlyArrayNonEmpty(tasks)) return SkillLanePermutationResult.make({ pValue: 1, familyPValues: {} });
     const random = yield* Random.Random;
     const families = A.sort(A.dedupe(A.map(tasks, (task) => task.family)), Order.String);
-    const familyOf = A.map(tasks, (task) =>
-      pipe(
-        A.findFirstIndex(families, (family) => family === task.family),
-        O.getOrElse(() => 0)
-      )
-    );
+    // A family's index is its rank among the sorted distinct families.
+    const familyOf = A.map(tasks, (task) => A.length(A.filter(families, (family) => family < task.family)));
     const familySizes = A.map(families, (family) => A.length(A.filter(tasks, (task) => task.family === family)));
     const observed = A.map(tasks, taskDifference);
     const observedOverall = Math.abs(roundScore(sampleMean(observed)));
@@ -295,7 +293,10 @@ export const skillLanePermutationTest: {
     return SkillLanePermutationResult.make({
       pValue: pValueOf(exceedOverall, relabelings),
       familyPValues: R.fromEntries(
-        A.map(families, (family, index) => [family, pValueOf(exceedFamilies[index] ?? 0, relabelings)] as const)
+        A.map(A.zip(families, Array.from(exceedFamilies)), ([family, exceed]) => [
+          family,
+          pValueOf(exceed, relabelings),
+        ])
       ),
     });
   })
@@ -425,17 +426,16 @@ export const buildSkillLaneProbeReport: {
     const permutation = yield* skillLanePermutationTest(counted, options.relabelings).pipe(
       Random.withSeed(options.seed)
     );
-    const familyNames = R.keys(permutation.familyPValues);
-    const adjusted = holmAdjust(A.map(familyNames, (family) => permutation.familyPValues[family] ?? 1));
-    const families = A.map(familyNames, (family, index) => {
+    const familyPValues = R.toEntries(permutation.familyPValues);
+    const adjusted = holmAdjust(A.map(familyPValues, ([, pValue]) => pValue));
+    const families = A.map(A.zip(familyPValues, adjusted), ([[family, pValue], adjustedPValue]) => {
       const members = A.filter(counted, (task) => task.family === family);
       const familyDifference = roundScore(sampleMean(A.map(members, taskDifference)));
-      const adjustedPValue = adjusted[index] ?? 1;
       return SkillLaneFamilyTest.make({
         family,
         tasks: A.length(members),
         difference: familyDifference,
-        pValue: permutation.familyPValues[family] ?? 1,
+        pValue,
         adjustedPValue,
         keep: adjustedPValue < ALPHA && familyDifference > 0,
       });

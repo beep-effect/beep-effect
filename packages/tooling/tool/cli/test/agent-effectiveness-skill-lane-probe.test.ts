@@ -312,6 +312,25 @@ describe("skill lane probe report", () => {
     })
   );
 
+  it.effect("reports a one-cell task without counting it", () =>
+    Effect.gen(function* () {
+      const report = yield* buildSkillLaneProbeReport(
+        A.appendAll(
+          cellRuns("fn-schema-1", "fn-schema", "B", [0.4, 0.6]),
+          cellRuns("fn-schema-2", "fn-schema", "C", [0.5, 0.7])
+        ),
+        SkillLaneProbeOptions.make({ data: "scored", seed: 20261113, relabelings: 100 })
+      );
+      expect(A.map(report.tasks, (task) => [task.countedB, task.countedC])).toEqual([
+        [2, 0],
+        [0, 2],
+      ]);
+      expect(A.map(report.tasks, (task) => task.standardError)).toEqual([0.1, 0.1]);
+      expect(report.difference.n).toBe(0);
+      expect(report.test.detected).toBe(false);
+    })
+  );
+
   it.effect("labels pilot data and writes no verdict", () =>
     Effect.gen(function* () {
       const report = yield* buildSkillLaneProbeReport(
