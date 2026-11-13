@@ -16,7 +16,10 @@
  * The correction is structural, not procedural: the attempt filter lives in the
  * collector, so a reader cannot forget it. {@link ciLaneTimingRow} returns
  * `pickupSeconds: None` for any job on attempt 2 or later, and every aggregate
- * derives from those rows rather than from raw timestamps.
+ * derives from those rows rather than from raw timestamps. The admission
+ * census's verdict wait follows the same rule: it runs from the run's
+ * `created_at`, which re-dispatch leaves alone, and exists only on attempt-one
+ * rows.
  *
  * Rows are read from `/repos/{owner}/{repo}/actions/runs/{run_id}/jobs`, which
  * carries `run_attempt`, per-step timings, and the runner labels — everything
@@ -1622,9 +1625,16 @@ class CiLaneTimingDurationRow extends S.Opaque<CiLaneTimingDurationRow, { readon
     jobName: S.NonEmptyString,
     pickupSeconds: S.Option(NonNegativeTimingSeconds),
     runAttempt: S.tag(1),
+    // Workflow-run `created_at` to the reporting job's `completed_at`; an optional key so rows encoded before
+    // the column existed decode to `None`.
+    verdictWaitSeconds: NonNegativeTimingSeconds.pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
   }).pipe(
     $I.annoteSchema("CiLaneTimingDurationRow", {
-      description: "Attempt-one successful non-negative required-lane duration with complete workflow-run provenance.",
+      description:
+        "Attempt-one successful non-negative required-lane duration and verdict wait with complete workflow-run provenance.",
     })
   )
 ) {}
@@ -1671,7 +1681,57 @@ const CiLaneTimingWindowRow = S.Union([
 type CiLaneTimingWindowRow = typeof CiLaneTimingWindowRow.Type;
 
 /**
+ * A p95 the 20-minute charter judges for each required lane.
+ *
+ * **Details**
+ *
+ * `duration` is the lane's own span: a single job's `started_at` to
+ * `completed_at`, or a sharded lane's earliest shard start to its aggregator's
+ * completion. `wait` is the verdict wait: the workflow run's `created_at` to the
+ * reporting job's `completed_at`, which adds run-level queueing, `needs` chains
+ * and runner pickup to the body.
+ *
+ * **Example** (List the judged measures)
+ *
+ * ```ts
+ * import { CiLaneTimingCharterMeasure } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(CiLaneTimingCharterMeasure.literals)
+ * // ["duration", "wait"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CiLaneTimingCharterMeasure = LiteralKit(["duration", "wait"]).pipe(
+  $I.annoteSchema("CiLaneTimingCharterMeasure", {
+    description: "A required-lane p95 the 20-minute charter judges: the lane's own duration or its verdict wait.",
+  })
+);
+
+/**
+ * A p95 the 20-minute charter judges for each required lane.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CiLaneTimingCharterMeasure = typeof CiLaneTimingCharterMeasure.Type;
+
+/**
  * Nearest-rank latency statistics for one required lane.
+ *
+ * **Details**
+ *
+ * `state` is `Breach` when the duration p95 or the verdict-wait p95 is
+ * 20m00s or more, or cannot be computed; `breaches` names each measure that
+ * failed. Both populations are attempt-one rows only. A re-run job measured
+ * from the run's `created_at` would count the time before someone clicked
+ * re-run, so a later attempt contributes no duration and no wait, exactly as it
+ * contributes no pickup. An attempt-one row of a run that was later re-run keeps
+ * its wait: `created_at` is not rewritten on re-dispatch (`run_started_at` is,
+ * and the census never reads it). A row whose wait reads negative (a garbled
+ * record) stays in the duration population and is left out of the wait
+ * percentiles.
  *
  * **Example** (Describe an empty fail-closed lane)
  *
@@ -1680,6 +1740,7 @@ type CiLaneTimingWindowRow = typeof CiLaneTimingWindowRow.Type;
  * import * as O from "effect/Option"
  *
  * const stat = CiLaneTimingWindowStat.make({
+ *   breaches: ["duration", "wait"],
  *   lane: "Lint",
  *   maxSeconds: O.none(),
  *   n: 0,
@@ -1688,8 +1749,11 @@ type CiLaneTimingWindowRow = typeof CiLaneTimingWindowRow.Type;
  *   pr: 0,
  *   push: 0,
  *   state: "Breach",
+ *   waitP50Seconds: O.none(),
+ *   waitP95Seconds: O.none(),
  * })
- * console.log(stat.state)
+ * console.log(stat.breaches)
+ * // ["duration", "wait"]
  * ```
  *
  * @category models
@@ -1697,6 +1761,7 @@ type CiLaneTimingWindowRow = typeof CiLaneTimingWindowRow.Type;
  */
 export class CiLaneTimingWindowStat extends S.Opaque<CiLaneTimingWindowStat, { readonly brand: unique symbol }>()(
   S.Struct({
+    breaches: S.Array(CiLaneTimingCharterMeasure),
     lane: S.NonEmptyString,
     maxSeconds: S.Option(NonNegativeTimingSeconds),
     n: S.Int.check(S.isGreaterThanOrEqualTo(0)),
@@ -1705,9 +1770,12 @@ export class CiLaneTimingWindowStat extends S.Opaque<CiLaneTimingWindowStat, { r
     pr: S.Int.check(S.isGreaterThanOrEqualTo(0)),
     push: S.Int.check(S.isGreaterThanOrEqualTo(0)),
     state: LiteralKit(["Pass", "Breach"]),
+    waitP50Seconds: S.Option(NonNegativeTimingSeconds),
+    waitP95Seconds: S.Option(NonNegativeTimingSeconds),
   }).pipe(
     $I.annoteSchema("CiLaneTimingWindowStat", {
-      description: "Per-required-lane count split and nearest-rank latency statistics against the 20-minute charter.",
+      description:
+        "Per-required-lane count split and nearest-rank duration and verdict-wait statistics against the 20-minute charter.",
     })
   )
 ) {}
@@ -1979,6 +2047,10 @@ class CiEffectiveLaneSpec extends S.Opaque<CiEffectiveLaneSpec, { readonly brand
     // Name of the attempt-one job whose presence marks a run that allocated only a planned subset of the
     // newest layout's shards; a lane without it must always run one complete layout.
     plannedBy: S.optionalKey(S.NonEmptyString),
+    // When the first shard layout landed, for a lane that ran as the aggregator job alone before it. A run
+    // created earlier that carries no complete or planned layout is measured as that single job, exactly as an
+    // ordinary required lane; a later run without a layout is an incomplete span.
+    shardedSince: S.optionalKey(S.DateTimeUtc),
   }).pipe(
     $I.annoteSchema("CiEffectiveLaneSpec", {
       description:
@@ -1990,8 +2062,13 @@ class CiEffectiveLaneSpec extends S.Opaque<CiEffectiveLaneSpec, { readonly brand
 const specShardNames = (spec: CiEffectiveLaneSpec): ReadonlyArray<string> => A.dedupe(A.flatten(spec.shardLayouts));
 
 // Must match the `name:` of the `test-plan` job in `.github/workflows/check.yml`: a run carrying exactly one
-// attempt-one job with this name built its Test Unit matrix from the affected partitions only.
+// attempt-one job with this name built its Test Unit and Test Integration matrices from the affected partitions
+// only.
 const CI_TEST_PLAN_JOB_NAME = "Test Plan";
+
+// #3005 merged: heavy.yml's single `Heavy / Test Integration` job became hosted shards plus a fail-closed
+// aggregate of the same name in check.yml.
+const CI_TEST_INTEGRATION_SHARDED_SINCE = DateTime.makeUnsafe("2026-11-09T17:15:26Z");
 
 // The layout whose every shard has an attempt-one job in this run; the newest layout wins a tie (a layout
 // that is a superset of an older one always wins when complete).
@@ -2133,6 +2210,61 @@ const CI_EFFECTIVE_LANE_SPECS: ReadonlyArray<CiEffectiveLaneSpec> = [
         "Test Unit (unit-e)",
         "Test Unit (unit-f)",
         "Test Unit (unit-g)",
+      ],
+    ],
+  }),
+  // Before #3005 the lane was heavy.yml's single `Heavy / Test Integration` job; `shardedSince` measures those
+  // runs by that job's own span. Property Laws is not a required context and has no spec.
+  CiEffectiveLaneSpec.make({
+    aggregator: "Heavy / Test Integration",
+    lane: "Test Integration",
+    plannedBy: CI_TEST_PLAN_JOB_NAME,
+    shardedSince: CI_TEST_INTEGRATION_SHARDED_SINCE,
+    shardLayouts: [
+      // #3005 (2026-11-09T17:15Z): sixteen @beep/law-practice-server integration shards and the int-rest
+      // catch-all; from #3030 (2026-11-10T00:15Z) a pull request allocates only the planned subset.
+      [
+        "Test Integration (lps-int-1)",
+        "Test Integration (lps-int-2)",
+        "Test Integration (lps-int-3)",
+        "Test Integration (lps-int-4)",
+        "Test Integration (lps-int-5)",
+        "Test Integration (lps-int-6)",
+        "Test Integration (lps-int-7)",
+        "Test Integration (lps-int-8)",
+        "Test Integration (lps-int-9)",
+        "Test Integration (lps-int-10)",
+        "Test Integration (lps-int-11)",
+        "Test Integration (lps-int-12)",
+        "Test Integration (lps-int-13)",
+        "Test Integration (lps-int-14)",
+        "Test Integration (lps-int-15)",
+        "Test Integration (lps-int-16)",
+        "Test Integration (int-rest)",
+      ],
+      // From #3029 (2026-11-10T00:53Z): shards sized at their files' worst measured seconds, nineteen
+      // law-practice-server partitions.
+      [
+        "Test Integration (lps-int-1)",
+        "Test Integration (lps-int-2)",
+        "Test Integration (lps-int-3)",
+        "Test Integration (lps-int-4)",
+        "Test Integration (lps-int-5)",
+        "Test Integration (lps-int-6)",
+        "Test Integration (lps-int-7)",
+        "Test Integration (lps-int-8)",
+        "Test Integration (lps-int-9)",
+        "Test Integration (lps-int-10)",
+        "Test Integration (lps-int-11)",
+        "Test Integration (lps-int-12)",
+        "Test Integration (lps-int-13)",
+        "Test Integration (lps-int-14)",
+        "Test Integration (lps-int-15)",
+        "Test Integration (lps-int-16)",
+        "Test Integration (lps-int-17)",
+        "Test Integration (lps-int-18)",
+        "Test Integration (lps-int-19)",
+        "Test Integration (int-rest)",
       ],
     ],
   }),
@@ -2725,6 +2857,16 @@ const laterAttemptRowForJob = (
     runId: run.id,
   });
 
+// What an author or the merge gate waits for one required context: the run's `created_at` (never the
+// re-dispatch-rewritten `run_started_at`) to the reporting job's completion. Typed to attempt-one jobs because a
+// re-run job's completion would add the time before someone clicked re-run; a negative span is a garbled record.
+const attemptOneVerdictWaitSeconds = (run: CiWorkflowWindowRun, job: CiWorkflowAttemptOneJob): O.Option<number> =>
+  pipe(
+    epochMillis(job.completed_at),
+    O.map((completedAt) => (completedAt - DateTime.toEpochMillis(run.created_at)) / 1_000),
+    O.filter((seconds) => seconds >= 0)
+  );
+
 const durationRowForAttemptOneJob = (
   run: CiWorkflowWindowRun,
   lane: string,
@@ -2769,6 +2911,7 @@ const durationRowForAttemptOneJob = (
         runAttempt: 1,
         runCreatedAt: run.created_at,
         runId: run.id,
+        verdictWaitSeconds: attemptOneVerdictWaitSeconds(run, job),
       }),
   });
 };
@@ -2827,9 +2970,8 @@ const effectiveDurationRow = (
   const shardStartedAtMillis = A.getSomes(
     A.map(shards, (shardName) => O.flatMap(attemptOneJobNamed(jobs, shardName), (job) => epochMillis(job.started_at)))
   );
-  const aggregatorCompletedAtMillis = O.flatMap(attemptOneJobNamed(jobs, spec.aggregator), (job) =>
-    epochMillis(job.completed_at)
-  );
+  const aggregator = attemptOneJobNamed(jobs, spec.aggregator);
+  const aggregatorCompletedAtMillis = O.flatMap(aggregator, (job) => epochMillis(job.completed_at));
   const earliestStartedAtMillis = A.head(A.sort(shardStartedAtMillis, Order.Number));
   const durationSeconds = pipe(
     O.zipWith(
@@ -2865,9 +3007,39 @@ const effectiveDurationRow = (
         runAttempt: 1,
         runCreatedAt: run.created_at,
         runId: run.id,
+        verdictWaitSeconds: O.flatMap(aggregator, (job) => attemptOneVerdictWaitSeconds(run, job)),
       }),
   });
 };
+
+// A run created before the lane's first shard layout ran it as the aggregator job alone; with no complete or
+// planned layout it yields the ordinary lane's rows for that job (none when the job is absent), so pre-shard
+// windows read exactly as they did before the lane had a spec.
+const unshardedRunRows = (
+  run: CiWorkflowWindowRun,
+  jobs: ReadonlyArray<CiWorkflowAttemptOneJob>,
+  spec: CiEffectiveLaneSpec
+): O.Option<ReadonlyArray<CiLaneTimingWindowRow>> =>
+  pipe(
+    O.fromUndefinedOr(spec.shardedSince),
+    O.filter(
+      (shardedSince) => DateTime.isLessThan(run.created_at, shardedSince) && O.isNone(effectiveShardLayout(jobs, spec))
+    ),
+    O.map(() =>
+      pipe(
+        jobs,
+        A.filter((job) => Str.equivalence(job.name, spec.aggregator)),
+        A.map((job) => durationRowForAttemptOneJob(run, spec.lane, job))
+      )
+    )
+  );
+
+const effectiveLaneRows = (
+  run: CiWorkflowWindowRun,
+  jobs: ReadonlyArray<CiWorkflowAttemptOneJob>,
+  spec: CiEffectiveLaneSpec
+): ReadonlyArray<CiLaneTimingWindowRow> =>
+  O.getOrElse(unshardedRunRows(run, jobs, spec), () => A.of(effectiveDurationRow(run, jobs, spec)));
 
 const shardPickupRows = (
   run: CiWorkflowWindowRun,
@@ -2959,7 +3131,7 @@ const rowsForRun = (
   const effectiveRows = pipe(
     CI_EFFECTIVE_LANE_SPECS,
     A.filter((spec) => HashSet.has(requiredContexts, spec.lane)),
-    A.map((spec) => effectiveDurationRow(runJobs.run, attemptOneJobs, spec))
+    A.flatMap((spec) => effectiveLaneRows(runJobs.run, attemptOneJobs, spec))
   );
   return A.appendAll(
     A.appendAll(A.appendAll(ordinaryRows, effectiveRows), laterEffectiveRows(requiredContexts, runJobs)),
@@ -2971,11 +3143,25 @@ const isDurationWindowRow = S.is(CiLaneTimingDurationRow);
 const isAttributionWindowRow = S.is(CiLaneTimingAttributionRow);
 const isPickupWindowRow = S.is(CiLaneTimingPickupRow);
 
+// A p95 that is absent or at least 20m00s breaches its measure; an empty population fails closed.
+const charterBreach = (
+  measure: CiLaneTimingCharterMeasure,
+  p95Seconds: O.Option<number>
+): ReadonlyArray<CiLaneTimingCharterMeasure> =>
+  O.exists(p95Seconds, (seconds) => seconds < Duration.toSeconds(CI_LANE_TIMING_CHARTER)) ? A.empty() : A.of(measure);
+
 const timingWindowStat = (rows: ReadonlyArray<CiLaneTimingDurationRow>, lane: string): CiLaneTimingWindowStat => {
   const laneRows = A.filter(rows, (row) => Str.equivalence(row.lane, lane));
   const durations = A.map(laneRows, (row) => row.durationSeconds);
+  const waits = A.getSomes(A.map(laneRows, (row) => row.verdictWaitSeconds));
   const p95Seconds = nearestRank(durations, 0.95);
+  const waitP95Seconds = nearestRank(waits, 0.95);
+  const breaches = A.appendAll(
+    charterBreach(CiLaneTimingCharterMeasure.Enum.duration, p95Seconds),
+    charterBreach(CiLaneTimingCharterMeasure.Enum.wait, waitP95Seconds)
+  );
   return CiLaneTimingWindowStat.make({
+    breaches,
     lane,
     maxSeconds: A.last(A.sort(durations, Order.Number)),
     n: A.length(laneRows),
@@ -2983,7 +3169,9 @@ const timingWindowStat = (rows: ReadonlyArray<CiLaneTimingDurationRow>, lane: st
     p95Seconds,
     pr: A.length(A.filter(laneRows, (row) => Str.equivalence(row.event, "pull_request"))),
     push: A.length(A.filter(laneRows, (row) => Str.equivalence(row.event, "push"))),
-    state: O.exists(p95Seconds, (seconds) => seconds < Duration.toSeconds(CI_LANE_TIMING_CHARTER)) ? "Pass" : "Breach",
+    state: A.isReadonlyArrayEmpty(breaches) ? "Pass" : "Breach",
+    waitP50Seconds: nearestRank(waits, 0.5),
+    waitP95Seconds,
   });
 };
 
@@ -3097,8 +3285,10 @@ const reportFromRows = Effect.fn("Ci.reportFromLaneTimingWindowRows")(function* 
  * **Details**
  *
  * This is the deterministic test and offline-analysis seam. It normalizes the
- * reusable-workflow prefix, replaces sharded `Lint` and `Test Unit` aggregator
- * spans with their effective critical paths, and rejects any required-context
+ * reusable-workflow prefix, replaces sharded `Lint`, `Test Unit` and
+ * `Test Integration` aggregator spans with their effective critical paths
+ * (a `Test Integration` run older than its shards keeps the single job's own
+ * span), records each successful row's verdict wait, and rejects any required-context
  * set whose normalized cardinality is not a ratified population size. With no
  * ruleset version to look up, it accepts any count in the ratified table; the
  * windowed collector pins the exact count for the resolved version. The
@@ -3240,13 +3430,20 @@ const roundedDuration = (seconds: number): string => {
 const renderTimingOption = (seconds: O.Option<number>): string =>
   O.match(seconds, { onNone: () => "—", onSome: roundedDuration });
 
-const renderMarkdownP95 = (stat: CiLaneTimingWindowStat): string => {
-  const rendered = renderTimingOption(stat.p95Seconds);
-  return Str.equivalence(stat.state, "Breach") ? `**${rendered}**` : rendered;
+const renderMarkdownCharterP95 = (
+  stat: CiLaneTimingWindowStat,
+  measure: CiLaneTimingCharterMeasure,
+  seconds: O.Option<number>
+): string => {
+  const rendered = renderTimingOption(seconds);
+  return A.contains(stat.breaches, measure) ? `**${rendered}**` : rendered;
 };
 
-const renderMarkdownState = (state: CiLaneTimingWindowStat["state"]): string =>
-  Str.equivalence(state, "Breach") ? "**Breach**" : state;
+const renderMarkdownState = (stat: CiLaneTimingWindowStat): string =>
+  A.match(stat.breaches, {
+    onEmpty: () => stat.state,
+    onNonEmpty: (measures) => `**${stat.state} (${A.join(measures, ", ")})**`,
+  });
 
 const renderRequiredPopulation = (report: CiLaneTimingWindowReport): string =>
   `- required contexts: ${report.contextCount} (expected ${O.getOrElse(
@@ -3325,12 +3522,14 @@ const renderPopulationChangeComments = (report: CiLaneTimingWindowReport): Reado
 const renderSuccessfulDurationsMarkdown = (report: CiLaneTimingWindowReport): ReadonlyArray<string> => [
   "## Successful attempt-one durations",
   "",
-  "| Required lane | n | PR | Push | p50 | p95 | Max | P3 state |",
-  "| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
+  "Duration is the lane's own span (a sharded lane runs from its earliest shard start to its aggregator's completion). Wait runs from the workflow run's `created_at` to the reporting job's completion, so it also counts run queueing, `needs` chains and runner pickup. A lane breaches when either p95 is 20m00s or more.",
+  "",
+  "| Required lane | n | PR | Push | p50 | p95 | Max | Wait p50 | Wait p95 | P3 state |",
+  "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
   ...A.map(
     report.laneStats,
     (stat) =>
-      `| ${stat.lane} | ${stat.n} | ${stat.pr} | ${stat.push} | ${renderTimingOption(stat.p50Seconds)} | ${renderMarkdownP95(stat)} | ${renderTimingOption(stat.maxSeconds)} | ${renderMarkdownState(stat.state)} |`
+      `| ${stat.lane} | ${stat.n} | ${stat.pr} | ${stat.push} | ${renderTimingOption(stat.p50Seconds)} | ${renderMarkdownCharterP95(stat, CiLaneTimingCharterMeasure.Enum.duration, stat.p95Seconds)} | ${renderTimingOption(stat.maxSeconds)} | ${renderTimingOption(stat.waitP50Seconds)} | ${renderMarkdownCharterP95(stat, CiLaneTimingCharterMeasure.Enum.wait, stat.waitP95Seconds)} | ${renderMarkdownState(stat)} |`
   ),
 ];
 
@@ -3592,9 +3791,11 @@ const renderQueueTripwire = (pickup: CiLaneTimingPickupStat): string =>
  * **Details**
  *
  * The duration and attribution tables preserve the headings and column shapes
- * used by `research/current-ruleset-week-p95.md`. Later attempts remain a
- * separate current-report-shaped table, and the shard-pickup tripwire is a
- * line outside every wall-duration percentile.
+ * used by `research/current-ruleset-week-p95.md`; the duration table adds
+ * `Wait p50` and `Wait p95` before `P3 state`, and the state names each
+ * breached measure (`Breach (wait)`, `Breach (duration, wait)`). Later attempts
+ * remain a separate current-report-shaped table, and the shard-pickup tripwire
+ * is a line outside every wall-duration percentile.
  *
  * **Example** (Render report Markdown through the builder)
  *
@@ -3677,6 +3878,7 @@ const WINDOW_TSV_COLUMNS = [
   "attribution",
   "durationSeconds",
   "pickupSeconds",
+  "verdictWaitSeconds",
 ] as const;
 
 const renderWindowRowTsv = (row: CiLaneTimingWindowRow): string =>
@@ -3694,6 +3896,7 @@ const renderWindowRowTsv = (row: CiLaneTimingWindowRow): string =>
           tsvStringCell(attribution.jobName),
           tsvStringCell(attribution.conclusion),
           attribution.attribution,
+          "",
           "",
           "",
         ],
@@ -3714,6 +3917,7 @@ const renderWindowRowTsv = (row: CiLaneTimingWindowRow): string =>
           "",
           `${duration.durationSeconds}`,
           tsvCell(duration.pickupSeconds),
+          tsvCell(duration.verdictWaitSeconds),
         ],
         "\t"
       ),
@@ -3732,6 +3936,7 @@ const renderWindowRowTsv = (row: CiLaneTimingWindowRow): string =>
           "",
           "",
           `${pickup.pickupSeconds}`,
+          "",
         ],
         "\t"
       ),
@@ -3745,6 +3950,8 @@ const renderWindowRowTsv = (row: CiLaneTimingWindowRow): string =>
  * Duration, attribution, and pickup rows share one stable header. Empty cells
  * preserve semantic absence: pickup never enters `durationSeconds`, and an
  * excluded observation never impersonates a zero-duration success.
+ * `verdictWaitSeconds` is the last column, so earlier TSVs keep their column
+ * positions; only an attempt-one duration row fills it.
  *
  * **Example** (Render a TSV header through the builder)
  *
