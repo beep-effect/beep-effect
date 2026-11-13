@@ -6,7 +6,7 @@
     "title": "Certainty Scorecard",
     "status": "active",
     "created": "2026-11-09",
-    "updated": "2026-11-10",
+    "updated": "2026-11-12",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/certainty-scorecard",
@@ -85,5 +85,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Authored 2026-11-09 from explorations/ten-minute-certainty, not started: no upstream dependency and goes first. Startable now: MEAS-01 slice 1 with MEAS-04 (beep ci certainty CLI), ROUT-05 slice 1 (partition job mapping) and MEAS-02 (refusal attribution). The nightly workflow waits on slice 1. route-soundness-repair runs alongside; main-verdict-every-commit, heavy-pool-diet, hosted-setup-tax and local-proof-under-ten read their acceptance numbers from this goal."
+  "statusNote": "P1 Implement in progress. Slice 1 (MEAS-01 slice 1 with MEAS-04, beep ci certainty) merged as #3118, its coverage rows fixed by #3121. Slice 2 (ROUT-05 slice 1: every hosted job attributed to a lane, a support job or unknown, with a conservation census) is in review. Startable next: MEAS-02 (refusal attribution) and the certainty-nightly workflow. route-soundness-repair runs alongside; main-verdict-every-commit, heavy-pool-diet, hosted-setup-tax and local-proof-under-ten read their acceptance numbers from this goal."
 }

@@ -120,7 +120,7 @@ Status checked against the live checkout at 6eb2e0588e2 and re-checked at c90929
 | MEAS-03 | Separate terminations and type unlocated failures | partly landed (terminations census at `Economics.ts:1399`; terminated attempts still count as red, `Economics.ts:1013`) | Adjudicated fixtures; the denominator change is recorded | MEAS-02, MEAS-07 |
 | MEAS-07 | Journal final-check invocations and keep per-run history | open (`FinalCheck.ts` writes no attempt journal) | Journaling unit test plus a ready-gate regression fixture | none |
 | PERIL-11 | Keep attempt journals outside the reaped residue root; T3 lanes via `roots.json`; seat and host fields (merges MEAS-09) | open (`ResidueReap.ts:1776`, `yeet` not retained; no T3 row in the runbook list) | Fixture: retire, simulate a copy failure, restore, import duplicates, run residue-reap with maxAgeDays=0, re-census; each (runId, attemptId) appears exactly once and a copy failure blocks deletion | MEAS-07 |
-| ROUT-05 | Route corpus with partition mapping, step classes and per-lane outcomes in one capture (merges ROUT-06) | open (`RouteCensus.ts:168` strips the suffix to `Test Integration`, which matches no lane context; the lane is `Heavy / Test Integration`, `CiLane.ts:477`) | An old receipt restored to a scratch `--corpus` dir reproduces 242 skipped and 0 skippedReds; a post-#3043/#3046 fixture maps every job (conservation test: mapped plus unknown minutes equal total); aggregator and setup reds become unknown, never dropped | none |
+| ROUT-05 | Route corpus with partition mapping, step classes and per-lane outcomes in one capture (merges ROUT-06) | partly landed (slice 1: partition and alias mapping with a lane, support or unknown conservation census, decision `job-attribution-classes`; step classes and per-task outcomes remain) | An old receipt restored to a scratch `--corpus` dir reproduces 242 skipped and 0 skippedReds; a post-#3043/#3046 fixture maps every job (conservation test: mapped plus unknown minutes equal total); aggregator and setup reds become unknown, never dropped | none |
 | MEAS-06 | Project the existing Vitest unit-results.json into per-file and per-package timing on every event | open (unit-results.json is uploaded only by the failure-only step at `.github/workflows/check.yml:924-934`; nothing projects it) | Rows exist for every executed package and file counts equal expectedTestFiles, stratified by event | MEAS-01 |
 | MEAS-05 | Joined per-check cost ledger at (lane, partition) grain with asymmetric digests | open | At least 95% of job-minutes mapped on the three reference runs; an umbrella-plus-partition fixture shows no double count | ROUT-05, MEAS-04 |
 | MEAS-08 | Time-join PSI samples onto attempts (no hot-path stamps) | open | None | MEAS-05 |
@@ -365,6 +365,22 @@ Live probes on 2026-11-10: run 42646019844 returned all 180 jobs as three per-at
 Lane claude/jovial-sammet-084b0a
 
 Reverse: Drop the 30-job retry in collectCiWorkflowRunAttemptJobs; exhausted 100-job pages then stamp the attempt partial directly.
+
+### Hosted jobs are attributed as lane, support or unknown, and the census conserves their time, 2026-11-12
+
+ROUT-05 slice 1 fixes the join `RouteCensus.ts` used: a `Test Integration (<partition>)` job stripped to `Test Integration`, which is no lane context, so the 20 partition jobs and their minutes fell out of every census and replay. `jobNameToLane` now joins, in order: the lane context name; an earlier or conditional context name (`Build` before Heavy, until 2026-09-09; `Coverage Artifact Migration`; `Test Integration Partitions`); then a partition family (`<context> (<partition>)`, plus `Test Integration` for the `Heavy / Test Integration` lane), only for names that carry a partition suffix. Every job is then classed by the new `RouteJobClass` literal: `lane`, `support` (Change Profile, Heavy Admission and its `Heavy` call placeholder, Test Plan, PR Size Label and the four heavy.yml producer-pilot jobs) or `unknown`. Test Plan is support, not a lane job: it selects the Test Unit and Test Integration partitions at once, so charging it to one lane would misstate that lane. The census gains `jobMinutes` (`RouteJobMinutes`): lane, support and unknown jobs and milliseconds that sum to the totals, with each unknown name listed once. On Check run 43322847791 (2026-11-12, attempt 1, 80 jobs, committed as `test/fixtures/ci-route/census/partition-runs-2026-11-12.json`) every job maps: 72 lane jobs (21 test-integration, 25 test-unit, 5 property, 3 lint) and 8 support jobs, 0 unknown. On the 2026-09-01..10-30 corpus the names still unknown are retired lanes (`Knip`, `Shadcn Lint`, `Heavy / Effect Diagnostics`) and one unexpanded matrix name; they are reported, not mapped. The names newly joined there (`Build`, `Coverage Artifact Migration`) carry no pull-request red on a lane the footprint record can skip (`build`, `check`), so the replay totals cannot move. Per-step classes and per-task outcomes (aggregator and setup reds as unknown) stay in slice 2 (PLAN slice 11).
+
+Lane fix/rout-05-partition-map
+
+Reverse: Drop RouteJobAttribution, RouteJobMinutes and the alias tables in RouteCensus.ts; jobNameToLane then joins on context names and partition suffixes alone.
+
+### Slice 1 merged with two coverage rows red; #3121 fixed them, 2026-11-12
+
+#3118 (slice 1) merged as 8390750a8e3 with Heavy / Coverage Regression red on two rows it introduced: `LaneTimings.ts` branches at 99.4% against a 100% baseline (the `partial-read` reason folded into the preview verdict was never exercised) and `Certainty.ts`, a new file with no baseline row, at 75-81%. Main run 43310132188 on 5e9ee8341bd showed both. #3121 (3e2e0acaed8) fixed them with tests only: `test/ci-certainty-reader.test.ts` drives the live reader through a scripted GitHub transport and git, and a `--window --preview` lane-timings run covers the partial-read banner; scoped coverage then read 100% on all four `Certainty.ts` measures and on `LaneTimings.ts` branches, with no source or baseline change. The yeet inbox row for that red was acknowledged against 3e2e0acaed8. The other rows in that run belonged to other PRs.
+
+Lane fix/rout-05-partition-map
+
+Reverse: None needed: this records history. Delete the file if the attribution proves wrong.
 
 <!-- beep:decisions:end -->
 

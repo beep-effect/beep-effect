@@ -83,6 +83,12 @@ bun run beep goals decisions check --slug merge-queue-lab
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug merge-queue-lab`; add a `kind: checkpoint` file there, never edit this block._
 
-_No checkpoint files yet._
+### Closeout re-final after #3112 merged before its readiness receipt, 2026-11-10
+
+#3112 carried proposedCloseout but was flipped ready and merged five seconds later (2026-11-10 07:33:48Z and 07:33:53Z) by the operator gh login, before its until-ready monitor recorded merge-ready. goals completion refresh therefore read unknown. This docs-only re-final rebinds proposedCloseout.finalPullRequest, the completionGate final entry and the yeet-verdict ref to its own branch, and is held for its own merge-ready receipt before it merges.
+
+Lane docs/merge-queue-lab-refinal
+
+Reverse: None needed; the re-final only rebinds proposedCloseout and the gating verdict.
 
 <!-- beep:decisions:end -->

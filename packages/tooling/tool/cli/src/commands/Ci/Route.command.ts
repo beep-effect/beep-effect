@@ -177,6 +177,10 @@ const renderCensus = (census: RouteCensus): ReadonlyArray<string> => [
     (cost) =>
       `    ${Str.padEnd(18)(cost.lane)} ${Str.padEnd(16)(cost.basis)} ${O.match(cost.p50Ms, { onNone: () => "-", onSome: minutes })}${O.match(cost.source, { onNone: () => "", onSome: (s) => `  ${s}` })}`
   ),
+  `  job time: ${minutes(census.jobMinutes.totalMs)} over ${census.jobMinutes.jobs} job(s); lane ${minutes(census.jobMinutes.laneMs)} (${census.jobMinutes.laneJobs}), support ${minutes(census.jobMinutes.supportMs)} (${census.jobMinutes.supportJobs}), unknown ${minutes(census.jobMinutes.unknownMs)} (${census.jobMinutes.unknownJobs})`,
+  ...(A.isReadonlyArrayNonEmpty(census.jobMinutes.unknownNames)
+    ? [`  unknown job names: ${A.join(census.jobMinutes.unknownNames, ", ")}`]
+    : []),
 ];
 
 const renderReplay = (replay: RouteReplay): ReadonlyArray<string> => [
