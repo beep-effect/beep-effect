@@ -1,4 +1,5 @@
 import { isHeavyDocsOnlyPath } from "@beep/repo-cli/commands/Ci";
+import { CoverageScopeOwner, planCoverageAffectedScope } from "@beep/repo-cli/test/Quality";
 import { FinalCheckGate } from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
 import { assertInclude } from "@effect/vitest/utils";
@@ -129,6 +130,21 @@ describe("final-check gate names in the docs", () => {
     const docs = A.map(R.keys(DOC_TEXT), Str.replace("../../../../../", ""));
     expect(docs).toHaveLength(3);
     expect(A.filter(docs, isHeavyDocsOnlyPath)).toStrictEqual([]);
+  });
+
+  it("selects only the repo-cli tests for an edit to a document it reads, never a full coverage scope", () => {
+    const owners = [
+      CoverageScopeOwner.make({
+        packageName: "@beep/repo-cli",
+        packagePath: "packages/tooling/tool/cli",
+        hasCoverage: true,
+      }),
+    ];
+    const docs = A.map(R.keys(DOC_TEXT), Str.replace("../../../../../", ""));
+    const scopes = A.map(docs, (doc) => planCoverageAffectedScope(owners, [doc]));
+    expect(A.map(scopes, (scope) => (scope._tag === "selected" ? scope.packageNames : [scope._tag]))).toStrictEqual(
+      A.map(docs, () => ["@beep/repo-cli"])
+    );
   });
 
   it(`${GATE_TABLE} tables every final-check gate in run order`, () => {
