@@ -10,7 +10,7 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { flow } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
@@ -22,13 +22,16 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { workspaceDirectories } from "../RepoWorkspaces.ts";
 import {
+  buildServedCheck,
   CheckerScriptName,
   CodegenGeneratorPackage,
   checkerEngineExemptions,
   ImplScriptDrift,
   implScriptDefaults,
+  isDeclarationOnlyBuild,
   javaScriptBuildOverrides,
   NonCanonicalChecker,
+  ownSourceCheckOverrides,
   PackageKind,
   PackageScriptsReport,
   RetiredScriptName,
@@ -40,7 +43,9 @@ import {
 } from "./PackageScripts.schemas.ts";
 import type {
   CheckerEngineExemption,
+  ImplScriptDefault,
   JavaScriptBuildOverride,
+  OwnSourceCheckOverride,
   PackageScriptsDrift,
   TaskScriptRule,
 } from "./PackageScripts.schemas.ts";
@@ -82,6 +87,7 @@ export class PackageScriptsPolicyError extends S.TaggedError<
  *   bypassingConfigs: HashSet.empty(),
  *   generators: HashSet.empty(),
  *   javaScriptBuilds: HashSet.empty(),
+ *   ownSourceChecks: HashSet.empty(),
  * })
  * console.log(HashSet.size(evidence.doctestOwners)) // 0
  * ```
@@ -95,9 +101,12 @@ export class DerivationEvidence extends S.Opaque<DerivationEvidence, { readonly 
     generators: S.HashSet(S.String),
     // Manifests whose reviewed `javaScriptBuildOverrides` row keeps their `beep:build` as written.
     javaScriptBuilds: S.HashSet(S.String),
+    // Manifests whose reviewed `ownSourceCheckOverrides` row keeps the no-emit check leading `beep:check`.
+    ownSourceChecks: S.HashSet(S.String),
   }).pipe(
     $I.annoteSchema("DerivationEvidence", {
-      description: "Derived task membership and JavaScript-emit overrides keyed by repository-relative manifest path.",
+      description:
+        "Derived task membership, JavaScript-emit overrides and own-source check overrides keyed by repository-relative manifest path.",
     })
   )
 ) {}
@@ -166,6 +175,17 @@ const retireImplementations = (kind: PackageKind, impls: ScriptsBlock["impls"], 
       ? HashMap.set(current, row.name, row.replacement)
       : current
   );
+// After retirement, so the declaration-only build that pass wrote serves the check in the same pass;
+// a package with an own-source check override keeps the no-emit check first.
+const serveCheckFromBuild = (impls: ScriptsBlock["impls"], keepsOwnSourceCheck: boolean): ScriptsBlock["impls"] =>
+  keepsOwnSourceCheck
+    ? impls
+    : pipe(
+        O.all([HashMap.get(impls, "beep:check"), HashMap.get(impls, "beep:build")]),
+        O.flatMap(([check, build]) => buildServedCheck(check, build)),
+        O.map((check) => HashMap.set(impls, "beep:check", check)),
+        O.getOrElse(() => impls)
+      );
 const ruleEnabled = (rule: TaskScriptRule, actual: ScriptsBlock, evidence: DerivationEvidence) =>
   Match.value(rule.presence).pipe(
     Match.tag("required", () => true),
@@ -203,6 +223,7 @@ const expectedBlock: PackageScriptsPolicyShape["expected"] = (kind, actual, evid
   if (O.exists(codegen, isPlaceholder)) tasks = HashMap.remove(tasks, "codegen");
   // After seeding, so an implementation seeded from a retired task value is retired in the same pass.
   impls = retireImplementations(kind, impls, HashSet.size(evidence.javaScriptBuilds) > 0);
+  impls = serveCheckFromBuild(impls, HashSet.size(evidence.ownSourceChecks) > 0);
   const extras = HashMap.filter(actual.extras, (_, name) => !isRetiredScriptName(name));
   return ScriptsBlock.make({ kind, tasks, impls, extras });
 };
@@ -237,6 +258,37 @@ const declaresEmptyBuildOutputs = (text: string): boolean =>
   O.exists(decodeTurboBuildOutputs(text), (turbo) => A.isReadonlyArrayEmpty(turbo.tasks.build.outputs));
 const isNoEmitBuild = (actual: ScriptsBlock): boolean =>
   O.exists(HashMap.get(actual.impls, "beep:build"), Str.includes(NOEMIT_BUILD_CONFIG));
+const noEmitBuildConflicts = (actual: ScriptsBlock, turboText: string): ReadonlyArray<PackageScriptsDrift> =>
+  isNoEmitBuild(actual) && !declaresEmptyBuildOutputs(turboText)
+    ? [{ _tag: "derivation-conflict", name: "build", reason: NOEMIT_BUILD_REASON }]
+    : [];
+
+// The root `check` task depends on the package's own `build`, whose declaration-only program
+// leads a declaration-only package's `beep:check`. Any other package with a `check` keeps the
+// upstream-only graph through its own `turbo.json`: `tasks.check.dependsOn` lists `^build`, not
+// `build`, and does not extend the root list. `bun run beep create-package` emits that override.
+const UPSTREAM_BUILD_EDGE = "^build";
+const OWN_BUILD_EDGE = "build";
+const TURBO_EXTENDS = "$TURBO_EXTENDS$";
+const OWN_BUILD_EDGE_REASON =
+  'check of a build that is not declaration-only needs turbo.json with tasks.check.dependsOn: ["^build"] (bun run beep create-package emits it)';
+const decodeTurboCheckDependsOn = S.decodeUnknownOption(
+  S.fromJsonString(S.Struct({ tasks: S.Struct({ check: S.Struct({ dependsOn: S.Array(S.String) }) }) }))
+);
+const keepsCheckOffOwnBuild = (text: string): boolean =>
+  O.exists(
+    decodeTurboCheckDependsOn(text),
+    ({ tasks }) =>
+      A.contains(tasks.check.dependsOn, UPSTREAM_BUILD_EDGE) &&
+      !A.contains(tasks.check.dependsOn, OWN_BUILD_EDGE) &&
+      !A.contains(tasks.check.dependsOn, TURBO_EXTENDS)
+  );
+const ownBuildEdgeConflicts = (expected: ScriptsBlock, turboText: string): ReadonlyArray<PackageScriptsDrift> =>
+  HashMap.has(expected.tasks, "check") &&
+  !O.exists(HashMap.get(expected.impls, "beep:build"), isDeclarationOnlyBuild) &&
+  !keepsCheckOffOwnBuild(turboText)
+    ? [{ _tag: "derivation-conflict", name: "check", reason: OWN_BUILD_EDGE_REASON }]
+    : [];
 
 const derivationConflicts = (evidence: DerivationEvidence, manifestPath: string, expected: ScriptsBlock) => {
   const conflicts: Array<PackageScriptsDrift> = [];
@@ -345,15 +397,28 @@ const checkerEngineDrift = (
   });
 };
 
-const implementationDrift = (actual: ScriptsBlock): ReadonlyArray<ImplScriptDrift> =>
+// The scaffold default an implementation is compared with: a declaration-only package's default
+// check leads with its build, as `scaffoldPackageScripts` and the writer produce it.
+const scaffoldDefault = (actual: ScriptsBlock, row: ImplScriptDefault, keepsOwnSourceCheck: boolean): string =>
+  row.name !== "beep:check" || keepsOwnSourceCheck
+    ? row.value
+    : pipe(
+        HashMap.get(actual.impls, "beep:build"),
+        O.flatMap((build) => buildServedCheck(row.value, build)),
+        O.getOrElse(() => row.value)
+      );
+
+const implementationDrift = (actual: ScriptsBlock, keepsOwnSourceCheck: boolean): ReadonlyArray<ImplScriptDrift> =>
   A.getSomes(
-    A.map(implScriptDefaults, (row) =>
-      row.kind === actual.kind
-        ? HashMap.get(actual.impls, row.name).pipe(
-            O.filter((value) => value !== row.value),
-            O.map((value) => ImplScriptDrift.make({ name: row.name, expected: row.value, actual: value }))
-          )
-        : O.none()
+    A.map(
+      A.filter(implScriptDefaults, (row) => row.kind === actual.kind),
+      (row) => {
+        const expected = scaffoldDefault(actual, row, keepsOwnSourceCheck);
+        return HashMap.get(actual.impls, row.name).pipe(
+          O.filter((value) => value !== expected),
+          O.map((value) => ImplScriptDrift.make({ name: row.name, expected, actual: value }))
+        );
+      }
     )
   );
 
@@ -374,7 +439,8 @@ export class PackageScriptsPolicy extends Context.Service<PackageScriptsPolicy, 
     make: Effect.fn("PackageScriptsPolicy.make")(function* (
       root: string,
       exemptions: ReadonlyArray<CheckerEngineExemption> = checkerEngineExemptions,
-      overrides: ReadonlyArray<JavaScriptBuildOverride> = javaScriptBuildOverrides
+      overrides: ReadonlyArray<JavaScriptBuildOverride> = javaScriptBuildOverrides,
+      checkOverrides: ReadonlyArray<OwnSourceCheckOverride> = ownSourceCheckOverrides
     ) {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -444,12 +510,14 @@ export class PackageScriptsPolicy extends Context.Service<PackageScriptsPolicy, 
         }
         const bypasses = yield* collectBypasses(repoRoot, entries, owners);
         const javaScriptBuilds = HashSet.fromIterable(A.map(overrides, (row) => row.manifest));
+        const ownSourceChecks = HashSet.fromIterable(A.map(checkOverrides, (row) => row.manifest));
         return {
           evidence: DerivationEvidence.make({
             doctestOwners: owners,
             bypassingConfigs: bypasses,
             generators,
             javaScriptBuilds,
+            ownSourceChecks,
           }),
           drift,
         };
@@ -473,17 +541,15 @@ export class PackageScriptsPolicy extends Context.Service<PackageScriptsPolicy, 
           bypassingConfigs: HashSet.filter(evidence.bypassingConfigs, (entry) => entry === manifestPath),
           generators: HashSet.filter(evidence.generators, (entry) => entry === manifestPath),
           javaScriptBuilds: HashSet.filter(evidence.javaScriptBuilds, (entry) => entry === manifestPath),
+          ownSourceChecks: HashSet.filter(evidence.ownSourceChecks, (entry) => entry === manifestPath),
         });
         const expected = expectedBlock(kind, actual, local);
         const turboFile = path.join(dir, "turbo.json");
         const turboText = (yield* fs.exists(turboFile)) ? yield* fs.readFileString(turboFile) : "";
-        const buildConflicts: ReadonlyArray<PackageScriptsDrift> =
-          isNoEmitBuild(actual) && !declaresEmptyBuildOutputs(turboText)
-            ? [{ _tag: "derivation-conflict", name: "build", reason: NOEMIT_BUILD_REASON }]
-            : [];
         const conflicts = [
           ...derivationConflicts(evidence, manifestPath, expected),
-          ...buildConflicts,
+          ...noEmitBuildConflicts(actual, turboText),
+          ...ownBuildEdgeConflicts(expected, turboText),
           ...checkerEngineDrift(exemptions, manifestPath, actual),
         ];
         const rendered =
@@ -498,7 +564,8 @@ export class PackageScriptsPolicy extends Context.Service<PackageScriptsPolicy, 
         }
         const effective = write ? expected : actual;
         const rows = [...diffBlock(effective, expected), ...conflicts];
-        return { manifestPath, rows, implDrift: implementationDrift(effective), written: didWrite };
+        const implDrift = implementationDrift(effective, HashSet.size(local.ownSourceChecks) > 0);
+        return { manifestPath, rows, implDrift, written: didWrite };
       });
       const run = Effect.fn("PackageScriptsPolicy.run")(
         function* (repoRoot: string, write: boolean) {
