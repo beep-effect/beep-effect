@@ -34,6 +34,7 @@ export {
 export {
   JsoncCanonicalizeError,
   JsoncCanonicalizeErrorCode,
+  JsoncCanonicalizeOptions,
   type JsoncDigest,
   JsoncFingerprint,
   JsoncTextHashOptions,

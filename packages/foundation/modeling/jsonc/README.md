@@ -153,6 +153,22 @@ console.log(Result.isFailure(bad) ? `${bad.failure.code} at "${bad.failure.path}
 // UnrepresentableValue at "/a/b"
 ```
 
+One relaxation is opt-in. A wire-form object often carries an optional member that is present but unset, and `JSON.stringify` treats such a member as absent. `JsoncCanonicalizeOptions.make({ omitUndefinedMembers: true })` does the same: an object member whose value reads as `undefined` is left out, in the same walk and after one read of the member. Nothing else changes. An `undefined` array element, an array hole, an `undefined` root and every other non-JSON value still fail typed. `canonicalizeResult`, `canonicalize`, `hashResult` and `hash` all take the options as their last argument:
+
+```ts
+import { JsoncCanonicalizeOptions, JsoncFingerprint } from "@beep/jsonc";
+import * as Result from "effect/Result";
+
+const omitting = JsoncCanonicalizeOptions.make({ omitUndefinedMembers: true });
+
+const sparse = JsoncFingerprint.canonicalizeResult({ id: "e1", note: undefined }, omitting);
+console.log(Result.isSuccess(sparse) ? sparse.success : "");
+// {"id":"e1"}
+
+console.log(Result.isFailure(JsoncFingerprint.canonicalizeResult([undefined], omitting)));
+// true
+```
+
 `hash` and `hashText` carry that canonicalization through to a content digest: the lowercase-hex SHA-256 of the UTF-8 bytes of the canonical text (`hash`) or of raw text as given (`hashText`). Both require core's `Crypto.Crypto` service in `R`. This module owns no backend, so provide `@effect/platform-node`'s `NodeCrypto.layer` (or any `Crypto` layer) at the application edge:
 
 ```ts

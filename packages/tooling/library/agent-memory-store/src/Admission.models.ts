@@ -12,7 +12,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { NearDuplicateFlag } from "./Dedupe.models.ts";
-import { ContentHash, NodeId, RevisionId } from "./NodeIdentity.models.ts";
+import { ContentHash, isWellFormedText, NodeId, RevisionId } from "./NodeIdentity.models.ts";
 import { LineageId } from "./Observation.events.ts";
 import { InsertPlacement, NodeOperation } from "./Operation.models.ts";
 
@@ -40,6 +40,14 @@ export { ClaimGateSeverity, ClaimGateViolation } from "@beep/epistemics/ClaimGat
  * structural floor. `nodeIdAlreadyExists` rejects an insert whose minted id
  * the log already holds, as on a batch retried after an uncertain commit.
  *
+ * Decision `admission-refusal-codes`: the rejected outcome names what the
+ * store refused. `unknownNode` rejects an operation naming a node the log
+ * never held (or an insert whose predecessor is no node of its file),
+ * `unknownRevision` one whose expected revision was never a revision of its
+ * node, and `statusOutsideLifecycle` a status move whose field has no
+ * lifecycle, whose value is outside it, or whose node text holds no single
+ * value of it.
+ *
  * **Example** (Check a violation code)
  *
  * ```ts
@@ -62,6 +70,9 @@ export const MemoryViolationCode = LiteralKit([
   "insertAfterMissingNode",
   "nodeIdAlreadyExists",
   "staleExpectedRevision",
+  "unknownNode",
+  "unknownRevision",
+  "statusOutsideLifecycle",
 ]).pipe(
   $I.annoteSchema("MemoryViolationCode", {
     description: "Store-specific violation codes layered on the claim gate findings.",
@@ -283,7 +294,11 @@ export const toClaimGateResult: (outcome: AdmissionOutcome) => ClaimGateResult =
  * This is the read model of one unresolved `WriteHeld` event. `operation` is
  * the write exactly as submitted, `headRevision` is the revision the log held
  * for the node when the write was held, and `since` is the journal time of the
- * hold. `ours` and `theirs` follow the rules of the `held` admission outcome.
+ * hold. `ours` is the text the log held at `headRevision` (absent when it held
+ * none), the text a `theirs` or `merged` resolution is judged against; when
+ * the node has moved on to another text since, the resolution is not applied
+ * and the write is held again on the current head under a new hold id.
+ * `theirs` follows the rules of the `held` admission outcome.
  *
  * **Example** (Read the fields of a held conflict)
  *
@@ -306,7 +321,7 @@ export class HeldConflict extends S.Opaque<HeldConflict, { readonly brand: uniqu
       description: "Revision the log held for the node when the write was held.",
     }),
     ours: S.OptionFromOptionalKey(S.String).annotateKey({
-      description: "Live text the log holds for the node; absent when it holds none.",
+      description: "Text the log held for the node at headRevision; absent when it held none.",
     }),
     theirs: S.OptionFromOptionalKey(S.String).annotateKey({
       description: "Text the agent submitted; absent for a delete.",
@@ -336,7 +351,11 @@ const ConflictChoice = LiteralKit(["ours", "theirs", "merged"]).pipe(
  * held operation's change, and `merged` a text written by the resolver; both
  * write a revision on top of the node's heads at resolve time, never on the
  * stale revision the operation named. Each resolution is recorded as a
- * `HoldResolved` event.
+ * `HoldResolved` event. When the node moved on to another text after the
+ * hold, a `theirs` or `merged` resolution (other than `theirs` for a status
+ * move, which rewrites only the status token) is not applied: the hold is
+ * closed and the write is held again on the current head under a new hold id,
+ * so no resolution replaces a text its resolver was not shown.
  *
  * A held insert has no heads: `theirs` and `merged` create the node. When its
  * predecessor never reached the log, the resolver names where it goes with
@@ -368,7 +387,7 @@ export const ConflictResolution = ConflictChoice.toTaggedUnion("choice")({
     }),
   },
   merged: {
-    text: S.NonEmptyString.annotateKey({ description: "Resolver-written replacement text." }),
+    text: S.NonEmptyString.check(isWellFormedText).annotateKey({ description: "Resolver-written replacement text." }),
     placement: S.OptionFromOptionalKey(InsertPlacement).annotateKey({
       description: "New place for a held insert; absent keeps the submitted placement.",
     }),

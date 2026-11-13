@@ -6,7 +6,7 @@
     "title": "Declaration-Only Builds",
     "status": "active",
     "created": "2026-11-10",
-    "updated": "2026-11-10",
+    "updated": "2026-11-12",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/declaration-only-builds",
@@ -34,7 +34,14 @@
     "goals/declaration-only-builds/GOAL.md",
     "goals/declaration-only-builds/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/2026-11-10-build-baseline.md",
+    "research/2026-11-10-build-baseline.tsv",
+    "research/2026-11-10-build-check-equivalence.md",
+    "research/2026-11-12-build-check-equivalence.tsv",
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -50,7 +57,7 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P1",
@@ -87,5 +94,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Authored 2026-11-10 from explorations/build-pipeline-simplification, not started. Startable now: PR 1 (baseline and proof harness, no behaviour change). PR 3 (check once) is conditional on PR 1."
+  "statusNote": "P0 in progress: PR 1 (baseline, census build-equivalence mode, effect-drizzle probe fix) is open. The census found build and check diagnostics identical in every state, so check-once (PR 3) is kept. Next: PR 2, the declaration-only build, which also removes the stale tsbuildinfo output glob."
 }
