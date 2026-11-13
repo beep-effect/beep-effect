@@ -3450,6 +3450,7 @@
     {"name":"Skills.writeTextOutput","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SkillsLock.classifyAgainstPathHistory","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SkillsLock.compileSkillsLockMigration","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"SkillsLock.computeInstalledTreeHash","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SkillsLock.computeLocalSkillLockEntry","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SkillsLock.installedSkillName","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SkillsLock.isAlreadyApplied","owner":"@beep/repo-cli","family":"tooling","conforms":true},
