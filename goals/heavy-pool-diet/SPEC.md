@@ -375,6 +375,12 @@ Lane fix/certainty-scoring-fixes · PR #3144
 
 Reverse: Delete this file; the Admission chain criterion then reads the certainty-scorecard row under whatever definition it carries when measured.
 
+### Slices 3 and 6 are held until the ci-lane-economics window-5 verdict, 2026-11-13
+
+The CI goals driver (T3 thread CI goals finish, which keeps the ci-lane-economics window-5 record, window 2026-11-13T20:00Z to 2026-11-20T20:00Z) ruled on 2026-11-13 that #3302 (PLAN slice 3: required heavy lanes first and job-level lane skips in heavy.yml) is lane-affecting. It stays a draft, merged with main and green, and merges together with slice 6 only after the window-5 verdict, or earlier if the driver restarts the window. A preview census runs 2026-11-18T02:00Z; if it shows a breach this change repairs, the driver asks the operator about merging the held set then. #3301 (slice 4) is not lane-affecting and goes to final at content-final. #3299 (slice 7) is not lane-affecting as it stands, but it edits a workflow file, so it is an operator hand merge queued from a `final <sha40> #3299` PR comment. Finals are posted as PR comments. The goal's final PR (reflection and `goals set-status heavy-pool-diet completed-retained`) is coordinated by the driver. Rejected: merging #3302 at the ordinary gate (it would change heavy-lane start order and skips inside the measurement window).
+
+Reverse: Delete this file; #3302 and slice 6 then merge at the ordinary gate.
+
 ### The hosted check-census step adds at most 0.5 slot-minutes per relevant Heavy / Check run, 2026-11-13
 
 Measured on a built local tree on 2026-11-13 (single-threaded tsc 7.0.2+effect-tsgo.0.68.1, host load 5 to 11 on 64 cores): the step runs serially after a green Turbo run on the same runner and adds 24.2 s when the run checked @beep/repo-cli, 5.4 s for @beep/law-practice-domain, 4.2 s for the six @beep/schema rows and 30.0 s for every row (push runs), plus about 1.4 s for the Turbo selection dry run on every affected run; a run that checks no row package pays only that dry run. A slower hosted core stretches these numbers in proportion, and the step's own `ci:check:census: ok in <ms>` log line is the hosted reading.

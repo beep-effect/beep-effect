@@ -8,7 +8,7 @@ Status: `active`
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | in-progress | Re-check lever status against `origin/main` (#3041, the Test Unit layout, PERIH-10) and fix the baseline window. | Lever table in `SPEC.md` current; scorecard baseline window (or interim `bun run beep ci lane-timings` readings) recorded under `history/`. |
+| P0 Research | complete | Re-check lever status against `origin/main` (#3041, the Test Unit layout, PERIH-10) and fix the baseline window. | Lever table in `SPEC.md` current; scorecard baseline window (or interim `bun run beep ci lane-timings` readings) recorded under `history/`. |
 | P1 Implement | in-progress | Land slices 1 to 12 below in order, at most three open PRs. | Every open lever landed behind its admission gate, or stopped with a decision file. |
 | P2 Verify | pending | Read the acceptance numbers from the certainty scorecard over at least 7 days of code-head PR runs after the last diet lever. | Lint Policy p95, heavy slot-min per code run, admission-to-Heavy start and the post-diet heavy-queue p95 recorded under `history/`. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
