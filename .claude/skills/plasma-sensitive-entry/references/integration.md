@@ -14,6 +14,28 @@ lifetime, and terminates/reaps only its owned child on cancellation. The secret
 never enters argv, environment variables, logs, or temporary files. Do not
 replace the FIFO with a socket or redirect helper output to a tool transcript.
 
+## Stable entry point for tools outside the repository
+
+Tools that live outside this checkout (for example a `~/.local/bin` wrapper
+such as `aws-vault-prime`) call the helper by path, so that path is the
+contract. Call it as:
+
+```sh
+bun <checkout>/.claude/skills/plasma-sensitive-entry/scripts/prompt.ts \
+  --write-fd 3 --title "<title>" --label "<label>" --timeout 90
+```
+
+The flags and exit codes match the retired `scripts/prompt.py`; only the
+interpreter and file name changed. The repository bans tracked Python
+(`goals/python-free-repo`), so `python3 … prompt.py`, `install.py` and
+`ssh-askpass.py` no longer exist; `ssh-askpass.ts` and `install.ts` replace
+the other two. When you rename or move a script that external tools call,
+search the workstation for its old path (`~/.local/bin`, `~/.config/systemd`,
+`~/.config/environment.d`, shell rc files and `~/.ssh/config`) in the same
+change.
+
+## Owned FIFO lifecycle
+
 An adapter creating its own FIFO must follow the same lifecycle. Never reuse
 another agent's pipe or wait for helper exit before draining it: a long answer
 can fill the pipe. Before delivery, line-oriented authentication consumers
