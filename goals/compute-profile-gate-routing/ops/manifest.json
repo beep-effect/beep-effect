@@ -101,6 +101,7 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
+  "retentionReason": "Documents a live system: the workstation and worker compute profile read from the cgroup, the gate routing table with its measured per-host rows, the worker posture of yeet and the catalog hooks, the Catalog Regeneration workflow, and the dankserver and beep-worker acceptance evidence that later host changes are judged against.",
   "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 3298
