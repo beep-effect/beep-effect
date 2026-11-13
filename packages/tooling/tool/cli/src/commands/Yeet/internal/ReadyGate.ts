@@ -58,6 +58,7 @@ import {
   gateHostedContextFor,
   patientGit,
 } from "../../../internal/repo-run/index.ts";
+import { HEAVY_ADMISSION_LABEL } from "../../Ci/HeavyAdmission.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { FinalCheckGate } from "./FinalCheck.schemas.ts";
 import {
@@ -89,6 +90,7 @@ import {
 import { YEET_READY_COMMAND } from "./MonitorPolicy.ts";
 import { findLiveReadyMonitorJob } from "./ProofJob.ts";
 import { ProofJobLauncher } from "./ProofJobLauncher.ts";
+import { admitPullRequestToHeavy } from "./PullRequest.ts";
 import { ReviewLaneFlipRow, YEET_REVIEW_LANE_SCHEMA_VERSION } from "./ReviewLane.schemas.ts";
 import { recordYeetReviewLaneRows } from "./ReviewLane.ts";
 import { YEET_REVIEW_WINDOW_DEFAULT } from "./ReviewWindow.ts";
@@ -105,6 +107,7 @@ import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetReadyOptions } from "../Yeet.schemas.ts";
 import type { FinalCheckReceipt } from "./FinalCheck.schemas.ts";
 import type { FinalCheckRefreshOwnChange, FinalCheckRefreshRefused } from "./FinalCheckRefresh.schemas.ts";
+import type { YeetOpenReadyHooks } from "./OpenReady.ts";
 import type { ProofJobRecord } from "./ProofJob.ts";
 import type { SquashCommitlintReport } from "./SquashCommitlint.ts";
 
@@ -394,6 +397,8 @@ export class YeetReadyGateRefused extends S.TaggedError<YeetReadyGateRefused, { 
   {
     blocker: YeetReadyRefusalBlocker,
     message: S.String,
+    // The bare reason, without the `yeet ready` framing, for a caller that words its own refusal.
+    detail: S.optionalKey(S.String),
   },
   $I.annoteError<YeetReadyGateRefused>("YeetReadyGateRefused", {
     description: "yeet ready refused to flip a draft pull request because a content-final criterion is unmet.",
@@ -615,6 +620,10 @@ const readPullRequestAuthor = Effect.fn("Yeet.ReadyGate.readPullRequestAuthor")(
 });
 
 interface YeetReadyGateDependencies {
+  readonly admitHeavy?: (
+    context: RepoRunContext,
+    prNumber: number
+  ) => Effect.Effect<void, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git>;
   readonly finalCheck?: (
     context: RepoRunContext,
     headSha: string
@@ -835,6 +844,7 @@ const ReviewerRequestStack = S.Struct({
 const ReviewerRequestPull = S.Struct({
   state: S.String,
   draft: S.Boolean,
+  created_at: S.OptionFromOptionalKey(S.DateTimeUtcFromString),
   head: S.Struct({ sha: ReviewerRequestHead }),
   user: S.Struct({ login: S.NonEmptyString }),
   base: S.Struct({ repo: S.Struct({ full_name: S.NonEmptyString }) }),
@@ -904,8 +914,13 @@ const reviewerPullReady = (pull: typeof ReviewerRequestPull.Type, head: string) 
 const reviewerCommentCovered = (pull: typeof ReviewerRequestPull.Type) =>
   pull.user.login === REVIEWER_COMMENT_AUTHOR && pull.base.repo.full_name === REVIEWER_COMMENT_REPOSITORY;
 
-const readReviewerReadyAt = Effect.fnUntraced(function* (context: RepoRunContext, prNumber: number) {
-  // Match ReviewWindow's latest ready_for_review event. A missing transition
+const readReviewerReadyAt = Effect.fnUntraced(function* (
+  context: RepoRunContext,
+  prNumber: number,
+  openedAt: O.Option<DateTime.Utc>
+) {
+  // Match ReviewWindow's latest ready_for_review event, or the open of a pull
+  // request that was never a draft. A missing transition on one that was a draft
   // is unknown: an eventually consistent timeline must not validate a draft-era request.
   const events = yield* reviewerRequestOutput(context, [
     "api",
@@ -920,16 +935,18 @@ const readReviewerReadyAt = Effect.fnUntraced(function* (context: RepoRunContext
       exitCode: 1,
     });
   }
+  const drafted = A.filter(A.flatten(events), (event) => event.event === "convert_to_draft");
   const readyAt = yield* pipe(
     readyEvents,
     A.map((event) => event.created_at),
     A.getSomes,
     A.sort(DateTime.Order),
     A.last,
+    // Opened ready and never converted: the open is the ready transition.
+    O.orElse(() => (A.isReadonlyArrayEmpty(drafted) ? openedAt : O.none())),
     Effect.fromOption,
     Effect.mapError(() => YeetCommandError.make({ message: "reviewer ready timestamp is unavailable", exitCode: 1 }))
   );
-  const drafted = A.filter(A.flatten(events), (event) => event.event === "convert_to_draft");
   if (
     A.some(
       drafted,
@@ -948,7 +965,8 @@ const readReviewerReadyAt = Effect.fnUntraced(function* (context: RepoRunContext
 const requestReviewerComment = Effect.fnUntraced(function* (
   context: RepoRunContext,
   prNumber: number,
-  confirmedHead: string
+  confirmedHead: string,
+  openedAt: O.Option<DateTime.Utc>
 ) {
   const login = yield* reviewerRequestOutput(context, ["api", "user", "--jq", ".login"]).pipe(Effect.map(Str.trim));
   if (login !== REVIEWER_COMMENT_AUTHOR) {
@@ -957,7 +975,7 @@ const requestReviewerComment = Effect.fnUntraced(function* (
       exitCode: 1,
     });
   }
-  const readyAt = yield* readReviewerReadyAt(context, prNumber);
+  const readyAt = yield* readReviewerReadyAt(context, prNumber, openedAt);
   const body = reviewerCommentBody(confirmedHead);
   const pages = yield* reviewerRequestOutput(context, [
     "api",
@@ -1018,7 +1036,7 @@ const requestReviewerReview = Effect.fn("Yeet.requestReviewerReview")(function* 
       ? yield* pushReviewerRequest(context, prNumber, confirmedHead)
       : `[yeet] no comment routine configured for this pull request author/repository; no repeated review-trigger push`;
   }
-  return yield* requestReviewerComment(context, prNumber, confirmedHead);
+  return yield* requestReviewerComment(context, prNumber, confirmedHead, pull.created_at);
 });
 
 /**
@@ -1052,6 +1070,28 @@ const ensureReviewerRequest = Effect.fn("Yeet.ensureReviewerRequest")(function* 
     )
   );
   yield* Console.log(message);
+});
+
+const admitHeavyForReady = (context: RepoRunContext, prNumber: number) =>
+  admitPullRequestToHeavy(context, prNumber).pipe(provideYeetGhLogin(context.repoRoot), Effect.asVoid);
+
+// A ready pull request is admitted to the heavy matrix. One that already
+// carries the label is left alone, so no second label event starts a Heavy
+// Admit run. The edit warns on its own failure; a failed diff read warns here.
+const ensureHeavyAdmission = Effect.fn("Yeet.ensureHeavyAdmission")(function* (
+  context: RepoRunContext,
+  dependencies: YeetReadyGateDependencies,
+  prNumber: number,
+  labels: ReadonlyArray<string>
+) {
+  if (A.contains(labels, HEAVY_ADMISSION_LABEL)) return;
+  yield* (dependencies.admitHeavy ?? admitHeavyForReady)(context, prNumber).pipe(
+    Effect.catchTag("YeetCommandError", (cause) =>
+      Console.error(
+        `[yeet] warning: could not apply ${HEAVY_ADMISSION_LABEL} to PR #${prNumber} (${cause.message}); run: gh api -X POST repos/{owner}/{repo}/issues/${prNumber}/labels -f labels[]=${HEAVY_ADMISSION_LABEL}`
+      )
+    )
+  );
 });
 
 // Advisory only: the merge gate holds on the same verdict, so the flip never
@@ -1111,6 +1151,7 @@ const rewriteCarryForReady = Effect.fn("Yeet.rewriteCarryForReady")(function* (
 const refuseFinalCheck = (detail: string) =>
   YeetReadyGateRefused.make({
     blocker: "final-check",
+    detail,
     message: `yeet ready refused: blocked on final-check: ${detail}. Re-run \`${YEET_READY_COMMAND}\` once it passes.`,
   });
 
@@ -1307,6 +1348,10 @@ const acceptHostedDeferrals = Effect.fn("Yeet.acceptHostedDeferrals")(function* 
   return judged.accepted;
 });
 
+// A publish checks the receipt before its pull request exists.
+const renderFinalPr = (prNumber: O.Option<number>): string =>
+  O.match(prNumber, { onNone: () => "#<pr>", onSome: (value) => `#${value}` });
+
 const renderHostedGreen = (accepted: ReadonlyArray<FinalCheckGate>): string =>
   A.isReadonlyArrayEmpty(accepted) ? "" : ` hosted-green ${A.join(accepted, ",")}`;
 
@@ -1318,13 +1363,13 @@ const acceptCarriedReceipt = Effect.fn("Yeet.acceptCarriedReceipt")(function* (
   dependencies: YeetReadyGateDependencies,
   receipt: FinalCheckReceipt,
   headSha: string,
-  prNumber: number,
+  prNumber: O.Option<number>,
   label: string
 ) {
   yield* logReceiptSkips(receipt, label);
   const accepted = yield* acceptHostedDeferrals(context, dependencies, receipt, headSha);
   yield* Console.log(
-    `[yeet] report this final as: final <sha40> #${prNumber} receipt ${receipt.headSha}${renderHostedGreen(accepted)} (the sha is the head after the flip)`
+    `[yeet] report this final as: final <sha40> ${renderFinalPr(prNumber)} receipt ${receipt.headSha}${renderHostedGreen(accepted)} (the sha is the head after the flip)`
   );
 });
 
@@ -1341,13 +1386,13 @@ const acceptOwnReceipt = Effect.fn("Yeet.acceptOwnReceipt")(function* (
   dependencies: YeetReadyGateDependencies,
   passing: FinalCheckReceipt,
   headSha: string,
-  prNumber: number
+  prNumber: O.Option<number>
 ) {
   yield* logReceiptSkips(passing, Str.slice(0, 12)(headSha));
   const accepted = yield* acceptHostedDeferrals(context, dependencies, passing, headSha);
   if (A.isReadonlyArrayNonEmpty(accepted)) {
     yield* Console.log(
-      `[yeet] report this final as: final <sha40> #${prNumber} receipt ${passing.headSha}${renderHostedGreen(accepted)} (the sha is the head after the flip)`
+      `[yeet] report this final as: final <sha40> ${renderFinalPr(prNumber)} receipt ${passing.headSha}${renderHostedGreen(accepted)} (the sha is the head after the flip)`
     );
   }
 });
@@ -1371,11 +1416,12 @@ const refuseStaleCarriedReceipt = (receipt: FinalCheckReceipt, missing: string, 
 // this exact head. Skipped gates are named so the owner states them in the PR.
 // A head with no receipt of its own may carry an ancestor's passing receipt
 // under the ancestor refresh rule, then the GitHub rewrite carry; a failing or partial
-// receipt on this head always stands.
+// receipt on this head always stands. A publish asks before its pull request
+// exists (`prNumber` is `None`), where no GitHub rewrite can have happened yet.
 const requireFinalCheck = Effect.fn("Yeet.requireFinalCheck")(function* (
   context: RepoRunContext,
   dependencies: YeetReadyGateDependencies,
-  prNumber: number,
+  prNumber: O.Option<number>,
   headSha: string
 ) {
   const receipt = yield* (dependencies.finalCheck ?? readFinalCheckForReady)(context, headSha);
@@ -1388,9 +1434,10 @@ const requireFinalCheck = Effect.fn("Yeet.requireFinalCheck")(function* (
   }
   if (O.isSome(receipt)) return yield* refuseFinalCheck(refusal.value);
   const ancestor = yield* (dependencies.refresh ?? refreshForReady)(context, headSha);
-  const refresh = O.isSome(ancestor)
-    ? ancestor
-    : yield* (dependencies.rewriteCarry ?? rewriteCarryForReady)(context, prNumber, headSha);
+  const refresh =
+    O.isSome(ancestor) || O.isNone(prNumber)
+      ? ancestor
+      : yield* (dependencies.rewriteCarry ?? rewriteCarryForReady)(context, prNumber.value, headSha);
   if (O.isNone(refresh)) return yield* refuseFinalCheck(refusal.value);
   yield* FinalCheckRefreshVerdict.match(refresh.value, {
     refused: (refused) =>
@@ -1535,18 +1582,20 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
       ),
     "already-ready": Effect.fnUntraced(function* ({ prNumber }) {
       const currentHead = O.getOrElse(read.remote.headSha, () => "unknown");
-      yield* requireFinalCheck(context, dependencies, prNumber, currentHead);
+      yield* requireFinalCheck(context, dependencies, O.some(prNumber), currentHead);
       yield* Console.log(
         `[yeet] pull request #${prNumber} is already ready for review; current-head final-check proof verified, nothing to flip`
       );
       yield* adviseSquashCommitlint(context, dependencies, prNumber);
+      // Repairs a ready pull request whose label edit failed at the open or the flip.
+      yield* ensureHeavyAdmission(context, dependencies, prNumber, read.remote.labels);
       yield* ensureReviewerRequest(context, dependencies, prNumber, currentHead, false);
     }),
     flip: Effect.fnUntraced(function* ({ prNumber, headSha }) {
       yield* requireFinalCheck(
         context,
         dependencies,
-        prNumber,
+        O.some(prNumber),
         O.getOrElse(headSha, () => "unknown")
       );
       yield* adviseSquashCommitlint(context, dependencies, prNumber);
@@ -1578,6 +1627,8 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
       // shared budget is spent instead of failing the way `gh pr ready` did.
       yield* (dependencies.markReady ?? markReadyThroughBudget)(prNumber, sameHead);
       yield* Console.log(`[yeet] pull request #${prNumber} flipped from draft to ready for review`);
+      // A `--draft` open carries no heavy-admission label: the flip admits the heavy matrix.
+      yield* ensureHeavyAdmission(context, dependencies, prNumber, value2.remote.labels);
       // The flip opens the rounds-to-ready window (ruling 81); a failed
       // record is one warning and never touches the flip.
       const flippedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
@@ -1616,6 +1667,69 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
     }),
   });
   return decision;
+});
+
+const renderOpenReadyRefusal = (headSha: string, detail: string): string =>
+  `yeet publish refused to open the pull request ready: ${detail}. Nothing was pushed; commit ${Str.slice(0, 12)(headSha)} is local. A pull request opens ready for review only on a head with a passing final-check receipt: run \`${YEET_FINAL_CHECK_COMMAND}\` (skip a gate this machine cannot run with --skip <gate>=<reason> and name it in the PR body), then \`bun run beep yeet open\`. To open unfinished work instead, pass --draft: a draft runs only the cheap hosted tier until \`${YEET_READY_COMMAND}\` flips it.`;
+
+/**
+ * The ready-gate hooks a publish uses to open a pull request ready.
+ *
+ * **Details**
+ *
+ * `requireProof` is the receipt rule `yeet ready` enforces at a flip, asked
+ * before the pull request exists: the head's own passing final-check receipt,
+ * or an ancestor's under the refresh rule. A receipt whose gates the worker
+ * profile deferred to hosted CI cannot pass here, because no hosted run exists
+ * before the open. `afterOpen` does what the flip does once the pull request
+ * is ready: it records the start of the review round and requests the reviewer
+ * by comment where the routine covers the author. It never pushes, and a
+ * failure is one warning.
+ *
+ * **Example** (Reference the hooks)
+ *
+ * ```ts
+ * import { yeetOpenReadyHooks } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof yeetOpenReadyHooks().requireProof) // "function"
+ * ```
+ *
+ * @param dependencies - Injectable receipt, refresh, hosted-check and reviewer reads for tests.
+ * @returns The hooks the command layer provides as `YeetOpenReady`.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const yeetOpenReadyHooks = (dependencies: YeetReadyGateDependencies = {}): YeetOpenReadyHooks => ({
+  requireProof: (context, headSha) =>
+    requireFinalCheck(context, dependencies, O.none(), headSha).pipe(
+      Effect.catchTag("YeetReadyGateRefused", (refused) =>
+        Effect.fail(
+          YeetCommandError.make({
+            message: renderOpenReadyRefusal(headSha, refused.detail ?? refused.message),
+            exitCode: 1,
+          })
+        )
+      )
+    ),
+  afterOpen: Effect.fnUntraced(function* (context, prNumber, headSha) {
+    const openedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+    const author = yield* (dependencies.readAuthor ?? readPullRequestAuthor)(context, prNumber);
+    yield* recordYeetReviewLaneRows(context.repoRoot, [
+      ReviewLaneFlipRow.make({
+        schemaVersion: YEET_REVIEW_LANE_SCHEMA_VERSION,
+        prNumber,
+        branch: context.branch,
+        recordedAt: openedAt,
+        headSha,
+        at: openedAt,
+        author,
+      }),
+    ]);
+    yield* ensureReviewerRequest(context, dependencies, prNumber, headSha, false);
+    yield* Console.log(
+      `[yeet] the review window starts now: the merge gate opens no sooner than the review window (default ${Duration.toMinutes(YEET_REVIEW_WINDOW_DEFAULT)} minutes) after this open or the last push, whichever is later`
+    );
+  }),
 });
 
 /**

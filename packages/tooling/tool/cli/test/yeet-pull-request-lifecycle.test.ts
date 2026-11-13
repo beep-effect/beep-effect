@@ -9,10 +9,13 @@ import {
   applyPublishLabels,
   buildYeetRunPlan,
   defaultYeetRunOptions,
+  FinalCheckReceipt,
+  FinalCheckStepResult,
   findOpenPullRequest,
   findOpenPullRequestViaRest,
   RepoPlanStep,
   RepoRunContext,
+  renderFinalCheckBodySection,
   runGhPullRequestView,
   validateCommitMessage,
   validateMonitorBranch,
@@ -427,6 +430,48 @@ describe("Yeet pull request lifecycle boundaries", () => {
           { labels: ["ready-for-heavy"] },
         ]);
       }).pipe(withGh(""))
+    );
+  });
+
+  // A pull request opens ready on its final-check receipt, so the body names what the receipt holds.
+  it("names the gates that ran and each skipped gate's reason in the pull request body", () => {
+    const step = (gate: "lint" | "check" | "coverage", status: "passed" | "skipped", reason?: string) =>
+      FinalCheckStepResult.make({
+        gate,
+        label: `final-check:${gate}`,
+        hostedContext: `Heavy / ${gate}`,
+        command: status === "skipped" ? "(skipped)" : `bun run ${gate}`,
+        status,
+        durationMs: 0,
+        ...(reason === undefined ? {} : { reason }),
+      });
+    const receipt = FinalCheckReceipt.make({
+      headSha: Str.repeat(40)("a"),
+      mergeBase: Str.repeat(40)("b"),
+      base: "origin/main",
+      complete: true,
+      verdict: "pass",
+      startedAt: "2026-11-13T00:00:00.000Z",
+      finishedAt: "2026-11-13T00:01:00.000Z",
+      steps: [
+        step("lint", "passed"),
+        step("check", "passed"),
+        step("check", "passed"),
+        step("coverage", "skipped", "admission waited 10 minutes"),
+      ],
+      expectationRewrites: [],
+    });
+    expect(renderFinalCheckBodySection(receipt)).toBe(
+      A.join(
+        [
+          "## Final check",
+          "",
+          "- `yeet final-check` on aaaaaaaaaaaa: pass",
+          "- ran: lint, check",
+          "- skipped, proved by hosted CI only: coverage (admission waited 10 minutes)",
+        ],
+        "\n"
+      )
     );
   });
 

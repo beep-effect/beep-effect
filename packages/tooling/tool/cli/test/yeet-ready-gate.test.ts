@@ -47,6 +47,7 @@ import {
   YeetStatusArtifact,
   YeetStatusRemote,
   YeetWatchCheck,
+  yeetOpenReadyHooks,
 } from "@beep/repo-cli/test/Yeet";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -107,6 +108,7 @@ const prView = (
     readonly failingRequiredCheckCount: number;
     readonly headSha: O.Option<string>;
     readonly isDraft: boolean;
+    readonly labels: ReadonlyArray<string>;
     readonly mergeable: string;
     readonly pendingCheckCount: number;
     readonly pendingOptionalCheckCount: number;
@@ -123,6 +125,8 @@ const prView = (
     number: 42,
     headSha: O.some(headSha),
     isDraft: true,
+    // A draft admitted to heavy at its open, so the flip has no label to add.
+    labels: ["ready-for-heavy"],
     mergeable: "MERGEABLE",
     mergeStateStatus: "DRAFT",
     requiredCheckCount: 3,
@@ -467,6 +471,136 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         expect(decision._tag).toBe("flip");
         const got1 = yield* Ref.get(calls);
         expect(got1).toEqual([["ready", "42"]]);
+      })
+    );
+
+    // Open ready at content-final (2026-11-13): a `--draft` open carries no
+    // heavy-admission label, so the flip is what admits the heavy matrix.
+    it.effect("applies the heavy-admission label when it flips a cheap-tier draft", () =>
+      Effect.gen(function* () {
+        const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+        const admitted = yield* Ref.make<ReadonlyArray<number>>([]);
+        const flip = (labels: ReadonlyArray<string>) =>
+          runYeetReadyGate(context, {
+            rewriteCarry: () => Effect.succeedNone,
+            finalCheck: passingFinalCheck,
+            squashCommitlint: passingSquashCommitlint,
+            recordInherited: () => Effect.void,
+            read: () => Effect.succeed(prView({ labels })),
+            markReady: recordingMarkReady(calls),
+            admitHeavy: (_context, prNumber) => Ref.update(admitted, A.append(prNumber)),
+            requestReview: stubReviewerRequest,
+            findMonitor: () => Effect.succeedNone,
+          });
+        const cheapTier = yield* flip([]);
+        expect(cheapTier._tag).toBe("flip");
+        const afterCheapTier = yield* Ref.get(admitted);
+        expect(afterCheapTier).toEqual([42]);
+        // A draft that already carries the label starts no second Heavy Admit run.
+        yield* flip(["ready-for-heavy"]);
+        const afterLabelled = yield* Ref.get(admitted);
+        expect(afterLabelled).toEqual([42]);
+        const flips = yield* Ref.get(calls);
+        expect(flips).toEqual([
+          ["ready", "42"],
+          ["ready", "42"],
+        ]);
+      })
+    );
+
+    it.effect("keeps the flip when the heavy-admission label cannot be applied", () =>
+      Effect.gen(function* () {
+        const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+        const decision = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
+          finalCheck: passingFinalCheck,
+          squashCommitlint: passingSquashCommitlint,
+          recordInherited: () => Effect.void,
+          read: () => Effect.succeed(prView({ labels: [] })),
+          markReady: recordingMarkReady(calls),
+          admitHeavy: () => Effect.fail(YeetCommandError.make({ message: "label edit failed", exitCode: 1 })),
+          requestReview: stubReviewerRequest,
+          findMonitor: () => Effect.succeedNone,
+        });
+        expect(decision._tag).toBe("flip");
+        const errors = yield* TestConsole.errorLines;
+        expect(A.join(A.map(errors, String), "\n")).toContain("could not apply ready-for-heavy to PR #42");
+      })
+    );
+
+    it.effect("repairs a ready pull request that lacks the heavy-admission label", () =>
+      Effect.gen(function* () {
+        const admitted = yield* Ref.make<ReadonlyArray<number>>([]);
+        const decision = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
+          finalCheck: passingFinalCheck,
+          squashCommitlint: passingSquashCommitlint,
+          read: () => Effect.succeed(prView({ isDraft: false, labels: [] })),
+          admitHeavy: (_context, prNumber) => Ref.update(admitted, A.append(prNumber)),
+          requestReview: stubReviewerRequest,
+        });
+        expect(decision._tag).toBe("already-ready");
+        const got = yield* Ref.get(admitted);
+        expect(got).toEqual([42]);
+      })
+    );
+
+    // The receipt rule `yeet ready` enforces at a flip, asked by a publish
+    // before its pull request exists.
+    it.effect("refuses to open a pull request ready without a passing final-check receipt for the head", () =>
+      Effect.gen(function* () {
+        const hooks = yeetOpenReadyHooks({
+          finalCheck: () => Effect.succeedNone,
+          refresh: () => Effect.succeedNone,
+          rewriteCarry: () => Effect.die("no pull request exists yet, so no rewrite carry is read"),
+        });
+        const error = yield* hooks.requireProof(context, headSha).pipe(Effect.flip);
+        expect(error._tag).toBe("YeetCommandError");
+        expect(error.message).toContain("yeet publish refused to open the pull request ready");
+        expect(error.message).toContain("Nothing was pushed");
+        expect(error.message).toContain("bun run beep yeet final-check");
+        expect(error.message).toContain("--draft");
+        expect(error.message).not.toContain("yeet ready refused");
+      })
+    );
+
+    it.effect("refuses to open ready on a failing receipt, and opens on a passing one", () =>
+      Effect.gen(function* () {
+        const failing = yeetOpenReadyHooks({
+          finalCheck: (_context, head) =>
+            Effect.map(
+              passingFinalCheck(context, head),
+              O.map((receipt) => FinalCheckReceipt.make({ ...receipt, verdict: "fail" }))
+            ),
+        });
+        const error = yield* failing.requireProof(context, headSha).pipe(Effect.flip);
+        expect(error.message).toContain("yeet publish refused to open the pull request ready");
+        const passing = yeetOpenReadyHooks({ finalCheck: passingFinalCheck });
+        yield* passing.requireProof(context, headSha);
+        const logs = yield* TestConsole.logLines;
+        expect(A.join(A.map(logs, String), "\n")).toContain("final-check receipt for abc1234def: pass");
+      })
+    );
+
+    it.effect("starts the review round and requests the reviewer without a push when a pull request opens ready", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const work = yield* fs.makeTempDirectoryScoped({ prefix: "ready-gate-open-" });
+        const requests = yield* Ref.make<ReadonlyArray<readonly [number, string, boolean | undefined]>>([]);
+        const hooks = yeetOpenReadyHooks({
+          readAuthor: () => Effect.succeedSome("octocat"),
+          requestReview: (_context, prNumber, confirmedHead, allowPush) =>
+            Ref.update(requests, A.append([prNumber, confirmedHead, allowPush] as const)).pipe(
+              Effect.as("[yeet] requested")
+            ),
+        });
+        yield* hooks.afterOpen(RepoRunContext.make({ ...context, repoRoot: work, cwd: work }), 42, headSha);
+        const got = yield* Ref.get(requests);
+        expect(got).toEqual([[42, headSha, false]]);
+        const ledger = yield* readYeetReviewLaneLedger(work);
+        expect(A.map(ledger.rows, (row) => row._tag)).toEqual(["flip"]);
+        const logs = yield* TestConsole.logLines;
+        expect(A.join(A.map(logs, String), "\n")).toContain("the review window starts now");
       })
     );
 

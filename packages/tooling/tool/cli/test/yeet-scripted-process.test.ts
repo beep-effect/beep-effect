@@ -596,7 +596,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
       })
     );
 
-    it.effect("uses the --body-file summary and names the yeet open route without reading git", () =>
+    it.effect("uses the --body-file summary and names the yeet open route without reading the commit log", () =>
       Effect.gen(function* () {
         const commands = yield* makeCommands;
         const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([executedStep(0)]);
@@ -606,10 +606,11 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         });
         const body = yield* buildPrBody(contextAt("/repo"), recorder, request).pipe(withProcesses([], commands));
         expect(body).toContain(
-          "## Summary\n\nWhy it changed.\n\n## Local proof\n\n- none: `yeet open` pushed without local gates; hosted CI is the authoritative proof\n\nVerdict: .beep/yeet/runs/"
+          "## Summary\n\nWhy it changed.\n\n## Local proof\n\n- none: `yeet open` pushed without the cheap gates; hosted CI proves them\n\nVerdict: .beep/yeet/runs/"
         );
         expect(body).not.toContain("full:cheap-gates");
-        expect(commandLines(commands)).toEqual([]);
+        // The head is resolved once, to look for its final-check receipt.
+        expect(commandLines(commands)).toEqual(["git rev-parse --verify HEAD"]);
       })
     );
 
