@@ -106,6 +106,8 @@ const passingFinalCheck = (_context: RepoRunContext, head: string) =>
     })
   );
 
+const encodeFinalCheckReceipt = S.encodeEffect(S.fromJsonString(FinalCheckReceipt));
+
 const contextAt = (repoRoot: string, branch: string = BRANCH) =>
   RepoRunContext.make({
     base: "origin/main",
@@ -620,7 +622,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const bodyFor = Effect.fnUntraced(function* (head: string, verdict: "pass" | "fail") {
-          const receipt = yield* S.encodeEffect(S.fromJsonString(FinalCheckReceipt))(
+          const receipt = yield* encodeFinalCheckReceipt(
             FinalCheckReceipt.make({
               headSha: head,
               mergeBase: Str.repeat(40)("b"),
