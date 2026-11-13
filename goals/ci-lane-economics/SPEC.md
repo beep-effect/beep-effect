@@ -200,6 +200,20 @@ Lane docs/ci-lane-overflow-ruling
 
 Reverse: Remove the overflow routing so every shard runs on ubuntu-24.04 again and restore the 5m00s pickup tripwire; no standing AWS setting changes.
 
+### Skip the required aggregates and Heavy Admission at job level on documentation diffs, 2026-11-13
+
+A documentation-only pull request took 13 to 15 hosted runners (measured on #3170, #3202 and #3205, 2026-11-13) although it can fail only Repo Sanity's documentation path, Docs Policy, Commitlint and Secret Scanning. Four aggregates (Lint, Test Unit, Property Laws, Heavy / Test Integration) each queued up to 400 seconds for a runner to print one line, Heavy Admission queued 177 to 350 seconds in front of Repo Sanity to emit three constants, and the Storybook and Vercel Deploy workflows each took a runner to decide to do nothing.
+
+Decision: the aggregates and Heavy Admission are skipped at job level when Change Profile succeeded and reported `docs_only` (same-repository heads for admission). GitHub reports a job-level skip as a passing required check, which the ruleset already relies on for Codegen Drift, Nix Shell, Security, SAST and the Heavy lanes. The Heavy caller reads Change Profile directly and still calls heavy.yml with `admitted: false`, so every `Heavy / <lane>` context exists. Any other profile result runs each aggregate, whose script fails closed. Vercel Deploy gets a `pull_request.paths` filter equal to its preview rule, and Storybook ignores pull requests confined to docs/, goals/, explorations/ and research/.
+
+Test Plan keeps starting beside Change Profile and still takes one runner (about 25 seconds) on a documentation diff. Gating it on Change Profile would put one more runner wait in front of every code pull request's test shards, the ordering the 2026-11-10 decision in this packet protects.
+
+`ci-docs-job-admission.test.ts` simulates the job graph from the checked-in `if` expressions and fails when a documentation diff requests any runner beyond Change Profile, Test Plan, PR Size Label, Commitlint, Secret Scanning, Repo Sanity and Docs Policy.
+
+Lane fix/ci-applicability-docs-only
+
+Reverse: Revert the pull request: the four aggregates return to `if: !cancelled()`, Heavy Admission regains its documentation step, and the Vercel and Storybook pull_request path filters are removed.
+
 ### The census reports verdict wait per required context and measures Test Integration by its shards, 2026-11-13
 
 The bounded census (`beep ci lane-timings --window`) now records `verdictWaitSeconds` on every attempt-one successful row: the workflow run's `created_at` to the reporting job's `completed_at` (the aggregator for a sharded lane, the job itself otherwise). That is what an author or the merge gate waits for: run-level queueing (main's concurrency group), `needs` chains, runner pickup and the body. The duration table gains `Wait p50` and `Wait p95`. A lane's P3 state is `Breach` when either the duration p95 or the wait p95 is 20m00s or more, and the cell names the measure (`Breach (wait)`, `Breach (duration, wait)`). Like pickup, the wait exists only on attempt-one rows; it reads `created_at`, never the re-dispatch-rewritten `run_started_at`. The duration columns are unchanged, and the TSV adds the column last.

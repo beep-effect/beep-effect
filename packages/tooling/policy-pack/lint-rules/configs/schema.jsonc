@@ -13,6 +13,7 @@
     "../rules/prefer-array-flat-map.grit",
     "../rules/prefer-identity-annote-pipe.grit",
     "../rules/no-hand-built-identity-annotation.grit",
-    "../rules/prefer-exact-optional-key.grit"
+    "../rules/prefer-exact-optional-key.grit",
+    "../rules/no-hand-rolled-canonical-json.grit"
   ]
 }
