@@ -1,6 +1,6 @@
 # Cache review for YEET-08 slice 1 (2026-11-13)
 
-Reviewed on branch `claude/stoic-torvalds-00017b`, on top of `eee4f58f460`.
+Reviewed on branch `claude/stoic-torvalds-00017b`, re-recorded on top of `2968573cf50`.
 Reviewer: Claude Opus 5.5 medium (slice 3 of `goals/route-soundness-repair`).
 
 Slice 3 adds `packages/tooling/tool/cli/test/yeet-final-check-docs-drift.test.ts`,
@@ -26,12 +26,15 @@ On this head the audit reports two blocking findings:
 
 and `configuration-source-drift` (REVIEW) on
 `packages/tooling/tool/cli/turbo.json`, the edited file, and on the root
-`turbo.json`. The root `turbo.json` is byte-identical to `origin/main` on this
-head (`git diff origin/main -- turbo.json` is empty): its REVIEW row is the
-baseline lagging main. `beep cache baseline` refuses a request that leaves it
-unreviewed, so the request re-stamps the `//` subject for origin/main's
-unchanged root `turbo.json` bytes only, with no task, input or qualification
-change.
+`turbo.json`. This branch does not edit the root `turbo.json`; it equals
+`origin/main` at `2968573cf50` (`git diff origin/main -- turbo.json` is
+empty). Its REVIEW row is main's own growth since the baseline was last
+stamped: #3178 added one input,
+`$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Quality/CheckCensusBuildEquivalence.ts`,
+to six root tasks that already list `CheckCensus.ts`. `beep cache baseline` refuses a
+request that leaves that row unreviewed, so the request re-stamps the `//`
+subject for those unchanged origin/main bytes only. It changes no task,
+command, output or qualification.
 
 ## What changed
 
