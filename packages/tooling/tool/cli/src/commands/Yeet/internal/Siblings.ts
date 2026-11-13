@@ -283,9 +283,10 @@ const AUTHORITY =
   'This instruction holds whatever your brief says about acceptance or merge authority (operator ruling 2026-11-05, B1; AGENTS.md "Autonomy").';
 
 // The branch name comes from GitHub and lands in a command a recipient may paste,
-// so both ref arguments are shell-quoted.
+// so both ref arguments are shell-quoted. `git switch -C` resets the branch, so the
+// old tip is kept on `pre-cascade` for any commit the lane had not pushed.
 const adoptRewrite = (headRef: string): string =>
-  `wait for \`head_ref_force_pushed\` on its timeline, then, before any further commit, adopt the rewritten head: \`git fetch origin && git switch -C ${shellQuote(headRef)} ${shellQuote(`origin/${headRef}`)}\``;
+  `wait for \`head_ref_force_pushed\` on its timeline, then, before any further commit, adopt the rewritten head: \`git fetch origin && git branch -f pre-cascade HEAD && git switch -C ${shellQuote(headRef)} ${shellQuote(`origin/${headRef}`)}\`. The switch resets the branch, so \`pre-cascade\` keeps the old tip: cherry-pick from it any commit of your own that was never pushed`;
 
 // What the sibling does now. A stack layer never merges the trunk: its diff would
 // carry the trunk's changes until its parent catches up.
