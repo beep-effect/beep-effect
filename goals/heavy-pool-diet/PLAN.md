@@ -156,6 +156,21 @@ Lane chore/ci-goals-finish
 
 Reverse: Delete this checkpoint; it records a fact about main and changes no behaviour.
 
+### Check-lane baselines before 3e822c71c5 are not comparable (check once), 2026-11-13
+
+declaration-only-builds PR 3 (#3242, "check once") merged at `3e822c71c5` (2026-11-13). The root Turbo `check` task now depends on the package's own `build` for declaration-only packages, and their `beep:check` runs the declaration-only build command instead of a separate no-emit check.
+
+- Every `check` task hash misses once from that commit. The first run after merging main is cold and is not a regression.
+- Build minutes now sit inside the check lane: Heavy / Check and Heavy / Build start together on separate VMs, so on a cold hash both compute the same build. A check-lane wall-time or runner-minute baseline recorded before that commit is not comparable with a reading after it. Re-take the baseline before reading an after-number.
+- The cache-qualification and check-census baselines were re-recorded in that PR; a reading that compares against either must use the post-merge files.
+- Measured by the owning goal on main at `d8326d55935` (182 packages, serial): own-source check 35.4 s, a warm unchanged build 19.7 s; the saving from checking once is 15.7 s serial.
+- `TSRS_FAST` is a global Turbo input and part of the tsrs incremental state: record with each baseline whether it was set.
+- Follow-up this makes possible, not scheduled here: folding Heavy / Build into Heavy / Check (one fewer fleet VM per run), a heavy-pool-diet slice.
+
+Lane docs/check-lane-baseline-break
+
+Reverse: Delete this checkpoint; it records a fact about main and changes no behaviour.
+
 ### First main closure-gate runs after #3145 failed before the digest comparison, 2026-11-13
 
 #3145 merged as 87c4dc204c8 on 2026-11-13. The first four `Beep CI Binary` runs on main after it failed in "Compare the closure digest with the latest release" with `Missing required flag: --list` (job 131612442366 and siblings): runs 43342046581, 43342105606, 43342142443 and 43342189531, on main pushes 87c4dc204c8 through d1c7c6cb63f. `beep ci binary-closure` declared `--list` as a boolean flag without a default, so the CLI required it, and the workflow calls the command with `--out` only. Every run stopped before compile, so no release was cut and the pinned binary at `.github/actions/fetch-beep-ci/action.yml` was never affected. The two runs before #3145 (61ac4497363, f3cd33a2969) passed on the old path trigger.
