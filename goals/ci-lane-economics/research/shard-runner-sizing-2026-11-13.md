@@ -83,7 +83,8 @@ hosted queue:
 
 (The unbounded row differs slightly from the table above because a shard is sent only when a VM is free at
 its creation.) A cap of 48 overflow VMs keeps 128 vCPU, sixteen VMs, for the Heavy lanes and costs 22 s of
-pickup p95 against no cap. The count holds only for the 8-vCPU instance types; a 16-vCPU type counts double.
+pickup p95 against no cap. The count holds only for the 8-vCPU instance types; a 16-vCPU type counts double, and four of the
+pool's seven types are 16-vCPU, so the bound that matters is 384 vCPU, not 48 VMs.
 
 ## Reading
 
