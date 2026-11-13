@@ -197,19 +197,14 @@ interface FingerprintSources {
   }>;
 }
 
-const readSources = Effect.fnUntraced(function* (root: string) {
+// Every workspace manifest under `root`, sorted by package name.
+const readWorkspaceEntries = Effect.fnUntraced(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const read = (file: string) =>
     fs
       .readFileString(path.join(root, file))
       .pipe(Effect.mapError((cause) => PolicyFingerprintError.make({ message: `Cannot read ${file}`, cause })));
-  const turboText = yield* read("turbo.json");
-  const parsedJsonc = yield* parseJsonc("turbo.json", turboText);
-  const turbo = yield* decodeTurbo(parsedJsonc).pipe(Effect.mapError(decodeFailure("turbo.json")));
-  const rootManifestText = yield* read("package.json");
-  const parsedJsonc1 = yield* parseJsonc("package.json", rootManifestText);
-  const rootManifest = yield* decodeManifest(parsedJsonc1).pipe(Effect.mapError(decodeFailure("package.json")));
   const directories = yield* workspaceDirectories(root).pipe(
     Effect.mapError((cause) => PolicyFingerprintError.make({ message: "Cannot resolve workspaces", cause }))
   );
@@ -232,6 +227,23 @@ const readSources = Effect.fnUntraced(function* (root: string) {
       };
     })
   );
+  return workspaces;
+});
+
+const readSources = Effect.fnUntraced(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const read = (file: string) =>
+    fs
+      .readFileString(path.join(root, file))
+      .pipe(Effect.mapError((cause) => PolicyFingerprintError.make({ message: `Cannot read ${file}`, cause })));
+  const turboText = yield* read("turbo.json");
+  const parsedJsonc = yield* parseJsonc("turbo.json", turboText);
+  const turbo = yield* decodeTurbo(parsedJsonc).pipe(Effect.mapError(decodeFailure("turbo.json")));
+  const rootManifestText = yield* read("package.json");
+  const parsedJsonc1 = yield* parseJsonc("package.json", rootManifestText);
+  const rootManifest = yield* decodeManifest(parsedJsonc1).pipe(Effect.mapError(decodeFailure("package.json")));
+  const workspaces = yield* readWorkspaceEntries(root);
   const cli = A.findFirst(workspaces, (entry) => entry.workspace.name === CLI_WORKSPACE);
   if (O.isNone(cli)) {
     return yield* PolicyFingerprintError.make({ message: "CLI workspace is missing", cause: CLI_WORKSPACE });
@@ -291,6 +303,54 @@ const liveTree = Effect.fnUntraced(function* (root: string) {
       }),
   };
   return tree;
+});
+
+/**
+ * The live checkout under `root` as a policy source tree.
+ *
+ * **Details**
+ *
+ * Reads files and lists directories (ignoring `node_modules`) relative to the
+ * root, caching each directory listing. Other import-graph consumers, such as
+ * the CI binary closure digest, walk the same tree the fingerprint walks.
+ *
+ * **Example** (Read the live source tree)
+ *
+ * ```ts
+ * import { livePolicySourceTree } from "@beep/repo-cli/commands/Lint"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(livePolicySourceTree("/repo"))) // true
+ * ```
+ *
+ * @param root - The repository root.
+ * @returns A source tree reading the live checkout.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const livePolicySourceTree = liveTree;
+
+/**
+ * Every workspace package under `root`: name, repo-relative directory and the
+ * raw `exports` and `imports` maps an import walk resolves specifiers through.
+ *
+ * **Example** (Read the workspaces)
+ *
+ * ```ts
+ * import { readPolicyWorkspaces } from "@beep/repo-cli/commands/Lint"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(readPolicyWorkspaces("/repo"))) // true
+ * ```
+ *
+ * @param root - The repository root.
+ * @returns The workspaces, sorted by package name.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const readPolicyWorkspaces = Effect.fn("readPolicyWorkspaces")(function* (root: string) {
+  const entries = yield* readWorkspaceEntries(root);
+  return A.map(entries, (entry) => entry.workspace);
 });
 
 /**
