@@ -26,7 +26,7 @@ import {
   readRetiredPackageNames,
 } from "@beep/repo-cli-kit/cli/Labs/index";
 import { printLines } from "@beep/repo-cli-kit/cli/Printer";
-import { scaffoldPackageScripts } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas";
+import { buildServedCheck, scaffoldPackageScripts } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas";
 import { runToExit } from "@beep/repo-cli-kit/process/StepExec";
 import {
   DomainError,
@@ -403,7 +403,10 @@ const CHECK_TSCONFIG_TEMPLATE_PAIR: TemplateSpecPair = ["tsconfig.check.json.hbs
 
 // Scaffolds whose `build` is the `noEmit` check (`tsrs -p tsconfig.check.json`)
 // write nothing to disk, so they declare `build.outputs: []`; otherwise Turbo
-// warns "no output files found" on every root build.
+// warns "no output files found" on every root build. Like every build that is
+// not declaration-only, they also keep `check` off their own build: the root
+// `check` task depends on `build`, which only a declaration-only package's
+// check reuses (`bun run beep lint package-scripts` enforces the override).
 const NOEMIT_TURBO_TEMPLATE_PAIR: TemplateSpecPair = ["app-noemit-turbo.json.hbs", "turbo.json"];
 const NOEMIT_TURBO_TEMPLATE_SPEC = TemplateSpec.make({
   templateName: NOEMIT_TURBO_TEMPLATE_PAIR[0],
@@ -411,9 +414,14 @@ const NOEMIT_TURBO_TEMPLATE_SPEC = TemplateSpec.make({
 });
 const NOEMIT_TURBO_FILE = NOEMIT_TURBO_TEMPLATE_PAIR[1];
 
+// Bundler apps (`next build`, `vite build`) keep `check` off their own build,
+// which would otherwise run the whole bundle before every type-check.
+const BUNDLER_TURBO_TEMPLATE_PAIR: TemplateSpecPair = ["app-bundler-turbo.json.hbs", "turbo.json"];
+
 const NEXTJS_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFrom([
   ["app-next-tsconfig.json.hbs", "tsconfig.json"],
   CHECK_TSCONFIG_TEMPLATE_PAIR,
+  BUNDLER_TURBO_TEMPLATE_PAIR,
   ["app-next-next-env.d.ts.hbs", "next-env.d.ts"],
   ["app-next-next.config.ts.hbs", "next.config.ts"],
   ["app-next-src-app-globals.css.hbs", "src/app/globals.css"],
@@ -427,6 +435,7 @@ const NEXTJS_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFrom
 const TAURI_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFrom([
   ["app-tauri-tsconfig.json.hbs", "tsconfig.json"],
   CHECK_TSCONFIG_TEMPLATE_PAIR,
+  BUNDLER_TURBO_TEMPLATE_PAIR,
   ["app-tauri-index.html.hbs", "index.html"],
   ["app-tauri-src-App.tsx.hbs", "src/App.tsx"],
   ["app-tauri-src-main.tsx.hbs", "src/main.tsx"],
@@ -455,6 +464,7 @@ const TAURI_APP_ASSET_SPECS: ReadonlyArray<StaticAssetSpec> = A.of(
 const NEXTJS_LAB_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFrom([
   ["app-next-tsconfig.json.hbs", "tsconfig.json"],
   CHECK_TSCONFIG_TEMPLATE_PAIR,
+  BUNDLER_TURBO_TEMPLATE_PAIR,
   ["app-next-lab-tsconfig.next.json.hbs", "tsconfig.next.json"],
   ["app-next-next-env.d.ts.hbs", "next-env.d.ts"],
   ["app-next-lab-next.config.ts.hbs", "next.config.ts"],
@@ -470,6 +480,7 @@ const NEXTJS_LAB_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecs
 const VITE_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFrom([
   ["app-vite-tsconfig.json.hbs", "tsconfig.json"],
   CHECK_TSCONFIG_TEMPLATE_PAIR,
+  BUNDLER_TURBO_TEMPLATE_PAIR,
   ["app-vite-index.html.hbs", "index.html"],
   ["app-vite-src-App.tsx.hbs", "src/App.tsx"],
   ["app-vite-src-main.tsx.hbs", "src/main.tsx"],
@@ -585,6 +596,7 @@ const NEXTJS_APP_FILES = [
   "package.json",
   "tsconfig.json",
   "tsconfig.check.json",
+  "turbo.json",
   "next-env.d.ts",
   "next.config.ts",
   "src/app/globals.css",
@@ -602,6 +614,7 @@ const TAURI_APP_FILES = [
   "package.json",
   "tsconfig.json",
   "tsconfig.check.json",
+  "turbo.json",
   "index.html",
   "src/App.tsx",
   "src/main.tsx",
@@ -625,6 +638,7 @@ const NEXTJS_LAB_APP_FILES = [
   "package.json",
   "tsconfig.json",
   "tsconfig.check.json",
+  "turbo.json",
   "tsconfig.next.json",
   "next-env.d.ts",
   "next.config.ts",
@@ -644,6 +658,7 @@ const VITE_APP_FILES = [
   "package.json",
   "tsconfig.json",
   "tsconfig.check.json",
+  "turbo.json",
   "index.html",
   "src/App.tsx",
   "src/main.tsx",
@@ -1936,17 +1951,29 @@ const encodeManifestJson = (manifest: unknown): Effect.Effect<string, DomainErro
 // Labs are runnable apps and render through `appBaseScripts`; the package renderer never sees them.
 type PackageScriptsKind = Exclude<ScriptsPackageKind, "lab">;
 
-const packageScripts = (kind: PackageScriptsKind, withStoriesTsconfig: boolean) => ({
-  ...scaffoldPackageScripts(kind, ["lint:fix", "test:integration", "docgen"]),
-  "beep:check:tests": "tsrs -p tsconfig.test.json --noEmit",
-  ...(withStoriesTsconfig
-    ? {
-        "beep:check": "tsrs -p tsconfig.check.json && bun run beep:check:tests && bun run beep:check:stories",
-        "beep:check:stories": "tsrs -p tsconfig.stories.json --noEmit",
-      }
-    : {}),
-  coverage: "bunx vitest run --coverage --exclude=test/integration/**",
-});
+// The stories check extends the own-source check, which a declaration-only build serves.
+const STORIES_CHECK = "tsrs -p tsconfig.check.json && bun run beep:check:tests && bun run beep:check:stories";
+const storiesCheck = (scripts: Readonly<Record<string, string>>): string =>
+  pipe(
+    R.get(scripts, "beep:build"),
+    O.flatMap((build) => buildServedCheck(STORIES_CHECK, build)),
+    O.getOrElse(() => STORIES_CHECK)
+  );
+
+const packageScripts = (kind: PackageScriptsKind, withStoriesTsconfig: boolean) => {
+  const scripts = scaffoldPackageScripts(kind, ["lint:fix", "test:integration", "docgen"]);
+  return {
+    ...scripts,
+    "beep:check:tests": "tsrs -p tsconfig.test.json --noEmit",
+    ...(withStoriesTsconfig
+      ? {
+          "beep:check": storiesCheck(scripts),
+          "beep:check:stories": "tsrs -p tsconfig.stories.json --noEmit",
+        }
+      : {}),
+    coverage: "bunx vitest run --coverage --exclude=test/integration/**",
+  };
+};
 
 /**
  * Shared script renderers used by package and application scaffolds.

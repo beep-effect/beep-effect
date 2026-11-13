@@ -41,9 +41,10 @@ node_modules/.bin/tsrs     -> tsrs/bin/tsrs  (tsrs's JS launcher; execs the patc
 ```
 
 `beep:build` (`tsrs -p tsconfig.json --emitDeclarationOnly`), `beep:check`
-(`tsrs -p tsconfig.check.json`), `beep:check:tests`
-(`tsrs -p tsconfig.test.json --noEmit`), the root `check:configs` and infra's
-`tsrs -b tsconfig.json` all run the Rust compiler. Measured on 2026-10-26
+(led by that build command in a declaration-only package, by
+`tsrs -p tsconfig.check.json` elsewhere; see [Check once](#check-once-the-check-leads-with-the-build)),
+`beep:check:tests` (`tsrs -p tsconfig.test.json --noEmit`), the root
+`check:configs` and infra's `tsrs -b tsconfig.json` all run the Rust compiler. Measured on 2026-10-26
 against tsc-rs 0.8.0 ([goals/tsrs-gates/research/measurements-2026-10-26.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/tsrs-gates/research/measurements-2026-10-26.md)):
 identical diagnostics on all 181 check projects and infra's `-b` build, serial
 wall 21.3 s against 26.4 s at a higher peak RSS per project, and every rule of
@@ -105,6 +106,70 @@ reads, and declaration maps keep go-to-source working.
   contract: no generated or workspace `beep:build` runs Babel or emits
   JavaScript outside an override, and a fixture built with the generated command
   has a `.d.ts` and `.d.ts.map` for every `exports` subpath and no JavaScript.
+
+### Check once: the check leads with the build
+
+A declaration-only package type-checks its own source once per Turbo run. Its
+generated `beep:check` leads with the build program instead of the separate
+no-emit program; every later segment stays as written:
+
+```text
+before: tsrs -p tsconfig.check.json && bun run beep:check:tests
+after:  tsrs -p tsconfig.json --emitDeclarationOnly && bun run beep:check:tests
+```
+
+- The root `turbo.json` `check` task depends on `["^build", "build"]`: the
+  package's own `build` runs first, so the check's first step finds the
+  incremental state that build just wrote and is a no-op of about 100 ms on an
+  unchanged package. A direct `bun run check` in the package, outside Turbo,
+  still type-checks every source file, because the step is the full build
+  program, not a skipped one.
+- The scripts policy owns the rewrite. `retiredCheckSegments` in
+  `packages/tooling/library/repo-cli-kit/src/package-scripts/PackageScripts.schemas.ts`
+  retires a leading `tsrs -p tsconfig.check.json` for every package whose
+  `beep:build` runs `DECLARATION_ONLY_BUILD_COMMAND`;
+  `bun run beep lint package-scripts` reports the old value as `retired-impl`
+  and `--write` replaces that program text only. Extra compiler flags on the
+  first segment are carried over in the same order: `@beep/repo-cli`'s check
+  opens with
+  `tsrs -p tsconfig.json --emitDeclarationOnly --checkerCostCache source.tsrs-cost-cache`
+  (see [Compiler performance defaults](#compiler-performance-defaults)); the
+  cost cache does not disturb the build's incremental state.
+- `ownSourceCheckOverrides` (same file) keeps the no-emit check first for a
+  declaration-only package whose check program is wider than its build program.
+  Two rows today: `@beep/effect-drizzle` and `@beep/markdown` add `scripts` to
+  their `tsconfig.check.json` `include`.
+- Every other package with a `check` (the bundler apps, the no-emit apps and
+  labs whose `beep:build` is `tsrs -p tsconfig.check.json`, and infra) keeps the
+  old graph through its own `turbo.json`: `tasks.check.dependsOn` lists
+  `^build` and not `build`, without `$TURBO_EXTENDS$`. Otherwise `check` would
+  run a whole `next build` or `vite build` first. The scripts lint reports a
+  missing override as a `derivation-conflict` on `check`, and
+  `bun run beep create-package` emits it for service, runtime-proof, Next.js,
+  Vite and Tauri apps.
+- The Turbo `check` task still declares `outputs: []`, although its first step
+  can write `dist` and `dist/tsconfig.tsbuildinfo`. That is intended: the
+  own-build edge already ran `build` in the same invocation, so under Turbo the
+  step writes nothing, and a `check` cache hit restores nothing because there is
+  nothing to restore.
+- A direct `bun run check` or `bun run beep:check` on a clean tree emits
+  declarations into `dist` as a side effect, because its first step is the
+  build. A read-only checkout, or a worker-profile lane that expects `check` to
+  write nothing, notices this.
+- `tsconfig.check.json` stays. The two override packages still run it, the
+  check-program census (`bun run beep quality check-census`) measures every
+  check overlay, the build-equivalence census below compares it with the build
+  program, and editors and tools that open a package's check config keep working.
+- The contract is the "check once" block of
+  `packages/tooling/tool/cli/test/build-turbo-outputs.test.ts`, derived from the
+  live manifests and `turbo.json` files: no package whose build is not
+  declaration-only depends on its own build or had its check rewritten, every
+  declaration-only check leads with the build program (its own flags allowed)
+  unless overridden, and
+  each `tsconfig.check.json` the build serves adds nothing to the build program
+  (it extends `./tsconfig.json`, declares no `include`, `files` or `exclude`,
+  keeps the build's `references`, and sets only emit options). The packages
+  whose check config does add something are exactly `ownSourceCheckOverrides`.
 
 ### Updating tsrs and @effect/tsgo
 
@@ -285,11 +350,13 @@ and [persistent scheduling history](https://github.com/oxc-project/tsrs/blob/ed7
 
 ### Build and check program equivalence
 
-A library package type-checks its `src` twice per run: `beep:build`
+Before [check once](#check-once-the-check-leads-with-the-build), a library
+package type-checked its `src` twice per run: `beep:build`
 (`tsrs -p tsconfig.json --emitDeclarationOnly`, declarations and incremental,
 build info in `dist/tsconfig.tsbuildinfo`) and `beep:check`
-(`tsrs -p tsconfig.check.json`, `noEmit`, not incremental). Before the build may serve as the check, the two
-programs must report the same diagnostics. The check census proves it:
+(`tsrs -p tsconfig.check.json`, `noEmit`, not incremental). The build serves as
+the check only while the two programs report the same diagnostics and hold the
+same package files. The check census is the standing proof:
 
 ```bash
 bun run beep quality check-census --build-equivalence [--seed] \
@@ -331,10 +398,20 @@ data, not a command failure.
   run refuses before any compiler starts. Run it on a built tree you are not
   using for anything else meanwhile.
 
-The report (`check-census-build-equivalence/v1`, default
+- Before either pass, both programs run with `--listFilesOnly`. Each row
+  records `checkOnlyFiles`, the files inside the package directory that the
+  check program lists and the build program does not (relative to the package,
+  sorted), and `servedByBuild`, whether the package's `beep:check` leads with
+  the build program (its own flags allowed). The summary counts `widerChecks` (rows with a non-empty list) and
+  `servedWiderChecks` (those whose check the build serves); a non-zero
+  `servedWiderChecks` fails the run, because that package's own-source check no
+  longer covers every file it used to.
+
+The report (`check-census-build-equivalence/v2`, default
 `.beep/quality/check-census-build-equivalence.json`) is written before a
-difference or an ineffective probe fails the command; differing comparisons
-print both programs' lines.
+difference, an ineffective probe or a served wider check fails the command;
+differing comparisons print both programs' lines and every wider check prints
+the files it adds.
 
 ## Binary paths (Linux x64)
 
