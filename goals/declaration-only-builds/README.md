@@ -37,8 +37,9 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 P3 Yeet, in progress. PR 1 (#3178) and PR 2 (#3208) are merged. PR 3, check
-once, is open. Next: P4 Close, a goals-only final PR with the reflection and
-the closeout proposal, per [`PLAN.md`](./PLAN.md).
+once, is open. Next: P4 Close, a final PR with the reflection and the
+`closeout` record that `goals set-status declaration-only-builds
+completed-retained` writes once it is open, per [`PLAN.md`](./PLAN.md).
 
 ## Latest Evidence
 

@@ -99,5 +99,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "P3 in progress: PR 1 (#3178) and PR 2 (#3208) merged; PR 3 (check once: the check runs the build program after the package's own build, 180 packages) is open. Measured: serial build work 80.9 s to 32.9 s, dist 232.5 MB to 147.9 MB, and 15.5 s less compiler work per full check run. Next: a goals-only final PR with the reflection and proposedCloseout."
+  "statusNote": "P3 in progress: PR 1 (#3178) and PR 2 (#3208) merged; PR 3 (check once: the check runs the build program after the package's own build, 180 packages) is open. Measured: serial build work 80.9 s to 32.9 s, dist 232.5 MB to 147.9 MB, and 15.5 s less compiler work per full check run. Next: the final PR ships the reflection; once it is open, `goals set-status declaration-only-builds completed-retained` writes `closeout` and that commit rides the same PR."
 }
