@@ -36,6 +36,7 @@ import { ciLaneCommand, ciLocalCommand } from "./CiLane.ts";
 import { ciPartitionsCommand } from "./CiPartitions.command.ts";
 import { ciRerunRunnerLossCommand } from "./CiRerunRunnerLoss.ts";
 import { CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
+import { ciShardOverflowPreflightCommand } from "./CiShardOverflowPreflight.ts";
 import { ciDependencyReviewCommand } from "./DependencyReviewCommand.ts";
 import { ciLaneTimingsCommand } from "./LaneTimings.ts";
 import { ciRouteCommand } from "./Route.command.ts";
@@ -410,6 +411,7 @@ export const ciCommand = Command.make("ci", {}, () =>
     "- bun run beep ci prune-apt [sources-dir]",
     "- bun run beep ci runner-resources <lane> <command> [args...]",
     "- bun run beep ci shard-overflow --partitions <json> --callee local|pinned",
+    "- bun run beep ci shard-overflow-preflight --webhook-url <url>",
     "- bun run beep ci workflow-lint",
     "- bun run beep ci lane <id> [flags] (or --list)",
     "- bun run beep ci lane-timings [--runs n] [--tsv] or --window --since ISO --until ISO [--preview] [filters]",
@@ -436,5 +438,6 @@ export const ciCommand = Command.make("ci", {}, () =>
     ciPartitionsCommand,
     ciRerunRunnerLossCommand,
     ciRouteCommand,
+    ciShardOverflowPreflightCommand,
   ])
 );

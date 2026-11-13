@@ -162,6 +162,13 @@ export * from "./CiRunnerOutputs.ts";
  */
 export * from "./CiShardOverflow.ts";
 /**
+ * Shard overflow preflight: the runner group and webhook checks an operator must pass before switching overflow on.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiShardOverflowPreflight.ts";
+/**
  * Dependency review service, live layer and verdict rendering.
  *
  * @category cli-commands
