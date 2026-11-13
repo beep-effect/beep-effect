@@ -333,6 +333,73 @@ use the controller region. Keep the grants until an upstream upgrade supplies
 and validates equivalent access; do not hand-edit the generated SDK or broaden
 runner workload identity.
 
+## Shard overflow pool
+
+The shard overflow pool (`goals/ci-lane-economics`, #3256) is a second
+`CiFleetController` that takes Test Unit shards Test Plan routes away from a
+long hosted queue. The ordered enablement list, with its commands and the
+disable path, is in
+`goals/ci-lane-economics/research/shard-overflow-routing-2026-11-13.md`.
+
+| | Heavy pool | Overflow pool |
+| --- | --- | --- |
+| Module prefix and `ghr:environment` | `beep-ci` | `beep-ovf` |
+| Runner group and label | `beep-ec2-heavy` | `beep-shard-overflow` |
+| Runner names | `beep-ci-*` | `beep-ovf-*` |
+| Roles | `/beep-ci/beep-ci-*` | `/beep-ovf/beep-ovf-*` |
+| Webhook secret | `/github-action-runners/app/github_app_webhook_secret` | `/github-action-runners/shard-overflow/github_app_webhook_secret` |
+| Termination grants | `beep-ci-spot-termination-*`, `beep-ci-deregister-retry` | `beep-ovf-spot-termination-*`, `beep-ovf-deregister-retry` |
+
+Neither prefix may start with the other. The termination watcher matches
+instances whose `ghr:environment` tag starts with its own prefix, so an
+overlapping prefix lets one pool's handler deregister the other pool's runners.
+
+### Fleet permissions boundary
+
+Every role the module creates carries `beep-ci-fleet-boundary`, an IAM policy
+maintained by hand, outside Pulumi. Its `PassOwnRoles` statement is the one
+that constrains names: a fleet role may pass to EC2
+(`iam:PassedToService` `ec2.amazonaws.com`) only the roles it lists, and the
+scale-up Lambda must pass the runner role, `/<prefix>/<prefix>-runner-<hash>`,
+for every launch.
+
+- v4: `arn:aws:iam::832907639880:role/beep-ci/beep-ci-*`.
+- v5 (default since 2026-11-13): v4 plus
+  `arn:aws:iam::832907639880:role/beep-ovf/beep-ovf-*`, nothing else.
+
+A new pool prefix, or a `role_path` that moves a runner role, needs its entry in
+`PassOwnRoles` before the pool is applied. A wrong entry does not show in a
+Pulumi preview: the launch fails at run time. Roll back with
+`aws iam set-default-policy-version --policy-arn arn:aws:iam::832907639880:policy/beep-ci-fleet-boundary --version-id v4`,
+and only after the overflow pool is off. Record why in a
+`goals/ci-lane-economics/decisions/` file.
+
+### After switching overflow on
+
+The first overflow VM launch is the first proof of the boundary entry; nothing
+earlier exercises `iam:PassRole`. On the first run that routes:
+
+1. Test Plan logs `shard-overflow: routed; ...`.
+2. The scale-up log shows the launch:
+
+   ```sh
+   aws logs filter-log-events --log-group-name /aws/lambda/beep-ovf-scale-up \
+     --start-time "$(( ($(date +%s) - 3600) * 1000 ))" \
+     --filter-pattern '?"Created instance" ?"Create fleet" ?"PassRole"' \
+     --query 'events[].message' --output text
+   ```
+
+   Expect `Created instance(s): i-...`. A `Create fleet request failed.` or
+   `Create fleet did not create every requested instance.` line naming
+   `iam:PassRole` means the boundary does not admit the runner role.
+3. `Test Unit (<partition>) / Overflow` jobs run on `beep-ovf-*` runners,
+   Coverage Regression finds their evidence, and `Test Unit` passes.
+
+If the launch fails: `gh variable set BEEP_SHARD_OVERFLOW --body off`, cancel the
+runs whose overflow jobs are still queued (a self-hosted job with no runner
+waits rather than fails) and re-run them hosted, then compare the boundary's
+default version and the runner role's path with the table above.
+
 ## Deploy and verify
 
 1. Refresh AWS identity, the source branch, the current fleet cap, and running
