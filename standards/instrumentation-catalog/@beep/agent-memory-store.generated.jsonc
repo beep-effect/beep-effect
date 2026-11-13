@@ -6,6 +6,11 @@
   "attributes": [],
   "instruments": [],
   "spans": [
+    {"name":"Admission.admit","owner":"@beep/agent-memory-store","family":"tooling","conforms":true},
+    {"name":"Admission.held","owner":"@beep/agent-memory-store","family":"tooling","conforms":true},
+    {"name":"Admission.resolve","owner":"@beep/agent-memory-store","family":"tooling","conforms":true},
+    {"name":"AgentWrite.admitEdits","owner":"@beep/agent-memory-store","family":"tooling","conforms":true},
+    {"name":"AgentWrite.writeEdits","owner":"@beep/agent-memory-store","family":"tooling","conforms":true},
     {"name":"Embedder.unavailable.embed","owner":"@beep/agent-memory-store","family":"tooling","conforms":false},
     {"name":"MarkdownProjector.exportFolder","owner":"@beep/agent-memory-store","family":"tooling","conforms":true},
     {"name":"MarkdownProjector.importFolder","owner":"@beep/agent-memory-store","family":"tooling","conforms":true},

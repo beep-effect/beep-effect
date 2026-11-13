@@ -7,6 +7,14 @@ name: Beep CI Binary
 # own pull request (goals/scripts-to-beep-cli decision
 # 2026-11-07-ci-binary-release-asset). Only main commits publish: the binary
 # that gates a pull request is never built from that pull request's head.
+#
+# The path list below is only a coarse prefilter. A release is cut only when
+# the binary's closure digest (`beep ci binary-closure`: the static import
+# closure of bin-ci.ts, the workspace manifests it reaches, bun.lock,
+# .bun-version, bunfig.toml, patches/, the compile recipe and this file) differs from
+# the digest recorded on the latest `beep-ci-*` release; every release records
+# its digest in its notes and a `beep-linux-x64.closure.json` asset
+# (goals/heavy-pool-diet PERIH-11).
 
 on:
   push:
@@ -18,12 +26,25 @@ on:
       - packages/drivers/**
       - bun.lock
       - .bun-version
+      - bunfig.toml
+      - patches/**
       - .github/workflows/beep-ci-binary.yml
   workflow_dispatch:
+    inputs:
+      verify_reproducible:
+        description: >-
+          Compile even when the closure is unchanged and require the sha256 of
+          the latest release, which recorded the same closure digest.
+        type: boolean
+        default: false
 
-# One publish per commit; a newer main push never cancels an upload in flight.
+# One run at a time, so each run compares its closure digest against the release
+# the previous run published: two overlapping runs both read the older release and
+# published the same closure twice (ad71f5cdb67, run 43347787888). A run in flight
+# is never cancelled; a newer main push only replaces a still-pending run, and that
+# newer commit's closure includes the pending one's changes.
 concurrency:
-  group: beep-ci-binary-${{ github.sha }}
+  group: beep-ci-binary
   cancel-in-progress: false
 
 permissions:
@@ -49,11 +70,72 @@ jobs:
         with:
           use-node: "false"
 
+      - name: Compare the closure digest with the latest release
+        id: closure
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          bun run beep ci binary-closure --out dist/beep-linux-x64.closure.json >/dev/null
+          digest="$(jq -r .digest dist/beep-linux-x64.closure.json)"
+          latest="$(gh release list --limit 100 --json tagName,createdAt \
+            --jq '[.[] | select(.tagName | startswith("beep-ci-"))] | sort_by(.createdAt) | last | .tagName // ""')"
+          recorded=""
+          if [[ -n "$latest" ]] && gh release download "$latest" --pattern beep-linux-x64.closure.json \
+            --dir "${RUNNER_TEMP}/latest-release" >/dev/null 2>&1; then
+            recorded="$(jq -r .digest "${RUNNER_TEMP}/latest-release/beep-linux-x64.closure.json")"
+          fi
+          changed=true
+          if [[ "$digest" == "$recorded" ]]; then changed=false; fi
+          {
+            echo "digest=$digest"
+            echo "latest=$latest"
+            echo "changed=$changed"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "### Beep CI binary closure"
+            echo ""
+            echo "- closure digest: \`$digest\`"
+            echo "- latest release: \`${latest:-none}\` (recorded digest \`${recorded:-none}\`)"
+            if [[ "$changed" == "true" ]]; then
+              echo "- closure changed: compile and publish."
+            else
+              echo "- closure unchanged: no compile, no release."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "closure digest $digest; latest release ${latest:-none} recorded ${recorded:-none}; changed=$changed"
+
       - name: Compile the CI binary
+        if: steps.closure.outputs.changed == 'true' || inputs.verify_reproducible
         shell: bash
         run: bun run beep ci compile-binary --outfile dist/beep-linux-x64
 
+      - name: Verify the unchanged closure reproduces the released binary
+        if: steps.closure.outputs.changed == 'false' && inputs.verify_reproducible
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          LATEST_TAG: ${{ steps.closure.outputs.latest }}
+        run: |
+          set -euo pipefail
+          gh release download "$LATEST_TAG" --pattern beep-linux-x64.sha256 --dir "${RUNNER_TEMP}/latest-release" --clobber
+          released="$(cut -d' ' -f1 "${RUNNER_TEMP}/latest-release/beep-linux-x64.sha256")"
+          compiled="$(cut -d' ' -f1 dist/beep-linux-x64.sha256)"
+          {
+            echo "- released sha256 (\`$LATEST_TAG\`): \`$released\`"
+            echo "- recompiled sha256: \`$compiled\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$released" != "$compiled" ]]; then
+            echo "::error::The unchanged closure compiled to $compiled, but $LATEST_TAG ships $released."
+            exit 1
+          fi
+          echo "The unchanged closure reproduces $LATEST_TAG byte for byte ($compiled)."
+
       - name: Smoke-run the CI binary
+        if: steps.closure.outputs.changed == 'true' || inputs.verify_reproducible
         shell: bash
         run: |
           (cd dist && sha256sum --check beep-linux-x64.sha256)
@@ -66,19 +148,21 @@ jobs:
           RUNNER_TEMP="$(mktemp -d)" dist/beep-linux-x64 ci runner-resources smoke -- true
 
       - name: Publish the release asset
+        if: steps.closure.outputs.changed == 'true'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           TARGET_SHA: ${{ github.sha }}
+          CLOSURE_DIGEST: ${{ steps.closure.outputs.digest }}
         run: |
           tag="beep-ci-${TARGET_SHA:0:12}"
           if gh release view "$tag" >/dev/null 2>&1; then
             echo "Release $tag already exists; nothing to publish."
             exit 0
           fi
-          gh release create "$tag" dist/beep-linux-x64 dist/beep-linux-x64.sha256 \
+          gh release create "$tag" dist/beep-linux-x64 dist/beep-linux-x64.sha256 dist/beep-linux-x64.closure.json \
             --target "$TARGET_SHA" \
             --title "$tag" \
-            --notes "Pre-toolchain beep CI binary (linux-x64) compiled from ${TARGET_SHA}." \
+            --notes "Pre-toolchain beep CI binary (linux-x64) compiled from ${TARGET_SHA}. Closure digest: ${CLOSURE_DIGEST} (beep ci binary-closure)." \
             --latest=false

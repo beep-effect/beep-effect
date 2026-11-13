@@ -17,6 +17,11 @@ const afterShardsNeeds = ["change-profile", "test-plan", "admission"];
 const afterShardsGuard = "${{ !cancelled() && needs.change-profile.result == 'success' }}";
 const afterShardsDocsGuard =
   "${{ !cancelled() && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only != 'true' }}";
+// Lanes with a `lanes.<id>` row in the change-profile pattern data also skip, before runner
+// allocation, when the profile reports them irrelevant. `!= 'false'` keeps a pinned binary that
+// predates the output (empty) running the lane.
+const afterShardsRelevanceGuard = (lane: string) =>
+  `\${{ !cancelled() && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only != 'true' && needs.change-profile.outputs.${lane}_relevant != 'false' }}`;
 const heavyGuard =
   "${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}";
 const heavyLaneContracts = [
@@ -41,14 +46,14 @@ const verificationLaneContracts = [
     id: "ecosystem",
     name: "Ecosystem Contracts",
     timeout: 30,
-    guard: afterShardsDocsGuard,
+    guard: afterShardsRelevanceGuard("ecosystem"),
   },
   {
     job: "codegen",
     id: "codegen",
     name: "Codegen Drift",
     timeout: 30,
-    guard: afterShardsDocsGuard,
+    guard: afterShardsRelevanceGuard("codegen"),
   },
 ];
 
@@ -176,9 +181,18 @@ it.effect(
     // Admission, and keep the same fail-closed condition.
     assert.deepEqual(yamlAt(workflow, ["jobs", "property-laws-shard", "needs"]), ["change-profile", "test-plan"]);
     assert.strictEqual(yamlAt(workflow, ["jobs", "property-laws-shard", "if"]), afterShardsDocsGuard);
-    assert.isUndefined(yamlAt(workflow, ["jobs", "security", "if"]));
+    // Security and SAST start once Change Profile reports; a docs_only diff or an
+    // irrelevant change skips them, and a failed profile (empty outputs) runs them.
+    for (const lane of ["security", "sast"]) {
+      assert.deepEqual(yamlAt(workflow, ["jobs", lane, "needs"]), ["change-profile"]);
+      assert.strictEqual(
+        yamlAt(workflow, ["jobs", lane, "if"]),
+        `\${{ !cancelled() && needs.change-profile.outputs.docs_only != 'true' && needs.change-profile.outputs.${lane}_relevant != 'false' }}`
+      );
+    }
+    // Secret scanning and commitlint read every change, prose included.
     assert.isUndefined(yamlAt(workflow, ["jobs", "secrets", "if"]));
-    assert.isUndefined(yamlAt(workflow, ["jobs", "sast", "if"]));
+    assert.isUndefined(yamlAt(workflow, ["jobs", "commitlint", "if"]));
   })
 );
 

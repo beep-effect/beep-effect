@@ -1,11 +1,18 @@
 import { fcRuns } from "@beep/fc-runs";
-import { Sha256Hex, Sha256HexFromBytes, Sha256HexFromHexBytes } from "@beep/schema/Sha256";
+import {
+  Sha256Hex,
+  Sha256HexFromBytes,
+  Sha256HexFromHexBytes,
+  Sha256PrefixedDigest,
+  Sha256PrefixedDigestFromHex,
+} from "@beep/schema/Sha256";
 import { it } from "@beep/test-runner";
 import { Str } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -145,6 +152,108 @@ it.layer(BunCrypto.layer, { timeout: "5 seconds" })("Sha256HexFromHexBytes", (it
       const digest = yield* decodeSha256Hex(knownDigest);
 
       expect((yield* Effect.exit(encodeSha256HexFromHexBytes(digest)))._tag).toBe("Failure");
+    })
+  );
+});
+
+describe("Sha256PrefixedDigest", () => {
+  const arbitrary = Arbitrary.schema(Sha256PrefixedDigest);
+  const decodeUnknownSha256PrefixedDigestEffect = S.decodeUnknownEffect(Sha256PrefixedDigest);
+  const isSha256PrefixedDigest = S.is(Sha256PrefixedDigest);
+
+  it.effect(
+    "accepts the sha256: prefix followed by a canonical lowercase digest",
+    Effect.fnUntraced(function* () {
+      const digest = yield* decodeUnknownSha256PrefixedDigestEffect(`sha256:${knownDigest}`);
+      expect(digest).toBe(`sha256:${knownDigest}`);
+    })
+  );
+
+  it.effect.prop(
+    "derives examples that match the one grammar",
+    [arbitrary],
+    Effect.fnUntraced(function* ([digest]) {
+      const decoded = yield* decodeUnknownSha256PrefixedDigestEffect(digest);
+      expect(decoded).toBe(digest);
+      expect(digest).toMatch(/^sha256:[0-9a-f]{64}$/);
+
+      return true;
+    }),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it("rejects everything outside the grammar", () => {
+    expect(
+      A.filter(
+        [
+          knownDigest,
+          `sha256:${Str.toUpperCase(knownDigest)}`,
+          `SHA256:${knownDigest}`,
+          `sha512:${knownDigest}`,
+          `sha256:${Str.slice(0, 63)(knownDigest)}`,
+          `sha256:${knownDigest}0`,
+          `sha256:${knownDigest}\n`,
+          ` sha256:${knownDigest}`,
+          `sha256:v1:${knownDigest}`,
+          "sha256:",
+        ],
+        isSha256PrefixedDigest
+      )
+    ).toEqual([]);
+  });
+
+  it.effect(
+    "keeps a domain brand's encoded form and makes it a Sha256PrefixedDigest",
+    Effect.fnUntraced(function* () {
+      const ReceiptDigest = Sha256PrefixedDigest.pipe(S.brand("ReceiptDigest"));
+      const receipt = yield* S.decodeEffect(ReceiptDigest)(`sha256:${emptyDigest}`);
+      const general: Sha256PrefixedDigest = receipt;
+      const encoded = yield* S.encodeEffect(ReceiptDigest)(receipt);
+
+      expect(encoded).toBe(`sha256:${emptyDigest}`);
+      expect(isSha256PrefixedDigest(general)).toBe(true);
+      expect(S.is(ReceiptDigest)(knownDigest)).toBe(false);
+    })
+  );
+});
+
+describe("Sha256PrefixedDigestFromHex", () => {
+  const decodeUnknownSha256PrefixedDigestFromHex = S.decodeUnknownEffect(Sha256PrefixedDigestFromHex);
+  const encodeSha256PrefixedDigestFromHex = S.encodeEffect(Sha256PrefixedDigestFromHex);
+
+  it.effect(
+    "adds the prefix on decode and removes it on encode",
+    Effect.fnUntraced(function* () {
+      const digest = yield* decodeUnknownSha256PrefixedDigestFromHex(knownDigest);
+      expect(digest).toBe(`sha256:${knownDigest}`);
+      const encoded = yield* encodeSha256PrefixedDigestFromHex(digest);
+      expect(encoded).toBe(knownDigest);
+    })
+  );
+
+  it.effect.prop(
+    "round-trips every bare digest",
+    [Arbitrary.schema(Sha256Hex)],
+    Effect.fnUntraced(function* ([hex]) {
+      const digest = yield* decodeUnknownSha256PrefixedDigestFromHex(hex);
+      expect(digest).toBe(`sha256:${hex}`);
+      const encoded = yield* encodeSha256PrefixedDigestFromHex(digest);
+      expect(encoded).toBe(hex);
+
+      return true;
+    }),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect(
+    "rejects an already prefixed digest and a malformed hex digest",
+    Effect.fnUntraced(function* () {
+      expect((yield* Effect.exit(decodeUnknownSha256PrefixedDigestFromHex(`sha256:${knownDigest}`)))._tag).toBe(
+        "Failure"
+      );
+      expect((yield* Effect.exit(decodeUnknownSha256PrefixedDigestFromHex(Str.toUpperCase(knownDigest))))._tag).toBe(
+        "Failure"
+      );
     })
   );
 });

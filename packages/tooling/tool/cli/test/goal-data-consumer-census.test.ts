@@ -41,6 +41,14 @@ import { provideSpawner } from "./support/ScriptedProcess.ts";
 const TEST_SOURCE = /^(?:packages|apps|infra)\/.+\/test\/.+\.(?:[cm]?[jt]sx?|jsonc?|py)$/u;
 const TEST_CODE = /\.(?:[cm]?[jt]sx?)$/u;
 const PACKAGE_TURBO = /^(?:packages|apps|infra)\/.+\/turbo\.json$/u;
+// Product and lab source that names packet paths its tests then read from the real repository,
+// such as @beep/ciops pinning its KPI inputs in src/kpi/Pins.ts. Repo tooling under
+// packages/tooling names packet paths as the targets of its own commands (doctor, laws, harvest,
+// route corpus); its tests read them from temp roots, so its src stays out of this scan.
+const PINNED_SOURCE = /^(?:packages|apps|infra)\/.+\/src\/.+\.(?:[cm]?[jt]sx?)$/u;
+const REPO_TOOLING = /^packages\/tooling\//u;
+// JSDoc and line comments mention packet paths as prose, never as reads.
+const COMMENT_LINE = /^\s*(?:\*|\/\/|\/\*)/u;
 const PACKET_ROOT = /^(?:goals|explorations)\//u;
 // The syntactic shapes that reach a real repository file: a path relative to the test file
 // (`new URL("../../../../goals/...")`, `import.meta.glob`), a path joined under an interpolated
@@ -104,13 +112,20 @@ const exclusions: ReadonlyArray<CensusExclusion> = [
     reference: "explorations/beep-ci-operational-ontology/research",
     source: "apps/labs/ciops/test/kpi-reading.test.ts",
     kind: "synthetic-fixture",
-    reason: "the test creates the directory under a temp root",
+    reason:
+      "this hit is the directory the test creates under a temp root; its real reads go through the src/kpi/Pins.ts constants, which the pinned-source scan reports",
   }),
   CensusExclusion.make({
     reference: "explorations/beep-ci-operational-ontology/research/control-interventions.yaml",
     source: "apps/labs/ciops/test/kpi-contract.test.ts",
     kind: "synthetic-fixture",
     reason: "contract data with a placeholder digest; the file is never read",
+  }),
+  CensusExclusion.make({
+    reference: "explorations/stacked-pr-adoption/research/",
+    source: "packages/tooling/tool/cli/test/support/YeetHeadMove.ts",
+    kind: "synthetic-fixture",
+    reason: "the head-move harness inits its own temp repository and writes stack-probe files under this prefix",
   }),
 ];
 
@@ -120,6 +135,10 @@ class CensusEntry extends S.Opaque<CensusEntry, { readonly brand: unique symbol 
 ) {}
 
 // A `${...}` placeholder ends the literal: what precedes it is a directory the consumer reads under.
+// The route lines of a change profile: the per-lane relevance lines that follow depend on which
+// consumer was mutated, while this census asserts only the docs-only route.
+const routeLines = (profile: string): string => A.join(A.take(Str.split(profile, "\n"), 3), "\n");
+
 const literalPrefix = (reference: string): string => Str.replace(/[^/]*\$\{.*$/u, "")(reference);
 
 // A literal is a file, a directory (with or without its trailing slash) or a glob.
@@ -138,7 +157,21 @@ const resolveReference = Effect.fnUntraced(function* (reference: string, packetP
 const matches = (shape: RegExp, text: string): ReadonlyArray<string> =>
   A.map(A.fromIterable(Str.matchAll(shape)(text)), (match) => match[1] ?? "");
 
+const isPinnedSource = (source: string): boolean => PINNED_SOURCE.test(source) && !REPO_TOOLING.test(source);
+
+const codeLines = (text: string): string =>
+  A.join(
+    A.filter(Str.split(text, "\n"), (line) => !COMMENT_LINE.test(line)),
+    "\n"
+  );
+
+// Source modules contribute only their bare path constants; tests and turbo.json every shape.
 const scanSource = (source: string, text: string): ReadonlyArray<readonly [string, boolean]> =>
+  isPinnedSource(source)
+    ? A.map(A.dedupe(matches(BARE_LITERAL, codeLines(text))), (reference) => [reference, true] as const)
+    : scanTestSource(source, text);
+
+const scanTestSource = (source: string, text: string): ReadonlyArray<readonly [string, boolean]> =>
   A.dedupeWith(
     A.appendAll(
       A.map(
@@ -173,7 +206,7 @@ const census = Effect.gen(function* () {
   const path = yield* Path.Path;
   const { root, paths } = yield* trackedFiles;
   const packetPaths = A.filter(paths, (file) => PACKET_ROOT.test(file));
-  const sources = A.filter(paths, (file) => TEST_SOURCE.test(file) || PACKAGE_TURBO.test(file));
+  const sources = A.filter(paths, (file) => TEST_SOURCE.test(file) || PACKAGE_TURBO.test(file) || isPinnedSource(file));
   const perSource = yield* Effect.forEach(
     sources,
     (source) =>
@@ -208,6 +241,7 @@ const mutations: ReadonlyArray<readonly [string, string]> = [
   ["runner-burst ops script", "goals/speed-loop/ops/runner-burst/teardown-burst-runners.sh"],
   ["ciops exploration ABox", "explorations/beep-ci-operational-ontology/ontology/extraction/s6/graphs/abox.ttl"],
   ["ontology exploration manifest", "explorations/legal-ontology-landscape/assets/manifest.jsonl"],
+  ["ciops KPI change-event ledger", "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"],
 ];
 
 // Before ROUT-03 the code route was the product roots alone; every goal-packet path was docs-only.
@@ -319,11 +353,11 @@ it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { timeout: "120 seco
           expect(A.contains(paths, mutated), `${label}: ${mutated} is tracked`).toBe(true);
           expect(preRepairDocsOnly.test(mutated), `${label} was docs-only before ROUT-03`).toBe(true);
           const profile = yield* changeProfileFor(mutated);
-          expect(profile, label).toBe("goals_only=false\ndocs_only=false\ndesktop_rust_relevant=false");
+          expect(routeLines(profile), label).toBe("goals_only=false\ndocs_only=false\ndesktop_rust_relevant=false");
         }
         // Control: prose beside a consumed path keeps the docs-only skip.
         const control = yield* changeProfileFor("goals/citation-extraction-engine/history/evidence/README.md");
-        expect(control).toBe("goals_only=false\ndocs_only=true\ndesktop_rust_relevant=false");
+        expect(routeLines(control)).toBe("goals_only=false\ndocs_only=true\ndesktop_rust_relevant=false");
       })
     );
   }
