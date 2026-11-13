@@ -2016,6 +2016,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         // Protected execution authenticates observations; required quality proof stays separate.
         "cache-producer.yml:Execute approved signed producer",
         "heavy.yml:Heavy / Execute approved signed producer",
+        // Draft-only writer of the catalog shards a worker-profile lane skipped;
+        // Repo Sanity still proves the shards, so it grants no quality verdict.
+        "catalog-regeneration.yml:Catalog Regeneration",
         "data-sync.yml:Sync Official Data",
         // Post-merge publisher of the commit-message overlay ref; it proves the
         // ref with `beep history notes --check` and grants no quality verdict.
