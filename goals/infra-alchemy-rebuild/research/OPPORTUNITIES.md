@@ -27,8 +27,8 @@ identifiers are redacted.
 
 ## 2026-11-13: `create-package github --kind infra` leaves a half-written `@beep/github` that config-sync then wires in
 
-- **Doing:** P3 GitHub stack (lane `goals/infra-alchemy-rebuild-p3-github`), trying to match the sibling
-  turbo-cache layout (`packages/tooling/infra/turbo-cache`, package `@beep/infra-turbo-cache`).
+- **Doing:** P3 GitHub stack (the P3 GitHub lane), trying to match the sibling
+  turbo-cache layout (directory turbo-cache under the tooling infra family, package `@beep/infra-turbo-cache`).
 - **Evidence:** `bun run beep create-package github --family tooling --kind infra` wrote
   `packages/tooling/infra/github/package.json` with name `@beep/github` (the drivers package already owns
   it), then failed with `Workspace name "@beep/github" already exists`. The partial directory stayed, and the

@@ -256,7 +256,7 @@ const bodyOf = (request: HttpClientRequest.HttpClientRequest): Effect.Effect<Jso
 };
 
 /** An `HttpClient` answering every request from the fake repository. */
-export const fakeHttpClient = (fake: FakeRepository) =>
+const fakeHttpClient = (fake: FakeRepository) =>
   Layer.succeed(
     HttpClient.HttpClient,
     HttpClient.make(
