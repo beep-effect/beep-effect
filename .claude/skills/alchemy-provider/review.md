@@ -47,12 +47,12 @@ reason the platform forces. References:
 | --- | --- |
 | Small reconcile with labels, `list`, adoption | [packages/hetzner/src/SshKey.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/hetzner/src/SshKey.ts) |
 | Multi-aspect reconcile | [packages/aws/src/DynamoDB/Table.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/aws/src/DynamoDB/Table.ts), [packages/aws/src/Kinesis/Stream.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/aws/src/Kinesis/Stream.ts) |
-| Read/Write/ReadWrite bindings, shared scaffolding unexported | `packages/cloudflare/src/R2/` |
+| Read/Write/ReadWrite bindings, shared scaffolding unexported | [packages/cloudflare/src/R2/](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/cloudflare/src/R2) |
 | Bindings that reach any host | [packages/aws/src/AWSBindings.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/aws/src/AWSBindings.ts), [packages/gcp/src/GCPBindings.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/gcp/src/GCPBindings.ts), [packages/aws/src/SQS/BindingHttp.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/aws/src/SQS/BindingHttp.ts) |
-| Package shape | `packages/hetzner/` (`package.json`, `tsconfig.json`, `src/Contributions.ts`) |
+| Package shape | [packages/hetzner/](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/hetzner) (`package.json`, `tsconfig.json`, `src/Contributions.ts`) |
 | Bindings tested inside a deployed host | [packages/integration-tests/test/AWS/DynamoDB/Bindings.test.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/integration-tests/test/AWS/DynamoDB/Bindings.test.ts) + `handler.ts` |
-| Framework websites on a CDN + functions | `packages/aws/src/Website/` (S3 + CloudFront + Lambda), `packages/cloudflare/src/Website/` |
-| Framework websites on containers/VMs (only when the cloud has no CDN or functions) | `packages/fly/src/Website/`, `packages/hetzner/src/Website/` |
+| Framework websites on a CDN + functions | [packages/aws/src/Website/](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/aws/src/Website) (S3 + CloudFront + Lambda), [packages/cloudflare/src/Website/](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/cloudflare/src/Website) |
+| Framework websites on containers/VMs (only when the cloud has no CDN or functions) | [packages/fly/src/Website/](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/fly/src/Website), [packages/hetzner/src/Website/](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/hetzner/src/Website) |
 
 ## 1. Package
 

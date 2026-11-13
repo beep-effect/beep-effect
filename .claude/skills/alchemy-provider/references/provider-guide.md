@@ -214,7 +214,7 @@ covers only the management API, extend it before writing a binding:
   provider, like AWS's `fromContainerMetadata`. A binding never fetches
   its own token.
 
-On Azure, the converter skips `data-plane/` (the Azure SDK converter in the distilled checkout), so
+On Azure, the distilled SDK converter skips `data-plane/`, so
 the agent hand-wrote XML request builders for Storage queues and blobs,
 Key Vault secrets, Service Bus, Event Hubs, a static-website uploader, and
 a managed-identity token cache: 22 raw request sites, with no typed
@@ -303,7 +303,7 @@ a hosted runtime, websites). A package holds:
 | File | Purpose |
 | --- | --- |
 | `package.json` | name, shared alchemy version, publish metadata, `exports`/`publishConfig` (generated, below), `alchemy.contributes`, dependencies |
-| `tsconfig.json` | composite project; references the distilled package, `distilled/core`, and `../alchemy` |
+| `tsconfig.json` | composite project; references the distilled package, `distilled/core`, and the upstream Alchemy core package |
 | [provider build script](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/aws/scripts/build.ts) | copied verbatim from a sibling package |
 | `src/Contributions.ts` | `Contributions.make({ name, auth, … })` — what the CLI, the Alchemist API, and the test harness load without the user's stack |
 | `src/AuthProvider.ts` | `makeStoredAuthProvider` fields, CI env vars, `<Provider>Auth` layer |
@@ -631,7 +631,7 @@ Every runtime needs:
   from this and other providers can attach grants and env.
 - **The host bundle option** (`<identity>HostBundle`) on the effectful
   bundle, and a source-only `Bootstrap` export for the process entry
-  ([packages/hetzner/src/Bootstrap.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/hetzner/src/Bootstrap.ts), `packages/aws/src/Bootstrap/`).
+  ([packages/hetzner/src/Bootstrap.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/hetzner/src/Bootstrap.ts), [packages/aws/src/Bootstrap/](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/aws/src/Bootstrap)).
 - **Event sources** for what the cloud triggers it with (queues, topics,
   storage events, schedules), shaped like AWS `SQS.QueueEventSource` and
   Cloudflare cron. Their contract lives in the source service and each
@@ -791,10 +791,10 @@ and its reason in the catalog:
 
 | Kind of provider | Static assets | Server rendering | Reference |
 | --- | --- | --- | --- |
-| Hyperscaler with a CDN and functions | object storage behind the CDN | serverless functions as the CDN's dynamic origin | `packages/aws/src/Website/` (S3 + CloudFront + Lambda, `SsrSite.ts`) |
-| Edge platform | the platform's asset hosting | the platform's functions | `packages/cloudflare/src/Website/` (Workers + static assets) |
-| Platform with its own function runtime | the platform's asset hosting | its functions, through a framework target | `packages/neon/src/Website/` (`frontend-frameworks/<framework>/neon.ts`) |
-| Containers or VMs only | served by the same Node server, behind the platform's CDN when it has one | the Node server | `packages/fly/src/Website/`, `packages/hetzner/src/Website/`, `packages/railway/src/Website/` (`Cdn.ts`) |
+| Hyperscaler with a CDN and functions | object storage behind the CDN | serverless functions as the CDN's dynamic origin | [packages/aws/src/Website/](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/aws/src/Website) (S3 + CloudFront + Lambda, `SsrSite.ts`) |
+| Edge platform | the platform's asset hosting | the platform's functions | [packages/cloudflare/src/Website/](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/cloudflare/src/Website) (Workers + static assets) |
+| Platform with its own function runtime | the platform's asset hosting | its functions, through a framework target | [packages/neon/src/Website/](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/neon/src/Website) (`frontend-frameworks/<framework>/neon.ts`) |
+| Containers or VMs only | served by the same Node server, behind the platform's CDN when it has one | the Node server | [packages/fly/src/Website/](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/fly/src/Website), [packages/hetzner/src/Website/](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/hetzner/src/Website), [packages/railway/src/Website/](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/railway/src/Website) (`Cdn.ts`) |
 
 What that means for the clouds still to be built:
 
@@ -948,7 +948,7 @@ and add an example for every row the provider has, and skip the rest:
 | Queue | a producer and a consumer through an event source | `gcp-pubsub-worker`, `gcp-pubsub-fanout` |
 | Scheduled job | a cron trigger | `gcp-cron`, `gcp-scheduled-job` |
 | Storage events | a function triggered by an upload | `gcp-storage-uploads`, `gcp-eventarc-firestore` |
-| Durable workflows | `alchemy/Workflows` on the provider's engine (Step 5): start, signal, read a run | no example yet; copy the conformance fixtures in `packages/integration-tests/test/Cloudflare/Workers/fixtures/durable-workflow/` |
+| Durable workflows | `alchemy/Workflows` on the provider's engine (Step 5): start, signal, read a run | no example yet; copy the conformance fixtures in [packages/integration-tests/test/Cloudflare/Workers/fixtures/durable-workflow/](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/integration-tests/test/Cloudflare/Workers/fixtures/durable-workflow) |
 | Containers | a container service | `aws-ecs`, `fly-service` |
 | Kubernetes | a Deployment on the cloud's managed cluster | `aws-eks`, `gcp-gke` |
 | VMs | a VM running a program | `aws-ec2`, `hetzner-server` |
