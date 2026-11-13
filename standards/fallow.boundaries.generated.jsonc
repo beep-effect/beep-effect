@@ -1453,12 +1453,14 @@
         "allow": [
           "@beep/alchemy-aws-extras",
           "@beep/identity",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/alchemy-aws-extras",
           "@beep/identity",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/utils"
         ]
       },
       {

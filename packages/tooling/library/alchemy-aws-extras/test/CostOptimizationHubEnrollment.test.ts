@@ -2,7 +2,7 @@ import { CostOptimizationHubEnrollment } from "@beep/alchemy-aws-extras/CostOpti
 import { describe, expect } from "@effect/vitest";
 import { destroy } from "alchemy/RemovalPolicy";
 import * as Effect from "effect/Effect";
-import * as FakeAws from "./fixtures/FakeAws.ts";
+import * as FakeAws from "./support/FakeAws.ts";
 
 describe("CostOptimizationHubEnrollment", () => {
   const lifecycle = FakeAws.harness();

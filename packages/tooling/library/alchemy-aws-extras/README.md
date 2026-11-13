@@ -43,7 +43,7 @@ credentials or ambient environment.
 
 ## Tests
 
-`bun run test` is hermetic. `test/fixtures/FakeAws.ts` serves an in-memory
+`bun run test` is hermetic. `test/support/FakeAws.ts` serves an in-memory
 account behind an effect `HttpClient`, so every distilled operation signs,
 serializes and parses for real with no credentials and no network. Each test
 case takes its own `FakeAws.harness()` because test cases run concurrently.

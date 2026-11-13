@@ -4004,6 +4004,7 @@
         "@alchemy.run/aws": "catalog:",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
         "@distilled.cloud/aws": "catalog:",
         "alchemy": "catalog:",
         "effect": "catalog:",

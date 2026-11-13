@@ -2,7 +2,7 @@ import { RunnerLaunchTemplate, resolveSsmImageId } from "@beep/alchemy-aws-extra
 import { describe, expect } from "@effect/vitest";
 import { adopt } from "alchemy/AdoptPolicy";
 import * as Effect from "effect/Effect";
-import * as FakeAws from "./fixtures/FakeAws.ts";
+import * as FakeAws from "./support/FakeAws.ts";
 
 const fleetProps = {
   launchTemplateName: "beep-ci-runners",

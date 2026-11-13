@@ -33,7 +33,7 @@ identifiers are redacted.
   directives are banned by the quality gate. The workarounds: export each
   resource through a narrowed `ExtrasResource` interface, make providers
   Layer constants, and give tests a `TypedStack` view of the scratch stack
-  (`test/fixtures/FakeAws.ts`). About an hour went to this.
+  (`test/support/FakeAws.ts`). About an hour went to this.
 - **Would have prevented it:** a short `@beep/alchemy-*` section in the
   `alchemy-provider` skill naming these three shapes, or one shared
   internal helper package the three P2 libraries import.

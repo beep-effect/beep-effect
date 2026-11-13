@@ -10,6 +10,7 @@
 import { AWSEnvironment } from "@alchemy.run/aws/Environment";
 import { $AlchemyAwsExtrasId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import * as O from "@beep/utils/Option";
 import * as ec2 from "@distilled.cloud/aws/ec2";
 import { Unowned } from "alchemy/AdoptPolicy";
 import { deepEqual, isResolved } from "alchemy/Diff";
@@ -663,60 +664,58 @@ const toTagRecord = (tags: ReadonlyArray<ec2.Tag> | undefined): Record<string, s
 const toTagList = (tags: Readonly<Record<string, string>>): Array<ec2.Tag> =>
   A.map(R.toEntries(tags), ([Key, Value]) => ({ Key, Value }));
 
-const toEbs = (ebs: LaunchTemplateEbs.Encoded): ec2.LaunchTemplateEbsBlockDeviceRequest => ({
-  ...(ebs.volumeSize === undefined ? {} : { VolumeSize: ebs.volumeSize }),
-  ...(ebs.volumeType === undefined ? {} : { VolumeType: ebs.volumeType }),
-  ...(ebs.iops === undefined ? {} : { Iops: ebs.iops }),
-  ...(ebs.throughput === undefined ? {} : { Throughput: ebs.throughput }),
-  ...(ebs.encrypted === undefined ? {} : { Encrypted: ebs.encrypted }),
-  ...(ebs.kmsKeyId === undefined ? {} : { KmsKeyId: ebs.kmsKeyId }),
-  ...(ebs.snapshotId === undefined ? {} : { SnapshotId: ebs.snapshotId }),
-  ...(ebs.deleteOnTermination === undefined ? {} : { DeleteOnTermination: ebs.deleteOnTermination }),
-});
+const toEbs = (ebs: LaunchTemplateEbs.Encoded): ec2.LaunchTemplateEbsBlockDeviceRequest =>
+  O.getSomesStruct({
+    VolumeSize: O.fromUndefinedOr(ebs.volumeSize),
+    VolumeType: O.fromUndefinedOr(ebs.volumeType),
+    Iops: O.fromUndefinedOr(ebs.iops),
+    Throughput: O.fromUndefinedOr(ebs.throughput),
+    Encrypted: O.fromUndefinedOr(ebs.encrypted),
+    KmsKeyId: O.fromUndefinedOr(ebs.kmsKeyId),
+    SnapshotId: O.fromUndefinedOr(ebs.snapshotId),
+    DeleteOnTermination: O.fromUndefinedOr(ebs.deleteOnTermination),
+  });
 
 const toMetadataOptions = (
   options: LaunchTemplateMetadataOptions.Encoded
-): ec2.LaunchTemplateInstanceMetadataOptionsRequest => ({
-  ...(options.httpEndpoint === undefined ? {} : { HttpEndpoint: options.httpEndpoint }),
-  ...(options.httpTokens === undefined ? {} : { HttpTokens: options.httpTokens }),
-  ...(options.httpPutResponseHopLimit === undefined
-    ? {}
-    : { HttpPutResponseHopLimit: options.httpPutResponseHopLimit }),
-  ...(options.httpProtocolIpv6 === undefined ? {} : { HttpProtocolIpv6: options.httpProtocolIpv6 }),
-  ...(options.instanceMetadataTags === undefined ? {} : { InstanceMetadataTags: options.instanceMetadataTags }),
-});
+): ec2.LaunchTemplateInstanceMetadataOptionsRequest =>
+  O.getSomesStruct({
+    HttpEndpoint: O.fromUndefinedOr(options.httpEndpoint),
+    HttpTokens: O.fromUndefinedOr(options.httpTokens),
+    HttpPutResponseHopLimit: O.fromUndefinedOr(options.httpPutResponseHopLimit),
+    HttpProtocolIpv6: O.fromUndefinedOr(options.httpProtocolIpv6),
+    InstanceMetadataTags: O.fromUndefinedOr(options.instanceMetadataTags),
+  });
+
+const toSpotOptions = (
+  spot: NonNullable<LaunchTemplateMarketOptions.Encoded["spotOptions"]>
+): ec2.LaunchTemplateSpotMarketOptionsRequest =>
+  O.getSomesStruct({
+    MaxPrice: O.fromUndefinedOr(spot.maxPrice),
+    SpotInstanceType: O.fromUndefinedOr(spot.spotInstanceType),
+    InstanceInterruptionBehavior: O.fromUndefinedOr(spot.instanceInterruptionBehavior),
+  });
 
 const toMarketOptions = (
   market: LaunchTemplateMarketOptions.Encoded
 ): ec2.LaunchTemplateInstanceMarketOptionsRequest => ({
   MarketType: market.marketType,
-  ...(market.spotOptions === undefined
-    ? {}
-    : {
-        SpotOptions: {
-          ...(market.spotOptions.maxPrice === undefined ? {} : { MaxPrice: market.spotOptions.maxPrice }),
-          ...(market.spotOptions.spotInstanceType === undefined
-            ? {}
-            : { SpotInstanceType: market.spotOptions.spotInstanceType }),
-          ...(market.spotOptions.instanceInterruptionBehavior === undefined
-            ? {}
-            : { InstanceInterruptionBehavior: market.spotOptions.instanceInterruptionBehavior }),
-        },
-      }),
+  ...O.getSomesStruct({ SpotOptions: O.map(O.fromUndefinedOr(market.spotOptions), toSpotOptions) }),
 });
+
+const copyGroups = (props: RunnerLaunchTemplateProps.Encoded): O.Option<Array<string>> =>
+  O.map(O.fromUndefinedOr(props.securityGroupIds), (groups) => A.copy(groups));
 
 const toNetworking = (props: RunnerLaunchTemplateProps.Encoded): ec2.RequestLaunchTemplateData =>
   props.associatePublicIpAddress === undefined
-    ? props.securityGroupIds === undefined
-      ? {}
-      : { SecurityGroupIds: A.copy(props.securityGroupIds) }
+    ? O.getSomesStruct({ SecurityGroupIds: copyGroups(props) })
     : {
         NetworkInterfaces: [
           {
             DeviceIndex: 0,
             AssociatePublicIpAddress: props.associatePublicIpAddress,
             DeleteOnTermination: true,
-            ...(props.securityGroupIds === undefined ? {} : { Groups: A.copy(props.securityGroupIds) }),
+            ...O.getSomesStruct({ Groups: copyGroups(props) }),
           },
         ],
       };
@@ -727,6 +726,16 @@ const toInstanceProfile = (props: RunnerLaunchTemplateProps.Encoded): ec2.Reques
     : props.instanceProfileName !== undefined
       ? { IamInstanceProfile: { Name: props.instanceProfileName } }
       : {};
+
+const toBlockDevice = (device: LaunchTemplateBlockDevice.Encoded): ec2.LaunchTemplateBlockDeviceMappingRequest => ({
+  DeviceName: device.deviceName,
+  Ebs: toEbs(device.ebs),
+});
+
+const toTagSpecification = (spec: LaunchTagSpecification.Encoded): ec2.LaunchTemplateTagSpecificationRequest => ({
+  ResourceType: spec.resourceType,
+  Tags: toTagList(spec.tags),
+});
 
 /**
  * Translate decoded props into the EC2 `LaunchTemplateData` request shape.
@@ -751,29 +760,15 @@ const toInstanceProfile = (props: RunnerLaunchTemplateProps.Encoded): ec2.Reques
  */
 export const toLaunchTemplateData = (props: RunnerLaunchTemplateProps.Encoded): ec2.RequestLaunchTemplateData => ({
   ImageId: props.imageId,
-  ...(props.instanceType === undefined ? {} : { InstanceType: props.instanceType }),
-  ...(props.ebsOptimized === undefined ? {} : { EbsOptimized: props.ebsOptimized }),
-  ...(props.userData === undefined ? {} : { UserData: Base64.encode(props.userData) }),
-  ...(props.blockDeviceMappings === undefined
-    ? {}
-    : {
-        BlockDeviceMappings: A.map(props.blockDeviceMappings, (device) => ({
-          DeviceName: device.deviceName,
-          Ebs: toEbs(device.ebs),
-        })),
-      }),
-  ...(props.instanceMarketOptions === undefined
-    ? {}
-    : { InstanceMarketOptions: toMarketOptions(props.instanceMarketOptions) }),
-  ...(props.metadataOptions === undefined ? {} : { MetadataOptions: toMetadataOptions(props.metadataOptions) }),
-  ...(props.tagSpecifications === undefined
-    ? {}
-    : {
-        TagSpecifications: A.map(props.tagSpecifications, (spec) => ({
-          ResourceType: spec.resourceType,
-          Tags: toTagList(spec.tags),
-        })),
-      }),
+  ...O.getSomesStruct({
+    InstanceType: O.fromUndefinedOr(props.instanceType),
+    EbsOptimized: O.fromUndefinedOr(props.ebsOptimized),
+    UserData: O.map(O.fromUndefinedOr(props.userData), Base64.encode),
+    BlockDeviceMappings: O.map(O.fromUndefinedOr(props.blockDeviceMappings), A.map(toBlockDevice)),
+    InstanceMarketOptions: O.map(O.fromUndefinedOr(props.instanceMarketOptions), toMarketOptions),
+    MetadataOptions: O.map(O.fromUndefinedOr(props.metadataOptions), toMetadataOptions),
+    TagSpecifications: O.map(O.fromUndefinedOr(props.tagSpecifications), A.map(toTagSpecification)),
+  }),
   ...toNetworking(props),
   ...toInstanceProfile(props),
 });

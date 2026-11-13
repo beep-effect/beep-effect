@@ -1,6 +1,6 @@
 # Cache baseline review: new package @beep/alchemy-aws-extras (2026-11-13)
 
-Reviewer: Claude Opus 5.5 (`goals/infra-alchemy-rebuild-p2-aws-extras`). No qualification is granted.
+Reviewer: Claude Opus 5.5, P2 aws-extras lane. No qualification is granted.
 
 `@beep/alchemy-aws-extras` is a new tooling library created with `bun run beep create-package`. Its
 computations have no recorded baseline, so `bun run beep quality cache-policy` reports
@@ -24,3 +24,9 @@ source only, and the audit reports no drift for `@beep/identity`.
 `//#lint:policy-fingerprint` in `turbo.json` and to `standards/policy-tools.fingerprint.json`, because the
 fingerprint covers every workspace manifest. That task's command, outputs, environment and dependency edges are
 unchanged; it only reads one more manifest.
+
+## Dependency edge `@beep/utils`
+
+The package gains the workspace dependency `@beep/utils` (for `Option.getSomesStruct`), so `build`, `check`,
+`lint:deprecated-apis` and `test` drift through the new upstream edge. Their commands, outputs and environment
+are unchanged.

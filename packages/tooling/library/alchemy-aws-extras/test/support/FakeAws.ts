@@ -52,7 +52,7 @@ export interface FakeAccount {
   nextLaunchTemplate: number;
 }
 
-export const makeAccount = (seed?: {
+const makeAccount = (seed?: {
   readonly costAllocationTags?: Record<string, Status>;
   readonly computeOptimizer?: Status;
   readonly costOptimizationHub?: Status;
@@ -159,66 +159,83 @@ type JsonInput = typeof JsonInput.Type;
 const decodeJsonInput = S.decodeUnknownEffect(S.fromJsonString(JsonInput));
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
-const costExplorer = (account: FakeAccount, operation: string, input: JsonInput): FakeResponse => {
-  switch (operation) {
-    case "ListCostAllocationTags": {
-      const keys = input.TagKeys;
-      const tags = A.filter(
-        A.fromIterable(account.costAllocationTags),
-        ([key]) => keys === undefined || A.contains(keys, key)
-      );
-      return json({
-        CostAllocationTags: A.map(tags, ([TagKey, Status]) => ({ TagKey, Status, Type: "UserDefined" })),
-      });
-    }
-    case "UpdateCostAllocationTagsStatus": {
-      const errors: Array<unknown> = [];
-      for (const entry of input.CostAllocationTagsStatus ?? []) {
-        if (MutableHashMap.has(account.costAllocationTags, entry.TagKey)) {
-          MutableHashMap.set(account.costAllocationTags, entry.TagKey, entry.Status);
-        } else {
-          errors.push({ TagKey: entry.TagKey, Code: "TagKeysNotFoundException", Message: "Tag key not found" });
-        }
-      }
-      return json(A.isArrayNonEmpty(errors) ? { Errors: errors } : {});
-    }
-    default:
-      return jsonError("UnknownOperationException", operation);
-  }
+type JsonHandler = (account: FakeAccount, input: JsonInput) => FakeResponse;
+
+const listCostAllocationTags: JsonHandler = (account, input) =>
+  json({
+    CostAllocationTags: pipe(
+      A.fromIterable(account.costAllocationTags),
+      A.filter(([key]) => input.TagKeys === undefined || A.contains(input.TagKeys, key)),
+      A.map(([TagKey, Status]) => ({ TagKey, Status, Type: "UserDefined" }))
+    ),
+  });
+
+const updateCostAllocationTagsStatus: JsonHandler = (account, input) => {
+  const entries = input.CostAllocationTagsStatus ?? [];
+  const isKnown = (entry: { readonly TagKey: string }) => MutableHashMap.has(account.costAllocationTags, entry.TagKey);
+  const known = A.filter(entries, isKnown);
+  const unknown = A.filter(entries, (entry) => !isKnown(entry));
+  for (const entry of known) MutableHashMap.set(account.costAllocationTags, entry.TagKey, entry.Status);
+  const errors = A.map(unknown, (entry) => ({
+    TagKey: entry.TagKey,
+    Code: "TagKeysNotFoundException",
+    Message: "Tag key not found",
+  }));
+  return json(A.isArrayNonEmpty(errors) ? { Errors: errors } : {});
 };
 
-const computeOptimizer = (account: FakeAccount, operation: string, input: JsonInput): FakeResponse => {
-  switch (operation) {
-    case "GetEnrollmentStatus":
-      return json(account.computeOptimizer);
-    case "UpdateEnrollmentStatus":
-      account.computeOptimizer = {
-        status: input.status ?? "Inactive",
-        memberAccountsEnrolled: input.includeMemberAccounts ?? false,
-      };
-      return json({ status: input.status });
-    default:
-      return jsonError("UnknownOperationException", operation);
-  }
+const getComputeOptimizerEnrollment: JsonHandler = (account) => json(account.computeOptimizer);
+
+const updateComputeOptimizerEnrollment: JsonHandler = (account, input) => {
+  account.computeOptimizer = {
+    status: input.status ?? "Inactive",
+    memberAccountsEnrolled: input.includeMemberAccounts ?? false,
+  };
+  return json({ status: input.status });
 };
 
-const costOptimizationHub = (account: FakeAccount, operation: string, input: JsonInput): FakeResponse => {
-  switch (operation) {
-    case "ListEnrollmentStatuses":
-      return json({
-        items: [{ accountId, status: account.costOptimizationHub.status }],
-        includeMemberAccounts: account.costOptimizationHub.includeMemberAccounts,
-      });
-    case "UpdateEnrollmentStatus":
-      account.costOptimizationHub = {
-        status: input.status ?? "Inactive",
-        includeMemberAccounts: input.includeMemberAccounts ?? false,
-      };
-      return json({ status: input.status });
-    default:
-      return jsonError("UnknownOperationException", operation);
-  }
+const listHubEnrollments: JsonHandler = (account) =>
+  json({
+    items: [{ accountId, status: account.costOptimizationHub.status }],
+    includeMemberAccounts: account.costOptimizationHub.includeMemberAccounts,
+  });
+
+const updateHubEnrollment: JsonHandler = (account, input) => {
+  account.costOptimizationHub = {
+    status: input.status ?? "Inactive",
+    includeMemberAccounts: input.includeMemberAccounts ?? false,
+  };
+  return json({ status: input.status });
 };
+
+/** awsJson services by endpoint host prefix, each with its operation table. */
+const jsonServices: ReadonlyArray<{
+  readonly prefix: string;
+  readonly service: string;
+  readonly operations: Readonly<Record<string, JsonHandler>>;
+}> = [
+  {
+    prefix: "ce.",
+    service: "ce",
+    operations: {
+      ListCostAllocationTags: listCostAllocationTags,
+      UpdateCostAllocationTagsStatus: updateCostAllocationTagsStatus,
+    },
+  },
+  {
+    prefix: "compute-optimizer.",
+    service: "compute-optimizer",
+    operations: {
+      GetEnrollmentStatus: getComputeOptimizerEnrollment,
+      UpdateEnrollmentStatus: updateComputeOptimizerEnrollment,
+    },
+  },
+  {
+    prefix: "cost-optimization-hub.",
+    service: "cost-optimization-hub",
+    operations: { ListEnrollmentStatuses: listHubEnrollments, UpdateEnrollmentStatus: updateHubEnrollment },
+  },
+];
 
 // ---------------------------------------------------------------------------
 // EC2 (query protocol)
@@ -233,14 +250,15 @@ const listParam = (params: Record<string, string>, prefix: string): Array<string
   );
 
 /** `<prefix>.N.Key` / `<prefix>.N.Value` pairs as a record. */
-const tagParams = (params: Record<string, string>, prefix: string): Record<string, string> => {
-  const tags: Record<string, string> = {};
-  for (const [key, value] of R.toEntries(params)) {
-    const match = new RegExp(`^${prefix}\\.(\\d+)\\.Key$`).exec(key);
-    if (match !== null) tags[value] = params[`${prefix}.${match[1]}.Value`] ?? "";
-  }
-  return tags;
-};
+const tagParams = (params: Record<string, string>, prefix: string): Record<string, string> =>
+  pipe(
+    R.toEntries(params),
+    A.flatMap(([key, value]) => {
+      const match = new RegExp(`^${prefix}\\.(\\d+)\\.Key$`).exec(key);
+      return match === null ? [] : [[value, params[`${prefix}.${match[1]}.Value`] ?? ""] as const];
+    }),
+    R.fromEntries
+  );
 
 /** The `LaunchTemplateData.*` params with the prefix removed. */
 const templateData = (params: Record<string, string>): Record<string, string> =>
@@ -251,87 +269,99 @@ const templateData = (params: Record<string, string>): Record<string, string> =>
     R.fromEntries
   );
 
-const ec2 = (account: FakeAccount, operation: string, params: Record<string, string>): FakeResponse => {
-  const byId = (id: string | undefined) =>
-    id === undefined ? undefined : pipe(account.launchTemplates, MutableHashMap.get(id), O.getOrUndefined);
-  switch (operation) {
-    case "DescribeLaunchTemplates": {
-      const ids = listParam(params, "LaunchTemplateId");
-      const names = listParam(params, "LaunchTemplateName");
-      const all = pipe(account.launchTemplates, MutableHashMap.values, A.fromIterable);
-      const found = A.filter(
-        all,
-        (template) =>
-          (A.isArrayEmpty(ids) || A.contains(ids, template.id)) &&
-          (A.isArrayEmpty(names) || A.contains(names, template.name))
-      );
-      if (A.isArrayNonEmpty(names) && A.isArrayEmpty(found)) {
-        return ec2Error(
-          "InvalidLaunchTemplateName.NotFoundException",
-          "At least one of the launch templates specified in the request does not exist."
-        );
-      }
-      if (A.isArrayNonEmpty(ids) && A.isArrayEmpty(found)) {
-        return ec2Error("InvalidLaunchTemplateId.NotFound", "The specified launch template does not exist.");
-      }
-      return xml(
-        operation,
-        `<launchTemplates>${A.join(
-          A.map(found, (template) => `<item>${launchTemplateXml(template)}</item>`),
-          ""
-        )}</launchTemplates>`
-      );
-    }
-    case "CreateLaunchTemplate": {
-      const name = params.LaunchTemplateName ?? "";
-      if (findLaunchTemplate(account, name) !== undefined) {
-        return ec2Error(
-          "InvalidLaunchTemplateName.AlreadyExistsException",
-          `Launch template name already in use: ${name}`
-        );
-      }
-      const id = seedLaunchTemplate(account, name, tagParams(params, "TagSpecification.1.Tag"));
-      const template = byId(id)!;
-      template.versions[0] = templateData(params);
-      return xml(operation, `<launchTemplate>${launchTemplateXml(template)}</launchTemplate>`);
-    }
-    case "CreateLaunchTemplateVersion": {
-      const template = byId(params.LaunchTemplateId);
-      if (template === undefined) return ec2Error("InvalidLaunchTemplateId.NotFound", "not found");
-      template.versions.push(templateData(params));
-      return xml(
-        operation,
-        `<launchTemplateVersion><launchTemplateId>${template.id}</launchTemplateId><versionNumber>${template.versions.length}</versionNumber></launchTemplateVersion>`
-      );
-    }
-    case "ModifyLaunchTemplate": {
-      const template = byId(params.LaunchTemplateId);
-      if (template === undefined) return ec2Error("InvalidLaunchTemplateId.NotFound", "not found");
-      template.defaultVersion = Number(params.SetDefaultVersion ?? params.DefaultVersion ?? template.defaultVersion);
-      return xml(operation, `<launchTemplate>${launchTemplateXml(template)}</launchTemplate>`);
-    }
-    case "DeleteLaunchTemplate": {
-      const template = byId(params.LaunchTemplateId);
-      if (template === undefined) return ec2Error("InvalidLaunchTemplateId.NotFound", "not found");
-      MutableHashMap.remove(account.launchTemplates, template.id);
-      return xml(operation, `<launchTemplate>${launchTemplateXml(template)}</launchTemplate>`);
-    }
-    case "CreateTags":
-    case "DeleteTags": {
-      const tags = tagParams(params, "Tag");
-      for (const resourceId of listParam(params, "ResourceId")) {
-        const template = byId(resourceId);
-        if (template === undefined) continue;
-        template.tags =
-          operation === "CreateTags"
-            ? { ...template.tags, ...tags }
-            : R.filter(template.tags, (_, key) => !(key in tags));
-      }
-      return xml(operation, "<return>true</return>");
-    }
-    default:
-      return ec2Error("InvalidAction", `unsupported operation ${operation}`);
+const templateById = (account: FakeAccount, id: string | undefined): LaunchTemplateRecord | undefined =>
+  id === undefined ? undefined : pipe(account.launchTemplates, MutableHashMap.get(id), O.getOrUndefined);
+
+const templateNotFound = () =>
+  ec2Error("InvalidLaunchTemplateId.NotFound", "The specified launch template does not exist.");
+
+const templateResponse = (operation: string, template: LaunchTemplateRecord) =>
+  xml(operation, `<launchTemplate>${launchTemplateXml(template)}</launchTemplate>`);
+
+type Ec2Handler = (account: FakeAccount, operation: string, params: Record<string, string>) => FakeResponse;
+
+const matchesFilter = (filter: ReadonlyArray<string>, value: string) =>
+  A.isReadonlyArrayEmpty(filter) || A.contains(filter, value);
+
+const describeLaunchTemplates: Ec2Handler = (account, operation, params) => {
+  const ids = listParam(params, "LaunchTemplateId");
+  const names = listParam(params, "LaunchTemplateName");
+  const found = pipe(
+    account.launchTemplates,
+    MutableHashMap.values,
+    A.fromIterable,
+    A.filter((template) => matchesFilter(ids, template.id) && matchesFilter(names, template.name))
+  );
+  if (A.isArrayEmpty(found) && A.isArrayNonEmpty(names)) {
+    return ec2Error(
+      "InvalidLaunchTemplateName.NotFoundException",
+      "At least one of the launch templates specified in the request does not exist."
+    );
   }
+  if (A.isArrayEmpty(found) && A.isArrayNonEmpty(ids)) return templateNotFound();
+  const items = A.join(
+    A.map(found, (template) => `<item>${launchTemplateXml(template)}</item>`),
+    ""
+  );
+  return xml(operation, `<launchTemplates>${items}</launchTemplates>`);
+};
+
+const createLaunchTemplate: Ec2Handler = (account, operation, params) => {
+  const name = params.LaunchTemplateName ?? "";
+  if (findLaunchTemplate(account, name) !== undefined) {
+    return ec2Error("InvalidLaunchTemplateName.AlreadyExistsException", `Launch template name already in use: ${name}`);
+  }
+  const id = seedLaunchTemplate(account, name, tagParams(params, "TagSpecification.1.Tag"));
+  const template = templateById(account, id);
+  if (template === undefined) return templateNotFound();
+  template.versions[0] = templateData(params);
+  return templateResponse(operation, template);
+};
+
+const createLaunchTemplateVersion: Ec2Handler = (account, operation, params) => {
+  const template = templateById(account, params.LaunchTemplateId);
+  if (template === undefined) return templateNotFound();
+  template.versions.push(templateData(params));
+  return xml(
+    operation,
+    `<launchTemplateVersion><launchTemplateId>${template.id}</launchTemplateId><versionNumber>${template.versions.length}</versionNumber></launchTemplateVersion>`
+  );
+};
+
+const modifyLaunchTemplate: Ec2Handler = (account, operation, params) => {
+  const template = templateById(account, params.LaunchTemplateId);
+  if (template === undefined) return templateNotFound();
+  template.defaultVersion = Number(params.SetDefaultVersion ?? template.defaultVersion);
+  return templateResponse(operation, template);
+};
+
+const deleteLaunchTemplate: Ec2Handler = (account, operation, params) => {
+  const template = templateById(account, params.LaunchTemplateId);
+  if (template === undefined) return templateNotFound();
+  MutableHashMap.remove(account.launchTemplates, template.id);
+  return templateResponse(operation, template);
+};
+
+const retag =
+  (apply: (current: Record<string, string>, tags: Record<string, string>) => Record<string, string>): Ec2Handler =>
+  (account, operation, params) => {
+    const tags = tagParams(params, "Tag");
+    const templates = A.flatMap(listParam(params, "ResourceId"), (id) => {
+      const template = templateById(account, id);
+      return template === undefined ? [] : [template];
+    });
+    for (const template of templates) template.tags = apply(template.tags, tags);
+    return xml(operation, "<return>true</return>");
+  };
+
+const ec2Operations: Readonly<Record<string, Ec2Handler>> = {
+  DescribeLaunchTemplates: describeLaunchTemplates,
+  CreateLaunchTemplate: createLaunchTemplate,
+  CreateLaunchTemplateVersion: createLaunchTemplateVersion,
+  ModifyLaunchTemplate: modifyLaunchTemplate,
+  DeleteLaunchTemplate: deleteLaunchTemplate,
+  CreateTags: retag((current, tags) => ({ ...current, ...tags })),
+  DeleteTags: retag((current, tags) => R.filter(current, (_, key) => !(key in tags))),
 };
 
 // ---------------------------------------------------------------------------
@@ -343,6 +373,39 @@ const decoder = new TextDecoder();
 const bodyText = (request: HttpClientRequest.HttpClientRequest): string =>
   request.body._tag === "Uint8Array" ? decoder.decode(request.body.body) : "";
 
+const lastSegment = (target: string) =>
+  pipe(
+    target,
+    Str.split("."),
+    A.last,
+    O.getOrElse(() => target)
+  );
+
+const routeJson = Effect.fn("FakeAws.routeJson")(function* (
+  account: FakeAccount,
+  target: string,
+  text: string,
+  host: string
+) {
+  const operation = lastSegment(target);
+  const input = yield* decodeJsonInput(text === "" ? "{}" : text);
+  const service = A.findFirst(jsonServices, (candidate) => Str.startsWith(candidate.prefix)(host));
+  if (O.isNone(service)) return jsonError("UnknownServiceException", host);
+  account.calls.push(`${service.value.service}:${operation}`);
+  const handler = service.value.operations[operation];
+  return handler === undefined ? jsonError("UnknownOperationException", operation) : handler(account, input);
+});
+
+const routeEc2 = (account: FakeAccount, text: string): FakeResponse => {
+  const params = R.fromEntries(new URLSearchParams(text).entries());
+  const operation = params.Action ?? "";
+  account.calls.push(`ec2:${operation}`);
+  const handler = ec2Operations[operation];
+  return handler === undefined
+    ? ec2Error("InvalidAction", `unsupported operation ${operation}`)
+    : handler(account, operation, params);
+};
+
 const route = Effect.fn("FakeAws.route")(function* (
   account: FakeAccount,
   request: HttpClientRequest.HttpClientRequest,
@@ -350,37 +413,11 @@ const route = Effect.fn("FakeAws.route")(function* (
 ) {
   const target = request.headers["x-amz-target"];
   const text = bodyText(request);
-  if (target !== undefined) {
-    const operation = pipe(
-      target,
-      Str.split("."),
-      A.last,
-      O.getOrElse(() => target)
-    );
-    const input = yield* decodeJsonInput(text === "" ? "{}" : text);
-    const host = url.hostname;
-    if (Str.startsWith("ce.")(host)) {
-      account.calls.push(`ce:${operation}`);
-      return costExplorer(account, operation, input);
-    }
-    if (Str.startsWith("compute-optimizer.")(host)) {
-      account.calls.push(`compute-optimizer:${operation}`);
-      return computeOptimizer(account, operation, input);
-    }
-    if (Str.startsWith("cost-optimization-hub.")(host)) {
-      account.calls.push(`cost-optimization-hub:${operation}`);
-      return costOptimizationHub(account, operation, input);
-    }
-    return jsonError("UnknownServiceException", host);
-  }
-  const params = R.fromEntries(new URLSearchParams(text).entries());
-  const operation = params.Action ?? "";
-  account.calls.push(`ec2:${operation}`);
-  return ec2(account, operation, params);
+  return target === undefined ? routeEc2(account, text) : yield* routeJson(account, target, text, url.hostname);
 });
 
 /** An effect `HttpClient` that serves `account`. */
-export const httpClient = (account: FakeAccount): HttpClient.HttpClient =>
+const httpClient = (account: FakeAccount): HttpClient.HttpClient =>
   HttpClient.make(
     Effect.fn("FakeAws.send")(function* (request, url) {
       const response = yield* route(account, request, url);
@@ -410,7 +447,7 @@ const environment = Layer.succeed(
  * The package's providers pinned to a fake environment, with the fake HTTP
  * client merged into the lifecycle context so no request leaves the process.
  */
-export const providers = (account: FakeAccount) =>
+const providers = (account: FakeAccount) =>
   AwsExtras.providers.pipe(
     Layer.provide(environment),
     Layer.provideMerge(Layer.succeed(HttpClient.HttpClient, httpClient(account)))

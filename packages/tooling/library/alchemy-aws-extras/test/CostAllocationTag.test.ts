@@ -4,7 +4,7 @@ import { destroy } from "alchemy/RemovalPolicy";
 import * as Effect from "effect/Effect";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
-import * as FakeAws from "./fixtures/FakeAws.ts";
+import * as FakeAws from "./support/FakeAws.ts";
 
 const statusOf = (account: FakeAws.FakeAccount, tagKey: string) =>
   O.getOrUndefined(MutableHashMap.get(account.costAllocationTags, tagKey));
