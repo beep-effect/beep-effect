@@ -83,9 +83,10 @@ tier only to reproduce a hosted red locally.
 
 ## Final check: the content-final gate
 
-`bun run beep yeet final-check` runs on the committed head before a lane calls
-a PR final, and `yeet ready` refuses to flip a draft without a complete,
-passing receipt for that exact head (`.beep/yeet/final-check/<sha>.json`).
+`bun run beep yeet final-check` runs on the committed head before a lane opens
+its PR. `yeet publish` and `yeet open` refuse to open a ready PR, and
+`yeet ready` refuses to flip a draft, without a complete, passing receipt for
+that exact head (`.beep/yeet/final-check/<sha>.json`).
 It exists because on 2026-10-23/24 lanes called PRs final after local checks
 that skip gates only hosted CI runs, and each merge redded `main`. Every gate
 below runs the hosted body (`beep ci lane <id>`, through the same

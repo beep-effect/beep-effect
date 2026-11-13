@@ -70,6 +70,12 @@ Before marking the packet closed:
 - **Baseline before after-numbers:** the first certified nightly is the "before" for every sibling goal. Record
   it under `history/` with run ids and aggregates only; never a raw head list with branch names that carry
   session ids.
+- **The nightly does not re-poll main (7-day horizon not built):** each night reads its day's main SHAs once,
+  at its capture (decision `certainty-nightly-workflow`), so a verdict that lands later is counted only if that
+  day is re-run. Build the re-poll when either holds: a recorded night in `history/certainty-nightly.md` has
+  main commits still `open` or `no-run` at capture that later received a completed push run, or
+  `main-verdict-every-commit` lands re-dispatch of missing main verdicts (its verdicts arrive after the push run
+  they replace, so a once-read rate would understate main).
 - **Merge `main` before touching `LaneTimings.ts`:** `goals/ci-lane-economics` edits its shard layouts with
   every partition change.
 - **Hand-offs:** slice 2 unblocks route refinement replays in `route-soundness-repair` and `hosted-setup-tax`;
@@ -148,6 +154,14 @@ Slice 2 (ROUT-05 slice 1) merged as #3141. Slice 3 fixes `actionableLane` in `pa
 Lane claude/determined-morse-ea66a8
 
 Reverse: Revert the slice-3 commit (actionableLane returns to the failed-step fallback) and delete this checkpoint so the slice-2 checkpoint is the latest PLAN status note.
+
+### Slice 4 (MEAS-01 slice 2) in review: the certainty nightly workflow, 2026-11-13
+
+Slices 10 (MEAS-03, #3262) and 11 (ROUT-05 slice 2, #3257) merged; slice 7 (PERIL-11 slice 1, #3263) is in review. Slice 4 (MEAS-01 slice 2) adds `.github/workflows/certainty-nightly.yml`: each night it scores the previous UTC day with `bun run beep ci certainty` from main's code, under the workflow token's `actions: read` and `contents: read`, with a request bound of the token bucket's remaining reads less the 15% reserve, and the run turns red when the report is not certified (decision `certainty-nightly-workflow`). The CLI gains `--summary-out`, an aggregates-only Markdown rendering used as the job summary. The record of each night goes to `history/certainty-nightly.md`, written by the driver from the run's artifact. A workflow change cannot be merged with the orchestrator App token, so the operator merges slice 4 by hand; P2's seven nights start at 2026-11-14, the first whole UTC day after both baseline breaks.
+
+Lane ci/certainty-nightly-workflow
+
+Reverse: Delete this checkpoint so the slice-6 checkpoint is the latest PLAN status note, and revert the slice-4 PR.
 
 ### Slice 5 (SCHE-09 slice 1) in review: trimmed admission rows archived and folded, 2026-11-13
 

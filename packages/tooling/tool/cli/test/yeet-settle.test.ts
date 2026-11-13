@@ -474,7 +474,7 @@ describe("B7 settle contracts", () => {
       })
     );
     expect(renderYeetSettleDetail(held)).toBe(
-      "settle: heavy-not-admitted; gated: Heavy / Check, Heavy / Docgen; admit: gh pr edit --add-label ready-for-heavy; waited 5s (not counted toward the 1s settle timeout)"
+      "settle: heavy-not-admitted; gated: Heavy / Check, Heavy / Docgen; admit: bun run beep yeet ready (flips a draft at content-final and applies ready-for-heavy); waited 5s (not counted toward the 1s settle timeout)"
     );
     // (2) run: B7 exactly — missing, and settle-timeout past the budget.
     const running = verdict({ ...gated, checks: [check("Lint")], admission: admission("run"), waitedMs: 999 });
@@ -534,7 +534,7 @@ describe("B7 settle contracts", () => {
     expect(yeetSettleVerdictIsHeld(mixed)).toBe(false);
     expect(mixed.budgetApplies).toBe(false);
     expect(renderYeetSettleDetail(mixed)).toBe(
-      "settle: required-pending; pending: Lint; gated: Heavy / Check, Heavy / Docgen; admit: gh pr edit --add-label ready-for-heavy; waited 5s; registered checks are GitHub's to time out"
+      "settle: required-pending; pending: Lint; gated: Heavy / Check, Heavy / Docgen; admit: bun run beep yeet ready (flips a draft at content-final and applies ready-for-heavy); waited 5s; registered checks are GitHub's to time out"
     );
     // Hold with a non-gated context never registered: it spends the budget and times out,
     // gated or not — the label cannot hide a required context that never came.
@@ -824,7 +824,7 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
           expect(got10).toBe(3);
           const heldLines = yield* ownLines;
           expect(heldLines).toContain(
-            "settle: heavy-not-admitted; gated: Heavy / Check, Heavy / Docgen; admit: gh pr edit --add-label ready-for-heavy; waited 200ms (not counted toward the 50ms settle timeout)"
+            "settle: heavy-not-admitted; gated: Heavy / Check, Heavy / Docgen; admit: bun run beep yeet ready (flips a draft at content-final and applies ready-for-heavy); waited 200ms (not counted toward the 50ms settle timeout)"
           );
           expect(heldLines).not.toContain("settle-timeout");
           yield* TestClock.adjust("100 millis");

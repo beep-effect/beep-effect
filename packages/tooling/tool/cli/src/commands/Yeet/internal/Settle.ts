@@ -1190,7 +1190,10 @@ const renderWaited = (verdict: YeetSettleVerdict): string =>
 const renderGated = (verdict: YeetSettleVerdict): ReadonlyArray<string> =>
   A.isReadonlyArrayEmpty(verdict.census.gated)
     ? []
-    : [...renderNames("gated", verdict.census.gated), `admit: gh pr edit --add-label ${HEAVY_ADMISSION_LABEL}`];
+    : [
+        ...renderNames("gated", verdict.census.gated),
+        `admit: bun run beep yeet ready (flips a draft at content-final and applies ${HEAVY_ADMISSION_LABEL})`,
+      ];
 
 const renderDocsOnly = (verdict: YeetSettleVerdict): ReadonlyArray<string> =>
   O.exists(verdict.admission, (admission) => HeavyAdmissionVerdict.is["skip-satisfied"](admission.verdict))
@@ -1258,7 +1261,7 @@ const renderCensusTail = (verdict: YeetSettleVerdict): ReadonlyArray<string> => 
  *   admission: O.some(HeavyAdmission.make({ verdict: "hold", admitted: false, sources: [], docsOnly: false, changedPathCount: 2 }))
  * })
  * console.log(renderYeetSettleDetail(verdict))
- * // settle: heavy-not-admitted; gated: Heavy / Check, Heavy / Lint Policy; admit: gh pr edit --add-label ready-for-heavy; waited 3m (not counted toward the 30m settle timeout)
+ * // settle: heavy-not-admitted; gated: Heavy / Check, Heavy / Lint Policy; admit: bun run beep yeet ready (flips a draft at content-final and applies ready-for-heavy); waited 3m (not counted toward the 30m settle timeout)
  * ```
  *
  * @param verdict - The verdict to render.

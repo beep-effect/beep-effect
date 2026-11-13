@@ -940,32 +940,21 @@ const formatShare = (share: O.Option<number>): string =>
 const latencyRow = (label: string, stat: CiCertaintyLatencyStat): string =>
   `| ${label} | ${stat.n} | ${stat.misses} | ${stat.censoredSuperseded} | ${stat.censoredOpen} | ${stat.withinTen} | ${formatPercentile(stat.p50Minutes, stat.p50Status)} | ${formatPercentile(stat.p95Minutes, stat.p95Status)} |`;
 
-/**
- * Render a scorecard as Markdown.
- *
- * **Details**
- *
- * The headline row comes first, every beside-row under it, then runner-minutes,
- * the main verdict rate, the sibling-goal rows, a per-head table that names
- * heads by SHA only (branch names can carry session identifiers and are never
- * printed), and the "Not covered" section. An uncertified report opens with a
- * blockquote naming every refusal, so it cannot be pasted as evidence without
- * the qualifier.
- *
- * **Example** (Reference the renderer)
- *
- * ```ts
- * import { renderCiCertaintyMarkdown } from "@beep/repo-cli/commands/Ci"
- *
- * console.log(typeof renderCiCertaintyMarkdown)
- * ```
- *
- * @param report - The scorecard to render.
- * @returns Markdown text.
- * @category formatting
- * @since 0.0.0
- */
-export const renderCiCertaintyMarkdown = (report: CiCertaintyReport): string =>
+const headTableLines = (report: CiCertaintyReport): ReadonlyArray<string> => [
+  "| Head | Class | State | Censored | Required green | Mergeable | Critical context | Runner-min |",
+  "| --- | --- | --- | --- | ---: | ---: | --- | ---: |",
+  ...A.map(
+    report.heads,
+    (head) =>
+      `| ${Str.slice(0, 10)(head.headSha)} | ${head.headClass} | ${head.state} | ${O.getOrElse(head.censor, () => "")} | ${formatMinutes(head.requiredGreenMinutes)} | ${formatMinutes(head.mergeableGreenMinutes)} | ${O.getOrElse(head.criticalContext, () => "")} | ${totalRunnerMinutes(head.runnerMinutes).toFixed(1)} |`
+  ),
+];
+
+const headCountLines = (report: CiCertaintyReport): ReadonlyArray<string> => [
+  `- heads judged: ${A.length(report.heads)} (per-head rows are left out of the summary)`,
+];
+
+const certaintyMarkdown = (report: CiCertaintyReport, headLines: ReadonlyArray<string>): string =>
   A.join(
     [
       `# ci certainty ${DateTime.formatIso(report.since)} → ${DateTime.formatIso(report.until)}`,
@@ -1012,13 +1001,7 @@ export const renderCiCertaintyMarkdown = (report: CiCertaintyReport): string =>
       "",
       "## Heads",
       "",
-      "| Head | Class | State | Censored | Required green | Mergeable | Critical context | Runner-min |",
-      "| --- | --- | --- | --- | ---: | ---: | --- | ---: |",
-      ...A.map(
-        report.heads,
-        (head) =>
-          `| ${Str.slice(0, 10)(head.headSha)} | ${head.headClass} | ${head.state} | ${O.getOrElse(head.censor, () => "")} | ${formatMinutes(head.requiredGreenMinutes)} | ${formatMinutes(head.mergeableGreenMinutes)} | ${O.getOrElse(head.criticalContext, () => "")} | ${totalRunnerMinutes(head.runnerMinutes).toFixed(1)} |`
-      ),
+      ...headLines,
       "",
       "## Not covered",
       "",
@@ -1026,6 +1009,60 @@ export const renderCiCertaintyMarkdown = (report: CiCertaintyReport): string =>
     ],
     "\n"
   );
+
+/**
+ * Render a scorecard as Markdown.
+ *
+ * **Details**
+ *
+ * The headline row comes first, every beside-row under it, then runner-minutes,
+ * the main verdict rate, the sibling-goal rows, a per-head table that names
+ * heads by SHA only (branch names can carry session identifiers and are never
+ * printed), and the "Not covered" section. An uncertified report opens with a
+ * blockquote naming every refusal, so it cannot be pasted as evidence without
+ * the qualifier.
+ *
+ * **Example** (Reference the renderer)
+ *
+ * ```ts
+ * import { renderCiCertaintyMarkdown } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(typeof renderCiCertaintyMarkdown)
+ * ```
+ *
+ * @param report - The scorecard to render.
+ * @returns Markdown text.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderCiCertaintyMarkdown = (report: CiCertaintyReport): string =>
+  certaintyMarkdown(report, headTableLines(report));
+
+/**
+ * Render a scorecard as Markdown with aggregates only.
+ *
+ * **Details**
+ *
+ * The same document as {@link renderCiCertaintyMarkdown}, refusal stamp
+ * included, with the per-head table replaced by a count of the heads judged.
+ * It is the form for surfaces that should carry aggregates and run ids only:
+ * the nightly workflow's job summary and the packet's `history/` record.
+ *
+ * **Example** (Reference the summary renderer)
+ *
+ * ```ts
+ * import { renderCiCertaintySummaryMarkdown } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(typeof renderCiCertaintySummaryMarkdown)
+ * ```
+ *
+ * @param report - The scorecard to render.
+ * @returns Markdown text without per-head rows.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderCiCertaintySummaryMarkdown = (report: CiCertaintyReport): string =>
+  certaintyMarkdown(report, headCountLines(report));
 
 /**
  * The time bounds and local inputs of one live capture.
@@ -1400,7 +1437,11 @@ const captureLive = Effect.fn("Ci.certaintyCaptureLive")(function* ({
  * Without `--corpus` it captures the window live (default: the 24 hours
  * before now) under the checkout's GitHub identity, bounded by
  * `--max-requests`; with `--corpus` it replays a captured or committed corpus
- * and reads nothing. `--write-corpus` saves the capture next to the report.
+ * and reads nothing. `--write-corpus` saves the capture next to the report;
+ * the corpus carries branch names, so it is never published. `--summary-out`
+ * also writes the aggregates-only Markdown
+ * ({@link renderCiCertaintySummaryMarkdown}), before any refusal, for public
+ * surfaces such as the nightly workflow's job summary.
  * An uncertified report is printed in full and then the command exits non-zero
  * naming every refusal, unless `--preview` accepts an uncertified run. The
  * reads are background reads under `goals/github-budget-ledger`'s reserve
@@ -1438,13 +1479,17 @@ export const ciCertaintyCommand = Command.make(
       Flag.withDescription("Exit zero for an uncertified report; the output keeps its refusal stamp")
     ),
     since: Flag.String("since").pipe(Flag.optional, Flag.withDescription("Inclusive UTC lower bound of head T0")),
+    summaryOut: Flag.String("summary-out").pipe(
+      Flag.optional,
+      Flag.withDescription("Also write the aggregates-only Markdown (no per-head rows) to this path")
+    ),
     until: Flag.String("until").pipe(Flag.optional, Flag.withDescription("Exclusive UTC upper bound of head T0")),
     writeCorpus: Flag.String("write-corpus").pipe(
       Flag.optional,
       Flag.withDescription("Write the captured corpus JSON to this path")
     ),
   },
-  Effect.fnUntraced(function* ({ corpus, json, mainRef, maxRequests, preview, since, until, writeCorpus }) {
+  Effect.fnUntraced(function* ({ corpus, json, mainRef, maxRequests, preview, since, summaryOut, until, writeCorpus }) {
     const fs = yield* FileSystem.FileSystem;
     const repoRoot = yield* findRepoRoot().pipe(Effect.orElseSucceed(() => process.cwd()));
     const captured = yield* O.match(corpus, {
@@ -1463,6 +1508,12 @@ export const ciCertaintyCommand = Command.make(
         .pipe(CiCommandError.mapError(`Failed to write ${writeCorpus.value}.`));
     }
     const report = yield* buildCiCertaintyReport(captured);
+    // Written before the refusal below, so a refused night still publishes its stamped summary.
+    if (O.isSome(summaryOut)) {
+      yield* fs
+        .writeFileString(summaryOut.value, `${renderCiCertaintySummaryMarkdown(report)}\n`)
+        .pipe(CiCommandError.mapError(`Failed to write ${summaryOut.value}.`));
+    }
     yield* Console.log(json ? yield* encodeCiCertaintyReport(report) : renderCiCertaintyMarkdown(report));
     if (!report.certified && !preview) {
       return yield* CiCommandError.make({
