@@ -74,5 +74,8 @@ security behavior, dependencies, lockfiles, generated files, or destructive
 state unless `SPEC.md` requires it — and stop if the work would weaken the
 shipped TierGate clamp.
 
-Done only when acceptance passes and verification is complete, or when a
-blocker is reported with file/command evidence.
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug agentic-governance-laws` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/agentic-governance-laws/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

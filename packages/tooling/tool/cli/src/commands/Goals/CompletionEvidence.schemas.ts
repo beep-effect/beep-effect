@@ -5,10 +5,13 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
+import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import * as S from "effect/Schema";
 import { MergeGateCheckRun } from "../Yeet/internal/MergeGate.schemas.ts";
 import { GhBranchRule } from "../Yeet/internal/Settle.ts";
 import {
+  GoalRedAttributionClaim,
   GoalRequiredCheckFact,
   GoalRequiredCheckSnapshot,
   GoalRuleEnforcement,
@@ -118,11 +121,26 @@ export class GoalMergeTimeEvidence extends S.Opaque<GoalMergeTimeEvidence, { rea
 /**
  * Inputs to the pure completion-evidence verdict.
  *
+ * **Details**
+ *
+ * `redAttributions` holds the claims the verdict may use to attribute a red or
+ * never-reported required context. Callers pass committed, fix-validated
+ * claims only; it defaults to empty, so an input built without it attributes
+ * nothing.
+ *
  * **Example** (Inspect the verdict input)
  *
  * ```ts
  * import { GoalCompletionEvidenceInput } from "@beep/repo-cli/commands/Goals/CompletionEvidence.schemas"
- * console.log(GoalCompletionEvidenceInput.fields.facts)
+ * import * as O from "effect/Option"
+ *
+ * const input = GoalCompletionEvidenceInput.make({
+ *   acceptedHead: O.some("head"),
+ *   mergeCommit: O.some("merge"),
+ *   requiredChecks: O.none(),
+ *   facts: [],
+ * })
+ * console.log(input.redAttributions.length) // 0
  * ```
  *
  * @category models
@@ -137,15 +155,51 @@ export class GoalCompletionEvidenceInput extends S.Opaque<
     mergeCommit: S.Option(S.NonEmptyString),
     requiredChecks: S.Option(GoalRequiredCheckSnapshot),
     facts: S.Array(GoalRequiredCheckFact),
+    redAttributions: ArrayKeyDefaultEmpty(GoalRedAttributionClaim),
   }).pipe(
     $I.annoteSchema("GoalCompletionEvidenceInput", {
-      description: "Accepted head, merge commit, stored merge-time inventory and head-bound facts for the verdict.",
+      description:
+        "Accepted head, merge commit, stored merge-time inventory, head-bound facts and red attributions for the verdict.",
     })
   )
 ) {}
 
 /**
+ * GitHub's open or closed state for a pull request.
+ *
+ * **Details**
+ *
+ * A merged pull request is `closed`; `merged` on {@link GoalCompletionPull}
+ * tells a merge apart from a close without merging.
+ *
+ * **Example** (Recognize a closed pull request)
+ *
+ * ```ts
+ * import { GoalCompletionPullState } from "@beep/repo-cli/commands/Goals/CompletionEvidence.schemas"
+ * console.log(GoalCompletionPullState.is.closed("closed")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GoalCompletionPullState = LiteralKit(["open", "closed"]).pipe(
+  $I.annoteSchema("GoalCompletionPullState", { description: "GitHub's open or closed pull-request state." })
+);
+/**
+ * GitHub's open or closed pull-request state.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GoalCompletionPullState = typeof GoalCompletionPullState.Type;
+
+/**
  * Wire decoder for completion Pull observations shared by the live and fixture ports.
+ *
+ * **Details**
+ *
+ * `state` is required on decode: GitHub always sends it, and it is what tells
+ * an open final apart from one closed without merging.
  *
  * **Example** (Inspect the completion Pull decoder)
  *
@@ -162,6 +216,7 @@ export class GoalCompletionPull extends S.Opaque<GoalCompletionPull, { readonly 
   S.Struct({
     created_at: S.DateTimeUtcFromString,
     number: S.Int,
+    state: GoalCompletionPullState,
     merged: S.Boolean,
     merged_at: S.OptionFromNullOr(S.DateTimeUtcFromString),
     merge_commit_sha: S.OptionFromNullOr(S.NonEmptyString),

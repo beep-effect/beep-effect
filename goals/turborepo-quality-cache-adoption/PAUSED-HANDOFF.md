@@ -68,8 +68,9 @@ code. Keep old experiment commits and receipts as historical evidence.
 5. Review 48 hours of applicable ordinary-use evidence and operating/rollback
    instructions. Existing evidence may count when valid; the old 7/7/14-day
    assurance program does not automatically restart.
-6. Only after acceptance, land final evidence/reflection/proposedCloseout;
-   verify after merge and adopt lifecycle status in a separate merged PR.
+6. Only after acceptance, land final evidence, the reflection and the
+   `closeout` record in the final PR; after the merge, completion refresh
+   must verify it.
 
 Until resumed, preserve live R2 operation and existing safety controls. Do not
 purchase services, expand capacity, rotate/activate keys or change grants.

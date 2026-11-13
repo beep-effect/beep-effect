@@ -1,6 +1,6 @@
 # Citation Extraction Engine
 
-Lifecycle: active. On 2026-11-08 the operator approved replacing exhaustive
+Lifecycle: completed-retained. On 2026-11-08 the operator approved replacing exhaustive
 parity with bounded six-form extraction and document-local linking. The six
 forms are full/short case, Id., supra, 35 U.S.C. and 37 C.F.R. on supplied plain
 text, with exact verified UTF-16 source anchors and explicit ambiguity.
@@ -27,10 +27,13 @@ The [public Layer receipt](history/evidence/2026-11-08-six-form-public-layer.md)
 records all 29 frozen inputs / 33 expected occurrences passing on Bun and Node,
 and 16 public resource/capture/regression controls. These are finite-profile
 results, not general accuracy or deployment attestation. The implementation and
-review fixes are published in final [PR #2966](https://github.com/beep-effect/beep-effect/pull/2966).
-Required exact-head hosted checks, review, merge and retention remain pending.
-The manifest proposes completed-retained closeout through that PR; this proposal
-is not completion evidence and the operative lifecycle remains active.
+review fixes merged in final [PR #2966](https://github.com/beep-effect/beep-effect/pull/2966)
+on 2026-11-09 (`9f44753a8c1`) through a ruleset bypass. Heavy / Check, Heavy /
+Test Integration, Heavy / Docgen and Heavy / Doctest were cancelled on its head;
+[`decisions/2026-11-13-final-2966-attributed-reds.md`](decisions/2026-11-13-final-2966-attributed-reds.md)
+attributes each one with its fix PR. The `closeout` record names #2966; the
+[batch migration](../goal-closeout-hosted-verification/history/migration-2026-11-13.md)
+adopted it from the legacy proposal.
 
 The original packet is recoverable at git commit 7dc8c2d443d. Original corpora,
 decisions, checkpoints and ledgers remain as historical evidence, not release

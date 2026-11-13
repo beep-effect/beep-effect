@@ -4,13 +4,13 @@
     "id": "scripts-to-beep-cli",
     "packetId": "goal-packet/v1:12bf5e205c457484e83551d4cd95a1ccbd444f08f7f61905c07da9252c4c1db6",
     "title": "Retire ./scripts into beep CLI commands and a compiled beep binary for CI",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-06",
-    "updated": "2026-11-09",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/scripts-to-beep-cli",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Retire ./scripts into beep CLI commands and a compiled beep binary for CI (graduated from explorations/pulumi-to-alchemy).",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -114,7 +114,7 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
@@ -134,7 +134,7 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "proposedCloseout": {
+  "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 3027
   }

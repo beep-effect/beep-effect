@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,12 +31,13 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Implementation merged in #2702 (2026-11-06, merge 072748d024). Two closeout
-PRs merged before their readiness monitors recorded `merge-ready: yes` and
-cannot verify: #2794, and #2869, which also merged at a commit naming a
-predicted PR number (#2848) that belonged to another PR. The third re-final
-PR, from lane gpcfa-refinal3, now carries `proposedCloseout`. It is held until
-its own monitor reports `merge-ready: yes`. Adoption follows after it merges.
+Closed: `completed-retained`, final #2869. Implementation merged in #2702
+(2026-11-06, merge 072748d024). #2794 and #2869 merged before their readiness
+monitors recorded `merge-ready: yes`, and the third re-final #2874 (merged
+2026-11-07, `9ed136596bb`) is a supporting PR. Under the hosted-only completion
+rules #2869 verifies: all 15 required checks green and no review threads. The
+[batch migration](../goal-closeout-hosted-verification/history/migration-2026-11-13.md)
+adopted the legacy proposal.
 
 ## Latest Evidence
 

@@ -1,5 +1,6 @@
 import {
   decideGoalCompletionEvidence,
+  describeGoalCompletionEvidence,
   GoalCompletionEvidenceInput,
   GoalCompletionIo,
   GoalCompletionReceipt,
@@ -10,6 +11,7 @@ import {
   GoalMergeTimeEvidenceRequest,
   GoalObservedCheckRun,
   GoalPullRequestRef,
+  GoalRedAttributionClaim,
   goalCompletionIo,
   layerGoalCompletionReceiptStoreMemory,
   observeGoalCompletion,
@@ -21,6 +23,7 @@ import { expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -32,9 +35,14 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 import { NodeTestLayer, temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 import { completionIoFixture } from "./support/CompletionIo.ts";
-import type { GoalRequiredCheckSnapshot } from "@beep/repo-cli/test/Goals";
+import type {
+  GoalCompletionEvidenceVerdict,
+  GoalRequiredCheckFact,
+  GoalRequiredCheckSnapshot,
+} from "@beep/repo-cli/test/Goals";
 
 // Recorded read-only GitHub REST responses for PR #1429 (see the fixture's
 // provenance field). Tests mutate copies of these payloads; none reach GitHub.
@@ -191,6 +199,41 @@ const gapsOf = (receipt: GoalCompletionReceipt) =>
     A.empty
   );
 
+const DECISION = "goals/demo/decisions/2026-11-14-final-merged-over-reds.md";
+
+const attribution = (context: string, overrides: Partial<GoalRedAttributionClaim> = {}) =>
+  GoalRedAttributionClaim.make({
+    context,
+    attribution: "inherited",
+    fixPullRequest: 2994,
+    decisionFile: DECISION,
+    source: "origin-main",
+    ...overrides,
+  });
+
+// The pure verdict over an observed receipt's stored facts, with the given claims.
+const verdictOf = (
+  receipt: GoalCompletionReceipt,
+  redAttributions: ReadonlyArray<GoalRedAttributionClaim> = []
+): GoalCompletionEvidenceVerdict =>
+  decideGoalCompletionEvidence(
+    GoalCompletionEvidenceInput.make({
+      acceptedHead: receipt.acceptedHead,
+      mergeCommit: O.map(receipt.merge, (merge) => merge.mergeCommit),
+      requiredChecks: receipt.requiredChecks,
+      facts: receipt.requiredCheckFacts,
+      redAttributions,
+    })
+  );
+
+const factOf = (receipt: GoalCompletionReceipt, context: string): O.Option<GoalRequiredCheckFact> =>
+  A.findFirst(receipt.requiredCheckFacts, (fact) => fact.context === context);
+
+const lintRun = (runs: ReadonlyArray<RecordedRunType>): RecordedRunType =>
+  O.getOrThrow(A.findFirst(runs, (run) => run.name === "Lint"));
+
+const MERGED_AT = DateTime.makeUnsafe("2026-10-06T00:55:25Z");
+
 const ReceiptStoreTestLayer = Layer.mergeAll(NodeTestLayer, layerGoalCompletionReceiptStoreMemory);
 
 it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal merge-time completion evidence", (it) => {
@@ -263,7 +306,158 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal merge-time comp
       expect(receipt.outcome).toBe("unsatisfied");
     })
   );
-  it.effect("a failed required-status-checks rule in the merge-push rule suite is unsatisfied", () =>
+  it.effect("a head-bound required red attributed by a claim verifies and lists the red", () =>
+    Effect.gen(function* () {
+      const receipt = yield* observe({
+        data: withRuns(A.map((run) => (run.name === "Lint" ? { ...run, conclusion: "failure" } : run))),
+      });
+      const verdict = verdictOf(receipt, [attribution("Lint")]);
+      expect(verdict._tag).toBe("verified");
+      if (verdict._tag !== "verified") return;
+      expect(A.length(verdict.facts)).toBe(16);
+      expect(verdict.ruleSuiteBypassed).toBe(false);
+      expect(
+        A.map(verdict.attributedReds, (red) => [red.context, red.observed, red.conclusion, red.attribution])
+      ).toEqual([["Lint", "red", "failure", "inherited"]]);
+      assertSome(A.head(A.map(verdict.attributedReds, (red) => red.checkRunId)), O.some(112045092048));
+      expect(describeGoalCompletionEvidence(verdict)).toContain(`attributed: Lint (inherited, fix #2994, ${DECISION})`);
+      const unrelated = verdictOf(receipt, [attribution("Knip")]);
+      expect(unrelated._tag).toBe("unsatisfied");
+      if (unrelated._tag === "unsatisfied") expect(A.map(unrelated.reds, (red) => red.context)).toEqual(["Lint"]);
+    })
+  );
+  it.effect("a conflicting claim does not attribute; agreeing claims collapse to the strongest source", () =>
+    Effect.gen(function* () {
+      const receipt = yield* observe({
+        data: withRuns(A.map((run) => (run.name === "Lint" ? { ...run, conclusion: "failure" } : run))),
+      });
+      const conflicting = verdictOf(receipt, [
+        attribution("Lint"),
+        attribution("Lint", { attribution: "introduced", decisionFile: "goals/demo/decisions/other.md" }),
+      ]);
+      expect(conflicting._tag).toBe("unsatisfied");
+      const fixDiffers = verdictOf(receipt, [attribution("Lint"), attribution("Lint", { fixPullRequest: 3000 })]);
+      expect(fixDiffers._tag).toBe("unsatisfied");
+      const agreeing = verdictOf(receipt, [
+        attribution("Lint", { source: "working-tree", decisionFile: "goals/demo/decisions/draft.md" }),
+        attribution("Lint", { source: "head", decisionFile: "goals/demo/decisions/head.md" }),
+        attribution("Lint"),
+      ]);
+      expect(agreeing._tag).toBe("verified");
+      if (agreeing._tag === "verified")
+        expect(A.map(agreeing.attributedReds, (red) => [red.source, red.decisionFile])).toEqual([
+          ["origin-main", DECISION],
+        ]);
+    })
+  );
+  it.effect("a never-reported required context covered by a claim verifies; a pending one does not", () =>
+    Effect.gen(function* () {
+      const missing = yield* observe({ data: withRuns(A.filter((run) => run.name !== "Knip")) });
+      expect(missing.outcome).toBe("unknown");
+      expect(verdictOf(missing)._tag).toBe("unknown");
+      const covered = verdictOf(missing, [attribution("Knip", { attribution: "introduced" })]);
+      expect(covered._tag).toBe("verified");
+      if (covered._tag === "verified") {
+        expect(A.map(covered.attributedReds, (red) => [red.context, red.observed, red.conclusion])).toEqual([
+          ["Knip", "missing", "unknown"],
+        ]);
+        expect(A.map(covered.attributedReds, (red) => O.isNone(red.checkRunId))).toEqual([true]);
+        expect(describeGoalCompletionEvidence(covered)).toContain("Knip (never reported, introduced, fix #2994");
+        expect(describeGoalCompletionEvidence(covered)).toContain("15 green required contexts");
+      }
+      const pending = yield* observe({
+        data: withRuns(
+          A.map((run) =>
+            run.name === "Knip" ? { ...run, status: "in_progress", conclusion: null, completed_at: null } : run
+          )
+        ),
+      });
+      assertSome(
+        O.map(factOf(pending, "Knip"), (fact) => fact.conclusion),
+        "pending"
+      );
+      const stillRunning = verdictOf(pending, [attribution("Knip")]);
+      expect(stillRunning._tag).toBe("unknown");
+      if (stillRunning._tag === "unknown") expect(stillRunning.gaps).toEqual(["required-check-unobserved"]);
+    })
+  );
+  it.effect("gaps win over attributions: an attributed red without a rule suite stays unknown", () =>
+    Effect.gen(function* () {
+      const receipt = yield* observe({
+        data: flow(
+          withRuns(A.map((run) => (run.name === "Lint" ? { ...run, conclusion: "failure" } : run))),
+          (data) => ({ ...data, ruleSuites: [[]] })
+        ),
+      });
+      expect(verdictOf(receipt)._tag).toBe("unsatisfied");
+      const attributed = verdictOf(receipt, [attribution("Lint")]);
+      expect(attributed._tag).toBe("unknown");
+      if (attributed._tag === "unknown") expect(attributed.gaps).toContain("rule-suite-unavailable");
+    })
+  );
+  it.effect("skipped and neutral required conclusions count as success", () =>
+    Effect.forEach(
+      ["skipped", "neutral"],
+      Effect.fn("CompletionEvidenceTest.successfulConclusion")(function* (conclusion) {
+        const receipt = yield* observe({
+          data: withRuns(A.map((run) => (run.name === "Lint" ? { ...run, conclusion } : run))),
+        });
+        expect(receipt.outcome).toBe("verified");
+        assertSome(
+          O.map(factOf(receipt, "Lint"), (fact) => fact.conclusion),
+          conclusion
+        );
+      })
+    )
+  );
+  it.effect("the newest run on the accepted head binds, whenever it ran", () =>
+    Effect.gen(function* () {
+      // Pending at merge, then green: it counts by its eventual conclusion.
+      const finishedLater = yield* observe({
+        data: withRuns(A.map((run) => (run.name === "Lint" ? { ...run, completed_at: "2026-10-06T01:10:00Z" } : run))),
+      });
+      expect(finishedLater.outcome).toBe("verified");
+      const rerun = (overrides: Partial<RecordedRunType>) =>
+        withRuns((runs) =>
+          A.append(A.fromIterable(runs), {
+            ...lintRun(runs),
+            id: lintRun(runs).id + 1,
+            started_at: "2026-10-06T01:30:00Z",
+            completed_at: "2026-10-06T01:40:00Z",
+            ...overrides,
+          })
+        );
+      // A rerun after the merge supersedes the result before it.
+      const postMergeRed = yield* observe({ data: rerun({ conclusion: "failure" }) });
+      expect(postMergeRed.outcome).toBe("unsatisfied");
+      // A run still in progress is pending: unknown, never green or red.
+      const running = yield* observe({ data: rerun({ status: "in_progress", conclusion: null, completed_at: null }) });
+      expect(running.outcome).toBe("unknown");
+      assertSome(
+        O.map(factOf(running, "Lint"), (fact) => [fact.conclusion, fact.outcome]),
+        ["pending", "unknown"]
+      );
+    })
+  );
+  it.effect("a merge older than the rule-suite listing window skips the listing", () =>
+    Effect.gen(function* () {
+      // The layer's test clock is shared with the cases after this one.
+      const start = yield* Clock.currentTimeMillis;
+      yield* Effect.addFinalizer(() => TestClock.setTime(start));
+      const at = (days: number) => MERGED_AT.pipe(DateTime.add({ days }), DateTime.toEpochMillis, TestClock.setTime);
+      yield* at(30);
+      expect((yield* observe()).outcome).toBe("verified");
+      yield* at(32);
+      const stale = yield* observe();
+      expect(stale.outcome).toBe("unknown");
+      expect(gapsOf(stale)).toContain("rule-suite-unavailable");
+      // A listing read would fail here; past the window it is never made.
+      const unread = yield* observe({ fail: Str.includes("/rulesets/rule-suites") });
+      expect(gapsOf(unread)).toContain("rule-suite-unavailable");
+      expect(gapsOf(unread)).not.toContain("network-failure");
+    })
+  );
+  it.effect("a failed required-status-checks evaluation with every context green verifies as bypassed", () =>
     Effect.gen(function* () {
       const receipt = yield* observe({
         data: flow(
@@ -275,7 +469,22 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal merge-time comp
           (data) => ({ ...data, ruleSuite: { ...data.ruleSuite, result: "bypass" } })
         ),
       });
-      expect(receipt.outcome).toBe("unsatisfied");
+      expect(receipt.outcome).toBe("verified");
+      const verdict = verdictOf(receipt);
+      expect(verdict._tag === "verified" && verdict.ruleSuiteBypassed).toBe(true);
+      expect(describeGoalCompletionEvidence(verdict)).toContain("bypassed");
+      const red = yield* observe({
+        data: flow(
+          withEvaluations(
+            A.map((evaluation) =>
+              evaluation.rule_type === "required_status_checks" ? { ...evaluation, result: "fail" } : evaluation
+            )
+          ),
+          withRuns(A.map((run) => (run.name === "Lint" ? { ...run, conclusion: "failure" } : run)))
+        ),
+      });
+      const unattributed = verdictOf(red);
+      expect(unattributed._tag === "unsatisfied" && unattributed.ruleSuiteRed).toBe(true);
     })
   );
   it.effect("any network failure is unknown, never green", () =>
@@ -298,11 +507,13 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal merge-time comp
       );
     })
   );
-  it.effect("a failed check from a deleted ruleset that history shows gated the merge is red, never verified", () =>
+  it.effect("a failed check from a deleted ruleset that history shows gated the merge is a bypass, not a red", () =>
     Effect.gen(function* () {
       const failedDeleted = withEvaluations(A.append({ ...deletedRulesetEvaluation, result: "fail" }));
       const complete = yield* observe({ data: failedDeleted, deletedHistory: true });
-      expect(complete.outcome).toBe("unsatisfied");
+      expect(complete.outcome).toBe("verified");
+      const verdict = verdictOf(complete);
+      expect(verdict._tag === "verified" && verdict.ruleSuiteBypassed).toBe(true);
       const partial = yield* observe({
         data: flow(failedDeleted, withRuns(A.filter((run) => run.name !== "Knip"))),
         deletedHistory: true,
@@ -589,10 +800,28 @@ const completeInput = Effect.fn("CompletionEvidenceTest.completeInput")(function
 });
 
 // Verified implies: an inventory bound to the merge commit, no gaps, complete
-// reads, a recovered version for every required-check source, and a green fact
-// on the accepted head for every required context.
+// reads, a recovered version for every required-check source, and for every
+// required context a green fact on the accepted head, or a red or
+// never-reported head fact that a claim with the same context attributes.
 const verifiedHasCompleteHeadBoundFacts = (input: GoalCompletionEvidenceInput): boolean => {
-  if (decideGoalCompletionEvidence(input)._tag !== "verified") return true;
+  const verdict = decideGoalCompletionEvidence(input);
+  if (verdict._tag !== "verified") return true;
+  const headFacts = (context: string) =>
+    A.filter(input.facts, (fact) => fact.context === context && O.contains(input.acceptedHead, fact.head));
+  const attributed = (context: string): boolean =>
+    A.some(
+      verdict.attributedReds,
+      (red) =>
+        red.context === context &&
+        A.some(
+          input.redAttributions,
+          (claim) =>
+            claim.context === context &&
+            claim.attribution === red.attribution &&
+            claim.fixPullRequest === red.fixPullRequest
+        )
+    ) && A.some(headFacts(context), (fact) => fact.outcome === "unsatisfied" || O.isNone(fact.checkRunId));
+  const green = (context: string): boolean => A.some(headFacts(context), (fact) => fact.outcome === "verified");
   return O.exists(
     input.requiredChecks,
     (snapshot: GoalRequiredCheckSnapshot) =>
@@ -609,12 +838,8 @@ const verifiedHasCompleteHeadBoundFacts = (input: GoalCompletionEvidenceInput): 
               source.enforcement === "evaluate" || O.isNone(source.requiredStatusChecks) || O.isSome(source.version)
           )
       ) &&
-      A.every(snapshot.contexts, (context) =>
-        A.some(
-          input.facts,
-          (fact) => fact.context === context && fact.outcome === "verified" && O.contains(input.acceptedHead, fact.head)
-        )
-      )
+      A.every(snapshot.contexts, (context) => green(context) || attributed(context)) &&
+      (A.isReadonlyArrayNonEmpty(input.redAttributions) || A.isReadonlyArrayEmpty(verdict.attributedReds))
   );
 };
 
@@ -665,6 +890,15 @@ it.layer(RecordedProviderLayer, { timeout: "60 seconds" })("goal completion evid
         GoalCompletionEvidenceInput.make({ ...complete, acceptedHead: input.acceptedHead }),
         GoalCompletionEvidenceInput.make({ ...complete, mergeCommit: input.mergeCommit }),
         GoalCompletionEvidenceInput.make({ ...complete, facts: A.appendAll(complete.facts, input.facts) }),
+        GoalCompletionEvidenceInput.make({ ...complete, redAttributions: input.redAttributions }),
+        GoalCompletionEvidenceInput.make({
+          ...complete,
+          facts: input.facts,
+          redAttributions: A.appendAll(
+            input.redAttributions,
+            A.map(input.facts, (fact) => attribution(fact.context))
+          ),
+        }),
       ];
       expect(A.every(mixes, verifiedHasCompleteHeadBoundFacts)).toBe(true);
       expect(decideGoalCompletionEvidence(complete)._tag).toBe("verified");
