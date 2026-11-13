@@ -11,6 +11,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { OutputBound, runCaptured } from "@beep/repo-cli-kit/process/index";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
+import { Sha256PrefixedDigest } from "@beep/schema/Sha256";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -202,7 +203,7 @@ const Artifact = S.Struct({
   id,
   name: S.NonEmptyString.check(S.isMaxLength(100)),
   size_in_bytes: S.Int.check(S.isBetween({ minimum: 1, maximum: 1024 * 1024 })),
-  digest: S.String.check(S.isPattern(/^sha256:[0-9a-f]{64}$/)),
+  digest: Sha256PrefixedDigest,
   expired: S.tag(false),
   created_at: S.DateTimeUtcFromString,
   expires_at: S.DateTimeUtcFromString,

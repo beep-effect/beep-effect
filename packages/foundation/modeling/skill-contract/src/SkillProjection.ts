@@ -468,16 +468,17 @@ const checkForRender = (
   committed: string
 ): readonly [SkillArtifactCheck, O.Option<SkillArtifactDenialReason>] =>
   Result.match(rendered, {
-    onFailure:
-      /* istanbul ignore next -- Md.render fails only when an adapter throws; a well-typed projection cannot reach it, the arm stays for adapter defects. Owner: @beep/skill-contract. Exit: Md.render has no failure channel for well-typed documents. */
-      (error) => [
-        SkillArtifactCheck.make({
-          check: "rerender-byte-equality",
-          detail: `The contract projection could not be rendered: ${error.message}`,
-          outcome: "failed",
-        }),
-        O.some("rerender-mismatch"),
-      ],
+    // Md.render fails when its adapter throws, and a well-typed projection
+    // reaches that: the JSON frontmatter is canonical RFC 8785 text, which
+    // refuses a contract string holding an unpaired surrogate.
+    onFailure: (error) => [
+      SkillArtifactCheck.make({
+        check: "rerender-byte-equality",
+        detail: `The contract projection could not be rendered: ${error.message}`,
+        outcome: "failed",
+      }),
+      O.some("rerender-mismatch"),
+    ],
     onSuccess: (markdown) =>
       Str.Equivalence(markdown, committed)
         ? [

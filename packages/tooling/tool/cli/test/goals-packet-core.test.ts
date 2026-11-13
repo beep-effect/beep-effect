@@ -42,6 +42,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
+import { holdsOnlyWellFormedText } from "./support/WellFormedText.ts";
 
 const decodePacketTraceProjectionJson = S.decodeEffect(S.fromJsonString(PacketTraceProjection));
 const decodeUnknownPacketTraceEntryEffect = S.decodeUnknownEffect(PacketTraceEntry);
@@ -165,7 +166,11 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
   });
 
   describe("schema-derived properties", () => {
-    const PacketTraceEntryArbitrary = Arbitrary.schema(PacketTraceEntry);
+    // Byte stability is a property of canonical text, which exists only for
+    // well-formed strings: the owner refuses an unpaired surrogate.
+    const PacketTraceEntryArbitrary = Arbitrary.schema(PacketTraceEntry).pipe(
+      Arbitrary.filter(holdsOnlyWellFormedText)
+    );
     it.effect.prop(
       "round-trips arbitrary timeline entries through encode/decode byte-stably",
       [PacketTraceEntryArbitrary],

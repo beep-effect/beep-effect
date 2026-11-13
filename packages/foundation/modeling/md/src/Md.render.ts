@@ -6,21 +6,20 @@
  */
 
 import { $MdId } from "@beep/identity";
+import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
 import { HtmlFragment, SchemaUtils } from "@beep/schema";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { A, Html, R, thunkEmptyStr } from "@beep/utils";
 import { replaceAllWith } from "@beep/utils/Str";
 import * as Effect from "effect/Effect";
-import { cast, constant, dual, flow, pipe } from "effect/Function";
+import { cast, constant, dual, flow, identity, pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
-import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Tuple from "effect/Tuple";
 import { segmentInlineRuns } from "./Md.behavior.ts";
 import {
   BrowserSafeUrlPolicySpec,
@@ -66,7 +65,6 @@ const joinEmpty = A.join("");
 const lineSeparatorPattern = /\r\n?|\n/;
 const lineSeparatorGlobalPattern = /\r\n?|\n/g;
 const markdownTitleEscapePattern = /["\\]/g;
-const jsonStringEscapePattern = /["\\\u0000-\u001f]/g;
 const mathFencePattern = /\$\$/g;
 // A `$` that no backslash escapes yet: an inline-math value is raw TeX, where
 // `\$` already is a literal dollar, so escaping only the bare ones keeps
@@ -137,62 +135,15 @@ const protectBlockEdgeWhitespace: (rendered: string) => string = flow(
 
 type JsonRecord = Readonly<Record<string, S.Json>>;
 
-const byRecordEntryKeyAscending = <Value>(): Order.Order<readonly [string, Value]> =>
-  Order.mapInput(Order.String, Tuple.get(0));
-
-const jsonControlEscape: (value: string) => string = flow(
-  Str.charCodeAt(0),
-  O.map(
-    flow(
-      (code) => code.toString(16),
-      Str.padStart(4, "0"),
-      (hex) => `\\u${hex}`
-    )
-  ),
-  O.getOrElse(thunkEmptyStr)
-);
-
-const escapeJsonCharacter = Match.type<string>().pipe(
-  Match.withReturnType<string>(),
-  Match.when('"', () => '\\"'),
-  Match.when("\\", () => "\\\\"),
-  Match.when("\b", () => "\\b"),
-  Match.when("\f", () => "\\f"),
-  Match.when("\n", () => "\\n"),
-  Match.when("\r", () => "\\r"),
-  Match.when("\t", () => "\\t"),
-  Match.orElse(jsonControlEscape)
-);
-
-const renderJsonString = (value: string): string =>
-  `"${pipe(value, replaceAllWith(jsonStringEscapePattern, escapeJsonCharacter))}"`;
-
-const isJsonArray = (value: S.Json): value is ReadonlyArray<S.Json> => A.isArray(value);
-
-const isJsonRecord = (value: S.Json): value is JsonRecord => P.isObject(value) && !P.isNull(value) && !A.isArray(value);
-
-const renderJsonRecord: (record: JsonRecord) => string = flow(
-  R.toEntries,
-  A.sort(byRecordEntryKeyAscending<S.Json>()),
-  A.map(([key, item]) => `${renderJsonString(key)}:${renderJson(item)}`),
-  A.join(","),
-  (body) => `{${body}}`
-);
-
-const renderJson = (value: S.Json): string =>
-  Match.value(value).pipe(
-    Match.when(P.isNull, () => "null"),
-    Match.when(P.isString, renderJsonString),
-    Match.when(P.isNumber, (number) => `${number}`),
-    Match.when(P.isBoolean, (boolean) => (boolean ? "true" : "false")),
-    Match.when(isJsonArray, (array) => `[${pipe(array, A.map(renderJson), A.join(","))}]`),
-    Match.when(isJsonRecord, renderJsonRecord),
-    Match.exhaustive
-  );
-
+// JSON frontmatter is the RFC 8785 text of the canonical digest owner,
+// `JsoncFingerprint`. A record it refuses (a key or string with an unpaired
+// surrogate, nesting past its depth cap) throws its typed error, which the
+// `Result` render entry points capture as a `RenderError`.
 const renderJsonFrontmatter: (frontmatter: O.Option<JsonRecord>) => string = flow(
   O.filter((metadata) => A.isReadonlyArrayNonEmpty(R.toEntries(metadata))),
-  O.map((metadata) => `---json\n${renderJson(metadata)}\n---`),
+  O.map(
+    (metadata) => `---json\n${Result.getOrThrowWith(JsoncFingerprint.canonicalizeResult(metadata), identity)}\n---`
+  ),
   O.getOrElse(thunkEmptyStr)
 );
 
