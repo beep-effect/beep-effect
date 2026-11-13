@@ -1,0 +1,15 @@
+{
+  "previous": "53683ff9d25bfa271753ef5625f0ac8a685693227fb51be0786da6c47c65774e",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (heavy-pool-diet slice 3, perf/heavy-pool-diet-lanes-first)",
+    "reason": "Record the policy-fingerprint input drift from Heavy Admission importing the change profile readers: the root task gains CiOperational.service.ts and @beep/github-reporting source as generated inputs. No command, output, environment or cache flag changed; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/heavy-pool-diet-lane-skips-cache-review-2026-11-13.md",
+      "sha256": "3fd4da242c819aa407056e8f4c267901c3811d60df9ec1534f997a6fff4ab5b2"
+    }
+  },
+  "subjects": ["//"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

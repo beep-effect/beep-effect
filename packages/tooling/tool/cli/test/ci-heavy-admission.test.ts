@@ -7,19 +7,24 @@ import {
   ChangeClassifier,
   CiAdmissionInput,
   ciAdmissionCommand,
+  ciOperationalPatterns,
   decideHeavyAdmission,
+  decideHeavyLaneSkips,
   HEAVY_ADMISSION_LABEL,
+  HEAVY_LANE_IDS,
   HeavyAdmission,
   HeavyAdmissionEvent,
   HeavyAdmissionJson,
   HeavyAdmissionReadInput,
   heavyAdmissionGithubOutputs,
   heavyAdmissionSchemasForTesting,
+  heavyDocgenRelevantPattern,
   heavyDocsOnlyPattern,
   isHeavyDocsOnlyPath,
   RouteError,
   readHeavyAdmissionEvent,
   readHeavyAdmissionRoute,
+  readHeavyLaneSkips,
   renderHeavyAdmissionSummary,
   runCiAdmission,
 } from "@beep/repo-cli/commands/Ci";
@@ -423,12 +428,12 @@ describe("B8 heavy admission contracts", () => {
     // `ActionOutputs.set`: the same names, values and order the runner reads.
     expect(heavyAdmissionGithubOutputs(run)).toEqual(
       parseRunnerFile(
-        "verdict=run\nadmitted=true\ndocs_only=false\nsources=label\nroute_skips=\nroute_receipt=route-unavailable\n"
+        "verdict=run\nadmitted=true\ndocs_only=false\nsources=label\nroute_skips=\nroute_receipt=route-unavailable\nlane_skips=\n"
       )
     );
     expect(heavyAdmissionGithubOutputs(hold)).toEqual(
       parseRunnerFile(
-        "verdict=hold\nadmitted=false\ndocs_only=false\nsources=\nroute_skips=\nroute_receipt=route-unavailable\n"
+        "verdict=hold\nadmitted=false\ndocs_only=false\nsources=\nroute_skips=\nroute_receipt=route-unavailable\nlane_skips=\n"
       )
     );
     expect(renderHeavyAdmissionSummary(hold)).toBe(
@@ -623,12 +628,14 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
                 "sources=",
                 "route_skips=",
                 "route_receipt=route-unavailable",
+                "lane_skips=",
                 "verdict=skip-satisfied",
                 "admitted=false",
                 "docs_only=true",
                 "sources=",
                 "route_skips=",
                 "route_receipt=route-unavailable",
+                "lane_skips=",
                 "",
               ],
               "\n"
@@ -684,7 +691,7 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
         const readFileString8 = yield* fs.readFileString(output);
         expect(parseRunnerFile(readFileString8)).toEqual(
           parseRunnerFile(
-            "verdict=run\nadmitted=true\ndocs_only=false\nsources=label\nroute_skips=\nroute_receipt=route-unavailable\n"
+            "verdict=run\nadmitted=true\ndocs_only=false\nsources=label\nroute_skips=\nroute_receipt=route-unavailable\nlane_skips=\n"
           )
         );
         expect(A.map(gitWork(spawner), (spawn) => spawn.args[0])).toEqual(["fetch", "diff", "merge-base"]);
@@ -698,7 +705,7 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
         const readFileString9 = yield* fs.readFileString(output);
         expect(parseRunnerFile(readFileString9)).toEqual(
           parseRunnerFile(
-            "verdict=run\nadmitted=true\ndocs_only=false\nsources=label\nroute_skips=\nroute_receipt=route-unavailable\n"
+            "verdict=run\nadmitted=true\ndocs_only=false\nsources=label\nroute_skips=\nroute_receipt=route-unavailable\nlane_skips=\n"
           )
         );
         const again = yield* logs;
@@ -895,5 +902,186 @@ it.layer(platform, { timeout: "30 seconds" })("hosted admission route", (layerIt
         })
       )
     );
+  });
+});
+
+// HOST-06 (goals/heavy-pool-diet slice 3): Heavy Admission decides the goals-only and Docgen skips
+// heavy.yml's in-VM lane gate takes, so the caller can skip those lanes before a runner boots.
+const payloadWithShas = (shas: { readonly base?: string; readonly head?: string }) =>
+  Result.getOrThrowWith(
+    S.encodeUnknownResult(UnknownJson)({
+      action: "synchronize",
+      number: 1,
+      pull_request: {
+        draft: false,
+        labels: [{ name: HEAVY_ADMISSION_LABEL }],
+        head: { repo: { full_name: "beep-effect/beep-effect" }, ...(shas.head ? { sha: shas.head } : {}) },
+        base: { ref: "main", repo: { full_name: "beep-effect/beep-effect" }, ...(shas.base ? { sha: shas.base } : {}) },
+      },
+    }),
+    identity
+  );
+// The pinned `git diff --name-only --no-renames <base>...<head>` the lane gate reads, as C-quoted
+// newline lines, or a non-zero exit when the base is unreadable; fetches and other git calls succeed.
+const pinnedDiffSpawner = (diff: O.Option<ReadonlyArray<string>>) =>
+  ScriptedSpawner.make((_command, args) =>
+    A.contains(args, "--no-renames")
+      ? O.match(diff, {
+          onNone: () => ({ exit: 128, stderr: "fatal: bad revision 'base...head'" }),
+          onSome: (paths) => ({
+            stdout: A.join(
+              A.map(paths, (path) => `${path}\n`),
+              ""
+            ),
+          }),
+        })
+      : { stdout: "" }
+  );
+const pinnedDiffSpawns = (spawner: ScriptedSpawner) =>
+  A.filter(spawner.spawns, (spawn) => A.contains(spawn.args, "--no-renames"));
+const ALL_HEAVY_LANES = "build,check,docgen,doctest,lint-policy";
+// No `--github-output`: the command never writes, but its signature still names the service.
+const noGithubOutput = provideScopedLayer(ActionOutputs.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))));
+
+it.layer(platform, { timeout: "30 seconds" })("HOST-06 heavy lane skips", (layerIt) => {
+  for (const row of [
+    // Markdown is Docgen-relevant (`\.md$`) and docs are not goals-only: every lane runs.
+    { name: "documentation-only diff", paths: O.some(["docs/runbooks/ci.md"]), skips: "" },
+    { name: "goals-only diff", paths: O.some(["goals/x/PLAN.md", "goals/x/SPEC.md"]), skips: ALL_HEAVY_LANES },
+    // An empty diff is not goals-only, but has no Docgen-relevant path: Docgen skips, as today.
+    { name: "empty (no-diff) pull request", paths: O.some([]), skips: "docgen" },
+    { name: "unreadable base", paths: O.none(), skips: "" },
+    { name: "Docgen-relevant diff", paths: O.some(["packages/a/src/index.ts"]), skips: "" },
+    { name: "Docgen-irrelevant code diff", paths: O.some([".github/workflows/heavy.yml"]), skips: "docgen" },
+    // git C-quotes a special byte; the quoted line matches no Docgen root or suffix, as the grep does.
+    { name: "C-quoted path", paths: O.some(['"docs/\\303\\244.md"']), skips: "docgen" },
+  ] as const) {
+    layerIt.layer(
+      Git.layerTest({
+        changedFiles: () => Effect.succeed(O.getOrElse(row.paths, A.empty<string>)),
+        mergeBase: () => Effect.succeed("merge-base"),
+        show: () => Effect.succeedNone,
+      }),
+      { timeout: "30 seconds" }
+    )(row.name, (laneIt) => {
+      laneIt.effect("publishes lane_skips and leaves verdict, route_skips and route_receipt unchanged", () =>
+        temporary((root) =>
+          Effect.gen(function* () {
+            const classifier = ChangeClassifier.of({
+              classify: Effect.fn("ChangeClassifier.classify")(() =>
+                classifyChangedPaths(
+                  ClassifyDiff.make({
+                    base: "base",
+                    head: "head",
+                    commits: 1,
+                    entries: A.map(O.getOrElse(row.paths, A.empty<string>), (path) =>
+                      ChangedPathEntry.make({ path, status: "M" })
+                    ),
+                  }),
+                  () => Effect.succeedNone
+                )
+              ),
+            });
+            const decide = Effect.fn("admissionTest.decide")(function* (content: string, spawner: ScriptedSpawner) {
+              const path = yield* writeEvent(root, content);
+              const admission = yield* runCiAdmission(
+                CiAdmissionInput.make({ eventName: O.some("pull_request"), eventPath: O.some(path), cwd: root })
+              ).pipe(Effect.provideService(ChangeClassifier, classifier), noGithubOutput, provideSpawner(spawner));
+              return R.fromEntries(heavyAdmissionGithubOutputs(admission));
+            });
+            // Without the pinned SHAs the lane-skip read is off: the outputs every caller read before.
+            const before = yield* decide(payloadWithShas({}), pinnedDiffSpawner(row.paths));
+            const spawner = pinnedDiffSpawner(row.paths);
+            const after = yield* decide(payloadWithShas({ base: "base-sha", head: "head-sha" }), spawner);
+            expect(after.lane_skips).toBe(row.skips);
+            expect(before.lane_skips).toBe("");
+            expect(R.remove(after, "lane_skips")).toEqual(R.remove(before, "lane_skips"));
+            expect(A.map(pinnedDiffSpawns(spawner), (spawn) => spawn.args)).toEqual([
+              ["diff", "--name-only", "--no-renames", "base-sha...head-sha"],
+            ]);
+          })
+        )
+      );
+    });
+  }
+
+  layerIt.effect("a push event decides no lane skip and never spawns the pinned diff", () =>
+    temporary((root) =>
+      Effect.gen(function* () {
+        const spawner = pinnedDiffSpawner(O.some(["goals/x/PLAN.md"]));
+        const admission = yield* runCiAdmission(CiAdmissionInput.make({ eventName: O.some("push"), cwd: root })).pipe(
+          noGithubOutput,
+          provideScriptedGit(spawner)
+        );
+        const outputs = R.fromEntries(heavyAdmissionGithubOutputs(admission));
+        expect([outputs.verdict, outputs.route_skips, outputs.route_receipt, outputs.lane_skips]).toEqual([
+          "run",
+          "",
+          "route-not-applicable",
+          "",
+        ]);
+        expect(spawner.spawns).toEqual([]);
+      })
+    )
+  );
+
+  layerIt.effect("fails open: a missing SHA, an unreadable pattern file and a missing payload skip nothing", () =>
+    temporary((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        // A goals-only path that is also Docgen-irrelevant (no `.md` suffix).
+        const goals = O.some(["goals/x/ops/manifest.json"]);
+        const read = (content: string, spawner: ScriptedSpawner) =>
+          writeEvent(root, content).pipe(
+            Effect.flatMap((path) =>
+              readHeavyLaneSkips(
+                HeavyAdmissionReadInput.make({ eventName: "pull_request", eventPath: O.some(path), cwd: root })
+              )
+            ),
+            provideSpawner(spawner)
+          );
+        const headOnly = pinnedDiffSpawner(goals);
+        expect(yield* read(payloadWithShas({ head: "head-sha" }), headOnly)).toEqual([]);
+        expect(pinnedDiffSpawns(headOnly)).toEqual([]);
+        // An unreadable pattern file drops only the goals-only reason; the Docgen reason stands.
+        yield* fs.makeDirectory(`${root}/packages/tooling/tool/cli/src/commands/Ci`, { recursive: true });
+        yield* fs.writeFileString(`${root}/packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json`, "{");
+        expect(yield* read(payloadWithShas({ base: "b", head: "h" }), pinnedDiffSpawner(goals))).toEqual(["docgen"]);
+        // A missing payload is an error the read swallows.
+        const missing = yield* readHeavyLaneSkips(
+          HeavyAdmissionReadInput.make({
+            eventName: "pull_request",
+            eventPath: O.some(`${root}/absent.json`),
+            cwd: root,
+          })
+        ).pipe(provideSpawner(pinnedDiffSpawner(goals)));
+        expect(missing).toEqual([]);
+        const errors12 = yield* errors;
+        expect(errors12).toContain("heavy lane skips");
+      })
+    )
+  );
+
+  it("decides the skips purely, in heavy lane order", () => {
+    const patterns = O.some(ciOperationalPatterns);
+    expect(HEAVY_LANE_IDS).toEqual(["build", "check", "docgen", "doctest", "lint-policy"]);
+    expect(decideHeavyLaneSkips("pull_request", O.some(["goals/x/PLAN.md"]), patterns)).toEqual(HEAVY_LANE_IDS);
+    // No pattern data: the goals-only reason cannot hold. Packet markdown is Docgen-relevant, a
+    // packet manifest is not.
+    expect(decideHeavyLaneSkips("pull_request", O.some(["goals/x/PLAN.md"]), O.none())).toEqual([]);
+    expect(decideHeavyLaneSkips("pull_request", O.some(["goals/x/ops/manifest.json"]), O.none())).toEqual(["docgen"]);
+    expect(decideHeavyLaneSkips("merge_group", O.some([]), patterns)).toEqual([]);
+    for (const [path, relevant] of [
+      ["apps/web/src/a.ts", true],
+      ["infra/r2-cache/adapter.sh", true],
+      ["packages/x/docgen.json", true],
+      ["docgen.json", false],
+      ["scripts/a.mts", true],
+      ["README.md", true],
+      [".github/workflows/heavy.yml", false],
+      ["standards/branch-protection-contexts.json", false],
+    ] as const) {
+      expect(heavyDocgenRelevantPattern.test(path), path).toBe(relevant);
+    }
   });
 });

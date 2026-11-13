@@ -1,0 +1,16 @@
+---
+title: "ORDER and HOST-06 PR 1: required lanes first, lane_skips decided in Heavy Admission"
+date: 2026-11-13
+kind: checkpoint
+reversal: "Revert this PR's squash commit; heavy.yml then starts Lint Policy beside the required lanes again and ignores lane_skips."
+---
+
+PLAN slice 3, the first of the two `heavy.yml` PRs (#PRNUM), landed three changes.
+
+- ORDER (ruling D11): `heavy.yml`'s Lint Policy job (`verify`) now has `needs: [check, docgen, doctest]` and an `if:` that starts with `!cancelled()`, so the three required lanes get the cap-2 `beep-ec2-heavy` pool first. Lint Policy still runs and reports when Check is red or when a needed lane skips. Build is not in `needs`.
+- HOST-06 decision: `beep ci admission` publishes `lane_skips` beside `verdict`, `route_skips` and `route_receipt`. It holds the heavy lanes that the in-VM `Determine lane execution` step skips for a reason other than the route: every heavy lane on a goals-only change profile, and `docgen` on a pull request whose pinned diff has no Docgen-relevant path (an empty diff included). It reuses the change profile's pinned-diff reader and the checkout's pattern loader, which are now exported from `CiOperational.service.ts`, and states the Docgen expression once (`HEAVY_DOCGEN_RELEVANT_SOURCE`). A test pins the workflow's grep to that string. Any error falls back to no skip for that reason: a missing SHA, an unreadable base, an unreadable pattern file, or a stall.
+- HOST-06 job-level skip: every lane job's `if:` also requires its id to be absent from `inputs.lane_skips` and, on pull requests, from `inputs.route_skips`. Both checks use the `contains(format(',{0},', ...), ',<id>,')` form. The route half takes effect as soon as this merges, because callers already pass `route_skips`. `check.yml` and `heavy-admit.yml` expose `lane_skips` as an admission job output but do not pass it yet.
+
+Design call: the migration adds an input and renames no job. Every lane job keeps its literal name, so no migration job name is needed. The new `lane_skips` input defaults to empty, so existing callers keep today's behaviour, and the in-VM step stays in place unchanged as the decider for goals-only and Docgen. Slice 6 makes `check.yml` and `heavy-admit.yml` pass `lane_skips` once `main` resolves this workflow, then retires the in-VM decision.
+
+Hosted proof can only be read after merge, because both callers run `heavy.yml@main`. A PR's own Check never runs that PR's `heavy.yml`. Three things to read after merge: push-to-start of Check, Docgen and Doctest on the cap-2 pool is no slower on the same heads; Lint Policy gives a verdict on a seeded Check red; and every required `Heavy / *` context reports on a docs head, a goals-only head and a code head. The local gate is the ruleset parity ledger in `ci-runner-security.test.ts`: every required `Heavy / *` context in `standards/branch-protection-contexts.json` maps to exactly one literal-named job. The other local gate is the mutation fixtures in `ci-heavy-admission.test.ts`: documentation-only, goals-only, an empty diff, an unreadable base, Docgen-relevant, Docgen-irrelevant, a C-quoted path, and a push event. Each fixture asserts `lane_skips` and that `verdict`, `route_skips` and `route_receipt` are unchanged.

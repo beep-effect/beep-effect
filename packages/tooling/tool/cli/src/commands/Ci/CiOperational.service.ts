@@ -170,6 +170,96 @@ const diffLines = (stdout: string): ReadonlyArray<string> =>
   A.filter(Str.split(Str.replace(/\n+$/u, "")(stdout), "\n"), Str.isNonEmpty);
 
 /**
+ * Read the pinned pull-request diff `git diff --name-only --no-renames <base>...<head>` the
+ * change profile classifies.
+ *
+ * **Details**
+ *
+ * Lines stay C-quoted the way the shell gates read them. Any spawn failure or non-zero exit
+ * (an unfetched base, a missing SHA) is `None`, which every caller treats as "no diff to
+ * scope": each verification stays active.
+ *
+ * **Example** (Reference the reader)
+ *
+ * ```ts
+ * import { readPinnedPrDiff } from "@beep/repo-cli/commands/Ci"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * console.log(Effect.isEffect(readPinnedPrDiff("base", "head", O.none()))) // true
+ * ```
+ *
+ * @param base - The pull request's base SHA.
+ * @param head - The pull request's head SHA.
+ * @param cwd - The checkout to diff in; `None` uses the process directory.
+ * @returns The changed paths, or `None` when the diff is unreadable.
+ * @category services
+ * @since 0.0.0
+ */
+export const readPinnedPrDiff = Effect.fn("Ci.readPinnedPrDiff")(function* (
+  base: string,
+  head: string,
+  cwd: O.Option<string>
+): Effect.fn.Return<O.Option<ReadonlyArray<string>>, never, ChildProcessSpawner.ChildProcessSpawner> {
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  return yield* Effect.gen(function* () {
+    const handle = yield* spawner.spawn(
+      ChildProcess.make("git", ["diff", "--name-only", "--no-renames", `${base}...${head}`], {
+        stdin: "ignore",
+        stdout: "pipe",
+        stderr: "inherit",
+        ...O.match(cwd, { onNone: () => ({}), onSome: (dir) => ({ cwd: dir }) }),
+      })
+    );
+    const [stdout, status] = yield* Effect.all(
+      [handle.stdout.pipe(Stream.decodeText, Stream.mkString), handle.exitCode],
+      { concurrency: 2 }
+    );
+    return status === 0 ? O.some(diffLines(stdout)) : O.none<ReadonlyArray<string>>();
+  }).pipe(Effect.scoped, Effect.orElseSucceed(O.none<ReadonlyArray<string>>));
+});
+
+/**
+ * Load the CI pattern data a checkout carries, falling back to the compiled-in patterns when the
+ * checkout has no pattern file.
+ *
+ * **Details**
+ *
+ * The checkout's own file classifies its tree: a binary built from `main` must not judge a pull
+ * request by `main`'s compiled-in literals. A file that is present but unreadable fails.
+ *
+ * **Example** (Reference the loader)
+ *
+ * ```ts
+ * import { readCheckoutCiPatterns } from "@beep/repo-cli/commands/Ci"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(readCheckoutCiPatterns("."))) // true
+ * ```
+ *
+ * @param root - The repository root of the checkout.
+ * @returns The checkout's pattern data, or the compiled-in data when the file is absent.
+ * @category services
+ * @since 0.0.0
+ */
+export const readCheckoutCiPatterns = Effect.fn("Ci.readCheckoutCiPatterns")(function* (
+  root: string
+): Effect.fn.Return<CiOperationalPatterns, CiCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const target = path.join(root, PATTERN_FILE);
+  const loaded = yield* fs.exists(target).pipe(
+    Effect.flatMap((present) =>
+      present
+        ? fs.readFileString(target).pipe(Effect.flatMap(decodePatterns), Effect.asSome)
+        : Effect.succeed(O.none<CiOperationalPatterns>())
+    ),
+    CiCommandError.mapError(`ci-change-profile: could not read the CI patterns from ${target}`)
+  );
+  return O.getOrElse(loaded, () => ciOperationalPatterns);
+});
+
+/**
  * CI operational contract, with platform dependencies supplied by its live layer.
  *
  * **Example** (Reference the contract)
@@ -256,28 +346,17 @@ export const CiOperationalLive = Layer.effect(
         Effect.option
       );
       if (O.isNone(root)) return ciOperationalPatterns;
-      const target = path.join(root.value, PATTERN_FILE);
-      const read = fs
-        .exists(target)
-        .pipe(
-          Effect.flatMap((present) =>
-            present
-              ? fs.readFileString(target).pipe(Effect.flatMap(decodePatterns), Effect.asSome)
-              : Effect.succeed(O.none<CiOperationalPatterns>())
-          )
-        );
-      const loaded = yield* read.pipe(
-        CiCommandError.mapError(`ci-change-profile: could not read the CI patterns from ${target}`)
+      return yield* readCheckoutCiPatterns(root.value).pipe(
+        Effect.provideService(FileSystem.FileSystem, fs),
+        Effect.provideService(Path.Path, path)
       );
-      return O.getOrElse(loaded, () => ciOperationalPatterns);
     });
     // KEEP (D-22): the change profile reads git's C-quoted `--name-only` lines, so a path with a
     // non-ASCII or special byte never matches a docs pattern and keeps every profile active (pinned by
     // the `quoted path` golden in `ci-bootstrap-parity`); `Git.changedFiles`' `-z` paths are raw.
     const pinnedDiff = (base: string, head: string) =>
-      capture("git", ["diff", "--name-only", "--no-renames", `${base}...${head}`]).pipe(
-        Effect.map(({ stdout, status }) => (status === 0 ? O.some(diffLines(stdout)) : O.none())),
-        Effect.orElseSucceed(O.none<ReadonlyArray<string>>)
+      readPinnedPrDiff(base, head, O.none()).pipe(
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
       );
     const emitChangeProfile = Effect.fn("Ci.emitChangeProfile")(
       function* (patterns: CiOperationalPatterns, positionalBase: O.Option<string>, positionalHead: O.Option<string>) {

@@ -116,6 +116,9 @@ jobs:
       docs_only: ${{ steps.decide.outputs.docs_only }}
       route_skips: ${{ steps.decide.outputs.route_skips }}
       route_receipt: ${{ steps.decide.outputs.route_receipt }}
+      # HOST-06 (goals/heavy-pool-diet slice 3): exposed, not yet passed. heavy.yml@main declares
+      # `lane_skips` only once slice 3 merges; slice 6 passes it to the heavy caller below.
+      lane_skips: ${{ steps.decide.outputs.lane_skips }}
       # heavy.yml@main no longer declares Coverage Regression, so this is a
       # constant until COVE-08 makes that job name a literal and deletes it.
       legacy_coverage: 'false'
