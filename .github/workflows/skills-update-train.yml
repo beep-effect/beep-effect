@@ -135,8 +135,10 @@ jobs:
       github.event.pull_request.user.login == 'renovate[bot]'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    # Read only: the relock and materialize steps run over Renovate-bumped trees, so the job's
+    # own token must not be able to write. The push uses the App token minted right before it.
     permissions:
-      contents: write
+      contents: read
     steps:
       # The exact commit the replay judged, never the mutable branch, and no token left in
       # git config: nothing this job runs from the branch can reuse a push credential.

@@ -1778,6 +1778,8 @@ const effectVitestScope = GlobSet.make({ patterns: EffectVitestSourceFileGlobs }
  * console.log(isEffectVitestScopePath("packages/demo/src/Foo.ts")) // false
  * ```
  *
+ * @param file - Repository-relative path, with forward slashes.
+ * @returns `true` when the full D9 scan would read the path.
  * @category predicates
  * @since 0.0.0
  */

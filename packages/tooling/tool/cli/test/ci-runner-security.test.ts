@@ -2191,6 +2191,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assertAppTokenPush(push, "Push the regenerated shards");
       const relockJobs = yield* workflowJobs(parseWorkflowYaml(relockText));
       assertAppTokenPush(jobSteps(relockJobs, "relock"), "Push the relock to the Renovate branch");
+      // The relock job runs repository commands over Renovate-bumped trees: its own token is read only.
+      expect(yamlAt(parseWorkflowYaml(relockText), ["jobs", "relock", "permissions"])).toEqual({ contents: "read" });
       // The App private key reaches the mint action and nothing else; the regeneration job
       // that runs pull-request code references no secret at all.
       const regenerationSecrets = yield* stepsReferencing(jobs, "secrets.");
