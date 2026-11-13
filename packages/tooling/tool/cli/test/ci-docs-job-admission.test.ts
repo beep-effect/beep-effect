@@ -273,11 +273,20 @@ it.effect(
     );
     assert.strictEqual(
       yamlAt(check, ["jobs", "heavy", "if"]),
-      `\${{ !cancelled() && (needs.admission.outputs.verdict == 'run' || needs.admission.outputs.verdict == 'skip-satisfied' || (needs.admission.result == 'skipped' && needs.change-profile.result == 'success' && ${docsOnlyFromThisRepository})) }}`
+      `\${{ !cancelled() && ((needs.admission.result == 'success' && (needs.admission.outputs.verdict == 'run' || needs.admission.outputs.verdict == 'skip-satisfied')) || (needs.admission.result == 'skipped' && needs.change-profile.result == 'success' && ${docsOnlyFromThisRepository})) }}`
     );
     assert.strictEqual(
       yamlAt(check, ["jobs", "heavy", "with", "admitted"]),
       "${{ needs.admission.outputs.verdict == 'run' }}"
+    );
+    // A job publishes the outputs its steps wrote even when a later step fails it, which the
+    // simulation below does not model. An admission that decided and then failed (or was cancelled)
+    // must not reach Heavy with the verdict it left behind; only a successful one does.
+    const heavyGuard = yamlAt(check, ["jobs", "heavy", "if"]);
+    assertTrue(isWorkflowText(heavyGuard));
+    assert.deepEqual(
+      A.filter(publishedVerdictCases, (state) => heavyStartsOnPublishedVerdict(heavyGuard, state)),
+      A.filter(publishedVerdictCases, (state) => state.admission === "success")
     );
     const admissionSteps = yield* decodeWorkflowSteps(yamlAt(check, ["jobs", "admission", "steps"]));
     assert.isFalse(A.some(admissionSteps, (step) => yamlAt(step, ["id"]) === "docs"));
@@ -391,6 +400,23 @@ const expressionHolds = (expression: string, context: Readonly<Record<string, st
   }
   return Bun.spawnSync(["bash", "-c", `[[ ${rendered} ]]`], { stdout: "pipe", stderr: "pipe" }).exitCode === 0;
 };
+
+// Every admission result paired with a verdict its `decide` step already published.
+const publishedVerdictCases = A.flatMap(["run", "skip-satisfied"], (verdict) =>
+  A.map(["success", "failure", "cancelled", "skipped"], (admission) => ({ admission, verdict }))
+);
+const heavyStartsOnPublishedVerdict = (
+  guard: string,
+  state: { readonly admission: string; readonly verdict: string }
+): boolean =>
+  expressionHolds(guard, {
+    "needs.admission.result": state.admission,
+    "needs.admission.outputs.verdict": state.verdict,
+    "needs.change-profile.result": "success",
+    "needs.change-profile.outputs.docs_only": "false",
+    "github.event.pull_request.head.repo.full_name": "beep-effect/beep-effect",
+    "github.repository": "beep-effect/beep-effect",
+  });
 
 const simulateJobs = (workflow: unknown, scenario: RunnerScenario): Readonly<Record<string, JobResult>> => {
   const jobs = workflowRecord(yamlAt(workflow, ["jobs"]));

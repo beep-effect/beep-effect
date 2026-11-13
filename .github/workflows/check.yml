@@ -180,8 +180,10 @@ jobs:
     # The last arm is the documentation-only diff whose admission job was
     # skipped above: the same three conditions, and `admitted` below is false
     # because no verdict exists. `!cancelled()` lets the caller start although
-    # a needed job was skipped; a failed admission has no verdict and no arm.
-    if: ${{ !cancelled() && (needs.admission.outputs.verdict == 'run' || needs.admission.outputs.verdict == 'skip-satisfied' || (needs.admission.result == 'skipped' && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true' && github.event.pull_request.head.repo.full_name == github.repository)) }}
+    # a needed job was skipped, so the verdict arms require a successful
+    # admission themselves: a job that fails after its `decide` step (the
+    # cancellation step below it) still publishes the verdict that step wrote.
+    if: ${{ !cancelled() && ((needs.admission.result == 'success' && (needs.admission.outputs.verdict == 'run' || needs.admission.outputs.verdict == 'skip-satisfied')) || (needs.admission.result == 'skipped' && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true' && github.event.pull_request.head.repo.full_name == github.repository)) }}
     permissions:
       contents: read
       # GitHub validates every nested job, including the gated producer.
