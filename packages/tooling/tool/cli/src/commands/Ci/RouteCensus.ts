@@ -50,9 +50,12 @@ import {
   RouteJobMinutes,
   RouteLaneCost,
   RoutePlan,
+  RouteRedOrigin,
   RouteReplay,
   RouteReplayHead,
   RouteSelection,
+  RouteStepClass,
+  RouteTaskOutcome,
 } from "./Route.schemas.ts";
 import { ChangeClassifier, ClassifyInput, RouteCensusReader, VerificationRoute } from "./Route.service.ts";
 import { requiredLanes, routeFootprintCanonicalJson, skippedLanes } from "./RouteFootprints.ts";
@@ -64,7 +67,7 @@ import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitKitError } from "../../internal/repo-run/GitExec.ts";
 import type { GithubCheckLaneSpec } from "../Quality/Quality.schemas.ts";
 import type { WaveOrderShape } from "../Yeet/internal/WaveOrder.ts";
-import type { ChangeSet, HostedJob, HostedRun } from "./Route.schemas.ts";
+import type { ChangeSet, HostedJob, HostedRun, HostedStep, HostedTaskOutcome } from "./Route.schemas.ts";
 import type { RouteCensusShape, RouteCorpusLoaded, VerificationRouteShape } from "./Route.service.ts";
 
 const $I = $RepoCliId.create("commands/Ci/RouteCensus");
@@ -75,6 +78,8 @@ const PRE_PUSH_LANE_PREFIX = "quality:";
 const PRE_PUSH_SPEC_ROOT = ".";
 // Partitioned hosted jobs report as `<context> (<partition>)`, e.g. `Lint (lint-a)`.
 const PARTITION_SUFFIX = / \([^()]*\)$/;
+// A job of a reusable workflow reports as `<caller> / <job>`, e.g. `Heavy / Check`.
+const REUSABLE_JOB_SEPARATOR = " / ";
 // Heads classified at once; each classification spawns git.
 const ROUTE_HEAD_CONCURRENCY = 4;
 // Missing head commits fetched by sha at once.
@@ -167,6 +172,66 @@ const SUPPORT_JOB_NAMES: HashSet.HashSet<string> = HashSet.fromIterable([
   "Test Plan",
 ]);
 
+/**
+ * The names of the steps that prepare the runner or the environment before a
+ * lane's own work: GitHub's implicit first step and the named preparation
+ * steps of the lane jobs in check.yml and heavy.yml.
+ *
+ * **Details**
+ *
+ * {@link routeStepClass} classes these names `setup`; a name not listed is
+ * the lane's own work, so an unlisted or renamed step keeps its red on the
+ * lane. A contract test reads the workflows and fails when a listed name no
+ * longer exists there, or when a lane job runs an unclassified step before
+ * its own work.
+ *
+ * **Example** (The list holds GitHub's implicit first step)
+ *
+ * ```ts import.meta.vitest name="The list holds GitHub's implicit first step"
+ * import { ROUTE_SETUP_STEP_NAMES } from "@beep/repo-cli/commands/Ci/RouteCensus"
+ * import * as A from "effect/Array"
+ *
+ * A.contains(ROUTE_SETUP_STEP_NAMES, "Set up job") // => true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const ROUTE_SETUP_STEP_NAMES: ReadonlyArray<string> = [
+  "Authenticate Docker Hub when configured",
+  "Checkout repository",
+  "Determine audit base",
+  "Determine commit range",
+  "Determine comparison execution",
+  "Determine lane execution",
+  "Fetch beep CI binary",
+  "Fetch pull request base",
+  "Install Nix",
+  "Install Tauri Linux system dependencies",
+  "Install dependencies for SAST dispatch",
+  "Install dependencies for coverage comparison",
+  "Install dependencies for hosted settings policy",
+  "Install pinned commitlint",
+  "Install typos",
+  "Restore main Docgen Turbo cache",
+  "Set up job",
+  "Set up runner",
+  "Setup Bun for SAST dispatch",
+  "Setup Bun for coverage comparison",
+  "Setup Bun for hosted settings policy",
+  "Setup Cachix (read-only)",
+  "Setup Node.js",
+  "Setup Node.js for coverage comparison",
+  "Setup Rust toolchain",
+  "Setup monorepo CI",
+  "Verify coverage runtime features",
+];
+const SETUP_STEP_NAMES: HashSet.HashSet<string> = HashSet.fromIterable(ROUTE_SETUP_STEP_NAMES);
+// An aggregate job checks its shards' results in one step: `Require every Lint shard`, `Require every
+// planned Test Unit shard`, `Require every planned Test Integration partition`, `Require every Property
+// Laws slice`.
+const AGGREGATE_STEP_PREFIX = "Require every ";
+
 const LANE_BY_JOB_NAME: HashMap.HashMap<string, CiLaneId> = HashMap.union(
   LANE_BY_CONTEXT,
   HashMap.fromIterable(LANE_JOB_ALIASES)
@@ -188,7 +253,10 @@ const LANE_BY_PARTITION_FAMILY: HashMap.HashMap<string, CiLaneId> = HashMap.unio
  * (`Build`, `Coverage Artifact Migration`, `Test Integration Partitions`)
  * join their lane. Descriptors whose id is not a {@link CiLaneId}
  * (`pr-size`, `dependency-review`) never match, so `Security` is the
- * `security` lane.
+ * `security` lane. A job of a reusable workflow reports as
+ * `<caller> / <job>`; when that whole name joins no lane, the job joins its
+ * caller's lane, so a shard run through a called workflow
+ * (`Test Unit (repo-cli-1) / Overflow`) stays on the shard's lane.
  *
  * **Example** (Join hosted job names to lanes)
  *
@@ -199,6 +267,7 @@ const LANE_BY_PARTITION_FAMILY: HashMap.HashMap<string, CiLaneId> = HashMap.unio
  * O.getOrNull(jobNameToLane("Heavy / Check")) // => "check"
  * O.getOrNull(jobNameToLane("Lint (lint-a)")) // => "lint"
  * O.getOrNull(jobNameToLane("Test Integration (lps-int-1)")) // => "test-integration"
+ * O.getOrNull(jobNameToLane("Test Unit (repo-cli-1) / Overflow")) // => "test-unit"
  * O.isNone(jobNameToLane("PR Size Label")) // => true
  * ```
  *
@@ -214,6 +283,12 @@ export const jobNameToLane = (name: string): O.Option<CiLaneId> =>
       pipe(
         O.liftPredicate(Str.replace(PARTITION_SUFFIX, "")(name), (family) => !Str.Equivalence(family, name)),
         O.flatMap((family) => HashMap.get(LANE_BY_PARTITION_FAMILY, family))
+      )
+    ),
+    O.orElse(() =>
+      pipe(
+        Str.lastIndexOf(REUSABLE_JOB_SEPARATOR)(name),
+        O.flatMap((index) => jobNameToLane(Str.slice(0, index)(name)))
       )
     )
   );
@@ -253,6 +328,157 @@ export const hostedJobAttribution = (name: string): RouteJobAttribution =>
         RouteJobAttribution.make({ jobClass: HashSet.has(SUPPORT_JOB_NAMES, name) ? "support" : "unknown" }),
     })
   );
+
+/**
+ * Class one hosted job step by its name.
+ *
+ * **Details**
+ *
+ * A name that starts with `Require every ` is an `aggregate` step, the one
+ * step of a job that checks its shards' results. GitHub's implicit
+ * `Set up job` and the named preparation steps of the lane jobs (checkout,
+ * fetching the base and the CI binary, the lane gate, toolchain setup and
+ * installs) are `setup`. Every other name is the lane's own work (`task`), so
+ * a renamed or new step keeps a red on its lane.
+ *
+ * **Example** (Class three steps)
+ *
+ * ```ts import.meta.vitest name="Class three steps"
+ * import { routeStepClass } from "@beep/repo-cli/commands/Ci/RouteCensus"
+ *
+ * routeStepClass("Setup monorepo CI") // => "setup"
+ * routeStepClass("Require every Lint shard") // => "aggregate"
+ * routeStepClass("Run Lint shard") // => "task"
+ * ```
+ *
+ * @param name - A step name as GitHub lists it.
+ * @returns `aggregate`, `setup`, or `task` for any name the tables do not list.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const routeStepClass = (name: string): RouteStepClass =>
+  Match.value(name).pipe(
+    Match.when(Str.startsWith(AGGREGATE_STEP_PREFIX), () => RouteStepClass.Enum.aggregate),
+    Match.when(
+      (step: string) => HashSet.has(SETUP_STEP_NAMES, step),
+      () => RouteStepClass.Enum.setup
+    ),
+    Match.orElse(() => RouteStepClass.Enum.task)
+  );
+
+const isFailureText = (conclusion: O.Option<string>): boolean =>
+  O.exists(conclusion, (value) => Str.Equivalence(value, "failure"));
+
+// A step that stopped its job without failing: it never concluded, or it was cancelled (a timeout, a lost
+// runner).
+const isUnfinishedStep = (step: HostedStep): boolean =>
+  O.match(step.conclusion, { onNone: () => true, onSome: (value) => Str.Equivalence(value, "cancelled") });
+
+// The step a failed job stopped in: its first failed step, else its first unfinished one.
+const stoppingStep = (job: HostedJob): O.Option<HostedStep> =>
+  O.flatMap(job.steps, (steps) =>
+    O.orElse(
+      A.findFirst(steps, (step) => isFailureText(step.conclusion)),
+      () => A.findFirst(steps, isUnfinishedStep)
+    )
+  );
+
+const redOriginOf = (job: HostedJob): RouteRedOrigin => {
+  const tasks = O.getOrElse(job.tasks, A.empty<HostedTaskOutcome>);
+  const tasksPassed =
+    A.isReadonlyArrayNonEmpty(tasks) && A.every(tasks, (task) => RouteTaskOutcome.is.pass(task.outcome));
+  // A failed job whose every recorded task passed failed outside its tasks.
+  const ownWork = (origin: RouteRedOrigin): RouteRedOrigin => (tasksPassed ? RouteRedOrigin.Enum.harness : origin);
+  return A.some(tasks, (task) => RouteTaskOutcome.is.fail(task.outcome))
+    ? RouteRedOrigin.Enum.task
+    : O.match(stoppingStep(job), {
+        onNone: () => ownWork(RouteRedOrigin.Enum.unattributed),
+        onSome: (step) =>
+          RouteStepClass.match(routeStepClass(step.name), {
+            aggregate: () => RouteRedOrigin.Enum.aggregate,
+            setup: () => RouteRedOrigin.Enum.setup,
+            task: () => ownWork(RouteRedOrigin.Enum.task),
+          }),
+      });
+};
+
+/**
+ * What a failed hosted job's red came from, read from its recorded tasks and
+ * steps.
+ *
+ * **Details**
+ *
+ * A failed task decides `task`. Otherwise the job is judged by the step it
+ * stopped in, its first failed step, else its first step that never
+ * concluded or was cancelled: an `aggregate` step gives `aggregate`, a
+ * `setup` step gives `setup`, and a step of the lane's own work gives `task`,
+ * or `harness` when every recorded task passed. A job with neither steps nor
+ * tasks (every row captured before these fields) is `unattributed`, which
+ * stays the lane's red, so an old corpus replays exactly as before.
+ *
+ * **Example** (A job that failed while installing)
+ *
+ * ```ts import.meta.vitest name="A job that failed while installing"
+ * import { hostedJobRedOrigin } from "@beep/repo-cli/commands/Ci/RouteCensus"
+ * import { HostedJob, HostedStep } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const job = HostedJob.make({
+ *   name: "Heavy / Check",
+ *   conclusion: O.some("failure"),
+ *   steps: O.some([
+ *     HostedStep.make({ name: "Checkout repository", conclusion: O.some("success") }),
+ *     HostedStep.make({ name: "Setup monorepo CI", conclusion: O.some("failure") }),
+ *     HostedStep.make({ name: "Run verification lane", conclusion: O.some("skipped") }),
+ *   ]),
+ * })
+ * O.getOrNull(hostedJobRedOrigin(job)) // => "setup"
+ * O.isNone(hostedJobRedOrigin(HostedJob.make({ name: "Lint", conclusion: O.some("success") }))) // => true
+ * ```
+ *
+ * @param job - A captured job.
+ * @returns The origin of its red, or `None` when the job did not conclude `failure`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const hostedJobRedOrigin = (job: HostedJob): O.Option<RouteRedOrigin> =>
+  pipe(
+    job,
+    O.liftPredicate((candidate: HostedJob) => isFailureText(candidate.conclusion)),
+    O.map(redOriginOf)
+  );
+
+/**
+ * Whether a red of the given origin is charged to the job's lane.
+ *
+ * **Details**
+ *
+ * `task` and `unattributed` reds are the lane's. An `aggregate`, `setup` or
+ * `harness` red says nothing about the lane's own work, so the replay charges
+ * it to no lane and reports it as unknown.
+ *
+ * **Example** (Charge two origins)
+ *
+ * ```ts import.meta.vitest name="Charge two origins"
+ * import { routeRedOriginChargesLane } from "@beep/repo-cli/commands/Ci/RouteCensus"
+ *
+ * routeRedOriginChargesLane("unattributed") // => true
+ * routeRedOriginChargesLane("setup") // => false
+ * ```
+ *
+ * @param origin - The origin of a red.
+ * @returns `true` when the red is the lane's own.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const routeRedOriginChargesLane = (origin: RouteRedOrigin): boolean =>
+  RouteRedOrigin.match(origin, {
+    task: () => true,
+    unattributed: () => true,
+    aggregate: () => false,
+    setup: () => false,
+    harness: () => false,
+  });
 
 /**
  * The machine time of one hosted job in milliseconds, when both timestamps
@@ -1121,6 +1347,18 @@ const lanesConcluded = (
     )
   );
 
+// The failed lane jobs whose red is charged to their lane (`charged`), or charged to none.
+const failedLaneJobs = (
+  jobs: ReadonlyArray<readonly [CiLaneId, HostedJob]>,
+  charged: boolean
+): ReadonlyArray<readonly [CiLaneId, HostedJob]> =>
+  A.filter(jobs, ([, job]) =>
+    O.exists(hostedJobRedOrigin(job), (origin) => routeRedOriginChargesLane(origin) === charged)
+  );
+
+const laneSet = (jobs: ReadonlyArray<readonly [CiLaneId, HostedJob]>): HashSet.HashSet<CiLaneId> =>
+  HashSet.fromIterable(A.map(jobs, ([lane]) => lane));
+
 const NEWEST_FIRST: Order.Order<HostedRun> = Order.mapInput(
   Order.flip(Order.String),
   (run: HostedRun) => run.createdAt
@@ -1139,7 +1377,10 @@ const NEWEST_FIRST: Order.Order<HostedRun> = Order.mapInput(
  * `main` push run of the merge base itself, else the latest `main` push run
  * whose head is an ancestor of the merge base; a lane is green there when one
  * of its jobs succeeded. With no base run every skipped red counts
- * (fail-closed) and the head is base-unknown. A head still missing after
+ * (fail-closed) and the head is base-unknown. On both sides a lane is red
+ * only through a red charged to it ({@link hostedJobRedOrigin}); a skipped
+ * lane whose only head reds came from an aggregate, setup or harness step is
+ * listed in `unknownReds` and makes recall uncertain. A head still missing after
  * `ensureHeads` is unresolved: it is neither classified nor merge-based but
  * routed as one `unknown` atom (every lane selected, base unknown) and
  * counted in `unresolvedHeads`.
@@ -1250,21 +1491,31 @@ export const makeRouteCensusReader: Effect.Effect<
       return O.map(ancestor, mainRunsAt);
     });
 
-    const perHead = yield* Effect.forEach(
+    // Each head's replay row with the names of the failed jobs that could hide a skipped red on it.
+    const replayed = yield* Effect.forEach(
       heads,
       Effect.fnUntraced(function* (head: HeadEvidence) {
         const required = requiredLanes(head.atoms);
         const skipped = skippedLanes(required);
         const base = head.resolved ? yield* baseRuns(head.mergeBase) : O.none<ReadonlyArray<HostedRun>>();
-        const red = lanesConcluded(head.jobs, "failure");
+        // Only reds charged to a lane count; aggregate, setup and harness reds stay apart as unknown.
+        const red = laneSet(failedLaneJobs(head.jobs, true));
+        const uncharged = failedLaneJobs(head.jobs, false);
+        const unchargedLanes = laneSet(uncharged);
         const baseGreen = O.map(base, (runs) => lanesConcluded(hostedLaneJobs(runs), "success"));
-        const baseRed = O.map(base, (runs) => lanesConcluded(hostedLaneJobs(runs), "failure"));
-        return RouteReplayHead.make({
+        const baseRed = O.map(base, (runs) => laneSet(failedLaneJobs(hostedLaneJobs(runs), true)));
+        const unknownReds = A.filter(
+          skipped,
+          (lane) =>
+            HashSet.has(unchargedLanes, lane) && !HashSet.has(red, lane) && !O.exists(baseRed, HashSet.has(lane))
+        );
+        const row = RouteReplayHead.make({
           headSha: head.headSha,
           mergeBase: head.mergeBase,
           selected: A.filter(CI_LANE_ID_VALUES, (lane) => HashMap.has(required, lane)),
           skipped,
           skippedReds: A.filter(skipped, (lane) => HashSet.has(red, lane) && !O.exists(baseRed, HashSet.has(lane))),
+          unknownReds,
           baseUnknown:
             O.isNone(base) ||
             A.some(
@@ -1275,23 +1526,23 @@ export const makeRouteCensusReader: Effect.Effect<
                 !O.exists(baseRed, HashSet.has(lane))
             ),
         });
+        // Only a head that skipped lanes can hide a skipped red behind an unmatched job name.
+        const unknownRedNames = A.appendAll(
+          A.isReadonlyArrayNonEmpty(skipped) ? head.unknownRedNames : A.empty<string>(),
+          A.map(
+            A.filter(uncharged, ([lane]) => A.contains(unknownReds, lane)),
+            ([, job]) => job.name
+          )
+        );
+        return [row, unknownRedNames] as const;
       }),
       { concurrency: ROUTE_HEAD_CONCURRENCY }
     );
 
+    const perHead = A.map(replayed, ([row]) => row);
     const skippedLaneRuns = Num.sumAll(A.map(perHead, (head) => head.skipped.length));
     const skippedReds = Num.sumAll(A.map(perHead, (head) => head.skippedReds.length));
-    // Only a head that skipped lanes can hide a skipped red behind an unmatched job name.
-    const skippingHeads = HashSet.fromIterable(
-      A.map(
-        A.filter(perHead, (head) => A.isReadonlyArrayNonEmpty(head.skipped)),
-        (head) => head.headSha
-      )
-    );
-    const unknownRedHeads = A.filter(
-      heads,
-      (head) => HashSet.has(skippingHeads, head.headSha) && A.isReadonlyArrayNonEmpty(head.unknownRedNames)
-    );
+    const unknownRedHeads = A.filter(replayed, ([, names]) => A.isReadonlyArrayNonEmpty(names));
     const report = RouteReplay.make({
       schemaVersion: "route-replay/v1",
       corpusSha256: corpus.receipt.sha256,
@@ -1303,7 +1554,7 @@ export const makeRouteCensusReader: Effect.Effect<
       unresolvedHeads: A.filter(heads, (head) => !head.resolved).length,
       recall: 1 - shareOf(skippedReds, skippedLaneRuns),
       unknownRedHeads: unknownRedHeads.length,
-      unknownRedJobNames: A.sort(A.dedupe(A.flatMap(unknownRedHeads, (head) => head.unknownRedNames)), Order.String),
+      unknownRedJobNames: A.sort(A.dedupe(A.flatMap(unknownRedHeads, ([, names]) => names)), Order.String),
       recallCertain: A.isReadonlyArrayEmpty(unknownRedHeads),
       perHead,
     });
