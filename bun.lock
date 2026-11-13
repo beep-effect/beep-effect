@@ -227,6 +227,7 @@
         "@beep/epistemics": "workspace:^",
         "@beep/file-processing": "workspace:^",
         "@beep/identity": "workspace:^",
+        "@beep/jsonc": "workspace:^",
         "@beep/langextract": "workspace:^",
         "@beep/nlp": "workspace:^",
         "@beep/nlp-processing": "workspace:^",
@@ -246,7 +247,6 @@
         "unpdf": "catalog:",
       },
       "devDependencies": {
-        "@beep/jsonc": "workspace:^",
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
