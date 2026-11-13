@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -40,13 +40,21 @@ ledger, `beep holds lint` in the cheap gate) merged in #2450; slice 3
 (`beep holds update` as the `deps:update` pre-step, `beep holds why` and the
 [hold ledger runbook](../../docs/runbooks/hold-ledger.md)) merged in #2453. The
 first two ledger-driven unpins (#2462 statelyai, #2465 jsdom) proved the loop
-end to end. #2453 was pushed without a Yeet publish verdict, and #2755 was
-merged one commit past its verdict before its readiness monitor reported, so this
-docs-only re-final PR carries the `completed-retained` proposal and the gating
-verdict; the closeout reflection is `history/reflections/2026-11-01-claude.md`.
+end to end. #2453 was pushed without a Yeet publish verdict, so the docs-only
+#2755 is the final PR. It merged through a ruleset bypass before Test Unit ran,
+and Test Unit went green on its head 32 minutes later, so it verifies under the
+hosted-only completion rules. Re-final #2865 is a supporting PR. The
+[batch migration](../goal-closeout-hosted-verification/history/migration-2026-11-13.md)
+adopted the legacy proposal. The closeout reflection is
+`history/reflections/2026-11-01-claude.md`.
 
 ## Latest Evidence
 
+- 2026-11-13: closeout adopted with #2755 as final and #2865 as supporting
+  (goal-closeout-hosted-verification decision
+  `2026-11-13-migration-finals-and-tombstones`). `goals completion refresh`
+  verified #2755 from hosted facts: 15 required checks green, no review
+  threads, rule suite bypassed.
 - 2026-11-06: re-final. `goals completion refresh --slug hold-ledger` read #2755
   `unsatisfied`: its verdict named the pre-`yeet ready` head, and it merged before
   its until-ready monitor reported. #2755 is now a supporting PR, and this PR

@@ -21,11 +21,10 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GoalSlug } from "./Bootstrap.schemas.ts";
-import { readGoalCloseoutView, readGoalLifecycle } from "./Completion.ts";
+import { readGoalCloseoutView } from "./Completion.ts";
 import { GoalGraphInputError, GoalGraphOperationalError } from "./Goals.errors.ts";
 import { decodeGoalManifest } from "./Goals.schemas.ts";
 import {
@@ -95,20 +94,14 @@ export const loadCapabilityProjection = Effect.fn("Goals.loadCapabilityProjectio
 
 // The decoded census and its projection together: `explain` needs the manifest
 // behind one packet to read its clone-scoped closeout view, so the scan runs once.
+// Every packet's declared `initiative.status` is its status; nothing is derived
+// from completion receipts.
 const loadCapabilityCensus = Effect.fn("Goals.loadCapabilityCensus")(function* (repoRoot: string) {
   const records = yield* listGoalPacketsStrict(repoRoot).pipe(
     Effect.mapError(GoalGraphOperationalError.new("Failed to scan goals/ for the capability graph."))
   );
   const manifests = yield* Effect.forEach(records, decodePacketManifest, { concurrency: 1 });
-  const statuses = yield* Effect.forEach(
-    manifests,
-    (manifest) =>
-      readGoalLifecycle(repoRoot, manifest.initiative.id, manifest).pipe(
-        Effect.map((status) => [manifest.initiative.id, status] as const)
-      ),
-    { concurrency: 1 }
-  );
-  return { manifests, projection: compileCapabilityProjection(manifests, R.fromEntries(statuses)) } as const;
+  return { manifests, projection: compileCapabilityProjection(manifests) } as const;
 });
 
 const renderJson = <A, I>(schema: S.ConstraintCodec<A, I>, report: A) =>
@@ -226,9 +219,9 @@ export const goalsExplainCommand = Command.make(
           )
         )
       );
-      // The projection already carries the derived lifecycle; the view adds the
-      // proposal and whether this clone's receipt verified it. A report exists only
-      // for a slug the manifests carry, so the manifest is always found here.
+      // The view adds the committed closeout and whether this clone's receipt
+      // verified it. A report exists only for a slug the manifests carry, so the
+      // manifest is always found here.
       const manifest = A.findFirst(manifests, (candidate) => candidate.initiative.id === slug);
       const transposeOption1 = yield* Effect.transposeOption(
         O.map(manifest, (found) => readGoalCloseoutView(".", slug, found))

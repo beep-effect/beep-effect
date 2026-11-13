@@ -17,6 +17,21 @@
  * mechanical census-locked migration over every packet (dry-run by default,
  * `--write` to apply).
  *
+ * `completed-retained` binds the goal's final PR in the same write: it sets
+ * `closeout`, marks the final in `completionGate.pullRequests` (demoting any
+ * other final to `supporting`) and deletes a legacy `proposedCloseout` key.
+ * The final is, in order: the legacy proposal's own final, read from the raw
+ * manifest JSON; `--final-pr <n>` (an open PR, or a merged one only with
+ * `--adopt-merged`); the checked-out branch's open PR from `gh pr view`. A
+ * non-grandfathered packet with no final is refused ("publish first, then
+ * rerun"); a grandfathered one flips status only. Reopening a committed
+ * closeout as `active` or `paused` deletes the record and demotes its final
+ * to `supporting`. Any write that keeps or reopens a committed closeout, or
+ * flips a grandfathered gate, also deletes a stale `proposedCloseout` key; a
+ * stale proposal naming another final than the committed closeout is refused.
+ * Verification is hosted and later: `goals completion refresh` reads the
+ * merged final, so this writer never reads a receipt.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -35,7 +50,8 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
-import { readGoalCloseoutView } from "./Completion.ts";
+import * as S from "effect/Schema";
+import { GoalFinalPullRequestState, goalFinalPullRequestResolver } from "./FinalPullRequest.ts";
 import {
   GoalManifestInvalidError,
   GoalPacketNotFoundError,
@@ -44,8 +60,9 @@ import {
 } from "./Goals.errors.ts";
 import {
   decodeGoalManifest,
-  GoalCloseoutVerification,
+  GoalCloseoutRecord,
   GoalPhaseStatus,
+  GoalPullRequestRole,
   GoalStatus,
   isGoalStatus,
 } from "./Goals.schemas.ts";
@@ -66,7 +83,8 @@ import {
   PacketTransitionWriter,
 } from "./PacketCore/PacketTransitionWriter.ts";
 import { PORTFOLIO_INDEX_PATH, writePortfolioIndex } from "./PortfolioIndex.ts";
-import type { GoalCloseoutRecord, GoalManifest, GoalPhase, GoalProposedCloseout } from "./Goals.schemas.ts";
+import type { GoalFinalPullRequestResolverShape } from "./FinalPullRequest.ts";
+import type { GoalCompletionGate, GoalManifest, GoalPhase, GoalPullRequestRef } from "./Goals.schemas.ts";
 import type { GoalPacketRecord } from "./Inventory.ts";
 import type { GoalPacketMigration } from "./Migration.ts";
 import type { PacketStage } from "./PacketCore/PacketCore.schemas.ts";
@@ -418,68 +436,295 @@ type ManifestEdit = { readonly path: ReadonlyArray<string>; readonly value: unkn
 
 type CloseoutTransition = { readonly edits: ReadonlyArray<ManifestEdit>; readonly note: string };
 
-// A proposal keeps its declared status active or paused until its completion
-// receipt verifies; `completed-retained` then adopts it as a committed closeout
-// record. The record digests in the proposal's slot, so that receipt still matches.
-const adoptVerifiedCloseout = Effect.fn("Goals.adoptVerifiedCloseout")(function* (
+// What the operator asked the bind writer for: `--final-pr <n>` and `--adopt-merged`.
+type CloseoutRequest = { readonly finalPullRequest: O.Option<number>; readonly adoptMerged: boolean };
+
+type BoundFinal = { readonly number: number; readonly source: string };
+
+type PullRequestRefJson = { readonly number: number; readonly role: GoalPullRequestRole };
+
+const PUBLISH_FIRST = "publish first (`bun run beep yeet open` or `bun run beep yeet publish`), then rerun";
+
+const DELETE_PROPOSAL: ManifestEdit = { path: ["proposedCloseout"], value: undefined };
+
+// A stale proposedCloseout beside a committed closeout, or on a grandfathered
+// gate, binds nothing; the write deletes it so doctor's raw-key guard clears.
+const deletingStaleProposal = (
+  manifest: Readonly<Record<string, unknown>>,
+  transition: O.Option<CloseoutTransition>
+): O.Option<CloseoutTransition> =>
+  R.has(manifest, "proposedCloseout")
+    ? O.some(
+        O.match(transition, {
+          onNone: (): CloseoutTransition => ({ edits: [DELETE_PROPOSAL], note: "deletes the stale proposedCloseout." }),
+          onSome: (value): CloseoutTransition => ({
+            edits: A.append(value.edits, DELETE_PROPOSAL),
+            note: `${value.note} Also deletes the stale proposedCloseout.`,
+          }),
+        })
+      )
+    : transition;
+
+// A legacy proposal has the committed record's shape. It is read from the raw
+// JSON, so the bind still finds it once the schema stops modelling the key.
+const decodeLegacyProposal = S.decodeUnknownOption(GoalCloseoutRecord);
+
+const legacyProposal = Effect.fn("Goals.legacyProposal")(function* (
   slug: string,
-  status: GoalStatus,
-  decoded: GoalManifest,
-  proposal: GoalProposedCloseout
+  manifest: Readonly<Record<string, unknown>>
 ) {
-  if (status === "active" || status === "paused") return O.none<CloseoutTransition>();
-  if (status !== proposal.status) {
-    return yield* GoalStatusInputError.new(
-      `A proposed closeout retains active/paused declared status or adopts its proposed ${proposal.status}; ${status} is neither.`
+  const raw = R.get(manifest, "proposedCloseout");
+  if (O.isNone(raw)) return O.none<GoalCloseoutRecord>();
+  const proposal = decodeLegacyProposal(raw.value);
+  if (O.isNone(proposal)) {
+    return yield* GoalManifestInvalidError.new(
+      slug,
+      'proposedCloseout is not { "status": "completed-retained", "finalPullRequest": <n> }; fix or delete it and rerun.'
     );
   }
-  const root = yield* findRepoRoot().pipe(Effect.orElseSucceed(process.cwd));
-  const view = yield* readGoalCloseoutView(root, slug, decoded);
-  if (!O.exists(view, (value) => GoalCloseoutVerification.is.verified(value.verification))) {
+  return proposal;
+});
+
+// `number` takes `role` at its first position (appended when absent), later
+// duplicates of it go, and any other final is demoted to supporting.
+const placePullRequestRef = (
+  refs: ReadonlyArray<GoalPullRequestRef>,
+  number: number,
+  role: GoalPullRequestRole
+): ReadonlyArray<PullRequestRefJson> => {
+  const placed = A.map(
+    refs,
+    (ref): PullRequestRefJson =>
+      ref.number === number
+        ? { number, role }
+        : { number: ref.number, role: GoalPullRequestRole.is.final(ref.role) ? "supporting" : ref.role }
+  );
+  return O.match(
+    A.findFirstIndex(placed, (ref) => ref.number === number),
+    {
+      onNone: () => A.append(placed, { number, role }),
+      onSome: (first) => A.filter(placed, (ref, index) => ref.number !== number || index === first),
+    }
+  );
+};
+
+const otherDeclaredFinals = (gate: GoalCompletionGate, number: number): ReadonlyArray<GoalPullRequestRef> =>
+  A.filter(gate.pullRequests ?? [], (ref) => GoalPullRequestRole.is.final(ref.role) && ref.number !== number);
+
+// An open PR never displaces a declared final that already merged: that merged
+// PR is the goal's real final, and binding it is an explicit --adopt-merged.
+const refuseMergedDeclaredFinal = Effect.fn("Goals.refuseMergedDeclaredFinal")(function* (
+  resolver: GoalFinalPullRequestResolverShape,
+  root: string,
+  gate: GoalCompletionGate,
+  number: number
+) {
+  for (const declared of otherDeclaredFinals(gate, number)) {
+    const candidate = yield* resolver.byNumber(root, declared.number);
+    if (O.isNone(candidate)) {
+      return yield* GoalStatusInputError.new(
+        `completionGate.pullRequests names #${declared.number} as the final and its state cannot be read; rerun once \`gh pr view ${declared.number}\` works.`
+      );
+    }
+    if (GoalFinalPullRequestState.is.MERGED(candidate.value.state)) {
+      return yield* GoalStatusInputError.new(
+        `completionGate.pullRequests names #${declared.number} as the final and it already merged; bind it with \`--final-pr ${declared.number} --adopt-merged\` instead of #${number}.`
+      );
+    }
+  }
+});
+
+const requestedFinal = Effect.fn("Goals.requestedFinal")(function* (
+  resolver: GoalFinalPullRequestResolverShape,
+  root: string,
+  gate: GoalCompletionGate,
+  number: number,
+  adoptMerged: boolean
+) {
+  const candidate = yield* resolver.byNumber(root, number);
+  if (O.isNone(candidate)) {
     return yield* GoalStatusInputError.new(
-      `The proposed closeout via #${proposal.finalPullRequest} has no verified completion receipt; run \`bun run beep goals completion refresh --slug ${slug}\` once the final PR is merged and merge-ready.`
+      `\`gh pr view ${number}\` found no pull request #${number}; check the number and rerun.`
     );
   }
-  return O.some({
-    edits: [
-      { path: ["proposedCloseout"], value: undefined },
-      { path: ["closeout"], value: { status: proposal.status, finalPullRequest: proposal.finalPullRequest } },
-    ],
-    note: `verified via #${proposal.finalPullRequest}; a write replaces proposedCloseout with the committed closeout record.`,
+  return yield* GoalFinalPullRequestState.match(candidate.value.state, {
+    OPEN: () =>
+      refuseMergedDeclaredFinal(resolver, root, gate, number).pipe(
+        Effect.as<BoundFinal>({ number, source: `--final-pr ${number}, open` })
+      ),
+    MERGED: () =>
+      adoptMerged
+        ? Effect.succeed<BoundFinal>({ number, source: `--final-pr ${number} --adopt-merged, merged` })
+        : Effect.fail(
+            GoalStatusInputError.new(
+              `#${number} already merged; bind a merged PR only with \`--final-pr ${number} --adopt-merged\`.`
+            )
+          ),
+    CLOSED: () =>
+      Effect.fail(
+        GoalStatusInputError.new(`#${number} was closed without merging and cannot be the final; ${PUBLISH_FIRST}.`)
+      ),
   });
 });
 
-// Reopening a committed closeout (active or paused) turns the record back into
-// its proposal; the digest is unchanged, so the receipt keeps verifying it.
-// Any other status would leave a record that contradicts the declared status.
-const reopenCommittedCloseout = Effect.fn("Goals.reopenCommittedCloseout")(function* (
-  status: GoalStatus,
-  record: GoalCloseoutRecord
+const branchFinal = Effect.fn("Goals.branchFinal")(function* (
+  resolver: GoalFinalPullRequestResolverShape,
+  root: string,
+  gate: GoalCompletionGate
 ) {
-  if (status === record.status) return O.none<CloseoutTransition>();
+  const candidate = yield* resolver.forBranch(root);
+  if (O.isNone(candidate)) {
+    return yield* GoalStatusInputError.new(
+      `No pull request was found for the checked-out branch (or \`gh pr view\` failed), so there is no final to bind; ${PUBLISH_FIRST}.`
+    );
+  }
+  const number = candidate.value.number;
+  return yield* GoalFinalPullRequestState.match(candidate.value.state, {
+    OPEN: () =>
+      refuseMergedDeclaredFinal(resolver, root, gate, number).pipe(
+        Effect.as<BoundFinal>({ number, source: `the open PR of branch ${candidate.value.headRefName}` })
+      ),
+    MERGED: () =>
+      Effect.fail(
+        GoalStatusInputError.new(
+          `The branch's PR #${number} already merged; bind it with \`--final-pr ${number} --adopt-merged\`.`
+        )
+      ),
+    CLOSED: () =>
+      Effect.fail(GoalStatusInputError.new(`The branch's PR #${number} was closed without merging; ${PUBLISH_FIRST}.`)),
+  });
+});
+
+// The final, in order: the legacy proposal's own, then --final-pr, then the
+// checked-out branch's open PR. Only the last two read GitHub.
+const resolveBoundFinal = Effect.fn("Goals.resolveBoundFinal")(function* (
+  gate: GoalCompletionGate,
+  proposal: O.Option<GoalCloseoutRecord>,
+  request: CloseoutRequest
+) {
+  if (O.isSome(proposal)) {
+    const own = proposal.value.finalPullRequest;
+    const conflicting = O.filter(request.finalPullRequest, (number) => number !== own);
+    if (O.isSome(conflicting)) {
+      return yield* GoalStatusInputError.new(
+        `proposedCloseout names #${own} as its final, so --final-pr ${conflicting.value} conflicts; drop --final-pr, or delete the proposal first.`
+      );
+    }
+    return { number: own, source: "the legacy proposedCloseout" };
+  }
+  const resolver = yield* goalFinalPullRequestResolver();
+  const root = yield* findRepoRoot().pipe(Effect.orElseSucceed(process.cwd));
+  if (O.isSome(request.finalPullRequest)) {
+    return yield* requestedFinal(resolver, root, gate, request.finalPullRequest.value, request.adoptMerged);
+  }
+  return yield* branchFinal(resolver, root, gate);
+});
+
+// `completed-retained` binds the final in the status write itself, so the
+// writer can no longer produce a completed packet with no closeout record.
+// A grandfathered gate carries no record and flips status only.
+const bindCloseout = Effect.fn("Goals.bindCloseout")(function* (
+  slug: string,
+  decoded: GoalManifest,
+  manifest: Readonly<Record<string, unknown>>,
+  request: CloseoutRequest
+) {
+  const gate = decoded.completionGate;
+  const proposal = yield* legacyProposal(slug, manifest);
+  if (gate.grandfathered) {
+    if (O.isSome(request.finalPullRequest)) {
+      return yield* GoalStatusInputError.new(
+        `goals/${slug} is grandfathered and carries no closeout record; drop --final-pr.`
+      );
+    }
+    return deletingStaleProposal(manifest, O.none());
+  }
+  const final = yield* resolveBoundFinal(gate, proposal, request);
+  const effects = A.flatten<ReadonlyArray<ReadonlyArray<string>>>([
+    [`sets closeout and marks #${final.number} final in completionGate.pullRequests`],
+    A.map(otherDeclaredFinals(gate, final.number), (ref) => `demotes #${ref.number} to supporting`),
+    O.isSome(proposal) ? ["deletes proposedCloseout"] : A.empty<string>(),
+  ]);
+  return O.some<CloseoutTransition>({
+    edits: A.flatten<ReadonlyArray<ReadonlyArray<ManifestEdit>>>([
+      O.isSome(proposal) ? [{ path: ["proposedCloseout"], value: undefined }] : A.empty<ManifestEdit>(),
+      [
+        {
+          path: ["completionGate", "pullRequests"],
+          value: placePullRequestRef(gate.pullRequests ?? [], final.number, "final"),
+        },
+        { path: ["closeout"], value: { status: "completed-retained", finalPullRequest: final.number } },
+      ],
+    ]),
+    note: `binds #${final.number} as the final PR (${final.source}): ${A.join(effects, ", ")}.`,
+  });
+});
+
+// Reopening a committed closeout (active or paused) deletes the record and
+// keeps its final as a supporting PR; any other status would contradict it.
+const reopenCommittedCloseout = Effect.fn("Goals.reopenCommittedCloseout")(function* (
+  slug: string,
+  status: GoalStatus,
+  gate: GoalCompletionGate,
+  record: GoalCloseoutRecord,
+  request: CloseoutRequest
+) {
+  if (status === record.status) {
+    const rebind = O.filter(request.finalPullRequest, (number) => number !== record.finalPullRequest);
+    if (O.isSome(rebind)) {
+      return yield* GoalStatusInputError.new(
+        `A committed closeout already binds #${record.finalPullRequest}; reopen with \`bun run beep goals set-status ${slug} active\` before binding #${rebind.value}.`
+      );
+    }
+    return O.none<CloseoutTransition>();
+  }
   if (status !== "active" && status !== "paused") {
     return yield* GoalStatusInputError.new(
       `A committed closeout via #${record.finalPullRequest} keeps ${record.status} or reopens as active/paused; ${status} is neither.`
     );
   }
-  return O.some({
+  return O.some<CloseoutTransition>({
     edits: [
       { path: ["closeout"], value: undefined },
       {
-        path: ["proposedCloseout"],
-        value: { status: record.status, finalPullRequest: record.finalPullRequest },
+        path: ["completionGate", "pullRequests"],
+        value: placePullRequestRef(gate.pullRequests ?? [], record.finalPullRequest, "supporting"),
       },
     ],
-    note: `reopened from #${record.finalPullRequest}; a write turns the committed closeout record back into proposedCloseout.`,
+    note: `reopens from #${record.finalPullRequest}: deletes the closeout record and demotes #${record.finalPullRequest} to supporting.`,
   });
 });
 
-const closeoutTransition = (slug: string, status: GoalStatus, decoded: GoalManifest) =>
-  decoded.proposedCloseout !== undefined
-    ? adoptVerifiedCloseout(slug, status, decoded, decoded.proposedCloseout)
-    : decoded.closeout !== undefined
-      ? reopenCommittedCloseout(status, decoded.closeout)
-      : Effect.succeed(O.none<CloseoutTransition>());
+const closeoutTransition = Effect.fn("Goals.closeoutTransition")(function* (
+  slug: string,
+  status: GoalStatus,
+  decoded: GoalManifest,
+  manifest: Readonly<Record<string, unknown>>,
+  request: CloseoutRequest
+) {
+  if (decoded.closeout !== undefined) {
+    const record = decoded.closeout;
+    const proposal = yield* legacyProposal(slug, manifest);
+    const disagreeing = O.filter(
+      proposal,
+      (value) => status === record.status && value.finalPullRequest !== record.finalPullRequest
+    );
+    if (O.isSome(disagreeing)) {
+      return yield* GoalStatusInputError.new(
+        `The committed closeout binds #${record.finalPullRequest} but a stale proposedCloseout names #${disagreeing.value.finalPullRequest}; delete proposedCloseout to keep #${record.finalPullRequest}, or reopen with \`bun run beep goals set-status ${slug} active\` and bind #${disagreeing.value.finalPullRequest}.`
+      );
+    }
+    const transition = yield* reopenCommittedCloseout(slug, status, decoded.completionGate, record, request);
+    return deletingStaleProposal(manifest, transition);
+  }
+  if (status === "completed-retained") return yield* bindCloseout(slug, decoded, manifest, request);
+  if (status === "active" || status === "paused" || !R.has(manifest, "proposedCloseout")) {
+    return O.none<CloseoutTransition>();
+  }
+  return yield* GoalStatusInputError.new(
+    `A legacy proposedCloseout keeps active/paused until \`set-status ${slug} completed-retained\` binds its final; ${status} is neither.`
+  );
+});
 
 // One JSONC edit per field keeps comments and key order; a closeout transition
 // lands in the same write, and the result must still decode before anything is written.
@@ -518,12 +763,13 @@ const reportSetStatusFailure = Effect.fn(function* (error: { readonly message: s
 const setStatusForSlug = Effect.fn("Goals.setStatusForSlug")(function* (
   slug: string,
   status: GoalStatus,
-  preview: boolean
+  preview: boolean,
+  request: CloseoutRequest
 ) {
   const fs = yield* FileSystem.FileSystem;
   const writer = yield* PacketTransitionWriter;
   const { decoded, manifest, manifestText, record, rewrittenReadme } = yield* loadPacketSurfaces(slug, status);
-  const transition = yield* closeoutTransition(slug, status, decoded);
+  const transition = yield* closeoutTransition(slug, status, decoded, manifest, request);
   const now = yield* DateTime.now;
   const today = pipe(DateTime.formatIso(now), Str.slice(0, 10));
   const nextManifest = yield* rewriteManifestStatus(slug, { manifestText, manifest }, status, today, transition);
@@ -550,6 +796,9 @@ const setStatusForSlug = Effect.fn("Goals.setStatusForSlug")(function* (
   yield* fs.writeFileString(record.manifestPath, nextManifest);
   yield* fs.writeFileString(record.readmePath, rewrittenReadme);
   yield* writePortfolioIndex();
+  if (O.isSome(transition)) {
+    yield* Console.log(`[goals:set-status] ${slug} closeout: ${transition.value.note}`);
+  }
   yield* Console.log(
     `[goals:set-status] ${slug} -> ${status} (manifest, README Lifecycle line, ${PORTFOLIO_INDEX_PATH}).`
   );
@@ -575,6 +824,16 @@ const previewFlag = Flag.Boolean("preview").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Print the guarded transition plan (fold, events to append, derived state) without writing")
 );
+const finalPrFlag = Flag.String("final-pr").pipe(
+  Flag.withDescription(
+    "completed-retained only: bind this PR number as the goal's final (default: a legacy proposal's final, else the checked-out branch's open PR)"
+  ),
+  Flag.optional
+);
+const adoptMergedFlag = Flag.Boolean("adopt-merged").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Let --final-pr bind a PR that already merged")
+);
 
 type SetStatusInput = {
   readonly migrate: boolean;
@@ -582,11 +841,35 @@ type SetStatusInput = {
   readonly write: boolean;
   readonly slug: O.Option<string>;
   readonly status: O.Option<string>;
+  readonly finalPr: O.Option<string>;
+  readonly adoptMerged: boolean;
 };
+
+const POSITIVE_INTEGER = /^[1-9]\d*$/;
+
+// Flag-shape errors refuse before any packet read or process spawn.
+const parseCloseoutRequest = Effect.fn("Goals.parseCloseoutRequest")(function* (input: SetStatusInput) {
+  if (input.adoptMerged && O.isNone(input.finalPr)) {
+    return yield* GoalStatusInputError.new("--adopt-merged binds the merged PR that --final-pr <n> names; pass both.");
+  }
+  const finalPullRequest = yield* O.match(input.finalPr, {
+    onNone: () => Effect.succeedNone,
+    onSome: (raw) =>
+      POSITIVE_INTEGER.test(raw)
+        ? Effect.succeedSome(Number(raw))
+        : Effect.fail(GoalStatusInputError.new(`--final-pr "${raw}" is not a positive integer.`)),
+  });
+  return { finalPullRequest, adoptMerged: input.adoptMerged } satisfies CloseoutRequest;
+});
 
 const runMigrateMode = Effect.fn("Goals.runMigrateMode")(function* (input: SetStatusInput) {
   if (O.isSome(input.slug) || O.isSome(input.status)) {
     return yield* GoalStatusInputError.new("--migrate takes no slug/status arguments; it migrates every packet.");
+  }
+  if (O.isSome(input.finalPr) || input.adoptMerged) {
+    return yield* GoalStatusInputError.new(
+      "--migrate binds no final; --final-pr and --adopt-merged apply to one packet's completed-retained transition."
+    );
   }
   if (input.preview) {
     return yield* GoalStatusInputError.new(
@@ -600,6 +883,7 @@ const runSetStatusProgram = Effect.fn("Goals.runSetStatusProgram")(function* (in
   if (input.migrate) {
     return yield* runMigrateMode(input);
   }
+  const request = yield* parseCloseoutRequest(input);
   if (O.isNone(input.slug) || O.isNone(input.status)) {
     return yield* GoalStatusInputError.new(
       `Usage: beep goals set-status <slug> <status> with status one of ${STATUS_DOMAIN}.`
@@ -608,7 +892,12 @@ const runSetStatusProgram = Effect.fn("Goals.runSetStatusProgram")(function* (in
   if (!isGoalStatus(input.status.value)) {
     return yield* GoalStatusInputError.new(`Unknown status "${input.status.value}"; expected one of ${STATUS_DOMAIN}.`);
   }
-  return yield* setStatusForSlug(input.slug.value, input.status.value, input.preview);
+  if (O.isSome(request.finalPullRequest) && input.status.value !== "completed-retained") {
+    return yield* GoalStatusInputError.new(
+      `--final-pr binds the final of a completed-retained closeout; ${input.status.value} takes no final.`
+    );
+  }
+  return yield* setStatusForSlug(input.slug.value, input.status.value, input.preview, request);
 });
 
 /**
@@ -627,9 +916,17 @@ const runSetStatusProgram = Effect.fn("Goals.runSetStatusProgram")(function* (in
  */
 export const goalsSetStatusCommand = Command.make(
   "set-status",
-  { slug: slugArgument, status: statusArgument, migrate: migrateFlag, write: migrateWriteFlag, preview: previewFlag },
-  Effect.fn(function* ({ migrate, preview, slug, status, write }) {
-    return yield* runSetStatusProgram({ migrate, preview, slug, status, write }).pipe(
+  {
+    slug: slugArgument,
+    status: statusArgument,
+    migrate: migrateFlag,
+    write: migrateWriteFlag,
+    preview: previewFlag,
+    finalPr: finalPrFlag,
+    adoptMerged: adoptMergedFlag,
+  },
+  Effect.fn(function* ({ adoptMerged, finalPr, migrate, preview, slug, status, write }) {
+    return yield* runSetStatusProgram({ adoptMerged, finalPr, migrate, preview, slug, status, write }).pipe(
       Effect.catchTags({
         GoalStatusInputError: reportSetStatusFailure,
         GoalPacketNotFoundError: reportSetStatusFailure,
@@ -641,6 +938,8 @@ export const goalsSetStatusCommand = Command.make(
     );
   })
 ).pipe(
-  Command.withDescription("Set a packet's canonical status (manifest + README + INDEX) or run --migrate"),
+  Command.withDescription(
+    "Set a packet's canonical status (manifest + README + INDEX), binding the final PR on completed-retained, or run --migrate"
+  ),
   Command.provide(PacketCoreLive)
 );

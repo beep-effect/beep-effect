@@ -27,8 +27,8 @@ Yeet; a packet holds at most three open PRs.
 | P5 L3 and L6: taxonomy, alignments, interchange | pending | Legal seeds and FOLIO DTOs out of `@beep/ontology` to the law-practice asset pack through the manifested loader, consumers migrated in the same PR per the census; `fold -> Dataset`; `Dataset` quotient and canonical digest with the gold fixture regenerated; `Literal` cases; `rdf -> md` removed; SSSOM `MappingSet`; gUFO class-typing pilot on the one relator that drives a check. | `L3-1` to `L3-4` green in `packages/foundation/modeling/ontology/test`, `L6-1` to `L6-2` green in `packages/foundation/modeling/rdf/test`; `rg -l "@beep/md" packages/foundation/modeling/rdf/src packages/foundation/modeling/rdf/package.json` is empty; the `prov:Entity` projection round-trip test is green; the registry test asserts license and digest on every external namespace; the office-action standing list stays green. |
 | P6 L5 and L7: operations, agent surface, the flow | pending | `@beep/nlp-processing` absorbs `nlp/Operations` and `nlp/Algebra` after the `Combiner`/`Reducer` census; `Operation` with `withActivity`, Kleisli laws under a declared observation; instrumentation shard regenerated; MCP tools from the same schemas, write tools emit `proposed` only; the office-action flow completed end to end on synthetic fixtures; the matter-wall authorization work scoped by the P0 access-path map and the two-matter adversarial fixture in the law-practice server tests. | `L5-1` to `L5-3` green by id in `packages/foundation/capability/nlp-processing/test`; `OfficeActionReview.flow.test.ts` complete and green; `MatterWall.two-matter.test.ts` in the law-practice server tests green; the write-tools-emit-proposed test green; `bun run beep observability catalog --check` current. |
 | P7 Cut-over and retirement | pending | Retire `@beep/nlp` and every superseded `@beep/schema-org` facet per `standards/architecture/11-evolution-and-deprecation.md` with consumers migrated in the same PR; glossary, chapter and rulings merged and the chapter-11 amendment (merged before P2) confirmed in force; the `THEORY.md` narrative absorbed by the chapter before the file is retired with its package; the vision document corrected. | `research/consumer-census.md` records every disposition; `rg -l '@beep/nlp["/]' packages apps standards tsconfig.json` is empty; `rg -l "@beep/schema-org" packages apps` is empty except facets the census retains; `bun run beep lint schema-first`, `bun run beep lint identity-registry` and `bun run beep lint package-scripts` pass; no S31 inventory grew (entry counts per inventory and allowlist at or below the P0 base commit, SPEC Constraints); the chapter, rulings and glossary entries exist on `origin/main`. |
-| P8 Yeet: final PR to mergeable | pending | Publish the final PR through yeet with `final-check` on the pushed head and drive it to mergeable: required checks green or attributed, review threads answered and resolved, `proposedCloseout` plus the gating `yeet-verdict` and the reflection on board. | `bun run beep yeet final-check` receipt for the pushed head; `bun run beep yeet monitor --until-ready` prints `merge-ready: yes`; zero unresolved review threads. |
-| P9 Close | pending | Verify completion after merge and adopt the status in a packet-state PR. | `bun run beep goals completion refresh --slug text-knowledge-stack-rebuild` verifies; `set-status` adopted on `origin/main`. |
+| P8 Yeet: final PR to mergeable | pending | Publish the final PR through yeet with `final-check` on the pushed head and drive it to mergeable: required checks green or attributed, review threads answered and resolved, the `closeout` record (`goals set-status text-knowledge-stack-rebuild completed-retained`) and the reflection on board. | `bun run beep yeet final-check` receipt for the pushed head; `bun run beep yeet monitor --until-ready` prints `merge-ready: yes`; zero unresolved review threads. |
+| P9 Close | pending | Verify the closeout after the merge from hosted facts; name any red required check in a committed `redAttribution` decision file. | `bun run beep goals completion refresh --slug text-knowledge-stack-rebuild` prints verified; `origin/main` has `closeout.status == initiative.status`. |
 
 Phase ids match `ops/manifest.json` `phases[]`. Each of P1 to P7 is its own
 PR or PR stack; P8 names the last of them. "Green by id" means every test title
@@ -54,12 +54,13 @@ Before marking the packet closed:
    YAML frontmatter must validate against `ReflectionFrontmatter`.
 2. Run `bun run beep lint reflection-artifacts`.
 3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase
-   statuses and a typed `proposedCloseout` with status `completed-retained`
-   and finalPullRequest, plus a gating `yeet-verdict` reference in
-   `completionGate.acceptanceEvidence` for the final PR's accepted head (the
-   proposal does not validate without it). Keep `initiative.status` operative
-   until completion evidence verifies; do not close the external
-   execution/session ledger from a proposal.
+   statuses. Once the final PR is open, run
+   `bun run beep goals set-status text-knowledge-stack-rebuild completed-retained`: it writes
+   `closeout` naming that PR with the matching `initiative.status`, and the
+   commit ships in the final PR. After the merge,
+   `bun run beep goals completion refresh --slug text-knowledge-stack-rebuild` must print verified;
+   name any red required check in a committed decision file
+   (`redAttribution`).
 
 ## Execution Notes
 

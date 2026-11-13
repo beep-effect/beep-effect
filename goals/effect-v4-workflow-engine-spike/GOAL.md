@@ -67,6 +67,12 @@ exactly-once delivery without evidence, or changing dependencies, lockfiles,
 public API/schema, auth, infra, security behavior, or destructive state without
 the approval required by `SPEC.md`.
 
-Done only when the evidence contract is complete and Yeet reports the PR work
-mergeable, or when a documented engine failure gives docketing an actionable
-handoff and blocks unsupported adoption.
+The final PR needs the evidence contract complete, or a documented engine
+failure that gives docketing an actionable handoff and blocks unsupported
+adoption.
+
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug effect-v4-workflow-engine-spike` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/effect-v4-workflow-engine-spike/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

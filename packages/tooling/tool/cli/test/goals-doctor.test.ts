@@ -1,4 +1,6 @@
 import { Git } from "@beep/git/Git";
+import { GoalCloseoutCheck, GoalCloseoutChecker } from "@beep/repo-cli/commands/Goals/CloseoutCheck";
+import { GoalCompletionClaimsReader } from "@beep/repo-cli/commands/Goals/RedAttribution";
 import {
   CapabilityProjection,
   capabilityDoctorFindings,
@@ -6,6 +8,8 @@ import {
   classifyGoalDoctorFindings,
   DuplicateCapabilityDeclaration,
   GoalAcceptanceEvidenceRef,
+  GoalAttributedRedFact,
+  GoalCompletionClaims,
   GoalCompletionIo,
   GoalCompletionObservation,
   GoalCompletionReceipt,
@@ -25,6 +29,7 @@ import {
   layerGoalCompletionReceiptStoreMemory,
   PacketEventStoreLive,
 } from "@beep/repo-cli/test/Goals";
+import { YeetCommandError } from "@beep/repo-cli/test/Yeet";
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -47,9 +52,17 @@ import * as Result from "effect/Result";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 import { temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 import { completionIoFixture } from "./support/CompletionIo.ts";
 
+// A closeout checker that answers `check` for its own packet and none for any other.
+const fixedCloseoutChecker = (check: GoalCloseoutCheck) =>
+  GoalCloseoutChecker.of({
+    check: Effect.fn("GoalsDoctorTest.fixedChecker")(function* (_root: string, slug: string) {
+      return slug === check.packet ? O.some(check) : O.none<GoalCloseoutCheck>();
+    }),
+  });
 const decodeGoalManifest = S.decodeEffect(GoalManifest);
 const encodeGoalCompletionReceiptJson = S.encodeEffect(S.fromJsonString(GoalCompletionReceipt));
 const encodeGoalManifestJson = S.encodeEffect(S.fromJsonString(GoalManifest));
@@ -147,6 +160,56 @@ const writeActivePacket = Effect.fn("writeActivePacket")(function* (slug: string
   yield* writeProjectFile(`goals/${slug}/GOAL.md`, `# ${slug}\n`);
 });
 
+// A committed closeout on #7, consistent with its README.
+const writeClosedPacket = Effect.fn("writeClosedPacket")(function* () {
+  yield* writeProjectFile(
+    "goals/closed/ops/manifest.json",
+    `${encodeJson({
+      schemaVersion: "initiative-manifest/v2",
+      initiative: { id: "closed", status: "completed-retained" },
+      lifecycle: "completed-retained",
+      completionGate: COMPLETION_GATE,
+      closeout: { status: "completed-retained", finalPullRequest: 7 },
+    })}\n`
+  );
+  yield* writeProjectFile("goals/closed/README.md", "# closed\n\n## Status\n\nLifecycle: `completed-retained`\n");
+});
+
+// A port whose every GitHub read dies: the run must not reach it.
+const unusedGitHub = completionIoFixture({
+  manifest: Effect.succeed(""),
+  origin: Effect.succeed("git@github.com:example/repo.git"),
+  respond: Effect.fn("GoalsDoctorTest.unusedGitHub")(() => Effect.die("the fixed closeout check read GitHub")),
+});
+
+// Answers pulls/7 with `pull` and fails every other read.
+const pullOnlyGitHub = (
+  pull: { readonly state: string; readonly merged: boolean; readonly merged_at: string | null },
+  record: (endpoint: string) => void = () => undefined
+) =>
+  completionIoFixture({
+    manifest: Effect.succeed(""),
+    origin: Effect.succeed("git@github.com:example/repo.git"),
+    respond: Effect.fn("GoalsDoctorTest.pullOnlyGitHub")((endpoint: string) =>
+      Effect.sync(() => record(endpoint)).pipe(
+        Effect.andThen(
+          Str.endsWith("pulls/7")(endpoint)
+            ? Effect.succeed(
+                encodeJson({
+                  number: 7,
+                  ...pull,
+                  created_at: "2026-09-01T00:00:00Z",
+                  merge_commit_sha: pull.merged ? "merge-result" : null,
+                  head: { sha: "accepted-head" },
+                  base: { ref: "main", repo: { full_name: "example/repo" } },
+                })
+              )
+            : Effect.fail(YeetCommandError.make({ message: `fixture refuses ${endpoint}` }))
+        )
+      )
+    ),
+  });
+
 const writeBaseline = (keys: ReadonlyArray<string>) =>
   writeProjectFile(
     "goals/goals-doctor.baseline.jsonc",
@@ -204,52 +267,6 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
       expect(output).not.toContain("use doctor --online");
     })
   );
-  it.effect("offline proposals declare their final PR without a legacy missing-PR advisory", () =>
-    Effect.gen(function* () {
-      yield* temporaryWorkingDirectory;
-      yield* runGit(["init", "-b", "main"]);
-      yield* runGit(["config", "user.name", "Fixture"]);
-      yield* runGit(["config", "user.email", "fixture@example.invalid"]);
-      for (const slug of ["proposal-cited", "proposal-uncited"]) {
-        yield* writeActivePacket(slug);
-        yield* writeProjectFile(
-          `goals/${slug}/ops/manifest.json`,
-          `${encodeJson({
-            initiative: { id: slug, status: "active" },
-            lifecycle: "active",
-            completionGate: {
-              ...COMPLETION_GATE,
-              acceptanceEvidence: [{ kind: "yeet-verdict", ref: ".beep/yeet/verdict.json", gating: true }],
-            },
-            proposedCloseout: { status: "completed-retained", finalPullRequest: 7 },
-          })}\n`
-        );
-      }
-      yield* writeBaseline([]);
-      yield* runGit(["add", "."]);
-      yield* runGit(["commit", "-m", "chore: proposal-cited fixture"]);
-      const output = yield* captureOutput(
-        runGoalsCommand(["doctor"]).pipe(
-          Effect.provideService(
-            GoalCompletionIo,
-            completionIoFixture({
-              manifest: Effect.succeed(""),
-              origin: Effect.succeed("git@github.com:example/repo.git"),
-              respond: Effect.fn("GoalsDoctorTest.proposalGitHub")(() => Effect.die("offline proposal used GitHub")),
-            })
-          )
-        )
-      );
-      for (const slug of ["proposal-cited", "proposal-uncited"]) {
-        expect(output).toContain(`${slug} [completion-gate-unknown]`);
-        expect(output).not.toContain(`${slug} [completion-gate-unsatisfied]`);
-      }
-      expect(output).toContain("Final PR #7: unknown. No matching clone receipt.");
-      expect(output).not.toContain("Legacy completion declaration has no PR reference");
-      // The derived status line names the proposal and that this clone has not verified it.
-      expect(output).toContain("[goals:doctor] note: proposal-cited: completed-retained (proposed via #7, unverified)");
-    })
-  );
   it.effect("offline committed closeouts print their committed status line", () =>
     Effect.gen(function* () {
       yield* temporaryWorkingDirectory;
@@ -291,13 +308,297 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
       expect(output).toContain("closed [completion-gate-unknown]");
     })
   );
+  it.effect("online closeout checks map each outcome onto a note, an advisory or the blocking finding", () =>
+    Effect.forEach(
+      [
+        {
+          check: { outcome: "final-open", reasons: ["final #7 open"] },
+          blocks: false,
+          expected: [
+            "[goals:doctor] note: closed: completed-retained (committed via #7, unverified); final #7 open, nothing to verify until it merges",
+          ],
+          absent: ["closed [completion-gate", "closed [closeout-unverified]"],
+        },
+        {
+          check: {
+            outcome: "verified",
+            reasons: ["verified by a goal-completion-receipt/v1 row (Yeet readiness rules)"],
+            attributedReds: [
+              GoalAttributedRedFact.make({
+                context: "Lint",
+                checkRunId: O.some(1),
+                conclusion: "failure",
+                observed: "red",
+                attribution: "inherited",
+                fixPullRequest: 2994,
+                decisionFile: "goals/closed/decisions/2026-11-14-lint.md",
+                source: "origin-main",
+              }),
+            ],
+          },
+          blocks: false,
+          expected: [
+            "[goals:doctor] note: closed: completed-retained (verified via #7)",
+            "[goals:doctor] note: closed: attributed Lint (inherited, fix #2994, goals/closed/decisions/2026-11-14-lint.md)",
+            "[goals:doctor] note: closed: verified by a goal-completion-receipt/v1 row (Yeet readiness rules)",
+          ],
+          absent: ["closed [completion-gate", "closed [closeout-unverified]"],
+        },
+        {
+          check: {
+            outcome: "operator-ruling",
+            reasons: ["unattributed red: Lint"],
+            rulingFile: O.some("goals/closed/decisions/2026-11-14-ruling.md"),
+          },
+          blocks: false,
+          expected: [
+            "[goals:doctor] note: closed: completed-retained (committed via #7, unverified); closed by operator ruling goals/closed/decisions/2026-11-14-ruling.md",
+          ],
+          absent: ["closed [completion-gate", "closed [closeout-unverified]"],
+        },
+        {
+          check: {
+            outcome: "beyond-window",
+            reasons: ["final #7 merged more than 28 days ago, beyond the rule-suite window"],
+          },
+          blocks: false,
+          expected: [
+            "[goals:doctor] note: closed: completed-retained (committed via #7, unverified); final #7 merged more than 28 days ago, beyond the rule-suite window",
+          ],
+          absent: ["closed [completion-gate", "closed [closeout-unverified]"],
+        },
+        {
+          check: { outcome: "transient", reasons: ["review threads unreadable"] },
+          blocks: false,
+          expected: ["closed [completion-gate-unknown] Final PR #7: unknown (transient). review threads unreadable."],
+          absent: ["closed [closeout-unverified]"],
+        },
+        {
+          check: { outcome: "unverified", reasons: ["unattributed red: Lint"] },
+          blocks: true,
+          expected: [
+            "[goals:doctor] NEW blocking findings (not in baseline):",
+            "closed [closeout-unverified] Final PR #7: unattributed red: Lint. Next:",
+            "--final 7 --attribute-red",
+            "bun run beep goals set-status closed active",
+          ],
+          absent: ["closed [completion-gate"],
+        },
+      ] as const,
+      Effect.fn("GoalsDoctorTest.closeoutOutcome")(function* (row) {
+        yield* temporaryWorkingDirectory;
+        yield* writeClosedPacket();
+        yield* writeBaseline([]);
+        const check = GoalCloseoutCheck.make({ packet: "closed", finalPullRequest: 7, ...row.check });
+        let exit: Exit.Exit<unknown, unknown> = Exit.void;
+        const output = yield* captureOutput(
+          runGoalsCommand(["doctor", "--online"]).pipe(
+            Effect.provideService(GoalCloseoutChecker, fixedCloseoutChecker(check)),
+            Effect.provideService(GoalCompletionIo, unusedGitHub),
+            Effect.exit,
+            Effect.tap((result) =>
+              Effect.sync(() => {
+                exit = result;
+              })
+            )
+          )
+        );
+        if (row.blocks) expectReportedFailure(exit);
+        else exit.pipe(Exit.isSuccess, assertTrue);
+        for (const text of row.expected) expect(output).toContain(text);
+        for (const text of row.absent) expect(output).not.toContain(text);
+      }),
+      { discard: true }
+    )
+  );
+  it.effect("an unverified closeout blocks under the key carrying its final, and the baseline ratchets it", () =>
+    Effect.gen(function* () {
+      yield* temporaryWorkingDirectory;
+      yield* writeClosedPacket();
+      const check = GoalCloseoutCheck.make({
+        packet: "closed",
+        finalPullRequest: 7,
+        outcome: "unverified",
+        reasons: ["final #7 closed without merging; bind a new final or reopen the packet"],
+      });
+      const online = runGoalsCommand(["doctor", "--online"]).pipe(
+        Effect.provideService(GoalCloseoutChecker, fixedCloseoutChecker(check)),
+        Effect.provideService(GoalCompletionIo, unusedGitHub)
+      );
+      // A re-final mints a new key, so an inherited #6 never covers #7.
+      yield* writeBaseline(["closed closeout-unverified #6"]);
+      const introduced = yield* Effect.exit(online);
+      expectReportedFailure(introduced);
+      yield* writeBaseline(["closed closeout-unverified #7"]);
+      const inherited = yield* Effect.exit(online);
+      inherited.pipe(Exit.isSuccess, assertTrue);
+    })
+  );
+  it.effect("a raw legacy proposedCloseout key is a blocking manifest-invalid naming the bind command", () =>
+    Effect.gen(function* () {
+      yield* temporaryWorkingDirectory;
+      yield* writeActivePacket("legacy");
+      // The schema strips the retired key, so the packet decodes; only the raw JSON shows it.
+      yield* writeProjectFile(
+        "goals/legacy/ops/manifest.json",
+        `${encodeJson({
+          schemaVersion: "initiative-manifest/v2",
+          initiative: { id: "legacy", title: "legacy", status: "active" },
+          lifecycle: "active",
+          completionGate: COMPLETION_GATE,
+          proposedCloseout: { status: "completed-retained", finalPullRequest: 7 },
+        })}\n`
+      );
+      const decoded = yield* S.decodeUnknownEffect(GoalManifest)({
+        initiative: { id: "legacy", status: "active" },
+        completionGate: COMPLETION_GATE,
+        proposedCloseout: { status: "completed-retained", finalPullRequest: 7 },
+      });
+      expect(decoded).not.toHaveProperty("proposedCloseout");
+      yield* writeBaseline([]);
+      let exit: Exit.Exit<unknown, unknown> = Exit.void;
+      const output = yield* captureOutput(
+        runGoalsCommand(["doctor"]).pipe(
+          Effect.exit,
+          Effect.tap((result) =>
+            Effect.sync(() => {
+              exit = result;
+            })
+          )
+        )
+      );
+      expectReportedFailure(exit);
+      expect(output).toContain(
+        "legacy [manifest-invalid] ops/manifest.json has a legacy proposedCloseout; run `bun run beep goals set-status legacy completed-retained`, which binds its final, or deletes it when a closeout is already committed or the gate is grandfathered."
+      );
+      yield* writeBaseline(["legacy manifest-invalid"]);
+      const inherited = yield* Effect.exit(runGoalsCommand(["doctor"]));
+      inherited.pipe(Exit.isSuccess, assertTrue);
+      // Without the key the same packet is clean.
+      yield* writeBaseline([]);
+      yield* writeActivePacket("legacy");
+      const clean = yield* Effect.exit(runGoalsCommand(["doctor"]));
+      clean.pipe(Exit.isSuccess, assertTrue);
+    })
+  );
+  it.effect("offline never blocks a committed closeout and never consults the closeout checker", () =>
+    Effect.gen(function* () {
+      yield* temporaryWorkingDirectory;
+      yield* writeClosedPacket();
+      yield* writeBaseline([]);
+      let consulted = 0;
+      const checker = GoalCloseoutChecker.of({
+        check: Effect.fn("GoalsDoctorTest.countingChecker")(function* () {
+          consulted += 1;
+          return O.some(GoalCloseoutCheck.make({ packet: "closed", finalPullRequest: 7, outcome: "unverified" }));
+        }),
+      });
+      let exit: Exit.Exit<unknown, unknown> = Exit.void;
+      const output = yield* captureOutput(
+        runGoalsCommand(["doctor"]).pipe(
+          Effect.provideService(GoalCloseoutChecker, checker),
+          Effect.provideService(GoalCompletionIo, unusedGitHub),
+          Effect.exit,
+          Effect.tap((result) =>
+            Effect.sync(() => {
+              exit = result;
+            })
+          )
+        )
+      );
+      exit.pipe(Exit.isSuccess, assertTrue);
+      expect(consulted).toBe(0);
+      expect(output).toContain("closed [completion-gate-unknown]");
+      expect(output).not.toContain("[closeout-unverified]");
+    })
+  );
+  it.effect("the live online check blocks a final closed without merging and advises on a transient read", () =>
+    Effect.forEach(
+      [
+        {
+          pull: { state: "closed", merged: false, merged_at: null },
+          blocks: true,
+          expected: "closed [closeout-unverified] Final PR #7: final #7 closed without merging",
+        },
+        {
+          pull: { state: "closed", merged: true, merged_at: "2026-11-10T00:00:00Z" },
+          blocks: false,
+          expected: "closed [completion-gate-unknown] Final PR #7: unknown (transient).",
+        },
+      ] as const,
+      Effect.fn("GoalsDoctorTest.liveCloseout")(function* (row) {
+        yield* temporaryWorkingDirectory;
+        yield* writeClosedPacket();
+        yield* writeBaseline([]);
+        let exit: Exit.Exit<unknown, unknown> = Exit.void;
+        const output = yield* captureOutput(
+          runGoalsCommand(["doctor", "--online"]).pipe(
+            Effect.provideService(GoalCompletionIo, pullOnlyGitHub(row.pull)),
+            Effect.provideService(GoalCompletionClaimsReader, {
+              read: () => Effect.succeed(GoalCompletionClaims.make({})),
+            }),
+            Effect.exit,
+            Effect.tap((result) =>
+              Effect.sync(() => {
+                exit = result;
+              })
+            )
+          )
+        );
+        if (row.blocks) expectReportedFailure(exit);
+        else exit.pipe(Exit.isSuccess, assertTrue);
+        expect(output).toContain(row.expected);
+      }),
+      { discard: true }
+    )
+  );
+  it.effect("online legacy rows read only the pull request when the final merged before the window", () =>
+    Effect.gen(function* () {
+      yield* temporaryWorkingDirectory;
+      yield* DateTime.makeUnsafe("2026-11-12T00:00:00Z").pipe(DateTime.toEpochMillis, TestClock.setTime);
+      yield* writeProjectFile(
+        "goals/typed/ops/manifest.json",
+        `${encodeJson({
+          initiative: { id: "typed", status: "completed-retained" },
+          lifecycle: "completed-retained",
+          completionGate: { ...COMPLETION_GATE, pullRequests: [{ number: 7, role: "final" }] },
+        })}\n`
+      );
+      yield* writeProjectFile("goals/typed/README.md", "# Typed\n\nLifecycle: `completed-retained`\n");
+      yield* writeBaseline([]);
+      let reads = A.empty<string>();
+      const output = yield* captureOutput(
+        runGoalsCommand(["doctor", "--online"]).pipe(
+          Effect.provideService(
+            GoalCompletionIo,
+            pullOnlyGitHub({ state: "closed", merged: true, merged_at: "2026-10-06T00:00:00Z" }, (endpoint) => {
+              reads = A.append(reads, endpoint);
+            })
+          )
+        )
+      );
+      expect(reads).toEqual(["repos/{owner}/{repo}/pulls/7"]);
+      expect(output).toContain(
+        "[goals:doctor] note: typed: final #7 merged more than 28 days ago, beyond the rule-suite window; its stored receipt is used"
+      );
+      expect(output).toContain("typed [completion-gate-unknown]");
+    })
+  );
   it.effect("doctor prints the missing fact for unknown completion and nothing for verified", () =>
     Effect.forEach(
       [
-        { declaration: false, extraUnknown: false, expect: "accepted-head declaration digest unobserved" },
-        { declaration: true, extraUnknown: true, expect: 'gating evidence yeet-verdict "merge-ready" unknown' },
-        { declaration: true, extraUnknown: false, expect: "" },
-      ],
+        // A v1 row that verified under Yeet readiness is returned as stored.
+        { version: "goal-completion-receipt/v1", threads: false, extraUnknown: false, expect: "" },
+        // A v2 row must carry both hosted kinds; the missing one is named.
+        {
+          version: "goal-completion-receipt/v2",
+          threads: false,
+          extraUnknown: false,
+          expect: "no hosted-review-threads evidence",
+        },
+        // A declared local verdict gates nothing, even when it is unknown.
+        { version: "goal-completion-receipt/v2", threads: true, extraUnknown: true, expect: "" },
+      ] as const,
       Effect.fn("GoalsDoctorTest.unknownCompletionWording")(function* (row) {
         yield* temporaryWorkingDirectory;
         yield* runGit(["init", "-b", "main"]);
@@ -318,12 +619,20 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
           observedHead: O.some("accepted-head"),
           detail: "Green",
         });
+        const threads = GoalEvidenceCheck.make({
+          ref: GoalAcceptanceEvidenceRef.make({ kind: "hosted-review-threads", ref: "outstanding", gating: true }),
+          outcome: "verified",
+          observedHead: O.some("accepted-head"),
+          detail: "No outstanding review thread (0 read when refresh ran).",
+        });
+        const hostedEvidence = row.threads ? [hosted, threads] : [hosted];
         const receipt = GoalCompletionReceipt.make({
-          schemaVersion: "goal-completion-receipt/v1",
+          schemaVersion: row.version,
           repository: "example/repo",
           packet: "typed",
           declarationDigest: digest,
-          acceptedDeclarationDigest: row.declaration ? O.some(digest) : O.none(),
+          // The accepted-head digest no longer gates (DN-12).
+          acceptedDeclarationDigest: O.none(),
           requiredChecks: O.some(
             GoalRequiredCheckSnapshot.make({
               contexts: ["Lint"],
@@ -376,7 +685,7 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
           ),
           evidence: row.extraUnknown
             ? [
-                hosted,
+                ...hostedEvidence,
                 GoalEvidenceCheck.make({
                   ref: GoalAcceptanceEvidenceRef.make({ kind: "yeet-verdict", ref: "merge-ready", gating: true }),
                   outcome: "unknown",
@@ -384,7 +693,7 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
                   detail: "Verdict absent",
                 }),
               ]
-            : [hosted],
+            : hostedEvidence,
           nonRequiredReds: [],
           subClaims: [],
           outcome: "verified",
@@ -418,132 +727,30 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
       })
     )
   );
-  it.effect("a verified proposal reads as adoption pending until set-status commits it", () =>
-    Effect.gen(function* () {
-      yield* temporaryWorkingDirectory;
-      yield* runGit(["init", "-b", "main"]);
-      const verdictRef = GoalAcceptanceEvidenceRef.make({
-        kind: "yeet-verdict",
-        ref: ".beep/yeet/verdict.json",
-        gating: true,
-      });
-      const manifest = yield* decodeGoalManifest({
-        initiative: { id: "pending", status: "active" },
-        lifecycle: "active",
-        completionGate: { ...COMPLETION_GATE, acceptanceEvidence: [verdictRef] },
-        proposedCloseout: { status: "completed-retained", finalPullRequest: 7 },
-      });
-      const manifestJson = yield* encodeGoalManifestJson(manifest);
-      yield* writeProjectFile("goals/pending/ops/manifest.json", manifestJson);
-      yield* writeProjectFile("goals/pending/README.md", "# Pending\n\nLifecycle: `active`\n");
-      yield* writeBaseline([]);
-      const digest = yield* goalCompletionDeclarationDigest(manifest);
-      const time = DateTime.makeUnsafe("2026-10-06T01:00:00Z");
-      const verifiedCheck = (ref: GoalAcceptanceEvidenceRef) =>
-        GoalEvidenceCheck.make({ ref, outcome: "verified", observedHead: O.some("accepted-head"), detail: "Green" });
-      const receipt = GoalCompletionReceipt.make({
-        schemaVersion: "goal-completion-receipt/v1",
-        repository: "example/repo",
-        packet: "pending",
-        declarationDigest: digest,
-        acceptedDeclarationDigest: O.some(digest),
-        requiredChecks: O.some(
-          GoalRequiredCheckSnapshot.make({
-            contexts: ["Lint"],
-            sources: ["repos/{owner}/{repo}/rulesets/42/history/1"],
-            effectiveAt: time,
-            inventoryComplete: true,
-            mergeTimeInventory: O.some(
-              GoalMergeTimeInventory.make({
-                source: "repos/{owner}/{repo}/rulesets/rule-suites/1",
-                ruleSuiteId: 1,
-                ref: "refs/heads/main",
-                afterSha: "merge-result",
-                pushedAt: time,
-                result: "pass",
-                ruleSources: [
-                  GoalMergeTimeRuleSource.make({
-                    sourceType: "ruleset",
-                    rulesetId: O.some(42),
-                    name: O.some("main"),
-                    enforcement: "active",
-                    requiredStatusChecks: O.some("pass"),
-                    survives: true,
-                    version: O.some("repos/{owner}/{repo}/rulesets/42/history/1"),
-                  }),
-                ],
-              })
-            ),
-          })
-        ),
-        requiredCheckFacts: [
-          GoalRequiredCheckFact.make({
-            context: "Lint",
-            head: "accepted-head",
-            checkRunId: O.some(1),
-            conclusion: "success",
-            outcome: "verified",
-            source: "check-run",
-          }),
-        ],
-        finalPullRequest: 7,
-        acceptedHead: O.some("accepted-head"),
-        merge: O.some(
-          GoalMergeResult.make({
-            mergeCommit: "merge-result",
-            tree: "merge-tree",
-            mergedAt: time,
-            method: O.none(),
-            baseRef: "main",
-          })
-        ),
-        evidence: [
-          verifiedCheck(
-            GoalAcceptanceEvidenceRef.make({ kind: "hosted-required-checks", ref: "required", gating: true })
-          ),
-          verifiedCheck(verdictRef),
-        ],
-        nonRequiredReds: [],
-        subClaims: [],
-        outcome: "verified",
-        verifiedAt: time,
-      });
-      yield* writeProjectFile(
-        ".beep/goals/completion-receipts.ndjson",
-        `${yield* encodeGoalCompletionReceiptJson(receipt)}\n`
-      );
-      const output = yield* captureOutput(
-        runGoalsCommand(["doctor"]).pipe(
-          Effect.provideService(
-            GoalCompletionIo,
-            completionIoFixture({
-              manifest: Effect.succeed(""),
-              origin: Effect.succeed("git@github.com:example/repo.git"),
-              respond: Effect.fn("GoalsDoctorTest.adoptionGitHub")(() => Effect.die("offline adoption used GitHub")),
-            })
-          )
-        )
-      );
-      // Proof alone never closes the packet: the note says so and the advisory names the adoption command.
-      expect(output).toContain("[goals:doctor] note: pending: completed-retained (verified via #7, adoption pending)");
-      expect(output).toContain("pending [closeout-adoption-pending]");
-      expect(output).toContain("bun run beep goals set-status pending completed-retained");
-    })
-  );
   it.effect("stored receipts name a known red and unreadable merge facts plainly", () =>
     Effect.forEach(
       [
         {
+          version: "goal-completion-receipt/v2" as const,
           merged: true,
           hosted: "unsatisfied" as const,
           kind: "completion-gate-unsatisfied",
           text: "See head-bound completion evidence",
         },
         {
+          version: "goal-completion-receipt/v2" as const,
           merged: false,
           hosted: "unknown" as const,
           kind: "completion-gate-unknown",
           text: "PR, merge or check facts could not be read",
+        },
+        // A v1 row that did not verify predates the hosted-only rules (DN-8).
+        {
+          version: "goal-completion-receipt/v1" as const,
+          merged: true,
+          hosted: "unsatisfied" as const,
+          kind: "completion-gate-unknown",
+          text: "v1 receipt predates hosted-only rules; rerun refresh",
         },
       ],
       Effect.fn("GoalsDoctorTest.storedReceiptMessages")(function* (row) {
@@ -561,7 +768,7 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         const digest = yield* goalCompletionDeclarationDigest(manifest);
         const time = DateTime.makeUnsafe("2026-10-06T01:00:00Z");
         const receipt = GoalCompletionReceipt.make({
-          schemaVersion: "goal-completion-receipt/v1",
+          schemaVersion: row.version,
           repository: "example/repo",
           packet: "typed",
           declarationDigest: digest,
@@ -633,7 +840,6 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
       const digest = yield* goalCompletionDeclarationDigest(manifest);
       const time = DateTime.makeUnsafe("2026-10-06T01:00:00Z");
       const receipt = GoalCompletionReceipt.make({
-        schemaVersion: "goal-completion-receipt/v1",
         repository: "example/repo",
         packet: "typed",
         declarationDigest: digest,
@@ -757,7 +963,7 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
   );
 
   it.effect(
-    "flags every-phase-complete only while the packet still owns its status",
+    "flags an active packet whose phases are all complete",
     () =>
       Effect.gen(function* () {
         yield* temporaryWorkingDirectory;
@@ -780,21 +986,16 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
             phases,
           })}\n`
         );
-        // A proposed closeout keeps "active" by design (set-status refuses to flip it);
-        // completion is derived from receipts, so the phase rule must stay quiet.
-        yield* writeActivePacket("proposed");
+        // A packet whose phases are not all complete owes nothing yet.
+        yield* writeActivePacket("working");
         yield* writeProjectFile(
-          "goals/proposed/ops/manifest.json",
+          "goals/working/ops/manifest.json",
           `${encodeJson({
             schemaVersion: "initiative-manifest/v2",
-            initiative: { id: "proposed", title: "proposed", status: "active" },
+            initiative: { id: "working", title: "working", status: "active" },
             lifecycle: "active",
-            completionGate: {
-              ...COMPLETION_GATE,
-              acceptanceEvidence: [{ kind: "yeet-verdict", ref: ".beep/yeet/verdict.json", gating: true }],
-            },
-            proposedCloseout: { status: "completed-retained", finalPullRequest: 7 },
-            phases,
+            completionGate: COMPLETION_GATE,
+            phases: [...phases, { id: "P2", status: "active" }],
           })}\n`
         );
         yield* writeBaseline([]);
@@ -824,8 +1025,7 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         );
         expectReportedFailure(exit);
         expect(output).toContain("owned [phases-terminal-but-active]");
-        expect(output).not.toContain("proposed [phases-terminal-but-active]");
-        expect(output).toContain("proposed [completion-gate-unknown]");
+        expect(output).not.toContain("working [phases-terminal-but-active]");
       }),
     20_000
   );

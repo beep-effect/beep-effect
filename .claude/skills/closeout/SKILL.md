@@ -74,10 +74,14 @@ Prefer these, so prompts read the same across sessions:
 - `Open the follow-up PR for <x>` — when the next step is a separate branch.
 - `Run /grill-with-docs on <decision>` — when direction, not execution, is next.
 - `Retire the lane` / `Sweep the clone` — post-merge closeout.
-- `Adopt the <slug> closeout (Recommended)` — after a goal's final PR merges:
-  `goals completion refresh`, then `goals set-status` in a packet-state PR. A
-  goal is not done, and `/goal` must not stop, until that PR merges.
-- `Archive the <slug> packet (Recommended)` — after the adoption PR merges:
+- `Verify the <slug> closeout (Recommended)` — after a goal's final PR merges:
+  `goals completion refresh --slug <slug>`, then `goals doctor --online`.
+  `yeet sweep --retire` runs the same check and leaves a P0 inbox row when it
+  fails. A red required check needs a committed `redAttribution` decision
+  file naming it with its cause and fix PR; a final GitHub can no longer
+  verify needs an `operatorRuling` decision file. A goal is not done, and
+  `/goal` must not stop, until it verifies or an operator ruling closes it.
+- `Archive the <slug> packet (Recommended)` — after the closeout verifies:
   `bun run beep goals archive --kind goals --slug <slug> --plan`, then
   `--write --expect <planId>`, push the archive checkout, then land the
   tombstone in a packet-state PR; or set

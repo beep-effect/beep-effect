@@ -56,3 +56,9 @@ Non-negotiable:
 Acceptance: every `SPEC.md` criterion and manifest verification command passes with no unrelated
 churn. Stop on an external-write path, public exposure, missing bundle capability, authorization
 change, fallback failure, or scope beyond the fixed five-day story.
+
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug lejeune-knowledge-desk-lab` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/lejeune-knowledge-desk-lab/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

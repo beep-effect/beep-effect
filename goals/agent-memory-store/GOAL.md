@@ -68,9 +68,8 @@ git diff --check -- goals/agent-memory-store
 bun run beep goals decisions check --slug agent-memory-store
 ```
 
-Ship proposedCloseout, the gating `yeet-verdict` and the reflection in the
-final PR (status stays active or paused). After that merge, verify with `bun run beep goals completion refresh --slug agent-memory-store`,
-then adopt with `bun run beep goals set-status agent-memory-store <status>` in a
-packet-state PR. Done only once it merges and this passes, or an operator
-blocker is reported with evidence:
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug agent-memory-store` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
 `git show origin/main:goals/agent-memory-store/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

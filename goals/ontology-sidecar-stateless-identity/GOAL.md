@@ -1,7 +1,6 @@
 # GOAL: run the ontology sidecar stateless, keyed on the launch bearer
 
-Repo root: the current working directory (the `beep-effect` checkout you run
-in; several checkouts exist). All paths below are repo-relative.
+Repo root: the current `beep-effect` checkout; all paths below are repo-relative.
 
 Outcome: the desktop ontology MCP sidecar serves `[McpProtocol.v2026_07_28]`
 only; `GovernedTierGate` keys grant freeze, hash chains and TTL on a
@@ -9,14 +8,12 @@ server-side digest of the verified per-launch bearer; the integration harness
 and the live proof client drive it through `@beep/mcp-kit/client`; the Origin
 allow-list lives on `OntologyMcpServerConfig` behind one Origin check.
 
-Compact `/goal` launcher; the packet files are the contract:
+The packet files are the contract:
 
-- `goals/ontology-sidecar-stateless-identity/README.md`
-- `goals/ontology-sidecar-stateless-identity/SPEC.md`
-- `goals/ontology-sidecar-stateless-identity/PLAN.md`
+- `goals/ontology-sidecar-stateless-identity/{README,SPEC,PLAN}.md`
 - `goals/ontology-sidecar-stateless-identity/ops/manifest.json`
 
-Read those first, then `AGENTS.md`, `CLAUDE.md`,
+Read those first, then `AGENTS.md`,
 `explorations/effect-mcp-2026-07-28/{BRIEF,MAP,DECISIONS}.md`, and
 `goals/agent-execution-authority/SPEC.md`. Repo standards outrank packet
 prose.
@@ -54,7 +51,7 @@ Workflow:
    POST 403; `S.TaggedError`; CORS `allowedHeaders` gain `mcp-protocol-version`,
    `mcp-method`, `mcp-name` and drop `mcp-session-id`.
 6. Decision 10: "a run is a sidecar launch"; record the HTTP cancellation gap;
-   package-verify per package; at P4 Close `/reflect` + reflection lint.
+   package-verify per package.
 
 Acceptance:
 
@@ -75,9 +72,10 @@ jq . goals/ontology-sidecar-stateless-identity/ops/manifest.json
 git diff --check -- goals/ontology-sidecar-stateless-identity
 ```
 
-Do not change public API, dependencies, lockfiles, or generated files
-outside the named surfaces. The raw bearer never enters a ledger, span, log,
-or assertion.
+The raw bearer never enters a ledger, span, log, or assertion.
 
-Done when acceptance passes and verification is complete, or a blocker is
-reported with file/command evidence.
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug ontology-sidecar-stateless-identity` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/ontology-sidecar-stateless-identity/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

@@ -108,7 +108,7 @@ with backward-compatible decode, and its ROUT-07):**
 
 **Close:** read the 7-day scorecard cohort, record the parity ledgers and per-lever attribution under
 `history/`, read Property Laws p95 against the HOST-05 gate (only after slice 4 has landed), then the
-reflection and `proposedCloseout`.
+reflection and the `closeout` record.
 
 ## Closeout Checklist
 
@@ -119,9 +119,13 @@ Before marking the packet closed:
    validate against `ReflectionFrontmatter`.
 2. Run `bun run beep lint reflection-artifacts`.
 3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase
-   statuses and a typed `proposedCloseout` with status `completed-retained`
-   and finalPullRequest. Keep `initiative.status` operative until completion
-   evidence verifies; do not close the external execution/session ledger from a proposal.
+   statuses. Once the final PR is open, run
+   `bun run beep goals set-status hosted-setup-tax completed-retained`: it writes
+   `closeout` naming that PR with the matching `initiative.status`, and the
+   commit ships in the final PR. After the merge,
+   `bun run beep goals completion refresh --slug hosted-setup-tax` must print verified;
+   name any red required check in a committed decision file
+   (`redAttribution`).
 
 ## Execution Notes
 
