@@ -3,9 +3,10 @@
 # Scores one whole UTC day with `bun run beep ci certainty` from the checked-out
 # default branch: push to every required context green per pull-request head,
 # the main verdict rate, runner-minutes, and the rows sibling goals read
-# (goals/certainty-scorecard/SPEC.md, "Numbers the scorecard reports"). The
-# scheduled run scores yesterday; a dispatch may name an earlier day, which is
-# how a dropped or refused night is re-run.
+# (goals/certainty-scorecard/SPEC.md, "Numbers the scorecard reports"). Without
+# a `day` input a run scores the UTC day before the run's own created_at, which
+# a GitHub re-run keeps, so re-running a refused night scores that night's day.
+# A dispatch may name the day instead, which is how a dropped night is re-run.
 #
 # A night counts toward the packet's seven only when this run succeeds: the
 # capture is bounded, and an api-partial or otherwise uncertified report exits
@@ -35,7 +36,7 @@ on:
   workflow_dispatch:
     inputs:
       day:
-        description: "UTC day to score, YYYY-MM-DD (empty scores yesterday)"
+        description: "UTC day to score, YYYY-MM-DD (empty: the day before this run was created)"
         required: false
         default: ""
 
@@ -69,7 +70,14 @@ jobs:
           echo "CERTAINTY_JOB_STARTED=$(date -u +%s)" >> "$GITHUB_ENV"
           day="${DAY_INPUT:-}"
           if [[ -z "$day" ]]; then
-            day="$(date -u -d yesterday +%F)"
+            # The UTC day before this run was created. A re-run attempt keeps the run's created_at
+            # (only run_started_at moves), so it scores the same day as the night it repeats.
+            if ! created="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" --jq .created_at)" \
+              || [[ ! "$created" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T ]] \
+              || ! day="$(date -u -d "${created:0:10} - 1 day" +%F 2>/dev/null)"; then
+              echo "::error::could not read this run's created_at; the day is not scored."
+              exit 1
+            fi
           fi
           if [[ ! "$day" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || [[ "$(date -u -d "$day" +%F 2>/dev/null)" != "$day" ]]; then
             echo "::error::day must be a calendar date written YYYY-MM-DD; received ${day}."

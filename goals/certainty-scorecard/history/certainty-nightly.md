@@ -13,6 +13,9 @@ expires after 90 days.
   dispatch (`gh workflow run certainty-nightly.yml --ref main -f day=<day>`) or a GitHub re-run of the refused
   run (`gh run rerun <run-id>`). The row for that day says `yes` under Re-run and gives the run id and attempt
   number that counted; the refused or dropped scheduled night keeps its own row.
+- Which day a run scores: the `day` input when given, otherwise the UTC day before the run's `created_at`. A
+  GitHub re-run keeps the run's `created_at`, so it scores the same day as the night it repeats, however late it
+  runs. A run whose own record cannot be read is refused.
 - A main verdict that lands after the night's capture is picked up only by a re-run of that day; nothing re-polls
   main inside the 7-day horizon (PLAN.md execution notes).
 - The first countable day is 2026-11-14, the first whole UTC day after both baseline breaks (d8326d55935 and

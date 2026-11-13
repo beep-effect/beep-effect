@@ -2153,9 +2153,27 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const temp = yield* fs.makeTempDirectoryScoped();
       const bin = path.join(temp, "bin");
       yield* fs.makeDirectory(bin);
-      // `gh api rate_limit --jq ...` answers with the scripted core bucket; `bun` records its argv and
-      // answers as the certainty command would in the scripted mode.
-      yield* fs.writeFileString(path.join(bin, "gh"), '#!/usr/bin/env bash\nprintf "%s\\n" "$FAKE_RATE_LIMIT"\n');
+      // `gh` logs every call and answers by endpoint: the scripted core bucket for `rate_limit`, the
+      // run's created_at for `actions/runs/<id>` (or a failure), and a later per-attempt created_at that
+      // the plan must never read. `bun` records its argv and answers as the certainty command would.
+      yield* fs.writeFileString(
+        path.join(bin, "gh"),
+        A.join(
+          [
+            "#!/usr/bin/env bash",
+            'printf "%s\\n" "$*" >> "$FAKE_GH_CALLS"',
+            'case "$*" in',
+            '  *rate_limit*) printf "%s\\n" "$FAKE_RATE_LIMIT" ;;',
+            '  */attempts/*) printf "%s\\n" "$FAKE_ATTEMPT_CREATED_AT" ;;',
+            '  *actions/runs/*) [[ "${FAKE_RUN_API:-}" == fail ]] && { echo "HTTP 502" >&2; exit 1; }',
+            '    printf "%s\\n" "$FAKE_CREATED_AT" ;;',
+            "  *) exit 1 ;;",
+            "esac",
+            "",
+          ],
+          "\n"
+        )
+      );
       yield* fs.writeFileString(
         path.join(bin, "bun"),
         A.join(
@@ -2182,9 +2200,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const runStep = Effect.fnUntraced(function* (script: string, env: Readonly<Record<string, string>>) {
         const output = path.join(temp, `output-${run}`);
         const exported = path.join(temp, `env-${run}`);
+        const ghCalls = path.join(temp, `gh-calls-${run}`);
         run += 1;
         yield* fs.writeFileString(output, "");
         yield* fs.writeFileString(exported, "");
+        yield* fs.writeFileString(ghCalls, "");
         const result = Bun.spawnSync(["bash", "-c", script], {
           cwd: temp,
           env: {
@@ -2193,13 +2213,17 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
             GITHUB_OUTPUT: output,
             RUNNER_TEMP: temp,
             REQUEST_CAP: requestCap,
+            GITHUB_REPOSITORY: "beep-effect/beep-effect",
+            GITHUB_RUN_ID: "43500000001",
             FAKE_ARGS: path.join(temp, "bun-args"),
+            FAKE_GH_CALLS: ghCalls,
             ...env,
           },
           stderr: "pipe",
           stdout: "pipe",
         });
         return {
+          calls: yield* fs.readFileString(ghCalls),
           exit: result.exitCode,
           output: yield* fs.readFileString(output),
           stdout: result.stdout.toString(),
@@ -2212,6 +2236,46 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(planned.output).toBe(
         "day=2026-10-31\nsince=2026-10-31T00:00:00Z\nuntil=2026-11-01T00:00:00Z\nbound=750\nlimit=1000\nremaining=900\n"
       );
+      // An explicit day is taken as given: the run's own record is never read.
+      expect(planned.calls).toBe('api rate_limit --jq .resources.core | "\\(.limit) \\(.remaining)"\n');
+
+      // Without a day the plan scores the UTC day before the run's created_at, read from the run, not
+      // from an attempt. A GitHub re-run keeps the run's created_at (run 43374964920: attempt 2 reads
+      // created_at 05:53:32Z at the run and 06:24:33Z at /attempts/2), so a schedule re-run days later
+      // still scores the night it repeats, never "yesterday" as of the re-run.
+      const runRecord = "api repos/beep-effect/beep-effect/actions/runs/43500000001 --jq .created_at\n";
+      const scheduled = yield* runStep(plan, {
+        DAY_INPUT: "",
+        FAKE_CREATED_AT: "2026-11-10T04:41:12Z",
+        FAKE_ATTEMPT_CREATED_AT: "2026-11-10T04:41:12Z",
+        FAKE_RATE_LIMIT: "1000 900",
+      });
+      expect(scheduled.exit).toBe(0);
+      expect(scheduled.output).toContain("day=2026-11-09\nsince=2026-11-09T00:00:00Z\nuntil=2026-11-10T00:00:00Z\n");
+      expect(Str.startsWith(runRecord)(scheduled.calls)).toBe(true);
+      const rerun = yield* runStep(plan, {
+        DAY_INPUT: "",
+        FAKE_CREATED_AT: "2026-11-10T04:41:12Z",
+        FAKE_ATTEMPT_CREATED_AT: "2026-11-12T08:15:00Z",
+        FAKE_RATE_LIMIT: "1000 900",
+      });
+      expect(rerun.output).toBe(scheduled.output);
+      expect(rerun.calls).not.toContain("/attempts/");
+      // A dispatch without a day follows the same rule from its own creation time.
+      const dispatched = yield* runStep(plan, {
+        DAY_INPUT: "",
+        FAKE_CREATED_AT: "2026-11-01T00:00:05Z",
+        FAKE_ATTEMPT_CREATED_AT: "2026-11-01T00:00:05Z",
+        FAKE_RATE_LIMIT: "1000 900",
+      });
+      expect(dispatched.output).toContain("day=2026-10-31\n");
+      // An unreadable or malformed run record refuses the night before the budget is read.
+      for (const failure of [{ FAKE_RUN_API: "fail" }, { FAKE_CREATED_AT: "null" }]) {
+        const closed = yield* runStep(plan, { DAY_INPUT: "", FAKE_RATE_LIMIT: "1000 900", ...failure });
+        expect([closed.exit, closed.output]).toEqual([1, ""]);
+        expect(closed.stdout).toContain("::error::could not read this run's created_at; the day is not scored.");
+        expect(closed.calls).not.toContain("rate_limit");
+      }
       const capped = yield* runStep(plan, { DAY_INPUT: "2026-11-12", FAKE_RATE_LIMIT: "5000 4980" });
       expect(capped.output).toContain(`bound=${requestCap}\n`);
       const inReserve = yield* runStep(plan, { DAY_INPUT: "2026-11-12", FAKE_RATE_LIMIT: "1000 150" });
