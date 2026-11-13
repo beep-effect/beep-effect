@@ -226,9 +226,7 @@ const prepare = Effect.fn("Citation.prepareAnnotationEntry")(function* (
     }
     const xml = yield* makeCitationXmlWorker(limits, owned.xmlRuntime);
     const processor = yield* (
-      mode.mode === "skip"
-        ? makeCitationSkipAnnotationSpans()
-        : Effect.flatMap(owned.wrap, makeCitationWrapAnnotationSpans)
+      mode.mode === "skip" ? makeCitationSkipAnnotationSpans() : makeCitationWrapAnnotationSpans(limits, owned.wrap)
     ).pipe(Effect.provideService(CitationXmlBalance, xml));
     const assembly = yield* makeCitationAnnotationAssembly(limits).pipe(
       Effect.provideService(CitationAnnotationSpanProcessor, processor)

@@ -707,6 +707,7 @@
     {"name":"Citation.projectSessionNode","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.projectSixForms","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.projectVerifiedOccurrences","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"Citation.provideStageAdmission","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.publicationHashString","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.pythonByteHash","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.pythonJsonString","owner":"@beep/law-practice-server","family":"slice","conforms":true},

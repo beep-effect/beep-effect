@@ -153,12 +153,16 @@ export const installCitationCaseNameScan = Effect.fn("Citation.installCaseNameSc
   runtime: CitationNativeProcessRuntime,
   config: CitationCaseNameScanConfiguration
 ) {
-  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText);
-  const predicates = yield* makeCitationCaseNamePredicates();
-  const worker = yield* installCitationRegexEvaluator(limits, runtime, config.bindings, "python-regex-v0");
+  const installedInput = yield* Effect.exit(makeCitationRegexInput(limits, reserveCitationInvocationText));
+  const installedPredicates = yield* Effect.exit(makeCitationCaseNamePredicates());
+  const installedWorker = yield* Effect.exit(
+    installCitationRegexEvaluator(limits, runtime, config.bindings, "python-regex-v0")
+  );
   return Effect.fn("Citation.runCaseNameScan")(function* (raw: unknown) {
     const request = yield* decodeCitationMetadataWordRequest(limits, Input, raw, () => fail("invalid-input"));
+    const input = yield* installedInput;
     const budget = yield* CitationTextBudget;
+    const predicates = yield* installedPredicates;
     const words = yield* Effect.forEach(
       request.words,
       Effect.fn("Citation.ownCaseNameWord")(function* (word) {
@@ -186,6 +190,7 @@ export const installCitationCaseNameScan = Effect.fn("Citation.installCaseNameSc
         plaintiffLength: 0,
       })
     );
+    const worker = yield* installedWorker;
     const update = (patch: Partial<CitationCaseNameScanState>) =>
       Ref.update(state, (current) => CitationCaseNameScanState.make({ ...current, ...patch }));
     const join = Effect.fn("Citation.extractCaseNameText")(function* (start: number, end: number) {

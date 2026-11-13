@@ -6,9 +6,12 @@ import * as Clock from "effect/Clock";
 import * as Digest from "effect/crypto/Digest";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
+import * as SynchronizedRef from "effect/SynchronizedRef";
+import * as Tuple from "effect/Tuple";
 import { CitationInvocation, reserveCitationInvocationText } from "./Invocation.ts";
 import { acquireCitationNativeLease, captureCitationNativeAdmission } from "./NativeAdmission.ts";
 import {
@@ -38,8 +41,12 @@ const invalidRuntime = () => failure("invalid-runtime");
  * and operation: snapshot limits and runtime, the descriptor registry, job
  * preparation, control-frame preflight, Clock, spawner and the shared native
  * admission. Each evaluation reads CitationInvocation at call time, reserves its
- * source text on the invocation budget, and starts one physical owner in the
- * invocation Scope (protocol v2: one child per job). Full job preflight precedes
+ * source text on the invocation budget, and uses the invocation's one physical
+ * owner, created in the invocation Scope on its first evaluation with that
+ * evaluator's Clock, spawner and limits (every evaluator of one engine shares
+ * them, so one request is served by one spawner); the owner's
+ * open/quarantine check runs before job preparation (protocol v2: one child
+ * per job). Full job preflight precedes
  * payload/map allocation and native acquisition. A native timer includes
  * spawn/startup/traffic/matching; confirmed retirement alone releases the shared
  * total/regex lease. This private component supplies no public engine Layer.
@@ -70,12 +77,18 @@ export const installCitationRegexEvaluator = Effect.fn("Citation.installRegexEva
   const preparation = yield* makeCitationRegexJobPreparation(limits, reserveCitationInvocationText);
   const regexDeadline = limits.regexDeadline.pipe(Duration.toMillis, Duration.millis);
   yield* preflightCitationRegexControlFrames(limits.processMessageBytes);
-  // The physical owner captures a Scope, so it belongs to the invocation, never the engine.
-  const startOwner = Effect.flatMap(CitationInvocation, ({ scope }) =>
-    makeCitationNativeProcessOwner(limits, engineOperation, failure).pipe(
-      Effect.provideService(Scope.Scope, scope),
-      Effect.provideService(Clock.Clock, clock),
-      Effect.provideService(ChildProcessSpawner, spawner)
+  // The physical owner captures a Scope, so it belongs to the invocation, never the
+  // engine: the request's first evaluation creates it and later ones reuse it.
+  const ownerFor = Effect.flatMap(CitationInvocation, ({ scope, regexOwner }) =>
+    SynchronizedRef.modifyEffect(regexOwner, (current) =>
+      O.isSome(current)
+        ? Effect.succeed(Tuple.make(current.value, current))
+        : makeCitationNativeProcessOwner(limits, engineOperation, failure).pipe(
+            Effect.provideService(Scope.Scope, scope),
+            Effect.provideService(Clock.Clock, clock),
+            Effect.provideService(ChildProcessSpawner, spawner),
+            Effect.map((owner) => Tuple.make(owner, O.some(owner)))
+          )
     )
   );
   const evaluateWith = (registry: Effect.Success<ReturnType<typeof makeRegistry>>) =>
@@ -87,7 +100,7 @@ export const installCitationRegexEvaluator = Effect.fn("Citation.installRegexEva
         maximumMatches: unknown = limits.patternMatches,
         mode: unknown = "finditer"
       ) =>
-        Effect.flatMap(startOwner, (owner) =>
+        Effect.flatMap(ownerFor, (owner) =>
           withCitationNativeProcess(
             owner,
             acquireCitationNativeLease(admission, engineOperation, true, failure),
@@ -135,11 +148,3 @@ export const installCitationRegexEvaluator = Effect.fn("Citation.installRegexEva
   });
   return { evaluate: evaluateWith(registry), bindDescriptors };
 });
-/** One installed regex evaluator.
- * @internal @category models @since 0.0.0
- */
-export type CitationRegexEvaluator = Effect.Success<ReturnType<typeof installCitationRegexEvaluator>>;
-/** One completed regex evaluation.
- * @internal @category models @since 0.0.0
- */
-export type CitationRegexEvaluation = Effect.Success<ReturnType<CitationRegexEvaluator["evaluate"]>>;

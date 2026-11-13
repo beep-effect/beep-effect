@@ -110,7 +110,7 @@ export const installCitationPreCaseMetadataExtraction = Effect.fn("Citation.inst
   config: CitationPublicationMetadataConfiguration
 ) {
   const match = yield* installCitationMetadataContextMatch(limits, runtime, config);
-  const strings = yield* makeCitationPinCiteCleaner(limits);
+  const installedStrings = yield* Effect.exit(makeCitationPinCiteCleaner(limits));
   return Effect.fn("Citation.preparePreCaseMetadata")(function* (raw: unknown) {
     const envelope = yield* S.decodeUnknownEffect(Envelope)(raw).pipe(Effect.mapError(invalidInput));
     if (truthy(envelope.plaintiff)) return O.none<CitationPreCaseMetadataPatch>();
@@ -121,6 +121,7 @@ export const installCitationPreCaseMetadataExtraction = Effect.fn("Citation.inst
     if (O.isNone(owned)) return O.none<CitationPreCaseMetadataPatch>();
     const pin = yield* owned.value.capture("pin_cite");
     const antecedentGuess = yield* owned.value.capture("antecedent");
+    const strings = yield* installedStrings;
     const cleaned = yield* strings.cleanPinCite(pin);
     const fullSpanStart = request.spanStart - (owned.value.end - owned.value.start);
     return O.some(

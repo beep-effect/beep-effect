@@ -2,6 +2,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { constant } from "effect/Function";
@@ -18,7 +19,10 @@ const $I = $LawPracticeServerId.create("test/CitationEngineProbe");
  *
  * Each field counts spans of one name, except `nativeProcesses`, which counts
  * child processes the observed spawner started. `regexWorkerConstructions`
- * counts installed regex evaluators (`Citation.installRegexEvaluator`). The goals
+ * counts installed regex evaluators (`Citation.installRegexEvaluator`).
+ * `regexDescriptorBindings` counts per-call descriptor registries for
+ * request-generated patterns, `nativeProcessOwners` physical process owners and
+ * `diffXmlWorkerConstructions` Diff and Xml worker constructions. The goals
  * `citation-engine-install-once` and `citation-regex-worker-v3` move these
  * numbers on purpose and update the recorded baseline in the same change.
  *
@@ -32,6 +36,9 @@ const $I = $LawPracticeServerId.create("test/CitationEngineProbe");
  *   regexWorkerConstructions: 0,
  *   regexEvaluations: 0,
  *   nativeProcesses: 0,
+ *   regexDescriptorBindings: 0,
+ *   nativeProcessOwners: 0,
+ *   diffXmlWorkerConstructions: 0,
  * });
  * ```
  * @internal @category models @since 0.0.0
@@ -44,6 +51,9 @@ export class CitationEngineWorkCounts extends S.Opaque<CitationEngineWorkCounts,
     regexWorkerConstructions: S.Natural,
     regexEvaluations: S.Natural,
     nativeProcesses: S.Natural,
+    regexDescriptorBindings: S.Natural,
+    nativeProcessOwners: S.Natural,
+    diffXmlWorkerConstructions: S.Natural,
   }).pipe(
     $I.annoteSchema("CitationEngineWorkCounts", {
       description:
@@ -53,12 +63,15 @@ export class CitationEngineWorkCounts extends S.Opaque<CitationEngineWorkCounts,
 ) {}
 
 const spanNames = {
-  metadataOperationInstalls: "Citation.makeMetadataOperation",
-  configurationDetaches: "Citation.detachMetadataConfiguration",
-  tokenizerBuilds: "Citation.makeTokenizer",
-  regexWorkerConstructions: "Citation.installRegexEvaluator",
-  regexEvaluations: "Citation.evaluateRegexProcess",
-} satisfies Record<Exclude<keyof typeof CitationEngineWorkCounts.fields, "nativeProcesses">, string>;
+  metadataOperationInstalls: ["Citation.makeMetadataOperation"],
+  configurationDetaches: ["Citation.detachMetadataConfiguration"],
+  tokenizerBuilds: ["Citation.makeTokenizer"],
+  regexWorkerConstructions: ["Citation.installRegexEvaluator"],
+  regexEvaluations: ["Citation.evaluateRegexProcess"],
+  regexDescriptorBindings: ["Citation.bindRegexDescriptors"],
+  nativeProcessOwners: ["Citation.makeNativeProcessOwner"],
+  diffXmlWorkerConstructions: ["Citation.makeDiffWorker", "Citation.makeXmlWorker"],
+} satisfies Record<Exclude<keyof typeof CitationEngineWorkCounts.fields, "nativeProcesses">, ReadonlyArray<string>>;
 const zero = constant(0);
 
 /** Count named engine spans and child processes around a piece of work.
@@ -89,6 +102,7 @@ export const makeCitationEngineProbe = Effect.fn("EngineProbeTest.make")(functio
 ) {
   const seen = MutableHashMap.empty<string, number>();
   const count = (name: string) => O.getOrElse(MutableHashMap.get(seen, name), zero);
+  const total = (names: ReadonlyArray<string>) => A.reduce(names, 0, (sum, name) => sum + count(name));
   const tracer = Tracer.make({
     span: (options) => {
       MutableHashMap.set(seen, options.name, count(options.name) + 1);
@@ -97,12 +111,15 @@ export const makeCitationEngineProbe = Effect.fn("EngineProbeTest.make")(functio
   });
   const read = Effect.map(native, (processes) =>
     CitationEngineWorkCounts.make({
-      metadataOperationInstalls: count(spanNames.metadataOperationInstalls),
-      configurationDetaches: count(spanNames.configurationDetaches),
-      tokenizerBuilds: count(spanNames.tokenizerBuilds),
-      regexWorkerConstructions: count(spanNames.regexWorkerConstructions),
-      regexEvaluations: count(spanNames.regexEvaluations),
+      metadataOperationInstalls: total(spanNames.metadataOperationInstalls),
+      configurationDetaches: total(spanNames.configurationDetaches),
+      tokenizerBuilds: total(spanNames.tokenizerBuilds),
+      regexWorkerConstructions: total(spanNames.regexWorkerConstructions),
+      regexEvaluations: total(spanNames.regexEvaluations),
       nativeProcesses: processes.spawned,
+      regexDescriptorBindings: total(spanNames.regexDescriptorBindings),
+      nativeProcessOwners: total(spanNames.nativeProcessOwners),
+      diffXmlWorkerConstructions: total(spanNames.diffXmlWorkerConstructions),
     })
   );
   const measure = Effect.fn("EngineProbeTest.measure")(function* <A, E, R>(work: Effect.Effect<A, E, R>) {
@@ -116,6 +133,9 @@ export const makeCitationEngineProbe = Effect.fn("EngineProbeTest.make")(functio
       regexWorkerConstructions: after.regexWorkerConstructions - before.regexWorkerConstructions,
       regexEvaluations: after.regexEvaluations - before.regexEvaluations,
       nativeProcesses: after.nativeProcesses - before.nativeProcesses,
+      regexDescriptorBindings: after.regexDescriptorBindings - before.regexDescriptorBindings,
+      nativeProcessOwners: after.nativeProcessOwners - before.nativeProcessOwners,
+      diffXmlWorkerConstructions: after.diffXmlWorkerConstructions - before.diffXmlWorkerConstructions,
     });
     return { value, counts, elapsedMillis: Duration.toMillis(elapsed) };
   });

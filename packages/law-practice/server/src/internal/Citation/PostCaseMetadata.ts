@@ -17,6 +17,7 @@ import {
   installCitationMetadataContextMatch,
   makeCitationMetadataOperation,
   prepareCitationPublicationMetadata,
+  provideCitationStageAdmission,
 } from "./MetadataComposition.ts";
 import { makeCitationMetadataStrings } from "./MetadataStrings.ts";
 import { makeCitationMetadataYearFromBound } from "./MetadataYear.ts";
@@ -121,9 +122,11 @@ export const installCitationPostCaseMetadataExtraction = Effect.fn("Citation.ins
   courtTable: string
 ) {
   const match = yield* installCitationMetadataContextMatch(limits, runtime, config);
-  const strings = yield* makeCitationMetadataStrings(limits, runtime, config.yearPattern, config.yearBindings);
-  const years = yield* makeCitationMetadataYearFromBound(limits, config.highestValidYear);
-  const courts = yield* makeCitationCourtLookup(limits, courtTable);
+  const installedStrings = yield* Effect.exit(
+    makeCitationMetadataStrings(limits, runtime, config.yearPattern, config.yearBindings)
+  );
+  const installedYears = yield* Effect.exit(makeCitationMetadataYearFromBound(limits, config.highestValidYear));
+  const installedCourts = yield* Effect.exit(makeCitationCourtLookup(limits, courtTable));
   return Effect.fn("Citation.preparePostCaseMetadata")(function* (raw: unknown) {
     const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
     const context = citationMetadataContext({ ...request, forward: true });
@@ -131,6 +134,7 @@ export const installCitationPostCaseMetadataExtraction = Effect.fn("Citation.ins
     if (O.isNone(owned)) return O.none<CitationPostCaseMetadataPatch>();
     const capture = owned.value.capture;
     const rawPin = yield* capture("pin_cite");
+    const strings = yield* installedStrings;
     const cleanedPin = yield* strings.cleanPinCite(rawPin);
     const rawExtra = yield* capture("extra");
     const extra = yield* strings.stripWhitespace(rawExtra);
@@ -144,12 +148,14 @@ export const installCitationPostCaseMetadataExtraction = Effect.fn("Citation.ins
     const day = yield* capture("day");
     let numericYear = request.year;
     if (pointLength(year) > 0) {
+      const years = yield* installedYears;
       const parsedYear = yield* years.getYear(year);
       numericYear = O.getOrNull(parsedYear);
     }
     const rawCourt = yield* capture("court");
     let court = O.none<CourtId | null>();
     if (pointLength(rawCourt) > 0) {
+      const courts = yield* installedCourts;
       const selected = yield* courts.lookup(rawCourt);
       court = selected.court.pipe(O.getOrNull, O.some);
     }
@@ -187,21 +193,27 @@ export const makeCitationPostCaseMetadata = Effect.fn("Citation.makePostCaseMeta
     Config,
     invalidConfiguration
   );
-  const { runtime, config } = yield* prepareCitationPublicationMetadata(
+  return yield* provideCitationStageAdmission(
     limits,
-    runtimeInput,
-    decoded,
-    "173f538b2d3f8f2522eeb298388114e59bca173d00e03ac7f7b844f02c1be040",
-    invalidConfiguration
-  );
-  // Installation authenticates the court table even when later input has no raw court capture.
-  const prepare = yield* installCitationPostCaseMetadataExtraction(limits, runtime, config, decoded.courtTable);
-  const installed = yield* makeCitationMetadataOperation(limits, prepare);
-  const apply = Effect.fn("Citation.addPostCaseMetadata")((raw: unknown) =>
     Effect.gen(function* () {
-      const [patch, reservedUnits] = yield* installed.run(raw);
-      return CitationPostCaseMetadataResult.make({ patch, reservedUnits });
+      // Installation authenticates even when later input has no raw court capture.
+      yield* makeCitationCourtLookup(limits, decoded.courtTable);
+      const { runtime, config } = yield* prepareCitationPublicationMetadata(
+        limits,
+        runtimeInput,
+        decoded,
+        "173f538b2d3f8f2522eeb298388114e59bca173d00e03ac7f7b844f02c1be040",
+        invalidConfiguration
+      );
+      const prepare = yield* installCitationPostCaseMetadataExtraction(limits, runtime, config, decoded.courtTable);
+      const installed = yield* makeCitationMetadataOperation(limits, prepare);
+      const apply = Effect.fn("Citation.addPostCaseMetadata")((raw: unknown) =>
+        Effect.gen(function* () {
+          const [patch, reservedUnits] = yield* installed.run(raw);
+          return CitationPostCaseMetadataResult.make({ patch, reservedUnits });
+        })
+      );
+      return { apply };
     })
   );
-  return { apply };
 });

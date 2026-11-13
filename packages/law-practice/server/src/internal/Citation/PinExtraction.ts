@@ -90,7 +90,9 @@ export const installCitationPinCiteExtraction = Effect.fn("Citation.installPinEx
   config: CitationPublicationMetadataConfiguration
 ) {
   const match = yield* installCitationMetadataContextMatch(limits, runtime, config);
-  const strings = yield* makeCitationMetadataStrings(limits, runtime, config.yearPattern, config.yearBindings);
+  const installedStrings = yield* Effect.exit(
+    makeCitationMetadataStrings(limits, runtime, config.yearPattern, config.yearBindings)
+  );
   return Effect.fn("Citation.preparePinExtraction")(function* (raw: unknown) {
     const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
     const index = request.index < 0 ? request.words.length + request.index : request.index;
@@ -108,6 +110,7 @@ export const installCitationPinCiteExtraction = Effect.fn("Citation.installPinEx
     if (O.isNone(matched)) return { pinCite: null, pinCiteSpanEnd: null, parenthetical: null };
     const pin = yield* matched.value.capture("pin_cite");
     const capturedParenthetical = yield* matched.value.capture("parenthetical");
+    const strings = yield* installedStrings;
     const details = yield* strings.inspectPinCite(pin);
     const parenthetical = yield* strings.parenthetical(capturedParenthetical);
     // Source reads from_token.end only after matching and parenthetical processing.

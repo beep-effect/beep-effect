@@ -208,7 +208,7 @@ export const RULES: { readonly [K in RuleName]: RuleMetadata } = RuleRegistrySch
     severity: "error",
     replaces: O.none(),
     summary:
-      "Require explicit citation authority; reject optional serviceOption/getOption/getOrUndefined lookups. Local aliases and aliased named imports require semantic linting.",
+      "Require explicit citation authority; reject optional serviceOption/getOption/getOrUndefined and captured-context get/getUnsafe/getOrElse lookups. Local aliases and aliased named imports require semantic linting.",
     scope: O.some("packages/law-practice/server/src/internal/Citation/**"),
   }),
   "no-file-url-pathname": RuleMetadataSchema.make({

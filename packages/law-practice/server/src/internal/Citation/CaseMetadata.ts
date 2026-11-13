@@ -28,6 +28,7 @@ import {
   decodeCitationMetadataWordRequest,
   makeCitationMetadataOperation,
   prepareCitationPublicationMetadata,
+  provideCitationStageAdmission,
 } from "./MetadataComposition.ts";
 import {
   CitationPostCaseMetadataConfiguration,
@@ -161,12 +162,13 @@ const installPostMetadata = Effect.fn("Citation.installFullCasePostMetadata")(fu
     CitationPublicationMetadataConfiguration.make(config),
     config.courtTable
   );
-  const strings = yield* makeCitationRegexInput(limits, reserveCitationInvocationText);
+  const installedStrings = yield* Effect.exit(makeCitationRegexInput(limits, reserveCitationInvocationText));
   return Effect.fn("Citation.applyFullCasePostMetadata")(function* (request: CitationCaseMetadataInput) {
     const post = yield* extractPost(request);
     if (O.isNone(post)) return request;
     const next = post.value;
     const court = O.getOrNull(next.metadata.court);
+    const strings = yield* installedStrings;
     const projected = court === null ? null : (yield* strings.prepareText(court, () => Effect.void)).value.storage;
     return CitationCaseMetadataInput.make({
       ...request,
@@ -273,36 +275,41 @@ export const makeCitationCaseMetadata = Effect.fn("Citation.makeFullCaseMetadata
     S.toType(CitationCaseMetadataConfiguration),
     invalid
   );
-  yield* makeCitationCourtLookup(limits, decoded.post.courtTable);
-  const post = yield* prepareCitationPublicationMetadata(
+  return yield* provideCitationStageAdmission(
     limits,
-    runtime,
-    decoded.post,
-    "173f538b2d3f8f2522eeb298388114e59bca173d00e03ac7f7b844f02c1be040",
-    invalid
-  );
-  const pre = yield* prepareCitationPublicationMetadata(
-    limits,
-    runtime,
-    decoded.pre,
-    "d151b7a02a061593bb44bd881eee2dc174fff7f1b5449512f25cc2b98fb315b0",
-    invalid
-  );
-  const names = yield* copyCitationCaseNameSelectionConfiguration(limits, decoded.names);
-  const config = CitationCaseMetadataConfiguration.make({
-    post: { ...post.config, courtTable: decoded.post.courtTable },
-    pre: pre.config,
-    names,
-  });
-  const owner = yield* CitationFrozenEditions;
-  const editions = yield* makeCitationEditionInference(limits);
-  const prepare = yield* installPrepare(limits, runtime, config, owner, editions);
-  const installed = yield* makeCitationMetadataOperation(limits, prepare);
-  const extract = Effect.fn("Citation.addFullCaseMetadata")((raw: unknown) =>
     Effect.gen(function* () {
-      const [result, reservedUnits] = yield* installed.run(raw);
-      return CitationCaseMetadataResult.make({ ...result, reservedUnits });
+      yield* makeCitationCourtLookup(limits, decoded.post.courtTable);
+      const post = yield* prepareCitationPublicationMetadata(
+        limits,
+        runtime,
+        decoded.post,
+        "173f538b2d3f8f2522eeb298388114e59bca173d00e03ac7f7b844f02c1be040",
+        invalid
+      );
+      const pre = yield* prepareCitationPublicationMetadata(
+        limits,
+        runtime,
+        decoded.pre,
+        "d151b7a02a061593bb44bd881eee2dc174fff7f1b5449512f25cc2b98fb315b0",
+        invalid
+      );
+      const names = yield* copyCitationCaseNameSelectionConfiguration(limits, decoded.names);
+      const config = CitationCaseMetadataConfiguration.make({
+        post: { ...post.config, courtTable: decoded.post.courtTable },
+        pre: pre.config,
+        names,
+      });
+      const owner = yield* CitationFrozenEditions;
+      const editions = yield* makeCitationEditionInference(limits);
+      const prepare = yield* installPrepare(limits, runtime, config, owner, editions);
+      const installed = yield* makeCitationMetadataOperation(limits, prepare);
+      const extract = Effect.fn("Citation.addFullCaseMetadata")((raw: unknown) =>
+        Effect.gen(function* () {
+          const [result, reservedUnits] = yield* installed.run(raw);
+          return CitationCaseMetadataResult.make({ ...result, reservedUnits });
+        })
+      );
+      return { extract };
     })
   );
-  return { extract };
 });

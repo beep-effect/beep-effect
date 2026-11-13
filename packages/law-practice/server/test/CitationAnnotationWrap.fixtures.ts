@@ -2,6 +2,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { makeCitationAnnotationTemplates } from "@beep/law-practice-server/internal/Citation/AnnotationTemplate";
 import {
   makeCitationAnnotationWrap,
   makeCitationWrapAnnotationSpans,
@@ -41,7 +42,9 @@ export const replayCitationNativeWrap = Effect.fn("AnnotationWrapTest.native")(f
   const wrapper = yield* makeCitationAnnotationWrap(setup.limits, setup.runtime).pipe(
     Effect.provideContext(setup.provided)
   );
-  const templates = yield* wrapper.templates.pipe(Effect.provideService(CitationTextBudget, setup.budget));
+  const templates = yield* makeCitationAnnotationTemplates(setup.limits).pipe(
+    Effect.provideService(CitationTextBudget, setup.budget)
+  );
   const rows = full
     ? corpus.cases
     : A.filter(corpus.cases, (row) => row.id % 110 === 0 || row.id % 110 === 34 || row.id % 110 === 16);
@@ -100,8 +103,10 @@ export const replayCitationWrapComposition = Effect.fn("AnnotationWrapTest.compo
   const regexDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-wrap-regex-" });
   const runtime = yield* makeCitationRegexTestRuntime(kind, regexDirectory);
   const observedXml = yield* makeCitationAnnotationXmlTrace(setup.worker.raw);
-  const processor = yield* makeCitationAnnotationWrap(setup.limits, runtime).pipe(
-    Effect.flatMap(makeCitationWrapAnnotationSpans),
+  const processor = yield* makeCitationWrapAnnotationSpans(
+    setup.limits,
+    makeCitationAnnotationWrap(setup.limits, runtime)
+  ).pipe(
     Effect.provideContext(setup.provided),
     Effect.provideService(CitationTextBudget, setup.budget),
     Effect.provideService(CitationXmlBalance, observedXml.xml)
@@ -125,4 +130,29 @@ export const replayCitationWrapComposition = Effect.fn("AnnotationWrapTest.compo
     children += expected.length + A.filter(row.wrapped, (call) => call.success).length;
   }
   yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, children);
+});
+
+/** When both the per-request templates and the installed wrap worker refuse,
+ * the templates' refusal is reported, as when the original built templates first.
+ * @internal @category testing @since 0.0.0
+ */
+export const refuseCitationWrapInOriginalOrder = Effect.fn("AnnotationWrapTest.refusalOrder")(function* (
+  kind: CitationNativeRuntimeKind
+) {
+  const setup = yield* installCitationXmlWorker(kind);
+  const fs = yield* FileSystem.FileSystem;
+  const regexDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-wrap-order-" });
+  const runtime = yield* makeCitationRegexTestRuntime(kind, regexDirectory);
+  const refusing = { ...setup.limits, producedTextUtf16: -1 };
+  const refused = yield* makeCitationWrapAnnotationSpans(refusing, makeCitationAnnotationWrap(refusing, runtime)).pipe(
+    Effect.provideContext(setup.provided),
+    Effect.provideService(CitationTextBudget, setup.budget),
+    Effect.provideService(CitationXmlBalance, setup.worker.raw),
+    Effect.flip
+  );
+  const templates = yield* makeCitationAnnotationTemplates(refusing).pipe(
+    Effect.provideService(CitationTextBudget, setup.budget),
+    Effect.flip
+  );
+  return { refused, templates };
 });

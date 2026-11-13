@@ -169,18 +169,20 @@ const installPincited = Effect.fn("Citation.installPincitedReferences")(function
   runtime: CitationNativeProcessRuntime,
   config: CitationReferencePatternConfiguration
 ) {
-  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText, "source");
-  const generated = yield* installCitationRegexEvaluator(limits, runtime, []);
+  const installedInput = yield* Effect.exit(makeCitationRegexInput(limits, reserveCitationInvocationText, "source"));
+  const installedGenerated = yield* Effect.exit(installCitationRegexEvaluator(limits, runtime, []));
   return Effect.fn("Citation.extractPincitedReferences")(function* (raw: unknown) {
     const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
     // Per request: the builder charges its fixed fragments to the request budget.
     const builder = yield* makeCitationReferencePatterns(limits, config);
     const pattern = yield* builder.build(request.metadata, "pin");
     if (O.isNone(pattern)) return A.empty<CitationGeneratedReference>();
+    const input = yield* installedInput;
     const plain = yield* input.prepareUnicode(request.plain, () => Effect.void);
     const length = plain.value.pythonLength;
     const start = Num.max(0, Num.min(length, request.offset < 0 ? length + request.offset : request.offset));
     const remainder = yield* plain.slice({ start, end: length }, () => Effect.void);
+    const generated = yield* installedGenerated;
     const worker = yield* generated.bindDescriptors([pattern.value.descriptor]);
     const evaluated = yield* worker.evaluate(pattern.value.pattern, remainder, pattern.value.descriptor.flags);
     if (evaluated.result.matches === 0) return A.empty<CitationGeneratedReference>();
@@ -261,7 +263,7 @@ const installMarkup = Effect.fn("Citation.installMarkupReferences")(function* (
   runtime: CitationNativeProcessRuntime,
   config: CitationReferencePatternConfiguration
 ) {
-  const generated = yield* installCitationRegexEvaluator(limits, runtime, []);
+  const installedGenerated = yield* Effect.exit(installCitationRegexEvaluator(limits, runtime, []));
   return Effect.fn("Citation.extractMarkupReferences")(function* (raw: unknown) {
     const request = yield* S.decodeUnknownEffect(MarkupInput)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
     // Per request: the builder charges its fixed fragments to the request budget.
@@ -275,6 +277,7 @@ const installMarkup = Effect.fn("Citation.installMarkupReferences")(function* (
       { start: bound(offset, markup.value.pythonLength), end: markup.value.pythonLength },
       () => Effect.void
     );
+    const generated = yield* installedGenerated;
     const worker = yield* generated.bindDescriptors([pattern.value.descriptor, builder.rejection.descriptor]);
     const evaluated = yield* worker.evaluate(pattern.value.pattern, suffix, pattern.value.descriptor.flags);
     if (evaluated.result.matches === 0) return A.empty<CitationGeneratedReference>();
@@ -359,11 +362,12 @@ const installCombined = Effect.fn("Citation.installGeneratedReferences")(functio
   runtime: CitationNativeProcessRuntime,
   config: CitationReferencePatternConfiguration
 ) {
-  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText, "source");
+  const installedInput = yield* Effect.exit(makeCitationRegexInput(limits, reserveCitationInvocationText, "source"));
   const prepare = yield* installPincited(limits, runtime, config);
   const prepareMarkup = yield* installMarkup(limits, runtime, config);
   return Effect.fn("Citation.extractGeneratedReferences")(function* (raw: unknown) {
     const request = yield* S.decodeUnknownEffect(CombinedInput)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
+    const input = yield* installedInput;
     const plain = yield* input.prepareUnicode(request.plain, () => Effect.void);
     if (plain.value.pythonLength <= request.offset || request.kind !== "FullCaseCitation")
       return A.empty<CitationGeneratedReference>();

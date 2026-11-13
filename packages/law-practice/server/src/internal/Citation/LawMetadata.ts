@@ -22,6 +22,7 @@ import {
   installCitationMetadataStringProcessing,
   makeCitationMetadataOperation,
   prepareCitationPublicationMetadata,
+  provideCitationStageAdmission,
 } from "./MetadataComposition.ts";
 import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import { decodeCitationRegexPolicy } from "./RegexPolicy.ts";
@@ -197,14 +198,19 @@ const installLawMetadata = Effect.fn("Citation.installLawMetadata")(function* (
   configurationInput: unknown
 ) {
   const limits = yield* decodeCitationRegexPolicy(policy, invalidConfiguration);
-  const { runtime, config } = yield* prepareConfiguration(limits, runtimeInput, configurationInput);
-  const preparePatch = yield* installPatch(limits, runtime, config);
-  const installed = yield* makeCitationMetadataOperation(limits, preparePatch);
-  const run = Effect.fn("Citation.runLawMetadata")(function* (request: CitationLawMetadataInput) {
-    const [patch, reservedUnits] = yield* installed.run(request);
-    return CitationLawMetadataResult.make({ patch, reservedUnits });
-  });
-  return { ...installed, limits, run };
+  return yield* provideCitationStageAdmission(
+    limits,
+    Effect.gen(function* () {
+      const { runtime, config } = yield* prepareConfiguration(limits, runtimeInput, configurationInput);
+      const preparePatch = yield* installPatch(limits, runtime, config);
+      const installed = yield* makeCitationMetadataOperation(limits, preparePatch);
+      const run = Effect.fn("Citation.runLawMetadata")(function* (request: CitationLawMetadataInput) {
+        const [patch, reservedUnits] = yield* installed.run(request);
+        return CitationLawMetadataResult.make({ patch, reservedUnits });
+      });
+      return { ...installed, limits, run };
+    })
+  );
 });
 /** Install immutable source configuration and shared admission. Each call uses
  * a fresh Scope and captures no outer Scope in its dependency Context. An

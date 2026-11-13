@@ -81,10 +81,14 @@ export const installCitationStopWordCleanup = Effect.fn("Citation.installStopWor
   runtime: CitationNativeProcessRuntime,
   config: CitationStopWordsConfiguration
 ) {
-  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText);
-  const worker = yield* installCitationRegexEvaluator(limits, runtime, config.bindings, "python-regex-v0");
+  const installedInput = yield* Effect.exit(makeCitationRegexInput(limits, reserveCitationInvocationText));
+  const installedWorker = yield* Effect.exit(
+    installCitationRegexEvaluator(limits, runtime, config.bindings, "python-regex-v0")
+  );
   return Effect.fn("Citation.runStopWordCleanup")(function* (raw: unknown) {
     const request = yield* S.decodeUnknownEffect(Native)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
+    const input = yield* installedInput;
+    const worker = yield* installedWorker;
     const substitute = Effect.fn("Citation.substituteStopWordPattern")(function* (
       name: keyof typeof fingerprints,
       source: CitationPythonUnicodeStorage,

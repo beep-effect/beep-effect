@@ -27,6 +27,7 @@ import { citationPythonPointAt, concatCitationPythonRanges } from "./PythonUnico
 import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import { installCitationRegexEvaluator } from "./RegexWorker.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type * as Exit from "effect/Exit";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import type { CitationRegexCapturedRange } from "./RegexResult.ts";
 
@@ -171,9 +172,14 @@ export const makeCitationHtmlDiscoveryRunner = Effect.fn("Citation.prepareHtmlDi
   return { placeholder, emphasis };
 });
 const discover = Effect.fn("Citation.prepareHtmlDiscovery")(function* (
-  runner: Effect.Success<ReturnType<typeof makeCitationHtmlDiscoveryRunner>>,
+  installedRunner: Exit.Exit<
+    Effect.Success<ReturnType<typeof makeCitationHtmlDiscoveryRunner>>,
+    Effect.Error<ReturnType<typeof makeCitationHtmlDiscoveryRunner>>
+  >,
   raw: unknown
 ) {
+  // Installed once; its outcome surfaces where each call built the runner.
+  const runner = yield* installedRunner;
   const masked = yield* runner.placeholder(raw);
   const tags = yield* runner.emphasis(masked.source.value.storage);
   return { placeholder: masked.placeholder, tags };
@@ -189,7 +195,11 @@ export const copyCitationHtmlDiscoveryConfiguration = Effect.fn("Citation.copyHt
 );
 const ownDiscovery = ownCitationStageCall({
   copy: copyCitationHtmlDiscoveryConfiguration,
-  install: makeCitationHtmlDiscoveryRunner,
+  install: (
+    limits: CitationEngineLimits,
+    runtime: CitationNativeProcessRuntime,
+    config: CitationHtmlDiscoveryConfiguration
+  ) => Effect.exit(makeCitationHtmlDiscoveryRunner(limits, runtime, config)),
 });
 /** Reuse captured operation admission, Clock, text budget, Effect RPC and owned
  * regex retirement. Both fixed jobs complete and retire before publication.
@@ -202,6 +212,7 @@ export const makeCitationHtmlDiscovery = makeCitationMetadataStage({
   schema: S.toType(CitationHtmlDiscoveryConfiguration),
   invalid: () => fail("invalid-configuration"),
   own: ownDiscovery,
-  prepare: (_limits, _runtime, runner: Effect.Success<ReturnType<typeof ownDiscovery>>, raw) => discover(runner, raw),
+  prepare: (_limits, _runtime, installedRunner: Effect.Success<ReturnType<typeof ownDiscovery>>, raw) =>
+    discover(installedRunner, raw),
   project: (patch, reservedUnits) => CitationHtmlDiscoveryResult.make({ ...patch, reservedUnits }),
 });

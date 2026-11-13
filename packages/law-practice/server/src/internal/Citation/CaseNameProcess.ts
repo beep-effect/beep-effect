@@ -163,16 +163,20 @@ export const installCitationCaseNameProcess = Effect.fn("Citation.installCaseNam
   runtime: CitationNativeProcessRuntime,
   config: CitationCaseNameProcessConfiguration
 ) {
-  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText);
-  const worker = yield* installCitationRegexEvaluator(limits, runtime, config.bindings, "python-regex-v0");
+  const installedInput = yield* Effect.exit(makeCitationRegexInput(limits, reserveCitationInvocationText));
+  const installedWorker = yield* Effect.exit(
+    installCitationRegexEvaluator(limits, runtime, config.bindings, "python-regex-v0")
+  );
   const clean = yield* installCitationStopWordCleanup(limits, runtime, config.cleaner);
   return Effect.fn("Citation.processNativeCaseName")(function* (raw: unknown) {
     const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
     if (request.candidateCaseName === null) return yield* fail("missing-candidate");
     if (request.words.length > limits.tokens)
       return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "tokens" });
+    const input = yield* installedInput;
     const words = yield* Effect.forEach(request.words, (word) => input.prepareUnicode(word, () => Effect.void));
     const candidate = (yield* input.prepareUnicode(request.candidateCaseName, () => Effect.void)).value.storage;
+    const worker = yield* installedWorker;
     const split = Effect.fn("Citation.splitCaseNameOnce")(function* () {
       const evaluated = yield* worker.evaluate(config.patterns.splitV, candidate, 0, 1, "search");
       if (evaluated.result.matches === 0) return { plaintiff: empty, defendant: evaluated.source.value.storage };

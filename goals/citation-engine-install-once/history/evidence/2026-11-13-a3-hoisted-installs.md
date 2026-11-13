@@ -34,12 +34,13 @@ Recorded 2026-11-13 on `perf/citation-hoist-installs` in lane
   tries, recipes, editions, evaluator, text plan) from `tokenize`, which holds
   only request state (token objects, produced counter, id list) and reads
   `CitationInvocation`. TokenizedExtraction now installs it once.
-- **Install failures keep their request-time placement.** Each stage-tree
-  hoist site and the annotation entry's HTML geometry and wrap installs run once
-  under `Effect.exit`; the request yields that `Exit` where it used to install
-  the stage, so a policy that cannot hold a stage still refuses only the
-  requests that reach it, with the same label and order (decision "Surface a
-  hoisted install failure where each request used to install the stage").
+- **Install outcomes keep main's placement.** Every moved install runs once at
+  engine construction and captures its outcome with `Effect.exit`. Installs that
+  were eager on main replay that `Exit` at the stage install point; installs
+  that were lazy on main replay it at main's call point (classification table
+  below; decision "Surface each hoisted install outcome where main ran the
+  install"). A policy that cannot hold an install therefore refuses only the
+  requests that reach it, with main's label and order.
 - **Install-time request reads.** `installedWithoutRequestValues` in
   `CitationEngine.layer.ts` makes an engine stage install that still requires
   `CitationInvocation` or `CitationTextBudget` fail to typecheck. HtmlDiscovery's
@@ -107,7 +108,7 @@ by concurrent requests.
 
 | Object | Closes over | Judgement |
 | --- | --- | --- |
-| Regex evaluator | limits, runtime, timing, shared native admission, Clock, spawner, Digest, descriptor registry (a `MutableHashMap` written only during construction), job preparation | Safe. The physical owner (Scope, birth lock, process list, closed flag) is created per evaluation in the invocation Scope, never shared. |
+| Regex evaluator | limits, runtime, timing, shared native admission, Clock, spawner, Digest, descriptor registry (a `MutableHashMap` written only during construction), job preparation | Safe. The physical owner (Scope, birth lock, process list, closed flag) lives in the invocation (`CitationInvocation.regexOwner`), created on the request's first evaluation, never shared between requests. |
 | Tokenizer install | ordering, recipes, editions, evaluator, text plan, regex input | Safe. Token objects (with their semaphore and rows), the produced counter and the id list are created inside `tokenize`. |
 | Extractor ordering | initial `RuntimeSet` (semaphore and counters), selection tries | Safe. The initial set is filled at construction; `ordered` copies it, the copy has its own semaphore and counters, and the source's semaphore only serializes the read. The tries are written only during construction. |
 | Context matchers, metadata strings, metadata year, pin cleaner, court lookup | patterns, wrappers, token context, evaluator, court table | Safe. No mutable state; the court lookup reads the invocation budget at call time. |
@@ -196,7 +197,7 @@ a malformed configuration is refused at installation with no child process).
 
 | Check | Result |
 | --- | --- |
-| Each affected test file, one vitest run per file (142 files: every test that transitively imports a changed module or fixture; integration left to hosted CI) | 139 pass. `CitationSemanticExtraction.test.ts` failed, was fixed (install-failure deferral) and passes. `CitationExtractorControls.test.ts` (22) and `CitationSixFormProjection.test.ts` (1 of 2) fail identically on clean HEAD in this checkout (configuration schema refusal on the six-form extractor path, which A3 does not touch): inherited, left to hosted CI for attribution. |
+| Each affected test file, one vitest run per file (142 files: every test that transitively imports a changed module or fixture; integration left to hosted CI) | 139 pass. `CitationSemanticExtraction.test.ts` failed, was fixed (install-failure deferral) and passes. `CitationExtractorControls.test.ts` (22) and `CitationSixFormProjection.test.ts` (1 of 2) failed, here and on clean HEAD, because these runs used `bunx vitest run`, which runs on Node; both bundle the recognizer worker with Bun at test time and read `Bun.version`, which Node lacks. Corrected in review round 1: they are local-environment failures, not inherited reds. Hosted CI is green on all eight law-practice shards for `origin/main` and this head, and both files pass locally under `bunx --bun vitest run` (the package script's runtime). |
 | Files re-run after the deferral edit | Full-span replay 12/12; semantic extraction; the tokenized, document, entry, verified, source, loop and annotation-entry groups in the coverage runs (all passing). |
 | `bun run beep quality package-verify @beep/law-practice-server --quick` | pass (lint, check). The full form runs the whole suite and is left to hosted CI. |
 | `bun run docgen:local` | pass |
@@ -211,3 +212,159 @@ law-practice suite once with coverage (28 failures under that load); it was
 stopped and is not used as evidence. Under parallel instrumented runs,
 `CitationCaseName.test.ts` and `CitationEngineLayer.test.ts` overran deadlines;
 both pass in their individual runs.
+
+## Review round 1
+
+An independent review of draft #3282 at `78c94aad5d7` against `origin/main`
+found no blocker, one MAJOR and seven MINOR items. All are fixed in the
+review-round-1 commit on top of `78c94aad5d7` (which also merges `origin/main`).
+
+| # | Finding | Fix |
+| --- | --- | --- |
+| 1 (MAJOR) | Installs that were lazy on main ran at the parent's install; only the eight stage-tree sites replayed their `Exit`, so a nested refusal replayed for every request ahead of refusals main reported first | Every moved install classified below; lazy installs replay their `Exit` at main's call point, so helper installs cannot fail at construction. The annotation processor builds templates before yielding the wrap worker. Three tests added. |
+| 2 | Standalone stages created one fallback native admission per evaluator | `provideCitationStageAdmission` provides one admission (host or fallback) to the whole stage install; `makeCitationMetadataOperation` requires it and lost its unreachable fallback |
+| 3 | Post-case metadata authenticated the court table after the publication patterns | Main's order restored: court table first |
+| 4 | Captured-context lookups and Scope binding were unguarded | `no-citation-optional-invocation` now rejects `Context.get`, `getUnsafe` and `getOrElse` for the three authority names (36 new fixtures); the probe counts process owners and Diff/Xml workers, and the construction row asserts them |
+| 5 | `bindDescriptors` work was uncounted | New probe column `regexDescriptorBindings`: 2, 0, 0, 0, 0, 0, 1, 1, 0, 0 per call (4 in all) |
+| 6 | One process owner per evaluation | One owner per invocation in `CitationInvocation.regexOwner`, created on the first evaluation; the owner's open/quarantine check again precedes job preparation. Still one claim, one start and one confirmed retirement per evaluation. |
+| 7 | Six-form failures called inherited | Corrected in the Checks table: local Node-runtime failures; both pass under `bunx --bun vitest run` |
+| 8 | Unused `CitationRegexEvaluator` and `CitationRegexEvaluation` exports | Deleted |
+
+### Install classification
+
+"Eager" means main built it on every request at a stage point (a child stage
+installed by its parent's prepare); "lazy" means main built it only when a
+request reached a particular helper call. Every install below now runs once at
+engine construction; the last column is where its captured `Exit` is yielded.
+
+| Install (file) | On main | Outcome surfaces at |
+| --- | --- | --- |
+| Verified extraction (SourceExtraction) | eager, per request after the source adapter | `extractPrepared`, after the source request is prepared |
+| Semantic stage and occurrence projection (VerifiedExtraction) | eager, after mode decoding | start of the extraction body |
+| Extraction entry and semantic projection (SemanticExtraction) | eager | start of the extraction body |
+| Document stage (ExtractionEntry) | eager, after steps are owned | before `extract` |
+| Tokenized stage (DocumentExtraction) | eager, after plain/markup copies | before `extract` |
+| Input document (DocumentExtraction) | eager | start of `extractDocument` |
+| Tokenizer and loop (TokenizedExtraction) | eager, after request decode | after decode |
+| Regex input (TokenizedExtraction) | lazy, after tokenization | after `tokenize` |
+| Loop children: full, reference, generated, selection (ExtractionLoop) | eager, after decode and the token check | after the token check |
+| Context matcher and its regex input (MetadataComposition) | lazy, inside each context match | matcher at the start of each match; input after the whole-match check |
+| Metadata strings and year parser (MetadataComposition) | lazy, inside string processing | strings first, year parser after parenthetical processing |
+| Metadata strings (PinExtraction) | lazy, after the captures | before `inspectPinCite` |
+| Pin-cite cleaner (PreCaseMetadata) | lazy, after the captures | before `cleanPinCite` |
+| Metadata strings, year parser, court lookup (PostCaseMetadata) | lazy; year and court only inside their branches | strings before `cleanPinCite`; year and court inside their branches |
+| Court-table authentication (PostCaseMetadata stage) | eager, before the publication patterns | unchanged (restored order) |
+| Regex input for the court projection (CaseMetadata) | lazy, after a post-case patch | after the patch's court is read |
+| Stop-word input and evaluator (StopWords) | lazy, per cleanup call after decode | after decode, input then evaluator |
+| Case-name scan input, predicates, evaluator (CaseNameScan) | lazy, per scan | input after decode, predicates after the budget read, evaluator after the state `Ref` |
+| Case-name process input and evaluator (CaseNameProcess) | lazy, per call | input after the token check, evaluator after the candidate |
+| HTML case-name input and evaluator (HtmlCaseName) | lazy; evaluator only in the single-element path | input after the index check; evaluator inside `single` |
+| Plain case name, case-name selection, reference-token helpers (CaseName, CaseNameSelection, ReferenceTokenExtraction, CaseMetadata) | lazy | composed of the deferred installs above, so they cannot fail at construction |
+| Generated-reference input and evaluator (GeneratedReferences, plain and markup) | lazy, after the pattern is built | input after the empty-pattern check; evaluator before `bindDescriptors` |
+| Generated-reference combined input (GeneratedReferences) | lazy, after decode | after decode |
+| HTML discovery runner (HtmlDiscovery stage) | lazy, per discovery call | start of `discover` |
+| HTML geometry input and discovery runner (HtmlGeometryPreparation, used by InputDocument and AnnotationEntry) | lazy; only on the markup branch and in annotation source maps | start of `forward`, input then discovery |
+| Annotation wrap worker (AnnotationEntry, AnnotationWrap) | lazy, after the templates, in wrap mode | after the per-request templates, in `makeCitationWrapAnnotationSpans` |
+| Reference-pattern builder, Diff and Xml workers, annotation templates | lazy | still built per request (unchanged) |
+
+Tests for the three reviewer scenarios:
+
+- `CitationInputDocumentCoverage.test.ts`: with `patterns: 1` the HTML
+  discovery evaluator install refuses, yet the input document installs, a plain
+  request initializes, and only a markup request refuses (`patterns`).
+- `CitationReferenceTokenExtractionCoverage.test.ts`: with `patternUtf16` one
+  unit above the pin pattern (the longest raw pattern), the stage installs, a
+  section reference extracts, and an Id reference refuses with `patternUtf16`
+  from the wrapped pin pattern.
+- `CitationAnnotationWrap.test.ts`: when both the templates and the wrap worker
+  refuse, the processor reports the templates' refusal.
+
+### Counts after review round 1 (full-span probe, Bun)
+
+| Call | Installs | Detaches | Tokenizer builds | Evaluator installs | Evaluations | Child processes | Descriptor bindings | Process owners | Diff/Xml workers |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 0 | 0 | 0 | 0 | 70 | 70 | 2 | 1 | 0 |
+| 2 | 0 | 0 | 0 | 0 | 15 | 15 | 0 | 1 | 0 |
+| 3 | 0 | 0 | 0 | 0 | 15 | 15 | 0 | 1 | 0 |
+| 4 | 0 | 0 | 0 | 0 | 24 | 24 | 0 | 1 | 0 |
+| 5 | 0 | 0 | 0 | 0 | 19 | 19 | 0 | 1 | 0 |
+| 6 | 0 | 0 | 0 | 0 | 15 | 15 | 0 | 1 | 0 |
+| 7 | 0 | 0 | 0 | 0 | 65 | 65 | 1 | 1 | 0 |
+| 8 | 0 | 0 | 0 | 0 | 38 | 38 | 1 | 1 | 0 |
+| 9 | 0 | 0 | 0 | 0 | 15 | 15 | 0 | 1 | 0 |
+| 10 | 0 | 0 | 0 | 0 | 15 | 15 | 0 | 1 | 0 |
+| **Total** | **0** | **0** | **0** | **0** | **291** | **291** | **4** | **10** | **0** |
+
+Process owners per call were 56 in all on main (one per regex worker
+construction) and 291 at `78c94aad5d7` (one per evaluation); now 10, one per
+invocation. Construction: 16 installs, 10 detaches, 1 tokenizer build, 26
+evaluator installs, 0 evaluations, 0 child processes, 0 descriptor bindings, 1
+process owner (the HTML cleaner worker's, built by the engine's document
+services as on main; no stage install starts one) and 0 Diff/Xml workers.
+
+Wall time, final round-1 code, Bun, per call in milliseconds, load average
+38.7 / 76.1 / 109.7 at start and 86.2 / 94.1 / 112.8 at end: 33695, 3048, 2570,
+4712, 3352, 2620, 9640, 6076, 2440, 2465 (70.6 s; the first call ran during a
+load spike); node call 1: 9980; construction 8951.
+
+### Checks in review round 1
+
+The workstation was under heavy load during this round (load averages near or
+above 110 on 64 cores, with the out-of-memory killer stopping local bun
+processes). Partway through, the operator ruled that local compute should not
+be waited on: run only package-scoped checks and the individual tests for the
+touched files and the reviewer's scenarios, then push and let hosted CI prove
+the rest.
+
+Ran locally (all with `bunx --bun vitest run`, one file per vitest process):
+
+| Check | Result |
+| --- | --- |
+| Full-span replay `CitationCanonicalFullSpan.test.ts`, alone, on the round's final code | 12/12; counts as in the table above |
+| Scenario and edited tests: `CitationInputDocumentCoverage`, `CitationReferenceTokenExtractionCoverage`, `CitationAnnotationWrap`, `CitationAnnotationAssembly`, `CitationAnnotationCallback`, `CitationRegexNullable` | pass |
+| `CitationExtractorControls`, `CitationSixFormProjection` under `--bun` | pass (item 7) |
+| The 142 affected test files, one run each, three workers, before the ruling | 141 pass. `CitationExtractionLoop.test.ts` hit its 29.75 s test watchdog at load above 110 (a different case on each attempt); it passed when re-run alone (194 s) and in this round's coverage group. |
+| Per-file coverage for the 21 source files changed this round, before the ruling (table below) | 20 at or above their floors |
+| `package-verify --quick` for `@beep/law-practice-server` | pass |
+| Full `package-verify` for `@beep/lint-rules` (rule change), including its 178 rule tests | pass |
+| Changed-file `bunx biome check`, policy fingerprint, `skills update --check`, `docgen:local`, effect-vitest inventory (`introduced=0 resolved=0`) | pass |
+
+| File | Lines / statements / branches / functions (floor) | Verdict |
+| --- | --- | --- |
+| `AnnotationEntry.ts` | 100 / 100 / 100 / 100 (100 / 100 / 100 / 100) | at or above |
+| `AnnotationWrap.ts` | 96.29 / 84.37 / 60 / 57.14 (96.29 / 84.37 / 60 / 57.14) | at or above |
+| `CaseMetadata.ts` | 98.63 / 97.5 / 100 / 90 (98.46 / 97.22 / 100 / 88.88) | at or above |
+| `CaseNameProcess.ts` | 100 / 97.91 / 93.93 / 96 (100 / 97.82 / 93.93 / 95.83) | at or above |
+| `CaseNameScan.ts` | 99.35 / 98.85 / 98.79 / 97.22 (99.32 / 98.82 / 98.79 / 97.14) | at or above |
+| `ExtractionLoop.ts` | 94.02 / 94.52 / 91.3 / 88.88 (92.18 / 92.85 / 91.3 / 82.35) | at or above |
+| `GeneratedReferences.ts` | 96 / 93.79 / 86.36 / 86.84 (95.37 / 92.96 / 86.36 / 84.37) | at or above |
+| `HtmlCaseName.ts` | 97.58 / 95.94 / 93.61 / 91.89 (97.47 / 95.83 / 93.61 / 91.66) | at or above |
+| `HtmlDiscovery.ts` | 100 / 96.51 / 83.33 / 94.73 (100 / 96.38 / 83.33 / 94.11) | at or above |
+| `HtmlGeometryPreparation.ts` | 97.29 / 95 / 100 / 83.33 (96.42 / 93.54 / 100 / 77.77) | at or above |
+| `Invocation.ts` | 100 / 100 / 50 / 100 (no baseline row (package minimum)) | at or above |
+| `JournalMetadata.ts` | 100 / 92.5 / 50 / 83.33 (96.66 / 91.66 / 50 / 81.81) | at or above |
+| `LawMetadata.ts` | 100 / 95.38 / 50 / 88.88 (98.18 / 95.08 / 50 / 88.23) | at or above |
+| `MetadataComposition.ts` | 99.28 / 98.67 / 91.42 / 100 (99.22 / 98.58 / 92.68 / 100) | below on branches; see note |
+| `PinExtraction.ts` | 100 / 94.59 / 90 / 88.88 (100 / 94.11 / 90 / 87.5) | at or above |
+| `PostCaseMetadata.ts` | 100 / 98.38 / 100 / 90.9 (98.03 / 98.21 / 100 / 90) | at or above |
+| `PreCaseMetadata.ts` | 100 / 97.61 / 100 / 90 (96.96 / 97.43 / 100 / 88.88) | at or above |
+| `ReferenceTokenExtraction.ts` | 97.36 / 95.29 / 86.36 / 88.46 (95.83 / 93.82 / 86.36 / 84.61) | at or above |
+| `RegexWorker.ts` | 97.67 / 95.74 / 85.71 / 94.44 (96.55 / 93.93 / 80 / 90.9) | at or above |
+| `StopWords.ts` | 98.21 / 98.5 / 100 / 95.23 (98.03 / 98.38 / 100 / 94.73) | at or above |
+| `TokenizedExtraction.ts` | 97.5 / 95.74 / 100 / 86.66 (97.29 / 95.45 / 100 / 86.66) | at or above |
+
+`MetadataComposition.ts` branches: the one uncovered branch is the
+substitution's invalid-match refusal (line 64), unchanged by this slice and
+uncovered on clean HEAD by the same focused group. The dead fallback admission
+(the other line uncovered at `78c94aad5d7`) was deleted, which lifted lines and
+statements above their floors. A behavior test for line 64 was added after the
+measurement (`CitationRegexNullable.test.ts`: the nullable `a*` control's empty
+search match is refused by the substitution); it passes but its coverage was
+not re-measured locally.
+
+Left to hosted CI because of host pressure: the full law-practice suite and
+integration cohort, the coverage regression gate (`Heavy / Coverage
+Regression`, the proof for every floor, including `MetadataComposition.ts`
+with the new test), `knowledge semantic-delta`, and the whole-repo gates that
+`yeet final-check` replays. A remote-worker wall-time run was not taken.
+

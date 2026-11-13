@@ -1,0 +1,9 @@
+---
+title: "Hold one regex process owner per invocation, created on its first evaluation"
+date: 2026-11-13
+lane: "perf/citation-hoist-installs"
+pullRequest: 3282
+reversal: "Start a physical regex owner per evaluation inside the invocation Scope again."
+---
+
+Review round 1: an owner per evaluation decoded limits, built a semaphore and refs and added a finalizer to the invocation Scope about 29 times per call. CitationInvocation gains a regexOwner field, a SynchronizedRef holding an optional native process owner, set up empty by openCitationInvocation (service contract first, then the evaluator). The first regex evaluation of a request creates the owner in the invocation Scope with the evaluator's captured Clock and spawner; later evaluations reuse it. Each evaluation still claims, starts and retires its own child through withCitationNativeProcess (one child per job, lease released only on confirmed retirement), and the owner's open and quarantine check again runs before job preparation, as main's per-helper owner did. No session, lane or process reuse: those stay with citation-regex-worker-v3. The probe's nativeProcessOwners column shows 1 per call on the full-span cohort. The owner is created with the first evaluator's Clock, spawner and limits; every evaluator of one engine shares those, so a request is always served by one spawner. CitationAnnotationAssembly.test.ts ran its Bun and Node runtimes, each with its own observed spawner, inside one test invocation; it now opens one invocation per runtime, which is what one request is.

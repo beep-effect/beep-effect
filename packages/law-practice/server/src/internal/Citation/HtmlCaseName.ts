@@ -137,14 +137,17 @@ export const installCitationHtmlCaseName = Effect.fn("Citation.installHtmlCaseNa
   runtime: CitationNativeProcessRuntime,
   config: CitationHtmlCaseNameConfiguration
 ) {
-  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText);
+  const installedInput = yield* Effect.exit(makeCitationRegexInput(limits, reserveCitationInvocationText));
   const clean = yield* installCitationStopWordCleanup(limits, runtime, config.cleaner);
-  const worker = yield* installCitationRegexEvaluator(limits, runtime, config.bindings, "python-regex-v0");
+  const installedWorker = yield* Effect.exit(
+    installCitationRegexEvaluator(limits, runtime, config.bindings, "python-regex-v0")
+  );
   return Effect.fn("Citation.extractHtmlCaseName")(function* (raw: unknown) {
     const request = yield* decodeCitationMetadataWordRequest(limits, S.toType(CitationHtmlCaseNameInput), raw, () =>
       fail("invalid-input")
     );
     if (request.index < 0 || request.index >= request.words.length) return yield* fail("invalid-index");
+    const input = yield* installedInput;
     const words = yield* Effect.forEach(
       request.words,
       Effect.fnUntraced(function* (word) {
@@ -237,6 +240,7 @@ export const installCitationHtmlCaseName = Effect.fn("Citation.installHtmlCaseNa
       tags: ReadonlyArray<CitationHtmlEmphasis>
     ) {
       const projected = yield* geometry.convert(tags);
+      const worker = yield* installedWorker;
       const evaluated = yield* worker.evaluate(config.patterns.splitV, projected.text, 2, 1, "search");
       if (evaluated.result.matches === 0)
         return yield* parties(

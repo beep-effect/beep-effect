@@ -117,16 +117,16 @@ const observeFullSpan = (range: readonly [number, number], combined: boolean, id
  */
 export const citationCanonicalFullSpanWork: ReadonlyArray<CitationEngineWorkCounts> = A.map(
   [
-    [0, 0, 0, 0, 70, 70],
-    [0, 0, 0, 0, 15, 15],
-    [0, 0, 0, 0, 15, 15],
-    [0, 0, 0, 0, 24, 24],
-    [0, 0, 0, 0, 19, 19],
-    [0, 0, 0, 0, 15, 15],
-    [0, 0, 0, 0, 65, 65],
-    [0, 0, 0, 0, 38, 38],
-    [0, 0, 0, 0, 15, 15],
-    [0, 0, 0, 0, 15, 15],
+    [0, 0, 0, 0, 70, 70, 2, 1, 0],
+    [0, 0, 0, 0, 15, 15, 0, 1, 0],
+    [0, 0, 0, 0, 15, 15, 0, 1, 0],
+    [0, 0, 0, 0, 24, 24, 0, 1, 0],
+    [0, 0, 0, 0, 19, 19, 0, 1, 0],
+    [0, 0, 0, 0, 15, 15, 0, 1, 0],
+    [0, 0, 0, 0, 65, 65, 1, 1, 0],
+    [0, 0, 0, 0, 38, 38, 1, 1, 0],
+    [0, 0, 0, 0, 15, 15, 0, 1, 0],
+    [0, 0, 0, 0, 15, 15, 0, 1, 0],
   ] as const,
   ([
     metadataOperationInstalls,
@@ -135,6 +135,9 @@ export const citationCanonicalFullSpanWork: ReadonlyArray<CitationEngineWorkCoun
     regexWorkerConstructions,
     regexEvaluations,
     nativeProcesses,
+    regexDescriptorBindings,
+    nativeProcessOwners,
+    diffXmlWorkerConstructions,
   ]) =>
     CitationEngineWorkCounts.make({
       metadataOperationInstalls,
@@ -143,6 +146,9 @@ export const citationCanonicalFullSpanWork: ReadonlyArray<CitationEngineWorkCoun
       regexWorkerConstructions,
       regexEvaluations,
       nativeProcesses,
+      regexDescriptorBindings,
+      nativeProcessOwners,
+      diffXmlWorkerConstructions,
     })
 );
 /** Engine work done once, when one default engine is constructed.
@@ -152,7 +158,11 @@ export const citationCanonicalFullSpanWork: ReadonlyArray<CitationEngineWorkCoun
  * The install-once goal moves stage installs, configuration detaches, the
  * tokenizer build and regex evaluator installs from every call to engine
  * construction. This row keeps that moved work visible; per-call rows count
- * only work a call performs.
+ * only work a call performs. No stage install may start a physical process
+ * owner or build a Diff or Xml worker: those capture a request Scope or
+ * per-owner queues. The one owner counted here is the HTML cleaner worker's,
+ * which the engine Layer owns by design (document services, unchanged by the
+ * install-once goal); an owner started by any stage install raises the count.
  *
  * **Example** (Reading the construction row)
  * ```ts
@@ -168,6 +178,9 @@ export const citationCanonicalFullSpanConstruction = CitationEngineWorkCounts.ma
   regexWorkerConstructions: 26,
   regexEvaluations: 0,
   nativeProcesses: 0,
+  regexDescriptorBindings: 0,
+  nativeProcessOwners: 1,
+  diffXmlWorkerConstructions: 0,
 });
 /** Check and log the work one engine construction performed.
  *

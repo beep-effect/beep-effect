@@ -101,13 +101,18 @@ const own = Effect.fn("Citation.ownTokenizedExtraction")(function* (
   const loop = yield* Effect.exit(
     makeCitationExtractionLoop(limits, runtime, config.loop).pipe(Effect.provideContext(children))
   );
-  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText, "source");
+  const input = yield* Effect.exit(makeCitationRegexInput(limits, reserveCitationInvocationText, "source"));
   return { config, children, tokenizer, loop, input };
 });
 const prepare = Effect.fn("Citation.tokenizeAndExtract")(function* (
   _limits: CitationEngineLimits,
   _runtime: CitationNativeProcessRuntime,
-  { children, tokenizer: installedTokenizer, loop: installedLoop, input }: Effect.Success<ReturnType<typeof own>>,
+  {
+    children,
+    tokenizer: installedTokenizer,
+    loop: installedLoop,
+    input: installedInput,
+  }: Effect.Success<ReturnType<typeof own>>,
   raw: unknown
 ) {
   const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
@@ -115,6 +120,7 @@ const prepare = Effect.fn("Citation.tokenizeAndExtract")(function* (
     const tokenizer = yield* installedTokenizer;
     const loop = yield* installedLoop;
     const tokenized = yield* tokenizer.port.tokenize(request.plain);
+    const input = yield* installedInput;
     const source = yield* input.prepareUnicode(tokenized.source, () => Effect.void);
     const tokens = HashMap.fromIterable(A.map(tokenized.tokens, (row) => Tuple.make(row.id, row.seed)));
     const lookup = (id: number) => Effect.fromOption(HashMap.get(tokens, id), () => fail("missing-token"));

@@ -151,10 +151,10 @@ export const replayCitationAnnotationCallbacks = Effect.fn("AnnotationCallbackTe
       Match.when("unchecked", () => Effect.succeedNone),
       Match.when("skip", () => makeCitationSkipAnnotationSpans().pipe(Effect.asSome)),
       Match.when("wrap", () =>
-        makeCitationAnnotationWrap(setup.limits, setup.regexRuntime).pipe(
-          Effect.flatMap(makeCitationWrapAnnotationSpans),
-          Effect.asSome
-        )
+        makeCitationWrapAnnotationSpans(
+          setup.limits,
+          makeCitationAnnotationWrap(setup.limits, setup.regexRuntime)
+        ).pipe(Effect.asSome)
       ),
       Match.exhaustive,
       Effect.provideContext(setup.provided),

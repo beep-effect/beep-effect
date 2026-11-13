@@ -56,10 +56,8 @@ export const makeCitationAnnotationWrap = Effect.fn("Citation.makeAnnotationWrap
   const worker = yield* installCitationRegexEvaluator(limits, runtime, bindings, "python-re").pipe(
     Effect.provideService(CitationRegexOperation, "annotate")
   );
-  // Templates capture the request's reservation, so each request builds its own.
-  const templates = makeCitationAnnotationTemplates(limits);
   const wrap = Effect.fn("Citation.wrapAnnotationTags")(function* (
-    template: Effect.Success<typeof templates>,
+    template: Effect.Success<ReturnType<typeof makeCitationAnnotationTemplates>>,
     source: CitationPythonUnicodeStorage,
     before: CitationPythonUnicodeStorage,
     after: CitationPythonUnicodeStorage
@@ -76,18 +74,22 @@ export const makeCitationAnnotationWrap = Effect.fn("Citation.makeAnnotationWrap
     }
     return yield* template.substitute(plan, evaluated.source.value.storage, matches);
   });
-  return { templates, wrap };
+  return { wrap };
 });
 /** Compose original XML fast paths and reverse after/before tag wrapping before
  * the existing assembly inserts the outer annotation. The tag wrapper is
- * installed once by the caller; the per-request processor captures the request's
- * XML balance and reservation.
+ * installed once by the caller and passed as the effect that yields it (its
+ * install `Exit`, or the install itself). Per request, the templates are built
+ * first (they capture the request's reservation), then the installed wrapper is
+ * yielded, in the order the original built them.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationWrapAnnotationSpans = Effect.fn("Citation.makeWrapAnnotationSpans")(function* (
-  tags: Effect.Success<ReturnType<typeof makeCitationAnnotationWrap>>
+export const makeCitationWrapAnnotationSpans = Effect.fn("Citation.makeWrapAnnotationSpans")(function* <E, R>(
+  limits: CitationEngineLimits,
+  installed: Effect.Effect<Effect.Success<ReturnType<typeof makeCitationAnnotationWrap>>, E, R>
 ) {
-  const templates = yield* tags.templates;
+  const templates = yield* makeCitationAnnotationTemplates(limits);
+  const tags = yield* installed;
   const prepare = Effect.fn("Citation.wrapUnbalancedAnnotationSpan")(function* (
     _source: CitationPythonUnicodeValue,
     replacement: CitationAnnotationReplacement,

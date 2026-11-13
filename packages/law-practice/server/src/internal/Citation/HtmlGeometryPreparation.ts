@@ -102,13 +102,17 @@ export const installCitationHtmlGeometry = Effect.fn("Citation.installHtmlGeomet
   regexRuntime: CitationNativeProcessRuntime,
   config: CitationHtmlGeometryPreparationConfiguration
 ) {
-  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText);
-  const discovery = yield* makeCitationHtmlDiscoveryRunner(limits, regexRuntime, config.discovery);
+  const installedInput = yield* Effect.exit(makeCitationRegexInput(limits, reserveCitationInvocationText));
+  const installedDiscovery = yield* Effect.exit(
+    makeCitationHtmlDiscoveryRunner(limits, regexRuntime, config.discovery)
+  );
   const forward = Effect.fn("Citation.prepareForwardHtmlMap")(function* <E>(
     markup: unknown,
     plainInput: Effect.Effect<unknown, E>,
     useDmp = true
   ) {
+    const input = yield* installedInput;
+    const discovery = yield* installedDiscovery;
     const masked = yield* discovery.placeholder(markup);
     const plainValue = yield* plainInput;
     const plain = yield* input.prepareUnicode(plainValue, () => Effect.void);
@@ -129,6 +133,7 @@ export const installCitationHtmlGeometry = Effect.fn("Citation.installHtmlGeomet
     plainInput: Effect.Effect<unknown, E>
   ) {
     const prepared = yield* forward(markup, plainInput);
+    const discovery = yield* installedDiscovery;
     const backwardSteps = yield* prepared.diff.evaluate(prepared.source.value.storage, prepared.plain.value.storage);
     const tags = yield* discovery.emphasis(prepared.source.value.storage);
     return CitationHtmlTagGeometryInput.make({

@@ -182,61 +182,64 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
     it.effect(
       "creates implicit source maps with actual placeholder and diff workers on Bun and Node",
       () =>
-        withCitationTestInvocation(
-          Effect.gen(function* () {
-            const corpus = yield* loadMapping;
-            const discovery = yield* readCitationHtmlDiscoveryCorpus();
-            const fs = yield* FileSystem.FileSystem;
-            const captured = yield* Effect.context<Scope.Scope | Digest.Digest | Path.Path>();
-            for (const kind of ["bun", "node"] as const) {
-              const setup = yield* setupCitationMetadataRuntime(kind, undefined, true);
-              const directory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-annotation-diff-" });
-              const diffRuntime = yield* makeCitationDiffTestRuntime(kind, directory);
-              const assembly = yield* makeCitationAnnotationAssembly(setup.limits).pipe(
-                Effect.provideService(CitationTextBudget, setup.budget)
-              );
-              for (const row of A.filter(corpus.cases, (_, index) => index % 6 === 0)) {
-                const output = yield* setup.operation.run(
-                  "annotate",
-                  Effect.gen(function* () {
-                    const html = yield* installCitationHtmlGeometry(
-                      setup.limits,
-                      setup.runtime,
-                      CitationHtmlGeometryPreparationConfiguration.make({
-                        discovery: CitationHtmlDiscoveryConfiguration.make(discovery.configuration),
-                        diffRuntime,
-                      })
-                    );
-                    const mapped = yield* prepareCitationAnnotationSourceMap(
-                      setup.limits,
-                      html,
-                      CitationPythonUnicodeStorage.make(row.plain),
-                      CitationPythonUnicodeStorage.make(row.source)
-                    );
-                    const prepared = yield* prepareCitationAnnotations(
-                      setup.limits,
-                      nativeReplacements(row.input),
-                      O.some(mapped.updater)
-                    );
-                    expect(prepared).toEqual(nativeReplacements(row.mapped));
-                    return yield* assembly.assemble(mapped.source, prepared);
-                  }).pipe(
-                    Effect.provideContext(setup.provided),
-                    Effect.provideContext(captured),
-                    Effect.provideService(CitationTextBudget, setup.budget)
-                  )
+        Effect.gen(function* () {
+          const corpus = yield* loadMapping;
+          const discovery = yield* readCitationHtmlDiscoveryCorpus();
+          const fs = yield* FileSystem.FileSystem;
+          const captured = yield* Effect.context<Scope.Scope | Digest.Digest | Path.Path>();
+          // One request is served by one engine's spawner, so each runtime gets its own invocation.
+          for (const kind of ["bun", "node"] as const) {
+            yield* withCitationTestInvocation(
+              Effect.gen(function* () {
+                const setup = yield* setupCitationMetadataRuntime(kind, undefined, true);
+                const directory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-annotation-diff-" });
+                const diffRuntime = yield* makeCitationDiffTestRuntime(kind, directory);
+                const assembly = yield* makeCitationAnnotationAssembly(setup.limits).pipe(
+                  Effect.provideService(CitationTextBudget, setup.budget)
                 );
-                expect(output).toEqual(row.result);
-              }
-              yield* assertCitationWorkerCompositionReleased(
-                setup.operation,
-                setup.admission,
-                setup.observed.snapshot,
-                12
-              );
-            }
-          })
-        ),
+                for (const row of A.filter(corpus.cases, (_, index) => index % 6 === 0)) {
+                  const output = yield* setup.operation.run(
+                    "annotate",
+                    Effect.gen(function* () {
+                      const html = yield* installCitationHtmlGeometry(
+                        setup.limits,
+                        setup.runtime,
+                        CitationHtmlGeometryPreparationConfiguration.make({
+                          discovery: CitationHtmlDiscoveryConfiguration.make(discovery.configuration),
+                          diffRuntime,
+                        })
+                      );
+                      const mapped = yield* prepareCitationAnnotationSourceMap(
+                        setup.limits,
+                        html,
+                        CitationPythonUnicodeStorage.make(row.plain),
+                        CitationPythonUnicodeStorage.make(row.source)
+                      );
+                      const prepared = yield* prepareCitationAnnotations(
+                        setup.limits,
+                        nativeReplacements(row.input),
+                        O.some(mapped.updater)
+                      );
+                      expect(prepared).toEqual(nativeReplacements(row.mapped));
+                      return yield* assembly.assemble(mapped.source, prepared);
+                    }).pipe(
+                      Effect.provideContext(setup.provided),
+                      Effect.provideContext(captured),
+                      Effect.provideService(CitationTextBudget, setup.budget)
+                    )
+                  );
+                  expect(output).toEqual(row.result);
+                }
+                yield* assertCitationWorkerCompositionReleased(
+                  setup.operation,
+                  setup.admission,
+                  setup.observed.snapshot,
+                  12
+                );
+              })
+            );
+          }
+        }),
       { timeout: 120000 }
     );
     it.effect("checks exact output, growth and cumulative allocation before materializing annotation output", () =>

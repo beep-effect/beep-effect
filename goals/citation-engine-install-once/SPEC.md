@@ -168,11 +168,27 @@ Lane perf/citation-hoist-installs
 
 Reverse: Construct the generated-reference regex worker inside each prepare again.
 
+### Count descriptor bindings, process owners and Diff/Xml workers in the probe, 2026-11-13
+
+Review round 1: bindDescriptors builds a descriptor registry (regex input, program, point sets, timing) on each generated-reference call under a span the probe ignored. Rather than hoist part of the registry, the probe counts it as regexDescriptorBindings, so the per-call table is honest. nativeProcessOwners counts physical process owners and diffXmlWorkerConstructions counts Diff and Xml worker constructions; the construction row asserts zero for both, which fails if an engine-time install ever starts a process owner (and so binds a Scope) or builds a Diff or Xml worker.
+
+Lane perf/citation-hoist-installs · PR #3282
+
+Reverse: Drop the three columns from CitationEngineWorkCounts and the full-span tables.
+
 ### Delete the unused cleaner operation adapter, 2026-11-13
 
 A repository-wide live source and test search found makeCitationCleanerOperation only in its defining module and CitationCleanerOperation.test.ts. No src caller, public engine boundary, or package composition uses it; SourceCleaning uses CleanerPipeline directly. The similarly named replay fixture independently wraps CleanerPipeline and does not call this adapter. Delete the test-only dead production adapter and its test rather than count fixture admission as a production proof. Public engine admission is now proved by the manual-clock engine test. Regenerate the instrumentation catalog and prune the generated shard plan with repository writers.
 
 Reverse: Restore CleanerOperation.ts and its test from head 99bb436ca0fc if a real production caller is introduced.
+
+### Hold one regex process owner per invocation, created on its first evaluation, 2026-11-13
+
+Review round 1: an owner per evaluation decoded limits, built a semaphore and refs and added a finalizer to the invocation Scope about 29 times per call. CitationInvocation gains a regexOwner field, a SynchronizedRef holding an optional native process owner, set up empty by openCitationInvocation (service contract first, then the evaluator). The first regex evaluation of a request creates the owner in the invocation Scope with the evaluator's captured Clock and spawner; later evaluations reuse it. Each evaluation still claims, starts and retires its own child through withCitationNativeProcess (one child per job, lease released only on confirmed retirement), and the owner's open and quarantine check again runs before job preparation, as main's per-helper owner did. No session, lane or process reuse: those stay with citation-regex-worker-v3. The probe's nativeProcessOwners column shows 1 per call on the full-span cohort. The owner is created with the first evaluator's Clock, spawner and limits; every evaluator of one engine shares those, so a request is always served by one spawner. CitationAnnotationAssembly.test.ts ran its Bun and Node runtimes, each with its own observed spawner, inside one test invocation; it now opens one invocation per runtime, which is what one request is.
+
+Lane perf/citation-hoist-installs · PR #3282
+
+Reverse: Start a physical regex owner per evaluation inside the invocation Scope again.
 
 ### Judge MetadataComposition coverage against the same focused group on clean HEAD, 2026-11-13
 
@@ -280,6 +296,22 @@ Lane perf/citation-hoist-installs
 
 Reverse: Remove installedWithoutRequestValues from CitationEngine.layer.ts.
 
+### Provide one native admission to each stage install, 2026-11-13
+
+Review round 1: helpers and child stages installed in a stage's own body ran before makeCitationMetadataOperation captured its fallback native admission, so a standalone stage (tests, direct callers) got one admission per evaluator instead of the stage's one. provideCitationStageAdmission captures the host admission, or creates one fallback, right after the stage decodes its limits, and provides it to the whole install: makeCitationMetadataStage, the publication metadata operation, post-case, law, journal, case metadata, reference tokens and the extraction loop. makeCitationMetadataOperation now requires the admission and no longer has its own fallback, which only that path could reach. The engine is unaffected; it always supplies the host admission.
+
+Lane perf/citation-hoist-installs · PR #3282
+
+Reverse: Let each nested install capture its own fallback native admission.
+
+### Reject captured-context lookups of citation request authority, 2026-11-13
+
+Review round 1: the rule covered optional lookups but not Context.get, Context.getUnsafe or Context.getOrElse on a captured context for CitationTextBudget, CitationOperationAdmission and CitationInvocation. Both data-first and data-last forms are added, with fixtures for all three names plain and namespaced (36 new invalid cases), and the Citation directory passes the extended rule.
+
+Lane perf/citation-hoist-installs · PR #3282
+
+Reverse: Remove the get, getUnsafe and getOrElse forms from no-citation-optional-invocation.
+
 ### Remove only the deleted cleaner adapter coverage row, 2026-11-13
 
 Remove the orphan CleanerOperation.ts file row by hand. The baseline writer exists as coverage:baseline:write, but it consumes complete measured package snapshots and has no file-row deletion command. Regenerating law-practice-server would run its whole suite, which the task explicitly forbids locally. Keep every other coverage floor unchanged and leave frozen proof references under goals/citation-extraction-engine and the eyecite fixture untouched.
@@ -298,17 +330,21 @@ Reverse: Restore the cleaner parent Option wrappers and parentless fallbacks.
 
 installCitationRegexEvaluator holds only engine constants: limits, runtime, timing, the shared native admission, Clock, spawner, Digest, descriptor registry, job preparation and the control-frame preflight. The process owner captures a Scope, a birth lock and a process list, so it is not shared: each evaluate reads CitationInvocation and starts one owner in the invocation Scope, then runs the unchanged withCitationNativeProcess sequence (one child per job, protocol v2, lease released only on confirmed retirement). Before A3 one owner served each helper call; now one serves each evaluation. The owner-level snapshot and reap had no production reader and are removed; the quarantine refusal a later evaluation sees now comes from the shared native admission with the same reason, quarantined. CitationRegexWorker.test.ts asserts the admission snapshot where it asserted the owner snapshot.
 
+Superseded in review round 1 by "Hold one regex process owner per invocation, created on its first evaluation".
+
 Lane perf/citation-hoist-installs
 
 Reverse: Restore per-helper-call makeCitationRegexWorker construction with its owner snapshot and reap.
 
-### Surface a hoisted install failure where each request used to install the stage, 2026-11-13
+### Surface each hoisted install outcome where main ran the install, 2026-11-13
 
-CitationSemanticExtraction.test.ts installs the semantic stage under a deliberately tiny producedTextUtf16 and expects the eyecite shortcut to succeed. Hoisted, the tokenizer install refused at construction (its extractor selection cannot hold extractor strings longer than the limit), so the whole stage failed to install. Before A3 that refusal reached only non-shortcut requests. Each stage-tree hoist site (source, verified, semantic, entry, document, tokenized, loop) and the annotation entry's HTML geometry and wrap installs now run once at construction under Effect.exit, and the request yields that Exit at the point where it used to install the stage. Results, refusal labels and their order are unchanged; the install still runs once and the probe counts are unaffected. The engine-construction type guard still rejects any install that reads a request value.
+CitationSemanticExtraction.test.ts installs the semantic stage under a deliberately tiny producedTextUtf16 and expects the eyecite shortcut to succeed; hoisted, the tokenizer install refused at construction. Review round 1 then showed the first fix was incomplete: only the eight stage-tree sites replayed their install Exit, while helpers that main built lazily inside a helper call (context matchers, metadata strings and years, the court lookup, the pin-cite cleaner, stop words, the case-name chain, generated-reference inputs and evaluators, HTML discovery and geometry, the annotation wrap worker) were built in the parent install, so their refusals replayed for every request at the stage point, ahead of refusals main reported first.
+
+Mechanism now: every install keeps its work at engine construction and captures its outcome with Effect.exit. Installs that were eager on main (a child stage installed by its parent's prepare) replay their Exit at the stage install point, as before. Installs that were lazy on main replay their Exit at main's call point: the helper call, inside markupBranch through the HTML geometry's forward map, inside the year and court branches of the post-case helper, inside the single-element HTML case name, and before bindDescriptors. Helper installs therefore cannot fail at construction. The annotation processor builds its templates per request before yielding the installed wrap worker, in main's order. The evidence file classifies every moved install. Tests: a plain request through an input document whose HTML geometry install refuses still initializes and only markup refuses; a patternUtf16 policy one unit above the pin pattern extracts a section reference and refuses an Id reference with patternUtf16; the wrap processor reports the template refusal when both refuse.
 
 Lane perf/citation-hoist-installs
 
-Reverse: Let hoisted stage installs fail engine construction directly.
+Reverse: Let hoisted installs fail engine construction directly.
 
 ### Update the existing draft without starting a readiness monitor, 2026-11-13
 

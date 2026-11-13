@@ -38,6 +38,7 @@ import {
   installCitationMetadataContextMatch,
   makeCitationMetadataOperation,
   prepareCitationPublicationMetadata,
+  provideCitationStageAdmission,
 } from "./MetadataComposition.ts";
 import { installCitationPinCiteExtraction } from "./PinExtraction.ts";
 import { CitationTokenContextInput } from "./TokenContext.ts";
@@ -288,39 +289,44 @@ export const makeCitationReferenceTokenExtraction = Effect.fn("Citation.makeRefe
     S.toType(CitationReferenceTokenConfiguration),
     () => fail("invalid-configuration")
   );
-  const pin = yield* prepareCitationPublicationMetadata(
+  return yield* provideCitationStageAdmission(
     limits,
-    runtime,
-    decoded.pin,
-    "3d1b06d98647ef244e02b08aee15ff80a0fb3971528a8a9c97854dd35916bb3d",
-    () => fail("invalid-configuration")
-  );
-  const names = yield* copyCitationCaseNameSelectionConfiguration(limits, decoded.names);
-  const supra = yield* copyCitationMetadataPatternConfiguration(
-    limits,
-    S.toType(S.Struct({ pattern: CitationPythonUnicodeStorage })),
-    { pattern: decoded.supra.pattern },
-    decoded.supra.bindings,
-    { pattern: "5e82e531e754da20a304f03d9a0ff46f1e5c89e30c9f2e661f8ec196e584e30d" },
-    () => fail("invalid-configuration")
-  );
-  const config = CitationReferenceTokenConfiguration.make({
-    pin: pin.config,
-    names,
-    supra: { pattern: supra.patterns.pattern, bindings: supra.bindings },
-    editions: A.map(decoded.editions, (row) => ({ ...row })),
-  });
-  const refs = HashMap.fromIterable(A.map(config.editions, (row) => Tuple.make(row.id, row.ref)));
-  if (HashMap.size(refs) !== config.editions.length) return yield* fail("invalid-configuration");
-  const owner = yield* CitationFrozenEditions;
-  const inference = yield* makeCitationEditionInference(limits);
-  const prepare = yield* installPrepare(limits, runtime, config, refs, owner, inference);
-  const installed = yield* makeCitationMetadataOperation(limits, prepare);
-  const extract = Effect.fn("Citation.extractReferenceToken")((raw: unknown) =>
     Effect.gen(function* () {
-      const [result, reservedUnits] = yield* installed.run(raw);
-      return CitationReferenceTokenResult.make({ ...result, reservedUnits });
+      const pin = yield* prepareCitationPublicationMetadata(
+        limits,
+        runtime,
+        decoded.pin,
+        "3d1b06d98647ef244e02b08aee15ff80a0fb3971528a8a9c97854dd35916bb3d",
+        () => fail("invalid-configuration")
+      );
+      const names = yield* copyCitationCaseNameSelectionConfiguration(limits, decoded.names);
+      const supra = yield* copyCitationMetadataPatternConfiguration(
+        limits,
+        S.toType(S.Struct({ pattern: CitationPythonUnicodeStorage })),
+        { pattern: decoded.supra.pattern },
+        decoded.supra.bindings,
+        { pattern: "5e82e531e754da20a304f03d9a0ff46f1e5c89e30c9f2e661f8ec196e584e30d" },
+        () => fail("invalid-configuration")
+      );
+      const config = CitationReferenceTokenConfiguration.make({
+        pin: pin.config,
+        names,
+        supra: { pattern: supra.patterns.pattern, bindings: supra.bindings },
+        editions: A.map(decoded.editions, (row) => ({ ...row })),
+      });
+      const refs = HashMap.fromIterable(A.map(config.editions, (row) => Tuple.make(row.id, row.ref)));
+      if (HashMap.size(refs) !== config.editions.length) return yield* fail("invalid-configuration");
+      const owner = yield* CitationFrozenEditions;
+      const inference = yield* makeCitationEditionInference(limits);
+      const prepare = yield* installPrepare(limits, runtime, config, refs, owner, inference);
+      const installed = yield* makeCitationMetadataOperation(limits, prepare);
+      const extract = Effect.fn("Citation.extractReferenceToken")((raw: unknown) =>
+        Effect.gen(function* () {
+          const [result, reservedUnits] = yield* installed.run(raw);
+          return CitationReferenceTokenResult.make({ ...result, reservedUnits });
+        })
+      );
+      return { extract };
     })
   );
-  return { extract };
 });
