@@ -1988,8 +1988,9 @@ class CiLaneTimingQueueTripwireChange extends S.Opaque<
 // Every change to the tripwire, oldest first. A window is judged against the newest change effective at or before
 // its `--since`, so an earlier admission document re-renders with the limit it was written under.
 const CI_LANE_TIMING_QUEUE_TRIPWIRE_CHANGES: ReadonlyArray<CiLaneTimingQueueTripwireChange> = [
-  // Operator decision 2026-11-13 in goals/ci-lane-economics/decisions, "Shards overflow to the self-hosted pool
-  // only past a 10-minute hosted wait": the design admits shard pickup up to that threshold.
+  // Operator decision 2026-11-13, "Shards overflow to the self-hosted pool only past a 10-minute hosted wait"
+  // (the design admits shard pickup up to that threshold):
+  // goals/ci-lane-economics/decisions/2026-11-13-shards-overflow-to-the-self-hosted-pool-only-past-a-10-minute-hosted-wait.md
   CiLaneTimingQueueTripwireChange.make({
     effectiveFrom: DateTime.makeUnsafe("2026-11-13T00:00:00Z"),
     limit: Duration.minutes(10),
@@ -3344,7 +3345,10 @@ const reportFromRows = Effect.fn("Ci.reportFromLaneTimingWindowRows")(function* 
  * windowed collector pins the exact count for the resolved version. The
  * per-day peak column is swept from the paired runs' in-flight bounds. The
  * shard pickup tripwire is the limit in force at `since` (5m00s before
- * 2026-11-13T00:00:00Z, 10m00s from then on); with no `since`, the newest.
+ * 2026-11-13T00:00:00Z, 10m00s from then on). Without `since` the report is
+ * judged against the newest limit, 10m00s: an offline read of current runs
+ * uses the rule in force today, and anything that must reproduce an earlier
+ * admission document passes that window's `since`.
  *
  * **Example** (Observe the fail-closed context assertion)
  *
