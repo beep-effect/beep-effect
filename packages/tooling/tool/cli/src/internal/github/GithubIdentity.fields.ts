@@ -19,25 +19,43 @@ import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("internal/github/GithubIdentity.fields");
 
+// 1Password secret reference syntax (developer.1password.com/docs/cli/secret-reference-syntax):
+// `op://<vault>/<item>/[<section>/]<field>`. A part names its vault, item, section or field with
+// letters, digits, `-`, `_`, `.` and spaces, or by the unique ID `op` reports for it; a name with
+// any other character must be addressed by ID. One
+// optional `attribute` (`attr`) or `ssh-format` query parameter selects a field attribute or the
+// OpenSSH key format. Tabs, newlines and every other character are refused, so a pasted raw
+// token never decodes. Components are bounded by slashes; names are case-insensitive.
 const OpReference = S.String.check(
-  S.isPattern(/^op:\/\/[^\s]+$/, {
-    identifier: "OpReferencePattern",
-    title: "1Password reference",
-    description: "An op:// secret reference, never a raw secret.",
-    message: "must be an op:// reference, not a raw secret",
-  })
+  S.isPattern(
+    /^[oO][pP]:\/\/(?:[\w. -]+\/){2,3}[\w. -]+(?:\?(?:(?:attribute|attr)=(?:type|value|id|purpose|otp|content|size|name)|ssh-format=openssh))?$(?![\s\S])/u,
+    {
+      identifier: "OpReferencePattern",
+      title: "1Password reference",
+      description:
+        "An op://vault/item/[section/]field secret reference whose parts are names (letters, digits, -, _, . and spaces) or IDs, never a raw secret.",
+      message: "must be an op://vault/item/[section/]field reference, not a raw secret",
+    }
+  )
 );
 
 /**
  * A 1Password reference to a GitHub token.
  *
- * **Example** (Reject a raw token)
+ * **Details**
+ *
+ * Follows 1Password's secret reference syntax: `op://vault/item/[section/]field`,
+ * each part a name made of letters, digits, `-`, `_`, `.` and spaces, or the
+ * part's ID. A name holding any other character is addressed by its ID.
+ *
+ * **Example** (Accept a name with spaces, reject a raw token)
  *
  * ```ts
  * import { GithubTokenRef } from "@beep/repo-cli/test/SharedInternals"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(GithubTokenRef)("op://vault/item/token")) // true
+ * console.log(S.is(GithubTokenRef)("op://Private/GitHub CLI token/credential")) // true
  * console.log(S.is(GithubTokenRef)("ghp_raw")) // false
  * ```
  *

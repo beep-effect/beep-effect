@@ -2916,6 +2916,7 @@
         "$TURBO_ROOT$/packages/foundation/capability/file-processing/src/PathSafety/PathSafety.policy.ts",
         "$TURBO_ROOT$/packages/foundation/capability/file-processing/src/PathSafety/PathSafety.service.ts",
         "$TURBO_ROOT$/packages/foundation/capability/file-processing/src/PathSafety/index.ts",
+        "$TURBO_ROOT$/packages/foundation/modeling/glob/src/GlobSet.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/managed-section/package.json",
         "$TURBO_ROOT$/packages/foundation/modeling/managed-section/src/CommentStyle.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/managed-section/src/Section.ts",

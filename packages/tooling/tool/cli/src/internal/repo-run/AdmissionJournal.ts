@@ -51,6 +51,7 @@ import {
 } from "./ProcessIdentity.ts";
 import {
   AdmissionPriority,
+  AdmissionRoute,
   AdmissionWorkKind,
   QualitySchedulerError,
   YeetAdmissionTicket,
@@ -668,6 +669,44 @@ export class AdmissionJournalTicketEvictedV3 extends AdmissionJournalCheckoutIde
   })
 ) {}
 
+/**
+ * Version-three routing fact a `worker` host writes instead of a queue entry.
+ *
+ * **Details**
+ *
+ * A worker never queues: the scheduler bypasses the ticket queue or refuses a
+ * hosted-only gate, and `yeet final-check` decides each gate from the routing
+ * table. Each decision is one row with the {@link AdmissionRoute} fields
+ * (`computeProfile`, `forceLocal`, the gate route and the `bypass` or
+ * `refusal` outcome) plus the writer's pid, process start and instant. The
+ * row trims, archives and folds like every other known row.
+ *
+ * **Example** (Read the routing row version)
+ *
+ * ```ts
+ * import { AdmissionJournalRouted } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionJournalRouted.fields._tag.schema.literal) // "admission-routed"
+ * ```
+ *
+ * @category domain-events
+ * @since 0.0.0
+ */
+export class AdmissionJournalRouted extends S.Opaque<AdmissionJournalRouted, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("admission-routed", {
+    schemaVersion: S.tag("yeet-admission-journal/v3"),
+    nonce: S.String,
+    pid: S.Finite,
+    procStart: S.String,
+    routedAtMillis: S.Finite,
+    ...AdmissionRoute.fields,
+  }).pipe(
+    $I.annoteSchema("AdmissionJournalRouted", {
+      description: "A worker host's routing decision (bypass or refusal) made without the admission ticket queue.",
+    })
+  )
+) {}
+
 const admissionJournalEventGuards = {
   "admission-admitted": S.is(AdmissionJournalAdmitted),
   "admission-released": S.is(S.Union([AdmissionJournalReleased, AdmissionJournalReleasedV3])),
@@ -675,6 +714,7 @@ const admissionJournalEventGuards = {
   "admission-ticket-evicted": S.is(S.Union([AdmissionJournalTicketEvicted, AdmissionJournalTicketEvictedV3])),
   "admission-enqueued": S.is(AdmissionJournalEnqueued),
   "admission-withdrawn": S.is(AdmissionJournalWithdrawn),
+  "admission-routed": S.is(AdmissionJournalRouted),
 };
 
 /**
@@ -701,6 +741,7 @@ export const AdmissionJournalEvent = S.Union([
   AdmissionJournalReleasedV3,
   AdmissionJournalLeaseEvictedV3,
   AdmissionJournalTicketEvictedV3,
+  AdmissionJournalRouted,
 ]).pipe(
   $I.annoteSchema("AdmissionJournalEvent", {
     description: "Version-one, version-two, and version-three transitions in the shared admission journal.",
@@ -735,7 +776,8 @@ type AdmissionJournalTransition =
   | AdmissionJournalReleased
   | AdmissionJournalReleasedV3
   | AdmissionJournalEnqueued
-  | AdmissionJournalWithdrawn;
+  | AdmissionJournalWithdrawn
+  | AdmissionJournalRouted;
 
 const encodeEvent = S.encodeUnknownEffect(S.fromJsonString(AdmissionJournalEvent));
 

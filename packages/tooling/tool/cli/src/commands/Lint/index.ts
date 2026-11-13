@@ -140,6 +140,7 @@ export {
   encodeEffectVitestPrimitiveGraphDocument,
   encodeSchemaFirstInventoryDocument,
   isActiveSchemaFirstRuleAdvisory,
+  isEffectVitestScopePath,
   isEffectVitestTestFilePath,
   LiteralKitConstAssertionViolation,
   makeEffectVitestFindingKey,
