@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Host agent for /update-harnesses. Runs ON one fleet host: piped over SSH stdin by
-# update_harnesses.py (`bash -s -- <mode> <harness>...`) or run locally on the hub.
+# update_harnesses.ts (`bash -s -- <mode> <harness>...`) or run locally on the hub.
 #
 #   harness_host.sh status|update <harness>...
 #

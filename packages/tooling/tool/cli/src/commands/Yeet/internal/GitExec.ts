@@ -88,9 +88,10 @@ export const yeetGitKitError = (invocation: GitInvocation): ((error: GitKitError
  *
  * **Details**
  *
- The unbounded runner for output Yeet only needs reduced, such as a digest of a diff larger than the
- * repo-run capture limit. Its one caller is the byte-exact patch identity in `FinalCheckRefresh`
- * (`// KEEP (D-18)`): the kit buffers decoded text, and that digest keeps every byte.
+ * The unbounded runner for output Yeet only needs reduced, such as a digest of a diff larger than the
+ * repo-run capture limit. Its callers keep bytes or plumbing the kit does not model: the byte-exact
+ * patch identity in `FinalCheckRefresh` (`// KEEP (D-18)`, Y33) and `HeadMove`'s strict-UTF-8 reads
+ * and per-path patch digest (`// KEEP (D-22)`); the kit buffers decoded text.
  *
  * **Example** (Count diff bytes)
  *
