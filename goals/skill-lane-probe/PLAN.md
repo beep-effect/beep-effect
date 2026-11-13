@@ -2,14 +2,14 @@
 
 ## Status
 
-Status: `pending`
+Status: `active`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Read the first probe's findings, rule and amendments, and its probe code. Confirm the account has plan headroom. Rerun preflight under scorer profile v3. | Preflight recorded; the code change is scoped; no blocker on the plan. |
-| P1 Implement | pending | Add lane fraction as a selectable primary, the within-task permutation test, the fixed-task interval and the three-outcome verdict, schema first and with tests. Pass the first slice on the committed pilot records. | First slice passes; package verification green; coverage floors hold; the code PR is merged. |
+| P0 Research | completed | Read the first probe's findings, rule and amendments, and its probe code. Confirm the account has plan headroom. Rerun preflight under scorer profile v3. | Preflight recorded; the code change is scoped; no blocker on the plan. |
+| P1 Implement | active | Add lane fraction as a selectable primary, the within-task permutation test, the fixed-task interval and the three-outcome verdict, schema first and with tests. Pass the first slice on the committed pilot records. | First slice passes; package verification green; coverage floors hold; the code PR is merged. |
 | P2 Verify | pending | Run the 120 scored runs under the cost ceiling, score every kept directory, write the findings and the verdict. | Run records and findings are in `history/`; the verdict is stated against the Decision Rule. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Record the verdict row, the prune proposal on a Null, and the fired gate in the exploration. Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |

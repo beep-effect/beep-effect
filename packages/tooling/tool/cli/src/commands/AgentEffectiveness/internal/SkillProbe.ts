@@ -31,6 +31,8 @@ import {
 } from "../AgentEffectiveness.schemas.ts";
 import { buildAgentEffectivenessEvalScoreReport, evaluateTaskFixture } from "./EvalScorer.ts";
 import { LawEvaluation } from "./EvalScoring.ts";
+import { SkillLaneProbeReport } from "./SkillLaneProbeSchemas.ts";
+import { buildSkillLaneProbeReport, SKILL_LANE_PROBE_MAX_ATTEMPTS } from "./SkillLaneProbeStats.ts";
 import {
   PluginEvalResult,
   SkillProbeFingerprint,
@@ -47,6 +49,7 @@ import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { AgentEffectivenessEvalScoreReport } from "../AgentEffectiveness.schemas.ts";
+import type { SkillLaneProbeOptions } from "./SkillLaneProbeStats.ts";
 import type { PluginEvalRun, SkillProbeCell, SkillProbePrimary } from "./SkillProbeSchemas.ts";
 
 const SKILL_NAME = "schema-first-development";
@@ -1091,4 +1094,49 @@ export const runSkillProbeSelect = Effect.fn("SkillProbe.select")(function* (
   const selection = selectSkillProbePrimary(records);
   yield* encodeSelection(selection).pipe(Effect.flatMap(Console.log));
   return selection;
+});
+
+const encodeLaneReport = S.encodeEffect(S.fromJsonString(SkillLaneProbeReport));
+
+/**
+ * Build the lane probe report from run record files and print it as JSON.
+ *
+ * **Details**
+ *
+ * Refuses records the first probe's pooling checks reject and more than 144
+ * attempts. A pilot report is labelled as such and carries no verdict.
+ *
+ * **Example** (Report pilot records)
+ *
+ * ```ts
+ * import { runSkillLaneProbeReport } from "@beep/repo-cli/test/AgentEffectiveness"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = runSkillLaneProbeReport(["runs.jsonl"], "preflight.json", {
+ *   data: "pilot",
+ *   seed: 20261113,
+ *   relabelings: 100000
+ * })
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param files - JSON Lines files of `SkillProbeRunRecord`.
+ * @param preflightPath - Preflight receipt; records of its dropped tasks are refused.
+ * @param options - Data label, seed and relabeling count.
+ * @returns The report that was printed, with its verdict on scored data.
+ * @category commands
+ * @since 0.0.0
+ */
+export const runSkillLaneProbeReport = Effect.fn("SkillProbe.laneReport")(function* (
+  files: ReadonlyArray<string>,
+  preflightPath: string,
+  options: SkillLaneProbeOptions
+): Effect.fn.Return<SkillLaneProbeReport, AgentEffectivenessEvalScorerError | S.SchemaError, ProbeEnv> {
+  const records = yield* readPoolableRecords(files, preflightPath);
+  if (A.length(records) > SKILL_LANE_PROBE_MAX_ATTEMPTS) {
+    return yield* fail(`${A.length(records)} attempts exceed the cap of ${SKILL_LANE_PROBE_MAX_ATTEMPTS}.`);
+  }
+  const report = yield* buildSkillLaneProbeReport(records, options);
+  yield* encodeLaneReport(report).pipe(Effect.flatMap(Console.log));
+  return report;
 });
