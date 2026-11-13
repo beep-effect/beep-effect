@@ -631,14 +631,17 @@ const mainVerdictOf = (runs: ReadonlyArray<CiWorkflowWindowRun>): CiCertaintyMai
   return A.isReadonlyArrayNonEmpty(runs) ? "cancelled" : "no-run";
 };
 
-const mainRowOf = (commit: CiCertaintyMainCommit): CiCertaintyMainRow =>
-  CiCertaintyMainRow.make({
-    committedAt: commit.committedAt,
-    docsOnly: commit.docsOnly,
-    runIds: A.map(commit.runs, (run) => run.id),
-    sha: commit.sha,
-    verdict: mainVerdictOf(commit.runs),
-  });
+// An incomplete push-run listing says nothing about a commit's runs, so it is unread, never no-run.
+const mainRowOf =
+  (listingPartial: boolean) =>
+  (commit: CiCertaintyMainCommit): CiCertaintyMainRow =>
+    CiCertaintyMainRow.make({
+      committedAt: commit.committedAt,
+      docsOnly: commit.docsOnly,
+      runIds: A.map(commit.runs, (run) => run.id),
+      sha: commit.sha,
+      verdict: listingPartial ? "unread" : mainVerdictOf(commit.runs),
+    });
 
 const mainStatOf = (rows: ReadonlyArray<CiCertaintyMainRow>): CiCertaintyMainStat => {
   const code = A.filter(rows, (row) => !row.docsOnly);
@@ -651,7 +654,8 @@ const mainStatOf = (rows: ReadonlyArray<CiCertaintyMainRow>): CiCertaintyMainSta
     docsCommits: A.length(rows) - A.length(code),
     noRun: count("no-run"),
     open: count("open"),
-    rate: A.isReadonlyArrayNonEmpty(code) ? O.some(verdicts / A.length(code)) : O.none(),
+    rate: A.isReadonlyArrayNonEmpty(code) && count("unread") === 0 ? O.some(verdicts / A.length(code)) : O.none(),
+    unread: count("unread"),
     verdicts,
   });
 };
@@ -738,7 +742,7 @@ export const buildCiCertaintyReport = Effect.fn("Ci.buildCiCertaintyReport")(fun
     A.filter(corpus.mainCommits, (commit) =>
       insideWindow(corpus.since, corpus.until, DateTime.toEpochMillis(commit.committedAt))
     ),
-    mainRowOf
+    mainRowOf(corpus.mainListingPartial)
   );
   const slo = ciCertaintyLatencyStat(codeHeads, (head) => head.requiredGreenMinutes);
   const countedHeads = A.filter(heads, (head) => O.isNone(head.censor));
@@ -877,7 +881,7 @@ export const renderCiCertaintyMarkdown = (report: CiCertaintyReport): string =>
       "",
       "## Main verdict rate",
       "",
-      `- non-docs first-parent commits: ${report.main.commits} (docs ${report.main.docsCommits}); completed verdicts ${report.main.verdicts}; rate ${formatShare(report.main.rate)}; cancelled ${report.main.cancelled}; no run ${report.main.noRun}; open ${report.main.open}`,
+      `- non-docs first-parent commits: ${report.main.commits} (docs ${report.main.docsCommits}); completed verdicts ${report.main.verdicts}; rate ${formatShare(report.main.rate)}; cancelled ${report.main.cancelled}; no run ${report.main.noRun}; open ${report.main.open}; unread ${report.main.unread}`,
       "",
       "## Rows for sibling goals",
       "",
@@ -1086,6 +1090,8 @@ const captureWithClient = Effect.fn("Ci.certaintyCaptureWithClient")(function* (
   CiLaneTimingGithubClient | ChildProcessSpawner.ChildProcessSpawner
 > {
   const capturedAt = yield* DateTime.now;
+  // The main push listing is a few pages; read it before the per-attempt job reads spend the bound.
+  const mainRunsResult = yield* listRuns("check.yml", "push", request.since, capturedAt).pipe(Effect.result);
   const checkRuns = yield* listRuns("check.yml", "pull_request", request.since, capturedAt);
   const heavyAdmitRuns = yield* listRuns("heavy-admit.yml", "pull_request", request.since, capturedAt);
   const windowHeadShas = HashSet.fromIterable(
@@ -1110,7 +1116,6 @@ const captureWithClient = Effect.fn("Ci.certaintyCaptureWithClient")(function* (
     }),
     { concurrency: 8 }
   );
-  const mainRunsResult = yield* listRuns("check.yml", "push", request.since, capturedAt).pipe(Effect.result);
   const mainRuns = mainRunsResult._tag === "Success" ? mainRunsResult.success : A.empty<CiWorkflowWindowRun>();
   const commits = yield* readMainCommits(request);
   const requestCount = yield* Ref.get(count);
