@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "citation-regex-worker-v3",
+    "packetId": "goal-packet/v1:149d3027f12d327ba0e310310b3bc2748e8e70ddbc638b5ed2b61d168b46282c",
+    "title": "Citation Regex Worker V3",
+    "status": "active",
+    "created": "2026-11-12",
+    "updated": "2026-11-12",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/citation-regex-worker-v3",
+  "lifecycle": "active",
+  "mission": "Serve a request's regex jobs from one child process at a time in a per-invocation native lane, under a parent timer per job, keeping SIGKILL retirement and capacity release only on confirmed death.",
+  "statusNote": "Graduated 2026-11-12, not started. Waits on slice A2 of citation-engine-install-once; first slice B1, the native lane.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/citation-engine-install-and-worker-reuse",
+    "graduated": "2026-11-12"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/citation-regex-worker-v3/README.md",
+    "goals/citation-regex-worker-v3/SPEC.md",
+    "goals/citation-regex-worker-v3/PLAN.md",
+    "goals/citation-regex-worker-v3/GOAL.md",
+    "goals/citation-regex-worker-v3/research/SOURCES.md",
+    "explorations/citation-engine-install-and-worker-reuse/research/design-2026-11-12.md",
+    "explorations/citation-engine-install-and-worker-reuse/research/design-review-2026-11-12.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/citation-regex-worker-v3/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/citation-regex-worker-v3/GOAL.md)\" -le 4000",
+    "jq . goals/citation-regex-worker-v3/ops/manifest.json",
+    "rg -n \"citation-regex-worker-v3|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/citation-regex-worker-v3",
+    "git diff --check -- goals/citation-regex-worker-v3",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

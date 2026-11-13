@@ -3,15 +3,15 @@
   "initiative": {
     "id": "law-time-capture-spine",
     "title": "Law Time Capture Spine",
-    "status": "active",
+    "status": "paused",
     "created": "2026-07-14",
-    "updated": "2026-07-14",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/law-time-capture-spine",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "Deliver the manual timer-to-approved-entry spine with matter/task context, evidence-bounded narrative, attorney control, and duplicate-safe CSV/prebill preview.",
-  "statusNote": "P0 gate: Tom supplies the initial native prosecution task set from representative real matters before implementation contracts freeze.",
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): Blocked on external human input; nothing in flight. Resume with `bun run beep goals set-status law-time-capture-spine active` when it is picked up. Before the ruling: P0 gate: Tom supplies the initial native prosecution task set from representative real matters before implementation contracts freeze.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

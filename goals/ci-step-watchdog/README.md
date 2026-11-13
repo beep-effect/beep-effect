@@ -4,6 +4,8 @@
 
 Lifecycle: `paused`
 
+**Paused by operator ruling (finish board, 2026-11-13).** It still has value against the bun busy-spin hangs, but it is not urgent while the timeout caps from ci-lane-economics land, and nothing is in flight. No lane is working on it; resume with `bun run beep goals set-status ci-step-watchdog active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
+
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
 This packet is authored but not yet started. Resume by setting the packet to

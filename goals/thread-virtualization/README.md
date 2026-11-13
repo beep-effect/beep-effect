@@ -2,7 +2,9 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `superseded`
+
+**Closed by operator ruling (finish board, 2026-11-13).** Stale since August with nothing started and only bulk-touch activity; close by ruling and re-graduate if UI work resumes. The packet is `superseded` without meeting its completion gate. To resume, run `bun run beep goals set-status thread-virtualization active` and re-graduate the next slice. Decision: [`decisions/2026-11-13-finish-board-ruling-close.md`](./decisions/2026-11-13-finish-board-ruling-close.md).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

@@ -102,6 +102,18 @@ Lane lane-bootstrap-worktrunk
 
 Reverse: Remove the WorktreeCreate and WorktreeRemove hooks from .claude/settings.json; the adoption pass keeps registering such lanes as adopted, so nothing else changes.
 
+### Paused by operator ruling (finish board, 2026-11-13): P1 is recorded blocked and nothing is moving, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
+
+Triage rationale: P1 is recorded blocked and nothing is moving.
+
+No lane is working on it. Resume with `bun run beep goals set-status lane-bootstrap active` when it is picked up.
+
+Lane chore/finish-board-pause-b1
+
+Reverse: goals set-status lane-bootstrap active when it is picked up
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger
