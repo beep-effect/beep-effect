@@ -247,7 +247,7 @@ resolve a compute profile (D5). Goal packet: `goals/compute-profile-gate-routing
 | Host | Installed memory | cgroup ceiling | Profile | Source |
 | --- | --- | --- | --- | --- |
 | DankStation | 125 GiB | uncapped | `workstation` | measured |
-| dankserver worker slice | 15 GiB | 7 GiB `memory.high` / 8 GiB `memory.max` | `worker` | measured 2026-11-07 |
+| dankserver worker slice | 15 GiB | 7 GiB `memory.high` / 8 GiB `memory.max` on `user-1001.slice` | `worker` | measured 2026-11-07; probe `ceilingGib: 7`, `source: probe` 2026-11-13 |
 | beep-worker | unmeasured | unmeasured | unmeasured | run `bun run beep compute profile --json` on the host and record it here |
 | tom-pc-1-wsl | unmeasured | unmeasured | unmeasured | run `bun run beep compute profile --json` on the host and record it here |
 | hosted runners | n/a | n/a | posture `hosted`, never a profile (D5) | — |
