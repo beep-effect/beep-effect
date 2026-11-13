@@ -1680,13 +1680,13 @@ export class PersonMatchWorkerSuccess extends S.Opaque<PersonMatchWorkerSuccess,
     elapsedSeconds: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
   }).pipe(
     $I.annoteSchema("PersonMatchWorkerSuccess", {
-      description: "A successful versioned response from the local person-matching Python worker.",
+      description: "A successful versioned response from the local person-matching inference service.",
     })
   )
 ) {}
 
 /**
- * Defines a failed response from the local person-matching Python worker.
+ * Defines a failed response from the local person-matching inference service.
  *
  * **Example** (Validate a worker failure)
  *
@@ -1729,7 +1729,7 @@ export class PersonMatchWorkerFailure extends S.Opaque<PersonMatchWorkerFailure,
     elapsedSeconds: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
   }).pipe(
     $I.annoteSchema("PersonMatchWorkerFailure", {
-      description: "A failed versioned response from the local person-matching Python worker.",
+      description: "A failed versioned response from the local person-matching inference service.",
     })
   )
 ) {}
@@ -1768,12 +1768,12 @@ export class PersonMatchWorkerFailure extends S.Opaque<PersonMatchWorkerFailure,
  */
 export const PersonMatchWorkerReport = S.Union([PersonMatchWorkerSuccess, PersonMatchWorkerFailure]).pipe(
   $I.annoteSchema("PersonMatchWorkerReport", {
-    description: "A versioned success or failure response emitted by the person-matching Python worker.",
+    description: "A versioned success or failure response emitted by the person-matching inference service.",
   })
 );
 
 /**
- * A decoded success or failure response from the person-matching Python worker.
+ * A decoded success or failure response from the person-matching inference service.
  *
  * @category type-level
  * @since 0.0.0
