@@ -8,9 +8,13 @@ expires after 90 days.
 ## Counting rule
 
 - A day counts toward P2's seven when a run on main for that day concluded `success` and its `report.json` has
-  `"certified": true`. A refused, failed or missing night breaks the streak unless a dispatch of the same day
-  (`gh workflow run certainty-nightly.yml --ref main -f day=<day>`) certifies it; the row names the run that
-  counted.
+  `"certified": true`.
+- A refused, failed or missing night breaks the streak unless a re-run of the same day certifies it: a new
+  dispatch (`gh workflow run certainty-nightly.yml --ref main -f day=<day>`) or a GitHub re-run of the refused
+  run (`gh run rerun <run-id>`). The row for that day says `yes` under Re-run and gives the run id and attempt
+  number that counted; the refused or dropped scheduled night keeps its own row.
+- A main verdict that lands after the night's capture is picked up only by a re-run of that day; nothing re-polls
+  main inside the 7-day horizon (PLAN.md execution notes).
 - The first countable day is 2026-11-14, the first whole UTC day after both baseline breaks (d8326d55935 and
   3e822c71c5, both 2026-11-13).
 
@@ -32,5 +36,5 @@ streak can be audited.
 
 ## Nights
 
-| UTC day | Run (attempt, event) | Conclusion | Certified | GitHub requests | Job minutes | Code heads n / misses / superseded | SLO p50 / p95 | Main verdict rate |
-| --- | --- | --- | --- | ---: | ---: | --- | --- | --- |
+| UTC day | Run id | Attempt | Event | Re-run | Conclusion | Certified | GitHub requests | Job minutes | Code heads n / misses / superseded | SLO p50 / p95 | Main verdict rate |
+| --- | --- | ---: | --- | --- | --- | --- | ---: | ---: | --- | --- | --- |

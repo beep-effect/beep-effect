@@ -50,10 +50,12 @@ them with the live journal (decision `sche-09-admission-archive`); the pressure 
 journal, carrying the receipt it wrote (decision `final-check-attempt-journal`). Slice 11 (ROUT-05 slice 2)
 merged as #3257: failed jobs keep their steps in the v1 route corpus, rows take optional per-task outcomes, and
 aggregate, setup and harness reds are charged to no lane and reported as unknown by the replay (decision
-`step-classes-and-red-origins`); its producer of per-task outcome records is the new slice 11b. Slices 10
-(MEAS-03, #3262) and 7 (PERIL-11 slice 1, #3263) are in review. Slice 4 (MEAS-01 slice 2) is in review:
-`.github/workflows/certainty-nightly.yml` scores the previous UTC day each night from main's code and turns red
-when the report is not certified (decision `certainty-nightly-workflow`). It is a workflow change, so the
+`step-classes-and-red-origins`); its producer of per-task outcome records is the new slice 11b. Slice 10
+(MEAS-03) merged as #3262: economics classes every attempt green, red or terminated, terminated attempts leave
+the red denominator, and each run mode reports its elapsed p50 and p95 (decision `terminations-apart-from-reds`).
+In short, slices 5 (#3227), 6 (#3228), 10 (#3262) and 11 (#3257) merged; 7 (#3263) and 4 (#3266) are in review.
+Slice 4 (MEAS-01 slice 2) adds `.github/workflows/certainty-nightly.yml`: it scores the previous UTC day each
+night from main's code and turns red when the report is not certified (decision `certainty-nightly-workflow`). It is a workflow change, so the
 operator merges it by hand. Each night is recorded in [`history/certainty-nightly.md`](./history/certainty-nightly.md),
 and P2's seven nights start at 2026-11-14. Wall-time, cache and dist baselines taken before d8326d55935 (#3208,
 declaration-only builds) are not comparable with later readings (checkpoint
@@ -83,7 +85,8 @@ declaration-only builds) are not comparable with later readings (checkpoint
   main-verdict report" (M, CLI only), with fixes #3144, #3168 and #3181; ROUT-05 slice 1 (partition job
   mapping, #3141); MEAS-02 (refusal attribution, slice 3, #3176); SCHE-09 slice 1 (admission archive, slice 5,
   #3227); MEAS-07 (final-check attempt journals, slice 6, #3228); ROUT-05 slice 2 (failed-job steps and
-  uncharged reds, slice 11, #3257). The nightly workflow (slice 4) is in review.
+  uncharged reds, slice 11, #3257); MEAS-03 (terminations apart from reds, slice 10, #3262). The nightly
+  workflow (slice 4, #3266) and PERIL-11 slice 1 (slice 7, #3263) are in review.
 - Order constraints: MEAS-02 lands before any WaveOrder re-seed in `local-proof-under-ten`; ROUT-05 lands
   before any census or cost ledger (MEAS-05) is trusted and before any route refinement replay; MEAS-07 lands
   before journal retention (PERIL-11); SCHE-09 is owned here and consumed by `local-proof-under-ten` (D23); nightly reads are budgeted against
