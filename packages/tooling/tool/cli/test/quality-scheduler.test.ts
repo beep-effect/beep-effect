@@ -17,6 +17,7 @@ import {
   AdmissionJournalReader,
   AdmissionJournalReleased,
   AdmissionJournalReleasedV3,
+  AdmissionJournalRouted,
   AdmissionJournalTicketEvicted,
   AdmissionJournalTicketEvictedV3,
   AdmissionJournalWithdrawn,
@@ -110,7 +111,7 @@ import * as Base64Url from "effect/encoding/Base64Url";
 import * as Hex from "effect/encoding/Hex";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
@@ -361,6 +362,27 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
       enqueuedAtMillis: index,
       admittedAtMillis: index,
     });
+
+  const journalRouted = (index: number) =>
+    AdmissionJournalRouted.make({
+      schemaVersion: "yeet-admission-journal/v3",
+      _tag: "admission-routed",
+      nonce: `routed-${index}`,
+      pid: index,
+      procStart: `${index}`,
+      routedAtMillis: index,
+      checkoutRoot: "/repo/worker",
+      branch: "feat/worker",
+      command: "bun run beep yeet final-check",
+      computeProfile: "worker",
+      gateRoute: O.some("check"),
+      outcome: "refusal",
+    });
+
+  const routedRows = flow(
+    A.filter(AdmissionJournalEvent.guards["admission-routed"]),
+    A.map((row) => [O.getOrUndefined(row.gateRoute), row.outcome, row.computeProfile, row.forceLocal, row.command])
+  );
 
   const journalLeaseEvicted = AdmissionJournalLeaseEvicted.make({
     schemaVersion: "yeet-admission-journal/v2",
@@ -1782,6 +1804,28 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
         )
       );
 
+      // goals/compute-profile-gate-routing P3: the worker routing rows are known rows, so the ring
+      // trims them to the archive and the history folds them back like every other transition.
+      it.effect("archives trimmed worker routing rows and folds them back", () =>
+        withAdmissionRoot((tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* TestClock.setTime(trimInstant);
+            const seeded = yield* encodeLines(A.makeBy(2400, journalRouted));
+            yield* writeJournal(tempRoot, seeded);
+            yield* appendAdmissionJournalEvent(tempRoot.root, journalRouted(2400));
+
+            const archiveDirectory = yield* archiveDirectoryOf(tempRoot);
+            const segment = yield* fs.readFileString(path.join(archiveDirectory, "2026-11-12.ndjson"));
+            expect(segment).toBe(`\n${A.getUnsafe(seeded, 0)}\n`);
+            const history = yield* readAdmissionJournalHistory(tempRoot.root);
+            deepStrictEqual(history.events, A.makeBy(2401, journalRouted));
+            expect(rowCounts(history)).toStrictEqual([1, 2400, 0, 0]);
+          })
+        )
+      );
+
       it.effect("isolates a torn archive tail from the next trimmed batch", () =>
         withAdmissionRoot((tempRoot) =>
           Effect.gen(function* () {
@@ -2066,6 +2110,16 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const expected = yield* readAdmissionJournalHistory(tempRoot.root);
             deepStrictEqual(decoded, expected);
             deepStrictEqual(decoded.events, [...archived, today, ...journalV3Events()]);
+
+            // A worker's routing rows get their own line.
+            const forced = AdmissionJournalRouted.make({ ...journalRouted(2), forceLocal: true, outcome: "bypass" });
+            const routedLines = yield* encodeLines([journalRouted(1), forced]);
+            yield* writeJournal(tempRoot, [...liveLines, ...routedLines]);
+            yield* runQualityCommand(["scheduler", "history"]);
+            const routedText = yield* TestConsole.logLines;
+            expect(A.map(A.drop(routedText, A.length(jsonLines)), String)).toContain(
+              "- worker routes: 2 (1 bypass, 1 refusal; 1 forced)"
+            );
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
       );
@@ -6968,6 +7022,9 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           expect(ranValue).toBe(false);
           const queued = yield* listDirectory(tempRoot.queue);
           expect(A.length(queued)).toBe(0);
+          // The worker never queues, so the refusal is the admission fact it leaves.
+          const journal = yield* readJournalEvents(tempRoot.root);
+          expect(routedRows(journal)).toEqual([["check", "refusal", "worker", false, "bun run beep yeet verify"]]);
         }).pipe(
           provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
           Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -6976,9 +7033,9 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
       }).pipe(TestClock.withLive)
     );
 
-    it.effect("runs a hosted-only gate on worker with forceLocal and logs it", () =>
+    it.effect("runs a hosted-only gate on worker with forceLocal, logs it and journals the bypass", () =>
       Effect.gen(function* () {
-        const { runtimeDir } = yield* admissionTemporaryRoot;
+        const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
         const testConsole = yield* TestConsole.make;
         const logLines: Array<string> = [];
         return yield* Effect.gen(function* () {
@@ -6993,6 +7050,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           const released = yield* Ref.get(releases);
           expect(released).toBe(1);
           expect(A.some(logLines, Str.includes("compute-profile=worker force-local=true"))).toBe(true);
+          const journal = yield* readJournalEvents(tempRoot.root);
+          expect(routedRows(journal)).toEqual([["check", "bypass", "worker", true, "bun run beep yeet verify"]]);
         }).pipe(
           provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
           Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),

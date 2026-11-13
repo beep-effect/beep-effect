@@ -49,6 +49,7 @@ import {
   AdmissionJournalEnqueued,
   AdmissionJournalLeaseEvictedV3,
   AdmissionJournalReleasedV3,
+  AdmissionJournalRouted,
   AdmissionJournalTicketEvictedV3,
   AdmissionJournalWithdrawn,
   acquireJournalFileLock,
@@ -76,6 +77,7 @@ import {
   AdmissionPromotionTransition,
   AdmissionReapClaim,
   AdmissionRequest,
+  AdmissionRoute,
   AdmissionSnapshot,
   AdmissionTicketReapClaim,
   ComputeProfileRefusal,
@@ -2426,6 +2428,78 @@ const workerBypassLine = (request: AdmissionRequest): string =>
   `[yeet] admission: compute-profile=worker${request.forceLocal ? " force-local=true" : ""}; coordinating ${request.kind} through the origin gate only`;
 
 /**
+ * Append one worker routing decision to the admission journal, best effort.
+ *
+ * **Details**
+ *
+ * A `worker` host never enqueues a ticket, so without this row its runs leave
+ * no admission fact. The row ({@link AdmissionJournalRouted}) goes through the
+ * same locked rewrite as every transition, so it trims to the archive and
+ * folds into the history like the others. A journal that cannot be written is
+ * a warning: the decision, the run and its exit never depend on it, and the
+ * caller never waits on a queue.
+ *
+ * **Example** (Record a refused check)
+ *
+ * ```ts
+ * import { AdmissionRoute, recordAdmissionRoute } from "@beep/repo-cli/test/RepoRun"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * const route = AdmissionRoute.make({
+ *   checkoutRoot: "/repo",
+ *   branch: "feat/x",
+ *   command: "bun run beep yeet final-check",
+ *   computeProfile: "worker",
+ *   gateRoute: O.some("check"),
+ *   outcome: "refusal"
+ * })
+ * console.log(Effect.isEffect(recordAdmissionRoute(route))) // true
+ * ```
+ *
+ * @param route - The routing decision to record.
+ * @returns An effect that appends the row or warns that it could not.
+ * @category admission
+ * @since 0.0.0
+ */
+export const recordAdmissionRoute = Effect.fn("QualityScheduler.recordAdmissionRoute")(function* (
+  route: AdmissionRoute
+): Effect.fn.Return<void, never, SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest> {
+  const path = yield* Path.Path;
+  const runtimeRoot = yield* perUserRuntimeRoot();
+  const procStart = yield* processStartIdentityForPid(process.pid);
+  const nonce = yield* SecureRandom.SecureRandom.use((crypto) => crypto.uuidV4());
+  const routedAtMillis = yield* Clock.currentTimeMillis;
+  const event = AdmissionJournalRouted.make({
+    ...route,
+    schemaVersion: "yeet-admission-journal/v3",
+    _tag: "admission-routed",
+    nonce,
+    pid: process.pid,
+    procStart: O.getOrElse(procStart, constant("")),
+    routedAtMillis,
+  });
+  yield* appendAdmissionJournalEvent(admissionRootFor(path, runtimeRoot), event).pipe(
+    Effect.catch(warnAdmissionJournalError)
+  );
+});
+
+const recordWorkerRequestRoute = (request: AdmissionRequest, outcome: AdmissionRoute["outcome"]) =>
+  recordAdmissionRoute(
+    AdmissionRoute.make({
+      checkoutRoot: request.checkoutRoot,
+      branch: request.branch,
+      command: request.command,
+      attemptId: request.attemptId,
+      envProfile: request.envProfile,
+      computeProfile: "worker",
+      forceLocal: request.forceLocal,
+      gateRoute: request.gateRoute,
+      outcome,
+    })
+  );
+
+/**
  * Run one unit of heavy repository work under machine-wide weighted admission.
  *
  * Enqueues a durable ticket, waits (with visible progress) until the request
@@ -2508,6 +2582,7 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
       envelopeGib
     );
     if (O.isSome(refusal)) {
+      yield* recordWorkerRequestRoute(request, "refusal");
       return yield* QualitySchedulerError.make({
         message: refusal.value.message,
         reason: "compute-profile-refusal",
@@ -2515,6 +2590,7 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
       });
     }
     yield* Console.log(workerBypassLine(request));
+    yield* recordWorkerRequestRoute(request, "bypass");
     return yield* bypassAdmission(gate, use, resolved);
   }
   // Defensive fallback: a workstation profile below the envelope is impossible

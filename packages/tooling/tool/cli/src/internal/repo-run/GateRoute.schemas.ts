@@ -24,8 +24,10 @@ const $I = $RepoCliId.create("internal/repo-run/GateRoute.schemas");
  *
  * **Details**
  *
- * The first nine ids are the `yeet final-check` gate families; the `hook:`
- * ids are the two catalog pre-commit hooks.
+ * The first nine ids are the `yeet final-check` gate families;
+ * `effect-vitest-files` is the scoped `lint effect-vitest --files` replay a
+ * worker runs over the diff's test files while Lint Policy is deferred; the
+ * `hook:` ids are the two catalog pre-commit hooks.
  *
  * **Example** (Recognize a hook route id)
  *
@@ -48,6 +50,7 @@ export const GateRouteId = LiteralKit([
   "docgen",
   "fallow",
   "coverage",
+  "effect-vitest-files",
   "hook:schema-catalog",
   "hook:instrumentation-catalog",
 ]).pipe(
@@ -134,6 +137,9 @@ const gateRouteRecord: Record<GateRouteId, GateRouteModes> = {
   docgen: hostedOnlyOnWorker,
   fallow: hostedOnlyOnWorker,
   coverage: hostedOnlyOnWorker,
+  // One syntax-only parse per test file of the diff (0.5 s, 166 MB on dankserver, 2026-11-13):
+  // the cheap part of Lint Policy a worker can see before hosted CI.
+  "effect-vitest-files": everywhereLocal,
   "hook:schema-catalog": hostedOnlyOnWorker,
   "hook:instrumentation-catalog": hostedOnlyOnWorker,
 };
@@ -143,8 +149,8 @@ const gateRouteRecord: Record<GateRouteId, GateRouteModes> = {
  *
  * **Details**
  *
- * On `worker`, `expectation-rewrite`, package-scoped `lint` and `repo-sanity`
- * stay local; `cheap-gates`, `lint-policy`, `check`, `docgen`, `fallow`,
+ * On `worker`, `expectation-rewrite`, package-scoped `lint`, `repo-sanity`
+ * and `effect-vitest-files` stay local; `cheap-gates`, `lint-policy`, `check`, `docgen`, `fallow`,
  * `coverage` and both catalog hooks are hosted-only. On `workstation` every
  * gate is local. The table is built from a total record, so a new
  * {@link GateRouteId} without a row fails to compile.
@@ -196,6 +202,127 @@ export const gateRouteFor: {
       (modes) => modes[profile]
     )
 );
+
+/**
+ * How `--force-local` runs a gate that is hosted-only on the `worker` profile.
+ *
+ * **Details**
+ *
+ * `Serial` runs the gate one task at a time (concurrency 1). `Refused` keeps
+ * it deferred to hosted CI because one of its processes alone outgrows the
+ * worker budget; the reason names the measurement.
+ *
+ * **Example** (Build a refusal)
+ *
+ * ```ts
+ * import { WorkerForcedRoute } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const route = WorkerForcedRoute.cases.Refused.make({ reason: "its compiler held 4.07 GB" })
+ * console.log(route._tag) // "Refused"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const WorkerForcedRoute = S.TaggedUnion({
+  Serial: {},
+  Refused: { reason: S.NonEmptyString },
+}).pipe(
+  $I.annoteSchema("WorkerForcedRoute", {
+    description: "How --force-local runs a gate that is hosted-only on the worker compute profile.",
+  })
+);
+
+/**
+ * How `--force-local` runs a gate that is hosted-only on the `worker` profile.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type WorkerForcedRoute = typeof WorkerForcedRoute.Type;
+
+const forcedSerial = WorkerForcedRoute.cases.Serial.make({});
+const forcedRefused = (reason: string): WorkerForcedRoute => WorkerForcedRoute.cases.Refused.make({ reason });
+
+// Measured on dankserver (15 GiB host, 7 GiB worker slice) and recorded in
+// goals/compute-profile-gate-routing/research/2026-11-13-worker-host-acceptance.md
+// and the agent-pools runbook. The worker bar is 1.5 GB for any one process
+// (SPEC criterion 3); a gate whose single process already outgrows it cannot
+// be made to fit by running fewer of them at once.
+const workerForcedRouteEntries: ReadonlyArray<readonly [GateRouteId, WorkerForcedRoute]> = [
+  [
+    "cheap-gates",
+    forcedRefused("no worker-slice budget is proven for its whole-repo scans; leave this gate to hosted CI"),
+  ],
+  [
+    "lint-policy",
+    forcedRefused(
+      "it owns the test-file type check, whose tsc held 2.59 GB for @beep/repo-cli on dankserver and gave no result in 30 minutes under a 3 GiB cap"
+    ),
+  ],
+  // Local on worker as its changeset status check; --force-local does not restore the full lane.
+  [
+    "repo-sanity",
+    forcedRefused(
+      "no worker-slice budget is proven for its full catalog lane; only the changeset status check runs here"
+    ),
+  ],
+  ["check", forcedRefused("one package's tsgo check held 4.07 GB on dankserver, above the 1.5 GB worker bar")],
+  ["docgen", forcedRefused("it builds the same TypeScript programs as check, whose tsgo held 4.07 GB on dankserver")],
+  ["fallow", forcedSerial],
+  ["coverage", forcedSerial],
+];
+
+/**
+ * The `--force-local` route of each gate that `worker` does not run in full.
+ *
+ * **Details**
+ *
+ * `fallow` (largest process 398 MB) and `coverage` (one Vitest file run
+ * 684 MB) run one task at a time; `cheap-gates`, `lint-policy`, `check` and
+ * `docgen` are refused because one of their processes alone exceeds the
+ * 1.5 GB worker bar. `repo-sanity` keeps its changeset status narrowing: the
+ * full lane's catalog scan is refused. Other gates have no row.
+ *
+ * **Example** (Read the fallow route)
+ *
+ * ```ts
+ * import { workerForcedRouteTable } from "@beep/repo-cli/test/RepoRun"
+ * import * as HashMap from "effect/HashMap"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.map(HashMap.get(workerForcedRouteTable, "fallow"), (route) => route._tag)) // Some("Serial")
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const workerForcedRouteTable: HashMap.HashMap<GateRouteId, WorkerForcedRoute> =
+  HashMap.fromIterable(workerForcedRouteEntries);
+
+/**
+ * Why `--force-local` refuses a gate on the `worker` profile, if it does.
+ *
+ * **Example** (Refuse check, run fallow)
+ *
+ * ```ts
+ * import { workerForcedRefusal } from "@beep/repo-cli/test/RepoRun"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isSome(workerForcedRefusal("check"))) // true
+ * console.log(O.isNone(workerForcedRefusal("fallow"))) // true
+ * ```
+ *
+ * @param gate - The gate family to route.
+ * @returns The refusal reason when the gate cannot be forced on a worker.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const workerForcedRefusal = (gate: GateRouteId): O.Option<string> =>
+  HashMap.get(workerForcedRouteTable, gate).pipe(
+    O.filter(WorkerForcedRoute.guards.Refused),
+    O.map((route) => route.reason)
+  );
 
 /**
  * The reason `yeet final-check` records for a gate it skipped because the

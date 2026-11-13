@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { GlobSet } from "@beep/glob/GlobSet";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
@@ -1624,7 +1625,13 @@ export class EffectVitestPackageTiming extends S.Opaque<EffectVitestPackageTimin
 ) {}
 
 /**
- * Selects census, baseline refresh, row emission, or default ratchet mode.
+ * Selects census, baseline refresh, row emission, scoped files, or default ratchet mode.
+ *
+ * **Details**
+ *
+ * `files` (default empty) selects the scoped mode: only those files are
+ * parsed and compared with their own baseline rows, with no repository scan.
+ * It cannot be combined with `census`, `write` or `rows`.
  *
  * **Example** (Select default ratchet mode)
  *
@@ -1633,14 +1640,14 @@ export class EffectVitestPackageTiming extends S.Opaque<EffectVitestPackageTimin
  * import * as O from "effect/Option"
  *
  * const options = EffectVitestLintOptions.make({ census: false, write: false, rows: O.none() })
- * console.log(options.write)
+ * console.log(options.files) // []
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export class EffectVitestLintOptions extends S.Opaque<EffectVitestLintOptions, { readonly brand: unique symbol }>()(
-  S.Struct({ census: S.Boolean, write: S.Boolean, rows: optionalText }).pipe(
+  S.Struct({ census: S.Boolean, write: S.Boolean, rows: optionalText, files: ArrayKeyDefaultEmpty(S.String) }).pipe(
     $I.annoteSchema("EffectVitestLintOptions", { description: "Validated Effect Vitest lint command operation flags." })
   )
 ) {}
@@ -1750,6 +1757,33 @@ export const EffectVitestSourceFileGlobs: ReadonlyArray<string> = A.fromIterable
   "!{apps,packages,infra}/**/.*/**",
   "!**/dist/**",
 ]);
+
+const effectVitestScope = GlobSet.make({ patterns: EffectVitestSourceFileGlobs });
+
+/**
+ * Tests whether a repository-relative path is one the D9 scan reads.
+ *
+ * **Details**
+ *
+ * Matches {@link EffectVitestSourceFileGlobs} (includes, then the `!`
+ * exclusions) without walking the tree, so a scoped run can drop the paths a
+ * full scan would never parse.
+ *
+ * **Example** (Keep a test, drop a source module)
+ *
+ * ```ts
+ * import { isEffectVitestScopePath } from "@beep/repo-cli/commands/Lint"
+ *
+ * console.log(isEffectVitestScopePath("packages/demo/test/Foo.test.ts")) // true
+ * console.log(isEffectVitestScopePath("packages/demo/src/Foo.ts")) // false
+ * ```
+ *
+ * @param file - Repository-relative path, with forward slashes.
+ * @returns `true` when the full D9 scan would read the path.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isEffectVitestScopePath = (file: string): boolean => effectVitestScope.matches(file);
 
 /**
  * Supplies the vitest config globs the D9 browser-mode filter parses.

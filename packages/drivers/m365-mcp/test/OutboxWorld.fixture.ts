@@ -8,6 +8,7 @@ import {
   GraphAttachment,
   GraphEmailAddress,
   GraphEvent,
+  GraphMailFolder,
   GraphMessage,
   GraphRecipient,
   M365,
@@ -25,6 +26,7 @@ import {
   OutboxDraftCreatedRecord,
   OutboxEventCreatedRecord,
   OutboxHandlerSettings,
+  openOutboxDrafts,
 } from "@beep/m365-mcp";
 import { Sha256Hex } from "@beep/schema";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
@@ -45,6 +47,8 @@ import type { OutboxAttachmentDigest, OutboxAuditRecord } from "@beep/m365-mcp";
 export const MAILBOX = "mailbox@example.test";
 export const DRAFT_ID = "draft-1";
 export const EVENT_ID = "event-1";
+/** The id the stub gives the mailbox's Deleted Items folder. */
+export const DELETED_ITEMS_FOLDER_ID = "deleteditems-folder";
 export const SETTINGS = OutboxHandlerSettings.make({
   mailbox: MAILBOX,
   maxAttachments: 4,
@@ -109,6 +113,10 @@ export const fixtureFile = storedFile({ content: FIXTURE_CONTENT, name: "fixture
 
 type WorldState = {
   readonly appendFailsFor: ReadonlyArray<OutboxAuditRecord["_tag"]>;
+  /** Record kinds whose next append fails once; each entry is used up by one failure. */
+  readonly appendFailsOnce: ReadonlyArray<OutboxAuditRecord["_tag"]>;
+  /** The RFC 5322 message id a create returns. */
+  readonly createdInternetMessageId: O.Option<string>;
   readonly calls: ReadonlyArray<string>;
   readonly corruptUploads: boolean;
   readonly draft: GraphMessage;
@@ -122,6 +130,14 @@ type WorldState = {
   readonly knownDraftIds: ReadonlyArray<string>;
   /** When set, `listMessages` fails with it. */
   readonly listFailure: O.Option<M365Error>;
+  /** Message ids whose read fails with a transport error. */
+  readonly failingMessageIds: ReadonlyArray<string>;
+  /** Message ids the mailbox no longer has: their read answers 404. */
+  readonly missingMessageIds: ReadonlyArray<string>;
+  /** When set, a category write fails with it, such as a 412 for a message changed since it was read. */
+  readonly categoryFailure: O.Option<M365Error>;
+  /** When set, reading the Deleted Items folder fails with it. */
+  readonly mailFolderFailure: O.Option<M365Error>;
   /** Mail other than the draft: `getMessage` finds it by id, `listMessages` by conversation. */
   readonly messages: ReadonlyArray<GraphMessage>;
   readonly nextId: number;
@@ -135,6 +151,8 @@ type WorldState = {
 
 const initialState: WorldState = {
   appendFailsFor: [],
+  appendFailsOnce: [],
+  createdInternetMessageId: storedDraft.internetMessageId,
   calls: [],
   corruptUploads: false,
   draft: storedDraft,
@@ -145,6 +163,10 @@ const initialState: WorldState = {
   files: [fixtureFile],
   knownDraftIds: [DRAFT_ID],
   listFailure: O.none(),
+  failingMessageIds: [],
+  missingMessageIds: [],
+  categoryFailure: O.none(),
+  mailFolderFailure: O.none(),
   messages: [],
   nextId: 1,
   pagedConversation: false,
@@ -225,7 +247,13 @@ const StubM365Layer = Layer.effect(
       createDraftMessage: Effect.fn("StubM365.createDraftMessage")(function* (request) {
         yield* called("createDraftMessage", request);
         yield* Ref.update(state, (current) => ({ ...current, files: [] }));
-        return GraphMessage.make({ id: DRAFT_ID, isDraft: O.some(true), webLink: storedDraft.webLink });
+        const current = yield* Ref.get(state);
+        return GraphMessage.make({
+          id: DRAFT_ID,
+          internetMessageId: current.createdInternetMessageId,
+          isDraft: O.some(true),
+          webLink: storedDraft.webLink,
+        });
       }),
       createEvent: Effect.fn("StubM365.createEvent")(function* (request) {
         yield* called("createEvent", request);
@@ -261,10 +289,22 @@ const StubM365Layer = Layer.effect(
         );
       }),
       getListItem: notScripted,
-      getMailFolder: notScripted,
+      // Only the well-known Deleted Items folder is asked for.
+      getMailFolder: Effect.fn("StubM365.getMailFolder")(function* (request) {
+        yield* called("getMailFolder", request);
+        const current = yield* Ref.get(state);
+        yield* pipe(current.mailFolderFailure, O.match({ onNone: () => Effect.void, onSome: Effect.fail }));
+        return GraphMailFolder.make({ id: `${request.folder}-folder` });
+      }),
       getMessage: Effect.fn("StubM365.getMessage")(function* (request) {
         yield* called("getMessage", request);
         const current = yield* Ref.get(state);
+        if (A.contains(current.missingMessageIds, request.messageId)) {
+          return yield* M365Error.fromReason("response status", { resource: "messages", status: 404 });
+        }
+        if (A.contains(current.failingMessageIds, request.messageId)) {
+          return yield* M365Error.fromReason("transport", { resource: "messages" });
+        }
         return pipe(
           A.findFirst(current.messages, (message) => message.id === request.messageId),
           O.getOrElse(() => current.draft)
@@ -300,11 +340,14 @@ const StubM365Layer = Layer.effect(
         yield* pipe(current.listFailure, O.match({ onNone: () => Effect.void, onSome: Effect.fail }));
         return M365MessageCollection.make({
           "@odata.nextLink": current.pagedConversation ? O.some("https://graph.example.test/v1.0/next-page") : O.none(),
-          value: A.filter(current.messages, (message) =>
-            O.exists(message.conversationId, (id) =>
-              O.contains(request.filter, `conversationId eq '${Str.replaceAll("'", "''")(id)}'`)
-            )
-          ),
+          value: A.filter(current.messages, (message) => {
+            const matches = (property: string) => (id: string) =>
+              O.contains(request.filter, `${property} eq '${Str.replaceAll("'", "''")(id)}'`);
+            return (
+              O.exists(message.conversationId, matches("conversationId")) ||
+              O.exists(message.internetMessageId, matches("internetMessageId"))
+            );
+          }),
         });
       }),
       listSites: notScripted,
@@ -320,7 +363,32 @@ const StubM365Layer = Layer.effect(
         yield* called("updateEvent", request);
         return GraphEvent.make({ id: request.eventId });
       }),
-      updateMessageCategories: notScripted,
+      // Like Graph with If-Match: the write answers 412 unless the change key is the stored one.
+      updateMessageCategories: Effect.fn("StubM365.updateMessageCategories")(function* (request) {
+        yield* called("updateMessageCategories", request);
+        const current = yield* Ref.get(state);
+        const stored = A.findFirst(current.messages, (message) => message.id === request.messageId);
+        const matches = O.exists(stored, (message) =>
+          O.exists(request.changeKey, (changeKey) => O.contains(message.changeKey, changeKey))
+        );
+        yield* pipe(current.categoryFailure, O.match({ onNone: () => Effect.void, onSome: Effect.fail }));
+        if (!matches) {
+          return yield* M365Error.fromReason("response status", { resource: "messages", status: 412 });
+        }
+        const updated = (message: GraphMessage) =>
+          GraphMessage.make({
+            ...message,
+            categories: O.some(request.categories),
+            changeKey: O.map(message.changeKey, (changeKey) => `${changeKey}+`),
+          });
+        yield* Ref.update(state, (latest) => ({
+          ...latest,
+          messages: A.map(latest.messages, (message) =>
+            message.id === request.messageId ? updated(message) : message
+          ),
+        }));
+        return yield* Effect.fromOption(stored, () => M365Error.fromReason("transport")).pipe(Effect.map(updated));
+      }),
     });
   })
 );
@@ -335,6 +403,13 @@ const StubAuditLogLayer = Layer.effect(
     return OutboxAuditLog.of({
       append: Effect.fn("StubAuditLog.append")(function* (record) {
         const current = yield* Ref.get(state);
+        if (A.contains(current.appendFailsOnce, record._tag)) {
+          yield* Ref.update(state, (latest) => ({
+            ...latest,
+            appendFailsOnce: A.filter(latest.appendFailsOnce, (tag) => tag !== record._tag),
+          }));
+          return yield* OutboxAuditError.make({ message: "The audit record could not be appended.", reason: "append" });
+        }
         if (A.contains(current.appendFailsFor, record._tag)) {
           return yield* OutboxAuditError.make({ message: "The audit record could not be appended.", reason: "append" });
         }
@@ -357,6 +432,7 @@ const StubAuditLogLayer = Layer.effect(
         const current = yield* Ref.get(state);
         return A.some(current.records, (record) => isEventCreated(record) && record.eventId === eventId);
       }),
+      openDrafts: Ref.get(state).pipe(Effect.map((current) => openOutboxDrafts(current.records))),
       nextAuditId: Ref.modify(state, (current) => [
         `audit-${current.nextId}`,
         { ...current, nextId: current.nextId + 1 },

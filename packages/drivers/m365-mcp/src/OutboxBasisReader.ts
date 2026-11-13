@@ -36,6 +36,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { odataEquals } from "./internal/ODataFilter.ts";
 import {
   compareBasisPin,
   eventViewOf,
@@ -103,9 +104,6 @@ const callerObservation = (ref: OutboxBasisPinRef): OutboxBasisObservation =>
 const changedSinceRead = (kind: string, fields: ReadonlyArray<string>): string =>
   `The pinned ${kind} changed since it was read (${A.join(fields, ", ")}). Read it again and redo the draft; no draft was created.`;
 
-const conversationFilter = (conversationId: string): string =>
-  `conversationId eq '${Str.replaceAll("'", "''")(conversationId)}'`;
-
 const unreadableStatus = (reason: string): OutboxBasisStatus => OutboxBasisStatus.cases.Unreadable.make({ reason });
 
 const isNotFound = (error: M365Error): boolean =>
@@ -124,7 +122,7 @@ const makeReader = Effect.fnUntraced(function* (mailbox: GraphPathSegment) {
     m365
       .listMessages(
         M365ListMessagesRequest.make({
-          filter: O.some(conversationFilter(conversationId)),
+          filter: O.some(odataEquals("conversationId", conversationId)),
           select: O.some(CONVERSATION_SELECT),
           top: O.some(CONVERSATION_PAGE_SIZE),
           userId,

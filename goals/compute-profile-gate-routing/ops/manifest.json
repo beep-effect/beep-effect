@@ -11,7 +11,7 @@
   },
   "packetPath": "goals/compute-profile-gate-routing",
   "lifecycle": "active",
-  "statusNote": "Slices P0 (#2925) and P1 (#2959, fix #2972) merged 2026-11-08; slice P2 (hosted catalog regeneration workflow and docs) is in the 2026-11-13 takeover PR. Remaining: the worker-host end-to-end acceptance run, then the reflection and proposedCloseout final PR.",
+  "statusNote": "P0 to P2 merged (#2925, #2959, #2972, #3226). The 2026-11-13 dankserver acceptance run (#3267) failed criterion 3; this lane fixes its findings. Repeat acceptance on dankserver before the final PR and reflection.",
   "mission": "Typed workstation|worker compute profile; worker hosts defer hosted-only gates, catalog hooks and local proof to hosted CI by construction.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -39,6 +39,7 @@
     "research/2026-11-08-p0-probe-evidence.md",
     "research/2026-11-08-p1-yeet-lefthook-evidence.md",
     "research/2026-11-08-p2-hosted-regeneration.md",
+    "research/2026-11-13-worker-host-acceptance-repeat.md",
     "research/2026-11-13-worker-host-acceptance.md",
     "research/SOURCES.md"
   ],
@@ -62,7 +63,7 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "complete"
+      "status": "in-progress"
     },
     {
       "id": "P2",

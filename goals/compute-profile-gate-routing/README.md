@@ -31,13 +31,14 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 Verify. Implementation slices P0 (profile probe, gate routing table, scheduler refusal; #2925)
-and P1 (yeet posture, catalog hook skip; #2959) merged on 2026-11-08 with the fix #2972. Slice P2
-(hosted `Catalog Regeneration` workflow, AGENTS.md, runbook and skill docs, Palantiri host-memory
-line) is in the 2026-11-13 takeover PR. Remaining after it: the worker-host end-to-end acceptance
-run (SPEC acceptance criterion 3), then the final PR with the reflection and `proposedCloseout`.
+P2 Verify. Implementation slices P0 (#2925), P1 (#2959, fix #2972) and P2 (#3226)
+are merged. The 2026-11-13 dankserver acceptance run (#3267) failed criterion 3;
+this lane fixes its findings. Repeat the worker-host run on dankserver before the goal's
+final PR with the reflection and closeout record.
 
 ## Latest Evidence
+
+- `research/2026-11-13-worker-host-acceptance.md`: failed criterion 3, forced-gate and admission gaps; repeat on dankserver after these fixes.
 
 - `research/2026-11-08-p0-probe-evidence.md`: probe readings on DankStation and a capped scope.
 - `research/2026-11-08-p1-yeet-lefthook-evidence.md`: yeet posture, final-check skips, hook skip.
