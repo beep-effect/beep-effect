@@ -295,3 +295,13 @@ S12 step 1 ran three refreshes (skill-effect-probe alone, then
 citation-extraction-engine and research-intake-2026-11). Across them the
 token's remaining core quota fell by 162 and GraphQL by 32. Other sessions
 share the token, so these are upper bounds.
+
+## Result on `de6dc093e79` (second merge of `main`)
+
+`main` gained one more legacy proposal after the first merge:
+canonical-digest-owner, whose final #3209 had merged. `bun run beep goals
+set-status canonical-digest-owner completed-retained` bound #3209 from the
+proposal and deleted the key, and `bun run beep goals completion refresh
+--slug canonical-digest-owner` printed `verified`. Its GOAL.md and PLAN.md keep
+`main`'s bytes, because the packet is now completed. PR B merged as #3245
+(`de6dc093e79`) and is in this merge. The manifest census is again all `false`.
