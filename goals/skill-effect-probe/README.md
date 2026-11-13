@@ -37,19 +37,23 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement — in progress. P0 passed on 2026-11-12: six runs on
-`sfv4-normalization-003` were scored and tied to case, cell and run through
-the harness `tracePath` ([receipt](./history/p0-slice/README.md)). The probe
-commands (`beep agent-effectiveness evals probe stage|preflight|score|report`),
-the preflight ([12 of 12 pass](./history/preflight.json)) and the
-[analysis rule](./research/2026-11-12-analysis-rule.md) are in. Next: the P2
-scored run.
+P2 Verify — blocked on the Claude plan's seven-day limit, which resets
+2026-11-15 23:00 America/Chicago. P0 passed and P1 is in: the probe commands
+(`beep agent-effectiveness evals probe stage|preflight|score|report`), the
+preflight (12 of 12 pass under scorer profile v2), the
+[analysis rule](./research/2026-11-12-analysis-rule.md) and its
+[amendment](./research/2026-11-13-analysis-rule-amendment.md), both
+committed before any scored run record. The first P2 attempt ended on the
+plan limit and is [void](./history/p2-attempt-1/README.md). Next after the
+reset: the cell A headroom pilot, its go or no-go, then the scored run.
 
 ## Latest Evidence
 
 - [P0 slice receipt](./history/p0-slice/README.md)
 - [Preflight](./history/preflight.json)
-- [Analysis rule](./research/2026-11-12-analysis-rule.md)
+- [Analysis rule](./research/2026-11-12-analysis-rule.md) and
+  [amendment](./research/2026-11-13-analysis-rule-amendment.md)
+- [Void first P2 attempt](./history/p2-attempt-1/README.md)
 
 ## Notes
 

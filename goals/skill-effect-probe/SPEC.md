@@ -100,15 +100,24 @@ Higher sources outrank lower sources when they conflict.
 
 ## Decision Rule
 
-Primary measure: all-lanes pass per run, averaged per task and cell.
+Primary measure: all-lanes pass per run, averaged per task and cell, scored
+under the probe's scorer profile (see
+[`research/2026-11-13-analysis-rule-amendment.md`](./research/2026-11-13-analysis-rule-amendment.md)).
+The outcomes are checked in this order.
 
+- **Insensitive.** Fewer than 4 counted tasks have at least one all-lanes
+  pass among their B and C runs. Consequence: no verdict on the trainer
+  question and no prune proposal; the findings carry the lane census. A task
+  every run passes is not insensitive.
 - **Effect.** Cell C beats cell B by at least 0.10 on the primary measure, and
   the interval on the per-task paired differences excludes zero. Consequence:
   the source exploration reopens at `decompose` to size a corpus from the
   measured effect and variance.
 - **Null.** Anything else. Consequence: the trainer question closes for
   lint-enforceable skills, the tombstones stay as they are, and the findings
-  carry a prune proposal for the skill.
+  carry a prune proposal for the skill. When the clustered interval on C
+  minus B lies wholly below zero, the Null is reported as harm and the prune
+  proposal says so.
 - **Fired rate below 0.8 in cell C.** Reported as its own finding; it fires
   the activation-probe gate in the exploration map whichever way the main
   result falls.
@@ -210,11 +219,23 @@ Laws against laws plus skill is the production question because the code laws lo
 
 Reverse: Drop cell A in a later run if B minus A proves uninformative; the records for B and C stay comparable.
 
+### Add the Insensitive outcome and a harm flag to the decision rule, 2026-11-13
+
+Packet-author review 2026-11-13 (authorised as packet author): fewer than 4 counted tasks with an all-lanes pass in B or C means no verdict and no prune proposal; a C-B interval wholly below zero is a Null reported as harm. SPEC Decision Rule edited with the amendment file.
+
+Reverse: Restore the two-outcome rule in a new dated amendment before any further scored run.
+
 ### Cell A from an empty plugin, B and C from one with-without run, 2026-11-13
 
 Cell A runs the archived prompt against a skill-less plugin under --ablation none; B and C are the without and with arms of one laws-prompt invocation. No fourth cell.
 
 Reverse: Add a fourth cell (skill without laws) in a new dated analysis rule if the arms prove unequal.
+
+### Hold the scored run for the plan-limit reset, 2026-11-13
+
+The seven-day limit resets 2026-11-15 23:00 America/Chicago. Per SPEC, no top-up, no runner or model switch: the headroom pilot and P2 resume after the reset.
+
+Reverse: Resume earlier only if the operator assigns plan headroom; that is an operator decision, not an agent one.
 
 ### Known-good solutions stay out of the repository, 2026-11-13
 
@@ -228,6 +249,12 @@ AgentConventionTrial compares one declared pair of receipts with digest controls
 
 Reverse: Fold the probe into AgentConventionTrial if a later comparison needs one shape for both.
 
+### Repair three scorer-drift items for this probe only, 2026-11-13
+
+Ignore tsgo missingPipeableSignature (enabled 2026-08-10, stated nowhere), accept S.Opaque where tasks require extends S.Class (skill default since 2026-10-14), and accept S.decodeTo( where tasks require S.decode( (the skill's idiom; an author's call, since it fails the post-corpus test). Implemented as scorer profile skill-probe-scorer/v2 in SkillProbe.ts; the shared evals score command is unchanged.
+
+Reverse: Score with profile v1 (drop repairSkillProbeTask and IGNORED_TSGO_RULES) in a new dated analysis rule.
+
 ### Run to kept directory through tracePath, 2026-11-13
 
 Each --json run entry carries tracePath = <kept dir>/out/trace.jsonl, so case, arm and index tie to the kept directory in one invocation (P0 slice).
@@ -239,6 +266,12 @@ Reverse: If a later harness drops tracePath, fall back to one case and one arm p
 Allowed tools Read, Write, Edit, Glob, Grep, Skill in every cell; the P0 maximum was 12 turns and 55 seconds.
 
 Reverse: Grant Bash in a later run through a new dated analysis rule; records stay comparable only within one rule.
+
+### Void the first P2 attempt, 2026-11-13
+
+178 of 180 runs ended on the seven-day plan limit; the two that completed are not scored because the rule was amended before any scored record and scoring them would expose C-B before the headroom pilot.
+
+Reverse: Score the two kept runs under v1 from the cached result if a reviewer wants them; they stay outside the evidence.
 
 <!-- beep:decisions:end -->
 

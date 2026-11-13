@@ -391,6 +391,7 @@ export type SkillProbeOutcome = typeof SkillProbeOutcome.Type;
  *   invocation: "p2-laws-1",
  *   runIndex: 0,
  *   keptDir: "claude-eval-abc",
+ *   scorerProfile: "skill-probe-scorer/v2",
  *   fingerprint: SkillProbeFingerprint.make({
  *     modelId: "claude-opus-5-5",
  *     claudeVersion: "2.1.323",
@@ -420,6 +421,7 @@ export class SkillProbeRunRecord extends S.Opaque<SkillProbeRunRecord, { readonl
     invocation: S.NonEmptyString,
     runIndex: Count,
     keptDir: S.NonEmptyString,
+    scorerProfile: S.NonEmptyString,
     fingerprint: SkillProbeFingerprint,
     fired: S.Boolean,
     anySkillFired: S.Boolean,
@@ -534,7 +536,12 @@ export class SkillProbeDifference extends S.Opaque<SkillProbeDifference, { reado
  * ```ts
  * import { SkillProbeVerdict } from "@beep/repo-cli/test/AgentEffectiveness"
  *
- * const verdict = SkillProbeVerdict.cases.Null.make({ difference: 0.02, lower: -0.1, reason: "below threshold" })
+ * const verdict = SkillProbeVerdict.cases.Null.make({
+ *   difference: 0.02,
+ *   lower: -0.1,
+ *   harm: false,
+ *   reason: "below threshold"
+ * })
  * console.log(verdict._tag) // "Null"
  * ```
  *
@@ -542,12 +549,13 @@ export class SkillProbeDifference extends S.Opaque<SkillProbeDifference, { reado
  * @since 0.0.0
  */
 export const SkillProbeVerdict = S.TaggedUnion({
+  Insensitive: { sensitiveTasks: Count, reason: S.NonEmptyString },
   Effect: { difference: S.Finite, lower: S.Finite },
-  Null: { difference: S.Finite, lower: S.Finite, reason: S.NonEmptyString },
+  Null: { difference: S.Finite, lower: S.Finite, harm: S.Boolean, reason: S.NonEmptyString },
 }).pipe(
   $I.annoteSchema("SkillProbeVerdict", {
     description:
-      "Effect when C-B all-lanes is at least the threshold with a clustered lower bound above zero, else Null.",
+      "Insensitive when too few tasks pass all lanes in B or C; else Effect when C-B all-lanes meets the threshold with a clustered lower bound above zero; else Null, flagged as harm when the interval lies below zero.",
   })
 );
 
@@ -567,6 +575,38 @@ export const SkillProbeVerdict = S.TaggedUnion({
  * @since 0.0.0
  */
 export type SkillProbeVerdict = typeof SkillProbeVerdict.Type;
+
+/**
+ * Share of a task and cell's counted runs that scored 1 on each lane.
+ *
+ * **Example** (Read a lane census field)
+ *
+ * ```ts
+ * import { SkillProbeLaneCensus } from "@beep/repo-cli/test/AgentEffectiveness"
+ *
+ * console.log(Object.keys(SkillProbeLaneCensus.fields).includes("tsgo")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SkillProbeLaneCensus extends S.Opaque<SkillProbeLaneCensus, { readonly brand: unique symbol }>()(
+  S.Struct({
+    taskId: S.NonEmptyString,
+    family: S.NonEmptyString,
+    cell: SkillProbeCell,
+    counted: Count,
+    completion: NonNegative,
+    schemaFirst: NonNegative,
+    tsgo: NonNegative,
+    biome: NonNegative,
+    allLanes: NonNegative,
+  }).pipe(
+    $I.annoteSchema("SkillProbeLaneCensus", {
+      description: "Share of a task and cell's counted runs that scored 1 on each lane and on all lanes.",
+    })
+  )
+) {}
 
 /**
  * The probe report: cell summaries, paired differences and the verdict.
@@ -589,6 +629,7 @@ export class SkillProbeReport extends S.Opaque<SkillProbeReport, { readonly bran
     countedRuns: Count,
     excludedRuns: Count,
     cells: S.Array(SkillProbeCellSummary),
+    laneCensus: S.Array(SkillProbeLaneCensus),
     differences: S.Array(SkillProbeDifference),
     firedOnly: S.Array(SkillProbeDifference),
     firedRate: SkillProbeEstimate,

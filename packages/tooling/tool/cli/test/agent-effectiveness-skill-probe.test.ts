@@ -7,6 +7,7 @@ import {
   estimateMean,
   PluginEvalResult,
   readSkillProbeRecords,
+  repairSkillProbeTask,
   SkillOptTaskManifest,
   SkillProbeFingerprint,
   SkillProbeOutcome,
@@ -31,6 +32,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const HASH_A = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const HASH_B = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
@@ -73,6 +75,7 @@ const record = (
     invocation: "test",
     runIndex: 0,
     keptDir: "claude-eval-test",
+    scorerProfile: "skill-probe-scorer/v2",
     fingerprint,
     fired: options.fired ?? cell === "C",
     anySkillFired: options.fired ?? cell === "C",
@@ -154,30 +157,84 @@ describe("skill probe report", () => {
   });
 
   it("returns a null when the clustered interval reaches zero", () => {
+    const passesInC = (taskId: string) => Str.startsWith("fn-schema")(taskId) || taskId === "getsomes-struct-1";
     const records = A.flatMap(tasksOf, ({ taskId, family }) => [
       record(taskId, family, "B", false),
-      record(taskId, family, "C", family === "fn-schema"),
+      record(taskId, family, "C", passesInC(taskId)),
     ]);
     const probe = buildSkillProbeReport(records);
-    expect(probe.verdict._tag).toBe("Null");
     assertSome(
-      O.map(overall(probe, "C-B", "all-lanes"), (row) => row.estimate.mean),
-      0.25
+      O.map(overall(probe, "C-B", "all-lanes"), (row) => [row.estimate.mean, row.estimate.lower < 0] as const),
+      [0.333333, true] as const
     );
     if (SkillProbeVerdict.guards.Null(probe.verdict)) {
-      expect(probe.verdict.lower).toBeLessThanOrEqual(0);
+      expect(probe.verdict.harm).toBe(false);
       expect(probe.verdict.reason).toContain("does not exclude zero");
     } else expect.unreachable();
   });
 
-  it("returns a null below the threshold and when no task pairs B with C", () => {
+  it("flags harm when C-B lies wholly below zero", () => {
+    const probe = buildSkillProbeReport(
+      A.flatMap(tasksOf, ({ taskId, family }) => [
+        record(taskId, family, "B", true),
+        record(taskId, family, "C", false),
+      ])
+    );
+    expect(probe.verdict).toEqual(
+      SkillProbeVerdict.cases.Null.make({
+        difference: -1,
+        lower: -1,
+        harm: true,
+        reason: "C-B all-lanes -1 is below 0.1.",
+      })
+    );
+  });
+
+  it("returns insensitive before effect or null when fewer than four tasks ever pass in B or C", () => {
+    const records = A.flatMap(tasksOf, ({ taskId, family }) => [
+      record(taskId, family, "A", true),
+      record(taskId, family, "B", false),
+      record(taskId, family, "C", family === "fn-schema"),
+    ]);
+    expect(buildSkillProbeReport(records).verdict).toEqual(
+      SkillProbeVerdict.cases.Insensitive.make({
+        sensitiveTasks: 3,
+        reason: "3 counted tasks have an all-lanes pass among their B and C runs; the floor is 4.",
+      })
+    );
+  });
+
+  it("reports the lane census per task and cell", () => {
+    const probe = buildSkillProbeReport([
+      record("t-1", "f", "B", true),
+      record("t-1", "f", "B", false),
+      record("t-1", "f", "B", false, { excluded: true }),
+    ]);
+    expect(probe.laneCensus).toHaveLength(1);
+    expect(probe.laneCensus[0]).toMatchObject({
+      cell: "B",
+      counted: 2,
+      completion: 0.5,
+      schemaFirst: 1,
+      tsgo: 1,
+      biome: 1,
+      allLanes: 0.5,
+    });
+  });
+
+  it("returns a null below the threshold, and insensitive when no task passes in B or C", () => {
     const equal = buildSkillProbeReport(
       A.flatMap(tasksOf, ({ taskId, family }) => [record(taskId, family, "B", true), record(taskId, family, "C", true)])
     );
     expect(equal.verdict).toEqual(
-      SkillProbeVerdict.cases.Null.make({ difference: 0, lower: 0, reason: "C-B all-lanes 0 is below 0.1." })
+      SkillProbeVerdict.cases.Null.make({
+        difference: 0,
+        lower: 0,
+        harm: false,
+        reason: "C-B all-lanes 0 is below 0.1.",
+      })
     );
-    expect(buildSkillProbeReport([record("t", "f", "A", true)]).verdict._tag).toBe("Null");
+    expect(buildSkillProbeReport([record("t", "f", "A", true)]).verdict._tag).toBe("Insensitive");
   });
 
   it("counts excluded runs without scoring them and gates a low fired rate", () => {
@@ -245,6 +302,39 @@ describe("skill probe staging", () => {
     });
     expect(skillProbeFamily(task)).toBe("getsomes-struct");
     expect(skillProbeFamily(SkillOptTaskManifest.make({ ...task, ruleIds: [] }))).toBe("sfv4-getsomes-struct-002");
+  });
+
+  it("repairs only the drifted completion patterns", () => {
+    const task = SkillOptTaskManifest.make({
+      id: "t",
+      ruleIds: [],
+      derivedFrom: [],
+      prompt: "p",
+      fixture: "f",
+      entrypoint: "src/x.ts",
+      completion: {
+        requiredExports: ["X"],
+        requiredPatterns: [
+          "export\\s+class\\s+X\\s+extends\\s+S\\.Class\\b",
+          "S\\.decode\\s*\\(",
+          "S\\.decodeUnknownOption\\s*\\(\\s*X\\s*\\)",
+        ],
+        forbiddenPatterns: ["S\\.decode\\s*\\("],
+      },
+    });
+    const repaired = repairSkillProbeTask(task);
+    expect(repaired.prompt).toBe("p");
+    expect(repaired.completion.forbiddenPatterns).toEqual(task.completion.forbiddenPatterns);
+    const [opaque, decode, decodeOption] = A.map(
+      repaired.completion.requiredPatterns,
+      (source) => new RegExp(source, "u")
+    );
+    expect(opaque?.test("export class X extends S.Opaque<X, B>()")).toBe(true);
+    expect(opaque?.test("export class X extends S.Class<X>()")).toBe(true);
+    expect(decode?.test("S.decodeTo(S.String, SchemaTransformation.trim())")).toBe(true);
+    expect(decode?.test("S.decode(SchemaTransformation.trim())")).toBe(true);
+    expect(decode?.test("S.decodeUnknownSync(X)")).toBe(false);
+    expect(decodeOption?.source).toBe(task.completion.requiredPatterns[2]);
   });
 
   it.effect("decodes a harness result and ignores fields it does not read", () =>

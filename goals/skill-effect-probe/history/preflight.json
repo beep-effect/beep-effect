@@ -40,7 +40,7 @@
             "ruleId": "SFV4-fn-schema",
             "file": "src/FrameFileName.ts",
             "line": 1,
-            "message": "Missing required pattern /export\\s+class\\s+FrameFileNameInput\\s+extends\\s+S\\.Class\\b/."
+            "message": "Missing required pattern /export\\s+class\\s+FrameFileNameInput\\s+extends\\s+S\\.(?:Class|Opaque)\\b/."
           },
           {
             "source": "completion",
@@ -177,7 +177,7 @@
             "ruleId": "SFV4-fn-schema",
             "file": "src/ExtractFrames.ts",
             "line": 1,
-            "message": "Missing required pattern /export\\s+class\\s+ExtractFramesInput\\s+extends\\s+S\\.Class\\b/."
+            "message": "Missing required pattern /export\\s+class\\s+ExtractFramesInput\\s+extends\\s+S\\.(?:Class|Opaque)\\b/."
           },
           {
             "source": "completion",
@@ -314,14 +314,14 @@
             "ruleId": "SFV4-fn-schema",
             "file": "src/SourceMetadata.ts",
             "line": 1,
-            "message": "Missing required pattern /export\\s+class\\s+SourceMetadataInput\\s+extends\\s+S\\.Class\\b/."
+            "message": "Missing required pattern /export\\s+class\\s+SourceMetadataInput\\s+extends\\s+S\\.(?:Class|Opaque)\\b/."
           },
           {
             "source": "completion",
             "ruleId": "SFV4-fn-schema",
             "file": "src/SourceMetadata.ts",
             "line": 1,
-            "message": "Missing required pattern /export\\s+class\\s+SourceMetadata\\s+extends\\s+S\\.Class\\b/."
+            "message": "Missing required pattern /export\\s+class\\s+SourceMetadata\\s+extends\\s+S\\.(?:Class|Opaque)\\b/."
           },
           {
             "source": "completion",
@@ -437,7 +437,7 @@
             "ruleId": "SFV4-getsomes-struct",
             "file": "src/ContactSubmission.ts",
             "line": 1,
-            "message": "Missing required pattern /export\\s+class\\s+ContactSubmissionDraft\\s+extends\\s+S\\.Class\\b/."
+            "message": "Missing required pattern /export\\s+class\\s+ContactSubmissionDraft\\s+extends\\s+S\\.(?:Class|Opaque)\\b/."
           },
           {
             "source": "completion",
@@ -581,7 +581,7 @@
             "ruleId": "SFV4-getsomes-struct",
             "file": "src/BoxErrorDetails.ts",
             "line": 1,
-            "message": "Missing required pattern /export\\s+class\\s+BoxErrorDetails\\s+extends\\s+S\\.Class\\b/."
+            "message": "Missing required pattern /export\\s+class\\s+BoxErrorDetails\\s+extends\\s+S\\.(?:Class|Opaque)\\b/."
           },
           {
             "source": "completion",
@@ -711,7 +711,7 @@
             "ruleId": "SFV4-getsomes-struct",
             "file": "src/RunpodDiagnostics.ts",
             "line": 1,
-            "message": "Missing required pattern /export\\s+class\\s+RunpodDiagnostics\\s+extends\\s+S\\.Class\\b/."
+            "message": "Missing required pattern /export\\s+class\\s+RunpodDiagnostics\\s+extends\\s+S\\.(?:Class|Opaque)\\b/."
           },
           {
             "source": "completion",
@@ -855,14 +855,14 @@
             "ruleId": "SFV4-normalization",
             "file": "src/CorpusExtension.ts",
             "line": 1,
-            "message": "Missing required pattern /S\\.decodeUnknownOption\\s*\\(\\s*CorpusExtension\\s*\\)/."
+            "message": "Missing required pattern /S\\.decode(?:To)?\\s*\\(/."
           },
           {
             "source": "completion",
             "ruleId": "SFV4-normalization",
             "file": "src/CorpusExtension.ts",
             "line": 1,
-            "message": "Missing required pattern /S\\.decode\\s*\\(/."
+            "message": "Missing required pattern /S\\.decodeUnknownOption\\s*\\(\\s*CorpusExtension\\s*\\)/."
           },
           {
             "source": "completion",
@@ -1013,14 +1013,14 @@
             "ruleId": "SFV4-normalization",
             "file": "src/OperationCode.ts",
             "line": 1,
-            "message": "Missing required pattern /S\\.decodeUnknownOption\\s*\\(\\s*OperationCode\\s*\\)/."
+            "message": "Missing required pattern /S\\.decode(?:To)?\\s*\\(/."
           },
           {
             "source": "completion",
             "ruleId": "SFV4-normalization",
             "file": "src/OperationCode.ts",
             "line": 1,
-            "message": "Missing required pattern /S\\.decode\\s*\\(/."
+            "message": "Missing required pattern /S\\.decodeUnknownOption\\s*\\(\\s*OperationCode\\s*\\)/."
           },
           {
             "source": "completion",
@@ -1150,14 +1150,14 @@
             "ruleId": "SFV4-normalization",
             "file": "src/HtmlText.ts",
             "line": 1,
-            "message": "Missing required pattern /S\\.decodeUnknownOption\\s*\\(\\s*HtmlInnerText\\s*\\)/."
+            "message": "Missing required pattern /S\\.decode(?:To)?\\s*\\(/."
           },
           {
             "source": "completion",
             "ruleId": "SFV4-normalization",
             "file": "src/HtmlText.ts",
             "line": 1,
-            "message": "Missing required pattern /S\\.decode\\s*\\(/."
+            "message": "Missing required pattern /S\\.decodeUnknownOption\\s*\\(\\s*HtmlInnerText\\s*\\)/."
           },
           {
             "source": "completion",

@@ -21,6 +21,7 @@ import {
   SkillProbeCellSummary,
   SkillProbeDifference,
   SkillProbeEstimate,
+  SkillProbeLaneCensus,
   SkillProbeOutcome,
   SkillProbeReport,
   SkillProbeVerdict,
@@ -35,6 +36,8 @@ import type {
 
 /** Effect threshold on the overall C-B all-lanes difference. */
 const EFFECT_THRESHOLD = 0.1;
+/** Tasks that must show an all-lanes pass in B or C before Effect or Null is read. */
+const SENSITIVE_TASK_FLOOR = 4;
 /** Fired-rate gate on counted cell C runs. */
 const FIRED_RATE_GATE = 0.8;
 const NORMAL_975 = 1.96;
@@ -193,6 +196,38 @@ const cellKey = (taskId: string, cell: SkillProbeCell): string => `${taskId}\u00
 const contrastMeasureKey = (diff: TaskDifference): string => `${diff.contrast}\u0000${diff.measure}`;
 const familyKey = (diff: TaskDifference): string => diff.family;
 
+const laneShare = (
+  counted: ReadonlyArray<SkillProbeRunRecord>,
+  passes: (scored: typeof SkillProbeOutcome.cases.Scored.Type) => boolean
+): number =>
+  A.isReadonlyArrayNonEmpty(counted)
+    ? roundScore(
+        A.length(
+          A.filter(counted, (record) => SkillProbeOutcome.guards.Scored(record.outcome) && passes(record.outcome))
+        ) / A.length(counted)
+      )
+    : 0;
+
+const censusCell = (
+  taskId: string,
+  family: string,
+  cell: SkillProbeCell,
+  records: ReadonlyArray<SkillProbeRunRecord>
+): SkillProbeLaneCensus => {
+  const counted = A.filter(records, isCounted);
+  return SkillProbeLaneCensus.make({
+    taskId,
+    family,
+    cell,
+    counted: A.length(counted),
+    completion: laneShare(counted, (scored) => scored.report.breakdown.completion === 1),
+    schemaFirst: laneShare(counted, (scored) => scored.report.breakdown.schemaFirst === 1),
+    tsgo: laneShare(counted, (scored) => scored.report.breakdown.tsgo === 1),
+    biome: laneShare(counted, (scored) => scored.report.breakdown.biome === 1),
+    allLanes: laneShare(counted, (scored) => scored.allLanesPass),
+  });
+};
+
 const summarizeCell = (
   taskId: string,
   family: string,
@@ -303,26 +338,37 @@ const differenceRows = (diffs: ReadonlyArray<TaskDifference>): ReadonlyArray<Ski
   return A.appendAll(A.appendAll(taskRows, familyRows), overallRows);
 };
 
-const verdictOf = (differences: ReadonlyArray<SkillProbeDifference>): SkillProbeVerdict =>
-  pipe(
-    differences,
-    A.findFirst((row) => row.level === "overall" && row.contrast === "C-B" && row.measure === "all-lanes"),
-    O.match({
-      onNone: () =>
-        SkillProbeVerdict.cases.Null.make({ difference: 0, lower: 0, reason: "No task has counted B and C runs." }),
-      onSome: ({ estimate }) =>
-        estimate.mean >= EFFECT_THRESHOLD && estimate.lower > 0
-          ? SkillProbeVerdict.cases.Effect.make({ difference: estimate.mean, lower: estimate.lower })
-          : SkillProbeVerdict.cases.Null.make({
-              difference: estimate.mean,
-              lower: estimate.lower,
-              reason:
-                estimate.mean < EFFECT_THRESHOLD
-                  ? `C-B all-lanes ${estimate.mean} is below ${EFFECT_THRESHOLD}.`
-                  : `The clustered interval's lower end ${estimate.lower} does not exclude zero.`,
+const verdictOf = (differences: ReadonlyArray<SkillProbeDifference>, sensitiveTasks: number): SkillProbeVerdict =>
+  sensitiveTasks < SENSITIVE_TASK_FLOOR
+    ? SkillProbeVerdict.cases.Insensitive.make({
+        sensitiveTasks,
+        reason: `${sensitiveTasks} counted tasks have an all-lanes pass among their B and C runs; the floor is ${SENSITIVE_TASK_FLOOR}.`,
+      })
+    : pipe(
+        differences,
+        A.findFirst((row) => row.level === "overall" && row.contrast === "C-B" && row.measure === "all-lanes"),
+        O.match({
+          onNone: () =>
+            SkillProbeVerdict.cases.Null.make({
+              difference: 0,
+              lower: 0,
+              harm: false,
+              reason: "No task has counted B and C runs.",
             }),
-    })
-  );
+          onSome: ({ estimate }) =>
+            estimate.mean >= EFFECT_THRESHOLD && estimate.lower > 0
+              ? SkillProbeVerdict.cases.Effect.make({ difference: estimate.mean, lower: estimate.lower })
+              : SkillProbeVerdict.cases.Null.make({
+                  difference: estimate.mean,
+                  lower: estimate.lower,
+                  harm: estimate.upper < 0,
+                  reason:
+                    estimate.mean < EFFECT_THRESHOLD
+                      ? `C-B all-lanes ${estimate.mean} is below ${EFFECT_THRESHOLD}.`
+                      : `The clustered interval's lower end ${estimate.lower} does not exclude zero.`,
+                }),
+        })
+      );
 
 const fingerprintKey = (fingerprint: SkillProbeFingerprint): string =>
   `${fingerprint.modelId}|${fingerprint.claudeVersion}|${fingerprint.skillSha256}|${fingerprint.lawsSha256}`;
@@ -366,6 +412,25 @@ export const buildSkillProbeReport = (records: ReadonlyArray<SkillProbeRunRecord
       )
     )
   );
+  const laneCensus = A.flatMap(tasks, ([taskId, family]) =>
+    A.getSomes(
+      A.map(SkillProbeCellOrder, (cell) =>
+        O.map(R.get(groups, cellKey(taskId, cell)), (members) => censusCell(taskId, family, cell, members))
+      )
+    )
+  );
+  const sensitiveTasks = A.length(
+    A.filter(tasks, ([taskId]) =>
+      A.some(
+        records,
+        (record) =>
+          record.taskId === taskId &&
+          record.cell !== "A" &&
+          SkillProbeOutcome.guards.Scored(record.outcome) &&
+          record.outcome.allLanesPass
+      )
+    )
+  );
   const differences = differenceRows(taskDifferences(tasks, groups));
   const firedGroups = R.map(groups, (members) => A.filter(members, (record) => record.cell !== "C" || record.fired));
   const firedOnly = A.filter(
@@ -387,10 +452,11 @@ export const buildSkillProbeReport = (records: ReadonlyArray<SkillProbeRunRecord
     countedRuns: counted,
     excludedRuns: A.length(records) - counted,
     cells,
+    laneCensus,
     differences,
     firedOnly,
     firedRate,
     firedRateGate: A.isReadonlyArrayNonEmpty(countedC) && firedRate.mean < FIRED_RATE_GATE,
-    verdict: verdictOf(differences),
+    verdict: verdictOf(differences, sensitiveTasks),
   });
 };

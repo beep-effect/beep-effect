@@ -20,8 +20,15 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.ts";
-import { AgentEffectivenessEvalReportStatus, decodeTaskManifestJson } from "../AgentEffectiveness.schemas.ts";
-import { scoreAgentEffectivenessEval } from "./EvalScorer.ts";
+import {
+  AgentEffectivenessEvalReportStatus,
+  decodeTaskManifestJson,
+  SkillOptTaskManifest,
+} from "../AgentEffectiveness.schemas.ts";
+import { evaluateSkillOptCompletion, readSourceSnapshots } from "./EvalFixture.ts";
+import { evaluateLaw } from "./EvalLawLanes.ts";
+import { buildAgentEffectivenessEvalScoreReport } from "./EvalScorer.ts";
+import { LawEvaluation } from "./EvalScoring.ts";
 import {
   PluginEvalResult,
   SkillProbeFingerprint,
@@ -36,7 +43,7 @@ import { buildSkillProbeReport } from "./SkillProbeStats.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { AgentEffectivenessEvalScoreReport, SkillOptTaskManifest } from "../AgentEffectiveness.schemas.ts";
+import type { AgentEffectivenessEvalScoreReport } from "../AgentEffectiveness.schemas.ts";
 import type { PluginEvalRun, SkillProbeCell } from "./SkillProbeSchemas.ts";
 
 const SKILL_NAME = "schema-first-development";
@@ -49,6 +56,74 @@ const API_ERROR_PATTERN =
   /api[ _-]?error|rate[ _-]?limit|overload|\b429\b|\b5\d\d\b|authentication|authenticate|unauthori[sz]ed|server error|credit balance/iu;
 
 type ProbeEnv = FileSystem.FileSystem | Path.Path;
+
+/**
+ * Scorer profile every run record carries: the shared law scorer plus the
+ * drift repairs named in `goals/skill-effect-probe/research/2026-11-13-analysis-rule-amendment.md`.
+ *
+ * **Example** (Read the profile)
+ *
+ * ```ts
+ * import { SKILL_PROBE_SCORER_PROFILE } from "@beep/repo-cli/test/AgentEffectiveness"
+ *
+ * console.log(SKILL_PROBE_SCORER_PROFILE) // "skill-probe-scorer/v2"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const SKILL_PROBE_SCORER_PROFILE = "skill-probe-scorer/v2";
+
+// Completion patterns the archived corpus wrote before the current idiom; each
+// repair accepts the old spelling and the one the live skill teaches.
+const PATTERN_REPAIRS: ReadonlyArray<readonly [string, string]> = [
+  ["extends\\s+S\\.Class\\b", "extends\\s+S\\.(?:Class|Opaque)\\b"],
+  ["S\\.decode\\s*\\(", "S\\.decode(?:To)?\\s*\\("],
+];
+// tsgo rules enabled after the corpus was written and stated by none of the
+// prompt, the Code Laws or the skill.
+const IGNORED_TSGO_RULES: ReadonlyArray<string> = ["missingPipeableSignature"];
+
+const repairPattern = (pattern: string): string =>
+  A.reduce(PATTERN_REPAIRS, pattern, (current, [from, to]) => Str.replaceAll(from, to)(current));
+
+/**
+ * Apply the probe's completion-pattern repairs to a task manifest; prompts,
+ * exports and forbidden patterns are unchanged.
+ *
+ * **Example** (Accept the Opaque idiom)
+ *
+ * ```ts
+ * import { SkillOptTaskManifest, repairSkillProbeTask } from "@beep/repo-cli/test/AgentEffectiveness"
+ *
+ * const task = SkillOptTaskManifest.make({
+ *   id: "t",
+ *   ruleIds: [],
+ *   derivedFrom: [],
+ *   prompt: "p",
+ *   fixture: "f",
+ *   entrypoint: "src/x.ts",
+ *   completion: { requiredExports: [], requiredPatterns: ["extends\\s+S\\.Class\\b"], forbiddenPatterns: [] }
+ * })
+ * console.log(repairSkillProbeTask(task).completion.requiredPatterns[0]) // "extends\\s+S\\.(?:Class|Opaque)\\b"
+ * ```
+ *
+ * @param task - Archived task manifest.
+ * @returns The manifest the probe scores against.
+ * @category models
+ * @since 0.0.0
+ */
+export const repairSkillProbeTask = (task: SkillOptTaskManifest): SkillOptTaskManifest =>
+  SkillOptTaskManifest.make({
+    ...task,
+    completion: SkillOptTaskManifest.fields.completion.make({
+      ...task.completion,
+      requiredPatterns: A.map(task.completion.requiredPatterns, repairPattern),
+    }),
+  });
+
+const isIgnoredTsgoViolation = (message: string): boolean =>
+  A.some(IGNORED_TSGO_RULES, (rule) => Str.includes(`effect(${rule})`)(message));
 type ScoreEnv = ProbeEnv | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner;
 
 const decodeStage = S.decodeUnknownEffect(S.fromJsonString(SkillProbeStage));
@@ -358,6 +433,30 @@ export const stageSkillProbe = Effect.fn("SkillProbe.stage")(function* (
   return stage;
 });
 
+const scoreProbeFixture = Effect.fn("SkillProbe.scoreFixture")(function* (dir: string, taskPath: string) {
+  const path = yield* Path.Path;
+  const task = yield* readText(taskPath).pipe(
+    Effect.flatMap(decodeTaskManifestJson),
+    Effect.mapError(mapFail(`Task manifest is not valid: ${taskPath}.`, taskPath))
+  );
+  const repaired = repairSkillProbeTask(task);
+  const fixtureDir = path.resolve(dir);
+  const snapshots = yield* readSourceSnapshots(fixtureDir);
+  const sourceFiles = pipe(
+    snapshots,
+    A.map((snapshot) => snapshot.relativePath),
+    A.sort(Order.String)
+  );
+  const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(mapFail("Cannot locate the repository root.")));
+  const completion = yield* evaluateSkillOptCompletion(repaired, fixtureDir);
+  const law = yield* evaluateLaw(fixtureDir, repoRoot, sourceFiles);
+  return buildAgentEffectivenessEvalScoreReport(
+    repaired,
+    completion,
+    LawEvaluation.make({ ...law, tsgo: A.filter(law.tsgo, (violation) => !isIgnoredTsgoViolation(violation.message)) })
+  );
+});
+
 const isAllLanesPass = (report: AgentEffectivenessEvalScoreReport): boolean =>
   AgentEffectivenessEvalReportStatus.is.scored(report.status) &&
   report.breakdown.completion === 1 &&
@@ -404,14 +503,11 @@ export const preflightSkillProbe = Effect.fn("SkillProbe.preflight")(function* (
   const rows = yield* Effect.forEach(stage.tasks, (task) =>
     Effect.gen(function* () {
       const taskPath = path.join(options.archiveRoot, task.taskPath);
-      const fixture = yield* scoreAgentEffectivenessEval({
-        dir: path.join(options.archiveRoot, task.fixture),
-        taskPath,
-      });
+      const fixture = yield* scoreProbeFixture(path.join(options.archiveRoot, task.fixture), taskPath);
       const knownGoodDir = path.join(options.knownGoodRoot, task.id);
       const hasKnownGood = yield* fs.exists(knownGoodDir).pipe(Effect.orElseSucceed(() => false));
       const knownGood = hasKnownGood
-        ? yield* Effect.asSome(scoreAgentEffectivenessEval({ dir: knownGoodDir, taskPath }))
+        ? yield* Effect.asSome(scoreProbeFixture(knownGoodDir, taskPath))
         : O.none<AgentEffectivenessEvalScoreReport>();
       const knownGoodFiles = hasKnownGood ? yield* fileDigests(knownGoodDir) : A.empty();
       const fixtureFailsTask = !isAllLanesPass(fixture) && fixture.breakdown.completion < 1;
@@ -510,7 +606,7 @@ const scoreRun = Effect.fn("SkillProbe.scoreRun")(function* (
             const exists = yield* fs.exists(fixtureDir).pipe(Effect.orElseSucceed(() => false));
             if (!exists) return SkillProbeOutcome.cases.Excluded.make({ reason: "The fixture is missing." });
             const taskPath = path.join(context.archiveRoot, context.task.taskPath);
-            const attempt = scoreAgentEffectivenessEval({ dir: fixtureDir, taskPath });
+            const attempt = scoreProbeFixture(fixtureDir, taskPath);
             const first = yield* attempt;
             const report = AgentEffectivenessEvalReportStatus.is["environment-failure"](first.status)
               ? yield* attempt
@@ -531,6 +627,7 @@ const scoreRun = Effect.fn("SkillProbe.scoreRun")(function* (
     invocation: context.invocation,
     runIndex: context.runIndex,
     keptDir: Str.isEmpty(keptDir) ? "none" : path.basename(keptDir),
+    scorerProfile: SKILL_PROBE_SCORER_PROFILE,
     fingerprint: context.fingerprint,
     fired: passed("skill-fired"),
     anySkillFired: passed("any-skill"),

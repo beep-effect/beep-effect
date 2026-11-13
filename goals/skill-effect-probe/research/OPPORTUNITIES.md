@@ -38,3 +38,16 @@ identifiers are redacted.
   solution whenever the schema-first rules change, so a task whose contract
   contradicts a newer law is rewritten or retired before a probe spends runs
   on it.
+
+## 2026-11-12: a plan limit turns a 180-run invocation into 178 instant failures
+
+- **Doing:** the first P2 attempt.
+- **Evidence:** `claude plugin eval ... -j 2` kept launching runs after the
+  seven-day limit was reached; 178 runs ended in about a second each with
+  "You've hit your weekly limit" and a `rate_limit_event` with status
+  `rejected`. `--max-cost-usd` never trips, because failed runs cost 0.
+  The pre-run `beep accounts` view had shown a different account with full
+  headroom marked "use next", which is not the account the eval child used.
+- **Would have prevented it:** a harness option to abort on the first
+  plan-limit error, and an accounts view that names the account the CLI is
+  signed in to separately from the recommended next one.

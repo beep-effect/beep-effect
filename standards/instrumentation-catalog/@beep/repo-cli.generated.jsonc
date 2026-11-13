@@ -3291,6 +3291,7 @@
     {"name":"SkillProbe.readText","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SkillProbe.report","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SkillProbe.score","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"SkillProbe.scoreFixture","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SkillProbe.scoreRun","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SkillProbe.stage","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SkillProbe.traceApiError","owner":"@beep/repo-cli","family":"tooling","conforms":true},
