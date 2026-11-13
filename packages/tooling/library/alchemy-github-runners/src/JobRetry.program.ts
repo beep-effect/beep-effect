@@ -2,6 +2,8 @@
  * The job-retry Lambda's program: a delayed re-check that puts a job back on
  * the build queue while GitHub still reports it queued.
  *
+ * **Details**
+ *
  * Ported from `lambdas/functions/control-plane/src/scale-runners/job-retry.ts`
  * of github-aws-runners/terraform-aws-github-runner v7.10.1 (MIT); see the
  * package README for the license notice.

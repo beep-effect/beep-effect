@@ -1,6 +1,8 @@
 /**
  * WebCrypto primitives for the webhook signature and the GitHub App JWT.
  *
+ * **Details**
+ *
  * Effect ships no HMAC or RSA signing module, so these use the platform's
  * `crypto.subtle` (present in the Lambda Node runtime and in Bun), never
  * `node:crypto`.

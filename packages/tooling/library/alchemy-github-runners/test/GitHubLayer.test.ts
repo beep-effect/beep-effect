@@ -9,6 +9,7 @@ import {
   RunnerOwner,
 } from "@beep/alchemy-github-runners";
 import { describe, expect, it } from "@effect/vitest";
+import { deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
@@ -29,41 +30,36 @@ const ok = (body: string, status = 200): FakeAnswer => ({
   headers: { "content-type": "application/json" },
 });
 
-const route = (request: RecordedRequest): O.Option<FakeAnswer> => {
-  const path = request.url.pathname;
-  const key = `${request.method} ${path}`;
-  switch (key) {
-    case "GET /orgs/beep-effect/installation":
-      return O.some(ok('{"id":42}'));
-    case "GET /repos/beep-effect/beep-effect/installation":
-      return O.some(ok('{"id":43}'));
-    case "POST /app/installations/42/access_tokens":
-      return O.some(ok('{"token":"ghs_installation","expires_at":"2026-11-13T20:00:00Z"}', 201));
-    case "GET /repos/beep-effect/beep-effect/actions/jobs/7":
-      return O.some(ok('{"id":7,"run_id":3,"status":"queued","name":"check","labels":["beep-ec2-heavy"]}'));
-    case "GET /orgs/beep-effect/actions/runner-groups":
-      return O.some(
-        ok(
-          '{"total_count":1,"runner_groups":[{"id":3,"name":"beep-ec2-heavy","visibility":"selected","default":false}]}'
-        )
-      );
-    case "POST /orgs/beep-effect/actions/runners/generate-jitconfig":
-      return O.some(ok(`{"runner":${runner(11, false)},"encoded_jit_config":"eyJqaXQiOnRydWV9"}`, 201));
-    case "POST /orgs/beep-effect/actions/runners/registration-token":
-      return O.some(ok('{"token":"reg","expires_at":"2026-11-13T20:00:00Z"}', 201));
-    case "GET /orgs/beep-effect/actions/runners/11":
-      return O.some(ok(runner(11, true)));
-    case "GET /orgs/beep-effect/actions/runners/12":
-      return O.some(ok('{"message":"Not Found"}', 404));
-    case "GET /orgs/beep-effect/actions/runners":
-      return O.some(ok(`{"total_count":2,"runners":[${runner(11, true)},${runner(12, false)}]}`));
-    case "DELETE /orgs/beep-effect/actions/runners/11":
-      return O.some(ok('{"message":"Bad request - Runner is busy"}', 422));
-    case "DELETE /orgs/beep-effect/actions/runners/12":
-      return O.some({ status: 204, body: "" });
-  }
-  return O.none();
+const responses: Readonly<Record<string, FakeAnswer>> = {
+  "GET /orgs/beep-effect/installation": ok('{"id":42}'),
+  "GET /repos/beep-effect/beep-effect/installation": ok('{"id":43}'),
+  "POST /app/installations/42/access_tokens": ok(
+    '{"token":"ghs_installation","expires_at":"2026-11-13T20:00:00Z"}',
+    201
+  ),
+  "GET /repos/beep-effect/beep-effect/actions/jobs/7": ok(
+    '{"id":7,"run_id":3,"status":"queued","name":"check","labels":["beep-ec2-heavy"]}'
+  ),
+  "GET /orgs/beep-effect/actions/runner-groups": ok(
+    '{"total_count":1,"runner_groups":[{"id":3,"name":"beep-ec2-heavy","visibility":"selected","default":false}]}'
+  ),
+  "POST /orgs/beep-effect/actions/runners/generate-jitconfig": ok(
+    `{"runner":${runner(11, false)},"encoded_jit_config":"eyJqaXQiOnRydWV9"}`,
+    201
+  ),
+  "POST /orgs/beep-effect/actions/runners/registration-token": ok(
+    '{"token":"reg","expires_at":"2026-11-13T20:00:00Z"}',
+    201
+  ),
+  "GET /orgs/beep-effect/actions/runners/11": ok(runner(11, true)),
+  "GET /orgs/beep-effect/actions/runners/12": ok('{"message":"Not Found"}', 404),
+  "GET /orgs/beep-effect/actions/runners": ok(`{"total_count":2,"runners":[${runner(11, true)},${runner(12, false)}]}`),
+  "DELETE /orgs/beep-effect/actions/runners/11": ok('{"message":"Bad request - Runner is busy"}', 422),
+  "DELETE /orgs/beep-effect/actions/runners/12": { status: 204, body: "" },
 };
+
+const route = (request: RecordedRequest): O.Option<FakeAnswer> =>
+  O.fromUndefinedOr(responses[`${request.method} ${request.url.pathname}`]);
 
 const generatePem = Effect.gen(function* () {
   const pair = yield* Effect.promise(() =>
@@ -87,8 +83,7 @@ const run = <A, E>(http: FakeHttp, world: World, program: Effect.Effect<A, E, Gi
   Layer.mergeAll(gitHubAppAuthLive(options), gitHubRunnersLive(options)).pipe(
     Layer.provide(Layer.mergeAll(http.layer, Layer.succeedContext(worldContext(world)))),
     Layer.build,
-    Effect.flatMap((context) => program.pipe(Effect.provideContext(context))),
-    Effect.scoped
+    Effect.flatMap((context) => program.pipe(Effect.provideContext(context)))
   );
 
 const org = RunnerOwner.make({ type: "Org", owner: "beep-effect" });
@@ -152,19 +147,15 @@ describe("live GitHub layers over distilled", () => {
         "eyJqaXQiOnRydWV9",
         "reg",
       ]);
-      expect([out.busy, out.gone, out.listed, out.busyStatus]).toStrictEqual([
-        O.some(true),
-        true,
-        [11, 12],
-        O.some(422),
-      ]);
+      deepStrictEqual([out.busy, out.gone, out.listed, out.busyStatus], [O.some(true), true, [11, 12], O.some(422)]);
       const authorizations = A.map(http.requests, (request) => Str.split(request.headers.authorization ?? "", " ")[0]);
       expect(A.dedupe(authorizations)).toStrictEqual(["Bearer"]);
       const appCall = A.findFirst(
         http.requests,
         (request) => request.url.pathname === "/orgs/beep-effect/installation"
       );
-      expect(O.map(appCall, (request) => Str.split(request.headers.authorization ?? "", ".").length)).toStrictEqual(
+      deepStrictEqual(
+        O.map(appCall, (request) => Str.split(request.headers.authorization ?? "", ".").length),
         O.some(3)
       );
     })

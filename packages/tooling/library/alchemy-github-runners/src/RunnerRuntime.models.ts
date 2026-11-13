@@ -307,6 +307,14 @@ export const RunnerOs = LiteralKit(["linux"]).pipe(
 );
 
 /**
+ * Runtime type for {@link RunnerOs}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RunnerOs = typeof RunnerOs.Type;
+
+/**
  * Runner-binaries syncer runtime config.
  *
  * **Example** (The fleet syncer)

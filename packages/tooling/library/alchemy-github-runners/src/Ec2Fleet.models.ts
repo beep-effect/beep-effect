@@ -2,6 +2,8 @@
  * The runner-launch request and result the scale-up program exchanges with
  * the `Ec2Fleet` service, independent of the EC2 SDK.
  *
+ * **Details**
+ *
  * Request shape ported from `createInstances` in
  * `lambdas/functions/control-plane/src/aws/ec2-runners.ts` of
  * github-aws-runners/terraform-aws-github-runner v7.10.1 (MIT); see the

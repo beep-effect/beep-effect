@@ -2,6 +2,8 @@
  * The runner-binaries syncer Lambda's program: keep the S3 mirror of the
  * `actions/runner` tarball on the latest release.
  *
+ * **Details**
+ *
  * Ported from `lambdas/functions/gh-agent-syncer/src/syncer/syncer.ts` of
  * github-aws-runners/terraform-aws-github-runner v7.10.1 (MIT); see the
  * package README for the license notice.

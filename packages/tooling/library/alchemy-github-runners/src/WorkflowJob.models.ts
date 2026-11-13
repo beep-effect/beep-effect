@@ -2,6 +2,8 @@
  * GitHub `workflow_job` webhook payloads and the webhook Lambda's request and
  * response shapes.
  *
+ * **Details**
+ *
  * Ported from `lambdas/functions/webhook` of github-aws-runners/terraform-aws-github-runner
  * v7.10.1 (MIT); see the package README for the license notice.
  *

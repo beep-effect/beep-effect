@@ -1,6 +1,8 @@
 /**
  * SSM Parameter Store layout of a runner fleet.
  *
+ * **Details**
+ *
  * The layout follows the `ssm` module of github-aws-runners/terraform-aws-github-runner
  * v7.10.1 (MIT; see the package README): App secrets under `<root>/app/`,
  * one-use runner tokens under `<root>/<pool>/tokens/<instance-id>`, and the

@@ -2,6 +2,8 @@
  * Runner pool configuration: what one pool of ephemeral EC2 runners launches,
  * which jobs it accepts and how it scales.
  *
+ * **Details**
+ *
  * Option names and defaults follow the `runners` module variables of
  * github-aws-runners/terraform-aws-github-runner v7.10.1 (MIT); see the package
  * README for the license notice.
