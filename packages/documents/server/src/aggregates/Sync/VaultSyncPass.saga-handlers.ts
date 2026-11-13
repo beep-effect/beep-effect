@@ -163,17 +163,7 @@ export const VaultSyncCheckpoint = Context.Reference<(phase: string) => Effect.E
  * @category workflows
  * @since 0.0.0
  */
-export const VaultSyncPassLive = VaultSyncPass.toLayer<
-  never,
-  | import("@alchemy.run/domain/Aggregate").Key<
-      "SyncDestination" | "SyncItem" | "SyncOperation" | "ConflictEventRegistry"
-    >
-  | import("@alchemy.run/domain/ExternalSystem").Identifier<typeof BoxMirror>
-  | VaultSyncRoot
-  | FileSystem.FileSystem
-  | Path.Path,
-  WorkflowEngine.WorkflowEngine | WorkflowEngine.WorkflowInstance
->(
+export const VaultSyncPassLive = VaultSyncPass.toLayer(
   Effect.gen(function* () {
     const destinations = yield* V.SyncDestination;
     const items = yield* V.SyncItem;
@@ -211,7 +201,7 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
         return { operationsSucceeded: 0, conflicts: 0 };
       }
       const options = (step: string) => ({ commandId: `${key}/${step}` });
-      const active = Effect.map(destinations.state(destinationId), (state) =>
+      const active = Effect.map(destinations.get(destinationId), (state) =>
         O.liftPredicate(state, (s): s is Registered => s._tag === "Registered" && !s.paused)
       );
       const probe = Effect.fnUntraced(function* (destination: Registered) {
@@ -227,7 +217,7 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
         const itemId = O.getOrElse(H.get(destination.paths, entry.path), () =>
           V.ItemId.make(`documents_sync_item_a${stable(`${destinationId}/${entry.path}`)}`)
         );
-        const current = yield* items.state(itemId);
+        const current = yield* items.get(itemId);
         if (unchanged(current, entry)) return;
         const generation = (current?.observation.generation ?? 0) + 1;
         const type = observedOperationType(entry, current);
@@ -262,7 +252,7 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
         for (const entry of entries) yield* observeEntry(destination, entry);
       });
       const slotsOf = Effect.fnUntraced(function* (itemId: V.ItemId, kind: V.SyncItemKind) {
-        const item = yield* items.state(itemId);
+        const item = yield* items.get(itemId);
         if (item?.observation.kind !== kind) return [];
         return A.map(A.fromIterable(item.slots), ([, operationId]) => ({ itemId, operationId }));
       });
@@ -285,7 +275,7 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
       // the wait must outlast it, or a resumed pass dies before the policy runs.
       const awaitOperation = (operationId: V.OperationId) =>
         operations
-          .state(operationId)
+          .get(operationId)
           .pipe(
             Effect.repeat({ until: (state) => state !== null, schedule: Schedule.spaced("10 millis") }),
             Effect.timeout("2 minutes"),
@@ -300,14 +290,14 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
           V.ExpireLease.make({ attempt: operation.leaseEpoch }),
           options(`expire/${operationId}/${operation.leaseEpoch}`)
         );
-        return yield* operations.state(operationId);
+        return yield* operations.get(operationId);
       });
       const parentRemoteIdOf = Effect.fnUntraced(function* (destination: Registered, relPath: V.VaultRelPath) {
         const parentPath = path.dirname(relPath);
         if (parentPath === ".") return destination.rootId;
         const parentItemId = H.get(destination.paths, V.VaultRelPath.make(parentPath));
         if (O.isNone(parentItemId)) return null;
-        const parent = yield* items.state(parentItemId.value);
+        const parent = yield* items.get(parentItemId.value);
         return parent?.remoteId ?? null;
       });
       const mirrorCall = Effect.fnUntraced(function* (
@@ -396,7 +386,7 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
         parentRemoteId: V.RemoteItemId
       ) {
         yield* lease(operationId, operation, item, parentRemoteId);
-        const leased = yield* operations.state(operationId);
+        const leased = yield* operations.get(operationId);
         if (leased === null) return null;
         const input = operation.input;
         const result = yield* Effect.result(mirrorCall(operationId, input, item, parentRemoteId));
@@ -415,7 +405,7 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
         const current = yield* active;
         const destination = O.getOrNull(current);
         if (destination?.rootId == null) return null;
-        const item = yield* items.state(itemId);
+        const item = yield* items.get(itemId);
         const awaited = yield* awaitOperation(operationId);
         if (item === null || awaited === null) return null;
         const operation = yield* recoverLease(operationId, awaited);
@@ -428,7 +418,7 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
         let tracked: V.ItemId | null = null;
         let parentTracked = event.parentRemoteId === destination.rootId;
         for (const [, id] of destination.paths) {
-          const item = yield* items.state(id);
+          const item = yield* items.get(id);
           if (item?.remoteId === event.remoteId) tracked = id;
           parentTracked ||= item?.observation.kind === "folder" && item.remoteId === event.parentRemoteId;
         }
@@ -568,7 +558,7 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
       const initialCursor = yield* Activity.make({
         name: "poll-start",
         success: S.NullOr(S.String),
-        execute: Effect.map(destinations.state(destinationId), (state) =>
+        execute: Effect.map(destinations.get(destinationId), (state) =>
           state._tag === "Registered" ? state.cursor : null
         ).pipe(passStep("pollStart")),
       });

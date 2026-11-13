@@ -222,7 +222,12 @@ export class AiMetricsOtlpExportError extends S.TaggedError<
  * @category models
  * @since 0.0.0
  */
-export class AiMetricsOtlpExportInput extends S.Opaque<AiMetricsOtlpExportInput, { readonly brand: unique symbol }>()(
+export class AiMetricsOtlpExportInput extends S.Opaque<
+  AiMetricsOtlpExportInput,
+  {
+    readonly brand: unique symbol;
+  }
+>()(
   S.Struct({
     duckDbPath: S.String,
     endpoint: AiMetricsOtlpEndpointSpec,
@@ -366,7 +371,12 @@ export class AiMetricsOtlpSpanProjectionBatch extends S.Opaque<
  * @category models
  * @since 0.0.0
  */
-export class AiMetricsOtlpExportResult extends S.Opaque<AiMetricsOtlpExportResult, { readonly brand: unique symbol }>()(
+export class AiMetricsOtlpExportResult extends S.Opaque<
+  AiMetricsOtlpExportResult,
+  {
+    readonly brand: unique symbol;
+  }
+>()(
   S.Struct({
     endpointTraceUrl: S.String,
     sessionSpanCount: S.Natural,
@@ -388,7 +398,12 @@ export class AiMetricsOtlpExportResult extends S.Opaque<AiMetricsOtlpExportResul
  * @category models
  * @since 0.0.0
  */
-class AiMetricsOtlpTurnExportRow extends S.Opaque<AiMetricsOtlpTurnExportRow, { readonly brand: unique symbol }>()(
+class AiMetricsOtlpTurnExportRow extends S.Opaque<
+  AiMetricsOtlpTurnExportRow,
+  {
+    readonly brand: unique symbol;
+  }
+>()(
   S.Struct({
     agentNicknameHash: S.OptionFromNullOr(S.String),
     agentRoleHash: S.OptionFromNullOr(S.String),
@@ -483,31 +498,34 @@ const readTurnRows = Effect.fn("AiMetrics.otlp.readTurnRows")(function* () {
   const duckdb = yield* DuckDb;
   const rows = yield* duckdb
     .query(
-      `SELECT
-         t.turn_id AS "turnId",
-         t.ingest_run_id AS "ingestRunId",
-         t.agent_session_id AS "agentSessionId",
-         t.source_kind AS "sourceKind",
-         t.source_path_hash AS "sourcePathHash",
-         COALESCE(t.source_role, s.source_role, 'primary') AS "sourceRole",
-         t.line_number AS "lineNumber",
-         t.event_name AS "eventName",
-         t.raw_event_hash AS "rawEventHash",
-         t.timestamp AS "timestamp",
-         s.session_id_hash AS "sessionIdHash",
-         s.started_at AS "sessionStartedAt",
-         s.parent_session_id_hash AS "parentSessionIdHash",
-         s.parent_thread_id_hash AS "parentThreadIdHash",
-         s.forked_from_id_hash AS "forkedFromIdHash",
-         s.thread_spawn AS "threadSpawn",
-         s.agent_role_hash AS "agentRoleHash",
-         s.agent_nickname_hash AS "agentNicknameHash",
-         s.config_snapshot_id AS "configSnapshotId",
-         s.session_harness_hash AS "sessionHarnessHash",
-         COALESCE(s.session_stamp_completeness, 'unknown') AS "sessionStampCompleteness",
-         COALESCE(s.session_stamp_qualification, 'unknown') AS "sessionStampQualification"
+      `SELECT t.turn_id                AS "turnId",
+              t.ingest_run_id          AS "ingestRunId",
+              t.agent_session_id       AS "agentSessionId",
+              t.source_kind            AS "sourceKind",
+              t.source_path_hash       AS "sourcePathHash",
+              COALESCE(t.source_role, s.source_role,
+                       'primary')      AS "sourceRole",
+              t.line_number            AS "lineNumber",
+              t.event_name             AS "eventName",
+              t.raw_event_hash         AS "rawEventHash",
+              t.timestamp              AS "timestamp",
+              s.session_id_hash        AS "sessionIdHash",
+              s.started_at             AS "sessionStartedAt",
+              s.parent_session_id_hash AS "parentSessionIdHash",
+              s.parent_thread_id_hash  AS "parentThreadIdHash",
+              s.forked_from_id_hash    AS "forkedFromIdHash",
+              s.thread_spawn           AS "threadSpawn",
+              s.agent_role_hash        AS "agentRoleHash",
+              s.agent_nickname_hash    AS "agentNicknameHash",
+              s.config_snapshot_id     AS "configSnapshotId",
+              s.session_harness_hash   AS "sessionHarnessHash",
+              COALESCE(s.session_stamp_completeness,
+                       'unknown')      AS "sessionStampCompleteness",
+              COALESCE(s.session_stamp_qualification,
+                       'unknown')      AS "sessionStampQualification"
        FROM ai_metrics_turns t
-       JOIN ai_metrics_sessions s ON s.agent_session_id = t.agent_session_id
+              JOIN ai_metrics_sessions s
+                   ON s.agent_session_id = t.agent_session_id
        WHERE t.otlp_exported_at_epoch_ms IS NULL
        ORDER BY t.agent_session_id, t.line_number`
     )
@@ -770,8 +788,8 @@ export const markAiMetricsOtlpTurnsExported: (
         yield* duckdb
           .run(
             `UPDATE ai_metrics_turns
-         SET otlp_exported_at_epoch_ms = $exportedAtEpochMillis
-         WHERE turn_id IN (${A.join(placeholders, ", ")})`,
+             SET otlp_exported_at_epoch_ms = $exportedAtEpochMillis
+             WHERE turn_id IN (${A.join(placeholders, ", ")})`,
             { exportedAtEpochMillis, ...bindings }
           )
           .pipe(
@@ -852,7 +870,10 @@ const readableSpanFor =
       ended: true,
       endTime: timestamp,
       events: [],
-      instrumentationScope: { name: AI_METRICS_OTLP_SCOPE_NAME, version: AI_METRICS_OTLP_SERVICE_VERSION },
+      instrumentationScope: {
+        name: AI_METRICS_OTLP_SCOPE_NAME,
+        version: AI_METRICS_OTLP_SERVICE_VERSION,
+      },
       kind: SpanKind.INTERNAL,
       links: [],
       name: projection.spanName,
@@ -1173,13 +1194,11 @@ export const runAiMetricsOtlpExport: (
     // Ordering is the whole point: each chunk is delivered first, then only that
     // acknowledged chunk reaches the mark. A rejected chunk fails before its checkpoint,
     // while earlier chunks stay closed so a retry resumes instead of replaying the prefix.
-    const result = yield* runAiMetricsOtlpProjectionBatchExportUntraced(input, batch, (projections) =>
+    return yield* runAiMetricsOtlpProjectionBatchExportUntraced(input, batch, (projections) =>
       markAiMetricsOtlpTurnsExported(AiMetricsOtlpSpanProjection.turnIdsFor(projections)).pipe(
         Effect.provideService(DuckDb, duckdb)
       )
     );
-
-    return result;
   },
   (effect, input) => effect.pipe(withOtlpExportSpan(input))
 );

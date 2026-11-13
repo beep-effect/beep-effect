@@ -16,6 +16,7 @@ import * as BunTerminal from "@effect/platform-bun/BunTerminal";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Command from "effect/cli/Command";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -82,7 +83,10 @@ const fixture = Effect.gen(function* () {
     ),
     revoked: Effect.fn("VaultSyncSecurity.fixture")(() => Effect.never),
   });
-  const host = VaultSyncModel.layer(VaultSyncPolicies).pipe(Layer.provide(Domain.InMemory));
+  const host = VaultSyncModel.layer(VaultSyncPolicies).pipe(
+    Layer.provide(SecureRandom.layerWebCrypto),
+    Layer.provide(Domain.InMemory)
+  );
   const session = VaultSyncSessionLive.pipe(Layer.provide(Layer.succeed(V.SessionResolver, resolver)));
   return { active, identity, resolver, host: Layer.merge(host, session) };
 });
@@ -184,12 +188,16 @@ describe("Views as security boundaries", () => {
     Effect.gen(function* () {
       const f = yield* fixture;
       const context = yield* Layer.build(Layer.merge(f.host, cliPlatform));
-      const cli = Cli.toCli({
-        apiName: VaultSyncApi.apiName,
-        group: VaultSyncApi.group,
-        serves: VaultSyncApi.serves,
-        client: VaultSyncApi.clientInProcess,
-      });
+      const cli = Cli.toCli(
+        {
+          apiName: VaultSyncApi.apiName,
+          annotations: VaultSyncApi.annotations,
+          group: VaultSyncApi.group,
+          serves: VaultSyncApi.serves,
+          client: VaultSyncApi.clientInProcess,
+        },
+        { expose: ["VaultSyncStatus.get"] }
+      );
       const failure = yield* Command.runWith(cli, { version: "test", renderErrors: false })([
         "vault-sync-status",
         "get",
@@ -265,7 +273,7 @@ describe("Views as security boundaries", () => {
             ),
           });
         })
-      ).pipe(Layer.provide(Domain.InMemory));
+      ).pipe(Layer.provide(SecureRandom.layerWebCrypto), Layer.provide(Domain.InMemory));
       const resolver = V.SessionResolver.of({
         ...f.resolver,
         scope: Effect.fn("VaultSyncSecurity.commandScope")(() =>
@@ -273,7 +281,10 @@ describe("Views as security boundaries", () => {
         ),
       });
       const session = VaultSyncSessionLive.pipe(Layer.provide(Layer.succeed(V.SessionResolver, resolver)));
-      const hosted = VaultSyncModel.layer(VaultSyncPolicies).pipe(Layer.provide(recording));
+      const hosted = VaultSyncModel.layer(VaultSyncPolicies).pipe(
+        Layer.provide(SecureRandom.layerWebCrypto),
+        Layer.provide(recording)
+      );
       const context = yield* Layer.build(Layer.merge(session, hosted));
       const client = yield* VaultSyncApi.clientInProcess.pipe(Effect.provideContext(context));
       yield* client.ClaimDestinationName(V.reservationKey({ orgId: 1, name: "test" }), {

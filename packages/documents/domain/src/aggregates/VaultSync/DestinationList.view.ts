@@ -8,7 +8,7 @@ import * as Domain from "@alchemy.run/domain";
 import * as H from "effect/HashMap";
 import * as S from "effect/Schema";
 import { ScopeDenied } from "./Session.context.ts";
-import { authorizeVaultSync, Session } from "./Session.middleware.ts";
+import { Session } from "./Session.middleware.ts";
 import { DestinationState } from "./SyncDestination.command.ts";
 import { SyncDestinationSnapshot } from "./SyncDestinationSnapshot.view.ts";
 import * as V from "./Values.ts";
@@ -26,7 +26,6 @@ import * as V from "./Values.ts";
 export class DestinationList extends Domain.View("DestinationList", {
   middleware: [Session],
   rejects: [ScopeDenied],
-  validate: (request) => authorizeVaultSync(`DestinationList.${request.mode}`, { key: request.key }),
   from: [SyncDestinationSnapshot],
   key: V.WorkspaceKey,
   state: S.HashMap(V.DestinationId, DestinationState),

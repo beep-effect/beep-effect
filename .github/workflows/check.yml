@@ -903,10 +903,10 @@ jobs:
           publish test_unit "$test_unit" "$ALL_TEST_UNIT_PARTITIONS"
           publish test_integration "$test_integration" "$ALL_TEST_INTEGRATION_PARTITIONS"
 
-      # `--callee local` while check.yml calls ./.github/workflows/shard-overflow.yml:
-      # the overflow runner group admits that file only at refs/heads/main, so
-      # the command routes main pushes only. The cutover to the @main reference
-      # changes the call and this flag together (ci-runner-security.test.ts).
+      # `--callee pinned`: check.yml calls shard-overflow.yml@main, the one
+      # definition the overflow runner group admits, so pull requests from this
+      # repository route too. The flag and the `uses:` reference change together
+      # (ci-shard-overflow.test.ts).
       - name: Route shard overflow
         id: overflow
         if: vars.BEEP_SHARD_OVERFLOW == 'on' && steps.plan.outputs.test_unit != '[]'
@@ -920,7 +920,7 @@ jobs:
           BEEP_SHARD_OVERFLOW_WAIT_SECONDS: ${{ vars.BEEP_SHARD_OVERFLOW_WAIT_SECONDS }}
           BEEP_SHARD_OVERFLOW_POOL_SIZE: ${{ vars.BEEP_SHARD_OVERFLOW_POOL_SIZE }}
           PLANNED_TEST_UNIT: ${{ steps.plan.outputs.test_unit }}
-        run: beep ci shard-overflow --partitions "$PLANNED_TEST_UNIT" --callee local
+        run: beep ci shard-overflow --partitions "$PLANNED_TEST_UNIT" --callee pinned
 
       # The two Test Unit halves hold the plan exactly once, by construction:
       # the routed split is published only when it partitions the plan, and
@@ -1105,11 +1105,12 @@ jobs:
           fi
 
   # The overflow half of the plan: the same shard on a `beep-shard-overflow`
-  # VM, through shard-overflow.yml, reported as `Test Unit (<partition>) /
-  # Overflow`. Empty unless Test Plan routed partitions, which it never does
-  # for a fork's pull request; the condition repeats that guard and
-  # shard-overflow.yml repeats it again at main. Every artifact a hosted shard
-  # uploads is uploaded under the same name.
+  # VM, through shard-overflow.yml at main (as heavy.yml@main: the runner
+  # group admits that definition only, so a pull request cannot replace it),
+  # reported as `Test Unit (<partition>) / Overflow`. Empty unless Test Plan
+  # routed partitions, which it never does for a fork's pull request; the
+  # condition repeats that guard and shard-overflow.yml repeats it again at
+  # main. Every artifact a hosted shard uploads is uploaded under the same name.
   test-unit-overflow:
     name: Test Unit (${{ matrix.partition }})
     needs: [change-profile, test-plan]
@@ -1120,7 +1121,7 @@ jobs:
       fail-fast: false
       matrix:
         partition: ${{ fromJSON(needs.test-plan.outputs.test_unit_overflow) }}
-    uses: ./.github/workflows/shard-overflow.yml
+    uses: beep-effect/beep-effect/.github/workflows/shard-overflow.yml@main
     secrets: inherit
     with:
       partition: ${{ matrix.partition }}

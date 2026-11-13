@@ -21,7 +21,7 @@ const platform = Layer.mergeAll(FsUtilsLive.pipe(Layer.provideMerge(NodeServices
 
 const CI_BINARY = "packages/tooling/tool/cli/src/commands/Ci/CiBinary.ts";
 // bun.lock names a patch by path only, so the patch content is a closure input of its own.
-const PATCH_FILE = "patches/alchemy@2.0.0-beta.85.patch";
+const PATCH_FILE = "patches/@alchemy.run%2Fdomain@2.0.0-beta.86.patch";
 const PATTERNS_JSON = "packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json";
 
 // The live tree with some files' content replaced (an edit) or created (a new file).

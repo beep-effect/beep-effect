@@ -2,6 +2,8 @@
   "@biomejs/biome",
   "@lexical/**",
   "detailed-xml-validator",
+  "drizzle-kit",
+  "drizzle-orm",
   "fallow",
   "fast-xml-validator",
   "lexical",

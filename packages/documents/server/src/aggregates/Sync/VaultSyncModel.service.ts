@@ -270,7 +270,7 @@ export const ensureLegacyBoxDestination = Effect.fn($I`ensureLegacyBoxDestinatio
   const ownership = yield* VaultSyncOwnership;
   const mirrorRoot = yield* VaultSyncMirrorRoot;
   const destinationId = yield* workspaceDestinationId(workspaceId);
-  const state = yield* destinations.state(destinationId);
+  const state = yield* destinations.get(destinationId);
   if (state._tag === "Registered") return destinationId;
   const orgId = yield* ownership.orgOf(workspaceId);
   yield* destinations.send(
