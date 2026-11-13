@@ -52,7 +52,8 @@ is due on or after 2026-11-27. The four slices are listed in
   [`research/stack-p0-probes-2026-11.md`](./research/stack-p0-probes-2026-11.md).
 - Slice D: [`research/stack-pilot-2026-11.md`](./research/stack-pilot-2026-11.md)
   (the pilot record: kill criteria, one row per stack, and the probe that
-  showed GitHub does not restack a layer when the trunk moves).
+  found no restack after a trunk move in any case it could reproduce; a
+  layer cascaded onto `main` is still to be watched).
 - The evidence this goal starts from is the stack test record,
   [`explorations/stacked-pr-adoption/research/stack-test-2026-11.md`](../../explorations/stacked-pr-adoption/research/stack-test-2026-11.md).
 
