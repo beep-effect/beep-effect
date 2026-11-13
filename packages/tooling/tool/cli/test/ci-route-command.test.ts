@@ -5,6 +5,7 @@ import {
   CI_LANE_ID_VALUES,
   HostedJob,
   HostedRun,
+  HostedStep,
   makeCiRouteCommandForTesting,
   ROUTE_CORPUS_DEFAULT_DIR,
   ROUTE_CORPUS_RECEIPT_FILE,
@@ -317,8 +318,45 @@ it.layer(CliLayer, { timeout: "30 seconds" })("beep ci route command", (it) => {
           A.findFirst(replay, (line) => Str.startsWith("[ci route] replay over")(line))
         );
         expect(recallLine).toContain(
-          " — recall is an upper bound: 1 skipping head(s) have failed jobs no rule maps (Heavy / Typecheck, Knip)"
+          " — recall is an upper bound: 1 skipping head(s) have failed jobs not charged to a lane (Heavy / Typecheck, Knip)"
         );
+      })
+    )
+  );
+
+  it.effect("prints a skipped lane whose only red came from setup as an unknown red, not a skipped red", () =>
+    withConsole(
+      Effect.gen(function* () {
+        // a1's Heavy / Check failed while installing, before the check lane ran.
+        const setupRed = (runs: ReadonlyArray<HostedRun>) =>
+          A.map(runs, (run) =>
+            run.headSha === "a1"
+              ? HostedRun.make({
+                  ...run,
+                  jobs: A.map(run.jobs, (job) =>
+                    job.name === "Heavy / Check"
+                      ? HostedJob.make({
+                          ...job,
+                          steps: O.some([
+                            HostedStep.make({ name: "Set up job", conclusion: O.some("success") }),
+                            HostedStep.make({ name: "Setup monorepo CI", conclusion: O.some("failure") }),
+                          ]),
+                        })
+                      : job
+                  ),
+                })
+              : run
+          );
+        const { run } = yield* harness([], setupRed);
+        yield* run(["replay"]);
+        const replayLog = yield* TestConsole.logLines;
+        const lines = A.map(replayLog, String);
+        expect(lines[0]).toContain("(2 skipped red(s)");
+        expect(lines[0]).toContain(
+          " — recall is an upper bound: 1 skipping head(s) have failed jobs not charged to a lane (Heavy / Check)"
+        );
+        expect(lines).toContain("  a1  unknown reds: check");
+        expect(lines).not.toContain("  a1  skipped reds: check");
       })
     )
   );
