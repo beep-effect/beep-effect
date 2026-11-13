@@ -683,6 +683,7 @@
     {"name":"CiLane.runCiDoctestLane","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CiLane.runCiFallowLane","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CiLane.runCiLane","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CiLane.runCiLaneSteps","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CiLane.runCiLocal","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CiLane.runCiPartitionExecution","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CiLane.runCiPartitionedLane","owner":"@beep/repo-cli","family":"tooling","conforms":true},

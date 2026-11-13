@@ -2271,18 +2271,51 @@ const resolveStorybookLaneAffected = Effect.fn("CiLane.resolveStorybookLaneAffec
  * **Example** (Read a lane's failure policy)
  *
  * ```ts
- * import { ciLaneFailurePolicyForTesting } from "@beep/repo-cli/commands/Ci"
+ * import { ciLaneFailurePolicy } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(ciLaneFailurePolicyForTesting("repo-sanity")) // "collect-all"
+ * console.log(ciLaneFailurePolicy("repo-sanity")) // "collect-all"
  * ```
  *
  * @param laneId - CI lane whose runner is chosen.
- * @returns The policy `runCiStepLane` applies to that lane's steps.
- * @category testing
+ * @returns The policy {@link runCiLaneSteps} applies to that lane's steps.
+ * @category policies
  * @since 0.0.0
  */
-export const ciLaneFailurePolicyForTesting = (laneId: CiLaneId): GithubCheckFailurePolicy =>
+export const ciLaneFailurePolicy = (laneId: CiLaneId): GithubCheckFailurePolicy =>
   laneId === "jsdoc-ratchet" ? "fail-fast" : "collect-all";
+
+/**
+ * Run a step-planned CI lane's body under its {@link ciLaneFailurePolicy}.
+ *
+ * **Details**
+ *
+ * `beep ci lane <id>` plans the body and hands it to this runner, so a test
+ * that substitutes the body steps exercises the same runner hosted CI uses.
+ *
+ * **Example** (Run a lane body)
+ *
+ * ```ts
+ * import { runCiLaneSteps } from "@beep/repo-cli/commands/Ci"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(runCiLaneSteps("repo-sanity", []))) // true
+ * ```
+ *
+ * @param laneId - CI lane whose policy and log label apply.
+ * @param steps - The lane body's steps in execution order.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const runCiLaneSteps = Effect.fn("CiLane.runCiLaneSteps")(function* (
+  laneId: CiLaneId,
+  steps: ReadonlyArray<QualityTaskStep>
+) {
+  // The JSDoc ratchet's inventory and compare are a dependency chain: never
+  // compare yesterday's artifact after a failed scan.
+  yield* ciLaneFailurePolicy(laneId) === "fail-fast"
+    ? Effect.forEach(steps, (step) => runQualityTaskStreamingStepGroup(`ci:${laneId}`, [step]), { discard: true })
+    : runQualityTaskStreamingStepGroup(`ci:${laneId}`, steps);
+});
 
 const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
   repoRoot: string,
@@ -2309,12 +2342,7 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
     return;
   }
 
-  // The general step group collects failures. The JSDoc ratchet's inventory
-  // and compare are a dependency chain: never compare yesterday's artifact
-  // after a failed scan.
-  yield* ciLaneFailurePolicyForTesting(laneId) === "fail-fast"
-    ? Effect.forEach(steps, (step) => runQualityTaskStreamingStepGroup(`ci:${laneId}`, [step]), { discard: true })
-    : runQualityTaskStreamingStepGroup(`ci:${laneId}`, steps);
+  yield* runCiLaneSteps(laneId, steps);
 });
 
 const runCiDoctestLane = Effect.fn("CiLane.runCiDoctestLane")(function* (repoRoot: string) {
