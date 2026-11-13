@@ -92,13 +92,45 @@ export const tCritical975 = (degreesOfFreedom: number): number =>
         O.getOrElse(() => NORMAL_975)
       );
 
-const mean = (values: ReadonlyArray<number>): number =>
+/**
+ * Arithmetic mean of the values, 0 for an empty input.
+ *
+ * **Example** (Mean of three values)
+ *
+ * ```ts
+ * import { sampleMean } from "@beep/repo-cli/test/AgentEffectiveness"
+ *
+ * console.log(sampleMean([1, 2, 3])) // 2
+ * ```
+ *
+ * @param values - Values to average.
+ * @returns The mean, or 0 when there are no values.
+ * @category statistics
+ * @since 0.0.0
+ */
+export const sampleMean = (values: ReadonlyArray<number>): number =>
   A.isReadonlyArrayNonEmpty(values) ? Num.sumAll(values) / A.length(values) : 0;
 
-const sampleVariance = (values: ReadonlyArray<number>): number => {
+/**
+ * Unbiased sample variance of the values, 0 for fewer than two.
+ *
+ * **Example** (Variance of three values)
+ *
+ * ```ts
+ * import { sampleVariance } from "@beep/repo-cli/test/AgentEffectiveness"
+ *
+ * console.log(sampleVariance([1, 2, 3])) // 1
+ * ```
+ *
+ * @param values - Values whose spread is measured.
+ * @returns The variance with an `n - 1` divisor, or 0 when there are fewer than two values.
+ * @category statistics
+ * @since 0.0.0
+ */
+export const sampleVariance = (values: ReadonlyArray<number>): number => {
   const n = A.length(values);
   if (n < 2) return 0;
-  const center = mean(values);
+  const center = sampleMean(values);
   return Num.sumAll(A.map(values, (value) => (value - center) ** 2)) / (n - 1);
 };
 
@@ -133,7 +165,7 @@ export const estimateMean: {
   (values: ReadonlyArray<number>, critical: number): SkillProbeEstimate;
 } = dual(2, (values: ReadonlyArray<number>, critical: number): SkillProbeEstimate => {
   const n = A.length(values);
-  return makeEstimate(n, mean(values), n < 2 ? 0 : Math.sqrt(sampleVariance(values) / n), critical);
+  return makeEstimate(n, sampleMean(values), n < 2 ? 0 : Math.sqrt(sampleVariance(values) / n), critical);
 });
 
 /**
@@ -169,7 +201,7 @@ export const estimateClusteredMean = (
   points: ReadonlyArray<{ readonly cluster: string; readonly value: number }>
 ): SkillProbeEstimate => {
   const total = A.length(points);
-  const center = mean(A.map(points, (point) => point.value));
+  const center = sampleMean(A.map(points, (point) => point.value));
   const clusterSums = pipe(
     A.groupBy(points, (point) => point.cluster),
     R.values,
@@ -291,7 +323,7 @@ const taskDifferences = (
             family,
             contrast,
             measure,
-            value: mean(laterValues) - mean(earlierValues),
+            value: sampleMean(laterValues) - sampleMean(earlierValues),
             standardError: Math.sqrt(
               sampleVariance(laterValues) / A.length(laterValues) +
                 sampleVariance(earlierValues) / A.length(earlierValues)
