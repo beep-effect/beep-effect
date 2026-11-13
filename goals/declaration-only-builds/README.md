@@ -36,10 +36,9 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P4 Close. The three work PRs are merged: #3178 (baseline and proof harness),
-#3208 (declaration-only build) and #3242 (check once). The final PR, #3259,
-carried the closeout reflection and is merged. Its `closeout` record names
-#3259, and `goals completion refresh` verifies it from hosted facts.
+Closed. The three work PRs (#3178, #3208, #3242) and the final PR (#3259) are
+merged, the completion check verified #3259, and the packet is
+`completed-retained`.
 
 ## Latest Evidence
 

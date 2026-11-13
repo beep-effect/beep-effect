@@ -141,9 +141,10 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Closed: the three work PRs are merged (#3178, #3208, #3242). Library builds emit declarations and declaration maps only; the check of 180 packages runs the build program after the package's own build. Measured: serial build work 80.9 s to 32.9 s, dist 232.5 MB to 147.9 MB, 15.5 s less compiler work per full check run. The final PR, #3259, carried the reflection and is merged; `closeout` names it and completion refresh verifies it.",
+  "statusNote": "Closed 2026-11-13 as completed-retained, verified via #3259. Library builds emit declarations and declaration maps only (#3208); the check of 180 packages runs the build program after the package's own build (#3242). Measured: serial build work 80.9 s to 32.9 s, dist 232.5 MB to 147.9 MB, 15.5 s less compiler work per full check run.",
   "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 3259
-  }
+  },
+  "retentionReason": "Documents a live system: the declaration-only generated build, the check that runs the build program after the package's own build, the two override lists in the scripts policy, the census build-equivalence mode and the build measurement script under ops/, with the equivalence and timing evidence the contract tests and the toolchain runbook rest on; archive once the two override packages are served by the build and the no-emit check configs are removed."
 }
