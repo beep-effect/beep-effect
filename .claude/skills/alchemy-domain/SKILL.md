@@ -3,6 +3,9 @@ name: alchemy-domain
 description: Build backends with @alchemy.run/domain (domain-driven design on Effect) - turn requirements into aggregates, commands, events, rejections, views, policies, sagas, projections, streams, queries, external systems and Apis; lay them out in a monorepo (domain / server / web packages, kind-suffixed files); test them with stories; host them on Durable Objects (Cloudflare, Rivet or Effect Cluster) with alchemy; and drive them from a foldkit frontend. Use when designing or changing an @alchemy.run/domain model, adding a building block, wiring hosting or a frontend, or reviewing such code.
 ---
 
+This repo-local adaptation is based on the [Alchemy upstream skill](https://github.com/alchemy-run/alchemy/tree/main/packages/domain/skills/alchemy-domain).
+Maintain its repository policy adaptations locally; it is not a floating upstream mirror.
+
 # Building with @alchemy.run/domain
 
 `@alchemy.run/domain` models a backend as typed messages and pure state transitions. Commands are decided by aggregates, which record events. Views fold events into read models. Policies react to events. Sagas run long processes. Projections write outside the model, and queries serve what they wrote. The same model runs in memory for tests and on Cloudflare, Rivet or Effect Cluster Durable Objects in production.

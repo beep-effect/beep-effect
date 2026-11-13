@@ -14,16 +14,14 @@
       "installedTargets": [
         ".claude/skills/alchemy-domain",
         ".agents/skills/alchemy-domain"
-      ],
-      "installedTreeHash": "15d8199877d4f69881a2af6083f1c1c08a8e1f0a9767eea76fcbeb5470ced459"
+      ]
     },
     "alchemy-provider": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/alchemy-provider",
         ".agents/skills/alchemy-provider"
-      ],
-      "installedTreeHash": "bce776c0961224adac123618044cc6a73f54ab4a52f9deb4201c1d4fced45e12"
+      ]
     },
     "atom-reactivity-specialist": {
       "_tag": "local",
