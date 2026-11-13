@@ -191,6 +191,17 @@ export const ciShardOverflowRunnerLabel = "beep-shard-overflow";
  * an owned runner, and which keeps overflow jobs apart from heavy ones in the
  * Actions jobs API.
  *
+ * **Gotchas**
+ *
+ * The prefix `beep-ovf` must not start with the heavy pool's `beep-ci`, nor the
+ * other way round: the module's termination watcher matches instances whose
+ * `ghr:environment` tag starts with its own prefix, so an overlapping prefix
+ * lets one pool's handler deregister the other pool's runners. The module puts
+ * the runner role at `/beep-ovf/beep-ovf-runner-*`, and the scale-up Lambda can
+ * pass it to EC2 only because the hand-maintained `beep-ci-fleet-boundary`
+ * (v5) lists `role/beep-ovf/beep-ovf-*` in `PassOwnRoles`; renaming the prefix
+ * means changing that boundary first.
+ *
  * **Example** (List the overflow instance types)
  *
  * ```ts
@@ -203,7 +214,7 @@ export const ciShardOverflowRunnerLabel = "beep-shard-overflow";
  * @since 0.0.0
  */
 export const ciShardOverflowRunnerPool = CiRunnerPool.make({
-  prefix: "beep-ci-ovf",
+  prefix: "beep-ovf",
   runnerGroupName: "beep-shard-overflow",
   runnerNamePrefix: "beep-ovf-",
   instanceTypes: ["r7a.2xlarge", "r7i.2xlarge", "r6i.2xlarge"],
