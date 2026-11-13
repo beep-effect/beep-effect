@@ -290,6 +290,34 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
     })
   );
 
+  it.effect("leaves a merged, dormant T3 Code lane to its own session even with --apply", () =>
+    Effect.gen(function* () {
+      const { mainHead, repoRoot, tempRoot } = yield* makeScratchRepo;
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      // A T3 thread stays bound to its worktree with no process standing in it, so
+      // even a dormant verdict cannot prove nobody owns the lane.
+      const t3Root = path.join(tempRoot, ".t3", "worktrees", "repo");
+      yield* fs.makeDirectory(t3Root, { recursive: true });
+      const t3Lane = yield* addWorktree(repoRoot, t3Root, "t3-lane");
+      const runner = ghStub(mainHead, { [t3Lane]: { open: undefined, merged: 402 } });
+      const report = yield* runWorktreeReap({
+        apply: true,
+        nowMillis: FIXTURE_NOW_MILLIS,
+        probeLiveness: verdictProber("dormant"),
+        ...runner,
+        startFrom: repoRoot,
+      }).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env: { HOME: tempRoot } }))
+      );
+
+      expect(O.getOrThrow(candidateAt(report, t3Lane).skipReason)).toBe("self-retire-only");
+      expect(candidateAt(report, t3Lane).retired).toBe(false);
+      const exists = yield* fs.exists(t3Lane);
+      assertTrue(exists);
+    })
+  );
+
   it.effect("probes real same-uid liveness: the invoking cwd is live, a fresh temp dir is dormant", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

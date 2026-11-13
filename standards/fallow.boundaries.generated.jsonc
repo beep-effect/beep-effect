@@ -5511,6 +5511,7 @@
         "allow": [
           "@beep/epistemic-ui",
           "@beep/graph-3d",
+          "@beep/public-site",
           "@beep/storybook",
           "@beep/ui",
           "@beep/utils"
@@ -5518,6 +5519,7 @@
         "allowTypeOnly": [
           "@beep/epistemic-ui",
           "@beep/graph-3d",
+          "@beep/public-site",
           "@beep/storybook",
           "@beep/ui",
           "@beep/utils"

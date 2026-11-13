@@ -67,6 +67,8 @@ const withStep = (environment: Readonly<Record<string, string>>) =>
 
 // The scripted spawner, with `before` run for each spawn ahead of its scripted
 // answer: the files a real child would have written.
+// Own double: decorates the `ScriptedSpawner` with a per-spawn side effect (writing the receipts a
+// real child writes), which a script answer cannot express.
 const provideSpawnerWith =
   (spawner: ScriptedSpawner, before: (command: string, args: ReadonlyArray<string>) => Effect.Effect<void>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>) =>

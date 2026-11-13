@@ -192,6 +192,9 @@ export const observeAiMetricsGitRoot = Effect.fn("AiMetrics.observeGitRoot")(fun
     const observeIdentity = Effect.fnUntraced(function* (gitDir: string, commonDir: string) {
       // --local limits this identity to repository configuration, rather than a
       // globally configured fallback remote. A missing origin is local identity.
+      // KEEP (D-22): evidence probe on the same scrubbed `readGit` as X10 (the `GIT_*` overrides
+      // cleared per call, a 16 KiB cap, strict UTF-8, exit 1 read as "no origin"); the kit reads its
+      // environment once at `make` and decodes leniently.
       const remote = yield* readGit(["config", "--local", "--get", "remote.origin.url"]);
       if (O.isNone(remote) || (remote.value.exitCode !== 0 && remote.value.exitCode !== 1))
         return unknown("probe-failed");
@@ -210,6 +213,8 @@ export const observeAiMetricsGitRoot = Effect.fn("AiMetrics.observeGitRoot")(fun
         linkedWorktree: gitDir !== commonDir,
       });
     });
+    // KEEP (D-21, X10): the root probe needs `-c core.fsmonitor=false` and the scrubbed per-call
+    // environment, neither of which the kit can pass.
     const paths = yield* readGit([
       "-c",
       "core.fsmonitor=false",

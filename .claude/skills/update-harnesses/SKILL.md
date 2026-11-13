@@ -7,7 +7,7 @@ description: >
   apps (ChatGPT and Claude Desktop on DankStation and grok-bot; Cursor and Kimi
   Desktop on DankStation). Use on `/update-harnesses`, when a harness is out of
   date somewhere, or to audit which versions and install methods each host runs.
-compatibility: DankStation hub with Python 3, the canonical fleet SSH wrappers and yubi-sudo on its PATH; hosts need bash 4+ and coreutils.
+compatibility: DankStation hub with Bun, the canonical fleet SSH wrappers and yubi-sudo on its PATH; hosts need bash 4+ and coreutils.
 metadata:
   status: active
 ---
@@ -20,11 +20,11 @@ versions. You choose the scope, announce the YubiKey touches and act on the
 summary.
 
 ```sh
-s=.claude/skills/update-harnesses/scripts/update_harnesses.py
-python3 $s plan                  # host x harness matrix, connects nowhere
-python3 $s status                # read-only: versions, methods, pending, drift
-python3 $s update                # everything, everywhere
-python3 $s update --host dankserver --harness codex --harness junie
+s=.claude/skills/update-harnesses/scripts/update_harnesses.ts
+bun $s plan                  # host x harness matrix, connects nowhere
+bun $s status                # read-only: versions, methods, pending, drift
+bun $s update                # everything, everywhere
+bun $s update --host dankserver --harness codex --harness junie
 ```
 
 `--host` and `--harness` repeat and accept aliases (`chatgpt`, `cursor`,
@@ -121,5 +121,5 @@ environment ids there: the repository is public. Routes live in
 ## Verification
 
 ```sh
-PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s .claude/skills/update-harnesses/scripts -p 'test_*.py'
+bun test ./.claude/skills/update-harnesses/scripts/update_harnesses.test.ts
 ```

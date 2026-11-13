@@ -46,6 +46,8 @@ const makeNeverExitSpawner = Effect.fnUntraced(function* () {
     stdout: pipe,
     unref: Effect.succeed(Effect.void),
   });
+  // Own double: a handle that never exits until killed, to drive the capture timeout; `ScriptedSpawner`
+  // completes every script.
   return ChildProcessSpawner.make(() => Effect.succeed(handle));
 });
 
