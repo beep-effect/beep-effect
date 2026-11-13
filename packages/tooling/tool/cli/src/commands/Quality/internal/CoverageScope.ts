@@ -19,6 +19,7 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { CiGoalDocument, ciGoalDataConsumers } from "../../Ci/CiOperational.schemas.ts";
 import { QualityTaskConfigurationError } from "../Quality.errors.ts";
 import { discoverWorkspacePackages } from "./QualityArtifactSupport.ts";
 import type { LenientManifest } from "@beep/package-json/LenientManifest";
@@ -105,14 +106,14 @@ export const COVERAGE_GENERATED_STANDARDS_OWNER_ROWS: ReadonlyArray<readonly [st
 ];
 
 // Live repository inputs read or executed by coverage-executed package tests. File entries also
-// accept globs for inventories discovered by tests (goal manifests and workspace
-// manifests). Prefixes cover recursively consumed trees; all matching consumers
-// are retained alongside the ordinary workspace owner.
+// accept globs for inventories discovered by tests (workspace manifests). Prefixes cover
+// recursively consumed trees; all matching consumers are retained alongside the ordinary
+// workspace owner. Goal and exploration readers are not listed here: they come from the
+// ROUT-03 registry `ciGoalDataConsumers` (see `goalDataConsumerNamesForFile`).
 const COVERAGE_REPOSITORY_FIXTURE_OWNER_FILES: ReadonlyArray<readonly [string, string]> = [
   ["standards/fallow.feature-matrix.jsonc", "@beep/repo-cli"],
   ["packages/foundation/ui-system/editor/test/fixtures/capability-atlas.json", "@beep/editor"],
   ["standards/branch-protection-contexts.json", "@beep/repo-cli"],
-  ["goals/*/ops/manifest.json", "@beep/repo-cli"],
   ["standards/schema-crispening.policy.jsonc", "@beep/repo-cli"],
   // Generated governance data is consumed by tooling, not by every runtime package.
   ["standards/effect-vitest.inventory.jsonc", "@beep/repo-cli"],
@@ -150,7 +151,6 @@ const COVERAGE_REPOSITORY_FIXTURE_OWNER_PATTERNS: ReadonlyArray<readonly [GlobPa
 );
 
 const COVERAGE_REPOSITORY_FIXTURE_OWNER_PREFIXES: ReadonlyArray<readonly [string, string]> = [
-  ["goals/speed-loop/ops/runner-burst/", "@beep/repo-cli"],
   ["scripts/", "@beep/repo-cli"],
   [".github/", "@beep/repo-cli"],
   [".claude/helpers/", "@beep/repo-cli"],
@@ -166,6 +166,25 @@ const COVERAGE_REPOSITORY_FIXTURE_OWNER_PREFIXES: ReadonlyArray<readonly [string
     (packageName): readonly [string, string] => ["packages/_internal/db-admin/drizzle/", packageName]
   ),
 ];
+
+// ROUT-03 registry (CiOperational.schemas.ts), kept live by goal-data-consumer-census.test.ts:
+// the only goal and exploration paths whose changes select coverage owners. A packet document
+// (CiGoalDocument: packet-root prose, ops/manifest.json, history/research .gitkeep) selects
+// nothing even under a registry prefix such as citation ops/ (C1). Every other packet path
+// stays coverage-inert under COVERAGE_NOOP_PREFIXES.
+const GOAL_DATA_CONSUMER_OWNER_PATTERNS = A.map(ciGoalDataConsumers, (row) => ({
+  pattern: new RegExp(row.pattern, "u"),
+  consumers: row.consumers,
+}));
+const isGoalDocument = S.is(CiGoalDocument);
+const goalDataConsumerNamesForFile = (filePath: string): ReadonlyArray<string> =>
+  isGoalDocument(filePath)
+    ? A.empty<string>()
+    : pipe(
+        GOAL_DATA_CONSUMER_OWNER_PATTERNS,
+        A.filter((row) => row.pattern.test(filePath)),
+        A.flatMap((row) => row.consumers)
+      );
 
 // Sequential coverage-task seconds measured locally on 2026-11-09 (HEAD
 // 33b9f1cb31, 64-thread workstation, load average 48-59 with another
@@ -771,6 +790,7 @@ const repositoryFixtureOwnerNamesForFile = (filePath: string): ReadonlyArray<str
       A.filter(COVERAGE_REPOSITORY_FIXTURE_OWNER_PREFIXES, ([prefix]) => Str.startsWith(prefix)(filePath))
     ),
     A.map(([, packageName]) => packageName),
+    A.appendAll(goalDataConsumerNamesForFile(filePath)),
     A.dedupe
   );
 
