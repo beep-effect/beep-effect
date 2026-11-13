@@ -29,9 +29,7 @@ import {
   decodeTaskManifestJson,
   SkillOptTaskManifest,
 } from "../AgentEffectiveness.schemas.ts";
-import { evaluateSkillOptCompletion, readSourceSnapshots } from "./EvalFixture.ts";
-import { evaluateLaw } from "./EvalLawLanes.ts";
-import { buildAgentEffectivenessEvalScoreReport } from "./EvalScorer.ts";
+import { buildAgentEffectivenessEvalScoreReport, evaluateTaskFixture } from "./EvalScorer.ts";
 import { LawEvaluation } from "./EvalScoring.ts";
 import {
   PluginEvalResult,
@@ -540,16 +538,7 @@ const scoreProbeFixture = Effect.fn("SkillProbe.scoreFixture")(function* (dir: s
     Effect.mapError(mapFail(`Task manifest is not valid: ${taskPath}.`, taskPath))
   );
   const repaired = repairSkillProbeTask(task);
-  const fixtureDir = path.resolve(dir);
-  const snapshots = yield* readSourceSnapshots(fixtureDir);
-  const sourceFiles = pipe(
-    snapshots,
-    A.map((snapshot) => snapshot.relativePath),
-    A.sort(Order.String)
-  );
-  const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(mapFail("Cannot locate the repository root.")));
-  const completion = yield* evaluateSkillOptCompletion(repaired, fixtureDir);
-  const law = yield* evaluateLaw(fixtureDir, repoRoot, sourceFiles);
+  const { completion, law, repoRoot } = yield* evaluateTaskFixture(repaired, path.resolve(dir));
   const redactMessage = redactSkillProbePath(repoRoot);
   const redact = (violation: AgentEffectivenessEvalViolation): AgentEffectivenessEvalViolation =>
     AgentEffectivenessEvalViolation.make({ ...violation, message: redactMessage(violation.message) });
@@ -580,6 +569,22 @@ const isAllLanesPass = (report: AgentEffectivenessEvalScoreReport): boolean =>
   report.breakdown.tsgo === 1 &&
   report.breakdown.biome === 1 &&
   A.isReadonlyArrayEmpty(report.violations);
+
+const preflightVerdict = (
+  fixture: AgentEffectivenessEvalScoreReport,
+  knownGood: O.Option<AgentEffectivenessEvalScoreReport>
+): { readonly passed: boolean; readonly reason: string } => {
+  if (isAllLanesPass(fixture) || fixture.breakdown.completion >= 1) {
+    return { passed: false, reason: "The untouched fixture already meets its completion contract." };
+  }
+  return O.match(knownGood, {
+    onNone: () => ({ passed: false, reason: "No known-good solution." }),
+    onSome: (report) =>
+      isAllLanesPass(report)
+        ? { passed: true, reason: "ok" }
+        : { passed: false, reason: "The known-good solution does not pass every lane." },
+  });
+};
 
 /**
  * Options for preflighting the staged tasks.
@@ -633,22 +638,14 @@ export const preflightSkillProbe = Effect.fn("SkillProbe.preflight")(function* (
         ? yield* Effect.asSome(scoreProbeFixture(knownGoodDir, taskPath))
         : O.none<AgentEffectivenessEvalScoreReport>();
       const knownGoodFiles = hasKnownGood ? yield* fileDigests(knownGoodDir) : A.empty();
-      const fixtureFailsTask = !isAllLanesPass(fixture) && fixture.breakdown.completion < 1;
-      const knownGoodPasses = O.exists(knownGood, isAllLanesPass);
-      const reason = !fixtureFailsTask
-        ? "The untouched fixture already meets its completion contract."
-        : !hasKnownGood
-          ? "No known-good solution."
-          : knownGoodPasses
-            ? "ok"
-            : "The known-good solution does not pass every lane.";
+      const { passed, reason } = preflightVerdict(fixture, knownGood);
       return SkillProbePreflightRow.make({
         taskId: task.id,
         family: task.family,
         fixture,
         knownGood,
         knownGoodFiles,
-        passed: fixtureFailsTask && knownGoodPasses,
+        passed,
         reason,
       });
     })
@@ -746,6 +743,33 @@ const traceApiError = Effect.fn("SkillProbe.traceApiError")(function* (tracePath
   return traceExclusionReason(text);
 });
 
+// Exclusions decided before any kept directory is read, in rule order.
+const runExclusionReason = (run: PluginEvalRun, traceError: O.Option<string>, keptDir: string): O.Option<string> => {
+  if (run.error !== null && API_ERROR_PATTERN.test(run.error)) return O.some(`Harness API error: ${run.error}`);
+  if (O.isSome(traceError)) return traceError;
+  return Str.isEmpty(keptDir) ? O.some(`No kept directory: ${run.error ?? "the harness started no agent"}`) : O.none();
+};
+
+const scoreKeptDir = Effect.fn("SkillProbe.scoreKeptDir")(function* (
+  keptDir: string,
+  archiveRoot: string,
+  task: SkillProbeStage["tasks"][number]
+): Effect.fn.Return<SkillProbeOutcome, AgentEffectivenessEvalScorerError, ScoreEnv> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs.chmod(keptDir, 0o700).pipe(Effect.ignore);
+  yield* fs.chmod(path.join(keptDir, "sealed"), 0o700).pipe(Effect.ignore);
+  const fixtureDir = path.join(keptDir, "sealed", "home", "cwd", task.fixture);
+  const exists = yield* fs.exists(fixtureDir).pipe(Effect.orElseSucceed(() => false));
+  if (!exists) return SkillProbeOutcome.cases.Excluded.make({ reason: "The fixture is missing." });
+  const attempt = scoreProbeFixture(fixtureDir, path.join(archiveRoot, task.taskPath));
+  const first = yield* attempt;
+  const report = AgentEffectivenessEvalReportStatus.is["environment-failure"](first.status) ? yield* attempt : first;
+  return AgentEffectivenessEvalReportStatus.is["environment-failure"](report.status)
+    ? SkillProbeOutcome.cases.Excluded.make({ reason: "Scorer environment failure after a rescore." })
+    : SkillProbeOutcome.cases.Scored.make({ report, allLanesPass: isAllLanesPass(report), laneFraction: report.score });
+});
+
 const scoreRun = Effect.fn("SkillProbe.scoreRun")(function* (
   run: PluginEvalRun,
   context: {
@@ -759,38 +783,14 @@ const scoreRun = Effect.fn("SkillProbe.scoreRun")(function* (
     readonly fingerprint: SkillProbeFingerprint;
   }
 ): Effect.fn.Return<SkillProbeRunRecord, AgentEffectivenessEvalScorerError, ScoreEnv> {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const keptDir = Str.isEmpty(run.tracePath) ? "" : path.dirname(path.dirname(run.tracePath));
   const passed = (name: string) => A.some(run.graders, (grader) => grader.name === name && grader.passed);
-  const excluded = (reason: string) => Effect.succeed(SkillProbeOutcome.cases.Excluded.make({ reason }));
   const traceError = Str.isEmpty(run.tracePath) ? O.none<string>() : yield* traceApiError(run.tracePath);
-  const outcome = yield* run.error !== null && API_ERROR_PATTERN.test(run.error)
-    ? excluded(`Harness API error: ${run.error}`)
-    : O.isSome(traceError)
-      ? excluded(traceError.value)
-      : Str.isEmpty(keptDir)
-        ? excluded(`No kept directory: ${run.error ?? "the harness started no agent"}`)
-        : Effect.gen(function* () {
-            yield* fs.chmod(keptDir, 0o700).pipe(Effect.ignore);
-            yield* fs.chmod(path.join(keptDir, "sealed"), 0o700).pipe(Effect.ignore);
-            const fixtureDir = path.join(keptDir, "sealed", "home", "cwd", context.task.fixture);
-            const exists = yield* fs.exists(fixtureDir).pipe(Effect.orElseSucceed(() => false));
-            if (!exists) return SkillProbeOutcome.cases.Excluded.make({ reason: "The fixture is missing." });
-            const taskPath = path.join(context.archiveRoot, context.task.taskPath);
-            const attempt = scoreProbeFixture(fixtureDir, taskPath);
-            const first = yield* attempt;
-            const report = AgentEffectivenessEvalReportStatus.is["environment-failure"](first.status)
-              ? yield* attempt
-              : first;
-            return AgentEffectivenessEvalReportStatus.is["environment-failure"](report.status)
-              ? SkillProbeOutcome.cases.Excluded.make({ reason: "Scorer environment failure after a rescore." })
-              : SkillProbeOutcome.cases.Scored.make({
-                  report,
-                  allLanesPass: isAllLanesPass(report),
-                  laneFraction: report.score,
-                });
-          });
+  const reason = runExclusionReason(run, traceError, keptDir);
+  const outcome = O.isSome(reason)
+    ? SkillProbeOutcome.cases.Excluded.make({ reason: reason.value })
+    : yield* scoreKeptDir(keptDir, context.archiveRoot, context.task);
   return SkillProbeRunRecord.make({
     schemaVersion: "skill-probe-run/v1",
     taskId: context.task.id,
@@ -1019,6 +1019,20 @@ export const readSkillProbeRecords = Effect.fn("SkillProbe.readRecords")(functio
   return A.flatten(perFile);
 });
 
+// Records the rule lets a report or a selection pool, or a failure naming every problem.
+const readPoolableRecords = Effect.fn("SkillProbe.readPoolableRecords")(function* (
+  files: ReadonlyArray<string>,
+  preflightPath: string
+) {
+  const preflight = yield* readText(preflightPath).pipe(Effect.flatMap(decodePreflight));
+  const records = yield* readSkillProbeRecords(files);
+  const problems = validateSkillProbeRecords(records, preflight.dropped);
+  if (A.isReadonlyArrayNonEmpty(problems)) {
+    return yield* fail(`Run records cannot be pooled:\n- ${A.join(problems, "\n- ")}`);
+  }
+  return records;
+});
+
 /**
  * Build the probe report from run record files and print it as JSON.
  *
@@ -1043,12 +1057,7 @@ export const runSkillProbeReport = Effect.fn("SkillProbe.report")(function* (
   preflightPath: string,
   primary: SkillProbePrimary
 ): Effect.fn.Return<SkillProbeReport, AgentEffectivenessEvalScorerError | S.SchemaError, ProbeEnv> {
-  const preflight = yield* readText(preflightPath).pipe(Effect.flatMap(decodePreflight));
-  const records = yield* readSkillProbeRecords(files);
-  const problems = validateSkillProbeRecords(records, preflight.dropped);
-  if (A.isReadonlyArrayNonEmpty(problems)) {
-    return yield* fail(`Run records cannot be pooled:\n- ${A.join(problems, "\n- ")}`);
-  }
+  const records = yield* readPoolableRecords(files, preflightPath);
   const report = buildSkillProbeReport(records, primary);
   yield* encodeReport(report).pipe(Effect.flatMap(Console.log));
   return report;
@@ -1078,12 +1087,7 @@ export const runSkillProbeSelect = Effect.fn("SkillProbe.select")(function* (
   files: ReadonlyArray<string>,
   preflightPath: string
 ): Effect.fn.Return<SkillProbePrimarySelection, AgentEffectivenessEvalScorerError | S.SchemaError, ProbeEnv> {
-  const preflight = yield* readText(preflightPath).pipe(Effect.flatMap(decodePreflight));
-  const records = yield* readSkillProbeRecords(files);
-  const problems = validateSkillProbeRecords(records, preflight.dropped);
-  if (A.isReadonlyArrayNonEmpty(problems)) {
-    return yield* fail(`Run records cannot be pooled:\n- ${A.join(problems, "\n- ")}`);
-  }
+  const records = yield* readPoolableRecords(files, preflightPath);
   const selection = selectSkillProbePrimary(records);
   yield* encodeSelection(selection).pipe(Effect.flatMap(Console.log));
   return selection;

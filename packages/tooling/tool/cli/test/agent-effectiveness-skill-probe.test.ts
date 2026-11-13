@@ -67,50 +67,66 @@ const report = (allLanes: boolean, score: number) =>
     violations: [],
   });
 
+type RecordOptions = {
+  readonly fired?: boolean;
+  readonly excluded?: boolean;
+  readonly turns?: number;
+  readonly invocation?: string;
+  readonly runIndex?: number;
+  readonly slot?: string;
+  readonly attempt?: number;
+  readonly keptDir?: string;
+  readonly scorerProfile?: string;
+};
+
+const outcomeOf = (allLanes: boolean, excluded: boolean) =>
+  excluded
+    ? SkillProbeOutcome.cases.Excluded.make({ reason: "rate limit" })
+    : SkillProbeOutcome.cases.Scored.make({
+        report: report(allLanes, allLanes ? 1 : 0.5),
+        allLanesPass: allLanes,
+        laneFraction: allLanes ? 1 : 0.5,
+      });
+
 const record = (
   taskId: string,
   family: string,
   cell: "A" | "B" | "C",
   allLanes: boolean,
-  options: {
-    readonly fired?: boolean;
-    readonly excluded?: boolean;
-    readonly turns?: number;
-    readonly invocation?: string;
-    readonly runIndex?: number;
-    readonly slot?: string;
-    readonly attempt?: number;
-    readonly keptDir?: string;
-    readonly scorerProfile?: string;
-  } = {}
-) =>
-  SkillProbeRunRecord.make({
+  options: RecordOptions = {}
+) => {
+  const settings = {
+    fired: cell === "C",
+    excluded: false,
+    turns: 10,
+    invocation: "test",
+    runIndex: 0,
+    attempt: 1,
+    keptDir: "none",
+    scorerProfile: "skill-probe-scorer/v2",
+    ...options,
+  };
+  return SkillProbeRunRecord.make({
     schemaVersion: "skill-probe-run/v1",
     taskId,
     family,
     cell,
-    invocation: options.invocation ?? "test",
-    runIndex: options.runIndex ?? 0,
-    slot: options.slot ?? `${taskId}#${cell}#${options.runIndex ?? 0}`,
-    attempt: options.attempt ?? 1,
-    keptDir: options.keptDir ?? "none",
-    scorerProfile: options.scorerProfile ?? "skill-probe-scorer/v2",
+    invocation: settings.invocation,
+    runIndex: settings.runIndex,
+    slot: settings.slot ?? `${taskId}#${cell}#${settings.runIndex}`,
+    attempt: settings.attempt,
+    keptDir: settings.keptDir,
+    scorerProfile: settings.scorerProfile,
     fingerprint,
-    fired: options.fired ?? cell === "C",
-    anySkillFired: options.fired ?? cell === "C",
-    turns: options.turns ?? 10,
+    fired: settings.fired,
+    anySkillFired: settings.fired,
+    turns: settings.turns,
     durationSeconds: 30,
     costUsd: 0.1,
     startedAt: "2026-11-13T00:00:00.000Z",
-    outcome:
-      options.excluded === true
-        ? SkillProbeOutcome.cases.Excluded.make({ reason: "rate limit" })
-        : SkillProbeOutcome.cases.Scored.make({
-            report: report(allLanes, allLanes ? 1 : 0.5),
-            allLanesPass: allLanes,
-            laneFraction: allLanes ? 1 : 0.5,
-          }),
+    outcome: outcomeOf(allLanes, settings.excluded),
   });
+};
 
 const FAMILIES = ["fn-schema", "getsomes-struct", "normalization", "null-return"];
 const tasksOf = A.flatMap(FAMILIES, (family) =>
