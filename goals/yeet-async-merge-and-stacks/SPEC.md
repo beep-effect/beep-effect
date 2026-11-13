@@ -101,7 +101,7 @@ Higher sources outrank lower sources when they conflict.
       the review-window start and carries the final-check receipt; a
       changed patch-id or a lane push restarts both. The rewritten heads of
       #3050 and #3051 from the test record are fixtures.
-- [ ] Slice C: one lane publishes a second layer on an open PR through
+- [x] Slice C: one lane publishes a second layer on an open PR through
       Yeet, with the footer, label and monitor; readies it without a push;
       merges both layers from the top through the gate; and retires both
       lanes with `yeet sweep --retire`. The Yeet skill's step 2c says how.
