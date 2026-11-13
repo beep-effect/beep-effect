@@ -18,6 +18,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
+import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
@@ -32,8 +33,10 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { CiCommandError } from "./Ci.errors.ts";
 import {
+  CI_RELEVANCE_LANE_VALUES,
   CiChangeProfile,
   CiEnvironmentSelection,
+  CiLaneRelevance,
   CiOperationalPatterns,
   CiResourceSample,
   ciOperationalPatterns,
@@ -73,7 +76,19 @@ const diffUnavailable = Console.error(
   "ci-change-profile: pinned PR diff unavailable; keeping every verification profile active"
 );
 /** The profile of a run with no diff to scope: every verification stays active. */
-const fullProfile = CiChangeProfile.make({ goalsOnly: false, docsOnly: false, desktopRustRelevant: true });
+const fullProfile = CiChangeProfile.make({
+  goalsOnly: false,
+  docsOnly: false,
+  desktopRustRelevant: true,
+  lanes: CiLaneRelevance.make({
+    codegen: true,
+    ecosystem: true,
+    nix: true,
+    desktop_ipc: true,
+    sast: true,
+    security: true,
+  }),
+});
 const inherited = { stdin: "inherit", stdout: "inherit", stderr: "inherit" } as const;
 
 // `grep -E` semantics: a pattern matches a path when it matches anywhere in it.
@@ -82,19 +97,73 @@ const searchFor = (pattern: string) => {
   return (line: string): boolean => expression.test(line);
 };
 
-// The shell adapter's three greps over the pinned diff, one path per line.
-const classifyChangedPaths = (patterns: CiOperationalPatterns, paths: ReadonlyArray<string>): CiChangeProfile => {
+/**
+ * Classify a pinned pull-request diff into the hosted change profile.
+ *
+ * **Details**
+ *
+ * A pattern matches a path when it matches anywhere in it (`grep -E` semantics), the same test
+ * the check.yml path gates run with `grep -Eq` over the pattern data. An empty diff is neither
+ * goals-only nor docs-only and makes no described lane relevant; a lane the pattern data does not
+ * describe is always relevant.
+ *
+ * **Example** (A Semgrep rule change makes only SAST relevant)
+ *
+ * ```ts
+ * import { classifyChangeProfile, ciOperationalPatterns } from "@beep/repo-cli/commands/Ci"
+ *
+ * const profile = classifyChangeProfile(ciOperationalPatterns, [".semgrep/first-party.yml"])
+ * console.log(profile.lanes.sast, profile.lanes.security) // true false
+ * ```
+ *
+ * @param patterns - The pattern data the checkout carries.
+ * @param paths - Repo-relative changed paths, one per `git diff --name-only --no-renames` line.
+ * @returns The goals-only, docs-only, Rust and per-lane profile.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const classifyChangeProfile: {
+  (paths: ReadonlyArray<string>): (patterns: CiOperationalPatterns) => CiChangeProfile;
+  (patterns: CiOperationalPatterns, paths: ReadonlyArray<string>): CiChangeProfile;
+} = dual(2, (patterns: CiOperationalPatterns, paths: ReadonlyArray<string>): CiChangeProfile => {
   const goals = searchFor(patterns.goals);
   const docs = searchFor(patterns.docs);
   const codeRoot = searchFor(patterns.codeRoots);
   const desktop = searchFor(patterns.desktop);
   const changed = A.isReadonlyArrayNonEmpty(paths);
+  // A lane the pattern file does not describe stays relevant; a described lane runs when a
+  // changed path matches its inputs.
+  const relevant = (pattern: string | undefined): boolean =>
+    O.match(O.fromUndefinedOr(pattern), { onNone: () => true, onSome: (row) => A.some(paths, searchFor(row)) });
+  const lanes = patterns.lanes;
   return CiChangeProfile.make({
     goalsOnly: changed && A.every(paths, goals),
     docsOnly: changed && !A.some(paths, codeRoot) && A.every(paths, (line: string) => goals(line) || docs(line)),
     desktopRustRelevant: changed && A.some(paths, desktop),
+    lanes: CiLaneRelevance.make({
+      codegen: relevant(lanes?.codegen),
+      ecosystem: relevant(lanes?.ecosystem),
+      nix: relevant(lanes?.nix),
+      desktop_ipc: relevant(lanes?.desktop_ipc),
+      sast: relevant(lanes?.sast),
+      security: relevant(lanes?.security),
+    }),
   });
-};
+});
+
+// The GitHub output and shell `eval` text: the three retired-adapter lines, then one
+// `<lane>_relevant` line per relevance lane in declaration order.
+const renderChangeProfile = (profile: CiChangeProfile): string =>
+  A.join(
+    [
+      `goals_only=${profile.goalsOnly}`,
+      `docs_only=${profile.docsOnly}`,
+      `desktop_rust_relevant=${profile.desktopRustRelevant}`,
+      ...A.map(CI_RELEVANCE_LANE_VALUES, (lane) => `${lane}_relevant=${profile.lanes[lane]}`),
+      "",
+    ],
+    "\n"
+  );
 
 // `$(git diff ...)` drops the trailing newlines; each remaining line is one path.
 const diffLines = (stdout: string): ReadonlyArray<string> =>
@@ -224,9 +293,9 @@ export const CiOperationalLive = Layer.effect(
         if (event === "pull_request" && O.isNone(paths)) yield* diffUnavailable;
         const profile = O.match(paths, {
           onNone: () => fullProfile,
-          onSome: (changed) => classifyChangedPaths(patterns, changed),
+          onSome: (changed) => classifyChangeProfile(patterns, changed),
         });
-        const output = `goals_only=${profile.goalsOnly}\ndocs_only=${profile.docsOnly}\ndesktop_rust_relevant=${profile.desktopRustRelevant}\n`;
+        const output = renderChangeProfile(profile);
         const target = yield* text("GITHUB_OUTPUT");
         if (Str.isNonEmpty(target)) yield* append(target, output);
         yield* Console.log(Str.trimEnd(output));

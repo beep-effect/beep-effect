@@ -9,15 +9,17 @@
 |--------|-------|-----------------|------------------------|-------|-------------|
 | `host-01-row` | HOST-01 A hosted verdict for every main commit, staged (rank 1, tier T0) | in-repo | `explorations/ten-minute-certainty/research/phase2/PLAN.md` (row 1, heading "HOST-01") | main verdicts | adopt, staged by D7 |
 | `host-01-merged` | HOST-01 mechanism, savings, both skeptics, runnable gate | in-repo | `explorations/ten-minute-certainty/research/phase2/merged/hosted-ci.md` (heading "HOST-01") | main verdicts | adopt, except the per-SHA slice and the gate's 95% projected main-SHA coverage term (handed to merge-queue-activation, D28) |
-| `host-01-slice-a` | Forbid cancelling `refs/heads/main` runs (AGENTS.md and orchestrate skill) | in-repo | `AGENTS.md:198-202`, `.claude/skills/orchestrate/SKILL.md:255,261` | policy | adopt (open) |
-| `host-01-slice-b` | Throughput partition layout for main push runs | in-repo | `.github/workflows/check.yml:721-818` (push branch at `:798`) | layout | adopt (open; #3030 kept full push allocation) |
-| `host-01-slice-c` | Re-dispatch missing or cancelled main verdicts | in-repo | `.github/workflows/rerun-runner-loss.yml`, `packages/tooling/tool/cli/src/commands/Ci/RunnerLossRerun.ts:28-32` | re-dispatch | adopt (open) |
-| `host-01-slice-d` | Per-SHA Check concurrency group for main pushes | in-repo | `.github/workflows/check.yml:12-14` | concurrency | handed off: folded into `merge-queue-activation` (`verdict-placement`, D28) |
+| `host-01-slice-a` | Forbid cancelling `refs/heads/main` runs (AGENTS.md and orchestrate skill) | in-repo | `AGENTS.md` (Autonomy, "Inherited reds"), `.claude/skills/orchestrate/SKILL.md` ("Red check", "Queue starved" rows); command guard `isAgentCancellableWorkflowRun` | policy | landed: #3111 (2026-11-10), command guard #3140 |
+| `host-01-slice-b` | Throughput partition layout for main push runs | in-repo | `.github/workflows/check.yml` job `test-plan`, step `Publish partition plan` | layout | adopt (open; #3030 kept full push allocation) |
+| `host-01-slice-c` | Re-dispatch missing or cancelled main verdicts | in-repo | `.github/workflows/rerun-runner-loss.yml`, `packages/tooling/tool/cli/src/commands/Ci/RunnerLossRerun.ts` (`superseded-head` reason) | re-dispatch | adopt (open) |
+| `host-01-slice-d` | Per-SHA Check concurrency group for main pushes | in-repo | `.github/workflows/check.yml` top-level `concurrency` block | concurrency | handed off: folded into `merge-queue-activation` (`verdict-placement`, D28) |
 | `verdict-placement` | The merge group is the per-commit main verdict | in-repo | `explorations/github-merge-queue/DECISIONS.md` (`verdict-placement`, `sequencing-against-ten-minute-certainty`) | scope | adopt: this goal provides the layout and replay |
 | `critique-ceiling` | Job-adding levers share the unverified ~60-job ceiling | in-repo | `explorations/ten-minute-certainty/research/phase2/PLAN.md` ("Cross-area critique", conflicts and "numbers without a primary source") | order | adopt: the replay counts landed levers (D19) |
 | `critique-cost` | Per-SHA cost: ~9.7k claimed vs 20 to 36k recomputed; docs-only skip share unmeasured | in-repo | same section | cost | quoted with caveat; now bears on `merge-queue-activation` |
 | `critique-rollback` | No CI-YAML lever names a tested revert; App token cannot merge workflow PRs | in-repo | same section ("missing from the plan") | rollback | adopt: each workflow slice names its revert and merger |
 | `meas-prereq-replay` | Replay of main merge timestamps against the 60-job ceiling and cap-2 heavy pool | in-repo | `explorations/ten-minute-certainty/research/phase2/PLAN.md` ("Measurement prerequisites") | gate | adopt (slice 2; published for `merge-queue-activation`) |
+| `check-run-queue-day-measure` | Two measured days of Check runs after the final shard layout (hosted peak 60, jobs per run, main push cancels and waits) | in-repo | [`research/2026-11-13-check-run-queue-day-measure.md`](./2026-11-13-check-run-queue-day-measure.md) | baseline | cited by decision `check-run-queue-measurements` |
+| `scorecard-census` | Which `CiCertaintyReport` fields exist on main | in-repo | `packages/tooling/tool/cli/src/commands/Ci/Certainty.schemas.ts`, `CI_CERTAINTY_NOT_COVERED` in `Certainty.ts` | gate | decision `scorecard-field-census` |
 | `lane-econ-not-changed` | 82 of 100 main push runs cancelled, nine of twelve sampled started no job; per-SHA left for its own decision | in-repo | `goals/ci-lane-economics/SPEC.md` ("Not changed") | baseline | cited as newer evidence |
 
 ## 2. Upstream repositories & licenses
@@ -26,22 +28,26 @@ None. No lever takes code or a pattern from an upstream repository.
 
 ## 3. External research sources
 
-None. The exploration ledger lists no external source for HOST-01; the ~60 concurrent hosted-job figure is
-the documented GitHub Team default, recorded in the exploration as unverified.
+- GitHub REST reference, "Workflow runs" (re-run a workflow, re-run failed jobs); "Re-running workflows and
+  jobs"; workflow syntax `concurrency` (including `queue`) and "Control the concurrency of workflows and jobs".
+  Read 2026-11-13 for decision `rerun-api-cancelled-push-runs`.
+- The ~60 concurrent hosted-job figure is the documented GitHub Team default; a peak of exactly 60 was observed
+  on three measured days (research note `2026-11-13-check-run-queue-day-measure.md`), with no admin read.
 
 ## 4. In-repo capability references
 
 | Brick | Path | Verdict |
 |---|---|---|
-| Check workflow concurrency | `.github/workflows/check.yml:12-14` | read only: re-dispatch works around the shared main group |
-| Test Plan job, push branch | `.github/workflows/check.yml:721-818` (24 + 20 partitions at `:739-740`; shard timeouts 20 min at `:825`, `:1014`) | extend: throughput layout |
-| Heavy identity resolution | `.github/workflows/check.yml:149`, caller at `:214`, `.github/workflows/heavy.yml` | reuse: record beside each verdict; two-PR rule for changes |
+| Check workflow concurrency | `.github/workflows/check.yml` top-level `concurrency` block | read only: re-dispatch works around the shared main group |
+| Test Plan job, push branch | `.github/workflows/check.yml` job `test-plan` (env `ALL_TEST_UNIT_PARTITIONS` 24 and `ALL_TEST_INTEGRATION_PARTITIONS` 20, step `Publish partition plan`); 20-minute `timeout-minutes` on `test-unit-shard` and `test-integration-shard` | extend: throughput layout |
+| Heavy identity resolution | the run payload's `referenced_workflows[].sha` (the admission step that read it was deleted by #3116); caller: `check.yml` job `heavy`; `.github/workflows/heavy.yml` | reuse: record beside each verdict; two-PR rule for changes |
 | Partition tables and plans | `packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts`, `CiPartitions.service.ts`, `CiPartitions.schemas.ts`, `packages/tooling/tool/cli/vitest.shards.json` | extend: push layout (owned by ci-lane-economics for PRs) |
 | Runner-loss rerun | `.github/workflows/rerun-runner-loss.yml`, `packages/tooling/tool/cli/src/commands/Ci/CiRerunRunnerLoss.ts`, `RunnerLossRerun.ts` | reuse the pattern: bounded attempts, head gate, summary |
-| Workflow policy lint | `packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts:385-392` | keep passing |
+| Workflow policy lint | `packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts` ("main pushes must not be cancelled by workflow concurrency") | keep passing |
 | Hosted job and step reads | `packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts` | reuse for the replay |
-| PR-head-only cancels | `packages/tooling/tool/cli/src/commands/Yeet/internal/MergeGate.ts` (`cancelMergedHeadRuns`), `packages/tooling/tool/cli/src/commands/Yeet/internal/GhOps.ts` (`cancel-queued`) | unchanged: cannot reach main SHAs |
+| PR-head-only cancels | `packages/tooling/tool/cli/src/commands/Yeet/internal/MergeGate.ts` (`cancelMergedHeadRuns`), `packages/tooling/tool/cli/src/commands/Yeet/internal/GhOps.ts` (`cancel-queued`) | since #3140 both cancel only pull-request runs (`isAgentCancellableWorkflowRun`) |
 | Required contexts | `standards/branch-protection-contexts.json` | reuse: what a verdict covers |
+| Certainty scorecard | `bun run beep ci certainty` (`packages/tooling/tool/cli/src/commands/Ci/Certainty.ts`, #3118; rows redefined by open #3144) | consume: main verdict rate; missing fields in decision `scorecard-field-census` |
 | Heavy merge proof | `docs/runbooks/ci-hosted-settings.md` ("Heavy workflow merge proof") | reuse for any `heavy.yml` slice |
 | Runner reliability runbook | `docs/runbooks/ci-runner-reliability.md` | amend with re-dispatch |
 | Tests | `packages/tooling/tool/cli/test/ci-governance.test.ts`, `ci-rerun-runner-loss.test.ts`, `ci-partitions.test.ts`, `ci-lane.test.ts`, `ci-lane-timings.test.ts` | extend |

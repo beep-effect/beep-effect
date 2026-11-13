@@ -8,7 +8,7 @@ Status: `in-progress`
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | in-progress | Land the cancel ban (slice 1) and settle the facts the later slices need: which scorecard fields report main verdicts, first-wave pickup, heavy wait and cancel attribution; whether the re-run API accepts a cancelled push run. | Slice 1 merged; each fact recorded as a decision file or a `history/` note with its evidence. |
+| P0 Research | complete | Land the cancel ban (slice 1) and settle the facts the later slices need: which scorecard fields report main verdicts, first-wave pickup, heavy wait and cancel attribution; whether the re-run API accepts a cancelled push run. | Slice 1 merged; each fact recorded as a decision file or a `history/` note with its evidence. |
 | P1 Implement | pending | Slices 2 to 4 in the order below, each behind its admission gate. | Each slice merged, or refused by its gate and the refusal recorded. |
 | P2 Verify | pending | Read the 7-day (and 14-day) windows from the scorecard. | Acceptance numbers recorded under `history/`, the residual against the 95% bar named as `merge-queue-activation`'s. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
@@ -26,7 +26,7 @@ are not a slice: the per-commit verdict is handed to `merge-queue-activation` (`
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `docs(agents): never cancel refs/heads/main runs` (one clause in the AGENTS.md "Inherited reds" bullet; the "Red check" and "Queue starved" rows of the orchestrate skill) | HOST-01 a | S | none; carry another ready always-loaded edit in the same PR only if it is ready the same day | nothing | `git revert` of the commit; docs only, so the orchestrator may merge it |
 | 2 | `feat(ci): replay main merge timestamps against the hosted ceiling and heavy pool` (a planned replay subcommand on `@beep/repo-cli` plus the report under `history/`, published as input for `merge-queue-activation`'s owner) | replay | M | the current-layout replay is calibrated against the scorecard's measured week, and the report states the calibration error, before any projection is used | scorecard: main verdict rate, per-run job counts, PR first-wave pickup and heavy wait | revert the command; the report stays as evidence |
-| 3 | `perf(ci): throughput partition layout for main push runs` (push branch of the Test Plan job, the partition generator, a census-parity test) | HOST-01 b | M; L if heavy lanes change | canonical test-id census equals the full profile exactly; every push leg projected, from measured file seconds, to finish inside its 20-minute shard timeout (`check.yml:825`, `:1014`); Coverage Regression still gets every push manifest; the replay with the layout shows PR first-wave pickup p95 and heavy-wait p95 regressed by at most 1 min and reports projected heavy slot-hours per day | 2; `main` merged | revert PR: the push branch publishes every partition again (`check.yml:798`) |
+| 3 | `perf(ci): throughput partition layout for main push runs` (push branch of the Test Plan job, the partition generator, a census-parity test) | HOST-01 b | M; L if heavy lanes change | canonical test-id census equals the full profile exactly; every push leg projected, from measured file seconds, to finish inside its 20-minute shard timeout (`timeout-minutes` on the `test-unit-shard` and `test-integration-shard` jobs); Coverage Regression still gets every push manifest; the replay with the layout shows PR first-wave pickup p95 and heavy-wait p95 regressed by at most 1 min and reports projected heavy slot-hours per day | 2; `main` merged | revert PR: the push branch publishes every partition again (`test-plan` job, `Publish partition plan` step, env `ALL_TEST_UNIT_PARTITIONS` and `ALL_TEST_INTEGRATION_PARTITIONS`) |
 | 3b | only if the replay says heavy lanes must batch on push: additive `heavy.yml` layout under a migration name, then a retiring PR | HOST-01 b | M + S | post-merge Heavy probe on each merge SHA (`docs/runbooks/ci-hosted-settings.md`) | 3 | the retiring PR is not opened; revert the additive PR |
 | 4 | `feat(ci): re-dispatch missing main verdicts beside rerun-runner-loss` (a separate job on the same `workflow_run` trigger plus a planned re-dispatch subcommand) | HOST-01 c | S | decision tests: re-run only when no main Check run is queued or pending, newest unverdicted non-docs SHA first, attempt ceiling, docs-only and PR runs refused, kill switch honoured; the replay, run with re-dispatch included, shows PR first-wave pickup p95 and heavy-wait p95 regressed by at most 1 min | 2; scorecard main census; merge `main` after yeet-monitor-app-identity 3a if it is open | set the kill-switch repository variable to `false`, then revert the PR |
 
@@ -87,6 +87,8 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 Slice 1 (HOST-01 a) adds the ban to the AGENTS.md Inherited-reds bullet and the orchestrate skill's Red check and Queue starved rows: the unblocker cancels pull-request runs only, never a `refs/heads/main` run, queued or running. No certainty scorecard is on `main` yet (MEAS-01 slice 1 is unmerged), so the pre-change main verdict rate cannot be read now. The ban's start date is 2026-11-10 (UTC, the day this PR merges): the 7-day before window is 2026-11-03 to 2026-11-09 and the 7-day after window, which is also the first zero-agent-cancel window, is 2026-11-11 to 2026-11-17. The scorecard reads both once it reports the main verdict rate and cancel attribution; slice 2 (the replay) waits on those numbers.
 
+Update 2026-11-13: #3118 has since put `beep ci certainty` on `main`. It reports the main verdict rate but not cancel attribution, first-wave pickup p95 or heavy-wait p95 (decision `scorecard-field-census`); the before-window read is in `history/2026-11-13-pre-ban-main-verdict-rate.md`.
+
 Lane docs/main-cancel-ban
 
 Reverse: Revert the cancel-ban PR and delete this checkpoint; the before/after reads then have no anchor.
@@ -98,5 +100,13 @@ Post-merge review of #3111 found that the ban was doctrine only: `yeet gh checks
 Lane fix/cancel-queued-pr-runs-only
 
 Reverse: Revert the PR; the ban then rests on the AGENTS.md clause and the orchestrate skill alone.
+
+### P0 complete; P1 held until the scorecard reports first-wave pickup and heavy wait, 2026-11-13
+
+P0 Research is complete: slice 1 merged (#3111, guard #3140), and each P0 fact is recorded with its evidence: decision `scorecard-field-census` (which scorecard fields report main verdicts, first-wave pickup, heavy wait and cancel attribution), decision `rerun-api-cancelled-push-runs` (the re-run API and cancelled push runs) and the history note `2026-11-13-pre-ban-main-verdict-rate`. P1 stays pending: slice 2 (the replay) is held under SPEC "Stop Conditions" because the scorecard cannot report first-wave pickup or heavy wait, and slices 3 and 4 gate on the replay. The two measured days of Check runs (decision `check-run-queue-measurements`) are calibration input for the replay, not a substitute for the scorecard.
+
+Lane claude/amazing-swirles-67011b
+
+Reverse: Set P0 back to in-progress and delete this checkpoint if a P0 fact is found unrecorded.
 
 <!-- beep:decisions:end -->

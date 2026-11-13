@@ -504,7 +504,7 @@ export const computeProfileFinalCheckSkips = ({
  *
  * **Details**
  *
- * The `repo-sanity` lane opens with the whole-repo schema catalog scan, which
+ * The `repo-sanity` lane runs the whole-repo schema catalog scan, which
  * holds about 5 GB on a host whose worker slice is capped at 7 GiB. On `worker`
  * the gate therefore runs only its changeset status check (D6) and hosted Repo
  * Sanity proves the rest. The decision lives here rather than in `beep ci lane`

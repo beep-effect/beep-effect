@@ -20,6 +20,7 @@ import {
   ciLaneStepsForTesting,
   ciLocalLaneInputsForTesting,
   ciLocalStepsForTesting,
+  DOCS_POLICY_ROOT_TASKS,
   docgenLaneModeForChangedPaths,
   planCiLanePartitions,
   plannedCiLanePartitions,
@@ -368,7 +369,7 @@ describe("CI lane descriptors", () => {
   it("enumerates every check.yml lane exactly once", () => {
     const ids = A.map(CI_LANE_DESCRIPTORS, (descriptor) => descriptor.id);
     expect(A.length(A.dedupe(ids))).toBe(A.length(ids));
-    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(25);
+    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(26);
   });
 
   it("retires the standalone Effect diagnostics lane", () => {
@@ -1952,13 +1953,49 @@ describe("ciLaneStepsForTesting", () => {
     expect(step.env).toBeUndefined();
   });
 
-  it("always checks workflow policy, the schema catalog, catalog usage, home paths and shadcn lint and appends changeset status on request", () => {
+  it("runs only the home path law and the changeset checks on a documentation-only diff", () => {
+    // --docs-only wins over --changeset-status: the documentation path always validates changesets.
+    const steps = ciLaneStepsForTesting(
+      REPO_ROOT,
+      "repo-sanity",
+      CiLaneRunOptions.make({ ...baseOptions, changesetStatus: true, docsOnly: true })
+    );
+    expect(A.map(steps, (step) => step.label)).toEqual([
+      "lint:private-home-paths",
+      "ci:repo-sanity:changeset-graph",
+      "ci:repo-sanity:changeset-status",
+    ]);
+    expect(A.map(steps, (step) => [...step.args])).toEqual([
+      ["run", "beep", "laws", "private-home-paths", "--check"],
+      ["run", "beep", "quality", "changeset-graph"],
+      ["run", "beep", "quality", "changeset-status", "--since", "origin/main"],
+    ]);
+  });
+
+  it("runs the docs policy tasks in one Turbo graph, then the knowledge doctor against the base", () => {
+    const steps = ciLaneStepsForTesting(
+      REPO_ROOT,
+      "docs-policy",
+      CiLaneRunOptions.make({ ...baseOptions, base: "origin/release" })
+    );
+    expect(A.map(steps, (step) => step.label)).toEqual(["ci:docs-policy:tasks", "ci:docs-policy:knowledge-doctor"]);
+    const turboFlags = ["--concurrency=4", "--continue=dependencies-successful", "--summarize"];
+    expect(firstOf(steps)).toMatchObject({
+      command: "bunx",
+      args: ["turbo", "run", ...DOCS_POLICY_ROOT_TASKS, ...expectedTurboCacheArgs(turboFlags), ...turboFlags],
+      cwd: REPO_ROOT,
+    });
+    expect([...lastOf(steps).args]).toEqual(["run", "beep", "knowledge", "doctor", "ci", "--base", "origin/release"]);
+  });
+
+  it("always checks workflow policy, the schema catalog, catalog usage, home paths, coverage owners and shadcn lint and appends changeset status on request", () => {
     const withoutFlag = ciLaneStepsForTesting(REPO_ROOT, "repo-sanity", baseOptions);
     expect(A.map(withoutFlag, (step) => step.label)).toEqual([
       "ci:repo-sanity:workflow-lint",
       "lint:schema-catalog",
       "ci:repo-sanity:catalog-usage",
       "lint:private-home-paths",
+      "lint:coverage-owners",
       "ci:repo-sanity",
       "ci:repo-sanity:shadcn",
     ]);
@@ -1967,11 +2004,18 @@ describe("ciLaneStepsForTesting", () => {
       args: ["run", "beep", "ci", "workflow-lint"],
       cwd: REPO_ROOT,
     });
-    // Heavy / Lint Policy skips docs-only diffs, so the hosted home path
-    // guard lives in Repo Sanity, which still runs for them.
+    // Repo Sanity is required and Heavy / Lint Policy is not, so the home path
+    // law stays in Repo Sanity on every head.
     expect(O.getOrThrow(A.findFirst(withoutFlag, (step) => step.label === "lint:private-home-paths"))).toMatchObject({
       command: "bun",
       args: ["run", "beep", "laws", "private-home-paths", "--check"],
+      cwd: REPO_ROOT,
+    });
+    // A new standards reader in another package selects only that package's
+    // tests, so the owner row check runs on every Repo Sanity pass instead.
+    expect(O.getOrThrow(A.findFirst(withoutFlag, (step) => step.label === "lint:coverage-owners"))).toMatchObject({
+      command: "bun",
+      args: ["run", "beep", "lint", "coverage-owners"],
       cwd: REPO_ROOT,
     });
 
@@ -1985,6 +2029,7 @@ describe("ciLaneStepsForTesting", () => {
       "lint:schema-catalog",
       "ci:repo-sanity:catalog-usage",
       "lint:private-home-paths",
+      "lint:coverage-owners",
       "ci:repo-sanity",
       "ci:repo-sanity:shadcn",
       "ci:repo-sanity:changeset-status",
