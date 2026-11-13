@@ -79,6 +79,15 @@ and 0 wrong; 744 of 744 backward moves rejected. The numbers are in the
 2026-11-13 checkpoint in `PLAN.md`; the fixture design is decision
 `p2-adversarial-fixture-is-seeded-contention-strata`.
 
+2026-11-13, P2 lane, on the comparable replay: this repository's goals
+history at 3f0261b37a0 replayed as concurrent writers (decision
+`p2-ac3-history-replay-construction`; 118 clusters, 275 writes, 3,364
+operations). Zero silent loss in history order and three seeded orders.
+History order: structural floor 11/275; resolver-needed 40/275 against
+26/279 (40 x 279 = 11,160 above 26 x 275 = 7,150), not met; per-op landing
+3,267/3,364 (97.1%), met; typed status 0 held and 0 wrong. AC-3 stays open;
+the held-write breakdown is in the 2026-11-13 AC-3 checkpoint in `PLAN.md`.
+
 ## Notes
 
 - The S14b lesson governs every new bar: set held-write bars on the
