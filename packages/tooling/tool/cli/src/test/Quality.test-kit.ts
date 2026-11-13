@@ -24,6 +24,7 @@ export {
   uncoveredWorkspacePackageNames,
 } from "@beep/repo-cli/commands/Quality/ChangesetStatus";
 export * from "@beep/repo-cli/commands/Quality/CheckCensus";
+export * from "@beep/repo-cli/commands/Quality/CheckCensusBuildEquivalence";
 export * from "@beep/repo-cli/commands/Quality/CheckCensusGate";
 export * from "@beep/repo-cli/commands/Quality/Quality.command";
 export {

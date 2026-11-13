@@ -36,18 +36,27 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research, not started. First action: PR 1 (baseline and proof harness, no
-behaviour change), per [`PLAN.md`](./PLAN.md).
+P0 Research, in progress. PR 1 (baseline and proof harness, no behaviour
+change) is open. Next: PR 2, the declaration-only build, per
+[`PLAN.md`](./PLAN.md).
 
 ## Latest Evidence
 
-Not started.
+- [`research/2026-11-10-build-baseline.md`](./research/2026-11-10-build-baseline.md):
+  across 181 emitting packages the compile takes 52.2 s serial and the Babel
+  pass 66.4 s; JavaScript and its maps are 84.0 MB of a 228.6 MB `dist` total.
+  A declarations-only compile is no faster than a full emit.
+- [`research/2026-11-10-build-check-equivalence.md`](./research/2026-11-10-build-check-equivalence.md):
+  2,912 build-versus-check comparisons over 182 packages, all identical, from
+  a cache restore, warm and cold, with `TSRS_FAST` unset and `1`. Check-once
+  is kept for the 180 packages whose check program is the build program.
 
 ## Notes
 
-- The numbers this packet starts from were taken at load average 59 to 63.
-  Re-measure before quoting them as a baseline.
-- The check-once step is conditional on PR 1's census result and is the first
-  thing cut.
-- PR 2 invalidates every build cache entry once. Land it when the merge queue
-  is quiet.
+- Both measurements ran at load average 60 to 130. Ratios hold better than
+  seconds; PR 2 re-measures with the same script.
+- The check-once step survived PR 1's census. It is still the first thing
+  cut if the appetite runs out.
+- PR 2 invalidates every build cache entry once, and carries the stale
+  `node_modules/.tmp` tsbuildinfo glob removal for that reason. Land it when
+  the merge queue is quiet.
