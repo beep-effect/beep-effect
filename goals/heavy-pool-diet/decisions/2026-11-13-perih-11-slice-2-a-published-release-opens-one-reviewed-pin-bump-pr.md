@@ -3,6 +3,7 @@ title: "PERIH-11 slice 2: a published release opens one reviewed pin-bump PR"
 date: 2026-11-13
 kind: checkpoint
 lane: "ci/heavy-pool-diet-pin-bump-pr"
+pullRequest: 3299
 reversal: "Revert this PR's squash commit; pin bumps are then hand-written again."
 ---
 

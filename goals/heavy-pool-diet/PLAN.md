@@ -28,7 +28,7 @@ three of this packet's PRs are open at once; slices 1 to 3 are the first three.
 | 4b | `test(repo-cli): pay the PR C checker parity gates` | LINT-04 residual | M | S2 prefilter generated from the retired-host rows and tested against them; P55 planted fixtures; S4 findings diff; P12/P11 814-assertion digest, diagnostics sha 44b7c59c9033de74 and an aliased-assertion fixture; P28 census and a WORKSPACE_MANIFEST_WALK re-key probe; per-file coverage floors hold. | A free PR slot |
 | 5 | `perf(repo-cli): leave the JSDoc inventory to the required JSDoc Ratchet lane` | LINT-05 | S | Plan test: the hosted plan omits `jsdoc:inventory:check` and `jsdoc:ratchet:check` only while JSDoc Ratchet is required; seeded-red draft PR shows JSDoc Ratchet red and neither task in the Lint Policy log; identical Lint Policy findings otherwise. | #3041 merged; merge `main` after PERIH-02 if it landed first |
 | 6 | `perf(ci): retire the heavy migration job names` (second `heavy.yml` PR) | ORDER (D11), HOST-06 PR 2 | S | `main` resolves the slice 3 workflow; parity ledger unchanged after the retirement. | Slice 3 merged and resolved on `main` |
-| 7 | `ci: open a pin-bump PR on closure change` | PERIH-11 slice 2 | S | A closure change on `main` opens one reviewed pin-bump PR that passes its own Check; no PR for a release with an unchanged closure. | Open (#PRNUM) |
+| 7 | `ci: open a pin-bump PR on closure change` | PERIH-11 slice 2 | S | A closure change on `main` opens one reviewed pin-bump PR that passes its own Check; no PR for a release with an unchanged closure. | Open (#3299) |
 | 8 | `perf(repo-cli): derive the changed-scope state width from the remaining slots` | LINT-02 slice 2 (absorbs LINT-03) | S | Plan-shape test: summed width at most `policyLint`, medium at least 2 for every profile, doctor present in both scopes with unchanged argv; then the hosted A/B for LINT-02 (at least 10 runs per arm, p50 and p95 each at least 90 s better, memory.peak under 24 GB) recorded under `history/`. | Slice 5; #3041 merged |
 | 9 | `ci: bundle ci admission in the CI binary with a closure-digest fallback` | PERIH-01 slice 2 | M | Replay of recorded events (draft, label, fork, docs, push, error) through binary and source gives byte-identical `verdict`, `route_skips` and `route_receipt`; a closure-digest mismatch fixture forces the head-install fallback. | Slice 7; PERIH-10 landed by `route-soundness-repair` |
 | 10 | Pin-bump PR for the admission binary (opened by slice 7's automation) | PERIH-11, PERIH-01 | S | Passes its own Check on the new pin. | Slice 9 merged and released |
@@ -222,7 +222,7 @@ PLAN slice 7 lands PERIH-11 slice 2. When `beep-ci-binary.yml` publishes a new `
 
 Still to read on main after merge: that first run re-recording rather than publishing; the first real closure change opening one pin-bump pull request that passes its own Check; and a closure-unchanged push opening none.
 
-Lane ci/heavy-pool-diet-pin-bump-pr
+Lane ci/heavy-pool-diet-pin-bump-pr · PR #3299
 
 Reverse: Revert this PR's squash commit; pin bumps are then hand-written again.
 
