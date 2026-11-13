@@ -1,3 +1,4 @@
+import * as Test from "@alchemy.run/test/Vitest";
 import {
   declareRunnerSweep,
   JobRetryPolicy,
@@ -8,11 +9,6 @@ import {
   SelfHostedRunner,
   WebhookRuntimeConfig,
 } from "@beep/alchemy-github-runners";
-import type { RunnerLaunchSpec } from "@beep/alchemy-github-runners";
-import type * as Core from "@alchemy.run/test/Core";
-import * as Test from "@alchemy.run/test/Vitest";
-import type { Input } from "alchemy/Input";
-import type { StackServices } from "alchemy/Stack";
 import { expect } from "@effect/vitest";
 import { inMemoryState } from "alchemy/State/InMemoryState";
 import * as A from "effect/Array";
@@ -22,8 +18,12 @@ import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Recorder, fakeProviders } from "./support/FakeProviders.ts";
+import { fakeProviders, Recorder } from "./support/FakeProviders.ts";
 import { World } from "./support/FakeWorld.ts";
+import type * as Core from "@alchemy.run/test/Core";
+import type { RunnerLaunchSpec } from "@beep/alchemy-github-runners";
+import type { Input } from "alchemy/Input";
+import type { StackServices } from "alchemy/Stack";
 
 /** One harness per test: its own recorder, world, in-memory state and stage. */
 const harness = (stage: string) => {
@@ -103,7 +103,8 @@ const typeCounts = (recorder: Recorder) =>
 const fn = (recorder: Recorder, fqn: string) =>
   O.getOrThrow(O.filter(recorder.byFqn(fqn), (entry) => entry.type === "Lambda.Function"));
 
-const statementsOf = (recorder: Recorder, fqn: string) => A.flatMap(fn(recorder, fqn).bindings, (binding) => binding.data.policyStatements ?? []);
+const statementsOf = (recorder: Recorder, fqn: string) =>
+  A.flatMap(fn(recorder, fqn).bindings, (binding) => binding.data.policyStatements ?? []);
 
 onePool.test.provider("one pool declares the whole fleet from shipped primitives", (stack) =>
   Effect.gen(function* () {
@@ -131,12 +132,12 @@ onePool.test.provider("one pool declares the whole fleet from shipped primitives
     expect(scaleUp.news.functionUrl).toBe(false);
     expect(Str.endsWith("internal/lambda/scale-up.ts")(String(scaleUp.news.main))).toBe(true);
     const config = yield* decodePool((scaleUp.news.env as Record<string, unknown>)[runtimeConfigEnvName]);
-    expect([config.environment, config.launchTemplate.launchTemplateId, config.tokenPath, config.subnetIds]).toStrictEqual([
-      "beep-ci-heavy",
-      "lt-heavy",
-      "/beep-ci/heavy/tokens",
-      ["subnet-a", "subnet-b"],
-    ]);
+    expect([
+      config.environment,
+      config.launchTemplate.launchTemplateId,
+      config.tokenPath,
+      config.subnetIds,
+    ]).toStrictEqual(["beep-ci-heavy", "lt-heavy", "/beep-ci/heavy/tokens", ["subnet-a", "subnet-b"]]);
     expect(config.buildQueueUrl).toBe("https://sqs.us-east-1.amazonaws.com/123456789012/Runners-Poolheavy-BuildQueue");
     expect(O.getOrUndefined(config.jobRetryQueueUrl)).toBe(
       "https://sqs.us-east-1.amazonaws.com/123456789012/Runners-Poolheavy-JobRetryQueue"
@@ -150,11 +151,21 @@ onePool.test.provider("one pool declares the whole fleet from shipped primitives
 
     expect(fn(recorder, "Runners/Webhook").news.functionUrl).toBe(true);
     expect(out.webhookUrl).toBe("https://runners-webhook.lambda-url.on.aws/");
-    const webhook = yield* decodeWebhook((fn(recorder, "Runners/Webhook").news.env as Record<string, unknown>)[runtimeConfigEnvName]);
+    const webhook = yield* decodeWebhook(
+      (fn(recorder, "Runners/Webhook").news.env as Record<string, unknown>)[runtimeConfigEnvName]
+    );
     expect(A.map(webhook.pools, (pool) => [pool.pool, pool.labels])).toStrictEqual([["heavy", ["beep-ec2-heavy"]]]);
 
-    const rules = A.map(recorder.ofType("EventBridge.Rule"), (rule) => String(rule.news.scheduleExpression ?? "pattern"));
-    expect(A.sort(rules, Str.Order)).toStrictEqual(["cron(* * * * ? *)", "pattern", "pattern", "rate(1 day)", "rate(1 day)"]);
+    const rules = A.map(recorder.ofType("EventBridge.Rule"), (rule) =>
+      String(rule.news.scheduleExpression ?? "pattern")
+    );
+    expect(A.sort(rules, Str.Order)).toStrictEqual([
+      "cron(* * * * ? *)",
+      "pattern",
+      "pattern",
+      "rate(1 day)",
+      "rate(1 day)",
+    ]);
 
     const kms = A.filter(statementsOf(recorder, "Runners/TerminationWatcher"), (statement) =>
       A.contains(statement.Action as ReadonlyArray<string>, "kms:Decrypt")
@@ -198,7 +209,9 @@ twoPools.test.provider("two pools get their own queues and Lambdas behind one we
     expect([counts["Lambda.Function"], counts["SQS.Queue"], counts["IAM.Role"], counts["KMS.Key"]]).toStrictEqual([
       9, 8, 2, 1,
     ]);
-    const webhook = yield* decodeWebhook((fn(recorder, "Runners/Webhook").news.env as Record<string, unknown>)[runtimeConfigEnvName]);
+    const webhook = yield* decodeWebhook(
+      (fn(recorder, "Runners/Webhook").news.env as Record<string, unknown>)[runtimeConfigEnvName]
+    );
     expect(A.map(webhook.pools, (pool) => [pool.pool, pool.queueUrl])).toStrictEqual([
       ["heavy", "https://sqs.us-east-1.amazonaws.com/123456789012/Runners-Poolheavy-BuildQueue"],
       ["overflow", "https://sqs.us-east-1.amazonaws.com/123456789012/Runners-Pooloverflow-BuildQueue"],
@@ -206,11 +219,11 @@ twoPools.test.provider("two pools get their own queues and Lambdas behind one we
     const overflowConfig = yield* decodePool(
       (fn(recorder, "Runners/Pooloverflow/ScaleUp").news.env as Record<string, unknown>)[runtimeConfigEnvName]
     );
-    expect([overflowConfig.environment, overflowConfig.pool.maximumCount, O.isNone(overflowConfig.jobRetryQueueUrl)]).toStrictEqual([
-      "beep-ci-overflow",
-      48,
-      true,
-    ]);
+    expect([
+      overflowConfig.environment,
+      overflowConfig.pool.maximumCount,
+      O.isNone(overflowConfig.jobRetryQueueUrl),
+    ]).toStrictEqual(["beep-ci-overflow", 48, true]);
     expect(A.map(out.pools, (pool) => pool.environment)).toStrictEqual(["beep-ci-heavy", "beep-ci-overflow"]);
     const runnerTags = { "ghr:Application": "github-action-runner", "ghr:Owner": "beep-effect", "ghr:Type": "Org" };
     const heavyRunners = world.launch(1, { ...runnerTags, "ghr:environment": "beep-ci-heavy" });
@@ -224,10 +237,17 @@ sweeping.test.provider("RunnerSweep changes nothing on create and update, and sw
   Effect.gen(function* () {
     const { world } = sweeping;
     yield* destroy(stack);
-    const tags = { "ghr:Application": "github-action-runner", "ghr:environment": "beep-ci-heavy", "ghr:Owner": "beep-effect", "ghr:Type": "Org" };
+    const tags = {
+      "ghr:Application": "github-action-runner",
+      "ghr:environment": "beep-ci-heavy",
+      "ghr:Owner": "beep-effect",
+      "ghr:Type": "Org",
+    };
     const [instanceId = ""] = world.launch(1, tags);
     world.launch(1, { ...tags, "ghr:environment": "someone-else" });
-    world.githubRunners.push(SelfHostedRunner.make({ id: 9, name: `beep-ci-${instanceId}`, status: "online", busy: false }));
+    world.githubRunners.push(
+      SelfHostedRunner.make({ id: 9, name: `beep-ci-${instanceId}`, status: "online", busy: false })
+    );
     world.ssm["/beep-ci/heavy/tokens/i-stale"] = { value: "x", modified: 0, tags: {} };
     const sweep = (tokenPaths: ReadonlyArray<string>) =>
       declareRunnerSweep({ id: "Sweep", props: { environments: ["beep-ci-heavy"], tokenPaths, dependsOn: [] } }).pipe(

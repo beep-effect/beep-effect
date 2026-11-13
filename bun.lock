@@ -3997,13 +3997,16 @@
       "name": "@beep/alchemy-github-runners",
       "version": "0.0.0",
       "dependencies": {
+        "@alchemy.run/aws": "catalog:",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "@distilled.cloud/aws": "catalog:",
         "@distilled.cloud/github": "catalog:",
+        "alchemy": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@alchemy.run/test": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",

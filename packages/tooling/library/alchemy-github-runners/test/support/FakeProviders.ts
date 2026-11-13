@@ -3,7 +3,6 @@
  * declares, plus the real RunnerSweep provider over the in-memory world.
  */
 
-import { RunnerSweepProvider } from "@beep/alchemy-github-runners";
 import * as EventBridge from "@alchemy.run/aws/EventBridge";
 import * as IAM from "@alchemy.run/aws/IAM";
 import * as KMS from "@alchemy.run/aws/KMS";
@@ -11,23 +10,24 @@ import * as Lambda from "@alchemy.run/aws/Lambda";
 import * as S3 from "@alchemy.run/aws/S3";
 import * as SQS from "@alchemy.run/aws/SQS";
 import * as SSM from "@alchemy.run/aws/SSM";
+import { RunnerSweepProvider } from "@beep/alchemy-github-runners";
 import * as Provider from "alchemy/Provider";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import * as Str from "effect/String";
-import type { World } from "./FakeWorld.ts";
 import { worldContext } from "./FakeWorld.ts";
+import type * as O from "effect/Option";
+import type { World } from "./FakeWorld.ts";
 
 export interface Reconciled {
-  readonly type: string;
-  readonly fqn: string;
-  readonly news: Readonly<Record<string, unknown>>;
   readonly bindings: ReadonlyArray<{
     readonly sid: string;
     readonly data: { readonly policyStatements?: ReadonlyArray<Readonly<Record<string, unknown>>> };
   }>;
+  readonly fqn: string;
+  readonly news: Readonly<Record<string, unknown>>;
+  readonly type: string;
 }
 
 export class Recorder {
@@ -47,9 +47,9 @@ const slug = (fqn: string) => Str.replaceAll("/", "-")(fqn);
 const arn = (service: string, path: string) => `arn:aws:${service}:us-east-1:123456789012:${slug(path)}`;
 
 interface LifecycleInput {
+  readonly bindings?: unknown;
   readonly fqn: string;
   readonly news: unknown;
-  readonly bindings?: unknown;
 }
 
 const record = (recorder: Recorder, type: string, input: LifecycleInput) => {
@@ -85,11 +85,17 @@ export const fakeProviders = ({ recorder, world }: { readonly recorder: Recorder
   Layer.mergeAll(
     Provider.succeed(
       KMS.Key,
-      lifecycle(recorder, "KMS.Key", (fqn) => ({ keyId: `key-${slug(fqn)}`, keyArn: arn("kms", `key/${fqn}`) })) as never
+      lifecycle(recorder, "KMS.Key", (fqn) => ({
+        keyId: `key-${slug(fqn)}`,
+        keyArn: arn("kms", `key/${fqn}`),
+      })) as never
     ),
     Provider.succeed(
       KMS.Alias,
-      lifecycle(recorder, "KMS.Alias", (_fqn, news) => ({ aliasName: news.aliasName, targetKeyId: news.targetKeyId })) as never
+      lifecycle(recorder, "KMS.Alias", (_fqn, news) => ({
+        aliasName: news.aliasName,
+        targetKeyId: news.targetKeyId,
+      })) as never
     ),
     Provider.succeed(
       SSM.Parameter,
@@ -141,11 +147,18 @@ export const fakeProviders = ({ recorder, world }: { readonly recorder: Recorder
     ),
     Provider.succeed(
       Lambda.EventSourceMapping,
-      lifecycle(recorder, "Lambda.EventSourceMapping", (fqn) => ({ uuid: fqn, eventSourceMappingArn: fqn, functionArn: fqn })) as never
+      lifecycle(recorder, "Lambda.EventSourceMapping", (fqn) => ({
+        uuid: fqn,
+        eventSourceMappingArn: fqn,
+        functionArn: fqn,
+      })) as never
     ),
     Provider.succeed(
       Lambda.Permission,
-      lifecycle(recorder, "Lambda.Permission", (fqn, news) => ({ statementId: slug(fqn), functionName: news.functionName })) as never
+      lifecycle(recorder, "Lambda.Permission", (fqn, news) => ({
+        statementId: slug(fqn),
+        functionName: news.functionName,
+      })) as never
     ),
     Provider.succeed(
       EventBridge.Rule,

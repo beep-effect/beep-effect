@@ -20,17 +20,14 @@ import * as Lambda from "@alchemy.run/aws/Lambda";
 import * as S3 from "@alchemy.run/aws/S3";
 import * as SQS from "@alchemy.run/aws/SQS";
 import * as SSM from "@alchemy.run/aws/SSM";
-import type { Input } from "alchemy/Input";
 import * as Namespace from "alchemy/Namespace";
 import * as Output from "alchemy/Output";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import type * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import { instanceStateChangeDetailType, spotInterruptionWarningDetailType } from "./Ec2Events.models.ts";
-import type { RunnerPool, RunnerType } from "./RunnerPool.models.ts";
 import {
   HousekeeperRuntimeConfig,
   LaunchTemplateRef,
@@ -42,8 +39,11 @@ import {
   WebhookRuntimeConfig,
 } from "./RunnerRuntime.models.ts";
 import { declareRunnerSweep } from "./RunnerSweep.ts";
-import { renderRunnerUserData, RunnerUserDataInput } from "./RunnerUserData.ts";
+import { RunnerUserDataInput, renderRunnerUserData } from "./RunnerUserData.ts";
 import { AppParameterNames, appParameterNames, poolConfigPath, poolTokenPath } from "./SsmParameters.models.ts";
+import type { Input } from "alchemy/Input";
+import type * as Redacted from "effect/Redacted";
+import type { RunnerPool, RunnerType } from "./RunnerPool.models.ts";
 
 type Value<T> = T | Output.Output<T>;
 
@@ -65,10 +65,10 @@ const runnerTarballKey = "actions-runner-linux.tar.gz";
  * @since 0.0.0
  */
 export interface RunnerLaunchSpec {
-  readonly pool: RunnerPool;
   readonly environment: string;
   readonly instanceProfileArn: Output.Output<string>;
   readonly instanceProfileName: Output.Output<string>;
+  readonly pool: RunnerPool;
   readonly userData: Output.Output<string>;
 }
 
@@ -100,25 +100,25 @@ export interface RunnerLaunchTemplateRef {
  * @since 0.0.0
  */
 export interface RunnerFleetProps<E, R> {
-  readonly id: string;
-  readonly name: string;
-  readonly ssmRoot: string;
-  readonly runnerType: RunnerType;
-  readonly repositoryAllowList: ReadonlyArray<string>;
-  readonly subnetIds: A.NonEmptyReadonlyArray<Value<string>>;
   readonly app: {
     readonly id: Redacted.Redacted<string>;
     readonly keyBase64: Redacted.Redacted<string>;
     readonly webhookSecret: Redacted.Redacted<string>;
   };
-  readonly pools: A.NonEmptyReadonlyArray<RunnerPool>;
+  readonly id: string;
   readonly launchTemplate: (spec: RunnerLaunchSpec) => Effect.Effect<RunnerLaunchTemplateRef, E, R>;
+  readonly logRetention?: Duration.Input | undefined;
+  readonly name: string;
+  readonly pools: A.NonEmptyReadonlyArray<RunnerPool>;
+  readonly postInstall?: string | undefined;
+  readonly preInstall?: string | undefined;
+  readonly repositoryAllowList: ReadonlyArray<string>;
+  readonly runAs?: string | undefined;
   readonly runnerManagedPolicyArns?: ReadonlyArray<Value<string>> | undefined;
   readonly runnerPermissionsBoundaryArn?: Value<string> | undefined;
-  readonly preInstall?: string | undefined;
-  readonly postInstall?: string | undefined;
-  readonly runAs?: string | undefined;
-  readonly logRetention?: Duration.Input | undefined;
+  readonly runnerType: RunnerType;
+  readonly ssmRoot: string;
+  readonly subnetIds: A.NonEmptyReadonlyArray<Value<string>>;
   readonly tokenMinimumDaysOld?: number | undefined;
 }
 
@@ -269,8 +269,8 @@ export const RunnerFleet = <E, R>(props: RunnerFleetProps<E, R>) =>
           `Pool${pool.name}`,
           Effect.gen(function* () {
             const environment = `${props.name}-${pool.name}`;
-            const tokenPath = poolTokenPath({ root: props.ssmRoot, pool: pool.name });
-            const configPath = poolConfigPath({ root: props.ssmRoot, pool: pool.name });
+            const tokenPath = poolTokenPath(props.ssmRoot, pool.name);
+            const configPath = poolConfigPath(props.ssmRoot, pool.name);
             const tokenArn = ssmArn`arn:aws:ssm:*:*:parameter${tokenPath}`;
             const configArn = ssmArn`arn:aws:ssm:*:*:parameter${configPath}`;
 

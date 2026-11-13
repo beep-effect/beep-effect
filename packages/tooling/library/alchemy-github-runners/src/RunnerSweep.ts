@@ -12,19 +12,19 @@
 
 import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import * as Provider from "alchemy/Provider";
-import type { InputProps } from "alchemy/Input";
 import { Resource } from "alchemy/Resource";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Ec2Fleet } from "./Ec2Fleet.service.ts";
-import { GitHubAppAuth, GitHubRunners } from "./GitHubApp.service.ts";
 import { RunnerOwner } from "./GitHubRunners.models.ts";
 import { RunnerFilter } from "./RunnerInstance.models.ts";
 import { RunnerType } from "./RunnerPool.models.ts";
 import { SsmStore } from "./SsmStore.service.ts";
 import { deregisterRunner } from "./TerminationWatcher.program.ts";
+import type { InputProps } from "alchemy/Input";
+import type { GitHubAppAuth, GitHubRunners } from "./GitHubApp.service.ts";
 
 const $I = $AlchemyGithubRunnersId.create("RunnerSweep");
 
@@ -127,17 +127,17 @@ export const sweepRunners = Effect.fn("RunnerSweep.sweep")(function* (input: {
  *
  * **Details**
  *
- * `dependsOn` lists the scale-up function names: making the sweep depend on
- * them makes Alchemy delete the sweep, and so run it, before the Lambdas that
- * could launch new runners are gone... and after nothing else reads them.
+ * `dependsOn` lists the scale-up function names. Alchemy deletes dependents
+ * first, so the sweep runs before the Lambdas that launch runners are removed;
+ * a runner launched in that window is the next destroy's to sweep.
  *
  * @category models
  * @since 0.0.0
  */
 export interface RunnerSweepProps {
+  readonly dependsOn: ReadonlyArray<string>;
   readonly environments: ReadonlyArray<string>;
   readonly tokenPaths: ReadonlyArray<string>;
-  readonly dependsOn: ReadonlyArray<string>;
 }
 
 /**

@@ -60,27 +60,30 @@ export class RunnerUserDataInput extends S.Opaque<RunnerUserDataInput, { readonl
 ) {}
 
 const retryInstall = [
+  'os_id="$(. /etc/os-release && echo "$ID")"',
+  'case "$os_id" in ubuntu|debian) os_family=apt ;; *) os_family=dnf ;; esac',
+  'pkg_install() { if [ "$os_family" = apt ]; then DEBIAN_FRONTEND=noninteractive apt-get install -y "$@"; else dnf install -y "$@"; fi; }',
   "install_with_retry() {",
   "  attempt=0",
-  "  until dnf install -y \"$@\"; do",
+  '  until pkg_install "$@"; do',
   "    attempt=$((attempt + 1))",
-  "    if [ \"$attempt\" -gt 5 ]; then return 1; fi",
-  "    echo \"install of $* failed; retrying\"",
+  '    if [ "$attempt" -gt 5 ]; then return 1; fi',
+  '    echo "install of $* failed; retrying"',
   "    sleep 5",
   "  done",
   "}",
 ];
 
 const imds = [
-  "imds_token=\"\"",
+  'imds_token=""',
   "for _ in $(seq 1 40); do",
   "  imds_token=\"$(curl -sf -X PUT http://169.254.169.254/latest/api/token -H 'X-aws-ec2-metadata-token-ttl-seconds: 180' || true)\"",
-  "  if [ -n \"$imds_token\" ]; then break; fi",
+  '  if [ -n "$imds_token" ]; then break; fi',
   "  sleep 5",
   "done",
-  "imds() { curl -sf -H \"X-aws-ec2-metadata-token: $imds_token\" \"http://169.254.169.254/latest/$1\"; }",
-  "region=\"$(imds dynamic/instance-identity/document | jq -r .region)\"",
-  "instance_id=\"$(imds meta-data/instance-id)\"",
+  'imds() { curl -sf -H "X-aws-ec2-metadata-token: $imds_token" "http://169.254.169.254/latest/$1"; }',
+  'region="$(imds dynamic/instance-identity/document | jq -r .region)"',
+  'instance_id="$(imds meta-data/instance-id)"',
   `token_path="$(imds meta-data/tags/instance/${RunnerTag.tokenPath})"`,
   `runner_name_prefix="$(imds meta-data/tags/instance/${RunnerTag.runnerNamePrefix} || true)"`,
 ];
@@ -91,7 +94,8 @@ const imds = [
  * **Details**
  *
  * The script logs to `/var/log/user-data.log` and the console, installs
- * docker, jq, git and curl with retries, unpacks the runner under
+ * docker, jq, git and curl with retries (dnf on Amazon Linux, apt-get plus the
+ * AWS CLI v2 installer on Ubuntu and Debian, chosen from `/etc/os-release`), unpacks the runner under
  * `/opt/actions-runner` (as `runAs`), reads the instance id, region, token
  * path and name prefix through IMDSv2 (the launch template must enable
  * instance metadata tags), waits for its configuration at
@@ -130,9 +134,18 @@ export const renderRunnerUserData = (input: RunnerUserDataInput): string => {
       "set +x",
       ...retryInstall,
       input.preInstall,
-      "for _ in 1 2 3 4 5; do dnf upgrade-minimal -y && break; sleep 5; done",
-      "install_with_retry docker jq git",
-      "install_with_retry --allowerasing curl",
+      'if [ "$os_family" = apt ]; then',
+      "  for _ in 1 2 3 4 5; do apt-get update -y && break; sleep 5; done",
+      "  install_with_retry docker.io jq git curl unzip",
+      "  if ! command -v aws >/dev/null 2>&1; then",
+      '    curl -sSfL "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o /tmp/awscliv2.zip',
+      "    unzip -q /tmp/awscliv2.zip -d /tmp && /tmp/aws/install && rm -rf /tmp/aws /tmp/awscliv2.zip",
+      "  fi",
+      "else",
+      "  for _ in 1 2 3 4 5; do dnf upgrade-minimal -y && break; sleep 5; done",
+      "  install_with_retry docker jq git",
+      "  install_with_retry --allowerasing curl",
+      "fi",
       "service docker start",
       `usermod -a -G docker ${input.runAs}`,
       `run_as=${input.runAs}`,
@@ -141,7 +154,7 @@ export const renderRunnerUserData = (input: RunnerUserDataInput): string => {
       ...imds,
       `aws s3 cp "${input.runnerTarballS3Url}" actions-runner.tar.gz --region "$region" --no-progress`,
       "tar xzf actions-runner.tar.gz && rm -f actions-runner.tar.gz",
-      "install_with_retry libicu",
+      'if [ "$os_family" = apt ]; then ./bin/installdependencies.sh; else install_with_retry libicu; fi',
       'chown -R "$run_as":"$run_as" /opt/actions-runner /opt/hostedtoolcache',
       input.postInstall,
       "cleanup() {",
