@@ -21,6 +21,8 @@ import {
   AttemptJournalStore,
   AttemptJournalStoreError,
   attemptJournalStoreRunsDirectory,
+  buildYeetEconomicsReport,
+  EconomicsScope,
   EconomicsScopeRequest,
   PrRepository,
   renderAttemptJournalExport,
@@ -186,6 +188,16 @@ const attemptKeys = (journals: ReadonlyArray<EconomicsJournal>): ReadonlyArray<s
 const keysOf = (runId: string, ...ids: ReadonlyArray<UUID>): ReadonlyArray<string> =>
   A.map(ids, (id) => `${runId}/${id}`);
 
+const REPORT_SCOPE = EconomicsScope.make({ kind: "fleet", checkouts: [], branch: O.none() });
+
+// The report's attempt classes (MEAS-03): retained rows fold through the same
+// attempt path as live rows, so an interrupted attempt is terminated, never red.
+const classMixOf = (journals: ReadonlyArray<EconomicsJournal>): ReadonlyArray<readonly [string, number]> =>
+  A.map(
+    buildYeetEconomicsReport(journals, REPORT_SCOPE, DateTime.makeUnsafe(0), []).attempts.all.classMix,
+    (row) => [row.key, row.count] as const
+  );
+
 const duplicatesOf = (journals: ReadonlyArray<EconomicsJournal>) => ({
   starts: A.reduce(journals, 0, (total, journal) => total + journal.diagnostics.duplicateStartedRowsDeduplicated),
   terminals: A.reduce(journals, 0, (total, journal) => total + journal.diagnostics.duplicateFinishedRowsDeduplicated),
@@ -301,6 +313,7 @@ describe("attempt journal store", () => {
           const restored = yield* fleetCensus(fixture.clone);
           deepStrictEqual(attemptKeys(restored), keysOf(RUN_ID, a1, a2, a3));
           deepStrictEqual(duplicatesOf(restored), { starts: 2, terminals: 2 });
+          deepStrictEqual(classMixOf(restored), [["terminated", 3]]);
 
           // Duplicate import: retiring the restored lane appends only the new attempt's rows.
           const again = yield* remove(fixture.clone, true);
@@ -325,6 +338,9 @@ describe("attempt journal store", () => {
           const reaped = yield* fleetCensus(fixture.clone);
           deepStrictEqual(attemptKeys(reaped), keysOf(RUN_ID, a1, a2, a3));
           deepStrictEqual(duplicatesOf(reaped), { starts: 0, terminals: 0 });
+          // Every attempt is now read from the store only, still terminated and counted once.
+          deepStrictEqual(A.dedupe(A.map(reaped, (journal) => journal.checkout)), ["(retained)"]);
+          deepStrictEqual(classMixOf(reaped), [["terminated", 3]]);
         }).pipe(withHome(fixture.home));
       })
     );
