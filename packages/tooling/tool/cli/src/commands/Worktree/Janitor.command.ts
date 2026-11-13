@@ -26,6 +26,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { AttemptJournalStore } from "../Yeet/internal/AttemptJournalStore.ts";
 import { FleetMirrorService, FleetMirrorServiceLive } from "./Fleet.service.ts";
 import { ResidueReapClass, ResidueReapReport } from "./internal/ResidueReap.schemas.ts";
 import { runResidueReap } from "./internal/ResidueReap.ts";
@@ -367,5 +368,5 @@ export const residueReapCommand = Command.make(
   Command.withDescription(
     "Dry-run-first janitor for bounded Codex, Turbo, merged-preview, qualification-view, and beep cache residue"
   ),
-  Command.provide(Layer.merge(FleetMirrorServiceLive, ResidueTerminalLaneProbeLive))
+  Command.provide(Layer.mergeAll(FleetMirrorServiceLive, ResidueTerminalLaneProbeLive, AttemptJournalStore.layer))
 );
