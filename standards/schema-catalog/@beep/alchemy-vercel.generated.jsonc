@@ -19,6 +19,7 @@
     {"file":"packages/tooling/library/alchemy-vercel/src/Project.ts","symbol":"ProjectAttributes","kind":"struct-const","owner":"@beep/alchemy-vercel","identity":"ProjectAttributes","description":"Observed state of a Vercel project."},
     {"file":"packages/tooling/library/alchemy-vercel/src/Project.ts","symbol":"ProjectGitRepository","kind":"struct-const","owner":"@beep/alchemy-vercel","identity":"ProjectGitRepository","description":"Git repository a Vercel project is linked to at creation."},
     {"file":"packages/tooling/library/alchemy-vercel/src/Project.ts","symbol":"ProjectLink","kind":"struct-const","owner":"@beep/alchemy-vercel","identity":"ProjectLink","description":"Git repository link reported by Vercel, with its production branch."},
-    {"file":"packages/tooling/library/alchemy-vercel/src/Project.ts","symbol":"ProjectProps","kind":"struct-const","owner":"@beep/alchemy-vercel","identity":"ProjectProps","description":"Desired configuration of a Vercel project."}
+    {"file":"packages/tooling/library/alchemy-vercel/src/Project.ts","symbol":"ProjectProps","kind":"struct-const","owner":"@beep/alchemy-vercel","identity":"ProjectProps","description":"Desired configuration of a Vercel project."},
+    {"file":"packages/tooling/library/alchemy-vercel/src/Project.ts","symbol":"ProjectRepositoryMismatch","kind":"tagged-error","owner":"@beep/alchemy-vercel","identity":"ProjectRepositoryMismatch"}
   ]
 }

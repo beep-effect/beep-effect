@@ -101,7 +101,7 @@ describe("Vercel.Project", () => {
     Effect.gen(function* () {
       const stack = typed(scratch);
       yield* stack.destroy();
-      const seeded = FakeVercel.seedProject("vt-project-adopt");
+      const seeded = FakeVercel.seedProject("vt-project-adopt", "acme/oip");
 
       const refused = yield* Effect.exit(stack.deploy(Vercel.Project("Web", webProps("vt-project-adopt"))));
       expect(failureTag(refused)).toEqual(O.some("OwnedBySomeoneElse"));
@@ -112,6 +112,19 @@ describe("Vercel.Project", () => {
       expect(adopted.rootDirectory).toBe("apps/oip-web");
       yield* stack.destroy();
       expect(O.isNone(FakeVercel.project(seeded.id))).toBe(true);
+    })
+  );
+  test.provider("refuses to adopt a project linked to another repository", (scratch) =>
+    Effect.gen(function* () {
+      const stack = typed(scratch);
+      yield* stack.destroy();
+      const seeded = FakeVercel.seedProject("vt-project-relink", "acme/legacy");
+      const refused = yield* Effect.exit(
+        stack.deploy(Vercel.Project("Web", webProps("vt-project-relink")).pipe(adopt(true)))
+      );
+      expect(failureTag(refused)).toEqual(O.some("ProjectRepositoryMismatch"));
+      expect(O.getOrThrow(FakeVercel.project(seeded.id)).framework).toBeUndefined();
+      yield* stack.destroy();
     })
   );
 });

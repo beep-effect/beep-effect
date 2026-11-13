@@ -146,4 +146,46 @@ describe("Vercel.EnvVar", () => {
       expect(O.isNone(FakeVercel.env(seeded.id))).toBe(true);
     })
   );
+  test.provider("treats a variable on overlapping targets as foreign", (scratch) =>
+    Effect.gen(function* () {
+      const stack = typed(scratch);
+      yield* stack.destroy();
+      const project = FakeVercel.seedProject("vt-env-overlap");
+      const seeded = FakeVercel.seedEnv({
+        projectId: project.id,
+        key: "SITE",
+        value: "foreign",
+        type: "encrypted",
+        target: ["production", "preview"],
+      });
+      const declare = Vercel.EnvVar("Var", {
+        project: project.id,
+        teamId: TEAM_ID,
+        key: "SITE",
+        value: Redacted.make("ours"),
+        targets: ["production"],
+      });
+
+      const refused = yield* Effect.exit(stack.deploy(declare));
+      expect(failureTag(refused)).toEqual(O.some("OwnedBySomeoneElse"));
+      expect(O.getOrThrow(FakeVercel.env(seeded.id)).value).toBe("foreign");
+
+      const adopted = yield* stack.deploy(declare.pipe(adopt(true)));
+      expect(adopted.envId).toBe(seeded.id);
+      expect(adopted.targets).toEqual(["production"]);
+      yield* stack.destroy();
+    })
+  );
+
+  test.provider("keeps the variable when the default type is written out", (scratch) =>
+    Effect.gen(function* () {
+      const stack = typed(scratch);
+      yield* stack.destroy();
+      const env = { key: "SITE", value: Redacted.make("a"), targets: ["production"] } as const;
+      const implicit = yield* stack.deploy(stackWith("vt-env-default-type", env));
+      const explicit = yield* stack.deploy(stackWith("vt-env-default-type", { ...env, type: "encrypted" }));
+      expect(explicit.envId).toBe(implicit.envId);
+      yield* stack.destroy();
+    })
+  );
 });

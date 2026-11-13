@@ -113,13 +113,14 @@ export const FakeVercel = {
     ),
   domain: (name: string): O.Option<DomainRecord> => MutableHashMap.get(domainsByName, name),
   requests: (): ReadonlyArray<string> => requests,
-  seedProject: (name: string): ProjectRecord => {
+  seedProject: (name: string, repo?: string): ProjectRecord => {
     const project: ProjectRecord = {
       id: nextId("prj"),
       name,
       accountId: TEAM_ID,
       nodeVersion: "22.x",
       ssoProtection: null,
+      ...(repo === undefined ? {} : { repo }),
     };
     MutableHashMap.set(projectsById, project.id, project);
     return project;

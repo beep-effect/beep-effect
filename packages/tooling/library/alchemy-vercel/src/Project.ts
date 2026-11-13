@@ -20,6 +20,7 @@ import { flow } from "effect/Function";
 import * as Match from "effect/Match";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { teamScope } from "./internal/scope.ts";
 import type { DeclaredResource } from "./internal/resource.ts";
 import type { Providers } from "./Providers.ts";
@@ -290,6 +291,43 @@ export class ProjectAttributes extends S.Opaque<ProjectAttributes, { readonly br
 ) {}
 
 /**
+ * Raised when an existing project is linked to a different git repository than the
+ * declared `gitRepository`.
+ *
+ * **Details**
+ *
+ * The project API sets the repository only at creation and has no call that relinks it,
+ * so an adopted project whose link differs cannot be brought to the declared repository.
+ * Relink it in Vercel, or drop `gitRepository` from the props, then deploy again.
+ *
+ * **Example** (Describe a mismatch)
+ *
+ * ```ts
+ * import { ProjectRepositoryMismatch } from "@beep/alchemy-vercel/Project"
+ *
+ * const error = ProjectRepositoryMismatch.make({ projectId: "prj_1", declared: "acme/web", linked: "acme/old" })
+ * console.log(error._tag) // "ProjectRepositoryMismatch"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class ProjectRepositoryMismatch extends S.TaggedError<
+  ProjectRepositoryMismatch,
+  { readonly brand: unique symbol }
+>($I`ProjectRepositoryMismatch`)(
+  "ProjectRepositoryMismatch",
+  {
+    projectId: S.String.annotateKey({ description: "The existing project." }),
+    declared: S.String.annotateKey({ description: "Repository declared in the props, as `owner/name`." }),
+    linked: S.String.annotateKey({ description: "Repository Vercel reports, or empty when none is linked." }),
+  },
+  $I.annoteError<ProjectRepositoryMismatch>("ProjectRepositoryMismatch", {
+    description: "An existing Vercel project is linked to a different repository than the declared one.",
+  })
+) {}
+
+/**
  * Resource type of {@link Project}.
  *
  * @category resources
@@ -308,7 +346,9 @@ const ProjectClass = Resource<Project>("Vercel.Project");
  * create reads as foreign: deploying over an existing project of the same
  * name fails with `OwnedBySomeoneElse` unless the resource is wrapped in
  * `adopt(true)` (or the deploy passes `--adopt`). An adopted project is
- * then updated to the declared settings.
+ * then updated to the declared settings, except its repository link: the API
+ * sets that only at creation, so an adopted project linked elsewhere fails
+ * with `ProjectRepositoryMismatch`.
  *
  * **Example** (A Next.js project linked to GitHub)
  *
@@ -343,6 +383,21 @@ const gitRepositoryEquivalence = S.toEquivalence(S.UndefinedOr(ProjectGitReposit
  */
 const replacesProject = (news: ProjectProps, olds: ProjectProps): boolean =>
   news.teamId !== olds.teamId || !gitRepositoryEquivalence(news.gitRepository, olds.gitRepository);
+
+/**
+ * The repository an existing project is linked to must be the declared one: the project API
+ * cannot relink it, so an adopted project with another link fails instead of drifting.
+ */
+const assertRepository = Effect.fn("Vercel.Project.assertRepository")(function* (
+  news: ProjectProps,
+  observed: ProjectAttributes | undefined
+) {
+  if (observed === undefined || news.gitRepository === undefined) return;
+  const declared = news.gitRepository.repo;
+  const linked = observed.link?.repo ?? "";
+  if (Str.toLowerCase(declared) === Str.toLowerCase(linked)) return;
+  return yield* ProjectRepositoryMismatch.make({ projectId: observed.projectId, declared, linked });
+});
 
 const projectName = Effect.fn("Vercel.Project.name")(function* (
   id: string,
@@ -473,8 +528,10 @@ export const ProjectProvider = Provider.succeed(ProjectClass, {
     // unless it is this resource's own previous generation (a delete-first replacement).
     return output !== undefined || state.projectId === previous?.projectId ? state : Unowned(state);
   }),
-  diff: Effect.fn("Vercel.Project.provider.diff")(function* ({ news, olds }) {
-    if (!isResolved(news) || !replacesProject(news, olds)) return undefined;
+  diff: Effect.fn("Vercel.Project.provider.diff")(function* ({ news, olds, output }) {
+    if (!isResolved(news)) return undefined;
+    // Plan-time guard: an adopted (or relinked-outside-the-stack) project keeps its link.
+    if (!replacesProject(news, olds)) return yield* assertRepository(news, output);
     // Names are unique within a team, so a replacement that keeps its team and name deletes first.
     return { action: "replace", deleteFirst: news.teamId === olds.teamId && news.name === olds.name } as const;
   }),
@@ -485,6 +542,7 @@ export const ProjectProvider = Provider.succeed(ProjectClass, {
     const observed =
       (output === undefined ? undefined : yield* readProject(output.projectId, news.teamId)) ??
       (yield* readProject(name, news.teamId));
+    yield* assertRepository(news, observed);
     const current =
       observed ??
       (yield* projects

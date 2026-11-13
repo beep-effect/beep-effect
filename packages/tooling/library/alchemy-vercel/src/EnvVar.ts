@@ -301,6 +301,13 @@ export const EnvVar: DeclaredResource<EnvVar> = EnvVarClass;
 
 const sortTargets = A.sort(Order.String);
 
+/**
+ * Vercel's upsert replaces any variable with the same key and branch that shares a target, so
+ * existence and ownership are judged on overlapping targets, not only an identical set.
+ */
+const overlaps = (left: ReadonlyArray<string>, right: ReadonlyArray<string>): boolean =>
+  A.some(left, (target) => A.contains(right, target));
+
 const sameTargets = (left: ReadonlyArray<string>, right: ReadonlyArray<string>): boolean =>
   A.makeEquivalence(Equivalence.String)(sortTargets(left), sortTargets(right));
 
@@ -339,12 +346,15 @@ const findEnv = Effect.fn("Vercel.EnvVar.find")(function* (
     readonly key: string;
     readonly targets: ReadonlyArray<string>;
     readonly gitBranch?: string;
+    readonly overlap?: boolean;
   }
 ) {
   const envs = yield* listEnvs(project, teamId).pipe(Effect.catchTag("NotFound", () => Effect.succeed([])));
   return A.findFirst(A.filter(envs, hasId), (env) =>
     match.envId === undefined
-      ? env.key === match.key && env.gitBranch === match.gitBranch && sameTargets(listedTargets(env), match.targets)
+      ? env.key === match.key &&
+        env.gitBranch === match.gitBranch &&
+        (match.overlap === true ? overlaps : sameTargets)(listedTargets(env), match.targets)
       : env.id === match.envId
   ).pipe(O.map(toAttributes(project)), O.getOrUndefined);
 });
@@ -384,6 +394,7 @@ export const EnvVarProvider = Provider.succeed(EnvVarClass, {
     const state = yield* findEnv(output?.projectId ?? olds.project, olds.teamId, {
       key: olds.key,
       targets: olds.targets,
+      overlap: true,
       ...O.getSomesStruct({
         envId: O.fromUndefinedOr(output?.envId),
         gitBranch: O.fromUndefinedOr(olds.gitBranch),
@@ -396,7 +407,11 @@ export const EnvVarProvider = Provider.succeed(EnvVarClass, {
   }),
   diff: Effect.fn("Vercel.EnvVar.provider.diff")(function* ({ news, olds }) {
     if (!isResolved(news)) return undefined;
-    if (news.project !== olds.project || news.teamId !== olds.teamId || news.type !== olds.type) {
+    if (
+      news.project !== olds.project ||
+      news.teamId !== olds.teamId ||
+      (news.type ?? EnvVarType.Enum.encrypted) !== (olds.type ?? EnvVarType.Enum.encrypted)
+    ) {
       // A same-project replacement would collide with the old key and targets, so it deletes first.
       return { action: "replace", deleteFirst: news.project === olds.project } as const;
     }
@@ -411,6 +426,7 @@ export const EnvVarProvider = Provider.succeed(EnvVarClass, {
         ? yield* findEnv(news.project, news.teamId, {
             key: news.key,
             targets: news.targets,
+            overlap: true,
             ...O.getSomesStruct({ gitBranch: O.fromUndefinedOr(news.gitBranch) }),
           })
         : yield* findEnv(output.projectId, news.teamId, { envId: output.envId, key: news.key, targets: news.targets });
