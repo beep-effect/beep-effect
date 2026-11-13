@@ -38,10 +38,11 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 P1 Implement — slice 1 (MEAS-01 slice 1 with MEAS-04) merged as #3118 (`beep ci certainty` and per-attempt
-job reads; coverage rows fixed by #3121, decision `slice-1-coverage-reds`). Slice 2 (ROUT-05 slice 1) is in
-review: every hosted job is attributed to a lane, a support job or unknown, and `beep ci route census` reports
-the conservation census (decision `job-attribution-classes`). Next startable: MEAS-02 (slice 3) and the nightly
-(slice 4).
+job reads; coverage rows fixed by #3121, decision `slice-1-coverage-reds`). Slice 2 (ROUT-05 slice 1) merged
+as #3141: every hosted job is attributed to a lane, a support job or unknown, and `beep ci route census` reports
+the conservation census (decision `job-attribution-classes`). Slice 3 (MEAS-02 with DEPS-10) is in review: the
+Yeet economics fold attributes refusals by failure kind as rows of the same `actionableLaneMix` (checkpoint
+`slice-3-refusal-attribution`). Next startable: the nightly (slice 4).
 
 ## Latest Evidence
 
@@ -56,8 +57,8 @@ the conservation census (decision `job-attribution-classes`). Next startable: ME
 ## Notes
 
 - Merged: MEAS-01 slice 1 with MEAS-04 (#3118), "feat(ci): beep ci certainty head-level required-green and
-  main-verdict report" (M, CLI only). ROUT-05 slice 1 (partition job mapping) is in review. MEAS-02 (refusal
-  attribution) can open beside it, within the packet's three-PR limit. The nightly workflow is its own later PR.
+  main-verdict report" (M, CLI only), and ROUT-05 slice 1 (partition job mapping, #3141). MEAS-02 (refusal
+  attribution, slice 3) is in review. The nightly workflow is its own later PR.
 - Order constraints: MEAS-02 lands before any WaveOrder re-seed in `local-proof-under-ten`; ROUT-05 lands
   before any census or cost ledger (MEAS-05) is trusted and before any route refinement replay; MEAS-07 lands
   before journal retention (PERIL-11); SCHE-09 is owned here and consumed by `local-proof-under-ten` (D23); nightly reads are budgeted against
