@@ -131,7 +131,9 @@ describe("compute profile probe", () => {
   );
 });
 
-describe("memory stats under a compute ceiling", () => {
+const ceilingMemoryStats = memoryStatsLayerFor(source(7 * GIB, 15 * GIB)).pipe(Layer.provide(FileSystem.layerNoop({})));
+
+it.layer(ceilingMemoryStats)("memory stats under a compute ceiling", (it) => {
   it.effect("traces the cgroup reservation-capacity read as MemoryStats.reservationCapacity", () =>
     Effect.gen(function* () {
       const spans = MutableRef.make<ReadonlyArray<string>>([]);
@@ -145,9 +147,7 @@ describe("memory stats under a compute ceiling", () => {
       assertDefined(stats.reservationCapacity);
       yield* stats.reservationCapacity([], AdmissionConfig.make({})).pipe(Effect.withTracer(tracer));
       expect(MutableRef.get(spans)).toContain("MemoryStats.reservationCapacity");
-    }).pipe(
-      Effect.provide(memoryStatsLayerFor(source(7 * GIB, 15 * GIB)).pipe(Layer.provide(FileSystem.layerNoop({}))))
-    )
+    })
   );
 });
 
