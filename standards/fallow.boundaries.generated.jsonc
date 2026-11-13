@@ -3521,6 +3521,7 @@
         "allow": [
           "@beep/html",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/markdown",
           "@beep/md",
           "@beep/schema",
@@ -3531,6 +3532,7 @@
         "allowTypeOnly": [
           "@beep/html",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/markdown",
           "@beep/md",
           "@beep/schema",

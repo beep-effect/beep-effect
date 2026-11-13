@@ -24,19 +24,15 @@ import { JsoncCanonicalizeError, JsoncFingerprint } from "@beep/jsonc/JsoncFinge
 import { Md } from "@beep/md";
 import { Document } from "@beep/md/Md.model";
 import { canonicalJsonText } from "@beep/repo-cli/test/Goals";
-import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { assertSuccess } from "@effect/vitest/utils";
-import * as Arbitrary from "effect/Arbitrary";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import { identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import type { JsoncCanonicalizeErrorCode } from "@beep/jsonc/JsoncFingerprint";
 
 type Encoder = (value: unknown) => string;
@@ -47,149 +43,7 @@ const swapped: ReadonlyArray<readonly [name: string, encode: Encoder]> = [
   ["PacketCore canonicalJsonText", canonicalJsonText],
 ];
 
-// ── Generator ───────────────────────────────────────────────────────────────
-
-// Numbers whose ECMAScript serialization is easy to get wrong: negative zero,
-// both ends of the exponent switch (1e21, 1e-7), the smallest and largest
-// doubles, and integers on either side of 2 ** 53.
-const edgeNumbers = [
-  0,
-  -0,
-  1,
-  -1,
-  0.1 + 0.2,
-  1.5,
-  4.35,
-  1e-6,
-  1e-7,
-  1e20,
-  1e21,
-  123456789012345680000,
-  333333333.3333333,
-  5e-324,
-  2 ** 53,
-  2 ** 53 + 2,
-  Number.MAX_SAFE_INTEGER,
-  Number.MIN_SAFE_INTEGER,
-  Number.MAX_VALUE,
-  -Number.MAX_VALUE,
-] as const;
-
-// Strings that separate the escaping and ordering rules: every two-character
-// escape, C0 controls, the two line separators JSON leaves unescaped, a
-// precomposed and a decomposed accent, and three keys whose UTF-16 code-unit
-// order (RFC 8785) differs from their code-point order: U+10000 is the unit
-// pair D800 DC00, so it sorts before U+E000 and U+FB00.
-const edgeStrings = [
-  "",
-  '"',
-  "\\",
-  "/",
-  "\u0000",
-  "\u001f",
-  "\u007f",
-  "\b\f\n\r\t",
-  "\u2028",
-  "\u2029",
-  "\u00e9",
-  "e\u0301",
-  "\ue000",
-  "\ufb00",
-  "\uffff",
-  "\u{10000}",
-  "\u{1f600}",
-  "__proto__",
-  "constructor",
-  "toString",
-  "0",
-  "9",
-  "10",
-  "a",
-  "A",
-  "aa",
-] as const;
-
-const pick = <T>(pool: A.NonEmptyReadonlyArray<T>): Arbitrary.Arbitrary<T> =>
-  Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: pool.length - 1 }))).pipe(
-    Arbitrary.map((index) => A.getUnsafe(pool, index))
-  );
-
-// `Arbitrary.schema(S.Json)` also generates strings with unpaired surrogates,
-// which are not I-JSON. Those belong to the off-domain table below, so the
-// plain-JSON generator replaces them with U+FFFD and keeps every run on the
-// domain instead of discarding it.
-const isJsonArray = (value: S.Json): value is S.JsonArray => A.isArray(value);
-const isJsonObject = (value: S.Json): value is S.JsonObject =>
-  P.isObject(value) && !P.isNull(value) && !A.isArray(value);
-
-const wellFormed = (value: S.Json): S.Json => {
-  if (P.isString(value)) {
-    return value.toWellFormed();
-  }
-  if (isJsonArray(value)) {
-    return A.map(value, wellFormed);
-  }
-  if (isJsonObject(value)) {
-    return pipe(
-      R.toEntries(value),
-      A.map(([key, entry]) => [key.toWellFormed(), wellFormed(entry)] as const),
-      R.fromEntries
-    );
-  }
-  return value;
-};
-
-// A schema-derived JSON tree, widened with the edge pools: the pools appear as
-// array elements, as member values and as member keys, at the top level and
-// one level down, so key ordering is exercised on exactly the keys where the
-// two orders disagree.
-const plainJsonObject: Arbitrary.Arbitrary<S.JsonObject> = Arbitrary.all({
-  tree: Arbitrary.schema(S.Json).pipe(Arbitrary.map(wellFormed)),
-  numbers: Arbitrary.array(pick(edgeNumbers), { maxLength: 8 }),
-  strings: Arbitrary.array(pick(edgeStrings), { maxLength: 8 }),
-}).pipe(
-  Arbitrary.map(({ tree, numbers, strings }): S.JsonObject => {
-    const keyed = R.fromEntries(
-      A.map(strings, (key, index) => [key, O.getOrElse(A.get(numbers, index), (): S.Json => tree)] as const)
-    );
-    return {
-      tree,
-      numbers,
-      strings,
-      keyed,
-      nested: [[tree, keyed], { "": strings, [Str.repeat(2)("\u{10000}")]: numbers }],
-    };
-  })
-);
-
-// The md encoder has no entry point of its own: it renders a document's JSON
-// frontmatter between two fence lines.
-const mdFrontmatter = (frontmatter: S.JsonObject): string =>
-  Md.renderUnsafe(Document.make({ children: [], frontmatter: O.some(frontmatter) }));
-
-const fenced = (canonical: string): string => `---json\n${canonical}\n---`;
-
-// ── Plain JSON: byte equality of the encoders not yet swapped ───────────────
-
-describe("canonical digest owner: md frontmatter differential", () => {
-  it.prop(
-    "@beep/md frontmatter emits the owner's RFC 8785 bytes for every plain JSON object",
-    { value: plainJsonObject },
-    ({ value }) => {
-      assertSuccess(Result.map(JsoncFingerprint.canonicalizeResult(value), fenced), mdFrontmatter(value));
-    },
-    { arbitrary: fcRuns(200) }
-  );
-
-  // Unlike the other encoders, this one writes its own string escapes and
-  // leaves an unpaired surrogate unescaped.
-  it("fixes what @beep/md frontmatter does with an unpaired surrogate", () => {
-    expect(mdFrontmatter({ s: "\ud800" })).toBe(fenced('{"s":"\ud800"}'));
-    expect(observeOwner({ s: "\ud800" })).toStrictEqual({ refused: "LoneSurrogate" });
-  });
-});
-
-// ── Off the JSON domain: what each side does today ──────────────────────────
+// ── Off the JSON domain: what each export did and does ──────────────────────
 
 type Observed =
   | { readonly text: string }
@@ -335,5 +189,43 @@ describe("canonical digest owner: behaviour off the JSON domain", () => {
       expect(observeEncoder(encode, pastCap)).toStrictEqual({ refused: "NestingDepthExceeded" });
     }
     expect(observeOwner(pastCap)).toStrictEqual({ refused: "NestingDepthExceeded" });
+  });
+});
+
+// ── @beep/md frontmatter ────────────────────────────────────────────────────
+
+const frontmatterDocument = (frontmatter: S.JsonObject): Document =>
+  Document.make({ children: [], frontmatter: O.some(frontmatter) });
+
+const fenced = (canonical: string): string => `---json\n${canonical}\n---`;
+
+describe("canonical digest owner: @beep/md frontmatter", () => {
+  // The fences and the empty-object rule are md's own; the JSON between the
+  // fences is the owner's, keys in UTF-16 code-unit order.
+  it("renders JSON frontmatter as the owner's RFC 8785 text between fences", () => {
+    assertSuccess(
+      Result.map(
+        Md.render(frontmatterDocument({ b: 1, "\ue000": 3, a: [true, null], "\u{10000}": 2 })),
+        (markdown): string => markdown
+      ),
+      fenced('{"a":[true,null],"b":1,"\u{10000}":2,"\ue000":3}')
+    );
+  });
+
+  // Behaviour change from slice C. The legacy encoder wrote its own escapes
+  // and left an unpaired surrogate raw, `{"s":"\ud800"}` between the fences
+  // (recorded from slice A). The render entry points now refuse it: `render`
+  // fails typed with a `RenderError` carrying the owner's refusal as its
+  // cause, and `renderUnsafe` throws the owner's error.
+  it("refuses an unpaired surrogate: render fails typed, renderUnsafe throws", () => {
+    const illFormed = frontmatterDocument({ s: "\ud800" });
+
+    assertFailure(
+      Result.mapError(Md.render(illFormed), (error) =>
+        S.is(JsoncCanonicalizeError)(error.cause) ? error.cause.code : "not refused"
+      ),
+      "LoneSurrogate"
+    );
+    expect(observeEncoder(() => Md.renderUnsafe(illFormed), undefined)).toStrictEqual({ refused: "LoneSurrogate" });
   });
 });
