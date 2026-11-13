@@ -108,8 +108,8 @@ log tail) with back-links to the exploration, not copies; cross-link both manife
 the goal (`goals/<slug>/research/SOURCES.md`), reproducing the source corpus for
 implementation and linking the exploration's ledger as primary (the scaffold
 writes section 5's links; in anything you copy across, rewrite each relative
-link and its backticked label to `explorations/<slug>/<file>`, since
-`../RESEARCH.md` resolves inside the goal), and register it
+link and its backticked label to `explorations/<slug>/<file>`, since a
+parent-relative link resolves inside the goal), and register it
 in the goal manifest `researchReports[]` + `currentSourceOfTruth[]` with
 `provenance.exploration` wired to the exploration's `links.goals`; flip
 exploration status to `graduated` once every promised-now goal exists —
