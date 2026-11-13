@@ -32,10 +32,10 @@ identifiers are redacted.
 
 ## 2026-11-13: an out-of-repo tool broke on a script rename
 
-- **Doing:** the skills port (#3293), which replaced
-  `.claude/skills/plasma-sensitive-entry/scripts/prompt.py` with `prompt.ts`.
-- **Evidence:** the workstation tool `~/.local/bin/aws-vault-prime` ran
-  `python3 -I -B …/scripts/prompt.py --write-fd … --title … --label … --timeout 90`
+- **Doing:** the skills port (#3293), which replaced the plasma-sensitive-entry
+  Python prompt helper with `scripts/prompt.ts`.
+- **Evidence:** the workstation tool aws-vault-prime (in the user's local bin
+  directory) ran the Python helper with `--write-fd … --title … --label … --timeout 90`
   against the primary clone. Once main reached that clone, every AWS TOTP dialog
   failed silently and the operator saw no prompt. The orchestrator patched the
   tool to call `bun …/scripts/prompt.ts` with the same flags. The repo-side
