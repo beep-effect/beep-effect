@@ -63,12 +63,12 @@
     {
       "id": "P1",
       "name": "Log and L0 projection",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Admission",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",
@@ -113,5 +113,5 @@
     "A ruling of the 2026-11-09 decision-log entry cannot be met by the phase as designed: the phase stops and reports; the ruling is not routed around.",
     "A spike-derived bar is missed: remediation on the current route, or a decision file re-baselining the bar with a new measurement; never a silent threshold edit."
   ],
-  "statusNote": "P1 Log and L0 projection in progress (2026-11-10): the live MemoryLog over effect/eventlog and @beep/sqlite, the Markdown node partition with its reparse check, and the live MarkdownProjector (importFolder, exportFolder, projectNode) are built; AC-1 (byte identity, edit confinement, concurrent insertions) and the AC-8 nonempty-folder import tests are green locally on the frozen goals sample; P0 completed in PR #3013."
+  "statusNote": "P2 Admission in progress (2026-11-13): op capture against the exported base, live store-side admission (per-node compare-and-set, whole-node three-way merge, held writes as log events, typed status fields with the lifecycle guard) and the capture-admit-export write path are built; AC-2 is green on the adversarial fixture (0 of 100 runs with loss, 1,000/1,000 contested nodes held with both texts); AC-3 is measured and stays open (its ratio bars are not comparable on this upper-bound fixture); P1 completed in PR #3058."
 }
