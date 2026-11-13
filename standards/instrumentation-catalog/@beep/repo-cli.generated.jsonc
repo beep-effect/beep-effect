@@ -2913,6 +2913,7 @@
     {"name":"QualityTasks.readPackageJson","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.readPackageJsonFile","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.readQualityTaskManifest","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"QualityTasks.readRequiredContexts","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.readTurboLaneDigest","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.readTurboLaneLedger","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.recordTurboLaneLedgerRow","owner":"@beep/repo-cli","family":"tooling","conforms":true},
