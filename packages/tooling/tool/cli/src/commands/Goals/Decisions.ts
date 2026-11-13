@@ -4,7 +4,8 @@
  * directory into the generated `## Decision log` block of `SPEC.md` (and the
  * `## Checkpoints` block of `PLAN.md` for `kind: checkpoint`); `check` reports
  * drift, `write` regenerates, `add` creates a schema-valid file and regenerates
- * in one step.
+ * in one step. `add --final <n>` with `--attribute-red` or `--operator-ruling`
+ * also writes the completion-claim blocks for a goal's final PR.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -33,6 +34,7 @@ import { GOAL_DECISIONS_DIR, GoalDecisionKind, GoalDecisionLogReport } from "./D
 import { GoalDecisionLog } from "./Decisions.service.ts";
 import { makeGoalPacketFilesystemReader } from "./Doctor.ts";
 import { GoalPacketNotFoundError, GoalPlanInputError } from "./Goals.errors.ts";
+import { GoalAttributedRedCause, GoalRedAttributionBlock } from "./Goals.schemas.ts";
 import { listGoalPackets } from "./Inventory.ts";
 import { canonicalJsonTextPretty } from "./PacketCore/PacketDigest.ts";
 import type { GoalDecisionLogShape } from "./Decisions.service.ts";
@@ -228,6 +230,14 @@ const yamlScalar = (value: string): string => `"${pipe(value, Str.replace(/\\/g,
 /**
  * Input of `beep goals decisions add`, as parsed from the command line.
  *
+ * **Details**
+ *
+ * `final`, `attributeRed` and `operatorRuling` write the completion-claim
+ * blocks: each `attributeRed` entry is `<context>=<cause>#<fix>` and becomes
+ * one red of a `redAttribution` block for `final`, and `operatorRuling`
+ * writes an `operatorRuling` block for `final`. All three default to absent,
+ * so an input without claims constructs as before.
+ *
  * **Example** (Construct an add input)
  *
  * ```ts
@@ -262,6 +272,9 @@ export class GoalDecisionAddInput extends S.Opaque<GoalDecisionAddInput, { reado
     pullRequest: S.Option(S.String),
     date: S.Option(S.String),
     topic: S.Option(S.String),
+    final: S.Option(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    attributeRed: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed(A.empty<string>()))),
+    operatorRuling: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
   }).pipe(
     $I.annoteSchema("GoalDecisionAddInput", {
       description: "Raw command-line input of beep goals decisions add before validation.",
@@ -270,10 +283,118 @@ export class GoalDecisionAddInput extends S.Opaque<GoalDecisionAddInput, { reado
 ) {}
 
 const isKind = S.is(GoalDecisionKind);
+const isAttributedRedCause = S.is(GoalAttributedRedCause);
+const decodeRedAttribution = S.decodeUnknownEffect(GoalRedAttributionBlock, { errors: "all" });
+
+const positiveInteger = (flag: string, raw: O.Option<string>) =>
+  O.match(raw, {
+    onNone: () => Effect.succeedNone,
+    onSome: (value) =>
+      /^[1-9]\d*$/.test(value)
+        ? Effect.succeedSome(Number(value))
+        : Effect.fail(GoalPlanInputError.new(`${flag} "${value}" is not a positive integer.`)),
+  });
+
+// `<context>=<cause>#<fix>`: the context runs to the last "=" and may itself contain "=" or "#".
+const ATTRIBUTE_RED = /^(.+)=([^=#]+)#\s*([1-9]\d*)$/;
+
+const parseAttributeRed = Effect.fn("Goals.parseAttributeRed")(function* (raw: string) {
+  const parts = pipe(
+    Str.trim(raw),
+    Str.match(ATTRIBUTE_RED),
+    O.flatMap((match) => O.all([O.fromUndefinedOr(match[1]), O.fromUndefinedOr(match[2]), O.fromUndefinedOr(match[3])]))
+  );
+  if (O.isNone(parts)) {
+    return yield* GoalPlanInputError.new(
+      `--attribute-red "${raw}" is not "<context>=<cause>#<fix PR>" (for example "Heavy / Check=inherited#2994").`
+    );
+  }
+  const [context, cause, fix] = parts.value;
+  const attribution = Str.trim(cause);
+  if (!isAttributedRedCause(attribution)) {
+    return yield* GoalPlanInputError.new(
+      `--attribute-red "${raw}": cause "${attribution}" must be one of: ${A.join(GoalAttributedRedCause.literals, ", ")}.`
+    );
+  }
+  return { context: Str.trim(context), attribution, fixPullRequest: Number(fix) };
+});
+
+// Claims need --final and a kind: decision file; --final needs a claim.
+const checkClaimFlags = Effect.fn("Goals.checkDecisionClaimFlags")(function* (
+  kind: GoalDecisionKind,
+  finalPullRequest: O.Option<number>,
+  claims: boolean
+) {
+  if (claims && kind !== GoalDecisionKind.Enum.decision) {
+    return yield* GoalPlanInputError.new(
+      "--attribute-red and --operator-ruling write completion claims, which only a kind: decision file may carry."
+    );
+  }
+  if (O.isSome(finalPullRequest) && !claims) {
+    return yield* GoalPlanInputError.new("--final needs --attribute-red or --operator-ruling.");
+  }
+  if (O.isNone(finalPullRequest) && claims) {
+    return yield* GoalPlanInputError.new(
+      "--attribute-red and --operator-ruling need --final <n>, the goal's final PR."
+    );
+  }
+});
+
+// The reds as one validated redAttribution block for the final, or None without any.
+const redAttributionBlock = (final: number, reds: ReadonlyArray<unknown>) =>
+  A.isReadonlyArrayNonEmpty(reds)
+    ? decodeRedAttribution({ finalPullRequest: final, reds }).pipe(
+        Effect.mapBoth({
+          onSuccess: O.some,
+          onFailure: (error) =>
+            GoalPlanInputError.new(
+              `--attribute-red does not form a valid redAttribution block for #${final}: ${pipe(
+                String(error.message),
+                Str.replace(/\s+/g, " "),
+                Str.slice(0, 200)
+              )}`
+            ),
+        })
+      )
+    : Effect.succeed(O.none<GoalRedAttributionBlock>());
+
+// The claim blocks a decision file carries; both stay None without --attribute-red or --operator-ruling.
+const completionClaims = Effect.fn("Goals.decisionCompletionClaims")(function* (
+  kind: GoalDecisionKind,
+  finalPullRequest: O.Option<number>,
+  input: GoalDecisionAddInput
+) {
+  const reds = yield* Effect.forEach(input.attributeRed, parseAttributeRed);
+  yield* checkClaimFlags(kind, finalPullRequest, A.isReadonlyArrayNonEmpty(reds) || input.operatorRuling);
+  if (O.isNone(finalPullRequest)) {
+    return { redAttribution: O.none<GoalRedAttributionBlock>(), operatorRuling: O.none<number>() };
+  }
+  const final = finalPullRequest.value;
+  const redAttribution = yield* redAttributionBlock(final, reds);
+  return { redAttribution, operatorRuling: input.operatorRuling ? O.some(final) : O.none<number>() };
+});
+
+const redAttributionLines = (block: GoalRedAttributionBlock): ReadonlyArray<string> => [
+  "redAttribution:",
+  `  finalPullRequest: ${block.finalPullRequest}`,
+  "  reds:",
+  ...A.map(
+    block.reds,
+    (red) =>
+      `    - { context: ${yamlScalar(red.context)}, attribution: ${red.attribution}, fixPullRequest: ${red.fixPullRequest} }`
+  ),
+];
 
 /**
  * Runs `beep goals decisions add`: writes a schema-valid decision file and
  * regenerates the packet's blocks.
+ *
+ * **Details**
+ *
+ * `--attribute-red` and `--operator-ruling` need `--final` and a
+ * `kind: decision` file, and `--final` needs one of them. The reds are
+ * validated as a `redAttribution` block (unique contexts, no fix PR equal to
+ * the final) before anything is written.
  *
  * **Example** (Build the add effect)
  *
@@ -315,16 +436,12 @@ export const runGoalsDecisionsAdd = Effect.fn("Goals.runDecisionsAdd")(function*
   if (Str.isEmpty(topic)) {
     return yield* GoalPlanInputError.new("--topic (or --title) must contain at least one letter or digit.");
   }
-  const pullRequest = yield* O.match(input.pullRequest, {
-    onNone: () => Effect.succeedNone,
-    onSome: (raw) =>
-      /^[1-9]\d*$/.test(raw)
-        ? Effect.succeedSome(Number(raw))
-        : Effect.fail(GoalPlanInputError.new(`--pr "${raw}" is not a positive integer.`)),
-  });
+  const pullRequest = yield* positiveInteger("--pr", input.pullRequest);
+  const finalPullRequest = yield* positiveInteger("--final", input.final);
   if (Str.isEmpty(Str.trim(input.title)) || Str.isEmpty(Str.trim(input.reversal))) {
     return yield* GoalPlanInputError.new("--title and --reversal must be non-empty single lines.");
   }
+  const claims = yield* completionClaims(kind, finalPullRequest, input);
   const frontmatter = [
     "---",
     `title: ${yamlScalar(Str.trim(input.title))}`,
@@ -333,6 +450,11 @@ export const runGoalsDecisionsAdd = Effect.fn("Goals.runDecisionsAdd")(function*
     ...O.match(input.lane, { onNone: A.empty<string>, onSome: (lane) => [`lane: ${yamlScalar(Str.trim(lane))}`] }),
     ...O.match(pullRequest, { onNone: A.empty<string>, onSome: (pr) => [`pullRequest: ${pr}`] }),
     `reversal: ${yamlScalar(Str.trim(input.reversal))}`,
+    ...O.match(claims.redAttribution, { onNone: A.empty<string>, onSome: redAttributionLines }),
+    ...O.match(claims.operatorRuling, {
+      onNone: A.empty<string>,
+      onSome: (final) => ["operatorRuling:", `  finalPullRequest: ${final}`],
+    }),
     "---",
     "",
   ];
@@ -395,6 +517,20 @@ const addCommand = Command.make(
     topic: Flag.String("topic").pipe(
       Flag.withDescription("File-name topic (lowercase hyphenated); defaults to the slugified title"),
       Flag.optional
+    ),
+    final: Flag.String("final").pipe(
+      Flag.withDescription("The goal's final PR that --attribute-red and --operator-ruling claims name"),
+      Flag.optional
+    ),
+    attributeRed: Flag.String("attribute-red").pipe(
+      Flag.withDescription(
+        'Repeatable "<context>=<cause>#<fix PR>": a red required check the final merged over (cause inherited, introduced or mixed)'
+      ),
+      Flag.atLeast(0)
+    ),
+    operatorRuling: Flag.Boolean("operator-ruling").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Record the operator's ruling that closes the --final PR")
     ),
   },
   Effect.fn("Goals.decisionsAddCommand")(function* (input) {

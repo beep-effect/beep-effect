@@ -1,18 +1,30 @@
 /**
  * `beep goals doctor` — diff goal-packet manifest claims against reality.
  *
- * Blocking findings (manifest missing/invalid, status↔lifecycle mismatch,
+ * Blocking findings (manifest missing/invalid, a retired `proposedCloseout`
+ * key included, status↔lifecycle mismatch,
  * README status-line drift, oversized `GOAL.md`, all-phases-terminal-but-
  * active, invalid reflection frontmatter in any packet, invalid decision files
  * and a stale generated Decision log / Checkpoints block, a `researchReports`
- * array that drifts from the packet's `research/` listing) are checked against
- * the committed baseline `goals/goals-doctor.baseline.jsonc` following the
- * fallow ratchet pattern: inherited findings are advisory, new findings
- * block, and the baseline may only shrink. Advisory findings (staleness,
- * missing launchers, schema-version upgrades, unsatisfied completion gates,
- * missing supersession pointers, broken exploration back-links) never block.
+ * array that drifts from the packet's `research/` listing, and online a
+ * `closeout-unverified` committed closeout) are checked against the committed
+ * baseline `goals/goals-doctor.baseline.jsonc` following the fallow ratchet
+ * pattern: inherited findings are advisory, new findings block, and the
+ * baseline may only shrink. Advisory findings (staleness, missing launchers,
+ * schema-version upgrades, unknown or unsatisfied completion gates, missing
+ * supersession pointers, broken exploration back-links) never block.
  * Git-backed advisories run as single-pass log walks and degrade to a
  * skipped-with-note on shallow or unavailable history.
+ *
+ * **Details**
+ *
+ * With `--online`, every committed closeout is classified from hosted facts
+ * (`CloseoutCheck.ts`): an open final, a verified final, an operator ruling
+ * and a final merged before the 28-day rule-suite window are notes; an
+ * unknown caused only by failed GitHub reads is an advisory; anything else
+ * (an unattributed red, an outstanding thread, a structural unknown, a final
+ * closed without merging) is the blocking `<slug> closeout-unverified #N`.
+ * Offline, completion findings come from stored receipts and never block.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -28,6 +40,7 @@ import { A, O, pipe, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual, flow } from "effect/Function";
@@ -42,17 +55,21 @@ import { diffMembership } from "../../internal/ratchet/RatchetDiff.ts";
 import { runRepoCommandCaptureRaw } from "../../internal/repo-run/index.ts";
 import { ExplorationManifest, ExplorationStatus } from "../Explore/Atlas.ts";
 import { reflectionFileNameIsArtifact, reflectionFrontmatterIsValid } from "../Lint/ReflectionArtifact.ts";
+import { GoalCloseoutCheckOutcome, readGoalCloseoutCheck } from "./CloseoutCheck.ts";
 import {
+  GOAL_CLOSEOUT_WINDOW_DAYS,
   goalCloseoutView,
   goalCompletionUnknownReasons,
+  goalFinalWithinCloseoutWindow,
   observeGoalCompletion,
   storedGoalCompletion,
+  withGoalCompletionIo,
 } from "./Completion.ts";
+import { readGoalCompletion } from "./CompletionEvidence.ts";
 import { goalDecisionLogReport } from "./Decisions.projection.ts";
 import { GOAL_DECISIONS_DIR } from "./Decisions.schemas.ts";
 import {
   decodeGoalManifest,
-  GoalCloseoutVerification,
   GoalOpsScriptPath,
   GoalPhaseStatus,
   GoalStatus,
@@ -70,8 +87,15 @@ import {
   readmeLifecycleToken,
 } from "./Inventory.ts";
 import { diffResearchReports, projectResearchReports, renderResearchReportsDrift } from "./ManifestProjection.ts";
+import type { GoalCloseoutCheck } from "./CloseoutCheck.ts";
 import type { GoalDecisionDocument, GoalDecisionReader } from "./Decisions.projection.ts";
-import type { GoalCompletionReceipt, GoalManifest, GoalPullRequestRef } from "./Goals.schemas.ts";
+import type {
+  GoalAttributedRedFact,
+  GoalCloseoutRecord,
+  GoalCompletionReceipt,
+  GoalManifest,
+  GoalPullRequestRef,
+} from "./Goals.schemas.ts";
 import type { CapabilityProjection } from "./Graph.schemas.ts";
 import type { GoalPacketRecord } from "./Inventory.ts";
 
@@ -139,7 +163,7 @@ export const GoalDoctorFindingKind = LiteralKit([
   "schema-version-upgrade",
   "completion-gate-unsatisfied",
   "completion-gate-unknown",
-  "closeout-adoption-pending",
+  "closeout-unverified",
   "superseded-without-pointer",
   "exploration-backlink-missing",
   "packet-stream-fork",
@@ -806,14 +830,11 @@ const statusConsistencyFindings = (
     );
   }
 
-  // A proposed closeout keeps its declared status active or paused until its
-  // shared completion receipt verifies; `goals set-status completed-retained`
-  // then adopts it, and the completion-gate findings report it until then.
-  // Asking such a packet to change its status earlier would be a contradiction.
+  // Closeout is one PR: the final binds `closeout` and flips the status itself,
+  // so an active packet whose phases are all complete owes that flip.
   const phases = goalManifestPhases(manifest);
   if (
     GoalStatus.is.active(status) &&
-    manifest.proposedCloseout === undefined &&
     A.isReadonlyArrayNonEmpty(phases) &&
     A.every(phases, (phase) => GoalPhaseStatus.is.complete(phase.status))
   ) {
@@ -967,12 +988,36 @@ const manifestAdvisoryFindings = (
   return findings;
 };
 
+// The retired `proposedCloseout` key is no longer modeled, so the decoder
+// strips it and only the raw JSON still shows it. One-PR closeout binds the
+// final through `goals set-status`, which deletes the key (also beside a
+// committed closeout or on a grandfathered gate); a manifest that still
+// carries it (an agent following an old checklist) blocks until then.
+const legacyProposalFindings = (
+  record: GoalPacketRecord,
+  raw: Readonly<Record<string, unknown>>
+): ReadonlyArray<GoalDoctorFinding> =>
+  R.has(raw, "proposedCloseout")
+    ? A.of(
+        finding(
+          record.slug,
+          "manifest-invalid",
+          "blocking",
+          `ops/manifest.json has a legacy proposedCloseout; run \`bun run beep goals set-status ${record.slug} completed-retained\`, which binds its final, or deletes it when a closeout is already committed or the gate is grandfathered.`
+        )
+      )
+    : A.empty<GoalDoctorFinding>();
+
 const decodedManifestFindings = (
   record: GoalPacketRecord,
   manifest: GoalManifest,
   raw: Readonly<Record<string, unknown>>
 ): ReadonlyArray<GoalDoctorFinding> =>
-  A.appendAll(statusConsistencyFindings(record, manifest), manifestAdvisoryFindings(record, manifest, raw));
+  A.flatten([
+    statusConsistencyFindings(record, manifest),
+    legacyProposalFindings(record, raw),
+    manifestAdvisoryFindings(record, manifest, raw),
+  ]);
 
 const explorationBacklinkFindings = Effect.fn("Goals.explorationBacklinkFindings")(function* <E, R>(
   record: GoalPacketRecord,
@@ -1246,8 +1291,7 @@ const completedManifest = (packet: DoctorPacket) =>
   O.filter(
     packet.manifest,
     (manifest) =>
-      (GoalStatus.is["completed-retained"](manifest.initiative.status) || manifest.proposedCloseout !== undefined) &&
-      !manifest.completionGate.grandfathered
+      GoalStatus.is["completed-retained"](manifest.initiative.status) && !manifest.completionGate.grandfathered
   );
 
 const completionGateAdvisories = (
@@ -1257,10 +1301,7 @@ const completionGateAdvisories = (
   A.flatMap(packets, (packet) =>
     completedManifest(packet).pipe(
       O.filter(
-        (manifest) =>
-          manifest.proposedCloseout === undefined &&
-          manifest.completionGate.pullRequests === undefined &&
-          !citedAnywhere(packet, subjectsText)
+        (manifest) => manifest.completionGate.pullRequests === undefined && !citedAnywhere(packet, subjectsText)
       ),
       O.map(() =>
         A.of(
@@ -1492,6 +1533,40 @@ const completionReceiptFindings = (
   return findings;
 };
 
+type StructuredCompletionAdvisory = {
+  readonly slug: string;
+  readonly findings: ReadonlyArray<GoalDoctorFinding>;
+  readonly notes: ReadonlyArray<string>;
+};
+
+// Online, a legacy row (a final but no committed closeout) takes the closeout
+// window pre-check: a final merged before the window reads its stored receipt,
+// so its full observation, thread read included, is skipped.
+const legacyOnlineReceipt = Effect.fn("Goals.legacyOnlineReceipt")(function* (
+  root: string,
+  slug: string,
+  manifest: GoalManifest,
+  final: GoalPullRequestRef
+) {
+  const pull = yield* readGoalCompletion(root, (io, at) => io.pullRequest(at, final.number)).pipe(Effect.option);
+  const now = yield* DateTime.now;
+  const beyondWindow = O.exists(
+    pull,
+    (value) => value.merged && O.exists(value.merged_at, (mergedAt) => !goalFinalWithinCloseoutWindow(mergedAt, now))
+  );
+  if (!beyondWindow) {
+    const observed = yield* observeGoalCompletion(root, slug, manifest, final);
+    return { receipt: O.some(observed), notes: A.empty<string>() };
+  }
+  const stored = yield* storedGoalCompletion(root, slug, manifest, final).pipe(Effect.orElseSucceed(O.none));
+  return {
+    receipt: stored,
+    notes: A.of(
+      `${slug}: final #${final.number} merged more than ${GOAL_CLOSEOUT_WINDOW_DAYS} days ago, beyond the rule-suite window; its stored receipt is used`
+    ),
+  };
+});
+
 const completionEvidenceAdvisory = Effect.fn("Goals.completionEvidenceAdvisory")(function* (
   packet: DoctorPacket,
   manifest: GoalManifest,
@@ -1499,55 +1574,99 @@ const completionEvidenceAdvisory = Effect.fn("Goals.completionEvidenceAdvisory")
   online: boolean
 ) {
   const root = yield* findRepoRoot().pipe(Effect.orElseSucceed(process.cwd));
-  const receipt = online
-    ? yield* Effect.asSome(observeGoalCompletion(root, packet.record.slug, manifest, final))
-    : yield* storedGoalCompletion(root, packet.record.slug, manifest, final).pipe(Effect.orElseSucceed(O.none));
+  const slug = packet.record.slug;
+  const read = online
+    ? yield* legacyOnlineReceipt(root, slug, manifest, final)
+    : {
+        receipt: yield* storedGoalCompletion(root, slug, manifest, final).pipe(Effect.orElseSucceed(O.none)),
+        notes: A.empty<string>(),
+      };
+  const receipt = read.receipt;
   if (
     O.isNone(receipt) &&
-    manifest.proposedCloseout === undefined &&
     manifest.closeout === undefined &&
     manifest.completionGate.pullRequests === undefined &&
     !online
   )
     return O.none<StructuredCompletionAdvisory>();
-  const findings = completionReceiptFindings(packet.record.slug, final, receipt);
-  // A proposed closeout reads as its derived status here, verified or not, so
-  // the operator sees the same line `session open` and `goals explain` print.
-  const view = yield* goalCloseoutView(packet.record.slug, manifest, receipt);
-  const committed = O.map(O.fromUndefinedOr(manifest.closeout), (record) =>
-    renderGoalCloseoutRecordView(
-      record,
-      O.isSome(receipt) && receipt.value.outcome === "verified" ? "verified" : "unverified"
-    )
+  // A committed closeout reads as the same line `session open` and `goals explain` print.
+  const status = A.map(
+    O.toArray(O.map(goalCloseoutView(slug, manifest, receipt), renderGoalCloseoutView)),
+    (line) => `${slug}: ${line}`
   );
-  const notes = A.map(
-    A.getSomes([O.map(view, renderGoalCloseoutView), committed]),
-    (line) => `${packet.record.slug}: ${line}`
-  );
-  // A verified proposal is proof, not closeout: the packet is done only once
-  // `set-status` adopts it as a committed record that merges to main.
-  const adoption = O.match(
-    O.filter(view, (value) => GoalCloseoutVerification.is.verified(value.verification)),
-    {
-      onNone: A.empty<GoalDoctorFinding>,
-      onSome: (value) =>
-        A.of(
-          finding(
-            packet.record.slug,
-            "closeout-adoption-pending",
-            "advisory",
-            `Proposed closeout via #${value.proposedCloseout.finalPullRequest} verified but is not adopted; run \`bun run beep goals set-status ${packet.record.slug} ${value.proposedCloseout.status}\` and merge that packet-state PR.`
-          )
-        ),
-    }
-  );
-  return O.some({ slug: packet.record.slug, findings: A.appendAll(findings, adoption), notes });
+  return O.some<StructuredCompletionAdvisory>({
+    slug,
+    findings: completionReceiptFindings(slug, final, receipt),
+    notes: A.appendAll(status, read.notes),
+  });
 });
 
-type StructuredCompletionAdvisory = {
-  readonly slug: string;
-  readonly findings: ReadonlyArray<GoalDoctorFinding>;
-  readonly notes: ReadonlyArray<string>;
+const describeAttributedRed = (red: GoalAttributedRedFact): string =>
+  `${red.context} (${red.observed === "missing" ? "never reported, " : ""}${red.attribution}, fix #${red.fixPullRequest}, ${red.decisionFile})`;
+
+// The 2.6 mapping of one online closeout check onto findings and notes.
+const closeoutCheckAdvisory = (
+  slug: string,
+  record: GoalCloseoutRecord,
+  check: GoalCloseoutCheck
+): StructuredCompletionAdvisory => {
+  const final = check.finalPullRequest;
+  const note = (text: string): string => `${slug}: ${text}`;
+  const status = renderGoalCloseoutRecordView(
+    record,
+    GoalCloseoutCheckOutcome.is.verified(check.outcome) ? "verified" : "unverified"
+  );
+  const reasons = A.join(check.reasons, "; ");
+  const advisory = (
+    findings: ReadonlyArray<GoalDoctorFinding>,
+    notes: ReadonlyArray<string>
+  ): StructuredCompletionAdvisory => ({ slug, findings, notes });
+  return GoalCloseoutCheckOutcome.match(check.outcome, {
+    "final-open": () => advisory([], [note(`${status}; final #${final} open, nothing to verify until it merges`)]),
+    verified: () =>
+      advisory(
+        [],
+        [
+          note(status),
+          ...A.map(check.attributedReds, (red) => note(`attributed ${describeAttributedRed(red)}`)),
+          ...A.map(check.reasons, note),
+        ]
+      ),
+    "operator-ruling": () =>
+      advisory(
+        [],
+        [
+          note(`${status}; closed by operator ruling ${O.getOrElse(check.rulingFile, () => "(unnamed)")}`),
+          ...A.map(check.reasons, note),
+        ]
+      ),
+    "beyond-window": () => advisory([], [note(`${status}; ${reasons}`)]),
+    transient: () =>
+      advisory(
+        [
+          finding(
+            slug,
+            "completion-gate-unknown",
+            "advisory",
+            `Final PR #${final}: unknown (transient). ${reasons}. Rerun bun run beep goals doctor --online, or bun run beep goals completion refresh --slug ${slug}, once GitHub facts are readable.`
+          ),
+        ],
+        [note(status)]
+      ),
+    unverified: () =>
+      advisory(
+        [
+          finding(
+            slug,
+            "closeout-unverified",
+            "blocking",
+            `Final PR #${final}: ${reasons}. Next: name each red required check with its cause and fix PR in a decisions/ file committed to main (bun run beep goals decisions add ${slug} --title "..." --reversal "..." --final ${final} --attribute-red "<context>=<cause>#<fix>"), answer every outstanding review thread, record an operatorRuling (--final ${final} --operator-ruling), or reopen the packet with bun run beep goals set-status ${slug} active.`,
+            `#${final}`
+          ),
+        ],
+        [note(status)]
+      ),
+  });
 };
 
 const structuredCompletionAdvisory = Effect.fn("Goals.structuredCompletionAdvisory")(function* (
@@ -1557,6 +1676,14 @@ const structuredCompletionAdvisory = Effect.fn("Goals.structuredCompletionAdviso
   const eligible = completedManifest(packet);
   if (O.isNone(eligible)) return O.none<StructuredCompletionAdvisory>();
   const manifest = eligible.value;
+  const record = manifest.closeout;
+  // Online, a committed closeout is classified from hosted facts; this is the
+  // only path that can block.
+  if (online && record !== undefined) {
+    const root = yield* findRepoRoot().pipe(Effect.orElseSucceed(process.cwd));
+    const check = yield* readGoalCloseoutCheck(root, packet.record.slug, manifest);
+    return O.map(check, (value) => closeoutCheckAdvisory(packet.record.slug, record, value));
+  }
   const final = A.findFirst(goalPullRequestRefs(manifest), (ref) => ref.role === "final");
   if (O.isNone(final)) {
     if (manifest.completionGate.pullRequests === undefined) return O.none<StructuredCompletionAdvisory>();
@@ -1694,9 +1821,11 @@ export const runGoalsDoctor = Effect.fn("Goals.runGoalsDoctor")(function* (optio
   }
 
   const advisoriesFromGit = yield* gitAdvisories(packets);
-  const forEach3 = yield* Effect.forEach(packets, (packet) =>
-    structuredCompletionAdvisory(packet, options.online === true)
-  );
+  const online = options.online === true;
+  const structuredRun = Effect.forEach(packets, (packet) => structuredCompletionAdvisory(packet, online));
+  // One memoized completion port serves the whole online run, so packets that
+  // share a base branch read its rule-suite listing once.
+  const forEach3 = yield* online ? withGoalCompletionIo(structuredRun) : structuredRun;
   const structured = A.getSomes(forEach3);
   const completionFindings = A.flatMap(structured, (row) => row.findings);
   const structuredSlugs = HashSet.fromIterable(A.map(structured, (row) => row.slug));

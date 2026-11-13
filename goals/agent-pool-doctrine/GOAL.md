@@ -64,5 +64,8 @@ Stop and report before changing public API, schema (beyond the one literal),
 dependencies, lockfiles, generated files, or destructive state unless `SPEC.md`
 explicitly requires it. Never run a lane with `--sandbox disabled`.
 
-Done only when acceptance passes and verification is complete, or when a blocker
-is reported with file/command evidence.
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug agent-pool-doctrine` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/agent-pool-doctrine/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

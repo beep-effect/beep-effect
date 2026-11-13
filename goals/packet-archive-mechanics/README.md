@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -33,10 +33,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Tooling — in progress. Harvest, archive plan and write (against a local archive
-checkout), the doctor advisory, the INDEX column and the doctrine text are
-implemented on the lane; the tooling PR, the committed ledger and the public-CLI smoke
-remain.
+Closed: `completed-retained`, final #2998 (archive sweep batch 6, merged
+2026-11-09). P0 Tooling, P1 Archive repo and P2 Sweep are complete. #2998
+verifies from hosted facts: all 15 required checks green and no review threads.
+The [batch migration](../goal-closeout-hosted-verification/history/migration-2026-11-13.md)
+adopted the legacy proposal.
 
 ## Latest Evidence
 

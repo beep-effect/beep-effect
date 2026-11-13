@@ -1,3 +1,5 @@
+import { GoalCloseoutCheck } from "@beep/repo-cli/commands/Goals/CloseoutCheck";
+import { WorktreeRemovalReceipt } from "@beep/repo-cli/commands/Worktree";
 import {
   SweepPlan,
   SweepPlanJson,
@@ -10,6 +12,10 @@ import {
   SweepStepId,
   SweepStepNeedsOperator,
   SweepStepSkipped,
+  YeetRetirePlan,
+  YeetRetireSweepReport,
+  YeetRetireSweepReportJson,
+  YeetRetireVerdict,
 } from "@beep/repo-cli/test/Yeet";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
@@ -17,6 +23,8 @@ import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 
 const plan = SweepPlan.make({
   schemaVersion: "yeet-sweep-plan/v1",
@@ -152,6 +160,66 @@ describe("SweepReport", () => {
       expect(handoff?.outcome.status === "needs-operator" ? handoff.outcome.operatorCommand : undefined).toContain(
         "git worktree remove"
       );
+    })
+  );
+});
+
+describe("YeetRetireSweepReport", () => {
+  const retireReport = YeetRetireSweepReport.make({
+    schemaVersion: "yeet-retire-sweep-report/v2",
+    retire: YeetRetirePlan.make({
+      worktreePath: "/clones/beep/.claude/worktrees/lane",
+      owningClone: "/clones/beep",
+      name: "lane",
+      branch: "claude/lane",
+    }),
+    verdict: YeetRetireVerdict.cases["pr-merged"].make({}),
+    receipt: WorktreeRemovalReceipt.make({
+      targetPath: "/clones/beep/.claude/worktrees/lane",
+      branch: O.some("claude/lane"),
+      reason: "clean",
+      manifest: O.none(),
+      branchDeleted: true,
+    }),
+    activePackets: [],
+    sweep: report,
+  });
+
+  it.effect("decodes a v2 report written before closeoutChecks existed with no checks", () =>
+    Effect.gen(function* () {
+      const encoded = yield* S.encodeEffect(YeetRetireSweepReport)(retireReport);
+      const legacy = Struct.omit(encoded, ["closeoutChecks"]);
+      expect("closeoutChecks" in legacy).toBe(false);
+      const decoded = yield* S.decodeEffect(YeetRetireSweepReport)(legacy);
+      expect(decoded.schemaVersion).toBe("yeet-retire-sweep-report/v2");
+      expect(decoded.closeoutChecks).toEqual([]);
+      expect(decoded.stoppedJobs).toEqual([]);
+    })
+  );
+
+  it.effect("round-trips the touched packets' closeout checks through its JSON codec", () =>
+    Effect.gen(function* () {
+      const checked = YeetRetireSweepReport.make({
+        ...retireReport,
+        closeoutChecks: [
+          GoalCloseoutCheck.make({
+            packet: "demo",
+            finalPullRequest: 7,
+            outcome: "unverified",
+            reasons: ["unattributed red: Lint"],
+          }),
+          GoalCloseoutCheck.make({
+            packet: "ruled",
+            finalPullRequest: 9,
+            outcome: "operator-ruling",
+            rulingFile: O.some("goals/ruled/decisions/2026-11-14-ruling.md"),
+          }),
+        ],
+      });
+      const text = yield* YeetRetireSweepReportJson.encode(checked);
+      const decoded = yield* YeetRetireSweepReportJson.decode(text);
+      expect(decoded.closeoutChecks).toEqual(checked.closeoutChecks);
+      expect(text).toContain('"rulingFile":"goals/ruled/decisions/2026-11-14-ruling.md"');
     })
   );
 });

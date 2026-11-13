@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,10 +31,15 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Yeet: final PR [#2892](https://github.com/beep-effect/beep-effect/pull/2892) carries the
-reflection and `proposedCloseout` (`completed-retained`). The operative lifecycle
-stays `active` until completion verifies after merge; adoption follows in a
-separate packet-state PR.
+Closed: `completed-retained`, final
+[#2963](https://github.com/beep-effect/beep-effect/pull/2963), the third goals-only
+re-final (merged 2026-11-08, `de54b37982b`). It merged through a ruleset bypass
+while Heavy / Check, Heavy / Test Integration, Heavy / Docgen and Heavy / Doctest
+were queued, and GitHub then cancelled them;
+[`decisions/2026-11-13-final-2963-attributed-reds.md`](decisions/2026-11-13-final-2963-attributed-reds.md)
+attributes each one with its fix PR. The
+[batch migration](../goal-closeout-hosted-verification/history/migration-2026-11-13.md)
+adopted the legacy proposal.
 
 ## Latest Evidence
 

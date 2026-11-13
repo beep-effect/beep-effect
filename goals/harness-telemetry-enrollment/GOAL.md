@@ -15,3 +15,9 @@ Use the existing ai-metrics tooling, Phoenix driver, hook/managed-launch surface
 Advance P0 through P4 under SPEC: implement, verify, publish through current Yeet policy, obtain current hosted/review/merge evidence, then write the closeout reflection and update lifecycle through the canonical writer. Do not mark complete merely because fixtures pass or packets exist. New spend requires the operator; ordinary implementation choices use documented reasons and rollback within the authorized launch scope.
 
 Acceptance is the full SPEC checklist. Capture package, deployment, privacy, resource and user-interpretation evidence as applicable. Keep outcomes and limitations legible to the operator.
+
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug harness-telemetry-enrollment` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/harness-telemetry-enrollment/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

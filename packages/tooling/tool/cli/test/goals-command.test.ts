@@ -1,12 +1,14 @@
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   buildBackfillManifestText,
+  buildPortfolioIndexContent,
+  buildPortfolioIndexReport,
   GOAL_MANIFEST_BACKFILLS,
   GOAL_PHASE_STATUS_MIGRATIONS,
   GOAL_STATUS_MIGRATIONS,
+  GoalCloseoutRecord,
   GoalManifest,
   GoalPacketRecord,
-  GoalProposedCloseout,
   migrateGoalPhaseStatusToken,
   migrateGoalStatusToken,
   PortfolioIndexRow,
@@ -15,12 +17,12 @@ import {
   readmeLifecycleToken,
   readmeMissionLine,
   readmeTitle,
-  renderGoalProposedCloseout,
+  renderGoalCloseoutRecord,
   renderPortfolioIndex,
   rewriteReadmeLifecycleToken,
 } from "@beep/repo-cli/test/Goals";
-import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { describe, expect, it, layer } from "@effect/vitest";
+import { assertNone, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { constant } from "effect/Function";
@@ -28,6 +30,7 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { NodeTestLayer, withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const decodeManifest = S.decodeUnknownEffect(GoalManifest);
 const encodePrettyJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown, { space: 2 }));
@@ -308,8 +311,15 @@ describe("renderPortfolioIndex", () => {
       status: "active",
       phasesComplete: 0,
       phasesTotal: 0,
-      closeout: renderGoalProposedCloseout(
-        GoalProposedCloseout.make({ status: "completed-retained", finalPullRequest: 2320 })
+    }),
+    PortfolioIndexRow.make({
+      slug: "beta",
+      title: "Beta",
+      status: "completed-retained",
+      phasesComplete: 2,
+      phasesTotal: 2,
+      closeout: renderGoalCloseoutRecord(
+        GoalCloseoutRecord.make({ status: "completed-retained", finalPullRequest: 2320 })
       ),
     }),
     PortfolioIndexRow.make({
@@ -335,24 +345,68 @@ describe("renderPortfolioIndex", () => {
     expect(O.getOrElse(Str.indexOf("[alpha]")(first), constant(-1))).toBeLessThan(
       O.getOrElse(Str.indexOf("[zeta]")(first), constant(-1))
     );
-    expect(first).toContain("4 packets: 2 active · 0 paused · 0 completed-retained · 0 superseded · 1 reference.");
+    expect(first).toContain("5 packets: 2 active · 0 paused · 1 completed-retained · 0 superseded · 1 reference.");
     expect(first).toContain("Zeta \\| Pipes");
     expect(first).toContain("Do the \\| thing");
   });
 
-  it("renders a proposed closeout from the manifest alone, under the committed status group", () => {
+  it("renders a committed closeout record from the manifest alone, under the committed status group", () => {
     const content = renderPortfolioIndex(rows, []);
     expect(content).toContain("| Packet | Title | Phases | Updated | Closeout | Archived | Mission |");
-    expect(content).toContain(
-      "| [alpha](./alpha/README.md) | Alpha | — | — | proposed completed-retained via #2320 | — | — |"
-    );
+    expect(content).toContain("| [beta](./beta/README.md) | Beta | 2/2 | — | completed-retained via #2320 | — | — |");
+    expect(content).toContain("| [alpha](./alpha/README.md) | Alpha | — | — | — | — | — |");
     expect(content).toContain(
       "| [zeta](./zeta/README.md) | Zeta \\| Pipes | 1/3 | 2026-07-01 | — | — | Do the \\| thing |"
     );
-    // The proposal does not move the row: INDEX never reads the clone-scoped receipt.
     expect(content).toContain("## Active (2)");
-    expect(content).not.toContain("## Completed (retained)");
+    expect(content).toContain("## Completed (retained) (1)");
   });
+});
+
+layer(NodeTestLayer, { timeout: "30 seconds" })("goals index closeout column", (it) => {
+  it.effect(
+    "reads only the committed closeout record; a legacy proposedCloseout key renders nothing and moves nothing",
+    () =>
+      Effect.gen(function* () {
+        const { report, content } = yield* withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeProjectFile("bun.lock", "");
+            yield* writeProjectFile(
+              "goals/legacy/ops/manifest.json",
+              `${yield* encodePrettyJson({
+                initiative: { id: "legacy", title: "Legacy", status: "active" },
+                completionGate: COMPLETION_GATE,
+                proposedCloseout: { status: "completed-retained", finalPullRequest: 2320 },
+              })}\n`
+            );
+            yield* writeProjectFile(
+              "goals/closed/ops/manifest.json",
+              `${yield* encodePrettyJson({
+                initiative: { id: "closed", title: "Closed", status: "completed-retained" },
+                completionGate: COMPLETION_GATE,
+                closeout: { status: "completed-retained", finalPullRequest: 2321 },
+              })}\n`
+            );
+            return { report: yield* buildPortfolioIndexReport(), content: yield* buildPortfolioIndexContent() };
+          })
+        );
+
+        deepStrictEqual(report.invalid, []);
+        deepStrictEqual(
+          A.map(report.packets, (row) => [row.slug, row.status, O.fromUndefinedOr(row.closeout)] as const),
+          [
+            ["closed", "completed-retained", O.some("completed-retained via #2321")],
+            ["legacy", "active", O.none()],
+          ]
+        );
+        expect(content).toContain(
+          "| [closed](./closed/README.md) | Closed | — | — | completed-retained via #2321 | — | — |"
+        );
+        expect(content).toContain("| [legacy](./legacy/README.md) | Legacy | — | — | — | — | — |");
+        expect(content).toContain("## Active (1)");
+        expect(content).not.toContain("proposed completed-retained");
+      })
+  );
 });
 
 describe("parseGoalManifestText", () => {

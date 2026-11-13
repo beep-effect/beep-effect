@@ -5,10 +5,11 @@
  * `goals/<slug>/history/reflections/<YYYY-MM-DD>-<agent>.md` in EVERY packet —
  * active or completed — so this lint cannot report a false green that
  * `goals doctor` then fails (the PR #365 YAML traps hid in a completed-only
- * gap). Only the closeout-presence gate is a completed-packet contract:
- * packets that opt out via `reflectionRequired: false` in their manifest get
- * an advisory, and every other completed packet blocks when it lacks a
- * reflection artifact.
+ * gap). Only the closeout-presence gate is a completed-packet contract, keyed
+ * on `initiative.status`: packets that opt out via `reflectionRequired: false`
+ * in their manifest get an advisory unless they carry a committed `closeout`
+ * record, and every other completed packet blocks when it lacks a reflection
+ * artifact.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -24,7 +25,7 @@ import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import { makePolicyFindingLogger } from "@beep/repo-cli-kit/cli/PolicyFindingLogger";
 import { LiteralKit } from "@beep/schema";
 import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
-import { A, thunkEmptyStr, thunkFalse } from "@beep/utils";
+import { A, thunkFalse } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
@@ -36,7 +37,7 @@ import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { GoalCloseoutRecord, GoalProposedCloseout, GoalStatus } from "../Goals/Goals.schemas.ts";
+import { GoalCloseoutRecord, GoalStatus } from "../Goals/Goals.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Lint/ReflectionArtifact");
 
@@ -266,21 +267,17 @@ export const reflectionFrontmatterIsValid = frontmatterIsValid;
  */
 export const reflectionFileNameIsArtifact = (file: string): boolean => REFLECTION_FILE_PATTERN.test(file);
 
-// A proposed or committed closeout keeps a packet inside the reflection gate.
+// Only a committed closeout record keeps a packet inside the reflection gate. The final PR that
+// writes it also carries the reflection, so `reflectionRequired: false` cannot opt it out. A
+// legacy `proposedCloseout` key neither enters the gate nor supplies a status.
 const declaresCloseout = (record: Readonly<Record<string, unknown>>): boolean =>
-  O.isSome(S.decodeUnknownOption(GoalProposedCloseout)(record.proposedCloseout)) ||
   O.isSome(S.decodeUnknownOption(GoalCloseoutRecord)(record.closeout));
 
+// The gate reads the committed `initiative.status` and nothing else.
 const readManifestStatus = (manifest: unknown): { readonly status: string; readonly reflectionRequired: boolean } => {
   const record = (manifest ?? {}) as Record<string, unknown>;
   const initiative = (record.initiative ?? {}) as Record<string, unknown>;
-  const proposal = S.decodeUnknownOption(GoalProposedCloseout)(record.proposedCloseout);
-  const status = pipe(
-    [O.getOrUndefined(O.map(proposal, (value) => value.status)), initiative.status, record.status, record.lifecycle],
-    A.map((value) => (P.isString(value) ? value : "")),
-    A.findFirst((value) => value.length > 0),
-    O.getOrElse(thunkEmptyStr)
-  );
+  const status = P.isString(initiative.status) ? initiative.status : Str.empty;
   const reflectionRequired =
     declaresCloseout(record) || record.reflectionRequired === true || initiative.reflectionRequired === true;
   return { status, reflectionRequired };

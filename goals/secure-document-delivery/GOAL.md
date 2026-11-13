@@ -68,5 +68,8 @@ git diff --check -- goals/secure-document-delivery
 Stop before widening scope, adding dependencies, enabling live fetch, promoting
 the capability, or weakening a fail-closed boundary.
 
-Done only when acceptance is green and the PR is mergeable through Yeet;
-otherwise report blockers with file/command evidence.
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug secure-document-delivery` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/secure-document-delivery/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

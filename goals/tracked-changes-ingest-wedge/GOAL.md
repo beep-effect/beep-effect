@@ -20,3 +20,9 @@ mounts. Provider choice is configuration, not a constraint.
 Do not add a generator, DMS taxonomy, broad DOCX redesign, or duplicate eval
 framework. Publish the proven minimal rung through Yeet and close with a
 reflection.
+
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug tracked-changes-ingest-wedge` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/tracked-changes-ingest-wedge/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

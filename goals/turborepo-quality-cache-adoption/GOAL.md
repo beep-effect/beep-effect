@@ -22,8 +22,13 @@ No new spending or trust relaxation is authorized. Push fixes to hosted CI;
 respect the operator's no-local-verify/no-publish constraint. Existing ordinary
 Git hooks and native packet metadata writers remain allowed.
 
-Future completion requires operational acceptance, final evidence/reflection
-and proposedCloseout with implementation, then completion refresh and a
-separate merged packet-state adoption PR. Do not mark completed-retained now.
-SPEC's operative amendment is normative; older assurance instructions are
-retained for future decisions, not an automatic work queue.
+Future completion requires operational acceptance. Do not mark
+completed-retained now. SPEC's operative amendment is normative; older
+assurance instructions are retained for future decisions, not an automatic
+work queue.
+
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug turborepo-quality-cache-adoption` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/turborepo-quality-cache-adoption/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`
