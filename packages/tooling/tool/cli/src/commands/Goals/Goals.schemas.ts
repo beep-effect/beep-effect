@@ -570,7 +570,7 @@ export type GoalClaimSource = typeof GoalClaimSource.Type;
  *
  * @param source - Where the decision file carrying the claim was found.
  * @returns 0 for `origin-main`, 1 for `head` and 2 for `working-tree`.
- * @category orders
+ * @category utilities
  * @since 0.0.0
  */
 export const goalClaimSourceRank = (source: GoalClaimSource): number =>
