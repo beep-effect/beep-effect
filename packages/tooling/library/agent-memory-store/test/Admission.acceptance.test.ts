@@ -39,7 +39,7 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import { buildAdversarialFixture, strata } from "./admission-fixture.ts";
+import { buildAdversarialFixture, fixtureStatusFields, phaseStatus, strata } from "./admission-fixture.ts";
 import { prepareReplay, replayOnce, verdictOf } from "./admission-replay.ts";
 import { loadGoalsMarkdownSample } from "./fixtures/goals-markdown-sample.ts";
 import { isBunRuntime, report, TestPlatform, tempDirectory } from "./projector-support.ts";
@@ -71,7 +71,7 @@ const replayLayer = Layer.effect(
     const sample = yield* loadGoalsMarkdownSample;
     const fixture = buildAdversarialFixture(sample.files);
     const workspace = yield* tempDirectory("beep-ac2-ac3-");
-    const prepared = yield* prepareReplay(fixture, workspace);
+    const prepared = yield* prepareReplay(fixture, workspace, { fields: fixtureStatusFields, lifecycle: phaseStatus });
     const verdicts = yield* Effect.forEach(A.range(1, runs), (seed) =>
       Effect.map(replayOnce(prepared, seed), verdictOf)
     );
