@@ -2519,13 +2519,13 @@
       "reason": "Changes the OS-level working directory: the archive fence reads /proc/<pid>/cwd, so only process.chdir exercises it. A cwd override is process state, and it.layer would leak it across the block. Owner: @beep/repo-cli. Exit: the fence takes the invoking process's working directory as an injected input instead of reading its own /proc entry. #1855 wave 5 register."
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/yeet.test.ts:303:withEnvVarEffect@25#1",
+      "id": "EV003:packages/tooling/tool/cli/test/yeet.test.ts:304:withEnvVarEffect@25#1",
       "lens": "detector",
       "ruleId": "EV003",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet.test.ts",
-      "line": 303,
-      "endLine": 321,
+      "line": 304,
+      "endLine": 322,
       "symbol": "withEnvVarEffect",
       "occurrence": "v2:9de6cbb26ee2cc4269eebbc213519cc12670f526f85838a1fd4843bf89bed741",
       "class": "resource-wrapper",
@@ -10481,13 +10481,13 @@
       "reason": "The check-fidelity monitor appends inbox rows, and the inbox active projection runs flock, sh and jq through Bun.spawnSync in the real inbox directory. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the inbox projection runs in process or behind an injected lock service."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:48:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:50:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts",
-      "line": 48,
-      "endLine": 48,
+      "line": 50,
+      "endLine": 50,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -10875,6 +10875,27 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "NodeChildProcessSpawner.layer and Bun.spawnSync run git over real temp repositories. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when git runs behind a scripted spawner."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/yeet-stack-gate.test.ts:22:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/yeet-stack-gate.test.ts",
+      "line": 22,
+      "endLine": 22,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-status-triage.test.ts:39:@effect/platform-node@0#1",

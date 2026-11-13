@@ -341,7 +341,9 @@ export class QualityIssueIndex extends S.Opaque<QualityIssueIndex, { readonly br
  * opens or reuses its draft pull request without running any local gate, so
  * hosted CI is the only proof. `bodyFile` names Markdown that replaces the
  * generated commit-log summary of a pull request the run creates; an existing
- * pull request keeps its body. Both default when omitted.
+ * pull request keeps its body. `stackOn` is `--stack-on`: the open pull
+ * request this branch publishes on as the upper layer of a two-layer native
+ * stack. All three default when omitted.
  *
  * **Example** (Construct run options)
  *
@@ -420,6 +422,7 @@ export class YeetRunOptions extends S.Opaque<YeetRunOptions, { readonly brand: u
     resolveThreads: S.String,
     retriggerGreptile: S.Boolean,
     reuseVerified: S.Boolean,
+    stackOn: S.Option(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)),
     stagedOnly: S.Boolean,
     summary: S.Boolean,
     tier: YeetProofTier,
