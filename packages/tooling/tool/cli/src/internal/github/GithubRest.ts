@@ -203,7 +203,15 @@ const CombinedStatusWire = S.Struct({
  * import { GithubWorkflowRunRecord } from "@beep/repo-cli/test/SharedInternals"
  * import * as O from "effect/Option"
  *
- * const run = GithubWorkflowRunRecord.make({ id: 9, name: "CI", status: "completed", conclusion: O.some("failure"), headSha: "abc" })
+ * const run = GithubWorkflowRunRecord.make({
+ *   id: 9,
+ *   name: "CI",
+ *   status: "completed",
+ *   conclusion: O.some("failure"),
+ *   headSha: "abc",
+ *   event: "pull_request",
+ *   headBranch: O.some("feat/x"),
+ * })
  * console.log(run.id) // 9
  * ```
  *
@@ -211,10 +219,82 @@ const CombinedStatusWire = S.Struct({
  * @since 0.0.0
  */
 export class GithubWorkflowRunRecord extends S.Opaque<GithubWorkflowRunRecord, { readonly brand: unique symbol }>()(
-  S.Struct({ id: S.Int, name: S.String, status: S.String, conclusion: S.Option(S.String), headSha: S.String }).pipe(
-    $I.annoteSchema("GithubWorkflowRunRecord", { description: "One workflow run, read over GitHub REST." })
-  )
+  S.Struct({
+    id: S.Int,
+    name: S.String,
+    status: S.String,
+    conclusion: S.Option(S.String),
+    headSha: S.String,
+    event: S.String,
+    headBranch: S.Option(S.String),
+  }).pipe($I.annoteSchema("GithubWorkflowRunRecord", { description: "One workflow run, read over GitHub REST." }))
 ) {}
+
+/**
+ * The workflow-run events a pull request triggers.
+ *
+ * **Details**
+ *
+ * Agent cancels are limited to these runs: no agent cancels a
+ * `refs/heads/main` push run, queued or running (AGENTS.md, Inherited reds).
+ * A run whose event is anything else (`push`, `merge_group`, `schedule`,
+ * `workflow_dispatch`, or an event GitHub did not report) is left alone.
+ *
+ * **Example** (Check an event)
+ *
+ * ```ts
+ * import { GithubPullRequestRunEvent } from "@beep/repo-cli/test/SharedInternals"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(GithubPullRequestRunEvent)("push")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GithubPullRequestRunEvent = LiteralKit(["pull_request", "pull_request_target"]).pipe(
+  $I.annoteSchema("GithubPullRequestRunEvent", { description: "A workflow-run event a pull request triggers." })
+);
+
+/**
+ * The workflow-run events a pull request triggers.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GithubPullRequestRunEvent = typeof GithubPullRequestRunEvent.Type;
+
+const isPullRequestRunEvent = S.is(GithubPullRequestRunEvent);
+
+/**
+ * Whether an agent may cancel this workflow run: only runs a pull request
+ * triggered, never a push run on any branch (so never a `refs/heads/main` run).
+ *
+ * **Example** (A main push run on the PR head sha is kept)
+ *
+ * ```ts
+ * import { GithubWorkflowRunRecord, isAgentCancellableWorkflowRun } from "@beep/repo-cli/test/SharedInternals"
+ * import * as O from "effect/Option"
+ *
+ * const run = GithubWorkflowRunRecord.make({
+ *   id: 9,
+ *   name: "Check",
+ *   status: "in_progress",
+ *   conclusion: O.none(),
+ *   headSha: "abc",
+ *   event: "push",
+ *   headBranch: O.some("main"),
+ * })
+ * console.log(isAgentCancellableWorkflowRun(run)) // false
+ * ```
+ *
+ * @param run - The workflow run read over REST.
+ * @returns `true` only for a run a pull request triggered.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isAgentCancellableWorkflowRun = (run: GithubWorkflowRunRecord): boolean =>
+  isPullRequestRunEvent(run.event);
 
 const WorkflowRunWire = S.Struct({
   id: S.Int,
@@ -222,6 +302,8 @@ const WorkflowRunWire = S.Struct({
   status: S.NullOr(S.String),
   conclusion: S.NullOr(S.String),
   head_sha: S.String,
+  event: S.String.pipe(S.NullOr, S.optionalKey),
+  head_branch: S.String.pipe(S.NullOr, S.optionalKey),
 });
 
 /**
@@ -1021,6 +1103,8 @@ const makeGithubRest = Effect.gen(function* () {
             status: run.status ?? "unknown",
             conclusion: O.fromNullishOr(run.conclusion),
             headSha: run.head_sha,
+            event: run.event ?? "unknown",
+            headBranch: O.fromNullishOr(run.head_branch),
           })
         )
       )

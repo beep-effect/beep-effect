@@ -940,12 +940,21 @@ const context = RepoRunContext.make({
 const workflowRunPages = (additionalActiveRuns: GhScript["additionalActiveRuns"]) => [
   {
     workflow_runs: [
-      { id: 11, head_sha: pullFixture.head.sha, status: "queued", conclusion: null },
-      { id: 12, head_sha: pullFixture.head.sha, status: "in_progress", conclusion: null },
-      { id: 12, head_sha: pullFixture.head.sha, status: "in_progress", conclusion: null },
-      { id: 13, head_sha: pullFixture.head.sha, status: "in_progress", conclusion: null },
-      { id: 14, head_sha: Str.repeat(40)("0"), status: "waiting", conclusion: null },
-      { id: 19, head_sha: pullFixture.head.sha, status: "completed", conclusion: "success" },
+      { id: 11, head_sha: pullFixture.head.sha, status: "queued", conclusion: null, event: "pull_request" },
+      { id: 12, head_sha: pullFixture.head.sha, status: "in_progress", conclusion: null, event: "pull_request" },
+      { id: 12, head_sha: pullFixture.head.sha, status: "in_progress", conclusion: null, event: "pull_request" },
+      { id: 13, head_sha: pullFixture.head.sha, status: "in_progress", conclusion: null, event: "pull_request" },
+      { id: 14, head_sha: Str.repeat(40)("0"), status: "waiting", conclusion: null, event: "pull_request" },
+      { id: 19, head_sha: pullFixture.head.sha, status: "completed", conclusion: "success", event: "pull_request" },
+      // A live main push run on the merged head sha is never cancelled (the main cancel ban).
+      {
+        id: 20,
+        head_sha: pullFixture.head.sha,
+        status: "in_progress",
+        conclusion: null,
+        event: "push",
+        head_branch: "main",
+      },
     ],
   },
   ...(additionalActiveRuns === true
@@ -956,6 +965,7 @@ const workflowRunPages = (additionalActiveRuns: GhScript["additionalActiveRuns"]
             head_sha: pullFixture.head.sha,
             status,
             conclusion: null,
+            event: "pull_request",
           })),
         },
       ]
