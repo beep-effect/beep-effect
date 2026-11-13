@@ -1,6 +1,6 @@
 import { Git } from "@beep/git/Git";
 import { lintCommand } from "@beep/repo-cli";
-import { COVERAGE_GENERATED_STANDARDS_OWNER_ROWS } from "@beep/repo-cli/test/Quality";
+import { COVERAGE_SCANNED_OWNER_ROWS } from "@beep/repo-cli/test/Quality";
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { it } from "@beep/test-runner";
@@ -14,11 +14,13 @@ import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { expectReportedExit } from "./support/CommandTest.ts";
+import { readerListText, rowOwnerNames, rowOwnerPackagePath, rowReaderPathsOf } from "./support/CoverageOwnerRows.ts";
 
 // `beep lint coverage-owners` runs in Repo Sanity (hosted-setup-tax TURB-01):
 // these cases drive the real command over scoped fixture checkouts.
@@ -38,15 +40,11 @@ const testLayer = Layer.provideMerge(
 
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 
-const READER_PATHS = A.dedupe(A.map(COVERAGE_GENERATED_STANDARDS_OWNER_ROWS, ([readerPath]) => readerPath));
+const READER_PATHS = A.dedupe(A.map(COVERAGE_SCANNED_OWNER_ROWS, ([readerPath]) => readerPath));
 const FALLOW_PATH = "standards/fallow.boundaries.generated.jsonc";
 const SCHEMA_FIRST_PATH = "standards/schema-first.inventory.jsonc";
-
-const readerSource = (paths: ReadonlyArray<string>): string =>
-  `export const readers = [${A.join(
-    A.map(paths, (path) => `"${path}"`),
-    ", "
-  )}];\n`;
+const REPO_CLI = "@beep/repo-cli";
+const REPO_CLI_KIT = "@beep/repo-cli-kit";
 
 const writeFile = Effect.fn("LintCoverageOwnersTest.writeFile")(function* (root: string, file: string, text: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -77,7 +75,21 @@ const writeFixture = Effect.fn("LintCoverageOwnersTest.writeFixture")(function* 
   return root;
 });
 
-const repoCliManifest = ["packages/cli/package.json", workspacePackage("@beep/repo-cli")] as const;
+/**
+ * One package per row owner, its test tree reading the owner's reader paths after `edit` adjusts
+ * them, so the unedited fixture's scan equals the rows.
+ */
+const rowOwnerFiles = (
+  edit: (packageName: string, readerPaths: ReadonlyArray<string>) => ReadonlyArray<string> = (_, readerPaths) =>
+    readerPaths
+): ReadonlyArray<readonly [string, string]> =>
+  A.flatMap(rowOwnerNames(COVERAGE_SCANNED_OWNER_ROWS), (packageName) => [
+    [`${rowOwnerPackagePath(packageName)}/package.json`, workspacePackage(packageName)] as const,
+    [
+      `${rowOwnerPackagePath(packageName)}/test/readers.test.ts`,
+      readerListText(edit(packageName, rowReaderPathsOf(COVERAGE_SCANNED_OWNER_ROWS, packageName))),
+    ] as const,
+  ]);
 
 /** Error lines this run printed, after the lines earlier cases left in the shared TestConsole. */
 const runAndCollectErrors = Effect.fn("LintCoverageOwnersTest.runAndCollectErrors")(function* (root: string) {
@@ -93,10 +105,7 @@ describe("coverage-owners lint command", { concurrent: false }, () => {
   it.layer(testLayer, { timeout: "60 seconds" })((it) => {
     it.effect("passes when the only readers are the row owner's", () =>
       Effect.gen(function* () {
-        const root = yield* writeFixture(
-          [repoCliManifest, ["packages/cli/test/readers.test.ts", readerSource(READER_PATHS)]],
-          true
-        );
+        const root = yield* writeFixture(rowOwnerFiles(), true);
         const { exit, lines } = yield* runAndCollectErrors(root);
         exit.pipe(Exit.isSuccess, assertTrue);
         deepStrictEqual(lines, []);
@@ -106,12 +115,13 @@ describe("coverage-owners lint command", { concurrent: false }, () => {
     it.effect("fails on a reader the rows miss and on a row whose reader is gone", () =>
       Effect.gen(function* () {
         const root = yield* writeFixture(
-          [
-            repoCliManifest,
-            ["packages/cli/test/readers.test.ts", readerSource(A.filter(READER_PATHS, (path) => path !== FALLOW_PATH))],
-            ["packages/kit/package.json", workspacePackage("@beep/repo-cli-kit")],
-            ["packages/kit/test/Inventory.test.ts", readerSource([SCHEMA_FIRST_PATH])],
-          ],
+          rowOwnerFiles((packageName, readerPaths) =>
+            Match.value(packageName).pipe(
+              Match.when(REPO_CLI, () => A.filter(readerPaths, (path) => path !== FALLOW_PATH)),
+              Match.when(REPO_CLI_KIT, () => A.append(readerPaths, SCHEMA_FIRST_PATH)),
+              Match.orElse(() => readerPaths)
+            )
+          ),
           true
         );
         const { exit, lines } = yield* runAndCollectErrors(root);
@@ -142,7 +152,7 @@ describe("coverage-owners lint command", { concurrent: false }, () => {
         exit.pipe(Exit.isFailure, assertTrue);
         const logLines = yield* TestConsole.logLines;
         const logs = A.join(A.filter(A.drop(logLines, before), P.isString), "\n");
-        assertInclude(logs, "[coverage-owners] sources=0 drift=6");
+        assertInclude(logs, `[coverage-owners] sources=0 drift=${A.length(READER_PATHS)}`);
       })
     );
   });

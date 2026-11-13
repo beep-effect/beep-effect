@@ -103,7 +103,94 @@ export const COVERAGE_GENERATED_STANDARDS_OWNER_ROWS: ReadonlyArray<readonly [st
   ["standards/policy-tools.fingerprint.json", "standards/policy-tools.fingerprint.json", "@beep/repo-cli"],
   ["standards/cache-qualification-baseline.json", "standards/cache-qualification-baseline.json", "@beep/repo-cli"],
   ["standards/fallow.boundaries.generated.jsonc", "standards/fallow.boundaries.generated.jsonc", "@beep/repo-cli"],
+  [
+    "standards/check-census.regression-baseline.jsonc",
+    "standards/check-census.regression-baseline.jsonc",
+    "@beep/repo-cli",
+  ],
+  [
+    "standards/root-package.projection.generated.json",
+    "standards/root-package.projection.generated.json",
+    "@beep/repo-cli",
+  ],
 ];
+
+/**
+ * Owner rows for tooling inputs at the repository root, derived from the
+ * same reader scan as {@link COVERAGE_GENERATED_STANDARDS_OWNER_ROWS}.
+ *
+ * **Details**
+ *
+ * The skill tree and its lock, the harness ledger and the generated Biome
+ * identity config sit outside every workspace package, so before these rows a
+ * change to any of them fell through to the "no current workspace owner"
+ * fallback and ran the full Test Unit matrix. Each row is
+ * `[readerPath, ownerPattern, packageName]` and holds the scan's result.
+ *
+ * **Gotchas**
+ *
+ * A reader of a path spells every segment of it somewhere, so the readers of
+ * any one segment are a sound superset. The skill tree's own basename,
+ * `skills`, is also a schema.org term, an HTML id and a CLI subcommand, so its
+ * row scans for the `.claude` segment instead. Every file under
+ * `.claude/skills/` selects the readers of `.claude`, including files that
+ * also have a narrower hand-written row.
+ *
+ * **Example** (List the mapped reader paths)
+ *
+ * ```ts
+ * import { COVERAGE_TOOLING_INPUT_OWNER_ROWS } from "@beep/repo-cli/test/Quality"
+ * import * as A from "effect/Array"
+ *
+ * const readerPaths = A.map(COVERAGE_TOOLING_INPUT_OWNER_ROWS, ([readerPath]) => readerPath)
+ * console.log(A.contains(readerPaths, "skills-lock.json")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const COVERAGE_TOOLING_INPUT_OWNER_ROWS: ReadonlyArray<readonly [string, string, string]> = [
+  ...A.map(
+    [
+      "@beep/ai-sync",
+      "@beep/infra",
+      "@beep/palantiri",
+      "@beep/repo-ai-metrics",
+      "@beep/repo-cli",
+      "@beep/repo-cli-kit",
+      "@beep/repo-configs",
+    ],
+    (owner) => [".claude", ".claude/skills/**", owner] as const
+  ),
+  ["skills-lock.json", "skills-lock.json", "@beep/repo-cli"],
+  ...A.map(
+    ["@beep/infra", "@beep/palantiri", "@beep/repo-ai-metrics", "@beep/repo-cli"],
+    (owner) => ["harness-ledger", "harness-ledger/**", owner] as const
+  ),
+  ["biome.identity.jsonc", "biome.identity.jsonc", "@beep/repo-cli"],
+];
+
+/**
+ * Every owner row the reader scan derives: the generated standards rows and
+ * the tooling input rows. `bun run beep lint coverage-owners` compares each
+ * of them with the scan.
+ *
+ * **Example** (Count the scanned reader paths)
+ *
+ * ```ts
+ * import { COVERAGE_SCANNED_OWNER_ROWS } from "@beep/repo-cli/test/Quality"
+ * import * as A from "effect/Array"
+ *
+ * console.log(A.dedupe(A.map(COVERAGE_SCANNED_OWNER_ROWS, ([readerPath]) => readerPath)).length) // 12
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const COVERAGE_SCANNED_OWNER_ROWS: ReadonlyArray<readonly [string, string, string]> = A.appendAll(
+  COVERAGE_GENERATED_STANDARDS_OWNER_ROWS,
+  COVERAGE_TOOLING_INPUT_OWNER_ROWS
+);
 
 // Live repository inputs read or executed by coverage-executed package tests. File entries also
 // accept globs for inventories discovered by tests (workspace manifests). Prefixes cover
@@ -134,7 +221,7 @@ const COVERAGE_REPOSITORY_FIXTURE_OWNER_FILES: ReadonlyArray<readonly [string, s
   ["package.json", "@beep/repo-cli"],
   ["turbo.json", "@beep/repo-cli"],
   ["packages/foundation/**/package.json", "@beep/repo-cli"],
-  ...A.map(COVERAGE_GENERATED_STANDARDS_OWNER_ROWS, ([, pattern, owner]) => [pattern, owner] as const),
+  ...A.map(COVERAGE_SCANNED_OWNER_ROWS, ([, pattern, owner]) => [pattern, owner] as const),
 ];
 
 // The owner patterns are static literals compiled once; a guard trip here is a
