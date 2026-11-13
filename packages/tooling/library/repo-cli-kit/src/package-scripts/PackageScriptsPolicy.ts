@@ -251,6 +251,27 @@ const derivationConflicts = (evidence: DerivationEvidence, manifestPath: string,
   return conflicts;
 };
 
+// An implementation whose expected value differs is a retired value (the writer never changes an
+// owned one otherwise); a retired extra is a key the writer removes.
+const retiredDrift = (actual: ScriptsBlock, expected: ScriptsBlock): ReadonlyArray<PackageScriptsDrift> => [
+  ...A.flatMap(
+    A.fromIterable(actual.impls),
+    ([name, value]): ReadonlyArray<PackageScriptsDrift> =>
+      O.match(
+        O.filter(HashMap.get(expected.impls, name), (text) => text !== value),
+        {
+          onNone: () => [],
+          onSome: (replacement) => [{ _tag: "retired-impl", name, expected: replacement, actual: value }],
+        }
+      )
+  ),
+  ...A.flatMap(
+    A.fromIterable(actual.extras),
+    ([name, value]): ReadonlyArray<PackageScriptsDrift> =>
+      isRetiredScriptName(name) ? [{ _tag: "retired-script", name, actual: value }] : []
+  ),
+];
+
 const diffBlock: PackageScriptsPolicyShape["diff"] = (actual, expected) => {
   if (PackageKind.is.exempt(actual.kind)) return [];
   const drift: Array<PackageScriptsDrift> = [];
@@ -260,13 +281,7 @@ const diffBlock: PackageScriptsPolicyShape["diff"] = (actual, expected) => {
   for (const [name] of expected.impls) {
     if (!HashMap.has(actual.impls, name)) drift.push({ _tag: "missing-impl", name });
   }
-  for (const [name, value] of actual.impls) {
-    const replacement = HashMap.get(expected.impls, name).pipe(O.filter((text) => text !== value));
-    if (O.isSome(replacement)) drift.push({ _tag: "retired-impl", name, expected: replacement.value, actual: value });
-  }
-  for (const [name, value] of actual.extras) {
-    if (isRetiredScriptName(name)) drift.push({ _tag: "retired-script", name, actual: value });
-  }
+  drift.push(...retiredDrift(actual, expected));
   for (const rule of rulesFor(actual.kind)) {
     if (missingOwnedTask(actual, rule)) {
       drift.push({ _tag: "missing-task", name: rule.name });
