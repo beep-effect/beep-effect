@@ -37,7 +37,7 @@ Two JSON fixtures, both extracted with a port of upstream's own
 (TypeScript, run with Bun; no Python). Invoked from this package:
 
 ```sh
-bun run generate:gfm-corpora
+bun run scripts/extract-gfm-corpora.ts
 ```
 
 It reads the pinned `.repos/cmark-gfm/test/` checkout (pass

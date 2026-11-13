@@ -28,6 +28,7 @@ import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
@@ -38,6 +39,7 @@ import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import {
+  CacheAdapterObservationExpectation,
   CacheAdapterProcessSnapshot,
   CacheAdapterRuntimeObservation,
   CacheOwnedAdapterStartup,
@@ -83,7 +85,6 @@ const AllowedEnvironment = HashSet.make(
 );
 
 const Role = S.Literals(["reader", "writer"]);
-const Phase = S.Literals(["ready", "after-load"]);
 const Integer = S.NumberFromString.pipe(S.check(S.isInt()));
 
 /**
@@ -194,22 +195,70 @@ const holdsLoopbackListener = (snapshot: CacheAdapterProcessSnapshot, port: numb
   );
 };
 
-/**
- * Expected identity of one owned adapter observation.
- *
- * @internal
- * @category models
- * @since 0.0.0
- */
-export interface CacheAdapterObservationExpectation {
-  readonly environmentNames: Iterable<string>;
-  readonly phase: typeof Phase.Type;
-  readonly pid: number;
-  readonly port: number;
-  readonly role: string;
-  readonly sha256: string;
-  readonly unit: string;
-}
+const ownsCgroup = (snapshot: CacheAdapterProcessSnapshot, expected: CacheAdapterObservationExpectation) =>
+  snapshot.mainPid > 0 &&
+  snapshot.mainPid === expected.pid &&
+  Str.startsWith("/user.slice/")(snapshot.controlGroup) &&
+  Str.endsWith(`/${expected.unit}`)(snapshot.controlGroup);
+
+const explicitEnvironment = (snapshot: CacheAdapterProcessSnapshot, expected: CacheAdapterObservationExpectation) => {
+  const names = HashSet.fromIterable(snapshot.environmentNames);
+  return (
+    Equal.equals(names, HashSet.fromIterable(expected.environmentNames)) &&
+    !HashSet.has(names, "TURBO_REMOTE_CACHE_SIGNATURE_KEY") &&
+    !HashSet.some(names, Str.startsWith("OP_"))
+  );
+};
+
+const cpuEnvelope = (snapshot: CacheAdapterProcessSnapshot) =>
+  pipe(
+    A.map(Str.split(Str.trim(snapshot.cpuMax), /\s+/), parseInteger),
+    O.liftPredicate((cpu) => A.length(cpu) === 2),
+    O.flatMap((cpu) => O.all({ quota: O.flatten(A.get(cpu, 0)), period: O.flatten(A.get(cpu, 1)) })),
+    O.filter(({ quota, period }) => quota === 2 * period)
+  );
+
+const resourceEnvelope = (snapshot: CacheAdapterProcessSnapshot) =>
+  O.isSome(cpuEnvelope(snapshot)) &&
+  O.contains(parseInteger(snapshot.memoryMax), MEMORY_MAX_BYTES) &&
+  O.contains(parseInteger(snapshot.pidsMax), 16);
+
+const lifetimeEnvelope = (snapshot: CacheAdapterProcessSnapshot) =>
+  snapshot.runtimeMaxUSec === "10min" && snapshot.timeoutStopUSec === "10s" && snapshot.killMode === "control-group";
+
+const workerCounts = (snapshot: CacheAdapterProcessSnapshot) => ({
+  actix: countMatching(snapshot.threadNames, "actix", "arbiter"),
+  tokio: countMatching(snapshot.threadNames, "tokio"),
+});
+
+const workerEnvelope = (snapshot: CacheAdapterProcessSnapshot) => {
+  const { actix, tokio } = workerCounts(snapshot);
+  return actix === 3 && tokio >= 2 && tokio <= 8 && A.length(snapshot.threadNames) <= 12;
+};
+
+type ObservationCheck = readonly [
+  holds: (snapshot: CacheAdapterProcessSnapshot, expected: CacheAdapterObservationExpectation) => boolean,
+  refusal: string,
+];
+
+// The retired host's order and refusal messages; the first failing check names the refusal.
+const OBSERVATION_CHECKS: ReadonlyArray<ObservationCheck> = [
+  [ownsCgroup, "Runtime proof did not identify its owned adapter cgroup"],
+  [
+    (snapshot, expected) => snapshot.executableSha256 === expected.sha256,
+    "The resource unit did not execute the reviewed adapter",
+  ],
+  [
+    (snapshot, expected) => holdsLoopbackListener(snapshot, expected.port),
+    "The owned adapter does not hold its loopback listener",
+  ],
+  [explicitEnvironment, "The backend inherited environment outside its explicit fixture allowlist"],
+  [resourceEnvelope, "The actual adapter resource envelope differs from the requested caps"],
+  [lifetimeEnvelope, "The actual adapter lifetime or stop envelope differs from its requested caps"],
+  [workerEnvelope, "The adapter did not preserve its fixed worker envelope"],
+];
+
+const decodeObservation = S.decodeUnknownEffect(CacheAdapterRuntimeObservation);
 
 /**
  * Judge one recorded process snapshot against the owned adapter's fixed envelope.
@@ -221,7 +270,7 @@ export interface CacheAdapterObservationExpectation {
  * lifetime/stop envelope, then the fixed worker-thread envelope. The first
  * failing check names the refusal.
  *
- * **Example** (Judge a snapshot without I/O)
+ * **Example** (Plan a snapshot judgment)
  * ```ts
  * import { observeCacheAdapterSnapshot } from "@beep/repo-cli/test/Cache"
  * console.assert(typeof observeCacheAdapterSnapshot === "function")
@@ -231,67 +280,31 @@ export interface CacheAdapterObservationExpectation {
  * @param snapshot - Recorded systemd, /proc and cgroup facts.
  * @param expected - The unit, role, phase, executable digest, environment names, port and PID.
  * @returns The schema-checked runtime observation.
- * @category observations
+ * @category observability
  * @since 0.0.0
  */
 export const observeCacheAdapterSnapshot = Effect.fn("CacheAdapterHost.observeSnapshot")(function* (
   snapshot: CacheAdapterProcessSnapshot,
   expected: CacheAdapterObservationExpectation
 ) {
-  if (
-    snapshot.mainPid <= 0 ||
-    snapshot.mainPid !== expected.pid ||
-    !Str.startsWith("/user.slice/")(snapshot.controlGroup) ||
-    !Str.endsWith(`/${expected.unit}`)(snapshot.controlGroup)
-  )
-    return yield* fail("Runtime proof did not identify its owned adapter cgroup");
-  if (snapshot.executableSha256 !== expected.sha256)
-    return yield* fail("The resource unit did not execute the reviewed adapter");
-  if (!holdsLoopbackListener(snapshot, expected.port))
-    return yield* fail("The owned adapter does not hold its loopback listener");
-  const names = HashSet.fromIterable(snapshot.environmentNames);
-  if (
-    !Equal.equals(names, HashSet.fromIterable(expected.environmentNames)) ||
-    HashSet.has(names, "TURBO_REMOTE_CACHE_SIGNATURE_KEY") ||
-    HashSet.some(names, Str.startsWith("OP_"))
-  )
-    return yield* fail("The backend inherited environment outside its explicit fixture allowlist");
-  const cpu = A.map(Str.split(Str.trim(snapshot.cpuMax), /\s+/), parseInteger);
-  const quota = pipe(A.get(cpu, 0), O.flatten);
-  const period = pipe(A.get(cpu, 1), O.flatten);
-  const memory = parseInteger(snapshot.memoryMax);
-  const tasks = parseInteger(snapshot.pidsMax);
-  if (
-    A.length(cpu) !== 2 ||
-    !O.contains(memory, MEMORY_MAX_BYTES) ||
-    !O.contains(tasks, 16) ||
-    !O.isSome(quota) ||
-    !O.isSome(period) ||
-    quota.value !== 2 * period.value
-  )
-    return yield* fail("The actual adapter resource envelope differs from the requested caps");
-  if (
-    snapshot.runtimeMaxUSec !== "10min" ||
-    snapshot.timeoutStopUSec !== "10s" ||
-    snapshot.killMode !== "control-group"
-  )
-    return yield* fail("The actual adapter lifetime or stop envelope differs from its requested caps");
-  const actix = countMatching(snapshot.threadNames, "actix", "arbiter");
-  const tokio = countMatching(snapshot.threadNames, "tokio");
-  if (actix !== 3 || tokio < 2 || tokio > 8 || A.length(snapshot.threadNames) > 12)
-    return yield* fail("The adapter did not preserve its fixed worker envelope");
+  const refusal = A.findFirst(OBSERVATION_CHECKS, ([holds]) => !holds(snapshot, expected));
+  if (O.isSome(refusal)) return yield* fail(refusal.value[1]);
+  const cpu = yield* cpuEnvelope(snapshot).pipe(
+    Effect.fromOption(() => CacheCommandError.new("Unreachable cpu envelope."))
+  );
   const memoryPeak = yield* parseInteger(snapshot.memoryPeak).pipe(
     Effect.fromOption(() => CacheCommandError.new("The owned adapter memory peak is unreadable."))
   );
-  return yield* S.decodeUnknownEffect(CacheAdapterRuntimeObservation)({
+  const { actix, tokio } = workerCounts(snapshot);
+  return yield* decodeObservation({
     role: expected.role,
     phase: expected.phase,
     actixThreadsIncludingAcceptor: actix,
     tokioNamedThreadsIncludingBlocking: tokio,
     totalThreads: A.length(snapshot.threadNames),
     memoryMaxBytes: MEMORY_MAX_BYTES,
-    cpuQuotaMicros: quota.value,
-    cpuPeriodMicros: period.value,
+    cpuQuotaMicros: cpu.quota,
+    cpuPeriodMicros: cpu.period,
     tasksMax: 16,
     runtimeMaxSeconds: 600,
     stopTimeoutSeconds: 10,
@@ -343,7 +356,7 @@ const readEnvironmentNames = Effect.fnUntraced(function* (fs: FileSystem.FileSys
  * @param environment - User-manager client environment.
  * @param unit - The owned transient unit name.
  * @returns The unparsed systemd, /proc and cgroup facts.
- * @category observations
+ * @category observability
  * @since 0.0.0
  */
 const readCacheAdapterSnapshot = Effect.fn("CacheAdapterHost.readSnapshot")(function* (
@@ -392,19 +405,6 @@ export type CacheOwnedAdapterServices =
   | HttpClient.HttpClient;
 
 /**
- * One started owned adapter, bound to the caller's scope.
- *
- * @internal
- * @category models
- * @since 0.0.0
- */
-export interface CacheOwnedAdapter {
-  readonly ready: CacheAdapterRuntimeObservation;
-  readonly stop: Effect.Effect<void, CacheCommandError, CacheOwnedAdapterServices>;
-  readonly verify: Effect.Effect<CacheAdapterRuntimeObservation, CacheCommandError, CacheOwnedAdapterServices>;
-}
-
-/**
  * Starts one owned adapter unit inside the caller's scope from a private startup value.
  *
  * @internal
@@ -415,52 +415,77 @@ export interface CacheOwnedAdapterHostShape {
   readonly start: (
     startup: CacheOwnedAdapterStartup,
     work: string
-  ) => Effect.Effect<CacheOwnedAdapter, CacheCommandError, CacheOwnedAdapterServices | Scope.Scope>;
+  ) => Effect.Effect<
+    {
+      /** Readiness observation of the started unit. */
+      readonly ready: CacheAdapterRuntimeObservation;
+      /** Observe the same process again after load. */
+      readonly verify: Effect.Effect<CacheAdapterRuntimeObservation, CacheCommandError, CacheOwnedAdapterServices>;
+      /** Run the exhaustive cleanup; fails when any owned resource could not be stopped. */
+      readonly stop: Effect.Effect<void, CacheCommandError, CacheOwnedAdapterServices>;
+    },
+    CacheCommandError,
+    CacheOwnedAdapterServices | Scope.Scope
+  >;
 }
 
 const realPathOption = (fs: FileSystem.FileSystem) => (path: string) =>
   fs.realPath(path).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
 
+interface StartupFacts {
+  readonly digest: string;
+  readonly home: O.Option<string>;
+  readonly info: FileSystem.File.Info;
+  readonly startup: CacheOwnedAdapterStartup;
+  readonly workspace: string;
+}
+
+const startupPort = (startup: CacheOwnedAdapterStartup) => pipe(R.get(startup.env, "PORT"), O.flatMap(parseInteger));
+const startupRole = (startup: CacheOwnedAdapterStartup) =>
+  pipe(R.get(startup.env, "BEEP_CACHE_ACCESS_ROLE"), O.filter(S.is(Role)));
+
+const STARTUP_CHECKS: ReadonlyArray<(facts: StartupFacts) => boolean> = [
+  ({ info }) => info.type === "File" && (info.mode & 0o111) !== 0,
+  ({ digest, startup }) => digest === startup.sha256,
+  ({ startup }) => O.contains(R.get(startup.env, "HOST"), "127.0.0.1"),
+  ({ startup }) => O.exists(startupPort(startup), (value) => value >= 1024 && value <= 65_535),
+  ({ startup }) => O.contains(R.get(startup.env, "BEEP_CACHE_POLICY"), "signed-v1"),
+  ({ startup }) => O.isSome(startupRole(startup)),
+  ({ startup }) => A.every(R.keys(startup.env), (key) => HashSet.has(AllowedEnvironment, key)),
+  ({ home, workspace }) => O.contains(home, workspace),
+];
+
+const encodeStartup = JsonStringCodec(CacheOwnedAdapterStartup).encode;
+
 const validateStartup = Effect.fnUntraced(function* (startup: CacheOwnedAdapterStartup, work: string) {
   const fs = yield* FileSystem.FileSystem;
-  const refuse = fail("Owned adapter input differs from its bounded signed profile");
   const adapter = yield* fs.realPath(startup.adapter);
-  const info = yield* fs.stat(adapter);
-  const environment = startup.env;
-  const port = pipe(R.get(environment, "PORT"), O.flatMap(parseInteger));
-  const role = pipe(R.get(environment, "BEEP_CACHE_ACCESS_ROLE"), O.filter(S.is(Role)));
-  const home = yield* pipe(
-    R.get(environment, "HOME"),
-    O.match({ onNone: () => Effect.succeed(O.none<string>()), onSome: realPathOption(fs) })
+  const facts: StartupFacts = {
+    info: yield* fs.stat(adapter),
+    digest: yield* fs.readFile(adapter).pipe(Effect.flatMap(hashBytes)),
+    home: yield* O.match(R.get(startup.env, "HOME"), {
+      onNone: () => Effect.succeed(O.none<string>()),
+      onSome: realPathOption(fs),
+    }),
+    workspace: yield* fs.realPath(work),
+    startup,
+  };
+  const accepted = O.all({ port: startupPort(startup), role: startupRole(startup) }).pipe(
+    O.filter(() => A.every(STARTUP_CHECKS, (holds) => holds(facts)))
   );
-  const workspace = yield* fs.realPath(work);
-  if (
-    info.type !== "File" ||
-    (info.mode & 0o111) === 0 ||
-    (yield* fs.readFile(adapter).pipe(Effect.flatMap(hashBytes))) !== startup.sha256 ||
-    !O.contains(R.get(environment, "HOST"), "127.0.0.1") ||
-    !O.exists(port, (value) => value >= 1024 && value <= 65_535) ||
-    !O.contains(R.get(environment, "BEEP_CACHE_POLICY"), "signed-v1") ||
-    !O.isSome(role) ||
-    !A.every(R.keys(environment), (key) => HashSet.has(AllowedEnvironment, key)) ||
-    !O.contains(home, workspace)
-  )
-    return yield* refuse;
-  if (!O.isSome(port)) return yield* refuse;
-  const configuration = yield* JsonStringCodec(CacheOwnedAdapterStartup).encode(
-    CacheOwnedAdapterStartup.make({ ...startup, adapter })
+  const { port, role } = yield* accepted.pipe(
+    Effect.fromOption(() => CacheCommandError.new("Owned adapter input differs from its bounded signed profile"))
   );
+  const configuration = yield* encodeStartup(CacheOwnedAdapterStartup.make({ ...startup, adapter }));
   const bytes = new TextEncoder().encode(configuration);
   if (bytes.length > STARTUP_INPUT_BOUND) return yield* fail("Owned adapter startup input exceeds its bound");
-  return { adapter, bytes, port: port.value, role: role.value, workspace };
+  return { bytes, port, role, workspace: facts.workspace };
 });
 
 const stopUnit = Effect.fnUntraced(function* (environment: Readonly<Record<string, string>>, unit: string) {
   const stopped = yield* systemctl(environment, ["stop", unit], Duration.seconds(15));
-  if (stopped.exitCode !== 0) {
-    const loaded = yield* unitProperty(environment, unit, "LoadState");
-    if (loaded !== "not-found") return yield* fail("Owned adapter unit could not be stopped");
-  }
+  const loaded = stopped.exitCode === 0 ? "stopped" : yield* unitProperty(environment, unit, "LoadState");
+  if (loaded !== "stopped" && loaded !== "not-found") return yield* fail("Owned adapter unit could not be stopped");
   const state = yield* unitProperty(environment, unit, "ActiveState");
   if (state !== "inactive" && state !== "failed")
     return yield* fail("Owned adapter unit remained active after cleanup");
@@ -496,80 +521,111 @@ const stopOwnedAdapters = Effect.fnUntraced(function* (
     return yield* fail(`Owned adapter cleanup failed in ${failures} operation(s); every resource was attempted`);
 });
 
-const healthy = (port: number) =>
-  HttpClient.get(`http://127.0.0.1:${port}/management/health`).pipe(
+/**
+ * Whether a loopback HTTP endpoint answers 200 within one second.
+ *
+ * **Details**
+ * Shared by the owned adapter host and the R2 probe's reader adapter. Any
+ * transport failure or timeout counts as not ready.
+ *
+ * **Example** (Plan one readiness probe)
+ * ```ts
+ * import { cacheLoopbackHealthy } from "@beep/repo-cli/test/Cache"
+ * import * as HttpClientRequest from "effect/http/HttpClientRequest"
+ * const probe = cacheLoopbackHealthy(HttpClientRequest.get("http://127.0.0.1:9427/management/health"))
+ * console.assert(typeof probe === "object")
+ * ```
+ *
+ * @internal
+ * @param request - The health request.
+ * @returns `true` when the endpoint answered 200.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const cacheLoopbackHealthy = (request: HttpClientRequest.HttpClientRequest) =>
+  HttpClient.execute(request).pipe(
     Effect.map((response) => response.status === 200),
     Effect.timeout(Duration.seconds(1)),
     Effect.orElseSucceed(() => false)
   );
 
-const startLive = Effect.fn("CacheAdapterHost.start")(function* (startup: CacheOwnedAdapterStartup, work: string) {
+const systemdRunArguments = (unit: string, workspace: string) => [
+  "--user",
+  "--quiet",
+  "--wait",
+  "--pipe",
+  `--unit=${unit}`,
+  "--service-type=exec",
+  `--working-directory=${workspace}`,
+  "--property=MemoryMax=256M",
+  "--property=CPUQuota=200%",
+  "--property=TasksMax=16",
+  "--property=RuntimeMaxSec=600",
+  "--property=TimeoutStopSec=10",
+  "--property=KillMode=control-group",
+  ...cacheOwnedAdapterLauncher({ runtime: process.execPath, bun: P.isNotUndefined(process.versions.bun) }),
+];
+
+const allocateUnit = Effect.fnUntraced(function* (manager: Readonly<Record<string, string>>, role: string) {
   const random = yield* SecureRandomService.SecureRandom;
-  const input = yield* validateStartup(startup, work);
-  const manager = userManagerEnvironment(input.workspace);
   const uuid = yield* random.uuidV4();
-  const unit = `beep-cache-owned-${Str.slice(0, 12)(Str.replaceAll("-", "")(uuid))}-${input.role}.service`;
+  const unit = `beep-cache-owned-${Str.slice(0, 12)(Str.replaceAll("-", "")(uuid))}-${role}.service`;
   const loaded = yield* unitProperty(manager, unit, "LoadState");
   if (loaded !== "not-found") return yield* fail("Owned adapter unit already exists");
-  const processScope = yield* Scope.make();
-  const resources = yield* Ref.make<OwnedResources>({ units: [unit], processes: [processScope] });
-  // The exhaustive cleanup scope is installed before the unit or child can exist.
-  yield* Effect.addFinalizer(() => stopOwnedAdapters(manager, resources).pipe(Effect.ignore));
-  const handle = yield* ChildProcess.make(
-    SYSTEMD_RUN,
-    [
-      "--user",
-      "--quiet",
-      "--wait",
-      "--pipe",
-      `--unit=${unit}`,
-      "--service-type=exec",
-      `--working-directory=${input.workspace}`,
-      "--property=MemoryMax=256M",
-      "--property=CPUQuota=200%",
-      "--property=TasksMax=16",
-      "--property=RuntimeMaxSec=600",
-      "--property=TimeoutStopSec=10",
-      "--property=KillMode=control-group",
-      ...cacheOwnedAdapterLauncher({ runtime: process.execPath, bun: P.isNotUndefined(process.versions.bun) }),
-    ],
-    {
-      cwd: input.workspace,
-      extendEnv: false,
-      env: manager,
-      stdin: { stream: Stream.make(input.bytes) },
-      stdout: "ignore",
-      stderr: "ignore",
-      forceKillAfter: Duration.seconds(10),
-    }
-  ).pipe(Scope.provide(processScope));
-  const ownedEnvironment = R.keys(startup.env);
-  const observe = (phase: typeof Phase.Type, pid: number) =>
-    readCacheAdapterSnapshot(manager, unit).pipe(
-      Effect.flatMap((snapshot) =>
-        observeCacheAdapterSnapshot(snapshot, {
-          unit,
-          role: input.role,
-          phase,
-          sha256: startup.sha256,
-          environmentNames: ownedEnvironment,
-          port: input.port,
-          pid,
-        })
-      )
-    );
+  return unit;
+});
+
+const awaitReadiness = Effect.fnUntraced(function* (handle: ChildProcessSpawner.ChildProcessHandle, port: number) {
+  const health = HttpClientRequest.get(`http://127.0.0.1:${port}/management/health`);
   const isReady = yield* Effect.gen(function* () {
     if (!(yield* handle.isRunning)) return yield* fail("Owned adapter exited before readiness");
-    const ready = yield* healthy(input.port);
+    const ready = yield* cacheLoopbackHealthy(health);
     if (!ready) yield* Effect.sleep(Duration.millis(50));
     return ready;
   }).pipe(Effect.repeat({ times: READINESS_ATTEMPTS - 1, until: (ready: boolean) => ready }));
   if (!isReady) return yield* fail("Owned adapter did not become ready");
+});
+
+const startLive = Effect.fn("CacheAdapterHost.start")(function* (startup: CacheOwnedAdapterStartup, work: string) {
+  const input = yield* validateStartup(startup, work);
+  const manager = userManagerEnvironment(input.workspace);
+  const unit = yield* allocateUnit(manager, input.role);
+  const processScope = yield* Scope.make();
+  const resources = yield* Ref.make<OwnedResources>({ units: [unit], processes: [processScope] });
+  // The exhaustive cleanup scope is installed before the unit or child can exist.
+  yield* Effect.addFinalizer(() => stopOwnedAdapters(manager, resources).pipe(Effect.ignore));
+  const handle = yield* ChildProcess.make(SYSTEMD_RUN, systemdRunArguments(unit, input.workspace), {
+    cwd: input.workspace,
+    extendEnv: false,
+    env: manager,
+    stdin: { stream: Stream.make(input.bytes) },
+    stdout: "ignore",
+    stderr: "ignore",
+    forceKillAfter: Duration.seconds(10),
+  }).pipe(Scope.provide(processScope));
+  yield* awaitReadiness(handle, input.port);
   const pid = yield* unitProperty(manager, unit, "MainPID").pipe(
     Effect.map(parseInteger),
     Effect.map(O.getOrElse(() => 0))
   );
-  const ready = yield* observe("ready", pid);
+  const observe = (phase: CacheAdapterObservationExpectation["phase"]) =>
+    readCacheAdapterSnapshot(manager, unit).pipe(
+      Effect.flatMap((snapshot) =>
+        observeCacheAdapterSnapshot(
+          snapshot,
+          CacheAdapterObservationExpectation.make({
+            unit,
+            role: input.role,
+            phase,
+            sha256: startup.sha256,
+            environmentNames: R.keys(startup.env),
+            port: input.port,
+            pid,
+          })
+        )
+      )
+    );
+  const ready = yield* observe("ready");
   // The unit caps the adapter at ten minutes; parent commands cannot extend it.
   const deadline = (yield* Clock.currentTimeMillis) + Duration.toMillis(Duration.minutes(10));
   const requireLive = Effect.gen(function* () {
@@ -579,9 +635,9 @@ const startLive = Effect.fn("CacheAdapterHost.start")(function* (startup: CacheO
   });
   return {
     ready,
-    verify: requireLive.pipe(Effect.andThen(observe("after-load", pid))),
+    verify: requireLive.pipe(Effect.andThen(observe("after-load"))),
     stop: requireLive.pipe(Effect.andThen(stopOwnedAdapters(manager, resources))),
-  } satisfies CacheOwnedAdapter;
+  };
 }, CacheCommandError.mapError("Owned adapter host failed."));
 
 /**

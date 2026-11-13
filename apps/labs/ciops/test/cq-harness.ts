@@ -5,7 +5,7 @@ import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import * as Oxigraph from "oxigraph";
@@ -65,7 +65,7 @@ const dedent = (block: string): string => {
 };
 
 /** One SELECT solution; reading an unbound column fails the assertion. */
-export class Solution {
+class Solution {
   private readonly row: ReadonlyMap<string, Oxigraph.Term>;
 
   constructor(row: ReadonlyMap<string, Oxigraph.Term>) {
@@ -123,13 +123,6 @@ export class Graph {
     return new Graph(store);
   });
 
-  /** A copy of every quad, plus extra quads. */
-  copy(extra: ReadonlyArray<Oxigraph.Quad> = []): Graph {
-    const probe = new Oxigraph.Store(this.quads());
-    A.forEach(extra, (quad) => probe.add(quad));
-    return new Graph(probe);
-  }
-
   quads(): ReadonlyArray<Oxigraph.Quad> {
     return this.store.match(null, null, null, null);
   }
@@ -149,13 +142,6 @@ export class Graph {
     const solutions = A.filter(rows, (row): row is Map<string, Oxigraph.Term> => row instanceof Map);
     expect(A.isArray(result) && A.length(solutions) === A.length(rows), "SELECT must return solution rows").toBe(true);
     return A.map(solutions, (row) => new Solution(row));
-  }
-
-  subjects(type: Oxigraph.NamedNode): ReadonlyArray<Node> {
-    return A.filter(
-      A.map(this.match(null, RDF_TYPE, type), (quad) => quad.subject),
-      isNode
-    );
   }
 
   objects(subject: Node, predicate: Oxigraph.NamedNode): ReadonlyArray<Oxigraph.Term> {
@@ -187,16 +173,43 @@ export class Cq020 {
     );
     return new Cq020(`PREFIX ciops-prov: <${PROV}>\n${query}`);
   });
-
-  /** Bind exactly the CQ's `?ep` parameter to one episode node. */
-  bind(episode: Node): string {
-    const pattern = /VALUES \?ep \{[^}]*\}/g;
-    const bindings = pipe(
-      Str.match(pattern)(this.query),
-      O.map(A.length),
-      O.getOrElse(() => 0)
-    );
-    expect(bindings, "Bind exactly the CQ's episode parameter").toBe(1);
-    return Str.replace(pattern, `VALUES ?ep { ${render(episode)} }`)(this.query);
-  }
 }
+
+/** The typed subjects of `type` in a graph. */
+export const subjectsOf: {
+  (type: Oxigraph.NamedNode): (graph: Graph) => ReadonlyArray<Node>;
+  (graph: Graph, type: Oxigraph.NamedNode): ReadonlyArray<Node>;
+} = dual(
+  2,
+  (graph: Graph, type: Oxigraph.NamedNode): ReadonlyArray<Node> =>
+    A.filter(
+      A.map(graph.match(null, RDF_TYPE, type), (quad) => quad.subject),
+      isNode
+    )
+);
+
+const EPISODE_VALUES = /VALUES \?ep \{[^}]*\}/g;
+
+/** Bind exactly the CQ's `?ep` parameter to one episode node. */
+export const bindEpisode: {
+  (episode: Node): (cq020: Cq020) => string;
+  (cq020: Cq020, episode: Node): string;
+} = dual(2, (cq020: Cq020, episode: Node): string => {
+  const bindings = pipe(
+    Str.match(EPISODE_VALUES)(cq020.query),
+    O.map(A.length),
+    O.getOrElse(() => 0)
+  );
+  expect(bindings, "Bind exactly the CQ's episode parameter").toBe(1);
+  return Str.replace(EPISODE_VALUES, `VALUES ?ep { ${render(episode)} }`)(cq020.query);
+});
+
+/** A copy of every quad in a graph, plus extra quads. */
+export const copyGraph: {
+  (extra: ReadonlyArray<Oxigraph.Quad>): (graph: Graph) => Graph;
+  (graph: Graph, extra: ReadonlyArray<Oxigraph.Quad>): Graph;
+} = dual(2, (graph: Graph, extra: ReadonlyArray<Oxigraph.Quad>): Graph => {
+  const probe = new Oxigraph.Store(graph.quads());
+  A.forEach(extra, (quad) => probe.add(quad));
+  return new Graph(probe);
+});

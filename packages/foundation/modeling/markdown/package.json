@@ -38,8 +38,7 @@
     "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
     "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
     "beep:check:tests": "tsrs -p tsconfig.test.json --noEmit",
-    "generate:entities": "bun run scripts/generate-entities.ts && biome check --write src/internal/entityMap.ts",
-    "generate:gfm-corpora": "bun run scripts/extract-gfm-corpora.ts"
+    "generate:entities": "bun run scripts/generate-entities.ts && biome check --write src/internal/entityMap.ts"
   },
   "exports": {
     ".": "./src/index.ts",

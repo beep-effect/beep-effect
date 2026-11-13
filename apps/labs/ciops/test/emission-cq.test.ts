@@ -8,7 +8,20 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Oxigraph from "oxigraph";
-import { asNode, CIOPS, Cq020, Graph, only, prov, RDF_TYPE, render, renderAll, xsdString } from "./cq-harness.ts";
+import {
+  asNode,
+  bindEpisode,
+  CIOPS,
+  Cq020,
+  Graph,
+  only,
+  prov,
+  RDF_TYPE,
+  render,
+  renderAll,
+  subjectsOf,
+  xsdString,
+} from "./cq-harness.ts";
 
 const cq020Columns = ["proposal", "spec", "step", "idx", "req", "scope"] as const;
 
@@ -17,8 +30,8 @@ it.layer(BunFileSystem.layer, { timeout: "30 seconds" })("@beep/ciops emission v
     Effect.gen(function* () {
       const graph = yield* Graph.load(["emission-v2.ttl"]);
       const cq020 = yield* Cq020.load();
-      const episode = only(graph.subjects(prov("VerificationEpisode")));
-      const query = cq020.bind(episode);
+      const episode = only(subjectsOf(graph, prov("VerificationEpisode")));
+      const query = bindEpisode(cq020, episode);
 
       const rows = graph.select(query);
       expect(A.length(rows), "CQ-020 must return the two admitted requests, excluding the tail").toBe(2);
@@ -37,7 +50,7 @@ it.layer(BunFileSystem.layer, { timeout: "30 seconds" })("@beep/ciops emission v
       expect(renderAll(graph.objects(proposal, prov("hasProjectionSpecification")))).toStrictEqual([
         render(specification),
       ]);
-      expect(A.length(graph.subjects(prov("AdmissionProjectionSpecification")))).toBe(1);
+      expect(A.length(subjectsOf(graph, prov("AdmissionProjectionSpecification")))).toBe(1);
       expect(renderAll(graph.objects(specification, prov("policyDigest")))).toStrictEqual([
         render(xsdString("policy-digest")),
       ]);

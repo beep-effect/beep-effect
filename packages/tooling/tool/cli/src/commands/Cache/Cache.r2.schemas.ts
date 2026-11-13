@@ -77,34 +77,27 @@ export type CacheR2Marker = typeof CacheR2Marker.Type;
  * **Example** (Inspect the read fields)
  * ```ts
  * import { CacheR2TaskCache } from "@beep/repo-cli/test/Cache"
- * console.assert(CacheR2TaskCache !== undefined)
+ * console.assert(CacheR2TaskCache.make({ status: "MISS" }).status === "MISS")
  * ```
  *
  * @internal
  * @category schemas
  * @since 0.0.0
  */
-export const CacheR2TaskCache = S.StructWithRest(
-  S.Struct({
-    status: S.String,
-    remote: S.Boolean.pipe(S.optionalKey),
-    timeSaved: S.Finite.pipe(S.optionalKey),
-  }),
-  [S.Record(S.String, S.Unknown)]
-).pipe(
-  $I.annoteSchema("CacheR2TaskCache", {
-    description: "The task's Turbo cache status, remote flag and saved time plus every other summary field.",
-  })
-);
-
-/**
- * Decoded run-summary cache facts.
- *
- * @internal
- * @category models
- * @since 0.0.0
- */
-export type CacheR2TaskCache = typeof CacheR2TaskCache.Type;
+export class CacheR2TaskCache extends S.Opaque<CacheR2TaskCache, { readonly brand: unique symbol }>()(
+  S.StructWithRest(
+    S.Struct({
+      status: S.String,
+      remote: S.Boolean.pipe(S.optionalKey),
+      timeSaved: S.Finite.pipe(S.optionalKey),
+    }),
+    [S.Record(S.String, S.Unknown)]
+  ).pipe(
+    $I.annoteSchema("CacheR2TaskCache", {
+      description: "The task's Turbo cache status, remote flag and saved time plus every other summary field.",
+    })
+  )
+) {}
 
 /**
  * Turbo run-summary execution timing retained by the probe.
@@ -119,15 +112,17 @@ export type CacheR2TaskCache = typeof CacheR2TaskCache.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const CacheR2TaskExecution = S.Struct({
-  startTime: S.Finite.pipe(S.optionalKey),
-  endTime: S.Finite.pipe(S.optionalKey),
-  exitCode: S.Finite.pipe(S.NullOr, S.optionalKey),
-}).pipe(
-  $I.annoteSchema("CacheR2TaskExecution", {
-    description: "Start, end and exit code of one Turbo task execution.",
-  })
-);
+export class CacheR2TaskExecution extends S.Opaque<CacheR2TaskExecution, { readonly brand: unique symbol }>()(
+  S.Struct({
+    startTime: S.Finite.pipe(S.optionalKey),
+    endTime: S.Finite.pipe(S.optionalKey),
+    exitCode: S.Finite.pipe(S.NullOr, S.optionalKey),
+  }).pipe(
+    $I.annoteSchema("CacheR2TaskExecution", {
+      description: "Start, end and exit code of one Turbo task execution.",
+    })
+  )
+) {}
 
 /**
  * One qualification task row.
@@ -256,6 +251,15 @@ export const CacheR2FleetStatus = LiteralKit(["planned", "legacy-use-beep-turbo"
 );
 
 /**
+ * Decoded {@link CacheR2FleetStatus} value.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export type CacheR2FleetStatus = typeof CacheR2FleetStatus.Type;
+
+/**
  * One checkout row of the fleet enrollment receipt.
  *
  * **Example** (Inspect the cache mode field)
@@ -299,6 +303,148 @@ export class CacheR2FleetReceipt extends S.Opaque<CacheR2FleetReceipt, { readonl
   S.Struct({ recorded_utc: S.String, applied: S.Boolean, checkouts: S.Array(CacheR2FleetRow) }).pipe(
     $I.annoteSchema("CacheR2FleetReceipt", {
       description: "Recorded time, apply flag and per-checkout rows of one fleet enrollment run.",
+    })
+  )
+) {}
+
+/**
+ * HTTP method the probe issues against the Turbo artifact API.
+ *
+ * **Example** (Check a method)
+ * ```ts
+ * import { CacheR2Method } from "@beep/repo-cli/test/Cache"
+ * console.assert(CacheR2Method.is.HEAD("HEAD"))
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CacheR2Method = LiteralKit(["GET", "PUT", "HEAD"]).pipe(
+  $I.annoteSchema("CacheR2Method", { description: "Artifact read, write or existence probe." })
+);
+
+/**
+ * Decoded {@link CacheR2Method} value.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export type CacheR2Method = typeof CacheR2Method.Type;
+
+/**
+ * One artifact API request issued by the probe.
+ *
+ * **Details**
+ * Without `api` the request targets the resolved Turbo API; the reader proof
+ * names the reader adapter's loopback API instead.
+ *
+ * **Example** (Read the marker receipt)
+ * ```ts
+ * import { CacheR2Request } from "@beep/repo-cli/test/Cache"
+ * console.assert(CacheR2Request.make({ key: "seed-receipt", method: "GET" }).method === "GET")
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheR2Request extends S.Opaque<CacheR2Request, { readonly brand: unique symbol }>()(
+  S.Struct({
+    key: S.String,
+    method: CacheR2Method,
+    body: S.Uint8Array.pipe(S.optionalKey),
+    api: S.String.pipe(S.optionalKey),
+  }).pipe(
+    $I.annoteSchema("CacheR2Request", {
+      description: "Artifact key, method, optional body and optional alternate API base of one probe request.",
+    })
+  )
+) {}
+
+/**
+ * One artifact API response observed by the probe.
+ *
+ * **Example** (Inspect the status field)
+ * ```ts
+ * import { CacheR2Response } from "@beep/repo-cli/test/Cache"
+ * console.assert("status" in CacheR2Response.fields)
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheR2Response extends S.Opaque<CacheR2Response, { readonly brand: unique symbol }>()(
+  S.Struct({
+    status: S.Int,
+    body: S.Uint8Array,
+    headers: S.Record(S.String, S.String),
+    elapsedSeconds: S.Finite,
+  }).pipe(
+    $I.annoteSchema("CacheR2Response", {
+      description: "HTTP status, body bytes, headers and elapsed seconds of one artifact API response.",
+    })
+  )
+) {}
+
+/**
+ * Resolved Turbo artifact tuple and checkout root the live probe works in.
+ *
+ * **Example** (Describe a probe target)
+ * ```ts
+ * import { CacheR2ProbeTarget } from "@beep/repo-cli/test/Cache"
+ * const target = CacheR2ProbeTarget.make({ root: "/repo", api: "http://127.0.0.1:9427", token: "t", team: "team_x" })
+ * console.assert(target.team === "team_x")
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheR2ProbeTarget extends S.Opaque<CacheR2ProbeTarget, { readonly brand: unique symbol }>()(
+  S.Struct({
+    root: S.String,
+    api: S.NonEmptyString,
+    token: S.NonEmptyString,
+    team: S.NonEmptyString,
+  }).pipe(
+    $I.annoteSchema("CacheR2ProbeTarget", {
+      description: "Checkout root plus the resolved TURBO_API, TURBO_TOKEN and TURBO_TEAM tuple.",
+    })
+  )
+) {}
+
+/**
+ * Inputs of one fleet enrollment run.
+ *
+ * **Example** (Plan a projects directory)
+ * ```ts
+ * import { CacheR2FleetRequest } from "@beep/repo-cli/test/Cache"
+ * import * as O from "effect/Option"
+ * const request = CacheR2FleetRequest.make({
+ *   roots: ["/home/me/projects"],
+ *   apply: false,
+ *   output: O.none(),
+ *   workstation: "/repo/infra/r2-cache/workstation.sh"
+ * })
+ * console.assert(request.apply === false)
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheR2FleetRequest extends S.Opaque<CacheR2FleetRequest, { readonly brand: unique symbol }>()(
+  S.Struct({
+    roots: S.Array(S.String),
+    apply: S.Boolean,
+    output: S.Option(S.String),
+    workstation: S.String,
+  }).pipe(
+    $I.annoteSchema("CacheR2FleetRequest", {
+      description: "Clone roots, apply flag, optional private receipt path and the enrollment script.",
     })
   )
 ) {}

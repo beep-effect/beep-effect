@@ -8,6 +8,7 @@ import {
   CacheSignedPilotRequest,
 } from "@beep/repo-cli/commands/Cache";
 import {
+  CacheAdapterObservationExpectation,
   CacheAdapterProcessSnapshot,
   CacheAdapterRuntimeObservation,
   CacheOwnedAdapterHost,
@@ -185,6 +186,25 @@ const fixture = Effect.fn("ProducerAdapterTest.fixture")(function* (fault: typeo
   // The inert host replaces the systemd user manager. These tests cover parent
   // lifetime decisions; observation and startup-input refusals are covered
   // against recorded process facts and the real launcher below.
+  const verifyFailure = Fault.matchOrElse(
+    fault,
+    {
+      "verify-failure": () => O.some("The owned adapter does not hold its loopback listener"),
+      "backend-exited": () => O.some("Owned backend stopped before the parent completed"),
+    },
+    () => O.none<string>()
+  );
+  const verify = O.match(verifyFailure, {
+    onNone: () => Effect.succeed(observe(fault === "bad-after" ? "ready" : "after-load")),
+    onSome: fail,
+  });
+  const stop =
+    fault === "cleanup-failure"
+      ? fail("Owned adapter cleanup failed in 1 operation(s); every resource was attempted")
+      : Effect.sync(() => {
+          peer.stopped++;
+        });
+  const ready = observe(fault === "bad-ready" ? "after-load" : "ready");
   const host: CacheOwnedAdapterHostShape = {
     start: Effect.fnUntraced(function* (startup) {
       peer.started++;
@@ -196,19 +216,6 @@ const fixture = Effect.fn("ProducerAdapterTest.fixture")(function* (fault: typeo
         })
       );
       if (fault === "start-failure") return yield* fail("Owned adapter exited before readiness");
-      const ready = fault === "bad-ready" ? observe("after-load") : observe("ready");
-      const verify =
-        fault === "verify-failure"
-          ? fail("The owned adapter does not hold its loopback listener")
-          : fault === "backend-exited"
-            ? fail("Owned backend stopped before the parent completed")
-            : Effect.succeed(fault === "bad-after" ? observe("ready") : observe("after-load"));
-      const stop =
-        fault === "cleanup-failure"
-          ? fail("Owned adapter cleanup failed in 1 operation(s); every resource was attempted")
-          : Effect.sync(() => {
-              peer.stopped++;
-            });
       return { ready, verify, stop };
     }),
   };
@@ -436,15 +443,15 @@ const recorded = CacheAdapterProcessSnapshot.make({
     "tokio-runtime-w",
   ],
 });
-const expectation = {
+const expectation = CacheAdapterObservationExpectation.make({
   unit,
   role: "writer",
-  phase: "ready" as const,
+  phase: "ready",
   sha256: adapterSha256,
   environmentNames,
   port,
   pid: 41_337,
-};
+});
 
 const Negative = LiteralKit([
   "changed-pid",

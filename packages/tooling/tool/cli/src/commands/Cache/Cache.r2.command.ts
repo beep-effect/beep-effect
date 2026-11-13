@@ -19,8 +19,16 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CacheCommandError } from "./Cache.errors.ts";
-import { CacheR2Marker, CacheR2ProbeMode, CacheR2ProbeReceipt } from "./Cache.r2.schemas.ts";
-import { layerCacheR2ProbeIo, runCacheR2Fleet, runCacheR2Probe } from "./Cache.r2.ts";
+import { runCacheR2Fleet } from "./Cache.r2.fleet.ts";
+import { layerCacheR2ProbeIo } from "./Cache.r2.live.ts";
+import {
+  CacheR2FleetRequest,
+  CacheR2Marker,
+  CacheR2ProbeMode,
+  CacheR2ProbeReceipt,
+  CacheR2ProbeTarget,
+} from "./Cache.r2.schemas.ts";
+import { runCacheR2Probe } from "./Cache.r2.ts";
 
 const renderFailure = <A, E, R>(effect: Effect.Effect<A, E | CacheCommandError, R>) =>
   effect.pipe(
@@ -28,6 +36,10 @@ const renderFailure = <A, E, R>(effect: Effect.Effect<A, E | CacheCommandError, 
       Console.error(error.message).pipe(Effect.andThen(failWithReportedExit(error.message)))
     )
   );
+
+const encodeReceipt = S.encodeEffect(S.fromJsonString(CacheR2ProbeReceipt, { space: 2 }));
+const decodeMarker = S.decodeEffect(CacheR2Marker);
+const TUPLE_REQUIRED = "A resolved Turbo API/token/team tuple is required";
 
 const TurboTuple = Config.all({
   api: Config.String("TURBO_API").pipe(Config.withDefault("")),
@@ -45,21 +57,19 @@ const cacheR2ProbeCommand = Command.make(
   },
   Effect.fn("CacheR2.probeCommand")(
     function* ({ mode, marker }) {
-      const tuple = yield* TurboTuple.pipe(
-        Effect.mapError(() => CacheCommandError.new("A resolved Turbo API/token/team tuple is required"))
-      );
-      if (Str.isEmpty(tuple.api) || Str.isEmpty(tuple.token) || Str.isEmpty(tuple.team))
-        return yield* CacheCommandError.new("A resolved Turbo API/token/team tuple is required");
-      const checked = yield* S.decodeEffect(CacheR2Marker)(marker).pipe(
+      const tuple = yield* TurboTuple.pipe(Effect.mapError(() => CacheCommandError.new(TUPLE_REQUIRED)));
+      if (A.some([tuple.api, tuple.token, tuple.team], Str.isEmpty))
+        return yield* CacheCommandError.new(TUPLE_REQUIRED);
+      const checked = yield* decodeMarker(marker).pipe(
         Effect.mapError(() => CacheCommandError.new("Marker must be sixteen hexadecimal characters"))
       );
       // The command handler is this probe's entry point; the live layer needs the
       // tuple resolved above, so it is built here rather than at command wiring.
-      const io = yield* Layer.build(layerCacheR2ProbeIo({ root: process.cwd(), tuple })).pipe(
-        CacheCommandError.mapError("Cannot prepare the qualification probe.")
-      );
+      const io = yield* Layer.build(
+        layerCacheR2ProbeIo(CacheR2ProbeTarget.make({ root: process.cwd(), ...tuple }))
+      ).pipe(CacheCommandError.mapError("Cannot prepare the qualification probe."));
       const receipt = yield* runCacheR2Probe(mode, checked).pipe(Effect.provideContext(io));
-      const text = yield* S.encodeEffect(S.fromJsonString(CacheR2ProbeReceipt, { space: 2 }))(receipt).pipe(
+      const text = yield* encodeReceipt(receipt).pipe(
         CacheCommandError.mapError("Cannot render the qualification receipt.")
       );
       yield* Console.log(text);
@@ -90,12 +100,14 @@ const cacheR2FleetCommand = Command.make(
   },
   Effect.fn("CacheR2.fleetCommand")(function* ({ roots, apply, output }) {
     const path = yield* Path.Path;
-    const result = yield* runCacheR2Fleet({
-      roots,
-      apply,
-      output,
-      workstation: path.join(process.cwd(), "infra/r2-cache/workstation.sh"),
-    });
+    const result = yield* runCacheR2Fleet(
+      CacheR2FleetRequest.make({
+        roots,
+        apply,
+        output,
+        workstation: path.join(process.cwd(), "infra/r2-cache/workstation.sh"),
+      })
+    );
     yield* Console.log(A.join(result.lines, "\n"));
     if (result.blocked) return yield* failWithReportedExit("Fleet enrollment blocked for at least one checkout.");
   }, renderFailure)

@@ -10,8 +10,8 @@ off, so this lane ports or deletes all six Python files now.
 | File | Consumer found | Disposition |
 | --- | --- | --- |
 | `policy_runtime.py` (371) | `Cache.adapter.ts` spawned `/usr/bin/python3 -I -B policy_runtime.py owned-host` for producer uploads; `policy-lab.py` imported it | Ported in-process: `packages/tooling/tool/cli/src/commands/Cache/Cache.adapter.host.ts` |
-| `probe.py` (112) | `.github/workflows/cache-warm.yml` (`r2_probe` dispatch); README seed/restore steps | Ported: `bun run beep cache r2 probe seed\|ci\|restore --marker <hex16>` (`Cache.r2.ts`, `Cache.r2.command.ts`) |
-| `fleet.py` (68) | Copied by `workstation.sh install` into `~/.local/share/beep/r2-cache/`; README enrollment step | Ported: `bun run beep cache r2 fleet <roots...> [--apply] [--output <path>]`; install step no longer copies it |
+| `probe.py` (112) | `.github/workflows/cache-warm.yml` (`r2_probe` dispatch); README seed/restore steps | Ported: `bun run beep cache r2 probe seed\|ci\|restore --marker <hex16>` (`Cache.r2.ts`, `Cache.r2.live.ts`, `Cache.r2.command.ts`) |
+| `fleet.py` (68) | Copied by `workstation.sh install` into `~/.local/share/beep/r2-cache/`; README enrollment step | Ported: `bun run beep cache r2 fleet <roots...> [--apply] [--output <path>]` (`Cache.r2.fleet.ts`); install step no longer copies it |
 | `trial-grants.py` (267, boto3) | README operator step only; trial expires 2026-11-28; owning goal `turborepo-cache-trust-observability` is paused | Deleted. Result retained: `goals/turborepo-cache-trust-observability/research/saved-storage-grants-checkpoint-2026-11-03.json` |
 | `policy-lab.py` (1035) + `policy-lab-requirements.txt` | README "optional" lab only | Deleted. Results retained: `research/adapter-policy-lab.json`, `adapter-runtime-lab.json`, `adapter-runtime-checkpoint.json` under the trust packet |
 | `policy-build-requirements.txt` | `.github/workflows/heavy.yml` producer build (`pip install --require-hashes`), `ci-runner-security.test.ts` | Kept. It pins the `cargo-zigbuild`/`ziglang` wheels for the Rust musl build; it is a lockfile for a build tool, not Python source, and has a live consumer |

@@ -1,5 +1,8 @@
 import {
+  CacheR2FleetRequest,
   CacheR2ProbeIo,
+  CacheR2Response,
+  CacheR2TaskCache,
   CacheR2TaskExecution,
   CacheR2TaskRow,
   CacheRuntimeProcess,
@@ -13,6 +16,7 @@ import { currentHostPlatform } from "@beep/utils/HostProcess";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
@@ -24,15 +28,10 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type {
-  CacheR2ProbeIoShape,
-  CacheR2ProbeReceipt,
-  CacheR2Request,
-  CacheR2Response,
-  CacheR2TaskCache,
-} from "@beep/repo-cli/test/Cache";
+import type { CacheR2ProbeReceipt, CacheR2Request } from "@beep/repo-cli/test/Cache";
 
 const hashHex = S.decodeEffect(Sha256HexFromBytes);
+const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 const marker = "0123456789abcdef";
 
 // Recorded from the retired probe.py fixture()/write_payloads() for this marker.
@@ -69,7 +68,7 @@ describe("R2 probe fixtures", () => {
             },
           ],
         };
-        const text = yield* S.encodeEffect(S.fromJsonString(S.Unknown))(summary);
+        const text = yield* encodeJson(summary);
         const row = yield* selectCacheR2SummaryTask(text, "lint:effect-imports");
         expect(row.hash).toBe("d8326d5593584900");
         expect(row.cache.remote).toBe(true);
@@ -77,7 +76,7 @@ describe("R2 probe fixtures", () => {
         expect(row.cache.source).toBe("REMOTE");
         expect(row.execution).toEqual({ startTime: 1000, endTime: 1280, exitCode: 0 });
         const missing = yield* selectCacheR2SummaryTask(text, "lint:effect-imports-markdown").pipe(Effect.exit);
-        expect(Exit.isFailure(missing)).toBe(true);
+        missing.pipe(Exit.isFailure, assertTrue);
       })
     );
   });
@@ -94,11 +93,11 @@ type Scenario = {
   readonly readerWrites?: boolean;
 };
 
-const row = (task: string, hash: string, mode: string, cache: CacheR2TaskCache) =>
+const row = (task: string, hash: string, mode: string, cache: Parameters<typeof CacheR2TaskCache.make>[0]) =>
   CacheR2TaskRow.make({
     task,
     hash,
-    cache,
+    cache: CacheR2TaskCache.make(cache),
     execution: CacheR2TaskExecution.make({ startTime: 1_000, endTime: 6_000, exitCode: 0 }),
     elapsed_s: 5,
     mode,
@@ -111,9 +110,9 @@ const row = (task: string, hash: string, mode: string, cache: CacheR2TaskCache) 
  */
 const makeIo =
   (store: MutableHashMap.MutableHashMap<string, Stored>, receipts: Array<CacheR2ProbeReceipt>) =>
-  (scenario: Scenario): CacheR2ProbeIoShape => {
+  (scenario: Scenario): CacheR2ProbeIo["Service"] => {
     const respond = (status: number, body = new Uint8Array(), headers: Record<string, string> = {}) =>
-      Effect.succeed<CacheR2Response>({ status, body, headers, elapsedSeconds: 0.25 });
+      Effect.succeed(CacheR2Response.make({ status, body, headers, elapsedSeconds: 0.25 }));
     const request = (request: CacheR2Request) => {
       const reader = request.api === "http://127.0.0.1:reader";
       const found = MutableHashMap.get(store, request.key);
@@ -184,7 +183,7 @@ describe("R2 qualification probe", () => {
         expect(ci.reader_write_rejected).toBe(true);
         expect(ci.uploaded_duration_ms).toBe(5_000);
         expect(ci.consumer?.hash).toBe("seedhash");
-        expect(O.isNone(MutableHashMap.get(store, "8113b693e8990525"))).toBe(true);
+        assertNone(MutableHashMap.get(store, "8113b693e8990525"));
         const restore = yield* run("restore");
         expect(restore.status).toBe("success");
         expect(restore.ci?.mode).toBe("ci");
@@ -212,11 +211,12 @@ describe("R2 qualification probe", () => {
           Effect.provideService(CacheR2ProbeIo, io(scenario)),
           Effect.exit
         );
-        expect(Exit.isFailure(exit)).toBe(true);
+        exit.pipe(Exit.isFailure, assertTrue);
         expect(failureText(exit)).toContain(message);
         const last = A.last(receipts);
-        expect(O.map(last, (receipt) => [receipt.mode, receipt.status, receipt.failure])).toEqual(
-          O.some([mode, "failed", message])
+        assertSome(
+          O.map(last, (receipt) => [receipt.mode, receipt.status, receipt.failure]),
+          [mode, "failed", message]
         );
       })
     );
@@ -266,12 +266,14 @@ describe.skipIf(currentHostPlatform !== "linux")("R2 fleet enrollment", () => {
       Effect.gen(function* () {
         const f = yield* fleetFixture(0);
         const output = f.path.join(f.parent, "state", "fleet.json");
-        const result = yield* runCacheR2Fleet({
-          roots: [f.parent],
-          apply: false,
-          output: O.some(output),
-          workstation: f.workstation,
-        });
+        const result = yield* runCacheR2Fleet(
+          CacheR2FleetRequest.make({
+            roots: [f.parent],
+            apply: false,
+            output: O.some(output),
+            workstation: f.workstation,
+          })
+        );
         expect(A.map(result.receipt.checkouts, (row) => [row.checkout, row.mode, row.status])).toEqual([
           [f.main, "local:rw,remote:rw", "planned"],
           [f.lane, "local:rw,remote:r", "legacy-use-beep-turbo"],
@@ -290,12 +292,14 @@ describe.skipIf(currentHostPlatform !== "linux")("R2 fleet enrollment", () => {
     it.effect("enrolls supported checkouts through workstation.sh and reports blocks", () =>
       Effect.gen(function* () {
         const enrolled = yield* fleetFixture(0);
-        const applied = yield* runCacheR2Fleet({
-          roots: [enrolled.main],
-          apply: true,
-          output: O.none(),
-          workstation: enrolled.workstation,
-        });
+        const applied = yield* runCacheR2Fleet(
+          CacheR2FleetRequest.make({
+            roots: [enrolled.main],
+            apply: true,
+            output: O.none(),
+            workstation: enrolled.workstation,
+          })
+        );
         expect(A.map(applied.receipt.checkouts, (row) => [row.status, row.exit_code])).toEqual([
           ["enrolled", 0],
           ["legacy-use-beep-turbo", undefined],
@@ -303,12 +307,14 @@ describe.skipIf(currentHostPlatform !== "linux")("R2 fleet enrollment", () => {
         const calls = yield* enrolled.fs.readFileString(enrolled.calls);
         expect(Str.trim(calls)).toBe(`enable ${enrolled.main} local:rw,remote:rw`);
         const blocked = yield* fleetFixture(3);
-        const refused = yield* runCacheR2Fleet({
-          roots: [blocked.main],
-          apply: true,
-          output: O.none(),
-          workstation: blocked.workstation,
-        });
+        const refused = yield* runCacheR2Fleet(
+          CacheR2FleetRequest.make({
+            roots: [blocked.main],
+            apply: true,
+            output: O.none(),
+            workstation: blocked.workstation,
+          })
+        );
         expect(refused.blocked).toBe(true);
         expect(A.map(refused.receipt.checkouts, (row) => row.status)).toEqual(["blocked", "legacy-use-beep-turbo"]);
       })

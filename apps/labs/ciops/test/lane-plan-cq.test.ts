@@ -23,7 +23,22 @@ import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Oxigraph from "oxigraph";
-import { asNode, CIOPS, Cq020, Graph, only, PROV, prov, RDF_TYPE, render, renderAll, xsdString } from "./cq-harness.ts";
+import {
+  asNode,
+  bindEpisode,
+  CIOPS,
+  Cq020,
+  copyGraph,
+  Graph,
+  only,
+  PROV,
+  prov,
+  RDF_TYPE,
+  render,
+  renderAll,
+  subjectsOf,
+  xsdString,
+} from "./cq-harness.ts";
 import type { Node } from "./cq-harness.ts";
 
 const PREFIXES = `PREFIX ciops: <${CIOPS}>\nPREFIX ciops-prov: <${PROV}>\n`;
@@ -123,7 +138,7 @@ it.layer(PlatformLive, { timeout: "30 seconds" })("@beep/ciops lane-plan CQ", (i
       expect(A.length(A.dedupe(rankedLanes)), "Fixture lane ids must be unique").toBe(laneCount);
 
       // 1. Amended CQ-020: the admission rows are unchanged, and the lane-plan episode answers nothing.
-      const episodes = graph.subjects(prov("VerificationEpisode"));
+      const episodes = subjectsOf(graph, prov("VerificationEpisode"));
       expect(A.length(episodes), "One admission episode and one lane-plan episode").toBe(2);
       const anchors = (predicate: string) =>
         A.filter(episodes, (episode) => A.isReadonlyArrayNonEmpty(graph.objects(episode, prov(predicate))));
@@ -135,7 +150,7 @@ it.layer(PlatformLive, { timeout: "30 seconds" })("@beep/ciops lane-plan CQ", (i
       expect(graph.objects(admissionEpisode, prov("hasLanePlan"))).toStrictEqual([]);
       expect(graph.objects(laneEpisode, prov("hasCurrentProposal"))).toStrictEqual([]);
 
-      const rows = graph.select(cq020.bind(admissionEpisode));
+      const rows = graph.select(bindEpisode(cq020, admissionEpisode));
       expect(A.length(rows), "CQ-020 must return the two admitted requests, excluding the tail").toBe(2);
       expect(A.map(rows, (row) => row.integer("idx"))).toStrictEqual([0, 1]);
       A.forEach(rows, (row) => expect(row.render("scope")).toBe(render(xsdString("admission"))));
@@ -143,11 +158,11 @@ it.layer(PlatformLive, { timeout: "30 seconds" })("@beep/ciops lane-plan CQ", (i
         [render(xsdString("admitted-a"))],
         [render(xsdString("admitted-b"))],
       ]);
-      expect(graph.select(cq020.bind(laneEpisode)), "Lane steps are never CQ-020 rows").toStrictEqual([]);
+      expect(graph.select(bindEpisode(cq020, laneEpisode)), "Lane steps are never CQ-020 rows").toStrictEqual([]);
 
       // Every bound column, not only idx/scope/unitRef: adding the lane plan changes no admission row.
       const admissionTable = (target: Graph) =>
-        A.map(target.select(cq020.bind(admissionEpisode)), (row) => row.columns());
+        A.map(target.select(bindEpisode(cq020, admissionEpisode)), (row) => row.columns());
       const combinedTable = admissionTable(graph);
       expect(combinedTable, "CQ-020 admission rows must equal the admission-only store's").toStrictEqual(
         admissionTable(admissionGraph)
@@ -220,16 +235,16 @@ it.layer(PlatformLive, { timeout: "30 seconds" })("@beep/ciops lane-plan CQ", (i
       expect(forbiddenIris(graph), "Forbidden terms emitted").toStrictEqual([]);
 
       // 6a. Self-test: planted forbidden IRIs are each reported alone; look-alike decoys pass.
-      expect(forbiddenIris(graph.copy(forbiddenDecoys))).toStrictEqual([]);
+      expect(forbiddenIris(copyGraph(graph, forbiddenDecoys))).toStrictEqual([]);
       A.forEach(forbiddenTraps, ([trap, plantedIri]) =>
-        expect(forbiddenIris(graph.copy([trap])), `Self-test: ${plantedIri} not reported alone`).toStrictEqual([
+        expect(forbiddenIris(copyGraph(graph, [trap])), `Self-test: ${plantedIri} not reported alone`).toStrictEqual([
           plantedIri,
         ])
       );
 
       // 6b. Self-test: re-point the admission proposal at a renamed specification, so only ?spec changes.
       const keyColumns = (target: Graph) =>
-        A.map(target.select(cq020.bind(admissionEpisode)), (row) => [
+        A.map(target.select(bindEpisode(cq020, admissionEpisode)), (row) => [
           row.render("idx"),
           row.render("scope"),
           renderAll(target.objects(row.node("req"), prov("scheduledUnitRef"))),
@@ -237,7 +252,7 @@ it.layer(PlatformLive, { timeout: "30 seconds" })("@beep/ciops lane-plan CQ", (i
       const proposal = asNode(only(graph.objects(admissionEpisode, prov("hasCurrentProposal"))));
       const specQuad = only(graph.match(proposal, prov("hasProjectionSpecification"), null));
       const renamed = Oxigraph.namedNode(`${specQuad.object.value}-self-test`);
-      const probe = graph.copy([
+      const probe = copyGraph(graph, [
         Oxigraph.quad(proposal, prov("hasProjectionSpecification"), renamed),
         Oxigraph.quad(renamed, RDF_TYPE, prov("AdmissionProjectionSpecification")),
       ]);

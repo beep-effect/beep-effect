@@ -481,6 +481,7 @@
     {"name":"CacheR2.fleetCommand","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheR2.probe","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheR2.probeCommand","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CacheR2.readerAdapter","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheR2.request","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheR2.selectSummaryTask","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheR2.task","owner":"@beep/repo-cli","family":"tooling","conforms":true},

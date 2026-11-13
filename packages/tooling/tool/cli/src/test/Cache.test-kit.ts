@@ -26,15 +26,15 @@ export {
   validateCacheProducerImport,
 } from "../commands/Cache/Cache.acceptance.ts";
 export {
-  type CacheAdapterObservationExpectation,
-  type CacheOwnedAdapter,
   CacheOwnedAdapterHost,
   type CacheOwnedAdapterHostShape,
+  cacheLoopbackHealthy,
   cacheOwnedAdapterHostLive,
   cacheOwnedAdapterLauncher,
   observeCacheAdapterSnapshot,
 } from "../commands/Cache/Cache.adapter.host.ts";
 export {
+  CacheAdapterObservationExpectation,
   CacheAdapterProcessSnapshot,
   CacheAdapterRuntimeObservation,
   CacheAdapterWriterAfterLoad,
@@ -131,14 +131,21 @@ export {
 } from "../commands/Cache/Cache.profile.ts";
 export { serveCachePrivateSocket } from "../commands/Cache/Cache.protocol.fixture.ts";
 export { cacheR2Command } from "../commands/Cache/Cache.r2.command.ts";
+export { runCacheR2Fleet } from "../commands/Cache/Cache.r2.fleet.ts";
+export { layerCacheR2ProbeIo } from "../commands/Cache/Cache.r2.live.ts";
 export {
   CacheR2FleetReceipt,
+  CacheR2FleetRequest,
   CacheR2FleetRow,
   CacheR2FleetStatus,
   CacheR2Marker,
+  CacheR2Method,
   CacheR2PayloadRow,
   CacheR2ProbeMode,
   CacheR2ProbeReceipt,
+  CacheR2ProbeTarget,
+  CacheR2Request,
+  CacheR2Response,
   CacheR2StoredReceipt,
   CacheR2TaskCache,
   CacheR2TaskExecution,
@@ -146,13 +153,7 @@ export {
 } from "../commands/Cache/Cache.r2.schemas.ts";
 export {
   CacheR2ProbeIo,
-  type CacheR2ProbeIoShape,
-  type CacheR2Request,
-  type CacheR2Response,
-  type CacheR2TurboTuple,
   cacheR2ProbeFixture,
-  layerCacheR2ProbeIo,
-  runCacheR2Fleet,
   runCacheR2Probe,
   selectCacheR2SummaryTask,
 } from "../commands/Cache/Cache.r2.ts";

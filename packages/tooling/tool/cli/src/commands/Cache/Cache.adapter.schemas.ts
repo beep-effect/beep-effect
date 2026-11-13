@@ -257,3 +257,44 @@ export class CacheProducerAdapterReceipt extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Expected identity of one owned adapter observation.
+ *
+ * **Example** (Describe a readiness expectation)
+ * ```ts
+ * import { CacheAdapterObservationExpectation } from "@beep/repo-cli/test/Cache"
+ * const expected = CacheAdapterObservationExpectation.make({
+ *   unit: "beep-cache-owned-0123456789ab-writer.service",
+ *   role: "writer",
+ *   phase: "ready",
+ *   sha256: "0".repeat(64),
+ *   environmentNames: ["PATH", "HOME"],
+ *   port: 19427,
+ *   pid: 4242
+ * })
+ * console.assert(expected.phase === "ready")
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheAdapterObservationExpectation extends S.Opaque<
+  CacheAdapterObservationExpectation,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    unit: S.String,
+    role: S.String,
+    phase: AdapterPhase,
+    sha256: S.String,
+    environmentNames: S.Array(S.String),
+    port: S.Int,
+    pid: S.Int,
+  }).pipe(
+    $I.annoteSchema("CacheAdapterObservationExpectation", {
+      description: "Owned unit, role, phase, executable digest, environment names, loopback port and stable PID.",
+    })
+  )
+) {}

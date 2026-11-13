@@ -49,6 +49,7 @@ import {
   CacheDependencyPublicationPlan,
 } from "./Cache.diagnostics.schemas.ts";
 import type * as PlatformError from "effect/PlatformError";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type {
   CacheDependencyDiagnosticCode,
   CacheDependencyDiagnosticFileKind,
@@ -225,6 +226,23 @@ export const readCacheDiagnosticSource = Effect.fn("CacheDiagnostics.readSource"
   Effect.catchTag("PlatformError", () => refuse("filesystem-or-process-failed"))
 );
 
+const chunkEquals = (chunk: Uint8Array, expected: Uint8Array, offset: number) => {
+  for (let index = 0; index < chunk.length; index += 1) if (chunk[index] !== expected[offset + index]) return false;
+  return true;
+};
+
+const sameSourceBytes = Effect.fnUntraced(function* (handle: FileSystem.File, expected: Uint8Array) {
+  const chunk = new Uint8Array(64 * 1024);
+  for (let offset = 0; offset < expected.length; offset += chunk.length) {
+    const length = Math.min(chunk.length, expected.length - offset);
+    const read = yield* readExact(handle, chunk.subarray(0, length));
+    if (read !== length) return yield* refuse("source-read-drift");
+    if (!chunkEquals(chunk.subarray(0, length), expected, offset)) return false;
+  }
+  if ((yield* readExact(handle, chunk.subarray(0, 1))) !== 0) return yield* refuse("source-read-drift");
+  return true;
+});
+
 /**
  * Compare a source report with retained bytes in bounded chunks, without a second full copy.
  *
@@ -249,17 +267,7 @@ export const compareCacheDiagnosticSource = Effect.fn("CacheDiagnostics.compareS
       Effect.gen(function* () {
         const [handle, size] = yield* openSource(fs, file, limits);
         if (size !== expected.length) return false;
-        const chunk = new Uint8Array(64 * 1024);
-        for (let offset = 0; offset < size; offset += chunk.length) {
-          const length = Math.min(chunk.length, size - offset);
-          const read = yield* readExact(handle, chunk.subarray(0, length));
-          if (read !== length) return yield* refuse("source-read-drift");
-          for (let index = 0; index < length; index += 1) {
-            if (chunk[index] !== expected[offset + index]) return false;
-          }
-        }
-        if ((yield* readExact(handle, chunk.subarray(0, 1))) !== 0) return yield* refuse("source-read-drift");
-        return true;
+        return yield* sameSourceBytes(handle, expected);
       })
     );
   },
@@ -374,22 +382,61 @@ const pythonFloatValue = (text: string): O.Option<number> => {
     : O.none();
 };
 
+type PaxSetter = (member: TarMember, value: string) => Effect.Effect<void, CacheDependencyDiagnosticRefusal>;
+const assign =
+  (apply: (member: TarMember, value: string) => void): PaxSetter =>
+  (member, value) =>
+    Effect.sync(() => apply(member, value));
+const sparseSize: PaxSetter = (member, value) =>
+  O.match(pythonInt(value), {
+    onNone: () => refuse("invalid-value-or-shape"),
+    onSome: (size) =>
+      Effect.sync(() => {
+        member.size = size;
+      }),
+  });
+const intOrZero = (value: string) => O.getOrElse(pythonInt(value), () => 0);
+
+// Python tarfile's pax keyword handlers, applied in record order.
+const PAX_SETTERS: Readonly<Record<string, PaxSetter>> = {
+  "GNU.sparse.name": assign((member, value) => {
+    member.name = value;
+  }),
+  "GNU.sparse.size": sparseSize,
+  "GNU.sparse.realsize": sparseSize,
+  path: assign((member, value) => {
+    member.name = stripTrailingSlashes(value);
+  }),
+  linkpath: assign((member, value) => {
+    member.linkname = value;
+  }),
+  uname: assign((member, value) => {
+    member.uname = value;
+  }),
+  gname: assign((member, value) => {
+    member.gname = value;
+  }),
+  size: assign((member, value) => {
+    member.size = intOrZero(value);
+  }),
+  uid: assign((member, value) => {
+    member.uid = intOrZero(value);
+  }),
+  gid: assign((member, value) => {
+    member.gid = intOrZero(value);
+  }),
+  mtime: assign((member, value) => {
+    member.mtime = O.getOrElse(pythonFloatValue(value), () => 0);
+  }),
+};
+
 const applyPax = Effect.fnUntraced(function* (member: TarMember, pairs: PaxPairs) {
-  for (const [keyword, value] of pairs) {
-    if (keyword === "GNU.sparse.name") member.name = value;
-    else if (keyword === "GNU.sparse.size" || keyword === "GNU.sparse.realsize") {
-      const size = pythonInt(value);
-      if (O.isNone(size)) return yield* refuse("invalid-value-or-shape");
-      member.size = size.value;
-    } else if (keyword === "path") member.name = stripTrailingSlashes(value);
-    else if (keyword === "linkpath") member.linkname = value;
-    else if (keyword === "uname") member.uname = value;
-    else if (keyword === "gname") member.gname = value;
-    else if (keyword === "size") member.size = O.getOrElse(pythonInt(value), () => 0);
-    else if (keyword === "uid") member.uid = O.getOrElse(pythonInt(value), () => 0);
-    else if (keyword === "gid") member.gid = O.getOrElse(pythonInt(value), () => 0);
-    else if (keyword === "mtime") member.mtime = O.getOrElse(pythonFloatValue(value), () => 0);
-  }
+  yield* Effect.forEach(
+    pairs,
+    ([keyword, value]) =>
+      O.match(R.get(PAX_SETTERS, keyword), { onNone: () => Effect.void, onSome: (set) => set(member, value) }),
+    { discard: true }
+  );
   member.pax = A.map(pairs, ([key, entry]): [string, string] => [key, entry]);
 });
 
@@ -398,11 +445,14 @@ const HeaderStop = S.TaggedStruct("HeaderStop", {
 });
 const isHeaderStop = S.is(HeaderStop);
 
-const parseHeader = Effect.fnUntraced(function* (block: Uint8Array, dircheck: boolean) {
-  if (block.length === 0) return HeaderStop.make({ reason: "empty" });
-  if (block.length !== blockSize) return HeaderStop.make({ reason: "truncated" });
-  if (everyByte(block, (byte) => byte === 0)) return HeaderStop.make({ reason: "end" });
-  const fields = O.all({
+const headerStop = (block: Uint8Array): O.Option<typeof HeaderStop.Type> => {
+  if (block.length === 0) return O.some(HeaderStop.make({ reason: "empty" }));
+  if (block.length !== blockSize) return O.some(HeaderStop.make({ reason: "truncated" }));
+  return everyByte(block, (byte) => byte === 0) ? O.some(HeaderStop.make({ reason: "end" })) : O.none();
+};
+
+const headerFields = (block: Uint8Array) =>
+  O.all({
     checksum: parseOctal(block.subarray(148, 156)),
     mode: parseOctal(block.subarray(100, 108)),
     uid: parseOctal(block.subarray(108, 116)),
@@ -411,8 +461,21 @@ const parseHeader = Effect.fnUntraced(function* (block: Uint8Array, dircheck: bo
     mtime: parseOctal(block.subarray(136, 148)),
     devmajor: parseOctal(block.subarray(329, 337)),
     devminor: parseOctal(block.subarray(337, 345)),
-  });
-  if (O.isNone(fields) || !checksumMatches(block, fields.value.checksum)) return HeaderStop.make({ reason: "invalid" });
+  }).pipe(O.filter((fields) => checksumMatches(block, fields.checksum)));
+
+const normalizeHeader = (member: TarMember, prefix: string, dircheck: boolean) => {
+  // Old V7 archives represent a directory as a regular file with a trailing slash.
+  if (dircheck && member.type === typeAregular && Str.endsWith("/")(member.name)) member.type = typeDirectory;
+  member.sparse = member.type === typeSparse;
+  if (isDirectory(member)) member.name = stripTrailingSlashes(member.name);
+  if (prefix !== "" && !A.contains(gnuTypes, member.type)) member.name = `${prefix}/${member.name}`;
+};
+
+const parseHeader = Effect.fnUntraced(function* (block: Uint8Array, dircheck: boolean) {
+  const stop = headerStop(block);
+  if (O.isSome(stop)) return stop.value;
+  const fields = headerFields(block);
+  if (O.isNone(fields)) return HeaderStop.make({ reason: "invalid" });
   const member: TarMember = {
     name: yield* decodeText(untilNul(block.subarray(0, 100))),
     mode: fields.value.mode,
@@ -428,11 +491,7 @@ const parseHeader = Effect.fnUntraced(function* (block: Uint8Array, dircheck: bo
     sparse: false,
   };
   const prefix = yield* decodeText(untilNul(block.subarray(345, 500)));
-  // Old V7 archives represent a directory as a regular file with a trailing slash.
-  if (dircheck && member.type === typeAregular && Str.endsWith("/")(member.name)) member.type = typeDirectory;
-  if (member.type === typeSparse) member.sparse = true;
-  if (isDirectory(member)) member.name = stripTrailingSlashes(member.name);
-  if (prefix !== "" && !A.contains(gnuTypes, member.type)) member.name = `${prefix}/${member.name}`;
+  normalizeHeader(member, prefix, dircheck);
   return member;
 });
 
@@ -541,21 +600,27 @@ const readHeaderData = Effect.fnUntraced(function* (
   return data;
 });
 
+const paxRecord = Effect.fnUntraced(function* (data: Uint8Array, position: number) {
+  const prefix = paxLengthPrefix.exec(latin1.decode(data.subarray(position, position + 21)));
+  if (prefix === null) return yield* refuse("archive-read-failed");
+  const digits = prefix[1] ?? "";
+  const length = Number(digits);
+  const end = position + length - 1;
+  if (length < 5 || position + length > data.length) return yield* refuse("archive-read-failed");
+  const record = data.subarray(position + digits.length + 1, end);
+  const equals = record.indexOf(0x3d);
+  if (equals <= 0 || data[end] !== 0x0a) return yield* refuse("archive-read-failed");
+  const keyword = yield* decodeText(record.subarray(0, equals));
+  const value = yield* decodeText(record.subarray(equals + 1));
+  return { keyword, value, length };
+});
+
 const parsePaxRecords = Effect.fnUntraced(function* (data: Uint8Array, pairs: PaxPairs) {
   let position = 0;
   while (position < data.length && data[position] !== 0) {
-    const prefix = paxLengthPrefix.exec(latin1.decode(data.subarray(position, position + 21)));
-    if (prefix === null) return yield* refuse("archive-read-failed");
-    const length = Number(prefix[1]);
-    const end = position + length - 1;
-    if (length < 5 || position + length > data.length) return yield* refuse("archive-read-failed");
-    const record = data.subarray(position + (prefix[1]?.length ?? 0) + 1, end);
-    const equals = record.indexOf(0x3d);
-    if (equals <= 0 || data[end] !== 0x0a) return yield* refuse("archive-read-failed");
-    const keyword = yield* decodeText(record.subarray(0, equals));
-    const value = yield* decodeText(record.subarray(equals + 1));
-    setPax(pairs, keyword, value);
-    position += length;
+    const record = yield* paxRecord(data, position);
+    setPax(pairs, record.keyword, record.value);
+    position += record.length;
   }
 });
 
@@ -583,6 +648,47 @@ const readSubsequent = Effect.fnUntraced(function* (
   return isHeaderStop(next) ? yield* refuse("archive-read-failed") : next;
 });
 
+const isLongHeader = (header: TarMember) => header.type === typeLongName || header.type === typeLongLink;
+const isPaxHeader = (header: TarMember) =>
+  header.type === typeExtended || header.type === typeGlobal || header.type === typeSolarisExtended;
+
+const readLongHeader = Effect.fnUntraced(function* (
+  reader: ArchiveReader,
+  header: TarMember,
+  globalPax: PaxPairs,
+  limits: CacheDependencyDiagnosticLimits
+) {
+  const data = yield* readHeaderData(reader, header, limits);
+  const next = yield* readSubsequent(reader, globalPax, limits);
+  const text = yield* decodeText(untilNul(data));
+  if (header.type === typeLongName) next.name = text;
+  else next.linkname = text;
+  if (isDirectory(next) && Str.endsWith("/")(next.name)) next.name = Str.slice(0, -1)(next.name);
+  return next;
+});
+
+const sparsePax = (pairs: PaxPairs) => {
+  const pax = R.fromEntries(pairs);
+  const sparseVersion = pax["GNU.sparse.major"] === "1" && pax["GNU.sparse.minor"] === "0";
+  return R.has(pax, "GNU.sparse.map") || R.has(pax, "GNU.sparse.size") || sparseVersion;
+};
+
+const readPaxHeader = Effect.fnUntraced(function* (
+  reader: ArchiveReader,
+  header: TarMember,
+  globalPax: PaxPairs,
+  limits: CacheDependencyDiagnosticLimits
+) {
+  const data = yield* readHeaderData(reader, header, limits);
+  const global = header.type === typeGlobal;
+  const pairs: PaxPairs = global ? globalPax : A.map(globalPax, ([key, value]): [string, string] => [key, value]);
+  yield* parsePaxRecords(data, pairs);
+  const next = yield* readSubsequent(reader, globalPax, limits);
+  if (sparsePax(pairs)) next.sparse = true;
+  if (!global) yield* applyPax(next, pairs);
+  return next;
+});
+
 const readMember: (
   reader: ArchiveReader,
   globalPax: PaxPairs,
@@ -593,31 +699,8 @@ const readMember: (
     const block = yield* reader.take(blockSize);
     const header = yield* parseHeader(block, dircheck);
     if (isHeaderStop(header)) return header;
-    if (header.type === typeLongName || header.type === typeLongLink) {
-      const data = yield* readHeaderData(reader, header, limits);
-      const next = yield* readSubsequent(reader, globalPax, limits);
-      const text = yield* decodeText(untilNul(data));
-      if (header.type === typeLongName) next.name = text;
-      else next.linkname = text;
-      if (isDirectory(next)) next.name = Str.endsWith("/")(next.name) ? Str.slice(0, -1)(next.name) : next.name;
-      return next;
-    }
-    if (header.type === typeExtended || header.type === typeGlobal || header.type === typeSolarisExtended) {
-      const data = yield* readHeaderData(reader, header, limits);
-      const pairs: PaxPairs =
-        header.type === typeGlobal ? globalPax : A.map(globalPax, ([key, value]): [string, string] => [key, value]);
-      yield* parsePaxRecords(data, pairs);
-      const next = yield* readSubsequent(reader, globalPax, limits);
-      const pax = R.fromEntries(pairs);
-      if (
-        R.has(pax, "GNU.sparse.map") ||
-        R.has(pax, "GNU.sparse.size") ||
-        (pax["GNU.sparse.major"] === "1" && pax["GNU.sparse.minor"] === "0")
-      )
-        next.sparse = true;
-      if (header.type !== typeGlobal) yield* applyPax(next, pairs);
-      return next;
-    }
+    if (isLongHeader(header)) return yield* readLongHeader(reader, header, globalPax, limits);
+    if (isPaxHeader(header)) return yield* readPaxHeader(reader, header, globalPax, limits);
     yield* applyPax(header, globalPax);
     if (isDirectory(header)) header.name = stripTrailingSlashes(header.name);
     return header;
@@ -699,6 +782,174 @@ const requirePhysicalRoot = Effect.fnUntraced(function* (root: string) {
   if (linked || (yield* fs.stat(modules)).type !== "Directory") return yield* refuse("dependency-root-not-physical");
 });
 
+interface SnapshotState {
+  entries: number;
+  fileDetailBytes: number;
+  readonly fileRows: Array<CacheDependencyDiagnosticFileRow>;
+  readonly groups: MutableHashMap.MutableHashMap<string, GroupState>;
+  readonly limits: CacheDependencyDiagnosticLimits;
+  readonly reader: ArchiveReader;
+}
+
+const groupFor = Effect.fnUntraced(function* (state: SnapshotState, label: string) {
+  const existing = MutableHashMap.get(state.groups, label);
+  if (O.isSome(existing)) return existing.value;
+  if (MutableHashMap.size(state.groups) >= state.limits.groups) return yield* refuse("group-bound");
+  const group = newGroup(label);
+  MutableHashMap.set(state.groups, label, group);
+  return group;
+});
+
+const checkMemberShape = Effect.fnUntraced(function* (state: SnapshotState, member: TarMember) {
+  state.entries += 1;
+  if (state.entries > state.limits.entries) return yield* refuse("entry-bound");
+  const supported = isDirectory(member) || isRegular(member) || member.type === typeSymlink;
+  if (!supported) return yield* refuse("archive-entry-type");
+  if (member.size > state.limits.streamBytes || member.sparse) return yield* refuse("archive-entry-bound");
+});
+
+const headerLine = (member: TarMember, type: string, pax: Record<string, string>) =>
+  concatBytes(
+    encodeCacheDiagnosticJson([
+      member.name,
+      type,
+      member.size,
+      member.mode,
+      member.uid,
+      member.gid,
+      member.uname,
+      member.gname,
+      member.mtime,
+      member.linkname,
+      pax,
+    ]),
+    newline
+  );
+
+const recordFileDetail = Effect.fnUntraced(function* (
+  state: SnapshotState,
+  member: TarMember,
+  consumed: number,
+  payloadDigest: Uint8Array
+) {
+  if (state.fileRows.length >= state.limits.fileDetailEntries) return yield* refuse("file-detail-entry-bound");
+  const row: CacheDependencyDiagnosticFileRow = [
+    sha256Hex(utf8.encode(member.name)),
+    fileKind(member.name),
+    consumed,
+    Sha256Hex.make(Hex.encode(payloadDigest)),
+  ];
+  state.fileDetailBytes += encodeCacheDiagnosticJson(row).length + 1;
+  if (state.fileDetailBytes > state.limits.fileDetailBytes) return yield* refuse("file-detail-byte-bound");
+  state.fileRows.push(row);
+});
+
+const ingestRegular = Effect.fnUntraced(function* (
+  state: SnapshotState,
+  group: GroupState,
+  member: TarMember,
+  identity: Uint8Array,
+  label: string
+) {
+  const payload = createSha256();
+  const consumed = yield* state.reader.consume(member.size, (chunk) => {
+    payload.update(chunk);
+  });
+  if (consumed !== member.size) return yield* refuse("archive-read-failed");
+  const padding = blockLength(member.size) - member.size;
+  const padded = yield* state.reader.take(padding);
+  if (padded.length !== padding) return yield* refuse("archive-read-failed");
+  const payloadDigest = payload.digest();
+  group.files += 1;
+  group.bytes += consumed;
+  group.content.update(concatBytes(identity, payloadDigest));
+  if (label === fileDetailGroup) yield* recordFileDetail(state, member, consumed, payloadDigest);
+});
+
+const ingestLink = Effect.fnUntraced(function* (
+  state: SnapshotState,
+  group: GroupState,
+  member: TarMember,
+  identity: Uint8Array
+) {
+  if (utf8.encode(member.linkname).length > state.limits.headerBytes) return yield* refuse("archive-link-bound");
+  // Link text is hashed but never traversed or emitted.
+  group.links.update(concatBytes(identity, encodeCacheDiagnosticJson(member.linkname), newline));
+});
+
+const ingestMember = Effect.fnUntraced(function* (state: SnapshotState, member: TarMember) {
+  yield* checkMemberShape(state, member);
+  const label = yield* packageGroup(member.name, state.limits);
+  const group = yield* groupFor(state, label);
+  group.entries += 1;
+  const pax = R.fromEntries(member.pax);
+  if (encodeCacheDiagnosticJson(pax).length > state.limits.headerBytes) return yield* refuse("archive-header-bound");
+  const type = latin1.decode(Uint8Array.of(member.type));
+  const identity = concatBytes(encodeCacheDiagnosticJson([member.name, type]), newline);
+  group.mode.update(concatBytes(identity, encodeCacheDiagnosticJson(member.mode), newline));
+  group.headers.update(headerLine(member, type, pax));
+  if (isRegular(member)) yield* ingestRegular(state, group, member, identity, label);
+  else group.content.update(identity);
+  if (member.type === typeSymlink) yield* ingestLink(state, group, member, identity);
+});
+
+const ByLabel = Order.mapInput(Order.String, ([label]: readonly [string, GroupState]) => label);
+
+const snapshotRows = (groups: MutableHashMap.MutableHashMap<string, GroupState>) =>
+  A.map(
+    A.sort(A.fromIterable(groups), ByLabel),
+    ([, group]): CacheDependencyDiagnosticGroupRow => [
+      group.label,
+      group.entries,
+      group.files,
+      group.bytes,
+      digestHex(group.content),
+      digestHex(group.mode),
+      digestHex(group.links),
+      digestHex(group.headers),
+    ]
+  );
+
+const snapshotFileDetails = (
+  fileRows: ReadonlyArray<CacheDependencyDiagnosticFileRow>,
+  limits: CacheDependencyDiagnosticLimits
+) =>
+  A.isReadonlyArrayNonEmpty(fileRows)
+    ? {
+        fileDetails: CacheDependencyDiagnosticFileDetails.make({
+          group: "node-gyp",
+          columns: ["nameSha256", "kind", "bytes", "contentSha256"],
+          rows: fileRows,
+          entryLimit: limits.fileDetailEntries,
+          encodedBytesLimit: limits.fileDetailBytes,
+        }),
+      }
+    : {};
+
+const ingestArchive = Effect.fnUntraced(function* (state: SnapshotState, globalPax: PaxPairs) {
+  let first = true;
+  while (true) {
+    const next = yield* nextMember(state.reader, globalPax, state.limits, first);
+    if (O.isNone(next)) return;
+    first = false;
+    yield* ingestMember(state, next.value);
+  }
+});
+
+const finishArchive = Effect.fnUntraced(function* (
+  reader: ArchiveReader,
+  handle: ChildProcessSpawner.ChildProcessHandle,
+  deadline: number
+) {
+  yield* reader.drain;
+  const remaining = deadline - (yield* Clock.currentTimeMillis);
+  if (remaining <= 0) return yield* refuse("deadline");
+  const exitCode = yield* handle.exitCode.pipe(
+    Effect.timeoutOrElse({ duration: Duration.millis(remaining), orElse: () => refuse("subprocess-deadline") })
+  );
+  if (exitCode !== 0) return yield* refuse("archive-command-failed");
+});
+
 /**
  * Stream one canonical GNU tar pass over `node_modules` and group it by package.
  *
@@ -745,124 +996,21 @@ export const snapshotCacheDependencies = Effect.fn("CacheDiagnostics.snapshot")(
           }
         );
         const pull = yield* Stream.toPull(handle.stdout);
-        const reader = makeArchiveReader(pull, deadline, limits);
-        const groups = MutableHashMap.empty<string, GroupState>();
-        const globalPax: PaxPairs = [];
-        const fileRows: Array<CacheDependencyDiagnosticFileRow> = [];
-        let fileDetailBytes = 2;
-        let entries = 0;
-        let first = true;
-        while (true) {
-          const next = yield* nextMember(reader, globalPax, limits, first);
-          if (O.isNone(next)) break;
-          first = false;
-          const member = next.value;
-          entries += 1;
-          if (entries > limits.entries) return yield* refuse("entry-bound");
-          const regular = isRegular(member);
-          const symlink = member.type === typeSymlink;
-          if (!(isDirectory(member) || regular || symlink)) return yield* refuse("archive-entry-type");
-          if (member.size > limits.streamBytes || member.sparse) return yield* refuse("archive-entry-bound");
-          const label = yield* packageGroup(member.name, limits);
-          const existing = MutableHashMap.get(groups, label);
-          if (O.isNone(existing) && MutableHashMap.size(groups) >= limits.groups) return yield* refuse("group-bound");
-          const group = O.isSome(existing) ? existing.value : newGroup(label);
-          if (O.isNone(existing)) MutableHashMap.set(groups, label, group);
-          group.entries += 1;
-          const pax = R.fromEntries(member.pax);
-          if (encodeCacheDiagnosticJson(pax).length > limits.headerBytes) return yield* refuse("archive-header-bound");
-          const type = latin1.decode(Uint8Array.of(member.type));
-          const identity = concatBytes(encodeCacheDiagnosticJson([member.name, type]), newline);
-          group.mode.update(concatBytes(identity, encodeCacheDiagnosticJson(member.mode), newline));
-          group.headers.update(
-            concatBytes(
-              encodeCacheDiagnosticJson([
-                member.name,
-                type,
-                member.size,
-                member.mode,
-                member.uid,
-                member.gid,
-                member.uname,
-                member.gname,
-                member.mtime,
-                member.linkname,
-                pax,
-              ]),
-              newline
-            )
-          );
-          if (regular) {
-            const payload = createSha256();
-            const consumed = yield* reader.consume(member.size, (chunk) => {
-              payload.update(chunk);
-            });
-            if (consumed !== member.size) return yield* refuse("archive-read-failed");
-            const padding = blockLength(member.size) - member.size;
-            if ((yield* reader.take(padding)).length !== padding) return yield* refuse("archive-read-failed");
-            const payloadDigest = payload.digest();
-            group.files += 1;
-            group.bytes += consumed;
-            group.content.update(concatBytes(identity, payloadDigest));
-            if (label === fileDetailGroup) {
-              if (fileRows.length >= limits.fileDetailEntries) return yield* refuse("file-detail-entry-bound");
-              const row: CacheDependencyDiagnosticFileRow = [
-                sha256Hex(utf8.encode(member.name)),
-                fileKind(member.name),
-                consumed,
-                Sha256Hex.make(Hex.encode(payloadDigest)),
-              ];
-              fileDetailBytes += encodeCacheDiagnosticJson(row).length + 1;
-              if (fileDetailBytes > limits.fileDetailBytes) return yield* refuse("file-detail-byte-bound");
-              fileRows.push(row);
-            }
-          } else {
-            group.content.update(identity);
-          }
-          if (symlink) {
-            if (utf8.encode(member.linkname).length > limits.headerBytes) return yield* refuse("archive-link-bound");
-            // Link text is hashed but never traversed or emitted.
-            group.links.update(concatBytes(identity, encodeCacheDiagnosticJson(member.linkname), newline));
-          }
-        }
-        yield* reader.drain;
-        const remaining = deadline - (yield* Clock.currentTimeMillis);
-        if (remaining <= 0) return yield* refuse("deadline");
-        const exitCode = yield* handle.exitCode.pipe(
-          Effect.timeoutOrElse({ duration: Duration.millis(remaining), orElse: () => refuse("subprocess-deadline") })
-        );
-        if (exitCode !== 0) return yield* refuse("archive-command-failed");
-        const rows = A.map(
-          A.sort(
-            A.fromIterable(groups),
-            Order.mapInput(Order.String, ([label]: readonly [string, GroupState]) => label)
-          ),
-          ([, group]): CacheDependencyDiagnosticGroupRow => [
-            group.label,
-            group.entries,
-            group.files,
-            group.bytes,
-            digestHex(group.content),
-            digestHex(group.mode),
-            digestHex(group.links),
-            digestHex(group.headers),
-          ]
-        );
+        const state: SnapshotState = {
+          reader: makeArchiveReader(pull, deadline, limits),
+          limits,
+          groups: MutableHashMap.empty<string, GroupState>(),
+          fileRows: [],
+          fileDetailBytes: 2,
+          entries: 0,
+        };
+        yield* ingestArchive(state, []);
+        yield* finishArchive(state.reader, handle, deadline);
         return CacheDependencyDiagnosticSnapshot.make({
-          sha256: reader.digest(),
-          archiveBytes: reader.bytes(),
-          groups: rows,
-          ...(A.isReadonlyArrayNonEmpty(fileRows)
-            ? {
-                fileDetails: CacheDependencyDiagnosticFileDetails.make({
-                  group: "node-gyp",
-                  columns: ["nameSha256", "kind", "bytes", "contentSha256"],
-                  rows: fileRows,
-                  entryLimit: limits.fileDetailEntries,
-                  encodedBytesLimit: limits.fileDetailBytes,
-                }),
-              }
-            : {}),
+          sha256: state.reader.digest(),
+          archiveBytes: state.reader.bytes(),
+          groups: snapshotRows(state.groups),
+          ...snapshotFileDetails(state.fileRows, limits),
         });
       })
     );
@@ -886,6 +1034,36 @@ const indexRows = (
 ): Record<string, CacheDependencyDiagnosticGroupRow> => R.fromEntries(A.map(rows, (row) => [row[0], row]));
 const groupRowEquivalence = S.toEquivalence(S.NullOr(CacheDependencyDiagnosticGroupRow));
 const snapshotEquivalence = S.toEquivalence(CacheDependencyDiagnosticSnapshot);
+
+const readSourceDeclaration = Effect.fnUntraced(function* (sourceBytes: Uint8Array, revision: string) {
+  const parsed = yield* decodeText(sourceBytes).pipe(
+    Effect.flatMap(decodeJson),
+    Effect.mapError(() => CacheDependencyDiagnosticRefusal.make({ code: "invalid-value-or-shape" }))
+  );
+  if ((yield* field(parsed, "schemaVersion")) !== "cache-producer-workflow/v2") return yield* refuse("source-version");
+  const sourceRevision = yield* field(parsed, "revision").pipe(Effect.flatMap(requireString));
+  if (!hex40.test(sourceRevision)) return yield* refuse("source-revision");
+  if (sourceRevision !== revision) return yield* refuse("source-revision-mismatch");
+  const declared = yield* field(parsed, "toolchain").pipe(
+    Effect.flatMap((toolchain) => field(toolchain, "installedDependencies"))
+  );
+  if ((yield* field(declared, "format")) !== "canonical-gnu-tar/v1") return yield* refuse("dependency-format");
+  const declaredDigest = yield* field(declared, "sha256").pipe(Effect.flatMap(requireString));
+  if (!hex64.test(declaredDigest)) return yield* refuse("dependency-digest");
+  return { sourceRevision, declaredDigest };
+});
+
+const changedGroupKeys = (
+  before: Record<string, CacheDependencyDiagnosticGroupRow>,
+  after: Record<string, CacheDependencyDiagnosticGroupRow>
+) =>
+  A.sort(
+    A.filter(
+      A.dedupe([...R.keys(before), ...R.keys(after)]),
+      (key) => !groupRowEquivalence(O.getOrNull(R.get(before, key)), O.getOrNull(R.get(after, key)))
+    ),
+    Order.String
+  );
 
 /**
  * Hooks a test can use to change the tree or source between and after the two passes.
@@ -938,34 +1116,13 @@ export const observeCacheDependencies = Effect.fn("CacheDiagnostics.observe")(fu
   const started = yield* Clock.currentTimeMillis;
   const deadline = started + Duration.toMillis(Duration.seconds(limits.deadlineSeconds));
   const sourceBytes = yield* readCacheDiagnosticSource(source, limits);
-  const parsed = yield* decodeText(sourceBytes).pipe(
-    Effect.flatMap(decodeJson),
-    Effect.mapError(() => CacheDependencyDiagnosticRefusal.make({ code: "invalid-value-or-shape" }))
-  );
-  if ((yield* field(parsed, "schemaVersion")) !== "cache-producer-workflow/v2") return yield* refuse("source-version");
-  const sourceRevision = yield* field(parsed, "revision").pipe(Effect.flatMap(requireString));
-  if (!hex40.test(sourceRevision)) return yield* refuse("source-revision");
-  if (sourceRevision !== revision) return yield* refuse("source-revision-mismatch");
-  const declared = yield* field(parsed, "toolchain").pipe(
-    Effect.flatMap((toolchain) => field(toolchain, "installedDependencies"))
-  );
-  if ((yield* field(declared, "format")) !== "canonical-gnu-tar/v1") return yield* refuse("dependency-format");
-  const declaredDigest = yield* field(declared, "sha256").pipe(Effect.flatMap(requireString));
-  if (!hex64.test(declaredDigest)) return yield* refuse("dependency-digest");
+  const { sourceRevision, declaredDigest } = yield* readSourceDeclaration(sourceBytes, revision);
   const first = yield* snapshotCacheDependencies(root, deadline, limits);
   yield* hooks.afterFirstPass ?? Effect.void;
   const second = yield* snapshotCacheDependencies(root, deadline, limits);
   yield* hooks.afterSecondPass ?? Effect.void;
-  const before = indexRows(first.groups);
   const after = indexRows(second.groups);
-  const changed = A.sort(
-    A.filter(A.dedupe([...R.keys(before), ...R.keys(after)]), (key) => {
-      const left = O.getOrNull(R.get(before, key));
-      const right = O.getOrNull(R.get(after, key));
-      return !groupRowEquivalence(left, right);
-    }),
-    Order.String
-  );
+  const changed = changedGroupKeys(indexRows(first.groups), after);
   const stable = snapshotEquivalence(first, second);
   const matched = first.sha256 === declaredDigest;
   const unchanged = yield* compareCacheDiagnosticSource(source, sourceBytes, limits);

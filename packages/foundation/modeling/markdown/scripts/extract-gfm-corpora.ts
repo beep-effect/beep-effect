@@ -3,8 +3,8 @@
  * One-off extractor for the vendored GFM conformance corpora.
  *
  * Run by hand, never by CI and never by the test suite, with
- * `bun run generate:gfm-corpora` (or `bun run scripts/extract-gfm-corpora.ts`
- * from this package). It reads the pinned `.repos/cmark-gfm/test/` checkout;
+ * `bun run scripts/extract-gfm-corpora.ts` from this package (no package script, so
+ * the Turbo cache inputs stay unchanged). It reads the pinned `.repos/cmark-gfm/test/` checkout;
  * pass `--cmark-gfm <dir>` to read another checkout of the same ref.
  *
  * The example-block scanner is a line-for-line port of upstream
@@ -34,6 +34,7 @@
  * @since 0.0.0
  */
 
+import { $MarkdownId } from "@beep/identity/packages";
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as A from "effect/Array";
@@ -46,26 +47,27 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const $I = $MarkdownId.create("scripts/extract-gfm-corpora");
+
 /**
  * One conformance example, in the `data/conformance/commonmark/spec.json` field order.
  *
  * @since 0.0.0
  */
-export const GfmExample = S.Struct({
-  markdown: S.String,
-  html: S.String,
-  example: S.Int,
-  start_line: S.Int,
-  end_line: S.Int,
-  section: S.String,
-});
-
-/**
- * The decoded type of {@link GfmExample}.
- *
- * @since 0.0.0
- */
-export type GfmExample = typeof GfmExample.Type;
+export class GfmExample extends S.Opaque<GfmExample, { readonly brand: unique symbol }>()(
+  S.Struct({
+    markdown: S.String,
+    html: S.String,
+    example: S.Int,
+    start_line: S.Int,
+    end_line: S.Int,
+    section: S.String,
+  }).pipe(
+    $I.annoteSchema("GfmExample", {
+      description: "One cmark spec example: its markdown, expected HTML, number, source line span and section.",
+    })
+  )
+) {}
 
 const CorpusJson = S.fromJsonString(S.Array(GfmExample), { space: 2 });
 const encodeCorpus = S.encodeEffect(CorpusJson);
@@ -113,51 +115,51 @@ const initialState: ScanState = {
 
 const untab = Str.replaceAll("→", "\t");
 
-const scanLine = (state: ScanState, line: string): ScanState => {
-  const lineNumber = state.lineNumber + 1;
-  const stripped = pyStrip(line);
-  const next = { ...state, lineNumber };
-  if (Str.startsWith(EXAMPLE_FENCE)(stripped)) {
+const openExample = (next: ScanState, stripped: string): ScanState => ({
+  ...next,
+  mode: 1,
+  flags: A.filter(Str.split(Str.slice(EXAMPLE_FENCE.length)(stripped), /\s+/), Str.isNonEmpty),
+});
+
+const closeExample = (state: ScanState, next: ScanState): ScanState => {
+  const exampleNumber = state.exampleNumber + 1;
+  const example = GfmExample.make({
+    markdown: untab(state.markdown),
+    html: untab(state.html),
+    example: exampleNumber,
+    start_line: state.startLine,
+    end_line: next.lineNumber,
+    section: state.section,
+  });
+  return {
+    ...next,
+    mode: 0,
+    exampleNumber,
+    startLine: 0,
+    markdown: "",
+    html: "",
+    examples: A.contains(state.flags, "disabled") ? state.examples : A.append(state.examples, example),
+  };
+};
+
+const appendLine = (state: ScanState, next: ScanState, line: string): ScanState => {
+  if (state.mode === 1)
     return {
       ...next,
-      mode: 1,
-      flags: A.filter(Str.split(Str.slice(EXAMPLE_FENCE.length)(stripped), /\s+/), Str.isNonEmpty),
-    };
-  }
-  if (stripped === FENCE) {
-    const exampleNumber = state.exampleNumber + 1;
-    const example: GfmExample = {
-      markdown: untab(state.markdown),
-      html: untab(state.html),
-      example: exampleNumber,
-      start_line: state.startLine,
-      end_line: lineNumber,
-      section: state.section,
-    };
-    return {
-      ...next,
-      mode: 0,
-      exampleNumber,
-      startLine: 0,
-      markdown: "",
-      html: "",
-      examples: A.contains(state.flags, "disabled") ? state.examples : A.append(state.examples, example),
-    };
-  }
-  if (stripped === ".") {
-    return { ...next, mode: 2 };
-  }
-  if (state.mode === 1) {
-    return {
-      ...next,
-      startLine: state.startLine === 0 ? lineNumber - 1 : state.startLine,
+      startLine: state.startLine === 0 ? next.lineNumber - 1 : state.startLine,
       markdown: state.markdown + line,
     };
-  }
-  if (state.mode === 2) {
-    return { ...next, html: state.html + line };
-  }
+  if (state.mode === 2) return { ...next, html: state.html + line };
   return HEADER.test(line) ? { ...next, section: pyStrip(Str.replace(HEADERS, "")(line)) } : next;
+};
+
+const scanLine = (state: ScanState, line: string): ScanState => {
+  const stripped = pyStrip(line);
+  const next = { ...state, lineNumber: state.lineNumber + 1 };
+  if (Str.startsWith(EXAMPLE_FENCE)(stripped)) return openExample(next, stripped);
+  if (stripped === FENCE) return closeExample(state, next);
+  if (stripped === ".") return { ...next, mode: 2 };
+  return appendLine(state, next, line);
 };
 
 /**
