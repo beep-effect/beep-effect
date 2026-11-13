@@ -119,8 +119,9 @@ check is queued or running (that wait is GitHub's job timeout, not ours).
 Gate lines name `registration`, `required-pending`, `heavy-not-admitted`,
 `base-conflict`, `closeout-pending`, or `settle-timeout`, including missing and
 pending contexts. `base-conflict` means the base moved under the head (GitHub
-reports `CONFLICTING`/`DIRTY` and empties the check rollup): merge `origin/main`
-and push; the wait never spends the budget. Under `--until-ready` it is also a
+reports `CONFLICTING`/`DIRTY` and empties the check rollup): merge the ref the
+line names and push (`origin/main`, or the parent's branch on a stack layer);
+the wait never spends the budget. Under `--until-ready` it is also a
 P0 `base-conflict` inbox row, and neither it nor a required red ends the loop
 (see Inbox). A context once seen registered for
 a head stays `pending` when one poll omits it, never `missing`. `heavy-not-admitted` is tier-2 admission (B8): the loop computes the
