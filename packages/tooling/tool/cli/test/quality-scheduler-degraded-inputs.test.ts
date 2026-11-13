@@ -1,7 +1,7 @@
 import {
   admissionStatus,
   MemoryStats,
-  MemoryStatsLive,
+  memoryStatsLayerFor,
   provideRuntimeRootForTesting,
   QualitySchedulerError,
   RuntimeRootChoice,
@@ -41,10 +41,21 @@ const meminfoReadError = PlatformError.systemError({
   description: "fixture denied",
 });
 
+// The live layer clamps availableGib to the process cgroup ceiling, so a fixture read through it
+// reports the host's ceiling (a memory-capped agent scope) instead of the fixture. An uncapped,
+// fixed source keeps these readings a function of the fixture alone.
+const uncappedMemorySource = {
+  constrainedMemoryBytes: () => undefined,
+  residentBytes: () => 0,
+  totalMemoryBytes: () => undefined,
+};
+
 const memoryStatsFrom = (
   readFileString: (path: string) => Effect.Effect<string, PlatformError.PlatformError>
 ): Layer.Layer<MemoryStats> =>
-  MemoryStatsLive.pipe(Layer.provide(Layer.mergeAll(FileSystem.layerNoop({ readFileString }), BunCrypto.layer)));
+  memoryStatsLayerFor(uncappedMemorySource).pipe(
+    Layer.provide(Layer.mergeAll(FileSystem.layerNoop({ readFileString }), BunCrypto.layer))
+  );
 
 const readMemoryStats = Effect.gen(function* () {
   const stats = yield* MemoryStats;
