@@ -49,6 +49,7 @@ import {
   admissionStatus,
   GITHUB_CHECK_MODE_VALUES,
   installAgentRunsSlice,
+  isAgedQuarantineEntry,
   QUARANTINE_ARCHIVE_DIRECTORY_NAME,
   QUARANTINE_ARCHIVE_MIN_AGE_MILLIS,
   quarantinedAtMillisOf,
@@ -3869,6 +3870,14 @@ const admissionRootOfEntry = (entryPath: string): O.Option<string> =>
     O.flatMap((match) => O.fromUndefinedOr(match[1]))
   );
 
+// Archive directory for a set of quarantine entries: every entry shares the admission root.
+const quarantineArchiveSuffix = (entries: A.NonEmptyReadonlyArray<string>, separator: string): string =>
+  pipe(
+    admissionRootOfEntry(A.headNonEmpty(entries)),
+    O.map((root) => `${separator}${root}/${QUARANTINE_ARCHIVE_DIRECTORY_NAME}`),
+    O.getOrElse(() => "")
+  );
+
 // One summary line instead of one line per entry (the P0 baseline printed
 // 2068); `--json` keeps every path.
 const renderQuarantineSummaryLines = (quarantined: ReadonlyArray<string>, nowMillis: number): ReadonlyArray<string> =>
@@ -3882,15 +3891,23 @@ const renderQuarantineSummaryLines = (quarantined: ReadonlyArray<string>, nowMil
           onNonEmpty: (instants) => `, oldest ${formatQuarantineAge(nowMillis - A.min(instants, Order.Number))} ago`,
         })
       );
-      const archive = pipe(
-        admissionRootOfEntry(A.headNonEmpty(entries)),
-        O.map((root) => `; archive ${root}/${QUARANTINE_ARCHIVE_DIRECTORY_NAME}`),
-        O.getOrElse(() => "")
-      );
+      const archive = quarantineArchiveSuffix(entries, "; archive ");
       const count = A.length(entries);
       return [
         `- quarantined: ${count} entr${count === 1 ? "y" : "ies"}${oldest}${archive} (reap --apply archives entries older than ${formatQuarantineAge(QUARANTINE_ARCHIVE_MIN_AGE_MILLIS)}; --json lists paths)`,
       ];
+    },
+  });
+
+// The reap dry run and `--apply` report the archive with the same predicate the
+// reap pass uses, so the preview matches what `--apply` moves.
+const renderQuarantineArchiveLine = (verb: "would archive" | "archived", paths: ReadonlyArray<string>): string =>
+  A.match(paths, {
+    onEmpty: () => `${verb} no aged quarantine entries`,
+    onNonEmpty: (entries) => {
+      const count = A.length(entries);
+      const archive = quarantineArchiveSuffix(entries, " -> ");
+      return `${verb} ${count} quarantine entr${count === 1 ? "y" : "ies"} older than ${formatQuarantineAge(QUARANTINE_ARCHIVE_MIN_AGE_MILLIS)}${archive}`;
     },
   });
 
@@ -3981,16 +3998,35 @@ const schedulerReapCommand = Command.make(
   {
     apply: Flag.Boolean("apply").pipe(
       Flag.withDefault(false),
-      Flag.withDescription("Actually remove dead admission state (default: dry-run report)")
+      Flag.withDescription(
+        "Actually remove dead admission state and archive aged quarantine entries (default: dry-run report)"
+      )
     ),
   },
   Effect.fn(function* ({ apply }) {
+    // Read-only pre-scan: the aged set the reap pass is about to archive.
+    const before = apply ? yield* Effect.asSome(admissionStatus()) : O.none<AdmissionSnapshot>();
+    const beforeMillis = yield* Clock.currentTimeMillis;
     const snapshot = yield* reapAdmissionState({ apply });
+    const nowMillis = yield* Clock.currentTimeMillis;
     const reconciledAttempts = apply ? yield* reconcileCurrentCheckoutAttemptJournals() : 0;
     const deadLines = A.map(snapshot.dead, (path) => `- ${path}`);
+    const archiveLine = O.match(before, {
+      onNone: () =>
+        renderQuarantineArchiveLine("would archive", A.filter(snapshot.quarantined, isAgedQuarantineEntry(nowMillis))),
+      onSome: (prior) =>
+        renderQuarantineArchiveLine(
+          "archived",
+          A.filter(
+            prior.quarantined,
+            (path) => isAgedQuarantineEntry(path, beforeMillis) && !A.contains(snapshot.quarantined, path)
+          )
+        ),
+    });
     yield* printLines([
       apply ? "reaped dead admission state:" : "dry run — would reap:",
       ...(A.length(deadLines) === 0 ? ["(nothing dead)"] : deadLines),
+      archiveLine,
       ...(apply ? [`reconciled owner-dead attempts: ${reconciledAttempts}`] : []),
     ]);
   })
