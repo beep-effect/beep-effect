@@ -594,8 +594,11 @@ const RunnerLaunchTemplateResource = Resource<RunnerLaunchTemplate>(RunnerLaunch
  * mappings (gp3 root volume, encryption, IOPS, throughput), `ebsOptimized`,
  * Spot `instanceMarketOptions` and launch `tagSpecifications`, beside IMDS
  * options, an instance profile, security groups, user data and an
- * SSM-resolved AMI. Each update publishes a new version and makes it the
- * default. Ownership is tag-based: `read` brands a same-name template
+ * SSM-resolved AMI. An update publishes a new version and makes it the
+ * default only when the launch data changes (`tagSpecifications` included);
+ * a change to the template's own `tags` edits its tags without a new version,
+ * and an adopted template always gets a version with the declared data.
+ * Ownership is tag-based: `read` brands a same-name template
  * without Alchemy's internal tags `Unowned`, so adopting it needs an explicit
  * adopt policy.
  *
