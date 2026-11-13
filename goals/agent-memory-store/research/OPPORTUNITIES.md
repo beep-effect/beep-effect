@@ -72,3 +72,62 @@ identifiers are redacted.
 - **Fixed in the same change:** the test now snapshots the source right
   before the import and its header says the tree must not change during the
   run.
+
+## 2026-11-12: the P2 capture brief described a BaseNode field the P0 model does not have
+
+- **Doing:** writing op capture (lane agent-memory-store-p2) against the
+  exported base.
+- **Evidence:** the brief said each `BaseNode` lists "node id, revision, kind,
+  text"; `src/Operation.models.ts` has `nodeId`, `revisionId` and an
+  `OccurrenceAnchor` whose quote is the text, and no kind. Capture had to
+  derive kinds by re-partitioning the base text (decision
+  `op-capture-derives-base-kinds`) rather than read them.
+- **Would have prevented it:** quoting the field list straight from the model
+  file in a phase brief, or a generated field summary of each P0 model in the
+  packet.
+
+## 2026-11-12: Effect language-service rules fire on unexported-looking test helpers
+
+- **Doing:** writing the op capture test harness
+  (`test/OperationCapture.support.ts`).
+- **Evidence:** the package test type check (`tsconfig.test.json`) failed with
+  `TS377101 missingPipeableSignature` on every exported two-or-more-argument
+  helper, `TS377050 missedPipeableOpportunity` on
+  `assertNone(Result.getOrThrow(captureBatch(...)))` and `TS377032
+  strictEffectProvide` on `Effect.provide(Digest.layerWebCrypto)` inside a test;
+  three rounds of edits to helpers that only tests call.
+- **Would have prevented it:** a short "test helper shapes" line in the
+  effect-vitest checklist (single-object parameters or `dual`, `layer(...)`
+  instead of `Effect.provide`), or relaxing the pipeable rule for `test/**`.
+
+## 2026-11-12: the schema-first gate's reach into src/internal is only knowable from its source
+
+- **Doing:** writing the admission layer's internal read model
+  (`src/internal/AdmissionLog.ts`, lane agent-memory-store-p2).
+- **Evidence:** the first draft exported plain `interface NodeState` and
+  `interface HoldRecord` from an `@internal` module. The repo-wide
+  `lint schema-first` scan is outside a package lane's command budget, so the
+  only way to learn that exported data-like interfaces count even under
+  `src/internal/` was reading `SchemaFirstScan.ts` and `SchemaFirstDetectors.ts`
+  in the CLI package; both became `S.Opaque` classes before any run.
+- **Would have prevented it:** a package-scoped mode of the schema-first scan
+  (a `--package` filter like `lint laws` has), so a lane can run it on its own
+  files.
+
+## 2026-11-13: the adversarial replay spent its time in capture and fsync, not admission
+
+- **Doing:** timing the AC-2 and AC-3 replay (lane agent-memory-store-p2,
+  `test/admission-replay.ts`): 100 runs of 118 writes each.
+- **Evidence:** the first version imported the fourteen fixture files into a
+  fresh store and captured every write per run: about 3.5 s a run, 350 s in
+  all. Admission itself measured 1.2 ms an operation (100 replaces in one
+  batch: 119 ms); op capture cost about 10 ms a write, because it partitions
+  the base file again on every call (`baseKinds`) as well as the edited file,
+  and the files run to 32,000 characters. Moving to one import, one capture
+  per write and a byte copy of the database per run was then slower again
+  (2.6 to 3.8 s a run) until the run copies skipped the journal and fsync
+  (`PRAGMA journal_mode = MEMORY`, `synchronous = OFF`): 0.3 to 0.9 s a run on
+  a loaded host, the whole file about 40 s at load average 57.
+- **Would have prevented it:** a cached base partition in op capture (the
+  base kinds of an export never change), and a documented way to snapshot an
+  imported in-memory store for test replays instead of copying a file.

@@ -81,9 +81,11 @@ const repoCliManifest = ["packages/cli/package.json", workspacePackage("@beep/re
 
 /** Error lines this run printed, after the lines earlier cases left in the shared TestConsole. */
 const runAndCollectErrors = Effect.fn("LintCoverageOwnersTest.runAndCollectErrors")(function* (root: string) {
-  const before = A.length(yield* TestConsole.errorLines);
+  const priorErrorLines = yield* TestConsole.errorLines;
+  const before = A.length(priorErrorLines);
   const exit = yield* Effect.exit(runLintCommand(["coverage-owners", "--repo-root", root]));
-  const lines = pipe(yield* TestConsole.errorLines, A.drop(before), A.filter(P.isString));
+  const errorLines = yield* TestConsole.errorLines;
+  const lines = pipe(errorLines, A.drop(before), A.filter(P.isString));
   return { exit, lines } as const;
 });
 
@@ -96,7 +98,7 @@ describe("coverage-owners lint command", { concurrent: false }, () => {
           true
         );
         const { exit, lines } = yield* runAndCollectErrors(root);
-        assertTrue(Exit.isSuccess(exit));
+        exit.pipe(Exit.isSuccess, assertTrue);
         deepStrictEqual(lines, []);
       })
     );
@@ -126,18 +128,20 @@ describe("coverage-owners lint command", { concurrent: false }, () => {
     it.effect("defaults to the enclosing checkout, whose rows equal its scan", () =>
       Effect.gen(function* () {
         const exit = yield* Effect.exit(runLintCommand(["coverage-owners"]));
-        assertTrue(Exit.isSuccess(exit));
+        exit.pipe(Exit.isSuccess, assertTrue);
       })
     );
 
     it.effect("fails when the scan finds no workspace sources", () =>
       Effect.gen(function* () {
         const root = yield* writeFixture([], false);
-        const before = A.length(yield* TestConsole.logLines);
+        const priorLogLines = yield* TestConsole.logLines;
+        const before = A.length(priorLogLines);
         const { exit } = yield* runAndCollectErrors(root);
         expectReportedExit(exit);
-        assertTrue(Exit.isFailure(exit));
-        const logs = A.join(A.filter(A.drop(yield* TestConsole.logLines, before), P.isString), "\n");
+        exit.pipe(Exit.isFailure, assertTrue);
+        const logLines = yield* TestConsole.logLines;
+        const logs = A.join(A.filter(A.drop(logLines, before), P.isString), "\n");
         assertInclude(logs, "[coverage-owners] sources=0 drift=6");
       })
     );

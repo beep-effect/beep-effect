@@ -38,9 +38,13 @@ on:
         type: boolean
         default: false
 
-# One publish per commit; a newer main push never cancels an upload in flight.
+# One run at a time, so each run compares its closure digest against the release
+# the previous run published: two overlapping runs both read the older release and
+# published the same closure twice (ad71f5cdb67, run 43347787888). A run in flight
+# is never cancelled; a newer main push only replaces a still-pending run, and that
+# newer commit's closure includes the pending one's changes.
 concurrency:
-  group: beep-ci-binary-${{ github.sha }}
+  group: beep-ci-binary
   cancel-in-progress: false
 
 permissions:
