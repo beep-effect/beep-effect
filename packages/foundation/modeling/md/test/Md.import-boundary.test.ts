@@ -72,7 +72,14 @@ const PARSER_PACKAGES = ["@beep/markdown", "@beep/yaml", "@beep/toml", "@beep/js
 const isBridgeModule = (module: string): boolean =>
   module === "Md.syntax.ts" || module === "Md.parse.ts" || Str.startsWith("internal/syntax/")(module);
 
+// The one exception: `@beep/jsonc/JsoncFingerprint` is that package's
+// canonical-JSON facade, not its parser, and loads no parser module. JSON
+// frontmatter renders through it, the one owner of RFC 8785 bytes (goal
+// canonical-digest-owner, slice C).
+const CANONICAL_JSON_FACADE = "@beep/jsonc/JsoncFingerprint";
+
 const isParserSpecifier = (specifier: string): boolean =>
+  specifier !== CANONICAL_JSON_FACADE &&
   A.some(PARSER_PACKAGES, (name) => specifier === name || Str.startsWith(`${name}/`)(specifier));
 
 const sorted = (values: Iterable<string>): ReadonlyArray<string> => A.sort(A.fromIterable(values), Order.String);

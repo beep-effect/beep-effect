@@ -2507,6 +2507,7 @@
         "allow": [
           "@beep/epistemics",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/provenance",
           "@beep/schema",
           "@beep/test-runner",
@@ -2515,6 +2516,7 @@
         "allowTypeOnly": [
           "@beep/epistemics",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/provenance",
           "@beep/schema",
           "@beep/test-runner",
@@ -3519,6 +3521,7 @@
         "allow": [
           "@beep/html",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/markdown",
           "@beep/md",
           "@beep/schema",
@@ -3529,6 +3532,7 @@
         "allowTypeOnly": [
           "@beep/html",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/markdown",
           "@beep/md",
           "@beep/schema",
@@ -4118,6 +4122,7 @@
         "allow": [
           "@beep/epistemics",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/party-domain",
           "@beep/schema",
           "@beep/shared-domain",
@@ -4126,6 +4131,7 @@
         "allowTypeOnly": [
           "@beep/epistemics",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/party-domain",
           "@beep/schema",
           "@beep/shared-domain",

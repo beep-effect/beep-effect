@@ -32,6 +32,7 @@ import {
 } from "@beep/epistemics/EvidenceVerification";
 import { makeLogicalEdgeIdentity, makeLogicalEdgeKey } from "@beep/epistemics/LogicalEdgeIdentity";
 import { $EpistemicsId } from "@beep/identity/packages";
+import { JsoncCanonicalizeError } from "@beep/jsonc/JsoncFingerprint";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
@@ -39,12 +40,12 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertFailure, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
@@ -295,6 +296,14 @@ const ref = (edgeVersionId: string, key: string) =>
 
 const evidenceIds = (values: A.NonEmptyReadonlyArray<string>) => A.map(values, (id) => PartyEvidenceId.make(id));
 
+// A sealing function's outcome: its own result, or the owner's typed refusal
+// it now throws, as code and JSON pointer.
+const sealOrRefusal = <A>(seal: () => A): Result.Result<A, string> =>
+  Result.try({
+    try: seal,
+    catch: (thrown) => (S.is(JsoncCanonicalizeError)(thrown) ? `${thrown.code} at ${thrown.path}` : "not refused"),
+  });
+
 const basisFor = (left: A.NonEmptyReadonlyArray<string>, right: A.NonEmptyReadonlyArray<string>) =>
   MatchBasis.make({
     detector: "party-detector",
@@ -357,7 +366,15 @@ describe("second binding of the contradiction factories", () => {
       const samples = yield* Arbitrary.sampleEffect(arbitraries.ContradictionCandidateContentArbitrary, { count: 10 });
       A.forEach(samples, (content) => {
         expect(S.is(CandidateContent)(content)).toBe(true);
-        pipe(behavior.contradictionCandidateDigest(content), Result.isSuccess, assertTrue);
+        // This binding's ids are free `S.String`, so a sample can hold an
+        // unpaired surrogate, which the seal refuses (pinned below).
+        Result.match(
+          sealOrRefusal(() => behavior.contradictionCandidateDigest(content)),
+          {
+            onSuccess: flow(Result.isSuccess, assertTrue),
+            onFailure: (refusal) => expect(refusal).toMatch(/^LoneSurrogate at \//),
+          }
+        );
       });
       const matchBases = yield* Arbitrary.sampleEffect(arbitraries.ContradictionMatchBasisArbitrary, { count: 10 });
       A.forEach(matchBases, (basis) => expect(S.is(MatchBasis)(basis)).toBe(true));
@@ -391,6 +408,31 @@ describe("second binding of the contradiction factories", () => {
       );
     })
   );
+
+  it("throws the owner's typed refusal instead of sealing an unpaired surrogate", () => {
+    const content = ProposalContent.make({
+      fact: { value: 1 },
+      losingBelief: ref("v-\ud800", "a"),
+      proposalId: vocabulary.ContradictionProposalId.make(Str.repeat(64)("c")),
+      rationale: "The signed amendment controls.",
+      validFrom: DateTime.makeUnsafe(0),
+      validTo: O.none(),
+    });
+    const { detectionProposalId } = makeDetectionProposalId({
+      contradiction: vocabulary,
+      BeliefVersionRef,
+      ContradictionProposalContent: ProposalContent,
+    });
+
+    assertFailure(
+      sealOrRefusal(() => behavior.contradictionProposalDigest(content)),
+      "LoneSurrogate at /losingBelief/edgeVersionId"
+    );
+    assertFailure(
+      sealOrRefusal(() => detectionProposalId(ref("v-1", "a"), { subject: "s", value: "\udc00" })),
+      "LoneSurrogate at /fact/value"
+    );
+  });
 
   it("validates detection beliefs, snapshots and detected contradictions", () => {
     const $D = partyIdentity("ContradictionDetection");

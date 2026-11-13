@@ -93,6 +93,7 @@
   },
   "dependencies": {
     "@beep/identity": "workspace:^",
+    "@beep/jsonc": "workspace:^",
     "@beep/provenance": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",

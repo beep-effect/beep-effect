@@ -6,6 +6,9 @@
       "path": "../identity/tsconfig.json"
     },
     {
+      "path": "../jsonc/tsconfig.json"
+    },
+    {
       "path": "../provenance/tsconfig.json"
     },
     {

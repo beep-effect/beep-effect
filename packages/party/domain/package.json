@@ -69,6 +69,7 @@
     "tr46": "catalog:"
   },
   "devDependencies": {
+    "@beep/jsonc": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     "bun-types": "catalog:"

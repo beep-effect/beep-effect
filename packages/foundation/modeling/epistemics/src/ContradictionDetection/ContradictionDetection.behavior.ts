@@ -16,6 +16,18 @@ import type { FieldSchema } from "../Factory/index.ts";
 /**
  * Encode JSON values with the same canonicalizer used by the contradiction seals.
  *
+ * **Details**
+ *
+ * The output is RFC 8785 canonical JSON from `JsoncFingerprint` in
+ * `@beep/jsonc`, the one owner of the bytes every seal here hashes.
+ *
+ * **Gotchas**
+ *
+ * A value outside plain JSON throws the owner's `JsoncCanonicalizeError`
+ * instead of being coerced: an object member whose value is `undefined`, a
+ * non-finite number, a bigint, a non-plain object, a string or key with an
+ * unpaired surrogate, and nesting past the owner's depth cap.
+ *
  * **Example** (Encode keys in canonical order)
  *
  * ```ts

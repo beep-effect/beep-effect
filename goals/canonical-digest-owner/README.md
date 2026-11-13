@@ -33,10 +33,21 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Slices A (census and proof) and B (owner surface) are done; slice C (swaps)
-is next. The work is four slices, A to D, listed in [`PLAN.md`](./PLAN.md).
+Slices A (census and proof), B (owner surface) and C (swaps) are done; slice
+D (guard) is next. The work is four slices, A to D, listed in
+[`PLAN.md`](./PLAN.md).
 
 ## Latest Evidence
+
+Slice C, 2026-11-13: the epistemics, PacketCore, semantica and `@beep/md`
+frontmatter encoders are now `JsoncFingerprint`, one commit each; only
+PacketCore passes `omitUndefinedMembers`. Every stored packet event, golden
+execution seal and the W1 corpus hash still recompute. Values outside plain
+JSON, an unpaired surrogate above all, are now the owner's typed refusal; the
+call sites where free text can reach one are listed in `PLAN.md`, "Slice C
+evidence". PartyKey v1 keeps its bytes and gains a parity proof, and the two
+`sha256:` regular expressions in `@beep/repo-cli` are now
+`Sha256PrefixedDigest`.
 
 Slice B, 2026-11-12: `@beep/schema` exports `Sha256PrefixedDigest`, the one
 `sha256:` grammar, and `ContentDigest` and `SourceTextDigest` are defined from

@@ -123,3 +123,15 @@ Also not listed: about two dozen schema-order `S.fromJsonString(Schema[, {space:
 - `packages/epistemic/server/test/RetentionCalibrationCLI.test.ts:148` contains a fixed 64-hex `policyDigest` (`edb7f5df…`). I could not confirm without running it whether it equals `retentionPolicyDigest` of the protocol's central policy, i.e. whether it is a pinned output of row 17.
 - `packages/law-practice/domain/src/values/CourtReporterVocabulary/CourtReporterVocabulary.compatibility.ts:118-161` builds JSON arrays (via `S.fromJsonString(S.Unknown)`) as in-memory comparison keys. It neither sorts keys nor hashes, so it is excluded.
 - `packages/ontology/use-cases/src/tools/OntologyToolService.ts:98-110` fingerprints a dataset with RDFC-1.0. That is RDF canonicalization, not JSON, so it is out of scope here.
+
+## Slice C dispositions
+
+Rows whose disposition changed in slice C (the consolidated census and
+`PLAN.md`, "Slice C evidence", hold the detail):
+
+- Rows 1 and 2 (semantica `canonicalJson` and the digests over it): replaced;
+  the body is the owner, strict.
+- Row 3 (PartyKey v1): stays pinned, now with a parity proof in
+  `packages/party/domain/test/PartyKey.test.ts`.
+- Rows 13 to 21 (digests and uses over `canonicalDetectionJson`): unchanged
+  bytes through the swapped E1.

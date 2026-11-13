@@ -79,6 +79,7 @@
   "dependencies": {
     "@beep/html": "workspace:^",
     "@beep/identity": "workspace:^",
+    "@beep/jsonc": "workspace:^",
     "@beep/markdown": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",

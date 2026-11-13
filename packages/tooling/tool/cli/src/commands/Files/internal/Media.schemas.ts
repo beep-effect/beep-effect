@@ -7,6 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Sha256PrefixedDigest } from "@beep/schema/Sha256";
 import { Str } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
@@ -66,28 +67,28 @@ export type PositiveMediaDimension = typeof PositiveMediaDimension.Type;
 /**
  * SHA-256 hash recorded for normalized file bytes.
  *
- * **Example** (Check schema with undefined)
+ * **Details**
+ *
+ * The shared `Sha256PrefixedDigest` grammar from `@beep/schema`: `sha256:`
+ * followed by 64 lowercase hexadecimal digits.
+ *
+ * **Example** (Accept only the lowercase prefixed form)
  *
  * ```ts
  * import * as S from "effect/Schema"
  * import { FileSha256Hash } from "@beep/repo-cli/commands/Files"
  *
- * const acceptsUndefined = S.is(FileSha256Hash)(undefined)
+ * const hex = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+ *
+ * console.log(S.is(FileSha256Hash)(`sha256:${hex}`)) // true
+ * console.log(S.is(FileSha256Hash)(`SHA256:${hex}`)) // false
+ * console.log(S.is(FileSha256Hash)(undefined)) // false
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const FileSha256Hash = S.String.check(
-  S.isPattern(
-    /^sha256:[a-f0-9]{64}$/,
-    $I.annote("FileSha256HashPatternCheck", {
-      title: "File SHA-256 Hash",
-      description: "A file content hash must use the sha256:<64 lowercase hex digits> format.",
-      message: "Expected a SHA-256 file hash",
-    })
-  )
-).pipe(
+export const FileSha256Hash = Sha256PrefixedDigest.pipe(
   $I.annoteSchema("FileSha256Hash", {
     description: "A SHA-256 digest for exact file-byte duplicate detection.",
   })

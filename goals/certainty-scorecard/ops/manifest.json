@@ -6,7 +6,7 @@
     "title": "Certainty Scorecard",
     "status": "active",
     "created": "2026-11-09",
-    "updated": "2026-11-12",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/certainty-scorecard",
@@ -85,5 +85,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "P1 Implement in progress. Slice 1 (MEAS-01 slice 1 with MEAS-04, beep ci certainty) merged as #3118, its coverage rows fixed by #3121. Slice 2 (ROUT-05 slice 1: every hosted job attributed to a lane, a support job or unknown, with a conservation census) merged as #3141. Slice 3 (MEAS-02 with DEPS-10: refusals attributed by failure kind inside actionableLaneMix) is in review. Startable next: the certainty-nightly workflow. route-soundness-repair runs alongside; main-verdict-every-commit, heavy-pool-diet, hosted-setup-tax and local-proof-under-ten read their acceptance numbers from this goal."
+  "statusNote": "P1 Implement in progress. The first wave has merged. Slice 1 (MEAS-01 slice 1 with MEAS-04, beep ci certainty) merged as #3118; its coverage rows were fixed by #3121, and its scoring by #3144 (verdict-instant supersession, heavy-pool admission, head-attempt runner-minutes), #3168 (main read first, an incomplete listing marked unread) and #3181. Slice 2 (ROUT-05 slice 1: every hosted job attributed to a lane, a support job or unknown, with a conservation census) merged as #3141. Slice 3 (MEAS-02 with DEPS-10: refusals attributed by failure kind inside actionableLaneMix) merged as #3176. Startable next: the certainty-nightly workflow (slice 4), SCHE-09 archived admission rows (slice 5) and MEAS-07 final-check attempt journals (slice 6). route-soundness-repair runs alongside; main-verdict-every-commit, heavy-pool-diet, hosted-setup-tax and local-proof-under-ten read their acceptance numbers from this goal."
 }
