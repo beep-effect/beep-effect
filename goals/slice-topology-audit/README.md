@@ -2,7 +2,9 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `paused`
+
+**Paused by operator ruling (finish board, 2026-11-13).** Worthwhile but unstarted and not in flight; pausing reduces open active goals. No lane is working on it; resume with `bun run beep goals set-status slice-topology-audit active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

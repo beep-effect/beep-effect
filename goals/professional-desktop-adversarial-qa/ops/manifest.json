@@ -3,14 +3,14 @@
   "initiative": {
     "id": "professional-desktop-adversarial-qa",
     "title": "Professional Desktop Adversarial QA",
-    "status": "active",
+    "status": "superseded",
     "created": "2026-07-11",
-    "updated": "2026-07-12",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "README.md"
   },
   "packetPath": "goals/professional-desktop-adversarial-qa",
-  "lifecycle": "active",
-  "statusNote": "P1 remains in progress. Rounds 1 and 2 contain unresolved evidence-backed findings, so the campaign has not reached its two-consecutive-clean-round exit gate.",
+  "lifecycle": "superseded",
+  "statusNote": "Closed (superseded) 2026-11-13 by operator ruling (finish board): It is stale (3+ weeks), it uses an old campaign charter and branch from July, and the browser-qa-loop skill now supersedes it. Re-open with `bun run beep goals set-status professional-desktop-adversarial-qa active` and re-graduate the next slice. Before the ruling: P1 remains in progress. Rounds 1 and 2 contain unresolved evidence-backed findings, so the campaign has not reached its two-consecutive-clean-round exit gate.",
   "mission": "Run adversarial QA and repair loops over the professional desktop surface until two consecutive rounds are clean.",
   "executionCapable": true,
   "reflectionRequired": false,
@@ -79,5 +79,7 @@
     "Required QA credentials or runtime services are unavailable.",
     "A finding requires destructive or out-of-scope external changes.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "supersededNote": "Closed by operator ruling (finish board, 2026-11-13) without meeting its completion gate; see goals/professional-desktop-adversarial-qa/decisions/2026-11-13-finish-board-ruling-close.md.",
+  "retentionReason": "Closed by operator ruling (finish board, 2026-11-13) with a re-open path: the full packet stays on main so `bun run beep goals set-status professional-desktop-adversarial-qa active` can resume it or re-graduate the next slice without restoring from the archive."
 }

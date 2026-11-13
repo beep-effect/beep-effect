@@ -2,7 +2,11 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `superseded`
+
+**Closed by operator ruling (finish board, 2026-11-13).** Its remaining charter already lives in successor packets, so keeping it open only duplicates tracking. The packet is `superseded` without meeting its completion gate. To resume, run `bun run beep goals set-status ci-fleet-endgame active` and re-graduate the next slice. Decision: [`decisions/2026-11-13-finish-board-ruling-close.md`](./decisions/2026-11-13-finish-board-ruling-close.md).
+
+Parent program only. This ruling closes the ci-fleet-endgame parent packet and nothing else. Its P4/P5 charter was split on 2026-08-13 into goals/ci-fleet-residue (completed-retained) and goals/ci-lane-economics, which stays active and keeps its own status; this ruling does not change it. P6 (close citing both charter halves) is dropped.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

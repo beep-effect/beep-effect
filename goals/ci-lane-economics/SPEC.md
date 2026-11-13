@@ -28,9 +28,9 @@ Property Laws ~22.4m on hosted.
 ## Exit criteria
 
 No required job exceeds 20 minutes at p95 (attempt-one successful runs)
-across a representative week of PR and push waves under any load the
-orchestration doctrine admits (at most six CI-active branches,
-`research/repair-decision-3.md`) — the charter says no one waits, so the
+across a representative week of PR and push waves at the load the operator
+runs (15 to 20 CI-active branches, operator ruling 2026-11-13; the six-branch bound of
+`research/repair-decision-3.md` is withdrawn) — the charter says no one waits, so the
 tail is the gate, not the median; queue time counts. Per-lane placement decisions
 recorded; cost within the standing budget gates; rerun/flake rates tracked
 separately via the attribution rules rather than laundered into percentiles.
@@ -164,5 +164,40 @@ Changes:
 Lane perf/property-laws-under-ten
 
 Reverse: In check.yml restore the two-slice matrix [repo-cli, rest] with its two filters and put admission back in the shard job's needs; the comma-separated filter and shard options of the lane command can stay unused.
+
+### Judge the charter at 15 to 20 CI-active branches and move test shards to the self-hosted pool, 2026-11-13
+
+Operator ruling 2026-11-13 (about 05:50Z, relayed by the orchestrator). It replaces D1's load bound and repair decision 3's ruling that the charter is judged at six or fewer CI-active branches.
+
+**Evidence.** Preview census `2026-11-10T04:00Z` to `2026-11-13T05:40Z` (373 Check runs, 15 required contexts, ruleset version `54940515`; `research/window-5-preview-2026-11-13.md`): Test Unit p95 24m00s (p50 12m56s), shard pickup p95 13m32s against the 5m00s tripwire (n=3,944), and peak CI-active branches of 8, 9 and 17 on the three days with runs. No day was at or under six. On main run 43370160740 every hosted job waited 10 to 16 minutes for a runner while the slowest body ran 9m05s: about 70 hosted jobs per run against the 60-job concurrency cap, with 11 runs queued.
+
+**Ruling.**
+
+- The charter is judged at the load the operator actually runs: about 15 to 20 CI-active branches. A window passes or fails at that bound; a day above 20 is reported, not excused.
+- The six-branch fan-out governor signed in repair decision 3 is not built.
+- The test shards (Test Unit, Test Integration, Property Laws) move from GitHub-hosted `ubuntu-24.04` to the existing self-hosted EC2 pool. No new paid service. The runner scaler baseline (`RUNNERS_MAXIMUM_COUNT`, 2) is not raised permanently without the operator: the driver sizes the runners the shards need at about 20 branches and brings that number with an estimated monthly EC2 delta first.
+- The workflow edits that change shard labels are hand-merged by the operator and land after #3215.
+- The census fixes (a verdict-wait column per required context, Test Integration shards in the population) and the hosted job diet go ahead.
+- Window 5 starts after those land and is measured at the new bound.
+
+Window 4 (`2026-10-27T10:00Z` to `2026-11-03T10:00Z`) was previewed on 2026-11-02 and never censused as a full week; its layout was superseded by D4 and the 2026-11-08 to 2026-11-10 repacks, so it stays a preview and admits nothing.
+
+Lane chore/ci-goals-finish
+
+Reverse: Restore the six-branch bound of repair decision 3 and build the pre-push governor; return the shard jobs to ubuntu-24.04 in check.yml.
+
+### Shards overflow to the self-hosted pool only past a 10-minute hosted wait, 2026-11-13
+
+Operator decision 2026-11-13 (about 06:25Z), after the sizing in `research/shard-runner-sizing-2026-11-13.md`. It replaces the "move the test shards to the self-hosted pool" clause of the same day's load ruling; the 15 to 20 branch bound stands.
+
+- Moving every shard needs about 96 concurrent runners (the spot quota fits 64) and about $1,500 to $2,300 a month against a $200 ceiling. Not done.
+- Shards stay on GitHub-hosted runners. A shard runs on the self-hosted pool only when the hosted wait would pass 10 minutes. Unbounded, the model sends 433 of 6,613 shards over three days and peaks at 78 VMs, which is 624 vCPU and over the 512-vCPU spot quota. The overflow pool is therefore 48 VMs of the 8-vCPU `.2xlarge` types only (384 vCPU), leaving 128 vCPU for the Heavy lanes. The scaler cap counts VMs and the shared pool launches seven types, four of them 16-vCPU `.4xlarge`, so overflow runners get their own launch configuration restricted to `r7a`, `r7i` and `r6i` `.2xlarge`; the overflow PR shows the worst-case vCPU of overflow plus Heavy at or under 512. No `.4xlarge` overflow option is offered: it was not modelled. A shard that finds the pool full stays in the hosted queue. Modelled at that cap: 300 shards, 43.8 VM-hours, shard pickup p95 8m43s, longest wait 12m52s, about $110 to $170 a month. No quota request and no second shard per VM.
+- The queue tripwire moves from 5m00s to 10m00s shard pickup p95 for windows starting on or after 2026-11-13, because the design admits waits up to its threshold; earlier windows keep 5m00s so their documents reproduce. The census retarget (`Ci/LaneTimings.ts`, a window-dated limit) is open work: it is being added to #3229, whose first head (ee4b635b) left the limit at 5m00s. Until that lands on main the command prints 5m00s, and window 5 does not start before it. The charter is unchanged: every required check under 20m00s at p95, queue and pickup included.
+- The scaler baseline cap stays 2. The operator accepted a burst cap near 80 for the overflow; the quota bounds it lower, at 48 `.2xlarge` overflow VMs plus the Heavy lanes, 512 vCPU in all. The overflow PR designs how the cap rises and is restored around a burst, and reports its first week of actual spend against the estimate.
+- The hosted job diet goes ahead regardless.
+
+Lane docs/ci-lane-overflow-ruling
+
+Reverse: Remove the overflow routing so every shard runs on ubuntu-24.04 again and restore the 5m00s pickup tripwire; no standing AWS setting changes.
 
 <!-- beep:decisions:end -->

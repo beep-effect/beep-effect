@@ -3,14 +3,14 @@
   "initiative": {
     "id": "patent-drafting-episode-ledger",
     "title": "Patent Drafting Episode Ledger",
-    "status": "paused",
+    "status": "superseded",
     "created": "2026-08-13",
-    "updated": "2026-09-12",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/patent-drafting-episode-ledger",
-  "lifecycle": "paused",
-  "statusNote": "2026-09-12: paused at the roadmap re-eval (graduated 2026-08-13, zero execution, flagged stale-active by goals doctor). Resumes after practice-kg-mcp P8 hands off and goals/agentic-professional-runtime closes; also needs goals/citation-verified-span-substrate; see the docs/ROADMAP.md parked table.",
+  "lifecycle": "superseded",
+  "statusNote": "Closed (superseded) 2026-11-13 by operator ruling (finish board): It has had zero execution since August and depends on three other goals. The text-knowledge stack rebuild is likely to reshape it, so it is better re-graduated than kept. Re-open with `bun run beep goals set-status patent-drafting-episode-ledger active` and re-graduate the next slice. Before the ruling: 2026-09-12: paused at the roadmap re-eval (graduated 2026-08-13, zero execution, flagged stale-active by goals doctor). Resumes after practice-kg-mcp P8 hands off and goals/agentic-professional-runtime closes; also needs goals/citation-verified-span-substrate; see the docs/ROADMAP.md parked table.",
   "mission": "Ship the law-owned DraftingEpisode, support-set promotion gate, answer annex, and rebuildable projection proof.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -78,5 +78,7 @@
     "../../explorations/patent-drafting-episode-ledger/research/01-repo-surfaces.md",
     "../../explorations/patent-drafting-episode-ledger/research/02-drafting-episode-frame.md",
     "../../explorations/patent-drafting-episode-ledger/research/SOURCES.md"
-  ]
+  ],
+  "supersededNote": "Closed by operator ruling (finish board, 2026-11-13) without meeting its completion gate; see goals/patent-drafting-episode-ledger/decisions/2026-11-13-finish-board-ruling-close.md.",
+  "retentionReason": "Closed by operator ruling (finish board, 2026-11-13) with a re-open path: the full packet stays on main so `bun run beep goals set-status patent-drafting-episode-ledger active` can resume it or re-graduate the next slice without restoring from the archive."
 }

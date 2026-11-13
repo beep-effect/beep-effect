@@ -36,6 +36,7 @@ import rulesFixture from "./fixtures/yeet-merge-gate/rules.json" with { type: "j
 import threadsFixture from "./fixtures/yeet-merge-gate/threads.json" with { type: "json" };
 import openThreadsFixture from "./fixtures/yeet-merge-gate/threads-open.json" with { type: "json" };
 import timelineFixture from "./fixtures/yeet-merge-gate/timeline.json" with { type: "json" };
+import { LIVE_SUITE, liveSuite, pr3133Suites, SHADOWED_CONTEXTS, suiteOfCheck } from "./support/ShadowedSuites.ts";
 import { legacyGhAnswer, recordedGithub } from "./support/YeetGithub.ts";
 import { rewriteWindowScenario, yeetRealGitTestLayer } from "./support/YeetHeadMove.ts";
 import type { GateTableRow } from "@beep/repo-cli/test/Yeet";
@@ -120,6 +121,57 @@ describe("yeet gate-table decision", () => {
     const row = decideGateTableRow(read({ checkRuns: withRun(required, "in_progress", null) }));
     expect(row.gateMet).toBe(false);
     expect(row.pending).toEqual([required]);
+  });
+
+  // #3133: the ruleset reads only the newest Heavy Admit run's suite, so the table drops the runs
+  // a newer run replaced, as the merge gate does, and names what that hides.
+  it("marks a required check green only in a replaced Heavy Admit suite as shadowed, never GATE-MET", () => {
+    const suiteRuns = A.map(fixtureRuns, (run) =>
+      MergeGateCheckRun.make({ ...run, checkSuiteId: O.some(suiteOfCheck(run.name)) })
+    );
+    const shadowed = decideGateTableRow(read({ checkRuns: suiteRuns, workflowSuites: pr3133Suites }));
+    expect(shadowed.gateMet).toBe(false);
+    expect(shadowed.pending).toEqual(A.map(SHADOWED_CONTEXTS, (context) => `shadowed:${context}`));
+    expect(shadowed.requiredGreen).toBe(A.length(requiredContexts) - A.length(SHADOWED_CONTEXTS));
+    // A newer run that reports the checks itself (a re-report's `skipped` lanes) is the live suite.
+    const reReported = A.map(SHADOWED_CONTEXTS, (name, index) =>
+      MergeGateCheckRun.make({
+        id: 112231400000 + index,
+        name,
+        status: "completed",
+        conclusion: "skipped",
+        checkSuiteId: O.some(LIVE_SUITE),
+      })
+    );
+    const live = decideGateTableRow(
+      read({ checkRuns: [...suiteRuns, ...reReported], workflowSuites: [...pr3133Suites, liveSuite] })
+    );
+    expect(live.gateMet).toBe(true);
+    expect(live.pending).toEqual([]);
+    // A red that exists only in the replaced suite is a red, never dropped or read as pending.
+    const hiddenRed = decideGateTableRow(
+      read({
+        checkRuns: A.map(suiteRuns, (run) =>
+          A.contains(SHADOWED_CONTEXTS, run.name) ? MergeGateCheckRun.make({ ...run, conclusion: "failure" }) : run
+        ),
+        workflowSuites: pr3133Suites,
+      })
+    );
+    expect(hiddenRed.gateMet).toBe(false);
+    expect(hiddenRed.reds).toEqual(A.map(SHADOWED_CONTEXTS, (context) => `${context}=failure`));
+    expect(hiddenRed.pending).toEqual([]);
+    // An optional check is not the ruleset's to read: its red in the replaced suite stays in `reds`.
+    const optionalRed = decideGateTableRow(
+      read({
+        checkRuns: A.map(suiteRuns, (run) =>
+          run.name === "Heavy / Lint Policy" ? MergeGateCheckRun.make({ ...run, conclusion: "failure" }) : run
+        ),
+        workflowSuites: pr3133Suites,
+      })
+    );
+    expect(optionalRed.gateMet).toBe(false);
+    expect(optionalRed.reds).toEqual(["Heavy / Lint Policy=failure"]);
+    expect(optionalRed.pending).toEqual(A.map(SHADOWED_CONTEXTS, (context) => `shadowed:${context}`));
   });
 
   it("holds on a required context with no run at all", () => {
@@ -289,6 +341,8 @@ const restRoutes = (script: Script): Readonly<Record<string, GithubAnswer>> => (
   [`{repo}/commits/${draftSha}/status`]: { body: script.statuses },
   "{repo}/issues/1459/timeline": { body: timelineFixture },
   [`{repo}/commits/${pullFixture.head.sha}/check-suites`]: { body: checkSuitesFixture },
+  // The recorded check runs name no suite, so the head's workflow runs replace nothing.
+  "{repo}/actions/runs": { body: { total_count: 0, workflow_runs: [] } },
 });
 
 const answer = (script: Script, call: GithubCall): GithubAnswer | undefined =>
@@ -332,6 +386,31 @@ describe("yeet gate-table recorded read", () => {
       // One ruleset read for the one base, one thread read for the one ready PR.
       expect(A.length(A.filter(github.calls, (call) => call.path === "{repo}/rules/branches/main"))).toBe(1);
       expect(A.length(A.filter(github.calls, (call) => O.isSome(call.graphql)))).toBe(1);
+    })
+  );
+
+  it.effect("gates a stack layer on its trunk's ruleset, not the branch it targets", () =>
+    Effect.gen(function* () {
+      const layer = {
+        ...pullFixture,
+        base: { ...pullFixture.base, ref: "feat/parent" },
+        stack: { number: 1500, position: 2, size: 2, base: { ref: "main", sha: pullFixture.base.sha } },
+      };
+      const { report, github } = yield* runRead({
+        pulls: [layer],
+        detail: layer,
+        threads: threadsFixture,
+        statuses: noStatuses,
+      });
+      const row = rowAt(report, 0);
+      expect(row.read.baseRef).toBe("feat/parent");
+      expect(row.gateMet).toBe(true);
+      expect(
+        A.map(
+          A.filter(github.calls, (call) => Str.startsWith("{repo}/rules/branches/")(call.path)),
+          (call) => call.path
+        )
+      ).toEqual(["{repo}/rules/branches/main"]);
     })
   );
 

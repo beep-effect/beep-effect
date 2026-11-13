@@ -3,15 +3,15 @@
   "initiative": {
     "id": "effect-v4-workflow-engine-spike",
     "title": "Effect v4 Workflow Engine Spike",
-    "status": "active",
+    "status": "paused",
     "created": "2026-07-14",
-    "updated": "2026-10-06",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effect-v4-workflow-engine-spike",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "Prove a persistence-backed Effect v4 WorkflowEngine adapter survives real process kill/restart and hand its explicit durability contract to law docketing.",
-  "statusNote": "P0 must select the proof store and map all 14 durability constraints before adapter implementation.",
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): Its only value is gating docketing, which is not in flight; pause it until docketing needs durable workflows. Resume with `bun run beep goals set-status effect-v4-workflow-engine-spike active` when it is picked up. Before the ruling: P0 must select the proof store and map all 14 durability constraints before adapter implementation.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

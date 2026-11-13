@@ -3,13 +3,13 @@
   "initiative": {
     "id": "tracked-changes-ingest-wedge",
     "title": "Tracked-Changes Ingest Wedge",
-    "status": "active",
+    "status": "paused",
     "created": "2026-08-13",
-    "updated": "2026-08-13",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/tracked-changes-ingest-wedge",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "Prove and ship tracked-changes-aware OOXML-to-canonical ingest with U4 as a P0 kill-gate and structural fallback.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -72,5 +72,6 @@
     "../../explorations/harvey-lab-firm-knowledge/research/SOURCES.md",
     "../../explorations/harvey-lab-firm-knowledge/research/mine-synthetic-corpus.md",
     "../../explorations/harvey-lab-firm-knowledge/research/verify-completeness.md"
-  ]
+  ],
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): Product-relevant but unstarted; nothing in flight, so park until text-knowledge foundation direction settles. Resume with `bun run beep goals set-status tracked-changes-ingest-wedge active` when it is picked up. Its blocker goals/effect-native-legal-eval was closed by the same ruling; resuming this packet must first decide whether to re-open that packet or drop the dependency."
 }

@@ -2,7 +2,9 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `paused`
+
+**Paused by operator ruling (finish board, 2026-11-13).** It isn't actively moving and is gated on agent-observability-foundation. No lane is working on it; resume with `bun run beep goals set-status harness-telemetry-enrollment active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
 
 Explicitly launched by the operator on 2026-11-03 after foundation PR2655 verified. Source: [manifest](./ops/manifest.json). The recovery hold remains intact.
 

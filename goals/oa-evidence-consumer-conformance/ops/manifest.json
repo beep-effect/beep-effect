@@ -5,7 +5,7 @@
     "title": "OA Evidence Consumer Conformance",
     "status": "paused",
     "created": "2026-10-06",
-    "updated": "2026-10-06",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/oa-evidence-consumer-conformance",
@@ -81,5 +81,6 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): It is a scoped child of agentic-professional-runtime and should be sequenced by that parent, not started now. Resume with `bun run beep goals set-status oa-evidence-consumer-conformance active` when it is picked up."
 }
