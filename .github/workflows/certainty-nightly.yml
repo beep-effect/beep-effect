@@ -1,0 +1,189 @@
+# Certainty nightly (goals/certainty-scorecard, MEAS-01 slice 2).
+#
+# Scores one whole UTC day with `bun run beep ci certainty` from the checked-out
+# default branch: push to every required context green per pull-request head,
+# the main verdict rate, runner-minutes, and the rows sibling goals read
+# (goals/certainty-scorecard/SPEC.md, "Numbers the scorecard reports"). The
+# scheduled run scores yesterday; a dispatch may name an earlier day, which is
+# how a dropped or refused night is re-run.
+#
+# A night counts toward the packet's seven only when this run succeeds: the
+# capture is bounded, and an api-partial or otherwise uncertified report exits
+# non-zero (the CLI refuses certification), so the run is red, its error
+# annotation names the refusal, and its job summary carries the refusal stamp.
+#
+# Security posture: schedule and dispatch only, never pull_request; the job
+# runs only on the default branch. The token reads Actions runs and jobs and
+# nothing else; no secret is used. The capture's corpus names branches, which
+# can carry agent session ids, so it is never written here: the published
+# report (JSON, heads by SHA) and the aggregates-only summary carry none.
+#
+# Budget: `/rate_limit` (free) reads the token's core bucket first, and the
+# capture's request bound is the bucket's remaining reads minus the 15%
+# background reserve of goals/github-budget-ledger, capped at the CLI default.
+# A bucket already inside the reserve refuses the night without reading.
+#
+# The durable record is the packet's history/ note, written by hand or by the
+# driver from this run's artifact (aggregates and run ids only); the artifact
+# itself lives 90 days, this repository's maximum.
+name: Certainty Nightly
+
+on:
+  schedule:
+    # 04:41 UTC: heads pushed late on the scored day have hours to finish.
+    - cron: "41 4 * * *"
+  workflow_dispatch:
+    inputs:
+      day:
+        description: "UTC day to score, YYYY-MM-DD (empty scores yesterday)"
+        required: false
+        default: ""
+
+# One night at a time; a running capture is never cancelled.
+concurrency:
+  group: certainty-nightly
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  report:
+    name: Certainty Nightly Report
+    # Score from default-branch code only; a dispatch from another ref is a no-op.
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Choose the day and the request bound
+        id: plan
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DAY_INPUT: ${{ inputs.day }}
+          REQUEST_CAP: "1500"
+        run: |
+          set -euo pipefail
+          echo "CERTAINTY_JOB_STARTED=$(date -u +%s)" >> "$GITHUB_ENV"
+          day="${DAY_INPUT:-}"
+          if [[ -z "$day" ]]; then
+            day="$(date -u -d yesterday +%F)"
+          fi
+          if [[ ! "$day" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || [[ "$(date -u -d "$day" +%F 2>/dev/null)" != "$day" ]]; then
+            echo "::error::day must be a calendar date written YYYY-MM-DD; received ${day}."
+            exit 1
+          fi
+          if [[ ! "$day" < "$(date -u +%F)" ]]; then
+            echo "::error::day ${day} has not ended in UTC; score an earlier day."
+            exit 1
+          fi
+          budget="$(gh api rate_limit --jq '.resources.core | "\(.limit) \(.remaining)"')"
+          read -r limit remaining <<< "$budget"
+          if [[ ! "$limit" =~ ^[0-9]+$ || ! "$remaining" =~ ^[0-9]+$ ]]; then
+            echo "::error::rate_limit returned no core bucket; the day is not scored."
+            exit 1
+          fi
+          reserve=$(( (limit * 15 + 99) / 100 ))
+          bound=$(( remaining - reserve ))
+          if (( bound > REQUEST_CAP )); then
+            bound=$REQUEST_CAP
+          fi
+          if (( bound < 1 )); then
+            echo "::error::GITHUB_TOKEN core bucket is inside the 15% reserve (${remaining} of ${limit} left, reserve ${reserve}); the day is not scored."
+            exit 1
+          fi
+          {
+            echo "day=${day}"
+            echo "since=${day}T00:00:00Z"
+            echo "until=$(date -u -d "${day} + 1 day" +%F)T00:00:00Z"
+            echo "bound=${bound}"
+            echo "limit=${limit}"
+            echo "remaining=${remaining}"
+          } >> "$GITHUB_OUTPUT"
+
+      # Commits and trees only: the capture reads first-parent history and tree-only diffs.
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      # A GitHub-API command needs Bun and a script-free install, not the monorepo setup.
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Score the day
+        id: score
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          DAY: ${{ steps.plan.outputs.day }}
+          SINCE: ${{ steps.plan.outputs.since }}
+          UNTIL: ${{ steps.plan.outputs.until }}
+          BOUND: ${{ steps.plan.outputs.bound }}
+        run: |
+          set -uo pipefail
+          out="${RUNNER_TEMP}/certainty"
+          mkdir -p "$out"
+          bun run beep ci certainty --since "$SINCE" --until "$UNTIL" --main-ref HEAD \
+            --max-requests "$BOUND" --json --summary-out "$out/summary.md" > "$out/report.json"
+          status=$?
+          if jq -e '.certified == true' "$out/report.json" > /dev/null 2>&1; then
+            exit "$status"
+          fi
+          refusals="$(jq -r '.refusals | join(", ")' "$out/report.json" 2>/dev/null || true)"
+          if [[ -n "$refusals" ]]; then
+            echo "::error title=Certainty not certified::The ${DAY} report was refused (${refusals}); this night does not count toward the seven."
+          else
+            echo "::error title=Certainty capture failed::No report for ${DAY}; the capture failed before scoring (see this step's log)."
+          fi
+          exit 1
+
+      - name: Upload the report
+        if: always() && steps.plan.outputs.day != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: certainty-report-${{ steps.plan.outputs.day }}-attempt-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/certainty/report.json
+            ${{ runner.temp }}/certainty/summary.md
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Publish the job summary
+        if: always()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DAY: ${{ steps.plan.outputs.day }}
+          SINCE: ${{ steps.plan.outputs.since }}
+          UNTIL: ${{ steps.plan.outputs.until }}
+          BOUND: ${{ steps.plan.outputs.bound }}
+          LIMIT: ${{ steps.plan.outputs.limit }}
+          REMAINING: ${{ steps.plan.outputs.remaining }}
+        run: |
+          set -uo pipefail
+          summary="${RUNNER_TEMP}/certainty/summary.md"
+          elapsed=$(( $(date -u +%s) - ${CERTAINTY_JOB_STARTED:-$(date -u +%s)} ))
+          after="$(gh api rate_limit --jq '.resources.core.remaining' 2>/dev/null || echo unknown)"
+          {
+            if [[ -s "$summary" ]]; then
+              cat "$summary"
+            else
+              echo "# Certainty nightly: no report for ${DAY:-an unchosen day}"
+            fi
+            echo
+            echo "## Nightly run"
+            echo
+            echo "- workflow run ${GITHUB_RUN_ID}, attempt ${GITHUB_RUN_ATTEMPT}, at ${GITHUB_SHA}"
+            echo "- window ${SINCE:-none} to ${UNTIL:-none}; request bound ${BOUND:-none}"
+            echo "- GITHUB_TOKEN core bucket: limit ${LIMIT:-unknown}; remaining ${REMAINING:-unknown} before the capture and ${after} after (other workflows share the bucket)"
+            echo "- job wall time through this step: $(( elapsed / 60 )) min $(( elapsed % 60 )) s"
+          } >> "$GITHUB_STEP_SUMMARY"

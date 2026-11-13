@@ -47,13 +47,17 @@ the Yeet economics fold attributes refusals by failure kind as rows of the same 
 admission ring trims go to UTC day segments kept for 30 days, and `bun run beep quality scheduler history` folds
 them with the live journal (decision `sche-09-admission-archive`); the pressure fields are slice 5b. Slice 6
 (MEAS-07) merged as #3228: each `yeet final-check` run is a `final-check` attempt in the branch's Yeet attempt
-journal, carrying the receipt it wrote (decision `final-check-attempt-journal`). Slice 11 (ROUT-05 slice 2) is
-in review: failed jobs keep their steps in the v1 route corpus, rows take optional per-task outcomes, and
+journal, carrying the receipt it wrote (decision `final-check-attempt-journal`). Slice 11 (ROUT-05 slice 2)
+merged as #3257: failed jobs keep their steps in the v1 route corpus, rows take optional per-task outcomes, and
 aggregate, setup and harness reds are charged to no lane and reported as unknown by the replay (decision
-`step-classes-and-red-origins`); its producer of per-task outcome records is the new slice 11b. Slices 7
-(PERIL-11 slice 1) and 10 (MEAS-03) have started. Still startable: the certainty-nightly workflow (slice 4). Wall-time, cache and
-dist baselines taken before d8326d55935 (#3208, declaration-only builds) are not comparable with later readings
-(checkpoint `baselines-before-d8326d5593-not-comparable`).
+`step-classes-and-red-origins`); its producer of per-task outcome records is the new slice 11b. Slices 10
+(MEAS-03, #3262) and 7 (PERIL-11 slice 1, #3263) are in review. Slice 4 (MEAS-01 slice 2) is in review:
+`.github/workflows/certainty-nightly.yml` scores the previous UTC day each night from main's code and turns red
+when the report is not certified (decision `certainty-nightly-workflow`). It is a workflow change, so the
+operator merges it by hand. Each night is recorded in [`history/certainty-nightly.md`](./history/certainty-nightly.md),
+and P2's seven nights start at 2026-11-14. Wall-time, cache and dist baselines taken before d8326d55935 (#3208,
+declaration-only builds) are not comparable with later readings (checkpoint
+`baselines-before-d8326d5593-not-comparable`), nor are check-lane baselines taken before 3e822c71c5 (#3242).
 
 ## Latest Evidence
 
@@ -69,13 +73,17 @@ dist baselines taken before d8326d55935 (#3208, declaration-only builds) are not
 - Slice 11 keeps the old route receipt's verdict: the 2026-09-01..10-30 corpus (sha256 e840ea6d…), copied to a
   scratch `--corpus` directory, replays to 5,083 heads, 242 skipped lane runs, 0 skipped reds and recall 1, with
   0 unknown-red heads.
+- Slice 4's cost reading: the 2026-11-12 UTC day, run locally through the nightly workflow's own scripts, took
+  83 GitHub reads and 99 s for 43 heads and was certified. The day predates both baseline breaks, so it is not a
+  baseline; the first dispatched run on main measures the hosted runner-minutes.
 
 ## Notes
 
 - Merged: MEAS-01 slice 1 with MEAS-04 (#3118), "feat(ci): beep ci certainty head-level required-green and
   main-verdict report" (M, CLI only), with fixes #3144, #3168 and #3181; ROUT-05 slice 1 (partition job
   mapping, #3141); MEAS-02 (refusal attribution, slice 3, #3176); SCHE-09 slice 1 (admission archive, slice 5,
-  #3227); MEAS-07 (final-check attempt journals, slice 6, #3228). The nightly workflow is its own later PR.
+  #3227); MEAS-07 (final-check attempt journals, slice 6, #3228); ROUT-05 slice 2 (failed-job steps and
+  uncharged reds, slice 11, #3257). The nightly workflow (slice 4) is in review.
 - Order constraints: MEAS-02 lands before any WaveOrder re-seed in `local-proof-under-ten`; ROUT-05 lands
   before any census or cost ledger (MEAS-05) is trusted and before any route refinement replay; MEAS-07 lands
   before journal retention (PERIL-11); SCHE-09 is owned here and consumed by `local-proof-under-ten` (D23); nightly reads are budgeted against

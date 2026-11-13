@@ -127,6 +127,14 @@ Lane claude/determined-morse-ea66a8
 
 Reverse: Revert the slice-3 commit (actionableLane returns to the failed-step fallback) and delete this checkpoint so the slice-2 checkpoint is the latest PLAN status note.
 
+### Slice 4 (MEAS-01 slice 2) in review: the certainty nightly workflow, 2026-11-13
+
+Slice 11 (ROUT-05 slice 2) merged as #3257. Slice 4 (MEAS-01 slice 2) adds `.github/workflows/certainty-nightly.yml`: each night it scores the previous UTC day with `bun run beep ci certainty` from main's code, under the workflow token's `actions: read` and `contents: read`, with a request bound of the token bucket's remaining reads less the 15% reserve, and the run turns red when the report is not certified (decision `certainty-nightly-workflow`). The CLI gains `--summary-out`, an aggregates-only Markdown rendering used as the job summary. The record of each night goes to `history/certainty-nightly.md`, written by the driver from the run's artifact. A workflow change cannot be merged with the orchestrator App token, so the operator merges slice 4 by hand; P2's seven nights start at 2026-11-14, the first whole UTC day after both baseline breaks. Slices 10 (MEAS-03, #3262) and 7 (PERIL-11 slice 1, #3263) are in review.
+
+Lane ci/certainty-nightly-workflow
+
+Reverse: Delete this checkpoint so the slice-6 checkpoint is the latest PLAN status note, and revert the slice-4 PR.
+
 ### Slice 5 (SCHE-09 slice 1) in review: trimmed admission rows archived and folded, 2026-11-13
 
 Slice 3 (MEAS-02 with DEPS-10) merged as #3176. Slice 5 archives the rows the 200-admission ring trims to UTC day segments kept for 30 days under the admission root, folds them with the live journal in `bun run beep quality scheduler history`, and prunes aged segments in the scheduler reap pass (decision `sche-09-admission-archive`). The SCHE-09 pressure fields are the new slice 5b. local-proof-under-ten can read the retained history before its scheduler levers (SCHE-08, SCHE-07, SCHE-01/02) once every live checkout runs this revision. Still startable in the second wave: the certainty-nightly workflow (slice 4) and MEAS-07 final-check attempt journals (slice 6).
