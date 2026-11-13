@@ -65,7 +65,7 @@ reopening before confirmed retirement).
 - Predecessor goal: `goals/citation-extraction-engine` (isolation contract in
   `history/evidence/2026-10-28-limits-isolation-contract.md`, reuse audit in
   `history/evidence/2026-11-02-effect-upstream-reuse-audit.md`).
-- This packet: [`../RESEARCH.md`](../../../explorations/citation-engine-install-and-worker-reuse/RESEARCH.md),
-  [`../DECISIONS.md`](../../../explorations/citation-engine-install-and-worker-reuse/DECISIONS.md), [`../BRIEF.md`](../../../explorations/citation-engine-install-and-worker-reuse/BRIEF.md),
-  [`../MAP.md`](../../../explorations/citation-engine-install-and-worker-reuse/MAP.md).
+- Source exploration packet: [`explorations/citation-engine-install-and-worker-reuse/RESEARCH.md`](../../../explorations/citation-engine-install-and-worker-reuse/RESEARCH.md),
+  [`explorations/citation-engine-install-and-worker-reuse/DECISIONS.md`](../../../explorations/citation-engine-install-and-worker-reuse/DECISIONS.md), [`explorations/citation-engine-install-and-worker-reuse/BRIEF.md`](../../../explorations/citation-engine-install-and-worker-reuse/BRIEF.md),
+  [`explorations/citation-engine-install-and-worker-reuse/MAP.md`](../../../explorations/citation-engine-install-and-worker-reuse/MAP.md).
 - Test guard for the red episode: PR #3203.

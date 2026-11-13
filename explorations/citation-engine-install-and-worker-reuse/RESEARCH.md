@@ -11,8 +11,8 @@ Dated 2026-11-12. Path prefixes used below: `C/` is
 `packages/law-practice/server/src/CitationEngine/CitationEngine.layer.ts`, `T/`
 is `packages/law-practice/server/test/`, `G/` is
 `goals/citation-extraction-engine/`. Effect citations are against the Effect
-4.1.4 reference checkout (commit `9ef5cd04d2ec`), `E/` being
-`packages/effect/src/`.
+4.1.4 reference checkout (commit `9ef5cd04d2ec`); `E/` is the `src` directory
+of that repository's `effect` package.
 
 ## External Landscape
 
