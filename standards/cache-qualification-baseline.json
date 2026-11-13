@@ -456,11 +456,11 @@
       }
     },
     "@beep/epistemics": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (declaration-only-builds session, fix/cache-baseline-jsonc-dependency)",
+      "reason": "Record the dependency edge #3193 added: @beep/epistemics, @beep/md and @beep/party-domain now depend on @beep/jsonc, so their ^build-dependent tasks changed configuration. No command, cache flag, input, output or environment changed; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "docs/reports/jsonc-dependency-cache-review-2026-11-13.md",
+        "sha256": "1cb95120c1682a57cd57523ce4a3f6a2fc927327cc8659c9611da40df3ce045d"
       }
     },
     "@beep/execution-authority-config": {
@@ -824,11 +824,11 @@
       }
     },
     "@beep/md": {
-      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
-      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
+      "reviewer": "Claude Fable 5.2 (declaration-only-builds session, fix/cache-baseline-jsonc-dependency)",
+      "reason": "Record the dependency edge #3193 added: @beep/epistemics, @beep/md and @beep/party-domain now depend on @beep/jsonc, so their ^build-dependent tasks changed configuration. No command, cache flag, input, output or environment changed; no qualification is granted.",
       "basis": {
-        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
-        "sha256": "2a5f7a96ae72b4694af7dea220b85bb51c51f357199b502d10287a31c7ac0965"
+        "path": "docs/reports/jsonc-dependency-cache-review-2026-11-13.md",
+        "sha256": "1cb95120c1682a57cd57523ce4a3f6a2fc927327cc8659c9611da40df3ce045d"
       }
     },
     "@beep/memfs": {
@@ -1040,11 +1040,11 @@
       }
     },
     "@beep/party-domain": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (declaration-only-builds session, fix/cache-baseline-jsonc-dependency)",
+      "reason": "Record the dependency edge #3193 added: @beep/epistemics, @beep/md and @beep/party-domain now depend on @beep/jsonc, so their ^build-dependent tasks changed configuration. No command, cache flag, input, output or environment changed; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "docs/reports/jsonc-dependency-cache-review-2026-11-13.md",
+        "sha256": "1cb95120c1682a57cd57523ce4a3f6a2fc927327cc8659c9611da40df3ce045d"
       }
     },
     "@beep/party-server": {
@@ -38777,6 +38777,7 @@
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/provenance#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -38835,6 +38836,7 @@
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/provenance#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -38879,6 +38881,7 @@
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/provenance#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -39007,6 +39010,7 @@
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/provenance#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/schema#transit",
@@ -39208,6 +39212,7 @@
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/provenance#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -39255,6 +39260,7 @@
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/provenance#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -39310,6 +39316,7 @@
         "commandDigest": "5a9bbf4d32ca4ad8646f2601140000cdd134492443bdaa9ba3665eaba129e8f0",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/provenance#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -66991,6 +66998,7 @@
         "dependencies": [
           "@beep/html#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/markdown#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -67051,6 +67059,7 @@
         "dependencies": [
           "@beep/html#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/markdown#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -67097,6 +67106,7 @@
         "dependencies": [
           "@beep/html#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/markdown#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -67193,6 +67203,7 @@
         "dependencies": [
           "@beep/html#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/markdown#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -67282,6 +67293,7 @@
         "dependencies": [
           "@beep/html#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/markdown#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/schema#transit",
@@ -67485,6 +67497,7 @@
         "dependencies": [
           "@beep/html#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/markdown#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -67534,6 +67547,7 @@
         "dependencies": [
           "@beep/html#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/markdown#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -67591,6 +67605,7 @@
         "dependencies": [
           "@beep/html#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/markdown#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -83784,6 +83799,7 @@
         "dependencies": [
           "@beep/epistemics#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
           "@beep/utils#build"
@@ -83842,6 +83858,7 @@
         "dependencies": [
           "@beep/epistemics#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
           "@beep/utils#build"
@@ -83886,6 +83903,7 @@
         "dependencies": [
           "@beep/epistemics#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
           "@beep/utils#build"
@@ -84014,6 +84032,7 @@
         "dependencies": [
           "@beep/epistemics#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
@@ -84215,6 +84234,7 @@
         "dependencies": [
           "@beep/epistemics#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
           "@beep/utils#transit"
@@ -84262,6 +84282,7 @@
         "dependencies": [
           "@beep/epistemics#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
           "@beep/utils#transit",
@@ -84317,6 +84338,7 @@
         "dependencies": [
           "@beep/epistemics#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
           "@beep/utils#build"
