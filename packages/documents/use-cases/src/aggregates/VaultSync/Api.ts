@@ -31,8 +31,21 @@ export class VaultSyncApi extends Domain.Api("VaultSyncApi", {
   ],
   views: ["VaultSyncStatus", "OpenConflicts", "DestinationList", "OperationQueue"],
   streams: [],
-  aggregates: [],
 }) {}
+
+const vaultSyncCliCalls = [
+  "RequestVaultSync",
+  "ProbeDestination",
+  "ClaimDestinationName",
+  "RecordConflict",
+  "PauseDestination",
+  "ResumeDestination",
+  "ReviewConflict",
+  "VaultSyncStatus.get",
+  "OpenConflicts.get",
+  "DestinationList.get",
+  "OperationQueue.get",
+] satisfies ReadonlyArray<Cli.Exposable<typeof VaultSyncApi>>;
 
 /**
  * CLI derived from the same API; the host supplies per-call enrolled credentials.
@@ -46,7 +59,11 @@ export class VaultSyncApi extends Domain.Api("VaultSyncApi", {
  * @category protocols
  * @since 0.0.0
  */
-export const vaultSyncCli = <E, R>(options: Cli.Options<E, R>) => Cli.toCli(VaultSyncApi, options);
+export const vaultSyncCli = <E, R>(options: Cli.Options<typeof VaultSyncApi, E, R>) =>
+  Cli.toCli(VaultSyncApi, {
+    expose: vaultSyncCliCalls,
+    ...options,
+  });
 
 /**
  * Options for the remote CLI: the sidecar's protected RPC endpoint plus per-call credentials.
@@ -58,7 +75,13 @@ export const vaultSyncCli = <E, R>(options: Cli.Options<E, R>) => Cli.toCli(Vaul
  * @category protocols
  * @since 0.0.0
  */
-export type VaultSyncRemoteCliOptions<E, R> = Cli.Options<E, R> & { readonly url: string };
+export type VaultSyncRemoteCliOptions<E, R> = Cli.Options<
+  Pick<typeof VaultSyncApi, "apiName" | "annotations" | "serves" | "group"> & {
+    readonly client: ReturnType<typeof VaultSyncApi.clientHttp>;
+  },
+  E,
+  R
+> & { readonly url: string };
 
 /**
  * Generated remote CLI bound to the sidecar's gated RPC endpoint.
@@ -76,9 +99,13 @@ export const vaultSyncRemoteCli = <E, R>({ url, ...options }: VaultSyncRemoteCli
   Cli.toCli(
     {
       apiName: VaultSyncApi.apiName,
+      annotations: VaultSyncApi.annotations,
       serves: VaultSyncApi.serves,
       group: VaultSyncApi.group,
       client: VaultSyncApi.clientHttp(url),
     },
-    options
+    {
+      expose: vaultSyncCliCalls,
+      ...options,
+    }
   );

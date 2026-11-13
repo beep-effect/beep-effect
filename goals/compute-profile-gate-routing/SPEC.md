@@ -51,7 +51,7 @@ Higher sources outrank lower sources when they conflict.
 ## Acceptance Criteria
 
 - [ ] The profile probe subcommand prints `worker` inside dankserver's worker slice and `workstation` on DankStation, and its `--is worker` form exits 0/1 in under a second.
-- [ ] On a worker host `yeet final-check` refuses hosted-only gates and prints the `yeet open` route; `--force-local` runs them and the receipt records it.
+- [ ] On a worker host `yeet final-check` refuses hosted-only gates and prints the `yeet open` route; under `--force-local` each forced gate either completes with concurrency 1 and the receipt records `forceLocal: true`, or refuses with a reason naming its dankserver measurement (or no measured worker budget), writes an `admission-routed` refusal row and records no forced step. Refusing is correct on a 7 GiB slice (decision 2026-11-13).
 - [ ] A worker-profile lane completes edit → commit (hooks skipped by profile) → `yeet open` → hosted regeneration commit → hosted green → `yeet ready` with no local process above 1.5 GB RSS.
 - [ ] A workstation commit still runs both catalog hooks (no behavior change on `workstation`).
 - [ ] Attempt and admission facts carry `computeProfile` beside `ProofEnvProfile`; receipts name auto-skipped gates with reason `compute-profile=worker`.
@@ -215,6 +215,24 @@ The GateRouteId to hosted-context table sits next to GateRoute in GateRoute.sche
 Lane goals/compute-profile-gate-routing-p1
 
 Reverse: Drop gateHostedContextTable and the hostedChecks read in ReadyGate.ts; profile skips then behave like operator skips (named, never checked).
+
+### A forced gate on a worker completes serially inside its measured budget or refuses with the reason, 2026-11-13
+
+The two dankserver acceptance runs (research/2026-11-13-worker-host-acceptance.md and its -repeat.md sibling; 15 GiB host, 7 GiB agent slice) measured every forced gate that ran: none completed. Forced fallow, serial, held a 2G-capped scope at its ceiling (2.15 GB aggregate) in its first sub-lane fallow:audit:check (204 packages) until slice pressure passed 15 at 523 s; unserialized it reached 3.06 GB and gave no result in 29.5 minutes. The @beep/repo-cli test type-check held 2.59 GB in one tsc process and gave no result in 30 minutes under a 3 GiB cap. The whole-repo schema catalog scan behind cheap-gates and the full repo-sanity lane held 5.2 GB for 25 minutes (decision 2026-11-08). Forced coverage was stopped at 565 s at 2.15 GB in a prebuild that ran turbo build at --concurrency=4.
+
+The worker forced-route table now follows those figures. Only coverage is forceable: its prebuild, shard group and Turbo graph all follow --concurrency=1, and final-check runs it only when the affected plan selects the diff's own packages, which it names. A whole-workspace or unreadable plan refuses. fallow, check and lint-policy (2.59 GB), cheap-gates and the full repo-sanity lane (5.2 GB) refuse with their measured figure and note; docgen refuses with no measured worker budget. Every refusal tells the operator to push with yeet open and let hosted CI prove the gate. The receipt records forceLocal: true only when a gate was actually forced, so a refusal-only run no longer claims a forced run.
+
+Amended reading of criterion 2b: on a worker, a forced gate either completes with concurrency 1 and its receipt records forceLocal: true, or refuses with a reason naming its measurement; a refused gate writes an admission-routed refusal row and no forced step. Refusing is correct behaviour on a 7 GiB slice. Still to show on dankserver: one forced coverage run over a small package completing with forceLocal: true on its receipt.
+
+Lane fix/compute-profile-forced-gates
+
+Reverse: Set fallow back to Serial in workerForcedRouteTable, drop the coverage scope refusal in FinalCheck.ts and record options.forceLocal on the receipt again
+
+### Forced coverage completes on a worker and records forceLocal, 2026-11-13
+
+On dankserver, final-check --force-local --gates coverage measured @beep/github-references through one turbo run coverage --concurrency=1 graph (8 tasks, builds included), passed in 34.9 s with a 588 MB largest process, a 1.39 GB scope peak under a 2G MemoryHigh and slice pressure at 0.00, wrote a receipt with a passed coverage step and forceLocal: true, and journalled admission-routed coverage bypass with forceLocal: true. A forced fallow refused at once with its measured reason, wrote a refusal row and left forceLocal: false. Criterion 2b passes. Evidence: research/2026-11-13-worker-host-acceptance-forced-gate.md.
+
+Reverse: Delete the research note; it records measurements and changes no behaviour.
 
 ### P2 lane taken over and rebased onto main, 2026-11-13
 

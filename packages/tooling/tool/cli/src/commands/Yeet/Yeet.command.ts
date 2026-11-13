@@ -1474,7 +1474,7 @@ const yeetFinalCheckCommand = Command.make(
     forceLocal: Flag.Boolean("force-local").pipe(
       Flag.withDefault(false),
       Flag.withDescription(
-        "Run hosted-only gates locally even on a worker compute profile; the receipt records forceLocal: true"
+        "On a worker compute profile, run coverage over the diff's affected packages one task at a time; every other hosted-only gate refuses with its measured reason. The receipt records forceLocal: true when a gate was forced"
       )
     ),
   },

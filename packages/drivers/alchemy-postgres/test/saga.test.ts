@@ -3,9 +3,11 @@
  * cluster workflow engine over SQL storage, so a run survives its runtime
  * being torn down and built again on the same database.
  */
+
 import * as Domain from "@alchemy.run/domain";
 import { AlchemyPostgres } from "@beep/alchemy-postgres";
 import { PgliteTestLayer } from "@beep/pglite/Pglite.test-layer";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, layer } from "@effect/vitest";
 import { deepStrictEqual } from "@effect/vitest/utils";
 import * as Context from "effect/Context";
@@ -72,14 +74,18 @@ const withRuntime = Effect.fnUntraced(function* <A, E, R>(
 });
 
 describe("Sagas on AlchemyPostgres over PGlite", () => {
-  layer(PgliteTestLayer, { timeout: "60 seconds", excludeTestServices: true, concurrent: false })("sagas", (it) => {
+  layer(Layer.merge(PgliteTestLayer, NodeCrypto.layer), {
+    timeout: "60 seconds",
+    excludeTestServices: true,
+    concurrent: false,
+  })("sagas", (it) => {
     it.effect("a two-step saga completes once, each step applied once", () =>
       Effect.gen(function* () {
         const context = yield* Layer.build(runtime);
         const id = ParcelId.make("parcel-straight");
         const run = yield* Context.get(context, Deliver).start(id, { wait: false });
         yield* run.result.pipe(Effect.timeout(Duration.seconds(20)));
-        const parcel = yield* Context.get(context, Parcel).state(id);
+        const parcel = yield* Context.get(context, Parcel).get(id);
         deepStrictEqual(parcel, { packed: 1, shipped: 1 });
       })
     );
@@ -92,7 +98,7 @@ describe("Sagas on AlchemyPostgres over PGlite", () => {
           Effect.gen(function* () {
             yield* Context.get(context, Deliver).start(id, { wait: true });
             yield* Context.get(context, Parcel)
-              .state(id)
+              .get(id)
               .pipe(
                 Effect.repeat({ until: ({ packed }) => packed === 1, schedule: Schedule.spaced(Duration.millis(50)) }),
                 Effect.timeout(Duration.seconds(20))
@@ -106,7 +112,7 @@ describe("Sagas on AlchemyPostgres over PGlite", () => {
             const run = Context.get(context, Deliver).get(id);
             yield* run.signal(Go, undefined);
             yield* run.result.pipe(Effect.timeout(Duration.seconds(20)));
-            const parcel = yield* Context.get(context, Parcel).state(id);
+            const parcel = yield* Context.get(context, Parcel).get(id);
             deepStrictEqual(parcel, { packed: 1, shipped: 1 });
           })
         );
