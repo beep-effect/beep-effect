@@ -10,6 +10,7 @@
  * @since 0.0.0
  */
 
+import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import * as ec2 from "@distilled.cloud/aws/ec2";
 import * as s3 from "@distilled.cloud/aws/s3";
 import * as sqs from "@distilled.cloud/aws/sqs";
@@ -39,6 +40,8 @@ import type * as Context from "effect/Context";
 import type { FleetLaunchRequest } from "./Ec2Fleet.models.ts";
 import type { RunnerFilter } from "./RunnerInstance.models.ts";
 
+const $I = $AlchemyGithubRunnersId.create("Aws.layer");
+
 type AwsServices = AwsCredentials | HttpClient.HttpClient;
 
 const retryableTags = [
@@ -56,24 +59,7 @@ const retryableTags = [
   "TooManyUpdates",
 ];
 
-/**
- * Maps a distilled AWS failure to {@link AwsApiError}; throttling, 5xx-class
- * and transport errors are retryable.
- *
- * **Example** (A throttled call)
- *
- * ```ts
- * import { toAwsApiError } from "@beep/alchemy-github-runners/Aws.layer"
- *
- * console.log(toAwsApiError({ service: "ec2", operation: "createFleet" })({ _tag: "RequestLimitExceeded" }).retryable) // true
- * ```
- *
- * @param input - AWS service and operation names.
- * @returns A mapper from the SDK failure.
- * @category errors
- * @since 0.0.0
- */
-export const toAwsApiError =
+const toAwsApiError =
   ({ service, operation }: { readonly service: string; readonly operation: string }) =>
   (error: { readonly _tag: string; readonly message?: unknown }): AwsApiError =>
     AwsApiError.make({
@@ -403,7 +389,9 @@ export const messageQueueLive: Layer.Layer<MessageQueue, never, AwsServices> = L
 const LatestRelease = S.Struct({
   tag_name: S.String,
   assets: S.Array(S.Struct({ name: S.String, browser_download_url: S.String })),
-});
+}).pipe(
+  $I.annoteSchema("LatestRelease", { description: "The parts of GitHub's latest-release response the syncer reads." })
+);
 
 /**
  * Live {@link RunnerBinaries}: the public GitHub releases API for the asset,

@@ -59,7 +59,7 @@ export * from "./GitHubRunners.models.ts";
 /**
  * Job-retry Lambda program.
  *
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export * from "./JobRetry.program.ts";
@@ -80,7 +80,7 @@ export * from "./RunnerBinaries.service.ts";
 /**
  * Runner-binaries syncer Lambda program.
  *
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export * from "./RunnerBinariesSyncer.program.ts";
@@ -143,21 +143,21 @@ export * from "./RunnerUserData.ts";
 /**
  * Scale-down Lambda program.
  *
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export * from "./ScaleDown.program.ts";
 /**
  * Scale-up Lambda program.
  *
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export * from "./ScaleUp.program.ts";
 /**
  * SSM housekeeper Lambda program.
  *
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export * from "./SsmHousekeeper.program.ts";
@@ -178,7 +178,7 @@ export * from "./SsmStore.service.ts";
 /**
  * Termination watcher Lambda program.
  *
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export * from "./TerminationWatcher.program.ts";
@@ -192,7 +192,7 @@ export * from "./WebCrypto.ts";
 /**
  * Webhook Lambda program.
  *
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export * from "./Webhook.program.ts";

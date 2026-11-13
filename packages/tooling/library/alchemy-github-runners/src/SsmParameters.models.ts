@@ -11,6 +11,7 @@
  */
 
 import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $AlchemyGithubRunnersId.create("SsmParameters.models");
@@ -97,16 +98,19 @@ export const appParameterNames = (root: string): AppParameterNames =>
  * ```ts
  * import { poolTokenPath } from "@beep/alchemy-github-runners/SsmParameters.models"
  *
- * console.log(poolTokenPath({ root: "/beep-ci", pool: "heavy" })) // "/beep-ci/heavy/tokens"
+ * console.log(poolTokenPath("/beep-ci", "heavy")) // "/beep-ci/heavy/tokens"
  * ```
  *
- * @param input - The fleet's SSM root and the pool name.
+ * @param root - The fleet's SSM root.
+ * @param pool - The pool name.
  * @returns The token path; each token is `<path>/<instance-id>`.
  * @category constructors
  * @since 0.0.0
  */
-export const poolTokenPath = ({ root, pool }: { readonly root: string; readonly pool: string }): string =>
-  `${root}/${pool}/tokens`;
+export const poolTokenPath: {
+  (pool: string): (root: string) => string;
+  (root: string, pool: string): string;
+} = dual(2, (root: string, pool: string): string => `${root}/${pool}/tokens`);
 
 /**
  * Where a pool caches configuration it resolves at runtime (the runner-group id).
@@ -116,16 +120,19 @@ export const poolTokenPath = ({ root, pool }: { readonly root: string; readonly 
  * ```ts
  * import { poolConfigPath } from "@beep/alchemy-github-runners/SsmParameters.models"
  *
- * console.log(poolConfigPath({ root: "/beep-ci", pool: "heavy" })) // "/beep-ci/heavy/config"
+ * console.log(poolConfigPath("/beep-ci", "heavy")) // "/beep-ci/heavy/config"
  * ```
  *
- * @param input - The fleet's SSM root and the pool name.
+ * @param root - The fleet's SSM root.
+ * @param pool - The pool name.
  * @returns `<root>/<pool>/config`.
  * @category constructors
  * @since 0.0.0
  */
-export const poolConfigPath = ({ root, pool }: { readonly root: string; readonly pool: string }): string =>
-  `${root}/${pool}/config`;
+export const poolConfigPath: {
+  (pool: string): (root: string) => string;
+  (root: string, pool: string): string;
+} = dual(2, (root: string, pool: string): string => `${root}/${pool}/config`);
 
 /**
  * The cached runner-group id parameter for a group name.
@@ -135,18 +142,16 @@ export const poolConfigPath = ({ root, pool }: { readonly root: string; readonly
  * ```ts
  * import { runnerGroupCacheName } from "@beep/alchemy-github-runners/SsmParameters.models"
  *
- * console.log(runnerGroupCacheName({ configPath: "/beep-ci/heavy/config", group: "beep-ec2-heavy" }))
+ * console.log(runnerGroupCacheName("/beep-ci/heavy/config", "beep-ec2-heavy"))
  * ```
  *
- * @param input - The pool's config path and the runner group name.
+ * @param configPath - The pool's config path.
+ * @param group - The runner group name.
  * @returns The parameter name.
  * @category constructors
  * @since 0.0.0
  */
-export const runnerGroupCacheName = ({
-  configPath,
-  group,
-}: {
-  readonly configPath: string;
-  readonly group: string;
-}): string => `${configPath}/runner-group/${group}`;
+export const runnerGroupCacheName: {
+  (group: string): (configPath: string) => string;
+  (configPath: string, group: string): string;
+} = dual(2, (configPath: string, group: string): string => `${configPath}/runner-group/${group}`);

@@ -5,6 +5,7 @@
  * @internal
  */
 
+import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import * as AwsCredentials from "@distilled.cloud/aws/Credentials";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
@@ -17,7 +18,9 @@ import { ec2FleetLive, messageQueueLive, runnerBinariesLive, ssmStoreLive } from
 import { GitHubLiveOptions, gitHubAppAuthLive, gitHubRunnersLive } from "../../GitHubApp.layer.ts";
 import { RuntimeConfigError } from "../../RunnerFleet.errors.ts";
 import { runtimeConfigEnvName } from "../../RunnerRuntime.models.ts";
-import type { AppParameterNames } from "../../SsmParameters.models.ts";
+import type { PoolRuntimeConfig, TerminationWatcherRuntimeConfig } from "../../RunnerRuntime.models.ts";
+
+const $I = $AlchemyGithubRunnersId.create("internal/lambda/Runtime");
 
 /**
  * Decodes the Lambda's runtime config from its environment.
@@ -51,13 +54,7 @@ export const awsLive = Layer.mergeAll(ec2FleetLive, ssmStoreLive, messageQueueLi
  *
  * @internal
  */
-export const fleetLive = ({
-  app,
-  ghesApiUrl,
-}: {
-  readonly app: AppParameterNames;
-  readonly ghesApiUrl: O.Option<string>;
-}) => {
+export const fleetLive = ({ app, ghesApiUrl }: PoolRuntimeConfig | TerminationWatcherRuntimeConfig) => {
   const options = GitHubLiveOptions.make({
     app,
     apiBaseUrl: O.getOrElse(ghesApiUrl, () => "https://api.github.com"),
@@ -71,20 +68,24 @@ export const fleetLive = ({
  *
  * @internal
  */
-export const SqsEvent = S.Struct({
-  Records: S.Array(S.Struct({ messageId: S.String, body: S.String, eventSource: S.optionalKey(S.String) })),
-});
+export class SqsEvent extends S.Opaque<SqsEvent, { readonly brand: unique symbol }>()(
+  S.Struct({
+    Records: S.Array(S.Struct({ messageId: S.String, body: S.String, eventSource: S.optionalKey(S.String) })),
+  }).pipe($I.annoteSchema("SqsEvent", { description: "An SQS event as Lambda delivers it." }))
+) {}
 
 /**
  * A function-URL (payload 2.0) request as Lambda delivers it.
  *
  * @internal
  */
-export const FunctionUrlEvent = S.Struct({
-  headers: S.optionalKey(S.Record(S.String, S.UndefinedOr(S.String))),
-  body: S.optionalKey(S.String),
-  isBase64Encoded: S.optionalKey(S.Boolean),
-});
+export class FunctionUrlEvent extends S.Opaque<FunctionUrlEvent, { readonly brand: unique symbol }>()(
+  S.Struct({
+    headers: S.optionalKey(S.Record(S.String, S.UndefinedOr(S.String))),
+    body: S.optionalKey(S.String),
+    isBase64Encoded: S.optionalKey(S.Boolean),
+  }).pipe($I.annoteSchema("FunctionUrlEvent", { description: "A function-URL (payload 2.0) request." }))
+) {}
 
 /**
  * Builds a Lambda handler: decode the runtime config once, build the live

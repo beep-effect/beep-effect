@@ -67,7 +67,7 @@ export const instanceStateChangeDetailType = "EC2 Instance State-change Notifica
  */
 export class SpotInterruptionWarning extends S.Opaque<SpotInterruptionWarning, { readonly brand: unique symbol }>()(
   S.Struct({
-    "detail-type": S.Literal(spotInterruptionWarningDetailType),
+    "detail-type": S.tag(spotInterruptionWarningDetailType),
     detail: S.Struct({
       "instance-id": S.String,
       "instance-action": S.String,
@@ -106,7 +106,7 @@ export class SpotInterruptionWarning extends S.Opaque<SpotInterruptionWarning, {
  */
 export class InstanceStateChange extends S.Opaque<InstanceStateChange, { readonly brand: unique symbol }>()(
   S.Struct({
-    "detail-type": S.Literal(instanceStateChangeDetailType),
+    "detail-type": S.tag(instanceStateChangeDetailType),
     detail: S.Struct({
       "instance-id": S.String,
       state: S.String,

@@ -76,7 +76,7 @@ export type DeregisterOutcome = typeof DeregisterOutcome.Type;
  *
  * @param input - The instance and the environment prefix.
  * @returns Whether the watcher should act on it.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export const matchesEnvironment = (input: { readonly instance: TaggedInstance; readonly prefix: string }): boolean =>
@@ -101,7 +101,7 @@ export const matchesEnvironment = (input: { readonly instance: TaggedInstance; r
  *
  * @param input - The instance id and the runner's owner.
  * @returns `deregistered`, `not-found` or `busy`.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export const deregisterRunner = Effect.fn("TerminationWatcher.deregisterRunner")(function* (input: {
@@ -155,7 +155,7 @@ const queueRetry = Effect.fn("TerminationWatcher.queueRetry")(function* (
  *
  * @param input - Watcher config and the event.
  * @returns The outcome per described instance.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export const handleTerminationEvent = Effect.fn("TerminationWatcher.handleEvent")(function* (input: {
@@ -217,7 +217,7 @@ export const handleTerminationEvent = Effect.fn("TerminationWatcher.handleEvent"
  *
  * @param input - Watcher config and the retry message.
  * @returns The outcome.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export const handleDeregisterRetry = Effect.fn("TerminationWatcher.handleRetry")(function* (input: {

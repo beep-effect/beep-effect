@@ -30,7 +30,7 @@ import type { SyncerRuntimeConfig } from "./RunnerRuntime.models.ts";
  *
  * @param config - Bucket, key, OS and architecture.
  * @returns `true` when a new asset was uploaded.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export const handleRunnerBinariesSync = Effect.fn("RunnerBinariesSyncer.handle")(function* (

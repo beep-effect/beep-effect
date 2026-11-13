@@ -30,6 +30,7 @@
     {"name":"RunnerBinaries.latestAsset","owner":"@beep/alchemy-github-runners","family":"tooling","conforms":true},
     {"name":"RunnerBinaries.mirror","owner":"@beep/alchemy-github-runners","family":"tooling","conforms":true},
     {"name":"RunnerBinariesSyncer.handle","owner":"@beep/alchemy-github-runners","family":"tooling","conforms":true},
+    {"name":"ScaleDown.evaluateRunner","owner":"@beep/alchemy-github-runners","family":"tooling","conforms":true},
     {"name":"ScaleDown.handle","owner":"@beep/alchemy-github-runners","family":"tooling","conforms":true},
     {"name":"ScaleDown.removeRunner","owner":"@beep/alchemy-github-runners","family":"tooling","conforms":true},
     {"name":"ScaleDown.sweepOrphans","owner":"@beep/alchemy-github-runners","family":"tooling","conforms":true},

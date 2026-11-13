@@ -9,6 +9,7 @@
  * @since 0.0.0
  */
 
+import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
@@ -22,8 +23,16 @@ import { GitHubAppAuthError } from "./RunnerFleet.errors.ts";
 
 const textEncoder = new TextEncoder();
 
-const encodeJwtHeader = S.encodeEffect(S.fromJsonString(S.Struct({ alg: S.String, typ: S.String })));
-const encodeJwtClaims = S.encodeEffect(S.fromJsonString(S.Struct({ iat: S.Int, exp: S.Int, iss: S.String })));
+const $I = $AlchemyGithubRunnersId.create("WebCrypto");
+
+const JwtHeader = S.Struct({ alg: S.String, typ: S.String }).pipe(
+  $I.annoteSchema("JwtHeader", { description: "The JOSE header of a GitHub App JWT." })
+);
+const JwtClaims = S.Struct({ iat: S.Int, exp: S.Int, iss: S.String }).pipe(
+  $I.annoteSchema("JwtClaims", { description: "The claims of a GitHub App JWT: issued-at, expiry and App id." })
+);
+const encodeJwtHeader = S.encodeEffect(S.fromJsonString(JwtHeader));
+const encodeJwtClaims = S.encodeEffect(S.fromJsonString(JwtClaims));
 
 /**
  * Lower-case hex HMAC-SHA256 of `body` under `secret`.

@@ -15,6 +15,7 @@
 import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
@@ -23,18 +24,19 @@ import * as S from "effect/Schema";
 import { FleetLaunchRequest, FleetOverride } from "./Ec2Fleet.models.ts";
 import { Ec2Fleet } from "./Ec2Fleet.service.ts";
 import { GitHubRunners } from "./GitHubApp.service.ts";
-import { JitConfigRequest } from "./GitHubRunners.models.ts";
+import { JitConfigRequest, RunnerOwner } from "./GitHubRunners.models.ts";
 import { installationTokenFor, ownerOf } from "./internal/Installation.ts";
 import { MessageQueue } from "./MessageQueue.service.ts";
 import { RunnerFilter, RunnerTag, runnerApplicationTagValue } from "./RunnerInstance.models.ts";
 import { ActionRequestMessage } from "./RunnerMessages.models.ts";
+import { CapacityType } from "./RunnerPool.models.ts";
+import { PoolRuntimeConfig } from "./RunnerRuntime.models.ts";
 import { runnerGroupCacheName } from "./SsmParameters.models.ts";
 import { SsmStore } from "./SsmStore.service.ts";
 import type { FleetLaunchResult } from "./Ec2Fleet.models.ts";
-import type { InstallationToken, RunnerOwner } from "./GitHubRunners.models.ts";
+import type { InstallationToken } from "./GitHubRunners.models.ts";
 import type { QueuedActionRequest } from "./RunnerMessages.models.ts";
-import type { AllocationStrategy, CapacityType } from "./RunnerPool.models.ts";
-import type { PoolRuntimeConfig } from "./RunnerRuntime.models.ts";
+import type { AllocationStrategy } from "./RunnerPool.models.ts";
 
 const $I = $AlchemyGithubRunnersId.create("ScaleUp.program");
 
@@ -58,21 +60,47 @@ const onDemandStrategies: ReadonlyArray<AllocationStrategy> = ["lowest-price", "
  * ```ts
  * import { sanitizeAllocationStrategy } from "@beep/alchemy-github-runners/ScaleUp.program"
  *
- * console.log(sanitizeAllocationStrategy({ strategy: "capacity-optimized", capacityType: "on-demand" })) // "lowest-price"
+ * console.log(sanitizeAllocationStrategy("capacity-optimized", "on-demand")) // "lowest-price"
  * ```
  *
- * @param input - The configured strategy and the capacity type being launched.
+ * @param strategy - The configured strategy.
+ * @param capacityType - The capacity type being launched.
  * @returns A strategy valid for that capacity type.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
-export const sanitizeAllocationStrategy = (input: {
-  readonly strategy: AllocationStrategy;
-  readonly capacityType: CapacityType;
-}): AllocationStrategy =>
-  A.contains(input.capacityType === "spot" ? spotStrategies : onDemandStrategies, input.strategy)
-    ? input.strategy
-    : "lowest-price";
+export const sanitizeAllocationStrategy: {
+  (capacityType: CapacityType): (strategy: AllocationStrategy) => AllocationStrategy;
+  (strategy: AllocationStrategy, capacityType: CapacityType): AllocationStrategy;
+} = dual(
+  2,
+  (strategy: AllocationStrategy, capacityType: CapacityType): AllocationStrategy =>
+    A.contains(capacityType === "spot" ? spotStrategies : onDemandStrategies, strategy) ? strategy : "lowest-price"
+);
+
+/**
+ * What one launch attempt asks for.
+ *
+ * **Example** (One Spot runner for an org)
+ *
+ * ```ts
+ * import { FleetLaunchInput } from "@beep/alchemy-github-runners/ScaleUp.program"
+ *
+ * console.log(FleetLaunchInput)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FleetLaunchInput extends S.Opaque<FleetLaunchInput, { readonly brand: unique symbol }>()(
+  S.Struct({
+    config: PoolRuntimeConfig,
+    owner: RunnerOwner,
+    count: S.Int.check(S.isGreaterThanOrEqualTo(1)),
+    capacityType: CapacityType,
+    imageId: S.Option(S.String),
+  }).pipe($I.annoteSchema("FleetLaunchInput", { description: "What one launch attempt asks for." }))
+) {}
 
 /**
  * The instant `CreateFleet` request for `count` runners of a pool and owner.
@@ -95,21 +123,12 @@ export const sanitizeAllocationStrategy = (input: {
  *
  * @param input - Pool config, owner, runner count, capacity type and optional AMI override.
  * @returns An instant, tagged request for `count` instances across every type and subnet.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
-export const fleetLaunchRequest = (input: {
-  readonly config: PoolRuntimeConfig;
-  readonly owner: RunnerOwner;
-  readonly count: number;
-  readonly capacityType: CapacityType;
-  readonly imageId: O.Option<string>;
-}): FleetLaunchRequest => {
+export const fleetLaunchRequest = (input: FleetLaunchInput): FleetLaunchRequest => {
   const { config } = input;
-  const allocationStrategy = sanitizeAllocationStrategy({
-    strategy: config.pool.allocationStrategy,
-    capacityType: input.capacityType,
-  });
+  const allocationStrategy = sanitizeAllocationStrategy(config.pool.allocationStrategy, input.capacityType);
   const prioritized = allocationStrategy === "prioritized" || allocationStrategy === "capacity-optimized-prioritized";
   const overrides = A.flatMap(config.subnetIds, (subnetId) =>
     A.map(config.pool.instanceTypes, (instanceType, index) =>
@@ -194,16 +213,12 @@ const failedLaunch = (count: number, retryable: boolean): LaunchOutcome =>
  *
  * @param input - Pool config, owner, count, capacity type and AMI override.
  * @returns Launched instance ids and the retryable and non-retryable shortfall.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
-export const launchRunners: (input: {
-  readonly config: PoolRuntimeConfig;
-  readonly owner: RunnerOwner;
-  readonly count: number;
-  readonly capacityType: CapacityType;
-  readonly imageId: O.Option<string>;
-}) => Effect.Effect<LaunchOutcome, never, Ec2Fleet> = Effect.fn("ScaleUp.launchRunners")(function* (input) {
+export const launchRunners: (input: FleetLaunchInput) => Effect.Effect<LaunchOutcome, never, Ec2Fleet> = Effect.fn(
+  "ScaleUp.launchRunners"
+)(function* (input) {
   const ec2 = yield* Ec2Fleet;
   const attempt = yield* ec2.createFleet(fleetLaunchRequest(input)).pipe(Effect.result);
   if (attempt._tag === "Failure") {
@@ -218,7 +233,9 @@ export const launchRunners: (input: {
     input.capacityType === "spot" &&
     A.some(fleet.errorCodes, (code) => A.contains(input.config.pool.onDemandFailoverErrors, code));
   if (failover) {
-    const onDemand = yield* launchRunners({ ...input, count: missing, capacityType: "on-demand" });
+    const onDemand = yield* launchRunners(
+      FleetLaunchInput.make({ ...input, count: missing, capacityType: "on-demand" })
+    );
     return LaunchOutcome.make({ ...onDemand, instanceIds: A.appendAll(fleet.instanceIds, onDemand.instanceIds) });
   }
   const retryable = A.some(fleet.errorCodes, (code) => A.contains(input.config.scaleErrors, code));
@@ -238,7 +255,7 @@ const resolveRunnerGroupId = Effect.fn("ScaleUp.resolveRunnerGroupId")(function*
     return 1;
   }
   const ssm = yield* SsmStore;
-  const cacheName = runnerGroupCacheName({ configPath: config.configPath, group: config.pool.runnerGroup });
+  const cacheName = runnerGroupCacheName(config.configPath, config.pool.runnerGroup);
   const cached = yield* ssm.get(cacheName).pipe(Effect.orElseSucceed(O.none));
   const parsed = O.flatMap(cached, (value) => O.liftThrowable(() => Number.parseInt(Redacted.value(value), 10))());
   if (O.isSome(parsed) && Number.isInteger(parsed.value)) {
@@ -273,7 +290,7 @@ const resolveRunnerGroupId = Effect.fn("ScaleUp.resolveRunnerGroupId")(function*
  *
  * @param input - Pool config, installation token, owner and launched instance ids.
  * @returns The instance ids that failed configuration.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export const configureRunners = Effect.fn("ScaleUp.configureRunners")(function* (input: {
@@ -357,7 +374,7 @@ export const configureRunners = Effect.fn("ScaleUp.configureRunners")(function* 
  *
  * @param input - Pool config and the message to re-check later.
  * @returns Nothing; a disabled policy or exhausted attempts publish nothing.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export const publishJobRetry = Effect.fn("ScaleUp.publishJobRetry")(function* (input: {
@@ -444,13 +461,15 @@ const scaleUpGroup = Effect.fn("ScaleUp.group")(function* (
   const launched: LaunchOutcome =
     imageId._tag === "Failure"
       ? failedLaunch(allowed, imageId.failure.retryable)
-      : yield* launchRunners({
-          config,
-          owner,
-          count: allowed,
-          capacityType: config.pool.capacityType,
-          imageId: imageId.success,
-        });
+      : yield* launchRunners(
+          FleetLaunchInput.make({
+            config,
+            owner,
+            count: allowed,
+            capacityType: config.pool.capacityType,
+            imageId: imageId.success,
+          })
+        );
 
   const failedConfig = A.isReadonlyArrayNonEmpty(launched.instanceIds)
     ? yield* configureRunners({ config, token, owner, instanceIds: launched.instanceIds })
@@ -494,7 +513,7 @@ const scaleUpGroup = Effect.fn("ScaleUp.group")(function* (
  *
  * @param input - Pool runtime config and the decoded batch.
  * @returns Message ids to retry.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export const handleScaleUp = Effect.fn("ScaleUp.handle")(function* (input: {
