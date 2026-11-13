@@ -12,6 +12,10 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { formatJsonc, renderTruncatedLines, writeArtifact } from "@beep/repo-cli-kit/artifacts/index";
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { printLines } from "@beep/repo-cli-kit/cli/Printer";
+import {
+  DECLARATION_ONLY_BUILD_COMMAND,
+  DECLARATION_ONLY_BUILD_FLAG,
+} from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas";
 import { runCaptured } from "@beep/repo-cli-kit/process/index";
 import { workspaceManifests } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { TsconfigLoader } from "@beep/repo-tsconfig/TsconfigLoader";
@@ -45,10 +49,11 @@ const CHECK_CONFIG = "tsconfig.check.json";
 // The base config emits to `${configDir}/dist`; a package that sets no
 // `outDir` of its own builds there.
 const DEFAULT_OUT_DIR = "dist";
-// One `&&` segment of an emitting `beep:build`. A no-emit build
-// (`tsrs -p tsconfig.check.json`, the package-scripts NOEMIT notion) never
-// matches it, so its packages have no build program to compare.
-const EMITTING_BUILD_COMMAND = "tsrs -p tsconfig.json";
+// Both programs run as `tsrs <args> --pretty false`. The build arguments are
+// the generated `beep:build` invocation (`DECLARATION_ONLY_BUILD_COMMAND`),
+// so the census compares the program the build actually runs.
+const BUILD_ARGS = ["-p", BUILD_CONFIG, DECLARATION_ONLY_BUILD_FLAG];
+const CHECK_ARGS = ["-p", CHECK_CONFIG];
 const UNSET_TSRS_FAST = "unset";
 const renderedLineLimit = 20;
 const packageColumnWidth = 40;
@@ -560,7 +565,7 @@ type BuildEquivalenceEnvironment = FileSystem.FileSystem | Path.Path | CompilerE
 const buildsWithEmittingConfig = (scripts: HashMap.HashMap<string, string>): boolean =>
   O.exists(
     HashMap.get(scripts, "beep:build"),
-    flow(Str.split("&&"), A.map(Str.trim), A.contains(EMITTING_BUILD_COMMAND))
+    flow(Str.split("&&"), A.map(Str.trim), A.contains(DECLARATION_ONLY_BUILD_COMMAND))
   );
 
 const hasBuildEquivalenceSources = Effect.fn("CheckCensusBuildEquivalence.hasSources")(function* (
@@ -582,14 +587,16 @@ const hasBuildEquivalenceSources = Effect.fn("CheckCensusBuildEquivalence.hasSou
 
 /**
  * Resolve the emitting workspace packages: both `tsconfig.json` and
- * `tsconfig.check.json`, a `src` directory, and a `beep:build` that runs
- * `tsrs -p tsconfig.json`, optionally narrowed by a name substring.
+ * `tsconfig.check.json`, a `src` directory, and a `beep:build` with an `&&`
+ * segment equal to the generated `tsrs -p tsconfig.json --emitDeclarationOnly`,
+ * optionally narrowed by a name substring.
  *
  * **Details**
  *
  * Packages whose `beep:build` only type-checks (`tsrs -p tsconfig.check.json`)
  * or uses a framework builder are skipped: they have no emitting build program
- * to compare with the check.
+ * to compare with the check. So is a package whose reviewed JavaScript-emit
+ * override runs a different build program.
  *
  * **Example** (Select one package family)
  *
@@ -682,16 +689,16 @@ const readCompilerVersion = Effect.fn("CheckCensusBuildEquivalence.compilerVersi
 const runProgram = Effect.fn("CheckCensusBuildEquivalence.runProgram")(function* (
   tsrsPath: string,
   target: BuildEquivalenceTarget,
-  config: string
+  programArgs: ReadonlyArray<string>
 ): Effect.fn.Return<BuildEquivalenceRun, QualityScriptCommandError, CompilerEnvironment> {
   const [elapsed, captured] = yield* runCaptured({
     command: tsrsPath,
-    args: ["-p", config, "--pretty", "false"],
+    args: [...programArgs, "--pretty", "false"],
     cwd: target.pkg.dir,
     source: "all",
     extendEnv: true,
   }).pipe(
-    QualityScriptCommandError.mapError(`Failed to run ${tsrsPath} -p ${config} for ${target.pkg.name}.`),
+    QualityScriptCommandError.mapError(`Failed to run ${tsrsPath} ${A.join(programArgs, " ")} for ${target.pkg.name}.`),
     Effect.timed
   );
 
@@ -714,7 +721,7 @@ const compareBuild = (
   state: BuildEquivalenceState,
   seed: BuildEquivalenceSeed
 ): Effect.Effect<BuildEquivalenceComparison, QualityScriptCommandError, CompilerEnvironment> =>
-  Effect.map(runProgram(tsrsPath, target, BUILD_CONFIG), (build) =>
+  Effect.map(runProgram(tsrsPath, target, BUILD_ARGS), (build) =>
     BuildEquivalenceComparison.make({ state, seed, build, check, identical: sameDiagnostics(build, check) })
   );
 
@@ -741,7 +748,7 @@ const cleanPass = Effect.fn("CheckCensusBuildEquivalence.cleanPass")(function* (
   options: BuildEquivalenceOptions,
   target: BuildEquivalenceTarget
 ): Effect.fn.Return<BuildEquivalenceRow, QualityScriptCommandError, BuildEquivalenceEnvironment> {
-  const check = yield* runProgram(options.tsrsPath, target, CHECK_CONFIG);
+  const check = yield* runProgram(options.tsrsPath, target, CHECK_ARGS);
   const asFound = yield* compareBuild(options.tsrsPath, target, check, options.initialState, "clean");
   // A warm initial state already is the warm comparison.
   const warm = yield* Effect.when(
@@ -763,14 +770,14 @@ const seededComparisons = Effect.fn("CheckCensusBuildEquivalence.seededCompariso
   target: BuildEquivalenceTarget,
   probePath: string
 ): Effect.fn.Return<BuildEquivalenceRow, QualityScriptCommandError, BuildEquivalenceEnvironment> {
-  const seededCheck = yield* runProgram(options.tsrsPath, target, CHECK_CONFIG);
+  const seededCheck = yield* runProgram(options.tsrsPath, target, CHECK_ARGS);
   const asFound = yield* compareBuild(options.tsrsPath, target, seededCheck, options.initialState, "seeded");
   // Nothing changed since the last build: a retry must not go green.
   const retry = yield* compareBuild(options.tsrsPath, target, seededCheck, "warm", "seeded");
   yield* removeOutDir(target);
   const cold = yield* compareBuild(options.tsrsPath, target, seededCheck, "cold", "seeded");
   yield* removeProbe(probePath);
-  const cleanCheck = yield* runProgram(options.tsrsPath, target, CHECK_CONFIG);
+  const cleanCheck = yield* runProgram(options.tsrsPath, target, CHECK_ARGS);
   // Clean source again, built from the incremental state a seeded build left.
   const recovered = yield* compareBuild(options.tsrsPath, target, cleanCheck, "warm", "recovered");
   yield* removeOutDir(target);
@@ -847,8 +854,9 @@ const summarize = (rows: ReadonlyArray<BuildEquivalenceRow>): BuildEquivalenceSu
  *
  * **Details**
  *
- * Every program runs as `tsrs -p <config> --pretty false` from the package
- * directory with the caller's environment. The clean pass runs the check
+ * The check runs as `tsrs -p tsconfig.check.json --pretty false` and the build
+ * as the generated `tsrs -p tsconfig.json --emitDeclarationOnly --pretty false`,
+ * both from the package directory with the caller's environment. The clean pass runs the check
  * once, then builds as found (labelled with `initialState`), again when that
  * label is not already `warm`, and cold after removing the outDir. The seeded
  * pass writes {@link CHECK_CENSUS_PROBE_FILE_NAME} into `src`, compares the

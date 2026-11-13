@@ -2,14 +2,14 @@
 
 ## Status
 
-Status: `in-progress` (P0, PR 1 open)
+Status: `in-progress` (P1, PR 2 open)
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | in-progress | PR 1, no behaviour change: the repo-wide baseline, the build-versus-check diagnostics comparison through the check-program census, and the three stale findings. | The "Baseline and proof harness" criteria in `SPEC.md` are met and PR 1 is merged. A decision file records whether check-once survives. |
-| P1 Implement | pending | PR 2: remove Babel and JavaScript emit from the generated build and the scaffolds; regenerate every scripts block; extend the build output contract test. PR 3 only if P0 kept it: serve the own-source check from the build. | The "Declaration-only build" criteria are met; the check-once criterion is met or cut by decision. |
+| P0 Research | complete | PR 1, no behaviour change: the repo-wide baseline, the build-versus-check diagnostics comparison through the check-program census, and the three stale findings. | The "Baseline and proof harness" criteria in `SPEC.md` are met and PR 1 is merged. A decision file records whether check-once survives. |
+| P1 Implement | in-progress | PR 2: remove Babel and JavaScript emit from the generated build and the scaffolds; regenerate every scripts block; extend the build output contract test. PR 3 only if P0 kept it: serve the own-source check from the build. | The "Declaration-only build" criteria are met; the check-once criterion is met or cut by decision. |
 | P2 Verify | pending | Re-measure with the baseline's method; confirm the hosted gate on PR 2 as the proof that nothing reads `dist/*.js`; record any Exception Ledger rows. | After numbers are in `research/`; every red is attributed. |
 | P3 Yeet: PR to mergeable | pending | Publish each PR through yeet and drive it to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
@@ -20,9 +20,9 @@ At most three, opened one at a time in this order.
 
 1. **Baseline and proof harness.** Measures and fixes only. It decides whether
    PR 3 exists.
-2. **Declaration-only build.** Changes `tsconfig.base.json`, a global Turbo
-   input, so it invalidates every build cache entry once. Tell the sibling
-   verification goals before it merges and after.
+2. **Declaration-only build.** Changes every generated `beep:build` and the
+   `build` task outputs, so it invalidates every build cache entry once. Tell
+   the sibling verification goals before it merges and after.
 3. **Check once.** Conditional. Cut first if the appetite runs out or any
    diagnostic difference shows up.
 
@@ -64,6 +64,16 @@ git diff --check -- goals/declaration-only-builds
 
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug declaration-only-builds`; add a `kind: checkpoint` file there, never edit this block._
+
+### P0 complete: PR 1 merged as #3178; PR 2 open with after numbers, 2026-11-13
+
+PR 1 merged as #3178 on 2026-11-13. The inherited check-census red found on the way (baseline stamped with an old compiler) was fixed on `main` in #3192.
+
+PR 2 measured back to back with a fresh before: serial build work of 181 packages 80.9 s to 32.9 s, `dist` 232.5 MB to 147.9 MB, compile unchanged. PR 2 adds 1,192 single-checker instantiations to `@beep/repo-cli` (the retirement schemas in the scripts policy), so it re-measures the check-census baseline; the gate is a strict ratchet and passes afterwards.
+
+Lane feat/declaration-only-build
+
+Reverse: None needed; a status note.
 
 ### P0 measured: baseline and equivalence in research, PR 1 open, 2026-11-13
 

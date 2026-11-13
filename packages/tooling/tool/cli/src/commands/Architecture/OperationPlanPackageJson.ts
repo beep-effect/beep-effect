@@ -106,7 +106,6 @@ export const renderPackageJsonOperation = Effect.fn(function* (operation: WriteP
     },
     scripts: {
       ...scaffoldPackageScripts("library", ["lint:fix", "test:integration"]),
-      babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
       "beep:check:tests": "tsrs -p tsconfig.test.json --noEmit",
       coverage: "bunx vitest run --coverage --exclude=test/integration/**",
     },
