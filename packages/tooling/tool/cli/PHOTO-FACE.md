@@ -53,8 +53,12 @@ No separately hosted graph or executable model code is downloaded.
 DFA confidence below 0.20 excludes a crop from recognition. References reject
 the whole image if any detected crop fails. A candidate with only rejected
 crops is `no-face`; a candidate with both accepted and rejected crops is forced
-to `review`. Both carry `aligner-confidence-failed`. Quality checks still use
-a geometrically aligned crop, including on the AdaFace path.
+to `review`. Both carry `aligner-confidence-failed`. A candidate where any
+detected face has an empty or non-finite embedding is never scored: it is
+forced to `review` with `invalid-embedding`, which takes precedence over
+`aligner-confidence-failed`, and it may report `faceCount` 0 with no
+`bestScore`. Quality checks still use a geometrically aligned crop, including
+on the AdaFace path.
 
 `--compute`, `--devices`, `BEEP_PHOTO_FACE_ROCM_LIBRARY_PATH`, and `BEEP_UV_PATH`
 have been removed. There is no automatic environment fallback. CPU inference
