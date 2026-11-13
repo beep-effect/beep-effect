@@ -316,6 +316,7 @@
       <excludeFolder url="file://$MODULE_DIR$/explorations/textjs-console-ui" />
       <excludeFolder url="file://$MODULE_DIR$/goals/alchemy-vault-sync-slice" />
       <excludeFolder url="file://$MODULE_DIR$/goals/attributed-multi-claim-span" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/canonical-digest-owner" />
       <excludeFolder url="file://$MODULE_DIR$/goals/catalog-writer-incremental" />
       <excludeFolder url="file://$MODULE_DIR$/goals/ci-fleet-endgame" />
       <excludeFolder url="file://$MODULE_DIR$/goals/claim-element-antecedent-check" />
