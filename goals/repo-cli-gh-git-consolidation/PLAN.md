@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active` — P0 to P2 complete; the closeout PR carries W8 (D-22), the site-list ledger, the reflection and `closeout`.
+Status: `completed-retained` — closeout PR #3287 carries W8 (D-22), the site-list ledger, the reflection and `closeout`.
 
 ## Phases
 
@@ -11,8 +11,8 @@ Status: `active` — P0 to P2 complete; the closeout PR carries W8 (D-22), the s
 | P0 Research | complete | Inspect source hierarchy and confirm scope. | `research/p0-site-inventory-2026-11-02.md`: every site-list row, the kit gaps G1-G10, the off-list spawns and the wave plan; decisions D-02 to D-05 in `SPEC.md`. |
 | P1 Implement | complete | Land the kit features with tests, then switch the sites, one owner per PR (the Waves table). | Acceptance criteria are met. |
 | P2 Verify | complete | Run required checks and capture evidence. | Verification is green or blockers are documented. |
-| P3 Yeet: PR to mergeable | in-progress | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | in-progress | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P3 Yeet: PR to mergeable | complete | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P4 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Waves
 
