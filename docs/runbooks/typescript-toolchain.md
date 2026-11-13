@@ -247,6 +247,57 @@ checker-cache and scheduling optimizations; experimental overrides remain at
 upstream defaults. See [tsrs performance options](https://github.com/oxc-project/tsrs/blob/ed745c993a1310daa5e6866b101d2e48818b351d/docs/USAGE.md#performance-options)
 and [persistent scheduling history](https://github.com/oxc-project/tsrs/blob/ed745c993a1310daa5e6866b101d2e48818b351d/notes/perf-balance.md).
 
+### Build and check program equivalence
+
+A library package type-checks its `src` twice per run: `beep:build`
+(`tsrs -p tsconfig.json`, emitting and incremental, build info in
+`dist/tsconfig.tsbuildinfo`) and `beep:check` (`tsrs -p tsconfig.check.json`,
+`noEmit`, not incremental). Before the build may serve as the check, the two
+programs must report the same diagnostics. The check census proves it:
+
+```bash
+bun run beep quality check-census --build-equivalence [--seed] \
+  [--initial-state restored|warm] [--filter <text>] \
+  [--equivalence-output-json <path>]
+```
+
+The mode runs alone: no overlay census, no baseline gate. It selects every
+workspace package with `tsconfig.json`, `tsconfig.check.json`, a `src`
+directory, and a `beep:build` that runs `tsrs -p tsconfig.json`; no-emit
+builds (`tsrs -p tsconfig.check.json`) and framework builds are skipped, and a
+selection with no package fails. Both programs run as
+`tsrs -p <config> --pretty false` from the package directory with the caller's
+environment, so `TSRS_FAST` reaches the compiler and the report records its
+literal value (or `unset`). Two runs are identical when their exit codes and
+their sorted, trimmed, non-empty output lines are equal; a failing compiler is
+data, not a command failure.
+
+- The clean pass compares one check run with the build as found (labelled by
+  `--initial-state`, default `warm`), a second build when that label is
+  `restored`, and a cold build after the outDir is removed.
+- `--seed` writes `src/__census_probe.ts` (a TS2322 and a floating Effect),
+  compares the as-found, warm-retry and cold builds with the seeded check,
+  removes the probe, then compares a recovered warm build and a cold clean build
+  with a fresh clean check. A seeded check that exits 0 or prints no
+  `error TS` line marks the row `probeEffective: false`, which fails the run.
+  Its finalizer removes the probe and, unless the pass finished its cold clean
+  rebuild, the outDir, so no `__census_probe.*` output survives a failure or
+  an interruption.
+- `restored` is only a label the caller declares: run the Turbo cache restore
+  first (for example `bunx turbo run build --filter=<package>`), then pass
+  `--initial-state restored`. The census cannot observe where the state came
+  from.
+- Builds run in place, strictly one package at a time, because a cold step
+  deletes an outDir that downstream programs read. Every outDir is resolved
+  through the `extends` chain and must lie strictly inside its package, or the
+  run refuses before any compiler starts. Run it on a built tree you are not
+  using for anything else meanwhile.
+
+The report (`check-census-build-equivalence/v1`, default
+`.beep/quality/check-census-build-equivalence.json`) is written before a
+difference or an ineffective probe fails the command; differing comparisons
+print both programs' lines.
+
 ## Binary paths (Linux x64)
 
 Verified at 0.67.5. Substitute the platform triple on other machines.
