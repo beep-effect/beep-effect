@@ -126,6 +126,8 @@ const workflowRunsPayload = [
     head_sha: pullPayload.head.sha,
     event: "pull_request",
     head_branch: "feat/gh-rest-first",
+    path: ".github/workflows/check.yml",
+    created_at: "2026-10-06T16:30:00Z",
   },
   {
     id: 21,
@@ -135,8 +137,18 @@ const workflowRunsPayload = [
     head_sha: pullPayload.head.sha,
     event: "push",
     head_branch: "main",
+    path: ".github/workflows/check.yml",
+    created_at: "2026-10-06T16:31:00Z",
   },
-  { id: 22, name: "Check", status: "queued", conclusion: null, head_sha: pullPayload.head.sha },
+  {
+    id: 22,
+    name: "Check",
+    status: "queued",
+    conclusion: null,
+    head_sha: pullPayload.head.sha,
+    path: ".github/workflows/check.yml",
+    created_at: "2026-10-06T16:32:00Z",
+  },
 ];
 const timelinePayload = [
   { event: "labeled", created_at: "2026-10-06T16:01:00Z" },
