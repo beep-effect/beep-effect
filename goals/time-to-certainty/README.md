@@ -1,6 +1,10 @@
 # time-to-certainty
 
-Lifecycle: `paused`
+Lifecycle: `superseded`
+
+**Closed by operator ruling (finish board, 2026-11-13).** Its scope is now carried by the ten-minute-certainty program with nine merged slices. The packet is `superseded` without meeting its completion gate. To resume, run `bun run beep goals set-status time-to-certainty active` and re-graduate the next slice. Decision: [`decisions/2026-11-13-finish-board-ruling-close.md`](./decisions/2026-11-13-finish-board-ruling-close.md).
+
+Parent program only. This ruling closes the time-to-certainty parent packet and nothing else. Its scope is carried by the ten-minute-certainty program (explorations/ten-minute-certainty) and its slice goals: goals/certainty-scorecard, goals/heavy-pool-diet, goals/hosted-setup-tax, goals/local-proof-under-ten, goals/main-verdict-every-commit and goals/route-soundness-repair. Those children stay active and keep their own status; this ruling does not change them.
 
 Created 2026-09-03 · Anchor: [SPEC.md](SPEC.md) · Order: [PLAN.md](PLAN.md)
 
@@ -23,7 +27,7 @@ exploration; this packet moves the operational proxies and feeds that packet's n
 Evidence and receipts live under [research/](research/).
 
 Re-homed 2026-11-09 (ruling D13 of
-[ten-minute-certainty](../../explorations/ten-minute-certainty/DECISIONS.md)): this packet stays paused.
+[ten-minute-certainty](../../explorations/ten-minute-certainty/DECISIONS.md)): this packet stayed paused until the 2026-11-13 ruling closed it.
 Its open seams, ProofLedger C4.2 enforcement, the WaveOrder re-seed and the gate-order fixtures, are owned
 by [local-proof-under-ten](../local-proof-under-ten/README.md), which carries rulings 76 to 83 as
 constraints and edits none of this packet's artifacts.

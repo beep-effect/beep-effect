@@ -2,7 +2,11 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `superseded`
+
+**Closed by operator ruling (finish board, 2026-11-13).** It never started, needs approval for containment and cost, and has no near-term driver; reopen it from the exploration if a legal-eval need comes back. The packet is `superseded` without meeting its completion gate. To resume, run `bun run beep goals set-status effect-native-legal-eval active` and re-graduate the next slice. Decision: [`decisions/2026-11-13-finish-board-ruling-close.md`](./decisions/2026-11-13-finish-board-ruling-close.md).
+
+goals/tracked-changes-ingest-wedge lists this packet as a blocker; it is paused by the same ruling, and resuming it must first decide whether to re-open this packet or drop the dependency.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

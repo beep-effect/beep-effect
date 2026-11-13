@@ -1,10 +1,12 @@
 # Belief View Engine
 
-Lifecycle: `paused`
+Lifecycle: `superseded`
+
+**Closed by operator ruling (finish board, 2026-11-13).** It has sat unstarted at scaffold for three months, no lane is pulling it, and the text-knowledge stack rebuild probably redefines this layer. The packet is `superseded` without meeting its completion gate. To resume, run `bun run beep goals set-status belief-view-engine active` and re-graduate the next slice. Decision: [`decisions/2026-11-13-finish-board-ruling-close.md`](./decisions/2026-11-13-finish-board-ruling-close.md).
 
 One working belief per contention set, on demand: BeliefContentionKey v1, the total selection-policy contract, the content-addressed BeliefViewRevision with digest-encoding v1, the same-policy typed delta, and the capped, indexed scope-wide EdgeAuthority read.
 
-**Paused at scaffold (2026-08-17) — queue goal.** Authored-but-not-started by
+**Before the 2026-11-13 ruling: paused at scaffold (2026-08-17) as a queue goal.** Authored-but-not-started by
 design: no program-lane slot was free at graduation. Resume when a lane slot
 frees or the roadmap pulls it (`docs/ROADMAP.md` parked section).
 
