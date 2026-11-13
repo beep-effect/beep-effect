@@ -16,3 +16,8 @@ Applying D2a/D2b passes the exact review regressions and restores replay T20/T21
 ## 2026-11-13: D2c resolves the cross-epoch bridge
 
 The orchestrator removed reset continuation for fingerprint-free observations. Unknown readings now form key-wide reset instances, separately for idle and busy observations. Instance-based hourly baselines also count the first reading when the window began inside the hour and flag partial first windows. An independent python3 -I implementation importing no repository code matches all four core and GraphQL replay hours; GraphQL is 1,176+/1,204+/1,539+/2,130+, with no remaining numerical mismatch. The previous proposed consistency guard is unnecessary under this replacement rule.
+
+
+## 2026-11-13: One token reads two GraphQL windows; the per-credential premise was a coincidence
+
+Two hours after #3200 merged, the live report showed 108,330+ GraphQL points for T05 and 184,766+ for T06, against a 5,000-point window. The raw rows of one `yeet monitor` process show one fingerprint and one operation alternating between resets 15 seconds apart (one window rising 16 to 3,390, the other 35 to 938), so the reducer again read every switch as a reset. The 11-12 replay that "proved" per-credential windows had no fingerprints, so the PID-to-credential split it relied on could not distinguish credentials from concurrent windows. Two things would have caught it before merge: replaying the first post-deploy hour of fingerprinted rows, and a guard that fails any hourly GraphQL total above the limit times the number of observed windows. D2f now treats every GraphQL lane as a reset-scoped instance; an independent per-window computation matches the fixed report (T05 3,192, T06 4,529).

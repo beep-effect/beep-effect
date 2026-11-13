@@ -5,6 +5,7 @@ import {
   anchorsOf,
   BucketKey,
   BucketReading,
+  BucketReadingJson,
   CommandSpend,
   GhSpawnObservation,
   GithubBudgetLedger,
@@ -24,6 +25,7 @@ import {
   LedgerSummaryJson,
   LedgerWindow,
   LegacyLedgerHour,
+  LegacyLedgerRollupVersion,
   lanesOf,
   layerGithubBudgetLedger,
   layerGithubLedgerStoreLive,
@@ -33,6 +35,7 @@ import {
   ReserveState,
   readingOfTransport,
   reserveOf,
+  retainLatestReading,
   SampleBucket,
   usableReadingOf,
   windowsOf,
@@ -46,7 +49,6 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
@@ -173,7 +175,7 @@ describe("GithubLedger lanes", () => {
     deepStrictEqual(fleetOf(hour), [O.some(267 + 942), true]);
   });
 
-  it("adds a lane's real mid-hour reset once, alongside a concurrent lane", () => {
+  it("splits a GraphQL credential at its real mid-hour reset into window instances", () => {
     const postReset = 95 * MINUTE + 30 * SECOND;
     const rows = [
       laneARow(2 * MINUTE, 100, 30 * MINUTE),
@@ -191,13 +193,15 @@ describe("GithubLedger lanes", () => {
     ];
     const knownRows = A.map(rows, fingerprintedRow);
     const lanes = lanesOf(anchorsOf({ key: graphqlKey, rows: knownRows, admitGraphqlSamples: false }));
-    expect(A.map(lanes, A.length)).toStrictEqual([6, 5]);
+    // Credential A's two windows are separate instances, ordered by their first reading.
+    expect(A.map(lanes, A.length)).toStrictEqual([4, 5, 2]);
     const windows = windowsOf({ key: graphqlKey, rows: knownRows, admitGraphqlSamples: false });
-    const crossing = A.filter(windows, isCrossing);
-    expect(A.map(crossing, (window) => [window.lane, window.resetLowerBound])).toStrictEqual([[0, 40 + 30]]);
+    assertFalse(A.some(windows, isCrossing));
     const hour = hourOf({ hour: at(0), key: graphqlKey, rows: knownRows, windows, costs: [] });
-    // Lane A: 230 − 100 − 30 = 100 before the reset, 70 across it, 50 after; lane B: 600 − 300.
-    deepStrictEqual(fleetOf(hour), [O.some(100 + 70 + 50 + 300), true]);
+    // Credential A: its first window's peak 230 − 100 (the lagging 200 does not lower it), then 90 from
+    // zero in the window that began at 35:30; credential B: 600 − 300.
+    deepStrictEqual(fleetOf(hour), [O.some(130 + 90 + 300), true]);
+    assertFalse(hour.lanesInferred);
   });
 
   it("orders windows that end at the same instant by lane", () => {
@@ -244,10 +248,10 @@ const judge = reserveOf({ now: DateTime.makeUnsafe(NOW), admitGraphqlSamples: fa
 const usable = usableReadingOf({ now: DateTime.makeUnsafe(NOW), admitGraphqlSamples: false });
 
 describe("GithubLedger reserve over concurrent lanes", () => {
-  it("signals on the more depleted of two live lanes, each judged on its newest reading", () => {
-    // Lane A's older 100 is superseded by its newer 4000; lane B is the more depleted bucket.
-    const laneAOld = graphqlReading(100, 6, RESET_A);
-    const laneANew = graphqlReading(4000, 1, RESET_A + 2 * SECOND);
+  it("signals on the most constrained fresh live reading of any lane", () => {
+    // Lane A's count rises 1000 -> 1010 within its window; lane B is the more depleted bucket.
+    const laneAOld = graphqlReading(4000, 6, RESET_A);
+    const laneANew = graphqlReading(3990, 1, RESET_A + 2 * SECOND);
     const laneB = graphqlReading(900, 3, RESET_B);
     const readings = [laneAOld, laneANew, laneB];
     deepStrictEqual(
@@ -323,8 +327,8 @@ const withStateRoot = Effect.provideService(
   ConfigProvider.fromUnknown({ BEEP_GITHUB_LEDGER_STATE_ROOT: STATE_ROOT })
 );
 
-// The inflated hour as the version-1 code stored it, in the version-1 window shape (no lane).
-const inflatedRollupText = Effect.gen(function* () {
+// The inflated hour as an older calculation stored it; v1 used a window shape without lanes.
+const inflatedRollupText = Effect.fnUntraced(function* (version: LegacyLedgerRollupVersion) {
   const rollup = LedgerHourRollup.make({
     hour: at(0),
     host,
@@ -373,11 +377,8 @@ const inflatedRollupText = Effect.gen(function* () {
     ],
   });
   const text = yield* S.encodeEffect(LedgerHourRollupJson)(rollup);
-  return pipe(
-    text,
-    Str.replace('"github-ledger-rollup/v2"', '"github-ledger-rollup/v1"'),
-    Str.replaceAll(/"lane":\d+,/g, "")
-  );
+  const versioned = Str.replace('"github-ledger-rollup/v3"', `"${version}"`)(text);
+  return version === "github-ledger-rollup/v1" ? Str.replaceAll(/"lane":\d+,/g, "")(versioned) : versioned;
 });
 
 const fleetUsedOf = (rollups: ReadonlyArray<LedgerHourResult | LedgerRollupRead>) =>
@@ -385,36 +386,38 @@ const fleetUsedOf = (rollups: ReadonlyArray<LedgerHourResult | LedgerRollupRead>
 
 describe("GithubLedger rollup versions", () => {
   it.layer(Layer.merge(MemoryFileSystem.layerWith({}), Path.layer), { timeout: "30 seconds" })((it) => {
-    it.effect("recomputes an hour whose stored rollup is an older version instead of trusting it", () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const file = `${STATE_ROOT}/rollups/2026-11-12T20.json`;
-        const v1 = yield* inflatedRollupText;
-        assertTrue(Str.includes('"github-ledger-rollup/v1"')(v1));
-        assertNone(S.decodeOption(LedgerHourRollupJson)(v1));
-        yield* fs.makeDirectory(`${STATE_ROOT}/rollups`, { recursive: true });
-        yield* fs.writeFileString(file, v1);
-        yield* TestClock.setTime(H + 2 * HOUR);
-        yield* Effect.gen(function* () {
-          const store = yield* GithubLedgerStore;
-          const ledger = yield* GithubBudgetLedger;
-          // Each lane's first reading after its reset ripens the hour.
-          const later = [
-            laneARow(HOUR + 5 * MINUTE, 3, HOUR + RESET_A),
-            laneBRow(HOUR + 6 * MINUTE, 5, HOUR + RESET_B),
-          ];
-          yield* Effect.forEach(A.appendAll(interleaved, later), store.append, { discard: true });
-          const stored = yield* store.readRollup(at(0));
-          assertTrue(O.exists(stored, (rollup) => rollup.schemaVersion === "github-ledger-rollup/v1"));
-          const read = yield* ledger.hours(LedgerRange.make({ from: at(0), to: at(30 * MINUTE) }));
-          deepStrictEqual(fleetUsedOf(read), [[false, O.some(1169)]]);
-          yield* ledger.prune;
-          const rewritten = yield* fs.readFileString(file);
-          assertTrue(Str.includes('"github-ledger-rollup/v2"')(rewritten));
-          const kept = yield* store.readRollup(at(0));
-          deepStrictEqual(kept.pipe(A.fromOption, fleetUsedOf), [[true, O.some(1169)]]);
-        }).pipe(withLayer(liveLedger), withStateRoot);
-      })
+    it.effect.each(LegacyLedgerRollupVersion.literals)(
+      "recomputes an hour whose stored rollup is the older %s instead of trusting it",
+      (version) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const file = `${STATE_ROOT}/rollups/2026-11-12T20.json`;
+          const legacyText = yield* inflatedRollupText(version);
+          assertTrue(Str.includes(`"${version}"`)(legacyText));
+          assertNone(S.decodeOption(LedgerHourRollupJson)(legacyText));
+          yield* fs.makeDirectory(`${STATE_ROOT}/rollups`, { recursive: true });
+          yield* fs.writeFileString(file, legacyText);
+          yield* TestClock.setTime(H + 2 * HOUR);
+          yield* Effect.gen(function* () {
+            const store = yield* GithubLedgerStore;
+            const ledger = yield* GithubBudgetLedger;
+            // Each lane's first reading after its reset ripens the hour.
+            const later = [
+              laneARow(HOUR + 5 * MINUTE, 3, HOUR + RESET_A),
+              laneBRow(HOUR + 6 * MINUTE, 5, HOUR + RESET_B),
+            ];
+            yield* Effect.forEach(A.appendAll(interleaved, later), store.append, { discard: true });
+            const stored = yield* store.readRollup(at(0));
+            assertTrue(O.exists(stored, (rollup) => rollup.schemaVersion === version));
+            const read = yield* ledger.hours(LedgerRange.make({ from: at(0), to: at(30 * MINUTE) }));
+            deepStrictEqual(fleetUsedOf(read), [[false, O.some(1169)]]);
+            yield* ledger.prune;
+            const rewritten = yield* fs.readFileString(file);
+            assertTrue(Str.includes('"github-ledger-rollup/v3"')(rewritten));
+            const kept = yield* store.readRollup(at(0));
+            deepStrictEqual(kept.pipe(A.fromOption, fleetUsedOf), [[true, O.some(1169)]]);
+          }).pipe(withLayer(liveLedger), withStateRoot);
+        })
     );
   });
 });
@@ -512,54 +515,58 @@ describe("GithubLedger independent review regressions", () => {
 });
 
 it.layer(Layer.merge(MemoryFileSystem.layerWith({}), Path.layer), { timeout: "30 seconds" })((it) => {
-  it.effect("R7 invalidates a persisted v1 summary before serving derived usage", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const summary = LedgerSummary.make({
-        generatedAt: at(0),
-        lastRowAt: O.none(),
-        spenders: [],
-        unattributedLastHour: [{ key: graphqlKey, unattributed: O.some(10327) }],
-      });
-      const text = yield* S.encodeEffect(LedgerSummaryJson)(summary);
-      yield* fs.makeDirectory(`${STATE_ROOT}/latest`, { recursive: true });
-      yield* fs.writeFileString(
-        `${STATE_ROOT}/latest/summary.json`,
-        Str.replace("github-ledger-summary/v2", "github-ledger-summary/v1")(text)
-      );
-      yield* Effect.gen(function* () {
-        const ledger = yield* GithubBudgetLedger;
-        const value = yield* ledger.summary;
-        assertNone(value);
-      }).pipe(withLayer(liveLedger), withStateRoot);
-    })
+  it.effect.each(["github-ledger-summary/v1", "github-ledger-summary/v2"])(
+    "R7 invalidates a persisted %s summary before serving derived usage",
+    (version) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const summary = LedgerSummary.make({
+          generatedAt: at(0),
+          lastRowAt: O.none(),
+          spenders: [],
+          unattributedLastHour: [{ key: graphqlKey, unattributed: O.some(10327) }],
+        });
+        const text = yield* S.encodeEffect(LedgerSummaryJson)(summary);
+        yield* fs.makeDirectory(`${STATE_ROOT}/latest`, { recursive: true });
+        yield* fs.writeFileString(
+          `${STATE_ROOT}/latest/summary.json`,
+          Str.replace("github-ledger-summary/v3", version)(text)
+        );
+        yield* Effect.gen(function* () {
+          const ledger = yield* GithubBudgetLedger;
+          const value = yield* ledger.summary;
+          assertNone(value);
+        }).pipe(withLayer(liveLedger), withStateRoot);
+      })
   );
 
-  it.effect("R8 preserves an expired raw hour as explicit legacy unknown usage", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const text = yield* inflatedRollupText;
-      yield* fs.makeDirectory(`${STATE_ROOT}/rollups`, { recursive: true });
-      yield* fs.writeFileString(`${STATE_ROOT}/rollups/2026-11-12T20.json`, text);
-      yield* TestClock.setTime(H + 96 * HOUR);
-      yield* Effect.gen(function* () {
-        const ledger = yield* GithubBudgetLedger;
-        const hours = yield* ledger.hours(LedgerRange.make({ from: at(0), to: at(MINUTE) }));
-        const legacy = O.getOrThrow(A.findFirst(hours, isLegacyHour));
-        expect(legacy.schemaVersion).toBe("github-ledger-rollup/v1");
-        const keys = legacy.keys;
-        const bucket = O.getOrThrow(A.head(keys));
-        assertNone(bucket.fleetUsed);
-        assertNone(bucket.unattributed);
-        assertNone(bucket.ghEstimated);
-        expect([bucket.estimatedPoints, bucket.attributedNominal]).toStrictEqual([null, null]);
-        assertFalse(bucket.overAttributed);
-        assertTrue(A.some(renderGithubLedgerHour(legacy), Str.includes("legacy-unrecomputable")));
-        yield* ledger.prune;
-        const retained = yield* ledger.hours(LedgerRange.make({ from: at(0), to: at(MINUTE) }));
-        expect(A.map(retained, (hour) => hour.schemaVersion)).toStrictEqual(["github-ledger-rollup/v1"]);
-      }).pipe(withLayer(liveLedger), withStateRoot);
-    })
+  it.effect.each(LegacyLedgerRollupVersion.literals)(
+    "R8 preserves an expired raw %s hour as explicit legacy unknown usage",
+    (version) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const text = yield* inflatedRollupText(version);
+        yield* fs.makeDirectory(`${STATE_ROOT}/rollups`, { recursive: true });
+        yield* fs.writeFileString(`${STATE_ROOT}/rollups/2026-11-12T20.json`, text);
+        yield* TestClock.setTime(H + 96 * HOUR);
+        yield* Effect.gen(function* () {
+          const ledger = yield* GithubBudgetLedger;
+          const hours = yield* ledger.hours(LedgerRange.make({ from: at(0), to: at(MINUTE) }));
+          const legacy = O.getOrThrow(A.findFirst(hours, isLegacyHour));
+          expect(legacy.schemaVersion).toBe(version);
+          const keys = legacy.keys;
+          const bucket = O.getOrThrow(A.head(keys));
+          assertNone(bucket.fleetUsed);
+          assertNone(bucket.unattributed);
+          assertNone(bucket.ghEstimated);
+          expect([bucket.estimatedPoints, bucket.attributedNominal]).toStrictEqual([null, null]);
+          assertFalse(bucket.overAttributed);
+          assertTrue(A.some(renderGithubLedgerHour(legacy), Str.includes("legacy-unrecomputable")));
+          yield* ledger.prune;
+          const retained = yield* ledger.hours(LedgerRange.make({ from: at(0), to: at(MINUTE) }));
+          expect(A.map(retained, (hour) => hour.schemaVersion)).toStrictEqual([version]);
+        }).pipe(withLayer(liveLedger), withStateRoot);
+      })
   );
 });
 
@@ -686,8 +693,10 @@ it.layer(Layer.merge(MemoryFileSystem.layerWith({}), Path.layer), { timeout: "30
         cached.pipe(O.isSome, assertTrue);
         const fs = yield* FileSystem.FileSystem;
         const files = yield* fs.readDirectory(`${STATE_ROOT}/latest`);
-        assertTrue(A.contains(files, "transport-user_alice-graphql-aaaaaaaaaaaa.json"));
-        assertTrue(A.contains(files, "transport-user_alice-graphql-bbbbbbbbbbbb.json"));
+        // GraphQL readings are retained per credential window instance.
+        const window = `busy-${(H + 50 * MINUTE) / SECOND}`;
+        assertTrue(A.contains(files, `v3-transport-user_alice-graphql-aaaaaaaaaaaa-${window}.json`));
+        assertTrue(A.contains(files, `v3-transport-user_alice-graphql-bbbbbbbbbbbb-${window}.json`));
       }).pipe(withLayer(liveLedger), withStateRoot);
       // Restart reads both readings from disk, independently of the previous cache.
       yield* Effect.gen(function* () {
@@ -915,6 +924,167 @@ it("D2c leaves an hour unmeasured when its instances have no in-hour anchors", (
   assertNone(hour.fleetUsed);
   assertFalse(hour.lanesInferred);
   expect(hour.ghEstimated).toBe(0);
+});
+
+// The live 2026-11-13T06 pattern: one process and one token alternate between two
+// GraphQL windows whose resets are 15 s apart, rising 16..3390 and 35..938.
+const W19 = 60 * MINUTE + 19 * SECOND;
+const W34 = 60 * MINUTE + 34 * SECOND;
+const w19Used = [16, 433, 985, 1468, 1996, 2538, 3072, 3390];
+const w34Used = [35, 146, 248, 463, 667, 770, 888, 938];
+const oneTokenTwoWindows = A.flatMap(A.zip(w19Used, w34Used), ([w19, w34], index) => [
+  observed(7 * index + 1, w19, W19, tokenA),
+  observed(7 * index + 4, w34, W34, tokenA),
+]);
+
+it("D2f counts one token's two interleaved GraphQL windows as two window instances", () => {
+  const lanes = lanesOf(anchorsOf({ key: graphqlKey, rows: oneTokenTwoWindows, admitGraphqlSamples: false }));
+  expect(A.map(lanes, A.length)).toStrictEqual([8, 8]);
+  const hour = calculated(oneTokenTwoWindows);
+  // Both windows began inside the hour, so each counts from zero to its peak.
+  deepStrictEqual(fleetOf(hour), [O.some(3390 + 938), false]);
+  assertFalse(hour.lanesInferred);
+  // A process without a fingerprint read the 19 s window once; it attaches to that instance only.
+  const unknown = graphqlRow({ at: 30 * MINUTE, used: 2000, reset: W19, command: monitor, pid: 7 });
+  const mixed = calculated(A.append(oneTokenTwoWindows, unknown));
+  deepStrictEqual(fleetOf(mixed), [O.some(3390 + 938), false]);
+  assertTrue(mixed.lanesInferred);
+});
+
+const coreSample = (minute: number, used: number, reset: number, credential: O.Option<CredentialFingerprint>) =>
+  GithubLedgerRow.cases.Sample.make({
+    at: at(minute * MINUTE),
+    host,
+    command: sampler,
+    identity: login,
+    credential,
+    trigger: "timer",
+    selfCost: "confirmed-free",
+    buckets: [SampleBucket.make({ resource: "core", limit: 5000, used, remaining: 5000 - used, resetAt: at(reset) })],
+  });
+const coreHour = (rows: ReadonlyArray<GithubLedgerRow>) =>
+  hourOf({
+    hour: at(0),
+    key: coreKey,
+    rows,
+    windows: windowsOf({ key: coreKey, rows, admitGraphqlSamples: false }),
+    costs: [],
+  });
+
+it("D2f keeps a known REST credential in one lane across its reset", () => {
+  const rows = [
+    coreSample(5, 100, 30 * MINUTE, O.some(tokenA)),
+    coreSample(20, 300, 30 * MINUTE, O.some(tokenA)),
+    coreSample(35, 40, 90 * MINUTE, O.some(tokenA)),
+    coreSample(50, 90, 90 * MINUTE, O.some(tokenA)),
+  ];
+  const windows = windowsOf({ key: coreKey, rows, admitGraphqlSamples: false });
+  expect(A.map(windows, (window) => [window.lane, window.crossesReset, window.resetLowerBound])).toStrictEqual([
+    [0, false, 0],
+    [0, true, 40],
+    [0, false, 0],
+  ]);
+  // 200 before the reset, 40 across it and 50 after; the first window began before the hour.
+  const hour = coreHour(rows);
+  deepStrictEqual(fleetOf(hour), [O.some(290), true]);
+  assertFalse(hour.lanesInferred);
+  // An unfingerprinted sample co-observing the shared core bucket merges into the lane.
+  const merged = coreHour(A.append(rows, coreSample(10, 150, 30 * MINUTE, O.none())));
+  deepStrictEqual(fleetOf(merged), [O.some(290), true]);
+  assertTrue(merged.lanesInferred);
+  // A known REST lane whose first window began inside the hour counts from zero.
+  const fresh = coreHour([
+    coreSample(15, 20, 70 * MINUTE, O.some(tokenA)),
+    coreSample(25, 35, 70 * MINUTE, O.some(tokenA)),
+  ]);
+  deepStrictEqual(fleetOf(fresh), [O.some(35), false]);
+});
+
+it.effect("D2f retains and judges each GraphQL window of one token", () =>
+  Effect.gen(function* () {
+    yield* TestClock.setTime(H + 10 * MINUTE);
+    const store = yield* makeGithubLedgerStoreMemory;
+    const depleted = readingOfTransport(observed(9, 4300, W19, tokenA));
+    // The healthy window is read last; a per-token latest reading would hide the depleted one.
+    yield* store.writeLatestTransport(depleted);
+    yield* store.writeLatestTransport(readingOfTransport(observed(9.5, 938, W34, tokenA)));
+    const latest = yield* store.latestTransport;
+    expect(A.length(latest)).toBe(2);
+    yield* Effect.gen(function* () {
+      const ledger = yield* GithubBudgetLedger;
+      const signal = yield* ledger.reserve(graphqlKey);
+      expect(signal.state._tag).toBe("Below");
+      const usable = yield* ledger.latestUsable(graphqlKey);
+      assertSome(usable, depleted);
+    }).pipe(withLayer(layerGithubBudgetLedger({ host }).pipe(Layer.provide(Layer.succeed(GithubLedgerStore, store)))));
+  })
+);
+
+it("D2f keeps reserve consistent when retention drops a reset-jitter bridge", () => {
+  // The independent review's reproduction: one window whose reported reset drifts 0..8 s, then a lower late reading.
+  const readings = A.map(
+    [
+      observed(6, 4300, 50 * MINUTE + 8 * SECOND, tokenA),
+      observed(7, 4301, 50 * MINUTE + 4 * SECOND, tokenA),
+      observed(8, 4302, 50 * MINUTE, tokenA),
+      observed(9, 1000, 50 * MINUTE + 8 * SECOND, tokenA),
+    ],
+    readingOfTransport
+  );
+  const retainAll = (entries: ReadonlyArray<readonly [string, BucketReading]>, reading: BucketReading) =>
+    retainLatestReading(reading, entries);
+  const retained = A.reduce(readings, A.empty<readonly [string, BucketReading]>(), retainAll);
+  // The bridge at +4 s is gone, so retention keeps two entries; the full history is one lane.
+  expect(A.length(retained)).toBe(2);
+  const judgeAt = reserveOf({ now: at(10 * MINUTE), admitGraphqlSamples: false });
+  const full = judgeAt(graphqlKey, readings).state;
+  deepStrictEqual(
+    judgeAt(
+      graphqlKey,
+      A.map(retained, ([, reading]) => reading)
+    ).state,
+    full
+  );
+  expect(full._tag).toBe("Below");
+  // A later bridging reading consolidates both entries and keeps their peak, so the verdict holds.
+  const bridged = retainAll(retained, readingOfTransport(observed(9.5, 1001, 50 * MINUTE + 4 * SECOND, tokenA)));
+  expect(A.length(bridged)).toBe(1);
+  deepStrictEqual(
+    judgeAt(
+      graphqlKey,
+      A.map(bridged, ([, reading]) => reading)
+    ).state,
+    full
+  );
+});
+
+it.layer(Layer.merge(MemoryFileSystem.layerWith({}), Path.layer), { timeout: "30 seconds" })((it) => {
+  it.effect("D2f keeps window files outside the v2 namespace and reads v2 files as candidates", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(H + 10 * MINUTE);
+      const fs = yield* FileSystem.FileSystem;
+      const healthy = readingOfTransport(observed(9.5, 938, W34, tokenA));
+      yield* Effect.gen(function* () {
+        const store = yield* GithubLedgerStore;
+        yield* store.writeLatestTransport(readingOfTransport(observed(9, 4300, W19, tokenA)));
+        yield* store.writeLatestTransport(healthy);
+      }).pipe(withLayer(liveLedger), withStateRoot);
+      // A v2 writer consolidates every `transport-` file of one credential, so it cannot collapse these windows.
+      const files = yield* fs.readDirectory(`${STATE_ROOT}/latest`);
+      assertFalse(A.some(files, Str.startsWith("transport-")));
+      // What a v2 writer leaves behind: one file for the token, holding the healthy window.
+      const text = yield* S.encodeEffect(BucketReadingJson)(healthy);
+      yield* fs.writeFileString(`${STATE_ROOT}/latest/transport-user_alice-graphql-aaaaaaaaaaaa.json`, text);
+      yield* Effect.gen(function* () {
+        const store = yield* GithubLedgerStore;
+        const readings = yield* store.latestTransport;
+        expect(A.length(readings)).toBe(3);
+        const ledger = yield* GithubBudgetLedger;
+        const signal = yield* ledger.reserve(graphqlKey);
+        expect(signal.state._tag).toBe("Below");
+      }).pipe(withLayer(liveLedger), withStateRoot);
+    })
+  );
 });
 
 const anchorTime = (anchor: LedgerAnchor) => DateTime.toEpochMillis(anchor.at);
