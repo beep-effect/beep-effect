@@ -328,7 +328,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { concurrent:
                     A.filter(
                       logs,
                       (message) =>
-                        S.is(S.Array(S.Unknown))(message) &&
+                        A.isArray(message) &&
                         A.contains(
                           message,
                           `Citation ${method === "extract" ? "extraction" : "annotation"} boundary refused`
@@ -357,7 +357,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { concurrent:
                     A.filter(
                       logs,
                       (message) =>
-                        S.is(S.Array(S.Unknown))(message) &&
+                        A.isArray(message) &&
                         A.contains(
                           message,
                           `Citation ${method === "extract" ? "extraction" : "annotation"} boundary refused`
