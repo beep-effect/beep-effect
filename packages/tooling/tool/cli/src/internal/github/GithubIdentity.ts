@@ -221,7 +221,7 @@ export const selectGithubIdentity = Effect.fn("GithubIdentity.select")(function*
     if (!S.is(GithubTokenRef)(tokenRef.value)) {
       return yield* identityError(
         "op-read-failed",
-        `the GitHub token reference (--token-ref or ${GITHUB_TOKEN_REF_ENV}) must be an op:// reference`
+        `the GitHub token reference (--token-ref or ${GITHUB_TOKEN_REF_ENV}) must be an op://vault/item/[section/]field reference; a name with characters other than letters, digits, -, _, . and spaces goes by its 1Password ID`
       );
     }
     return GithubIdentity.make({

@@ -1,8 +1,14 @@
 import { YeetCommandError } from "@beep/repo-cli/commands/Yeet/Yeet.errors";
 import {
+  AdmissionJournalEvent,
+  admissionJournalPath,
+  admissionRootFor,
   attemptJournalPathForCheckout,
   ComputeProfileProbe,
+  decodeAdmissionJournalEvent,
   makeComputeProfileProbe,
+  provideRuntimeRootForTesting,
+  RuntimeRootChoice,
 } from "@beep/repo-cli/test/RepoRun";
 import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
@@ -45,6 +51,7 @@ import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -215,18 +222,27 @@ const WORKSTATION = makeComputeProfileProbe({
   residentBytes: () => 0,
 });
 
+// A 7 GiB slice on a 15 GiB host: the dankserver worker profile.
+const WORKER = makeComputeProfileProbe({
+  constrainedMemoryBytes: () => 7 * 1024 ** 3,
+  totalMemoryBytes: () => 15 * 1024 ** 3,
+  residentBytes: () => 0,
+});
+
 const finalCheck = (
   options: {
     readonly gates?: ReadonlyArray<string>;
     readonly skip?: ReadonlyArray<string>;
     readonly forceLocal?: boolean;
-  } = {}
+    readonly dryRun?: boolean;
+  } = {},
+  probe = WORKSTATION
 ) =>
   runYeetFinalCheck(
     YeetFinalCheckOptions.make({ base: "HEAD~1", gates: [], skip: [], dryRun: false, failFast: false, ...options })
   ).pipe(
     Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
-    Effect.provideService(ComputeProfileProbe, WORKSTATION)
+    Effect.provideService(ComputeProfileProbe, probe)
   );
 
 // Every gate but the in-process expectation replay skipped with a reason: a
@@ -471,6 +487,87 @@ it.layer(JournalTestLayer, { timeout: "60 seconds" })("final-check attempt journ
       assertSome(onHead, passing);
       const errorLines = yield* TestConsole.errorLines;
       assertInclude(A.join(A.map(errorLines, String), "\n"), "[yeet] final-check attempt journal not written");
+    })
+  );
+
+  // goals/compute-profile-gate-routing P3 (2026-11-13 dankserver acceptance findings 3 and 4): a
+  // forced gate on a worker runs one task at a time and its receipt records forceLocal; a gate the
+  // worker cannot hold stays with hosted CI; and every routing decision leaves an admission row,
+  // because a worker never takes a ticket.
+  it.effect(
+    "forces fallow serially on a worker, refuses check, and journals each routing decision",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const runtimeDir = yield* fs.makeTempDirectoryScoped();
+      const runtimeRoot = RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir });
+      const root = yield* scratchRepository();
+      yield* commitFile(root, "package.json", '{"scripts":{"beep":"echo"}}\n');
+      const head = yield* git(root, ["rev-parse", "HEAD"]);
+
+      // docgen carries an operator skip: the operator, not the profile, routed it, so it has no row.
+      const options = { gates: ["fallow", "check", "docgen"], skip: ["docgen=hosted CI proves it"], forceLocal: true };
+      const planned = yield* finalCheck({ ...options, dryRun: true }, WORKER).pipe(
+        provideRuntimeRootForTesting(runtimeRoot)
+      );
+      assertNone(planned);
+      const forced = yield* finalCheck(options, WORKER).pipe(provideRuntimeRootForTesting(runtimeRoot));
+      const receipt = O.getOrThrow(forced);
+      expect([receipt.computeProfile, receipt.forceLocal, receipt.verdict, receipt.complete]).toEqual([
+        "worker",
+        true,
+        "pass",
+        false,
+      ]);
+      expect(A.map(receipt.steps, (row) => [row.gate, row.status, row.reason])).toEqual([
+        ["check", "skipped", "compute-profile=worker"],
+        ["docgen", "skipped", "hosted CI proves it"],
+        ["fallow", "passed", undefined],
+      ]);
+      const fallow = O.getOrThrow(A.findFirst(receipt.steps, (row) => row.gate === "fallow"));
+      expect(fallow.command).toContain("bun run beep ci lane fallow --base");
+      expect(Str.endsWith(" --validate-envelopes --serial")(fallow.command)).toBe(true);
+      const onHead = yield* readFinalCheckReceipt(root, head);
+      assertSome(
+        O.map(onHead, (written) => written.forceLocal),
+        true
+      );
+      const logged = yield* TestConsole.logLines;
+      const logLines = A.map(logged, String);
+      expect(A.filter(logLines, Str.startsWith("[yeet] final-check --force-local"))).toEqual([
+        expect.stringContaining("refused check on the worker profile: one package's tsgo check held 4.07 GB"),
+        "[yeet] final-check --force-local on the worker profile runs fallow one task at a time (concurrency 1)",
+        expect.stringContaining("refused check on the worker profile"),
+        "[yeet] final-check --force-local on the worker profile runs fallow one task at a time (concurrency 1)",
+      ]);
+
+      const path = yield* Path.Path;
+      const admission = yield* admissionJournalPath(admissionRootFor(path, runtimeRoot));
+      const text = yield* fs.readFileString(admission);
+      const rows = yield* Effect.forEach(A.filter(Str.split(text, "\n"), Str.isNonEmpty), (line) =>
+        decodeAdmissionJournalEvent(line)
+      );
+      const routed = A.filter(rows, AdmissionJournalEvent.guards["admission-routed"]);
+      expect(
+        A.map(routed, (row) => [
+          O.getOrUndefined(row.gateRoute),
+          row.outcome,
+          row.computeProfile,
+          row.forceLocal,
+          row.command,
+          row.branch,
+          O.isSome(row.attemptId),
+        ])
+      ).toEqual([
+        ["check", "refusal", "worker", true, "bun run beep yeet final-check", "main", true],
+        ["fallow", "bypass", "worker", true, "bun run beep yeet final-check", "main", true],
+      ]);
+      const events = yield* journalEvents(root);
+      // Both rows name the forced run's attempt, beside its attempt-journal row.
+      const attemptId = O.map(A.last(startedRows(events)), (row) => row.attemptId);
+      deepStrictEqual(
+        A.map(routed, (row) => row.attemptId),
+        [attemptId, attemptId]
+      );
     })
   );
 });

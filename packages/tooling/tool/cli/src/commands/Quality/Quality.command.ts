@@ -3976,6 +3976,16 @@ const renderAdmissionWaitLine = (events: AdmissionJournalHistory["events"]): str
     },
   });
 
+// A worker host never queues; its routing rows (compute-profile-gate-routing P3) say how many
+// decisions ran locally and how many it left to hosted CI. Absent when there are none.
+const renderAdmissionRouteLines = (events: AdmissionJournalHistory["events"]): ReadonlyArray<string> =>
+  A.match(A.filter(events, AdmissionJournalEvent.guards["admission-routed"]), {
+    onEmpty: () => [],
+    onNonEmpty: (routed) => [
+      `- worker routes: ${A.length(routed)} (${A.length(A.filter(routed, (row) => row.outcome === "bypass"))} bypass, ${A.length(A.filter(routed, (row) => row.outcome === "refusal"))} refusal; ${A.length(A.filter(routed, (row) => row.forceLocal))} forced)`,
+    ],
+  });
+
 // Aggregates only; `--json` carries every row for the scheduler goals' own folds.
 const renderAdmissionJournalHistoryLines = (history: AdmissionJournalHistory): ReadonlyArray<string> => [
   `admission history: ${A.length(history.events)} rows from ${A.match(history.archive.segments, {
@@ -3984,6 +3994,7 @@ const renderAdmissionJournalHistoryLines = (history: AdmissionJournalHistory): R
   })} and the live journal`,
   `- rows read: ${history.archivedRows} archived, ${history.liveRows} live; ${history.duplicateRows} duplicate(s) dropped, ${history.opaqueRows} undecodable`,
   renderAdmissionWaitLine(history.events),
+  ...renderAdmissionRouteLines(history.events),
   `- archive: ${history.archive.directory} (the reap pass prunes segments older than ${formatQuarantineAge(ADMISSION_JOURNAL_ARCHIVE_RETENTION_MILLIS)}; --json lists every row)`,
 ];
 

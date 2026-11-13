@@ -28,6 +28,7 @@ import {
   finalCheckGateSetRefusal,
   finalCheckRefusal,
   findExpectationRewrites,
+  forcedWorkerFinalCheckLines,
   parseFinalCheckGates,
   parseFinalCheckSkips,
   planFinalCheckRoute,
@@ -416,9 +417,126 @@ describe("routeFinalCheckStepsForProfile", () => {
     );
   });
 
-  it("keeps the full lane on workstation and under --force-local", () => {
+  it("keeps the whole plan on workstation, test files included", () => {
+    const changed = ["packages/a/test/a.test.ts"];
+    const withTests = planFinalCheckSteps("/repo", BASE, changed);
     expect(routeFinalCheckStepsForProfile({ planned, profile: "workstation", forceLocal: false })).toEqual(planned);
-    expect(routeFinalCheckStepsForProfile({ planned, profile: "worker", forceLocal: true })).toEqual(planned);
+    expect(
+      routeFinalCheckStepsForProfile({
+        planned: withTests,
+        profile: "workstation",
+        forceLocal: true,
+        changedFiles: changed,
+      })
+    ).toEqual(withTests);
+  });
+
+  // goals/compute-profile-gate-routing P3: a forced worker run holds one task at a time, and the
+  // full repo-sanity lane's catalog scan (5.2 GB on dankserver) stays refused.
+  it("runs forced Fallow and coverage one task at a time on worker and keeps repo-sanity narrowed", () => {
+    const routed = routeFinalCheckStepsForProfile({ planned, profile: "worker", forceLocal: true });
+    const argsOf = (gate: string) =>
+      A.map(
+        A.filter(routed, (entry) => entry.gate === gate),
+        (entry) => entry.step.args
+      );
+
+    expect(argsOf("fallow")).toEqual([
+      ["run", "beep", "ci", "lane", "fallow", "--base", BASE, "--validate-envelopes", "--serial"],
+    ]);
+    expect(argsOf("coverage")).toEqual([["run", "coverage", "--affected", "--concurrency=1"]]);
+    expect(repoSanityArgs(routed)).toEqual([["run", "beep", "quality", "changeset-status", "--since", "origin/main"]]);
+    expect(A.filter(routed, (entry) => !A.contains(["fallow", "coverage", "repo-sanity"], entry.gate))).toEqual(
+      A.filter(planned, (entry) => !A.contains(["fallow", "coverage", "repo-sanity"], entry.gate))
+    );
+  });
+
+  // Lint Policy is hosted-only on worker; its effect-vitest pass costs one parse per file, so the
+  // worker's lint gate runs it over the diff's files in the effect-vitest scope.
+  it("adds the scoped effect-vitest check after the lint steps on worker", () => {
+    const changed = [
+      "packages/a/src/a.ts",
+      "packages/a/test/a.test.ts",
+      "packages/a/test/support/fixture.ts",
+      "goals/x.md",
+    ];
+    const routed = routeFinalCheckStepsForProfile({
+      planned: planFinalCheckSteps("/repo", BASE, changed),
+      profile: "worker",
+      forceLocal: false,
+      changedFiles: changed,
+    });
+    const labels = A.map(
+      A.filter(routed, (entry) => entry.gate === "lint"),
+      (entry) => entry.step.label
+    );
+    expect(labels).toEqual([
+      "final-check:lint",
+      "final-check:lint:changed-files",
+      "final-check:lint:effect-vitest-files",
+    ]);
+    const scoped = O.getOrThrow(
+      A.findFirst(routed, (entry) => entry.step.label === "final-check:lint:effect-vitest-files")
+    );
+    expect(scoped.step.args).toEqual([
+      "run",
+      "beep",
+      "lint",
+      "effect-vitest",
+      "--files",
+      "packages/a/test/a.test.ts",
+      "--files",
+      "packages/a/test/support/fixture.ts",
+    ]);
+    expect(scoped.hostedContext).toContain("Heavy / Lint Policy");
+    const untested = ["packages/a/src/a.ts"];
+    expect(
+      A.some(
+        routeFinalCheckStepsForProfile({
+          planned: planFinalCheckSteps("/repo", BASE, untested),
+          profile: "worker",
+          forceLocal: false,
+          changedFiles: untested,
+        }),
+        (entry) => entry.step.label === "final-check:lint:effect-vitest-files"
+      )
+    ).toBe(false);
+  });
+});
+
+describe("forced final-check on a worker", () => {
+  it("skips only the gates a worker cannot force and names each refusal", () => {
+    const gates = FinalCheckGate.literals;
+    const forced = computeProfileFinalCheckSkips({ gates, operatorSkips: [], profile: "worker", forceLocal: true });
+    expect(A.map(forced, (skip) => skip.gate)).toEqual(["cheap-gates", "lint-policy", "check", "docgen"]);
+    expect(A.every(forced, (skip) => skip.reason === "compute-profile=worker")).toBe(true);
+    const lines = forcedWorkerFinalCheckLines({ gates, operatorSkips: [], profile: "worker", forceLocal: true });
+    expect(A.map(A.dropRight(lines, 1), (line) => Str.split(line, " ")[4])).toEqual([
+      "cheap-gates",
+      "lint-policy",
+      "repo-sanity",
+      "check",
+      "docgen",
+    ]);
+    expect(A.every(A.dropRight(lines, 1), Str.startsWith("[yeet] final-check --force-local refused "))).toBe(true);
+    expect(lines[5]).toContain("runs fallow, coverage one task at a time (concurrency 1)");
+    expect(lines[3]).toContain("4.07 GB");
+  });
+
+  it("prints nothing unforced or off worker, and no concurrency line when every forced gate is refused", () => {
+    const gates = FinalCheckGate.literals;
+    expect(forcedWorkerFinalCheckLines({ gates, operatorSkips: [], profile: "worker", forceLocal: false })).toEqual([]);
+    expect(forcedWorkerFinalCheckLines({ gates, operatorSkips: [], profile: "workstation", forceLocal: true })).toEqual(
+      []
+    );
+    const onlyCheck = forcedWorkerFinalCheckLines({
+      gates: ["check", "fallow"],
+      operatorSkips: [FinalCheckSkip.make({ gate: "fallow", reason: "hosted CI proves it" })],
+      profile: "worker",
+      forceLocal: true,
+    });
+    expect(A.length(onlyCheck)).toBe(1);
+    expect(onlyCheck[0]).toContain("refused check");
   });
 });
 
@@ -1191,10 +1309,15 @@ describe("final-check compute-profile skips", () => {
     }).pipe(Effect.provideService(ComputeProfileProbe, workerProbe))
   );
 
-  it.effect("adds nothing under --force-local", () =>
+  it.effect("keeps only the gates a worker cannot force under --force-local", () =>
     Effect.gen(function* () {
       const { profileSkips } = yield* resolveFinalCheckProfileSkips(FinalCheckGate.literals, [], true);
-      expect(profileSkips).toStrictEqual([]);
+      expect(skipLines(profileSkips)).toStrictEqual(
+        A.map(
+          ["cheap-gates", "lint-policy", "check", "docgen"],
+          (gate) => `${gate}=${COMPUTE_PROFILE_WORKER_SKIP_REASON}`
+        )
+      );
     }).pipe(Effect.provideService(ComputeProfileProbe, workerProbe))
   );
 

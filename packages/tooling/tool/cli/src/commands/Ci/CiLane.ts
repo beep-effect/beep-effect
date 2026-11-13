@@ -781,6 +781,7 @@ export class CiLaneRunOptions extends S.Opaque<CiLaneRunOptions, { readonly bran
     force: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     docsOnly: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     skipSkillsLock: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    serial: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
   }).pipe(
     $I.annoteSchema("CiLaneRunOptions", {
       description: "Shape and optional Turbo scope for running one CI lane body.",
@@ -1806,7 +1807,7 @@ const fallowRunPhaseSteps = (repoRoot: string, options: CiLaneRunOptions): Reado
  * Build the step plan for a CI lane. Exposed for focused unit tests.
  *
  * The fallow lane's plan lists its subprocess steps in declaration order; its
- * runtime runs the seven Fallow sub-lanes three at a time and maintains
+ * runtime runs the seven Fallow sub-lanes three at a time (one at a time with `serial`) and maintains
  * `.beep/fallow/status.md` accounting in that same order (see {@link runCiLane}).
  *
  * **Example** (Configure a CI lane)
@@ -2209,8 +2210,9 @@ const runCiFallowLane = Effect.fn("CiLane.runCiFallowLane")(function* (
     return exitCode;
   });
 
+  // `--serial` (a forced run on a worker host) holds one Fallow project graph at a time.
   const exitCodes = yield* Effect.forEach(FALLOW_SUB_LANES, runFallowSubLane, {
-    concurrency: FALLOW_SUB_LANE_CONCURRENCY,
+    concurrency: options.serial ? 1 : FALLOW_SUB_LANE_CONCURRENCY,
   });
   const blockingExitCodes = A.take(exitCodes, A.length(FALLOW_BLOCKING_LANES));
 
@@ -3171,6 +3173,12 @@ export const ciLaneCommand = Command.make(
       Flag.withDefault(false),
       Flag.withDescription("Also replay the fallow envelope validation steps locally")
     ),
+    serial: Flag.Boolean("serial").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "fallow: run the Fallow sub-lanes one at a time (yeet final-check --force-local passes it on a worker host)"
+      )
+    ),
     runs: Flag.String("runs").pipe(
       Flag.withDefault("400"),
       Flag.withDescription("BEEP_FC_NUM_RUNS floor for the property lane (values only raise, never lower)")
@@ -3273,6 +3281,7 @@ export const ciLaneCommand = Command.make(
     summarize,
     to,
     validateEnvelopes,
+    serial,
   }) {
     const decodedShard = yield* O.match(shard, {
       onNone: () => Effect.succeedNone,
@@ -3323,6 +3332,7 @@ export const ciLaneCommand = Command.make(
       force,
       docsOnly,
       skipSkillsLock,
+      serial,
     });
 
     if (list) {
