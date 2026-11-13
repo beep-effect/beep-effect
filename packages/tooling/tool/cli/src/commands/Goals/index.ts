@@ -54,6 +54,13 @@ export * from "./Bootstrap.schemas.ts";
  * @since 0.0.0
  */
 export * from "./Bootstrap.ts";
+/**
+ * Online classification of committed goal closeouts from hosted facts.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./CloseoutCheck.ts";
 export * from "./Completion.ts";
 /**
  * Merge-time completion evidence request and result schemas.
@@ -118,6 +125,13 @@ export * from "./Decisions.ts";
  * @since 0.0.0
  */
 export * from "./Doctor.ts";
+/**
+ * Final pull request resolver for the closeout bind writer.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./FinalPullRequest.ts";
 /**
  * Goals command group root.
  *
@@ -256,6 +270,13 @@ export * from "./Migration.ts";
  * @since 0.0.0
  */
 export * from "./PortfolioIndex.ts";
+/**
+ * Completion claims (red attributions and operator rulings) read from a packet's decision files.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./RedAttribution.ts";
 /**
  * Operator risk-tier override command.
  *

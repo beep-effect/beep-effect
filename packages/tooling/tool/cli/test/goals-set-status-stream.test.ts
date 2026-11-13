@@ -85,7 +85,7 @@ const expectReportedFailure = (exit: Exit.Exit<unknown, unknown>) => {
 
 it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
   describe("set-status guarded stream writer", () => {
-    it.effect("refuses a proposed closeout status flip before writing the manifest or event stream", () =>
+    it.effect("binds a legacy proposal's own final on completed-retained, after a preview that writes nothing", () =>
       Effect.andThen(
         temporaryWorkingDirectory,
         Effect.gen(function* () {
@@ -97,6 +97,10 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             lifecycle: "active",
             completionGate: {
               ...COMPLETION_GATE,
+              pullRequests: [
+                { number: 1400, role: "supporting" },
+                { number: 1429, role: "supporting" },
+              ],
               acceptanceEvidence: [
                 {
                   kind: "yeet-verdict",
@@ -108,21 +112,42 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             proposedCloseout: { status: "completed-retained", finalPullRequest: 1429 },
           });
           yield* fs.writeFileString(manifestPath, manifest);
-          for (const flags of [[], ["--preview"]]) {
-            const exit1 = yield* Effect.exit(
-              runGoalsCommand(["set-status", "proposal", "completed-retained", ...flags])
-            );
-            expectReportedFailure(exit1);
-            const readFileString2 = yield* fs.readFileString(manifestPath);
-            expect(readFileString2).toBe(manifest);
-            const listEventFiles3 = yield* listEventFiles("proposal");
-            expect(listEventFiles3).toEqual([]);
-          }
+
+          const previewed = yield* Effect.exit(
+            runGoalsCommand(["set-status", "proposal", "completed-retained", "--preview"])
+          );
+          previewed.pipe(Exit.isSuccess, assertTrue);
+          const unchanged = yield* fs.readFileString(manifestPath);
+          expect(unchanged).toBe(manifest);
+          const previewEvents = yield* listEventFiles("proposal");
+          expect(previewEvents).toEqual([]);
+          const logLines = yield* TestConsole.logLines;
+          assertTrue(
+            A.some(
+              A.map(logLines, String),
+              Str.includes("closeout: binds #1429 as the final PR (the legacy proposedCloseout)")
+            )
+          );
+
+          const bound = yield* Effect.exit(runGoalsCommand(["set-status", "proposal", "completed-retained"]));
+          bound.pipe(Exit.isSuccess, assertTrue);
+          const text = yield* fs.readFileString(manifestPath);
+          expect(text).not.toContain("proposedCloseout");
+          const after = yield* decodeManifestJson(text);
+          expect(after.initiative.status).toBe("completed-retained");
+          expect(after.lifecycle).toBe("completed-retained");
+          expect(after.closeout).toEqual({ status: "completed-retained", finalPullRequest: 1429 });
+          expect(after.completionGate.pullRequests).toEqual([
+            { number: 1400, role: "supporting" },
+            { number: 1429, role: "final" },
+          ]);
+          const boundEvents = yield* listEventFiles("proposal");
+          expect(A.length(boundEvents)).toBe(2);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
-    it.effect("reopens a committed closeout as its proposal and refuses a status that contradicts the record", () =>
+    it.effect("reopens a committed closeout by demoting its final and refuses a status that contradicts it", () =>
       Effect.andThen(
         temporaryWorkingDirectory,
         Effect.gen(function* () {
@@ -134,6 +159,10 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             lifecycle: "completed-retained",
             completionGate: {
               ...COMPLETION_GATE,
+              pullRequests: [
+                { number: 1400, role: "supporting" },
+                { number: 1429, role: "final" },
+              ],
               acceptanceEvidence: [{ kind: "yeet-verdict", ref: ".beep/yeet/verdict.json", gating: true }],
             },
             closeout: { status: "completed-retained", finalPullRequest: 1429 },
@@ -153,7 +182,11 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           expect(after.initiative.status).toBe("active");
           expect(after.lifecycle).toBe("active");
           expect(after.closeout).toBeUndefined();
-          expect(after.proposedCloseout).toEqual({ status: "completed-retained", finalPullRequest: 1429 });
+          expect(readFileString6).not.toContain("proposedCloseout");
+          expect(after.completionGate.pullRequests).toEqual([
+            { number: 1400, role: "supporting" },
+            { number: 1429, role: "supporting" },
+          ]);
           const readFileString7 = yield* fs.readFileString(readmePath);
           expect(readFileString7).toContain("Lifecycle: `active`");
         })

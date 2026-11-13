@@ -22,12 +22,11 @@ outperform terse free-text advice.
 ## When to run
 
 - **Automatic (P3 Close):** the agent closing a goal packet writes one before
-  preparing a typed `proposedCloseout` or adopting a committed closeout as
-  `completed-retained`. That is the canonical completed status; legacy
-  `complete` is migration input, not a live lifecycle value. Packets with
-  `reflectionRequired: true` are gated, and a declared proposed or committed
-  closeout also keeps the packet in the reflection gate. A missing or invalid
-  required reflection blocks closeout.
+  running `goals set-status <slug> completed-retained` in the final PR. That
+  is the canonical completed status; legacy `complete` is migration input,
+  not a live lifecycle value. Packets with `reflectionRequired: true` are
+  gated, and a committed closeout also keeps the packet in the reflection
+  gate. A missing or invalid required reflection blocks closeout.
 - **On demand:** `/reflect <goal-slug>` — reflect on any packet now.
 - **TODO codification:** when you spot something that should become a standard,
   skill, lint rule, or issue, capture it as a `codification-todo` finding.

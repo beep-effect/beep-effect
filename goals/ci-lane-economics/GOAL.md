@@ -56,3 +56,9 @@ $100/mo projection and $200/mo ceiling from
 `goals/ci-fleet-endgame/research/runner-endgame-decision-record.md` govern
 every fleet move; never weaken fork-PR, cache-write, IAM, egress, or
 teardown rails. `main` is PR-only.
+
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug ci-lane-economics` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/ci-lane-economics/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

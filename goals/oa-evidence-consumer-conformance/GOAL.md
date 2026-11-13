@@ -23,3 +23,9 @@ Follow schema-first/Effect/topology laws for touched code. Run meaningful consum
 tests and beep quality package-verify for each touched package. Independent review,
 canonical Yeet hosted readiness and merge, same-PR lifecycle/reflection, and lane
 retirement are required. Implementing this goal was outside corpus synthesis.
+
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug oa-evidence-consumer-conformance` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/oa-evidence-consumer-conformance/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`
