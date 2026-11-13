@@ -8,6 +8,7 @@
 
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
+import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import { $RepoCliId } from "@beep/identity/packages";
 import { renderTruncatedLines } from "@beep/repo-cli-kit/artifacts/index";
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
@@ -18,6 +19,7 @@ import { TsconfigLoader } from "@beep/repo-tsconfig/TsconfigLoader";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as Cache from "effect/Cache";
+import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
@@ -25,7 +27,7 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
@@ -35,6 +37,7 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import { adaptGitKitError, resolveGitCommit } from "../../internal/repo-run/GitExec.ts";
+import { CiRunnerOutputsLive } from "../Ci/CiRunnerOutputs.ts";
 import {
   BuildEquivalenceCliOptions,
   BuildEquivalenceInitialState,
@@ -58,6 +61,8 @@ import {
   renderCheckCensusBaselineLines,
   renderCheckCensusCompilerStampLine,
   renderCheckCensusGateLines,
+  renderCheckCensusGateSummary,
+  renderCheckCensusStaleStampDeferralLine,
   resolveCheckCensusTargets,
   runCheckCensusGate,
   writeCheckCensusBaseline,
@@ -73,6 +78,7 @@ import { QualityScriptCommandError } from "./Quality.errors.ts";
 import type { FsUtils } from "@beep/repo-utils";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { CheckCensusBaseline } from "./CheckCensusGate.ts";
 
 const $I = $RepoCliId.create("commands/Quality/CheckCensus");
 
@@ -974,6 +980,58 @@ const writeCheckCensusBaselineCli = Effect.fn("CheckCensus.writeBaselineCli")(fu
   yield* Console.log(`wrote ${path.relative(repoRoot, baselinePath)}`);
 });
 
+// On a runner (`GITHUB_STEP_SUMMARY` set) the gate's Markdown joins the job
+// summary; off a runner the printed gate lines are the whole report.
+const appendCheckCensusStepSummary = Effect.fn("CheckCensus.appendStepSummary")(function* (markdown: string) {
+  const target = yield* Config.option(Config.String("GITHUB_STEP_SUMMARY")).pipe(
+    QualityScriptCommandError.mapError("Failed to read GITHUB_STEP_SUMMARY.")
+  );
+  if (O.isNone(O.filter(target, Str.isNonEmpty))) {
+    return;
+  }
+  const outputs = yield* ActionOutputs;
+  yield* outputs
+    .summary(markdown)
+    .pipe(QualityScriptCommandError.mapError("Failed to append the check-census gate to $GITHUB_STEP_SUMMARY."));
+});
+
+// The baseline's compiler next to the installed one, as `--stamp-only` and
+// `--defer-stale-stamp` both compare them; `baselineLabel` is the `--baseline`
+// text the lines name.
+const compilerStampOf = Effect.fn("CheckCensus.compilerStamp")(function* (
+  baseline: CheckCensusBaseline,
+  baselineLabel: string
+) {
+  const sampler = yield* CheckCensusSampler;
+  const compiler = yield* sampler.compilerVersion;
+
+  return CheckCensusCompilerStamp.make({ baselinePath: baselineLabel, baselineCompiler: baseline.compiler, compiler });
+});
+
+// `--defer-stale-stamp`: a baseline measured with another compiler cannot be
+// compared, and Repo Sanity's `--stamp-only` step already fails the pull
+// request for it, so the gate names the stale baseline and passes without
+// sampling. Answers whether it deferred.
+const deferStaleBaseline = Effect.fn("CheckCensus.deferStaleBaseline")(function* (
+  baseline: CheckCensusBaseline,
+  input: CheckCensusCliInput
+) {
+  if (!input.deferStaleStamp) {
+    return false;
+  }
+  const stamp = yield* compilerStampOf(baseline, input.baseline);
+  if (checkCensusCompilerStampAgrees(stamp)) {
+    return false;
+  }
+  const line = renderCheckCensusStaleStampDeferralLine(stamp);
+  yield* Console.log(line);
+  yield* appendCheckCensusStepSummary(`### check-census gate\n\n${line}\n`);
+  return true;
+});
+
+const rowPackagesOf = (input: CheckCensusCliInput): O.Option<ReadonlyArray<string>> =>
+  O.map(input.rowPackages, flow(Str.split(","), A.map(Str.trim), A.filter(Str.isNonEmpty)));
+
 const gateCheckCensusCli = Effect.fn("CheckCensus.gateCli")(function* (
   repoRoot: string,
   baselinePath: string,
@@ -981,11 +1039,15 @@ const gateCheckCensusCli = Effect.fn("CheckCensus.gateCli")(function* (
 ) {
   const census = yield* runCensusSection(repoRoot, input.filter, input.gateOnly);
   const baseline = yield* readCheckCensusBaseline(baselinePath);
-  const gate = yield* runCheckCensusGate(baseline, input.filter).pipe(
+  if (yield* deferStaleBaseline(baseline, input)) {
+    return yield* writeCheckCensusReport(repoRoot, input.outputJson, census);
+  }
+  const gate = yield* runCheckCensusGate(baseline, input.filter, rowPackagesOf(input)).pipe(
     Effect.map((report) => CheckCensusGateReport.make({ ...report, baselinePath: input.baseline }))
   );
 
   yield* printLines(renderCheckCensusGateLines(gate));
+  yield* appendCheckCensusStepSummary(renderCheckCensusGateSummary(gate));
   yield* writeCheckCensusReport(repoRoot, input.outputJson, CheckCensusReport.make({ ...census, gate: O.some(gate) }));
   if (checkCensusGateFailed(gate)) {
     return yield* failWithReportedExit(checkCensusGateFailureMessage(gate));
@@ -999,13 +1061,7 @@ const stampCheckCensusCli = Effect.fn("CheckCensus.stampCli")(function* (
   input: CheckCensusCliInput
 ) {
   const baseline = yield* readCheckCensusBaseline(baselinePath);
-  const sampler = yield* CheckCensusSampler;
-  const compiler = yield* sampler.compilerVersion;
-  const stamp = CheckCensusCompilerStamp.make({
-    baselinePath: input.baseline,
-    baselineCompiler: baseline.compiler,
-    compiler,
-  });
+  const stamp = yield* compilerStampOf(baseline, input.baseline);
 
   if (!checkCensusCompilerStampAgrees(stamp)) {
     return yield* QualityScriptCommandError.make({ message: renderCheckCensusCompilerStampLine(stamp) });
@@ -1019,6 +1075,8 @@ type CheckCensusCliInput = {
   readonly baseline: string;
   readonly writeBaseline: boolean;
   readonly gateOnly: boolean;
+  readonly deferStaleStamp: boolean;
+  readonly rowPackages: O.Option<string>;
   readonly stampOnly: boolean;
   readonly buildEquivalence: boolean;
   readonly seed: boolean;
@@ -1044,6 +1102,12 @@ const mixesStampOnlyFlags = (input: CheckCensusCliInput): boolean =>
     O.isSome(input.initialState) ||
     O.isSome(input.equivalenceOutputJson));
 
+// `--defer-stale-stamp` and `--row-packages` shape the gate, so a mode that
+// runs no gate rejects them instead of dropping them.
+const mixesGateFlags = (input: CheckCensusCliInput): boolean =>
+  (input.deferStaleStamp || O.isSome(input.rowPackages)) &&
+  (input.writeBaseline || input.stampOnly || input.buildEquivalence);
+
 const buildEquivalenceCliOptions = (repoRoot: string, input: CheckCensusCliInput): BuildEquivalenceCliOptions =>
   BuildEquivalenceCliOptions.make({
     repoRoot,
@@ -1056,6 +1120,12 @@ const buildEquivalenceCliOptions = (repoRoot: string, input: CheckCensusCliInput
 const runCheckCensusCli = Effect.fn("CheckCensus.cli")(function* (input: CheckCensusCliInput) {
   const path = yield* Path.Path;
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
+  if (mixesGateFlags(input)) {
+    return yield* QualityScriptCommandError.make({
+      message:
+        "--defer-stale-stamp and --row-packages shape the gate (not --write-baseline, --stamp-only or --build-equivalence).",
+    });
+  }
   if (mixesStampOnlyFlags(input)) {
     return yield* QualityScriptCommandError.make({
       message:
@@ -1093,11 +1163,20 @@ const runCheckCensusCli = Effect.fn("CheckCensus.cli")(function* (input: CheckCe
  * **Details**
  *
  * The overlay census is evidence and never fails on what it counts. The
- * gate re-measures every baseline row (narrowed by `--filter`) with
+ * gate re-measures every baseline row (narrowed by `--filter`, and by
+ * `--row-packages` to the rows those workspace packages own) with
  * `tsc --singleThreaded --extendedDiagnostics` and exits non-zero when a
  * row's instantiation count increased, the compiler differs from the
- * baseline's, or no baseline row was selected (a mistyped `--filter`); check time beyond the 5% band is an advisory line and an
- * instantiation decrease prints a tighten hint. `--gate-only` skips the overlay census;
+ * baseline's, or no baseline row was selected (a mistyped `--filter`). A
+ * strict row increases when it grows beyond the noise floor; a band row
+ * (`CheckCensusBandRow`) only beyond 5% of its baseline, and smaller growth
+ * is reported with its delta and percent. Check time beyond the 5% band is an
+ * advisory line and an instantiation decrease prints a tighten hint. On a
+ * runner (`GITHUB_STEP_SUMMARY` set) the gate also appends a Markdown table
+ * to the job summary. `--defer-stale-stamp` turns a compiler change into a
+ * passing deferral line that names the stale baseline and samples nothing,
+ * because Repo Sanity's `--stamp-only` step owns that red; the Heavy / Check
+ * lane passes it. `--gate-only` skips the overlay census;
  * `--write-baseline` re-measures every baseline row (the built-in defaults
  * when no baseline exists) and rewrites the baseline, refusing any program
  * with type errors.
@@ -1121,7 +1200,8 @@ const runCheckCensusCli = Effect.fn("CheckCensus.cli")(function* (input: CheckCe
  * `--write-baseline`, `--gate-only`, `--build-equivalence`, `--seed`,
  * `--initial-state` or `--equivalence-output-json` is a usage error, while
  * `--filter` and `--output-json` are ignored, as `--write-baseline` ignores
- * them.
+ * them. `--defer-stale-stamp` and `--row-packages` shape only the gate, so
+ * `--write-baseline`, `--stamp-only` and `--build-equivalence` reject them.
  *
  * **Example** (Register the subcommand)
  *
@@ -1159,6 +1239,18 @@ export const checkCensusCommand = Command.make(
       Flag.withDefault(false),
       Flag.withDescription("Skip the overlay census; only gate the baselined programs against the baseline")
     ),
+    deferStaleStamp: Flag.Boolean("defer-stale-stamp").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "With the gate: when the baseline's compiler stamp differs from the installed tsc, print that the baseline is stale and pass without sampling (Repo Sanity's --stamp-only step owns that red); the Heavy / Check lane passes it"
+      )
+    ),
+    rowPackages: Flag.String("row-packages").pipe(
+      Flag.withDescription(
+        "With the gate: only gate baseline rows owned by these comma-separated workspace packages (a row's owner is its name up to '#')"
+      ),
+      Flag.optional
+    ),
     stampOnly: Flag.Boolean("stamp-only").pipe(
       Flag.withDefault(false),
       Flag.withDescription(
@@ -1192,6 +1284,7 @@ export const checkCensusCommand = Command.make(
   },
   runCheckCensusCli
 ).pipe(
+  Command.provide(CiRunnerOutputsLive),
   Command.withDescription(
     "Measure check overlays against a reference-keeping overlay, then gate single-checker instantiations against the committed baseline; needs a built tree. --build-equivalence instead proves build and check programs report identical diagnostics; --stamp-only only checks the baseline's compiler stamp against the installed compiler"
   )
