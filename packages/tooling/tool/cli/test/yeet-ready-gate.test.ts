@@ -554,6 +554,18 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
               })
             )
           );
+          // Another pull request's ready open in the same ledger says nothing about this one.
+          yield* recordYeetReviewLaneRows(work, [
+            ReviewLaneFlipRow.make({
+              schemaVersion: "yeet-review-lane/v1",
+              prNumber: prNumber + 1000,
+              branch: "feature/other",
+              recordedAt: "2026-11-13T08:00:00.000Z",
+              headSha: `${headSha}f`,
+              at: "2026-11-13T08:00:00.000Z",
+              transition: "open",
+            }),
+          ]);
           const anchors = yield* Ref.make<ReadonlyArray<boolean | undefined>>([]);
           yield* runYeetReadyGate(lane, {
             rewriteCarry: () => Effect.succeedNone,
@@ -634,6 +646,24 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const logs = yield* TestConsole.logLines;
         expect(A.join(A.map(logs, String), "\n")).toContain("final-check receipt for abc1234def: pass");
       })
+    );
+
+    it.effect(
+      "opens ready on an ancestor's receipt carried by the refresh rule, before a pull request number exists",
+      () =>
+        Effect.gen(function* () {
+          const ancestor = Str.repeat(40)("9");
+          const found = yield* passingFinalCheck(context, ancestor);
+          const receipt = O.getOrThrow(found);
+          const hooks = yeetOpenReadyHooks({
+            finalCheck: () => Effect.succeedNone,
+            refresh: (_context, head) =>
+              Effect.succeedSome(FinalCheckRefreshPass.make({ receipt, finalHead: head, ownChanges: [] })),
+          });
+          yield* hooks.requireProof(context, headSha);
+          const logs = yield* TestConsole.logLines;
+          expect(A.join(A.map(logs, String), "\n")).toContain(`final <sha40> #<pr> receipt ${ancestor}`);
+        })
     );
 
     it.effect("starts the review round and requests the reviewer without a push when a pull request opens ready", () =>

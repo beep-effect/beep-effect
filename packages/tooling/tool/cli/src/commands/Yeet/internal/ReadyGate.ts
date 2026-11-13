@@ -398,7 +398,7 @@ export class YeetReadyGateRefused extends S.TaggedError<YeetReadyGateRefused, { 
     blocker: YeetReadyRefusalBlocker,
     message: S.String,
     // The bare reason, without the `yeet ready` framing, for a caller that words its own refusal.
-    detail: S.optionalKey(S.String),
+    detail: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefaultKey(Effect.succeed(""))),
   },
   $I.annoteError<YeetReadyGateRefused>("YeetReadyGateRefused", {
     description: "yeet ready refused to flip a draft pull request because a content-final criterion is unmet.",
@@ -1630,6 +1630,7 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
       Effect.fail(
         YeetReadyGateRefused.make({
           blocker: blocked.blocker,
+          detail: blocked.detail,
           message: `yeet ready refused: blocked on ${blocked.blocker}: ${blocked.detail}. Re-run \`${YEET_READY_COMMAND}\` once it clears.`,
         })
       ),
@@ -1748,7 +1749,7 @@ export const yeetOpenReadyHooks = (dependencies: YeetReadyGateDependencies = {})
       Effect.catchTag("YeetReadyGateRefused", (refused) =>
         Effect.fail(
           YeetCommandError.make({
-            message: renderOpenReadyRefusal(headSha, refused.detail ?? refused.message),
+            message: renderOpenReadyRefusal(headSha, refused.detail),
             exitCode: 1,
           })
         )

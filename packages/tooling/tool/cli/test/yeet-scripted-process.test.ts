@@ -19,6 +19,7 @@ import {
   deriveYeetMergeReady,
   ensurePullRequest,
   FinalCheckReceipt,
+  FinalCheckStepResult,
   findOpenPullRequest,
   findOpenPullRequestViaRest,
   isMergeCommitSubject,
@@ -611,6 +612,52 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         expect(body).not.toContain("full:cheap-gates");
         // The head is resolved once, to look for its final-check receipt.
         expect(commandLines(commands)).toEqual(["git rev-parse --verify HEAD"]);
+      })
+    );
+
+    // A pull request opens ready on its head's final-check receipt, so the body names it.
+    it.effect("adds the Final check section from the head's own passing receipt, and none from a failing one", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const bodyFor = Effect.fnUntraced(function* (head: string, verdict: "pass" | "fail") {
+          const receipt = yield* S.encodeEffect(S.fromJsonString(FinalCheckReceipt))(
+            FinalCheckReceipt.make({
+              headSha: head,
+              mergeBase: Str.repeat(40)("b"),
+              base: "origin/main",
+              complete: true,
+              verdict,
+              startedAt: "2026-11-13T00:00:00.000Z",
+              finishedAt: "2026-11-13T00:01:00.000Z",
+              steps: [
+                FinalCheckStepResult.make({
+                  gate: "coverage",
+                  label: "final-check:coverage",
+                  hostedContext: "Heavy / Coverage Regression",
+                  command: "(skipped)",
+                  status: "skipped",
+                  durationMs: 0,
+                  reason: "hosted proves",
+                }),
+              ],
+              expectationRewrites: [],
+            })
+          );
+          yield* fs.makeDirectory("/repo/.beep/yeet/final-check", { recursive: true });
+          yield* fs.writeFileString(`/repo/.beep/yeet/final-check/${head}.json`, receipt);
+          const commands = yield* makeCommands;
+          const recorder = yield* makeRecorder;
+          const request = YeetPrBodyRequest.make({ summary: O.some("## Summary\n\nWhy.\n") });
+          return yield* buildPrBody(contextAt("/repo"), recorder, request).pipe(
+            withProcesses([["rev-parse --verify HEAD", 0, `${head}\n`]], commands)
+          );
+        });
+        const passing = yield* bodyFor(Str.repeat(40)("d"), "pass");
+        expect(passing).toContain(
+          "## Final check\n\n- `yeet final-check` on dddddddddddd: pass\n- skipped, proved by hosted CI only: coverage (hosted proves)\n\nVerdict: "
+        );
+        const failing = yield* bodyFor(Str.repeat(40)("e"), "fail");
+        expect(failing).not.toContain("## Final check");
       })
     );
 

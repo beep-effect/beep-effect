@@ -279,6 +279,27 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
     })
   );
 
+  it.effect("does not anchor on the open when the pull request was converted to a draft since", () =>
+    Effect.gen(function* () {
+      const runner = ScriptedSpawner.make((command, args) => {
+        expect(command).toBe("gh");
+        expect(A.contains(args, "POST")).toBe(false);
+        return {
+          stdout: A.contains(args, "user")
+            ? "kriegcloud"
+            : A.some(args, Str.includes("/timeline?"))
+              ? json([[{ event: "convert_to_draft", created_at: "2026-11-06T11:30:00Z" }]])
+              : json(pull()),
+        };
+      });
+      const error = yield* requestReviewerReviewForTesting(context, 42, sha, false, true).pipe(
+        provideSpawner(runner),
+        Effect.flip
+      );
+      expect(error.message).toContain("reviewer ready timestamp is unavailable");
+    })
+  );
+
   it.effect("refuses an empty timeline when the open time is unknown", () =>
     Effect.gen(function* () {
       const { created_at: _createdAt, ...undated } = pull();

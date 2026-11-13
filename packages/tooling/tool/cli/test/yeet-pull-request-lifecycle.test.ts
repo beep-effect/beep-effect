@@ -475,6 +475,36 @@ describe("Yeet pull request lifecycle boundaries", () => {
     );
   });
 
+  it("omits the ran or skipped line a receipt has nothing for, and says when a skip recorded no reason", () => {
+    const receiptWith = (steps: ReadonlyArray<FinalCheckStepResult>) =>
+      FinalCheckReceipt.make({
+        headSha: Str.repeat(40)("c"),
+        mergeBase: Str.repeat(40)("b"),
+        base: "origin/main",
+        complete: true,
+        verdict: "pass",
+        startedAt: "2026-11-13T00:00:00.000Z",
+        finishedAt: "2026-11-13T00:01:00.000Z",
+        steps,
+        expectationRewrites: [],
+      });
+    const step = (status: "passed" | "skipped") =>
+      FinalCheckStepResult.make({
+        gate: "lint",
+        label: "final-check:lint",
+        hostedContext: "Lint",
+        command: "bun run lint",
+        status,
+        durationMs: 0,
+      });
+    const header = "## Final check\n\n- `yeet final-check` on cccccccccccc: pass";
+    expect(renderFinalCheckBodySection(receiptWith([step("passed")]))).toBe(`${header}\n- ran: lint`);
+    expect(renderFinalCheckBodySection(receiptWith([step("skipped")]))).toBe(
+      `${header}\n- skipped, proved by hosted CI only: lint (no reason recorded)`
+    );
+    expect(renderFinalCheckBodySection(receiptWith([]))).toBe(header);
+  });
+
   it("keeps the compatibility planner equivalent in both dual invocation forms", () => {
     const message = O.some("fix(repo): restore quality");
     expect(buildYeetRunPlan(context, message)).toEqual(buildYeetRunPlan(message)(context));
