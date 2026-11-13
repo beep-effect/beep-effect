@@ -9,7 +9,7 @@ Status: `active`
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Read the first probe's findings, rule and amendments, and its probe code. Confirm the account has plan headroom. Rerun preflight under scorer profile v3. | Preflight recorded; the code change is scoped; no blocker on the plan. |
-| P1 Implement | in-progress | Add lane fraction as a selectable primary, the within-task permutation test, the fixed-task interval and the three-outcome verdict, schema first and with tests. Pass the first slice on the committed pilot records. | First slice passes; package verification green; coverage floors hold; the code PR is merged. |
+| P1 Implement | complete | Add lane fraction as a selectable primary, the within-task permutation test, the fixed-task interval and the three-outcome verdict, schema first and with tests. Pass the first slice on the committed pilot records. | First slice passes; package verification green; coverage floors hold; the code PR is merged. |
 | P2 Verify | pending | Run the 120 scored runs under the cost ceiling, score every kept directory, write the findings and the verdict. | Run records and findings are in `history/`; the verdict is stated against the Decision Rule. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Record the verdict row, the prune proposal on a Null, and the fired gate in the exploration. Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
@@ -102,6 +102,12 @@ bun run beep quality package-verify @beep/repo-cli
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug skill-lane-probe`; add a `kind: checkpoint` file there, never edit this block._
 
-_No checkpoint files yet._
+### P1 merged; the P2 scored run waits for Claude plan headroom, 2026-11-13
+
+PR #3240 merged the lane report, the permutation test and their tests, so P1 is complete. Stage and preflight are done (12 of 12 pass) and the run script is ready. The scored run has not started: `bun run beep accounts status` on 2026-11-13 showed the active Claude account with 10% of its weekly quota left and 2d 18h to the reset. The first probe lost 178 runs to a weekly limit, so the run starts only when `bun run beep accounts status`, read immediately before the start, shows headroom on the account that runs it. That check applies after the weekly reset too; a reset alone is not enough. The run is not topped up. No scored run exists yet and nothing from the first probe is pooled.
+
+Lane goals/skill-lane-probe-p2 · PR #3240
+
+Reverse: Start the run earlier only if accounts status shows headroom for 120 Opus runs on the account the run will use.
 
 <!-- beep:decisions:end -->
