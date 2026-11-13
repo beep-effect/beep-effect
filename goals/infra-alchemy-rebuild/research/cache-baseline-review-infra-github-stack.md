@@ -26,5 +26,8 @@ epoch are unchanged.
 The root manifest changes in two places only: the `workspaces` list gains
 `packages/tooling/infra/github` (written by `create-package`), and the catalog gains
 `"@alchemy.run/github": "2.0.0-beta.86"`, the Alchemy version already pinned. No root script, Turbo task,
-input list, output or environment changes; `turbo.json` is identical to the last record (#3289). The audit's
-`REVIEW configuration-source-drift: turbo.json` line predates this lane.
+output or environment changes. One generated input list changes:
+`bun run beep lint policy-fingerprint --write` adds `packages/tooling/infra/github/package.json` to the
+inputs of `//#lint:policy-fingerprint` in `turbo.json` (and the matching entry in
+`standards/policy-tools.fingerprint.json`), because the fingerprint covers every workspace manifest. The
+task's command, outputs and environment are unchanged.

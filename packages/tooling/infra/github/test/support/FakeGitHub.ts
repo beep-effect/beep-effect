@@ -26,6 +26,10 @@ type Reply = readonly [number, unknown];
 
 const notFound: Reply = [404, { message: "Not Found" }];
 
+/** A page past the first is always empty: every list fits one page. */
+const isLaterPage = (method: string, query: URLSearchParams) =>
+  method === "GET" && Number(query.get("page") ?? "1") > 1;
+
 const JsonObject = S.fromJsonString(S.Record(S.String, S.Unknown));
 const decodeBody = S.decodeUnknownEffect(JsonObject);
 const encodeBody = S.encodeEffect(S.fromJsonString(S.Unknown));
@@ -109,18 +113,22 @@ export class FakeRepository {
       A.filter(Str.split(path, "/"), Str.isNonEmpty),
       decodeURIComponent
     );
-    // A page past the first is always empty: every list fits one page.
-    if (method === "GET" && Number(query.get("page") ?? "1") > 1) return [200, []];
+    if (isLaterPage(method, query)) return [200, []];
     if (root !== "repos") return this.accountRoute(root, owner);
-    if (owner !== this.owner || repo !== this.name) return notFound;
-    const route = kind === undefined ? undefined : this.routes[kind];
-    if (route !== undefined) return route(method, rest, body);
-    if (kind === undefined && method === "PATCH") this.repo = { ...this.repo, ...body };
-    return kind === undefined ? [200, this.repoBody()] : notFound;
+    return owner === this.owner && repo === this.name ? this.repoRoute(method, kind ?? "", rest, body) : notFound;
+  }
+
+  private repoRoute(method: string, kind: string, rest: ReadonlyArray<string>, body: Json): Reply {
+    const route = this.routes[kind];
+    return route === undefined ? notFound : route(method, rest, body);
   }
 
   /** Routes below `/repos/{owner}/{repo}/<kind>`. */
   private readonly routes: Record<string, (method: string, rest: ReadonlyArray<string>, body: Json) => Reply> = {
+    "": (method, _rest, body) => {
+      if (method === "PATCH") this.repo = { ...this.repo, ...body };
+      return [200, this.repoBody()];
+    },
     topics: (_method, _rest, body) => {
       this.topics = (body.names as ReadonlyArray<string> | undefined) ?? [];
       return [200, { names: this.topics }];
