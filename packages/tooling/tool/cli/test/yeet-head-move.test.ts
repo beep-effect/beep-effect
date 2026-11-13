@@ -1,6 +1,7 @@
-import { Git } from "@beep/git/Git";
+import { Git, GitCommandError } from "@beep/git/Git";
 import {
   layerYeetHeadMoveClassifierTest,
+  provideYeetHeadMoveClassifier,
   YeetHeadMoveClassifier,
   YeetHeadMoveRequest,
   YeetHeadMoveUnknown,
@@ -333,6 +334,56 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         expect(result._tag).toBe("unknown");
       })
     );
+    it.effect("reads a failed object probe as missing and fetches the object", () =>
+      Effect.gen(function* () {
+        const remote = yield* stack();
+        const local = yield* init();
+        yield* git(local, ["remote", "add", "origin", remote.root]);
+        // Every `Git.refExists` probe fails (W8, SPEC D-22): the first pass reads each object as
+        // missing and fetches it, and the post-fetch check failing keeps the verdict unknown.
+        const failingProbes = Git.layerTest({
+          configGet: () => Effect.succeedNone,
+          refExists: (cwd, ref) =>
+            Effect.fail(
+              GitCommandError.make({
+                kind: "failed",
+                args: ["cat-file", "-e", ref],
+                cwd,
+                exitCode: 128,
+                stderr: "fatal: probe failed",
+              })
+            ),
+        });
+        const serviceContext = yield* Layer.build(
+          YeetHeadMoveClassifier.layer(local).pipe(Layer.provide(failingProbes))
+        );
+        const verdict = yield* Context.get(serviceContext, YeetHeadMoveClassifier).classify(
+          YeetHeadMoveRequest.make({ before: remote.l2, after: remote.c2, base: remote.squash })
+        );
+        expect(verdict._tag).toBe("unknown");
+        const fetched = yield* git(local, ["cat-file", "-t", remote.c2]);
+        expect(Str.trim(fetched)).toBe("commit");
+      })
+    );
+    it.effect("returns unknown when a fetched object is still missing", () =>
+      Effect.gen(function* () {
+        const remote = yield* stack();
+        const local = yield* init();
+        yield* git(local, ["remote", "add", "origin", remote.root]);
+        const neverPresent = Git.layerTest({
+          configGet: () => Effect.succeedNone,
+          refExists: () => Effect.succeed(false),
+        });
+        const serviceContext = yield* Layer.build(
+          YeetHeadMoveClassifier.layer(local).pipe(Layer.provide(neverPresent))
+        );
+        const verdict = yield* Context.get(serviceContext, YeetHeadMoveClassifier).classify(
+          YeetHeadMoveRequest.make({ before: remote.l2, after: remote.c2, base: remote.squash })
+        );
+        expect(verdict._tag).toBe("unknown");
+        if (verdict._tag === "unknown") expect(verdict.reason).toContain("is still missing after the fetch");
+      })
+    );
     it.effect("fails closed with a typed error for invalid UTF-8 commit metadata", () =>
       Effect.gen(function* () {
         const s = yield* stack();
@@ -372,6 +423,20 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         expect(result._tag).toBe("unknown");
         const instant = yield* service.committerInstant("a");
         assertNone(instant);
+      })
+    );
+    it.effect("supplies a checkout classifier unless one is already provided", () =>
+      Effect.gen(function* () {
+        const s = yield* stack();
+        const request = YeetHeadMoveRequest.make({ before: s.l2, after: s.c2, base: s.squash });
+        const classifyRequest = YeetHeadMoveClassifier.use((classifier) => classifier.classify(request));
+        const live = yield* provideYeetHeadMoveClassifier(s.root)(classifyRequest);
+        expect(live).toMatchObject({ _tag: "unchanged", commits: 1 });
+        const fixture = yield* Layer.build(
+          layerYeetHeadMoveClassifierTest((input) => YeetHeadMoveUnknown.make({ ...input, reason: "fixture" }))
+        );
+        const kept = yield* provideYeetHeadMoveClassifier(s.root)(classifyRequest).pipe(Effect.provideContext(fixture));
+        expect(kept).toMatchObject({ _tag: "unknown", reason: "fixture" });
       })
     );
   }
