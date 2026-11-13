@@ -1,6 +1,8 @@
 import { Git } from "@beep/git/Git";
 import { qualityCommand, renderAdmissionSnapshotLinesForTesting } from "@beep/repo-cli/test/Quality";
 import {
+  ADMISSION_JOURNAL_ARCHIVE_DIRECTORY_NAME,
+  ADMISSION_JOURNAL_ARCHIVE_RETENTION_MILLIS,
   AdmissionAttemptTerminationJournal,
   AdmissionConfig,
   AdmissionEvictionEmission,
@@ -8,6 +10,7 @@ import {
   AdmissionJournalAdmitted,
   AdmissionJournalEnqueued,
   AdmissionJournalEvent,
+  AdmissionJournalHistory,
   AdmissionJournalLeaseEvicted,
   AdmissionJournalLeaseEvictedV3,
   AdmissionJournalLockGeneration,
@@ -24,6 +27,7 @@ import {
   AdmissionSnapshot,
   acquireJournalFileLock,
   admissionCapacityTokensFor,
+  admissionJournalHistory,
   admissionJournalPath,
   admissionProtocolPath,
   admissionProtocolStatus,
@@ -34,6 +38,7 @@ import {
   attemptJournalPathForCheckout,
   decodeAdmissionJournalEvent,
   finishAdmissionJournalLockReapForTesting,
+  isAgedAdmissionJournalArchiveSegment,
   isOvershootLoserForTesting,
   isProcessIdentityAliveWithStartForTesting,
   MemoryStats,
@@ -48,6 +53,7 @@ import {
   processStartIdentityForPid,
   processStartIdentityProbeForTesting,
   provideRuntimeRootForTesting,
+  pruneAgedAdmissionJournalArchive,
   publishAdmissionJournalForTesting,
   QUARANTINE_ARCHIVE_DIRECTORY_NAME,
   QUARANTINE_ARCHIVE_MIN_AGE_MILLIS,
@@ -56,6 +62,8 @@ import {
   quarantinedAtMillisOf,
   RunScopeRecord,
   RuntimeRootChoice,
+  readAdmissionJournalArchive,
+  readAdmissionJournalHistory,
   reapAdmissionState,
   releaseAdmissionJournalLockForTesting,
   repoRunSafeArtifactName,
@@ -94,6 +102,7 @@ import * as Context from "effect/Context";
 import * as Command from "effect/cli/Command";
 import * as Digest from "effect/crypto/Digest";
 import * as SecureRandom from "effect/crypto/SecureRandom";
+import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -1689,6 +1698,303 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           }
         }).pipe(TestClock.withLive)
     );
+
+    describe("admission journal archive", () => {
+      const trimInstant = DateTime.toEpochMillis(DateTime.makeUnsafe("2026-11-12T10:00:00Z"));
+
+      const withAdmissionRoot = Effect.fnUntraced(function* <Value, Failure, Requirements>(
+        body: (tempRoot: AdmissionTempRoot) => Effect.Effect<Value, Failure, Requirements>
+      ) {
+        const gibRef = yield* Ref.make(50);
+        const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
+        return yield* body(tempRoot).pipe(
+          provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+          Effect.provideService(MemoryStats, memoryStats(gibRef))
+        );
+      });
+
+      const encodeLines = (events: ReadonlyArray<AdmissionJournalEvent>) =>
+        Effect.forEach(events, (event) => encodeUnknownAdmissionJournalEventJson(event));
+
+      const writeLines = Effect.fnUntraced(function* (filePath: string, lines: ReadonlyArray<string>) {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* fs.makeDirectory(path.dirname(filePath), { recursive: true, mode: 0o700 });
+        yield* fs.writeFileString(filePath, `${A.join(lines, "\n")}\n`);
+      });
+
+      const writeJournal = Effect.fnUntraced(function* (tempRoot: AdmissionTempRoot, lines: ReadonlyArray<string>) {
+        const journalPath = yield* admissionJournalPath(tempRoot.root);
+        yield* writeLines(journalPath, lines);
+      });
+
+      const archiveDirectoryOf = Effect.fnUntraced(function* (tempRoot: AdmissionTempRoot) {
+        const path = yield* Path.Path;
+        return path.join(tempRoot.root, ADMISSION_JOURNAL_ARCHIVE_DIRECTORY_NAME);
+      });
+
+      const rowCounts = (history: AdmissionJournalHistory) => [
+        history.archivedRows,
+        history.liveRows,
+        history.duplicateRows,
+        history.opaqueRows,
+      ];
+
+      it("ages a segment once its whole UTC day is past the retention window", () => {
+        const dayEnd = DateTime.toEpochMillis(DateTime.makeUnsafe("2026-11-13T00:00:00Z"));
+        const agedAt = dayEnd + ADMISSION_JOURNAL_ARCHIVE_RETENTION_MILLIS;
+        expect(ADMISSION_JOURNAL_ARCHIVE_DIRECTORY_NAME).toBe("journal-archive");
+        expect(isAgedAdmissionJournalArchiveSegment("2026-11-12.ndjson", agedAt)).toBe(true);
+        expect(isAgedAdmissionJournalArchiveSegment(agedAt - 1)("2026-11-12.ndjson")).toBe(false);
+        expect(isAgedAdmissionJournalArchiveSegment("2026-13-45.ndjson", agedAt)).toBe(false);
+        expect(isAgedAdmissionJournalArchiveSegment("2026-11-12.ndjson.tmp", agedAt)).toBe(false);
+      });
+
+      it.effect("archives the rows the ring trims and folds them back ahead of the live journal", () =>
+        withAdmissionRoot((tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* TestClock.setTime(trimInstant);
+            const seeded = yield* encodeLines(A.makeBy(200, journalAdmitted));
+            yield* writeJournal(tempRoot, seeded);
+            yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(200));
+            yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(201));
+
+            const archiveDirectory = yield* archiveDirectoryOf(tempRoot);
+            const segment = yield* fs.readFileString(path.join(archiveDirectory, "2026-11-12.ndjson"));
+            expect(segment).toBe(
+              A.join(
+                A.map(A.take(seeded, 2), (line) => `\n${line}\n`),
+                ""
+              )
+            );
+            const live = yield* readJournalEvents(tempRoot.root);
+            expect(A.map(live, (event) => event.nonce)).toStrictEqual(A.makeBy(200, (index) => `nonce-${index + 2}`));
+
+            const history = yield* readAdmissionJournalHistory(tempRoot.root);
+            expect(history.archive.segments).toStrictEqual(["2026-11-12.ndjson"]);
+            deepStrictEqual(history.events, A.makeBy(202, journalAdmitted));
+            expect(rowCounts(history)).toStrictEqual([2, 200, 0, 0]);
+          })
+        )
+      );
+
+      it.effect("isolates a torn archive tail from the next trimmed batch", () =>
+        withAdmissionRoot((tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* TestClock.setTime(trimInstant);
+            const archiveDirectory = yield* archiveDirectoryOf(tempRoot);
+            const segmentPath = path.join(archiveDirectory, "2026-11-12.ndjson");
+            const torn = '{"schemaVersion":"yeet-admission-journal/v1","_tag":"admission-adm';
+            yield* fs.makeDirectory(archiveDirectory, { recursive: true, mode: 0o700 });
+            yield* fs.writeFileString(segmentPath, `\n${torn}`);
+            const seeded = yield* encodeLines(A.makeBy(200, journalAdmitted));
+            yield* writeJournal(tempRoot, seeded);
+            yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(200));
+
+            const segment = yield* fs.readFileString(segmentPath);
+            expect(segment).toBe(
+              `\n${torn}${A.join(
+                A.map(A.take(seeded, 1), (line) => `\n${line}\n`),
+                ""
+              )}`
+            );
+            const history = yield* readAdmissionJournalHistory(tempRoot.root);
+            deepStrictEqual(history.events, A.makeBy(201, journalAdmitted));
+            expect(rowCounts(history)).toStrictEqual([2, 200, 0, 1]);
+          })
+        )
+      );
+
+      it.effect("decodes mixed-revision archive rows in order and drops repeated copies", () =>
+        withAdmissionRoot((tempRoot) =>
+          Effect.gen(function* () {
+            const path = yield* Path.Path;
+            const archiveDirectory = yield* archiveDirectoryOf(tempRoot);
+            const legacyRelease = AdmissionJournalReleased.make({
+              schemaVersion: "yeet-admission-journal/v1",
+              _tag: "admission-released",
+              nonce: "nonce-1",
+              pid: 1,
+              releasedAtMillis: 2,
+            });
+            const older = [journalAdmitted(1), legacyRelease, journalLeaseEvicted];
+            const olderLines = yield* encodeLines(older);
+            const v3Lines = yield* encodeLines(journalV3Events());
+            const future = '{"schemaVersion":"yeet-admission-journal/v9","_tag":"admission-resized"}';
+            const liveTail = yield* encodeUnknownAdmissionJournalEventJson(journalAdmitted(9));
+            yield* writeLines(path.join(archiveDirectory, "2026-11-10.ndjson"), ["", ...olderLines]);
+            yield* writeLines(path.join(archiveDirectory, "2026-11-11.ndjson"), [
+              "",
+              ...v3Lines,
+              future,
+              ...A.take(olderLines, 1),
+            ]);
+            yield* writeLines(path.join(archiveDirectory, "notes.txt"), ["not a segment"]);
+            yield* writeJournal(tempRoot, [...A.take(v3Lines, 2), liveTail]);
+
+            const history = yield* readAdmissionJournalHistory(tempRoot.root);
+            expect(history.archive.segments).toStrictEqual(["2026-11-10.ndjson", "2026-11-11.ndjson"]);
+            deepStrictEqual(history.events, [...older, ...journalV3Events(), journalAdmitted(9)]);
+            expect(rowCounts(history)).toStrictEqual([10, 3, 3, 1]);
+
+            // A pre-v3 reader keeps the same rows but cannot decode the v3 ones.
+            const legacy = yield* readAdmissionJournalHistory(tempRoot.root).pipe(
+              Effect.provideService(
+                AdmissionJournalReader,
+                AdmissionJournalReader.of({ decode: decodeLegacyAdmissionJournalEvent })
+              )
+            );
+            deepStrictEqual(legacy.events, [...older, journalAdmitted(9)]);
+            expect(rowCounts(legacy)).toStrictEqual([10, 3, 3, 6]);
+          })
+        )
+      );
+
+      it.effect("keeps trimmed rows live while the archive cannot be written, then archives them", () =>
+        withAdmissionRoot((tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* TestClock.setTime(trimInstant);
+            const archiveDirectory = yield* archiveDirectoryOf(tempRoot);
+            const seeded = yield* encodeLines(A.makeBy(200, journalAdmitted));
+            yield* writeJournal(tempRoot, seeded);
+            // A regular file where the archive directory belongs blocks every copy.
+            yield* fs.writeFileString(archiveDirectory, "blocked\n");
+            yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(200));
+
+            const kept = yield* readJournalEvents(tempRoot.root);
+            deepStrictEqual(kept, A.makeBy(201, journalAdmitted));
+            const errorLines = yield* TestConsole.errorLines;
+            const segmentPath = path.join(archiveDirectory, "2026-11-12.ndjson");
+            expect(
+              A.some(
+                A.map(errorLines, String),
+                Str.startsWith(`[yeet] could not archive 1 trimmed admission journal row(s) to ${segmentPath} (`)
+              )
+            ).toBe(true);
+            const unreadable = yield* Effect.flip(readAdmissionJournalHistory(tempRoot.root));
+            expect(unreadable).toBeInstanceOf(QualitySchedulerError);
+            expect(unreadable.message).toBe(`Failed to list admission journal archive "${archiveDirectory}".`);
+            const prunedWhileBlocked = yield* pruneAgedAdmissionJournalArchive(tempRoot.root);
+            expect(prunedWhileBlocked).toBe(0);
+
+            yield* fs.remove(archiveDirectory);
+            yield* appendAdmissionJournalEvent(tempRoot.root, journalAdmitted(201));
+            const history = yield* readAdmissionJournalHistory(tempRoot.root);
+            deepStrictEqual(history.events, A.makeBy(202, journalAdmitted));
+            expect(rowCounts(history)).toStrictEqual([2, 200, 0, 0]);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+      );
+
+      it.effect("prunes segments past retention in the reap pass and previews them in the dry run", () =>
+        withAdmissionRoot((tempRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* TestClock.setTime(trimInstant);
+            const archiveDirectory = yield* archiveDirectoryOf(tempRoot);
+            for (const name of ["2026-10-01.ndjson", "2026-10-12.ndjson", "2026-10-13.ndjson", "2026-11-12.ndjson"]) {
+              yield* writeLines(path.join(archiveDirectory, name), [""]);
+            }
+            yield* writeLines(path.join(archiveDirectory, "notes.txt"), ["not a segment"]);
+            // An aged name that cannot be removed (a non-empty directory) is skipped, not fatal.
+            yield* writeLines(path.join(archiveDirectory, "2026-09-30.ndjson", "stray"), ["kept"]);
+            const pruneLine = (verb: string, count: number) =>
+              `${verb} ${count} admission journal archive segment(s) older than 30d 0h -> ${archiveDirectory}`;
+
+            yield* runQualityCommand(["scheduler", "reap", "--no-apply"]);
+            const dryRunLines = yield* TestConsole.logLines;
+            expect(A.map(dryRunLines, String)).toContain(pruneLine("would prune", 3));
+            const untouched = yield* readAdmissionJournalArchive(tempRoot.root);
+            expect(untouched.segments).toHaveLength(5);
+
+            yield* runQualityCommand(["scheduler", "reap", "--apply"]);
+            const applyLines = yield* TestConsole.logLines;
+            expect(A.map(A.drop(applyLines, A.length(dryRunLines)), String)).toContain(pruneLine("pruned", 2));
+            const pruned = yield* readAdmissionJournalArchive(tempRoot.root);
+            expect(pruned.segments).toStrictEqual(["2026-09-30.ndjson", "2026-10-13.ndjson", "2026-11-12.ndjson"]);
+            const strayKept = yield* fs.exists(path.join(archiveDirectory, "notes.txt"));
+            expect(strayKept).toBe(true);
+
+            yield* runQualityCommand(["scheduler", "reap", "--apply"]);
+            const finalLines = yield* TestConsole.logLines;
+            expect(A.map(A.drop(finalLines, A.length(applyLines)), String)).toContain(
+              "pruned no aged admission journal archive segments"
+            );
+            const errorLines = yield* TestConsole.errorLines;
+            expect(A.filter(A.map(errorLines, String), Str.startsWith("[yeet] pruned "))).toStrictEqual([
+              `[yeet] pruned 2 admission journal archive segment(s) older than 30 days from ${archiveDirectory}`,
+            ]);
+
+            const unreadable = yield* Effect.flip(admissionJournalHistory());
+            expect(unreadable.message).toBe(
+              `Failed to read admission journal archive segment "${path.join(archiveDirectory, "2026-09-30.ndjson")}".`
+            );
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+      );
+
+      it.effect("renders the folded history and its JSON from the scheduler history command", () =>
+        withAdmissionRoot((tempRoot) =>
+          Effect.gen(function* () {
+            const path = yield* Path.Path;
+            yield* TestClock.setTime(trimInstant);
+            const archiveDirectory = yield* archiveDirectoryOf(tempRoot);
+            const archiveLine = `- archive: ${archiveDirectory} (the reap pass prunes segments older than 30d 0h; --json lists every row)`;
+
+            yield* runQualityCommand(["scheduler", "history"]);
+            const emptyLines = yield* TestConsole.logLines;
+            expect(A.map(emptyLines, String)).toStrictEqual([
+              "admission history: 0 rows from no archive segments and the live journal",
+              "- rows read: 0 archived, 0 live; 0 duplicate(s) dropped, 0 undecodable",
+              "- admissions: 0",
+              archiveLine,
+            ]);
+
+            const admittedAt = (iso: string, waitMillis: number, index: number) => {
+              const admittedAtMillis = DateTime.toEpochMillis(DateTime.makeUnsafe(iso));
+              return AdmissionJournalAdmitted.make({
+                ...journalAdmitted(index),
+                enqueuedAtMillis: admittedAtMillis - waitMillis,
+                admittedAtMillis,
+              });
+            };
+            const archived = [admittedAt("2026-11-11T22:00:00Z", 1000, 1), admittedAt("2026-11-11T23:00:00Z", 3000, 2)];
+            const today = admittedAt("2026-11-12T08:00:00Z", 2000, 3);
+            const archivedLines = yield* encodeLines(archived);
+            const todayLines = yield* encodeLines([today]);
+            const liveLines = yield* encodeLines(journalV3Events());
+            yield* writeLines(path.join(archiveDirectory, "2026-11-11.ndjson"), ["", ...archivedLines]);
+            yield* writeLines(path.join(archiveDirectory, "2026-11-12.ndjson"), ["", ...todayLines]);
+            yield* writeJournal(tempRoot, liveLines);
+
+            yield* runQualityCommand(["scheduler", "history"]);
+            const textLines = yield* TestConsole.logLines;
+            expect(A.map(A.drop(textLines, A.length(emptyLines)), String)).toStrictEqual([
+              "admission history: 8 rows from 2 archive segment(s) 2026-11-11.ndjson to 2026-11-12.ndjson and the live journal",
+              "- rows read: 3 archived, 5 live; 0 duplicate(s) dropped, 0 undecodable",
+              "- admissions: 3 admitted 2026-11-11T22:00:00.000Z to 2026-11-12T08:00:00.000Z; wait p50 2.0s, p95 3.0s, max 3.0s",
+              archiveLine,
+            ]);
+
+            yield* runQualityCommand(["scheduler", "history", "--json"]);
+            const jsonLines = yield* TestConsole.logLines;
+            const rendered = A.join(A.map(A.drop(jsonLines, A.length(textLines)), String), "\n");
+            const decoded = yield* S.decodeEffect(S.fromJsonString(AdmissionJournalHistory))(rendered);
+            const expected = yield* readAdmissionJournalHistory(tempRoot.root);
+            deepStrictEqual(decoded, expected);
+            deepStrictEqual(decoded.events, [...archived, today, ...journalV3Events()]);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+      );
+    });
 
     it.effect("preserves an unknown protocol row byte-for-byte through a v1 append", () =>
       Effect.gen(function* () {
