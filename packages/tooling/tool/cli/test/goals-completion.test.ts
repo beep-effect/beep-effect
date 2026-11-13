@@ -481,6 +481,18 @@ it.layer(
   ),
   { timeout: "10 seconds" }
 )("prospective goal closeout", (it) => {
+  // The declaration digest is canonical JSON over manifest text; a statement
+  // holding an unpaired surrogate has none, and the digest fails typed.
+  it.effect("fails the declaration digest typed for an unpaired surrogate in the gate", () =>
+    Effect.gen(function* () {
+      const manifest = yield* decodeGoalManifest({
+        initiative: { id: "surrogate", status: "completed-retained" },
+        completionGate: { ...gate, statement: "Ship \ud800 via yeet" },
+      });
+      const failure = yield* Effect.flip(goalCompletionDeclarationDigest(manifest));
+      expect(failure.message).toContain('LoneSurrogate at "/completionGate/statement"');
+    })
+  );
   const proposal = GoalProposedCloseout.make({ status: "completed-retained", finalPullRequest: 1429 });
   const readiness = GoalAcceptanceEvidenceRef.make({
     kind: "yeet-verdict",

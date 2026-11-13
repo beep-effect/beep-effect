@@ -20,7 +20,7 @@
 //   pull request on the code route.
 // - the valid PacketCore fixture streams, which add the `stage-entered` body
 //   that no stored event carries.
-import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
+import { JsoncCanonicalizeError, JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
 import {
   canonicalJsonText,
   PacketEvent,
@@ -33,6 +33,7 @@ import {
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
@@ -95,7 +96,10 @@ const replay = Effect.fnUntraced(function* (file: StoredEventFile) {
   const event = yield* decodePacketEvent(upcastPacketEventJson(raw));
   const encoded = yield* encodePacketEvent(event);
   const owner = yield* JsoncFingerprint.hash(encoded);
-  const legacy = yield* packetEventDigest(event);
+  // The production digest path; since slice C its encoder is the owner with
+  // `omitUndefinedMembers`, so agreeing with the strict owner here also shows
+  // no stored event carries an undefined member.
+  const production = yield* packetEventDigest(event);
   const rendered = yield* renderPacketEventFile(event);
   return {
     source: file.source,
@@ -103,7 +107,7 @@ const replay = Effect.fnUntraced(function* (file: StoredEventFile) {
     type: parts.type,
     stored: parts.id,
     owner,
-    legacy,
+    production,
     rendersBack: rendered === file.text,
   };
 });
@@ -143,8 +147,8 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })((it) => {
         expect(sourceCount(rows, "goals-archive@")).toBe(71);
         expect(sourceCount(rows, "main-history@")).toBe(1);
         expect(mismatchPaths(rows)).toStrictEqual(legacyRows);
-        // The owner and the encoder that wrote the event agree on all of them.
-        expect(A.filter(rows, (row) => row.owner !== row.legacy)).toStrictEqual([]);
+        // The owner and the production digest path agree on all of them.
+        expect(A.filter(rows, (row) => row.owner !== row.production)).toStrictEqual([]);
         // The stored file is the indented renderer's output of the same event,
         // so the renderer is a view: no digest is taken over its bytes.
         expect(A.filter(rows, (row) => !row.rendersBack)).toStrictEqual([]);
@@ -166,24 +170,32 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })((it) => {
 
         expect(A.length(rows)).toBe(13);
         expect(mismatchPaths(rows)).toStrictEqual([]);
-        expect(A.filter(rows, (row) => row.owner !== row.legacy)).toStrictEqual([]);
+        expect(A.filter(rows, (row) => row.owner !== row.production)).toStrictEqual([]);
         expect(A.some(rows, (row) => row.type === "stage-entered")).toBe(true);
       })
     );
 
     // Beyond the stored events: any timeline entry the schema can mint, the
     // value PacketCore's own property test canonicalizes. The encoded form is
-    // plain JSON, so the owner emits PacketCore's bytes, except where a
-    // free-text field (`actor`, a reason) holds an unpaired surrogate, which
-    // PacketCore escapes and the owner refuses.
+    // plain JSON, so the strict owner emits PacketCore's bytes, except where a
+    // free-text field (`actor`, a reason) holds an unpaired surrogate. Before
+    // slice C PacketCore escaped and digested it; it now throws the owner's
+    // refusal, a behaviour change this property keeps in view.
     it.effect.prop(
-      "emits PacketCore's canonical bytes for any trace entry the schema can mint, or refuses an unpaired surrogate",
+      "emits the owner's bytes for any trace entry the schema can mint, or throws its refusal",
       [Arbitrary.schema(PacketTraceEntry)],
       Effect.fnUntraced(function* ([entry]) {
         const encoded = yield* encodePacketTraceEntry(entry);
+        const exported = Result.try({
+          try: () => canonicalJsonText(encoded),
+          catch: (thrown) => (S.is(JsoncCanonicalizeError)(thrown) ? thrown.code : "not refused"),
+        });
         Result.match(JsoncFingerprint.canonicalizeResult(encoded), {
-          onSuccess: (canonical) => expect(canonical).toBe(canonicalJsonText(encoded)),
-          onFailure: (failure) => expect(failure.code).toBe("LoneSurrogate"),
+          onSuccess: (canonical) => assertSuccess(exported, canonical),
+          onFailure: (failure) => {
+            expect(failure.code).toBe("LoneSurrogate");
+            assertFailure(exported, failure.code);
+          },
         });
       }),
       { arbitrary: fcRuns(50) }

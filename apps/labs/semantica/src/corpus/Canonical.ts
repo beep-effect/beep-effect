@@ -1,47 +1,25 @@
-import * as A from "effect/Array";
-import { identity, pipe } from "effect/Function";
-import * as O from "effect/Option";
-import * as Order from "effect/Order";
-import * as P from "effect/Predicate";
+import { canonicalDetectionJsonResult } from "@beep/epistemics/ContradictionDetection";
+import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
+import { identity } from "effect/Function";
 import * as Result from "effect/Result";
-import * as S from "effect/Schema";
-import * as Struct from "effect/Struct";
-
-const UnknownJson = S.fromJsonString(S.Unknown);
-
-const canonicalPrimitive = (value: string | number | boolean | null): string =>
-  Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity);
-
-const canonicalArray = (value: ReadonlyArray<unknown>): string => `[${pipe(value, A.map(canonicalJson), A.join(","))}]`;
-
-const canonicalObject = (value: { [x: PropertyKey]: unknown }): string => {
-  const entries = pipe(
-    Struct.keys(value),
-    A.sort(Order.String),
-    A.map((key) => {
-      const entry = value[key];
-      return P.isUndefined(entry)
-        ? O.none<readonly [string, unknown]>()
-        : O.some<readonly [string, unknown]>([key, entry]);
-    }),
-    A.getSomes
-  );
-
-  return `{${pipe(
-    entries,
-    A.map(([key, entry]) => `${canonicalPrimitive(key)}:${canonicalJson(entry)}`),
-    A.join(",")
-  )}}`;
-};
+import type * as S from "effect/Schema";
 
 /**
  * Encodes a JSON-compatible value with recursively sorted object keys and no whitespace.
  *
  * **Details**
  *
- * Object properties whose value is `undefined` are omitted. Unsupported array
- * entries use JSON's `null` representation. Primitive escaping delegates only
- * the scalar token to the native JSON encoder; object ordering remains explicit.
+ * The output is RFC 8785 canonical JSON from `JsoncFingerprint` in
+ * `@beep/jsonc`, the one owner of the bytes the lab's content ids and digests
+ * hash. Callers pass schema-encoded wire forms, which are plain JSON.
+ *
+ * **Gotchas**
+ *
+ * A value outside plain JSON throws the owner's `JsoncCanonicalizeError`
+ * instead of being coerced: an object member whose value is `undefined`, an
+ * `undefined` array element or root, a non-finite number, a bigint, a
+ * non-plain object such as a `Date`, a string or key with an unpaired
+ * surrogate, and nesting past the owner's depth cap.
  *
  * **Example** (Compare different key insertion orders)
  *
@@ -55,21 +33,33 @@ const canonicalObject = (value: { [x: PropertyKey]: unknown }): string => {
  * @category encoding
  * @since 0.0.0
  */
-export const canonicalJson = (value: unknown): string => {
-  if (P.isNull(value)) {
-    return canonicalPrimitive(value);
-  }
-  if (P.isString(value)) {
-    return canonicalPrimitive(value);
-  }
-  if (P.isNumber(value)) {
-    return canonicalPrimitive(value);
-  }
-  if (P.isBoolean(value)) {
-    return canonicalPrimitive(value);
-  }
-  if (A.isArray(value)) {
-    return canonicalArray(value);
-  }
-  return P.isObject(value) ? canonicalObject(value) : "null";
-};
+export const canonicalJson = (value: unknown): string =>
+  Result.getOrThrowWith(JsoncFingerprint.canonicalizeResult(value), identity);
+
+/**
+ * {@link canonicalJson} returning a `Result`, for the lab's digest helpers and
+ * schema checks, which already carry a `SchemaError` channel or a boolean.
+ *
+ * **Details**
+ *
+ * The owner's refusal of a value outside plain JSON becomes an `S.SchemaError`
+ * whose message names the owner's code and JSON pointer, instead of a thrown
+ * `JsoncCanonicalizeError`. It is the `@beep/epistemics` twin, so the mapping
+ * from refusal to `SchemaError` has one definition for the seal domains and
+ * the lab.
+ *
+ * **Example** (Refuse an unpaired surrogate without throwing)
+ *
+ * ```ts
+ * import { canonicalJsonResult } from "@/corpus/Canonical"
+ * import * as Result from "effect/Result"
+ *
+ * console.log(Result.getOrThrow(canonicalJsonResult({ b: 2, a: 1 }))) // {"a":1,"b":2}
+ * console.log(Result.isFailure(canonicalJsonResult({ a: "\ud800" }))) // true
+ * ```
+ *
+ * @category encoding
+ * @since 0.0.0
+ */
+export const canonicalJsonResult: (value: unknown) => Result.Result<string, S.SchemaError> =
+  canonicalDetectionJsonResult;

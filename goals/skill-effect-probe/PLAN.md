@@ -2,17 +2,17 @@
 
 ## Status
 
-Status: `pending`
+Status: `completed-retained`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Prove the pipeline on one task: seed the fixture, run three cells twice each, keep the directories, score them. Read the paired-difference, clustering and power sections of the Miller paper. | Six runs scored and tied to case, cell and run; the three-cell workaround is chosen; the analysis rule is drafted. |
-| P1 Implement | pending | Build the full suite and the reusable code: 12 cases in two prompt variants, the plugin wrapper, kept-directory scoring, paired-difference arithmetic. Run preflight on all 12 tasks. Commit the analysis rule. | Preflight recorded; package verification green; the rule is committed. |
-| P2 Verify | pending | Run the scored cells under the cost ceiling, score every kept directory, write the findings and the verdict. | About 180 scored runs recorded; findings state the verdict against the decision rule. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | pending | Record the verdict row, the prune proposal on a null, and any fired gate in the exploration. Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P0 Research | complete | Prove the pipeline on one task: seed the fixture, run three cells twice each, keep the directories, score them. Read the paired-difference, clustering and power sections of the Miller paper. | Six runs scored and tied to case, cell and run; the three-cell workaround is chosen; the analysis rule is drafted. |
+| P1 Implement | complete | Build the full suite and the reusable code: 12 cases in two prompt variants, the plugin wrapper, kept-directory scoring, paired-difference arithmetic. Run preflight on all 12 tasks. Commit the analysis rule. | Preflight recorded; package verification green; the rule is committed. |
+| P2 Verify | complete | Run the scored cells under the cost ceiling, score every kept directory, write the findings and the verdict. | About 180 scored runs recorded; findings state the verdict against the decision rule. |
+| P3 Yeet: PR to mergeable | complete | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P4 Close | complete | Record the verdict row, the prune proposal on a null, and any fired gate in the exploration. Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Phase Notes
 
@@ -95,6 +95,10 @@ bun run beep quality package-verify @beep/repo-cli
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug skill-effect-probe`; add a `kind: checkpoint` file there, never edit this block._
 
-_No checkpoint files yet._
+### Verdict Insensitive; closeout proposed, 2026-11-13
+
+Neither primary qualified on the laws-prompt pilot, so no scored run under amendment 2. Ledger chain hl-20261113-2588ca8f deferred by hl-20261113-8caf2f44; no prune proposal; activation gate fired and the exploration reopened at decompose; reflection written; proposedCloseout completed-retained on PR 3167.
+
+Reverse: Reopen the packet if a reachable corpus or a tool-enabled run configuration is approved as a new goal decision.
 
 <!-- beep:decisions:end -->

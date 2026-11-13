@@ -67,6 +67,10 @@ const contract = SkillContract.make({
 
 const renderFixture = () => Result.getOrThrow(renderSkillMarkdown(contract));
 
+// The JSON frontmatter is RFC 8785 text from the canonical digest owner, which
+// refuses a string with an unpaired surrogate; the render error says so.
+const loneSurrogateRefusal = /Canonical JSON serialization failed: LoneSurrogate at "\/contract\//;
+
 describe("@beep/skill-contract SkillProjection", () => {
   it.effect("renders and decodes the exact projection frontmatter", () =>
     Effect.gen(function* () {
@@ -263,15 +267,45 @@ describe("@beep/skill-contract SkillProjection", () => {
   );
 
   it.effect.prop(
-    "allows every schema-derived contract after render and verification",
+    "allows every schema-derived contract after render and verification, unless it cannot render",
     [Arbitrary.schema(SkillContract)],
     ([candidate]) =>
-      Effect.gen(function* () {
-        const committed = Result.getOrThrow(renderSkillMarkdown(candidate));
-        const verdict = yield* verifySkillArtifact(VerifySkillArtifactInput.make({ committed, contract: candidate }));
+      Result.match(renderSkillMarkdown(candidate), {
+        // Schema-derived strings hold an unpaired surrogate now and then, which
+        // the canonical JSON frontmatter refuses (pinned in the next test).
+        onFailure: (error) =>
+          Effect.sync(() => {
+            expect(error.message).toMatch(loneSurrogateRefusal);
+          }),
+        onSuccess: Effect.fnUntraced(function* (committed) {
+          const verdict = yield* verifySkillArtifact(VerifySkillArtifactInput.make({ committed, contract: candidate }));
 
-        expect(verdict.verdict).toBe("allowed");
+          expect(verdict.verdict).toBe("allowed");
+        }),
       }),
     { arbitrary: fcRuns(25) }
+  );
+
+  it.effect("denies a contract whose projection cannot be rendered", () =>
+    Effect.gen(function* () {
+      const unrenderable = SkillContract.make({ ...contract, promise: "Validate one QA inventory \ud800." });
+      const verdict = yield* verifySkillArtifact(
+        VerifySkillArtifactInput.make({ committed: renderFixture(), contract: unrenderable })
+      );
+
+      expect(verdict.verdict).toBe("denied");
+      expect(
+        SkillArtifactVerdict.match(verdict, {
+          allowed: () => [],
+          denied: ({ reasons }) => reasons,
+        })
+      ).toContain("rerender-mismatch");
+      expect(
+        SkillArtifactVerdict.match(verdict, {
+          allowed: () => "",
+          denied: ({ checks }) => checks[0].detail,
+        })
+      ).toMatch(loneSurrogateRefusal);
+    })
   );
 });

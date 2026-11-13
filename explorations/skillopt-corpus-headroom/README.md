@@ -3,8 +3,8 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `graduate`
-Status: `graduated`
+Stage: `decompose`
+Status: `active`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json)

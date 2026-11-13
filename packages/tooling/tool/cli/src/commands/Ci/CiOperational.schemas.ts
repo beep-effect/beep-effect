@@ -440,6 +440,35 @@ export const ciCodeShapedPathPatterns: A.NonEmptyReadonlyArray<string> = [
   "^(.*/)?(\\.gitignore|\\.gitattributes|tsconfig[^/]*\\.json|jsconfig[^/]*\\.json|biome[^/]*\\.jsonc?|turbo\\.jsonc?|docgen\\.json|components\\.json|\\.oxlintrc[^/]*)$",
 ];
 
+/**
+ * Root Markdown documents that a test reads, kept off the docs-only route.
+ *
+ * **Details**
+ *
+ * Markdown outside product roots is docs-only, so a pull request that edits only one of these
+ * files would skip Test Unit and never run the test that guards it. Each row is an anchored,
+ * `grep -E` compatible expression joined into {@link ciOperationalPatterns}' `codeRoots`. The
+ * final-check docs-drift test (`packages/tooling/tool/cli/test/yeet-final-check-docs-drift.test.ts`)
+ * reads AGENTS.md and the yeet skill's gate prose, and asserts every document it reads matches a
+ * row here.
+ *
+ * **Example** (Keep AGENTS.md on the code route)
+ *
+ * ```ts
+ * import { ciTestedDocumentPatterns } from "@beep/repo-cli/commands/Ci"
+ * import * as A from "effect/Array"
+ *
+ * console.log(A.some(ciTestedDocumentPatterns, (row) => new RegExp(row, "u").test("AGENTS.md"))) // true
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const ciTestedDocumentPatterns: A.NonEmptyReadonlyArray<string> = [
+  "^AGENTS\\.md$",
+  "^\\.claude/skills/yeet/(SKILL\\.md|references/gates-and-proof\\.md)$",
+];
+
 // Every relevance lane also runs when its own gate can change: the lane bodies, the pattern data
 // and classifier, the workflow that hosts the job, and the shared setup actions every job runs.
 const CI_GATE_SOURCES = A.join(
@@ -485,7 +514,12 @@ export const ciOperationalPatterns = CiOperationalPatterns.make({
   // codeRoots even inside a docs root.
   docs: "^docs/|^goals/[^/]+/|^explorations/|^research/|^\\.changeset/[^/]+\\.md$|\\.md$",
   codeRoots: A.join(
-    ["^(packages|apps|infra)/", ...ciCodeShapedPathPatterns, ...A.map(ciGoalDataConsumers, (row) => row.pattern)],
+    [
+      "^(packages|apps|infra)/",
+      ...ciCodeShapedPathPatterns,
+      ...ciTestedDocumentPatterns,
+      ...A.map(ciGoalDataConsumers, (row) => row.pattern),
+    ],
     "|"
   ),
   lanes: CiLaneRelevancePatterns.make({
@@ -541,8 +575,8 @@ export const ciOperationalPatterns = CiOperationalPatterns.make({
  *
  * `docs/**`, `goals/<packet>/**`, `explorations/**` and `research/**` are documentation
  * and planning surfaces, including temporary goal helpers and verifier inputs.
- * Root goal governance inventories and the goal paths tests consume ({@link ciGoalDataConsumers})
- * retain verification. `.changeset/*.md` and Markdown
+ * Root goal governance inventories, the goal paths tests consume ({@link ciGoalDataConsumers})
+ * and the root documents tests read ({@link ciTestedDocumentPatterns}) retain verification. `.changeset/*.md` and Markdown
  * outside product roots also qualify. Paths under `packages/`, `apps/` and
  * `infra/` retain verification, including their Markdown files. The tier-1
  * change profile and Yeet publication reuse this same schema-owned path rule.

@@ -95,7 +95,7 @@ Higher sources outrank lower sources when they conflict.
 
 - [x] A tracked census lists every sorted-key encoder and digest preimage
       in package and app source with its class and disposition.
-- [ ] A property test holds each replaced encoder byte-equal to
+- [x] A property test holds each replaced encoder byte-equal to
       `JsoncFingerprint.canonicalizeResult` on generated plain JSON, and it
       ran green before that encoder's body was replaced.
 - [x] A replay recomputes every stored PacketCore event digest in the tree
@@ -224,6 +224,70 @@ P0 count, 2026-11-12. Main has minted 76 packet event digests. Four are in the t
 Lane test/canonical-digest-census
 
 Reverse: Delete packages/tooling/tool/cli/test/fixtures/canonical-digest-owner/stored-packet-events.jsonl and the snapshot case in canonical-digest-owner-replay.test.ts; to read the tree live instead, register the test in ciGoalDataConsumers.
+
+### Swapped encoders' differential tests keep the legacy column as a record, 2026-11-13
+
+Once an encoder is the owner, its byte-equality property compares the owner with itself, so those properties and their generator are gone. What carries information stays. The off-domain tables now assert what each export does (the owner's refusal, read back by code; PacketCore's undefined-member row still emits through the option), beside a legacy column recorded from slice A, since that code no longer exists to observe. The depth-cap and NaN rows assert that the exports refuse. The md block pins the frontmatter text and both render outcomes. The packet event replay, the W1 corpus hash replay and the execution-seal replay are unchanged in substance and still pass. Existing property tests whose schema-derived free text produced an unpaired surrogate now either expect the seal or the owner's refusal, or draw well-formed text through a repo-cli test helper where the property is about canonical bytes.
+
+Lane refactor/canonical-digest-owner-swaps
+
+Reverse: Restore the slice A versions of the two differential test files from history; they need the legacy encoders, so revert the swap commits first.
+
+### Digest helpers and schema checks fail typed through their existing SchemaError channel; the exports still throw, 2026-11-13
+
+Review round 1 ruling on the question slice C left open. A refusal from the canonical JSON owner must not be a throw wherever a typed channel already exists, and it is mapped into that channel rather than widening it with JsoncCanonicalizeError or adding schema checks on free text. Each swapped encoder module keeps its throwing synchronous export and gains a Result twin beside it (canonicalJsonResult in the epistemics, execution-authority, epistemic-domain and semantica modules, canonicalDetectionJsonResult in the public epistemics surface, canonicalJsonTextResult in PacketCore) that maps the refusal to an S.SchemaError holding an InvalidValue issue whose message is the owner's, so it names the code and JSON pointer. The digest helpers with a SchemaError channel go through the twin: the contradiction proposal and candidate digests, the detection proposal id, the evidence manifestation key, the grant-set digest behind freezeGrantSet and verifyFrozenGrantSetDigest, the retention policy digest and report encoder, the packet event digest, the PacketCore plan digests whose functions already have a typed error, and the lab content digests, content ids and digest checks. That restores the packet event store's contract that a tampered event surfaces as a chain issue, and makes every lab schema check total. No signature and no stored digest changed. What still throws has no typed channel to map into: the four exports themselves, the execution-record seals, retentionPayloadBytes, the calibration script, and Effect sites whose channel is never or platform-only; PLAN.md lists them. Supersedes, in the decision on swapped exports throwing the owner's typed error, the sentence saying the throw escapes Result.map and becomes a defect inside an Effect generator: that now holds only for the call sites PLAN.md lists as still throwing. The rest of that decision stands.
+
+Lane fix/canonical-digest-typed-refusals
+
+Reverse: Call the throwing export again inside a helper, which turns its refusal back into a thrown error or defect there; the twins can stay.
+
+### The md import boundary exempts the JsoncFingerprint facade by name, 2026-11-13
+
+@beep/md keeps every parser package, @beep/jsonc among them, out of the runtime closure of its non-bridge entries, and its boundary test failed once the render module imported the owner. The swap needs that import, so the test now exempts exactly the specifier @beep/jsonc/JsoncFingerprint: the canonical-JSON facade of that package, whose own closure is one constant module and loads no parser. Every other @beep/jsonc subpath, and the package root, still counts as a parser. Rejected: keeping md's own encoder as a pinned row, since the census classes it replace and it diverged from RFC 8785 on unpaired surrogates, and moving the facade to another package, since @beep/schema cannot import @beep/jsonc and SPEC.md puts the owner in @beep/jsonc.
+
+Lane refactor/canonical-digest-owner-swaps
+
+Reverse: Remove the exemption and the render import together, restoring md's own frontmatter encoder as a pinned census row.
+
+### Only PacketCore passes omitUndefinedMembers; the other swaps are strict, 2026-11-13
+
+Slice C call, made per encoder from what the legacy encoder did and what its callers rely on. PacketCore canonicalJsonText passes omitUndefinedMembers: Goals/Completion.ts builds the completion declaration with packetId and proposedCloseout left undefined when absent, and 443 probe calls depended on the member being dropped. The epistemics encoder (behind canonicalDetectionJson and the two domain aliases) and the semantica lab encoder also dropped undefined members, but no caller relies on it: their seal and digest inputs are schema wire forms, no schema in those domains declares a member that encodes as undefined (no S.optional, only exact optional keys), and the probe's one undefined-member call for each came from the slice A table test. The md frontmatter encoder already threw on an undefined member, since its input is S.JsonObject. Strict is preferred wherever nothing relies on the relaxation, so a member left undefined by mistake is a typed refusal rather than a silently different preimage. Rejected: the option everywhere for symmetry, which would hide such mistakes in the seal domains that SPEC.md wants refused.
+
+Lane refactor/canonical-digest-owner-swaps
+
+Reverse: Pass JsoncCanonicalizeOptions with omitUndefinedMembers in the encoder that needs it; stored digests are unaffected because no stored preimage carries an undefined member.
+
+### PartyKey v1 keeps its serializer and gains a parity proof, 2026-11-13
+
+PartyKey v1 bytes are pinned by the archived party-slice specification and by the package fixture, and SPEC.md forbids changing them, so its encoder is not swapped. A property in the package's PartyKey test holds its canonicalJson equal to the owner's RFC 8785 bytes for the encoded basis on 200 seeded bases (source-record and namespaced identifier, drawn from canonical text), and hand-written cases cover each escape it writes and the pinned email basis. The two agree because the basis domain is narrow: fixed ASCII keys, where code-point and UTF-16 order coincide, string values only, and unpaired surrogates refused at decode. The census row stays pinned with the proof as its evidence. Adds @beep/jsonc as a devDependency of @beep/party-domain. Rejected: a swap, which would make the owner's future behaviour part of a pinned contract, and a pinned row without proof, which would leave the slice D guard trusting an unverified claim.
+
+Lane refactor/canonical-digest-owner-swaps
+
+Reverse: Delete the parity block from the PartyKey test and the devDependency; the pinned fixture still fixes the bytes.
+
+### The proposal-fact bound check stays total: a refused fact is out of bounds, 2026-11-13
+
+The contradiction proposal fact schema bounds a fact by the byte length of its canonical JSON. After the epistemics swap that check would throw for a fact the owner refuses: S.is then throws (the guard adapter dies on a failure that is not a schema issue), decode dies instead of failing, and the exported contradiction arbitraries throw while sampling. Five existing test suites failed that way. The check now reads the owner's Result and returns false on a refusal, so such a fact fails decode with the schema's typed error, as any other unbounded fact does. This is not a new check: the bound already meant at most 64 KiB of canonical UTF-8, and a value with no canonical form has no such size. It also guards detection beliefs, whose assertion check reuses the fact schema. Rejected: keeping the throw, since a schema guard that throws is a defect, and a separate well-formedness check on the fact, which would be a new domain check and is out of scope for this slice.
+
+Lane refactor/canonical-digest-owner-swaps
+
+Reverse: Call the epistemics canonicalJson in the check again; a fact with an unpaired surrogate then makes the fact schema throw instead of fail.
+
+### The cache and files sha256 schemas are the shared grammar, 2026-11-13
+
+The cache workflow's GitHub artifact digest and FileSha256Hash in the files media schemas each spelled the sha256: grammar as a regular expression. Both accepted exactly what Sha256PrefixedDigest accepts: the prefix, 64 characters, lowercase hex only, with uppercase digits, a longer tail and an uppercase prefix refused by both. So both are now that schema, and FileSha256Hash keeps its identity annotation. Encoded strings are unchanged and the decoded type gains the shared brand. One visible difference is accepted: a rejected value reports the template-literal message instead of the old pattern message. Rejected: a filter over the shared guard that keeps the old message, which would leave FileSha256Hash unbranded and outside the shared type.
+
+Lane refactor/canonical-digest-owner-swaps
+
+Reverse: Restore the two regular expressions; nothing stored changes.
+
+### Swapped synchronous exports throw the owner's typed error; no new error channels, 2026-11-13
+
+The four exports stay synchronous and return a string, as SPEC.md requires under Exports stay, so a refusal is thrown: each body is Result.getOrThrowWith over JsoncFingerprint.canonicalizeResult with identity, and the thrown value is the owner's JsoncCanonicalizeError with its code and JSON pointer, never a wrapped or plain Error. The digest helpers built on them (contradiction proposal and candidate digests, detection proposal id, evidence manifestation key, grant-set digest, PacketCore event and plan digests, the lab content ids) keep their Result or Effect signatures and SchemaError channels. The throw escapes Result.map, and inside an Effect generator it becomes a defect. Only the md render entry points turn it into a typed failure, because Md.render already captures adapter throws as RenderError. Rejected for this slice: widening those channels with JsoncCanonicalizeError, which changes every signature from the encoders up to the services, and adding schema checks on free-text fields, which the orchestrator decides after reading the surfacing list in PLAN.md. No stored event, seal or fixture carries a refused value, so nothing that verifies today stops verifying.
+
+Lane refactor/canonical-digest-owner-swaps
+
+Reverse: Add JsoncCanonicalizeError to the error channel of a digest helper and call canonicalizeResult there, or add a well-formedness check at the boundary that feeds it; the exports themselves can keep throwing.
 
 <!-- beep:decisions:end -->
 

@@ -29,14 +29,33 @@ commit was folded with no runs, as `no-run`. A spot check confirms it: main comm
 23:08Z) has Check push run 42717956683 (failure), which the report lists as `no-run`. The refusal guards the
 certification, but the JSON's `main` block still prints `rate` 0 with no partial marker of its own.
 
-Two consequences, reported to the certainty-scorecard owner (the lane of open #3144) rather than fixed here,
-since this goal builds no second census (SPEC "Stop Conditions"):
+Both defects were reported to the certainty-scorecard owner rather than fixed here, since this goal builds no
+second census (SPEC "Stop Conditions"), and #3168 (3b85830d051) fixed them: the push listing is now read before
+the pull-request job reads, and an incomplete listing marks every main commit `unread` with no `rate` instead
+of `no-run` (certainty-scorecard decision `main-listing-unread`).
 
-- With the default bound a 7-day window cannot read the main census at all: the pull-request job reads
-  (about 2,700 for this week) come first and starve it.
-- A partial main listing should mark the main stat partial (or leave `rate` empty), not report a 0% rate.
+## Read 2: main census complete, 2026-11-13T03:44Z
 
-## Read 2
+At `origin/main` 2968573cf50, after #3168. Since the main listing is read first, a small request bound reads the
+whole main census and only stops the pull-request job reads, which this note does not need:
 
-Pending: a retry with a larger `--max-requests` once the shared GitHub REST quota has room for about 3,000
-reads (it resets hourly and other lanes draw on it). Its result is added here with the same command line.
+```sh
+bun run beep ci certainty --since 2026-11-03 --until 2026-11-10 --max-requests 200 --preview --json
+```
+
+Result: exit 0 under `--preview`; `certified` false with refusal `api-partial`, from pull-request heads only
+(1,898 partial job reads at the bound). The main block is complete: `unread` 0 and `noRun` 0.
+
+| Field | Value |
+| --- | --- |
+| `capturedAt` | 2026-11-13T03:44:56Z |
+| Non-docs first-parent commits (`commits`) | 283 (docs commits 109) |
+| Completed verdicts (`verdicts`) | 70: 28 `success`, 42 `failure` |
+| `cancelled` / `noRun` / `open` / `unread` | 213 / 0 / 0 / 0 |
+| **Main verdict rate (`rate`)** | **0.247 (70 of 283)** |
+
+This is the "7 days before the cancel ban" read of the SPEC acceptance criterion: 24.7% of non-docs main SHAs
+got a completed hosted verdict over 2026-11-03..09, against the plan's 95% bar and D7's earlier 13% sample.
+Every miss is a cancelled push run; none is missing or still pending. The PR-head latency rows of this report
+are not read (their job reads stopped at the bound) and nothing here uses them. The "7 days after" read
+(2026-11-11..17) is due once that window closes and the runs settle.

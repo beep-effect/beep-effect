@@ -72,8 +72,13 @@ class Check extends S.Class<Check, { readonly brand: unique symbol }>($I`Check`)
 ) {}
 const decodeChecks = S.decodeUnknownEffect(S.Array(Check));
 class PrHead extends S.Class<PrHead, { readonly brand: unique symbol }>($I`PrHead`)(
-  { head: S.Struct({ sha: S.String }), base: S.Struct({ ref: S.String, sha: S.String }) },
-  $I.annote("PrHead", { description: "Live pull request head and target branch." })
+  {
+    head: S.Struct({ sha: S.String }),
+    base: S.Struct({ ref: S.String, sha: S.String }),
+    // `null` or absent outside a native stack; `base.ref` here is the stack's trunk.
+    stack: S.OptionFromOptionalNullOr(S.Struct({ base: S.Struct({ ref: S.String }) })),
+  },
+  $I.annote("PrHead", { description: "Live pull request head, target branch, and the trunk of its stack if any." })
 ) {}
 const decodePr = S.decodeUnknownEffect(PrHead);
 /**
@@ -511,7 +516,10 @@ const enforceReviewerAppGate = Effect.fn("Reviewer.enforceAppGate")(
   function* (pr: number, sha: string) {
     const head = yield* api(`${ROOT}/pulls/${pr}`).pipe(Effect.flatMap(decodePr));
     if (head.head.sha !== sha) return yield* fail("PR head moved before reviewer gate.");
-    const id = yield* requiredReviewerApp(head.base.ref);
+    // A stack layer's own base is the branch of the layer below, which no ruleset
+    // targets; GitHub evaluates the trunk's rules when the stack merges.
+    const rulesBranch = O.match(head.stack, { onNone: () => head.base.ref, onSome: (stack) => stack.base.ref });
+    const id = yield* requiredReviewerApp(rulesBranch);
     if (O.isNone(id)) return;
     const checks = yield* readReviewerChecks(sha);
     if (!reviewerCheckSatisfied(checks, sha, id.value, pr, head.base.sha))

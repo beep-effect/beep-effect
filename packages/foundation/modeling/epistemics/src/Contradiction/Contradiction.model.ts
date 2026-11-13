@@ -14,6 +14,7 @@
  */
 
 import { $EpistemicsId } from "@beep/identity/packages";
+import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { P, R } from "@beep/utils";
@@ -24,7 +25,7 @@ import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as DateTime from "effect/DateTime";
 import * as Eq from "effect/Equal";
-import { dual, flow, identity, pipe } from "effect/Function";
+import { constFalse, dual, flow, identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Result from "effect/Result";
@@ -32,7 +33,7 @@ import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 import { Confidence } from "../EvidenceSpan/index.ts";
-import { canonicalJson } from "../internal/CanonicalJson.ts";
+import { canonicalJsonResult } from "../internal/CanonicalJson.ts";
 import type { FieldSchema, IdentityConfig, KeyedFieldSchema, SchemaIdentity } from "../Factory/index.ts";
 
 const TrimmedText = S.String.pipe(S.decodeTo(S.NonEmptyString, SchemaTransformation.trim()));
@@ -178,7 +179,14 @@ const isBoundedProposalFact = (fact: S.JsonObject): boolean => {
     pending.push(...A.map(children, (value) => ({ depth: current.depth + 1, value })));
   }
 
-  return utf8ToBytes(canonicalJson(fact)).byteLength <= CONTRADICTION_PROPOSAL_FACT_MAX_BYTES;
+  // A fact the canonical digest owner refuses, such as one holding an unpaired
+  // surrogate, has no canonical UTF-8 to measure, so it is out of bounds: the
+  // check stays total and the schema fails typed instead of throwing.
+  return pipe(
+    JsoncFingerprint.canonicalizeResult(fact),
+    Result.map((canonical) => utf8ToBytes(canonical).byteLength <= CONTRADICTION_PROPOSAL_FACT_MAX_BYTES),
+    Result.getOrElse(constFalse)
+  );
 };
 
 const validIntervalIsOrdered = Order.isLessThan(DateTime.Order);
@@ -1453,18 +1461,24 @@ export const makeContradictionBehavior = <
     return ContradictionCandidateKey.make(sha256Hex(canonical));
   });
 
+  // A content the canonical JSON owner refuses fails in the same `SchemaError`
+  // channel as an encoding failure.
   const contradictionProposalDigest = (
     content: ProposalContent
   ): Result.Result<typeof ContradictionProposalDigest.Type, S.SchemaError> =>
-    Result.map(encodeProposalContent(content), (encoded) =>
-      ContradictionProposalDigest.make(sha256Hex(`v1\n${canonicalJson(encoded)}`))
+    Result.flatMap(encodeProposalContent(content), (encoded) =>
+      Result.map(canonicalJsonResult(encoded), (canonical) =>
+        ContradictionProposalDigest.make(sha256Hex(`v1\n${canonical}`))
+      )
     );
 
   const contradictionCandidateDigest = (
     content: CandidateContent
   ): Result.Result<typeof ContradictionCandidateDigest.Type, S.SchemaError> =>
-    Result.map(encodeCandidateContent(content), (encoded) =>
-      ContradictionCandidateDigest.make(sha256Hex(`v1\n${canonicalJson(encoded)}`))
+    Result.flatMap(encodeCandidateContent(content), (encoded) =>
+      Result.map(canonicalJsonResult(encoded), (canonical) =>
+        ContradictionCandidateDigest.make(sha256Hex(`v1\n${canonical}`))
+      )
     );
 
   return {

@@ -16,7 +16,7 @@ import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertFailure, assertTrue } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import * as Arbitrary from "effect/Arbitrary";
@@ -25,6 +25,7 @@ import { pipe } from "effect/Function";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const decodeUnknownEvidenceResult = S.decodeUnknownResult(Evidence);
 const decodeUnknownEvidenceVerificationModelResult = S.decodeUnknownResult(EvidenceVerificationModel);
@@ -88,6 +89,16 @@ const evidenceFor = (id: Epistemic.EvidenceId, anchor: TextAnchor) =>
   );
 const evidence = evidenceFor(evidenceId, verifiedAnchor.anchor);
 
+// The manifestation key hashes RFC 8785 bytes from the canonical digest owner,
+// which refuses an unpaired surrogate. Schema-derived free text (quotes,
+// source refs, versions) can hold one; the key function then fails typed, in
+// its SchemaError channel, with a message naming the owner's refusal.
+const manifestationKeyOrRefusal = (manifestation: EvidenceVerificationManifestation) =>
+  Result.mapError(
+    manifestationKeyFor(manifestation.evidenceId, TextAnchorVerificationReceipt.make(manifestation.verifiedAnchor)),
+    (error) => error.message
+  );
+
 describe("EvidenceVerificationTable", () => {
   it("projects the immutable sidecar column shape", () => {
     expect(EvidenceVerificationModel.sql.tableName).toBe("epistemic_evidence_verification");
@@ -129,40 +140,56 @@ describe("EvidenceVerificationTable", () => {
     "round-trips schema-derived manifestations through the sealed row converters",
     [Arbitrary.schema(EvidenceVerificationManifestation)],
     ([manifestation]) => {
-      const verification = Result.getOrThrow(
-        decodeUnknownEvidenceVerificationModelResult({
-          ...productEntityFixtureInput("EpistemicEvidenceVerification", 7),
-          evidenceId: manifestation.evidenceId,
-          manifestationKey: Result.getOrThrow(
-            manifestationKeyFor(
-              manifestation.evidenceId,
-              TextAnchorVerificationReceipt.make(manifestation.verifiedAnchor)
+      Result.match(manifestationKeyOrRefusal(manifestation), {
+        onFailure: (refusal) => {
+          expect(refusal).toMatch(/LoneSurrogate at "\/verifiedAnchor\//);
+        },
+        onSuccess: (manifestationKey) => {
+          const verification = Result.getOrThrow(
+            decodeUnknownEvidenceVerificationModelResult({
+              ...productEntityFixtureInput("EpistemicEvidenceVerification", 7),
+              evidenceId: manifestation.evidenceId,
+              manifestationKey,
+              verifiedAnchor: Result.getOrThrow(
+                encodeUnknownTextAnchorVerificationReceiptResult(manifestation.verifiedAnchor)
+              ),
+            })
+          );
+          const insert = Result.getOrThrow(
+            EvidenceVerification.toEvidenceVerificationInsert(
+              verification,
+              evidenceFor(manifestation.evidenceId, manifestation.verifiedAnchor.anchor)
             )
-          ),
-          verifiedAnchor: Result.getOrThrow(
-            encodeUnknownTextAnchorVerificationReceiptResult(manifestation.verifiedAnchor)
-          ),
-        })
-      );
-      const insert = Result.getOrThrow(
-        EvidenceVerification.toEvidenceVerificationInsert(
-          verification,
-          evidenceFor(manifestation.evidenceId, manifestation.verifiedAnchor.anchor)
-        )
-      );
-      const decoded = Result.getOrThrow(
-        EvidenceVerification.fromEvidenceVerificationRow({
-          ...insert,
-          id: verification.id,
-        })
-      );
+          );
+          const decoded = Result.getOrThrow(
+            EvidenceVerification.fromEvidenceVerificationRow({
+              ...insert,
+              id: verification.id,
+            })
+          );
 
-      expect(Result.getOrThrow(encodeUnknownEvidenceVerificationModelResult(decoded))).toStrictEqual(
-        Result.getOrThrow(encodeUnknownEvidenceVerificationModelResult(verification))
-      );
+          expect(Result.getOrThrow(encodeUnknownEvidenceVerificationModelResult(decoded))).toStrictEqual(
+            Result.getOrThrow(encodeUnknownEvidenceVerificationModelResult(verification))
+          );
+        },
+      });
     },
     { arbitrary: fcRuns(25) }
   );
+
+  it("fails typed when the manifestation holds an unpaired surrogate", () => {
+    const illFormedAnchor = TextAnchorVerificationReceipt.make({
+      anchor: TextAnchor.make({ ...verifiedAnchor.anchor, quote: "controlling \ud800act" }),
+      source: verifiedAnchor.source,
+    });
+
+    assertFailure(
+      Result.mapError(manifestationKeyFor(evidenceId, illFormedAnchor), (error) =>
+        Str.includes('LoneSurrogate at "/verifiedAnchor/anchor/quote"')(error.message)
+      ),
+      true
+    );
+  });
 
   it("round-trips rows through schema-derived converters", () => {
     const verification = Result.getOrThrow(decodeUnknownEvidenceVerificationModelResult(input));

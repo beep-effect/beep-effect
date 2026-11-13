@@ -2350,6 +2350,8 @@ export const ciLaneFailurePolicy = (laneId: CiLaneId): GithubCheckFailurePolicy 
  *
  * `beep ci lane <id>` plans the body and hands it to this runner, so a test
  * that substitutes the body steps exercises the same runner hosted CI uses.
+ * The one exception is `docs-policy`: its steps run abreast as one buffered
+ * collecting group, which still collects every red.
  *
  * **Example** (Run a lane body)
  *
