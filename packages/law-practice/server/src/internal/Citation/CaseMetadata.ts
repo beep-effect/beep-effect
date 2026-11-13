@@ -21,6 +21,7 @@ import {
   prepareCitationEditionInferenceInput,
 } from "./EditionInference.ts";
 import { CitationFrozenEditions, readCitationFrozenEdition } from "./FrozenEditions.ts";
+import { reserveCitationInvocationText } from "./Invocation.ts";
 import {
   CitationPublicationMetadataConfiguration,
   decodeCitationMetadataRuntimeConfiguration,
@@ -165,7 +166,7 @@ const postMetadata = Effect.fn("Citation.applyFullCasePostMetadata")(function* (
   if (O.isNone(post)) return request;
   const next = post.value;
   const court = O.getOrNull(next.metadata.court);
-  const strings = yield* makeCitationRegexInput(limits);
+  const strings = yield* makeCitationRegexInput(limits, reserveCitationInvocationText);
   const projected = court === null ? null : (yield* strings.prepareText(court, () => Effect.void)).value.storage;
   return CitationCaseMetadataInput.make({
     ...request,
@@ -192,7 +193,7 @@ export const guessCitationCaseCourt = Effect.fn("Citation.guessFullCaseCourt")(f
   for (const ref of A.appendAll(candidates.exact, candidates.variation)) {
     const edition = yield* readCitationFrozenEdition(owner, ref);
     if (!edition.value.reporter.is_scotus) continue;
-    const strings = yield* makeCitationRegexInput(limits);
+    const strings = yield* makeCitationRegexInput(limits, reserveCitationInvocationText);
     const guessed = yield* strings.prepareText("scotus", () => Effect.void);
     return guessed.value.storage;
   }
@@ -290,21 +291,14 @@ export const makeCitationCaseMetadata = Effect.fn("Citation.makeFullCaseMetadata
   });
   const owner = yield* CitationFrozenEditions;
   const editions = yield* makeCitationEditionInference(limits);
-  const installed = yield* makeCitationMetadataOperation(
-    limits,
-    (raw: unknown) => prepare(limits, runtime, config, owner, editions, raw),
-    invalid
+  const installed = yield* makeCitationMetadataOperation(limits, (raw: unknown) =>
+    prepare(limits, runtime, config, owner, editions, raw)
   );
-  const extract = Effect.fn("Citation.addFullCaseMetadata")(
-    (raw: unknown) =>
-      installed.operation.run(
-        "extract",
-        Effect.gen(function* () {
-          const [result, reservedUnits] = yield* installed.run(raw);
-          return CitationCaseMetadataResult.make({ ...result, reservedUnits });
-        })
-      ),
-    installed.timing.timed
+  const extract = Effect.fn("Citation.addFullCaseMetadata")((raw: unknown) =>
+    Effect.gen(function* () {
+      const [result, reservedUnits] = yield* installed.run(raw);
+      return CitationCaseMetadataResult.make({ ...result, reservedUnits });
+    })
   );
   return { extract };
 });

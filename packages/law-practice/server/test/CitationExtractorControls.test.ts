@@ -22,6 +22,8 @@ import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
+import * as Deferred from "effect/Deferred";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
@@ -30,6 +32,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
+import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -304,7 +307,58 @@ it.layer(testLayer, { excludeTestServices: true })("public extractor refusal con
       yield* expectPhysical(control.snapshot, 1);
     })
   );
-  it.layer(TestClock.layer())("captured supervision", (it) => {
+  it.layer(TestClock.layer(), { concurrent: false })("captured supervision", (it) => {
+    it.effect("starts the extractor stage deadline after queued admission", () =>
+      Effect.gen(function* () {
+        const firstEntered = yield* Deferred.make<void>();
+        const secondEntered = yield* Deferred.make<void>();
+        const calls = yield* Ref.make(0);
+        const completed = yield* Ref.make(false);
+        const resolver = SourceTextResolver.of({
+          resolve: Effect.fn("ExtractorControls.queuedResolve")(function* () {
+            const call = yield* Ref.getAndUpdate(calls, (n) => n + 1);
+            if (call === 0) {
+              yield* Deferred.succeed(firstEntered, undefined);
+              return yield* Effect.never;
+            }
+            yield* Deferred.succeed(secondEntered, undefined);
+            yield* Effect.sleep(Duration.millis(9500));
+            return yield* SourceTextResolverError.new("source-unavailable", "controlled refusal after work");
+          }),
+        });
+        const control = yield* fixture("deadline probe", {
+          resolver,
+          limits: {
+            concurrentOperations: 1,
+            queuedOperations: 1,
+            extractDeadline: Duration.seconds(10),
+            queueDeadline: Duration.seconds(5),
+            operationDeadline: Duration.seconds(30),
+          },
+        });
+        const first = yield* control.extractor.extract(control.input).pipe(Effect.forkChild);
+        yield* Deferred.await(firstEntered);
+        const second = yield* control.extractor.extract(control.input).pipe(
+          Effect.onExit(() => Ref.set(completed, true)),
+          Effect.forkChild
+        );
+        yield* TestClock.adjust(Duration.millis(800));
+        yield* Fiber.interrupt(first);
+        yield* Deferred.await(secondEntered);
+        yield* TestClock.adjust(Duration.millis(9200));
+        const finishedAtOuterDeadline = yield* Ref.get(completed);
+        expect(finishedAtOuterDeadline).toBe(false);
+        yield* TestClock.adjust(Duration.millis(300));
+        const failure = yield* Fiber.join(second).pipe(Effect.flip);
+        expect(failure).toMatchObject({
+          _tag: "CitationPrerequisiteError",
+          operation: "extract",
+          dependency: "source-evidence",
+        });
+        yield* expectPhysical(control.snapshot, 0);
+      })
+    );
+
     it.effect("uses the captured Clock and returns capacity after deadline and cancellation", () =>
       Effect.gen(function* () {
         const control = yield* fixture("35 U.S.C. 101", {

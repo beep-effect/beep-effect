@@ -4,14 +4,21 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import * as A from "effect/Array";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
-import { runEffectVitestLint } from "./internal/EffectVitestScan.ts";
+import { runEffectVitestFilesLint, runEffectVitestLint } from "./internal/EffectVitestScan.ts";
 import { EffectVitestLintOptions } from "./Lint.schemas.ts";
 
 /**
- * Run census, baseline refresh, detector-row emission, or the default membership ratchet.
+ * Run census, baseline refresh, detector-row emission, a scoped `--files` check, or the default membership ratchet.
+ *
+ * **Details**
+ *
+ * `--files <path>` (repeatable) checks only those files against their own
+ * baseline rows, with no repository scan; without it the command scans the
+ * whole D9 scope as before.
  *
  * **Example** (Build the detector command runner)
  *
@@ -41,11 +48,22 @@ export const lintEffectVitestCommand = Command.make(
       Flag.withDescription("Emit schema-validated JSONL rows per owning package"),
       Flag.optional
     ),
+    files: Flag.String("files").pipe(
+      Flag.atLeast(0),
+      Flag.withDescription(
+        "Check only these files (repeatable, repository-relative) against their baseline rows, with no repository scan"
+      )
+    ),
   },
-  Effect.fn("EffectVitest.command")(function* ({ census, rows, write }) {
-    yield* runEffectVitestLint(EffectVitestLintOptions.make({ census, rows, write }));
+  Effect.fn("EffectVitest.command")(function* ({ census, files, rows, write }) {
+    const options = EffectVitestLintOptions.make({ census, files, rows, write });
+    yield* A.isReadonlyArrayEmpty(files) ? runEffectVitestLint(options) : runEffectVitestFilesLint(options);
   })
-).pipe(Command.withDescription("Verify canonical @effect/vitest usage with a syntax-only full scan"));
+).pipe(
+  Command.withDescription(
+    "Verify canonical @effect/vitest usage with a syntax-only full scan, or only the files named by --files"
+  )
+);
 
 /**
  * Detector implementation exported for focused syntax fixtures.
@@ -86,6 +104,7 @@ export {
   formatEffectVitestIntroducedReport,
   preserveEffectVitestExceptions,
   retainBrowserSafeFindings,
+  runEffectVitestFilesLint,
   runEffectVitestLint,
   verifyEffectVitestPin,
 } from "./internal/EffectVitestScan.ts";

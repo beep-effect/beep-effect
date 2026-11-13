@@ -25,10 +25,12 @@ import * as Str from "effect/String";
 import { makeCitationCleanerRegistryHarness } from "./CitationCleanerRegistry.fixtures.ts";
 import { makeCitationDiffTestRuntime } from "./CitationDiffWorker.fixtures.ts";
 import { readCitationHtmlDiscoveryCorpus } from "./CitationHtmlDiscovery.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { makeCitationHtmlTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import { readCitationOracleFixture, setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationInputDocument } from "@beep/law-practice-server/internal/Citation/InputDocument";
+import type { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import type {
   CitationNativeProcessRuntime,
   CitationNativeRuntimeKind,
@@ -233,6 +235,11 @@ const makeCase = Effect.fn("InputDocumentTest.case")(function* (
     discovery,
     diffRuntime,
   }).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
+        Effect.map((bind) => ({ ...stage, initialize: bind(stage.initialize) }))
+      )
+    ),
     Effect.provideContext(setup.provided),
     Effect.provideService(CitationCleanerValues, h.values),
     Effect.provideService(CitationCleaner, registry.runtime),
@@ -288,7 +295,11 @@ const checkCase = Effect.fn("InputDocumentTest.check")(function* (
 ) {
   const { plain, markup, steps, stage } = fixture;
   const invocation = stage.initialize({ plain, markup, steps });
-  const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
+  const closed: Effect.Effect<
+    Effect.Success<typeof invocation>,
+    Effect.Error<typeof invocation>,
+    CitationInvocation
+  > = invocation;
   if (row.error !== null) {
     const error = yield* closed.pipe(Effect.flip);
     expect(error, `${row.id}:error`).toMatchObject({ sourceError: row.error });
@@ -307,39 +318,39 @@ const checkCase = Effect.fn("InputDocumentTest.check")(function* (
 /** Full source replay is hosted; smoke retains ordinary failures, None output, the zero-step
  * cleaner ledger split and actual geometry.
  */
-export const replayCitationInputDocument = Effect.fn("InputDocumentTest.replay")(function* (
-  full: boolean,
-  kind: CitationNativeRuntimeKind = "bun"
-) {
-  const corpus = yield* load;
-  const discovery = yield* readCitationHtmlDiscoveryCorpus();
-  const setup = yield* setupCitationMetadataRuntime(kind);
-  const fs = yield* FileSystem.FileSystem;
-  const directory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-document-diff-" });
-  const diffRuntime = yield* makeCitationDiffTestRuntime(kind, directory);
-  const htmlDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-document-html-" });
-  const htmlRuntime = yield* makeCitationHtmlTestRuntime(kind, htmlDirectory);
-  const rows = A.filter(
-    corpus.cases,
-    (row) =>
-      full ||
-      A.contains(
-        [
-          0, 14, 15, 16, 21, 23, 24, 27, 28, 29, 30, 32, 34, 35, 36, 39, 40, 41, 42, 43, 49, 53, 54, 56, 57, 70, 79, 84,
-          86, 93, 107,
-        ],
-        row.id
-      )
-  );
-  for (const row of rows) {
-    const fixture = yield* makeCase(row, setup, diffRuntime, htmlRuntime, discovery.configuration);
-    yield* checkCase(row, fixture);
-  }
-  expect(rows).toHaveLength(full ? 112 : 31);
-  const exits = yield* setup.observed.snapshot;
-  expect(exits).toEqual({ spawned: full ? 55 : 20, confirmed: full ? 55 : 20 });
-  const native = yield* setup.admission.snapshot;
-  expect(native).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
-  const operations = yield* setup.operation.snapshot;
-  expect(operations).toMatchObject({ active: 0, queued: 0 });
-});
+export const replayCitationInputDocument = Effect.fn("InputDocumentTest.replay")(
+  function* (full: boolean, kind: CitationNativeRuntimeKind = "bun") {
+    const corpus = yield* load;
+    const discovery = yield* readCitationHtmlDiscoveryCorpus();
+    const setup = yield* setupCitationMetadataRuntime(kind);
+    const fs = yield* FileSystem.FileSystem;
+    const directory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-document-diff-" });
+    const diffRuntime = yield* makeCitationDiffTestRuntime(kind, directory);
+    const htmlDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-document-html-" });
+    const htmlRuntime = yield* makeCitationHtmlTestRuntime(kind, htmlDirectory);
+    const rows = A.filter(
+      corpus.cases,
+      (row) =>
+        full ||
+        A.contains(
+          [
+            0, 14, 15, 16, 21, 23, 24, 27, 28, 29, 30, 32, 34, 35, 36, 39, 40, 41, 42, 43, 49, 53, 54, 56, 57, 70, 79,
+            84, 86, 93, 107,
+          ],
+          row.id
+        )
+    );
+    for (const row of rows) {
+      const fixture = yield* makeCase(row, setup, diffRuntime, htmlRuntime, discovery.configuration);
+      yield* checkCase(row, fixture);
+    }
+    expect(rows).toHaveLength(full ? 112 : 31);
+    const exits = yield* setup.observed.snapshot;
+    expect(exits).toEqual({ spawned: full ? 55 : 20, confirmed: full ? 55 : 20 });
+    const native = yield* setup.admission.snapshot;
+    expect(native).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
+    const operations = yield* setup.operation.snapshot;
+    expect(operations).toMatchObject({ active: 0, queued: 0 });
+  },
+  (effect) => withCitationTestInvocation(effect)
+);

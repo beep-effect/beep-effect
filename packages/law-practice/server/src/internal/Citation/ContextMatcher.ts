@@ -11,7 +11,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { concatCitationPythonRanges } from "./PythonUnicode.ts";
 import { CitationRegexSourceFlags } from "./RegexEngine.ts";
-import { makeCitationRegexInput } from "./RegexInput.ts";
+import { citationUnaccountedText, makeCitationRegexInput } from "./RegexInput.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationRegexCapture } from "./RegexResult.ts";
 import { makeCitationRegexWorker } from "./RegexWorker.ts";
@@ -67,7 +67,7 @@ export const makeCitationContextMatcher = Effect.fn("Citation.makeContextMatcher
   const limits = yield* decodeCitationRegexPolicy(policy, invalid);
   const flags = yield* S.decodeUnknownEffect(CitationRegexSourceFlags)(flagsInput).pipe(Effect.mapError(invalid));
   const timing = yield* makeCitationRegexTiming(limits, true);
-  const input = yield* makeCitationRegexInput(limits, "pattern");
+  const input = yield* makeCitationRegexInput(limits, citationUnaccountedText, "pattern");
   const pattern = (yield* input.prepareUnicode(patternInput, () => Effect.void)).value;
   const wrap = Effect.fn("Citation.wrapContextPattern")(function* (prefix: string, suffix: string) {
     const first = ascii(prefix);

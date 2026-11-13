@@ -5,6 +5,7 @@ import {
   CitationFrozenEditions,
   makeCitationFrozenEditions,
 } from "@beep/law-practice-server/internal/Citation/FrozenEditions";
+import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import {
   CitationJournalMetadataConfiguration,
   CitationJournalMetadataPatch,
@@ -25,6 +26,7 @@ import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationWorkerCapturedDeadline,
   assertCitationWorkerClosedLifetime,
@@ -119,6 +121,9 @@ const install = Effect.fn("JournalMetadataTest.install")(function* (
   const installed = enclosing === true ? Context.add(context, CitationTextBudget, text) : context;
   const configuration = { ...corpus.configuration };
   const metadata = yield* makeCitationJournalMetadata(limits, setup.runtime, configuration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
+    ),
     Effect.provideContext(installed),
     DateTime.withCurrentZoneOffset(0)
   );
@@ -171,16 +176,22 @@ export const assertCitationJournalMetadataBudget = Effect.fn("JournalMetadataTes
   exact.configuration.highestValidYear = 9999;
   const repeated = yield* exact.metadata.apply(raw);
   expect(repeated.reservedUnits).toBe(41);
+  const outer = yield* install("bun", 44, true);
+  yield* withCitationTestInvocation(
+    Effect.gen(function* () {
+      const { budget } = yield* CitationInvocation;
+      yield* budget.reserve(4);
+      const exhausted = yield* outer.metadata.apply(raw).pipe(Effect.flip);
+      expect(exhausted).toMatchObject({ limit: "producedTextUtf16" });
+      const used = yield* budget.snapshot;
+      expect(used).toBe(36);
+    }),
+    outer.limits
+  );
   const future = A.getUnsafe(exact.corpus.inputs, 63);
   const frozenYear = yield* exact.metadata.apply({ ...future.request, ...A.getUnsafe(exact.corpus.controls, 0) });
   const futurePatch = yield* Effect.fromOption(frozenYear.patch);
   expect(futurePatch).toEqual(future.patch);
-  const outer = yield* install("bun", 44, true);
-  yield* outer.text.reserve(4);
-  const exhausted = yield* outer.metadata.apply(raw).pipe(Effect.flip);
-  expect(exhausted).toMatchObject({ limit: "producedTextUtf16" });
-  const used = yield* outer.text.snapshot;
-  expect(used).toBe(36);
 });
 /** Shared lifetime and deadline control stays effective on the journal entrypoint. */
 export const assertCitationJournalMetadataLifetime = Effect.fn("JournalMetadataTest.lifetime")(function* () {
@@ -218,22 +229,15 @@ export const assertCitationJournalMetadataConfiguration = Effect.fn("JournalMeta
     [setup.limits, setup.runtime, { ...corpus.configuration, journalPattern: changedPattern }],
   ]) {
     const failed = yield* makeCitationJournalMetadata(policy, runtime, configuration).pipe(
+      Effect.flatMap((stage) =>
+        makeCitationTestScaffoldBinding(policy).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
+      ),
       Effect.provideContext(installed),
       DateTime.withCurrentZoneOffset(0),
       Effect.flip
     );
     expect(failed).toMatchObject({ reason: "invalid-configuration" });
   }
-  const oversized = yield* makeCitationTextBudget({
-    ...setup.limits,
-    producedTextUtf16: setup.limits.producedTextUtf16 + 1,
-  });
-  const failed = yield* makeCitationJournalMetadata(setup.limits, setup.runtime, corpus.configuration).pipe(
-    Effect.provideContext(Context.add(installed, CitationTextBudget, oversized)),
-    DateTime.withCurrentZoneOffset(0),
-    Effect.flip
-  );
-  expect(failed).toMatchObject({ reason: "invalid-configuration" });
   const valid = yield* install("bun");
   const request = A.getUnsafe(valid.corpus.inputs, 11).request;
   const invalidInput = yield* valid.metadata

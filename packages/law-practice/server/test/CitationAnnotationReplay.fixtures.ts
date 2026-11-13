@@ -87,8 +87,8 @@ const Outcome = S.TaggedUnion({
   $I.annoteSchema("Outcome", { description: "Original successful native output or invalid-template exception family." })
 );
 /** @internal @category testing @since 0.0.0 */
-export const assertCitationAnnotationOutcome = Effect.fn("AnnotationReplayTest.assertOutcome")(function* <E>(
-  output: Effect.Effect<CitationPythonUnicodeStorage, E>,
+export const assertCitationAnnotationOutcome = Effect.fn("AnnotationReplayTest.assertOutcome")(function* <E, R>(
+  output: Effect.Effect<CitationPythonUnicodeStorage, E, R>,
   expected: typeof Outcome.Type,
   id: string
 ) {

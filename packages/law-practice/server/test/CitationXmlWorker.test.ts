@@ -1,8 +1,10 @@
+import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { CitationPythonUnicodeStorage, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import { withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 import { installCitationXmlWorker, replayCitationXmlWorker } from "./CitationXmlWorker.fixtures.ts";
 
@@ -20,19 +22,25 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned XML w
   it.effect("captures the parent text authority and refuses allocation before native spawn", () =>
     Effect.gen(function* () {
       const setup = yield* installCitationXmlWorker("bun");
-      yield* setup.budget.reserve(setup.limits.producedTextUtf16 - 1);
-      const replacement = yield* makeCitationTextBudget(setup.limits);
-      const source = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array([65, 66]) });
-      const failure = yield* setup.worker
-        .balance(source)
-        .pipe(Effect.provideService(CitationTextBudget, replacement), Effect.flip);
-      expect(failure).toMatchObject({ operation: "annotate", limit: "producedTextUtf16" });
-      const used = yield* setup.budget.snapshot;
-      const swapped = yield* replacement.snapshot;
-      expect(used).toBe(setup.limits.producedTextUtf16 - 1);
-      expect(swapped).toBe(0);
-      const counts = yield* setup.observed.snapshot;
-      expect(counts).toEqual({ spawned: 0, confirmed: 0 });
+      yield* withCitationTestInvocation(
+        Effect.gen(function* () {
+          const { budget } = yield* CitationInvocation;
+          yield* budget.reserve(setup.limits.producedTextUtf16 - 1);
+          const replacement = yield* makeCitationTextBudget(setup.limits);
+          const source = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array([65, 66]) });
+          const failure = yield* setup.worker
+            .balance(source)
+            .pipe(Effect.provideService(CitationTextBudget, replacement), Effect.flip);
+          expect(failure).toMatchObject({ operation: "annotate", limit: "producedTextUtf16" });
+          const used = yield* budget.snapshot;
+          const swapped = yield* replacement.snapshot;
+          expect(used).toBe(setup.limits.producedTextUtf16 - 1);
+          expect(swapped).toBe(0);
+          const counts = yield* setup.observed.snapshot;
+          expect(counts).toEqual({ spawned: 0, confirmed: 0 });
+        }),
+        setup.limits
+      );
     })
   );
 });

@@ -8,6 +8,7 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { reserveCitationInvocationText } from "./Invocation.ts";
 import { parseCitationPythonInteger } from "./PythonInteger.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
@@ -64,7 +65,7 @@ export const makeCitationMetadataYearFromBound = Effect.fn("Citation.makeMetadat
     Effect.mapError(() => CitationMetadataYearFailure.make({ reason: "invalid-bound" }))
   );
   const timing = yield* makeCitationRegexTiming(limits, true);
-  const input = yield* makeCitationRegexInput(limits, "source");
+  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText, "source");
   const getYear = Effect.fn("Citation.getMetadataYear")(function* (raw: unknown) {
     const source = yield* input.prepareUnicode(raw, () => Effect.void);
     return yield* parse(source.value, highest);

@@ -140,9 +140,6 @@ const vocabulary = () =>
 export const failCitationExtractionBoundary = Effect.fn("Citation.failExtractionBoundary")(function* (
   error: typeof Failure.Type
 ): Effect.fn.Return<never, CitationEngineFailure> {
-  yield* Effect.logDebug("Citation extraction boundary refused").pipe(
-    Effect.annotateLogs({ operation: "extract", failureClass: error._tag })
-  );
   const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
     Effect.fail(CitationSafetyLimitExceeded.make({ operation: "extract", limit }));
   return yield* Match.value(error).pipe(

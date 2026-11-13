@@ -290,6 +290,11 @@ export const makeCitationNativeSleepClock = Effect.fn("WorkerTest.sleepClock")(f
     sleep,
   } satisfies Clock.Clock;
 });
+/** Disable only the enclosing fixture scaffold timer; independently bound method calls
+ * restore their captured Clock. This does not substitute native-work deadlines.
+ * @internal @category testing @since 0.0.0
+ */
+export const citationInvocationScaffoldClock = makeCitationNativeSleepClock(() => Effect.never);
 /** @internal @category testing @since 0.0.0 */
 export const makeCitationNativeManualClock = Effect.fn("WorkerTest.manualSleep")(function* (
   duration: Duration.Duration

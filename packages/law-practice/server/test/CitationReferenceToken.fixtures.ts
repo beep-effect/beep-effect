@@ -22,6 +22,7 @@ import {
   installCitationHtmlGeometryFixture,
   prepareCitationOptionalHtmlGeometry,
 } from "./CitationHtmlGeometryPreparation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationPinExtractionCorpus } from "./CitationPinExtraction.fixtures.ts";
 import { assertCitationWorkerCompositionReleased, readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
 import {
@@ -96,7 +97,15 @@ const install = Effect.fn("ReferenceTokenTest.install")(function* (kind: Citatio
     names: cases.names,
     editions,
     supra: corpus.configuration.supra,
-  }).pipe(Effect.provideContext(provided), DateTime.withCurrentZoneOffset(0));
+  }).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
+        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
+      )
+    ),
+    Effect.provideContext(provided),
+    DateTime.withCurrentZoneOffset(0)
+  );
   return { corpus, setup, prepare, stage };
 });
 type Row = (typeof Corpus.Type.cases)[number];

@@ -8,7 +8,10 @@ import {
   makeCitationOperationAdmission,
 } from "@beep/law-practice-server/internal/Citation/Admission";
 import { CitationExtractorOrderingBinding } from "@beep/law-practice-server/internal/Citation/ExtractorOrdering";
-import { makeCitationRegexInput } from "@beep/law-practice-server/internal/Citation/RegexInput";
+import {
+  citationUnaccountedText,
+  makeCitationRegexInput,
+} from "@beep/law-practice-server/internal/Citation/RegexInput";
 import {
   CitationTokenizerExtractor,
   makeCitationTokenizer,
@@ -27,6 +30,7 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   makeCitationNativeManualClock,
   makeCitationObservedSpawner,
@@ -128,6 +132,11 @@ export const setupCitationTokenizer = Effect.fn("TokenizerTest.setup")(function*
   const observed = yield* makeCitationObservedSpawner();
   const timer = yield* makeCitationNativeManualClock(limits.regexDeadline);
   const tokenizer = yield* makeCitationTokenizer(limits, runtime, configuration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(limits).pipe(
+        Effect.map((bind) => ({ ...stage, port: { ...stage.port, tokenize: bind(stage.port.tokenize) } }))
+      )
+    ),
     Effect.provideService(CitationOperationAdmission, admission),
     Effect.provideService(Clock.Clock, timer.clock),
     Effect.provideService(ChildProcessSpawner, observed.spawner)
@@ -141,7 +150,7 @@ export const assertCitationTokenizerCase = Effect.fn("TokenizerTest.case")(funct
 ) {
   const output = yield* setup.tokenizer.port.tokenize(row.source);
   expect(output.patternsChecked).toBe(row.selected.length);
-  const prepare = yield* makeCitationRegexInput(setup.limits);
+  const prepare = yield* makeCitationRegexInput(setup.limits, citationUnaccountedText);
   const source = yield* prepare.prepareUnicode(output.source, () => Effect.void);
   const items = yield* Effect.forEach(
     output.assembly.items,

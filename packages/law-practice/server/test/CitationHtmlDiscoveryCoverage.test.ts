@@ -4,6 +4,7 @@ import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { readCitationHtmlDiscoveryCorpus } from "./CitationHtmlDiscovery.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
@@ -11,7 +12,14 @@ const setup = Effect.fnUntraced(function* () {
   const loaded = yield* readCitationHtmlDiscoveryCorpus();
   const runtime = yield* setupCitationMetadataRuntime("bun", undefined, false, true, 8192);
   const make = (policy: unknown, configuration: unknown) =>
-    makeCitationHtmlDiscovery(policy, runtime.runtime, configuration).pipe(Effect.provideContext(runtime.provided));
+    makeCitationHtmlDiscovery(policy, runtime.runtime, configuration).pipe(
+      Effect.flatMap((stage) =>
+        makeCitationTestScaffoldBinding(policy).pipe(
+          Effect.map((bind) => ({ ...stage, discover: bind(stage.discover) }))
+        )
+      ),
+      Effect.provideContext(runtime.provided)
+    );
   return { ...loaded, runtime, make };
 });
 

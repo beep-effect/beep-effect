@@ -6,18 +6,15 @@ import {
   CitationPreCaseMetadataPatch,
   makeCitationPreCaseMetadata,
 } from "@beep/law-practice-server/internal/Citation/PreCaseMetadata";
-import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
-import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
-  assertCitationMetadataEnclosingRefusal,
   assertCitationMetadataFixtureLifetime,
   assertCitationMetadataInstallControls,
   assertCitationMetadataRefusal,
@@ -75,7 +72,13 @@ export const readCitationPreCaseMetadataCorpus = Effect.fn("PreCaseMetadataTest.
   expect(hash).toBe("6cfd521369b960f677231e9e5c9ca2981c6dc0ca6c0f7e9edf551f01c3dda4bd");
   return yield* S.decodeEffect(Corpus)(new TextDecoder().decode(bytes));
 });
-const install = makeCitationMetadataFixtureInstaller(makeCitationPreCaseMetadata)(readCitationPreCaseMetadataCorpus());
+const install = makeCitationMetadataFixtureInstaller((...args: Parameters<typeof makeCitationPreCaseMetadata>) =>
+  makeCitationPreCaseMetadata(...args).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
+    )
+  )
+)(readCitationPreCaseMetadataCorpus());
 /** Compare every early skip locally plus actual backward matching through both runtimes. */
 export const replayCitationPreCaseMetadata = Effect.fn("PreCaseMetadataTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
@@ -116,8 +119,6 @@ export const assertCitationPreCaseBudget = Effect.fn("PreCaseMetadataTest.budget
     bounded.observed.snapshot,
     1
   );
-  const enclosing = yield* install("bun", 102, true);
-  yield* assertCitationMetadataEnclosingRefusal(enclosing.stage.apply(row.request), enclosing.budget, 4, 97);
   const skipped = yield* install("bun", 1);
   const result = yield* skipped.stage.apply({
     plaintiff: { width: 1, bytes: new TextEncoder().encode("KNOWN") },
@@ -143,16 +144,16 @@ export const assertCitationPreCaseLifetime = Effect.fn("PreCaseMetadataTest.life
 export const assertCitationPreCaseMetadataConfiguration = Effect.fn("PreCaseMetadataTest.configuration")(function* () {
   const corpus = yield* readCitationPreCaseMetadataCorpus();
   const setup = yield* setupCitationMetadataRuntime("bun");
-  yield* assertCitationMetadataInstallControls(makeCitationPreCaseMetadata, setup, corpus.configuration);
-  const oversized = yield* makeCitationTextBudget({
-    ...setup.limits,
-    producedTextUtf16: setup.limits.producedTextUtf16 + 1,
-  });
-  const failed = yield* makeCitationPreCaseMetadata(setup.limits, setup.runtime, corpus.configuration).pipe(
-    Effect.provideContext(Context.add(setup.provided, CitationTextBudget, oversized)),
-    Effect.flip
+  yield* assertCitationMetadataInstallControls(
+    (...args: Parameters<typeof makeCitationPreCaseMetadata>) =>
+      makeCitationPreCaseMetadata(...args).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestScaffoldBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
+        )
+      ),
+    setup,
+    corpus.configuration
   );
-  expect(failed).toMatchObject({ reason: "invalid-configuration" });
   const valid = yield* install("bun");
   const request = A.getUnsafe(valid.corpus.cases, 23).request;
   for (const raw of [

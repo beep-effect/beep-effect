@@ -76,14 +76,14 @@ export class CitationPythonUnicode extends Context.Service<
   {
     readonly fromText: (input: unknown) => Effect.Effect<CitationPythonUnicodeValue, CitationPythonUnicodeFailure>;
     readonly fromStorage: (input: unknown) => Effect.Effect<CitationPythonUnicodeValue, CitationPythonUnicodeFailure>;
-    readonly fromStorageReserved: <E>(
+    readonly fromStorageReserved: <E, R>(
       input: unknown,
-      beforeAllocate: (units: number) => Effect.Effect<void, E>
-    ) => Effect.Effect<CitationPythonUnicodeValue, E | CitationPythonUnicodeFailure>;
-    readonly fromTextReserved: <E>(
+      beforeAllocate: (units: number) => Effect.Effect<void, E, R>
+    ) => Effect.Effect<CitationPythonUnicodeValue, E | CitationPythonUnicodeFailure, R>;
+    readonly fromTextReserved: <E, R>(
       input: unknown,
-      beforeAllocate: (units: number) => Effect.Effect<void, E>
-    ) => Effect.Effect<CitationPythonUnicodeValue, E | CitationPythonUnicodeFailure>;
+      beforeAllocate: (units: number) => Effect.Effect<void, E, R>
+    ) => Effect.Effect<CitationPythonUnicodeValue, E | CitationPythonUnicodeFailure, R>;
   }
 >()($I`CitationPythonUnicode`) {}
 const fail = (reason: typeof Reason.Type) => CitationPythonUnicodeFailure.make({ reason });
@@ -226,11 +226,11 @@ export const normalizeCitationPythonSlice: {
  * The receiver reserves exact units/bytes before allocating the new payload.
  * @internal @category operations @since 0.0.0
  */
-export const sliceCitationPythonStorage = Effect.fn("Citation.slicePythonStorage")(function* <E>(
+export const sliceCitationPythonStorage = Effect.fn("Citation.slicePythonStorage")(function* <E, R>(
   source: CitationPythonUnicodeStorage,
   start: number,
   end: number,
-  beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E>
+  beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E, R>
 ) {
   const layout = yield* measureCitationPythonSlice(source, start, end);
   yield* beforeAllocate(layout);
@@ -257,11 +257,11 @@ const copyNativeRange = Effect.fn("Citation.copyNativeRange")(function* (
   return cursor;
 });
 
-const allocateNativeOutput = Effect.fn("Citation.allocateNativeOutput")(function* <E>(
+const allocateNativeOutput = Effect.fn("Citation.allocateNativeOutput")(function* <E, R>(
   width: 1 | 2 | 4,
   pythonLength: number,
   utf16Units: number,
-  beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E>
+  beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E, R>
 ) {
   const layout = CitationPythonSliceLayout.make({ width, pythonLength, utf16Units, byteLength: pythonLength * width });
   yield* beforeAllocate(layout);
@@ -285,10 +285,10 @@ const visitKeptNativePoints = Effect.fn("Citation.visitKeptNativePoints")(functi
  * remains immutable through both passes, as for native slicing/replacement.
  * @internal @category operations @since 0.0.0
  */
-export const filterCitationPythonStorage = Effect.fn("Citation.filterNativeStorage")(function* <E>(
+export const filterCitationPythonStorage = Effect.fn("Citation.filterNativeStorage")(function* <E, R>(
   source: CitationPythonUnicodeStorage,
   keep: (point: number) => boolean,
-  beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E>
+  beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E, R>
 ) {
   let largest = 0;
   let pythonLength = 0;
@@ -310,13 +310,13 @@ export const filterCitationPythonStorage = Effect.fn("Citation.filterNativeStora
  * The caller validates ranges and reserves exact receiving sizes before allocation.
  * @internal @category operations @since 0.0.0
  */
-export const concatCitationPythonRanges = Effect.fn("Citation.concatNativeRanges")(function* <E>(
+export const concatCitationPythonRanges = Effect.fn("Citation.concatNativeRanges")(function* <E, R>(
   ranges: ReadonlyArray<{
     readonly source: CitationPythonUnicodeStorage;
     readonly start: number;
     readonly end: number;
   }>,
-  beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E>
+  beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E, R>
 ) {
   const sizes = yield* Effect.forEach(ranges, (range) =>
     measureCitationPythonSlice(range.source, range.start, range.end)
@@ -373,11 +373,11 @@ export const findCitationPythonLiteral = Effect.fn("Citation.findNativeLiteral")
   }
   return O.none<CitationPythonSliceBounds>();
 });
-const visitNativeReplacement = Effect.fn("Citation.visitNativeReplacement")(function* <E>(
+const visitNativeReplacement = Effect.fn("Citation.visitNativeReplacement")(function* <E, R>(
   source: CitationPythonUnicodeStorage,
   needle: CitationPythonUnicodeStorage,
   replacement: CitationPythonUnicodeStorage,
-  visit: (word: CitationPythonUnicodeStorage, start: number, end: number) => Effect.Effect<void, E>
+  visit: (word: CitationPythonUnicodeStorage, start: number, end: number) => Effect.Effect<void, E, R>
 ) {
   const length = source.bytes.length / source.width;
   const oldLength = needle.bytes.length / needle.width;
@@ -404,11 +404,11 @@ const visitNativeReplacement = Effect.fn("Citation.visitNativeReplacement")(func
  * the receiving allocation authority, as for concatCitationPythonRanges.
  * @internal @category operations @since 0.0.0
  */
-export const replaceCitationPythonStorage = Effect.fn("Citation.replaceNativeStorage")(function* <E>(
+export const replaceCitationPythonStorage = Effect.fn("Citation.replaceNativeStorage")(function* <E, R>(
   source: CitationPythonUnicodeStorage,
   needle: CitationPythonUnicodeStorage,
   replacement: CitationPythonUnicodeStorage,
-  beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E>
+  beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E, R>
 ) {
   let width: 1 | 2 | 4 = 1;
   let pythonLength = 0;
@@ -459,7 +459,7 @@ export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")
     Duration.toMillis,
     Duration.millis
   );
-  const bounded = <A, E>(body: Effect.Effect<A, E>) =>
+  const bounded = <A, E, R>(body: Effect.Effect<A, E, R>) =>
     body.pipe(
       Effect.timeoutOrElse({
         duration: deadline,
@@ -506,9 +506,9 @@ export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")
   // Reserved calls borrow immutable adapter-owned input through preflight.
   // The receiving copy is independently validated before success; ordinary
   // fromStorage retains its existing copy-before-scan snapshot behavior.
-  const fromStorageReserved = Effect.fn("Citation.reserveNativeUnicode")(function* <E>(
+  const fromStorageReserved = Effect.fn("Citation.reserveNativeUnicode")(function* <E, R>(
     input: unknown,
-    beforeAllocate: (units: number) => Effect.Effect<void, E>
+    beforeAllocate: (units: number) => Effect.Effect<void, E, R>
   ) {
     const decoded = yield* decodeStorage(input);
     const units = yield* validateCitationPythonStorage(decoded.bytes, decoded.width, maximum, invalidInput, () =>
@@ -519,9 +519,9 @@ export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")
     if (value.utf16Units !== units) return yield* fail("invalid-input");
     return value;
   });
-  const fromTextReserved = Effect.fn("Citation.reserveJavaScriptUnicode")(function* <E>(
+  const fromTextReserved = Effect.fn("Citation.reserveJavaScriptUnicode")(function* <E, R>(
     input: unknown,
-    beforeAllocate: (units: number) => Effect.Effect<void, E>
+    beforeAllocate: (units: number) => Effect.Effect<void, E, R>
   ) {
     const text = yield* S.decodeUnknownEffect(Text)(input).pipe(Effect.mapError(invalidInput));
     if (Str.length(text) > maximum) return yield* fail("limit-exceeded");
@@ -531,15 +531,15 @@ export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")
   return CitationPythonUnicode.of({
     fromText: Effect.fn("Citation.captureJavaScriptUnicode")((input) => bounded(fromText(input))),
     fromStorage: Effect.fn("Citation.captureNativeUnicode")((input) => bounded(fromStorage(input))),
-    fromStorageReserved: Effect.fn("Citation.captureReservedNativeUnicode")(function* <E>(
+    fromStorageReserved: Effect.fn("Citation.captureReservedNativeUnicode")(function* <E, R>(
       input: unknown,
-      beforeAllocate: (units: number) => Effect.Effect<void, E>
+      beforeAllocate: (units: number) => Effect.Effect<void, E, R>
     ) {
       return yield* bounded(fromStorageReserved(input, beforeAllocate));
     }),
-    fromTextReserved: Effect.fn("Citation.captureReservedJavaScriptUnicode")(function* <E>(
+    fromTextReserved: Effect.fn("Citation.captureReservedJavaScriptUnicode")(function* <E, R>(
       input: unknown,
-      beforeAllocate: (units: number) => Effect.Effect<void, E>
+      beforeAllocate: (units: number) => Effect.Effect<void, E, R>
     ) {
       return yield* bounded(fromTextReserved(input, beforeAllocate));
     }),

@@ -32,7 +32,7 @@ it.effect("does not retain a native slot while regex input waits for borrowed te
         Deferred.succeed(waiting, undefined).pipe(Effect.andThen(budget.reserve(units)))
       ),
     });
-    const preparer = yield* makeCitationRegexJobPreparation(limits).pipe(
+    const preparer = yield* makeCitationRegexJobPreparation(limits, watched.reserve).pipe(
       Effect.provideService(CitationTextBudget, watched)
     );
     const producer = yield* budget

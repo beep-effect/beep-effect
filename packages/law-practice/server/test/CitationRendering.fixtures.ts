@@ -18,7 +18,9 @@ import * as FileSystem from "effect/FileSystem";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
+import type { CitationTestInvocationBound } from "./CitationInvocation.fixtures.ts";
 
 const $I = $LawPracticeServerId.create("test/CitationRendering");
 const Native = CitationNativeUnicodeHex;
@@ -80,7 +82,7 @@ export const loadCitationRendering = Effect.fn("RenderingTest.load")(function* (
 });
 const at = <V>(values: ReadonlyArray<V>, index: number) => Effect.fromOption(A.get(values, index));
 const assertResult = Effect.fn("RenderingTest.result")(function* (
-  rendering: Effect.Success<ReturnType<typeof makeCitationRendering>>,
+  rendering: CitationTestInvocationBound<Effect.Success<ReturnType<typeof makeCitationRendering>>>,
   outputs: ReadonlyArray<CitationNativeUnicodeHex>,
   request: unknown,
   expected: number | null
@@ -106,7 +108,7 @@ const metadata = (mode: typeof ModeRow.Type, ordinal: number) =>
   );
 const replayMode = Effect.fn("RenderingTest.mode")(function* (
   corpus: typeof Corpus.Type,
-  rendering: Effect.Success<ReturnType<typeof makeCitationRendering>>,
+  rendering: CitationTestInvocationBound<Effect.Success<ReturnType<typeof makeCitationRendering>>>,
   mode: typeof ModeRow.Type
 ) {
   let count = 0;
@@ -127,7 +129,12 @@ const replayMode = Effect.fn("RenderingTest.mode")(function* (
 /** @internal @category testing @since 0.0.0 */
 export const replayCitationRendering = Effect.fn("RenderingTest.replay")(function* () {
   const { corpus, owner, limits } = yield* loadCitationRendering();
-  const rendering = yield* makeCitationRendering(limits).pipe(Effect.provideService(CitationFrozenEditions, owner));
+  const rendering = yield* makeCitationRendering(limits).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, render: bind(stage.render) })))
+    ),
+    Effect.provideService(CitationFrozenEditions, owner)
+  );
   expect(A.map(corpus.modes, (m) => m.mode)).toEqual(Mode.literals);
   let count = 0;
   for (const mode of corpus.modes) count += yield* replayMode(corpus, rendering, mode);

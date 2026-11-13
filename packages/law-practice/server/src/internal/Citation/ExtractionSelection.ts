@@ -19,11 +19,10 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
-import { CitationOperationAdmission } from "./Admission.ts";
 import { CitationGeneratedReference } from "./GeneratedReferences.ts";
+import { CitationInvocation } from "./Invocation.ts";
 import { citationPythonPointAt, makeCitationPythonUnicode } from "./PythonUnicode.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
-import { captureCitationTextReservation } from "./TextBudget.ts";
+import { decodeCitationRegexPolicy } from "./RegexPolicy.ts";
 import type { CitationFullExtractionResult } from "./FullExtraction.ts";
 import type { CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 import type { CitationReferenceTokenResult } from "./ReferenceTokenExtraction.ts";
@@ -159,11 +158,9 @@ export const makeCitationExtractionSelection = Effect.fn("Citation.makeExtractio
   policy: unknown
 ) {
   const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
-  const timing = yield* makeCitationRegexTiming(limits, true);
-  const admission = yield* CitationOperationAdmission;
   const unicode = yield* makeCitationPythonUnicode(limits);
-  const reserveParent = yield* captureCitationTextReservation;
   const select = Effect.fn("Citation.selectExtractedCitations")(function* (raw: unknown) {
+    const { reserve: reserveParent } = (yield* CitationInvocation).budget;
     if (!A.isArray(raw)) return yield* fail("invalid-input");
     if (raw.length > limits.candidates) return yield* safety("candidates");
     const rows = yield* S.decodeUnknownEffect(Rows)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
@@ -265,8 +262,6 @@ export const makeCitationExtractionSelection = Effect.fn("Citation.makeExtractio
     });
   });
   return {
-    select: Effect.fn("Citation.filterExtraction")((raw: unknown) =>
-      admission.run("extract", timing.timed(select(raw)))
-    ),
+    select: Effect.fn("Citation.filterExtraction")((raw: unknown) => select(raw)),
   };
 });

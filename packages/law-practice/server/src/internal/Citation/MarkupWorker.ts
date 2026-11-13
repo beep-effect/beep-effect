@@ -75,7 +75,7 @@ export const makeCitationMarkupWorker = Effect.fn("Citation.makeMarkupWorker")(f
   });
   const reap = nativeOwner.reap;
   const run = Effect.fn("Citation.runMarkupWorker")(
-    function* <A, E, P>(prepare: Effect.Effect<(child: ChildProcessHandle) => Effect.Effect<A, E>, P>) {
+    function* <A, E, P, R>(prepare: Effect.Effect<(child: ChildProcessHandle) => Effect.Effect<A, E>, P, R>) {
       return yield* Effect.uninterruptibleMask(
         Effect.fnUntraced(function* (restore) {
           yield* ensureOpen;

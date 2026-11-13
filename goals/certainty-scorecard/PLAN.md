@@ -155,6 +155,14 @@ Lane feat/certainty-rout-05-step-outcomes
 
 Reverse: Delete this checkpoint so the slice-6 checkpoint is the latest PLAN status note, and revert the slice-11 commits.
 
+### Slice 14 (MEAS-05 slice 1) in review: one lane map for every job-name join, 2026-11-13
+
+Slice 14 makes `CI_LANE_DESCRIPTORS` the one job-name map: the descriptors gain `jobAliases` and `shardFamily`, and the new `packages/tooling/tool/cli/src/commands/Ci/CiLaneJobs.ts` derives the joins the route census, the lane-timings census, the certainty scorecard, heavy admission and the ruleset governance check read, in place of their own literals (decision `lane-job-map`). #3256's overflow name is the map's one called shard job. The admission gate holds: no existing test changed, `ci-lane-jobs.test.ts` reproduces every answer the replaced mappers gave on a56516d6d30 (fixture `test/fixtures/ci-lane-jobs/job-name-conservation.json`), and the 2026-09-01..10-30 receipt still replays to 242 skipped lane runs and 0 skipped reds. Slice 15 (the ledger fold) can read lanes and shard families from the map.
+
+Lane refactor/certainty-meas-05-lane-map
+
+Reverse: Delete this checkpoint so the certainty-nightly first-run checkpoint is the latest PLAN status note, and revert the slice-14 PR.
+
 ### Slice 2 merged; slice 3 (MEAS-02 with DEPS-10) attributes refusals by failure kind, 2026-11-13
 
 Slice 2 (ROUT-05 slice 1) merged as #3141. Slice 3 fixes `actionableLane` in `packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.ts` on the read side: a handler-error verdict names the first unexecuted planned step as `failedStepId` (`Handler.ts`), so refusals were charged to `publish:00-head-install-preflight`. Refusals are now classified first, as rows of the same `actionableLaneMix`: `refusal:lock-bounce`, `refusal:stale-base` (the publish stale-base refusal sentence) and `refusal:closeout` (any red closeout). Then the first failed inner lane, then `failedStepId` only for a `step-exit` failure, then the first failed lane, then `unexecuted` (a handler error that ran no lane) or `unlocated`. Every red attempt stays one row, so the mix total equals `redAttempts` and the WaveOrder `mixSum` check keeps holding; `unchangedFingerprint.byActionableLane` uses the same classes. The writer in `Handler.ts`, `WaveOrder.ts`, `EconomicsSeedSourceView` and the frozen `goals/time-to-certainty/research/economics.json` are unchanged; the re-seed belongs to local-proof-under-ten (YEET-07). Rejected: filtering refusals out of the mix (breaks the `redAttempts` invariant and the seed check) and changing the writer (old journal rows would still carry the preflight id).
@@ -194,5 +202,13 @@ Slice 6 (MEAS-07) merged as #3228. Slice 7 files a checkout's Yeet attempt journ
 Lane fix/certainty-peril-11-journal-export
 
 Reverse: Delete this checkpoint so the slice-6 checkpoint is the latest PLAN status note, and revert the slice-7 PR.
+
+### Slice 8 (PERIL-11 slice 2) in review: T3 root row and monitor waits apart, 2026-11-13
+
+Slices 1 to 7, 10 and 11 merged (7 as #3263, 4 as #3266); the certainty nightly is live and its first run is recorded (#3270). Slice 8 (PERIL-11 slice 2) adds the T3 Code worktree root to the intended `roots.json` list in `docs/runbooks/fleet-roots-and-registry.md`, makes `yeet economics --fleet` read a checkout reachable through two roots once, and reports monitor waits apart from local work: a fourth attempt class `monitor`, local-work `modeDurations`, lane populations without wait lanes, and a `monitorWait` section in `yeet-economics/v4` (decision `peril-11-slice-2-t3-root-and-monitor-waits`). The admission gate is `packages/tooling/tool/cli/test/yeet-economics-fleet-roots.test.ts` and `packages/tooling/tool/cli/test/yeet-economics-monitor-wait.test.ts`. The workstation's own `roots.json` is not written: configured mode drops 8 orphaned lanes whose clones were deleted, so filing their journals in the attempt-journal store comes first. Next startable: PERIL-11 slice 3 (slice 9).
+
+Lane chore/certainty-peril-11-fleet-roots
+
+Reverse: Delete this checkpoint so the slice-7 checkpoint is the latest PLAN status note, and revert the slice-8 PR.
 
 <!-- beep:decisions:end -->

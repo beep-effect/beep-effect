@@ -11,6 +11,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CitationCaseNameProcessPatch } from "./CaseNameProcess.ts";
 import { CitationHtmlTagGeometryInput, makeCitationHtmlTagGeometry } from "./HtmlTagGeometry.ts";
+import { reserveCitationInvocationText } from "./Invocation.ts";
 import {
   copyCitationMetadataPatternConfiguration,
   decodeCitationMetadataWordRequest,
@@ -140,7 +141,7 @@ export const extractCitationHtmlCaseName = Effect.fn("Citation.extractHtmlCaseNa
     fail("invalid-input")
   );
   if (request.index < 0 || request.index >= request.words.length) return yield* fail("invalid-index");
-  const input = yield* makeCitationRegexInput(limits);
+  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText);
   const words = yield* Effect.forEach(
     request.words,
     Effect.fnUntraced(function* (word) {

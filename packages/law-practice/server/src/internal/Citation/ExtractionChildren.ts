@@ -7,7 +7,6 @@ import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { captureCitationOperationChildren } from "./Admission.ts";
 import { CitationFrozenEditions } from "./FrozenEditions.ts";
 
 /** The owner must admit its outer operation before providing this Context to
@@ -16,13 +15,9 @@ import { CitationFrozenEditions } from "./FrozenEditions.ts";
  * @internal @category operations @since 0.0.0
  */
 export const captureCitationExtractionChildren = Effect.fn("Citation.captureExtractionChildren")(function* () {
-  const children = yield* captureCitationOperationChildren();
   const editions = yield* CitationFrozenEditions;
   const zone = yield* DateTime.CurrentTimeZone;
   const plans = yield* Effect.serviceOption(CitationExtractionCleanerPlans);
-  const captured = children.pipe(
-    Context.add(CitationFrozenEditions, editions),
-    Context.add(DateTime.CurrentTimeZone, zone)
-  );
+  const captured = Context.make(CitationFrozenEditions, editions).pipe(Context.add(DateTime.CurrentTimeZone, zone));
   return O.isSome(plans) ? Context.add(captured, CitationExtractionCleanerPlans, plans.value) : captured;
 });

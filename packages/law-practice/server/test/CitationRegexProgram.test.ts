@@ -1,5 +1,8 @@
 import { makeCitationRegexAlphabet } from "@beep/law-practice-server/internal/Citation/RegexAlphabet";
-import { makeCitationRegexInput } from "@beep/law-practice-server/internal/Citation/RegexInput";
+import {
+  citationUnaccountedText,
+  makeCitationRegexInput,
+} from "@beep/law-practice-server/internal/Citation/RegexInput";
 import {
   CitationRegexPointRange,
   citationRegexHexDigit,
@@ -22,8 +25,8 @@ import * as Str from "effect/String";
 
 const setup = Effect.fn("RegexProgramTest.setup")(function* () {
   const limits = (yield* defaultCitationEnginePolicy).limits;
-  const input = yield* makeCitationRegexInput(limits, "pattern");
-  const source = yield* makeCitationRegexInput(limits);
+  const input = yield* makeCitationRegexInput(limits, citationUnaccountedText, "pattern");
+  const source = yield* makeCitationRegexInput(limits, citationUnaccountedText);
   const compiler = yield* makeCitationRegexProgram(limits);
   const alphabet = yield* makeCitationRegexAlphabet(limits);
   const compile = Effect.fn("RegexProgramTest.compile")(function* (text: string, flags = 0) {

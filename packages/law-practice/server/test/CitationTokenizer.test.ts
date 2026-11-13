@@ -3,13 +3,21 @@ import {
   CitationAdmissionSnapshot,
   CitationOperationAdmission,
 } from "@beep/law-practice-server/internal/Citation/Admission";
+import { makeCitationExtractorOrdering } from "@beep/law-practice-server/internal/Citation/ExtractorOrdering";
 import { makeCitationTokenizer } from "@beep/law-practice-server/internal/Citation/Tokenizer";
+import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Order from "effect/Order";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
+import {
+  makeCitationTestScaffoldBinding,
+  withCitationTestInvocation,
+  withCitationTestTextBudget,
+} from "./CitationInvocation.fixtures.ts";
 import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import {
   assertCitationTokenizerCase,
@@ -20,7 +28,7 @@ import {
 import { loadCitationTokenObjectsControls } from "./CitationTokenObjects.fixtures.ts";
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned tokenizer composition", (it) => {
-  it.effect("translates a closed admission owner into a declared port refusal without native work", () =>
+  it.effect("uses invocation admission instead of a closed install-time view", () =>
     Effect.gen(function* () {
       const controls = yield* loadCitationTokenizerControls();
       const setup = yield* setupCitationMetadataRuntime("bun");
@@ -33,8 +41,11 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
       const tokenizer = yield* makeCitationTokenizer(setup.limits, setup.runtime, controls.configuration).pipe(
         Effect.provideContext(Context.add(setup.provided, CitationOperationAdmission, closed))
       );
-      const failure = yield* tokenizer.port.tokenize({ width: 1, bytes: new Uint8Array() }).pipe(Effect.flip);
-      expect(failure).toMatchObject({ _tag: "CitationTokenizerFailure", reason: "stage-failed" });
+      const result = yield* withCitationTestInvocation(
+        tokenizer.port.tokenize({ width: 1, bytes: new Uint8Array() }),
+        setup.limits
+      );
+      expect(result.tokens).toEqual([]);
       const native = yield* setup.observed.snapshot;
       expect(native).toEqual({ spawned: 0, confirmed: 0 });
     })
@@ -47,7 +58,15 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
         { ...runtime.limits, patterns: 1 },
         runtime.runtime,
         controls.configuration
-      ).pipe(Effect.provideContext(runtime.provided), Effect.flip);
+      ).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestScaffoldBinding({ ...runtime.limits, patterns: 1 }).pipe(
+            Effect.map((bind) => ({ ...stage, port: { ...stage.port, tokenize: bind(stage.port.tokenize) } }))
+          )
+        ),
+        Effect.provideContext(runtime.provided),
+        Effect.flip
+      );
       expect(overPatterns).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "patterns" });
       const first = A.getUnsafe(controls.configuration.extractors, 0);
       const contradictory = {
@@ -62,7 +81,15 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
       const profileConflict = yield* makeCitationTokenizer(runtime.limits, runtime.runtime, {
         ...controls.configuration,
         extractors: [first, contradictory],
-      }).pipe(Effect.provideContext(runtime.provided), Effect.flip);
+      }).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestScaffoldBinding(runtime.limits).pipe(
+            Effect.map((bind) => ({ ...stage, port: { ...stage.port, tokenize: bind(stage.port.tokenize) } }))
+          )
+        ),
+        Effect.provideContext(runtime.provided),
+        Effect.flip
+      );
       expect(profileConflict).toMatchObject({ _tag: "CitationTokenizerFailure", reason: "invalid-configuration" });
       const observed = yield* runtime.observed.snapshot;
       expect(observed).toEqual({ spawned: 0, confirmed: 0 });
@@ -73,6 +100,11 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
       const controls = yield* loadCitationTokenizerControls();
       const runtime = yield* setupCitationMetadataRuntime("bun");
       const invalidPolicy = yield* makeCitationTokenizer({}, runtime.runtime, controls.configuration).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestScaffoldBinding({}).pipe(
+            Effect.map((bind) => ({ ...stage, port: { ...stage.port, tokenize: bind(stage.port.tokenize) } }))
+          )
+        ),
         Effect.provideContext(runtime.provided),
         Effect.flip
       );
@@ -87,6 +119,81 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
       const observed = yield* setup.observed.snapshot;
       expect(observed).toEqual({ spawned: 0, confirmed: 0 });
       yield* assertCitationTokenizerCase(setup, A.getUnsafe(controls.cases, 0));
+    })
+  );
+  it.effect("preserves source and ordering refusals before worker execution", () =>
+    Effect.gen(function* () {
+      const controls = yield* loadCitationTokenizerControls();
+      const source = A.getUnsafe(controls.cases, 2).source;
+      for (const [overrides, limit] of [
+        [{ sourceUtf16: 1 }, "sourceUtf16"],
+        [{ patternEvaluations: 1 }, "patternEvaluations"],
+      ] as const) {
+        const setup = yield* setupCitationTokenizer("bun", controls.configuration, overrides);
+        const refused = yield* setup.tokenizer.port.tokenize(source).pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", operation: "extract", limit });
+        const observed = yield* setup.observed.snapshot;
+        expect(observed).toEqual({ spawned: 0, confirmed: 0 });
+      }
+    })
+  );
+  it.effect("refuses inherited plus selected extractor work before spawning a worker", () =>
+    Effect.gen(function* () {
+      const controls = yield* loadCitationTokenizerControls();
+      const extractors = A.map(A.take(controls.configuration.extractors, 4), (row, index) => ({
+        ...row,
+        ordering: { ...row.ordering, hash: BigInt(index + 1), strings: index < 2 ? [] : row.ordering.strings },
+      }));
+      const configuration = { ...controls.configuration, extractors };
+      const source = { width: 1, bytes: new Uint8Array([182, 32, 167]) };
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const ordering = yield* makeCitationExtractorOrdering(
+        limits,
+        A.map(extractors, (row) => row.ordering)
+      );
+      const selected = yield* ordering.ordered(source);
+      expect(A.sort(selected.indices, Order.Number)).toEqual([0, 1, 2, 3]);
+      // Two inherited members fit at install, but copying and selecting must still be bounded.
+      const boundedOrdering = yield* makeCitationExtractorOrdering(
+        { ...limits, patternEvaluations: 3 },
+        A.map(extractors, (row) => row.ordering)
+      );
+      const orderingRefusal = yield* boundedOrdering.ordered(source).pipe(Effect.flip);
+      expect(orderingRefusal).toMatchObject({
+        _tag: "CitationSafetyLimitExceeded",
+        operation: "extract",
+        limit: "patternEvaluations",
+      });
+      const setup = yield* setupCitationTokenizer("bun", configuration, { patternEvaluations: 3 });
+      const refused = yield* setup.tokenizer.port.tokenize(source).pipe(Effect.flip);
+      expect(refused).toMatchObject({
+        _tag: "CitationSafetyLimitExceeded",
+        operation: "extract",
+        limit: "patternEvaluations",
+      });
+      const observed = yield* setup.observed.snapshot;
+      expect(observed).toEqual({ spawned: 0, confirmed: 0 });
+    })
+  );
+  it.effect("enforces its own produced-text ceiling under a larger invocation without partial output", () =>
+    Effect.gen(function* () {
+      const controls = yield* loadCitationTokenizerControls();
+      const setup = yield* setupCitationTokenizer("bun", controls.configuration, { producedTextUtf16: 13 });
+      const maximum = (yield* defaultCitationEnginePolicy).limits.producedTextUtf16;
+      const refused = yield* withCitationTestTextBudget(
+        maximum,
+        setup.tokenizer.port.tokenize({ width: 1, bytes: new TextEncoder().encode("Id. x") })
+      ).pipe(Effect.flip);
+      expect(refused).toMatchObject({
+        _tag: "CitationSafetyLimitExceeded",
+        operation: "extract",
+        limit: "producedTextUtf16",
+      });
+      const observed = yield* setup.observed.snapshot;
+      expect(observed.spawned).toBeGreaterThan(0);
+      expect(observed.confirmed).toBe(observed.spawned);
+      const admission = yield* setup.admission.snapshot;
+      expect(admission).toMatchObject({ active: 0, queued: 0 });
     })
   );
   it.effect("owns edition binding rows and rejects duplicate source edition identities", () =>

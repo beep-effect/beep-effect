@@ -12,7 +12,7 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { makeCitationRegexInput } from "./RegexInput.ts";
+import { citationUnaccountedText, makeCitationRegexInput } from "./RegexInput.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationRegexProgram, makeCitationRegexProgram } from "./RegexProgram.ts";
 
@@ -123,7 +123,7 @@ export const makeCitationRegexDescriptorRegistry = Effect.fn("Citation.makeRegex
     Effect.mapError(() => fail("invalid-bindings"))
   );
   const crypto = yield* Digest.Digest;
-  const input = yield* makeCitationRegexInput(limits, "pattern");
+  const input = yield* makeCitationRegexInput(limits, citationUnaccountedText, "pattern");
   const compiler = yield* makeCitationRegexProgram(limits, engineInput);
   const { timed } = yield* makeCitationRegexTiming(limits, false);
   const installed = MutableHashMap.empty<string, CitationRegexPatternDescriptor>();

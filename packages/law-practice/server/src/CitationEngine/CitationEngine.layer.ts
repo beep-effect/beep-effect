@@ -10,10 +10,12 @@ import {
   CitationSafetyLimitExceeded,
 } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
+import { CitationOperationAdmission } from "../internal/Citation/Admission.ts";
 import { CitationAnnotationEntryConfiguration } from "../internal/Citation/AnnotationEntry.ts";
 import { failCitationAnnotationBoundary } from "../internal/Citation/AnnotationFailure.ts";
 import { makeCitationAnnotationOperation } from "../internal/Citation/AnnotationOperation.ts";
@@ -26,13 +28,17 @@ import {
 } from "../internal/Citation/EngineArtifact.ts";
 import { failCitationExtractionBoundary } from "../internal/Citation/EngineFailure.ts";
 import { CitationFrozenEditions } from "../internal/Citation/FrozenEditions.ts";
+import { CitationInvocationPolicy, openCitationInvocation } from "../internal/Citation/Invocation.ts";
 import { CitationNativeProcessAdmission, makeCitationAdmissionOwners } from "../internal/Citation/NativeAdmission.ts";
 import { CitationNativeProcessRuntime } from "../internal/Citation/NativeProcess.ts";
+import { failCitationCleanerBoundary } from "../internal/Citation/PortFailure.ts";
 import { captureCitationOperationPolicy, captureCitationSnapshot } from "../internal/Citation/Snapshot.ts";
 import { makeCitationSourceCleaning } from "../internal/Citation/SourceCleaning.ts";
 import { makeCitationSourcePairDocument } from "../internal/Citation/SourceDocument.ts";
 import { makeCitationSourceResolution } from "../internal/Citation/SourceResolution.ts";
 import { CitationVerifiedExtractionConfiguration } from "../internal/Citation/VerifiedExtraction.ts";
+import type { CitationEngineOperation } from "@beep/law-practice-use-cases/server";
+import type { CitationInvocation } from "../internal/Citation/Invocation.ts";
 
 const $I = $LawPracticeServerId.create("CitationEngine/CitationEngine.layer");
 /** Trusted server configuration assembled from authenticated parser/helper/
@@ -80,28 +86,88 @@ const make = Effect.fn("Citation.makeEngine")(function* (raw: unknown) {
   // Null-page case hashing uses semantic-object identity. Require the trusted
   // owner at installation instead of refusing a valid citation on first use.
   yield* CitationMissingPageIdentityFactory;
-  const cleaner = yield* makeCitationSourceCleaning(limits, engineArtifact);
+  const cleaner = yield* makeCitationSourceCleaning(limits, engineArtifact).pipe(
+    Effect.updateContext((context: Context.Context<Effect.Services<ReturnType<typeof makeCitationSourceCleaning>>>) =>
+      Context.omit(CitationOperationAdmission)(context)
+    )
+  );
   const extraction = yield* makeCitationSourcePairDocument(
     limits,
     configuration.runtime,
     configuration.extraction
-  ).pipe(Effect.catch(failCitationExtractionBoundary));
-  const resolution = yield* makeCitationSourceResolution(limits, engineArtifact);
+  ).pipe(
+    Effect.updateContext(
+      (context: Context.Context<Effect.Services<ReturnType<typeof makeCitationSourcePairDocument>>>) =>
+        Context.omit(CitationOperationAdmission)(context)
+    ),
+    Effect.catch(failCitationExtractionBoundary)
+  );
+  const resolution = yield* makeCitationSourceResolution(limits, engineArtifact).pipe(
+    Effect.updateContext((context: Context.Context<Effect.Services<ReturnType<typeof makeCitationSourceResolution>>>) =>
+      Context.omit(CitationOperationAdmission)(context)
+    )
+  );
   const annotation = yield* makeCitationAnnotationOperation(
     limits,
     configuration.runtime,
     configuration.annotation,
     engineArtifact
-  ).pipe(Effect.catch((error) => failCitationAnnotationBoundary(limits, error)));
+  ).pipe(
+    Effect.updateContext(
+      (context: Context.Context<Effect.Services<ReturnType<typeof makeCitationAnnotationOperation>>>) =>
+        Context.omit(CitationOperationAdmission)(context)
+    ),
+    Effect.catch((error) => failCitationAnnotationBoundary(limits, error))
+  );
+  const admission = yield* CitationOperationAdmission;
+  const invocationClock = yield* Clock.Clock;
+  const invoke = <A, E>(operation: CitationEngineOperation, body: Effect.Effect<A, E, CitationInvocation>) =>
+    openCitationInvocation(
+      CitationInvocationPolicy.make({ limits, operation, deadlineStarts: "before-admission" }),
+      body.pipe(
+        Effect.updateContext((context: Context.Context<CitationInvocation>) =>
+          Context.omit(CitationOperationAdmission)(context)
+        )
+      )
+    ).pipe(
+      Effect.provideService(CitationOperationAdmission, admission),
+      Effect.provideService(Clock.Clock, invocationClock)
+    );
   return CitationEngine.of({
-    clean: cleaner.clean,
+    clean: Effect.fn("Citation.Engine.clean")((input) =>
+      invoke("clean", cleaner.clean(input)).pipe(
+        Effect.catchTag("CitationAdmissionFailure", failCitationCleanerBoundary)
+      )
+    ),
     extract: Effect.fn("Citation.Engine.extract")((input) =>
-      extraction.extract(input).pipe(Effect.map((result) => result.output))
+      invoke("extract", extraction.extract(input)).pipe(
+        Effect.map((result) => result.output),
+        Effect.catch(failCitationExtractionBoundary),
+        Effect.tapError((error) =>
+          Effect.logDebug("Citation extraction boundary refused").pipe(
+            Effect.annotateLogs({ operation: "extract", failureClass: error._tag })
+          )
+        )
+      )
     ),
     resolve: Effect.fn("Citation.Engine.resolve")((input) =>
-      resolution.resolve(input).pipe(Effect.map((result) => result.output))
+      invoke("resolve", resolution.resolve(input)).pipe(
+        Effect.map((result) => result.output),
+        Effect.catchTag("CitationAdmissionFailure", () =>
+          Effect.fail(CitationInputError.make({ operation: "resolve" }))
+        )
+      )
     ),
-    annotate: annotation.annotate,
+    annotate: Effect.fn("Citation.Engine.annotate")((input) =>
+      invoke("annotate", annotation.annotate(input)).pipe(
+        Effect.catch((error) => failCitationAnnotationBoundary(limits, error)),
+        Effect.tapError((error) =>
+          Effect.logDebug("Citation annotation boundary refused").pipe(
+            Effect.annotateLogs({ operation: "annotate", failureClass: error._tag })
+          )
+        )
+      )
+    ),
   });
 });
 /** Build the four real admitted operations with captured dependencies. The host

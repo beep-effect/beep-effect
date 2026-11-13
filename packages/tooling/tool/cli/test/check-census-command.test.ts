@@ -12,14 +12,16 @@ import {
 } from "@beep/repo-cli/test/Quality";
 import { FsUtilsLive } from "@beep/repo-utils";
 import { expect, it } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -31,9 +33,31 @@ import {
   writeProjectFile,
 } from "./support/CommandTest.ts";
 
-const TestLayer = Layer.mergeAll(FsUtilsLive, TestConsole.layer).pipe(Layer.provideMerge(NodeTestLayer));
+// Hosted runners export `GITHUB_STEP_SUMMARY` to every process, test workers included, and the
+// gate appends to it; the suite runs off-runner unless a test names its own summary file.
+const TestLayer = Layer.mergeAll(
+  FsUtilsLive,
+  TestConsole.layer,
+  ConfigProvider.layer(ConfigProvider.fromUnknown({}))
+).pipe(Layer.provideMerge(NodeTestLayer));
 
 const runCheckCensusCommand = Command.runWith(checkCensusCommand, { version: "0.0.0" });
+
+// One run on a runner whose job summary is `summary.md` in the fixture root.
+const onRunner = Effect.fn("CheckCensusCommandTest.onRunner")(function* (root: string) {
+  const path = yield* Path.Path;
+  const summaryPath = path.join(root, "summary.md");
+  return {
+    summaryPath,
+    run: (args: ReadonlyArray<string>) =>
+      runCheckCensusCommand(args).pipe(
+        Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromUnknown({ GITHUB_STEP_SUMMARY: summaryPath })
+        )
+      ),
+  };
+});
 const decodeReport = S.decodeUnknownEffect(S.fromJsonString(CheckCensusReport));
 const encodeJsonString = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
@@ -310,6 +334,109 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census command", (it) => {
       expect(A.map(errors, (error) => error._tag)).toStrictEqual(A.map(others, () => "QualityScriptCommandError"));
       expect(A.dedupe(A.map(errors, (error) => error.message))).toStrictEqual([
         "--stamp-only runs alone (not with --write-baseline, --gate-only, --build-equivalence, --seed, --initial-state or --equivalence-output-json).",
+      ]);
+    })
+  );
+
+  // The Heavy / Check lane's step: a stale stamp is Repo Sanity's red, so the gate defers it.
+  it.effect("defers a stale baseline under --defer-stale-stamp without sampling and names it in the job summary", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fixtureRepo;
+      yield* writeCheckCensusBaseline(
+        CHECK_CENSUS_BASELINE_PATH,
+        CheckCensusBaseline.make({ ...fixtureBaseline, compiler: "7.0.1+fixture" })
+      );
+      // A sampled program would fail the run: the shim prints no metrics for it.
+      yield* writeProjectFile("packages/consumer/no-metrics", "");
+      const runner = yield* onRunner(root);
+      const mark = yield* logMark;
+
+      yield* runner.run(["--gate-only", "--defer-stale-stamp", "--output-json", REPORT_PATH]);
+
+      const deferral = `check-census gate deferred: baseline ${CHECK_CENSUS_BASELINE_PATH} was measured with 7.0.1+fixture, but the installed compiler is ${FIXTURE_COMPILER}, so the baseline is stale and must be re-measured with \`${CHECK_CENSUS_BASELINE_WRITE_COMMAND}\` (the write needs a built tree). Repo Sanity's stamp check (\`check-census --stamp-only\`) owns that red; this run samples nothing and passes.`;
+      const logged = yield* loggedSince(mark);
+      expect(logged).toContain(deferral);
+      expect(logged).not.toContain("FAIL");
+      const summary = yield* fs.readFileString(runner.summaryPath);
+      expect(summary).toBe(`### check-census gate\n\n${deferral}\n`);
+      const report = yield* readReport;
+      assertNone(report.gate);
+    })
+  );
+
+  it.effect("still fails a stale baseline when --defer-stale-stamp is absent", () =>
+    Effect.gen(function* () {
+      yield* fixtureRepo;
+      yield* writeCheckCensusBaseline(
+        CHECK_CENSUS_BASELINE_PATH,
+        CheckCensusBaseline.make({ ...fixtureBaseline, compiler: "7.0.1+fixture" })
+      );
+      const mark = yield* logMark;
+
+      const exit = yield* Effect.exit(runCheckCensusCommand(["--gate-only", "--output-json", REPORT_PATH]));
+
+      expectReportedExit(exit);
+      const logged = yield* loggedSince(mark);
+      expect(logged).toContain("FAIL compiler changed: baseline measured with 7.0.1+fixture");
+      expect(logged).not.toContain("check-census gate deferred");
+    })
+  );
+
+  it.effect("gates the owned rows normally under --defer-stale-stamp and appends the table to the job summary", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fixtureRepo;
+      const runner = yield* onRunner(root);
+
+      yield* runner.run([
+        "--gate-only",
+        "--defer-stale-stamp",
+        "--row-packages",
+        " @fixture/consumer , @fixture/absent",
+        "--output-json",
+        REPORT_PATH,
+      ]);
+
+      const gate = yield* readReport.pipe(Effect.flatMap((report) => Effect.fromOption(report.gate)));
+      assertSome(gate.rowPackages, ["@fixture/consumer", "@fixture/absent"]);
+      expect(A.map(gate.comparisons, (comparison) => comparison.name)).toStrictEqual(["@fixture/consumer"]);
+      const summary = yield* fs.readFileString(runner.summaryPath);
+      expect(summary).toContain("| `@fixture/consumer` | strict (+32) | 1000 | 1000 | 0 | 0% | unchanged |");
+      expect(summary).toContain("Result: pass.");
+    })
+  );
+
+  it.effect("fails a --row-packages selection that owns no baseline row and names it", () =>
+    Effect.gen(function* () {
+      yield* fixtureRepo;
+      const mark = yield* logMark;
+
+      const exit = yield* Effect.exit(
+        runCheckCensusCommand(["--gate-only", "--row-packages", "@fixture/absent", "--output-json", REPORT_PATH])
+      );
+
+      expectReportedExit(exit);
+      const logged = yield* loggedSince(mark);
+      expect(logged).toContain("FAIL no baselined program was selected (no --filter, --row-packages @fixture/absent)");
+    })
+  );
+
+  it.effect("rejects the gate-shaping flags beside a mode that runs no gate", () =>
+    Effect.gen(function* () {
+      yield* fixtureRepo;
+      const combinations: ReadonlyArray<ReadonlyArray<string>> = A.flatMap(
+        [["--write-baseline"], ["--stamp-only"], ["--build-equivalence"]],
+        (mode) => [
+          [...mode, "--defer-stale-stamp"],
+          [...mode, "--row-packages", "@fixture/consumer"],
+        ]
+      );
+
+      const errors = yield* Effect.forEach(combinations, (flags) => runCheckCensusCommand(flags).pipe(Effect.flip));
+
+      expect(A.dedupe(A.map(errors, (error) => error.message))).toStrictEqual([
+        "--defer-stale-stamp and --row-packages shape the gate (not --write-baseline, --stamp-only or --build-equivalence).",
       ]);
     })
   );

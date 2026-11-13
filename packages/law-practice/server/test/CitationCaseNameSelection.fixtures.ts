@@ -16,12 +16,14 @@ import {
   installCitationHtmlGeometryFixture,
   prepareCitationOptionalHtmlGeometry,
 } from "./CitationHtmlGeometryPreparation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationWorkerCompositionReleased,
   readCitationOracleFixture,
   setupCitationMetadataRuntime,
 } from "./CitationRegexWorker.fixtures.ts";
 import { CitationCaseNameDocument } from "./CitationTokenSeed.fixtures.ts";
+import type { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
 const $I = $LawPracticeServerId.create("test/CitationCaseNameSelection");
@@ -65,7 +67,14 @@ const install = Effect.fn("CaseNameSelectionTest.install")(function* (kind: Cita
   const stage = yield* makeCitationCaseNameSelection(setup.limits, setup.runtime, {
     plain: plain.configuration,
     html: html.configuration,
-  }).pipe(Effect.provideContext(setup.provided));
+  }).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
+        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
+      )
+    ),
+    Effect.provideContext(setup.provided)
+  );
   return { corpus, setup, prepare, stage };
 });
 type Row = (typeof Corpus.Type.cases)[number];
@@ -88,7 +97,11 @@ const assertRow = Effect.fn("CaseNameSelectionTest.row")(function* (
       () => null
     ),
   });
-  const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
+  const closed: Effect.Effect<
+    Effect.Success<typeof invocation>,
+    Effect.Error<typeof invocation>,
+    CitationInvocation
+  > = invocation;
   const result = yield* closed;
   yield* assertCitationCaseNamePatch(result, row, kind);
   expect(row.after.fullSpanEnd).toEqual(row.before.fullSpanEnd);

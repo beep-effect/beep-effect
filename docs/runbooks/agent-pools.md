@@ -273,12 +273,84 @@ is the truth; this copy is rendered by hand from it.
 | `docgen` | local | hosted-only | `Heavy / Docgen` |
 | `fallow` | local | hosted-only | `Fallow Advisory Envelopes` |
 | `coverage` | local | hosted-only | `Heavy / Coverage Regression` |
+| `effect-vitest-files` | local | local | part of `Heavy / Lint Policy` |
 | `hook:schema-catalog` | local | hosted-only | `Repo Sanity` |
 | `hook:instrumentation-catalog` | local | hosted-only | `Repo Sanity` |
 
+`effect-vitest-files` is `bun run beep lint effect-vitest --files <path>` (repeatable): the
+effect-vitest pass of Lint Policy over the named files only, compared with their own baseline rows,
+with no repository scan. On `worker`, `yeet final-check` runs it inside the `lint` gate over the
+diff's files in the effect-vitest scope, so a test-file finding shows up before hosted CI instead of
+one hosted round trip later (36 minutes on 2026-11-13). It does not replace the test-file type
+check, which stays with hosted `Heavy / Check` and `Heavy / Lint Policy`.
+
+### Forced gates on a worker
+
+`yeet final-check --force-local` on `worker` runs a forced gate one task at a time
+(concurrency 1) and prints that line; the receipt records `forceLocal: true`. A gate whose single
+process already exceeds the worker bar (1.5 GB, SPEC criterion 3), or whose full run has no
+proven worker budget, stays hosted-only: `--force-local` refuses it with that reason and leaves it to hosted CI with the
+reason `compute-profile=worker`. The table in `GateRoute.schemas.ts` (`workerForcedRouteTable`) is
+the truth. Figures are dankserver measurements from
+`goals/compute-profile-gate-routing/research/2026-11-13-worker-host-acceptance.md` only.
+
+| Gate | `--force-local` on `worker` | Memory budget measured on dankserver |
+| --- | --- | --- |
+| `fallow` | runs, one sub-lane at a time (`ci lane fallow --serial`) | one sub-lane is a `bun` CLI of about 275 MB under its `op run` wrapper plus a `fallow` analyzer of up to 398 MB, about 0.7 GB together. Three abreast reached 3.06 GB and did not finish in 29.5 minutes under a 3 GiB cap. |
+| `coverage` | runs, one package at a time (`--concurrency=1`) | not measured as a gate; one `vitest run` of one test file peaked at 684 MB |
+| `check` | refused | an ad-hoc `tsgo` package check peaked at 4.07 GB |
+| `docgen` | refused | builds the same TypeScript programs as `check` |
+| `lint-policy` | refused | owns the test-file type check: `tsc` held 2.59 GB for `@beep/repo-cli` and gave no result in 30 minutes under a 3 GiB cap; the full `lint effect-vitest` scan reached 2.24 GB before a pressure watchdog stopped it |
+| `cheap-gates` | refused | no per-gate budget measured in the acceptance note; its whole-repo scan remains hosted-only |
+| `repo-sanity` | changeset status only; the full lane is refused | no full-lane budget measured in the acceptance note; the narrowed worker final-check peaked at 600–602 MB |
+
+Run a forced gate the way the acceptance run did, inside a capped scope, so a misjudged budget
+throttles the scope instead of the slice that hosts `t3 serve`:
+
+```sh
+systemd-run --user --scope -q -p MemoryHigh=2G -p MemoryMax=3G -p MemorySwapMax=0 \
+  bun run beep yeet final-check --force-local --gates fallow
+```
+
+A `--gates` run writes an incomplete receipt, which never admits `yeet ready`; run the plain
+`yeet final-check` on the head again afterwards.
+
+### Hosted catalog regeneration
+
 On `worker`, both catalog hooks are skipped and `yeet open` labels the PR `compute-profile-worker`.
-The `Catalog Regeneration` job in `.github/workflows/catalog-regeneration.yml` then regenerates
-the scoped shards and pushes them while the PR is a draft (D3, D9).
+The `Catalog Regeneration` workflow (`.github/workflows/catalog-regeneration.yml`) runs on the
+`labeled`, `synchronize` and `reopened` events of a same-repository draft with that label. Its
+first job regenerates the shards over the PR diff with a read-only token and no secret; its second
+job pushes the shard diff with an installation token of the `beep-knowledge-mint` GitHub App,
+minted in the step before the push with `contents: write` only. An App push starts the follow-up
+workflows like a lane push; a `github.token` push would leave them all `action_required`, so
+without the App credential the push job fails closed and says why in its summary.
+
+It covers every push the lane makes while the PR is a draft with the label, a merge of `main`
+included: the merge push re-runs the job on the merged head and it pushes any drift. It never runs
+after `yeet ready`, because a bot push would move the verdict head and restart the review window.
+When `main` changes the same shard after the flip, `yeet open` and `yeet ready` refuse the stale
+base, the lane merges `main`, and hosted `Repo Sanity` proves the merged shards. Git merges
+generated files line by line, so a clean merge is not proof; if `Repo Sanity` reds on a catalog
+shard, move the PR back to draft (`gh pr ready <n> --undo`), remove and reapply the `compute-profile-worker` label so the `labeled` event
+regenerates, wait for hosted green and run `yeet ready` again.
+
+### dankserver host-owner steps
+
+Two host defects from the 2026-11-13 acceptance run that only the host owner fixes; the repository
+changes nothing on a host.
+
+1. Remove the interim `lefthook-local.yml` from the dankserver primary clone and its line in
+   `.git/info/exclude`. It sets `skip: true` on `schema-catalog` and `instrumentation-catalog`,
+   which the profile skip (#2959) now does on its own; its own comment says to remove it once the
+   profile skip lands. `LEFTHOOK_VERBOSE=1 git commit` in a lane of that clone should still report
+   both catalog commands skipped "by condition".
+2. Give each worker account a git identity (`git config --global user.name` and `user.email`, the
+   identity that account commits as). Without it a commit fails with `empty ident name` and needs
+   `GIT_AUTHOR_*` and `GIT_COMMITTER_*` set by hand.
+
+The `gh` wrapper's `op://` reference may name its 1Password item with spaces since P3; names with
+other characters than letters, digits, `-`, `_`, `.` and spaces still need the item's ID.
 
 ## Cursor lane recipe v2
 

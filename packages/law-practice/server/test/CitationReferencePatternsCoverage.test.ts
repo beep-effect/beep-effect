@@ -18,6 +18,7 @@ import * as Num from "effect/Number";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
   makeCitationReferenceNameMetadata,
   readCitationGeneratedReferenceSource,
@@ -50,59 +51,94 @@ const plaintiffOnly = (plaintiff: Parameters<typeof makeCitationReferenceNameMet
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("reference pattern refusals", (it) => {
   it.effect("refuses an invalid policy and an altered exclusion list of the pinned length", () =>
-    Effect.gen(function* () {
-      const { budget, names, limits } = yield* install();
-      const policy = yield* makeCitationReferenceNames({}, names).pipe(
-        Effect.provideService(CitationTextBudget, budget),
-        Effect.flip
-      );
-      expect(policy).toMatchObject({ _tag: "CitationReferenceNamesFailure", reason: "invalid-policy" });
-      const altered = A.map(names, (name, index) => (index === 0 ? "different" : name));
-      strictEqual(altered.length, 93);
-      const mismatch = yield* makeCitationReferenceNames(limits, altered).pipe(
-        Effect.provideService(CitationTextBudget, budget),
-        Effect.flip
-      );
-      expect(mismatch).toMatchObject({ _tag: "CitationReferenceNamesFailure", reason: "invalid-configuration" });
-    })
+    withCitationTestInvocation(
+      Effect.gen(function* () {
+        const { budget, names, limits } = yield* install();
+        const policy = yield* makeCitationReferenceNames({}, names).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestScaffoldBinding({}).pipe(Effect.map((bind) => ({ ...stage, collect: bind(stage.collect) })))
+          ),
+          Effect.provideService(CitationTextBudget, budget),
+          Effect.flip
+        );
+        expect(policy).toMatchObject({ _tag: "CitationReferenceNamesFailure", reason: "invalid-policy" });
+        const altered = A.map(names, (name, index) => (index === 0 ? "different" : name));
+        strictEqual(altered.length, 93);
+        const mismatch = yield* makeCitationReferenceNames(limits, altered).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestScaffoldBinding(limits).pipe(
+              Effect.map((bind) => ({ ...stage, collect: bind(stage.collect) }))
+            )
+          ),
+          Effect.provideService(CitationTextBudget, budget),
+          Effect.flip
+        );
+        expect(mismatch).toMatchObject({ _tag: "CitationReferenceNamesFailure", reason: "invalid-configuration" });
+      })
+    )
   );
 
-  it.effect("refuses invalid policy, configuration, oversized budget and unauthenticated templates", () =>
-    Effect.gen(function* () {
-      const { budget, configuration, limits, tampered } = yield* install();
-      const run = (policy: unknown, input: unknown) =>
-        makeCitationReferencePatterns(policy, input).pipe(Effect.provideService(CitationTextBudget, budget));
-      const invalidPolicy = { _tag: "CitationReferencePatternFailure", reason: "invalid-policy" };
-      const invalidConfiguration = { _tag: "CitationReferencePatternFailure", reason: "invalid-configuration" };
-      yield* refuses(run({}, configuration), invalidPolicy);
-      yield* refuses(run(limits, {}), invalidConfiguration);
-      const oversized = { ...limits, producedTextUtf16: limits.producedTextUtf16 - 1 };
-      yield* refuses(run(oversized, configuration), invalidPolicy);
-      yield* refuses(run(limits, tampered), invalidConfiguration);
-      const owned = CitationReferencePatternConfiguration.make(tampered);
-      yield* refuses(copyCitationReferencePatternConfiguration(limits, owned), invalidConfiguration);
-    })
+  it.effect("refuses invalid policy, configuration and unauthenticated templates", () =>
+    withCitationTestInvocation(
+      Effect.gen(function* () {
+        const { budget, configuration, limits, tampered } = yield* install();
+        const run = (policy: unknown, input: unknown) =>
+          makeCitationReferencePatterns(policy, input).pipe(Effect.provideService(CitationTextBudget, budget));
+        const invalidPolicy = { _tag: "CitationReferencePatternFailure", reason: "invalid-policy" };
+        const invalidConfiguration = { _tag: "CitationReferencePatternFailure", reason: "invalid-configuration" };
+        yield* refuses(run({}, configuration), invalidPolicy);
+        yield* refuses(run(limits, {}), invalidConfiguration);
+        yield* refuses(run(limits, tampered), invalidConfiguration);
+        const owned = CitationReferencePatternConfiguration.make(tampered);
+        yield* refuses(copyCitationReferencePatternConfiguration(limits, owned), invalidConfiguration);
+      })
+    )
+  );
+
+  it.effect("rejects an oversized enclosing ledger before allocating and owns copied templates", () =>
+    withCitationTestInvocation(
+      Effect.gen(function* () {
+        const { budget, configuration, limits } = yield* install();
+        const refused = yield* makeCitationReferencePatterns(
+          { ...limits, producedTextUtf16: budget.maximum - 1 },
+          configuration
+        ).pipe(Effect.provideService(CitationTextBudget, budget), Effect.flip);
+        expect(refused).toMatchObject({ _tag: "CitationReferencePatternFailure", reason: "invalid-policy" });
+        const used = yield* budget.snapshot;
+        expect(used).toBe(0);
+        const owned = yield* copyCitationReferencePatternConfiguration(
+          limits,
+          CitationReferencePatternConfiguration.make(configuration)
+        );
+        expect(owned).toEqual(configuration);
+        expect(owned.patterns.pinPrefix).not.toBe(configuration.patterns.pinPrefix);
+        expect(owned.patterns.pinPrefix.bytes).not.toBe(configuration.patterns.pinPrefix.bytes);
+        expect(owned.disallowedNames).not.toBe(configuration.disallowedNames);
+      })
+    )
   );
 
   it.effect("escapes a leading metacharacter word and refuses an oversized literal before assembly", () =>
-    Effect.gen(function* () {
-      const { budget, configuration, limits, unicode } = yield* install();
-      const builder = yield* makeCitationReferencePatterns(limits, configuration).pipe(
-        Effect.provideService(CitationTextBudget, budget)
-      );
-      const name = yield* unicode.fromText("Abc $de");
-      const built = yield* builder.build(plaintiffOnly(name.storage), "markup");
-      const pattern = yield* Effect.fromOption(built);
-      const text = yield* unicode.fromStorage(pattern.pattern);
-      assertTrue(pipe(text.text, Str.includes("Abc\\s+\\$de")));
-      const patternUtf16 =
-        A.reduce(R.values(configuration.patterns), 0, (n, p) => Num.max(n, p.bytes.length / p.width)) + 32;
-      const small = yield* makeCitationReferencePatterns({ ...limits, patternUtf16 }, configuration).pipe(
-        Effect.provideService(CitationTextBudget, budget)
-      );
-      const long = yield* unicode.fromText(`A${Str.repeat(patternUtf16 + 1)("b")}`);
-      const refused = yield* small.build(plaintiffOnly(long.storage), "pin").pipe(Effect.flip);
-      expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "patternUtf16" });
-    })
+    withCitationTestInvocation(
+      Effect.gen(function* () {
+        const { budget, configuration, limits, unicode } = yield* install();
+        const builder = yield* makeCitationReferencePatterns(limits, configuration).pipe(
+          Effect.provideService(CitationTextBudget, budget)
+        );
+        const name = yield* unicode.fromText("Abc $de");
+        const built = yield* builder.build(plaintiffOnly(name.storage), "markup");
+        const pattern = yield* Effect.fromOption(built);
+        const text = yield* unicode.fromStorage(pattern.pattern);
+        assertTrue(pipe(text.text, Str.includes("Abc\\s+\\$de")));
+        const patternUtf16 =
+          A.reduce(R.values(configuration.patterns), 0, (n, p) => Num.max(n, p.bytes.length / p.width)) + 32;
+        const small = yield* makeCitationReferencePatterns({ ...limits, patternUtf16 }, configuration).pipe(
+          Effect.provideService(CitationTextBudget, budget)
+        );
+        const long = yield* unicode.fromText(`A${Str.repeat(patternUtf16 + 1)("b")}`);
+        const refused = yield* small.build(plaintiffOnly(long.storage), "pin").pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "patternUtf16" });
+      })
+    )
   );
 });

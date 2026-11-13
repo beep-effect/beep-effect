@@ -19,6 +19,7 @@ import { CitationExtractionLoopModel } from "./ExtractionLoop.ts";
 import { projectCitationExtractionSelection } from "./ExtractionSelection.ts";
 import { makeCitationNativeRendering } from "./NativeRendering.ts";
 import type { CitationTokenSeed } from "@beep/law-practice-use-cases/server";
+import type { CitationInvocation } from "./Invocation.ts";
 
 const invalid = () => CitationDumpFailure.make({ reason: "invalid-input" });
 const configuration = () => CitationDumpFailure.make({ reason: "invalid-configuration" });
@@ -97,8 +98,9 @@ export const makeCitationBuiltinDump = Effect.fn("Citation.makeBuiltinDump")(fun
       fields: A.append(fields, CitationDumpField.cases.Scalar.make({ name: "year", value: scalar(year) })),
     });
   }, timing.timed);
-  const projectClosed: (input: unknown) => Effect.Effect<CitationDumpRow, Effect.Error<ReturnType<typeof project>>> =
-    project;
+  const projectClosed: (
+    input: unknown
+  ) => Effect.Effect<CitationDumpRow, Effect.Error<ReturnType<typeof project>>, CitationInvocation> = project;
   return { project: projectClosed };
 });
 
