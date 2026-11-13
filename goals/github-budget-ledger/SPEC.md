@@ -394,15 +394,27 @@ Reverse: Revert the review-fix commit; the ledger falls back to scanning raw hou
 
 ### Ledger windows are per concurrent bucket, not per login, 2026-11-13
 
-Live ledger data on 2026-11-12 showed GitHub GraphQL rate-limit windows are per credential, not per login. The gh login token and the yeet monitor token, folded into `user:kriegcloud` by the alias map, each kept their own window, with resets about a minute apart. The design note (research/2026-11-10-design.md) split a key's anchors into sequential reset epochs, so each switch between the interleaved windows read as a reset crossing. The 20:00 UTC hour reported 10,347+ GraphQL points against a real ~1,200.
+Live ledger data on 2026-11-12 established that GraphQL windows are per credential, not per login. Aliases fold multiple credentials into one user key, and the archive also shows one PID using multiple credentials. A key therefore needs physical-window membership, not identity or PID alone.
 
-The bucket key stays identity plus resource, so the login grouping and the reserve signal per identity are unchanged. Inside a key, anchors are now assigned to lanes, one per concurrent physical bucket: by reset match, then an idle lane, then a lane whose window has ended, else a new lane. Windows pair anchors only within a lane, and the hour telescopes per lane. The reserve signal is the most constrained fresh, live lane. Rollups move to `github-ledger-rollup/v2`, and a v1 rollup reads as absent so its hour is recomputed from rows.
+Rows carry an optional non-secret credential fingerprint: twelve lowercase hex digits of SHA-256, shared with tokenHashLabel. Missing keys decode to None; App installation identities remain unknown because their tokens rotate. Gh spawns fingerprint only their selected environment token, never gh's stored token.
 
-This amends the design note's epoch model. That note is a dated record and is left as written.
+D2/D2a retain continuous sequences for known fingerprints. Distinct known GraphQL fingerprints never merge, and known GraphQL fingerprints never merge with unknown observations. For core, search and other shared resources, groups merge only when positive readings observed before their reset agree within five seconds. A known REST sequence can absorb an unknown instance only through such a co-observation.
+
+D2c supersedes D2b's fingerprint-free sub-lane continuation. Across the entire key, unknown busy anchors form window instances by transitive reset proximity within five seconds, irrespective of PID or sample source. Idle anchors form separate idle-only reset instances. Unknown instances never continue across a reset: the latest-ended-tail rule is removed. This prevents the cross-epoch merge bridge in which different PIDs inferred different successor assignments and whole-group merging retroactively joined concurrent windows.
+
+An inferred instance's hourly fleet contribution uses its earliest reset minus one hour as its window start. With an anchor before the hour, subtract the last before-hour reading from the last in-hour reading. Otherwise count the last reading from zero if the window began in the hour, exactly; if it began earlier, subtract the first in-hour reading and mark the result as a lower bound. Floor each rise at zero. Known fingerprint lanes retain their real-reset crossing lower bounds, but apply the same start-time test to the first window: count its first observation from zero when it began inside the hour, otherwise disclose the initial undercount as a lower bound.
+
+Unknown windows never carry a reset crossing, including when transitive jitter creates a cluster wider than five seconds. Inferred contributions set lanesInferred and render as `(inferred lanes)`; that marker is separate from the reset/partial-window lower-bound flag. Peak enrichment stays within a known lane. Nominal attribution and gh-spawn counts belong to the row's timestamp hour. Operation costs pair only within a PID, credential and compatible epoch, rejecting idle-to-busy jumps across incompatible resets.
+
+Latest transport files, memory state, in-process readings and write throttles retain readings per key and credential key. Reserve uses the same partition as accounting, treats each unknown window instance as a candidate, selects its newest fresh live reading, and signals on the most constrained candidate.
+
+Summaries use github-ledger-summary/v2; v1 summaries decode absent. Rollups remain github-ledger-rollup/v2. Version-tagged reads distinguish current and legacy rollups. Raw-backed v1 hours recompute; without raw rows, an explicit legacy-unrecomputable result preserves request counts and marks invalid fleet/attribution estimates unknown. It never becomes an ordinary empty hour.
+
+The independent D2c per-instance replay matches the report for core and GraphQL in all four target hours. GraphQL T20–T23 is 1,176+, 1,204+, 1,539+, 2,130+; T20 falls inside the independent 1,176..1,216 bound. The earlier dated design note is retained as history. The exact R1–R8 reproductions, the D2a resource rules, and D2c's three hourly baselines and cross-epoch bridge are covered by regression tests.
 
 Lane fix/github-ledger-concurrent-buckets
 
-Reverse: Revert the lanes commit and the rollup v2 bump; v2 rollups would then fail to decode and be recomputed under the v1 model
+Reverse: Revert this implementation; preserve raw rows and legacy rollups before any recalculation or migration
 
 <!-- beep:decisions:end -->
 

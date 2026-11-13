@@ -413,7 +413,7 @@ describe("github ledger commands with the ledger bound", () => {
           ]),
           summary: Effect.succeedSome(
             LedgerSummary.make({
-              schemaVersion: "github-ledger-summary/v1",
+              schemaVersion: "github-ledger-summary/v2",
               generatedAt: at,
               spenders: [],
               unattributedLastHour: [],

@@ -15,7 +15,12 @@
  * @since 0.0.0
  */
 
-import { GitHubRateLimitResource, RateLimitOutcome, RateLimitRequestKind } from "@beep/github/Resilience";
+import {
+  CredentialFingerprint,
+  GitHubRateLimitResource,
+  RateLimitOutcome,
+  RateLimitRequestKind,
+} from "@beep/github/Resilience";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { defectDiagnostics, optionalDefectMessage } from "@beep/schema/SchemaUtils/defectDiagnostics";
@@ -23,6 +28,7 @@ import { optionalDefect } from "@beep/schema/SchemaUtils/optionalDefect";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -569,6 +575,7 @@ export const GithubLedgerRow = S.TaggedUnion({
     host: HostLabel,
     command: GithubLedgerCommandLabel,
     identity: GithubIdentityLabel,
+    credential: S.OptionFromOptionalKey(CredentialFingerprint).pipe(S.withConstructorDefault(Effect.succeedNone)),
     resource: GitHubRateLimitResource,
     kind: RateLimitRequestKind,
     operation: GithubOperation,
@@ -586,6 +593,8 @@ export const GithubLedgerRow = S.TaggedUnion({
     host: HostLabel,
     command: GithubLedgerCommandLabel,
     identity: GithubIdentityLabel,
+    credential: S.OptionFromOptionalKey(CredentialFingerprint).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    pid: S.Int.pipe(S.withDecodingDefaultKey(Effect.succeed(0)), S.withConstructorDefault(Effect.succeed(0))),
     subcommand: GhSubcommand,
     resource: GitHubRateLimitResource,
     exitCode: S.Int,
@@ -596,6 +605,7 @@ export const GithubLedgerRow = S.TaggedUnion({
     host: HostLabel,
     command: GithubLedgerCommandLabel,
     identity: GithubIdentityLabel,
+    credential: S.OptionFromOptionalKey(CredentialFingerprint).pipe(S.withConstructorDefault(Effect.succeedNone)),
     trigger: SampleTrigger,
     selfCost: SelfCost,
     buckets: S.NonEmptyArray(SampleBucket),
@@ -895,6 +905,10 @@ export class BucketReading extends S.Opaque<BucketReading, { readonly brand: uni
     used: S.OptionFromNullOr(S.Int),
     resetAt: S.DateTimeUtcFromString,
     asOf: S.DateTimeUtcFromString,
+    source: S.String.pipe(
+      S.withDecodingDefaultKey(Effect.succeed("legacy")),
+      S.withConstructorDefault(Effect.succeed("legacy"))
+    ),
     basis: ReadingBasis,
   }).pipe($I.annoteSchema("BucketReading", { description: "The freshest known state of one bucket." }))
 ) {}
@@ -1403,6 +1417,8 @@ export class LedgerAnchor extends S.Opaque<LedgerAnchor, { readonly brand: uniqu
     at: S.DateTimeUtcFromString,
     used: S.Int,
     resetAt: S.DateTimeUtcFromString,
+    source: S.String.pipe(S.withConstructorDefault(Effect.succeed("legacy"))),
+    resource: GitHubRateLimitResource.pipe(S.withConstructorDefault(Effect.succeed("core"))),
     anchor: WindowAnchor,
   }).pipe($I.annoteSchema("LedgerAnchor", { description: "One reading of a bucket's fleet-wide used count." }))
 ) {}
@@ -1415,6 +1431,7 @@ export class LedgerAnchor extends S.Opaque<LedgerAnchor, { readonly brand: uniqu
  * A lane is one physical bucket. One key can hold several concurrent lanes,
  * such as two credentials of one login that the alias map folds together.
  * `lane` numbers them from 0 in order of first appearance within the key.
+ * `inferred` identifies windows whose lane membership rests on unknown credentials.
  *
  * **Example** (Build a window)
  *
@@ -1437,6 +1454,10 @@ export class LedgerWindow extends S.Opaque<LedgerWindow, { readonly brand: uniqu
   S.Struct({
     key: BucketKey,
     lane: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    inferred: S.Boolean.pipe(
+      S.withDecodingDefaultKey(Effect.succeed(false)),
+      S.withConstructorDefault(Effect.succeed(false))
+    ),
     from: S.DateTimeUtcFromString,
     to: S.DateTimeUtcFromString,
     anchor: WindowAnchor,
@@ -1495,6 +1516,11 @@ export class CommandSpend extends S.Opaque<CommandSpend, { readonly brand: uniqu
 /**
  * One bucket's usage and attribution in one hour.
  *
+ * **Details**
+ *
+ * `lanesInferred` discloses that at least one contributing window used reset
+ * inference for fingerprint-free rows. It defaults to false for old rollups.
+ *
  * **Example** (Build an hour key)
  *
  * ```ts
@@ -1516,6 +1542,10 @@ export class LedgerHourKey extends S.Opaque<LedgerHourKey, { readonly brand: uni
   S.Struct({
     key: BucketKey,
     fleetUsed: S.OptionFromNullOr(S.Int),
+    lanesInferred: S.Boolean.pipe(
+      S.withDecodingDefaultKey(Effect.succeed(false)),
+      S.withConstructorDefault(Effect.succeed(false))
+    ),
     fleetUsedIsLowerBound: S.Boolean,
     anchor: WindowAnchor,
     attributedNominal: S.Int,
@@ -1618,6 +1648,131 @@ export class LedgerHourRollup extends S.Opaque<LedgerHourRollup, { readonly bran
 ) {}
 
 /**
+ * Retained v1 wire data, whose request counts survive invalidated usage estimates.
+ *
+ * **Example** (Inspect legacy decoding)
+ *
+ * ```ts
+ * import { LegacyLedgerRollup } from "@beep/repo-cli/test/SharedInternals"
+ * import * as S from "effect/Schema"
+ * console.log(S.isSchema(LegacyLedgerRollup)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class LegacyLedgerRollup extends S.Opaque<LegacyLedgerRollup, { readonly brand: unique symbol }>()(
+  S.Struct({
+    schemaVersion: S.tag("github-ledger-rollup/v1"),
+    hour: S.DateTimeUtcFromString,
+    host: HostLabel,
+    complete: S.Boolean,
+    cells: S.Array(LedgerHourCell),
+    keys: S.Array(LedgerHourKey),
+  }).pipe(
+    $I.annoteSchema("LegacyLedgerRollup", {
+      description: "Retained v1 rollup input; fleet and estimated points are invalid.",
+    })
+  )
+) {}
+
+/**
+ * Version-tagged rollup read result, preserving retained legacy history.
+ *
+ * **Example** (Inspect the version union)
+ *
+ * ```ts
+ * import { LedgerRollupRead } from "@beep/repo-cli/test/SharedInternals"
+ * import * as S from "effect/Schema"
+ * console.log(S.isSchema(LedgerRollupRead)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const LedgerRollupRead = S.Union([LedgerHourRollup, LegacyLedgerRollup]).pipe(
+  S.toTaggedUnion("schemaVersion"),
+  $I.annoteSchema("LedgerRollupRead", {
+    description: "Current or legacy rollup, discriminated by calculation version.",
+  })
+);
+
+/** Type of {@link LedgerRollupRead}.
+ * @category models
+ * @since 0.0.0
+ */
+export type LedgerRollupRead = typeof LedgerRollupRead.Type;
+
+/**
+ * An unrecomputable retained hour. Null estimates explicitly mean unknown.
+ *
+ * **Example** (Inspect retained history)
+ *
+ * ```ts
+ * import { LegacyLedgerHour } from "@beep/repo-cli/test/SharedInternals"
+ * import * as S from "effect/Schema"
+ * console.log(S.isSchema(LegacyLedgerHour)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class LegacyLedgerHour extends S.Opaque<LegacyLedgerHour, { readonly brand: unique symbol }>()(
+  S.Struct({
+    schemaVersion: S.tag("github-ledger-rollup/v1"),
+    legacyUnrecomputable: S.tag(true),
+    hour: S.DateTimeUtcFromString,
+    host: HostLabel,
+    complete: S.Boolean,
+    cells: S.Array(LedgerHourCell.mapFields((fields) => ({ ...fields, nominal: S.Null }))),
+    keys: S.Array(
+      LedgerHourKey.mapFields((fields) => ({
+        ...fields,
+        fleetUsed: S.OptionFromNullOr(S.Int),
+        attributedNominal: S.Null,
+        estimatedPoints: S.Null,
+        ghSpawns: S.Null,
+        ghEstimated: S.OptionFromNullOr(S.Int),
+        byCommand: S.Array(
+          CommandSpend.mapFields((command) => ({ ...command, nominal: S.Null, estimatedPoints: S.Null }))
+        ),
+      }))
+    ),
+    operationCosts: S.Array(OperationCost),
+    windows: S.Array(LedgerWindow),
+  }).pipe(
+    $I.annoteSchema("LegacyLedgerHour", {
+      description: "Legacy retained request counts with invalid usage explicitly unknown.",
+    })
+  )
+) {}
+
+/**
+ * Current calculated hours or explicitly marked legacy hours.
+ *
+ * **Example** (Inspect hour output)
+ *
+ * ```ts
+ * import { LedgerHourResult } from "@beep/repo-cli/test/SharedInternals"
+ * import * as S from "effect/Schema"
+ * console.log(S.isSchema(LedgerHourResult)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const LedgerHourResult = S.Union([LedgerHourRollup, LegacyLedgerHour]).pipe(
+  S.toTaggedUnion("schemaVersion"),
+  $I.annoteSchema("LedgerHourResult", { description: "Calculated or explicitly unrecomputable hourly history." })
+);
+
+/** Type of {@link LedgerHourResult}.
+ * @category models
+ * @since 0.0.0
+ */
+export type LedgerHourResult = typeof LedgerHourResult.Type;
+
+/**
  * {@link LedgerHourRollup} as a JSON document.
  *
  * **Example** (Reject an empty document)
@@ -1668,7 +1823,7 @@ export class UnattributedSpend extends S.Opaque<UnattributedSpend, { readonly br
  * import * as O from "effect/Option"
  *
  * const summary = LedgerSummary.make({ generatedAt: DateTime.makeUnsafe(0), spenders: [], unattributedLastHour: [], lastRowAt: O.none() })
- * console.log(summary.schemaVersion) // "github-ledger-summary/v1"
+ * console.log(summary.schemaVersion) // "github-ledger-summary/v2"
  * ```
  *
  * @category models
@@ -1676,7 +1831,7 @@ export class UnattributedSpend extends S.Opaque<UnattributedSpend, { readonly br
  */
 export class LedgerSummary extends S.Opaque<LedgerSummary, { readonly brand: unique symbol }>()(
   S.Struct({
-    schemaVersion: S.tag("github-ledger-summary/v1"),
+    schemaVersion: S.tag("github-ledger-summary/v2"),
     generatedAt: S.DateTimeUtcFromString,
     spenders: S.Array(CommandSpend),
     unattributedLastHour: S.Array(UnattributedSpend),

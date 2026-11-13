@@ -15,13 +15,68 @@
 import { $GithubId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Context from "effect/Context";
+import * as Digest from "effect/crypto/Digest";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as Random from "effect/Random";
+import * as Redacted from "effect/Redacted";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $GithubId.create("Resilience");
+
+/**
+ * Non-secret twelve-hex SHA-256 prefix identifying a physical token.
+ *
+ * **Example** (Validate a fingerprint)
+ *
+ * ```ts
+ * import { CredentialFingerprint } from "@beep/github/Resilience"
+ * console.log(CredentialFingerprint.make("012345abcdef"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CredentialFingerprint = S.String.check(S.isPattern(/^[0-9a-f]{12}$/)).pipe(
+  S.brand("CredentialFingerprint"),
+  $I.annoteSchema("CredentialFingerprint", { description: "Twelve hex digits of a token's SHA-256; never the token." })
+);
+
+/**
+ * Type of {@link CredentialFingerprint}.
+ * @category models
+ * @since 0.0.0
+ */
+export type CredentialFingerprint = typeof CredentialFingerprint.Type;
+
+const credentialEncoder = new TextEncoder();
+
+/**
+ * Hash a redacted token without retaining its plaintext.
+ *
+ * **Example** (Hash a fixture)
+ *
+ * ```ts
+ * import { credentialFingerprint } from "@beep/github/Resilience"
+ * import * as Effect from "effect/Effect"
+ * import * as Redacted from "effect/Redacted"
+ * console.log((await Effect.runPromise(credentialFingerprint(Redacted.make("fixture")))).length) // 12
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const credentialFingerprint = Effect.fn("Resilience.credentialFingerprint")(function* (
+  token: Redacted.Redacted<string>
+) {
+  const context = yield* Layer.build(Digest.layerWebCrypto);
+  const digest = Context.get(context, Digest.Digest);
+  const hex = yield* digest.digestHex(Digest.sha256, credentialEncoder.encode(Redacted.value(token)));
+  return CredentialFingerprint.make(Str.slice(0, 12)(hex));
+}, Effect.scoped);
 
 /**
  * The GitHub rate-limit bucket a request counted against.
@@ -317,6 +372,8 @@ export type RateLimitCredential = typeof RateLimitCredential.Type;
  */
 export class RateLimitObservation extends S.Opaque<RateLimitObservation, { readonly brand: unique symbol }>()(
   S.Struct({
+    /** Non-secret physical token fingerprint; absent for rotating App tokens and unknown credentials. */
+    fingerprint: S.OptionFromOptionalKey(CredentialFingerprint).pipe(S.withConstructorDefault(Effect.succeedNone)),
     /** The parsed rate-limit headers. */
     snapshot: RateLimitSnapshot.pipe(
       $I.annoteKey("RateLimitObservation.snapshot", { description: "The parsed rate-limit headers." })

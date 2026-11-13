@@ -28,6 +28,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Ref from "effect/Ref";
+import * as Str from "effect/String";
 import {
   anchorsOf,
   calibrationOf,
@@ -53,12 +54,13 @@ import {
   GithubLedgerRow,
   hostLabelOf,
   LedgerRange,
+  LegacyLedgerHour,
   normalizeOperation,
   RetentionCutoffs,
   UNRESOLVED_IDENTITY,
 } from "./GithubLedger.schemas.ts";
 import { GithubLedgerStore, hoursOfRange, layerGithubLedgerStoreLive } from "./GithubLedger.store.ts";
-import type { RateLimitObservation, RateLimitSinkShape } from "@beep/github/Resilience";
+import type { CredentialFingerprint, RateLimitObservation, RateLimitSinkShape } from "@beep/github/Resilience";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type { GhSpawnObservation, GhSpawnSinkShape } from "../repo-run/GhSpawnSink.ts";
@@ -70,7 +72,9 @@ import type {
   GithubLedgerError,
   HostLabel,
   IdentityAliases,
+  LedgerHourResult,
   LedgerHourRollup,
+  LedgerRollupRead,
   LedgerSummary,
   ReserveSignal,
   SampleRow,
@@ -123,9 +127,9 @@ export interface GithubBudgetLedgerShape {
   readonly ghSink: GhSpawnSinkShape;
   /**
    * The hourly rollups of a range, computing missing or incomplete ones from
-   * rows; a stored rollup of an older schema version reads as missing.
+   * rows; retained v1 hours without raw rows carry an explicit legacy marker.
    */
-  readonly hours: (range: LedgerRange) => Effect.Effect<ReadonlyArray<LedgerHourRollup>, GithubLedgerError>;
+  readonly hours: (range: LedgerRange) => Effect.Effect<ReadonlyArray<LedgerHourResult>, GithubLedgerError>;
   /** When the identity was last sampled. */
   readonly lastSampleAt: (identity: GithubIdentityLabel) => Effect.Effect<O.Option<DateTime.Utc>, GithubLedgerError>;
   /** The newest reading of a bucket, from memory and `latest/` only. */
@@ -188,6 +192,8 @@ export class GithubBudgetLedger extends Context.Service<GithubBudgetLedger, Gith
  * @since 0.0.0
  */
 export interface GithubBudgetLedgerOptions {
+  /** The environment token fingerprint for gh; defaults to unknown. */
+  readonly ghCredential?: Effect.Effect<O.Option<CredentialFingerprint>>;
   /** The `gh` CLI identity, for spawn rows; defaults to `unresolved`. */
   readonly ghIdentity?: Effect.Effect<GithubIdentityLabel>;
   /** The host label; defaults to the short hostname. */
@@ -233,6 +239,7 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
   const host = options.host ?? hostLabelOf(NodeOS.hostname());
   const pid = yield* Effect.sync(() => process.pid);
   const ghIdentity = yield* Effect.cached(options.ghIdentity ?? Effect.succeed(UNRESOLVED_IDENTITY));
+  const ghCredential = options.ghCredential ?? Effect.succeedNone;
   const cache = yield* Ref.make(HashMap.empty<string, BucketReading>());
   const lastLatestWrite = yield* Ref.make(HashMap.empty<string, number>());
   const aliasCache = yield* Ref.make(O.none<IdentityAliases>());
@@ -251,7 +258,7 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
 
   const remember = (reading: BucketReading) =>
     Ref.update(cache, (current) => {
-      const key = bucketKeyString(reading.key);
+      const key = `${bucketKeyString(reading.key)}|${reading.source}`;
       return HashMap.set(
         current,
         key,
@@ -260,7 +267,7 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
     });
 
   const writeLatestThrottled = Effect.fnUntraced(function* (reading: BucketReading) {
-    const key = bucketKeyString(reading.key);
+    const key = `${bucketKeyString(reading.key)}|${reading.source}`;
     const now = DateTime.toEpochMillis(reading.asOf);
     const due = yield* Ref.modify(lastLatestWrite, (current) => {
       const last = HashMap.get(current, key);
@@ -284,6 +291,8 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
       host,
       command,
       identity,
+      credential:
+        observation.credential === "token" && !Str.startsWith("app:")(identity) ? observation.fingerprint : O.none(),
       resource: snapshot.resource,
       kind: observation.kind,
       operation,
@@ -307,12 +316,16 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
     const current = yield* aliases;
     const gh = yield* ghIdentity;
     const fields = ghSpawnFieldsOf(spawn.args);
+    const credential = yield* ghCredential;
+    const identity = canonicalIdentity(current)(gh);
     yield* store.append(
       GithubLedgerRow.cases.GhSpawn.make({
         at: spawn.at,
         host,
         command,
-        identity: canonicalIdentity(current)(gh),
+        identity,
+        credential: Str.startsWith("app:")(identity) ? O.none() : credential,
+        pid,
         subcommand: fields.subcommand,
         resource: fields.resource,
         exitCode: spawn.exitCode,
@@ -324,7 +337,7 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
   const recordSample = Effect.fnUntraced(function* (sample: SampleRow) {
     const current = yield* aliases;
     const identity = canonicalIdentity(current)(sample.identity);
-    const row = identity === sample.identity ? sample : { ...sample, identity };
+    const row = { ...sample, identity, credential: Str.startsWith("app:")(identity) ? O.none() : sample.credential };
     yield* store.append(row);
     yield* store.writeLatestSample(row);
     yield* Effect.forEach(readingsOfSample(row), remember, { discard: true });
@@ -485,10 +498,17 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
   };
 
   const storedComplete = (hour: DateTime.Utc) =>
-    Effect.map(store.readRollup(hour), (stored) => [hour, O.filter(stored, (rollup) => rollup.complete)] as const);
+    Effect.map(
+      store.readRollup(hour),
+      (stored) =>
+        [
+          hour,
+          O.filter(stored, (rollup) => rollup.schemaVersion === "github-ledger-rollup/v2" && rollup.complete),
+        ] as const
+    );
 
   const incompleteHours = (
-    stored: ReadonlyArray<readonly [DateTime.Utc, O.Option<LedgerHourRollup>]>
+    stored: ReadonlyArray<readonly [DateTime.Utc, O.Option<LedgerRollupRead>]>
   ): ReadonlyArray<DateTime.Utc> =>
     A.map(
       A.filter(stored, ([, complete]) => O.isNone(complete)),
@@ -501,10 +521,44 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
     const admit = admitter(now, calibration);
     const stored = yield* Effect.forEach(hoursOfRange(range), storedComplete);
     const contextOf = yield* contextRowsFor(incompleteHours(stored), now);
-    return A.map(stored, ([hour, complete]) =>
-      O.getOrElse(complete, () =>
-        rollupOf({ hour, host, complete: false, rows: contextOf(hour), admitGraphqlSamples: admit })
-      )
+    return yield* Effect.forEach(
+      stored,
+      Effect.fnUntraced(function* ([hour, complete]): Effect.fn.Return<LedgerHourResult, GithubLedgerError> {
+        if (O.isSome(complete) && complete.value.schemaVersion === "github-ledger-rollup/v2") return complete.value;
+        const rows = contextOf(hour);
+        const original = yield* store.readRollup(hour);
+        const start = DateTime.toEpochMillis(hour);
+        const hasRows = A.some(
+          rows,
+          (row) =>
+            DateTime.toEpochMillis(row.at) >= start &&
+            DateTime.toEpochMillis(row.at) < start + Duration.toMillis(Duration.hours(1))
+        );
+        if (!hasRows && O.isSome(original) && original.value.schemaVersion === "github-ledger-rollup/v1") {
+          const legacy = original.value;
+          return LegacyLedgerHour.make({
+            hour: legacy.hour,
+            host: legacy.host,
+            complete: false,
+            cells: A.map(legacy.cells, (cell) => ({ ...cell, nominal: null })),
+            keys: A.map(legacy.keys, (key) => ({
+              ...key,
+              fleetUsed: O.none(),
+              fleetUsedIsLowerBound: false,
+              attributedNominal: null,
+              estimatedPoints: null,
+              ghSpawns: null,
+              ghEstimated: O.none(),
+              unattributed: O.none(),
+              overAttributed: false,
+              byCommand: A.map(key.byCommand, (command) => ({ ...command, nominal: null, estimatedPoints: null })),
+            })),
+            operationCosts: [],
+            windows: [],
+          });
+        }
+        return rollupOf({ hour, host, complete: false, rows, admitGraphqlSamples: admit });
+      })
     );
   });
 
@@ -539,7 +593,10 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
       summaryOf({
         now,
         rows: A.map(recentRows, canonicalRow(current)),
-        lastComplete: O.filter(previous, (rollup) => rollup.complete),
+        lastComplete: O.filter(
+          previous,
+          (rollup): rollup is LedgerHourRollup => rollup.schemaVersion === "github-ledger-rollup/v2" && rollup.complete
+        ),
       })
     );
     yield* store.removeBefore(

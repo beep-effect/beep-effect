@@ -55,6 +55,7 @@ import {
   IdentityAliases,
   IdentityAliasesJson,
   LedgerHourRollupJson,
+  LedgerRollupRead,
   LedgerSummary,
   LedgerSummaryJson,
   SampleRowJson,
@@ -72,6 +73,7 @@ import type {
 } from "./GithubLedger.schemas.ts";
 
 const $I = $RepoCliId.create("internal/github/GithubLedger.store");
+const decodeRollupRead = S.decodeUnknownOption(S.fromJsonString(LedgerRollupRead));
 
 const HOUR_MILLIS = Duration.toMillis(Duration.hours(1));
 const CALIBRATION_FILE = "calibration.jsonl";
@@ -105,7 +107,7 @@ export interface GithubLedgerStoreShape {
    * The rollup of an hour, when one of the current schema version was written;
    * a rollup of another version, or an unreadable one, is absent.
    */
-  readonly readRollup: (hour: DateTime.Utc) => Effect.Effect<O.Option<LedgerHourRollup>, GithubLedgerError>;
+  readonly readRollup: (hour: DateTime.Utc) => Effect.Effect<O.Option<LedgerRollupRead>, GithubLedgerError>;
   /** The hot-parcel summary, when one was written. */
   readonly readSummary: Effect.Effect<O.Option<LedgerSummary>, GithubLedgerError>;
   /** Delete raw hours, rollups, `latest/` readings and calibration pairs past retention. */
@@ -372,7 +374,10 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
   const writeLatestTransport = Effect.fnUntraced(function* (reading: BucketReading) {
     const text = yield* encodeWith(BucketReadingJson, "encode a reading")(reading);
     const latest = yield* dir("latest");
-    const file = path.join(latest, `transport-${fileKeyOf(reading.key.identity)}-${reading.key.resource}.json`);
+    const file = path.join(
+      latest,
+      `transport-${fileKeyOf(reading.key.identity)}-${reading.key.resource}-${fileKeyOf(reading.source)}.json`
+    );
     yield* writePrivate(file, text, "write the latest transport reading");
   });
 
@@ -388,8 +393,8 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
   const readRollup = Effect.fnUntraced(function* (hour: DateTime.Utc) {
     const rollups = yield* dir("rollups");
     const text = yield* readOptional(path.join(rollups, `${hourFileKey(hour)}.json`), "read an hour rollup");
-    // The schemaVersion tag rejects any other version, so an older rollup is absent and its hour is recomputed.
-    return O.flatMap(text, S.decodeUnknownOption(LedgerHourRollupJson));
+    // Preserve v1 as a distinct version so expired raw history can be reported explicitly.
+    return O.flatMap(text, decodeRollupRead);
   });
 
   const writeRollup = Effect.fnUntraced(function* (rollup: LedgerHourRollup) {
@@ -658,7 +663,7 @@ export const makeGithubLedgerStoreMemory = Effect.sync((): GithubLedgerStoreShap
     writeLatestSample: (row) => Effect.sync(() => MutableHashMap.set(samples, row.identity, row)),
     latestSamples: Effect.sync(() => valuesOf(samples)),
     writeLatestTransport: (reading) =>
-      Effect.sync(() => MutableHashMap.set(transports, bucketKeyString(reading.key), reading)),
+      Effect.sync(() => MutableHashMap.set(transports, `${bucketKeyString(reading.key)}|${reading.source}`, reading)),
     latestTransport: Effect.sync(() => valuesOf(transports)),
     readAliases: Effect.sync(aliasesNow),
     writeAlias: (token, user) =>

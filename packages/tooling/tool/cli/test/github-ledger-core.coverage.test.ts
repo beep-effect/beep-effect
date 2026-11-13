@@ -179,32 +179,15 @@ const anchor = (offset: number, used: number, reset: number) =>
   LedgerAnchor.make({ at: at(offset), used, resetAt: at(reset), anchor: "sample" });
 
 describe("GithubLedger reducers", () => {
-  it("opens a second lane for a reset that arrives before the first lane's window ends", () => {
-    const first = anchor(0, 10, HOUR);
-    const second = anchor(MINUTE, 20, HOUR);
-    const concurrent = anchor(2 * MINUTE, 5, 2 * HOUR);
-    expect(lanesOf([first, second, concurrent])).toStrictEqual([[first, second], [concurrent]]);
-  });
-
-  it("joins the closest reset within jitter, then an idle lane, then the latest ended window", () => {
-    // Lanes 0 and 1 reset 8 s apart; a reset 5 s after lane 0's is 3 s from lane 1's.
-    const zero = anchor(0, 10, HOUR);
-    const one = anchor(MINUTE, 20, HOUR + 8000);
-    const closest = anchor(2 * MINUTE, 30, HOUR + 5000);
-    const nearZero = anchor(3 * MINUTE, 15, HOUR - 1000);
-    expect(lanesOf([zero, one, closest, nearZero])).toStrictEqual([
-      [zero, nearZero],
-      [one, closest],
-    ]);
-    // An idle reading's reset floats, so the next reading of any reset joins its lane.
-    const idle = anchor(0, 0, HOUR);
-    const afterIdle = anchor(MINUTE, 4, 2 * HOUR);
-    expect(lanesOf([idle, afterIdle])).toStrictEqual([[idle, afterIdle]]);
-    // Both windows end by 25 minutes; the post-reset reading continues the later one.
-    const early = anchor(0, 10, 10 * MINUTE);
-    const late = anchor(MINUTE, 20, 20 * MINUTE);
-    const fresh = anchor(25 * MINUTE, 3, 85 * MINUTE);
-    expect(lanesOf([early, late, fresh])).toStrictEqual([[early], [late, fresh]]);
+  it("clusters unknown reset instances transitively without crossing epochs", () => {
+    const a = { ...anchor(0, 10, HOUR), source: "a" };
+    const b = { ...anchor(MINUTE, 20, HOUR + 8000), source: "b" };
+    const c = { ...anchor(2 * MINUTE, 30, HOUR + 4000), source: "c" };
+    const idle = { ...anchor(3 * MINUTE, 0, HOUR), source: "idle" };
+    const reset = { ...anchor(65 * MINUTE, 2, 2 * HOUR), source: "a" };
+    deepStrictEqual(lanesOf([a, b, c, idle, reset]), [[a, b, c], [idle], [reset]]);
+    const expired = { ...anchor(2 * HOUR, 5, HOUR), source: "expired" };
+    deepStrictEqual(lanesOf([a, expired]), [[a, expired]]);
   });
 
   it("rolls up an hour whose windows cross a reset between two same-epoch runs", () => {
