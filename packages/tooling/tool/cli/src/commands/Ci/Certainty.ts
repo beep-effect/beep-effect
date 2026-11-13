@@ -953,7 +953,7 @@ export const renderCiCertaintyMarkdown = (report: CiCertaintyReport): string =>
       latencyRow("Coverage verdict, code heads", report.coverageVerdict),
       latencyRow("Docs heads", report.docsHeads),
       "",
-      "## Runner-minutes per run",
+      "## Runner-minutes per head attempt",
       "",
       `- head attempts: ${report.runnerMinutes.runs}; mean ${formatMinutes(report.runnerMinutes.meanTotal)} (GitHub-hosted ${formatMinutes(report.runnerMinutes.meanGithubHosted)}, beep-ec2-heavy ${formatMinutes(report.runnerMinutes.meanManaged)}); p50 ${formatMinutes(report.runnerMinutes.p50Total)}; p95 ${formatMinutes(report.runnerMinutes.p95Total)}`,
       `- green code head attempts (check.yml plus admitted heavy-admit.yml): p50 ${formatMinutes(report.runnerMinutes.greenCodeRunP50)}; p95 ${formatMinutes(report.runnerMinutes.greenCodeRunP95)}`,
