@@ -35,15 +35,23 @@
       {
         "number": 3146,
         "role": "supporting"
+      },
+      {
+        "number": 3169,
+        "role": "final"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/docs_merge-queue-lab-refinal-f0cf31bb0578/verdict.json",
+        "ref": ".beep/yeet/runs/docs_merge-queue-lab-closeout-ab5393b27d96/verdict.json",
         "gating": true
       }
     ]
+  },
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3169
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -144,5 +152,6 @@
       "path": "ops/queue-lab.sh",
       "purpose": "Drive synthetic pull requests through the queue-lab merge queue as the App, a fleet PAT or the gh login; read entries, change the lab ruleset's parameters, and clean up lab residue."
     }
-  ]
+  ],
+  "retentionReason": "Documents a live lab: the queue-lab branch and ruleset 26917133 (parked at build concurrency 0) that merge-group-parity re-arms, the findings ledger and evidence behind the go verdict, and the ops/queue-lab.sh driver; archive once merge-queue-activation has a merge queue on main and the lab ruleset is deleted."
 }
