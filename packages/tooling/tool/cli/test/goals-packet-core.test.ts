@@ -118,6 +118,23 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
       expect(canonicalJsonText({ a: undefined, b: 1 })).toBe('{"b":1}');
     });
 
+    // The indented renderer keeps its own walk (census E7): the compact text
+    // is the canonical digest owner's since slice C, so these shapes no longer
+    // reach this walk through `canonicalJsonText`.
+    it("renders empty containers, null, nesting and non-JSON leaves in the pretty form", () => {
+      expect(canonicalJsonTextPretty({})).toBe("{}\n");
+      expect(canonicalJsonTextPretty([])).toBe("[]\n");
+      expect(canonicalJsonTextPretty(null)).toBe("null\n");
+      expect(canonicalJsonTextPretty({ b: [1, { d: null, c: "x" }], a: {}, e: [] })).toBe(
+        '{\n  "a": {},\n  "b": [\n    1,\n    {\n      "c": "x",\n      "d": null\n    }\n  ],\n  "e": []\n}\n'
+      );
+      // An `undefined` member is absent; one whose every member is absent is empty.
+      expect(canonicalJsonTextPretty({ a: undefined, b: 1 })).toBe('{\n  "b": 1\n}\n');
+      expect(canonicalJsonTextPretty({ a: undefined })).toBe("{}\n");
+      // Anything that is neither a JSON scalar, an array nor a record renders as null.
+      expect(canonicalJsonTextPretty({ a: Symbol.for("not-json") })).toBe('{\n  "a": null\n}\n');
+    });
+
     it("round-trips event file names and rejects non-CAS names", () => {
       const digest = Str.repeat(64)("a");
       const parsed = parsePacketEventFileName(`00002-status-set-${digest}.json`);
