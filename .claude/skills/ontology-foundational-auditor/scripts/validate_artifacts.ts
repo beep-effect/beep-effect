@@ -602,7 +602,7 @@ namespace rt {
     return value;
   }
   function yamlLoad(value: unknown): unknown {
-    const data = Buffer.isBuffer(value) ? value.toString("utf8") : text(value);
+    const data = Buffer.isBuffer(value) ? new TextDecoder("utf-8", { fatal: true }).decode(value) : text(value);
     const doc = YAML.parseDocument(data, { schema: "yaml-1.1", uniqueKeys: false });
     const visit = (node: unknown): void => {
       if (YAML.isMap(node)) {
@@ -731,7 +731,7 @@ namespace rt {
     if (name === "is_file") return Fs.statSync(value, { throwIfNoEntry: false })?.isFile() ?? false;
     if (name === "is_dir") return Fs.statSync(value, { throwIfNoEntry: false })?.isDirectory() ?? false;
     if (name === "read_bytes") return Fs.readFileSync(value);
-    if (name === "read_text") return Fs.readFileSync(value, "utf8");
+    if (name === "read_text") return new TextDecoder("utf-8", { fatal: true }).decode(Fs.readFileSync(value));
     if (name === "write_text" || name === "write_bytes") {
       const bytes = Buffer.isBuffer(args[0]) ? args[0] : text(args[0]);
       Fs.writeFileSync(value, bytes);
