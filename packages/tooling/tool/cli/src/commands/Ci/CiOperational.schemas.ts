@@ -171,7 +171,7 @@ export const CiGoalDataConsumerMode = LiteralKit(["read", "spawn", "import", "tu
 export type CiGoalDataConsumerMode = typeof CiGoalDataConsumerMode.Type;
 
 /**
- * One goal-packet path family that a test consumes, kept off the docs-only route.
+ * One goal or exploration packet path family that a test consumes, kept off the docs-only route.
  *
  * **Details**
  *
@@ -215,7 +215,7 @@ export class CiGoalDataConsumer extends S.Opaque<CiGoalDataConsumer, { readonly 
 ) {}
 
 /**
- * Goal-packet paths that tests read, spawn or import, or that a package `turbo.json` declares.
+ * Goal and exploration packet paths that tests read, spawn or import, or that a package `turbo.json` declares.
  *
  * **Details**
  *
@@ -290,6 +290,39 @@ export const ciGoalDataConsumers: A.NonEmptyReadonlyArray<CiGoalDataConsumer> = 
     consumers: ["@beep/repo-cli"],
     modes: ["spawn", "turbo-input"],
     evidence: ["packages/tooling/tool/cli/test/cache-dependencies.test.ts", "packages/tooling/tool/cli/turbo.json"],
+  }),
+  CiGoalDataConsumer.make({
+    pattern: "^goals/speed-loop/ops/runner-burst/",
+    reference: "goals/speed-loop/ops/runner-burst",
+    consumers: ["@beep/repo-cli"],
+    modes: ["read"],
+    evidence: ["packages/tooling/tool/cli/test/ci-runner-security.test.ts"],
+  }),
+  CiGoalDataConsumer.make({
+    pattern:
+      "^explorations/beep-ci-operational-ontology/ontology/extraction/s6/(graphs/abox\\.ttl|snapshot/raw/journal\\.ndjson)$",
+    reference: "explorations/beep-ci-operational-ontology/ontology/extraction/s6/",
+    consumers: ["@beep/ciops"],
+    modes: ["read"],
+    evidence: [
+      "apps/labs/ciops/test/evidence.test.ts",
+      "apps/labs/ciops/test/live-replay.test.ts",
+      "apps/labs/ciops/test/projection.test.ts",
+    ],
+  }),
+  CiGoalDataConsumer.make({
+    pattern: "^explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/",
+    reference: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet",
+    consumers: ["@beep/ciops"],
+    modes: ["read"],
+    evidence: ["apps/labs/ciops/test/live-replay.test.ts"],
+  }),
+  CiGoalDataConsumer.make({
+    pattern: "^explorations/legal-ontology-landscape/assets/manifest\\.jsonl$",
+    reference: "explorations/legal-ontology-landscape/assets/manifest.jsonl",
+    consumers: ["@beep/ontology"],
+    modes: ["read"],
+    evidence: ["packages/foundation/modeling/ontology/test/SemanticFoundation.test.ts"],
   }),
   CiGoalDataConsumer.make({
     pattern: "^goals/[^/]+/ops/.+\\.ts$",

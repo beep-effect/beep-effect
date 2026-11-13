@@ -58,6 +58,20 @@ export * from "./OutboxAttachmentSource.ts";
  */
 export * from "./OutboxAuditLog.ts";
 /**
+ * The basis of an outbox draft: pins, statuses and the pure comparison.
+ *
+ * @category guards
+ * @since 0.1.0
+ */
+export * from "./OutboxBasis.ts";
+/**
+ * The reader that observes and rechecks a draft's pins.
+ *
+ * @category services
+ * @since 0.1.0
+ */
+export * from "./OutboxBasisReader.ts";
+/**
  * Outbox server configuration.
  *
  * @category configuration

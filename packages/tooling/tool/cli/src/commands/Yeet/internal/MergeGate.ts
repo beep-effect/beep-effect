@@ -64,7 +64,7 @@ import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { GithubAsyncMergeRequest, GithubRest } from "../../../internal/github/index.ts";
+import { GithubAsyncMergeRequest, GithubRest, isAgentCancellableWorkflowRun } from "../../../internal/github/index.ts";
 import { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import { enforceReviewerGate, withReviewerOperatorClient } from "../../Reviewer/ReviewerRuleset.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -82,6 +82,7 @@ import {
   yeetGithubFailure,
 } from "./GhOps.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
+import { provideYeetHeadMoveClassifier } from "./HeadMove.ts";
 import { MergeGateCheckRun } from "./MergeGate.schemas.ts";
 import { readYeetReviewWindow, renderYeetReviewWindow, YeetReviewWindow } from "./ReviewWindow.ts";
 import { readYeetRulesetRequiredContexts } from "./Settle.ts";
@@ -1327,7 +1328,9 @@ const readMergeGateUsing = Effect.fn("Yeet.readMergeGate")(function* (
     requiredContexts,
     checkRuns: A.map(checkRuns, toMergeGateCheckRun),
     baseRuns,
-    window: yield* readYeetReviewWindow({ prNumber: pull.number, headSha: pull.headSha }),
+    window: yield* readYeetReviewWindow({ prNumber: pull.number, headSha: pull.headSha, pull }).pipe(
+      provideYeetHeadMoveClassifier(context.repoRoot)
+    ),
     unresolvedThreads,
     squashCommitlint,
     readAt: yield* DateTime.now,
@@ -1607,8 +1610,9 @@ const postS11MergeComment = Effect.fn("Yeet.postS11MergeComment")(function* (
   yield* Console.log(`[yeet] recorded the S11 merge in a comment on #${decision.prNumber}`);
 });
 
-// Only non-terminal runs on the merged head are cancelled. Listing and each
-// cancellation are independently best effort after the merge.
+// Only non-terminal pull-request runs on the merged head are cancelled; a push
+// run on the same sha (a `refs/heads/main` run) is never cancelled. Listing and
+// each cancellation are independently best effort after the merge.
 const cancelMergedHeadRuns = Effect.fn("Yeet.cancelMergedHeadRuns")(function* (headSha: string) {
   const rest = yield* GithubRest;
   const runs = yield* rest.workflowRunsForSha(headSha).pipe(
@@ -1621,7 +1625,10 @@ const cancelMergedHeadRuns = Effect.fn("Yeet.cancelMergedHeadRuns")(function* (h
   );
   const runIds = A.dedupe(
     A.map(
-      A.filter(runs, (run) => run.headSha === headSha && run.status !== "completed"),
+      A.filter(
+        runs,
+        (run) => run.headSha === headSha && run.status !== "completed" && isAgentCancellableWorkflowRun(run)
+      ),
       (run) => run.id
     )
   );

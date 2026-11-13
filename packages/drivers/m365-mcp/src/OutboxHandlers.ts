@@ -4,9 +4,12 @@
  * **Details**
  *
  * The handlers compose the `@beep/m365` driver's app-only verbs with the
- * attachment source, the send guard, the event update guard and the audit
- * log. Draft sending is fail-closed until a Graph operation can bind the sent
- * content to the checked snapshot. An event is updated
+ * attachment source, the basis reader, the send guard, the event update
+ * guard and the audit log. A draft's pins are read and checked against the
+ * caller's view before the draft is created, and rechecked whenever it is
+ * read. Draft sending is fail-closed
+ * until a Graph operation can bind the sent content to the checked
+ * snapshot. An event is updated
  * only when this server recorded creating it and it has no attendee, because
  * Graph mails a meeting's attendees when it changes. The send guard sees
  * the stored attachments as they are: each one is downloaded and hashed on
@@ -56,6 +59,8 @@ import {
   OutboxEventUpdatedRecord,
   OutboxSendOutcomeRecord,
 } from "./OutboxAuditLog.ts";
+import { makeBasisReport } from "./OutboxBasis.ts";
+import { OutboxBasisReader } from "./OutboxBasisReader.ts";
 import { checkEventUpdate, OutboxEventUpdateCheck, storedAttendeeCount } from "./OutboxEventGuard.ts";
 import { checkSendExpectation, OutboxSendCheck, sameAttachments, storedRecipientAddresses } from "./OutboxSendGuard.ts";
 import { OutboxStoredAttachmentsRequest, readStoredAttachments } from "./OutboxStoredAttachments.ts";
@@ -74,6 +79,7 @@ import type * as Tool from "effect/ai/Tool";
 import type * as Layer from "effect/Layer";
 import type { OutboxAttachmentError } from "./OutboxAttachmentSource.ts";
 import type { OutboxAuditError, OutboxSendOutcome } from "./OutboxAuditLog.ts";
+import type { OutboxBasisError } from "./OutboxBasis.ts";
 import type { OutboxEventUpdateRefusalReason } from "./OutboxEventGuard.ts";
 import type { OutboxSendMismatchField } from "./OutboxSendGuard.ts";
 import type { OutboxStoredAttachmentError } from "./OutboxStoredAttachments.ts";
@@ -95,7 +101,13 @@ class OutboxRefusal extends S.TaggedError<OutboxRefusal, { readonly brand: uniqu
   })
 ) {}
 
-type OutboxFailure = M365Error | OutboxAttachmentError | OutboxAuditError | OutboxRefusal | OutboxStoredAttachmentError;
+type OutboxFailure =
+  | M365Error
+  | OutboxAttachmentError
+  | OutboxAuditError
+  | OutboxBasisError
+  | OutboxRefusal
+  | OutboxStoredAttachmentError;
 
 const isRetryableM365Error = (error: M365Error): boolean =>
   error.reason === "throttled" || error.reason === "transport";
@@ -219,7 +231,7 @@ export const makeOutboxToolkitHandlers = (
 ): Layer.Layer<
   Tool.HandlersFor<typeof OutboxToolkit.tools>,
   never,
-  M365 | OutboxAttachmentSource | OutboxAuditLog | Digest.Digest
+  M365 | OutboxAttachmentSource | OutboxAuditLog | OutboxBasisReader | Digest.Digest
 > =>
   OutboxToolkit.toLayer(
     Effect.gen(function* () {
@@ -227,6 +239,7 @@ export const makeOutboxToolkitHandlers = (
       const crypto = yield* Digest.Digest;
       const source = yield* OutboxAttachmentSource;
       const audit = yield* OutboxAuditLog;
+      const reader = yield* OutboxBasisReader;
       const userId = O.some(settings.mailbox);
 
       const readMessage = (draftId: string) =>
@@ -251,8 +264,11 @@ export const makeOutboxToolkitHandlers = (
           function* (params: OutboxCreateDraftParams) {
             // Every path is checked and read before Graph is touched.
             const attachments = yield* source.resolve(params.attachmentPaths);
+            // Every pin is read before the draft exists: an unreadable pin creates nothing.
+            const basis = yield* Effect.forEach(params.basis, reader.observe);
             yield* Effect.annotateCurrentSpan({
               m365_outbox_attachment_count: A.length(attachments),
+              m365_outbox_basis_count: A.length(basis),
               m365_outbox_recipient_count: A.length(params.to) + A.length(params.cc) + A.length(params.bcc),
             });
             const message = yield* m365.createDraftMessage(
@@ -298,6 +314,7 @@ export const makeOutboxToolkitHandlers = (
                   at: yield* DateTime.now,
                   attachments: digests,
                   auditId: yield* audit.nextAuditId,
+                  basis,
                   bcc: params.bcc,
                   cc: params.cc,
                   draftId: message.id,
@@ -307,7 +324,12 @@ export const makeOutboxToolkitHandlers = (
               );
             }).pipe(Effect.onError(() => Effect.ignore(deleteDraft(message.id))));
 
-            return OutboxDraftCreated.make({ attachments: digests, draftId: message.id, webLink: message.webLink });
+            return OutboxDraftCreated.make({
+              attachments: digests,
+              basis,
+              draftId: message.id,
+              webLink: message.webLink,
+            });
           },
           finalizeOutboxTool("m365_outbox_create_draft", "createDraft", false)
         ),
@@ -368,10 +390,20 @@ export const makeOutboxToolkitHandlers = (
           function* (params: OutboxDraftRef) {
             const draft = yield* readMessage(params.draftId);
             const stored = yield* readStored(params.draftId);
-            yield* Effect.annotateCurrentSpan({ m365_outbox_attachment_count: A.length(stored) });
+            // A draft this server did not record creating has no pins and reports unpinned.
+            const created = yield* audit.createdDraft(params.draftId);
+            const pins = O.match(created, { onNone: A.empty, onSome: (record) => record.basis });
+            const statuses = yield* Effect.forEach(pins, reader.recheck);
+            const basis = makeBasisReport(pins, statuses);
+            yield* Effect.annotateCurrentSpan({
+              m365_outbox_attachment_count: A.length(stored),
+              m365_outbox_basis_count: A.length(pins),
+              m365_outbox_basis_verdict: basis.verdict,
+            });
 
             return OutboxDraftView.make({
               attachments: stored,
+              basis,
               bcc: storedRecipientAddresses(draft.bccRecipients),
               bodyLength: pipe(
                 draft.body,

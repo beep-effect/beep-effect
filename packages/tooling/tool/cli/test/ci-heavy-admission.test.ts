@@ -370,6 +370,19 @@ describe("B8 heavy admission contracts", () => {
       ["goals/x/ops/codemod/rewrite.ts", false],
       // Every JavaScript or TypeScript module variant is code-shaped, not only the ops `.ts` row.
       ["goals/x/ops/check.tsx", false],
+      // Post-merge census gaps: bare-string and exploration reads keep verification too.
+      ["goals/speed-loop/ops/runner-burst/teardown-burst-runners.sh", false],
+      ["goals/speed-loop/ops/runner-burst/README.md", false],
+      ["goals/speed-loop/ops/other.sh", true],
+      ["explorations/beep-ci-operational-ontology/ontology/extraction/s6/graphs/abox.ttl", false],
+      ["explorations/beep-ci-operational-ontology/ontology/extraction/s6/snapshot/raw/journal.ndjson", false],
+      ["explorations/beep-ci-operational-ontology/ontology/extraction/s6/README.md", true],
+      [
+        "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/MANIFEST.yaml",
+        false,
+      ],
+      ["explorations/legal-ontology-landscape/assets/manifest.jsonl", false],
+      ["explorations/legal-ontology-landscape/assets/other.jsonl", true],
       ["docs/runbooks/ci-runner-reliability.md", true],
       ["docs/assets/diagram.svg", true],
       ["explorations/INBOX.md", true],

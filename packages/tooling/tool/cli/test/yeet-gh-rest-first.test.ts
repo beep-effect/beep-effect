@@ -20,6 +20,7 @@ import {
   GraphqlBudgetExhausted,
   GraphqlBudgetPolicy,
   GraphqlBudgetSnapshot,
+  isAgentCancellableWorkflowRun,
   layerGithubRest,
   layerGraphqlBudget,
   repoSlugFromRemote,
@@ -36,6 +37,7 @@ import {
   spliceYeetInheritedRedsSection,
   YeetGhGateFacts,
   YeetReadyInheritedRed,
+  YeetReviewWindowUnknown,
 } from "@beep/repo-cli/test/Yeet";
 import { NodeCrypto } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -58,6 +60,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
+import { recordedGithub } from "./support/YeetGithub.ts";
 import type { GraphQLDocument } from "@beep/github/GraphQL";
 
 // Recorded REST payloads (trimmed to the fields the wire schemas read).
@@ -72,7 +75,7 @@ const pullPayload = {
   merged_at: null,
   mergeable_state: "clean",
   head: { ref: "feat/gh-rest-first", sha: "abc1234def0000000000000000000000000000ff" },
-  base: { ref: "main" },
+  base: { ref: "main", sha: "base000000" },
   html_url: "https://github.com/beep-effect/beep-effect/pull/1501",
   user: { login: "kriegcloud" },
   labels: [{ name: "ready-for-heavy" }],
@@ -91,11 +94,36 @@ const rulesPayload = [
     parameters: { required_status_checks: [{ context: "Lint" }, { context: "Test Unit" }] },
   },
 ];
+// The PR head sha also carries a main push run (a branch fast-forwarded to
+// main's tip): cancel-queued must leave it alone.
+const workflowRunsPayload = [
+  {
+    id: 20,
+    name: "Check",
+    status: "queued",
+    conclusion: null,
+    head_sha: pullPayload.head.sha,
+    event: "pull_request",
+    head_branch: "feat/gh-rest-first",
+  },
+  {
+    id: 21,
+    name: "Check",
+    status: "in_progress",
+    conclusion: null,
+    head_sha: pullPayload.head.sha,
+    event: "push",
+    head_branch: "main",
+  },
+  { id: 22, name: "Check", status: "queued", conclusion: null, head_sha: pullPayload.head.sha },
+];
 const timelinePayload = [
   { event: "labeled", created_at: "2026-10-06T16:01:00Z" },
   { event: "ready_for_review", created_at: "2026-10-06T16:10:00Z" },
   { event: "ready_for_review", created_at: "2026-10-06T16:20:00Z" },
-  { event: "head_ref_force_pushed", created_at: "2026-10-06T16:35:00Z" },
+  { event: "head_ref_force_pushed", created_at: "2026-10-06T16:35:00Z", commit_id: "after-sha" },
+  { event: "head_ref_force_pushed", created_at: "2026-10-06T16:34:00Z", commit_id: null },
+  { event: "head_ref_force_pushed", created_at: "2026-10-06T16:33:00Z" },
 ];
 
 const repoLayer = Repo.layer(RepoRef.make({ owner: "beep-effect", repo: "beep-effect" }));
@@ -155,15 +183,37 @@ it.layer(
       "GET /repos/{owner}/{repo}/commits/{ref}/check-runs": checkRunsPayload,
       "GET /repos/{owner}/{repo}/rules/branches/{branch}": rulesPayload,
       "GET /repos/{owner}/{repo}/issues/{issue_number}/timeline": timelinePayload,
+      "GET /repos/{owner}/{repo}/actions/runs": workflowRunsPayload,
     }
   ),
   { timeout: "30 seconds" }
 )("GithubRest over recorded REST payloads", (it) => {
+  it.effect("keeps only pull-request runs cancellable, never a main push run on the same sha", () =>
+    Effect.gen(function* () {
+      const rest = yield* GithubRest;
+      const runs = yield* rest.workflowRunsForSha(pullPayload.head.sha);
+      expect(A.map(runs, (run) => [run.id, run.event] as const)).toEqual([
+        [20, "pull_request"],
+        [21, "push"],
+        [22, "unknown"],
+      ]);
+      assertSome(
+        O.flatMap(
+          A.findFirst(runs, (run) => run.id === 21),
+          (run) => run.headBranch
+        ),
+        "main"
+      );
+      expect(A.map(A.filter(runs, isAgentCancellableWorkflowRun), (run) => run.id)).toEqual([20]);
+    })
+  );
+
   it.effect("decodes a pull request, its check runs, required contexts, and ready event", () =>
     Effect.gen(function* () {
       const rest = yield* GithubRest;
       const pr = yield* rest.pullRequest(1501);
       expect(pr.draft).toBe(false);
+      expect(pr.baseSha).toBe("base000000");
       expect(pr.body).toBe("");
       expect(pr.labels).toEqual(["ready-for-heavy"]);
       assertSome(pr.mergeableState, "clean");
@@ -173,7 +223,21 @@ it.layer(
       expect(requiredStatusContexts2).toEqual(["Lint", "Test Unit"]);
       const timeline = yield* rest.reviewTimeline(1501);
       assertSome(O.map(timeline.readyAt, DateTime.formatIso), "2026-10-06T16:20:00.000Z");
-      assertSome(O.map(timeline.forcedAt, DateTime.formatIso), "2026-10-06T16:35:00.000Z");
+      assertSome(
+        O.map(
+          A.reduce(timeline.forcePushes, DateTime.makeUnsafe("1970-01-01T00:00:00Z"), (at, event) =>
+            DateTime.max(at, event.at)
+          ).pipe(O.some),
+          DateTime.formatIso
+        ),
+        "2026-10-06T16:35:00.000Z"
+      );
+      expect(A.length(timeline.forcePushes)).toBe(3);
+      assertSome(
+        O.flatMap(A.head(timeline.forcePushes), (push) => push.commitId),
+        "after-sha"
+      );
+      expect(A.map(A.drop(timeline.forcePushes, 1), (push) => O.isNone(push.commitId))).toEqual([true, true]);
       const headFirstReceivedAt3 = yield* rest.headFirstReceivedAt(pr.headSha);
       assertSome(O.map(headFirstReceivedAt3, DateTime.formatIso), "2026-10-06T16:30:00.000Z");
     })
@@ -347,6 +411,7 @@ const pr = (overrides: Partial<Parameters<typeof GithubPullRequestRecord.make>[0
     headRef: "feat/gh-rest-first",
     headSha: "abc1234def0000000000000000000000000000ff",
     baseRef: "main",
+    baseSha: "base000000",
     htmlUrl: "https://github.com/beep-effect/beep-effect/pull/1501",
     author: "kriegcloud",
     labels: [],
@@ -583,6 +648,29 @@ describe("REST merge gate", () => {
     expect(A.map(verdict.findings, (finding) => finding.reason)).toEqual(["review-window-open"]);
   });
 
+  it("holds transient unknown windows with their reason and refuses invalid local configuration", () => {
+    const unknownFacts = (reason: string) =>
+      facts({ headPushedAt: O.none(), windowResult: O.some(YeetReviewWindowUnknown.make({ reason })) });
+    const transient = decideYeetGhMergeGate(unknownFacts("the timeline of pull request #1501 could not be read"));
+    expect(transient.onlyHolds).toBe(true);
+    expect(transient.findings).toMatchObject([
+      { reason: "review-window-unknown", detail: "the timeline of pull request #1501 could not be read" },
+    ]);
+    const invalid = decideYeetGhMergeGate(
+      facts({
+        headPushedAt: O.none(),
+        windowConfigValid: false,
+        windowResult: O.some(
+          YeetReviewWindowUnknown.make({ reason: "BEEP_YEET_REVIEW_WINDOW is not a duration such as 20 minutes" })
+        ),
+      })
+    );
+    expect(invalid.onlyHolds).toBe(false);
+    expect(invalid.findings).toMatchObject([
+      { reason: "review-window-config", detail: "BEEP_YEET_REVIEW_WINDOW is not a duration such as 20 minutes" },
+    ]);
+  });
+
   it("keeps the newest run per check name", () => {
     const latest = latestCheckRunsByName([
       run(1, "Lint", "completed", "failure"),
@@ -764,5 +852,41 @@ it.layer(NodeCrypto.layer)("the gh-login edge", (it) => {
       expect(error.message).toMatch(/^GitHub access failed \(/u);
       expect(error._tag).toBe("YeetCommandError");
     }).pipe(withSpawner(""))
+  );
+});
+
+describe("GithubRest ref activity", () => {
+  const row = {
+    activity_type: "force_push",
+    before: "before",
+    after: "after",
+    timestamp: "2026-11-10T02:46:04Z",
+    actor: { login: "ignored" },
+  };
+  const activityService = (pageSize: number) =>
+    recordedGithub((call) => {
+      if (call.path !== "{repo}/activity") return undefined;
+      const page = Number(call.query.get("after") ?? "0") + 1;
+      return {
+        body: A.makeBy(pageSize, (index) => ({ ...row, after: `${page}-${index}` })),
+        headers: { link: `<https://api.github.com/repos/beep-effect/beep-effect/activity?after=${page}>; rel="next"` },
+      };
+    });
+  it.effect("uses cursor pagination and truncates at three pages of 100", () =>
+    Effect.gen(function* () {
+      const github = activityService(100);
+      const rows = yield* GithubRest.use((rest) => rest.refActivity("feat/stack probe")).pipe(github.provide);
+      expect(A.length(github.calls)).toBe(3);
+      expect(A.map(github.calls, (call) => call.query.get("after"))).toEqual([null, "1", "2"]);
+      expect(A.every(github.calls, (call) => !call.query.has("page"))).toBe(true);
+      expect(github.calls[0]?.query.get("ref")).toBe("refs/heads/feat/stack probe");
+      expect(github.calls[0]?.query.get("per_page")).toBe("100");
+      expect(A.length(rows)).toBe(300);
+      expect(A.map(A.take(rows, 2), (value) => value.after)).toEqual(["1-0", "1-1"]);
+      assertSome(
+        O.map(A.head(rows), (value) => DateTime.formatIso(value.timestamp)),
+        "2026-11-10T02:46:04.000Z"
+      );
+    })
   );
 });

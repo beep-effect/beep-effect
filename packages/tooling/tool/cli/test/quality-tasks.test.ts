@@ -8765,8 +8765,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const [fallback, fallbackLines] = yield* resolveAndLog([], localCi, {});
             expect(fallback.scoped).toBe(false);
             expect(fallbackLines).toEqual([
-              "[beep-cli] coverage: full fallback (TURBO_SCM_BASE is unset and no origin/main merge base resolves for HEAD; pass --full to request the full proof explicitly)",
+              "[beep-cli] coverage: full fallback (TURBO_SCM_BASE is unset and no origin/main merge base resolves for HEAD; pass --full to request the full proof explicitly); judging against the baseline committed at HEAD",
             ]);
+            expect(fallback.comparisonBase).toBe("HEAD");
 
             // With origin/main present the merge base itself becomes the base.
             yield* runGit(repoRoot, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
@@ -8835,7 +8836,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             yield* runGit(repoRoot, ["config", "commit.gpgsign", "false"]);
             yield* runGit(repoRoot, ["add", "--all"]);
             yield* runGit(repoRoot, ["commit", "-m", "seed"]);
-            yield* runGit(repoRoot, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
 
             // The dirty tree lowers the touched row to 50 and changes its source; the run measures 60.
             yield* writeBaseline(
@@ -8845,21 +8845,46 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               })
             );
             yield* fs.writeFileString(path.join(repoRoot, "packages/touched/src/Index.ts"), "export const v = 2;\n");
-            const measured = [
-              CoverageSnapshotEntry.make({
-                packageName: "@beep/touched",
-                baseline: row("touched", 60),
-              }),
+            const measuredAt = (touched: number) => [
+              CoverageSnapshotEntry.make({ packageName: "@beep/touched", baseline: row("touched", touched) }),
+              CoverageSnapshotEntry.make({ packageName: "@beep/untouched", baseline: row("untouched", 80) }),
             ];
+            const measured = A.take(measuredAt(60), 1);
             const bareRun = Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}));
             const localCi = { CI: "false", GITHUB_ACTIONS: "false", CONTINUOUS_INTEGRATION: "false" };
-            const options = yield* pipe(
+            const resolveBare = pipe(
               R.toEntries(localCi),
               A.reduce(resolveRootCoverageTaskOptionsForTesting(repoRoot, []), (use, [name, value]) =>
                 withEnvVarEffect(name, value, use)
               ),
               bareRun
             );
+            const withheldLowering = "[row lowered by this pull request to 50; judged at the base floor because";
+            let reportedSoFar = 0;
+            const newErrorText = Effect.gen(function* () {
+              const logged = yield* TestConsole.errorLines;
+              const errorLines = A.filter(logged, isString);
+              const fresh = A.join(A.drop(errorLines, reportedSoFar), "\n");
+              reportedSoFar = A.length(errorLines);
+              return fresh;
+            });
+
+            // No origin/main and no TURBO_SCM_BASE: the full fallback judges against the baseline
+            // committed at HEAD, so the uncommitted lowering is still withheld.
+            const fallback = yield* resolveBare;
+            expect(fallback.scoped).toBe(false);
+            expect(fallback.comparisonBase).toBe("HEAD");
+            const fallbackJudged = yield* compareRootCoverageForTesting(repoRoot, fallback, measuredAt(60)).pipe(
+              bareRun,
+              Effect.flip
+            );
+            expect(isQualityTaskFailed(fallbackJudged)).toBe(true);
+            const fallbackReported = yield* newErrorText;
+            expect(fallbackReported).toContain("@beep/touched");
+            expect(fallbackReported).toContain(withheldLowering);
+
+            yield* runGit(repoRoot, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+            const options = yield* resolveBare;
             expect(options.scoped).toBe(true);
             expect(options.expectedPackageNames).toEqual(["@beep/touched"]);
             // The bare run's merge base (origin/main is HEAD here) is carried to the comparator.
@@ -8868,9 +8893,15 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             // Judged at the merge-base floor (80), the measured 60 is a regression.
             const judged = yield* compareRootCoverageForTesting(repoRoot, options, measured).pipe(bareRun, Effect.flip);
             expect(isQualityTaskFailed(judged)).toBe(true);
-            const errorLines = yield* TestConsole.errorLines;
-            const reported = A.join(A.filter(errorLines, isString), "\n");
+            const reported = yield* newErrorText;
             expect(reported).toContain("@beep/touched");
+            // The self-judge line: the lowering is withheld because the package owns a changed file.
+            expect(reported).toContain(withheldLowering);
+
+            // The same pinned comparison passes once the package measures at its merge-base floor.
+            yield* compareRootCoverageForTesting(repoRoot, options, A.take(measuredAt(80), 1)).pipe(bareRun);
+            const passedReport = yield* newErrorText;
+            expect(passedReport).not.toContain(withheldLowering);
 
             // Pre-fix control: without the planned base the dirty row (50) is its own floor and 60 passes.
             const { comparisonBase: _planned, ...unpinned } = options;

@@ -1,0 +1,3 @@
+docs(explorations): remove both stack probe files (stack test, layer 3)
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>

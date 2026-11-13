@@ -25,8 +25,11 @@
     {"name":"M365Outbox.m365_outbox_update_event","owner":"@beep/m365-mcp","family":"driver","conforms":false},
     {"name":"OutboxAttachmentSource.resolve","owner":"@beep/m365-mcp","family":"driver","conforms":true},
     {"name":"OutboxAuditLog.append","owner":"@beep/m365-mcp","family":"driver","conforms":true},
+    {"name":"OutboxAuditLog.createdDraft","owner":"@beep/m365-mcp","family":"driver","conforms":true},
     {"name":"OutboxAuditLog.hasCreatedDraft","owner":"@beep/m365-mcp","family":"driver","conforms":true},
     {"name":"OutboxAuditLog.hasCreatedEvent","owner":"@beep/m365-mcp","family":"driver","conforms":true},
+    {"name":"OutboxBasisReader.observe","owner":"@beep/m365-mcp","family":"driver","conforms":true},
+    {"name":"OutboxBasisReader.recheck","owner":"@beep/m365-mcp","family":"driver","conforms":true},
     {"name":"OutboxConfig.load","owner":"@beep/m365-mcp","family":"driver","conforms":true},
     {"name":"OutboxStoredAttachments.read","owner":"@beep/m365-mcp","family":"driver","conforms":true}
   ]
