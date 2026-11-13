@@ -6,6 +6,8 @@
   // root config uses repo-root-relative paths). This preset documents the canonical
   // grouping for external `extends` consumers; Biome resolves the paths below relative
   // to THIS file (`configs/`), so they point up into the sibling `rules/` directory.
+  // The root config scopes `no-bigint-literals` and `no-hand-rolled-canonical-json`
+  // to source roots through `overrides`; this flat list applies them everywhere.
   "$schema": "https://biomejs.dev/schemas/2.5.1/schema.json",
   "plugins": [
     "../rules/no-file-url-pathname.grit",
@@ -14,6 +16,7 @@
     "../rules/prefer-array-flat-map.grit",
     "../rules/prefer-identity-annote-pipe.grit",
     "../rules/no-hand-built-identity-annotation.grit",
-    "../rules/prefer-exact-optional-key.grit"
+    "../rules/prefer-exact-optional-key.grit",
+    "../rules/no-hand-rolled-canonical-json.grit"
   ]
 }

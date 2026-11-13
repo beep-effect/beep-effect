@@ -14,7 +14,15 @@
  * The merge gate is a pure function of {@link YeetGhGateFacts} so it can be
  * tested from recorded payloads. Every unknown fails closed: an unreadable
  * ruleset, a thread read that did not come back (never read as zero), a
- * missing head commit time, a required context with no check run.
+ * missing head commit time, a required context with no check run. The base
+ * ruleset reads only the newest run's check suite per workflow file and event,
+ * so the gate drops a required context's check runs in a replaced suite before
+ * it takes the newest run per name; an optional check keeps its newest run
+ * over every suite, so its red there is still `check-red`. A required context left with no counted run is judged
+ * by its newest hidden copy (`SuiteShadow.ts`): a red copy is refused as
+ * `required-red`, a green one whose replacing run finished as
+ * `required-shadowed` (the ruleset would answer "expected"), and a copy or
+ * replacing run still going is held as `required-pending`.
  *
  * Exit codes: 0 done, 75 a hold that time can clear (pending checks, the
  * review window, an unknown thread count, a spent GraphQL budget), 1 a
@@ -92,6 +100,16 @@ import {
 } from "./ReviewWindow.ts";
 import { yeetStackRulesBranch } from "./Stack.ts";
 import { readYeetStackUngatedRefusal } from "./StackGate.ts";
+import {
+  gateCountsCheck,
+  HeadSuiteCheck,
+  HeadWorkflowSuite,
+  headWorkflowSuites,
+  hiddenRequiredChecks,
+  RequiredShadowInput,
+  renderHiddenRequiredChecks,
+  SHADOWED_REQUIRED_REMEDY,
+} from "./SuiteShadow.ts";
 import type { GitHubError } from "@beep/github/GitHubError";
 import type { Repo } from "@beep/github/Repo";
 import type { CliReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
@@ -103,6 +121,7 @@ import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrNumber } from "./Provenance.ts";
 import type { PrSessionRegistryShape } from "./PrSessionRegistry.ts";
 import type { YeetReadyInheritedRed } from "./ReadyGate.ts";
+import type { HeadCheckVerdict, HiddenRequiredCheck, HiddenRequiredState } from "./SuiteShadow.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/GhOps");
 
@@ -145,6 +164,7 @@ export const YeetGhGateReason = LiteralKit([
   "required-contexts-unknown",
   "required-red",
   "required-pending",
+  "required-shadowed",
   "check-red",
   "check-pending",
   "review-window-open",
@@ -200,6 +220,8 @@ export class YeetGhGateFinding extends S.Class<YeetGhGateFinding, { readonly bra
  * `requiredContexts` is none when the ruleset read failed; `outstandingThreads`
  * is none when the GraphQL thread read failed or was not attempted;
  * `headPushedAt` is none when GitHub has no check-suite receipt for the head.
+ * `workflowSuites` are the head's workflow runs with their check suites; none
+ * listed shadows nothing.
  *
  * @category models
  * @since 0.0.0
@@ -220,6 +242,9 @@ export class YeetGhGateFacts extends S.Opaque<YeetGhGateFacts, { readonly brand:
     forceWindow: S.Boolean,
     window: S.Duration.pipe(S.withConstructorDefault(Effect.succeed(YEET_GH_REVIEW_WINDOW))),
     now: S.DateTimeUtc,
+    workflowSuites: S.Array(HeadWorkflowSuite).pipe(
+      S.withConstructorDefault(Effect.succeed(A.empty<HeadWorkflowSuite>()))
+    ),
   }).pipe($I.annoteSchema("YeetGhGateFacts", { description: "Everything the REST merge gate decides on." }))
 ) {}
 
@@ -356,13 +381,11 @@ const pullRequestFindings = (facts: YeetGhGateFacts): ReadonlyArray<YeetGhGateFi
 
 const conclusionOf = (run: GithubCheckRunRecord): string => O.getOrElse(run.conclusion, () => "?");
 
-const RequiredContextState = LiteralKit(["green", "red", "pending"]);
+const verdictOf = (run: GithubCheckRunRecord): HeadCheckVerdict =>
+  isGood(run) ? "green" : run.status === "completed" ? "red" : "pending";
 
-const requiredContextState = (run: O.Option<GithubCheckRunRecord>): typeof RequiredContextState.Type =>
-  O.match(run, {
-    onNone: () => "pending",
-    onSome: (found) => (isGood(found) ? "green" : found.status === "completed" ? "red" : "pending"),
-  });
+const requiredContextState = (run: O.Option<GithubCheckRunRecord>): HeadCheckVerdict =>
+  O.match(run, { onNone: (): HeadCheckVerdict => "pending", onSome: verdictOf });
 
 const requiredFindings = (
   required: ReadonlyArray<string>,
@@ -385,6 +408,50 @@ const requiredFindings = (
     ],
     green: A.length(A.filter(states, (entry) => entry.state === "green")),
   };
+};
+
+// Required contexts with no run the ruleset reads, each judged by its newest
+// copy in a replaced check suite.
+const hiddenOf = (required: ReadonlyArray<string>, facts: YeetGhGateFacts): ReadonlyArray<HiddenRequiredCheck> =>
+  hiddenRequiredChecks(
+    RequiredShadowInput.make({
+      requiredContexts: required,
+      checks: A.map(facts.checkRuns, (run) =>
+        HeadSuiteCheck.make({
+          id: run.id,
+          name: run.name,
+          checkSuiteId: run.checkSuiteId,
+          verdict: verdictOf(run),
+          conclusion: run.conclusion,
+        })
+      ),
+      suites: facts.workflowSuites,
+    })
+  );
+
+// A hidden red is refused like a live one, and a passing copy whose replacing
+// run finished needs a person (re-apply the label); a copy or replacing run
+// still going is held, since that run may yet report it.
+const hiddenFindings = (hidden: ReadonlyArray<HiddenRequiredCheck>): ReadonlyArray<YeetGhGateFinding> => {
+  const inState = (state: HiddenRequiredState) => A.filter(hidden, (entry) => entry.state === state);
+  const [red, shadowed, pending] = [inState("red"), inState("shadowed"), inState("pending")];
+  return [
+    ...when(
+      A.isReadonlyArrayNonEmpty(red),
+      "required-red",
+      `red in a replaced check suite: ${renderHiddenRequiredChecks(red)}`
+    ),
+    ...when(
+      A.isReadonlyArrayNonEmpty(shadowed),
+      "required-shadowed",
+      `the ruleset reads these as expected: ${renderHiddenRequiredChecks(shadowed)}; ${SHADOWED_REQUIRED_REMEDY}`
+    ),
+    ...when(
+      A.isReadonlyArrayNonEmpty(pending),
+      "required-pending",
+      `hidden until the newest run reports them: ${renderHiddenRequiredChecks(pending)}`
+    ),
+  ];
 };
 
 const otherCheckFindings = (
@@ -470,7 +537,13 @@ const threadFindings = (outstanding: O.Option<number>): ReadonlyArray<YeetGhGate
  *
  * The gate mirrors AGENTS.md "Mergeable" plus the review-window ruling: open,
  * not draft, head at the pinned sha, every required context green on the
- * newest run, no other check red or pending unless tolerated by name, the
+ * newest run the base ruleset reads (runs in a check suite a newer run of the
+ * same workflow and event replaced are dropped first; a context left with no
+ * counted run is judged by its newest copy in such a suite: refused as
+ * `required-red` when that copy is red, as `required-shadowed` when it passed
+ * and the replacing run finished, held as `required-pending` otherwise), no
+ * other check red or pending on its newest run in any suite unless tolerated
+ * by name, the
  * review window elapsed (unless forced), and zero outstanding threads read
  * from GraphQL. A thread count that did not come back is never zero.
  *
@@ -488,9 +561,14 @@ const threadFindings = (outstanding: O.Option<number>): ReadonlyArray<YeetGhGate
  * @since 0.0.0
  */
 export const decideYeetGhMergeGate = (facts: YeetGhGateFacts): YeetGhGateVerdict => {
-  const latest = latestCheckRunsByName(facts.checkRuns);
   const required = O.getOrElse(facts.requiredContexts, A.empty<string>);
-  const requiredRead = requiredFindings(required, latest);
+  const counts = gateCountsCheck(facts.workflowSuites, required);
+  const latest = latestCheckRunsByName(A.filter(facts.checkRuns, (run) => counts(run.name, run.checkSuiteId)));
+  const hidden = hiddenOf(required, facts);
+  const requiredRead = requiredFindings(
+    A.filter(required, (context) => !A.some(hidden, (entry) => entry.context === context)),
+    latest
+  );
   const windowAge = reviewWindowAge(facts);
   const findings = [
     ...pullRequestFindings(facts),
@@ -500,6 +578,7 @@ export const decideYeetGhMergeGate = (facts: YeetGhGateFacts): YeetGhGateVerdict
       "the base ruleset's required contexts could not be read"
     ),
     ...requiredRead.findings,
+    ...hiddenFindings(hidden),
     ...otherCheckFindings(latest, HashSet.fromIterable(required), HashSet.fromIterable(facts.tolerated)),
     ...reviewWindowFindings(facts.forceWindow, windowAge, facts.window, facts.windowResult, facts.windowConfigValid),
     ...threadFindings(facts.outstandingThreads),
@@ -1346,16 +1425,17 @@ const readGateFacts = Effect.fn("YeetGh.readGateFacts")(function* (options: {
         Console.error(`[gh] ${label} unknown for #${options.number}: ${error.message}`).pipe(Effect.as(O.none<A>()))
       )
     );
-  const [requiredContexts, checkRuns, evidence] = yield* Effect.all(
+  const [requiredContexts, checkRuns, workflowRuns, evidence] = yield* Effect.all(
     [
       // A stack layer is gated on its trunk's rules, which GitHub evaluates at merge.
       optional("required contexts", rest.requiredStatusContexts(yeetStackRulesBranch(pr))),
       rest.checkRuns(pr.headSha),
+      rest.workflowRunsForSha(pr.headSha),
       readYeetReviewWindowEvidence({ prNumber: options.number, headSha: pr.headSha, pull: pr }).pipe(
         provideYeetHeadMoveClassifier(options.repoRoot ?? process.cwd())
       ),
     ],
-    { concurrency: 3 }
+    { concurrency: 4 }
   );
   if (evidence.result._tag === "unknown")
     yield* Console.error(`[gh] review window unknown for #${options.number}: ${evidence.result.reason}`);
@@ -1376,8 +1456,13 @@ const readGateFacts = Effect.fn("YeetGh.readGateFacts")(function* (options: {
     tolerated: options.tolerated,
     forceWindow: options.forceWindow,
     now: yield* DateTime.now,
+    workflowSuites: headWorkflowSuites(workflowRuns, pr.headSha),
   });
 });
+
+// The thread read waits on the GraphQL budget unless `--no-wait` asked it not to.
+const gateThreadPolicy = (noWait: boolean): GraphqlBudgetPolicy =>
+  noWait ? GraphqlBudgetPolicy.noWait : GraphqlBudgetPolicy.default;
 
 const renderVerdictLines = (facts: YeetGhGateFacts, verdict: YeetGhGateVerdict): ReadonlyArray<string> => {
   const pr = facts.pullRequest;
@@ -1393,6 +1478,13 @@ const renderVerdictLines = (facts: YeetGhGateFacts, verdict: YeetGhGateVerdict):
     `  gate: ${verdict.met ? "MET" : verdict.onlyHolds ? "HOLD" : "REFUSED"}`,
   ];
 };
+
+// Decide the gate from one read and print its verdict lines.
+const decideAndRenderGate = Effect.fn("YeetGh.decideAndRenderGate")(function* (facts: YeetGhGateFacts) {
+  const verdict = decideYeetGhMergeGate(facts);
+  yield* Effect.forEach(renderVerdictLines(facts, verdict), (line) => Console.log(line), { discard: true });
+  return verdict;
+});
 
 /**
  * `yeet gh pr status <n>`: the REST gate view of one pull request.
@@ -1418,10 +1510,9 @@ export const runYeetGhPrStatus = (
         tolerated: [],
         forceWindow: false,
         readThreads: options.threads,
-        policy: options.noWait ? GraphqlBudgetPolicy.noWait : GraphqlBudgetPolicy.default,
+        policy: gateThreadPolicy(options.noWait),
       });
-      const verdict = decideYeetGhMergeGate(facts);
-      yield* Effect.forEach(renderVerdictLines(facts, verdict), (line) => Console.log(line), { discard: true });
+      yield* decideAndRenderGate(facts);
       if (!options.threads) yield* Console.log("  (threads not read; pass --threads to spend GraphQL on them)");
     })
   );
@@ -1539,10 +1630,9 @@ export const runYeetGhMerge = (
         tolerated: options.tolerate,
         forceWindow: options.forceWindow,
         readThreads: true,
-        policy: options.noWait ? GraphqlBudgetPolicy.noWait : GraphqlBudgetPolicy.default,
+        policy: gateThreadPolicy(options.noWait),
       });
-      const verdict = decideYeetGhMergeGate(facts);
-      yield* Effect.forEach(renderVerdictLines(facts, verdict), (line) => Console.log(line), { discard: true });
+      const verdict = yield* decideAndRenderGate(facts);
       // This path gates one pull request; a stacked one merges through `yeet merge-gate`.
       // The refusal is permanent, so it exits 1 before a hold (75) can send a waiter round again.
       const stackRefusal = yield* readYeetStackUngatedRefusal(facts.pullRequest);
@@ -1552,7 +1642,7 @@ export const runYeetGhMerge = (
       if (!verdict.met) {
         return yield* report(verdict.onlyHolds ? YEET_GH_EXIT_HOLD : 1)(
           `[gh] not merging #${options.number}: ${A.join(
-            A.map(verdict.findings, (item) => item.reason),
+            A.dedupe(A.map(verdict.findings, (item) => item.reason)),
             ", "
           )}`
         );

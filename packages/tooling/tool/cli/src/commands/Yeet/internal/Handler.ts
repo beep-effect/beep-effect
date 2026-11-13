@@ -162,12 +162,7 @@ import {
   validatePublishBranch,
   warnOnMismatchedPublishUpstream,
 } from "./PublishScope.ts";
-import {
-  applyComputeProfileLabel,
-  applyHeavyAdmissionLabel,
-  ensurePullRequest,
-  YeetPrBodyRequest,
-} from "./PullRequest.ts";
+import { applyPublishLabels, ensurePullRequest, YeetPrBodyRequest } from "./PullRequest.ts";
 import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
 import { linkYeetStackLayer, resolveYeetPublishStackLayer, YeetPublishStackLayer } from "./StackPublish.ts";
 import { collectRemoteChecks, collectYeetStatus, renderYeetStatusSummary, writeYeetStatusSnapshot } from "./Status.ts";
@@ -1285,13 +1280,15 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
       bodyRequest,
       stackLayer
     );
-    yield* applyHeavyAdmissionLabel(
+    // The worker label goes first, so the ready-for-heavy run is the newest Heavy Admit run and no later
+    // label run queues behind its matrix only to re-report it.
+    yield* applyPublishLabels(
       plan.context,
       recorder,
       A.findFirst(plan.steps, (step) => step.id === PR_HEAVY_ADMISSION_LABEL_STEP_ID),
-      ensured
+      ensured,
+      options.hostedProof
     );
-    if (options.hostedProof) yield* applyComputeProfileLabel(ensured);
     // A layer not yet in a stack (just created, or a link that failed after its create) is linked now.
     yield* O.match(
       O.filter(stackLayer, (layer) => O.isNone(layer.stackNumber)),

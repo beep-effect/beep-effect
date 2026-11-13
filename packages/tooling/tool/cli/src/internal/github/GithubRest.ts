@@ -355,7 +355,14 @@ const toStackRecord = (wire: typeof StackWire.Type): GithubStackRecord =>
 const CompareWire = S.Struct({ behind_by: S.Int });
 
 /**
- * One check run on a commit.
+ * One check run on a commit, with the check suite it reports into.
+ *
+ * **Details**
+ *
+ * `checkSuiteId` is the REST `check_suite.id`, none when GitHub sends no
+ * suite. The merge gates map each suite to the workflow run that owns it,
+ * because the base ruleset reads only the newest run's suite per workflow and
+ * event.
  *
  * **Example** (A green run)
  *
@@ -365,18 +372,33 @@ const CompareWire = S.Struct({ behind_by: S.Int });
  *
  * const run = GithubCheckRunRecord.make({ id: 1, name: "Lint", status: "completed", conclusion: O.some("success") })
  * console.log(run.name) // "Lint"
+ * console.log(O.isNone(run.checkSuiteId)) // true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export class GithubCheckRunRecord extends S.Opaque<GithubCheckRunRecord, { readonly brand: unique symbol }>()(
-  S.Struct({ id: S.Int, name: S.String, status: S.String, conclusion: S.Option(S.String) }).pipe(
-    $I.annoteSchema("GithubCheckRunRecord", { description: "One check run on a commit, read over GitHub REST." })
+  S.Struct({
+    id: S.Int,
+    name: S.String,
+    status: S.String,
+    conclusion: S.Option(S.String),
+    checkSuiteId: S.Int.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  }).pipe(
+    $I.annoteSchema("GithubCheckRunRecord", {
+      description: "One check run on a commit and its check suite, read over GitHub REST.",
+    })
   )
 ) {}
 
-const CheckRunWire = S.Struct({ id: S.Int, name: S.String, status: S.String, conclusion: S.NullOr(S.String) });
+const CheckRunWire = S.Struct({
+  id: S.Int,
+  name: S.String,
+  status: S.String,
+  conclusion: S.NullOr(S.String),
+  check_suite: S.Struct({ id: S.Int }).pipe(S.NullOr, S.optionalKey),
+});
 
 /**
  * One commit status context (the legacy statuses API that deploy previews
@@ -408,12 +430,20 @@ const CombinedStatusWire = S.Struct({
 });
 
 /**
- * One GitHub Actions workflow run.
+ * One GitHub Actions workflow run, with the check suite it reports into.
+ *
+ * **Details**
+ *
+ * `path` is the workflow file (`.github/workflows/heavy-admit.yml`) and
+ * `event` the triggering event (`pull_request`, `push`). Together they key the
+ * runs the base ruleset compares: per key it reads only the newest run's
+ * suite, the one `checkSuiteId` names (none when GitHub sends no suite id).
  *
  * **Example** (A failed run)
  *
  * ```ts
  * import { GithubWorkflowRunRecord } from "@beep/repo-cli/test/SharedInternals"
+ * import * as DateTime from "effect/DateTime"
  * import * as O from "effect/Option"
  *
  * const run = GithubWorkflowRunRecord.make({
@@ -422,8 +452,11 @@ const CombinedStatusWire = S.Struct({
  *   status: "completed",
  *   conclusion: O.some("failure"),
  *   headSha: "abc",
+ *   checkSuiteId: O.some(90),
+ *   path: ".github/workflows/check.yml",
  *   event: "pull_request",
  *   headBranch: O.some("feat/x"),
+ *   createdAt: DateTime.makeUnsafe("2026-11-12T23:27:45Z"),
  * })
  * console.log(run.id) // 9
  * ```
@@ -438,9 +471,16 @@ export class GithubWorkflowRunRecord extends S.Opaque<GithubWorkflowRunRecord, {
     status: S.String,
     conclusion: S.Option(S.String),
     headSha: S.String,
+    checkSuiteId: S.Option(S.Int),
+    path: S.String,
     event: S.String,
     headBranch: S.Option(S.String),
-  }).pipe($I.annoteSchema("GithubWorkflowRunRecord", { description: "One workflow run, read over GitHub REST." }))
+    createdAt: S.DateTimeUtc,
+  }).pipe(
+    $I.annoteSchema("GithubWorkflowRunRecord", {
+      description: "One workflow run and its check suite, read over GitHub REST.",
+    })
+  )
 ) {}
 
 /**
@@ -515,8 +555,11 @@ const WorkflowRunWire = S.Struct({
   status: S.NullOr(S.String),
   conclusion: S.NullOr(S.String),
   head_sha: S.String,
+  check_suite_id: S.Int.pipe(S.NullOr, S.optionalKey),
+  path: S.String,
   event: S.String.pipe(S.NullOr, S.optionalKey),
   head_branch: S.String.pipe(S.NullOr, S.optionalKey),
+  created_at: S.DateTimeUtcFromString,
 });
 
 /**
@@ -932,7 +975,7 @@ export interface GithubRestShape {
     number: number,
     patch: { readonly title?: string | undefined; readonly body?: string | undefined }
   ) => Effect.Effect<GithubPullRequestRecord, GitHubError>;
-  /** Every workflow run for a head sha (all pages). */
+  /** Every workflow run for a head sha (all pages), with each run's workflow file, event and check suite. */
   readonly workflowRunsForSha: (sha: string) => Effect.Effect<ReadonlyArray<GithubWorkflowRunRecord>, GitHubError>;
 }
 
@@ -1072,6 +1115,7 @@ const makeGithubRest = Effect.gen(function* () {
             name: run.name,
             status: run.status,
             conclusion: O.fromNullishOr(run.conclusion),
+            checkSuiteId: O.fromNullishOr(run.check_suite?.id),
           })
         )
       )
@@ -1311,8 +1355,11 @@ const makeGithubRest = Effect.gen(function* () {
             status: run.status ?? "unknown",
             conclusion: O.fromNullishOr(run.conclusion),
             headSha: run.head_sha,
+            checkSuiteId: O.fromNullishOr(run.check_suite_id),
+            path: run.path,
             event: run.event ?? "unknown",
             headBranch: O.fromNullishOr(run.head_branch),
+            createdAt: run.created_at,
           })
         )
       )

@@ -335,6 +335,8 @@ const stackReadTable = (scenario: StackScenario, merged: boolean): Readonly<Reco
   [`{repo}/rules/branches/${TRUNK}`]: { body: rulesFixture },
   [`{repo}/rules/branches/${LOWER_REF}`]: { body: [] },
   [`{repo}/compare/${lowerHead}...${topHead}`]: containmentAnswer(scenario),
+  // The gate lists each head's workflow runs to model the ruleset's newest-suite read; none here.
+  "{repo}/actions/runs": { body: { total_count: 0, workflow_runs: [] } },
   "{repo}": {
     body: { squash_merge_commit_title: "COMMIT_OR_PR_TITLE", squash_merge_commit_message: "COMMIT_MESSAGES" },
   },

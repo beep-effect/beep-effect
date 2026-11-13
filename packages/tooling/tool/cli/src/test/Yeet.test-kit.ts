@@ -137,6 +137,7 @@ export {
   yeetStatusArtifactFromCloseoutForTesting,
   yeetStatusThreadTriageForTesting,
 } from "../commands/Yeet/internal/Status.ts";
+export * from "../commands/Yeet/internal/SuiteShadow.ts";
 export * from "../commands/Yeet/internal/Sweep.schemas.ts";
 export * from "../commands/Yeet/internal/Sweep.ts";
 export * from "../commands/Yeet/internal/TurboQuery.ts";

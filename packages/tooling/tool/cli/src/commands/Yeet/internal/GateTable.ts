@@ -11,8 +11,13 @@
  *
  * Reads are REST first (operator ruling 2026-10-06): every page of open pull
  * requests, each base branch's ruleset once, then per pull request its detail
- * (`mergeable_state`), check runs, combined commit statuses and the review
- * window through the reader `yeet ready` and the merge gate share. Review
+ * (`mergeable_state`), check runs, workflow runs, combined commit statuses
+ * and the review window through the reader `yeet ready` and the merge gate
+ * share. The workflow runs map each check run's suite to its run, because the
+ * base ruleset reads only the newest run's suite per workflow file and event:
+ * a required context's check run in a replaced suite is dropped before the
+ * newest run per name is taken, as the merge gate does (`SuiteShadow.ts`),
+ * and an optional check keeps its newest run over every suite. Review
  * threads are read over GraphQL only for pull requests out of draft, with the
  * same outstanding rule the merge gate applies, every page of threads.
  *
@@ -45,6 +50,7 @@ import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
@@ -58,14 +64,16 @@ import { MergeGateCheckRun } from "./MergeGate.schemas.ts";
 import { MERGE_GATE_OWNER_HOLD_LABEL, mergeGateGoodConclusion, mergeGateLatestRunPerName } from "./MergeGate.ts";
 import { readYeetReviewWindow, YeetReviewWindow } from "./ReviewWindow.ts";
 import { yeetStackRulesBranch } from "./Stack.ts";
+import { gateCountsCheck, HeadWorkflowSuitesField, headWorkflowSuites, hiddenRequiredChecksOf } from "./SuiteShadow.ts";
 import type { Git } from "@beep/git/Git";
 import type { Repo } from "@beep/github/Repo";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { GithubPullRequestRecord } from "../../../internal/github/index.ts";
+import type { GithubCheckRunRecord, GithubPullRequestRecord } from "../../../internal/github/index.ts";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { HeadCheckVerdict, HiddenRequiredCheck, HiddenRequiredState } from "./SuiteShadow.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/GateTable");
 
@@ -178,7 +186,8 @@ export type GateTableThreads = typeof GateTableThreads.Type;
  * `requiredContexts` is `None` when the base branch's ruleset was unreadable
  * or declares no required check; `statuses` is `None` when the combined
  * status read failed; `window` is `None` for a draft, whose window starts at
- * the flip.
+ * the flip. `workflowSuites` are the head's workflow runs with their check
+ * suites; none listed (the default) replaces no suite.
  *
  * **Example** (A draft read)
  *
@@ -220,6 +229,7 @@ export class GateTableRead extends S.Opaque<GateTableRead, { readonly brand: uni
     statuses: GithubCommitStatusRecord.pipe(S.Array, S.OptionFromNullOr),
     window: S.OptionFromNullOr(YeetReviewWindow),
     threads: GateTableThreads,
+    workflowSuites: HeadWorkflowSuitesField,
   }).pipe($I.annoteSchema("GateTableRead", { description: "The facts one gate table row is decided from." }))
 ) {}
 
@@ -228,10 +238,18 @@ export class GateTableRead extends S.Opaque<GateTableRead, { readonly brand: uni
  *
  * **Details**
  *
- * `requiredGreen` counts required contexts whose newest run is green;
- * `reds` names every completed check run that is not green; `pending` names
- * every required context still running or not yet registered and every
- * pending commit status (`status:<context>`); `statusReds` names every failing
+ * Every column reads a required context only on the check runs the base
+ * ruleset reads: its run in a check suite a newer run of the same workflow and
+ * event replaced is dropped first, and a context left with no counted run is
+ * judged by its newest hidden copy. An optional check is read on its newest
+ * run over every suite. `requiredGreen` counts required contexts whose newest
+ * run is green; `reds` names every completed check run that is not green, a
+ * hidden required red and an optional red in a replaced suite included;
+ * `pending` names every required context still
+ * running or not yet registered (as `shadowed:<context>` when its newest
+ * hidden copy passed and the run that replaced its suite finished, which the
+ * ruleset reads as expected) and every pending commit status
+ * (`status:<context>`); `statusReds` names every failing
  * commit status (`<context>=<state>`), which never holds; `holds` names the
  * hold labels on the pull request (`owner-merge-hold`), each of which holds.
  * `gateMet` is the `GATE-MET` column.
@@ -375,6 +393,49 @@ const isRedRun = (run: MergeGateCheckRun): boolean => !isPendingRun(run) && !mer
 
 const isGreenRun = (run: MergeGateCheckRun): boolean => !isPendingRun(run) && mergeGateGoodConclusion(run.conclusion);
 
+const verdictOf = (run: MergeGateCheckRun): HeadCheckVerdict =>
+  isPendingRun(run) ? "pending" : isRedRun(run) ? "red" : "green";
+
+// Required contexts with no run the ruleset reads, each judged by its newest
+// copy in a replaced check suite.
+const hiddenOf = (read: GateTableRead, required: ReadonlyArray<string>): ReadonlyArray<HiddenRequiredCheck> =>
+  hiddenRequiredChecksOf({ requiredContexts: required, runs: read.checkRuns, suites: read.workflowSuites, verdictOf });
+
+const hiddenContexts = (
+  hidden: ReadonlyArray<HiddenRequiredCheck>,
+  state: HiddenRequiredState
+): HashSet.HashSet<string> =>
+  HashSet.fromIterable(
+    A.map(
+      A.filter(hidden, (entry) => entry.state === state),
+      (entry) => entry.context
+    )
+  );
+
+// A hidden red is a red, under its copy's conclusion.
+const hiddenReds = (hidden: ReadonlyArray<HiddenRequiredCheck>): ReadonlyArray<string> =>
+  A.map(
+    A.filter(hidden, (entry) => entry.state === "red"),
+    (entry) => `${entry.context}=${O.getOrElse(entry.copy.conclusion, () => "none")}`
+  );
+
+// The required contexts that are not green and not red: running, unregistered,
+// or hidden and not red, a shadowed one marked `shadowed:`, the ruleset's "expected".
+const requiredPendingOf = (
+  required: ReadonlyArray<string>,
+  latestOf: (context: string) => O.Option<MergeGateCheckRun>,
+  hidden: ReadonlyArray<HiddenRequiredCheck>
+): ReadonlyArray<string> => {
+  const red = hiddenContexts(hidden, "red");
+  const shadowed = hiddenContexts(hidden, "shadowed");
+  return A.map(
+    A.filter(required, (context) =>
+      O.match(latestOf(context), { onNone: () => !HashSet.has(red, context), onSome: isPendingRun })
+    ),
+    (context) => (HashSet.has(shadowed, context) ? `shadowed:${context}` : context)
+  );
+};
+
 const windowElapsed = (read: GateTableRead): boolean =>
   O.exists(read.window, (window) => YeetReviewWindow.guards.elapsed(window));
 
@@ -388,8 +449,11 @@ const threadsClear = (threads: GateTableThreads): boolean =>
  *
  * `GATE-MET` needs all of: out of draft; not conflicting
  * (`mergeable_state` other than `dirty`); a readable ruleset whose every
- * required context's newest run is green; no completed check run red, required
- * or not; readable commit statuses with none pending; an elapsed
+ * required context's newest run is green, counting only runs the base ruleset
+ * reads (a run in a replaced check suite is dropped, and a context with no
+ * other run is judged by its newest hidden copy: red when that copy is red,
+ * pending as `shadowed:<context>` when it passed); no completed check run red, required
+ * or not (an optional check's newest run in any suite); readable commit statuses with none pending; an elapsed
  * review window; a counted thread list with nothing outstanding. A pending
  * non-required check run does not hold it, matching `gate.sh`: the merge gate
  * decides whether it may wait. A failing commit status is reported in
@@ -433,16 +497,19 @@ const threadsClear = (threads: GateTableThreads): boolean =>
  * @since 0.0.0
  */
 export const decideGateTableRow = (read: GateTableRead): GateTableRow => {
-  const latestByName = mergeGateLatestRunPerName(read.checkRuns);
+  const required = O.getOrElse(read.requiredContexts, A.empty<string>);
+  const counts = gateCountsCheck(read.workflowSuites, required);
+  const latestByName = mergeGateLatestRunPerName(A.filter(read.checkRuns, (run) => counts(run.name, run.checkSuiteId)));
   const latest = latestByName.pipe(HashMap.values, A.fromIterable);
   const latestOf = (context: string): O.Option<MergeGateCheckRun> => HashMap.get(latestByName, context);
-  const required = O.getOrElse(read.requiredContexts, A.empty<string>);
   const requiredGreen = A.length(A.filter(required, (context) => O.exists(latestOf(context), isGreenRun)));
-  const requiredPending = A.filter(required, (context) =>
-    O.match(latestOf(context), { onNone: () => true, onSome: isPendingRun })
-  );
+  const hidden = hiddenOf(read, required);
+  const requiredPending = requiredPendingOf(required, latestOf, hidden);
   const statuses = O.getOrElse(read.statuses, A.empty<GithubCommitStatusRecord>);
-  const reds = A.map(A.filter(latest, isRedRun), (run) => `${run.name}=${run.conclusion ?? "none"}`);
+  const reds = A.appendAll(
+    A.map(A.filter(latest, isRedRun), (run) => `${run.name}=${run.conclusion ?? "none"}`),
+    hiddenReds(hidden)
+  );
   const statusReds = A.map(
     A.filter(statuses, (status) => A.contains(STATUS_RED, status.state)),
     (status) => `${status.context}=${status.state}`
@@ -589,13 +656,14 @@ export const renderGateTableReport = (report: GateTableReport): string => {
 
 const byNumber = Order.mapInput(Order.Number, (pull: GithubPullRequestRecord) => pull.number);
 
-const toCheckRun = (run: {
-  readonly id: number;
-  readonly name: string;
-  readonly status: string;
-  readonly conclusion: O.Option<string>;
-}) =>
-  MergeGateCheckRun.make({ id: run.id, name: run.name, status: run.status, conclusion: O.getOrNull(run.conclusion) });
+const toCheckRun = (run: GithubCheckRunRecord) =>
+  MergeGateCheckRun.make({
+    id: run.id,
+    name: run.name,
+    status: run.status,
+    conclusion: O.getOrNull(run.conclusion),
+    checkSuiteId: run.checkSuiteId,
+  });
 
 const readThreads = Effect.fnUntraced(function* (
   prNumber: number,
@@ -627,6 +695,10 @@ const readRow = Effect.fnUntraced(function* (
     const checkRuns = yield* rest
       .checkRuns(pull.headSha)
       .pipe(Effect.mapError(yeetGithubFailure(`gh api check-runs #${pull.number}`)));
+    // The suites the check runs report into, so a required context's run only a replaced suite holds is not counted.
+    const workflowRuns = yield* rest
+      .workflowRunsForSha(pull.headSha)
+      .pipe(Effect.mapError(yeetGithubFailure(`gh api workflow runs #${pull.number}`)));
     const statuses = yield* rest.commitStatuses(pull.headSha).pipe(Effect.option);
     const window = yield* pull.draft
       ? Effect.succeed(O.none<YeetReviewWindow>())
@@ -649,6 +721,7 @@ const readRow = Effect.fnUntraced(function* (
         statuses,
         window,
         threads,
+        workflowSuites: headWorkflowSuites(workflowRuns, pull.headSha),
       })
     );
   });

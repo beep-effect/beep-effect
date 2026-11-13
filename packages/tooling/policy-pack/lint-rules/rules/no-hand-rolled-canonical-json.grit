@@ -1,0 +1,69 @@
+language js
+
+// goals/canonical-digest-owner: the bytes a digest hashes have one owner,
+// `JsoncFingerprint` in `@beep/jsonc` (RFC 8785). This rule rejects the shape
+// every hand-rolled sorted-key encoder in the census used to build object
+// text: an opening brace, an interpolated join of members, a closing brace.
+//
+//   `{${A.join(members, ",")}}`            template, compact
+//   `{\n${A.join(lines, ",\n")}\n${pad}}`  template, newline padded
+//   flow(..., A.join(","), (body) => `{${body}}`)
+//   "{" + members.join(",") + "}"
+//
+// Braces around any other interpolation (`{${key}}` URL paths, `{${n}}`
+// quantifiers, glob alternatives without a join, markdown attributes), arrays
+// (`[${...}]`), space-padded braces (`{ ${...} }`: TOML inline tables, N3) and
+// fixed-key templates (`{"a":${x}}`) do not match. A join assigned to a
+// variable before it is wrapped is not followed.
+//
+// The root biome.jsonc scopes it to `**/src/**` and exempts `@beep/jsonc`.
+// Census rows that keep their encoder (pinned, renderer) carry a
+// `biome-ignore lint/plugin/no-hand-rolled-canonical-json` naming the row.
+
+// A direct join of members: method, data-first, data-last, or the last stage
+// of a pipe.
+pattern member_join() {
+  or {
+    `$_.join($...)`,
+    `$_.join($...)($...)`,
+    `pipe($..., $last)` where { $last <: `$_.join($...)` },
+    `$_.pipe($..., $last)` where { $last <: `$_.join($...)` }
+  }
+}
+
+// An untagged template whose first chunk is `{` and whose last chunk is `}`,
+// each optionally padded by a newline and indentation, with a trailing
+// newline allowed after the closing brace.
+pattern object_brace_template() {
+  and { JsTemplateExpression(),
+  r"^`\{(?:(?:\\n|\r?\n)[ \t]*)?\$\{[\s\S]*\}(?:(?:\\n|\r?\n)[ \t]*)?\}(?:\\n)?`$" }
+}
+
+or {
+  JsTemplateExpression(elements=$elements) as $json where {
+    $json <: object_brace_template(),
+    $elements <: some JsTemplateElement(expression=member_join()),
+    register_diagnostic(span=$json, message="Rule: hand-rolled JSON object text: a template wraps a join of members in braces. Why: digest bytes have one owner, RFC 8785 through JsoncFingerprint (goals/canonical-digest-owner); a second encoder drifts from it on escapes, numbers, key order and undefined members, so one value can get two digests. Fix: call `JsoncFingerprint.canonicalizeResult(value)` from `@beep/jsonc/JsoncFingerprint`, passing `JsoncCanonicalizeOptions.make({ omitUndefinedMembers: true })` only where a legacy preimage dropped undefined members. A pinned or renderer encoder needs a row in goals/canonical-digest-owner/research/encoder-census.md and a biome-ignore naming that row; text that is not JSON takes a biome-ignore saying what it is.", severity="error")
+  },
+  // The join is an earlier stage than the wrap. `within` runs only for arrows
+  // whose body already matched the brace template, which are rare.
+  JsArrowFunctionExpression(body=$body) as $json where {
+    $body <: object_brace_template(),
+    $json <: within JsCallExpression(callee=$callee, arguments=JsCallArguments(args=$stages)) where {
+      $callee <: or {
+        `pipe`,
+        `flow`,
+        `$_.pipe`
+      },
+      $stages <: some `$_.join($...)`,
+      $stages <: some $json
+    } ,
+    register_diagnostic(span=$json, message="Rule: hand-rolled JSON object text: a pipeline joins members and a later stage wraps them in braces. Why: digest bytes have one owner, RFC 8785 through JsoncFingerprint (goals/canonical-digest-owner); a second encoder drifts from it on escapes, numbers, key order and undefined members, so one value can get two digests. Fix: call `JsoncFingerprint.canonicalizeResult(value)` from `@beep/jsonc/JsoncFingerprint`, passing `JsoncCanonicalizeOptions.make({ omitUndefinedMembers: true })` only where a legacy preimage dropped undefined members. A pinned or renderer encoder needs a row in goals/canonical-digest-owner/research/encoder-census.md and a biome-ignore naming that row; text that is not JSON takes a biome-ignore saying what it is.", severity="error")
+  },
+  `$open + $join + $close` as $json where {
+    $open <: r"^[\"']\{(?:\\n[ \t]*)?[\"']$",
+    $close <: r"^[\"'](?:\\n[ \t]*)?\}(?:\\n)?[\"']$",
+    $join <: member_join(),
+    register_diagnostic(span=$json, message="Rule: hand-rolled JSON object text: string concatenation wraps a join of members in braces. Why: digest bytes have one owner, RFC 8785 through JsoncFingerprint (goals/canonical-digest-owner); a second encoder drifts from it on escapes, numbers, key order and undefined members, so one value can get two digests. Fix: call `JsoncFingerprint.canonicalizeResult(value)` from `@beep/jsonc/JsoncFingerprint`, passing `JsoncCanonicalizeOptions.make({ omitUndefinedMembers: true })` only where a legacy preimage dropped undefined members. A pinned or renderer encoder needs a row in goals/canonical-digest-owner/research/encoder-census.md and a biome-ignore naming that row; text that is not JSON takes a biome-ignore saying what it is.", severity="error")
+  }
+}
