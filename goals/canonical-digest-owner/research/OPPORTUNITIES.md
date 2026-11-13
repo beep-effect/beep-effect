@@ -50,3 +50,41 @@ identifiers are redacted.
   cite line numbers from `HEAD` instead of the working tree.
 - **Would have prevented it:** running the probe in a second worktree, or
   after the read-only sweeps finished.
+
+## 2026-11-13: slice C merged at a head under review
+
+- **Doing:** reviewing pull request 3193 (slice C) before calling it final.
+- **Evidence:** the pull request was marked ready at 03:47Z by a process
+  neither ledger records, and hand-merged at 04:15Z at `48b597b654c` while a
+  review round was open. Three typed failures had become crashes (packet
+  event reader, semantica lab schema checks, epistemics `Result` digest
+  helpers); pull request 3204 fixed them on `main`.
+- **Would have prevented it:** a merge path that waits for the owning
+  session's `final <sha> #<n>` for the current head, and a ledger row for the
+  ready flip.
+
+## 2026-11-13: a new dependency edge passed hosted checks and broke the cheap gates
+
+- **Doing:** final-check on pull request 3204, and `yeet publish` on the
+  slice D lane.
+- **Evidence:** `quality:cache-policy` reported `configuration-drift` on
+  fourteen tasks of `@beep/epistemics`, `@beep/md` and `@beep/party-domain`,
+  from the `@beep/jsonc` edge slice C added. Hosted checks on 3193 were green;
+  the audit runs only in the local cheap gates, which `yeet open` skips. Pull
+  request 3206 recorded the baseline.
+- **Would have prevented it:** the audit as a hosted check, or `yeet open`
+  running it when a `package.json` dependency block changed.
+
+## 2026-11-13: stale install after a branch switch
+
+- **Doing:** final-check on pull request 3204 in the slice C lane.
+- **Evidence:** the lane moved from the merged branch to a new branch from
+  `origin/main` without a reinstall. The check gate failed in
+  `@beep/db-admin` ("snapshot is of unsupported version, please update
+  drizzle-kit"), and after `bun install --frozen-lockfile` installed six
+  packages, on test types in
+  `test/integration/ExecutionAuthorityLedgerMigration.pglite.test.ts`. Hosted
+  `Heavy / Check` passed on the same commit. The cause of the second failure
+  was not found.
+- **Would have prevented it:** final-check comparing the install with
+  `bun.lock` before the check gate.
