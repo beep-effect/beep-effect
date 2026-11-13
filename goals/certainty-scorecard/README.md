@@ -43,9 +43,12 @@ as #3141: every hosted job is attributed to a lane, a support job or unknown, an
 the conservation census (decision `job-attribution-classes`). Slice 3 (MEAS-02 with DEPS-10) merged as #3176:
 the Yeet economics fold attributes refusals by failure kind as rows of the same `actionableLaneMix` (checkpoint
 `slice-3-refusal-attribution`). Slice 1's scoring was then fixed by #3144 (decision `certainty-scoring-fixes`),
-#3168 (decision `main-listing-unread`) and #3181 (coverage). Next startable, the second wave: the
-certainty-nightly workflow (slice 4), archived admission rows (SCHE-09, slice 5) and final-check attempt journals
-(MEAS-07, slice 6).
+#3168 (decision `main-listing-unread`) and #3181 (coverage). Slice 5 (SCHE-09 slice 1) is in review: rows the
+admission ring trims go to UTC day segments kept for 30 days, and `bun run beep quality scheduler history` folds
+them with the live journal (decision `sche-09-admission-archive`); the pressure fields are slice 5b. Also
+startable in the second wave: the certainty-nightly workflow (slice 4) and final-check attempt journals (MEAS-07,
+slice 6). Wall-time, cache and dist baselines taken before d8326d55935 (#3208, declaration-only builds) are not
+comparable with later readings (checkpoint `baselines-before-d8326d5593-not-comparable`).
 
 ## Latest Evidence
 
