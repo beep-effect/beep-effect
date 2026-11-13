@@ -1,5 +1,6 @@
 import {
   COVERAGE_GENERATED_STANDARDS_OWNER_ROWS,
+  COVERAGE_SCANNED_OWNER_ROWS,
   CoverageReaderSource,
   CoverageScopeOwner,
   coverageOwnerDriftRows,
@@ -18,6 +19,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
+import { rowFixtureOwners, rowFixtureReaders } from "./support/CoverageOwnerRows.ts";
 
 // TURB-01 slice 1 (goals/hosted-setup-tax): generated standards files select
 // their scanned readers instead of the full Test Unit matrix.
@@ -47,6 +49,8 @@ const SAMPLE_CHANGED_FILES = [
   "standards/policy-tools.fingerprint.json",
   "standards/cache-qualification-baseline.json",
   "standards/fallow.boundaries.generated.jsonc",
+  "standards/check-census.regression-baseline.jsonc",
+  "standards/root-package.projection.generated.json",
 ] as const;
 
 const UNMAPPED_STANDARDS_FILE = "standards/fallow.boundaries.provenance.jsonc";
@@ -177,25 +181,20 @@ describe("coverage owners for generated standards inventories", () => {
 });
 
 describe("owner drift rows", () => {
-  const readerPaths = A.dedupe(A.map(COVERAGE_GENERATED_STANDARDS_OWNER_ROWS, ([path]) => path));
-  const repoCliReader = source(
-    "packages/tooling/tool/cli/test/readers.test.ts",
-    `const readers = [${A.join(
-      A.map(readerPaths, (path) => `"${path}"`),
-      ", "
-    )}];`
-  );
+  const readerPaths = A.dedupe(A.map(COVERAGE_SCANNED_OWNER_ROWS, ([path]) => path));
+  const rowOwners = rowFixtureOwners(COVERAGE_SCANNED_OWNER_ROWS);
+  const rowReaders = rowFixtureReaders(COVERAGE_SCANNED_OWNER_ROWS);
 
   it("is empty when the scan finds exactly the row owners", () => {
-    expect(coverageOwnerDriftRows(owners, [repoCliReader])).toEqual([]);
+    expect(coverageOwnerDriftRows(rowOwners, rowReaders)).toEqual([]);
   });
 
   it("reports a new test-tree reader in another package that the rows miss", () => {
     const kitReader = source(
-      "packages/tooling/library/repo-cli-kit/test/Inventory.test.ts",
+      "packages/repo-cli-kit/test/Inventory.test.ts",
       'const inventory = "standards/schema-first.inventory.jsonc";'
     );
-    expect(coverageOwnerDriftRows(owners, [repoCliReader, kitReader])).toEqual([
+    expect(coverageOwnerDriftRows(rowOwners, [...rowReaders, kitReader])).toEqual([
       {
         readerPath: "standards/schema-first.inventory.jsonc",
         rowOwners: ["@beep/repo-cli"],
@@ -205,7 +204,7 @@ describe("owner drift rows", () => {
   });
 
   it("reports every row whose reader is gone", () => {
-    expect(A.map(coverageOwnerDriftRows(owners, []), (row) => [row.readerPath, row.scannedOwners])).toEqual(
+    expect(A.map(coverageOwnerDriftRows(rowOwners, []), (row) => [row.readerPath, row.scannedOwners])).toEqual(
       A.map(readerPaths, (path) => [path, []])
     );
   });
