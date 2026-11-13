@@ -7,8 +7,9 @@
  * installed targets already hold the verified effective tree (`current`),
  * were rebuilt from the pristine tree plus its patch series (`rebuilt`), or
  * would be rebuilt (`would-rebuild`, check mode). A local row is never
- * reconstructed; it is `current` when its targets hash to the recorded
- * `installedTreeHash` and `local-drift` otherwise. Each target is reported
+ * reconstructed; it is `current` when every target exists, all hold the same
+ * tree and that tree matches a recorded `installedTreeHash`, and
+ * `local-drift` otherwise. Each target is reported
  * by its repo-relative path with its own state, so a skew between the two
  * install targets (a crash between the two renames) is visible per target.
  *
@@ -109,8 +110,9 @@ export type SkillMaterializeTargetState = typeof SkillMaterializeTargetState.Typ
  * `current`: every target already holds the verified tree. `rebuilt`: write
  * mode published the verified tree to every target. `would-rebuild`: check
  * mode found a target that differs or is missing. `local-drift`: a local
- * entry's targets no longer hash to its `installedTreeHash`; materialize does
- * not rebuild local skills, so `skills update` must relock them.
+ * entry's targets are missing, disagree with each other or left a recorded
+ * `installedTreeHash`; materialize does not rebuild local skills, so repair
+ * the targets or run `skills update`.
  *
  * **Example** (Check a status)
  *

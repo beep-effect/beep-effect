@@ -5,7 +5,11 @@
  * @since 0.0.0
  */
 
-import { decodeSkillsLockDocumentJson, SkillsLockDocument } from "@beep/ai-sync/SkillsLock.schemas";
+import {
+  decodeSkillsLockDocumentJson,
+  LocalSkillLockEntry,
+  SkillsLockDocument,
+} from "@beep/ai-sync/SkillsLock.schemas";
 import { $RepoCliId } from "@beep/identity/packages";
 import { asArrayBufferView, concatBytes } from "@beep/repo-cli-kit/cli/Bytes";
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
@@ -52,6 +56,7 @@ import {
   renderSkillsLockWriteReceiptJson,
 } from "./Skills.render.ts";
 import {
+  computeInstalledTreeHash,
   computeLocalSkillLockEntry,
   listInstalledSkillNames,
   planSkillsLockMigration,
@@ -1217,13 +1222,22 @@ const desiredLockEntry = Effect.fn("Skills.desiredLockEntry")(function* (
   if (O.isSome(vendored)) {
     return [name, vendored.value] as const;
   }
-  return [name, yield* computeLocalSkillLockEntry(repoRoot, name)] as const;
+  const entry = yield* computeLocalSkillLockEntry(repoRoot, name);
+  if (O.isNone(O.fromUndefinedOr(remoteSkillSourcesByName[name]))) {
+    return [name, entry] as const;
+  }
+  // A floating upstream's fetched tree is the one thing git alone cannot vouch for offline.
+  const installedTreeHash = yield* computeInstalledTreeHash(repoRoot, name);
+  return [name, LocalSkillLockEntry.make({ installedTargets: entry.installedTargets, installedTreeHash })] as const;
 });
 
 const skillsLockDocumentEquivalence = S.toEquivalence(SkillsLockDocument);
 
 // Over a v2 lock, vendored entries are kept verbatim and local entries are recomputed from the
-// installed trees with the same mode-aware hashing rule the plan uses. Drift is judged on the
+// installed trees: both targets must exist and hash alike. A repo-authored entry records the
+// targets only, so editing that skill never moves the lock; one refetched from a floating
+// upstream also records the fetched tree's hash. A repo-authored entry that still carries a
+// legacy `installedTreeHash` differs from the desired one and is rewritten. Drift is judged on the
 // decoded document, so a lock whose bytes were only reformatted (key order, wrapping) is not
 // drift and write mode leaves it alone.
 const evaluateLockDriftV2 = Effect.fnUntraced(function* (
@@ -1256,8 +1270,8 @@ const evaluateVendoredTreeDrift = Effect.fnUntraced(function* (repoRoot: string,
   const drift = yield* Effect.forEach(
     vendored,
     Effect.fnUntraced(function* ([name, entry]) {
-      const installed = yield* computeLocalSkillLockEntry(repoRoot, name);
-      return installed.installedTreeHash === entry.effective.installedTreeHash
+      const installedTreeHash = yield* computeInstalledTreeHash(repoRoot, name);
+      return installedTreeHash === entry.effective.installedTreeHash
         ? A.empty<SkillDrift>()
         : A.of<SkillDrift>({ _tag: "HandEditedVendoredOutput", name });
     })
@@ -1291,7 +1305,9 @@ const evaluateLockState = Effect.fnUntraced(function* (
  * kept verbatim, and an installed tree that moved away from its effective
  * tree is reported as `hand-edited-vendored-output`, naming both remedies: a
  * patch that keeps the edit, or `skills materialize`, which reverts it. Local
- * entries are recomputed from the installed trees.
+ * entries are recomputed from the installed trees: the two installed targets
+ * are hashed on the fly and must agree, and only a skill refetched from a
+ * floating upstream keeps a content hash in the lock.
  *
  * **Example** (Create the skills update workflow)
  *

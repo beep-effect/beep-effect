@@ -30,64 +30,56 @@
       "installedTargets": [
         ".claude/skills/atom-reactivity-specialist",
         ".agents/skills/atom-reactivity-specialist"
-      ],
-      "installedTreeHash": "ceacb539a7f19066d2df0189ef261f55202fe73f7052649924ffc42614d78d14"
+      ]
     },
     "auth-environments": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/auth-environments",
         ".agents/skills/auth-environments"
-      ],
-      "installedTreeHash": "6a6da41e07c79a90f07be2fdaf8677d0a9f5868c30de2a4ba34c4262e2e641dd"
+      ]
     },
     "browser-qa-loop": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/browser-qa-loop",
         ".agents/skills/browser-qa-loop"
-      ],
-      "installedTreeHash": "0e8fc1a4b2e1ef4ef8a8847a4f37b79d3099997dd82d6f475dd9eb16c75279ba"
+      ]
     },
     "closeout": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/closeout",
         ".agents/skills/closeout"
-      ],
-      "installedTreeHash": "fc4638f3b8ff71888c79e0ff4131810ebcf7aad79b6cdc979c531a28a11813d2"
+      ]
     },
     "codex-findings": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/codex-findings",
         ".agents/skills/codex-findings"
-      ],
-      "installedTreeHash": "f68576d572152f1229693b8e83a8687296afd584fcbcba6b4932c1df8c3084b1"
+      ]
     },
     "crispen": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/crispen",
         ".agents/skills/crispen"
-      ],
-      "installedTreeHash": "2d85da4f0dac22b1ce8dcfb0ee0cc935f2edabc8bec54dff9b76ca3ec8aa5a92"
+      ]
     },
     "effect-first-development": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/effect-first-development",
         ".agents/skills/effect-first-development"
-      ],
-      "installedTreeHash": "dc4adfbe4a302ec470f3e2599e24d7cb5081489c8410e0d2f0f31a82ac5934a7"
+      ]
     },
     "explore": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/explore",
         ".agents/skills/explore"
-      ],
-      "installedTreeHash": "d1aa78aad3493c517588c54952aef4e5530c93bf2101de3591f0f769ad1bfd01"
+      ]
     },
     "grill-me": {
       "_tag": "vendored",
@@ -154,128 +146,112 @@
       "installedTargets": [
         ".claude/skills/grill-with-docs",
         ".agents/skills/grill-with-docs"
-      ],
-      "installedTreeHash": "518adff424cd87823ecd8ba9dca5b37c0a330c68ae28ae3c14d0fcef10e55761"
+      ]
     },
     "grilling": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/grilling",
         ".agents/skills/grilling"
-      ],
-      "installedTreeHash": "8d809eba0d8649c228d722bc8f46dd679e1319b8a524487a9fb377a4117cedc9"
+      ]
     },
     "jsdoc-annotation-specialist": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/jsdoc-annotation-specialist",
         ".agents/skills/jsdoc-annotation-specialist"
-      ],
-      "installedTreeHash": "7da2a1873e0ef10ef23191eec49e3d2ee415ca1f91073655d9d474549610b6df"
+      ]
     },
     "motion-evidence-review": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/motion-evidence-review",
         ".agents/skills/motion-evidence-review"
-      ],
-      "installedTreeHash": "0efad7902ca25a67a5d0b1a4ca05078f915967b995cd264d943f1d2a6a79b39f"
+      ]
     },
     "onepassword-secret-refs": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/onepassword-secret-refs",
         ".agents/skills/onepassword-secret-refs"
-      ],
-      "installedTreeHash": "9d500c9ffd716b0b91338d6c867ab162cf1e1e6ed3f08b48b0a5e7a3bbe6281e"
+      ]
     },
     "ontology-architect": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/ontology-architect",
         ".agents/skills/ontology-architect"
-      ],
-      "installedTreeHash": "f4cebaaa810ecbc8cece5d383616645ae891ca5006dc7fdd4f0c000cd014145e"
+      ]
     },
     "ontology-conceptualizer": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/ontology-conceptualizer",
         ".agents/skills/ontology-conceptualizer"
-      ],
-      "installedTreeHash": "702ba3d74482fb1041761f8b2ed828fbca2ac6f8a1089e0d9d2e96b51baf480c"
+      ]
     },
     "ontology-curator": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/ontology-curator",
         ".agents/skills/ontology-curator"
-      ],
-      "installedTreeHash": "4192ecc0a7475de037759647e5de0b6172fda93fb8f4a9b665db5721953d6fdf"
+      ]
     },
     "ontology-foundational-auditor": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/ontology-foundational-auditor",
         ".agents/skills/ontology-foundational-auditor"
-      ],
-      "installedTreeHash": "e9888190ad8701caedfc368a0a28e8c98c33178311a9b8baffe523a0ed97f370"
+      ]
     },
     "ontology-mapper": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/ontology-mapper",
         ".agents/skills/ontology-mapper"
-      ],
-      "installedTreeHash": "97c0f4bc6cdf3595090d838c5648dc8847e2648be87acf0f06ba57041741e58d"
+      ]
     },
     "ontology-requirements": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/ontology-requirements",
         ".agents/skills/ontology-requirements"
-      ],
-      "installedTreeHash": "e978dd3ff137d18d85571b15ddbdc2c0f21a2704b84d90b1306b5b0359bb6400"
+      ]
     },
     "ontology-scout": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/ontology-scout",
         ".agents/skills/ontology-scout"
-      ],
-      "installedTreeHash": "78a7a70f4c6660f9a7e6e013fead5819bc957c451548b91f7e9661e8e56cd201"
+      ]
     },
     "ontology-validator": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/ontology-validator",
         ".agents/skills/ontology-validator"
-      ],
-      "installedTreeHash": "17a30d27f9045645fce9c54ad11a9af0790cdf658a6fd1d6f6f6bc5bd95684f5"
+      ]
     },
     "operator-handoff": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/operator-handoff",
         ".agents/skills/operator-handoff"
-      ],
-      "installedTreeHash": "34d18518161ee579de24ea989f9006543150e21038e6cab7fbabd6bb44890d8b"
+      ]
     },
     "orchestrate": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/orchestrate",
         ".agents/skills/orchestrate"
-      ],
-      "installedTreeHash": "e0413903c8959ea7c0e0adb24e1354c6a3b86301842bd2c7bd40ae2230f8649f"
+      ]
     },
     "plasma-sensitive-entry": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/plasma-sensitive-entry",
         ".agents/skills/plasma-sensitive-entry"
-      ],
-      "installedTreeHash": "0de8bc73d4f82c4d398f57caf5f72717a230f0070142b9dbd44bf22718681ebf"
+      ]
     },
     "portless": {
       "_tag": "vendored",
@@ -337,40 +313,35 @@
       "installedTargets": [
         ".claude/skills/qa-session-ops",
         ".agents/skills/qa-session-ops"
-      ],
-      "installedTreeHash": "04e92a41ae1bceea06a08fc1d390d7dc601cc2b5ddf932f9673abfa31a30e27d"
+      ]
     },
     "quality-review-fix-loop": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/quality-review-fix-loop",
         ".agents/skills/quality-review-fix-loop"
-      ],
-      "installedTreeHash": "b501a8de1c7f6c5c88d629d0fcfde526360c7dd13bc40190ed10a3b2a6ce39db"
+      ]
     },
     "reflect": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/reflect",
         ".agents/skills/reflect"
-      ],
-      "installedTreeHash": "ae2988a5c9212d5c7d459a71dd71cdc5190130330205429f4358dbd8e752b1d3"
+      ]
     },
     "remote-development-agents": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/remote-development-agents",
         ".agents/skills/remote-development-agents"
-      ],
-      "installedTreeHash": "ac1514428e40e1268ab01ea7fec920d0ff2f500200e0b9827294dfe97cd5921d"
+      ]
     },
     "schema-first-development": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/schema-first-development",
         ".agents/skills/schema-first-development"
-      ],
-      "installedTreeHash": "f612f0dfca9f6152275c0c908175e345c55e909bc433e92dc156b1df494237bf"
+      ]
     },
     "shadcn": {
       "_tag": "vendored",
@@ -540,8 +511,7 @@
       "installedTargets": [
         ".claude/skills/sparql-expert",
         ".agents/skills/sparql-expert"
-      ],
-      "installedTreeHash": "5e4d80233fac145e37e6ab8339d57e005b125f551dd1b513087119cede5aebf3"
+      ]
     },
     "teach": {
       "_tag": "vendored",
@@ -683,24 +653,21 @@
       "installedTargets": [
         ".claude/skills/unslop",
         ".agents/skills/unslop"
-      ],
-      "installedTreeHash": "94f4301d065429357b097b195bf4275660c0faab54dbc6cd97ef2f9620e143d4"
+      ]
     },
     "update-harnesses": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/update-harnesses",
         ".agents/skills/update-harnesses"
-      ],
-      "installedTreeHash": "8fbd57f4ee048f5bc3957051deca09181d754fbb6d3cd5e085e9152d9780de3a"
+      ]
     },
     "yeet": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/yeet",
         ".agents/skills/yeet"
-      ],
-      "installedTreeHash": "a8d83bd1c4a97fb6932c249ac3de0b9045024417675d712d29120b9099c94b2f"
+      ]
     }
   }
 }
