@@ -19,6 +19,7 @@ import * as Redacted from "effect/Redacted";
 import * as Str from "effect/String";
 import { FakeHttp } from "./support/FakeHttp.ts";
 import { World, worldContext } from "./support/FakeWorld.ts";
+import { generatePrivateKeyPem } from "./support/Pem.ts";
 import type { FakeAnswer, RecordedRequest } from "./support/FakeHttp.ts";
 
 const runner = (id: number, busy: boolean) =>
@@ -61,21 +62,6 @@ const responses: Readonly<Record<string, FakeAnswer>> = {
 const route = (request: RecordedRequest): O.Option<FakeAnswer> =>
   O.fromUndefinedOr(responses[`${request.method} ${request.url.pathname}`]);
 
-// The key is generated per run; the PEM label is assembled so no key-shaped literal sits in source.
-const pemLabel = A.join(["PRIVATE", "KEY"], " ");
-
-const generatePem = Effect.gen(function* () {
-  const pair = yield* Effect.promise(() =>
-    crypto.subtle.generateKey(
-      { name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" },
-      true,
-      ["sign", "verify"]
-    )
-  );
-  const der = yield* Effect.promise(() => crypto.subtle.exportKey("pkcs8", pair.privateKey));
-  return `-----BEGIN ${pemLabel}-----\n${Base64.encode(new Uint8Array(der))}\n-----END ${pemLabel}-----\n`;
-});
-
 const options = GitHubLiveOptions.make({
   app: appParameterNames("/beep-ci"),
   apiBaseUrl: "https://api.github.com",
@@ -95,7 +81,7 @@ describe("live GitHub layers over distilled", () => {
   it.effect("mint an installation token from the SSM-held App key, then drive the runner API", () =>
     Effect.gen(function* () {
       const world = new World();
-      const pem = yield* generatePem;
+      const pem = yield* generatePrivateKeyPem;
       world.ssm["/beep-ci/app/github_app_id"] = { value: "123456", modified: 0, tags: {} };
       world.ssm["/beep-ci/app/github_app_key_base64"] = { value: Base64.encode(pem), modified: 0, tags: {} };
       const http = new FakeHttp(route);

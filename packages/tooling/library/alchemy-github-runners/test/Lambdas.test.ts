@@ -146,6 +146,30 @@ describe("Lambda entry points", () => {
     })
   );
 
+  it.effect("termination watcher reports a deregister retry past the busy cap as a batch item failure", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      const [instanceId = ""] = world.launch(1, {
+        "ghr:environment": "beep-ci-heavy",
+        "ghr:Owner": "beep-effect",
+        "ghr:Type": "Org",
+      });
+      world.githubRunners.push(
+        SelfHostedRunner.make({ id: 7, name: `beep-ci-${instanceId}`, status: "online", busy: true })
+      );
+      world.busyOnDelete = [7];
+      const retry = yield* sqsEvent([
+        { instanceId, owner: "beep-effect", runnerType: "Org", runnerId: 0, retryCount: 1 },
+        { instanceId, owner: "beep-effect", runnerType: "Org", runnerId: 0, retryCount: 4 },
+      ]);
+      const out = yield* WatcherLambda.definition
+        .run(watcherConfig, retry)
+        .pipe(Effect.provideContext(worldContext(world)));
+      expect(out).toStrictEqual({ batchItemFailures: [{ itemIdentifier: "m-1" }] });
+      expect(A.map(world.sent, (sent) => sent.queueUrl)).toStrictEqual(["https://sqs/deregister-retry"]);
+    })
+  );
+
   it.effect("webhook verifies a base64 function-URL body with mixed-case headers", () =>
     Effect.gen(function* () {
       const world = new World();
