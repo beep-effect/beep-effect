@@ -60,7 +60,8 @@ import type { RunnerLossFailedJob } from "./RunnerLossRerun.ts";
 
 const $I = $RepoCliId.create("commands/Ci/CiRerunRunnerLoss");
 
-const JOBS_PER_PAGE = 100;
+// GitHub answers 502 to a 100-job page of a rerun attempt's listing; pages of 30 succeed.
+const JOBS_PER_PAGE = 30;
 const ANNOTATIONS_PER_PAGE = 100;
 // Ten pages bound the loop; a failed heavy job carries one or two annotations.
 const ANNOTATIONS_MAX_PAGES = 10;
