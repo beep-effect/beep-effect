@@ -45,7 +45,13 @@ Before marking the packet closed (and `status` → `completed-retained` / `compl
 2. Run `bun run beep lint reflection-artifacts` (this packet has
    `reflectionRequired: true`, so a missing/invalid reflection blocks closeout).
 3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase
-   statuses + `initiative.status`.
+   statuses. Once the final PR is open, run
+   `bun run beep goals set-status <slug> completed-retained`: it writes
+   `closeout` naming that PR with the matching `initiative.status`, and the
+   commit ships in the final PR. After the merge,
+   `bun run beep goals completion refresh --slug <slug>` must print verified;
+   name any red required check in a committed decision file
+   (`redAttribution`).
 
 ## Execution Notes
 

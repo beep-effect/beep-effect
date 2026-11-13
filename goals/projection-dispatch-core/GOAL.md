@@ -68,5 +68,8 @@ git diff --check -- goals/projection-dispatch-core
 Stop on a failed prerequisite, unprovable atomic/recovery boundary, auth scope
 that requires trusting the client or inventing a principal, or any non-goal.
 
-Done only when the matrix is green and the work ships as a PR driven to
-mergeable through Yeet; otherwise report blockers with file/command evidence.
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug projection-dispatch-core` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/projection-dispatch-core/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

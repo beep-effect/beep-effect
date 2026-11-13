@@ -70,8 +70,8 @@ git diff --check -- goals/text-knowledge-stack-rebuild
 bun run beep goals doctor
 ```
 
-Ship proposedCloseout, the gating `yeet-verdict` and the reflection in the
-final PR. After merge, `bun run beep goals completion refresh --slug text-knowledge-stack-rebuild`,
-then `bun run beep goals set-status text-knowledge-stack-rebuild <status>` in a
-packet-state PR. Done only once it merges and this passes:
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug text-knowledge-stack-rebuild` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
 `git show origin/main:goals/text-knowledge-stack-rebuild/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

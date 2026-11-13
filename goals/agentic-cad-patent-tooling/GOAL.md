@@ -1,8 +1,6 @@
 # GOAL: land the CAD + reference-numeral graph capability
 
-Repo root: the current working directory — the `beep-effect` checkout you are
-running in. Do not assume an absolute path; several checkouts exist. All paths
-below are repo-relative.
+Repo root: the current `beep-effect` checkout; all paths below are repo-relative.
 
 Outcome: `apps/professional-desktop` can open the drawings a matter already
 has, and the reference-numeral / figure graph is a queryable part of the
@@ -75,3 +73,9 @@ Stop and report instead of improvising when:
 - A provider's terms are incompatible with the matter's recorded policy.
 - Verification needs unnamed credentials, cost, or destructive side effects.
 - The same blocker repeats after reasonable investigation.
+
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug agentic-cad-patent-tooling` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/agentic-cad-patent-tooling/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

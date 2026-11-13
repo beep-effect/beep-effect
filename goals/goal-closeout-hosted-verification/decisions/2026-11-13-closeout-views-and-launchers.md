@@ -1,0 +1,13 @@
+---
+title: "Closeout views keep their version tags; the launcher rewrite trims prose and covers PLAN.md checklists"
+date: 2026-11-13
+lane: "feat/goal-closeout-hosted-verification"
+reversal: "Bump session-open and goal-explain to v2 and update lane-cockpit, list every closeout, restore the trimmed prose and the old PLAN.md step 3 text."
+---
+
+Agent decision (`research/design-pr-a.md` DN-19, DN-21), with critic fixes applied.
+
+- DN-19: `session-open/v1` and `goal-explain/v1` keep their version tags while `GoalCloseoutView` is rekeyed on `closeout`. lane-cockpit decodes the session envelope and ignores `goalCloseouts`; nothing else decodes the view. `readGoalCloseoutViews`, used by `session open` and the SessionStart hook, lists only closeouts whose stored receipt is not verified, or whose final merged in the last 28 days. `goals explain` keeps its single-packet view unfiltered. Unfiltered, the session view would print a line and read the receipt store for every committed closeout. The `closeoutChecks` key added to `yeet-retire-sweep-report/v2` follows the same rule.
+- DN-21: the GOAL.md rewrite also trims unrelated prose in launchers that overflow 4000 characters, including the T762 "Stop and report before changing public API" paragraph, which contradicts Autonomy. The same pass rewrites the Bootstrap closeout checklist's step 3 in every active or paused PLAN.md (26 verbatim copies at base) to the one-PR text. It also hand-edits the other live root prose of those packets that still prescribes `proposedCloseout` or a separate adoption PR (4 PLAN.md, 4 SPEC.md and 2 other files at base). After S10 a raw `proposedCloseout` key is a blocking `manifest-invalid`, so an agent that followed the old step 3 would turn its own packet red. Generated blocks, `decisions/`, `history/`, `research/`, `data/` and completed or superseded packets keep their bytes, judged by their status on `origin/main` after each merge of it, not at base: a packet `main` closes while PR A is open keeps `main`'s bytes. One exception to S11's prose-only scope: `completionGate.statement` in the two paused turborepo manifests (turborepo-cache-trust-observability, turborepo-quality-cache-adoption) prescribed `proposedCloseout` and a separate adoption PR, and the census flagged both, so they now name the one-PR route; neither packet has a closeout receipt, so the digest change costs nothing. `goals/_template/` and `goals/README.md` ride the same PR. The Codex packet generators do not change. The rewrite script is idempotent and runs again after the last `origin/main` merge, before final-check.
+
+Reverse: bump both tags to v2 and update lane-cockpit, list every closeout again, restore the trimmed prose, and restore the old PLAN.md step 3 text.

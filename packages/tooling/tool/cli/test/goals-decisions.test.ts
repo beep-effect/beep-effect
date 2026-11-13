@@ -2,23 +2,31 @@ import { collectManifestProjectionRows } from "@beep/repo-cli/commands/Goals/Man
 import {
   GOAL_DECISION_TARGETS,
   GoalDecision,
+  GoalDecisionAddInput,
+  GoalDecisionLog,
+  GoalDecisionLogLive,
+  GoalOperatorRuling,
   GoalPacketRecord,
+  GoalRedAttributionBlock,
   goalDecisionLogReport,
   goalPacketFindings,
   goalsCommand,
   makeGoalPacketFilesystemReader,
   parseGoalDecision,
   renderGoalDecisionBlock,
+  runGoalsDecisionsAdd,
   spliceGoalDecisionBlock,
 } from "@beep/repo-cli/test/Goals";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
@@ -59,6 +67,32 @@ const VALID_FILE = A.join(
   "\n"
 );
 
+const RED_ATTRIBUTION = [
+  "redAttribution:",
+  "  finalPullRequest: 2966",
+  "  reds:",
+  '    - { context: "Heavy / Check", attribution: inherited, fixPullRequest: 2994 }',
+  '    - { context: "Heavy / Test Integration", attribution: introduced, fixPullRequest: 2995 }',
+];
+
+const claimFile = (claim: ReadonlyArray<string>, extra: ReadonlyArray<string> = []) =>
+  A.join(
+    [
+      "---",
+      'title: "Final #2966 merged over two Heavy checks"',
+      "date: 2026-11-14",
+      'lane: "feat/goal-closeout-hosted-verification"',
+      'reversal: "Delete this file; goals completion refresh reports #2966 unsatisfied again."',
+      ...extra,
+      ...claim,
+      "---",
+      "",
+      "Evidence: run URLs.",
+      "",
+    ],
+    "\n"
+  );
+
 describe("goals decisions projection", () => {
   it.effect("renders entries oldest first and keeps the block deterministic", () =>
     Effect.sync(() => {
@@ -79,6 +113,64 @@ describe("goals decisions projection", () => {
       assertTrue(Str.startsWith("<!-- beep:decisions:begin -->")(block));
       assertTrue(Str.endsWith("<!-- beep:decisions:end -->")(block));
       expect(renderGoalDecisionBlock("demo", SPEC_TARGET, [])).toContain("_No decision files yet._");
+    })
+  );
+
+  it.effect("renders a decision's attributed reds and operator ruling after its body", () =>
+    Effect.sync(() => {
+      const claims = GoalDecision.make({
+        file: "2026-11-14-final-merged-over-reds.md",
+        frontmatter: {
+          title: "Final #2966 merged over two Heavy checks",
+          date: "2026-11-14",
+          kind: "decision",
+          reversal: "Delete this file.",
+          lane: "feat/x",
+          redAttribution: {
+            finalPullRequest: 2966,
+            reds: [
+              { context: "Heavy / Check", attribution: "inherited", fixPullRequest: 2994 },
+              { context: "Heavy / Test Integration", attribution: "introduced", fixPullRequest: 2995 },
+            ],
+          },
+          operatorRuling: { finalPullRequest: 2966 },
+        },
+        body: "Evidence: run URLs.",
+      });
+      const rulingOnly = GoalDecision.make({
+        file: "2026-11-14-operator-closes-2080.md",
+        frontmatter: {
+          title: "Operator closes #2080",
+          date: "2026-11-14",
+          kind: "decision",
+          reversal: "Delete this file.",
+          operatorRuling: { finalPullRequest: 2080 },
+        },
+        body: "",
+      });
+      const lines = Str.split(renderGoalDecisionBlock("demo", SPEC_TARGET, [claims, rulingOnly]), "\n");
+      const at = (line: string) => O.getOrThrow(A.findFirstIndex(lines, (candidate) => candidate === line));
+      const attributed =
+        "Attributed reds for #2966: Heavy / Check (inherited, fix #2994); Heavy / Test Integration (introduced, fix #2995)";
+      expect(at("Evidence: run URLs.")).toBeLessThan(at(attributed));
+      expect(at(attributed)).toBeLessThan(at("Operator ruling closes #2966"));
+      expect(at("Operator ruling closes #2966")).toBeLessThan(at("Lane feat/x"));
+      expect(lines[at(attributed) + 1]).toBe("");
+      // A ruling with no body and no attribution sits between the heading and the Reverse line.
+      const rulingHeading = at("### Operator closes #2080, 2026-11-14");
+      expect(A.drop(lines, rulingHeading)).toEqual([
+        "### Operator closes #2080, 2026-11-14",
+        "",
+        "Operator ruling closes #2080",
+        "",
+        "Reverse: Delete this file.",
+        "",
+        "<!-- beep:decisions:end -->",
+      ]);
+      // A decision without claims renders no claim lines.
+      const plain = renderGoalDecisionBlock("demo", SPEC_TARGET, [decision("2026-11-05-a.md", "2026-11-05", "Plain")]);
+      expect(plain).not.toContain("Attributed reds");
+      expect(plain).not.toContain("Operator ruling");
     })
   );
 
@@ -207,6 +299,130 @@ describe("goals decisions projection", () => {
         expect(ok.success.frontmatter.kind).toBe("decision");
         expect(ok.success.frontmatter.pullRequest).toBe(2700);
         expect(ok.success.body).toBe("Existing Decision Log bodies stay frozen above the generated block.");
+        expect(ok.success.frontmatter.redAttribution).toBeUndefined();
+        expect(ok.success.frontmatter.operatorRuling).toBeUndefined();
+      }
+    })
+  );
+
+  it.effect("accepts redAttribution and operatorRuling blocks on a decision", () =>
+    Effect.gen(function* () {
+      const attributed = yield* parseGoalDecision("2026-11-14-final-merged-over-reds.md", claimFile(RED_ATTRIBUTION));
+      attributed.pipe(Result.isSuccess, assertTrue);
+      if (Result.isSuccess(attributed)) {
+        expect(attributed.success.frontmatter.kind).toBe("decision");
+        expect(attributed.success.frontmatter.redAttribution).toEqual(
+          GoalRedAttributionBlock.make({
+            finalPullRequest: 2966,
+            reds: [
+              { context: "Heavy / Check", attribution: "inherited", fixPullRequest: 2994 },
+              { context: "Heavy / Test Integration", attribution: "introduced", fixPullRequest: 2995 },
+            ],
+          })
+        );
+        expect(attributed.success.body).toBe("Evidence: run URLs.");
+      }
+      const blockStyle = yield* parseGoalDecision(
+        "2026-11-14-final-merged-over-reds.md",
+        claimFile(
+          [
+            "redAttribution:",
+            "  finalPullRequest: 2963",
+            "  reds:",
+            "    - context: Heavy / Docgen",
+            "      attribution: mixed",
+            "      fixPullRequest: 3001",
+          ],
+          ["kind: decision"]
+        )
+      );
+      blockStyle.pipe(Result.isSuccess, assertTrue);
+      if (Result.isSuccess(blockStyle)) {
+        expect(blockStyle.success.frontmatter.redAttribution?.reds[0].attribution).toBe("mixed");
+      }
+      const ruling = yield* parseGoalDecision(
+        "2026-11-14-final-merged-over-reds.md",
+        claimFile(["operatorRuling:", "  finalPullRequest: 2080"])
+      );
+      ruling.pipe(Result.isSuccess, assertTrue);
+      if (Result.isSuccess(ruling)) {
+        expect(ruling.success.frontmatter.operatorRuling).toEqual(GoalOperatorRuling.make({ finalPullRequest: 2080 }));
+        expect(ruling.success.frontmatter.redAttribution).toBeUndefined();
+      }
+      const both = yield* parseGoalDecision(
+        "2026-11-14-final-merged-over-reds.md",
+        claimFile([...RED_ATTRIBUTION, "operatorRuling:", "  finalPullRequest: 2966"])
+      );
+      both.pipe(Result.isSuccess, assertTrue);
+    })
+  );
+
+  it.effect("rejects claim blocks on a checkpoint, misspelt claim keys and malformed attributions", () =>
+    Effect.gen(function* () {
+      const rejected = Effect.fnUntraced(function* (lines: ReadonlyArray<string>, extra: ReadonlyArray<string> = []) {
+        const parsed = yield* parseGoalDecision("2026-11-14-final-merged-over-reds.md", claimFile(lines, extra));
+        parsed.pipe(Result.isFailure, assertTrue);
+        return Result.isFailure(parsed) ? parsed.failure.message : "";
+      });
+      const checkpointRed = yield* rejected(RED_ATTRIBUTION, ["kind: checkpoint"]);
+      expect(checkpointRed).toContain("does not decode as GoalDecisionFrontmatter");
+      expect(checkpointRed).not.toContain("outside GoalDecisionFrontmatter");
+      expect(checkpointRed).toContain("allowed only on kind: decision");
+      const checkpointRuling = yield* rejected(["operatorRuling:", "  finalPullRequest: 2080"], ["kind: checkpoint"]);
+      expect(checkpointRuling).toContain("allowed only on kind: decision");
+
+      const misspeltBlock = yield* rejected(["redAttributions:", "  finalPullRequest: 2966"]);
+      expect(misspeltBlock).toContain("outside GoalDecisionFrontmatter: redAttributions");
+      expect(misspeltBlock).toContain("redAttribution, operatorRuling");
+      const misspeltNested = yield* rejected([
+        "redAttribution:",
+        "  finalPullRequest: 2966",
+        "  reds:",
+        '    - { context: "Heavy / Check", attribution: inherited, fixPR: 2994 }',
+      ]);
+      expect(misspeltNested).toContain("outside GoalDecisionFrontmatter: redAttribution.reds.0.fixPR");
+      const misspeltRuling = yield* rejected(["operatorRuling:", "  final: 2080"]);
+      expect(misspeltRuling).toContain("outside GoalDecisionFrontmatter: operatorRuling.final");
+
+      const duplicate = yield* rejected([
+        "redAttribution:",
+        "  finalPullRequest: 2966",
+        "  reds:",
+        '    - { context: "Heavy / Check", attribution: inherited, fixPullRequest: 2994 }',
+        '    - { context: "Heavy / Check", attribution: mixed, fixPullRequest: 2995 }',
+      ]);
+      expect(duplicate).toContain("Each red context may be attributed only once per block");
+      const fixIsFinal = yield* rejected([
+        "redAttribution:",
+        "  finalPullRequest: 2966",
+        "  reds:",
+        '    - { context: "Heavy / Check", attribution: inherited, fixPullRequest: 2966 }',
+      ]);
+      expect(fixIsFinal).toContain("must differ from the block's finalPullRequest");
+      for (const lines of [
+        [
+          "redAttribution:",
+          "  finalPullRequest: 2966",
+          "  reds:",
+          '    - { context: "Heavy / Check", attribution: unknown, fixPullRequest: 2994 }',
+        ],
+        ["redAttribution:", "  finalPullRequest: 2966", "  reds: []"],
+        [
+          "redAttribution:",
+          "  finalPullRequest: 0",
+          "  reds:",
+          '    - { context: "Heavy / Check", attribution: inherited, fixPullRequest: 2994 }',
+        ],
+        [
+          "redAttribution:",
+          "  finalPullRequest: 2966",
+          "  reds:",
+          '    - { context: "", attribution: inherited, fixPullRequest: 2994 }',
+        ],
+        ["operatorRuling:", "  finalPullRequest: -3"],
+      ]) {
+        const message = yield* rejected(lines);
+        expect(message).toContain("does not decode as GoalDecisionFrontmatter");
       }
     })
   );
@@ -336,6 +552,185 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("goals decisions command", (i
       expectReportedExit(invalid);
       const withInvalid = yield* goalPacketFindings(record, reader);
       expect(A.some(withInvalid.findings, (item) => item.key === "demo decision-file-invalid scratch.md")).toBe(true);
+    })
+  );
+
+  it.effect("add --final writes redAttribution and operatorRuling blocks that parse and project", () =>
+    Effect.gen(function* () {
+      yield* temporaryWorkingDirectory;
+      yield* writeProjectFile("goals/demo/SPEC.md", "# Demo\n\n## Decision log\n\nlegacy\n");
+      yield* writeProjectFile("goals/demo/README.md", "# Demo\n\nLifecycle: `active`\n");
+      yield* writeProjectFile("goals/demo/ops/manifest.json", "{}\n");
+      yield* runGoalsCommand([
+        "decisions",
+        "add",
+        "demo",
+        "--title",
+        "Final #2966 merged over two Heavy checks",
+        "--reversal",
+        "Delete this file; goals completion refresh reports #2966 unsatisfied again.",
+        "--body",
+        "Evidence: run URLs.",
+        "--lane",
+        "feat/goal-closeout-hosted-verification",
+        "--final",
+        "2966",
+        "--attribute-red",
+        "Heavy / Check=inherited#2994",
+        "--attribute-red",
+        "Heavy / Test Integration = introduced # 2995",
+        "--operator-ruling",
+        "--date",
+        "2026-11-14",
+      ]);
+      const name = "2026-11-14-final-2966-merged-over-two-heavy-checks.md";
+      const text = yield* readProjectFile(`goals/demo/decisions/${name}`);
+      expect(text).toContain(
+        A.join(
+          [
+            "redAttribution:",
+            "  finalPullRequest: 2966",
+            "  reds:",
+            '    - { context: "Heavy / Check", attribution: inherited, fixPullRequest: 2994 }',
+            '    - { context: "Heavy / Test Integration", attribution: introduced, fixPullRequest: 2995 }',
+            "operatorRuling:",
+            "  finalPullRequest: 2966",
+            "---",
+          ],
+          "\n"
+        )
+      );
+      const parsed = yield* parseGoalDecision(name, text);
+      parsed.pipe(Result.isSuccess, assertTrue);
+      if (Result.isSuccess(parsed)) {
+        expect(parsed.success.frontmatter.redAttribution).toEqual(
+          GoalRedAttributionBlock.make({
+            finalPullRequest: 2966,
+            reds: [
+              { context: "Heavy / Check", attribution: "inherited", fixPullRequest: 2994 },
+              { context: "Heavy / Test Integration", attribution: "introduced", fixPullRequest: 2995 },
+            ],
+          })
+        );
+        expect(parsed.success.frontmatter.operatorRuling).toEqual(GoalOperatorRuling.make({ finalPullRequest: 2966 }));
+      }
+      const spec = yield* readProjectFile("goals/demo/SPEC.md");
+      expect(spec).toContain(
+        "Attributed reds for #2966: Heavy / Check (inherited, fix #2994); Heavy / Test Integration (introduced, fix #2995)"
+      );
+      expect(spec).toContain("Operator ruling closes #2966");
+
+      // The context runs to the last "=", so it may itself carry "=" and "#"; a ruling may stand alone.
+      yield* runGoalsCommand([
+        "decisions",
+        "add",
+        "demo",
+        "--title",
+        "Shard red",
+        "--reversal",
+        "Delete this file.",
+        "--final",
+        "3001",
+        "--attribute-red",
+        "Shard=a #1=mixed#3002",
+        "--date",
+        "2026-11-14",
+      ]);
+      const shard = yield* readProjectFile("goals/demo/decisions/2026-11-14-shard-red.md");
+      expect(shard).toContain('    - { context: "Shard=a #1", attribution: mixed, fixPullRequest: 3002 }');
+      expect(shard).not.toContain("operatorRuling");
+      yield* runGoalsCommand([
+        "decisions",
+        "add",
+        "demo",
+        "--title",
+        "Operator closes #2080",
+        "--reversal",
+        "Delete this file.",
+        "--final",
+        "2080",
+        "--operator-ruling",
+        "--date",
+        "2026-11-14",
+      ]);
+      const closes = yield* readProjectFile("goals/demo/decisions/2026-11-14-operator-closes-2080.md");
+      expect(closes).toContain("operatorRuling:\n  finalPullRequest: 2080\n---");
+      expect(closes).not.toContain("redAttribution");
+      yield* runGoalsCommand(["decisions", "check", "--slug", "demo"]);
+    })
+  );
+
+  it.effect("add refuses malformed completion claims before writing anything", () =>
+    Effect.gen(function* () {
+      yield* temporaryWorkingDirectory;
+      yield* writeProjectFile("goals/demo/SPEC.md", "# Demo\n\n## Decision log\n\nlegacy\n");
+      yield* writeProjectFile("goals/demo/README.md", "# Demo\n\nLifecycle: `active`\n");
+      const services = yield* Layer.build(GoalDecisionLogLive);
+      const log = Context.get(services, GoalDecisionLog);
+      const refused = Effect.fnUntraced(function* (
+        claims: Partial<Pick<GoalDecisionAddInput, "final" | "attributeRed" | "operatorRuling" | "kind">>
+      ) {
+        const error = yield* runGoalsDecisionsAdd(
+          GoalDecisionAddInput.make({
+            slug: "demo",
+            title: "Claims",
+            reversal: "Delete this file.",
+            body: O.none(),
+            kind: O.none(),
+            lane: O.none(),
+            pullRequest: O.none(),
+            date: O.some("2026-11-14"),
+            topic: O.none(),
+            ...claims,
+          })
+        ).pipe(Effect.provideService(GoalDecisionLog, log), Effect.flip);
+        return P.hasProperty(error, "message") ? String(error.message) : String(error);
+      });
+      const final = O.some("2966");
+      const malformed = 'is not "<context>=<cause>#<fix PR>"';
+      const cases: ReadonlyArray<readonly [Parameters<typeof refused>[0], string]> = [
+        [{ attributeRed: ["Heavy / Check=inherited#2994"] }, "need --final <n>"],
+        [{ operatorRuling: true }, "need --final <n>"],
+        [{ final }, "--final needs --attribute-red or --operator-ruling"],
+        [{ final: O.some("abc"), operatorRuling: true }, '--final "abc" is not a positive integer'],
+        [{ final, attributeRed: ["Heavy / Check"] }, malformed],
+        [{ final, attributeRed: ["=inherited#2994"] }, malformed],
+        [{ final, attributeRed: ["Heavy / Check=inherited#0"] }, malformed],
+        [
+          { final, attributeRed: ["Heavy / Check=unknown#2994"] },
+          'cause "unknown" must be one of: inherited, introduced, mixed',
+        ],
+        [{ final, attributeRed: ["Heavy / Check=inherited#2966"] }, "must differ from the block's finalPullRequest"],
+        [
+          { final, attributeRed: ["Heavy / Check=inherited#2994", "Heavy / Check=mixed#2995"] },
+          "Each red context may be attributed only once per block",
+        ],
+        [{ final, operatorRuling: true, kind: O.some("checkpoint") }, "only a kind: decision file may carry"],
+      ];
+      for (const [claims, expected] of cases) {
+        const message = yield* refused(claims);
+        expect(message).toContain(expected);
+      }
+      const fs = yield* FileSystem.FileSystem;
+      const wrote = yield* fs.exists("goals/demo/decisions");
+      expect(wrote).toBe(false);
+      // The command line routes the same refusal.
+      const exit = yield* Effect.exit(
+        runGoalsCommand([
+          "decisions",
+          "add",
+          "demo",
+          "--title",
+          "Claims",
+          "--reversal",
+          "Delete this file.",
+          "--attribute-red",
+          "Heavy / Check=inherited#2994",
+          "--date",
+          "2026-11-14",
+        ])
+      );
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 

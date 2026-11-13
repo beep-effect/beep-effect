@@ -35,7 +35,7 @@ three of this packet's PRs are open at once; slices 1 to 3 are the first three.
 | 11 | `ci: switch Admission to the pinned binary after the pin bump` | PERIH-01 slice 3 | S | Heavy Admission in `check.yml` and `heavy-admit.yml` runs the binary without the workspace install; admission-to-Heavy start read on the scorecard; tested revert in the PR body. Workflow PR: cache-policy baseline re-record. | Slice 10 |
 | 12 | `chore(ci): queue-inclusive leg-width A/B harness for Test Unit` | HOST-08 | M | Hosted A/B under 1, 2 and 4+ concurrent PRs: push-to-Test-Unit p95 at most 9.5 min per run, runner-minutes beside it, no queued-job growth at the ceiling; the adopt-or-not result is a decision file. | Test Unit steady state (decision file); MEAS-04 (`certainty-scorecard`); ROUT-01 already met (landed in #3030; `hosted-setup-tax`) |
 
-The final PR of the goal carries the scorecard readings, `proposedCloseout` and the reflection; it may ride with
+The final PR of the goal carries the scorecard readings, the `closeout` record and the reflection; it may ride with
 slice 12 or follow it.
 
 ## Closeout Checklist
@@ -47,9 +47,13 @@ Before marking the packet closed:
    validate against `ReflectionFrontmatter`.
 2. Run `bun run beep lint reflection-artifacts`.
 3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase
-   statuses and a typed `proposedCloseout` with status `completed-retained`
-   and finalPullRequest. Keep `initiative.status` operative until completion
-   evidence verifies; do not close the external execution/session ledger from a proposal.
+   statuses. Once the final PR is open, run
+   `bun run beep goals set-status heavy-pool-diet completed-retained`: it writes
+   `closeout` naming that PR with the matching `initiative.status`, and the
+   commit ships in the final PR. After the merge,
+   `bun run beep goals completion refresh --slug heavy-pool-diet` must print verified;
+   name any red required check in a committed decision file
+   (`redAttribution`).
 
 ## Execution Notes
 

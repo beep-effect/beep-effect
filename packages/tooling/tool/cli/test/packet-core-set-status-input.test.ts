@@ -74,6 +74,31 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
       expectInputRejection(["demo"], "Usage: beep goals set-status")
     );
 
+    it.effect("rejects --adopt-merged without --final-pr before reading the packet or spawning gh", () =>
+      expectInputRejection(["demo", "completed-retained", "--adopt-merged"], "--adopt-merged binds the merged PR")
+    );
+
+    it.effect("rejects a --final-pr that is not a positive integer before reading the packet or spawning gh", () =>
+      Effect.gen(function* () {
+        yield* expectInputRejection(
+          ["demo", "completed-retained", "--final-pr", "0"],
+          '--final-pr "0" is not a positive integer'
+        );
+        yield* expectInputRejection(
+          ["demo", "completed-retained", "--final-pr", "#3150"],
+          '--final-pr "#3150" is not a positive integer'
+        );
+      })
+    );
+
+    it.effect("rejects --final-pr on a status other than completed-retained", () =>
+      expectInputRejection(["demo", "active", "--final-pr", "3150"], "active takes no final")
+    );
+
+    it.effect("rejects --final-pr and --adopt-merged in --migrate mode", () =>
+      expectInputRejection(["--migrate", "--final-pr", "3150", "--adopt-merged"], "--migrate binds no final")
+    );
+
     it.effect(
       "reports a slug with no goal packet directory",
       Effect.fnUntraced(function* () {

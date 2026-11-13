@@ -1,6 +1,7 @@
 import * as NodeURL from "node:url";
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
+import { GoalCloseoutCheck, GoalCloseoutChecker } from "@beep/repo-cli/commands/Goals/CloseoutCheck";
 import {
   CLAUDE_WORKTREES_RELATIVE_ROOT,
   restoreBeepMaterial,
@@ -11,6 +12,7 @@ import {
   WorktreeRemovalServiceLive,
   WorktreeResidueManifest,
 } from "@beep/repo-cli/commands/Worktree";
+import { GoalAttributedRedFact, GoalManifest } from "@beep/repo-cli/test/Goals";
 import {
   ProcessStatus,
   ProcessTable,
@@ -21,7 +23,11 @@ import {
 } from "@beep/repo-cli/test/RepoRun";
 import { GhPrView } from "@beep/repo-cli/test/SharedInternals";
 import {
+  checkTouchedCloseouts,
+  loadYeetInboxView,
   planRetire,
+  recordYeetLocalShardOutcome,
+  renderCloseoutChecks,
   renderRetireGate,
   renderRetirement,
   retireInvokingWorktree,
@@ -33,6 +39,7 @@ import {
   sweepAdoptionOwnCommitsArgs,
   withStoppedLaneJobs,
   YeetCommandError,
+  YeetLocalShardOutcome,
   YeetRetirePlan,
   YeetRetireSweepPlanJson,
   YeetRetireSweepReportJson,
@@ -64,6 +71,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
+import type { GoalCloseoutCheckOutcome } from "@beep/repo-cli/commands/Goals/CloseoutCheck";
 
 // `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
@@ -112,6 +120,8 @@ const encodePacketLifecycle = S.encodeEffect(
     })
   )
 );
+
+const encodeGoalManifestJson = S.encodeEffect(S.fromJsonString(GoalManifest));
 
 const encodePrFiles = S.encodeEffect(S.fromJsonString(S.Struct({ files: S.Array(S.Struct({ path: S.String })) })));
 
@@ -1646,6 +1656,212 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
       })
     )
   );
+
+  it.effect("checks the touched packets' committed closeouts after the sweep and keeps the clone inbox in step", () =>
+    withScratchRepo(({ repoRoot, lane, packetDir }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* fs.writeFileString(path.join(repoRoot, ".git", "info", "exclude"), ".beep/\n");
+        // One packet commits a closeout on main; another commits none, so it is never checked.
+        const completionGate = {
+          operator: "yeet",
+          requiresPullRequest: true,
+          requiresMergeable: true,
+          statement: "Ship.",
+          grandfathered: false,
+        } as const;
+        const manifests = [
+          [
+            "demo",
+            GoalManifest.make({
+              initiative: { id: "demo", status: "completed-retained" },
+              completionGate,
+              closeout: { status: "completed-retained", finalPullRequest: 7 },
+            }),
+          ],
+          ["plain", GoalManifest.make({ initiative: { id: "plain", status: "active" }, completionGate })],
+        ] as const;
+        for (const [slug, manifest] of manifests) {
+          const text = yield* encodeGoalManifestJson(manifest);
+          yield* fs.makeDirectory(path.join(lane, "goals", slug, "ops"), { recursive: true });
+          yield* fs.writeFileString(path.join(lane, "goals", slug, "ops", "manifest.json"), `${text}\n`);
+        }
+        yield* runGit(lane, ["add", "goals"]);
+        yield* runGit(lane, ["commit", "-m", "packets"]);
+        yield* runGit(lane, ["push", "origin", "claude/lane"]);
+        yield* runGit(lane, ["push", "origin", "claude/lane:main"]);
+        yield* runGit(repoRoot, ["fetch", "origin"]);
+        const tip = yield* runGitText(lane, ["rev-parse", "HEAD"]);
+        const prFiles = ["goals/demo/ops/manifest.json", "goals/plain/ops/manifest.json"];
+        // Rows an earlier sweep raised for finals main no longer binds: demo was rebound to #7, plain reopened.
+        for (const shard of ["goal-closeout:demo#6", "goal-closeout:plain#8"]) {
+          yield* recordYeetLocalShardOutcome(
+            repoRoot,
+            YeetLocalShardOutcome.make({ command: "refresh", exitCode: 1, headSha: "older-main", shard })
+          );
+        }
+        // The fixed checker answers for both slugs and records the claim scope; only the committed closeout reaches it.
+        const scopes: Array<string> = [];
+        const checkers = (outcome: GoalCloseoutCheckOutcome, reasons: ReadonlyArray<string> = []) => {
+          const checks = [
+            GoalCloseoutCheck.make({ packet: "demo", finalPullRequest: 7, outcome, reasons: [...reasons] }),
+            GoalCloseoutCheck.make({ packet: "plain", finalPullRequest: 8, outcome: "unverified" }),
+          ];
+          return Effect.provideService(GoalCloseoutChecker, {
+            check: (_root, slug, _manifest, scope) =>
+              Effect.sync(() => scopes.push(scope ?? "checkout")).pipe(
+                Effect.as(A.findFirst(checks, (check) => check.packet === slug))
+              ),
+          });
+        };
+        const rowsFor = (shard: string) =>
+          Effect.map(loadYeetInboxView(repoRoot), (view) =>
+            A.filter(
+              view.entries,
+              (entry) => entry.row.kind === "local-shard-failed" && entry.row.capsule.shard === shard
+            )
+          );
+        const closeoutRows = rowsFor("goal-closeout:demo#7");
+        const ackedFor = (shard: string) =>
+          Effect.map(
+            rowsFor(shard),
+            A.map((entry) => entry.ack.acked)
+          );
+        const acked = ackedFor("goal-closeout:demo#7");
+
+        // --plan classifies nothing and writes no row.
+        const planOutput = yield* captureOutput(
+          withCwd(lane, sweep(packetDir, { plan: true })).pipe(
+            Effect.provideServiceEffect(ChildProcessSpawner.ChildProcessSpawner, ghSpawner(tip, "MERGED", prFiles)),
+            checkers("unverified", ["unattributed red: Lint"])
+          )
+        );
+        expect(planOutput).not.toContain("[yeet] P0 closeout");
+        const beforeRun = yield* closeoutRows;
+        expect(beforeRun).toEqual([]);
+
+        // A blocking check raises one P0 row in the clone's inbox and says so; the sweep still succeeds.
+        const runOutput = yield* captureOutput(
+          withCwd(lane, sweep(packetDir, { json: true })).pipe(
+            Effect.provideServiceEffect(ChildProcessSpawner.ChildProcessSpawner, ghSpawner(tip, "MERGED", prFiles)),
+            checkers("unverified", ["unattributed red: Lint"])
+          )
+        );
+        const report = yield* YeetRetireSweepReportJson.decode(runOutput);
+        expect(A.map(report.closeoutChecks, (value) => [value.packet, value.outcome])).toEqual([
+          ["demo", "unverified"],
+        ]);
+        const exists = yield* fs.exists(lane);
+        expect(exists).toBe(false);
+        const mainSha = yield* runGitText(repoRoot, ["rev-parse", "origin/main"]);
+        const raised = yield* closeoutRows;
+        expect(A.map(raised, (entry) => [entry.row.severity, entry.ack.acked])).toEqual([["P0", false]]);
+        expect(
+          A.map(raised, (entry) => (entry.row.kind === "local-shard-failed" ? { ...entry.row.capsule } : null))
+        ).toEqual([
+          {
+            command: "bun run beep goals completion refresh --slug demo",
+            exitCode: 1,
+            headSha: mainSha,
+            shard: "goal-closeout:demo#7",
+          },
+        ]);
+        expect(renderCloseoutChecks(report.closeoutChecks)).toBe(
+          "[yeet] P0 closeout-unverified goals/demo #7: unattributed red: Lint; fix with a redAttribution or operatorRuling decision file on main"
+        );
+        // The sweep speaks for main, so it counts only the claims on origin/main.
+        expect(scopes).toEqual(["origin-main"]);
+        // The rows of finals main no longer binds are acknowledged: demo's #6 and plain's #8.
+        const superseded = yield* Effect.all([ackedFor("goal-closeout:demo#6"), ackedFor("goal-closeout:plain#8")]);
+        expect(superseded).toEqual([[true], [true]]);
+
+        // A transient check prints an advisory and leaves the row open.
+        const transient = yield* checkTouchedCloseouts(repoRoot, ["demo", "plain"], "origin/main").pipe(
+          checkers("transient", ["final #7 unreadable: the pull request read failed"])
+        );
+        expect(renderCloseoutChecks(transient)).toBe(
+          "[yeet] advisory completion-gate-unknown goals/demo #7: final #7 unreadable: the pull request read failed; rerun bun run beep goals completion refresh --slug demo once GitHub facts are readable"
+        );
+        const afterTransient = yield* acked;
+        expect(afterTransient).toEqual([false]);
+
+        // A verified check acknowledges the earlier row.
+        const verified = yield* checkTouchedCloseouts(repoRoot, ["demo"], "origin/main").pipe(checkers("verified"));
+        expect(renderCloseoutChecks(verified)).toBe("[yeet] closeout verified goals/demo #7");
+        const afterVerified = yield* acked;
+        expect(afterVerified).toEqual([true]);
+
+        // An unreadable main ref checks nothing.
+        const unreadable = yield* checkTouchedCloseouts(repoRoot, ["demo"], "origin/absent").pipe(
+          checkers("unverified")
+        );
+        expect(unreadable).toEqual([]);
+
+        // A touched slug with no manifest on main is neither checked nor reconciled.
+        const absent = yield* checkTouchedCloseouts(repoRoot, ["absent"], "origin/main").pipe(checkers("unverified"));
+        expect(absent).toEqual([]);
+
+        // An inbox the sweep cannot write is reported, and the check still returns.
+        yield* fs.remove(path.join(repoRoot, ".beep", "inbox"), { recursive: true });
+        yield* fs.writeFileString(path.join(repoRoot, ".beep", "inbox"), "not a directory\n");
+        const unwritable = yield* checkTouchedCloseouts(repoRoot, ["demo"], "origin/main").pipe(
+          checkers("unverified", ["unattributed red: Lint"])
+        );
+        expect(A.map(unwritable, (check) => check.outcome)).toEqual(["unverified"]);
+        const errors = yield* TestConsole.errorLines;
+        assertTrue(
+          A.some(errors, (line) =>
+            Str.startsWith("[yeet] closeout check goals/demo: could not update the closeout inbox row:")(String(line))
+          )
+        );
+      })
+    )
+  );
+
+  it("renders every closeout outcome on one line", () => {
+    const make = (
+      outcome: GoalCloseoutCheckOutcome,
+      extra: Partial<Pick<GoalCloseoutCheck, "attributedReds" | "reasons" | "rulingFile">> = {}
+    ) => GoalCloseoutCheck.make({ packet: "demo", finalPullRequest: 7, outcome, ...extra });
+    expect(renderCloseoutChecks([])).toBe("");
+    expect(
+      Str.split(
+        renderCloseoutChecks([
+          make("final-open", { reasons: ["final #7 open"] }),
+          make("beyond-window", { reasons: ["final #7 merged more than 28 days ago"] }),
+          make("operator-ruling", {
+            reasons: ["unattributed red: Lint"],
+            rulingFile: O.some("goals/demo/decisions/ruling.md"),
+          }),
+          make("operator-ruling"),
+          make("verified", {
+            attributedReds: [
+              GoalAttributedRedFact.make({
+                context: "Lint",
+                checkRunId: O.some(1),
+                conclusion: "failure",
+                observed: "red",
+                attribution: "inherited",
+                fixPullRequest: 9,
+                decisionFile: "goals/demo/decisions/red.md",
+                source: "origin-main",
+              }),
+            ],
+          }),
+          make("unverified"),
+        ]),
+        "\n"
+      )
+    ).toEqual([
+      "[yeet] closeout note goals/demo #7: final #7 open",
+      "[yeet] closeout note goals/demo #7: final #7 merged more than 28 days ago",
+      "[yeet] closeout goals/demo #7 closed by operator ruling goals/demo/decisions/ruling.md: unattributed red: Lint",
+      "[yeet] closeout goals/demo #7 closed by operator ruling unknown",
+      "[yeet] closeout verified goals/demo #7 (attributed: Lint (inherited, fix #9, goals/demo/decisions/red.md))",
+      "[yeet] P0 closeout-unverified goals/demo #7; fix with a redAttribution or operatorRuling decision file on main",
+    ]);
+  });
 
   it.effect("prints one decodable document in JSON mode for the plan and the run", () =>
     withScratchRepo(({ lane, tip, packetDir }) =>
