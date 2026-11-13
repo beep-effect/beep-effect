@@ -43,6 +43,8 @@ bun run beep yeet publish --stack-on <parent-pr> --message "type(scope): summary
    pre-committed head. The PR is created on the parent's branch, linked to
    the parent through the Stacks REST API, and gets the provenance footer,
    the `ready-for-heavy` label and the readiness monitor like any Yeet PR.
+   A layer always opens as a draft and needs no final-check receipt to open:
+   it has to exist before its parent merges. `yeet ready` flips it.
    Its title and body summary come from the layer's own commits.
 3. A refusal changes nothing. It names one of: `parent-not-open`,
    `parent-off-trunk`, `parent-stacked`, `parent-is-self`,

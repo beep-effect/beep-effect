@@ -309,6 +309,22 @@ Lane chore/yeet-delete-legacy-merge
 
 Reverse: Revert this PR; the legacy call returns behind BEEP_YEET_MERGE_ENDPOINT=legacy.
 
+### Open PRs ready at content-final; drafts opt-in and cheap-tier only, 2026-11-13
+
+Operator ruling 2026-11-13. A draft labelled ready-for-heavy ran the heavy matrix on every work-in-progress push: about 70 hosted jobs a run against a cap of 60, so draft pushes took runners from final PRs and delayed check results on main, and the review window started only at a later flip that sessions forgot.
+
+yeet publish and yeet open now open the pull request ready for review, labelled ready-for-heavy, and only when the head carries a passing yeet final-check receipt. The rule is the one yeet ready enforces at a flip (ReadyGate requireFinalCheck, with the ancestor refresh carry), asked before the push so a refusal leaves nothing on the remote. A branch whose pull request is already open is a fix push and needs no receipt to push; the push restarts the review window as before.
+
+Drafts are opt-in with --draft. A draft carries no ready-for-heavy label, so it gets the cheap hosted tier only; yeet ready applies the label when it flips the draft, and repairs a ready pull request that lacks it. The open mode is a three-value domain (ready, draft, draft-heavy). Yeet chooses draft-heavy itself in two cases a receipt cannot cover: a stack layer, which must exist before its parent merges, and a worker compute profile, whose final-check gates are hosted-only and so cannot pass before hosted CI has run.
+
+yeet open keeps its role as the route with no cheap gate, and can no longer bypass final-check: it needs the same receipt, where each gate constrained compute could not run is a recorded yeet final-check --skip gate=reason. The pull request body gets a Final check section naming the gates that ran and each skip, so the body records them without a hand-written list.
+
+No workflow file changed: heavy admission is decided by the label alone (heavy-admit.yml, check.yml admission job). The review window already anchors on the open of a pull request that was never a draft (ReviewWindow pr-opened anchor, covered by yeet-review-window tests).
+
+Lane feat/yeet-open-ready-at-final
+
+Reverse: restore draft default in publish/open and the AGENTS.md bullets
+
 ### How the pilot's kill criteria are measured, 2026-11-13
 
 The criteria in SPEC.md are sentences; the record gives each one a number a later session can read. Used: stacks in `GET /repos/{owner}/{repo}/stacks` created inside the clock on base main whose two layers each carry a lane's own change. Fewer than four in the fourteen days fires the first criterion, because two a week is a rate, not a floor for each week. Probe, test and acceptance stacks do not count, nor does a stack that was unstacked or closed with nothing merged. Wait: the minutes a review window was the only thing holding the stack, from every other gate criterion being met on both layers to the later window elapsing. A median above 40 minutes, two windows at the default length, fires the second. Time spent on hosted CI or on review fixes is not window wait: an ordinary pull request pays it too, and stack #3190 took 77 minutes with none of them spent on a window. Force-push: one stack that landed only after a lane rewrote a published branch, or after someone pressed Rebase stack for it, fires the third. The stack listing is the count of record, so a lane that forgets its row does not shrink the census.

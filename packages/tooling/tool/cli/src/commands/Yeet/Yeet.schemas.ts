@@ -10,7 +10,7 @@ import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { YeetProofTier } from "../../internal/repo-run/QualityScheduler.schemas.ts";
-import { DEFAULT_YEET_PACKET_DIR, YeetRunMode } from "./internal/Planner.schemas.ts";
+import { DEFAULT_YEET_PACKET_DIR, YeetPullRequestOpenMode, YeetRunMode } from "./internal/Planner.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/Yeet.schemas");
 
@@ -338,12 +338,15 @@ export class QualityIssueIndex extends S.Opaque<QualityIssueIndex, { readonly br
  * **Details**
  *
  * `hostedProof` is the `yeet open` route: publish pushes the committed HEAD and
- * opens or reuses its draft pull request without running any local gate, so
- * hosted CI is the only proof. `bodyFile` names Markdown that replaces the
+ * opens or reuses its pull request without running the cheap gates. `openAs`
+ * is how a pull request the run creates opens: `ready` (the default, which
+ * needs the head's passing final-check receipt), `draft` (`--draft`, cheap
+ * hosted tier only) or `draft-heavy` (chosen by Yeet for a worker compute
+ * profile). `bodyFile` names Markdown that replaces the
  * generated commit-log summary of a pull request the run creates; an existing
  * pull request keeps its body. `stackOn` is `--stack-on`: the open pull
  * request this branch publishes on as the upper layer of a two-layer native
- * stack. All three default when omitted.
+ * stack. All four default when omitted.
  *
  * **Example** (Construct run options)
  *
@@ -408,6 +411,7 @@ export class YeetRunOptions extends S.Opaque<YeetRunOptions, { readonly brand: u
     mode: YeetRunMode,
     monitor: S.Boolean,
     noEdit: S.Boolean,
+    openAs: YeetPullRequestOpenMode.pipe(S.withConstructorDefault(Effect.succeed("ready" as const))),
     packetDir: S.String,
     plan: S.Boolean,
     pr: S.Boolean,

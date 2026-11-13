@@ -208,6 +208,41 @@ const reviewLaneRowFields = {
 } satisfies S.Struct.Fields;
 
 /**
+ * How a pull request became ready for review.
+ *
+ * **Details**
+ *
+ * `flip` is `yeet ready` on a draft. `open` is a publish that opened the pull
+ * request ready, so it was never a draft and its open time is its ready time.
+ * The reviewer request reads this to decide whether the open may anchor a
+ * request when the timeline shows no ready event.
+ *
+ * **Example** (Recognize a ready open)
+ *
+ * ```ts
+ * import { ReviewLaneReadyTransition } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(ReviewLaneReadyTransition.is.open("open")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ReviewLaneReadyTransition = LiteralKit(["flip", "open"]).pipe(
+  $I.annoteSchema("ReviewLaneReadyTransition", {
+    description: "Whether a pull request became ready by a draft flip or by opening ready.",
+  })
+);
+
+/**
+ * How a pull request became ready for review.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ReviewLaneReadyTransition = typeof ReviewLaneReadyTransition.Type;
+
+/**
  * `yeet ready` flipped the pull request from draft to ready.
  *
  * **Details**
@@ -249,6 +284,11 @@ export class ReviewLaneFlipRow extends S.Opaque<ReviewLaneFlipRow, { readonly br
     // The pull request author when the flip could read it; the fold keeps the
     // author's own review submissions out of the rounds.
     author: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    // How the pull request became ready. Rows written before ready opens existed are flips.
+    transition: ReviewLaneReadyTransition.pipe(
+      S.withConstructorDefault(Effect.succeed("flip" as const)),
+      S.withDecodingDefaultKey(Effect.succeed("flip" as const))
+    ),
   }).pipe(
     $I.annoteSchema("ReviewLaneFlipRow", {
       description:

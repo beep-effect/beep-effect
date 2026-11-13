@@ -303,7 +303,7 @@ smoke.
 ## Routing work to the cloud
 
 Cloud lanes follow the pool doctrine in [`AGENTS.md`](../../AGENTS.md) and
-[agent-pools](./agent-pools.md). They land as draft PRs through Yeet like any
+[agent-pools](./agent-pools.md). They land as PRs through Yeet like any
 other lane; `claude --cloud` clones the pushed branch, so push before
 delegating. Credits and limits per vendor are account state, not repo state:
 check `Settings → Usage` on each Claude account and the Codex usage page before
