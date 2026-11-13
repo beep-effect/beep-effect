@@ -1828,7 +1828,15 @@ export class CiLaneTimingAttributionStat extends S.Opaque<
 ) {}
 
 /**
- * Shard pickup statistics used by the five-minute queue tripwire.
+ * Shard pickup statistics judged against the queue tripwire in force for the
+ * window.
+ *
+ * **Details**
+ *
+ * `tripwireSeconds` is the limit the window was judged against, chosen by the
+ * window's `--since`: 5m00s before 2026-11-13T00:00:00Z and 10m00s from then
+ * on, so an earlier admission document re-renders with the limit it was
+ * written under. `breached` means the pickup p95 is above that limit.
  *
  * **Example** (Describe an unavailable pickup population)
  *
@@ -1842,8 +1850,10 @@ export class CiLaneTimingAttributionStat extends S.Opaque<
  *   n: 0,
  *   p50Seconds: O.none(),
  *   p95Seconds: O.none(),
+ *   tripwireSeconds: 600,
  * })
- * console.log(stat.n)
+ * console.log(stat.tripwireSeconds)
+ * // 600
  * ```
  *
  * @category models
@@ -1856,9 +1866,11 @@ export class CiLaneTimingPickupStat extends S.Opaque<CiLaneTimingPickupStat, { r
     n: S.Int.check(S.isGreaterThanOrEqualTo(0)),
     p50Seconds: S.Option(NonNegativeTimingSeconds),
     p95Seconds: S.Option(NonNegativeTimingSeconds),
+    tripwireSeconds: NonNegativeTimingSeconds,
   }).pipe(
     $I.annoteSchema("CiLaneTimingPickupStat", {
-      description: "Nearest-rank shard pickup statistics and the greater-than-five-minute queue tripwire verdict.",
+      description:
+        "Nearest-rank shard pickup statistics and the queue tripwire verdict against the limit in force for the window.",
     })
   )
 ) {}
@@ -1956,7 +1968,40 @@ export class CiLaneTimingWindowReport extends S.Opaque<CiLaneTimingWindowReport,
 
 const CI_LANE_TIMING_RULESET_ID = 10_240_248;
 const CI_LANE_TIMING_CHARTER = Duration.minutes(20);
+// The shard pickup tripwire the census was built with: goals/ci-lane-economics/GOAL.md, breach above 5m00s.
 const CI_LANE_TIMING_QUEUE_TRIPWIRE = Duration.minutes(5);
+
+class CiLaneTimingQueueTripwireChange extends S.Opaque<
+  CiLaneTimingQueueTripwireChange,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    effectiveFrom: S.DateTimeUtc,
+    limit: S.Duration,
+  }).pipe(
+    $I.annoteSchema("CiLaneTimingQueueTripwireChange", {
+      description: "A shard pickup tripwire limit and the window start from which a census judges against it.",
+    })
+  )
+) {}
+
+// Every change to the tripwire, oldest first. A window is judged against the newest change effective at or before
+// its `--since`, so an earlier admission document re-renders with the limit it was written under.
+const CI_LANE_TIMING_QUEUE_TRIPWIRE_CHANGES: ReadonlyArray<CiLaneTimingQueueTripwireChange> = [
+  // Operator decision 2026-11-13 in goals/ci-lane-economics/decisions, "Shards overflow to the self-hosted pool
+  // only past a 10-minute hosted wait": the design admits shard pickup up to that threshold.
+  CiLaneTimingQueueTripwireChange.make({
+    effectiveFrom: DateTime.makeUnsafe("2026-11-13T00:00:00Z"),
+    limit: Duration.minutes(10),
+  }),
+];
+
+// The limit in force for a window starting at `since`; with no window, the newest limit.
+const queueTripwireFor = (since: O.Option<DateTime.Utc>): Duration.Duration =>
+  A.reduce(CI_LANE_TIMING_QUEUE_TRIPWIRE_CHANGES, CI_LANE_TIMING_QUEUE_TRIPWIRE, (limit, change) =>
+    O.exists(since, (start) => DateTime.isLessThan(start, change.effectiveFrom)) ? limit : change.limit
+  );
+
 // Repair decision 3, ruling 2: the orchestration doctrine admits at most six CI-active branches.
 const CI_LANE_TIMING_ADMITTED_BRANCH_CAP = 6;
 // GitHub lists at most 1000 workflow runs per query; a wider span has to be split before paging.
@@ -3210,15 +3255,19 @@ const timingAttributionStat = (
   });
 };
 
-const timingPickupStat = (rows: ReadonlyArray<CiLaneTimingPickupRow>): CiLaneTimingPickupStat => {
+const timingPickupStat = (
+  rows: ReadonlyArray<CiLaneTimingPickupRow>,
+  tripwire: Duration.Duration
+): CiLaneTimingPickupStat => {
   const pickups = A.map(rows, (row) => row.pickupSeconds);
   const p95Seconds = nearestRank(pickups, 0.95);
   return CiLaneTimingPickupStat.make({
-    breached: O.exists(p95Seconds, (seconds) => seconds > Duration.toSeconds(CI_LANE_TIMING_QUEUE_TRIPWIRE)),
+    breached: O.exists(p95Seconds, (seconds) => seconds > Duration.toSeconds(tripwire)),
     maxSeconds: A.last(A.sort(pickups, Order.Number)),
     n: A.length(pickups),
     p50Seconds: nearestRank(pickups, 0.5),
     p95Seconds,
+    tripwireSeconds: Duration.toSeconds(tripwire),
   });
 };
 
@@ -3255,6 +3304,7 @@ const reportFromRows = Effect.fn("Ci.reportFromLaneTimingWindowRows")(function* 
   requiredContextSet: HashSet.HashSet<string>,
   runCount: number,
   rows: ReadonlyArray<CiLaneTimingWindowRow>,
+  since: O.Option<DateTime.Utc>,
   rulesetVersion: O.Option<CiRulesetHistoryVersion> = O.none(),
   populationChanges: ReadonlyArray<CiRulesetPopulationChange> = ciRulesetPopulationChangesDefault,
   dayPeaks: ReadonlyArray<CiLaneTimingDayPeak> = ciLaneTimingDayPeaksDefault
@@ -3269,7 +3319,7 @@ const reportFromRows = Effect.fn("Ci.reportFromLaneTimingWindowRows")(function* 
     contextCount: HashSet.size(requiredContextSet),
     dayPeaks,
     laneStats: A.map(requiredContexts, (lane) => timingWindowStat(durationRows, lane)),
-    pickup: timingPickupStat(pickupRows),
+    pickup: timingPickupStat(pickupRows, queueTripwireFor(since)),
     populationChanges,
     requiredContexts,
     rulesetVersion,
@@ -3292,7 +3342,9 @@ const reportFromRows = Effect.fn("Ci.reportFromLaneTimingWindowRows")(function* 
  * set whose normalized cardinality is not a ratified population size. With no
  * ruleset version to look up, it accepts any count in the ratified table; the
  * windowed collector pins the exact count for the resolved version. The
- * per-day peak column is swept from the paired runs' in-flight bounds.
+ * per-day peak column is swept from the paired runs' in-flight bounds. The
+ * shard pickup tripwire is the limit in force at `since` (5m00s before
+ * 2026-11-13T00:00:00Z, 10m00s from then on); with no `since`, the newest.
  *
  * **Example** (Observe the fail-closed context assertion)
  *
@@ -3306,13 +3358,15 @@ const reportFromRows = Effect.fn("Ci.reportFromLaneTimingWindowRows")(function* 
  *
  * @param requiredContexts - Selected contexts read from ruleset `10240248`.
  * @param runs - Ordered workflow runs paired with isolated paginated job buffers.
+ * @param since - Start of the window the runs belong to, which chooses the shard pickup tripwire.
  * @returns The schema-classified census report, or a fail-closed cardinality error.
  * @category mapping
  * @since 0.0.0
  */
 export const buildCiLaneTimingWindowReport = Effect.fn("Ci.buildCiLaneTimingWindowReport")(function* (
   requiredContexts: ReadonlyArray<string>,
-  runs: ReadonlyArray<CiWorkflowWindowRunJobs>
+  runs: ReadonlyArray<CiWorkflowWindowRunJobs>,
+  since: O.Option<DateTime.Utc> = O.none()
 ): Effect.fn.Return<CiLaneTimingWindowReport, CiCommandError> {
   const requiredContextSet = HashSet.fromIterable(A.map(requiredContexts, normalizeRequiredLaneName));
   yield* assertRequiredContextCount(requiredContextSet);
@@ -3321,6 +3375,7 @@ export const buildCiLaneTimingWindowReport = Effect.fn("Ci.buildCiLaneTimingWind
     requiredContextSet,
     A.length(runs),
     rows,
+    since,
     O.none(),
     ciRulesetPopulationChangesDefault,
     ciLaneTimingDayPeaks(A.map(runs, (runJobs) => runJobs.run))
@@ -3367,6 +3422,7 @@ const collectCiLaneTimingWindowWithClient = Effect.fn("Ci.collectCiLaneTimingWin
     requiredContextSet,
     A.length(runs),
     collected.rows,
+    O.some(options.since),
     O.some(version),
     changes,
     ciLaneTimingDayPeaks(runs)
@@ -3782,7 +3838,7 @@ const renderQueueTripwire = (pickup: CiLaneTimingPickupStat): string =>
   O.match(pickup.p95Seconds, {
     onNone: () => "Queue tripwire: unavailable — no attempt-one shard pickup carried both timestamps.",
     onSome: (seconds) =>
-      `Queue tripwire: ${pickup.breached ? "Breach" : "Pass"} — shard pickup p95 ${roundedDuration(seconds)} ${pickup.breached ? ">" : "≤"} 5m00s (n=${pickup.n}).`,
+      `Queue tripwire: ${pickup.breached ? "Breach" : "Pass"} — shard pickup p95 ${roundedDuration(seconds)} ${pickup.breached ? ">" : "≤"} ${roundedDuration(pickup.tripwireSeconds)} (n=${pickup.n}).`,
   });
 
 /**
@@ -3795,7 +3851,8 @@ const renderQueueTripwire = (pickup: CiLaneTimingPickupStat): string =>
  * `Wait p50` and `Wait p95` before `P3 state`, and the state names each
  * breached measure (`Breach (wait)`, `Breach (duration, wait)`). Later attempts
  * remain a separate current-report-shaped table, and the shard-pickup tripwire
- * is a line outside every wall-duration percentile.
+ * is a line outside every wall-duration percentile that prints the limit in
+ * force for the window (5m00s or 10m00s).
  *
  * **Example** (Render report Markdown through the builder)
  *

@@ -807,75 +807,79 @@ describe("ci lane timing admission window", () => {
   it.effect("keeps effective spans, pickup, and excluded outcomes in separate schema populations", () =>
     Effect.gen(function* () {
       const run = windowRun();
-      const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
-        windowRunJobs(run, [
-          job({
-            completed_at: "2026-09-04T00:00:10Z",
-            created_at: "2026-09-04T00:00:00Z",
-            id: 1,
-            name: "Heavy / Check",
-            run_id: run.id,
-            started_at: "2026-09-04T00:00:00Z",
-          }),
-          job({ conclusion: "failure", id: 2, name: "Heavy / Docgen", run_id: run.id }),
-          job({ conclusion: "cancelled", id: 3, name: "Heavy / Doctest", run_id: run.id }),
-          job({ id: 4, name: "Knip", run_attempt: 2, run_id: run.id }),
-          job({
-            completed_at: "2026-09-04T00:00:00Z",
-            id: 11,
-            name: "Codegen Drift",
-            run_id: run.id,
-            started_at: "2026-09-04T00:00:10Z",
-          }),
-          job({
-            completed_at: "2026-09-04T00:12:00Z",
-            created_at: "2026-09-04T00:00:00Z",
-            id: 5,
-            name: "Lint (lint-a)",
-            run_id: run.id,
-            started_at: "2026-09-04T00:06:00Z",
-          }),
-          job({
-            completed_at: "2026-09-04T00:11:00Z",
-            created_at: "2026-09-04T00:00:00Z",
-            id: 6,
-            name: "Lint (lint-b)",
-            run_id: run.id,
-            started_at: "2026-09-04T00:07:00Z",
-          }),
-          job({
-            completed_at: "2026-09-04T00:16:00Z",
-            created_at: "2026-09-04T00:00:00Z",
-            id: 7,
-            name: "Lint",
-            run_id: run.id,
-            started_at: "2026-09-04T00:12:00Z",
-          }),
-          job({
-            completed_at: "2026-09-04T00:09:00Z",
-            created_at: "2026-09-04T00:00:00Z",
-            id: 8,
-            name: "Test Unit (repo-cli-1)",
-            run_id: run.id,
-            started_at: "2026-09-04T00:01:00Z",
-          }),
-          job({
-            completed_at: "2026-09-04T00:10:00Z",
-            created_at: "2026-09-04T00:00:00Z",
-            id: 9,
-            name: "Test Unit (unit-a)",
-            run_id: run.id,
-            started_at: "2026-09-04T00:02:00Z",
-          }),
-          job({
-            completed_at: "2026-09-04T00:13:00Z",
-            id: 10,
-            name: "Test Unit",
-            run_id: run.id,
-            started_at: "2026-09-04T00:11:00Z",
-          }),
-        ]),
-      ]);
+      const report = yield* buildCiLaneTimingWindowReport(
+        REQUIRED_CONTEXTS,
+        [
+          windowRunJobs(run, [
+            job({
+              completed_at: "2026-09-04T00:00:10Z",
+              created_at: "2026-09-04T00:00:00Z",
+              id: 1,
+              name: "Heavy / Check",
+              run_id: run.id,
+              started_at: "2026-09-04T00:00:00Z",
+            }),
+            job({ conclusion: "failure", id: 2, name: "Heavy / Docgen", run_id: run.id }),
+            job({ conclusion: "cancelled", id: 3, name: "Heavy / Doctest", run_id: run.id }),
+            job({ id: 4, name: "Knip", run_attempt: 2, run_id: run.id }),
+            job({
+              completed_at: "2026-09-04T00:00:00Z",
+              id: 11,
+              name: "Codegen Drift",
+              run_id: run.id,
+              started_at: "2026-09-04T00:00:10Z",
+            }),
+            job({
+              completed_at: "2026-09-04T00:12:00Z",
+              created_at: "2026-09-04T00:00:00Z",
+              id: 5,
+              name: "Lint (lint-a)",
+              run_id: run.id,
+              started_at: "2026-09-04T00:06:00Z",
+            }),
+            job({
+              completed_at: "2026-09-04T00:11:00Z",
+              created_at: "2026-09-04T00:00:00Z",
+              id: 6,
+              name: "Lint (lint-b)",
+              run_id: run.id,
+              started_at: "2026-09-04T00:07:00Z",
+            }),
+            job({
+              completed_at: "2026-09-04T00:16:00Z",
+              created_at: "2026-09-04T00:00:00Z",
+              id: 7,
+              name: "Lint",
+              run_id: run.id,
+              started_at: "2026-09-04T00:12:00Z",
+            }),
+            job({
+              completed_at: "2026-09-04T00:09:00Z",
+              created_at: "2026-09-04T00:00:00Z",
+              id: 8,
+              name: "Test Unit (repo-cli-1)",
+              run_id: run.id,
+              started_at: "2026-09-04T00:01:00Z",
+            }),
+            job({
+              completed_at: "2026-09-04T00:10:00Z",
+              created_at: "2026-09-04T00:00:00Z",
+              id: 9,
+              name: "Test Unit (unit-a)",
+              run_id: run.id,
+              started_at: "2026-09-04T00:02:00Z",
+            }),
+            job({
+              completed_at: "2026-09-04T00:13:00Z",
+              id: 10,
+              name: "Test Unit",
+              run_id: run.id,
+              started_at: "2026-09-04T00:11:00Z",
+            }),
+          ]),
+        ],
+        O.some(run.created_at)
+      );
 
       expect(report.contextCount).toBe(18);
       expect(laneStat(report, "Check").n).toBe(1);
@@ -1597,6 +1601,80 @@ describe("ci lane timing admission window", () => {
     );
   });
 
+  // goals/ci-lane-economics decision of 2026-11-13: the tripwire moves from 5m00s to 10m00s for windows that start
+  // on or after 2026-11-13T00:00:00Z.
+  describe("queue tripwire by window", () => {
+    // Both Lint shards are created at 00:00 and picked up `pickupMinutes` later, so the pickup p95 is that wait.
+    const pickupReport = (since: O.Option<DateTime.Utc>, pickupMinutes: number) => {
+      const run = windowRun({ created_at: DateTime.makeUnsafe("2026-11-13T00:00:00Z"), id: 700 });
+      const startedAt = `2026-11-13T00:${Str.padStart(2, "0")(`${pickupMinutes}`)}:00Z`;
+      return buildCiLaneTimingWindowReport(
+        REQUIRED_CONTEXTS,
+        [
+          windowRunJobs(run, [
+            job({
+              completed_at: "2026-11-13T00:15:00Z",
+              created_at: "2026-11-13T00:00:00Z",
+              id: 701,
+              name: "Lint (lint-a)",
+              run_id: run.id,
+              started_at: startedAt,
+            }),
+            job({
+              completed_at: "2026-11-13T00:15:00Z",
+              created_at: "2026-11-13T00:00:00Z",
+              id: 702,
+              name: "Lint (lint-b)",
+              run_id: run.id,
+              started_at: startedAt,
+            }),
+          ]),
+        ],
+        since
+      );
+    };
+
+    it.effect("judges a window starting just before 2026-11-13 against 5m00s", () =>
+      Effect.gen(function* () {
+        const report = yield* pickupReport(O.some(DateTime.makeUnsafe("2026-11-12T23:59:59Z")), 7);
+        expect(report.pickup.tripwireSeconds).toBe(300);
+        assertTrue(report.pickup.breached);
+        expect(renderCiLaneTimingWindowMarkdown(report)).toContain(
+          "Queue tripwire: Breach — shard pickup p95 7m00s > 5m00s (n=2)."
+        );
+      })
+    );
+
+    it.effect("judges a window starting exactly at 2026-11-13T00:00:00Z against 10m00s", () =>
+      Effect.gen(function* () {
+        const report = yield* pickupReport(O.some(DateTime.makeUnsafe("2026-11-13T00:00:00Z")), 7);
+        expect(report.pickup.tripwireSeconds).toBe(600);
+        assertFalse(report.pickup.breached);
+        expect(renderCiLaneTimingWindowMarkdown(report)).toContain(
+          "Queue tripwire: Pass — shard pickup p95 7m00s ≤ 10m00s (n=2)."
+        );
+      })
+    );
+
+    it.effect("breaches a later window only above 10m00s", () =>
+      Effect.gen(function* () {
+        const report = yield* pickupReport(O.some(DateTime.makeUnsafe("2026-11-14T00:00:00Z")), 11);
+        assertTrue(report.pickup.breached);
+        expect(renderCiLaneTimingWindowMarkdown(report)).toContain(
+          "Queue tripwire: Breach — shard pickup p95 11m00s > 10m00s (n=2)."
+        );
+      })
+    );
+
+    it.effect("uses the newest limit when the report is built without a window", () =>
+      Effect.gen(function* () {
+        const report = yield* pickupReport(O.none(), 7);
+        expect(report.pickup.tripwireSeconds).toBe(600);
+        assertFalse(report.pickup.breached);
+      })
+    );
+  });
+
   it.effect("renders an unratified version without claiming a ratified context count", () =>
     Effect.gen(function* () {
       const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, []);
@@ -1629,34 +1707,38 @@ describe("ci lane timing admission window", () => {
       );
 
       const run = windowRun({ id: 250 });
-      const passingReport = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
-        windowRunJobs(run, [
-          job({
-            completed_at: "2026-09-04T00:03:00Z",
-            created_at: "2026-09-04T00:00:00Z",
-            id: 251,
-            name: "Lint (lint-a)",
-            run_id: run.id,
-            started_at: "2026-09-04T00:00:20Z",
-          }),
-          job({
-            completed_at: "2026-09-04T00:04:00Z",
-            created_at: "2026-09-04T00:00:00Z",
-            id: 252,
-            name: "Lint (lint-b)",
-            run_id: run.id,
-            started_at: "2026-09-04T00:00:30Z",
-          }),
-          job({
-            completed_at: "2026-09-04T00:05:00Z",
-            created_at: "2026-09-04T00:00:00Z",
-            id: 253,
-            name: "Lint",
-            run_id: run.id,
-            started_at: "2026-09-04T00:04:00Z",
-          }),
-        ]),
-      ]);
+      const passingReport = yield* buildCiLaneTimingWindowReport(
+        REQUIRED_CONTEXTS,
+        [
+          windowRunJobs(run, [
+            job({
+              completed_at: "2026-09-04T00:03:00Z",
+              created_at: "2026-09-04T00:00:00Z",
+              id: 251,
+              name: "Lint (lint-a)",
+              run_id: run.id,
+              started_at: "2026-09-04T00:00:20Z",
+            }),
+            job({
+              completed_at: "2026-09-04T00:04:00Z",
+              created_at: "2026-09-04T00:00:00Z",
+              id: 252,
+              name: "Lint (lint-b)",
+              run_id: run.id,
+              started_at: "2026-09-04T00:00:30Z",
+            }),
+            job({
+              completed_at: "2026-09-04T00:05:00Z",
+              created_at: "2026-09-04T00:00:00Z",
+              id: 253,
+              name: "Lint",
+              run_id: run.id,
+              started_at: "2026-09-04T00:04:00Z",
+            }),
+          ]),
+        ],
+        O.some(run.created_at)
+      );
 
       expect(passingReport.pickup.breached).toBe(false);
       expect(renderCiLaneTimingWindowMarkdown(passingReport)).toContain(
@@ -1711,6 +1793,8 @@ describe("ci lane timing admission window", () => {
 
       expect(report.runCount).toBe(1);
       expect(report.contextCount).toBe(18);
+      // A 2026-09-04 `--since` is judged against the tripwire in force then.
+      expect(report.pickup.tripwireSeconds).toBe(300);
       assertSome(
         O.map(report.rulesetVersion, (version) => version.version_id),
         48600030
@@ -1995,7 +2079,14 @@ describe("ci lane timing admission window", () => {
       contextCount: 15,
       dayPeaks: peaks,
       laneStats: [],
-      pickup: { breached: false, maxSeconds: O.none(), n: 0, p50Seconds: O.none(), p95Seconds: O.none() },
+      pickup: {
+        breached: false,
+        maxSeconds: O.none(),
+        n: 0,
+        p50Seconds: O.none(),
+        p95Seconds: O.none(),
+        tripwireSeconds: 300,
+      },
       requiredContexts: [],
       rulesetVersion: O.none(),
       rows: [],
@@ -2032,7 +2123,14 @@ describe("ci lane timing admission window", () => {
       contextCount: 15,
       dayPeaks: peaks,
       laneStats: [],
-      pickup: { breached: false, maxSeconds: O.none(), n: 0, p50Seconds: O.none(), p95Seconds: O.none() },
+      pickup: {
+        breached: false,
+        maxSeconds: O.none(),
+        n: 0,
+        p50Seconds: O.none(),
+        p95Seconds: O.none(),
+        tripwireSeconds: 300,
+      },
       requiredContexts: [],
       rulesetVersion: O.none(),
       rows: [],
