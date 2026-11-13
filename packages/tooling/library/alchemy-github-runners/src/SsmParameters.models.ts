@@ -147,9 +147,9 @@ export const poolConfigPath: {
  * console.log(runnerGroupCacheName("/beep-ci/heavy/config", "beep-ec2-heavy"))
  * ```
  *
- * @param configPath - The pool's config path.
- * @param group - The runner group name.
- * @returns The parameter name.
+ * @param configPath - Where the pool caches runtime-resolved settings.
+ * @param group - The org runner group whose numeric id is cached.
+ * @returns `<configPath>/runner-group/<group>`.
  * @category constructors
  * @since 0.0.0
  */
