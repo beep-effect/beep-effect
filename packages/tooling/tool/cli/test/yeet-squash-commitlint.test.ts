@@ -263,7 +263,7 @@ const pullRecord = {
   draft: false,
   merged_at: null,
   head: { ref: "feat/squash", sha: "212fe39b4f0000000000000000000000000000aa" },
-  base: { ref: "main" },
+  base: { ref: "main", sha: "base000000" },
   html_url: "https://github.com/beep-effect/beep-effect/pull/1913",
   user: { login: "kriegcloud" },
   labels: [],

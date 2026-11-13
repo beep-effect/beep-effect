@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -33,10 +33,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P4 Close: all implementation PRs are merged. The closeout is proposed through a third goals-only re-final PR (#3101), because #2933 and #2962 both merged before their readiness was recorded. Remaining: that PR merges on `merge-ready: yes`, `goals completion refresh` verifies it, and a packet-state PR adopts `completed-retained`.
+Closed: `completed-retained`. All implementation PRs are merged. Final PRs #2933, #2962 and #3101 each merged before their readiness was recorded, so the operator ruled the goal closed on 2026-11-10; this status and the closeout record landed in one packet-state PR, #3132. See [`decisions/2026-11-12-operator-ruling-close-in-one-packet-state-pr.md`](./decisions/2026-11-12-operator-ruling-close-in-one-packet-state-pr.md).
 
 ## Latest Evidence
 
+- 2026-11-12: `goals completion refresh` for #3101 reports `unknown` (hosted required checks verified at the accepted head; no recorded readiness, because the PR merged six minutes after its ready flip). Closed by operator ruling.
 - 2026-11-10: `goals completion refresh` for #2962 reports `unknown` (hosted required checks verified; readiness recovery refused, "status was recorded after job end"). A third goals-only re-final, #3101, takes over as the final PR; see [`decisions/2026-11-10-third-goals-only-re-final-after-2962-merged-before-readiness.md`](./decisions/2026-11-10-third-goals-only-re-final-after-2962-merged-before-readiness.md).
 - 2026-11-07: PR 2a #2825 merged (cc3fef7c02). PR 2b completes the Postgres driver: views, projections, streams, Backfill catch-up, upcasting, Cluster workflow engine with crash-and-resume; conformance on InMemory and PGlite (79 tests) and real Postgres 17 (32 scenarios).
 - 2026-11-06: PR 1 #2810 merged (7f7cb719ba). PR 2a adds the Postgres Platform for aggregates and policies with a conformance suite green on InMemory and PGlite.

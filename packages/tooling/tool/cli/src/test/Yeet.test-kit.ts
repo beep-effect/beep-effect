@@ -57,6 +57,8 @@ export {
 export * from "../commands/Yeet/internal/Guards.ts";
 export * from "../commands/Yeet/internal/Handler.ts";
 export * from "../commands/Yeet/internal/HeadInstallReceipt.ts";
+export * from "../commands/Yeet/internal/HeadMove.schemas.ts";
+export * from "../commands/Yeet/internal/HeadMove.ts";
 export * from "../commands/Yeet/internal/Inbox.ts";
 export * from "../commands/Yeet/internal/InboxPorcelain.ts";
 export * from "../commands/Yeet/internal/InboxView.ts";
@@ -85,6 +87,7 @@ export * from "../commands/Yeet/internal/OwnerCheckpoint.store.ts";
 export * from "../commands/Yeet/internal/OwnerCheckpoint.ts";
 export * from "../commands/Yeet/internal/PacketProvenance.ts";
 export * from "../commands/Yeet/internal/ParityReuse.ts";
+export * from "../commands/Yeet/internal/PatchIdentity.ts";
 export * from "../commands/Yeet/internal/Planner.schemas.ts";
 export * from "../commands/Yeet/internal/Planner.ts";
 export * from "../commands/Yeet/internal/Porcelain.ts";

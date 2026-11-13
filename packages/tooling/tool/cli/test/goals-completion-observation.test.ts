@@ -675,6 +675,14 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
       );
     })
   );
+  it.effect("labels the historical window as raw evidence without rewrite carry", () =>
+    Effect.gen(function* () {
+      const receipt = yield* observe({ windowShort: true });
+      const window = O.getOrThrow(A.findFirst(receipt.subClaims, (check) => check.ref.ref === "review-window"));
+      expect(window.detail).toContain("Raw review window at merge");
+      expect(window.detail).toContain("rewrite carry is not applied");
+    })
+  );
   it.effect("packet identity participates in declaration addressing", () =>
     Effect.gen(function* () {
       const value = yield* manifest();
