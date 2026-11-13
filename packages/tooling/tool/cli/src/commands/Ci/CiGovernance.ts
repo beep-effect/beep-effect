@@ -30,6 +30,7 @@ import * as Str from "effect/String";
 import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
 import { CiCommandError } from "./Ci.errors.ts";
 import { CI_LANE_DESCRIPTORS } from "./CiLane.ts";
+import { CiSupportJobName, ciCalledJobName } from "./CiLaneJobs.ts";
 import { githubStatusSuffix, layerCiGithub } from "./LaneTimings.ts";
 import type { GitHubError } from "@beep/github/GitHubError";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -462,7 +463,9 @@ export const workflowJobContexts = Effect.fn("CiGovernance.workflowJobContexts")
       O.getOrElse(A.empty)
     );
     const names = name === "${{ matrix.name }}" ? A.map(include, (row) => stringAt(row, "name")) : [name];
-    return A.map(names, (context) => (file === "heavy.yml" ? `Heavy / ${context}` : context));
+    return A.map(names, (context) =>
+      file === "heavy.yml" ? ciCalledJobName(context, CiSupportJobName.Enum.Heavy) : context
+    );
   });
 });
 
