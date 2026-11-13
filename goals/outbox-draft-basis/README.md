@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -36,15 +36,12 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement, in progress, with one P0 item still open. Decided in P0: the
-schemas and the time-zone rule (frozen), the message pin (it ships, on one
-conversation list call), the caller-view check at creation, and the
-sequencing with `m365-agent-outbox` slice 3 (not started, so this goal
-opens first). Still open in P0: the tenant proof that a draft category does
-not reach recipients, which waits on one message sent by a person. Next
-action: merge the first pull request (schemas, comparison, audit field,
-`create_draft` and `get_draft`); the second pull request writes no category
-until the proof is recorded.
+P4 Close. Both pull requests are built: #3137 merged, and #3172 (the
+check-drafts tool, the category mark, the package README and the runbook)
+is the final. The tenant proof ran on 2026-11-13: a category on a draft
+reaches neither an internal nor an external recipient, so the mark ships as
+built. Remaining for the operator: the one-time red category in the
+attorney's Outlook.
 
 ## Latest Evidence
 
@@ -74,6 +71,52 @@ creation with `basis-changed`. `bun run beep quality package-verify
 live re-run was blocked, see
 [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md).
 
+2026-11-13: the first pull request merged as #3137 (`fe9d360e92c`) with
+all 15 required checks green and no review thread. It was marked ready and
+merged by the operator's account before the lane's own `yeet final-check`
+finished, so there is no final-check receipt for that head; hosted CI is
+the proof.
+
+2026-11-13: the operator ruled the category name, its colour route, the
+check cadence, the closing record and the proof route in a grill session;
+each is a decision file of that date.
+
+2026-11-13: second pull request built: the `m365_outbox_check_drafts`
+tool, the category mark, three audit record kinds (`draft-basis-marked`,
+`draft-basis-cleared`, `draft-closed`), the package README and the
+runbook. `bun run beep quality package-verify @beep/m365-mcp` passed; 126
+package tests pass. It is held as a draft: it does not merge until the
+tenant proof is recorded.
+
+2026-11-13: the tenant proof could not start. Microsoft Graph answered
+HTTP 502 or 504 for mail reads on two mailboxes of the tenant, through the
+outbox app and through the Microsoft 365 connector, for over an hour.
+
+2026-11-13, later: Graph recovered and the tenant proof ran. The test
+message, sent by the operator from the attorney's mailbox, reached a firm
+mailbox and an outside mailbox with no category; its message id survived
+the send, and a draft discarded in Outlook kept its draft flag and message
+id in Deleted Items. Decision file: tenant proof, 2026-11-13.
+
+2026-11-13: #3172 finished hosted checks with 47 passed and one red,
+`Heavy / Coverage Regression`, which is not required on `main`. Every row
+it lists is a `@beep/repo-cli` file added on `main` without a baseline row
+(#3138, #3144, #3165); none is under `m365-mcp`. No review thread was
+opened. The session was paused there, with tenant mail still down.
+
+2026-11-13: three review findings on #3172 fixed in one push: a mark is
+recorded before it is written, so the server's own category can no longer
+be left on a draft without a record; a draft moved to another folder is
+found by its message id and not retired; a read without an `isDraft`
+value no longer retires a draft. 29 of 29 cheap gates passed.
+
+2026-11-13: two round-two review findings on #3172 fixed in one push: a
+draft deleted in Outlook is retired and never marked, and a draft recorded
+without a message id learns it on the next read (`draft-identified`). 136
+package tests pass and 29 of 29 cheap gates passed. Three Graph facts the
+lookup rests on are still unverified on the tenant and are listed in the
+decision file of that date.
+
 ## Notes
 
 - `m365_outbox_send_draft` refuses every send with `version-unbound`. The
@@ -81,5 +124,5 @@ live re-run was blocked, see
   advisory.
 - `m365-agent-outbox` slice 3 edits the same files and has no live session.
   Whichever packet opens a pull request second merges `main` first.
-- The tenant proof needs one message sent from the attorney's mailbox by a
-  person.
+- The tenant proof is recorded (decision file of 2026-11-13); it covers one
+  tenant, Outlook on the web and one outside mail provider.

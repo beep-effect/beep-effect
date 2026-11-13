@@ -35,6 +35,7 @@ the draft version that was checked. Contract and original design:
 | `m365_outbox_send_draft` | Checks the stored draft against `expect`, then refuses with `version-unbound`; it cannot safely send a mutable draft. | No |
 | `m365_outbox_create_event` | Creates a calendar event. No attendees. | No |
 | `m365_outbox_update_event` | Changes fields of a calendar event this server created, when the event has no attendees. | No |
+| `m365_outbox_check_drafts` | Rechecks every unsent draft this server created against its pins and sets or clears one Outlook category on it. | No |
 
 No tool takes a mailbox: it is fixed by `M365_OUTBOX_MAILBOX`.
 
@@ -53,6 +54,80 @@ deleting and updating are limited to what the log records.
 Microsoft Graph mails every attendee of a meeting when its subject, body or
 time changes. That would be a send outside the `expect` check and the audit
 pair, so an event with attendees is never changed by this server.
+
+### Basis
+
+A draft can rest on things the agent read in the mailbox: the calendar event
+a date came from, the message being answered. `create_draft` takes them as
+`basis`, a list of pins. Each pin names one item by `kind` (`event` or
+`message`) and Graph `id`, and carries the `view` the agent wrote the draft
+from:
+
+- an event: `subject`, `start` and `end` (`dateTime` and `timeZone` exactly
+  as Graph returned them; the server asks for no time zone, so these are
+  UTC), `isAllDay` and `isCancelled`;
+- a message: its `internetMessageId` and, when the agent saw one,
+  `newestOtherReply`, the `internetMessageId` of the newest later message
+  in the conversation from someone other than the mailbox.
+
+The server reads every pinned item itself before it creates anything, and
+the pin stores the server's read, never the agent's. Creation is refused,
+and nothing is created, with one of these reasons:
+
+| Reason | Meaning |
+| --- | --- |
+| `basis-unreadable` | The item could not be read, or lacks a field the view needs. |
+| `basis-series-master` | The event is a recurring series master; pin one occurrence instead. |
+| `basis-changed` | The item no longer matches the view the agent passed. The message names the fields. Read the item again and redo the draft. |
+
+Only the named fields count: a new category, reminder or `changeKey` on the
+item changes nothing. A message is found again by its `internetMessageId` in
+one listing of its conversation, so filing it into another folder does not
+lose it.
+
+`get_draft` rechecks every pin and returns a `basis` report with a status per
+pin (`Current`, `Changed` with the fields and the fresh view, `Gone`, or
+`Unreadable`) and one verdict:
+
+| Verdict | Meaning |
+| --- | --- |
+| `unpinned` | The draft was created without pins. |
+| `pinned-current` | Every pinned item is as it was. |
+| `pinned-stale` | A pinned item changed or is gone. Review the draft. |
+| `pinned-unverified` | No pin is stale, but one could not be read. |
+
+`check_drafts` takes no parameters. It rechecks every draft this server
+created that is not yet deleted, sent or closed, and marks it in Outlook with
+the category `Draft - recheck before sending`:
+
+- a `pinned-stale` draft gets the category;
+- a `pinned-current` draft loses it again, but only when this server set it;
+  a category a person added is left alone;
+- a `pinned-unverified` draft keeps its categories as they are, and an
+  `unpinned` draft is never touched.
+
+Every other category stays, in order, and the write is conditional on the
+draft's `changeKey`, so an edit in Outlook in between makes it fail; the next
+call retries. The only change the tool makes to a draft is its category list.
+Each mark is recorded before the category is written, and each removal right
+after, so the audit log never misses a category this server set: when the
+log cannot be written, nothing is set, and a removal whose record is still
+missing is reported as `cleared-unrecorded` and recorded on the next call.
+A draft moved out of Drafts into another folder gets a new Graph id; it is
+still found by its RFC 5322 message id. A copy in Deleted Items does not
+count: a draft deleted in Outlook is retired as missing. A draft recorded
+before message ids were stored learns its id on the next check. A draft that is no longer a draft, or
+is gone, is reported, recorded as closed and not checked again. The result lists each draft with its recorded
+subject, verdict and what was done to the category, the closed and the
+unreadable drafts, and a count per verdict.
+
+The mark is advisory. The attorney's Send in Outlook is never blocked, and
+nothing runs `check_drafts` on a schedule: a draft that goes stale between
+calls stays unmarked until the next call, so a session that prepares or
+reviews outbox drafts calls it first. Sending through this server stays
+disabled (`version-unbound`). The category's colour comes from a category of
+the same name created once in the attorney's Outlook; see
+`docs/runbooks/m365-agent-outbox-registration.md`.
 
 ### Sending
 
@@ -123,7 +198,10 @@ Graph call, then `send-outcome` with the same `auditId`; if the intent cannot
 be written, nothing is sent. A send the guard refuses writes one refused
 `send-outcome`, and so does a send of a draft the log has no creation record
 for. Draft creation, draft deletion and event writes write one record each; a
-refused event update writes none. Records hold recipients, subjects, attachment names, sizes and
+refused event update writes none. `check_drafts` writes `draft-basis-marked` or
+`draft-basis-cleared` for each category it sets or removes, `draft-closed`
+for a draft it finds sent or missing, and `draft-identified` once for a draft
+recorded without a message id. Records hold recipients, subjects, attachment names, sizes and
 digests, never a body or bytes. The log stays on the workstation.
 
 Each append writes a newline, the record and a newline, so a file has an empty

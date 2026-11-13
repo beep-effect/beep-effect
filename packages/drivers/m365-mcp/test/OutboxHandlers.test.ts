@@ -633,6 +633,7 @@ describe("@beep/m365-mcp outbox handlers", () => {
           ["m365_outbox_create_event", failed(toolkit.handle("m365_outbox_create_event", eventParams))],
           ["m365_outbox_update_event", failed(toolkit.handle("m365_outbox_update_event", { eventId: EVENT_ID }))],
           ["m365_outbox_create_draft", failed(toolkit.handle("m365_outbox_create_draft", createDraftParams))],
+          ["m365_outbox_check_drafts", failed(toolkit.handle("m365_outbox_check_drafts", {}))],
           // Last: it removes the draft the other tools read.
           ["m365_outbox_delete_draft", failed(toolkit.handle("m365_outbox_delete_draft", { draftId: DRAFT_ID }))],
         ] as const;
@@ -869,7 +870,8 @@ describe("@beep/m365-mcp outbox handlers", () => {
 
     for (const tool of R.values(OutboxToolkit.tools)) {
       const keys = parameterKeys(tool.parametersSchema);
-      assert.isAbove(A.length(keys), 0, tool.name);
+      // check_drafts takes no parameter at all; every other tool takes some.
+      assert.strictEqual(A.isReadonlyArrayEmpty(keys), tool.name === "m365_outbox_check_drafts", tool.name);
       assert.deepStrictEqual(A.intersection(keys, forbidden), [], tool.name);
     }
   });

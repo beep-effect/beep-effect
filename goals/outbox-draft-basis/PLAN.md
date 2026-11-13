@@ -2,17 +2,17 @@
 
 ## Status
 
-Status: `in-progress`
+Status: `complete`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | in-progress | Freeze the pin, status and report schemas and the zone rule. Run the tenant proof for the draft category. Decide the message pin. Check the state of `m365-agent-outbox` slice 3. | One decision file each for the schemas, the category proof and the message pin; the sequencing with slice 3 is recorded. |
-| P1 Implement | in-progress | Two pull requests. First: schemas, the pure comparison, the audit field, `create_draft` and `get_draft`. Second: the check-drafts tool, the category mark, the README and the runbook. | `SPEC.md` acceptance criteria are met. |
-| P2 Verify | pending | Run the package handoff and the final gates on each head. | `bun run beep quality package-verify @beep/m365-mcp` and `bun run beep yeet final-check` pass. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive each PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P0 Research | complete | Freeze the pin, status and report schemas and the zone rule. Run the tenant proof for the draft category. Decide the message pin. Check the state of `m365-agent-outbox` slice 3. | One decision file each for the schemas, the category proof and the message pin; the sequencing with slice 3 is recorded. |
+| P1 Implement | complete | Two pull requests. First: schemas, the pure comparison, the audit field, `create_draft` and `get_draft`. Second: the check-drafts tool, the category mark, the README and the runbook. | `SPEC.md` acceptance criteria are met. |
+| P2 Verify | complete | Run the package handoff and the final gates on each head. | `bun run beep quality package-verify @beep/m365-mcp` and `bun run beep yeet final-check` pass. |
+| P3 Yeet: PR to mergeable | complete | Publish through yeet and drive each PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P4 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 P1 order inside the first pull request: schema, then the service contract,
 then handlers. The second pull request writes no category until the P0
@@ -66,5 +66,13 @@ Checked 2026-11-10 before P1: origin has no branch and GitHub has no open pull r
 Lane feat/outbox-draft-basis
 
 Reverse: If a slice 3 pull request opens before this goal's first one merges, merge main into this lane after it lands.
+
+### Tenant proof route chosen; first attempt blocked by Graph gateway errors, 2026-11-13
+
+Operator ruling, 2026-11-13 (grill session): the proof is one test draft in the attorney's mailbox, written through the outbox's own Graph path with the category set by updateMessageCategories, addressed to one firm mailbox and one outside address the operator owns, and sent by a person from Outlook. On the same day every authenticated read of that mailbox answered HTTP 502 or 504 (messages and events, four attempts over about ten minutes), while Graph's public metadata and the sign-in metadata answered 200 and the configured mailbox and credentials checked out by length and hash. The draft was not created. The second pull request is built in the meantime and writes no category until the proof is recorded.
+
+Lane feat/outbox-draft-basis-check
+
+Reverse: Run the proof by hand in Outlook instead, or drop the mark by decision file if it cannot be run.
 
 <!-- beep:decisions:end -->
