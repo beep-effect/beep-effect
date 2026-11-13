@@ -98730,7 +98730,10 @@
             "!../../../../packages/architecture-lab/**/docs/**",
             "!../../../../packages/architecture-lab/**/node_modules/**",
             "../../../../.bun-version",
+            "../../../../.claude/skills/yeet/SKILL.md",
+            "../../../../.claude/skills/yeet/references/gates-and-proof.md",
             "../../../../.nvmrc",
+            "../../../../AGENTS.md",
             "../../../../apps/architecture-lab-proof/**",
             "../../../../goals/time-to-certainty/research/economics.json",
             "../../../../goals/time-to-certainty/research/gate-order-handoff.json",
@@ -99448,7 +99451,10 @@
             "!LICENSE",
             "!README.md",
             "../../../../.bun-version",
+            "../../../../.claude/skills/yeet/SKILL.md",
+            "../../../../.claude/skills/yeet/references/gates-and-proof.md",
             "../../../../.nvmrc",
+            "../../../../AGENTS.md",
             "../../../../apps/architecture-lab-proof/**",
             "../../../../goals/time-to-certainty/research/economics.json",
             "../../../../goals/time-to-certainty/research/gate-order-handoff.json",
@@ -99589,7 +99595,10 @@
             "!LICENSE",
             "!README.md",
             "../../../../.bun-version",
+            "../../../../.claude/skills/yeet/SKILL.md",
+            "../../../../.claude/skills/yeet/references/gates-and-proof.md",
             "../../../../.nvmrc",
+            "../../../../AGENTS.md",
             "../../../../apps/architecture-lab-proof/**",
             "../../../../goals/time-to-certainty/research/economics.json",
             "../../../../goals/time-to-certainty/research/gate-order-handoff.json",
@@ -128690,7 +128699,7 @@
       },
       {
         "path": "packages/tooling/tool/cli/turbo.json",
-        "sha256": "fa4c13c011c943c82ca643c48dbbf4162f76a208d1f5d93466ca91c749793f96"
+        "sha256": "74d8ac3e3ea89c40ed8c8104437866669b6f244d7634eb0aec70844756cfc1dd"
       },
       {
         "path": "turbo.json",

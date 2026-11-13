@@ -8,3 +8,6 @@
 export * from "../commands/AgentEffectiveness/index.ts";
 export * from "../commands/AgentEffectiveness/internal/EvalLawLanes.ts";
 export * from "../commands/AgentEffectiveness/internal/EvalScorer.ts";
+export * from "../commands/AgentEffectiveness/internal/SkillProbe.ts";
+export * from "../commands/AgentEffectiveness/internal/SkillProbeSchemas.ts";
+export * from "../commands/AgentEffectiveness/internal/SkillProbeStats.ts";

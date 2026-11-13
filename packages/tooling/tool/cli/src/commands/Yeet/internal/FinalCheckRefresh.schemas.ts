@@ -82,6 +82,7 @@ export const FinalCheckRefreshRefusalReason = LiteralKit([
   "effect-vitest-status-drift",
   "ancestor-receipt-not-passing",
   "malformed-receipt",
+  "receipt-gate-set-mismatch",
 ]).pipe(
   $I.annoteSchema("FinalCheckRefreshRefusalReason", {
     description: "Why the final-check refresh rule refused to carry a receipt to a later head.",
@@ -181,12 +182,13 @@ export class FinalCheckStatusDrift extends S.Opaque<FinalCheckStatusDrift, { rea
  * **Example** (Facts for an inventory-only refresh)
  *
  * ```ts
- * import { FinalCheckReceipt, FinalCheckRefreshFacts } from "@beep/repo-cli/test/Yeet"
+ * import { FINAL_CHECK_GATE_SET_DIGEST, FinalCheckReceipt, FinalCheckRefreshFacts } from "@beep/repo-cli/test/Yeet"
  * import * as O from "effect/Option"
  *
  * const facts = FinalCheckRefreshFacts.make({
  *   receipt: FinalCheckReceipt.make({
- *     schemaVersion: "yeet-final-check/v1", headSha: "r".repeat(40), mergeBase: "m".repeat(40), base: "origin/main",
+ *     schemaVersion: "yeet-final-check/v2", gateSetDigest: FINAL_CHECK_GATE_SET_DIGEST,
+ *     headSha: "r".repeat(40), mergeBase: "m".repeat(40), base: "origin/main",
  *     complete: true, verdict: "pass", startedAt: "2026-10-28T00:00:00.000Z",
  *     finishedAt: "2026-10-28T00:40:00.000Z", steps: [], expectationRewrites: [],
  *   }),
@@ -221,11 +223,12 @@ export class FinalCheckRefreshFacts extends S.Opaque<FinalCheckRefreshFacts, { r
  * **Example** (A passing refresh verdict)
  *
  * ```ts
- * import { FinalCheckReceipt, FinalCheckRefreshPass } from "@beep/repo-cli/test/Yeet"
+ * import { FINAL_CHECK_GATE_SET_DIGEST, FinalCheckReceipt, FinalCheckRefreshPass } from "@beep/repo-cli/test/Yeet"
  *
  * const verdict = FinalCheckRefreshPass.make({
  *   receipt: FinalCheckReceipt.make({
- *     schemaVersion: "yeet-final-check/v1", headSha: "r".repeat(40), mergeBase: "m".repeat(40), base: "origin/main",
+ *     schemaVersion: "yeet-final-check/v2", gateSetDigest: FINAL_CHECK_GATE_SET_DIGEST,
+ *     headSha: "r".repeat(40), mergeBase: "m".repeat(40), base: "origin/main",
  *     complete: true, verdict: "pass", startedAt: "2026-10-28T00:00:00.000Z",
  *     finishedAt: "2026-10-28T00:40:00.000Z", steps: [], expectationRewrites: [],
  *   }),

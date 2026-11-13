@@ -263,9 +263,9 @@ needed only for the escalation list below.
   `bun run beep yeet gh pr body <n> --body-file <md>`, which keeps it.
 - Draft means only "the owner is still pushing". "Final" means the pushed
   head passed `bun run beep yeet final-check`: the scoped local replay of
-  every hosted gate the cheap tier skips (Lint Policy, Lint, Effect
-  Diagnostics, Check, Docgen, Repo Sanity, Fallow, Coverage, and test
-  expectations rewritten to match new output). Flip the PR ready with
+  every hosted gate the cheap tier skips (Lint Policy, Lint, Check,
+  Docgen, Repo Sanity, Fallow, Coverage, and test expectations rewritten
+  to match new output). Flip the PR ready with
   `bun run beep yeet ready`, which refuses without that head's passing
   receipt; do not wait for hosted heavy CI, which doubles as the review
   window. A gate parked by constrained compute is skipped only with

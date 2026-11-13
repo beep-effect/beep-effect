@@ -38,12 +38,16 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 P1 Implement — slice 1 (ROUT-03 census, `fix(ci): keep goal ops scripts, fixtures and research inputs on the
-code route`) landed in #3064; slice 2 (COVE-02, bare coverage judges against its planned merge base) landed; P0
-re-checked lever status at `origin/main` 5e09d90a6da. Slice 3 (YEET-08 slice 1) completes the first wave; slice 4
-(ROUT-03 slice 2) is unblocked.
+code route`) landed in #3064; slice 2 (COVE-02, bare coverage judges against its planned merge base) landed in #3115; slice 3 (YEET-08
+slice 1, final-check receipts versioned by gate set) completes the first wave; P0 re-checked lever status at
+`origin/main` 5e09d90a6da. Slice 4 (ROUT-03 slice 2) is unblocked.
 
 ## Latest Evidence
 
+- `packages/tooling/tool/cli/test/yeet-final-check.test.ts`, `yeet-final-check-refresh.test.ts` and
+  `yeet-ready-gate.test.ts`: a v1 receipt is refused on the head, through the ancestor refresh, across an unchanged
+  rewrite and in `requireFinalCheck`; a v2 receipt under another gate set names the added and removed gates.
+  `yeet-final-check-docs-drift.test.ts` fails on the pre-slice AGENTS.md ("Effect Diagnostics" is not a gate).
 - `packages/tooling/tool/cli/test/goal-data-consumer-census.test.ts`: the generated census of consumed goal paths
   is red on the pre-slice patterns (548 consumed entries docs-only) and green after; change-profile gives
   `docs_only=false` for the frozen profile fixture, a citation ops `.py` probe, a `.ts` ops script and the ciops
