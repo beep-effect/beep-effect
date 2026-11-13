@@ -16,20 +16,12 @@ import type * as Provider from "alchemy/Provider";
 import type { ResourceLike } from "alchemy/Resource";
 import type * as Effect from "effect/Effect";
 
-/**
- * The failure type the typed views below give Alchemy's untyped (`any`)
- * engine and provider error channels.
- */
-export class StackFailure extends S.TaggedError<StackFailure, { readonly brand: unique symbol }>()("StackFailure", {
-  cause: S.Defect(),
-}) {}
-
 /** A scratch stack whose deploy and destroy carry a typed error channel. */
 export interface TypedStack {
   deploy<A extends ResourceLike>(
     effect: Effect.Effect<A, never, Vercel.Providers>
-  ): Effect.Effect<A["Attributes"], StackFailure>;
-  destroy(options?: { readonly include?: never }): Effect.Effect<void, StackFailure>;
+  ): Effect.Effect<A["Attributes"], Provider.ProviderError>;
+  destroy(options?: { readonly include?: never }): Effect.Effect<void, Provider.ProviderError>;
 }
 
 /** Narrow the harness's scratch stack to {@link TypedStack}. */

@@ -5,6 +5,8 @@
  * call, keeping projects, environment variables and domains in mutable maps.
  * Responses carry the fields the distilled response schemas require.
  */
+
+import * as BO from "@beep/utils/Option";
 import * as Credentials from "@distilled.cloud/vercel/Credentials";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -14,6 +16,7 @@ import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -242,17 +245,66 @@ type Route =
   | { readonly _tag: "Move"; readonly project: string; readonly domain: string }
   | { readonly _tag: "Unknown" };
 
+const unknownRoute: Route = { _tag: "Unknown" };
+
+/** Routes under `/projects/{idOrName}`, keyed by the path shape after the project. */
+const projectRoutes: Record<string, (project: string, id: string) => Route> = {
+  "": (project) => ({ _tag: "Project", project }),
+  env: (project) => ({ _tag: "Envs", project }),
+  "env/:id": (project, id) => ({ _tag: "Env", project, id }),
+  domains: (project) => ({ _tag: "Domains", project }),
+  "domains/:id": (project, domain) => ({ _tag: "Domain", project, domain }),
+  "domains/:id/verify": (project, domain) => ({ _tag: "Verify", project, domain }),
+  "domains/:id/move": (project, domain) => ({ _tag: "Move", project, domain }),
+};
+
 const toRoute = (segments: ReadonlyArray<string>): Route => {
   const [resource, project, sub, id, action] = A.drop(segments, 1);
-  if (resource !== "projects") return { _tag: "Unknown" };
+  if (resource !== "projects") return unknownRoute;
   if (project === undefined) return { _tag: "Projects" };
-  if (sub === undefined) return { _tag: "Project", project };
-  if (sub === "env") return id === undefined ? { _tag: "Envs", project } : { _tag: "Env", project, id };
-  if (sub !== "domains") return { _tag: "Unknown" };
-  if (id === undefined) return { _tag: "Domains", project };
-  if (action === "verify") return { _tag: "Verify", project, domain: id };
-  if (action === "move") return { _tag: "Move", project, domain: id };
-  return { _tag: "Domain", project, domain: id };
+  const shape = A.join(A.filter([sub ?? "", id === undefined ? "" : ":id", action ?? ""], Str.isNonEmpty), "/");
+  return O.match(R.get(projectRoutes, shape), {
+    onNone: () => unknownRoute,
+    onSome: (make) => make(project, id ?? ""),
+  });
+};
+
+const newProject = (name: string, accountId: string, body: typeof ProjectBody.Type): ProjectRecord => ({
+  id: nextId("prj"),
+  name,
+  accountId,
+  nodeVersion: "22.x",
+  ssoProtection: { deploymentType: "prod_deployment_urls_and_all_previews" },
+  ...BO.getSomesStruct({
+    framework: O.fromUndefinedOr(body.framework),
+    buildCommand: O.fromUndefinedOr(body.buildCommand),
+    installCommand: O.fromUndefinedOr(body.installCommand),
+    rootDirectory: O.fromUndefinedOr(body.rootDirectory),
+    repo: O.map(O.fromUndefinedOr(body.gitRepository), (repository) => repository.repo),
+  }),
+});
+
+const sharesTarget = (env: EnvRecord, key: string, gitBranch: string | undefined, target: ReadonlyArray<string>) =>
+  env.key === key && env.gitBranch === gitBranch && A.some(env.target, (t) => A.contains(target, t));
+
+/** `POST /projects/{id}/env`: with `upsert`, a same-key variable on any shared target is replaced. */
+const upsertEnv = (project: ProjectRecord, body: typeof EnvBody.Type, upsert: boolean) => {
+  if (body.key === undefined || body.value === undefined || body.target === undefined) return error(400, "bad_request");
+  const { key, value, target } = body;
+  const gitBranch = O.getOrUndefined(O.fromNullishOr(body.gitBranch));
+  const existing = A.findFirst(FakeVercel.envsOf(project.id), (env) => sharesTarget(env, key, gitBranch, target));
+  if (O.isSome(existing) && !upsert) return error(400, "env_already_exists");
+  const record: EnvRecord = {
+    id: O.match(existing, { onNone: () => nextId("env"), onSome: (env) => env.id }),
+    projectId: project.id,
+    key,
+    value,
+    type: body.type ?? "encrypted",
+    target,
+    ...BO.getSomesStruct({ gitBranch: O.fromUndefinedOr(gitBranch), comment: O.fromUndefinedOr(body.comment) }),
+  };
+  MutableHashMap.set(envsById, record.id, record);
+  return ok({ created: envResponse(record), failed: [] });
 };
 
 const withProject = (idOrName: string, f: (project: ProjectRecord) => { status: number; body: unknown }) =>
@@ -266,18 +318,7 @@ const handle = (method: string, route: Route, query: URLSearchParams, body: unkn
     Match.tag("Projects", () => {
       if (method !== "POST" || projectBody.name === undefined) return error(400, "bad_request");
       if (O.isSome(findProject(projectBody.name))) return error(409, "conflict");
-      const project: ProjectRecord = {
-        id: nextId("prj"),
-        name: projectBody.name,
-        accountId: query.get("teamId") ?? "user_fake",
-        nodeVersion: "22.x",
-        ssoProtection: { deploymentType: "prod_deployment_urls_and_all_previews" },
-        ...(projectBody.framework === undefined ? {} : { framework: projectBody.framework }),
-        ...(projectBody.buildCommand === undefined ? {} : { buildCommand: projectBody.buildCommand }),
-        ...(projectBody.installCommand === undefined ? {} : { installCommand: projectBody.installCommand }),
-        ...(projectBody.rootDirectory === undefined ? {} : { rootDirectory: projectBody.rootDirectory }),
-        ...(projectBody.gitRepository === undefined ? {} : { repo: projectBody.gitRepository.repo }),
-      };
+      const project = newProject(projectBody.name, query.get("teamId") ?? "user_fake", projectBody);
       MutableHashMap.set(projectsById, project.id, project);
       return ok(projectResponse(project));
     }),
@@ -299,29 +340,7 @@ const handle = (method: string, route: Route, query: URLSearchParams, body: unkn
         if (method === "GET") {
           return ok({ envs: A.map(FakeVercel.envsOf(project.id), envResponse), hiddenProductionEnvCount: 0 });
         }
-        if (envBody.key === undefined || envBody.value === undefined || envBody.target === undefined) {
-          return error(400, "bad_request");
-        }
-        const key = envBody.key;
-        const target = envBody.target;
-        const gitBranch = envBody.gitBranch ?? undefined;
-        const existing = A.findFirst(
-          FakeVercel.envsOf(project.id),
-          (env) => env.key === key && env.gitBranch === gitBranch && A.some(env.target, (t) => A.contains(target, t))
-        );
-        if (O.isSome(existing) && query.get("upsert") !== "true") return error(400, "env_already_exists");
-        const record: EnvRecord = {
-          id: O.match(existing, { onNone: () => nextId("env"), onSome: (env) => env.id }),
-          projectId: project.id,
-          key,
-          value: envBody.value,
-          type: envBody.type ?? "encrypted",
-          target,
-          ...(gitBranch === undefined ? {} : { gitBranch }),
-          ...(envBody.comment === undefined ? {} : { comment: envBody.comment }),
-        };
-        MutableHashMap.set(envsById, record.id, record);
-        return ok({ created: envResponse(record), failed: [] });
+        return upsertEnv(project, envBody, query.get("upsert") === "true");
       })
     ),
     Match.tag("Env", ({ project: idOrName, id }) =>
