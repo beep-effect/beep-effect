@@ -179,3 +179,22 @@ Higher sources outrank lower sources when they conflict.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | Persisted `$I` tag strings | any rename that would change a stored `_tag` | this packet | stored JSON / workflow activity names may reference them | a migration or an explicit ledger row per string |
+
+## Decision log
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug canonical-proof-reconciliation`; add a `kind: decision` file there, never edit this block._
+
+### Paused by operator ruling (finish board, 2026-11-13): It is blocked on a prerequisite and has made no progress in months, so it should not count as active, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
+
+Triage rationale: It is blocked on a prerequisite and has made no progress in months, so it should not count as active.
+
+No lane is working on it. Resume with `bun run beep goals set-status canonical-proof-reconciliation active` when it is picked up.
+
+Lane chore/finish-board-pause-b1
+
+Reverse: goals set-status canonical-proof-reconciliation active when it is picked up
+
+<!-- beep:decisions:end -->

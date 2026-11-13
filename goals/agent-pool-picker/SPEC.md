@@ -55,3 +55,22 @@ printed launch command, so orchestrators run what it prints instead of reading d
 ## Exception Ledger
 
 None.
+
+## Decision log
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug agent-pool-picker`; add a `kind: decision` file there, never edit this block._
+
+### Paused by operator ruling (finish board, 2026-11-13): It is cleanly gated on a dependency that is still open, and nothing is in flight, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`. It was already paused; the ruling confirms the pause and records why.
+
+Triage rationale: It is cleanly gated on a dependency that is still open, and nothing is in flight.
+
+No lane is working on it. Resume with `bun run beep goals set-status agent-pool-picker active` when it is picked up.
+
+Lane chore/finish-board-pause-b1
+
+Reverse: goals set-status agent-pool-picker active when it is picked up
+
+<!-- beep:decisions:end -->

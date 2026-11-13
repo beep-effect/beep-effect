@@ -1,6 +1,8 @@
 # Agentic CAD — Patent Tooling
 
-Lifecycle: `active`
+Lifecycle: `paused`
+
+**Paused by operator ruling (finish board, 2026-11-13).** It has real product value, but it is a large and unstarted build with no activity for a week, so it should not count as active. No lane is working on it; resume with `bun run beep goals set-status agentic-cad-patent-tooling active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
 
 CAD capability for a solo patent practice inside
 `apps/professional-desktop`: open the drawings a matter already has, and make

@@ -2,7 +2,9 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `paused`
+
+**Paused by operator ruling (finish board, 2026-11-13).** Zero phases begun and overlaps the text-knowledge stack rebuild; nothing in flight. No lane is working on it; resume with `bun run beep goals set-status hybrid-retrieval-fusion-core active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

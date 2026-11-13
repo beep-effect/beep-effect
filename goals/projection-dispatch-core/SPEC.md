@@ -118,6 +118,23 @@ Full rationale and rejected options remain in the exploration.
 | 2026-07-14 | Per-launch authentication plus server-authorized projection scope; no invented user principal. | [`Q6`](../../explorations/local-first-projection-sync/DECISIONS.md#2026-07-14--q6-subscription-authentication-and-authorization--locked) |
 | 2026-07-14 | FalkorDB excluded from v1; any future graph target is separately approved and non-authoritative. | [`Q7`](../../explorations/local-first-projection-sync/DECISIONS.md#2026-07-14--q7-falkordb--locked) |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug projection-dispatch-core`; add a `kind: decision` file there, never edit this block._
+
+### Paused by operator ruling (finish board, 2026-11-13): Blocked on another goal and nothing is in flight, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
+
+Triage rationale: Blocked on another goal and nothing is in flight.
+
+No lane is working on it. Resume with `bun run beep goals set-status projection-dispatch-core active` when it is picked up.
+
+Lane chore/finish-board-pause-b1
+
+Reverse: goals set-status projection-dispatch-core active when it is picked up
+
+<!-- beep:decisions:end -->
+
 ## Acceptance Criteria
 
 - [ ] P0 archives the sibling workflow spike evidence it consumes and an
