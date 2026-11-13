@@ -114,6 +114,16 @@ red and the parent needs `--relaxed`, or when the layer is not ready. Anyone
 with merge rights can also merge the parent alone at any time, so treat a
 cascade as normal.
 
+**Holding a layer until the top is gated.** To keep a ready lower layer from
+being merged alone, open one review thread on it that says so and resolve it
+when you gate the top: an unresolved thread blocks every merge that does not
+bypass the ruleset. Do not use a label for this. Any label a user or agent
+adds after `ready-for-heavy` starts a Heavy Admit run whose jobs all skip, and
+GitHub's rules can then count the required `Heavy / *` checks as missing (seen
+on #3133, 2026-11-12). If a label was added anyway, re-apply
+`ready-for-heavy` last so the newest Heavy Admit run is a real one, and wait
+for it.
+
 ## After GitHub rewrites a layer
 
 A cascade or a restack replaces the layer's commits with GitHub's replay.

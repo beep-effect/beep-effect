@@ -86,3 +86,53 @@ machine or session identifiers.
   repo CLI's shared internals. It took seven seconds here. A frozen copy that
   vendored the service calls it needs, instead of importing the live
   service, would not break at all.
+
+## 2026-11-13 — The first parent layer was merged before a layer could be stacked on it
+
+- **Doing:** opening the proof stack. #3170 (the P0 record) was published as
+  a draft at 01:34Z to serve as the parent.
+- **Evidence:**
+  - Its timeline shows `ready_for_review` at 01:35:36Z and `merged` at
+    01:45:16Z, both by the shared login, inside the review window and with no
+    reviewer review. The lane did neither, and its body's first line said not
+    to merge it by hand.
+  - The stack had to be rebuilt on a second parent (#3188), and both layers
+    were opened only after their final-check receipts existed so they could be
+    flipped by `yeet ready` within a minute of opening.
+- **Would have prevented it:** a hold a hand merge cannot miss. An unresolved
+  review thread is one, because the ruleset then refuses any merge without a
+  bypass. `references/stacks.md` now says to hold a layer that way.
+
+## 2026-11-13 — A hold label shadowed the Heavy run on both layers
+
+- **Doing:** protecting #3188 and #3189 with `owner-merge-hold` right after
+  `yeet ready`.
+- **Evidence:**
+  - `heavy-admit.yml` runs on every `labeled` event from a user token and
+    skips at job level for other labels. Each PR got a second Heavy Admit run,
+    `completed/skipped`, 90 seconds after the real one started
+    (runs 43358796559 and 43358800873).
+  - The orchestrator had already seen GitHub refuse #3133 with required
+    `Heavy / *` checks counted as missing behind such a run.
+  - The label was removed and `ready-for-heavy` re-applied on both, which
+    queued a second full Heavy matrix per layer behind the first.
+- **Would have prevented it:** `heavy-admit.yml` filtering non-admission
+  labels before a run is created, which the `merge-gate-shadow-suite` lane is
+  working on, or Yeet refusing to add a label after `ready-for-heavy`.
+
+## 2026-11-13 — Three heavy local runs at once made unrelated suites time out
+
+- **Doing:** `quality package-verify @beep/repo-cli` on the tooling lane while
+  two `yeet final-check` runs covered the two layers.
+- **Evidence:**
+  - package-verify: 10 timeouts at 30 s in `worktree-command`,
+    `worktree-remove-fence` and `yeet-sweep-retire`; all three files pass
+    alone (62, 13 and 47 tests).
+  - final-check coverage on the parent: one 90 s timeout in
+    `knowledge-doctor.test.ts`, 32 of 32 alone. The same gate then failed on
+    both layers for inherited new-file coverage rows (`Ci/Certainty.ts`,
+    `Ci/CiBinaryClosure.ts`, `Lint/CoverageOwners.ts`) after 42 minutes each.
+  - `final-check --resume` reran every gate, not only the failed one.
+- **Would have prevented it:** the coverage ratchet attributing rows for
+  files the head does not touch as inherited instead of failing, and
+  `--resume` reusing the gates that passed on the same head.
