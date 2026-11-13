@@ -14,6 +14,8 @@
 import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
 import { identity } from "effect/Function";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 
 /**
  * Deterministic canonical JSON over wire-form values: the RFC 8785 text that
@@ -33,3 +35,18 @@ import * as Result from "effect/Result";
  */
 export const canonicalJson = (value: unknown): string =>
   Result.getOrThrowWith(JsoncFingerprint.canonicalizeResult(value), identity);
+
+/**
+ * {@link canonicalJson} returning a `Result`: the owner's refusal of a value
+ * outside plain JSON is an `S.SchemaError` whose message carries the owner's
+ * code and JSON pointer, so a digest helper with a `SchemaError` channel
+ * reports it there instead of throwing.
+ *
+ * @category encoding
+ * @since 0.0.0
+ */
+export const canonicalJsonResult = (value: unknown): Result.Result<string, S.SchemaError> =>
+  Result.mapError(
+    JsoncFingerprint.canonicalizeResult(value),
+    (error) => new S.SchemaError(new SchemaIssue.InvalidValue({ message: error.message }))
+  );

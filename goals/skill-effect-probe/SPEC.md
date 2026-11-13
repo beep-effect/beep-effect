@@ -235,6 +235,12 @@ Cell A runs the archived prompt against a skill-less plugin under --ablation non
 
 Reverse: Add a fourth cell (skill without laws) in a new dated analysis rule if the arms prove unequal.
 
+### Closed by operator ruling without a verified readiness receipt, 2026-11-13
+
+Operator ruling 2026-11-13 ~05:10Z: #3167 (04:33Z), the re-final #3207 (04:47Z) and the owner-held re-final #3210 (05:07Z) all merged before the readiness monitor printed merge-ready: yes, so goals completion refresh cannot verify the closeout. The packet closes completed-retained by ruling with no verified receipt and no further re-finals.
+
+Reverse: Open a goals-only re-final held until monitor merge-ready if a verified completion receipt is later required; the verdict and evidence on main do not change.
+
 ### Hold the scored run for the plan-limit reset, 2026-11-13
 
 The seven-day limit resets 2026-11-15 23:00 America/Chicago. Per SPEC, no top-up, no runner or model switch: the headroom pilot and P2 resume after the reset.
@@ -258,6 +264,12 @@ Reverse: Commit them under a lint-excluded path if a reviewer needs to reproduce
 AgentConventionTrial compares one declared pair of receipts with digest controls; a three-cell, five-run, twelve-task probe needs run records and a clustered report. Run records reuse AgentEffectivenessEvalScoreReport.
 
 Reverse: Fold the probe into AgentConventionTrial if a later comparison needs one shape for both.
+
+### Re-final the closeout through a goals-only PR, 2026-11-13
+
+goals completion refresh marked #3167 unsatisfied on one check: no yeet publish verdict at its accepted head (the last wave was pushed with git push) and it merged before the readiness monitor printed merge-ready. Per the repo's re-final route, a goals-only PR carries the proposedCloseout, is published through yeet and merges only after merge-ready: yes; the packet-state PR follows. This takes the packet to three PRs, one over the two-PR budget, because the closeout cannot be verified otherwise.
+
+Reverse: None needed: the re-final changes only goal metadata; if the operator prefers, adopt the closeout manually after reviewing #3167.
 
 ### Repair three scorer-drift items for this probe only, 2026-11-13
 

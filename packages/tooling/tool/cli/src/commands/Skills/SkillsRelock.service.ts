@@ -39,7 +39,7 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { canonicalJsonText } from "../Goals/PacketCore/PacketDigest.ts";
+import { canonicalJsonTextResult } from "../Goals/PacketCore/PacketDigest.ts";
 import { isSecondStrike, readHunkLedger } from "./internal/HunkLedger.ts";
 import { readSkillsLockDocument, requireVendoredEntry, SKILLS_LOCK_PATH } from "./internal/LockFile.ts";
 import { decodePatchText, readVerifiedPatchSeries } from "./internal/PatchSeries.ts";
@@ -309,13 +309,15 @@ const planDigestOf = Effect.fn("SkillsRelock.planDigestOf")(function* (
     snapshot: encodeSnapshot(snapshot),
     effective: encodeEffective(effective),
   }).pipe(SkillsCommandError.mapError(`Failed to encode the ${skill} relock plan.`, SKILLS_LOCK_PATH, skill));
-  const preimage = canonicalJsonText({
-    schemaVersion: RELOCK_PLAN_SCHEMA_VERSION,
-    lockSha256,
-    skill,
-    sourceRevision: entry.upstream.sourceRevision,
-    ...encoded,
-  });
+  const preimage = yield* Effect.fromResult(
+    canonicalJsonTextResult({
+      schemaVersion: RELOCK_PLAN_SCHEMA_VERSION,
+      lockSha256,
+      skill,
+      sourceRevision: entry.upstream.sourceRevision,
+      ...encoded,
+    })
+  ).pipe(SkillsCommandError.mapError(`Failed to canonicalize the ${skill} relock plan.`, SKILLS_LOCK_PATH, skill));
   return yield* hashBytes(new TextEncoder().encode(preimage), "skills-relock-plan");
 });
 

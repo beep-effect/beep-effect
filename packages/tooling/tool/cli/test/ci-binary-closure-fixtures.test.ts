@@ -37,8 +37,18 @@ const baseFiles: ReadonlyArray<readonly [string, string]> = [
   [`${CLI}/src/dep.ts`, "export const dep = 1;\n"],
   [`${CLI}/src/unreached.ts`, "export const unreached = 2;\n"],
   ["patches/pkg@1.0.0.patch", "--- a\n+++ b\n"],
+  // The root tsconfig extends the base by an extensionless path in an array; the base extends a
+  // package (resolved in node_modules, pinned by bun.lock); the workspace extends the base again.
+  ["tsconfig.json", '{\n  // aliases live here\n  "extends": ["./tsconfig.base"],\n  "compilerOptions": {}\n}\n'],
+  [
+    "tsconfig.base.json",
+    '{ "extends": "@tsconfig/strictest/tsconfig.json", "compilerOptions": { "jsx": "react-jsx" } }',
+  ],
+  [`${CLI}/tsconfig.json`, '{ "extends": "../../../../tsconfig.base.json", "references": [] }'],
   ...A.map(BUILD_INPUTS, (file) => [file, `${file}\n`] as const),
 ];
+
+const TSCONFIGS = ["tsconfig.base.json", "tsconfig.json", `${CLI}/tsconfig.json`] as const;
 
 const memoryTree = (
   files: ReadonlyArray<readonly [string, string]>,
@@ -51,9 +61,13 @@ const memoryTree = (
         ? Effect.fail(PolicyFingerprintError.make({ message: `synthetic read failure for ${file}`, cause: file }))
         : Effect.succeed(HashMap.get(contents, file)),
     files: (directory) =>
-      Effect.succeed(
-        contents.pipe(HashMap.keys, A.fromIterable, A.filter(Str.startsWith(`${directory}/`)), A.sort(Order.String))
-      ),
+      O.contains(failing, directory)
+        ? Effect.fail(
+            PolicyFingerprintError.make({ message: `synthetic listing failure for ${directory}`, cause: directory })
+          )
+        : Effect.succeed(
+            contents.pipe(HashMap.keys, A.fromIterable, A.filter(Str.startsWith(`${directory}/`)), A.sort(Order.String))
+          ),
   };
 };
 
@@ -73,7 +87,14 @@ describe("ci binary closure over a synthetic tree", () => {
         const closure = yield* closureOf(memoryTree(baseFiles));
         expect(A.map(closure.files, (file) => file.path)).toStrictEqual(
           A.sort(
-            [`${CLI}/package.json`, ENTRY, `${CLI}/src/dep.ts`, "patches/pkg@1.0.0.patch", ...BUILD_INPUTS],
+            [
+              `${CLI}/package.json`,
+              ENTRY,
+              `${CLI}/src/dep.ts`,
+              "patches/pkg@1.0.0.patch",
+              ...TSCONFIGS,
+              ...BUILD_INPUTS,
+            ],
             Order.String
           )
         );
@@ -116,6 +137,34 @@ describe("ci binary closure over a synthetic tree", () => {
         const tree = memoryTree(withFile(ENTRY, 'import "./missing.ts";\n'));
         const error = yield* Effect.flip(closureOf(tree));
         expect(error.message).toBe("Failed to walk the CI binary import closure.");
+      })
+    );
+
+    it.effect(
+      "leaves out the tsconfig of a reached workspace that has none, keeping the root chain",
+      Effect.fnUntraced(function* () {
+        const tree = memoryTree(A.filter(baseFiles, ([file]) => file !== `${CLI}/tsconfig.json`));
+        const closure = yield* closureOf(tree);
+        const paths = A.map(closure.files, (file) => file.path);
+        expect(paths).not.toContain(`${CLI}/tsconfig.json`);
+        expect(paths).toContain("tsconfig.base.json");
+      })
+    );
+
+    it.effect(
+      "fails when a tsconfig on the chain is not valid configuration",
+      Effect.fnUntraced(function* () {
+        const tree = memoryTree(withFile("tsconfig.base.json", '{ "extends": 5 }'));
+        const error = yield* Effect.flip(closureOf(tree));
+        expect(error.message).toBe("Cannot read the TypeScript configurations of the CI binary closure.");
+      })
+    );
+
+    it.effect(
+      "fails when a closure directory cannot be listed",
+      Effect.fnUntraced(function* () {
+        const error = yield* Effect.flip(closureOf(memoryTree(baseFiles, O.some("patches"))));
+        expect(error.message).toBe("Cannot list patches.");
       })
     );
   });

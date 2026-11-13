@@ -8,7 +8,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { DegradedKind } from "@/schema/Degraded";
-import { sha256CanonicalSync } from "@/schema/Digest";
+import { sha256CanonicalResult } from "@/schema/Digest";
 import { ChunkId, DocumentId } from "@/schema/Ids";
 
 const $I = $SemanticaId.create("schema/Text");
@@ -223,7 +223,7 @@ export const chunkIdPreimage = (chunk: ChunkIdSource): Result.Result<typeof Chun
  * @since 0.0.0
  */
 export const makeChunkId = (chunk: ChunkIdSource): Result.Result<ChunkId, S.SchemaError> =>
-  Result.map(chunkIdPreimage(chunk), (preimage) => ChunkId.make(sha256CanonicalSync(preimage)));
+  Result.flatMap(chunkIdPreimage(chunk), (preimage) => Result.map(sha256CanonicalResult(preimage), ChunkId.make));
 
 const ChunkReceiptCheck = S.makeFilter(
   (chunk: typeof ChunkFields.Type) => S.toEquivalence(TextAnchor)(chunk.anchor, chunk.receipt.anchor),
