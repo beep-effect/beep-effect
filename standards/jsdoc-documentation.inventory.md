@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-13T01:21:43.142Z
+Generated: 2026-11-13T02:41:00.748Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 179 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 15 |
-| publicModules | 3906 |
-| publicExports | 27937 |
+| publicModules | 3907 |
+| publicExports | 27953 |
 | openModules | 114 |
 | openExports | 88 |
 | missingExportExamples | 0 |
@@ -66,7 +66,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 8 | `@beep/spdx` | `packages/foundation/modeling/spdx` | clean | 4 | 16 | 0 | 0 |
 | 9 | `@beep/utils` | `packages/foundation/modeling/utils` | clean | 29 | 229 | 0 | 0 |
 | 10 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 16 |
-| 11 | `@beep/schema` | `packages/foundation/modeling/schema` | clean | 170 | 973 | 0 | 0 |
+| 11 | `@beep/schema` | `packages/foundation/modeling/schema` | clean | 170 | 977 | 0 | 0 |
 | 12 | `@beep/codegen-kit` | `packages/tooling/library/codegen-kit` | clean | 6 | 45 | 0 | 0 |
 | 13 | `@beep/commands` | `packages/drivers/commands` | clean | 8 | 58 | 0 | 0 |
 | 14 | `@beep/cosmos` | `packages/drivers/cosmos` | clean | 6 | 22 | 0 | 0 |
@@ -77,7 +77,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 19 | `@beep/github-references` | `packages/foundation/modeling/github-references` | clean | 4 | 28 | 0 | 0 |
 | 20 | `@beep/glob` | `packages/foundation/modeling/glob` | clean | 4 | 9 | 0 | 0 |
 | 21 | `@beep/graph-3d` | `packages/drivers/graph-3d` | clean | 7 | 17 | 0 | 0 |
-| 22 | `@beep/jsonc` | `packages/foundation/modeling/jsonc` | clean | 8 | 53 | 0 | 0 |
+| 22 | `@beep/jsonc` | `packages/foundation/modeling/jsonc` | clean | 8 | 54 | 0 | 0 |
 | 23 | `@beep/memfs` | `packages/tooling/test-kit/memfs` | clean | 3 | 23 | 0 | 0 |
 | 24 | `@beep/pglite` | `packages/drivers/pglite` | clean | 4 | 10 | 0 | 0 |
 | 25 | `@beep/pretext` | `packages/drivers/pretext` | clean | 6 | 36 | 0 | 0 |
@@ -221,7 +221,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 163 | `@beep/ontology-server` | `packages/ontology/server` | clean | 8 | 23 | 0 | 0 |
 | 164 | `@beep/party-use-cases` | `packages/party/use-cases` | clean | 6 | 17 | 0 | 0 |
 | 165 | `@beep/practice-claude-mod` | `apps/practice-claude-mod` | clean | 8 | 30 | 0 | 0 |
-| 166 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 574 | 5311 | 45 | 29 |
+| 166 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 575 | 5322 | 45 | 29 |
 | 167 | `@beep/workspace-tables` | `packages/workspace/tables` | clean | 23 | 56 | 0 | 0 |
 | 168 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | clean | 12 | 45 | 0 | 0 |
 | 169 | `@beep/agents-use-cases` | `packages/agents/use-cases` | clean | 31 | 129 | 0 | 0 |
@@ -483,8 +483,8 @@ Export findings:
 - `src/commands/Cache/Cache.command.ts:376` `runCacheWarm` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.command.ts:574` `buildCacheDashboard` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.service.ts:112` `encodeCachePolicyBaselineText` (const) - 1 example import violation(s)
-- `src/commands/Ci/CiLane.ts:417` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
-- `src/commands/Ci/CiLane.ts:1788` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:419` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:1804` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
 - `src/commands/Corpus/Corpus.errors.ts:312` `CorpusArchiveMoveDigestMismatchError` (class) - 1 example import violation(s)
 - `src/commands/CreatePackage/CreatePackage.command.ts:119` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
 - `src/commands/Drawings/Drawings.intake.schemas.ts:304` `MessageFacts` (class) - 1 example import violation(s)
