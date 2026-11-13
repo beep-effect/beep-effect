@@ -33,7 +33,7 @@ import {
   anchorsOf,
   calibrationOf,
   canonicalRow,
-  expiredUnknownReading,
+  expiredInstanceReading,
   ghSpawnFieldsOf,
   hourStartOf,
   identityOfObservation,
@@ -87,6 +87,10 @@ const $I = $RepoCliId.create("internal/github/GithubLedger.service");
 const TRANSPORT_LATEST_INTERVAL = Duration.seconds(30);
 const RAW_RETENTION = Duration.hours(72);
 const ROLLUP_RETENTION = Duration.days(35);
+
+// Only the current calculation is trusted; v1 and v2 rollups recompute from raw rows or stay legacy.
+const isCurrentRollup = (rollup: LedgerRollupRead): rollup is LedgerHourRollup =>
+  rollup.schemaVersion === "github-ledger-rollup/v3";
 const RAW_KEEP_AT_LEAST = Duration.hours(24);
 const RAW_MAX_BYTES = 256 * 1024 * 1024;
 const ROLLUP_GRACE = Duration.minutes(75);
@@ -129,7 +133,7 @@ export interface GithubBudgetLedgerShape {
   readonly ghSink: GhSpawnSinkShape;
   /**
    * The hourly rollups of a range, computing missing or incomplete ones from
-   * rows; retained v1 hours without raw rows carry an explicit legacy marker.
+   * rows; retained v1 or v2 hours without raw rows carry an explicit legacy marker.
    */
   readonly hours: (range: LedgerRange) => Effect.Effect<ReadonlyArray<LedgerHourResult>, GithubLedgerError>;
   /** When the identity was last sampled. */
@@ -493,11 +497,7 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
   const storedComplete = (hour: DateTime.Utc) =>
     Effect.map(
       store.readRollup(hour),
-      (stored) =>
-        [
-          hour,
-          O.filter(stored, (rollup) => rollup.schemaVersion === "github-ledger-rollup/v2" && rollup.complete),
-        ] as const
+      (stored) => [hour, O.filter(stored, (rollup) => isCurrentRollup(rollup) && rollup.complete)] as const
     );
 
   const incompleteHours = (
@@ -517,7 +517,7 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
     return yield* Effect.forEach(
       stored,
       Effect.fnUntraced(function* ([hour, complete]): Effect.fn.Return<LedgerHourResult, GithubLedgerError> {
-        if (O.isSome(complete) && complete.value.schemaVersion === "github-ledger-rollup/v2") return complete.value;
+        if (O.isSome(complete) && isCurrentRollup(complete.value)) return complete.value;
         const rows = contextOf(hour);
         const original = yield* store.readRollup(hour);
         const start = DateTime.toEpochMillis(hour);
@@ -527,9 +527,10 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
             DateTime.toEpochMillis(row.at) >= start &&
             DateTime.toEpochMillis(row.at) < start + Duration.toMillis(Duration.hours(1))
         );
-        if (!hasRows && O.isSome(original) && original.value.schemaVersion === "github-ledger-rollup/v1") {
+        if (!hasRows && O.isSome(original) && !isCurrentRollup(original.value)) {
           const legacy = original.value;
           return LegacyLedgerHour.make({
+            schemaVersion: legacy.schemaVersion,
             hour: legacy.hour,
             host: legacy.host,
             complete: false,
@@ -588,7 +589,7 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
         rows: A.map(recentRows, canonicalRow(current)),
         lastComplete: O.filter(
           previous,
-          (rollup): rollup is LedgerHourRollup => rollup.schemaVersion === "github-ledger-rollup/v2" && rollup.complete
+          (rollup): rollup is LedgerHourRollup => isCurrentRollup(rollup) && rollup.complete
         ),
       })
     );
@@ -606,7 +607,7 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
       cache,
       HashMap.filter(
         (reading) =>
-          !expiredUnknownReading(reading, now) &&
+          !expiredInstanceReading(reading, now) &&
           DateTime.toEpochMillis(reading.asOf) >= nowMillis - Duration.toMillis(LATEST_RETENTION)
       )
     );
