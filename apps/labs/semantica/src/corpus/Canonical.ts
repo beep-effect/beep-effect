@@ -1,8 +1,8 @@
+import { canonicalDetectionJsonResult } from "@beep/epistemics/ContradictionDetection";
 import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
 import { identity } from "effect/Function";
 import * as Result from "effect/Result";
-import * as S from "effect/Schema";
-import * as SchemaIssue from "effect/SchemaIssue";
+import type * as S from "effect/Schema";
 
 /**
  * Encodes a JSON-compatible value with recursively sorted object keys and no whitespace.
@@ -44,7 +44,9 @@ export const canonicalJson = (value: unknown): string =>
  *
  * The owner's refusal of a value outside plain JSON becomes an `S.SchemaError`
  * whose message names the owner's code and JSON pointer, instead of a thrown
- * `JsoncCanonicalizeError`.
+ * `JsoncCanonicalizeError`. It is the `@beep/epistemics` twin, so the mapping
+ * from refusal to `SchemaError` has one definition for the seal domains and
+ * the lab.
  *
  * **Example** (Refuse an unpaired surrogate without throwing)
  *
@@ -59,8 +61,5 @@ export const canonicalJson = (value: unknown): string =>
  * @category encoding
  * @since 0.0.0
  */
-export const canonicalJsonResult = (value: unknown): Result.Result<string, S.SchemaError> =>
-  Result.mapError(
-    JsoncFingerprint.canonicalizeResult(value),
-    (error) => new S.SchemaError(new SchemaIssue.InvalidValue({ message: error.message }))
-  );
+export const canonicalJsonResult: (value: unknown) => Result.Result<string, S.SchemaError> =
+  canonicalDetectionJsonResult;
