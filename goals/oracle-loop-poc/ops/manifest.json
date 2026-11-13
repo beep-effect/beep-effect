@@ -4,13 +4,13 @@
     "id": "oracle-loop-poc",
     "packetId": "goal-packet/v1:2510f6486ac000f6552a57ee6947eeb36ffae6c9ae6347af8511d1f6f94ad6cf",
     "title": "Oracle Loop POC",
-    "status": "active",
+    "status": "paused",
     "created": "2026-10-28",
-    "updated": "2026-11-05",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/oracle-loop-poc",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "Prove the admit-find-repair loop for agent work product in a lab app: Markdown, HTML and .docx admitted into the Doc hub through positioned codecs, findings addressed by model path, repair by splice, a generic profile and a stacked patent profile, pre-registered kill criteria. Outcome: go/no-go on promoting the core shapes.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -85,5 +85,6 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): It is a proof of concept with no execution yet. It is worth doing later, but it should not be active. Resume with `bun run beep goals set-status oracle-loop-poc active` when it is picked up."
 }

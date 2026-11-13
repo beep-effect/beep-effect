@@ -2,7 +2,9 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `paused`
+
+**Paused by operator ruling (finish board, 2026-11-13).** Gains are slow and incremental, and it is far from its gates with nothing concrete next, so it should not hold an active slot. No lane is working on it; resume with `bun run beep goals set-status claim-check-performance active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
 
 A performance-focused follow-up to claim-element-antecedent-check. The old
 implementation remains 37/538 with poor accuracy and alert noise. Delivery

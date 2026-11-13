@@ -3,15 +3,15 @@
   "initiative": {
     "id": "law-docketing-patent-spine",
     "title": "Law Docketing Patent Spine",
-    "status": "active",
+    "status": "paused",
     "created": "2026-07-14",
-    "updated": "2026-07-14",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/law-docketing-patent-spine",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "Deliver the US Patent Office-Action Approval Spine from official evidence through attorney-approved durable reconciliation and one-way Outlook reminders.",
-  "statusNote": "Paired acceptance: patent v1 is blocked until goals/law-docketing-reliability proves the independent kill-app alert and restore/backfill/reconciliation path.",
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): Real product value but nothing started and paired with an unstarted reliability goal. Resume with `bun run beep goals set-status law-docketing-patent-spine active` when it is picked up. Before the ruling: Paired acceptance: patent v1 is blocked until goals/law-docketing-reliability proves the independent kill-app alert and restore/backfill/reconciliation path.",
   "dependencies": [
     "goals/m365-driver",
     "goals/law-docketing-reliability",

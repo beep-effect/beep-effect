@@ -468,6 +468,23 @@ would indicate changed verification evidence. The lane's other external write in
 Never print private log lines or corpus paths/content. Reversal: deletion of the run directory
 wholesale is an orchestrator decision; this lane never deletes it.
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug oppold-corpus-salvage-restoration`; add a `kind: decision` file there, never edit this block._
+
+### Paused by operator ruling (finish board, 2026-11-13): It still has data value, but it is blocked on the execution-identity question, and the 11-05 consolidation already did most of the recovery. Set it to paused so nothing claims to be in flight, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
+
+Triage rationale: It still has data value, but it is blocked on the execution-identity question, and the 11-05 consolidation already did most of the recovery. Set it to paused so nothing claims to be in flight.
+
+No lane is working on it. Resume with `bun run beep goals set-status oppold-corpus-salvage-restoration active` when it is picked up.
+
+Lane chore/finish-board-pause-b1
+
+Reverse: goals set-status oppold-corpus-salvage-restoration active when it is picked up
+
+<!-- beep:decisions:end -->
+
 ## Exception ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |
