@@ -9,7 +9,6 @@ import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { printCommandJson } from "@beep/repo-cli-kit/cli/Json";
-import { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import { findRepoRoot } from "@beep/repo-utils";
 import { GitObjectId } from "@beep/schema/Conformance";
 import * as O from "@beep/utils/Option";
@@ -67,6 +66,7 @@ import {
 } from "./ArtifactPaths.ts";
 import {
   appendYeetAttemptJournalEvent,
+  generateYeetAttemptId,
   YeetAttemptFinished,
   YeetAttemptStarted,
   YeetAttemptTerminated,
@@ -186,7 +186,6 @@ import type { YeetBaseFreshness, YeetMergeReady, YeetStashState, YeetVerdict } f
 
 const decodeGhPrViewJson = S.decodeEffect(S.fromJsonString(GhPrView));
 const decodeProofJobRecordLine = S.decodeUnknownOption(S.fromJsonString(ProofJobRecord));
-const decodeUUID = S.decodeEffect(UUID);
 
 export { defaultYeetRunOptions } from "../Yeet.schemas.ts";
 
@@ -201,17 +200,6 @@ const admissionAttemptFields = (attempt: O.Option<YeetAttemptStarted>) => ({
   envProfile: O.flatMap(attempt, (value) => value.envProfile),
   computeProfile: O.flatMap(attempt, (value) => value.computeProfile),
   stage: O.flatMap(attempt, (value) => value.stage),
-});
-
-const generateAttemptId = Effect.fn("Yeet.generateAttemptId")(function* (): Effect.fn.Return<
-  YeetAttemptId,
-  YeetCommandError,
-  SecureRandom.SecureRandom
-> {
-  const crypto = yield* SecureRandom.SecureRandom;
-  return yield* crypto
-    .uuidV4()
-    .pipe(Effect.flatMap(decodeUUID), Effect.mapError(YeetCommandError.new("Failed to generate Yeet attempt id.")));
 });
 
 const isNamedLocalProofShard = (step: RepoPlanStep): boolean =>
@@ -2798,7 +2786,8 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   }
   const startedAtEpochMillis = yield* Clock.currentTimeMillis;
   const attempt = yield* O.match(providedAttempt, {
-    onNone: () => Effect.flatMap(generateAttemptId(), (attemptId) => makeYeetAttempt(plan.context, options, attemptId)),
+    onNone: () =>
+      Effect.flatMap(generateYeetAttemptId(), (attemptId) => makeYeetAttempt(plan.context, options, attemptId)),
     onSome: Effect.succeed,
   });
   const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>(A.empty());
@@ -3128,7 +3117,7 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
     return yield* emptyPlanResult(context);
   }
   if (options.merged) {
-    const attemptId = yield* generateAttemptId();
+    const attemptId = yield* generateYeetAttemptId();
     return yield* runMergedVerify(context, options, message, modeOptions, attemptId);
   }
 

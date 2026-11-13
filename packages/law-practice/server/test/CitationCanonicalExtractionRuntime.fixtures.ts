@@ -135,5 +135,11 @@ export const makeCitationCanonicalExtractionReplay = Effect.fn("CanonicalExtract
       expect(counts.confirmed).toBe(counts.spawned);
     })
   );
-  return { extract, annotate, assertRetired, limits: installed.setup.limits };
+  return {
+    extract,
+    annotate,
+    assertRetired,
+    native: installed.setup.observed.snapshot,
+    limits: installed.setup.limits,
+  };
 });

@@ -55,6 +55,9 @@ import {
   appendAdmissionEvictionJournalEvent,
   appendAdmissionJournalEvent,
   appendAdmissionJournalEventOnce,
+  pruneAgedAdmissionJournalArchive,
+  readAdmissionJournalArchive,
+  readAdmissionJournalHistory,
   readAdmissionProtocol,
   releaseJournalFileLock,
   writeAdmissionProtocol,
@@ -412,6 +415,48 @@ const ensureAdmissionDirectories = Effect.fnUntraced(function* (): Effect.fn.Ret
 export const admissionProtocolStatus = Effect.fn("QualityScheduler.admissionProtocolStatus")(function* () {
   const directories = yield* ensureAdmissionDirectories();
   return yield* readAdmissionProtocol(directories.root);
+});
+
+/**
+ * List the machine-wide admission-journal archive's day segments.
+ *
+ * **Example** (Inspect the archive listing)
+ *
+ * ```ts
+ * import { admissionJournalArchiveStatus } from "@beep/repo-cli/test/RepoRun"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(admissionJournalArchiveStatus())) // true
+ * ```
+ *
+ * @returns The archive directory under the admission root and its segment names, oldest first.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const admissionJournalArchiveStatus = Effect.fn("QualityScheduler.admissionJournalArchiveStatus")(function* () {
+  const directories = yield* ensureAdmissionDirectories();
+  return yield* readAdmissionJournalArchive(directories.root);
+});
+
+/**
+ * Fold the machine-wide admission history: archived rows plus the live journal.
+ *
+ * **Example** (Read the admission history)
+ *
+ * ```ts
+ * import { admissionJournalHistory } from "@beep/repo-cli/test/RepoRun"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(admissionJournalHistory())) // true
+ * ```
+ *
+ * @returns The deduplicated admission history with its row counts.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const admissionJournalHistory = Effect.fn("QualityScheduler.admissionJournalHistory")(function* () {
+  const directories = yield* ensureAdmissionDirectories();
+  return yield* readAdmissionJournalHistory(directories.root);
 });
 
 /**
@@ -1364,6 +1409,7 @@ const repairDeadAdmissionState = Effect.fnUntraced(function* (
     discard: true,
   });
   yield* archiveAgedQuarantine(directories);
+  yield* pruneAgedAdmissionJournalArchive(directories.root);
 });
 
 const promotionTransitionPath = (path: Path.Path, directories: AdmissionDirectories, nonce: string): string =>
