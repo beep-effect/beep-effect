@@ -2044,6 +2044,17 @@ export const ciLaneStepsForTesting: {
           bunRunStep(repoRoot, "ci:repo-sanity:workflow-lint", ["beep", "ci", "workflow-lint"]),
           bunRunStep(repoRoot, "lint:schema-catalog", ["beep", "lint", "schema-catalog"]),
           bunRunStep(repoRoot, "ci:repo-sanity:catalog-usage", ["beep", "quality", "catalog-usage"]),
+          // The single-checker census baseline records the compiler it was measured with, and a
+          // compiler bump that leaves it behind makes the gate's counts incomparable; no lane
+          // noticed two such bumps. The stamp check reads the baseline and one `tsc --version`
+          // (no build, about a second), so it runs on every full pass. A documentation-only diff
+          // can move neither input, so the documentation path leaves it out.
+          bunRunStep(repoRoot, "ci:repo-sanity:check-census-stamp", [
+            "beep",
+            "quality",
+            "check-census",
+            "--stamp-only",
+          ]),
           // Required on every head: Heavy / Lint Policy also runs the law on
           // code PRs, but it is not a required context.
           homePaths,
