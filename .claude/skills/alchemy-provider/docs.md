@@ -22,8 +22,8 @@ each, against 10–21 for S3 Bucket, SQS Queue and R2 Bucket.
 
 ### Runtimes
 
-Copy the shape of `packages/aws/src/Lambda/Function.ts` and
-`packages/cloudflare/src/Workers/Worker.ts`. A runtime's JSDoc has:
+Copy the shape of [packages/aws/src/Lambda/Function.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/aws/src/Lambda/Function.ts) and
+[packages/cloudflare/src/Workers/Worker.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/cloudflare/src/Workers/Worker.ts). A runtime's JSDoc has:
 
 - **An intro** that says what the runtime is, what Alchemy creates and
   owns for you (role or identity, registry, plan), what it does not own,
@@ -53,8 +53,8 @@ missing.
 ### Fat-head resources
 
 The 10–20 resources most apps use (see the PR description in step 10).
-Copy `packages/aws/src/S3/Bucket.ts`, `packages/aws/src/SQS/Queue.ts`
-and `packages/cloudflare/src/R2/Bucket.ts`:
+Copy [packages/aws/src/S3/Bucket.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/aws/src/S3/Bucket.ts), [packages/aws/src/SQS/Queue.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/aws/src/SQS/Queue.ts)
+and [packages/cloudflare/src/R2/Bucket.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/cloudflare/src/R2/Bucket.ts):
 
 - **An intro**: what it is in user terms, the secure defaults Alchemy
   applies, and what replacing it costs (data loss, downtime).

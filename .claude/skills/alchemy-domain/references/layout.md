@@ -88,7 +88,7 @@ import { Bank, BankHandlers } from "@acme/domain/Bank.model";
 import { CustomerApi } from "@acme/domain/CustomerApi.api";
 ```
 
-Inside a package, import with relative paths and the `.ts` extension (`./Account.id.ts`). Across packages, import without the extension (`@acme/domain/Account/Account.id`). Don't add barrel files.
+Inside a package, import with relative paths and the `.ts` extension (the account ID module). Across packages, import without the extension (`@acme/domain/Account/Account.id`). Don't add barrel files.
 
 `server` depends on `@acme/domain` (`workspace:*`), `alchemy` and `effect`. `web` depends on `@acme/domain`, `alchemy`, `effect`, `foldkit` and `@effect/platform-browser`, with `vite`, `@foldkit/vite-plugin` and `vitest` as devDependencies. The root depends on `@acme/server` and `alchemy`.
 
@@ -146,6 +146,6 @@ More: [Cloudflare: Deploy it](https://alchemy.run/domain/cloudflare#deploy-it).
 
 ## Several models
 
-Each bounded context is its own domain package (`packages/banking`, `packages/lending`) with its own `*.model.ts`. They talk through policies that call each other's Apis or external system declarations, never by importing each other's aggregates. One server package can host several models; give each its own Worker or merge their layers into one.
+Each bounded context is its own domain package (banking package, lending package) with its own `*.model.ts`. They talk through policies that call each other's Apis or external system declarations, never by importing each other's aggregates. One server package can host several models; give each its own Worker or merge their layers into one.
 
 More: [Project layout: Add a package per model](https://alchemy.run/domain/project-layout#add-a-package-per-model), [Domain Model: Keep one language per model](https://alchemy.run/domain/model#keep-one-language-per-model).

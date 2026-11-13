@@ -71,7 +71,7 @@ When the provider already exists (a PR in progress, or a package on
 1. Merge `origin/main` into the branch and type-check the package (see
    **Branch, checkpoints, and PRs**).
 2. Run every check in [review.md](../review.md) against the code as it is,
-   and port `scripts/audit-service.ts` (step 2) to get per-service
+   and port [scripts/audit-service.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/scripts/audit-service.ts) (step 2) to get per-service
    operation coverage.
 3. Rebuild `INDEX.md` from the results: one row per missing resource,
    binding, runtime form, event source, workflow engine, website
@@ -214,7 +214,7 @@ covers only the management API, extend it before writing a binding:
   provider, like AWS's `fromContainerMetadata`. A binding never fetches
   its own token.
 
-On Azure, the converter skips `data-plane/` (`scripts/convert.ts`), so
+On Azure, the converter skips `data-plane/` (the Azure SDK converter in the distilled checkout), so
 the agent hand-wrote XML request builders for Storage queues and blobs,
 Key Vault secrets, Service Bus, Event Hubs, a static-website uploader, and
 a managed-identity token cache: 22 raw request sites, with no typed
@@ -251,7 +251,7 @@ lifecycle-to-operation mapping, bindings, testability, and priority.
 committed record of scope is the overview page below.
 
 Each catalog file also lists **every operation** in the service module,
-classified the way `scripts/audit-service.ts` classifies AWS:
+classified the way [scripts/audit-service.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/scripts/audit-service.ts) classifies AWS:
 
 | Category | Meaning | Becomes |
 | --- | --- | --- |
@@ -262,7 +262,7 @@ classified the way `scripts/audit-service.ts` classifies AWS:
 
 Read operations a user calls at runtime (get an item, list objects,
 describe a queue's depth) are bindings even when a lifecycle uses them
-too. Port `scripts/audit-service.ts` to the provider before the first
+too. Port [scripts/audit-service.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/scripts/audit-service.ts) to the provider before the first
 wave (it reads the distilled module and the package and prints the gaps),
 and run it per service at every wave boundary.
 
@@ -296,15 +296,15 @@ names are correct English singulars (`Index`, not `Indexe`; `Process`, not
 
 A provider is its own workspace package, `@alchemy.run/<provider>` in
 `packages/<provider>`, following **Package boundaries** in `AGENTS.md`.
-Copy the closest small package: `packages/axiom` (token auth, flat
-resources) or `packages/hetzner` (labels, `list`, nuke ordering, bindings,
+Copy the closest small package: [packages/axiom](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/axiom) (token auth, flat
+resources) or [packages/hetzner](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/hetzner) (labels, `list`, nuke ordering, bindings,
 a hosted runtime, websites). A package holds:
 
 | File | Purpose |
 | --- | --- |
 | `package.json` | name, shared alchemy version, publish metadata, `exports`/`publishConfig` (generated, below), `alchemy.contributes`, dependencies |
 | `tsconfig.json` | composite project; references the distilled package, `distilled/core`, and `../alchemy` |
-| `scripts/build.ts` | copied verbatim from a sibling package |
+| [provider build script](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/aws/scripts/build.ts) | copied verbatim from a sibling package |
 | `src/Contributions.ts` | `Contributions.make({ name, auth, … })` — what the CLI, the Alchemist API, and the test harness load without the user's stack |
 | `src/AuthProvider.ts` | `makeStoredAuthProvider` fields, CI env vars, `<Provider>Auth` layer |
 | `src/Credentials.ts` | `fromAuthProvider()` = `lazyCredentials<Resolved, ConfigError>()(...)` → the distilled `Credentials` layer |
@@ -319,7 +319,7 @@ a hosted runtime, websites). A package holds:
 `Contributions.ts` is imported on every CLI start, so it holds metadata and
 `Contributions.lazy(() => import(...), pick)` fields only. Contribute `auth`
 always; add `stateStores`, `cli`, `testServices`, and `devEnv` when the
-provider has them (`packages/aws/src/Contributions.ts` uses all of them).
+provider has them ([packages/aws/src/Contributions.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/aws/src/Contributions.ts) uses all of them).
 Declare it in `package.json`:
 
 ```json
@@ -344,22 +344,22 @@ writing it is:
   through the project's dependencies);
 - `tsconfig.json` — project references to the package and its distilled
   package;
-- `packages/integration-tests/package.json` and `tsconfig.json` — the
+- [packages/integration-tests/package.json](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/integration-tests/package.json) and `tsconfig.json` — the
   package, its distilled package, and the project reference;
-- `.github/workflows/pkg.yml` — the `@alchemy.run[Collapsed]` group;
+- [.github/workflows/pkg.yml](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/.github/workflows/pkg.yml) — the `@alchemy.run[Collapsed]` group;
 - `.gitignore` — `!packages/<provider>/src/globals.d.ts`;
 - `stacks/nuke.ts` — `<Provider>.providers()`;
-- `scripts/with-fake-profiles.sh` — fake CI credentials;
-- `scripts/generate-api-reference.ts` and `scripts/fix-api-jsdocs.ts` —
+- [scripts/with-fake-profiles.sh](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/scripts/with-fake-profiles.sh) — fake CI credentials;
+- [scripts/generate-api-reference.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/scripts/generate-api-reference.ts) and [scripts/fix-api-jsdocs.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/scripts/fix-api-jsdocs.ts) —
   the package's `src` root and provider prefix;
-- `packages/integration-tests/test/Bundle/ProviderBootstraps.test.ts` —
+- [packages/integration-tests/test/Bundle/ProviderBootstraps.test.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/integration-tests/test/Bundle/ProviderBootstraps.test.ts) —
   every `Bootstrap` the package ships;
 - `website/astro.config.ts`, `website/src/components/ProviderDirectory.astro`,
   `website/scripts/generate-llms-txt.ts`, and
   `website/src/content/docs/<provider>/` (`index.mdx`, `setup.mdx`) —
   sidebar, directory card, llms.txt, overview, and setup page.
 
-Core (`packages/alchemy`) never changes to add a provider. If a provider
+Core ([packages/alchemy](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/alchemy)) never changes to add a provider. If a provider
 seems to need a core change (a new auth registry entry, a CLI command, a
 state store), it is a `Contributions` field instead.
 
@@ -435,9 +435,9 @@ obvious from the code:
 
 | PR | What it settled |
 | --- | --- |
-| #2260 | bindings state what they need; a `<P>Bindings` module decides how the host gets it (`packages/aws/src/AWSBindings.ts`) |
-| #2347 | `Bind` / `withCredentials` effectful constructors, identity from real resources, `__ALCHEMY_HOST_IDENTITY__` bundle fold (`packages/gcp/src/GCPBindings.ts`) |
-| #2267 | deploy-only services read behind the runtime guard; `*Http` bindings on local resources fail with a typed error (`packages/cloudflare/src/HttpBindingDev.ts`) |
+| #2260 | bindings state what they need; a `<P>Bindings` module decides how the host gets it ([packages/aws/src/AWSBindings.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/aws/src/AWSBindings.ts)) |
+| #2347 | `Bind` / `withCredentials` effectful constructors, identity from real resources, `__ALCHEMY_HOST_IDENTITY__` bundle fold ([packages/gcp/src/GCPBindings.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/gcp/src/GCPBindings.ts)) |
+| #2267 | deploy-only services read behind the runtime guard; `*Http` bindings on local resources fail with a typed error ([packages/cloudflare/src/HttpBindingDev.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/cloudflare/src/HttpBindingDev.ts)) |
 | #2244, #2315 | no branching on another provider's host type; reach the host through `RuntimeContext` and core host services (`alchemy/WebhookHost`) |
 
 **Cover every `binding` operation** in the catalog. Follow the AWS
@@ -451,7 +451,7 @@ Read/Write/ReadWrite services from `AGENTS.md` on top of the per-operation ones.
 Least privilege depends on the cloud's permission model:
 
 - **Per-action permissions** (AWS IAM): grant the operation's actions on
-  the resource ARN, as `scripts/audit-service.ts` checks.
+  the resource ARN, as [scripts/audit-service.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/scripts/audit-service.ts) checks.
 - **Role-based** (GCP IAM, Azure RBAC): grant the smallest predefined
   role that covers the operation, on the resource, never the project or
   subscription. If the smallest predefined role covers much more than the
@@ -547,7 +547,7 @@ Rules the reference code follows:
   `!globalThis.__ALCHEMY_RUNTIME__` block. Read at layer build, they crash
   a foreign host at init.
 - Per-service grant helpers are constructors too (`GrantOnQueue` in
-  `packages/aws/src/SQS/BindingHttp.ts`), and shared scaffolding lives in
+  [packages/aws/src/SQS/BindingHttp.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/aws/src/SQS/BindingHttp.ts)), and shared scaffolding lives in
   an unexported `BindingHttp.ts` so each `<Op>Http.ts` is a one-line
   `Layer.effect(Cap, make…({ … }))`.
 - A provider with local emulation fails an HTTP binding to a locally
@@ -616,10 +616,10 @@ Copy both forms from the runtime closest to yours:
 
 | Runtime | File | Notes |
 | --- | --- | --- |
-| Cloudflare Worker | `packages/cloudflare/src/Workers/Worker.ts`, `InferEnv.ts` | the full reference: `env` entries become native bindings |
-| Railway Function | `packages/railway/src/Function.ts`, `InferEnv.ts` | bindings are env vars, so `InferEnv` maps to `string` |
-| GCP Cloud Run, Hetzner Service | `packages/gcp/src/Run/Service.ts`, `packages/hetzner/src/Service.ts` | `Platform` over a container or process |
-| AWS Lambda | `packages/aws/src/Lambda/Function.ts` | async form exists but has no `InferEnv`; don't copy that gap |
+| Cloudflare Worker | [packages/cloudflare/src/Workers/Worker.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/cloudflare/src/Workers/Worker.ts), `InferEnv.ts` | the full reference: `env` entries become native bindings |
+| Railway Function | [packages/railway/src/Function.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/railway/src/Function.ts), `InferEnv.ts` | bindings are env vars, so `InferEnv` maps to `string` |
+| GCP Cloud Run, Hetzner Service | [packages/gcp/src/Run/Service.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/gcp/src/Run/Service.ts), [packages/hetzner/src/Service.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/hetzner/src/Service.ts) | `Platform` over a container or process |
+| AWS Lambda | [packages/aws/src/Lambda/Function.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/aws/src/Lambda/Function.ts) | async form exists but has no `InferEnv`; don't copy that gap |
 
 Every runtime needs:
 
@@ -631,7 +631,7 @@ Every runtime needs:
   from this and other providers can attach grants and env.
 - **The host bundle option** (`<identity>HostBundle`) on the effectful
   bundle, and a source-only `Bootstrap` export for the process entry
-  (`packages/hetzner/src/Bootstrap.ts`, `packages/aws/src/Bootstrap/`).
+  ([packages/hetzner/src/Bootstrap.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/hetzner/src/Bootstrap.ts), `packages/aws/src/Bootstrap/`).
 - **Event sources** for what the cloud triggers it with (queues, topics,
   storage events, schedules), shaped like AWS `SQS.QueueEventSource` and
   Cloudflare cron. Their contract lives in the source service and each
@@ -681,7 +681,7 @@ a `compute/effect-workflows.mdx` page in the docs hub.
 ## Step 6 — live tests
 
 Tests live in `packages/integration-tests/test/<Provider>/` (paths below
-are relative to `packages/integration-tests`). Write them per the test
+are relative to [packages/integration-tests](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/integration-tests)). Write them per the test
 sections of `AGENTS.md` (`test.provider`,
 `stack.destroy()` at start and end, deterministic names, out-of-band
 verification through distilled, typed wait-until-gone). Run with the
@@ -830,7 +830,7 @@ Rules:
 ### Layout
 
 Ship the same framework set as the existing providers (`ls
-packages/aws/src/Website` and `packages/hetzner/src/Website`: Astro,
+packages/aws/src/Website` and [packages/hetzner/src/Website](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/hetzner/src/Website): Astro,
 Foldkit, Nextjs, Nuxt, Octane, ReactRouter, SolidStart, StaticSite,
 SvelteKit, TanStackStart, Vinext, Vite, Vocs, Waku):
 
@@ -850,7 +850,7 @@ that asserts the response comes through the CDN (a cache header, or the
 CDN hostname) and that a server-rendered route hits the function; a
 `<Framework>.local.test.ts` for `alchemy dev`; and a shared
 `PropSurface.test.ts`. It also gets an `examples/<provider>-website-<framework>`
-example listed in `scripts/test-examples.ts`, and a page under
+example listed in [scripts/test-examples.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/scripts/test-examples.ts), and a page under
 `website/src/content/docs/<provider>/frontend/`.
 
 ## Step 8 — close the loop
@@ -964,7 +964,7 @@ workspace project with the layout of `examples/gcp-pubsub-worker`:
 
 - `package.json` (private, `deploy` / `dev` / `destroy` / `test` scripts,
   `workspace:*` dependencies), `tsconfig.json` referencing
-  `packages/alchemy` and the provider package, and a `README.md`.
+  [packages/alchemy](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/alchemy) and the provider package, and a `README.md`.
 - `alchemy.run.ts`, with the runtime and resources in `src/`.
 - `test/integ.test.ts` with `@alchemy.run/test/Bun`: deploy in `beforeAll`,
   call the deployed app over HTTP, verify cloud state through distilled,
@@ -972,7 +972,7 @@ workspace project with the layout of `examples/gcp-pubsub-worker`:
   `test/dev.test.ts`.
 
 Register every example in the root `tsconfig.json` references and in
-`scripts/test-examples.ts`, and run its test against the testing profile
+[scripts/test-examples.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/scripts/test-examples.ts), and run its test against the testing profile
 before you call it done. Track examples as rows in `INDEX.md` like any
 other deliverable.
 

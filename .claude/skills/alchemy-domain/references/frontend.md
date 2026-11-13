@@ -172,6 +172,6 @@ More: [Integrate with Foldkit: Test and host the app](https://alchemy.run/domain
 
 ## Testing the app
 
-Test `update` and the Commands with Foldkit stories (`foldkit/story`) in `packages/web/test`. They need no server.
+Test `update` and the Commands with Foldkit stories (`foldkit/story`) in the web package’s test directory. They need no server.
 
 More: [Integrate with Foldkit: Test and host the app](https://alchemy.run/domain/foldkit#test-and-host-the-app).

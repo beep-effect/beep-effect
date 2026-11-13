@@ -26,13 +26,13 @@ Run this first; the other sections only judge the code that exists.
 | Nothing left unbuilt | count statuses in `processes/<P>/catalog/INDEX.md` | no `missing` or `implemented` rows; every `out-of-scope` and `blocked` row has a reason or exact error |
 | Index matches the code | every `tested` row has a `Resource<...>("<P>.<Service>.<Name>")` in `src/<P>` and a registered provider in `Providers.ts` | yes |
 | One test file per resource | every `tested` row has `test/<P>/<Service>/<Name>.test.ts` | yes |
-| Operations classified | every operation in each distilled service module appears in its catalog file as `resource-lifecycle`, `binding`, `event-source`, or `internal` with a reason | yes; the provider's port of `scripts/audit-service.ts` prints no unclassified operations |
+| Operations classified | every operation in each distilled service module appears in its catalog file as `resource-lifecycle`, `binding`, `event-source`, or `internal` with a reason | yes; the provider's port of [scripts/audit-service.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/scripts/audit-service.ts) prints no unclassified operations |
 | Binding coverage | the audit's `missingBindings` per service, and `rg -l 'Binding\.Service<' src/<P> \| xargs -n1 dirname \| sort -u \| wc -l` against the services with `binding` operations | no missing bindings; every service with data-plane operations has bindings (AWS: 205 of 212) |
 | Bindings through distilled | read each `*Http.ts` | wraps a `@distilled.cloud/<pkg>` operation; no `HttpClientRequest` |
 | Non-resource deliverables | index rows for runtime, event sources, websites, examples | none `missing` |
 | Skill freshness | `git log -1 --format=%H -- .agents/skills/alchemy-provider` vs the `Skill: <sha>` line at the top of `INDEX.md` | equal; a newer skill commit means re-read it and add rows for its new deliverables |
 | Framework examples | `ls examples \| grep '^<p>-website-'` vs `ls examples \| grep '^hetzner-website-'` | one per framework the provider hosts (skip when it can't host websites) |
-| Workload examples | `ls examples \| grep '^<p>-'` against the workload table in Step 10 | one per workload the cloud supports; each registered in `tsconfig.json` and `scripts/test-examples.ts`, with a passing `test/integ.test.ts` |
+| Workload examples | `ls examples \| grep '^<p>-'` against the workload table in Step 10 | one per workload the cloud supports; each registered in `tsconfig.json` and [scripts/test-examples.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/scripts/test-examples.ts), with a passing `test/integ.test.ts` |
 | Docs generated for everything | `ls website/src/content/docs/providers/<P>` after `pnpm docs:gen` | one page per resource and binding page group, matching the index |
 | Out-of-scope list published | the overview page's "Out of scope" section | matches the `out-of-scope` rows |
 
@@ -45,12 +45,12 @@ reason the platform forces. References:
 
 | Concern | Reference |
 | --- | --- |
-| Small reconcile with labels, `list`, adoption | `packages/hetzner/src/SshKey.ts` |
-| Multi-aspect reconcile | `packages/aws/src/DynamoDB/Table.ts`, `packages/aws/src/Kinesis/Stream.ts` |
+| Small reconcile with labels, `list`, adoption | [packages/hetzner/src/SshKey.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/hetzner/src/SshKey.ts) |
+| Multi-aspect reconcile | [packages/aws/src/DynamoDB/Table.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/aws/src/DynamoDB/Table.ts), [packages/aws/src/Kinesis/Stream.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/aws/src/Kinesis/Stream.ts) |
 | Read/Write/ReadWrite bindings, shared scaffolding unexported | `packages/cloudflare/src/R2/` |
-| Bindings that reach any host | `packages/aws/src/AWSBindings.ts`, `packages/gcp/src/GCPBindings.ts`, `packages/aws/src/SQS/BindingHttp.ts` |
+| Bindings that reach any host | [packages/aws/src/AWSBindings.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/aws/src/AWSBindings.ts), [packages/gcp/src/GCPBindings.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/gcp/src/GCPBindings.ts), [packages/aws/src/SQS/BindingHttp.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/aws/src/SQS/BindingHttp.ts) |
 | Package shape | `packages/hetzner/` (`package.json`, `tsconfig.json`, `src/Contributions.ts`) |
-| Bindings tested inside a deployed host | `packages/integration-tests/test/AWS/DynamoDB/Bindings.test.ts` + `handler.ts` |
+| Bindings tested inside a deployed host | [packages/integration-tests/test/AWS/DynamoDB/Bindings.test.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/integration-tests/test/AWS/DynamoDB/Bindings.test.ts) + `handler.ts` |
 | Framework websites on a CDN + functions | `packages/aws/src/Website/` (S3 + CloudFront + Lambda), `packages/cloudflare/src/Website/` |
 | Framework websites on containers/VMs (only when the cloud has no CDN or functions) | `packages/fly/src/Website/`, `packages/hetzner/src/Website/` |
 
@@ -161,8 +161,8 @@ Skip this section when the provider can't host websites; then `src/<P>/Website` 
 | Undeclared names in examples | `rg -n 'existing\.' src/<P>` and read every `**Example:**` | every identifier is declared in the example |
 | Binding examples | count `@binding` blocks vs those showing the host and `Effect.provide(...)` | all of them |
 | Resource examples | every `@resource` has at least one example | yes |
-| Runtime JSDoc | `rg -c '\*\*Example:\*\*' <runtime file>` and its `###` headings next to `packages/aws/src/Lambda/Function.ts` | ten or more examples; intro, cautions, each form, configuration, packaging, a bindings section per service, event sources |
-| Fat-head JSDoc | the same for each fat-head resource next to `packages/aws/src/S3/Bucket.ts` / `packages/cloudflare/src/R2/Bucket.ts` | five or more sections: creating, each configurable feature, binding to a runtime, runtime operations, event sources where they apply |
+| Runtime JSDoc | `rg -c '\*\*Example:\*\*' <runtime file>` and its `###` headings next to [packages/aws/src/Lambda/Function.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/aws/src/Lambda/Function.ts) | ten or more examples; intro, cautions, each form, configuration, packaging, a bindings section per service, event sources |
+| Fat-head JSDoc | the same for each fat-head resource next to [packages/aws/src/S3/Bucket.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/aws/src/S3/Bucket.ts) / [packages/cloudflare/src/R2/Bucket.ts](https://github.com/alchemy-run/alchemy/tree/39de206fc21604cd051e1827d0723a16bddd58d2/packages/cloudflare/src/R2/Bucket.ts) | five or more sections: creating, each configurable feature, binding to a runtime, runtime operations, event sources where they apply |
 | Long-tail JSDoc | sample 20 long-tail files | intro with the cloud's type name, one complete creation example, a caution per replacing prop |
 | Prop JSDoc | `rg -n '^  [a-zA-Z]+\??:' src/<P>/<Service>/<Resource>.ts` minus documented ones | every prop and attribute documented, with `@default` where there is one |
 | Namespace casing | `ls src/<P>` | PascalCase |
