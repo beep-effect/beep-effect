@@ -309,6 +309,50 @@ export class JSDocDocumentationInventoryWriteResult extends S.Opaque<
   )
 ) {}
 
+/**
+ * Program settings for the per-package ts-morph projects the inventory scans.
+ *
+ * **Details**
+ *
+ * Production scans build every package program with `noResolve: true`: only declarations in the
+ * added files are scored, so imports into other packages stay unloaded. Tests pass
+ * `{ noResolve: false }` to prove the report does not depend on module resolution
+ * (goals/heavy-pool-diet LINT-01); no CLI flag or environment variable reaches this seam.
+ *
+ * **Example** (Build with resolution on in a parity test)
+ *
+ * ```ts
+ * import {
+ *   buildJSDocDocumentationInventory,
+ *   JSDocDocumentationInventoryOptions,
+ *   JSDocInventoryProgramOptions,
+ * } from "@beep/repo-cli/test/Quality"
+ *
+ * const resolved = buildJSDocDocumentationInventory(
+ *   JSDocDocumentationInventoryOptions.make({}),
+ *   JSDocInventoryProgramOptions.make({ noResolve: false })
+ * )
+ * console.log(resolved)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export class JSDocInventoryProgramOptions extends S.Opaque<
+  JSDocInventoryProgramOptions,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    noResolve: S.Boolean,
+  }).pipe(
+    $I.annoteSchema("JSDocInventoryProgramOptions", {
+      description: "Compiler settings for the per-package programs the JSDoc inventory scans.",
+    })
+  )
+) {}
+
+const productionProgramOptions = JSDocInventoryProgramOptions.make({ noResolve: true });
+
 const resolveJSDocInventoryOptions = Effect.fn("JSDocDocumentationInventory.resolveOptions")(function* (
   options: JSDocDocumentationInventoryOptions = JSDocDocumentationInventoryOptions.make({})
 ) {
@@ -1325,7 +1369,8 @@ const analyzePackage = Effect.fn("JSDocDocumentationInventory.analyzePackage")(f
   repoRoot: string,
   path: Path.Path,
   candidatePaths: O.Option<MutableHashSet.MutableHashSet<string>>,
-  forbiddenRootImports: MutableHashSet.MutableHashSet<string>
+  forbiddenRootImports: MutableHashSet.MutableHashSet<string>,
+  programOptions: JSDocInventoryProgramOptions
 ): Effect.fn.Return<PackageInventory, QualityArtifactGeneratorError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const docgenPath = path.join(packageInfo.absolutePath, "docgen.json");
@@ -1338,8 +1383,9 @@ const analyzePackage = Effect.fn("JSDocDocumentationInventory.analyzePackage")(f
   const sourceFiles = A.filter(listSourceFiles1, (sourceFilePath) =>
     sourceFileIsInPackageInventory(sourceFilePath, packageInfo, srcDir, exclude, repoRoot, path, candidatePaths)
   );
-  // Only declarations in the added files are scored, so imports into other packages stay unloaded.
-  const project = createInMemoryTsMorphProject({ compilerOptions: { noResolve: true } });
+  // Only declarations in the added files are scored, so imports into other packages stay unloaded
+  // (production `noResolve: true`; the parity fixtures also build with resolution on).
+  const project = createInMemoryTsMorphProject({ compilerOptions: { noResolve: programOptions.noResolve } });
   // Populate the project before asking for semantic exports: adding another
   // source file invalidates the compiler program used by getExportedDeclarations.
   const projectSourceFiles = A.map(sourceFiles, (sourceFilePath) => project.addSourceFileAtPath(sourceFilePath));
@@ -1619,7 +1665,8 @@ const renderMarkdown = (inventory: Inventory): string => {
  * @since 0.0.0
  */
 export const buildJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInventory.build")(function* (
-  options: JSDocDocumentationInventoryOptions = JSDocDocumentationInventoryOptions.make({})
+  options: JSDocDocumentationInventoryOptions = JSDocDocumentationInventoryOptions.make({}),
+  programOptions: JSDocInventoryProgramOptions = productionProgramOptions
 ): Effect.fn.Return<
   Inventory,
   QualityArtifactGeneratorError,
@@ -1673,7 +1720,15 @@ export const buildJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
       const packageInfo = MutableHashMap.get(packageByName, packageName);
       return O.isNone(packageInfo)
         ? Effect.succeed(analyzeMissingPackage(packageName, index + 1))
-        : analyzePackage(packageInfo.value, index + 1, repoRoot, path, candidatePaths, forbiddenRootImports);
+        : analyzePackage(
+            packageInfo.value,
+            index + 1,
+            repoRoot,
+            path,
+            candidatePaths,
+            forbiddenRootImports,
+            programOptions
+          );
     },
     { concurrency: 1 }
   );
@@ -1704,7 +1759,8 @@ export const buildJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
  * @since 0.0.0
  */
 export const writeJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInventory.write")(function* (
-  options: JSDocDocumentationInventoryOptions = JSDocDocumentationInventoryOptions.make({})
+  options: JSDocDocumentationInventoryOptions = JSDocDocumentationInventoryOptions.make({}),
+  programOptions: JSDocInventoryProgramOptions = productionProgramOptions
 ): Effect.fn.Return<
   JSDocDocumentationInventoryWriteResult,
   QualityArtifactGeneratorError,
@@ -1713,11 +1769,14 @@ export const writeJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const { generatedAt, outputJsonPath, outputMarkdownPath, repoRoot } = yield* resolveJSDocInventoryOptions(options);
-  const inventory = yield* buildJSDocDocumentationInventory({
-    ...options,
-    rootDir: repoRoot,
-    generatedAt,
-  });
+  const inventory = yield* buildJSDocDocumentationInventory(
+    {
+      ...options,
+      rootDir: repoRoot,
+      generatedAt,
+    },
+    programOptions
+  );
   yield* fs.makeDirectory(path.dirname(outputJsonPath), { recursive: true }).pipe(
     QualityArtifactGeneratorError.mapError(`Failed to create artifact directory for ${outputJsonPath}.`, {
       filePath: outputJsonPath,
