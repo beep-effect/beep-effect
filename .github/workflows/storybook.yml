@@ -1,8 +1,19 @@
 name: Storybook
 
+# A pull request confined to the prose and packet roots never creates this
+# workflow. No workspace package lives under them and no Turbo task of
+# @beep/storybook or its dependencies reads them, so the affected probe below
+# could only answer "not affected" after taking a runner to say so. Any other
+# documentation-only diff (a root README, a changeset) still stops at the
+# docs_only gate. ci-docs-job-admission.test.ts holds both facts.
 on:
   pull_request:
     branches: [main]
+    paths-ignore:
+      - docs/**
+      - goals/**
+      - explorations/**
+      - research/**
   push:
     branches: [main]
 

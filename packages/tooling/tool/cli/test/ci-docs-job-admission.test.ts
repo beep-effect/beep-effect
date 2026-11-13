@@ -72,6 +72,16 @@ const planCases = A.flatMap(["success", "failure", "skipped", "cancelled", ""], 
 const decodeWorkflowSteps = S.decodeUnknownEffect(S.Array(S.Unknown));
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const isWorkflowText = S.is(S.String);
+const isWorkflowTextList = S.is(S.Array(S.String));
+const isWorkflowRecord = S.is(S.Record(S.String, S.Unknown));
+// A mapping node's entries; anything else (an absent `outputs`, a scalar) has none.
+const workflowRecord = (value: unknown): Readonly<Record<string, unknown>> => (isWorkflowRecord(value) ? value : {});
+// An aggregate is skipped, before it requests a runner, only on a Change Profile that succeeded and
+// reported a documentation-only diff; every other profile runs it and its script fails closed.
+const aggregateGuard =
+  "${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true') }}";
+const sameRepository = "github.event.pull_request.head.repo.full_name == github.repository";
+const docsOnlyFromThisRepository = `needs.change-profile.outputs.docs_only == 'true' && ${sameRepository}`;
 
 const readCheckWorkflow = Effect.map(
   Effect.tryPromise({
@@ -175,6 +185,7 @@ it.effect(
         );
       }
       assert.deepEqual(yamlAt(workflow, ["jobs", job, "needs"]), ["change-profile", shard]);
+      assert.strictEqual(yamlAt(workflow, ["jobs", job, "if"]), aggregateGuard);
     }
     for (const job of ["lint-shard", "labs", "fallow-advisory"]) {
       assert.deepEqual(yamlAt(workflow, ["jobs", job, "needs"]), afterShardsNeeds);
@@ -216,6 +227,7 @@ it.effect(
         );
       }
       assert.deepEqual(yamlAt(workflow, ["jobs", lane.job, "needs"]), lane.needs);
+      assert.strictEqual(yamlAt(workflow, ["jobs", lane.job, "if"]), aggregateGuard);
       assert.strictEqual(
         yamlAt(workflow, ["jobs", lane.job, "steps", 0, "env", "PLANNED_PARTITIONS"]),
         `\${{ needs.test-plan.outputs.${lane.output} }}`
@@ -253,21 +265,52 @@ it.effect(
 it.effect(
   "pins label classification and preserves normal fork admission when the docs shortcut is unavailable",
   Effect.fnUntraced(function* () {
+    // check.yml takes the same shortcut one level up: its admission job is skipped before a runner is
+    // requested and the Heavy caller passes `admitted: false` itself (the runner-request cases below
+    // simulate it). Both guards are that shortcut, so the rows below judge them as well.
+    const check = yield* readCheckWorkflow;
+    assert.strictEqual(
+      yamlAt(check, ["jobs", "admission", "if"]),
+      `\${{ needs.change-profile.result == 'success' && !(${docsOnlyFromThisRepository}) }}`
+    );
+    assert.strictEqual(
+      yamlAt(check, ["jobs", "heavy", "if"]),
+      `\${{ !cancelled() && ((needs.admission.result == 'success' && (needs.admission.outputs.verdict == 'run' || needs.admission.outputs.verdict == 'skip-satisfied')) || (needs.admission.result == 'skipped' && needs.change-profile.result == 'success' && ${docsOnlyFromThisRepository})) }}`
+    );
+    assert.strictEqual(
+      yamlAt(check, ["jobs", "heavy", "with", "admitted"]),
+      "${{ needs.admission.outputs.verdict == 'run' }}"
+    );
+    // A job publishes the outputs its steps wrote even when a later step fails it, which the
+    // simulation below does not model. An admission that decided and then failed (or was cancelled)
+    // must not reach Heavy with the verdict it left behind; only a successful one does.
+    const heavyGuard = yamlAt(check, ["jobs", "heavy", "if"]);
+    assertTrue(isWorkflowText(heavyGuard));
+    assert.deepEqual(
+      A.filter(publishedVerdictCases, (state) => heavyStartsOnPublishedVerdict(heavyGuard, state)),
+      A.filter(publishedVerdictCases, (state) => state.admission === "success")
+    );
+    const admissionSteps = yield* decodeWorkflowSteps(yamlAt(check, ["jobs", "admission", "steps"]));
+    assert.isFalse(A.some(admissionSteps, (step) => yamlAt(step, ["id"]) === "docs"));
     for (const caller of [
       {
         file: "check.yml",
+        shortcut: O.some(docsOnlyFromThisRepository),
         docsIndex: 0,
-        setupIndex: 3,
-        decideIndex: 4,
+        setupIndex: 2,
+        decideIndex: 3,
+        stepGuard: undefined,
         profile: "needs.change-profile.outputs.docs_only",
         guard: "",
       },
       // Heavy Admit decides admission only on an admission label event; its first step re-reports.
       {
         file: "heavy-admit.yml",
+        shortcut: O.none<string>(),
         docsIndex: 5,
         setupIndex: 6,
         decideIndex: 7,
+        stepGuard: "env.ADMISSION_LABEL_EVENT == 'true' && steps.docs.outputs.verdict != 'skip-satisfied'",
         profile: "steps.profile.outputs.docs_only",
         guard: "env.ADMISSION_LABEL_EVENT == 'true' && ",
       },
@@ -279,17 +322,21 @@ it.effect(
       const workflow = parseWorkflowYaml(source);
       assert.strictEqual(yamlAt(workflow, ["env", "BEEP_CI_PR_BASE_SHA"]), "${{ github.event.pull_request.base.sha }}");
       assert.strictEqual(yamlAt(workflow, ["env", "BEEP_CI_PR_HEAD_SHA"]), "${{ github.event.pull_request.head.sha }}");
-      const shortcut = yamlAt(workflow, ["jobs", "admission", "steps", caller.docsIndex, "if"]);
+      const shortcut = O.getOrElse(caller.shortcut, () =>
+        yamlAt(workflow, ["jobs", "admission", "steps", caller.docsIndex, "if"])
+      );
       assertTrue(isWorkflowText(shortcut));
       assert.strictEqual(
         shortcut,
         `${caller.guard}${caller.profile} == 'true' && github.event.pull_request.head.repo.full_name == github.repository`
       );
+      assert.strictEqual(
+        yamlAt(workflow, ["jobs", "admission", "steps", caller.setupIndex, "uses"]),
+        "./.github/actions/setup-monorepo-ci"
+      );
+      assert.strictEqual(yamlAt(workflow, ["jobs", "admission", "steps", caller.decideIndex, "id"]), "decide");
       for (const index of [caller.setupIndex, caller.decideIndex]) {
-        assert.strictEqual(
-          yamlAt(workflow, ["jobs", "admission", "steps", index, "if"]),
-          `${caller.guard}steps.docs.outputs.verdict != 'skip-satisfied'`
-        );
+        assert.strictEqual(yamlAt(workflow, ["jobs", "admission", "steps", index, "if"]), caller.stepGuard);
       }
       for (const row of [
         { docs: "true", head: "beep-effect/beep-effect", labels: [], paths: ["README.md"], verdict: "skip-satisfied" },
@@ -322,6 +369,289 @@ it.effect(
           })
         );
         assert.strictEqual(taken.exitCode === 0 ? "skip-satisfied" : admission.verdict, row.verdict);
+      }
+    }
+  })
+);
+
+// Runner-request simulation. Each check.yml job's real `if` is rendered with its `needs` and `github`
+// contexts and judged by bash, the way the aggregate scripts above are. A job with no status function
+// in its `if` is skipped when a needed job did not succeed (GitHub's implicit `success()`), and a
+// skipped job publishes no outputs. A job that starts is taken to succeed unless the scenario forces
+// its result.
+type JobResult = "success" | "failure" | "skipped";
+type RunnerScenario = {
+  readonly forced: Readonly<Record<string, JobResult>>;
+  readonly github: Readonly<Record<string, string>>;
+  readonly outputs: Readonly<Record<string, string>>;
+};
+
+const jobNeeds = (job: unknown): ReadonlyArray<string> => {
+  const needs = yamlAt(job, ["needs"]);
+  return isWorkflowTextList(needs) ? needs : isWorkflowText(needs) ? [needs] : [];
+};
+
+const expressionHolds = (expression: string, context: Readonly<Record<string, string>>): boolean => {
+  const rendered = pipe(
+    R.toEntries(context),
+    A.sortBy(([left], [right]) => (left.length === right.length ? 0 : left.length > right.length ? -1 : 1)),
+    A.reduce(
+      pipe(
+        expression,
+        Str.replaceAll("${{", ""),
+        Str.replaceAll("}}", ""),
+        Str.replaceAll("!cancelled()", "'ok' == 'ok'"),
+        Str.replaceAll("!(", "! ("),
+        Str.trim
+      ),
+      (text, [name, value]) => Str.replaceAll(name, `'${value}'`)(text)
+    )
+  );
+  // Every context the expression reads must be one the simulation supplies.
+  for (const unresolved of ["needs.", "github.", "inputs.", "()"]) {
+    assert.isFalse(Str.includes(unresolved)(rendered), `unresolved ${unresolved} in: ${rendered}`);
+  }
+  return Bun.spawnSync(["bash", "-c", `[[ ${rendered} ]]`], { stdout: "pipe", stderr: "pipe" }).exitCode === 0;
+};
+
+// Every admission result paired with a verdict its `decide` step already published.
+const publishedVerdictCases = A.flatMap(["run", "skip-satisfied"], (verdict) =>
+  A.map(["success", "failure", "cancelled", "skipped"], (admission) => ({ admission, verdict }))
+);
+const heavyStartsOnPublishedVerdict = (
+  guard: string,
+  state: { readonly admission: string; readonly verdict: string }
+): boolean =>
+  expressionHolds(guard, {
+    "needs.admission.result": state.admission,
+    "needs.admission.outputs.verdict": state.verdict,
+    "needs.change-profile.result": "success",
+    "needs.change-profile.outputs.docs_only": "false",
+    "github.event.pull_request.head.repo.full_name": "beep-effect/beep-effect",
+    "github.repository": "beep-effect/beep-effect",
+  });
+
+const simulateJobs = (workflow: unknown, scenario: RunnerScenario): Readonly<Record<string, JobResult>> => {
+  const jobs = workflowRecord(yamlAt(workflow, ["jobs"]));
+  const resultOf = (id: string): JobResult => {
+    const forced = R.get(scenario.forced, id);
+    if (O.isSome(forced)) {
+      return forced.value;
+    }
+    const job = R.get(jobs, id).pipe(O.getOrThrow);
+    const needs = jobNeeds(job);
+    const needed = A.map(needs, (need) => ({ need, result: resultOf(need) }));
+    const guard = yamlAt(job, ["if"]);
+    if (!isWorkflowText(guard)) {
+      return A.every(needed, ({ result }) => result === "success") ? "success" : "skipped";
+    }
+    if (!Str.includes("cancelled()")(guard) && A.some(needed, ({ result }) => result !== "success")) {
+      return "skipped";
+    }
+    const context = R.fromEntries([
+      ...R.toEntries(scenario.github),
+      ...A.flatMap(needed, ({ need, result }) => [
+        [`needs.${need}.result`, result] as const,
+        ...A.map(
+          R.keys(workflowRecord(yamlAt(jobs, [need, "outputs"]))),
+          (output) =>
+            [
+              `needs.${need}.outputs.${output}`,
+              result === "success" ? O.getOrElse(R.get(scenario.outputs, `${need}.${output}`), () => "") : "",
+            ] as const
+        ),
+      ]),
+    ]);
+    return expressionHolds(guard, context) ? "success" : "skipped";
+  };
+  return R.fromEntries(A.map(R.keys(jobs), (id) => [id, resultOf(id)] as const));
+};
+
+// The jobs that asked GitHub for a runner: they started and they declare `runs-on`.
+const runnerRequests = (workflow: unknown, results: Readonly<Record<string, JobResult>>): ReadonlyArray<string> =>
+  pipe(
+    R.keys(results),
+    A.filter((id) => R.get(results, id).pipe(O.getOrThrow) !== "skipped"),
+    A.filter((id) => isWorkflowText(yamlAt(workflow, ["jobs", id, "runs-on"]))),
+    A.sort(Str.Order)
+  );
+
+const thisRepository = {
+  "github.event_name": "pull_request",
+  "github.event.pull_request.head.repo.full_name": "beep-effect/beep-effect",
+  "github.repository": "beep-effect/beep-effect",
+};
+const docsOutputs = {
+  "change-profile.docs_only": "true",
+  "test-plan.test_unit": "[]",
+  "test-plan.test_integration": "[]",
+};
+// What a documentation diff can fail, plus the three jobs that classify or label every pull request.
+const docsRunnerJobs = ["change-profile", "commitlint", "docs-policy", "pr-size", "secrets", "test-plan", "verify"];
+const aggregateJobs = ["lint", "property-laws", "test-integration", "test-unit"];
+const shardJobs = ["lint-shard", "property-laws-shard", "test-integration-shard", "test-unit-shard"];
+
+it.effect(
+  "requests no test, lint or heavy runner for a documentation-only pull request",
+  Effect.fnUntraced(function* () {
+    const workflow = yield* readCheckWorkflow;
+    const results = simulateJobs(workflow, { forced: {}, github: thisRepository, outputs: docsOutputs });
+
+    assert.deepEqual(runnerRequests(workflow, results), docsRunnerJobs);
+    // The required aggregates and Heavy Admission are skipped at job level: no runner, no queue slot,
+    // and GitHub reports a job-level skip as a passing required check.
+    for (const job of [...aggregateJobs, ...shardJobs, "admission", "coverage-regression", "security", "sast"]) {
+      assert.strictEqual(R.get(results, job).pipe(O.getOrThrow), "skipped", job);
+    }
+    // The Heavy caller still starts, with `admitted: false`, so every `Heavy / <lane>` context exists
+    // and reports skipped (each lane's guard in heavy.yml begins with `inputs.admitted`, pinned below).
+    assert.strictEqual(R.get(results, "heavy").pipe(O.getOrThrow), "success");
+    assert.isUndefined(yamlAt(workflow, ["jobs", "heavy", "runs-on"]));
+    const admitted = yamlAt(workflow, ["jobs", "heavy", "with", "admitted"]);
+    assertTrue(isWorkflowText(admitted));
+    assert.isFalse(expressionHolds(admitted, { "needs.admission.outputs.verdict": "" }));
+    // Repo Sanity, the required documentation gate, waits on nothing that queues for a runner after
+    // Change Profile: Heavy Admission is skipped, and Test Plan starts with the run.
+    assert.deepEqual(jobNeeds(yamlAt(workflow, ["jobs", "verify"])), ["change-profile", "test-plan", "admission"]);
+    assert.deepEqual(jobNeeds(yamlAt(workflow, ["jobs", "test-plan"])), []);
+  })
+);
+
+it.effect(
+  "keeps a fork's documentation diff on the admission decision and a held Heavy caller",
+  Effect.fnUntraced(function* () {
+    const workflow = yield* readCheckWorkflow;
+    const fork = { ...thisRepository, "github.event.pull_request.head.repo.full_name": "contributor/fork" };
+    const held = simulateJobs(workflow, {
+      forced: {},
+      github: fork,
+      outputs: { ...docsOutputs, "admission.verdict": "hold" },
+    });
+    assert.strictEqual(R.get(held, "admission").pipe(O.getOrThrow), "success");
+    // `hold` never reaches the reusable workflow, so the heavy contexts stay "Expected".
+    assert.strictEqual(R.get(held, "heavy").pipe(O.getOrThrow), "skipped");
+    const labelled = simulateJobs(workflow, {
+      forced: {},
+      github: fork,
+      outputs: { ...docsOutputs, "admission.verdict": "run" },
+    });
+    assert.strictEqual(R.get(labelled, "heavy").pipe(O.getOrThrow), "success");
+  })
+);
+
+it.effect(
+  "runs every aggregate, fail-closed, unless Change Profile succeeded and reported documentation only",
+  Effect.fnUntraced(function* () {
+    const workflow = yield* readCheckWorkflow;
+    const codeOutputs = {
+      "change-profile.docs_only": "false",
+      "test-plan.test_unit": '["unit-a"]',
+      "test-plan.test_integration": '["int-rest"]',
+      "admission.verdict": "run",
+    };
+    const code = simulateJobs(workflow, { forced: {}, github: thisRepository, outputs: codeOutputs });
+    // A code diff requests every hosted job except Docs Policy.
+    const hosted = pipe(
+      R.keys(code),
+      A.filter((id) => isWorkflowText(yamlAt(workflow, ["jobs", id, "runs-on"]))),
+      A.sort(Str.Order)
+    );
+    assert.deepEqual(
+      runnerRequests(workflow, code),
+      A.filter(hosted, (id) => id !== "docs-policy")
+    );
+    assert.strictEqual(R.get(code, "heavy").pipe(O.getOrThrow), "success");
+
+    // A red shard, a failed plan and an unreadable profile each still start the aggregate, whose
+    // script (executed above) then fails.
+    const forcedCases: ReadonlyArray<Readonly<Record<string, JobResult>>> = [
+      { "test-unit-shard": "failure", "lint-shard": "failure" },
+      { "test-plan": "failure" },
+      { "change-profile": "failure" },
+    ];
+    for (const forced of forcedCases) {
+      const results = simulateJobs(workflow, { forced, github: thisRepository, outputs: codeOutputs });
+      for (const job of aggregateJobs) {
+        assert.strictEqual(R.get(results, job).pipe(O.getOrThrow), "success", `${job} under ${R.keys(forced)}`);
+      }
+    }
+    // An empty or malformed docs_only output is not a documentation diff.
+    for (const docs of ["", "invalid"]) {
+      const results = simulateJobs(workflow, {
+        forced: {},
+        github: thisRepository,
+        outputs: { ...codeOutputs, "change-profile.docs_only": docs },
+      });
+      for (const job of aggregateJobs) {
+        assert.strictEqual(R.get(results, job).pipe(O.getOrThrow), "success", `${job} for docs_only=${docs}`);
+      }
+    }
+    // A failed Change Profile leaves Heavy Admission and the Heavy caller unstarted, so the heavy
+    // contexts stay "Expected" and the pull request stays blocked.
+    const unknown = simulateJobs(workflow, {
+      forced: { "change-profile": "failure" },
+      github: thisRepository,
+      outputs: codeOutputs,
+    });
+    assert.strictEqual(R.get(unknown, "admission").pipe(O.getOrThrow), "skipped");
+    assert.strictEqual(R.get(unknown, "heavy").pipe(O.getOrThrow), "skipped");
+  })
+);
+
+const readRepositoryFile = (path: string) =>
+  Effect.tryPromise({
+    try: () => Bun.file(new URL(`../../../../../${path}`, import.meta.url)).text(),
+    catch: CiCommandError.new(`Unable to read ${path} for the workflow path-filter contract.`),
+  });
+// JSON is YAML, so the manifests and the VERCEL_APPS table read through the same parser and guards.
+const isWorkflowList = S.is(S.Array(S.Unknown));
+
+it.effect(
+  "creates the Vercel workflow on a pull request only for the app roots its plan deploys",
+  Effect.fnUntraced(function* () {
+    const source = yield* readRepositoryFile(".github/workflows/vercel-deploy.yml");
+    const workflow = parseWorkflowYaml(source);
+    const table = yamlAt(workflow, ["env", "VERCEL_APPS"]);
+    assertTrue(isWorkflowText(table));
+    const apps = parseWorkflowYaml(table);
+    assertTrue(isWorkflowList(apps));
+    const roots = pipe(
+      A.filter(apps, (app) => yamlAt(app, ["auto"]) === true),
+      A.map((app) => `${String(yamlAt(app, ["root"]))}/**`),
+      A.dedupe
+    );
+    assert.strictEqual(roots.length, 2);
+    assert.deepEqual(yamlAt(workflow, ["on", "pull_request", "paths"]), [
+      ...roots,
+      ".github/workflows/vercel-deploy.yml",
+    ]);
+    // Main pushes diff against the last production deployment, not the push: never filtered.
+    assert.deepEqual(yamlAt(workflow, ["on", "push"]), { branches: ["main"] });
+  })
+);
+
+it.effect(
+  "ignores for Storybook only pull-request roots that hold no workspace package and no global Turbo input",
+  Effect.fnUntraced(function* () {
+    const source = yield* readRepositoryFile(".github/workflows/storybook.yml");
+    const workflow = parseWorkflowYaml(source);
+    const ignoredRoots = ["docs", "goals", "explorations", "research"];
+    assert.deepEqual(
+      yamlAt(workflow, ["on", "pull_request", "paths-ignore"]),
+      A.map(ignoredRoots, (root) => `${root}/**`)
+    );
+    assert.deepEqual(yamlAt(workflow, ["on", "push"]), { branches: ["main"] });
+    const manifestSource = yield* readRepositoryFile("package.json");
+    const manifest = parseWorkflowYaml(manifestSource);
+    const workspaces = yamlAt(manifest, ["workspaces"]);
+    assertTrue(isWorkflowTextList(workspaces));
+    const turboSource = yield* readRepositoryFile("turbo.json");
+    const turbo = parseWorkflowYaml(turboSource);
+    const globalInputs = yamlAt(turbo, ["globalDependencies"]) ?? [];
+    assertTrue(isWorkflowTextList(globalInputs));
+    for (const root of ignoredRoots) {
+      for (const glob of [...workspaces, ...globalInputs]) {
+        assert.isFalse(Str.startsWith(`${root}/`)(glob) || glob === root, `${glob} lives under ${root}/`);
       }
     }
   })

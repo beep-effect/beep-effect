@@ -1162,6 +1162,7 @@ function renderFlowObject(
     const valStr = A.join(stringifyLines(obj[k], flowCtx, depth + 1, false), " ");
     return `${keyStr}: ${valStr}`;
   });
+  // biome-ignore lint/plugin/no-hand-rolled-canonical-json: census E11, renderer: YAML flow mapping, not JSON
   return `{${A.join(pairs, ", ")}}`;
 }
 
