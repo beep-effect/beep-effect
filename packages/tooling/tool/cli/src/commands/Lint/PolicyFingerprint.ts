@@ -197,14 +197,20 @@ interface FingerprintSources {
   }>;
 }
 
-// Every workspace manifest under `root`, sorted by package name.
-const readWorkspaceEntries = Effect.fnUntraced(function* (root: string) {
+// Read a repo-relative file under `root` as text.
+const rootFileReader = Effect.fnUntraced(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const read = (file: string) =>
+  return (file: string) =>
     fs
       .readFileString(path.join(root, file))
       .pipe(Effect.mapError((cause) => PolicyFingerprintError.make({ message: `Cannot read ${file}`, cause })));
+});
+
+// Every workspace manifest under `root`, sorted by package name.
+const readWorkspaceEntries = Effect.fnUntraced(function* (root: string) {
+  const path = yield* Path.Path;
+  const read = yield* rootFileReader(root);
   const directories = yield* workspaceDirectories(root).pipe(
     Effect.mapError((cause) => PolicyFingerprintError.make({ message: "Cannot resolve workspaces", cause }))
   );
@@ -231,12 +237,7 @@ const readWorkspaceEntries = Effect.fnUntraced(function* (root: string) {
 });
 
 const readSources = Effect.fnUntraced(function* (root: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const read = (file: string) =>
-    fs
-      .readFileString(path.join(root, file))
-      .pipe(Effect.mapError((cause) => PolicyFingerprintError.make({ message: `Cannot read ${file}`, cause })));
+  const read = yield* rootFileReader(root);
   const turboText = yield* read("turbo.json");
   const parsedJsonc = yield* parseJsonc("turbo.json", turboText);
   const turbo = yield* decodeTurbo(parsedJsonc).pipe(Effect.mapError(decodeFailure("turbo.json")));

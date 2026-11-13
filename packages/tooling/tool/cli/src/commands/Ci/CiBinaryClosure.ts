@@ -24,7 +24,6 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { A, O } from "@beep/utils";
 import * as Console from "effect/Console";
@@ -38,7 +37,7 @@ import * as S from "effect/Schema";
 import { sha256Hex } from "../Goals/PacketCore/PacketDigest.ts";
 import { makePolicyGraph } from "../Lint/internal/PolicyFingerprintGraph.ts";
 import { livePolicySourceTree, readPolicyWorkspaces } from "../Lint/PolicyFingerprint.ts";
-import { CiCommandError } from "./Ci.errors.ts";
+import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type { PolicySourceTree } from "../Lint/internal/PolicyFingerprintGraph.ts";
 import type { PolicyWorkspace } from "../Lint/PolicyFingerprint.schemas.ts";
@@ -156,20 +155,6 @@ const closurePaths = Effect.fnUntraced(function* (tree: PolicySourceTree, worksp
 });
 
 /**
- * What a closure computation reads: a source tree and the workspaces whose
- * `exports` maps resolve workspace specifiers.
- *
- * @category models
- * @since 0.0.0
- */
-export interface CiBinaryClosureSource {
-  /** The source tree to walk. */
-  readonly tree: PolicySourceTree;
-  /** The workspaces workspace specifiers resolve through. */
-  readonly workspaces: ReadonlyArray<PolicyWorkspace>;
-}
-
-/**
  * Compute the CI binary closure over a source tree.
  *
  * **Details**
@@ -193,10 +178,17 @@ export interface CiBinaryClosureSource {
  * @category use-cases
  * @since 0.0.0
  */
-export const ciBinaryClosureOf: (
-  source: CiBinaryClosureSource
-) => Effect.Effect<CiBinaryClosure, CiCommandError, Digest.Digest> = Effect.fn("Ci.ciBinaryClosureOf")(
-  function* ({ tree, workspaces }: CiBinaryClosureSource) {
+export const ciBinaryClosureOf: (source: {
+  readonly tree: PolicySourceTree;
+  readonly workspaces: ReadonlyArray<PolicyWorkspace>;
+}) => Effect.Effect<CiBinaryClosure, CiCommandError, Digest.Digest> = Effect.fn("Ci.ciBinaryClosureOf")(
+  function* ({
+    tree,
+    workspaces,
+  }: {
+    readonly tree: PolicySourceTree;
+    readonly workspaces: ReadonlyArray<PolicyWorkspace>;
+  }) {
     const paths = yield* closurePaths(tree, workspaces);
     const files = yield* Effect.forEach(paths, (path) =>
       Effect.flatMap(readRequired(tree, path), (text) =>
@@ -288,8 +280,6 @@ export const ciBinaryClosureCommand = Command.make(
       Effect.mapError((error) =>
         isCiCommandError(error) ? error : CiCommandError.new(error, "Failed to write the CI binary closure.")
       ),
-      Effect.catchTag("CiCommandError", (error) =>
-        Console.error(error.message).pipe(Effect.andThen(failWithReportedExit(error.message)))
-      )
+      Effect.catchTag("CiCommandError", reportCiCommandError)
     )
 ).pipe(Command.withDescription("Print the content digest of the compiled CI binary's closure"));
