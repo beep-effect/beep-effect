@@ -269,6 +269,30 @@ Lane goals/infra-alchemy-rebuild-p2-github-runners
 
 Reverse: Port the left-out upstream feature from lambdas/functions at v7.10.1 into the matching program and add its config field.
 
+### Runner user data supports Amazon Linux and Ubuntu and reads its token path from instance tags, 2026-11-13
+
+The user data ports upstream's `user-data.sh`, `install-runner.sh` and `start-runner.sh` without X-Ray, the CloudWatch agent or the SSM config-path lookup: scale-up tags each instance with `ghr:token_path` and `ghr:runner_name_prefix`, and the script reads them through IMDSv2 metadata tags, so a pool needs no SSM config parameters. The live fleet controller pins `ciFleetController:amiId` (`infra/ci-runners/Pulumi.production.yaml`; the AL2023 default parameter in `infra/src/CiFleetController.ts`; boot-time `dnf upgrade-minimal`), while the Ubuntu 24.04 parameter in `infra/ci-runners/Pulumi.yaml` configures the `CiRunners` groundwork stack. The script picks dnf or apt-get from `/etc/os-release` (installing AWS CLI v2 on Ubuntu), so either image works; the runner still starts with `./run.sh` from `/opt/actions-runner`, which keeps the live post-install shim working.
+
+Lane goals/infra-alchemy-rebuild-p2-github-runners-composite
+
+Reverse: Bake run_as, token path and agent mode back into SSM config parameters read by the user data, as upstream's start-runner.sh does.
+
+### RunnerFleet owns the App secret parameters under its own KMS key and serves the webhook from a function URL, 2026-11-13
+
+The composite declares one KMS key and alias per fleet and writes the App id, base64 key and webhook secret as SecureString `SSM.Parameter`s under it from caller-supplied `Redacted` values (nothing here reads 1Password or mints an App). Lambda roles read them through `bind` inline policies; the termination watcher's `kms:Decrypt` carries `kms:EncryptionContext:PARAMETER_ARN` for the id and key parameters, so no KMS grant exists. The webhook is a public Lambda function URL (the module used API Gateway); `RunnerSweep` depends on each pool's scale-up function so destroy sweeps runtime instances first.
+
+Lane goals/infra-alchemy-rebuild-p2-github-runners-composite
+
+Reverse: Take existing parameter ARNs as inputs and drop the composite's KMS key and SSM parameters.
+
+### RunnerFleet takes the launch template as a typed input until aws-extras lands, 2026-11-13
+
+`@beep/alchemy-aws-extras` (and its `RunnerLaunchTemplate`) was not on `origin/main` when the composite was written. `RunnerFleet` therefore owns each pool's runner role and instance profile and renders its user data, and hands them to a caller-supplied `launchTemplate(spec)` effect that returns a launch template id and version (`RunnerLaunchSpec` -> `RunnerLaunchTemplateRef`). The template must require IMDSv2 and enable instance metadata tags. Once `RunnerLaunchTemplate` lands, the composite composes it by default and the input becomes an override.
+
+Lane goals/infra-alchemy-rebuild-p2-github-runners-composite
+
+Reverse: Replace the launchTemplate input with a RunnerLaunchTemplate declared inside the composite from RunnerLaunchSpec.
+
 ### Termination watcher uses EC2 state-change events, not CloudTrail BidEvictedEvent, 2026-11-13
 
 Upstream's spot termination handler listens for the CloudTrail `BidEvictedEvent`, which needs a trail. The port deregisters on `EC2 Spot Instance Interruption Warning` and on `EC2 Instance State-change Notification` (`shutting-down`, `terminated`), both native EventBridge events, so no trail is required and an instance stopped for any reason is deregistered. One Lambda handles both events and the deregister-retry queue (busy runner: GitHub 422, re-queued after 300 s; a record that keeps failing reaches the queue's DLQ). Metrics are not ported.
