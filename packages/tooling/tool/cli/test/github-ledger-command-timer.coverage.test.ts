@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import {
   GITHUB_LEDGER_TIMER_UNIT,
   GithubCommandError,
@@ -40,11 +41,11 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as PlatformError from "effect/PlatformError";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import { NodeCommandTestLayer } from "./support/CommandTest.ts";
 import { scriptedSpawner, withLayer } from "./support/GithubLedgerFakes.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { GithubCalibrationOptions, SampleTrigger } from "@beep/repo-cli/test/SharedInternals";
 
 const host = HostLabel.make("hub");
@@ -455,16 +456,8 @@ const makeHome = Effect.fnUntraced(function* () {
   return yield* fs.makeTempDirectoryScoped({ prefix: "github-ledger-timer-" });
 });
 
-const failingSpawner = ChildProcessSpawner.make(() =>
-  Effect.fail(
-    PlatformError.systemError({
-      _tag: "NotFound",
-      module: "ChildProcess",
-      method: "spawn",
-      description: "systemctl is not installed",
-    })
-  )
-);
+// Every spawn fails as `systemctl` not found (D-14: `ScriptedSpawner`).
+const failingSpawner = ScriptedSpawner.make(() => ScriptedSpawner.notFound("systemctl"));
 
 describe("github ledger timer", () => {
   it("renders the exact service and timer units", () => {
@@ -665,10 +658,7 @@ describe("github ledger timer", () => {
     it.effect("fails typed when systemctl cannot be started", () =>
       Effect.gen(function* () {
         const home = yield* makeHome();
-        const error = yield* uninstallGithubLedgerTimer(home).pipe(
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, failingSpawner),
-          Effect.flip
-        );
+        const error = yield* uninstallGithubLedgerTimer(home).pipe(provideSpawner(failingSpawner), Effect.flip);
         expect([error.path, error.message]).toStrictEqual([
           GITHUB_LEDGER_TIMER_UNIT,
           "systemctl --user daemon-reload failed to start.",

@@ -755,6 +755,8 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   // Non-git fixtures retain the bounded filesystem walk. A real checkout uses
   // the index, so ignored hook-state/log noise cannot split identical heads.
+  // KEEP (D-21, X9): the exit code and the capped stderr are the evidence; the kit's `NotARepositoryError`
+  // drops git's own text.
   const [gitCode, gitStderr] = yield* Effect.scoped(
     Effect.gen(function* () {
       const handle = yield* spawner.spawn(

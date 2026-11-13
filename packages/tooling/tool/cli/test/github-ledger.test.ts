@@ -850,6 +850,8 @@ describe("GithubLedger file store", () => {
           expect(value11).toHaveLength(1);
         }).pipe(
           withLayer(liveLedger),
+          // Own double: dies on any spawn, so a ledger read that spawns fails loudly;
+          // `ScriptedSpawner` records and answers every spawn instead.
           Effect.provideService(
             ChildProcessSpawner.ChildProcessSpawner,
             ChildProcessSpawner.make(() => Effect.die("the read side must not spawn"))

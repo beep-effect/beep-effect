@@ -600,6 +600,8 @@ export const writeGitArchive = Effect.fn("GitExec.writeGitArchive")(function* <E
   archivePath: string,
   adapter: GitCommandErrorAdapter<E>
 ): Effect.fn.Return<void, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
+  // KEEP (D-21, X3): the canonical archive needs `-c` config and a per-call environment the kit
+  // cannot pass, and it writes bytes to `--output` rather than returning text.
   yield* runGitStructured(gitArchiveArgs(archivePath, commit), adapter, {
     cwd,
     stdin: "ignore",

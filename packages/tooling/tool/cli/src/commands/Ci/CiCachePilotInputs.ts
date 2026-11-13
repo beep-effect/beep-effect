@@ -415,6 +415,8 @@ export const prepareCachePilotRequest = Effect.fn("Ci.prepareCachePilotRequest")
   yield* Effect.forEach(
     tools.worktrees,
     Effect.fnUntraced(function* (tree) {
+      // KEEP (D-22): git's own output streams to the job log (inherited stdio) as the retired shell
+      // adapter's did, the parity `ci-cache-pilot` pins for the cleanup's remove; the kit captures it.
       const handle = yield* spawner.spawn(
         ChildProcess.make("git", ["worktree", "add", "--detach", tree, revision], { ...inherited, cwd: root })
       );
@@ -518,11 +520,15 @@ export const runCachePilotInputs = Effect.fn("Ci.runCachePilotInputs")(function*
   });
   const root = path.resolve(".");
   const program = Effect.gen(function* () {
+    // KEEP (D-22): git's stderr stays on the job log (inherited) as the shell adapter's did; the kit
+    // captures it.
     const head = yield* runStatus("git", ["rev-parse", "HEAD"], "pipe", env);
     // `$(git rev-parse HEAD)` drops trailing newlines before the comparison.
     const revision = yield* variable("GITHUB_SHA");
     if (Str.replace(/\n+$/u, "")(head.output) !== revision)
       return yield* failWithReportedExit("Checkout is not at GITHUB_SHA.");
+    // KEEP (D-22): the clean-checkout guard reads `diff --quiet`'s exit status as the step's own exit
+    // code; the kit has no exit-status member.
     yield* step("git", ["diff", "--quiet", "HEAD"]);
     yield* prepareCachePilotSources(root, mode, computation);
     yield* step("bun", [
@@ -546,6 +552,7 @@ export const runCachePilotInputs = Effect.fn("Ci.runCachePilotInputs")(function*
       `${inputs}/activation.json`,
     ]);
     yield* prepareCachePilotRequest(root, mode);
+    // KEEP (D-22): as above, the exit status is the step's contract.
     yield* step("git", ["diff", "--quiet", "HEAD"]);
   });
   // `umask 077` covers every file this command and its children create. A
