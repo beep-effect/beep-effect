@@ -32,6 +32,7 @@ graduation merges. Lever gates are in `SPEC.md` (Levers).
 | 8 | chore(fleet): T3 root in roots.json; split monitor time out of economics | PERIL-11 slice 2 | S | `yeet economics --fleet` counts the T3 lane; runbook list updated | 7 |
 | 9 | feat(yeet): optional host and seat fields on started rows; read fleet hosts read-only | PERIL-11 slice 3 | M | Old rows decode; fleet read uses only existing SSH routes and writes nothing remote; no raw rows leave local state | 7 |
 | 10 | fix(yeet): report terminations apart from reds | MEAS-03 | S | Adjudicated fixtures; denominator change recorded | 3, 6 |
+| 10b | fix(yeet): type the handler errors still read as unlocated | MEAS-03 slice 2 (unscheduled) | S | Adjudicated fixtures for the residual classes (publish input refusals, GitHub transport and rate limits, review-thread readiness refusals) drawn from a stratified sample of the live `unlocated` rows; `actionableLaneMix` total equals `redAttempts`; an unknown bucket stays | 10 |
 | 11 | feat(ci): optional step and per-task outcome fields under v1 | ROUT-05 slice 2 | M | v1 corpora still decode; aggregator and setup reds become unknown | 2 |
 | 12 | chore(route): capture 2026-10-31..now | ROUT-05 slice 3 | S | Captured by date range as a bounded background reader under github-budget-ledger's reserve signal (by hand and checkpointed until the signal lands); census conservation holds | 11 |
 | 13 | feat(ci): project unit-results.json timings | MEAS-06 | S | Adds its own every-event upload (today's is failure-only); rows for every executed package; file counts equal expectedTestFiles by event; `check.yml` only, no `heavy.yml` edit; cache-policy baseline re-recorded in the same PR; merge identity planned (App token cannot merge workflow PRs) | 1 |
@@ -41,7 +42,8 @@ graduation merges. Lever gates are in `SPEC.md` (Levers).
 | 17 | docs(goals): certainty-scorecard closeout | evidence | S | 7-night evidence note, fleet census note, reflection, `proposedCloseout` | all |
 
 Waves under the three-PR limit: {1, 2, 3}, then {4, 5, 6} as each of the first wave merges, then {7, 10, 11},
-{8, 9, 12}, {5b, 13, 14}, then 15, then 16, then 17.
+{8, 9, 12}, {5b, 13, 14}, then 15, then 16, then 17. Slice 10b is unscheduled: it takes a free slot in any
+wave after 10 merges and does not gate the closeout.
 
 ## Closeout Checklist
 
