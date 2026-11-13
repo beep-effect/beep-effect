@@ -8898,7 +8898,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             // The same pinned comparison passes once the package measures at its merge-base floor.
             yield* compareRootCoverageForTesting(repoRoot, options, A.take(measuredAt(80), 1)).pipe(bareRun);
             const passedReport = yield* newErrorText;
-            expect(passedReport).not.toContain(withheldLowering);
+            expect(passedReport).toBe("");
 
             // Pre-fix control: without the planned base the dirty row (50) is its own floor and 60 passes.
             const { comparisonBase: _planned, ...unpinned } = options;
