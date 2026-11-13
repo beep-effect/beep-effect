@@ -4,6 +4,7 @@ import {
   HostPressureInput,
   HostPressureSource,
   HostPressureStall,
+  hostMemoryCeilingTag,
   layerParcels,
   ParcelEnvelope,
   ParcelItem,
@@ -223,5 +224,21 @@ describe("Parcels.read host-pressure", () => {
         expect(gauges).toEqual([]);
       }).pipe(Effect.provideService(Metric.MetricRegistry, new Map()))
     );
+  });
+});
+
+describe("hostMemoryCeilingTag", () => {
+  it("names the ceiling and the profile when both are known", () => {
+    expect(hostMemoryCeilingTag({ ceilingGib: O.some(7.04), computeProfile: O.some("worker") })).toBe(
+      " (ceiling 7 GiB, worker)"
+    );
+  });
+
+  it("keeps the ceiling alone when the profile is unreadable", () => {
+    expect(hostMemoryCeilingTag({ ceilingGib: O.some(125.08), computeProfile: O.none() })).toBe(" (ceiling 125.1 GiB)");
+  });
+
+  it("adds nothing to a reading without either", () => {
+    expect(hostMemoryCeilingTag(HostMemoryInput.make({ availableGib: 40, totalGib: 64 }))).toBe("");
   });
 });

@@ -134,6 +134,11 @@ export class CiOperationalPatterns extends S.Opaque<CiOperationalPatterns, { rea
         description: "Per-lane relevance expressions; absent lanes stay relevant.",
       })
     ),
+    skills: S.optionalKey(
+      S.NonEmptyString.annotateKey({
+        description: "Changed paths that make Repo Sanity check the skills lock; an absent key always checks it.",
+      })
+    ),
   }).pipe(
     $I.annoteSchema("CiOperationalPatterns", {
       description: "Canonical pattern data for hosted and bootstrap CI profiles.",
@@ -494,6 +499,13 @@ const relevance = (...rows: A.NonEmptyReadonlyArray<string>): string => A.join([
  * policy reads; its live-advisory signal stays on every main push, which always gets the full
  * profile.
  *
+ * `skills` is the path gate of Repo Sanity's skills lock step (`beep skills update --check --offline`): the
+ * installed skill trees and their `.agents` mirror and patch series, the lock, the Codex skill
+ * configuration the check compares, the command that implements it and the `@beep/ai-sync` schemas
+ * it decodes the lock with. It is a step inside a
+ * required job, not a job of its own, so it is no relevance lane and has no `<lane>_relevant`
+ * output; check.yml reads the row with `jq` and `grep -E`.
+ *
  * **Example** (Read the shared docs pattern)
  *
  * ```ts
@@ -521,6 +533,16 @@ export const ciOperationalPatterns = CiOperationalPatterns.make({
       ...A.map(ciGoalDataConsumers, (row) => row.pattern),
     ],
     "|"
+  ),
+  skills: relevance(
+    "^\\.claude/skills/",
+    // `.agents/skills` is a tracked symlink, so a diff names the bare path and never a file under it.
+    "^\\.agents/(skills(/|$)|skill-patches/)",
+    "^skills-lock\\.json$",
+    "^\\.codex/config\\.toml$",
+    "^packages/tooling/tool/cli/src/commands/Skills/",
+    // The lock and skill schemas the check decodes with.
+    "^packages/tooling/library/ai-sync/"
   ),
   lanes: CiLaneRelevancePatterns.make({
     // Root dependency resolution changes the resolved generator or formatter, so the root
