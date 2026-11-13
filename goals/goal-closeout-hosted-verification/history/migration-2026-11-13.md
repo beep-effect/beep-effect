@@ -20,8 +20,8 @@ literal-kit-subset-algebra's, written at 05:19Z.
 | scripts-to-beep-cli | #3027 | verified | 8 success, 7 skipped | 0/0 | `8ef47891ad367381` |
 | merge-queue-lab | #3169 (see below) | verified | 6 success, 9 skipped | 0/0 | `c0b5270360177c6b` |
 | alchemy-vault-sync-slice | #3132 | verified (refresh only) | 8 success, 7 skipped | 0/0 | `1d392acec88bdf88` |
-| citation-extraction-engine | #2966 | verified with attributed reds, **pending commit** | 11 success, 4 cancelled | 0/10 | stored `unsatisfied`: `37d34874ed626e24` |
-| research-intake-2026-11 | #2963 | verified with attributed reds, **pending commit** | 11 success, 4 cancelled | 0/0 | stored `unsatisfied`: `57250e7f30a16f07` |
+| citation-extraction-engine | #2966 | verified with attributed reds (claims at `HEAD` only; S12 refresh) | 11 success, 4 cancelled | 0/10 | `37d34874ed626e24` |
+| research-intake-2026-11 | #2963 | verified with attributed reds (claims at `HEAD` only; S12 refresh) | 11 success, 4 cancelled | 0/0 | `57250e7f30a16f07` |
 | beep-effect-web-alchemy (archived) | #2583 | verified (receipt only, DN-23) | 15 success | 0/1 | `16bd1780878a9ca1` |
 | literal-kit-subset-algebra (archived) | #2080 | unsatisfied, stays unverified (receipt only, DN-23) | 10 success, 5 cancelled, 2 failure (17 required under ruleset version 53390820) | 0/12 | `73732d12e8af765b` |
 
@@ -31,11 +31,11 @@ post-migration declaration digest. Offline `goals doctor` prints
 after the status-prose and phase edits below, which the digest does not
 cover.
 
-### Pending commit: citation-extraction-engine and research-intake-2026-11
+### Attributed reds: citation-extraction-engine and research-intake-2026-11
 
-Both attribution files exist only in the working tree, so the stored receipts
-are `unsatisfied` (DN-6). Refresh printed `would verify once committed` for
-both files:
+At S9 both attribution files existed only in the working tree, so the stored
+receipts were `unsatisfied` (DN-6). Refresh printed `would verify once
+committed` for both files:
 
 - `goals/citation-extraction-engine/decisions/2026-11-13-final-2966-attributed-reds.md`:
   Heavy / Check, Heavy / Docgen, Heavy / Doctest `introduced`, fix #2984;
@@ -47,10 +47,12 @@ both files:
 Each fix PR was checked against GitHub: it merged, its head contains the
 final's merge commit (`git merge-base --is-ancestor`), and the attributed
 context passed on that head. The cause for each context follows DN-24. The
-run and job ids are in each file's body. After the orchestrator commits,
+run and job ids are in each file's body. Both files were committed in
+`51517c1eebc`. On the merged head (S12 step 1),
 `goals completion refresh --slug citation-extraction-engine` and
-`--slug research-intake-2026-11` must print
-`verified (claims at HEAD only: …; not done until they merge)`.
+`--slug research-intake-2026-11` each printed
+`verified (claims at HEAD only: …; not done until they merge)`, and the stored
+rows are now `verified` with the digests in the table above.
 
 ### literal-kit-subset-algebra
 
@@ -117,9 +119,10 @@ stored receipts still match.
   (#2488 closes two packets and #2985 three, so 34 − 1 − 2). At roughly 12 REST
   calls and one GraphQL call per final, that is about 372 REST and 31 GraphQL,
   plus a `pulls/{n}` pre-check for each legacy completed row that names a
-  final. After the S12 merge of `origin/main` (`6c2dc6a51fd`), skill-effect-probe
-  adds a 35th closeout and a 32nd final (#3210): about 384 REST and 32 GraphQL.
-  Recount after the last `origin/main` merge before sizing the run. Other sessions
+  final. After the S12 merge of `origin/main` (`13303191caf`), the merged tree
+  has 35 committed closeouts and 32 distinct finals; skill-effect-probe's #3210
+  is the new one, so about 384 REST and 32 GraphQL. Recount after any later
+  `origin/main` merge before sizing the run. Other sessions
   were also drawing the same token heavily (core use rose by about 360 in the
   few minutes before the 05:19Z refresh).
 
@@ -137,13 +140,14 @@ The offline evidence instead:
 
 Since base, `origin/main` closed skill-effect-probe completed-retained by
 operator ruling (#3212): its manifest now commits `closeout` naming #3210, so
-there is no proposal left to migrate. S12 step 1 checks it with
-`goals doctor --online`. If #3210 does not verify, add a decision file with
-`operatorRuling: { finalPullRequest: 3210 }` that cites #3212, because main's
-ruling file for the packet carries no machine-readable block. merge-queue-lab
-(#3169) is the other new committed closeout; `goals/merge-queue-lab/` in the
-lane is byte-identical to `origin/main` `6c2dc6a51fd`. No other migration
-packet changed on `main` since base. The only `proposedCloseout` keys left on
+there is no proposal left to migrate. S12 step 1 refreshed it, and
+`goals completion refresh --slug skill-effect-probe` printed
+`skill-effect-probe #3210: verified` (6 success and 9 skipped required
+contexts, 0 of 0 threads, digest `bd1e9c746812d189`). No
+`operatorRuling` decision file is needed. merge-queue-lab (#3169) is the other
+new committed closeout; `goals/merge-queue-lab/` in the lane is
+byte-identical to `13303191caf`. No other migration packet changed on `main`
+between base and `13303191caf`. The only `proposedCloseout` keys left on
 `origin/main` are the seven migration packets this lane adopts.
 
 ### Packets `main` closed or added while PR A was open (S12 step 1)
@@ -163,7 +167,11 @@ and time-to-certainty), and #3212 closed skill-effect-probe completed-retained.
 The lane's edits to their 25 files (GOAL.md launchers with the DN-21 trims,
 PLAN.md step 3, and the SPEC.md and PLAN.md prose of
 agent-rating-critique-fixes and knowledge-freshness-audit) were reverted to
-base before the merge, so the merge takes `main`'s bytes.
+base before the merge, so the merge takes `main`'s bytes. The lane merged
+`origin/main` at `13303191caf` (merge commit `115e045e95e`). The three
+commits after `6c2dc6a51fd` (#3224, #3217 and #3230) closed no packet; they
+changed only ci-lane-economics and yeet-async-merge-and-stacks, both still
+active.
 
 S12 step 1, after every merge of `origin/main`:
 
@@ -177,6 +185,37 @@ S12 step 1, after every merge of `origin/main`:
    session-route-resolver carries the old launcher done paragraph.
 3. Re-run the `proposedCloseout` census and `goals doctor --online` as
    described above.
+
+#### Result on `13303191caf`
+
+Run on the working tree of the merged head, before the orchestrator's commit:
+
+- Restored: nothing. Every packet named by
+  `git diff --name-only 13303191caf -- goals` is `active` or `paused` on
+  `13303191caf` (the migration packets included, which `main` still holds
+  open), except this new packet and `goals/README.md`.
+- Rewritten: the S11 script re-ran from a copy that skips the `edits.ts` rows
+  of packets `main` closed (ten rows across agent-rating-critique-fixes,
+  goal-portfolio-driver, knowledge-freshness-audit and the three semantica
+  packets), because DN-21 keeps their bytes. Over the 73 live packets it
+  changed seven files: the GOAL.md done paragraph of
+  citation-engine-install-once, citation-regex-worker-v3 and skill-lane-probe
+  (T2703) and session-route-resolver (T1448), and PLAN.md step 3 of
+  citation-engine-install-once, citation-regex-worker-v3 and skill-lane-probe.
+  A second run changed nothing. No GOAL.md is over 4000 characters (`wc -m`).
+- Live-prose census (`proposedCloseout|adoption PR|packet-state PR` over the
+  live packets, excluding `decisions/`, `history/`, `research/`, `data/`,
+  `ops/` and this packet): seven hits. Four sit inside generated
+  `beep:decisions` blocks of the two turborepo packets; three in
+  canonical-digest-owner describe the digest's field and instruct nothing.
+  No live manifest string still prescribes the old route.
+- `jq -e 'has("proposedCloseout")' goals/*/ops/manifest.json`: 303 `false`,
+  no `true`, and no nested key of that name. public-origin-beep-effect-com
+  (completed) mentions the word only in a phase `exit` string, which stays.
+- Refreshes: skill-effect-probe printed `verified` (above).
+  citation-extraction-engine and research-intake-2026-11 printed
+  `verified (claims at HEAD only: …; not done until they merge)` with their
+  four attributed contexts each.
 
 ## Checks
 
@@ -205,6 +244,40 @@ reruns them on the commit):
   #2994 Test Integration; #2975 Docgen; #2985 Check, Doctest and Test
   Integration.
 
+### On the merged head (S12 step 1)
+
+Run on the working tree of `115e045e95e` plus the S12 step 1 edits:
+
+- `jq -e 'has("proposedCloseout")' goals/*/ops/manifest.json`: 303 `false`, no `true`.
+- `bun run beep goals decisions check`: `packets=302 decisions=888 invalid=0 drift=0`.
+- `bun run beep goals doctor` (offline): `packets=302 blocking_new=0 blocking_inherited=0 baseline_resolved=0 advisories=29`.
+  It prints `completed-retained (verified via #2966)`, `(verified via #2963)`
+  and `(verified via #3210)`. The two `completion-gate-unsatisfied` rows for
+  #2966 and #2963 are gone, and the six migration `archive-decision-missing`
+  rows remain. The new rows come from `main`: six `capability-stranded` rows
+  for packets #3219 superseded and three `archive-decision-missing` rows for
+  graduated explorations. The lane does not touch either.
+- `bun run beep goals manifest --write`, `bun run beep lint schema-catalog --write`,
+  `bun run beep observability catalog --write` and
+  `bun run beep goals decisions write --slug goal-closeout-hosted-verification`:
+  no change. `bun run beep lint policy-fingerprint --check`: current.
+- `bun run beep skills update`: re-locked the closeout, reflect and yeet hashes
+  in `skills-lock.json` (the merge took `main`'s file); `--check` is then
+  current. Its one advisory, `yeet/SKILL.md` at 503 lines, is the same on
+  `main`.
+- `git diff --check`: clean.
+- `bun run beep quality package-verify @beep/repo-cli --quick`: lint ok, check ok.
+- 30 test files, each run alone with `bunx --bun vitest run test/<file>.test.ts`
+  from `packages/tooling/tool/cli`: all passed (677 tests), the two
+  `knowledge-doctor-*` files included.
+- `bun run lint:jsdoc` in the package, `bun run beep lint effect-vitest`
+  (`introduced=0 resolved=0`) and `bun run beep lint schema-first` (parity
+  ratchet `introduced=0`): exit 0. The effect-vitest baseline already holds
+  six findings in two test files this lane edits (`session-ledger` and
+  `yeet-sweep-retire`: the `withCwd`, `withRealCwd` and `scoped` helpers and
+  the `@effect/platform-node` import). They are on `main` too; the lane adds
+  calls to `withCwd` but does not change the helpers.
+
 ## GitHub usage
 
 About 175 REST calls and 14 GraphQL calls. The first refresh (alchemy-vault-sync-slice)
@@ -217,3 +290,8 @@ The second pass added the literal-kit-subset-algebra refresh (one process
 with its own rule-suite listing, about 20 REST and one GraphQL) and four
 `gh pr checks` reads (GraphQL). The rate-limit window reset during that
 refresh, so these figures are estimates, not measurements.
+
+S12 step 1 ran three refreshes (skill-effect-probe alone, then
+citation-extraction-engine and research-intake-2026-11). Across them the
+token's remaining core quota fell by 162 and GraphQL by 32. Other sessions
+share the token, so these are upper bounds.
