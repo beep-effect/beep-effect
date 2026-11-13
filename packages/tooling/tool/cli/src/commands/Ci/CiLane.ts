@@ -359,8 +359,20 @@ const CiWorkflow = LiteralKit(["check", "heavy", "storybook"]).pipe(
   $I.annoteSchema("CiWorkflow", { description: "The workflow that produces a declared CI lane context." })
 );
 
+const ciLaneJobAliasesDefault: ReadonlyArray<string> = A.empty();
+
 /**
  * Machine-readable descriptor for a hosted workflow lane.
+ *
+ * **Details**
+ *
+ * The descriptors are the one map from a lane to the hosted jobs it reports
+ * through: `contextName` is the reporting job's name as GitHub prints it
+ * (`Heavy / <job>` for a job of the called heavy workflow), `jobAliases` are
+ * the earlier and conditional names that job has carried, and `shardFamily`
+ * names the lane's partition jobs (`<shardFamily> (<partition>)`) when they do
+ * not report under `contextName`. `CiLaneJobs.ts` derives every job-name join
+ * from these fields.
  *
  * **Example** (Configure a CI lane)
  *
@@ -385,6 +397,11 @@ export class CiLaneDescriptor extends S.Opaque<CiLaneDescriptor, { readonly bran
   S.Struct({
     id: S.String,
     contextName: S.String,
+    jobAliases: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(ciLaneJobAliasesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(ciLaneJobAliasesDefault))
+    ),
+    shardFamily: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     workflow: CiWorkflow.pipe(
       S.withConstructorDefault(Effect.succeed(CiWorkflow.Enum.check)),
       S.withDecodingDefaultTypeKey(Effect.succeed(CiWorkflow.Enum.check))
@@ -496,6 +513,10 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   CiLaneDescriptor.make({
     id: "test-integration",
     contextName: "Heavy / Test Integration",
+    // check.yml's conditional name for the shards' aggregate on a legacy-integration head.
+    jobAliases: ["Test Integration Partitions"],
+    // Since #3005 the shards run in check.yml as `Test Integration (<partition>)`.
+    shardFamily: O.some("Test Integration"),
     required: true,
     laneClass: "cli-runnable",
     replay: "exact",
@@ -507,6 +528,8 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     id: "coverage",
     workflow: "check",
     contextName: "Heavy / Coverage Regression",
+    // check.yml's conditional name for this job on a legacy-coverage head.
+    jobAliases: ["Coverage Artifact Migration"],
     required: false,
     laneClass: "cli-runnable",
     replay: "exact",
@@ -594,6 +617,8 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     id: "build",
     workflow: "heavy",
     contextName: "Heavy / Build",
+    // The context's name before the lane moved under Heavy (until 2026-09-09).
+    jobAliases: ["Build"],
     required: false,
     laneClass: "cli-runnable",
     replay: "exact",

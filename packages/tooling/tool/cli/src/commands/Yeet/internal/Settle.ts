@@ -51,12 +51,8 @@ import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { adaptGitKitError, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
-import {
-  HEAVY_ADMISSION_LABEL,
-  HEAVY_CONTEXT_PREFIX,
-  HeavyAdmission,
-  HeavyAdmissionVerdict,
-} from "../../Ci/HeavyAdmission.ts";
+import { HEAVY_CONTEXT_PREFIX } from "../../Ci/CiLaneJobs.ts";
+import { HEAVY_ADMISSION_LABEL, HeavyAdmission, HeavyAdmissionVerdict } from "../../Ci/HeavyAdmission.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { YeetCheckOutcome, YeetSettleReason } from "./CheckOutcome.ts";
 import { YeetGitErrorWording, yeetGitErrorAdapter } from "./GitErrorAdapter.ts";

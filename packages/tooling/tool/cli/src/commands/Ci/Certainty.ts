@@ -61,9 +61,15 @@ import {
   CiCertaintyTestUnitConversion,
 } from "./Certainty.schemas.ts";
 import { CiCommandError } from "./Ci.errors.ts";
+import {
+  CiSupportJobName,
+  ciLaneDescriptor,
+  ciLaneReportingNames,
+  ciLaneShardJobPrefix,
+  HEAVY_CONTEXT_PREFIX,
+} from "./CiLaneJobs.ts";
 import { CI_LANE_PARTITIONS } from "./CiLanePartitions.ts";
 import { isHeavyDocsOnlyPath } from "./CiOperational.schemas.ts";
-import { HEAVY_CONTEXT_PREFIX } from "./HeavyAdmission.ts";
 import {
   CiLaneTimingGithubClient,
   CiLaneTimingWindowOptions,
@@ -84,6 +90,7 @@ import type {
   CiCertaintyProducer,
   CiCertaintyRefusal,
 } from "./Certainty.schemas.ts";
+import type { CiLaneId } from "./CiLane.ts";
 import type { CiWorkflowJob, CiWorkflowPartialRead, CiWorkflowWindowRun } from "./LaneTimings.ts";
 
 const $I = $RepoCliId.create("commands/Ci/Certainty");
@@ -142,19 +149,19 @@ export const CI_CERTAINTY_NOT_COVERED: ReadonlyArray<string> = [
 const PRODUCER_CHECK: CiCertaintyProducer = "check.yml";
 const PRODUCER_HEAVY_ADMIT: CiCertaintyProducer = "heavy-admit.yml";
 const TEN_MINUTES = 10;
-const HEAVY_ADMISSION_JOB = "Heavy Admission";
+const HEAVY_ADMISSION_JOB = CiSupportJobName.Enum["Heavy Admission"];
 const DOCS_ADMISSION_STEP = "Satisfy documentation-only admission";
-const DOCS_POLICY_JOB = "Docs Policy";
-const TEST_PLAN_JOB = "Test Plan";
-const TEST_UNIT_PARTITION_PREFIX = "Test Unit (";
-const COVERAGE_CONTEXTS: ReadonlyArray<string> = ["Heavy / Coverage Regression", "Coverage Artifact Migration"];
-// Yeet-mergeable adds these to the required set (D5); Coverage Regression keeps its conditional name.
-const MERGEABLE_EXTRA_CONTEXTS: ReadonlyArray<ReadonlyArray<string>> = [
-  ["Heavy / Lint Policy"],
-  ["Property Laws"],
-  ["Fallow Advisory Envelopes"],
-  COVERAGE_CONTEXTS,
-];
+const DOCS_POLICY_JOB = ciLaneDescriptor("docs-policy").contextName;
+const TEST_PLAN_JOB = CiSupportJobName.Enum["Test Plan"];
+const TEST_UNIT_PARTITION_PREFIX = ciLaneShardJobPrefix("test-unit");
+const COVERAGE_CONTEXTS = ciLaneReportingNames("coverage");
+// Yeet-mergeable adds these lanes' contexts to the required set (D5); Coverage Regression keeps its conditional
+// name.
+const MERGEABLE_EXTRA_LANES: ReadonlyArray<CiLaneId> = ["lint-policy", "property", "fallow", "coverage"];
+const MERGEABLE_EXTRA_CONTEXTS: ReadonlyArray<ReadonlyArray<string>> = A.map(
+  MERGEABLE_EXTRA_LANES,
+  ciLaneReportingNames
+);
 const GREEN_CONCLUSIONS = HashSet.make("success", "skipped", "neutral");
 const TEST_UNIT_FULL_LAYOUT_JOBS = A.length(
   A.filter(CI_LANE_PARTITIONS, (partition) => partition.lane === "test-unit")

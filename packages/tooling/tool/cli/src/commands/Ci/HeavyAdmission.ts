@@ -45,6 +45,7 @@ import * as Str from "effect/String";
 import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import { patientGit } from "../../internal/repo-run/PatientGit.ts";
 import { CiCommandError } from "./Ci.errors.ts";
+import { isCiHeavyLane } from "./CiLaneJobs.ts";
 import { isHeavyDocsOnlyPath } from "./CiOperational.schemas.ts";
 
 export { heavyDocsOnlyPattern, isHeavyDocsOnlyPath } from "./CiOperational.schemas.ts";
@@ -72,22 +73,6 @@ const $I = $RepoCliId.create("commands/Ci/HeavyAdmission");
  * @since 0.0.0
  */
 export const HEAVY_ADMISSION_LABEL = "ready-for-heavy";
-
-/**
- * The check-context prefix every heavy lane reports under.
- *
- * **Example** (Recognise a heavy context)
- *
- * ```ts
- * import { HEAVY_CONTEXT_PREFIX } from "@beep/repo-cli/commands/Ci"
- *
- * console.log("Heavy / Check".startsWith(HEAVY_CONTEXT_PREFIX)) // true
- * ```
- *
- * @category constants
- * @since 0.0.0
- */
-export const HEAVY_CONTEXT_PREFIX = "Heavy / ";
 
 /**
  * Why a head was admitted: the label on a pull request, a merge-group entry,
@@ -270,10 +255,6 @@ export class HeavyAdmissionRoute extends S.Opaque<HeavyAdmissionRoute, { readonl
 const ROUTE_READ_TIMEOUT = Duration.minutes(3);
 
 const unavailableRoute = HeavyAdmissionRoute.make({ lanes: [], receipt: "route-unavailable" });
-const heavyRouteLanes = LiteralKit(["lint-policy", "check", "docgen", "doctest", "build"]).pipe(
-  $I.annoteSchema("HeavyRouteLanes", { description: "Lane ids in heavy.yml's verify matrix." })
-);
-const isHeavyRouteLane = S.is(heavyRouteLanes);
 const RouteReceiptJson = S.fromJsonString(S.Unknown);
 const decodeRouteSentinel = S.decodeUnknownEffect(S.fromJsonString(RouteSentinel));
 
@@ -657,7 +638,7 @@ export const readHeavyAdmissionRoute = Effect.fn("Ci.readHeavyAdmissionRoute")(f
         change.atoms,
         A.map(sentinel.revoked, (row) => row.id)
       ),
-      (row) => isHeavyRouteLane(row.lane)
+      (row) => isCiHeavyLane(row.lane)
     );
     const footprintDigest = yield* routeFootprintDigest;
     const receipt = yield* S.encodeUnknownEffect(RouteReceiptJson)({
