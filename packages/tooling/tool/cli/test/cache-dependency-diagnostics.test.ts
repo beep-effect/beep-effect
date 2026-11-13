@@ -453,9 +453,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("installed depend
       yield* f.fs.writeFileString(diagnostic, "PRIVATE_DIAGNOSTIC_SENTINEL");
       // The CLI entry reads `Bun.argv`, so it always runs under bun, whichever runtime hosts vitest;
       // `run` isolates PATH, so resolve bun's absolute path from the inherited PATH first.
-      const bunExecutable = Bun.spawnSync(["bun", "-e", "console.log(process.execPath)"], { stdout: "pipe" })
-        .stdout.toString()
-        .trim();
+      const bunExecutable = Str.trim(
+        Bun.spawnSync(["bun", "-e", "console.log(process.execPath)"], { stdout: "pipe" }).stdout.toString()
+      );
       const command = [
         bunExecutable,
         bin,
