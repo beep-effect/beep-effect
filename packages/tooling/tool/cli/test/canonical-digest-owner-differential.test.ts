@@ -1,25 +1,26 @@
-// Slice A of goals/canonical-digest-owner: the encoder differential as a
-// tracked test.
+// Goal canonical-digest-owner: the encoder differential as a tracked test.
 //
-// Three hand-rolled canonical-JSON encoders are held byte-equal to the owner,
-// `JsoncFingerprint.canonicalizeResult` (RFC 8785), on generated plain JSON:
-// the epistemics encoder behind `canonicalDetectionJson`, PacketCore's
+// Slice A held the hand-rolled canonical-JSON encoders byte-equal to the
+// owner, `JsoncFingerprint.canonicalizeResult` (RFC 8785), on generated plain
+// JSON: the epistemics encoder behind `canonicalDetectionJson`, PacketCore's
 // `canonicalJsonText`, and the JSON frontmatter encoder inside `@beep/md`,
 // which the census found and which is reachable only through a rendered
 // document. The semantica lab encoder has the same two tests in
 // `apps/labs/semantica/test/CanonicalDifferential.test.ts`, because a package
 // cannot import an app.
 //
-// The second half fixes what each side does today with values that are not
-// plain JSON. Those rows are a record of present behaviour, not a contract:
-// slice C replaces the two bodies with the owner and this table is where the
-// change shows.
+// Slice C replaces each body with the owner, one encoder per commit. A swapped
+// export is the owner by construction, so its byte-equality property would
+// compare the owner with itself and is dropped. What still carries
+// information is the table below: for each value outside plain JSON, what the
+// legacy encoder did (recorded from slice A, since that code is gone) and what
+// the export does now, which is each behaviour change of the swap.
 //
 // This file lives in `@beep/repo-cli` because that package already depends on
 // `@beep/epistemics`, `@beep/jsonc` and the test kits, so it adds no
 // dependency edge (decision `2026-11-12-differential-test-placement`).
 import { canonicalDetectionJson } from "@beep/epistemics/ContradictionDetection";
-import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
+import { JsoncCanonicalizeError, JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
 import { Md } from "@beep/md";
 import { Document } from "@beep/md/Md.model";
 import { canonicalJsonText } from "@beep/repo-cli/test/Goals";
@@ -29,7 +30,7 @@ import { assertSuccess } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -40,9 +41,14 @@ import type { JsoncCanonicalizeErrorCode } from "@beep/jsonc/JsoncFingerprint";
 
 type Encoder = (value: unknown) => string;
 
+// Encoders not yet swapped for the owner, still held byte-equal to it.
 const encoders: ReadonlyArray<readonly [name: string, encode: Encoder]> = [
-  ["epistemics canonicalDetectionJson", canonicalDetectionJson],
   ["PacketCore canonicalJsonText", canonicalJsonText],
+];
+
+// Exports whose body is the owner since slice C.
+const swapped: ReadonlyArray<readonly [name: string, encode: Encoder]> = [
+  ["epistemics canonicalDetectionJson", canonicalDetectionJson],
 ];
 
 // ── Generator ───────────────────────────────────────────────────────────────
@@ -236,10 +242,18 @@ type Observed =
   | { readonly threw: string }
   | { readonly refused: JsoncCanonicalizeErrorCode };
 
+// A swapped export throws the owner's typed error; it reads back as the same
+// `refused` code the owner returns.
 const observeEncoder = (encode: Encoder, value: unknown): Observed =>
   pipe(
-    Result.try({ try: () => encode(value), catch: (thrown) => (P.isError(thrown) ? thrown.name : "non-error") }),
-    Result.match({ onSuccess: (text): Observed => ({ text }), onFailure: (threw): Observed => ({ threw }) })
+    Result.try({ try: () => encode(value), catch: identity }),
+    Result.match({
+      onSuccess: (text): Observed => ({ text }),
+      onFailure: (thrown): Observed =>
+        S.is(JsoncCanonicalizeError)(thrown)
+          ? { refused: thrown.code }
+          : { threw: P.isError(thrown) ? thrown.name : "non-error" },
+    })
   );
 
 const observeOwner = (value: unknown): Observed =>
@@ -251,6 +265,9 @@ const observeOwner = (value: unknown): Observed =>
 type OffDomainRow = {
   readonly input: string;
   readonly value: () => unknown;
+  // What a swapped encoder emitted before slice C, as slice A observed it. The
+  // code is gone, so this is the record of the change, not an assertion.
+  readonly legacy: { readonly epistemics: Observed };
   readonly epistemics: Observed;
   readonly packetCore: Observed;
   readonly owner: Observed;
@@ -262,63 +279,72 @@ const offDomainRows: ReadonlyArray<OffDomainRow> = [
   {
     input: "an object member whose value is undefined",
     value: () => ({ a: undefined, b: 1 }),
-    epistemics: { text: '{"b":1}' },
+    legacy: { epistemics: { text: '{"b":1}' } },
+    epistemics: { refused: "UnrepresentableValue" },
     packetCore: { text: '{"b":1}' },
     owner: { refused: "UnrepresentableValue" },
   },
   {
     input: "an undefined array element",
     value: () => [1, undefined, 2],
-    epistemics: { threw: "TypeError" },
+    legacy: { epistemics: { threw: "TypeError" } },
+    epistemics: { refused: "UnrepresentableValue" },
     packetCore: { text: "[1,null,2]" },
     owner: { refused: "UnrepresentableValue" },
   },
   {
     input: "undefined at the root",
     value: () => undefined,
-    epistemics: { threw: "TypeError" },
+    legacy: { epistemics: { threw: "TypeError" } },
+    epistemics: { refused: "UnrepresentableValue" },
     packetCore: { text: "null" },
     owner: { refused: "UnrepresentableValue" },
   },
   {
     input: "NaN",
     value: () => ({ n: Number.NaN }),
-    epistemics: { text: '{"n":null}' },
+    legacy: { epistemics: { text: '{"n":null}' } },
+    epistemics: { refused: "NonFiniteNumber" },
     packetCore: { text: '{"n":null}' },
     owner: { refused: "NonFiniteNumber" },
   },
   {
     input: "Infinity",
     value: () => [Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY],
-    epistemics: { text: "[null,null]" },
+    legacy: { epistemics: { text: "[null,null]" } },
+    epistemics: { refused: "NonFiniteNumber" },
     packetCore: { text: "[null,null]" },
     owner: { refused: "NonFiniteNumber" },
   },
   {
     input: "a Date",
     value: () => ({ d: DateTime.toDate(DateTime.makeUnsafe(0)) }),
-    epistemics: { text: '{"d":{}}' },
+    legacy: { epistemics: { text: '{"d":{}}' } },
+    epistemics: { refused: "NonPlainObject" },
     packetCore: { text: '{"d":{}}' },
     owner: { refused: "NonPlainObject" },
   },
   {
     input: "a bigint",
     value: () => ({ b: 1n }),
-    epistemics: { text: '{"b":{}}' },
+    legacy: { epistemics: { text: '{"b":{}}' } },
+    epistemics: { refused: "BigIntValue" },
     packetCore: { text: '{"b":null}' },
     owner: { refused: "BigIntValue" },
   },
   {
     input: "a lone surrogate in a string value",
     value: () => ["\ud800"],
-    epistemics: { text: '["\\ud800"]' },
+    legacy: { epistemics: { text: '["\\ud800"]' } },
+    epistemics: { refused: "LoneSurrogate" },
     packetCore: { text: '["\\ud800"]' },
     owner: { refused: "LoneSurrogate" },
   },
   {
     input: "a lone surrogate in a member key",
     value: () => ({ "\udc00": 1 }),
-    epistemics: { text: '{"\\udc00":1}' },
+    legacy: { epistemics: { text: '{"\\udc00":1}' } },
+    epistemics: { refused: "LoneSurrogate" },
     packetCore: { text: '{"\\udc00":1}' },
     owner: { refused: "LoneSurrogate" },
   },
@@ -337,19 +363,27 @@ describe("canonical digest owner: behaviour off the JSON domain", () => {
     for (const [, encode] of encoders) {
       expect(encode({ n: Number.NaN })).toBe(encode({ n: null }));
     }
+    for (const [, encode] of swapped) {
+      expect(observeEncoder(encode, { n: Number.NaN })).toStrictEqual({ refused: "NonFiniteNumber" });
+      expect(observeEncoder(encode, { n: null })).toStrictEqual({ text: '{"n":null}' });
+    }
     expect(observeOwner({ n: Number.NaN })).toStrictEqual({ refused: "NonFiniteNumber" });
     expect(observeOwner({ n: null })).toStrictEqual({ text: '{"n":null}' });
   });
 
   // Plain JSON, but past the owner's hardening cap. No stored value nests this
-  // deep (the replay proves that for events and seals); the row exists so the
-  // swap in slice C lists it as a behaviour change.
+  // deep (the replay proves that for events and seals). The legacy encoders
+  // emitted it; a swapped export refuses it, a behaviour change of slice C.
   it("fixes the one plain-JSON difference: nesting past the owner's depth cap", () => {
     const atCap = nestedArrays(256);
     const pastCap = nestedArrays(257);
     for (const [, encode] of encoders) {
       assertSuccess(JsoncFingerprint.canonicalizeResult(atCap), encode(atCap));
       expect(Str.startsWith("[[[")(encode(pastCap))).toBe(true);
+    }
+    for (const [, encode] of swapped) {
+      assertSuccess(JsoncFingerprint.canonicalizeResult(atCap), encode(atCap));
+      expect(observeEncoder(encode, pastCap)).toStrictEqual({ refused: "NestingDepthExceeded" });
     }
     expect(observeOwner(pastCap)).toStrictEqual({ refused: "NestingDepthExceeded" });
   });

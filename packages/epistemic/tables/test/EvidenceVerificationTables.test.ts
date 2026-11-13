@@ -22,6 +22,7 @@ import { getTableConfig } from "drizzle-orm/pg-core";
 import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
 import { pipe } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -88,6 +89,20 @@ const evidenceFor = (id: Epistemic.EvidenceId, anchor: TextAnchor) =>
   );
 const evidence = evidenceFor(evidenceId, verifiedAnchor.anchor);
 
+// The manifestation key hashes RFC 8785 bytes from the canonical digest owner,
+// which refuses an unpaired surrogate. Schema-derived free text (quotes,
+// source refs, versions) can hold one; the key function then throws the
+// owner's typed error, read back here as its message.
+const manifestationKeyOrRefusal = (manifestation: EvidenceVerificationManifestation) =>
+  Result.try({
+    try: () =>
+      Result.getOrThrow(
+        manifestationKeyFor(manifestation.evidenceId, TextAnchorVerificationReceipt.make(manifestation.verifiedAnchor))
+      ),
+    catch: (thrown) =>
+      P.isTagged(thrown, "JsoncCanonicalizeError") && P.isError(thrown) ? thrown.message : "not refused",
+  });
+
 describe("EvidenceVerificationTable", () => {
   it("projects the immutable sidecar column shape", () => {
     expect(EvidenceVerificationModel.sql.tableName).toBe("epistemic_evidence_verification");
@@ -129,37 +144,39 @@ describe("EvidenceVerificationTable", () => {
     "round-trips schema-derived manifestations through the sealed row converters",
     [Arbitrary.schema(EvidenceVerificationManifestation)],
     ([manifestation]) => {
-      const verification = Result.getOrThrow(
-        decodeUnknownEvidenceVerificationModelResult({
-          ...productEntityFixtureInput("EpistemicEvidenceVerification", 7),
-          evidenceId: manifestation.evidenceId,
-          manifestationKey: Result.getOrThrow(
-            manifestationKeyFor(
-              manifestation.evidenceId,
-              TextAnchorVerificationReceipt.make(manifestation.verifiedAnchor)
+      Result.match(manifestationKeyOrRefusal(manifestation), {
+        onFailure: (refusal) => {
+          expect(refusal).toMatch(/LoneSurrogate at "\/verifiedAnchor\//);
+        },
+        onSuccess: (manifestationKey) => {
+          const verification = Result.getOrThrow(
+            decodeUnknownEvidenceVerificationModelResult({
+              ...productEntityFixtureInput("EpistemicEvidenceVerification", 7),
+              evidenceId: manifestation.evidenceId,
+              manifestationKey,
+              verifiedAnchor: Result.getOrThrow(
+                encodeUnknownTextAnchorVerificationReceiptResult(manifestation.verifiedAnchor)
+              ),
+            })
+          );
+          const insert = Result.getOrThrow(
+            EvidenceVerification.toEvidenceVerificationInsert(
+              verification,
+              evidenceFor(manifestation.evidenceId, manifestation.verifiedAnchor.anchor)
             )
-          ),
-          verifiedAnchor: Result.getOrThrow(
-            encodeUnknownTextAnchorVerificationReceiptResult(manifestation.verifiedAnchor)
-          ),
-        })
-      );
-      const insert = Result.getOrThrow(
-        EvidenceVerification.toEvidenceVerificationInsert(
-          verification,
-          evidenceFor(manifestation.evidenceId, manifestation.verifiedAnchor.anchor)
-        )
-      );
-      const decoded = Result.getOrThrow(
-        EvidenceVerification.fromEvidenceVerificationRow({
-          ...insert,
-          id: verification.id,
-        })
-      );
+          );
+          const decoded = Result.getOrThrow(
+            EvidenceVerification.fromEvidenceVerificationRow({
+              ...insert,
+              id: verification.id,
+            })
+          );
 
-      expect(Result.getOrThrow(encodeUnknownEvidenceVerificationModelResult(decoded))).toStrictEqual(
-        Result.getOrThrow(encodeUnknownEvidenceVerificationModelResult(verification))
-      );
+          expect(Result.getOrThrow(encodeUnknownEvidenceVerificationModelResult(decoded))).toStrictEqual(
+            Result.getOrThrow(encodeUnknownEvidenceVerificationModelResult(verification))
+          );
+        },
+      });
     },
     { arbitrary: fcRuns(25) }
   );

@@ -2507,6 +2507,7 @@
         "allow": [
           "@beep/epistemics",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/provenance",
           "@beep/schema",
           "@beep/test-runner",
@@ -2515,6 +2516,7 @@
         "allowTypeOnly": [
           "@beep/epistemics",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/provenance",
           "@beep/schema",
           "@beep/test-runner",
