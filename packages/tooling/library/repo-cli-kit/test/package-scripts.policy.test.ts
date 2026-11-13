@@ -1,6 +1,9 @@
 import {
   CheckerEngineExemption,
   ImplScriptDrift,
+  JavaScriptBuildOverride,
+  RetiredScriptName,
+  retiredImplScripts,
   ScriptsRecord,
   scriptsBlockFromRecord,
 } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas";
@@ -42,7 +45,11 @@ const noEvidence = DerivationEvidence.make({
   doctestOwners: HashSet.empty(),
   bypassingConfigs: HashSet.empty(),
   generators: HashSet.empty(),
+  javaScriptBuilds: HashSet.empty(),
 });
+const isRetiredScriptName = S.is(RetiredScriptName);
+const isRetiredAppImpl = (name: string, value: string) =>
+  A.some(retiredImplScripts, (row) => row.kind === "app" && row.name === name && row.value === value);
 const fixture = Effect.fn("fixture")(function* (files: Readonly<Record<string, unknown>>) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -72,8 +79,9 @@ describe("package scripts policy", () => {
           const policy = yield* PackageScriptsPolicy.make("/repo");
           const actual = Result.getOrThrow(decodeAppResult(scripts));
           const expected = policy.expected("app", actual, noEvidence);
-          expect(expected.extras).toEqual(actual.extras);
-          for (const [key, value] of actual.impls) assertSome(HashMap.get(expected.impls, key), value);
+          expect(expected.extras).toEqual(HashMap.filter(actual.extras, (_, key) => !isRetiredScriptName(key)));
+          for (const [key, value] of actual.impls)
+            if (!isRetiredAppImpl(key, value)) assertSome(HashMap.get(expected.impls, key), value);
           expect(policy.diff(expected, policy.expected("app", expected, noEvidence))).toEqual([]);
         }),
       { arbitrary: fcRuns(100) }
@@ -345,6 +353,95 @@ describe("package scripts policy", () => {
         yield* policy.write(root);
         const check8 = yield* policy.check(root);
         expect(checkerRows(check8)).toEqual(A.filter(allRows, (entry) => entry.name !== "beep:check"));
+      })
+    );
+  });
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    const babelBuild = {
+      coverage: "owned coverage",
+      babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
+      "beep:build": "tsrs -p tsconfig.json && bun run babel",
+    };
+    const retirementFixture = () =>
+      fixture({
+        "package.json": { name: "root", workspaces: ["packages/*", "apps/*"] },
+        "packages/babel/package.json": { name: "@beep/babel", scripts: babelBuild },
+        "packages/javascript/package.json": {
+          name: "@beep/javascript",
+          scripts: { coverage: "owned coverage", "beep:build": "tsrs -p tsconfig.json" },
+        },
+        "packages/codegen/package.json": {
+          name: "@beep/codegen",
+          scripts: { ...babelBuild, "beep:build": "bun run codegen && tsrs -p tsconfig.json && bun run babel" },
+        },
+        "packages/owned/package.json": {
+          name: "@beep/owned",
+          scripts: { coverage: "owned coverage", "beep:build": "tsrs -p tsconfig.json --listEmittedFiles" },
+        },
+        "apps/library-shaped/package.json": { name: "@beep/library-shaped", scripts: babelBuild },
+        "packages/legacy/package.json": {
+          name: "@beep/legacy",
+          scripts: { coverage: "owned coverage", babel: babelBuild.babel, build: babelBuild["beep:build"] },
+        },
+      });
+    const buildOf = Effect.fnUntraced(function* (root: string, dir: string) {
+      const fs = yield* FileSystem.FileSystem;
+      const text = yield* fs.readFileString(`${root}/${dir}/package.json`);
+      const manifest = yield* decodeManifest(text);
+      return manifest.scripts;
+    });
+    it.effect(
+      "fails retired Babel builds and the babel script, then writes declaration-only builds",
+      Effect.fnUntraced(function* () {
+        const root = yield* retirementFixture();
+        const policy = yield* PackageScriptsPolicy.make(root);
+        const initial = yield* policy.check(root);
+        expect(HashMap.get(initial.drift, "packages/babel/package.json").pipe(O.getOrElse(() => []))).toEqual(
+          expect.arrayContaining([
+            {
+              _tag: "retired-impl",
+              name: "beep:build",
+              expected: "tsrs -p tsconfig.json --emitDeclarationOnly",
+              actual: "tsrs -p tsconfig.json && bun run babel",
+            },
+            { _tag: "retired-script", name: "babel", actual: babelBuild.babel },
+          ])
+        );
+        yield* policy.write(root);
+        expect(HashMap.size((yield* policy.check(root)).drift)).toBe(0);
+        expect(HashSet.size((yield* policy.write(root)).written)).toBe(0);
+        const declarationOnly = "tsrs -p tsconfig.json --emitDeclarationOnly";
+        // `packages/legacy` held the Babel build in its task: the seeded implementation is retired in the same pass.
+        for (const dir of ["packages/babel", "packages/javascript", "apps/library-shaped", "packages/legacy"]) {
+          const scripts = yield* buildOf(root, dir);
+          expect(scripts["beep:build"]).toBe(declarationOnly);
+          expect(scripts).not.toHaveProperty("babel");
+        }
+        const codegen = yield* buildOf(root, "packages/codegen");
+        expect(codegen["beep:build"]).toBe(`bun run codegen && ${declarationOnly}`);
+        expect(codegen).not.toHaveProperty("babel");
+        const owned = yield* buildOf(root, "packages/owned");
+        expect(owned["beep:build"]).toBe("tsrs -p tsconfig.json --listEmittedFiles");
+      })
+    );
+    it.effect(
+      "keeps a JavaScript-emitting build only for a manifest named by an override row",
+      Effect.fnUntraced(function* () {
+        const root = yield* retirementFixture();
+        const overrides = [
+          JavaScriptBuildOverride.make({
+            manifest: "packages/javascript/package.json",
+            reason: "a worker image runs dist/main.js",
+          }),
+        ];
+        const policy = yield* PackageScriptsPolicy.make(root, [], overrides);
+        yield* policy.write(root);
+        const report = yield* policy.check(root);
+        expect(HashMap.size(report.drift)).toBe(0);
+        const javascript = yield* buildOf(root, "packages/javascript");
+        expect(javascript["beep:build"]).toBe("tsrs -p tsconfig.json");
+        const babel = yield* buildOf(root, "packages/babel");
+        expect(babel["beep:build"]).toBe("tsrs -p tsconfig.json --emitDeclarationOnly");
       })
     );
   });

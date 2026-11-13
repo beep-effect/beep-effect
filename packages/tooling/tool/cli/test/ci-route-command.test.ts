@@ -26,6 +26,7 @@ import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -125,10 +126,10 @@ const services = (recorded: Recorded, runs: ReadonlyArray<HostedRun>, atoms: Rea
 
 const harness = Effect.fn("RouteCommandTest.harness")(function* (
   atoms: ReadonlyArray<ChangeAtom>,
-  extraJobs: ReadonlyArray<HostedJob> = []
+  editRuns: (runs: ReadonlyArray<HostedRun>) => ReadonlyArray<HostedRun> = identity
 ) {
-  const decodedRuns = yield* decodeRuns(replayRunsJson);
-  const runs = A.map(decodedRuns, (run) => HostedRun.make({ ...run, jobs: [...run.jobs, ...extraJobs] }));
+  const decoded = yield* decodeRuns(replayRunsJson);
+  const runs = editRuns(decoded);
   const recorded: Recorded = {
     captures: yield* Ref.make<ReadonlyArray<RouteCorpusCaptureOptions>>([]),
     loads: yield* Ref.make<ReadonlyArray<string>>([]),
@@ -287,21 +288,37 @@ it.layer(CliLayer, { timeout: "30 seconds" })("beep ci route command", (it) => {
     )
   );
 
-  it.effect("names unmapped failed jobs in the census and qualifies the replay recall", () =>
+  it.effect("names unmapped failed jobs in the census and bounds an uncertain replay recall", () =>
     withConsole(
       Effect.gen(function* () {
-        const { run } = yield* harness(
-          [],
-          [HostedJob.make({ name: "Unmapped validator", conclusion: O.some("failure") })]
-        );
+        // Head a1, whose route skips check, also fails two jobs no rule maps to a lane.
+        const unmappedReds = (runs: ReadonlyArray<HostedRun>) =>
+          A.map(runs, (run) =>
+            run.headSha === "a1"
+              ? HostedRun.make({
+                  ...run,
+                  jobs: A.appendAll(run.jobs, [
+                    HostedJob.make({ name: "Heavy / Typecheck", conclusion: O.some("failure") }),
+                    HostedJob.make({ name: "Knip", conclusion: O.some("failure") }),
+                  ]),
+                })
+              : run
+          );
+        const { run } = yield* harness([], unmappedReds);
         yield* run(["census"]);
-        const censusLines = yield* TestConsole.logLines;
-        expect(censusLines).toContain("  unknown job names: Unmapped validator");
+        const censusLog = yield* TestConsole.logLines;
+        const census = A.map(censusLog, String);
+        expect(census).toContain("  unknown job names: Heavy / Typecheck, Knip");
+
         yield* run(["replay"]);
-        const logLines = yield* TestConsole.logLines;
-        const lines = A.map(logLines, String);
-        expect(A.filter(lines, Str.includes("recall is an upper bound"))).toHaveLength(1);
-        expect(A.filter(lines, Str.includes("failed jobs no rule maps (Unmapped validator)"))).toHaveLength(1);
+        const replayLog = yield* TestConsole.logLines;
+        const replay = A.map(replayLog, String);
+        const recallLine = yield* Effect.fromOption(
+          A.findFirst(replay, (line) => Str.startsWith("[ci route] replay over")(line))
+        );
+        expect(recallLine).toContain(
+          " — recall is an upper bound: 1 skipping head(s) have failed jobs no rule maps (Heavy / Typecheck, Knip)"
+        );
       })
     )
   );
