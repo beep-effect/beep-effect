@@ -16,3 +16,12 @@ export const AuthorityGrants = Capability.make({
   operations: [IssueGrant.tag, NarrowGrant.tag, RevokeGrant.tag],
   description: "Issue, narrow and revoke grants in an organization.",
 });
+
+/**
+ * Every capability the authority context defines: the file's designated
+ * primary export, as `PartyCapabilities` is Party's.
+ *
+ * @category capabilities
+ * @since 0.0.0
+ */
+export const AuthorityCapabilities = [AuthorityGrants] as const;

@@ -1,17 +1,15 @@
 import { Story } from "@alchemy.run/domain/Story";
 import { expect, it } from "@effect/vitest";
-import { CapabilityGrant, type GrantTerms, ResourceScope } from "@proto/kernel/Capability";
+import type { GrantTerms } from "@proto/kernel/Capability";
 import { CurrentInvocation } from "@proto/kernel/CurrentInvocation.context";
-import { CapabilityId, DelegationId, GrantId, OrgId, PrincipalId, RunId } from "@proto/kernel/Ids";
+import { DelegationId, GrantId, PrincipalId, RunId } from "@proto/kernel/Ids";
 import {
   byProcess,
   Cause,
   extend,
   GrantRef,
   Invocation,
-  type Provenance,
   provenanceOf,
-  Root,
 } from "@proto/kernel/Invocation";
 import { RunActivated } from "@proto/runs-contract/Run/ActivateRun.command";
 import { AwaitApproval, RunAwaitingApproval } from "@proto/runs-contract/Run/AwaitApproval.command";
@@ -20,6 +18,7 @@ import { CompleteRun, RunCompleted } from "@proto/runs-contract/Run/CompleteRun.
 import { ConcludeRun } from "@proto/runs-contract/Run/ConcludeRun.command";
 import { BudgetExceeded } from "@proto/runs-contract/Run/BudgetExceeded.rejection";
 import { ChildGrantWidens, ChildRequested, DelegateRun } from "@proto/runs-contract/Run/DelegateRun.command";
+import { ExhaustRun, RunExhausted } from "@proto/runs-contract/Run/ExhaustRun.command";
 import { NotThisRun } from "@proto/runs-contract/Run/NotThisRun.rejection";
 import { ChildRunOpened } from "@proto/runs-contract/Run/OpenChildRun.command";
 import { ContinuationOpened } from "@proto/runs-contract/Run/OpenContinuation.command";
@@ -27,11 +26,8 @@ import { RecordStep, RunContinued, StepRecorded } from "@proto/runs-contract/Run
 import { RunRejected } from "@proto/runs-contract/Run/RejectRun.command";
 import { ReleaseReservation, ReservationReleased } from "@proto/runs-contract/Run/ReleaseReservation.command";
 import { HumanOnly, RequestRun, RunRequested } from "@proto/runs-contract/Run/RequestRun.command";
-import { ReservationId } from "@proto/runs-contract/Run/Reservation.id";
 import { BudgetReserved, ReserveBudget } from "@proto/runs-contract/Run/ReserveBudget.command";
 import { RunNotRunning } from "@proto/runs-contract/Run/RunNotRunning.rejection";
-import { RunVersions } from "@proto/runs-contract/Run/RunVersions";
-import { SessionId } from "@proto/runs-contract/Run/Session.id";
 import { SettleUsage, UsageSettled } from "@proto/runs-contract/Run/SettleUsage.command";
 import { Authority, GrantDenied } from "@proto/runs-model/Authority.external";
 import { AgentRun } from "@proto/runs-model/Run/AgentRun.aggregate";
@@ -39,80 +35,25 @@ import { SessionRuns } from "@proto/runs-model/Run/SessionRuns.view";
 import { RunsHandlers } from "@proto/runs-model/Runs.handlers";
 import { RunsModel } from "@proto/runs-model/Runs.model";
 
-const { call, fail, given, provide, rejected, replied, state, succeed, then, view, when } = Story;
+const { call, fail, provide, rejected, replied, state, succeed, then, view, when } = Story;
 const as = (invocation: Invocation) => provide(CurrentInvocation, invocation);
 
 const story = Story.make(RunsModel, { layer: RunsHandlers, stub: [Authority] });
 
-// Fixtures build invocations, as the authority context does in a host.
-const acme = OrgId.make("org_acme");
-const session = SessionId.make("session_1");
-const versions = RunVersions.make({ prompt: "p1", model: "m1", tools: "t1" });
-const requester = Invocation.make({
-  root: Root.cases.Human.make({ principal: PrincipalId.make("p_req") }),
-  onBehalfOf: PrincipalId.make("p_req"),
-  grants: [
-    CapabilityGrant.make({
-      grant: GrantId.make("g_req"),
-      delegation: null,
-      capability: CapabilityId.make("party.propose"),
-      operations: null,
-      resource: ResourceScope.cases.Org.make({ org: acme }),
-      expires: null,
-    }),
-  ],
-  chain: [],
-});
-const terms = (operations: ReadonlyArray<string> | null): GrantTerms => ({
-  capability: CapabilityId.make("party.propose"),
-  operations,
-  resource: ResourceScope.cases.Org.make({ org: acme }),
-  expires: null,
-});
-const parentTerms = terms(["ProposeDisposition", "AcceptClaim"]);
-const source = GrantRef.make({ grant: GrantId.make("g_req"), delegation: null });
-
-/** A run's own invocation: an agent root naming its accountable human, its delegation its only grant. */
-const asRun = (run: string, delegation: string, granted: GrantTerms = parentTerms) =>
-  Invocation.make({
-    root: Root.cases.Agent.make({ run: RunId.make(run), accountable: PrincipalId.make("p_req") }),
-    onBehalfOf: PrincipalId.make("p_req"),
-    grants: [CapabilityGrant.make({ grant: GrantId.make("g_req"), delegation: DelegationId.make(delegation), ...granted })],
-    chain: [],
-  });
-
-const run1 = AgentRun.ref("run_1");
-const reservation = (id: string) => ReservationId.make(id);
-const hopOn = (policy: string, stream: string, seq: number, event: string) =>
-  byProcess(policy, Cause.cases.Event.make({ stream, seq, event }));
-
-/** A run requested by p_req and granted, with this budget and history bound. */
-const active = (allowance: number, historyBound = 20): ReadonlyArray<ReturnType<typeof given>> => [
-  given(
-    run1,
-    new RunRequested({
-      session,
-      purpose: "review",
-      versions,
-      allowance,
-      historyBound,
-      source,
-      terms: parentTerms,
-      requester: PrincipalId.make("p_req"),
-      provenance: provenanceOf(requester),
-    }),
-    new RunActivated({
-      session,
-      delegation: DelegationId.make("dlg:run_1"),
-      accountable: PrincipalId.make("p_req"),
-      runProvenance: provenanceOf(asRun("run_1", "dlg:run_1")),
-      provenance: extend(provenanceOf(requester), hopOn("GrantOnRequest", "AgentRun/run_1", 1, "RunRequested")),
-    }),
-  ),
-];
-
-const self = (run: string, delegation: string, granted?: GrantTerms): Provenance =>
-  provenanceOf(asRun(run, delegation, granted));
+import {
+  active,
+  asRun,
+  hopOn,
+  parentTerms,
+  requester,
+  reservation,
+  run1,
+  self,
+  session,
+  source,
+  terms,
+  versions,
+} from "./fixtures.ts";
 
 it.effect("a person requests a run; the authority context grants its narrowed delegation and it starts", () => {
   const grantHop = hopOn("GrantOnRequest", "AgentRun/run_1", 1, "RunRequested");
@@ -488,6 +429,97 @@ it.effect("a child that finishes resumes its parent, which keeps what the child 
         spent: 12,
         outcome: "done",
         provenance: extend(provenanceOf(asChild), hopOn("ResumeParent", "AgentRun/run_child", 4, "RunCompleted")),
+      }),
+    ),
+    state(run1, (current) => {
+      expect(current).toMatchObject({ _tag: "Running", run: { budget: { allowance: 100, allocated: 0, spent: 12 } } });
+    }),
+    as(asRun("run_1", "dlg:run_1")),
+    when(run1, new ReserveBudget({ reservation: reservation("p1"), units: 88 })),
+    then(run1, new BudgetReserved({ session, reservation: reservation("p1"), units: 88, remaining: 0, provenance: self("run_1", "dlg:run_1") })),
+  );
+});
+
+it.effect("a child that runs out of budget is exhausted, and its parent resumes with what the child left", () => {
+  const child = AgentRun.ref("run_child");
+  const childTerms = terms(["ProposeDisposition"]);
+  const childSource = GrantRef.make({ grant: GrantId.make("g_req"), delegation: DelegationId.make("dlg:run_1") });
+  const asChild = asRun("run_child", "dlg:run_child", childTerms);
+  return story(
+    ...active(100),
+    as(asRun("run_1", "dlg:run_1")),
+    when(
+      run1,
+      new DelegateRun({
+        child: RunId.make("run_child"),
+        delegation: DelegationId.make("dlg:run_child"),
+        purpose: "sub-review",
+        allowance: 30,
+        terms: childTerms,
+      }),
+    ),
+    then(
+      run1,
+      new ChildRequested({
+        session,
+        child: RunId.make("run_child"),
+        delegation: DelegationId.make("dlg:run_child"),
+        purpose: "sub-review",
+        allowance: 30,
+        terms: childTerms,
+        versions,
+        historyBound: 20,
+        source: childSource,
+        provenance: self("run_1", "dlg:run_1"),
+      }),
+    ),
+    call(Authority.grantRun, { run: RunId.make("run_child"), source: childSource }),
+    succeed(Authority.grantRun, {
+      delegation: DelegationId.make("dlg:run_child"),
+      accountable: PrincipalId.make("p_req"),
+      provenance: provenanceOf(asChild),
+    }),
+    then(
+      child,
+      new ChildRunOpened({
+        session,
+        parent: RunId.make("run_1"),
+        purpose: "sub-review",
+        versions,
+        allowance: 30,
+        historyBound: 20,
+        source: childSource,
+        terms: childTerms,
+        delegation: DelegationId.make("dlg:run_child"),
+        accountable: PrincipalId.make("p_req"),
+        requester: PrincipalId.make("p_req"),
+        runProvenance: provenanceOf(asChild),
+        provenance: extend(self("run_1", "dlg:run_1"), hopOn("OpenChildOnRequest", "AgentRun/run_1", 3, "ChildRequested")),
+      }),
+    ),
+    as(asChild),
+    when(child, new ReserveBudget({ reservation: reservation("c1"), units: 20 })),
+    then(child, new BudgetReserved({ session, reservation: reservation("c1"), units: 20, remaining: 10, provenance: provenanceOf(asChild) })),
+    when(child, new SettleUsage({ reservation: reservation("c1"), units: 12 })),
+    then(
+      child,
+      new UsageSettled({ session, reservation: reservation("c1"), reserved: 20, units: 12, remaining: 18, provenance: provenanceOf(asChild) }),
+    ),
+    // The next call needs more than the 18 left: the child's executor ends it as exhausted.
+    when(child, new ReserveBudget({ reservation: reservation("c2"), units: 30 })),
+    rejected(new BudgetExceeded({ requested: 30, remaining: 18 })),
+    when(child, new ExhaustRun()),
+    then(child, new RunExhausted({ session, remaining: 18, provenance: provenanceOf(asChild) })),
+    // The policy reads the finished child and tells its parent: 18 of 30 come back.
+    then(
+      run1,
+      new ChildRunFinished({
+        session,
+        child: RunId.make("run_child"),
+        allowance: 30,
+        spent: 12,
+        outcome: "RunExhausted",
+        provenance: extend(provenanceOf(asChild), hopOn("ResumeParent", "AgentRun/run_child", 4, "RunExhausted")),
       }),
     ),
     state(run1, (current) => {

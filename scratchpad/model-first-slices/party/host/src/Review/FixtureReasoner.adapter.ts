@@ -1,4 +1,4 @@
-import { type AssessRequest, Reasoner } from "@proto/party-model/Review/Reasoner.external";
+import { type AssessRequest, Reasoner, Usage } from "@proto/party-model/Review/Reasoner.external";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
@@ -26,7 +26,7 @@ export const assessWithFixture = (request: AssessRequest) => {
       sources >= 2
         ? { disposition: "accept" as const, rationale: `${sources} independent sources agree` }
         : { disposition: "reject" as const, rationale: "a single source is not corroboration" },
-    usage: { units: Math.min(request.maxAllowance, 5 + 3 * request.signals.length) },
+    usage: Usage.make({ units: Math.min(request.maxAllowance, 5 + 3 * request.signals.length) }),
     receipt: { idempotencyKey: request.idempotencyKey, promptVersion: request.promptVersion, model: "fixture-reasoner" },
   });
 };

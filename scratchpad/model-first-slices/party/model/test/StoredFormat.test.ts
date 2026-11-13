@@ -16,10 +16,11 @@ import { MemoryPartyDirectoryStore } from "@proto/party-model/Directory/PartyDir
 import { PartyHandlers } from "@proto/party-model/Party.handlers";
 import { PartyModel } from "@proto/party-model/Party.model";
 import { Reasoner } from "@proto/party-model/Review/Reasoner.external";
-import { ReviewAssist } from "@proto/party-model/Review/ReviewAssist.saga";
+import { ReviewAssist, ReviewAssistActivities } from "@proto/party-model/Review/ReviewAssist.saga";
 import { ReviewRuns } from "@proto/party-model/Review/ReviewRuns.external";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -120,5 +121,24 @@ it.effect("a read converts in memory and never rewrites stored bytes; a new writ
     const added = yield* S.encodeUnknownEffect(S.toCodecJson(EvidenceAdded))(claim1[2]);
     expect(added).toMatchObject({ signals: [{ source: "phone", excerpt: "confirmed by phone", trust: "normal" }] });
     expect(O.isSome(R.get(added as Record<string, unknown>, "signals"))).toBe(true);
+  }).pipe(Effect.provide(NodeServices.layer)),
+);
+
+// D35: activity results are stored formats. Frozen before phase 4 added `usage.cachedUnits`.
+it.effect("the review saga's stored activity results decode with today's schemas, converting on read", () =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const { file, bytes, json } = yield* stored("ReviewAssist.activities.json");
+    const results = json as Record<keyof typeof ReviewAssistActivities, unknown>;
+    const exitOf = <Name extends keyof typeof ReviewAssistActivities>(name: Name) =>
+      S.decodeUnknownEffect(
+        S.toCodecJson(S.Exit(ReviewAssistActivities[name].success, ReviewAssistActivities[name].error, S.Defect())),
+      )(results[name]);
+    expect(yield* exitOf("assess")).toMatchObject({ _tag: "Success", value: { usage: { units: 12, cachedUnits: 0 } } });
+    expect(yield* exitOf("reserve")).toMatchObject({ _tag: "Success", value: { run: "review:claim_1:1" } });
+    const step = yield* exitOf("step");
+    expect(Exit.isFailure(step)).toBe(true);
+    expect(yield* exitOf("propose")).toEqual(Exit.succeed("readmission:lapsed"));
+    expect(yield* fs.readFileString(file)).toBe(bytes);
   }).pipe(Effect.provide(NodeServices.layer)),
 );

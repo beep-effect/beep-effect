@@ -10,6 +10,7 @@
     "./Inbox/ClaimDecided.inbox": "./src/Inbox/ClaimDecided.inbox.ts",
     "./Inbox/Inbox.store": "./src/Inbox/Inbox.store.ts",
     "./Lineage": "./src/Lineage.ts",
+    "./Runs.descriptor": "./src/Runs.descriptor.ts",
     "./RunsGateway.adapter": "./src/RunsGateway.adapter.ts"
   },
   "dependencies": {
@@ -25,6 +26,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
+    "@effect/platform-node": "4.1.4",
     "@effect/vitest": "4.1.4",
     "@proto/authority-host": "workspace:*",
     "@proto/authority-model": "workspace:*",

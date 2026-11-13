@@ -32,8 +32,8 @@ const encoder = new TextEncoder();
  * It guards the sends the prototype makes itself (gateways, inboxes). A
  * client that picks its own command id is still answered from the stored
  * receipt without a check; that needs the library (see the phase 3 notes).
- * `tenant` is the scope whose ids must not collide: the principal a gateway
- * acts for, or the producer an inbox consumes.
+ * `tenant` is the org (D36): the same resource scope grants are checked
+ * against.
  *
  * **Example** (The id for one report)
  * ```ts
@@ -41,7 +41,7 @@ const encoder = new TextEncoder();
  * import * as Digest from "effect/crypto/Digest";
  * import * as Effect from "effect/Effect";
  *
- * const commandId = requestKey({ tenant: "p_req", operation: "ReserveBudget", payload: { units: 40 } }).pipe(
+ * const commandId = requestKey({ tenant: "org_acme", operation: "ReserveBudget", payload: { units: 40 } }).pipe(
  *   Effect.provide(Digest.layerWebCrypto),
  * );
  * ```

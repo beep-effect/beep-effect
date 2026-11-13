@@ -16,8 +16,15 @@ import * as S from "effect/Schema";
 import { liveRun } from "../Lineage.ts";
 import { InboxStore } from "./Inbox.store.ts";
 
-/** The one version this consumer knows. A producer adding versions changes nothing here. */
-const version = 1;
+/**
+ * The one `ClaimDecided` version this inbox consumes. A producer adding
+ * versions changes nothing here; the runs descriptor declares it (D34).
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const ClaimDecidedVersion = 1;
+const version = ClaimDecidedVersion;
 const decode = S.decodeUnknownEffect(S.toCodecJson(ClaimDecided.versions[version]));
 const process = "ClaimDecidedInbox";
 
@@ -78,7 +85,7 @@ export const ClaimDecidedInboxLive = Layer.effect(
           Effect.gen(function* () {
             const live = yield* liveRun(runs, run);
             const commandId = yield* requestKey({
-              tenant: envelope.producer,
+              tenant: fact.org,
               operation: ConcludeRun.tag,
               payload: { fact: key, run: live.run },
             }).pipe(Effect.provideService(Digest.Digest, digest));

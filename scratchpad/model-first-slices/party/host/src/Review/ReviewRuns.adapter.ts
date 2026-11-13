@@ -1,15 +1,27 @@
 import type { Hop, Provenance } from "@proto/kernel/Invocation";
 import type { RunId } from "@proto/kernel/Ids";
-import { BudgetRefused, ReviewRuns, RunRefused } from "@proto/party-model/Review/ReviewRuns.external";
+import { BudgetRefused, ReviewRuns, RunEnded, RunRefused } from "@proto/party-model/Review/ReviewRuns.external";
 import { ReservationId } from "@proto/runs-contract/Run/Reservation.id";
 import { SessionId } from "@proto/runs-contract/Run/Session.id";
-import { RunReport, type RunReportRefused, RunsGateway } from "@proto/runs-contract/Runs.gateway";
+import {
+  type RunEnded as RunsRunEnded,
+  RunReport,
+  type RunReportRefused,
+  RunsGateway,
+} from "@proto/runs-contract/Runs.gateway";
 import * as Effect from "effect/Effect";
+
+/** A run that ended is Party's `RunEnded`; any other refusal is `RunRefused`. */
+const refusedAs = (refused: RunReportRefused | RunsRunEnded): RunRefused | RunEnded =>
+  refused._tag === "RunEnded"
+    ? new RunEnded({ status: refused.status })
+    : new RunRefused({ reason: refused.reason });
 
 /**
  * Party's review-run port over the runs context's gateway: Party's words
  * (open, reserve, settle, ...) translated to the runs contract's request and
- * reports. A budget refusal comes back as Party's `BudgetRefused`.
+ * reports. A budget refusal comes back as Party's `BudgetRefused`, and a
+ * report to a run that has ended as `RunEnded`.
  *
  * @category adapters
  * @since 0.0.0
@@ -22,7 +34,7 @@ export const PartyReviewRuns = ReviewRuns.toLayer(
     ) =>
       gateway
         .report({ provenance: call.provenance, hop: call.hop, run: call.run, report: what })
-        .pipe(Effect.mapError((refused: RunReportRefused) => new RunRefused({ reason: refused.reason })));
+        .pipe(Effect.mapError(refusedAs));
     return {
       open: ({ session, ...request }) =>
         gateway
@@ -36,9 +48,9 @@ export const PartyReviewRuns = ReviewRuns.toLayer(
           })
           .pipe(
             Effect.mapError((refused) =>
-              refused.reason === "budget" && refused.remaining !== null
+              refused._tag === "RunReportRefused" && refused.reason === "budget" && refused.remaining !== null
                 ? new BudgetRefused({ remaining: refused.remaining })
-                : new RunRefused({ reason: refused.reason }),
+                : refusedAs(refused),
             ),
           ),
       settle: ({ reservation, units, ...call }) =>

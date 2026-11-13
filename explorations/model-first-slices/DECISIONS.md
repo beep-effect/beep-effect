@@ -584,3 +584,33 @@ tenant?
 
 **Rationale:** Phase 3 used stand-ins (the principal acted for, the producing context). Rejected:
 the principal acted for; deferring. Recommended answer accepted.
+
+## 2026-11-13 — Phase 4 of the rework, and the graduation gate in memory
+
+Phase 4 is built: 14 packages type-check and 130 tests in 37 files pass, with the handler-registry
+and generated-file checks, re-run by the orchestrating session. Its notes are in
+`research/11-rework-phase4-notes.md`. It built: deployment descriptors as data with the D34
+fact-retirement checker; the `party/web` package (bindings generated from the contract, a plain
+screen, a machine-backed screen with seven stories, a render test per screen); a generated proof
+inventory of 22 invariants (`PROOFS.md`) with a primary-export checker and outcome coverage measured
+at run time (94 of 109 declared outcomes executed; the 15 left are authority refusal paths).
+
+The D16 gate, as of this phase:
+
+| Gate item | In memory |
+| --- | --- |
+| Two contexts exchanging an integration fact through an outbox and inbox | Proven |
+| A parent and child agent run, with budget exhaustion | Proven |
+| Approval through the authenticated command boundary | Proven |
+| A projection rebuild with no side effects | Proven |
+| A stored-format compatibility test | Proven, activity results included |
+| The conformance suite on the Postgres swarm host, restore included | Not done |
+| One plain screen and one machine-backed screen | Proven without a browser |
+| The proof inventory for each invariant | Proven |
+
+The packet does not graduate until the conformance suite passes on the Postgres swarm host (D5,
+D16). "Proven" here means in memory, on `Domain.InMemory`; nothing has run on a cluster.
+
+Open from phase 4, for the next round: whether a producer's newest fact version may be reported
+retirable; where generated entry modules live; where a browser session's credentials and tenant
+come from. The 15 uncovered authority outcomes are to be covered in the next phase.

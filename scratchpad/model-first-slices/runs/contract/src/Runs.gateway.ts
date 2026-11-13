@@ -5,6 +5,7 @@ import * as Context from "effect/Context";
 import type * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { ReservationId } from "./Run/Reservation.id.ts";
+import { RunStatus } from "./Run/RunStatus.ts";
 import { RunVersions } from "./Run/RunVersions.ts";
 import { SessionId } from "./Run/Session.id.ts";
 
@@ -90,6 +91,24 @@ export class RunReportRefused extends S.TaggedError<RunReportRefused>()("RunRepo
 }) {}
 
 /**
+ * The run has ended (completed, cancelled, exhausted or rejected), so it
+ * takes no more reports. An executor that meets it stops cleanly: the run
+ * was concluded elsewhere, for example by a fact that decided its subject.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class RunEnded extends S.TaggedError<RunEnded>()("RunEnded", { status: RunStatus }) {}
+
+/**
+ * The statuses in which a run has ended.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const EndedStatus = S.Literals(["completed", "cancelled", "exhausted", "rejected"]);
+
+/**
  * The runs context's synchronous contract for other contexts' hosts: start a
  * run on a requester's provenance, and report to it as the run. A product
  * context declares its own port in its own words and adapts it to this.
@@ -112,6 +131,6 @@ export class RunsGateway extends Context.Service<
       readonly hop: Hop;
       readonly run: RunId;
       readonly report: RunReport;
-    }) => Effect.Effect<CurrentRun, RunReportRefused>;
+    }) => Effect.Effect<CurrentRun, RunReportRefused | RunEnded>;
   }
 >()("Runs/Gateway") {}

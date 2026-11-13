@@ -17,12 +17,10 @@ system alongside people?
 
 ## Next Open Question
 
-The D15 rework is under way in `scratchpad/model-first-slices/`, in the worktree
-`beep-effect-worktrees/model-first-slices` on branch `explore/model-first-slices`; its `FINDINGS.md` records what each
-decision looked like against the real library. Next: verify phase 1 (`bun run check`, `bun run
-test`, findings), then phases 2 to 4, then the Postgres swarm host (needs `docker swarm init`).
-[`BRIEF.md`](./BRIEF.md) has not been confirmed in words by the operator. The authority context's
-name is still open (D18).
+The cluster phase: run the prototype on the Postgres Docker swarm host with a conformance suite,
+restore included (D5, D16). It needs `docker swarm init` on the workstation, which the operator
+has not yet approved, and the remote form of gateways (D31). Smaller questions left by phase 4 are
+at the end of `DECISIONS.md`. [`BRIEF.md`](./BRIEF.md) has not been confirmed in words.
 
 ## Read This First
 
@@ -34,6 +32,9 @@ name is still open (D18).
 
 ## Trail
 
+- 2026-11-13: phase 4 verified (14 packages type-check, 130 tests pass). Seven of the eight D16
+  gate items are proven in memory; the Postgres swarm conformance run is the one left. Notes in
+  `research/11`. Committed locally.
 - 2026-11-13: phase 3 verified (13 packages type-check, 98 tests pass); notes in `research/10`.
   D32 to D36 settled. Committed locally. Phase 4 (web package, proof inventory, deployment
   descriptors as data) launched.

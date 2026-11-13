@@ -1,18 +1,21 @@
 import { CurrentInvocation } from "@proto/kernel/CurrentInvocation.context";
 import { byAgent, extend, sagaStep } from "@proto/kernel/Invocation";
-import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
-import { ClaimNotPending } from "@proto/party-contract/Claim/ClaimNotPending.rejection";
-import { NotAnAgent, ProposalStale, ProposeDisposition } from "@proto/party-contract/Claim/ProposeDisposition.command";
+import { ProposeDisposition } from "@proto/party-contract/Claim/ProposeDisposition.command";
 import { RecordReviewRefused } from "@proto/party-contract/Claim/RecordReviewRefused.command";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Activity from "effect/workflow/Activity";
 import { Authority } from "../Authority.external.ts";
 import { Claim } from "../Claim/Claim.aggregate.ts";
-import { Assessed, Reasoner, ReasonerUnavailable } from "./Reasoner.external.ts";
-import { ReviewAssist } from "./ReviewAssist.saga.ts";
+import { Reasoner } from "./Reasoner.external.ts";
+import { ReviewAssist, ReviewAssistActivities } from "./ReviewAssist.saga.ts";
 import { ReviewPlan } from "./ReviewPlan.ts";
-import { type BudgetRefused, LiveRun, ReviewRuns, RunRefused } from "./ReviewRuns.external.ts";
+import { type BudgetRefused, LiveRun, ReviewRuns, RunEnded, RunRefused } from "./ReviewRuns.external.ts";
+
+/** How the proposal went, in memory only: the activity itself records `string | null`. */
+const Proposal = S.TaggedUnion({ Made: {}, Refused: { refusal: S.String }, AlreadyDecided: {} });
+
+
 
 /**
  * The run. Each step is one activity, so a retried step does not apply
@@ -27,6 +30,9 @@ import { type BudgetRefused, LiveRun, ReviewRuns, RunRefused } from "./ReviewRun
  * - The proposal is sent under the live run's provenance, re-admitted for
  *   this hop: a delegation revoked mid-run refuses here, and the refusal is
  *   recorded on the claim and on the run.
+ * - A decision that lands while the run is still working ends it cleanly: a
+ *   report to the concluded run answers `RunEnded`, a proposal on the decided
+ *   claim answers `ClaimNotPending`, and the saga stops there without error.
  * - The run then waits for the claim to be decided. The executor's work ends
  *   there: the runs context concludes the run when Party publishes the
  *   decision (D11), whether a person approved the proposal or decided the
@@ -46,8 +52,11 @@ export const ReviewAssistLive = ReviewAssist.toLayer(
       let live: LiveRun = { run, provenance };
       const hop = (step: string) => byAgent(live.run, sagaStep(ReviewAssist.sagaName, run, step));
       const as = (step: string) => ({ provenance: live.provenance, hop: hop(step), run: live.run });
-      const report = (name: string, execute: Effect.Effect<LiveRun, RunRefused>) =>
-        Activity.make({ name, success: LiveRun, error: RunRefused, execute }).pipe(
+      const report = (
+        name: "release" | "settle" | "step" | "exhaust" | "await",
+        execute: Effect.Effect<LiveRun, RunRefused | RunEnded>,
+      ) =>
+        Activity.make({ name, ...ReviewAssistActivities[name], execute }).pipe(
           Effect.tap((next) =>
             Effect.sync(() => {
               live = next;
@@ -58,8 +67,7 @@ export const ReviewAssistLive = ReviewAssist.toLayer(
 
       const reserved = yield* Activity.make({
         name: "reserve",
-        success: S.NullOr(LiveRun),
-        error: RunRefused,
+        ...ReviewAssistActivities.reserve,
         execute: runs
           .reserve({ ...as("reserve"), reservation, units: ReviewPlan.maxPerCall })
           .pipe(Effect.catchTag("BudgetRefused", (_: BudgetRefused) => Effect.succeed(null))),
@@ -73,8 +81,7 @@ export const ReviewAssistLive = ReviewAssist.toLayer(
 
       const assessed = yield* Activity.make({
         name: "assess",
-        success: Assessed,
-        error: ReasonerUnavailable,
+        ...ReviewAssistActivities.assess,
         execute: reasoner.assess({
           run: live.run,
           step: "assess",
@@ -88,11 +95,11 @@ export const ReviewAssistLive = ReviewAssist.toLayer(
       yield* report("settle", runs.settle({ ...as("settle"), reservation, units: assessed.usage.units }));
       yield* report("step", runs.step({ ...as("step"), step: "assess" }));
 
-      // Propose as the live run, under its provenance re-admitted for this hop.
-      const refusal = yield* Activity.make({
+      // Propose as the live run, under its provenance re-admitted for this hop. A claim
+      // already decided answers ClaimNotPending: the run's work is over, and it ends here.
+      const proposed = yield* Activity.make({
         name: "propose",
-        success: S.NullOr(S.String),
-        error: S.Union([ClaimNotPending, MissingGrant, NotAnAgent, ProposalStale]),
+        ...ReviewAssistActivities.propose,
         execute: authority.readmit({ provenance: live.provenance, hop: hop("propose") }).pipe(
           Effect.flatMap((invocation) =>
             claims
@@ -102,11 +109,16 @@ export const ReviewAssistLive = ReviewAssist.toLayer(
           Effect.as(null),
           Effect.catchTag("ReadmissionRefused", (refused) => Effect.succeed(`readmission:${refused.reason}`)),
         ),
-      });
-      if (refusal !== null) {
+      }).pipe(
+        Effect.map((refusal) => (refusal === null ? Proposal.cases.Made.make({}) : Proposal.cases.Refused.make({ refusal }))),
+        Effect.catchTag("ClaimNotPending", () => Effect.succeed(Proposal.cases.AlreadyDecided.make({}))),
+      );
+      if (Proposal.guards.AlreadyDecided(proposed)) return;
+      if (Proposal.guards.Refused(proposed)) {
+        const refusal = proposed.refusal;
         yield* Activity.make({
           name: "record-refusal",
-          error: RunRefused,
+          ...ReviewAssistActivities["record-refusal"],
           execute: claims
             .send(
               claim,
@@ -122,6 +134,6 @@ export const ReviewAssistLive = ReviewAssist.toLayer(
       }
 
       yield* report("await", runs.awaitApproval(as("await")));
-    });
+    }, Effect.catchTag("RunEnded", () => Effect.void));
   }),
 );

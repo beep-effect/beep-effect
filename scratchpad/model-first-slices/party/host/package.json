@@ -11,6 +11,7 @@
     "./Evidence/MailboxPoller.singleton": "./src/Evidence/MailboxPoller.singleton.ts",
     "./Facts/PartyFactsFeed.adapter": "./src/Facts/PartyFactsFeed.adapter.ts",
     "./Host": "./src/Host.ts",
+    "./Party.descriptor": "./src/Party.descriptor.ts",
     "./Review/FixtureReasoner.adapter": "./src/Review/FixtureReasoner.adapter.ts",
     "./Review/ReasonerTape": "./src/Review/ReasonerTape.ts",
     "./Review/RecordingReasoner.adapter": "./src/Review/RecordingReasoner.adapter.ts",

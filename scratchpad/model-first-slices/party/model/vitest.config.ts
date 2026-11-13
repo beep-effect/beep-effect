@@ -8,5 +8,6 @@ export default defineConfig({
     pool: "forks",
     fileParallelism: false,
     maxWorkers: 1,
+    setupFiles: ["../../shared/tooling/vitest/outcomes.setup.ts"],
   },
 });

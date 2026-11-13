@@ -14,6 +14,8 @@ import { SettleUsage } from "@proto/runs-contract/Run/SettleUsage.command";
 import {
   type CurrentRun,
   RunReport,
+  EndedStatus,
+  RunEnded,
   RunReportRefused,
   RunRequestRefused,
   RunsGateway,
@@ -23,6 +25,7 @@ import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { liveRun, settling } from "./Lineage.ts";
 
 
@@ -36,8 +39,9 @@ import { liveRun, settling } from "./Lineage.ts";
  * A report to a run that continued at its history bound goes to the live run
  * of its lineage, re-admitted under that run's provenance (its own
  * delegation), and the live run is returned for the caller's next report.
- * Every send carries a command id derived from the caller, the operation
- * and the request (`requestKey`), so a retried report is the same command.
+ * Every send carries a command id derived from the org, the operation and
+ * the request (`requestKey`, D36), so a retried report is the same command.
+ * A report to a run that has ended fails with `RunEnded`.
  *
  * **Gotchas**
  *
@@ -67,8 +71,16 @@ export const RunsGatewayLive = Layer.effect(
         Effect.provideService(send, CurrentInvocation, invocation),
       );
 
-    const refusal = (cause: { readonly _tag: string; readonly reason?: unknown; readonly remaining?: unknown }) =>
-      new RunReportRefused({
+    const isEnded = S.is(EndedStatus);
+    const refusal = (cause: {
+      readonly _tag: string;
+      readonly reason?: unknown;
+      readonly remaining?: unknown;
+      readonly status?: unknown;
+    }): RunReportRefused | RunEnded =>
+      cause._tag === "RunNotRunning" && isEnded(cause.status)
+        ? new RunEnded({ status: cause.status })
+        : new RunReportRefused({
         reason:
           cause._tag === "BudgetExceeded"
             ? "budget"
@@ -78,25 +90,35 @@ export const RunsGatewayLive = Layer.effect(
         remaining: typeof cause.remaining === "number" ? cause.remaining : null,
       });
 
-    /** The live run of the caller's lineage, with the provenance it acts under now. */
-    const follow = (current: CurrentRun): Effect.Effect<CurrentRun, RunReportRefused> =>
-      Effect.flatMap(liveRun(runs, current.run), (live) =>
-        live.run === current.run
-          ? Effect.succeed(current)
+    /**
+     * The live run of the caller's lineage, with the provenance it acts under
+     * now, and the org its grant is scoped to: the tenant of its command ids (D36).
+     */
+    const follow = (
+      current: CurrentRun,
+    ): Effect.Effect<{ readonly current: CurrentRun; readonly org: string }, RunReportRefused> =>
+      Effect.flatMap(liveRun(runs, current.run), (live) => {
+        const record = recordOf(live.state);
+        const org = O.getOrElse(
+          O.map(record, (run): string => run.terms.resource.org),
+          () => "unscoped",
+        );
+        return live.run === current.run
+          ? Effect.succeed({ current, org })
           : O.match(
-              O.flatMapNullishOr(recordOf(live.state), (record) => record.provenance),
+              O.flatMapNullishOr(record, (run) => run.provenance),
               {
                 onNone: () =>
                   Effect.fail(new RunReportRefused({ reason: `continuation:${live.state._tag}`, remaining: null })),
-                onSome: (provenance) => Effect.succeed({ run: live.run, provenance }),
+                onSome: (provenance) => Effect.succeed({ current: { run: live.run, provenance }, org }),
               },
-            ),
-      );
+            );
+      });
 
     return {
       request: (request) =>
         commandIdOf({
-          tenant: request.provenance.onBehalfOf,
+          tenant: request.terms.resource.org,
           operation: "RequestRun",
           payload: { run: request.run, session: request.session, hop: request.hop },
         }).pipe(
@@ -134,9 +156,9 @@ export const RunsGatewayLive = Layer.effect(
 
       report: ({ provenance, hop, run, report }) =>
         Effect.gen(function* () {
-          const current = yield* follow({ run, provenance });
+          const { current, org } = yield* follow({ run, provenance });
           const options = yield* commandIdOf({
-            tenant: current.provenance.onBehalfOf,
+            tenant: org,
             operation: report._tag,
             payload: { run: current.run, report, hop },
           });

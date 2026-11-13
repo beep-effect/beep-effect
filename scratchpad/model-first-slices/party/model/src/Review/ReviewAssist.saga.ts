@@ -8,8 +8,8 @@ import { NotAnAgent, ProposalStale } from "@proto/party-contract/Claim/ProposeDi
 import { EvidenceSignal } from "@proto/party-contract/Evidence";
 import { Proposition } from "@proto/party-contract/Proposition";
 import * as S from "effect/Schema";
-import { ReasonerUnavailable } from "./Reasoner.external.ts";
-import { RunRefused } from "./ReviewRuns.external.ts";
+import { Assessed, ReasonerUnavailable } from "./Reasoner.external.ts";
+import { LiveRun, RunEnded, RunRefused } from "./ReviewRuns.external.ts";
 
 /**
  * The executor of one review run, keyed by the run: reserve budget, assess
@@ -36,3 +36,27 @@ export class ReviewAssist extends Domain.Saga(
   },
   { description: "A review run's executor: assess within budget, propose as the run, then wait for the decision." },
 ) {}
+
+/** What a report step records when it fails. */
+const ReportError = S.Union([RunRefused, RunEnded]);
+
+/**
+ * The executor's activities and the schemas their results are stored with.
+ * These results are a stored format (D35): a compatible change converts on
+ * read; an incompatible one needs a new saga version, so a run in flight
+ * finishes on the version it started.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ReviewAssistActivities = {
+  reserve: { success: S.NullOr(LiveRun), error: ReportError },
+  assess: { success: Assessed, error: ReasonerUnavailable },
+  release: { success: LiveRun, error: ReportError },
+  settle: { success: LiveRun, error: ReportError },
+  step: { success: LiveRun, error: ReportError },
+  propose: { success: S.NullOr(S.String), error: S.Union([ClaimNotPending, MissingGrant, NotAnAgent, ProposalStale]) },
+  "record-refusal": { success: S.Void, error: ReportError },
+  exhaust: { success: LiveRun, error: ReportError },
+  await: { success: LiveRun, error: ReportError },
+} as const;

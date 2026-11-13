@@ -10,6 +10,7 @@
     "party/contract",
     "party/model",
     "party/host",
+    "party/web",
     "authority/contract",
     "authority/model",
     "authority/host",
@@ -19,10 +20,14 @@
     "apps/practice"
   ],
   "scripts": {
-    "check": "tsc --noEmit -p shared/kernel && tsc --noEmit -p shared/contract-kit && tsc --noEmit -p shared/tooling && tsc --noEmit -p party/contract && tsc --noEmit -p party/model && tsc --noEmit -p party/host && tsc --noEmit -p authority/contract && tsc --noEmit -p authority/model && tsc --noEmit -p authority/host && tsc --noEmit -p runs/contract && tsc --noEmit -p runs/model && tsc --noEmit -p runs/host && tsc --noEmit -p apps/practice",
-    "test": "bun run --cwd party/contract test && bun run --cwd runs/contract test && bun run --cwd party/model test && bun run --cwd authority/model test && bun run --cwd runs/model test && bun run --cwd authority/host test && bun run --cwd runs/host test && bun run --cwd party/host test",
+    "check": "tsc --noEmit -p shared/kernel && tsc --noEmit -p shared/contract-kit && tsc --noEmit -p shared/tooling && tsc --noEmit -p party/contract && tsc --noEmit -p party/model && tsc --noEmit -p party/host && tsc --noEmit -p party/web && tsc --noEmit -p authority/contract && tsc --noEmit -p authority/model && tsc --noEmit -p authority/host && tsc --noEmit -p runs/contract && tsc --noEmit -p runs/model && tsc --noEmit -p runs/host && tsc --noEmit -p apps/practice && tsc --noEmit -p scripts",
+    "test": "rm -rf node_modules/.cache/proto-outcomes && bun run --cwd shared/tooling test && bun run --cwd party/contract test && bun run --cwd runs/contract test && bun run --cwd party/model test && bun run --cwd authority/model test && bun run --cwd runs/model test && bun run --cwd authority/host test && bun run --cwd runs/host test && bun run --cwd party/host test && bun run --cwd party/web test && bun run --cwd apps/practice test && bun scripts/outcomes.ts --check",
     "handlers": "bun run --cwd party/model handlers && bun run --cwd authority/model handlers && bun run --cwd runs/model handlers",
-    "handlers:check": "bun run --cwd party/model handlers --check && bun run --cwd authority/model handlers --check && bun run --cwd runs/model handlers --check"
+    "handlers:check": "bun run --cwd party/model handlers --check && bun run --cwd authority/model handlers --check && bun run --cwd runs/model handlers --check",
+    "bindings": "bun run --cwd party/web bindings",
+    "proofs": "bun scripts/proofs.ts",
+    "outcomes": "bun scripts/outcomes.ts",
+    "generated:check": "bun run handlers:check && bun run --cwd party/web bindings --check && bun scripts/proofs.ts --check"
   },
   "devDependencies": {
     "@effect/vitest": "4.1.4",

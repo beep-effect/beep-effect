@@ -5,14 +5,25 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
+    "./FactRetirement": "./src/FactRetirement.ts",
+    "./GeneratedFile": "./src/GeneratedFile.ts",
     "./HandlerRegistry": "./src/HandlerRegistry.ts",
     "./ImportGraph": "./src/ImportGraph.ts",
+    "./PrimaryExport": "./src/PrimaryExport.ts",
     "./RpcParity": "./src/RpcParity.ts",
     "./SourceScan": "./src/SourceScan.ts"
   },
   "dependencies": {
     "@alchemy.run/domain": "2.0.0-beta.87",
     "@effect/platform-node": "4.1.4",
+    "@proto/kernel": "workspace:*",
     "effect": "4.1.4"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@effect/vitest": "4.1.4",
+    "vitest": "5.0.4"
   }
 }

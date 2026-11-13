@@ -3,6 +3,7 @@ import { RunId } from "@proto/kernel/Ids";
 import { Disposition } from "@proto/party-contract/Disposition";
 import { EvidenceSignal } from "@proto/party-contract/Evidence";
 import { Proposition } from "@proto/party-contract/Proposition";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 /**
@@ -35,7 +36,11 @@ export type Assessment = typeof Assessment.Type;
  * @category models
  * @since 0.0.0
  */
-export const Usage = S.Struct({ units: S.Int });
+export const Usage = S.Struct({
+  units: S.Int,
+  // Added in phase 4 (D35): stored results and tapes without it read 0.
+  cachedUnits: S.Int.pipe(S.withDecodingDefaultKey(Effect.succeed(0)), S.withConstructorDefault(Effect.succeed(0))),
+});
 
 /**
  * The call's receipt: the idempotency key it was made under, the prompt

@@ -22,6 +22,7 @@ import {
 } from "@proto/party-contract/Claim/ProposeDisposition.command";
 import { ReviewRefused } from "@proto/party-contract/Claim/RecordReviewRefused.command";
 import { RequestReview } from "@proto/party-contract/Claim/RequestReview.command";
+import { ClaimRetracted, RetractClaim } from "@proto/party-contract/Claim/RetractClaim.command";
 import { ReviewRequested } from "@proto/party-contract/Claim/ReviewRequested.event";
 import { PartyIntake, PartyPropose, PartyRead, PartyReview } from "@proto/party-contract/Party.capabilities";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
@@ -34,7 +35,7 @@ import { PartyHandlers } from "@proto/party-model/Party.handlers";
 import { PartyModel } from "@proto/party-model/Party.model";
 import { Reasoner } from "@proto/party-model/Review/Reasoner.external";
 import { ReviewAssist } from "@proto/party-model/Review/ReviewAssist.saga";
-import { BudgetRefused, ReviewRuns } from "@proto/party-model/Review/ReviewRuns.external";
+import { BudgetRefused, ReviewRuns, RunEnded } from "@proto/party-model/Review/ReviewRuns.external";
 import * as Layer from "effect/Layer";
 import { acme, agentRun, delegated, human, onOrg, oneSource, readmitted } from "./fixtures.ts";
 
@@ -92,7 +93,7 @@ const assessUpToPropose = (run: RunId, live = liveAs(run, "p_intake", "g_intake_
   call(Reasoner.assess, { run, step: "assess", idempotencyKey: `${run}:assess`, promptVersion: "review-v1", maxAllowance: 40 }),
   succeed(Reasoner.assess, {
     assessment: { disposition: "accept", rationale },
-    usage: { units: 12 },
+    usage: { units: 12, cachedUnits: 0 },
     receipt: { idempotencyKey: `${run}:assess`, promptVersion: "review-v1", model: "fixture" },
   }),
   call(ReviewRuns.settle, { run, units: 12 }),
@@ -293,5 +294,53 @@ it.effect("a run that continues at its history bound is followed: the next step 
     call(ReviewRuns.awaitApproval, { run: next, provenance: provenanceOf(nextRun) }),
     succeed(ReviewRuns.awaitApproval, continued),
     saga(ReviewAssist, run1, { _tag: "Completed", result: undefined }),
+  );
+});
+
+it.effect("a decision that concluded the run while it was assessing ends the executor cleanly", () =>
+  story(
+    ...assertedByIntake,
+    call(ReviewRuns.reserve, { run: run1, units: 40 }),
+    succeed(ReviewRuns.reserve, liveAs(run1, "p_intake", "g_intake_propose")),
+    call(Reasoner.assess, { run: run1 }),
+    succeed(Reasoner.assess, {
+      assessment: { disposition: "accept", rationale },
+      usage: { units: 12, cachedUnits: 0 },
+      receipt: { idempotencyKey: `${run1}:assess`, promptVersion: "review-v1", model: "fixture" },
+    }),
+    // The runs context concluded the run from Party's fact in the meantime.
+    call(ReviewRuns.settle, { run: run1, units: 12 }),
+    fail(ReviewRuns.settle, new RunEnded({ status: "completed" })),
+    // No step, no proposal, no wait: the saga completes without an error.
+    saga(ReviewAssist, run1, { _tag: "Completed", result: undefined }),
+  ),
+);
+
+it.effect("a claim decided before the proposal lands ends the executor cleanly, with nothing recorded", () => {
+  const runProvenance = provenanceOf(runInvocation(run1, "p_intake", "g_intake_propose"));
+  return story(
+    ...assertedByIntake,
+    call(ReviewRuns.reserve, { run: run1, units: 40 }),
+    succeed(ReviewRuns.reserve, liveAs(run1, "p_intake", "g_intake_propose")),
+    call(Reasoner.assess, { run: run1 }),
+    // While the Reasoner works, a reviewer decides the claim directly.
+    as(reviewer),
+    when(claim, new RetractClaim({ reason: "duplicate" })),
+    then(claim, new ClaimRetracted({ reason: "duplicate", provenance: provenanceOf(reviewer) })),
+    succeed(Reasoner.assess, {
+      assessment: { disposition: "accept", rationale },
+      usage: { units: 12, cachedUnits: 0 },
+      receipt: { idempotencyKey: `${run1}:assess`, promptVersion: "review-v1", model: "fixture" },
+    }),
+    call(ReviewRuns.settle, { run: run1, units: 12 }),
+    succeed(ReviewRuns.settle, liveAs(run1, "p_intake", "g_intake_propose")),
+    call(ReviewRuns.step, { run: run1, step: "assess" }),
+    succeed(ReviewRuns.step, liveAs(run1, "p_intake", "g_intake_propose")),
+    call(Authority.readmit, { provenance: runProvenance, hop: sagaHop(run1, "propose") }),
+    succeed(Authority.readmit, readmitted(runInvocation(run1, "p_intake", "g_intake_propose"), sagaHop(run1, "propose"))),
+    // The proposal answers ClaimNotPending: no refusal is recorded and no wait is reported.
+    then(claim),
+    saga(ReviewAssist, run1, { _tag: "Completed", result: undefined }),
+    view(ClaimReview, claim, { status: "retracted", notes: [] }),
   );
 });

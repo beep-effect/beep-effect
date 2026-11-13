@@ -6,8 +6,12 @@
     "status": "active",
     "stage": "shape",
     "openQuestions": [
-      "Does BRIEF.md and the fourth-draft artifact match the operator's picture (shape review)? The operator started the rework without confirming in words.",
-      "Naming left open by phase 1: `.adapter.ts` for a middleware's server half; contract `.read.ts` beside model `.view.ts`; placement of the contract kit and tooling packages (research/08)."
+      "Cluster phase go-ahead: `docker swarm init` on the workstation and the Postgres swarm conformance run (D5, D16).",
+      "Remote form of cross-context gateways and host authentication (D31, deferred to the cluster phase).",
+      "May a producer's newest fact version be reported retirable (D34)?",
+      "Where do generated cluster entry modules live: the app or each host (D13)?",
+      "Browser session: where credentials and tenant come from, and what clears atom caches on logout or tenant change (D12).",
+      "Shape review: BRIEF.md and the artifact have not been confirmed in words by the operator."
     ],
     "sources": ["research/SOURCES.md"],
     "links": {

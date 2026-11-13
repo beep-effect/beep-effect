@@ -13,6 +13,15 @@ import * as S from "effect/Schema";
 export class RunRefused extends S.TaggedError<RunRefused>()("RunRefused", { reason: S.String }) {}
 
 /**
+ * The run has ended (completed, cancelled, exhausted or rejected), for
+ * example because the claim was decided while the run was still working.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class RunEnded extends S.TaggedError<RunEnded>()("RunEnded", { status: S.String }) {}
+
+/**
  * The run's remaining allowance cannot cover the reservation.
  *
  * @category errors
@@ -82,14 +91,14 @@ export class ReviewRuns extends Domain.ExternalSystem(
     reserve: {
       args: { ...call, reservation: S.String, units: S.Int },
       success: LiveRun,
-      error: [RunRefused, BudgetRefused],
+      error: [RunRefused, BudgetRefused, RunEnded],
     },
-    settle: { args: { ...call, reservation: S.String, units: S.Int }, success: LiveRun, error: RunRefused },
-    release: { args: { ...call, reservation: S.String }, success: LiveRun, error: RunRefused },
-    step: { args: { ...call, step: S.String }, success: LiveRun, error: RunRefused },
-    awaitApproval: { args: call, success: LiveRun, error: RunRefused },
-    exhaust: { args: call, success: LiveRun, error: RunRefused },
-    refuse: { args: { ...call, reason: S.String }, success: LiveRun, error: RunRefused },
+    settle: { args: { ...call, reservation: S.String, units: S.Int }, success: LiveRun, error: [RunRefused, RunEnded] },
+    release: { args: { ...call, reservation: S.String }, success: LiveRun, error: [RunRefused, RunEnded] },
+    step: { args: { ...call, step: S.String }, success: LiveRun, error: [RunRefused, RunEnded] },
+    awaitApproval: { args: call, success: LiveRun, error: [RunRefused, RunEnded] },
+    exhaust: { args: call, success: LiveRun, error: [RunRefused, RunEnded] },
+    refuse: { args: { ...call, reason: S.String }, success: LiveRun, error: [RunRefused, RunEnded] },
   },
   { description: "Opens review runs and reports their budget, steps and outcome to the runs context." },
 ) {}
