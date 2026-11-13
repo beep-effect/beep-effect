@@ -259,6 +259,26 @@ again. This run did not approve the held runs.
   stopped after 30 minutes with no result: `tsc` alone held 2.59 GB RSS, the
   scope sat at 2.98 GB, and `user-1001.slice` reached `some avg10=89`
   pressure. The fix was therefore pushed unproven and left to hosted CI.
+- Second round, head `5a8fae07e6` (fix plus a clean merge of `origin/main`):
+  run [43439997235](https://github.com/beep-effect/beep-effect/actions/runs/43439997235).
+  `Heavy / Check` passed. `Heavy / Lint Policy` (job 131935580357, 14:11:21Z
+  to 14:19:35Z) was red again with `1 new finding(s)` in the same test file.
+  This one was introduced by the fix itself.
+- Rule attribution. The hosted log names only the file. A full local
+  `lint effect-vitest` was stopped by a pressure watchdog at 2.24 GB and slice
+  pressure 40. Instead the lane ran the exported single-file entry point,
+  `detectEffectVitestFindings`, over the three versions of the test file
+  (0.5 s, 166 MB):
+  `round1 ["EV002:149:unresolved-layer-provide"]`,
+  `round2 ["EV014:136:resource-layer-without-hook-timeout"]`,
+  `fixed []`. The fix gives `it.layer` the `{ timeout: "30 seconds" }` option
+  that its siblings use; 11 tests pass.
+- Catalog Regeneration on `5a8fae07e6` (run 43439996771) was `skipped`. The
+  PR was no longer a draft, so the job's `draft == true` condition excluded
+  it. That is by design, but it means a ready worker PR whose merge of `main`
+  drifts a shard has no hosted regeneration left; only the Check-side catalog
+  gate would catch it. It did not drift here: the span line survived both
+  merges.
 - The `yeet ready` result after hosted green is recorded on the PR.
 
 ## Step 7: `--force-local` (criterion 2, second half)
@@ -344,6 +364,8 @@ aggregates, page cache included.
 | `git merge origin/main` | 4.0 s | 262 MB | yes |
 | `yeet ready` (draft, refused) / (ready PR, refused) / (red gate, refused) | 9.0 / 8.3 / 8.0 s | 386 / 386 / 389 MB | yes |
 | `vitest run test/compute-profile.test.ts` (fix) | 6.3 s | 684 MB | yes |
+| `lint effect-vitest --rows` (capped scope, watchdog stop at pressure 40) | about 20 s, stopped | scope 2.24 GB | yes |
+| single-file `detectEffectVitestFindings` replay | 0.5 s | 166 MB | yes |
 | `turbo run package-test-typecheck --filter=@beep/repo-cli` (capped scope, stopped) | 30 min, stopped | `tsc` 2.59 GB; scope 2.98 GB | yes: **exceeds 1.5 GB** |
 | detached readiness monitor unit (cgroup `MemoryPeak`) | running | 337 MB aggregate | yes |
 | `final-check --force-local --gates fallow` (scope) | 29.5 min, stopped | 3.06 GB aggregate; largest process 398 MB | step 7 |
@@ -377,7 +399,10 @@ above come from the external wrapper.
 6. A worker lane cannot see Check or Lint Policy reds before hosted CI
    reports them, and the local test type-check alone exceeds the worker
    budget (`tsc` 2.59 GB for `@beep/repo-cli`). A test-file type error costs
-   one hosted round trip, about 36 minutes here.
+   one hosted round trip, about 36 minutes here, and this run took two (the
+   first fix tripped EV014). The single-file `detectEffectVitestFindings`
+   replay is cheap (0.5 s, 166 MB) and would have caught both
+   effect-vitest findings locally; it is not exposed as a CLI command.
 7. Hosted regeneration only covers the first push. When `main` later
    changes the same shard, the lane must merge `main` by hand (`yeet open`
    refuses a stale base). Git merged it cleanly here, but nothing guarantees
