@@ -363,6 +363,16 @@ const findEnv = Effect.fn("Vercel.EnvVar.find")(function* (
   ).pipe(O.map(toAttributes(project)), O.getOrUndefined);
 });
 
+/**
+ * Whether the stored variable's type differs from the declared one.
+ *
+ * @param news - The declared props.
+ * @param output - The stored attributes, when the variable is deployed or adopted.
+ * @returns `true` when reconcile must replace the variable to reach the declared type.
+ */
+const storedTypeDiffers = (news: EnvVarProps, output: EnvVarAttributes | undefined): boolean =>
+  output !== undefined && output.type !== (news.type ?? EnvVarType.Enum.encrypted);
+
 const requestBody = (news: EnvVarProps) =>
   S.encodeEffect(EnvVarRequestBody)(
     EnvVarRequestBody.make({
@@ -409,7 +419,7 @@ export const EnvVarProvider = Provider.succeed(EnvVarClass, {
     // unless it is this resource's own previous generation (a delete-first replacement).
     return output !== undefined || state.envId === previous?.envId ? state : Unowned(state);
   }),
-  diff: Effect.fn("Vercel.EnvVar.provider.diff")(function* ({ news, olds }) {
+  diff: Effect.fn("Vercel.EnvVar.provider.diff")(function* ({ news, olds, output }) {
     if (!isResolved(news)) return undefined;
     if (
       news.project !== olds.project ||
@@ -419,8 +429,10 @@ export const EnvVarProvider = Provider.succeed(EnvVarClass, {
       // A same-project replacement would collide with the old key and targets, so it deletes first.
       return { action: "replace", deleteFirst: news.project === olds.project } as const;
     }
-    // Anything else, the redacted value included, falls through to the engine's prop comparison.
-    return undefined;
+    // A stored type that differs from the declared one (an adopted variable) needs reconcile,
+    // which replaces it; anything else, the redacted value included, falls through to the
+    // engine's prop comparison.
+    return storedTypeDiffers(news, output) ? ({ action: "update" } as const) : undefined;
   }),
   reconcile: Effect.fn("Vercel.EnvVar.provider.reconcile")(function* ({ news, output, session }) {
     const scope = teamScope(news.teamId);
@@ -434,7 +446,15 @@ export const EnvVarProvider = Provider.succeed(EnvVarClass, {
             ...O.getSomesStruct({ gitBranch: O.fromUndefinedOr(news.gitBranch) }),
           })
         : yield* findEnv(output.projectId, news.teamId, { envId: output.envId, key: news.key, targets: news.targets });
-    if (existing === undefined) {
+    if (existing !== undefined && existing.type !== body.type) {
+      // Vercel does not promise to change a stored type in place (a sensitive value can never
+      // be read back), so a variable of another type is replaced delete-first rather than
+      // left weaker than declared.
+      yield* projects
+        .removeProjectEnv({ idOrName: existing.projectId, id: existing.envId, ...scope })
+        .pipe(Effect.catchTag("NotFound", () => Effect.void));
+      yield* projects.createProjectEnv({ idOrName: news.project, upsert: "true", ...scope, body });
+    } else if (existing === undefined) {
       yield* projects.createProjectEnv({ idOrName: news.project, upsert: "true", ...scope, body });
     } else {
       yield* projects.editProjectEnv({
@@ -443,6 +463,7 @@ export const EnvVarProvider = Provider.succeed(EnvVarClass, {
         ...scope,
         key: body.key,
         value: body.value,
+        type: body.type,
         target: A.copy(body.target),
         gitBranch: news.gitBranch ?? null,
         ...O.getSomesStruct({ comment: O.fromUndefinedOr(body.comment) }),

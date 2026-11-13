@@ -188,4 +188,34 @@ describe("Vercel.EnvVar", () => {
       yield* stack.destroy();
     })
   );
+  test.provider("replaces an adopted variable whose stored type is weaker than declared", (scratch) =>
+    Effect.gen(function* () {
+      const stack = typed(scratch);
+      yield* stack.destroy();
+      const project = FakeVercel.seedProject("vt-env-adopt-type");
+      const seeded = FakeVercel.seedEnv({
+        projectId: project.id,
+        key: "HUBSPOT_TOKEN",
+        value: "old",
+        type: "encrypted",
+        target: ["production"],
+      });
+      const adopted = yield* stack.deploy(
+        Vercel.EnvVar("Var", {
+          project: project.id,
+          teamId: TEAM_ID,
+          key: "HUBSPOT_TOKEN",
+          value: Redacted.make("secret"),
+          targets: ["production"],
+          type: "sensitive",
+        }).pipe(adopt(true))
+      );
+      expect(adopted.type).toBe("sensitive");
+      expect(O.isNone(FakeVercel.env(seeded.id))).toBe(true);
+      const stored = O.getOrThrow(FakeVercel.env(adopted.envId));
+      expect(stored.type).toBe("sensitive");
+      expect(stored.value).toBe("secret");
+      yield* stack.destroy();
+    })
+  );
 });

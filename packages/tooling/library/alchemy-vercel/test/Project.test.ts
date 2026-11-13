@@ -127,4 +127,16 @@ describe("Vercel.Project", () => {
       yield* stack.destroy();
     })
   );
+  test.provider("refuses to adopt a project linked to the same path on another provider", (scratch) =>
+    Effect.gen(function* () {
+      const stack = typed(scratch);
+      yield* stack.destroy();
+      FakeVercel.seedProject("vt-project-provider", "acme/oip", "gitlab");
+      const refused = yield* Effect.exit(
+        stack.deploy(Vercel.Project("Web", webProps("vt-project-provider")).pipe(adopt(true)))
+      );
+      expect(failureTag(refused)).toEqual(O.some("ProjectRepositoryMismatch"));
+      yield* stack.destroy();
+    })
+  );
 });

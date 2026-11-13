@@ -55,14 +55,19 @@ profile; pass the token through `op run`.
 - `Project`: `teamId` and `gitRepository` changes replace the project; a
   replacement that keeps the name deletes first, because names are unique per
   team. The API links a repository only at creation, so adopting a project
-  linked to another repository fails with `ProjectRepositoryMismatch`.
+  linked to another repository (path or git provider) fails with
+  `ProjectRepositoryMismatch`.
 - `EnvVar`: the value is `Redacted` and is never an attribute; every update
   writes the declared value. A variable with the same key and branch on any
   overlapping target counts as existing, because Vercel's upsert would
-  overwrite it. `project`, `teamId` and `type` changes replace.
+  overwrite it. A stored variable whose type differs from the declared one
+  (an adopted `encrypted` variable declared `sensitive`) is replaced, delete
+  first, so it is never left weaker than declared. `project`, `teamId` and `type` changes replace.
 - `Domain`: a `project` change moves the domain (`moveProjectDomain`);
   `moveFrom` plus adoption moves it from the project that holds it. Unverified
-  domains report their DNS challenges in `verification`.
+  domains report their DNS challenges in `verification`, and every deploy
+  retries verification until it succeeds, so the deploy after the DNS change
+  verifies the domain without any prop change.
 
 ## Tests
 

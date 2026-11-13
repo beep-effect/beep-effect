@@ -305,13 +305,15 @@ export const DomainProvider = Provider.succeed(DomainClass, {
     // unless it is this resource's own previous generation (a delete-first replacement).
     return state.name === previous?.name && state.projectId === previous.projectId ? state : Unowned(state);
   }),
-  diff: Effect.fn("Vercel.Domain.provider.diff")(function* ({ news, olds }) {
+  diff: Effect.fn("Vercel.Domain.provider.diff")(function* ({ news, olds, output }) {
     if (!isResolved(news)) return undefined;
     if (news.name !== olds.name || news.teamId !== olds.teamId) {
       // A domain belongs to one project at a time: a same-name replacement deletes first.
       return { action: "replace", deleteFirst: news.name === olds.name } as const;
     }
-    return undefined;
+    // An unverified domain plans an update on every deploy, so reconcile asks Vercel to
+    // verify it again once its DNS is in place, even when the props are unchanged.
+    return output !== undefined && !output.verified ? ({ action: "update" } as const) : undefined;
   }),
   reconcile: Effect.fn("Vercel.Domain.provider.reconcile")(function* ({ news, output, session }) {
     const scope = teamScope(news.teamId);

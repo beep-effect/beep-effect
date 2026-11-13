@@ -140,4 +140,20 @@ describe("Vercel.Domain", () => {
       expect(O.isNone(FakeVercel.domain("adopt.test"))).toBe(true);
     })
   );
+  test.provider("verifies a pending domain on a later unchanged deploy once DNS is in place", (scratch) =>
+    Effect.gen(function* () {
+      const stack = typed(scratch);
+      yield* stack.destroy();
+      const name = `cutover${PENDING_SUFFIX}`;
+      const pending = yield* stack.deploy(onProject("vt-domain-reverify", { name }));
+      expect(pending.verified).toBe(false);
+
+      FakeVercel.fixDns(name);
+      const verified = yield* stack.deploy(onProject("vt-domain-reverify", { name }));
+      expect(verified.verified).toBe(true);
+      expect(verified.verification).toEqual([]);
+      expect(O.getOrThrow(FakeVercel.domain(name)).verified).toBe(true);
+      yield* stack.destroy();
+    })
+  );
 });

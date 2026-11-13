@@ -15,6 +15,7 @@ import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
@@ -34,6 +35,7 @@ const ProjectRecord = S.Struct({
   autoExposeSystemEnvs: S.optionalKey(S.Boolean),
   ssoProtection: S.Struct({ deploymentType: S.String }).pipe(S.NullOr),
   repo: S.optionalKey(S.String),
+  repoType: S.optionalKey(S.String),
 });
 type ProjectRecord = typeof ProjectRecord.Type;
 
@@ -97,6 +99,7 @@ export const TEAM_ID = "team_fake";
 const projectsById = MutableHashMap.empty<string, ProjectRecord>();
 const envsById = MutableHashMap.empty<string, EnvRecord>();
 const domainsByName = MutableHashMap.empty<string, DomainRecord>();
+const dnsFixed = MutableHashSet.empty<string>();
 const requests: Array<string> = [];
 let sequence = 0;
 
@@ -116,7 +119,7 @@ export const FakeVercel = {
     ),
   domain: (name: string): O.Option<DomainRecord> => MutableHashMap.get(domainsByName, name),
   requests: (): ReadonlyArray<string> => requests,
-  seedProject: (name: string, repo?: string): ProjectRecord => {
+  seedProject: (name: string, repo?: string, repoType?: string): ProjectRecord => {
     const project: ProjectRecord = {
       id: nextId("prj"),
       name,
@@ -124,6 +127,7 @@ export const FakeVercel = {
       nodeVersion: "22.x",
       ssoProtection: null,
       ...(repo === undefined ? {} : { repo }),
+      ...(repoType === undefined ? {} : { repoType }),
     };
     MutableHashMap.set(projectsById, project.id, project);
     return project;
@@ -132,6 +136,10 @@ export const FakeVercel = {
     const record: EnvRecord = { ...env, id: nextId("env") };
     MutableHashMap.set(envsById, record.id, record);
     return record;
+  },
+  /** Put a pending domain's DNS in place, so the next verification succeeds. */
+  fixDns: (name: string): void => {
+    MutableHashSet.add(dnsFixed, name);
   },
   seedDomain: (name: string, projectId: string): DomainRecord => {
     const record: DomainRecord = {
@@ -189,16 +197,24 @@ const projectResponse = (project: ProjectRecord) => ({
   ...(project.repo === undefined
     ? {}
     : {
-        link: {
-          type: "github",
-          org: Str.split("/")(project.repo)[0] ?? "",
-          repo: Str.split("/")(project.repo)[1] ?? "",
-          productionBranch: "main",
-          deployHooks: [],
-          gitCredentialId: "cred",
-        },
+        link: linkOf(project.repo, project.repoType ?? "github"),
       }),
 });
+
+const linkOf = (repo: string, type: string) => {
+  const [owner = "", name = ""] = Str.split("/")(repo);
+  const common = { type, productionBranch: "main", deployHooks: [], gitCredentialId: "cred" };
+  return type === "gitlab"
+    ? {
+        ...common,
+        projectId: "1",
+        projectName: name,
+        projectNamespace: owner,
+        projectNameWithNamespace: repo,
+        projectUrl: `https://gitlab.com/${repo}`,
+      }
+    : { ...common, org: owner, repo: name };
+};
 
 const apexOf = (name: string): string => A.join(A.takeRight(Str.split(".")(name), 2), ".");
 
@@ -419,10 +435,14 @@ const handle = (method: string, route: Route, query: URLSearchParams, body: unkn
           O.filter(MutableHashMap.get(domainsByName, name), (domain) => domain.projectId === project.id),
           {
             onNone: () => notFound,
-            onSome: (domain) =>
-              Str.endsWith(PENDING_SUFFIX)(name)
-                ? error(400, "missing_txt_record")
-                : ok(domainResponse({ ...domain, verified: true })),
+            onSome: (domain) => {
+              if (Str.endsWith(PENDING_SUFFIX)(name) && !MutableHashSet.has(dnsFixed, name)) {
+                return error(400, "missing_txt_record");
+              }
+              const verified: DomainRecord = { ...domain, verified: true };
+              MutableHashMap.set(domainsByName, name, verified);
+              return ok(domainResponse(verified));
+            },
           }
         )
       )

@@ -319,8 +319,10 @@ export class ProjectRepositoryMismatch extends S.TaggedError<
   "ProjectRepositoryMismatch",
   {
     projectId: S.String.annotateKey({ description: "The existing project." }),
-    declared: S.String.annotateKey({ description: "Repository declared in the props, as `owner/name`." }),
-    linked: S.String.annotateKey({ description: "Repository Vercel reports, or empty when none is linked." }),
+    declared: S.String.annotateKey({ description: "Repository declared in the props, as `provider:owner/name`." }),
+    linked: S.String.annotateKey({
+      description: "Repository Vercel reports, as `provider:owner/name`, or empty when none is linked.",
+    }),
   },
   $I.annoteError<ProjectRepositoryMismatch>("ProjectRepositoryMismatch", {
     description: "An existing Vercel project is linked to a different repository than the declared one.",
@@ -389,6 +391,15 @@ const replacesProject = (news: ProjectProps, olds: ProjectProps): boolean =>
   news.teamId !== olds.teamId || !gitRepositoryEquivalence(news.gitRepository, olds.gitRepository);
 
 /**
+ * The declared git provider a reported link type belongs to: Vercel reports GitHub links as
+ * `github`, `github-limited` or `github-custom-host`.
+ *
+ * @param linkType - The link `type` Vercel reports.
+ * @returns The provider to compare with a declared `gitRepository.type`.
+ */
+const gitProviderOf = (linkType: string): string => (Str.startsWith("github")(linkType) ? "github" : linkType);
+
+/**
  * The repository an existing project is linked to must be the declared one: the project API
  * cannot relink it, so an adopted project with another link fails instead of drifting.
  */
@@ -397,9 +408,12 @@ const assertRepository = Effect.fn("Vercel.Project.assertRepository")(function* 
   observed: ProjectAttributes | undefined
 ) {
   if (observed === undefined || news.gitRepository === undefined) return;
-  const declared = news.gitRepository.repo;
-  const linked = observed.link?.repo ?? "";
-  if (Str.toLowerCase(declared) === Str.toLowerCase(linked)) return;
+  const declared = `${news.gitRepository.type}:${Str.toLowerCase(news.gitRepository.repo)}`;
+  const linked = O.match(O.fromUndefinedOr(observed.link), {
+    onNone: () => "",
+    onSome: (link) => `${gitProviderOf(link.type)}:${Str.toLowerCase(link.repo)}`,
+  });
+  if (declared === linked) return;
   return yield* ProjectRepositoryMismatch.make({ projectId: observed.projectId, declared, linked });
 });
 
