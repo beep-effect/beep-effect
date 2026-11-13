@@ -7,7 +7,9 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -260,6 +262,47 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         expect(preserved).toBe("preserve concurrent reader\n");
       })
     );
+    it.effect("adds BatchMode only to an OpenSSH transport when fetching over ssh", () =>
+      Effect.gen(function* () {
+        const remote = yield* stack();
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const bin = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-head-move-ssh-" });
+        const log = path.join(bin, "argv.log");
+        // A stand-in transport: record argv, answer the variant probe, run the remote command locally.
+        const transport = Effect.fnUntraced(function* (name: string) {
+          const file = path.join(bin, name);
+          yield* fs.writeFileString(
+            file,
+            `#!/bin/sh\nprintf '%s\\n' "${name} $*" >> '${log}'\nfor a; do [ "$a" = "-G" ] && exit 0; done\nfor last; do :; done\nexec sh -c "$last"\n`
+          );
+          yield* fs.chmod(file, 0o755);
+          return file;
+        });
+        const ssh = yield* transport("ssh-fake");
+        const plink = yield* transport("plink-fake");
+        const fetchVia = Effect.fnUntraced(function* (env: Record<string, string>, sshCommand: O.Option<string>) {
+          const local = yield* init();
+          yield* git(local, ["remote", "add", "origin", `localhost:${remote.root}`]);
+          if (O.isSome(sshCommand)) yield* git(local, ["config", "core.sshCommand", sshCommand.value]);
+          return yield* classify(local, remote.l2, remote.c2, remote.squash).pipe(
+            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env))
+          );
+        });
+        const quoted = yield* fetchVia({ GIT_SSH_COMMAND: `"${ssh}"` }, O.none());
+        expect(quoted).toMatchObject({ _tag: "unchanged", commits: 1 });
+        const sshLog = yield* fs.readFileString(log);
+        const sshLines = A.filter(Str.split(sshLog, "\n"), Str.startsWith("ssh-fake"));
+        expect(A.isReadonlyArrayNonEmpty(sshLines)).toBe(true);
+        expect(A.every(sshLines, Str.includes("-o BatchMode=yes"))).toBe(true);
+        const configured = yield* fetchVia({}, O.some(plink));
+        expect(configured).toMatchObject({ _tag: "unchanged", commits: 1 });
+        const plinkLog = yield* fs.readFileString(log);
+        const plinkLines = A.filter(Str.split(plinkLog, "\n"), Str.startsWith("plink-fake"));
+        expect(A.isReadonlyArrayNonEmpty(plinkLines)).toBe(true);
+        expect(A.some(plinkLines, Str.includes("BatchMode"))).toBe(false);
+      })
+    );
     it.effect("returns unknown when a missing object cannot be fetched from origin", () =>
       Effect.gen(function* () {
         const s = yield* stack();
@@ -289,8 +332,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const context = yield* Layer.build(
           layerYeetHeadMoveClassifierTest((input) => YeetHeadMoveUnknown.make({ ...input, reason: "fixture" }))
         );
-        const result = yield* Context.get(context, YeetHeadMoveClassifier).classify(request);
+        const service = Context.get(context, YeetHeadMoveClassifier);
+        const result = yield* service.classify(request);
         expect(result._tag).toBe("unknown");
+        const instant = yield* service.committerInstant("a");
+        expect(O.isNone(instant)).toBe(true);
       })
     );
   }
