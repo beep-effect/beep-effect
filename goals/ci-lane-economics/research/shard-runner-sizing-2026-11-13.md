@@ -85,6 +85,7 @@ hosted queue:
 its creation.) A cap of 48 overflow VMs keeps 128 vCPU, sixteen VMs, for the Heavy lanes and costs 22 s of
 pickup p95 against no cap. The count holds only for the 8-vCPU instance types; a 16-vCPU type counts double, and four of the
 pool's seven types are 16-vCPU, so the bound that matters is 384 vCPU, not 48 VMs.
+The decision therefore restricts overflow runners to the `.2xlarge` types, where these rows apply as modelled.
 
 ## Reading
 
