@@ -14,7 +14,7 @@ import { CitationRegexSourceFlags } from "./RegexEngine.ts";
 import { citationUnaccountedText, makeCitationRegexInput } from "./RegexInput.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationRegexCapture } from "./RegexResult.ts";
-import { makeCitationRegexWorker } from "./RegexWorker.ts";
+import { installCitationRegexEvaluator } from "./RegexWorker.ts";
 import { makeCitationTokenContext } from "./TokenContext.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ContextMatcher");
@@ -53,7 +53,8 @@ const budget = (limit: "patternUtf16" | "producedTextUtf16") =>
   CitationSafetyLimitExceeded.make({ operation: "extract", limit });
 const ascii = (text: string) => CitationPythonUnicodeStorage.make({ width: 1, bytes: new TextEncoder().encode(text) });
 /** Capture one installed source pattern and its independently observed wrapped
- * descriptors. No function is request data. Methods have R = never and reuse
+ * descriptors once per stage install. No function is request data. Methods read
+ * CitationInvocation at call time and reuse
  * the existing physical owner, shared admission, typed RPC and capture codec.
  * @internal @category operations @since 0.0.0
  */
@@ -84,7 +85,7 @@ export const makeCitationContextMatcher = Effect.fn("Citation.makeContextMatcher
   const forward = yield* wrap("^(?:", ")");
   const backward = yield* wrap("(?:", ")$");
   const context = yield* makeCitationTokenContext(limits);
-  const worker = yield* makeCitationRegexWorker(limits, runtime, bindings, "python-regex-v0");
+  const worker = yield* installCitationRegexEvaluator(limits, runtime, bindings, "python-regex-v0");
   const search = Effect.fn("Citation.matchOnTokens")(function* (request: unknown) {
     const prepared = yield* context.plan(request);
     if (prepared.allocatedUnits + prepared.contextUnits > limits.producedTextUtf16)
@@ -106,5 +107,5 @@ export const makeCitationContextMatcher = Effect.fn("Citation.makeContextMatcher
       match: { captures, names: R.map(matched.descriptor.profile.names, identity) },
     });
   }, timing.timed);
-  return { search, snapshot: worker.snapshot };
+  return { search };
 });
