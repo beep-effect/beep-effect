@@ -20,7 +20,7 @@ Each slice is one PR and runs the phases above. They land in order.
 
 | Slice | Status | Content | Count that must move |
 | --- | --- | --- | --- |
-| A1 | pending | Measurement fixture and recorded baseline. Test-only. | none; records the baseline |
+| A1 | in review | Measurement fixture and recorded baseline. Test-only. | none; records the baseline |
 | A2 | pending | `CitationInvocation` binding: budget and admission read at call time, optional lookups deleted, lint rule. Children still installed per request. | optional lookups to 0 |
 | A3 | pending | Hoist the stage tree, tokenizer and regex evaluators to engine construction. | per-request installs 14 to 0; tokenizer builds 10 to 1 |
 | A4 | pending | `CitationOwned` at the boundary; nested detaches, per-stage decodes and repeated fingerprints removed. | detaches 2 + 8 per call to 1 |
