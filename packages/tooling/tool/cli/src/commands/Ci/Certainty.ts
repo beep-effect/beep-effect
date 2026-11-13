@@ -38,6 +38,7 @@ import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
@@ -62,6 +63,7 @@ import {
 import { CiCommandError } from "./Ci.errors.ts";
 import { CI_LANE_PARTITIONS } from "./CiLanePartitions.ts";
 import { isHeavyDocsOnlyPath } from "./CiOperational.schemas.ts";
+import { HEAVY_CONTEXT_PREFIX } from "./HeavyAdmission.ts";
 import {
   CiLaneTimingGithubClient,
   CiLaneTimingWindowOptions,
@@ -248,6 +250,27 @@ const headStateOf = (
 };
 
 const completedMillis = (job: CiWorkflowJob): O.Option<number> => epochMillis(job.completed_at);
+
+// Green because the job ran, not because it was skipped.
+const ranGreen = (job: CiWorkflowJob): boolean =>
+  Str.equivalence(jobContextState(job), "green") && job.conclusion !== "skipped";
+
+// A later label on a proven head makes heavy-admit.yml re-report the proof: heavy.yml called with
+// `admitted: false` reports every `Heavy / <lane>` skipped. That copy is not the lane's completion
+// while an earlier job of the same name ran green on the head, so it never moves the green instant.
+const isReReport =
+  (jobs: ReadonlyArray<ProducedJob>) =>
+  (produced: ProducedJob): boolean =>
+    Str.equivalence(produced.producer, PRODUCER_HEAVY_ADMIT) &&
+    Str.startsWith(HEAVY_CONTEXT_PREFIX)(produced.job.name) &&
+    produced.job.conclusion === "skipped" &&
+    A.some(
+      jobs,
+      (earlier) =>
+        Str.equivalence(earlier.job.name, produced.job.name) &&
+        ranGreen(earlier.job) &&
+        Order.isLessThan(latestJobOrder)(earlier, produced)
+    );
 
 // Every context group is green, and the latest job of each one finished: the instant the last one did.
 const groupsGreenAt = (
@@ -472,7 +495,10 @@ const judgeHead = (
   requiredContexts: ReadonlyArray<string>,
   rulesetDigest: string
 ): CiCertaintyHeadRow => {
-  const jobs = A.flatMap(head.runs, (run) => A.map(run.jobs, (job): ProducedJob => ({ job, producer: run.workflow })));
+  const produced = A.flatMap(head.runs, (run) =>
+    A.map(run.jobs, (job): ProducedJob => ({ job, producer: run.workflow }))
+  );
+  const jobs = A.filter(produced, P.not(isReReport(produced)));
   const requiredGroups = A.map(requiredContexts, (context) => [context]);
   const contexts = A.map(requiredGroups, (names) => contextRow(jobs, names));
   const partial = A.some(head.runs, (run) => A.isReadonlyArrayNonEmpty(run.partialReads));
@@ -644,7 +670,9 @@ const admissionToHeavyMinutes = (run: CiCertaintyRun): O.Option<number> => {
 };
 
 // A heavy-admit.yml run whose Heavy Admission was skipped (a label event that admitted nothing) is no
-// producer run; check.yml runs always are.
+// producer run; check.yml runs always are. A later label on an admitted head runs Heavy Admission and
+// re-reports the lanes as skipped (or skips the caller); it counts here, but its skipped lane copies
+// add no minutes and `isReReport` keeps them from moving a lane's green instant.
 const isAdmittedRun = (run: CiCertaintyRun): boolean =>
   isCheckPullRequestRun(run) ||
   A.some(run.jobs, (job) => Str.equivalence(job.name, HEAVY_ADMISSION_JOB) && job.conclusion !== "skipped");

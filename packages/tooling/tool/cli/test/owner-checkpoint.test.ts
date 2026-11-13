@@ -1248,6 +1248,8 @@ const lintRun = {
   external_id: null,
 };
 const upstreamReadinessRoute = (call: GithubCall): GithubAnswer | undefined => {
+  // The merge gate lists the head's workflow runs to model the ruleset; this head has none.
+  if (call.path === "{repo}/actions/runs") return { body: { total_count: 0, workflow_runs: [] } };
   if (Str.endsWith("/statuses")(call.path)) return { body: [] };
   if (Str.endsWith("/rules/branches/main")(call.path))
     return {

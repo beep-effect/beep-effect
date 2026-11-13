@@ -31,9 +31,23 @@ enters the heavy matrix only with the `ready-for-heavy` label, or as a main
 push / merge group; an unlabelled code PR holds outside the queue). A docs-only
 diff from this repository skips the job before it requests a runner, and the
 Heavy caller passes `admitted: false` straight from Change Profile so every
-lane context reports without work. `heavy-admit.yml`
-runs the same job plus the heavy caller when the label is
-applied, so labelling never cancels or re-runs tier 1. Throughput is
+lane context reports without work. `heavy-admit.yml` runs the same job plus the
+heavy caller when the label is applied, so labelling never cancels or re-runs
+tier 1. On a same-repository
+PR that carries the label, a later label re-reports: the base ruleset reads
+only the newest Heavy Admit run's check suite, so a run that skipped would hide
+the heavy checks. When the newest earlier Heavy Admit run on the head that
+reported heavy lanes succeeded, the later run calls the heavy caller with
+`admitted: false` and every lane is reported skipped without an EC2 runner,
+provided that proof ran the same `heavy.yml` file the later run calls (the
+same commit, or two commits whose `heavy.yml` blobs match; a lane main added
+since never ran on the head) and every newer copy of those
+lanes on the head (Check's own suite re-runs them on a reopened head) has
+passed. Otherwise it skips, and `yeet merge-gate`, `yeet gh` and
+`yeet gate-table` judge each hidden required check by its newest copy: a red
+one stays `required-red`, a green one is `required-shadowed`. Optional checks
+keep their newest run in any suite, so their reds still count. Fork admission
+still needs the admission label event itself. Throughput is
 still heavy duration times queue depth. Pool sizing — `runners_maximum_count`,
 Spot versus On-Demand, the two-worker cap above — remains the operator's lever
 and is unchanged by admission (time-to-certainty ruling 57).

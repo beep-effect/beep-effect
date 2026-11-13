@@ -729,6 +729,54 @@ describe("ci certainty head states", () => {
   });
 });
 
+// A later label on a proven head makes heavy-admit.yml re-report the proof: every `Heavy / <lane>`
+// skipped, hours after the lane ran green. The green instant stays at the run that did the work.
+const REREPORT_HEAD = Str.repeat(40)("5");
+
+describe("ci certainty re-reported heavy lanes", () => {
+  it.layer(testLayer)((it) => {
+    it.effect("never takes a later re-report's skipped lane as the context's completion", () =>
+      Effect.gen(function* () {
+        const heavyAdmit = (id: number, createdAt: string, job: Partial<CiWorkflowJob>) =>
+          CiCertaintyRun.make({
+            ...foldRun(id, REREPORT_HEAD, createdAt, O.some("completed"), [foldJob({ name: "Heavy / Check", ...job })]),
+            workflow: "heavy-admit.yml",
+          });
+        const report = yield* buildCiCertaintyReport(
+          CiCertaintyCorpus.make({
+            ...syntheticCorpus([]),
+            pullRequestRuns: [
+              foldRun(301, REREPORT_HEAD, "2026-11-09T10:00:00Z", O.some("completed"), [foldJob({ id: 51 })]),
+              // The admitted run proves Heavy / Check twelve minutes after the push.
+              heavyAdmit(302, "2026-11-09T10:01:00Z", {
+                id: 52,
+                started_at: "2026-11-09T10:02:00Z",
+                completed_at: "2026-11-09T10:12:00Z",
+              }),
+              // Three hours later an unrelated label re-reports it without work.
+              heavyAdmit(303, "2026-11-09T13:00:00Z", {
+                id: 53,
+                conclusion: "skipped",
+                created_at: "2026-11-09T13:00:10Z",
+                started_at: "2026-11-09T13:00:20Z",
+                completed_at: "2026-11-09T13:00:21Z",
+              }),
+            ],
+            requiredContexts: ["Lint", "Heavy / Check"],
+          })
+        );
+
+        const head = headStartingWith(report.heads, REREPORT_HEAD);
+        strictEqual(head.state, "green");
+        assertSome(head.requiredGreenMinutes, 12);
+        assertSome(head.criticalContext, "Heavy / Check");
+        const check = O.getOrThrow(A.findFirst(head.contexts, (row) => row.context === "Heavy / Check"));
+        assertSome(check.runId, 302);
+      })
+    );
+  });
+});
+
 // The live capture through the command: a fake GitHub API and a scripted `git`.
 const LIVE_HEAD = Str.repeat(40)("a");
 const LATER_HEAD = Str.repeat(40)("c");
