@@ -293,7 +293,7 @@ export const skillLanePermutationTest: {
     return SkillLanePermutationResult.make({
       pValue: pValueOf(exceedOverall, relabelings),
       familyPValues: R.fromEntries(
-        A.map(A.zip(families, Array.from(exceedFamilies)), ([family, exceed]) => [
+        A.map(A.zip(families, A.fromIterable(exceedFamilies)), ([family, exceed]) => [
           family,
           pValueOf(exceed, relabelings),
         ])
