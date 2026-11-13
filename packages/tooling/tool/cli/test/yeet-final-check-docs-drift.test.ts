@@ -1,3 +1,4 @@
+import { isHeavyDocsOnlyPath } from "@beep/repo-cli/commands/Ci";
 import { FinalCheckGate } from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
 import { assertInclude } from "@effect/vitest/utils";
@@ -123,6 +124,12 @@ describe("final-check gate names in the docs", () => {
       expect(problems).toStrictEqual([]);
     });
   }
+
+  it("keeps every document it reads on the code route, so a docs-only edit still runs it", () => {
+    const docs = A.map(R.keys(DOC_TEXT), Str.replace("../../../../../", ""));
+    expect(docs).toHaveLength(3);
+    expect(A.filter(docs, isHeavyDocsOnlyPath)).toStrictEqual([]);
+  });
 
   it(`${GATE_TABLE} tables every final-check gate in run order`, () => {
     const text = O.getOrElse(readRepoFile(GATE_TABLE), () => "");
