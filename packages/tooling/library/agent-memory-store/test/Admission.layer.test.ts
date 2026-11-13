@@ -994,21 +994,27 @@ describe.skipIf(!isBunRuntime)("Admission layer (Bun runtime)", () => {
           ["staleExpectedRevision"],
           ["staleExpectedRevision"],
         ]);
-        expect(A.map(reheld, (outcome) => heldOf(outcome).pipe(O.flatMap((held) => held.ours)))).toEqual([
-          O.some("Alpha by D, keep me.\n"),
-          O.some("Beta by D, keep me.\n"),
-          O.some(statusRow("blocked")),
-          O.some("Delta by A.\n"),
-        ]);
+        deepStrictEqual(
+          A.map(reheld, (outcome) => heldOf(outcome).pipe(O.flatMap((held) => held.ours))),
+          [
+            O.some("Alpha by D, keep me.\n"),
+            O.some("Beta by D, keep me.\n"),
+            O.some(statusRow("blocked")),
+            O.some("Delta by A.\n"),
+          ]
+        );
         expect(holdIdOf(alphaTheirs)).not.toBe(holdIdOf(heldWrites[0]));
         // Nothing was overwritten: each node still holds the text that moved it on.
         const heads = yield* Effect.forEach([alpha, beta, gamma, delta], (node) => headOf(log, node.nodeId));
-        expect(A.map(heads, (head) => head.text)).toEqual([
-          O.some("Alpha by D, keep me.\n"),
-          O.some("Beta by D, keep me.\n"),
-          O.some(statusRow("blocked")),
-          O.some("Delta by A.\n"),
-        ]);
+        deepStrictEqual(
+          A.map(heads, (head) => head.text),
+          [
+            O.some("Alpha by D, keep me.\n"),
+            O.some("Beta by D, keep me.\n"),
+            O.some(statusRow("blocked")),
+            O.some("Delta by A.\n"),
+          ]
+        );
         const open = yield* admission.held;
         expect(A.map(open, (conflict) => conflict.holdId)).toEqual(A.map(reheld, holdIdOf));
         assertSome(open[0]?.ours ?? O.none(), "Alpha by D, keep me.\n");

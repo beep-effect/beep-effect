@@ -35,6 +35,7 @@
  * counts there; they are also logged and asserted.
  */
 import { describe, expect, it } from "@effect/vitest";
+import { deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -285,12 +286,12 @@ describe.skipIf(!isBunRuntime)("admission on the adversarial fixture (Bun runtim
           for (const verdict of verdicts) {
             const byStratum = strataOf(verdict);
             const held = (stratum: string) => O.map(MutableHashMap.get(byStratum, stratum), (counts) => counts.held);
-            expect([held("reviseVersusRevise"), held("reviseVersusRetire"), held("mixedCleanAndContested")]).toEqual([
-              O.some(6),
-              O.some(6),
-              O.some(4),
-            ]);
-            expect(MutableHashMap.get(byStratum, "differentNodesOneFile")).toEqual(
+            deepStrictEqual(
+              [held("reviseVersusRevise"), held("reviseVersusRetire"), held("mixedCleanAndContested")],
+              [O.some(6), O.some(6), O.some(4)]
+            );
+            deepStrictEqual(
+              MutableHashMap.get(byStratum, "differentNodesOneFile"),
               O.some({ count: 12, held: 0, landed: 12 })
             );
           }
