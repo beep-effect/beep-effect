@@ -9,7 +9,7 @@ Status: `active`
 | P0 Cache-warm census | complete | Re-measure every required lane's p50/p95 on cache-warm PR and push waves (attempt-one successful runs only; failures and reruns feed flake attribution, never the percentiles). | Completed 2026-08-13 via the explicit 10-wave alternative; see `research/cache-warm-lane-census.md`. |
 | P1 Placement decisions | complete | Decide fleet vs hosted vs free re-fit per lane from the census plus cost model. | Signed and live-falsified 2026-08-13; see `research/placement-decision.md`. No fleet additions; the one hosted re-fit candidate remains on its existing fleet placement after two runner shutdowns. |
 | P2 Execute moves | complete | Move lanes per the placement table (workflow lane edits; sharding where caching cannot help). | Completed 2026-08-16: every signed zero-expansion move merged through #719. |
-| P3 Evidence + close | in progress: three windows denied, window-5 preview denied, load bound restated | Prove the charter on live waves and close. | Windows 1 to 3 denied (`research/admission-week-p95.md`, `-2-`, `-3-`); window 4 previewed 2026-11-02 and never censused as a full week. The 2026-11-13 preview over `2026-11-10T04:00Z` → `2026-11-13T05:40Z` (`research/window-5-preview-2026-11-13.md`) reads `Test Unit` 24m00s p95, shard pickup 13m32s p95 and 8, 9 and 17 peak CI-active branches: shard bodies hold (slowest 9m05s), hosted runner pickup does not. Operator rulings 2026-11-13: the charter is judged at 15 to 20 CI-active branches with no governor, and the test shards stay hosted, overflowing to the self-hosted pool only past a 10-minute hosted wait (at most 48 `.2xlarge` VMs). On main: the census fix (#3229: wait from run creation to each required check, Test Integration by its shards, the window-dated 10m00s pickup limit). Open before window 5: aggregates that take no runner when every shard succeeded (#3258), the first-parent diff base (#3249) and owner rows (#3255) in hosted-setup-tax, and the overflow routing (#3256, which ships switched off). Window 5 is the first seven days after the last of them is live, which for #3256 means applied and enabled, not merged; close only when every required p95, queue and pickup included, is below 20m00s at 15 to 20 CI-active branches. |
+| P3 Evidence + close | in progress: three windows denied, window-5 preview denied, load bound restated | Prove the charter on live waves and close. | Windows 1 to 3 denied (`research/admission-week-p95.md`, `-2-`, `-3-`); window 4 previewed 2026-11-02 and never censused as a full week. The 2026-11-13 preview over `2026-11-10T04:00Z` → `2026-11-13T05:40Z` (`research/window-5-preview-2026-11-13.md`) reads `Test Unit` 24m00s p95, shard pickup 13m32s p95 and 8, 9 and 17 peak CI-active branches: shard bodies hold (slowest 9m05s), hosted runner pickup does not. Operator rulings 2026-11-13: the charter is judged at 15 to 20 CI-active branches with no governor, and the test shards stay hosted, overflowing to the self-hosted pool only past a 10-minute hosted wait (at most 48 `.2xlarge` VMs). On main: the census fix (#3229: wait from run creation to each required check, Test Integration by its shards, the window-dated 10m00s pickup limit). All of these are on main and live: aggregates that take no runner when every shard succeeded (#3258), the first-parent diff base (#3249), owner rows (#3255), and the overflow routing (#3256, #3275) with the pool applied and switched on at 2026-11-13T19:48:48Z. Window 5 runs `2026-11-13T20:00Z` → `2026-11-20T20:00Z` and is censused on or after its end; close only when every required wait p95, queue and pickup included, is below 20m00s at 15 to 20 CI-active branches. |
 
 ## Notes
 
@@ -159,6 +159,28 @@ Status: `active`
 
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug ci-lane-economics`; add a `kind: checkpoint` file there, never edit this block._
+
+### First overflow VM launched, 2026-11-13
+
+The overflow pool launched its first VMs at 2026-11-13T20:36:42Z, 48 minutes after `BEEP_SHARD_OVERFLOW` went on, and every job it took passed.
+
+- Run: Check 43502623814 (pull request, head `b6e833f1c2`, created 20:33:19Z). The route job sent all 24 Test Unit shards to `Test Unit (<shard>) / Overflow`.
+- Result: 24 of 24 overflow jobs concluded `success`. Each ran on its own runner named `beep-ovf-<instance id>`.
+- First VM: `i-0befcf82d46671a6c`, `r7a.2xlarge`, spot, launched 20:36:42Z. Its job, `Test Unit (repo-cli-3) / Overflow`, was queued at 20:36:36Z, started at 20:37:30Z and finished at 20:42:18Z.
+- Scale-up log (`/aws/lambda/beep-ovf-scale-up`): `Created instance(s): i-0befcf82d46671a6c` at 20:36:42.876Z. 31 such lines between 20:36:42Z and 20:45:16Z, and no `PassRole`, `UnauthorizedOperation` or `ERROR` line. This is the proof that the `beep-ovf` entry in `beep-ci-fleet-boundary` v5 lets the scale-up role pass the runner role.
+- Pickup wait (job queued to started) over the 24 jobs: shortest 54s, median about 4m00s, longest 6m50s. The last shard finished at 20:48:44Z, 15m25s after the run was created.
+- Conditions: the heavy pool was in its 2 to 8 burst (from 20:27:07Z) and #3278 had merged at 20:35:50Z with a cold cache.
+
+Two things to watch, neither changed here because a pool change inside window 5 would restart it:
+
+- The pool launched about one VM every 30 seconds, so the 24th shard waited 6m50s for its runner. That is inside the 10-minute tripwire but it is most of the budget.
+- 32 instances launched for 24 jobs. The eight extra launched between 20:43Z and 20:45Z and no other recent Check run had overflow jobs. Cause not yet read; check on the next overflow event.
+
+All 32 instances are terminated. The switch stays on.
+
+Lane docs/ci-overflow-first-launch
+
+Reverse: Delete this file and run goals decisions write; overflow itself is switched off with gh variable set BEEP_SHARD_OVERFLOW --body off
 
 ### Window 5 waits on four changes; routing alone does not reach 20 minutes at 17 branches, 2026-11-13
 

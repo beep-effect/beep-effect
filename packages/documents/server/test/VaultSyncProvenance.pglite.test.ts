@@ -5,6 +5,7 @@ import { VaultSyncApi, VaultSyncModel, VaultSyncPolicies } from "@beep/documents
 import { PgliteTestLayer } from "@beep/pglite/Pglite.test-layer";
 import { describe, expect, layer } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -68,7 +69,10 @@ describe("vault-sync driver provenance", () => {
     it.effect("fills the driver principal and source-kind columns from the v1 request context (D17 F8)", () =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
-        const hosted = VaultSyncModel.layer(VaultSyncPolicies).pipe(Layer.provide(AlchemyPostgres.layer(config)));
+        const hosted = VaultSyncModel.layer(VaultSyncPolicies).pipe(
+          Layer.provide(SecureRandom.layerWebCrypto),
+          Layer.provide(AlchemyPostgres.layer(config))
+        );
         const session = VaultSyncSessionLive.pipe(Layer.provide(Layer.succeed(V.SessionResolver, resolver)));
         const context = yield* Layer.build(Layer.merge(session, hosted));
         const client = yield* VaultSyncApi.clientInProcess.pipe(Effect.provideContext(context));

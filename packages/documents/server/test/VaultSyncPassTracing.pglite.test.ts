@@ -15,6 +15,7 @@ import { PgliteTestLayer } from "@beep/pglite/Pglite.test-layer";
 import { describe, expect, layer } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -95,6 +96,7 @@ describe("VaultSyncPass tracing (D17)", () => {
         const runtime = yield* TracedPass.layer(Layer.mergeAll(VaultSyncPolicies, VaultSyncPassLive)).pipe(
           Layer.provide(adapters),
           Layer.provide(rootLayer),
+          Layer.provide(SecureRandom.layerWebCrypto),
           Layer.provide(AlchemyPostgres.layer()),
           Layer.provideMerge(Layer.succeed(Tracer.Tracer, tracer)),
           Layer.fresh,

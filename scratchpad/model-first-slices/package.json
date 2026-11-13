@@ -1,0 +1,25 @@
+{
+  "name": "@proto/model-first-slices",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "shared/kernel",
+    "party/model",
+    "party/host",
+    "apps/practice"
+  ],
+  "scripts": {
+    "check": "tsc --noEmit -p shared/kernel && tsc --noEmit -p party/model && tsc --noEmit -p party/host && tsc --noEmit -p apps/practice",
+    "test": "bun run --cwd party/model test && bun run --cwd party/host test"
+  },
+  "devDependencies": {
+    "@effect/vitest": "4.1.4",
+    "@types/node": "26.6.5",
+    "typescript": "7.1.0-dev.20261105.1",
+    "vitest": "5.0.4"
+  },
+  "overrides": {
+    "effect": "4.1.4"
+  }
+}

@@ -3,6 +3,7 @@
  * refuses to host, its migrations, its default configuration and how it treats
  * a stored row it cannot read.
  */
+
 import * as Domain from "@alchemy.run/domain";
 import { Internals } from "@alchemy.run/domain/Model";
 import {
@@ -11,8 +12,10 @@ import {
   AlchemyPostgresPlatform,
   AlchemyPostgresTables,
   migrate,
+  ScheduleRow,
 } from "@beep/alchemy-postgres";
 import { PgliteTestLayer } from "@beep/pglite/Pglite.test-layer";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, layer } from "@effect/vitest";
 import { deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -82,7 +85,7 @@ const decodeStoredRows = rowsOf(StoredRow);
 // Default configuration: `alchemy_` tables and no provenance mapping.
 const hosted = Unit.layer(CardAuditLive).pipe(
   Layer.provideMerge(AlchemyPostgresPlatform.layer()),
-  Layer.provideMerge(PgliteTestLayer)
+  Layer.provideMerge(Layer.merge(PgliteTestLayer, NodeCrypto.layer))
 );
 
 describe("AlchemyPostgresPlatform", () => {
@@ -201,6 +204,41 @@ describe("AlchemyPostgresPlatform", () => {
       })
     );
 
+    it.effect("replaying an arming preserves its deadline and never recommits an accepted command", () =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const cards = yield* Card;
+        const internals = yield* Internals;
+        const store = yield* Effect.fromOption(O.fromUndefinedOr(internals.aggregates.get("Card")));
+        const id = CardId.make("schedule-replay");
+        const command = { _tag: "IssueCard", holder: "pat" };
+        const meta = { commandId: "accepted-arming", context: {} };
+        yield* store.send(id, command, meta);
+        const due = yield* store.schedule(id, "reminder", command, meta, { afterMillis: 50 });
+        const replayedDue = yield* store.schedule(id, "reminder", { _tag: "IssueCard", holder: "replacement" }, meta, {
+          afterMillis: 60_000,
+        });
+        deepStrictEqual(replayedDue, due);
+        const statuses = yield* sql`SELECT id, command_id, command, meta, due_at, status
+          FROM alchemy_aggregate_schedule WHERE model = 'Unit' AND aggregate = 'Card'
+          AND id = ${id} AND command_id = 'reminder'`.pipe(
+          Effect.flatMap(rowsOf(ScheduleRow)),
+          Effect.map(A.map((row) => row.status)),
+          Effect.repeat({ until: (rows) => A.contains(rows, "executed"), schedule: Schedule.spaced("20 millis") }),
+          Effect.timeout("10 seconds")
+        );
+        deepStrictEqual(statuses, ["executed"]);
+        const state = yield* cards.get(id);
+        deepStrictEqual(state, { _tag: "Issued", holder: "pat" });
+        const events = yield* Effect.fromOption(O.fromUndefinedOr(store.events));
+        const committed = yield* events(id);
+        deepStrictEqual(
+          A.map(committed, ({ envelope }) => envelope.seq),
+          [1]
+        );
+      })
+    );
+
     it.effect("dies with an AlchemyPostgresError naming the read when a stored event is unreadable", () =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
@@ -226,7 +264,7 @@ describe("AlchemyPostgresPlatform", () => {
 // A short lease for this host's own claims; the crashed host's lease below is set explicitly.
 const shortLease = Unit.layer(CardAuditLive).pipe(
   Layer.provideMerge(AlchemyPostgresPlatform.layer(AlchemyPostgresConfig.make({ leaseMillis: 1_000 }))),
-  Layer.provideMerge(PgliteTestLayer)
+  Layer.provideMerge(Layer.merge(PgliteTestLayer, NodeCrypto.layer))
 );
 
 describe("AlchemyPostgresPlatform delivery lease", () => {
@@ -281,23 +319,26 @@ class Holding extends Domain.Model("Holding", { aggregates: [Card], policies: [C
 const holding = Holding.layer(CardHoldLive).pipe(Layer.provideMerge(AlchemyPostgresPlatform.layer()));
 
 describe("AlchemyPostgresPlatform delivery lease on close", () => {
-  layer(PgliteTestLayer, { timeout: "60 seconds", excludeTestServices: true })("on PGlite", (it) => {
-    it.effect("frees the row it was delivering when the host closes, without counting an attempt", () =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        const id = CardId.make("closing-host");
-        const scope = yield* Scope.make();
-        const context = yield* Layer.buildWithScope(holding, scope);
-        yield* Context.get(context, Card).send(id, IssueCard.make({ holder: "lee" }));
-        yield* Effect.sync(() => holdsOf(id)).pipe(
-          Effect.repeat({ until: (runs) => runs === 1, schedule: Schedule.spaced(Duration.millis(20)) }),
-          Effect.timeout(Duration.seconds(10))
-        );
-        yield* Scope.close(scope, Exit.void);
-        const rows = yield* sql`SELECT status, attempts, locked_until FROM alchemy_delivery
+  layer(Layer.merge(PgliteTestLayer, NodeCrypto.layer), { timeout: "60 seconds", excludeTestServices: true })(
+    "on PGlite",
+    (it) => {
+      it.effect("frees the row it was delivering when the host closes, without counting an attempt", () =>
+        Effect.gen(function* () {
+          const sql = yield* SqlClient.SqlClient;
+          const id = CardId.make("closing-host");
+          const scope = yield* Scope.make();
+          const context = yield* Layer.buildWithScope(holding, scope);
+          yield* Context.get(context, Card).send(id, IssueCard.make({ holder: "lee" }));
+          yield* Effect.sync(() => holdsOf(id)).pipe(
+            Effect.repeat({ until: (runs) => runs === 1, schedule: Schedule.spaced(Duration.millis(20)) }),
+            Effect.timeout(Duration.seconds(10))
+          );
+          yield* Scope.close(scope, Exit.void);
+          const rows = yield* sql`SELECT status, attempts, locked_until FROM alchemy_delivery
           WHERE model = 'Holding' AND source = ${`Card/${id}`}`.pipe(Effect.flatMap(decodeOutboxRows));
-        deepStrictEqual(rows, [{ status: "pending", attempts: 0, locked_until: 0 }]);
-      })
-    );
-  });
+          deepStrictEqual(rows, [{ status: "pending", attempts: 0, locked_until: 0 }]);
+        })
+      );
+    }
+  );
 });
