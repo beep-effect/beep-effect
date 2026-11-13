@@ -318,6 +318,14 @@ export const ciGoalDataConsumers: A.NonEmptyReadonlyArray<CiGoalDataConsumer> = 
     evidence: ["apps/labs/ciops/test/live-replay.test.ts"],
   }),
   CiGoalDataConsumer.make({
+    pattern:
+      "^explorations/beep-ci-operational-ontology/research/(control-interventions\\.yaml|evidence/journal-snapshot-2026-10-01/journal\\.redacted\\.ndjson)$",
+    reference: "explorations/beep-ci-operational-ontology/research/",
+    consumers: ["@beep/ciops"],
+    modes: ["read"],
+    evidence: ["apps/labs/ciops/src/kpi/Pins.ts"],
+  }),
+  CiGoalDataConsumer.make({
     pattern: "^explorations/legal-ontology-landscape/assets/manifest\\.jsonl$",
     reference: "explorations/legal-ontology-landscape/assets/manifest.jsonl",
     consumers: ["@beep/ontology"],

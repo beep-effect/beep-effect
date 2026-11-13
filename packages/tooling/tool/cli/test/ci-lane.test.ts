@@ -1988,13 +1988,14 @@ describe("ciLaneStepsForTesting", () => {
     expect([...lastOf(steps).args]).toEqual(["run", "beep", "knowledge", "doctor", "ci", "--base", "origin/release"]);
   });
 
-  it("always checks workflow policy, the schema catalog, catalog usage, home paths and shadcn lint and appends changeset status on request", () => {
+  it("always checks workflow policy, the schema catalog, catalog usage, home paths, coverage owners and shadcn lint and appends changeset status on request", () => {
     const withoutFlag = ciLaneStepsForTesting(REPO_ROOT, "repo-sanity", baseOptions);
     expect(A.map(withoutFlag, (step) => step.label)).toEqual([
       "ci:repo-sanity:workflow-lint",
       "lint:schema-catalog",
       "ci:repo-sanity:catalog-usage",
       "lint:private-home-paths",
+      "lint:coverage-owners",
       "ci:repo-sanity",
       "ci:repo-sanity:shadcn",
     ]);
@@ -2010,6 +2011,13 @@ describe("ciLaneStepsForTesting", () => {
       args: ["run", "beep", "laws", "private-home-paths", "--check"],
       cwd: REPO_ROOT,
     });
+    // A new standards reader in another package selects only that package's
+    // tests, so the owner row check runs on every Repo Sanity pass instead.
+    expect(O.getOrThrow(A.findFirst(withoutFlag, (step) => step.label === "lint:coverage-owners"))).toMatchObject({
+      command: "bun",
+      args: ["run", "beep", "lint", "coverage-owners"],
+      cwd: REPO_ROOT,
+    });
 
     const withFlag = ciLaneStepsForTesting(
       REPO_ROOT,
@@ -2021,6 +2029,7 @@ describe("ciLaneStepsForTesting", () => {
       "lint:schema-catalog",
       "ci:repo-sanity:catalog-usage",
       "lint:private-home-paths",
+      "lint:coverage-owners",
       "ci:repo-sanity",
       "ci:repo-sanity:shadcn",
       "ci:repo-sanity:changeset-status",

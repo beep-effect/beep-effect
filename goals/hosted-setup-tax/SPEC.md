@@ -434,11 +434,25 @@ Reverse: Revert the perf/ci-applicable-checks PR; or delete the lanes rows from 
 
 ### Workflow policy runs inside the Repo Sanity lane body, 2026-11-12
 
-The post-merge review of #3117 found that check.yml ran `beep ci workflow-lint` as its own Repo Sanity step ahead of "Run verification lane", whose `if:` has no `!cancelled()`. A workflow-lint red therefore skipped the whole lane body, the shadcn step included, which contradicted the no-masking claim. The check now runs as `ci:repo-sanity:workflow-lint`, the first step of the collecting lane body, so local final-check replays it too. I chose this over adding `!cancelled()` to the lane step, which would also run the lane after a broken setup step. `ciLaneFailurePolicyForTesting` names the per-lane runner choice that `runCiStepLane` applies (`collect-all`, or `fail-fast` for the JSDoc ratchet), and `ci-repo-sanity-owners.test.ts` asserts that Repo Sanity collects, so the masking test covers the real lane runner.
+The post-merge review of #3117 found that check.yml ran `beep ci workflow-lint` as its own Repo Sanity step ahead of "Run verification lane", whose `if:` has no `!cancelled()`. A workflow-lint red therefore skipped the whole lane body, the shadcn step included, which contradicted the no-masking claim. The check now runs as `ci:repo-sanity:workflow-lint`, the first step of the collecting lane body. Local final-check replays it on the workstation profile or with `--force-local`; on the worker profile final-check narrows Repo Sanity to changeset status, so hosted Repo Sanity proves it. I chose this over adding `!cancelled()` to the lane step, which would also run the lane after a broken setup step. `ciLaneFailurePolicy` names the per-lane runner choice (`collect-all`, or `fail-fast` for the JSDoc ratchet), and `runCiLaneSteps` applies it: `beep ci lane` hands every step-planned body to that runner. `ci-repo-sanity-owners.test.ts` drives `runCiLaneSteps` with the real Repo Sanity labels, every step before shadcn red, and shows the shadcn step still runs; a fail-fast contrast shows the ratchet stops at its first red. Known limit: a red in a check.yml setup step still skips the lane body, and the owners test guards only the `ci workflow-lint` script, so a different pre-lane check added later to the verify job would bring the masking back without a red test. Such a check belongs in the lane body.
 
 Lane ci/repo-sanity-workflow-lint-in-lane
 
 Reverse: Restore the check.yml 'Check workflow policy' step and drop the ci:repo-sanity:workflow-lint body step
+
+### TURB-01: the owner drift check runs in Repo Sanity, on the PR that adds or removes a reader, 2026-11-12
+
+The slice 1 drift check lived only in a @beep/repo-cli test, and the planner never selects repo-cli for a reader that appears outside it. `dependentSeedOwnerForFile` drops test-tree files, so a PR that adds a test file under repo-cli-kit's `test/` tree reading `standards/schema-first.inventory.jsonc` selects only repo-cli-kit and merges green. The next PR that regenerates the inventory selects only repo-cli by its row, so the new reader goes unrun and the drift test goes red on that unrelated PR or on main. A new reader in `apps/**` src behaves the same way. The post-merge review of #3063 found this (2026-11-12).
+
+The check now also runs as `bun run beep lint coverage-owners`, a step in the Repo Sanity lane body (`CiLane.ts`). That lane runs for every diff except packet-prose-only ones, which cannot add a TypeScript reader. The lint and the repo-cli test call the same `workspaceCoverageOwnerDrift`. It globs `packages/**` and `apps/**` TypeScript sources, compares every row with the scan in both directions, and fails on drift or on an empty scan. On this head it reads 9242 sources in about 7 s with zero drift. Seeding the reader from the scenario above turned it red: the row lists @beep/repo-cli, the scan finds @beep/repo-cli and @beep/repo-cli-kit. `yeet final-check` replays `ci lane repo-sanity` on the workstation profile or with `--force-local`; on the worker profile it skips that lane body, so hosted Repo Sanity is the proof there.
+
+Known limits: readers outside `packages/**` and `apps/**` (goal-packet `ops/` scripts, `scripts/`) are not scanned, and a local run also scans untracked files in the working tree.
+
+Rejected: a planner trigger that maps any changed `*.ts` mentioning a row basename to @beep/repo-cli. A deleted or edited reader no longer mentions the basename in its head text, so the trigger would miss removals unless the planner also read base blobs. It would also make the planner read file contents on every run.
+
+Lane fix/turb-01-owner-drift-lint
+
+Reverse: Remove the lint:coverage-owners step from the repo-sanity body in CiLane.ts and the coverage-owners lint command; the repo-cli test still holds the rows when it runs.
 
 <!-- beep:decisions:end -->
 

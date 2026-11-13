@@ -2034,6 +2034,13 @@ export const ciLaneStepsForTesting: {
           // Required on every head: Heavy / Lint Policy also runs the law on
           // code PRs, but it is not a required context.
           homePaths,
+          // A new reader of a generated standards file in another package does not
+          // select @beep/repo-cli's tests, so the owner rows are checked here, on
+          // the pull request that adds or removes the reader (hosted-setup-tax
+          // TURB-01). Readers are test files and the files they read are generated
+          // standards inventories, both code-route shapes, so the documentation
+          // path never needs it.
+          bunRunStep(repoRoot, "lint:coverage-owners", ["beep", "lint", "coverage-owners"]),
           // `audit:github repo-sanity` runs the changeset graph check (its
           // `repo-sanity:changeset-graph` lane), so this body carries no second
           // copy (hosted-setup-tax PERIL-04).
@@ -2323,18 +2330,51 @@ const resolveStorybookLaneAffected = Effect.fn("CiLane.resolveStorybookLaneAffec
  * **Example** (Read a lane's failure policy)
  *
  * ```ts
- * import { ciLaneFailurePolicyForTesting } from "@beep/repo-cli/commands/Ci"
+ * import { ciLaneFailurePolicy } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(ciLaneFailurePolicyForTesting("repo-sanity")) // "collect-all"
+ * console.log(ciLaneFailurePolicy("repo-sanity")) // "collect-all"
  * ```
  *
  * @param laneId - CI lane whose runner is chosen.
- * @returns The policy `runCiStepLane` applies to that lane's steps.
- * @category testing
+ * @returns The policy {@link runCiLaneSteps} applies to that lane's steps.
+ * @category policies
  * @since 0.0.0
  */
-export const ciLaneFailurePolicyForTesting = (laneId: CiLaneId): GithubCheckFailurePolicy =>
+export const ciLaneFailurePolicy = (laneId: CiLaneId): GithubCheckFailurePolicy =>
   laneId === "jsdoc-ratchet" ? "fail-fast" : "collect-all";
+
+/**
+ * Run a step-planned CI lane's body under its {@link ciLaneFailurePolicy}.
+ *
+ * **Details**
+ *
+ * `beep ci lane <id>` plans the body and hands it to this runner, so a test
+ * that substitutes the body steps exercises the same runner hosted CI uses.
+ *
+ * **Example** (Run a lane body)
+ *
+ * ```ts
+ * import { runCiLaneSteps } from "@beep/repo-cli/commands/Ci"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(runCiLaneSteps("repo-sanity", []))) // true
+ * ```
+ *
+ * @param laneId - CI lane whose policy and log label apply.
+ * @param steps - The lane body's steps in execution order.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const runCiLaneSteps = Effect.fn("CiLane.runCiLaneSteps")(function* (
+  laneId: CiLaneId,
+  steps: ReadonlyArray<QualityTaskStep>
+) {
+  // The JSDoc ratchet's inventory and compare are a dependency chain: never
+  // compare yesterday's artifact after a failed scan.
+  yield* ciLaneFailurePolicy(laneId) === "fail-fast"
+    ? Effect.forEach(steps, (step) => runQualityTaskStreamingStepGroup(`ci:${laneId}`, [step]), { discard: true })
+    : runQualityTaskStreamingStepGroup(`ci:${laneId}`, steps);
+});
 
 const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
   repoRoot: string,
@@ -2369,12 +2409,7 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
     return;
   }
 
-  // The general step group collects failures. The JSDoc ratchet's inventory
-  // and compare are a dependency chain: never compare yesterday's artifact
-  // after a failed scan.
-  yield* ciLaneFailurePolicyForTesting(laneId) === "fail-fast"
-    ? Effect.forEach(steps, (step) => runQualityTaskStreamingStepGroup(`ci:${laneId}`, [step]), { discard: true })
-    : runQualityTaskStreamingStepGroup(`ci:${laneId}`, steps);
+  yield* runCiLaneSteps(laneId, steps);
 });
 
 const runCiDoctestLane = Effect.fn("CiLane.runCiDoctestLane")(function* (repoRoot: string) {
