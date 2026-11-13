@@ -1138,12 +1138,15 @@ describe("CI lane partitions", () => {
       // The test lanes allocate what Test Plan publishes. Its full lists (what a push runs and the
       // bound every pull-request plan is checked against) are exactly the table's partitions, in
       // table order, and each partition is handed the plan to prove it.
-      for (const { job, laneId, all, output, aggregate } of [
+      // Test Unit's hosted shards allocate the hosted half of the plan (the overflow step may route the
+      // rest to the self-hosted pool); every shard still proves the whole plan.
+      for (const { job, laneId, all, output, matrixOutput, aggregate } of [
         {
           job: "test-unit-shard",
           laneId: "test-unit",
           all: "ALL_TEST_UNIT_PARTITIONS",
           output: "test_unit",
+          matrixOutput: "test_unit_hosted",
           aggregate: "test-unit",
         },
         {
@@ -1151,6 +1154,7 @@ describe("CI lane partitions", () => {
           laneId: "test-integration",
           all: "ALL_TEST_INTEGRATION_PARTITIONS",
           output: "test_integration",
+          matrixOutput: "test_integration",
           aggregate: "test-integration",
         },
       ] as const) {
@@ -1159,11 +1163,11 @@ describe("CI lane partitions", () => {
         // The list is JSON, which the workflow YAML reader parses as a flow sequence.
         expect(parseWorkflowYaml(fullPlan)).toEqual(lanePartitionIds(laneId));
         expect(yamlAt(workflow, ["jobs", job, "strategy", "matrix", "partition"])).toBe(
-          `\${{ fromJSON(needs.test-plan.outputs.${output}) }}`
+          `\${{ fromJSON(needs.test-plan.outputs.${matrixOutput}) }}`
         );
         expect(yamlAt(workflow, ["jobs", job, "needs"])).toEqual(["change-profile", "test-plan"]);
         expect(yamlAt(workflow, ["jobs", job, "if"])).toBe(
-          `needs.change-profile.outputs.docs_only != 'true' && needs.test-plan.outputs.${output} != '[]'`
+          `needs.change-profile.outputs.docs_only != 'true' && needs.test-plan.outputs.${matrixOutput} != '[]'`
         );
         expect(yamlAt(workflow, ["jobs", "test-plan", "outputs", output])).toBe(`\${{ steps.plan.outputs.${output} }}`);
         expect(workflowText).toContain(
@@ -1200,12 +1204,13 @@ describe("CI lane partitions", () => {
         "change-profile",
         "test-plan",
         "test-unit-shard",
+        "test-unit-overflow",
       ]);
       expect(unitGate).toContain('[[ "${{ needs.change-profile.result }}" == "success" ]]');
       expect(unitGate).toContain('[[ "${{ needs.test-plan.result }}" == "success" ]]');
-      expect(unitGate).toContain(
-        'case "${{ needs.change-profile.outputs.docs_only }}:${planned}:${{ needs.test-unit-shard.result }}" in'
-      );
+      expect(unitGate).toContain('shards="${{ needs.test-unit-shard.result }}"');
+      expect(unitGate).toContain('[[ "${{ needs.test-unit-overflow.result }}" == "skipped" ]] || shards=failure');
+      expect(unitGate).toContain('case "${{ needs.change-profile.outputs.docs_only }}:${planned}:${shards}" in');
       expect(unitGate).toContain("true:*:skipped)");
       expect(unitGate).toContain("false:none:skipped)");
       expect(unitGate).toContain("false:some:success)");

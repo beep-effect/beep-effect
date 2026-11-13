@@ -148,6 +148,13 @@ export * from "./CiRerunRunnerLoss.ts";
  */
 export * from "./CiRunnerOutputs.ts";
 /**
+ * Shard overflow routing: the hosted and overflow halves of a Test Unit plan.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiShardOverflow.ts";
+/**
  * Dependency review service, live layer and verdict rendering.
  *
  * @category cli-commands

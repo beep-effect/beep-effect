@@ -2107,6 +2107,20 @@ class CiEffectiveLaneSpec extends S.Opaque<CiEffectiveLaneSpec, { readonly brand
 
 const specShardNames = (spec: CiEffectiveLaneSpec): ReadonlyArray<string> => A.dedupe(A.flatten(spec.shardLayouts));
 
+// A Test Unit partition that Test Plan routed to the self-hosted overflow pool runs through
+// shard-overflow.yml, called from check.yml's matrix job of the same name, and reports as
+// `<shard> / Overflow` (goals/ci-lane-economics, 2026-11-13). It is that shard: the same partition,
+// steps and artifacts on another runner, so the census measures it in its layout and its pickup.
+const CI_OVERFLOW_SHARD_SUFFIX = " / Overflow";
+
+const isShardJobNamed =
+  (shardName: string) =>
+  (jobName: string): boolean =>
+    Str.equivalence(jobName, shardName) || Str.equivalence(jobName, `${shardName}${CI_OVERFLOW_SHARD_SUFFIX}`);
+
+const isSpecShardJobNamed = (spec: CiEffectiveLaneSpec, jobName: string): boolean =>
+  A.some(specShardNames(spec), (shardName) => isShardJobNamed(shardName)(jobName));
+
 // Must match the `name:` of the `test-plan` job in `.github/workflows/check.yml`: a run carrying exactly one
 // attempt-one job with this name built its Test Unit and Test Integration matrices from the affected partitions
 // only.
@@ -2123,7 +2137,7 @@ const completeShardLayout = (
   spec: CiEffectiveLaneSpec
 ): O.Option<ReadonlyArray<string>> =>
   A.findFirst(A.reverse(spec.shardLayouts), (layout) =>
-    A.every(layout, (shardName) => O.isSome(attemptOneJobNamed(jobs, shardName)))
+    A.every(layout, (shardName) => O.isSome(attemptOneShardJob(jobs, shardName)))
   );
 
 // A planned run allocates only the newest layout's shards whose partitions have affected packages, so its
@@ -2139,7 +2153,7 @@ const plannedShardLayout = (
     O.map(
       (): ReadonlyArray<string> =>
         A.filter(A.lastNonEmpty(spec.shardLayouts), (shardName) =>
-          A.some(jobs, (job) => Str.equivalence(job.name, shardName))
+          A.some(jobs, (job) => isShardJobNamed(shardName)(job.name))
         )
     ),
     O.filter((layout) => A.isReadonlyArrayNonEmpty(layout))
@@ -2464,9 +2478,7 @@ const normalizeRequiredLaneName = (name: string): string =>
 const effectiveLaneSpecForJobName = (name: string): O.Option<CiEffectiveLaneSpec> =>
   A.findFirst(
     CI_EFFECTIVE_LANE_SPECS,
-    (spec) =>
-      Str.equivalence(spec.aggregator, name) ||
-      A.some(specShardNames(spec), (shardName) => Str.equivalence(shardName, name))
+    (spec) => Str.equivalence(spec.aggregator, name) || isSpecShardJobNamed(spec, name)
   );
 
 const windowRunOrder = Order.combine(
@@ -2970,6 +2982,15 @@ const attemptOneJobNamed = (
   return A.length(matches) === 1 ? A.head(matches) : O.none();
 };
 
+// The one attempt-one job that ran this shard, hosted or routed to the overflow pool.
+const attemptOneShardJob = (
+  jobs: ReadonlyArray<CiWorkflowAttemptOneJob>,
+  shardName: string
+): O.Option<CiWorkflowAttemptOneJob> => {
+  const matches = A.filter(jobs, (job) => isShardJobNamed(shardName)(job.name));
+  return A.length(matches) === 1 ? A.head(matches) : O.none();
+};
+
 const incompleteEffectiveRow = (run: CiWorkflowWindowRun, spec: CiEffectiveLaneSpec): CiLaneTimingAttributionRow =>
   CiLaneTimingAttributionRow.make({
     attribution: "incomplete-effective-span",
@@ -2993,9 +3014,9 @@ const effectiveDurationRow = (
     return incompleteEffectiveRow(run, spec);
   }
   const shards = layout.value;
-  const expectedNames = A.prepend(shards, spec.aggregator);
-  const components = A.getSomes(A.map(expectedNames, (name) => attemptOneJobNamed(jobs, name)));
-  if (A.length(components) !== A.length(expectedNames)) {
+  const shardComponents = A.getSomes(A.map(shards, (shardName) => attemptOneShardJob(jobs, shardName)));
+  const components = A.appendAll(O.toArray(attemptOneJobNamed(jobs, spec.aggregator)), shardComponents);
+  if (A.length(components) !== A.length(shards) + 1) {
     return incompleteEffectiveRow(run, spec);
   }
   const conclusions = A.map(components, actionConclusion);
@@ -3013,9 +3034,7 @@ const effectiveDurationRow = (
       runId: run.id,
     });
   }
-  const shardStartedAtMillis = A.getSomes(
-    A.map(shards, (shardName) => O.flatMap(attemptOneJobNamed(jobs, shardName), (job) => epochMillis(job.started_at)))
-  );
+  const shardStartedAtMillis = A.getSomes(A.map(shardComponents, (job) => epochMillis(job.started_at)));
   const aggregator = attemptOneJobNamed(jobs, spec.aggregator);
   const aggregatorCompletedAtMillis = O.flatMap(aggregator, (job) => epochMillis(job.completed_at));
   const earliestStartedAtMillis = A.head(A.sort(shardStartedAtMillis, Order.Number));
@@ -3094,7 +3113,7 @@ const shardPickupRows = (
   A.flatMap(CI_EFFECTIVE_LANE_SPECS, (spec) =>
     pipe(
       jobs,
-      A.filter((job) => A.some(specShardNames(spec), (shardName) => Str.equivalence(shardName, job.name))),
+      A.filter((job) => isSpecShardJobNamed(spec, job.name)),
       A.map((job) =>
         O.map(attemptOnePickupSeconds(CiWorkflowJob.make(job)), (pickupSeconds) =>
           CiLaneTimingPickupRow.make({
@@ -3122,12 +3141,11 @@ const laterEffectiveRows = (
     CI_EFFECTIVE_LANE_SPECS,
     A.filter((spec) => HashSet.has(requiredContexts, spec.lane)),
     A.flatMap((spec) => {
-      const componentNames = A.prepend(specShardNames(spec), spec.aggregator);
       const laterComponents = A.filter(
         runJobs.jobs,
         (job) =>
           !isCiWorkflowAttemptOneJob(job) &&
-          A.some(componentNames, (componentName) => Str.equivalence(componentName, job.name))
+          (Str.equivalence(spec.aggregator, job.name) || isSpecShardJobNamed(spec, job.name))
       );
       const laterAttempts = A.dedupe(A.map(laterComponents, (job) => job.run_attempt));
       return pipe(

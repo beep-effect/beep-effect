@@ -409,6 +409,7 @@ export const ciCommand = Command.make("ci", {}, () =>
     "- bun run beep ci pr-size <number>",
     "- bun run beep ci prune-apt [sources-dir]",
     "- bun run beep ci runner-resources <lane> <command> [args...]",
+    "- bun run beep ci shard-overflow --partitions <json> --callee local|pinned",
     "- bun run beep ci workflow-lint",
     "- bun run beep ci lane <id> [flags] (or --list)",
     "- bun run beep ci lane-timings [--runs n] [--tsv] or --window --since ISO --until ISO [--preview] [filters]",

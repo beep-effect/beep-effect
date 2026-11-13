@@ -104,6 +104,11 @@ type AggregateState = {
   readonly plan: string;
   readonly planned: string;
   readonly result: string;
+  // Test Unit's overflow half (shard overflow, 2026-11-13). Absent, the overflow step routed nothing:
+  // the hosted half is the whole plan and the overflow job was skipped.
+  readonly hosted?: string;
+  readonly overflow?: string;
+  readonly overflowResult?: string;
 };
 
 // Runs one aggregate's real script with every `needs` expression rendered and the plan in its env.
@@ -118,10 +123,20 @@ const aggregatePasses = (script: string, shard: string, state: AggregateState): 
         Str.replaceAll("${{ needs.change-profile.result }}", state.classification),
         Str.replaceAll("${{ needs.test-plan.result }}", state.plan),
         Str.replaceAll("${{ needs.change-profile.outputs.docs_only }}", state.docs),
-        Str.replaceAll(`\${{ needs.${shard}.result }}`, state.result)
+        Str.replaceAll(`\${{ needs.${shard}.result }}`, state.result),
+        Str.replaceAll("${{ needs.test-unit-overflow.result }}", state.overflowResult ?? "skipped")
       ),
     ],
-    { stdout: "pipe", stderr: "pipe", env: { ...Bun.env, PLANNED_PARTITIONS: state.planned } }
+    {
+      stdout: "pipe",
+      stderr: "pipe",
+      env: {
+        ...Bun.env,
+        PLANNED_PARTITIONS: state.planned,
+        HOSTED_PARTITIONS: state.hosted ?? state.planned,
+        OVERFLOW_PARTITIONS: state.overflow ?? "[]",
+      },
+    }
   ).exitCode === 0;
 
 type PlannedLane = {
@@ -130,6 +145,8 @@ type PlannedLane = {
   readonly job: string;
   readonly needs: ReadonlyArray<string>;
   readonly output: string;
+  // The Test Plan output the hosted shard matrix reads.
+  readonly shardOutput: string;
   readonly shard: string;
 };
 
@@ -141,7 +158,8 @@ const plannedLanes: ReadonlyArray<PlannedLane> = [
     job: "test-unit",
     shard: "test-unit-shard",
     output: "test_unit",
-    needs: ["change-profile", "test-plan", "test-unit-shard"],
+    shardOutput: "test_unit_hosted",
+    needs: ["change-profile", "test-plan", "test-unit-shard", "test-unit-overflow"],
     emptyPlanSkips: true,
     isSome: (planned) => planned !== "[]",
   },
@@ -149,6 +167,7 @@ const plannedLanes: ReadonlyArray<PlannedLane> = [
     job: "test-integration",
     shard: "test-integration-shard",
     output: "test_integration",
+    shardOutput: "test_integration",
     needs: ["admission", "change-profile", "test-plan", "test-integration-shard"],
     emptyPlanSkips: false,
     isSome: Str.includes('"int-rest"'),
@@ -235,9 +254,80 @@ it.effect(
       assert.deepEqual(yamlAt(workflow, ["jobs", lane.shard, "needs"]), ["change-profile", "test-plan"]);
       assert.strictEqual(
         yamlAt(workflow, ["jobs", lane.shard, "if"]),
-        `needs.change-profile.outputs.docs_only != 'true' && needs.test-plan.outputs.${lane.output} != '[]'`
+        `needs.change-profile.outputs.docs_only != 'true' && needs.test-plan.outputs.${lane.shardOutput} != '[]'`
       );
     }
+  })
+);
+
+// Shard overflow (goals/ci-lane-economics, 2026-11-13): Test Plan may route part of the Test Unit plan to
+// the self-hosted pool. The verdict passes only when the two halves hold the plan exactly once and each
+// half passed or, holding nothing, was never allocated.
+it.effect(
+  "executes the Test Unit aggregate across the hosted and overflow halves of the plan",
+  Effect.fnUntraced(function* () {
+    const workflow = yield* readCheckWorkflow;
+    const script = aggregateScript(workflow, "test-unit");
+    const base = { admission: "", classification: "success", docs: "false", plan: "success" };
+    const passes = (state: Omit<AggregateState, keyof typeof base>) =>
+      aggregatePasses(script, "test-unit-shard", { ...base, ...state });
+    const plan = '["repo-cli-1","unit-a"]';
+    const split = { planned: plan, hosted: '["unit-a"]', overflow: '["repo-cli-1"]' };
+    assert.isTrue(passes({ ...split, result: "success", overflowResult: "success" }), "both halves passed");
+    assert.isTrue(
+      passes({ planned: plan, hosted: "[]", overflow: plan, result: "skipped", overflowResult: "success" }),
+      "every partition routed"
+    );
+    for (const overflowResult of ["failure", "cancelled", "skipped", ""]) {
+      assert.isFalse(passes({ ...split, result: "success", overflowResult }), `overflow ${overflowResult}`);
+    }
+    for (const result of ["failure", "cancelled", "skipped", ""]) {
+      assert.isFalse(passes({ ...split, result, overflowResult: "success" }), `hosted ${result}`);
+    }
+    // An empty half that reports anything but a skip, and halves that lose or repeat a partition.
+    assert.isFalse(
+      passes({ planned: plan, hosted: plan, overflow: "[]", result: "success", overflowResult: "success" })
+    );
+    assert.isFalse(
+      passes({ planned: plan, hosted: '["unit-a"]', overflow: "[]", result: "success", overflowResult: "skipped" })
+    );
+    assert.isFalse(
+      passes({ planned: plan, hosted: plan, overflow: '["unit-a"]', result: "success", overflowResult: "success" })
+    );
+    assert.isFalse(
+      passes({
+        planned: plan,
+        hosted: '["unit-a"]',
+        overflow: '["unit-b"]',
+        result: "success",
+        overflowResult: "success",
+      })
+    );
+    assert.isFalse(passes({ ...split, hosted: "null", result: "success", overflowResult: "success" }));
+
+    // The overflow caller: the routed half only, never for a fork, proving the whole plan.
+    assert.deepEqual(yamlAt(workflow, ["jobs", "test-unit-overflow", "needs"]), ["change-profile", "test-plan"]);
+    assert.strictEqual(
+      yamlAt(workflow, ["jobs", "test-unit-overflow", "if"]),
+      `needs.change-profile.outputs.docs_only != 'true' && needs.test-plan.outputs.test_unit_overflow != '[]' && (github.event_name == 'push' || ${sameRepository})`
+    );
+    assert.strictEqual(
+      yamlAt(workflow, ["jobs", "test-unit-overflow", "strategy", "matrix", "partition"]),
+      "${{ fromJSON(needs.test-plan.outputs.test_unit_overflow) }}"
+    );
+    assert.strictEqual(
+      yamlAt(workflow, ["jobs", "test-unit-overflow", "with", "planned_partitions"]),
+      "${{ needs.test-plan.outputs.test_unit }}"
+    );
+    // A skipped or failed routing step publishes "every partition hosted".
+    assert.strictEqual(
+      yamlAt(workflow, ["jobs", "test-plan", "outputs", "test_unit_hosted"]),
+      "${{ steps.overflow.outputs.test_unit_hosted || steps.plan.outputs.test_unit }}"
+    );
+    assert.strictEqual(
+      yamlAt(workflow, ["jobs", "test-plan", "outputs", "test_unit_overflow"]),
+      "${{ steps.overflow.outputs.test_unit_overflow || '[]' }}"
+    );
   })
 );
 

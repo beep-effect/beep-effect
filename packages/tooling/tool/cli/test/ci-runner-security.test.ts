@@ -2003,6 +2003,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "check.yml:Test Unit (${{ matrix.partition }})",
         "check.yml:Test Integration (${{ matrix.partition }})",
         "check.yml:Property Laws (${{ matrix.partition }})",
+        // A Test Unit partition Test Plan routed to the overflow pool; the Test Unit aggregate judges it
+        // (ci-shard-overflow.test.ts pins it to the hosted shard's steps).
+        "shard-overflow.yml:Overflow",
         "check.yml:Coverage Artifact Migration",
         "cache-warm.yml:Warm Turbo cache",
         // Manual source inspection is operational evidence, not a required quality lane.
