@@ -19,6 +19,7 @@ import * as Effect from "effect/Effect";
 import * as Equivalence from "effect/Equivalence";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import { teamScope } from "./internal/scope.ts";
@@ -254,6 +255,41 @@ export class EnvVarAttributes extends S.Opaque<EnvVarAttributes, { readonly bran
 ) {}
 
 /**
+ * Raised when Vercel stores a variable with a weaker type than declared even after the
+ * variable was recreated with the declared type.
+ *
+ * **Details**
+ *
+ * The provider fails rather than recreating the variable on every deploy. Declare the type
+ * the team can store, or change the team's environment variable policy.
+ *
+ * **Example** (Describe the failure)
+ *
+ * ```ts
+ * import { EnvVarTypeNotApplied } from "@beep/alchemy-vercel/EnvVar"
+ *
+ * const error = EnvVarTypeNotApplied.make({ key: "API_KEY", declared: "sensitive", stored: "encrypted" })
+ * console.log(error._tag) // "EnvVarTypeNotApplied"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class EnvVarTypeNotApplied extends S.TaggedError<EnvVarTypeNotApplied, { readonly brand: unique symbol }>(
+  $I`EnvVarTypeNotApplied`
+)(
+  "EnvVarTypeNotApplied",
+  {
+    key: S.String.annotateKey({ description: "The variable's key." }),
+    declared: EnvVarType.annotateKey({ description: "The declared storage type." }),
+    stored: S.String.annotateKey({ description: "The storage type Vercel kept." }),
+  },
+  $I.annoteError<EnvVarTypeNotApplied>("EnvVarTypeNotApplied", {
+    description: "Vercel stored an environment variable with a weaker type than declared after a replacement.",
+  })
+) {}
+
+/**
  * Resource type of {@link EnvVar}.
  *
  * @category resources
@@ -364,14 +400,37 @@ const findEnv = Effect.fn("Vercel.EnvVar.find")(function* (
 });
 
 /**
- * Whether the stored variable's type differs from the declared one.
+ * How strongly each storage type protects a value: `plain`, then `encrypted`, then `sensitive`, weakest first.
+ * A type Vercel reports outside this set ranks weakest.
+ */
+const typeStrength: Record<string, number> = { plain: 1, encrypted: 2, sensitive: 3 };
+
+const strengthOf = (type: string): number => O.getOrElse(R.get(typeStrength, type), () => 0);
+
+/**
+ * Whether a stored type is weaker than the declared one.
+ *
+ * **Details**
+ *
+ * A stored type that is equal or stronger satisfies the declaration: some teams store
+ * Production and Preview variables as `sensitive` whatever type is requested, and such a
+ * variable must not be replaced on every deploy.
+ *
+ * @param stored - The type Vercel reports for the variable.
+ * @param declared - The declared type.
+ * @returns `true` when the stored type protects the value less than declared.
+ */
+const isWeaker = (stored: string, declared: EnvVarType): boolean => strengthOf(stored) < strengthOf(declared);
+
+/**
+ * Whether the stored variable needs a type-driven replacement.
  *
  * @param news - The declared props.
  * @param output - The stored attributes, when the variable is deployed or adopted.
- * @returns `true` when reconcile must replace the variable to reach the declared type.
+ * @returns `true` when the stored type is weaker than the declared one.
  */
-const storedTypeDiffers = (news: EnvVarProps, output: EnvVarAttributes | undefined): boolean =>
-  output !== undefined && output.type !== (news.type ?? EnvVarType.Enum.encrypted);
+const storedTypeWeaker = (news: EnvVarProps, output: EnvVarAttributes | undefined): boolean =>
+  output !== undefined && isWeaker(output.type, news.type ?? EnvVarType.Enum.encrypted);
 
 const requestBody = (news: EnvVarProps) =>
   S.encodeEffect(EnvVarRequestBody)(
@@ -386,6 +445,46 @@ const requestBody = (news: EnvVarProps) =>
       }),
     })
   );
+
+/**
+ * Create, edit or type-replace the variable so Vercel holds the declared value.
+ *
+ * **Details**
+ *
+ * Vercel does not promise to change a stored type in place (a sensitive value can never be
+ * read back), so a variable stored weaker than declared is removed and created again. An
+ * existing variable of equal or stronger type is edited without a type, so it keeps it.
+ *
+ * @param news - The declared props.
+ * @param body - The encoded request body.
+ * @param existing - The variable already on Vercel, if any.
+ * @returns An effect that completes once the write is accepted.
+ */
+const writeEnv = Effect.fn("Vercel.EnvVar.write")(function* (
+  news: EnvVarProps,
+  body: typeof EnvVarRequestBody.Encoded,
+  existing: EnvVarAttributes | undefined
+) {
+  const scope = teamScope(news.teamId);
+  const create = projects.createProjectEnv({ idOrName: news.project, upsert: "true", ...scope, body });
+  if (existing === undefined) return yield* create;
+  if (isWeaker(existing.type, body.type)) {
+    yield* projects
+      .removeProjectEnv({ idOrName: existing.projectId, id: existing.envId, ...scope })
+      .pipe(Effect.catchTag("NotFound", () => Effect.void));
+    return yield* create;
+  }
+  return yield* projects.editProjectEnv({
+    idOrName: existing.projectId,
+    id: existing.envId,
+    ...scope,
+    key: body.key,
+    value: body.value,
+    target: A.copy(body.target),
+    gitBranch: news.gitBranch ?? null,
+    ...O.getSomesStruct({ comment: O.fromUndefinedOr(body.comment) }),
+  });
+});
 
 /**
  * Provider layer for {@link EnvVar}.
@@ -432,10 +531,9 @@ export const EnvVarProvider = Provider.succeed(EnvVarClass, {
     // A stored type that differs from the declared one (an adopted variable) needs reconcile,
     // which replaces it; anything else, the redacted value included, falls through to the
     // engine's prop comparison.
-    return storedTypeDiffers(news, output) ? ({ action: "update" } as const) : undefined;
+    return storedTypeWeaker(news, output) ? ({ action: "update" } as const) : undefined;
   }),
   reconcile: Effect.fn("Vercel.EnvVar.provider.reconcile")(function* ({ news, output, session }) {
-    const scope = teamScope(news.teamId);
     const body = yield* requestBody(news);
     const existing =
       output === undefined
@@ -446,29 +544,7 @@ export const EnvVarProvider = Provider.succeed(EnvVarClass, {
             ...O.getSomesStruct({ gitBranch: O.fromUndefinedOr(news.gitBranch) }),
           })
         : yield* findEnv(output.projectId, news.teamId, { envId: output.envId, key: news.key, targets: news.targets });
-    if (existing !== undefined && existing.type !== body.type) {
-      // Vercel does not promise to change a stored type in place (a sensitive value can never
-      // be read back), so a variable of another type is replaced delete-first rather than
-      // left weaker than declared.
-      yield* projects
-        .removeProjectEnv({ idOrName: existing.projectId, id: existing.envId, ...scope })
-        .pipe(Effect.catchTag("NotFound", () => Effect.void));
-      yield* projects.createProjectEnv({ idOrName: news.project, upsert: "true", ...scope, body });
-    } else if (existing === undefined) {
-      yield* projects.createProjectEnv({ idOrName: news.project, upsert: "true", ...scope, body });
-    } else {
-      yield* projects.editProjectEnv({
-        idOrName: existing.projectId,
-        id: existing.envId,
-        ...scope,
-        key: body.key,
-        value: body.value,
-        type: body.type,
-        target: A.copy(body.target),
-        gitBranch: news.gitBranch ?? null,
-        ...O.getSomesStruct({ comment: O.fromUndefinedOr(body.comment) }),
-      });
-    }
+    yield* writeEnv(news, body, existing);
     const reconciled = yield* findEnv(news.project, news.teamId, {
       key: news.key,
       targets: news.targets,
@@ -476,6 +552,9 @@ export const EnvVarProvider = Provider.succeed(EnvVarClass, {
     });
     if (reconciled === undefined) {
       return yield* Effect.die(`Vercel env var ${news.key} is not listed after reconcile`);
+    }
+    if (isWeaker(reconciled.type, body.type)) {
+      return yield* EnvVarTypeNotApplied.make({ key: news.key, declared: body.type, stored: reconciled.type });
     }
     yield* session.note(`Vercel env var ${news.key} (${A.join(reconciled.targets, ", ")})`);
     return reconciled;

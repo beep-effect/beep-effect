@@ -1,6 +1,7 @@
 import * as Vercel from "@beep/alchemy-vercel";
 import { describe, expect } from "@effect/vitest";
 import { adopt, Unowned } from "alchemy/AdoptPolicy";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -215,6 +216,42 @@ describe("Vercel.EnvVar", () => {
       const stored = O.getOrThrow(FakeVercel.env(adopted.envId));
       expect(stored.type).toBe("sensitive");
       expect(stored.value).toBe("secret");
+      yield* stack.destroy();
+    })
+  );
+  test.provider("accepts a stronger stored type and converges without replacing", (scratch) =>
+    Effect.gen(function* () {
+      const stack = typed(scratch);
+      yield* stack.destroy();
+      FakeVercel.storeTypeAs("TEAM_POLICY_VAR", "sensitive");
+      const env = { key: "TEAM_POLICY_VAR", value: Redacted.make("v"), targets: ["production"] } as const;
+      const first = yield* stack.deploy(stackWith("vt-env-stronger", env));
+      expect(first.type).toBe("sensitive");
+      const removesBefore = A.length(A.filter(FakeVercel.requests(), (request) => request === "DELETE Env"));
+      const second = yield* stack.deploy(stackWith("vt-env-stronger", env));
+      expect(second.envId).toBe(first.envId);
+      const removesAfter = A.length(A.filter(FakeVercel.requests(), (request) => request === "DELETE Env"));
+      expect(removesAfter).toBe(removesBefore);
+      yield* stack.destroy();
+    })
+  );
+
+  test.provider("fails when Vercel keeps a weaker type than declared", (scratch) =>
+    Effect.gen(function* () {
+      const stack = typed(scratch);
+      yield* stack.destroy();
+      FakeVercel.storeTypeAs("WEAK_POLICY_VAR", "encrypted");
+      const refused = yield* Effect.exit(
+        stack.deploy(
+          stackWith("vt-env-weaker", {
+            key: "WEAK_POLICY_VAR",
+            value: Redacted.make("v"),
+            targets: ["production"],
+            type: "sensitive",
+          })
+        )
+      );
+      expect(failureTag(refused)).toEqual(O.some("EnvVarTypeNotApplied"));
       yield* stack.destroy();
     })
   );

@@ -60,9 +60,14 @@ profile; pass the token through `op run`.
 - `EnvVar`: the value is `Redacted` and is never an attribute; every update
   writes the declared value. A variable with the same key and branch on any
   overlapping target counts as existing, because Vercel's upsert would
-  overwrite it. A stored variable whose type differs from the declared one
-  (an adopted `encrypted` variable declared `sensitive`) is replaced, delete
-  first, so it is never left weaker than declared. `project`, `teamId` and `type` changes replace.
+  overwrite it. Storage types rank `plain` < `encrypted` <
+  `sensitive`, and `type` is a minimum: a stored type that is equal or stronger
+  satisfies it. Some teams store Production and Preview variables as
+  `sensitive` whatever is requested; such a variable is accepted as is and
+  never recreated. A stored type that is weaker (an adopted `encrypted`
+  variable declared `sensitive`) is replaced, delete first. If Vercel still
+  keeps a weaker type, the deploy fails with `EnvVarTypeNotApplied` instead
+  of recreating the variable on every deploy. `project`, `teamId` and `type` changes replace.
 - `Domain`: a `project` change moves the domain (`moveProjectDomain`);
   `moveFrom` plus adoption moves it from the project that holds it. Unverified
   domains report their DNS challenges in `verification`, and every deploy

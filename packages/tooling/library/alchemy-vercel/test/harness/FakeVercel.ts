@@ -100,6 +100,7 @@ const projectsById = MutableHashMap.empty<string, ProjectRecord>();
 const envsById = MutableHashMap.empty<string, EnvRecord>();
 const domainsByName = MutableHashMap.empty<string, DomainRecord>();
 const dnsFixed = MutableHashSet.empty<string>();
+const storedTypes = MutableHashMap.empty<string, string>();
 const requests: Array<string> = [];
 let sequence = 0;
 
@@ -136,6 +137,10 @@ export const FakeVercel = {
     const record: EnvRecord = { ...env, id: nextId("env") };
     MutableHashMap.set(envsById, record.id, record);
     return record;
+  },
+  /** Model a team policy: variables with this key are stored as `type` whatever is requested. */
+  storeTypeAs: (key: string, type: string): void => {
+    MutableHashMap.set(storedTypes, key, type);
   },
   /** Put a pending domain's DNS in place, so the next verification succeeds. */
   fixDns: (name: string): void => {
@@ -315,7 +320,7 @@ const upsertEnv = (project: ProjectRecord, body: typeof EnvBody.Type, upsert: bo
     projectId: project.id,
     key,
     value,
-    type: body.type ?? "encrypted",
+    type: O.getOrElse(MutableHashMap.get(storedTypes, key), () => body.type ?? "encrypted"),
     target,
     ...BO.getSomesStruct({ gitBranch: O.fromUndefinedOr(gitBranch), comment: O.fromUndefinedOr(body.comment) }),
   };

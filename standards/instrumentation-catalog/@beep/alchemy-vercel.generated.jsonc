@@ -18,6 +18,7 @@
     {"name":"Vercel.EnvVar.provider.diff","owner":"@beep/alchemy-vercel","family":"tooling","conforms":false},
     {"name":"Vercel.EnvVar.provider.read","owner":"@beep/alchemy-vercel","family":"tooling","conforms":false},
     {"name":"Vercel.EnvVar.provider.reconcile","owner":"@beep/alchemy-vercel","family":"tooling","conforms":false},
+    {"name":"Vercel.EnvVar.write","owner":"@beep/alchemy-vercel","family":"tooling","conforms":true},
     {"name":"Vercel.Project.assertRepository","owner":"@beep/alchemy-vercel","family":"tooling","conforms":true},
     {"name":"Vercel.Project.name","owner":"@beep/alchemy-vercel","family":"tooling","conforms":true},
     {"name":"Vercel.Project.provider.delete","owner":"@beep/alchemy-vercel","family":"tooling","conforms":false},
