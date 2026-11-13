@@ -2218,7 +2218,7 @@ describe("B8 watch heavy admission", () => {
           expect(settleRows35).toEqual([]);
           const lines = yield* stderr;
           expect(lines).toContain(
-            "settle: heavy-not-admitted; gated: Heavy / Check; admit: gh pr edit --add-label ready-for-heavy; waited 1s 500ms (not counted toward the 1s settle timeout)"
+            "settle: heavy-not-admitted; gated: Heavy / Check; admit: bun run beep yeet ready (flips a draft at content-final and applies ready-for-heavy); waited 1s 500ms (not counted toward the 1s settle timeout)"
           );
           expect(lines).not.toContain("settle-timeout");
         })

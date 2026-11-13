@@ -10,6 +10,7 @@ import { GitCommand } from "@beep/git/GitCommand";
 import { GitHubRepository } from "@beep/github/GitHubRepository";
 import { PullRequest as GithubPullRequest } from "@beep/github/PullRequest";
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -30,7 +31,8 @@ import {
   runArtifactPathForContext as runOutputPathForContext,
   writeTextFile,
 } from "./ArtifactPaths.ts";
-import { yeetGitKitError } from "./GitExec.ts";
+import { readFinalCheckReceipt } from "./FinalCheck.ts";
+import { currentCommitSha, yeetGitKitError } from "./GitExec.ts";
 import {
   ensureProvenanceFooter,
   isProvenanceStampFailure,
@@ -52,6 +54,7 @@ import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GhCommandFailure, GithubPullRequestRecord } from "../../../internal/github/index.ts";
 import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { FinalCheckReceipt, FinalCheckStepResult } from "./FinalCheck.schemas.ts";
 import type { YeetGithubServices } from "./GhOps.ts";
 import type { PrNumber } from "./Provenance.ts";
 import type { PrSessionRegistryShape } from "./PrSessionRegistry.ts";
@@ -373,8 +376,9 @@ const branchCommitRange = Effect.fn("Yeet.branchCommitRange")(function* (
  * `summary` replaces the generated commit-log summary (`--body-file`), so an
  * agent writes its own description at creation instead of rewriting the body
  * afterwards, which is what used to drop the provenance footer. `hostedProof`
- * marks a `yeet open` body: no local gate ran, and the "Local proof" section
- * says so.
+ * marks a `yeet open` body: no cheap gate ran, and the "Local proof" section
+ * says so. A head with its own passing final-check receipt also gets a
+ * "Final check" section naming the gates that ran and each skipped gate's reason.
  *
  * **Example** (Request a hosted-proof body)
  *
@@ -400,8 +404,78 @@ export class YeetPrBodyRequest extends S.Opaque<YeetPrBodyRequest, { readonly br
   )
 ) {}
 
-const HOSTED_PROOF_SECTION =
-  "- none: `yeet open` pushed without local gates; hosted CI is the authoritative proof" as const;
+const HOSTED_PROOF_SECTION = "- none: `yeet open` pushed without the cheap gates; hosted CI proves them" as const;
+
+/**
+ * Render the "Final check" section of a pull request body from the head's
+ * final-check receipt.
+ *
+ * **Details**
+ *
+ * A pull request opens ready on the strength of this receipt, so the body
+ * names what it holds: the gates that ran, and each gate that was skipped with
+ * the reason recorded at `yeet final-check --skip <gate>=<reason>`. A reviewer
+ * then sees which gates hosted CI alone proves without asking the owner.
+ *
+ * **Example** (Name a skipped gate)
+ *
+ * ```ts
+ * import { FinalCheckReceipt, FinalCheckStepResult, renderFinalCheckBodySection } from "@beep/repo-cli/test/Yeet"
+ *
+ * const receipt = FinalCheckReceipt.make({
+ *   headSha: "a".repeat(40), mergeBase: "b".repeat(40), base: "origin/main", complete: true, verdict: "pass",
+ *   startedAt: "2026-11-13T00:00:00.000Z", finishedAt: "2026-11-13T00:01:00.000Z", expectationRewrites: [],
+ *   steps: [
+ *     FinalCheckStepResult.make({
+ *       gate: "coverage", label: "final-check:coverage", hostedContext: "Heavy / Coverage", command: "(skipped)",
+ *       status: "skipped", durationMs: 0, reason: "admission waited 10 minutes",
+ *     }),
+ *   ],
+ * })
+ * console.log(renderFinalCheckBodySection(receipt))
+ * // ## Final check
+ * //
+ * // - `yeet final-check` on aaaaaaaaaaaa: pass
+ * // - skipped, proved by hosted CI only: coverage (admission waited 10 minutes)
+ * ```
+ *
+ * @param receipt - The receipt of the head the pull request opens on.
+ * @returns The Markdown section.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderFinalCheckBodySection = (receipt: FinalCheckReceipt): string => {
+  const gatesWith = (status: FinalCheckStepResult["status"]) =>
+    pipe(
+      receipt.steps,
+      A.filter((step) => step.status === status),
+      A.dedupeWith((left, right) => left.gate === right.gate)
+    );
+  const ran = A.map(gatesWith("passed"), (step) => step.gate);
+  const skipped = A.map(gatesWith("skipped"), (step) => `${step.gate} (${step.reason ?? "no reason recorded"})`);
+  return A.join(
+    [
+      "## Final check",
+      "",
+      `- \`yeet final-check\` on ${Str.slice(0, 12)(receipt.headSha)}: ${receipt.verdict}`,
+      ...(A.isReadonlyArrayNonEmpty(ran) ? [`- ran: ${A.join(ran, ", ")}`] : []),
+      ...(A.isReadonlyArrayNonEmpty(skipped) ? [`- skipped, proved by hosted CI only: ${A.join(skipped, "; ")}`] : []),
+    ],
+    "\n"
+  );
+};
+
+// The head's own passing receipt, when it has one: a carried or missing receipt adds no section.
+const finalCheckBodySection = Effect.fn("Yeet.finalCheckBodySection")(function* (context: RepoRunContext) {
+  const head = yield* currentCommitSha(context).pipe(Effect.option);
+  if (O.isNone(head)) return "";
+  const receipt = yield* readFinalCheckReceipt(context.repoRoot, head.value);
+  return pipe(
+    receipt,
+    O.filter((value) => value.verdict === "pass" && value.complete),
+    O.match({ onNone: () => "", onSome: (value) => `\n${renderFinalCheckBodySection(value)}\n` })
+  );
+});
 
 const commitLogSummary = Effect.fn("Yeet.commitLogSummary")(function* (
   context: RepoRunContext,
@@ -493,7 +567,8 @@ export const buildPrBody = Effect.fn("Yeet.buildPrBody")(function* (
       ? laneSummary
       : "- no local proof lane ran before the push; hosted CI is the authoritative proof";
   const runId = yield* runIdForContext(context);
-  return `${Str.trim(summary)}\n\n## Local proof\n\n${proofSection}\n\nVerdict: .beep/yeet/runs/${runId}/verdict.json\n`;
+  const finalCheck = yield* finalCheckBodySection(context);
+  return `${Str.trim(summary)}\n\n## Local proof\n\n${proofSection}\n${finalCheck}\nVerdict: .beep/yeet/runs/${runId}/verdict.json\n`;
 });
 
 /**
@@ -1061,14 +1136,144 @@ const branchChangedPaths = (context: RepoRunContext) =>
   );
 
 /**
- * Apply the heavy-admission label to the draft pull request a publish just
- * created.
+ * What adding the heavy-admission label to one pull request did.
+ *
+ * **Example** (Recognize a docs-only skip)
+ *
+ * ```ts
+ * import { YeetHeavyAdmissionLabelStatus } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YeetHeavyAdmissionLabelStatus.is["docs-only"]("docs-only")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const YeetHeavyAdmissionLabelStatus = LiteralKit(["applied", "docs-only", "failed"]).pipe(
+  $I.annoteSchema("YeetHeavyAdmissionLabelStatus", {
+    description: "Whether the heavy-admission label was applied, skipped for a docs-only diff, or failed.",
+  })
+);
+
+/**
+ * What adding the heavy-admission label to one pull request did.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type YeetHeavyAdmissionLabelStatus = typeof YeetHeavyAdmissionLabelStatus.Type;
+
+/**
+ * The outcome of one heavy-admission label attempt, with the text a recorded
+ * lane keeps.
+ *
+ * **Example** (Describe an applied label)
+ *
+ * ```ts
+ * import { YeetHeavyAdmissionLabelOutcome } from "@beep/repo-cli/test/Yeet"
+ *
+ * const outcome = YeetHeavyAdmissionLabelOutcome.make({ status: "applied", detail: "ready-for-heavy" })
+ * console.log(outcome.status) // "applied"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetHeavyAdmissionLabelOutcome extends S.Opaque<
+  YeetHeavyAdmissionLabelOutcome,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({ status: YeetHeavyAdmissionLabelStatus, detail: S.String }).pipe(
+    $I.annoteSchema("YeetHeavyAdmissionLabelOutcome", {
+      description: "Status and recorded detail of one heavy-admission label attempt.",
+    })
+  )
+) {}
+
+/**
+ * Admit one pull request to the heavy matrix by adding the `ready-for-heavy`
+ * label, unless its diff is docs-only.
  *
  * **Details**
  *
- * Push-first publish opens the pull request as a draft and admits the heavy
- * matrix at creation (push-first-publish D4), so the hosted proof starts with
- * the first push instead of waiting for someone to add the label. A diff whose
+ * The one label edit behind both callers: a publish that opens a pull request
+ * ready (or as a heavy-admitted draft), and `yeet ready` when it flips a
+ * cheap-tier draft. A diff whose every path is docs-only skips the label,
+ * because the heavy matrix already treats it as satisfied. A failed edit is a
+ * warning that names the equivalent `gh` call, never an error: the pull
+ * request exists, and `monitor --until-ready` holds on `heavy-not-admitted`
+ * until the label lands.
+ *
+ * **Example** (Build the admission effect)
+ *
+ * ```ts
+ * import { admitPullRequestToHeavy, RepoRunContext } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const context = RepoRunContext.make({
+ *   base: "origin/main", branch: "feature/x", cwd: ".", head: "HEAD", originalArgv: [],
+ *   packetDir: ".beep/yeet", repoRoot: ".", turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
+ * })
+ * console.log(Effect.isEffect(admitPullRequestToHeavy(context, 7))) // true
+ * ```
+ *
+ * @param context - Repo context whose branch diff decides the docs-only skip.
+ * @param prNumber - The pull request to label.
+ * @param dependencies - Injectable changed-path reader for tests.
+ * @returns What the attempt did.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const admitPullRequestToHeavy = Effect.fn("Yeet.admitPullRequestToHeavy")(function* (
+  context: RepoRunContext,
+  prNumber: number,
+  dependencies: HeavyAdmissionLabelDependencies = {}
+): Effect.fn.Return<
+  YeetHeavyAdmissionLabelOutcome,
+  YeetCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git | YeetGithubServices
+> {
+  const changedPaths = yield* (dependencies.changedPaths ?? branchChangedPaths)(context);
+  if (A.isReadonlyArrayNonEmpty(changedPaths) && A.every(changedPaths, isHeavyDocsOnlyPath)) {
+    yield* Console.log(`[yeet] docs-only diff: ${HEAVY_ADMISSION_LABEL} not applied to PR #${prNumber}`);
+    return YeetHeavyAdmissionLabelOutcome.make({
+      status: "docs-only",
+      detail: "skipped: docs-only diff needs no heavy matrix",
+    });
+  }
+  // REST, not `gh pr edit` (GraphQL): labelling must not fail when the shared GraphQL budget is spent.
+  // `args` is the equivalent `gh` call the warning hands the operator.
+  const args = [
+    "api",
+    "-X",
+    "POST",
+    `repos/{owner}/{repo}/issues/${prNumber}/labels`,
+    "-f",
+    `labels[]=${HEAVY_ADMISSION_LABEL}`,
+    "--jq",
+    'map(.name) | join(",")',
+  ];
+  const result = yield* Effect.result(GithubRest.use((rest) => rest.addLabels(prNumber, [HEAVY_ADMISSION_LABEL])));
+  if (Result.isFailure(result)) {
+    yield* Console.error(
+      `[yeet] warning: could not apply ${HEAVY_ADMISSION_LABEL} to PR #${prNumber}; run: gh ${A.join(args, " ")}\n${result.failure.message}`
+    );
+    return YeetHeavyAdmissionLabelOutcome.make({ status: "failed", detail: result.failure.message });
+  }
+  yield* Console.log(`[yeet] applied ${HEAVY_ADMISSION_LABEL} to PR #${prNumber}`);
+  return YeetHeavyAdmissionLabelOutcome.make({ status: "applied", detail: A.join(result.success, ",") });
+});
+
+/**
+ * Apply the heavy-admission label to the pull request a publish just created.
+ *
+ * **Details**
+ *
+ * A publish that opens its pull request ready, or as a heavy-admitted draft
+ * (a stack layer, a worker compute profile), admits the heavy matrix at
+ * creation, so the hosted proof starts with the open instead of waiting for
+ * someone to add the label. A `--draft` open plans no label step, so this
+ * does nothing and `yeet ready` applies the label at the flip. A diff whose
  * every path is docs-only skips the label: the heavy matrix already treats it as
  * satisfied. An existing pull request keeps the labels it has. A failed edit is
  * recorded and warned about, never fatal: the branch is already pushed, and
@@ -1123,36 +1328,17 @@ export const applyHeavyAdmissionLabel = Effect.fn("Yeet.applyHeavyAdmissionLabel
     );
     return;
   }
-  const changedPaths = yield* (dependencies.changedPaths ?? branchChangedPaths)(context);
-  if (A.isReadonlyArrayNonEmpty(changedPaths) && A.every(changedPaths, isHeavyDocsOnlyPath)) {
-    yield* Console.log(`[yeet] docs-only diff: ${HEAVY_ADMISSION_LABEL} not applied to PR #${pullRequest.number}`);
-    yield* recordPrLabelLane(recorder, labelStep.value, "skipped", "skipped: docs-only diff needs no heavy matrix");
-    return;
-  }
-  // REST, not `gh pr edit` (GraphQL): labelling must not fail when the shared GraphQL budget is spent.
-  // `args` is the equivalent `gh` call the warning hands the operator.
-  const args = [
-    "api",
-    "-X",
-    "POST",
-    `repos/{owner}/{repo}/issues/${pullRequest.number}/labels`,
-    "-f",
-    `labels[]=${HEAVY_ADMISSION_LABEL}`,
-    "--jq",
-    'map(.name) | join(",")',
-  ];
-  const result = yield* Effect.result(
-    GithubRest.use((rest) => rest.addLabels(pullRequest.number, [HEAVY_ADMISSION_LABEL]))
+  const outcome = yield* admitPullRequestToHeavy(context, pullRequest.number, dependencies);
+  yield* recordPrLabelLane(
+    recorder,
+    labelStep.value,
+    YeetHeavyAdmissionLabelStatus.match(outcome.status, {
+      applied: () => "passed" as const,
+      "docs-only": () => "skipped" as const,
+      failed: () => "failed" as const,
+    }),
+    outcome.detail
   );
-  if (Result.isFailure(result)) {
-    yield* Console.error(
-      `[yeet] warning: could not apply ${HEAVY_ADMISSION_LABEL} to PR #${pullRequest.number}; run: gh ${A.join(args, " ")}\n${result.failure.message}`
-    );
-    yield* recordPrLabelLane(recorder, labelStep.value, "failed", result.failure.message);
-    return;
-  }
-  yield* Console.log(`[yeet] applied ${HEAVY_ADMISSION_LABEL} to PR #${pullRequest.number}`);
-  yield* recordPrLabelLane(recorder, labelStep.value, "passed", A.join(result.success, ","));
 });
 
 /**
