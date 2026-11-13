@@ -25,6 +25,7 @@ import * as S from "effect/Schema";
 import { runRepoCommandCapture, scanProcessAttachments } from "../../internal/repo-run/index.ts";
 import { recordSweepDone } from "../Session/SessionLedger.service.ts";
 import { classifyFleetLiveness } from "./Fleet.service.ts";
+import { worktreeRemovalRoots } from "./internal/RemovalRoots.ts";
 import { WorktreeReapCandidate, WorktreeReapClass, WorktreeReapReport } from "./Reap.schemas.ts";
 import { WorktreeCommandError } from "./Worktree.errors.ts";
 import { FleetLivenessReadings, WorktreeRemovalRequest } from "./Worktree.schemas.ts";
@@ -87,6 +88,9 @@ type AssessContext = {
   readonly path: Path.Path;
   readonly prober: ReapLivenessProber;
   readonly pullRequests: ReapPullRequestLister;
+  // The sibling and nested roots: the only places reap may retire from. Lanes
+  // under any other removal root (T3 Code, fleet roots) retire only themselves.
+  readonly reapRoots: ReadonlyArray<string>;
   readonly runner: ReapCommandRunner;
 };
 
@@ -433,6 +437,15 @@ const assessCandidate = Effect.fn("WorktreeReap.assessCandidate")(function* (
     bytes: O.none<number>(),
     retired: false,
   };
+  // A T3 thread stays bound to its worktree with no process standing in it, so
+  // the liveness probe cannot see it; removing the lane kills the thread.
+  if (!A.contains(ctx.reapRoots, ctx.path.dirname(ctx.path.resolve(entry.path)))) {
+    return {
+      candidate: WorktreeReapCandidate.make({ ...base, skipReason: O.some("self-retire-only") }),
+      warnings: A.empty(),
+      authorizedHead: O.none(),
+    };
+  }
   if (entry.locked) {
     return {
       candidate: WorktreeReapCandidate.make({ ...base, skipReason: O.some("locked") }),
@@ -714,6 +727,10 @@ export const runWorktreeReap = Effect.fn("WorktreeReap.runWorktreeReap")(functio
     idleThreshold: Duration.hours(idleThresholdHours),
     nowMillis: options.nowMillis ?? (yield* Clock.currentTimeMillis),
     path,
+    reapRoots: A.map(
+      worktreeRemovalRoots({ path, mainCheckout, home: O.none(), configured: O.none() }),
+      (root) => root.path
+    ),
     ...reapSeams(options),
   };
   const assessed = yield* Effect.forEach(

@@ -1,11 +1,11 @@
 {
-  "previous": "54d62566323581b5a3d776e58fb88de0e73598c8ac7566bb0e16b51732efab1c",
+  "previous": "27f0ff5e3147b63593f257fee0341b5db4fd5a01bbaf3b5f9c2c7e6a3b4899e0",
   "review": {
     "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p3-turbo-cache)",
-    "reason": "Record the new @beep/infra-turbo-cache workspace, re-record @beep/scratchpad after the turbo-cache-r2 module and its script moved out, and the root subject for the new manifest in the policy-fingerprint inputs plus the turbo.json input-list regeneration inherited from main (#3263, #3271, #3274, #3276); no command, output or environment changes, no qualification granted.",
+    "reason": "Record the new @beep/infra-turbo-cache workspace, re-record @beep/scratchpad after the turbo-cache-r2 module and its script moved out, and the root subject for the new manifest in the policy-fingerprint inputs; no command, output or environment changes, no qualification granted.",
     "basis": {
       "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-infra-turbo-cache.md",
-      "sha256": "e4b2cd585f21b6317119936f02a072304887ac6a6fa5beecab209d05d87102ae"
+      "sha256": "ecd340ae5005a217e851b1458f318f75a3ad46c3874c75f9bb72ebe7dcd24cbb"
     }
   },
   "scope": ["@beep/identity#lint", "@beep/types#lint"],

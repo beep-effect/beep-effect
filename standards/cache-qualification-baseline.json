@@ -9,10 +9,10 @@
   "reviews": {
     "//": {
       "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p3-turbo-cache)",
-      "reason": "Record the new @beep/infra-turbo-cache workspace, re-record @beep/scratchpad after the turbo-cache-r2 module and its script moved out, and the root subject for the new manifest in the policy-fingerprint inputs plus the turbo.json input-list regeneration inherited from main (#3263, #3271, #3274, #3276); no command, output or environment changes, no qualification granted.",
+      "reason": "Record the new @beep/infra-turbo-cache workspace, re-record @beep/scratchpad after the turbo-cache-r2 module and its script moved out, and the root subject for the new manifest in the policy-fingerprint inputs; no command, output or environment changes, no qualification granted.",
       "basis": {
         "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-infra-turbo-cache.md",
-        "sha256": "e4b2cd585f21b6317119936f02a072304887ac6a6fa5beecab209d05d87102ae"
+        "sha256": "ecd340ae5005a217e851b1458f318f75a3ad46c3874c75f9bb72ebe7dcd24cbb"
       }
     },
     "@beep/acp": {
@@ -673,10 +673,10 @@
     },
     "@beep/infra-turbo-cache": {
       "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p3-turbo-cache)",
-      "reason": "Record the new @beep/infra-turbo-cache workspace, re-record @beep/scratchpad after the turbo-cache-r2 module and its script moved out, and the root subject for the new manifest in the policy-fingerprint inputs plus the turbo.json input-list regeneration inherited from main (#3263, #3271, #3274, #3276); no command, output or environment changes, no qualification granted.",
+      "reason": "Record the new @beep/infra-turbo-cache workspace, re-record @beep/scratchpad after the turbo-cache-r2 module and its script moved out, and the root subject for the new manifest in the policy-fingerprint inputs; no command, output or environment changes, no qualification granted.",
       "basis": {
         "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-infra-turbo-cache.md",
-        "sha256": "e4b2cd585f21b6317119936f02a072304887ac6a6fa5beecab209d05d87102ae"
+        "sha256": "ecd340ae5005a217e851b1458f318f75a3ad46c3874c75f9bb72ebe7dcd24cbb"
       }
     },
     "@beep/jsonc": {
@@ -1345,10 +1345,10 @@
     },
     "@beep/scratchpad": {
       "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p3-turbo-cache)",
-      "reason": "Record the new @beep/infra-turbo-cache workspace, re-record @beep/scratchpad after the turbo-cache-r2 module and its script moved out, and the root subject for the new manifest in the policy-fingerprint inputs plus the turbo.json input-list regeneration inherited from main (#3263, #3271, #3274, #3276); no command, output or environment changes, no qualification granted.",
+      "reason": "Record the new @beep/infra-turbo-cache workspace, re-record @beep/scratchpad after the turbo-cache-r2 module and its script moved out, and the root subject for the new manifest in the policy-fingerprint inputs; no command, output or environment changes, no qualification granted.",
       "basis": {
         "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-infra-turbo-cache.md",
-        "sha256": "e4b2cd585f21b6317119936f02a072304887ac6a6fa5beecab209d05d87102ae"
+        "sha256": "ecd340ae5005a217e851b1458f318f75a3ad46c3874c75f9bb72ebe7dcd24cbb"
       }
     },
     "@beep/semantic-web": {
@@ -1432,11 +1432,11 @@
       }
     },
     "@beep/storybook": {
-      "reviewer": "Claude Opus 5.5 (declaration-only-builds PR 2, feat/declaration-only-build)",
-      "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
+      "reviewer": "Claude Fable 5.2 (goals/infra-alchemy-rebuild-p3-storybook)",
+      "reason": "Re-record @beep/storybook after the Alchemy stack adds a build script, one linted file and the stack dependencies, and the root subject for turbo.json input-list regeneration inherited from main (#3263, #3271, #3274, #3276); no command, output or environment changes, no qualification granted.",
       "basis": {
-        "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
+        "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-storybook-alchemy-stack.md",
+        "sha256": "d22636ceba560fac18f37d0b28ae28d6d04e7985c9f7765bae99027af3c117e5"
       }
     },
     "@beep/tailscale": {
@@ -113891,10 +113891,11 @@
       {
         "computation": "@beep/storybook#build",
         "command": "bun run beep:build",
-        "commandDigest": "ff868fad9ac76519db2cf7e0e2f951f402e1258acf5a45d0f3d696a1a85a3ef0",
+        "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
         "dependencies": [
           "@beep/epistemic-ui#build",
           "@beep/graph-3d#build",
+          "@beep/public-site#build",
           "@beep/ui#build",
           "@beep/utils#build"
         ],
@@ -113947,12 +113948,13 @@
       {
         "computation": "@beep/storybook#check",
         "command": "bun run beep:check",
-        "commandDigest": "ff868fad9ac76519db2cf7e0e2f951f402e1258acf5a45d0f3d696a1a85a3ef0",
+        "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
         "dependencies": [
           "@beep/dock-react#check",
           "@beep/editor#check",
           "@beep/epistemic-ui#build",
           "@beep/graph-3d#build",
+          "@beep/public-site#build",
           "@beep/ui#build",
           "@beep/utils#build"
         ],
@@ -113994,7 +113996,7 @@
       {
         "computation": "@beep/storybook#lint",
         "command": "bun run beep:lint",
-        "commandDigest": "ff868fad9ac76519db2cf7e0e2f951f402e1258acf5a45d0f3d696a1a85a3ef0",
+        "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -114029,10 +114031,11 @@
       {
         "computation": "@beep/storybook#lint:deprecated-apis",
         "command": "beep-cli lint deprecated-apis --package .",
-        "commandDigest": "ff868fad9ac76519db2cf7e0e2f951f402e1258acf5a45d0f3d696a1a85a3ef0",
+        "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
         "dependencies": [
           "@beep/epistemic-ui#transit",
           "@beep/graph-3d#transit",
+          "@beep/public-site#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/ui#transit",
           "@beep/utils#transit"
@@ -114097,7 +114100,7 @@
       {
         "computation": "@beep/storybook#lint:fix",
         "command": "bun run beep:lint:fix",
-        "commandDigest": "ff868fad9ac76519db2cf7e0e2f951f402e1258acf5a45d0f3d696a1a85a3ef0",
+        "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -114127,7 +114130,7 @@
       {
         "computation": "@beep/storybook#lint:jsdoc",
         "command": "beep-cli lint jsdoc --package .",
-        "commandDigest": "ff868fad9ac76519db2cf7e0e2f951f402e1258acf5a45d0f3d696a1a85a3ef0",
+        "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
         "dependencies": [
           "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
         ],
@@ -114183,7 +114186,7 @@
       {
         "computation": "@beep/storybook#lint:laws",
         "command": "beep-cli lint laws --package .",
-        "commandDigest": "ff868fad9ac76519db2cf7e0e2f951f402e1258acf5a45d0f3d696a1a85a3ef0",
+        "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
         "dependencies": [
           "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
         ],
@@ -114229,10 +114232,11 @@
       {
         "computation": "@beep/storybook#package-test-typecheck",
         "command": "beep-cli quality test-tsgo-package",
-        "commandDigest": "ff868fad9ac76519db2cf7e0e2f951f402e1258acf5a45d0f3d696a1a85a3ef0",
+        "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
         "dependencies": [
           "@beep/epistemic-ui#transit",
           "@beep/graph-3d#transit",
+          "@beep/public-site#transit",
           "@beep/ui#transit",
           "@beep/utils#transit"
         ],
@@ -114275,7 +114279,7 @@
       {
         "computation": "@beep/storybook#storybook",
         "command": "portless storybook.beep sh -c 'storybook dev -p \"${PORT:-6006}\"'",
-        "commandDigest": "ff868fad9ac76519db2cf7e0e2f951f402e1258acf5a45d0f3d696a1a85a3ef0",
+        "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -114304,10 +114308,11 @@
       {
         "computation": "@beep/storybook#storybook:build",
         "command": "NODE_OPTIONS=--disable-warning=DEP0205 storybook build -o storybook-static",
-        "commandDigest": "ff868fad9ac76519db2cf7e0e2f951f402e1258acf5a45d0f3d696a1a85a3ef0",
+        "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
         "dependencies": [
           "@beep/epistemic-ui#build",
           "@beep/graph-3d#build",
+          "@beep/public-site#build",
           "@beep/ui#build",
           "@beep/utils#build"
         ],
@@ -114352,7 +114357,7 @@
       {
         "computation": "@beep/storybook#storybook:start",
         "command": "portless storybook.beep sh -c 'vite preview --host 0.0.0.0 --port \"${PORT:-6006}\" --outDir storybook-static'",
-        "commandDigest": "ff868fad9ac76519db2cf7e0e2f951f402e1258acf5a45d0f3d696a1a85a3ef0",
+        "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
         "dependencies": [
           "@beep/storybook#storybook:build"
         ],
@@ -114382,10 +114387,11 @@
       {
         "computation": "@beep/storybook#test",
         "command": "bun run beep:test",
-        "commandDigest": "ff868fad9ac76519db2cf7e0e2f951f402e1258acf5a45d0f3d696a1a85a3ef0",
+        "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
         "dependencies": [
           "@beep/epistemic-ui#transit",
           "@beep/graph-3d#transit",
+          "@beep/public-site#transit",
           "@beep/ui#transit",
           "@beep/utils#transit",
           "@beep/utils#transit"
@@ -114436,10 +114442,11 @@
       {
         "computation": "@beep/storybook#test:storybook",
         "command": "bun run scripts/run-storybook-tests.mjs",
-        "commandDigest": "ff868fad9ac76519db2cf7e0e2f951f402e1258acf5a45d0f3d696a1a85a3ef0",
+        "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
         "dependencies": [
           "@beep/epistemic-ui#build",
           "@beep/graph-3d#build",
+          "@beep/public-site#build",
           "@beep/ui#build",
           "@beep/utils#build"
         ],
@@ -129642,7 +129649,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "0e9d48d40aefad5257abc21770b242cc5a802083dea339c0ac8ca2eb6669cefd"
+        "sha256": "126b15bf59c33ceb7b353fe0645f5eec379c65260a8d11fa0163daf0ee771ea4"
       }
     ]
   }

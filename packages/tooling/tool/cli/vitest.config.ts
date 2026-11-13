@@ -125,6 +125,7 @@ const isolatedSuites = [
   "test/tsconfig-sync.test.ts",
   "test/worktree-command.test.ts",
   "test/worktree-remove-fence.test.ts",
+  "test/worktree-remove-t3-root.test.ts",
   "test/xdg-adoption.test.ts",
   "test/yeet-command-wiring.test.ts",
   "test/yeet-final-check-journal.test.ts",

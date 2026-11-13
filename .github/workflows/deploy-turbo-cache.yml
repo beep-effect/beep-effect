@@ -90,19 +90,31 @@ jobs:
           TURBO_CACHE_ALERT_EMAIL: ${{ secrets.TURBO_CACHE_ALERT_EMAIL }}
         run: bunx alchemy deploy --stage prod --yes --env-file /dev/null
 
-      # The cache refuses an anonymous status request (401) and anything
-      # outside the protocol (404): the Worker is up and its policy is live,
-      # without a token ever entering this job.
+      # The Worker answers an anonymous status request and an anonymous upload
+      # with 401 (Cloudflare's edge never answers 401 itself) and an unknown
+      # path with an empty-bodied 404 (the edge's own 404 page has a body), so
+      # these prove the Worker and its policy are live without a token. A probe
+      # straight after a first deploy races propagation, and curl's retries do
+      # not cover a 404: poll until all three hold or 120 seconds pass, then
+      # fail with the last values.
       - name: Smoke-check the Worker
         shell: bash
         run: |
           set -euo pipefail
           origin=https://beep-turbo-cache.beep-effect.workers.dev
-          code() { curl -sS -o /dev/null -w '%{http_code}' --retry 5 --retry-delay 5 --retry-all-errors "$@"; }
-          status="$(code "$origin/v8/artifacts/status?slug=beep")"
-          upload="$(code -X PUT -H 'content-length: 1' --data x "$origin/v8/artifacts/smoke?slug=beep")"
-          root="$(code "$origin/")"
-          echo "status=${status} upload=${upload} root=${root}"
-          [[ "$status" == "401" ]]
-          [[ "$upload" == "401" ]]
-          [[ "$root" == "404" ]]
+          probe() { curl -sS -o /dev/null --max-time 20 "$@" || echo "curl-failed"; }
+          deadline=$((SECONDS + 120))
+          while :; do
+            status="$(probe -w '%{http_code}' "$origin/v8/artifacts/status?slug=beep")"
+            upload="$(probe -w '%{http_code}' -X PUT -H 'content-length: 1' --data x "$origin/v8/artifacts/smoke?slug=beep")"
+            root="$(probe -w '%{http_code} %{size_download}' "$origin/")"
+            echo "status=${status} upload=${upload} root=${root}"
+            if [[ "$status" == "401" && "$upload" == "401" && "$root" == "404 0" ]]; then
+              exit 0
+            fi
+            if (( SECONDS >= deadline )); then
+              echo "smoke check did not converge within 120s" >&2
+              exit 1
+            fi
+            sleep 5
+          done

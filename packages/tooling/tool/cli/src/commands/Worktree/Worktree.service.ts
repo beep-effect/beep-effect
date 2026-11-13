@@ -90,8 +90,8 @@ import {
   sessionRootOf,
 } from "../../internal/repo-run/index.ts";
 import { AttemptJournalStore } from "../Yeet/internal/AttemptJournalStore.ts";
+import { resolveWorktreeRemovalRoots, worktreeRemovalCandidates } from "./internal/RemovalRoots.ts";
 import { isRetainedCheckoutResidueName } from "./internal/ResidueReap.ts";
-import { CLAUDE_WORKTREES_RELATIVE_ROOT } from "./Worktree.constants.ts";
 import { WorktreeCommandError, WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";
 import {
   WorktreeArchivePlan,
@@ -120,6 +120,7 @@ import type {
   AttemptJournalStoreError,
   AttemptJournalStoreLocation,
 } from "../Yeet/internal/AttemptJournalStore.schemas.ts";
+import type { WorktreeRemovalRoot } from "./internal/RemovalRoots.schemas.ts";
 import type {
   WorktreeListEntry,
   WorktreeResidueReason as WorktreeResidueReasonType,
@@ -1533,6 +1534,85 @@ const preserveResidue = Effect.fn("WorktreeRemovalService.preserveResidue")(func
   );
 });
 
+const removalFenceRefusal = (request: WorktreeRemovalRequest) => () =>
+  WorktreeCommandError.make({
+    message:
+      "Removal target must be an exact registered worktree beneath a declared worktree root (managed, nested, T3 or fleet roots registry) with the same Git common directory.",
+    path: request.targetPath,
+  });
+
+// A lane sits directly under one of its clone's worktree roots: the sibling
+// `-worktrees` directory, the Claude Code nested root, the T3 Code root, or a
+// root the fleet roots registry lists. A root only says where a lane may sit;
+// registration and the Git common directory decide whether it is one.
+const rootedRemovalCandidates = Effect.fnUntraced(function* (request: WorktreeRemovalRequest) {
+  const path = yield* Path.Path;
+  const target = path.resolve(request.targetPath);
+  const roots = yield* resolveWorktreeRemovalRoots(request.mainCheckout);
+  const named = isWorktreeRemovalName(request.name)
+    ? worktreeRemovalCandidates({ path, roots, name: request.name })
+    : A.empty<{ readonly root: WorktreeRemovalRoot; readonly target: string }>();
+  const candidates = A.filter(named, (candidate) => candidate.target === target);
+  if (!A.isReadonlyArrayNonEmpty(candidates) || target === path.resolve(request.mainCheckout)) {
+    return yield* removalFenceRefusal(request)();
+  }
+  return candidates;
+});
+
+// The real target must still be `<root>/<name>` for one admitting root once
+// symbolic links resolve. Returns the canonical target.
+const canonicalRootedTarget = Effect.fnUntraced(function* (
+  request: WorktreeRemovalRequest,
+  candidates: ReadonlyArray<{ readonly root: WorktreeRemovalRoot }>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const invalid = removalFenceRefusal(request);
+  const canonicalTarget = yield* fs.realPath(path.resolve(request.targetPath)).pipe(Effect.mapError(invalid));
+  const canonicalRoots = yield* Effect.forEach(candidates, (candidate) =>
+    fs.realPath(candidate.root.path).pipe(Effect.option)
+  );
+  if (!A.some(A.getSomes(canonicalRoots), (root) => canonicalTarget === path.join(root, request.name))) {
+    return yield* invalid();
+  }
+  return canonicalTarget;
+});
+
+// The target must share the clone's Git common directory and never be the
+// primary checkout: that one is registered and shares the common directory, and
+// a root that happens to hold it (a fleet root over the projects directory)
+// must not make the clone itself removable.
+const assertSameCommonDirectory = Effect.fnUntraced(function* (
+  request: WorktreeRemovalRequest,
+  canonicalTarget: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const git = yield* Git;
+  const invalid = removalFenceRefusal(request);
+  const expectedCommon = yield* git
+    .commonDir(request.mainCheckout)
+    .pipe(
+      Effect.mapError(
+        adaptGitKitError(GitCommand.commonDir(), worktreeGitErrorAdapter("Could not resolve the owning Git directory."))
+      )
+    );
+  const targetCommon = yield* git
+    .commonDir(path.resolve(request.targetPath))
+    .pipe(
+      Effect.mapError(
+        adaptGitKitError(GitCommand.commonDir(), worktreeGitErrorAdapter("Could not resolve the target Git directory."))
+      )
+    );
+  const expectedReal = yield* fs.realPath(Str.trim(expectedCommon)).pipe(Effect.mapError(invalid));
+  const targetReal = yield* fs.realPath(Str.trim(targetCommon)).pipe(Effect.mapError(invalid));
+  const primaryReal = yield* fs.realPath(request.mainCheckout).pipe(Effect.mapError(invalid));
+  const primaries = [primaryReal, path.dirname(expectedReal)];
+  if (expectedReal !== targetReal || A.contains(primaries, canonicalTarget)) {
+    return yield* invalid();
+  }
+});
+
 const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemovalRequest")(function* (
   request: WorktreeRemovalRequest
 ): Effect.fn.Return<
@@ -1546,23 +1626,10 @@ const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemoval
       path: request.targetPath,
     });
   }
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const invalid = removalFenceRefusal(request);
   const target = path.resolve(request.targetPath);
-  const managedRoot = path.join(path.dirname(request.mainCheckout), `${path.basename(request.mainCheckout)}-worktrees`);
-  // Claude Code's desktop app nests its lanes under the clone itself; both
-  // roots are retirement-eligible, and the target must sit in exactly one.
-  const nestedRoot = path.join(request.mainCheckout, CLAUDE_WORKTREES_RELATIVE_ROOT);
-  const root = target === path.resolve(nestedRoot, request.name) ? nestedRoot : managedRoot;
-  const invalid = () =>
-    WorktreeCommandError.make({
-      message:
-        "Removal target must be an exact registered worktree beneath the managed or nested worktrees root with the same Git common directory.",
-      path: request.targetPath,
-    });
-  if (!isWorktreeRemovalName(request.name) || target !== path.resolve(root, request.name)) {
-    return yield* invalid();
-  }
+  const candidates = yield* rootedRemovalCandidates(request);
   const git = yield* Git;
   const entries = yield* git.worktreeList(request.mainCheckout).pipe(
     Effect.mapBoth({
@@ -1577,30 +1644,8 @@ const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemoval
   if (!A.some(entries, (entry) => path.resolve(entry.path) === target)) {
     return yield* invalid();
   }
-  const canonicalRoot = yield* fs.realPath(root).pipe(Effect.mapError(invalid));
-  const canonicalTarget = yield* fs.realPath(target).pipe(Effect.mapError(invalid));
-  if (canonicalTarget !== path.join(canonicalRoot, request.name)) {
-    return yield* invalid();
-  }
-  const expectedCommon = yield* git
-    .commonDir(request.mainCheckout)
-    .pipe(
-      Effect.mapError(
-        adaptGitKitError(GitCommand.commonDir(), worktreeGitErrorAdapter("Could not resolve the owning Git directory."))
-      )
-    );
-  const targetCommon = yield* git
-    .commonDir(target)
-    .pipe(
-      Effect.mapError(
-        adaptGitKitError(GitCommand.commonDir(), worktreeGitErrorAdapter("Could not resolve the target Git directory."))
-      )
-    );
-  const expectedReal = yield* fs.realPath(Str.trim(expectedCommon)).pipe(Effect.mapError(invalid));
-  const targetReal = yield* fs.realPath(Str.trim(targetCommon)).pipe(Effect.mapError(invalid));
-  if (expectedReal !== targetReal) {
-    return yield* invalid();
-  }
+  const canonicalTarget = yield* canonicalRootedTarget(request, candidates);
+  yield* assertSameCommonDirectory(request, canonicalTarget);
 });
 
 const makeRemovalReceipt = (
