@@ -19,6 +19,12 @@
           },
           {
             "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/session-ledger.sh\" codex",
+            "timeout": 5,
+            "statusMessage": "Recording session routes"
+          },
+          {
+            "type": "command",
             "command": "\"$(git rev-parse --show-toplevel)/.codex/hooks/hook-pulse.sh\"",
             "timeout": 5
           }

@@ -33,11 +33,12 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research. Next: from inside a T3-hosted Codex session, check whether `T3CODE_THREAD_ID` is set, then write the schemas.
+P2 Verify. P0 and P1 are done: `bun run beep session resolve <key> [--json]` and presence capture in the SessionStart hooks, `session note` and `session presence` (lane `feat/session-route-resolver`).
 
 ## Latest Evidence
 
-Not started.
+- 2026-11-13: `test/session-route-resolver.test.ts` (17 tests) passes on Bun and Node; it runs the real hook against a scratch repository and decodes every presence row it writes.
+- 2026-11-13: live resolves on DankStation matched `ListAgents` names for T3-hosted Claude peers; see `history/` once the proof is filed.
 
 ## Notes
 

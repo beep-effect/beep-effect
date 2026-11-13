@@ -2,15 +2,15 @@
 
 ## Status
 
-Status: `pending`
+Status: `active`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Check from inside a T3-hosted Codex session whether `T3CODE_THREAD_ID` is set; confirm the Effect v4 APIs for the recursive union. | Both facts are recorded as checkpoint files. |
-| P1 Implement | pending | Schemas, then presence capture in the identity reader and hooks, then `session resolve` over ledger, presence and the Claude live index; then the Codex thread-table and `t3` CLI readers (first to cut). | Acceptance criteria are met. |
-| P2 Verify | pending | Run required checks and capture evidence. | Verification is green or blockers are documented. |
+| P0 Research | complete | Check from inside a T3-hosted Codex session whether `T3CODE_THREAD_ID` is set; confirm the Effect v4 APIs for the recursive union. | Both facts are recorded as checkpoint files. |
+| P1 Implement | complete | Schemas, then presence capture in the identity reader and hooks, then `session resolve` over ledger, presence and the Claude live index; then the Codex thread-table and `t3` CLI readers (first to cut). | Acceptance criteria are met. |
+| P2 Verify | in-progress | Run required checks and capture evidence. | Verification is green or blockers are documented. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
@@ -70,6 +70,20 @@ git diff --check -- goals/session-route-resolver
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug session-route-resolver`; add a `kind: checkpoint` file there, never edit this block._
 
-_No checkpoint files yet._
+### P0: T3-hosted sessions see T3CODE_THREAD_ID, Codex included, 2026-11-13
+
+Observed in a T3-hosted Claude session's tool shell: T3CODE_THREAD_ID, CLAUDE_CODE_ENTRYPOINT=t3-code and CLAUDE_CODE_SESSION_ID are set, and the T3 userdata environment-id file holds the environment id. For Codex, the T3 Codex adapter (apps/server/src/orchestration-v2/Adapters/CodexAdapterV2.ts, T3 checkout 2026-11-13) sets T3CODE_THREAD_ID per thread through shell_environment_policy, so a T3-hosted Codex tool shell sees its own thread id; the app-server process itself does not carry it, so presence is captured from the session's shells and hooks, not from the server process. `t3 thread show <id> --json` exits 1 with 'is no longer available' on stderr for a missing thread, which separates dead from unreachable.
+
+Lane feat/session-route-resolver
+
+Reverse: If a Codex shell under T3 lacks the variable, record that kind as resolving through t3 thread lookup by worktree or PR only.
+
+### P0: the recursive route union uses S.suspend over opaque tagged members, 2026-11-13
+
+Validated against the installed Effect v4 (node_modules/effect/dist/Schema.d.ts): S.suspend, S.TaggedStruct, S.Union with S.toTaggedUnion('_tag'). The repo pattern is packages/foundation/ui-system/dock/src/Dock.models-tree.ts: opaque members, a suspended reference typed S.Codec<X.Type, X.Encoded>, and an exported declare namespace carrying Type and Encoded.
+
+Lane feat/session-route-resolver
+
+Reverse: Replace the via-parent member's suspended field with a flat parent route and a depth field.
 
 <!-- beep:decisions:end -->
