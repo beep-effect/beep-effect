@@ -16,6 +16,7 @@ import {
   ciLaneOfPrePushLaneId,
   ensureRouteHeads,
   hostedJobAttribution,
+  hostedJobCostMs,
   hostedLaneJobs,
   jobNameToLane,
   missingFromBatchCheck,
@@ -37,6 +38,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
@@ -230,9 +232,20 @@ describe("route job attribution", () => {
       expect(minutes.jobs).toBe(80);
       expect(minutes.unknownJobs).toBe(0);
       expect(minutes.unknownNames).toEqual([]);
-      expect(minutes.laneJobs + minutes.supportJobs + minutes.unknownJobs).toBe(minutes.jobs);
-      expect(minutes.laneMs + minutes.supportMs + minutes.unknownMs).toBe(minutes.totalMs);
-      expect(minutes.totalMs).toBeGreaterThan(0);
+      // The guard is the literal per-class time, re-derived from the fixture's raw timestamps: 336.67 min of
+      // machine time, 4 min of it support jobs, all the rest on lanes.
+      const rawMs = Num.sumAll(
+        A.getSomes(
+          A.map(
+            A.flatMap(runs, (run) => run.jobs),
+            hostedJobCostMs
+          )
+        )
+      );
+      expect(rawMs).toBe(20_200_000);
+      expect([minutes.totalMs, minutes.laneMs, minutes.supportMs, minutes.unknownMs]).toEqual([
+        20_200_000, 19_960_000, 240_000, 0,
+      ]);
 
       const lanes = A.map(hostedLaneJobs(runs), ([lane]) => lane);
       const jobsOf = (lane: CiLaneId): number =>
@@ -570,6 +583,39 @@ describe("route replay", () => {
       })
     );
   }
+
+  it.effect("marks recall uncertain when a skipping head has a failed job no rule maps", () =>
+    Effect.gen(function* () {
+      const original = yield* decodeRuns(replayRunsJson);
+      // A renamed check job fails on a1, whose route skips check: the replay cannot see it as a skipped red.
+      const runs = A.map(original, (run) =>
+        run.headSha === "a1"
+          ? HostedRun.make({
+              ...run,
+              jobs: A.append(run.jobs, HostedJob.make({ name: "Heavy / Typecheck", conclusion: O.some("failure") })),
+            })
+          : run
+      );
+      const ensured = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const clean = yield* runReplay(
+        original,
+        classifierLayer(noAtoms),
+        gitLayer(REPLAY_MERGE_BASES, REPLAY_ANCESTORS, ensured)
+      );
+      const marked = yield* runReplay(
+        runs,
+        classifierLayer(noAtoms),
+        gitLayer(REPLAY_MERGE_BASES, REPLAY_ANCESTORS, ensured)
+      );
+      expect([clean.recallCertain, clean.unknownRedHeads]).toEqual([true, 0]);
+      expect([marked.recallCertain, marked.unknownRedHeads, marked.unknownRedJobNames]).toEqual([
+        false,
+        1,
+        ["Heavy / Typecheck"],
+      ]);
+      expect(marked.recall).toBe(clean.recall);
+    })
+  );
 
   it.effect("has recall 1 at all-unknown", () =>
     Effect.gen(function* () {

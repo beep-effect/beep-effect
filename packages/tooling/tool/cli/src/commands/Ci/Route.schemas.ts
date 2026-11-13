@@ -965,6 +965,9 @@ export class RouteReplayHead extends S.Opaque<RouteReplayHead, { readonly brand:
  *   baseUnknownHeads: 0,
  *   unresolvedHeads: 0,
  *   recall: 1,
+ *   unknownRedHeads: 0,
+ *   unknownRedJobNames: [],
+ *   recallCertain: true,
  *   perHead: [],
  * })
  * replay.recall // => 1
@@ -984,6 +987,9 @@ export class RouteReplay extends S.Opaque<RouteReplay, { readonly brand: unique 
     baseUnknownHeads: S.Int,
     unresolvedHeads: S.Int,
     recall: S.Finite,
+    unknownRedHeads: S.Int,
+    unknownRedJobNames: S.Array(S.String),
+    recallCertain: S.Boolean,
     perHead: S.Array(RouteReplayHead),
   }).pipe(
     $I.annoteSchema("RouteReplay", {

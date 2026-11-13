@@ -46,6 +46,7 @@ import {
   RouteCensusRow,
   RouteError,
   RouteJobAttribution,
+  RouteJobClass,
   RouteJobMinutes,
   RouteLaneCost,
   RoutePlan,
@@ -63,7 +64,7 @@ import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitKitError } from "../../internal/repo-run/GitExec.ts";
 import type { GithubCheckLaneSpec } from "../Quality/Quality.schemas.ts";
 import type { WaveOrderShape } from "../Yeet/internal/WaveOrder.ts";
-import type { ChangeSet, HostedJob, HostedRun, RouteJobClass } from "./Route.schemas.ts";
+import type { ChangeSet, HostedJob, HostedRun } from "./Route.schemas.ts";
 import type { RouteCensusShape, RouteCorpusLoaded, VerificationRouteShape } from "./Route.service.ts";
 
 const $I = $RepoCliId.create("commands/Ci/RouteCensus");
@@ -1007,7 +1008,22 @@ type HeadEvidence = {
   readonly atoms: ReadonlyArray<ChangeAtom>;
   readonly jobs: ReadonlyArray<readonly [CiLaneId, HostedJob]>;
   readonly resolved: boolean;
+  readonly unknownRedNames: ReadonlyArray<string>;
 };
+
+// Failed jobs no rule maps to a lane: a replay cannot tell whether one hid a skipped red.
+const unknownRedJobNames = (runs: ReadonlyArray<HostedRun>): ReadonlyArray<string> =>
+  A.dedupe(
+    A.map(
+      A.filter(
+        A.flatMap(runs, (run) => run.jobs),
+        (job) =>
+          RouteJobClass.is.unknown(hostedJobAttribution(job.name).jobClass) &&
+          O.exists(job.conclusion, (conclusion) => Str.Equivalence(conclusion, "failure"))
+      ),
+      (job) => job.name
+    )
+  );
 
 // Sound by totality: `unknown` reaches every lane, so the route runs everything for the head.
 const unresolvedHeadAtom = (headSha: string): ChangeAtom =>
@@ -1162,6 +1178,7 @@ export const makeRouteCensusReader: Effect.Effect<
       heads,
       Effect.fnUntraced(function* ([headSha, runs]: readonly [string, ReadonlyArray<HostedRun>]) {
         const jobs = hostedLaneJobs(runs);
+        const unknownRedNames = unknownRedJobNames(runs);
         if (HashSet.has(unresolved, headSha)) {
           const evidence: HeadEvidence = {
             headSha,
@@ -1169,6 +1186,7 @@ export const makeRouteCensusReader: Effect.Effect<
             atoms: [unresolvedHeadAtom(headSha)],
             jobs,
             resolved: false,
+            unknownRedNames,
           };
           return evidence;
         }
@@ -1176,7 +1194,14 @@ export const makeRouteCensusReader: Effect.Effect<
         const changeSet = yield* classifier.classify(
           ClassifyInput.make({ repoRoot: yield* git.repoRoot, base: mergeBase, head: headSha })
         );
-        const evidence: HeadEvidence = { headSha, mergeBase, atoms: changeSet.atoms, jobs, resolved: true };
+        const evidence: HeadEvidence = {
+          headSha,
+          mergeBase,
+          atoms: changeSet.atoms,
+          jobs,
+          resolved: true,
+          unknownRedNames,
+        };
         return evidence;
       }),
       { concurrency: ROUTE_HEAD_CONCURRENCY }
@@ -1256,6 +1281,17 @@ export const makeRouteCensusReader: Effect.Effect<
 
     const skippedLaneRuns = Num.sumAll(A.map(perHead, (head) => head.skipped.length));
     const skippedReds = Num.sumAll(A.map(perHead, (head) => head.skippedReds.length));
+    // Only a head that skipped lanes can hide a skipped red behind an unmatched job name.
+    const skippingHeads = HashSet.fromIterable(
+      A.map(
+        A.filter(perHead, (head) => A.isReadonlyArrayNonEmpty(head.skipped)),
+        (head) => head.headSha
+      )
+    );
+    const unknownRedHeads = A.filter(
+      heads,
+      (head) => HashSet.has(skippingHeads, head.headSha) && A.isReadonlyArrayNonEmpty(head.unknownRedNames)
+    );
     const report = RouteReplay.make({
       schemaVersion: "route-replay/v1",
       corpusSha256: corpus.receipt.sha256,
@@ -1266,6 +1302,9 @@ export const makeRouteCensusReader: Effect.Effect<
       baseUnknownHeads: A.filter(perHead, (head) => head.baseUnknown).length,
       unresolvedHeads: A.filter(heads, (head) => !head.resolved).length,
       recall: 1 - shareOf(skippedReds, skippedLaneRuns),
+      unknownRedHeads: unknownRedHeads.length,
+      unknownRedJobNames: A.sort(A.dedupe(A.flatMap(unknownRedHeads, (head) => head.unknownRedNames)), Order.String),
+      recallCertain: A.isReadonlyArrayEmpty(unknownRedHeads),
       perHead,
     });
     yield* Effect.logDebug("Route replay computed").pipe(
