@@ -733,6 +733,25 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         );
         const racing = yield* runYeetReadyGate(repo, dependencies).pipe(racingGithub.provide, Effect.flip);
         expect(racing.message).toContain(`no final-check receipt for head ${Str.slice(0, 12)(scenario.s.c2)}`);
+        // The pull still names this head, but its branch activity is unreadable: no prior
+        // heads means no candidate receipt, so the missing-receipt refusal stands.
+        const unreadableActivity = recordedGithub((call) =>
+          call.path === "{repo}/pulls/3050"
+            ? {
+                body: restPullRequest({
+                  number: 3050,
+                  head: { ref: "probe", sha: scenario.s.c2 },
+                  base: { ref: "main", sha: scenario.s.squash },
+                }),
+              }
+            : call.path === "{repo}/activity"
+              ? { status: 503 }
+              : undefined
+        );
+        const blind = yield* runYeetReadyGate(repo, dependencies).pipe(unreadableActivity.provide, Effect.flip);
+        expect(blind).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
+        expect(blind.message).toContain(`no final-check receipt for head ${Str.slice(0, 12)(scenario.s.c2)}`);
+        expect(A.some(unreadableActivity.calls, (call) => call.path === "{repo}/activity")).toBe(true);
       })
     );
     it.effect("renders a rewrite carry and uses the carried receipt on the current head", () =>

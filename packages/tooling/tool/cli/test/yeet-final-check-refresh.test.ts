@@ -812,6 +812,26 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         assertInclude(verdict.detail, "yeet-final-check/v1");
       })
     );
+    it.effect("returns none when the receipt directory is absent", () =>
+      Effect.gen(function* () {
+        const s = yield* stack();
+        const context = yield* Layer.build(YeetHeadMoveClassifier.layer(s.root));
+        const result = yield* checkFinalCheckRewriteCarry(s.root, s.squash, s.c2, s.squash, HashSet.make(s.l2)).pipe(
+          Effect.provideContext(context)
+        );
+        assertNone(result);
+      })
+    );
+    it.effect("leaves the head's own receipt and ancestor receipts to the refresh rule", () =>
+      Effect.gen(function* () {
+        const s = yield* stack();
+        const parent = yield* git(s.root, ["rev-parse", `${s.c2}^`]);
+        yield* writeReceipt(s.root, receiptFor(s.c2));
+        yield* writeReceipt(s.root, receiptFor(parent));
+        const result = yield* checkRewrite(s.root, s.squash, s.c2, s.squash);
+        assertNone(result);
+      })
+    );
     it.effect("chooses an undecodable equivalent receipt by filename and refuses it", () =>
       Effect.gen(function* () {
         const s = yield* stack();
