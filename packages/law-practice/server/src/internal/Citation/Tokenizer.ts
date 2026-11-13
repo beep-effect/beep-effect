@@ -29,7 +29,7 @@ import { reserveCitationInvocationText } from "./Invocation.ts";
 import { CitationRegexPatternDescriptor, CitationRegexPatternProfile } from "./RegexDescriptors.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
 import { decodeCitationRegexPolicy } from "./RegexPolicy.ts";
-import { makeCitationRegexWorker } from "./RegexWorker.ts";
+import { installCitationRegexEvaluator } from "./RegexWorker.ts";
 import { CitationTokenAssemblyFailure, CitationTokenAssemblyHost, makeCitationTokenAssembly } from "./TokenAssembly.ts";
 import { CitationTokenCaptureRuntime, makeCitationTokenCapture } from "./TokenCapture.ts";
 import { CitationTokenEditionBinding } from "./TokenEditions.ts";
@@ -175,9 +175,11 @@ export const makeCitationTokenizer = Effect.fn("Citation.makeTokenizer")(functio
     editionRows
   ).pipe(Effect.mapError(preserveSafety));
   const editions = A.map(editionRows, (row) => CitationTokenEditionBinding.make({ ...row }));
-  const worker = yield* makeCitationRegexWorker(limits, runtime, descriptors.pipe(HashMap.values, A.fromIterable)).pipe(
-    Effect.mapError(preserveSafety)
-  );
+  const worker = yield* installCitationRegexEvaluator(
+    limits,
+    runtime,
+    descriptors.pipe(HashMap.values, A.fromIterable)
+  ).pipe(Effect.mapError(preserveSafety));
   const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText, "source");
   const text = yield* makeCitationTokenText(limits).pipe(Effect.mapError(preserveSafety));
   const tokenize = Effect.fn("Citation.tokenizeNativeSource")(function* (sourceInput: unknown) {
@@ -271,7 +273,5 @@ export const makeCitationTokenizer = Effect.fn("Citation.makeTokenizer")(functio
     port: {
       tokenize: Effect.fn("Citation.runAdmittedTokenizer")((source) => tokenize(source)),
     },
-    snapshot: worker.snapshot,
-    reap: worker.reap,
   };
 });
