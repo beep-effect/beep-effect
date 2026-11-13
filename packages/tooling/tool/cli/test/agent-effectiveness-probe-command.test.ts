@@ -2,13 +2,18 @@ import * as NodeProcess from "node:process";
 import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { agentEffectivenessCommand } from "@beep/repo-cli/commands/AgentEffectiveness";
-import { SkillProbePrimarySelection, SkillProbeReport, SkillProbeStage } from "@beep/repo-cli/test/AgentEffectiveness";
+import {
+  SkillProbePreflight,
+  SkillProbePrimarySelection,
+  SkillProbeReport,
+  SkillProbeStage,
+} from "@beep/repo-cli/test/AgentEffectiveness";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -27,6 +32,7 @@ const decodeSelection = S.decodeUnknownEffect(S.fromJsonString(SkillProbePrimary
 const encodeSelection = S.encodeEffect(S.fromJsonString(SkillProbePrimarySelection));
 const SelectionArbitrary = Arbitrary.schema(SkillProbePrimarySelection);
 const decodeReport = S.decodeUnknownEffect(S.fromJsonString(SkillProbeReport));
+const decodePreflight = S.decodeUnknownEffect(S.fromJsonString(SkillProbePreflight));
 const HASH = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
 const TestLayer = Git.layer.pipe(
@@ -176,6 +182,10 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })("agent-effecti
         "--out",
         path.join(root, "preflight-empty.json"),
       ]);
+      const fs = yield* FileSystem.FileSystem;
+      const preflightText = yield* fs.readFileString(path.join(root, "preflight-empty.json"));
+      const preflight = yield* decodePreflight(preflightText);
+      expect(preflight).toMatchObject({ schemaVersion: "skill-probe-preflight/v1", rows: [], dropped: [] });
 
       const taskStage = path.join(root, "task-stage.json");
       yield* writeText(taskStage, {
@@ -243,7 +253,7 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })("agent-effecti
       const selectionText = yield* lastLogged();
       const selection = yield* decodeSelection(selectionText);
       expect(A.map(selection.candidates, (candidate) => candidate.tasks)).toEqual([[task.id], [task.id]]);
-      expect(O.isNone(selection.selected)).toBe(true);
+      assertNone(selection.selected);
 
       const refused = yield* Effect.flip(
         run([

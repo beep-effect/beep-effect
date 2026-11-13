@@ -3509,27 +3509,6 @@
       "reason": "The test reads store state after a failed setVaultRoot call, then asserts failure polarity, the exact error tag, the missing-path reason and the unconfigured state; a flipped failure would hide the post-failure read ordering. Owner: @beep/workspace-server. Exit: retire when EV005 recognises a Result capture followed by post-failure state reads (#1855 wave 8 register)."
     },
     {
-      "id": "EV006:packages/tooling/tool/cli/test/agent-effectiveness-probe-command.test.ts:229:expect@6#1",
-      "lens": "detector",
-      "ruleId": "EV006",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/agent-effectiveness-probe-command.test.ts",
-      "line": 229,
-      "endLine": 229,
-      "symbol": "expect",
-      "occurrence": "v2:b376ec819aaff0098aa7da9f3be7055c7645753f0dee973df19dfb2fac946e14",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(O.isNone(selection.selected)).toBe(true)",
-      "replacement": {
-        "primitive": "utils.assertNone",
-        "sketch": "Assert the original Option is None; preserve the existing predicate polarity. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV008:apps/professional-desktop/test/browser-failure-atoms.test.ts:26:sleep@76#1",
       "lens": "resource",
       "ruleId": "EV008",
@@ -7776,13 +7755,13 @@
       "reason": "The hashFileSha256 large-file case streams 64 chunks from a real file and proves it never reads the file whole; on MemoryFileSystem its 64 appends are quadratic and timed out at 300 s on hosted Test Unit (#2250). Owner: @beep/repo-cli. Exit: retire when MemoryFileSystem appends in linear time or the case streams a seeded file."
     },
     {
-      "id": "EV010:packages/tooling/library/repo-cli-kit/test/package-scripts.policy.test.ts:10:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/library/repo-cli-kit/test/package-scripts.policy.test.ts:13:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli-kit",
       "file": "packages/tooling/library/repo-cli-kit/test/package-scripts.policy.test.ts",
-      "line": 10,
-      "endLine": 10,
+      "line": 13,
+      "endLine": 13,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -8238,13 +8217,13 @@
       "reason": "The live poller suite reads a real temporary auth directory: directory listing, per-file reads and a missing-directory NotFound are the subject, with HttpClient stubbed per test. Owner: @beep/repo-cli. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/agent-effectiveness-skill-probe.test.ts:33:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/agent-effectiveness-skill-probe.test.ts:36:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/agent-effectiveness-skill-probe.test.ts",
-      "line": 33,
-      "endLine": 33,
+      "line": 36,
+      "endLine": 36,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
