@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -37,12 +37,15 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Yeet — closeout proposed in PR #3167. **Verdict: Insensitive.** On the
-laws-prompt pilot (24 B, 24 C runs), no task had an all-lanes or law pass, so
-under the amended rule there was no scored run: this corpus cannot measure
-the skill at Opus 5.5 without tools. The fired rate (17 of 24, 0.71) fired
-the activation gate, and the source exploration reopened at `decompose`.
-No prune proposal.
+Closed `completed-retained` by operator ruling on 2026-11-13, without a
+verified readiness receipt. The final PRs #3167, #3207 and #3210 all merged
+before the readiness monitor printed `merge-ready: yes`.
+
+**Verdict: Insensitive.** On the laws-prompt pilot (24 B, 24 C runs), no task
+had an all-lanes or law pass, so under the amended rule there was no scored
+run: the archived corpus cannot measure the skill at Opus 5.5 without tools.
+The fired rate (17 of 24, 0.71) fired the activation gate, and the source
+exploration reopened at `decompose`. No prune proposal.
 
 ## Latest Evidence
 
