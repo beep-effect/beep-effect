@@ -1878,6 +1878,7 @@
     {"name":"Goals.gitAdvisories","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.graphStatement","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.harvestCommand","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Goals.listExplorationPacketFiles","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.listGoalPackets","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.listGoalPacketsStrict","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.loadCapabilityCensus","owner":"@beep/repo-cli","family":"tooling","conforms":true},
