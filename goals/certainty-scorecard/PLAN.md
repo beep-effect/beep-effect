@@ -26,6 +26,7 @@ graduation merges. Lever gates are in `SPEC.md` (Levers).
 | 3 | fix(yeet): attribute refusals by failure kind | MEAS-02 (with DEPS-10) | S | `actionableLaneMix` total equals `redAttempts`; `gate-order-handoff.test.ts` green | none; must merge before any WaveOrder re-seed in `local-proof-under-ten` |
 | 4 | ci: certainty-nightly workflow | MEAS-01 slice 2 | S | Workflow-security enumeration test; first run's runner-minutes and request count recorded; cache-policy baseline re-recorded; merge identity planned (App token cannot merge workflow PRs) | 1 |
 | 5 | feat(repo-cli): archive trimmed admission rows | SCHE-09 | S | Archive fold tests; mixed-revision rows decode | none; `local-proof-under-ten` reads it before its scheduler levers |
+| 5b | feat(repo-cli): stamp capacity and host pressure on admitted and released rows | SCHE-09 slice 2 | S | Old rows decode and older readers keep the new optional fields byte-for-byte; promotion p95 overhead measured before and after; where the facts live (journal rows or unit observations) recorded as a decision | 5 |
 | 6 | feat(yeet): journal final-check attempts | MEAS-07 | S | Journaling unit test plus a ready-gate regression fixture | none |
 | 7 | fix(worktree): export attempt journals to local state on retire | PERIL-11 slice 1 | M | Retire, copy-failure, restore, duplicate-import, residue-reap maxAgeDays=0 fixture; each (runId, attemptId) once | 6 |
 | 8 | chore(fleet): T3 root in roots.json; split monitor time out of economics | PERIL-11 slice 2 | S | `yeet economics --fleet` counts the T3 lane; runbook list updated | 7 |
@@ -40,7 +41,7 @@ graduation merges. Lever gates are in `SPEC.md` (Levers).
 | 17 | docs(goals): certainty-scorecard closeout | evidence | S | 7-night evidence note, fleet census note, reflection, `proposedCloseout` | all |
 
 Waves under the three-PR limit: {1, 2, 3}, then {4, 5, 6} as each of the first wave merges, then {7, 10, 11},
-{8, 9, 12}, {13, 14}, then 15, then 16, then 17.
+{8, 9, 12}, {5b, 13, 14}, then 15, then 16, then 17.
 
 ## Closeout Checklist
 
@@ -103,6 +104,12 @@ Lane fix/rout-05-partition-map
 
 Reverse: Delete this checkpoint and restore the slice-1 checkpoint as the latest PLAN status note.
 
+### Baselines before d8326d5593 are not comparable (declaration-only builds), 2026-11-13
+
+#3208 merged at d8326d55935849b4bf6fd29ec4ef80327efd6af8 (2026-11-13T05:44:35Z). Library builds are now `tsrs -p tsconfig.json --emitDeclarationOnly` with no Babel step and no JavaScript in a library dist. Every #build cache entry misses once from that commit, and the first cold run is not a regression. Any wall-time, cache-size or dist-size baseline recorded before it is not comparable with a reading after it, and the first certified nightly must be taken after it. Measured by the owning goal over 181 packages: build 80.9 s to 32.9 s, dist 232.5 MB to 147.9 MB (goals/declaration-only-builds/research/2026-11-13-build-after.md).
+
+Reverse: Delete this checkpoint; it records a fact about main and changes no behaviour.
+
 ### Slice 2 merged; slice 3 (MEAS-02 with DEPS-10) attributes refusals by failure kind, 2026-11-13
 
 Slice 2 (ROUT-05 slice 1) merged as #3141. Slice 3 fixes `actionableLane` in `packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.ts` on the read side: a handler-error verdict names the first unexecuted planned step as `failedStepId` (`Handler.ts`), so refusals were charged to `publish:00-head-install-preflight`. Refusals are now classified first, as rows of the same `actionableLaneMix`: `refusal:lock-bounce`, `refusal:stale-base` (the publish stale-base refusal sentence) and `refusal:closeout` (any red closeout). Then the first failed inner lane, then `failedStepId` only for a `step-exit` failure, then the first failed lane, then `unexecuted` (a handler error that ran no lane) or `unlocated`. Every red attempt stays one row, so the mix total equals `redAttempts` and the WaveOrder `mixSum` check keeps holding; `unchangedFingerprint.byActionableLane` uses the same classes. The writer in `Handler.ts`, `WaveOrder.ts`, `EconomicsSeedSourceView` and the frozen `goals/time-to-certainty/research/economics.json` are unchanged; the re-seed belongs to local-proof-under-ten (YEET-07). Rejected: filtering refusals out of the mix (breaks the `redAttempts` invariant and the seed check) and changing the writer (old journal rows would still carry the preflight id).
@@ -110,5 +117,13 @@ Slice 2 (ROUT-05 slice 1) merged as #3141. Slice 3 fixes `actionableLane` in `pa
 Lane claude/determined-morse-ea66a8
 
 Reverse: Revert the slice-3 commit (actionableLane returns to the failed-step fallback) and delete this checkpoint so the slice-2 checkpoint is the latest PLAN status note.
+
+### Slice 5 (SCHE-09 slice 1) in review: trimmed admission rows archived and folded, 2026-11-13
+
+Slice 3 (MEAS-02 with DEPS-10) merged as #3176. Slice 5 archives the rows the 200-admission ring trims to UTC day segments kept for 30 days under the admission root, folds them with the live journal in `bun run beep quality scheduler history`, and prunes aged segments in the scheduler reap pass (decision `sche-09-admission-archive`). The SCHE-09 pressure fields are the new slice 5b. local-proof-under-ten can read the retained history before its scheduler levers (SCHE-08, SCHE-07, SCHE-01/02) once every live checkout runs this revision. Still startable in the second wave: the certainty-nightly workflow (slice 4) and MEAS-07 final-check attempt journals (slice 6).
+
+Lane feat/certainty-sche-09-admission-archive
+
+Reverse: Delete this checkpoint so the slice-3 checkpoint is the latest PLAN status note, and revert the slice-5 commit.
 
 <!-- beep:decisions:end -->
