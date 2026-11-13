@@ -4,6 +4,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import * as O from "@beep/utils/Option";
 import { sha256 } from "@noble/hashes/sha2.js";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -15,7 +16,6 @@ import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
-import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
@@ -44,8 +44,13 @@ import {
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as HttpClient from "effect/http/HttpClient";
 import type { MatchPersonModelIntegrityError, PersonMatchWorkerServiceError } from "./MatchPerson.errors.ts";
-import type { FaceImage, InferredFace } from "./MatchPerson.inference.ts";
-import type { MatchPersonOptions, PersonMatchDisposition, PersonMatchModel } from "./MatchPerson.schemas.ts";
+import type { FaceImage, InferredFace, PersonMatchInference } from "./MatchPerson.inference.ts";
+import type {
+  MatchPersonOptions,
+  PersonMatchDisposition,
+  PersonMatchModel,
+  PersonMatchReferenceRejectionReason,
+} from "./MatchPerson.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Files/internal/MatchPerson.worker-service");
 const encodeWorkerReportJson = S.encodeEffect(S.fromJsonString(PersonMatchWorkerSuccess));
@@ -208,32 +213,51 @@ class FaceQuality extends S.Opaque<FaceQuality, { readonly brand: unique symbol 
     $I.annoteSchema("FaceQuality", { description: "Aligned-crop quality measurements and stable rejection flags." })
   )
 ) {}
-const quality = (image: FaceImage, face: InferredFace, minArea: number) => {
-  const crop = alignFaceImage(image, face.landmarks);
+class CropQualityStats extends S.Opaque<CropQualityStats, { readonly brand: unique symbol }>()(
+  S.Struct({ brightness: S.Finite, blurVariance: S.Finite }).pipe(
+    $I.annoteSchema("CropQualityStats", { description: "Aligned grayscale brightness and Laplacian variance." })
+  )
+) {}
+const cropQualityStats = (crop: FaceImage): CropQualityStats => {
   const gray = new Float64Array(112 * 112);
+  const channel = (i: number) => crop.pixels[i] ?? 0;
   for (let i = 0; i < gray.length; i++)
-    gray[i] = Math.round(
-      (crop.pixels[i * 3] ?? 0) * 0.299 + (crop.pixels[i * 3 + 1] ?? 0) * 0.587 + (crop.pixels[i * 3 + 2] ?? 0) * 0.114
-    );
+    gray[i] = Math.round(channel(i * 3) * 0.299 + channel(i * 3 + 1) * 0.587 + channel(i * 3 + 2) * 0.114);
+  const reflect = (n: number) => (n < 0 ? -n : n > 111 ? 222 - n : n);
+  const value = (x: number, y: number) => gray[reflect(y) * 112 + reflect(x)] ?? 0;
   let mean = 0;
   let sum = 0;
   let squared = 0;
-  const reflect = (n: number) => (n < 0 ? -n : n > 111 ? 222 - n : n);
   for (let y = 0; y < 112; y++)
     for (let x = 0; x < 112; x++) {
-      const v = gray[y * 112 + x] ?? 0;
-      mean += v;
-      const lap =
-        (gray[y * 112 + reflect(x - 1)] ?? 0) +
-        (gray[y * 112 + reflect(x + 1)] ?? 0) +
-        (gray[reflect(y - 1) * 112 + x] ?? 0) +
-        (gray[reflect(y + 1) * 112 + x] ?? 0) -
-        4 * v;
+      const center = value(x, y);
+      mean += center;
+      const lap = value(x - 1, y) + value(x + 1, y) + value(x, y - 1) + value(x, y + 1) - 4 * center;
       sum += lap;
       squared += lap * lap;
     }
-  mean /= gray.length;
-  const variance = squared / gray.length - (sum / gray.length) ** 2;
+  return CropQualityStats.make({
+    brightness: mean / gray.length,
+    blurVariance: squared / gray.length - (sum / gray.length) ** 2,
+  });
+};
+const isSideFace = (face: InferredFace): boolean => {
+  const [left, right, nosePoint, leftMouth, rightMouth] = face.landmarks;
+  const angle = -Math.atan2(right[1] - left[1], right[0] - left[0]);
+  const horizontal = (point: readonly [number, number]) =>
+    (point[0] - (left[0] + right[0]) / 2) * Math.cos(angle) - (point[1] - (left[1] + right[1]) / 2) * Math.sin(angle);
+  const leftX = horizontal(left);
+  const rightX = horizontal(right);
+  const nose = horizontal(nosePoint);
+  const span = Math.abs(rightX - leftX);
+  if (span <= 1e-6) return false;
+  const axis = (leftX + rightX + horizontal(leftMouth) + horizontal(rightMouth)) / 4;
+  const dl = Math.abs(nose - leftX);
+  const dr = Math.abs(rightX - nose);
+  return Math.abs(nose - axis) / span > 0.18 || Math.min(dl, dr) / Math.max(dl, dr) < 0.38;
+};
+const quality = (image: FaceImage, face: InferredFace, minArea: number) => {
+  const stats = cropQualityStats(alignFaceImage(image, face.landmarks));
   const box = face.box;
   const area =
     ((Math.max(0, Math.min(image.width, box.x2) - Math.max(0, box.x1)) *
@@ -242,24 +266,11 @@ const quality = (image: FaceImage, face: InferredFace, minArea: number) => {
     100;
   const flags: Array<PersonMatchQualityFlag> = [];
   if (area < minArea) flags.push("face-too-small");
-  if (variance < 45) flags.push("blurry");
-  if (mean < 45) flags.push("too-dark");
-  if (mean > 220) flags.push("too-bright");
-  const left = face.landmarks[0] ?? [0, 0];
-  const right = face.landmarks[1] ?? [0, 0];
-  const angle = -Math.atan2(right[1] - left[1], right[0] - left[0]);
-  const xs = A.map(
-    face.landmarks,
-    (p) => (p[0] - (left[0] + right[0]) / 2) * Math.cos(angle) - (p[1] - (left[1] + right[1]) / 2) * Math.sin(angle)
-  );
-  const span = Math.abs((xs[1] ?? 0) - (xs[0] ?? 0));
-  const nose = xs[2] ?? 0;
-  const axis = ((xs[0] ?? 0) + (xs[1] ?? 0) + (xs[3] ?? 0) + (xs[4] ?? 0)) / 4;
-  const dl = Math.abs(nose - (xs[0] ?? 0));
-  const dr = Math.abs((xs[1] ?? 0) - nose);
-  if (span > 1e-6 && (Math.abs(nose - axis) / span > 0.18 || Math.min(dl, dr) / Math.max(dl, dr) < 0.38))
-    flags.push("side-face");
-  return FaceQuality.make({ flags, area, brightness: mean, blurVariance: variance });
+  if (stats.blurVariance < 45) flags.push("blurry");
+  if (stats.brightness < 45) flags.push("too-dark");
+  if (stats.brightness > 220) flags.push("too-bright");
+  if (isSideFace(face)) flags.push("side-face");
+  return FaceQuality.make({ flags, area, ...stats });
 };
 /**
  * Measure aligned-crop brightness, Laplacian variance, face area and quality flags.
@@ -286,12 +297,210 @@ export const faceQualityForTesting: {
   (image: FaceImage, face: InferredFace, minArea: number): ReturnType<typeof quality>;
   (face: InferredFace, minArea: number): (image: FaceImage) => ReturnType<typeof quality>;
 } = dual(3, quality);
+class ReferenceObservation extends S.Opaque<ReferenceObservation, { readonly brand: unique symbol }>()(
+  S.Struct({ reference: PersonMatchReference, vector: S.Array(S.Finite).pipe(S.Option) }).pipe(
+    $I.annoteSchema("ReferenceObservation", {
+      description: "A reference decision and its optional accepted embedding.",
+    })
+  )
+) {}
+class ReferenceSet extends S.Opaque<ReferenceSet, { readonly brand: unique symbol }>()(
+  S.Struct({
+    references: S.Array(PersonMatchReference),
+    vectors: S.Array(S.Finite).pipe(S.Array),
+    names: S.Array(S.NonEmptyString),
+    centroid: S.Array(S.Finite),
+  }).pipe($I.annoteSchema("ReferenceSet", { description: "Accepted identity evidence and all reference decisions." }))
+) {}
+class ScoredFace extends S.Opaque<ScoredFace, { readonly brand: unique symbol }>()(
+  S.Struct({ face: PersonMatchFace, score: S.Finite }).pipe(
+    $I.annoteSchema("ScoredFace", {
+      description: "A rounded public face record with its unrounded classification score.",
+    })
+  )
+) {}
+type FaceInference = Context.Service.Shape<typeof PersonMatchInference>;
+const rejectedReference = (
+  base: PersonMatchReference,
+  reason: PersonMatchReferenceRejectionReason,
+  faceCount = 0,
+  detectionScore: O.Option<number> = O.none()
+) =>
+  ReferenceObservation.make({
+    reference: PersonMatchReference.make({ ...base, reason, faceCount, ...O.getSomesStruct({ detectionScore }) }),
+    vector: O.none(),
+  });
+const readReference = Effect.fn("Files.PersonMatch.readReference")(function* (
+  sourcePath: string,
+  inference: FaceInference,
+  options: MatchPersonOptions
+) {
+  const path = yield* Path.Path;
+  const base = PersonMatchReference.make({
+    sourceName: path.basename(sourcePath),
+    sourcePath,
+    accepted: false,
+    faceCount: 0,
+  });
+  const image = yield* decodeFaceImage(sourcePath);
+  if (O.isNone(image)) return rejectedReference(base, "unreadable-image");
+  const faces = yield* inference.detect(image.value, options.detectionThreshold);
+  if (A.some(faces, (face) => O.isNone(face.embedding))) return rejectedReference(base, "aligner-confidence-failed");
+  const face = faces[0];
+  if (faces.length !== 1 || face === undefined)
+    return rejectedReference(base, faces.length === 0 ? "no-face" : "multiple-faces", faces.length);
+  if (O.isNone(face.embedding) || A.some(face.embedding.value, (v) => !Number.isFinite(v)))
+    return rejectedReference(base, "invalid-embedding", 1, O.some(round(face.score)));
+  return ReferenceObservation.make({
+    reference: PersonMatchReference.make({ ...base, accepted: true, faceCount: 1, detectionScore: round(face.score) }),
+    vector: face.embedding,
+  });
+});
+const collectReferences = Effect.fn("Files.PersonMatch.collectReferences")(function* (
+  paths: ReadonlyArray<string>,
+  inference: FaceInference,
+  options: MatchPersonOptions
+) {
+  const observations = yield* Effect.forEach(paths, (source) => readReference(source, inference, options), {
+    concurrency: 1,
+  });
+  const references = A.map(observations, (o) => o.reference);
+  const vectors = A.getSomes(A.map(observations, (o) => o.vector));
+  const names = A.map(
+    A.filter(references, (r) => r.accepted),
+    (r) => r.sourceName
+  );
+  if (vectors.length === 0)
+    return yield* error(
+      "no-accepted-references",
+      "No reference image contained exactly one detectable face with a valid embedding."
+    );
+  if (options.recursive && HashSet.size(HashSet.fromIterable(names)) !== names.length)
+    return yield* error("invalid-arguments", "Recursive accepted reference names must be unique.");
+  const centroid = normalizeFaceVector(
+    A.makeBy(
+      vectors[0]?.length ?? 0,
+      (i) => A.reduce(vectors, 0, (sum, vector) => sum + (vector[i] ?? 0)) / vectors.length
+    )
+  );
+  return ReferenceSet.make({ references, vectors, names, centroid });
+});
+const scoreFace = (
+  image: FaceImage,
+  face: InferredFace,
+  embedding: ReadonlyArray<number>,
+  referenceSet: ReferenceSet,
+  options: MatchPersonOptions
+): ScoredFace => {
+  const scores = A.map(referenceSet.vectors, (v) => dot(v, embedding));
+  const descending = A.take(A.sort(scores, Order.flip(Num.Order)), 3);
+  const median =
+    descending.length === 2
+      ? ((descending[0] ?? 0) + (descending[1] ?? 0)) / 2
+      : (descending[Math.floor(descending.length / 2)] ?? 0);
+  const best = Math.max(...scores);
+  const bestIndex = A.findFirstIndex(scores, (s) => s === best);
+  const centroidScore = dot(referenceSet.centroid, embedding);
+  const q = quality(image, face, options.minFaceAreaPct);
+  const matchScore = Math.max(centroidScore, median);
+
+  return ScoredFace.make({
+    face: PersonMatchFace.make({
+      box: PersonMatchFaceBox.make({
+        x1: round(Math.max(0, Math.min(image.width, face.box.x1)), 3),
+        y1: round(Math.max(0, Math.min(image.height, face.box.y1)), 3),
+        x2: round(Math.max(0, Math.min(image.width, face.box.x2)), 3),
+        y2: round(Math.max(0, Math.min(image.height, face.box.y2)), 3),
+      }),
+      detectionScore: round(face.score),
+      faceAreaPct: round(q.area),
+      matchScore: round(matchScore),
+      centroidScore: round(centroidScore),
+      top3MedianScore: round(median),
+      bestReferenceScore: round(best),
+      bestReferenceName: referenceSet.names[O.getOrElse(bestIndex, () => 0)] ?? "",
+      qualityFlags: q.flags,
+    }),
+    score: matchScore,
+  });
+};
+const matchingDisposition = (scored: ReadonlyArray<ScoredFace>): PersonMatchDisposition => {
+  if (scored.length > 1) return "group-match";
+  return A.some(scored, (s) => s.face.qualityFlags.length > 0) ? "low-quality-match" : "solo-match";
+};
+const classifyFaces = (
+  scored: ReadonlyArray<ScoredFace>,
+  rejected: boolean,
+  options: MatchPersonOptions
+): PersonMatchDisposition => {
+  if (scored.length === 0) return "no-face";
+  if (rejected) return "review";
+  if (A.some(scored, (face) => face.score >= options.matchThreshold)) return matchingDisposition(scored);
+  return Math.max(...A.map(scored, (face) => face.score)) >= options.reviewThreshold ? "review" : "no-match";
+};
+const candidateEntry = Effect.fn("Files.PersonMatch.candidateEntry")(function* (
+  sourcePath: string,
+  inputs: CanonicalMatchPersonInputs,
+  inference: FaceInference,
+  referenceSet: ReferenceSet,
+  options: MatchPersonOptions
+) {
+  const path = yield* Path.Path;
+  const base = {
+    sourceName: path.basename(sourcePath),
+    sourcePath,
+    relativePath: A.join(Str.split(path.relative(inputs.candidateDirectory, sourcePath), path.sep), "/"),
+  };
+  const image = yield* decodeFaceImage(sourcePath);
+  if (O.isNone(image))
+    return PersonMatchEntry.make({
+      ...base,
+      disposition: "unreadable",
+      faceCount: 0,
+      faces: [],
+      reason: "image-decode-failed",
+    });
+  const detected = yield* inference.detect(image.value, options.detectionThreshold);
+  const scored = A.getSomes(
+    A.map(detected, (face) =>
+      O.map(face.embedding, (embedding) => scoreFace(image.value, face, embedding, referenceSet, options))
+    )
+  );
+  const faces = A.map(scored, (s) => s.face);
+  const rejected = A.some(detected, (face) => O.isNone(face.embedding));
+  const best = faces.length === 0 ? O.none() : O.some(Math.max(...A.map(scored, (s) => s.score)));
+  return PersonMatchEntry.make({
+    ...base,
+    disposition: classifyFaces(scored, rejected, options),
+    faceCount: faces.length,
+    faces,
+    ...(O.isSome(best) ? { bestScore: round(best.value) } : {}),
+    ...(rejected ? { reason: "aligner-confidence-failed" } : {}),
+  });
+});
+const scanCandidates = Effect.fn("Files.PersonMatch.scanCandidates")(function* (
+  candidates: ReadonlyArray<string>,
+  inputs: CanonicalMatchPersonInputs,
+  inference: FaceInference,
+  referenceSet: ReferenceSet,
+  options: MatchPersonOptions
+) {
+  const entries: Array<PersonMatchEntry> = [];
+  let reported = A.reduce(referenceSet.references, 0, (sum, reference) => sum + reference.faceCount);
+  for (const sourcePath of candidates) {
+    const entry = yield* candidateEntry(sourcePath, inputs, inference, referenceSet, options);
+    reported += entry.faceCount;
+    if (reported > 65536) return yield* error("input-limit-exceeded", "Reported face count exceeds 65536.");
+    entries.push(entry);
+  }
+
+  return entries;
+});
 const runWorker = Effect.fn("Files.PersonMatch.run")(function* (
   options: MatchPersonOptions,
   inputs: CanonicalMatchPersonInputs
 ) {
   const started = yield* Clock.clockWith((clock) => Effect.succeed(clock.currentTimeMillisUnsafe()));
-  const path = yield* Path.Path;
   if (!options.acceptModelLicense)
     return yield* MatchPersonError.license("Model terms must be acknowledged before loading weights.");
   const referencePaths = yield* discover(inputs.referenceDirectory, options.recursive, 256);
@@ -311,149 +520,10 @@ const runWorker = Effect.fn("Files.PersonMatch.run")(function* (
     : prepared.recognizerPath;
   const recognizer = yield* openFaceSession(recognizerPath);
   const inference = makeFaceInference(detector, recognizer, aligner);
-  const references: Array<PersonMatchReference> = [];
-  const vectors: Array<ReadonlyArray<number>> = [];
-  const names: Array<string> = [];
-  let reported = 0;
-  for (const sourcePath of referencePaths) {
-    const base = { sourceName: path.basename(sourcePath), sourcePath, accepted: false, faceCount: 0 };
-    const image = yield* decodeFaceImage(sourcePath);
-    if (O.isNone(image)) {
-      references.push(PersonMatchReference.make({ ...base, reason: "unreadable-image" }));
-      continue;
-    }
-    const faces = yield* inference.detect(image.value, options.detectionThreshold);
-    if (A.some(faces, (face) => O.isNone(face.embedding))) {
-      references.push(PersonMatchReference.make({ ...base, reason: "aligner-confidence-failed" }));
-      continue;
-    }
-    reported += faces.length;
-    const face = faces[0];
-    if (faces.length !== 1 || face === undefined) {
-      references.push(
-        PersonMatchReference.make({
-          ...base,
-          faceCount: faces.length,
-          reason: faces.length === 0 ? "no-face" : "multiple-faces",
-        })
-      );
-      continue;
-    }
-    if (O.isNone(face.embedding) || A.some(face.embedding.value, (v) => !Number.isFinite(v))) {
-      references.push(
-        PersonMatchReference.make({
-          ...base,
-          faceCount: 1,
-          detectionScore: round(face.score),
-          reason: "invalid-embedding",
-        })
-      );
-      continue;
-    }
-    references.push(
-      PersonMatchReference.make({ ...base, accepted: true, faceCount: 1, detectionScore: round(face.score) })
-    );
-    vectors.push(face.embedding.value);
-    names.push(base.sourceName);
-  }
-  if (vectors.length === 0)
-    return yield* error(
-      "no-accepted-references",
-      "No reference image contained exactly one detectable face with a valid embedding."
-    );
-  if (options.recursive && HashSet.size(HashSet.fromIterable(names)) !== names.length)
-    return yield* error("invalid-arguments", "Recursive accepted reference names must be unique.");
-  const centroid = normalizeFaceVector(
-    A.makeBy(
-      vectors[0]?.length ?? 0,
-      (i) => A.reduce(vectors, 0, (sum, vector) => sum + (vector[i] ?? 0)) / vectors.length
-    )
-  );
-  const entries: Array<PersonMatchEntry> = [];
-  for (const sourcePath of candidates) {
-    const base = {
-      sourceName: path.basename(sourcePath),
-      sourcePath,
-      relativePath: A.join(Str.split(path.relative(inputs.candidateDirectory, sourcePath), path.sep), "/"),
-    };
-    const image = yield* decodeFaceImage(sourcePath);
-    if (O.isNone(image)) {
-      entries.push(
-        PersonMatchEntry.make({
-          ...base,
-          disposition: "unreadable",
-          faceCount: 0,
-          faces: [],
-          reason: "image-decode-failed",
-        })
-      );
-      continue;
-    }
-    const detected = yield* inference.detect(image.value, options.detectionThreshold);
-    const rejected = A.some(detected, (f) => O.isNone(f.embedding));
-    const faces: Array<PersonMatchFace> = [];
-    const rawScores: Array<number> = [];
-    for (const face of detected) {
-      if (O.isNone(face.embedding)) continue;
-      const embedding = face.embedding.value;
-      const scores = A.map(vectors, (v) => dot(v, embedding));
-      const descending = A.take(A.sort(scores, Order.flip(Num.Order)), 3);
-      const median =
-        descending.length === 2
-          ? ((descending[0] ?? 0) + (descending[1] ?? 0)) / 2
-          : (descending[Math.floor(descending.length / 2)] ?? 0);
-      const best = Math.max(...scores);
-      const bestIndex = A.findFirstIndex(scores, (s) => s === best);
-      const centroidScore = dot(centroid, embedding);
-      const q = quality(image.value, face, options.minFaceAreaPct);
-      const matchScore = Math.max(centroidScore, median);
-      rawScores.push(matchScore);
-      faces.push(
-        PersonMatchFace.make({
-          box: PersonMatchFaceBox.make({
-            x1: round(Math.max(0, Math.min(image.value.width, face.box.x1)), 3),
-            y1: round(Math.max(0, Math.min(image.value.height, face.box.y1)), 3),
-            x2: round(Math.max(0, Math.min(image.value.width, face.box.x2)), 3),
-            y2: round(Math.max(0, Math.min(image.value.height, face.box.y2)), 3),
-          }),
-          detectionScore: round(face.score),
-          faceAreaPct: round(q.area),
-          matchScore: round(matchScore),
-          centroidScore: round(centroidScore),
-          top3MedianScore: round(median),
-          bestReferenceScore: round(best),
-          bestReferenceName: names[O.getOrElse(bestIndex, () => 0)] ?? "",
-          qualityFlags: q.flags,
-        })
-      );
-    }
-    reported += faces.length;
-    if (reported > 65536) return yield* error("input-limit-exceeded", "Reported face count exceeds 65536.");
-    const best = faces.length === 0 ? O.none() : O.some(Math.max(...rawScores));
-    let disposition: PersonMatchDisposition = "no-face";
-    if (O.isSome(best))
-      disposition =
-        best.value >= options.matchThreshold
-          ? faces.length > 1
-            ? "group-match"
-            : (faces[0]?.qualityFlags.length ?? 0) > 0
-              ? "low-quality-match"
-              : "solo-match"
-          : best.value >= options.reviewThreshold
-            ? "review"
-            : "no-match";
-    if (rejected && faces.length > 0) disposition = "review";
-    entries.push(
-      PersonMatchEntry.make({
-        ...base,
-        disposition,
-        faceCount: faces.length,
-        faces,
-        ...(O.isSome(best) ? { bestScore: round(best.value) } : {}),
-        ...(rejected ? { reason: "aligner-confidence-failed" } : {}),
-      })
-    );
-  }
+  const referenceSet = yield* collectReferences(referencePaths, inference, options);
+  const references = referenceSet.references;
+  const vectors = referenceSet.vectors;
+  const entries = yield* scanCandidates(candidates, inputs, inference, referenceSet, options);
   const runtime = {
     framework: "onnxruntime",
     packageVersion: runtimeVersion,

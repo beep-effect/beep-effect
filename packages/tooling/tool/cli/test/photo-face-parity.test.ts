@@ -11,7 +11,7 @@ import {
 } from "@beep/repo-cli/test/Files";
 import { it } from "@beep/test-runner";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { describe, expect } from "@effect/vitest";
+import { assert, describe, expect } from "@effect/vitest";
 import { sha256 } from "@noble/hashes/sha2.js";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -21,6 +21,8 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import reference from "./fixtures/photo-face/python-reference.json" with { type: "json" };
+import type { PersonMatchBackend } from "@beep/repo-cli/test/Files";
+import type { InferenceSession } from "onnxruntime-node";
 
 const modelDirectory = Effect.runSync(Config.String("BEEP_PHOTO_FACE_PARITY_MODELS").pipe(Config.option));
 const fixtureDirectory = new URL("./fixtures/photo-face/", import.meta.url);
@@ -62,78 +64,88 @@ it("retains negative detector geometry until report clipping and measures the cl
   expect(quality.flags).toEqual(["blurry", "too-dark"]);
 });
 
+const assertFaceParity = (
+  image: FaceImage,
+  face: InferredFace,
+  recorded: (typeof reference)["fixtures"][number]["backends"]["buffalo-l"][number]
+): void => {
+  if (O.isNone(face.embedding)) assert.fail("Fixture unexpectedly rejected.");
+  const cosine = A.reduce(A.zip(face.embedding.value, recorded.embedding), 0, (sum, [a, b]) => sum + a * b);
+  expect(cosine).toBeGreaterThanOrEqual(0.999);
+  const [x1 = 0, y1 = 0, x2 = 0, y2 = 0] = recorded.box;
+  const intersection =
+    Math.max(0, Math.min(x2, face.box.x2) - Math.max(x1, face.box.x1)) *
+    Math.max(0, Math.min(y2, face.box.y2) - Math.max(y1, face.box.y1));
+  const union = (x2 - x1) * (y2 - y1) + (face.box.x2 - face.box.x1) * (face.box.y2 - face.box.y1) - intersection;
+  expect(intersection / union).toBeGreaterThanOrEqual(0.998);
+  expect(Math.abs(face.score - recorded.score)).toBeLessThan(0.001);
+  expect(Math.abs(face.confidence - recorded.confidence)).toBeLessThan(0.00001);
+  const quality = faceQualityForTesting(image, face, 0.5);
+  expect(quality.flags).toEqual(recorded.quality.flags);
+  expect(Math.abs(quality.area - recorded.quality.area)).toBeLessThan(0.005);
+  expect(Math.abs(quality.brightness - recorded.quality.brightness)).toBeLessThan(0.05);
+  expect(Math.abs(quality.blurVariance - recorded.quality.blurVariance) / recorded.quality.blurVariance).toBeLessThan(
+    0.005
+  );
+};
+const compareBackendFixtures = Effect.fnUntraced(function* (
+  backend: PersonMatchBackend,
+  detector: InferenceSession,
+  aligner: InferenceSession,
+  temporary: string
+) {
+  const path = yield* Path.Path;
+  const root = O.getOrElse(modelDirectory, () => "");
+
+  const recognizer = yield* openFaceSession(
+    backend === "buffalo-l" ? path.join(root, "w600k_r50.onnx") : path.join(temporary, "recognizer.onnx")
+  );
+  const inference = makeFaceInference(detector, recognizer, backend === "buffalo-l" ? O.none() : O.some(aligner));
+  const blank = FaceImage.make({ width: 32, height: 32, pixels: new Uint8Array(32 * 32 * 3) });
+  const noFaces = yield* inference.detect(blank, 0.5);
+  expect(noFaces).toEqual([]);
+  for (const fixture of reference.fixtures) {
+    const image = yield* decodeFaceImage(new URL(fixture.image, fixtureDirectory).pathname).pipe(
+      Effect.flatMap(
+        O.match({
+          onNone: () => Effect.die(`Fixture cannot decode: ${fixture.image}`),
+          onSome: Effect.succeed,
+        })
+      )
+    );
+    const faces = yield* inference.detect(image, 0.5);
+    const expected = fixture.backends[backend];
+    expect(faces.length).toBe(expected.length);
+    for (const [face, recorded] of A.zip(faces, expected)) {
+      assertFaceParity(image, face, recorded);
+    }
+  }
+});
 describe.skipIf(O.isNone(modelDirectory))("pinned model parity against Python", () => {
   it.layer(NodeServices.layer)((it) => {
     it.effect(
       "matches saved embeddings, boxes, detector and quality scores for both backends",
       () =>
-        Effect.scoped(
-          Effect.gen(function* () {
-            const fs = yield* FileSystem.FileSystem;
-            const path = yield* Path.Path;
-            const root = O.getOrElse(modelDirectory, () => "");
-            for (const [filename, expected] of pins) {
-              const data = yield* fs.readFile(path.join(root, filename ?? ""));
-              expect(Hex.encode(sha256(data))).toBe(expected);
-            }
-            const temporary = yield* fs.makeTempDirectoryScoped();
-            for (const component of ["aligner", "recognizer"] satisfies ReadonlyArray<"aligner" | "recognizer">) {
-              const source = yield* fs.readFile(path.join(root, `${component}.safetensors`));
-              const model = yield* compileAdaFaceOnnx(source, component);
-              yield* fs.writeFile(path.join(temporary, `${component}.onnx`), model);
-            }
-            const detector = yield* openFaceSession(path.join(root, "det_10g.onnx"));
-            const aligner = yield* openFaceSession(path.join(temporary, "aligner.onnx"));
-            for (const backend of ["buffalo-l", "adaface-kprpe"] satisfies ReadonlyArray<
-              "buffalo-l" | "adaface-kprpe"
-            >) {
-              const recognizer = yield* openFaceSession(
-                backend === "buffalo-l" ? path.join(root, "w600k_r50.onnx") : path.join(temporary, "recognizer.onnx")
-              );
-              const inference = makeFaceInference(
-                detector,
-                recognizer,
-                backend === "buffalo-l" ? O.none() : O.some(aligner)
-              );
-              const blank = FaceImage.make({ width: 32, height: 32, pixels: new Uint8Array(32 * 32 * 3) });
-              const noFaces = yield* inference.detect(blank, 0.5);
-              expect(noFaces).toEqual([]);
-              for (const fixture of reference.fixtures) {
-                const image = yield* decodeFaceImage(new URL(fixture.image, fixtureDirectory).pathname);
-                if (O.isNone(image)) return yield* Effect.die(`Fixture cannot decode: ${fixture.image}`);
-                const faces = yield* inference.detect(image.value, 0.5);
-                const expected = fixture.backends[backend];
-                expect(faces.length).toBe(expected.length);
-                for (const [face, recorded] of A.zip(faces, expected)) {
-                  if (O.isNone(face.embedding) || recorded.embedding === null)
-                    return yield* Effect.die("Fixture unexpectedly rejected.");
-                  const cosine = A.reduce(
-                    A.zip(face.embedding.value, recorded.embedding),
-                    0,
-                    (sum, [a, b]) => sum + a * b
-                  );
-                  expect(cosine).toBeGreaterThanOrEqual(0.999);
-                  const [x1 = 0, y1 = 0, x2 = 0, y2 = 0] = recorded.box;
-                  const intersection =
-                    Math.max(0, Math.min(x2, face.box.x2) - Math.max(x1, face.box.x1)) *
-                    Math.max(0, Math.min(y2, face.box.y2) - Math.max(y1, face.box.y1));
-                  const union =
-                    (x2 - x1) * (y2 - y1) + (face.box.x2 - face.box.x1) * (face.box.y2 - face.box.y1) - intersection;
-                  expect(intersection / union).toBeGreaterThanOrEqual(0.998);
-                  expect(Math.abs(face.score - recorded.score)).toBeLessThan(0.001);
-                  expect(Math.abs(face.confidence - recorded.confidence)).toBeLessThan(0.00001);
-                  const quality = faceQualityForTesting(image.value, face, 0.5);
-                  expect(quality.flags).toEqual(recorded.quality.flags);
-                  expect(Math.abs(quality.area - recorded.quality.area)).toBeLessThan(0.005);
-                  expect(Math.abs(quality.brightness - recorded.quality.brightness)).toBeLessThan(0.05);
-                  expect(
-                    Math.abs(quality.blurVariance - recorded.quality.blurVariance) / recorded.quality.blurVariance
-                  ).toBeLessThan(0.05);
-                }
-              }
-            }
-          })
-        ),
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const root = O.getOrElse(modelDirectory, () => "");
+          for (const [filename, expected] of pins) {
+            const data = yield* fs.readFile(path.join(root, filename ?? ""));
+            expect(Hex.encode(sha256(data))).toBe(expected);
+          }
+          const temporary = yield* fs.makeTempDirectoryScoped();
+          for (const component of ["aligner", "recognizer"] satisfies ReadonlyArray<"aligner" | "recognizer">) {
+            const source = yield* fs.readFile(path.join(root, `${component}.safetensors`));
+            const model = yield* compileAdaFaceOnnx(source, component);
+            yield* fs.writeFile(path.join(temporary, `${component}.onnx`), model);
+          }
+          const detector = yield* openFaceSession(path.join(root, "det_10g.onnx"));
+          const aligner = yield* openFaceSession(path.join(temporary, "aligner.onnx"));
+          for (const backend of ["buffalo-l", "adaface-kprpe"] satisfies ReadonlyArray<"buffalo-l" | "adaface-kprpe">) {
+            yield* compareBackendFixtures(backend, detector, aligner, temporary);
+          }
+        }),
       60_000
     );
   });

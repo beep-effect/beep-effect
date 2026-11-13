@@ -235,21 +235,62 @@ class Graph {
   }
 }
 
-const buildAligner = (g: Graph): Uint8Array => {
-  let x = g.convBn("images", "body.stage1.0", 3, 2);
-  for (const [index, channels, stride] of [
-    [1, 8, 1],
-    [2, 16, 2],
-    [3, 32, 1],
-    [4, 32, 2],
-    [5, 64, 1],
+class AlignerPriors extends S.Opaque<AlignerPriors, { readonly brand: unique symbol }>()(
+  S.Struct({ centers: S.Array(S.Finite), sizes: S.Array(S.Finite) }).pipe(
+    $I.annoteSchema("AlignerPriors", { description: "Fixed 160-pixel DFA anchor centers and sizes." })
+  )
+) {}
+const appendScalePriors = (
+  centers: Array<number>,
+  sizes: Array<number>,
+  step: number,
+  anchorSizes: ReadonlyArray<number>
+): void => {
+  for (let row = 0; row < Math.ceil(160 / step); row++)
+    for (let column = 0; column < Math.ceil(160 / step); column++)
+      for (const size of anchorSizes) {
+        centers.push(((column + 0.5) * step) / 160, ((row + 0.5) * step) / 160);
+        sizes.push(size / 160, size / 160);
+      }
+};
+const alignerPriors = (): AlignerPriors => {
+  const centers: Array<number> = [];
+  const sizes: Array<number> = [];
+  for (const { step, sizes: anchorSizes } of [
+    { step: 8, sizes: [64, 80] },
+    { step: 16, sizes: [96, 112] },
+    { step: 32, sizes: [128, 144] },
+  ]) {
+    appendScalePriors(centers, sizes, step, anchorSizes);
+  }
+
+  return AlignerPriors.make({ centers, sizes });
+};
+class AlignerStages extends S.Opaque<AlignerStages, { readonly brand: unique symbol }>()(
+  S.Struct({ first: S.String, second: S.String, third: S.String }).pipe(
+    $I.annoteSchema("AlignerStages", { description: "The three fixed MobileNet feature-map graph outputs." })
+  )
+) {}
+const alignerBody = (g: Graph): AlignerStages => {
+  let value = g.convBn("images", "body.stage1.0", 3, 2);
+  for (const { index, channels, stride } of [
+    { index: 1, channels: 8, stride: 1 },
+    { index: 2, channels: 16, stride: 2 },
+    { index: 3, channels: 32, stride: 1 },
+    { index: 4, channels: 32, stride: 2 },
+    { index: 5, channels: 64, stride: 1 },
   ])
-    x = g.depthwise(x, `body.stage1.${index}`, channels ?? 0, stride ?? 1);
-  const stage1 = x;
-  for (let i = 0; i < 6; i++) x = g.depthwise(x, `body.stage2.${i}`, i === 0 ? 64 : 128, i === 0 ? 2 : 1);
-  const stage2 = x;
-  x = g.depthwise(x, "body.stage3.0", 128, 2);
-  x = g.depthwise(x, "body.stage3.1", 256, 1);
+    value = g.depthwise(value, `body.stage1.${index}`, channels, stride);
+  const first = value;
+  value = g.depthwise(value, "body.stage2.0", 64, 2);
+  for (let i = 1; i < 6; i++) value = g.depthwise(value, `body.stage2.${i}`, 128, 1);
+  const second = value;
+  value = g.depthwise(value, "body.stage3.0", 128, 2);
+  value = g.depthwise(value, "body.stage3.1", 256, 1);
+  return AlignerStages.make({ first, second, third: value });
+};
+const buildAligner = (g: Graph): Uint8Array => {
+  const { first: stage1, second: stage2, third: x } = alignerBody(g);
   const p3 = g.convBn(x, "fpn.output3", 1);
   const p2 = g.convBn(g.node("Add", [g.convBn(stage2, "fpn.output2", 1), g.resize(p3, 10)]), "fpn.merge2");
   const p1 = g.convBn(g.node("Add", [g.convBn(stage1, "fpn.output1", 1), g.resize(p2, 20)]), "fpn.merge1");
@@ -272,21 +313,7 @@ const buildAligner = (g: Graph): Uint8Array => {
   const boxes = head("BboxHead", 4);
   const classes = head("ClassHead", 2);
   const landmarks = head("LandmarkHead", 10);
-  const centers: Array<number> = [];
-  const sizes: Array<number> = [];
-  for (const [step, small, large] of [
-    [8, 64, 80],
-    [16, 96, 112],
-    [32, 128, 144],
-  ]) {
-    if (step === undefined || small === undefined || large === undefined) continue;
-    for (let row = 0; row < Math.ceil(160 / step); row++)
-      for (let column = 0; column < Math.ceil(160 / step); column++)
-        for (const size of [small, large]) {
-          centers.push(((column + 0.5) * step) / 160, ((row + 0.5) * step) / 160);
-          sizes.push(size / 160, size / 160);
-        }
-  }
+  const { centers, sizes } = alignerPriors();
   const center = g.constant(centers, [1, 1050, 2]);
   const size = g.constant(sizes, [1, 1050, 2]);
   const decodeCenter = g.node("Add", [
@@ -382,6 +409,40 @@ const buildRecognizer = (g: Graph): Uint8Array => {
   return g.model([valueInfo("images", [1, 3, 112, 112]), valueInfo("keypoints", [1, 5, 2])], x, [1, 512]);
 };
 
+const decodeTensorSource = Effect.fn("Files.decodeFaceTensorSource")(function* (
+  name: string,
+  header: unknown,
+  payload: Uint8Array,
+  size: number
+) {
+  if (!S.is(TensorHeader)(header)) return yield* MatchPersonError.modelIntegrity(`Invalid tensor header: ${name}`);
+  const [start, end] = header.data_offsets;
+  const expected = A.reduce(header.shape, 1, (a, b) => a * b) * (header.dtype === "F32" ? 4 : 8);
+  if (!Str.startsWith("model.net.")(name) || end - start !== expected || end > payload.length - 8 - size)
+    return yield* MatchPersonError.modelIntegrity(`Invalid tensor bounds or name: ${name}`);
+  return TensorSource.make({
+    dtype: header.dtype,
+    shape: header.shape,
+    data: payload.subarray(8 + size + start, 8 + size + end),
+  });
+});
+const decodeSafetensors = Effect.fn("Files.decodeFaceSafetensors")(function* (payload: Uint8Array) {
+  if (payload.length < 8) return yield* MatchPersonError.modelIntegrity("Truncated safetensors header.");
+  const size = Number(new DataView(payload.buffer, payload.byteOffset, 8).getBigUint64(0, true));
+  if (!Number.isSafeInteger(size) || size < 2 || size > payload.length - 8)
+    return yield* MatchPersonError.modelIntegrity("Invalid safetensors header length.");
+  const headers = yield* decodeHeaders(new TextDecoder().decode(payload.subarray(8, 8 + size))).pipe(
+    Effect.mapError((cause) => MatchPersonError.modelIntegrity("Invalid safetensors tensor table.", cause))
+  );
+  let tensors = HashMap.empty<string, TensorSource>();
+
+  for (const [name, header] of R.toEntries(headers)) {
+    if (name === "__metadata__") continue;
+    const source = yield* decodeTensorSource(name, header, payload, size);
+    tensors = HashMap.set(tensors, Str.slice(10)(name), source);
+  }
+  return tensors;
+});
 /**
  * Decode a checksum-verified safetensors payload and compile the fixed graph.
  *
@@ -398,31 +459,7 @@ export const compileAdaFaceOnnx = Effect.fn("Files.compileAdaFaceOnnx")(function
   payload: Uint8Array,
   component: "aligner" | "recognizer"
 ) {
-  if (payload.length < 8) return yield* MatchPersonError.modelIntegrity("Truncated safetensors header.");
-  const size = Number(new DataView(payload.buffer, payload.byteOffset, 8).getBigUint64(0, true));
-  if (!Number.isSafeInteger(size) || size < 2 || size > payload.length - 8)
-    return yield* MatchPersonError.modelIntegrity("Invalid safetensors header length.");
-  const headers = yield* decodeHeaders(new TextDecoder().decode(payload.subarray(8, 8 + size))).pipe(
-    Effect.mapError((cause) => MatchPersonError.modelIntegrity("Invalid safetensors tensor table.", cause))
-  );
-  let tensors = HashMap.empty<string, TensorSource>();
-  for (const [name, header] of R.toEntries(headers)) {
-    if (name === "__metadata__") continue;
-    if (!S.is(TensorHeader)(header)) return yield* MatchPersonError.modelIntegrity(`Invalid tensor header: ${name}`);
-    const [start, end] = header.data_offsets;
-    const expected = A.reduce(header.shape, 1, (a, b) => a * b) * (header.dtype === "F32" ? 4 : 8);
-    if (!Str.startsWith("model.net.")(name) || end - start !== expected || end > payload.length - 8 - size)
-      return yield* MatchPersonError.modelIntegrity(`Invalid tensor bounds or name: ${name}`);
-    tensors = HashMap.set(
-      tensors,
-      Str.slice(10)(name),
-      TensorSource.make({
-        dtype: header.dtype,
-        shape: header.shape,
-        data: payload.subarray(8 + size + start, 8 + size + end),
-      })
-    );
-  }
+  const tensors = yield* decodeSafetensors(payload);
   const graph = new Graph(tensors);
   const model = component === "aligner" ? buildAligner(graph) : buildRecognizer(graph);
   // Missing inputs remain visible in the encoded graph; reject before caching or execution.

@@ -41,6 +41,7 @@ import {
   encodePersonMatchReport,
   PERSON_MATCH_MAX_CANDIDATE_IMAGES,
   PERSON_MATCH_MAX_REFERENCE_IMAGES,
+  PersonMatchParameters,
   PersonMatchReport,
 } from "./MatchPerson.schemas.ts";
 import { CanonicalMatchPersonInputs, PersonMatchWorkerService } from "./MatchPerson.worker-service.ts";
@@ -1371,24 +1372,30 @@ const validateWorkerCompleteness = Effect.fn("Files.validatePersonMatchWorkerCom
   }
 });
 
+const requestedWorkerParametersEqual = S.toEquivalence(
+  S.Struct({
+    backend: PersonMatchParameters.fields.backend,
+    compute: PersonMatchParameters.fields.compute,
+    batchSize: PersonMatchParameters.fields.batchSize,
+    thresholdSource: PersonMatchParameters.fields.thresholdSource,
+    detectionThreshold: PersonMatchParameters.fields.detectionThreshold,
+    matchThreshold: PersonMatchParameters.fields.matchThreshold,
+    reviewThreshold: PersonMatchParameters.fields.reviewThreshold,
+    minFaceAreaPct: PersonMatchParameters.fields.minFaceAreaPct,
+    recursive: PersonMatchParameters.fields.recursive,
+  }).pipe(
+    $I.annoteSchema("RequestedWorkerParameters", {
+      description: "The requested scan parameters whose exact echo is required.",
+    })
+  )
+);
 const validateWorkerSemantics = Effect.fn("Files.validatePersonMatchWorkerSemantics")(function* (
   worker: PersonMatchWorkerSuccess,
   inputs: CanonicalMatchPersonInputs,
   expected: ExpectedPersonMatchFiles,
   options: MatchPersonOptions
 ): Effect.fn.Return<void, FilesCommandError, Path.Path> {
-  const parameters = worker.parameters;
-  if (
-    parameters.backend !== options.backend ||
-    parameters.compute !== options.compute ||
-    parameters.batchSize !== options.batchSize ||
-    parameters.thresholdSource !== options.thresholdSource ||
-    parameters.detectionThreshold !== options.detectionThreshold ||
-    parameters.matchThreshold !== options.matchThreshold ||
-    parameters.reviewThreshold !== options.reviewThreshold ||
-    parameters.minFaceAreaPct !== options.minFaceAreaPct ||
-    parameters.recursive !== options.recursive
-  ) {
+  if (!requestedWorkerParametersEqual(worker.parameters, options)) {
     return yield* FilesCommandError.make({
       message: "Person-match worker reported parameters that do not match the requested scan.",
     });

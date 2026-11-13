@@ -21,6 +21,10 @@ import type { MatchPersonRuntimeError } from "./MatchPerson.errors.ts";
 
 const $I = $RepoCliId.create("commands/Files/internal/MatchPerson.inference");
 const Point = S.Tuple([S.Finite, S.Finite]);
+const FaceLandmarks = S.Tuple([Point, Point, Point, Point, Point]).pipe(
+  $I.annoteSchema("FaceLandmarks", { description: "The detector's five eye, nose and mouth points." })
+);
+type FaceLandmarks = typeof FaceLandmarks.Type;
 /**
  * Unclipped detector geometry, including coordinates outside the image.
  *
@@ -70,7 +74,7 @@ export class FaceImage extends S.Opaque<FaceImage, { readonly brand: unique symb
  * ```ts
  * import { InferredFace, FaceDetectionBox } from "@beep/repo-cli/test/Files"
  * import * as O from "effect/Option"
- * const face = InferredFace.make({ box: FaceDetectionBox.make({ x1: 0, y1: 0, x2: 10, y2: 10 }), score: 0.9, landmarks: [], embedding: O.none(), confidence: 0 })
+ * const face = InferredFace.make({ box: FaceDetectionBox.make({ x1: 0, y1: 0, x2: 10, y2: 10 }), score: 0.9, landmarks: [[1, 1], [2, 1], [1.5, 2], [1, 3], [2, 3]], embedding: O.none(), confidence: 0 })
  * console.log(O.isNone(face.embedding))
  * ```
  *
@@ -82,7 +86,7 @@ export class InferredFace extends S.Opaque<InferredFace, { readonly brand: uniqu
   S.Struct({
     box: FaceDetectionBox,
     score: S.Finite,
-    landmarks: S.Array(Point),
+    landmarks: FaceLandmarks,
     embedding: S.Array(S.Finite).pipe(S.Option),
     confidence: S.Finite,
   }).pipe(
@@ -181,6 +185,53 @@ export const normalizeFaceVector = (values: ArrayLike<number>): ReadonlyArray<nu
   const magnitude = Math.sqrt(sum);
   return A.makeBy(values.length, (i) => at(values, i) / magnitude);
 };
+const borderPixel = (image: FaceImage, x: number, y: number, channel: number): number =>
+  x < 0 || x >= image.width || y < 0 || y >= image.height ? 0 : at(image.pixels, (y * image.width + x) * 3 + channel);
+const sampleImage = (image: FaceImage, x: number, y: number, channel: number): number => {
+  const left = Math.floor(x);
+  const top = Math.floor(y);
+  const dx = x - left;
+  const dy = y - top;
+  return (
+    borderPixel(image, left, top, channel) * (1 - dx) * (1 - dy) +
+    borderPixel(image, left + 1, top, channel) * dx * (1 - dy) +
+    borderPixel(image, left, top + 1, channel) * (1 - dx) * dy +
+    borderPixel(image, left + 1, top + 1, channel) * dx * dy
+  );
+};
+const samplePlane = (tensor: Float32Array, x: number, y: number, channel: number): number => {
+  const left = Math.floor(x);
+  const top = Math.floor(y);
+  const dx = x - left;
+  const dy = y - top;
+  const pixel = (xx: number, yy: number) =>
+    at(tensor, channel * 112 * 112 + Math.min(111, yy) * 112 + Math.min(111, xx));
+  return (
+    pixel(left, top) * (1 - dx) * (1 - dy) +
+    pixel(left + 1, top) * dx * (1 - dy) +
+    pixel(left, top + 1) * (1 - dx) * dy +
+    pixel(left + 1, top + 1) * dx * dy
+  );
+};
+const alignerInput = (tensor: Float32Array): Float32Array => {
+  const aligned = new Float32Array(3 * 160 * 160);
+  for (let c = 0; c < 3; c++)
+    for (let y = 0; y < 160; y++)
+      for (let x = 0; x < 160; x++)
+        aligned[c * 160 * 160 + y * 160 + x] = samplePlane(tensor, (x * 111) / 159, (y * 111) / 159, 2 - c);
+  return aligned;
+};
+const detectorInput = (image: FaceImage, width: number, height: number): Float32Array => {
+  const values = new Float32Array(640 * 640 * 3).fill(-127.5 / 128);
+  for (let y = 0; y < height; y++)
+    for (let x = 0; x < width; x++) {
+      const sx = Math.max(0, Math.min(image.width - 1, ((x + 0.5) * image.width) / width - 0.5));
+      const sy = Math.max(0, Math.min(image.height - 1, ((y + 0.5) * image.height) / height - 0.5));
+      for (let c = 0; c < 3; c++)
+        values[c * 640 * 640 + y * 640 + x] = (Math.round(sampleImage(image, sx, sy, c)) - 127.5) / 128;
+    }
+  return values;
+};
 // OpenCV-compatible inverse affine resampling with black borders.
 const warpFace = (image: FaceImage, transform: ReadonlyArray<number>, side = 112): FaceImage => {
   const [a = 1, b = 0, tx = 0, c = 0, d = 1, ty = 0] = transform;
@@ -191,22 +242,8 @@ const warpFace = (image: FaceImage, transform: ReadonlyArray<number>, side = 112
       // OpenCV INTER_LINEAR uses a 32-entry interpolation table.
       const sx = Math.round(((d * (x - tx) - b * (y - ty)) / det) * 32) / 32;
       const sy = Math.round(((-c * (x - tx) + a * (y - ty)) / det) * 32) / 32;
-      const ix = Math.floor(sx);
-      const floorY = Math.floor(sy);
-      const dx = sx - ix;
-      const dy = sy - floorY;
-      for (let channel = 0; channel < 3; channel++) {
-        let value = 0;
-        for (let yy = 0; yy < 2; yy++)
-          for (let xx = 0; xx < 2; xx++) {
-            if (ix + xx < 0 || ix + xx >= image.width || floorY + yy < 0 || floorY + yy >= image.height) continue;
-            value +=
-              at(image.pixels, ((floorY + yy) * image.width + ix + xx) * 3 + channel) *
-              (xx === 0 ? 1 - dx : dx) *
-              (yy === 0 ? 1 - dy : dy);
-          }
-        pixels[(y * side + x) * 3 + channel] = Math.round(value);
-      }
+      for (let channel = 0; channel < 3; channel++)
+        pixels[(y * side + x) * 3 + channel] = Math.round(sampleImage(image, sx, sy, channel));
     }
   return FaceImage.make({ width: side, height: side, pixels });
 };
@@ -230,9 +267,9 @@ const warpFace = (image: FaceImage, transform: ReadonlyArray<number>, side = 112
  * @since 0.0.0
  */
 export const alignFaceImage: {
-  (image: FaceImage, points: ReadonlyArray<readonly [number, number]>): FaceImage;
-  (points: ReadonlyArray<readonly [number, number]>): (image: FaceImage) => FaceImage;
-} = dual(2, (image: FaceImage, points: ReadonlyArray<readonly [number, number]>): FaceImage => {
+  (image: FaceImage, points: FaceLandmarks): FaceImage;
+  (points: FaceLandmarks): (image: FaceImage) => FaceImage;
+} = dual(2, (image: FaceImage, points: FaceLandmarks): FaceImage => {
   const target = [
     [38.2946, 51.6963],
     [73.5318, 51.5014],
@@ -240,28 +277,19 @@ export const alignFaceImage: {
     [41.5493, 92.3655],
     [70.7299, 92.2041],
   ];
-  let sx = 0;
-  let sy = 0;
-  let dx = 0;
-  let dy = 0;
-  for (let i = 0; i < 5; i++) {
-    sx += points[i]?.[0] ?? 0;
-    sy += points[i]?.[1] ?? 0;
-    dx += target[i]?.[0] ?? 0;
-    dy += target[i]?.[1] ?? 0;
-  }
-  sx /= 5;
-  sy /= 5;
-  dx /= 5;
-  dy /= 5;
+  const pairs = A.zip(points, target);
+  const sx = A.reduce(points, 0, (sum, point) => sum + point[0]) / 5;
+  const sy = A.reduce(points, 0, (sum, point) => sum + point[1]) / 5;
+  const dx = A.reduce(target, 0, (sum, point) => sum + at(point, 0)) / 5;
+  const dy = A.reduce(target, 0, (sum, point) => sum + at(point, 1)) / 5;
   let aa = 0;
   let bb = 0;
   let denominator = 0;
-  for (let i = 0; i < 5; i++) {
-    const x = (points[i]?.[0] ?? 0) - sx;
-    const y = (points[i]?.[1] ?? 0) - sy;
-    const u = (target[i]?.[0] ?? 0) - dx;
-    const v = (target[i]?.[1] ?? 0) - dy;
+  for (const [point, destination] of pairs) {
+    const x = point[0] - sx;
+    const y = point[1] - sy;
+    const u = at(destination, 0) - dx;
+    const v = at(destination, 1) - dy;
     aa += x * u + y * v;
     bb += x * v - y * u;
     denominator += x * x + y * y;
@@ -340,6 +368,139 @@ export const openFaceSession = Effect.fn("Files.openFaceSession")((path: string)
   )
 );
 // Compose the fixed CPU detector and recognition sessions.
+const outputName = (names: ReadonlyArray<string>, index: number) => names[index] ?? "";
+const decodeLevel = (
+  outputs: ort.InferenceSession.ReturnType,
+  names: ReadonlyArray<string>,
+  level: number,
+  scale: number,
+  threshold: number
+): ReadonlyArray<InferredFace> => {
+  const detections: Array<InferredFace> = [];
+  const stride = 8 * 2 ** level;
+  const size = 640 / stride;
+  const scores = outputValues(outputs, outputName(names, level));
+  const boxes = outputValues(outputs, outputName(names, level + 3));
+  const landmarks = outputValues(outputs, outputName(names, level + 6));
+  for (let i = 0; i < scores.length; i++) {
+    const score = at(scores, i);
+    if (score < threshold) continue;
+    const cx = (Math.floor(i / 2) % size) * stride;
+    const cy = Math.floor(Math.floor(i / 2) / size) * stride;
+
+    const box = FaceDetectionBox.make({
+      x1: (cx - at(boxes, i * 4) * stride) * scale,
+      y1: (cy - at(boxes, i * 4 + 1) * stride) * scale,
+      x2: (cx + at(boxes, i * 4 + 2) * stride) * scale,
+      y2: (cy + at(boxes, i * 4 + 3) * stride) * scale,
+    });
+    const point = (j: number): typeof Point.Type => [
+      (cx + at(landmarks, i * 10 + j * 2) * stride) * scale,
+      (cy + at(landmarks, i * 10 + j * 2 + 1) * stride) * scale,
+    ];
+    detections.push(
+      InferredFace.make({
+        box,
+        score,
+        landmarks: [point(0), point(1), point(2), point(3), point(4)],
+        embedding: O.none(),
+        confidence: 1,
+      })
+    );
+  }
+
+  return detections;
+};
+const embedFace = (
+  image: FaceImage,
+  recognizer: ort.InferenceSession,
+  aligner: O.Option<ort.InferenceSession>,
+  runtime: typeof import("onnxruntime-node")
+) =>
+  Effect.fnUntraced(function* (face: InferredFace) {
+    const crop = O.isSome(aligner) ? squareCrop(image, face.box) : alignFaceImage(image, face.landmarks);
+    const tensor = channels(crop, 127.5, 127.5);
+    let confidence = 1;
+    let keypoints: ReadonlyArray<number> = [];
+    if (O.isSome(aligner)) {
+      const aligned = alignerInput(tensor);
+      const alignerOutput = yield* run(aligner.value, {
+        images: new runtime.Tensor("float32", aligned, [1, 3, 160, 160]),
+      });
+      const merged = outputValues(alignerOutput, "output");
+      confidence = 1 / (1 + Math.exp(at(merged, 4) - at(merged, 5)));
+      keypoints = A.makeBy(10, (i) => at(merged, i + 6));
+    }
+    if (confidence < 0.2) return InferredFace.make({ ...face, confidence, embedding: O.none() });
+    const output = yield* run(recognizer, {
+      [recognizer.inputNames[0] ?? "images"]: new runtime.Tensor("float32", tensor, [1, 3, 112, 112]),
+      ...(O.isSome(aligner)
+        ? { keypoints: new runtime.Tensor("float32", Float32Array.from(keypoints), [1, 5, 2]) }
+        : {}),
+    });
+    const vector = outputValues(output, recognizer.outputNames[0] ?? "output");
+    if (vector.length !== 512)
+      return yield* MatchPersonError.runtimeFromWorker(
+        "missing-embedding",
+        "Recognizer returned an unexpected embedding shape."
+      );
+    const embedding = normalizeFaceVector(vector);
+    if (A.some(embedding, (n) => !Number.isFinite(n)))
+      return yield* MatchPersonError.runtimeFromWorker(
+        "missing-embedding",
+        "Recognizer returned an invalid embedding."
+      );
+    return InferredFace.make({ ...face, confidence, embedding: O.some(embedding) });
+  });
+class DetectorDimensions extends S.Opaque<DetectorDimensions, { readonly brand: unique symbol }>()(
+  S.Struct({ width: PosInt, height: PosInt }).pipe(
+    $I.annoteSchema("DetectorDimensions", {
+      description: "Aspect-preserving image dimensions inside the 640-pixel SCRFD canvas.",
+    })
+  )
+) {}
+const detectorDimensions = Effect.fnUntraced(function* (image: FaceImage) {
+  const width = image.height > image.width ? Math.floor((640 * image.width) / image.height) : 640;
+  const height = image.height > image.width ? 640 : Math.floor((640 * image.height) / image.width);
+  if (width < 1 || height < 1)
+    return yield* MatchPersonError.runtimeFromWorker(
+      "worker-failed",
+      "Image aspect ratio is too extreme for the detector."
+    );
+
+  return DetectorDimensions.make({ width, height });
+});
+const suppressDetections = (detections: ReadonlyArray<InferredFace>): ReadonlyArray<InferredFace> => {
+  const kept: Array<InferredFace> = [];
+  for (const face of A.sort(detections, faceOrder))
+    if (A.every(kept, (other) => iou(face.box, other.box) <= 0.4)) kept.push(face);
+
+  return kept;
+};
+const selectDetections = (
+  kept: ReadonlyArray<InferredFace>,
+  image: FaceImage,
+  adaFace: boolean
+): ReadonlyArray<InferredFace> =>
+  // AdaFace's detector max_num=32 chooses area minus twice squared center distance.
+  adaFace && kept.length > 32
+    ? A.take(
+        A.sort(
+          kept,
+          Order.mapInput(
+            Num.Order,
+            (f: InferredFace) =>
+              -(
+                (f.box.x2 - f.box.x1) * (f.box.y2 - f.box.y1) -
+                2 *
+                  (((f.box.x1 + f.box.x2) / 2 - image.width / 2) ** 2 +
+                    ((f.box.y1 + f.box.y2) / 2 - image.height / 2) ** 2)
+              )
+          )
+        ),
+        32
+      )
+    : kept;
 const makeFaceInferenceImpl = (
   detector: ort.InferenceSession,
   recognizer: ort.InferenceSession,
@@ -348,168 +509,23 @@ const makeFaceInferenceImpl = (
   PersonMatchInference.of({
     detect: Effect.fn("Files.PersonMatchInference.detect")(function* (image, threshold) {
       const runtime = yield* loadRuntime();
-      const width = image.height > image.width ? Math.floor((640 * image.width) / image.height) : 640;
-      const height = image.height > image.width ? 640 : Math.floor((640 * image.height) / image.width);
-      if (width < 1 || height < 1)
-        return yield* MatchPersonError.runtimeFromWorker(
-          "worker-failed",
-          "Image aspect ratio is too extreme for the detector."
-        );
-      const resized = new Uint8Array(width * height * 3);
-      for (let y = 0; y < height; y++)
-        for (let x = 0; x < width; x++) {
-          const sx = Math.max(0, Math.min(image.width - 1, ((x + 0.5) * image.width) / width - 0.5));
-          const sy = Math.max(0, Math.min(image.height - 1, ((y + 0.5) * image.height) / height - 0.5));
-          const ix = Math.floor(sx);
-          const floorY = Math.floor(sy);
-          const dx = sx - ix;
-          const dy = sy - floorY;
-          for (let c = 0; c < 3; c++) {
-            let v = 0;
-            for (let yy = 0; yy < 2; yy++)
-              for (let xx = 0; xx < 2; xx++)
-                v +=
-                  at(
-                    image.pixels,
-                    (Math.min(image.height - 1, floorY + yy) * image.width + Math.min(image.width - 1, ix + xx)) * 3 + c
-                  ) *
-                  (xx === 0 ? 1 - dx : dx) *
-                  (yy === 0 ? 1 - dy : dy);
-            resized[(y * width + x) * 3 + c] = Math.round(v);
-          }
-        }
-      const plane = 640 * 640;
-      const values = new Float32Array(plane * 3);
-      for (let y = 0; y < height; y++)
-        for (let x = 0; x < width; x++)
-          for (let c = 0; c < 3; c++)
-            values[c * plane + y * 640 + x] = (at(resized, (y * width + x) * 3 + c) - 127.5) / 128;
-      // Padded detector pixels are black before normalization.
-      for (let y = 0; y < 640; y++)
-        for (let x = 0; x < 640; x++)
-          if (y >= height || x >= width) for (let c = 0; c < 3; c++) values[c * plane + y * 640 + x] = -127.5 / 128;
+      const { width, height } = yield* detectorDimensions(image);
+      const values = detectorInput(image, width, height);
       const outputs = yield* run(detector, {
         [detector.inputNames[0] ?? "input.1"]: new runtime.Tensor("float32", values, [1, 3, 640, 640]),
       });
-      const detections: Array<InferredFace> = [];
-      for (let level = 0; level < 3; level++) {
-        const stride = 8 * 2 ** level;
-        const size = 640 / stride;
-        const scores = outputValues(outputs, detector.outputNames[level] ?? "");
-        const boxes = outputValues(outputs, detector.outputNames[level + 3] ?? "");
-        const landmarks = outputValues(outputs, detector.outputNames[level + 6] ?? "");
-        for (let i = 0; i < scores.length; i++) {
-          const score = at(scores, i);
-          if (score < threshold) continue;
-          const cx = (Math.floor(i / 2) % size) * stride;
-          const cy = Math.floor(Math.floor(i / 2) / size) * stride;
-          const scale = image.height / height;
-          const box = FaceDetectionBox.make({
-            x1: (cx - at(boxes, i * 4) * stride) * scale,
-            y1: (cy - at(boxes, i * 4 + 1) * stride) * scale,
-            x2: (cx + at(boxes, i * 4 + 2) * stride) * scale,
-            y2: (cy + at(boxes, i * 4 + 3) * stride) * scale,
-          });
-          detections.push(
-            InferredFace.make({
-              box,
-              score,
-              landmarks: A.makeBy(5, (j): readonly [number, number] => [
-                (cx + at(landmarks, i * 10 + j * 2) * stride) * scale,
-                (cy + at(landmarks, i * 10 + j * 2 + 1) * stride) * scale,
-              ]),
-              embedding: O.none(),
-              confidence: 1,
-            })
-          );
-        }
-      }
-      const kept: Array<InferredFace> = [];
-      for (const face of A.sort(detections, faceOrder))
-        if (A.every(kept, (other) => iou(face.box, other.box) <= 0.4)) kept.push(face);
-      // AdaFace's detector max_num=32 chooses area minus twice squared center distance.
-      const selected =
-        O.isSome(aligner) && kept.length > 32
-          ? A.take(
-              A.sort(
-                kept,
-                Order.mapInput(
-                  Num.Order,
-                  (f: InferredFace) =>
-                    -(
-                      (f.box.x2 - f.box.x1) * (f.box.y2 - f.box.y1) -
-                      2 *
-                        (((f.box.x1 + f.box.x2) / 2 - image.width / 2) ** 2 +
-                          ((f.box.y1 + f.box.y2) / 2 - image.height / 2) ** 2)
-                    )
-                )
-              ),
-              32
-            )
-          : kept;
+      const detections = A.flatMap([0, 1, 2], (level) =>
+        decodeLevel(outputs, detector.outputNames, level, image.height / height, threshold)
+      );
+      const selected = selectDetections(suppressDetections(detections), image, O.isSome(aligner));
       if (selected.length > 32)
         return yield* MatchPersonError.runtimeFromWorker(
           "input-limit-exceeded",
           "Detected more than 32 faces in one image."
         );
-      return yield* Effect.forEach(
-        A.sort(selected, positionOrder),
-        Effect.fnUntraced(function* (face) {
-          const crop = O.isSome(aligner) ? squareCrop(image, face.box) : alignFaceImage(image, face.landmarks);
-          const tensor = channels(crop, 127.5, 127.5);
-          let confidence = 1;
-          let keypoints: ReadonlyArray<number> = [];
-          if (O.isSome(aligner)) {
-            // torch interpolate(..., align_corners=True), followed by RGB -> BGR.
-            const aligned = new Float32Array(3 * 160 * 160);
-            for (let c = 0; c < 3; c++)
-              for (let y = 0; y < 160; y++)
-                for (let x = 0; x < 160; x++) {
-                  const sx = (x * 111) / 159;
-                  const sy = (y * 111) / 159;
-                  const ix = Math.floor(sx);
-                  const floorY = Math.floor(sy);
-                  const dx = sx - ix;
-                  const dy = sy - floorY;
-                  let v = 0;
-                  for (let yy = 0; yy < 2; yy++)
-                    for (let xx = 0; xx < 2; xx++)
-                      v +=
-                        at(tensor, (2 - c) * 112 * 112 + Math.min(111, floorY + yy) * 112 + Math.min(111, ix + xx)) *
-                        (xx === 0 ? 1 - dx : dx) *
-                        (yy === 0 ? 1 - dy : dy);
-                  aligned[c * 160 * 160 + y * 160 + x] = v;
-                }
-            const alignerOutput = yield* run(aligner.value, {
-              images: new runtime.Tensor("float32", aligned, [1, 3, 160, 160]),
-            });
-            const merged = outputValues(alignerOutput, "output");
-            confidence = 1 / (1 + Math.exp(at(merged, 4) - at(merged, 5)));
-            keypoints = A.makeBy(10, (i) => at(merged, i + 6));
-          }
-          if (confidence < 0.2) return InferredFace.make({ ...face, confidence, embedding: O.none() });
-          const output = yield* run(recognizer, {
-            [recognizer.inputNames[0] ?? "images"]: new runtime.Tensor("float32", tensor, [1, 3, 112, 112]),
-            ...(O.isSome(aligner)
-              ? { keypoints: new runtime.Tensor("float32", Float32Array.from(keypoints), [1, 5, 2]) }
-              : {}),
-          });
-          const vector = outputValues(output, recognizer.outputNames[0] ?? "output");
-          if (vector.length !== 512)
-            return yield* MatchPersonError.runtimeFromWorker(
-              "missing-embedding",
-              "Recognizer returned an unexpected embedding shape."
-            );
-          const embedding = normalizeFaceVector(vector);
-          if (A.some(embedding, (n) => !Number.isFinite(n)))
-            return yield* MatchPersonError.runtimeFromWorker(
-              "missing-embedding",
-              "Recognizer returned an invalid embedding."
-            );
-          return InferredFace.make({ ...face, confidence, embedding: O.some(embedding) });
-        }),
-        { concurrency: 1 }
-      );
+      return yield* Effect.forEach(A.sort(selected, positionOrder), embedFace(image, recognizer, aligner, runtime), {
+        concurrency: 1,
+      });
     }),
   });
 

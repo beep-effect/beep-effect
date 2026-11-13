@@ -825,6 +825,43 @@ class PreparedOnnxModels extends S.Opaque<PreparedOnnxModels, { readonly brand: 
   )
 ) {}
 
+const installBuffaloArchive = Effect.fn("Files.installBuffaloArchive")(function* (
+  root: string,
+  directory: string,
+  required: ReadonlyArray<PinnedModelArtifact>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const archive = PinnedModelArtifact.make({
+    ...detectorArtifact,
+    fileName: "buffalo_l.zip",
+    sizeBytes: PosInt.make(288621354),
+    sha256: Sha256Hex.make("80ffe37d8a5940d59a7384c201a2a38d4741f2f3c51eef46ebb28218a7b0ca2f"),
+  });
+  const archivePath = path.join(root, archive.fileName);
+  yield* ensureArtifact(archive, archivePath, root);
+  const data = yield* fs
+    .readFile(archivePath)
+    .pipe(Effect.mapError((cause) => acquisitionError("Cannot read verified Buffalo archive.", cause)));
+  const extracted = yield* Effect.try({
+    try: () =>
+      unzipSync(data, {
+        filter: (entry) => A.some(required, (a) => a.fileName === entry.name) && entry.originalSize <= 175_000_000,
+      }),
+    catch: (cause) => integrityError("Cannot decode verified Buffalo archive.", cause),
+  });
+  for (const artifact of required) {
+    const content = extracted[artifact.fileName];
+    if (content === undefined) return yield* integrityError(`Archive omitted ${artifact.fileName}.`);
+    const digest = Hex.encode(sha256(content));
+    if (content.length !== artifact.sizeBytes || digest !== artifact.sha256)
+      return yield* integrityError(`Archive artifact mismatch: ${artifact.fileName}.`);
+    const destination = path.join(directory, artifact.fileName);
+    yield* fs
+      .writeFile(destination, content, { flag: "wx" })
+      .pipe(Effect.mapError((cause) => acquisitionError("Cannot install ONNX artifact.", cause)));
+  }
+});
 /**
  * Acquire and verify the same Buffalo archive used by the former worker.
  * **Example** (Reference model preparation)
@@ -854,38 +891,7 @@ export const preparePersonMatchOnnxModels = Effect.fn("Files.preparePersonMatchO
           .exists(path.join(directory, artifact.fileName))
           .pipe(Effect.mapError((cause) => acquisitionError("Cannot inspect ONNX artifact.", cause)))
       );
-      if (A.some(missing, (exists) => !exists)) {
-        const archive = PinnedModelArtifact.make({
-          ...detectorArtifact,
-          fileName: "buffalo_l.zip",
-          sizeBytes: PosInt.make(288621354),
-          sha256: Sha256Hex.make("80ffe37d8a5940d59a7384c201a2a38d4741f2f3c51eef46ebb28218a7b0ca2f"),
-        });
-        const archivePath = path.join(root, archive.fileName);
-        yield* ensureArtifact(archive, archivePath, root);
-        const data = yield* fs
-          .readFile(archivePath)
-          .pipe(Effect.mapError((cause) => acquisitionError("Cannot read verified Buffalo archive.", cause)));
-        const extracted = yield* Effect.try({
-          try: () =>
-            unzipSync(data, {
-              filter: (entry) =>
-                A.some(required, (a) => a.fileName === entry.name) && entry.originalSize <= 175_000_000,
-            }),
-          catch: (cause) => integrityError("Cannot decode verified Buffalo archive.", cause),
-        });
-        for (const artifact of required) {
-          const content = extracted[artifact.fileName];
-          if (content === undefined) return yield* integrityError(`Archive omitted ${artifact.fileName}.`);
-          const digest = Hex.encode(sha256(content));
-          if (content.length !== artifact.sizeBytes || digest !== artifact.sha256)
-            return yield* integrityError(`Archive artifact mismatch: ${artifact.fileName}.`);
-          const destination = path.join(directory, artifact.fileName);
-          yield* fs
-            .writeFile(destination, content, { flag: "wx" })
-            .pipe(Effect.mapError((cause) => acquisitionError("Cannot install ONNX artifact.", cause)));
-        }
-      }
+      if (A.some(missing, (exists) => !exists)) yield* installBuffaloArchive(root, directory, required);
       for (const artifact of required) yield* validateArtifactPath(artifact, path.join(directory, artifact.fileName));
     }),
     releaseModelStoreLock
