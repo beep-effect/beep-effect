@@ -1,9 +1,9 @@
 {
   "catalog": {
-    "@alchemy.run/aws": "2.0.0-beta.85",
-    "@alchemy.run/cloudflare": "2.0.0-beta.85",
-    "@alchemy.run/domain": "2.0.0-beta.85",
-    "@alchemy.run/test": "2.0.0-beta.85",
+    "@alchemy.run/aws": "2.0.0-beta.86",
+    "@alchemy.run/cloudflare": "2.0.0-beta.86",
+    "@alchemy.run/domain": "2.0.0-beta.86",
+    "@alchemy.run/test": "2.0.0-beta.86",
     "@arizeai/phoenix-client": "8.0.0",
     "@azure/core-http-compat": "2.5.0",
     "@azure/core-rest-pipeline": "1.25.1",
@@ -95,9 +95,9 @@
     "@pnpm/catalogs.resolver": "1100.1.2",
     "@pnpm/catalogs.types": "1100.0.1",
     "@pulumi/aws": "^7.54.0",
-    "@pulumi/cloudflare": "^6.23.3",
+    "@pulumi/cloudflare": "^6.24.0",
     "@pulumi/command": "^4.5.0",
-    "@pulumi/pulumi": "3.274.1",
+    "@pulumi/pulumi": "3.275.0",
     "@pulumiverse/vercel": "^5.26.1",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.2",
@@ -146,7 +146,7 @@
     "@xstate/test": "2.0.0-beta.1",
     "ajv": "8.20.0",
     "ajv-formats": "3.0.1",
-    "alchemy": "2.0.0-beta.85",
+    "alchemy": "2.0.0-beta.86",
     "ast-v8-to-istanbul": "1.0.8",
     "babel-plugin-react-compiler": "^1.0.0",
     "bippy": "^0.7.3",
@@ -321,8 +321,7 @@
   },
   "packageManager": "bun@1.4.4",
   "patchedDependencies": {
-    "@alchemy.run/domain@2.0.0-beta.85": "patches/@alchemy.run%2Fdomain@2.0.0-beta.85.patch",
-    "alchemy@2.0.0-beta.85": "patches/alchemy@2.0.0-beta.85.patch"
+    "@alchemy.run/domain@2.0.0-beta.86": "patches/@alchemy.run%2Fdomain@2.0.0-beta.86.patch"
   },
   "private": true,
   "repository": {
