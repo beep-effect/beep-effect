@@ -124,6 +124,7 @@ const isolatedSuites = [
   "test/worktree-remove-fence.test.ts",
   "test/xdg-adoption.test.ts",
   "test/yeet-command-wiring.test.ts",
+  "test/yeet-final-check-journal.test.ts",
   "test/yeet-inbox-porcelain.test.ts",
   "test/yeet-sweep-retire.test.ts",
 ];
