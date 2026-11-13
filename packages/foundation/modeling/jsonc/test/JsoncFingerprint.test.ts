@@ -1,6 +1,7 @@
 import {
   JsoncCanonicalizeError,
   JsoncCanonicalizeErrorCode,
+  JsoncCanonicalizeOptions,
   JsoncFingerprint,
   JsoncTextHashOptions,
 } from "@beep/jsonc";
@@ -43,6 +44,8 @@ describe("JsoncFingerprint", () => {
       assert.isTrue(S.is(JsoncCanonicalizeError)(error));
       assert.strictEqual(error.message, 'Canonical JSON serialization failed: BigIntValue at "/n" — d');
       assert.deepStrictEqual({ ...JsoncTextHashOptions.make({}) }, { normalizeEol: false });
+      assert.deepStrictEqual({ ...JsoncCanonicalizeOptions.make({}) }, { omitUndefinedMembers: false });
+      assertSuccess(S.decodeResult(JsoncCanonicalizeOptions)({}), JsoncCanonicalizeOptions.make({}));
     });
   });
 
@@ -451,6 +454,159 @@ describe("JsoncFingerprint", () => {
         assert.include(error.message, 'UnrepresentableValue at "/a"');
         const canonicalize1 = yield* JsoncFingerprint.canonicalize([1, "x", true]);
         assert.strictEqual(canonicalize1, '[1,"x",true]');
+      })
+    );
+  });
+
+  describe("refusal table", () => {
+    // Every class of value outside plain JSON, with the code and JSON pointer
+    // the owner answers. `omitUndefinedMembers` moves exactly one class, an
+    // object member whose value is `undefined`, and that class has its own test.
+    const omitting = JsoncCanonicalizeOptions.make({ omitUndefinedMembers: true });
+    const refusing = JsoncCanonicalizeOptions.make({ omitUndefinedMembers: false });
+
+    const hole: Array<number> = new Array(2);
+    hole[0] = 1;
+
+    class Point {
+      readonly x = 1;
+    }
+
+    const refused: ReadonlyArray<
+      readonly [label: string, value: unknown, code: JsoncCanonicalizeErrorCode, path: string]
+    > = [
+      ["undefined at the root", undefined, "UnrepresentableValue", ""],
+      ["undefined array element", [1, undefined], "UnrepresentableValue", "/1"],
+      ["undefined array element inside an object", { a: [undefined] }, "UnrepresentableValue", "/a/0"],
+      ["array hole", hole, "UnrepresentableValue", "/1"],
+      ["function member", { f: () => 0 }, "UnrepresentableValue", "/f"],
+      ["symbol member", { s: Symbol("s") }, "UnrepresentableValue", "/s"],
+      ["NaN", { n: Number.NaN }, "NonFiniteNumber", "/n"],
+      ["positive infinity", [Number.POSITIVE_INFINITY], "NonFiniteNumber", "/0"],
+      ["negative infinity", [Number.NEGATIVE_INFINITY], "NonFiniteNumber", "/0"],
+      ["bigint", { b: 1n }, "BigIntValue", "/b"],
+      ["unpaired surrogate in a string", { s: "\uD800" }, "LoneSurrogate", "/s"],
+      ["unpaired surrogate in a member key", { "k\uDC00": 1 }, "LoneSurrogate", "/k\uDC00"],
+      ["unpaired surrogate in the key of an undefined member", { "k\uDC00": undefined }, "LoneSurrogate", "/k\uDC00"],
+      ["Date", { d: DateTime.makeUnsafe(0).pipe(DateTime.toDateUtc) }, "NonPlainObject", "/d"],
+      ["Map", { m: new Map() }, "NonPlainObject", "/m"],
+      ["typed array", { u: new Uint8Array(1) }, "NonPlainObject", "/u"],
+      ["class instance", { p: new Point() }, "NonPlainObject", "/p"],
+    ];
+
+    it("answers every class outside plain JSON with one code and pointer, whatever the options", () => {
+      for (const [label, value, code, path] of refused) {
+        for (const options of [undefined, refusing, omitting]) {
+          const error = failureOfResult(JsoncFingerprint.canonicalizeResult(value, options));
+          assert.deepStrictEqual([label, error.code, error.path], [label, code, path]);
+        }
+      }
+    });
+
+    it("refuses nesting past the cap and cyclic values, whatever the options", () => {
+      const cyclic: Record<string, unknown> = {};
+      cyclic.self = cyclic;
+      let deep: unknown = 1;
+      for (let i = 0; i < 300; i++) {
+        deep = { next: deep };
+      }
+      for (const value of [cyclic, deep]) {
+        for (const options of [undefined, refusing, omitting]) {
+          assert.strictEqual(
+            failureOfResult(JsoncFingerprint.canonicalizeResult(value, options)).code,
+            "NestingDepthExceeded"
+          );
+        }
+      }
+    });
+
+    it("refuses an undefined object member by default and with the option off", () => {
+      const value = { a: 1, b: undefined };
+      for (const options of [undefined, refusing]) {
+        const error = failureOfResult(JsoncFingerprint.canonicalizeResult(value, options));
+        assert.deepStrictEqual([error.code, error.path], ["UnrepresentableValue", "/b"]);
+      }
+    });
+  });
+
+  describe("omitUndefinedMembers", () => {
+    const omitting = JsoncCanonicalizeOptions.make({ omitUndefinedMembers: true });
+
+    it("leaves out undefined members at every depth and nothing else", () => {
+      const value = { z: undefined, a: 1, c: { d: undefined, e: [{ f: undefined, g: null }, []] }, b: {} };
+      assertSuccess(JsoncFingerprint.canonicalizeResult(value, omitting), '{"a":1,"b":{},"c":{"e":[{"g":null},[]]}}');
+      assertSuccess(JsoncFingerprint.canonicalizeResult({ a: undefined }, omitting), "{}");
+      assertSuccess(
+        JsoncFingerprint.canonicalizeResult({ a: null, b: 0, c: "", d: false }, omitting),
+        '{"a":null,"b":0,"c":"","d":false}'
+      );
+    });
+
+    it("gives the bytes of the same value with those members deleted", () => {
+      const sparse = { id: "e1", packetId: undefined, closeout: { status: "open", proposed: undefined } };
+      const dense = { id: "e1", closeout: { status: "open" } };
+      assert.deepStrictEqual(
+        JsoncFingerprint.canonicalizeResult(sparse, omitting),
+        JsoncFingerprint.canonicalizeResult(dense)
+      );
+      assert.deepStrictEqual(
+        JsoncFingerprint.canonicalizeResult(dense, omitting),
+        JsoncFingerprint.canonicalizeResult(dense)
+      );
+    });
+
+    it("reads a getter once and lets it decide whether its member exists", () => {
+      let reads = 0;
+      const value: Record<string, unknown> = { a: 1 };
+      Object.defineProperty(value, "unset", {
+        enumerable: true,
+        get: () => {
+          reads += 1;
+          return undefined;
+        },
+      });
+      assertSuccess(JsoncFingerprint.canonicalizeResult(value, omitting), '{"a":1}');
+      assert.strictEqual(reads, 1);
+    });
+
+    it("still fails typed at the first refused member in sorted order", () => {
+      const error = failureOfResult(
+        JsoncFingerprint.canonicalizeResult({ a: undefined, b: Number.NaN, c: 1n }, omitting)
+      );
+      assert.deepStrictEqual([error.code, error.path], ["NonFiniteNumber", "/b"]);
+    });
+
+    it("reaches hashResult in both call forms", () => {
+      const sparse = { a: 1, b: undefined };
+      const dense = Result.getOrThrow(JsoncFingerprint.hashResult({ a: 1 }, syncDigest));
+      assertSuccess(JsoncFingerprint.hashResult(sparse, syncDigest, omitting), dense);
+      assertSuccess(JsoncFingerprint.hashResult(syncDigest, omitting)(sparse), dense);
+      assertSuccess(JsoncFingerprint.hashResult(syncDigest)({ a: 1 }), dense);
+      assertFailure(JsoncFingerprint.hashResult(sparse, syncDigest), failure(sparse));
+      assertFailure(JsoncFingerprint.hashResult(syncDigest)(sparse), failure(sparse));
+    });
+
+    it.effect("reaches canonicalize", () =>
+      Effect.gen(function* () {
+        const sparse = { a: 1, b: undefined };
+        const canonical = yield* JsoncFingerprint.canonicalize(sparse, omitting);
+        assert.strictEqual(canonical, '{"a":1}');
+        const refused = yield* Effect.flip(JsoncFingerprint.canonicalize(sparse));
+        assert.deepStrictEqual(refused, failure(sparse));
+      })
+    );
+  });
+
+  it.layer(CryptoTest)("omitUndefinedMembers with a Crypto layer", (it) => {
+    it.effect("reaches hash", () =>
+      Effect.gen(function* () {
+        const omitting = JsoncCanonicalizeOptions.make({ omitUndefinedMembers: true });
+        const sparse = { a: 1, b: undefined };
+        const dense = yield* JsoncFingerprint.hash({ a: 1 });
+        const omitted = yield* JsoncFingerprint.hash(sparse, omitting);
+        assert.strictEqual(omitted, dense);
+        const refused = yield* Effect.flip(JsoncFingerprint.hash(sparse));
+        assert.deepStrictEqual(refused, failure(sparse));
       })
     );
   });

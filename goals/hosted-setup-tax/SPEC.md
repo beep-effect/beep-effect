@@ -416,6 +416,22 @@ Lane feat/turb-01-standards-coverage-owners
 
 Reverse: Delete COVERAGE_GENERATED_STANDARDS_OWNER_ROWS and its spread from CoverageScope.ts (the files return to the full fallback), and delete CoverageScopeReaders.ts with its test; no generated file or seal changes.
 
+### Job-level lane relevance for Codegen, Ecosystem, Nix, IPC, SAST and Security, and the docs-only Security and SAST skip, 2026-11-12
+
+The operator asked on 2026-11-10 for CI to run only the checks applicable to a change, in one PR. That PR lands PERIH-04's job-level relevance and extends it to SAST and Security.
+
+- `beep ci change-profile` emits `codegen_relevant`, `ecosystem_relevant`, `nix_relevant`, `desktop_ipc_relevant`, `sast_relevant` and `security_relevant` from the `lanes` rows of the pattern data. Codegen, Ecosystem, Nix and IPC carry the path gates those jobs applied after checkout, widened with the gate sources (CiLane.ts, the CiOperational files, check.yml) and, for Codegen, the merge-driver bootstrap inputs (.gitattributes, the Git and Worktree commands).
+- Every job guard reads `!= 'false'`. The pinned binary (beep-ci-d15ecf4ca610) predates the outputs, so the job-level skips take effect only at the next pin bump. Until then the step gates read the same rows with jq and grep -E; a test proves grep -E and the binary's RegExp agree on every row.
+- Labs stays excluded, as the PERIH-04 ruling requires.
+- Security and SAST now wait on Change Profile. On a docs_only diff, or when their relevance is false, they skip at job level. Security's verdict then depends only on main plus the live advisory database and GitHub settings. Every main push still runs it, because a push always gets the full profile. This reverses the agent choice in #2935 that kept Security and SAST in force on docs-only PRs. Semgrep never scans Markdown, and docs_only no longer admits JS/TS or dependency manifests.
+- Security's relevance covers every manifest GitHub's dependency graph recognizes, plus the whole `@beep/repo-cli` workspace closure that implements its GitHub policy reads. SAST's covers the same closure, which dispatches it. A census test walks the workspace graph from `@beep/repo-cli` and fails if a closure member leaves those rows. An independent review (Codex `gpt-6.1-sol`) found both gaps in the first draft of this PR.
+- CodeRabbit found two more gaps in the carried-over gates. Codegen's row now covers the generators' workspace closure (codegen-kit, identity, schema, utils), inside the same CLI closure its `worktree prepare` bootstrap runs through. Every lane's gate sources now include the shared setup actions (setup-monorepo-ci, setup-bun, fetch-beep-ci). The census test now checks each lane against the closure of the workspaces its job executes.
+- PERIH-05 and PERIH-06 (Nix, Security and SAST without the workspace install) and HOST-09 (the PR Size fold) remain open.
+
+Lane perf/ci-applicable-checks
+
+Reverse: Revert the perf/ci-applicable-checks PR; or delete the lanes rows from ciOperationalPatterns and drop the needs and if lines from the security and sast jobs, which restores today's always-run Security and SAST.
+
 ### Workflow policy runs inside the Repo Sanity lane body, 2026-11-12
 
 The post-merge review of #3117 found that check.yml ran `beep ci workflow-lint` as its own Repo Sanity step ahead of "Run verification lane", whose `if:` has no `!cancelled()`. A workflow-lint red therefore skipped the whole lane body, the shadcn step included, which contradicted the no-masking claim. The check now runs as `ci:repo-sanity:workflow-lint`, the first step of the collecting lane body. Local final-check replays it on the workstation profile or with `--force-local`; on the worker profile final-check narrows Repo Sanity to changeset status, so hosted Repo Sanity proves it. I chose this over adding `!cancelled()` to the lane step, which would also run the lane after a broken setup step. `ciLaneFailurePolicy` names the per-lane runner choice (`collect-all`, or `fail-fast` for the JSDoc ratchet), and `runCiLaneSteps` applies it: `beep ci lane` hands every step-planned body to that runner. `ci-repo-sanity-owners.test.ts` drives `runCiLaneSteps` with the real Repo Sanity labels, every step before shadcn red, and shows the shadcn step still runs; a fail-fast contrast shows the ratchet stops at its first red. Known limit: a red in a check.yml setup step still skips the lane body, and the owners test guards only the `ci workflow-lint` script, so a different pre-lane check added later to the verify job would bring the masking back without a red test. Such a check belongs in the lane body.
@@ -437,6 +453,14 @@ Rejected: a planner trigger that maps any changed `*.ts` mentioning a row basena
 Lane fix/turb-01-owner-drift-lint
 
 Reverse: Remove the lint:coverage-owners step from the repo-sanity body in CiLane.ts and the coverage-owners lint command; the repo-cli test still holds the rows when it runs.
+
+### The runner-minutes criterion reads the scorecard's per-head-attempt figure, 2026-11-13
+
+The Runner-minutes acceptance criterion thresholds green code runner-minutes per run (p50 at most 244 against the 264 baseline, p95 reported beside it) "as the scorecard reports it". certainty-scorecard #3144 (decision `certainty-scoring-fixes` there) changed that figure. `greenCodeRunP50` and `greenCodeRunP95` used to come from successful check.yml runs alone, so a head admitted by the `ready-for-heavy` label was scored without the beep-ec2-heavy minutes its heavy-admit.yml run spent. They now cover head attempts: each check.yml run plus the admitted heavy-admit.yml runs of its head, with heavy-admit runs whose Heavy Admission was skipped dropped. On the committed baseline fixture, green code p50/p95 move from 271.63/385.35 to 278.85/385.35, and the per-run mean from 219.7 over 40 runs to 251.08 over 35 head attempts. This goal reads the criterion as runner-minutes per green code head attempt. The 264 and 556 baselines predate the scorecard CLI and are not re-derived here. The cohort this goal is judged on, and any re-measured baseline beside it, must both come from a `beep ci certainty` build that includes #3144, so the baseline and the measurement count the same quantity.
+
+Lane fix/certainty-scoring-fixes · PR #3144
+
+Reverse: Delete this file; the Runner-minutes criterion then reads the scorecard figure under whatever definition it carries when measured.
 
 <!-- beep:decisions:end -->
 

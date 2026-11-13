@@ -3016,7 +3016,10 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       for (const [name, changedPath, accepted] of [
         ["ordinary report", "docs/reports/probe.md", true],
         ["Unicode and newline report", "docs/reports/日本語\nreport.md", true],
-        ["unselected docs source", "docs/run.ts", true],
+        ["unselected docs source", "docs/run.py", true],
+        // JavaScript and TypeScript are code-shaped wherever they sit (SAST scans them), so a docs
+        // root does not make them report-only.
+        ["docs JavaScript source", "docs/run.ts", false],
         ["selected goal source", "goals/demo/run.ts", false],
         ["selected research source", "research/demo/run.js", false],
         ["package source", "packages/probe.ts", false],

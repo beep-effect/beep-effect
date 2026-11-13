@@ -104,8 +104,8 @@ const fetchSshEnvironment = Effect.fn("Yeet.headMoveFetchSshEnvironment")(functi
   const configured = O.isSome(command) ? command : yield* read(root, ["config", "core.sshCommand"]).pipe(Effect.option);
   if (O.isNone(configured) && O.isSome(program)) return {};
   const ssh = O.getOrElse(configured, () => "ssh");
-  const executable = Str.replace(/^['"]|['"]$/g, "")(O.getOrElse(A.head(Str.split(ssh, /\s+/)), () => ""));
-  const programName = O.getOrElse(A.last(Str.split(executable, "/")), () => "");
+  const executable = Str.replace(/^['"]|['"]$/g, "")(A.headNonEmpty(Str.split(ssh, /\s+/)));
+  const programName = A.lastNonEmpty(Str.split(executable, "/"));
   return Str.startsWith("ssh")(programName) ? { GIT_SSH_COMMAND: `${ssh} -o BatchMode=yes` } : {};
 });
 
@@ -156,13 +156,7 @@ const readCommit = Effect.fn("Yeet.headMoveReadCommit")(function* (root: string,
     authorDate,
     message,
     committerEmail: email,
-    signature: A.findFirst(
-      Str.split(
-        O.getOrElse(A.head(Str.split(commitObject, "\n\n")), () => ""),
-        "\n"
-      ),
-      Str.startsWith("gpgsig ")
-    ),
+    signature: A.findFirst(Str.split(A.headNonEmpty(Str.split(commitObject, "\n\n")), "\n"), Str.startsWith("gpgsig ")),
   });
 });
 // Step 1: a fast-forward, including equality, restarts proof.
@@ -243,7 +237,9 @@ const rawEntries = Effect.fn("Yeet.headMoveRawEntries")(function* (root: string,
   const tokens = Str.split(entryText, "\0");
   const entries: Array<Entry> = [];
   for (let i = 0; i < A.length(tokens) - 1; i += 2) {
-    const [oldMode, newMode, , , status] = yield* decodeRawEntry(Str.split(tokens[i] ?? "", " "));
+    // In bounds by construction: i < length - 1.
+    const meta = yield* Effect.fromOption(A.get(tokens, i));
+    const [oldMode, newMode, , , status] = yield* decodeRawEntry(Str.split(meta, " "));
     const path = yield* decodePath(tokens[i + 1]);
     entries.push(Entry.make({ oldMode, newMode, status, path }));
   }
@@ -293,12 +289,11 @@ const patches = Effect.fn("Yeet.headMovePatches")(function* (
     return changed(
       request,
       "patch",
-      `Commit ${index}: raw entries differ at ${
-        A.join(
-          A.map(newEntries, (entry) => entry.path),
-          ", "
-        ) || "deleted path"
-      }.`
+      // `after` holds only non-empty commits, so the new side always lists at least one path.
+      `Commit ${index}: raw entries differ at ${A.join(
+        A.map(newEntries, (entry) => entry.path),
+        ", "
+      )}.`
     );
   for (const entry of newEntries) {
     const oldDigest = yield* patchDigest(root, before, entry.path);

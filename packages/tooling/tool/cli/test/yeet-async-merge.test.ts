@@ -15,7 +15,6 @@ import {
   mergeGateRequestsBypass,
   mergeYeetGhAtHead,
   renderMergeGateMergedLine,
-  renderYeetMergeEndpoint,
   renderYeetMergeSettlement,
   settleYeetMerge,
   YeetAsyncMergePoll,
@@ -24,7 +23,6 @@ import {
 import { describe, expect, it } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
-import * as ConfigProvider from "effect/ConfigProvider";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -80,14 +78,8 @@ const github = (put: GithubAnswer, polls: ReadonlyArray<GithubAnswer> = [merged]
   });
 };
 
-const withEndpoint = (endpoint: string | undefined) =>
-  Effect.provideService(
-    ConfigProvider.ConfigProvider,
-    ConfigProvider.fromUnknown(endpoint === undefined ? {} : { BEEP_YEET_MERGE_ENDPOINT: endpoint })
-  );
-
-const settle = (recorded: ReturnType<typeof github>, request = strict, endpoint?: string) =>
-  settleYeetMerge(PR, request, noWait).pipe(withEndpoint(endpoint), recorded.provide);
+const settle = (recorded: ReturnType<typeof github>, request = strict) =>
+  settleYeetMerge(PR, request, noWait).pipe(recorded.provide);
 
 describe("GithubRest async merge client", () => {
   it.effect("sends the pinned strict request and reads a 202 as pending, never merged", () =>
@@ -178,7 +170,6 @@ describe("settleYeetMerge", () => {
       const settled = yield* settle(recorded);
       expect(settled).toEqual(
         YeetMergeSettlement.cases.Merged.make({
-          endpoint: "async",
           sha: MERGE,
           message: "Pull request was merged.",
           attached: false,
@@ -197,14 +188,13 @@ describe("settleYeetMerge", () => {
     Effect.gen(function* () {
       const sentence = "A conversation must be resolved before this pull request can be merged.";
       const settled = yield* settle(github(accepted, [stillPending, failed(sentence)]));
-      expect(settled).toEqual(YeetMergeSettlement.cases.Failed.make({ endpoint: "async", message: sentence }));
+      expect(settled).toEqual(YeetMergeSettlement.cases.Failed.make({ message: sentence }));
       expect(renderYeetMergeSettlement(settled)).toBe(`merge-async failed: ${sentence}`);
     })
   );
 
   it("folds GitHub's multi-line rule sentence onto one line", () => {
     const settled = YeetMergeSettlement.cases.Failed.make({
-      endpoint: "async",
       message:
         "Repository rule violations found\n\nA conversation must be resolved before this pull request can be merged.\n\n",
     });
@@ -242,7 +232,6 @@ describe("settleYeetMerge", () => {
       const settled = yield* settle(recorded);
       expect(settled).toEqual(
         YeetMergeSettlement.cases.Unsettled.make({
-          endpoint: "async",
           message: "enqueued, not merged: Pull request was added to the merge queue.",
           uuid: O.none(),
         })
@@ -327,61 +316,10 @@ describe("settleYeetMerge", () => {
     })
   );
 
-  it.effect("routes through the legacy merge call behind BEEP_YEET_MERGE_ENDPOINT=legacy", () =>
-    Effect.gen(function* () {
-      const recorded = recordedGithub((call) =>
-        call.method === "PUT"
-          ? { body: { merged: true, sha: MERGE, message: "Pull Request successfully merged" } }
-          : undefined
-      );
-      const settled = yield* settle(recorded, GithubAsyncMergeRequest.make({ ...strict, bypassRules: true }), "legacy");
-      // The legacy call cannot send a bypass, so none is reported even when one was asked for.
-      expect(settled).toMatchObject({ _tag: "Merged", endpoint: "legacy", sha: MERGE, bypassRules: false });
-      expect(A.map(recorded.calls, githubCallLine)).toEqual([`PUT {repo}/pulls/${PR}/merge`]);
-      expect(renderYeetMergeSettlement(settled)).toBe(`merge (legacy) merged as ${MERGE}`);
-    })
-  );
-
-  // Not a recorded GitHub answer (GitHub declines with HTTP 405, below): the legacy wire schema
-  // allows a 200 body with `merged: false`, and it must settle as a failure, never as merged.
-  it.effect("fails a legacy merge on the schema-allowed merged:false 200 body with its sentence", () =>
-    Effect.gen(function* () {
-      const recorded = github({ body: { merged: false, sha: "", message: "Pull Request is not mergeable" } });
-      const settled = yield* settle(recorded, strict, "legacy");
-      expect(settled).toEqual(
-        YeetMergeSettlement.cases.Failed.make({ endpoint: "legacy", message: "Pull Request is not mergeable" })
-      );
-      expect(renderYeetMergeSettlement(settled)).toBe("merge (legacy) failed: Pull Request is not mergeable");
-    })
-  );
-
-  it.effect("keeps a legacy merge GitHub declines with HTTP 405 a GitHubError for the caller", () =>
-    Effect.gen(function* () {
-      const recorded = github({
-        status: 405,
-        body: {
-          message: "Pull Request is not mergeable",
-          documentation_url: "https://docs.github.com/rest/pulls/pulls#merge-a-pull-request",
-        },
-      });
-      const error = yield* settle(recorded, strict, "legacy").pipe(Effect.flip);
-      expect(error).toMatchObject({ _tag: "GitHubError", status: 405, kind: "rejected" });
-      expect(A.map(recorded.calls, githubCallLine)).toEqual([`PUT {repo}/pulls/${PR}/merge`]);
-    })
-  );
-
   it("names a failure GitHub sent without a sentence", () => {
-    const settled = YeetMergeSettlement.cases.Failed.make({ endpoint: "async", message: " \n " });
+    const settled = YeetMergeSettlement.cases.Failed.make({ message: " \n " });
     expect(renderYeetMergeSettlement(settled)).toBe("merge-async failed: GitHub sent no message");
   });
-
-  it.effect("falls back to async when the switch does not parse", () =>
-    Effect.gen(function* () {
-      const recorded = github(merged);
-      const settled = yield* settle(recorded, strict, "sideways");
-      expect(settled).toMatchObject({ _tag: "Merged", endpoint: "async" });
-    })
-  );
 });
 
 describe("merge-gate bypass and merge line", () => {
@@ -416,7 +354,6 @@ describe("merge-gate bypass and merge line", () => {
         prNumber: PR,
         mergeSha: MERGE,
         commitTitle: "fix: x (#7)",
-        endpoint: "async",
         bypassRequested,
       });
     expect(renderMergeGateMergedLine(merge(false))).toBe('MERGED #7 -> bbbbbbbbbb "fix: x (#7)" via merge-async');
@@ -473,20 +410,4 @@ describe("yeet gh merge step", () => {
       expect(P.hasProperty(error, "exitCode") ? error.exitCode : undefined).toBe(75);
     })
   );
-
-  it("names both endpoints", () => {
-    expect(renderYeetMergeEndpoint("async")).toBe("merge-async");
-    expect(renderYeetMergeEndpoint("legacy")).toBe("merge (legacy)");
-    expect(
-      renderMergeGateMergedLine(
-        MergeGateMerged.make({
-          prNumber: PR,
-          mergeSha: MERGE,
-          commitTitle: "fix: x (#7)",
-          endpoint: "legacy",
-          bypassRequested: false,
-        })
-      )
-    ).toBe('MERGED #7 -> bbbbbbbbbb "fix: x (#7)" via merge (legacy)');
-  });
 });

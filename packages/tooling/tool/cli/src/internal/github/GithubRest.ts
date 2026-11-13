@@ -307,18 +307,6 @@ const WorkflowRunWire = S.Struct({
 });
 
 /**
- * The outcome of a REST squash merge.
- *
- * @category models
- * @since 0.0.0
- */
-export class GithubMergeRecord extends S.Opaque<GithubMergeRecord, { readonly brand: unique symbol }>()(
-  S.Struct({ merged: S.Boolean, sha: S.String, message: S.String }).pipe(
-    $I.annoteSchema("GithubMergeRecord", { description: "The REST merge response." })
-  )
-) {}
-
-/**
  * What an async merge request asks GitHub to do.
  *
  * **Details**
@@ -598,7 +586,6 @@ const TimelineEventWire = S.Struct({
 const CheckSuitesWire = S.Struct({ check_suites: S.Array(S.Struct({ created_at: S.String })) });
 const CommentWire = S.Struct({ id: S.Int, html_url: S.String });
 const LabelWire = S.Struct({ name: S.String });
-const MergeWire = S.Struct({ merged: S.Boolean, sha: S.String, message: S.String });
 
 // The one body `merge-async` and its poll answer with, on 202, 200, 400 and 409 alike
 // (observed 2026-11-10: goals/yeet-async-merge-and-stacks/research/merge-async-p0-probes-2026-11.md).
@@ -658,20 +645,6 @@ export interface GithubRestShape {
    * unknown when none exists.
    */
   readonly headFirstReceivedAt: (sha: string) => Effect.Effect<O.Option<DateTime.Utc>, GitHubError>;
-  /**
-   * Squash-merge (or another method) pinned to a head sha. Without a
-   * `commitTitle` or `commitMessage` GitHub writes the subject or body its
-   * merge settings prescribe.
-   */
-  readonly mergePullRequest: (
-    number: number,
-    options: {
-      readonly sha: string;
-      readonly commitTitle?: string | undefined;
-      readonly commitMessage?: string | undefined;
-      readonly method: "merge" | "squash" | "rebase";
-    }
-  ) => Effect.Effect<GithubMergeRecord, GitHubError>;
   /** The open pull request whose head is `owner:branch`, if any. */
   readonly openPullRequestForBranch: (
     headOwner: string,
@@ -982,30 +955,6 @@ const makeGithubRest = Effect.gen(function* () {
         )
       );
 
-  const mergePullRequest = (
-    number: number,
-    options: {
-      readonly sha: string;
-      readonly commitTitle?: string | undefined;
-      readonly commitMessage?: string | undefined;
-      readonly method: "merge" | "squash" | "rebase";
-    }
-  ) =>
-    client
-      .requestDecoded(
-        "PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge",
-        {
-          ...at,
-          pull_number: number,
-          sha: options.sha,
-          merge_method: options.method,
-          ...OptionUtils.getSomesStruct({ commit_title: O.fromUndefinedOr(options.commitTitle) }),
-          ...OptionUtils.getSomesStruct({ commit_message: O.fromUndefinedOr(options.commitMessage) }),
-        },
-        MergeWire
-      )
-      .pipe(Effect.map((merge) => GithubMergeRecord.make(merge)));
-
   const toAsyncMergeOutcome =
     (operation: string, inFlight: boolean) =>
     (wire: typeof AsyncMergeWire.Type): Effect.Effect<GithubAsyncMergeOutcome, GitHubError> => {
@@ -1141,7 +1090,6 @@ const makeGithubRest = Effect.gen(function* () {
     commitStatuses,
     headFirstReceivedAt,
     createIssueComment,
-    mergePullRequest,
     openPullRequestForBranch,
     openPullRequests,
     pullRequest,

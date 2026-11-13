@@ -13,6 +13,7 @@ import {
   verifyTextAnchorAgainstVerifiedSource,
 } from "@beep/provenance/VerifiedTextAnchor";
 import { PosixPath } from "@beep/schema/PosixPath";
+import { Sha256PrefixedDigest } from "@beep/schema/Sha256";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -395,3 +396,17 @@ it.layer(BunCrypto.layer, { timeout: "5 seconds" })("@beep/provenance VerifiedTe
     { arbitrary: fcRuns(25) }
   );
 });
+
+it.effect(
+  "defines SourceTextDigest over the shared sha256: grammar with its encoded form unchanged",
+  Effect.fnUntraced(function* () {
+    const hex = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+    const digest = yield* S.decodeEffect(SourceTextDigest)(`sha256:${hex}`);
+    const general: Sha256PrefixedDigest = digest;
+    const encoded = yield* S.encodeEffect(SourceTextDigest)(digest);
+
+    expect(encoded).toBe(`sha256:${hex}`);
+    expect(S.is(Sha256PrefixedDigest)(general)).toBe(true);
+    expect(A.filter([hex, `sha256:${hex}0`, `SHA256:${hex}`], S.is(SourceTextDigest))).toEqual([]);
+  })
+);

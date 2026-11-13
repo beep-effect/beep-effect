@@ -135,6 +135,10 @@ class CensusEntry extends S.Opaque<CensusEntry, { readonly brand: unique symbol 
 ) {}
 
 // A `${...}` placeholder ends the literal: what precedes it is a directory the consumer reads under.
+// The route lines of a change profile: the per-lane relevance lines that follow depend on which
+// consumer was mutated, while this census asserts only the docs-only route.
+const routeLines = (profile: string): string => A.join(A.take(Str.split(profile, "\n"), 3), "\n");
+
 const literalPrefix = (reference: string): string => Str.replace(/[^/]*\$\{.*$/u, "")(reference);
 
 // A literal is a file, a directory (with or without its trailing slash) or a glob.
@@ -349,11 +353,11 @@ it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { timeout: "120 seco
           expect(A.contains(paths, mutated), `${label}: ${mutated} is tracked`).toBe(true);
           expect(preRepairDocsOnly.test(mutated), `${label} was docs-only before ROUT-03`).toBe(true);
           const profile = yield* changeProfileFor(mutated);
-          expect(profile, label).toBe("goals_only=false\ndocs_only=false\ndesktop_rust_relevant=false");
+          expect(routeLines(profile), label).toBe("goals_only=false\ndocs_only=false\ndesktop_rust_relevant=false");
         }
         // Control: prose beside a consumed path keeps the docs-only skip.
         const control = yield* changeProfileFor("goals/citation-extraction-engine/history/evidence/README.md");
-        expect(control).toBe("goals_only=false\ndocs_only=true\ndesktop_rust_relevant=false");
+        expect(routeLines(control)).toBe("goals_only=false\ndocs_only=true\ndesktop_rust_relevant=false");
       })
     );
   }
