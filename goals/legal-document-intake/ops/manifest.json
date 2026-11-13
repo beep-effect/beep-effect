@@ -3,15 +3,15 @@
   "initiative": {
     "id": "legal-document-intake",
     "title": "Legal Document Intake",
-    "status": "active",
+    "status": "paused",
     "created": "2026-07-08",
-    "updated": "2026-07-14",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/legal-document-intake",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "blockedBy": ["goals/practice-kg-mcp"],
-  "statusNote": "2026-10-02 roadmap re-eval: P4 waits for the practice-kg-mcp P8 handoff (its P4-lite executes intake P4's outcome, decision D6); the Box test tenant is still unprovisioned. Queued in Lane 1, not stalled.",
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): Half the phases remain and nothing is in flight; it is valuable for customers but needs a dedicated lane before resuming. Resume with `bun run beep goals set-status legal-document-intake active` when it is picked up. Before the ruling: 2026-10-02 roadmap re-eval: P4 waits for the practice-kg-mcp P8 handoff (its P4-lite executes intake P4's outcome, decision D6); the Box test tenant is still unprovisioned. Queued in Lane 1, not stalled.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
