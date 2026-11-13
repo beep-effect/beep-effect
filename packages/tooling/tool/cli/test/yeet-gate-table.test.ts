@@ -335,6 +335,31 @@ describe("yeet gate-table recorded read", () => {
     })
   );
 
+  it.effect("gates a stack layer on its trunk's ruleset, not the branch it targets", () =>
+    Effect.gen(function* () {
+      const layer = {
+        ...pullFixture,
+        base: { ...pullFixture.base, ref: "feat/parent" },
+        stack: { number: 1500, position: 2, size: 2, base: { ref: "main", sha: pullFixture.base.sha } },
+      };
+      const { report, github } = yield* runRead({
+        pulls: [layer],
+        detail: layer,
+        threads: threadsFixture,
+        statuses: noStatuses,
+      });
+      const row = rowAt(report, 0);
+      expect(row.read.baseRef).toBe("feat/parent");
+      expect(row.gateMet).toBe(true);
+      expect(
+        A.map(
+          A.filter(github.calls, (call) => Str.startsWith("{repo}/rules/branches/")(call.path)),
+          (call) => call.path
+        )
+      ).toEqual(["{repo}/rules/branches/main"]);
+    })
+  );
+
   it.effect("counts outstanding threads with the merge gate's rule", () =>
     Effect.gen(function* () {
       const { report } = yield* runRead({ pulls: [pullFixture], threads: openThreadsFixture, statuses: noStatuses });
