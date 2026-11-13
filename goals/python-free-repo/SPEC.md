@@ -44,7 +44,7 @@ Completed ports below name their current TypeScript runner.
 | --- | --- | --- |
 | `packages/tooling/tool/cli/python/photo-face` | 13 | port to `@beep/repo-cli` Files commands over `onnxruntime-node` (new `@beep/face-embedding` if the surface warrants it) |
 | `packages/foundation/modeling/markdown/scripts/extract-gfm-corpora.py` | 1 | port to a package script in TypeScript |
-| `.claude/skills/plasma-sensitive-entry/scripts/*.py` | 4 | port to TypeScript over `effect/process` driving `kdialog`; the skill's install step updates |
+| `.claude/skills/plasma-sensitive-entry/scripts/*.ts` | 4 | ported to TypeScript over `effect/process` driving `kdialog`; the skill's install step updated |
 | `.claude/skills/ontology-foundational-auditor/scripts/validate_artifacts.ts` | 1 | ported from Python to TypeScript (`bun` runnable from the skill) |
 | `apps/labs/ciops/scripts/*.py` | 2 | port to the app's test or script surface |
 | `test-gitleaks-observation-digest.py` (retired) | 1 | ported to `packages/tooling/tool/cli/test/gitleaks-observation-digest.test.ts` (`scripts-to-beep-cli` PR #2860) |
