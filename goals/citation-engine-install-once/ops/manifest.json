@@ -6,13 +6,13 @@
     "title": "Citation Engine Install Once",
     "status": "active",
     "created": "2026-11-12",
-    "updated": "2026-11-12",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/citation-engine-install-once",
   "lifecycle": "active",
   "mission": "Install the citation stage tree, tokenizer and regex evaluators once per engine, bind each request's budget, Scope and admission through one invocation service, and own configuration once at the engine boundary, with no change to extraction results.",
-  "statusNote": "Graduated 2026-11-12, not started. First slice A1: the measurement fixture and recorded baseline.",
+  "statusNote": "Slice A1 in review: the probe fixture and recorded baseline (history/evidence/2026-11-13-a1-baseline.md). Next slice A2, the CitationInvocation binding.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -53,12 +53,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

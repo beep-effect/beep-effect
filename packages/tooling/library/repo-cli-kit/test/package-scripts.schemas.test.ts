@@ -1,17 +1,24 @@
 import {
   applyScaffoldRuleForTesting,
+  buildServedCheck,
   CheckerEngineExemption,
   CheckerScriptName,
   checkerEngineExemptions,
+  checkLeadsWithBuild,
   DECLARATION_ONLY_BUILD_COMMAND,
   DECLARATION_ONLY_BUILD_FLAG,
   implScriptDefaults,
+  isDeclarationOnlyBuild,
   JavaScriptBuildOverride,
   javaScriptBuildOverrides,
   NonCanonicalChecker,
+  OWN_SOURCE_CHECK_COMMAND,
+  OwnSourceCheckOverride,
+  ownSourceCheckOverrides,
   PackageKind,
   PackageScriptsReportFromWire,
   RetiredScriptName,
+  retiredCheckSegments,
   retiredImplScripts,
   ScriptsBlock,
   ScriptsRecord,
@@ -25,7 +32,7 @@ import {
 } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -132,6 +139,66 @@ describe("canonical package scripts schemas", () => {
     const override = { manifest: "packages/a/package.json", reason: "the worker image runs dist/main.js" };
     expect(A.map([override, { ...override, reason: "" }], S.is(JavaScriptBuildOverride))).toEqual([true, false]);
     expect(javaScriptBuildOverrides).toEqual([]);
+  });
+  it("serves a declaration-only check from its build and leaves every other check alone", () => {
+    const served = `${DECLARATION_ONLY_BUILD_COMMAND} && bun run beep:check:tests`;
+    expect(A.map(retiredCheckSegments, (row) => [row.segment, row.replacement])).toEqual([
+      [OWN_SOURCE_CHECK_COMMAND, DECLARATION_ONLY_BUILD_COMMAND],
+    ]);
+    assertSome(
+      buildServedCheck(`${OWN_SOURCE_CHECK_COMMAND} && bun run beep:check:tests`, DECLARATION_ONLY_BUILD_COMMAND),
+      served
+    );
+    assertSome(
+      buildServedCheck(DECLARATION_ONLY_BUILD_COMMAND)(OWN_SOURCE_CHECK_COMMAND),
+      DECLARATION_ONLY_BUILD_COMMAND
+    );
+    assertSome(
+      buildServedCheck(OWN_SOURCE_CHECK_COMMAND, `bun run codegen && ${DECLARATION_ONLY_BUILD_COMMAND}`),
+      DECLARATION_ONLY_BUILD_COMMAND
+    );
+    // Flags of the first segment carry over, in order, ahead of the later segments.
+    assertSome(
+      buildServedCheck(
+        `${OWN_SOURCE_CHECK_COMMAND} --checkerCostCache a.cache --pretty false && bun run beep:check:tests`,
+        DECLARATION_ONLY_BUILD_COMMAND
+      ),
+      `${DECLARATION_ONLY_BUILD_COMMAND} --checkerCostCache a.cache --pretty false && bun run beep:check:tests`
+    );
+    // A longer config name, a later no-emit segment, and a build that is not declaration-only.
+    assertNone(buildServedCheck(`${OWN_SOURCE_CHECK_COMMAND}c`, DECLARATION_ONLY_BUILD_COMMAND));
+    assertNone(buildServedCheck(`bun run codegen && ${OWN_SOURCE_CHECK_COMMAND}`, DECLARATION_ONLY_BUILD_COMMAND));
+    assertNone(buildServedCheck(OWN_SOURCE_CHECK_COMMAND, OWN_SOURCE_CHECK_COMMAND));
+    assertNone(buildServedCheck(OWN_SOURCE_CHECK_COMMAND, `${DECLARATION_ONLY_BUILD_COMMAND} --listEmittedFiles`));
+    expect(
+      A.map(
+        [DECLARATION_ONLY_BUILD_COMMAND, `bun run codegen && ${DECLARATION_ONLY_BUILD_COMMAND}`, "vite build", ""],
+        isDeclarationOnlyBuild
+      )
+    ).toEqual([true, true, false, false]);
+    expect(
+      A.map(
+        [
+          served,
+          `${DECLARATION_ONLY_BUILD_COMMAND} --checkerCostCache a.cache && bun run beep:check:tests`,
+          `${DECLARATION_ONLY_BUILD_COMMAND}&&bun run beep:check:tests`,
+          `${DECLARATION_ONLY_BUILD_COMMAND}Extra`,
+          `${OWN_SOURCE_CHECK_COMMAND} && bun run beep:check:tests`,
+          `bun run codegen && ${DECLARATION_ONLY_BUILD_COMMAND}`,
+        ],
+        checkLeadsWithBuild
+      )
+    ).toEqual([true, true, true, false, false, false]);
+    for (const kind of ["library", "tool", "ecosystem", "infra"] as const)
+      expect(scaffoldPackageScripts(kind, [])["beep:check"], kind).toBe(served);
+    for (const kind of ["app", "lab"] as const)
+      expect(scaffoldPackageScripts(kind, [])["beep:check"], kind).toBe(OWN_SOURCE_CHECK_COMMAND);
+    expect(A.map(ownSourceCheckOverrides, (row) => row.manifest)).toEqual([
+      "packages/ecosystem/effect-drizzle/package.json",
+      "packages/foundation/modeling/markdown/package.json",
+    ]);
+    const override = { manifest: "packages/a/package.json", reason: "the check program adds scripts" };
+    expect(A.map([override, { ...override, reason: "" }], S.is(OwnSourceCheckOverride))).toEqual([true, false]);
   });
   it("leaves exempt task ownership with the caller even when every task is selected", () => {
     expect(scaffoldPackageScripts("exempt", TaskScriptName.literals)).toEqual({});

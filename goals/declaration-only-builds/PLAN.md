@@ -2,16 +2,16 @@
 
 ## Status
 
-Status: `in-progress` (P1, PR 2 open)
+Status: `in-progress` (P3, PR 3 open)
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | PR 1, no behaviour change: the repo-wide baseline, the build-versus-check diagnostics comparison through the check-program census, and the three stale findings. | The "Baseline and proof harness" criteria in `SPEC.md` are met and PR 1 is merged. A decision file records whether check-once survives. |
-| P1 Implement | in-progress | PR 2: remove Babel and JavaScript emit from the generated build and the scaffolds; regenerate every scripts block; extend the build output contract test. PR 3 only if P0 kept it: serve the own-source check from the build. | The "Declaration-only build" criteria are met; the check-once criterion is met or cut by decision. |
-| P2 Verify | pending | Re-measure with the baseline's method; confirm the hosted gate on PR 2 as the proof that nothing reads `dist/*.js`; record any Exception Ledger rows. | After numbers are in `research/`; every red is attributed. |
-| P3 Yeet: PR to mergeable | pending | Publish each PR through yeet and drive it to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P1 Implement | complete | PR 2: remove Babel and JavaScript emit from the generated build and the scaffolds; regenerate every scripts block; extend the build output contract test. PR 3 only if P0 kept it: serve the own-source check from the build. | The "Declaration-only build" criteria are met; the check-once criterion is met or cut by decision. |
+| P2 Verify | complete | Re-measure with the baseline's method; confirm the hosted gate on PR 2 as the proof that nothing reads `dist/*.js`; record any Exception Ledger rows. | After numbers are in `research/`; every red is attributed. |
+| P3 Yeet: PR to mergeable | in-progress | Publish each PR through yeet and drive it to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Pull Requests
@@ -82,6 +82,16 @@ Baseline (main at 2cadc8caa0d, 181 emitting packages, fastest of three, serial):
 Equivalence: 2,912 build-versus-check comparisons identical, so check-once is kept. The stale tsbuildinfo glob moved to PR 2 because removing it changes every build task hash.
 
 Lane chore/declaration-only-builds-baseline
+
+Reverse: None needed; a status note.
+
+### PR 2 merged as #3208; PR 3 (check once) open, 2026-11-13
+
+PR 2 merged as #3208 on 2026-11-13. Its hosted gate was green except an inherited coverage ratchet row, which is the proof that nothing reads `dist/*.js`; the Exception Ledger stays empty. An inherited cache-policy red found while publishing it was fixed on `main` in #3206. The four sibling verification goals were told before the merge, when the PR was final and after it landed.
+
+PR 3 serves the own-source check of 180 packages from the build program (decision `2026-11-13-check-runs-the-build-program`), with the Turbo edge scoped as the owner of `goals/route-soundness-repair` asked. P4 Close follows in a goals-only final PR so the completion check sees a merge-ready head.
+
+Lane feat/check-once
 
 Reverse: None needed; a status note.
 
