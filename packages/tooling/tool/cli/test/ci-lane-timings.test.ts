@@ -69,6 +69,7 @@ import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { githubFetch, reply, unreachable } from "./support/GithubFetch.ts";
@@ -263,6 +264,34 @@ const laneStat = (report: CiLaneTimingWindowReport, lane: string) =>
 
 const attributionStat = (report: CiLaneTimingWindowReport, lane: string) =>
   O.getOrThrow(A.findFirst(report.attribution, (stat) => stat.lane === lane));
+
+type CiLaneTimingWindowRowShape = CiLaneTimingWindowReport["rows"][number];
+type CiLaneTimingDurationRowShape = Extract<CiLaneTimingWindowRowShape, { readonly population: "duration" }>;
+
+const durationRowFor = (report: CiLaneTimingWindowReport, lane: string) =>
+  O.getOrThrow(
+    A.findFirst(
+      report.rows,
+      (row): row is CiLaneTimingDurationRowShape => row.population === "duration" && row.lane === lane
+    )
+  );
+
+const tsvCellFor = (tsv: string, rowPrefix: string, column: string) => {
+  const lines = Str.split("\n")(tsv);
+  const header = Str.split("\t")(O.getOrThrow(A.findFirst(lines, Str.startsWith("population\t"))));
+  const cells = Str.split("\t")(O.getOrThrow(A.findFirst(lines, Str.startsWith(rowPrefix))));
+  return cells[header.indexOf(column)];
+};
+
+const checkJobFor = (run: CiWorkflowWindowRun, createdAt: string, startedAt: string, completedAt: string) =>
+  job({
+    completed_at: completedAt,
+    created_at: createdAt,
+    id: run.id + 1,
+    name: "Heavy / Check",
+    run_id: run.id,
+    started_at: startedAt,
+  });
 
 const windowOptions = (overrides: Partial<CiLaneTimingWindowOptions> = {}) =>
   CiLaneTimingWindowOptions.make({
@@ -778,75 +807,79 @@ describe("ci lane timing admission window", () => {
   it.effect("keeps effective spans, pickup, and excluded outcomes in separate schema populations", () =>
     Effect.gen(function* () {
       const run = windowRun();
-      const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
-        windowRunJobs(run, [
-          job({
-            completed_at: "2026-09-04T00:00:10Z",
-            created_at: "2026-09-04T00:00:00Z",
-            id: 1,
-            name: "Heavy / Check",
-            run_id: run.id,
-            started_at: "2026-09-04T00:00:00Z",
-          }),
-          job({ conclusion: "failure", id: 2, name: "Heavy / Docgen", run_id: run.id }),
-          job({ conclusion: "cancelled", id: 3, name: "Heavy / Doctest", run_id: run.id }),
-          job({ id: 4, name: "Knip", run_attempt: 2, run_id: run.id }),
-          job({
-            completed_at: "2026-09-04T00:00:00Z",
-            id: 11,
-            name: "Codegen Drift",
-            run_id: run.id,
-            started_at: "2026-09-04T00:00:10Z",
-          }),
-          job({
-            completed_at: "2026-09-04T00:12:00Z",
-            created_at: "2026-09-04T00:00:00Z",
-            id: 5,
-            name: "Lint (lint-a)",
-            run_id: run.id,
-            started_at: "2026-09-04T00:06:00Z",
-          }),
-          job({
-            completed_at: "2026-09-04T00:11:00Z",
-            created_at: "2026-09-04T00:00:00Z",
-            id: 6,
-            name: "Lint (lint-b)",
-            run_id: run.id,
-            started_at: "2026-09-04T00:07:00Z",
-          }),
-          job({
-            completed_at: "2026-09-04T00:16:00Z",
-            created_at: "2026-09-04T00:00:00Z",
-            id: 7,
-            name: "Lint",
-            run_id: run.id,
-            started_at: "2026-09-04T00:12:00Z",
-          }),
-          job({
-            completed_at: "2026-09-04T00:09:00Z",
-            created_at: "2026-09-04T00:00:00Z",
-            id: 8,
-            name: "Test Unit (repo-cli-1)",
-            run_id: run.id,
-            started_at: "2026-09-04T00:01:00Z",
-          }),
-          job({
-            completed_at: "2026-09-04T00:10:00Z",
-            created_at: "2026-09-04T00:00:00Z",
-            id: 9,
-            name: "Test Unit (unit-a)",
-            run_id: run.id,
-            started_at: "2026-09-04T00:02:00Z",
-          }),
-          job({
-            completed_at: "2026-09-04T00:13:00Z",
-            id: 10,
-            name: "Test Unit",
-            run_id: run.id,
-            started_at: "2026-09-04T00:11:00Z",
-          }),
-        ]),
-      ]);
+      const report = yield* buildCiLaneTimingWindowReport(
+        REQUIRED_CONTEXTS,
+        [
+          windowRunJobs(run, [
+            job({
+              completed_at: "2026-09-04T00:00:10Z",
+              created_at: "2026-09-04T00:00:00Z",
+              id: 1,
+              name: "Heavy / Check",
+              run_id: run.id,
+              started_at: "2026-09-04T00:00:00Z",
+            }),
+            job({ conclusion: "failure", id: 2, name: "Heavy / Docgen", run_id: run.id }),
+            job({ conclusion: "cancelled", id: 3, name: "Heavy / Doctest", run_id: run.id }),
+            job({ id: 4, name: "Knip", run_attempt: 2, run_id: run.id }),
+            job({
+              completed_at: "2026-09-04T00:00:00Z",
+              id: 11,
+              name: "Codegen Drift",
+              run_id: run.id,
+              started_at: "2026-09-04T00:00:10Z",
+            }),
+            job({
+              completed_at: "2026-09-04T00:12:00Z",
+              created_at: "2026-09-04T00:00:00Z",
+              id: 5,
+              name: "Lint (lint-a)",
+              run_id: run.id,
+              started_at: "2026-09-04T00:06:00Z",
+            }),
+            job({
+              completed_at: "2026-09-04T00:11:00Z",
+              created_at: "2026-09-04T00:00:00Z",
+              id: 6,
+              name: "Lint (lint-b)",
+              run_id: run.id,
+              started_at: "2026-09-04T00:07:00Z",
+            }),
+            job({
+              completed_at: "2026-09-04T00:16:00Z",
+              created_at: "2026-09-04T00:00:00Z",
+              id: 7,
+              name: "Lint",
+              run_id: run.id,
+              started_at: "2026-09-04T00:12:00Z",
+            }),
+            job({
+              completed_at: "2026-09-04T00:09:00Z",
+              created_at: "2026-09-04T00:00:00Z",
+              id: 8,
+              name: "Test Unit (repo-cli-1)",
+              run_id: run.id,
+              started_at: "2026-09-04T00:01:00Z",
+            }),
+            job({
+              completed_at: "2026-09-04T00:10:00Z",
+              created_at: "2026-09-04T00:00:00Z",
+              id: 9,
+              name: "Test Unit (unit-a)",
+              run_id: run.id,
+              started_at: "2026-09-04T00:02:00Z",
+            }),
+            job({
+              completed_at: "2026-09-04T00:13:00Z",
+              id: 10,
+              name: "Test Unit",
+              run_id: run.id,
+              started_at: "2026-09-04T00:11:00Z",
+            }),
+          ]),
+        ],
+        O.some(run.created_at)
+      );
 
       expect(report.contextCount).toBe(18);
       expect(laneStat(report, "Check").n).toBe(1);
@@ -865,8 +898,11 @@ describe("ci lane timing admission window", () => {
       expect(report.pickup.breached).toBe(true);
 
       const markdown = renderCiLaneTimingWindowMarkdown(report);
-      expect(markdown).toContain("| Required lane | n | PR | Push | p50 | p95 | Max | P3 state |");
-      expect(markdown).toContain("| Lint | 1 | 1 | 0 | 10m00s | 10m00s | 10m00s | Pass |");
+      expect(markdown).toContain(
+        "| Required lane | n | PR | Push | p50 | p95 | Max | Wait p50 | Wait p95 | P3 state |"
+      );
+      // Run created 00:00, Lint aggregator completed 00:16.
+      expect(markdown).toContain("| Lint | 1 | 1 | 0 | 10m00s | 10m00s | 10m00s | 16m00s | 16m00s | Pass |");
       expect(markdown).toContain(
         "| Required lane | Failures | Cancellations | Invalid spans | Incomplete shard sets |"
       );
@@ -1277,6 +1313,368 @@ describe("ci lane timing admission window", () => {
     );
   });
 
+  // The default window run is created at 2026-09-04T00:00:00Z.
+  describe("verdict wait", () => {
+    it.effect("measures a single-job lane from run creation to the job's completion", () =>
+      Effect.gen(function* () {
+        const run = windowRun({ id: 500 });
+        const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+          windowRunJobs(run, [
+            checkJobFor(run, "2026-09-04T00:02:00Z", "2026-09-04T00:06:00Z", "2026-09-04T00:09:00Z"),
+          ]),
+        ]);
+        const row = durationRowFor(report, "Check");
+        expect(row.durationSeconds).toBe(180);
+        assertSome(row.verdictWaitSeconds, 540);
+        assertSome(laneStat(report, "Check").waitP50Seconds, 540);
+        assertSome(laneStat(report, "Check").waitP95Seconds, 540);
+        deepStrictEqual(laneStat(report, "Check").breaches, []);
+        expect(tsvCellFor(renderCiLaneTimingWindowTsv(report), "duration\tCheck", "verdictWaitSeconds")).toBe("540");
+      })
+    );
+
+    it.effect("measures a sharded lane from run creation to its aggregator's completion", () =>
+      Effect.gen(function* () {
+        const run = windowRun({ id: 510 });
+        const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+          windowRunJobs(run, [
+            // Seven minutes of run-level queueing before the first shard was even created.
+            job({
+              completed_at: "2026-09-04T00:12:00Z",
+              created_at: "2026-09-04T00:07:00Z",
+              id: 511,
+              name: "Lint (lint-a)",
+              run_id: run.id,
+              started_at: "2026-09-04T00:09:00Z",
+            }),
+            job({
+              completed_at: "2026-09-04T00:13:00Z",
+              created_at: "2026-09-04T00:07:00Z",
+              id: 512,
+              name: "Lint (lint-b)",
+              run_id: run.id,
+              started_at: "2026-09-04T00:10:00Z",
+            }),
+            job({
+              completed_at: "2026-09-04T00:14:00Z",
+              created_at: "2026-09-04T00:13:10Z",
+              id: 513,
+              name: "Lint",
+              run_id: run.id,
+              started_at: "2026-09-04T00:13:30Z",
+            }),
+          ]),
+        ]);
+        const row = durationRowFor(report, "Lint");
+        // The duration starts at the earliest shard start (00:09); the wait starts at run creation (00:00).
+        expect(row.durationSeconds).toBe(300);
+        assertSome(row.verdictWaitSeconds, 840);
+        assertNone(row.pickupSeconds);
+        assertSome(laneStat(report, "Lint").waitP95Seconds, 840);
+      })
+    );
+
+    it.effect("records no wait for a later attempt and keeps an attempt-one wait in a re-run run", () =>
+      Effect.gen(function* () {
+        // `run_started_at` was rewritten by the re-run; `created_at` was not, and the wait reads only it.
+        const run = windowRun({
+          id: 520,
+          run_attempt: 2,
+          run_started_at: O.some(DateTime.makeUnsafe("2026-09-04T02:00:00Z")),
+        });
+        const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+          windowRunJobs(run, [
+            checkJobFor(run, "2026-09-04T00:01:00Z", "2026-09-04T00:02:00Z", "2026-09-04T00:05:00Z"),
+            job({
+              completed_at: "2026-09-04T02:05:00Z",
+              created_at: "2026-09-04T02:00:00Z",
+              id: 522,
+              name: "Heavy / Check",
+              run_attempt: 2,
+              run_id: run.id,
+              started_at: "2026-09-04T02:01:00Z",
+            }),
+          ]),
+        ]);
+        assertSome(durationRowFor(report, "Check").verdictWaitSeconds, 300);
+        expect(laneStat(report, "Check").n).toBe(1);
+        assertSome(laneStat(report, "Check").waitP95Seconds, 300);
+        const laterRows = A.filter(report.rows, (row) => row.runAttempt === 2);
+        expect(A.map(laterRows, (row) => row.population)).toStrictEqual(["attribution"]);
+        expect(tsvCellFor(renderCiLaneTimingWindowTsv(report), "attribution\tCheck", "verdictWaitSeconds")).toBe("");
+      })
+    );
+
+    it.effect("reads Breach (wait) when the duration passes and the wait does not", () =>
+      Effect.gen(function* () {
+        const run = windowRun({ id: 530 });
+        const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+          windowRunJobs(run, [
+            checkJobFor(run, "2026-09-04T00:20:00Z", "2026-09-04T00:22:00Z", "2026-09-04T00:24:00Z"),
+          ]),
+        ]);
+        const check = laneStat(report, "Check");
+        assertSome(check.p95Seconds, 120);
+        assertSome(check.waitP95Seconds, 1_440);
+        expect(check.state).toBe("Breach");
+        deepStrictEqual(check.breaches, ["wait"]);
+        const markdown = renderCiLaneTimingWindowMarkdown(report);
+        expect(markdown).toContain(
+          "| Check | 1 | 1 | 0 | 2m00s | 2m00s | 2m00s | 24m00s | **24m00s** | **Breach (wait)** |"
+        );
+        // A lane with no successful row fails both measures closed.
+        expect(markdown).toContain("| Docgen | 0 | 0 | 0 | — | **—** | — | — | **—** | **Breach (duration, wait)** |");
+      })
+    );
+
+    it.effect("keeps a garbled wait out of the wait percentiles and fails the wait closed", () =>
+      Effect.gen(function* () {
+        // The job claims to have completed before its run was created.
+        const run = windowRun({ id: 540, created_at: DateTime.makeUnsafe("2026-09-04T01:00:00Z") });
+        const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+          windowRunJobs(run, [
+            checkJobFor(run, "2026-09-04T00:01:00Z", "2026-09-04T00:02:00Z", "2026-09-04T00:05:00Z"),
+          ]),
+        ]);
+        const row = durationRowFor(report, "Check");
+        expect(row.durationSeconds).toBe(180);
+        assertNone(row.verdictWaitSeconds);
+        expect(laneStat(report, "Check").n).toBe(1);
+        assertNone(laneStat(report, "Check").waitP95Seconds);
+        deepStrictEqual(laneStat(report, "Check").breaches, ["wait"]);
+      })
+    );
+
+    it.effect("decodes a report whose rows predate the wait column, reading the wait as absent", () =>
+      Effect.gen(function* () {
+        const run = windowRun({ id: 550 });
+        const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+          windowRunJobs(run, [
+            checkJobFor(run, "2026-09-04T00:01:00Z", "2026-09-04T00:02:00Z", "2026-09-04T00:05:00Z"),
+          ]),
+        ]);
+        assertSome(durationRowFor(report, "Check").verdictWaitSeconds, 300);
+        // A row encoded before the column existed carries every field but `verdictWaitSeconds`.
+        const legacy = yield* S.decodeUnknownEffect(CiLaneTimingWindowReport)({
+          ...report,
+          rows: A.map(report.rows, (row) =>
+            row.population === "duration" ? Struct.omit(row, ["verdictWaitSeconds"]) : row
+          ),
+        });
+        const legacyRow = durationRowFor(legacy, "Check");
+        assertNone(legacyRow.verdictWaitSeconds);
+        expect(legacyRow.durationSeconds).toBe(180);
+        assertSome(legacyRow.pickupSeconds, 60);
+        deepStrictEqual(legacy.laneStats, report.laneStats);
+      })
+    );
+  });
+
+  describe("Test Integration shards", () => {
+    // #3005 sharded the lane at 2026-11-09T17:15:26Z; these runs are created after it unless stated.
+    const shardedRun = (id: number) => windowRun({ created_at: DateTime.makeUnsafe("2026-11-12T00:00:00Z"), id });
+    const lawPractice = (count: number) => A.makeBy(count, (index) => `lps-int-${index + 1}`);
+    const nineteenAndRest = A.append(lawPractice(19), "int-rest");
+    const sixteenAndRest = A.append(lawPractice(16), "int-rest");
+    const shardJobs = (run: CiWorkflowWindowRun, partitions: ReadonlyArray<string>) =>
+      A.map(partitions, (partition, index) =>
+        job({
+          completed_at: "2026-11-12T00:12:00Z",
+          created_at: "2026-11-12T00:01:00Z",
+          id: run.id * 100 + index,
+          name: `Test Integration (${partition})`,
+          run_id: run.id,
+          started_at: `2026-11-12T00:0${3 + (index % 3)}:00Z`,
+        })
+      );
+    const aggregator = (run: CiWorkflowWindowRun) =>
+      job({
+        completed_at: "2026-11-12T00:13:05Z",
+        created_at: "2026-11-12T00:12:30Z",
+        id: run.id * 100 + 99,
+        name: "Heavy / Test Integration",
+        run_id: run.id,
+        started_at: "2026-11-12T00:13:00Z",
+      });
+    const testPlan = (run: CiWorkflowWindowRun) =>
+      job({
+        completed_at: "2026-11-12T00:00:50Z",
+        created_at: "2026-11-12T00:00:05Z",
+        id: run.id * 100 + 98,
+        name: "Test Plan",
+        run_id: run.id,
+        started_at: "2026-11-12T00:00:20Z",
+      });
+
+    it.effect("measures the twenty-shard layout from its earliest shard to the aggregate and counts its pickups", () =>
+      Effect.gen(function* () {
+        const run = shardedRun(60);
+        const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+          windowRunJobs(run, [testPlan(run), ...shardJobs(run, nineteenAndRest), aggregator(run)]),
+        ]);
+        const row = durationRowFor(report, "Test Integration");
+        expect(row.jobName).toBe("Heavy / Test Integration");
+        // Earliest shard start 00:03:00 to aggregate completion 00:13:05; run created 00:00:00.
+        expect(row.durationSeconds).toBe(605);
+        assertSome(row.verdictWaitSeconds, 785);
+        expect(laneStat(report, "Test Integration").n).toBe(1);
+        const pickups = A.filter(
+          report.rows,
+          (windowRow) => windowRow.population === "pickup" && windowRow.lane === "Test Integration"
+        );
+        expect(A.length(pickups)).toBe(20);
+        expect(report.pickup.n).toBe(20);
+        assertSome(report.pickup.p95Seconds, 240);
+      })
+    );
+
+    it.effect("admits the sixteen-shard layout of #3005 without a Test Plan job", () =>
+      Effect.gen(function* () {
+        const run = shardedRun(61);
+        const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+          windowRunJobs(run, [...shardJobs(run, sixteenAndRest), aggregator(run)]),
+        ]);
+        expect(laneStat(report, "Test Integration").n).toBe(1);
+        assertSome(laneStat(report, "Test Integration").p95Seconds, 605);
+        expect(attributionStat(report, "Test Integration").incompleteEffectiveSpans).toBe(0);
+      })
+    );
+
+    it.effect("measures a planned subset that allocated only int-rest", () =>
+      Effect.gen(function* () {
+        const run = shardedRun(62);
+        const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+          windowRunJobs(run, [testPlan(run), ...shardJobs(run, ["int-rest"]), aggregator(run)]),
+        ]);
+        expect(laneStat(report, "Test Integration").n).toBe(1);
+        assertSome(laneStat(report, "Test Integration").p95Seconds, 605);
+        assertSome(laneStat(report, "Test Integration").waitP95Seconds, 785);
+      })
+    );
+
+    it.effect("keeps a sharded-era run with a missing shard incomplete", () =>
+      Effect.gen(function* () {
+        const run = shardedRun(63);
+        const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+          windowRunJobs(run, [
+            ...shardJobs(
+              run,
+              A.filter(nineteenAndRest, (partition) => partition !== "lps-int-3")
+            ),
+            aggregator(run),
+          ]),
+        ]);
+        expect(laneStat(report, "Test Integration").n).toBe(0);
+        expect(attributionStat(report, "Test Integration").incompleteEffectiveSpans).toBe(1);
+      })
+    );
+
+    it.effect("measures a run older than the shards by its single Heavy / Test Integration job", () =>
+      Effect.gen(function* () {
+        const preShard = windowRun({ created_at: DateTime.makeUnsafe("2026-11-08T00:00:00Z"), id: 64 });
+        const preShardWithoutJob = windowRun({ created_at: DateTime.makeUnsafe("2026-11-08T01:00:00Z"), id: 65 });
+        const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+          windowRunJobs(preShard, [
+            job({
+              completed_at: "2026-11-08T00:50:00Z",
+              created_at: "2026-11-08T00:01:00Z",
+              id: 6_401,
+              name: "Heavy / Test Integration",
+              run_id: preShard.id,
+              started_at: "2026-11-08T00:03:00Z",
+            }),
+          ]),
+          // A pre-shard run that never created the job yields no row, as it did before the lane had a spec.
+          windowRunJobs(preShardWithoutJob, [
+            checkJobFor(preShardWithoutJob, "2026-11-08T01:01:00Z", "2026-11-08T01:02:00Z", "2026-11-08T01:05:00Z"),
+          ]),
+        ]);
+        const row = durationRowFor(report, "Test Integration");
+        expect(row.jobName).toBe("Heavy / Test Integration");
+        expect(row.durationSeconds).toBe(2_820);
+        assertSome(row.pickupSeconds, 120);
+        assertSome(row.verdictWaitSeconds, 3_000);
+        expect(laneStat(report, "Test Integration").n).toBe(1);
+        expect(attributionStat(report, "Test Integration").incompleteEffectiveSpans).toBe(0);
+        deepStrictEqual(laneStat(report, "Test Integration").breaches, ["duration", "wait"]);
+      })
+    );
+  });
+
+  // goals/ci-lane-economics decision of 2026-11-13: the tripwire moves from 5m00s to 10m00s for windows that start
+  // on or after 2026-11-13T00:00:00Z.
+  describe("queue tripwire by window", () => {
+    // Both Lint shards are created at 00:00 and picked up `pickupMinutes` later, so the pickup p95 is that wait.
+    const pickupReport = (since: O.Option<DateTime.Utc>, pickupMinutes: number) => {
+      const run = windowRun({ created_at: DateTime.makeUnsafe("2026-11-13T00:00:00Z"), id: 700 });
+      const startedAt = `2026-11-13T00:${Str.padStart(2, "0")(`${pickupMinutes}`)}:00Z`;
+      return buildCiLaneTimingWindowReport(
+        REQUIRED_CONTEXTS,
+        [
+          windowRunJobs(run, [
+            job({
+              completed_at: "2026-11-13T00:15:00Z",
+              created_at: "2026-11-13T00:00:00Z",
+              id: 701,
+              name: "Lint (lint-a)",
+              run_id: run.id,
+              started_at: startedAt,
+            }),
+            job({
+              completed_at: "2026-11-13T00:15:00Z",
+              created_at: "2026-11-13T00:00:00Z",
+              id: 702,
+              name: "Lint (lint-b)",
+              run_id: run.id,
+              started_at: startedAt,
+            }),
+          ]),
+        ],
+        since
+      );
+    };
+
+    it.effect("judges a window starting just before 2026-11-13 against 5m00s", () =>
+      Effect.gen(function* () {
+        const report = yield* pickupReport(O.some(DateTime.makeUnsafe("2026-11-12T23:59:59Z")), 7);
+        expect(report.pickup.tripwireSeconds).toBe(300);
+        assertTrue(report.pickup.breached);
+        expect(renderCiLaneTimingWindowMarkdown(report)).toContain(
+          "Queue tripwire: Breach — shard pickup p95 7m00s > 5m00s (n=2)."
+        );
+      })
+    );
+
+    it.effect("judges a window starting exactly at 2026-11-13T00:00:00Z against 10m00s", () =>
+      Effect.gen(function* () {
+        const report = yield* pickupReport(O.some(DateTime.makeUnsafe("2026-11-13T00:00:00Z")), 7);
+        expect(report.pickup.tripwireSeconds).toBe(600);
+        assertFalse(report.pickup.breached);
+        expect(renderCiLaneTimingWindowMarkdown(report)).toContain(
+          "Queue tripwire: Pass — shard pickup p95 7m00s ≤ 10m00s (n=2)."
+        );
+      })
+    );
+
+    it.effect("breaches a later window only above 10m00s", () =>
+      Effect.gen(function* () {
+        const report = yield* pickupReport(O.some(DateTime.makeUnsafe("2026-11-14T00:00:00Z")), 11);
+        assertTrue(report.pickup.breached);
+        expect(renderCiLaneTimingWindowMarkdown(report)).toContain(
+          "Queue tripwire: Breach — shard pickup p95 11m00s > 10m00s (n=2)."
+        );
+      })
+    );
+
+    it.effect("uses the newest limit when the report is built without a window", () =>
+      Effect.gen(function* () {
+        const report = yield* pickupReport(O.none(), 7);
+        expect(report.pickup.tripwireSeconds).toBe(600);
+        assertFalse(report.pickup.breached);
+      })
+    );
+  });
+
   it.effect("renders an unratified version without claiming a ratified context count", () =>
     Effect.gen(function* () {
       const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, []);
@@ -1309,34 +1707,38 @@ describe("ci lane timing admission window", () => {
       );
 
       const run = windowRun({ id: 250 });
-      const passingReport = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
-        windowRunJobs(run, [
-          job({
-            completed_at: "2026-09-04T00:03:00Z",
-            created_at: "2026-09-04T00:00:00Z",
-            id: 251,
-            name: "Lint (lint-a)",
-            run_id: run.id,
-            started_at: "2026-09-04T00:00:20Z",
-          }),
-          job({
-            completed_at: "2026-09-04T00:04:00Z",
-            created_at: "2026-09-04T00:00:00Z",
-            id: 252,
-            name: "Lint (lint-b)",
-            run_id: run.id,
-            started_at: "2026-09-04T00:00:30Z",
-          }),
-          job({
-            completed_at: "2026-09-04T00:05:00Z",
-            created_at: "2026-09-04T00:00:00Z",
-            id: 253,
-            name: "Lint",
-            run_id: run.id,
-            started_at: "2026-09-04T00:04:00Z",
-          }),
-        ]),
-      ]);
+      const passingReport = yield* buildCiLaneTimingWindowReport(
+        REQUIRED_CONTEXTS,
+        [
+          windowRunJobs(run, [
+            job({
+              completed_at: "2026-09-04T00:03:00Z",
+              created_at: "2026-09-04T00:00:00Z",
+              id: 251,
+              name: "Lint (lint-a)",
+              run_id: run.id,
+              started_at: "2026-09-04T00:00:20Z",
+            }),
+            job({
+              completed_at: "2026-09-04T00:04:00Z",
+              created_at: "2026-09-04T00:00:00Z",
+              id: 252,
+              name: "Lint (lint-b)",
+              run_id: run.id,
+              started_at: "2026-09-04T00:00:30Z",
+            }),
+            job({
+              completed_at: "2026-09-04T00:05:00Z",
+              created_at: "2026-09-04T00:00:00Z",
+              id: 253,
+              name: "Lint",
+              run_id: run.id,
+              started_at: "2026-09-04T00:04:00Z",
+            }),
+          ]),
+        ],
+        O.some(run.created_at)
+      );
 
       expect(passingReport.pickup.breached).toBe(false);
       expect(renderCiLaneTimingWindowMarkdown(passingReport)).toContain(
@@ -1391,6 +1793,8 @@ describe("ci lane timing admission window", () => {
 
       expect(report.runCount).toBe(1);
       expect(report.contextCount).toBe(18);
+      // A 2026-09-04 `--since` is judged against the tripwire in force then.
+      expect(report.pickup.tripwireSeconds).toBe(300);
       assertSome(
         O.map(report.rulesetVersion, (version) => version.version_id),
         48600030
@@ -1675,7 +2079,14 @@ describe("ci lane timing admission window", () => {
       contextCount: 15,
       dayPeaks: peaks,
       laneStats: [],
-      pickup: { breached: false, maxSeconds: O.none(), n: 0, p50Seconds: O.none(), p95Seconds: O.none() },
+      pickup: {
+        breached: false,
+        maxSeconds: O.none(),
+        n: 0,
+        p50Seconds: O.none(),
+        p95Seconds: O.none(),
+        tripwireSeconds: 300,
+      },
       requiredContexts: [],
       rulesetVersion: O.none(),
       rows: [],
@@ -1712,7 +2123,14 @@ describe("ci lane timing admission window", () => {
       contextCount: 15,
       dayPeaks: peaks,
       laneStats: [],
-      pickup: { breached: false, maxSeconds: O.none(), n: 0, p50Seconds: O.none(), p95Seconds: O.none() },
+      pickup: {
+        breached: false,
+        maxSeconds: O.none(),
+        n: 0,
+        p50Seconds: O.none(),
+        p95Seconds: O.none(),
+        tripwireSeconds: 300,
+      },
       requiredContexts: [],
       rulesetVersion: O.none(),
       rows: [],
