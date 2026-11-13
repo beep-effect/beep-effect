@@ -9,7 +9,9 @@ on:
           `false` skips it before runner allocation while retaining its exact
           `Heavy / <lane>` check context. Dynamic job names cannot be skipped
           this way: they report `Heavy / matrix.name` (probe #1164).
-          Callers pass `false` only for documentation-only admission verdicts.
+          Callers pass `false` only for `skip-satisfied` admission verdicts:
+          a documentation-only diff, or heavy-admit.yml re-reporting a head
+          an earlier Heavy Admit run on the same SHA already proved green.
         required: false
         type: boolean
         default: true

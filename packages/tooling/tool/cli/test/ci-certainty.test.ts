@@ -166,6 +166,49 @@ describe("ci certainty fixture replay", () => {
       })
     );
 
+    it.effect("classes a head apart by its Docs Policy job once Heavy Admission is skipped on documentation", () =>
+      Effect.gen(function* () {
+        const corpus = yield* loadCorpus(BASELINE);
+        // The same docs head as check.yml shapes it since 2026-11-13: Heavy Admission is skipped before
+        // a runner is requested, and `policy` lists what the Docs Policy job reported (empty: no such job).
+        const reshaped = (policy: ReadonlyArray<string>) =>
+          CiCertaintyCorpus.make({
+            ...corpus,
+            pullRequestRuns: A.map(corpus.pullRequestRuns, (run) =>
+              Str.startsWith("b85ee265")(run.run.head_sha) && run.workflow === "check.yml"
+                ? CiCertaintyRun.make({
+                    ...run,
+                    jobs: A.flatMap(run.jobs, (job) =>
+                      job.name === "Heavy Admission"
+                        ? [
+                            CiWorkflowJob.make({ ...job, conclusion: "skipped", steps: [] }),
+                            ...A.map(policy, (conclusion) =>
+                              CiWorkflowJob.make({ ...job, conclusion, id: job.id + 1, name: "Docs Policy", steps: [] })
+                            ),
+                          ]
+                        : [job]
+                    ),
+                  })
+                : run
+            ),
+          });
+        const classOf = (policy: ReadonlyArray<string>) =>
+          buildCiCertaintyReport(reshaped(policy)).pipe(
+            Effect.map((report) => headStartingWith(report.heads, "b85ee265").headClass)
+          );
+
+        const green = yield* classOf(["success"]);
+        const red = yield* classOf(["failure"]);
+        const skipped = yield* classOf(["skipped"]);
+        const absent = yield* classOf([]);
+        strictEqual(green, "docs");
+        // A red Docs Policy is still a documentation head; a skipped or absent one is a code head.
+        strictEqual(red, "docs");
+        strictEqual(skipped, "code");
+        strictEqual(absent, "code");
+      })
+    );
+
     it.effect("reports the post-#3030 admission and Test Unit selection rows", () =>
       Effect.gen(function* () {
         const report = yield* loadCorpus(PLANNED).pipe(Effect.flatMap(buildCiCertaintyReport));
@@ -681,6 +724,54 @@ describe("ci certainty head states", () => {
         strictEqual(report.main.commits, 0);
         strictEqual(report.main.docsCommits, 1);
         assertNone(report.main.rate);
+      })
+    );
+  });
+});
+
+// A later label on a proven head makes heavy-admit.yml re-report the proof: every `Heavy / <lane>`
+// skipped, hours after the lane ran green. The green instant stays at the run that did the work.
+const REREPORT_HEAD = Str.repeat(40)("5");
+
+describe("ci certainty re-reported heavy lanes", () => {
+  it.layer(testLayer)((it) => {
+    it.effect("never takes a later re-report's skipped lane as the context's completion", () =>
+      Effect.gen(function* () {
+        const heavyAdmit = (id: number, createdAt: string, job: Partial<CiWorkflowJob>) =>
+          CiCertaintyRun.make({
+            ...foldRun(id, REREPORT_HEAD, createdAt, O.some("completed"), [foldJob({ name: "Heavy / Check", ...job })]),
+            workflow: "heavy-admit.yml",
+          });
+        const report = yield* buildCiCertaintyReport(
+          CiCertaintyCorpus.make({
+            ...syntheticCorpus([]),
+            pullRequestRuns: [
+              foldRun(301, REREPORT_HEAD, "2026-11-09T10:00:00Z", O.some("completed"), [foldJob({ id: 51 })]),
+              // The admitted run proves Heavy / Check twelve minutes after the push.
+              heavyAdmit(302, "2026-11-09T10:01:00Z", {
+                id: 52,
+                started_at: "2026-11-09T10:02:00Z",
+                completed_at: "2026-11-09T10:12:00Z",
+              }),
+              // Three hours later an unrelated label re-reports it without work.
+              heavyAdmit(303, "2026-11-09T13:00:00Z", {
+                id: 53,
+                conclusion: "skipped",
+                created_at: "2026-11-09T13:00:10Z",
+                started_at: "2026-11-09T13:00:20Z",
+                completed_at: "2026-11-09T13:00:21Z",
+              }),
+            ],
+            requiredContexts: ["Lint", "Heavy / Check"],
+          })
+        );
+
+        const head = headStartingWith(report.heads, REREPORT_HEAD);
+        strictEqual(head.state, "green");
+        assertSome(head.requiredGreenMinutes, 12);
+        assertSome(head.criticalContext, "Heavy / Check");
+        const check = O.getOrThrow(A.findFirst(head.contexts, (row) => row.context === "Heavy / Check"));
+        assertSome(check.runId, 302);
       })
     );
   });
