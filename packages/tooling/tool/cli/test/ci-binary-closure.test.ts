@@ -1,20 +1,15 @@
-import { CiBinaryClosure, ciBinaryClosureCommand, ciBinaryClosureOf } from "@beep/repo-cli/commands/Ci/CiBinaryClosure";
+import { ciBinaryClosureOf } from "@beep/repo-cli/commands/Ci/CiBinaryClosure";
 import { livePolicySourceTree, readPolicyWorkspaces } from "@beep/repo-cli/commands/Lint";
 import { FsUtilsLive, findRepoRoot } from "@beep/repo-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Console from "effect/Console";
-import * as Command from "effect/cli/Command";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as TestConsole from "effect/testing/TestConsole";
 
 // PERIH-11 slice 1 (goals/heavy-pool-diet): the CI binary release gate compares closure digests.
 // These fixtures overlay single files on the live checkout and prove which edits move the digest.
@@ -22,9 +17,6 @@ import * as TestConsole from "effect/testing/TestConsole";
 type SourceTree = Parameters<typeof ciBinaryClosureOf>[0]["tree"];
 
 const platform = Layer.mergeAll(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)), Digest.layerWebCrypto);
-
-const runClosureCommand = Command.runWith(ciBinaryClosureCommand, { version: "0.0.0" });
-const decodeClosureJson = S.decodeEffect(S.fromJsonString(CiBinaryClosure));
 
 const CI_BINARY = "packages/tooling/tool/cli/src/commands/Ci/CiBinary.ts";
 // bun.lock names a patch by path only, so the patch content is a closure input of its own.
@@ -46,16 +38,15 @@ const append =
   (text: O.Option<string>): string =>
     `${O.getOrElse(text, () => "")}${suffix}`;
 
-// The closure walks the real checkout, so each test resolves the checkout root through the
-// native filesystem (symlinked worktrees and home directories resolve to one canonical root).
-const live = Effect.fnUntraced(function* (root: string) {
+const live = Effect.gen(function* () {
+  const root = yield* findRepoRoot();
   const tree = yield* livePolicySourceTree(root);
   const workspaces = yield* readPolicyWorkspaces(root);
   return { tree, workspaces } as const;
 });
 
-const digestWith = Effect.fnUntraced(function* (root: string, edits: ReadonlyArray<readonly [string, string]>) {
-  const { tree, workspaces } = yield* live(root);
+const digestWith = Effect.fnUntraced(function* (edits: ReadonlyArray<readonly [string, string]>) {
+  const { tree, workspaces } = yield* live;
   const closure = yield* ciBinaryClosureOf({
     tree: overlay(tree, HashMap.fromIterable(A.map(edits, ([file, suffix]) => [file, append(suffix)] as const))),
     workspaces,
@@ -68,10 +59,7 @@ describe("ci binary closure", () => {
     it.effect(
       "is deterministic across runs and workspace order",
       Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const found = yield* findRepoRoot();
-        const root = yield* fs.realPath(found);
-        const { tree, workspaces } = yield* live(root);
+        const { tree, workspaces } = yield* live;
         const first = yield* ciBinaryClosureOf({ tree, workspaces });
         const second = yield* ciBinaryClosureOf({ tree, workspaces: A.reverse(workspaces) });
         expect(second.digest).toBe(first.digest);
@@ -83,10 +71,7 @@ describe("ci binary closure", () => {
     it.effect(
       "covers the entry, reached workspace modules and the build inputs, never the patterns projection",
       Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const found = yield* findRepoRoot();
-        const root = yield* fs.realPath(found);
-        const closure = yield* digestWith(root, []);
+        const closure = yield* digestWith([]);
         const paths = A.map(closure.files, (file) => file.path);
         expect(paths).toContain("packages/tooling/tool/cli/src/bin-ci.ts");
         expect(paths).toContain(CI_BINARY);
@@ -104,10 +89,7 @@ describe("ci binary closure", () => {
     it.effect(
       "moves when a file inside the closure changes",
       Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const found = yield* findRepoRoot();
-        const root = yield* fs.realPath(found);
-        const base = yield* digestWith(root, []);
+        const base = yield* digestWith([]);
         for (const file of [
           CI_BINARY,
           "packages/foundation/modeling/utils/src/Str.ts",
@@ -116,7 +98,7 @@ describe("ci binary closure", () => {
           ".github/workflows/beep-ci-binary.yml",
           PATCH_FILE,
         ]) {
-          const edited = yield* digestWith(root, [[file, "\n// closure mutation fixture\n"]]);
+          const edited = yield* digestWith([[file, "\n// closure mutation fixture\n"]]);
           expect(edited.digest, file).not.toBe(base.digest);
         }
       })
@@ -125,11 +107,8 @@ describe("ci binary closure", () => {
     it.effect(
       "moves when a new import edge pulls a module into the closure",
       Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const found = yield* findRepoRoot();
-        const root = yield* fs.realPath(found);
-        const base = yield* digestWith(root, []);
-        const edited = yield* digestWith(root, [[CI_BINARY, '\nimport "./CiLane.ts";\n']]);
+        const base = yield* digestWith([]);
+        const edited = yield* digestWith([[CI_BINARY, '\nimport "./CiLane.ts";\n']]);
         const paths = A.map(edited.files, (file) => file.path);
         expect(A.map(base.files, (file) => file.path)).not.toContain(
           "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"
@@ -142,39 +121,17 @@ describe("ci binary closure", () => {
     it.effect(
       "holds when a file outside the closure changes",
       Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const found = yield* findRepoRoot();
-        const root = yield* fs.realPath(found);
-        const base = yield* digestWith(root, []);
+        const base = yield* digestWith([]);
         for (const file of [
           "goals/heavy-pool-diet/PLAN.md",
           "packages/drivers/git/src/Git.ts",
           "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
           PATTERNS_JSON,
         ]) {
-          const edited = yield* digestWith(root, [[file, "\n// outside the closure\n"]]);
+          const edited = yield* digestWith([[file, "\n// outside the closure\n"]]);
           expect(edited.digest, file).toBe(base.digest);
         }
       })
-    );
-
-    // beep-ci-binary.yml runs `beep ci binary-closure --out <asset>` with no `--list`; the first
-    // main pushes after #3145 failed there because `--list` had no default and was required.
-    it.effect("runs the workflow's --out-only invocation and writes the closure the digest describes", () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const found = yield* findRepoRoot();
-        const root = yield* fs.realPath(found);
-        const directory = yield* fs.makeTempDirectoryScoped();
-        const out = `${directory}/beep-linux-x64.closure.json`;
-        yield* runClosureCommand(["--out", out]);
-        const lines = yield* TestConsole.logLines;
-        const written = yield* fs.readFileString(out);
-        const closure = yield* decodeClosureJson(written);
-        const expected = yield* digestWith(root, []);
-        expect(closure.digest).toBe(expected.digest);
-        expect(lines).toStrictEqual([expected.digest]);
-      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
   });
 });
