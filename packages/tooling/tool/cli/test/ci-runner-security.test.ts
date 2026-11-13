@@ -462,6 +462,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const root = yield* findRepoRoot();
       const heavyYaml = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
       const heavy = parseWorkflowYaml(heavyYaml);
+      // Callers and required contexts name the workflow "Heavy"; a stray paste into the plain
+      // scalar folds into the name without breaking the YAML (seen on PR #3296).
+      expect(yamlAt(heavy, ["name"])).toBe("Heavy");
       const requested = yamlAt(heavy, ["jobs", "producer-execute", "permissions"]);
       expect(requested).toEqual({ contents: "read", actions: "read" });
       expect(yamlAt(heavy, ["permissions"])).toEqual({ contents: "read" });

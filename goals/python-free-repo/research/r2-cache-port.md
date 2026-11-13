@@ -1,4 +1,4 @@
-| `policy-build-requirements.txt` | `.github/workflows/heavy.yml` producer build, `ci-runner-security.test.ts` | Replaced by `policy-build-tools.txt`. heavy.yml no longer installs the `ziglang` wheel, so the file now pins what the producer step really installs: the Zig release tarball URL, sha256 and version, and the `cargo-zigbuild` wheel URL, sha256 and version. The install step reads every pin from it, and build.json digests it as a source input |# infra/r2-cache Python port
+# infra/r2-cache Python port
 
 Lane: `chore/python-free-repo`, 2026-11-13. The SPEC listed `infra/r2-cache` as a
 non-goal because `infra-alchemy-rebuild` deletes the directory at its P6. Parts are
@@ -14,7 +14,7 @@ off, so this lane ports or deletes all six Python files now.
 | `fleet.py` (68) | Copied by `workstation.sh install` into `~/.local/share/beep/r2-cache/`; README enrollment step | Ported: `bun run beep cache r2 fleet <roots...> [--apply] [--output <path>]` (`Cache.r2.fleet.ts`); install step no longer copies it |
 | `trial-grants.py` (267, boto3) | README operator step only; trial expires 2026-11-28; owning goal `turborepo-cache-trust-observability` is paused | Deleted. Result retained: `goals/turborepo-cache-trust-observability/research/saved-storage-grants-checkpoint-2026-11-03.json` |
 | `policy-lab.py` (1035) + `policy-lab-requirements.txt` | README "optional" lab only | Deleted. Results retained: `research/adapter-policy-lab.json`, `adapter-runtime-lab.json`, `adapter-runtime-checkpoint.json` under the trust packet |
-| `policy-build-requirements.txt` | `.github/workflows/heavy.yml` producer build (`pip install --require-hashes`), `ci-runner-security.test.ts` | Kept. It pins the `cargo-zigbuild`/`ziglang` wheels for the Rust musl build; it is a lockfile for a build tool, not Python source, and has a live consumer |
+| `policy-build-requirements.txt` | `.github/workflows/heavy.yml` producer build, `ci-runner-security.test.ts` | Replaced by `policy-build-tools.txt`. heavy.yml no longer installs the `ziglang` wheel, so the file now pins what the producer step really installs: the Zig release tarball URL, sha256 and version, and the `cargo-zigbuild` wheel URL, sha256 and version. The install step reads every pin from it, and build.json digests it as a source input |
 
 Recovery for every deleted file: `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:infra/r2-cache/<file>`.
 

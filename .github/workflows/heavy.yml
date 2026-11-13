@@ -1,8 +1,4 @@
-name: Heavy          fetch zig.tar.xz "$zig_url"
-          fetch cargo-zigbuild.whl "$zigbuild_url"
-          printf '%s  %s\n' \
-            "$zig_sha256" "$tools/downloads/zig.tar.xz" \
-            "$zigbuild_sha256" "$tools/downloads/cargo-zigbuild.whl" |
+name: Heavy
 
 on:
   workflow_call:
