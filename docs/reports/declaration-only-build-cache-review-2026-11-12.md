@@ -1,6 +1,6 @@
 # Cache review for the declaration-only build
 
-Branch `feat/declaration-only-build` (goal `declaration-only-builds`, PR 2),
+Branch feat/declaration-only-build (goal `declaration-only-builds`, PR 2),
 reviewed on top of `f7e320d8400`. Reviewer: Claude Opus 5.5 (PR 2 implementer).
 
 `bun run beep cache audit` reports 1,571 blocking `configuration-drift`
@@ -27,7 +27,7 @@ root `tsconfig.json`, `tsconfig.packages.json` and Storybook's
 `tsconfig.stories.json` still keep build info there, but none of them runs in a
 package `build` task (Storybook's `beep:build` is `storybook build`). The glob
 only restored stale build info into fresh checkouts. Decision
-`goals/declaration-only-builds/decisions/2026-11-10-tmp-glob-rides-pr-2` moved
+`goals/declaration-only-builds/decisions/2026-11-10-tmp-glob-rides-pr-2.md` moved
 its removal into this PR so the repository rebuilds from cold once.
 
 ## Regenerated scripts blocks (181 subjects, every cached task)
@@ -81,3 +81,13 @@ configuration is unchanged.
 
 No command, cache flag, environment key, epoch or qualification scope changes,
 and no qualification is granted.
+
+## Dependency edge inherited from #3193 (three subjects)
+
+This lane merged `main` on 2026-11-13 after #3193 added
+`"@beep/jsonc": "workspace:^"` to `@beep/epistemics`, `@beep/md` and
+`@beep/party-domain` without re-recording the baseline. Their
+`^build`-dependent tasks drift on `main` for that reason alone (#3206 records
+the same edge there). The record made from this review covers it too: an
+upstream edge only, with no command, cache flag, input, output or environment
+change.

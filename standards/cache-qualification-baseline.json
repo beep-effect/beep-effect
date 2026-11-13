@@ -12,7 +12,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/acp": {
@@ -20,7 +20,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/agent-memory-store": {
@@ -28,7 +28,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/agents-client": {
@@ -36,7 +36,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/agents-domain": {
@@ -44,7 +44,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/agents-server": {
@@ -52,7 +52,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/agents-tables": {
@@ -60,7 +60,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/agents-use-cases": {
@@ -68,7 +68,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/ai-provider-cli": {
@@ -76,7 +76,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/ai-sync": {
@@ -84,7 +84,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/alchemy-postgres": {
@@ -92,7 +92,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/anthropic": {
@@ -100,7 +100,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/api-docs": {
@@ -116,7 +116,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/architecture-lab-client": {
@@ -124,7 +124,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/architecture-lab-config": {
@@ -132,7 +132,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/architecture-lab-domain": {
@@ -140,7 +140,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/architecture-lab-proof": {
@@ -148,7 +148,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/architecture-lab-server": {
@@ -156,7 +156,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/architecture-lab-tables": {
@@ -164,7 +164,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/architecture-lab-ui": {
@@ -172,7 +172,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/architecture-lab-use-cases": {
@@ -180,7 +180,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/beep-effect-web": {
@@ -188,7 +188,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/box": {
@@ -196,7 +196,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/box-provisioning": {
@@ -204,7 +204,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/brand": {
@@ -212,7 +212,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/chalk": {
@@ -220,7 +220,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/ciops": {
@@ -236,7 +236,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/codegen-kit": {
@@ -244,7 +244,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/colors": {
@@ -252,7 +252,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/commands": {
@@ -260,7 +260,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/config-file": {
@@ -268,7 +268,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/cosmos": {
@@ -276,7 +276,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/data": {
@@ -284,7 +284,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/db-admin": {
@@ -292,7 +292,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/discord": {
@@ -300,7 +300,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/doc-text": {
@@ -308,7 +308,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/dock": {
@@ -316,7 +316,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/dock-react": {
@@ -324,7 +324,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/docket-intake": {
@@ -340,7 +340,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/documents-server": {
@@ -348,7 +348,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/documents-tables": {
@@ -356,7 +356,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/documents-use-cases": {
@@ -364,7 +364,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/drizzle": {
@@ -372,7 +372,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/duckdb": {
@@ -380,7 +380,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/ecfr": {
@@ -388,7 +388,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/editor": {
@@ -396,7 +396,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/effect-drizzle": {
@@ -404,7 +404,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/epistemic-client": {
@@ -412,7 +412,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/epistemic-domain": {
@@ -420,7 +420,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/epistemic-server": {
@@ -428,7 +428,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/epistemic-tables": {
@@ -436,7 +436,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/epistemic-ui": {
@@ -444,7 +444,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/epistemic-use-cases": {
@@ -452,7 +452,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/epistemics": {
@@ -460,7 +460,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/execution-authority-config": {
@@ -468,7 +468,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/execution-authority-domain": {
@@ -476,7 +476,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/execution-authority-server": {
@@ -484,7 +484,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/execution-authority-tables": {
@@ -492,7 +492,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/execution-authority-use-cases": {
@@ -500,7 +500,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/exiftool": {
@@ -508,7 +508,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/eyecite": {
@@ -516,7 +516,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/fc-runs": {
@@ -524,7 +524,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/ffmpeg": {
@@ -532,7 +532,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/file-processing": {
@@ -540,7 +540,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/firecrawl": {
@@ -548,7 +548,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/freshbooks": {
@@ -556,7 +556,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/git": {
@@ -564,7 +564,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/github": {
@@ -572,7 +572,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/github-actions": {
@@ -580,7 +580,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/github-commands": {
@@ -588,7 +588,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/github-references": {
@@ -596,7 +596,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/github-reporting": {
@@ -604,7 +604,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/glob": {
@@ -612,7 +612,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/gov-legal-mcp": {
@@ -620,7 +620,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/govinfo": {
@@ -628,7 +628,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/graph-3d": {
@@ -636,7 +636,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/html": {
@@ -644,7 +644,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/hubspot": {
@@ -652,7 +652,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/identity": {
@@ -660,7 +660,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/infra": {
@@ -676,7 +676,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/jsonl": {
@@ -684,7 +684,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/lane-cockpit": {
@@ -700,7 +700,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/law-practice-domain": {
@@ -708,7 +708,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/law-practice-server": {
@@ -716,7 +716,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/law-practice-tables": {
@@ -724,7 +724,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/law-practice-use-cases": {
@@ -732,7 +732,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/lejeune-bolt-workbench": {
@@ -740,7 +740,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/lexical-schema": {
@@ -748,7 +748,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/libpff": {
@@ -756,7 +756,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/lint-rules": {
@@ -764,7 +764,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/lockfiles": {
@@ -772,7 +772,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/m365": {
@@ -780,7 +780,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/m365-mcp": {
@@ -788,7 +788,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/managed-section": {
@@ -796,7 +796,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/markdown": {
@@ -804,7 +804,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/mcp-kit": {
@@ -812,7 +812,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/mcpb-kit": {
@@ -820,7 +820,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/md": {
@@ -828,7 +828,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/memfs": {
@@ -836,7 +836,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/n3": {
@@ -844,7 +844,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/nlp": {
@@ -852,7 +852,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/nlp-mcp": {
@@ -860,7 +860,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/nlp-processing": {
@@ -868,7 +868,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/npm-spec": {
@@ -876,7 +876,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/obs": {
@@ -884,7 +884,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/observability": {
@@ -892,7 +892,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/occt": {
@@ -900,7 +900,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/oip-web": {
@@ -908,7 +908,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/onepassword-cli": {
@@ -916,7 +916,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/ontology": {
@@ -924,7 +924,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/ontology-client": {
@@ -932,7 +932,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/ontology-config": {
@@ -940,7 +940,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/ontology-domain": {
@@ -948,7 +948,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/ontology-server": {
@@ -956,7 +956,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/ontology-ui": {
@@ -964,7 +964,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/ontology-use-cases": {
@@ -972,7 +972,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/openai": {
@@ -980,7 +980,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/openai-compat": {
@@ -988,7 +988,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/openclaw": {
@@ -996,7 +996,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/oxigraph": {
@@ -1004,7 +1004,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/pacer": {
@@ -1012,7 +1012,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/package-json": {
@@ -1020,7 +1020,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/palantiri": {
@@ -1028,7 +1028,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/pandoc-ast": {
@@ -1036,7 +1036,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/party-domain": {
@@ -1044,7 +1044,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/party-server": {
@@ -1052,7 +1052,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/party-use-cases": {
@@ -1060,7 +1060,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/pdf-tools": {
@@ -1068,7 +1068,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/pglite": {
@@ -1076,7 +1076,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/phoenix": {
@@ -1084,7 +1084,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/poppler": {
@@ -1092,7 +1092,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/postgres": {
@@ -1100,7 +1100,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/practice-claude-mod": {
@@ -1116,7 +1116,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/practice-identify": {
@@ -1132,7 +1132,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/practice-m365-contacts": {
@@ -1172,7 +1172,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/professional-desktop": {
@@ -1180,7 +1180,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/provenance": {
@@ -1188,7 +1188,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/public-site": {
@@ -1196,7 +1196,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/qa-capture": {
@@ -1204,7 +1204,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/rdf": {
@@ -1212,7 +1212,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/rdf-canonize": {
@@ -1220,7 +1220,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/repo-ai-metrics": {
@@ -1228,7 +1228,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/repo-cli": {
@@ -1236,7 +1236,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/repo-cli-kit": {
@@ -1244,7 +1244,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/repo-configs": {
@@ -1252,7 +1252,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/repo-docgen": {
@@ -1260,7 +1260,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/repo-tsconfig": {
@@ -1268,7 +1268,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/repo-utils": {
@@ -1276,7 +1276,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/repo-workspaces": {
@@ -1284,7 +1284,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/runpod": {
@@ -1292,7 +1292,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/runtime-env": {
@@ -1300,7 +1300,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/sanity": {
@@ -1308,7 +1308,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/sbom": {
@@ -1316,7 +1316,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/schema": {
@@ -1324,7 +1324,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/schema-org": {
@@ -1332,7 +1332,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/scratchpad": {
@@ -1348,7 +1348,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/semantica": {
@@ -1356,7 +1356,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/semver": {
@@ -1364,7 +1364,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/shacl": {
@@ -1372,7 +1372,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/shared-domain": {
@@ -1380,7 +1380,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/shared-tables": {
@@ -1388,7 +1388,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/shared-use-cases": {
@@ -1396,7 +1396,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/skill-contract": {
@@ -1404,7 +1404,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/spdx": {
@@ -1412,7 +1412,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/sqlite": {
@@ -1420,7 +1420,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/storybook": {
@@ -1428,7 +1428,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/tailscale": {
@@ -1436,7 +1436,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/technical-drawing": {
@@ -1444,7 +1444,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/tesseract": {
@@ -1452,7 +1452,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/test-runner": {
@@ -1460,7 +1460,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/test-utils": {
@@ -1468,7 +1468,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/tika": {
@@ -1476,7 +1476,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/todox": {
@@ -1484,7 +1484,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/toml": {
@@ -1492,7 +1492,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/trustgraph-workbench": {
@@ -1500,7 +1500,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/tsconfig": {
@@ -1508,7 +1508,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/types": {
@@ -1516,7 +1516,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/ui": {
@@ -1524,7 +1524,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/uspto": {
@@ -1532,7 +1532,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/uspto-mcp": {
@@ -1540,7 +1540,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/utils": {
@@ -1548,7 +1548,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/walker": {
@@ -1556,7 +1556,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/windows-secrets": {
@@ -1564,7 +1564,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/wink": {
@@ -1572,7 +1572,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/workspace-domain": {
@@ -1580,7 +1580,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/workspace-server": {
@@ -1588,7 +1588,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/workspace-tables": {
@@ -1596,7 +1596,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/workspace-use-cases": {
@@ -1604,7 +1604,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/xdg": {
@@ -1612,7 +1612,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/xstate": {
@@ -1620,7 +1620,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     },
     "@beep/yaml": {
@@ -1628,7 +1628,7 @@
       "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
       }
     }
   },
@@ -38725,6 +38725,7 @@
         "commandDigest": "dbd718fe92f1587ff56e977ea13cfc1dc2632f88e2c700121d9fc053918a5c5e",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/provenance#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -38782,6 +38783,7 @@
         "commandDigest": "dbd718fe92f1587ff56e977ea13cfc1dc2632f88e2c700121d9fc053918a5c5e",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/provenance#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -38826,6 +38828,7 @@
         "commandDigest": "dbd718fe92f1587ff56e977ea13cfc1dc2632f88e2c700121d9fc053918a5c5e",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/provenance#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -38954,6 +38957,7 @@
         "commandDigest": "dbd718fe92f1587ff56e977ea13cfc1dc2632f88e2c700121d9fc053918a5c5e",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/provenance#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/schema#transit",
@@ -39155,6 +39159,7 @@
         "commandDigest": "dbd718fe92f1587ff56e977ea13cfc1dc2632f88e2c700121d9fc053918a5c5e",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/provenance#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -39202,6 +39207,7 @@
         "commandDigest": "dbd718fe92f1587ff56e977ea13cfc1dc2632f88e2c700121d9fc053918a5c5e",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/provenance#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -39257,6 +39263,7 @@
         "commandDigest": "dbd718fe92f1587ff56e977ea13cfc1dc2632f88e2c700121d9fc053918a5c5e",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/provenance#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -66895,6 +66902,7 @@
         "dependencies": [
           "@beep/html#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/markdown#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -66954,6 +66962,7 @@
         "dependencies": [
           "@beep/html#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/markdown#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -67000,6 +67009,7 @@
         "dependencies": [
           "@beep/html#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/markdown#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -67096,6 +67106,7 @@
         "dependencies": [
           "@beep/html#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/markdown#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -67185,6 +67196,7 @@
         "dependencies": [
           "@beep/html#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/markdown#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/schema#transit",
@@ -67388,6 +67400,7 @@
         "dependencies": [
           "@beep/html#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/markdown#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -67437,6 +67450,7 @@
         "dependencies": [
           "@beep/html#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/markdown#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -67494,6 +67508,7 @@
         "dependencies": [
           "@beep/html#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/markdown#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -83661,6 +83676,7 @@
         "dependencies": [
           "@beep/epistemics#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
           "@beep/utils#build"
@@ -83718,6 +83734,7 @@
         "dependencies": [
           "@beep/epistemics#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
           "@beep/utils#build"
@@ -83762,6 +83779,7 @@
         "dependencies": [
           "@beep/epistemics#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
           "@beep/utils#build"
@@ -83890,6 +83908,7 @@
         "dependencies": [
           "@beep/epistemics#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
@@ -84091,6 +84110,7 @@
         "dependencies": [
           "@beep/epistemics#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
           "@beep/utils#transit"
@@ -84138,6 +84158,7 @@
         "dependencies": [
           "@beep/epistemics#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
           "@beep/utils#transit",
@@ -84193,6 +84214,7 @@
         "dependencies": [
           "@beep/epistemics#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
           "@beep/utils#build"

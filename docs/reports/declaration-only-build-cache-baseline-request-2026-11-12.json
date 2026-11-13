@@ -1,11 +1,11 @@
 {
-  "previous": "49f74c359f3830b8d6736182adef7ae09438c541d6ef05a6ab501ab51dc2392e",
+  "previous": "2ed4d8ac0f8af2b2ecee290371556fc0f904bceba17c6f4e68c5b1e8f57966cb",
   "review": {
     "reviewer": "Claude Opus 5.5 (declaration-only-builds PR 2, feat/declaration-only-build)",
     "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
     "basis": {
       "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-      "sha256": "d8241c26be13f2bd3b972c0ea093089192934cd1ca223edeeb50331538ad0a4c"
+      "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
     }
   },
   "subjects": [
