@@ -37,23 +37,26 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 Verify — blocked on the Claude plan's seven-day limit, which resets
-2026-11-15 23:00 America/Chicago. P0 passed and P1 is in: the probe commands
-(`beep agent-effectiveness evals probe stage|preflight|score|report`), the
-preflight (12 of 12 pass under scorer profile v2), the
-[analysis rule](./research/2026-11-12-analysis-rule.md) and its
-[amendment](./research/2026-11-13-analysis-rule-amendment.md), both
-committed before any scored run record. The first P2 attempt ended on the
-plan limit and is [void](./history/p2-attempt-1/README.md). Next after the
-reset: the cell A headroom pilot, its go or no-go, then the scored run.
+P3 Yeet — closeout proposed in PR #3167. **Verdict: Insensitive.** On the
+laws-prompt pilot (24 B, 24 C runs), no task had an all-lanes or law pass, so
+under the amended rule there was no scored run: this corpus cannot measure
+the skill at Opus 5.5 without tools. The fired rate (17 of 24, 0.71) fired
+the activation gate, and the source exploration reopened at `decompose`.
+No prune proposal.
 
 ## Latest Evidence
 
-- [P0 slice receipt](./history/p0-slice/README.md)
-- [Preflight](./history/preflight.json)
-- [Analysis rule](./research/2026-11-12-analysis-rule.md) and
-  [amendment](./research/2026-11-13-analysis-rule-amendment.md)
-- [Void first P2 attempt](./history/p2-attempt-1/README.md)
+- [Findings and verdict](./history/FINDINGS.md)
+- [Laws-prompt pilot](./history/p1-laws-pilot/README.md) and
+  [cell A pilot](./history/p1-headroom-pilot/README.md)
+- [P0 slice receipt](./history/p0-slice/README.md),
+  [preflight](./history/preflight.json),
+  [void first P2 attempt](./history/p2-attempt-1/README.md)
+- Analysis rule: [2026-11-12](./research/2026-11-12-analysis-rule.md),
+  [amendment](./research/2026-11-13-analysis-rule-amendment.md),
+  [amendment 2](./research/2026-11-13-analysis-rule-amendment-2.md),
+  [primary selection](./research/2026-11-13-primary-selection.md)
+- [Closeout reflection](./history/reflections/2026-11-13-claude.md)
 
 ## Notes
 

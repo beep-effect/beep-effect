@@ -7,6 +7,7 @@ import {
   estimateMean,
   PluginEvalResult,
   readSkillProbeRecords,
+  redactSkillProbePath,
   repairSkillProbeTask,
   SkillOptTaskManifest,
   SkillProbeFingerprint,
@@ -505,6 +506,15 @@ describe("skill probe primary selection", () => {
     const lawReport = buildSkillProbeReport(records, "law-pass");
     expect(lawReport.primary).toBe("law-pass");
     expect(lawReport.verdict).toEqual(SkillProbeVerdict.cases.Effect.make({ difference: 1, lower: 1 }));
+  });
+});
+
+describe("skill probe path redaction", () => {
+  it("replaces every occurrence of the repository root", () => {
+    expect(redactSkillProbePath("/work/repo")('import("/work/repo/a") and "/work/repo/b"')).toBe(
+      'import("<repo>/a") and "<repo>/b"'
+    );
+    expect(redactSkillProbePath("/work/repo")("src/X.ts(1,1): error")).toBe("src/X.ts(1,1): error");
   });
 });
 

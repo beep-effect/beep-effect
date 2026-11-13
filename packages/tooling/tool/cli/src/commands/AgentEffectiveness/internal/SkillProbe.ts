@@ -25,6 +25,7 @@ import * as Str from "effect/String";
 import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.ts";
 import {
   AgentEffectivenessEvalReportStatus,
+  AgentEffectivenessEvalViolation,
   decodeTaskManifestJson,
   SkillOptTaskManifest,
 } from "../AgentEffectiveness.schemas.ts";
@@ -146,6 +147,29 @@ export const repairSkillProbeTask = (task: SkillOptTaskManifest): SkillOptTaskMa
 // Biome findings only a formatter satisfies; no cell has one.
 const isIgnoredBiomeViolation = (ruleId: string): boolean =>
   ruleId === "format" || Str.startsWith("assist/source/")(ruleId);
+
+/**
+ * Replace the repository root in a scorer diagnostic with `<repo>`, so run
+ * records committed to a public repository carry no absolute paths.
+ *
+ * **Example** (Redact a type-import path)
+ *
+ * ```ts
+ * import { redactSkillProbePath } from "@beep/repo-cli/test/AgentEffectiveness"
+ *
+ * console.log(redactSkillProbePath("/work/repo")('import("/work/repo/node_modules/effect")'))
+ * // import("<repo>/node_modules/effect")
+ * ```
+ *
+ * @param repoRoot - Absolute repository root.
+ * @returns A function that redacts that root in a message.
+ * @category models
+ * @since 0.0.0
+ */
+export const redactSkillProbePath =
+  (repoRoot: string) =>
+  (message: string): string =>
+    Str.replaceAll(repoRoot, "<repo>")(message);
 
 const isIgnoredTsgoViolation = (message: string): boolean =>
   A.some(IGNORED_TSGO_RULES, (rule) => Str.includes(`effect(${rule})`)(message));
@@ -480,13 +504,25 @@ const scoreProbeFixture = Effect.fn("SkillProbe.scoreFixture")(function* (dir: s
   const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(mapFail("Cannot locate the repository root.")));
   const completion = yield* evaluateSkillOptCompletion(repaired, fixtureDir);
   const law = yield* evaluateLaw(fixtureDir, repoRoot, sourceFiles);
+  const redactMessage = redactSkillProbePath(repoRoot);
+  const redact = (violation: AgentEffectivenessEvalViolation): AgentEffectivenessEvalViolation =>
+    AgentEffectivenessEvalViolation.make({ ...violation, message: redactMessage(violation.message) });
   return buildAgentEffectivenessEvalScoreReport(
     repaired,
     completion,
     LawEvaluation.make({
       ...law,
-      tsgo: A.filter(law.tsgo, (violation) => !isIgnoredTsgoViolation(violation.message)),
-      biome: A.filter(law.biome, (violation) => !isIgnoredBiomeViolation(violation.ruleId)),
+      schemaFirst: A.map(law.schemaFirst, redact),
+      tsgo: pipe(
+        law.tsgo,
+        A.filter((violation) => !isIgnoredTsgoViolation(violation.message)),
+        A.map(redact)
+      ),
+      biome: pipe(
+        law.biome,
+        A.filter((violation) => !isIgnoredBiomeViolation(violation.ruleId)),
+        A.map(redact)
+      ),
     })
   );
 });
