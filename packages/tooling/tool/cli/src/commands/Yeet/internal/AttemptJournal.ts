@@ -8,20 +8,22 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import { SchemaUtils } from "@beep/schema";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import {
   appendEncodedAttemptJournalEvent,
+  attemptJournalPathForCheckout,
   YeetAttemptJournalCompacted,
   YeetAttemptTerminationReason,
 } from "../../../internal/repo-run/AttemptTerminationJournal.ts";
 import { attemptInputFactFields } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
+import { FinalCheckReceipt } from "./FinalCheck.schemas.ts";
 import { YeetVerdict } from "./Verdict.ts";
 import type * as Digest from "effect/crypto/Digest";
-import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as SchemaAST from "effect/SchemaAST";
@@ -77,6 +79,12 @@ export class YeetAttemptStarted extends S.Opaque<YeetAttemptStarted, { readonly 
  * Successful and failed command completions use this stable event. Abnormal
  * ends without a complete verdict use {@link YeetAttemptTerminated} instead.
  *
+ * A `yeet final-check` attempt (verdict mode `final-check`) that wrote its
+ * head receipt also carries that exact receipt in `finalCheckReceipt`. The
+ * per-head receipt file is overwritten by every run on the head, so these rows
+ * are the per-run receipt history; `yeet ready` still reads only the head file.
+ * Rows written before the field existed decode with it absent.
+ *
  * **Example** (Use YeetAttemptFinished)
  *
  * ```ts
@@ -96,6 +104,7 @@ export class YeetAttemptFinished extends S.Opaque<YeetAttemptFinished, { readonl
     recordedAt: S.String,
     verdict: YeetVerdict,
     ...attemptInputFactFields,
+    finalCheckReceipt: FinalCheckReceipt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("YeetAttemptFinished", {
       description: "Normal terminal marker embedding the exact verdict written for a completed attempt.",
@@ -250,11 +259,100 @@ export const appendYeetAttemptJournalEvent = Effect.fn("YeetAttemptJournal.appen
   YeetCommandError,
   FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
 > {
-  const line = yield* encodeEvent(event).pipe(
-    Effect.mapError(YeetCommandError.new("Failed to encode Yeet attempt journal event."))
-  );
+  const line = yield* encodeJournalLine(event);
   const journalPath = yield* attemptJournalPath(context);
-  yield* appendEncodedAttemptJournalEvent(journalPath, line, event._tag).pipe(
+  yield* appendJournalLine(journalPath, line, event);
+});
+
+const encodeJournalLine = (event: YeetAttemptJournalEvent) =>
+  encodeEvent(event).pipe(Effect.mapError(YeetCommandError.new("Failed to encode Yeet attempt journal event.")));
+
+const appendJournalLine = (journalPath: string, line: string, event: YeetAttemptJournalEvent) =>
+  appendEncodedAttemptJournalEvent(journalPath, line, event._tag).pipe(
     Effect.mapError(YeetCommandError.new("Failed to append Yeet attempt journal event."))
   );
+
+/**
+ * Append an attempt event to a checkout's branch journal without a repo-run context.
+ *
+ * **Details**
+ *
+ * Commands that run outside a Yeet plan, such as `yeet final-check`, write to
+ * the same `.beep/yeet/runs/<runId>/attempts.ndjson` file the scheduler and
+ * proof jobs address through `attemptJournalPathForCheckout`, under the same
+ * lock, torn-tail repair, owner reconciliation and bounded retention.
+ *
+ * **Example** (Append a final-check start row)
+ *
+ * ```ts
+ * import { appendYeetAttemptJournalEventForCheckout, YeetAttemptStarted } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const started = YeetAttemptStarted.make({
+ *   schemaVersion: "yeet-attempt-journal/v1",
+ *   _tag: "attempt-started",
+ *   attemptId: "550e8400-e29b-41d4-a716-446655440000",
+ *   runId: "feature-0123456789ab",
+ *   branch: "feature",
+ *   base: "origin/main",
+ *   head: "a".repeat(40),
+ *   mode: "final-check",
+ *   startedAt: "2026-11-12T00:00:00.000Z",
+ * })
+ * console.log(Effect.isEffect(appendYeetAttemptJournalEventForCheckout("/repo", "feature", started))) // true
+ * ```
+ *
+ * @param checkoutRoot - Checkout that owns the attempt journal.
+ * @param branch - Branch whose run directory holds the journal.
+ * @param event - The journal event to append.
+ * @returns An effect that appends and compacts the branch journal.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const appendYeetAttemptJournalEventForCheckout = Effect.fn("YeetAttemptJournal.appendForCheckout")(function* (
+  checkoutRoot: string,
+  branch: string,
+  event: YeetAttemptJournalEvent
+): Effect.fn.Return<
+  void,
+  YeetCommandError,
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
+> {
+  const line = yield* encodeJournalLine(event);
+  const journalPath = yield* attemptJournalPathForCheckout(checkoutRoot, branch).pipe(
+    Effect.mapError(YeetCommandError.new("Failed to resolve the Yeet attempt journal path."))
+  );
+  yield* appendJournalLine(journalPath, line, event);
+});
+
+const decodeAttemptId = S.decodeEffect(UUID);
+
+/**
+ * Generate a fresh attempt id for a journaled Yeet attempt.
+ *
+ * **Example** (Generate an attempt id)
+ *
+ * ```ts
+ * import { generateYeetAttemptId } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(generateYeetAttemptId())) // true
+ * ```
+ *
+ * @returns A random UUID v4 attempt id.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const generateYeetAttemptId = Effect.fn("Yeet.generateAttemptId")(function* (): Effect.fn.Return<
+  UUID,
+  YeetCommandError,
+  SecureRandom.SecureRandom
+> {
+  const crypto = yield* SecureRandom.SecureRandom;
+  return yield* crypto
+    .uuidV4()
+    .pipe(
+      Effect.flatMap(decodeAttemptId),
+      Effect.mapError(YeetCommandError.new("Failed to generate Yeet attempt id."))
+    );
 });
