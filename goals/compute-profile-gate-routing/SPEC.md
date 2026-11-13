@@ -50,13 +50,13 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] The profile probe subcommand prints `worker` inside dankserver's worker slice and `workstation` on DankStation, and its `--is worker` form exits 0/1 in under a second.
-- [ ] On a worker host `yeet final-check` refuses hosted-only gates and prints the `yeet open` route; under `--force-local` each forced gate either completes with concurrency 1 and the receipt records `forceLocal: true`, or refuses with a reason naming its dankserver measurement (or no measured worker budget), writes an `admission-routed` refusal row and records no forced step. Refusing is correct on a 7 GiB slice (decision 2026-11-13).
-- [ ] A worker-profile lane completes edit → commit (hooks skipped by profile) → `yeet open` → hosted regeneration commit → hosted green → `yeet ready` with no local process above 1.5 GB RSS.
-- [ ] A workstation commit still runs both catalog hooks (no behavior change on `workstation`).
-- [ ] Attempt and admission facts carry `computeProfile` beside `ProofEnvProfile`; receipts name auto-skipped gates with reason `compute-profile=worker`.
-- [ ] AGENTS.md, agent-pools runbook (per-host table incl. measured dankserver row), remote-development-agents and yeet skills updated; `bun run beep skills update --check` passes.
-- [ ] No unrelated refactors or formatting churn.
+- [x] The profile probe subcommand prints `worker` inside dankserver's worker slice and `workstation` on DankStation, and its `--is worker` form exits 0/1 in under a second.
+- [x] On a worker host `yeet final-check` refuses hosted-only gates and prints the `yeet open` route; under `--force-local` each forced gate either completes with concurrency 1 and the receipt records `forceLocal: true`, or refuses with a reason naming its dankserver measurement (or no measured worker budget), writes an `admission-routed` refusal row and records no forced step. Refusing is correct on a 7 GiB slice (decision 2026-11-13).
+- [x] A worker-profile lane completes edit → commit (hooks skipped by profile) → `yeet open` → hosted regeneration commit → hosted green → `yeet ready` with no local process above 1.5 GB RSS.
+- [x] A workstation commit still runs both catalog hooks (no behavior change on `workstation`).
+- [x] Attempt and admission facts carry `computeProfile` beside `ProofEnvProfile`; receipts name auto-skipped gates with reason `compute-profile=worker`.
+- [x] AGENTS.md, agent-pools runbook (per-host table incl. measured dankserver row), remote-development-agents and yeet skills updated; `bun run beep skills update --check` passes.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 

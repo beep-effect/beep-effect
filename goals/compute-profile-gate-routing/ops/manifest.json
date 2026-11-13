@@ -4,14 +4,14 @@
     "id": "compute-profile-gate-routing",
     "packetId": "goal-packet/v1:4a36fa6b574cdc8ff342c9561632b6d16f9df4c445eefbe70f898670caf92c60",
     "title": "Compute-Profile Gate Routing",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-07",
     "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/compute-profile-gate-routing",
-  "lifecycle": "active",
-  "statusNote": "P0 to P2 merged (#2925, #2959, #2972, #3226). #3276 fixed the first dankserver run's findings; the repeat run of 2026-11-13 (#3277) closed findings 1, 2, 4 and 6. This lane settles criterion 2b: a forced gate on a worker completes serially or refuses with its measured reason. Remaining before the final PR and reflection: one short dankserver run showing a forced gate (coverage over a small package) completing with forceLocal: true on its receipt, and the lane's own draft-to-ready flip through yeet ready.",
+  "lifecycle": "completed-retained",
+  "statusNote": "Complete: every acceptance criterion is met. Implementation #2925, #2959, #2972, #3226. Worker-host acceptance #3267, #3276, #3277; #3281 made a forced gate complete serially or refuse with its measured reason and proved the lane's own ready flip on beep-worker; #3288 showed forced coverage with forceLocal: true on dankserver. #3298 is the final PR with the reflection, the closeout record and the subset-receipt fix.",
   "mission": "Typed workstation|worker compute profile; worker hosts defer hosted-only gates, catalog hooks and local proof to hosted CI by construction.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -24,7 +24,13 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 3298,
+        "role": "final"
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -65,22 +71,22 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -94,5 +100,10 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "retentionReason": "Documents a live system: the workstation and worker compute profile read from the cgroup, the gate routing table with its measured per-host rows, the worker posture of yeet and the catalog hooks, the Catalog Regeneration workflow, and the dankserver and beep-worker acceptance evidence that later host changes are judged against.",
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3298
+  }
 }
