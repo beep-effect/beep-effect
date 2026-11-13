@@ -106,13 +106,13 @@ Higher sources outrank lower sources when they conflict.
 - [x] `@beep/schema` exports the prefixed digest grammar, and
       `ContentDigest` and `SourceTextDigest` are defined from it with their
       encoded forms unchanged.
-- [ ] `rg` finds no sorted-key JSON encoder outside `@beep/jsonc` except the
+- [x] `rg` finds no sorted-key JSON encoder outside `@beep/jsonc` except the
       census rows classed as pinned, renderer or legacy.
-- [ ] A lint rule rejects a new one, and it is wired into the single lint
+- [x] A lint rule rejects a new one, and it is wired into the single lint
       pass.
-- [ ] `explorations/protocol-as-value/MAP.md` still lists the three gated
+- [x] `explorations/protocol-as-value/MAP.md` still lists the three gated
       candidates; this goal activated none of them.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
@@ -272,6 +272,30 @@ The cache workflow's GitHub artifact digest and FileSha256Hash in the files medi
 Lane refactor/canonical-digest-owner-swaps
 
 Reverse: Restore the two regular expressions; nothing stored changes.
+
+### Guard exceptions: a source-root override that exempts @beep/jsonc, and census rows in source, 2026-11-13
+
+Slice D call. The root biome.jsonc registers the rule through an overrides entry with includes ["**/src/**", "!packages/foundation/modeling/jsonc/**"]. Path scope is how the repository's other plugin rules take exceptions (no-native-error and no-bigint-literals are both override-scoped), and no plugin rule had an in-source suppression before this one. The negated glob exempts the owner package, whose JsoncFingerprint walk builds its object text with the same join the rule rejects; a fixture tree proved Biome 2.5.6 honours the negation in an override. Source roots only, matching the census scope, which excludes tests: under test/ the shape builds JSON, YAML flow and glob brace text on purpose (glob brace-expansion property tests, the yaml flow property tests, the jsonc tests, a practice-mail-tagging fixture). scripts/ is out as well: its only hits are three html generator templates that emit TypeScript object literals, not JSON, and no census encoder lives in a script. Every hit left in source is a census row and carries biome-ignore lint/plugin/no-hand-rolled-canonical-json on the line above it, with the row id and class: E5 PartyKey.behavior.ts (pinned), E6 PublicationResourceHash.ts (pinned), E7 PacketDigest.ts canonicalJsonTextPretty (renderer), E8 OpenclawRender.ts (renderer), E9 ToolNames.ts (renderer), E11 the yaml stringifier flow mapping (renderer, YAML; it is renderFlowObject, called from stringifyObjectLines, row 13 of the foundation-drivers partition) and E12 PolicyFingerprintJson.ts (renderer, tooling row L4). A suppression must sit directly above the line where the diagnostic starts; Biome reports one that matches nothing as suppressions/unused, so a suppression goes stale loudly when its encoder changes. No hit lacked a census row. Rejected: a per-file override list in biome.jsonc for the census rows, which would hide the reason from the code and exempt a whole file instead of one expression.
+
+Lane feat/canonical-digest-owner-guard
+
+Reverse: Move the rule to the top-level plugins array or widen its override includes, and add or remove biome-ignore lines to match the hits that result.
+
+### The guard matches braces around a join of members, in three forms, 2026-11-13
+
+Slice D call. The rule no-hand-rolled-canonical-json in @beep/lint-rules is a Biome GritQL rule at severity error with three arms. An untagged template whose first chunk is an opening brace and whose last chunk is a closing brace, each optionally padded by a newline and indentation (a trailing newline is allowed), with at least one interpolation that is a direct join of members: xs.join(sep), A.join(xs, sep), A.join(sep)(xs), or a join as the last stage of pipe or .pipe. A pipe, flow or .pipe call with a join stage and, as another stage, an arrow whose body is such a brace template. A string concatenation of a brace literal, a join and a closing brace literal. Every sorted-key encoder the census found built its object text one of these ways: the first arm matches E1, E2 and E3 as they were before slice C and E5 to E9, E11 and E12 (tooling L4) today; the second matches the E4 md frontmatter encoder as it was. Biome 2.5.6 support was proved by fixtures, not assumed: node patterns with list fields under some, regular expressions over a node's source text, and a spread before one element work; a spread before two adjacent elements (flow($..., $join, $wrap, $...)) matched only when the join was the first argument, which is why the second arm anchors on the arrow and checks direct stages with some. Deliberately not matched: braces around an interpolation that is not a join (URL path templates, regex quantifiers, glob alternatives built without a join, markdown attributes), arrays, space-padded braces (TOML inline tables at packages/foundation/modeling/toml, N3 formulas), tagged templates and fixed-key templates such as the eyecite resource preimages in CaseResourceHash.ts. A join assigned to a variable before it is wrapped is not followed. Glob brace text built with a join cannot be told from JSON by syntax; in source it would need a biome-ignore saying what it is, and today there is none. Cost, one plugin over every TS and JS file in packages, apps and infra: 21.7 s CPU against 12.6 s with no plugin, 1.2 s against 1.0 s wall; prefer-exact-optional-key, measured the same way, costs 64 s. Rejected: an oxlint rule or a ts-morph check, since the repository puts syntactic guards in GritQL and SPEC.md names biome.jsonc; and braces around any interpolation, which fires on the runpod path template, the glob and markdown emitters and the law-practice regex translator.
+
+Lane feat/canonical-digest-owner-guard
+
+Reverse: Delete rules/no-hand-rolled-canonical-json.grit, its registry entry, fixtures, preset lines and biome.jsonc override, and the seven biome-ignore lines.
+
+### The recursive key-sort arm is dropped, 2026-11-13
+
+Slice D call on the stretch arm: a self-recursive function, declared or assigned to a variable, whose body sorts record keys (R.keys, R.toEntries, Object.keys, Object.entries or Struct.keys under A.sort, .sort, .toSorted or a pipe into A.sort) and calls itself by name. Measured over every TS and JS file in packages, apps and infra it reports exactly two sites, OpenclawRender.ts encodeCanonicalValue (E8) and ToolNames.ts renderCanonicalValue (E9). Both are census rows, so it passes the precision test, but the template arm already reports both. Run against the four legacy encoders as they were before slice C it reports none: E1 sorted a filtered entry list rather than R.keys, E3 and E4 recursed mutually through a second function, and E4 was point-free. E10 sortKeys is not recursive, so the arm misses it too. It needs a whole-body contains on every variable declarator and function declaration. Alone, over the same files, it cost 178.8 s CPU and 4.8 s wall, against 21.7 s and 1.3 s for the shipped rule and 12.0 s and 1.2 s with no plugin: about 167 s of CPU for the arm against about 10 s for the whole shipped rule. It adds no recall at that price, so the rule ships with the three brace arms only. Rejected: keeping it for symmetry with the census definition of an encoder, which sorts keys whether or not it builds braces; a guard on that definition needs data flow, which GritQL in Biome does not have.
+
+Lane feat/canonical-digest-owner-guard
+
+Reverse: Add the arm to no-hand-rolled-canonical-json.grit with fixtures; it reports E8 and E9 on today's tree, which already carry suppressions.
 
 ### Swapped synchronous exports throw the owner's typed error; no new error channels, 2026-11-13
 

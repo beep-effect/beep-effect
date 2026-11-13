@@ -24,7 +24,7 @@ exploration's `MAP.md` calls these P0 to P3.
 | A, census and proof | done | The first vertical slice: property test of the epistemics encoder against the owner, plus the execution-record seal replay. | Census table tracked; property test covers every candidate; PacketCore and seal replays pass or name their legacy rows. No production code changed. |
 | B, owner surface | done | Schema for the prefixed digest in `@beep/schema`, then the `undefined`-member pre-pass in `@beep/jsonc`. | Grammar exported; `ContentDigest` and `SourceTextDigest` derive from it with encoded forms unchanged; refusal table fixed by test. |
 | C, swaps | done | Epistemics first (most seal consumers), then PacketCore, then semantica, one commit each. | Each body delegates to the owner; exports unchanged; slice A's tests still green; PartyKey v1 has a parity proof or a pinned row. |
-| D, guard | pending | Write the rule against the tree as it stands after C. | Rule active in the lint pass with no exceptions beyond census rows. |
+| D, guard | done | Write the rule against the tree as it stands after C. | Rule active in the lint pass with no exceptions beyond census rows. |
 
 P0 Research settled, before slice A: how many stored PacketCore events the
 archive repository holds and whether the replay must cover them; and before
@@ -170,6 +170,77 @@ Carried into slice D:
   digest helpers carry `JsoncCanonicalizeError` in their channels instead of
   throwing. The table above lists every reachable site. The lab's schema checks
   are the ones where a guard can now throw.
+
+### Slice D evidence
+
+Done 2026-11-13, published as a draft for the orchestrator's closeout.
+
+- Guard: `no-hand-rolled-canonical-json`, a GritQL rule in
+  `packages/tooling/policy-pack/lint-rules/rules/` at severity `error`. It
+  reports JSON object text built as braces around a join of members, written
+  as a template, as a pipeline whose later stage wraps the join, or as string
+  concatenation. The root `biome.jsonc` registers it through an override over
+  `**/src/**` that exempts `packages/foundation/modeling/jsonc/**`, so it runs
+  in the single Biome lint pass.
+- Fixtures in the package's `test/sources.ts` report the four legacy encoders
+  as they were before slice C and the shapes of E5 to E9, compact and newline
+  padded, and stay silent on URL path templates, glob and markdown braces,
+  regex quantifiers, arrays, space-padded TOML tables, fixed-key templates and
+  a call to the owner.
+- Every hit Biome reports on the tree is a census row carrying a
+  `biome-ignore lint/plugin/no-hand-rolled-canonical-json` with its row id;
+  none is unsuppressed and no hit lacked a row. The recursive key-sort arm was
+  measured and dropped.
+- Decisions: the three `slice-d-*` files dated 2026-11-13.
+
+How the `rg` criterion was checked, at the head of the slice D pull request:
+
+```sh
+# 1. Object text around a join, the guard's shape without Biome
+rg -n -U --pcre2 -t ts -t js -g '**/src/**' -g '!packages/foundation/modeling/jsonc/**' \
+  '`\{(?:(?:\\n|\n)[ \t]*)?\$\{[^`]{0,40}?\b(?:join|pipe)\(|["'\'']\{(?:\\n)?["'\''] *\+ *[^;]{0,40}\bjoin\(' \
+  packages apps infra
+# 2. Source files that sort record keys and also emit JSON text
+rg -l -U --pcre2 -t ts -t js -g '**/src/**' -g '!packages/foundation/modeling/jsonc/**' \
+  '(?:A|Arr|Array)\.sort(?:By)?\(\s*(?:R|Record|Struct|Object)\.(?:keys|toEntries|entries)\(|(?:R|Record|Struct|Object)\.(?:keys|toEntries|entries)\([^()]*\)\s*\.(?:sort|toSorted)\(|pipe\(\s*(?:R|Record|Struct|Object)\.(?:keys|toEntries|entries)\([^()]*\),\s*(?:A|Arr)\.sort' \
+  packages apps infra \
+  | xargs rg -l 'JSON\.stringify|fromJsonString|UnknownJson|encodeJson|stringifyJson|JsonString'
+```
+
+Command 1 finds seven sites, the same seven the guard reports:
+
+| Site | Census row |
+| --- | --- |
+| `packages/party/domain/src/values/PartyKey/PartyKey.behavior.ts` | E5, pinned |
+| `packages/law-practice/server/src/internal/Citation/PublicationResourceHash.ts` | E6, pinned |
+| `packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketDigest.ts` (`canonicalJsonTextPretty`) | E7, renderer |
+| `packages/drivers/openclaw/src/OpenclawRender.ts` | E8, renderer |
+| `packages/drivers/gov-legal-mcp/src/ToolNames.ts` | E9, renderer |
+| `packages/foundation/modeling/yaml/src/internal/stringifier.ts` (`renderFlowObject`, YAML) | E11, renderer |
+| `packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintJson.ts` | E12 (tooling L4), renderer |
+
+Command 2 finds sixteen files. Six hold census encoders, three hold
+array-only pair preimages, and seven sort keys for something other than JSON
+object text:
+
+| File | Census row, or why it is not an encoder |
+| --- | --- |
+| `OpenclawRender.ts`, `ToolNames.ts`, `PacketDigest.ts` | E8, E9, E7 (as above) |
+| `packages/foundation/modeling/package-json/src/internal/format.ts` | E10, renderer |
+| `packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts` | E12 (tooling Q7), renderer |
+| `packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/ReportersDb.ts` | tooling Sy3, renderer: a hand-joined alias label, not JSON |
+| `packages/law-practice/server/src/internal/Citation/Snapshot.ts` | slices-apps row 4, outside: `[key, number]` pairs in an array |
+| `packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts`, `Cache/Cache.pilot.ts` | tooling K10 and K11, outside: `[key, value]` pairs in an array; `Cache.pilot.ts:2325` sorts environment names for a report field |
+| `packages/drivers/libpff/src/Libpff.pffexport.ts` | not an encoder: orders directory paths before building items |
+| `packages/tooling/library/repo-workspaces/src/internal/packedInstallPlan.ts` | not an encoder: dependency names for a closure walk |
+| `packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts` | not an encoder: shard owners in order; shards are schema-encoded |
+| `packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts` | not an encoder: a `key:value` summary line |
+| `packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts` | not an encoder: rule names compared as lists |
+| `packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts`, `Qa/JudgeContract.ts` | not an encoder: `Object.keys(...).sort()` inside a JSDoc example |
+
+`explorations/protocol-as-value/MAP.md` still lists the definition digest,
+the chain kit and the protocol kit as gated, unchanged since the graduation
+pull request (#3096), and no goal packet exists for any of them.
 
 ## Closeout Checklist
 

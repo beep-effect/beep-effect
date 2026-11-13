@@ -33,11 +33,19 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Slices A (census and proof), B (owner surface) and C (swaps) are done; slice
-D (guard) is next. The work is four slices, A to D, listed in
-[`PLAN.md`](./PLAN.md).
+All four slices, A to D, listed in [`PLAN.md`](./PLAN.md), are done: A
+(census and proof), B (owner surface), C (swaps) and D (guard). Closeout is
+next.
 
 ## Latest Evidence
+
+Slice D, 2026-11-13: the lint rule `no-hand-rolled-canonical-json` rejects
+JSON object text built as braces around a join of members anywhere in
+`**/src/**` outside `@beep/jsonc`, at severity `error` in the single Biome
+lint pass. The seven census rows that still build text that way (E5 to E9,
+E11 and E12) carry a suppression naming the row, and no other site in the tree
+trips it. `PLAN.md`, "Slice D evidence", records the `rg` check of the
+census table.
 
 Slice C, 2026-11-13: the epistemics, PacketCore, semantica and `@beep/md`
 frontmatter encoders are now `JsoncFingerprint`, one commit each; only

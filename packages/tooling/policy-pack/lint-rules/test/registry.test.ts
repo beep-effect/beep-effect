@@ -179,6 +179,14 @@ describe("rule registry", () => {
             "Schema fields use exact optional keys (EF-40): `S.optionalKey`, `S.withDecodingDefaultKey` and `S.OptionFromOptionalKey`, never `S.optional`, `S.withDecodingDefault` or `S.OptionFromOptional`.",
           scope: null,
         },
+        "no-hand-rolled-canonical-json": {
+          name: "no-hand-rolled-canonical-json",
+          severity: "error",
+          replaces: null,
+          summary:
+            "Disallow hand-rolled JSON object text (braces around a join of members) outside `@beep/jsonc`; canonical bytes come from `JsoncFingerprint.canonicalizeResult`.",
+          scope: "**/src/** except packages/foundation/modeling/jsonc/**",
+        },
       });
     })
   );
