@@ -117,23 +117,23 @@ Baseline and proof harness (PR 1, no behaviour change):
 
 Declaration-only build (PR 2):
 
-- [ ] `turbo.json` `build.outputs` no longer lists the
+- [x] `turbo.json` `build.outputs` no longer lists the
       `node_modules/.tmp` tsbuildinfo glob, or the package that still writes
       there is named in the Exception Ledger. Moved here from PR 1: removing
       it changes every build task hash (decision
       `2026-11-10-tmp-glob-rides-pr-2`).
 
-- [ ] No generated `beep:build` runs Babel and no workspace manifest or
+- [x] No generated `beep:build` runs Babel and no workspace manifest or
       scaffold carries a `babel` script key; `bun run beep lint package-scripts`
       passes.
-- [ ] After a clean `bun run build`, no library package's `dist` holds `*.js`
+- [x] After a clean `bun run build`, no library package's `dist` holds `*.js`
       or `*.js.map` outside Exception Ledger rows, and every `exports` subpath
       has its `.d.ts` and `.d.ts.map`. The build output contract test asserts
       both.
 - [ ] The PR's hosted gate is green on its head, or each red is attributed as
       inherited. This run is the proof that nothing reads `dist/*.js`.
-- [ ] `docs/runbooks/typescript-toolchain.md` describes the new `beep:build`.
-- [ ] `research/` holds the after numbers, measured the same way as the
+- [x] `docs/runbooks/typescript-toolchain.md` describes the new `beep:build`.
+- [x] `research/` holds the after numbers, measured the same way as the
       baseline.
 
 Check once (PR 3, conditional):
@@ -281,6 +281,18 @@ Consequence for the plan: PR 2 no longer changes a global Turbo input. It still 
 Lane feat/declaration-only-build
 
 Reverse: Move the flag into the base config and add an explicit opt-out to every no-emit overlay through the overlay generators.
+
+### Every tsrs-emitting generated build becomes declaration-only, three apps included, 2026-11-13
+
+The scripts policy only seeds a missing implementation value and never touches extra keys, so regenerating could not migrate anything. PR 2 adds a retirement rule: retired script names (`babel`) that the lint rejects and the writer removes, and retired `beep:build` values with their replacement.
+
+The retired values are the Babel build, the bare `tsrs -p tsconfig.json` build that 13 packages used, and the codegen-prefixed Babel build of `@beep/repo-configs`. They are retired for every managed kind, not only library, tool, ecosystem and infra, because three apps carried the library build: `apps/architecture-lab-proof` and `apps/practice-gateway` called `bun run babel`, so dropping the key alone would have broken them, and `apps/practice-kg-mcp` used the bare build. All three run from `src` (their `bin` entries point there) and nothing reads their `dist` JavaScript. 182 manifests changed.
+
+A package that needs JavaScript keeps it through `javaScriptBuildOverrides`, a named per-package list that starts empty. The search for readers of `dist/*.js` across manifests, CI lane code, workflows, Vitest and Vite configs, docgen and Dockerfiles found none, so the Exception Ledger stays empty. The hosted gate on PR 2 is the proof.
+
+Lane feat/declaration-only-build
+
+Reverse: Add a JavaScriptBuildOverride row for the manifest in the scripts policy and run the package-scripts writer; that package emits JavaScript again.
 
 <!-- beep:decisions:end -->
 

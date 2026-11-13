@@ -94,3 +94,16 @@ machine or session identifiers.
   first.
 - **Would have prevented it:** nothing cheaper; recorded so the next generated
   script migration starts from the retirement tables.
+
+## 2026-11-13 — Drafts merged while the owner's final-check was still running
+
+- **Doing:** running `bun run beep yeet final-check` on #3178 and #3192 before
+  calling either final.
+- **Evidence:** both drafts were flipped ready and merged by the gate 20
+  minutes after they opened, on green hosted checks plus one inherited red.
+  The local final-check for #3178 was 45 minutes into its coverage gate at
+  load average 60 to 110 and had one 90-second test timeout to show for it.
+  The same happened to #3110 on 2026-11-10.
+- **Would have prevented it:** nothing was lost here, since hosted CI was the
+  proof. The waste is the local run: a final-check that stops itself when its
+  PR merges, or an owner signal the gate reads before flipping a draft.
