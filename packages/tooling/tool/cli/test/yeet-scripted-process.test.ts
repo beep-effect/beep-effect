@@ -92,7 +92,6 @@ const PR_URL = "https://github.com/o/r/pull/7";
 const passingFinalCheck = (_context: RepoRunContext, head: string) =>
   Effect.succeedSome(
     FinalCheckReceipt.make({
-      schemaVersion: "yeet-final-check/v1",
       headSha: head,
       mergeBase: Str.repeat(40)("0"),
       base: "origin/main",
