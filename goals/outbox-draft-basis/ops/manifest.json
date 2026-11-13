@@ -4,13 +4,13 @@
     "id": "outbox-draft-basis",
     "packetId": "goal-packet/v1:82d50f160b7cbf3a2c9b8b830be4977ba2347bad516e58d547820c3c33324144",
     "title": "Outbox Draft Basis",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-10",
     "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/outbox-draft-basis",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "An outbox draft records the Microsoft Graph items it rested on, and a draft whose basis changed is reported and flagged in Outlook before the attorney sends it.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -23,7 +23,13 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 3172,
+        "role": "final"
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -91,5 +97,10 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "P1 in progress: the first pull request merged as #3137 on 2026-11-13; the second (check-drafts tool, category mark, README, runbook) is being built. Open in P0: the tenant category proof. Its route is chosen (a test draft in the attorney's mailbox, sent by a person) and the first attempt was blocked by Graph gateway errors; no category is written before the proof is recorded. Shares files with m365-agent-outbox slice 3."
+  "statusNote": "Complete: #3137 merged and #3172 is the final (check-drafts tool, category mark, README, runbook). The tenant proof of 2026-11-13 showed a draft category reaches neither an internal nor an external recipient, so the mark ships as built. Left for the operator: the one-time red category in the attorney's Outlook.",
+  "retentionReason": "Documents a live system: the basis pins, the basis report on get_draft, the check-drafts tool and its audit records, the Outlook category mark, and the tenant proof that the category stays on the sender's side.",
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3172
+  }
 }
