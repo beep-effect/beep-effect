@@ -197,10 +197,10 @@ describe("renderSiblingBroadcast", () => {
     expect(body).toContain("#3241 was the layer below this pull request and merged alone");
     expect(body).toContain("Merge nothing into it: wait for `head_ref_force_pushed` on its timeline");
     expect(body).toContain(
-      "`git fetch origin && git branch -f pre-cascade HEAD && git switch -C 'codex/cache-creation-mask-identity' 'origin/codex/cache-creation-mask-identity'`"
+      "`git fetch origin && git branch -f 'pre-cascade/codex/cache-creation-mask-identity' HEAD && git switch -C 'codex/cache-creation-mask-identity' 'origin/codex/cache-creation-mask-identity'`"
     );
     // The switch resets the branch, so the instruction keeps the old tip for unpushed commits.
-    expect(body).toContain("`pre-cascade` keeps the old tip: cherry-pick from it any commit of your own");
+    expect(body).toContain("the `pre-cascade/` branch keeps the old tip: cherry-pick from it any commit of your own");
     expect(body).not.toContain("Merge `origin/main` into this lane now");
     // No probe ran, and the comment does not pretend one did.
     expect(body).not.toContain("conflict probe");

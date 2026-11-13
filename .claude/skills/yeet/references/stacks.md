@@ -138,12 +138,13 @@ A cascade or a restack replaces the layer's commits with GitHub's replay.
 The local branch is then behind a head it cannot fast-forward to.
 
 ```bash
-git fetch origin && git branch -f pre-cascade HEAD && git switch -C <branch> origin/<branch>
+git fetch origin && git branch -f pre-cascade/<branch> HEAD && git switch -C <branch> origin/<branch>
 ```
 
 - Do this before any further commit. `git switch -C` resets the branch, so
-  `pre-cascade` keeps the old tip: cherry-pick from it any commit of your own
-  that was never pushed, then push as a fast-forward.
+  `pre-cascade/<branch>` keeps the old tip: cherry-pick from it any commit of
+  your own that was never pushed, then push as a fast-forward. The name is per
+  branch because linked worktrees share `refs/heads`.
 - A rewrite that changed nothing keeps the review window and the final-check
   receipt (`yeet ready` and the gate say so). A rewrite that changed a patch
   restarts both.
