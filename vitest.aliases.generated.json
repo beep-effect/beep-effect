@@ -2342,5 +2342,11 @@
     "./packages/tooling/library/agent-memory-store/src/*"
   ],
   "@beep/sqlite": ["./packages/drivers/sqlite/src/index.ts"],
-  "@beep/sqlite/*": ["./packages/drivers/sqlite/src/*"]
+  "@beep/sqlite/*": ["./packages/drivers/sqlite/src/*"],
+  "@beep/alchemy-github-runners": [
+    "./packages/tooling/library/alchemy-github-runners/src/index.ts"
+  ],
+  "@beep/alchemy-github-runners/*": [
+    "./packages/tooling/library/alchemy-github-runners/src/*"
+  ]
 }

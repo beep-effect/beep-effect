@@ -237,6 +237,46 @@ Lane fix/beep-effect-web-prod-worker-name
 
 Reverse: Remove productionWorkerName from apps/beep-effect-web/alchemy.run.ts once the S3 state holds a completed Website record; the generated name then stays authoritative.
 
+### App JWTs are signed with WebCrypto; @distilled.cloud/github joins the catalog at rc.18, 2026-11-13
+
+`@distilled.cloud/github@1.0.0-rc.18` (the version matching the repo's other distilled pins; `@alchemy.run/github@2.0.0-beta.85` depends on exactly it) has no App-authentication module: its `Credentials` takes a bearer token only. The package signs the RS256 App JWT with `crypto.subtle` (Effect has no RSA module; `node:crypto` is avoided), wrapping GitHub's PKCS#1 keys to PKCS#8, and exchanges it for installation tokens through distilled `apps.*`. Webhook HMAC-SHA256 uses `crypto.subtle` with a constant-time compare. Root catalog pins added at exactly the resolved rc.18: `@distilled.cloud/aws`, `@distilled.cloud/core`, `@distilled.cloud/github`.
+
+Lane goals/infra-alchemy-rebuild-p2-github-runners
+
+Reverse: Replace WebCrypto.signAppJwt with distilled's App module once a bump ships it, and drop the PKCS#1 wrapper.
+
+### github-runners ships as two sequential PRs: Lambdas first, composite second, 2026-11-13
+
+`@beep/alchemy-github-runners` is about 6,500 lines before the composite (schemas, six service contracts, two distilled-backed live layers, seven Lambda programs and their entry points, 42 hermetic tests). The lane ships it as two sequential PRs, one open at a time: PR 1 carries the schemas, service contracts, live layers, Lambda programs and tests; PR 2 adds the runner user data, `RunnerSweep`, the `RunnerFleet` composite and its harness tests, and composes `RunnerLaunchTemplate` from `@beep/alchemy-aws-extras` if that has landed. PR 2 opens after PR 1 merges.
+
+Lane goals/infra-alchemy-rebuild-p2-github-runners
+
+Reverse: Fold the second PR's resources and composite into one PR if the first has not merged yet.
+
+### One webhook per fleet routes jobs to every pool's build queue, 2026-11-13
+
+The live fleet runs one terraform module per pool, so the heavy and shard-overflow pools each have a webhook and a webhook secret. The port follows upstream's multi-runner design instead: one webhook Lambda per fleet holds a matcher per pool (labels, match mode, build-queue URL), tries strict matchers (bidirectional or all-of) before any-of ones and sends the job to the first match. Two pools therefore need one App webhook URL and one secret; the overflow pool's separate secret parameter is not carried over.
+
+Lane goals/infra-alchemy-rebuild-p2-github-runners
+
+Reverse: Give each pool its own webhook Lambda and WebhookRuntimeConfig with a single matcher.
+
+### Runner Lambdas port terraform-aws-github-runner v7.10.1 without the features the live fleet leaves off, 2026-11-13
+
+The handlers port `lambdas/functions/{webhook,control-plane,termination-watcher,gh-agent-syncer}` at v7.10.1, the version `infra/ci-runners/Pulumi.yaml` pins, as Effect programs over six service contracts (`GitHubAppAuth`, `GitHubRunners`, `Ec2Fleet`, `SsmStore`, `MessageQueue`, `RunnerBinaries`). Wire shapes stay upstream's: the SQS `ActionRequestMessage`, the `ghr:*` EC2 tags and the SSM token layout. Left out because the live fleet does not use them: dynamic `ghr-*` labels, dedicated hosts (`RunInstances`), the warm pool (`adjustPool`), the EventBridge webhook mode and queue-selection strategies other than first match, the AMI housekeeper, GitHub Enterprise base URLs in registration-token mode, and Powertools metrics and X-Ray. `jobQueuedCheck` defaults to false (the live value; upstream's default is true). Partial-launch, cap and retry semantics match upstream, including the on-demand failover for configured `CreateFleet` error codes.
+
+Lane goals/infra-alchemy-rebuild-p2-github-runners
+
+Reverse: Port the left-out upstream feature from lambdas/functions at v7.10.1 into the matching program and add its config field.
+
+### Termination watcher uses EC2 state-change events, not CloudTrail BidEvictedEvent, 2026-11-13
+
+Upstream's spot termination handler listens for the CloudTrail `BidEvictedEvent`, which needs a trail. The port deregisters on `EC2 Spot Instance Interruption Warning` and on `EC2 Instance State-change Notification` (`shutting-down`, `terminated`), both native EventBridge events, so no trail is required and an instance stopped for any reason is deregistered. One Lambda handles both events and the deregister-retry queue (busy runner: GitHub 422, re-queued after 300 s; a record that keeps failing reaches the queue's DLQ). Metrics are not ported.
+
+Lane goals/infra-alchemy-rebuild-p2-github-runners
+
+Reverse: Add an EventBridge rule on the CloudTrail BidEvictedEvent and decode it in TerminationEvent.
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

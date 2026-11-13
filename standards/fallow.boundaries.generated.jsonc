@@ -60,6 +60,12 @@
         ]
       },
       {
+        "name": "@beep/alchemy-github-runners",
+        "patterns": [
+          "packages/tooling/library/alchemy-github-runners/src/**"
+        ]
+      },
+      {
         "name": "@beep/alchemy-postgres",
         "patterns": [
           "packages/drivers/alchemy-postgres/src/**"
@@ -1440,6 +1446,15 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/alchemy-github-runners",
+        "allow": [
+          "@beep/alchemy-github-runners"
+        ],
+        "allowTypeOnly": [
+          "@beep/alchemy-github-runners"
         ]
       },
       {
