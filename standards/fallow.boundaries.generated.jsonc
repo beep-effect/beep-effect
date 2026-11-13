@@ -1472,10 +1472,16 @@
       {
         "from": "@beep/alchemy-vercel",
         "allow": [
-          "@beep/alchemy-vercel"
+          "@beep/alchemy-vercel",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
-          "@beep/alchemy-vercel"
+          "@beep/alchemy-vercel",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/utils"
         ]
       },
       {
