@@ -573,6 +573,18 @@ it.layer(nativeLayer)((it) => {
   );
 });
 
+it.effect("normalizes subnormal and very large embedding components to unit length", () =>
+  Effect.sync(() => {
+    const unitSquares = (vector: ReadonlyArray<number>) =>
+      A.reduce(normalizeFaceVector(vector), 0, (sum, value) => sum + value * value);
+    expect(unitSquares([5e-324, 5e-324])).toBeCloseTo(1, 6);
+    expect(unitSquares([1e-162, 3e-162, -2e-162])).toBeCloseTo(1, 6);
+    expect(unitSquares([1e300, -1e300])).toBeCloseTo(1, 6);
+    expect(normalizeFaceVector([0, 0])).toStrictEqual([]);
+    expect(normalizeFaceVector([1, Number.NaN])).toStrictEqual([]);
+  })
+);
+
 it.effect.prop(
   "normalizes schema-derived finite embedding vectors",
   [Arbitrary.schema(Frame.fields.vector)],

@@ -190,17 +190,29 @@ const at = (values: ArrayLike<number>, i: number) => values[i] ?? 0;
  * console.log(normalizeFaceVector([3, 4])) // [0.6, 0.8]
  * ```
  *
+ * **Details**
+ *
+ * Components are divided by the largest absolute component before squaring, so
+ * subnormal or very large components neither underflow nor overflow the sum.
+ *
  * @param values - Finite embedding components with nonzero magnitude.
- * @returns Normalized components, or an empty vector for zero or non-finite magnitude.
+ * @returns Normalized components, or an empty vector for zero magnitude or any non-finite component.
  * @internal
  * @category inference
  * @since 0.0.0
  */
 export const normalizeFaceVector = (values: ArrayLike<number>): ReadonlyArray<number> => {
+  let largest = 0;
+  for (let i = 0; i < values.length; i++) {
+    const component = at(values, i);
+    if (!Number.isFinite(component)) return [];
+    largest = Math.max(largest, Math.abs(component));
+  }
+  if (largest === 0) return [];
   let sum = 0;
-  for (let i = 0; i < values.length; i++) sum += at(values, i) ** 2;
-  const magnitude = Math.sqrt(sum);
-  return magnitude > 0 && Number.isFinite(magnitude) ? A.makeBy(values.length, (i) => at(values, i) / magnitude) : [];
+  for (let i = 0; i < values.length; i++) sum += (at(values, i) / largest) ** 2;
+  const scaledMagnitude = Math.sqrt(sum);
+  return A.makeBy(values.length, (i) => at(values, i) / largest / scaledMagnitude);
 };
 const borderPixel = (image: FaceImage, x: number, y: number, channel: number): number =>
   x < 0 || x >= image.width || y < 0 || y >= image.height ? 0 : at(image.pixels, (y * image.width + x) * 3 + channel);
