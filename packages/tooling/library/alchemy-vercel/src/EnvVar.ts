@@ -304,6 +304,10 @@ const sortTargets = A.sort(Order.String);
 /**
  * Vercel's upsert replaces any variable with the same key and branch that shares a target, so
  * existence and ownership are judged on overlapping targets, not only an identical set.
+ *
+ * @param left - The targets of one variable.
+ * @param right - The targets of the other.
+ * @returns Whether the two target sets share a target.
  */
 const overlaps = (left: ReadonlyArray<string>, right: ReadonlyArray<string>): boolean =>
   A.some(left, (target) => A.contains(right, target));

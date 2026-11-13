@@ -380,6 +380,10 @@ const gitRepositoryEquivalence = S.toEquivalence(S.UndefinedOr(ProjectGitReposit
 /**
  * A team or linked-repository change replaces the project: the project API cannot move a
  * project between teams or relink its repository.
+ *
+ * @param news - The declared props.
+ * @param olds - The props of the deployed generation.
+ * @returns Whether the change needs a replacement.
  */
 const replacesProject = (news: ProjectProps, olds: ProjectProps): boolean =>
   news.teamId !== olds.teamId || !gitRepositoryEquivalence(news.gitRepository, olds.gitRepository);
@@ -487,6 +491,11 @@ const protectionBody = (protection: DeploymentProtection): projects.UpdateProjec
 
 /**
  * The settings in `news` that differ from what Vercel reports.
+ *
+ * @param name - The project name to keep or rename to.
+ * @param news - The declared props.
+ * @param current - The project as Vercel reports it.
+ * @returns The `updateProject` fields to send; empty when nothing differs.
  */
 const projectPatch = (name: string, news: ProjectProps, current: ProjectAttributes) => {
   const differs = <A>(desired: A | undefined, observed: A | undefined): O.Option<A> =>
