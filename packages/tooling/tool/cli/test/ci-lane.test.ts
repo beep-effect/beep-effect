@@ -20,6 +20,7 @@ import {
   ciLaneStepsForTesting,
   ciLocalLaneInputsForTesting,
   ciLocalStepsForTesting,
+  ciOperationalPatterns,
   DOCS_POLICY_ROOT_TASKS,
   docgenLaneModeForChangedPaths,
   planCiLanePartitions,
@@ -1959,7 +1960,7 @@ describe("ciLaneStepsForTesting", () => {
     expect(step.env).toBeUndefined();
   });
 
-  it("runs only the home path law and the changeset checks on a documentation-only diff", () => {
+  it("runs only the home path law, the changeset checks and the skills lock on a documentation-only diff", () => {
     // --docs-only wins over --changeset-status: the documentation path always validates changesets.
     const steps = ciLaneStepsForTesting(
       REPO_ROOT,
@@ -1970,12 +1971,70 @@ describe("ciLaneStepsForTesting", () => {
       "lint:private-home-paths",
       "ci:repo-sanity:changeset-graph",
       "ci:repo-sanity:changeset-status",
+      "ci:repo-sanity:skills-lock",
     ]);
     expect(A.map(steps, (step) => [...step.args])).toEqual([
       ["run", "beep", "laws", "private-home-paths", "--check"],
       ["run", "beep", "quality", "changeset-graph"],
       ["run", "beep", "quality", "changeset-status", "--since", "origin/main"],
+      // A SKILL.md edit is a documentation diff, so the lock check sits on this path too.
+      // Offline: a hosted required step never calls the unauthenticated GitHub API.
+      ["run", "beep", "skills", "update", "--check", "--offline"],
     ]);
+  });
+
+  it("checks the skills lock on every Repo Sanity shape unless the caller states the diff cannot move it", () => {
+    const labelsOf = (options: CiLaneRunOptions) =>
+      A.map(ciLaneStepsForTesting(REPO_ROOT, "repo-sanity", options), (step) => step.label);
+    const lock = "ci:repo-sanity:skills-lock";
+    // The default (local replays, final-check, main pushes) always checks it.
+    for (const shape of [{}, { changesetStatus: true }, { docsOnly: true }]) {
+      expect(labelsOf(CiLaneRunOptions.make({ ...baseOptions, ...shape }))).toContain(lock);
+      const skipped = labelsOf(CiLaneRunOptions.make({ ...baseOptions, ...shape, skipSkillsLock: true }));
+      expect(skipped).not.toContain(lock);
+      // The flag removes that one step and nothing else.
+      expect(skipped).toEqual(
+        A.filter(labelsOf(CiLaneRunOptions.make({ ...baseOptions, ...shape })), (label) => label !== lock)
+      );
+    }
+    const descriptor = O.getOrThrow(A.findFirst(CI_LANE_DESCRIPTORS, (candidate) => candidate.id === "repo-sanity"));
+    expect([...descriptor.flags]).toEqual(["--changeset-status", "--docs-only", "--skip-skills-lock"]);
+  });
+
+  it("gates the skills lock step on the paths the check reads and on its own gate sources", () => {
+    const row = ciOperationalPatterns.skills;
+    expect(row).toBeDefined();
+    const relevant = new RegExp(row ?? "", "u");
+    for (const path of [
+      ".claude/skills/explore/SKILL.md",
+      ".claude/skills/yeet/references/gh-rest.md",
+      // The mirror is a tracked symlink: a retargeted or deleted mirror shows as the bare path.
+      ".agents/skills",
+      "packages/tooling/library/ai-sync/src/SkillsLock.schemas.ts",
+      ".agents/skill-patches/oracle/0001-skill-md.patch",
+      "skills-lock.json",
+      ".codex/config.toml",
+      "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts",
+      "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json",
+      ".github/workflows/check.yml",
+      ".github/actions/setup-monorepo-ci/action.yml",
+    ]) {
+      expect(relevant.test(path), path).toBe(true);
+    }
+    for (const path of [
+      "goals/ci-lane-economics/PLAN.md",
+      "README.md",
+      "docs/skills-lock.json.md",
+      ".claude/settings.json",
+      ".claude/agents/crispener.md",
+      "packages/foundation/modeling/schema/src/index.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/index.ts",
+      ".agents/skillset.md",
+      "bun.lock",
+    ]) {
+      expect(relevant.test(path), path).toBe(false);
+    }
   });
 
   it("runs the docs policy tasks in one Turbo graph, then the knowledge doctor against the base", () => {
@@ -2004,6 +2063,7 @@ describe("ciLaneStepsForTesting", () => {
       "lint:coverage-owners",
       "ci:repo-sanity",
       "ci:repo-sanity:shadcn",
+      "ci:repo-sanity:skills-lock",
     ]);
     expect(firstOf(withoutFlag)).toMatchObject({
       command: "bun",
@@ -2039,17 +2099,14 @@ describe("ciLaneStepsForTesting", () => {
       "ci:repo-sanity",
       "ci:repo-sanity:shadcn",
       "ci:repo-sanity:changeset-status",
+      "ci:repo-sanity:skills-lock",
     ]);
     // lab-apps-lifecycle P2 (ratified row 8): CI's changeset gate routes
     // through the path-aware wrapper so lab-only changes are ceremony-exempt.
-    expect([...lastOf(withFlag).args]).toEqual([
-      "run",
-      "beep",
-      "quality",
-      "changeset-status",
-      "--since",
-      "origin/main",
-    ]);
+    const changesetStep = O.getOrThrow(
+      A.findFirst(withFlag, (step) => step.label === "ci:repo-sanity:changeset-status")
+    );
+    expect([...changesetStep.args]).toEqual(["run", "beep", "quality", "changeset-status", "--since", "origin/main"]);
   });
 
   it("plans the fallow lane as promoted blocking, advisory, then optional validation", () => {

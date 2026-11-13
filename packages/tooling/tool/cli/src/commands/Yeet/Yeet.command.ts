@@ -1553,7 +1553,7 @@ const yeetEconomicsCommand = Command.make(
   {
     json: Flag.Boolean("json").pipe(
       Flag.withDefault(false),
-      Flag.withDescription("Render the economics report as JSON (yeet-economics/v2)")
+      Flag.withDescription("Render the economics report as JSON (yeet-economics/v3)")
     ),
     branch: Flag.String("branch").pipe(
       Flag.optional,

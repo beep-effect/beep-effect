@@ -1417,10 +1417,23 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.include(verifyGate, 'echo "docs_path=$docs_path" >> "$GITHUB_OUTPUT"');
       const docsSanity = stepByName(verifySteps, "Check documentation sanity");
       assert.strictEqual(docsSanity.if, "steps.lane-gate.outputs.docs_path == 'true'");
-      assert.strictEqual(
-        stepRun(verifySteps, "Check documentation sanity"),
-        "bun run beep ci lane repo-sanity --docs-only"
+      // The skills lock step of the lane body is skipped, on either path, only when the pull
+      // request changes none of the `skills` pattern row's paths; an absent row keeps it.
+      assert.include(verifyGate, "skills_lock=true");
+      assert.include(verifyGate, "jq -r '.skills // empty'");
+      assert.include(verifyGate, 'echo "skills_lock=$skills_lock" >> "$GITHUB_OUTPUT"');
+      assert.strictEqual(yamlAt(docsSanity, ["env", "SKILLS_LOCK"]), "${{ steps.lane-gate.outputs.skills_lock }}");
+      const docsSanityRun = stepRun(verifySteps, "Check documentation sanity");
+      assert.include(docsSanityRun, 'if [[ "$SKILLS_LOCK" == "false" ]]; then');
+      assert.include(docsSanityRun, "bun run beep ci lane repo-sanity --docs-only --skip-skills-lock\nelse");
+      assert.include(docsSanityRun, "else\n  bun run beep ci lane repo-sanity --docs-only\nfi");
+      const laneRun = stepRun(verifySteps, "Run verification lane");
+      assert.include(
+        laneRun,
+        'if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "${{ steps.lane-gate.outputs.skills_lock }}" == "false" ]]; then\n      run_lane ci lane repo-sanity --changeset-status --skip-skills-lock'
       );
+      // A push never passes the skip.
+      assert.include(laneRun, "else\n      run_lane ci lane repo-sanity\n    fi");
       // Codegen and Ecosystem read their path gates from the change-profile pattern data.
       assert.include(verifyGate, "'.lanes[$lane] // empty'");
       assert.include(laneRow("ecosystem"), "^packages/ecosystem/");
@@ -2018,6 +2031,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         // Protected execution authenticates observations; required quality proof stays separate.
         "cache-producer.yml:Execute approved signed producer",
         "heavy.yml:Heavy / Execute approved signed producer",
+        // Draft-only writer of the catalog shards a worker-profile lane skipped;
+        // Repo Sanity still proves the shards, so it grants no quality verdict.
+        "catalog-regeneration.yml:Catalog Regeneration",
         "data-sync.yml:Sync Official Data",
         // Post-merge publisher of the commit-message overlay ref; it proves the
         // ref with `beep history notes --check` and grants no quality verdict.
