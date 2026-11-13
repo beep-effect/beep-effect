@@ -13,11 +13,15 @@ import {
 } from "../AccountCostControls.ts";
 import { CiFleetController, loadCiFleetControllerConfig } from "../CiFleetController.ts";
 import { CiRunnersStack, loadCiRunnersStackArgs } from "../CiRunners.ts";
+import {
+  ciShardOverflowWebhook,
+  declareCiShardOverflowController,
+  loadCiShardOverflowPoolConfig,
+} from "../CiShardOverflowPool.ts";
 import { CiTurboCache, CiTurboCacheRemediation, loadCiTurboCacheConfig } from "../CiTurboCache.ts";
 
 const stack = new CiRunnersStack("ci-runners", loadCiRunnersStackArgs());
-const controller = new CiFleetController("ci-fleet-controller", {
-  config: loadCiFleetControllerConfig(),
+const fleetNetwork = {
   region: stack.region,
   subnetIds: [
     stack.publicSubnetAId,
@@ -28,6 +32,15 @@ const controller = new CiFleetController("ci-fleet-controller", {
   ],
   vpcId: stack.vpcId,
   workerSecurityGroupId: stack.workerSecurityGroupId,
+};
+const fleetConfig = loadCiFleetControllerConfig();
+const controller = new CiFleetController("ci-fleet-controller", { config: fleetConfig, ...fleetNetwork });
+// The Test Unit shard overflow pool (goals/ci-lane-economics, 2026-11-13) exists only once the
+// operator sets `ciShardOverflow:enabled`; until then this program declares no overflow resource.
+const shardOverflowController = declareCiShardOverflowController({
+  heavy: fleetConfig,
+  overflow: loadCiShardOverflowPoolConfig(),
+  network: fleetNetwork,
 });
 const accountCostControlsConfig = new pulumi.Config("accountCostControls");
 // Read reserved concurrency 20 equalled the observed peak and throttled 25,760
@@ -234,6 +247,19 @@ export const flowLogGroupName = stack.flowLogGroupName;
  * @since 0.0.0
  */
 export const controllerWebhook = controller.webhook;
+
+/**
+ * The shard overflow controller's webhook output, absent until `ciShardOverflow:enabled`.
+ *
+ * **Details**
+ *
+ * Its API Gateway endpoint is the payload URL of the repository webhook that
+ * delivers `workflow_job` events to the overflow pool.
+ *
+ * @category resources
+ * @since 0.0.0
+ */
+export const shardOverflowWebhook = ciShardOverflowWebhook(shardOverflowController);
 
 /**
  * Base URL CI jobs supply as `TURBO_API` for the asymmetric Turbo remote cache.
