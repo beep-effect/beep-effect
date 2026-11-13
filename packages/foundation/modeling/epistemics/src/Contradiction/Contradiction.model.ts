@@ -32,6 +32,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
 import { Confidence } from "../EvidenceSpan/index.ts";
 import { canonicalJsonResult } from "../internal/CanonicalJson.ts";
 import type { FieldSchema, IdentityConfig, KeyedFieldSchema, SchemaIdentity } from "../Factory/index.ts";
@@ -147,6 +148,29 @@ const proposalFactObjectEntries = (value: S.Json): ReadonlyArray<readonly [strin
 
 const proposalFactTextCodeUnits = (value: S.Json, objectEntries: ReadonlyArray<readonly [string, S.Json]>): number =>
   (P.isString(value) ? Str.length(value) : 0) + A.reduce(objectEntries, 0, (total, [key]) => total + Str.length(key));
+
+// An unpaired surrogate is the one thing generated JSON holds that the fact
+// check refuses, so the fact arbitrary replaces each with U+FFFD, as
+// `String.prototype.toWellFormed` does, instead of discarding the sample.
+const wellFormedProposalFactText: (text: string) => string = Str.replaceAll(/\p{Surrogate}/gu, "\uFFFD");
+
+const wellFormedProposalFactJson = (value: S.Json): S.Json => {
+  if (P.isString(value)) {
+    return wellFormedProposalFactText(value);
+  }
+  if (A.isArray(value)) {
+    return A.map(value as ReadonlyArray<S.Json>, wellFormedProposalFactJson);
+  }
+  return P.isObject(value) ? wellFormedProposalFactObject(value as S.JsonObject) : value;
+};
+
+const wellFormedProposalFactObject = (fact: S.JsonObject): S.JsonObject =>
+  R.fromEntries(
+    A.map(proposalFactObjectEntries(fact), ([key, child]) => [
+      wellFormedProposalFactText(key),
+      wellFormedProposalFactJson(child),
+    ])
+  );
 
 const proposalFactChildren = (
   value: S.Json,
@@ -388,6 +412,15 @@ export const makeContradictionVocabulary = (config: IdentityConfig) => {
     })
   );
 
+  // Constructs facts the bound class accepts: generated JSON with every
+  // unpaired surrogate replaced. Deriving from the checked schema instead
+  // discards about a quarter of the samples, which exhausts a property that
+  // nests several facts. The guard stays as the last word on the size bounds.
+  const ContradictionProposalFactArbitrary = Arbitrary.schema(S.JsonObject).pipe(
+    Arbitrary.map(wellFormedProposalFactObject),
+    Arbitrary.filter(S.is(ContradictionProposalFact))
+  );
+
   const ContradictionProposalRationale = TrimmedText.check(
     S.isMaxLength(
       CONTRADICTION_PROPOSAL_RATIONALE_MAX_LENGTH,
@@ -439,6 +472,7 @@ export const makeContradictionVocabulary = (config: IdentityConfig) => {
     ContradictionMatchBasisKindBase,
     ContradictionDetectorIdentity,
     ContradictionProposalFact,
+    ContradictionProposalFactArbitrary,
     ContradictionProposalRationale,
     ContradictionDispositionStatus,
     ContradictionDispositionStatusBase,
@@ -909,6 +943,7 @@ export const makeContradictionProposals = <
   const {
     ContradictionProposalDigest,
     ContradictionProposalFact,
+    ContradictionProposalFactArbitrary,
     ContradictionProposalId,
     ContradictionProposalRationale,
   } = vocabulary;
@@ -983,8 +1018,16 @@ export const makeContradictionProposals = <
 
   const encodeProposalContent = S.encodeResult(ContradictionProposalContentSchema.mapFields(identity));
 
+  // The structural proposal with its fact built by the constructive fact
+  // arbitrary; every other field derives from its own schema.
+  const ContradictionResolutionProposalStructArbitrary = Arbitrary.all({
+    fact: ContradictionProposalFactArbitrary,
+    rest: Arbitrary.schema(ContradictionResolutionProposalStructSchema.mapFields(Struct.omit(["fact"]))),
+  }).pipe(Arbitrary.map(({ fact, rest }) => ({ ...rest, fact })));
+
   return {
     ContradictionResolutionProposalStructSchema,
+    ContradictionResolutionProposalStructArbitrary,
     ContradictionResolutionProposalSchema,
     ContradictionProposalContentSchema,
     encodeProposalContent,
@@ -1546,7 +1589,7 @@ export const makeContradictionArbitraries = <
   };
   readonly ContradictionMatchBasisStruct: S.Top & { readonly Type: MatchBasisFields };
   readonly ContradictionMatchBasis: { readonly make: (input: MatchBasisFields) => MatchBasis };
-  readonly ContradictionResolutionProposalStruct: S.Top & { readonly Type: ProposalFields };
+  readonly ContradictionResolutionProposalStructArbitrary: Arbitrary.Arbitrary<ProposalFields>;
   readonly ContradictionResolutionProposal: { readonly make: (input: ProposalFields) => Proposal };
   readonly proposalsShareId: (self: Proposal, that: Proposal) => boolean;
   readonly ContradictionAssessment: {
@@ -1576,7 +1619,7 @@ export const makeContradictionArbitraries = <
     CanonicalContradictionBeliefPair,
     ContradictionMatchBasisStruct,
     ContradictionMatchBasis,
-    ContradictionResolutionProposalStruct,
+    ContradictionResolutionProposalStructArbitrary,
     ContradictionResolutionProposal,
     proposalsShareId,
     ContradictionAssessment,
@@ -1627,7 +1670,7 @@ export const makeContradictionArbitraries = <
     })
   );
 
-  const ContradictionResolutionProposalArbitrary = Arbitrary.schema(ContradictionResolutionProposalStruct).pipe(
+  const ContradictionResolutionProposalArbitrary = ContradictionResolutionProposalStructArbitrary.pipe(
     Arbitrary.map((proposal) =>
       ContradictionResolutionProposal.make({
         ...proposal,
