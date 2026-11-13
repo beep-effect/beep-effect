@@ -28,9 +28,9 @@ Property Laws ~22.4m on hosted.
 ## Exit criteria
 
 No required job exceeds 20 minutes at p95 (attempt-one successful runs)
-across a representative week of PR and push waves under any load the
-orchestration doctrine admits (at most six CI-active branches,
-`research/repair-decision-3.md`) — the charter says no one waits, so the
+across a representative week of PR and push waves at the load the operator
+runs (15 to 20 CI-active branches, operator ruling 2026-11-13; the six-branch bound of
+`research/repair-decision-3.md` is withdrawn) — the charter says no one waits, so the
 tail is the gate, not the median; queue time counts. Per-lane placement decisions
 recorded; cost within the standing budget gates; rerun/flake rates tracked
 separately via the attribution rules rather than laundered into percentiles.
@@ -164,5 +164,145 @@ Changes:
 Lane perf/property-laws-under-ten
 
 Reverse: In check.yml restore the two-slice matrix [repo-cli, rest] with its two filters and put admission back in the shard job's needs; the comma-separated filter and shard options of the lane command can stay unused.
+
+### Judge the charter at 15 to 20 CI-active branches and move test shards to the self-hosted pool, 2026-11-13
+
+Operator ruling 2026-11-13 (about 05:50Z, relayed by the orchestrator). It replaces D1's load bound and repair decision 3's ruling that the charter is judged at six or fewer CI-active branches.
+
+**Evidence.** Preview census `2026-11-10T04:00Z` to `2026-11-13T05:40Z` (373 Check runs, 15 required contexts, ruleset version `54940515`; `research/window-5-preview-2026-11-13.md`): Test Unit p95 24m00s (p50 12m56s), shard pickup p95 13m32s against the 5m00s tripwire (n=3,944), and peak CI-active branches of 8, 9 and 17 on the three days with runs. No day was at or under six. On main run 43370160740 every hosted job waited 10 to 16 minutes for a runner while the slowest body ran 9m05s: about 70 hosted jobs per run against the 60-job concurrency cap, with 11 runs queued.
+
+**Ruling.**
+
+- The charter is judged at the load the operator actually runs: about 15 to 20 CI-active branches. A window passes or fails at that bound; a day above 20 is reported, not excused.
+- The six-branch fan-out governor signed in repair decision 3 is not built.
+- The test shards (Test Unit, Test Integration, Property Laws) move from GitHub-hosted `ubuntu-24.04` to the existing self-hosted EC2 pool. No new paid service. The runner scaler baseline (`RUNNERS_MAXIMUM_COUNT`, 2) is not raised permanently without the operator: the driver sizes the runners the shards need at about 20 branches and brings that number with an estimated monthly EC2 delta first.
+- The workflow edits that change shard labels are hand-merged by the operator and land after #3215.
+- The census fixes (a verdict-wait column per required context, Test Integration shards in the population) and the hosted job diet go ahead.
+- Window 5 starts after those land and is measured at the new bound.
+
+Window 4 (`2026-10-27T10:00Z` to `2026-11-03T10:00Z`) was previewed on 2026-11-02 and never censused as a full week; its layout was superseded by D4 and the 2026-11-08 to 2026-11-10 repacks, so it stays a preview and admits nothing.
+
+Lane chore/ci-goals-finish
+
+Reverse: Restore the six-branch bound of repair decision 3 and build the pre-push governor; return the shard jobs to ubuntu-24.04 in check.yml.
+
+### Local skills are not hashed in skills-lock.json, 2026-11-13
+
+Of the 39 entries in `skills-lock.json`, 34 are `local`, and each carried `installedTreeHash`. For 33 of them that hash is a function of tracked files only, so it told git nothing new, yet every pull request that edited the skill had to rewrite its line. Skills several lanes edit at once (yeet, closeout) made #3226, #3241, #3248, #3250, #3251 and #3254 conflict on one line on 2026-11-13, and `main` drifted red twice (#3217, #3245).
+
+Decision: a repo-authored skill entry is `_tag` and `installedTargets` only. `skills update --check` and `--check --offline` read both installed targets, hash them on the fly and require them to agree, and still validate frontmatter, the Codex configuration and the set of skills and targets against the lock. The five vendored entries keep their upstream pin, patch series and effective-tree hashes. `adhd`, the one local skill refetched from a floating upstream, keeps `installedTreeHash`: it records the tree `skills update` last fetched, which is the only thing an offline check can compare a hand edit of that skill with, so removing it would have weakened the Repo Sanity step.
+
+The schema keeps `installedTreeHash` as an optional key so a lock written before this change still decodes. On a repo-authored entry it counts as lock drift and `skills update` drops it; the same pull request migrates the committed lock. After this the lock changes only when a skill is added, removed, retargeted, vendored or refetched.
+
+No goal packet owns the skills tooling; this packet holds the decision that put the lock check in Repo Sanity, and the cost removed here is pull-request conflicts and the reruns they cause.
+
+Lane fix/skills-lock-local-unhashed
+
+Reverse: restore installedTreeHash for local entries and the hash comparison
+
+### Repo Sanity owns the skills lock check, gated on the paths it reads, 2026-11-13
+
+No hosted lane ran `beep skills update --check`, so #3042, #3044, #3099, #3109, #3111 and #3166 merged over a stale `skills-lock.json` (fixed in #3225). Only the Skills Update Train ran it, and only on its own relock path.
+
+Decision: the check is a step of Repo Sanity's lane body, on the documentation path and the full path, because Repo Sanity is required and a `SKILL.md` edit is a documentation diff. The step runs the check with a new `--offline` flag: the plain check refetches every floating upstream skill (one today, `adhd`) through the unauthenticated GitHub API, which answered 403 from this workstation while the lane was being built and rate-limits shared hosted runner addresses, and it would turn an upstream push into a red on an unrelated pull request. Offline, the check judges the lock, the installed trees, the mirror, the Codex configuration and the frontmatter from tracked files, which is the drift that recurred (#3217 and #3245 each edited a yeet reference without refreshing the lock). It takes about a second inside a job that is already set up, so it gets no job of its own. `--offline` is refused outside `--check`, because a write that skipped the refetch would record a lock no upstream snapshot backs. The step is on by default, which covers local replays, `yeet final-check` and main pushes. On a pull request check.yml's lane gate reads the new `skills` row of the change-profile pattern data with jq and grep and passes `--skip-skills-lock` when the diff touches none of: the installed skills, their .agents mirror and patch series, the lock, the Codex skill configuration, the skills command, and the gate's own sources. It is a top-level pattern row like `desktop`, not a relevance lane, because it gates a step and has no job to guard; the pinned CI binary reads the extended file unchanged (verified against beep-ci-202927595d64).
+
+Lane fix/ci-skills-lock-gate
+
+Reverse: Revert the pull request: the ci:repo-sanity:skills-lock step, the --skip-skills-lock flag, the skills pattern row and the lane gate's skills_lock output go away together.
+
+### Route Test Unit shards to the overflow pool on the hosted queue depth, into free VMs only, 2026-11-13
+
+Design for the operator decision of the same day (shards overflow only past a 10-minute hosted wait). Model, calibration and tables: `research/shard-overflow-routing-2026-11-13.md`.
+
+- **Signal.** Test Plan counts the jobs waiting for a GitHub-hosted runner across this repository's queued and in-progress runs, with its own `GITHUB_TOKEN` (two run listings and one jobs listing per run, at most 40 runs), and predicts the wait as 5.5 s a queued job (330 s mean hosted body over 60 hosted runners). A run routes past 600 s, 110 queued jobs. On the 296 runs of 2026-11-10..13 that planned shards it flags 18 of 235 runs whose worst shard waited ten minutes or less (7.7%) and misses 27 of 61 that waited longer (44.3%). Test Plan's own pickup delay (one API call) correlates at 0.36 against 0.62 and was rejected; an outside controller flipping a variable needs a variable-writing token and was rejected.
+- **Routed.** Test Unit partitions only, the first `min(planned, free VMs)` in plan order, free VMs being 48 less the overflow jobs queued or running; the rest stay hosted, so a routed shard never waits behind a full pool. Without that rule the replay queued 29 shards inside a full pool.
+- **Aggregates** stay hosted. Skipping them at job level on success is the largest single lever in the model (Test Unit wait p95 on 2026-11-13: 32m08s with overflow alone, 26m31s with both, at $113 to $178 a month); it landed separately in #3258, and this change extends its Test Unit rule, Coverage Regression's acceptance and the census to both halves: a skip needs each half to have succeeded or, holding nothing, to have been skipped.
+- **Charter.** Within 48 VMs no rule tested brings Test Unit's wait p95 under 20 minutes on the 17-branch day: the best is 21m15s, routing past 20 queued jobs, at $334 to $527 a month. The front hop (Change Profile and Test Plan queueing, 8m31s p95 even then) is what remains.
+- **Safety and pool.** The `beep-shard-overflow` label is reachable only through `shard-overflow.yml`, whose job condition admits a push or a same-repository pull request and whose runner group admits only that file at `refs/heads/main`. The job equals the hosted shard but for `runs-on`. The pool is a second `CiFleetController` with the heavy pool's rails, `r7a`/`r7i`/`r6i` `.2xlarge` only, at most 48 VMs, declared only under `ciShardOverflow:enabled`; 384 overflow vCPU plus 128 for the heavy pool at a burst cap of 8 is the 512-vCPU Spot quota.
+- **Off by default.** Nothing routes until the repository variable `BEEP_SHARD_OVERFLOW` is `on`, and the variable is set last, after every step below.
+- **Why the runner group restriction is a hand step.** The stack in `infra/ci-runners` authenticates to AWS only: it has no GitHub provider (`@pulumi/github` is not a dependency) and holds no GitHub credential. Writing an organization runner group takes `admin:org`, which only the operator's own login carries, or the fleet App's key, whose `organization_self_hosted_runners: write` permission allows it; that key is KMS-encrypted in SSM and only the controller Lambdas may decrypt it. Handing the Pulumi program either credential would put an organization-administration secret into provider configuration, into every deploy's process and into the state backend, a wider exposure than the restriction guards against. The heavy group `beep-ec2-heavy` was restricted by hand through the API for the same reason, and `docs/runbooks/aws-cost-operations.md` says not to relax it. What code can own is the check: `beep ci shard-overflow-preflight` reads the group and the webhook back with the operator's token and fails unless both are exact (step 8), so switching overflow on does not rest on anyone's memory. A workflow's `GITHUB_TOKEN` cannot read organization runner groups, so the check cannot run inside Test Plan itself.
+
+**Enablement, in order.** Each step is finished before the next starts; nothing routes until step 9.
+
+1. **This pull request on `main`, after #3258.** It carries the skip rule across both halves: the `Test Unit` aggregate is skipped, and Coverage Regression accepts the skip, only when Test Plan succeeded and each half (hosted shards, overflow shards) succeeded or held nothing and was skipped; Test Plan's settle step makes the halves an exact split of the plan. It needs the operator's hand merge (workflow files). Note the `beep-ci-<sha>` release and sha256 that `Publish Beep CI Binary` builds from the merge commit: that binary is the first with `ci shard-overflow`.
+2. **Runner group, restricted when it is created.** With the operator's `gh` login (`admin:org`), create the organization runner group `beep-shard-overflow`: visibility `selected` with `beep-effect/beep-effect` as its only repository, public repositories allowed, workflows restricted to exactly `beep-effect/beep-effect/.github/workflows/shard-overflow.yml@refs/heads/main`: `gh api -X POST orgs/beep-effect/actions/runner-groups -f name=beep-shard-overflow -f visibility=selected -F "selected_repository_ids[]=$(gh api repos/beep-effect/beep-effect --jq .id)" -F allows_public_repositories=true -F restricted_to_workflows=true -f "selected_workflows[]=beep-effect/beep-effect/.github/workflows/shard-overflow.yml@refs/heads/main"`. GitHub's defaults are visibility `all`, public repositories refused and every workflow allowed (the organization's `Default` group reads exactly that). With public repositories refused, routed shards never get a runner. With them allowed but workflows unrestricted, a fork's pull request can write `runs-on: beep-shard-overflow` into its own copy of `check.yml` and run its code on the pool's VMs, because a fork edits the `if:` guards as well. The group exists before the apply because the pool registers its runners into it by name.
+3. **Webhook secret.** Generate a fresh random value (kept in 1Password, never displayed, never the heavy pool's `/github-action-runners/app/github_app_webhook_secret`) and store it as the SSM SecureString `/github-action-runners/shard-overflow/github_app_webhook_secret`, encrypted with the fleet App's KMS key (stack config `ciFleetController:githubAppKmsKeyArn`), the only key the controller Lambdas may decrypt with.
+4. **Cutover pull request, hand-merged.** One pull request makes three changes. `infra/ci-runners/Pulumi.production.yaml` gains `ciShardOverflow:enabled: "true"` and `ciShardOverflow:githubAppWebhookSecretSsmParameterArn` set to the parameter of step 3; `ciShardOverflow:heavyBurstCap` stays unset (8). `check.yml`'s `test-unit-overflow` caller changes to `uses: beep-effect/beep-effect/.github/workflows/shard-overflow.yml@main` and the routing step to `--callee pinned`, together: `ci-shard-overflow.test.ts` fails on either alone. `.github/actions/fetch-beep-ci/action.yml` pins the release of step 1. The `@main` reference must follow step 1, because GitHub resolves it when it parses the workflow; until it lands, `--callee local` routes `main` pushes only, the one event whose local path resolves to `refs/heads/main`.
+5. **Pulumi apply.** From a clean `main` checkout in `infra/ci-runners`, attended, through "Deploy and verify" in `docs/runbooks/ci-runner-reliability.md`: `pulumi preview --diff --refresh --save-plan <plan>` must show only creates under `ci-shard-overflow-controller` (`beep-ci-ovf-*` module resources, `/beep-ci-ovf/controller/runner-ami-id`, `beep-ci-ovf-runner-imds-disable`, six KMS grants) and no change to `ci-fleet-controller`; then `pulumi up --plan <plan>` and `pulumi preview --refresh --expect-no-changes`. The program refuses to build without the secret ARN, or when 48 overflow VMs × 8 vCPU plus the heavy burst cap × 16 vCPU exceeds the 512-vCPU Spot quota. An apply resets a live heavy burst cap to the source value 2; re-run that burst's `set-cap.sh` afterwards, within the heavy burst limit below.
+6. **`workflow_job` webhook.** Set `endpoint="$(pulumi stack output shardOverflowWebhook --json | jq -r .endpoint)"` and add a repository webhook (`web`, JSON, active, events `workflow_job` only) that delivers there, signed with the parameter of step 3, which is piped so it never reaches the terminal or a process argument: `aws ssm get-parameter --name /github-action-runners/shard-overflow/github_app_webhook_secret --with-decryption --query Parameter.Value --output text | jq --raw-input --arg url "$endpoint" '{name: "web", active: true, events: ["workflow_job"], config: {url: $url, content_type: "json", insecure_ssl: "0", secret: .}}' | gh api -X POST repos/beep-effect/beep-effect/hooks --input - --jq '{id, active, events}'`. The heavy pool's own `workflow_job` webhook stays as it is.
+7. **Cost tag.** Activate the `ghr:environment` cost allocation tag (Billing, Cost allocation tags) so the pool's spend reads apart from the heavy pool's.
+8. **Preflight.** `bun run beep ci shard-overflow-preflight --webhook-url "$endpoint"`, with the operator's `gh` login, exits 0 only when the group of step 2 exists, admits exactly `beep-effect/beep-effect`, allows public repositories and is restricted to exactly `beep-effect/beep-effect/.github/workflows/shard-overflow.yml@refs/heads/main`, and an active `workflow_job` webhook delivers to the endpoint. Anything else prints each problem and exits 1: stop there.
+9. **Switch on.** Only after step 8 printed `shard-overflow-preflight: ok`: `gh variable set BEEP_SHARD_OVERFLOW --body on --repo beep-effect/beep-effect`. Optional tuning without a deploy: `BEEP_SHARD_OVERFLOW_WAIT_SECONDS` (default 600) and `BEEP_SHARD_OVERFLOW_POOL_SIZE` (default 48). On the next busy run, Test Plan logs `shard-overflow: routed; ...`, `Test Unit (<partition>) / Overflow` jobs run on `beep-ovf-*` runners, Coverage Regression finds their evidence, and `Test Unit` passes.
+
+**Heavy burst limit.** While the overflow pool exists, a heavy-pool burst stays at 8 VMs or fewer (`set-cap.sh 8` at most): 48 × 8 + 8 × 16 = 512 vCPU, the Spot quota. `set-cap.sh` does not know about the overflow pool, so this is the operator's rule; the program refuses a `ciShardOverflow:heavyBurstCap` above 8.
+
+**Disable.**
+
+- Stop routing, no deploy: `gh variable set BEEP_SHARD_OVERFLOW --body off --repo beep-effect/beep-effect` (or `gh variable delete BEEP_SHARD_OVERFLOW --repo beep-effect/beep-effect`). The next Test Plan skips the routing step and every partition runs hosted; routed shards already queued or running finish on the pool. Any value but `on` is off: `decideShardOverflow` returns `disabled`, and the command test proves it then makes no API call.
+- Remove the pool once no `Test Unit (<partition>) / Overflow` job is queued or running: delete the webhook of step 6; set `ciShardOverflow:enabled` to `"false"` in a pull request and apply it (the preview deletes only the overflow controller's resources); then delete the parameter of step 3 and the runner group of step 2.
+- Revert the code: revert this pull request. With the variable off the workflows already behave as they did before it.
+
+Lane feat/ci-shard-overflow-routing
+
+Reverse: Set BEEP_SHARD_OVERFLOW off (no deploy), or revert the PR; set ciShardOverflow:enabled false and apply to drop the pool.
+
+### Shards overflow to the self-hosted pool only past a 10-minute hosted wait, 2026-11-13
+
+Operator decision 2026-11-13 (about 06:25Z), after the sizing in `research/shard-runner-sizing-2026-11-13.md`. It replaces the "move the test shards to the self-hosted pool" clause of the same day's load ruling; the 15 to 20 branch bound stands.
+
+- Moving every shard needs about 96 concurrent runners (the spot quota fits 64) and about $1,500 to $2,300 a month against a $200 ceiling. Not done.
+- Shards stay on GitHub-hosted runners. A shard runs on the self-hosted pool only when the hosted wait would pass 10 minutes. Unbounded, the model sends 433 of 6,613 shards over three days and peaks at 78 VMs, which is 624 vCPU and over the 512-vCPU spot quota. The overflow pool is therefore 48 VMs of the 8-vCPU `.2xlarge` types only (384 vCPU), leaving 128 vCPU for the Heavy lanes. The scaler cap counts VMs and the shared pool launches seven types, four of them 16-vCPU `.4xlarge`, so overflow runners get their own launch configuration restricted to `r7a`, `r7i` and `r6i` `.2xlarge`; the overflow PR shows the worst-case vCPU of overflow plus Heavy at or under 512. No `.4xlarge` overflow option is offered: it was not modelled. A shard that finds the pool full stays in the hosted queue. Modelled at that cap: 300 shards, 43.8 VM-hours, shard pickup p95 8m43s, longest wait 12m52s, about $110 to $170 a month. No quota request and no second shard per VM.
+- The queue tripwire moves from 5m00s to 10m00s shard pickup p95 for windows starting on or after 2026-11-13, because the design admits waits up to its threshold; earlier windows keep 5m00s so their documents reproduce. The census retarget (`Ci/LaneTimings.ts`, a window-dated limit) is open work: it is being added to #3229, whose first head (ee4b635b) left the limit at 5m00s. Until that lands on main the command prints 5m00s, and window 5 does not start before it. The charter is unchanged: every required check under 20m00s at p95, queue and pickup included.
+- The scaler baseline cap stays 2. The operator accepted a burst cap near 80 for the overflow; the quota bounds it lower, at 48 `.2xlarge` overflow VMs plus the Heavy lanes, 512 vCPU in all. The overflow PR designs how the cap rises and is restored around a burst, and reports its first week of actual spend against the estimate.
+- The hosted job diet goes ahead regardless.
+
+Lane docs/ci-lane-overflow-ruling
+
+Reverse: Remove the overflow routing so every shard runs on ubuntu-24.04 again and restore the 5m00s pickup tripwire; no standing AWS setting changes.
+
+### Skip the required aggregates and Heavy Admission at job level on documentation diffs, 2026-11-13
+
+A documentation-only pull request took 13 to 15 hosted runners (measured on #3170, #3202 and #3205, 2026-11-13) although it can fail only Repo Sanity's documentation path, Docs Policy, Commitlint and Secret Scanning. Four aggregates (Lint, Test Unit, Property Laws, Heavy / Test Integration) each queued up to 400 seconds for a runner to print one line, Heavy Admission queued 177 to 350 seconds in front of Repo Sanity to emit three constants, and the Storybook and Vercel Deploy workflows each took a runner to decide to do nothing.
+
+Decision: the aggregates and Heavy Admission are skipped at job level when Change Profile succeeded and reported `docs_only` (same-repository heads for admission). GitHub reports a job-level skip as a passing required check, which the ruleset already relies on for Codegen Drift, Nix Shell, Security, SAST and the Heavy lanes. The Heavy caller reads Change Profile directly and still calls heavy.yml with `admitted: false`, so every `Heavy / <lane>` context exists. Any other profile result runs each aggregate, whose script fails closed. Vercel Deploy gets a `pull_request.paths` filter equal to its preview rule, and Storybook ignores pull requests confined to docs/, goals/, explorations/ and research/.
+
+Test Plan keeps starting beside Change Profile and still takes one runner (about 25 seconds) on a documentation diff. Gating it on Change Profile would put one more runner wait in front of every code pull request's test shards, the ordering the 2026-11-10 decision in this packet protects.
+
+`ci-docs-job-admission.test.ts` simulates the job graph from the checked-in `if` expressions and fails when a documentation diff requests any runner beyond Change Profile, Test Plan, PR Size Label, Commitlint, Secret Scanning, Repo Sanity and Docs Policy.
+
+Lane fix/ci-applicability-docs-only
+
+Reverse: Revert the pull request: the four aggregates return to `if: !cancelled()`, Heavy Admission regains its documentation step, and the Vercel and Storybook pull_request path filters are removed.
+
+### Skip the four test and lint aggregates at job level when every shard succeeded, 2026-11-13
+
+The aggregates `Test Unit`, `Heavy / Test Integration`, `Lint` and `Property Laws` used to take a hosted runner after their last shard only to print one line. On 2026-11-13 that hop (last shard done to the Test Unit aggregate reported) measured p50 1m39s and p95 9m13s over 83 green runs, because the aggregate queued behind every other run's jobs. Each aggregate is now skipped at job level in exactly two states whose verdict is already a pass, and GitHub reports a job-level skip as a passing required check (live on #3241 after #3215: the four contexts concluded `skipped` and the pull request merged under the ruleset).
+
+- **Documentation diff** (#3215's skip, tightened): Change Profile succeeded with `docs_only` true, the shard matrix was skipped, and for Test Unit and Test Integration a successful Test Plan planned nothing.
+- **Skip on success**: Change Profile succeeded with `docs_only` false, every job the aggregate's script checks succeeded (Test Plan; Heavy Admission for Test Integration; a non-empty plan, one carrying `int-rest` for Test Integration), and the shard matrix concluded `success`, which GitHub reports only when every leg the plan expanded passed.
+
+Every other state runs the aggregate and its unchanged script fails closed. The conditions keep `!cancelled()`, a status function, so GitHub evaluates them whatever the needs concluded rather than skipping on an implicit `success()`, and a cancelled run still reports the aggregate `cancelled` (seen on 45 cancelled runs of 2026-11-10..13). `ci-docs-job-admission.test.ts` runs every combination of the needs results through each condition and its script: the verdict never changes, every passing state is a skip, and no state with a shard that failed, was cancelled or was skipped on a code diff, or with an unsuccessful Change Profile or Test Plan, is skipped. Coverage Regression now also reads the Test Unit shard matrix and accepts a skipped Test Unit verdict only beside a successful one. The lane-timings census reads a skipped aggregator beside shards that all succeeded as a success whose duration and verdict wait end at the last shard's completion; any other skipped aggregator stays a failure, and runs from before the change read as they did.
+
+**Modelled effect** (the job-graph replay of the 378 Check runs of 2026-11-10..13 in #3256's research note; the model frees the aggregate on every outcome, but failing verdicts are outside the charter population): on its own, Test Unit wait p95 43m40s to 31m40s over the window and 48m22s to 34m14s on 2026-11-13; Test Integration 43m42s to 29m29s and Lint 43m23s to 29m19s on that day. With the overflow routing of #3256: Test Unit 26m31s, Test Integration 22m34s and Lint 22m07s on 2026-11-13. No spend: about four fewer hosted jobs per green code run.
+
+Lane perf/ci-aggregate-skip-on-success
+
+Reverse: Revert the PR: the four aggregate conditions and Coverage Regression's Test Unit check return to their #3215 form; the census change only adds a shape old runs never had.
+
+### The census reports verdict wait per required context and measures Test Integration by its shards, 2026-11-13
+
+The bounded census (`beep ci lane-timings --window`) now records `verdictWaitSeconds` on every attempt-one successful row: the workflow run's `created_at` to the reporting job's `completed_at` (the aggregator for a sharded lane, the job itself otherwise). That is what an author or the merge gate waits for: run-level queueing (main's concurrency group), `needs` chains, runner pickup and the body. The duration table gains `Wait p50` and `Wait p95`. A lane's P3 state is `Breach` when either the duration p95 or the wait p95 is 20m00s or more, and the cell names the measure (`Breach (wait)`, `Breach (duration, wait)`). Like pickup, the wait exists only on attempt-one rows; it reads `created_at`, never the re-dispatch-rewritten `run_started_at`. The duration columns are unchanged, and the TSV adds the column last.
+
+The shard pickup tripwire follows the operator decision of the same day (`2026-11-13-shards-overflow-to-the-self-hosted-pool-only-past-a-10-minute-hosted-wait.md`): it moves from 5m00s to 10m00s. The census chooses the limit by the window from a dated table, the way it chooses ratified populations: a window whose `--since` is before 2026-11-13T00:00:00Z is judged against 5m00s and a window starting at or after it against 10m00s. The Markdown tripwire line prints the limit that applied, so windows 1 to 4 and the earlier previews re-render as they were written.
+
+`Test Integration` is now an effective lane like `Lint` and `Test Unit`: aggregator `Heavy / Test Integration`, planned by `Test Plan`, with the shard layouts of #3005 (sixteen `lps-int` shards and `int-rest`, merged 2026-11-09T17:15:26Z) and #3029 (nineteen and `int-rest`, merged 2026-11-10T00:52:58Z). A run created before #3005 merged is measured as heavy.yml's single job, so earlier windows read as they did. Its shards join the pickup population. Property Laws is not a required context and stays out.
+
+**Evidence.** On main run 43370160740 every hosted job waited 10 to 16 minutes for a runner, and the run waited 7m47s between its `created_at` and its first job's `created_at`; none of that was in any duration p95. The 2026-11-13 preview measured `Test Integration` as its aggregate job alone (p50 0m03s). A two-hour preview (`2026-11-13T04:00Z` to `06:00Z`, before and after read concurrently at 06:15Z): before, only `Test Unit` breached (24m55s p95); after, `Test Integration` reads 11m53s p50 and 21m03s p95 by its shards, nine of fifteen contexts breach on wait p95 (`Lint` 37m00s, `Test Unit` 41m26s, `Test Integration` 35m36s), and shard pickup n rises from 681 to 902.
+
+**Consequence.** Window 5 is judged on wait p95 as well as duration p95: a required context passes only when both are under 20m00s.
+
+Lane fix/ci-lane-census-verdict-wait
+
+Reverse: Drop the Test Integration lane spec and judge the P3 state on duration p95 alone; the wait columns may stay as information.
 
 <!-- beep:decisions:end -->

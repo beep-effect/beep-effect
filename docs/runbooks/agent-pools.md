@@ -236,6 +236,50 @@ too. Ultra Other Models allowance is about $400/mo API-list-price
 the retention fact is recorded because nothing from the out-of-repo corpus, client documents, or
 secrets may enter any Cursor lane prompt.
 
+## Compute profiles
+
+`bun run beep compute profile` resolves the host's profile from the process memory ceiling: the
+tighter of the cgroup limit and installed memory. A ceiling below the admission envelope (20 GiB
+by default) is `worker`; anything else is `workstation`. `BEEP_COMPUTE_PROFILE=worker` may tighten
+the probe; it can never loosen it to `workstation`. Hosted runners are posture `hosted` and never
+resolve a compute profile (D5). Goal packet: `goals/compute-profile-gate-routing/`.
+
+| Host | Installed memory | cgroup ceiling | Profile | Source |
+| --- | --- | --- | --- | --- |
+| DankStation | 125 GiB | uncapped | `workstation` | measured |
+| dankserver worker slice | 15 GiB | 7 GiB `memory.high` / 8 GiB `memory.max` on `user-1001.slice` | `worker` | measured 2026-11-07; probe `ceilingGib: 7`, `source: probe` 2026-11-13 |
+| beep-worker | unmeasured | unmeasured | unmeasured | run `bun run beep compute profile --json` on the host and record it here |
+| tom-pc-1-wsl | unmeasured | unmeasured | unmeasured | run `bun run beep compute profile --json` on the host and record it here |
+| hosted runners | n/a | n/a | posture `hosted`, never a profile (D5) | — |
+
+dankserver evidence for the hosted-only routes: on 2026-11-07 the schema-catalog pre-commit hook
+held 4.18 GB RSS inside the 7 GiB slice (`RESEARCH.md` of the archived exploration,
+<https://github.com/beep-effect/beep-effect-goals-archive/tree/main/explorations/compute-profile-gate-routing>).
+On 2026-11-08 a T3 thread ran `yeet final-check` there; its `cheap-gates` step
+(`beep laws effect-imports --check`) held 4.97 GB in the slice for more than 100 minutes and
+stalled `t3 serve`.
+
+Gate routes (D6). The table in `packages/tooling/tool/cli/src/internal/repo-run/GateRoute.schemas.ts`
+is the truth; this copy is rendered by hand from it.
+
+| Gate | `workstation` | `worker` | Hosted check run |
+| --- | --- | --- | --- |
+| `expectation-rewrite` | local | local | — |
+| `cheap-gates` | local | hosted-only | `Repo Sanity` |
+| `lint-policy` | local | hosted-only | `Heavy / Lint Policy` |
+| `lint` | local | local | — |
+| `repo-sanity` | local | local | — |
+| `check` | local | hosted-only | `Heavy / Check` |
+| `docgen` | local | hosted-only | `Heavy / Docgen` |
+| `fallow` | local | hosted-only | `Fallow Advisory Envelopes` |
+| `coverage` | local | hosted-only | `Heavy / Coverage Regression` |
+| `hook:schema-catalog` | local | hosted-only | `Repo Sanity` |
+| `hook:instrumentation-catalog` | local | hosted-only | `Repo Sanity` |
+
+On `worker`, both catalog hooks are skipped and `yeet open` labels the PR `compute-profile-worker`.
+The `Catalog Regeneration` job in `.github/workflows/catalog-regeneration.yml` then regenerates
+the scoped shards and pushes them while the PR is a draft (D3, D9).
+
 ## Cursor lane recipe v2
 
 Canonical headless volume lane (D12, D13). Capture to `<lane>.ndjson` and `<lane>.stderr`.

@@ -141,6 +141,7 @@ export const ROUTE_FOOTPRINTS = {
   coverage: unrefined("coverage", "covered-pkgs", COVERAGE_CLASS),
   "desktop-ipc": unrefined("desktop-ipc", "reverse-deps", BUILD_CLASS),
   docgen: unrefined("docgen", "reverse-deps", BUILD_CLASS),
+  "docs-policy": unrefined("docs-policy", "none", LOCAL_CLASS),
   doctest: unrefined("doctest", "reverse-deps", BUILD_CLASS),
   ecosystem: unrefined("ecosystem", "reverse-deps", BUILD_CLASS),
   fallow: unrefined("fallow", "none", LOCAL_CLASS),

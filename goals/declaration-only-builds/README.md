@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -36,18 +36,49 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research, not started. First action: PR 1 (baseline and proof harness, no
-behaviour change), per [`PLAN.md`](./PLAN.md).
+Closed. The three work PRs (#3178, #3208, #3242) and the final PR (#3259) are
+merged, the completion check verified #3259, and the packet is
+`completed-retained`.
 
 ## Latest Evidence
 
-Not started.
+- [`history/reflections/2026-11-13-claude.md`](./history/reflections/2026-11-13-claude.md):
+  the closeout reflection.
+- PR 3's hosted gate (#3242) passed Build, Check, Docgen, Doctest, Lint Policy
+  and every unit and integration shard; its one red was inherited coverage
+  ratchet rows in files it does not touch.
+- [`research/2026-11-13-check-once-cost.md`](./research/2026-11-13-check-once-cost.md):
+  the own-source check costs 35.4 s serial over 182 packages and a warm
+  unchanged build 19.7 s. PR 3 runs the build program as the check's first
+  step for 180 packages (15.5 s less compiler work per full check run) and a
+  file-set sweep finds the check program wider than the build program in
+  exactly the two packages that keep the old step.
+- PR 2's hosted gate (#3208) passed Build, Check, Docgen, Storybook, Test Unit,
+  Test Integration and the Vercel plan with no JavaScript in any library
+  `dist`; its one red was an inherited coverage ratchet row. Nothing reads
+  `dist/*.js`. The Exception Ledger is empty.
+- [`research/2026-11-13-build-after.md`](./research/2026-11-13-build-after.md):
+  before and after, back to back on one machine state. Serial build work of
+  181 packages falls from 80.9 s to 32.9 s (59%); `dist` shrinks from 232.5 MB
+  to 147.9 MB (36%); the compile itself is unchanged.
+- [`research/2026-11-10-build-check-equivalence.md`](./research/2026-11-10-build-check-equivalence.md):
+  2,912 build-versus-check comparisons over 182 packages, all identical, from
+  a cache restore, warm and cold, with `TSRS_FAST` unset and `1`. Check-once
+  is kept for the 180 packages whose check program is the build program.
+- [`research/2026-11-10-build-baseline.md`](./research/2026-11-10-build-baseline.md):
+  the first baseline, taken at higher load on an older compiler.
 
 ## Notes
 
-- The numbers this packet starts from were taken at load average 59 to 63.
-  Re-measure before quoting them as a baseline.
-- The check-once step is conditional on PR 1's census result and is the first
-  thing cut.
-- PR 2 invalidates every build cache entry once. Land it when the merge queue
-  is quiet.
+- The declaration-only flag sits on the generated build command, not in
+  `tsconfig.base.json`: the base option would break 404 no-emit overlays
+  (TS5069).
+- A package that needs JavaScript keeps it through `javaScriptBuildOverrides`
+  in the scripts policy; one whose check program is wider than its build
+  program keeps the no-emit check through `ownSourceCheckOverrides`
+  (`@beep/effect-drizzle`, `@beep/markdown`).
+- A package whose build is not the declaration-only command must override the
+  Turbo `check` task to depend on `^build` only. The scripts lint enforces it
+  and `bun run beep create-package` emits it.
+- `TSRS_FAST` is part of the compiler's incremental state. A build made with
+  it unset is rebuilt, not reused, by a run that sets it.

@@ -1,17 +1,20 @@
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   CHECK_CENSUS_BASELINE_PATH,
+  CHECK_CENSUS_BASELINE_WRITE_COMMAND,
   CHECK_CENSUS_DEFAULT_TARGETS,
   CHECK_CENSUS_INSTANTIATION_NOISE,
   CheckCensusBaseline,
   CheckCensusBaselineProvenance,
   CheckCensusBaselineRow,
+  CheckCensusCompilerStamp,
   CheckCensusGateReport,
   CheckCensusMetricMissing,
   CheckCensusSample,
   CheckCensusSampleRefused,
   CheckCensusSampler,
   checkCensusBaselineRows,
+  checkCensusCompilerStampAgrees,
   checkCensusGateFailed,
   checkCensusGateFailureMessage,
   compareCheckCensusSample,
@@ -23,6 +26,7 @@ import {
   readCheckCensusBaseline,
   readCheckCensusMetrics,
   renderCheckCensusBaselineLines,
+  renderCheckCensusCompilerStampLine,
   renderCheckCensusGateLines,
   resolveCheckCensusTargets,
   runCheckCensusGate,
@@ -440,6 +444,58 @@ describe("check-census gate rendering", () => {
       "check-census baseline (1 rows, compiler 7.0.2+effect-tsgo.0.45.0, 368998daff4b5d6c0e2f1a3b7c9d8e6f5a4b3c2d)"
     );
     expect(A.some(renderCheckCensusBaselineLines(dirty), Str.endsWith(" + uncommitted changes)"))).toBe(true);
+  });
+});
+
+describe("check-census compiler stamp", () => {
+  const stamp = (baselineCompiler: string, compiler: string) =>
+    CheckCensusCompilerStamp.make({ baselineCompiler, compiler });
+
+  it("agrees only when the installed compiler is the baseline's", () => {
+    expect(checkCensusCompilerStampAgrees(stamp("7.0.2+effect-tsgo.0.68.1", "7.0.2+effect-tsgo.0.68.1"))).toBe(true);
+    expect(checkCensusCompilerStampAgrees(stamp("7.0.2+effect-tsgo.0.67.5", "7.0.2+effect-tsgo.0.68.1"))).toBe(false);
+  });
+
+  // The stamp check and the gate judge a compiler change identically.
+  it("disagrees exactly when a gate run on the same compilers fails for the compiler", () => {
+    const unchanged = compareCheckCensusSample(sample(1000, 1000), row("@beep/schema", 1000, 1000));
+    const gateFails = (baselineCompiler: string, compiler: string) =>
+      checkCensusGateFailed(
+        CheckCensusGateReport.make({
+          baselineCommit: "368998daff",
+          baselineCompiler,
+          compiler,
+          comparisons: [unchanged],
+        })
+      );
+
+    expect(gateFails("7.0.2", "7.0.2")).toBe(!checkCensusCompilerStampAgrees(stamp("7.0.2", "7.0.2")));
+    expect(gateFails("7.0.2", "7.0.3")).toBe(!checkCensusCompilerStampAgrees(stamp("7.0.2", "7.0.3")));
+  });
+
+  it("renders one agreement line naming the shared compiler", () => {
+    expect(renderCheckCensusCompilerStampLine(stamp("7.0.2+effect-tsgo.0.68.1", "7.0.2+effect-tsgo.0.68.1"))).toBe(
+      "check-census stamp: baseline and installed compiler agree (7.0.2+effect-tsgo.0.68.1)"
+    );
+  });
+
+  it("renders one disagreement line naming both compilers, the baseline, and the re-measure command", () => {
+    const line = renderCheckCensusCompilerStampLine(
+      CheckCensusCompilerStamp.make({
+        baselinePath: "custom/baseline.jsonc",
+        baselineCompiler: "7.0.2+effect-tsgo.0.67.5",
+        compiler: "7.0.2+effect-tsgo.0.68.1",
+      })
+    );
+
+    expect(line).toBe(
+      `check-census stamp: baseline custom/baseline.jsonc was measured with 7.0.2+effect-tsgo.0.67.5, but the installed compiler is 7.0.2+effect-tsgo.0.68.1; re-measure with \`${CHECK_CENSUS_BASELINE_WRITE_COMMAND}\` (the write needs a built tree).`
+    );
+    expect(line).not.toContain("\n");
+  });
+
+  it("defaults the baseline path to the committed baseline", () => {
+    expect(stamp("7.0.2", "7.0.2").baselinePath).toBe(CHECK_CENSUS_BASELINE_PATH);
   });
 });
 

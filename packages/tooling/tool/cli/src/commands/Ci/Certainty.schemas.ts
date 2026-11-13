@@ -81,9 +81,11 @@ export type CiCertaintyHeadState = typeof CiCertaintyHeadState.Type;
  *
  * **Details**
  *
- * A head is `docs` when its check.yml Heavy Admission job ran the
- * documentation-only admission step; docs heads finish in minutes and are
- * reported as their own class so they never flatter the code-head statistic.
+ * A head is `docs` when its check.yml run created the Docs Policy job, which
+ * only a documentation-only change profile does, or (runs before 2026-11-13)
+ * when its Heavy Admission job ran the documentation-only admission step.
+ * Docs heads finish in minutes and are reported as their own class so they
+ * never flatter the code-head statistic.
  *
  * **Example** (List the head classes)
  *
@@ -257,9 +259,10 @@ export type CiCertaintyContextState = typeof CiCertaintyContextState.Type;
  * @category models
  * @since 0.0.0
  */
-export const CiCertaintyMainVerdict = LiteralKit(["success", "failure", "cancelled", "no-run", "open"]).pipe(
+export const CiCertaintyMainVerdict = LiteralKit(["success", "failure", "cancelled", "no-run", "open", "unread"]).pipe(
   $I.annoteSchema("CiCertaintyMainVerdict", {
-    description: "Hosted verdict a main first-parent commit received from check.yml push runs.",
+    description:
+      "Hosted verdict a main first-parent commit received from check.yml push runs; unread when the push-run listing did not complete.",
   })
 );
 
@@ -692,7 +695,17 @@ export class CiCertaintyLatencyStat extends S.Opaque<CiCertaintyLatencyStat, { r
 ) {}
 
 /**
- * Runner-minutes per producer run.
+ * Runner-minutes per head attempt: one check.yml run with the admitted
+ * heavy-admit.yml runs of its head.
+ *
+ * **Details**
+ *
+ * A heavy-admit.yml run joins the latest check.yml run of its head created at
+ * or before it, so a head admitted by the `ready-for-heavy` label carries its
+ * beep-ec2-heavy minutes just as one admitted inside check.yml does. A
+ * heavy-admit.yml run whose Heavy Admission was skipped is not counted. `runs`
+ * counts head attempts; the green code-run percentiles cover the attempts of
+ * code heads whose check.yml run succeeded.
  *
  * **Example** (Describe an empty runner-minute statistic)
  *
@@ -728,13 +741,20 @@ export class CiCertaintyRunnerStat extends S.Opaque<CiCertaintyRunnerStat, { rea
     runs: NonNegativeInt,
   }).pipe(
     $I.annoteSchema("CiCertaintyRunnerStat", {
-      description: "Raw runner-minutes per pull-request producer run, split by pool, with green code-run percentiles.",
+      description:
+        "Raw runner-minutes per head attempt (a check.yml run plus its admitted heavy-admit.yml runs), split by pool, with green code-attempt percentiles.",
     })
   )
 ) {}
 
 /**
  * Main verdict rate over non-docs first-parent commits.
+ *
+ * **Details**
+ *
+ * When the check.yml push-run listing did not complete, every commit is
+ * `unread` rather than `no-run`, and `rate` is none: an unread listing is not
+ * evidence that main ran nothing.
  *
  * **Example** (Describe an empty verdict statistic)
  *
@@ -749,6 +769,7 @@ export class CiCertaintyRunnerStat extends S.Opaque<CiCertaintyRunnerStat, { rea
  *   noRun: 0,
  *   open: 0,
  *   rate: O.none(),
+ *   unread: 0,
  *   verdicts: 0,
  * })
  * console.log(stat.commits)
@@ -765,6 +786,7 @@ export class CiCertaintyMainStat extends S.Opaque<CiCertaintyMainStat, { readonl
     noRun: NonNegativeInt,
     open: NonNegativeInt,
     rate: S.OptionFromNullOr(Share),
+    unread: NonNegativeInt,
     verdicts: NonNegativeInt,
   }).pipe(
     $I.annoteSchema("CiCertaintyMainStat", {
@@ -807,7 +829,14 @@ export class CiCertaintyTestUnitConversion extends S.Opaque<
 ) {}
 
 /**
- * Admission-to-Heavy start latency over non-docs pull-request runs.
+ * Admission-to-Heavy start latency over the producer runs of code heads.
+ *
+ * **Details**
+ *
+ * Each check.yml or heavy-admit.yml run pairs its own Heavy Admission start
+ * with its first executed job on the heavy pool (beep-ec2-heavy runner
+ * labels). Hosted jobs named `Heavy / ...`, such as the Test Integration
+ * aggregate, are not heavy-pool pickup and never count.
  *
  * **Example** (Describe an empty admission statistic)
  *
@@ -827,7 +856,8 @@ export class CiCertaintyAdmissionStat extends S.Opaque<CiCertaintyAdmissionStat,
     p50Minutes: S.OptionFromNullOr(NonNegativeMinutes),
   }).pipe(
     $I.annoteSchema("CiCertaintyAdmissionStat", {
-      description: "Median minutes from the Heavy Admission job's start to the first executed Heavy job's start.",
+      description:
+        "Median minutes from a run's Heavy Admission start to the start of its first executed job on the heavy pool.",
     })
   )
 ) {}

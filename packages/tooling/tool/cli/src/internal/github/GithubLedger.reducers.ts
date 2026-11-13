@@ -1,20 +1,23 @@
 /**
  * Pure reducers of the GitHub budget ledger: identity and cost of an
- * observation, readings, the reserve signal, reset epochs, windows, hourly
- * usage, per-operation costs, rollups and the summary.
+ * observation, readings, the reserve signal, lanes, windows, hourly usage,
+ * per-operation costs, rollups and the summary.
  *
  * **Details**
  *
  * Headers report the fleet-wide bucket after a response, not one request's
- * cost. Hourly usage therefore telescopes `used` per reset epoch, per-command
- * points come from a minimum-positive same-process estimator, and everything
- * the host did not attribute is the `unattributed` remainder.
+ * cost. One bucket key can hold several concurrent buckets (lanes), such as
+ * two GraphQL windows read through one token. Hourly usage therefore counts
+ * `used` per lane and reset epoch, per-command points come from a minimum-positive
+ * same-process estimator, and everything the host did not attribute is the
+ * `unattributed` remainder.
  *
  * @internal
  * @packageDocumentation
  * @since 0.0.0
  */
 
+import { CredentialFingerprint } from "@beep/github/Resilience";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
@@ -27,6 +30,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import {
   ANONYMOUS_IDENTITY,
   BucketKey,
@@ -35,6 +39,7 @@ import {
   CommandSpend,
   canonicalIdentity,
   DEFAULT_COMMAND_LABEL,
+  fileKeyOf,
   GhSubcommand,
   GithubIdentityLabel,
   GithubLedgerRow,
@@ -66,6 +71,24 @@ import type {
   TransportRow,
   WindowAnchor,
 } from "./GithubLedger.schemas.ts";
+
+/**
+ * Stable physical credential key, with a source-specific fallback for old rows.
+ *
+ * **Example** (Inspect the key helper)
+ *
+ * ```ts
+ * import { credentialKeyOf } from "@beep/repo-cli/test/SharedInternals"
+ * console.log(typeof credentialKeyOf) // "function"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const credentialKeyOf = (row: TransportRow | SampleRow | GhSpawnRow): string =>
+  O.getOrElse(row.credential, () => (row._tag === "Sample" ? `sample:${row.identity}` : `pid:${row.pid}`));
+
+const isFingerprint = S.is(CredentialFingerprint);
 
 const HOUR_MILLIS = Duration.toMillis(Duration.hours(1));
 const EPOCH_JITTER_MILLIS = Duration.toMillis(Duration.seconds(5));
@@ -179,6 +202,7 @@ export const readingOfTransport = (row: TransportRow): BucketReading =>
     used: row.used,
     resetAt: row.resetAt,
     asOf: row.at,
+    source: credentialKeyOf(row),
     basis: "transport",
   });
 
@@ -207,6 +231,7 @@ export const readingsOfSample = (row: SampleRow): ReadonlyArray<BucketReading> =
       used: O.some(bucket.used),
       resetAt: bucket.resetAt,
       asOf: row.at,
+      source: credentialKeyOf(row),
       basis: "sample",
     })
   );
@@ -280,16 +305,199 @@ export const calibrationOf =
     );
   };
 
+const byAsOf = Order.mapInput(Order.Number, (reading: BucketReading) => millis(reading.asOf));
+
+const resetGap = (self: { readonly resetAt: DateTime.Utc }, that: { readonly resetAt: DateTime.Utc }): number =>
+  Math.abs(millis(self.resetAt) - millis(that.resetAt));
+
+const sameReset = (self: { readonly resetAt: DateTime.Utc }, that: { readonly resetAt: DateTime.Utc }): boolean =>
+  resetGap(self, that) <= EPOCH_JITTER_MILLIS;
+
+// Every GraphQL reading and every unknown source belongs to one reset-scoped window instance.
+const windowScoped = (reading: BucketReading): boolean =>
+  reading.key.resource === "graphql" || !isFingerprint(reading.source);
+
+// Chain items into runs: an item extends the current run when `joins(last, item)`, else starts a new one.
+const runsOf = <Item>(
+  items: ReadonlyArray<Item>,
+  joins: (last: Item, next: Item) => boolean
+): ReadonlyArray<A.NonEmptyReadonlyArray<Item>> =>
+  A.reduce(items, A.empty<A.NonEmptyReadonlyArray<Item>>(), (runs, item) =>
+    O.match(A.last(runs), {
+      onNone: () => A.append(runs, A.of(item)),
+      onSome: (run) =>
+        joins(A.lastNonEmpty(run), item)
+          ? A.append(A.dropRight(runs, 1), A.append(run, item))
+          : A.append(runs, A.of(item)),
+    })
+  );
+
+// The least headroom above the floor first; on a tie, the newer reading.
+const mostConstrained = Order.combine(
+  Order.mapInput(Order.Number, (reading: BucketReading) => reading.remaining - reserveFloor(reading.limit)),
+  Order.flip(byAsOf)
+);
+
+// A live window's count only rises, so every fresh live reading is a lower
+// bound on its window: the most constrained one decides, whichever window or
+// credential it reads. With none, the newest reading is the fallback.
+const judgedReadingOf = (now: DateTime.Utc, usable: ReadonlyArray<BucketReading>): O.Option<BucketReading> => {
+  const live = A.filter(
+    usable,
+    (reading) =>
+      millis(now) - millis(reading.asOf) <= Duration.toMillis(RESERVE_READING_BOUND) &&
+      millis(reading.resetAt) > millis(now)
+  );
+  return A.match(live, {
+    onEmpty: () => A.last(A.sort(usable, byAsOf)),
+    onNonEmpty: (present) => O.some(A.min(present, mostConstrained)),
+  });
+};
+
 /**
- * The newest reading of a bucket that its reserve verdict may rest on.
+ * Retain one newest reading per REST credential or per window instance.
+ *
+ * **Details**
+ *
+ * A known REST credential keeps one entry. Every GraphQL reading, and every
+ * reading of an unknown source, is window scoped: one GraphQL token can read
+ * two interleaved windows at once. Window instances use one-second reset
+ * buckets per credential (or across unknown sources) and reuse the
+ * lexicographically earliest retained key within five seconds, separately for
+ * idle and busy readings. Unmatched instances allocate an unused stem or
+ * numeric suffix; a drifting instance never gives up its occupied key. All
+ * matching neighbours consolidate into that key. This preserves distinct
+ * windows even when one process or token observes both. A window instance
+ * keeps its most used reading (then the newest), because a window's count only
+ * rises and a lower late reading is a lagging response; a REST credential keeps
+ * its newest reading, which may follow a reset. The last entry is the updated
+ * instance, so persistence, cache and throttling share its exact key.
+ *
+ * **Example** (Start a retention table)
+ *
+ * ```ts
+ * import { BucketKey, BucketReading, GithubIdentityLabel, retainLatestReading } from "@beep/repo-cli/test/SharedInternals"
+ * import * as DateTime from "effect/DateTime"
+ * import * as O from "effect/Option"
+ * const reading = BucketReading.make({
+ *   key: BucketKey.make({ identity: GithubIdentityLabel.make("user:octocat"), resource: "core" }),
+ *   source: "pid:42", limit: 5000, remaining: 4990, used: O.some(10),
+ *   asOf: DateTime.makeUnsafe(0), resetAt: DateTime.makeUnsafe(3_600_000), basis: "transport"
+ * })
+ * const retained = retainLatestReading(reading, [])
+ * console.log(retained[0][0]) // "user_octocat-core-instance-busy-3600"
+ * ```
+ *
+ * @param reading - The incoming reading.
+ * @param entries - Existing logical filename stems and their readings.
+ * @returns Consolidated entries, with the updated credential or instance last.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const retainLatestReading: {
+  (
+    reading: BucketReading,
+    entries: ReadonlyArray<readonly [string, BucketReading]>
+  ): A.NonEmptyReadonlyArray<readonly [string, BucketReading]>;
+  (
+    entries: ReadonlyArray<readonly [string, BucketReading]>
+  ): (reading: BucketReading) => A.NonEmptyReadonlyArray<readonly [string, BucketReading]>;
+} = dual(
+  2,
+  (
+    reading: BucketReading,
+    entries: ReadonlyArray<readonly [string, BucketReading]>
+  ): A.NonEmptyReadonlyArray<readonly [string, BucketReading]> => {
+    const used = (value: BucketReading) => O.getOrElse(value.used, () => value.limit - value.remaining);
+    const known = isFingerprint(reading.source);
+    const scoped = windowScoped(reading);
+    const matches = A.filter(
+      entries,
+      ([, other]) =>
+        bucketKeyString(other.key) === bucketKeyString(reading.key) &&
+        (known ? other.source === reading.source : !isFingerprint(other.source)) &&
+        (!scoped || ((used(other) === 0) === (used(reading) === 0) && sameReset(other, reading)))
+    );
+    const prefix = `${fileKeyOf(reading.key.identity)}-${reading.key.resource}-`;
+    const instance = `${used(reading) === 0 ? "idle" : "busy"}-${Math.floor(millis(reading.resetAt) / 1000)}`;
+    const key = pipe(
+      A.map(matches, ([key]) => key),
+      A.sort(Order.String),
+      A.head,
+      O.getOrElse(() => {
+        const stem = `${prefix}${known ? reading.source : "instance"}${scoped ? `-${instance}` : ""}`;
+        const available = (suffix: number): string => {
+          const candidate = suffix === 0 ? stem : `${stem}-${suffix}`;
+          return A.some(entries, ([retained]) => retained === candidate) ? available(suffix + 1) : candidate;
+        };
+        return available(0);
+      })
+    );
+    const newer = (self: BucketReading, that: BucketReading) => millis(that.asOf) > millis(self.asOf);
+    // A window instance keeps its peak; a REST credential keeps its newest reading.
+    const replaces = (self: BucketReading, that: BucketReading) =>
+      scoped ? used(that) > used(self) || (used(that) === used(self) && newer(self, that)) : newer(self, that);
+    const newest = A.reduce(matches, reading, (kept, [, other]) => (replaces(kept, other) ? other : kept));
+    return A.append(
+      A.filter(entries, (entry) => !A.contains(matches, entry)),
+      Tuple.make(key, newest)
+    );
+  }
+);
+
+/**
+ * Whether a retained window instance has reached its reset.
+ *
+ * **Details**
+ *
+ * Window instances are every GraphQL reading and every reading of an unknown
+ * source (see {@link retainLatestReading}). A known REST credential's entry
+ * never expires by reset; it ages out with the retention bound instead.
+ *
+ * **Example** (Build a retention predicate)
+ *
+ * ```ts
+ * import { BucketKey, BucketReading, GithubIdentityLabel, expiredInstanceReading } from "@beep/repo-cli/test/SharedInternals"
+ * import * as DateTime from "effect/DateTime"
+ * import * as O from "effect/Option"
+ * const reading = BucketReading.make({
+ *   key: BucketKey.make({ identity: GithubIdentityLabel.make("user:octocat"), resource: "core" }),
+ *   source: "pid:42", limit: 5000, remaining: 4990, used: O.some(10),
+ *   asOf: DateTime.makeUnsafe(0), resetAt: DateTime.makeUnsafe(60_000), basis: "transport"
+ * })
+ * console.log(expiredInstanceReading(reading, DateTime.makeUnsafe(60_000))) // true
+ * ```
+ *
+ * @param reading - The retained reading.
+ * @param now - The retention cycle time.
+ * @returns True only for a window instance whose reset is at or before now.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const expiredInstanceReading: {
+  (reading: BucketReading, now: DateTime.Utc): boolean;
+  (now: DateTime.Utc): (reading: BucketReading) => boolean;
+} = dual(
+  2,
+  (reading: BucketReading, now: DateTime.Utc): boolean =>
+    windowScoped(reading) && millis(reading.resetAt) <= millis(now)
+);
+
+/**
+ * The reading of a bucket that its reserve verdict rests on.
  *
  * **Details**
  *
  * For a `graphql` key, sample-basis readings count only when
  * `admitGraphqlSamples`, because REST misreports the GraphQL bucket. Every
- * other key takes its newest reading of either basis. This is the reading
- * {@link reserveOf} judges, so a caller that shows a bucket's numbers next
- * to its verdict shows the same reading.
+ * other key takes readings of either basis. A key may hold several concurrent
+ * buckets, such as two GraphQL windows of one token. A live window's count
+ * only rises, so every fresh (at most ten minutes old) and live (reset after
+ * `now`) reading is a lower bound on its window, and the most constrained one
+ * (least `remaining − floor`, then the newest) is returned whichever window or
+ * credential it reads. With no fresh live reading it is the newest reading. This is the reading
+ * {@link reserveOf} judges, so a caller that shows a bucket's numbers next to
+ * its verdict shows the same reading.
  *
  * **Example** (An uncalibrated GraphQL sample is not usable)
  *
@@ -308,39 +516,43 @@ export const calibrationOf =
  *   asOf: DateTime.makeUnsafe(0),
  *   basis: "sample"
  * })
- * console.log(O.isNone(usableReadingOf({ admitGraphqlSamples: false })(key, [sample]))) // true
+ * const usable = usableReadingOf({ now: DateTime.makeUnsafe(0), admitGraphqlSamples: false })
+ * console.log(O.isNone(usable(key, [sample]))) // true
  * ```
  *
- * @param input - Whether calibration admits sample-basis `graphql` readings.
- * @returns A function from a key and readings to the newest usable reading of that key.
+ * @param input - The current time and whether calibration admits sample-basis `graphql` readings.
+ * @returns A function from a key and readings to the reading that key's verdict rests on.
  * @category utilities
  * @since 0.0.0
  */
 export const usableReadingOf =
-  ({ admitGraphqlSamples }: { readonly admitGraphqlSamples: boolean }) =>
+  ({ now, admitGraphqlSamples }: { readonly now: DateTime.Utc; readonly admitGraphqlSamples: boolean }) =>
   (key: BucketKey, readings: ReadonlyArray<BucketReading>): O.Option<BucketReading> =>
-    pipe(
-      readings,
+    judgedReadingOf(
+      now,
       A.filter(
+        readings,
         (reading) =>
           bucketKeyString(reading.key) === bucketKeyString(key) &&
           (key.resource !== "graphql" || reading.basis === "transport" || admitGraphqlSamples)
-      ),
-      A.sort(Order.mapInput(Order.Number, (reading: BucketReading) => millis(reading.asOf))),
-      A.last
+      )
     );
 
 /**
- * The reserve signal of one bucket from its readings.
+ * The reserve signal of one bucket key from its readings.
  *
  * **Details**
  *
  * For a `graphql` key, sample-basis readings count only when
  * `admitGraphqlSamples`; with only sample readings and no admission the state is
- * `Unknown{uncalibrated}`. No reading is `Unknown{no-reading}`; a newest reading
- * older than ten minutes is `Unknown{stale}`; a reset at or before `now` is
- * `Unknown{window-reset}`; `remaining < ceil(0.15 × limit)` is `Below`;
- * otherwise `Clear`.
+ * `Unknown{uncalibrated}`. No reading is `Unknown{no-reading}`. A key may hold
+ * several concurrent buckets (such as two GraphQL windows of one token): the
+ * signal rests on the most constrained fresh live reading (see
+ * {@link usableReadingOf}). It is `Below` when that
+ * bucket's `remaining < ceil(0.15 × limit)`, so when any live bucket is below
+ * its floor, and `Clear` otherwise. With no reading that is both fresh and
+ * live, the newest reading decides: older than ten minutes is
+ * `Unknown{stale}`, a reset at or before `now` is `Unknown{window-reset}`.
  *
  * **Example** (No reading is unknown)
  *
@@ -363,8 +575,8 @@ export const reserveOf =
     const own = A.filter(readings, (reading) => bucketKeyString(reading.key) === bucketKeyString(key));
     const unknown = (reason: ReserveUnknownReason, asOf: O.Option<DateTime.Utc>) =>
       ReserveSignal.make({ key, state: ReserveState.cases.Unknown.make({ reason, asOf }) });
-    const newest = usableReadingOf({ admitGraphqlSamples })(key, own);
-    return O.match(newest, {
+    const judged = usableReadingOf({ now, admitGraphqlSamples })(key, own);
+    return O.match(judged, {
       onNone: () => unknown(A.isReadonlyArrayNonEmpty(own) ? "uncalibrated" : "no-reading", O.none()),
       onSome: (reading) => {
         const floor = reserveFloor(reading.limit);
@@ -396,6 +608,12 @@ const transportUsed = (row: TransportRow): number => O.getOrElse(row.used, () =>
 const sameKey =
   (key: BucketKey) => (row: { readonly identity: GithubIdentityLabel; readonly resource: GitHubRateLimitResource }) =>
     row.identity === key.identity && row.resource === key.resource;
+
+// One bucket's own transport and gh-spawn rows, shared by windowsOf and hourOf.
+const keyRowsOf = (key: BucketKey, rows: ReadonlyArray<GithubLedgerRow>) => ({
+  transports: A.filter(rows, (row): row is TransportRow => isTransport(row) && sameKey(key)(row)),
+  spawns: A.filter(rows, (row): row is GhSpawnRow => isGhSpawn(row) && sameKey(key)(row)),
+});
 
 /**
  * The anchors of one bucket: `Sample` buckets for REST resources; this host's
@@ -434,7 +652,14 @@ export const anchorsOf = ({
             pipe(
               A.filter(row.buckets, (bucket) => bucket.resource === key.resource),
               A.map((bucket) =>
-                LedgerAnchor.make({ at: row.at, used: bucket.used, resetAt: bucket.resetAt, anchor: "sample" })
+                LedgerAnchor.make({
+                  source: credentialKeyOf(row),
+                  resource: key.resource,
+                  at: row.at,
+                  used: bucket.used,
+                  resetAt: bucket.resetAt,
+                  anchor: "sample",
+                })
               )
             )
           )
@@ -444,68 +669,191 @@ export const anchorsOf = ({
       ? pipe(
           A.filter(rows, (row): row is TransportRow => isTransport(row) && row.kind === "graphql" && sameKey(key)(row)),
           A.map((row) =>
-            LedgerAnchor.make({ at: row.at, used: transportUsed(row), resetAt: row.resetAt, anchor: "transport" })
+            LedgerAnchor.make({
+              source: credentialKeyOf(row),
+              resource: key.resource,
+              at: row.at,
+              used: transportUsed(row),
+              resetAt: row.resetAt,
+              anchor: "transport",
+            })
           )
         )
       : A.empty<LedgerAnchor>();
   return A.sort(A.appendAll(samples, transports), byAt);
 };
 
+// An idle bucket reports `reset = now + 1 h` on every read, so after `used == 0` the reset is not anchored.
 const sameEpoch = (
   earlier: { readonly used: number; readonly resetAt: DateTime.Utc },
   later: { readonly resetAt: DateTime.Utc }
-): boolean => earlier.used === 0 || Math.abs(millis(later.resetAt) - millis(earlier.resetAt)) <= EPOCH_JITTER_MILLIS;
+): boolean => earlier.used === 0 || sameReset(earlier, later);
+
+// Known REST credentials retain continuity across resets. Unknown observations,
+// and every GraphQL observation, form physical window instances: one GraphQL
+// token can read two interleaved windows at once. GraphQL unknown instances
+// attach to one known instance; REST instances may join a shared known sequence.
+const partitionCredentials = <Item>(
+  items: ReadonlyArray<Item>,
+  anchorOf: (item: Item) => {
+    readonly source: string;
+    readonly at: DateTime.Utc;
+    readonly resetAt: DateTime.Utc;
+    readonly used: number;
+  },
+  resource: GitHubRateLimitResource
+): readonly [ReadonlyArray<A.NonEmptyReadonlyArray<Item>>, ReadonlyArray<A.NonEmptyReadonlyArray<Item>>] => {
+  const known = A.filter(items, (item) => isFingerprint(anchorOf(item).source));
+  const unknown = A.filter(items, (item) => !isFingerprint(anchorOf(item).source));
+  const byReset = Order.mapInput(DateTime.Order, (item: Item) => anchorOf(item).resetAt);
+  // Idle and busy observations never share an instance. Sorting by reset makes
+  // adjacent jitter matches the transitive reset cluster, independent of PID.
+  const instancesOf = (group: ReadonlyArray<Item>) =>
+    A.flatMap(R.values(A.groupBy(group, (item): string => `${anchorOf(item).used === 0}`)), (sameLoad) =>
+      runsOf(A.sort(sameLoad, byReset), (last, next) => sameReset(anchorOf(last), anchorOf(next)))
+    );
+  const instances = instancesOf(unknown);
+  const credentials = R.values(A.groupBy(known, (item) => anchorOf(item).source));
+  const knownGroups = resource === "graphql" ? A.flatMap(credentials, instancesOf) : credentials;
+  const shares = (left: Item, right: Item): boolean => {
+    const a = anchorOf(left);
+    const b = anchorOf(right);
+    return (
+      a.used > 0 &&
+      b.used > 0 &&
+      sameReset(a, b) &&
+      millis(a.at) < millis(a.resetAt) &&
+      millis(b.at) < millis(b.resetAt)
+    );
+  };
+  const merge = (
+    pending: ReadonlyArray<A.NonEmptyReadonlyArray<Item>>,
+    lane: A.NonEmptyReadonlyArray<Item>
+  ): ReadonlyArray<A.NonEmptyReadonlyArray<Item>> => {
+    const joins = (group: A.NonEmptyReadonlyArray<Item>) => A.some(group, (a) => A.some(lane, (b) => shares(a, b)));
+    const joined = A.filter(pending, joins);
+    const rest = A.filter(pending, (group) => !joins(group));
+    return A.isReadonlyArrayNonEmpty(joined) ? merge(rest, A.appendAll(lane, A.flatten(joined))) : A.append(rest, lane);
+  };
+  // The second tuple member records ambiguous instances for accounting only.
+  // Reserve keeps every instance eligible; ambiguity never hides depletion.
+  const attached = () =>
+    A.reduce(
+      instances,
+      Tuple.make<readonly [ReadonlyArray<A.NonEmptyReadonlyArray<Item>>, ReadonlyArray<A.NonEmptyReadonlyArray<Item>>]>(
+        knownGroups,
+        []
+      ),
+      ([lanes, ambiguous], instance) => {
+        const candidates = A.flatMap(lanes, (lane, index) =>
+          A.some(instance, (a) => A.some(lane, (b) => isFingerprint(anchorOf(b).source) && shares(a, b))) ? [index] : []
+        );
+        return A.match(candidates, {
+          onEmpty: () => Tuple.make(A.append(lanes, instance), ambiguous),
+          onNonEmpty: (present) =>
+            A.length(present) === 1
+              ? Tuple.make(
+                  A.map(lanes, (lane, index) =>
+                    index === A.headNonEmpty(present) ? A.appendAll(lane, instance) : lane
+                  ),
+                  ambiguous
+                )
+              : Tuple.make(A.append(lanes, instance), A.append(ambiguous, instance)),
+        });
+      }
+    );
+  const [groups, ambiguous] =
+    resource === "graphql"
+      ? attached()
+      : Tuple.make(A.reduce(A.appendAll(knownGroups, instances), A.empty<A.NonEmptyReadonlyArray<Item>>(), merge), []);
+  const lanes = pipe(
+    groups,
+    A.map((group) =>
+      A.sort(
+        group,
+        Order.mapInput(DateTime.Order, (item: Item) => anchorOf(item).at)
+      )
+    ),
+    A.sort(Order.mapInput(DateTime.Order, (group: A.NonEmptyReadonlyArray<Item>) => anchorOf(A.headNonEmpty(group)).at))
+  );
+  return Tuple.make(lanes, ambiguous);
+};
 
 /**
- * Split time-ordered anchors into reset epochs.
+ * Partition one key's anchors by credential and positive live co-observation.
  *
  * **Details**
  *
- * Two consecutive anchors share an epoch when their resets differ by at most
- * five seconds, or when the earlier one has `used == 0` (an idle bucket reports
- * `reset = now + 1 h` on every read, so its reset is not anchored).
+ * REST credential groups merge to a fixed point only when positive readings
+ * observed before their reset agree within five seconds. Idle groups never
+ * merge. A known REST credential stays in its lane across resets. GraphQL
+ * splits each known fingerprint into reset-scoped window instances, because
+ * one token can read two interleaved windows at once; distinct fingerprints
+ * never merge, and an unknown instance attaches only when exactly one known
+ * instance co-observes it. Ambiguous instances remain standalone reserve
+ * candidates but contribute zero to accounting, with inferred lower-bound flags.
+ * Unknown anchors cluster into reset-scoped instances across sources, with idle
+ * and busy instances kept separate. Instances never continue across resets.
+ * Lane ids follow first anchor time.
  *
- * **Example** (One anchor, one epoch)
+ * **Example** (No credentials, no lanes)
  *
  * ```ts
- * import { LedgerAnchor, epochsOf } from "@beep/repo-cli/test/SharedInternals"
- * import * as DateTime from "effect/DateTime"
- *
- * const anchor = LedgerAnchor.make({ at: DateTime.makeUnsafe(0), used: 1, resetAt: DateTime.makeUnsafe(1), anchor: "sample" })
- * console.log(epochsOf([anchor]).length) // 1
+ * import { lanesOf } from "@beep/repo-cli/test/SharedInternals"
+ * console.log(lanesOf([]).length) // 0
  * ```
  *
- * @param anchors - Anchors, oldest first.
- * @returns The epochs, oldest first.
+ * @param anchors - One key's anchors.
+ * @param resource - The resource; shared REST buckets merge co-observations, GraphQL lanes are window instances.
+ * @returns Lanes and anchors sorted by time.
  * @category utilities
  * @since 0.0.0
  */
-export const epochsOf = (anchors: ReadonlyArray<LedgerAnchor>): ReadonlyArray<A.NonEmptyReadonlyArray<LedgerAnchor>> =>
-  A.reduce(anchors, A.empty<A.NonEmptyReadonlyArray<LedgerAnchor>>(), (epochs, anchor) =>
-    O.match(A.last(epochs), {
-      onNone: () => A.append(epochs, A.of(anchor)),
-      onSome: (current) =>
-        sameEpoch(A.lastNonEmpty(current), anchor)
-          ? A.append(A.dropRight(epochs, 1), A.append(current, anchor))
-          : A.append(epochs, A.of(anchor)),
+export const lanesOf: {
+  (anchors: ReadonlyArray<LedgerAnchor>): ReadonlyArray<A.NonEmptyReadonlyArray<LedgerAnchor>>;
+  (
+    anchors: ReadonlyArray<LedgerAnchor>,
+    resource: GitHubRateLimitResource
+  ): ReadonlyArray<A.NonEmptyReadonlyArray<LedgerAnchor>>;
+  (
+    resource: GitHubRateLimitResource
+  ): (anchors: ReadonlyArray<LedgerAnchor>) => ReadonlyArray<A.NonEmptyReadonlyArray<LedgerAnchor>>;
+} = dual(
+  (args) => A.isArray(args[0]),
+  (
+    anchors: ReadonlyArray<LedgerAnchor>,
+    resource: GitHubRateLimitResource = O.match(A.head(anchors), {
+      onNone: (): GitHubRateLimitResource => "core",
+      onSome: (anchor) => anchor.resource,
     })
-  );
+  ) => {
+    const [lanes] = partitionCredentials(anchors, (anchor) => anchor, resource);
+    return lanes;
+  }
+);
 
 const inWindow = (from: number, to: number) => (row: { readonly at: DateTime.Utc }) =>
   millis(row.at) > from && millis(row.at) <= to;
 
+const byWindowEnd = Order.combine(
+  Order.mapInput(Order.Number, (window: LedgerWindow) => millis(window.to)),
+  Order.mapInput(Order.Number, (window: LedgerWindow) => window.lane)
+);
+
 /**
- * The windows of one bucket, between consecutive anchors.
+ * The windows of one bucket key, between consecutive anchors of each lane.
  *
  * **Details**
  *
- * A same-epoch window's `delta` is the signed `used` difference. A window whose
- * later anchor starts a new epoch while the earlier one had `used > 0` crosses a
- * reset: its `resetLowerBound` is `used(to) + max(0, peakBefore − used(from))`,
- * where `peakBefore` is the highest `used` seen for the key with a reset within
- * five seconds of the earlier anchor's. `attributedNominal` sums this host's
- * `Transport` nominal costs for the key in the window; `ghSpawns` counts its
- * `GhSpawn` rows.
+ * Anchors are split into lanes by {@link lanesOf} and paired only within a
+ * lane, so readings of concurrent buckets never pair. A same-epoch window's
+ * `delta` is the signed `used` difference. A window whose later anchor starts
+ * a new epoch while the earlier one had `used > 0` crosses a reset: its
+ * `resetLowerBound` is `used(to) + max(0, peakBefore − used(from))`, where
+ * `peakBefore` is the highest `used` seen before `to` among the lane's anchors
+ * and that lane's `Transport` rows with a reset within five seconds of the
+ * earlier anchor's. `attributedNominal` sums this host's `Transport` nominal
+ * costs for the key in the window; `ghSpawns` counts its `GhSpawn` rows.
  *
  * **Example** (No anchors, no windows)
  *
@@ -517,7 +865,7 @@ const inWindow = (from: number, to: number) => (row: { readonly at: DateTime.Utc
  * ```
  *
  * @param input - The bucket, the canonical rows and whether sample-basis `graphql` readings are admitted.
- * @returns The windows, oldest first.
+ * @returns The windows, sorted by end and then lane.
  * @category utilities
  * @since 0.0.0
  */
@@ -530,39 +878,50 @@ export const windowsOf = ({
   readonly rows: ReadonlyArray<GithubLedgerRow>;
   readonly admitGraphqlSamples: boolean;
 }): ReadonlyArray<LedgerWindow> => {
-  const anchors = anchorsOf({ key, rows, admitGraphqlSamples });
-  const transports = A.filter(rows, (row): row is TransportRow => isTransport(row) && sameKey(key)(row));
-  const spawns = A.filter(rows, (row): row is GhSpawnRow => isGhSpawn(row) && sameKey(key)(row));
-  return A.map(A.zip(anchors, A.drop(anchors, 1)), ([from, to]) => {
-    const same = sameEpoch(from, to);
-    const crossesReset = !same && from.used > 0;
-    const matchesFromEpoch = (resetAt: DateTime.Utc) =>
-      Math.abs(millis(resetAt) - millis(from.resetAt)) <= EPOCH_JITTER_MILLIS;
-    const peakBefore = pipe(
-      A.filter(anchors, (anchor) => millis(anchor.at) < millis(to.at) && matchesFromEpoch(anchor.resetAt)),
-      A.map((anchor) => anchor.used),
-      A.appendAll(
+  const { transports, spawns } = keyRowsOf(key, rows);
+  const windowsOfLane = (lane: A.NonEmptyReadonlyArray<LedgerAnchor>, index: number): ReadonlyArray<LedgerWindow> =>
+    A.map(A.zip(lane, A.drop(lane, 1)), ([from, to]) => {
+      // A GraphQL lane and an unknown-only lane are each one window instance, so they never cross a reset.
+      const same =
+        key.resource === "graphql" || A.every(lane, (anchor) => !isFingerprint(anchor.source)) || sameEpoch(from, to);
+      const crossesReset = !same && from.used > 0;
+      const before = (row: { readonly at: DateTime.Utc; readonly resetAt: DateTime.Utc }) =>
+        millis(row.at) < millis(to.at) && sameReset(row, from);
+      // Only a reset crossing needs the peak, so it is computed on demand.
+      const peakBefore = () =>
         pipe(
-          A.filter(transports, (row) => millis(row.at) < millis(to.at) && matchesFromEpoch(row.resetAt)),
-          A.map(transportUsed)
-        )
-      ),
-      A.reduce(from.used, (peak, used) => Math.max(peak, used))
-    );
-    const within = inWindow(millis(from.at), millis(to.at));
-    return LedgerWindow.make({
-      key,
-      from: from.at,
-      to: to.at,
-      anchor: to.anchor,
-      sameEpoch: same,
-      delta: same ? to.used - from.used : 0,
-      crossesReset,
-      resetLowerBound: crossesReset ? to.used + Math.max(0, peakBefore - from.used) : 0,
-      attributedNominal: Num.sumAll(A.map(A.filter(transports, within), (row) => row.nominalCost)),
-      ghSpawns: A.length(A.filter(spawns, within)),
+          A.map(A.filter(lane, before), (anchor) => anchor.used),
+          A.appendAll(
+            A.map(
+              A.filter(
+                transports,
+                (row) => before(row) && A.some(lane, (anchor) => anchor.source === credentialKeyOf(row))
+              ),
+              transportUsed
+            )
+          ),
+          A.reduce(from.used, (peak, used) => Math.max(peak, used))
+        );
+      const within = inWindow(millis(from.at), millis(to.at));
+      return LedgerWindow.make({
+        key,
+        lane: index,
+        inferred: A.some(lane, (anchor) => !isFingerprint(anchor.source)),
+        from: from.at,
+        to: to.at,
+        anchor: to.anchor,
+        sameEpoch: same,
+        delta: same ? to.used - from.used : 0,
+        crossesReset,
+        resetLowerBound: crossesReset ? to.used + Math.max(0, peakBefore() - from.used) : 0,
+        attributedNominal: Num.sumAll(A.map(A.filter(transports, within), (row) => row.nominalCost)),
+        ghSpawns: A.length(A.filter(spawns, within)),
+      });
     });
-  });
+  return A.sort(
+    A.flatMap(lanesOf(anchorsOf({ key, rows, admitGraphqlSamples }), key.resource), windowsOfLane),
+    byWindowEnd
+  );
 };
 
 /**
@@ -594,14 +953,14 @@ export const operationCostsOf = (rows: ReadonlyArray<GithubLedgerRow>): Readonly
     rows,
     (row): row is TransportRow => isTransport(row) && row.kind === "graphql" && row.resource === "graphql"
   );
-  const groups = A.groupBy(graphql, (row) => `${row.pid}|${row.identity}`);
+  const groups = A.groupBy(graphql, (row) => `${row.pid}|${row.identity}|${credentialKeyOf(row)}`);
   const candidates = pipe(
     R.values(groups),
     A.flatMap((group) => {
       const sorted = A.sort(group, byAt);
       return pipe(
         A.zip(sorted, A.drop(sorted, 1)),
-        A.filter(([first, second]) => sameEpoch({ used: transportUsed(first), resetAt: first.resetAt }, second)),
+        A.filter(([first, second]) => sameReset(first, second)),
         A.map(([first, second]) => ({
           operation: second.operation,
           delta: transportUsed(second) - transportUsed(first),
@@ -735,15 +1094,21 @@ export const keysOfRows = (rows: ReadonlyArray<GithubLedgerRow>): ReadonlyArray<
 };
 
 /**
- * One bucket's usage in hour `hour`, from the windows that end in it.
+ * One bucket key's hourly usage from known credential windows and inferred instances.
  *
  * **Details**
  *
- * `fleetUsed` telescopes per epoch (`last − first`, floored once at 0) and
- * adds each reset-crossing window's lower bound; it is none when no window
- * ends in the hour. `ghEstimated = min(ghSpawns, max(0, fleetUsed −
- * estimatedPoints))` and `unattributed = max(0, fleetUsed − estimatedPoints −
- * ghEstimated)`.
+ * `fleetUsed` telescopes known REST lanes' runs of chained same-epoch windows
+ * (`last − first`, each run floored once at 0), sums them over those lanes
+ * and adds each confirmed reset-crossing lower bound; such a lane counts its
+ * first window from zero only when it began inside the hour. Window instances
+ * (every GraphQL lane and every unknown-only lane) add their peak in-hour
+ * `used` against the peak before the hour, a zero baseline for a window
+ * beginning in the hour, or the first in-hour anchor with a lower-bound flag. Concurrent lanes' windows overlap in time, so
+ * `attributedNominal` and `ghSpawns` count each `Transport` and `GhSpawn` row
+ * once in its timestamp hour. `ghEstimated = min(ghSpawns, max(0,
+ * fleetUsed − estimatedPoints))` and `unattributed = max(0, fleetUsed −
+ * estimatedPoints − ghEstimated)`.
  *
  * **Example** (An empty hour)
  *
@@ -756,7 +1121,7 @@ export const keysOfRows = (rows: ReadonlyArray<GithubLedgerRow>): ReadonlyArray<
  * console.log(O.isNone(hourOf({ hour: DateTime.makeUnsafe(0), key, rows: [], windows: [], costs: [] }).fleetUsed)) // true
  * ```
  *
- * @param input - The hour start, the bucket, canonical rows, the bucket's windows and the operation costs.
+ * @param input - The hour, bucket, rows, windows, operation costs and calibration admission used to select anchors.
  * @returns The hour's usage for the bucket.
  * @category utilities
  * @since 0.0.0
@@ -767,43 +1132,96 @@ export const hourOf = ({
   rows,
   windows,
   costs,
+  admitGraphqlSamples = A.some(windows, (window) => window.anchor === "sample"),
 }: {
   readonly hour: DateTime.Utc;
   readonly key: BucketKey;
   readonly rows: ReadonlyArray<GithubLedgerRow>;
   readonly windows: ReadonlyArray<LedgerWindow>;
   readonly costs: ReadonlyArray<OperationCost>;
+  readonly admitGraphqlSamples?: boolean;
 }): LedgerHourKey => {
   const start = millis(hour);
   const inHour = (at: DateTime.Utc) => millis(at) >= start && millis(at) < start + HOUR_MILLIS;
   const ending = A.filter(windows, (window) => inHour(window.to));
   const table = costTable(costs);
-  const transports = A.filter(
-    rows,
-    (row): row is TransportRow => isTransport(row) && sameKey(key)(row) && inHour(row.at)
+  const { transports, spawns } = keyRowsOf(key, rows);
+  const hourTransports = A.filter(transports, (row) => inHour(row.at));
+  const estimatedPoints = Num.sumAll(A.map(hourTransports, costOfRow(table)));
+  const ghSpawns = A.length(A.filter(spawns, (row) => inHour(row.at)));
+  const [lanes, ambiguous] = partitionCredentials(
+    anchorsOf({ key, rows, admitGraphqlSamples }),
+    (anchor) => anchor,
+    key.resource
   );
-  const spawns = A.filter(rows, (row): row is GhSpawnRow => isGhSpawn(row) && sameKey(key)(row) && inHour(row.at));
-  const estimatedPoints = Num.sumAll(A.map(transports, costOfRow(table)));
-  const ghSpawns = Num.sumAll(A.map(ending, (window) => window.ghSpawns));
-  const crossing = A.filter(ending, (window) => window.crossesReset);
+  const knownLane = (lane: A.NonEmptyReadonlyArray<LedgerAnchor>) =>
+    A.some(lane, (anchor) => isFingerprint(anchor.source));
+  const unknownAnchor = (anchor: LedgerAnchor) => !isFingerprint(anchor.source);
+  // Every GraphQL lane is one window instance; a REST lane is one only without a known credential.
+  const instanceIndexes = A.flatMap(lanes, (lane, index) =>
+    key.resource === "graphql" || !knownLane(lane) ? [index] : []
+  );
+  const knownEnding = A.filter(ending, (window) => !A.contains(instanceIndexes, window.lane));
+  const crossing = A.filter(knownEnding, (window) => window.crossesReset);
+  const peakOf = (anchors: A.NonEmptyReadonlyArray<LedgerAnchor>) =>
+    A.max(
+      A.map(anchors, (anchor) => anchor.used),
+      Order.Number
+    );
+  const instanceLanes = A.filter(lanes, (_, index) => A.contains(instanceIndexes, index));
+  const inferred = A.flatMap(instanceLanes, (lane) => {
+    const present = A.filter(lane, (anchor) => inHour(anchor.at));
+    return A.match(present, {
+      onEmpty: () => [],
+      onNonEmpty: (anchors) => {
+        if (A.some(ambiguous, (instance) => A.contains(instance, A.headNonEmpty(anchors)))) {
+          return [Tuple.make(0, true)];
+        }
+        const before = A.filter(lane, (anchor) => millis(anchor.at) < start);
+        const earliestReset = A.reduce(lane, millis(A.headNonEmpty(lane).resetAt), (reset, anchor) =>
+          Math.min(reset, millis(anchor.resetAt))
+        );
+        const startsHere = earliestReset - HOUR_MILLIS >= start;
+        // A window's count only rises, so a lower late reading is a lagging response: use each side's peak.
+        const baseline = A.match(before, {
+          onNonEmpty: peakOf,
+          onEmpty: () => (startsHere ? 0 : A.headNonEmpty(anchors).used),
+        });
+        return [Tuple.make(Math.max(0, peakOf(anchors) - baseline), A.isReadonlyArrayEmpty(before) && !startsHere)];
+      },
+    });
+  });
+  const initial = A.flatMap(lanes, (lane, index) => {
+    const first = A.headNonEmpty(lane);
+    if (A.contains(instanceIndexes, index) || !inHour(first.at)) return [];
+    const firstCross = A.findFirst(windows, (window) => window.lane === index && window.crossesReset);
+    const epoch = A.takeWhile(
+      lane,
+      (anchor) => O.isNone(firstCross) || millis(anchor.at) <= millis(firstCross.value.from)
+    );
+    const earliestReset = A.reduce(epoch, millis(first.resetAt), (reset, anchor) =>
+      Math.min(reset, millis(anchor.resetAt))
+    );
+    const startsHere = earliestReset - HOUR_MILLIS >= start;
+    return [Tuple.make(startsHere ? Math.max(0, first.used) : 0, !startsHere)];
+  });
+  const contributions = A.appendAll(inferred, initial);
   const telescoped = pipe(
-    A.filter(ending, (window) => window.sameEpoch),
-    // Consecutive same-epoch windows chain end to start; a gap is a new epoch run.
-    A.reduce(A.empty<A.NonEmptyReadonlyArray<LedgerWindow>>(), (runs, window) =>
-      O.match(A.last(runs), {
-        onNone: () => A.append(runs, A.of(window)),
-        onSome: (run) =>
-          millis(A.lastNonEmpty(run).to) === millis(window.from)
-            ? A.append(A.dropRight(runs, 1), A.append(run, window))
-            : A.append(runs, A.of(window)),
-      })
-    ),
+    A.filter(knownEnding, (window) => window.sameEpoch),
+    A.groupBy((window) => `${window.lane}`),
+    R.values,
+    A.flatMap((lane) => runsOf(lane, (last, next) => millis(last.to) === millis(next.from))),
     A.map((run) => Math.max(0, Num.sumAll(A.map(run, (window) => window.delta)))),
     Num.sumAll
   );
-  const fleetUsed = A.isReadonlyArrayNonEmpty(ending)
-    ? O.some(telescoped + Num.sumAll(A.map(crossing, (window) => window.resetLowerBound)))
-    : O.none<number>();
+  const fleetUsed =
+    A.isReadonlyArrayNonEmpty(knownEnding) || A.isReadonlyArrayNonEmpty(contributions)
+      ? O.some(
+          telescoped +
+            Num.sumAll(A.map(crossing, (window) => window.resetLowerBound)) +
+            Num.sumAll(A.map(contributions, ([used]) => used))
+        )
+      : O.none<number>();
   const ghEstimated = O.match(fleetUsed, {
     onNone: () => 0,
     onSome: (used) => Math.min(ghSpawns, Math.max(0, used - estimatedPoints)),
@@ -811,19 +1229,27 @@ export const hourOf = ({
   return LedgerHourKey.make({
     key,
     fleetUsed,
-    fleetUsedIsLowerBound: A.isReadonlyArrayNonEmpty(crossing),
+    lanesInferred:
+      A.some(instanceLanes, (lane) => A.some(lane, (anchor) => inHour(anchor.at)) && A.some(lane, unknownAnchor)) ||
+      A.some(lanes, (lane) => knownLane(lane) && inHour(A.headNonEmpty(lane).at) && A.some(lane, unknownAnchor)) ||
+      A.some(knownEnding, (window) => window.inferred),
+    fleetUsedIsLowerBound: A.isReadonlyArrayNonEmpty(crossing) || A.some(contributions, ([, lowerBound]) => lowerBound),
     anchor: pipe(
       A.last(ending),
       O.map((window): WindowAnchor => window.anchor),
       O.getOrElse((): WindowAnchor => (key.resource === "graphql" ? "transport" : "sample"))
     ),
-    attributedNominal: Num.sumAll(A.map(ending, (window) => window.attributedNominal)),
+    attributedNominal: Num.sumAll(A.map(hourTransports, (row) => row.nominalCost)),
     estimatedPoints,
     ghSpawns,
     ghEstimated,
     unattributed: O.map(fleetUsed, (used) => Math.max(0, used - estimatedPoints - ghEstimated)),
     overAttributed: O.exists(fleetUsed, (used) => estimatedPoints > used),
-    byCommand: commandSpendsOf(transports, spawns, table),
+    byCommand: commandSpendsOf(
+      hourTransports,
+      A.filter(spawns, (row) => inHour(row.at)),
+      table
+    ),
   });
 };
 
@@ -926,7 +1352,16 @@ export const rollupOf = (input: {
     host: input.host,
     complete: input.complete,
     cells: cellsOf(hourRows),
-    keys: A.map(keyed, ({ key, all }) => hourOf({ hour, key, rows: input.rows, windows: all, costs })),
+    keys: A.map(keyed, ({ key, all }) =>
+      hourOf({
+        hour,
+        key,
+        rows: input.rows,
+        windows: all,
+        costs,
+        admitGraphqlSamples: input.admitGraphqlSamples(key.identity),
+      })
+    ),
     operationCosts: hourCosts,
     windows: A.flatMap(keyed, ({ windows }) => windows),
   });

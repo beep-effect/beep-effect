@@ -1,0 +1,191 @@
+name: Shard Overflow
+
+# Test Unit partitions that Test Plan routed to the self-hosted overflow pool
+# (goals/ci-lane-economics, research/shard-overflow-routing-2026-11-13.md).
+# check.yml calls this workflow once per routed partition; the job is the
+# hosted `Test Unit (<partition>)` shard with `runs-on` swapped for the
+# overflow label, and ci-runner-security.test.ts fails when the two drift
+# apart. The organization runner group `beep-shard-overflow` admits only this
+# file at refs/heads/main, so a pull request cannot replace the definition,
+# and the job condition below refuses a fork's pull request even if a caller
+# routes one. Secrets reach the job the way they reach the hosted shard:
+# write credentials only on a push through the `turbo-cache-write`
+# environment, read-only cache credentials on a same-repository pull request.
+
+on:
+  workflow_call:
+    inputs:
+      partition:
+        description: The Test Unit partition this job runs.
+        required: true
+        type: string
+      planned_partitions:
+        description: The run's whole Test Unit plan (JSON array), for the unplanned-partition check.
+        required: true
+        type: string
+      docs_only:
+        description: Change Profile's docs_only output.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  # Event facts only, as in check.yml: the shard passes --event-base, which the
+  # CLI resolves from GITHUB_SHA and the event payload (fixed across jobs and
+  # partial reruns), so routed and hosted shards diff against one base.
+  BEEP_CI_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+  BEEP_CI_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+
+jobs:
+  # The job id matches check.yml's hosted shard so `github.job`, and with it
+  # every artifact name, is the same on either runner.
+  test-unit-shard:
+    name: Overflow
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: beep-shard-overflow
+    timeout-minutes: 20
+    environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Fetch pull request base
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+
+      - name: Determine lane execution
+        id: lane-gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          should_run=true
+          docs_only="${{ inputs.docs_only }}"
+          if [[ "$docs_only" == "true" ]]; then
+            should_run=false
+          fi
+          echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
+
+      - name: Setup monorepo CI
+        if: steps.lane-gate.outputs.should_run == 'true'
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          node-version: "22.23.4"
+          native-pdf-tools: ${{ startsWith(inputs.partition, 'repo-cli') }}
+          free-disk: "true"
+          free-disk-min-gib: "64"
+          turbo-remote-cache: "true"
+          app-secrets: "true"
+          turbo-api: ${{ vars.TURBO_API }}
+          turbo-team: ${{ vars.TURBO_TEAM }}
+          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
+          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
+          r2-enabled: ${{ vars.TURBO_R2_ENABLED }}
+          r2-endpoint: ${{ vars.TURBO_R2_ENDPOINT }}
+          r2-bucket: ${{ vars.TURBO_R2_BUCKET }}
+          r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
+          r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
+          database-url: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
+          database-url-unpooled: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
+          email-resend-api-key: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
+          auth-secret: ${{ github.event_name == 'push' && secrets.AUTH_SECRET || '' }}
+          better-auth-secret: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_SECRET || '' }}
+          better-auth-url: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_URL || '' }}
+          security-trusted-origins: ${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}
+          liveblocks-secret-key: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
+
+      - name: Verify coverage runtime features
+        if: steps.lane-gate.outputs.should_run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Preserve the existing coverage runtime: newer Node versions have a
+          # native escaped-key round-trip defect. Float16Array is scoped to test
+          # workers by vitest.shared.ts, never granted through job-wide NODE_OPTIONS.
+          node --js-float16array -p "'Node ' + process.versions.node + ', ' + Float16Array.name"
+
+      - name: Run Test Unit shard
+        id: unit-tests
+        if: steps.lane-gate.outputs.should_run == 'true'
+        env:
+          PLANNED_PARTITIONS: ${{ inputs.planned_partitions }}
+        run: |
+          set -euo pipefail
+          run_lane() {
+            setsid bun run beep "$@" < /dev/null &
+            local pgid=$!
+            local status=0
+            wait "$pgid" || status=$?
+            kill -TERM -- "-$pgid" 2>/dev/null || true
+            sleep 2
+            kill -KILL -- "-$pgid" 2>/dev/null || true
+            return "$status"
+          }
+
+          shape_args=(--event-base)
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            shape_args+=(--affected)
+          fi
+          shape_args+=(--summarize)
+          run_lane ci lane test-unit --partition "${{ inputs.partition }}" --planned-partitions "$PLANNED_PARTITIONS" --coverage-output ".beep/ci-coverage/${{ inputs.partition }}" "${shape_args[@]}"
+
+      # A failed producer never seals coverage evidence. Preserve its raw test
+      # reports separately so bounded console output cannot hide later failures.
+      - name: Upload failed Unit test reports
+        if: failure() && steps.unit-tests.outcome == 'failure'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: unit-failures-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.partition }}
+          path: |
+            packages/**/coverage/**/unit-results.json
+            apps/**/coverage/**/unit-results.json
+            infra/coverage/**/unit-results.json
+            scratchpad/coverage/**/unit-results.json
+            tools/**/coverage/**/unit-results.json
+            !**/node_modules/**
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Upload Unit coverage evidence
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: unit-coverage-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.partition }}
+          path: .beep/ci-coverage/${{ inputs.partition }}/
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Append Turbo summary
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        run: bun run beep ci append-turbo-summary
+
+      - name: Upload trusted Turbo summaries
+        if: github.event_name == 'push' && hashFiles('.turbo/runs/*.json') != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: turbo-summary-${{ github.job }}-${{ matrix.id || inputs.partition || 'single' }}
+          path: .turbo/runs/*.json
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Skip lane
+        if: steps.lane-gate.outputs.should_run != 'true'
+        run: echo "Skipping Test Unit (${{ inputs.partition }}) for this change set."
+
+      - name: Stop R2 cache adapter
+        if: always()
+        shell: bash
+        run: |
+          if [[ -x infra/r2-cache/adapter.sh ]]; then
+            infra/r2-cache/adapter.sh stop-ci
+          fi

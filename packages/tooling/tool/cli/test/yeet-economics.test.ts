@@ -771,6 +771,79 @@ describe("yeet economics first failure", () => {
     ]);
   });
 
+  it("classifies refusals before lanes and keeps every red attempt a row of the mix", () => {
+    const preflight = "publish:00-head-install-preflight";
+    const handlerError = (message: string): Partial<Parameters<typeof EconomicsAttempt.make>[0]> => ({
+      failureKind: O.some("handler-error"),
+      failedStepId: O.some(preflight),
+      message,
+    });
+    const economics = report([
+      journal("run-1", [
+        // The scheduler refused admission before any step ran.
+        red("admission", 0, 1, {
+          ...handlerError("Yeet scheduler admission timed out before the proof started."),
+          lanes: [lane(preflight, "not-run", O.none(), "wrapper")],
+        }),
+        // A handler error after a lane passed is not the preflight's failure.
+        red("handler-error", 2, 3, {
+          ...handlerError("The pull request is not open."),
+          lanes: [lane("publish:01-cheap-gates", "passed", O.some(1_000), "wrapper")],
+        }),
+        red("lock-bounce", 4, 5, handlerError("Another Yeet full proof for this repository is active.")),
+        red(
+          "stale-base",
+          6,
+          7,
+          handlerError("yeet publish refuses a stale base: files changed on this branch were also changed.")
+        ),
+        red("closeout", 8, 9, { ...handlerError("The pull request is not merged."), mode: O.some("closeout") }),
+        red("install", 10, 11, {
+          failedStepId: O.some(preflight),
+          lanes: [lane(preflight, "failed", O.some(4_000), "wrapper")],
+        }),
+        red("inner", 12, 13, {
+          failedStepId: O.some("full:01-pre-push"),
+          lanes: [
+            lane("full:01-pre-push", "failed", O.some(5_000), "wrapper"),
+            lane("quality:coverage", "failed", O.some(300), "inner"),
+          ],
+        }),
+        red("missing-receipt", 14, 15, { outcome: O.none(), failureKind: O.none(), verdictSchemaVersion: O.none() }),
+        // MEAS-03: an interrupted attempt is terminated, counted apart from the reds.
+        red("interrupted", 16, 17, {
+          outcome: O.none(),
+          failureKind: O.none(),
+          verdictSchemaVersion: O.none(),
+          terminationReason: O.some("interrupted"),
+        }),
+        green("green", 18, 19),
+      ]),
+    ]);
+    const failure = economics.firstFailure;
+    expect(failure.redAttempts).toBe(8);
+    expect(economics.attempts.all.classMix).toEqual([
+      { key: "red", count: 8 },
+      { key: "green", count: 1 },
+      { key: "terminated", count: 1 },
+    ]);
+    expect(Num.sumAll(A.map(failure.actionableLaneMix, (row) => row.count))).toBe(failure.redAttempts);
+    expect(
+      A.sort(
+        failure.actionableLaneMix,
+        Order.mapInput(Order.String, (row: { readonly key: string }) => row.key)
+      )
+    ).toEqual([
+      { key: preflight, count: 1 },
+      { key: "quality:coverage", count: 1 },
+      { key: "refusal:closeout", count: 1 },
+      { key: "refusal:lock-bounce", count: 1 },
+      { key: "refusal:stale-base", count: 1 },
+      { key: "unexecuted", count: 1 },
+      { key: "unlocated", count: 2 },
+    ]);
+  });
+
   it("classifies each receipt proxy by its own sentinel", () => {
     const sentinels: ReadonlyArray<readonly [string, Partial<Parameters<typeof EconomicsAttempt.make>[0]>]> = [
       ["scheduler-lock-bounce", { message: "Another Yeet full proof for this repository is active." }],
@@ -836,7 +909,9 @@ describe("yeet economics red to green", () => {
       leftCensoredEpisodesExcluded: 1,
       leftCensoredObservedAttempts: 2,
       rightCensoredStreaks: 2,
-      rightCensoredRedAttempts: 3,
+      // run-4's open streak holds the killed (terminated) attempt and a red; run-5's one red.
+      rightCensoredRedAttempts: 2,
+      rightCensoredTerminatedAttempts: 1,
       // run-4 is open from 0 to 20 minutes, run-5 from 0 to 5.
       rightCensoredObservedSpanMinutes: 25,
     });
@@ -848,9 +923,13 @@ describe("yeet economics red to green", () => {
     assertSome(uncut.p50Ms, 20 * MINUTE);
     assertSome(uncut.p95Ms, 1_500 * MINUTE);
     assertNone(uncut.closedEpisodesOver24hExcluded);
-    expect(economics.attempts.comparable.failureKindMix).toEqual([
-      { key: "step-exit", count: 8 },
-      { key: "unknown", count: 1 },
+    // The killed attempt still joins run-4's open streak (ruling 75's walk is
+    // unchanged), but it is terminated, so it has no failure kind (MEAS-03).
+    expect(economics.attempts.comparable.failureKindMix).toEqual([{ key: "step-exit", count: 8 }]);
+    expect(economics.attempts.comparable.classMix).toEqual([
+      { key: "red", count: 8 },
+      { key: "green", count: 7 },
+      { key: "terminated", count: 1 },
     ]);
   });
 });
@@ -907,6 +986,47 @@ describe("yeet economics unchanged fingerprint", () => {
     });
   });
 
+  it("keys a handler-error repeat by its refusal class, never by the unexecuted preflight", () => {
+    const preflight = "publish:00-head-install-preflight";
+    const economics = report([
+      journal("run-1", [
+        red("stale", 0, 1, {
+          failureKind: O.some("handler-error"),
+          failedStepId: O.some(preflight),
+          message: "yeet publish refuses a stale base: files changed on this branch were also changed.",
+          diffFingerprint: O.some("f6"),
+        }),
+        green("after-stale", 2, 3, { diffFingerprint: O.some("f6") }),
+        red("refused", 4, 5, {
+          failureKind: O.some("handler-error"),
+          failedStepId: O.some(preflight),
+          message: "The pull request is not open.",
+          diffFingerprint: O.some("f7"),
+        }),
+        green("after-refused", 6, 7, { diffFingerprint: O.some("f7") }),
+        red("install", 8, 9, {
+          failedStepId: O.some(preflight),
+          lanes: [lane(preflight, "failed", O.some(4_000), "wrapper")],
+          diffFingerprint: O.some("f8"),
+        }),
+        green("after-install", 10, 11, { diffFingerprint: O.some("f8") }),
+      ]),
+    ]);
+    const fingerprint = economics.unchangedFingerprint;
+    expect(fingerprint.failedUnchangedFingerprintThenGreen).toBe(3);
+    expect(Num.sumAll(A.map(fingerprint.byActionableLane, (row) => row.count))).toBe(3);
+    expect(
+      A.sort(
+        fingerprint.byActionableLane,
+        Order.mapInput(Order.String, (row: { readonly key: string }) => row.key)
+      )
+    ).toEqual([
+      { key: preflight, count: 1 },
+      { key: "refusal:stale-base", count: 1 },
+      { key: "unexecuted", count: 1 },
+    ]);
+  });
+
   it("never counts an interrupted red or a closeout pair", () => {
     const economics = report([
       journal("run-1", [
@@ -959,6 +1079,12 @@ it.layer(LiveSource, { timeout: "30 seconds" })("yeet economics terminations", (
         { key: "legacy-unowned-start", count: 1 },
         { key: "oom-killed", count: 1 },
       ]);
+      // MEAS-03: none of these reasons names a failure, so all six are terminated and none is red.
+      expect(economics.attempts.all.classMix).toEqual([{ key: "terminated", count: 6 }]);
+      expect(economics.firstFailure.redAttempts).toBe(0);
+      expect(renderYeetEconomicsCloseoutSummary(economics)[4]).toBe(
+        "economics: terminations 7 start(s), 1 without a terminal row; 6 terminated apart from reds; reasons interrupted 2, signal 2, legacy-unowned-start 1, oom-killed 1"
+      );
     })
   );
 });
@@ -967,7 +1093,8 @@ describe("yeet economics document", () => {
   it.effect("round-trips the JSON codec and encodes an empty report with null percentiles", () =>
     Effect.gen(function* () {
       const empty = report([]);
-      expect(empty.schemaVersion).toBe("yeet-economics/v2");
+      expect(empty.schemaVersion).toBe("yeet-economics/v3");
+      expect(empty.modeDurations).toEqual([]);
       expect(empty.reviewLane.roundsToReady.closedPullRequests).toBe(0);
       assertNone(empty.reviewLane.roundsToReady.p50Rounds);
       expect(empty.dataQuality.diagnostics.finishedAttempts).toBe(0);
@@ -1004,8 +1131,9 @@ describe("yeet economics document", () => {
       const encoded = yield* YeetEconomicsReportJson.encode(populated);
       const decoded5 = yield* YeetEconomicsReportJson.decode(encoded);
       expect(decoded5).toEqual(populated);
+      // A v2 document counted terminations as reds; v3 refuses to read it as its own.
       const invalid = yield* Effect.flip(
-        YeetEconomicsReportJson.decode(Str.replace('"yeet-economics/v2"', '"yeet-economics/v1"')(text))
+        YeetEconomicsReportJson.decode(Str.replace('"yeet-economics/v3"', '"yeet-economics/v2"')(text))
       );
       expect(S.isSchemaError(invalid)).toBe(true);
     })
@@ -1244,6 +1372,8 @@ describe("yeet economics rendering", () => {
   const sections = [
     "yeet economics",
     "attempts:",
+    "classes (terminations apart from reds):",
+    "durations by mode (elapsed of green and red attempts; terminated ones counted apart, outside the percentiles):",
     "wrapper lanes:",
     "inner lanes:",
     "review lane (rounds to ready; its own denominators, never summed with the lane populations):",
@@ -1289,9 +1419,13 @@ describe("yeet economics rendering", () => {
       "economics: red to green p50 n/a over 0 closed episode(s) (comparable, <= 24h)",
       "economics: first failure completes at p50 n/a (0 of 0 red attempt(s) reconstructable)",
       "economics: no wrapper lane time measured",
-      "economics: terminations 0 start(s), 0 without a terminal row; reasons none",
+      "economics: terminations 0 start(s), 0 without a terminal row; 0 terminated apart from reds; reasons none",
     ]);
     const text = renderYeetEconomicsReport(populated);
+    expect(Str.includes("  verify: 2 attempt(s), 1 red, 0 terminated; 2 measured, p50 10.0m, p95 1.17h")(text)).toBe(
+      true
+    );
+    expect(Str.includes("first failure (M2): 1 red attempt(s) (0 terminated, counted apart),")(text)).toBe(true);
     expect(Str.includes("+3 more lane(s)")(text)).toBe(true);
     expect(Str.includes("full:12-step / full:twelve (full)")(text)).toBe(true);
     expect(Str.includes("1.50h")(text)).toBe(true);
@@ -1300,7 +1434,7 @@ describe("yeet economics rendering", () => {
     );
     const fleetScope = EconomicsScope.make({ kind: "fleet", checkouts: ["a", "b", "c", "d"], branch: O.some("main") });
     expect(
-      Str.startsWith("yeet economics (yeet-economics/v2) — fleet main: a, b, c, +1 more;")(
+      Str.startsWith("yeet economics (yeet-economics/v3) — fleet main: a, b, c, +1 more;")(
         renderYeetEconomicsReport(buildYeetEconomicsReport([], fleetScope, NOW, []))
       )
     ).toBe(true);
@@ -1339,9 +1473,11 @@ it.layer(LiveSourceWithConsole, { timeout: "30 seconds" })("yeet economics close
       const logLines10 = yield* TestConsole.logLines;
       const lines = A.takeRight(logLines10, 10);
       expect(lines[4]).toBe(
-        "[yeet] economics: terminations 1 start(s), 0 without a terminal row; reasons none (1 in flight)"
+        "[yeet] economics: terminations 1 start(s), 0 without a terminal row; 0 terminated apart from reds; reasons none (1 in flight)"
       );
-      expect(lines[9]).toBe("[yeet] economics: terminations 2 start(s), 1 without a terminal row; reasons none");
+      expect(lines[9]).toBe(
+        "[yeet] economics: terminations 2 start(s), 1 without a terminal row; 0 terminated apart from reds; reasons none"
+      );
     })
   );
 });

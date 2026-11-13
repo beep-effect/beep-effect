@@ -7,11 +7,13 @@ import { RetryPolicy } from "@beep/github/Resilience";
 import {
   HostedJob,
   HostedRun,
+  HostedStep,
   RouteCorpus,
   RouteCorpusCaptureOptions,
   RouteCorpusReceipt,
   RouteError,
 } from "@beep/repo-cli/commands/Ci";
+import { hostedJobRedOrigin } from "@beep/repo-cli/commands/Ci/RouteCensus";
 import {
   makeRouteCorpus,
   makeRouteGithubRunner,
@@ -71,6 +73,7 @@ type Calls = Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>;
 const decodeReceipt = S.decodeUnknownEffect(S.fromJsonString(RouteCorpusReceipt));
 const encodeReceipt = S.encodeEffect(S.fromJsonString(RouteCorpusReceipt));
 const decodeRun = S.decodeUnknownEffect(S.fromJsonString(HostedRun));
+const encodeRun = S.encodeEffect(S.fromJsonString(HostedRun));
 
 // Answers `gh run list` and `gh run view` from the recorded payloads and records
 // every call with its cwd first; a date with no recorded list has no runs.
@@ -477,6 +480,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
             conclusion: O.some("success"),
             attempt: 1,
             jobs: [
+              // gh listed this job's steps, but a job that did not fail keeps none.
               HostedJob.make({
                 name: "Heavy / Check",
                 conclusion: O.some("success"),
@@ -503,11 +507,18 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
             conclusion: O.some("failure"),
             attempt: 1,
             jobs: [
+              // The failed job keeps its steps; gh's empty conclusion of the pending last step is absent.
               HostedJob.make({
                 name: "Check / Lint",
                 conclusion: O.some("failure"),
                 startedAt: O.some("2026-10-27T15:10:22Z"),
                 completedAt: O.some("2026-10-27T15:24:40Z"),
+                steps: O.some([
+                  HostedStep.make({ name: "Set up job", conclusion: O.some("success") }),
+                  HostedStep.make({ name: "Setup monorepo CI", conclusion: O.some("success") }),
+                  HostedStep.make({ name: "Run Lint shard", conclusion: O.some("failure") }),
+                  HostedStep.make({ name: "Complete job" }),
+                ]),
               }),
               // Go's zero time is gh's spelling of a timestamp that never happened.
               HostedJob.make({ name: "Check / Docgen", conclusion: O.some("cancelled") }),
@@ -632,6 +643,27 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         expect(viewedRunIds(got34)).toEqual([]);
         const exists35 = yield* fs.exists(path.join(root, "corpus", ROUTE_CORPUS_RECEIPT_FILE));
         expect(exists35).toBe(false);
+      })
+    );
+
+    it.effect("decodes v1 rows captured before steps and tasks and re-encodes them byte for byte", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const directory = yield* path.fromFileUrl(FIXTURES);
+        // Five rows of the 2026-09-01..10-30 corpus (sha256 e840ea6d...), branch names replaced.
+        const text = yield* fs.readFileString(path.join(directory, "v1-rows-2026-09.ndjson"));
+        const lines = A.filter(Str.split(text, "\n"), Str.isNonEmpty);
+        const runs = yield* Effect.forEach(lines, (line) => decodeRun(line));
+        const jobs = A.flatMap(runs, (run) => run.jobs);
+        expect([runs.length, jobs.length]).toEqual([5, 120]);
+        assertTrue(A.every(jobs, (job) => O.isNone(job.steps) && O.isNone(job.tasks)));
+        // With no step or task evidence every red stays on its lane, as before these fields.
+        const origins = A.getSomes(A.map(jobs, hostedJobRedOrigin));
+        expect(origins.length).toBe(15);
+        assertTrue(A.every(origins, (origin) => origin === "unattributed"));
+        const reencoded = yield* Effect.forEach(runs, (run) => encodeRun(run));
+        expect(reencoded).toEqual(lines);
       })
     );
 
@@ -961,7 +993,17 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
             "/jobs",
             (page2) => ({
               total_count: 2,
-              jobs: [{ name: page2 ? "Lint" : "Check", conclusion: "success", started_at: null, completed_at: null }],
+              jobs: [
+                page2
+                  ? {
+                      name: "Lint",
+                      conclusion: "failure",
+                      started_at: null,
+                      completed_at: null,
+                      steps: [{ name: "Run Lint shard", status: "completed", conclusion: "failure", number: 3 }],
+                    }
+                  : { name: "Check", conclusion: "success", started_at: null, completed_at: null },
+              ],
             }),
           ],
           ["/runs", (page2) => ({ total_count: 2, workflow_runs: [{ ...wire, id: page2 ? 8 : 7 }] })],
@@ -983,6 +1025,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const viewed = yield* run(["run", "view", "7"], ".");
         const view = yield* decodeViewedJobs(viewed);
         expect(A.map(view.jobs, (job) => job.name)).toEqual(["Check", "Lint"]);
+        // Steps pass through as name and conclusion; a job listed without them carries null.
+        expect(viewed).toContain('"steps":null');
+        expect(viewed).toContain('"steps":[{"name":"Run Lint shard","conclusion":"failure"}]');
         expect(A.some(transport.calls, (url) => Str.includes("/workflows/42/runs")(url.pathname))).toBe(true);
       })
     );

@@ -25,16 +25,16 @@
     "package-test-typecheck": "beep-cli quality test-tsgo-package",
     "test": "bun run beep:test",
     "test:integration": "bun run beep:test:integration",
-    "beep:build": "tsrs -p tsconfig.json",
-    "beep:check": "tsrs -p tsconfig.check.json && bun run beep:check:tests",
+    "test:integration:parallel": "bun run beep:test:integration",
+    "beep:build": "tsrs -p tsconfig.json --emitDeclarationOnly",
+    "beep:check": "tsrs -p tsconfig.json --emitDeclarationOnly && bun run beep:check:tests",
     "beep:docgen": "bunx --bun --no-install docgen",
     "beep:doctest": "BEEP_VITEST_DOCTEST=1 bunx vitest run",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/** --exclude=test/PartyContactSource.boundary.test.ts && bunx vitest run test/PartyContactSource.boundary.test.ts",
     "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
-    "beep:check:tests": "tsrs -p test/tsconfig.json --noEmit",
-    "test:integration:parallel": "bun run beep:test:integration"
+    "beep:check:tests": "tsrs -p test/tsconfig.json --noEmit"
   },
   "exports": {
     ".": "./src/index.ts",

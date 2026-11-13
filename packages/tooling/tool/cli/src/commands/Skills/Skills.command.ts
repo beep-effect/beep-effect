@@ -5,7 +5,11 @@
  * @since 0.0.0
  */
 
-import { decodeSkillsLockDocumentJson, SkillsLockDocument } from "@beep/ai-sync/SkillsLock.schemas";
+import {
+  decodeSkillsLockDocumentJson,
+  LocalSkillLockEntry,
+  SkillsLockDocument,
+} from "@beep/ai-sync/SkillsLock.schemas";
 import { $RepoCliId } from "@beep/identity/packages";
 import { asArrayBufferView, concatBytes } from "@beep/repo-cli-kit/cli/Bytes";
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
@@ -52,6 +56,7 @@ import {
   renderSkillsLockWriteReceiptJson,
 } from "./Skills.render.ts";
 import {
+  computeInstalledTreeHash,
   computeLocalSkillLockEntry,
   listInstalledSkillNames,
   planSkillsLockMigration,
@@ -364,6 +369,12 @@ const remoteSkillSourcesByName: Readonly<Record<string, RemoteSkillSource>> = pi
 const checkFlag = Flag.Boolean("check").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Report skill drift without writing files and exit non-zero when changes are needed")
+);
+const offlineFlag = Flag.Boolean("offline").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
+    "With --check: fetch no floating upstream skill and judge only tracked files (lock, installed trees, .agents mirror, Codex configuration, frontmatter)"
+  )
 );
 const dryRunFlag = Flag.Boolean("dry-run").pipe(
   Flag.withDefault(false),
@@ -1031,11 +1042,23 @@ const printFrontmatterReport = Effect.fn("Skills.printFrontmatterReport")(functi
   );
 });
 
-const resolveMode = (check: boolean, dryRun: boolean): Effect.Effect<SkillsRunMode, SkillsCommandError> => {
+const resolveMode = (
+  check: boolean,
+  dryRun: boolean,
+  offline: boolean
+): Effect.Effect<SkillsRunMode, SkillsCommandError> => {
   if (check && dryRun) {
     return Effect.fail(
       SkillsCommandError.make({
         message: "The --check and --dry-run flags are mutually exclusive.",
+      })
+    );
+  }
+  // A write that skipped the refetch would record a lock no upstream snapshot backs.
+  if (offline && !check) {
+    return Effect.fail(
+      SkillsCommandError.make({
+        message: "The --offline flag is only valid with --check.",
       })
     );
   }
@@ -1187,13 +1210,22 @@ const desiredLockEntry = Effect.fn("Skills.desiredLockEntry")(function* (
   if (O.isSome(vendored)) {
     return [name, vendored.value] as const;
   }
-  return [name, yield* computeLocalSkillLockEntry(repoRoot, name)] as const;
+  const entry = yield* computeLocalSkillLockEntry(repoRoot, name);
+  if (O.isNone(O.fromUndefinedOr(remoteSkillSourcesByName[name]))) {
+    return [name, entry] as const;
+  }
+  // A floating upstream's fetched tree is the one thing git alone cannot vouch for offline.
+  const installedTreeHash = yield* computeInstalledTreeHash(repoRoot, name);
+  return [name, LocalSkillLockEntry.make({ installedTargets: entry.installedTargets, installedTreeHash })] as const;
 });
 
 const skillsLockDocumentEquivalence = S.toEquivalence(SkillsLockDocument);
 
 // Over a v2 lock, vendored entries are kept verbatim and local entries are recomputed from the
-// installed trees with the same mode-aware hashing rule the plan uses. Drift is judged on the
+// installed trees: both targets must exist and hash alike. A repo-authored entry records the
+// targets only, so editing that skill never moves the lock; one refetched from a floating
+// upstream also records the fetched tree's hash. A repo-authored entry that still carries a
+// legacy `installedTreeHash` differs from the desired one and is rewritten. Drift is judged on the
 // decoded document, so a lock whose bytes were only reformatted (key order, wrapping) is not
 // drift and write mode leaves it alone.
 const evaluateLockDriftV2 = Effect.fnUntraced(function* (
@@ -1226,8 +1258,8 @@ const evaluateVendoredTreeDrift = Effect.fnUntraced(function* (repoRoot: string,
   const drift = yield* Effect.forEach(
     vendored,
     Effect.fnUntraced(function* ([name, entry]) {
-      const installed = yield* computeLocalSkillLockEntry(repoRoot, name);
-      return installed.installedTreeHash === entry.effective.installedTreeHash
+      const installedTreeHash = yield* computeInstalledTreeHash(repoRoot, name);
+      return installedTreeHash === entry.effective.installedTreeHash
         ? A.empty<SkillDrift>()
         : A.of<SkillDrift>({ _tag: "HandEditedVendoredOutput", name });
     })
@@ -1261,7 +1293,9 @@ const evaluateLockState = Effect.fnUntraced(function* (
  * kept verbatim, and an installed tree that moved away from its effective
  * tree is reported as `hand-edited-vendored-output`, naming both remedies: a
  * patch that keeps the edit, or `skills materialize`, which reverts it. Local
- * entries are recomputed from the installed trees.
+ * entries are recomputed from the installed trees: the two installed targets
+ * are hashed on the fly and must agree, and only a skill refetched from a
+ * floating upstream keeps a content hash in the lock.
  *
  * **Example** (Create the skills update workflow)
  *
@@ -1279,6 +1313,7 @@ const evaluateLockState = Effect.fnUntraced(function* (
  */
 export const runSkillsUpdate = Effect.fn("Skills.runSkillsUpdate")(function* (options: {
   readonly mode: SkillsRunMode;
+  readonly offline?: boolean;
   readonly skill: O.Option<string>;
 }): Effect.fn.Return<
   ReadonlyArray<SkillDrift>,
@@ -1301,6 +1336,7 @@ const recoverBeforeWrite = Effect.fn("Skills.recoverBeforeWrite")(function* (rep
 
 const updateSkills = Effect.fn("Skills.updateSkills")(function* (options: {
   readonly mode: SkillsRunMode;
+  readonly offline?: boolean;
   readonly skill: O.Option<string>;
 }) {
   const path = yield* Path.Path;
@@ -1314,7 +1350,11 @@ const updateSkills = Effect.fn("Skills.updateSkills")(function* (options: {
   const lock = yield* readLockV2(repoRoot);
   yield* refuseVendoredRefetch(lock, options.skill);
   const resolvedSourcesToFetch = yield* resolveSourcesToFetch(options.skill);
-  const sources = yield* floatingSources(lock, resolvedSourcesToFetch);
+  // An offline check fetches nothing: it judges the lock, the installed trees, the .agents mirror,
+  // the Codex configuration and the frontmatter, all tracked files. Whether a floating source has
+  // moved upstream is the online check's question.
+  const sources =
+    options.offline === true ? A.empty<RemoteSkillSource>() : yield* floatingSources(lock, resolvedSourcesToFetch);
   yield* Effect.forEach(
     sources,
     (source) => resolveSkillDestination(repoRoot, path.join(repoRoot, CLAUDE_SKILLS_DIR, source.name)),
@@ -1360,11 +1400,12 @@ const skillsUpdateCommand = Command.make(
   {
     check: checkFlag,
     dryRun: dryRunFlag,
+    offline: offlineFlag,
     skill: skillFlag,
   },
-  Effect.fn(function* ({ check, dryRun, skill }) {
-    const mode = yield* resolveMode(check, dryRun);
-    yield* runSkillsUpdate({ mode, skill }).pipe(
+  Effect.fn(function* ({ check, dryRun, offline, skill }) {
+    const mode = yield* resolveMode(check, dryRun, offline);
+    yield* runSkillsUpdate({ mode, offline, skill }).pipe(
       Effect.catchTags({
         SkillFrontmatterError: Effect.fn(function* (error) {
           yield* Console.error(`skills:update: ${error.message}`);

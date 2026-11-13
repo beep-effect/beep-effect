@@ -31,6 +31,7 @@ import {
   ProofJobUnit,
   proofLedgerPathForCheckout,
   RepoRunContext,
+  requireOpenReadyProofForTesting,
   runArtifactPathForContext,
   runHostedProofPublishPhasesForTesting,
   runPlanExecutionForTesting,
@@ -40,7 +41,10 @@ import {
   YeetAttemptJournalEvent,
   YeetAttemptStarted,
   YeetEnsuredPullRequest,
+  YeetOpenReady,
+  YeetPublishStackLayer,
   YeetRunPlanModeOptions,
+  YeetStackPublishDecision,
   YeetVerdictJson,
 } from "@beep/repo-cli/test/Yeet";
 import { GitObjectId } from "@beep/schema/Conformance";
@@ -71,8 +75,13 @@ import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
-import { offlineGithubLayer } from "./support/YeetGithub.ts";
-import type { YeetExecutedStep, YeetPrBodyRequest, YeetVerdictExtrasForTesting } from "@beep/repo-cli/test/Yeet";
+import { githubCallLine, offlineGithubLayer, recordedGithub } from "./support/YeetGithub.ts";
+import type {
+  YeetExecutedStep,
+  YeetPrBodyRequest,
+  YeetStackLayerDecision,
+  YeetVerdictExtrasForTesting,
+} from "@beep/repo-cli/test/Yeet";
 
 const runYeetCommand = Command.runWith(yeetCommand, { version: "0.0.0" });
 
@@ -250,6 +259,23 @@ describe("yeet final-check command", () => {
         expect(affected).not.toContain("lint policy --full");
         assertInclude(affected, "lint-policy: bunx oxlint . --config .oxlintrc.docs.json");
         assertInclude(affected, "lint-policy: bun run beep lint deprecated-apis --full");
+      })
+    );
+
+    it.effect(
+      "plans a coverage gate whose affected scope is noop without its command",
+      Effect.fnUntraced(function* () {
+        const root = yield* temporaryWorkingDirectory;
+        yield* runFixtureGit(root, ["init", "-q"]);
+        yield* commit(root, ".gitignore", ".beep/\n", "ignore yeet state");
+        yield* commit(root, "package.json", '{"name":"final-check-scratch","private":true}\n', "workspace root");
+        yield* commit(root, "README.md", "head\n", "head");
+        const before = yield* TestConsole.logLines;
+        yield* finalCheck(["--base", "HEAD~1", "--gates", "coverage", "--dry-run"]);
+        const after = yield* TestConsole.logLines;
+        const planned = A.join(A.map(A.drop(after, A.length(before)), String), "\n");
+        assertInclude(planned, "coverage: no affected packages (planner noop); nothing runs");
+        expect(planned).not.toContain("bun run coverage --affected");
       })
     );
   });
@@ -669,7 +695,7 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("yeet push-first publish p
     })
   );
 
-  it("gives --prove-first and --push-only the same draft, label, stamp, and detached monitor tail", () => {
+  it("gives --prove-first and --push-only the same ready create, label, stamp, and detached monitor tail", () => {
     const tail = [
       "publish:02-pr-create",
       PR_HEAVY_ADMISSION_LABEL_STEP_ID,
@@ -684,7 +710,7 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("yeet push-first publish p
         A.findFirst(proveFirst.steps, (step) => step.id === "publish:02-pr-create"),
         (step) => A.contains(step.args, "--draft")
       ),
-      true
+      false
     );
     expect(stepIds(proveFirst)).toContain("full:01-pre-push");
   });
@@ -1201,6 +1227,143 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
     return { plan, submit, recorder, extras, ensurePullRequest };
   });
 
+  // Open ready at content-final (2026-11-13): a publish that would create a
+  // ready pull request asks for the head's final-check receipt before it pushes.
+  const readyCreate = (root: string, args: ReadonlyArray<string>) =>
+    RepoPlanStep.make({
+      id: "publish:02-pr-create",
+      label: "publish:pr-create",
+      phase: "publish",
+      command: "gh",
+      args: ["pr", "create", ...args],
+      cwd: root,
+      scope: "repo",
+      mutability: "publish",
+      resume: "never",
+    });
+  const openReadyHead = Str.repeat(40)("a");
+  const refusingProof = (asked: Ref.Ref<ReadonlyArray<string>>, existing: O.Option<unknown>) => ({
+    findOpen: () => Effect.succeed(existing),
+    requireProof: (_context: RepoRunContext, headSha: string) =>
+      Ref.update(asked, A.append(headSha)).pipe(
+        Effect.andThen(
+          Effect.fail(YeetCommandError.make({ message: "no final-check receipt for the head", exitCode: 1 }))
+        )
+      ),
+    afterOpen: () => Effect.void,
+  });
+
+  it.effect(
+    "refuses to push a branch whose pull request would open ready without the head's final-check receipt",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-open-ready-" });
+      const fixture = yield* tailFixture(root, "process.exit(0)");
+      const plan = RepoRunPlan.make({ context: fixture.plan.context, steps: [readyCreate(root, [])] });
+      const asked = yield* Ref.make<ReadonlyArray<string>>([]);
+      const error = yield* requireOpenReadyProofForTesting(
+        plan,
+        defaultYeetRunOptions({ pr: true }),
+        openReadyHead
+      ).pipe(Effect.provideService(YeetOpenReady, refusingProof(asked, O.none())), Effect.flip);
+      expect(error.message).toBe("no final-check receipt for the head");
+      const got = yield* Ref.get(asked);
+      expect(got).toEqual([openReadyHead]);
+    })
+  );
+
+  it.effect(
+    "asks for no receipt on a --draft open, a --no-pr push, or a fix push to an open pull request",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-open-ready-skip-" });
+      const fixture = yield* tailFixture(root, "process.exit(0)");
+      const asked = yield* Ref.make<ReadonlyArray<string>>([]);
+      const ready = RepoRunPlan.make({ context: fixture.plan.context, steps: [readyCreate(root, [])] });
+      const draft = RepoRunPlan.make({ context: fixture.plan.context, steps: [readyCreate(root, ["--draft"])] });
+      yield* requireOpenReadyProofForTesting(draft, defaultYeetRunOptions({ pr: true }), openReadyHead).pipe(
+        Effect.provideService(YeetOpenReady, refusingProof(asked, O.none()))
+      );
+      yield* requireOpenReadyProofForTesting(ready, defaultYeetRunOptions({ pr: false }), openReadyHead).pipe(
+        Effect.provideService(YeetOpenReady, refusingProof(asked, O.none()))
+      );
+      yield* requireOpenReadyProofForTesting(ready, defaultYeetRunOptions({ pr: true }), openReadyHead).pipe(
+        Effect.provideService(YeetOpenReady, refusingProof(asked, O.some({ number: 1427 })))
+      );
+      const got = yield* Ref.get(asked);
+      expect(got).toEqual([]);
+    })
+  );
+
+  it.effect(
+    "opens a --draft pull request without the heavy-admission label or the ready-open hooks",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-open-draft-" });
+      const fixture = yield* tailFixture(root, 'console.log("merge-ready: yes")');
+      // The `--draft` plan: a draft create and no label step.
+      const plan = RepoRunPlan.make({
+        context: fixture.plan.context,
+        steps: [readyCreate(root, ["--draft"]), fixture.submit],
+      });
+      const opened = yield* Ref.make<ReadonlyArray<number>>([]);
+      const result = yield* finishPublishWithPullRequestForTesting(
+        plan,
+        defaultYeetRunOptions({ message: "feat(repo-cli): draft", openAs: "draft", pr: true }),
+        [fixture.submit],
+        fixture.recorder,
+        fixture.extras,
+        false,
+        {
+          ensurePullRequest: () =>
+            Effect.succeed(
+              YeetEnsuredPullRequest.make({
+                number: 1427,
+                url: O.some("https://github.com/o/r/pull/1427"),
+                created: true,
+              })
+            ),
+          monitorSupport: Effect.succeed("unsupported"),
+          listJobs: () => Effect.succeed([]),
+        }
+      ).pipe(
+        Effect.provideService(YeetOpenReady, {
+          requireProof: () => Effect.void,
+          afterOpen: (_context, prNumber) => Ref.update(opened, A.append(prNumber)),
+        })
+      );
+      expect(result.pushed).toBe(true);
+      const entries = yield* Ref.get(fixture.recorder);
+      // Only the monitor ran: no label lane was recorded, because none was planned.
+      expect(A.map(entries, (entry) => entry.step.id)).toEqual([MONITOR_READY_SUBMIT_STEP_ID]);
+      const got = yield* Ref.get(opened);
+      expect(got).toEqual([]);
+      const logs = yield* TestConsole.logLines;
+      const text = A.join(A.map(logs, String), "\n");
+      expect(text).toContain("draft #1427 runs the cheap hosted tier only");
+      expect(text).toContain("https://github.com/o/r/pull/1427 (draft)");
+    })
+  );
+
+  it.effect(
+    "fails closed when no receipt reader is wired into a publish that opens ready",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-open-ready-unwired-" });
+      const fixture = yield* tailFixture(root, "process.exit(0)");
+      const plan = RepoRunPlan.make({ context: fixture.plan.context, steps: [readyCreate(root, [])] });
+      const unwired = yield* YeetOpenReady;
+      const error = yield* requireOpenReadyProofForTesting(
+        plan,
+        defaultYeetRunOptions({ pr: true }),
+        openReadyHead
+      ).pipe(Effect.provideService(YeetOpenReady, { ...unwired, findOpen: () => Effect.succeedNone }), Effect.flip);
+      expect(error.message).toContain("refused to open the pull request ready");
+      // The unwired follow-up does nothing: with no ready open there is no review round to record.
+      yield* unwired.afterOpen(fixture.plan.context, 1427, openReadyHead);
+    })
+  );
+
   it.effect(
     "uses attached readiness monitoring when the user manager is unavailable",
     Effect.fnUntraced(function* () {
@@ -1399,6 +1562,76 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
       expect(hosted?.hostedProof).toBe(true);
       assertNone(O.flatMap(O.fromUndefinedOr(fallback), (request) => request.summary));
       expect(fallback?.hostedProof).toBe(false);
+    })
+  );
+
+  it.effect(
+    "hands a stack layer to the pull-request create and links it only while it is not stacked",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-stack-link-" });
+      const fixture = yield* tailFixture(root, "");
+      const handed = yield* Ref.make<ReadonlyArray<O.Option<YeetStackLayerDecision>>>([]);
+      const ensurePullRequest = (
+        _context: RepoRunContext,
+        _steps: ReadonlyArray<RepoPlanStep>,
+        _recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+        _message?: O.Option<string>,
+        _bodyRequest?: YeetPrBodyRequest,
+        stackLayer?: O.Option<YeetStackLayerDecision>
+      ) => Ref.update(handed, A.append(stackLayer ?? O.none())).pipe(Effect.andThen(fixture.ensurePullRequest()));
+      const github = recordedGithub((call) =>
+        call.method === "POST" && call.path === "{repo}/stacks"
+          ? {
+              status: 201,
+              body: {
+                number: 1430,
+                open: true,
+                base: { ref: "main" },
+                pull_requests: [
+                  { number: 1426, state: "open", draft: true, merged_at: null, head: { ref: "feat/parent", sha: "a" } },
+                  {
+                    number: 1427,
+                    state: "open",
+                    draft: true,
+                    merged_at: null,
+                    head: { ref: "feat/push-first", sha: "b" },
+                  },
+                ],
+              },
+            }
+          : undefined
+      );
+      const layer = (stackNumber: O.Option<number>): O.Option<YeetStackLayerDecision> =>
+        O.some(
+          YeetStackPublishDecision.cases.Layer.make({
+            parentNumber: 1426,
+            parentHeadRef: "feat/parent",
+            parentHeadSha: Str.repeat(40)("a"),
+            trunk: "main",
+            stackNumber,
+            parentMoved: false,
+          })
+        );
+      const unlinked = layer(O.none());
+      const linked = layer(O.some(1430));
+      const publishAs = (stackLayer: O.Option<YeetStackLayerDecision>) =>
+        finishPublishWithPullRequestForTesting(
+          fixture.plan,
+          defaultYeetRunOptions({ message: "feat(repo-cli): the layer", pr: true }),
+          [fixture.submit],
+          fixture.recorder,
+          fixture.extras,
+          false,
+          { ensurePullRequest, listJobs: () => Effect.succeed([running]) }
+        ).pipe(Effect.provideService(YeetPublishStackLayer, stackLayer), github.provide);
+      yield* publishAs(unlinked);
+      yield* publishAs(linked);
+      const layers = yield* Ref.get(handed);
+      expect(layers).toEqual([unlinked, linked]);
+      expect(A.map(github.calls, (call) => [githubCallLine(call), call.body])).toEqual([
+        ["POST {repo}/stacks", { pull_requests: [1426, 1427] }],
+      ]);
     })
   );
 

@@ -119,8 +119,8 @@ Higher sources outrank lower sources when they conflict.
   `packages/tooling/tool/cli/src/commands/Yeet/internal/ReadyGate.ts`,
   `packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewWindow.ts` and its 20-minute twin in
   `packages/tooling/tool/cli/src/commands/Yeet/internal/GhOps.ts`.
-- Scheduler status rendering: `packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts` (one line per
-  quarantined path today).
+- Scheduler status rendering: `packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts` (one quarantine
+  summary line since slice 2; `--json` keeps every path).
 - Simulation lab for backfill and fairness: `apps/labs/ciops`.
 - Docs: `.claude/skills/yeet/SKILL.md`, `.claude/skills/yeet/references/detached-jobs.md`,
   `.claude/skills/orchestrate/SKILL.md` (the `beep-heavy` doctrine PERIL-10 retires), and the AGENTS.md

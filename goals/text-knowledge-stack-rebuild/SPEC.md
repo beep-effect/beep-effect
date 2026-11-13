@@ -519,6 +519,18 @@ Lane goals/text-knowledge-stack-rebuild · PR #2993
 
 Reverse: Any single resolution is reversed by a decision file recorded in P0 before the phase that depends on it (P2 for the text package and cm1, P3 for the annotation package, P4 for Assessments); the SPEC acceptance row for that item is edited in the same change.
 
+### Paused by operator ruling (finish board, 2026-11-13): Very large ten-phase program with no implementation started; set to paused until resourced rather than leaving active, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
+
+Triage rationale: Very large ten-phase program with no implementation started; set to paused until resourced rather than leaving active.
+
+No lane is working on it. Resume with `bun run beep goals set-status text-knowledge-stack-rebuild active` when it is picked up.
+
+Lane chore/finish-board-pause-b2
+
+Reverse: goals set-status text-knowledge-stack-rebuild active when it is picked up
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

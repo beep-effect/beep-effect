@@ -12,7 +12,7 @@ import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { canonicalJson } from "../internal/CanonicalJson.ts";
+import { canonicalJsonResult } from "../internal/CanonicalJson.ts";
 import type { IdCodec, SchemaIdentity } from "../Factory/index.ts";
 
 const manifestationEncodingVersion = "evidence-verification-manifestation/v1";
@@ -123,9 +123,11 @@ export const makeEvidenceVerificationManifestationKey = <
   const evidenceVerificationManifestationKey = (
     manifestation: Manifestation["Type"]
   ): Result.Result<Key, S.SchemaError> =>
-    Result.map(encodeManifestation(manifestation), (encoded) =>
-      EvidenceVerificationManifestationKey.make(
-        bytesToHex(sha256(utf8ToBytes(`${manifestationEncodingVersion}\n${canonicalJson(encoded)}`)))
+    Result.flatMap(encodeManifestation(manifestation), (encoded) =>
+      Result.map(canonicalJsonResult(encoded), (canonical) =>
+        EvidenceVerificationManifestationKey.make(
+          bytesToHex(sha256(utf8ToBytes(`${manifestationEncodingVersion}\n${canonical}`)))
+        )
       )
     );
 

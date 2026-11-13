@@ -60,7 +60,7 @@ import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { canonicalJsonText } from "../Goals/PacketCore/PacketDigest.ts";
+import { canonicalJsonTextResult } from "../Goals/PacketCore/PacketDigest.ts";
 import { readSkillsLockText, SKILLS_LOCK_PATH } from "./internal/LockFile.ts";
 import { PATCH_ROOT } from "./internal/PatchStaging.ts";
 import {
@@ -1169,9 +1169,10 @@ export const resolveSkillProvenance = Effect.fn("SkillsProvenance.resolveSkillPr
  * **Details**
  *
  * Both installed targets (`.claude/skills/<skill>` and
- * `.agents/skills/<skill>`) must exist and carry the same mode-aware tree;
- * the entry records the targets and their combined installed-tree hash, the
- * same hashing rule a vendored entry's `effective.installedTreeHash` uses.
+ * `.agents/skills/<skill>`) must exist and carry the same mode-aware tree,
+ * hashed on the fly; a missing or divergent target fails. The entry records
+ * the targets only. A repo-authored skill's content is tracked by git, so the
+ * lock holds no hash of it and editing the skill leaves its entry unchanged.
  *
  * **Example** (Inspect the requirements before providing them)
  *
@@ -1184,7 +1185,7 @@ export const resolveSkillProvenance = Effect.fn("SkillsProvenance.resolveSkillPr
  *
  * @param repoRoot - Absolute repository root holding the installed targets.
  * @param skill - Directory name of the skill under `.claude/skills` and `.agents/skills`.
- * @returns Both installed target paths and the mode-aware tree hash they share.
+ * @returns Both installed target paths.
  * @category queries
  * @since 0.0.0
  */
@@ -1193,10 +1194,39 @@ export const computeLocalSkillLockEntry = Effect.fn("SkillsLock.computeLocalSkil
   skill: string
 ): Effect.fn.Return<LocalSkillLockEntry, SkillsCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const installed = yield* requireInstalledTargets(repoRoot, skill);
-  return LocalSkillLockEntry.make({
-    installedTargets: installed.installedTargets,
-    installedTreeHash: installed.installedTreeHash,
-  });
+  return LocalSkillLockEntry.make({ installedTargets: installed.installedTargets });
+});
+
+/**
+ * Computes the cross-target installed-tree hash of one installed skill.
+ *
+ * **Details**
+ *
+ * This is the fresh reading a vendored entry's `effective.installedTreeHash`
+ * and a floating-upstream local entry's `installedTreeHash` are compared with. Both installed targets must exist and carry the same
+ * mode-aware tree.
+ *
+ * **Example** (Inspect the requirements before providing them)
+ *
+ * ```ts
+ * import { computeInstalledTreeHash } from "@beep/repo-cli/commands/Skills/Skills.service"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(computeInstalledTreeHash("/workspace/beep-effect", "shadcn"))) // true
+ * ```
+ *
+ * @param repoRoot - Absolute repository root holding the installed targets.
+ * @param skill - Directory name of the skill under `.claude/skills` and `.agents/skills`.
+ * @returns The hash of both target paths framed with the tree hash they share.
+ * @category queries
+ * @since 0.0.0
+ */
+export const computeInstalledTreeHash = Effect.fn("SkillsLock.computeInstalledTreeHash")(function* (
+  repoRoot: string,
+  skill: string
+): Effect.fn.Return<Sha256Hex, SkillsCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
+  const installed = yield* requireInstalledTargets(repoRoot, skill);
+  return installed.installedTreeHash;
 });
 
 /**
@@ -1646,10 +1676,7 @@ const migrateSkill = Effect.fn("SkillsLock.migrateSkill")(function* (
     const { reason, message } = installed.failure;
     return plannedRow(UnresolvedMigrationRow.make({ skill, cause: "install-state", note: `${reason}: ${message}` }));
   }
-  const entry = LocalSkillLockEntry.make({
-    installedTargets: installed.success.installedTargets,
-    installedTreeHash: installed.success.installedTreeHash,
-  });
+  const entry = LocalSkillLockEntry.make({ installedTargets: installed.success.installedTargets });
   const resolution = HashMap.get(resolutions, skill);
   if (O.isSome(resolution)) {
     // An upstream that cannot be read at the pin or along its path history (moved
@@ -1694,7 +1721,9 @@ const sealSkillsLockMigrationPlan = Effect.fn("SkillsLock.sealSkillsLockMigratio
   const encodedRows = yield* encodeMigrationRows(rows).pipe(
     SkillsCommandError.mapError("Failed to encode the skills lock migration plan rows.")
   );
-  const preimage = canonicalJsonText({ schemaVersion: PLAN_SCHEMA_VERSION, lockSha256, rows: encodedRows });
+  const preimage = yield* Effect.fromResult(
+    canonicalJsonTextResult({ schemaVersion: PLAN_SCHEMA_VERSION, lockSha256, rows: encodedRows })
+  ).pipe(SkillsCommandError.mapError("Failed to canonicalize the skills lock migration plan."));
   const planDigest = yield* hashBytes(textEncoder.encode(preimage), "skills-lock-migration-plan");
   return SkillsLockMigrationPlan.make({ planDigest, lockSha256, rows });
 });

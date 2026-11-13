@@ -38,7 +38,7 @@ import * as Str from "effect/String";
 import { BootstrapInput } from "../Goals/Bootstrap.schemas.ts";
 import { compileMaterializationPlan, planTodayFlag, reportCompiledPlan, resolveToday } from "../Goals/Bootstrap.ts";
 import { GoalPlanInputError, GoalPlanOperationalError } from "../Goals/Goals.errors.ts";
-import { listGoalPackets, parseGoalManifestText } from "../Goals/Inventory.ts";
+import { listExplorationPacketFiles, listGoalPackets, parseGoalManifestText } from "../Goals/Inventory.ts";
 import {
   materializeExpectFlag,
   materializeWriteFlag,
@@ -60,6 +60,7 @@ import {
 import {
   canonicalJsonText,
   canonicalJsonTextPretty,
+  canonicalJsonTextResult,
   sha256Hex,
   sha256HexBytes,
 } from "../Goals/PacketCore/PacketDigest.ts";
@@ -208,6 +209,7 @@ export const readExplorationSnapshot = Effect.fn("Explore.readExplorationSnapsho
     ),
     ...optionalProp("manifestDigest", manifestDigest),
     goals,
+    packetFiles: exists ? yield* listExplorationPacketFiles(exploration, repoRoot) : A.empty(),
   });
 });
 
@@ -308,12 +310,13 @@ const classifyChildren = (
   );
 };
 
-const childBootstrapInput = (exploration: string, today: string) => (child: GraduationChildInput) =>
+const childBootstrapInput = (snapshot: ExplorationSnapshot, today: string) => (child: GraduationChildInput) =>
   BootstrapInput.make({
     slug: child.slug,
     title: child.title,
-    mission: `${child.title} (graduated from ${EXPLORATIONS_DIR}/${exploration}).`,
-    provenanceExploration: exploration,
+    mission: `${child.title} (graduated from ${EXPLORATIONS_DIR}/${snapshot.exploration}).`,
+    provenanceExploration: snapshot.exploration,
+    provenanceFiles: snapshot.packetFiles,
     today,
   });
 
@@ -390,7 +393,7 @@ export const compileGraduationPlan: {
     const classification = classifyChildren(snapshot, request.children);
     const existingSlugs = A.map(snapshot.goals, (goal) => goal.slug);
     const children = yield* Effect.forEach(classification.pending, (child) =>
-      compileMaterializationPlan(childBootstrapInput(snapshot.exploration, request.today)(child), existingSlugs)
+      compileMaterializationPlan(childBootstrapInput(snapshot, request.today)(child), existingSlugs)
     );
     const childConflicts = A.flatMap(children, (plan: MaterializationPlan) =>
       A.map(plan.conflicts, (conflict) =>
@@ -687,11 +690,12 @@ const appendPendingEvents = Effect.fn("Explore.appendPendingEvents")(function* (
   );
   const recordedSuffix = A.takeRight(pending.events, A.length(owed));
   const encodedEventBodies = yield* encodeEventBodies(owed);
-  const owedText = canonicalJsonText(encodedEventBodies);
-  if (
-    A.length(recordedSuffix) !== A.length(owed) ||
-    (yield* Effect.map(encodeEventBodies(recordedSuffix), canonicalJsonText)) !== owedText
-  ) {
+  const owedText = yield* Effect.fromResult(canonicalJsonTextResult(encodedEventBodies));
+  const recordedText = yield* Effect.flatMap(
+    encodeEventBodies(recordedSuffix),
+    flow(canonicalJsonTextResult, Effect.fromResult)
+  );
+  if (A.length(recordedSuffix) !== A.length(owed) || recordedText !== owedText) {
     return yield* GraduationRecoveryError.new(
       pending.exploration,
       `The ops/events stream of explorations/${pending.exploration} moved since the pending graduation events were recorded; it now owes ${owedText}, which is not what was recorded. Repair the stream by hand.`

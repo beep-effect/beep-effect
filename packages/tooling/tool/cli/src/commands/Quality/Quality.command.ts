@@ -14,6 +14,7 @@ import { isLabsWorkspacePath } from "@beep/repo-cli-kit/cli/Labs/index";
 import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { unknownRecordKeys, unknownRecordProperty } from "@beep/repo-cli-kit/cli/UnknownProbe";
 import { formatCommandLine, QualityTaskStep, runCaptured, runToExit } from "@beep/repo-cli-kit/process/index";
+import { nearestRank } from "@beep/repo-cli-kit/stats/NearestRank";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
@@ -43,12 +44,19 @@ import * as S from "effect/Schema";
 import { XMLParser } from "fast-xml-parser";
 import { checkScriptTestTypecheckCoverage } from "../../internal/quality/TestTypecheckCoverage.ts";
 import {
+  ADMISSION_JOURNAL_ARCHIVE_RETENTION_MILLIS,
   AdmissionConfig,
+  AdmissionJournalEvent,
+  AdmissionJournalHistory,
   adaptGitKitError,
+  admissionJournalArchiveStatus,
+  admissionJournalHistory,
   admissionProtocolStatus,
   admissionStatus,
   GITHUB_CHECK_MODE_VALUES,
   installAgentRunsSlice,
+  isAgedAdmissionJournalArchiveSegment,
+  isAgedQuarantineEntry,
   QUARANTINE_ARCHIVE_DIRECTORY_NAME,
   QUARANTINE_ARCHIVE_MIN_AGE_MILLIS,
   quarantinedAtMillisOf,
@@ -128,7 +136,11 @@ import type { JsoncParseError } from "@beep/jsonc/Jsonc";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { AdmissionSnapshot } from "../../internal/repo-run/index.ts";
+import type {
+  AdmissionJournalArchive,
+  AdmissionSnapshot,
+  QualitySchedulerError,
+} from "../../internal/repo-run/index.ts";
 import type {
   GithubCheckFailurePolicy as GithubCheckFailurePolicyType,
   GithubCheckLaneSpec,
@@ -3869,6 +3881,14 @@ const admissionRootOfEntry = (entryPath: string): O.Option<string> =>
     O.flatMap((match) => O.fromUndefinedOr(match[1]))
   );
 
+// Archive directory for a set of quarantine entries: every entry shares the admission root.
+const quarantineArchiveSuffix = (entries: A.NonEmptyReadonlyArray<string>, separator: string): string =>
+  pipe(
+    admissionRootOfEntry(A.headNonEmpty(entries)),
+    O.map((root) => `${separator}${root}/${QUARANTINE_ARCHIVE_DIRECTORY_NAME}`),
+    O.getOrElse(() => "")
+  );
+
 // One summary line instead of one line per entry (the P0 baseline printed
 // 2068); `--json` keeps every path.
 const renderQuarantineSummaryLines = (quarantined: ReadonlyArray<string>, nowMillis: number): ReadonlyArray<string> =>
@@ -3882,17 +3902,92 @@ const renderQuarantineSummaryLines = (quarantined: ReadonlyArray<string>, nowMil
           onNonEmpty: (instants) => `, oldest ${formatQuarantineAge(nowMillis - A.min(instants, Order.Number))} ago`,
         })
       );
-      const archive = pipe(
-        admissionRootOfEntry(A.headNonEmpty(entries)),
-        O.map((root) => `; archive ${root}/${QUARANTINE_ARCHIVE_DIRECTORY_NAME}`),
-        O.getOrElse(() => "")
-      );
+      const archive = quarantineArchiveSuffix(entries, "; archive ");
       const count = A.length(entries);
       return [
         `- quarantined: ${count} entr${count === 1 ? "y" : "ies"}${oldest}${archive} (reap --apply archives entries older than ${formatQuarantineAge(QUARANTINE_ARCHIVE_MIN_AGE_MILLIS)}; --json lists paths)`,
       ];
     },
   });
+
+// The reap dry run and `--apply` report the archive with the same predicate the
+// reap pass uses, so the preview matches what `--apply` moves.
+const renderQuarantineArchiveLine = (verb: "would archive" | "archived", paths: ReadonlyArray<string>): string =>
+  A.match(paths, {
+    onEmpty: () => `${verb} no aged quarantine entries`,
+    onNonEmpty: (entries) => {
+      const count = A.length(entries);
+      const archive = quarantineArchiveSuffix(entries, " -> ");
+      return `${verb} ${count} quarantine entr${count === 1 ? "y" : "ies"} older than ${formatQuarantineAge(QUARANTINE_ARCHIVE_MIN_AGE_MILLIS)}${archive}`;
+    },
+  });
+
+// The reap dry run and `--apply` report the archive prune with the predicate the
+// reap pass uses, so the preview names what `--apply` deletes.
+const renderAdmissionArchivePruneLine = (
+  verb: "would prune" | "pruned",
+  directory: string,
+  segments: ReadonlyArray<string>
+): string =>
+  A.match(segments, {
+    onEmpty: () => `${verb} no aged admission journal archive segments`,
+    onNonEmpty: (names) =>
+      `${verb} ${A.length(names)} admission journal archive segment(s) older than ${formatQuarantineAge(ADMISSION_JOURNAL_ARCHIVE_RETENTION_MILLIS)} -> ${directory}`,
+  });
+
+// The archive listing never blocks or hides the reap: when either listing
+// failed, the prune line reports the typed error instead of a prune count.
+// A dry run prunes nothing, so every aged segment is a preview; after
+// `--apply`, only aged segments that are gone count as pruned.
+const renderAdmissionArchivePruneOutcome = (
+  apply: boolean,
+  beforeMillis: number,
+  archiveBefore: Result.Result<AdmissionJournalArchive, QualitySchedulerError>,
+  archiveRemaining: Result.Result<ReadonlyArray<string>, QualitySchedulerError>
+): string =>
+  pipe(
+    Result.all([archiveBefore, archiveRemaining]),
+    Result.match({
+      onFailure: (error) => `could not list admission journal archive: ${error.message}`,
+      onSuccess: ([before, remaining]) =>
+        renderAdmissionArchivePruneLine(
+          apply ? "pruned" : "would prune",
+          before.directory,
+          A.filter(
+            before.segments,
+            (name) => isAgedAdmissionJournalArchiveSegment(name, beforeMillis) && !A.contains(remaining, name)
+          )
+        ),
+    })
+  );
+
+const formatAdmissionInstant = (millis: number): string => DateTime.formatIso(DateTime.makeUnsafe(millis));
+const formatAdmissionWait = (millis: number): string => `${(millis / 1000).toFixed(1)}s`;
+
+const renderAdmissionWaitLine = (events: AdmissionJournalHistory["events"]): string =>
+  A.match(A.filter(events, AdmissionJournalEvent.guards["admission-admitted"]), {
+    onEmpty: () => "- admissions: 0",
+    onNonEmpty: (admitted) => {
+      const instants = A.map(admitted, (row) => row.admittedAtMillis);
+      const waits = A.map(admitted, (row) => row.admittedAtMillis - row.enqueuedAtMillis);
+      const wait = (quantile: number): string =>
+        pipe(nearestRank(waits, quantile), O.map(formatAdmissionWait), O.getOrElse(constant("n/a")));
+      return `- admissions: ${A.length(admitted)} admitted ${formatAdmissionInstant(A.min(instants, Order.Number))} to ${formatAdmissionInstant(A.max(instants, Order.Number))}; wait p50 ${wait(0.5)}, p95 ${wait(0.95)}, max ${wait(1)}`;
+    },
+  });
+
+// Aggregates only; `--json` carries every row for the scheduler goals' own folds.
+const renderAdmissionJournalHistoryLines = (history: AdmissionJournalHistory): ReadonlyArray<string> => [
+  `admission history: ${A.length(history.events)} rows from ${A.match(history.archive.segments, {
+    onEmpty: () => "no archive segments",
+    onNonEmpty: (names) => `${A.length(names)} archive segment(s) ${A.headNonEmpty(names)} to ${A.lastNonEmpty(names)}`,
+  })} and the live journal`,
+  `- rows read: ${history.archivedRows} archived, ${history.liveRows} live; ${history.duplicateRows} duplicate(s) dropped, ${history.opaqueRows} undecodable`,
+  renderAdmissionWaitLine(history.events),
+  `- archive: ${history.archive.directory} (the reap pass prunes segments older than ${formatQuarantineAge(ADMISSION_JOURNAL_ARCHIVE_RETENTION_MILLIS)}; --json lists every row)`,
+];
+
+const encodeAdmissionJournalHistory = S.encodeEffect(AdmissionJournalHistory);
 
 const renderAdmissionSnapshotLines = (snapshot: AdmissionSnapshot, nowMillis: number): ReadonlyArray<string> => [
   `admission capacity: ${snapshot.activeTokens}/${snapshot.capacityTokens} tokens (MemAvailable ${snapshot.memAvailableGib.toFixed(1)} GiB${snapshot.hardFloorEngaged ? ", HARD FLOOR ENGAGED" : ""})`,
@@ -3981,16 +4076,41 @@ const schedulerReapCommand = Command.make(
   {
     apply: Flag.Boolean("apply").pipe(
       Flag.withDefault(false),
-      Flag.withDescription("Actually remove dead admission state (default: dry-run report)")
+      Flag.withDescription(
+        "Actually remove dead admission state, archive aged quarantine entries and prune aged admission journal archive segments (default: dry-run report)"
+      )
     ),
   },
   Effect.fn(function* ({ apply }) {
+    // Read-only pre-scan: the aged set the reap pass is about to archive.
+    const before = apply ? yield* Effect.asSome(admissionStatus()) : O.none<AdmissionSnapshot>();
+    const archiveBefore = yield* Effect.result(admissionJournalArchiveStatus());
+    const beforeMillis = yield* Clock.currentTimeMillis;
     const snapshot = yield* reapAdmissionState({ apply });
+    const nowMillis = yield* Clock.currentTimeMillis;
+    const archiveRemaining = apply
+      ? yield* Effect.result(Effect.map(admissionJournalArchiveStatus(), (archive) => archive.segments))
+      : Result.succeed(A.empty<string>());
+    const pruneLine = renderAdmissionArchivePruneOutcome(apply, beforeMillis, archiveBefore, archiveRemaining);
     const reconciledAttempts = apply ? yield* reconcileCurrentCheckoutAttemptJournals() : 0;
     const deadLines = A.map(snapshot.dead, (path) => `- ${path}`);
+    const archiveLine = O.match(before, {
+      onNone: () =>
+        renderQuarantineArchiveLine("would archive", A.filter(snapshot.quarantined, isAgedQuarantineEntry(nowMillis))),
+      onSome: (prior) =>
+        renderQuarantineArchiveLine(
+          "archived",
+          A.filter(
+            prior.quarantined,
+            (path) => isAgedQuarantineEntry(path, beforeMillis) && !A.contains(snapshot.quarantined, path)
+          )
+        ),
+    });
     yield* printLines([
       apply ? "reaped dead admission state:" : "dry run — would reap:",
       ...(A.length(deadLines) === 0 ? ["(nothing dead)"] : deadLines),
+      archiveLine,
+      pruneLine,
       ...(apply ? [`reconciled owner-dead attempts: ${reconciledAttempts}`] : []),
     ]);
   })
@@ -3999,6 +4119,28 @@ const schedulerReapCommand = Command.make(
     "Reap dead admission state and reconcile this checkout's attempts when applied (dry-run by default)"
   )
 );
+
+const schedulerHistoryCommand = Command.make(
+  "history",
+  {
+    json: Flag.Boolean("json").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Emit the folded history, every row included, as JSON")
+    ),
+  },
+  Effect.fn(function* ({ json }) {
+    const history = yield* admissionJournalHistory();
+    if (json) {
+      const encoded = yield* encodeAdmissionJournalHistory(history).pipe(
+        QualityScriptCommandError.mapError("Failed to encode the admission history.")
+      );
+      const rendered = yield* jsonStringifyPretty(encoded);
+      yield* printLines([rendered]);
+      return;
+    }
+    yield* printLines(renderAdmissionJournalHistoryLines(history));
+  })
+).pipe(Command.withDescription("Fold the archived and live admission-journal rows into one history (read-only)"));
 
 const schedulerProtocolCommand = Command.make(
   "protocol",
@@ -4076,6 +4218,8 @@ const qualitySchedulerCommand = Command.make("scheduler", {}, () =>
     "- bun run beep quality scheduler status --json",
     "- bun run beep quality scheduler reap",
     "- bun run beep quality scheduler reap --apply",
+    "- bun run beep quality scheduler history",
+    "- bun run beep quality scheduler history --json",
     "- bun run beep quality scheduler protocol",
     "- bun run beep quality scheduler protocol --enable-evictions",
     "- bun run beep quality scheduler protocol --disable-evictions",
@@ -4089,6 +4233,7 @@ const qualitySchedulerCommand = Command.make("scheduler", {}, () =>
   Command.withSubcommands([
     schedulerStatusCommand,
     schedulerReapCommand,
+    schedulerHistoryCommand,
     schedulerProtocolCommand,
     schedulerReconcileAttemptsCommand,
     schedulerSliceCommand,

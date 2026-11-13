@@ -1,0 +1,15 @@
+{
+  "previous": "2cb001d6b95d329a4c66979880d22a9464810402bdb5e020190b3804e30dbccf",
+  "review": {
+    "reviewer": "Claude Fable 5.2 (declaration-only-builds session, fix/cache-baseline-jsonc-dependency)",
+    "reason": "Record the dependency edge #3193 added: @beep/epistemics, @beep/md and @beep/party-domain now depend on @beep/jsonc, so their ^build-dependent tasks changed configuration. No command, cache flag, input, output or environment changed; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/jsonc-dependency-cache-review-2026-11-13.md",
+      "sha256": "1cb95120c1682a57cd57523ce4a3f6a2fc927327cc8659c9611da40df3ce045d"
+    }
+  },
+  "subjects": ["@beep/epistemics", "@beep/md", "@beep/party-domain"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

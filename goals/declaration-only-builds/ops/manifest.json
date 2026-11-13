@@ -4,13 +4,13 @@
     "id": "declaration-only-builds",
     "packetId": "goal-packet/v1:585ff4d7e6367f0e5b61f8b495587b00b2ec5ac07fdf7a63202cfa013822607e",
     "title": "Declaration-Only Builds",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-10",
-    "updated": "2026-11-10",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/declaration-only-builds",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Library package builds emit declarations only: remove the Babel pass and JavaScript emit from generated builds, and type-check each package source once per run if the check-program census proves build and check agree.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -23,7 +23,49 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 3110,
+        "role": "supporting"
+      },
+      {
+        "number": 3178,
+        "role": "supporting"
+      },
+      {
+        "number": 3192,
+        "role": "supporting"
+      },
+      {
+        "number": 3206,
+        "role": "supporting"
+      },
+      {
+        "number": 3208,
+        "role": "supporting"
+      },
+      {
+        "number": 3242,
+        "role": "supporting"
+      },
+      {
+        "number": 3259,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "hosted-required-checks",
+        "ref": "required",
+        "gating": true
+      },
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/docs_declaration-only-builds-closeout-4daf18b5523b/verdict.json",
+        "gating": true
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -34,7 +76,19 @@
     "goals/declaration-only-builds/GOAL.md",
     "goals/declaration-only-builds/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/2026-11-10-build-baseline.md",
+    "research/2026-11-10-build-baseline.tsv",
+    "research/2026-11-10-build-check-equivalence.md",
+    "research/2026-11-12-build-check-equivalence.tsv",
+    "research/2026-11-13-build-after.md",
+    "research/2026-11-13-build-after.tsv",
+    "research/2026-11-13-build-before.tsv",
+    "research/2026-11-13-check-once-cost.md",
+    "research/2026-11-13-check-once-cost.tsv",
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -50,27 +104,27 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -87,5 +141,10 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Authored 2026-11-10 from explorations/build-pipeline-simplification, not started. Startable now: PR 1 (baseline and proof harness, no behaviour change). PR 3 (check once) is conditional on PR 1."
+  "statusNote": "Closed 2026-11-13 as completed-retained, verified via #3259. Library builds emit declarations and declaration maps only (#3208); the check of 180 packages runs the build program after the package's own build (#3242). Measured: serial build work 80.9 s to 32.9 s, dist 232.5 MB to 147.9 MB, 15.5 s less compiler work per full check run.",
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3259
+  },
+  "retentionReason": "Documents a live system: the declaration-only generated build, the check that runs the build program after the package's own build, the two override lists in the scripts policy, the census build-equivalence mode and the build measurement script under ops/, with the equivalence and timing evidence the contract tests and the toolchain runbook rest on; archive once the two override packages are served by the build and the no-emit check configs are removed."
 }

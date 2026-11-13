@@ -3,6 +3,7 @@ import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   decodeSkillsLockDocumentJson,
   encodeSkillsLockDocumentJson,
+  LocalSkillLockEntry,
   renderCodexConfigWithSkills,
   runSkillsUpdate,
   SkillEffective,
@@ -620,6 +621,135 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("skills update over a v2 l
       expect(A.some(checked, (entry) => entry._tag === "LockDrift")).toBe(false);
       const readProjectFile18 = yield* readProjectFile(root, "skills-lock.json");
       expect(readProjectFile18).toBe(reformatted);
+    }).pipe(Effect.provideService(HttpClient.HttpClient, makeSkillsClient()))
+  );
+
+  it.effect("checks offline from tracked files only, with no request to a floating upstream", () =>
+    Effect.gen(function* () {
+      const root = yield* temporaryRepository;
+      yield* writeProjectFile(root, ".codex/config.toml", "[skills]\n  include_instructions = true\n");
+      yield* writeProjectFile(root, "skills-lock.json", `${yield* encodeSkillsLockDocumentJson(emptyLockV2)}\n`);
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.makeDirectory(`${root}/.agents`, { recursive: true });
+      yield* fs.symlink("../.claude/skills", `${root}/.agents/skills`);
+      yield* runSkillsUpdate({ mode: "write", skill: O.some("grill-me") }).pipe(
+        Effect.provideService(HttpClient.HttpClient, makeSkillsClient())
+      );
+      // Every request fails from here on, as on a rate-limited runner address.
+      const refusing = makeWebHandlerClient(() => Effect.succeed(new Response("rate limited", { status: 403 })));
+      const offline = (options: { readonly offline: boolean }) =>
+        runSkillsUpdate({ mode: "check", skill: O.none(), ...options }).pipe(
+          Effect.provideService(HttpClient.HttpClient, refusing)
+        );
+
+      // The online check needs the floating upstream; the offline one agrees with the lock without it.
+      const online = yield* offline({ offline: false }).pipe(Effect.flip);
+      expect(online.message).toContain("non-2xx");
+      const clean = yield* offline({ offline: true });
+      expect(clean).toEqual([]);
+
+      // A skill edited without refreshing the lock is the drift the hosted step exists for.
+      yield* writeProjectFile(
+        root,
+        ".claude/skills/grill-me/SKILL.md",
+        `${remoteGrillMeSkill}\nEdited after the lock.\n`
+      );
+      const stale = yield* offline({ offline: true }).pipe(Effect.flip);
+      expect(stale.message).toBe("Repo-local skills are stale.");
+    })
+  );
+
+  it.effect("leaves the lock unchanged when two branches edit the same repo-authored skill", () =>
+    Effect.gen(function* () {
+      const root = yield* temporaryRepository;
+      const fs = yield* FileSystem.FileSystem;
+      yield* writeProjectFile(root, ".codex/config.toml", "[skills]\n  include_instructions = true\n");
+      yield* writeProjectFile(root, "skills-lock.json", `${yield* encodeSkillsLockDocumentJson(emptyLockV2)}\n`);
+      yield* fs.makeDirectory(`${root}/.agents`, { recursive: true });
+      yield* fs.symlink("../.claude/skills", `${root}/.agents/skills`);
+      const demoSkill = (body: string) => `---\nname: demo\ndescription: Demo.\n---\n${body}`;
+      const relock = runSkillsUpdate({ mode: "write", skill: O.some("grill-me") });
+      const checkOffline = runSkillsUpdate({ mode: "check", skill: O.none(), offline: true });
+
+      // The common ancestor: one repo-authored skill beside one fetched from a floating upstream.
+      yield* writeProjectFile(root, ".claude/skills/demo/SKILL.md", demoSkill("Base.\n"));
+      yield* relock;
+      const baseLock = yield* readProjectFile(root, "skills-lock.json");
+      const base = yield* decodeSkillsLockDocumentJson(baseLock);
+      expect(base.skills.demo).toEqual({
+        _tag: "local",
+        installedTargets: [".claude/skills/demo", ".agents/skills/demo"],
+      });
+      // Only the floating upstream's fetched tree is recorded: git cannot vouch for it offline.
+      const fetched = base.skills["grill-me"];
+      assert(fetched !== undefined && fetched._tag === "local");
+      expect(fetched.installedTreeHash).toBeDefined();
+
+      // Each branch edits the same skill and runs the same relock. Neither moves the lock, so
+      // both leave the ancestor's bytes and git has nothing to merge in skills-lock.json.
+      for (const edit of ["Branch one rewrote this line.\n", "Branch two rewrote it differently.\n"]) {
+        yield* writeProjectFile(root, ".claude/skills/demo/SKILL.md", demoSkill(edit));
+        const drift = yield* checkOffline;
+        expect(drift).toEqual([]);
+        yield* relock;
+        const branchLock = yield* readProjectFile(root, "skills-lock.json");
+        expect(branchLock).toBe(baseLock);
+      }
+    }).pipe(Effect.provideService(HttpClient.HttpClient, makeSkillsClient()))
+  );
+
+  it.effect("reads a lock that still hashes a repo-authored skill, reports it stale and drops the hash", () =>
+    Effect.gen(function* () {
+      const root = yield* temporaryRepository;
+      const fs = yield* FileSystem.FileSystem;
+      yield* writeProjectFile(root, ".codex/config.toml", "[skills]\n  include_instructions = true\n");
+      yield* fs.makeDirectory(`${root}/.agents`, { recursive: true });
+      yield* fs.symlink("../.claude/skills", `${root}/.agents/skills`);
+      yield* writeProjectFile(root, ".claude/skills/demo/SKILL.md", "---\nname: demo\ndescription: Demo.\n---\n");
+      // The shape every local entry had before 2026-11-13.
+      const legacyLock = `{"version": 2, "skills": {"demo": {"_tag": "local", "installedTargets": [".claude/skills/demo", ".agents/skills/demo"], "installedTreeHash": "0000000000000000000000000000000000000000000000000000000000000000"}}}`;
+      yield* writeProjectFile(root, "skills-lock.json", `${legacyLock}\n`);
+      const checkOffline = runSkillsUpdate({ mode: "check", skill: O.none(), offline: true });
+
+      const stale = yield* checkOffline.pipe(Effect.flip);
+      expect(stale.message).toBe("Repo-local skills are stale.");
+
+      yield* runSkillsUpdate({ mode: "write", skill: O.none(), offline: true });
+      const rewritten = yield* readProjectFile(root, "skills-lock.json");
+      expect(rewritten).not.toContain("installedTreeHash");
+      const clean = yield* checkOffline;
+      expect(clean).toEqual([]);
+    }).pipe(Effect.provideService(HttpClient.HttpClient, makeSkillsClient()))
+  );
+
+  it.effect("fails the check when a repo-authored skill's two installed targets disagree", () =>
+    Effect.gen(function* () {
+      const root = yield* temporaryRepository;
+      yield* writeProjectFile(root, ".codex/config.toml", "[skills]\n  include_instructions = true\n");
+      const demoSkill = (body: string) => `---\nname: demo\ndescription: Demo.\n---\n${body}`;
+      // Two real directories instead of the symlink: the lock holds no hash to catch this, the
+      // on-the-fly comparison of the targets does.
+      yield* writeProjectFile(root, ".claude/skills/demo/SKILL.md", demoSkill("Claude copy.\n"));
+      yield* writeProjectFile(root, ".agents/skills/demo/SKILL.md", demoSkill("Agents copy.\n"));
+      const lock = SkillsLockDocument.make({
+        version: 2,
+        skills: {
+          demo: LocalSkillLockEntry.make({ installedTargets: [".claude/skills/demo", ".agents/skills/demo"] }),
+        },
+      });
+      yield* writeProjectFile(root, "skills-lock.json", `${yield* encodeSkillsLockDocumentJson(lock)}\n`);
+
+      const error = yield* runSkillsUpdate({ mode: "check", skill: O.none(), offline: true }).pipe(Effect.flip);
+
+      expect(error.message).toContain("Installed skill targets disagree for demo");
+    }).pipe(Effect.provideService(HttpClient.HttpClient, makeSkillsClient()))
+  );
+
+  it.effect("refuses --offline outside a check, which would record a lock no upstream snapshot backs", () =>
+    Effect.gen(function* () {
+      yield* temporaryRepository;
+      const refused = yield* runSkillsCommand(["update", "--offline"]).pipe(Effect.flip);
+      expect(String(refused)).toContain("The --offline flag is only valid with --check.");
     }).pipe(Effect.provideService(HttpClient.HttpClient, makeSkillsClient()))
   );
 

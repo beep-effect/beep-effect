@@ -1,12 +1,25 @@
 import {
   applyScaffoldRuleForTesting,
+  buildServedCheck,
   CheckerEngineExemption,
   CheckerScriptName,
   checkerEngineExemptions,
+  checkLeadsWithBuild,
+  DECLARATION_ONLY_BUILD_COMMAND,
+  DECLARATION_ONLY_BUILD_FLAG,
   implScriptDefaults,
+  isDeclarationOnlyBuild,
+  JavaScriptBuildOverride,
+  javaScriptBuildOverrides,
   NonCanonicalChecker,
+  OWN_SOURCE_CHECK_COMMAND,
+  OwnSourceCheckOverride,
+  ownSourceCheckOverrides,
   PackageKind,
   PackageScriptsReportFromWire,
+  RetiredScriptName,
+  retiredCheckSegments,
+  retiredImplScripts,
   ScriptsBlock,
   ScriptsRecord,
   scaffoldPackageScripts,
@@ -19,14 +32,16 @@ import {
 } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type { PackageScriptsReportWire } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas";
 
 const appCodec = scriptsBlockFromRecord("app");
@@ -70,7 +85,7 @@ describe("canonical package scripts schemas", () => {
     });
     const scripts = applyScaffoldRuleForTesting(HashMap.empty(), rule);
     assertSome(HashMap.get(scripts, "build"), "bun run --if-present beep:build");
-    assertSome(HashMap.get(scripts, "beep:build"), "tsrs -p tsconfig.json && bun run babel");
+    assertSome(HashMap.get(scripts, "beep:build"), "tsrs -p tsconfig.json --emitDeclarationOnly");
   });
   it("keeps caller scripts and indirections when a kind has no implementation default", () => {
     const rule = TaskScriptRule.make({
@@ -94,6 +109,96 @@ describe("canonical package scripts schemas", () => {
     const library = scaffoldPackageScripts("library", ["test:integration"]);
     expect(library["test:integration"]).toBe("bun run beep:test:integration");
     expect(library["beep:test:integration"]).toBe("bunx --bun vitest run test/integration --passWithNoTests");
+  });
+  it("generates a declaration-only build without Babel for every emitting kind", () => {
+    expect(DECLARATION_ONLY_BUILD_COMMAND).toBe(`tsrs -p tsconfig.json ${DECLARATION_ONLY_BUILD_FLAG}`);
+    const builds = A.filter(implScriptDefaults, (row) => row.name === "beep:build");
+    expect(
+      A.map(
+        A.filter(builds, (row) => row.value === DECLARATION_ONLY_BUILD_COMMAND),
+        (row) => row.kind
+      )
+    ).toEqual(["library", "tool", "ecosystem", "infra"]);
+    expect(A.some(builds, (row) => pipe(row.value, Str.includes("babel")))).toBe(false);
+    for (const kind of ["library", "tool", "ecosystem", "infra"] as const) {
+      const scripts = scaffoldPackageScripts(kind, []);
+      expect(scripts["beep:build"]).toBe(DECLARATION_ONLY_BUILD_COMMAND);
+      expect(scripts).not.toHaveProperty("babel");
+    }
+  });
+  it("retires the Babel build, the JavaScript build and the babel script for every managed kind", () => {
+    expect(RetiredScriptName.literals).toEqual(["babel"]);
+    expect(retiredImplScripts).toHaveLength(18);
+    expect(A.some(retiredImplScripts, (row) => row.kind === "exempt")).toBe(false);
+    expect(A.some(retiredImplScripts, (row) => pipe(row.replacement, Str.includes("babel")))).toBe(false);
+    expect(A.dedupe(A.map(retiredImplScripts, (row) => row.value))).toEqual([
+      "tsrs -p tsconfig.json && bun run babel",
+      "tsrs -p tsconfig.json",
+      "bun run codegen && tsrs -p tsconfig.json && bun run babel",
+    ]);
+    const override = { manifest: "packages/a/package.json", reason: "the worker image runs dist/main.js" };
+    expect(A.map([override, { ...override, reason: "" }], S.is(JavaScriptBuildOverride))).toEqual([true, false]);
+    expect(javaScriptBuildOverrides).toEqual([]);
+  });
+  it("serves a declaration-only check from its build and leaves every other check alone", () => {
+    const served = `${DECLARATION_ONLY_BUILD_COMMAND} && bun run beep:check:tests`;
+    expect(A.map(retiredCheckSegments, (row) => [row.segment, row.replacement])).toEqual([
+      [OWN_SOURCE_CHECK_COMMAND, DECLARATION_ONLY_BUILD_COMMAND],
+    ]);
+    assertSome(
+      buildServedCheck(`${OWN_SOURCE_CHECK_COMMAND} && bun run beep:check:tests`, DECLARATION_ONLY_BUILD_COMMAND),
+      served
+    );
+    assertSome(
+      buildServedCheck(DECLARATION_ONLY_BUILD_COMMAND)(OWN_SOURCE_CHECK_COMMAND),
+      DECLARATION_ONLY_BUILD_COMMAND
+    );
+    assertSome(
+      buildServedCheck(OWN_SOURCE_CHECK_COMMAND, `bun run codegen && ${DECLARATION_ONLY_BUILD_COMMAND}`),
+      DECLARATION_ONLY_BUILD_COMMAND
+    );
+    // Flags of the first segment carry over, in order, ahead of the later segments.
+    assertSome(
+      buildServedCheck(
+        `${OWN_SOURCE_CHECK_COMMAND} --checkerCostCache a.cache --pretty false && bun run beep:check:tests`,
+        DECLARATION_ONLY_BUILD_COMMAND
+      ),
+      `${DECLARATION_ONLY_BUILD_COMMAND} --checkerCostCache a.cache --pretty false && bun run beep:check:tests`
+    );
+    // A longer config name, a later no-emit segment, and a build that is not declaration-only.
+    assertNone(buildServedCheck(`${OWN_SOURCE_CHECK_COMMAND}c`, DECLARATION_ONLY_BUILD_COMMAND));
+    assertNone(buildServedCheck(`bun run codegen && ${OWN_SOURCE_CHECK_COMMAND}`, DECLARATION_ONLY_BUILD_COMMAND));
+    assertNone(buildServedCheck(OWN_SOURCE_CHECK_COMMAND, OWN_SOURCE_CHECK_COMMAND));
+    assertNone(buildServedCheck(OWN_SOURCE_CHECK_COMMAND, `${DECLARATION_ONLY_BUILD_COMMAND} --listEmittedFiles`));
+    expect(
+      A.map(
+        [DECLARATION_ONLY_BUILD_COMMAND, `bun run codegen && ${DECLARATION_ONLY_BUILD_COMMAND}`, "vite build", ""],
+        isDeclarationOnlyBuild
+      )
+    ).toEqual([true, true, false, false]);
+    expect(
+      A.map(
+        [
+          served,
+          `${DECLARATION_ONLY_BUILD_COMMAND} --checkerCostCache a.cache && bun run beep:check:tests`,
+          `${DECLARATION_ONLY_BUILD_COMMAND}&&bun run beep:check:tests`,
+          `${DECLARATION_ONLY_BUILD_COMMAND}Extra`,
+          `${OWN_SOURCE_CHECK_COMMAND} && bun run beep:check:tests`,
+          `bun run codegen && ${DECLARATION_ONLY_BUILD_COMMAND}`,
+        ],
+        checkLeadsWithBuild
+      )
+    ).toEqual([true, true, true, false, false, false]);
+    for (const kind of ["library", "tool", "ecosystem", "infra"] as const)
+      expect(scaffoldPackageScripts(kind, [])["beep:check"], kind).toBe(served);
+    for (const kind of ["app", "lab"] as const)
+      expect(scaffoldPackageScripts(kind, [])["beep:check"], kind).toBe(OWN_SOURCE_CHECK_COMMAND);
+    expect(A.map(ownSourceCheckOverrides, (row) => row.manifest)).toEqual([
+      "packages/ecosystem/effect-drizzle/package.json",
+      "packages/foundation/modeling/markdown/package.json",
+    ]);
+    const override = { manifest: "packages/a/package.json", reason: "the check program adds scripts" };
+    expect(A.map([override, { ...override, reason: "" }], S.is(OwnSourceCheckOverride))).toEqual([true, false]);
   });
   it("leaves exempt task ownership with the caller even when every task is selected", () => {
     expect(scaffoldPackageScripts("exempt", TaskScriptName.literals)).toEqual({});

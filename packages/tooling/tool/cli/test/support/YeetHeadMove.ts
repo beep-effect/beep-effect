@@ -213,6 +213,7 @@ export const rewriteWindowScenario = Effect.fn("HeadMoveTest.rewriteWindowScenar
         },
       };
     if (Str.endsWith("/check-runs")(call.path)) return { body: { check_runs: [], total_count: 0 } };
+    if (Str.endsWith("/actions/runs")(call.path)) return { body: { workflow_runs: [], total_count: 0 } };
     if (Str.endsWith("/status")(call.path)) return { body: { statuses: [], total_count: 0 } };
     return undefined;
   });

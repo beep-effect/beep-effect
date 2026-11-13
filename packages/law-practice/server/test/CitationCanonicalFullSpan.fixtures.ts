@@ -3,13 +3,16 @@
  */
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { readCitationCanonicalCaptures } from "./CitationCanonicalCaptures.fixtures.ts";
 import { makeCitationCanonicalExtractionReplay } from "./CitationCanonicalExtractionRuntime.fixtures.ts";
+import { CitationEngineWorkCounts, makeCitationEngineProbe } from "./CitationEngineProbe.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
 const Span = S.Tuple([S.Int, S.Int]);
@@ -94,64 +97,169 @@ const observeFullSpan = (range: readonly [number, number], combined: boolean, id
   return Str.includes(":1165:")(id) ? range[0] : range[1];
 };
 
-/** Original parser calls in the full-span cohort; replay slices must cover every call. */
-export const citationCanonicalFullSpanCalls = 10;
-/** Recompute a slice of the original parser calls and their independent full-span equalities.
- * The whole cohort (`from` 0, `count` ${citationCanonicalFullSpanCalls}) checks all thirteen.
+/** Engine work each original call performs, in call order, on either runtime.
+ *
+ * **Details**
+ *
+ * These are counts, not timings, so they hold on a loaded host. A change that
+ * moves one (installing stages once, owning configuration once, reusing the
+ * regex worker) updates the row here and reports before and after in its pull
+ * request. The recorded baseline is in
+ * `goals/citation-engine-install-once/history/evidence/`.
+ *
+ * **Example** (Reading the first call's baseline)
+ * ```ts
+ * import * as A from "effect/Array";
+ * import { citationCanonicalFullSpanWork } from "./CitationCanonicalFullSpan.fixtures.ts";
+ * const first = A.get(citationCanonicalFullSpanWork, 0);
+ * ```
  * @internal @category testing @since 0.0.0
  */
-export const replayCitationCanonicalFullSpan = Effect.fn("CanonicalFullSpanTest.replay")(function* (
-  kind: CitationNativeRuntimeKind,
-  from: number,
-  count: number
+export const citationCanonicalFullSpanWork: ReadonlyArray<CitationEngineWorkCounts> = A.map(
+  [
+    [14, 8, 1, 15, 70, 70],
+    [14, 8, 1, 3, 15, 15],
+    [14, 8, 1, 3, 15, 15],
+    [14, 8, 1, 3, 24, 24],
+    [14, 8, 1, 5, 19, 19],
+    [14, 8, 1, 5, 15, 15],
+    [14, 8, 1, 8, 65, 65],
+    [14, 8, 1, 8, 38, 38],
+    [14, 8, 1, 3, 15, 15],
+    [14, 8, 1, 3, 15, 15],
+  ] as const,
+  ([
+    metadataOperationInstalls,
+    configurationDetaches,
+    tokenizerBuilds,
+    regexWorkerConstructions,
+    regexEvaluations,
+    nativeProcesses,
+  ]) =>
+    CitationEngineWorkCounts.make({
+      metadataOperationInstalls,
+      configurationDetaches,
+      tokenizerBuilds,
+      regexWorkerConstructions,
+      regexEvaluations,
+      nativeProcesses,
+    })
+);
+/** Original parser calls in the full-span cohort; together they carry all thirteen equalities. */
+export const citationCanonicalFullSpanCalls = 10;
+/** Read the pinned captures and their ten parser calls once, and install one default replay engine.
+ *
+ * **Details**
+ *
+ * Every original call is a full production extraction (a fresh one-job regex worker per pattern
+ * evaluation plus the per-request stage installation), so one call costs seconds of real work.
+ * Preparing once lets each call run as its own test against the same installed engine instead of
+ * serializing the whole cohort under one watchdog.
+ *
+ * **Example** (Preparing the Bun cohort)
+ * ```ts
+ * import { prepareCitationCanonicalFullSpanReplay } from "./CitationCanonicalFullSpan.fixtures.ts";
+ * const prepared = prepareCitationCanonicalFullSpanReplay("bun");
+ * ```
+ * @internal @category testing @since 0.0.0
+ */
+export const prepareCitationCanonicalFullSpanReplay = Effect.fn("CanonicalFullSpanTest.prepare")(function* (
+  kind: CitationNativeRuntimeKind
 ) {
   const { operations, assertions } = yield* readCitationCanonicalCaptures();
   const calls = yield* readCalls(operations);
-  const rows = A.take(A.drop(calls, from), count);
   const replay = yield* makeCitationCanonicalExtractionReplay(kind);
-  let checked = 0;
-  for (const { row, body, models, combined, simple, targets } of rows) {
-    const extraction = replay.extract(body.input.plain_text, "plain", models, row.id, null);
-    const actual = yield* extraction.pipe(
-      Effect.tapError((error) =>
-        Effect.logWarning("Original full-span extraction refused").pipe(
-          Effect.annotateLogs({
-            runtime: kind,
-            caseId: row.id,
-            failure: error._tag,
-            limit: error._tag === "CitationSafetyLimitExceeded" ? error.limit : "none",
-          })
-        )
+  const probe = yield* makeCitationEngineProbe(replay.native);
+  return { kind, calls, assertions, replay, probe };
+});
+/** One prepared full-span cohort shared by the per-call tests of a runtime.
+ * @internal @category testing @since 0.0.0
+ */
+export class CitationCanonicalFullSpanReplay extends Context.Service<
+  CitationCanonicalFullSpanReplay,
+  Effect.Success<ReturnType<typeof prepareCitationCanonicalFullSpanReplay>>
+>()("@beep/law-practice-server/test/CitationCanonicalFullSpan.fixtures/CitationCanonicalFullSpanReplay") {}
+/** Build one prepared cohort for a runtime; its engine and native runtimes live for the layer's scope.
+ *
+ * **Example** (Sharing the Bun cohort across per-call tests)
+ * ```ts
+ * import { citationCanonicalFullSpanReplayLayer } from "./CitationCanonicalFullSpan.fixtures.ts";
+ * const layer = citationCanonicalFullSpanReplayLayer("bun");
+ * ```
+ * @internal @category testing @since 0.0.0
+ */
+export const citationCanonicalFullSpanReplayLayer = (kind: CitationNativeRuntimeKind) =>
+  Layer.effect(CitationCanonicalFullSpanReplay, prepareCitationCanonicalFullSpanReplay(kind));
+/** Recompute one original parser call and its independent full-span equalities.
+ * Covering every index from 0 below `citationCanonicalFullSpanCalls` checks all thirteen.
+ *
+ * **Example** (Replaying the first call)
+ * ```ts
+ * import * as Effect from "effect/Effect";
+ * import {
+ *   prepareCitationCanonicalFullSpanReplay,
+ *   replayCitationCanonicalFullSpanCall,
+ * } from "./CitationCanonicalFullSpan.fixtures.ts";
+ * const first = prepareCitationCanonicalFullSpanReplay("node").pipe(
+ *   Effect.flatMap((prepared) => replayCitationCanonicalFullSpanCall(prepared, 0))
+ * );
+ * ```
+ * @internal @category testing @since 0.0.0
+ */
+export const replayCitationCanonicalFullSpanCall = Effect.fn("CanonicalFullSpanTest.replayCall")(function* (
+  prepared: CitationCanonicalFullSpanReplay["Service"],
+  index: number
+) {
+  const { kind, calls, assertions, replay, probe } = prepared;
+  const { row, body, models, combined, simple, targets } = yield* Effect.fromOption(A.get(calls, index)).pipe(
+    Effect.orDie
+  );
+  const extraction = replay.extract(body.input.plain_text, "plain", models, row.id, null);
+  const measured = yield* probe.measure(extraction).pipe(
+    Effect.tapError((error) =>
+      Effect.logWarning("Original full-span extraction refused").pipe(
+        Effect.annotateLogs({
+          runtime: kind,
+          caseId: row.id,
+          failure: error._tag,
+          limit: error._tag === "CitationSafetyLimitExceeded" ? error.limit : "none",
+        })
       )
+    )
+  );
+  const actual = measured.value;
+  yield* Effect.logInfo("Original full-span call engine work").pipe(
+    Effect.annotateLogs({ runtime: kind, call: index, elapsedMillis: measured.elapsedMillis, ...measured.counts })
+  );
+  expect(measured.counts, row.id).toEqual(A.getUnsafe(citationCanonicalFullSpanWork, index));
+  expect(actual.source.source.sourceText, row.id).toBe(body.stages.document.plainText);
+  let checked = 0;
+  for (const target of targets) {
+    const captured = yield* Effect.fromOption(HashMap.get(assertions, target.id));
+    const expected = yield* S.decodeEffect(Criterion)(captured.payload);
+    expect(expected.operands[0].value, target.id).toEqual(expected.operands[1].value);
+    yield* checkOriginalContext(
+      expected.context.values,
+      combined,
+      simple,
+      body.input.plain_text,
+      models,
+      target.index,
+      target.id
     );
-    expect(actual.source.source.sourceText, row.id).toBe(body.stages.document.plainText);
-    for (const target of targets) {
-      const captured = yield* Effect.fromOption(HashMap.get(assertions, target.id));
-      const expected = yield* S.decodeEffect(Criterion)(captured.payload);
-      expect(expected.operands[0].value, target.id).toEqual(expected.operands[1].value);
-      yield* checkOriginalContext(
-        expected.context.values,
-        combined,
-        simple,
-        body.input.plain_text,
-        models,
-        target.index,
-        target.id
-      );
-      const mention = A.getUnsafe(actual.document.mentions, target.index);
-      const component = yield* Effect.fromOption(A.findFirst(mention.components, (value) => value.name === "fullSpan"));
-      const anchor = component.anchor.anchor;
-      const text = actual.source.source.sourceText;
-      const range = Tuple.make(
-        A.fromIterable(Str.slice(0, anchor.startChar)(text)).length,
-        A.fromIterable(Str.slice(0, anchor.endChar)(text)).length
-      );
-      const observation = observeFullSpan(range, combined, target.id);
-      expect(observation, target.id).toEqual(expected.operands[1].value);
-      checked++;
-    }
+    const mention = A.getUnsafe(actual.document.mentions, target.index);
+    const component = yield* Effect.fromOption(A.findFirst(mention.components, (value) => value.name === "fullSpan"));
+    const anchor = component.anchor.anchor;
+    const text = actual.source.source.sourceText;
+    const range = Tuple.make(
+      A.fromIterable(Str.slice(0, anchor.startChar)(text)).length,
+      A.fromIterable(Str.slice(0, anchor.endChar)(text)).length
+    );
+    const observation = observeFullSpan(range, combined, target.id);
+    expect(observation, target.id).toEqual(expected.operands[1].value);
+    checked++;
   }
-  expect(checked).toBe(A.reduce(rows, 0, (total, call) => total + call.targets.length));
+  expect(checked).toBe(targets.length);
   yield* replay.assertRetired;
 });
 

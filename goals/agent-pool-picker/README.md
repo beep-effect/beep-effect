@@ -4,6 +4,8 @@
 
 Lifecycle: `paused`
 
+**Paused by operator ruling (finish board, 2026-11-13).** It is cleanly gated on a dependency that is still open, and nothing is in flight. No lane is working on it; resume with `bun run beep goals set-status agent-pool-picker active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
+
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
 Authored, not started. Resumes when `goals/agent-pool-doctrine` ships; its seat map and floors are

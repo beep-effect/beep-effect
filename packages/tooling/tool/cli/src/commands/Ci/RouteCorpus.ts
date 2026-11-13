@@ -55,7 +55,7 @@ import {
 } from "../../internal/github/GithubIdentity.ts";
 import { GithubRest, layerGithubRest } from "../../internal/github/GithubRest.ts";
 import { sha256HexBytes } from "../Goals/PacketCore/PacketDigest.ts";
-import { HostedJob, HostedRun, RouteCorpusReceipt, RouteError } from "./Route.schemas.ts";
+import { HostedJob, HostedRun, HostedStep, RouteCorpusReceipt, RouteError } from "./Route.schemas.ts";
 import { RouteCorpus, RouteCorpusLoaded } from "./Route.service.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -215,15 +215,27 @@ class GhRunListRow extends S.Opaque<GhRunListRow, { readonly brand: unique symbo
   )
 ) {}
 
+class GhRunViewStep extends S.Opaque<GhRunViewStep, { readonly brand: unique symbol }>()(
+  S.Struct({
+    name: S.String,
+    conclusion: GhText,
+  }).pipe(
+    $I.annoteSchema("GhRunViewStep", {
+      description: "One step of a `gh run view --json jobs` job: its name and conclusion.",
+    })
+  )
+) {}
+
 class GhRunViewJob extends S.Opaque<GhRunViewJob, { readonly brand: unique symbol }>()(
   S.Struct({
     name: S.NonEmptyString,
     conclusion: GhText,
     startedAt: GhText,
     completedAt: GhText,
+    steps: GhRunViewStep.pipe(S.Array, S.OptionFromOptionalNullOr),
   }).pipe(
     $I.annoteSchema("GhRunViewJob", {
-      description: "One job of a `gh run view --json jobs` payload: name, conclusion and timestamps.",
+      description: "One job of a `gh run view --json jobs` payload: name, conclusion, timestamps and steps.",
     })
   )
 ) {}
@@ -267,13 +279,25 @@ const isGoZeroTime = Str.startsWith("0001-01-01T");
 const presentText = (value: O.Option<string>): O.Option<string> =>
   O.filter(value, (text) => Str.isNonEmpty(text) && !isGoZeroTime(text));
 
-const hostedJobOf = (job: GhRunViewJob): HostedJob =>
-  HostedJob.make({
+const hostedStepOf = (step: GhRunViewStep): HostedStep =>
+  HostedStep.make({ name: step.name, conclusion: presentText(step.conclusion) });
+
+// Steps are kept only on a failed job, the one job the replay judges by them, so the pinned corpus stays
+// small.
+const hostedJobOf = (job: GhRunViewJob): HostedJob => {
+  const conclusion = presentText(job.conclusion);
+  return HostedJob.make({
     name: job.name,
-    conclusion: presentText(job.conclusion),
+    conclusion,
     startedAt: presentText(job.startedAt),
     completedAt: presentText(job.completedAt),
+    steps: pipe(
+      job.steps,
+      O.filter(() => O.exists(conclusion, (value) => Str.Equivalence(value, "failure"))),
+      O.map(A.map(hostedStepOf))
+    ),
   });
+};
 
 const hostedRunOf = (view: GhRunView): HostedRun =>
   HostedRun.make({
@@ -345,11 +369,13 @@ const RunWire = S.Struct({
   head_sha: S.String,
   run_attempt: S.optionalKey(S.Int),
 });
+const StepWire = S.Struct({ name: S.String, conclusion: S.NullOr(S.String) });
 const JobWire = S.Struct({
   name: S.NonEmptyString,
   conclusion: S.NullOr(S.String),
   started_at: S.NullOr(S.String),
   completed_at: S.NullOr(S.String),
+  steps: StepWire.pipe(S.Array, S.NullOr, S.optionalKey),
 });
 const decodeWorkflowRows = S.decodeUnknownEffect(S.Array(WorkflowWire));
 const decodeRunRows = S.decodeUnknownEffect(S.Array(RunWire));
@@ -441,6 +467,7 @@ export const makeRouteGithubRunner = Effect.gen(function* () {
           conclusion: job.conclusion,
           startedAt: job.started_at,
           completedAt: job.completed_at,
+          steps: job.steps ?? null,
         })),
       });
     }).pipe(
@@ -591,7 +618,9 @@ type CapturePlan = {
  * lacks (eight at a time), and then pins the corpus: it writes
  * `hosted-runs.<sha256>.ndjson.gz`, sorted by `createdAt` then run id, and
  * switches `RECEIPTS.json` last through a temporary file and a rename. An
- * interrupted switch leaves the previous receipt and its corpus intact.
+ * interrupted switch leaves the previous receipt and its corpus intact. A job
+ * that concluded `failure` keeps its step names and conclusions; no other job
+ * keeps steps, and runs already pinned are never re-fetched for them.
  *
  * The receipt's `until` is the last fully captured day. A day with an
  * eligible run that has not finished stays open: its finished runs are

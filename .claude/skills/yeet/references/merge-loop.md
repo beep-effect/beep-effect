@@ -7,16 +7,35 @@ Read when the heavy matrix holds, when a monitor triages a red job, or when a sw
 the merge-loop porcelain. They read the clone and the PR; none of them plan
 turbo work, so they are cheap to run mid-loop.
 
-- **Heavy admission is applied at creation.** `yeet publish` labels the draft
-  PR `ready-for-heavy` when it creates it (push-first-publish D4), so the heavy
-  matrix starts with tier 1. `Heavy Admission` in `check.yml` still holds any
-  code PR without the label (`Heavy / *` stays "Expected", merge blocked): that
-  is a PR that already existed before the publish, or one whose label edit
-  failed. Only then run `bun run beep yeet gh pr label add <n> ready-for-heavy` (REST) yourself;
-  the held `monitor --until-ready` loop prints that exact command and does not
-  burn its settle budget. Never remove and re-add the label.
+- **Heavy admission is applied when the PR is ready.** `yeet publish` and
+  `yeet open` open the PR ready for review and label it `ready-for-heavy` when
+  they create it (open ready at content-final, 2026-11-13), so the heavy
+  matrix starts with tier 1. A `--draft` PR is not labelled: it runs the cheap
+  tier only, and `yeet ready` applies the label when it flips the draft.
+  `Heavy Admission` in `check.yml` holds any code PR without the label
+  (`Heavy / *` stays "Expected", merge blocked): a draft that has not been
+  flipped, or a ready PR whose label edit failed. `bun run beep yeet ready`
+  repairs the second case too; the held `monitor --until-ready` loop prints
+  that command and does not burn its settle budget. A stack layer and a
+  worker-profile open are drafts labelled at creation, as before. Never remove and re-add the label, with one
+  exception: a `required-shadowed` hold from `yeet merge-gate` or `yeet gh`
+  (a required `Heavy / *` check green only in a Heavy Admit suite a newer run
+  replaced). Re-apply the label once: that admission label event runs the
+  heavy matrix again, so the newest run reports the check itself.
   The label triggers `heavy-admit.yml`, which runs only the admission job and
-  the heavy matrix for that head; tier 1 is neither cancelled nor re-run.
+  the heavy matrix for that head; tier 1 is neither cancelled nor re-run. On a
+  same-repository PR that already carries the label, any later label re-reports
+  a passing heavy proof on that head as passed without work (no EC2 run),
+  because the base ruleset reads only the newest Heavy Admit run's suite. With
+  no passing proof, a proof that ran a different `heavy.yml` file than the
+  later run calls (the same commit, or two commits whose `heavy.yml` blobs
+  match, still re-reports; a changed file may add lanes), or a newer copy
+  of a heavy lane (Check's own suite on a reopened head) that is red or
+  unfinished, the later run skips, and the gates judge each hidden required
+  check by its newest copy: a red one is still `required-red` (relaxed mode
+  runs the own-red check on it), a green one is `required-shadowed`. An
+  optional check is judged on its newest run in any suite, so its red there
+  still holds strict mode and is recorded by a relaxed merge.
   Docs-only PRs (`docs/**`, `explorations/**`, `research/**`, `.changeset/*.md`,
   any `*.md`, packet prose) need no label: every heavy lane passes without work on
   a hosted runner and satisfies the ruleset. Removing the label changes nothing already reported;
@@ -66,6 +85,17 @@ merge. It does not, and nothing may.
   delegation model overrides it; a lane that may not publish may still merge
   main and push the catch-up. The monitor keeps polling across that push, so
   do not re-submit it.
+- **A stack layer merges its parent's branch.** On a layer both texts name
+  the parent's branch instead: the row reads `base conflict with
+  origin/<parent-branch>`, and the comment tells the layer not to merge
+  `origin/main`. The parent merges `origin/main`; the layer then merges
+  `origin/<parent-branch>` and pushes
+  ([`stacks.md`](stacks.md#keep-the-layer-on-the-parent)). When the merged
+  pull request was the layer's own parent (`--alone`), the comment says so:
+  GitHub is cascading the layer onto `main`, so it merges nothing, waits for
+  `head_ref_force_pushed` on its timeline and then adopts the rewritten head
+  with `git switch -C`. That layer is not probed. A stacked sibling whose
+  relation to the merged pull request could not be read is told both cases.
 - **The broadcast.** When `yeet merge-gate` merges a PR that touched
   `goals/<slug>/**`, it comments on every other open PR touching the same
   packet in the same run, naming the merged sibling, the slug, the base it
@@ -83,9 +113,11 @@ merge. It does not, and nothing may.
 
 ## Ready
 
-`bun run beep yeet ready` flips a draft at content-final (push-first-publish
-D11, which amends D10). It reads the PR with the monitor's own status read and
-flips the draft when, on the current head, the PR is open, no required
+`bun run beep yeet ready` flips an opt-in draft at content-final
+(push-first-publish D11, which amends D10) and applies `ready-for-heavy`. A PR
+that `yeet publish` or `yeet open` opened ready passed the same receipt rule
+before its push and needs no flip. It reads the PR with the monitor's own
+status read and flips the draft when, on the current head, the PR is open, no required
 check is known to be failing, every review thread is answered, and
 `.beep/yeet/final-check/<head>.json` is a complete passing receipt. Pending
 checks and optional lanes (`Heavy / *`) never hold it. Otherwise it refuses
@@ -123,13 +155,17 @@ inventory is an own change, the lane's net count per finding status (head minus
 its merge base) must also match between R and F: taking main's copy and
 re-running `--write` must not reopen or drop findings. A pass prints R, the own
 changes with their allowance, and R's skipped gates; report it to the
-orchestrator as `final <F> #N receipt <R>`, where F is the sha after the S32
-re-request push. A refusal names R and the files or statuses that broke it.
+orchestrator as `final <F> #N receipt <R>`, where F is the head `yeet ready`
+reports. A refusal names R and the files or statuses that broke it.
 
-It then pushes one empty `chore: re-request beep-reviewer (S32)` commit (beep-reviewer
-ignores heads pushed while draft), only from the flipped head, else it prints the manual
-command; a failed push only warns. Send the sha it prints as the final. Run that printed
-fallback only when `yeet ready` could not push; never push an unprompted S32 by hand.
+It then asks `beep-reviewer` for the review, because the reviewer ignores heads
+pushed while draft. For a PR the shared login authored it posts an exact-head
+request comment and pushes nothing, so the flipped head is the final. Only a PR
+the comment routine does not cover gets one empty
+`chore: re-request beep-reviewer (S32)` commit, pushed from the flipped head
+(else the manual command is printed; a failed push only warns), and then the
+sha it prints is the final. A stack layer never gets that commit
+([`stacks.md`](stacks.md#ready)). Never push an unprompted S32 by hand.
 
 The merge gate carries the wait instead. `merge-ready: yes` needs the
 `review-window-elapsed` criterion: 20 minutes since the later of the latest
@@ -151,6 +187,6 @@ cannot run (model quota exhausted), drop the requirement with
 (both need `kriegcloud`'s gh login). Runbook: `docs/ops/beep-reviewer-app.md`.
 
 `monitor --until-ready` still ends `ready-pending-flip` (exit 0) when the PR
-is a draft and nothing but the draft flag blocks it. That now means the owner
-flipped late: the window starts at the flip, so submit a new monitor after
+is a draft and nothing but the draft flag blocks it. The window starts at the
+flip (at the open, for a PR opened ready), so submit a new monitor after
 `yeet ready` and wait for `merge-ready: yes`.

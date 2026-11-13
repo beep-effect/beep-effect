@@ -9,7 +9,6 @@ import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { printCommandJson } from "@beep/repo-cli-kit/cli/Json";
-import { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import { findRepoRoot } from "@beep/repo-utils";
 import { GitObjectId } from "@beep/schema/Conformance";
 import * as O from "@beep/utils/Option";
@@ -48,6 +47,7 @@ import {
 import { patientGit } from "../../../internal/repo-run/PatientGit.ts";
 import { processIdentityStatus } from "../../../internal/repo-run/ProcessIdentity.ts";
 import { CiLocalStepPlan } from "../../Ci/CiLane.ts";
+import { HEAVY_ADMISSION_LABEL } from "../../Ci/HeavyAdmission.ts";
 import {
   FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH,
   FlakeQuarantineArtifactJson,
@@ -67,6 +67,7 @@ import {
 } from "./ArtifactPaths.ts";
 import {
   appendYeetAttemptJournalEvent,
+  generateYeetAttemptId,
   YeetAttemptFinished,
   YeetAttemptStarted,
   YeetAttemptTerminated,
@@ -109,6 +110,7 @@ import {
 } from "./MonitorChecks.ts";
 import { replayYeetMonitorCommentsAsGhLogin, runYeetPullRequestCommentMonitor } from "./MonitorComments.ts";
 import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS } from "./MonitorPolicy.ts";
+import { YeetOpenReady } from "./OpenReady.ts";
 import {
   ciParityLaneCandidates,
   clearProofEnvironments,
@@ -120,7 +122,12 @@ import {
   recordProofEnvironment,
   renderParityLaneDecision,
 } from "./ParityReuse.ts";
-import { GIT_PUSH_STEP_ID, YeetRunMode } from "./Planner.schemas.ts";
+import {
+  GIT_PUSH_STEP_ID,
+  YeetPullRequestOpenMode,
+  YeetRunMode,
+  yeetPullRequestOpenModeFor,
+} from "./Planner.schemas.ts";
 import {
   buildYeetRunPlanWithMode,
   CI_PARITY_STEP_ID,
@@ -162,13 +169,9 @@ import {
   validatePublishBranch,
   warnOnMismatchedPublishUpstream,
 } from "./PublishScope.ts";
-import {
-  applyComputeProfileLabel,
-  applyHeavyAdmissionLabel,
-  ensurePullRequest,
-  YeetPrBodyRequest,
-} from "./PullRequest.ts";
+import { applyPublishLabels, ensurePullRequest, findOpenPullRequest, YeetPrBodyRequest } from "./PullRequest.ts";
 import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
+import { linkYeetStackLayer, resolveYeetPublishStackLayer, YeetPublishStackLayer } from "./StackPublish.ts";
 import { collectRemoteChecks, collectYeetStatus, renderYeetStatusSummary, writeYeetStatusSnapshot } from "./Status.ts";
 import { collectTurboPlanSnapshot } from "./TurboQuery.ts";
 import { BuildYeetVerdictInput, buildYeetVerdict, YeetExecutedStep, YeetVerdictJson } from "./Verdict.ts";
@@ -183,13 +186,13 @@ import type { YeetPublishIntent, YeetRunOptions, YeetRunResult } from "../Yeet.s
 import type { ParityLaneDecision, ProofEnvironment } from "./ParityReuse.ts";
 import type { ProofEnvProfile, ProofStage } from "./ProofFact.ts";
 import type { ProofJobLauncherShape } from "./ProofJobLauncher.ts";
+import type { YeetStackLayerDecision } from "./StackPublish.ts";
 import type { YeetStatusReviewThread } from "./Status.schemas.ts";
 import type { YeetStatusSnapshot } from "./Status.ts";
 import type { YeetBaseFreshness, YeetMergeReady, YeetStashState, YeetVerdict } from "./Verdict.ts";
 
 const decodeGhPrViewJson = S.decodeEffect(S.fromJsonString(GhPrView));
 const decodeProofJobRecordLine = S.decodeUnknownOption(S.fromJsonString(ProofJobRecord));
-const decodeUUID = S.decodeEffect(UUID);
 
 export { defaultYeetRunOptions } from "../Yeet.schemas.ts";
 
@@ -204,17 +207,6 @@ const admissionAttemptFields = (attempt: O.Option<YeetAttemptStarted>) => ({
   envProfile: O.flatMap(attempt, (value) => value.envProfile),
   computeProfile: O.flatMap(attempt, (value) => value.computeProfile),
   stage: O.flatMap(attempt, (value) => value.stage),
-});
-
-const generateAttemptId = Effect.fn("Yeet.generateAttemptId")(function* (): Effect.fn.Return<
-  YeetAttemptId,
-  YeetCommandError,
-  SecureRandom.SecureRandom
-> {
-  const crypto = yield* SecureRandom.SecureRandom;
-  return yield* crypto
-    .uuidV4()
-    .pipe(Effect.flatMap(decodeUUID), Effect.mapError(YeetCommandError.new("Failed to generate Yeet attempt id.")));
 });
 
 const isNamedLocalProofShard = (step: RepoPlanStep): boolean =>
@@ -773,13 +765,15 @@ const runRequiredPhase = Effect.fn("Yeet.runRequiredPhase")(function* (
 
 // The `--message` first line titles the pull request (and so its squash-merge
 // commit); without one the branch's first non-merge commit subject does. The
-// body request carries `--body-file` and the `yeet open` proof route.
+// body request carries `--body-file` and the `yeet open` proof route; a stack
+// layer opens on its parent's branch.
 const ensureRequestedPullRequest = Effect.fn("Yeet.ensureRequestedPullRequest")(function* (
   context: RepoRunContext,
   steps: ReadonlyArray<RepoPlanStep>,
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
   message: O.Option<string> = O.none(),
-  bodyRequest: YeetPrBodyRequest = YeetPrBodyRequest.make({})
+  bodyRequest: YeetPrBodyRequest = YeetPrBodyRequest.make({}),
+  stackLayer: O.Option<YeetStackLayerDecision> = O.none()
 ) {
   return yield* ensurePullRequest(
     context,
@@ -788,7 +782,8 @@ const ensureRequestedPullRequest = Effect.fn("Yeet.ensureRequestedPullRequest")(
     A.findFirst(steps, (step) => step.id === "publish:03-pr-provenance-stamp"),
     {},
     message,
-    bodyRequest
+    bodyRequest,
+    stackLayer
   );
 });
 
@@ -1112,8 +1107,16 @@ const runStandardPublishPhases = Effect.fn("Yeet.runStandardPublishPhases")(func
     O.some(attempt)
   );
 
-  yield* runPublishPushPhase(plan.context, publishSteps, recorder, extras, preparedHead);
-  return yield* finishPublishWithPullRequest(plan, options, monitorSteps, recorder, extras, skipCommit);
+  return yield* pushAndFinishPublish(
+    plan,
+    options,
+    publishSteps,
+    monitorSteps,
+    recorder,
+    extras,
+    skipCommit,
+    preparedHead
+  );
 });
 
 /**
@@ -1241,8 +1244,82 @@ const findRunningReadyMonitor = Effect.fn("Yeet.findRunningReadyMonitor")(functi
 const renderReadyMonitorJob = (record: ProofJobRecord, reused: boolean): string =>
   `[yeet] readiness monitor job: ${record.jobId}${reused ? ` (already ${record.phase}; not re-submitted)` : ""}\n[yeet] wait with: bun run beep yeet job wait ${record.jobId}`;
 
+// Whether the plan opens a pull request it creates ready for review: the
+// create step carries `--draft` for the two draft open modes.
+const planOpensReady = (steps: ReadonlyArray<RepoPlanStep>): boolean =>
+  A.some(steps, (step) => step.id === "publish:02-pr-create" && !A.contains(step.args, "--draft"));
+
+// A publish opens a pull request ready only on a head with a passing
+// final-check receipt (decision 2026-11-13, open ready at content-final). Asked
+// before the push, so a refusal leaves nothing on the remote. A branch whose
+// pull request is already open is a fix push: it keeps that pull request's
+// state and needs no receipt to push.
+const requireOpenReadyProof = Effect.fn("Yeet.requireOpenReadyProof")(function* (
+  plan: RepoRunPlan,
+  options: YeetRunOptions,
+  headSha: string
+): Effect.fn.Return<
+  void,
+  YeetCommandError,
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
+  | Git
+> {
+  if (!options.pr || !planOpensReady(plan.steps)) return;
+  const hooks = yield* YeetOpenReady;
+  const existing = yield* hooks.findOpen === undefined
+    ? findOpenPullRequest(plan.context).pipe(provideYeetGhLogin(plan.context.repoRoot))
+    : hooks.findOpen(plan.context);
+  if (O.isSome(existing)) return;
+  yield* hooks.requireProof(plan.context, headSha);
+});
+
+/**
+ * Run the receipt gate a publish takes before it pushes a branch whose pull
+ * request it would open ready.
+ *
+ * **Example** (Reference the gate for a wiring test)
+ *
+ * ```ts
+ * import { requireOpenReadyProofForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof requireOpenReadyProofForTesting) // "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const requireOpenReadyProofForTesting = requireOpenReadyProof;
+
+// What follows the create of a pull request, by how it opened. Opened ready,
+// the open is the ready transition: record the review round and request the
+// reviewer, as a flip does. A `--draft` open plans no label step, so its owner
+// is told how its monitor behaves. Returns whether it opened ready.
+const settleOpenedPullRequest = Effect.fn("Yeet.settleOpenedPullRequest")(function* (
+  plan: RepoRunPlan,
+  prNumber: number,
+  created: boolean
+) {
+  if (!created) return false;
+  if (planOpensReady(plan.steps)) {
+    const hooks = yield* YeetOpenReady;
+    const openedHead = yield* readPublishedHead(plan.context);
+    yield* hooks.afterOpen(plan.context, prNumber, openedHead);
+    return true;
+  }
+  if (!A.some(plan.steps, (step) => step.id === PR_HEAVY_ADMISSION_LABEL_STEP_ID)) {
+    yield* Console.log(
+      `[yeet] draft #${prNumber} runs the cheap hosted tier only. Its readiness monitor reports cheap-tier reds, then holds at heavy-not-admitted instead of ending green. When the content is final: \`bun run beep yeet final-check\`, then \`bun run beep yeet ready\` (flips it and applies ${HEAVY_ADMISSION_LABEL}).`
+    );
+  }
+  return false;
+});
+
 // The pull-request tail every publish path shares (push-first-publish D4, D7):
-// ensure the draft pull request, apply the heavy-admission label, then reuse
+// ensure the pull request, apply the heavy-admission label, then reuse
 // the readiness monitor already polling that pull request, submit a detached
 // one, or stay attached when `--monitor` asked to. A running monitor keeps
 // polling across fix pushes, so a second publish must not submit a second job.
@@ -1269,24 +1346,37 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
   }
   const message = yield* validateRequiredMessage(options);
   const bodyRequest = yield* prBodyRequestFor(plan.context, options);
-  // One gh login for the pull request create (or reuse), its provenance stamp and its label.
+  const stackLayer = yield* YeetPublishStackLayer;
+  // One gh login for the pull request create (or reuse), its provenance stamp, its label and its stack link.
   const pullRequest = yield* Effect.gen(function* () {
     const ensured = yield* (dependencies.ensurePullRequest ?? ensureRequestedPullRequest)(
       plan.context,
       plan.steps,
       recorder,
       message,
-      bodyRequest
+      bodyRequest,
+      stackLayer
     );
-    yield* applyHeavyAdmissionLabel(
+    // The worker label goes first, so the ready-for-heavy run is the newest Heavy Admit run and no later
+    // label run queues behind its matrix only to re-report it.
+    yield* applyPublishLabels(
       plan.context,
       recorder,
       A.findFirst(plan.steps, (step) => step.id === PR_HEAVY_ADMISSION_LABEL_STEP_ID),
-      ensured
+      ensured,
+      options.hostedProof
     );
-    if (options.hostedProof) yield* applyComputeProfileLabel(ensured);
+    // A layer not yet in a stack (just created, or a link that failed after its create) is linked now.
+    yield* O.match(
+      O.filter(stackLayer, (layer) => O.isNone(layer.stackNumber)),
+      {
+        onNone: () => Effect.void,
+        onSome: (layer) => Effect.asVoid(linkYeetStackLayer(layer.parentNumber, ensured.number)),
+      }
+    );
     return ensured;
   }).pipe(provideYeetGhLogin(plan.context.repoRoot));
+  const openedReady = yield* settleOpenedPullRequest(plan, pullRequest.number, pullRequest.created);
   const submitSteps = A.filter(monitorSteps, (step) => step.id === MONITOR_READY_SUBMIT_STEP_ID);
   if (A.isReadonlyArrayEmpty(submitSteps)) {
     return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
@@ -1313,7 +1403,7 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
     })
   );
   yield* Console.log(
-    `[yeet] pull request: ${O.getOrElse(pullRequest.url, () => `#${pullRequest.number}`)}${pullRequest.created ? " (draft)" : ""}`
+    `[yeet] pull request: ${O.getOrElse(pullRequest.url, () => `#${pullRequest.number}`)}${pullRequest.created ? (openedReady ? " (ready for review)" : " (draft)") : ""}`
   );
   if (attached) {
     yield* Console.log(
@@ -1343,6 +1433,23 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
     onSome: (record) => Console.log(renderReadyMonitorJob(record, O.isSome(running))),
   });
   return yield* publishResult(plan.context, !skipCommit);
+});
+
+// The end every publish route shares once its local gates have passed: the
+// receipt a ready open needs, the push, then the pull-request tail.
+const pushAndFinishPublish = Effect.fn("Yeet.pushAndFinishPublish")(function* (
+  plan: RepoRunPlan,
+  options: YeetRunOptions,
+  publishSteps: ReadonlyArray<RepoPlanStep>,
+  monitorSteps: ReadonlyArray<RepoPlanStep>,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  extras: Ref.Ref<YeetVerdictExtras>,
+  skipCommit: boolean,
+  preparedHead: GitObjectId
+) {
+  yield* requireOpenReadyProof(plan, options, preparedHead);
+  yield* runPublishPushPhase(plan.context, publishSteps, recorder, extras, preparedHead);
+  return yield* finishPublishWithPullRequest(plan, options, monitorSteps, recorder, extras, skipCommit);
 });
 
 /**
@@ -1443,10 +1550,12 @@ const submitDetachedReadyMonitor = Effect.fn("Yeet.submitDetachedReadyMonitor")(
   return pipe(A.head(results), O.flatMap(submittedProofJob));
 });
 
-// `yeet open` (hostedProof): no local gate and no head-install preflight. The
-// committed HEAD is pushed, then the shared tail opens or reuses the draft,
-// labels it, stamps its provenance footer and submits the readiness monitor.
-// No scheduler admission is taken, so a saturated host cannot hold it.
+// `yeet open` (hostedProof): no cheap gate and no head-install preflight. The
+// committed HEAD is pushed, then the shared tail opens or reuses the pull
+// request, labels it, stamps its provenance footer and submits the readiness
+// monitor. No scheduler admission is taken, so a saturated host cannot hold
+// it. Opening ready still needs the head's final-check receipt, where each
+// gate constrained compute could not run is a recorded `--skip`.
 const runHostedProofPublishPhases = Effect.fn("Yeet.runHostedProofPublishPhases")(function* (
   plan: RepoRunPlan,
   options: YeetRunOptions,
@@ -1466,8 +1575,16 @@ const runHostedProofPublishPhases = Effect.fn("Yeet.runHostedProofPublishPhases"
   | Git
 > {
   const preparedHead = yield* readPublishedHead(plan.context);
-  yield* runPublishPushPhase(plan.context, publishSteps, recorder, extras, preparedHead);
-  return yield* finishPublishWithPullRequest(plan, options, monitorSteps, recorder, extras, skipCommit);
+  return yield* pushAndFinishPublish(
+    plan,
+    options,
+    publishSteps,
+    monitorSteps,
+    recorder,
+    extras,
+    skipCommit,
+    preparedHead
+  );
 });
 
 /**
@@ -1536,8 +1653,16 @@ const runPushFirstPublishPhases = Effect.fn("Yeet.runPushFirstPublishPhases")(fu
     recorder,
     "yeet clean-HEAD install preflight failed before push."
   );
-  yield* runPublishPushPhase(plan.context, publishSteps, recorder, extras, preparedHead);
-  return yield* finishPublishWithPullRequest(plan, options, monitorSteps, recorder, extras, skipCommit);
+  return yield* pushAndFinishPublish(
+    plan,
+    options,
+    publishSteps,
+    monitorSteps,
+    recorder,
+    extras,
+    skipCommit,
+    preparedHead
+  );
 });
 
 /**
@@ -1564,6 +1689,8 @@ export const runPushFirstPublishPhasesForTesting = runPushFirstPublishPhases;
  * Refreshes the published branch, requires two ordered parents and compares the
  * tree with Git's merge result. A merge carrying extra edits fails closed.
  * Conflicted merges whose resolutions cannot be reproduced require verified reuse.
+ * A stack layer's merge of its parent's branch (`origin/<parent branch>`)
+ * counts as a base merge too.
  *
  * **Example** (Reference the merge guard)
  *
@@ -1576,7 +1703,8 @@ export const runPushFirstPublishPhasesForTesting = runPushFirstPublishPhases;
  * @since 0.0.0
  */
 export const assertMergeOnlyPublish = Effect.fn("Yeet.assertMergeOnlyPublish")(function* (
-  context: RepoRunContext
+  context: RepoRunContext,
+  stackLayer: O.Option<YeetStackLayerDecision> = O.none()
 ): Effect.fn.Return<void, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner | Git> {
   const refuse = () =>
     Effect.fail(
@@ -1607,7 +1735,14 @@ export const assertMergeOnlyPublish = Effect.fn("Yeet.assertMergeOnlyPublish")(f
     );
   const published = yield* resolveYeetRev(context.repoRoot, "FETCH_HEAD");
   const baseAncestor = yield* resolveYeetMergeBase(context.repoRoot, second.value, context.base);
-  if (first.value !== published || baseAncestor !== second.value) return yield* refuse();
+  // A stack layer may instead have merged its parent's branch.
+  const parentMerge =
+    baseAncestor !== second.value &&
+    O.isSome(stackLayer) &&
+    (yield* git
+      .isAncestor(context.repoRoot, second.value, `origin/${stackLayer.value.parentHeadRef}`)
+      .pipe(Effect.orElseSucceed(() => false)));
+  if (first.value !== published || (baseAncestor !== second.value && !parentMerge)) return yield* refuse();
   const merged = yield* git.mergeTree(context.repoRoot, first.value, second.value).pipe(Effect.option);
   const tree = yield* resolveYeetRev(context.repoRoot, "HEAD^{tree}");
   const clean = O.flatMap(merged, (result) => (result._tag === "clean" ? O.some(result.tree) : O.none()));
@@ -1697,8 +1832,10 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
   const reusableSkipCommit = yield* shouldSkipCommitForReusablePublish(plan.context, options);
   if (options.reuseVerified) yield* assertReusableVerifiedState(plan.context);
 
-  const freshness = yield* enforceBaseFreshness(plan.context, options);
-  if (options.pushOnly && !options.reuseVerified) yield* assertMergeOnlyPublish(plan.context);
+  // Resolved before any commit or push, so a refused --stack-on changes nothing.
+  const stackLayer = yield* resolveYeetPublishStackLayer(plan.context, options);
+  const freshness = yield* enforceBaseFreshness(plan.context, options, stackLayer);
+  if (options.pushOnly && !options.reuseVerified) yield* assertMergeOnlyPublish(plan.context, stackLayer);
   yield* Ref.update(extras, (state) => ({ ...state, baseFreshness: O.some(freshness) }));
   const [skipCommit, stash] = yield* preparePublishCommit(
     plan,
@@ -1727,7 +1864,7 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
     extras,
     skipCommit,
     committedAttempt
-  );
+  ).pipe(Effect.provideService(YeetPublishStackLayer, stackLayer));
 
   return yield* pipe(
     stash,
@@ -2774,7 +2911,8 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   }
   const startedAtEpochMillis = yield* Clock.currentTimeMillis;
   const attempt = yield* O.match(providedAttempt, {
-    onNone: () => Effect.flatMap(generateAttemptId(), (attemptId) => makeYeetAttempt(plan.context, options, attemptId)),
+    onNone: () =>
+      Effect.flatMap(generateYeetAttemptId(), (attemptId) => makeYeetAttempt(plan.context, options, attemptId)),
     onSome: Effect.succeed,
   });
   const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>(A.empty());
@@ -3091,6 +3229,7 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
     mode: options.mode,
     monitor: options.monitor,
     noEdit: options.noEdit,
+    openAs: yeetPullRequestOpenModeFor({ requested: options.openAs, stackLayer: O.isSome(options.stackOn) }),
     pr: options.pr,
     proveFirst: options.proveFirst,
     pushOnly: options.pushOnly,
@@ -3104,7 +3243,7 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
     return yield* emptyPlanResult(context);
   }
   if (options.merged) {
-    const attemptId = yield* generateAttemptId();
+    const attemptId = yield* generateYeetAttemptId();
     return yield* runMergedVerify(context, options, message, modeOptions, attemptId);
   }
 
@@ -3132,6 +3271,7 @@ export class BuildYeetRunPlanTestOptions extends S.Opaque<
     mode: YeetRunMode.pipe(S.withConstructorDefault(Effect.succeed("publish"))),
     monitor: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     noEdit: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    openAs: YeetPullRequestOpenMode.pipe(S.withConstructorDefault(Effect.succeed("ready" as const))),
     pr: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     proveFirst: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     pushOnly: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
@@ -3169,6 +3309,7 @@ export const buildYeetRunPlanForTesting = (
       mode: normalized.mode,
       monitor: normalized.monitor,
       noEdit: normalized.noEdit,
+      openAs: normalized.openAs,
       pr: normalized.pr,
       proveFirst: normalized.proveFirst,
       pushOnly: normalized.pushOnly,

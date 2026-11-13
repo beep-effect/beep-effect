@@ -392,6 +392,50 @@ Spawn rows now take the identity the spawned `gh` spends. That is the env token'
 
 Reverse: Revert the review-fix commit; the ledger falls back to scanning raw hours for calibration, keeps every latest reading, and judges the parcel by its oldest bucket.
 
+### GraphQL windows are reset-scoped instances, even for one token, 2026-11-13
+
+D2f supersedes the 2026-11-13 premise that GraphQL windows are per credential. After #3200 merged, the live ledger reported 108,330+ GraphQL points for 2026-11-13T05 and 184,766+ for T06, against a 5,000-point window. Raw rows show one process, with one token fingerprint and one operation, alternating between two GraphQL windows whose resets are 15 seconds apart: in T06 one window rose to about 3,500 and the other to about 940. A token can therefore read two concurrent GraphQL windows. The 11-12 split by credential matched that data by coincidence and is not a property of the API.
+
+Every GraphQL lane is now one reset-scoped window instance. A known fingerprint splits into instances by transitive reset proximity within five seconds, separately for idle and busy readings, exactly as unknown sources already did. Distinct fingerprints still never merge, and an unknown instance attaches only when exactly one known instance co-observes it (D2e). GraphQL windows never cross a reset. An instance contributes its peak in-hour `used`, minus its peak before the hour, or from zero when the window began inside the hour, or from its first in-hour reading as a lower bound. The peak replaces the last reading because a window's count only rises, so a lower late reading is a lagging response. Known REST credentials keep one continuous lane across resets, because core is shared per user.
+
+Latest transport readings, the in-process cache and the write throttles retain one entry per GraphQL window instance, keyed per credential, so reserve sees a depleted window even when the token read the healthier one last. A window entry keeps its most used reading (then the newest), because a lower late reading is a lagging response; a known REST entry keeps its newest reading, which may follow a reset. GraphQL entries expire at their reset like unknown instances; known REST entries keep age-based retention.
+
+Reserve judges the most constrained fresh (at most ten minutes old) live (reset after now) reading, whichever window or credential it reads. A live window's count only rises, so every such reading is a lower bound on its window, and per-lane newest-reading selection is unnecessary. This keeps the verdict stable when retention splits one reset-jittered window into two entries, which an independent review reproduced with resets drifting 0 to 8 seconds and a lower late reading.
+
+v3 writes its latest transport files as `latest/v3-transport-<key>.json`. A v2 writer scans every `transport-` file and consolidates all files of one credential into one, deleting the rest; the review reproduced it collapsing two v3 window files so that a restarted v3 reader saw only the healthy window. Outside that namespace, v2 cannot touch v3 files. v3 still reads v2's `transport-` files as extra reserve candidates and prunes both namespaces by age and expiry, but never rewrites v2 files.
+
+Rollups move to github-ledger-rollup/v3 and summaries to github-ledger-summary/v3. v1 and v2 rollups are legacy: with raw rows they recompute, and without them they stay explicit legacy-unrecomputable hours. Older summaries decode absent. A checkout that still runs v2 code rewrites v2 rollups for hours that it holds raw rows for, and v3 readers recompute those hours, so v3 readers stay correct while a mixed fleet upgrades.
+
+An independent per-window computation over the live raw rows matches the v3 report for 2026-11-13T05 (3,192) and T06 (4,529).
+
+Lane fix/github-ledger-graphql-windows
+
+Reverse: Revert this change; v2 rollups are still on disk and raw rows recompute any hour within retention
+
+### Ledger windows are per concurrent bucket, not per login, 2026-11-13
+
+Live ledger data on 2026-11-12 established that GraphQL windows are per credential, not per login. Aliases fold multiple credentials into one user key, and the archive also shows one PID using multiple credentials. A key therefore needs physical-window membership, not identity or PID alone.
+
+Rows carry an optional non-secret credential fingerprint: twelve lowercase hex digits of SHA-256, shared with tokenHashLabel. Missing keys decode to None; App installation identities remain unknown because their tokens rotate. Gh spawns fingerprint only their selected environment token, never gh's stored token.
+
+D2/D2a retain continuous sequences for known fingerprints. Distinct known GraphQL fingerprints never merge. D2e supersedes D2d's closest-reset attachment: an unknown reset instance attaches only when exactly one known GraphQL lane directly co-observes it. Co-observation requires both readings to be busy, within five seconds of reset agreement, and observed before the reset. With no candidate the instance remains its own inferred lane. With multiple candidates it is ambiguous: accounting omits its usage and marks every hour touched by its anchors as an inferred lower bound. Reserve keeps the ambiguous readings as their own candidate lane so depletion cannot be hidden. An unknown instance is never a union edge between known fingerprints. The single-credential upgrade still counts 110 rather than 210; an unknown producer switching between A and B with observations 100, 110, 200 and 210 now counts the known total 320 rather than 410. A closest-reset or tie choice cannot establish credential ownership, so omitting ambiguous usage is the conservative bound. For core, search and other shared resources, groups merge only when positive readings observed before their reset agree within five seconds. A known REST sequence can absorb an unknown instance only through such a co-observation.
+
+D2c supersedes D2b's fingerprint-free sub-lane continuation. Across the entire key, unknown busy anchors form window instances by transitive reset proximity within five seconds, irrespective of PID or sample source. Idle anchors form separate idle-only reset instances. Unknown instances never continue across a reset: the latest-ended-tail rule is removed. This prevents the cross-epoch merge bridge in which different PIDs inferred different successor assignments and whole-group merging retroactively joined concurrent windows.
+
+An inferred instance's hourly fleet contribution uses its earliest reset minus one hour as its window start. With an anchor before the hour, subtract the last before-hour reading from the last in-hour reading. Otherwise count the last reading from zero if the window began in the hour, exactly; if it began earlier, subtract the first in-hour reading and mark the result as a lower bound. Floor each rise at zero. Known fingerprint lanes retain their real-reset crossing lower bounds, but apply the same start-time test to the first window: count its first observation from zero when it began inside the hour, otherwise disclose the initial undercount as a lower bound.
+
+Unknown windows never carry a reset crossing, including when transitive jitter creates a cluster wider than five seconds. Inferred contributions set lanesInferred and render as `(inferred lanes)`; that marker is separate from the reset/partial-window lower-bound flag. Peak enrichment stays within a known lane. Nominal attribution and gh-spawn counts belong to the row's timestamp hour. Operation costs pair only within a PID, credential and compatible epoch, rejecting idle-to-busy jumps across incompatible resets.
+
+Latest samples retain one row per identity and credential source in both file and memory stores; legacy sample files remain one source. Latest transports, in-process readings and write throttles retain known fingerprints per key and credential. Unknown transport readings use one-second reset buckets, separately for idle and busy states. A neighbour check within five seconds reuses the lexicographically earliest retained key and consolidates all matching neighbours while retaining the newest observation. If no retained instance matches, an occupied reset-bucket stem is never reused: allocate the first unused numeric suffix, checking all retained keys. This preserves separate windows when successive jitter moves a retained reading away from the reset encoded in its original key. Suffixes participate in the same persistence, cache, throttle and expiry paths. Distinct reset windows from one PID therefore survive, including in the same second of observation. The live files, memory store, cache and throttle share this retention helper. At each retention cycle, expired unknown reset instances are removed from persistent state and the cache; associated throttle entries are retired too. Known sequences retain their ordinary age-based retention. Reserve uses the same partition as accounting, treats each unknown window instance as a candidate, selects its newest fresh live reading, and signals on the most constrained candidate.
+
+Summaries use github-ledger-summary/v2; v1 summaries decode absent. Rollups remain github-ledger-rollup/v2. Version-tagged reads distinguish current and legacy rollups. Raw-backed v1 hours recompute; without raw rows, an explicit legacy-unrecomputable result preserves request counts and marks invalid fleet/attribution estimates unknown. It never becomes an ordinary empty hour.
+
+The independent D2c per-instance replay matches the report for core and GraphQL in all four target hours. GraphQL T20–T23 is 1,176+, 1,204+, 1,539+, 2,130+; T20 falls inside the independent 1,176..1,216 bound. The earlier dated design note is retained as history. The exact R1–R8 reproductions, the D2a resource rules, and D2c's three hourly baselines and cross-epoch bridge are covered by regression tests.
+
+Lane fix/github-ledger-concurrent-buckets
+
+Reverse: Revert this implementation; preserve raw rows and legacy rollups before any recalculation or migration
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

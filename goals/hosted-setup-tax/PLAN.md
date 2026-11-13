@@ -108,7 +108,7 @@ with backward-compatible decode, and its ROUT-07):**
 
 **Close:** read the 7-day scorecard cohort, record the parity ledgers and per-lever attribution under
 `history/`, read Property Laws p95 against the HOST-05 gate (only after slice 4 has landed), then the
-reflection and `proposedCloseout`.
+reflection and the `closeout` record.
 
 ## Closeout Checklist
 
@@ -119,9 +119,13 @@ Before marking the packet closed:
    validate against `ReflectionFrontmatter`.
 2. Run `bun run beep lint reflection-artifacts`.
 3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase
-   statuses and a typed `proposedCloseout` with status `completed-retained`
-   and finalPullRequest. Keep `initiative.status` operative until completion
-   evidence verifies; do not close the external execution/session ledger from a proposal.
+   statuses. Once the final PR is open, run
+   `bun run beep goals set-status hosted-setup-tax completed-retained`: it writes
+   `closeout` naming that PR with the matching `initiative.status`, and the
+   commit ships in the final PR. After the merge,
+   `bun run beep goals completion refresh --slug hosted-setup-tax` must print verified;
+   name any red required check in a committed decision file
+   (`redAttribution`).
 
 ## Execution Notes
 
@@ -175,5 +179,33 @@ Reverse: Revert this PR; the packet returns to the TURB-01 slice 1 checkpoint.
 Lane docs/hosted-setup-tax-slice-2-merged · PR #3117
 
 Reverse: Revert #3117 (10ed12d4410) as recorded in the slice 2 decision file; this checkpoint is status only.
+
+### Baselines before d8326d5593 are not comparable (declaration-only builds), 2026-11-13
+
+declaration-only-builds PR 2 (#3208) merged at `d8326d55935849b4bf6fd29ec4ef80327efd6af8` (2026-11-13T05:44:35Z). Library builds are now `tsrs -p tsconfig.json --emitDeclarationOnly`: no Babel step, no `babel` script key, no JavaScript in a library dist.
+
+- Every `#build` cache entry (local, remote, CI) misses once from that commit. The first run after merging main rebuilds cold and is not a regression.
+- Any wall-time, cache-size or dist-size baseline this packet recorded before that commit is not comparable with a reading after it. Re-take the baseline before reading an after-number.
+- Measured by the owning goal (181 packages, serial, fastest of three): build 80.9 s to 32.9 s, dist 232.5 MB to 147.9 MB, compile unchanged (`goals/declaration-only-builds/research/2026-11-13-build-after.md`).
+- A lane editing generated files (package.json scripts, the catalog, turbo.json, the policy fingerprint, the cache baseline, the check-census baseline) merges main first and re-runs the generators.
+
+Lane chore/ci-goals-finish
+
+Reverse: Delete this checkpoint; it records a fact about main and changes no behaviour.
+
+### Check-lane baselines before 3e822c71c5 are not comparable (check once), 2026-11-13
+
+declaration-only-builds PR 3 (#3242, "check once") merged at `3e822c71c5` (2026-11-13). The root Turbo `check` task now depends on the package's own `build` for declaration-only packages, and their `beep:check` runs the declaration-only build command instead of a separate no-emit check.
+
+- Every `check` task hash misses once from that commit. The first run after merging main is cold and is not a regression.
+- Build minutes now sit inside the check lane: Heavy / Check and Heavy / Build start together on separate VMs, so on a cold hash both compute the same build. A check-lane wall-time or runner-minute baseline recorded before that commit is not comparable with a reading after it. Re-take the baseline before reading an after-number.
+- The cache-qualification and check-census baselines were re-recorded in that PR; a reading that compares against either must use the post-merge files.
+- Measured by the owning goal on main at `d8326d55935` (182 packages, serial): own-source check 35.4 s, a warm unchanged build 19.7 s; the saving from checking once is 15.7 s serial.
+- `TSRS_FAST` is a global Turbo input and part of the tsrs incremental state: record with each baseline whether it was set.
+- Follow-up this makes possible, not scheduled here: folding Heavy / Build into Heavy / Check (one fewer fleet VM per run), a heavy-pool-diet slice.
+
+Lane docs/check-lane-baseline-break
+
+Reverse: Delete this checkpoint; it records a fact about main and changes no behaviour.
 
 <!-- beep:decisions:end -->

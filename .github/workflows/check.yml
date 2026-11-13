@@ -17,9 +17,14 @@ permissions:
   contents: read
 
 env:
-  # The event payload is fixed across jobs and partial reruns. Never bind
-  # coverage identity or affected scope to a freshly fetched moving ref.
-  BEEP_COVERAGE_BASE_SHA: ${{ github.event.pull_request.base.sha || github.sha }}
+  # Event facts only. The coverage lanes (Test Plan's unit plan, Test Unit,
+  # Labs, Coverage Regression) pass --event-base: the CLI diffs a pull request
+  # against the first parent of the checked-out merge commit once HEAD is
+  # proven to be it (GITHUB_SHA, two parents, the second the PR head), keeps
+  # pull_request.base.sha when the proof fails, and uses GITHUB_SHA on push.
+  # GITHUB_SHA and the payload are fixed across jobs and partial reruns, so
+  # producers and comparator resolve one base. Never bind coverage identity
+  # or affected scope to a freshly fetched moving ref.
   # Classify the PR itself; HEAD remains the synthetic merge used for proof.
   BEEP_CI_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
   BEEP_CI_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -31,9 +36,17 @@ jobs:
     name: Change Profile
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    # Per-lane `<lane>_relevant` outputs gate jobs before runner allocation. Every guard reads
+    # `!= 'false'`, so a pinned binary that predates a lane (empty output) still runs it.
     outputs:
       docs_only: ${{ steps.profile.outputs.docs_only }}
       goals_only: ${{ steps.profile.outputs.goals_only }}
+      codegen_relevant: ${{ steps.profile.outputs.codegen_relevant }}
+      ecosystem_relevant: ${{ steps.profile.outputs.ecosystem_relevant }}
+      nix_relevant: ${{ steps.profile.outputs.nix_relevant }}
+      desktop_ipc_relevant: ${{ steps.profile.outputs.desktop_ipc_relevant }}
+      sast_relevant: ${{ steps.profile.outputs.sast_relevant }}
+      security_relevant: ${{ steps.profile.outputs.security_relevant }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -75,43 +88,39 @@ jobs:
 
   # Tier-2 admission (time-to-certainty B8, rulings 50–57). One hosted job
   # decides, before the reusable workflow is called, whether the heavy matrix
-  # runs (`run`), is called with `admitted: false` so every `Heavy / <lane>`
-  # context passes without work (`skip-satisfied`, docs-only diffs), or is held (`hold`:
-  # the caller job is skipped, the required contexts stay "Expected", and
-  # the PR is merge-blocked until the `ready-for-heavy` label lands). The
-  # decision is `bun run beep ci admission`, unit-tested in the CLI; the
-  # monitor loop evaluates the same function for its `heavy-not-admitted`
-  # settle wait, and heavy-admit.yml runs the same two jobs when the label
-  # is applied, so the label never restarts tier 1.
+  # runs (`run`) or is held (`hold`: the caller job is skipped, the required
+  # contexts stay "Expected", and the PR is merge-blocked until the
+  # `ready-for-heavy` label lands). The decision is `bun run beep ci admission`,
+  # unit-tested in the CLI; the monitor loop evaluates the same function for
+  # its `heavy-not-admitted` settle wait, and heavy-admit.yml runs the same two
+  # jobs when the label is applied, so the label never restarts tier 1.
+  #
+  # A documentation-only diff from this repository has nothing to decide: the
+  # job is skipped before a runner is requested, and `heavy` below calls the
+  # reusable workflow with `admitted: false` straight from Change Profile, so
+  # every `Heavy / <lane>` context still reports. A fork keeps the full
+  # decision (its label rules apply to documentation too), and a failed Change
+  # Profile skips this job, which leaves the heavy contexts "Expected".
   admission:
     name: Heavy Admission
     needs: [change-profile]
+    if: ${{ needs.change-profile.result == 'success' && !(needs.change-profile.outputs.docs_only == 'true' && github.event.pull_request.head.repo.full_name == github.repository) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
       actions: write
     outputs:
-      verdict: ${{ steps.decide.outputs.verdict || steps.docs.outputs.verdict }}
-      admitted: ${{ steps.decide.outputs.admitted || steps.docs.outputs.admitted }}
-      docs_only: ${{ steps.decide.outputs.docs_only || steps.docs.outputs.docs_only }}
+      verdict: ${{ steps.decide.outputs.verdict }}
+      admitted: ${{ steps.decide.outputs.admitted }}
+      docs_only: ${{ steps.decide.outputs.docs_only }}
       route_skips: ${{ steps.decide.outputs.route_skips }}
       route_receipt: ${{ steps.decide.outputs.route_receipt }}
       # heavy.yml@main no longer declares Coverage Regression, so this is a
       # constant until COVE-08 makes that job name a literal and deletes it.
       legacy_coverage: 'false'
     steps:
-      - name: Satisfy documentation-only admission
-        id: docs
-        if: needs.change-profile.outputs.docs_only == 'true' && github.event.pull_request.head.repo.full_name == github.repository
-        shell: bash
-        run: |
-          echo "verdict=skip-satisfied" >> "$GITHUB_OUTPUT"
-          echo "admitted=false" >> "$GITHUB_OUTPUT"
-          echo "docs_only=true" >> "$GITHUB_OUTPUT"
-          echo "Documentation-only diff: no dependency installation or heavy proof needed."
       - name: Checkout repository
-        if: steps.docs.outputs.verdict != 'skip-satisfied'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
@@ -119,19 +128,17 @@ jobs:
           persist-credentials: false
 
       - name: Fetch pull request base
-        if: steps.docs.outputs.verdict != 'skip-satisfied' && github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request'
         shell: bash
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       - name: Setup monorepo CI
-        if: steps.docs.outputs.verdict != 'skip-satisfied'
         uses: ./.github/actions/setup-monorepo-ci
         with:
           free-disk: "false"
 
       - name: Decide heavy admission
-        if: steps.docs.outputs.verdict != 'skip-satisfied'
         id: decide
         shell: bash
         run: bun run beep ci admission --github-output
@@ -140,6 +147,13 @@ jobs:
       # head's label-triggered `Heavy Admit` matrix may still be queued or
       # running: concurrency groups never cross workflows, so cancel those
       # superseded runs explicitly instead of paying seven heavy lanes twice.
+      # A later label's run can also wait `pending` in the admitting group
+      # behind one that is executing. The branch's runs are listed once
+      # (paginated) and filtered to the unfinished ones here, so a pass costs
+      # one call on the shared GITHUB_TOKEN budget; after any cancel the list
+      # is read once more, because cancelling the executing run promotes the
+      # one waiting behind it. Cancelling only saves EC2 time, so a listing
+      # that fails is a warning and never fails admission.
       - name: Cancel superseded Heavy Admit runs
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         shell: bash
@@ -151,31 +165,53 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
-          for status in queued in_progress; do
+          # This pull request's unfinished Heavy Admit runs for an older head, from one listing.
+          superseded_runs() {
             gh api --method GET --paginate \
               "repos/${GH_REPO}/actions/workflows/heavy-admit.yml/runs" \
-              -f branch="$HEAD_REF" -f status="$status" -f per_page=100 \
+              -f branch="$HEAD_REF" -f per_page=100 </dev/null \
               | jq --arg repo "$GH_REPO" --arg sha "$HEAD_SHA" --argjson pr "$PR_NUMBER" '
-                  .workflow_runs[]
+                  .workflow_runs[]?
+                  | select(.status | IN("pending", "waiting", "requested", "queued", "in_progress"))
                   | select(.head_repository.full_name == $repo)
                   | select(any(.pull_requests[]?; .number == $pr))
                   | select(.head_sha | strings | test("^[0-9a-f]{40}$"))
                   | select(.head_sha != $sha)
-                  | .id | select(type == "number")' \
-              | while read -r run_id; do
-                  [[ -n "$run_id" ]] || continue
-                  echo "cancelling superseded Heavy Admit run $run_id"
-                  gh run cancel "$run_id" || true
-                done
-          done
+                  | .id | select(type == "number")'
+          }
+          cancelled=0
+          cancel_superseded() {
+            local runs run_id
+            if ! runs="$(superseded_runs)"; then
+              echo "::warning::Could not list this branch's Heavy Admit runs; a superseded run may keep running."
+              return 0
+            fi
+            while read -r run_id; do
+              [[ -n "$run_id" ]] || continue
+              echo "cancelling superseded Heavy Admit run $run_id"
+              gh run cancel "$run_id" </dev/null || true
+              cancelled=$((cancelled + 1))
+            done <<< "$runs"
+          }
+          cancel_superseded
+          # Cancelling the executing run promotes the one waiting `pending` behind it.
+          if (( cancelled > 0 )); then
+            cancel_superseded
+          fi
 
   heavy:
     name: Heavy
-    needs: [admission]
+    needs: [change-profile, admission]
     # `hold` skips the caller so no `Heavy / *` check run exists and the
     # ruleset keeps the PR blocked; never pass `hold` through as
     # `admitted: false`, which would report every lane as passing without work.
-    if: ${{ needs.admission.outputs.verdict == 'run' || needs.admission.outputs.verdict == 'skip-satisfied' }}
+    # The last arm is the documentation-only diff whose admission job was
+    # skipped above: the same three conditions, and `admitted` below is false
+    # because no verdict exists. `!cancelled()` lets the caller start although
+    # a needed job was skipped, so the verdict arms require a successful
+    # admission themselves: a job that fails after its `decide` step (the
+    # cancellation step below it) still publishes the verdict that step wrote.
+    if: ${{ !cancelled() && ((needs.admission.result == 'success' && (needs.admission.outputs.verdict == 'run' || needs.admission.outputs.verdict == 'skip-satisfied')) || (needs.admission.result == 'skipped' && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true' && github.event.pull_request.head.repo.full_name == github.repository)) }}
     permissions:
       contents: read
       # GitHub validates every nested job, including the gated producer.
@@ -188,9 +224,11 @@ jobs:
       # excludes start, then complete skip-satisfied with this receipt in their job summary.
       route_skips: ${{ needs.admission.outputs.route_skips }}
       route_receipt: ${{ needs.admission.outputs.route_receipt }}
-  # Repo Sanity starts for every diff: a packet-prose-only (goals_only) diff
-  # skips the lane body but still runs the private home path law, because the
-  # public repository must not record an absolute home path in any diff.
+  # Repo Sanity starts for every diff and is the required gate for documentation
+  # too. A docs_only diff (prose, packet files, changesets) skips the lane body
+  # and runs only what such a diff can fail: the private home path law (the
+  # public repository must not record an absolute home path) and the changeset
+  # checks. Docs Policy runs the knowledge and packet policy on the same diffs.
   verify:
     name: Repo Sanity
     # Admitted after the test shards (decision of 2026-11-10 in goals/ci-lane-economics). GitHub
@@ -223,64 +261,70 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
-      - name: Fetch beep CI binary
-        uses: ./.github/actions/fetch-beep-ci
-
       - name: Determine lane execution
         id: lane-gate
         shell: bash
+        env:
+          DOCS_ONLY: ${{ needs.change-profile.outputs.docs_only }}
         run: |
           set -euo pipefail
           should_run=true
-          home_paths_only=false
-          eval "$(beep ci change-profile)"
-          # Docs-only diffs (Heavy admission's path rule) give these lanes
-          # nothing to prove. Repo Sanity validates `.changeset/*.md`, which that
-          # rule counts as documentation, so only packet prose suppresses it.
-          skip_profile="$docs_only"
-          if [[ "${{ env.BEEP_CI_LANE_ID }}" == "repo-sanity" ]]; then
-            skip_profile="$goals_only"
-          fi
-          if [[ "$skip_profile" == "true" ]]; then
+          docs_path=false
+          skills_lock=true
+          # Job-level guards already skip Codegen and Ecosystem on docs_only
+          # diffs and on a false `<lane>_relevant` output. Repo Sanity is the
+          # required gate for documentation diffs, so it keeps a short path.
+          if [[ "${{ env.BEEP_CI_LANE_ID }}" == "repo-sanity" && "$DOCS_ONLY" == "true" ]]; then
             should_run=false
-            # Packet prose still gets the private home path law.
-            if [[ "${{ env.BEEP_CI_LANE_ID }}" == "repo-sanity" ]]; then
-              home_paths_only=true
-            fi
+            docs_path=true
           fi
-          if [[ "${{ env.BEEP_CI_LANE_ID }}" == "codegen" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            base_ref="origin/${GITHUB_BASE_REF:-main}"
-            if ! git rev-parse --verify "$base_ref" >/dev/null 2>&1; then
-              git fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-            fi
-            changed_files="$(git diff --name-only "${base_ref}...HEAD")"
-            # Root dependency resolution changes the resolved generator or formatter, so these files are drift inputs.
-            if ! grep -Eq '(^packages/drivers/(acp|ecfr|govinfo|runpod)/(openapi[^/]*\.json|spec/|scripts/|src/_generated/)|^packages/tooling/library/codegen-kit/|^packages/tooling/tool/cli/src/commands/Ci/CiLane\.ts$|^packages/_internal/db-admin/drizzle/|^apps/professional-desktop/(package\.json|scripts/sync-migration-bundle\.ts|src/runtime/Migrations\.gen\.ts)$|^(package\.json|bun\.lock)$)' <<< "$changed_files"; then
-              should_run=false
-            fi
-          fi
-          # Ecosystem Contracts type-tests and bundle-probes the family against
-          # effect and drizzle-orm only (src imports no workspace package), so
-          # its inputs are the family, the resolved toolchain and the lane body.
-          if [[ "${{ env.BEEP_CI_LANE_ID }}" == "ecosystem" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            changed_files="$(git diff --name-only "origin/${GITHUB_BASE_REF:-main}...HEAD")"
-            if ! grep -Eq '(^packages/ecosystem/|^packages/tooling/tool/cli/src/commands/Ci/CiLane\.ts$|^\.github/workflows/check\.yml$|^(package\.json|bun\.lock|tsconfig\.base\.json|\.bun-version)$)' <<< "$changed_files"; then
-              should_run=false
-            fi
+          # Path gates for lanes whose inputs are a few roots. The expressions
+          # live in the change-profile pattern data (`lanes`), the same rows the
+          # pinned binary turns into `<lane>_relevant`; an absent row runs the
+          # lane. Renames list both sides (--no-renames), a superset.
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            case "${{ env.BEEP_CI_LANE_ID }}" in
+              codegen|ecosystem)
+                base_ref="origin/${GITHUB_BASE_REF:-main}"
+                if ! git rev-parse --verify "$base_ref" >/dev/null 2>&1; then
+                  git fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+                fi
+                pattern="$(jq -r --arg lane "${{ env.BEEP_CI_LANE_ID }}" '.lanes[$lane] // empty' \
+                  packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json)"
+                changed_files="$(git diff --name-only --no-renames "${base_ref}...HEAD")"
+                if [[ -n "$pattern" ]] && ! grep -Eq "$pattern" <<< "$changed_files"; then
+                  should_run=false
+                fi
+                ;;
+              repo-sanity)
+                # The skills lock step (`beep skills update --check --offline`) of the lane
+                # body, on the documentation path too: skipped only when the pull
+                # request changes none of the `skills` row's paths. An absent row,
+                # an unreadable diff and every push keep it.
+                base_ref="origin/${GITHUB_BASE_REF:-main}"
+                pattern="$(jq -r '.skills // empty' \
+                  packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json)"
+                if [[ -n "$pattern" ]] && changed_files="$(git diff --name-only --no-renames "${base_ref}...HEAD")" \
+                  && ! grep -Eq "$pattern" <<< "$changed_files"; then
+                  skills_lock=false
+                fi
+                ;;
+            esac
           fi
 
           echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
-          echo "home_paths_only=$home_paths_only" >> "$GITHUB_OUTPUT"
+          echo "docs_path=$docs_path" >> "$GITHUB_OUTPUT"
+          echo "skills_lock=$skills_lock" >> "$GITHUB_OUTPUT"
 
       - name: Setup monorepo CI
-        if: steps.lane-gate.outputs.should_run == 'true' || steps.lane-gate.outputs.home_paths_only == 'true'
+        if: steps.lane-gate.outputs.should_run == 'true' || steps.lane-gate.outputs.docs_path == 'true'
         uses: ./.github/actions/setup-monorepo-ci
         with:
-          # The law-only goals_only path reads tracked files: it frees no disk
-          # and exports no application secrets. The full lane keeps both.
-          free-disk: ${{ steps.lane-gate.outputs.home_paths_only == 'true' && 'false' || 'true' }}
+          # The documentation path reads tracked files: it frees no disk and
+          # exports no application secrets. The full lane keeps both.
+          free-disk: ${{ steps.lane-gate.outputs.docs_path == 'true' && 'false' || 'true' }}
           free-disk-min-gib: "64"
-          app-secrets: ${{ steps.lane-gate.outputs.home_paths_only == 'true' && 'false' || 'true' }}
+          app-secrets: ${{ steps.lane-gate.outputs.docs_path == 'true' && 'false' || 'true' }}
           database-url: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
           database-url-unpooled: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
           email-resend-api-key: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
@@ -290,9 +334,17 @@ jobs:
           security-trusted-origins: ${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}
           liveblocks-secret-key: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
 
-      - name: Check private home paths
-        if: steps.lane-gate.outputs.home_paths_only == 'true'
-        run: bun run beep laws private-home-paths --check
+      - name: Check documentation sanity
+        if: steps.lane-gate.outputs.docs_path == 'true'
+        env:
+          SKILLS_LOCK: ${{ steps.lane-gate.outputs.skills_lock }}
+        run: |
+          set -euo pipefail
+          if [[ "$SKILLS_LOCK" == "false" ]]; then
+            bun run beep ci lane repo-sanity --docs-only --skip-skills-lock
+          else
+            bun run beep ci lane repo-sanity --docs-only
+          fi
 
       - name: Verify regenerate merge-driver bootstrap
         if: env.BEEP_CI_LANE_ID == 'codegen' && steps.lane-gate.outputs.should_run == 'true'
@@ -340,7 +392,9 @@ jobs:
               run_lane ci lane "${{ env.BEEP_CI_LANE_ID }}"
               ;;
             repo-sanity)
-              if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+              if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "${{ steps.lane-gate.outputs.skills_lock }}" == "false" ]]; then
+                run_lane ci lane repo-sanity --changeset-status --skip-skills-lock
+              elif [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
                 run_lane ci lane repo-sanity --changeset-status
               else
                 run_lane ci lane repo-sanity
@@ -358,7 +412,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Skip lane
-        if: steps.lane-gate.outputs.should_run != 'true'
+        if: steps.lane-gate.outputs.should_run != 'true' && steps.lane-gate.outputs.docs_path != 'true'
         run: echo "Skipping ${{ env.BEEP_CI_LANE_NAME }} for this change set."
 
       - name: Warn when the intended runner image is stale
@@ -368,10 +422,60 @@ jobs:
             echo "::warning::Runner image provenance is stale or invalid. See docs/runbooks/aws-cost-operations.md before the next attended image refresh."
           fi
 
+  # Knowledge, packet and Markdown policy for documentation-only pull requests
+  # (route-soundness-repair ROUT-02, exploration ruling D8). A docs_only diff
+  # never starts Heavy / Lint Policy, which runs the same tasks for code pull
+  # requests and main pushes. The task set and its justified exclusions live in
+  # packages/tooling/tool/cli/src/commands/Ci/DocsPolicy.ts, and a completeness
+  # test derives the obligation from turbo.json inputs. The job waits only on
+  # Change Profile: a docs_only run allocates no test shards to queue behind.
+  # Not a required context; Repo Sanity keeps the home path law and the
+  # changeset checks merge-blocking on the same diffs.
+  docs-policy:
+    name: Docs Policy
+    needs: [change-profile]
+    if: ${{ !cancelled() && needs.change-profile.outputs.docs_only == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      BEEP_CI_LANE_ID: docs-policy
+      BEEP_CI_LANE_NAME: Docs Policy
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Fetch pull request base
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+
+      # Tracked files and git history only: no disk cleanup, no application secrets.
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+
+      - name: Install typos
+        uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
+        with:
+          tool: typos-cli@1.50.3
+
+      - name: Run docs policy lane
+        env:
+          # The knowledge doctor's seal guard admits a baseline change only on the
+          # mint App's pull request (C8 condition i), as in Heavy / Lint Policy.
+          KNOWLEDGE_MINT_APP_SLUG: ${{ vars.KNOWLEDGE_MINT_APP_SLUG }}
+        run: bun run beep ci lane docs-policy --base "origin/${GITHUB_BASE_REF:-main}"
+
   ecosystem:
     name: Ecosystem Contracts
     needs: [change-profile, test-plan, admission]
-    if: ${{ !cancelled() && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only != 'true' }}
+    if: ${{ !cancelled() && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only != 'true' && needs.change-profile.outputs.ecosystem_relevant != 'false' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
@@ -384,7 +488,7 @@ jobs:
   codegen:
     name: Codegen Drift
     needs: [change-profile, test-plan, admission]
-    if: ${{ !cancelled() && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only != 'true' }}
+    if: ${{ !cancelled() && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only != 'true' && needs.change-profile.outputs.codegen_relevant != 'false' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
@@ -490,7 +594,7 @@ jobs:
             return "$status"
           }
 
-          shape_args=(--base "$BEEP_COVERAGE_BASE_SHA")
+          shape_args=(--event-base)
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             shape_args+=(--affected)
           fi
@@ -649,11 +753,32 @@ jobs:
             infra/r2-cache/adapter.sh stop-ci
           fi
 
+  # Required-context aggregates (Lint, Test Unit, Heavy / Test Integration,
+  # Property Laws). Each is skipped at job level, before it requests a runner,
+  # only in a state whose verdict is already a pass, and GitHub reports a
+  # job-level skip as a passing required check (#3215; goals/ci-lane-economics,
+  # 2026-11-13):
+  # - documentation diff: Change Profile succeeded and reported `docs_only`, the
+  #   shard matrix was skipped (its own guard reads the same output) and, for
+  #   the planned lanes, Test Plan succeeded and planned nothing;
+  # - skip on success: Change Profile succeeded and reported a code diff, every
+  #   job the aggregate's script checks succeeded, and the shard matrix
+  #   concluded `success`, which GitHub reports only when every leg of the
+  #   matrix the plan expanded passed. The queue hop after the last shard goes.
+  # Every other state runs the aggregate and its script decides: a failed,
+  # cancelled or skipped shard matrix, a failed or skipped Change Profile, Test
+  # Plan or Heavy Admission, an unknown classification. `!cancelled()` makes the
+  # condition a status function, so GitHub evaluates it whatever the needs
+  # concluded instead of skipping the job on an implicit `success()`, and a
+  # cancelled run reports the aggregate `cancelled`, never `skipped`.
+  # ci-docs-job-admission.test.ts runs every combination of the needs results
+  # through the condition and the script; it fails if a shard that did not
+  # succeed could leave an aggregate skipped or the verdict could change.
   lint:
     name: Lint
     timeout-minutes: 5
     needs: [change-profile, lint-shard]
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && !(needs.change-profile.result == 'success' && ((needs.change-profile.outputs.docs_only == 'true' && needs.lint-shard.result == 'skipped') || (needs.change-profile.outputs.docs_only == 'false' && needs.lint-shard.result == 'success'))) }}
     runs-on: ubuntu-24.04
     steps:
       - name: Require every Lint shard
@@ -677,12 +802,22 @@ jobs:
   # out a partition with selected tasks, and Coverage Regression requires
   # evidence from every partition with affected owners, so a partition that
   # was not allocated is a stated skip and never a silent pass.
+  #
+  # Shard overflow (goals/ci-lane-economics, 2026-11-13): once the plan is
+  # published, `beep ci shard-overflow` may send planned Test Unit partitions to
+  # the self-hosted overflow pool. It routes only while the repository variable
+  # BEEP_SHARD_OVERFLOW is `on`, the event is a push or a same-repository pull
+  # request, the hosted queue predicts more than a ten-minute wait, and only
+  # into free overflow VMs. A skipped or failed routing step leaves the outputs
+  # below at "every partition hosted".
   test-plan:
     name: Test Plan
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
+      # The routing step lists this repository's queued and running jobs.
+      actions: read
     env:
       # Every partition of each lane, in table order (CiLanePartitions.ts).
       ALL_TEST_UNIT_PARTITIONS: '["repo-cli-1", "repo-cli-2", "repo-cli-3", "repo-cli-4", "repo-cli-5", "repo-cli-6", "repo-cli-7", "repo-cli-8", "repo-cli-9", "law-practice-1", "law-practice-2", "law-practice-3", "law-practice-4", "law-practice-5", "law-practice-6", "law-practice-7", "law-practice-8", "unit-a", "unit-b", "unit-c", "unit-d", "unit-e", "unit-f", "unit-g"]'
@@ -690,9 +825,11 @@ jobs:
     outputs:
       test_unit: ${{ steps.plan.outputs.test_unit }}
       test_integration: ${{ steps.plan.outputs.test_integration }}
+      test_unit_hosted: ${{ steps.split.outputs.test_unit_hosted }}
+      test_unit_overflow: ${{ steps.split.outputs.test_unit_overflow }}
     steps:
       - name: Checkout repository
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || vars.BEEP_SHARD_OVERFLOW == 'on'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
@@ -706,7 +843,7 @@ jobs:
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       - name: Fetch beep CI binary
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || vars.BEEP_SHARD_OVERFLOW == 'on'
         uses: ./.github/actions/fetch-beep-ci
 
       # Classified here as well so the plan does not wait for Change Profile:
@@ -727,7 +864,7 @@ jobs:
         id: unit
         if: github.event_name == 'pull_request' && steps.profile.outputs.docs_only != 'true'
         shell: bash
-        run: bun run beep ci lane test-unit --plan-partitions --affected --base "$BEEP_COVERAGE_BASE_SHA"
+        run: bun run beep ci lane test-unit --plan-partitions --affected --event-base
 
       - name: Plan Test Integration partitions
         id: integration
@@ -766,10 +903,57 @@ jobs:
           publish test_unit "$test_unit" "$ALL_TEST_UNIT_PARTITIONS"
           publish test_integration "$test_integration" "$ALL_TEST_INTEGRATION_PARTITIONS"
 
+      # `--callee local` while check.yml calls ./.github/workflows/shard-overflow.yml:
+      # the overflow runner group admits that file only at refs/heads/main, so
+      # the command routes main pushes only. The cutover to the @main reference
+      # changes the call and this flag together (ci-runner-security.test.ts).
+      - name: Route shard overflow
+        id: overflow
+        if: vars.BEEP_SHARD_OVERFLOW == 'on' && steps.plan.outputs.test_unit != '[]'
+        continue-on-error: true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BEEP_CI_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          BEEP_SHARD_OVERFLOW: ${{ vars.BEEP_SHARD_OVERFLOW }}
+          BEEP_SHARD_OVERFLOW_WAIT_SECONDS: ${{ vars.BEEP_SHARD_OVERFLOW_WAIT_SECONDS }}
+          BEEP_SHARD_OVERFLOW_POOL_SIZE: ${{ vars.BEEP_SHARD_OVERFLOW_POOL_SIZE }}
+          PLANNED_TEST_UNIT: ${{ steps.plan.outputs.test_unit }}
+        run: beep ci shard-overflow --partitions "$PLANNED_TEST_UNIT" --callee local
+
+      # The two Test Unit halves hold the plan exactly once, by construction:
+      # the routed split is published only when it partitions the plan, and
+      # anything else (overflow off, nothing routed, a routing step that failed
+      # or wrote half its outputs) publishes every partition hosted. A
+      # successful Test Plan therefore always carries an exact split, which the
+      # Test Unit aggregate's skip on success relies on.
+      - name: Settle the Test Unit split
+        id: split
+        shell: bash
+        env:
+          PLANNED_TEST_UNIT: ${{ steps.plan.outputs.test_unit }}
+          ROUTED_HOSTED: ${{ steps.overflow.outputs.test_unit_hosted }}
+          ROUTED_OVERFLOW: ${{ steps.overflow.outputs.test_unit_overflow }}
+        run: |
+          set -euo pipefail
+          hosted="$PLANNED_TEST_UNIT"
+          overflow='[]'
+          if jq --exit-status --null-input --argjson plan "$PLANNED_TEST_UNIT" --argjson hosted "${ROUTED_HOSTED:-null}" --argjson overflow "${ROUTED_OVERFLOW:-null}" \
+            '($hosted | type) == "array" and ($overflow | type) == "array" and ($hosted + $overflow | sort) == ($plan | sort) and ($hosted + $overflow | unique | length) == ($plan | length)' > /dev/null 2>&1; then
+            hosted="$ROUTED_HOSTED"
+            overflow="$ROUTED_OVERFLOW"
+          fi
+          echo "test_unit_hosted=$(jq --compact-output . <<<"$hosted")" >> "$GITHUB_OUTPUT"
+          echo "test_unit_overflow=$(jq --compact-output . <<<"$overflow")" >> "$GITHUB_OUTPUT"
+
+  # The hosted half of the plan. Every partition the overflow step did not
+  # route runs here; PLANNED_PARTITIONS stays the whole plan, so each shard's
+  # unplanned-partition check still sees every partition of the run.
   test-unit-shard:
     name: Test Unit (${{ matrix.partition }})
     needs: [change-profile, test-plan]
-    if: needs.change-profile.outputs.docs_only != 'true' && needs.test-plan.outputs.test_unit != '[]'
+    if: needs.change-profile.outputs.docs_only != 'true' && needs.test-plan.outputs.test_unit_hosted != '[]'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
@@ -778,7 +962,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        partition: ${{ fromJSON(needs.test-plan.outputs.test_unit) }}
+        partition: ${{ fromJSON(needs.test-plan.outputs.test_unit_hosted) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -861,7 +1045,7 @@ jobs:
             return "$status"
           }
 
-          shape_args=(--base "$BEEP_COVERAGE_BASE_SHA")
+          shape_args=(--event-base)
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             shape_args+=(--affected)
           fi
@@ -920,27 +1104,72 @@ jobs:
             infra/r2-cache/adapter.sh stop-ci
           fi
 
+  # The overflow half of the plan: the same shard on a `beep-shard-overflow`
+  # VM, through shard-overflow.yml, reported as `Test Unit (<partition>) /
+  # Overflow`. Empty unless Test Plan routed partitions, which it never does
+  # for a fork's pull request; the condition repeats that guard and
+  # shard-overflow.yml repeats it again at main. Every artifact a hosted shard
+  # uploads is uploaded under the same name.
+  test-unit-overflow:
+    name: Test Unit (${{ matrix.partition }})
+    needs: [change-profile, test-plan]
+    if: needs.change-profile.outputs.docs_only != 'true' && needs.test-plan.outputs.test_unit_overflow != '[]' && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        partition: ${{ fromJSON(needs.test-plan.outputs.test_unit_overflow) }}
+    uses: ./.github/workflows/shard-overflow.yml
+    secrets: inherit
+    with:
+      partition: ${{ matrix.partition }}
+      planned_partitions: ${{ needs.test-plan.outputs.test_unit }}
+      docs_only: ${{ needs.change-profile.outputs.docs_only }}
+
   # Fails on any shard failure or cancellation and on a plan or classification
   # failure. A skipped shard matrix passes only as a stated skip: a
   # documentation-only diff, or a plan that selected no Test Unit partition.
+  # The hosted and overflow halves must together hold the plan exactly once,
+  # and each half passes or was never allocated. Skipped at job level (a
+  # passing required check) only when that verdict is already a pass: a
+  # documentation diff with both halves skipped, or a code diff whose every
+  # half either succeeded or held nothing and was skipped. Test Plan's
+  # "Settle the Test Unit split" step makes a successful Test Plan carry an
+  # exact split, so the halves cannot drop or repeat a partition.
   test-unit:
     name: Test Unit
     timeout-minutes: 5
-    needs: [change-profile, test-plan, test-unit-shard]
-    if: ${{ !cancelled() }}
+    needs: [change-profile, test-plan, test-unit-shard, test-unit-overflow]
+    if: ${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.test-plan.result == 'success' && ((needs.change-profile.outputs.docs_only == 'true' && needs.test-plan.outputs.test_unit == '[]' && needs.test-unit-shard.result == 'skipped' && needs.test-unit-overflow.result == 'skipped') || (needs.change-profile.outputs.docs_only == 'false' && needs.test-plan.outputs.test_unit != '[]' && ((needs.test-plan.outputs.test_unit_hosted != '[]' && needs.test-unit-shard.result == 'success') || (needs.test-plan.outputs.test_unit_hosted == '[]' && needs.test-unit-shard.result == 'skipped')) && ((needs.test-plan.outputs.test_unit_overflow != '[]' && needs.test-unit-overflow.result == 'success') || (needs.test-plan.outputs.test_unit_overflow == '[]' && needs.test-unit-overflow.result == 'skipped'))))) }}
     runs-on: ubuntu-24.04
     steps:
       - name: Require every planned Test Unit shard
         shell: bash
         env:
           PLANNED_PARTITIONS: ${{ needs.test-plan.outputs.test_unit }}
+          HOSTED_PARTITIONS: ${{ needs.test-plan.outputs.test_unit_hosted }}
+          OVERFLOW_PARTITIONS: ${{ needs.test-plan.outputs.test_unit_overflow }}
         run: |
           set -euo pipefail
           [[ "${{ needs.change-profile.result }}" == "success" ]]
           [[ "${{ needs.test-plan.result }}" == "success" ]]
           # An empty or non-array plan is a failed plan, never an empty one.
           planned="$(jq --exit-status --raw-output 'if type == "array" then (if length == 0 then "none" else "some" end) else error("plan is not an array") end' <<<"$PLANNED_PARTITIONS")"
-          case "${{ needs.change-profile.outputs.docs_only }}:${planned}:${{ needs.test-unit-shard.result }}" in
+          # The hosted and overflow halves hold every planned partition exactly once.
+          jq --exit-status --null-input --argjson plan "$PLANNED_PARTITIONS" --argjson hosted "$HOSTED_PARTITIONS" --argjson overflow "$OVERFLOW_PARTITIONS" \
+            '($hosted + $overflow | sort) == ($plan | sort) and ($hosted + $overflow | unique | length) == ($plan | length)' > /dev/null
+          # The hosted shards' result, as before overflow, unless Test Plan routed partitions: then
+          # the routed half must pass, and an empty hosted half was never allocated.
+          shards="${{ needs.test-unit-shard.result }}"
+          if [[ "$(jq --raw-output 'length' <<<"$OVERFLOW_PARTITIONS")" == "0" ]]; then
+            [[ "${{ needs.test-unit-overflow.result }}" == "skipped" ]] || shards=failure
+          elif [[ "${{ needs.test-unit-overflow.result }}" != "success" ]]; then
+            shards=failure
+          elif [[ "$(jq --raw-output 'length' <<<"$HOSTED_PARTITIONS")" == "0" && "$shards" == "skipped" ]]; then
+            shards=success
+          fi
+          case "${{ needs.change-profile.outputs.docs_only }}:${planned}:${shards}" in
             true:*:skipped) echo "Documentation-only diff: Test Unit shards were not allocated." ;;
             false:none:skipped) echo "The plan selected no Test Unit partition for this change set; Coverage Regression requires evidence from every partition with affected owners." ;;
             false:some:success) echo "Every planned Test Unit shard passed: $(jq --raw-output 'join(" ")' <<<"$PLANNED_PARTITIONS")" ;;
@@ -1079,7 +1308,7 @@ jobs:
     name: Heavy / Test Integration
     timeout-minutes: 5
     needs: [admission, change-profile, test-plan, test-integration-shard]
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.test-plan.result == 'success' && ((needs.change-profile.outputs.docs_only == 'true' && needs.test-plan.outputs.test_integration == '[]' && needs.test-integration-shard.result == 'skipped') || (needs.admission.result == 'success' && needs.change-profile.outputs.docs_only == 'false' && contains(needs.test-plan.outputs.test_integration, '"int-rest"') && needs.test-integration-shard.result == 'success'))) }}
     runs-on: ubuntu-24.04
     steps:
       - name: Require every planned Test Integration partition
@@ -1104,8 +1333,12 @@ jobs:
     # legacy producer. After main retires that producer this becomes the exact
     # existing coverage context, without a ruleset edit or duplicate check name.
     name: ${{ needs.admission.outputs.legacy_coverage == 'true' && 'Coverage Artifact Migration' || 'Heavy / Coverage Regression' }}
-    needs: [admission, test-unit, labs]
-    if: ${{ !cancelled() && needs.admission.outputs.docs_only != 'true' }}
+    # The Test Unit halves are read directly: a Test Unit aggregate skipped on
+    # success (see the aggregates above) is a pass only beside a successful Test
+    # Plan whose hosted and overflow halves each succeeded or, holding nothing,
+    # were never allocated.
+    needs: [change-profile, admission, test-plan, test-unit, test-unit-shard, test-unit-overflow, labs]
+    if: ${{ !cancelled() && needs.change-profile.outputs.docs_only != 'true' && needs.admission.outputs.docs_only != 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -1133,11 +1366,20 @@ jobs:
         shell: bash
         env:
           ADMISSION_RESULT: ${{ needs.admission.result }}
+          PLAN_RESULT: ${{ needs.test-plan.result }}
           UNIT_RESULT: ${{ needs.test-unit.result }}
+          UNIT_SHARDS_RESULT: ${{ needs.test-unit-shard.result }}
+          UNIT_OVERFLOW_RESULT: ${{ needs.test-unit-overflow.result }}
+          HOSTED_PARTITIONS: ${{ needs.test-plan.outputs.test_unit_hosted }}
+          OVERFLOW_PARTITIONS: ${{ needs.test-plan.outputs.test_unit_overflow }}
         run: |
           set -euo pipefail
           [[ "$ADMISSION_RESULT" == "success" ]]
-          [[ "$UNIT_RESULT" == "success" ]]
+          # The Test Unit verdict passed: the aggregate ran green, or it was skipped on success beside a
+          # successful Test Plan whose halves each succeeded or held nothing and were skipped, at least one
+          # of them run (this job never runs on a documentation diff).
+          unit_half() { [[ ( "$1" != "[]" && "$2" == "success" ) || ( "$1" == "[]" && "$2" == "skipped" ) ]]; }
+          [[ "$UNIT_RESULT" == "success" ]] || { [[ "$UNIT_RESULT" == "skipped" && "$PLAN_RESULT" == "success" && ( "$UNIT_SHARDS_RESULT" == "success" || "$UNIT_OVERFLOW_RESULT" == "success" ) ]] && unit_half "$HOSTED_PARTITIONS" "$UNIT_SHARDS_RESULT" && unit_half "$OVERFLOW_PARTITIONS" "$UNIT_OVERFLOW_RESULT"; } || exit 1
           eval "$(beep ci change-profile)"
           echo "should_run=$([[ "$docs_only" == "true" ]] && echo false || echo true)" >> "$GITHUB_OUTPUT"
 
@@ -1229,7 +1471,7 @@ jobs:
           jq -e --arg run "$GITHUB_RUN_ID" --argjson attempt "$LABS_PRODUCER_ATTEMPT" '
             .partitionId == "labs" and .identity.runId == $run and .identity.runAttempt == $attempt
           ' "$labs_manifest" > /dev/null
-          shape_args=(--base "$BEEP_COVERAGE_BASE_SHA")
+          shape_args=(--event-base)
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             shape_args+=(--affected)
           fi
@@ -1242,7 +1484,7 @@ jobs:
   professional-desktop-ipc-stdio:
     name: Professional Desktop IPC Stdio
     needs: [change-profile, test-plan, admission]
-    if: ${{ !cancelled() && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only != 'true' }}
+    if: ${{ !cancelled() && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only != 'true' && needs.change-profile.outputs.desktop_ipc_relevant != 'false' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     permissions:
@@ -1281,9 +1523,11 @@ jobs:
             base_ref="origin/${GITHUB_BASE_REF:-main}"
             changed_files="$(git diff --name-only --no-renames "${base_ref}...HEAD")"
 
+            # `lanes.desktop_ipc` in the change-profile pattern data; an absent row runs the lane.
+            pattern="$(jq -r '.lanes.desktop_ipc // empty' packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json)"
             if [[ -z "$changed_files" ]]; then
               should_run=false
-            elif ! printf "%s\n" "$changed_files" | grep -Eq '(^apps/professional-desktop/|^packages/(foundation/|(agents|workspace|shared|epistemic)(/|-)|drivers/(pglite|postgres)/)|^\.github/(actions/setup-monorepo-ci/|workflows/check\.yml$)|^(bun\.lock|package\.json|turbo\.json)$)'; then
+            elif [[ -n "$pattern" ]] && ! printf "%s\n" "$changed_files" | grep -Eq "$pattern"; then
               should_run=false
             fi
           fi
@@ -1493,7 +1737,7 @@ jobs:
     name: Property Laws
     timeout-minutes: 5
     needs: [change-profile, property-laws-shard]
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && !(needs.change-profile.result == 'success' && ((needs.change-profile.outputs.docs_only == 'true' && needs.property-laws-shard.result == 'skipped') || (needs.change-profile.outputs.docs_only == 'false' && needs.property-laws-shard.result == 'success'))) }}
     runs-on: ubuntu-24.04
     steps:
       - name: Require every Property Laws slice
@@ -1983,6 +2227,15 @@ jobs:
 
   security:
     name: Security
+    # Runs when the diff touches what Security reads: dependency manifests and
+    # lockfiles, the OSV configuration, workflows and the hosted governance
+    # sources (`lanes.security` in CiOperational.patterns.json). On any other
+    # pull request its verdict is a function of main plus the live advisory
+    # database and GitHub settings, which every main push re-checks (a push
+    # always gets the full profile). A failed Change Profile leaves both
+    # outputs empty, so the job runs.
+    needs: [change-profile]
+    if: ${{ !cancelled() && needs.change-profile.outputs.docs_only != 'true' && needs.change-profile.outputs.security_relevant != 'false' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -2040,7 +2293,7 @@ jobs:
   nix:
     name: Nix Shell
     needs: [change-profile, test-plan, admission]
-    if: ${{ !cancelled() && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only != 'true' }}
+    if: ${{ !cancelled() && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only != 'true' && needs.change-profile.outputs.nix_relevant != 'false' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -2069,8 +2322,10 @@ jobs:
           set -euo pipefail
           should_run=true
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            changed_files="$(git diff --name-only "origin/${GITHUB_BASE_REF:-main}...HEAD")"
-            if ! grep -Eq '(^flake\.(nix|lock)$|^\.github/workflows/check\.yml$|^packages/tooling/tool/cli/src/commands/Ci/CiLane\.ts$)' <<< "$changed_files"; then
+            # `lanes.nix` in the change-profile pattern data; an absent row runs the lane.
+            pattern="$(jq -r '.lanes.nix // empty' packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json)"
+            changed_files="$(git diff --name-only --no-renames "origin/${GITHUB_BASE_REF:-main}...HEAD")"
+            if [[ -n "$pattern" ]] && ! grep -Eq "$pattern" <<< "$changed_files"; then
               should_run=false
             fi
           fi
@@ -2103,6 +2358,12 @@ jobs:
 
   sast:
     name: SAST
+    # Semgrep scans only changed JavaScript and TypeScript, so the job runs when
+    # the diff touches those, its rules (.semgrep/) or its install inputs
+    # (`lanes.sast` in CiOperational.patterns.json). A failed Change Profile
+    # leaves both outputs empty, so the job runs.
+    needs: [change-profile]
+    if: ${{ !cancelled() && needs.change-profile.outputs.docs_only != 'true' && needs.change-profile.outputs.sast_relevant != 'false' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:

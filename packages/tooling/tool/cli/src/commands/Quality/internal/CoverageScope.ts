@@ -19,6 +19,7 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { CiGoalDocument, ciGoalDataConsumers } from "../../Ci/CiOperational.schemas.ts";
 import { QualityTaskConfigurationError } from "../Quality.errors.ts";
 import { discoverWorkspacePackages } from "./QualityArtifactSupport.ts";
 import type { LenientManifest } from "@beep/package-json/LenientManifest";
@@ -102,17 +103,104 @@ export const COVERAGE_GENERATED_STANDARDS_OWNER_ROWS: ReadonlyArray<readonly [st
   ["standards/policy-tools.fingerprint.json", "standards/policy-tools.fingerprint.json", "@beep/repo-cli"],
   ["standards/cache-qualification-baseline.json", "standards/cache-qualification-baseline.json", "@beep/repo-cli"],
   ["standards/fallow.boundaries.generated.jsonc", "standards/fallow.boundaries.generated.jsonc", "@beep/repo-cli"],
+  [
+    "standards/check-census.regression-baseline.jsonc",
+    "standards/check-census.regression-baseline.jsonc",
+    "@beep/repo-cli",
+  ],
+  [
+    "standards/root-package.projection.generated.json",
+    "standards/root-package.projection.generated.json",
+    "@beep/repo-cli",
+  ],
 ];
 
+/**
+ * Owner rows for tooling inputs at the repository root, derived from the
+ * same reader scan as {@link COVERAGE_GENERATED_STANDARDS_OWNER_ROWS}.
+ *
+ * **Details**
+ *
+ * The skill tree and its lock, the harness ledger and the generated Biome
+ * identity config sit outside every workspace package, so before these rows a
+ * change to any of them fell through to the "no current workspace owner"
+ * fallback and ran the full Test Unit matrix. Each row is
+ * `[readerPath, ownerPattern, packageName]` and holds the scan's result.
+ *
+ * **Gotchas**
+ *
+ * A reader of a path spells every segment of it somewhere, so the readers of
+ * any one segment are a sound superset. The skill tree's own basename,
+ * `skills`, is also a schema.org term, an HTML id and a CLI subcommand, so its
+ * row scans for the `.claude` segment instead. Every file under
+ * `.claude/skills/` selects the readers of `.claude`, including files that
+ * also have a narrower hand-written row.
+ *
+ * **Example** (List the mapped reader paths)
+ *
+ * ```ts
+ * import { COVERAGE_TOOLING_INPUT_OWNER_ROWS } from "@beep/repo-cli/test/Quality"
+ * import * as A from "effect/Array"
+ *
+ * const readerPaths = A.map(COVERAGE_TOOLING_INPUT_OWNER_ROWS, ([readerPath]) => readerPath)
+ * console.log(A.contains(readerPaths, "skills-lock.json")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const COVERAGE_TOOLING_INPUT_OWNER_ROWS: ReadonlyArray<readonly [string, string, string]> = [
+  ...A.map(
+    [
+      "@beep/ai-sync",
+      "@beep/infra",
+      "@beep/palantiri",
+      "@beep/repo-ai-metrics",
+      "@beep/repo-cli",
+      "@beep/repo-cli-kit",
+      "@beep/repo-configs",
+    ],
+    (owner) => [".claude", ".claude/skills/**", owner] as const
+  ),
+  ["skills-lock.json", "skills-lock.json", "@beep/repo-cli"],
+  ...A.map(
+    ["@beep/infra", "@beep/palantiri", "@beep/repo-ai-metrics", "@beep/repo-cli"],
+    (owner) => ["harness-ledger", "harness-ledger/**", owner] as const
+  ),
+  ["biome.identity.jsonc", "biome.identity.jsonc", "@beep/repo-cli"],
+];
+
+/**
+ * Every owner row the reader scan derives: the generated standards rows and
+ * the tooling input rows. `bun run beep lint coverage-owners` compares each
+ * of them with the scan.
+ *
+ * **Example** (Count the scanned reader paths)
+ *
+ * ```ts
+ * import { COVERAGE_SCANNED_OWNER_ROWS } from "@beep/repo-cli/test/Quality"
+ * import * as A from "effect/Array"
+ *
+ * console.log(A.dedupe(A.map(COVERAGE_SCANNED_OWNER_ROWS, ([readerPath]) => readerPath)).length) // 12
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const COVERAGE_SCANNED_OWNER_ROWS: ReadonlyArray<readonly [string, string, string]> = A.appendAll(
+  COVERAGE_GENERATED_STANDARDS_OWNER_ROWS,
+  COVERAGE_TOOLING_INPUT_OWNER_ROWS
+);
+
 // Live repository inputs read or executed by coverage-executed package tests. File entries also
-// accept globs for inventories discovered by tests (goal manifests and workspace
-// manifests). Prefixes cover recursively consumed trees; all matching consumers
-// are retained alongside the ordinary workspace owner.
+// accept globs for inventories discovered by tests (workspace manifests). Prefixes cover
+// recursively consumed trees; all matching consumers are retained alongside the ordinary
+// workspace owner. Goal and exploration readers are not listed here: they come from the
+// ROUT-03 registry `ciGoalDataConsumers` (see `goalDataConsumerNamesForFile`).
 const COVERAGE_REPOSITORY_FIXTURE_OWNER_FILES: ReadonlyArray<readonly [string, string]> = [
   ["standards/fallow.feature-matrix.jsonc", "@beep/repo-cli"],
   ["packages/foundation/ui-system/editor/test/fixtures/capability-atlas.json", "@beep/editor"],
   ["standards/branch-protection-contexts.json", "@beep/repo-cli"],
-  ["goals/*/ops/manifest.json", "@beep/repo-cli"],
   ["standards/schema-crispening.policy.jsonc", "@beep/repo-cli"],
   // Generated governance data is consumed by tooling, not by every runtime package.
   ["standards/effect-vitest.inventory.jsonc", "@beep/repo-cli"],
@@ -120,6 +208,10 @@ const COVERAGE_REPOSITORY_FIXTURE_OWNER_FILES: ReadonlyArray<readonly [string, s
   ["standards/schema-catalog/**/*.generated.jsonc", "@beep/repo-cli-kit"],
   ["standards/effect-laws.allowlist.jsonc", "@beep/repo-configs"],
   [".claude/skills/effect-first-development/SKILL.md", "@beep/repo-configs"],
+  // The final-check docs-drift test reads these documents (ciTestedDocumentPatterns).
+  ["AGENTS.md", "@beep/repo-cli"],
+  [".claude/skills/yeet/SKILL.md", "@beep/repo-cli"],
+  [".claude/skills/yeet/references/gates-and-proof.md", "@beep/repo-cli"],
   [".claude/hooks/yeet-inbox.sh", "@beep/repo-cli"],
   [".claude/hooks/circuit-breaker.sh", "@beep/repo-ai-metrics"],
   [".claude/hooks/hook-pulse.sh", "@beep/repo-ai-metrics"],
@@ -129,7 +221,7 @@ const COVERAGE_REPOSITORY_FIXTURE_OWNER_FILES: ReadonlyArray<readonly [string, s
   ["package.json", "@beep/repo-cli"],
   ["turbo.json", "@beep/repo-cli"],
   ["packages/foundation/**/package.json", "@beep/repo-cli"],
-  ...A.map(COVERAGE_GENERATED_STANDARDS_OWNER_ROWS, ([, pattern, owner]) => [pattern, owner] as const),
+  ...A.map(COVERAGE_SCANNED_OWNER_ROWS, ([, pattern, owner]) => [pattern, owner] as const),
 ];
 
 // The owner patterns are static literals compiled once; a guard trip here is a
@@ -146,7 +238,6 @@ const COVERAGE_REPOSITORY_FIXTURE_OWNER_PATTERNS: ReadonlyArray<readonly [GlobPa
 );
 
 const COVERAGE_REPOSITORY_FIXTURE_OWNER_PREFIXES: ReadonlyArray<readonly [string, string]> = [
-  ["goals/speed-loop/ops/runner-burst/", "@beep/repo-cli"],
   ["scripts/", "@beep/repo-cli"],
   [".github/", "@beep/repo-cli"],
   [".claude/helpers/", "@beep/repo-cli"],
@@ -162,6 +253,25 @@ const COVERAGE_REPOSITORY_FIXTURE_OWNER_PREFIXES: ReadonlyArray<readonly [string
     (packageName): readonly [string, string] => ["packages/_internal/db-admin/drizzle/", packageName]
   ),
 ];
+
+// ROUT-03 registry (CiOperational.schemas.ts), kept live by goal-data-consumer-census.test.ts:
+// the only goal and exploration paths whose changes select coverage owners. A packet document
+// (CiGoalDocument: packet-root prose, ops/manifest.json, history/research .gitkeep) selects
+// nothing even under a registry prefix such as citation ops/ (C1). Every other packet path
+// stays coverage-inert under COVERAGE_NOOP_PREFIXES.
+const GOAL_DATA_CONSUMER_OWNER_PATTERNS = A.map(ciGoalDataConsumers, (row) => ({
+  pattern: new RegExp(row.pattern, "u"),
+  consumers: row.consumers,
+}));
+const isGoalDocument = S.is(CiGoalDocument);
+const goalDataConsumerNamesForFile = (filePath: string): ReadonlyArray<string> =>
+  isGoalDocument(filePath)
+    ? A.empty<string>()
+    : pipe(
+        GOAL_DATA_CONSUMER_OWNER_PATTERNS,
+        A.filter((row) => row.pattern.test(filePath)),
+        A.flatMap((row) => row.consumers)
+      );
 
 // Sequential coverage-task seconds measured locally on 2026-11-09 (HEAD
 // 33b9f1cb31, 64-thread workstation, load average 48-59 with another
@@ -767,6 +877,7 @@ const repositoryFixtureOwnerNamesForFile = (filePath: string): ReadonlyArray<str
       A.filter(COVERAGE_REPOSITORY_FIXTURE_OWNER_PREFIXES, ([prefix]) => Str.startsWith(prefix)(filePath))
     ),
     A.map(([, packageName]) => packageName),
+    A.appendAll(goalDataConsumerNamesForFile(filePath)),
     A.dedupe
   );
 

@@ -1,70 +1,47 @@
 // @vitest-environment node
 
-// Slice A of goals/canonical-digest-owner, for the lab's own encoder.
+// Goal canonical-digest-owner, for the lab's own encoder.
 //
-// `canonicalJson` in `src/corpus/Canonical.ts` is held byte-equal to the owner,
-// `JsoncFingerprint.canonicalizeResult` (RFC 8785), wherever the owner emits,
-// and its present output for values that are not plain JSON is fixed row by
-// row. The epistemics and PacketCore encoders have the same two tests in
+// Slice A held `canonicalJson` in `src/corpus/Canonical.ts` byte-equal to the
+// owner, `JsoncFingerprint.canonicalizeResult` (RFC 8785), wherever the owner
+// emits, and fixed its output for values that are not plain JSON. Slice C made
+// the owner its body, so the byte-equality property would now compare the
+// owner with itself and is gone. What still carries information: the table of
+// behaviour changes (the legacy output, recorded from slice A, beside the
+// refusal the export now throws) and the replay of the committed W1 digest.
+// The epistemics and PacketCore encoders have the same table in
 // `packages/tooling/tool/cli/test/canonical-digest-owner-differential.test.ts`;
 // this one lives in the app because a package cannot import an app (decision
 // `2026-11-12-differential-test-placement` in the goal packet).
-import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
-import { fcRuns } from "@beep/test-utils";
+import { JsoncCanonicalizeError, JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
 import { describe, expect, it } from "@effect/vitest";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
-import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
 import * as Hex from "effect/encoding/Hex";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { canonicalJson } from "@/corpus/Canonical";
+import * as Str from "effect/String";
+import { canonicalJson, canonicalJsonResult } from "@/corpus/Canonical";
+import { contentDigestSync } from "@/schema/Digest";
+import { RdfStatement } from "@/schema/Reasoning";
 import w1Manifest from "../fixtures/w1.manifest.json" with { type: "json" };
 import type { JsoncCanonicalizeErrorCode } from "@beep/jsonc/JsoncFingerprint";
 
-const ownerText = (value: unknown): string => Result.getOrThrow(JsoncFingerprint.canonicalizeResult(value));
-
-const ownerRefusal = (value: unknown): JsoncCanonicalizeErrorCode | "emitted" =>
-  Result.match(JsoncFingerprint.canonicalizeResult(value), {
-    onSuccess: (): JsoncCanonicalizeErrorCode | "emitted" => "emitted",
-    onFailure: (failure) => failure.code,
+// The export throws the owner's typed error; read it back as its code.
+const exported = (value: unknown): Result.Result<string, JsoncCanonicalizeErrorCode | "not refused"> =>
+  Result.try({
+    try: () => canonicalJson(value),
+    catch: (thrown) => (S.is(JsoncCanonicalizeError)(thrown) ? thrown.code : "not refused"),
   });
 
 describe("semantica canonicalJson against the canonical digest owner", () => {
-  // `Arbitrary.schema(S.Json)` covers the whole double range, `__proto__`
-  // keys, null-prototype objects and astral strings. It also generates
-  // unpaired surrogates, the one thing in `S.Json` that is not I-JSON: there
-  // the owner refuses, and the row below fixes what this encoder does instead.
-  it.prop(
-    "emits the owner's RFC 8785 bytes wherever the owner emits",
-    { value: Arbitrary.schema(S.Json) },
-    ({ value }) => {
-      Result.match(JsoncFingerprint.canonicalizeResult(value), {
-        onSuccess: (text) => expect(canonicalJson(value)).toBe(text),
-        onFailure: (failure) => expect(failure.code).toBe("LoneSurrogate"),
-      });
-    },
-    { arbitrary: fcRuns(600) }
-  );
-
-  it("orders keys by UTF-16 code unit and serializes numbers as ECMAScript does", () => {
-    // U+10000 is the unit pair D800 DC00, so it sorts before U+E000 and
-    // U+FB00 although its code point is larger.
-    const keys = { "\ufb00": 1, "\u{10000}": 2, "\ue000": 3, "": 4, a: 5, A: 6, "10": 7, "9": 8 };
-    const numbers = [0, -0, 1e21, 1e-7, 5e-324, 2 ** 53, 0.1 + 0.2, Number.MAX_VALUE, -Number.MAX_VALUE];
-    const strings = ['"', "\\", "/", "\u0000", "\u001f", "\u2028", "\u2029", "\u00e9", "e\u0301", "\u{1f600}"];
-
-    expect(canonicalJson(keys)).toBe('{"":4,"10":7,"9":8,"A":6,"a":5,"\u{10000}":2,"\ue000":3,"\ufb00":1}');
-    for (const value of [keys, numbers, strings, { keys, numbers, strings }]) {
-      expect(canonicalJson(value)).toBe(ownerText(value));
-    }
-  });
-
-  // Present behaviour, not a contract: slice C replaces the body with the
-  // owner, and each row here is a place where the output changes to a typed
-  // refusal (or, for an `undefined` member, stays the same through the one
-  // permitted pre-pass).
-  const offDomain: ReadonlyArray<readonly [input: string, value: unknown, today: string, owner: string]> = [
+  // Each row is a behaviour change of the swap: `legacy` is what the lab's own
+  // encoder wrote, as slice A observed it (the code is gone, so it is a
+  // record, not an assertion); the export now throws the owner's refusal.
+  const offDomain: ReadonlyArray<
+    readonly [input: string, value: unknown, legacy: string, refusal: JsoncCanonicalizeErrorCode]
+  > = [
     ["an object member whose value is undefined", { a: undefined, b: 1 }, '{"b":1}', "UnrepresentableValue"],
     ["an undefined array element", [1, undefined, 2], "[1,null,2]", "UnrepresentableValue"],
     ["undefined at the root", undefined, "null", "UnrepresentableValue"],
@@ -76,16 +53,36 @@ describe("semantica canonicalJson against the canonical digest owner", () => {
     ["a lone surrogate in a member key", { "\udc00": 1 }, '{"\\udc00":1}', "LoneSurrogate"],
   ];
 
-  it.each(offDomain)("fixes today's output and the owner's refusal for %s", (_input, value, today, owner) => {
-    expect(canonicalJson(value)).toBe(today);
-    expect(ownerRefusal(value)).toBe(owner);
+  it.each(offDomain)("refuses %s, which the legacy encoder wrote as %s", (_input, value, _legacy, refusal) => {
+    assertFailure(exported(value), refusal);
   });
 
-  // Stored-digest replay for the lab: a digest committed in a fixture must
-  // recompute through the owner before slice C swaps this encoder. The W1
-  // manifest's `corpusHash` is SHA-256 over this encoder's bytes for `rows`.
+  // Since review round 1 the lab's digest helpers and schema checks go through
+  // the Result twin, so the same refusal fails typed instead of throwing.
+  it("fails the lab's digest helpers typed and keeps its schema checks total", () => {
+    const named = (refusal: string) => (error: S.SchemaError) => Str.includes(refusal)(error.message);
+
+    assertFailure(Result.mapError(canonicalJsonResult({ a: "\ud800" }), named('LoneSurrogate at "/a"')), true);
+    assertFailure(
+      Result.mapError(
+        contentDigestSync(S.Struct({ text: S.String }))({ text: "\ud800" }),
+        named('LoneSurrogate at "/text"')
+      ),
+      true
+    );
+    // The statement id check hashes the triple; a term with no canonical form
+    // makes the guard false instead of making it throw.
+    const illFormed = { id: Str.repeat(64)("0"), subject: "\ud800", predicate: "p", object: "o" };
+    expect(S.is(RdfStatement)(illFormed)).toBe(false);
+  });
+
+  // Stored-digest replay for the lab: the W1 manifest's `corpusHash` is
+  // SHA-256 over the canonical bytes of `rows`, committed before the swap. It
+  // must recompute through the owner and through the export.
   it("recomputes the committed W1 manifest corpus hash through the owner", () => {
-    expect(Hex.encode(sha256(new TextEncoder().encode(ownerText(w1Manifest.rows))))).toBe(w1Manifest.corpusHash);
-    expect(canonicalJson(w1Manifest.rows)).toBe(ownerText(w1Manifest.rows));
+    const hashOf = (text: string): string => Hex.encode(sha256(new TextEncoder().encode(text)));
+
+    assertSuccess(Result.map(JsoncFingerprint.canonicalizeResult(w1Manifest.rows), hashOf), w1Manifest.corpusHash);
+    assertSuccess(Result.map(exported(w1Manifest.rows), hashOf), w1Manifest.corpusHash);
   });
 });

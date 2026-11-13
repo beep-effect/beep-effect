@@ -34,7 +34,11 @@
     "goals/github-budget-ledger/GOAL.md",
     "goals/github-budget-ledger/research/SOURCES.md"
   ],
-  "researchReports": ["research/2026-11-10-design.md", "research/SOURCES.md"],
+  "researchReports": [
+    "research/2026-11-10-design.md",
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

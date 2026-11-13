@@ -16,15 +16,6 @@
     "kind": "modeling"
   },
   "scripts": {
-    "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
-    "beep:build": "tsrs -p tsconfig.json && bun run babel",
-    "beep:check": "tsrs -p tsconfig.check.json && bun run beep:check:tests",
-    "beep:check:tests": "tsrs -p tsconfig.test.json --noEmit",
-    "beep:docgen": "bunx --bun --no-install docgen",
-    "beep:lint": "biome check .",
-    "beep:lint:fix": "biome check . --write",
-    "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
-    "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
     "build": "bun run beep:build",
     "check": "bun run beep:check",
     "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
@@ -36,7 +27,15 @@
     "lint:laws": "beep-cli lint laws --package .",
     "package-test-typecheck": "beep-cli quality test-tsgo-package",
     "test": "bun run beep:test",
-    "test:integration": "bun run beep:test:integration"
+    "test:integration": "bun run beep:test:integration",
+    "beep:build": "tsrs -p tsconfig.json --emitDeclarationOnly",
+    "beep:check": "tsrs -p tsconfig.json --emitDeclarationOnly && bun run beep:check:tests",
+    "beep:docgen": "bunx --bun --no-install docgen",
+    "beep:lint": "biome check .",
+    "beep:lint:fix": "biome check . --write",
+    "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
+    "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
+    "beep:check:tests": "tsrs -p tsconfig.test.json --noEmit"
   },
   "exports": {
     ".": "./src/index.ts",

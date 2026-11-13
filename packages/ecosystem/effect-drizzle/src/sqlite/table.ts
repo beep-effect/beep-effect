@@ -180,6 +180,7 @@ export type TableOf<M extends AnyModel> = SQLiteTableWithColumns<{
   schema: undefined;
   columns: BuildColumns<string, BuildersOf<M["sql"]["fields"]>, "sqlite">;
   dialect: "sqlite";
+  isAlias: false;
 }>;
 
 const buildColumn = (

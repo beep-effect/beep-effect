@@ -338,6 +338,48 @@ export const PhaseArchetype = LiteralKit(["standard-delivery", "report-first"]).
 export type PhaseArchetype = typeof PhaseArchetype.Type;
 
 /**
+ * Stage artifacts of an exploration packet that a goal ledger may cite.
+ *
+ * **Details**
+ *
+ * A packet gains these files stage by stage, so any of them can be absent.
+ * The bootstrap compiler cites only the ones its caller found on disk.
+ *
+ * **Example** (Narrow a packet file name)
+ *
+ * ```ts
+ * import { ExplorationPacketFile } from "@beep/repo-cli/commands/Goals/Bootstrap.schemas"
+ *
+ * console.log(ExplorationPacketFile.is["BRIEF.md"]("BRIEF.md")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ExplorationPacketFile = LiteralKit(["RESEARCH.md", "DECISIONS.md", "BRIEF.md", "MAP.md"]).pipe(
+  $I.annoteSchema("ExplorationPacketFile", {
+    description: "Exploration stage artifact a graduated goal's provenance ledger may link.",
+  })
+);
+
+/**
+ * Exploration stage artifact name.
+ *
+ * **Example** (Annotate a packet file name)
+ *
+ * ```ts
+ * import type { ExplorationPacketFile } from "@beep/repo-cli/commands/Goals/Bootstrap.schemas"
+ *
+ * const file: ExplorationPacketFile = "MAP.md"
+ * console.log(file)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ExplorationPacketFile = typeof ExplorationPacketFile.Type;
+
+/**
  * Lowercase SHA-256 hex digest carried by plan rows and snapshots.
  *
  * **Example** (Validate a digest string)
@@ -630,6 +672,9 @@ export class BootstrapInput extends S.Opaque<BootstrapInput, { readonly brand: u
     provides: S.Array(CapabilitySlug).pipe(S.withConstructorDefault(Effect.succeed(A.empty<CapabilitySlug>()))),
     requires: S.Array(CapabilitySlug).pipe(S.withConstructorDefault(Effect.succeed(A.empty<CapabilitySlug>()))),
     provenanceExploration: S.optionalKey(S.String),
+    provenanceFiles: S.Array(ExplorationPacketFile).pipe(
+      S.withConstructorDefault(Effect.succeed(A.empty<ExplorationPacketFile>()))
+    ),
     today: S.String.check(
       S.isPattern(
         /^\d{4}-\d{2}-\d{2}$/,
@@ -765,7 +810,7 @@ const VALIDATION_REQUIREMENTS_BY_FINDING_KIND: Readonly<
   "schema-version-upgrade": [],
   "completion-gate-unsatisfied": [],
   "completion-gate-unknown": [],
-  "closeout-adoption-pending": [],
+  "closeout-unverified": ["doctor-clean"],
   "superseded-without-pointer": [],
   "exploration-backlink-missing": [],
   "packet-status-drift": [],

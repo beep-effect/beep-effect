@@ -18,6 +18,8 @@ import {
   makeContradictionVocabulary,
 } from "@beep/epistemics/Contradiction";
 import {
+  canonicalDetectionJson,
+  canonicalDetectionJsonResult,
   makeContradictionDetectionSnapshot,
   makeContradictionDetectionVocabulary,
   makeDetectedContradiction,
@@ -32,6 +34,7 @@ import {
 } from "@beep/epistemics/EvidenceVerification";
 import { makeLogicalEdgeIdentity, makeLogicalEdgeKey } from "@beep/epistemics/LogicalEdgeIdentity";
 import { $EpistemicsId } from "@beep/identity/packages";
+import { JsoncCanonicalizeError } from "@beep/jsonc/JsoncFingerprint";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
@@ -39,7 +42,7 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertFailure, assertSuccess, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -278,7 +281,7 @@ const arbitraries = makeContradictionArbitraries({
   CanonicalContradictionBeliefPair: CanonicalPair,
   ContradictionMatchBasisStruct: matchBasis.ContradictionMatchBasisStructSchema,
   ContradictionMatchBasis: MatchBasis,
-  ContradictionResolutionProposalStruct: proposals.ContradictionResolutionProposalStructSchema,
+  ContradictionResolutionProposalStructArbitrary: proposals.ContradictionResolutionProposalStructArbitrary,
   ContradictionResolutionProposal: Proposal,
   proposalsShareId: assessment.proposalsShareId,
   ContradictionAssessment: Assessment,
@@ -294,6 +297,19 @@ const ref = (edgeVersionId: string, key: string) =>
   });
 
 const evidenceIds = (values: A.NonEmptyReadonlyArray<string>) => A.map(values, (id) => PartyEvidenceId.make(id));
+
+// A digest helper's failure as its message: the canonical JSON owner's refusal
+// arrives in the helper's own `SchemaError` channel, naming its code and pointer.
+const failureMessage = <A>(result: Result.Result<A, S.SchemaError>): Result.Result<A, string> =>
+  Result.mapError(result, (error) => error.message);
+
+// Fixed seeds the candidate-content sampler runs under, beside the seed that
+// exhausted it on `main` (ep94).
+const SEED_COUNT = 64;
+
+// `true` in the failure channel when that message names the given refusal.
+const refusedAt = <A>(result: Result.Result<A, S.SchemaError>, refusal: string): Result.Result<A, boolean> =>
+  Result.mapError(failureMessage(result), Str.includes(refusal));
 
 const basisFor = (left: A.NonEmptyReadonlyArray<string>, right: A.NonEmptyReadonlyArray<string>) =>
   MatchBasis.make({
@@ -357,10 +373,40 @@ describe("second binding of the contradiction factories", () => {
       const samples = yield* Arbitrary.sampleEffect(arbitraries.ContradictionCandidateContentArbitrary, { count: 10 });
       A.forEach(samples, (content) => {
         expect(S.is(CandidateContent)(content)).toBe(true);
-        pipe(behavior.contradictionCandidateDigest(content), Result.isSuccess, assertTrue);
+        // This binding's ids are free `S.String`, so a sample can hold an
+        // unpaired surrogate, which the seal refuses typed (pinned below).
+        Result.match(failureMessage(behavior.contradictionCandidateDigest(content)), {
+          onSuccess: (digest) => expect(digest).toMatch(/^[0-9a-f]{64}$/),
+          onFailure: (message) => expect(message).toMatch(/LoneSurrogate at "\//),
+        });
       });
       const matchBases = yield* Arbitrary.sampleEffect(arbitraries.ContradictionMatchBasisArbitrary, { count: 10 });
       A.forEach(matchBases, (basis) => expect(S.is(MatchBasis)(basis)).toBe(true));
+    })
+  );
+
+  // The contradiction arbitraries construct their facts; they do not filter
+  // generated JSON. Deriving the fact from its checked schema discarded about
+  // a quarter of the samples and exhausted this sampler on some seeds,
+  // 433213354620349 among them (ep94).
+  it.effect("samples candidate content on fixed seeds without exhausting the generator", () =>
+    Effect.gen(function* () {
+      const seeds = A.prepend(
+        A.makeBy(SEED_COUNT, (index) => index + 1),
+        433213354620349
+      );
+      for (const seed of seeds) {
+        const samples = yield* Arbitrary.sampleEffect(arbitraries.ContradictionCandidateContentArbitrary, {
+          count: 10,
+          seed,
+        });
+        expect(A.every(samples, S.is(CandidateContent))).toBe(true);
+      }
+      const facts = yield* Arbitrary.sampleEffect(vocabulary.ContradictionProposalFactArbitrary, {
+        count: 200,
+        seed: 1,
+      });
+      expect(A.every(facts, S.is(vocabulary.ContradictionProposalFact))).toBe(true);
     })
   );
 
@@ -391,6 +437,49 @@ describe("second binding of the contradiction factories", () => {
       );
     })
   );
+
+  it("fails typed, in the SchemaError channel, instead of sealing an unpaired surrogate", () => {
+    const content = ProposalContent.make({
+      fact: { value: 1 },
+      losingBelief: ref("v-\ud800", "a"),
+      proposalId: vocabulary.ContradictionProposalId.make(Str.repeat(64)("c")),
+      rationale: "The signed amendment controls.",
+      validFrom: DateTime.makeUnsafe(0),
+      validTo: O.none(),
+    });
+    const { detectionProposalId } = makeDetectionProposalId({
+      contradiction: vocabulary,
+      BeliefVersionRef,
+      ContradictionProposalContent: ProposalContent,
+    });
+
+    assertFailure(
+      refusedAt(behavior.contradictionProposalDigest(content), 'LoneSurrogate at "/losingBelief/edgeVersionId"'),
+      true
+    );
+    assertFailure(
+      refusedAt(
+        detectionProposalId(ref("v-1", "a"), { subject: "s", value: "\udc00" }),
+        'LoneSurrogate at "/fact/value"'
+      ),
+      true
+    );
+  });
+
+  // The synchronous export keeps its string return (the seal call sites and
+  // the two domain aliases use it), so its refusal is the owner's typed error,
+  // thrown; the Result twin reports the same refusal as a SchemaError.
+  it("canonicalDetectionJson throws the owner's refusal and its Result twin returns it", () => {
+    expect(canonicalDetectionJson({ b: 1, a: [true, null] })).toBe('{"a":[true,null],"b":1}');
+    assertSuccess(canonicalDetectionJsonResult({ b: 1, a: [true, null] }), '{"a":[true,null],"b":1}');
+
+    const refusal = Result.try(() => canonicalDetectionJson({ a: "\ud800" }));
+    assertFailure(
+      Result.mapError(refusal, (thrown) => (S.is(JsoncCanonicalizeError)(thrown) ? thrown.code : "not the owner's")),
+      "LoneSurrogate"
+    );
+    assertFailure(refusedAt(canonicalDetectionJsonResult({ a: "\ud800" }), 'LoneSurrogate at "/a"'), true);
+  });
 
   it("validates detection beliefs, snapshots and detected contradictions", () => {
     const $D = partyIdentity("ContradictionDetection");

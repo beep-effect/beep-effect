@@ -386,16 +386,8 @@ export const Index = { make: Nodes.index };
  *
  * ```ts
  * import { Table } from "@beep/effect-drizzle/pg"
- * import { pgTable, text } from "drizzle-orm/pg-core"
  *
- * const user = pgTable("user", { email: text("email").notNull() }, (columns) => [
- *   Table.UniqueIndex.make({
- *     name: "user_email_unique_idx",
- *     columns: [columns.email],
- *     where: undefined
- *   })
- * ])
- * console.log(user.email.name)
+ * type Made = ReturnType<typeof Table.UniqueIndex.make> // => tagged uniqueIndex node
  * ```
  *
  * @see {@link uniqueIndex} for the validated factory used in table extras.

@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -33,10 +33,47 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Slice A (census and proof) is done; slice B (owner surface) is next. The work
-is four slices, A to D, listed in [`PLAN.md`](./PLAN.md).
+All four slices, A to D, listed in [`PLAN.md`](./PLAN.md), are done: A
+(census and proof), B (owner surface), C (swaps) and D (guard). The slice D
+pull request (3209) is the final one: it carries the reflection
+([`history/reflections/2026-11-13-claude.md`](./history/reflections/2026-11-13-claude.md))
+and proposes closeout as `completed-retained`. The status changes in a
+packet-state pull request after 3209 merges and the completion refresh
+verifies it.
 
 ## Latest Evidence
+
+Slice D, 2026-11-13: the lint rule `no-hand-rolled-canonical-json` rejects
+JSON object text built as braces around a join of members anywhere in
+`**/src/**` outside `@beep/jsonc`, at severity `error` in the single Biome
+lint pass. The seven census rows that still build text that way (E5 to E9,
+E11 and E12) carry a suppression naming the row, and no other site in the tree
+trips it. `PLAN.md`, "Slice D evidence", records the `rg` check of the
+census table.
+
+Slice C review round 1, 2026-11-13: the digest helpers and schema checks
+that already had a `SchemaError` channel now report the owner's refusal there
+instead of throwing, through a `Result` twin beside each swapped export. A
+tampered event with an unpaired surrogate reads as a chain issue again, and
+no lab schema check can throw on one. The exports still throw; `PLAN.md`,
+"Slice C evidence", lists what is typed and what still throws.
+
+Slice C, 2026-11-13: the epistemics, PacketCore, semantica and `@beep/md`
+frontmatter encoders are now `JsoncFingerprint`, one commit each; only
+PacketCore passes `omitUndefinedMembers`. Every stored packet event, golden
+execution seal and the W1 corpus hash still recompute. Values outside plain
+JSON, an unpaired surrogate above all, are now the owner's typed refusal; the
+call sites where free text can reach one are listed in `PLAN.md`, "Slice C
+evidence". PartyKey v1 keeps its bytes and gains a parity proof, and the two
+`sha256:` regular expressions in `@beep/repo-cli` are now
+`Sha256PrefixedDigest`.
+
+Slice B, 2026-11-12: `@beep/schema` exports `Sha256PrefixedDigest`, the one
+`sha256:` grammar, and `ContentDigest` and `SourceTextDigest` are defined from
+it with their encoded strings unchanged. `JsoncFingerprint` takes
+`JsoncCanonicalizeOptions`, whose `omitUndefinedMembers` leaves out an object
+member read as `undefined` and nothing else; a refusal table in the package's
+tests fixes what the owner answers for every other value outside plain JSON.
 
 Slice A, 2026-11-12: the census
 ([`research/encoder-census.md`](./research/encoder-census.md)) classes 157

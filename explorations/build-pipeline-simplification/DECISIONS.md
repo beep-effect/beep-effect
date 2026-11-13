@@ -48,8 +48,9 @@ designed then, for that member. Reversal: reopen this packet at `decompose`.
 
 ## 2026-11-10 — Q3 shared build-kit package
 
-**Question:** Should a new `packages/tooling/library/build-kit` own the
-generated `beep:build` script, the artifact assertion and the tsbuildinfo purge?
+**Question:** Should a new build-kit package in the tooling library family own
+the generated `beep:build` script, the artifact assertion and the tsbuildinfo
+purge?
 
 **Answer:** No new package. Changes go through the existing generated-scripts
 policy in `@beep/repo-cli-kit` (`PackageScripts.schemas.ts`) and its Turbo

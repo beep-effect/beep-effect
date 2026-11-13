@@ -1,8 +1,6 @@
 # GOAL: Canonical Proof Reconciliation
 
-Repo root: the current working directory — the `beep-effect` checkout you are
-running in. Do not assume an absolute path; several checkouts exist. All paths
-below are repo-relative.
+Repo root: the current `beep-effect` checkout; all paths below are repo-relative.
 
 Outcome: bring the CLI's accepted proof (`AcceptedProofManifest` +
 `architecture-lab`) and the eight live slices onto the amended slice grammar —
@@ -74,10 +72,11 @@ git diff --check -- goals/canonical-proof-reconciliation
 bun run beep architecture audit --slice architecture-lab --json
 ```
 
-Stop and report before changing public API, schema, data migration, auth, infra,
-security behavior, dependencies, lockfiles, generated files, or destructive
-state unless `SPEC.md` explicitly requires it. Never overturn a locked
-exploration decision here — reopen the exploration at `align` instead.
+Never overturn a locked exploration decision here — reopen the exploration at
+`align` instead.
 
-Done only when acceptance passes and verification is complete, or when a blocker
-is reported with file/command evidence.
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug canonical-proof-reconciliation` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/canonical-proof-reconciliation/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

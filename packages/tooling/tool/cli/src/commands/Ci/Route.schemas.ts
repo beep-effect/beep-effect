@@ -505,7 +505,110 @@ export class RoutePlan extends S.Opaque<RoutePlan, { readonly brand: unique symb
 ) {}
 
 /**
+ * One step of a hosted job: its name as GitHub lists it and its conclusion.
+ *
+ * **Details**
+ *
+ * `conclusion` is `None` for a step that never concluded (a lost runner, or
+ * a step still running when the job was cancelled or timed out).
+ *
+ * **Example** (A failed step)
+ *
+ * ```ts import.meta.vitest name="A failed step"
+ * import { HostedStep } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const step = HostedStep.make({ name: "Setup monorepo CI", conclusion: O.some("failure") })
+ * O.getOrNull(step.conclusion) // => "failure"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HostedStep extends S.Opaque<HostedStep, { readonly brand: unique symbol }>()(
+  S.Struct({
+    name: S.String,
+    conclusion: OptionalText,
+  }).pipe(
+    $I.annoteSchema("HostedStep", {
+      description: "One step of a hosted job: its name and its conclusion, absent when it never concluded.",
+    })
+  )
+) {}
+
+/**
+ * How one Turbo task of a hosted job ended.
+ *
+ * **Details**
+ *
+ * `pass`: the task ran, or replayed from the cache, and exited 0. `fail`: it
+ * exited non-zero. `not-run`: it was planned and never ran (a failed
+ * dependency, a cancel). `unknown`: the record cannot tell.
+ *
+ * **Example** (Guard a task outcome)
+ *
+ * ```ts import.meta.vitest name="Guard a task outcome"
+ * import { RouteTaskOutcome } from "@beep/repo-cli/commands/Ci"
+ *
+ * RouteTaskOutcome.is["not-run"]("not-run") // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RouteTaskOutcome = LiteralKit(["pass", "fail", "not-run", "unknown"]).pipe(
+  $I.annoteSchema("RouteTaskOutcome", {
+    description:
+      "pass: ran or replayed and exited 0; fail: exited non-zero; not-run: planned, never ran; unknown: not recorded.",
+  })
+);
+
+/**
+ * Type of {@link RouteTaskOutcome}.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type RouteTaskOutcome = typeof RouteTaskOutcome.Type;
+
+/**
+ * The outcome of one Turbo task a hosted job ran, keyed by its task id
+ * (`<package>#<task>`).
+ *
+ * **Example** (A failed task)
+ *
+ * ```ts import.meta.vitest name="A failed task"
+ * import { HostedTaskOutcome } from "@beep/repo-cli/commands/Ci"
+ *
+ * const task = HostedTaskOutcome.make({ task: "@beep/repo-cli#test", outcome: "fail" })
+ * task.outcome // => "fail"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HostedTaskOutcome extends S.Opaque<HostedTaskOutcome, { readonly brand: unique symbol }>()(
+  S.Struct({
+    task: S.NonEmptyString,
+    outcome: RouteTaskOutcome,
+  }).pipe(
+    $I.annoteSchema("HostedTaskOutcome", {
+      description: "One Turbo task of a hosted job, by task id, with the outcome it ended in.",
+    })
+  )
+) {}
+
+/**
  * One hosted job of a captured run.
+ *
+ * **Details**
+ *
+ * `steps` and `tasks` are optional keys of `route-corpus/v1`, so every row
+ * captured before them decodes, and re-encodes byte for byte, with both
+ * `None`. The capture records `steps` only on a job that concluded `failure`,
+ * the one job the replay judges by its steps. No capture fills `tasks` yet: a
+ * job that carries per-task outcome records gets them there. The replay reads
+ * both through `hostedJobRedOrigin` (`RouteCensus.ts`).
  *
  * **Example** (A finished hosted job)
  *
@@ -515,6 +618,7 @@ export class RoutePlan extends S.Opaque<RoutePlan, { readonly brand: unique symb
  *
  * const job = HostedJob.make({ name: "Lint", conclusion: O.some("success") })
  * O.isNone(job.startedAt) // => true
+ * O.isNone(job.steps) // => true
  * ```
  *
  * @category models
@@ -526,9 +630,12 @@ export class HostedJob extends S.Opaque<HostedJob, { readonly brand: unique symb
     conclusion: OptionalText,
     startedAt: OptionalText,
     completedAt: OptionalText,
+    steps: S.Array(HostedStep).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    tasks: S.Array(HostedTaskOutcome).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("HostedJob", {
-      description: "One hosted job: its check name, conclusion and timestamps.",
+      description:
+        "One hosted job: its check name, conclusion and timestamps, with its steps when it failed and per-task outcomes when recorded.",
     })
   )
 ) {}
@@ -655,6 +762,81 @@ export const RouteJobClass = LiteralKit(["lane", "support", "unknown"]).pipe(
  * @since 0.0.0
  */
 export type RouteJobClass = typeof RouteJobClass.Type;
+
+/**
+ * What one step of a hosted job does.
+ *
+ * **Details**
+ *
+ * `setup`: prepares the runner or the environment before the lane's own work
+ * (checkout, toolchains, install, the lane gate). `aggregate`: checks other
+ * jobs' results (`Require every … shard`). `task`: anything else, which is
+ * the lane's own work; an unrecognised step name is a `task` step.
+ *
+ * **Example** (Guard a step class)
+ *
+ * ```ts import.meta.vitest name="Guard a step class"
+ * import { RouteStepClass } from "@beep/repo-cli/commands/Ci"
+ *
+ * RouteStepClass.is.aggregate("aggregate") // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RouteStepClass = LiteralKit(["setup", "aggregate", "task"]).pipe(
+  $I.annoteSchema("RouteStepClass", {
+    description:
+      "setup: prepares the runner or environment; aggregate: checks other jobs' results; task: the lane's own work.",
+  })
+);
+
+/**
+ * Type of {@link RouteStepClass}.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type RouteStepClass = typeof RouteStepClass.Type;
+
+/**
+ * What a failed hosted job's red came from.
+ *
+ * **Details**
+ *
+ * `task`: a task failed, or the job stopped in a step of the lane's own
+ * work. `aggregate`: it stopped in a step that checks other jobs. `setup`: it
+ * stopped while preparing the runner or the environment. `harness`: every
+ * recorded task passed, yet the job failed. `unattributed`: the job carries
+ * no step or task evidence, as every row captured before these fields.
+ * `task` and `unattributed` reds are the lane's; the other three are charged
+ * to no lane, and the replay reports them as unknown, never as dropped.
+ *
+ * **Example** (Guard a red origin)
+ *
+ * ```ts import.meta.vitest name="Guard a red origin"
+ * import { RouteRedOrigin } from "@beep/repo-cli/commands/Ci"
+ *
+ * RouteRedOrigin.is.unattributed("unattributed") // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RouteRedOrigin = LiteralKit(["task", "aggregate", "setup", "harness", "unattributed"]).pipe(
+  $I.annoteSchema("RouteRedOrigin", {
+    description:
+      "task and unattributed reds are the lane's; aggregate, setup and harness reds are charged to no lane and reported as unknown.",
+  })
+);
+
+/**
+ * Type of {@link RouteRedOrigin}.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type RouteRedOrigin = typeof RouteRedOrigin.Type;
 
 /**
  * The attribution of one hosted job name: its class and, for a `lane` job,
@@ -906,6 +1088,13 @@ export class RouteCensus extends S.Opaque<RouteCensus, { readonly brand: unique 
  * The replay of one hosted head under the route: what was skipped and whether
  * a skipped lane went red while green on the base.
  *
+ * **Details**
+ *
+ * `skippedReds` counts only reds charged to the lane (`RouteRedOrigin` `task`
+ * or `unattributed`). `unknownReds` lists the skipped lanes whose only reds
+ * came from an aggregate, setup or harness step, where the lane was not red
+ * on the base either: the replay cannot say whether those lanes failed.
+ *
  * **Example** (A head with nothing skipped)
  *
  * ```ts import.meta.vitest name="A head with nothing skipped"
@@ -917,6 +1106,7 @@ export class RouteCensus extends S.Opaque<RouteCensus, { readonly brand: unique 
  *   selected: ["lint"],
  *   skipped: [],
  *   skippedReds: [],
+ *   unknownReds: [],
  *   baseUnknown: false,
  * })
  * head.skippedReds.length // => 0
@@ -932,10 +1122,12 @@ export class RouteReplayHead extends S.Opaque<RouteReplayHead, { readonly brand:
     selected: S.Array(CiLaneId),
     skipped: S.Array(CiLaneId),
     skippedReds: S.Array(CiLaneId),
+    unknownReds: S.Array(CiLaneId),
     baseUnknown: S.Boolean,
   }).pipe(
     $I.annoteSchema("RouteReplayHead", {
-      description: "One head's replay: selected and skipped lanes, skipped lanes that went red, base-unknown flag.",
+      description:
+        "One head's replay: selected and skipped lanes, skipped lanes that went red, skipped lanes whose reds no lane is charged with, base-unknown flag.",
     })
   )
 ) {}
@@ -949,6 +1141,10 @@ export class RouteReplayHead extends S.Opaque<RouteReplayHead, { readonly brand:
  * lane was green on main at or before the merge base; an unknown base counts
  * against the route (fail-closed) and is reported in `baseUnknownHeads`.
  * `unresolvedHeads` counts heads whose commit stayed missing after fetching; each selects every lane and is base-unknown.
+ * `unknownRedHeads` counts the heads that could hide a skipped red: a
+ * skipping head with a failed job no rule maps, or a head with `unknownReds`.
+ * `unknownRedJobNames` names those jobs, and `recallCertain` is false while
+ * the count is above zero, when recall is an upper bound.
  *
  * **Example** (An empty replay has full recall)
  *
@@ -965,6 +1161,9 @@ export class RouteReplayHead extends S.Opaque<RouteReplayHead, { readonly brand:
  *   baseUnknownHeads: 0,
  *   unresolvedHeads: 0,
  *   recall: 1,
+ *   unknownRedHeads: 0,
+ *   unknownRedJobNames: [],
+ *   recallCertain: true,
  *   perHead: [],
  * })
  * replay.recall // => 1
@@ -984,6 +1183,9 @@ export class RouteReplay extends S.Opaque<RouteReplay, { readonly brand: unique 
     baseUnknownHeads: S.Int,
     unresolvedHeads: S.Int,
     recall: S.Finite,
+    unknownRedHeads: S.Int,
+    unknownRedJobNames: S.Array(S.String),
+    recallCertain: S.Boolean,
     perHead: S.Array(RouteReplayHead),
   }).pipe(
     $I.annoteSchema("RouteReplay", {

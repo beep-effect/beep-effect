@@ -215,13 +215,18 @@ const withSanctionedEcosystemDiagnosticDelta = Effect.fnUntraced(function* (
 const NoEmitTurboConfig = {
   $schema: "https://v2-11-8.turborepo.dev/schema.json",
   extends: ["//"],
-  tasks: { build: { outputs: [] } },
+  tasks: { build: { outputs: [] }, check: { dependsOn: ["^build"] } },
+};
+// Bundler apps keep `check` off their own `next build` / `vite build`.
+const BundlerTurboConfig = {
+  $schema: "https://v2-11-8.turborepo.dev/schema.json",
+  extends: ["//"],
+  tasks: { check: { dependsOn: ["^build"] } },
 };
 
 const ExpectedGeneratedQualityScripts = {
-  babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
-  "beep:build": "tsrs -p tsconfig.json && bun run babel",
-  "beep:check": "tsrs -p tsconfig.check.json && bun run beep:check:tests",
+  "beep:build": "tsrs -p tsconfig.json --emitDeclarationOnly",
+  "beep:check": "tsrs -p tsconfig.json --emitDeclarationOnly && bun run beep:check:tests",
   "beep:check:tests": "tsrs -p tsconfig.test.json --noEmit",
   "beep:docgen": "bunx --bun --no-install docgen",
   docgen: "bun run beep:docgen",
@@ -243,7 +248,7 @@ const ExpectedGeneratedQualityScripts = {
 } as const;
 const ExpectedGeneratedStoriesQualityScripts = {
   ...ExpectedGeneratedQualityScripts,
-  "beep:check": "tsrs -p tsconfig.check.json && bun run beep:check:tests && bun run beep:check:stories",
+  "beep:check": "tsrs -p tsconfig.json --emitDeclarationOnly && bun run beep:check:tests && bun run beep:check:stories",
   "beep:check:stories": "tsrs -p tsconfig.stories.json --noEmit",
 } as const;
 const ExpectedNextjsAppScripts = {
@@ -845,6 +850,8 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
             const generatedPackage = yield* decodeGeneratedPackageManifest(readJsonFile15);
 
             expect(generatedPackage.scripts).toEqual(ExpectedNextjsAppScripts);
+            const bundlerTurbo = yield* readJsonFile(path.join(packageDir, "turbo.json"));
+            expect(bundlerTurbo).toEqual(BundlerTurboConfig);
             expect(generatedPackage.scripts.docgen).toBeUndefined();
             expect(generatedPackage.exports).toBeUndefined();
             expect(generatedPackage.files).toBeUndefined();
@@ -909,6 +916,8 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
             const generatedPackage = yield* decodeGeneratedPackageManifest(readJsonFile20);
 
             expect(generatedPackage.scripts).toEqual(ExpectedTauriAppScripts);
+            const bundlerTurbo = yield* readJsonFile(path.join(packageDir, "turbo.json"));
+            expect(bundlerTurbo).toEqual(BundlerTurboConfig);
             expect(generatedPackage.scripts.docgen).toBeUndefined();
             expect(generatedPackage.exports).toBeUndefined();
             expect(generatedPackage.files).toBeUndefined();

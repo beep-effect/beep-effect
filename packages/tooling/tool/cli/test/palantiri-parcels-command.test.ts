@@ -27,7 +27,7 @@ import {
   proofJobInput,
   renderParcelSpec,
 } from "@beep/repo-cli/test/Palantiri";
-import { MemoryStats } from "@beep/repo-cli/test/RepoRun";
+import { ComputeProfileProbe, MemoryStats, makeComputeProfileProbe } from "@beep/repo-cli/test/RepoRun";
 import { layerSessionLedgerMemory, SessionLedger, SessionLedgerRow } from "@beep/repo-cli/test/Session";
 import {
   ProofJobRecord,
@@ -280,6 +280,13 @@ describe("host-pressure", () => {
     totalGib: Effect.succeed(64),
     ceilingGib: Effect.succeed(64),
   });
+  // Pinned so the memory line names the same profile on every host.
+  const GIB = 1024 ** 3;
+  const workstationProbe = makeComputeProfileProbe({
+    constrainedMemoryBytes: () => 64 * GIB,
+    totalMemoryBytes: () => 64 * GIB,
+    residentBytes: () => 0,
+  });
 
   // A temporary proc root, optionally with pressure files, read through the
   // live source.
@@ -296,7 +303,8 @@ describe("host-pressure", () => {
           discard: true,
         });
         const source = yield* makeHostPressureSource({ procRoot: proc, admission: Effect.succeedNone }).pipe(
-          Effect.provideService(MemoryStats, memoryStats)
+          Effect.provideService(MemoryStats, memoryStats),
+          Effect.provideService(ComputeProfileProbe, workstationProbe)
         );
         return runtimeWith(Layer.succeed(HostPressureSource, source));
       })
@@ -316,7 +324,7 @@ describe("host-pressure", () => {
         const envelope = yield* decodeEnvelope(json);
         expect(reasonOf(envelope)).toBe("attribution-incomplete");
         expect(envelope.summary).toBe(
-          "3 of 4 readings fresh; 1 unreachable (io); cpu 2.1%, memory 2.1% stalled (some, avg10); 40 of 64 GiB available"
+          "3 of 4 readings fresh; 1 unreachable (io); cpu 2.1%, memory 2.1% stalled (some, avg10); 40 of 64 GiB available (ceiling 64 GiB, workstation)"
         );
         expectClean(json);
       })

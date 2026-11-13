@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "citation-engine-install-once",
+    "packetId": "goal-packet/v1:25b1edf0fdaf7e397929ffcc5d92187ab35670228ddf18f0c79ff5ac4ba7f6dd",
+    "title": "Citation Engine Install Once",
+    "status": "active",
+    "created": "2026-11-12",
+    "updated": "2026-11-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/citation-engine-install-once",
+  "lifecycle": "active",
+  "mission": "Install the citation stage tree, tokenizer and regex evaluators once per engine, bind each request's budget, Scope and admission through one invocation service, and own configuration once at the engine boundary, with no change to extraction results.",
+  "statusNote": "Slice A1 in review: the probe fixture and recorded baseline (history/evidence/2026-11-13-a1-baseline.md). Next slice A2, the CitationInvocation binding.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/citation-engine-install-and-worker-reuse",
+    "graduated": "2026-11-12"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/citation-engine-install-once/README.md",
+    "goals/citation-engine-install-once/SPEC.md",
+    "goals/citation-engine-install-once/PLAN.md",
+    "goals/citation-engine-install-once/GOAL.md",
+    "goals/citation-engine-install-once/research/SOURCES.md",
+    "explorations/citation-engine-install-and-worker-reuse/research/design-2026-11-12.md",
+    "explorations/citation-engine-install-and-worker-reuse/research/design-review-2026-11-12.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/citation-engine-install-once/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "in-progress"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/citation-engine-install-once/GOAL.md)\" -le 4000",
+    "jq . goals/citation-engine-install-once/ops/manifest.json",
+    "rg -n \"citation-engine-install-once|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/citation-engine-install-once",
+    "git diff --check -- goals/citation-engine-install-once",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

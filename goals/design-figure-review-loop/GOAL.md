@@ -65,6 +65,8 @@ destructive state yourself when the goal needs them: record each in SPEC.md's
 Decision Log with its reason and how to reverse it, then continue. Escalate
 only what AGENTS.md "Autonomy" lists.
 
-Done only when the goal reaches `completed-retained` (acceptance passes,
-verification is complete, closeout and reflection landed), or when a blocker
-that needs the operator is reported with file/command evidence.
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug design-figure-review-loop` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/design-figure-review-loop/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

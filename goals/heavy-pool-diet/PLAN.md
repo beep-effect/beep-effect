@@ -35,7 +35,7 @@ three of this packet's PRs are open at once; slices 1 to 3 are the first three.
 | 11 | `ci: switch Admission to the pinned binary after the pin bump` | PERIH-01 slice 3 | S | Heavy Admission in `check.yml` and `heavy-admit.yml` runs the binary without the workspace install; admission-to-Heavy start read on the scorecard; tested revert in the PR body. Workflow PR: cache-policy baseline re-record. | Slice 10 |
 | 12 | `chore(ci): queue-inclusive leg-width A/B harness for Test Unit` | HOST-08 | M | Hosted A/B under 1, 2 and 4+ concurrent PRs: push-to-Test-Unit p95 at most 9.5 min per run, runner-minutes beside it, no queued-job growth at the ceiling; the adopt-or-not result is a decision file. | Test Unit steady state (decision file); MEAS-04 (`certainty-scorecard`); ROUT-01 already met (landed in #3030; `hosted-setup-tax`) |
 
-The final PR of the goal carries the scorecard readings, `proposedCloseout` and the reflection; it may ride with
+The final PR of the goal carries the scorecard readings, the `closeout` record and the reflection; it may ride with
 slice 12 or follow it.
 
 ## Closeout Checklist
@@ -47,9 +47,13 @@ Before marking the packet closed:
    validate against `ReflectionFrontmatter`.
 2. Run `bun run beep lint reflection-artifacts`.
 3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase
-   statuses and a typed `proposedCloseout` with status `completed-retained`
-   and finalPullRequest. Keep `initiative.status` operative until completion
-   evidence verifies; do not close the external execution/session ledger from a proposal.
+   statuses. Once the final PR is open, run
+   `bun run beep goals set-status heavy-pool-diet completed-retained`: it writes
+   `closeout` naming that PR with the matching `initiative.status`, and the
+   commit ships in the final PR. After the merge,
+   `bun run beep goals completion refresh --slug heavy-pool-diet` must print verified;
+   name any red required check in a committed decision file
+   (`redAttribution`).
 
 ## Execution Notes
 
@@ -138,5 +142,72 @@ The mutation fixtures are `packages/tooling/tool/cli/test/ci-binary-closure.test
 Lane claude/jolly-hopper-9a2206 · PR #3145
 
 Reverse: Revert the slice's squash commit; beep-ci-binary.yml then releases on its path list again and the closure command disappears.
+
+### Baselines before d8326d5593 are not comparable (declaration-only builds), 2026-11-13
+
+declaration-only-builds PR 2 (#3208) merged at `d8326d55935849b4bf6fd29ec4ef80327efd6af8` (2026-11-13T05:44:35Z). Library builds are now `tsrs -p tsconfig.json --emitDeclarationOnly`: no Babel step, no `babel` script key, no JavaScript in a library dist.
+
+- Every `#build` cache entry (local, remote, CI) misses once from that commit. The first run after merging main rebuilds cold and is not a regression.
+- Any wall-time, cache-size or dist-size baseline this packet recorded before that commit is not comparable with a reading after it. Re-take the baseline before reading an after-number.
+- Measured by the owning goal (181 packages, serial, fastest of three): build 80.9 s to 32.9 s, dist 232.5 MB to 147.9 MB, compile unchanged (`goals/declaration-only-builds/research/2026-11-13-build-after.md`).
+- A lane editing generated files (package.json scripts, the catalog, turbo.json, the policy fingerprint, the cache baseline, the check-census baseline) merges main first and re-runs the generators.
+
+Lane chore/ci-goals-finish
+
+Reverse: Delete this checkpoint; it records a fact about main and changes no behaviour.
+
+### Check-lane baselines before 3e822c71c5 are not comparable (check once), 2026-11-13
+
+declaration-only-builds PR 3 (#3242, "check once") merged at `3e822c71c5` (2026-11-13). The root Turbo `check` task now depends on the package's own `build` for declaration-only packages, and their `beep:check` runs the declaration-only build command instead of a separate no-emit check.
+
+- Every `check` task hash misses once from that commit. The first run after merging main is cold and is not a regression.
+- Build minutes now sit inside the check lane: Heavy / Check and Heavy / Build start together on separate VMs, so on a cold hash both compute the same build. A check-lane wall-time or runner-minute baseline recorded before that commit is not comparable with a reading after it. Re-take the baseline before reading an after-number.
+- The cache-qualification and check-census baselines were re-recorded in that PR; a reading that compares against either must use the post-merge files.
+- Measured by the owning goal on main at `d8326d55935` (182 packages, serial): own-source check 35.4 s, a warm unchanged build 19.7 s; the saving from checking once is 15.7 s serial.
+- `TSRS_FAST` is a global Turbo input and part of the tsrs incremental state: record with each baseline whether it was set.
+- Follow-up this makes possible, not scheduled here: folding Heavy / Build into Heavy / Check (one fewer fleet VM per run), a heavy-pool-diet slice.
+
+Lane docs/check-lane-baseline-break
+
+Reverse: Delete this checkpoint; it records a fact about main and changes no behaviour.
+
+### First main closure-gate runs after #3145 failed before the digest comparison, 2026-11-13
+
+#3145 merged as 87c4dc204c8 on 2026-11-13. The first four `Beep CI Binary` runs on main after it failed in "Compare the closure digest with the latest release" with `Missing required flag: --list` (job 131612442366 and siblings): runs 43342046581, 43342105606, 43342142443 and 43342189531, on main pushes 87c4dc204c8 through d1c7c6cb63f. `beep ci binary-closure` declared `--list` as a boolean flag without a default, so the CLI required it, and the workflow calls the command with `--out` only. Every run stopped before compile, so no release was cut and the pinned binary at `.github/actions/fetch-beep-ci/action.yml` was never affected. The two runs before #3145 (61ac4497363, f3cd33a2969) passed on the old path trigger.
+
+These runs therefore say nothing yet about closure skips: none reached the digest comparison. #3165 gives `--list` a default of false and adds `ci-binary-closure-command.test.ts`, which runs the workflow's exact `--out`-only invocation through the registered command (red without the default, green with it). The same command with the default in place exits 0 in about 3 s and writes a 345-file closure JSON. In the same PR, `ci-binary-closure.test.ts` resolves the checkout root with `fs.realPath` inside each test, which satisfies EV010 without the inventory row #3145 added (S31). The first main push after #3165 publishes the first digest-recording release; the closure-skip reading is the main push after that whose closure is unchanged.
+
+Lane fix/ci-binary-closure-ev010 · PR #3165
+
+Reverse: Revert #3165's squash commit; the release workflow then fails at the closure step again and the closure test needs its EV010 inventory row back.
+
+### PERIH-11: the closure digest covers tsconfig chains; dispatches run on main only, 2026-11-13
+
+A post-merge review of #3145, #3165, #3183 and #3185 found three gaps, all fixed in one PR.
+
+- The digest missed TypeScript configuration. When Bun bundles, it resolves `compilerOptions.paths` before `node_modules` and the exports map, and it honours emit options such as `jsx` and `verbatimModuleSyntax`. The root `tsconfig.json` carries the `@beep/*` path aliases (written by tsconfig-sync) and `tsconfig.base.json` sets `jsx` and `verbatimModuleSyntax`. So an alias or emit edit could change the binary while the digest held, and the workflow would keep a stale release. The closure now adds each reached workspace's `tsconfig.json`, every file on its relative `extends` chain, and the root `tsconfig.json`. A package-specifier `extends` resolves into `node_modules`, which `bun.lock` pins. The closure grows from 345 to 361 files. The workflow path prefilter gains the root `tsconfig.json` and `tsconfig.base.json`, so an edit to those starts the run. Including whole workspace tsconfigs, `references` included, adds little release churn: tsconfig-sync rewrites references only when a dependency changes, and the changed `package.json` already moves the digest.
+- A `workflow_dispatch` from a non-default ref joined the single `beep-ci-binary` concurrency group #3185 introduced. It could take a pending main push's slot, get the main push cancelled, then skip its own job, leaving a closure change unpublished. The group is now keyed on `github.ref`.
+- A `verify_reproducible` dispatch from a non-default ref skipped the whole job and showed green without comparing bytes. The job-level ref condition is now a first step that fails on any ref other than the default branch. When `verify_reproducible` is set and the closure changed, the summary says the run did not verify anything.
+- Including the root `tsconfig.json` would otherwise cut byte-identical releases: on main it changed 20 times in the 14 days to 2026-11-13 (tsconfig-sync adds alias entries whenever a package is added or renamed), and `tsconfig.base.json` changed 4 times. A changed digest now leads to a compile followed by a byte comparison with the latest release's `beep-linux-x64.sha256`. When the bytes match, the workflow re-uploads `beep-linux-x64.closure.json` onto that release with `--clobber` and appends a "re-recorded" line to its notes. It cuts no new release, and the next run sees the closure as unchanged and skips the compile. This rests on the build being reproducible, which run 43353769826 showed. Rejected: digesting only the alias entries the closure resolves, which is tighter but more code and more ways to be wrong.
+
+Lane fix/ci-binary-closure-tsconfig
+
+Reverse: Revert this PR's squash commit; tsconfig edits then stop moving the digest and a non-main dispatch skips green again.
+
+### PERIH-11 slice 1 read on main: unchanged closures skip, and recompile byte for byte, 2026-11-13
+
+After #3165 (2ca2885bf09) fixed the `--list` default, the `Beep CI Binary` runs on main read as follows (closure digest, then outcome):
+
+- 2ca2885bf09, run 43347759308: digest 40dcf6635fef; the latest release (beep-ci-61ac4497363e) recorded no digest, so it compiled and published beep-ci-2ca2885bf097, the first release that records a digest.
+- ad71f5cdb67, run 43347787888: same digest 40dcf6635fef, but it also compiled and published (beep-ci-ad71f5cdb675). It overlapped run 43347759308 and listed the releases before that run had published, so it compared against beep-ci-61ac4497363e. The per-SHA concurrency group lets runs for different commits overlap; serializing them is a separate small PR.
+- 3b85830d051, run 43350867866: digest 40dcf6635fef equals the recorded digest, so the job skipped compile, smoke and publish. This is the first closure skip.
+- 202927595d6, run 43351886883: digest 6560e02c00f9 changed, so the job compiled and published beep-ci-202927595d64.
+- 0f7a40369eb (run 43351914611) and 29ccc707fa9 (run 43352789758): digest 6560e02c00f9 unchanged, so both skipped.
+
+Reproducibility: the `verify_reproducible` dispatch on main at 29ccc707fa9 (run 43353769826) found the closure unchanged, recompiled anyway, and matched beep-ci-202927595d64 byte for byte (sha256 98a0a2483f6e...). The release was built from 202927595d6, a different commit with the same closure, so an unchanged closure compiles to the same binary on hosted CI. PLAN slice 2's admission gate is met. The pin-bump automation is slice 7.
+
+Lane fix/ci-binary-closure-coverage
+
+Reverse: Records hosted readings only; revert this checkpoint file if the runs are re-read differently.
 
 <!-- beep:decisions:end -->

@@ -4,13 +4,13 @@
     "id": "canonical-digest-owner",
     "packetId": "goal-packet/v1:73bb856d1a550694f85d5d2b5120e0ee36eb9c86a765d74b2d07bfce0221e0f2",
     "title": "Canonical Digest Owner",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-10",
-    "updated": "2026-11-12",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/canonical-digest-owner",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "RFC 8785 is the one canonical byte form, @beep/jsonc owns it, digests share one sha256: grammar, and the hand-rolled encoders are replaced with proof that no stored digest changes.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -23,7 +23,44 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 3096,
+        "role": "supporting"
+      },
+      {
+        "number": 3129,
+        "role": "supporting"
+      },
+      {
+        "number": 3173,
+        "role": "supporting"
+      },
+      {
+        "number": 3193,
+        "role": "supporting"
+      },
+      {
+        "number": 3204,
+        "role": "supporting"
+      },
+      {
+        "number": 3211,
+        "role": "supporting"
+      },
+      {
+        "number": 3209,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/feat_canonical-digest-owner-guard-2121c956b047/verdict.json",
+        "gating": true
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -65,22 +102,22 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [
@@ -94,5 +131,9 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3209
+  }
 }

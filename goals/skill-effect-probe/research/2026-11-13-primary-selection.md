@@ -1,0 +1,1 @@
+Primary selection, 2026-11-13: neither all-lanes pass nor law pass qualifies on the laws-prompt pilot (0 tasks with a pooled B or C pass for either, `history/p1-laws-pilot/selection.json`), so under amendment 2 there is no scored run and the verdict is Insensitive.

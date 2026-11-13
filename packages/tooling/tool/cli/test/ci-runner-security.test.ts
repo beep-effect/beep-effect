@@ -29,8 +29,23 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
+import type { CiRelevanceLane } from "@beep/repo-cli/commands/Ci";
 
 const SETUP_MONOREPO_ACTION = "./.github/actions/setup-monorepo-ci";
+const LANE_GATED = "steps.lane-gate.outputs.should_run == 'true'";
+const LANE_SKIPPED = "steps.lane-gate.outputs.should_run != 'true'";
+type TierOneGates = { readonly setup: string; readonly skip: string };
+// Repo Sanity also sets up, and reports no skip, on its documentation path.
+const TIER_ONE_GATES: Readonly<Record<string, TierOneGates>> = {
+  verify: {
+    setup: `${LANE_GATED} || steps.lane-gate.outputs.docs_path == 'true'`,
+    skip: `${LANE_SKIPPED} && steps.lane-gate.outputs.docs_path != 'true'`,
+  },
+};
+const tierOneGates = (jobId: string): TierOneGates =>
+  O.getOrElse(R.get(TIER_ONE_GATES, jobId), () => ({ setup: LANE_GATED, skip: LANE_SKIPPED }));
+const laneRow = (lane: CiRelevanceLane): string =>
+  O.getOrElse(O.fromUndefinedOr(ciOperationalPatterns.lanes?.[lane]), () => "");
 
 // Explicit secret inputs of setup-monorepo-ci: the Turbo tokens plus the
 // application secret block packages/tooling/tool/cli/src/commands/Ci/CiOperational.service.ts allowlists. The script,
@@ -473,7 +488,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(triggers).not.toContain("pull_request_target");
       expect(yamlAt(workflow, ["permissions"])).toEqual({ contents: "read" });
       expect(yamlAt(workflow, ["jobs", "security", "name"])).toBe("Security");
-      expect(yamlAt(workflow, ["jobs", "security", "if"])).toBeUndefined();
+      // Security runs when the diff touches what it reads; every main push gets the full profile.
+      expect(yamlAt(workflow, ["jobs", "security", "needs"])).toEqual(["change-profile"]);
+      expect(yamlAt(workflow, ["jobs", "security", "if"])).toBe(
+        "${{ !cancelled() && needs.change-profile.outputs.docs_only != 'true' && needs.change-profile.outputs.security_relevant != 'false' }}"
+      );
       const jobs = yield* workflowJobs(workflow);
       expect(jobs.security?.permissions).toEqual({ contents: "read", actions: "read" });
       const review = stepByName(jobSteps(jobs, "security"), "Dependency review");
@@ -854,7 +873,17 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         assert.strictEqual(result.exitCode, 0, result.stderr.toString());
         return parseProfileOutput(result.stdout.toString());
       };
-      const fullProfile = { goals_only: "false", docs_only: "false", desktop_rust_relevant: "true" };
+      const fullProfile = {
+        goals_only: "false",
+        docs_only: "false",
+        desktop_rust_relevant: "true",
+        codegen_relevant: "true",
+        ecosystem_relevant: "true",
+        nix_relevant: "true",
+        desktop_ipc_relevant: "true",
+        sast_relevant: "true",
+        security_relevant: "true",
+      };
       git(["init"]);
       git(["config", "user.email", "ci-profile@example.test"]);
       git(["config", "user.name", "CI Profile Test"]);
@@ -1154,6 +1183,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       git(["config", "user.email", "ci-profile@example.test"]);
       git(["config", "user.name", "CI Profile Test"]);
       git(["config", "commit.gpgsign", "false"]);
+      // The gate reads its path expression from the checkout's pattern data; keep the
+      // copy out of the fixture commits so every diff stays the one under test.
+      const patternPath = "packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json";
+      yield* fs.makeDirectory(path.dirname(path.join(tempRoot, patternPath)), { recursive: true });
+      yield* fs.copyFile(path.join(repoRoot, patternPath), path.join(tempRoot, patternPath));
+      yield* fs.writeFileString(path.join(tempRoot, ".git/info/exclude"), `${patternPath}\n`, { flag: "a" });
       yield* writeAndCommit("README.md", "# baseline\n", "baseline");
       const cratePath = "apps/professional-desktop/src-tauri/src/lib.rs";
       yield* writeAndCommit(cratePath, "pub fn baseline() {}\n", "baseline crate");
@@ -1328,7 +1363,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     Effect.fnUntraced(function* () {
       const policy = yield* readCredentialPolicySources();
       const jobs = yield* workflowJobs(policy.workflow);
-      const gated = "steps.lane-gate.outputs.should_run == 'true'";
+      const gated = LANE_GATED;
       for (const jobId of [
         "verify",
         "labs",
@@ -1341,13 +1376,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       ]) {
         const steps = jobSteps(jobs, jobId);
         const setupIndex = O.getOrThrow(A.findFirstIndex(steps, (step) => step.uses === SETUP_MONOREPO_ACTION));
-        assert.strictEqual(
-          setupMonorepoStep(jobs, jobId).if,
-          jobId === "verify" ? `${gated} || steps.lane-gate.outputs.home_paths_only == 'true'` : gated,
-          jobId
-        );
+        const gates = tierOneGates(jobId);
+        assert.strictEqual(setupMonorepoStep(jobs, jobId).if, gates.setup, jobId);
         assert.isBelow(stepIndexByName(steps, "Determine lane execution"), setupIndex, jobId);
-        assert.strictEqual(stepByName(steps, "Skip lane").if, "steps.lane-gate.outputs.should_run != 'true'", jobId);
+        assert.strictEqual(stepByName(steps, "Skip lane").if, gates.skip, jobId);
       }
       for (const jobId of [
         "labs",
@@ -1364,40 +1396,55 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           jobId
         );
       }
-      const verifyGate = stepRun(jobSteps(jobs, "verify"), "Determine lane execution");
-      assert.include(verifyGate, 'skip_profile="$docs_only"');
-      // Repo Sanity validates `.changeset/*.md`, which the docs-only rule counts as documentation.
-      assert.include(
-        verifyGate,
-        'if [[ "${{ env.BEEP_CI_LANE_ID }}" == "repo-sanity" ]]; then\n  skip_profile="$goals_only"'
-      );
-      // A goals_only packet-prose diff skips the Repo Sanity body, never the
-      // public-repo home path law: the job condition names only the cancel and
-      // Change Profile terms, never goals_only, and the law step is gated only on
-      // the lane gate's home_paths_only output.
+      const verifySteps = jobSteps(jobs, "verify");
+      const verifyGate = stepRun(verifySteps, "Determine lane execution");
+      // Repo Sanity is the required gate for documentation diffs too: the job
+      // condition names only the cancel and Change Profile terms, never
+      // docs_only, and a docs_only diff takes the documentation path (the home
+      // path law and the changeset checks) instead of the lane body.
       assert.strictEqual(
         yamlAt(policy.workflow, ["jobs", "verify", "if"]),
         "${{ !cancelled() && needs.change-profile.result == 'success' }}"
       );
+      assert.strictEqual(
+        stepByName(verifySteps, "Determine lane execution").env?.DOCS_ONLY,
+        "${{ needs.change-profile.outputs.docs_only }}"
+      );
       assert.include(
         verifyGate,
-        'should_run=false\n  # Packet prose still gets the private home path law.\n  if [[ "${{ env.BEEP_CI_LANE_ID }}" == "repo-sanity" ]]; then\n    home_paths_only=true'
+        'if [[ "${{ env.BEEP_CI_LANE_ID }}" == "repo-sanity" && "$DOCS_ONLY" == "true" ]]; then\n  should_run=false\n  docs_path=true'
       );
-      assert.include(verifyGate, 'echo "home_paths_only=$home_paths_only" >> "$GITHUB_OUTPUT"');
-      const homePaths = stepByName(jobSteps(jobs, "verify"), "Check private home paths");
-      assert.strictEqual(homePaths.if, "steps.lane-gate.outputs.home_paths_only == 'true'");
-      assert.strictEqual(
-        stepRun(jobSteps(jobs, "verify"), "Check private home paths"),
-        "bun run beep laws private-home-paths --check"
+      assert.include(verifyGate, 'echo "docs_path=$docs_path" >> "$GITHUB_OUTPUT"');
+      const docsSanity = stepByName(verifySteps, "Check documentation sanity");
+      assert.strictEqual(docsSanity.if, "steps.lane-gate.outputs.docs_path == 'true'");
+      // The skills lock step of the lane body is skipped, on either path, only when the pull
+      // request changes none of the `skills` pattern row's paths; an absent row keeps it.
+      assert.include(verifyGate, "skills_lock=true");
+      assert.include(verifyGate, "jq -r '.skills // empty'");
+      assert.include(verifyGate, 'echo "skills_lock=$skills_lock" >> "$GITHUB_OUTPUT"');
+      assert.strictEqual(yamlAt(docsSanity, ["env", "SKILLS_LOCK"]), "${{ steps.lane-gate.outputs.skills_lock }}");
+      const docsSanityRun = stepRun(verifySteps, "Check documentation sanity");
+      assert.include(docsSanityRun, 'if [[ "$SKILLS_LOCK" == "false" ]]; then');
+      assert.include(docsSanityRun, "bun run beep ci lane repo-sanity --docs-only --skip-skills-lock\nelse");
+      assert.include(docsSanityRun, "else\n  bun run beep ci lane repo-sanity --docs-only\nfi");
+      const laneRun = stepRun(verifySteps, "Run verification lane");
+      assert.include(
+        laneRun,
+        'if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "${{ steps.lane-gate.outputs.skills_lock }}" == "false" ]]; then\n      run_lane ci lane repo-sanity --changeset-status --skip-skills-lock'
       );
-      assert.include(verifyGate, "^packages/ecosystem/");
+      // A push never passes the skip.
+      assert.include(laneRun, "else\n      run_lane ci lane repo-sanity\n    fi");
+      // Codegen and Ecosystem read their path gates from the change-profile pattern data.
+      assert.include(verifyGate, "'.lanes[$lane] // empty'");
+      assert.include(laneRow("ecosystem"), "^packages/ecosystem/");
       assert.include(
         stepRun(jobSteps(jobs, "coverage-regression"), "Determine comparison execution"),
         '[[ "$docs_only" == "true" ]]'
       );
 
       const nix = jobSteps(jobs, "nix");
-      assert.include(stepRun(nix, "Determine lane execution"), "^flake\\.(nix|lock)$");
+      assert.include(stepRun(nix, "Determine lane execution"), "'.lanes.nix // empty'");
+      assert.include(laneRow("nix"), "^flake\\.(nix|lock)$");
       for (const name of ["Install Nix", "Setup Cachix (read-only)", "Run Nix checks"]) {
         assert.strictEqual(stepByName(nix, name).if, gated, name);
       }
@@ -1410,8 +1457,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       );
       assert.include(stepRun(sast, "Run SAST"), "bun run beep ci lane sast");
 
+      // Docs-only (and green-shard) aggregates skip before any install; the exact conditions and their
+      // every needs combination are pinned in ci-docs-job-admission.test.ts.
       for (const jobId of ["lint", "test-unit"]) {
-        assert.strictEqual(yamlAt(policy.workflow, ["jobs", jobId, "if"]), "${{ !cancelled() }}", jobId);
+        const guard = String(yamlAt(policy.workflow, ["jobs", jobId, "if"]));
+        assert.include(guard, "!cancelled() && !(needs.change-profile.result == 'success' && ", jobId);
+        assert.include(guard, "needs.change-profile.outputs.docs_only == 'true' && ", jobId);
+        assert.include(guard, `needs.${jobId}-shard.result == 'skipped'`, jobId);
       }
     })
   );
@@ -1670,10 +1722,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.notInclude(workflowText, "check|test-integration|coverage)");
       assert.notInclude(workflowText, "lint-policy|codegen|ecosystem)");
       assert.include(workflowText, "codegen|ecosystem)");
-      // typos runs only inside Lint Policy (heavy.yml) and lefthook.
-      assert.notInclude(workflowText, "typos-cli");
+      // typos runs inside Lint Policy (heavy.yml), lefthook, and check.yml's Docs
+      // Policy job for docs_only pull requests, pinned to the same release.
+      const typosPins = (text: string) =>
+        A.dedupe(O.getOrElse(Str.match(/typos-cli@[0-9.]+/gu)(text), () => A.empty<string>()));
+      assert.deepStrictEqual(typosPins(workflowText), typosPins(heavyWorkflowText));
+      assert.lengthOf(typosPins(heavyWorkflowText), 1);
       assert.notInclude(workflowText, "install_typos");
-      assert.include(heavyWorkflowText, "typos-cli");
     })
   );
 
@@ -1851,9 +1906,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const heavyJobs = yield* workflowJobs(heavy);
       assert.notInclude(checkText, "Free runner disk");
       assert.notInclude(heavyText, "Free runner disk");
-      // Repo Sanity's law-only goals_only path skips the cleanup and the
-      // application secrets; every full lane run keeps both.
-      const lawOnlyLight = "${{ steps.lane-gate.outputs.home_paths_only == 'true' && 'false' || 'true' }}";
+      // Repo Sanity's documentation path skips the cleanup and the application
+      // secrets; every full lane run keeps both.
+      const lawOnlyLight = "${{ steps.lane-gate.outputs.docs_path == 'true' && 'false' || 'true' }}";
       assert.strictEqual(setupMonorepoInputs(checkJobs, "verify")["free-disk"], lawOnlyLight);
       assert.strictEqual(setupMonorepoInputs(checkJobs, "verify")["app-secrets"], lawOnlyLight);
       assert.strictEqual(setupMonorepoInputs(checkJobs, "labs")["free-disk"], "true");
@@ -1962,8 +2017,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "check.yml:Test Unit (${{ matrix.partition }})",
         "check.yml:Test Integration (${{ matrix.partition }})",
         "check.yml:Property Laws (${{ matrix.partition }})",
+        // A Test Unit partition Test Plan routed to the overflow pool; the Test Unit aggregate judges it
+        // (ci-shard-overflow.test.ts pins it to the hosted shard's steps).
+        "shard-overflow.yml:Overflow",
         "check.yml:Coverage Artifact Migration",
         "cache-warm.yml:Warm Turbo cache",
+        // Scheduled read-only scorecard of hosted runs (goals/certainty-scorecard MEAS-01); it judges no head.
+        "certainty-nightly.yml:Certainty Nightly Report",
         // Manual source inspection is operational evidence, not a required quality lane.
         "cache-local-observe.yml:Observe local cache pilot",
         "heavy.yml:Heavy / Observe local cache pilot",
@@ -1975,6 +2035,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         // Protected execution authenticates observations; required quality proof stays separate.
         "cache-producer.yml:Execute approved signed producer",
         "heavy.yml:Heavy / Execute approved signed producer",
+        // Draft-only writer of the catalog shards a worker-profile lane skipped;
+        // Repo Sanity still proves the shards, so it grants no quality verdict.
+        "catalog-regeneration.yml:Catalog Regeneration",
         "data-sync.yml:Sync Official Data",
         // Post-merge publisher of the commit-message overlay ref; it proves the
         // ref with `beep history notes --check` and grants no quality verdict.
@@ -2032,6 +2095,225 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       }
       // A stale exemption would silently admit a future job of that name without a lane descriptor.
       expect(A.filter(exemptions, (exemption) => !A.contains(observedContexts, exemption))).toEqual([]);
+    })
+  );
+
+  // goals/certainty-scorecard MEAS-01 slice 2: a scheduled scorer that reads Actions runs with the
+  // workflow token, runs default-branch code only, publishes no branch names, and turns red when the
+  // night's report is not certified, so a refused night can never be counted toward the seven.
+  it.effect("keeps the certainty nightly read-only, default-branch only and red on an uncertified night", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const ambientPath = yield* Config.String("PATH");
+      const root = yield* findRepoRoot();
+      const text = yield* fs.readFileString(path.join(root, ".github/workflows/certainty-nightly.yml"));
+      const workflow = parseWorkflowYaml(text);
+      const triggers = yield* decodeYamlRecord(yamlAt(workflow, ["on"]));
+      expect(A.sort(R.keys(triggers), Order.String)).toEqual(["schedule", "workflow_dispatch"]);
+      expect(yamlAt(workflow, ["on", "schedule", 0, "cron"])).toBe("41 4 * * *");
+      expect(yamlAt(workflow, ["permissions"])).toEqual({});
+      expect(yamlAt(workflow, ["concurrency"])).toEqual({ group: "certainty-nightly", "cancel-in-progress": false });
+      const job = (segments: ReadonlyArray<string | number>) => yamlAt(workflow, ["jobs", "report", ...segments]);
+      expect(job(["if"])).toBe("github.ref == format('refs/heads/{0}', github.event.repository.default_branch)");
+      expect(job(["runs-on"])).toBe("ubuntu-24.04");
+      expect(job(["timeout-minutes"])).toBe(30);
+      expect(job(["permissions"])).toEqual({ actions: "read", contents: "read" });
+      const jobs = yield* workflowJobs(workflow);
+      const steps = jobSteps(jobs, "report");
+      expect(stepByName(steps, "Checkout repository").with).toEqual({
+        "fetch-depth": 0,
+        filter: "blob:none",
+        "persist-credentials": false,
+      });
+      expect(stepByName(steps, "Setup Bun").uses).toBe("./.github/actions/setup-bun");
+      expect(stepRun(steps, "Install dependencies")).toBe("bun install --frozen-lockfile --ignore-scripts");
+      expect(
+        A.filter(
+          steps,
+          (step) =>
+            step.uses !== undefined && !/^(\.\/\.github\/actions\/|[\w-]+\/[\w-]+@[0-9a-f]{40}$)/.test(step.uses)
+        )
+      ).toEqual([]);
+      const code = pipe(
+        Str.split(text, "\n"),
+        A.filter((line) => !Str.startsWith("#")(Str.trim(line))),
+        A.join("\n")
+      );
+      expect(code).not.toContain("secrets.");
+      expect(code).not.toContain("beep-ec2-heavy");
+      // An uncertified report must fail the run, and the captured corpus names branches.
+      expect(code).not.toContain("--preview");
+      expect(code).not.toContain("--write-corpus");
+      expect(stepByName(steps, "Upload the report").with).toEqual({
+        name: "certainty-report-${{ steps.plan.outputs.day }}-attempt-${{ github.run_attempt }}",
+        path: "${{ runner.temp }}/certainty/report.json\n${{ runner.temp }}/certainty/summary.md\n",
+        "if-no-files-found": "warn",
+        "retention-days": 90,
+      });
+      expect(stepByName(steps, "Publish the job summary").if).toBe("always()");
+
+      const temp = yield* fs.makeTempDirectoryScoped();
+      const bin = path.join(temp, "bin");
+      yield* fs.makeDirectory(bin);
+      // `gh` logs every call and answers by endpoint: the scripted core bucket for `rate_limit`, the
+      // run's created_at for `actions/runs/<id>` (or a failure), and a later per-attempt created_at that
+      // the plan must never read. `bun` records its argv and answers as the certainty command would.
+      yield* fs.writeFileString(
+        path.join(bin, "gh"),
+        A.join(
+          [
+            "#!/usr/bin/env bash",
+            'printf "%s\\n" "$*" >> "$FAKE_GH_CALLS"',
+            'case "$*" in',
+            '  *rate_limit*) printf "%s\\n" "$FAKE_RATE_LIMIT" ;;',
+            '  */attempts/*) printf "%s\\n" "$FAKE_ATTEMPT_CREATED_AT" ;;',
+            '  *actions/runs/*) [[ "${FAKE_RUN_API:-}" == fail ]] && { echo "HTTP 502" >&2; exit 1; }',
+            '    printf "%s\\n" "$FAKE_CREATED_AT" ;;',
+            "  *) exit 1 ;;",
+            "esac",
+            "",
+          ],
+          "\n"
+        )
+      );
+      yield* fs.writeFileString(
+        path.join(bin, "bun"),
+        A.join(
+          [
+            "#!/usr/bin/env bash",
+            `printf '<%s>' "$@" > "$FAKE_ARGS"`,
+            'case "$FAKE_MODE" in',
+            `  certified) echo '{"certified":true,"refusals":[]}' ;;`,
+            `  refused) echo '{"certified":false,"refusals":["api-partial"]}'; exit 1 ;;`,
+            `  lenient) echo '{"certified":false,"refusals":["empty-population"]}' ;;`,
+            "  *) echo 'capture failed' >&2; exit 1 ;;",
+            "esac",
+            "",
+          ],
+          "\n"
+        )
+      );
+      yield* fs.chmod(path.join(bin, "gh"), 0o755);
+      yield* fs.chmod(path.join(bin, "bun"), 0o755);
+      const plan = stepRun(steps, "Choose the day and the request bound");
+      const requestCap = String(stepEnvironment(stepByName(steps, "Choose the day and the request bound")).REQUEST_CAP);
+      const score = stepRun(steps, "Score the day");
+      let run = 0;
+      const runStep = Effect.fnUntraced(function* (script: string, env: Readonly<Record<string, string>>) {
+        const output = path.join(temp, `output-${run}`);
+        const exported = path.join(temp, `env-${run}`);
+        const ghCalls = path.join(temp, `gh-calls-${run}`);
+        run += 1;
+        yield* fs.writeFileString(output, "");
+        yield* fs.writeFileString(exported, "");
+        yield* fs.writeFileString(ghCalls, "");
+        const result = Bun.spawnSync(["bash", "-c", script], {
+          cwd: temp,
+          env: {
+            PATH: `${bin}:${ambientPath}`,
+            GITHUB_ENV: exported,
+            GITHUB_OUTPUT: output,
+            RUNNER_TEMP: temp,
+            REQUEST_CAP: requestCap,
+            GITHUB_REPOSITORY: "beep-effect/beep-effect",
+            GITHUB_RUN_ID: "43500000001",
+            FAKE_ARGS: path.join(temp, "bun-args"),
+            FAKE_GH_CALLS: ghCalls,
+            ...env,
+          },
+          stderr: "pipe",
+          stdout: "pipe",
+        });
+        return {
+          calls: yield* fs.readFileString(ghCalls),
+          exit: result.exitCode,
+          output: yield* fs.readFileString(output),
+          stdout: result.stdout.toString(),
+        };
+      });
+
+      // The day is a whole UTC day, and the bound is the bucket's remaining reads less the 15% reserve.
+      const planned = yield* runStep(plan, { DAY_INPUT: "2026-10-31", FAKE_RATE_LIMIT: "1000 900" });
+      expect(planned.exit).toBe(0);
+      expect(planned.output).toBe(
+        "day=2026-10-31\nsince=2026-10-31T00:00:00Z\nuntil=2026-11-01T00:00:00Z\nbound=750\nlimit=1000\nremaining=900\n"
+      );
+      // An explicit day is taken as given: the run's own record is never read.
+      expect(planned.calls).toBe('api rate_limit --jq .resources.core | "\\(.limit) \\(.remaining)"\n');
+
+      // Without a day the plan scores the UTC day before the run's created_at, read from the run, not
+      // from an attempt. A GitHub re-run keeps the run's created_at (run 43374964920: attempt 2 reads
+      // created_at 05:53:32Z at the run and 06:24:33Z at /attempts/2), so a schedule re-run days later
+      // still scores the night it repeats, never "yesterday" as of the re-run.
+      const runRecord = "api repos/beep-effect/beep-effect/actions/runs/43500000001 --jq .created_at\n";
+      const scheduled = yield* runStep(plan, {
+        DAY_INPUT: "",
+        FAKE_CREATED_AT: "2026-11-10T04:41:12Z",
+        FAKE_ATTEMPT_CREATED_AT: "2026-11-10T04:41:12Z",
+        FAKE_RATE_LIMIT: "1000 900",
+      });
+      expect(scheduled.exit).toBe(0);
+      expect(scheduled.output).toContain("day=2026-11-09\nsince=2026-11-09T00:00:00Z\nuntil=2026-11-10T00:00:00Z\n");
+      expect(Str.startsWith(runRecord)(scheduled.calls)).toBe(true);
+      const rerun = yield* runStep(plan, {
+        DAY_INPUT: "",
+        FAKE_CREATED_AT: "2026-11-10T04:41:12Z",
+        FAKE_ATTEMPT_CREATED_AT: "2026-11-12T08:15:00Z",
+        FAKE_RATE_LIMIT: "1000 900",
+      });
+      expect(rerun.output).toBe(scheduled.output);
+      expect(rerun.calls).not.toContain("/attempts/");
+      // A dispatch without a day follows the same rule from its own creation time.
+      const dispatched = yield* runStep(plan, {
+        DAY_INPUT: "",
+        FAKE_CREATED_AT: "2026-11-01T00:00:05Z",
+        FAKE_ATTEMPT_CREATED_AT: "2026-11-01T00:00:05Z",
+        FAKE_RATE_LIMIT: "1000 900",
+      });
+      expect(dispatched.output).toContain("day=2026-10-31\n");
+      // An unreadable or malformed run record refuses the night before the budget is read.
+      for (const failure of [{ FAKE_RUN_API: "fail" }, { FAKE_CREATED_AT: "null" }]) {
+        const closed = yield* runStep(plan, { DAY_INPUT: "", FAKE_RATE_LIMIT: "1000 900", ...failure });
+        expect([closed.exit, closed.output]).toEqual([1, ""]);
+        expect(closed.stdout).toContain("::error::could not read this run's created_at; the day is not scored.");
+        expect(closed.calls).not.toContain("rate_limit");
+      }
+      const capped = yield* runStep(plan, { DAY_INPUT: "2026-11-12", FAKE_RATE_LIMIT: "5000 4980" });
+      expect(capped.output).toContain(`bound=${requestCap}\n`);
+      const inReserve = yield* runStep(plan, { DAY_INPUT: "2026-11-12", FAKE_RATE_LIMIT: "1000 150" });
+      expect([inReserve.exit, inReserve.output]).toEqual([1, ""]);
+      expect(inReserve.stdout).toContain("inside the 15% reserve (150 of 1000 left, reserve 150)");
+      const unread = yield* runStep(plan, { DAY_INPUT: "2026-11-12", FAKE_RATE_LIMIT: "" });
+      expect([unread.exit, unread.output]).toEqual([1, ""]);
+      for (const day of ["2026-02-30", "2999-01-01", "2026-11-12; touch pwned", "$(touch pwned)"]) {
+        const refused = yield* runStep(plan, { DAY_INPUT: day, FAKE_RATE_LIMIT: "1000 900" });
+        expect([refused.exit, refused.output], day).toEqual([1, ""]);
+      }
+      const pwned = yield* fs.exists(path.join(temp, "pwned"));
+      expect(pwned).toBe(false);
+
+      // The score step passes the plan to the CLI and fails on anything but a certified report.
+      const window = { DAY: "2026-11-12", SINCE: "2026-11-12T00:00:00Z", UNTIL: "2026-11-13T00:00:00Z", BOUND: "750" };
+      const certified = yield* runStep(score, { ...window, FAKE_MODE: "certified" });
+      expect(certified.exit).toBe(0);
+      const bunArgs = yield* fs.readFileString(path.join(temp, "bun-args"));
+      expect(bunArgs).toBe(
+        `<run><beep><ci><certainty><--since><2026-11-12T00:00:00Z><--until><2026-11-13T00:00:00Z><--main-ref><HEAD><--max-requests><750><--json><--summary-out><${temp}/certainty/summary.md>`
+      );
+      const report = yield* fs.readFileString(path.join(temp, "certainty", "report.json"));
+      expect(report).toBe('{"certified":true,"refusals":[]}\n');
+      const refused = yield* runStep(score, { ...window, FAKE_MODE: "refused" });
+      expect(refused.exit).toBe(1);
+      expect(refused.stdout).toContain(
+        "::error title=Certainty not certified::The 2026-11-12 report was refused (api-partial); this night does not count toward the seven."
+      );
+      const lenient = yield* runStep(score, { ...window, FAKE_MODE: "lenient" });
+      expect(lenient.exit).toBe(1);
+      expect(lenient.stdout).toContain("was refused (empty-population)");
+      const crashed = yield* runStep(score, { ...window, FAKE_MODE: "crash" });
+      expect(crashed.exit).toBe(1);
+      expect(crashed.stdout).toContain("::error title=Certainty capture failed::No report for 2026-11-12");
     })
   );
   it.effect("keeps reusable Heavy callers compatible with the protected producer permission ceiling", () =>
@@ -2667,16 +2949,23 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const policy = yield* readCredentialPolicySources();
       const jobs = yield* workflowJobs(policy.workflow);
       const comparison = jobSteps(jobs, "coverage-regression");
-      expect(yamlAt(policy.workflow, ["jobs", "heavy", "needs"])).toEqual(["admission"]);
+      expect(yamlAt(policy.workflow, ["jobs", "heavy", "needs"])).toEqual(["change-profile", "admission"]);
       // Audit M4: the comparison waits for Test Unit and the Labs producer, not
-      // the whole verify matrix, and never starts inside a cancelled run.
+      // the whole verify matrix, and never starts inside a cancelled run. It reads
+      // Test Plan and both Test Unit halves too: an aggregate skipped on success
+      // passes only beside a successful plan whose hosted and overflow halves each
+      // succeeded or, holding nothing, were never allocated.
       expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "needs"])).toEqual([
+        "change-profile",
         "admission",
+        "test-plan",
         "test-unit",
+        "test-unit-shard",
+        "test-unit-overflow",
         "labs",
       ]);
       expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "if"])).toBe(
-        "${{ !cancelled() && needs.admission.outputs.docs_only != 'true' }}"
+        "${{ !cancelled() && needs.change-profile.outputs.docs_only != 'true' && needs.admission.outputs.docs_only != 'true' }}"
       );
       expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "name"])).toBe(
         "${{ needs.admission.outputs.legacy_coverage == 'true' && 'Coverage Artifact Migration' || 'Heavy / Coverage Regression' }}"
@@ -2723,7 +3012,53 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(labs.run).toContain("--coverage-output .beep/ci-coverage/labs");
       expect(labs.run).toContain("--coverage-only");
       const gate = stepByName(comparison, "Determine comparison execution");
-      expect(gate.run).toContain('[[ "$UNIT_RESULT" == "success" ]]');
+      expect(gate.env).toMatchObject({
+        PLAN_RESULT: "${{ needs.test-plan.result }}",
+        UNIT_RESULT: "${{ needs.test-unit.result }}",
+        UNIT_SHARDS_RESULT: "${{ needs.test-unit-shard.result }}",
+        UNIT_OVERFLOW_RESULT: "${{ needs.test-unit-overflow.result }}",
+        HOSTED_PARTITIONS: "${{ needs.test-plan.outputs.test_unit_hosted }}",
+        OVERFLOW_PARTITIONS: "${{ needs.test-plan.outputs.test_unit_overflow }}",
+      });
+      // Every Test Unit outcome the comparison can meet, across both halves: the checked-in lines proceed on a
+      // passed verdict only.
+      const gateLines = Str.split(gate.run ?? "", "\n");
+      const unitLines = A.filter(gateLines, (line) => Str.includes("unit_half")(line));
+      expect(A.length(unitLines)).toBe(2);
+      const unitCheck = A.join(["set -euo pipefail", ...A.map(unitLines, Str.trim)], "\n");
+      const one = '["unit-a"]';
+      for (const [unit, plan, hosted, shards, overflow, routed, proceeds] of [
+        ["success", "success", one, "success", "[]", "skipped", true],
+        ["skipped", "success", one, "success", "[]", "skipped", true],
+        ["skipped", "success", one, "success", '["repo-cli-1"]', "success", true],
+        ["skipped", "success", "[]", "skipped", one, "success", true],
+        ["skipped", "success", one, "failure", "[]", "skipped", false],
+        ["skipped", "success", one, "skipped", "[]", "skipped", false],
+        ["skipped", "success", one, "cancelled", "[]", "skipped", false],
+        ["skipped", "success", one, "success", '["repo-cli-1"]', "failure", false],
+        ["skipped", "success", one, "success", '["repo-cli-1"]', "cancelled", false],
+        ["skipped", "success", one, "success", '["repo-cli-1"]', "skipped", false],
+        ["skipped", "success", one, "success", "[]", "success", false],
+        ["skipped", "success", "[]", "success", one, "success", false],
+        ["skipped", "success", "[]", "skipped", "[]", "skipped", false],
+        ["skipped", "failure", one, "success", "[]", "skipped", false],
+        ["skipped", "", "", "success", "", "skipped", false],
+        ["failure", "success", one, "success", "[]", "skipped", false],
+        ["cancelled", "success", one, "success", "[]", "skipped", false],
+        ["", "", "", "", "", "", false],
+      ] as const) {
+        const check = Bun.spawnSync(["bash", "-c", unitCheck], {
+          env: {
+            UNIT_RESULT: unit,
+            PLAN_RESULT: plan,
+            HOSTED_PARTITIONS: hosted,
+            UNIT_SHARDS_RESULT: shards,
+            OVERFLOW_PARTITIONS: overflow,
+            UNIT_OVERFLOW_RESULT: routed,
+          },
+        });
+        expect(check.exitCode === 0, `${unit}/${plan}/${hosted}:${shards}/${overflow}:${routed}`).toBe(proceeds);
+      }
       expect(gate.run).toContain('[[ "$ADMISSION_RESULT" == "success" ]]');
       expect(gate.run).not.toContain("verify.result");
     })

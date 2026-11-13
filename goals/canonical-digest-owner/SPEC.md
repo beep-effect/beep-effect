@@ -93,26 +93,26 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] A tracked census lists every sorted-key encoder and digest preimage
+- [x] A tracked census lists every sorted-key encoder and digest preimage
       in package and app source with its class and disposition.
-- [ ] A property test holds each replaced encoder byte-equal to
+- [x] A property test holds each replaced encoder byte-equal to
       `JsoncFingerprint.canonicalizeResult` on generated plain JSON, and it
       ran green before that encoder's body was replaced.
-- [ ] A replay recomputes every stored PacketCore event digest in the tree
+- [x] A replay recomputes every stored PacketCore event digest in the tree
       and every execution-record seal fixture through the owner, with zero
       mismatches, or each mismatch has a legacy row in the census.
-- [ ] A test fixes the refusal table: each non-JSON input class and the
+- [x] A test fixes the refusal table: each non-JSON input class and the
       typed error the owner returns for it.
-- [ ] `@beep/schema` exports the prefixed digest grammar, and
+- [x] `@beep/schema` exports the prefixed digest grammar, and
       `ContentDigest` and `SourceTextDigest` are defined from it with their
       encoded forms unchanged.
-- [ ] `rg` finds no sorted-key JSON encoder outside `@beep/jsonc` except the
+- [x] `rg` finds no sorted-key JSON encoder outside `@beep/jsonc` except the
       census rows classed as pinned, renderer or legacy.
-- [ ] A lint rule rejects a new one, and it is wired into the single lint
+- [x] A lint rule rejects a new one, and it is wired into the single lint
       pass.
-- [ ] `explorations/protocol-as-value/MAP.md` still lists the three gated
+- [x] `explorations/protocol-as-value/MAP.md` still lists the three gated
       candidates; this goal activated none of them.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
@@ -201,6 +201,22 @@ Lane test/canonical-digest-census
 
 Reverse: Move the test files, drop @beep/jsonc from the devDependencies of @beep/execution-authority-domain and @beep/semantica, and run bun run beep tsconfig-sync.
 
+### The shared grammar is Sha256PrefixedDigest; a domain digest keeps both brands, 2026-11-12
+
+Slice B call. @beep/schema exports Sha256PrefixedDigest beside Sha256Hex, with Sha256PrefixedDigestFromHex as the codec between the bare and the prefixed form. The name Sha256Digest was not used: @beep/sbom already exports a schema of that name for the bare 64-character form (it strips an optional prefix while parsing), and two modeling packages exporting one name for opposite grammars would invite the mix-up this goal removes. ContentDigest and SourceTextDigest are now that schema with their own brand added, so each keeps its encoded string and its existing brand, and gains the shared brand. A domain digest is therefore assignable to the shared type, and a function that only needs the grammar can take any of them; two domain digests stay distinct from each other. Rejected: an unbranded shared grammar, which would make every prefixed string a digest of every kind once decoded. Found while surveying and left for slice C because both sit in @beep/repo-cli, which slice C already changes: the cache workflow schema and the files media schema each spell the same grammar as a regular expression.
+
+Lane feat/canonical-digest-owner-surface
+
+Reverse: Rename the export in @beep/schema and its two importers; the encoded string does not change, so nothing stored is affected.
+
+### The undefined-member relaxation is an option of the emitter, not a second pass, 2026-11-12
+
+Slice B call. The 2026-11-10 decision named a pre-pass that drops object members whose value is undefined. It lands as JsoncCanonicalizeOptions.omitUndefinedMembers on the owner's own walk, default false, accepted by canonicalizeResult, canonicalize, hashResult and hash. Contract is the one already decided: only an object member read as undefined is left out; an undefined array element, an array hole, an undefined root, a function, a symbol and every other value outside plain JSON still fail typed, and a member key with an unpaired surrogate fails even when its value is undefined. Rejected: a separate function that copies the value without those members before canonicalizing. It would read every getter twice or need its own copy of the hardening the walk already has (the depth cap that also stops cycles, the guards around throwing getters and Proxy traps, indexed array reads), and a second walk could disagree with the first about which member fails first and at which JSON pointer. Inside the walk the member is read once, so a getter decides once whether its member exists, and the first-failure order and pointers are unchanged. Also rejected: a second set of entry points with the relaxation in their names; the options class matches JsoncTextHashOptions, which the same facade already uses for hashText. Tests: the refusal table in the jsonc fingerprint test fixes each input class, its code and its pointer under all three option states, and a property holds the option equal to deleting the members.
+
+Lane feat/canonical-digest-owner-surface
+
+Reverse: Add a standalone pre-pass function beside the option and move callers to it, or remove the option and its tests; the default is refusal, so no stored digest depends on the option until slice C adopts it.
+
 ### The replay covers archived and history-only events through a tracked snapshot, 2026-11-12
 
 P0 count, 2026-11-12. Main has minted 76 packet event digests. Four are in the tree (four goals, one packet-created event each). The archive repository beep-effect/beep-effect-goals-archive holds 71 at commit 6187b837dc1b (61 packet-created, 9 status-set, 1 risk-tier-overridden). One exists only in history: goals/firecrawl-driver, deleted with its packet in pull request 1975 and never archived. The replay must cover the archive: it holds 71 of the 76, every parent link and every body type other than packet-created, so a tree-only replay would never exercise a chained event. The archive is a separate repository that hosted CI does not check out, so all 76 events are snapshotted into one JSONL fixture in the repo-cli test tree, each line naming its source commit. The four in-tree events are in the snapshot too and are not read live: a test that reads packet data must be registered as a goal-data consumer (the ROUT-03 census), which would move every pull request that adds a packet event onto the code route. Result: 76 of 76 recompute through JsoncFingerprint.hash; no legacy row. Refresh the snapshot with the commands in research/slice-a-evidence.md when the tree or the archive gains an event.
@@ -208,6 +224,94 @@ P0 count, 2026-11-12. Main has minted 76 packet event digests. Four are in the t
 Lane test/canonical-digest-census
 
 Reverse: Delete packages/tooling/tool/cli/test/fixtures/canonical-digest-owner/stored-packet-events.jsonl and the snapshot case in canonical-digest-owner-replay.test.ts; to read the tree live instead, register the test in ciGoalDataConsumers.
+
+### Swapped encoders' differential tests keep the legacy column as a record, 2026-11-13
+
+Once an encoder is the owner, its byte-equality property compares the owner with itself, so those properties and their generator are gone. What carries information stays. The off-domain tables now assert what each export does (the owner's refusal, read back by code; PacketCore's undefined-member row still emits through the option), beside a legacy column recorded from slice A, since that code no longer exists to observe. The depth-cap and NaN rows assert that the exports refuse. The md block pins the frontmatter text and both render outcomes. The packet event replay, the W1 corpus hash replay and the execution-seal replay are unchanged in substance and still pass. Existing property tests whose schema-derived free text produced an unpaired surrogate now either expect the seal or the owner's refusal, or draw well-formed text through a repo-cli test helper where the property is about canonical bytes.
+
+Lane refactor/canonical-digest-owner-swaps
+
+Reverse: Restore the slice A versions of the two differential test files from history; they need the legacy encoders, so revert the swap commits first.
+
+### Digest helpers and schema checks fail typed through their existing SchemaError channel; the exports still throw, 2026-11-13
+
+Review round 1 ruling on the question slice C left open. A refusal from the canonical JSON owner must not be a throw wherever a typed channel already exists, and it is mapped into that channel rather than widening it with JsoncCanonicalizeError or adding schema checks on free text. Each swapped encoder module keeps its throwing synchronous export and gains a Result twin beside it (canonicalJsonResult in the epistemics, execution-authority, epistemic-domain and semantica modules, canonicalDetectionJsonResult in the public epistemics surface, canonicalJsonTextResult in PacketCore) that maps the refusal to an S.SchemaError holding an InvalidValue issue whose message is the owner's, so it names the code and JSON pointer. The digest helpers with a SchemaError channel go through the twin: the contradiction proposal and candidate digests, the detection proposal id, the evidence manifestation key, the grant-set digest behind freezeGrantSet and verifyFrozenGrantSetDigest, the retention policy digest and report encoder, the packet event digest, the PacketCore plan digests whose functions already have a typed error, and the lab content digests, content ids and digest checks. That restores the packet event store's contract that a tampered event surfaces as a chain issue, and makes every lab schema check total. No signature and no stored digest changed. What still throws has no typed channel to map into: the four exports themselves, the execution-record seals, retentionPayloadBytes, the calibration script, and Effect sites whose channel is never or platform-only; PLAN.md lists them. Supersedes, in the decision on swapped exports throwing the owner's typed error, the sentence saying the throw escapes Result.map and becomes a defect inside an Effect generator: that now holds only for the call sites PLAN.md lists as still throwing. The rest of that decision stands.
+
+Lane fix/canonical-digest-typed-refusals
+
+Reverse: Call the throwing export again inside a helper, which turns its refusal back into a thrown error or defect there; the twins can stay.
+
+### The md import boundary exempts the JsoncFingerprint facade by name, 2026-11-13
+
+@beep/md keeps every parser package, @beep/jsonc among them, out of the runtime closure of its non-bridge entries, and its boundary test failed once the render module imported the owner. The swap needs that import, so the test now exempts exactly the specifier @beep/jsonc/JsoncFingerprint: the canonical-JSON facade of that package, whose own closure is one constant module and loads no parser. Every other @beep/jsonc subpath, and the package root, still counts as a parser. Rejected: keeping md's own encoder as a pinned row, since the census classes it replace and it diverged from RFC 8785 on unpaired surrogates, and moving the facade to another package, since @beep/schema cannot import @beep/jsonc and SPEC.md puts the owner in @beep/jsonc.
+
+Lane refactor/canonical-digest-owner-swaps
+
+Reverse: Remove the exemption and the render import together, restoring md's own frontmatter encoder as a pinned census row.
+
+### Only PacketCore passes omitUndefinedMembers; the other swaps are strict, 2026-11-13
+
+Slice C call, made per encoder from what the legacy encoder did and what its callers rely on. PacketCore canonicalJsonText passes omitUndefinedMembers: Goals/Completion.ts builds the completion declaration with packetId and proposedCloseout left undefined when absent, and 443 probe calls depended on the member being dropped. The epistemics encoder (behind canonicalDetectionJson and the two domain aliases) and the semantica lab encoder also dropped undefined members, but no caller relies on it: their seal and digest inputs are schema wire forms, no schema in those domains declares a member that encodes as undefined (no S.optional, only exact optional keys), and the probe's one undefined-member call for each came from the slice A table test. The md frontmatter encoder already threw on an undefined member, since its input is S.JsonObject. Strict is preferred wherever nothing relies on the relaxation, so a member left undefined by mistake is a typed refusal rather than a silently different preimage. Rejected: the option everywhere for symmetry, which would hide such mistakes in the seal domains that SPEC.md wants refused.
+
+Lane refactor/canonical-digest-owner-swaps
+
+Reverse: Pass JsoncCanonicalizeOptions with omitUndefinedMembers in the encoder that needs it; stored digests are unaffected because no stored preimage carries an undefined member.
+
+### PartyKey v1 keeps its serializer and gains a parity proof, 2026-11-13
+
+PartyKey v1 bytes are pinned by the archived party-slice specification and by the package fixture, and SPEC.md forbids changing them, so its encoder is not swapped. A property in the package's PartyKey test holds its canonicalJson equal to the owner's RFC 8785 bytes for the encoded basis on 200 seeded bases (source-record and namespaced identifier, drawn from canonical text), and hand-written cases cover each escape it writes and the pinned email basis. The two agree because the basis domain is narrow: fixed ASCII keys, where code-point and UTF-16 order coincide, string values only, and unpaired surrogates refused at decode. The census row stays pinned with the proof as its evidence. Adds @beep/jsonc as a devDependency of @beep/party-domain. Rejected: a swap, which would make the owner's future behaviour part of a pinned contract, and a pinned row without proof, which would leave the slice D guard trusting an unverified claim.
+
+Lane refactor/canonical-digest-owner-swaps
+
+Reverse: Delete the parity block from the PartyKey test and the devDependency; the pinned fixture still fixes the bytes.
+
+### The proposal-fact bound check stays total: a refused fact is out of bounds, 2026-11-13
+
+The contradiction proposal fact schema bounds a fact by the byte length of its canonical JSON. After the epistemics swap that check would throw for a fact the owner refuses: S.is then throws (the guard adapter dies on a failure that is not a schema issue), decode dies instead of failing, and the exported contradiction arbitraries throw while sampling. Five existing test suites failed that way. The check now reads the owner's Result and returns false on a refusal, so such a fact fails decode with the schema's typed error, as any other unbounded fact does. This is not a new check: the bound already meant at most 64 KiB of canonical UTF-8, and a value with no canonical form has no such size. It also guards detection beliefs, whose assertion check reuses the fact schema. Rejected: keeping the throw, since a schema guard that throws is a defect, and a separate well-formedness check on the fact, which would be a new domain check and is out of scope for this slice.
+
+Lane refactor/canonical-digest-owner-swaps
+
+Reverse: Call the epistemics canonicalJson in the check again; a fact with an unpaired surrogate then makes the fact schema throw instead of fail.
+
+### The cache and files sha256 schemas are the shared grammar, 2026-11-13
+
+The cache workflow's GitHub artifact digest and FileSha256Hash in the files media schemas each spelled the sha256: grammar as a regular expression. Both accepted exactly what Sha256PrefixedDigest accepts: the prefix, 64 characters, lowercase hex only, with uppercase digits, a longer tail and an uppercase prefix refused by both. So both are now that schema, and FileSha256Hash keeps its identity annotation. Encoded strings are unchanged and the decoded type gains the shared brand. One visible difference is accepted: a rejected value reports the template-literal message instead of the old pattern message. Rejected: a filter over the shared guard that keeps the old message, which would leave FileSha256Hash unbranded and outside the shared type.
+
+Lane refactor/canonical-digest-owner-swaps
+
+Reverse: Restore the two regular expressions; nothing stored changes.
+
+### Guard exceptions: a source-root override that exempts @beep/jsonc, and census rows in source, 2026-11-13
+
+Slice D call. The root biome.jsonc registers the rule through an overrides entry with includes ["**/src/**", "!packages/foundation/modeling/jsonc/**"]. Path scope is how the repository's other plugin rules take exceptions (no-native-error and no-bigint-literals are both override-scoped), and no plugin rule had an in-source suppression before this one. The negated glob exempts the owner package, whose JsoncFingerprint walk builds its object text with the same join the rule rejects; a fixture tree proved Biome 2.5.6 honours the negation in an override. Source roots only, matching the census scope, which excludes tests: under test/ the shape builds JSON, YAML flow and glob brace text on purpose (glob brace-expansion property tests, the yaml flow property tests, the jsonc tests, a practice-mail-tagging fixture). scripts/ is out as well: its only hits are three html generator templates that emit TypeScript object literals, not JSON, and no census encoder lives in a script. Every hit left in source is a census row and carries biome-ignore lint/plugin/no-hand-rolled-canonical-json on the line above it, with the row id and class: E5 PartyKey.behavior.ts (pinned), E6 PublicationResourceHash.ts (pinned), E7 PacketDigest.ts canonicalJsonTextPretty (renderer), E8 OpenclawRender.ts (renderer), E9 ToolNames.ts (renderer), E11 the yaml stringifier flow mapping (renderer, YAML; it is renderFlowObject, called from stringifyObjectLines, row 13 of the foundation-drivers partition) and E12 PolicyFingerprintJson.ts (renderer, tooling row L4). A suppression must sit directly above the line where the diagnostic starts; Biome reports one that matches nothing as suppressions/unused, so a suppression goes stale loudly when its encoder changes. No hit lacked a census row. Rejected: a per-file override list in biome.jsonc for the census rows, which would hide the reason from the code and exempt a whole file instead of one expression.
+
+Lane feat/canonical-digest-owner-guard
+
+Reverse: Move the rule to the top-level plugins array or widen its override includes, and add or remove biome-ignore lines to match the hits that result.
+
+### The guard matches braces around a join of members, in three forms, 2026-11-13
+
+Slice D call. The rule no-hand-rolled-canonical-json in @beep/lint-rules is a Biome GritQL rule at severity error with three arms. An untagged template whose first chunk is an opening brace and whose last chunk is a closing brace, each optionally padded by a newline and indentation (a trailing newline is allowed), with at least one interpolation that is a direct join of members: xs.join(sep), A.join(xs, sep), A.join(sep)(xs), or a join as the last stage of pipe or .pipe. A pipe, flow or .pipe call with a join stage and, as another stage, an arrow whose body is such a brace template. A string concatenation of a brace literal, a join and a closing brace literal. Every sorted-key encoder the census found built its object text one of these ways: the first arm matches E1, E2 and E3 as they were before slice C and E5 to E9, E11 and E12 (tooling L4) today; the second matches the E4 md frontmatter encoder as it was. Biome 2.5.6 support was proved by fixtures, not assumed: node patterns with list fields under some, regular expressions over a node's source text, and a spread before one element work; a spread before two adjacent elements (flow($..., $join, $wrap, $...)) matched only when the join was the first argument, which is why the second arm anchors on the arrow and checks direct stages with some. Deliberately not matched: braces around an interpolation that is not a join (URL path templates, regex quantifiers, glob alternatives built without a join, markdown attributes), arrays, space-padded braces (TOML inline tables at packages/foundation/modeling/toml, N3 formulas), tagged templates and fixed-key templates such as the eyecite resource preimages in CaseResourceHash.ts. A join assigned to a variable before it is wrapped is not followed. Glob brace text built with a join cannot be told from JSON by syntax; in source it would need a biome-ignore saying what it is, and today there is none. Cost, one plugin over every TS and JS file in packages, apps and infra: 21.7 s CPU against 12.6 s with no plugin, 1.2 s against 1.0 s wall; prefer-exact-optional-key, measured the same way, costs 64 s. Rejected: an oxlint rule or a ts-morph check, since the repository puts syntactic guards in GritQL and SPEC.md names biome.jsonc; and braces around any interpolation, which fires on the runpod path template, the glob and markdown emitters and the law-practice regex translator.
+
+Lane feat/canonical-digest-owner-guard
+
+Reverse: Delete rules/no-hand-rolled-canonical-json.grit, its registry entry, fixtures, preset lines and biome.jsonc override, and the seven biome-ignore lines.
+
+### The recursive key-sort arm is dropped, 2026-11-13
+
+Slice D call on the stretch arm: a self-recursive function, declared or assigned to a variable, whose body sorts record keys (R.keys, R.toEntries, Object.keys, Object.entries or Struct.keys under A.sort, .sort, .toSorted or a pipe into A.sort) and calls itself by name. Measured over every TS and JS file in packages, apps and infra it reports exactly two sites, OpenclawRender.ts encodeCanonicalValue (E8) and ToolNames.ts renderCanonicalValue (E9). Both are census rows, so it passes the precision test, but the template arm already reports both. Run against the four legacy encoders as they were before slice C it reports none: E1 sorted a filtered entry list rather than R.keys, E3 and E4 recursed mutually through a second function, and E4 was point-free. E10 sortKeys is not recursive, so the arm misses it too. It needs a whole-body contains on every variable declarator and function declaration. Alone, over the same files, it cost 178.8 s CPU and 4.8 s wall, against 21.7 s and 1.3 s for the shipped rule and 12.0 s and 1.2 s with no plugin: about 167 s of CPU for the arm against about 10 s for the whole shipped rule. It adds no recall at that price, so the rule ships with the three brace arms only. Rejected: keeping it for symmetry with the census definition of an encoder, which sorts keys whether or not it builds braces; a guard on that definition needs data flow, which GritQL in Biome does not have.
+
+Lane feat/canonical-digest-owner-guard
+
+Reverse: Add the arm to no-hand-rolled-canonical-json.grit with fixtures; it reports E8 and E9 on today's tree, which already carry suppressions.
+
+### Swapped synchronous exports throw the owner's typed error; no new error channels, 2026-11-13
+
+The four exports stay synchronous and return a string, as SPEC.md requires under Exports stay, so a refusal is thrown: each body is Result.getOrThrowWith over JsoncFingerprint.canonicalizeResult with identity, and the thrown value is the owner's JsoncCanonicalizeError with its code and JSON pointer, never a wrapped or plain Error. The digest helpers built on them (contradiction proposal and candidate digests, detection proposal id, evidence manifestation key, grant-set digest, PacketCore event and plan digests, the lab content ids) keep their Result or Effect signatures and SchemaError channels. The throw escapes Result.map, and inside an Effect generator it becomes a defect. Only the md render entry points turn it into a typed failure, because Md.render already captures adapter throws as RenderError. Rejected for this slice: widening those channels with JsoncCanonicalizeError, which changes every signature from the encoders up to the services, and adding schema checks on free-text fields, which the orchestrator decides after reading the surfacing list in PLAN.md. No stored event, seal or fixture carries a refused value, so nothing that verifies today stops verifying.
+
+Lane refactor/canonical-digest-owner-swaps
+
+Reverse: Add JsoncCanonicalizeError to the error channel of a digest helper and call canonicalizeResult there, or add a well-formedness check at the boundary that feeds it; the exports themselves can keep throwing.
 
 <!-- beep:decisions:end -->
 

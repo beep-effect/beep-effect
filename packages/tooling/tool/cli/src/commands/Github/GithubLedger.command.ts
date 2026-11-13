@@ -24,10 +24,11 @@ import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
-  LedgerHourRollup,
+  LedgerHourResult,
   LedgerRange,
   ReserveState,
   SampleOutcome,
@@ -42,7 +43,7 @@ import {
   installGithubLedgerTimer,
   uninstallGithubLedgerTimer,
 } from "./GithubLedger.timer.ts";
-import type { CalibrationRow, LedgerHourKey, ReserveSignal } from "../../internal/github/GithubLedger.schemas.ts";
+import type { CalibrationRow, ReserveSignal } from "../../internal/github/GithubLedger.schemas.ts";
 
 const LEDGER_OFF = "github ledger: off (CI or BEEP_GITHUB_LEDGER=off); nothing to do.";
 const CALIBRATION_SPACING = Duration.seconds(10);
@@ -73,7 +74,8 @@ export const renderGithubSampleOutcome = (outcome: SampleOutcome): string =>
     Failed: ({ entry, identity, detail }) => `failed ${O.getOrElse(identity, () => entry)}: ${detail}`,
   });
 
-const renderNumber = O.match({ onNone: () => "none", onSome: (value: number) => `${value}` });
+const renderNumber = (value: number | O.Option<number>): string =>
+  P.isNumber(value) ? `${value}` : O.match(value, { onNone: () => "none", onSome: (value) => `${value}` });
 
 /**
  * One line per bucket of an hourly rollup.
@@ -94,19 +96,29 @@ const renderNumber = O.match({ onNone: () => "none", onSome: (value: number) => 
  * @category utilities
  * @since 0.0.0
  */
-export const renderGithubLedgerHour = (rollup: LedgerHourRollup): ReadonlyArray<string> => {
+export const renderGithubLedgerHour = (rollup: LedgerHourResult): ReadonlyArray<string> => {
   const hour = rollup.hour.pipe(DateTime.formatIso, Str.slice(0, 13));
-  const flag = rollup.complete ? "" : " (incomplete)";
-  const line = (key: LedgerHourKey) =>
-    `${hour} ${key.key.identity} ${key.key.resource}${flag}: fleetUsed=${renderNumber(key.fleetUsed)}${
+  const flag =
+    rollup.schemaVersion !== "github-ledger-rollup/v3"
+      ? " (legacy-unrecomputable)"
+      : rollup.complete
+        ? ""
+        : " (incomplete)";
+  const line = (key: LedgerHourResult["keys"][number]) =>
+    `${hour} ${key.key.identity} ${key.key.resource}${flag}${key.lanesInferred ? " (inferred lanes)" : ""}: fleetUsed=${renderNumber(key.fleetUsed)}${
       key.fleetUsedIsLowerBound ? "+" : ""
-    } estimated=${key.estimatedPoints} gh=${key.ghEstimated} unattributed=${renderNumber(key.unattributed)}${
+    } estimated=${key.estimatedPoints === null ? "unknown" : key.estimatedPoints} gh=${renderNumber(key.ghEstimated)} unattributed=${renderNumber(key.unattributed)}${
       key.overAttributed ? " over-attributed" : ""
     } commands=${A.join(
-      A.map(key.byCommand, (spend) => `${spend.command}:${spend.estimatedPoints}`),
+      A.map(
+        key.byCommand,
+        (spend) => `${spend.command}:${spend.estimatedPoints === null ? "unknown" : spend.estimatedPoints}`
+      ),
       ","
     )}`;
-  return A.isReadonlyArrayNonEmpty(rollup.keys) ? A.map(rollup.keys, line) : A.of(`${hour} ${rollup.host}: no buckets`);
+  const keys: ReadonlyArray<LedgerHourResult["keys"][number]> = rollup.keys;
+  const lines = A.map(keys, line);
+  return A.isReadonlyArrayNonEmpty(lines) ? lines : A.of(`${hour} ${rollup.host}${flag}: no buckets`);
 };
 
 const renderReserve = (signal: ReserveSignal): string =>
@@ -168,7 +180,7 @@ const calibrateCommand = Command.make(
   })
 ).pipe(Command.withDescription("Compare REST /rate_limit's graphql bucket with GraphQL rateLimit for the gh login"));
 
-const LedgerHourRollupsJson = LedgerHourRollup.pipe(S.Array, S.fromJsonString);
+const LedgerHourRollupsJson = LedgerHourResult.pipe(S.Array, S.fromJsonString);
 
 const parseSince = (since: string) =>
   pipe(

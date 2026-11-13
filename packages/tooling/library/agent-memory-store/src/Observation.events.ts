@@ -16,7 +16,7 @@ import { LiteralKit } from "@beep/schema";
 import * as Event from "effect/eventlog/Event";
 import * as EventGroup from "effect/eventlog/EventGroup";
 import * as S from "effect/Schema";
-import { NodeId } from "./NodeIdentity.models.ts";
+import { isWellFormedText, NodeId } from "./NodeIdentity.models.ts";
 
 const $I = $AgentMemoryStoreId.create("Observation.events");
 
@@ -62,7 +62,7 @@ export type ObservationKind = typeof ObservationKind.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const LineageId = S.NonEmptyString.pipe(
+export const LineageId = S.NonEmptyString.check(isWellFormedText).pipe(
   S.brand("LineageId"),
   $I.annoteSchema("LineageId", {
     description: "Session or agent lineage that made an observation.",

@@ -37,5 +37,11 @@ gating findings, IPRally adapter or licensed raw input in public repo.
 
 Use schema-first and Effect v4 repo laws. Publish reviewable increments through
 Yeet and hosted CI under existing authorization; no local full-proof queues.
-Only close after all performance gates, package/hosted checks, review, archived
-positive exact-head readiness, strict merge, reflection and native cleanup.
+The final PR needs every performance gate, package and hosted checks, review,
+the reflection and native cleanup.
+
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug claim-check-performance` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/claim-check-performance/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

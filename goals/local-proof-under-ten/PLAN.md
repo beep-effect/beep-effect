@@ -23,9 +23,13 @@ Before marking the packet closed:
    validate against `ReflectionFrontmatter`.
 2. Run `bun run beep lint reflection-artifacts`.
 3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase
-   statuses and a typed `proposedCloseout` with status `completed-retained`
-   and finalPullRequest. Keep `initiative.status` operative until completion
-   evidence verifies; do not close the external execution/session ledger from a proposal.
+   statuses. Once the final PR is open, run
+   `bun run beep goals set-status local-proof-under-ten completed-retained`: it writes
+   `closeout` naming that PR with the matching `initiative.status`, and the
+   commit ships in the final PR. After the merge,
+   `bun run beep goals completion refresh --slug local-proof-under-ten` must print verified;
+   name any red required check in a committed decision file
+   (`redAttribution`).
 
 ## Execution Notes
 
@@ -120,12 +124,25 @@ Reverse: Delete this checkpoint file and re-run goals decisions write; the basel
 
 ### Slice 2 (PERIL-10): quarantine summary line and aged-entry archive, 2026-11-12
 
-Slice 2 lands PERIL-10's code half. `quality scheduler status` prints the quarantine as one line (count, oldest age read from the `.<nowMillis>` suffix, archive directory); `--json` keeps every path. The scheduler's reap pass (`repairDeadAdmissionState`, run by admission attempts and `quality scheduler reap --apply`) moves quarantine entries older than 7 days into `<admission root>/quarantine-archive` under an exclusive claims lock, never overwriting and never deleting (ruling D17: archive first, retire nothing). The status snapshot stays read-only, and leases, tickets and claims are never touched. The beep-heavy retirement in the orchestrate skill stays open as slice 4.
+Slice 2 lands PERIL-10's code half. `quality scheduler status` prints the quarantine as one line (count, oldest age read from the `.<nowMillis>` suffix, archive directory); `--json` keeps every path. The scheduler's reap pass (`repairDeadAdmissionState`, run by admission attempts and `quality scheduler reap --apply`) moves quarantine entries older than 7 days into `<admission root>/quarantine-archive` under an exclusive claims lock, never overwriting and never deleting (ruling D17: archive first, retire nothing). The status snapshot stays read-only, and leases, tickets and reap claims are never touched; the archive's only write in `claims/` is its own lock, `claims/quarantine-archive.lock`. A needed entry is restored by moving it into its live directory with the suffix stripped; moving it back into `quarantine/` is re-archived by the next reap (review fix, 2026-11-13). The beep-heavy retirement in the orchestrate skill stays open as slice 4.
 
 Prerequisite drift recorded on 2026-11-12: COVE-02 landed in #3115, MEAS-01 with MEAS-04 in #3118; SCHE-09, MEAS-02 and MEAS-07 are still open. The PLAN's HOST-01 co-carry note is moot because HOST-01 part a landed alone in #3111. #3130 (goal yeet-async-merge-and-stacks, merged 2026-11-12) adds `Yeet/internal/PatchIdentity.ts` and a head-move classifier that carries the review window across GitHub-made unchanged rewrites (cascade, restack) and fails closed on merges, so PERIL-09 (keep the anchor across a diff-preserving merge of main) remains open and should build on that classifier.
 
 Lane fix/peril-10-quarantine-summary
 
-Reverse: Revert the slice 2 PR; move archived entries back from <admission root>/quarantine-archive into quarantine/ if any is needed.
+Reverse: Revert the slice 2 PR; restore any needed archived entry by moving it from <admission root>/quarantine-archive into its live directory (leases/ or queue/) with the .<nowMillis> suffix stripped.
+
+### Baselines before d8326d5593 are not comparable (declaration-only builds), 2026-11-13
+
+declaration-only-builds PR 2 (#3208) merged at `d8326d55935849b4bf6fd29ec4ef80327efd6af8` (2026-11-13T05:44:35Z). Library builds are now `tsrs -p tsconfig.json --emitDeclarationOnly`: no Babel step, no `babel` script key, no JavaScript in a library dist.
+
+- Every `#build` cache entry (local, remote, CI) misses once from that commit. The first run after merging main rebuilds cold and is not a regression.
+- Any wall-time, cache-size or dist-size baseline this packet recorded before that commit is not comparable with a reading after it. Re-take the baseline before reading an after-number.
+- Measured by the owning goal (181 packages, serial, fastest of three): build 80.9 s to 32.9 s, dist 232.5 MB to 147.9 MB, compile unchanged (`goals/declaration-only-builds/research/2026-11-13-build-after.md`).
+- A lane editing generated files (package.json scripts, the catalog, turbo.json, the policy fingerprint, the cache baseline, the check-census baseline) merges main first and re-runs the generators.
+
+Lane chore/ci-goals-finish
+
+Reverse: Delete this checkpoint; it records a fact about main and changes no behaviour.
 
 <!-- beep:decisions:end -->

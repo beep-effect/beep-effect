@@ -67,6 +67,7 @@ import {
   runCiCoveragePartition,
   runCiLabsCoverage,
 } from "./CiCoverage.ts";
+import { CI_LANE_DEFAULT_BASE, resolveCiLaneBase } from "./CiEventBase.ts";
 import {
   CI_LANE_PARTITION_TABLE_PATH,
   CI_LANE_PARTITIONS,
@@ -77,6 +78,7 @@ import {
   withCiLaneDefaultPlacements,
 } from "./CiLanePartitions.ts";
 import { CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
+import { DOCS_POLICY_ROOT_TASKS } from "./DocsPolicy.ts";
 import type { FsUtils } from "@beep/repo-utils";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -236,6 +238,7 @@ export const CI_LANE_ID_VALUES = [
   "coverage",
   "desktop-ipc",
   "docgen",
+  "docs-policy",
   "doctest",
   "ecosystem",
   "fallow",
@@ -449,9 +452,19 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     required: true,
     laneClass: "cli-runnable",
     replay: "exact",
-    flags: ["--changeset-status"],
+    flags: ["--changeset-status", "--docs-only", "--skip-skills-lock"],
     notes:
-      "Always validates the changeset graph and runs the private home path law (this lane runs for docs-only diffs; a goals_only packet-prose diff runs only the law); CI also passes --changeset-status on pull requests.",
+      "Always validates the changeset graph and runs the private home path law; CI also passes --changeset-status on pull requests. A docs_only pull request runs --docs-only: the law, the changeset graph and the changeset status, and nothing that reads code-route paths. Both shapes run `beep skills update --check --offline` (installed skills, their .agents mirror and Codex configuration against skills-lock.json, from tracked files only); CI passes --skip-skills-lock on a pull request that changes none of the `skills` pattern row's paths.",
+  }),
+  CiLaneDescriptor.make({
+    id: "docs-policy",
+    contextName: "Docs Policy",
+    required: false,
+    laneClass: "cli-runnable",
+    replay: "exact",
+    flags: ["--base"],
+    notes:
+      "Runs on docs_only pull requests only (route-soundness-repair ROUT-02, D8): the knowledge, packet and Markdown root tasks in DOCS_POLICY_ROOT_TASKS plus `knowledge doctor ci --base`, which Heavy / Lint Policy runs for code pull requests and main pushes.",
   }),
   CiLaneDescriptor.make({
     id: "check",
@@ -733,6 +746,8 @@ export class CiLaneRunOptions extends S.Opaque<CiLaneRunOptions, { readonly bran
     coverageOnly: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     dryRun: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     force: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    docsOnly: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    skipSkillsLock: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
   }).pipe(
     $I.annoteSchema("CiLaneRunOptions", {
       description: "Shape and optional Turbo scope for running one CI lane body.",
@@ -835,6 +850,9 @@ const jsdocRatchetStep = (repoRoot: string, inventoryPath: string): QualityTaskS
 // not the 32GB beep-ec2-heavy fleet, so they keep the 16GB-survival turbo cap
 // instead of inheriting the fleet default that boundedRootTurboArgs applies in CI.
 const HOSTED_16GB_TURBO_CONCURRENCY_ARG = "--concurrency=2";
+// Docs Policy's tasks are file walkers and git reads on a 4-vCPU hosted runner, with no
+// compiler or test worker in the graph.
+const DOCS_POLICY_TURBO_CONCURRENCY_ARG = "--concurrency=4";
 const decodeUnknownQualityCheckConcurrencyOption = S.decodeUnknownOption(QualityCheckConcurrency);
 
 const qualityCheckConcurrencyArg = (): string =>
@@ -1956,49 +1974,110 @@ export const ciLaneStepsForTesting: {
           },
         }),
       ],
-      "repo-sanity": () => [
-        // Workflow policy runs inside the collecting body, not as its own
-        // check.yml step: a separate step's red skipped the whole lane body,
-        // the shadcn step included (hosted-setup-tax PERIH-02 follow-up).
-        bunRunStep(repoRoot, "ci:repo-sanity:workflow-lint", ["beep", "ci", "workflow-lint"]),
-        bunRunStep(repoRoot, "lint:schema-catalog", ["beep", "lint", "schema-catalog"]),
-        bunRunStep(repoRoot, "ci:repo-sanity:catalog-usage", ["beep", "quality", "catalog-usage"]),
-        // Repo Sanity is the hosted lane that still runs for docs-only diffs,
-        // so the public-repo home path law runs here: Heavy / Lint Policy skips
-        // docs-only PRs. For a goals_only packet-prose diff check.yml skips this
-        // lane body and runs only the law, in its "Check private home paths" step.
-        // On a code PR Lint Policy runs the law as well; that duplicate (about
-        // 10 s) is accepted so docs-only diffs stay covered.
-        bunRunStep(repoRoot, "lint:private-home-paths", ["beep", "laws", "private-home-paths", "--check"]),
-        // A new reader of a generated standards file in another package does not
-        // select @beep/repo-cli's tests, so the owner rows are checked here, on
-        // the pull request that adds or removes the reader (hosted-setup-tax
-        // TURB-01).
-        bunRunStep(repoRoot, "lint:coverage-owners", ["beep", "lint", "coverage-owners"]),
-        // `audit:github repo-sanity` runs the changeset graph check (its
-        // `repo-sanity:changeset-graph` lane), so this body carries no second
-        // copy (hosted-setup-tax PERIL-04).
-        bunRunStep(repoRoot, "ci:repo-sanity", ["audit:github", "repo-sanity"]),
-        // The one hosted owner of the strict @shadcn/lint policy
-        // (.oxlintrc.shadcn.json; hosted-setup-tax PERIH-02). Repo Sanity is
-        // required, so a finding blocks the merge. The step group runs every
-        // step and fails with all reds, so an earlier red cannot hide it.
-        rootTaskStep(repoRoot, "ci:repo-sanity:shadcn", "lint:shadcn"),
-        ...(options.changesetStatus
-          ? [
-              // lab-apps-lifecycle P2 (ratified row 8): route CI's changeset
-              // gate through the path-aware wrapper so lab-only changes are
-              // exempt from changeset ceremony.
-              bunRunStep(repoRoot, "ci:repo-sanity:changeset-status", [
-                "beep",
-                "quality",
-                "changeset-status",
-                "--since",
-                "origin/main",
-              ]),
-            ]
-          : A.empty<QualityTaskStep>()),
+      // A docs_only pull request never starts Heavy / Lint Policy, so this lane runs the policy
+      // tasks a documentation diff can fail (DocsPolicy.ts) in one Turbo graph, then the knowledge
+      // doctor against the review base, as the changed-scope Lint Policy plan does.
+      "docs-policy": () => [
+        QualityTaskStep.make({
+          label: "ci:docs-policy:tasks",
+          command: "bunx",
+          cwd: repoRoot,
+          args: directTurboArgs(DOCS_POLICY_ROOT_TASKS, [
+            DOCS_POLICY_TURBO_CONCURRENCY_ARG,
+            "--continue=dependencies-successful",
+            "--summarize",
+          ]),
+        }),
+        bunRunStep(repoRoot, "ci:docs-policy:knowledge-doctor", [
+          "beep",
+          "knowledge",
+          "doctor",
+          "ci",
+          "--base",
+          options.base,
+        ]),
       ],
+      "repo-sanity": () => {
+        const homePaths = bunRunStep(repoRoot, "lint:private-home-paths", [
+          "beep",
+          "laws",
+          "private-home-paths",
+          "--check",
+        ]);
+        // lab-apps-lifecycle P2 (ratified row 8): route CI's changeset gate
+        // through the path-aware wrapper so lab-only changes are exempt from
+        // changeset ceremony.
+        const changesetStatus = bunRunStep(repoRoot, "ci:repo-sanity:changeset-status", [
+          "beep",
+          "quality",
+          "changeset-status",
+          "--since",
+          "origin/main",
+        ]);
+        // A documentation-only diff (prose, packet files, `.changeset/*.md`)
+        // can fail only the public-repo home path law and the changeset
+        // checks; every other step reads code-route paths (sources, manifests,
+        // tool configuration, workflows). Docs Policy runs the knowledge and
+        // packet policy on the same diffs.
+        // No other hosted lane compared the installed skills with skills-lock.json, and pull
+        // requests kept merging over a stale lock (#3225, #3246). A SKILL.md edit is a
+        // documentation diff, so the step sits on both paths. `--offline` keeps it to tracked
+        // files: the plain check also refetches each floating upstream skill through the
+        // unauthenticated GitHub API, which rate-limits shared runner addresses and would turn an
+        // upstream push into a red on an unrelated pull request. It takes about a second;
+        // check.yml skips it on a pull request that changes none of the `skills` pattern row's paths.
+        const skillsLock = options.skipSkillsLock
+          ? A.empty<QualityTaskStep>()
+          : [bunRunStep(repoRoot, "ci:repo-sanity:skills-lock", ["beep", "skills", "update", "--check", "--offline"])];
+        if (options.docsOnly) {
+          return [
+            homePaths,
+            bunRunStep(repoRoot, "ci:repo-sanity:changeset-graph", ["beep", "quality", "changeset-graph"]),
+            changesetStatus,
+            ...skillsLock,
+          ];
+        }
+        return [
+          // Workflow policy runs inside the collecting body, not as its own
+          // check.yml step: a separate step's red skipped the whole lane body,
+          // the shadcn step included (hosted-setup-tax PERIH-02 follow-up).
+          bunRunStep(repoRoot, "ci:repo-sanity:workflow-lint", ["beep", "ci", "workflow-lint"]),
+          bunRunStep(repoRoot, "lint:schema-catalog", ["beep", "lint", "schema-catalog"]),
+          bunRunStep(repoRoot, "ci:repo-sanity:catalog-usage", ["beep", "quality", "catalog-usage"]),
+          // The single-checker census baseline records the compiler it was measured with, and a
+          // compiler bump that leaves it behind makes the gate's counts incomparable; no lane
+          // noticed two such bumps. The stamp check reads the baseline and one `tsc --version`
+          // (no build, about a second), so it runs on every full pass. A documentation-only diff
+          // can move neither input, so the documentation path leaves it out.
+          bunRunStep(repoRoot, "ci:repo-sanity:check-census-stamp", [
+            "beep",
+            "quality",
+            "check-census",
+            "--stamp-only",
+          ]),
+          // Required on every head: Heavy / Lint Policy also runs the law on
+          // code PRs, but it is not a required context.
+          homePaths,
+          // A new reader of a scanned repository file (generated standards file or
+          // root tooling input) in another package does not select the row's
+          // owners, so the owner rows are checked here, on the pull request that
+          // adds or removes the reader (hosted-setup-tax TURB-01). Readers are
+          // TypeScript sources, a code-route shape, so the documentation path
+          // never needs it: a documentation-only change cannot add or drop one.
+          bunRunStep(repoRoot, "lint:coverage-owners", ["beep", "lint", "coverage-owners"]),
+          // `audit:github repo-sanity` runs the changeset graph check (its
+          // `repo-sanity:changeset-graph` lane), so this body carries no second
+          // copy (hosted-setup-tax PERIL-04).
+          bunRunStep(repoRoot, "ci:repo-sanity", ["audit:github", "repo-sanity"]),
+          // The one hosted owner of the strict @shadcn/lint policy
+          // (.oxlintrc.shadcn.json; hosted-setup-tax PERIH-02). Repo Sanity is
+          // required, so a finding blocks the merge. The step group runs every
+          // step and fails with all reds, so an earlier red cannot hide it.
+          rootTaskStep(repoRoot, "ci:repo-sanity:shadcn", "lint:shadcn"),
+          ...(options.changesetStatus ? [changesetStatus] : A.empty<QualityTaskStep>()),
+          ...skillsLock,
+        ];
+      },
       sast: () => [bunRunStep(repoRoot, "ci:sast", ["beep", "quality", "github-checks", "sast"])],
       secrets: () => [bunRunStep(repoRoot, "ci:secrets", ["beep", "quality", "github-checks", "secrets"])],
       security: () => [bunRunStep(repoRoot, "ci:security", ["beep", "quality", "github-checks", "security"])],
@@ -2296,6 +2375,8 @@ export const ciLaneFailurePolicy = (laneId: CiLaneId): GithubCheckFailurePolicy 
  *
  * `beep ci lane <id>` plans the body and hands it to this runner, so a test
  * that substitutes the body steps exercises the same runner hosted CI uses.
+ * The one exception is `docs-policy`: its steps run abreast as one buffered
+ * collecting group, which still collects every red.
  *
  * **Example** (Run a lane body)
  *
@@ -2344,6 +2425,14 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
   const steps = ciLaneStepsForTesting(repoRoot, laneId, resolvedOptions);
   if (A.isReadonlyArrayEmpty(steps)) {
     yield* Console.log(`[ci] ${laneId}: no steps for this configuration (skipped)`);
+    return;
+  }
+
+  if (laneId === "docs-policy") {
+    // The knowledge doctor reads only committed Git state (its own archive extractions of HEAD and
+    // the merge-base), never a Turbo output, so it runs abreast of the task graph as it does in the
+    // Lint Policy plan. Buffered output keeps each step's log whole; every red is still collected.
+    yield* runQualityTaskStreamingStepGroup(`ci:${laneId}`, steps, A.length(steps), true);
     return;
   }
 
@@ -2887,8 +2976,16 @@ export const ciLaneCommand = Command.make(
       Flag.withDescription("Storybook only: write should_run to GITHUB_OUTPUT without building or testing")
     ),
     base: Flag.String("base").pipe(
-      Flag.withDefault("origin/main"),
-      Flag.withDescription("Base git ref for affected/docgen/fallow/commitlint shapes")
+      Flag.withDescription(
+        `Base git ref for affected/docgen/fallow/commitlint shapes (default ${CI_LANE_DEFAULT_BASE})`
+      ),
+      Flag.optional
+    ),
+    eventBase: Flag.Boolean("event-base").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "Resolve the base from the workflow event instead of --base: a pull request's verified merge commit first parent (else pull_request.base.sha), otherwise GITHUB_SHA"
+      )
     ),
     head: Flag.String("head").pipe(Flag.withDefault("HEAD"), Flag.withDescription("Head git ref for docgen shapes")),
     summarize: Flag.Boolean("summarize").pipe(
@@ -2908,6 +3005,18 @@ export const ciLaneCommand = Command.make(
     changesetStatus: Flag.Boolean("changeset-status").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Also run the changeset status check (CI passes this on pull requests)")
+    ),
+    docsOnly: Flag.Boolean("docs-only").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "repo-sanity: run only the checks a documentation-only diff can fail (home path law, changeset graph and status)"
+      )
+    ),
+    skipSkillsLock: Flag.Boolean("skip-skills-lock").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "repo-sanity: leave out the skills lock check (CI passes this when a pull request changes no skill, lock or checker path)"
+      )
     ),
     validateEnvelopes: Flag.Boolean("validate-envelopes").pipe(
       Flag.withDefault(false),
@@ -2986,8 +3095,11 @@ export const ciLaneCommand = Command.make(
   },
   Effect.fnUntraced(function* ({
     affected,
-    base,
+    base: baseFlag,
     changesetStatus,
+    docsOnly,
+    skipSkillsLock,
+    eventBase,
     coverageOutput,
     coverageInput,
     compareOnly,
@@ -3031,6 +3143,9 @@ export const ciLaneCommand = Command.make(
           Effect.catchTag("CiCommandError", reportCiCommandError)
         ),
     });
+    const base = yield* resolveCiLaneBase(baseFlag, eventBase).pipe(
+      Effect.catchTag("CiCommandError", reportCiCommandError)
+    );
     const options = CiLaneRunOptions.make({
       affected,
       base,
@@ -3057,6 +3172,8 @@ export const ciLaneCommand = Command.make(
       seed,
       dryRun,
       force,
+      docsOnly,
+      skipSkillsLock,
     });
 
     if (list) {
@@ -3250,6 +3367,7 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
     coverage: () => turboShapeFlags,
     "desktop-ipc": A.empty<string>,
     docgen: () => ["--mode", plan.affected ? "auto" : "full", "--base", plan.base],
+    "docs-policy": () => ["--base", plan.base],
     doctest: A.empty<string>,
     ecosystem: A.empty<string>,
     fallow: () => ["--base", plan.base, "--validate-envelopes"],

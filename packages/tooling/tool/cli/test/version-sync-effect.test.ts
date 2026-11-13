@@ -375,9 +375,33 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect Ca
             "\n"
           )
         );
+        // The overflow copy of the unit producer keeps the same pin; any other job of that file does not.
+        yield* fs.writeFileString(
+          path.join(workflowDir, "shard-overflow.yml"),
+          A.join(
+            [
+              "jobs:",
+              "  test-unit-shard:",
+              "    steps:",
+              "      - with:",
+              '          node-version: "22.23.4"',
+              "  labs:",
+              "    steps:",
+              "      - with:",
+              '          node-version: "22.23.4"',
+            ],
+            "\n"
+          )
+        );
         const pinned = yield* resolveNodeVersions(tmpDir);
-        expect(A.map(pinned.workflowLocations, (location) => location.jobName)).toEqual(["ordinary-check"]);
-        expect(buildNodeReport(pinned).items).toHaveLength(1);
+        expect(
+          A.sort(
+            A.map(pinned.workflowLocations, (location) => location.jobName),
+            Str.Order
+          )
+        ).toEqual(["labs", "ordinary-check"]);
+        expect(buildNodeReport(pinned).items).toHaveLength(2);
+        yield* fs.remove(path.join(workflowDir, "shard-overflow.yml"));
 
         yield* fs.writeFileString(
           path.join(workflowDir, "other.yml"),

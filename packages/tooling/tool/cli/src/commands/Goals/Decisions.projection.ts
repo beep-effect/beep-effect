@@ -229,10 +229,29 @@ const attribution = (decision: GoalDecision): O.Option<string> => {
   return A.isReadonlyArrayNonEmpty(parts) ? O.some(A.join(parts, " · ")) : O.none();
 };
 
+// Completion claims render as plain text too: a context such as "Heavy / Check" is a check name, not a path.
+const claimLines = (decision: GoalDecision): ReadonlyArray<string> => [
+  ...O.match(O.fromUndefinedOr(decision.frontmatter.redAttribution), {
+    onNone: A.empty<string>,
+    onSome: (block) => [
+      `Attributed reds for #${block.finalPullRequest}: ${A.join(
+        A.map(block.reds, (red) => `${red.context} (${red.attribution}, fix #${red.fixPullRequest})`),
+        "; "
+      )}`,
+      "",
+    ],
+  }),
+  ...O.match(O.fromUndefinedOr(decision.frontmatter.operatorRuling), {
+    onNone: A.empty<string>,
+    onSome: (ruling) => [`Operator ruling closes #${ruling.finalPullRequest}`, ""],
+  }),
+];
+
 const renderEntry = (decision: GoalDecision): ReadonlyArray<string> => [
   `### ${decision.frontmatter.title}, ${decision.frontmatter.date}`,
   "",
   ...(Str.isEmpty(decision.body) ? A.empty<string>() : [decision.body, ""]),
+  ...claimLines(decision),
   ...O.match(attribution(decision), { onNone: A.empty<string>, onSome: (line) => [line, ""] }),
   `Reverse: ${decision.frontmatter.reversal}`,
   "",
@@ -247,8 +266,10 @@ const renderEntry = (decision: GoalDecision): ReadonlyArray<string> => [
  * The block is deterministic text: markers on their own lines, a one-line
  * provenance note pointing at `decisions/` and the regenerating command, then
  * one `### <title>, <date>` entry per decision ending in its `Reverse:` line.
- * Changing this renderer changes every projected packet, so a change is a
- * repo-wide `--write`.
+ * A decision carrying completion claims adds `Attributed reds for #N: …`
+ * (each red with its cause and fix PR) and `Operator ruling closes #N` after
+ * its body. Changing this renderer changes every projected packet, so a
+ * change is a repo-wide `--write`.
  *
  * **Example** (Render an empty block)
  *

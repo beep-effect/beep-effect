@@ -2,7 +2,9 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `superseded`
+
+**Closed by operator ruling (finish board, 2026-11-13).** It was never started, has no next step and depends on telemetry work that is not in flight; the only recent touch was the bulk research-intake routing sweep. The packet is `superseded` without meeting its completion gate. To resume, run `bun run beep goals set-status agent-outcome-experiments active` and re-graduate the next slice. Decision: [`decisions/2026-11-13-finish-board-ruling-close.md`](./decisions/2026-11-13-finish-board-ruling-close.md).
 
 Authored but not started. Source: [manifest](./ops/manifest.json). No implementation, deployment or experiment execution occurred during packet preparation.
 

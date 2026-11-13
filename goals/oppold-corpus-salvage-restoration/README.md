@@ -1,6 +1,8 @@
 # Oppold Corpus Salvage Restoration
 
-Lifecycle: `active`
+Lifecycle: `paused`
+
+**Paused by operator ruling (finish board, 2026-11-13).** It still has data value, but it is blocked on the execution-identity question, and the 11-05 consolidation already did most of the recovery. Set it to paused so nothing claims to be in flight. No lane is working on it; resume with `bun run beep goals set-status oppold-corpus-salvage-restoration active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
 
 This packet closes two separate gates. P0 preserves and independently verifies
 the current T7 salvage state. The transformation wave then restores mail,
@@ -14,7 +16,7 @@ before resuming. It records verified encrypted recovery, applied exact-copy
 retirement, changed legacy-path behavior, retired temporary backup inputs and
 an independent native extraction/publication job still in progress. Refresh its
 private receipts; do not replay sealed families or treat backup/native extraction
-as this packet's P2 acceptance. Lifecycle remains `active`.
+as this packet's P2 acceptance. The packet stays `paused` until it is picked up.
 
 ### Retained 2026-10-14 recovery stop
 

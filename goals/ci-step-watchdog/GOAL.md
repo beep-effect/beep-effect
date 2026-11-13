@@ -68,3 +68,9 @@ safe deadline calibration is not possible, `check.yml` needs broader changes,
 target-file ownership overlaps, the 1.4.0 soak shows a recurrence, or the
 work needs an unnamed dependency, credential, cost, destructive effect, or
 policy approval.
+
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug ci-step-watchdog` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/ci-step-watchdog/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

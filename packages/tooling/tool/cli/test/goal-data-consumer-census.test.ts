@@ -2,6 +2,7 @@ import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { GlobSet } from "@beep/glob";
 import {
+  CiGoalDocument,
   ciBinaryCommand,
   ciGoalDataConsumers,
   ciOperationalPatterns,
@@ -17,10 +18,13 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -70,6 +74,7 @@ const GLOB_CHARACTER = /[*?[{]/u;
 // Test files whose packet-path literals are classifier inputs, never reads.
 const CLASSIFIER_TABLES: ReadonlyArray<string> = [
   "packages/tooling/tool/cli/test/ci-heavy-admission.test.ts",
+  "packages/tooling/tool/cli/test/coverage-scope-goal-readers.test.ts",
   "packages/tooling/tool/cli/test/goal-data-consumer-census.test.ts",
 ];
 
@@ -135,6 +140,10 @@ class CensusEntry extends S.Opaque<CensusEntry, { readonly brand: unique symbol 
 ) {}
 
 // A `${...}` placeholder ends the literal: what precedes it is a directory the consumer reads under.
+// The route lines of a change profile: the per-lane relevance lines that follow depend on which
+// consumer was mutated, while this census asserts only the docs-only route.
+const routeLines = (profile: string): string => A.join(A.take(Str.split(profile, "\n"), 3), "\n");
+
 const literalPrefix = (reference: string): string => Str.replace(/[^/]*\$\{.*$/u, "")(reference);
 
 // A literal is a file, a directory (with or without its trailing slash) or a glob.
@@ -222,6 +231,33 @@ const census = Effect.gen(function* () {
 });
 
 const pathPattern = (pattern: string): RegExp => new RegExp(pattern, "u");
+
+const isGoalDocument = S.is(CiGoalDocument);
+
+// The coverage planner selects a goal or exploration path's owners from these rows
+// (CoverageScope.ts `goalDataConsumerNamesForFile`), so each census reader must be listed here.
+const registryRows = A.map(ciGoalDataConsumers, (row) => ({
+  pattern: pathPattern(row.pattern),
+  consumers: row.consumers,
+}));
+const registryReadersOf = (consumed: string): ReadonlyArray<string> =>
+  pipe(
+    registryRows,
+    A.filter((row) => row.pattern.test(consumed)),
+    A.flatMap((row) => row.consumers)
+  );
+
+// The nearest ancestor directory of a census source that holds a tracked package.json. A
+// `src/test/*.test-kit.ts` source is owned by its package, not by the directory before `/test/`.
+const owningPackageDirectory = (source: string, tracked: HashSet.HashSet<string>): O.Option<string> => {
+  const segments = A.dropRight(Str.split("/")(source), 1);
+  return A.findFirst(
+    A.makeBy(A.length(segments), (index) => A.join(A.take(segments, A.length(segments) - index), "/")),
+    (directory) => HashSet.has(tracked, `${directory}/package.json`)
+  );
+};
+
+const decodePackageName = S.decodeUnknownEffect(S.fromJsonString(S.Struct({ name: S.NonEmptyString })));
 
 // The mutations the packet names: malform the frozen citation fixture, a citation ops `.py` probe
 // and a ciops research JSON (the `.ts` ops script is the first tracked one the census finds), plus
@@ -339,6 +375,47 @@ it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { timeout: "120 seco
     );
 
     it.effect(
+      "lists every reader package as a consumer of the row matching its path, and no turbo.json packet document",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { root, paths, entries } = yield* census;
+        const tracked = HashSet.fromIterable(paths);
+        const consumed = A.filter(entries, (entry) => !isExcluded(entry));
+        const ownerRows = yield* Effect.forEach(
+          A.dedupe(A.map(consumed, (entry) => entry.source)),
+          Effect.fnUntraced(function* (source) {
+            const directory = owningPackageDirectory(source, tracked);
+            if (O.isNone(directory)) return [source, O.none<string>()] as const;
+            const text = yield* fs.readFileString(path.join(root, directory.value, "package.json"));
+            const manifest = yield* decodePackageName(text);
+            return [source, O.some(manifest.name)] as const;
+          })
+        );
+        const owners = HashMap.fromIterable(ownerRows);
+        // The coverage planner selects a registry path's readers from its row's consumers, so a
+        // reader package missing from them would leave that path's tests out of coverage.
+        const unlisted = A.filterMap(consumed, (entry) => {
+          const owner = O.flatten(HashMap.get(owners, entry.source));
+          const readers = registryReadersOf(entry.path);
+          return O.exists(owner, (name) => A.contains(readers, name))
+            ? Result.failVoid
+            : Result.succeed(
+                `${entry.path} <- ${entry.source} (${O.getOrElse(owner, () => "no package.json")}); add the package to the consumers of the ciGoalDataConsumers row matching the path (row consumers: ${A.isReadonlyArrayNonEmpty(readers) ? A.join(readers, ", ") : "none"})`
+              );
+        });
+        expect(unlisted).toEqual([]);
+        // Turbo would select a package for a packet-document edit that the planner treats as
+        // noop, which makes hosted Test Unit stricter than local final-check.
+        const turboPacketDocuments = A.map(
+          A.filter(consumed, (entry) => PACKAGE_TURBO.test(entry.source) && isGoalDocument(entry.path)),
+          (entry) => `${entry.path} <- ${entry.source} (${entry.reference}); a turbo.json input must name goal data`
+        );
+        expect(turboPacketDocuments).toEqual([]);
+      })
+    );
+
+    it.effect(
       "selects the code route through change-profile for each mutated consumer that was docs-only before",
       Effect.fnUntraced(function* () {
         const { paths } = yield* census;
@@ -349,11 +426,11 @@ it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { timeout: "120 seco
           expect(A.contains(paths, mutated), `${label}: ${mutated} is tracked`).toBe(true);
           expect(preRepairDocsOnly.test(mutated), `${label} was docs-only before ROUT-03`).toBe(true);
           const profile = yield* changeProfileFor(mutated);
-          expect(profile, label).toBe("goals_only=false\ndocs_only=false\ndesktop_rust_relevant=false");
+          expect(routeLines(profile), label).toBe("goals_only=false\ndocs_only=false\ndesktop_rust_relevant=false");
         }
         // Control: prose beside a consumed path keeps the docs-only skip.
         const control = yield* changeProfileFor("goals/citation-extraction-engine/history/evidence/README.md");
-        expect(control).toBe("goals_only=false\ndocs_only=true\ndesktop_rust_relevant=false");
+        expect(routeLines(control)).toBe("goals_only=false\ndocs_only=true\ndesktop_rust_relevant=false");
       })
     );
   }

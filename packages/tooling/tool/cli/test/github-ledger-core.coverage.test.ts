@@ -6,7 +6,6 @@ import {
   ConfiguredGithubIdentity,
   commandLabelOf,
   emptyIdentityAliases,
-  epochsOf,
   GithubBudgetLedger,
   GithubConfiguredIdentities,
   GithubIdentityLabel,
@@ -21,6 +20,7 @@ import {
   hostLabelOf,
   hourOf,
   LedgerAnchor,
+  lanesOf,
   layerGithubBudgetLedger,
   layerGithubLedgerStoreMemory,
   makeGithubLedgerStoreMemory,
@@ -132,16 +132,17 @@ const calibration = GithubLedgerRow.cases.Calibration.make({
 
 // Two same-epoch windows on either side of a reset-crossing window, three
 // transports split across two commands (one free, one rate limited) and a
-// calibration pairing.
+// calibration pairing. The first window resets at 12 minutes, before the
+// 20-minute sample opens the next one, so that sample continues the same lane.
 const crossingRows = [
-  sample({ at: at(5 * MINUTE), used: 100, reset: HOUR }),
+  sample({ at: at(5 * MINUTE), used: 100, reset: 12 * MINUTE }),
   transport({ at: at(6 * MINUTE), used: 101, command: beep, nominalCost: 1, outcome: "rate-limited" }),
   transport({ at: at(7 * MINUTE), used: 101, command: monitor, nominalCost: 0 }),
   transport({ at: at(8 * MINUTE), used: 102, command: monitor, nominalCost: 1 }),
-  sample({ at: at(10 * MINUTE), used: 200, reset: HOUR }),
+  sample({ at: at(10 * MINUTE), used: 200, reset: 12 * MINUTE }),
   calibration,
-  sample({ at: at(20 * MINUTE), used: 50, reset: 2 * HOUR }),
-  sample({ at: at(30 * MINUTE), used: 80, reset: 2 * HOUR }),
+  sample({ at: at(20 * MINUTE), used: 50, reset: 72 * MINUTE }),
+  sample({ at: at(30 * MINUTE), used: 80, reset: 72 * MINUTE }),
 ];
 
 const crossingRollup = (complete: boolean) =>
@@ -178,11 +179,15 @@ const anchor = (offset: number, used: number, reset: number) =>
   LedgerAnchor.make({ at: at(offset), used, resetAt: at(reset), anchor: "sample" });
 
 describe("GithubLedger reducers", () => {
-  it("splits anchors into epochs at a reset", () => {
-    const first = anchor(0, 10, HOUR);
-    const second = anchor(MINUTE, 20, HOUR);
-    const afterReset = anchor(2 * MINUTE, 5, 2 * HOUR);
-    expect(epochsOf([first, second, afterReset])).toStrictEqual([[first, second], [afterReset]]);
+  it("clusters unknown reset instances transitively without crossing epochs", () => {
+    const a = { ...anchor(0, 10, HOUR), source: "a" };
+    const b = { ...anchor(MINUTE, 20, HOUR + 8000), source: "b" };
+    const c = { ...anchor(2 * MINUTE, 30, HOUR + 4000), source: "c" };
+    const idle = { ...anchor(3 * MINUTE, 0, HOUR), source: "idle" };
+    const reset = { ...anchor(65 * MINUTE, 2, 2 * HOUR), source: "a" };
+    deepStrictEqual(lanesOf([a, b, c, idle, reset]), [[a, b, c], [idle], [reset]]);
+    const expired = { ...anchor(2 * HOUR, 5, HOUR), source: "expired" };
+    deepStrictEqual(lanesOf([a, expired]), [[a, expired]]);
   });
 
   it("rolls up an hour whose windows cross a reset between two same-epoch runs", () => {

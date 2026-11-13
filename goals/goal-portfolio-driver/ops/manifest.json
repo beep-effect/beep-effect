@@ -3,15 +3,15 @@
   "initiative": {
     "id": "goal-portfolio-driver",
     "title": "Goal Portfolio Driver",
-    "status": "paused",
+    "status": "superseded",
     "created": "2026-07-14",
-    "updated": "2026-08-17",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/goal-portfolio-driver",
-  "lifecycle": "paused",
+  "lifecycle": "superseded",
   "mission": "Drain every locked portfolio goal through merged PR evidence and completed-retained lifecycle status.",
-  "statusNote": "Paused 2026-08-17 pending the driver-revisit gate: (1) exploration portfolio wrap-up complete and (2) goals/packet-control-plane-core closed. Rationale (operator): an autonomous drain is only trustworthy once feedback is fast (the 2026-08 CI campaign took pipelines and local checks from hours to minutes — that leg is paid) and packet state is trustworthy (guarded writers, derived truth, fork detection, advisory-mode evidence — the control plane's job). The 2026-07-14 locked 25-packet queue is stale and must be relocked from derived state at revisit, not resumed.",
+  "statusNote": "Closed (superseded) 2026-11-13 by operator ruling (finish board): The orchestrator role and the autonomy charter replaced it, and its 25-goal queue is stale. Re-open with `bun run beep goals set-status goal-portfolio-driver active` and re-graduate the next slice. Before the ruling: Paused 2026-08-17 pending the driver-revisit gate: (1) exploration portfolio wrap-up complete and (2) goals/packet-control-plane-core closed. Rationale (operator): an autonomous drain is only trustworthy once feedback is fast (the 2026-08 CI campaign took pipelines and local checks from hours to minutes — that leg is paid) and packet state is trustworthy (guarded writers, derived truth, fork detection, advisory-mode evidence — the control plane's job). The 2026-07-14 locked 25-packet queue is stale and must be relocked from derived state at revisit, not resumed.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
@@ -104,5 +104,7 @@
     "The same flaky check blocks three PRs; create a quarantine mini-goal at queue head.",
     "One goal consumes 12 Codex-hours and must park.",
     "Free disk is below 50 GB, so no new lane may be created."
-  ]
+  ],
+  "supersededNote": "Closed by operator ruling (finish board, 2026-11-13) without meeting its completion gate; see goals/goal-portfolio-driver/decisions/2026-11-13-finish-board-ruling-close.md.",
+  "retentionReason": "Closed by operator ruling (finish board, 2026-11-13) with a re-open path: the full packet stays on main so `bun run beep goals set-status goal-portfolio-driver active` can resume it or re-graduate the next slice without restoring from the archive."
 }

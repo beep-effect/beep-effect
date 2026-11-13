@@ -6,7 +6,7 @@
  */
 
 import { $FileProcessingId } from "@beep/identity";
-import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex, Sha256PrefixedDigest } from "@beep/schema";
 import { FileExtension } from "@beep/schema/FileExtension";
 import { FileName } from "@beep/schema/FileName";
 import { MimeType } from "@beep/schema/MimeType";
@@ -168,7 +168,7 @@ export type OperationId = typeof OperationId.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const ContentDigest = S.TemplateLiteral(["sha256:", Sha256Hex]).pipe(
+export const ContentDigest = Sha256PrefixedDigest.pipe(
   S.brand("FileProcessingContentDigest"),
   $I.annoteSchema("ContentDigest", {
     description: "A SHA-256 content digest using the sha256:<hex> representation.",

@@ -163,7 +163,7 @@ const packetRow = (manifest: GoalManifest, status: GoalStatus): GraphPacketRow =
  * ```
  *
  * @param manifests - Decoded manifests in any discovery order.
- * @param operativeStatuses - Receipt-derived status overrides; proposals alone never populate these.
+ * @param operativeStatuses - Optional per-packet status overrides; a packet without one keeps its declared `initiative.status` (the goals commands pass none).
  * @returns The sorted, duplicate-free projection.
  * @category projections
  * @since 0.0.0

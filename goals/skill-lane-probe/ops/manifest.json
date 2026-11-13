@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "skill-lane-probe",
+    "packetId": "goal-packet/v1:da43b574cd8b10a32536d1ba5ec7c2cf6fb4d0e2b9ec937d499bc2bebbfc1e60",
+    "title": "Skill Lane Probe",
+    "status": "active",
+    "created": "2026-11-13",
+    "updated": "2026-11-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/skill-lane-probe",
+  "lifecycle": "active",
+  "mission": "Measure whether the schema-first-development skill changes Opus 5.5 lane-fraction scores on the 12 archived SkillOpt tasks, laws prompt with the skill against without it, and return a verdict against a rule merged before any scored run.",
+  "statusNote": "P0 done 2026-11-13: preflight 12 of 12 under profile v3. P1 done 2026-11-13: PR #3240 merged the lane-fraction report route, permutation test, fixed-task interval, Holm family tests and the four-outcome verdict, with tests. Next: the 120 scored runs (P2), held until the Claude account that runs them has plan headroom; on 2026-11-13 the active account had 10% of its weekly quota left. Check accounts status before starting.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/skillopt-corpus-headroom",
+    "graduated": "2026-11-13"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/skill-lane-probe/README.md",
+    "goals/skill-lane-probe/SPEC.md",
+    "goals/skill-lane-probe/PLAN.md",
+    "goals/skill-lane-probe/GOAL.md",
+    "goals/skill-lane-probe/research/SOURCES.md"
+  ],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/skill-lane-probe/GOAL.md"
+    }
+  ],
+  "provides": ["tooling/skill-lane-probe"],
+  "requires": ["tooling/skill-effect-probe"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/skill-lane-probe/GOAL.md)\" -le 4000",
+    "jq . goals/skill-lane-probe/ops/manifest.json",
+    "rg -n \"skill-lane-probe|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/skill-lane-probe",
+    "git diff --check -- goals/skill-lane-probe",
+    "bun run beep quality package-verify @beep/repo-cli",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation.",
+    "claude plugin eval is switched off server-side or the plan limit rejects runs outright."
+  ]
+}

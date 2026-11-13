@@ -46,6 +46,7 @@ import {
   YeetUntilReadyPolicy,
   YeetWatchCheck,
   yeetBaseConflictFor,
+  yeetConflictBaseFor,
   yeetGatedFamiliesFor,
   yeetHeadTimelineStamp,
   yeetMonitorDurationMillis,
@@ -366,7 +367,12 @@ describe("B7 settle contracts", () => {
     assertNone(O.some<"heavy-not-admitted">("heavy-not-admitted").pipe(yeetSettleStampFor));
   });
   it("names a base conflict first, uncounted and never terminal, and clears on the repaired push", () => {
-    const dirty = { expected: expected(["Lint", "Test Unit"]), baseConflict: true, timeoutMs: 1000 };
+    const dirty = {
+      expected: expected(["Lint", "Test Unit"]),
+      baseConflict: true,
+      conflictBase: O.some("origin/main"),
+      timeoutMs: 1000,
+    };
     // GitHub emptied the rollup: every context reads missing, yet the budget does not apply.
     const conflict = verdict({ ...dirty, waitedMs: 5000 });
     expectBaseConflict(conflict);
@@ -388,6 +394,31 @@ describe("B7 settle contracts", () => {
     expect(yeetBaseConflictFor(O.some("mergeable"), O.some("dirty"))).toBe(true);
     expect(yeetBaseConflictFor(O.some("MERGEABLE"), O.some("CLEAN"))).toBe(false);
     expect(yeetBaseConflictFor(O.none(), O.none())).toBe(false);
+  });
+  it("names the pull request's own base, so a stack layer merges its parent's branch and not the trunk", () => {
+    // GitHub computes a layer's conflict against the parent's branch; the run's base stays the trunk.
+    expect(yeetConflictBaseFor(O.some("feat/parent"), "origin/main")).toBe("origin/feat/parent");
+    expect(yeetConflictBaseFor(O.some("main"), "origin/main")).toBe("origin/main");
+    expect(O.none<string>().pipe(yeetConflictBaseFor("origin/main"))).toBe("origin/main");
+    expect(yeetConflictBaseFor(O.some(""), "origin/main")).toBe("origin/main");
+    const layer = verdict({
+      baseConflict: true,
+      conflictBase: O.some(yeetConflictBaseFor(O.some("feat/parent"), "origin/main")),
+      waitedMs: 5000,
+    });
+    expectBaseConflict(layer);
+    assertSome(layer.conflictBase, "origin/feat/parent");
+    expect(renderYeetSettleDetail(layer)).toBe(
+      "settle: base-conflict; merge origin/feat/parent and push; waited 5s (not counted toward the 1s settle timeout)"
+    );
+    // A verdict without the ref (an artifact written before the field) names no branch, never the trunk.
+    expect(renderYeetSettleDetail(verdict({ baseConflict: true, waitedMs: 5000 }))).toBe(
+      "settle: base-conflict; merge the pull request's base and push; waited 5s (not counted toward the 1s settle timeout)"
+    );
+    // The ref rides only a base-conflict verdict.
+    assertNone(
+      verdict({ conflictBase: O.some("origin/feat/parent"), checks: [check("Lint", "pending")] }).conflictBase
+    );
   });
   it("restarts the settle clock only when the budget resumes", () => {
     const withBudget = (budgetApplies: boolean) =>
@@ -474,7 +505,7 @@ describe("B7 settle contracts", () => {
       })
     );
     expect(renderYeetSettleDetail(held)).toBe(
-      "settle: heavy-not-admitted; gated: Heavy / Check, Heavy / Docgen; admit: gh pr edit --add-label ready-for-heavy; waited 5s (not counted toward the 1s settle timeout)"
+      "settle: heavy-not-admitted; gated: Heavy / Check, Heavy / Docgen; admit: bun run beep yeet ready (flips a draft at content-final and applies ready-for-heavy); waited 5s (not counted toward the 1s settle timeout)"
     );
     // (2) run: B7 exactly — missing, and settle-timeout past the budget.
     const running = verdict({ ...gated, checks: [check("Lint")], admission: admission("run"), waitedMs: 999 });
@@ -534,7 +565,7 @@ describe("B7 settle contracts", () => {
     expect(yeetSettleVerdictIsHeld(mixed)).toBe(false);
     expect(mixed.budgetApplies).toBe(false);
     expect(renderYeetSettleDetail(mixed)).toBe(
-      "settle: required-pending; pending: Lint; gated: Heavy / Check, Heavy / Docgen; admit: gh pr edit --add-label ready-for-heavy; waited 5s; registered checks are GitHub's to time out"
+      "settle: required-pending; pending: Lint; gated: Heavy / Check, Heavy / Docgen; admit: bun run beep yeet ready (flips a draft at content-final and applies ready-for-heavy); waited 5s; registered checks are GitHub's to time out"
     );
     // Hold with a non-gated context never registered: it spends the budget and times out,
     // gated or not — the label cannot hide a required context that never came.
@@ -824,7 +855,7 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
           expect(got10).toBe(3);
           const heldLines = yield* ownLines;
           expect(heldLines).toContain(
-            "settle: heavy-not-admitted; gated: Heavy / Check, Heavy / Docgen; admit: gh pr edit --add-label ready-for-heavy; waited 200ms (not counted toward the 50ms settle timeout)"
+            "settle: heavy-not-admitted; gated: Heavy / Check, Heavy / Docgen; admit: bun run beep yeet ready (flips a draft at content-final and applies ready-for-heavy); waited 200ms (not counted toward the 50ms settle timeout)"
           );
           expect(heldLines).not.toContain("settle-timeout");
           yield* TestClock.adjust("100 millis");

@@ -96,6 +96,23 @@ no legal conclusion.
 | 2026-07-14 | `PTMNFEE2` is a weekly cumulative, checksum-pinned, validated full replacement with attributed fixtures. | [`Q8`](../../explorations/uspto-patent-driver-depth/DECISIONS.md#2026-07-14--q8-ptmnfee2-ingestion) |
 | 2026-07-14 | Keep bulk ingest separate from the prosecution read but reuse its generation substrate. | [`MAP judgment`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/uspto-patent-driver-depth/MAP.md#judgment-keep-ptmnfee2-separate) |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug uspto-ptmnfee2-ingest`; add a `kind: decision` file there, never edit this block._
+
+### Paused by operator ruling (finish board, 2026-11-13): Sibling of uspto-prosecution-read with no work started; pause it and run it together with that goal, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
+
+Triage rationale: Sibling of uspto-prosecution-read with no work started; pause it and run it together with that goal.
+
+No lane is working on it. Resume with `bun run beep goals set-status uspto-ptmnfee2-ingest active` when it is picked up.
+
+Lane chore/finish-board-pause-b1
+
+Reverse: goals set-status uspto-ptmnfee2-ingest active when it is picked up
+
+<!-- beep:decisions:end -->
+
 ## Acceptance Criteria
 
 - [ ] P0 evidence answers the exact current layout/archive members, complete

@@ -2,7 +2,9 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `superseded`
+
+**Closed by operator ruling (finish board, 2026-11-13).** There has been no real execution since July, only research-intake decisions. The live proofs need the operator, and two large phases have not started. The packet is `superseded` without meeting its completion gate. To resume, run `bun run beep goals set-status openclaw-workstation-agent active` and re-graduate the next slice. Decision: [`decisions/2026-11-13-finish-board-ruling-close.md`](./decisions/2026-11-13-finish-board-ruling-close.md).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

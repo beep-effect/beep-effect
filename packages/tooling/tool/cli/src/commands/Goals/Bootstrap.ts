@@ -37,12 +37,12 @@ import {
 import { GOAL_DECISION_TARGETS, renderGoalDecisionBlock } from "./Decisions.projection.ts";
 import { GoalPlanInputError, GoalPlanOperationalError } from "./Goals.errors.ts";
 import { isCapabilitySlug } from "./Goals.schemas.ts";
-import { listGoalPackets } from "./Inventory.ts";
+import { listExplorationPacketFiles, listGoalPackets } from "./Inventory.ts";
 import { materializeExpectFlag, materializeWriteFlag, requireOneMode, writeReviewedPlan } from "./Materialize.ts";
 import { canonicalJsonText, canonicalJsonTextPretty, sha256Hex } from "./PacketCore/PacketDigest.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as PlatformError from "effect/PlatformError";
-import type { PlanMode, PlanOwnership, ValidationRequirement } from "./Bootstrap.schemas.ts";
+import type { ExplorationPacketFile, PlanMode, PlanOwnership, ValidationRequirement } from "./Bootstrap.schemas.ts";
 import type { CapabilitySlug } from "./Goals.schemas.ts";
 
 const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
@@ -51,7 +51,7 @@ const decodeGoalSlug = S.decodeEffect(GoalSlug);
 const encodeUnknownMaterializationPlan = S.encodeUnknownEffect(MaterializationPlan);
 
 const COMPLETION_GATE_STATEMENT =
-  "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).";
+  "Not achieved until this goal's final PR, driven to mergeable via /yeet (bun run beep yeet: repair -> publish -> final-check -> ready -> monitor), merges and goals completion refresh verifies it from hosted facts.";
 
 const STOP_CONDITIONS: ReadonlyArray<string> = [
   "Required source files are missing or materially contradictory.",
@@ -330,11 +330,10 @@ irreversible change (a tested down-migration, a backup of deleted state) before
 the change merges, and ship a breaking public API or schema change with a major
 changeset. Escalate only what AGENTS.md "Autonomy" lists.
 
-Ship proposedCloseout and the reflection in the final PR (status stays active or
-paused). After that merge, verify with \`bun run beep goals completion refresh --slug ${input.slug}\`,
-then adopt with \`bun run beep goals set-status ${input.slug} <status>\` in a
-packet-state PR. Done only once it merges and this passes, or an operator
-blocker is reported with evidence:
+The final PR carries the reflection and writes \`closeout\` naming itself. Done
+only when this passes and \`goals completion refresh --slug ${input.slug}\` prints
+verified, when this passes under an operator ruling in \`decisions/\`, or when an
+operator blocker is reported with evidence:
 \`git show origin/main:goals/${input.slug}/ops/manifest.json | jq -e '.closeout.status == .initiative.status'\`
 `;
 
@@ -432,9 +431,13 @@ Before marking the packet closed:
    validate against \`ReflectionFrontmatter\`.
 2. Run \`bun run beep lint reflection-artifacts\`.
 3. Update \`README.md\` (status, latest evidence) and \`ops/manifest.json\` phase
-   statuses and a typed \`proposedCloseout\` with status \`completed-retained\`
-   and finalPullRequest. Keep \`initiative.status\` operative until completion
-   evidence verifies; do not close the external execution/session ledger from a proposal.
+   statuses. Once the final PR is open, run
+   \`bun run beep goals set-status ${input.slug} completed-retained\`: it writes
+   \`closeout\` naming that PR with the matching \`initiative.status\`, and the
+   commit ships in the final PR. After the merge,
+   \`bun run beep goals completion refresh --slug ${input.slug}\` must print verified;
+   name any red required check in a committed decision file
+   (\`redAttribution\`).
 
 ## Execution Notes
 
@@ -467,6 +470,27 @@ const sourcesPayload = (input: BootstrapInput): string => {
   corpus during the first research phase.`
       : `- **Source exploration:** \`explorations/${input.provenanceExploration}\` — primary ledger:
   \`explorations/${input.provenanceExploration}/research/SOURCES.md\`.`;
+  // Repo-root paths to the packet files the caller found on disk. A relative
+  // link copied from the exploration's ledger would resolve inside the goal,
+  // and a path to a file the packet lacks is a broken target either way.
+  const crossLinkLines = pipe(
+    O.fromUndefinedOr(input.provenanceExploration),
+    O.filter(() => A.isReadonlyArrayNonEmpty(input.provenanceFiles)),
+    O.match({
+      onNone: () => "",
+      onSome: (exploration) => `
+- Source exploration packet: ${pipe(
+        input.provenanceFiles,
+        A.map((file) => `\`explorations/${exploration}/${file}\``),
+        A.join(",\n  ")
+      )}.
+- Write each backticked path in this file from the repo root. A Markdown link
+  target resolves from this file's directory instead, so point it three levels
+  up to the repo root first; never copy a relative link out of the
+  exploration's ledger unchanged.
+`,
+    })
+  );
   return `# ${input.title} — Sources & Provenance
 
 ${provenanceLines}
@@ -486,7 +510,7 @@ ${provenanceLines}
 ## 4. In-repo capability references
 
 ## 5. Cross-links & provenance
-`;
+${crossLinkLines}`;
 };
 
 /**
@@ -1053,6 +1077,10 @@ const runBootstrapPlan = Effect.fn("Goals.runBootstrapPlan")(function* (options:
     );
   }
   const today = yield* resolveToday(options.today);
+  const provenanceFiles = yield* O.match(options.fromExploration, {
+    onNone: () => Effect.succeed(A.empty<ExplorationPacketFile>()),
+    onSome: (exploration) => listExplorationPacketFiles(exploration),
+  });
   const input = BootstrapInput.make({
     slug,
     title: options.title,
@@ -1061,6 +1089,7 @@ const runBootstrapPlan = Effect.fn("Goals.runBootstrapPlan")(function* (options:
     provides,
     requires,
     ...(O.isSome(options.fromExploration) ? { provenanceExploration: options.fromExploration.value } : {}),
+    provenanceFiles,
     today,
   });
   const records = yield* listGoalPackets();

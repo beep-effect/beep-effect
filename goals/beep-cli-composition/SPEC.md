@@ -143,6 +143,23 @@ them and record each in the Decision Log.
 | 2026-11-03 | D29 W3 creates `@beep/repo-cli-kit` with `create-package` and moves repo-cli's CLI-kit substrate into it: `src/internal/{cli,schema,process,artifacts,systemd,stats,duckdb,package-scripts,tsmorph}` and the root modules `Codeowners`, `ManifestRead`, `PathContainment`, `RepoWorkspaces` and `WholeToken`, with their tests and coverage rows. Identities re-root to the new package, and the modules gain full public JSDoc. `internal/repo-run/` stays for W4, after `goals/repo-cli-gh-git-consolidation` W7 rewrites its git runners. Exceptions that inventory regeneration resets on moved files are carried across (effect-vitest, schema-first), and two `lint-workers` mocks that the detector could not see behind relative paths get reviewed reasons. The knowledge refs gate now labels `docs/reports/` and `goals/<packet>/ops/inventory/digests/` archival: both hold dated, often digest-bound, captured evidence. The static command-surface reader resolves the shared flags in both the new and the pre-W3 layout (verifier item 7, partly). | The census maps these modules to `lib:repo-cli-kit` and none imports a later library. Rejected: also moving `internal/repo-run/GitExec.ts` (it collides with W7); re-recording the reset exceptions as open debt; editing hash-bound reports to satisfy the refs gate. | `git mv` the modules back under `src/internal/`, drop the package with `bun run beep delete-package`, and restore the archival segments and the single shared-flag path. |
 | 2026-11-01 | D24 Retire the `JSDocMigrateRewrite` core and its remarks-routing schema (`JSDocMigrate.schemas.ts`) with both of their tests, closing the last D22 keep that rested on the effected port runner. | effected-promotion PR C (#2476, a0589d263d) deleted the `scratchpad/effected` lab with its `DocsMigrate.ts` runner, the only consumer; a live-source search finds no other importer outside the test kit. The shared helpers the core used (`fencedLineState`, `stripCommentFraming`, `documentationShapeViolations`) keep other callers and stay. | Restore the two modules, both tests and the two `Quality.test-kit.ts` re-exports from git history at a0589d263d. |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug beep-cli-composition`; add a `kind: decision` file there, never edit this block._
+
+### Paused by operator ruling (finish board, 2026-11-13): It is a large refactor that touches the CLI everything else depends on. With no owner active it should not stay active, and it would collide with other repo-cli lanes, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
+
+Triage rationale: It is a large refactor that touches the CLI everything else depends on. With no owner active it should not stay active, and it would collide with other repo-cli lanes.
+
+No lane is working on it. Resume with `bun run beep goals set-status beep-cli-composition active` when it is picked up.
+
+Lane chore/finish-board-pause-b2
+
+Reverse: goals set-status beep-cli-composition active when it is picked up
+
+<!-- beep:decisions:end -->
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |

@@ -5,7 +5,10 @@
  * Every write serializes under `<admission root>/journal.lock`: the writer
  * reads the journal, preserves undecodable records byte-for-byte, appends its event, ring-trims
  * to the newest admitted transitions, and publishes the result with an atomic
- * temp-file rename. Scheduler correctness lives exclusively in ticket and
+ * temp-file rename. Rows the ring trims are first appended to a day segment
+ * under `<admission root>/journal-archive/`, so admission history outlives the
+ * ring; the history fold reads the archive and the live journal together.
+ * Scheduler correctness lives exclusively in ticket and
  * lease files; `bypassAdmission` on sub-envelope machines mints neither file
  * and journals no transition.
  *
@@ -22,13 +25,15 @@ import * as Console from "effect/Console";
 import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
 import * as SecureRandom from "effect/crypto/SecureRandom";
+import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import * as Base64Url from "effect/encoding/Base64Url";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
-import { constant, dual, flow, pipe } from "effect/Function";
+import { constant, dual, flow, identity, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -73,6 +78,104 @@ const LOCK_REAP_ADOPTION_BOUND_MILLIS = 30_000;
 // therefore applies only to malformed generations, never a parseable live
 // owner whose lock could still be released concurrently.
 const LOCK_REUSE_BACKSTOP_MILLIS = 300_000;
+const ARCHIVE_SEGMENT_SPAN_MILLIS = Duration.toMillis(Duration.days(1));
+
+/**
+ * Directory name, under the admission root, that holds rows trimmed from the journal ring.
+ *
+ * **Details**
+ *
+ * Each locked rewrite that trims known rows appends them, byte-for-byte, to the
+ * segment named after the current UTC day (`<YYYY-MM-DD>.ndjson`) before it
+ * publishes the trimmed journal. The scheduler's admission path writes here but
+ * never reads a segment's rows; the history fold does.
+ *
+ * **Example** (Name the archive directory)
+ *
+ * ```ts
+ * import { ADMISSION_JOURNAL_ARCHIVE_DIRECTORY_NAME } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(ADMISSION_JOURNAL_ARCHIVE_DIRECTORY_NAME) // "journal-archive"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const ADMISSION_JOURNAL_ARCHIVE_DIRECTORY_NAME = "journal-archive";
+
+/**
+ * How long an archive segment is kept once its UTC day has ended (thirty days).
+ *
+ * **Example** (Read the retention window)
+ *
+ * ```ts
+ * import { ADMISSION_JOURNAL_ARCHIVE_RETENTION_MILLIS } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(ADMISSION_JOURNAL_ARCHIVE_RETENTION_MILLIS) // 2592000000
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const ADMISSION_JOURNAL_ARCHIVE_RETENTION_MILLIS = Duration.toMillis(Duration.days(30));
+
+const archiveSegmentNameFor = (nowMillis: number): string =>
+  `${DateTime.formatIsoDateUtc(DateTime.makeUnsafe(nowMillis))}.ndjson`;
+
+// Start of the UTC day a `<YYYY-MM-DD>.ndjson` segment covers; any other name is not a segment.
+const archiveSegmentDayStartMillis: (name: string) => O.Option<number> = flow(
+  Str.match(/^(\d{4}-\d{2}-\d{2})\.ndjson$/u),
+  O.flatMap((match) => O.fromUndefinedOr(match[1])),
+  O.flatMap(DateTime.make),
+  O.map(DateTime.toEpochMillis)
+);
+
+const isAdmissionJournalArchiveSegmentName = flow(archiveSegmentDayStartMillis, O.isSome);
+
+/**
+ * Whether an archive segment has outlived the retention window and may be pruned.
+ *
+ * **Details**
+ *
+ * A segment ages once its whole UTC day is at least
+ * {@link ADMISSION_JOURNAL_ARCHIVE_RETENTION_MILLIS} old, so every row it holds
+ * was trimmed at least thirty days ago. The reap pass and the reap dry-run
+ * preview share this predicate. A name that is not `<YYYY-MM-DD>.ndjson` is never
+ * a segment and never ages.
+ *
+ * **Example** (Check the retention gate)
+ *
+ * ```ts
+ * import { isAgedAdmissionJournalArchiveSegment } from "@beep/repo-cli/test/RepoRun"
+ * import * as DateTime from "effect/DateTime"
+ *
+ * const now = DateTime.toEpochMillis(DateTime.makeUnsafe("2026-12-13T00:00:00Z"))
+ * console.log(isAgedAdmissionJournalArchiveSegment("2026-11-12.ndjson", now)) // true
+ * console.log(isAgedAdmissionJournalArchiveSegment(now)("2026-11-13.ndjson")) // false
+ * console.log(isAgedAdmissionJournalArchiveSegment("notes.txt", now)) // false
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const isAgedAdmissionJournalArchiveSegment: {
+  /**
+   * @param nowMillis - Current instant in epoch milliseconds.
+   * @returns A predicate over archive segment file names.
+   */
+  (nowMillis: number): (name: string) => boolean;
+  /**
+   * @param name - Archive segment file name.
+   * @param nowMillis - Current instant in epoch milliseconds.
+   * @returns `true` when the segment's day ended at least the retention window ago.
+   */
+  (name: string, nowMillis: number): boolean;
+} = dual(2, (name: string, nowMillis: number): boolean =>
+  O.exists(
+    archiveSegmentDayStartMillis(name),
+    (dayStart) => nowMillis - (dayStart + ARCHIVE_SEGMENT_SPAN_MILLIS) >= ADMISSION_JOURNAL_ARCHIVE_RETENTION_MILLIS
+  )
+);
 
 /**
  * Whether eviction events may be emitted into the shared admission journal.
@@ -694,6 +797,87 @@ export class AdmissionJournalReader extends Context.Service<AdmissionJournalRead
 
 const currentAdmissionJournalReader = AdmissionJournalReader.of({ decode: decodeAdmissionJournalEvent });
 
+const AdmissionJournalRowCount = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
+  $I.annoteSchema("AdmissionJournalRowCount", {
+    description: "Number of non-empty journal or archive lines counted by the history fold.",
+  })
+);
+
+/**
+ * Admission-journal archive directory and the day segments it currently holds.
+ *
+ * **Example** (Construct an archive listing)
+ *
+ * ```ts
+ * import { AdmissionJournalArchive } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const archive = AdmissionJournalArchive.make({
+ *   directory: "/tmp/admit/journal-archive",
+ *   segments: ["2026-11-11.ndjson", "2026-11-12.ndjson"],
+ * })
+ * console.log(archive.segments.length) // 2
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AdmissionJournalArchive extends S.Opaque<AdmissionJournalArchive, { readonly brand: unique symbol }>()(
+  S.Struct({
+    directory: S.String,
+    segments: S.Array(S.String),
+  }).pipe(
+    $I.annoteSchema("AdmissionJournalArchive", {
+      description: "Archive directory of trimmed admission-journal rows and its day segment names, oldest first.",
+    })
+  )
+) {}
+
+/**
+ * Admission history folded from the archive segments and the live journal.
+ *
+ * **Details**
+ *
+ * `events` lists every decodable row once: archive segments oldest first, each in
+ * append order, then the live journal. A line that appears more than once (a
+ * crash between the archive append and the journal publish, or a retried locked
+ * rewrite) is counted in `duplicateRows` and kept only at its first position.
+ * Lines the reader cannot decode (a torn tail, or a row from a newer revision)
+ * are counted in `opaqueRows` and left out of `events`.
+ *
+ * **Example** (Construct an empty history)
+ *
+ * ```ts
+ * import { AdmissionJournalArchive, AdmissionJournalHistory } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const history = AdmissionJournalHistory.make({
+ *   archive: AdmissionJournalArchive.make({ directory: "/tmp/admit/journal-archive", segments: [] }),
+ *   archivedRows: 0,
+ *   liveRows: 0,
+ *   duplicateRows: 0,
+ *   opaqueRows: 0,
+ *   events: [],
+ * })
+ * console.log(history.events.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AdmissionJournalHistory extends S.Opaque<AdmissionJournalHistory, { readonly brand: unique symbol }>()(
+  S.Struct({
+    archive: AdmissionJournalArchive,
+    archivedRows: AdmissionJournalRowCount,
+    liveRows: AdmissionJournalRowCount,
+    duplicateRows: AdmissionJournalRowCount,
+    opaqueRows: AdmissionJournalRowCount,
+    events: S.Array(AdmissionJournalEvent),
+  }).pipe(
+    $I.annoteSchema("AdmissionJournalHistory", {
+      description: "Deduplicated admission transitions from the journal archive and the live journal, with row counts.",
+    })
+  )
+) {}
+
 /**
  * Resolves the machine-wide admission journal path beneath a scheduler root.
  *
@@ -775,10 +959,13 @@ export const readAdmissionProtocol = Effect.fn("AdmissionJournal.readProtocol")(
   );
 });
 
-const prepareAdmissionJournalPaths = Effect.fnUntraced(function* (
-  root: string
-): Effect.fn.Return<
-  { readonly journalPath: string; readonly lockPath: string; readonly protocolPath: string },
+const prepareAdmissionJournalPaths = Effect.fnUntraced(function* (root: string): Effect.fn.Return<
+  {
+    readonly archiveDirectory: string;
+    readonly journalPath: string;
+    readonly lockPath: string;
+    readonly protocolPath: string;
+  },
   QualitySchedulerError,
   FileSystem.FileSystem | Path.Path
 > {
@@ -788,10 +975,29 @@ const prepareAdmissionJournalPaths = Effect.fnUntraced(function* (
     .makeDirectory(root, { recursive: true, mode: 0o700 })
     .pipe(Effect.mapError(QualitySchedulerError.new("Failed to create admission journal directory.")));
   return {
+    archiveDirectory: path.join(root, ADMISSION_JOURNAL_ARCHIVE_DIRECTORY_NAME),
     journalPath: path.join(root, JOURNAL_FILE_NAME),
     lockPath: path.join(root, LOCK_FILE_NAME),
     protocolPath: path.join(root, PROTOCOL_FILE_NAME),
   };
+});
+
+// Missing files read as empty: the journal and every archive segment are created lazily.
+const readJournalLines = Effect.fnUntraced(function* (
+  filePath: string,
+  label: string
+): Effect.fn.Return<ReadonlyArray<string>, QualitySchedulerError, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const text = yield* fs
+    .readFileString(filePath)
+    .pipe(
+      Effect.catchTag("PlatformError", (error) =>
+        error.reason._tag === "NotFound"
+          ? Effect.succeed(Str.empty)
+          : Effect.fail(QualitySchedulerError.new(`Failed to read ${label} "${filePath}".`)(error))
+      )
+    );
+  return pipe(Str.split("\n")(text), A.filter(Str.isNonEmpty));
 });
 
 const legacyLockOwnerPid = flow(Str.split(":"), A.head, O.flatMap(N.parse));
@@ -1604,26 +1810,47 @@ const publishJournalAtomic = Effect.fnUntraced(function* (
  */
 export const publishAdmissionJournalForTesting = publishJournalAtomic;
 
+// Copy trimmed rows to today's archive segment before the trimmed journal is
+// published. A copy that fails keeps the rows in the live journal (the next
+// rewrite archives them), so a trim never deletes history it could not copy.
+// Each batch starts with a newline, so a torn tail left by an interrupted
+// append stays on its own undecodable line instead of absorbing this batch's
+// first row. A retried rewrite may archive a row twice; the history fold drops
+// byte-identical duplicates.
+const archiveTrimmedJournalRows = Effect.fnUntraced(function* (
+  archiveDirectory: string,
+  lockPath: string,
+  lockToken: string,
+  lines: A.NonEmptyReadonlyArray<string>
+): Effect.fn.Return<boolean, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const nowMillis = yield* Clock.currentTimeMillis;
+  const segmentPath = path.join(archiveDirectory, archiveSegmentNameFor(nowMillis));
+  // A displaced writer must not archive rows the lock's new owner trims too.
+  yield* assertJournalFileLockOwned(lockPath, lockToken);
+  return yield* fs.makeDirectory(archiveDirectory, { recursive: true, mode: 0o700 }).pipe(
+    Effect.andThen(fs.writeFileString(segmentPath, `\n${A.join(lines, "\n")}\n`, { flag: "a", mode: 0o600 })),
+    Effect.as(true),
+    Effect.catchTag("PlatformError", (error) =>
+      Console.error(
+        `[yeet] could not archive ${A.length(lines)} trimmed admission journal row(s) to ${segmentPath} (${error.message}); keeping them in the live journal.`
+      ).pipe(Effect.as(false))
+    )
+  );
+});
+
 const rewriteJournalLocked = Effect.fnUntraced(function* (
   journalPath: string,
+  archiveDirectory: string,
   lockPath: string,
   lockToken: string,
   event: AdmissionJournalEvent,
   line: string,
   idempotent: boolean
 ): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom> {
-  const fs = yield* FileSystem.FileSystem;
   yield* assertJournalFileLockOwned(lockPath, lockToken);
-  const text = yield* fs
-    .readFileString(journalPath)
-    .pipe(
-      Effect.catchTag("PlatformError", (error) =>
-        error.reason._tag === "NotFound"
-          ? Effect.succeed(Str.empty)
-          : Effect.fail(QualitySchedulerError.new(`Failed to read admission journal "${journalPath}".`)(error))
-      )
-    );
-  const rawLines = pipe(Str.split("\n")(text), A.filter(Str.isNonEmpty));
+  const rawLines = yield* readJournalLines(journalPath, "admission journal");
   // Mixed fleet revisions share this journal. Preserve rows this revision does
   // not understand byte-for-byte so an older locked rewrite cannot erase a
   // newer protocol event before all checkouts have rolled forward.
@@ -1679,19 +1906,30 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
     A.head,
     O.getOrElse(constant(A.length(records)))
   );
-  const retainedRecords = A.filter(
-    records,
-    (record, index) =>
-      O.isNone(record.event) ||
-      (index >= firstRetainedIndex &&
-        (AdmissionJournalEvent.guards["admission-admitted"](record.event.value) || index >= firstOtherRetainedIndex))
+  // Opaque rows are always retained, so every trimmed row is a known row.
+  const retains = (event: O.Option<AdmissionJournalEvent>, index: number): boolean =>
+    O.isNone(event) ||
+    (index >= firstRetainedIndex &&
+      (AdmissionJournalEvent.guards["admission-admitted"](event.value) || index >= firstOtherRetainedIndex));
+  const [retainedRecords, trimmedRecords] = A.partition(records, (record, index) =>
+    retains(record.event, index) ? Result.succeed(record) : Result.fail(record)
   );
+  const archived = yield* A.match(trimmedRecords, {
+    onEmpty: () => Effect.succeed(true),
+    onNonEmpty: (trimmed) =>
+      archiveTrimmedJournalRows(
+        archiveDirectory,
+        lockPath,
+        lockToken,
+        A.map(trimmed, (record) => record.line)
+      ),
+  });
   yield* publishJournalAtomic(
     journalPath,
     lockPath,
     lockToken,
     pipe(
-      retainedRecords,
+      archived ? retainedRecords : records,
       A.map((record) => `${record.line}\n`),
       A.join(Str.empty)
     )
@@ -1709,7 +1947,10 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
  * reruns the whole read-and-publish operation through a bounded retry. The
  * rewrite preserves undecodable records, ring-trims known rows to the
  * newest 200 admitted transitions and caps total known history at 2,400 rows,
- * reserving those admissions before keeping other recent rows. It publishes via temp-file
+ * reserving those admissions before keeping other recent rows. Trimmed rows are
+ * appended to today's segment under {@link ADMISSION_JOURNAL_ARCHIVE_DIRECTORY_NAME}
+ * first; when that copy fails they stay in the live journal until a later rewrite
+ * archives them. It publishes via temp-file
  * rename. A lock that stays busy fails the append with a typed error;
  * scheduler correctness never depends on this operation, so callers treat
  * that failure as a best-effort diagnostic write. Unknown journal rows remain
@@ -1750,13 +1991,13 @@ const appendAdmissionJournalEventWithMode = Effect.fnUntraced(function* (
   QualitySchedulerError,
   FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
 > {
-  const { journalPath, lockPath } = yield* prepareAdmissionJournalPaths(root);
+  const { archiveDirectory, journalPath, lockPath } = yield* prepareAdmissionJournalPaths(root);
   const line = yield* encodeEvent(event).pipe(
     Effect.mapError(QualitySchedulerError.new("Failed to encode admission journal event."))
   );
   yield* withJournalFileLock(
     lockPath,
-    (lockToken) => rewriteJournalLocked(journalPath, lockPath, lockToken, event, line, idempotent),
+    (lockToken) => rewriteJournalLocked(journalPath, archiveDirectory, lockPath, lockToken, event, line, idempotent),
     LOCKED_OPERATION_RETRY_ATTEMPTS,
     `Admission journal lock "${lockPath}" stayed busy; dropping one ${event._tag} event.`
   );
@@ -1830,7 +2071,7 @@ export const appendAdmissionEvictionJournalEvent = Effect.fn("AdmissionJournal.a
   QualitySchedulerError,
   FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
 > {
-  const { journalPath, lockPath } = yield* prepareAdmissionJournalPaths(root);
+  const { archiveDirectory, journalPath, lockPath } = yield* prepareAdmissionJournalPaths(root);
   const line = yield* encodeEvent(event).pipe(
     Effect.mapError(QualitySchedulerError.new("Failed to encode admission eviction journal event."))
   );
@@ -1840,10 +2081,165 @@ export const appendAdmissionEvictionJournalEvent = Effect.fn("AdmissionJournal.a
       if (AdmissionEvictionEmission.is.off((yield* readAdmissionProtocol(root)).eviction)) {
         return false;
       }
-      yield* rewriteJournalLocked(journalPath, lockPath, lockToken, event, line, true);
+      yield* rewriteJournalLocked(journalPath, archiveDirectory, lockPath, lockToken, event, line, true);
       return true;
     }),
     LOCKED_OPERATION_RETRY_ATTEMPTS,
     `Admission journal lock "${lockPath}" stayed busy; dropping one ${event._tag} event.`
   );
+});
+
+// Segment names sort by day; files that are not `<YYYY-MM-DD>.ndjson` are ignored.
+const listArchiveSegmentNames = Effect.fnUntraced(function* (directory: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const names = yield* fs.readDirectory(directory).pipe(
+    Effect.catchIf(
+      (error) => error.reason._tag === "NotFound",
+      () => Effect.succeed(A.empty<string>())
+    )
+  );
+  return A.sort(A.filter(names, isAdmissionJournalArchiveSegmentName), Order.String);
+});
+
+/**
+ * List the admission-journal archive directory's day segments, oldest first.
+ *
+ * **Details**
+ *
+ * A missing archive directory (no row has been trimmed yet) lists no segments.
+ * Any other listing failure is a typed error whose message names the platform
+ * reason (for example `PermissionDenied`, or `BadResource` when the path is a
+ * file): a history read must not pass off an unreadable archive as an empty
+ * one. Callers that must not be blocked by the archive, such as the scheduler
+ * reap command, report the error instead of failing on it.
+ *
+ * **Example** (List the archive segments)
+ *
+ * ```ts
+ * import { readAdmissionJournalArchive } from "@beep/repo-cli/test/RepoRun"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(readAdmissionJournalArchive("/tmp/admission"))) // true
+ * ```
+ *
+ * @param root - Machine-wide admission root directory.
+ * @returns The archive directory and its segment names.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const readAdmissionJournalArchive = Effect.fn("AdmissionJournal.readArchive")(function* (
+  root: string
+): Effect.fn.Return<AdmissionJournalArchive, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  const path = yield* Path.Path;
+  const directory = path.join(root, ADMISSION_JOURNAL_ARCHIVE_DIRECTORY_NAME);
+  const segments = yield* listArchiveSegmentNames(directory).pipe(
+    Effect.mapError((error) =>
+      QualitySchedulerError.new(`Failed to list admission journal archive "${directory}" (${error.reason._tag}).`)(
+        error
+      )
+    )
+  );
+  return AdmissionJournalArchive.make({ directory, segments });
+});
+
+/**
+ * Fold the archived admission rows and the live journal into one history.
+ *
+ * **Details**
+ *
+ * Rows are read in order (archive segments oldest first, then the live journal),
+ * byte-identical repeats are dropped after their first position, and each
+ * remaining row is decoded with the provided {@link AdmissionJournalReader}
+ * (the current reader by default), so v1, v2 and v3 rows decode together. The
+ * scheduler's admission path never calls this; the history command does.
+ *
+ * **Gotchas**
+ *
+ * Checkouts on a revision older than the archive still trim without copying, so
+ * rows they trimmed are absent until every checkout writes the archive.
+ *
+ * **Example** (Read the admission history)
+ *
+ * ```ts
+ * import { readAdmissionJournalHistory } from "@beep/repo-cli/test/RepoRun"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(readAdmissionJournalHistory("/tmp/admission"))) // true
+ * ```
+ *
+ * @param root - Machine-wide admission root directory.
+ * @returns The deduplicated history with its row counts.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const readAdmissionJournalHistory = Effect.fn("AdmissionJournal.readHistory")(function* (
+  root: string
+): Effect.fn.Return<AdmissionJournalHistory, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  const path = yield* Path.Path;
+  const archive = yield* readAdmissionJournalArchive(root);
+  const segmentLines = yield* Effect.forEach(archive.segments, (name) =>
+    readJournalLines(path.join(archive.directory, name), "admission journal archive segment")
+  );
+  const archivedLines = A.flatten(segmentLines);
+  const liveLines = yield* readJournalLines(path.join(root, JOURNAL_FILE_NAME), "admission journal");
+  const lines = A.appendAll(archivedLines, liveLines);
+  const firstIndexByLine = A.reduce(lines, HashMap.empty<string, number>(), (firstIndexes, line, index) =>
+    HashMap.has(firstIndexes, line) ? firstIndexes : HashMap.set(firstIndexes, line, index)
+  );
+  const unique = A.filter(lines, (line, index) => O.contains(HashMap.get(firstIndexByLine, line), index));
+  const providedReader = yield* Effect.serviceOption(AdmissionJournalReader);
+  const reader = O.getOrElse(providedReader, constant(currentAdmissionJournalReader));
+  const decoded = yield* Effect.forEach(unique, flow(reader.decode, Effect.option));
+  const events = A.getSomes(decoded);
+  return AdmissionJournalHistory.make({
+    archive,
+    archivedRows: A.length(archivedLines),
+    liveRows: A.length(liveLines),
+    duplicateRows: A.length(lines) - A.length(unique),
+    opaqueRows: A.length(unique) - A.length(events),
+    events,
+  });
+});
+
+/**
+ * Delete archive segments whose day ended more than the retention window ago.
+ *
+ * **Details**
+ *
+ * The scheduler's reap pass runs this after archiving aged quarantine entries.
+ * It lists segment names only and never reads a segment's rows. It is
+ * best-effort: an unlistable archive or a segment that cannot be removed is
+ * skipped, never fatal to admission. A segment past retention is never
+ * written again (writers append to the current day), so pruning takes no lock.
+ *
+ * **Example** (Reference the archive prune)
+ *
+ * ```ts
+ * import { pruneAgedAdmissionJournalArchive } from "@beep/repo-cli/test/RepoRun"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(pruneAgedAdmissionJournalArchive("/tmp/admission"))) // true
+ * ```
+ *
+ * @param root - Machine-wide admission root directory.
+ * @returns The number of segments removed.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const pruneAgedAdmissionJournalArchive = Effect.fn("AdmissionJournal.pruneArchive")(function* (
+  root: string
+): Effect.fn.Return<number, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const nowMillis = yield* Clock.currentTimeMillis;
+  const directory = path.join(root, ADMISSION_JOURNAL_ARCHIVE_DIRECTORY_NAME);
+  const segments = yield* listArchiveSegmentNames(directory).pipe(Effect.orElseSucceed(A.empty<string>));
+  const removed = yield* Effect.forEach(A.filter(segments, isAgedAdmissionJournalArchiveSegment(nowMillis)), (name) =>
+    fs.remove(path.join(directory, name)).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)))
+  );
+  const count = A.length(A.filter(removed, identity));
+  yield* count > 0
+    ? Console.error(`[yeet] pruned ${count} admission journal archive segment(s) older than 30 days from ${directory}`)
+    : Effect.void;
+  return count;
 });

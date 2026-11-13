@@ -114,7 +114,17 @@ generated from that directory and never edited by hand.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug python-free-repo`; add a `kind: decision` file there, never edit this block._
 
-_No decision files yet._
+### Paused by operator ruling (finish board, 2026-11-13): Hygiene work with no execution yet and no urgency, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
+
+Triage rationale: Hygiene work with no execution yet and no urgency.
+
+No lane is working on it. Resume with `bun run beep goals set-status python-free-repo active` when it is picked up.
+
+Lane chore/finish-board-pause-b1
+
+Reverse: goals set-status python-free-repo active when it is picked up
 
 <!-- beep:decisions:end -->
 

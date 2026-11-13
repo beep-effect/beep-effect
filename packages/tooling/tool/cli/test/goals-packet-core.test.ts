@@ -42,6 +42,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
+import { holdsOnlyWellFormedText } from "./support/WellFormedText.ts";
 
 const decodePacketTraceProjectionJson = S.decodeEffect(S.fromJsonString(PacketTraceProjection));
 const decodeUnknownPacketTraceEntryEffect = S.decodeUnknownEffect(PacketTraceEntry);
@@ -117,6 +118,23 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
       expect(canonicalJsonText({ a: undefined, b: 1 })).toBe('{"b":1}');
     });
 
+    // The indented renderer keeps its own walk (census E7): the compact text
+    // is the canonical digest owner's since slice C, so these shapes no longer
+    // reach this walk through `canonicalJsonText`.
+    it("renders empty containers, null, nesting and non-JSON leaves in the pretty form", () => {
+      expect(canonicalJsonTextPretty({})).toBe("{}\n");
+      expect(canonicalJsonTextPretty([])).toBe("[]\n");
+      expect(canonicalJsonTextPretty(null)).toBe("null\n");
+      expect(canonicalJsonTextPretty({ b: [1, { d: null, c: "x" }], a: {}, e: [] })).toBe(
+        '{\n  "a": {},\n  "b": [\n    1,\n    {\n      "c": "x",\n      "d": null\n    }\n  ],\n  "e": []\n}\n'
+      );
+      // An `undefined` member is absent; one whose every member is absent is empty.
+      expect(canonicalJsonTextPretty({ a: undefined, b: 1 })).toBe('{\n  "b": 1\n}\n');
+      expect(canonicalJsonTextPretty({ a: undefined })).toBe("{}\n");
+      // Anything that is neither a JSON scalar, an array nor a record renders as null.
+      expect(canonicalJsonTextPretty({ a: Symbol.for("not-json") })).toBe('{\n  "a": null\n}\n');
+    });
+
     it("round-trips event file names and rejects non-CAS names", () => {
       const digest = Str.repeat(64)("a");
       const parsed = parsePacketEventFileName(`00002-status-set-${digest}.json`);
@@ -165,7 +183,11 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
   });
 
   describe("schema-derived properties", () => {
-    const PacketTraceEntryArbitrary = Arbitrary.schema(PacketTraceEntry);
+    // Byte stability is a property of canonical text, which exists only for
+    // well-formed strings: the owner refuses an unpaired surrogate.
+    const PacketTraceEntryArbitrary = Arbitrary.schema(PacketTraceEntry).pipe(
+      Arbitrary.filter(holdsOnlyWellFormedText)
+    );
     it.effect.prop(
       "round-trips arbitrary timeline entries through encode/decode byte-stably",
       [PacketTraceEntryArbitrary],
@@ -958,6 +980,44 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
           expect(kinds).toContain("digest-mismatch");
         }),
       20_000
+    );
+
+    // An actor is free text. A stored event whose JSON escapes an unpaired
+    // surrogate there decodes as a PacketEvent but has no canonical form: the
+    // digest fails typed and the read reports it as an issue, not a defect.
+    it.effect(
+      "reports an event whose actor holds an unpaired surrogate as event-invalid",
+      () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const store = yield* PacketEventStore;
+          const packetPath = yield* fs.makeTempDirectoryScoped();
+          const events = `${packetPath}/ops/events`;
+          yield* fs.makeDirectory(events, { recursive: true });
+          const content = yield* renderPacketEventFile(genesisEvent("surrogate"));
+          yield* fs.writeFileString(
+            `${events}/00001-packet-created-${Str.repeat(64)("a")}.json`,
+            Str.replace('"actor": "test"', '"actor": "\\ud800"')(content)
+          );
+
+          const listing = yield* store.list(
+            PacketStreamLocator.make({ packet: "surrogate", root: "goals", packetPath })
+          );
+          expect(listing.events).toStrictEqual([]);
+          expect(A.map(listing.issues, (issue) => [issue.kind, issue.detail])).toStrictEqual([
+            ["event-invalid", "decoded PacketEvent could not be canonically encoded."],
+          ]);
+        }),
+      20_000
+    );
+
+    it.effect("fails the event digest typed, in its SchemaError channel, for an unpaired surrogate", () =>
+      Effect.gen(function* () {
+        const failure = yield* Effect.flip(
+          packetEventDigest(PacketEvent.make({ ...genesisEvent("surrogate"), actor: "\ud800" }))
+        );
+        expect(failure.message).toContain('LoneSurrogate at "/actor"');
+      })
     );
 
     it.effect(

@@ -189,10 +189,9 @@ secret failure through desktop sign-in.
   introduced regression remains.
 - [ ] The final implementation PR reaches Yeet `merge-ready: yes`, with
   required checks and reviews handled.
-- [ ] Final evidence, reflection and proposedCloseout land in the final implementation
-  PR; after it merges, completion refresh verifies the proposal and a separate
-  packet-state PR adopts completed-retained. That PR is merged and origin/main
-  has matching closeout and initiative statuses.
+- [ ] Final evidence, the reflection and the `closeout` record land in the final
+  implementation PR; after it merges, completion refresh verifies it from
+  hosted facts, and origin/main has matching closeout and initiative statuses.
 
 Packet creation satisfies no implementation criterion. A partial or blocked
 result remains active/paused with receipts, not completed-retained.
@@ -1259,5 +1258,17 @@ Operator adopted the six-gate operational R2 finish line and requested mergeable
 PR #2956
 
 Reverse: On explicit resume, audit the six operational gates; expand assurance only with a new recorded decision and effort budget.
+
+### Paused by operator ruling (finish board, 2026-11-13): Depends on cache-trust work; stays paused alongside it, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`. It was already paused; the ruling confirms the pause and records why.
+
+Triage rationale: Depends on cache-trust work; stays paused alongside it.
+
+No lane is working on it. Resume with `bun run beep goals set-status turborepo-quality-cache-adoption active` when it is picked up.
+
+Lane chore/finish-board-pause-b2
+
+Reverse: goals set-status turborepo-quality-cache-adoption active when it is picked up
 
 <!-- beep:decisions:end -->

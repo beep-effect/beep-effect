@@ -2,15 +2,20 @@ import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { GitHubError } from "@beep/github/GitHubError";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
+import { ComputeProfileProbe, makeComputeProfileProbe } from "@beep/repo-cli/test/RepoRun";
 import { GithubRest } from "@beep/repo-cli/test/SharedInternals";
 import {
   applyHeavyAdmissionLabel,
+  applyPublishLabels,
   buildYeetRunPlan,
   defaultYeetRunOptions,
+  FinalCheckReceipt,
+  FinalCheckStepResult,
   findOpenPullRequest,
   findOpenPullRequestViaRest,
   RepoPlanStep,
   RepoRunContext,
+  renderFinalCheckBodySection,
   runGhPullRequestView,
   validateCommitMessage,
   validateMonitorBranch,
@@ -31,7 +36,7 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
-import { captureGithub, provideLegacyGh, restPullRequest } from "./support/YeetGithub.ts";
+import { captureGithub, provideLegacyGh, recordedGithub, restPullRequest } from "./support/YeetGithub.ts";
 import type { YeetExecutedStep } from "@beep/repo-cli/test/Yeet";
 
 const context = RepoRunContext.make({
@@ -402,6 +407,102 @@ describe("Yeet pull request lifecycle boundaries", () => {
         ]);
       }).pipe(withGh(""))
     );
+
+    // Every label starts a Heavy Admit run and admission is sticky, so the worker label goes first:
+    // the ready-for-heavy run is then the newest, the one suite the base ruleset reads.
+    it.effect("requests the worker label before ready-for-heavy when a worker opens a pull request", () =>
+      Effect.gen(function* () {
+        const github = recordedGithub((call) =>
+          Str.endsWith("/issues/42/labels")(call.path) ? { body: [{ name: "label" }] } : undefined
+        );
+        const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
+        const worker = makeComputeProfileProbe({
+          constrainedMemoryBytes: () => 7 * 1024 ** 3,
+          totalMemoryBytes: () => 125 * 1024 ** 3,
+          residentBytes: () => 0,
+        });
+        yield* applyPublishLabels(context, recorder, O.some(labelStep), created, true, {
+          changedPaths: () => Effect.succeed(["package.json"]),
+        }).pipe(github.provide, Effect.provideService(ComputeProfileProbe, worker));
+        const labelled = A.filter(github.calls, (call) => Str.endsWith("/issues/42/labels")(call.path));
+        expect(A.map(labelled, (call) => call.body)).toEqual([
+          { labels: ["compute-profile-worker"] },
+          { labels: ["ready-for-heavy"] },
+        ]);
+      }).pipe(withGh(""))
+    );
+  });
+
+  // A pull request opens ready on its final-check receipt, so the body names what the receipt holds.
+  it("names the gates that ran and each skipped gate's reason in the pull request body", () => {
+    const step = (gate: "lint" | "check" | "coverage", status: "passed" | "skipped", reason?: string) =>
+      FinalCheckStepResult.make({
+        gate,
+        label: `final-check:${gate}`,
+        hostedContext: `Heavy / ${gate}`,
+        command: status === "skipped" ? "(skipped)" : `bun run ${gate}`,
+        status,
+        durationMs: 0,
+        ...(reason === undefined ? {} : { reason }),
+      });
+    const receipt = FinalCheckReceipt.make({
+      headSha: Str.repeat(40)("a"),
+      mergeBase: Str.repeat(40)("b"),
+      base: "origin/main",
+      complete: true,
+      verdict: "pass",
+      startedAt: "2026-11-13T00:00:00.000Z",
+      finishedAt: "2026-11-13T00:01:00.000Z",
+      steps: [
+        step("lint", "passed"),
+        step("check", "passed"),
+        step("check", "passed"),
+        step("coverage", "skipped", "admission waited 10 minutes"),
+      ],
+      expectationRewrites: [],
+    });
+    expect(renderFinalCheckBodySection(receipt)).toBe(
+      A.join(
+        [
+          "## Final check",
+          "",
+          "- `yeet final-check` on aaaaaaaaaaaa: pass",
+          "- ran: lint, check",
+          "- skipped, proved by hosted CI only: coverage (admission waited 10 minutes)",
+        ],
+        "\n"
+      )
+    );
+  });
+
+  it("omits the ran or skipped line a receipt has nothing for, and says when a skip recorded no reason", () => {
+    const receiptWith = (steps: ReadonlyArray<FinalCheckStepResult>) =>
+      FinalCheckReceipt.make({
+        headSha: Str.repeat(40)("c"),
+        mergeBase: Str.repeat(40)("b"),
+        base: "origin/main",
+        complete: true,
+        verdict: "pass",
+        startedAt: "2026-11-13T00:00:00.000Z",
+        finishedAt: "2026-11-13T00:01:00.000Z",
+        steps,
+        expectationRewrites: [],
+      });
+    const step = (status: "passed" | "skipped") =>
+      FinalCheckStepResult.make({
+        gate: "lint",
+        label: "final-check:lint",
+        hostedContext: "Lint",
+        command: "bun run lint",
+        status,
+        durationMs: 0,
+      });
+    const header = "## Final check\n\n- `yeet final-check` on cccccccccccc: pass";
+    expect(renderFinalCheckBodySection(receiptWith([step("passed")]))).toBe(`${header}\n- ran: lint`);
+    expect(renderFinalCheckBodySection(receiptWith([step("skipped")]))).toBe(
+      `${header}\n- skipped, proved by hosted CI only: lint (no reason recorded)`
+    );
+    expect(renderFinalCheckBodySection(receiptWith([]))).toBe(header);
   });
 
   it("keeps the compatibility planner equivalent in both dual invocation forms", () => {

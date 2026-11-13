@@ -2,7 +2,9 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `superseded`
+
+**Closed by operator ruling (finish board, 2026-11-13).** It has been stale for about three weeks with no next step, and the research/ surface already covers the intake need; close it by ruling and keep only the P0 laws. The packet is `superseded` without meeting its completion gate. To resume, run `bun run beep goals set-status nightly-research-routine active` and re-graduate the next slice. Decision: [`decisions/2026-11-13-finish-board-ruling-close.md`](./decisions/2026-11-13-finish-board-ruling-close.md).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

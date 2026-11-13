@@ -6,6 +6,7 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
+import type { ReviewThreads } from "@beep/github/ReviewThread";
 import type * as Effect from "effect/Effect";
 import type * as O from "effect/Option";
 import type { YeetCommandError } from "../Yeet/Yeet.errors.ts";
@@ -83,6 +84,8 @@ export class GoalCompletionIo extends Context.Service<
     readonly ruleSuite: (root: string, id: number) => Effect.Effect<GoalCompletionRuleSuite, YeetCommandError>;
     /** Current repository and inherited rulesets, including creation instants. */
     readonly rulesets: (root: string) => Effect.Effect<GoalCompletionRulesetList, YeetCommandError>;
+    /** Every review thread on one pull request, with the pull request's author, as GitHub reports them now. */
+    readonly reviewThreads: (root: string, number: number) => Effect.Effect<ReviewThreads, YeetCommandError>;
   }
 >()($I`GoalCompletionIo`) {}
 

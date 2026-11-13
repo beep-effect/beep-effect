@@ -26,7 +26,7 @@ proved about each.
 
 | Class | Meaning | Disposition |
 | --- | --- | --- |
-| replace | A sorted-key encoder whose output is RFC 8785 on its domain, and the digests taken over it. | Slice C replaces the encoder body with `JsoncFingerprint`; exports and digests keep their bytes. |
+| replace | A sorted-key encoder whose output is RFC 8785 on its domain, and the digests taken over it. | Slice C replaced the encoder body with `JsoncFingerprint` (done for E1 to E4); exports and digests keep their bytes. |
 | pinned | Bytes fixed by a named specification, a wire contract or an in-source digest constant. | Keep. |
 | renderer | Indented or domain-ordered output for files and people. | Keep. The row says whether a digest is taken over the output. |
 | outside | A digest preimage that is not sorted-key JSON: hand-joined fields, JSON in schema field order, or an array-only tuple. | No action in this goal. Recorded so the slice D guard can tell known from new. |
@@ -53,11 +53,11 @@ outside `@beep/jsonc` except the census rows" is checked against.
 
 | # | Encoder | Class | Layout | Why |
 | --- | --- | --- | --- | --- |
-| E1 | `packages/foundation/modeling/epistemics/src/internal/CanonicalJson.ts` `canonicalJson`, exported as `canonicalDetectionJson`; aliased by `packages/epistemic/domain/src/values/internal/CanonicalJson.ts` and `packages/execution-authority/domain/src/internal/CanonicalJson.ts` | replace | compact | Recursive `Order.String` sort, `JSON.stringify` scalars. Byte-equal to the owner on plain JSON (differential test). |
-| E2 | `packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketDigest.ts` `canonicalJsonText` | replace | compact | Same construction. Shares its engine with E7. |
-| E3 | `apps/labs/semantica/src/corpus/Canonical.ts` `canonicalJson` | replace | compact | Same construction. |
-| E4 | `packages/foundation/modeling/md/src/Md.render.ts` `renderJson` (JSON frontmatter) | replace | compact, between `---json` fences | Found by this census. Recursive sort with its own string escapes; byte-equal to the owner on well-formed input. Not hashed anywhere. |
-| E5 | `packages/party/domain/src/values/PartyKey/PartyKey.behavior.ts` `canonicalJson`, `canonicalBytes` | pinned | compact | PartyKey v1 bytes, fixed by the archived party-slice specification (linked from `packages/party/domain/README.md`, restated in that package's `AGENTS.md`) and by the fixture in `packages/party/domain/test/PartyKey.test.ts`. String-only, fixed ASCII keys, own escaping. |
+| E1 | `packages/foundation/modeling/epistemics/src/internal/CanonicalJson.ts` `canonicalJson`, exported as `canonicalDetectionJson`; aliased by `packages/epistemic/domain/src/values/internal/CanonicalJson.ts` and `packages/execution-authority/domain/src/internal/CanonicalJson.ts` | replace, done | compact | Slice C: the body is the owner, strict. Was a recursive `Order.String` sort with `JSON.stringify` scalars, byte-equal to the owner on plain JSON. |
+| E2 | `packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketDigest.ts` `canonicalJsonText` | replace, done | compact | Slice C: the body is the owner with `omitUndefinedMembers`. The engine it shared with E7 now serves E7 alone. |
+| E3 | `apps/labs/semantica/src/corpus/Canonical.ts` `canonicalJson` | replace, done | compact | Slice C: the body is the owner, strict. |
+| E4 | `packages/foundation/modeling/md/src/Md.render.ts` `renderJson` (JSON frontmatter) | replace, done | compact, between `---json` fences | Found by this census. Slice C: the frontmatter is the owner's text, strict; the recursive sort and string escapes are gone. Not hashed anywhere. |
+| E5 | `packages/party/domain/src/values/PartyKey/PartyKey.behavior.ts` `canonicalJson`, `canonicalBytes` | pinned | compact | PartyKey v1 bytes, fixed by the archived party-slice specification (linked from `packages/party/domain/README.md`, restated in that package's `AGENTS.md`) and by the fixture in `packages/party/domain/test/PartyKey.test.ts`. String-only, fixed ASCII keys, own escaping. Slice C kept it and added a parity proof in the same test file: on its domain its bytes equal the owner's. |
 | E6 | `packages/law-practice/server/src/internal/Citation/RuntimeHashEncoding.ts`, `PublicationResourceHash.ts`, `CaseResourceHash.ts` | pinned | Python `json.dumps` separators | Byte parity with eyecite 2.7.6 (`sort_keys`, `ensure_ascii`, code-point order). RFC 8785 differs on all three. |
 | E7 | `PacketDigest.ts` `canonicalJsonTextPretty` | renderer | indented, trailing newline | Writes `ops/events/*.json` and `ops/trace.json`. The event digest is taken over E2's bytes, not these (the replay re-renders all 76 stored events byte for byte). File-content digests exist over plan payloads (`Goals/Bootstrap.ts`, `Goals/Materialize.ts`). |
 | E8 | `packages/drivers/openclaw/src/OpenclawRender.ts` `canonicalizeDocument` | renderer | indented, trailing newline | Renders `openclaw.json`. `contentHash` is SHA-256 of the rendered file including the newline, a file checksum that `infra/src/OpenClaw.ts` compares with the deployed file. Not a canonical digest. |
@@ -65,6 +65,15 @@ outside `@beep/jsonc` except the census rows" is checked against.
 | E10 | `packages/foundation/modeling/package-json/src/internal/format.ts` `sortKeys`; `packages/tooling/library/repo-utils/src/schemas/PackageJsonTools.ts`; `PackageJson.ts` `toSortedRecord`; `packages/tooling/library/repo-cli-kit/src/package-scripts/PackageScripts.schemas.ts` | renderer | indented | `package.json` ordering: documented keys first, Node condition order preserved. A global sort would be wrong here. |
 | E11 | `packages/foundation/modeling/yaml/src/internal/stringifier.ts` (`sortKeys` option) | renderer | YAML | Not JSON. No source caller turns the option on. |
 | E12 | One-level sorts that shape a record before an indented file is written: `mcpb-kit` manifest env, cache policy baseline reviews, skills lock map, root package projection, shard timings, coverage baseline, policy fingerprint turbo edit (rows LB4, LB8, S3, S6, T1, Ci2, Q7, L4, L5 in the tooling file) | renderer | indented | Committed or generated files. Where a digest exists it is a file-content digest. |
+
+Guarded by `no-hand-rolled-canonical-json` (slice D), a Biome GritQL rule in
+`@beep/lint-rules` that runs over `**/src/**` outside `@beep/jsonc` and
+rejects JSON object text built as braces around a join of members. Seven rows
+build their text that way and carry an in-source suppression naming the row:
+E5, E6, E7, E8, E9, E11 and E12 (tooling L4). E10 and the other E12 rows
+shape a record that a JSON codec renders, so the rule does not see them; a
+new encoder of that kind still needs a row here. `PLAN.md`, "Slice D
+evidence", has the `rg` check of this table.
 
 `packages/tooling/tool/cli/src/commands/Quality/internal/CoverageArtifacts.ts`
 `normalizedRaw` sorts only the top-level keys of a compact document and hashes
@@ -120,6 +129,35 @@ in particular.
 The off-domain behaviour of every encoder is fixed row by row in
 `packages/tooling/tool/cli/test/canonical-digest-owner-differential.test.ts`
 and `apps/labs/semantica/test/CanonicalDifferential.test.ts`.
+
+## Slice C outcome
+
+Read at the head of the slice C pull request.
+
+- E1 to E4 are the owner. Only E2 passes `omitUndefinedMembers`; the
+  decision `2026-11-13-only-packetcore-omits-undefined-members` says why.
+- Every digest in the table above still recomputes: the packet event replay
+  (76 stored and 13 fixture events), the four golden execution seals and the
+  W1 `corpusHash`.
+- Findings 2 to 5 above are now behaviour changes: the exports throw the
+  owner's `JsoncCanonicalizeError` for each of those inputs. `PLAN.md`, "Slice
+  C evidence", lists how the refusal surfaces at each call site reachable from
+  free text. Finding 3 surfaces typed, through `Md.render`'s `RenderError`.
+- The proposal-fact bound check in
+  `packages/foundation/modeling/epistemics/src/Contradiction/Contradiction.model.ts`
+  measured E1's bytes; it now reads the owner's `Result` and treats a refusal
+  as out of bounds, so the schema guard stays total.
+- E5 stays pinned, with a parity proof.
+
+Digest grammars, beside the encoders:
+
+| Grammar | Where | Disposition |
+| --- | --- | --- |
+| `Sha256PrefixedDigest` (`sha256:` plus 64 lowercase hex) | `packages/foundation/modeling/schema/src/Sha256.ts` | Owner (slice B). |
+| `ContentDigest`, `SourceTextDigest` | file-processing, provenance | Derived from it (slice B). |
+| GitHub artifact digest, `FileSha256Hash` | `@beep/repo-cli` cache workflow and files media schemas | Derived from it (slice C); they were regular expressions accepting the same strings. |
+| `Sha256Digest` (bare 64-character form; strips an optional prefix while parsing) | `@beep/sbom` | Pinned: a separate contract ported with that package. Left as is. |
+| `pk:v1:` plus hex | `@beep/party-domain` `PartyKey` | Pinned with PartyKey v1. |
 
 ## Legacy rows
 

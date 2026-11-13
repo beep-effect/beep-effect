@@ -78,6 +78,13 @@ export * from "./CiCachePilotHost.ts";
 export * from "./CiCachePilotInputs.ts";
 export * from "./CiCompileBinary.ts";
 /**
+ * The base a coverage lane diffs against, resolved from the workflow event.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiEventBase.ts";
+/**
  * Hosted CI governance commands and policy checks.
  *
  * @category cli-commands
@@ -148,6 +155,20 @@ export * from "./CiRerunRunnerLoss.ts";
  */
 export * from "./CiRunnerOutputs.ts";
 /**
+ * Shard overflow routing: the hosted and overflow halves of a Test Unit plan.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiShardOverflow.ts";
+/**
+ * Shard overflow preflight: the runner group and webhook checks an operator must pass before switching overflow on.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiShardOverflowPreflight.ts";
+/**
  * Dependency review service, live layer and verdict rendering.
  *
  * @category cli-commands
@@ -168,6 +189,13 @@ export * from "./DependencyReviewCommand.ts";
  * @since 0.0.0
  */
 export * from "./DependencyReviewSchemas.ts";
+/**
+ * Docs Policy lane task set and its justified exclusions.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./DocsPolicy.ts";
 /**
  * Public heavy-admission decision export.
  *

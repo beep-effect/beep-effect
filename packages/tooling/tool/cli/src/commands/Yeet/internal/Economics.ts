@@ -5,8 +5,9 @@
  * **Details**
  *
  * {@link YeetEconomicsSource} reads `.beep/yeet/runs/<runId>/attempts.ndjson`
- * and orphan `verdict.json` files into normalized journals; the pure fold
- * {@link buildYeetEconomicsReport} turns them into the `yeet-economics/v1`
+ * and orphan `verdict.json` files into normalized journals (with `--fleet`,
+ * also the workstation store of removed checkouts' journals); the pure fold
+ * {@link buildYeetEconomicsReport} turns them into the `yeet-economics/v3`
  * document. Nothing is written to disk.
  *
  * @packageDocumentation
@@ -28,7 +29,7 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { constTrue, dual, flow, pipe } from "effect/Function";
+import { constant, constTrue, dual, flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
@@ -44,13 +45,16 @@ import * as Str from "effect/String";
 import { YeetAttemptTerminationReason } from "../../../internal/repo-run/AttemptTerminationJournal.ts";
 import { repoRunArtifactId } from "../../../internal/repo-run/RepoRunArtifacts.ts";
 import {
+  readCheckoutClone,
   readCloneFleetOrigin,
   readCloneFleetRepository,
   readConfiguredFleetRoots,
 } from "../../Worktree/internal/FleetRoots.ts";
 import { CLAUDE_WORKTREES_RELATIVE_ROOT, WORKTREES_ROOT_SUFFIX } from "../../Worktree/Worktree.constants.ts";
+import { attemptJournalStoreRunsDirectory } from "./AttemptJournalStore.ts";
 import {
   EconomicsAttempt,
+  EconomicsAttemptClass,
   EconomicsAttemptMix,
   EconomicsAttempts,
   EconomicsDataQuality,
@@ -63,6 +67,7 @@ import {
   EconomicsLaneKind,
   EconomicsLanePopulation,
   EconomicsLaneRow,
+  EconomicsModeDurationRow,
   EconomicsRedToGreen,
   EconomicsScope,
   EconomicsScopeKind,
@@ -93,15 +98,13 @@ const RUNS_DIRECTORY_NAME = "runs";
 const JOURNAL_FILE_NAME = "attempts.ndjson";
 const VERDICT_FILE_NAME = "verdict.json";
 const CHECKOUT_PREFIX = "beep-effect";
-const GIT_METADATA_NAME = ".git";
-const GIT_WORKTREES_DIRECTORY_NAME = "worktrees";
-const GITDIR_PREFIX = "gitdir:";
 const FLEET_READ_CONCURRENCY = 8;
 const COMPARABLE_EPISODE_CUT = Duration.hours(24);
 const UNKNOWN_KEY = "unknown";
 const VERDICT_V2 = "yeet-verdict/v2";
-const UNLOCATED_LANE = "unlocated";
 const TOP_LANE_ROWS = 10;
+// The checkout label of the attempt-journal store's journals in a fleet read.
+const RETAINED_CHECKOUT_LABEL = "(retained)";
 
 // Ruling 74: the wrapper phase prefixes for verdicts written before inner
 // lanes carried `parentLaneId`.
@@ -126,6 +129,41 @@ const EconomicsComparableMode = YeetRunMode.pick(["verify", "repair", "publish"]
   })
 );
 const isComparableMode = S.is(EconomicsComparableMode);
+
+// MEAS-02 and MEAS-03: the non-lane rows of `actionableLaneMix`. Refusals are
+// classified before any lane or step id, and stay rows of the same mix so its
+// total equals `redAttempts`; `unrecorded` is a red with no verdict (its
+// writer stamped `unrecorded-failure`), `unexecuted` a handler-error red that
+// ran no lane, `unlocated` any other red with no failed lane and no step-exit
+// step.
+const EconomicsActionableClass = LiteralKit([
+  "refusal:lock-bounce",
+  "refusal:stale-base",
+  "refusal:moved-tree",
+  "refusal:closeout",
+  "unrecorded",
+  "unexecuted",
+  "unlocated",
+]).pipe(
+  $I.annoteSchema("EconomicsActionableClass", {
+    description: "The actionable-lane mix rows that name a refusal or an unlocated red instead of a lane.",
+  })
+);
+
+// Lane statuses that mean the lane actually ran.
+const EconomicsExecutedLaneStatus = YeetLaneStatus.pick(["passed", "reused", "failed"]).pipe(
+  $I.annoteSchema("EconomicsExecutedLaneStatus", {
+    description: "Yeet lane statuses that mean the lane ran in the attempt.",
+  })
+);
+const isExecutedLaneStatus = S.is(EconomicsExecutedLaneStatus);
+
+// The publish stale-base refusal (`PublishScope.ts`), matched lowercased.
+const STALE_BASE_REFUSAL = /refuses a stale base/u;
+
+// The final-check moved-tree refusal (`FinalCheck.ts` `refuseMovedTree`): the
+// gates ran, but the checkout changed under them, so no receipt was written.
+const MOVED_TREE_SENTENCE = "the checkout changed while the gates ran";
 
 const EconomicsReceiptProxyClass = LiteralKit([
   "scheduler-lock-bounce",
@@ -425,7 +463,8 @@ const elapsedBetween = (startedAt: O.Option<string>, endedAt: O.Option<string>):
 
 // Resolution order of the A1 loader: the verdict wins, then the start row; the
 // terminal row's facts win over the start row's; a terminated row has no
-// verdict, so its outcome is none (red) and it has no lanes. A reconciler-
+// verdict, so its outcome is none, its reason decides its class (MEAS-03) and
+// it has no lanes. A reconciler-
 // stamped termination still orders by its `recordedAt` but measures no
 // elapsed time and ends no streak bound (ruling 75).
 const attemptFromTerminal = (
@@ -495,7 +534,8 @@ interface OrphanVerdict {
 // file that is unreadable, malformed or has no `attemptId` cannot be keyed.
 const applyOrphanVerdict = (
   terminals: HashMap.HashMap<string, TerminalFacts>,
-  read: ContainedFileRead
+  read: ContainedFileRead,
+  excluded: HashSet.HashSet<string>
 ): OrphanVerdict => {
   const keyed = pipe(
     read.contents,
@@ -505,7 +545,7 @@ const applyOrphanVerdict = (
   const unkeyedVerdictFiles = countIf(read.exists && O.isNone(keyed));
   return pipe(
     keyed,
-    O.filter(({ attemptId }) => !HashMap.has(terminals, attemptId)),
+    O.filter(({ attemptId }) => !HashMap.has(terminals, attemptId) && !HashSet.has(excluded, attemptId)),
     O.match({
       onNone: () => ({ terminals, orphanVerdictFilesAdded: 0, unkeyedVerdictFiles }),
       onSome: ({ attemptId, verdict }) => ({
@@ -527,20 +567,49 @@ interface RunIdentity {
   readonly runId: string;
 }
 
+// A folded journal and every attempt id its rows or orphan verdict named, so a
+// fleet read can tell which retained attempts a live journal already holds.
+interface FoldedJournal {
+  readonly attemptIds: HashSet.HashSet<string>;
+  readonly journal: EconomicsJournal;
+}
+
+const rowAttemptId = (row: EconomicsJournalRow): O.Option<string> =>
+  EconomicsJournalRow.match(row, {
+    "attempt-started": (started) => O.some(started.attemptId),
+    "attempt-finished": (finished) => O.some(finished.attemptId),
+    "attempt-terminated": (terminated) => O.some(terminated.attemptId),
+    "journal-compacted": O.none<string>,
+  });
+
+// `excluded` names attempts a live journal of the same run already holds: the
+// retained copy's rows for them are dropped before the fold and counted as
+// duplicates, so live rows win (the A1 loader's "live overwrites" rule) and each
+// (runId, attemptId) is counted once.
 const foldRunJournal = (
   run: RunIdentity,
   inFlightAttemptId: O.Option<string>,
   journalRead: ContainedFileRead,
-  verdictRead: ContainedFileRead
-): EconomicsJournal => {
+  verdictRead: ContainedFileRead,
+  excluded: HashSet.HashSet<string>
+): FoldedJournal => {
   const decoded = journalRead.contents.pipe(
     O.match({
       onNone: (): DecodedJournalText => ({ rows: A.empty(), invalidRows: 0 }),
       onSome: decodeJournalText,
     })
   );
-  const fold = A.reduce(decoded.rows, emptyJournalFold, stepJournalFold);
-  const orphan = applyOrphanVerdict(fold.terminals, verdictRead);
+  const isExcluded = (row: EconomicsJournalRow): boolean =>
+    O.exists(rowAttemptId(row), (attemptId) => HashSet.has(excluded, attemptId));
+  const dropped = A.filter(decoded.rows, isExcluded);
+  const droppedStarts = A.length(A.filter(dropped, EconomicsJournalRow.guards["attempt-started"]));
+  const kept = A.reduce(A.filter(decoded.rows, P.not(isExcluded)), emptyJournalFold, stepJournalFold);
+  const fold: JournalFold = {
+    ...kept,
+    duplicateStarts: kept.duplicateStarts + droppedStarts,
+    duplicateTerminals: kept.duplicateTerminals + A.length(dropped) - droppedStarts,
+  };
+  const orphan = applyOrphanVerdict(fold.terminals, verdictRead, excluded);
   // The caller's own running attempt (a closeout reading its branch) has a
   // start and no terminal row yet; it is dropped, not counted as a death.
   const inFlight = O.filter(
@@ -555,7 +624,7 @@ const foldRunJournal = (
   const terminalIds = orphan.terminals.pipe(HashMap.keys, HashSet.fromIterable);
   const journalReadable = O.isSome(journalRead.contents);
   const inFlightExcluded = O.isSome(inFlight);
-  return EconomicsJournal.make({
+  const journal = EconomicsJournal.make({
     checkout: run.checkout,
     runId: run.runId,
     cutoff: O.flatMap(fold.cutoffMs, formatMillis),
@@ -577,6 +646,7 @@ const foldRunJournal = (
       inFlightStartsExcluded: countIf(inFlightExcluded),
     }),
   });
+  return { journal, attemptIds: fold.starts.pipe(HashMap.keys, HashSet.fromIterable, HashSet.union(terminalIds)) };
 };
 
 // ---------------------------------------------------------------------------
@@ -626,53 +696,13 @@ const realDirectoryNames = Effect.fnUntraced(function* (directory: string, keep:
   return yield* Effect.filter(A.filter(listDirectory3, keep), (name) => isRealDirectory(path.join(directory, name)));
 });
 
-// A linked worktree's `.git` file holds `gitdir: <clone>/.git/worktrees/<name>`.
-const gitDirOfGitFile = (path: Path.Path, checkout: string, content: string): O.Option<string> =>
-  pipe(
-    A.findFirst(A.map(Str.split(content, "\n"), Str.trim), Str.startsWith(GITDIR_PREFIX)),
-    O.map(flow(Str.slice(Str.length(GITDIR_PREFIX)), Str.trim)),
-    O.filter(Str.isNonEmpty),
-    O.map((target) => path.resolve(checkout, target))
-  );
-
-const cloneOfGitDir = (path: Path.Path, gitDir: string): O.Option<string> => {
-  const worktrees = path.dirname(gitDir);
-  const metadata = path.dirname(worktrees);
-  return O.liftPredicate(
-    path.dirname(metadata),
-    () =>
-      Str.Equivalence(path.basename(worktrees), GIT_WORKTREES_DIRECTORY_NAME) &&
-      Str.Equivalence(path.basename(metadata), GIT_METADATA_NAME)
-  );
-};
-
-// The clone that owns a checkout, read from its git metadata without spawning
-// git: a `.git` directory makes the checkout its own clone, a `.git` file
-// names the clone's `.git/worktrees/<name>`. None when `.git` is unreadable.
-const cloneRootOf = Effect.fnUntraced(function* (checkout: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const gitPath = path.join(checkout, GIT_METADATA_NAME);
-  const pipe4 = yield* fs.stat(gitPath).pipe(Effect.option);
-  const kind = O.map(pipe4, (info) => info.type);
-  if (O.contains(kind, "Directory")) {
-    return O.some(checkout);
-  }
-  const content = O.contains(kind, "File") ? yield* fs.readFileString(gitPath).pipe(Effect.option) : O.none<string>();
-  return pipe(
-    content,
-    O.flatMap((text) => gitDirOfGitFile(path, checkout, text)),
-    O.flatMap((gitDir) => cloneOfGitDir(path, gitDir))
-  );
-});
-
 // The projects root is the clone's parent (ruling 73). Only when `.git` is
 // unreadable does the directory name decide: a lane under `<clone>-worktrees/`
 // sits one level deeper than a clone.
 const projectsRootOf = Effect.fnUntraced(function* (repoRoot: string) {
   const path = yield* Path.Path;
   const parent = path.dirname(repoRoot);
-  const cloneRootOf5 = yield* cloneRootOf(repoRoot);
+  const cloneRootOf5 = yield* readCheckoutClone(repoRoot);
   return O.getOrElse(
     O.map(cloneRootOf5, (clone) => path.dirname(clone)),
     () => (Str.endsWith(WORKTREES_ROOT_SUFFIX)(path.basename(parent)) ? path.dirname(parent) : parent)
@@ -711,7 +741,7 @@ const fleetCandidates = Effect.fnUntraced(function* (
 // The fleet's candidates: the configured roots list shared with `worktree fleet`
 // (`BEEP_FLEET_ROOTS`, then `roots.json`) when set, else the derived projects root.
 const fleetScopeCandidates = Effect.fnUntraced(function* (repoRoot: string, projectsRoot: string) {
-  const clone = yield* cloneRootOf(repoRoot);
+  const clone = yield* readCheckoutClone(repoRoot);
   const repository = yield* readCloneFleetRepository(O.getOrElse(clone, () => repoRoot));
   // A report never fails over its scope: an undecodable roots.json warns and falls back to the derived root,
   // where `worktree fleet` refuses it outright.
@@ -733,7 +763,7 @@ const fleetScopeCandidates = Effect.fnUntraced(function* (repoRoot: string, proj
   // the rule the fleet mirror applies. Without a readable origin of our own, nothing else is admitted.
   const ownOrigin = yield* readCloneFleetOrigin(O.getOrElse(clone, () => repoRoot));
   const sharesOrigin = Effect.fnUntraced(function* (candidate: string) {
-    const candidateClone = yield* cloneRootOf(candidate);
+    const candidateClone = yield* readCheckoutClone(candidate);
     const origin = yield* readCloneFleetOrigin(O.getOrElse(candidateClone, () => candidate));
     return O.isSome(ownOrigin) && O.contains(origin, ownOrigin.value);
   });
@@ -797,30 +827,80 @@ const readRunFile = (
 const readRunJournal = Effect.fnUntraced(function* (
   checkout: EconomicsCheckout,
   runId: string,
-  inFlightAttemptId: O.Option<string>
+  inFlightAttemptId: O.Option<string>,
+  excluded: HashSet.HashSet<string>
 ) {
   const path = yield* Path.Path;
   const runDirectory = path.join(checkout.runsDirectory, runId);
   const journalRead = yield* readRunFile(checkout.runsDirectory, path.join(runDirectory, JOURNAL_FILE_NAME));
   const verdictRead = yield* readRunFile(checkout.runsDirectory, path.join(runDirectory, VERDICT_FILE_NAME));
   return journalRead.exists || verdictRead.exists
-    ? O.some(foldRunJournal({ checkout: checkout.label, runId }, inFlightAttemptId, journalRead, verdictRead))
-    : O.none<EconomicsJournal>();
+    ? O.some(foldRunJournal({ checkout: checkout.label, runId }, inFlightAttemptId, journalRead, verdictRead, excluded))
+    : O.none<FoldedJournal>();
 });
+
+const noExcludedAttempts: (runId: string) => HashSet.HashSet<string> = constant(HashSet.empty());
+const orNoExcludedAttempts: (excluded: O.Option<HashSet.HashSet<string>>) => HashSet.HashSet<string> = O.getOrElse(
+  HashSet.empty<string>
+);
 
 // Every real run directory, or only the branch's; a stray file or a symlink
 // under `runs/` is skipped without a diagnostic.
 const readCheckoutJournals = Effect.fnUntraced(function* (
   checkout: EconomicsCheckout,
   runId: O.Option<string>,
-  inFlightAttemptId: O.Option<string>
+  inFlightAttemptId: O.Option<string>,
+  excludedFor: (runId: string) => HashSet.HashSet<string> = noExcludedAttempts
 ) {
   const runIds = yield* realDirectoryNames(
     checkout.runsDirectory,
     (name) => O.isNone(runId) || O.contains(runId, name)
   );
-  const forEach6 = yield* Effect.forEach(runIds, (id) => readRunJournal(checkout, id, inFlightAttemptId));
+  const forEach6 = yield* Effect.forEach(runIds, (id) =>
+    readRunJournal(checkout, id, inFlightAttemptId, excludedFor(id))
+  );
   return A.getSomes(forEach6);
+});
+
+// The attempt-journal store's partition for the clone's repository, read as one
+// more checkout labelled `(retained)` (PERIL-11). Retained rows of an attempt a
+// live journal of the same run holds are dropped (`foldRunJournal`). A clone with
+// no GitHub origin has no partition; an unresolvable state root warns, since a
+// report never fails over its scope.
+const readRetainedJournals = Effect.fnUntraced(function* (
+  repoRoot: string,
+  runId: O.Option<string>,
+  inFlightAttemptId: O.Option<string>,
+  live: ReadonlyArray<FoldedJournal>
+) {
+  const path = yield* Path.Path;
+  const root = path.resolve(repoRoot);
+  const clone = yield* readCheckoutClone(root);
+  const repository = yield* readCloneFleetRepository(O.getOrElse(clone, () => root));
+  const runsDirectory = yield* Effect.transposeOption(O.map(repository, attemptJournalStoreRunsDirectory)).pipe(
+    Effect.catchTag("AttemptJournalStoreError", (error) =>
+      Effect.as(
+        Effect.logWarning(`yeet economics --fleet: ${error.message} Skipping the retained attempt journals.`),
+        O.none<string>()
+      )
+    )
+  );
+  if (O.isNone(runsDirectory)) {
+    return A.empty<FoldedJournal>();
+  }
+  const liveAttempts = A.reduce(live, HashMap.empty<string, HashSet.HashSet<string>>(), (byRun, folded) =>
+    HashMap.set(
+      byRun,
+      folded.journal.runId,
+      HashSet.union(folded.attemptIds, orNoExcludedAttempts(HashMap.get(byRun, folded.journal.runId)))
+    )
+  );
+  return yield* readCheckoutJournals(
+    { label: RETAINED_CHECKOUT_LABEL, runsDirectory: runsDirectory.value },
+    runId,
+    inFlightAttemptId,
+    (id) => orNoExcludedAttempts(HashMap.get(liveAttempts, id))
+  );
 });
 
 const readEconomicsJournals = Effect.fn("Yeet.Economics.read")(function* (
@@ -841,7 +921,11 @@ const readEconomicsJournals = Effect.fn("Yeet.Economics.read")(function* (
     (checkout) => readCheckoutJournals(checkout, runId, request.inFlightAttemptId),
     { concurrency: FLEET_READ_CONCURRENCY }
   );
-  return A.flatten(nested);
+  const live = A.flatten(nested);
+  const retained = request.fleet
+    ? yield* readRetainedJournals(request.repoRoot, runId, request.inFlightAttemptId, live)
+    : A.empty<FoldedJournal>();
+  return A.map(A.appendAll(live, retained), (folded) => folded.journal);
 });
 
 /**
@@ -886,7 +970,12 @@ const makeYeetEconomicsSource: Effect.Effect<
  * `<clone>/.claude/worktrees/*` lane under the projects root, the parent of
  * the clone named by the checkout's `.git` metadata, each labelled by its path
  * relative to that root. Symlinked checkouts and run directories and stray
- * files under `runs/` are skipped without being counted.
+ * files under `runs/` are skipped without being counted. The fleet also reads
+ * the attempt-journal store's partition for the clone's GitHub repository,
+ * where removed checkouts' journals are filed, labelled `(retained)`; a
+ * retained attempt that a live journal of the same run also holds is counted
+ * once, from the live journal, and its retained rows add to the duplicate
+ * counts.
  *
  * A bad journal never fails the read: an unreadable file counts in
  * `unreadableJournals` and a line that fails the row projection counts in
@@ -1009,8 +1098,92 @@ export class YeetReviewLaneSource extends Context.Service<YeetReviewLaneSource, 
 // ---------------------------------------------------------------------------
 
 const orUnknown: (value: O.Option<string>) => string = O.getOrElse(() => UNKNOWN_KEY);
+
+const asGreen = constant(EconomicsAttemptClass.Enum.green);
+const asRed = constant(EconomicsAttemptClass.Enum.red);
+const asTerminated = constant(EconomicsAttemptClass.Enum.terminated);
+
+const outcomeClass = YeetOutcome.match({ success: asGreen, failure: asRed });
+
+// MEAS-03: a verdict-less attempt's class, by its termination reason. Only a
+// reason that names a failure of the attempt itself is red; every other one
+// means the attempt was cut off or its outcome was never recorded. The match
+// is exhaustive, so a new reason is classed where it is added.
+const terminationReasonClass = YeetAttemptTerminationReason.match({
+  success: asTerminated,
+  failure: asRed,
+  interrupted: asTerminated,
+  signal: asTerminated,
+  "queued-submitter-death": asTerminated,
+  "lease-eviction": asTerminated,
+  "owner-dead": asTerminated,
+  "legacy-unowned-start": asTerminated,
+  "stale-unverifiable-owner": asTerminated,
+  "terminal-row-missing": asTerminated,
+  "unrecorded-failure": asRed,
+  "oom-killed": asTerminated,
+  timeout: asTerminated,
+  "job-start-failed": asTerminated,
+  cancelled: asTerminated,
+  "finalizer-missing": asTerminated,
+});
+
+/**
+ * Class one normalized attempt as green, red, or terminated apart from reds
+ * (MEAS-03).
+ *
+ * **Details**
+ *
+ * The verdict's outcome decides when there is one. A verdict-less attempt is
+ * red only when its termination reason names a failure of the attempt itself
+ * (`unrecorded-failure`, the legacy `failure`); any other reason is a
+ * termination. An attempt with neither an outcome nor a reason stays red.
+ *
+ * **Example** (An interrupted attempt is not a red)
+ *
+ * ```ts
+ * import { EconomicsAttempt, economicsAttemptClass } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const interrupted = EconomicsAttempt.make({
+ *   checkout: "beep-effect",
+ *   runId: "feat-0123456789ab",
+ *   attemptId: "attempt-1",
+ *   branch: "feat",
+ *   mode: O.some("final-check"),
+ *   outcome: O.none(),
+ *   failureKind: O.none(),
+ *   failedStepId: O.none(),
+ *   message: "",
+ *   startedAt: O.some("2026-11-13T00:00:00.000Z"),
+ *   endedAt: O.some("2026-11-13T00:04:00.000Z"),
+ *   elapsedMs: O.some(240000),
+ *   diffFingerprint: O.none(),
+ *   terminationReason: O.some("interrupted"),
+ *   verdictSchemaVersion: O.none(),
+ *   lanes: [],
+ * })
+ * console.log(economicsAttemptClass(interrupted)) // "terminated"
+ * ```
+ *
+ * @param attempt - A loader-normalized row with its outcome and termination reason.
+ * @returns `green`, `red` or `terminated`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const economicsAttemptClass = (attempt: EconomicsAttempt): EconomicsAttemptClass =>
+  pipe(
+    O.map(attempt.outcome, outcomeClass),
+    O.orElse(() => O.map(attempt.terminationReason, terminationReasonClass)),
+    O.getOrElse(asRed)
+  );
+
 const isGreen = (attempt: EconomicsAttempt): boolean => O.exists(attempt.outcome, YeetOutcome.is.success);
-const isRed = P.not(isGreen);
+const isRed = flow(economicsAttemptClass, EconomicsAttemptClass.is.red);
+const isTerminated = flow(economicsAttemptClass, EconomicsAttemptClass.is.terminated);
+// Ruling 75's red-to-green walk is unchanged by MEAS-03: every attempt that is
+// not green, terminations included, joins a streak.
+const isNotGreen = P.not(isGreen);
 const isLockBounce = (attempt: EconomicsAttempt): boolean =>
   O.exists(attempt.failureKind, YeetFailureKind.is["handler-error"]) &&
   Str.includes(LOCK_BOUNCE_SENTENCE)(attempt.message);
@@ -1022,9 +1195,40 @@ const attemptKey = (attempt: EconomicsAttempt): string =>
 const attemptMix = (attempts: ReadonlyArray<EconomicsAttempt>): EconomicsAttemptMix =>
   EconomicsAttemptMix.make({
     outcomeMix: economicsCountMix(A.map(attempts, (attempt) => orUnknown(attempt.outcome))),
+    classMix: economicsCountMix(A.map(attempts, economicsAttemptClass)),
     modeMix: economicsCountMix(A.map(attempts, (attempt) => orUnknown(attempt.mode))),
     failureKindMix: economicsCountMix(A.map(A.filter(attempts, isRed), (attempt) => orUnknown(attempt.failureKind))),
   });
+
+const modeDurationOrder = Order.combine(
+  Order.mapInput(Order.flip(Order.Number), (row: EconomicsModeDurationRow) => row.attempts),
+  Order.mapInput(Order.String, (row: EconomicsModeDurationRow) => row.mode)
+);
+
+// MEAS-03: one row per run mode. The elapsed sample is the green and red
+// attempts that carry a non-negative elapsed time; a terminated attempt ran
+// only until it was cut off, so it is counted beside the sample.
+const modeDurationRow = ([mode, members]: readonly [string, ReadonlyArray<EconomicsAttempt>]) => {
+  const sample = A.filter(
+    A.getSomes(A.map(A.filter(members, P.not(isTerminated)), (attempt) => attempt.elapsedMs)),
+    Num.isGreaterThanOrEqualTo(0)
+  );
+  return EconomicsModeDurationRow.make({
+    mode,
+    attempts: A.length(members),
+    redAttempts: A.countBy(members, isRed),
+    terminatedAttempts: A.countBy(members, isTerminated),
+    measuredAttempts: A.length(sample),
+    p50ElapsedMs: roundedRank(sample, 0.5),
+    p95ElapsedMs: roundedRank(sample, 0.95),
+  });
+};
+
+const modeDurations = (attempts: ReadonlyArray<EconomicsAttempt>): ReadonlyArray<EconomicsModeDurationRow> =>
+  A.sort(
+    A.map(R.toEntries(A.groupBy(attempts, (attempt) => orUnknown(attempt.mode))), modeDurationRow),
+    modeDurationOrder
+  );
 
 interface LaneObservation {
   readonly attemptKey: string;
@@ -1151,13 +1355,62 @@ const failureOffsets = (attempt: EconomicsAttempt): O.Option<FailureOffsets> => 
   );
 };
 
+const isHandlerError = (attempt: EconomicsAttempt): boolean =>
+  O.exists(attempt.failureKind, YeetFailureKind.is["handler-error"]);
+
+// The refusal classes in match order, checked before any lane: the scheduler
+// lock bounce, the publish stale-base refusal, the final-check moved-tree
+// refusal, and any red closeout.
+const REFUSAL_CLASSES: ReadonlyArray<
+  readonly [typeof EconomicsActionableClass.Type, (attempt: EconomicsAttempt) => boolean]
+> = [
+  [EconomicsActionableClass.Enum["refusal:lock-bounce"], isLockBounce],
+  [
+    EconomicsActionableClass.Enum["refusal:stale-base"],
+    (attempt) => isHandlerError(attempt) && STALE_BASE_REFUSAL.test(Str.toLowerCase(attempt.message)),
+  ],
+  [
+    EconomicsActionableClass.Enum["refusal:moved-tree"],
+    (attempt) => isHandlerError(attempt) && Str.includes(MOVED_TREE_SENTENCE)(attempt.message),
+  ],
+  [EconomicsActionableClass.Enum["refusal:closeout"], (attempt) => O.exists(attempt.mode, YeetRunMode.is.closeout)],
+];
+
+const refusalClass = (attempt: EconomicsAttempt): O.Option<typeof EconomicsActionableClass.Type> =>
+  O.map(
+    A.findFirst(REFUSAL_CLASSES, ([, matches]) => matches(attempt)),
+    ([refusal]) => refusal
+  );
+
+// A red no lane locates: a verdict-less one (its writer stamped a failure) is
+// `unrecorded`, a handler error that ran no lane `unexecuted`, any other red
+// `unlocated`.
+const unlocatedClass = Match.type<EconomicsAttempt>().pipe(
+  Match.when({ terminationReason: O.isSome }, () => EconomicsActionableClass.Enum.unrecorded),
+  Match.when(
+    (attempt: EconomicsAttempt) =>
+      isHandlerError(attempt) && !A.some(attempt.lanes, (lane) => isExecutedLaneStatus(lane.status)),
+    () => EconomicsActionableClass.Enum.unexecuted
+  ),
+  Match.orElse(() => EconomicsActionableClass.Enum.unlocated)
+);
+
+// A handler-error verdict names the first unexecuted planned step as its
+// failed step (`Handler.ts`), so only a step-exit failed step is a lane.
 const actionableLane = (attempt: EconomicsAttempt): string =>
   pipe(
-    A.findFirst(attempt.lanes, (lane) => isInnerLane(lane) && isFailedLane(lane)),
-    O.map((lane) => lane.id),
-    O.orElse(() => attempt.failedStepId),
+    refusalClass(attempt),
+    O.orElse(() =>
+      O.map(
+        A.findFirst(attempt.lanes, (lane) => isInnerLane(lane) && isFailedLane(lane)),
+        (lane) => lane.id
+      )
+    ),
+    O.orElse(() =>
+      O.filter(attempt.failedStepId, () => O.exists(attempt.failureKind, YeetFailureKind.is["step-exit"]))
+    ),
     O.orElse(() => O.map(A.findFirst(attempt.lanes, isFailedLane), (lane) => lane.id)),
-    O.getOrElse(() => UNLOCATED_LANE)
+    O.getOrElse(() => unlocatedClass(attempt))
   );
 
 const receiptProxyClass = (attempt: EconomicsAttempt): string => {
@@ -1257,8 +1510,9 @@ const machineMillis = (members: ReadonlyArray<TimedAttempt>): number =>
   sumOf(members, (timed) => O.getOrElse(timed.attempt.elapsedMs, thunk0));
 
 interface OpenStreak {
-  readonly attempts: number;
   readonly observedSpanMs: number;
+  readonly redAttempts: number;
+  readonly terminatedAttempts: number;
 }
 
 interface JournalEpisodes {
@@ -1266,15 +1520,16 @@ interface JournalEpisodes {
   readonly openStreak: O.Option<OpenStreak>;
 }
 
-// Ruling 75: a red attempt joins the streak, a green one closes it; a green with
-// no streak closes nothing. Episodes never span two runs.
+// Ruling 75: an attempt that is not green (a termination too) joins the
+// streak, a green one closes it; a green with no streak closes nothing.
+// Episodes never span two runs.
 const journalEpisodes = (journal: EconomicsJournal): JournalEpisodes => {
   const cutoffMs = O.flatMap(journal.cutoff, parseMillis);
   const walk = A.reduce(
     comparableSequence(journal),
     emptyEpisodeWalk,
     (state: EpisodeWalk, timed: TimedAttempt): EpisodeWalk =>
-      isRed(timed.attempt)
+      isNotGreen(timed.attempt)
         ? { ...state, streak: A.append(state.streak, timed) }
         : A.match(state.streak, {
             onEmpty: () => state,
@@ -1295,14 +1550,15 @@ const journalEpisodes = (journal: EconomicsJournal): JournalEpisodes => {
   );
   return {
     closed: walk.episodes,
-    // A streak still red at the end is right-censored; its observed lower
-    // bound runs from the first red's start to the last member's last
-    // measured time.
+    // A streak still open (no green after it) at the end is right-censored;
+    // its members are counted by class, and its observed lower bound runs
+    // from its first member's start to its last member's last measured time.
     openStreak: A.match(walk.streak, {
       onEmpty: O.none,
       onNonEmpty: (streak) =>
         O.some({
-          attempts: A.length(streak),
+          redAttempts: A.countBy(streak, (timed) => isRed(timed.attempt)),
+          terminatedAttempts: A.countBy(streak, (timed) => isTerminated(timed.attempt)),
           observedSpanMs: Math.max(0, measuredEndMillis(A.lastNonEmpty(streak)) - startMillis(A.headNonEmpty(streak))),
         }),
     }),
@@ -1327,7 +1583,8 @@ const episodeSummary = (
     leftCensoredEpisodesExcluded: A.length(leftCensored),
     leftCensoredObservedAttempts: sumOf(leftCensored, (episode) => episode.attempts),
     rightCensoredStreaks: A.length(openStreaks),
-    rightCensoredRedAttempts: sumOf(openStreaks, (streak) => streak.attempts),
+    rightCensoredRedAttempts: sumOf(openStreaks, (streak) => streak.redAttempts),
+    rightCensoredTerminatedAttempts: sumOf(openStreaks, (streak) => streak.terminatedAttempts),
     rightCensoredObservedSpanMinutes: minutesOf(sumOf(openStreaks, (streak) => streak.observedSpanMs)),
     closedEpisodesOver24hExcluded: over24hExcluded,
   });
@@ -1343,14 +1600,14 @@ const redToGreen = (journals: ReadonlyArray<EconomicsJournal>): EconomicsRedToGr
   const comparable = A.filter(closed, (episode) => episode.spanMs <= cutMs);
   return EconomicsRedToGreen.make({
     comparable24h: episodeSummary(
-      "comparable24h: modes verify/repair/publish; lock bounces and left-censored episodes excluded; span <= 24h",
+      "comparable24h: modes verify/repair/publish; a streak runs from the first not-green attempt (red or terminated) to the next green; lock bounces and left-censored episodes excluded; span <= 24h",
       comparable,
       leftCensored,
       openStreaks,
       O.some(A.length(closed) - A.length(comparable))
     ),
     uncut: episodeSummary(
-      "uncut: same modes, bounce and censoring rule; no span ceiling",
+      "uncut: same modes, streak, bounce and censoring rules; no span ceiling",
       closed,
       leftCensored,
       openStreaks,
@@ -1451,12 +1708,14 @@ const dataQuality = (
 
 /**
  * Fold normalized journals and review lane ledgers into the
- * `yeet-economics/v2` report.
+ * `yeet-economics/v3` report.
  *
  * **Details**
  *
  * Pure: the same journals, ledgers, scope and instant always give the same
- * document. Lanes and first failure fold every attempt; red-to-green folds
+ * document. Lanes and the per-mode durations fold every attempt; first
+ * failure folds the red attempts, never a terminated one
+ * ({@link economicsAttemptClass}); red-to-green folds
  * the comparable attempts of each run separately; the review lane folds the
  * ledgers, narrowed to the scope's branch when it has one (ruling 81);
  * percentiles are nearest rank rounded with `Math.round`.
@@ -1514,6 +1773,7 @@ export const buildYeetEconomicsReport: {
         all: attemptMix(attempts),
         comparable: attemptMix(A.filter(attempts, isComparable)),
       }),
+      modeDurations: modeDurations(attempts),
       wrapperLanes: lanePopulation(attempts, EconomicsLaneKind.Enum.wrapper),
       innerLanes: lanePopulation(attempts, EconomicsLaneKind.Enum.inner),
       reviewLane: buildYeetEconomicsReviewLane(ledgers, scope.branch),
@@ -1594,6 +1854,18 @@ const renderEpisodes = (title: string, summary: EconomicsEpisodeSummary): string
 
 const totalCount = (rows: ReadonlyArray<EconomicsCountRow>): number => sumOf(rows, (row) => row.count);
 
+const terminatedCount = (report: YeetEconomicsReport): number =>
+  totalCount(A.filter(report.attempts.all.classMix, (row) => EconomicsAttemptClass.is.terminated(row.key)));
+
+const renderModeDurations = (rows: ReadonlyArray<EconomicsModeDurationRow>): ReadonlyArray<string> => [
+  "durations by mode (elapsed of green and red attempts; terminated ones counted apart, outside the percentiles):",
+  ...A.map(
+    rows,
+    (row) =>
+      `  ${row.mode}: ${row.attempts} attempt(s), ${row.redAttempts} red, ${row.terminatedAttempts} terminated; ${row.measuredAttempts} measured, p50 ${formatOptionalMs(row.p50ElapsedMs)}, p95 ${formatOptionalMs(row.p95ElapsedMs)}`
+  ),
+];
+
 const inFlightNote = (excluded: number): string => (excluded > 0 ? ` (${excluded} in flight)` : "");
 
 const scopeLine = (report: YeetEconomicsReport): string =>
@@ -1637,22 +1909,25 @@ export const renderYeetEconomicsReport = (report: YeetEconomicsReport): string =
     dataQuality: quality,
   } = report;
   const diagnostics = quality.diagnostics;
+  const terminated = terminatedCount(report);
   return A.join(
     [
       scopeLine(report),
       `attempts: ${totalCount(attempts.all.outcomeMix)} — ${formatMix(attempts.all.outcomeMix)}; comparable ${totalCount(attempts.comparable.outcomeMix)} — ${formatMix(attempts.comparable.outcomeMix)}`,
+      `  classes (terminations apart from reds): ${formatMix(attempts.all.classMix)}; comparable ${formatMix(attempts.comparable.classMix)}`,
       `  modes: ${formatMix(attempts.all.modeMix)}`,
-      `  failure kinds: ${formatMix(attempts.all.failureKindMix)}`,
+      `  failure kinds (red attempts): ${formatMix(attempts.all.failureKindMix)}`,
+      ...renderModeDurations(report.modeDurations),
       ...renderPopulation("wrapper lanes", report.wrapperLanes),
       ...renderPopulation("inner lanes", report.innerLanes),
       ...renderYeetEconomicsReviewLane(report.reviewLane),
-      `first failure (M2): ${failure.redAttempts} red attempt(s), ${failure.attemptsWithReconstructableOuterFailure} reconstructable, ${failure.attemptsWithoutReconstructableOuterFailure} not; start p50 ${formatOptionalMs(failure.startOffsetP50Ms)} p95 ${formatOptionalMs(failure.startOffsetP95Ms)}; completion p50 ${formatOptionalMs(failure.completionOffsetP50Ms)} p95 ${formatOptionalMs(failure.completionOffsetP95Ms)}`,
+      `first failure (M2): ${failure.redAttempts} red attempt(s) (${terminated} terminated, counted apart), ${failure.attemptsWithReconstructableOuterFailure} reconstructable, ${failure.attemptsWithoutReconstructableOuterFailure} not; start p50 ${formatOptionalMs(failure.startOffsetP50Ms)} p95 ${formatOptionalMs(failure.startOffsetP95Ms)}; completion p50 ${formatOptionalMs(failure.completionOffsetP50Ms)} p95 ${formatOptionalMs(failure.completionOffsetP95Ms)}`,
       `  actionable lanes: ${formatMix(failure.actionableLaneMix, TOP_LANE_ROWS)}`,
       `  receipt proxies: ${formatMix(failure.receiptProxyMix)}`,
       renderEpisodes("red to green (M1) comparable24h", episodes.comparable24h),
       renderEpisodes("red to green (M1) uncut", episodes.uncut),
-      `  censoring: left ${episodes.uncut.leftCensoredEpisodesExcluded} episode(s) (${episodes.uncut.leftCensoredObservedAttempts} attempt(s)), right ${episodes.uncut.rightCensoredStreaks} streak(s) (${episodes.uncut.rightCensoredRedAttempts} red attempt(s), observed at least ${episodes.uncut.rightCensoredObservedSpanMinutes} min)`,
-      `terminations (M5): ${report.terminations.starts} start(s), ${report.terminations.startsWithoutFinish} without a terminal row; reasons: ${formatMix(report.terminations.reasonMix)}`,
+      `  censoring: left ${episodes.uncut.leftCensoredEpisodesExcluded} episode(s) (${episodes.uncut.leftCensoredObservedAttempts} attempt(s)), right ${episodes.uncut.rightCensoredStreaks} streak(s) (${episodes.uncut.rightCensoredRedAttempts} red and ${episodes.uncut.rightCensoredTerminatedAttempts} terminated attempt(s), observed at least ${episodes.uncut.rightCensoredObservedSpanMinutes} min)`,
+      `terminations (M5): ${report.terminations.starts} start(s), ${report.terminations.startsWithoutFinish} without a terminal row; ${terminated} terminated apart from reds; reasons: ${formatMix(report.terminations.reasonMix)}`,
       `unchanged fingerprint (M4 fingerprint-repeat proxy; the ack-resolution join is not on this surface): ${fingerprint.classification}; ${fingerprint.attemptsWithFingerprint} attempt(s) carry a fingerprint; ${fingerprint.failedUnchangedFingerprintThenGreen} verdict red then green on the same fingerprint`,
       `  by actionable lane: ${formatMix(fingerprint.byActionableLane, TOP_LANE_ROWS)}; by receipt proxy: ${formatMix(fingerprint.byReceiptProxy)}`,
       `data quality: window ${O.getOrElse(quality.attemptWindowStartUtc, () => "n/a")} .. ${O.getOrElse(quality.attemptWindowEndUtc, () => "n/a")}; journals ${diagnostics.journalsObserved} read, ${diagnostics.unreadableJournals} unreadable; invalid rows ${diagnostics.invalidRows}; compaction receipts ${diagnostics.compactionReceipts} (${diagnostics.leftCensoredJournals} left-censored journal(s))`,
@@ -1671,9 +1946,10 @@ export const renderYeetEconomicsReport = (report: YeetEconomicsReport): string =
  *
  * The lines cover attempts and outcomes, the comparable closed-episode span
  * p50, the first-failure completion offset p50, the top wrapper lane by
- * minutes, and terminations. An empty report still renders every line. The
- * terminations line ends ` (N in flight)` when the caller's own running
- * attempt was dropped from the starts.
+ * minutes, and terminations, with the attempts counted apart from reds. An
+ * empty report still renders every line. The terminations line ends
+ * ` (N in flight)` when the caller's own running attempt was dropped from the
+ * starts.
  *
  * **Example** (Summarize an empty report)
  *
@@ -1711,7 +1987,7 @@ export const renderYeetEconomicsCloseoutSummary = (report: YeetEconomicsReport):
     onSome: (row) =>
       `economics: top wrapper lane ${laneName(row)} ${formatDurationMs(row.totalDurationMs)} (${formatPercent(row.sharePct)} of wrapper time)`,
   }),
-  `economics: terminations ${report.terminations.starts} start(s), ${report.terminations.startsWithoutFinish} without a terminal row; reasons ${formatMix(report.terminations.reasonMix)}${inFlightNote(report.dataQuality.diagnostics.inFlightStartsExcluded)}`,
+  `economics: terminations ${report.terminations.starts} start(s), ${report.terminations.startsWithoutFinish} without a terminal row; ${terminatedCount(report)} terminated apart from reds; reasons ${formatMix(report.terminations.reasonMix)}${inFlightNote(report.dataQuality.diagnostics.inFlightStartsExcluded)}`,
 ];
 
 // ---------------------------------------------------------------------------

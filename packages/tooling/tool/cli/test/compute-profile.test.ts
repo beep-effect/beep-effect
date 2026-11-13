@@ -1,18 +1,26 @@
 import {
+  AdmissionConfig,
   ComputeProfileProbe,
   constrainedCeilingGib,
+  MemoryStats,
   makeComputeProfileProbe,
   memoryCeilingGib,
+  memoryStatsLayerFor,
   resolveComputeProfileWith,
   YeetAdmissionTicket,
 } from "@beep/repo-cli/test/RepoRun";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertDefined, assertNone, assertSome } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as MutableRef from "effect/MutableRef";
 import * as S from "effect/Schema";
+import * as Tracer from "effect/Tracer";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { ComputeMemorySource } from "@beep/repo-cli/test/RepoRun";
 
@@ -120,6 +128,26 @@ describe("compute profile probe", () => {
       Effect.provideService(ComputeProfileProbe, makeComputeProfileProbe(source(2 * GIB, 125 * GIB))),
       withOverride({})
     )
+  );
+});
+
+const ceilingMemoryStats = memoryStatsLayerFor(source(7 * GIB, 15 * GIB)).pipe(Layer.provide(FileSystem.layerNoop({})));
+
+it.layer(ceilingMemoryStats, { timeout: "30 seconds" })("memory stats under a compute ceiling", (it) => {
+  it.effect("traces the cgroup reservation-capacity read as MemoryStats.reservationCapacity", () =>
+    Effect.gen(function* () {
+      const spans = MutableRef.make<ReadonlyArray<string>>([]);
+      const tracer = Tracer.make({
+        span(options) {
+          MutableRef.update(spans, A.append(options.name));
+          return new Tracer.NativeSpan(options);
+        },
+      });
+      const stats = yield* MemoryStats;
+      assertDefined(stats.reservationCapacity);
+      yield* stats.reservationCapacity([], AdmissionConfig.make({})).pipe(Effect.withTracer(tracer));
+      expect(MutableRef.get(spans)).toContain("MemoryStats.reservationCapacity");
+    })
   );
 });
 
