@@ -186,6 +186,16 @@ Lane chore/ci-goals-finish
 
 Reverse: Restore the six-branch bound of repair decision 3 and build the pre-push governor; return the shard jobs to ubuntu-24.04 in check.yml.
 
+### Repo Sanity owns the skills lock check, gated on the paths it reads, 2026-11-13
+
+No hosted lane ran `beep skills update --check`, so #3042, #3044, #3099, #3109, #3111 and #3166 merged over a stale `skills-lock.json` (fixed in #3225). Only the Skills Update Train ran it, and only on its own relock path.
+
+Decision: the check is a step of Repo Sanity's lane body, on the documentation path and the full path, because Repo Sanity is required and a `SKILL.md` edit is a documentation diff. The step runs the check with a new `--offline` flag: the plain check refetches every floating upstream skill (one today, `adhd`) through the unauthenticated GitHub API, which answered 403 from this workstation while the lane was being built and rate-limits shared hosted runner addresses, and it would turn an upstream push into a red on an unrelated pull request. Offline, the check judges the lock, the installed trees, the mirror, the Codex configuration and the frontmatter from tracked files, which is the drift that recurred (#3217 and #3245 each edited a yeet reference without refreshing the lock). It takes about a second inside a job that is already set up, so it gets no job of its own. `--offline` is refused outside `--check`, because a write that skipped the refetch would record a lock no upstream snapshot backs. The step is on by default, which covers local replays, `yeet final-check` and main pushes. On a pull request check.yml's lane gate reads the new `skills` row of the change-profile pattern data with jq and grep and passes `--skip-skills-lock` when the diff touches none of: the installed skills, their .agents mirror and patch series, the lock, the Codex skill configuration, the skills command, and the gate's own sources. It is a top-level pattern row like `desktop`, not a relevance lane, because it gates a step and has no job to guard; the pinned CI binary reads the extended file unchanged (verified against beep-ci-202927595d64).
+
+Lane fix/ci-skills-lock-gate
+
+Reverse: Revert the pull request: the ci:repo-sanity:skills-lock step, the --skip-skills-lock flag, the skills pattern row and the lane gate's skills_lock output go away together.
+
 ### Shards overflow to the self-hosted pool only past a 10-minute hosted wait, 2026-11-13
 
 Operator decision 2026-11-13 (about 06:25Z), after the sizing in `research/shard-runner-sizing-2026-11-13.md`. It replaces the "move the test shards to the self-hosted pool" clause of the same day's load ruling; the 15 to 20 branch bound stands.
@@ -213,6 +223,21 @@ Test Plan keeps starting beside Change Profile and still takes one runner (about
 Lane fix/ci-applicability-docs-only
 
 Reverse: Revert the pull request: the four aggregates return to `if: !cancelled()`, Heavy Admission regains its documentation step, and the Vercel and Storybook pull_request path filters are removed.
+
+### Skip the four test and lint aggregates at job level when every shard succeeded, 2026-11-13
+
+The aggregates `Test Unit`, `Heavy / Test Integration`, `Lint` and `Property Laws` used to take a hosted runner after their last shard only to print one line. On 2026-11-13 that hop (last shard done to the Test Unit aggregate reported) measured p50 1m39s and p95 9m13s over 83 green runs, because the aggregate queued behind every other run's jobs. Each aggregate is now skipped at job level in exactly two states whose verdict is already a pass, and GitHub reports a job-level skip as a passing required check (live on #3241 after #3215: the four contexts concluded `skipped` and the pull request merged under the ruleset).
+
+- **Documentation diff** (#3215's skip, tightened): Change Profile succeeded with `docs_only` true, the shard matrix was skipped, and for Test Unit and Test Integration a successful Test Plan planned nothing.
+- **Skip on success**: Change Profile succeeded with `docs_only` false, every job the aggregate's script checks succeeded (Test Plan; Heavy Admission for Test Integration; a non-empty plan, one carrying `int-rest` for Test Integration), and the shard matrix concluded `success`, which GitHub reports only when every leg the plan expanded passed.
+
+Every other state runs the aggregate and its unchanged script fails closed. The conditions keep `!cancelled()`, a status function, so GitHub evaluates them whatever the needs concluded rather than skipping on an implicit `success()`, and a cancelled run still reports the aggregate `cancelled` (seen on 45 cancelled runs of 2026-11-10..13). `ci-docs-job-admission.test.ts` runs every combination of the needs results through each condition and its script: the verdict never changes, every passing state is a skip, and no state with a shard that failed, was cancelled or was skipped on a code diff, or with an unsuccessful Change Profile or Test Plan, is skipped. Coverage Regression now also reads the Test Unit shard matrix and accepts a skipped Test Unit verdict only beside a successful one. The lane-timings census reads a skipped aggregator beside shards that all succeeded as a success whose duration and verdict wait end at the last shard's completion; any other skipped aggregator stays a failure, and runs from before the change read as they did.
+
+**Modelled effect** (the job-graph replay of the 378 Check runs of 2026-11-10..13 in #3256's research note; the model frees the aggregate on every outcome, but failing verdicts are outside the charter population): on its own, Test Unit wait p95 43m40s to 31m40s over the window and 48m22s to 34m14s on 2026-11-13; Test Integration 43m42s to 29m29s and Lint 43m23s to 29m19s on that day. With the overflow routing of #3256: Test Unit 26m31s, Test Integration 22m34s and Lint 22m07s on 2026-11-13. No spend: about four fewer hosted jobs per green code run.
+
+Lane perf/ci-aggregate-skip-on-success
+
+Reverse: Revert the PR: the four aggregate conditions and Coverage Regression's Test Unit check return to their #3215 form; the census change only adds a shape old runs never had.
 
 ### The census reports verdict wait per required context and measures Test Integration by its shards, 2026-11-13
 

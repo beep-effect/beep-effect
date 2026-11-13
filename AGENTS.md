@@ -262,6 +262,9 @@ needed only for the escalation list below.
   Never open a PR with raw `gh pr create` or replace a body with
   `gh pr edit --body*`: both drop the Yeet provenance footer. Use
   `bun run beep yeet gh pr body <n> --body-file <md>`, which keeps it.
+  The 10-minute rule is the `workstation` profile's: on the `worker` profile
+  (`bun run beep compute profile`) the scheduler refuses hosted-only gates and
+  `yeet publish` takes the `yeet open` posture, so no local proof queues.
 - Draft means only "the owner is still pushing". "Final" means the pushed
   head passed `bun run beep yeet final-check`: the scoped local replay of
   every hosted gate the cheap tier skips (Lint Policy, Lint, Check,

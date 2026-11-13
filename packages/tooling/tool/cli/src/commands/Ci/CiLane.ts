@@ -67,6 +67,7 @@ import {
   runCiCoveragePartition,
   runCiLabsCoverage,
 } from "./CiCoverage.ts";
+import { CI_LANE_DEFAULT_BASE, resolveCiLaneBase } from "./CiEventBase.ts";
 import {
   CI_LANE_PARTITION_TABLE_PATH,
   CI_LANE_PARTITIONS,
@@ -451,9 +452,9 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     required: true,
     laneClass: "cli-runnable",
     replay: "exact",
-    flags: ["--changeset-status", "--docs-only"],
+    flags: ["--changeset-status", "--docs-only", "--skip-skills-lock"],
     notes:
-      "Always validates the changeset graph and runs the private home path law; CI also passes --changeset-status on pull requests. A docs_only pull request runs --docs-only: the law, the changeset graph and the changeset status, and nothing that reads code-route paths.",
+      "Always validates the changeset graph and runs the private home path law; CI also passes --changeset-status on pull requests. A docs_only pull request runs --docs-only: the law, the changeset graph and the changeset status, and nothing that reads code-route paths. Both shapes run `beep skills update --check --offline` (installed skills, their .agents mirror and Codex configuration against skills-lock.json, from tracked files only); CI passes --skip-skills-lock on a pull request that changes none of the `skills` pattern row's paths.",
   }),
   CiLaneDescriptor.make({
     id: "docs-policy",
@@ -746,6 +747,7 @@ export class CiLaneRunOptions extends S.Opaque<CiLaneRunOptions, { readonly bran
     dryRun: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     force: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     docsOnly: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    skipSkillsLock: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
   }).pipe(
     $I.annoteSchema("CiLaneRunOptions", {
       description: "Shape and optional Turbo scope for running one CI lane body.",
@@ -2017,11 +2019,22 @@ export const ciLaneStepsForTesting: {
         // checks; every other step reads code-route paths (sources, manifests,
         // tool configuration, workflows). Docs Policy runs the knowledge and
         // packet policy on the same diffs.
+        // No other hosted lane compared the installed skills with skills-lock.json, and pull
+        // requests kept merging over a stale lock (#3225, #3246). A SKILL.md edit is a
+        // documentation diff, so the step sits on both paths. `--offline` keeps it to tracked
+        // files: the plain check also refetches each floating upstream skill through the
+        // unauthenticated GitHub API, which rate-limits shared runner addresses and would turn an
+        // upstream push into a red on an unrelated pull request. It takes about a second;
+        // check.yml skips it on a pull request that changes none of the `skills` pattern row's paths.
+        const skillsLock = options.skipSkillsLock
+          ? A.empty<QualityTaskStep>()
+          : [bunRunStep(repoRoot, "ci:repo-sanity:skills-lock", ["beep", "skills", "update", "--check", "--offline"])];
         if (options.docsOnly) {
           return [
             homePaths,
             bunRunStep(repoRoot, "ci:repo-sanity:changeset-graph", ["beep", "quality", "changeset-graph"]),
             changesetStatus,
+            ...skillsLock,
           ];
         }
         return [
@@ -2034,12 +2047,12 @@ export const ciLaneStepsForTesting: {
           // Required on every head: Heavy / Lint Policy also runs the law on
           // code PRs, but it is not a required context.
           homePaths,
-          // A new reader of a generated standards file in another package does not
-          // select @beep/repo-cli's tests, so the owner rows are checked here, on
-          // the pull request that adds or removes the reader (hosted-setup-tax
-          // TURB-01). Readers are test files and the files they read are generated
-          // standards inventories, both code-route shapes, so the documentation
-          // path never needs it.
+          // A new reader of a scanned repository file (generated standards file or
+          // root tooling input) in another package does not select the row's
+          // owners, so the owner rows are checked here, on the pull request that
+          // adds or removes the reader (hosted-setup-tax TURB-01). Readers are
+          // TypeScript sources, a code-route shape, so the documentation path
+          // never needs it: a documentation-only change cannot add or drop one.
           bunRunStep(repoRoot, "lint:coverage-owners", ["beep", "lint", "coverage-owners"]),
           // `audit:github repo-sanity` runs the changeset graph check (its
           // `repo-sanity:changeset-graph` lane), so this body carries no second
@@ -2051,6 +2064,7 @@ export const ciLaneStepsForTesting: {
           // step and fails with all reds, so an earlier red cannot hide it.
           rootTaskStep(repoRoot, "ci:repo-sanity:shadcn", "lint:shadcn"),
           ...(options.changesetStatus ? [changesetStatus] : A.empty<QualityTaskStep>()),
+          ...skillsLock,
         ];
       },
       sast: () => [bunRunStep(repoRoot, "ci:sast", ["beep", "quality", "github-checks", "sast"])],
@@ -2951,8 +2965,16 @@ export const ciLaneCommand = Command.make(
       Flag.withDescription("Storybook only: write should_run to GITHUB_OUTPUT without building or testing")
     ),
     base: Flag.String("base").pipe(
-      Flag.withDefault("origin/main"),
-      Flag.withDescription("Base git ref for affected/docgen/fallow/commitlint shapes")
+      Flag.withDescription(
+        `Base git ref for affected/docgen/fallow/commitlint shapes (default ${CI_LANE_DEFAULT_BASE})`
+      ),
+      Flag.optional
+    ),
+    eventBase: Flag.Boolean("event-base").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "Resolve the base from the workflow event instead of --base: a pull request's verified merge commit first parent (else pull_request.base.sha), otherwise GITHUB_SHA"
+      )
     ),
     head: Flag.String("head").pipe(Flag.withDefault("HEAD"), Flag.withDescription("Head git ref for docgen shapes")),
     summarize: Flag.Boolean("summarize").pipe(
@@ -2977,6 +2999,12 @@ export const ciLaneCommand = Command.make(
       Flag.withDefault(false),
       Flag.withDescription(
         "repo-sanity: run only the checks a documentation-only diff can fail (home path law, changeset graph and status)"
+      )
+    ),
+    skipSkillsLock: Flag.Boolean("skip-skills-lock").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "repo-sanity: leave out the skills lock check (CI passes this when a pull request changes no skill, lock or checker path)"
       )
     ),
     validateEnvelopes: Flag.Boolean("validate-envelopes").pipe(
@@ -3056,9 +3084,11 @@ export const ciLaneCommand = Command.make(
   },
   Effect.fnUntraced(function* ({
     affected,
-    base,
+    base: baseFlag,
     changesetStatus,
     docsOnly,
+    skipSkillsLock,
+    eventBase,
     coverageOutput,
     coverageInput,
     compareOnly,
@@ -3102,6 +3132,9 @@ export const ciLaneCommand = Command.make(
           Effect.catchTag("CiCommandError", reportCiCommandError)
         ),
     });
+    const base = yield* resolveCiLaneBase(baseFlag, eventBase).pipe(
+      Effect.catchTag("CiCommandError", reportCiCommandError)
+    );
     const options = CiLaneRunOptions.make({
       affected,
       base,
@@ -3129,6 +3162,7 @@ export const ciLaneCommand = Command.make(
       dryRun,
       force,
       docsOnly,
+      skipSkillsLock,
     });
 
     if (list) {

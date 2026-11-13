@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -36,12 +36,17 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Yeet, in progress. PR 1 (#3178) and PR 2 (#3208) are merged. PR 3, check
-once, is open. Next: P4 Close, a goals-only final PR with the reflection and
-the closeout proposal, per [`PLAN.md`](./PLAN.md).
+Closed. The three work PRs (#3178, #3208, #3242) and the final PR (#3259) are
+merged, the completion check verified #3259, and the packet is
+`completed-retained`.
 
 ## Latest Evidence
 
+- [`history/reflections/2026-11-13-claude.md`](./history/reflections/2026-11-13-claude.md):
+  the closeout reflection.
+- PR 3's hosted gate (#3242) passed Build, Check, Docgen, Doctest, Lint Policy
+  and every unit and integration shard; its one red was inherited coverage
+  ratchet rows in files it does not touch.
 - [`research/2026-11-13-check-once-cost.md`](./research/2026-11-13-check-once-cost.md):
   the own-source check costs 35.4 s serial over 182 packages and a warm
   unchanged build 19.7 s. PR 3 runs the build program as the check's first

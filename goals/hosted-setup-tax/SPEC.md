@@ -118,7 +118,7 @@ Status is from the lever check of 2026-11-09 against `origin/main` 6eb2e0588e2, 
 
 | Id | What | Status | Admission gate before landing | Depends on |
 | --- | --- | --- | --- | --- |
-| TURB-01 | Owner rows in `CoverageScope.ts` for generated standards inventories (instrumentation catalog, JSDoc and schema-first inventories, policy fingerprint, cache-qualification baseline, `fallow.boundaries.generated.jsonc`) so they stop forcing a full Test Unit fallback | slice 1 merged as #3063 (b757bd0400f): before it, rows at `CoverageScope.ts:76-98` covered none of them and `:772` returned "no current workspace owner"; now `COVERAGE_GENERATED_STANDARDS_OWNER_ROWS` with a reader scan and live drift check (decision file); replay: 67 of 727 first-parent commits shrink (`research/turb-01/REPLAY.md`); slice 2 (scorecard conversion share) open | Per-file planner fixtures select exactly the scanned readers; an unmapped standards file still returns full; an in-repo first-parent replay shrinks only commits whose sole full trigger is a mapped file; a token- and segment-aware reader drift check proven by a seeded `path.join` fixture; policy fingerprint resealed | ROUT-05 (soft, corpus) |
+| TURB-01 | Owner rows in `CoverageScope.ts` for generated standards inventories (instrumentation catalog, JSDoc and schema-first inventories, policy fingerprint, cache-qualification baseline, `fallow.boundaries.generated.jsonc`) so they stop forcing a full Test Unit fallback | slice 1 merged as #3063 (b757bd0400f): before it, rows at `CoverageScope.ts:76-98` covered none of them and `:772` returned "no current workspace owner"; now `COVERAGE_GENERATED_STANDARDS_OWNER_ROWS` with a reader scan and live drift check (decision file); replay: 67 of 727 first-parent commits shrink (`research/turb-01/REPLAY.md`); slice 1b in review: `COVERAGE_TOOLING_INPUT_OWNER_ROWS` plus two standards rows give scanned owners to the remaining "no current workspace owner" paths (skill tree and `skills-lock.json`, harness ledger, `biome.identity.jsonc`, check-census baseline, root-package projection), replay 40 of 1000 commits shrink with 0 violations (decision file); #3249 (coverage planner on the merge commit's first parent) is open beside it; slice 2 (scorecard conversion share) open | Per-file planner fixtures select exactly the scanned readers; an unmapped standards file still returns full; an in-repo first-parent replay shrinks only commits whose sole full trigger is a mapped file; a token- and segment-aware reader drift check proven by a seeded `path.join` fixture; policy fingerprint resealed | ROUT-05 (soft, corpus) |
 | TEST-01 | Property sweep runs only property-executing tests, then an oracle-checked census | partly landed: #3030 (f818c6e52bf) test-level selection; #3056 (741b1492b2a) runs the sweep as four slices, two of them Vitest shards of repo-cli (decision file); open: the oracle census, then a file split where the census and its per-file collection and hook timings show module-scope or hook cost still dominating (D26) | Old and new oracle logs identical in (file, test, runs, seed) on 3 heads, with per-file collection and hook time recorded; `passWithNoTests` override; fixtures for module-scope `fcRuns`, props without `fcRuns`, renamed tests; the split slice records its outcome (files split, or none qualifies) in a decision file | none |
 | PERIL-01 | Fold the Fallow advisory envelopes into Labs after its coverage body | open: standalone `fallow-advisory` job; Labs has `contents: read` only | Shadow on a draft PR for at least 10 runs with matching envelope fields; seeded finding gives a failed check run and the merge gate refuses the PR; a check-run post without `checks: write` is visible; a Labs failure still posts; Coverage Regression green with a red Fallow step; RouteCensus keeps a Fallow row | PERIH-04 |
 | PERIH-02 | One hosted `lint:shadcn` owner in required Repo Sanity; retire Shadcn Lint; drop it from the hosted Lint Policy plan | merged as #3117 (10ed12d4410): the `shadcn-lint` job and its case arm left `check.yml`, the CiLane `shadcn-lint` lane retired, `lint:shadcn` left `policyStateTasks` (was `Tasks.ts:3709`) and runs as the `ci:repo-sanity:shadcn` step of the `repo-sanity` lane body; `ci-repo-sanity-owners.test.ts` holds one owner and the no-masking property | Planted violation turns Repo Sanity red on PR and push, green when removed; a unit test asserts exactly one hosted owner; an earlier Repo Sanity failure cannot mask the step | none |
@@ -454,6 +454,56 @@ Lane fix/turb-01-owner-drift-lint
 
 Reverse: Remove the lint:coverage-owners step from the repo-sanity body in CiLane.ts and the coverage-owners lint command; the repo-cli test still holds the rows when it runs.
 
+### Pull-request runs diff against the merge commit's first parent, not the event base sha, 2026-11-13
+
+**Evidence.** Test Plan, Test Unit, Labs and Coverage Regression passed
+`--base "$BEEP_COVERAGE_BASE_SHA"` (`pull_request.base.sha || github.sha`)
+while checking out the synthetic merge commit. GitHub records `base.sha`
+from the pull request; when main moves before it creates the merge, the
+merge's first parent is newer and `base.sha...HEAD` counts main's commits
+as the pull request's own. Hosted run 43386625727 (PR #3228) checked out
+`bc319bbe9 Merge 71bc76f9 into 97afc3ae` with the base at `13303191`: 49
+changed files instead of 10, a full coverage fallback from #3215's
+workflow edits, and 24 Test Unit partitions where 9 were needed. Of 87
+pull-request Check runs on 2026-11-13 (03:46Z to 08:05Z), 23 had
+`base.sha` different from the merge's first parent; replaying the new
+base on their exact merge commits shrank 5 of the 18 that
+ran the planner, saving 65 of the window's 1,327 planned partitions (4.9%);
+4 of its 47 full-matrix runs were this defect (replay table in the PR).
+
+**What changed.** `beep ci lane --event-base` (`CiEventBase.ts`) resolves
+the base once per job from event facts (`GITHUB_EVENT_NAME`, `GITHUB_SHA`,
+`BEEP_CI_PR_BASE_SHA`, `BEEP_CI_PR_HEAD_SHA`) and the checkout: the
+merge's first parent when HEAD is `GITHUB_SHA` with exactly two parents,
+the second being `pull_request.head.sha`. The four call sites pass
+`--event-base`; `BEEP_COVERAGE_BASE_SHA` is gone. Coverage identity
+(`baseSha`) and the comparator's floors and self-judge scope move with
+the affected scope: identity is only compared for equality between
+producers and the comparator, and the floors at the merged base are
+the floors of the code under test.
+
+**What was kept.** When the proof fails the base stays
+`pull_request.base.sha`, the old behaviour: it is an ancestor of the
+merged base, so it never selects less than the pull request's own diff
+and only costs runner time. A pull request with neither fails the lane
+instead of diffing against itself; push runs keep `GITHUB_SHA`.
+Stability across jobs and re-runs holds because `GITHUB_SHA` is fixed
+per run: the checkout fetches that exact sha, and run 43374964920's
+attempt 2 re-executed a shard after main moved four commits and still
+checked out `fb5ab903 Merge 6b162016 into d8326d55`. The other affected
+lanes (`origin/<base>...HEAD`) were already right: on every replayed
+merge, `git merge-base origin/main <merge>` equals its first parent.
+
+**Revert (tested).** `git revert` of the squash commit restores the
+variable, the four `--base "$BEEP_COVERAGE_BASE_SHA"` call sites and the
+contract assertion. `--base` keeps its meaning in the new CLI, so a
+workflow-only revert also runs: the replay's old leg (`--base <base.sha>`
+on the new CLI) reproduced run 43386625727's 24-partition plan.
+
+Lane fix/ci-pr-base-first-parent
+
+Reverse: git revert the PR's squash commit: check.yml returns to BEEP_COVERAGE_BASE_SHA and --base; a workflow-only revert also runs on the new CLI
+
 ### The runner-minutes criterion reads the scorecard's per-head-attempt figure, 2026-11-13
 
 The Runner-minutes acceptance criterion thresholds green code runner-minutes per run (p50 at most 244 against the 264 baseline, p95 reported beside it) "as the scorecard reports it". certainty-scorecard #3144 (decision `certainty-scoring-fixes` there) changed that figure. `greenCodeRunP50` and `greenCodeRunP95` used to come from successful check.yml runs alone, so a head admitted by the `ready-for-heavy` label was scored without the beep-ec2-heavy minutes its heavy-admit.yml run spent. They now cover head attempts: each check.yml run plus the admitted heavy-admit.yml runs of its head, with heavy-admit runs whose Heavy Admission was skipped dropped. On the committed baseline fixture, green code p50/p95 move from 271.63/385.35 to 278.85/385.35, and the per-run mean from 219.7 over 40 runs to 251.08 over 35 head attempts. This goal reads the criterion as runner-minutes per green code head attempt. The 264 and 556 baselines predate the scorecard CLI and are not re-derived here. The cohort this goal is judged on, and any re-measured baseline beside it, must both come from a `beep ci certainty` build that includes #3144, so the baseline and the measurement count the same quantity.
@@ -461,6 +511,27 @@ The Runner-minutes acceptance criterion thresholds green code runner-minutes per
 Lane fix/certainty-scoring-fixes · PR #3144
 
 Reverse: Delete this file; the Runner-minutes criterion then reads the scorecard figure under whatever definition it carries when measured.
+
+### Owner rows for the remaining no-owner fallback paths, 2026-11-13
+
+The 2026-11-13 full-fallback census replayed the 47 full-matrix pull-request Check runs (1,128 shard jobs) on their merge commits: reverting every "no current workspace owner" path together would have avoided the full matrix in 9 runs, 120 shard jobs (10.6%). The paths were the skill tree and `skills-lock.json` (they travel together when a skill changes), `standards/check-census.regression-baseline.jsonc`, `standards/root-package.projection.generated.json`, `harness-ledger/rows/2026-11.jsonl` and `biome.identity.jsonc`. Each now has owner rows that the slice 1 reader scan derives, and `bun run beep lint coverage-owners` (Repo Sanity) checks every one of them, so `COVERAGE_SCANNED_OWNER_ROWS` (the slice 1 rows plus these) is the drift check's domain.
+
+What each path maps to, from the scan over 9315 `packages/**` and `apps/**` sources:
+
+- `skills-lock.json`: @beep/repo-cli alone (the `beep skills` commands and their tests). Row in `COVERAGE_TOOLING_INPUT_OWNER_ROWS`; 9 partitions instead of 24.
+- `.claude/skills/**`: the readers of the `.claude` segment, @beep/ai-sync, @beep/repo-ai-metrics (with its coverage dependents @beep/infra and @beep/palantiri, since its `src/` names `.claude` in `config-snapshot.ts` and `hook-pulse.ts`), @beep/repo-cli, @beep/repo-cli-kit and @beep/repo-configs; 13 partitions. A reader of a path spells every segment of it, so the readers of any one segment are a sound superset. The tree's own basename, `skills`, also matches a schema.org vocabulary term, an HTML section id, an OpenClaw subcommand and plugin `skills/` directories: 15 owners and 15 partitions. The row scans `.claude`. The hand-written rows for `yeet/SKILL.md`, `yeet/references/gates-and-proof.md` and `effect-first-development/SKILL.md` stay, and those files now also select the tree's readers.
+- `harness-ledger/**`: @beep/repo-ai-metrics (its identity string is a whole-segment match, a kept over-approximation) with @beep/infra and @beep/palantiri, and @beep/repo-cli; 11 partitions. Directory row on `harness-ledger`; the rows file's own basename and `rows` match 62 packages.
+- `biome.identity.jsonc`, `standards/check-census.regression-baseline.jsonc`, `standards/root-package.projection.generated.json`: @beep/repo-cli alone. The two standards files join `COVERAGE_GENERATED_STANDARDS_OWNER_ROWS`.
+
+No path gets an empty-owner row: every scan found readers. The only package Turbo test inputs among these paths are repo-cli's two yeet skill files, already covered. The projection is a Turbo global input, so Turbo's own `--affected` still selects every test package when it changes; the planner row is the scan's honest result, but a run that changes the projection still allocates every partition through Turbo. `beep-effect.iml` (1 run, beside `bun.lock`) has no reader and stays on the fallback.
+
+Gates: per-file planner fixtures select exactly the scanned readers (`coverage-scope-tooling-input-owners.test.ts`, with the two standards files in `coverage-scope-standards-owners.test.ts`); look-alikes (`.claude/settings.json`, `.claude/skills-archive/**`, `skills-lock.json.bak`, `harness-ledger.md`, `biome.identity.jsonc.orig`, `beep-effect.iml`) stay full; a seeded `path.join(repoRoot, "skills-lock.json")` reader in another package and a seeded source-tree `.claude/skills` reader fail the drift rows, and the same seed in the live tree turned `beep lint coverage-owners` red. The replay (`ops/turb-01b-replay.ts`, `research/turb-01/REPLAY.md`) plans the last 1000 first-parent commits of 98c2decbdb3 with the planner as it stood there and with these rows: 40 commits shrink from full to owner-scoped (424 of their 960 planner-only partitions), 59 stay full with fewer reasons, 2 widen (a yeet skill file that had a narrower hand-written row, 9 or 10 to 13 partitions), 0 violations. The policy fingerprint stays current (no sealed input changed).
+
+Rejected: mapping the skill tree to @beep/repo-cli alone (hand-asserted; repo-configs, repo-cli-kit, ai-sync and ai-metrics read `.claude` paths); an intersection of the per-segment scans (13 partitions either way, and a second matching rule); the basename `skills` (15 partitions of noise).
+
+Lane feat/turb-01-no-owner-rows
+
+Reverse: Delete COVERAGE_TOOLING_INPUT_OWNER_ROWS and the two standards rows from CoverageScope.ts and point the drift check back at COVERAGE_GENERATED_STANDARDS_OWNER_ROWS; the paths return to the full fallback.
 
 <!-- beep:decisions:end -->
 
