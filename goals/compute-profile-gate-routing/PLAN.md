@@ -14,10 +14,9 @@ Status: `in-progress`
 | P3 Yeet: PR to mergeable | in-progress | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
-Implementation shipped as three slice PRs: P0 #2925, P1 #2959 (fix #2972) and P2, the takeover
-PR from lane `goals/compute-profile-p2-takeover`. P2 Verify still needs the worker-host
-end-to-end acceptance run (SPEC acceptance criterion 3); P4 Close is the final PR with the
-reflection and `proposedCloseout`.
+Implementation shipped as three slice PRs: P0 #2925, P1 #2959 (fix #2972) and P2, the 2026-11-13
+takeover PR. P2 Verify still needs the worker-host end-to-end acceptance run (SPEC acceptance
+criterion 3); P4 Close is the final PR with the reflection and `proposedCloseout`.
 
 ## Closeout Checklist
 

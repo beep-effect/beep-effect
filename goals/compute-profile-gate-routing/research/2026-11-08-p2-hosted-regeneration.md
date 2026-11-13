@@ -1,6 +1,6 @@
 # P2: hosted catalog regeneration and docs
 
-Recorded 2026-11-08 from the `goals/compute-profile-gate-routing-p2` lane, before commit.
+Recorded 2026-11-08 from the P2 lane, before commit.
 
 ## The `Catalog Regeneration` job
 
@@ -58,7 +58,6 @@ unreadable override drops only the profile. The line reads, for example,
 ## Takeover, 2026-11-13
 
 The P2 lane's owner session ended on 2026-11-08 before a PR was opened. Its single commit
-(574c4b77212) was cherry-picked onto `main` in lane `goals/compute-profile-p2-takeover`. The
-rebase dropped the unused beep CI binary fetch, added `LEFTHOOK=0` to the commit step, exempted
+(574c4b77212) was cherry-picked onto `main` in a takeover lane ([decision](../decisions/2026-11-13-p2-lane-taken-over-and-rebased-onto-main.md)). The rebase dropped the unused beep CI binary fetch, added `LEFTHOOK=0` to the commit step, exempted
 the job in the CI job-to-descriptor test, re-applied the AGENTS.md amendment as one appended
 sentence and pointed the runbook's dankserver evidence at the archived exploration.
