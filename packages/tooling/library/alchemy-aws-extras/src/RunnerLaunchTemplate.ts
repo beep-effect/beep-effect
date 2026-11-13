@@ -630,6 +630,9 @@ export const RunnerLaunchTemplate: ExtrasResource<RunnerLaunchTemplate> = Runner
  * console.log(resolveSsmImageId("/beep-ci/runner-ami-id")) // "resolve:ssm:/beep-ci/runner-ami-id"
  * ```
  *
+ * @param parameterName - SSM parameter name holding the AMI id.
+ * @returns The EC2 `resolve:ssm:` image reference.
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -736,6 +739,9 @@ const toInstanceProfile = (props: RunnerLaunchTemplateProps.Encoded): ec2.Reques
  * })
  * console.log(data.BlockDeviceMappings?.[0]?.Ebs?.VolumeType) // "gp3"
  * ```
+ *
+ * @param props - The plain launch template props.
+ * @returns The `LaunchTemplateData` request body EC2 receives.
  *
  * @category utilities
  * @since 0.0.0
