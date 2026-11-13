@@ -30,7 +30,7 @@
     "test:integration": "bun run beep:test:integration",
     "test:property": "bun run beep:test",
     "beep:build": "tsrs -p tsconfig.json --emitDeclarationOnly",
-    "beep:check": "tsrs -p tsconfig.check.json && bun run beep:check:tests",
+    "beep:check": "tsrs -p tsconfig.json --emitDeclarationOnly && bun run beep:check:tests",
     "beep:docgen": "bunx --bun --no-install docgen",
     "beep:doctest": "BEEP_VITEST_DOCTEST=1 bunx vitest run",
     "beep:lint": "biome check .",

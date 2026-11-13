@@ -1,7 +1,10 @@
 import {
+  buildServedCheck,
   CheckerEngineExemption,
+  DECLARATION_ONLY_BUILD_COMMAND,
   ImplScriptDrift,
   JavaScriptBuildOverride,
+  OwnSourceCheckOverride,
   RetiredScriptName,
   retiredImplScripts,
   ScriptsRecord,
@@ -46,10 +49,17 @@ const noEvidence = DerivationEvidence.make({
   bypassingConfigs: HashSet.empty(),
   generators: HashSet.empty(),
   javaScriptBuilds: HashSet.empty(),
+  ownSourceChecks: HashSet.empty(),
 });
 const isRetiredScriptName = S.is(RetiredScriptName);
 const isRetiredAppImpl = (name: string, value: string) =>
   A.some(retiredImplScripts, (row) => row.kind === "app" && row.name === name && row.value === value);
+// A check whose first segment the (possibly just retired) build program now serves.
+const isServedCheck = (impls: HashMap.HashMap<string, string>, name: string, value: string) =>
+  name === "beep:check" &&
+  O.isSome(O.flatMap(HashMap.get(impls, "beep:build"), (build) => buildServedCheck(value, build)));
+// The per-package Turbo override every package whose build is not declaration-only carries.
+const checkOffOwnBuild = { extends: ["//"], tasks: { check: { dependsOn: ["^build"] } } };
 const fixture = Effect.fn("fixture")(function* (files: Readonly<Record<string, unknown>>) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -81,7 +91,8 @@ describe("package scripts policy", () => {
           const expected = policy.expected("app", actual, noEvidence);
           expect(expected.extras).toEqual(HashMap.filter(actual.extras, (_, key) => !isRetiredScriptName(key)));
           for (const [key, value] of actual.impls)
-            if (!isRetiredAppImpl(key, value)) assertSome(HashMap.get(expected.impls, key), value);
+            if (!isRetiredAppImpl(key, value) && !isServedCheck(expected.impls, key, value))
+              assertSome(HashMap.get(expected.impls, key), value);
           expect(policy.diff(expected, policy.expected("app", expected, noEvidence))).toEqual([]);
         }),
       { arbitrary: fcRuns(100) }
@@ -154,13 +165,16 @@ describe("package scripts policy", () => {
         const root = yield* fixture({
           "package.json": { name: "root", workspaces: ["packages/*", "apps/*", "infra", "scratchpad"] },
           "packages/a/package.json": { name: "@beep/a", scripts: base },
+          "packages/a/turbo.json": checkOffOwnBuild,
           "packages/a/src/index.ts": "export const x = 1;",
           "packages/a/test/fixtures/src/example.ts": "import.meta.vitest",
           "packages/a/src/index.d.ts": "import.meta.vitest",
           "packages/b/package.json": { name: "@beep/b", scripts: base },
+          "packages/b/turbo.json": checkOffOwnBuild,
           "packages/b/src/index.ts": "// import.meta.vitest",
           "packages/b/vitest.config.ts": "import shared from '../../../vitest.shared.ts'",
           "infra/package.json": { name: "@beep/infra", scripts: base },
+          "infra/turbo.json": checkOffOwnBuild,
           "infra/lambda/x/package.json": { scripts: { docgen: "out of domain" } },
           "scratchpad/package.json": { name: "scratchpad", scripts: { docgen: "exempt", "lint:laws": "owned" } },
         });
@@ -202,8 +216,12 @@ describe("package scripts policy", () => {
           "apps/stale/package.json": { name: "@beep/stale", scripts: noEmit },
           "apps/stale/turbo.json": { extends: ["//"], tasks: { build: { outputs: ["dist/**"] } } },
           "apps/covered/package.json": { name: "@beep/covered", scripts: noEmit },
-          "apps/covered/turbo.json": { extends: ["//"], tasks: { build: { outputs: [] } } },
+          "apps/covered/turbo.json": {
+            extends: ["//"],
+            tasks: { build: { outputs: [] }, check: { dependsOn: ["^build"] } },
+          },
           "apps/emitting/package.json": { name: "@beep/emitting", scripts: base },
+          "apps/emitting/turbo.json": checkOffOwnBuild,
         });
         const policy = yield* PackageScriptsPolicy.make(root);
         const report = yield* policy.write(root);
@@ -240,7 +258,7 @@ describe("package scripts policy", () => {
         const manifest = yield* decodeManifest(readFileString5);
         const jsonStringifyPretty6 = yield* jsonStringifyPretty({
           name: "@beep/a",
-          scripts: { ...manifest.scripts, "beep:check": "tsrs -p tsconfig.check.json" },
+          scripts: { ...manifest.scripts, "beep:check": "tsrs --extendedDiagnostics -p tsconfig.check.json" },
         });
         yield* fs.writeFileString(file, jsonStringifyPretty6);
         const before = yield* fs.readFileString(file);
@@ -248,10 +266,11 @@ describe("package scripts policy", () => {
           expect(HashMap.size(report.drift)).toBe(0);
           expect(HashMap.size(report.implDrift)).toBe(1);
           assertSome(HashMap.get(report.implDrift, "packages/a/package.json"), [
+            // Flags before the program are package-owned: never rewritten, compared with the served default.
             ImplScriptDrift.make({
               name: "beep:check",
-              actual: "tsrs -p tsconfig.check.json",
-              expected: "tsrs -p tsconfig.check.json && bun run beep:check:tests",
+              actual: "tsrs --extendedDiagnostics -p tsconfig.check.json",
+              expected: `${DECLARATION_ONLY_BUILD_COMMAND} && bun run beep:check:tests`,
             }),
           ]);
           expect(HashSet.size(report.written)).toBe(0);
@@ -289,7 +308,9 @@ describe("package scripts policy", () => {
       fixture({
         "package.json": { name: "root", workspaces: ["packages/*"] },
         "packages/regressed/package.json": { name: "@beep/regressed", scripts: regressed },
+        "packages/regressed/turbo.json": checkOffOwnBuild,
         "packages/customized/package.json": { name: "@beep/customized", scripts: customized },
+        "packages/customized/turbo.json": checkOffOwnBuild,
       });
     const row = (name: keyof typeof regressed, engine: "tsc" | "tsgo") => ({
       _tag: "checker-engine",
@@ -370,6 +391,7 @@ describe("package scripts policy", () => {
           name: "@beep/javascript",
           scripts: { coverage: "owned coverage", "beep:build": "tsrs -p tsconfig.json" },
         },
+        "packages/javascript/turbo.json": checkOffOwnBuild,
         "packages/codegen/package.json": {
           name: "@beep/codegen",
           scripts: { ...babelBuild, "beep:build": "bun run codegen && tsrs -p tsconfig.json && bun run babel" },
@@ -378,6 +400,7 @@ describe("package scripts policy", () => {
           name: "@beep/owned",
           scripts: { coverage: "owned coverage", "beep:build": "tsrs -p tsconfig.json --listEmittedFiles" },
         },
+        "packages/owned/turbo.json": checkOffOwnBuild,
         "apps/library-shaped/package.json": { name: "@beep/library-shaped", scripts: babelBuild },
         "packages/legacy/package.json": {
           name: "@beep/legacy",
@@ -543,6 +566,176 @@ describe("package scripts policy", () => {
         assertSome(HashMap.get(missing.drift, "packages/drivers/gov-legal-mcp/package.json"), [
           { _tag: "missing-task", name: "codegen" },
         ]);
+      })
+    );
+  });
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    const declarationOnly = { coverage: "owned coverage", "beep:build": DECLARATION_ONLY_BUILD_COMMAND };
+    const servedFixture = () =>
+      fixture({
+        "package.json": { name: "root", workspaces: ["packages/*", "apps/*"] },
+        "packages/library/package.json": {
+          name: "@beep/library",
+          scripts: { ...declarationOnly, "beep:check": "tsrs -p tsconfig.check.json && bun run beep:check:tests" },
+        },
+        "packages/codegen/package.json": {
+          name: "@beep/codegen",
+          scripts: {
+            coverage: "owned coverage",
+            "beep:build": `bun run codegen && ${DECLARATION_ONLY_BUILD_COMMAND}`,
+            "beep:check": "tsrs -p tsconfig.check.json&&bun run beep:check:scripts",
+          },
+        },
+        "packages/flagged/package.json": {
+          name: "@beep/flagged",
+          scripts: {
+            ...declarationOnly,
+            "beep:check":
+              "tsrs -p tsconfig.check.json --checkerCostCache a.cache --pretty false && tsrs -p test/tsconfig.json --checkerCostCache b.cache",
+          },
+        },
+        "packages/wide/package.json": {
+          name: "@beep/wide",
+          scripts: { ...declarationOnly, "beep:check": "tsrs -p tsconfig.check.json && bun run beep:check:tests" },
+        },
+        "packages/babel/package.json": {
+          name: "@beep/babel",
+          scripts: {
+            coverage: "owned coverage",
+            "beep:build": "tsrs -p tsconfig.json && bun run babel",
+            "beep:check": "tsrs -p tsconfig.check.json && bun run beep:check:tests",
+          },
+        },
+        "apps/noemit/package.json": {
+          name: "@beep/noemit",
+          scripts: { "beep:build": "tsrs -p tsconfig.check.json", "beep:check": "tsrs -p tsconfig.check.json" },
+        },
+        "apps/noemit/turbo.json": {
+          extends: ["//"],
+          tasks: { build: { outputs: [] }, check: { dependsOn: ["^build"] } },
+        },
+      });
+    const scriptsOf = Effect.fnUntraced(function* (root: string, dir: string) {
+      const fs = yield* FileSystem.FileSystem;
+      const text = yield* fs.readFileString(`${root}/${dir}/package.json`);
+      return (yield* decodeManifest(text)).scripts;
+    });
+    const wide = OwnSourceCheckOverride.make({
+      manifest: "packages/wide/package.json",
+      reason: "tsconfig.check.json adds scripts to include",
+    });
+    it.effect(
+      "leads a declaration-only check with its build, carries its flags, and keeps overrides and other builds",
+      Effect.fnUntraced(function* () {
+        const root = yield* servedFixture();
+        const policy = yield* PackageScriptsPolicy.make(root, [], [], [wide]);
+        const initial = yield* policy.check(root);
+        const checkRows = (dir: string) =>
+          A.filter(
+            HashMap.get(initial.drift, `${dir}/package.json`).pipe(O.getOrElse(() => [])),
+            (row) => row._tag === "retired-impl" && row.name === "beep:check"
+          );
+        expect(checkRows("packages/library")).toEqual([
+          {
+            _tag: "retired-impl",
+            name: "beep:check",
+            expected: `${DECLARATION_ONLY_BUILD_COMMAND} && bun run beep:check:tests`,
+            actual: "tsrs -p tsconfig.check.json && bun run beep:check:tests",
+          },
+        ]);
+        // Flags of the first segment follow the build command in the same order; the later segment is untouched.
+        const flaggedServed = `${DECLARATION_ONLY_BUILD_COMMAND} --checkerCostCache a.cache --pretty false && tsrs -p test/tsconfig.json --checkerCostCache b.cache`;
+        expect(checkRows("packages/flagged")).toEqual([
+          {
+            _tag: "retired-impl",
+            name: "beep:check",
+            expected: flaggedServed,
+            actual:
+              "tsrs -p tsconfig.check.json --checkerCostCache a.cache --pretty false && tsrs -p test/tsconfig.json --checkerCostCache b.cache",
+          },
+        ]);
+        for (const dir of ["packages/wide", "apps/noemit"]) expect(checkRows(dir), dir).toEqual([]);
+        yield* policy.write(root);
+        expect(HashMap.size((yield* policy.check(root)).drift)).toBe(0);
+        expect(HashSet.size((yield* policy.write(root)).written)).toBe(0);
+        const library = yield* scriptsOf(root, "packages/library");
+        expect(library["beep:check"]).toBe(`${DECLARATION_ONLY_BUILD_COMMAND} && bun run beep:check:tests`);
+        // Later segments keep their spelling; only the leading segment changes.
+        const codegen = yield* scriptsOf(root, "packages/codegen");
+        expect(codegen["beep:check"]).toBe(`${DECLARATION_ONLY_BUILD_COMMAND}&&bun run beep:check:scripts`);
+        // The Babel build retires to the declaration-only build and serves the check in the same pass.
+        const babel = yield* scriptsOf(root, "packages/babel");
+        expect(babel["beep:build"]).toBe(DECLARATION_ONLY_BUILD_COMMAND);
+        expect(babel["beep:check"]).toBe(`${DECLARATION_ONLY_BUILD_COMMAND} && bun run beep:check:tests`);
+        const flagged = yield* scriptsOf(root, "packages/flagged");
+        expect(flagged["beep:check"]).toBe(flaggedServed);
+        const kept = yield* scriptsOf(root, "packages/wide");
+        expect(kept["beep:check"]).toBe("tsrs -p tsconfig.check.json && bun run beep:check:tests");
+        const noemit = yield* scriptsOf(root, "apps/noemit");
+        expect(noemit["beep:check"]).toBe("tsrs -p tsconfig.check.json");
+      })
+    );
+    it.effect(
+      "rewrites the overridden package too once its own-source check override is removed",
+      Effect.fnUntraced(function* () {
+        const root = yield* servedFixture();
+        const policy = yield* PackageScriptsPolicy.make(root, [], [], []);
+        yield* policy.write(root);
+        const served = yield* scriptsOf(root, "packages/wide");
+        expect(served["beep:check"]).toBe(`${DECLARATION_ONLY_BUILD_COMMAND} && bun run beep:check:tests`);
+      })
+    );
+  });
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    const conflict = {
+      _tag: "derivation-conflict",
+      name: "check",
+      reason:
+        'check of a build that is not declaration-only needs turbo.json with tasks.check.dependsOn: ["^build"] (bun run beep create-package emits it)',
+    };
+    const checked = { coverage: "owned coverage", "beep:check": "tsrs -p tsconfig.check.json" };
+    const rowsOf = (report: { readonly drift: HashMap.HashMap<string, ReadonlyArray<unknown>> }, dir: string) =>
+      HashMap.get(report.drift, `${dir}/package.json`).pipe(O.getOrElse(() => []));
+    it.effect(
+      "requires a check that does not depend on the package's own build when the build is not declaration-only",
+      Effect.fnUntraced(function* () {
+        const root = yield* fixture({
+          "package.json": { name: "root", workspaces: ["packages/*"] },
+          // A package flipped from the declaration-only build to a bundler, with no Turbo override.
+          "packages/flipped/package.json": {
+            name: "@beep/flipped",
+            scripts: { ...checked, "beep:build": "vite build" },
+          },
+          "packages/extended/package.json": {
+            name: "@beep/extended",
+            scripts: { ...checked, "beep:build": "vite build" },
+          },
+          "packages/extended/turbo.json": {
+            extends: ["//"],
+            tasks: { check: { dependsOn: ["$TURBO_EXTENDS$", "@beep/other#check"] } },
+          },
+          "packages/own/package.json": { name: "@beep/own", scripts: { ...checked, "beep:build": "next build" } },
+          "packages/own/turbo.json": { extends: ["//"], tasks: { check: { dependsOn: ["^build", "build"] } } },
+          "packages/upstream-only/package.json": {
+            name: "@beep/upstream-only",
+            scripts: { ...checked, "beep:build": "vite build" },
+          },
+          "packages/upstream-only/turbo.json": {
+            extends: ["//"],
+            tasks: { check: { dependsOn: ["^build", "@beep/other#check"] } },
+          },
+          "packages/declaration-only/package.json": {
+            name: "@beep/declaration-only",
+            scripts: { coverage: "owned coverage", "beep:build": DECLARATION_ONLY_BUILD_COMMAND },
+          },
+        });
+        const policy = yield* PackageScriptsPolicy.make(root);
+        for (const report of [yield* policy.check(root), yield* policy.write(root)]) {
+          for (const dir of ["packages/flipped", "packages/extended", "packages/own"])
+            expect(rowsOf(report, dir), dir).toContainEqual(conflict);
+          for (const dir of ["packages/upstream-only", "packages/declaration-only"])
+            expect(rowsOf(report, dir), dir).not.toContainEqual(conflict);
+        }
       })
     );
   });

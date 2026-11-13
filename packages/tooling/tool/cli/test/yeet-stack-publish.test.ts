@@ -18,7 +18,9 @@ import { NodeCrypto } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
@@ -96,7 +98,9 @@ const lintOnMain = (conclusion: string): GithubAnswer => ({
 });
 
 interface Fixture {
+  readonly ancestryFails?: boolean;
   readonly builtOnParent?: boolean;
+  readonly fetchFails?: boolean;
   readonly own?: GithubAnswer;
   readonly parent?: GithubAnswer;
   readonly trunkCheck?: string;
@@ -117,21 +121,34 @@ const routes =
   (call: GithubCall): GithubAnswer | undefined =>
     call.method === "GET" ? readTable(fixture)[call.path] : undefined;
 
-const gitSpawner = (builtOnParent: boolean) =>
+// A failed ancestry check is git's loud exit 128, never the silent exit 1 of a non-ancestor.
+const ancestry = (fixture: Fixture) =>
+  fixture.ancestryFails === true
+    ? { exit: 128, stderr: `fatal: Not a valid commit name ${PARENT_HEAD}\n` }
+    : { exit: fixture.builtOnParent === false ? 1 : 0 };
+
+const fetchAnswer = (fixture: Fixture) =>
+  fixture.fetchFails === true
+    ? { exit: 128, stderr: "fatal: unable to access 'https://github.com/beep-effect/beep-effect.git/'\n" }
+    : { exit: 0 };
+
+// `gh auth token` answers as a host with no gh login does; it is read only when no login is provided.
+const gitSpawner = (fixture: Fixture) =>
   ScriptedSpawner.make((command, args) => {
     const line = A.join([command, ...args], " ");
     if (Str.includes("remote get-url --push origin")(line)) {
       return { exit: 0, stdout: "git@github.com:beep-effect/beep-effect.git\n" };
     }
-    if (Str.includes("merge-base --is-ancestor")(line)) return { exit: builtOnParent ? 0 : 1 };
+    if (Str.includes("merge-base --is-ancestor")(line)) return ancestry(fixture);
     if (Str.includes("rev-list")(line)) return { exit: 0, stdout: `${MAIN}\n` };
-    if (Str.includes("fetch")(line)) return { exit: 0 };
+    if (Str.includes("fetch")(line)) return fetchAnswer(fixture);
+    if (Str.includes("gh auth token")(line)) return { exit: 1, stderr: "You are not logged into any GitHub hosts.\n" };
     return { exit: 1, stdout: `unscripted: ${line}` };
   });
 
 const resolve = (stackOn: O.Option<number>, fixture: Fixture = {}) => {
   const github = recordedGithub(routes(fixture));
-  const spawner = gitSpawner(fixture.builtOnParent ?? true);
+  const spawner = gitSpawner(fixture);
   const run = resolveYeetStackPublish(context, stackOn).pipe(
     github.provide,
     Effect.provideServiceEffect(Git, Git.make),
@@ -142,14 +159,14 @@ const resolve = (stackOn: O.Option<number>, fixture: Fixture = {}) => {
   return { run, lines, gitLines };
 };
 
-const layer = (stackNumber: O.Option<number>) =>
+const layer = (stackNumber: O.Option<number>, parentMoved = false) =>
   YeetStackPublishDecision.cases.Layer.make({
     parentNumber: PARENT,
     parentHeadRef: "probe/stack-c-g",
     parentHeadSha: PARENT_HEAD,
     trunk: "main",
     stackNumber,
-    parentMoved: false,
+    parentMoved,
   });
 
 describe("resolveYeetStackPublish without --stack-on", () => {
@@ -186,6 +203,18 @@ describe("resolveYeetStackPublish without --stack-on", () => {
         `GET {repo}/pulls/${PARENT}`,
         "GET {repo}",
       ]);
+    })
+  );
+
+  it.effect("keeps a stacked layer whose parent's head is not in HEAD, marked as moved", () =>
+    Effect.gen(function* () {
+      const fixture = resolve(O.none(), {
+        own: { body: [childBody({ stack: stackRef(2) })] },
+        parent: { body: parentBody({ stack: stackRef(1) }) },
+        builtOnParent: false,
+      });
+      const resolved = yield* fixture.run;
+      assertSome(resolved, layer(O.some(STACK), true));
     })
   );
 
@@ -248,6 +277,22 @@ describe("resolveYeetStackPublish with --stack-on", () => {
     })
   );
 
+  it.effect("warns and still opens the layer when the parent's branch cannot be fetched", () =>
+    Effect.gen(function* () {
+      const fixture = resolve(O.some(PARENT), { fetchFails: true });
+      const resolved = yield* fixture.run;
+      assertSome(resolved, layer(O.none()));
+      expect(A.some(fixture.gitLines(), Str.includes(`merge-base --is-ancestor ${PARENT_HEAD} HEAD`))).toBe(true);
+    })
+  );
+
+  it.effect("refuses as not built on the parent when the ancestry check itself fails", () =>
+    Effect.gen(function* () {
+      const error = yield* resolve(O.some(PARENT), { ancestryFails: true }).run.pipe(Effect.flip);
+      expect(error.message).toContain("--stack-on refused (not-built-on-parent)");
+    })
+  );
+
   it.effect("fails when the branch's own pull request cannot be read", () =>
     Effect.gen(function* () {
       const fixture = resolve(O.some(PARENT), { own: { status: 500, body: { message: "Server Error" } } });
@@ -259,9 +304,16 @@ describe("resolveYeetStackPublish with --stack-on", () => {
 });
 
 it.layer(NodeCrypto.layer)("resolveYeetPublishStackLayer", (it) => {
+  // No gh login is provided and the environment is empty, so building the login fails at `gh auth token`.
+  const withoutLogin = flow(
+    Effect.provideServiceEffect(Git, Git.make),
+    provideSpawner(gitSpawner({})),
+    Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env: {} }))
+  );
+
   it.effect("reads nothing for a --no-pr trunk publish", () =>
     Effect.gen(function* () {
-      const spawner = gitSpawner(true);
+      const spawner = gitSpawner({});
       const resolved = yield* resolveYeetPublishStackLayer(context, defaultYeetRunOptions({ pr: false })).pipe(
         Effect.provideServiceEffect(Git, Git.make),
         provideSpawner(spawner)
@@ -277,8 +329,25 @@ it.layer(NodeCrypto.layer)("resolveYeetPublishStackLayer", (it) => {
       const resolved = yield* resolveYeetPublishStackLayer(
         context,
         defaultYeetRunOptions({ stackOn: O.some(PARENT) })
-      ).pipe(github.provide, Effect.provideServiceEffect(Git, Git.make), provideSpawner(gitSpawner(true)));
+      ).pipe(github.provide, Effect.provideServiceEffect(Git, Git.make), provideSpawner(gitSpawner({})));
       assertSome(resolved, layer(O.none()));
+    })
+  );
+
+  it.effect("fails a --stack-on publish when the gh login cannot be built", () =>
+    Effect.gen(function* () {
+      const error = yield* resolveYeetPublishStackLayer(
+        context,
+        defaultYeetRunOptions({ stackOn: O.some(PARENT) })
+      ).pipe(withoutLogin, Effect.flip);
+      expect(error.message).toMatch(/^GitHub access failed \(/u);
+    })
+  );
+
+  it.effect("publishes on the trunk when the gh login cannot be built and no --stack-on was given", () =>
+    Effect.gen(function* () {
+      const resolved = yield* resolveYeetPublishStackLayer(context, defaultYeetRunOptions()).pipe(withoutLogin);
+      assertNone(resolved);
     })
   );
 });
@@ -306,6 +375,17 @@ describe("linkYeetStackLayer", () => {
       expect(error.message).toBe(
         `yeet could not link #${PARENT} and #${CHILD} into a stack: GitHub answered "${sentence}". Pull request #${CHILD} is open; run the same command again to retry the link.`
       );
+    })
+  );
+
+  it.effect("fails with the repair hint when the link request itself fails", () =>
+    Effect.gen(function* () {
+      const github = recordedGithub(() => ({ status: 500, body: { message: "Server Error" } }));
+      const error = yield* linkYeetStackLayer(PARENT, CHILD).pipe(github.provide, Effect.flip);
+      expect(error.message).toContain(
+        `yeet could not link #${PARENT} and #${CHILD} into a stack: the request failed (`
+      );
+      expect(error.message).toContain(`Pull request #${CHILD} is open; run the same command again to retry the link.`);
     })
   );
 });
