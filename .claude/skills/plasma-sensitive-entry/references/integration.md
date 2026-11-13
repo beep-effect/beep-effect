@@ -16,8 +16,8 @@ replace the FIFO with a socket or redirect helper output to a tool transcript.
 
 ## Stable entry point for tools outside the repository
 
-Tools that live outside this checkout (for example a `~/.local/bin` wrapper
-such as `aws-vault-prime`) call the helper by path, so that path is the
+Tools that live outside this checkout, such as the workstation's
+`aws-vault-prime` wrapper, call the helper by path, so that path is the
 contract. Call it as:
 
 ```sh
@@ -25,13 +25,13 @@ bun <checkout>/.claude/skills/plasma-sensitive-entry/scripts/prompt.ts \
   --write-fd 3 --title "<title>" --label "<label>" --timeout 90
 ```
 
-The flags and exit codes match the retired `scripts/prompt.py`; only the
+The flags and exit codes match the retired Python prompt helper; only the
 interpreter and file name changed. The repository bans tracked Python
-(`goals/python-free-repo`), so `python3 … prompt.py`, `install.py` and
-`ssh-askpass.py` no longer exist; `ssh-askpass.ts` and `install.ts` replace
-the other two. When you rename or move a script that external tools call,
-search the workstation for its old path (`~/.local/bin`, `~/.config/systemd`,
-`~/.config/environment.d`, shell rc files and `~/.ssh/config`) in the same
+(`goals/python-free-repo`), so the Python prompt, install and askpass scripts
+no longer exist; `ssh-askpass.ts` and `install.ts` replace the other two. When
+you rename or move a script that external tools call, search the workstation
+for its old path (the user's local bin directory, user systemd units,
+environment.d drop-ins, shell rc files and the SSH client config) in the same
 change.
 
 ## Owned FIFO lifecycle
