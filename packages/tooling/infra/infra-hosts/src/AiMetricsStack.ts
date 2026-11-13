@@ -87,6 +87,8 @@ const tailnetPortStatePath = (config: AiMetricsHostConfig): string =>
  * console.log(phoenixPublicUrl(config)) // "https://metrics-host.example.ts.net:8447"
  * ```
  *
+ * @param config - The decoded AI metrics host configuration.
+ * @returns The tailnet HTTPS URL of Phoenix.
  * @category utilities
  * @since 0.0.0
  */
@@ -113,6 +115,7 @@ export const phoenixPublicUrl = (config: AiMetricsHostConfig): string =>
  * console.log(renderPreflightCommand({ config, kind: "prod" }).startsWith("ssh ")) // true
  * ```
  *
+ * @returns The rendered command.
  * @category serialization
  * @since 0.0.0
  */
@@ -161,6 +164,8 @@ export const renderPreflightCommand = ({
  * console.log(renderRetireComposeCommand(config).includes("disable --now")) // true
  * ```
  *
+ * @param config - The decoded AI metrics host configuration.
+ * @returns The rendered command.
  * @category serialization
  * @since 0.0.0
  */
@@ -210,6 +215,8 @@ export const renderRetireComposeCommand = (config: AiMetricsHostConfig): string 
  * console.log(renderTailscaleServeCommand(config).includes("--https=")) // true
  * ```
  *
+ * @param config - The decoded AI metrics host configuration.
+ * @returns The rendered command.
  * @category serialization
  * @since 0.0.0
  */
@@ -258,6 +265,7 @@ export const renderTailscaleServeCommand = (config: AiMetricsHostConfig): string
  * console.log(renderHealthCommand({ config, kind: "rehearsal", containerName: "phoenix-dev", hostPort: 16006 }).includes("tailscale")) // false
  * ```
  *
+ * @returns The rendered command.
  * @category serialization
  * @since 0.0.0
  */
@@ -320,6 +328,8 @@ export const renderHealthCommand = ({
  * console.log(renderTailscaleServeOffCommand(config).includes(" off")) // true
  * ```
  *
+ * @param config - The decoded AI metrics host configuration.
+ * @returns The rendered command.
  * @category serialization
  * @since 0.0.0
  */
@@ -350,6 +360,8 @@ export const renderTailscaleServeOffCommand = (config: AiMetricsHostConfig): str
  * console.log(renderRollbackToComposeCommand(config).includes("enable --now")) // true
  * ```
  *
+ * @param config - The decoded AI metrics host configuration.
+ * @returns The rendered command.
  * @category serialization
  * @since 0.0.0
  */

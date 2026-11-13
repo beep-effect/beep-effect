@@ -1211,6 +1211,8 @@ export const makeOpenClawGeneration: (
  * console.log(unit.startsWith("# BEEP_OPENCLAW_MANAGED")) // true
  * ```
  *
+ * @param generation - The rendered OpenClaw generation.
+ * @returns The systemd unit text.
  * @category serialization
  * @since 0.0.0
  */
@@ -1289,6 +1291,8 @@ export const renderOpenClawUnit = (generation: OpenClawGeneration): string =>
  * console.log(runScript.includes("config validate")) // true
  * ```
  *
+ * @param generation - The rendered OpenClaw generation.
+ * @returns The `run.sh` text.
  * @category serialization
  * @since 0.0.0
  */
@@ -1396,6 +1400,8 @@ export class OpenClawGenerationFile extends S.Opaque<OpenClawGenerationFile, { r
  * console.log(tree["run.sh"]?.mode) // "0755"
  * ```
  *
+ * @param generation - The rendered OpenClaw generation.
+ * @returns Every generation file with its path and mode.
  * @category serialization
  * @since 0.0.0
  */
@@ -1468,6 +1474,7 @@ export const renderOpenClawGenerationTree = (
  * console.log(script.includes("PREFLIGHT-OK")) // true
  * ```
  *
+ * @returns The rendered command.
  * @category serialization
  * @since 0.0.0
  */
@@ -1528,6 +1535,9 @@ export const renderOpenClawPreflightScript = ({
  * component to be uid 0 and not group- or world-writable. `--ignore-scripts` is no defense when
  * the package manager binary itself is writable, and the pinned `npm` is commonly a wrapper that
  * execs a sibling `node`, so the directory and both binaries are proven, not just `npm`.
+ *
+ * @param generation - The rendered OpenClaw generation.
+ * @returns The guard script lines.
  */
 const trustedToolchainLines = (generation: OpenClawGeneration): ReadonlyArray<string> => [
   "fail() { printf 'STAGE-FAIL: %s\\n' \"$1\" >&2; exit 73; }",
@@ -1608,6 +1618,8 @@ const trustedToolchainLines = (generation: OpenClawGeneration): ReadonlyArray<st
  * console.log(script.includes("STAGE-OK")) // true
  * ```
  *
+ * @param generation - The rendered OpenClaw generation.
+ * @returns The rendered command.
  * @category serialization
  * @since 0.0.0
  */
@@ -1744,6 +1756,8 @@ export const renderOpenClawStageScript = (generation: OpenClawGeneration): strin
  * console.log(script.includes("APPLY-OK")) // true
  * ```
  *
+ * @param generation - The rendered OpenClaw generation.
+ * @returns The rendered command.
  * @category serialization
  * @since 0.0.0
  */
@@ -1870,6 +1884,8 @@ export const renderOpenClawApplyScript = (generation: OpenClawGeneration): strin
  * console.log(script.includes("ROLLBACK-OK")) // true
  * ```
  *
+ * @param generation - The rendered OpenClaw generation.
+ * @returns The rendered command.
  * @category serialization
  * @since 0.0.0
  */
@@ -2027,6 +2043,8 @@ const expectedUnitTextLines = (generation: OpenClawGeneration): ReadonlyArray<st
  * console.log(script.includes("ALERT: OPENCLAW_CONFIG_DRIFT")) // true
  * ```
  *
+ * @param input - The generation and the declared workstation identity it is bound to.
+ * @returns The rendered command.
  * @category serialization
  * @since 0.0.0
  */
@@ -2089,6 +2107,8 @@ export const renderOpenClawDriftAuditScript = (input: OpenClawGenerationIdentity
  * console.log(script.includes("PROBE-COMPLETE")) // true
  * ```
  *
+ * @param input - The generation and the declared workstation identity it is bound to.
+ * @returns The rendered command.
  * @category serialization
  * @since 0.0.0
  */
@@ -2168,6 +2188,8 @@ export const renderOpenClawProbeScript = (input: OpenClawGenerationIdentityScrip
  * console.log(script.includes("LIVE-ACCEPTANCE-RESTORED PASS")) // true
  * ```
  *
+ * @param generation - The rendered OpenClaw generation.
+ * @returns The rendered command.
  * @category serialization
  * @since 0.0.0
  */
@@ -2273,6 +2295,7 @@ export const renderOpenClawLiveAcceptanceScript = (generation: OpenClawGeneratio
  * console.log(script.includes("BACKUP-OK")) // true
  * ```
  *
+ * @returns The rendered command.
  * @category serialization
  * @since 0.0.0
  */

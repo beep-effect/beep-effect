@@ -72,6 +72,8 @@ export type HostsStageKind = typeof HostsStageKind.Type;
  * console.log(stageKind("dev_operator")) // "rehearsal"
  * ```
  *
+ * @param stage - An Alchemy stage name.
+ * @returns `prod` for the prod stage, otherwise `rehearsal`.
  * @category utilities
  * @since 0.0.0
  */

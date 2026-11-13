@@ -57,3 +57,16 @@ identifiers are redacted.
   `alchemy deploy <file>`); fixed with an entry glob `packages/tooling/infra/*/*.alchemy.run.ts`.
 - **Would have prevented it:** the `infra` package kind registering `*.alchemy.run.ts` entries with Fallow
   when it registers `alchemy.run.ts`.
+
+## 2026-11-13: the generated infra-kind tsconfig does not own `alchemy.run.ts`
+
+- **Doing:** the same lane, after the packet gate added `bun run beep lint deprecated-apis --full` and the
+  root docs lint to the lane checks (both had failed `Heavy / Lint Policy` on sibling PRs).
+- **Evidence:** `create-package --kind infra` on `main` writes `tsconfig.json` with `include: ["src"]` and
+  `rootDir: "src"`, so `lint deprecated-apis --full` answered `TypeScript files have no tsconfig owner:` for
+  both entry files; listing them in `tsconfig.test.json` did not help, because ownership is resolved from the
+  directory's `tsconfig.json` and its references. Fixed as the turbo-cache lane did (`include` the entry files,
+  `rootDir: "."`). Separately, about 30 functions moved from `infra/` carried JSDoc without `@param`/`@returns`;
+  the docs lint's zero-warning budget only saw them once they lived under `packages/`.
+- **Would have prevented it:** `create-package --kind infra` emitting the entry-file ownership, and
+  `package-verify` running the docs oxlint rules over the package so the budget fails before hosted CI.

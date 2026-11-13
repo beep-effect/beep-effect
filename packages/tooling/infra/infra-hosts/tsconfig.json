@@ -1,11 +1,11 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../../../../tsconfig.base.json",
-  "include": ["src"],
+  "include": ["src", "alchemy.run.ts", "openclaw.alchemy.run.ts"],
   "compilerOptions": {
     "types": ["node"],
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "."
   },
   "references": [
     {
