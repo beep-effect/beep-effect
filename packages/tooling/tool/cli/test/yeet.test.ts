@@ -134,6 +134,7 @@ import {
   YeetMonitorReviewComment,
   YeetProofLockStateForTesting,
   YeetPublishIntent,
+  YeetStackPublishDecision,
   YeetStagedPublishIntent,
   YeetStatusArtifact,
   YeetStatusRemote,
@@ -1325,6 +1326,52 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         yield* runGit(tmpDir, ["commit", "--amend", "--no-edit"]);
         const amended = yield* assertMergeOnlyPublish(mergeContext).pipe(Effect.flip);
         expect(amended.message).toContain("requires --reuse-verified");
+      }).pipe(TestClock.withLive)
+    );
+
+    it.effect("accepts a stack layer's merge of its parent's branch only in layer mode", () =>
+      Effect.gen(function* () {
+        const { tmpDir, tempContext } = yield* trackedFileRepository;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const originDir = path.join(tmpDir, "remote.git");
+        yield* runGit(tmpDir, ["init", "--bare", originDir]);
+        yield* runGit(tmpDir, ["remote", "add", "origin", originDir]);
+        yield* runGit(tmpDir, ["branch", "-M", "main"]);
+        yield* runGit(tmpDir, ["switch", "-c", "parent"]);
+        yield* fs.writeFileString(path.join(tmpDir, "parent.txt"), "parent\n");
+        yield* runGit(tmpDir, ["add", "parent.txt"]);
+        yield* runGit(tmpDir, ["commit", "-m", "parent layer"]);
+        yield* runGit(tmpDir, ["push", "origin", "parent"]);
+        yield* runGit(tmpDir, ["switch", "-c", "layer"]);
+        yield* fs.writeFileString(path.join(tmpDir, "layer.txt"), "layer\n");
+        yield* runGit(tmpDir, ["add", "layer.txt"]);
+        yield* runGit(tmpDir, ["commit", "-m", "upper layer"]);
+        yield* runGit(tmpDir, ["push", "origin", "layer"]);
+        yield* runGit(tmpDir, ["switch", "parent"]);
+        yield* fs.writeFileString(path.join(tmpDir, "parent-fix.txt"), "fix\n");
+        yield* runGit(tmpDir, ["add", "parent-fix.txt"]);
+        yield* runGit(tmpDir, ["commit", "-m", "parent review fix"]);
+        yield* runGit(tmpDir, ["push", "origin", "parent"]);
+        yield* runGit(tmpDir, ["switch", "layer"]);
+        yield* runGit(tmpDir, ["merge", "origin/parent", "--no-edit"]);
+        const layerContext = RepoRunContext.make({ ...tempContext, branch: "layer", base: "main" });
+        const asTrunk = yield* assertMergeOnlyPublish(layerContext).pipe(Effect.flip);
+        expect(asTrunk.message).toContain("requires --reuse-verified");
+        const parentHead = yield* runGitCapture(tmpDir, ["rev-parse", "parent"]).pipe(Effect.map(Str.trim));
+        yield* assertMergeOnlyPublish(
+          layerContext,
+          O.some(
+            YeetStackPublishDecision.cases.Layer.make({
+              parentNumber: 41,
+              parentHeadRef: "parent",
+              parentHeadSha: parentHead,
+              trunk: "main",
+              stackNumber: O.some(43),
+              parentMoved: false,
+            })
+          )
+        );
       }).pipe(TestClock.withLive)
     );
 
@@ -6151,6 +6198,49 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         yield* runGit(tmpDir, ["add", "other.txt"]);
         const withStaged = yield* assessBaseFreshnessForTesting(overlapContext);
         expect(withStaged.overlappingPaths).toEqual(["other.txt", "shared.txt"]);
+      })
+    );
+
+    it.effect("measures a stack layer's own paths from its parent's head, not the parent's", () =>
+      Effect.gen(function* () {
+        const tmpDir = yield* temporaryDirectory;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+
+        yield* runGit(tmpDir, ["init", "-b", "main"]);
+        yield* runGit(tmpDir, ["config", "user.email", "yeet@example.test"]);
+        yield* runGit(tmpDir, ["config", "user.name", "Yeet Test"]);
+        yield* runGit(tmpDir, ["config", "commit.gpgsign", "false"]);
+        yield* fs.writeFileString(path.join(tmpDir, "shared.txt"), "base\n");
+        yield* runGit(tmpDir, ["add", "."]);
+        yield* runGit(tmpDir, ["commit", "-m", "init"]);
+
+        yield* runGit(tmpDir, ["checkout", "-b", "parent"]);
+        yield* fs.writeFileString(path.join(tmpDir, "shared.txt"), "parent\n");
+        yield* runGit(tmpDir, ["commit", "-am", "parent touches shared"]);
+        const parentHead = yield* runGitCapture(tmpDir, ["rev-parse", "HEAD"]).pipe(Effect.map(Str.trim));
+
+        yield* runGit(tmpDir, ["checkout", "-b", "layer"]);
+        yield* fs.writeFileString(path.join(tmpDir, "layer.txt"), "layer\n");
+        yield* runGit(tmpDir, ["add", "layer.txt"]);
+        yield* runGit(tmpDir, ["commit", "-m", "layer adds its own file"]);
+
+        yield* runGit(tmpDir, ["checkout", "main"]);
+        yield* fs.writeFileString(path.join(tmpDir, "shared.txt"), "main moved\n");
+        yield* runGit(tmpDir, ["commit", "-am", "main touches shared"]);
+        yield* runGit(tmpDir, ["checkout", "layer"]);
+
+        const layerContext = RepoRunContext.make({ ...context, base: "main", cwd: tmpDir, repoRoot: tmpDir });
+        const asTrunk = yield* assessBaseFreshnessForTesting(layerContext);
+        expect(asTrunk.overlappingPaths).toEqual(["shared.txt"]);
+        const asLayer = yield* assessBaseFreshnessForTesting(layerContext, O.some(parentHead));
+        expect(asLayer.behindCount).toBe(1);
+        expect(asLayer.overlappingPaths).toEqual([]);
+
+        yield* fs.writeFileString(path.join(tmpDir, "shared.txt"), "layer too\n");
+        yield* runGit(tmpDir, ["commit", "-am", "layer touches shared"]);
+        const layerOverlap = yield* assessBaseFreshnessForTesting(layerContext, O.some(parentHead));
+        expect(layerOverlap.overlappingPaths).toEqual(["shared.txt"]);
       })
     );
   });

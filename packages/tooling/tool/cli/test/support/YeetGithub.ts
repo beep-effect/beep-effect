@@ -124,6 +124,11 @@ const githubFetch = (routes: GithubRoutes, calls: Array<GithubCall>): typeof glo
 export interface RecordedGithub {
   /** Every call served so far, in order. */
   readonly calls: ReadonlyArray<GithubCall>;
+  /**
+   * The recorded transport itself, for a surface that builds its own client from an identity
+   * (`yeet gh`, through `GithubTransportFetch`) instead of reading the services `provide` hands it.
+   */
+  readonly fetch: typeof globalThis.fetch;
   /** Every `YeetGithubServices` member over the recorded transport, retries off. */
   readonly layer: Layer.Layer<YeetGithubServices>;
   /**
@@ -138,6 +143,7 @@ export interface RecordedGithub {
  */
 export const recordedGithub = (routes: GithubRoutes): RecordedGithub => {
   const calls: Array<GithubCall> = [];
+  const fetch = githubFetch(routes, calls);
   // Fresh: a recorded GitHub provided inside another must not reuse that one's
   // memoized services (`Layer.build` forks the surrounding memo map).
   const layer = Layer.mergeAll(
@@ -151,7 +157,7 @@ export const recordedGithub = (routes: GithubRoutes): RecordedGithub => {
       Layer.mergeAll(
         GitHubClient.layerFromToken({
           token: Redacted.make("gho_test"),
-          fetch: githubFetch(routes, calls),
+          fetch,
           retry: RetryPolicy.none,
         }),
         Repo.layer(YEET_GITHUB_REPO)
@@ -161,6 +167,7 @@ export const recordedGithub = (routes: GithubRoutes): RecordedGithub => {
   );
   return {
     calls,
+    fetch,
     layer,
     provide: (effect) =>
       layer.pipe(
