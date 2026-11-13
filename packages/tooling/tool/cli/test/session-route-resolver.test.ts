@@ -789,3 +789,101 @@ describe("session resolve", () => {
     );
   });
 });
+
+describe("session presence and resolve commands", () => {
+  it.layer(Layer.fresh(testLayer), { timeout: "60 seconds" })((it) => {
+    const runSession = Command.runWith(sessionCommand, { version: "0.0.0" });
+    const withEnv = (env: Record<string, string>) =>
+      Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env }));
+    const loggedAll = Effect.map(TestConsole.logLines, (lines) => A.map(lines, String));
+    const erroredAll = Effect.map(TestConsole.errorLines, (lines) => A.map(lines, String));
+
+    it.effect("session presence records this session's routes as text and JSON", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeFixture({});
+        const env = { ...fixture.env, CLAUDE_CODE_SESSION_ID: "presence-cmd-1", CLAUDE_CODE_ENTRYPOINT: "cli" };
+        yield* runSession(["presence"]).pipe(withEnv(env));
+        yield* runSession(["presence", "--json"]).pipe(withEnv(env));
+        const lines = yield* loggedAll;
+        expect(lines).toContain("[session] presence for claude-code session presence-cmd-1: claude-peer");
+        const json = O.getOrThrow(A.findLast(lines, Str.includes('"presence-cmd-1"')));
+        assertSome(
+          O.map(SessionPresenceJson.decodeOption(json), (row) => [row.entrypoint, row.sessionId]),
+          ["cli", "presence-cmd-1"]
+        );
+        const files = yield* fs.readDirectory(fixture.env.BEEP_SESSION_STATE_ROOT);
+        expect(A.filter(files, Str.endsWith(".presence.jsonl")).length).toBe(1);
+        const content = yield* fs.readFileString(path.join(fixture.env.BEEP_SESSION_STATE_ROOT, files[0] ?? ""));
+        expect(A.filter(Str.split(content, "\n"), Str.isNonEmpty).length).toBe(2);
+      })
+    );
+
+    it.effect("session presence records nothing outside a harness session", () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeFixture({});
+        yield* runSession(["presence"]).pipe(withEnv(fixture.env));
+        const lines = yield* loggedAll;
+        expect(lines).toContain("[session] no harness session id in this environment; nothing recorded");
+      })
+    );
+
+    it.effect("session presence reports a failed write as a session error", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeFixture({});
+        const blocked = path.join(fixture.root, "state-file");
+        yield* fs.writeFileString(blocked, "");
+        const failure = yield* runSession(["presence"]).pipe(
+          withEnv({ ...fixture.env, BEEP_SESSION_STATE_ROOT: blocked, CLAUDE_CODE_SESSION_ID: "presence-cmd-2" }),
+          Effect.flip
+        );
+        expect(String(failure)).toContain("[session]");
+        const errors = yield* erroredAll;
+        expect(A.some(errors, Str.startsWith("[session] "))).toBe(true);
+      })
+    );
+
+    it.effect("session resolve prints the text report and refuses a blank key", () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeFixture({});
+        yield* runSession(["resolve", "4242"]).pipe(withEnv(fixture.env));
+        const lines = yield* loggedAll;
+        expect(A.some(lines, Str.startsWith("[session:resolve] 4242: no owner on this host"))).toBe(true);
+        const failure = yield* runSession(["resolve", "  "]).pipe(withEnv(fixture.env), Effect.flip);
+        expect(String(failure)).toContain("resolve needs a PR, branch, lane or checkout");
+      })
+    );
+
+    it.effect(
+      "the presence store fails typed on a row it cannot encode, and recordPresence skips a process with no id",
+      () =>
+        Effect.gen(function* () {
+          const fixture = yield* makeFixture({});
+          const config = ConfigProvider.fromEnv({ env: fixture.env });
+          const store = yield* makeSessionPresenceStoreLive().pipe(
+            Effect.provideService(ConfigProvider.ConfigProvider, config)
+          );
+          const invalid = SessionPresence.make(
+            { ...presenceRow("valid", [], "codex"), sessionId: "" },
+            { disableChecks: true }
+          );
+          const error = yield* store.append(invalid).pipe(Effect.flip);
+          expect([error._tag, error.reason]).toStrictEqual(["SessionLedgerError", "decode"]);
+          const none = yield* recordPresence({
+            repository,
+            clone: "/work/beep-effect",
+            checkout: "/work/beep-effect",
+            lane: "beep-effect",
+            branch: "main",
+          }).pipe(
+            Effect.provideService(SessionPresenceStore, store),
+            Effect.provideService(ConfigProvider.ConfigProvider, config)
+          );
+          assertNone(none);
+        })
+    );
+  });
+});

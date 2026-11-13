@@ -23,7 +23,7 @@ import {
 } from "./Resolve.service.ts";
 import { SessionPresenceJson, SessionResolutionJson } from "./Route.schemas.ts";
 import { layerSessionRouteProbeLive } from "./RouteProbe.service.ts";
-import { reportSessionFailure, SessionLedgerError, sessionUsageError } from "./Session.errors.ts";
+import { reportSessionFailure, sessionUsageError } from "./Session.errors.ts";
 import { layerSessionLedgerLive, sessionCheckoutFacts } from "./SessionLedger.service.ts";
 
 const jsonFlag = Flag.Boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Emit the result as JSON"));
@@ -31,9 +31,8 @@ const keyArgument = Argument.String("key").pipe(
   Argument.withDescription("A PR number (3172 or #3172), a branch, a lane name, or a checkout path")
 );
 
-const encodeError = (what: string) => (cause: unknown) =>
-  SessionLedgerError.make({ reason: "decode", message: `Failed to encode the ${what}.`, cause });
-
+// Both documents are built by their own schemas' constructors, so encoding
+// them cannot fail; a failure here is a defect, not a session error.
 /**
  * `beep session resolve <key>`: the session that owns a PR, branch, lane or
  * checkout, each of its routes with liveness computed now, and the literal call
@@ -64,10 +63,7 @@ export const sessionResolveCommand = Command.make(
         SessionResolveInput.make({ repository: facts.repository, query: key, cwd })
       );
       if (json) {
-        yield* SessionResolutionJson.encode(resolution).pipe(
-          Effect.mapError(encodeError("session resolution")),
-          Effect.flatMap(Console.log)
-        );
+        yield* SessionResolutionJson.encode(resolution).pipe(Effect.orDie, Effect.flatMap(Console.log));
         return;
       }
       yield* Console.log(renderSessionResolution(resolution));
@@ -113,10 +109,7 @@ export const sessionPresenceCommand = Command.make(
         return;
       }
       if (json) {
-        yield* SessionPresenceJson.encode(presence.value).pipe(
-          Effect.mapError(encodeError("session presence")),
-          Effect.flatMap(Console.log)
-        );
+        yield* SessionPresenceJson.encode(presence.value).pipe(Effect.orDie, Effect.flatMap(Console.log));
         return;
       }
       yield* Console.log(
