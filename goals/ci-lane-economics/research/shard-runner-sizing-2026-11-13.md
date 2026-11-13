@@ -67,6 +67,24 @@ exceeds a threshold.
 At the 10-minute threshold: about $4.40 to $6.90 a heavy day (the same 2.3 days), $130 to $210 a month if
 every day were as heavy as these. At 5 minutes: $350 to $550 a month.
 
+### Overflow inside the spot quota
+
+78 VMs of the 8-vCPU types is 624 vCPU, over the 512-vCPU quota, and the Heavy lanes draw on the same pool.
+The same 10-minute threshold with a bounded overflow pool; a shard that finds the pool full stays in the
+hosted queue:
+
+| Overflow cap | vCPU at 8 per VM | Shards sent | VM-hours | Shard pickup p95 | Any job, pickup p95 | Max |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 32 | 256 | 277 | 40.5 | 8m59s | 9m29s | 13m45s |
+| 48 | 384 | 300 | 43.8 | 8m43s | 9m20s | 12m52s |
+| 60 | 480 | 336 | 48.4 | 8m34s | 9m14s | 12m02s |
+| 64 | 512 | 348 | 49.9 | 8m30s | 9m12s | 11m45s |
+| unbounded | 648 at peak | 384 | 54.1 | 8m21s | 9m05s | 11m16s |
+
+(The unbounded row differs slightly from the table above because a shard is sent only when a VM is free at
+its creation.) A cap of 48 overflow VMs keeps 128 vCPU, sixteen VMs, for the Heavy lanes and costs 22 s of
+pickup p95 against no cap. The count holds only for the 8-vCPU instance types; a 16-vCPU type counts double.
+
 ## Reading
 
 Hosted runners supply the 669 hours free and are idle most of the day; the queue is a burst problem. Paying
