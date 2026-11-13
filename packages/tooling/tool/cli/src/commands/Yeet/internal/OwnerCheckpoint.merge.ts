@@ -21,6 +21,7 @@ import {
   OwnerCheckpointRequest,
 } from "./OwnerCheckpoint.schemas.ts";
 import { qualifyOwnerCheckpointSnapshot } from "./OwnerCheckpoint.ts";
+import { readYeetStackUngatedRefusal } from "./StackGate.ts";
 import type {
   OwnerCheckpointBinding,
   OwnerCheckpointPolicy,
@@ -119,6 +120,10 @@ export const dispatchOwnerCheckpointMerge = Effect.fn("OwnerCheckpoint.dispatchM
     live.draft
   )
     return yield* OwnerCheckpointError.make({ reason: "binding" });
+  // One merge here lands one pull request: a stack scope that is not single, or
+  // one that cannot be read, refuses before the dispatch fence.
+  const stackRefusal = yield* readYeetStackUngatedRefusal(live);
+  if (O.isSome(stackRefusal)) return yield* OwnerCheckpointError.make({ reason: "gate" });
   yield* qualifyDispatchBase(snapshot);
   const now = yield* DateTime.now;
   yield* qualifyOwnerCheckpointSnapshot(binding, snapshot, policy, now);

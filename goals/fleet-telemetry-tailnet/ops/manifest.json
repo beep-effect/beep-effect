@@ -4,13 +4,13 @@
     "id": "fleet-telemetry-tailnet",
     "packetId": "goal-packet/v1:e6920eac1b2e0fa78d27f9fe06546347e7b78ad58c4bb87af5b026accfbcd5e8",
     "title": "Fleet Telemetry on the Tailnet",
-    "status": "active",
+    "status": "paused",
     "created": "2026-10-14",
-    "updated": "2026-10-14",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/fleet-telemetry-tailnet",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "Tier-aware ingest gateway, scrape/push topology, enrollment gate (D1 trigger), tag and Funnel proposals, and generated fleet dashboards.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -89,5 +89,6 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): It is large and has not started, and it is not urgent compared with the in-flight lanes; it should not stay active. Resume with `bun run beep goals set-status fleet-telemetry-tailnet active` when it is picked up."
 }

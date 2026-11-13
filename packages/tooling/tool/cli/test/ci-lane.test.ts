@@ -1089,16 +1089,22 @@ describe("CI lane partitions", () => {
       const workflow = parseWorkflowYaml(workflowText);
       expect(workflowText).not.toMatch(/ci lane (?:lint|test-unit)[^\n]*--force/u);
       expect(yamlAt(workflow, ["jobs", "lint", "name"])).toBe("Lint");
-      expect(yamlAt(workflow, ["jobs", "lint", "if"])).toBe("${{ !cancelled() }}");
+      expect(yamlAt(workflow, ["jobs", "lint", "if"])).toBe(
+        "${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true') }}"
+      );
       expect(yamlAt(workflow, ["jobs", "test-unit", "name"])).toBe("Test Unit");
-      expect(yamlAt(workflow, ["jobs", "test-unit", "if"])).toBe("${{ !cancelled() }}");
+      expect(yamlAt(workflow, ["jobs", "test-unit", "if"])).toBe(
+        "${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true') }}"
+      );
       expect(yamlAt(workflow, ["jobs", "lint-shard", "strategy", "fail-fast"])).toBe(false);
       expect(yamlAt(workflow, ["jobs", "test-unit-shard", "strategy", "fail-fast"])).toBe(false);
       expect(yamlAt(workflow, ["jobs", "test-integration-shard", "strategy", "fail-fast"])).toBe(false);
 
       // The integration aggregate reports the exact context the heavy pool used to own.
       expect(yamlAt(workflow, ["jobs", "test-integration", "name"])).toBe("Heavy / Test Integration");
-      expect(yamlAt(workflow, ["jobs", "test-integration", "if"])).toBe("${{ !cancelled() }}");
+      expect(yamlAt(workflow, ["jobs", "test-integration", "if"])).toBe(
+        "${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true') }}"
+      );
       expect(yamlAt(workflow, ["jobs", "test-integration", "needs"])).toEqual([
         "admission",
         "change-profile",
@@ -1210,7 +1216,9 @@ describe("CI lane partitions", () => {
       // and two directory slices whose Turbo filters are complements, so every package and file runs
       // in exactly one of them.
       expect(yamlAt(workflow, ["jobs", "property-laws", "name"])).toBe("Property Laws");
-      expect(yamlAt(workflow, ["jobs", "property-laws", "if"])).toBe("${{ !cancelled() }}");
+      expect(yamlAt(workflow, ["jobs", "property-laws", "if"])).toBe(
+        "${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true') }}"
+      );
       expect(yamlAt(workflow, ["jobs", "property-laws", "needs"])).toEqual(["change-profile", "property-laws-shard"]);
       expect(yamlAt(workflow, ["jobs", "property-laws-shard", "strategy", "fail-fast"])).toBe(false);
       expect(yamlAt(workflow, ["jobs", "property-laws-shard", "strategy", "matrix", "partition"])).toEqual([

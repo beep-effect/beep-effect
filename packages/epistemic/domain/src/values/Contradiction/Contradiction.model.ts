@@ -982,7 +982,7 @@ const arbitraries = makeContradictionArbitraries({
   CanonicalContradictionBeliefPair,
   ContradictionMatchBasisStruct: matchBasis.ContradictionMatchBasisStructSchema,
   ContradictionMatchBasis,
-  ContradictionResolutionProposalStruct: proposals.ContradictionResolutionProposalStructSchema,
+  ContradictionResolutionProposalStructArbitrary: proposals.ContradictionResolutionProposalStructArbitrary,
   ContradictionResolutionProposal,
   proposalsShareId: assessment.proposalsShareId,
   ContradictionAssessment,

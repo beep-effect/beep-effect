@@ -1458,7 +1458,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.include(stepRun(sast, "Run SAST"), "bun run beep ci lane sast");
 
       for (const jobId of ["lint", "test-unit"]) {
-        assert.strictEqual(yamlAt(policy.workflow, ["jobs", jobId, "if"]), "${{ !cancelled() }}", jobId);
+        assert.strictEqual(
+          yamlAt(policy.workflow, ["jobs", jobId, "if"]),
+          "${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true') }}",
+          jobId
+        );
       }
     })
   );
@@ -2717,16 +2721,17 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const policy = yield* readCredentialPolicySources();
       const jobs = yield* workflowJobs(policy.workflow);
       const comparison = jobSteps(jobs, "coverage-regression");
-      expect(yamlAt(policy.workflow, ["jobs", "heavy", "needs"])).toEqual(["admission"]);
+      expect(yamlAt(policy.workflow, ["jobs", "heavy", "needs"])).toEqual(["change-profile", "admission"]);
       // Audit M4: the comparison waits for Test Unit and the Labs producer, not
       // the whole verify matrix, and never starts inside a cancelled run.
       expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "needs"])).toEqual([
+        "change-profile",
         "admission",
         "test-unit",
         "labs",
       ]);
       expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "if"])).toBe(
-        "${{ !cancelled() && needs.admission.outputs.docs_only != 'true' }}"
+        "${{ !cancelled() && needs.change-profile.outputs.docs_only != 'true' && needs.admission.outputs.docs_only != 'true' }}"
       );
       expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "name"])).toBe(
         "${{ needs.admission.outputs.legacy_coverage == 'true' && 'Coverage Artifact Migration' || 'Heavy / Coverage Regression' }}"

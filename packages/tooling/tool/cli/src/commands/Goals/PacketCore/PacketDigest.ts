@@ -100,6 +100,7 @@ const canonicalObject = (value: Readonly<Record<string, unknown>>, indent: numbe
     entries,
     ([key, entry]) => `${canonicalPrimitive(key)}:${pads.keyGap}${canonicalAtDepth(entry, indent, depth + 1)}`
   );
+  // biome-ignore lint/plugin/no-hand-rolled-canonical-json: census E7, renderer: indented files; digests use the owner
   return `{${pads.open}${A.join(rendered, pads.joiner)}${pads.close}}`;
 };
 

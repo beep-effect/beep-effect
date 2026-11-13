@@ -417,6 +417,32 @@ it.layer(platform, { timeout: "60 seconds" })("squash commitlint against the rep
     )
   );
 
+  it.effect("lints GitHub's own default for a stack's lower layer: the commit subject, unpinned", () =>
+    withScripted(
+      { commits: [commit("fix(x): one", "Body.")], commitlint: { exitCode: 0, output: "" } },
+      (_calls, context, github) =>
+        Effect.gen(function* () {
+          const report = yield* readSquashCommitlint(context, pullFacts, "github-default");
+          expect(report.message.header).toBe("fix(x): one (#1913)");
+          expect(report.message.body).toBe(`Body.\n\n${trailer}`);
+          expect(A.map(github, githubCallLine)).toEqual(["GET {repo}", "GET {repo}/pulls/1913/commits"]);
+        })
+    )
+  );
+
+  it.effect("GitHub's default title from a long commit subject fails the real commitlint the pinned title passes", () =>
+    withScripted({ commits: [commit(longSubject, "Every Codex selection point.")] }, (_calls, context) =>
+      Effect.gen(function* () {
+        const sent = yield* readSquashCommitlint(context, pullFacts);
+        const landed = yield* readSquashCommitlint(context, pullFacts, "github-default");
+        expect(sent.message.header).toBe(`${pullFacts.title} (#1913)`);
+        expect(sent.verdict._tag).toBe("pass");
+        expect(landed.message.header).toBe(`${longSubject} (#1913)`);
+        expect(landed.verdict._tag === "fail" ? landed.verdict.rules : []).toContain("header-max-length");
+      })
+    )
+  );
+
   it.effect("falls back to GitHub's default settings when the repository omits them", () =>
     withScripted(
       {
