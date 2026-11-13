@@ -85,8 +85,11 @@ history at 3f0261b37a0 replayed as concurrent writers (decision
 operations). Zero silent loss in history order and three seeded orders.
 History order: structural floor 11/275; resolver-needed 40/275 against
 26/279 (40 x 279 = 11,160 above 26 x 275 = 7,150), not met; per-op landing
-3,267/3,364 (97.1%), met; typed status 0 held and 0 wrong. AC-3 stays open;
-the held-write breakdown is in the 2026-11-13 AC-3 checkpoint in `PLAN.md`.
+3,267/3,364 (97.1%), met; typed status 0 held and 0 wrong. The
+resolver-needed ratio is judged at P5's exit, after the `## Current Phase`
+owner rule lands (decision `ac3-resolver-needed-bar-is-judged-in-p5`), so
+AC-3's box stays open; the held-write breakdown is in the 2026-11-13 AC-3
+checkpoint in `PLAN.md`.
 
 ## Notes
 
