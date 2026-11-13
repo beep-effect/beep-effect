@@ -270,6 +270,7 @@ jobs:
           set -euo pipefail
           should_run=true
           docs_path=false
+          skills_lock=true
           # Job-level guards already skip Codegen and Ecosystem on docs_only
           # diffs and on a false `<lane>_relevant` output. Repo Sanity is the
           # required gate for documentation diffs, so it keeps a short path.
@@ -295,11 +296,25 @@ jobs:
                   should_run=false
                 fi
                 ;;
+              repo-sanity)
+                # The skills lock step (`beep skills update --check --offline`) of the lane
+                # body, on the documentation path too: skipped only when the pull
+                # request changes none of the `skills` row's paths. An absent row,
+                # an unreadable diff and every push keep it.
+                base_ref="origin/${GITHUB_BASE_REF:-main}"
+                pattern="$(jq -r '.skills // empty' \
+                  packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json)"
+                if [[ -n "$pattern" ]] && changed_files="$(git diff --name-only --no-renames "${base_ref}...HEAD")" \
+                  && ! grep -Eq "$pattern" <<< "$changed_files"; then
+                  skills_lock=false
+                fi
+                ;;
             esac
           fi
 
           echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
           echo "docs_path=$docs_path" >> "$GITHUB_OUTPUT"
+          echo "skills_lock=$skills_lock" >> "$GITHUB_OUTPUT"
 
       - name: Setup monorepo CI
         if: steps.lane-gate.outputs.should_run == 'true' || steps.lane-gate.outputs.docs_path == 'true'
@@ -321,7 +336,15 @@ jobs:
 
       - name: Check documentation sanity
         if: steps.lane-gate.outputs.docs_path == 'true'
-        run: bun run beep ci lane repo-sanity --docs-only
+        env:
+          SKILLS_LOCK: ${{ steps.lane-gate.outputs.skills_lock }}
+        run: |
+          set -euo pipefail
+          if [[ "$SKILLS_LOCK" == "false" ]]; then
+            bun run beep ci lane repo-sanity --docs-only --skip-skills-lock
+          else
+            bun run beep ci lane repo-sanity --docs-only
+          fi
 
       - name: Verify regenerate merge-driver bootstrap
         if: env.BEEP_CI_LANE_ID == 'codegen' && steps.lane-gate.outputs.should_run == 'true'
@@ -369,7 +392,9 @@ jobs:
               run_lane ci lane "${{ env.BEEP_CI_LANE_ID }}"
               ;;
             repo-sanity)
-              if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+              if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "${{ steps.lane-gate.outputs.skills_lock }}" == "false" ]]; then
+                run_lane ci lane repo-sanity --changeset-status --skip-skills-lock
+              elif [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
                 run_lane ci lane repo-sanity --changeset-status
               else
                 run_lane ci lane repo-sanity
