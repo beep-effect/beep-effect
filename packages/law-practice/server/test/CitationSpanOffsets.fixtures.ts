@@ -2,7 +2,10 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { makeCitationRegexInput } from "@beep/law-practice-server/internal/Citation/RegexInput";
+import {
+  citationUnaccountedText,
+  makeCitationRegexInput,
+} from "@beep/law-practice-server/internal/Citation/RegexInput";
 import {
   CitationSpanDiffStep,
   CitationSpanOffsetEntry,
@@ -68,7 +71,7 @@ export const readCitationSpanOffsetsCorpus = Effect.fn("SpanOffsetsTest.load")(f
     "7f3ea888395629a5472de3ca0fc952db102ff3b918194ffab0cb1543b07f4223"
   ).pipe(Effect.flatMap(S.decodeEffect(Corpus)));
   const limits = (yield* defaultCitationEnginePolicy).limits;
-  const input = yield* makeCitationRegexInput(limits);
+  const input = yield* makeCitationRegexInput(limits, citationUnaccountedText);
   const plans = yield* Effect.forEach(
     corpus.maps,
     Effect.fn("SpanOffsetsTest.preparePlan")(function* (row) {

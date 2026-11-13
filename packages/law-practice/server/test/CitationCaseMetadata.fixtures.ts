@@ -11,6 +11,7 @@ import {
   CitationFrozenEditions,
   makeCitationFrozenEditions,
 } from "@beep/law-practice-server/internal/Citation/FrozenEditions";
+import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -25,6 +26,7 @@ import {
   installCitationHtmlGeometryFixture,
   prepareCitationOptionalHtmlGeometry,
 } from "./CitationHtmlGeometryPreparation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { readCitationPostCaseMetadataCorpus } from "./CitationPostCaseMetadata.fixtures.ts";
 import { readCitationPreCaseMetadataCorpus } from "./CitationPreCaseMetadata.fixtures.ts";
 import {
@@ -143,6 +145,11 @@ const install = Effect.fn("CaseMetadataTest.install")(function* (
   const provided = setup.provided.pipe(Context.add(Clock.Clock, clock), Context.add(CitationFrozenEditions, owner));
   const prepare = yield* installCitationHtmlGeometryFixture(kind, { ...setup, provided });
   const stage = yield* makeCitationCaseMetadata(setup.limits, setup.runtime, configuration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
+        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
+      )
+    ),
     Effect.provideContext(provided),
     DateTime.withCurrentZoneOffset(0)
   );
@@ -237,6 +244,20 @@ export const assertCitationCaseMetadataBudget = Effect.fn("CaseMetadataTest.shar
   const spent = yield* tight.setup.budget.snapshot;
   expect(spent).toBeGreaterThan(0);
   expect(spent).toBeLessThan(total);
+  const outer = yield* install("bun", total + 3, true);
+  const outerRequest = yield* requestOf(outer, row);
+  yield* withCitationTestInvocation(
+    Effect.gen(function* () {
+      const { budget } = yield* CitationInvocation;
+      yield* budget.reserve(4);
+      const exhausted = yield* outer.stage.extract(outerRequest).pipe(Effect.flip);
+      expect(exhausted).toMatchObject({ limit: "producedTextUtf16" });
+      const used = yield* budget.snapshot;
+      expect(used).toBe(spent + 4);
+      expect(budget.maximum - used).toBe(total - 1 - spent);
+    }),
+    outer.setup.limits
+  ).pipe(Effect.provideService(Clock.Clock, outer.setup.timer.clock));
   yield* assertCitationWorkerCompositionReleased(
     tight.setup.operation,
     tight.setup.admission,

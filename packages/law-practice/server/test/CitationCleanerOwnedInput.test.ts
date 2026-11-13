@@ -15,6 +15,7 @@ import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
 import * as TestClock from "effect/testing/TestClock";
 import { makeCitationCleanerRegistryHarness as setup } from "./CitationCleanerRegistry.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 
 const original = CitationPythonUnicodeStorage.make({
   width: 2,
@@ -36,7 +37,19 @@ it.effect("bounds owned-value preflight with the captured cleaner deadline", () 
       ...policy.limits,
       cleanDeadline: Duration.millis(50),
       operationDeadline: Duration.millis(100),
-    }).pipe(Effect.provideService(CitationCleaner, runtime));
+    }).pipe(
+      Effect.flatMap((stage) =>
+        makeCitationTestScaffoldBinding(
+          {
+            ...policy.limits,
+            cleanDeadline: Duration.millis(50),
+            operationDeadline: Duration.millis(100),
+          },
+          "clean"
+        ).pipe(Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) })))
+      ),
+      Effect.provideService(CitationCleaner, runtime)
+    );
     const waiting = yield* pipeline.runOwned({ value, plan: "blocked-preflight" }).pipe(Effect.flip, Effect.forkChild);
     yield* Deferred.await(entered);
     yield* TestClock.adjust(Duration.millis(50));
@@ -104,6 +117,11 @@ it.effect("rejects forged handles and native source overflow before invoking a p
     expect(rejected).toMatchObject({ _tag: "CitationCleanerFailure", reason: "unissued-value" });
     const policy = yield* defaultCitationEnginePolicy;
     const tight = yield* makeCitationCleanerPipeline({ ...policy.limits, sourceUtf16: 1 }).pipe(
+      Effect.flatMap((stage) =>
+        makeCitationTestScaffoldBinding({ ...policy.limits, sourceUtf16: 1 }, "clean").pipe(
+          Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
+        )
+      ),
       Effect.provideService(CitationCleaner, h.registry.runtime)
     );
     const refused = yield* tight.runOwned({ value, plan: "too-large" }).pipe(Effect.flip);

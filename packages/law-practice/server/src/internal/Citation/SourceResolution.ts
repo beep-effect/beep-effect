@@ -17,8 +17,8 @@ import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { CitationOperationAdmission } from "./Admission.ts";
 import { CitationAuthorityEdition } from "./AuthorityIdentity.ts";
+import { CitationInvocation } from "./Invocation.ts";
 import { restoreCitationMentionAgainstVerifiedSource } from "./Mention.ts";
 import { CitationRegexOperation, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { makeCitationResolverBoundary } from "./RegisteredResolver.ts";
@@ -60,7 +60,7 @@ const InputJson = CitationEngineResolutionInput.pipe(S.toCodecJson, S.fromJsonSt
  * before asynchronous source work, then reverify anchors and engine-bound IDs.
  * Derive edition spellings from the captured frozen service, never the request.
  * Original resolver output/receipt/bindings remain available beside public
- * output for trusted restoration adapters. Returned resolve has R=never.
+ * output for trusted restoration adapters. Returned resolve requires CitationInvocation.
  * @internal @category constructors @since 0.0.0
  */
 export const makeCitationSourceResolution = Effect.fn("Citation.makeSourceResolution")(
@@ -71,7 +71,6 @@ export const makeCitationSourceResolution = Effect.fn("Citation.makeSourceResolu
     const vocabularyFailure = () =>
       CitationPrerequisiteError.make({ operation: "resolve", dependency: "court-reporter-vocabulary" });
     const { limits, engineArtifact } = yield* captureCitationOperationPolicy(policy, artifact, invalid);
-    const admission = yield* CitationOperationAdmission;
     const digest = yield* Digest.Digest;
     const evidence = yield* makeCitationSourceEvidence(limits);
     const editions = yield* makeCitationResolutionEditions();
@@ -115,43 +114,32 @@ export const makeCitationSourceResolution = Effect.fn("Citation.makeSourceResolu
     );
     return {
       resolve: Effect.fn("Citation.resolveSourceBoundary")(
-        (raw: unknown) =>
-          admission
-            .run(
-              "resolve",
-              Effect.scoped(
-                Effect.gen(function* () {
-                  const { workDuration, result, producedTextUtf16 } = yield* measureCitationTextWork(
-                    limits,
-                    prepare(raw)
-                  );
-                  const reportPolicy = yield* captureCitationOperationPolicy(limits, engineArtifact, invalid);
-                  const report = CitationEngineReport.make({
-                    operation: "resolve",
-                    engineArtifact,
-                    limits: reportPolicy.limits,
-                    workDuration,
-                    producedTextUtf16,
-                    extraction: null,
-                  });
-                  return CitationSourceResolutionResult.make({
-                    ...result,
-                    output: CitationEngineResolutionResult.make({
-                      source: result.source,
-                      document: result.document,
-                      report,
-                    }),
-                  });
-                })
-              )
-            )
-            .pipe(
-              Effect.catchTags({
-                CitationAdmissionFailure: () => Effect.fail(invalid()),
-                CitationSafetyLimitExceeded: timing.failSafety,
-              })
-            ),
-        timing.timed
+        function* (raw: unknown) {
+          const { workDuration, result, producedTextUtf16 } = yield* measureCitationTextWork(
+            (yield* CitationInvocation).budget,
+            prepare(raw)
+          );
+          const reportPolicy = yield* captureCitationOperationPolicy(limits, engineArtifact, invalid);
+          const report = CitationEngineReport.make({
+            operation: "resolve",
+            engineArtifact,
+            limits: reportPolicy.limits,
+            workDuration,
+            producedTextUtf16,
+            extraction: null,
+          });
+          return CitationSourceResolutionResult.make({
+            ...result,
+            output: CitationEngineResolutionResult.make({
+              source: result.source,
+              document: result.document,
+              report,
+            }),
+          });
+        },
+        Effect.catchTags({
+          CitationSafetyLimitExceeded: timing.failSafety,
+        })
       ),
     };
   },

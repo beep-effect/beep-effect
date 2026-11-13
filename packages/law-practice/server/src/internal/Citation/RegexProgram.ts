@@ -21,7 +21,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CitationRegexAlphabetText, CitationRegexAtomInterval, CitationRegexAtomSets } from "./RegexAlphabet.ts";
 import { CitationRegexSourceFlags } from "./RegexEngine.ts";
-import { makeCitationRegexInput } from "./RegexInput.ts";
+import { citationUnaccountedText, makeCitationRegexInput } from "./RegexInput.ts";
 import {
   CitationRegexPointRange,
   citationRegexHexDigit,
@@ -388,7 +388,7 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
   const limits = yield* decodeCitationRegexPolicy(policy, () =>
     CitationRegexTranslationFailure.make({ reason: "invalid-policy" })
   );
-  const patternInput = yield* makeCitationRegexInput(limits, "pattern");
+  const patternInput = yield* makeCitationRegexInput(limits, citationUnaccountedText, "pattern");
   const categories = yield* makeCitationRegexPointSets(engineInput);
   const { timed } = yield* makeCitationRegexTiming(limits, false);
 

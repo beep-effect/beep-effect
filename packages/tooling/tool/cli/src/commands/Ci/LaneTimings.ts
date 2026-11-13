@@ -75,9 +75,17 @@ import {
   selectGithubIdentity,
 } from "../../internal/github/index.ts";
 import { CiCommandError } from "./Ci.errors.ts";
+import {
+  CiSupportJobName,
+  ciLaneDescriptor,
+  ciLaneShardJobName,
+  HEAVY_CONTEXT_PREFIX,
+  isCiShardJobNamed,
+} from "./CiLaneJobs.ts";
 import type { GitHubError } from "@beep/github/GitHubError";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as SchemaAST from "effect/SchemaAST";
+import type { PartitionedCiLane } from "./CiLanePartitions.ts";
 
 const $I = $RepoCliId.create("commands/Ci/LaneTimings");
 
@@ -2010,7 +2018,6 @@ const CI_LANE_TIMING_ADMITTED_BRANCH_CAP = 6;
 const CI_WORKFLOW_RUNS_LIST_CAP = 1000;
 const CI_WORKFLOW_RUNS_MIN_SPLIT_SPAN = Duration.hours(1);
 const CI_LANE_TIMING_JOB_FETCH_CONCURRENCY = 8;
-const HEAVY_LANE_PREFIX = "Heavy / ";
 
 /**
  * A ruleset version whose required-context population the `ci-lane-economics`
@@ -2108,24 +2115,13 @@ class CiEffectiveLaneSpec extends S.Opaque<CiEffectiveLaneSpec, { readonly brand
 
 const specShardNames = (spec: CiEffectiveLaneSpec): ReadonlyArray<string> => A.dedupe(A.flatten(spec.shardLayouts));
 
-// A Test Unit partition that Test Plan routed to the self-hosted overflow pool runs through
-// shard-overflow.yml, called from check.yml's matrix job of the same name, and reports as
-// `<shard> / Overflow` (goals/ci-lane-economics, 2026-11-13). It is that shard: the same partition,
-// steps and artifacts on another runner, so the census measures it in its layout and its pickup.
-const CI_OVERFLOW_SHARD_SUFFIX = " / Overflow";
-
-const isShardJobNamed =
-  (shardName: string) =>
-  (jobName: string): boolean =>
-    Str.equivalence(jobName, shardName) || Str.equivalence(jobName, `${shardName}${CI_OVERFLOW_SHARD_SUFFIX}`);
-
+// A job is one of the spec's shards under any name the lane map gives a shard (`ciShardJobNames`).
 const isSpecShardJobNamed = (spec: CiEffectiveLaneSpec, jobName: string): boolean =>
-  A.some(specShardNames(spec), (shardName) => isShardJobNamed(shardName)(jobName));
+  A.some(specShardNames(spec), (shardName) => isCiShardJobNamed(jobName, shardName));
 
-// Must match the `name:` of the `test-plan` job in `.github/workflows/check.yml`: a run carrying exactly one
-// attempt-one job with this name built its Test Unit and Test Integration matrices from the affected partitions
-// only.
-const CI_TEST_PLAN_JOB_NAME = "Test Plan";
+// A run carrying exactly one attempt-one job with this name built its Test Unit and Test Integration matrices
+// from the affected partitions only.
+const CI_TEST_PLAN_JOB_NAME = CiSupportJobName.Enum["Test Plan"];
 
 // #3005 merged: heavy.yml's single `Heavy / Test Integration` job became hosted shards plus a fail-closed
 // aggregate of the same name in check.yml.
@@ -2154,7 +2150,7 @@ const plannedShardLayout = (
     O.map(
       (): ReadonlyArray<string> =>
         A.filter(A.lastNonEmpty(spec.shardLayouts), (shardName) =>
-          A.some(jobs, (job) => isShardJobNamed(shardName)(job.name))
+          A.some(jobs, (job) => isCiShardJobNamed(job.name, shardName))
         )
     ),
     O.filter((layout) => A.isReadonlyArrayNonEmpty(layout))
@@ -2165,170 +2161,181 @@ const effectiveShardLayout = (
   spec: CiEffectiveLaneSpec
 ): O.Option<ReadonlyArray<string>> => O.orElse(completeShardLayout(jobs, spec), () => plannedShardLayout(jobs, spec));
 
+// `Heavy / <lane>` reports the required context `<lane>` in the census.
+const normalizeRequiredLaneName = (name: string): string =>
+  Str.startsWith(HEAVY_CONTEXT_PREFIX)(name) ? Str.slice(Str.length(HEAVY_CONTEXT_PREFIX))(name) : name;
+
+// A sharded lane's spec, named from the lane map: the aggregator is the lane's reporting job, the census lane is
+// that context without the heavy prefix, and each layout lists the partitions whose `<family> (<partition>)` jobs
+// ran together.
+const effectiveLaneSpec = (
+  lane: PartitionedCiLane,
+  partitionLayouts: A.NonEmptyReadonlyArray<A.NonEmptyReadonlyArray<string>>,
+  history: Pick<CiEffectiveLaneSpec, "plannedBy" | "shardedSince"> = {}
+): CiEffectiveLaneSpec => {
+  const aggregator = ciLaneDescriptor(lane).contextName;
+  return CiEffectiveLaneSpec.make({
+    ...history,
+    aggregator,
+    lane: normalizeRequiredLaneName(aggregator),
+    shardLayouts: A.map(partitionLayouts, (layout) => A.map(layout, ciLaneShardJobName(lane))),
+  });
+};
+
 const CI_EFFECTIVE_LANE_SPECS: ReadonlyArray<CiEffectiveLaneSpec> = [
-  CiEffectiveLaneSpec.make({ aggregator: "Lint", lane: "Lint", shardLayouts: [["Lint (lint-a)", "Lint (lint-b)"]] }),
-  CiEffectiveLaneSpec.make({
-    aggregator: "Test Unit",
-    lane: "Test Unit",
-    plannedBy: CI_TEST_PLAN_JOB_NAME,
-    shardLayouts: [
+  effectiveLaneSpec("lint", [["lint-a", "lint-b"]]),
+  effectiveLaneSpec(
+    "test-unit",
+    [
       // #1195 (2026-09-22) to 2026-11-02: four repo-cli quarters and two unit bins.
-      [
-        "Test Unit (repo-cli-1)",
-        "Test Unit (repo-cli-2)",
-        "Test Unit (repo-cli-3)",
-        "Test Unit (repo-cli-4)",
-        "Test Unit (unit-a)",
-        "Test Unit (unit-b)",
-      ],
+      ["repo-cli-1", "repo-cli-2", "repo-cli-3", "repo-cli-4", "unit-a", "unit-b"],
       // From 2026-11-02 (ci-lane-economics D4): six repo-cli shards and four unit bins.
       [
-        "Test Unit (repo-cli-1)",
-        "Test Unit (repo-cli-2)",
-        "Test Unit (repo-cli-3)",
-        "Test Unit (repo-cli-4)",
-        "Test Unit (repo-cli-5)",
-        "Test Unit (repo-cli-6)",
-        "Test Unit (unit-a)",
-        "Test Unit (unit-b)",
-        "Test Unit (unit-c)",
-        "Test Unit (unit-d)",
+        "repo-cli-1",
+        "repo-cli-2",
+        "repo-cli-3",
+        "repo-cli-4",
+        "repo-cli-5",
+        "repo-cli-6",
+        "unit-a",
+        "unit-b",
+        "unit-c",
+        "unit-d",
       ],
       // From 2026-11-08: @beep/law-practice-server leaves unit-d for three Vitest shards of its own.
       [
-        "Test Unit (repo-cli-1)",
-        "Test Unit (repo-cli-2)",
-        "Test Unit (repo-cli-3)",
-        "Test Unit (repo-cli-4)",
-        "Test Unit (repo-cli-5)",
-        "Test Unit (repo-cli-6)",
-        "Test Unit (law-practice-1)",
-        "Test Unit (law-practice-2)",
-        "Test Unit (law-practice-3)",
-        "Test Unit (unit-a)",
-        "Test Unit (unit-b)",
-        "Test Unit (unit-c)",
-        "Test Unit (unit-d)",
+        "repo-cli-1",
+        "repo-cli-2",
+        "repo-cli-3",
+        "repo-cli-4",
+        "repo-cli-5",
+        "repo-cli-6",
+        "law-practice-1",
+        "law-practice-2",
+        "law-practice-3",
+        "unit-a",
+        "unit-b",
+        "unit-c",
+        "unit-d",
       ],
       // From 2026-11-09: LPT shard plans widen repo-cli to eleven and law-practice-server to twelve
       // slices, and the unit bins are repacked into seven, every Test Unit job sized under ten minutes.
       [
-        "Test Unit (repo-cli-1)",
-        "Test Unit (repo-cli-2)",
-        "Test Unit (repo-cli-3)",
-        "Test Unit (repo-cli-4)",
-        "Test Unit (repo-cli-5)",
-        "Test Unit (repo-cli-6)",
-        "Test Unit (repo-cli-7)",
-        "Test Unit (repo-cli-8)",
-        "Test Unit (repo-cli-9)",
-        "Test Unit (repo-cli-10)",
-        "Test Unit (repo-cli-11)",
-        "Test Unit (law-practice-1)",
-        "Test Unit (law-practice-2)",
-        "Test Unit (law-practice-3)",
-        "Test Unit (law-practice-4)",
-        "Test Unit (law-practice-5)",
-        "Test Unit (law-practice-6)",
-        "Test Unit (law-practice-7)",
-        "Test Unit (law-practice-8)",
-        "Test Unit (law-practice-9)",
-        "Test Unit (law-practice-10)",
-        "Test Unit (law-practice-11)",
-        "Test Unit (law-practice-12)",
-        "Test Unit (unit-a)",
-        "Test Unit (unit-b)",
-        "Test Unit (unit-c)",
-        "Test Unit (unit-d)",
-        "Test Unit (unit-e)",
-        "Test Unit (unit-f)",
-        "Test Unit (unit-g)",
+        "repo-cli-1",
+        "repo-cli-2",
+        "repo-cli-3",
+        "repo-cli-4",
+        "repo-cli-5",
+        "repo-cli-6",
+        "repo-cli-7",
+        "repo-cli-8",
+        "repo-cli-9",
+        "repo-cli-10",
+        "repo-cli-11",
+        "law-practice-1",
+        "law-practice-2",
+        "law-practice-3",
+        "law-practice-4",
+        "law-practice-5",
+        "law-practice-6",
+        "law-practice-7",
+        "law-practice-8",
+        "law-practice-9",
+        "law-practice-10",
+        "law-practice-11",
+        "law-practice-12",
+        "unit-a",
+        "unit-b",
+        "unit-c",
+        "unit-d",
+        "unit-e",
+        "unit-f",
+        "unit-g",
       ],
       // From 2026-11-10: sharded Test Unit jobs run two Vitest workers, so repo-cli needs nine slices
       // and law-practice-server eight; the seven unit bins are unchanged.
       [
-        "Test Unit (repo-cli-1)",
-        "Test Unit (repo-cli-2)",
-        "Test Unit (repo-cli-3)",
-        "Test Unit (repo-cli-4)",
-        "Test Unit (repo-cli-5)",
-        "Test Unit (repo-cli-6)",
-        "Test Unit (repo-cli-7)",
-        "Test Unit (repo-cli-8)",
-        "Test Unit (repo-cli-9)",
-        "Test Unit (law-practice-1)",
-        "Test Unit (law-practice-2)",
-        "Test Unit (law-practice-3)",
-        "Test Unit (law-practice-4)",
-        "Test Unit (law-practice-5)",
-        "Test Unit (law-practice-6)",
-        "Test Unit (law-practice-7)",
-        "Test Unit (law-practice-8)",
-        "Test Unit (unit-a)",
-        "Test Unit (unit-b)",
-        "Test Unit (unit-c)",
-        "Test Unit (unit-d)",
-        "Test Unit (unit-e)",
-        "Test Unit (unit-f)",
-        "Test Unit (unit-g)",
+        "repo-cli-1",
+        "repo-cli-2",
+        "repo-cli-3",
+        "repo-cli-4",
+        "repo-cli-5",
+        "repo-cli-6",
+        "repo-cli-7",
+        "repo-cli-8",
+        "repo-cli-9",
+        "law-practice-1",
+        "law-practice-2",
+        "law-practice-3",
+        "law-practice-4",
+        "law-practice-5",
+        "law-practice-6",
+        "law-practice-7",
+        "law-practice-8",
+        "unit-a",
+        "unit-b",
+        "unit-c",
+        "unit-d",
+        "unit-e",
+        "unit-f",
+        "unit-g",
       ],
     ],
-  }),
+    { plannedBy: CI_TEST_PLAN_JOB_NAME }
+  ),
   // Before #3005 the lane was heavy.yml's single `Heavy / Test Integration` job; `shardedSince` measures those
   // runs by that job's own span. Property Laws is not a required context and has no spec.
-  CiEffectiveLaneSpec.make({
-    aggregator: "Heavy / Test Integration",
-    lane: "Test Integration",
-    plannedBy: CI_TEST_PLAN_JOB_NAME,
-    shardedSince: CI_TEST_INTEGRATION_SHARDED_SINCE,
-    shardLayouts: [
+  effectiveLaneSpec(
+    "test-integration",
+    [
       // #3005 (2026-11-09T17:15Z): sixteen @beep/law-practice-server integration shards and the int-rest
       // catch-all; from #3030 (2026-11-10T00:15Z) a pull request allocates only the planned subset.
       [
-        "Test Integration (lps-int-1)",
-        "Test Integration (lps-int-2)",
-        "Test Integration (lps-int-3)",
-        "Test Integration (lps-int-4)",
-        "Test Integration (lps-int-5)",
-        "Test Integration (lps-int-6)",
-        "Test Integration (lps-int-7)",
-        "Test Integration (lps-int-8)",
-        "Test Integration (lps-int-9)",
-        "Test Integration (lps-int-10)",
-        "Test Integration (lps-int-11)",
-        "Test Integration (lps-int-12)",
-        "Test Integration (lps-int-13)",
-        "Test Integration (lps-int-14)",
-        "Test Integration (lps-int-15)",
-        "Test Integration (lps-int-16)",
-        "Test Integration (int-rest)",
+        "lps-int-1",
+        "lps-int-2",
+        "lps-int-3",
+        "lps-int-4",
+        "lps-int-5",
+        "lps-int-6",
+        "lps-int-7",
+        "lps-int-8",
+        "lps-int-9",
+        "lps-int-10",
+        "lps-int-11",
+        "lps-int-12",
+        "lps-int-13",
+        "lps-int-14",
+        "lps-int-15",
+        "lps-int-16",
+        "int-rest",
       ],
       // From #3029 (2026-11-10T00:53Z): shards sized at their files' worst measured seconds, nineteen
       // law-practice-server partitions.
       [
-        "Test Integration (lps-int-1)",
-        "Test Integration (lps-int-2)",
-        "Test Integration (lps-int-3)",
-        "Test Integration (lps-int-4)",
-        "Test Integration (lps-int-5)",
-        "Test Integration (lps-int-6)",
-        "Test Integration (lps-int-7)",
-        "Test Integration (lps-int-8)",
-        "Test Integration (lps-int-9)",
-        "Test Integration (lps-int-10)",
-        "Test Integration (lps-int-11)",
-        "Test Integration (lps-int-12)",
-        "Test Integration (lps-int-13)",
-        "Test Integration (lps-int-14)",
-        "Test Integration (lps-int-15)",
-        "Test Integration (lps-int-16)",
-        "Test Integration (lps-int-17)",
-        "Test Integration (lps-int-18)",
-        "Test Integration (lps-int-19)",
-        "Test Integration (int-rest)",
+        "lps-int-1",
+        "lps-int-2",
+        "lps-int-3",
+        "lps-int-4",
+        "lps-int-5",
+        "lps-int-6",
+        "lps-int-7",
+        "lps-int-8",
+        "lps-int-9",
+        "lps-int-10",
+        "lps-int-11",
+        "lps-int-12",
+        "lps-int-13",
+        "lps-int-14",
+        "lps-int-15",
+        "lps-int-16",
+        "lps-int-17",
+        "lps-int-18",
+        "lps-int-19",
+        "int-rest",
       ],
     ],
-  }),
+    { plannedBy: CI_TEST_PLAN_JOB_NAME, shardedSince: CI_TEST_INTEGRATION_SHARDED_SINCE }
+  ),
 ];
 
 class CiWorkflowWindowRunsPage extends S.Opaque<CiWorkflowWindowRunsPage, { readonly brand: unique symbol }>()(
@@ -2472,9 +2479,6 @@ export const makeCiLaneTimingGithubClient = Effect.fn("CiLaneTimingGithubClient.
     ),
   });
 });
-
-const normalizeRequiredLaneName = (name: string): string =>
-  Str.startsWith(HEAVY_LANE_PREFIX)(name) ? Str.slice(Str.length(HEAVY_LANE_PREFIX))(name) : name;
 
 const effectiveLaneSpecForJobName = (name: string): O.Option<CiEffectiveLaneSpec> =>
   A.findFirst(
@@ -2983,12 +2987,12 @@ const attemptOneJobNamed = (
   return A.length(matches) === 1 ? A.head(matches) : O.none();
 };
 
-// The one attempt-one job that ran this shard, hosted or routed to the overflow pool.
+// The one attempt-one job that ran this shard, under any name the lane map gives a shard.
 const attemptOneShardJob = (
   jobs: ReadonlyArray<CiWorkflowAttemptOneJob>,
   shardName: string
 ): O.Option<CiWorkflowAttemptOneJob> => {
-  const matches = A.filter(jobs, (job) => isShardJobNamed(shardName)(job.name));
+  const matches = A.filter(jobs, (job) => isCiShardJobNamed(job.name, shardName));
   return A.length(matches) === 1 ? A.head(matches) : O.none();
 };
 

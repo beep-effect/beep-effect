@@ -19,6 +19,7 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeCitationCaseNamePredicates } from "./CaseNamePredicates.ts";
+import { reserveCitationInvocationText } from "./Invocation.ts";
 import {
   copyCitationMetadataPatternConfiguration,
   decodeCitationMetadataWordRequest,
@@ -153,7 +154,7 @@ export const scanCitationCaseName = Effect.fn("Citation.runCaseNameScan")(functi
   raw: unknown
 ) {
   const request = yield* decodeCitationMetadataWordRequest(limits, Input, raw, () => fail("invalid-input"));
-  const input = yield* makeCitationRegexInput(limits);
+  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText);
   const budget = yield* CitationTextBudget;
   const predicates = yield* makeCitationCaseNamePredicates();
   const words = yield* Effect.forEach(

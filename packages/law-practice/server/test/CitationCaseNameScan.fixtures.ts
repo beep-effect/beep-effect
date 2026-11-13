@@ -16,8 +16,8 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
-  assertCitationMetadataEnclosingRefusal,
   assertCitationMetadataFailure,
   assertCitationMetadataFixtureLifetime,
   assertCitationMetadataRefusal,
@@ -99,6 +99,9 @@ const install = Effect.fn("CaseNameScanTest.install")(function* (
   const setup = yield* setupCitationMetadataRuntime(kind, maximum, enclosing, controlled, 8192);
   const configuration = { ...corpus.configuration, patterns: { ...corpus.configuration.patterns } };
   const scanner = yield* makeCitationCaseNameScan(setup.limits, setup.runtime, configuration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(setup.limits).pipe(Effect.map((bind) => ({ ...stage, scan: bind(stage.scan) })))
+    ),
     Effect.provideContext(setup.provided)
   );
   return { ...setup, corpus, configuration, stage: { apply: scanner.scan } };
@@ -171,7 +174,14 @@ export const assertCitationCaseNameScanBudget = Effect.fn("CaseNameScanTest.budg
     { ...exact.limits, tokens: 1 },
     exact.runtime,
     exact.configuration
-  ).pipe(Effect.provideContext(exact.provided));
+  ).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding({ ...exact.limits, tokens: 1 }).pipe(
+        Effect.map((bind) => ({ ...stage, scan: bind(stage.scan) }))
+      )
+    ),
+    Effect.provideContext(exact.provided)
+  );
   const tokens = yield* bounded.scan(row.request).pipe(Effect.flip);
   expect(tokens).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "tokens" });
   exact.configuration.patterns.year.bytes.fill(0);
@@ -186,8 +196,6 @@ export const assertCitationCaseNameScanBudget = Effect.fn("CaseNameScanTest.budg
     tight.observed.snapshot,
     3
   );
-  const enclosing = yield* install("bun", 25, true);
-  yield* assertCitationMetadataEnclosingRefusal(enclosing.stage.apply(row.request), enclosing.budget, 4, 23);
 });
 /** Closed parent lifetime and captured timing refuse before creating a child. */
 export const assertCitationCaseNameScanLifetime = Effect.fn("CaseNameScanTest.lifetime")(function* () {
@@ -208,12 +216,18 @@ export const assertCitationCaseNameScanDefaultPolicy = Effect.fn("CaseNameScanTe
     },
   ]) {
     const rejected = yield* makeCitationCaseNameScan(setup.limits, setup.runtime, configuration).pipe(
+      Effect.flatMap((stage) =>
+        makeCitationTestScaffoldBinding(setup.limits).pipe(Effect.map((bind) => ({ ...stage, scan: bind(stage.scan) })))
+      ),
       Effect.provideContext(setup.provided),
       Effect.flip
     );
     expect(rejected).toMatchObject({ reason: "invalid-configuration" });
   }
   const scanner = yield* makeCitationCaseNameScan(setup.limits, setup.runtime, corpus.configuration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(setup.limits).pipe(Effect.map((bind) => ({ ...stage, scan: bind(stage.scan) })))
+    ),
     Effect.provideContext(setup.provided)
   );
   const failure = yield* scanner.scan(A.getUnsafe(corpus.cases, 4).request).pipe(Effect.flip);

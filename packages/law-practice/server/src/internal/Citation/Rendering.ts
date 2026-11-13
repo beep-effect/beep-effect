@@ -8,14 +8,13 @@ import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as MutableList from "effect/MutableList";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CitationFrozenEditions } from "./FrozenEditions.ts";
+import { CitationInvocation } from "./Invocation.ts";
 import { CitationMetadataStringFields } from "./MetadataComposition.ts";
 import { concatCitationPythonRanges, makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationResourceCitationCorrectionInput, makeCitationResourceCorrection } from "./ResourceCorrection.ts";
-import { makeCitationTextBudget } from "./TextBudget.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/Rendering");
@@ -174,20 +173,18 @@ const makeParts = Effect.fn("Citation.makeRenderingParts")(function* (
   return { owned, literal, value, date, finish };
 });
 /** Capture existing frozen editions and timing, then compose original correction
- * and native metadata assembly under one fresh or installed invocation budget.
- * Methods have R = never. Matched-only, Id. and supra methods never consult an
+ * and native metadata assembly under the call-time invocation budget.
+ * Methods require CitationInvocation. Matched-only, Id. and supra methods never consult an
  * edition or resource group. Only a complete owned native result is returned.
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationRendering = Effect.fn("Citation.makeRendering")(function* (policy: unknown) {
   const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
   const owner = yield* CitationFrozenEditions;
-  const enclosing = yield* Effect.serviceOption(CitationTextBudget);
-  if (O.isSome(enclosing) && enclosing.value.maximum > limits.producedTextUtf16) return yield* fail("invalid-policy");
   const timing = yield* makeCitationRegexTiming(limits, true);
   const render = Effect.fn("Citation.renderBuiltInCitation")(function* (raw: unknown) {
     const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
-    const budget = O.isSome(enclosing) ? enclosing.value : yield* makeCitationTextBudget(limits);
+    const budget = (yield* CitationInvocation).budget;
     const parts = yield* makeParts(limits, budget);
     const correction = yield* makeCitationResourceCorrection(limits).pipe(
       Effect.provideService(CitationFrozenEditions, owner),

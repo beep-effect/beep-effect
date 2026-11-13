@@ -21,8 +21,10 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { installCitationAnnotationEntryFixture } from "./CitationAnnotationEntry.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
+import type { CitationAdmissionFailure } from "@beep/law-practice-server/internal/Citation/Admission";
 import type { CitationSourceAnnotationResult } from "@beep/law-practice-server/internal/Citation/SourceAnnotation";
 import type { CitationEngineFailure } from "@beep/law-practice-use-cases/server";
 
@@ -50,6 +52,11 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
           ),
         });
         const entry = yield* makeCitationSourceAnnotation(setup.limits, setup.runtime, setup.configuration).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
+              Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
+            )
+          ),
           Effect.provideService(SourceTextResolver, resolver),
           Effect.provideService(CitationAnnotationAnnotator, callback),
           Effect.provideContext(setup.provided)
@@ -101,10 +108,21 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
               setup.runtime,
               setup.configuration,
               artifact
-            ).pipe(Effect.provideService(SourceTextResolver, resolver), Effect.provideContext(setup.provided));
+            ).pipe(
+              Effect.flatMap((stage) =>
+                makeCitationTestScaffoldBinding(policy, "annotate").pipe(
+                  Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
+                )
+              ),
+              Effect.provideService(SourceTextResolver, resolver),
+              Effect.provideContext(setup.provided)
+            );
             expect(Reflect.set(policy, "producedTextUtf16", 1)).toBe(true);
             const invocation = entry.annotate({ ...request, engineArtifact: "ignored", limits: null });
-            const closed: Effect.Effect<CitationEngineAnnotationResult, CitationEngineFailure> = invocation;
+            const closed: Effect.Effect<
+              CitationEngineAnnotationResult,
+              CitationEngineFailure | CitationAdmissionFailure
+            > = invocation;
             const result = yield* closed;
             expect(S.is(CitationEngineAnnotationResult)(result)).toBe(true);
             expect(result.report).toMatchObject({ operation: "annotate", engineArtifact: artifact, extraction: null });
@@ -144,6 +162,11 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
           update: Effect.fn("SourceAnnotationTest.update")(() => Effect.succeed(0)),
         });
         const entry = yield* makeCitationSourceAnnotation(setup.limits, setup.runtime, setup.configuration).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
+              Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
+            )
+          ),
           Effect.provideService(SourceTextResolver, resolver),
           Effect.provideService(CitationAnnotationOffsetUpdater, updater),
           Effect.provideContext(setup.provided)
@@ -178,11 +201,17 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
           }),
         });
         const entry = yield* makeCitationSourceAnnotation(setup.limits, setup.runtime, setup.configuration).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
+              Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
+            )
+          ),
           Effect.provideService(SourceTextResolver, resolver),
           Effect.provideContext(setup.provided)
         );
         const invocation = entry.annotate({ plain: { source: proof.source, sourceText: "abc" }, replacements });
-        const closed: Effect.Effect<CitationSourceAnnotationResult, CitationEngineFailure> = invocation;
+        const closed: Effect.Effect<CitationSourceAnnotationResult, CitationEngineFailure | CitationAdmissionFailure> =
+          invocation;
         const result = yield* closed;
         expect(result.text).toEqual(word("a[b]c"));
         expect(S.is(VerifiedSourceText)(result.source)).toBe(true);
@@ -210,7 +239,15 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
           { ...setup.limits, sourceUtf16: 3 },
           setup.runtime,
           setup.configuration
-        ).pipe(Effect.provideService(SourceTextResolver, resolver), Effect.provideContext(setup.provided));
+        ).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestScaffoldBinding({ ...setup.limits, sourceUtf16: 3 }, "annotate").pipe(
+              Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
+            )
+          ),
+          Effect.provideService(SourceTextResolver, resolver),
+          Effect.provideContext(setup.provided)
+        );
         const over = yield* entry
           .annotate({ plain: { source: proof.source, sourceText: "abcd" }, replacements: [] })
           .pipe(Effect.flip);

@@ -196,10 +196,8 @@ const installLawMetadata = Effect.fn("Citation.installLawMetadata")(function* (
 ) {
   const limits = yield* decodeCitationRegexPolicy(policy, invalidConfiguration);
   const { runtime, config } = yield* prepareConfiguration(limits, runtimeInput, configurationInput);
-  const installed = yield* makeCitationMetadataOperation(
-    limits,
-    (request: CitationLawMetadataInput) => preparePatch(limits, runtime, config, request),
-    invalidConfiguration
+  const installed = yield* makeCitationMetadataOperation(limits, (request: CitationLawMetadataInput) =>
+    preparePatch(limits, runtime, config, request)
   );
   const run = Effect.fn("Citation.runLawMetadata")(function* (request: CitationLawMetadataInput) {
     const [patch, reservedUnits] = yield* installed.run(request);
@@ -219,16 +217,11 @@ export const makeCitationLawMetadata = Effect.fn("Citation.makeLawMetadata")(fun
   configurationInput: unknown
 ) {
   const installed = yield* installLawMetadata(policy, runtimeInput, configurationInput);
-  const apply = Effect.fn("Citation.addLawMetadata")(
-    (raw: unknown) =>
-      installed.operation.run(
-        "extract",
-        Effect.gen(function* () {
-          const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(invalidInput));
-          return yield* installed.run(request);
-        })
-      ),
-    installed.timing.timed
+  const apply = Effect.fn("Citation.addLawMetadata")((raw: unknown) =>
+    Effect.gen(function* () {
+      const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(invalidInput));
+      return yield* installed.run(request);
+    })
   );
   return { apply };
 });
@@ -270,20 +263,15 @@ export const makeCitationFullLawMetadata = Effect.fn("Citation.makeFullLawMetada
 ) {
   const installed = yield* installLawMetadata(policy, runtimeInput, configurationInput);
   const inference = yield* makeCitationEditionInference(installed.limits);
-  const apply = Effect.fn("Citation.addFullLawMetadata")(
-    (raw: unknown) =>
-      installed.operation.run(
-        "extract",
-        Effect.gen(function* () {
-          const selection = yield* prepareCitationEditionInferenceInput(installed.limits, raw);
-          const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(invalidInput));
-          const result = yield* installed.run(request);
-          const year = O.match(result.patch, { onNone: () => request.year, onSome: (patch) => patch.year });
-          const editionGuess = yield* inference.guess({ ...selection, year });
-          return CitationFullLawMetadataResult.make({ ...result, editionGuess });
-        })
-      ),
-    installed.timing.timed
+  const apply = Effect.fn("Citation.addFullLawMetadata")((raw: unknown) =>
+    Effect.gen(function* () {
+      const selection = yield* prepareCitationEditionInferenceInput(installed.limits, raw);
+      const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(invalidInput));
+      const result = yield* installed.run(request);
+      const year = O.match(result.patch, { onNone: () => request.year, onSome: (patch) => patch.year });
+      const editionGuess = yield* inference.guess({ ...selection, year });
+      return CitationFullLawMetadataResult.make({ ...result, editionGuess });
+    })
   );
   return { apply };
 });

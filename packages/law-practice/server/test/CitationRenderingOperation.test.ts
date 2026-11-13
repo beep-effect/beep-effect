@@ -7,6 +7,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationNativeRenderingAsset } from "./CitationNativeRendering.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
@@ -20,9 +21,17 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         const limits = { ...policy.limits, producedTextUtf16: 16 };
         for (const operation of ["clean", "extract", "resolve", "annotate"] as const) {
           const repr = yield* makeCitationPythonRepr(limits, printability).pipe(
+            Effect.flatMap((stage) =>
+              makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, text: bind(stage.text) })))
+            ),
             Effect.provideService(CitationRegexOperation, operation)
           );
           const dump = yield* makeCitationDump(limits, printability).pipe(
+            Effect.flatMap((stage) =>
+              makeCitationTestScaffoldBinding(limits).pipe(
+                Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
+              )
+            ),
             Effect.provideService(CitationRegexOperation, operation)
           );
           const reprFailure = yield* repr

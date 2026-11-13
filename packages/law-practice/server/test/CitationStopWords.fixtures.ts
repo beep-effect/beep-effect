@@ -11,8 +11,8 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
-  assertCitationMetadataEnclosingRefusal,
   assertCitationMetadataFailure,
   assertCitationMetadataRefusal,
   assertCitationWorkerCapturedDeadline,
@@ -69,7 +69,17 @@ const load = Effect.fn("StopWordsTest.load")(function* () {
   ).pipe(Effect.flatMap(S.decodeEffect(Corpus)));
   return { configuration: config.configuration, corpus };
 });
-const install = makeCitationMetadataFixture({ load, make: makeCitationStopWords });
+const install = makeCitationMetadataFixture({
+  load,
+  make: (...args: Parameters<typeof makeCitationStopWords>) =>
+    makeCitationStopWords(...args).pipe(
+      Effect.flatMap((stage) =>
+        makeCitationTestScaffoldBinding(args[0], "clean").pipe(
+          Effect.map((bind) => ({ ...stage, clean: bind(stage.clean) }))
+        )
+      )
+    ),
+});
 /** Smoke contains inline case, every semicolon shape, native surrogate controls, adjacency and one
  * strip per stop-word alternative (the full replay retired 2026-11-09). */
 export const replayCitationStopWords = Effect.fn("StopWordsTest.replay")(function* (
@@ -118,14 +128,6 @@ export const assertCitationStopWordsBudget = Effect.fn("StopWordsTest.budget")(f
     tight.observed.snapshot,
     3
   );
-  const enclosing = yield* install("bun", 81, true);
-  yield* assertCitationMetadataEnclosingRefusal(enclosing.stage.clean(row.source), enclosing.budget, 1, 77);
-  yield* assertCitationWorkerCompositionReleased(
-    enclosing.operation,
-    enclosing.admission,
-    enclosing.observed.snapshot,
-    3
-  );
 });
 /** Preserve closed parent lifetime, captured timer and closed invalid-input failure. */
 export const assertCitationStopWordsLifetime = Effect.fn("StopWordsTest.lifetime")(function* () {
@@ -139,6 +141,11 @@ export const assertCitationStopWordsLifetime = Effect.fn("StopWordsTest.lifetime
     },
   ]) {
     const rejected = yield* makeCitationStopWords(closed.limits, closed.runtime, configuration).pipe(
+      Effect.flatMap((stage) =>
+        makeCitationTestScaffoldBinding(closed.limits, "clean").pipe(
+          Effect.map((bind) => ({ ...stage, clean: bind(stage.clean) }))
+        )
+      ),
       Effect.provideContext(closed.provided),
       Effect.flip
     );

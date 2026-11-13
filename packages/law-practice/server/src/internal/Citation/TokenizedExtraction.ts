@@ -17,6 +17,7 @@ import {
   CitationExtractionLoopResult,
   makeCitationExtractionLoop,
 } from "./ExtractionLoop.ts";
+import { reserveCitationInvocationText } from "./Invocation.ts";
 import { detachCitationMetadataConfiguration, makeCitationMetadataStage } from "./MetadataComposition.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
 import { CitationTokenizerConfiguration, makeCitationTokenizer } from "./Tokenizer.ts";
@@ -107,7 +108,7 @@ const prepare = Effect.fn("Citation.tokenizeAndExtract")(function* (
     const tokenizer = yield* makeCitationTokenizer(limits, runtime, owned.config.tokenizer);
     const loop = yield* makeCitationExtractionLoop(limits, runtime, owned.config.loop);
     const tokenized = yield* tokenizer.port.tokenize(request.plain);
-    const input = yield* makeCitationRegexInput(limits, "source");
+    const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText, "source");
     const source = yield* input.prepareUnicode(tokenized.source, () => Effect.void);
     const tokens = HashMap.fromIterable(A.map(tokenized.tokens, (row) => Tuple.make(row.id, row.seed)));
     const lookup = (id: number) => Effect.fromOption(HashMap.get(tokens, id), () => fail("missing-token"));
@@ -137,7 +138,7 @@ const prepare = Effect.fn("Citation.tokenizeAndExtract")(function* (
 });
 /** Tokenize native Document text and construct/filter citations under one captured
  * admission, Scope, deadline and text authority. Input cleaning and the joke
- * shortcut remain upstream entry duties. Returned extract requires R=never.
+ * shortcut remain upstream entry duties. Returned extract requires CitationInvocation.
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationTokenizedExtraction = makeCitationMetadataStage({

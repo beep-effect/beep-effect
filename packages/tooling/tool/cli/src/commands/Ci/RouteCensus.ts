@@ -37,7 +37,14 @@ import { patientGit } from "../../internal/repo-run/PatientGit.ts";
 import { sha256Hex } from "../Goals/PacketCore/PacketDigest.ts";
 import { githubCheckPrePushLanes } from "../Quality/internal/GithubChecks.ts";
 import { DEFAULT_GATE_ORDER_SEED, WaveOrder } from "../Yeet/internal/WaveOrder.ts";
-import { CI_LANE_DESCRIPTORS, CI_LANE_ID_VALUES, CiLaneId } from "./CiLane.ts";
+import { CI_LANE_ID_VALUES, CiLaneId } from "./CiLane.ts";
+import {
+  ciCallerJobName,
+  ciJobShardFamily,
+  ciLaneOfReportingName,
+  ciLaneOfShardFamily,
+  isCiSupportJobName,
+} from "./CiLaneJobs.ts";
 import {
   CHANGE_ATOM_KIND_VALUES,
   ChangeAtom,
@@ -76,10 +83,6 @@ const PRE_PUSH_LANE_PREFIX = "quality:";
 // The pre-push specs are read for their ids and declaration order only; no
 // step runs, so the repository root they would run in is a placeholder.
 const PRE_PUSH_SPEC_ROOT = ".";
-// Partitioned hosted jobs report as `<context> (<partition>)`, e.g. `Lint (lint-a)`.
-const PARTITION_SUFFIX = / \([^()]*\)$/;
-// A job of a reusable workflow reports as `<caller> / <job>`, e.g. `Heavy / Check`.
-const REUSABLE_JOB_SEPARATOR = " / ";
 // Heads classified at once; each classification spawns git.
 const ROUTE_HEAD_CONCURRENCY = 4;
 // Missing head commits fetched by sha at once.
@@ -137,40 +140,6 @@ export const ciLaneOfPrePushLaneId = (id: string): O.Option<CiLaneId> =>
     O.map(Str.slice(Str.length(PRE_PUSH_LANE_PREFIX))),
     O.filter(isCiLaneId)
   );
-
-const LANE_BY_CONTEXT: HashMap.HashMap<string, CiLaneId> = HashMap.fromIterable(
-  A.getSomes(
-    A.map(CI_LANE_DESCRIPTORS, (descriptor) =>
-      O.map(O.liftPredicate(descriptor.id, isCiLaneId), (lane) => [descriptor.contextName, lane] as const)
-    )
-  )
-);
-
-// Earlier and conditional names of a lane's context: the build lane's context before it
-// moved under Heavy (until 2026-09-09), and the conditional names of the Test Integration
-// aggregate and of the coverage job (`check.yml` at a0c7f356af3).
-const LANE_JOB_ALIASES: ReadonlyArray<readonly [string, CiLaneId]> = [
-  ["Build", "build"],
-  ["Coverage Artifact Migration", "coverage"],
-  ["Test Integration Partitions", "test-integration"],
-];
-// Partition families whose base name is not the lane's context: `Test Integration
-// (<partition>)` jobs belong to the `Heavy / Test Integration` lane.
-const PARTITION_FAMILY_LANES: ReadonlyArray<readonly [string, CiLaneId]> = [["Test Integration", "test-integration"]];
-// Known jobs outside every lane: the change profile, heavy admission and its reusable-call
-// placeholder, the test plan that selects partitions for several lanes, the size label and
-// the producer pilot jobs of `heavy.yml`.
-const SUPPORT_JOB_NAMES: HashSet.HashSet<string> = HashSet.fromIterable([
-  "Change Profile",
-  "Heavy",
-  "Heavy / Build candidate producer adapter",
-  "Heavy / Execute approved signed producer",
-  "Heavy / Inspect producer sources and tools",
-  "Heavy / Observe local cache pilot",
-  "Heavy Admission",
-  "PR Size Label",
-  "Test Plan",
-]);
 
 /**
  * The names of the steps that prepare the runner or the environment before a
@@ -232,28 +201,20 @@ const SETUP_STEP_NAMES: HashSet.HashSet<string> = HashSet.fromIterable(ROUTE_SET
 // Laws slice`.
 const AGGREGATE_STEP_PREFIX = "Require every ";
 
-const LANE_BY_JOB_NAME: HashMap.HashMap<string, CiLaneId> = HashMap.union(
-  LANE_BY_CONTEXT,
-  HashMap.fromIterable(LANE_JOB_ALIASES)
-);
-const LANE_BY_PARTITION_FAMILY: HashMap.HashMap<string, CiLaneId> = HashMap.union(
-  LANE_BY_CONTEXT,
-  HashMap.fromIterable(PARTITION_FAMILY_LANES)
-);
-
 /**
  * The lane a hosted job belongs to, joined on the lane descriptor's
  * `contextName`.
  *
  * **Details**
  *
- * A partition job (`Lint (lint-a)`) joins through its context without the
- * partition suffix; a `Test Integration (<partition>)` job joins the
- * `Heavy / Test Integration` lane. Earlier and conditional context names
- * (`Build`, `Coverage Artifact Migration`, `Test Integration Partitions`)
- * join their lane. Descriptors whose id is not a {@link CiLaneId}
- * (`pr-size`, `dependency-review`) never match, so `Security` is the
- * `security` lane. A job of a reusable workflow reports as
+ * The names come from the lane map (`CiLaneJobs.ts`). A partition job
+ * (`Lint (lint-a)`) joins through its context without the partition suffix;
+ * a `Test Integration (<partition>)` job joins the `Heavy / Test Integration`
+ * lane through its declared shard family. Earlier and conditional context
+ * names (`Build`, `Coverage Artifact Migration`,
+ * `Test Integration Partitions`) join their lane. Descriptors whose id is not
+ * a {@link CiLaneId} (`pr-size`, `dependency-review`) never match, so
+ * `Security` is the `security` lane. A job of a reusable workflow reports as
  * `<caller> / <job>`; when that whole name joins no lane, the job joins its
  * caller's lane, so a shard run through a called workflow
  * (`Test Unit (repo-cli-1) / Overflow`) stays on the shard's lane.
@@ -278,19 +239,9 @@ const LANE_BY_PARTITION_FAMILY: HashMap.HashMap<string, CiLaneId> = HashMap.unio
  */
 export const jobNameToLane = (name: string): O.Option<CiLaneId> =>
   pipe(
-    HashMap.get(LANE_BY_JOB_NAME, name),
-    O.orElse(() =>
-      pipe(
-        O.liftPredicate(Str.replace(PARTITION_SUFFIX, "")(name), (family) => !Str.Equivalence(family, name)),
-        O.flatMap((family) => HashMap.get(LANE_BY_PARTITION_FAMILY, family))
-      )
-    ),
-    O.orElse(() =>
-      pipe(
-        Str.lastIndexOf(REUSABLE_JOB_SEPARATOR)(name),
-        O.flatMap((index) => jobNameToLane(Str.slice(0, index)(name)))
-      )
-    )
+    ciLaneOfReportingName(name),
+    O.orElse(() => O.flatMap(ciJobShardFamily(name), ciLaneOfShardFamily)),
+    O.orElse(() => O.flatMap(ciCallerJobName(name), jobNameToLane))
   );
 
 /**
@@ -324,8 +275,7 @@ export const hostedJobAttribution = (name: string): RouteJobAttribution =>
     jobNameToLane(name),
     O.match({
       onSome: (lane) => RouteJobAttribution.make({ jobClass: "lane", lane: O.some(lane) }),
-      onNone: () =>
-        RouteJobAttribution.make({ jobClass: HashSet.has(SUPPORT_JOB_NAMES, name) ? "support" : "unknown" }),
+      onNone: () => RouteJobAttribution.make({ jobClass: isCiSupportJobName(name) ? "support" : "unknown" }),
     })
   );
 

@@ -15,6 +15,7 @@ import {
   makeCitationHtmlDiscoveryRunner,
 } from "./HtmlDiscovery.ts";
 import { CitationHtmlTagGeometryInput } from "./HtmlTagGeometry.ts";
+import { reserveCitationInvocationText } from "./Invocation.ts";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
 import { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
@@ -102,7 +103,7 @@ export const prepareCitationForwardHtmlMap = Effect.fn("Citation.prepareForwardH
   plainInput: Effect.Effect<unknown, E>,
   useDmp = true
 ) {
-  const input = yield* makeCitationRegexInput(limits);
+  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText);
   const discovery = yield* makeCitationHtmlDiscoveryRunner(limits, regexRuntime, config.discovery);
   const masked = yield* discovery.placeholder(markup);
   const plainValue = yield* plainInput;

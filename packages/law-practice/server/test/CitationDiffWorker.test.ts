@@ -1,4 +1,5 @@
 import { makeCitationDiffWorker } from "@beep/law-practice-server/internal/Citation/DiffWorker";
+import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import {
   CitationNativeProcessAdmission,
   makeCitationNativeProcessAdmission,
@@ -25,6 +26,7 @@ import {
   makeCitationDiffWorkerFixture,
   replayCitationDiffWorker,
 } from "./CitationDiffWorker.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestTextBudget } from "./CitationInvocation.fixtures.ts";
 import {
   makeCitationNativeAcknowledgementSpawner,
   makeCitationNativeManualClock,
@@ -51,6 +53,11 @@ const controlled = Effect.fn("DiffWorkerTest.controlled")(function* (
   const admission = yield* makeCitationNativeProcessAdmission(limits);
   const observed = yield* makeCitationNativeAcknowledgementSpawner(afterKill);
   const worker = yield* makeCitationDiffWorker(limits, fixture).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding({ ...limits, extractDeadline: Duration.millis(1601) }).pipe(
+        Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
+      )
+    ),
     Effect.provideService(Clock.Clock, timer.clock),
     Effect.provideService(CitationNativeProcessAdmission, admission),
     Effect.provideService(ChildProcessSpawner, observed.spawner)
@@ -65,11 +72,21 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned defau
       const fixture = yield* makeCitationNativeWorkerFixture("busy", "diff", "bun");
       const observed = yield* makeCitationNativeAcknowledgementSpawner(Effect.void);
       const invalidRuntime = yield* makeCitationDiffWorker(limits, { ...fixture, kind: "unsupported" }).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestScaffoldBinding(limits).pipe(
+            Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
+          )
+        ),
         Effect.provideService(ChildProcessSpawner, observed.spawner),
         Effect.flip
       );
       expect(invalidRuntime).toMatchObject({ reason: "invalid-runtime" });
       const worker = yield* makeCitationDiffWorker(limits, fixture).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestScaffoldBinding(limits).pipe(
+            Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
+          )
+        ),
         Effect.provideService(ChildProcessSpawner, observed.spawner)
       );
       const invalidUnicode = yield* worker.evaluate({ width: 3, bytes: new Uint8Array([97]) }, after).pipe(Effect.flip);
@@ -79,31 +96,39 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned defau
     })
   );
 
-  it.effect("refuses combined input and captured text capacity before spawning or receiving copies", () =>
-    Effect.gen(function* () {
-      const fixture = yield* makeCitationNativeWorkerFixture("busy", "diff", "bun");
-      const limits = { ...(yield* defaultCitationEnginePolicy).limits, diffInputUtf16: 1, producedTextUtf16: 2 };
-      const budget = yield* makeCitationTextBudget(limits);
-      const observed = yield* makeCitationNativeAcknowledgementSpawner(Effect.void);
-      const worker = yield* makeCitationDiffWorker(limits, fixture).pipe(
-        Effect.provideService(CitationTextBudget, budget),
-        Effect.provideService(ChildProcessSpawner, observed.spawner)
-      );
-      const combined = yield* worker.evaluate(before, before).pipe(Effect.flip);
-      expect(combined).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "diffInputUtf16" });
-      const invalid = yield* worker.evaluate({ width: 2, bytes: new Uint8Array([97, 0]) }, after).pipe(Effect.flip);
-      expect(invalid).toMatchObject({ reason: "invalid-input" });
-      const unused = yield* budget.snapshot;
-      expect(unused).toBe(0);
-      yield* budget.reserve(2);
-      const replacement = yield* makeCitationTextBudget(limits);
-      const refused = yield* worker
-        .evaluate(before, after)
-        .pipe(Effect.provideService(CitationTextBudget, replacement), Effect.flip);
-      expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
-      const counts = yield* observed.snapshot;
-      expect(counts).toEqual({ spawned: 0, confirmed: 0 });
-    })
+  it.effect("refuses combined input and invocation text capacity before spawning or receiving copies", () =>
+    withCitationTestTextBudget(
+      2,
+      Effect.gen(function* () {
+        const fixture = yield* makeCitationNativeWorkerFixture("busy", "diff", "bun");
+        const limits = { ...(yield* defaultCitationEnginePolicy).limits, diffInputUtf16: 1, producedTextUtf16: 2 };
+        const budget = (yield* CitationInvocation).budget;
+        const observed = yield* makeCitationNativeAcknowledgementSpawner(Effect.void);
+        const worker = yield* makeCitationDiffWorker(limits, fixture).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestScaffoldBinding(limits).pipe(
+              Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
+            )
+          ),
+          Effect.provideService(CitationTextBudget, budget),
+          Effect.provideService(ChildProcessSpawner, observed.spawner)
+        );
+        const combined = yield* worker.evaluate(before, before).pipe(Effect.flip);
+        expect(combined).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "diffInputUtf16" });
+        const invalid = yield* worker.evaluate({ width: 2, bytes: new Uint8Array([97, 0]) }, after).pipe(Effect.flip);
+        expect(invalid).toMatchObject({ reason: "invalid-input" });
+        const unused = yield* budget.snapshot;
+        expect(unused).toBe(0);
+        yield* budget.reserve(2);
+        const replacement = yield* makeCitationTextBudget(limits);
+        const refused = yield* worker
+          .evaluate(before, after)
+          .pipe(Effect.provideService(CitationTextBudget, replacement), Effect.flip);
+        expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
+        const counts = yield* observed.snapshot;
+        expect(counts).toEqual({ spawned: 0, confirmed: 0 });
+      })
+    )
   );
   for (const kind of CitationNativeRuntimeKind.literals)
     it.effect(

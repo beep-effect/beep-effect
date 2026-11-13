@@ -12,6 +12,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import { makeCitationDiffTestRuntime } from "./CitationDiffWorker.fixtures.ts";
 import { readCitationHtmlDiscoveryCorpus } from "./CitationHtmlDiscovery.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationWorkerCompositionReleased,
   setupCitationMetadataRuntime,
@@ -34,7 +35,12 @@ export const installCitationHtmlGeometryFixture = Effect.fn("HtmlGeometryPrepara
   return yield* makeCitationHtmlGeometryPreparation(limits, setup.runtime, {
     discovery: discovery.configuration,
     diffRuntime,
-  }).pipe(Effect.provideContext(setup.provided));
+  }).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, prepare: bind(stage.prepare) })))
+    ),
+    Effect.provideContext(setup.provided)
+  );
 });
 /** Prepare geometry only for source callers that actually supplied markup. */
 export const prepareCitationOptionalHtmlGeometry = Effect.fn("HtmlGeometryPreparationTest.optional")(function* (

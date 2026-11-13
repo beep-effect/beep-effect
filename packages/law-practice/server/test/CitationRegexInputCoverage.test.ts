@@ -1,5 +1,6 @@
 import {
   CitationRegexInputLayout,
+  citationUnaccountedText,
   makeCitationRegexInput,
 } from "@beep/law-practice-server/internal/Citation/RegexInput";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
@@ -19,7 +20,7 @@ const overwrite = (bytes: Uint8Array, offset: number, replacement: ReadonlyArray
 it.effect("re-attributes a capture-time overflow of mutated native storage to the produced-text budget", () =>
   Effect.gen(function* () {
     const limits = (yield* defaultCitationEnginePolicy).limits;
-    const input = yield* makeCitationRegexInput({ ...limits, producedTextUtf16: 3 });
+    const input = yield* makeCitationRegexInput({ ...limits, producedTextUtf16: 3 }, citationUnaccountedText);
     const bytes = new Uint8Array([0x00, 0x00, 0x01, 0x00, 0x41, 0x00, 0x00, 0x00]);
     let measured = A.empty<CitationRegexInputLayout>();
     const failure = yield* input
@@ -49,7 +50,7 @@ it.effect("re-attributes a capture-time overflow of mutated native storage to th
 it.effect("refuses native storage whose capture no longer matches its measured layout", () =>
   Effect.gen(function* () {
     const limits = (yield* defaultCitationEnginePolicy).limits;
-    const input = yield* makeCitationRegexInput(limits);
+    const input = yield* makeCitationRegexInput(limits, citationUnaccountedText);
     const cases = [
       // A point beyond U+10FFFF fails the Unicode capture itself.
       { width: 4 as const, bytes: [0x00, 0x00, 0x01, 0x00, 0x41, 0x00, 0x00, 0x00], at: 4, next: [0x00, 0x00, 0x11] },

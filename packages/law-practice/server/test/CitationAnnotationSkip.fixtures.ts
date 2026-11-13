@@ -19,6 +19,7 @@ import {
   makeCitationAnnotationReplay,
   makeCitationAnnotationXmlTrace,
 } from "./CitationAnnotationReplay.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { assertCitationWorkerCompositionReleased, readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import { installCitationXmlWorker } from "./CitationXmlWorker.fixtures.ts";
@@ -62,7 +63,7 @@ export const replayCitationSkipAnnotations = Effect.fn("AnnotationSkipTest.repla
   ).pipe(Effect.flatMap(S.decodeEffect(Corpus)));
   const setup = yield* installCitationXmlWorker(kind);
   const skipped = yield* Ref.make(0);
-  const observedXml = yield* makeCitationAnnotationXmlTrace(setup.worker);
+  const observedXml = yield* makeCitationAnnotationXmlTrace(setup.worker.raw);
   const processor = yield* makeCitationSkipAnnotationSpans().pipe(
     Effect.provideService(CitationTextBudget, setup.budget),
     Effect.provideService(CitationXmlBalance, observedXml.xml)
@@ -74,7 +75,13 @@ export const replayCitationSkipAnnotations = Effect.fn("AnnotationSkipTest.repla
       return decision;
     }),
   });
-  const assembly = yield* makeCitationAnnotationReplay(setup.limits, setup.budget, observed);
+  const assembly = yield* makeCitationAnnotationReplay(setup.limits, setup.budget, observed).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
+        Effect.map((bind) => ({ ...stage, assemble: bind(stage.assemble) }))
+      )
+    )
+  );
   const rows = full ? corpus.cases : A.filter(corpus.cases, (row) => row.id % 7 === 2 || row.id % 7 === 5);
   let children = 0;
   for (const row of rows) {

@@ -17,7 +17,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeCitationPythonUnicode, measureCitationPythonSlice, sliceCitationPythonStorage } from "./PythonUnicode.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
-import { captureCitationTextReservation } from "./TextBudget.ts";
 import type {
   CitationPythonSliceLayout,
   CitationPythonUnicodeFailure,
@@ -167,16 +166,16 @@ export type CitationRegexProjection = typeof CitationRegexProjection.Type;
  * The receiving adapter must keep the owned native byte buffer immutable.
  * @internal @category services @since 0.0.0
  */
-export interface CitationPreparedRegexInput {
+export interface CitationPreparedRegexInput<R = never> {
   readonly layout: CitationRegexInputLayout;
   readonly measure: (
     input: unknown
   ) => Effect.Effect<CitationPythonSliceLayout, CitationRegexInputFailure | CitationSafetyLimitExceeded>;
   readonly project: (input: unknown) => Effect.Effect<CitationRegexProjection, CitationRegexInputFailure>;
-  readonly slice: <E>(
+  readonly slice: <E, R2>(
     input: unknown,
-    beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E>
-  ) => Effect.Effect<CitationPythonUnicodeStorage, E | CitationRegexInputFailure | CitationSafetyLimitExceeded>;
+    beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E, R2>
+  ) => Effect.Effect<CitationPythonUnicodeStorage, E | CitationRegexInputFailure | CitationSafetyLimitExceeded, R | R2>;
   readonly value: CitationPythonUnicodeValue;
 }
 const fail = (reason: CitationRegexInputFailure["reason"]) => CitationRegexInputFailure.make({ reason });
@@ -197,17 +196,17 @@ const boundary = (text: string, offset: number) =>
  * receives exact sizes before any receiving payload/projection/map allocation;
  * an optional native grant runs after the text reservation and before copying,
  * so a caller never holds native capacity while waiting for text authority.
- * no callable is request data. Returned operations have R = never.
+ * no callable is request data. Returned operations retain their reservation requirements.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(function* (
+export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(function* <R>(
   policy: unknown,
+  reservation: (units: number) => Effect.Effect<void, CitationSafetyLimitExceeded, R>,
   roleInput: unknown = "source"
 ) {
   const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
   const role = yield* S.decodeUnknownEffect(Role)(roleInput).pipe(Effect.mapError(() => fail("invalid-policy")));
-  const composedReserve = yield* captureCitationTextReservation;
-  const reserve = role === "source" ? composedReserve : (_units: number) => Effect.void;
+  const reserve = role === "source" ? reservation : citationUnaccountedText;
   const sourceMaximum = role === "pattern" ? limits.patternUtf16 : limits.sourceUtf16;
   const producedMaximum = role === "pattern" ? limits.patternUtf16 : limits.producedTextUtf16;
   const sourceLimit = role === "pattern" ? "patternUtf16" : "sourceUtf16";
@@ -226,7 +225,7 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
   const finish = Effect.fn("Citation.finishRegexInput")(function* (
     value: CitationPythonUnicodeValue,
     expected: CitationRegexInputLayout
-  ): Effect.fn.Return<CitationPreparedRegexInput, CitationRegexInputFailure> {
+  ): Effect.fn.Return<CitationPreparedRegexInput<R>, CitationRegexInputFailure> {
     if (
       value.pythonLength !== expected.pythonLength ||
       value.utf16Units !== expected.utf16Units ||
@@ -261,9 +260,9 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
       if (startChar === endChar) return CitationRegexProjectedPoint.make({ offset: startChar });
       return CitationRegexProjectedRange.make({ startChar, endChar });
     });
-    const slice = Effect.fn("Citation.slicePreparedRegexSource")(function* <E>(
+    const slice = Effect.fn("Citation.slicePreparedRegexSource")(function* <E, R2>(
       input: unknown,
-      beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E>
+      beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E, R2>
     ) {
       const range = yield* rangeOf(input);
       return yield* sliceCitationPythonStorage(value.storage, range.start, range.end, (layout) =>
@@ -278,9 +277,9 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
         const range = yield* rangeOf(input);
         return yield* measureCitationPythonSlice(value.storage, range.start, range.end);
       }, timed),
-      slice: Effect.fn("Citation.capturePreparedSourceSlice")(function* <E>(
+      slice: Effect.fn("Citation.capturePreparedSourceSlice")(function* <E, R2>(
         input: unknown,
-        beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E>
+        beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E, R2>
       ) {
         return yield* slice(input, beforeAllocate);
       }, timed),
@@ -296,9 +295,9 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
             : fail("invalid-input")
       )
     );
-  const prepareText = Effect.fn("Citation.prepareRegexText")(function* <E>(
+  const prepareText = Effect.fn("Citation.prepareRegexText")(function* <E, R2>(
     input: unknown,
-    beforeAllocate: (layout: CitationRegexInputLayout) => Effect.Effect<void, E>
+    beforeAllocate: (layout: CitationRegexInputLayout) => Effect.Effect<void, E, R2>
   ) {
     const text = yield* S.decodeUnknownEffect(S.String)(input).pipe(Effect.mapError(() => fail("invalid-input")));
     if (Str.length(text) > sourceMaximum) return yield* safety(sourceLimit);
@@ -355,10 +354,10 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
       projectionAmbiguous: ambiguous,
     });
   });
-  const prepareUnicode = Effect.fn("Citation.prepareRegexUnicode")(function* <E>(
+  const prepareUnicode = Effect.fn("Citation.prepareRegexUnicode")(function* <E, R2>(
     input: unknown,
-    beforeAllocate: (layout: CitationRegexInputLayout) => Effect.Effect<void, E>,
-    grant: Effect.Effect<void, E> = Effect.void
+    beforeAllocate: (layout: CitationRegexInputLayout) => Effect.Effect<void, E, R2>,
+    grant: Effect.Effect<void, E, R2> = Effect.void
   ) {
     const source = yield* S.decodeUnknownEffect(NativeInput)(input).pipe(Effect.mapError(() => fail("invalid-input")));
     const byteLength = source.bytes.byteLength;
@@ -374,18 +373,23 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
     return yield* finish(citationResult2, layout);
   });
   return {
-    prepareText: Effect.fn("Citation.captureRegexText")(function* <E>(
+    prepareText: Effect.fn("Citation.captureRegexText")(function* <E, R2>(
       input: unknown,
-      beforeAllocate: (layout: CitationRegexInputLayout) => Effect.Effect<void, E>
+      beforeAllocate: (layout: CitationRegexInputLayout) => Effect.Effect<void, E, R2>
     ) {
       return yield* prepareText(input, beforeAllocate);
     }, timed),
-    prepareUnicode: Effect.fn("Citation.captureRegexUnicode")(function* <E>(
+    prepareUnicode: Effect.fn("Citation.captureRegexUnicode")(function* <E, R2>(
       input: unknown,
-      beforeAllocate: (layout: CitationRegexInputLayout) => Effect.Effect<void, E>,
-      grant: Effect.Effect<void, E> = Effect.void
+      beforeAllocate: (layout: CitationRegexInputLayout) => Effect.Effect<void, E, R2>,
+      grant: Effect.Effect<void, E, R2> = Effect.void
     ) {
       return yield* prepareUnicode(input, beforeAllocate, grant);
     }, timed),
   };
 });
+
+/** The parent charged source text before writing the job frame; child processes have no request budget, and installed patterns are uncharged.
+ * @internal @category operations @since 0.0.0
+ */
+export const citationUnaccountedText = (_units: number): Effect.Effect<void> => Effect.void;

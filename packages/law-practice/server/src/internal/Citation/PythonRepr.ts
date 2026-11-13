@@ -5,17 +5,16 @@
  */
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationSafetyLimitExceeded, CitationTextBudget } from "@beep/law-practice-use-cases/server";
+import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as MutableList from "effect/MutableList";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { CitationInvocation } from "./Invocation.ts";
 import { citationPythonPointAt, makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
-import { makeCitationTextBudget } from "./TextBudget.ts";
 import type { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/PythonRepr");
@@ -128,13 +127,11 @@ const assembleRepr = Effect.fn("Citation.assemblePythonRepr")(function* (
  */
 export const makeCitationPythonRepr = Effect.fn("Citation.makePythonRepr")(function* (policy: unknown, table: unknown) {
   const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
-  const enclosing = yield* Effect.serviceOption(CitationTextBudget);
-  if (O.isSome(enclosing) && enclosing.value.maximum > limits.producedTextUtf16) return yield* fail("invalid-policy");
   const ranges = yield* readTable(table);
   const timing = yield* makeCitationRegexTiming(limits, true);
   const unicode = yield* makeCitationPythonUnicode(limits, timing.operation);
   const text = Effect.fn("Citation.pythonStringRepr")(function* (input: unknown) {
-    const budget = O.isSome(enclosing) ? enclosing.value : yield* makeCitationTextBudget(limits);
+    const budget = (yield* CitationInvocation).budget;
     const value = yield* unicode.fromStorageReserved(input, budget.reserve);
     const quote = yield* chooseQuote(value.storage);
     const units = yield* measureRepr(value.storage, quote, ranges);
