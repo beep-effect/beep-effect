@@ -548,6 +548,7 @@
     {"name":"CheckCensus.selectPackages","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CheckCensus.writeBaselineCli","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CheckCensus.writeReport","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CheckCensusBuildEquivalence.checkOnlyFiles","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CheckCensusBuildEquivalence.cleanPass","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CheckCensusBuildEquivalence.cli","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CheckCensusBuildEquivalence.compilerVersion","owner":"@beep/repo-cli","family":"tooling","conforms":true},
