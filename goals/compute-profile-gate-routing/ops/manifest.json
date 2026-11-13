@@ -6,11 +6,12 @@
     "title": "Compute-Profile Gate Routing",
     "status": "active",
     "created": "2026-11-07",
-    "updated": "2026-11-08",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/compute-profile-gate-routing",
   "lifecycle": "active",
+  "statusNote": "Slices P0 (#2925) and P1 (#2959, fix #2972) merged 2026-11-08; slice P2 (hosted catalog regeneration workflow and docs) is in the 2026-11-13 takeover PR. Remaining: the worker-host end-to-end acceptance run, then the reflection and proposedCloseout final PR.",
   "mission": "Typed workstation|worker compute profile; worker hosts defer hosted-only gates, catalog hooks and local proof to hosted CI by construction.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -37,6 +38,7 @@
   "researchReports": [
     "research/2026-11-08-p0-probe-evidence.md",
     "research/2026-11-08-p1-yeet-lefthook-evidence.md",
+    "research/2026-11-08-p2-hosted-regeneration.md",
     "research/SOURCES.md"
   ],
   "agentLaunchers": [
@@ -59,17 +61,17 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",

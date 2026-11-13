@@ -7,6 +7,7 @@
 
 import {
   Freshness,
+  hostMemoryCeilingTag,
   ParcelBudget,
   ParcelEnvelope,
   ParcelItem,
@@ -83,7 +84,7 @@ const renderItem = ParcelItem.match({
       (some) => `some ${percent(some.avg10)}/${percent(some.avg60)}/${percent(some.avg300)}`
     )}${optionText(item.full, (full) => `  full ${percent(full.avg10)}/${percent(full.avg60)}/${percent(full.avg300)}`)}${unknownTag(item.freshness)}`,
   HostMemory: (item) =>
-    `  memory  ${Num.round(item.availableGib, 1)} of ${Num.round(item.totalGib, 1)} GiB available${unknownTag(item.freshness)}`,
+    `  memory  ${Num.round(item.availableGib, 1)} of ${Num.round(item.totalGib, 1)} GiB available${hostMemoryCeilingTag(item)}${unknownTag(item.freshness)}`,
   AdmissionSlots: (item) =>
     `  admission  ${Num.round(item.activeTokens, 1)} of ${Num.round(item.capacityTokens, 1)} tokens active, ${item.queued} queued, ${item.dead} dead${item.hardFloorEngaged ? ", hard floor engaged" : ""}${unknownTag(item.freshness)}`,
   SessionChange: (item) =>
