@@ -37,7 +37,8 @@
   "researchReports": [
     "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
-    "research/r2-cache-port.md"
+    "research/r2-cache-port.md",
+    "research/triage.md"
   ],
   "agentLaunchers": [
     {
