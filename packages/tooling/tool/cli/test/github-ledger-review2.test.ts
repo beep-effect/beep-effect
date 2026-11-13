@@ -96,6 +96,19 @@ const observation = (minute: number, remaining: number, reset: number, credentia
       resetEpochSeconds: (T + reset) / SECOND,
     }),
   });
+const coreObservation = (
+  minute: number,
+  remaining: number,
+  reset: number,
+  credential: O.Option<CredentialFingerprint>
+) => {
+  const graphqlObservation = observation(minute, remaining, reset, credential);
+  return RateLimitObservation.make({
+    ...graphqlObservation,
+    kind: "rest",
+    snapshot: RateLimitSnapshot.make({ ...graphqlObservation.snapshot, resource: "core" }),
+  });
+};
 const hour = (rows: ReadonlyArray<GithubLedgerRow>, minute = 0) =>
   hourOf({
     hour: at(minute),
@@ -321,31 +334,35 @@ const verifyExpiry = Effect.gen(function* () {
     RateLimitObservation.make({ ...observation(8, 100, 40 * MINUTE, O.none()), budgetLabel: O.some("user:bob") })
   );
   yield* ledger.recordTransport(observation(9, 4000, 41 * MINUTE, O.some(b)));
+  yield* ledger.recordTransport(coreObservation(10, 4000, 41 * MINUTE, O.some(b)));
   yield* ledger.recordSample(sample(8, 100, 40, O.none()));
   yield* ledger.recordSample(sample(9, 4000, 40, O.some(a)));
   yield* TestClock.setTime(T + 42 * MINUTE);
   yield* ledger.prune;
   const transports = yield* store.latestTransport;
   const samples = yield* store.latestSamples;
-  expect(A.map(transports, (reading) => reading.source)).toStrictEqual([b]);
+  expect(A.map(transports, (reading) => [reading.source, reading.key.resource])).toStrictEqual([[b, "core"]]);
   deepStrictEqual(
     A.map(samples, (row) => row.credential),
     [O.some(a)]
   );
-  const cached = yield* ledger.latest(graphql);
+  const cached = yield* ledger.latest(core);
   const cachedSource = O.map(cached, (reading) => reading.source);
   assertSome(cachedSource, b);
+  // One GraphQL token can read two windows, so its readings are window instances that expire too.
+  const graphqlCached = yield* ledger.latest(graphql);
+  assertNone(graphqlCached);
   const expiredOnly = yield* ledger.latest(
     BucketKey.make({ identity: GithubIdentityLabel.make("user:bob"), resource: "graphql" })
   );
   assertNone(expiredOnly);
-  // Known fingerprints retain sequence continuity; their reset readings remain
-  // until normal age retention, while expired inferred instances disappear.
+  // Known REST fingerprints retain sequence continuity; their reset readings remain
+  // until normal age retention, while expired window instances disappear.
   const signal = yield* ledger.reserve(graphql);
   expect(signal.state._tag).toBe("Unknown");
 });
 
-it.effect("review2 expires inferred instances from memory retention cache and throttle", () =>
+it.effect("review2 expires window instances from memory retention cache and throttle", () =>
   Effect.gen(function* () {
     const store = yield* makeGithubLedgerStoreMemory;
     yield* verifyExpiry.pipe(ledgerOver(store));
@@ -353,7 +370,7 @@ it.effect("review2 expires inferred instances from memory retention cache and th
 );
 
 it.layer(Layer.merge(MemoryFileSystem.layerWith({}), Path.layer), { timeout: "30 seconds" })((it) => {
-  it.effect("review2 expires inferred instance files while keeping known credentials", () =>
+  it.effect("review2 expires window instance files while keeping known REST credentials", () =>
     verifyExpiry.pipe(withLayer(live), root("expiry"))
   );
 });

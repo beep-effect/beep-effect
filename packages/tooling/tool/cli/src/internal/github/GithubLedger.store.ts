@@ -45,7 +45,7 @@ import { writePrivateFile } from "../state/PrivateFile.ts";
 import { resolveWorkstationStateDir } from "../state/WorkstationState.ts";
 import {
   credentialKeyOf,
-  expiredUnknownReading,
+  expiredInstanceReading,
   hourFileKey,
   hourStartOf,
   readingsOfSample,
@@ -110,13 +110,13 @@ export interface GithubLedgerStoreShape {
   readonly calibrations: Effect.Effect<ReadonlyArray<CalibrationRow>, GithubLedgerError>;
   /** The newest sample per identity and credential source, including legacy files. */
   readonly latestSamples: Effect.Effect<ReadonlyArray<SampleRow>, GithubLedgerError>;
-  /** Latest transport readings per known credential or unknown reset instance. */
+  /** Latest transport readings per known REST credential or per window instance. */
   readonly latestTransport: Effect.Effect<ReadonlyArray<BucketReading>, GithubLedgerError>;
   /** The alias map; empty when absent or unreadable. */
   readonly readAliases: Effect.Effect<IdentityAliases, GithubLedgerError>;
   /**
    * A version-tagged current or legacy rollup. Unreadable or unsupported
-   * versions are absent; valid v1 history remains available for migration.
+   * versions are absent; valid v1 and v2 history remains available for migration.
    */
   readonly readRollup: (hour: DateTime.Utc) => Effect.Effect<O.Option<LedgerRollupRead>, GithubLedgerError>;
   /** The hot-parcel summary, when one was written. */
@@ -414,7 +414,7 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
   const readRollup = Effect.fnUntraced(function* (hour: DateTime.Utc) {
     const rollups = yield* dir("rollups");
     const text = yield* readOptional(path.join(rollups, `${hourFileKey(hour)}.json`), "read an hour rollup");
-    // Preserve v1 as a distinct version so expired raw history can be reported explicitly.
+    // Preserve v1 and v2 as distinct versions so expired raw history can be reported explicitly.
     return O.flatMap(text, decodeRollupRead);
   });
 
@@ -489,11 +489,11 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
             decodeSample(text),
             (sample) =>
               DateTime.toEpochMillis(sample.at) < limitMillis ||
-              A.every(readingsOfSample(sample), expiredUnknownReading(now))
+              A.every(readingsOfSample(sample), expiredInstanceReading(now))
           )
         : O.map(
             decodeReading(text),
-            (reading) => DateTime.toEpochMillis(reading.asOf) < limitMillis || expiredUnknownReading(reading, now)
+            (reading) => DateTime.toEpochMillis(reading.asOf) < limitMillis || expiredInstanceReading(reading, now)
           );
     const readings = A.filter(
       listed,
@@ -739,14 +739,14 @@ export const makeGithubLedgerStoreMemory = Effect.sync((): GithubLedgerStoreShap
             A.fromIterable(samples),
             ([, sample]) =>
               DateTime.toEpochMillis(sample.at) < latestLimit ||
-              A.every(readingsOfSample(sample), expiredUnknownReading(now))
+              A.every(readingsOfSample(sample), expiredInstanceReading(now))
           ),
           ([key]) => MutableHashMap.remove(samples, key)
         );
         A.forEach(
           A.filter(
             A.fromIterable(transports),
-            ([, reading]) => DateTime.toEpochMillis(reading.asOf) < latestLimit || expiredUnknownReading(reading, now)
+            ([, reading]) => DateTime.toEpochMillis(reading.asOf) < latestLimit || expiredInstanceReading(reading, now)
           ),
           ([key]) => MutableHashMap.remove(transports, key)
         );
