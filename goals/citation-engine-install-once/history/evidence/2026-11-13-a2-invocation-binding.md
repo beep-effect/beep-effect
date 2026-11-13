@@ -551,3 +551,5 @@ policy fingerprint and semantic delta were repeated after this merge and pass.
 Semantic delta on the committed code/evidence/main tree reports zero introduced,
 zero resolved and 194 unchanged findings. The single publication push follows
 these checks; no readiness monitor is started.
+
+A second pre-push main advance was also merged before publication: `d039f0cf38213bc87e03835061e56721aadfb3d0` incorporates `0fb1ae722b2d09534004a7f744bee74738176c0a` (#3254). Its changes concern stack conflict remedies and skills, with no Citation or package-proof input changes relative to the verified tree. Skills update/check and policy fingerprint pass again. Package and file receipts are retained for the identical inputs; the final pre-push gates follow this merge. No preparatory attempt pushed.
