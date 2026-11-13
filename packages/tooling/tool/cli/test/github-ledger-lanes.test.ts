@@ -14,6 +14,7 @@ import {
   GithubLedgerStore,
   HostLabel,
   hourOf,
+  LedgerAnchor,
   LedgerHourCell,
   LedgerHourKey,
   LedgerHourRollup,
@@ -36,8 +37,10 @@ import {
   usableReadingOf,
   windowsOf,
 } from "@beep/repo-cli/test/SharedInternals";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as DateTime from "effect/DateTime";
@@ -47,6 +50,7 @@ import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -912,3 +916,20 @@ it("D2c leaves an hour unmeasured when its instances have no in-hour anchors", (
   assertFalse(hour.lanesInferred);
   expect(hour.ghEstimated).toBe(0);
 });
+
+const anchorTime = (anchor: LedgerAnchor) => DateTime.toEpochMillis(anchor.at);
+const byAnchorTime = Order.mapInput(Order.Number, anchorTime);
+const laneIsTimeOrdered = (lane: ReadonlyArray<LedgerAnchor>) =>
+  A.every(A.zip(lane, A.drop(lane, 1)), ([earlier, later]) => anchorTime(earlier) <= anchorTime(later));
+
+it.prop(
+  "lanesOf places every schema-generated anchor in exactly one time-ordered lane",
+  { anchors: LedgerAnchor.pipe(S.Array, Arbitrary.schema) },
+  ({ anchors }) => {
+    const ordered = A.sort(anchors, byAnchorTime);
+    const lanes = lanesOf(ordered);
+    deepStrictEqual(Num.sumAll(A.map(lanes, A.length)), A.length(ordered));
+    assertTrue(A.every(lanes, laneIsTimeOrdered));
+  },
+  { arbitrary: fcRuns(25) }
+);
