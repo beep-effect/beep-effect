@@ -1,5 +1,6 @@
 import { HostsStageKind, stageKind, WorkstationOnly } from "@beep/infra-hosts/HostsStage";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -21,21 +22,22 @@ describe("HostsStage", () => {
   it.effect("the workstation guard refuses a true CI flag in every spelling", () =>
     Effect.gen(function* () {
       const refused = yield* Effect.forEach(["true", "1", "yes", "on"], (CI) => guardIn({ CI }));
-      expect(A.every(refused, Exit.isFailure)).toBe(true);
+      assertTrue(A.every(refused, Exit.isFailure));
     })
   );
 
   it.effect("the workstation guard admits an unset or false CI flag", () =>
     Effect.gen(function* () {
       const admitted = yield* Effect.forEach([{}, { CI: "false" }, { CI: "0" }], guardIn);
-      expect(A.every(admitted, Exit.isSuccess)).toBe(true);
+      assertTrue(A.every(admitted, Exit.isSuccess));
     })
   );
 
   it.effect("the workstation guard rejects a malformed CI flag", () =>
     Effect.gen(function* () {
       const malformed = yield* guardIn({ CI: "maybe" });
-      expect(Exit.isFailure(malformed)).toBe(true);
+      const rejected = Exit.isFailure(malformed);
+      assertTrue(rejected);
     })
   );
 });

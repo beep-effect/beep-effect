@@ -1,6 +1,8 @@
 /**
  * Pulumi orchestration surface for the OpenClaw workstation agent stack.
  *
+ * **Details**
+ *
  * The generation model and every applicator script moved to
  * `@beep/infra-hosts/OpenClawGeneration` (goals/infra-alchemy-rebuild P4),
  * which the Alchemy OpenClaw stack deploys. This module keeps only the Pulumi
@@ -212,6 +214,8 @@ export const OpenClawPulumiConfigValues = S.Class<OpenClawPulumiConfigValuesFiel
 /**
  * Build OpenClaw stack args from decoded Pulumi config values.
  *
+ * **Details**
+ *
  * Missing identity keys raise a `pulumi.RunError` rather than defaulting: an
  * apply against an undeclared machine is the outcome this stack exists to make
  * impossible.
@@ -398,6 +402,8 @@ export const loadOpenClawStackArgs = (): OpenClawStackArgs => {
 
 /**
  * Pulumi component applying one OpenClaw generation to the bound workstation.
+ *
+ * **Details**
  *
  * Children run in a fixed order — preflight, stage, apply, probe, and an
  * optional backup ship — each as a `command.local.Command` whose `create` and

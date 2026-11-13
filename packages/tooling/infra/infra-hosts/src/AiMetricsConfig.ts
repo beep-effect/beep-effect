@@ -1,6 +1,8 @@
 /**
  * Typed configuration for the AI metrics (Arize Phoenix) host stack.
  *
+ * **Details**
+ *
  * Decoded from the JSON file named by `BEEP_AI_METRICS_HOST_CONFIG`. Fields
  * that name a machine (SSH destination, tailnet name, the legacy Compose root)
  * have no default; fields that name this stack's own conventions (container,

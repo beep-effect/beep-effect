@@ -1,6 +1,8 @@
 /**
  * The AI metrics host stack: Arize Phoenix on dankserver.
  *
+ * **Details**
+ *
  * Replaces the Pulumi program that wrote a Compose file and a `systemd --user`
  * unit over SSH. The resource graph, for the `prod` stage:
  *

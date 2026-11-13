@@ -1,6 +1,8 @@
 /**
  * Exact immutable workspace artifacts for the OpenClaw workstation agent.
  *
+ * **Details**
+ *
  * Moved to `@beep/infra-hosts/OpenClawArtifacts` (goals/infra-alchemy-rebuild
  * P4); re-exported here until `infra/` is deleted.
  *

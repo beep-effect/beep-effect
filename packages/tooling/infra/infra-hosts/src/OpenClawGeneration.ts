@@ -1,6 +1,8 @@
 /**
  * Content-addressed OpenClaw generation model and applicator scripts.
  *
+ * **Details**
+ *
  * Every deployment renders one immutable generation under
  * `<configRoot>/<config-sha256>/` and flips a single `current` symlink at it.
  * Rendering is pure: the unit, `run.sh`, the generation tree and every
@@ -213,6 +215,8 @@ export type OpenClawFileMode = typeof OpenClawFileMode.Type;
 /**
  * Declared identity of the single workstation this stack may mutate.
  *
+ * **Details**
+ *
  * Every field is required and carries no default on purpose: a silent
  * wrong-target apply is the failure mode this binding exists to prevent, so an
  * incomplete expectation must refuse to render rather than degrade into an
@@ -392,6 +396,8 @@ export class OpenClawLocalProviderConfig extends S.Opaque<
 const openClawDeploymentConfigGatewayAuthTokenRefDefault = OpenclawSecretReference.make(defaultGatewayAuthTokenRef);
 /**
  * Deployment inputs the stack turns into an OpenClaw deployment intent.
+ *
+ * **Details**
  *
  * Secret material never appears here: `gatewayAuthTokenRef` is an `op://`
  * reference resolved on the workstation at runtime.
@@ -655,6 +661,8 @@ export const makeOpenClawDeploymentIntent: {
 /**
  * Backup shipping inputs for encrypted generation snapshots.
  *
+ * **Details**
+ *
  * The remote host is dumb storage: the ship script only creates the target
  * directory, copies an already-encrypted archive into it, and reads back a
  * sha256 receipt. Nothing else on the remote is modified.
@@ -704,6 +712,8 @@ export class OpenClawBackupConfig extends S.Opaque<OpenClawBackupConfig, { reado
 
 /**
  * One immutable, content-addressed OpenClaw generation.
+ *
+ * **Details**
  *
  * `generationId` is the length-delimited SHA-256 bundle of the config,
  * persona, proof skill, and compatibility identity. It is also the generation
@@ -1076,6 +1086,8 @@ export const makeOpenClawBundleHash: (
 /**
  * Build the content-addressed generation described by stack args.
  *
+ * **Details**
+ *
  * The driver render adapter turns the deployment config into canonical
  * `openclaw.json` bytes, then the config and immutable workspace artifact
  * hashes become one length-delimited generation identity. Hashing requires
@@ -1168,6 +1180,8 @@ export const makeOpenClawGeneration: (
 /**
  * Render the `systemd --user` unit for a generation.
  *
+ * **Details**
+ *
  * The unit never names a generation directory: it points at the
  * `<configRoot>/current` symlink so a pointer switch also switches binaries.
  * `UnsetEnvironment` strips inherited 1Password and gateway credentials from
@@ -1248,6 +1262,8 @@ export const renderOpenClawUnit = (generation: OpenClawGeneration): string =>
 
 /**
  * Render the generation entrypoint `run.sh`.
+ *
+ * **Details**
  *
  * The script resolves its own real path, so invoking it through the `current`
  * symlink still execs the binary staged inside the generation it resolves to.
@@ -1359,6 +1375,8 @@ export class OpenClawGenerationFile extends S.Opaque<OpenClawGenerationFile, { r
 /**
  * Render the complete generation tree as pure data.
  *
+ * **Details**
+ *
  * Keys are paths relative to `<configRoot>/<generationId>/`. The applicator —
  * not this function — materializes them, which keeps generation rendering
  * testable without a filesystem and reusable by a future remote applicator.
@@ -1423,6 +1441,8 @@ export const renderOpenClawGenerationTree = (
 
 /**
  * Render the preflight script that must pass before any mutation.
+ *
+ * **Details**
  *
  * Identity binding fails closed: an unreadable target value or an empty
  * expectation refuses the apply rather than passing on a vacuous match. Bus
@@ -1529,6 +1549,8 @@ export const renderOpenClawPreflightScript = ({
 /**
  * Guard lines proving the Node toolchain the privileged staging step executes is root-owned.
  *
+ * **Details**
+ *
  * Staging runs `npm install` under `sudo`, so every path that decides which `npm` and `node`
  * actually execute is inside the root trust boundary. Each candidate is fully resolved with
  * `readlink -f` (which collapses every symlink component) and then walked to `/`, requiring each
@@ -1574,6 +1596,8 @@ const trustedToolchainLines = (generation: OpenClawGeneration): ReadonlyArray<st
 
 /**
  * Render the staging script that materializes a generation tree.
+ *
+ * **Details**
  *
  * Staging is side-by-side and never touches the live pointer: the generation
  * directory is created root-owned with exact modes, the pinned OpenClaw
@@ -1709,6 +1733,8 @@ export const renderOpenClawStageScript = (generation: OpenClawGeneration): strin
 /**
  * Render the staged apply script that switches the active generation.
  *
+ * **Details**
+ *
  * The sequence is fixed and every step is recoverable: stop, snapshot the
  * stopped state with `cp -a` (so SQLite WAL and shm sidecars are captured
  * consistently), record the prior pointer, flip the pointer atomically with
@@ -1840,6 +1866,8 @@ export const renderOpenClawApplyScript = (generation: OpenClawGeneration): strin
 
 /**
  * Render the operator rollback script for a committed generation.
+ *
+ * **Details**
  *
  * Rollback is the apply failure path made explicit: stop, restore the
  * generation's stopped-state snapshot, return the pointer to the recorded
@@ -1994,6 +2022,8 @@ const expectedUnitTextLines = (generation: OpenClawGeneration): ReadonlyArray<st
 /**
  * Render the read-only drift audit script.
  *
+ * **Details**
+ *
  * The audit deliberately lives outside the `command.local.Command` graph:
  * command resources skip execution during preview and expose no refresh, so
  * they can never be the drift detector. It mutates nothing, always exits zero,
@@ -2059,6 +2089,8 @@ export const renderOpenClawDriftAuditScript = (input: OpenClawGenerationIdentity
 
 /**
  * Render the acceptance probe script run after a successful apply.
+ *
+ * **Details**
  *
  * Probes are alert-only: they exercise the gateway health and channel
  * surfaces, then fold in the read-only drift inventory so a single command
@@ -2145,6 +2177,8 @@ export const renderOpenClawProbeScript = (input: OpenClawGenerationIdentityScrip
 
 /**
  * Render the fail-closed, operator-invoked P3 live acceptance script.
+ *
+ * **Details**
  *
  * Run `degraded` while the designated op:// reference is unresolvable, then
  * restore it and run `restored`; the restored phase immediately proves model,
@@ -2246,6 +2280,8 @@ export const renderOpenClawLiveAcceptanceScript = (generation: OpenClawGeneratio
 /**
  * Render the encrypted snapshot shipping script.
  *
+ * **Details**
+ *
  * The archive is symmetrically encrypted locally before it ever leaves the
  * workstation; the passphrase is read from `OPENCLAW_BACKUP_PASSPHRASE`, which
  * the operator resolves out of band from the recorded `op://` reference, so no
@@ -2331,6 +2367,8 @@ export const renderOpenClawBackupShipScript = ({ backup, generation }: OpenClawB
 
 /**
  * Typed arguments for the OpenClaw workstation stack.
+ *
+ * **Details**
  *
  * `identity` has no default on purpose — the stack must be told which machine
  * it owns before it can render anything.

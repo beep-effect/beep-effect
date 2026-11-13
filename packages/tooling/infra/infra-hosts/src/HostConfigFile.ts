@@ -2,6 +2,8 @@
  * Loads a host stack's typed configuration from a JSON file named by an
  * environment variable.
  *
+ * **Details**
+ *
  * Host addresses, logins, paths and ports are machine facts, so no tracked
  * file carries them: each stack reads one JSON file that lives on the operator
  * workstation, decoded through the stack's schema. The file holds `op://`
@@ -20,6 +22,8 @@ import * as S from "effect/Schema";
 
 /**
  * Read and decode the JSON configuration file named by `envKey`.
+ *
+ * **Details**
  *
  * Every failure (unset variable, unreadable file, malformed JSON, a value the
  * schema rejects) surfaces as a `ConfigError`, the one error an

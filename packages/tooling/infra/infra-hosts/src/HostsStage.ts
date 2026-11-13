@@ -1,6 +1,8 @@
 /**
  * Stage policy shared by the host stacks.
  *
+ * **Details**
+ *
  * The host stacks invert the rule every other Alchemy stack follows: their
  * `prod` stage reaches dankserver and the operator workstation only over the
  * YubiKey-gated SSH and sudo routes, so `prod` runs from the operator
@@ -23,6 +25,8 @@ const HostsStageKindBase = LiteralKit(["prod", "rehearsal"]);
 
 /**
  * Stage kinds the host stacks distinguish.
+ *
+ * **Details**
  *
  * `prod` mutates the real host; `rehearsal` covers every other stage name
  * (`dev_$USER`, `live_$USER`, test stages), which deploys only the parts of a
@@ -82,6 +86,8 @@ export const stageKind = (stage: string): HostsStageKind =>
 
 /**
  * Refuses to run when the `CI` environment variable is true.
+ *
+ * **Details**
  *
  * Yield it before declaring any `prod` resource. In CI it fails with a
  * `ConfigError` (the only error an `Alchemy.Stack` body may raise), so a `prod`

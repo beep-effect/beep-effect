@@ -5423,6 +5423,27 @@
       "reason": "The inner scope closes the registry and mounts before acquireUseRelease restores the Worker global; forced defect and interruption controls prove termination before restoration. Owner: @beep/ontology-client. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
+      "id": "EV004:packages/tooling/infra/infra-hosts/test/OpenClawGeneration.test.ts:105:scoped@16#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/infra-hosts",
+      "file": "packages/tooling/infra/infra-hosts/test/OpenClawGeneration.test.ts",
+      "line": 105,
+      "endLine": 112,
+      "symbol": "scoped",
+      "occurrence": "v2:e65164bbdfd81dc82efa258cb86a905dd90a2bbafb130f7b1f755f79eb5eb564",
+      "class": "inner-helper-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const handle = yield* spawner.spawn(command); return yield* Effect.all([handle.stderr.pipe(Stream.decodeText(), Stream.mkString), handle.exitCode], { concurren",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV004:packages/tooling/library/codegen-kit/test/CodegenKit.test.ts:92:scoped@4#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -9931,6 +9952,27 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Native esbuild resolution, scoped disk bundle writes and file-URL evaluation are the subjects, with browser conditions and all forbidden-import assertions. Owner: @beep/ontology-use-cases. Exit: retire when the import-graph check uses esbuild's in-memory output and plugin resolution."
+    },
+    {
+      "id": "EV010:packages/tooling/infra/infra-hosts/test/OpenClawGeneration.test.ts:35:@effect/platform-node/NodeServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/infra-hosts",
+      "file": "packages/tooling/infra/infra-hosts/test/OpenClawGeneration.test.ts",
+      "line": 35,
+      "endLine": 35,
+      "symbol": "@effect/platform-node/NodeServices",
+      "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as NodeServices from \"@effect/platform-node/NodeServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/library/ai-metrics/test/agent-effectiveness.test.ts:36:@effect/platform-node@0#1",

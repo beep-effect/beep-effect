@@ -2,6 +2,8 @@
  * The OpenClaw host stack: the content-addressed generation applicator for
  * the operator workstation's OpenClaw agent.
  *
+ * **Details**
+ *
  * Replaces the Pulumi program's ordered `command.local.Command` resources with
  * ordered `Command.Exec` resources. The `prod` graph:
  *
