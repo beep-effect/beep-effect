@@ -25,6 +25,7 @@ import { CiCommandError } from "./Ci.errors.ts";
 import { cacheNativeSandboxDefaults, cleanupCachePilot, ensureCacheNativeSandbox } from "./CiCachePilotHost.ts";
 import { CiResourceLane } from "./CiOperational.schemas.ts";
 import { CiOperational, CiOperationalLive } from "./CiOperational.service.ts";
+import { ciShardOverflowCommand } from "./CiShardOverflow.ts";
 
 const operationalFailure = <A, R>(effect: Effect.Effect<A, CiCommandError, R>) =>
   effect.pipe(
@@ -121,9 +122,9 @@ const cachePilotCleanupCommand = Command.make(
  * **Details**
  *
  * `patterns`, `change-profile`, `job-env`, `prune-apt`, `runner-resources`,
- * `cache-sandbox` and `cache-pilot-cleanup` need only the platform services
- * (`FileSystem`, `Path`, `ChildProcessSpawner`), so the compiled CI binary
- * can run them before the job installs its toolchain.
+ * `cache-sandbox`, `cache-pilot-cleanup` and `shard-overflow` need only the
+ * platform services (`FileSystem`, `Path`, `ChildProcessSpawner`), so the
+ * compiled CI binary can run them before the job installs its toolchain.
  *
  * **Example** (Register the bootstrap commands under a `ci` group)
  *
@@ -146,4 +147,5 @@ export const ciBootstrapCommands = [
   runnerResourcesCommand,
   cacheSandboxCommand,
   cachePilotCleanupCommand,
+  ciShardOverflowCommand,
 ] as const;

@@ -2017,6 +2017,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "check.yml:Test Unit (${{ matrix.partition }})",
         "check.yml:Test Integration (${{ matrix.partition }})",
         "check.yml:Property Laws (${{ matrix.partition }})",
+        // A Test Unit partition Test Plan routed to the overflow pool; the Test Unit aggregate judges it
+        // (ci-shard-overflow.test.ts pins it to the hosted shard's steps).
+        "shard-overflow.yml:Overflow",
         "check.yml:Coverage Artifact Migration",
         "cache-warm.yml:Warm Turbo cache",
         // Scheduled read-only scorecard of hosted runs (goals/certainty-scorecard MEAS-01); it judges no head.
@@ -2949,13 +2952,16 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(yamlAt(policy.workflow, ["jobs", "heavy", "needs"])).toEqual(["change-profile", "admission"]);
       // Audit M4: the comparison waits for Test Unit and the Labs producer, not
       // the whole verify matrix, and never starts inside a cancelled run. It reads
-      // the Test Unit shard matrix too: an aggregate skipped on success passes only
-      // beside a matrix that succeeded.
+      // Test Plan and both Test Unit halves too: an aggregate skipped on success
+      // passes only beside a successful plan whose hosted and overflow halves each
+      // succeeded or, holding nothing, were never allocated.
       expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "needs"])).toEqual([
         "change-profile",
         "admission",
+        "test-plan",
         "test-unit",
         "test-unit-shard",
+        "test-unit-overflow",
         "labs",
       ]);
       expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "if"])).toBe(
@@ -3006,31 +3012,52 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(labs.run).toContain("--coverage-output .beep/ci-coverage/labs");
       expect(labs.run).toContain("--coverage-only");
       const gate = stepByName(comparison, "Determine comparison execution");
-      expect(gate.run).toContain(
-        '[[ "$UNIT_RESULT" == "success" || ( "$UNIT_RESULT" == "skipped" && "$UNIT_SHARDS_RESULT" == "success" ) ]]'
-      );
       expect(gate.env).toMatchObject({
+        PLAN_RESULT: "${{ needs.test-plan.result }}",
         UNIT_RESULT: "${{ needs.test-unit.result }}",
         UNIT_SHARDS_RESULT: "${{ needs.test-unit-shard.result }}",
+        UNIT_OVERFLOW_RESULT: "${{ needs.test-unit-overflow.result }}",
+        HOSTED_PARTITIONS: "${{ needs.test-plan.outputs.test_unit_hosted }}",
+        OVERFLOW_PARTITIONS: "${{ needs.test-plan.outputs.test_unit_overflow }}",
       });
-      // Every Test Unit outcome the comparison can meet: the checked-in line proceeds on a passed verdict only.
-      const unitLine = O.getOrThrow(
-        A.findFirst(Str.split(gate.run ?? "", "\n"), (line) => Str.includes("$UNIT_RESULT")(line))
-      );
-      for (const [unit, shards, proceeds] of [
-        ["success", "success", true],
-        ["skipped", "success", true],
-        ["skipped", "failure", false],
-        ["skipped", "skipped", false],
-        ["skipped", "cancelled", false],
-        ["failure", "success", false],
-        ["cancelled", "success", false],
-        ["", "", false],
+      // Every Test Unit outcome the comparison can meet, across both halves: the checked-in lines proceed on a
+      // passed verdict only.
+      const gateLines = Str.split(gate.run ?? "", "\n");
+      const unitLines = A.filter(gateLines, (line) => Str.includes("unit_half")(line));
+      expect(A.length(unitLines)).toBe(2);
+      const unitCheck = A.join(["set -euo pipefail", ...A.map(unitLines, Str.trim)], "\n");
+      const one = '["unit-a"]';
+      for (const [unit, plan, hosted, shards, overflow, routed, proceeds] of [
+        ["success", "success", one, "success", "[]", "skipped", true],
+        ["skipped", "success", one, "success", "[]", "skipped", true],
+        ["skipped", "success", one, "success", '["repo-cli-1"]', "success", true],
+        ["skipped", "success", "[]", "skipped", one, "success", true],
+        ["skipped", "success", one, "failure", "[]", "skipped", false],
+        ["skipped", "success", one, "skipped", "[]", "skipped", false],
+        ["skipped", "success", one, "cancelled", "[]", "skipped", false],
+        ["skipped", "success", one, "success", '["repo-cli-1"]', "failure", false],
+        ["skipped", "success", one, "success", '["repo-cli-1"]', "cancelled", false],
+        ["skipped", "success", one, "success", '["repo-cli-1"]', "skipped", false],
+        ["skipped", "success", one, "success", "[]", "success", false],
+        ["skipped", "success", "[]", "success", one, "success", false],
+        ["skipped", "success", "[]", "skipped", "[]", "skipped", false],
+        ["skipped", "failure", one, "success", "[]", "skipped", false],
+        ["skipped", "", "", "success", "", "skipped", false],
+        ["failure", "success", one, "success", "[]", "skipped", false],
+        ["cancelled", "success", one, "success", "[]", "skipped", false],
+        ["", "", "", "", "", "", false],
       ] as const) {
-        const check = Bun.spawnSync(["bash", "-c", Str.trim(unitLine)], {
-          env: { UNIT_RESULT: unit, UNIT_SHARDS_RESULT: shards },
+        const check = Bun.spawnSync(["bash", "-c", unitCheck], {
+          env: {
+            UNIT_RESULT: unit,
+            PLAN_RESULT: plan,
+            HOSTED_PARTITIONS: hosted,
+            UNIT_SHARDS_RESULT: shards,
+            OVERFLOW_PARTITIONS: overflow,
+            UNIT_OVERFLOW_RESULT: routed,
+          },
         });
-        expect(check.exitCode === 0, `${unit}/${shards}`).toBe(proceeds);
+        expect(check.exitCode === 0, `${unit}/${plan}/${hosted}:${shards}/${overflow}:${routed}`).toBe(proceeds);
       }
       expect(gate.run).toContain('[[ "$ADMISSION_RESULT" == "success" ]]');
       expect(gate.run).not.toContain("verify.result");
