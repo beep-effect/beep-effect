@@ -224,19 +224,27 @@ Review round 1 identified that engine queue wait must count against each stage d
 
 Reverse: Remove deadlineStarts and restore the previous invocation ordering only with an explicit behavior change.
 
+### Preserve tokenizer refusals independently of ordering counters, 2026-11-13
+
+Restore the selected-count patternEvaluations safety refusal and typed missing-ID invalid-configuration mapping. A2 preserves these refusals independently of the ordering implementation; no coverage floor changes. Reuse one invalidConfiguration factory at the existing policy, configuration and missing-ID boundaries rather than repeating equivalent error callbacks. The real control has two unfiltered members, a limit of three and four loose-policy selections. Both bounded ordering alone and the tokenizer refuse with extract/patternEvaluations before any worker starts. In this checkout RuntimeSet copies charge the new counter for each source bucket at line 147, or through copyBuckets at lines 137-141 when capacity changes; the control therefore refuses in ordering before the restored tokenizer guard. Leave that guard alternative and the missing-ID path unforced and uncovered.
+
+Lane feat/citation-invocation-binding · PR #3265
+
+Reverse: Restore the tokenizer guard deletion and missing-ID defect conversion from 76b441e82d4.
+
 ### Remove only the deleted cleaner adapter coverage row, 2026-11-13
 
 Remove the orphan CleanerOperation.ts file row by hand. The baseline writer exists as coverage:baseline:write, but it consumes complete measured package snapshots and has no file-row deletion command. Regenerating law-practice-server would run its whole suite, which the task explicitly forbids locally. Keep every other coverage floor unchanged and leave frozen proof references under goals/citation-extraction-engine and the eyecite fixture untouched.
 
 Reverse: Restore CleanerOperation.ts and its coverage baseline row
 
-### Remove unreachable cleaner and tokenizer fallback paths, 2026-11-13
+### Remove unreachable cleaner parent-budget fallback paths, 2026-11-13
 
-The invocation always supplies a parent budget, so CleanerPipeline no longer wraps it in Some or retains parentless fallbacks. Its charge loop now iterates typed charge values directly; the issued-ledger check still refuses forged, reused and absent entries. Tokenizer ordering is built from the same privately owned installed rows as the ID map, and its set-work counter already bounds every selection. The second selected-count check and typed missing-ID configuration mapper cannot be reached through caller input. Remove the duplicate guard and treat a missing private ID as an invariant defect. Restore behavioral coverage for live local ceilings, cumulative request capacity, required reference-budget installation refusal, configuration-copy ownership, and closed public-engine admission. No coverage floor changes.
+The invocation always supplies a parent budget, so CleanerPipeline no longer wraps it in Some or retains parentless fallbacks. Its charge loop now iterates typed charge values directly; the issued-ledger check still refuses forged, reused and absent entries. Behavioral tests cover live local ceilings, cumulative request capacity, unchanged empty text and unknown steps. No coverage floor changes.
 
 Lane feat/citation-invocation-binding · PR #3265
 
-Reverse: Restore the parent Option wrappers and tokenizer duplicate selection and missing-id refusals.
+Reverse: Restore the cleaner parent Option wrappers and parentless fallbacks.
 
 ### Update the existing draft without starting a readiness monitor, 2026-11-13
 

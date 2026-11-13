@@ -609,18 +609,12 @@ functions, in that order.
   charged. Exercise successful configuration copying and assert independent
   pattern bytes and name-array ownership. No production edit is made to this
   file. Remaining uncovered helpers are within its unchanged base floors.
-- Tokenizer: the old tight-budget control now encounters the invocation ledger
-  before its own produced-text ceiling. Keep the stage ceiling tight and bind
-  a larger invocation; assert the produced-text refusal and acknowledged native
-  retirement. Add source and ordering refusals that assert the exact limit and
-  zero children. The duplicate selected-count guard at old line 187 cannot
-  refuse: ordering bounds every set insertion/copy with `patternEvaluations`.
-  The missing-ID configuration mapper at old line 200 is also unreachable:
-  the schema checks ordering/recipe ID equality, duplicate IDs are refused,
-  and both private collections are built from the same owned installed rows.
-  Remove the duplicate ceiling and make a missing private ID an invariant
-  defect instead of a caller-configuration refusal. This rationale is in the
-  code commit and the decision file; no floor was lowered to hide it.
+- Tokenizer: the initial coverage repair separated the local text ceiling from
+  the invocation ledger and added source/ordering refusal controls, but also
+  removed the selected-count guard and converted the typed missing-ID refusal
+  to a defect. Coverage review rejected those production changes. They are
+  reverted by the correction below; the earlier removal rationale is withdrawn.
+
 
 Decision: `goals/citation-engine-install-once/decisions/2026-11-13-remove-unreachable-cleaner-and-tokenizer-fallback-paths.md`.
 All public signatures and extraction output remain unchanged. The process-boundary
@@ -674,3 +668,54 @@ new EV003 calls under the existing ownership/exit rationale, and keep only the
 Citation row changes. Restore unrelated positional churn to the committed
 baseline. No coverage floor changes. The accompanying decision records the
 request-lifetime rationale and reversal. Repeat the gate before the single push.
+
+
+### Coverage review correction: restore tokenizer refusals
+
+Code fix: `51c7088a0f131db872f0d4f3f8b4ebbb13328d81`, following review of
+`76b441e82d4`. Restore the selected-count guard exactly as on main and the
+missing-ID `invalid-configuration` error mapping. The mapping uses the same
+named error factory as policy/configuration refusal, preserving its typed
+channel and avoiding repeated equivalent callbacks. No missing-ID path is
+forced through a fake installation, and no refusal is converted to a defect.
+The earlier decision now records only the accepted cleaner removal. The new
+decision is `goals/citation-engine-install-once/decisions/2026-11-13-preserve-tokenizer-refusals-independently-of-ordering-counters.md`.
+
+The review's requested counter example is exercised through real ordering:
+U = 2 unfiltered members, limit = 3, and four selected IDs under a loose policy.
+The new test asserts all four IDs under that loose policy. Both bounded ordering
+alone and the bounded tokenizer then fail with operation `extract` and limit
+`patternEvaluations`, with zero spawned or confirmed worker processes.
+
+The copy counter does charge inherited storage in this checkout:
+`packages/law-practice/server/src/internal/Citation/RuntimeSet.ts` line 147 calls
+`step` for every source bucket when table sizes match. Lines 137-141 scan and
+charge buckets and reinsert inherited members when sizes differ. Line 157
+constructs the copy through the same constructor, executing those charges.
+Consequently the U = 2 / limit = 3 / selected = 4 control refuses inside ordering,
+before the restored tokenizer guard. Its true alternative and the missing-ID
+lookup refusal remain unforced. A2 retains both independently of these set
+implementation details. This is not a test claiming to reach the guard itself.
+
+Fresh focused V8 measurements after restoration, all at or above the unchanged
+floors (lines / statements / branches / functions):
+
+| File under `packages/law-practice/server/src/` | Measured | Base floors |
+| --- | --- | --- |
+| `CitationEngine/CitationEngine.layer.ts` | 98.14 / 96.42 / 100 / 92 | 97.29 / 95.12 / 100 / 84.61 |
+| `internal/Citation/CleanerPipeline.ts` | 100 / 100 / 100 / 100 | 100 / 100 / 98.52 / 100 |
+| `internal/Citation/ReferencePatterns.ts` | 96.8 / 96.49 / 100 / 84.61 | 96.8 / 96.49 / 100 / 84.61 |
+| `internal/Citation/Tokenizer.ts` | 100 / 98.87 / 88.88 / 100 | 98.75 / 97.84 / 88.88 / 96.42 |
+
+The tokenizer file passes individually with all ten tests. The engine coverage
+file passes all 15 tests (268.51 s); the cleaner four-file cohort passes all 32
+tests (5.70 s); the reference two-file cohort passes all five tests (11.89 s). Full-span passes all 11 tests
+in 86.46 s, with the fixture/table unchanged and the same 140 / 80 / 10 / 56 /
+291 / 291 totals. Upstream builds, quick server verification, local docgen,
+changed-file Biome, Effect/Vitest and policy fingerprint pass. Semantic delta
+reports zero introduced, zero resolved and 194 unchanged findings. The local
+main ref remains `d59751ef59e`; it is already merged, so no additional merge or
+pull is needed. No coverage baseline or lint inventory row changes this round.
+The full law-practice audit remains on hosted CI under the file-by-file rule.
+The historical Final-check receipt remains for `027869aabcb`; a new receipt is
+needed. Publish one push, retain draft, and start no watch or ready transition.
