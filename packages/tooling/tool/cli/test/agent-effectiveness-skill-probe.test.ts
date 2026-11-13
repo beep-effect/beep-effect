@@ -15,6 +15,7 @@ import {
   SkillProbeScoreOptions,
   SkillProbeVerdict,
   scoreSkillProbeRuns,
+  selectSkillProbePrimary,
   skillProbeFamily,
   skillProbePrompt,
   tCritical975,
@@ -177,7 +178,7 @@ describe("skill probe report", () => {
       record(taskId, family, "B", false),
       record(taskId, family, "C", true),
     ]);
-    const probe = buildSkillProbeReport(records);
+    const probe = buildSkillProbeReport(records, "all-lanes");
     expect(probe.verdict).toEqual(SkillProbeVerdict.cases.Effect.make({ difference: 1, lower: 1 }));
     expect(probe.firedRateGate).toBe(false);
     expect(probe.countedRuns).toBe(36);
@@ -186,7 +187,7 @@ describe("skill probe report", () => {
       0
     );
     expect(A.length(probe.cells)).toBe(36);
-    expect(A.length(A.filter(probe.differences, (row) => row.level === "family"))).toBe(4 * 2 * 4);
+    expect(A.length(A.filter(probe.differences, (row) => row.level === "family"))).toBe(4 * 2 * 5);
   });
 
   it("returns a null when the clustered interval reaches zero", () => {
@@ -195,7 +196,7 @@ describe("skill probe report", () => {
       record(taskId, family, "B", false),
       record(taskId, family, "C", passesInC(taskId)),
     ]);
-    const probe = buildSkillProbeReport(records);
+    const probe = buildSkillProbeReport(records, "all-lanes");
     assertSome(
       O.map(overall(probe, "C-B", "all-lanes"), (row) => [row.estimate.mean, row.estimate.lower < 0] as const),
       [0.333333, true] as const
@@ -211,7 +212,8 @@ describe("skill probe report", () => {
       A.flatMap(tasksOf, ({ taskId, family }) => [
         record(taskId, family, "B", true),
         record(taskId, family, "C", false),
-      ])
+      ]),
+      "all-lanes"
     );
     expect(probe.verdict).toEqual(
       SkillProbeVerdict.cases.Null.make({
@@ -228,23 +230,29 @@ describe("skill probe report", () => {
       record(`${family}-1`, family, "B", false),
       record(`${family}-1`, family, "C", true),
     ]);
-    expect(buildSkillProbeReport(records).verdict._tag).toBe("Insensitive");
-    const withFourth = buildSkillProbeReport([
-      ...records,
-      record("getsomes-struct-1", "getsomes-struct", "B", false),
-      record("getsomes-struct-1", "getsomes-struct", "C", true),
-    ]);
+    expect(buildSkillProbeReport(records, "all-lanes").verdict._tag).toBe("Insensitive");
+    const withFourth = buildSkillProbeReport(
+      [
+        ...records,
+        record("getsomes-struct-1", "getsomes-struct", "B", false),
+        record("getsomes-struct-1", "getsomes-struct", "C", true),
+      ],
+      "all-lanes"
+    );
     expect(withFourth.verdict).toEqual(SkillProbeVerdict.cases.Effect.make({ difference: 1, lower: 1 }));
   });
 
   it("returns a null when only one family contributes paired differences", () => {
-    const probe = buildSkillProbeReport([
-      ...A.flatMap(["1", "2", "3"], (index) => [
-        record(`fn-schema-${index}`, "fn-schema", "B", false),
-        record(`fn-schema-${index}`, "fn-schema", "C", true),
-      ]),
-      record("null-return-1", "null-return", "B", true),
-    ]);
+    const probe = buildSkillProbeReport(
+      [
+        ...A.flatMap(["1", "2", "3"], (index) => [
+          record(`fn-schema-${index}`, "fn-schema", "B", false),
+          record(`fn-schema-${index}`, "fn-schema", "C", true),
+        ]),
+        record("null-return-1", "null-return", "B", true),
+      ],
+      "all-lanes"
+    );
     assertSome(
       O.map(overall(probe, "C-B", "all-lanes"), (row) => row.families),
       1
@@ -260,20 +268,23 @@ describe("skill probe report", () => {
       record(taskId, family, "B", false),
       record(taskId, family, "C", family === "fn-schema"),
     ]);
-    expect(buildSkillProbeReport(records).verdict).toEqual(
+    expect(buildSkillProbeReport(records, "all-lanes").verdict).toEqual(
       SkillProbeVerdict.cases.Insensitive.make({
         sensitiveTasks: 3,
-        reason: "3 counted tasks have an all-lanes pass among their B and C runs; the floor is 4.",
+        reason: "3 counted tasks pass all-lanes at least once among their B and C runs; the floor is 4.",
       })
     );
   });
 
   it("reports the lane census per task and cell", () => {
-    const probe = buildSkillProbeReport([
-      record("t-1", "f", "B", true),
-      record("t-1", "f", "B", false),
-      record("t-1", "f", "B", false, { excluded: true }),
-    ]);
+    const probe = buildSkillProbeReport(
+      [
+        record("t-1", "f", "B", true),
+        record("t-1", "f", "B", false),
+        record("t-1", "f", "B", false, { excluded: true }),
+      ],
+      "all-lanes"
+    );
     expect(probe.laneCensus).toHaveLength(1);
     expect(probe.laneCensus[0]).toMatchObject({
       cell: "B",
@@ -288,7 +299,11 @@ describe("skill probe report", () => {
 
   it("returns a null below the threshold, and insensitive when no task passes in B or C", () => {
     const equal = buildSkillProbeReport(
-      A.flatMap(tasksOf, ({ taskId, family }) => [record(taskId, family, "B", true), record(taskId, family, "C", true)])
+      A.flatMap(tasksOf, ({ taskId, family }) => [
+        record(taskId, family, "B", true),
+        record(taskId, family, "C", true),
+      ]),
+      "all-lanes"
     );
     expect(equal.verdict).toEqual(
       SkillProbeVerdict.cases.Null.make({
@@ -298,7 +313,7 @@ describe("skill probe report", () => {
         reason: "C-B all-lanes 0 is below 0.1.",
       })
     );
-    expect(buildSkillProbeReport([record("t", "f", "A", true)]).verdict._tag).toBe("Insensitive");
+    expect(buildSkillProbeReport([record("t", "f", "A", true)], "all-lanes").verdict._tag).toBe("Insensitive");
   });
 
   it("counts excluded runs without scoring them and gates a low fired rate", () => {
@@ -308,7 +323,7 @@ describe("skill probe report", () => {
       record("t-1", "f", "C", true, { fired: false }),
       record("t-1", "f", "C", true, { fired: true }),
     ];
-    const probe = buildSkillProbeReport(records);
+    const probe = buildSkillProbeReport(records, "all-lanes");
     expect(probe.countedRuns).toBe(3);
     expect(probe.excludedRuns).toBe(1);
     expect(probe.firedRate.mean).toBe(0.5);
@@ -328,10 +343,10 @@ describe("skill probe report", () => {
   });
 
   it("reports turns and wall seconds as secondary differences", () => {
-    const probe = buildSkillProbeReport([
-      record("t-1", "f", "B", false, { turns: 9 }),
-      record("t-1", "f", "C", false, { turns: 12 }),
-    ]);
+    const probe = buildSkillProbeReport(
+      [record("t-1", "f", "B", false, { turns: 9 }), record("t-1", "f", "C", false, { turns: 12 })],
+      "all-lanes"
+    );
     assertSome(
       O.map(overall(probe, "C-B", "turns"), (row) => row.estimate.mean),
       3
@@ -434,6 +449,63 @@ describe("skill probe staging", () => {
       expect(result.cases[0]?.arms.without).toBeUndefined();
     })
   );
+});
+
+describe("skill probe primary selection", () => {
+  const lawOnly = (taskId: string, family: string, cell: "A" | "B" | "C") =>
+    SkillProbeRunRecord.make({
+      ...record(taskId, family, cell, false),
+      outcome: SkillProbeOutcome.cases.Scored.make({
+        report: AgentEffectivenessEvalScoreReport.make({
+          taskId,
+          score: 0.5,
+          breakdown: AgentEffectivenessEvalScoreBreakdown.make({ completion: 1, schemaFirst: 1, tsgo: 0.5, biome: 1 }),
+          violations: [],
+        }),
+        allLanesPass: false,
+        laneFraction: 0.5,
+      }),
+    });
+
+  it("selects all-lanes first, law pass second, and nothing below four tasks or two families", () => {
+    const allLanes = [
+      record("a-1", "a", "B", true),
+      record("a-2", "a", "C", true),
+      record("b-1", "b", "C", true),
+      record("b-2", "b", "B", true),
+    ];
+    assertSome(selectSkillProbePrimary(allLanes).selected, "all-lanes");
+    const lawPass = [
+      lawOnly("a-1", "a", "B"),
+      lawOnly("a-2", "a", "C"),
+      lawOnly("b-1", "b", "C"),
+      lawOnly("b-2", "b", "B"),
+      record("c-1", "c", "B", true),
+    ];
+    const selection = selectSkillProbePrimary(lawPass);
+    assertSome(selection.selected, "law-pass");
+    expect(selection.candidates[0]).toMatchObject({ primary: "all-lanes", tasks: ["c-1"], qualifies: false });
+    const oneFamily = A.map(["1", "2", "3", "4"], (index) => record(`a-${index}`, "a", "C", true));
+    assertNone(selectSkillProbePrimary(oneFamily).selected);
+    const cellA = [
+      record("a-1", "a", "A", true),
+      record("a-2", "a", "A", true),
+      record("b-1", "b", "A", true),
+      record("b-2", "b", "A", true),
+    ];
+    assertNone(selectSkillProbePrimary(cellA).selected);
+  });
+
+  it("reads the verdict and sensitivity from the selected primary", () => {
+    const records = A.flatMap(tasksOf, ({ taskId, family }) => [
+      record(taskId, family, "B", false),
+      lawOnly(taskId, family, "C"),
+    ]);
+    expect(buildSkillProbeReport(records, "all-lanes").verdict._tag).toBe("Insensitive");
+    const lawReport = buildSkillProbeReport(records, "law-pass");
+    expect(lawReport.primary).toBe("law-pass");
+    expect(lawReport.verdict).toEqual(SkillProbeVerdict.cases.Effect.make({ difference: 1, lower: 1 }));
+  });
 });
 
 describe("skill probe exclusion", () => {

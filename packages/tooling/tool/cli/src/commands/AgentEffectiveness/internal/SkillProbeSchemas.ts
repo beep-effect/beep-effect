@@ -106,9 +106,10 @@ export type SkillProbeContrast = typeof SkillProbeContrast.Type;
  * @category models
  * @since 0.0.0
  */
-export const SkillProbeMeasure = LiteralKit(["all-lanes", "lane-fraction", "turns", "wall-seconds"]).pipe(
+export const SkillProbeMeasure = LiteralKit(["all-lanes", "law-pass", "lane-fraction", "turns", "wall-seconds"]).pipe(
   $I.annoteSchema("SkillProbeMeasure", {
-    description: "Per-run measure: all-lanes pass (primary), lane fraction, turns and wall seconds.",
+    description:
+      "Per-run measure: all-lanes pass, law pass (completion and schema-first both 1), lane fraction, turns and wall seconds.",
   })
 );
 
@@ -128,6 +129,80 @@ export const SkillProbeMeasure = LiteralKit(["all-lanes", "lane-fraction", "turn
  * @since 0.0.0
  */
 export type SkillProbeMeasure = typeof SkillProbeMeasure.Type;
+
+/**
+ * Primary measure candidate, in the selection order of the second amendment.
+ *
+ * **Example** (Check a primary)
+ *
+ * ```ts
+ * import { SkillProbePrimary } from "@beep/repo-cli/test/AgentEffectiveness"
+ *
+ * console.log(SkillProbePrimary.is["law-pass"]("law-pass")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const SkillProbePrimary = LiteralKit(["all-lanes", "law-pass"]).pipe(
+  $I.annoteSchema("SkillProbePrimary", {
+    description: "Primary measure candidate: all-lanes pass first, then law pass (completion and schema-first).",
+  })
+);
+
+/**
+ * Primary measure candidate type.
+ *
+ * **Example** (Type a primary)
+ *
+ * ```ts
+ * import type { SkillProbePrimary } from "@beep/repo-cli/test/AgentEffectiveness"
+ *
+ * const primary: SkillProbePrimary = "all-lanes"
+ * console.log(primary) // "all-lanes"
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SkillProbePrimary = typeof SkillProbePrimary.Type;
+
+/**
+ * Primary selection from pooled B and C pilot runs.
+ *
+ * **Example** (Read a selection field)
+ *
+ * ```ts
+ * import { SkillProbePrimarySelection } from "@beep/repo-cli/test/AgentEffectiveness"
+ *
+ * console.log(Object.keys(SkillProbePrimarySelection.fields).includes("selected")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SkillProbePrimarySelection extends S.Opaque<
+  SkillProbePrimarySelection,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    schemaVersion: S.tag("skill-probe-primary-selection/v1"),
+    candidates: S.Array(
+      S.Struct({
+        primary: SkillProbePrimary,
+        tasks: S.Array(S.NonEmptyString),
+        families: S.Array(S.NonEmptyString),
+        qualifies: S.Boolean,
+      })
+    ),
+    selected: S.OptionFromNullOr(SkillProbePrimary),
+  }).pipe(
+    $I.annoteSchema("SkillProbePrimarySelection", {
+      description:
+        "For each primary candidate in order, the tasks and families with a pass among pooled B and C runs, and the first that qualifies.",
+    })
+  )
+) {}
 
 /**
  * One grader verdict from a `claude plugin eval` run.
@@ -489,6 +564,7 @@ export class SkillProbeCellSummary extends S.Opaque<SkillProbeCellSummary, { rea
     excluded: Count,
     fired: Count,
     allLanes: SkillProbeEstimate,
+    lawPass: SkillProbeEstimate,
     laneFraction: SkillProbeEstimate,
     turns: SkillProbeEstimate,
     wallSeconds: SkillProbeEstimate,
@@ -610,6 +686,7 @@ export class SkillProbeLaneCensus extends S.Opaque<SkillProbeLaneCensus, { reado
     tsgo: NonNegative,
     biome: NonNegative,
     allLanes: NonNegative,
+    lawPass: NonNegative,
   }).pipe(
     $I.annoteSchema("SkillProbeLaneCensus", {
       description: "Share of a task and cell's counted runs that scored 1 on each lane and on all lanes.",
@@ -635,6 +712,7 @@ export class SkillProbeReport extends S.Opaque<SkillProbeReport, { readonly bran
   S.Struct({
     schemaVersion: S.tag("skill-probe-report/v1"),
     scorerProfile: S.NonEmptyString,
+    primary: SkillProbePrimary,
     fingerprints: S.Array(SkillProbeFingerprint),
     countedRuns: Count,
     excludedRuns: Count,

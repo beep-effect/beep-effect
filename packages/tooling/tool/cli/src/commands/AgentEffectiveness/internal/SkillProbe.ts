@@ -38,16 +38,17 @@ import {
   SkillProbeOutcome,
   SkillProbePreflight,
   SkillProbePreflightRow,
+  SkillProbePrimarySelection,
   SkillProbeReport,
   SkillProbeRunRecord,
   SkillProbeStage,
 } from "./SkillProbeSchemas.ts";
-import { buildSkillProbeReport, validateSkillProbeRecords } from "./SkillProbeStats.ts";
+import { buildSkillProbeReport, selectSkillProbePrimary, validateSkillProbeRecords } from "./SkillProbeStats.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { AgentEffectivenessEvalScoreReport } from "../AgentEffectiveness.schemas.ts";
-import type { PluginEvalRun, SkillProbeCell } from "./SkillProbeSchemas.ts";
+import type { PluginEvalRun, SkillProbeCell, SkillProbePrimary } from "./SkillProbeSchemas.ts";
 
 const SKILL_NAME = "schema-first-development";
 const SKILL_DIR = `.claude/skills/${SKILL_NAME}`;
@@ -78,20 +79,21 @@ type ProbeEnv = FileSystem.FileSystem | Path.Path;
 
 /**
  * Scorer profile every run record carries: the shared law scorer plus the
- * drift repairs named in `goals/skill-effect-probe/research/2026-11-13-analysis-rule-amendment.md`.
+ * drift repairs named in `goals/skill-effect-probe/research/2026-11-13-analysis-rule-amendment.md`
+ * and the Biome repair of `2026-11-13-analysis-rule-amendment-2.md`.
  *
  * **Example** (Read the profile)
  *
  * ```ts
  * import { SKILL_PROBE_SCORER_PROFILE } from "@beep/repo-cli/test/AgentEffectiveness"
  *
- * console.log(SKILL_PROBE_SCORER_PROFILE) // "skill-probe-scorer/v2"
+ * console.log(SKILL_PROBE_SCORER_PROFILE) // "skill-probe-scorer/v3"
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const SKILL_PROBE_SCORER_PROFILE = "skill-probe-scorer/v2";
+export const SKILL_PROBE_SCORER_PROFILE = "skill-probe-scorer/v3";
 
 // Completion patterns the archived corpus wrote before the current idiom; each
 // repair accepts the old spelling and the one the live skill teaches.
@@ -140,6 +142,10 @@ export const repairSkillProbeTask = (task: SkillOptTaskManifest): SkillOptTaskMa
       requiredPatterns: A.map(task.completion.requiredPatterns, repairPattern),
     }),
   });
+
+// Biome findings only a formatter satisfies; no cell has one.
+const isIgnoredBiomeViolation = (ruleId: string): boolean =>
+  ruleId === "format" || Str.startsWith("assist/source/")(ruleId);
 
 const isIgnoredTsgoViolation = (message: string): boolean =>
   A.some(IGNORED_TSGO_RULES, (rule) => Str.includes(`effect(${rule})`)(message));
@@ -477,7 +483,11 @@ const scoreProbeFixture = Effect.fn("SkillProbe.scoreFixture")(function* (dir: s
   return buildAgentEffectivenessEvalScoreReport(
     repaired,
     completion,
-    LawEvaluation.make({ ...law, tsgo: A.filter(law.tsgo, (violation) => !isIgnoredTsgoViolation(violation.message)) })
+    LawEvaluation.make({
+      ...law,
+      tsgo: A.filter(law.tsgo, (violation) => !isIgnoredTsgoViolation(violation.message)),
+      biome: A.filter(law.biome, (violation) => !isIgnoredBiomeViolation(violation.ruleId)),
+    })
   );
 });
 
@@ -936,18 +946,20 @@ export const readSkillProbeRecords = Effect.fn("SkillProbe.readRecords")(functio
  * import { runSkillProbeReport } from "@beep/repo-cli/test/AgentEffectiveness"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(runSkillProbeReport(["runs.jsonl"], "preflight.json"))) // true
+ * console.log(Effect.isEffect(runSkillProbeReport(["runs.jsonl"], "preflight.json", "all-lanes"))) // true
  * ```
  *
  * @param files - JSON Lines files of `SkillProbeRunRecord`.
  * @param preflightPath - Preflight receipt; records of its dropped tasks are refused.
+ * @param primary - Primary measure the verdict reads.
  * @returns Cell summaries, paired differences, fired rate and verdict for the records.
  * @category commands
  * @since 0.0.0
  */
 export const runSkillProbeReport = Effect.fn("SkillProbe.report")(function* (
   files: ReadonlyArray<string>,
-  preflightPath: string
+  preflightPath: string,
+  primary: SkillProbePrimary
 ): Effect.fn.Return<SkillProbeReport, AgentEffectivenessEvalScorerError | S.SchemaError, ProbeEnv> {
   const preflight = yield* readText(preflightPath).pipe(Effect.flatMap(decodePreflight));
   const records = yield* readSkillProbeRecords(files);
@@ -955,7 +967,42 @@ export const runSkillProbeReport = Effect.fn("SkillProbe.report")(function* (
   if (A.isReadonlyArrayNonEmpty(problems)) {
     return yield* fail(`Run records cannot be pooled:\n- ${A.join(problems, "\n- ")}`);
   }
-  const report = buildSkillProbeReport(records);
+  const report = buildSkillProbeReport(records, primary);
   yield* encodeReport(report).pipe(Effect.flatMap(Console.log));
   return report;
+});
+
+const encodeSelection = S.encodeEffect(S.fromJsonString(SkillProbePrimarySelection));
+
+/**
+ * Validate pilot records and print the primary selection as JSON.
+ *
+ * **Example** (Select from pilot records)
+ *
+ * ```ts
+ * import { runSkillProbeSelect } from "@beep/repo-cli/test/AgentEffectiveness"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(runSkillProbeSelect(["pilot.jsonl"], "preflight.json"))) // true
+ * ```
+ *
+ * @param files - Pilot run record files.
+ * @param preflightPath - Preflight receipt; records of its dropped tasks are refused.
+ * @returns Each candidate's qualifying tasks and families and the selected primary.
+ * @category commands
+ * @since 0.0.0
+ */
+export const runSkillProbeSelect = Effect.fn("SkillProbe.select")(function* (
+  files: ReadonlyArray<string>,
+  preflightPath: string
+): Effect.fn.Return<SkillProbePrimarySelection, AgentEffectivenessEvalScorerError | S.SchemaError, ProbeEnv> {
+  const preflight = yield* readText(preflightPath).pipe(Effect.flatMap(decodePreflight));
+  const records = yield* readSkillProbeRecords(files);
+  const problems = validateSkillProbeRecords(records, preflight.dropped);
+  if (A.isReadonlyArrayNonEmpty(problems)) {
+    return yield* fail(`Run records cannot be pooled:\n- ${A.join(problems, "\n- ")}`);
+  }
+  const selection = selectSkillProbePrimary(records);
+  yield* encodeSelection(selection).pipe(Effect.flatMap(Console.log));
+  return selection;
 });

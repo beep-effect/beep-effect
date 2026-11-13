@@ -23,6 +23,7 @@ import {
   SkillProbeEstimate,
   SkillProbeLaneCensus,
   SkillProbeOutcome,
+  SkillProbePrimarySelection,
   SkillProbeReport,
   SkillProbeVerdict,
 } from "./SkillProbeSchemas.ts";
@@ -31,6 +32,7 @@ import type {
   SkillProbeContrast,
   SkillProbeFingerprint,
   SkillProbeMeasure,
+  SkillProbePrimary,
   SkillProbeRunRecord,
 } from "./SkillProbeSchemas.ts";
 
@@ -48,7 +50,19 @@ const T_975 = [
 ];
 
 const SkillProbeCellOrder: ReadonlyArray<SkillProbeCell> = ["A", "B", "C"];
-const MEASURES: ReadonlyArray<SkillProbeMeasure> = ["all-lanes", "lane-fraction", "turns", "wall-seconds"];
+const MEASURES: ReadonlyArray<SkillProbeMeasure> = ["all-lanes", "law-pass", "lane-fraction", "turns", "wall-seconds"];
+const PRIMARY_ORDER: ReadonlyArray<SkillProbePrimary> = ["all-lanes", "law-pass"];
+/** A primary qualifies with a pooled B or C pass on this many tasks... */
+const QUALIFYING_TASKS = 4;
+/** ...drawn from at least this many families. */
+const QUALIFYING_FAMILIES = 2;
+
+const isLawPass = (scored: typeof SkillProbeOutcome.cases.Scored.Type): boolean =>
+  scored.report.breakdown.completion === 1 && scored.report.breakdown.schemaFirst === 1;
+
+const passesPrimary = (record: SkillProbeRunRecord, primary: SkillProbePrimary): boolean =>
+  SkillProbeOutcome.guards.Scored(record.outcome) &&
+  (primary === "all-lanes" ? record.outcome.allLanesPass : isLawPass(record.outcome));
 const CONTRASTS: ReadonlyArray<readonly [SkillProbeContrast, SkillProbeCell, SkillProbeCell]> = [
   ["C-B", "C", "B"],
   ["B-A", "B", "A"],
@@ -174,6 +188,7 @@ const measureValue: Record<
   (record: SkillProbeRunRecord, scored: typeof SkillProbeOutcome.cases.Scored.Type) => number
 > = {
   "all-lanes": (_record, scored) => (scored.allLanesPass ? 1 : 0),
+  "law-pass": (_record, scored) => (isLawPass(scored) ? 1 : 0),
   "lane-fraction": (_record, scored) => scored.laneFraction,
   turns: (record) => record.turns,
   "wall-seconds": (record) => record.durationSeconds,
@@ -225,6 +240,7 @@ const censusCell = (
     tsgo: laneShare(counted, (scored) => scored.report.breakdown.tsgo === 1),
     biome: laneShare(counted, (scored) => scored.report.breakdown.biome === 1),
     allLanes: laneShare(counted, (scored) => scored.allLanesPass),
+    lawPass: laneShare(counted, isLawPass),
   });
 };
 
@@ -245,6 +261,7 @@ const summarizeCell = (
     excluded: A.length(records) - A.length(counted),
     fired: A.length(A.filter(counted, (record) => record.fired)),
     allLanes: estimateMean(values("all-lanes"), NORMAL_975),
+    lawPass: estimateMean(values("law-pass"), NORMAL_975),
     laneFraction: estimateMean(values("lane-fraction"), NORMAL_975),
     turns: estimateMean(values("turns"), NORMAL_975),
     wallSeconds: estimateMean(values("wall-seconds"), NORMAL_975),
@@ -341,15 +358,19 @@ const differenceRows = (diffs: ReadonlyArray<TaskDifference>): ReadonlyArray<Ski
   return A.appendAll(A.appendAll(taskRows, familyRows), overallRows);
 };
 
-const verdictOf = (differences: ReadonlyArray<SkillProbeDifference>, sensitiveTasks: number): SkillProbeVerdict =>
+const verdictOf = (
+  differences: ReadonlyArray<SkillProbeDifference>,
+  sensitiveTasks: number,
+  primary: SkillProbePrimary
+): SkillProbeVerdict =>
   sensitiveTasks < SENSITIVE_TASK_FLOOR
     ? SkillProbeVerdict.cases.Insensitive.make({
         sensitiveTasks,
-        reason: `${sensitiveTasks} counted tasks have an all-lanes pass among their B and C runs; the floor is ${SENSITIVE_TASK_FLOOR}.`,
+        reason: `${sensitiveTasks} counted tasks pass ${primary} at least once among their B and C runs; the floor is ${SENSITIVE_TASK_FLOOR}.`,
       })
     : pipe(
         differences,
-        A.findFirst((row) => row.level === "overall" && row.contrast === "C-B" && row.measure === "all-lanes"),
+        A.findFirst((row) => row.level === "overall" && row.contrast === "C-B" && row.measure === primary),
         O.match({
           onNone: () =>
             SkillProbeVerdict.cases.Null.make({
@@ -374,7 +395,7 @@ const verdictOf = (differences: ReadonlyArray<SkillProbeDifference>, sensitiveTa
                     harm: estimate.upper < 0,
                     reason:
                       estimate.mean < EFFECT_THRESHOLD
-                        ? `C-B all-lanes ${estimate.mean} is below ${EFFECT_THRESHOLD}.`
+                        ? `C-B ${primary} ${estimate.mean} is below ${EFFECT_THRESHOLD}.`
                         : `The clustered interval's lower end ${estimate.lower} does not exclude zero.`,
                   }),
         })
@@ -399,7 +420,7 @@ const fingerprintKey = (fingerprint: SkillProbeFingerprint): string =>
  * ```ts
  * import { buildSkillProbeReport } from "@beep/repo-cli/test/AgentEffectiveness"
  *
- * console.log(buildSkillProbeReport([]).verdict._tag) // "Null"
+ * console.log(buildSkillProbeReport([], "all-lanes").verdict._tag) // "Insensitive"
  * ```
  *
  * @param records - Run records from every cell.
@@ -407,7 +428,10 @@ const fingerprintKey = (fingerprint: SkillProbeFingerprint): string =>
  * @category statistics
  * @since 0.0.0
  */
-export const buildSkillProbeReport = (records: ReadonlyArray<SkillProbeRunRecord>): SkillProbeReport => {
+export const buildSkillProbeReport: {
+  (primary: SkillProbePrimary): (records: ReadonlyArray<SkillProbeRunRecord>) => SkillProbeReport;
+  (records: ReadonlyArray<SkillProbeRunRecord>, primary: SkillProbePrimary): SkillProbeReport;
+} = dual(2, (records: ReadonlyArray<SkillProbeRunRecord>, primary: SkillProbePrimary): SkillProbeReport => {
   const groups = A.groupBy(records, (record) => cellKey(record.taskId, record.cell));
   const tasks = pipe(
     records,
@@ -431,14 +455,7 @@ export const buildSkillProbeReport = (records: ReadonlyArray<SkillProbeRunRecord
   );
   const sensitiveTasks = A.length(
     A.filter(tasks, ([taskId]) =>
-      A.some(
-        records,
-        (record) =>
-          record.taskId === taskId &&
-          record.cell !== "A" &&
-          SkillProbeOutcome.guards.Scored(record.outcome) &&
-          record.outcome.allLanesPass
-      )
+      A.some(records, (record) => record.taskId === taskId && record.cell !== "A" && passesPrimary(record, primary))
     )
   );
   const differences = differenceRows(taskDifferences(tasks, groups));
@@ -455,6 +472,7 @@ export const buildSkillProbeReport = (records: ReadonlyArray<SkillProbeRunRecord
   const counted = A.length(A.filter(records, isCounted));
   return SkillProbeReport.make({
     schemaVersion: "skill-probe-report/v1",
+    primary,
     scorerProfile: pipe(
       A.head(records),
       O.map((record) => record.scorerProfile),
@@ -472,9 +490,9 @@ export const buildSkillProbeReport = (records: ReadonlyArray<SkillProbeRunRecord
     firedOnly,
     firedRate,
     firedRateGate: A.isReadonlyArrayNonEmpty(countedC) && firedRate.mean < FIRED_RATE_GATE,
-    verdict: verdictOf(differences, sensitiveTasks),
+    verdict: verdictOf(differences, sensitiveTasks, primary),
   });
-};
+});
 
 /** Most tries of one planned run: the original and two reruns. */
 const MAX_ATTEMPTS_PER_SLOT = 3;
@@ -592,3 +610,49 @@ export const validateSkillProbeRecords: {
     ]);
   }
 );
+
+/**
+ * Pick the primary measure from pooled B and C pilot runs: the first
+ * candidate, in the order all-lanes then law pass, with a pass on at least
+ * four tasks drawn from at least two families.
+ *
+ * **Details**
+ *
+ * Reads only pooled B and C passes, never their difference. Cell A and
+ * excluded runs are ignored.
+ *
+ * **Example** (No pilot runs)
+ *
+ * ```ts
+ * import { selectSkillProbePrimary } from "@beep/repo-cli/test/AgentEffectiveness"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(selectSkillProbePrimary([]).selected)) // true
+ * ```
+ *
+ * @param records - Pilot run records.
+ * @returns Each candidate's qualifying tasks and families and the selected primary.
+ * @category statistics
+ * @since 0.0.0
+ */
+export const selectSkillProbePrimary = (records: ReadonlyArray<SkillProbeRunRecord>): SkillProbePrimarySelection => {
+  const candidates = A.map(PRIMARY_ORDER, (primary) => {
+    const passing = A.filter(records, (record) => record.cell !== "A" && passesPrimary(record, primary));
+    const tasks = A.sort(A.dedupe(A.map(passing, (record) => record.taskId)), Order.String);
+    const families = A.sort(A.dedupe(A.map(passing, (record) => record.family)), Order.String);
+    return {
+      primary,
+      tasks,
+      families,
+      qualifies: A.length(tasks) >= QUALIFYING_TASKS && A.length(families) >= QUALIFYING_FAMILIES,
+    };
+  });
+  return SkillProbePrimarySelection.make({
+    schemaVersion: "skill-probe-primary-selection/v1",
+    candidates,
+    selected: pipe(
+      A.findFirst(candidates, (candidate) => candidate.qualifies),
+      O.map((candidate) => candidate.primary)
+    ),
+  });
+};

@@ -100,13 +100,17 @@ Higher sources outrank lower sources when they conflict.
 
 ## Decision Rule
 
-Primary measure: all-lanes pass per run, averaged per task and cell, scored
-under the probe's scorer profile (see
+Primary measure: chosen before the scored run by the fixed selection rule in
+[`research/2026-11-13-analysis-rule-amendment-2.md`](./research/2026-11-13-analysis-rule-amendment-2.md):
+all-lanes pass per run if it qualifies on the laws-prompt pilot, else law
+pass (completion and schema-first lanes both 1), averaged per task and cell
+and scored under the probe's scorer profile (see also
 [`research/2026-11-13-analysis-rule-amendment.md`](./research/2026-11-13-analysis-rule-amendment.md)).
-The outcomes are checked in this order.
+If neither qualifies there is no scored run and the verdict is Insensitive
+from the pilot. The outcomes are checked in this order.
 
-- **Insensitive.** Fewer than 4 counted tasks have at least one all-lanes
-  pass among their B and C runs. Consequence: no verdict on the trainer
+- **Insensitive.** Fewer than 4 counted tasks have at least one pass on the
+  primary measure among their B and C runs. Consequence: no verdict on the trainer
   question and no prune proposal; the findings carry the lane census. A task
   every run passes is not insensitive.
 - **Effect.** Cell C beats cell B by at least 0.10 on the primary measure, and
@@ -261,6 +265,12 @@ Ignore tsgo missingPipeableSignature (enabled 2026-08-10, stated nowhere), accep
 
 Reverse: Score with profile v1 (drop repairSkillProbeTask and IGNORED_TSGO_RULES) in a new dated analysis rule.
 
+### Replace the cell A gate with a laws-prompt pilot and a fixed primary selection, 2026-11-13
+
+Packet-author decision 2026-11-13: cell A floors by construction. A with-without pilot (24 B, 24 C runs, unscored) feeds a fixed rule: all-lanes pass, else law pass, whichever first has a pooled B or C pass on 4 tasks from 2 families; neither means an Insensitive verdict from the pilot and no scored run. SPEC Decision Rule edited with amendment 2.
+
+Reverse: Restore the all-lanes primary in a new dated amendment before any scored record.
+
 ### Run to kept directory through tracePath, 2026-11-13
 
 Each --json run entry carries tracePath = <kept dir>/out/trace.jsonl, so case, arm and index tie to the kept directory in one invocation (P0 slice).
@@ -272,6 +282,12 @@ Reverse: If a later harness drops tracePath, fall back to one case and one arm p
 Allowed tools Read, Write, Edit, Glob, Grep, Skill in every cell; the P0 maximum was 12 turns and 55 seconds.
 
 Reverse: Grant Bash in a later run through a new dated analysis rule; records stay comparable only within one rule.
+
+### Scorer profile v3 ignores Biome formatter findings, 2026-11-13
+
+Packet-author decision 2026-11-13: Biome format and assist/source findings fail in 10 of 12 tasks and only a formatter satisfies them; no run has one. Biome lint findings and every tsgo finding other than missingPipeableSignature stay scored.
+
+Reverse: Score with profile v2 in a new dated amendment before any further scored run.
 
 ### Void the first P2 attempt, 2026-11-13
 

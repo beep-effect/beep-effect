@@ -56,6 +56,7 @@ import {
 import {
   preflightSkillProbe,
   runSkillProbeReport,
+  runSkillProbeSelect,
   SkillProbePreflightOptions,
   SkillProbeScoreOptions,
   SkillProbeStageOptions,
@@ -784,15 +785,39 @@ const probeReportCommand = Command.make(
     preflight: Flag.File("preflight", { mustExist: true }).pipe(
       Flag.withDescription("Preflight receipt; records of dropped tasks are refused")
     ),
+    primary: Flag.ChoiceWithValue("primary", [
+      ["all-lanes", "all-lanes" as const],
+      ["law-pass", "law-pass" as const],
+    ]).pipe(
+      Flag.withDefault("all-lanes" as const),
+      Flag.withDescription("Primary measure the verdict reads (selected from the pilot)")
+    ),
   },
-  ({ records, preflight }) => runSkillProbeReport(records, preflight).pipe(Effect.asVoid)
+  ({ records, preflight, primary }) => runSkillProbeReport(records, preflight, primary).pipe(Effect.asVoid)
 ).pipe(Command.withDescription("Report cell means, paired differences and the verdict as JSON"));
 
+const probeSelectCommand = Command.make(
+  "select",
+  {
+    records: Flag.String("records").pipe(Flag.atLeast(1), Flag.withDescription("Pilot run records file (repeatable)")),
+    preflight: Flag.File("preflight", { mustExist: true }).pipe(
+      Flag.withDescription("Preflight receipt; records of dropped tasks are refused")
+    ),
+  },
+  ({ records, preflight }) => runSkillProbeSelect(records, preflight).pipe(Effect.asVoid)
+).pipe(Command.withDescription("Select the primary measure from pooled B and C pilot runs"));
+
 const probeCommand = Command.make("probe", {}, () =>
-  printLines(["Skill effect probe commands:", "- stage", "- preflight", "- score", "- report"])
+  printLines(["Skill effect probe commands:", "- stage", "- preflight", "- score", "- select", "- report"])
 ).pipe(
   Command.withDescription("Skill effect probe: stage, preflight, score kept runs, report"),
-  Command.withSubcommands([probeStageCommand, probePreflightCommand, probeScoreCommand, probeReportCommand])
+  Command.withSubcommands([
+    probeStageCommand,
+    probePreflightCommand,
+    probeScoreCommand,
+    probeSelectCommand,
+    probeReportCommand,
+  ])
 );
 
 const evalsCommand = Command.make("evals", {}, () =>
