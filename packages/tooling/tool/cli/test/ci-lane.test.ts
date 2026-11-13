@@ -2071,12 +2071,13 @@ describe("ciLaneStepsForTesting", () => {
     expect([...lastOf(steps).args]).toEqual(["run", "beep", "knowledge", "doctor", "ci", "--base", "origin/release"]);
   });
 
-  it("always checks workflow policy, the schema catalog, catalog usage, home paths, coverage owners and shadcn lint and appends changeset status on request", () => {
+  it("always checks workflow policy, the schema catalog, catalog usage, the census compiler stamp, home paths, coverage owners and shadcn lint and appends changeset status on request", () => {
     const withoutFlag = ciLaneStepsForTesting(REPO_ROOT, "repo-sanity", baseOptions);
     expect(A.map(withoutFlag, (step) => step.label)).toEqual([
       "ci:repo-sanity:workflow-lint",
       "lint:schema-catalog",
       "ci:repo-sanity:catalog-usage",
+      "ci:repo-sanity:check-census-stamp",
       "lint:private-home-paths",
       "lint:coverage-owners",
       "ci:repo-sanity",
@@ -2112,6 +2113,7 @@ describe("ciLaneStepsForTesting", () => {
       "ci:repo-sanity:workflow-lint",
       "lint:schema-catalog",
       "ci:repo-sanity:catalog-usage",
+      "ci:repo-sanity:check-census-stamp",
       "lint:private-home-paths",
       "lint:coverage-owners",
       "ci:repo-sanity",

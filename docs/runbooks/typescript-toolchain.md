@@ -206,6 +206,17 @@ After updating:
 5. A bump that adds rules follows the procedure under "Effect rules gate
    through Check": update the root severity map and copied profiles, keep
    the declared-off ledger explicit, and use the full check graph as the census.
+6. Run `bun run beep quality check-census --stamp-only`. It compares the
+   `compiler` stamp of `standards/check-census.regression-baseline.jsonc` with
+   the installed `tsc --version` and measures nothing, so it needs no build.
+   If it fails, the bump made the single-checker counts incomparable: re-measure
+   with `bun run beep quality check-census --write-baseline` on a built tree
+   (after `bun run build`) and commit the rewritten baseline with the bump.
+   Repo Sanity runs the same check as its `ci:repo-sanity:check-census-stamp`
+   step on every full lane run (the documentation-only path skips it), so a
+   bump that leaves the baseline behind fails a required check. On the worker
+   compute profile `yeet final-check` runs only the changeset status for
+   repo-sanity, so there hosted Repo Sanity is the stamp check's proof.
 
 ## Type-aware Oxlint on tsrs
 
