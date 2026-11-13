@@ -298,7 +298,7 @@ const everyOperationWire: DerivedProperty.Encoded = {
       left: {
         type: "selection",
         objectSet: { type: "searchAround", objectSet: { type: "methodInput" }, link: "peeps" },
-        operation: { type: "approximatePercentile", selectedPropertyApiName: "salary", approximatePercentile: 0.5 },
+        operation: { type: "approximatePercentile", selectedPropertyApiName: "salary", approximatePercentile: 50 },
       },
       right: {
         type: "negate",
@@ -692,7 +692,7 @@ describe("DerivedProperty", () => {
   it.effect(
     "round-trips one definition that uses every expression and renames every renamed key",
     Effect.fnUntraced(function* () {
-      const median = aggregate(reports, SelectedApproximatePercentile.of("salary", 0.5));
+      const median = aggregate(reports, SelectedApproximatePercentile.of("salary", 50));
       const offices = aggregate(reports, SelectedSet.of("office", 100));
       const built = greatest(
         minus(median, negate(abs(own("salary")))),

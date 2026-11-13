@@ -451,7 +451,8 @@ export class ExactDistinctAggregation extends S.Opaque<ExactDistinctAggregation,
  *
  * The wire does not say whether the scale is a fraction or a percentage: the
  * OSDK runtime defaults to `0.5` while its documentation passes `95`. The
- * value is therefore any finite number. Only available on Object Storage V2.
+ * value is therefore any finite number. The `Faux` backend reads it as a
+ * percentage from `0` to `100`. Only available on Object Storage V2.
  *
  * @category models
  * @since 0.0.0

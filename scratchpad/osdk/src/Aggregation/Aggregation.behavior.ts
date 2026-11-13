@@ -508,6 +508,12 @@ export const exactDistinct = (property: PropertySelector | PropertyApiName): Exa
 /**
  * Estimates a percentile of a numeric property in each group, named `<property>.approximatePercentile`.
  *
+ * **Gotchas**
+ *
+ * The wire does not fix the scale of the number. This package reads it as a
+ * percentage from `0` to `100`, as OSDK's documentation does when it passes
+ * `95`, and the in-memory `Faux` backend computes on that scale.
+ *
  * **Example** (Estimate the median)
  *
  * ```ts import.meta.vitest name="Estimate the median"
@@ -517,9 +523,9 @@ export const exactDistinct = (property: PropertySelector | PropertyApiName): Exa
  * import { Aggregation, approximatePercentile, MetricName, named } from "@beep/scratchpad/osdk/src/Aggregation/index"
  * import { PropertyApiName } from "@beep/scratchpad/osdk/src/Identifier/index"
  *
- * const median = pipe(PropertyApiName.make("age"), approximatePercentile(0.5), named(MetricName.make("median")))
+ * const median = pipe(PropertyApiName.make("age"), approximatePercentile(50), named(MetricName.make("median")))
  * const wire = await Effect.runPromise(S.encodeEffect(Aggregation)(median))
- * wire // => { type: "approximatePercentile", field: "age", name: "median", approximatePercentile: 0.5 }
+ * wire // => { type: "approximatePercentile", field: "age", name: "median", approximatePercentile: 50 }
  * ```
  *
  * @category constructors

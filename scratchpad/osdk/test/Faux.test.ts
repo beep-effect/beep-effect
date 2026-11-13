@@ -11,6 +11,7 @@ import * as Equivalence from "effect/Equivalence";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
@@ -941,6 +942,23 @@ it.layer(FauxLive)("the typed facade over the in-memory transport", (it) => {
       strictEqual(metricOf(metrics, "active", "exactDistinct"), 2);
       // Eight bonuses, of which "1000.50" and "1000.5" are one value.
       strictEqual(metricOf(metrics, "bonus", "approximateDistinct"), 7);
+    })
+  );
+
+  it.effect(
+    "a percentile is a percentage from 0 to 100, clamped outside it, so 0.5 is not the median",
+    Effect.fnUntraced(function* () {
+      const percentileAt = Effect.fnUntraced(function* (percentile: number) {
+        const result = yield* aggregate(employees.objectSet, [approximatePercentile(salary, percentile)], []);
+        const { metrics } = yield* Effect.fromOption(A.head(result.groups));
+        return metricOf(metrics, "salary", "approximatePercentile");
+      });
+      // Eight salaries: 150 160 170 175 180 185 190 200. Half a percent is rank 0.035 between 150 and 160.
+      const answers = yield* Effect.forEach([0, 50, 100, 250, -1, 0.5], percentileAt);
+      deepStrictEqual(
+        A.map(answers, (answer) => (P.isNumber(answer) ? Math.round(answer * 1000) / 1000 : answer)),
+        [150, 177.5, 200, 200, 150, 150.35]
+      );
     })
   );
 

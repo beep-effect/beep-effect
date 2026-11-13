@@ -17,7 +17,7 @@ authoring time, so the compiler sees it. The operator and metric tables are data
 says where.
 
 Size on 2026-11-13, measured: 57,762 lines in 109 files under `src`, 33 concepts, 1,377 exported values (697
-constants and 680 classes), 4,282 unit tests in 37 files and 754 doctests in 75 files.
+constants and 680 classes), 4,283 unit tests in 37 files and 754 doctests in 75 files.
 
 ## 2. A tour in code
 
@@ -870,6 +870,10 @@ cd R/scratchpad && bunx --bun vitest run --config osdk/vitest.config.ts
 cd R/scratchpad && BEEP_VITEST_DOCTEST=1 bunx --bun vitest run --config osdk/vitest.config.ts
 ```
 
+No script or hosted lane runs these: the root Vitest projects cover `packages/**` and `apps/**` only, and a new
+script in `scratchpad/package.json` changes the reviewed cache key of that workspace's `docgen` task. They are
+run by hand, and the numbers below are from such a run.
+
 `tsrs` runs the type checker and the Effect language-service rules as errors; a clean run prints nothing. Final
 lines of the three commands on 2026-11-13:
 
@@ -879,7 +883,7 @@ $ ./node_modules/.bin/tsrs -p scratchpad/osdk/tsconfig.json --noEmit --pretty fa
 
 $ bunx --bun vitest run --config osdk/vitest.config.ts
  Test Files  37 passed (37)
-      Tests  4282 passed (4282)
+      Tests  4283 passed (4283)
 
 $ BEEP_VITEST_DOCTEST=1 bunx --bun vitest run --config osdk/vitest.config.ts
  Test Files  75 passed (75)

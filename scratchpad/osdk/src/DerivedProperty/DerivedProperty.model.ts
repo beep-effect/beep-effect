@@ -312,7 +312,8 @@ export class SelectedExactDistinct extends S.Opaque<SelectedExactDistinct, { rea
  * The wire key is `approximatePercentile`; here it is `percentile`. The wire
  * does not say whether the scale is a fraction or a percentage: the OSDK
  * runtime defaults to `0.5` while its documentation passes `95`. The value is
- * therefore any finite number.
+ * therefore any finite number. The `Faux` backend reads it as a percentage
+ * from `0` to `100`.
  *
  * @category models
  * @since 0.0.0

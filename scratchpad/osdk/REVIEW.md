@@ -116,7 +116,7 @@ $ ./node_modules/.bin/tsrs -p scratchpad/osdk/tsconfig.json --noEmit --pretty fa
 
 $ bunx --bun vitest run --config osdk/vitest.config.ts
  Test Files  37 passed (37)
-      Tests  4282 passed (4282)
+      Tests  4283 passed (4283)
 
 $ BEEP_VITEST_DOCTEST=1 bunx --bun vitest run --config osdk/vitest.config.ts
  Test Files  75 passed (75)

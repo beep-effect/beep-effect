@@ -1216,7 +1216,8 @@ const summarize = (
     })
   );
 
-// Linear interpolation between the two values the percentile falls between.
+// Linear interpolation between the two values the percentile falls between. The percentile is a percentage
+// from 0 to 100 (50 is the median), the scale OSDK's documentation uses; values outside it are clamped.
 const percentileOf =
   (percentile: number) =>
   (numbers: A.NonEmptyReadonlyArray<number>): number => {
@@ -1574,7 +1575,8 @@ const aggregateObjectsImpl = Effect.fn("Faux.aggregateObjects")(function* (
  * no values has no value, except `count` and the distinct counts, which are
  * zero. A metric is named by the request, or `count` and
  * `<property>.<metric>` otherwise. The first metric with a direction orders
- * the rows. The answer is always reported as accurate.
+ * the rows. The answer is always reported as accurate. A percentile is read as
+ * a percentage from `0` to `100`, so `50` is the median.
  *
  * Duration groupings and default values of exact groupings are refused.
  *
