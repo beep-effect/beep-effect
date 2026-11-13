@@ -58,23 +58,35 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Log and L0 projection — in progress. P0 landed the decisions, schemas,
-`Context.Service` contracts and the `@beep/sqlite` driver (PR #3013). P1 builds
-the live `MemoryLog` (effect/eventlog over SQLite, per-node compare-and-set in
-the journal transaction), the Markdown node partition with its reparse check,
-and the live `MarkdownProjector` (folder import in one journal transaction,
-fenced byte-identical export, raw-slice `projectNode`).
+P2 Admission — in progress. P1 completed in PR #3058 (merged as 6fc960063d4):
+the live `MemoryLog`, the Markdown node partition with its reparse check and
+the live `MarkdownProjector`. P2 builds op capture against the exported base,
+live store-side admission (per-node compare-and-set at row and list-item
+granularity, the whole-node three-way merge, held writes as log events with
+both texts, per-op admission, typed status fields with the lifecycle guard)
+and the capture-admit-export write path (`admitEdits`, `writeEdits`).
 
 ## Latest Evidence
 
-2026-11-10, P1 lane: AC-1 green on the frozen goals sample (172 files,
-1,065,752 bytes): every file byte-identical after import and export and after a
-rebuild from the log alone; 3,096 generated node edits with 0 outside the
-touched span (3/n = 0.097%); 0 of 2,940 concurrent insertions read as
-deletions. The AC-8 import, aborted-import and export-refusal tests are green;
-AC-8 itself stays open until P5. The opt-in run over the whole live goals tree
-reproduced 3,597 of 3,597 files. The measured numbers are in the 2026-11-10
-checkpoint in `PLAN.md`.
+2026-11-13, P2 lane, on the adversarial concurrent-edit fixture this lane
+built (15 declared strata, 57 clusters, 118 writes per run over 14 files of
+the frozen goals sample): AC-2 green, 0 of 100 seeded runs with a silent loss
+and 1,000 of 1,000 contested nodes held with both texts. AC-3 measured and
+open: structural floor 912/11,800 writes; resolver-needed 1,912/11,800 and
+per-op landing 12,178/15,600 (78.1%), which this upper-bound fixture cannot
+compare with the S14b bars (26/279, 95%); status conflicts 1,000 with 0 held
+and 0 wrong; 744 of 744 backward moves rejected. The numbers are in the
+2026-11-13 checkpoint in `PLAN.md`; the fixture design is decision
+`p2-adversarial-fixture-is-seeded-contention-strata`.
+
+2026-11-13, P2 lane, on the comparable replay: this repository's goals
+history at 3f0261b37a0 replayed as concurrent writers (decision
+`p2-ac3-history-replay-construction`; 118 clusters, 275 writes, 3,364
+operations). Zero silent loss in history order and three seeded orders.
+History order: structural floor 11/275; resolver-needed 40/275 against
+26/279 (40 x 279 = 11,160 above 26 x 275 = 7,150), not met; per-op landing
+3,267/3,364 (97.1%), met; typed status 0 held and 0 wrong. AC-3 stays open;
+the held-write breakdown is in the 2026-11-13 AC-3 checkpoint in `PLAN.md`.
 
 ## Notes
 

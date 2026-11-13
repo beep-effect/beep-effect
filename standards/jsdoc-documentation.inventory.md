@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-10T06:44:19.889Z
+Generated: 2026-11-13T02:41:00.748Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 179 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 15 |
-| publicModules | 3886 |
-| publicExports | 27740 |
+| publicModules | 3907 |
+| publicExports | 27953 |
 | openModules | 114 |
 | openExports | 88 |
 | missingExportExamples | 0 |
@@ -60,13 +60,13 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 2 | `@beep/tsgo-shim` | `tools/tsgo-shim` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 3 | `@beep/types` | `packages/foundation/primitive/types` | needs-remediation | 5 | 12 | 1 | 12 |
 | 4 | `@beep/test-runner` | `packages/tooling/test-kit/test-runner` | clean | 4 | 6 | 0 | 0 |
-| 5 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 8 | 293 | 0 | 0 |
+| 5 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 8 | 294 | 0 | 0 |
 | 6 | `@beep/github-commands` | `packages/foundation/modeling/github-commands` | clean | 3 | 6 | 0 | 0 |
 | 7 | `@beep/ontology-config` | `packages/ontology/config` | clean | 7 | 18 | 0 | 0 |
 | 8 | `@beep/spdx` | `packages/foundation/modeling/spdx` | clean | 4 | 16 | 0 | 0 |
 | 9 | `@beep/utils` | `packages/foundation/modeling/utils` | clean | 29 | 229 | 0 | 0 |
 | 10 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 16 |
-| 11 | `@beep/schema` | `packages/foundation/modeling/schema` | clean | 170 | 973 | 0 | 0 |
+| 11 | `@beep/schema` | `packages/foundation/modeling/schema` | clean | 170 | 977 | 0 | 0 |
 | 12 | `@beep/codegen-kit` | `packages/tooling/library/codegen-kit` | clean | 6 | 45 | 0 | 0 |
 | 13 | `@beep/commands` | `packages/drivers/commands` | clean | 8 | 58 | 0 | 0 |
 | 14 | `@beep/cosmos` | `packages/drivers/cosmos` | clean | 6 | 22 | 0 | 0 |
@@ -77,7 +77,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 19 | `@beep/github-references` | `packages/foundation/modeling/github-references` | clean | 4 | 28 | 0 | 0 |
 | 20 | `@beep/glob` | `packages/foundation/modeling/glob` | clean | 4 | 9 | 0 | 0 |
 | 21 | `@beep/graph-3d` | `packages/drivers/graph-3d` | clean | 7 | 17 | 0 | 0 |
-| 22 | `@beep/jsonc` | `packages/foundation/modeling/jsonc` | clean | 8 | 53 | 0 | 0 |
+| 22 | `@beep/jsonc` | `packages/foundation/modeling/jsonc` | clean | 8 | 54 | 0 | 0 |
 | 23 | `@beep/memfs` | `packages/tooling/test-kit/memfs` | clean | 3 | 23 | 0 | 0 |
 | 24 | `@beep/pglite` | `packages/drivers/pglite` | clean | 4 | 10 | 0 | 0 |
 | 25 | `@beep/pretext` | `packages/drivers/pretext` | clean | 6 | 36 | 0 | 0 |
@@ -108,7 +108,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 50 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
 | 51 | `@beep/duckdb` | `packages/drivers/duckdb` | needs-remediation | 13 | 73 | 1 | 8 |
 | 52 | `@beep/exiftool` | `packages/drivers/exiftool` | clean | 5 | 55 | 0 | 0 |
-| 53 | `@beep/github` | `packages/drivers/github` | clean | 30 | 212 | 0 | 0 |
+| 53 | `@beep/github` | `packages/drivers/github` | clean | 30 | 226 | 0 | 0 |
 | 54 | `@beep/html` | `packages/foundation/modeling/html` | clean | 15 | 544 | 0 | 0 |
 | 55 | `@beep/hubspot` | `packages/drivers/hubspot` | clean | 4 | 23 | 0 | 0 |
 | 56 | `@beep/jsonl` | `packages/foundation/modeling/jsonl` | clean | 8 | 60 | 0 | 0 |
@@ -117,7 +117,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 59 | `@beep/managed-section` | `packages/foundation/modeling/managed-section` | clean | 7 | 31 | 0 | 0 |
 | 60 | `@beep/markdown` | `packages/foundation/modeling/markdown` | clean | 19 | 104 | 0 | 0 |
 | 61 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | clean | 12 | 113 | 0 | 0 |
-| 62 | `@beep/mcpb-kit` | `packages/tooling/library/mcpb-kit` | clean | 5 | 25 | 0 | 0 |
+| 62 | `@beep/mcpb-kit` | `packages/tooling/library/mcpb-kit` | clean | 5 | 33 | 0 | 0 |
 | 63 | `@beep/nlp` | `packages/foundation/modeling/nlp` | clean | 28 | 313 | 0 | 0 |
 | 64 | `@beep/npm-spec` | `packages/foundation/modeling/npm-spec` | clean | 13 | 72 | 0 | 0 |
 | 65 | `@beep/obs` | `packages/drivers/obs` | clean | 6 | 73 | 0 | 0 |
@@ -155,7 +155,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 97 | `@beep/practice-setup` | `apps/practice-setup` | clean | 6 | 38 | 0 | 0 |
 | 98 | `@beep/repo-tsconfig` | `packages/tooling/library/repo-tsconfig` | clean | 5 | 24 | 0 | 0 |
 | 99 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | clean | 7 | 31 | 0 | 0 |
-| 100 | `@beep/agent-memory-store` | `packages/tooling/library/agent-memory-store` | clean | 28 | 168 | 0 | 0 |
+| 100 | `@beep/agent-memory-store` | `packages/tooling/library/agent-memory-store` | clean | 38 | 212 | 0 | 0 |
 | 101 | `@beep/cli-kit` | `packages/foundation/capability/cli-kit` | clean | 29 | 196 | 0 | 0 |
 | 102 | `@beep/doc-text` | `packages/drivers/doc-text` | clean | 3 | 11 | 0 | 0 |
 | 103 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 6 | 112 | 0 | 0 |
@@ -176,7 +176,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 118 | `@beep/alchemy-postgres` | `packages/drivers/alchemy-postgres` | clean | 8 | 50 | 0 | 0 |
 | 119 | `@beep/editor` | `packages/foundation/ui-system/editor` | clean | 34 | 210 | 0 | 0 |
 | 120 | `@beep/github-actions` | `packages/drivers/github-actions` | clean | 24 | 162 | 0 | 0 |
-| 121 | `@beep/m365-mcp` | `packages/drivers/m365-mcp` | clean | 13 | 109 | 0 | 0 |
+| 121 | `@beep/m365-mcp` | `packages/drivers/m365-mcp` | clean | 15 | 140 | 0 | 0 |
 | 122 | `@beep/n3` | `packages/drivers/n3` | clean | 3 | 11 | 0 | 0 |
 | 123 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | clean | 48 | 312 | 0 | 0 |
 | 124 | `@beep/oip-web` | `apps/oip-web` | clean | 31 | 87 | 0 | 0 |
@@ -189,7 +189,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 131 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 8 | 56 | 0 | 0 |
 | 132 | `@beep/infra` | `infra` | needs-remediation | 11 | 109 | 3 | 19 |
 | 133 | `@beep/oxigraph` | `packages/drivers/oxigraph` | clean | 3 | 6 | 0 | 0 |
-| 134 | `@beep/palantiri` | `packages/tooling/library/palantiri` | clean | 20 | 156 | 0 | 0 |
+| 134 | `@beep/palantiri` | `packages/tooling/library/palantiri` | clean | 22 | 175 | 0 | 0 |
 | 135 | `@beep/rdf-canonize` | `packages/drivers/rdf-canonize` | clean | 2 | 2 | 0 | 0 |
 | 136 | `@beep/shacl` | `packages/drivers/shacl` | clean | 3 | 6 | 0 | 0 |
 | 137 | `@beep/shared-domain` | `packages/shared/domain` | clean | 106 | 374 | 0 | 0 |
@@ -221,7 +221,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 163 | `@beep/ontology-server` | `packages/ontology/server` | clean | 8 | 23 | 0 | 0 |
 | 164 | `@beep/party-use-cases` | `packages/party/use-cases` | clean | 6 | 17 | 0 | 0 |
 | 165 | `@beep/practice-claude-mod` | `apps/practice-claude-mod` | clean | 8 | 30 | 0 | 0 |
-| 166 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 568 | 5231 | 45 | 29 |
+| 166 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 575 | 5322 | 45 | 29 |
 | 167 | `@beep/workspace-tables` | `packages/workspace/tables` | clean | 23 | 56 | 0 | 0 |
 | 168 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | clean | 12 | 45 | 0 | 0 |
 | 169 | `@beep/agents-use-cases` | `packages/agents/use-cases` | clean | 31 | 129 | 0 | 0 |
@@ -332,10 +332,10 @@ Module findings:
 - `src/DuckDbEventLogServerEncrypted.service.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/DuckDbMessageStorage.service.ts:821` `layerMigrations` (const) - 1 documentation section/link violation(s)
-- `src/DuckDbMessageStorage.service.ts:856` `layerStorage` (const) - 1 documentation section/link violation(s)
-- `src/DuckDbMessageStorage.service.ts:887` `layerWith` (const) - 1 documentation section/link violation(s)
-- `src/DuckDbMessageStorage.service.ts:915` `layer` (const) - 1 documentation section/link violation(s)
+- `src/DuckDbMessageStorage.service.ts:920` `layerMigrations` (const) - 1 documentation section/link violation(s)
+- `src/DuckDbMessageStorage.service.ts:955` `layerStorage` (const) - 1 documentation section/link violation(s)
+- `src/DuckDbMessageStorage.service.ts:986` `layerWith` (const) - 1 documentation section/link violation(s)
+- `src/DuckDbMessageStorage.service.ts:1014` `layer` (const) - 1 documentation section/link violation(s)
 - `src/DuckDbRunnerStorage.service.ts:320` `layerMigrations` (const) - 1 documentation section/link violation(s)
 - `src/DuckDbRunnerStorage.service.ts:353` `layerStorage` (const) - 1 documentation section/link violation(s)
 - `src/DuckDbRunnerStorage.service.ts:379` `layerWith` (const) - 1 documentation section/link violation(s)
@@ -483,8 +483,8 @@ Export findings:
 - `src/commands/Cache/Cache.command.ts:376` `runCacheWarm` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.command.ts:574` `buildCacheDashboard` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.service.ts:112` `encodeCachePolicyBaselineText` (const) - 1 example import violation(s)
-- `src/commands/Ci/CiLane.ts:417` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
-- `src/commands/Ci/CiLane.ts:1800` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:419` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:1804` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
 - `src/commands/Corpus/Corpus.errors.ts:312` `CorpusArchiveMoveDigestMismatchError` (class) - 1 example import violation(s)
 - `src/commands/CreatePackage/CreatePackage.command.ts:119` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
 - `src/commands/Drawings/Drawings.intake.schemas.ts:304` `MessageFacts` (class) - 1 example import violation(s)
@@ -499,7 +499,7 @@ Export findings:
 - `src/commands/Qa/JudgeCheck.ts:606` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:628` `renderTimeline` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:732` `selectJudgeEvidence` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:1130` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:1133` `runBunAudit` (const) - 1 documentation section/link violation(s)
 - `src/commands/Runners/Runners.schemas.ts:120` `BakeConfig` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.schemas.ts:167` `BakeReport` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.schemas.ts:276` `BakePlan` (class) - 1 example import violation(s)

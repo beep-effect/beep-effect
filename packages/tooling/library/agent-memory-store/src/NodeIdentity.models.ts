@@ -18,6 +18,40 @@ import * as S from "effect/Schema";
 const $I = $AgentMemoryStoreId.create("NodeIdentity.models");
 
 /**
+ * Check that a string is well-formed UTF-16: it holds no lone surrogate.
+ *
+ * **Details**
+ *
+ * The memory log stores every payload string as UTF-8, which has no encoding
+ * for a lone surrogate, so a string holding one would be read back changed
+ * (each lone surrogate becomes U+FFFD) and a text the store compared or
+ * hashed would differ from the one it stored. Every string the store writes
+ * to the log carries this check (decision `journal-strings-are-well-formed`).
+ * Text read from UTF-8 files is always well-formed.
+ *
+ * **Example** (Refuse a lone surrogate)
+ *
+ * ```ts
+ * import { isWellFormedText } from "@beep/agent-memory-store"
+ * import * as S from "effect/Schema"
+ *
+ * const Text = S.String.check(isWellFormedText)
+ * console.log(S.is(Text)("Plain text."), S.is(Text)("\uD800")) // true false
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const isWellFormedText = S.makeFilter(
+  (text: string) => text.isWellFormed(),
+  $I.annote("WellFormedTextCheck", {
+    title: "Well-Formed Text",
+    description: "A string with no lone surrogate, so it survives the log's UTF-8 encoding unchanged.",
+    message: "Expected a well-formed string without lone surrogates.",
+  })
+);
+
+/**
  * Store-minted opaque node identifier: a UUID string assigned once and never
  * derived from content.
  *

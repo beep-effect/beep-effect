@@ -80,10 +80,13 @@ export const makeProjection = (): Projection => new Projection();
 
 const trusted = { disableChecks: true } as const;
 
-const decodeCreated = S.decodeUnknownEffect(NodeCreatedEvent.payloadSchemaBinary);
-const decodeRevised = S.decodeUnknownEffect(NodeRevisedEvent.payloadSchemaBinary);
-const decodeStatusChanged = S.decodeUnknownEffect(NodeStatusChangedEvent.payloadSchemaBinary);
-const decodeRetired = S.decodeUnknownEffect(NodeRetiredEvent.payloadSchemaBinary);
+/** The binary payload decoders of the node events, shared with the admission log. */
+export const nodeEventDecoders = {
+  created: S.decodeUnknownEffect(NodeCreatedEvent.payloadSchemaBinary),
+  revised: S.decodeUnknownEffect(NodeRevisedEvent.payloadSchemaBinary),
+  statusChanged: S.decodeUnknownEffect(NodeStatusChangedEvent.payloadSchemaBinary),
+  retired: S.decodeUnknownEffect(NodeRetiredEvent.payloadSchemaBinary),
+} as const;
 const decodeFileImported = S.decodeUnknownEffect(FileImportedEvent.payloadSchemaBinary);
 const decodeFolderImported = S.decodeUnknownEffect(FolderImportedEvent.payloadSchemaBinary);
 
@@ -131,7 +134,7 @@ const entryStep = (projection: Projection, entry: Entry): Effect.Effect<LazyArg<
     // The log refuses a second NodeCreated for a node, so each node is created
     // once here.
     Match.when(NodeCreatedEvent.tag, () =>
-      Effect.map(decodeCreated(entry.payload), (payload) => () => {
+      Effect.map(nodeEventDecoders.created(entry.payload), (payload) => () => {
         MutableHashMap.set(
           projection.nodes,
           payload.nodeId,
@@ -156,13 +159,15 @@ const entryStep = (projection: Projection, entry: Entry): Effect.Effect<LazyArg<
         });
       })
     ),
-    Match.when(NodeRevisedEvent.tag, () => Effect.map(decodeRevised(entry.payload), liveRevision(projection))),
+    Match.when(NodeRevisedEvent.tag, () =>
+      Effect.map(nodeEventDecoders.revised(entry.payload), liveRevision(projection))
+    ),
     Match.when(NodeStatusChangedEvent.tag, () =>
-      Effect.map(decodeStatusChanged(entry.payload), liveRevision(projection))
+      Effect.map(nodeEventDecoders.statusChanged(entry.payload), liveRevision(projection))
     ),
     Match.when(NodeRetiredEvent.tag, () =>
       Effect.map(
-        decodeRetired(entry.payload),
+        nodeEventDecoders.retired(entry.payload),
         (payload) => () =>
           updateNode(projection, payload.nodeId, { live: false, revisionId: payload.revisionId, text: "" })
       )
