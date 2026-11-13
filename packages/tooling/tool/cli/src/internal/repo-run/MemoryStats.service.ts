@@ -137,7 +137,7 @@ const decodeCgroupBytes = S.decodeUnknownOption(CgroupBytes);
 const invalidBudget = () => QualitySchedulerError.make({ message: "Cannot establish cgroup admission budget." });
 const requireBudgetMetadata = <T>(value: O.Option<T>) => Effect.fromOption(value).pipe(Effect.mapError(invalidBudget));
 
-const readCgroupMembership = Effect.fnUntraced(function* (pid: number) {
+const readCgroupMembership = Effect.fn("MemoryStats.readCgroupMembership")(function* (pid: number) {
   const fs = yield* FileSystem.FileSystem;
   return yield* fs
     .readFileString(`/proc/${pid}/cgroup`)
