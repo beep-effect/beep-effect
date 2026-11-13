@@ -128,7 +128,8 @@ const harness = Effect.fn("RouteCommandTest.harness")(function* (
   atoms: ReadonlyArray<ChangeAtom>,
   editRuns: (runs: ReadonlyArray<HostedRun>) => ReadonlyArray<HostedRun> = identity
 ) {
-  const runs = editRuns(yield* decodeRuns(replayRunsJson));
+  const decoded = yield* decodeRuns(replayRunsJson);
+  const runs = editRuns(decoded);
   const recorded: Recorded = {
     captures: yield* Ref.make<ReadonlyArray<RouteCorpusCaptureOptions>>([]),
     loads: yield* Ref.make<ReadonlyArray<string>>([]),
@@ -305,11 +306,13 @@ it.layer(CliLayer, { timeout: "30 seconds" })("beep ci route command", (it) => {
           );
         const { run } = yield* harness([], unmappedReds);
         yield* run(["census"]);
-        const census = A.map(yield* TestConsole.logLines, String);
+        const censusLog = yield* TestConsole.logLines;
+        const census = A.map(censusLog, String);
         expect(census).toContain("  unknown job names: Heavy / Typecheck, Knip");
 
         yield* run(["replay"]);
-        const replay = A.map(yield* TestConsole.logLines, String);
+        const replayLog = yield* TestConsole.logLines;
+        const replay = A.map(replayLog, String);
         const recallLine = yield* Effect.fromOption(
           A.findFirst(replay, (line) => Str.startsWith("[ci route] replay over")(line))
         );
