@@ -538,3 +538,16 @@ full audit proof. No ready transition, merge, final declaration or PR watch is
 part of this wave.
 
 A one-shot pre-publish metadata read found the unchanged published head `2b2f93a1565ec8d6246883bfb18f0dc29950ab8f` marked ready. It was explicitly restored to draft with `gh pr ready 3265 --undo`; no ready transition was made by this review wave. Publication uses the existing PR with the no-PR-tail option so no readiness monitor starts, and the body is replaced through the provenance-preserving Yeet command.
+
+### Last main sync before publication
+
+The first publisher was interrupted before any push when main advanced again.
+Merge commit `4efb6539ed585de6a344a96467f43b803d7882d8` incorporates
+`cdf4c4f30a4f8f352cf4dd9125dc5af4b031ed40` (#3263 and #3270).
+There are no Citation source, dependency-lock or test changes in that main delta,
+so the 87 file receipts and the 82.28 s full-span replay remain applicable.
+Quick server verification, full lint-rules verification, docgen, skills lock,
+policy fingerprint and semantic delta were repeated after this merge and pass.
+Semantic delta on the committed code/evidence/main tree reports zero introduced,
+zero resolved and 194 unchanged findings. The single publication push follows
+these checks; no readiness monitor is started.
