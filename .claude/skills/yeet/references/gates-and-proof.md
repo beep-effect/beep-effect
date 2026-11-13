@@ -153,8 +153,12 @@ checkout that changed during the run gets no receipt.
 On a `worker` compute profile (`bun run beep compute profile`; table and
 per-host ceilings in `docs/runbooks/agent-pools.md` "Compute profiles"),
 `final-check` skips every gate marked `hosted-only` above on its own, with
-the reason `compute-profile=worker`. `--force-local` runs them anyway, and
-the receipt records `forceLocal: true`. `yeet ready` treats only that exact
+the reason `compute-profile=worker`, and runs `lint effect-vitest --files`
+over the diff's test files inside the `lint` gate. `--force-local` runs
+`fallow` and `coverage` one task at a time (concurrency 1) and the receipt
+records `forceLocal: true`; it still refuses `cheap-gates`, `lint-policy`,
+`check`, `docgen` and the full `repo-sanity` lane, whose full runs exceed
+the worker budget or have no proven budget (see the runbook). `yeet ready` treats only that exact
 reason as deferred to hosted CI: for each deferred gate it reads the newest
 check run of the gate's hosted context on the PR head (`Repo Sanity`,
 `Heavy / Lint Policy`, `Heavy / Check`, `Heavy / Docgen`,

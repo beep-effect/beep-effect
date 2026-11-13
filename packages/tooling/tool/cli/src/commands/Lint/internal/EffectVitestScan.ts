@@ -1,9 +1,12 @@
 /** Full syntax-only Effect Vitest scan and ratchet orchestration. @packageDocumentation @since 0.0.0 */
 
+import { GlobSet } from "@beep/glob/GlobSet";
+import { $RepoCliId } from "@beep/identity/packages";
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { createWorkspaceOwnerResolver } from "@beep/repo-cli-kit/tsmorph/index";
 import { findRepoRoot } from "@beep/repo-utils";
 import { FsUtils, GlobOptions } from "@beep/repo-utils/FsUtils";
+import { readPackageJsonFile } from "@beep/repo-utils/schemas/PackageJson";
 import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { A, Str } from "@beep/utils";
 import * as Console from "effect/Console";
@@ -28,6 +31,7 @@ import {
   EffectVitestInventoryDocument,
   EffectVitestScanTiming,
   EffectVitestSourceFileGlobs,
+  isEffectVitestScopePath,
   isEffectVitestTestFilePath,
   makeEffectVitestFindingKey,
 } from "../Lint.schemas.ts";
@@ -42,6 +46,8 @@ import {
 } from "./EffectVitestStore.ts";
 import type { Node as MorphNode, ObjectLiteralExpression, SourceFile } from "ts-morph";
 import type { EffectVitestLintOptions, EffectVitestPrimitiveGraphDocument } from "../Lint.schemas.ts";
+
+const $I = $RepoCliId.create("commands/Lint/internal/EffectVitestScan");
 
 const EffectVitestPackageMetadata = S.Struct({
   name: S.tag("@effect/vitest"),
@@ -668,5 +674,206 @@ export const runEffectVitestLint = Effect.fn("EffectVitestScan.run")(function* (
     );
     yield* reportMembership(merged, baseline);
   }
+  return timing;
+});
+
+const isVitestConfigFileName = S.is(
+  S.String.check(S.isPattern(/^vitest[^/]*\.config\.(?:ts|mts|js|mjs)$/u)).pipe(
+    $I.annoteSchema("VitestConfigFileName", {
+      description: "A vitest config file name the D9 browser-mode filter parses.",
+    })
+  )
+);
+
+// Repository-relative ancestor directories of a file, nearest last, without the root itself.
+const ancestorDirectories = (file: string): ReadonlyArray<string> => {
+  const segments = A.dropRight(Str.split(file, "/"), 1);
+  return A.makeBy(A.length(segments), (index) => A.join(A.take(segments, index + 1), "/"));
+};
+
+// Browser-mode membership for a scoped run. A vitest config's `include` globs resolve from its
+// own directory, so only the configs in a file's ancestor directories can include it; reading
+// those gives the full scan's answer for these files without walking the repository.
+const scopedBrowserModeFiles = Effect.fn("EffectVitestScan.scopedBrowserModeFiles")(function* (
+  root: string,
+  files: ReadonlyArray<string>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const listed = yield* Effect.forEach(A.dedupe(A.flatMap(files, ancestorDirectories)), (directory) =>
+    fs
+      .readDirectory(path.join(root, directory))
+      .pipe(
+        Effect.orElseSucceed(A.empty<string>),
+        Effect.map(A.filter(isVitestConfigFileName)),
+        Effect.map(A.map((name) => `${directory}/${name}`))
+      )
+  );
+  const configProject = new Project({ useInMemoryFileSystem: true });
+  const included = yield* Effect.forEach(A.flatten(listed), (config) =>
+    fs.readFileString(path.join(root, config)).pipe(
+      Effect.map((text) => {
+        const directory = path.dirname(config);
+        const browser = GlobSet.make({
+          patterns: A.map(
+            browserModeIncludeGlobs(configProject.createSourceFile(config, text)),
+            Str.replace(/^\.\//u, "")
+          ),
+        });
+        return A.filter(
+          files,
+          (file) => Str.startsWith(`${directory}/`)(file) && browser.matches(Str.slice(directory.length + 1)(file))
+        );
+      })
+    )
+  );
+  return HashSet.fromIterable(A.flatten(included));
+}, EffectVitestLintError.mapError("Unable to read the vitest configs above the scoped files."));
+
+// Resolve ownership by ascending only the named file's directories, never discovering workspaces.
+const scopedFileOwner = Effect.fnUntraced(function* (root: string, file: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const manifest = yield* Effect.findFirst(A.reverse(ancestorDirectories(file)), (directory) =>
+    fs.exists(path.join(root, directory, "package.json"))
+  );
+  if (O.isNone(manifest)) return "@beep/root";
+  const metadata = yield* readPackageJsonFile(path.join(root, manifest.value, "package.json"));
+  return metadata.name;
+}, EffectVitestLintError.mapError("Unable to read the scoped file's package owner."));
+
+const refuseScopedModeCombination = (options: EffectVitestLintOptions) =>
+  options.census || options.write || O.isSome(options.rows)
+    ? Effect.fail(
+        EffectVitestLintError.new(
+          "--files checks only the named files; it cannot be combined with --census, --write or --rows."
+        )
+      )
+    : Effect.void;
+
+const refuseBaselinePinMismatch = (
+  existing: O.Option<EffectVitestInventoryDocument>,
+  graph: EffectVitestPrimitiveGraphDocument
+) =>
+  O.isSome(existing) && !Equal.equals(existing.value.effectVitestVersion, graph.version)
+    ? Effect.fail(
+        EffectVitestLintError.new(
+          `Baseline pin ${existing.value.effectVitestVersion} does not match graph pin ${graph.version}; refresh it with effect-vitest --write after reviewing the pinned source diff.`
+        )
+      )
+    : Effect.void;
+
+// The full scan's per-file report names only files; a scoped run also names each new row's
+// rule and line, which is what a worker needs to fix it without a hosted round trip.
+const reportScopedMembership = (
+  merged: ReadonlyArray<EffectVitestFinding>,
+  baseline: ReadonlyArray<EffectVitestFinding>
+) =>
+  reportMembership(merged, baseline).pipe(
+    Effect.tapError(() =>
+      Effect.forEach(
+        diffEffectVitestFindings(merged, baseline).introduced,
+        (finding) =>
+          Console.error(`[effect-vitest]   ${finding.file}:${finding.line} ${finding.ruleId} ${finding.class}`),
+        { discard: true }
+      )
+    )
+  );
+
+/**
+ * Check only the named files with the full scan's detector and ratchet, with no repository scan.
+ *
+ * **Details**
+ *
+ * Paths resolve from the repository root; files outside the D9 scope
+ * ({@link EffectVitestSourceFileGlobs}) are reported and skipped, because the
+ * full scan never reads them. Each remaining file is parsed on its own
+ * (syntax only), run through {@link detectEffectVitestFindings} and the pinned
+ * primitive graph, and compared with the committed baseline rows of the same
+ * files, so a finding the full ratchet would call new fails here too and is
+ * named with its rule and line. Browser-mode filtering reads only the vitest
+ * configs in the files' ancestor directories. Nothing is written. On
+ * dankserver one test file took 0.5 s and 166 MB, where the full scan held
+ * 2.24 GB; a worker host runs it from `yeet final-check` while Lint Policy is
+ * left to hosted CI.
+ *
+ * **Example** (Check one test file)
+ *
+ * ```ts
+ * import { EffectVitestLintOptions, runEffectVitestFilesLint } from "@beep/repo-cli/commands/Lint"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * const options = EffectVitestLintOptions.make({
+ *   census: false,
+ *   write: false,
+ *   rows: O.none(),
+ *   files: ["packages/demo/test/Foo.test.ts"]
+ * })
+ * console.log(Effect.isEffect(runEffectVitestFilesLint(options))) // true
+ * ```
+ *
+ * @param options - The command options; `files` names the files to check.
+ * @returns The scan timing for the checked files.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const runEffectVitestFilesLint = Effect.fn("EffectVitestScan.runFiles")(function* (
+  options: EffectVitestLintOptions
+) {
+  yield* refuseScopedModeCombination(options);
+  const root = yield* findRepoRoot().pipe(
+    EffectVitestLintError.mapError("Unable to locate the repository root for effect-vitest.")
+  );
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const graph = yield* readEffectVitestPrimitiveGraph(root);
+  yield* verifyEffectVitestPin(root, graph);
+  const started = performance.now();
+  const requested = A.dedupe(
+    A.map(options.files, (file) => toPosixPath(path.relative(root, path.resolve(root, file))))
+  );
+  const files = A.filter(requested, isEffectVitestScopePath);
+  const outside = A.filter(requested, (file) => !isEffectVitestScopePath(file));
+  if (A.isReadonlyArrayNonEmpty(outside)) {
+    yield* Console.log(
+      `[effect-vitest] skipped ${outside.length} file(s) outside the scan scope: ${A.join(outside, ", ")}`
+    );
+  }
+  const browserModeFiles = yield* scopedBrowserModeFiles(root, files);
+  const project = new Project({ useInMemoryFileSystem: true });
+  const detected = yield* Effect.forEach(
+    files,
+    Effect.fnUntraced(function* (file) {
+      const text = yield* fs
+        .readFileString(path.join(root, file))
+        .pipe(EffectVitestLintError.mapError(`Unable to read ${file} for effect-vitest.`));
+      const owner = yield* scopedFileOwner(root, file);
+      const rows = yield* detectEffectVitestFindings(project.createSourceFile(file, text), file, owner);
+      const kept = retainBrowserSafeFindings(rows, HashSet.has(browserModeFiles, file));
+      return isEffectVitestTestFilePath(file) ? kept : A.filter(kept, (finding) => finding.ruleId === "EV003");
+    })
+  );
+  const graphBacked = yield* applyEffectVitestPrimitiveGraph(A.flatten(detected), graph);
+  const existing = yield* readEffectVitestInventory(root);
+  yield* refuseBaselinePinMismatch(existing, graph);
+  const merged = preserveEffectVitestExceptions(A.sort(graphBacked, findingOrder), existing);
+  const scoped = HashSet.fromIterable(files);
+  const baseline = A.filter(
+    O.getOrElse(
+      O.map(existing, (document) => document.findings),
+      A.empty<EffectVitestFinding>
+    ),
+    (finding) => HashSet.has(scoped, finding.file)
+  );
+  const timing = EffectVitestScanTiming.make({
+    scanMs: performance.now() - started,
+    fileCount: files.length,
+    findingCount: merged.length,
+  });
+  yield* Console.log(
+    `[effect-vitest] files=${timing.fileCount} findings=${timing.findingCount} scanMs=${timing.scanMs.toFixed(1)} (scoped, no repository scan)`
+  );
+  yield* reportScopedMembership(merged, baseline);
   return timing;
 });

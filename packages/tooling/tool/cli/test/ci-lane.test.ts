@@ -2673,10 +2673,10 @@ const fallowLaneHandle = (exitCode: Effect.Effect<ChildProcessSpawner.ExitCode>)
     unref: Effect.succeed(Effect.void),
   });
 
-// Each fake Fallow `turbo run` holds its exit until three sub-lanes are in flight, so
-// a runner that waits for one sub-lane before starting the next never gets past the
-// first and the test times out.
-const fallowCiLayer = (probe: FallowLaneProbe, failingTask?: string) => {
+// Each fake Fallow `turbo run` holds its exit until `released` sub-lanes have started (three
+// by default), so a runner that waits for one sub-lane before starting the next never gets past
+// the first and the test times out. A serial run releases after the first.
+const fallowCiLayer = (probe: FallowLaneProbe, failingTask?: string, released = 3) => {
   const threeInFlight = Latch.makeUnsafe(false);
   const fileSystemLayer = FileSystem.layerNoop({
     exists: (file) => Effect.succeed(Str.endsWith("/.git")(file)),
@@ -2701,7 +2701,7 @@ const fallowCiLayer = (probe: FallowLaneProbe, failingTask?: string) => {
       A.appendInPlace(probe.started, task.value);
       probe.inFlight += 1;
       probe.maxInFlight = Num.max(probe.maxInFlight, probe.inFlight);
-      if (A.length(probe.started) === 3) {
+      if (A.length(probe.started) === released) {
         Latch.openUnsafe(threeInFlight);
       }
       const exit = Effect.sync(() => {
@@ -2736,6 +2736,21 @@ it.layer(fallowCiLayer(concurrentFallowProbe), { timeout: "10 seconds" })("fallo
       expect(concurrentFallowProbe.started).toEqual(FALLOW_LANE_TASKS);
       expect(concurrentFallowProbe.maxInFlight).toBe(3);
       expect(statusLanes(concurrentFallowProbe.status)).toEqual(A.map(FALLOW_STATUS_LANES, (lane) => `- ${lane}: 0`));
+    })
+  );
+});
+
+// goals/compute-profile-gate-routing P3: `yeet final-check --force-local` on a worker passes
+// `--serial`, so one Fallow project graph (about 0.7 GB with its wrappers) is held at a time.
+const serialFallowProbe = fallowLaneProbe();
+it.layer(fallowCiLayer(serialFallowProbe, undefined, 1), { timeout: "10 seconds" })("fallow lane serial", (it) => {
+  it.effect("runs the seven sub-lanes one at a time with serial", () =>
+    Effect.gen(function* () {
+      yield* runCiLane("fallow", CiLaneRunOptions.make({ ...baseOptions, serial: true }));
+
+      expect(serialFallowProbe.started).toEqual(FALLOW_LANE_TASKS);
+      expect(serialFallowProbe.maxInFlight).toBe(1);
+      expect(statusLanes(serialFallowProbe.status)).toEqual(A.map(FALLOW_STATUS_LANES, (lane) => `- ${lane}: 0`));
     })
   );
 });

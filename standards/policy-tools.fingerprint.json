@@ -3214,6 +3214,7 @@
         "packages/foundation/capability/file-processing/src/PathSafety/PathSafety.policy.ts",
         "packages/foundation/capability/file-processing/src/PathSafety/PathSafety.service.ts",
         "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
+        "packages/foundation/modeling/glob/src/GlobSet.ts",
         "packages/foundation/modeling/managed-section/package.json",
         "packages/foundation/modeling/managed-section/src/CommentStyle.ts",
         "packages/foundation/modeling/managed-section/src/Section.ts",

@@ -48,6 +48,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { constant, dual, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as Path from "effect/Path";
@@ -55,8 +56,14 @@ import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { COMPUTE_PROFILE_WORKER_SKIP_REASON, gateRouteFor } from "../../../internal/repo-run/GateRoute.schemas.ts";
+import {
+  COMPUTE_PROFILE_WORKER_SKIP_REASON,
+  gateRouteFor,
+  workerForcedRefusal,
+} from "../../../internal/repo-run/GateRoute.schemas.ts";
 import { processStartIdentityForPid } from "../../../internal/repo-run/ProcessIdentity.ts";
+import { AdmissionRoute } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
+import { recordAdmissionRoute } from "../../../internal/repo-run/QualityScheduler.ts";
 import { repoRunArtifactId } from "../../../internal/repo-run/RepoRunArtifacts.ts";
 import { CiLocalStepPlan, ciLaneDispatchStep } from "../../Ci/CiLane.ts";
 import { ChangeAtomKind, RouteSentinel } from "../../Ci/Route.schemas.ts";
@@ -64,6 +71,7 @@ import { ChangeClassifier, ClassifyInput } from "../../Ci/Route.service.ts";
 import { ChangeClassifierLive } from "../../Ci/RouteClassify.ts";
 import { routeFootprintCanonicalJson, routeLaneDecision } from "../../Ci/RouteFootprints.ts";
 import { sha256Hex } from "../../Goals/PacketCore/PacketDigest.ts";
+import { isEffectVitestScopePath } from "../../Lint/Lint.schemas.ts";
 import {
   hasReusableLaneProof,
   persistLaneProofs,
@@ -112,6 +120,7 @@ import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { ComputeProfile } from "../../../internal/repo-run/ComputeProfile.schemas.ts";
+import type { AdmissionRouteOutcome } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import type { CiLaneId } from "../../Ci/CiLane.ts";
 import type { ChangeAtom } from "../../Ci/Route.schemas.ts";
 import type { CoverageAffectedScope } from "../../Quality/internal/CoverageScope.ts";
@@ -590,6 +599,17 @@ export const parseFinalCheckSkips = Effect.fn("Yeet.parseFinalCheckSkips")(funct
   });
 });
 
+// The requested gates the profile routes to hosted CI, less those an operator skip already names.
+const profileRoutedGates = (
+  gates: ReadonlyArray<FinalCheckGate>,
+  operatorSkips: ReadonlyArray<FinalCheckSkip>,
+  profile: ComputeProfile
+): ReadonlyArray<FinalCheckGate> =>
+  A.filter(
+    gates,
+    (gate) => gateRouteFor(gate, profile) === "hosted-only" && !A.some(operatorSkips, (skip) => skip.gate === gate)
+  );
+
 /**
  * The skips the compute profile adds to a final-check run.
  *
@@ -597,8 +617,9 @@ export const parseFinalCheckSkips = Effect.fn("Yeet.parseFinalCheckSkips")(funct
  *
  * Every requested gate that is hosted-only on `profile` and has no operator
  * `--skip` is skipped with reason `compute-profile=worker`; an operator skip
- * for the same gate wins and keeps its own reason. `forceLocal` adds nothing,
- * so the hosted-only gates run here.
+ * for the same gate wins and keeps its own reason. With `forceLocal` only the
+ * gates a worker refuses to force ({@link workerForcedRefusal}: one of their
+ * processes alone outgrows the worker budget) stay skipped; the rest run here.
  *
  * **Example** (Defer check on a worker)
  *
@@ -626,16 +647,120 @@ export const computeProfileFinalCheckSkips = ({
   readonly profile: ComputeProfile;
   readonly forceLocal: boolean;
 }): ReadonlyArray<FinalCheckSkip> =>
-  forceLocal
-    ? []
-    : pipe(
-        gates,
-        A.filter(
-          (gate) =>
-            gateRouteFor(gate, profile) === "hosted-only" && !A.some(operatorSkips, (skip) => skip.gate === gate)
-        ),
-        A.map((gate) => FinalCheckSkip.make({ gate, reason: COMPUTE_PROFILE_WORKER_SKIP_REASON }))
-      );
+  pipe(
+    profileRoutedGates(gates, operatorSkips, profile),
+    A.filter((gate) => !forceLocal || O.isSome(workerForcedRefusal(gate))),
+    A.map((gate) => FinalCheckSkip.make({ gate, reason: COMPUTE_PROFILE_WORKER_SKIP_REASON }))
+  );
+
+/**
+ * The lines `yeet final-check --force-local` prints on a `worker` host.
+ *
+ * **Details**
+ *
+ * A forced gate on `worker` runs one task at a time (concurrency 1); a gate
+ * whose single process outgrows the worker budget is refused and stays with
+ * hosted CI, and `repo-sanity` keeps its changeset status narrowing. Each
+ * refusal names its measurement ({@link workerForcedRefusal}). Nothing is
+ * printed without `--force-local` or off `worker`.
+ *
+ * **Example** (Force fallow and check on a worker)
+ *
+ * ```ts
+ * import { forcedWorkerFinalCheckLines } from "@beep/repo-cli/test/Yeet"
+ *
+ * const lines = forcedWorkerFinalCheckLines({ gates: ["check", "fallow"], operatorSkips: [], profile: "worker", forceLocal: true })
+ * console.log(lines.length) // 2
+ * ```
+ *
+ * @param input - The planned gates, the parsed `--skip` values, the resolved
+ *   profile and whether `--force-local` was passed.
+ * @returns The refusal lines, then the concurrency line, in gate order.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const forcedWorkerFinalCheckLines = ({
+  gates,
+  operatorSkips,
+  profile,
+  forceLocal,
+}: {
+  readonly gates: ReadonlyArray<FinalCheckGate>;
+  readonly operatorSkips: ReadonlyArray<FinalCheckSkip>;
+  readonly profile: ComputeProfile;
+  readonly forceLocal: boolean;
+}): ReadonlyArray<string> => {
+  if (!forceLocal || profile !== "worker") return [];
+  const requested = A.filter(gates, (gate) => !A.some(operatorSkips, (skip) => skip.gate === gate));
+  const refused = A.getSomes(
+    A.map(requested, (gate) =>
+      O.map(
+        workerForcedRefusal(gate),
+        (reason) => `[yeet] final-check --force-local refused ${gate} on the worker profile: ${reason}`
+      )
+    )
+  );
+  const serial = A.filter(profileRoutedGates(gates, operatorSkips, profile), (gate) =>
+    O.isNone(workerForcedRefusal(gate))
+  );
+  return A.appendAll(
+    refused,
+    A.match(serial, {
+      onEmpty: () => [],
+      onNonEmpty: (forced) => [
+        `[yeet] final-check --force-local on the worker profile runs ${A.join(forced, ", ")} one task at a time (concurrency 1)`,
+      ],
+    })
+  );
+};
+
+// What a forced gate adds to its argv on `worker` to run one task at a time: the Fallow
+// sub-lanes one after another, the coverage Turbo graph one package at a time.
+const FORCED_WORKER_SERIAL_ARGS = HashMap.make<ReadonlyArray<readonly [FinalCheckGate, ReadonlyArray<string>]>>(
+  ["fallow", ["--serial"]],
+  ["coverage", ["--concurrency=1"]]
+);
+
+const appendStepArgs = (entry: FinalCheckPlannedStep, args: ReadonlyArray<string>): FinalCheckPlannedStep =>
+  FinalCheckPlannedStep.make({
+    ...entry,
+    step: QualityTaskStep.make({ ...entry.step, args: A.appendAll(entry.step.args, args) }),
+  });
+
+const workerStep =
+  (forceLocal: boolean) =>
+  (entry: FinalCheckPlannedStep): FinalCheckPlannedStep =>
+    entry.gate === "repo-sanity"
+      ? FinalCheckPlannedStep.make({
+          ...entry,
+          step: QualityTaskStep.make({
+            label: entry.step.label,
+            command: "bun",
+            args: ["run", "beep", "quality", "changeset-status", "--since", "origin/main"],
+            cwd: entry.step.cwd,
+          }),
+        })
+      : forceLocal
+        ? O.match(HashMap.get(FORCED_WORKER_SERIAL_ARGS, entry.gate), {
+            onNone: () => entry,
+            onSome: (args) => appendStepArgs(entry, args),
+          })
+        : entry;
+
+const FINAL_CHECK_EFFECT_VITEST_FILES_CONTEXT =
+  "Heavy / Lint Policy (lint:effect-vitest over the diff's test files; the rest of Lint Policy is hosted-only on worker)";
+
+const effectVitestFilesStep = (cwd: string, files: A.NonEmptyReadonlyArray<string>): FinalCheckPlannedStep =>
+  FinalCheckPlannedStep.make({
+    gate: "lint",
+    hostedContext: FINAL_CHECK_EFFECT_VITEST_FILES_CONTEXT,
+    step: QualityTaskStep.make({
+      label: "final-check:lint:effect-vitest-files",
+      command: "bun",
+      args: ["run", "beep", "lint", "effect-vitest", ...A.flatMap(files, (file) => ["--files", file])],
+      cwd,
+    }),
+  });
 
 /**
  * Narrow the planned steps to what the compute profile may run locally.
@@ -644,10 +769,15 @@ export const computeProfileFinalCheckSkips = ({
  *
  * The `repo-sanity` lane runs the whole-repo schema catalog scan, which
  * holds about 5 GB on a host whose worker slice is capped at 7 GiB. On `worker`
- * the gate therefore runs only its changeset status check (D6) and hosted Repo
- * Sanity proves the rest. The decision lives here rather than in `beep ci lane`
- * because hosted runners execute that same lane and must keep the full scan.
- * `workstation` and `--force-local` keep the full lane.
+ * the gate therefore runs only its changeset status check (D6), with or
+ * without `--force-local`, and hosted Repo Sanity proves the rest. The
+ * decision lives here rather than in `beep ci lane` because hosted runners
+ * execute that same lane and must keep the full scan. With `--force-local` on
+ * `worker`, Fallow runs its sub-lanes one at a time (`--serial`) and coverage
+ * its Turbo graph one package at a time (`--concurrency=1`). Lint Policy never
+ * runs on `worker`, so the `lint` gate gains `lint effect-vitest --files` over
+ * the diff's files in the effect-vitest scope: the part of Lint Policy that
+ * costs one syntax parse per file. `workstation` keeps the plan unchanged.
  *
  * **Example** (Narrow repo-sanity on a worker)
  *
@@ -665,8 +795,8 @@ export const computeProfileFinalCheckSkips = ({
  * console.log(O.map(step, (entry) => entry.step.args.join(" "))) // Some("run beep quality changeset-status --since origin/main")
  * ```
  *
- * @param input - The planned steps, the resolved profile and whether
- *   `--force-local` keeps every gate local.
+ * @param input - The planned steps, the resolved profile, whether
+ *   `--force-local` was passed, and the diff's added or modified files.
  * @returns The steps to run on this host, in plan order.
  * @category policies
  * @since 0.0.0
@@ -675,26 +805,24 @@ export const routeFinalCheckStepsForProfile = ({
   planned,
   profile,
   forceLocal,
+  changedFiles = [],
 }: {
   readonly planned: ReadonlyArray<FinalCheckPlannedStep>;
   readonly profile: ComputeProfile;
   readonly forceLocal: boolean;
-}): ReadonlyArray<FinalCheckPlannedStep> =>
-  forceLocal || profile !== "worker"
-    ? planned
-    : A.map(planned, (entry) =>
-        entry.gate === "repo-sanity"
-          ? FinalCheckPlannedStep.make({
-              ...entry,
-              step: QualityTaskStep.make({
-                label: entry.step.label,
-                command: "bun",
-                args: ["run", "beep", "quality", "changeset-status", "--since", "origin/main"],
-                cwd: entry.step.cwd,
-              }),
-            })
-          : entry
-      );
+  readonly changedFiles?: ReadonlyArray<string>;
+}): ReadonlyArray<FinalCheckPlannedStep> => {
+  if (profile !== "worker") return planned;
+  const routed = A.map(planned, workerStep(forceLocal));
+  const lastLint = A.findLastIndex(routed, (entry) => entry.gate === "lint");
+  return A.match(A.filter(changedFiles, isEffectVitestScopePath), {
+    onEmpty: () => routed,
+    onNonEmpty: (files) =>
+      A.flatMap(routed, (entry, index) =>
+        O.contains(lastLint, index) ? [entry, effectVitestFilesStep(entry.step.cwd, files)] : [entry]
+      ),
+  });
+};
 
 /**
  * The line `yeet final-check` prints when the profile deferred gates to hosted CI.
@@ -1520,6 +1648,59 @@ const closeFinalCheckAttempt = Effect.fn("Yeet.closeFinalCheckAttempt")(function
   yield* appendYeetAttemptJournalEventForCheckout(repoRoot, open.branch, row).pipe(Effect.catch(reportJournalFailure));
 });
 
+// A worker run never takes a ticket: each selected gate's routing decision is one admission
+// fact, `refusal` when the profile left it to hosted CI and `bypass` when it runs here. Gates an
+// operator or the change route skipped were not routed by the profile. Off `worker`, none.
+const finalCheckWorkerRoutes = (
+  run: FinalCheckRun,
+  gates: ReadonlyArray<FinalCheckGate>,
+  profileSkips: ReadonlyArray<FinalCheckSkip>,
+  profile: ComputeProfile
+): ReadonlyArray<readonly [FinalCheckGate, AdmissionRouteOutcome]> =>
+  profile === "worker"
+    ? A.getSomes(
+        A.map(gates, (gate) =>
+          A.some(profileSkips, (skip) => skip.gate === gate)
+            ? O.some([gate, "refusal"] as const)
+            : O.isSome(skipFor(run, gate))
+              ? O.none()
+              : O.some([gate, "bypass"] as const)
+        )
+      )
+    : [];
+
+// Best effort like the attempt journal: a row that cannot be written warns and changes nothing.
+const recordWorkerFinalCheckRoutes = (
+  repoRoot: string,
+  opened: O.Option<OpenFinalCheckAttempt>,
+  routes: ReadonlyArray<readonly [FinalCheckGate, AdmissionRouteOutcome]>,
+  forceLocal: boolean
+) =>
+  A.match(routes, {
+    onEmpty: () => Effect.void,
+    onNonEmpty: Effect.fnUntraced(function* (decided) {
+      const branch = yield* currentYeetBranch(repoRoot).pipe(Effect.orElseSucceed(constant("")));
+      yield* Effect.forEach(
+        decided,
+        ([gate, outcome]) =>
+          recordAdmissionRoute(
+            AdmissionRoute.make({
+              checkoutRoot: repoRoot,
+              branch,
+              command: YEET_FINAL_CHECK_COMMAND,
+              attemptId: O.map(opened, (open) => open.attempt.attemptId),
+              envProfile: O.some("local"),
+              computeProfile: "worker",
+              forceLocal,
+              gateRoute: O.some(gate),
+              outcome,
+            })
+          ),
+        { discard: true }
+      );
+    }),
+  });
+
 /**
  * Run `yeet final-check` on the committed head and write its receipt.
  *
@@ -1574,6 +1755,12 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
     options.forceLocal
   );
   const skips = A.appendAll(operatorSkips, profileSkips);
+  const forcedLines = forcedWorkerFinalCheckLines({
+    gates,
+    operatorSkips,
+    profile: computeProfile,
+    forceLocal: options.forceLocal,
+  });
   const headSha = yield* resolveYeetRev(repoRoot, "HEAD");
   const mergeBase = yield* resolveYeetMergeBase(repoRoot, options.base, "HEAD");
   const changedFiles = yield* changedYeetPaths(
@@ -1598,6 +1785,7 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
       planned: planFinalCheckSteps(repoRoot, mergeBase, changedFiles, O.getOrUndefined(fullPolicySweeps)),
       profile: computeProfile,
       forceLocal: options.forceLocal,
+      changedFiles,
     }),
     skips,
     resume: options.resume,
@@ -1621,6 +1809,7 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
     );
     yield* Effect.forEach(gates, (gate) => printGatePlan(run, gate), { discard: true });
     yield* printProfileSkips(profileSkips);
+    yield* Effect.forEach(forcedLines, (line) => Console.log(line), { discard: true });
     return O.none();
   }
 
@@ -1628,6 +1817,7 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
   const ran = yield* Ref.make<FinalCheckRan>({ steps: [], receipt: O.none() });
   const execute = Effect.gen(function* () {
     const startedAt = yield* nowIso;
+    yield* Effect.forEach(forcedLines, (line) => Console.log(line), { discard: true });
     const { steps, verdicts, shadowMisses } = yield* runGates(run, gates, options.failFast);
     yield* Ref.set(ran, { steps, receipt: O.none() });
     yield* refuseMovedTree(repoRoot, headSha);
@@ -1665,7 +1855,13 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
   // thing `yeet ready` reads.
   const receipt = yield* Effect.acquireUseRelease(
     openFinalCheckAttempt(repoRoot, options, headSha, computeProfile),
-    constant(execute),
+    (opened) =>
+      recordWorkerFinalCheckRoutes(
+        repoRoot,
+        opened,
+        finalCheckWorkerRoutes(run, gates, profileSkips, computeProfile),
+        options.forceLocal
+      ).pipe(Effect.andThen(execute)),
     (opened, exit) =>
       O.match(opened, {
         onNone: constant(Effect.void),

@@ -200,28 +200,78 @@ jobs:
           echo "changed=true" >> "$GITHUB_OUTPUT"
           printf '%s\n' "${skills[@]}" > "$RUNNER_TEMP/relocked.txt"
 
-      # The push token is used here only, on an explicit URL; it never enters git config. A
-      # branch that moved after the replay makes this a non-fast-forward push, which fails.
-      - name: Commit the recorded hashes to the Renovate branch
+      # The relock commit keeps the github-actions[bot] author the branch check above admits as
+      # a prior relock. Committing needs no token; the hooks setup installed are for people.
+      - name: Commit the recorded hashes
+        id: commit
         if: steps.relock.outputs.changed == 'true'
         shell: bash
         env:
-          HEAD_REF: ${{ github.event.pull_request.head.ref }}
-          PUSH_TOKEN: ${{ secrets.BEEP_SKILLS_TRAIN_TOKEN || github.token }}
+          LEFTHOOK: "0"
         run: |
           set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add skills-lock.json
           while read -r skill; do
             git add -A ".claude/skills/$skill"
           done < "$RUNNER_TEMP/relocked.txt"
           if git diff --cached --quiet; then
             echo "Relock wrote nothing new."
+            echo "committed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          git commit -m "chore(skills): relock $(paste -sd, "$RUNNER_TEMP/relocked.txt") at the bumped pin"
-          git push "https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${HEAD_REF}"
+          git -c core.hooksPath=/dev/null \
+            -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -m "chore(skills): relock $(paste -sd, "$RUNNER_TEMP/relocked.txt") at the bumped pin"
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+
+      # Fail closed: a github.token push leaves every follow-up run on the Renovate branch
+      # waiting for a maintainer's approval (`action_required`), so the relocked head would
+      # never be proven. No relock push has happened yet (no Renovate skills PR as of
+      # 2026-11-13), so the old secret fallback never showed it.
+      - name: Check the push App credential
+        if: steps.commit.outputs.committed == 'true'
+        shell: bash
+        env:
+          APP_CLIENT_ID: ${{ vars.KNOWLEDGE_MINT_APP_CLIENT_ID }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${APP_CLIENT_ID}" ]]; then
+            message="KNOWLEDGE_MINT_APP_CLIENT_ID is not set, so no App token can push the relock. A github.token push would leave every follow-up run waiting for approval; the relock was not pushed."
+            echo "::error::${message}"
+            {
+              echo "### Relock not pushed"
+              echo
+              echo "${message}"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+      # The knowledge-mint App's installation token: this repository only, `contents: write`
+      # only, minted right before the push and revoked when the job ends. The steps before it
+      # ran the CLI at a head the branch check proved to hold only Renovate and relock commits
+      # inside the lock and the skill trees, so no step that saw pull-request code holds it.
+      - name: Create push App token
+        id: app-token
+        if: steps.commit.outputs.committed == 'true'
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.KNOWLEDGE_MINT_APP_CLIENT_ID }}
+          private-key: ${{ secrets.KNOWLEDGE_MINT_APP_PRIVATE_KEY }}
+          permission-contents: write
+
+      # The push token is used here only, on an explicit URL; it never enters git config. A
+      # branch that moved after the replay makes this a non-fast-forward push, which fails.
+      - name: Push the relock to the Renovate branch
+        if: steps.commit.outputs.committed == 'true'
+        shell: bash
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PUSH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          git -c core.hooksPath=/dev/null push \
+            "https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${HEAD_REF}"
 
   batch-issue:
     name: Skills Train Batch Issue

@@ -192,6 +192,49 @@ const stepEnvironment = (step: WorkflowStep): Readonly<Record<string, unknown>> 
 const setupMonorepoInputs = (jobs: WorkflowJobs, jobId: string): Readonly<Record<string, unknown>> =>
   stepInputs(setupMonorepoStep(jobs, jobId));
 
+// Every step whose encoded form mentions `needle`, as `job/step` labels.
+const stepsReferencing = Effect.fnUntraced(function* (jobs: WorkflowJobs, needle: string) {
+  const labelled = A.flatMap(R.toEntries(jobs), ([jobId, job]) =>
+    A.map(job.steps ?? [], (step) => [`${jobId}/${step.name ?? ""}`, step] as const)
+  );
+  const encoded = yield* Effect.forEach(labelled, ([label, step]) =>
+    Effect.map(encodeJobsFixture(step), (text) => [label, text] as const)
+  );
+  return A.map(
+    A.filter(encoded, ([, text]) => Str.includes(needle)(text)),
+    ([label]) => label
+  );
+});
+
+const APP_TOKEN_STEP = "Create push App token";
+
+// The App token is minted after a fail-closed credential check, in the step right before the
+// push, with `contents: write` only, and only the push step reads it.
+const assertAppTokenPush = (steps: ReadonlyArray<WorkflowStep>, pushStep: string): void => {
+  const mint = stepIndexByName(steps, APP_TOKEN_STEP);
+  expect(stepIndexByName(steps, "Check the push App credential")).toBe(mint - 1);
+  expect(stepIndexByName(steps, pushStep)).toBe(mint + 1);
+  expect(stepByName(steps, APP_TOKEN_STEP).uses).toBe(
+    "actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510"
+  );
+  expect(stepInputs(stepByName(steps, APP_TOKEN_STEP))).toEqual({
+    "client-id": "${{ vars.KNOWLEDGE_MINT_APP_CLIENT_ID }}",
+    "private-key": "${{ secrets.KNOWLEDGE_MINT_APP_PRIVATE_KEY }}",
+    "permission-contents": "write",
+  });
+  expect(stepEnvironment(stepByName(steps, "Check the push App credential"))).toEqual({
+    APP_CLIENT_ID: "${{ vars.KNOWLEDGE_MINT_APP_CLIENT_ID }}",
+  });
+  expect(stepRun(steps, pushStep)).toContain("https://x-access-token:${PUSH_TOKEN}@github.com/");
+  expect(
+    A.map(
+      A.filter(steps, (step) => A.contains(R.values(stepEnvironment(step)), "${{ steps.app-token.outputs.token }}")),
+      (step) => step.name
+    )
+  ).toEqual([pushStep]);
+  expect(stepEnvironment(stepByName(steps, pushStep)).PUSH_TOKEN).toBe("${{ steps.app-token.outputs.token }}");
+};
+
 // Every step that saves an Actions cache, as `job/step` labels.
 const cacheSaveSteps = (jobs: WorkflowJobs): ReadonlyArray<string> =>
   A.flatMap(R.toEntries(jobs), ([jobId, job]) =>
@@ -2035,9 +2078,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         // Protected execution authenticates observations; required quality proof stays separate.
         "cache-producer.yml:Execute approved signed producer",
         "heavy.yml:Heavy / Execute approved signed producer",
-        // Draft-only writer of the catalog shards a worker-profile lane skipped;
-        // Repo Sanity still proves the shards, so it grants no quality verdict.
+        // Draft-only writer of the catalog shards a worker-profile lane skipped, and the
+        // job that pushes them; Repo Sanity still proves the shards, so neither grants a verdict.
         "catalog-regeneration.yml:Catalog Regeneration",
+        "catalog-regeneration.yml:Catalog Regeneration Push",
         "data-sync.yml:Sync Official Data",
         // Post-merge publisher of the commit-message overlay ref; it proves the
         // ref with `beep history notes --check` and grants no quality verdict.
@@ -2095,6 +2139,64 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       }
       // A stale exemption would silently admit a future job of that name without a lane descriptor.
       expect(A.filter(exemptions, (exemption) => !A.contains(observedContexts, exemption))).toEqual([]);
+    })
+  );
+
+  // goals/compute-profile-gate-routing P3: a push made with `github.token` leaves every follow-up
+  // run `action_required` (the 2026-11-13 dankserver run), so the shard regeneration and the skills
+  // relock push with the knowledge-mint App's installation token. It is minted in the step right
+  // before the push with `contents: write` only, after a fail-closed credential check, and the
+  // regeneration push runs in its own job that executes nothing from the pull request.
+  it.effect("pushes regenerated shards and skill relocks with an App token minted right before the push", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const regenerationText = yield* fs.readFileString(`${root}/.github/workflows/catalog-regeneration.yml`);
+      const relockText = yield* fs.readFileString(`${root}/.github/workflows/skills-update-train.yml`);
+      expect(regenerationText).not.toContain("BEEP_SKILLS_TRAIN_TOKEN");
+      expect(relockText).not.toContain("BEEP_SKILLS_TRAIN_TOKEN");
+      const regeneration = parseWorkflowYaml(regenerationText);
+      expect(yamlAt(regeneration, ["permissions"])).toEqual({ contents: "read" });
+      expect(yamlAt(regeneration, ["on", "pull_request", "types"])).toEqual(["labeled", "synchronize", "reopened"]);
+      for (const fragment of [
+        "github.event.pull_request.draft == true",
+        "contains(github.event.pull_request.labels.*.name, 'compute-profile-worker')",
+        "github.event.pull_request.head.repo.full_name == github.repository",
+      ]) {
+        expect(yamlAt(regeneration, ["jobs", "regenerate-catalogs", "if"])).toEqual(expect.stringContaining(fragment));
+      }
+      expect(yamlAt(regeneration, ["jobs", "regenerate-catalogs", "permissions"])).toEqual({ contents: "read" });
+      expect(yamlAt(regeneration, ["jobs", "push-catalogs", "needs"])).toBe("regenerate-catalogs");
+      expect(yamlAt(regeneration, ["jobs", "push-catalogs", "if"])).toBe(
+        "${{ needs.regenerate-catalogs.outputs.drifted == 'true' }}"
+      );
+      expect(yamlAt(regeneration, ["jobs", "push-catalogs", "permissions"])).toEqual({
+        contents: "read",
+        "pull-requests": "read",
+      });
+      const jobs = yield* workflowJobs(regeneration);
+      const regenerate = jobSteps(jobs, "regenerate-catalogs");
+      const push = jobSteps(jobs, "push-catalogs");
+      expect(stepInputs(stepByName(regenerate, "Checkout pull request head"))["persist-credentials"]).toBe(false);
+      expect(stepInputs(stepByName(push, "Checkout pull request head"))["persist-credentials"]).toBe(false);
+      // The push job installs nothing and runs no repository code; git runs with hooks off.
+      expect(
+        A.filter(push, (step) => step.uses === SETUP_MONOREPO_ACTION || Str.includes("bun ")(step.run ?? ""))
+      ).toEqual([]);
+      expect(stepRun(push, "Apply the shard diff")).toContain("core.hooksPath=/dev/null");
+      expect(stepRun(push, "Apply the shard diff")).toContain("standards/(schema|instrumentation)-catalog/");
+      expect(stepRun(push, "Confirm the pull request is still a labelled draft")).toContain(
+        '.name == "compute-profile-worker"'
+      );
+      assertAppTokenPush(push, "Push the regenerated shards");
+      const relockJobs = yield* workflowJobs(parseWorkflowYaml(relockText));
+      assertAppTokenPush(jobSteps(relockJobs, "relock"), "Push the relock to the Renovate branch");
+      // The App private key reaches the mint action and nothing else; the regeneration job
+      // that runs pull-request code references no secret at all.
+      const regenerationSecrets = yield* stepsReferencing(jobs, "secrets.");
+      const relockSecrets = yield* stepsReferencing(relockJobs, "secrets.");
+      expect(regenerationSecrets).toEqual(["push-catalogs/Create push App token"]);
+      expect(relockSecrets).toEqual(["relock/Create push App token"]);
     })
   );
 
