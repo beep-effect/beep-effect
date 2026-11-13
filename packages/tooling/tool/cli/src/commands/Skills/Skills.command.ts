@@ -324,6 +324,18 @@ export const remoteSkillSources: ReadonlyArray<RemoteSkillSource> = [
     skillPath: "skills/adhd/SKILL.md",
   }),
   skillSource({
+    name: "alchemy-domain",
+    source: "alchemy-run/alchemy",
+    ref: "main",
+    skillPath: "packages/domain/skills/alchemy-domain/SKILL.md",
+  }),
+  skillSource({
+    name: "alchemy-provider",
+    source: "alchemy-run/alchemy",
+    ref: "main",
+    skillPath: ".agents/skills/alchemy-provider/SKILL.md",
+  }),
+  skillSource({
     name: "grill-me",
     source: "mattpocock/skills",
     ref: "main",
