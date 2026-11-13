@@ -179,7 +179,7 @@ import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
 import type { CoverageSnapshotEntry } from "./internal/CoverageRegression.ts";
-import type { CoverageBaselineRowDelta, CoverageScopeMode } from "./internal/CoverageScope.ts";
+import type { CoverageAffectedScope, CoverageBaselineRowDelta, CoverageScopeMode } from "./internal/CoverageScope.ts";
 import type { FlakeQuarantineTask } from "./internal/FlakeQuarantine.ts";
 import type { LaneProofSession } from "./internal/LaneProofReuse.ts";
 import type { LintPolicyAffectedTargets } from "./internal/LintPolicyScope.ts";
@@ -1032,6 +1032,63 @@ const validateCoverageFileIdentityTaskOptions = Effect.fn("QualityTasks.validate
     );
 });
 
+/**
+ * Plan the affected coverage scope for `base...HEAD` exactly as `coverage --affected` does.
+ *
+ * **Details**
+ *
+ * Collects the changed files on both sides of the three-dot range plus the
+ * dirty worktree, narrows a row-only coverage baseline edit to the packages
+ * whose rows changed, and hands both to the shared workspace planner. The
+ * affected coverage subprocess, hosted Test Unit planning and the
+ * `yeet final-check` noop probe all call this one function, so a `noop` here
+ * is the subprocess's `noop`.
+ *
+ * **Example** (Build the affected-scope effect)
+ *
+ * ```ts
+ * import { resolveAffectedCoverageScope } from "@beep/repo-cli/commands/Quality/Tasks"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(resolveAffectedCoverageScope("/repo", "origin/main"))) // true
+ * ```
+ *
+ * @param repoRoot - Absolute repository root containing the workspace manifest.
+ * @param base - Git revision the three-dot range starts from, usually the merge base.
+ * @returns The full, selected or no-op coverage scope for the range.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const resolveAffectedCoverageScope = Effect.fn("QualityTasks.resolveAffectedCoverageScope")(function* (
+  repoRoot: string,
+  base: string
+): Effect.fn.Return<CoverageAffectedScope, QualityTaskConfigurationError, QualityTaskEnvironment> {
+  const changedFiles = yield* collectChangedFiles(repoRoot, base, "HEAD").pipe(
+    QualityTaskConfigurationError.mapError(`Failed to collect affected coverage files from ${base}...HEAD.`)
+  );
+  // A row-only baseline edit is validated by measuring the packages whose rows
+  // changed; anything else in the document keeps the baseline a global input.
+  // This line reports the diff only — the planner's own scope line below is
+  // the authority on what runs, since a row can still force `full` or `noop`.
+  const baselineRowPackages = A.contains(changedFiles, coverageRegressionBaselinePath)
+    ? yield* coverageBaselineRowDeltaFromBase(repoRoot, base)
+    : O.none<CoverageBaselineRowDelta>();
+  yield* O.match(baselineRowPackages, {
+    onNone: () => Effect.void,
+    onSome: (delta) => {
+      const rows = A.appendAll(
+        A.map(delta.present, (packageName) => `${packageName} (present)`),
+        A.map(delta.removed, (packageName) => `${packageName} (removed)`)
+      );
+      return Console.log(
+        A.isReadonlyArrayNonEmpty(rows)
+          ? `[beep-cli] coverage:affected: ${coverageRegressionBaselinePath} differs from ${base} only in the row(s) for ${A.join(rows, ", ")}; planning from those rows`
+          : `[beep-cli] coverage:affected: ${coverageRegressionBaselinePath} differs from ${base} only in provenance fields`
+      );
+    },
+  });
+  return yield* planWorkspaceCoverageAffectedScope(repoRoot, changedFiles, baselineRowPackages);
+});
+
 const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOptions")(function* (
   repoRoot: string,
   args: ReadonlyArray<string>,
@@ -1066,31 +1123,7 @@ const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOp
       })
     )
   );
-  const changedFiles = yield* collectChangedFiles(repoRoot, base, "HEAD").pipe(
-    QualityTaskConfigurationError.mapError(`Failed to collect affected coverage files from ${base}...HEAD.`)
-  );
-  // A row-only baseline edit is validated by measuring the packages whose rows
-  // changed; anything else in the document keeps the baseline a global input.
-  // This line reports the diff only — the planner's own scope line below is
-  // the authority on what runs, since a row can still force `full` or `noop`.
-  const baselineRowPackages = A.contains(changedFiles, coverageRegressionBaselinePath)
-    ? yield* coverageBaselineRowDeltaFromBase(repoRoot, base)
-    : O.none<CoverageBaselineRowDelta>();
-  yield* O.match(baselineRowPackages, {
-    onNone: () => Effect.void,
-    onSome: (delta) => {
-      const rows = A.appendAll(
-        A.map(delta.present, (packageName) => `${packageName} (present)`),
-        A.map(delta.removed, (packageName) => `${packageName} (removed)`)
-      );
-      return Console.log(
-        A.isReadonlyArrayNonEmpty(rows)
-          ? `[beep-cli] coverage:affected: ${coverageRegressionBaselinePath} differs from ${base} only in the row(s) for ${A.join(rows, ", ")}; planning from those rows`
-          : `[beep-cli] coverage:affected: ${coverageRegressionBaselinePath} differs from ${base} only in provenance fields`
-      );
-    },
-  });
-  const scope = yield* planWorkspaceCoverageAffectedScope(repoRoot, changedFiles, baselineRowPackages);
+  const scope = yield* resolveAffectedCoverageScope(repoRoot, base);
   const passthroughArgs = withoutCoverageAffectedArg(args);
 
   return yield* Match.value(scope).pipe(
@@ -4893,7 +4926,7 @@ const runRootCoverageTask = Effect.fn("QualityTasks.runRootCoverageTask")(functi
   }
 
   if (options.skip) {
-    yield* Console.log("[beep-cli] coverage:affected: no coverage-bearing inputs changed");
+    yield* Console.log("[beep-cli] coverage:affected: no affected packages (no coverage-bearing inputs changed)");
     return;
   }
 

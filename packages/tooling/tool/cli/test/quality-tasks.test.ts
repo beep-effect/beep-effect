@@ -34,6 +34,7 @@ import {
   coverageProducerEnvironment,
   parseTestLaneSelectionForTesting,
   readLintPolicySweeps,
+  resolveAffectedCoverageScope,
   resolveCiCoverageArtifactPlan,
   resolveCoverageSelector,
   runQualityTaskBufferedStepGroup,
@@ -1245,6 +1246,37 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         );
         expect(plan.scoped).toBe(true);
         expect(plan.owners).toEqual([]);
+      })
+    );
+    it.effect("resolves the affected coverage scope of an unchanged checkout to noop", () =>
+      Effect.gen(function* () {
+        const root = yield* coverageArtifactPlanRepository();
+        const scope = yield* resolveAffectedCoverageScope(root, "HEAD");
+        expect(scope).toEqual({ _tag: "noop" });
+      })
+    );
+    it.effect("resolves packet documents to noop and a package source to its owner", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* coverageArtifactPlanRepository();
+        yield* runGit(root, ["tag", "coverage-scope-base"]);
+        // The packet slug never exists in the real tree, so the goal-data census resolves nothing for it.
+        const packet = path.join(root, "goals", "coverage-scope-fixture");
+        yield* fs.makeDirectory(path.join(packet, "ops"), { recursive: true });
+        yield* fs.writeFileString(path.join(packet, "ops", "manifest.json"), "{}\n");
+        yield* fs.writeFileString(path.join(packet, "README.md"), "# Fixture packet\n");
+        yield* runGit(root, ["add", "--all"]);
+        yield* runGit(root, ["commit", "-m", "docs: packet documents only"]);
+        const documentsOnly = yield* resolveAffectedCoverageScope(root, "coverage-scope-base");
+        expect(documentsOnly).toEqual({ _tag: "noop" });
+
+        yield* fs.makeDirectory(path.join(root, "packages", "covered", "src"), { recursive: true });
+        yield* fs.writeFileString(path.join(root, "packages", "covered", "src", "index.ts"), "export const x = 1;\n");
+        yield* runGit(root, ["add", "--all"]);
+        yield* runGit(root, ["commit", "-m", "feat: covered source"]);
+        const withSource = yield* resolveAffectedCoverageScope(root, "coverage-scope-base");
+        expect(withSource).toEqual({ _tag: "selected", packageNames: ["@beep/covered"], dependentPackageNames: [] });
       })
     );
   });
