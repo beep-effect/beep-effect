@@ -10,7 +10,7 @@ import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationMetadataRefusal,
   assertCitationWorkerCompositionReleased,
@@ -70,7 +70,7 @@ const install = makeCitationMetadataFixture({
   make: (...args: Parameters<typeof makeCitationHtmlDiscovery>) =>
     makeCitationHtmlDiscovery(...args).pipe(
       Effect.flatMap((stage) =>
-        makeCitationTestInvocationBinding(args[0]).pipe(
+        makeCitationTestScaffoldBinding(args[0]).pipe(
           Effect.map((bind) => ({ ...stage, discover: bind(stage.discover) }))
         )
       )

@@ -5,7 +5,7 @@ import { makeCitationOperationAdmission } from "@beep/law-practice-server/intern
 import { makeCitationCleanerPipeline } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import { CitationCleaner } from "@beep/law-practice-use-cases/server";
 import * as Effect from "effect/Effect";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import type { CitationCleanerObject, CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 /** Allocate a new admission owner and capture the exact replay runtime.
@@ -18,7 +18,7 @@ export const makeCitationReplayCleanerOperation = Effect.fn("CleanerReplayTest.m
   const admission = yield* makeCitationOperationAdmission(limits);
   const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(limits, "clean").pipe(
+      makeCitationTestScaffoldBinding(limits, "clean").pipe(
         Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
       )
     ),

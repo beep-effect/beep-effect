@@ -20,7 +20,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { makeCitationNativeManualClock, makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
@@ -71,7 +71,7 @@ it.layer(citationTokenizerTestLayer)("source metadata year", (it) => {
             yield* setYear(highest - 1);
             const parser = yield* makeCitationMetadataYear(limits).pipe(
               Effect.flatMap((stage) =>
-                makeCitationTestInvocationBinding(limits).pipe(
+                makeCitationTestScaffoldBinding(limits).pipe(
                   Effect.map((bind) => ({ ...stage, getYear: bind(stage.getYear) }))
                 )
               ),
@@ -97,7 +97,7 @@ it.layer(citationTokenizerTestLayer)("source metadata year", (it) => {
         const limits = (yield* defaultCitationEnginePolicy).limits;
         const east = yield* makeCitationMetadataYear(limits).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(limits).pipe(
+            makeCitationTestScaffoldBinding(limits).pipe(
               Effect.map((bind) => ({ ...stage, getYear: bind(stage.getYear) }))
             )
           ),
@@ -105,7 +105,7 @@ it.layer(citationTokenizerTestLayer)("source metadata year", (it) => {
         );
         const west = yield* makeCitationMetadataYear(limits).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(limits).pipe(
+            makeCitationTestScaffoldBinding(limits).pipe(
               Effect.map((bind) => ({ ...stage, getYear: bind(stage.getYear) }))
             )
           ),
@@ -121,7 +121,7 @@ it.layer(citationTokenizerTestLayer)("source metadata year", (it) => {
         yield* setYear(10000);
         const invalidClock = yield* makeCitationMetadataYear(limits).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(limits).pipe(
+            makeCitationTestScaffoldBinding(limits).pipe(
               Effect.map((bind) => ({ ...stage, getYear: bind(stage.getYear) }))
             )
           ),
@@ -137,7 +137,7 @@ it.layer(citationTokenizerTestLayer)("source metadata year", (it) => {
       Effect.gen(function* () {
         const invalidPolicy = yield* makeCitationMetadataYear(null).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(null).pipe(
+            makeCitationTestScaffoldBinding(null).pipe(
               Effect.map((bind) => ({ ...stage, getYear: bind(stage.getYear) }))
             )
           ),
@@ -151,7 +151,7 @@ it.layer(citationTokenizerTestLayer)("source metadata year", (it) => {
         const limits = (yield* defaultCitationEnginePolicy).limits;
         const parser = yield* makeCitationMetadataYear({ ...limits, producedTextUtf16: 4 }).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding({ ...limits, producedTextUtf16: 4 }).pipe(
+            makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 4 }).pipe(
               Effect.map((bind) => ({ ...stage, getYear: bind(stage.getYear) }))
             )
           ),
@@ -175,7 +175,7 @@ it.layer(citationTokenizerTestLayer)("source metadata year", (it) => {
         const limits = (yield* defaultCitationEnginePolicy).limits;
         const parser = yield* makeCitationMetadataYear({ ...limits, extractDeadline: Duration.millis(997) }).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding({ ...limits, extractDeadline: Duration.millis(997) }).pipe(
+            makeCitationTestScaffoldBinding({ ...limits, extractDeadline: Duration.millis(997) }).pipe(
               Effect.map((bind) => ({ ...stage, getYear: bind(stage.getYear) }))
             )
           ),

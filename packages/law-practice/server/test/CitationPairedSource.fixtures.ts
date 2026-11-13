@@ -14,7 +14,7 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
@@ -35,7 +35,7 @@ const installPair = Effect.fnUntraced(function* (
     extraction: defaultConfiguration,
   }).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
         Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
       )
     ),
@@ -109,7 +109,7 @@ export const replayCitationPairedSource = Effect.fn("PairedSourceTest.replay")(f
     extraction: defaultConfiguration,
   }).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
         Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
       )
     ),
@@ -118,7 +118,7 @@ export const replayCitationPairedSource = Effect.fn("PairedSourceTest.replay")(f
   );
   const semantic = yield* makeCitationSemanticExtraction(setup.limits, setup.runtime, defaultConfiguration).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
         Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
       )
     ),

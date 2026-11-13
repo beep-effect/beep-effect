@@ -12,7 +12,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import { makeCitationDiffTestRuntime } from "./CitationDiffWorker.fixtures.ts";
 import { readCitationHtmlDiscoveryCorpus } from "./CitationHtmlDiscovery.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationWorkerCompositionReleased,
   setupCitationMetadataRuntime,
@@ -37,7 +37,7 @@ export const installCitationHtmlGeometryFixture = Effect.fn("HtmlGeometryPrepara
     diffRuntime,
   }).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(limits).pipe(Effect.map((bind) => ({ ...stage, prepare: bind(stage.prepare) })))
+      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, prepare: bind(stage.prepare) })))
     ),
     Effect.provideContext(setup.provided)
   );

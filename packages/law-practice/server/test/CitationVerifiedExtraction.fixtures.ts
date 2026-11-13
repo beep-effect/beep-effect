@@ -17,7 +17,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 import { citationEngineCorpusAmbiguousTwins } from "./CitationEngineCorpus.fixtures.ts";
-import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { assertCitationNativeRange, citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import { assertCitationTokenizedExtractionRow } from "./CitationTokenizedExtraction.fixtures.ts";
@@ -109,7 +109,7 @@ const assertResolvedRequest = Effect.fnUntraced(function* (
     extraction: defaultConfiguration,
   }).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
         Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
       )
     ),
@@ -169,7 +169,7 @@ export const replayCitationVerifiedExtraction = Effect.fn("VerifiedExtractionTes
     const config = { engineArtifact, extraction: defaultConfiguration };
     const stage = yield* makeCitationVerifiedExtraction(setup.limits, setup.runtime, config).pipe(
       Effect.flatMap((stage) =>
-        makeCitationTestInvocationBinding(setup.limits).pipe(
+        makeCitationTestScaffoldBinding(setup.limits).pipe(
           Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
         )
       ),

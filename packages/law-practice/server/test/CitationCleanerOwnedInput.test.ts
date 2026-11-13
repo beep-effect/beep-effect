@@ -15,7 +15,7 @@ import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
 import * as TestClock from "effect/testing/TestClock";
 import { makeCitationCleanerRegistryHarness as setup } from "./CitationCleanerRegistry.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 
 const original = CitationPythonUnicodeStorage.make({
   width: 2,
@@ -39,7 +39,7 @@ it.effect("bounds owned-value preflight with the captured cleaner deadline", () 
       operationDeadline: Duration.millis(100),
     }).pipe(
       Effect.flatMap((stage) =>
-        makeCitationTestInvocationBinding(
+        makeCitationTestScaffoldBinding(
           {
             ...policy.limits,
             cleanDeadline: Duration.millis(50),
@@ -118,7 +118,7 @@ it.effect("rejects forged handles and native source overflow before invoking a p
     const policy = yield* defaultCitationEnginePolicy;
     const tight = yield* makeCitationCleanerPipeline({ ...policy.limits, sourceUtf16: 1 }).pipe(
       Effect.flatMap((stage) =>
-        makeCitationTestInvocationBinding({ ...policy.limits, sourceUtf16: 1 }, "clean").pipe(
+        makeCitationTestScaffoldBinding({ ...policy.limits, sourceUtf16: 1 }, "clean").pipe(
           Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
         )
       ),

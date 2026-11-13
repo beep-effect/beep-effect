@@ -25,7 +25,7 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Tuple from "effect/Tuple";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationMetadataFailure,
   assertCitationMetadataRefusal,
@@ -154,7 +154,7 @@ const install = makeCitationMetadataFixture({
   make: (...args: Parameters<typeof makeCitationCaseNameProcess>) =>
     makeCitationCaseNameProcess(...args).pipe(
       Effect.flatMap((stage) =>
-        makeCitationTestInvocationBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
+        makeCitationTestScaffoldBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
       )
     ),
 });
@@ -216,7 +216,7 @@ export const assertCitationCaseNameProcessBudget = Effect.fn("CaseNameProcessTes
     setup.configuration
   ).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding({ ...setup.limits, tokens: 1 }).pipe(
+      makeCitationTestScaffoldBinding({ ...setup.limits, tokens: 1 }).pipe(
         Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) }))
       )
     ),
@@ -251,7 +251,7 @@ export const assertCitationCaseNameProcessLifetime = Effect.fn("CaseNameProcessT
   ]) {
     const rejected = yield* makeCitationCaseNameProcess(closed.limits, closed.runtime, configuration).pipe(
       Effect.flatMap((stage) =>
-        makeCitationTestInvocationBinding(closed.limits).pipe(
+        makeCitationTestScaffoldBinding(closed.limits).pipe(
           Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) }))
         )
       ),
@@ -294,7 +294,7 @@ export const assertCitationMetadataStageDeadline = Effect.fn("CaseNameProcessTes
   });
   const stage = yield* make(setup.limits, setup.runtime, undefined).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(Effect.map((bind) => ({ apply: bind(stage.apply) })))
+      makeCitationTestScaffoldBinding(setup.limits).pipe(Effect.map((bind) => ({ apply: bind(stage.apply) })))
     ),
     Effect.provideContext(setup.provided)
   );

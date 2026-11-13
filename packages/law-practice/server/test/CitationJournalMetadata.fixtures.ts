@@ -26,7 +26,7 @@ import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
-import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationWorkerCapturedDeadline,
   assertCitationWorkerClosedLifetime,
@@ -122,7 +122,7 @@ const install = Effect.fn("JournalMetadataTest.install")(function* (
   const configuration = { ...corpus.configuration };
   const metadata = yield* makeCitationJournalMetadata(limits, setup.runtime, configuration).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(limits).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
+      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
     ),
     Effect.provideContext(installed),
     DateTime.withCurrentZoneOffset(0)
@@ -230,7 +230,7 @@ export const assertCitationJournalMetadataConfiguration = Effect.fn("JournalMeta
   ]) {
     const failed = yield* makeCitationJournalMetadata(policy, runtime, configuration).pipe(
       Effect.flatMap((stage) =>
-        makeCitationTestInvocationBinding(policy).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
+        makeCitationTestScaffoldBinding(policy).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
       ),
       Effect.provideContext(installed),
       DateTime.withCurrentZoneOffset(0),

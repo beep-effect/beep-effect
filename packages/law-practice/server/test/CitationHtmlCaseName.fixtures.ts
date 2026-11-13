@@ -208,7 +208,12 @@ export const assertCitationHtmlCaseNameLifetime = Effect.fn("HtmlCaseNameTest.li
   const prepared = yield* installed.prepare.prepare({ plain: row.plain, markup: row.markup });
   const before = yield* installed.setup.observed.snapshot;
   yield* Scope.close(owner, Exit.void);
-  const failure = yield* installed.stage.extract(requestOf(row, prepared.geometry)).pipe(Effect.flip);
+  const closed = yield* installed.stage.extract(null).pipe(Effect.flip);
+  expect(closed).toMatchObject({ _tag: "CitationAdmissionFailure", reason: "closed" });
+  const failure = yield* withCitationTestInvocation(
+    installed.stage.extract(requestOf(row, prepared.geometry)),
+    installed.setup.limits
+  ).pipe(Effect.flip);
   expect(failure).toMatchObject({ reason: "closed" });
   const after = yield* installed.setup.observed.snapshot;
   expect(after).toEqual(before);

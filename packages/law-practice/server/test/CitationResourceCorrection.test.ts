@@ -32,7 +32,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
-import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { makeCitationNativeManualClock, makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
@@ -153,7 +153,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
         const { owner, limits } = yield* load();
         const invalidPolicy = yield* makeCitationResourceCorrection(null).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(null).pipe(
+            makeCitationTestScaffoldBinding(null).pipe(
               Effect.map((bind) => ({
                 ...stage,
                 reporter: bind(stage.reporter),
@@ -168,7 +168,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
         expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
         const correction = yield* makeCitationResourceCorrection(limits).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(limits).pipe(
+            makeCitationTestScaffoldBinding(limits).pipe(
               Effect.map((bind) => ({
                 ...stage,
                 reporter: bind(stage.reporter),
@@ -264,7 +264,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
           const { owner, limits } = yield* load();
           const correction = yield* makeCitationResourceCorrection(limits).pipe(
             Effect.flatMap((stage) =>
-              makeCitationTestInvocationBinding(limits).pipe(
+              makeCitationTestScaffoldBinding(limits).pipe(
                 Effect.map((bind) => ({
                   ...stage,
                   reporter: bind(stage.reporter),
@@ -319,7 +319,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
         const make = (maximum: number) =>
           makeCitationResourceCorrection({ ...limits, producedTextUtf16: maximum }).pipe(
             Effect.flatMap((stage) =>
-              makeCitationTestInvocationBinding({ ...limits, producedTextUtf16: maximum }).pipe(
+              makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: maximum }).pipe(
                 Effect.map((bind) => ({
                   ...stage,
                   reporter: bind(stage.reporter),
@@ -347,7 +347,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
             yield* budget.reserve(2);
             const enclosing = yield* makeCitationResourceCorrection({ ...limits, producedTextUtf16: 34 }).pipe(
               Effect.flatMap((stage) =>
-                makeCitationTestInvocationBinding({ ...limits, producedTextUtf16: 34 }).pipe(
+                makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 34 }).pipe(
                   Effect.map((bind) => ({
                     ...stage,
                     reporter: bind(stage.reporter),
@@ -382,7 +382,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
           const { corpus, owner, limits } = yield* load();
           const correction = yield* makeCitationResourceCorrection(limits).pipe(
             Effect.flatMap((stage) =>
-              makeCitationTestInvocationBinding(limits).pipe(
+              makeCitationTestScaffoldBinding(limits).pipe(
                 Effect.map((bind) => ({
                   ...stage,
                   reporter: bind(stage.reporter),
@@ -422,7 +422,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
         const request = { reporter: native("NY Slip Op"), page: native("[U]"), editionGuess: null };
         const bounded = yield* makeCitationResourceCorrection({ ...limits, producedTextUtf16: 15 }).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding({ ...limits, producedTextUtf16: 15 }).pipe(
+            makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 15 }).pipe(
               Effect.map((bind) => ({
                 ...stage,
                 reporter: bind(stage.reporter),
@@ -437,7 +437,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
         expect(failure).toMatchObject({ limit: "producedTextUtf16" });
         const exact = yield* makeCitationResourceCorrection({ ...limits, producedTextUtf16: 16 }).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding({ ...limits, producedTextUtf16: 16 }).pipe(
+            makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 16 }).pipe(
               Effect.map((bind) => ({
                 ...stage,
                 reporter: bind(stage.reporter),
@@ -460,7 +460,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
             yield* budget.reserve(2);
             const enclosing = yield* makeCitationResourceCorrection({ ...limits, producedTextUtf16: 17 }).pipe(
               Effect.flatMap((stage) =>
-                makeCitationTestInvocationBinding({ ...limits, producedTextUtf16: 17 }).pipe(
+                makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 17 }).pipe(
                   Effect.map((bind) => ({
                     ...stage,
                     reporter: bind(stage.reporter),
@@ -500,7 +500,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
           });
           const installed = yield* makeCitationResourceCorrection(limits).pipe(
             Effect.flatMap((stage) =>
-              makeCitationTestInvocationBinding(limits).pipe(
+              makeCitationTestScaffoldBinding(limits).pipe(
                 Effect.map((bind) => ({
                   ...stage,
                   reporter: bind(stage.reporter),
@@ -526,7 +526,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
               extractDeadline: Duration.millis(997),
             }).pipe(
               Effect.flatMap((stage) =>
-                makeCitationTestInvocationBinding({
+                makeCitationTestScaffoldBinding({
                   ...limits,
                   extractDeadline: Duration.millis(997),
                 }).pipe(

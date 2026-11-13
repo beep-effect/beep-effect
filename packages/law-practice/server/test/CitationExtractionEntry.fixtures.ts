@@ -10,7 +10,7 @@ import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { installCitationDocumentExtractionFixture } from "./CitationDocumentExtraction.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import { assertCitationTokenizedExtractionRow } from "./CitationTokenizedExtraction.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
@@ -42,9 +42,7 @@ export const replayCitationExtractionEntry = Effect.fn("ExtractionEntryTest.repl
   const install = (limits: typeof setup.limits) =>
     makeCitationExtractionEntry(limits, setup.runtime, configuration).pipe(
       Effect.flatMap((stage) =>
-        makeCitationTestInvocationBinding(limits).pipe(
-          Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-        )
+        makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) })))
       ),
       Effect.provideContext(entryContext),
       DateTime.withCurrentZoneOffset(0)
@@ -87,7 +85,7 @@ export const replayCitationExtractionEntry = Effect.fn("ExtractionEntryTest.repl
   expect(missingPlan).toMatchObject({ _tag: "CitationExtractionEntryFailure", reason: "invalid-input" });
   const malformedConfiguration = yield* makeCitationExtractionEntry(setup.limits, setup.runtime, {}).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
         Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
       )
     ),
@@ -101,7 +99,7 @@ export const replayCitationExtractionEntry = Effect.fn("ExtractionEntryTest.repl
   });
   const unconfigured = yield* makeCitationExtractionEntry(setup.limits, setup.runtime, { invalid: true }).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
         Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
       )
     ),

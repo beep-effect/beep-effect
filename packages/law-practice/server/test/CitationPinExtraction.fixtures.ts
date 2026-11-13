@@ -16,7 +16,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationMetadataFailure,
   assertCitationMetadataFixtureLifetime,
@@ -90,7 +90,7 @@ export const readCitationPinExtractionCorpus = Effect.fn("PinExtractionTest.load
 const install = makeCitationMetadataFixtureInstaller((...args: Parameters<typeof makeCitationPinExtraction>) =>
   makeCitationPinExtraction(...args).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
+      makeCitationTestScaffoldBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
     )
   )
 )(readCitationPinExtractionCorpus());
@@ -163,9 +163,7 @@ export const assertCitationPinExtractionConfiguration = Effect.fn("PinExtraction
     (...args: Parameters<typeof makeCitationPinExtraction>) =>
       makeCitationPinExtraction(...args).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(args[0]).pipe(
-            Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) }))
-          )
+          makeCitationTestScaffoldBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
         )
       ),
     setup,

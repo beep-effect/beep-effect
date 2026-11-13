@@ -20,7 +20,7 @@ import {
   makeCitationAnnotationXmlTrace,
 } from "./CitationAnnotationReplay.fixtures.ts";
 import { readCitationAnnotationWrapCorpus } from "./CitationAnnotationTemplate.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { makeCitationRegexTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import {
   assertCitationWorkerCompositionReleased,
@@ -98,7 +98,7 @@ export const replayCitationWrapComposition = Effect.fn("AnnotationWrapTest.compo
   const fs = yield* FileSystem.FileSystem;
   const regexDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-wrap-regex-" });
   const runtime = yield* makeCitationRegexTestRuntime(kind, regexDirectory);
-  const observedXml = yield* makeCitationAnnotationXmlTrace(setup.worker);
+  const observedXml = yield* makeCitationAnnotationXmlTrace(setup.worker.raw);
   const processor = yield* makeCitationWrapAnnotationSpans(setup.limits, runtime).pipe(
     Effect.provideContext(setup.provided),
     Effect.provideService(CitationTextBudget, setup.budget),
@@ -106,7 +106,7 @@ export const replayCitationWrapComposition = Effect.fn("AnnotationWrapTest.compo
   );
   const assembly = yield* makeCitationAnnotationReplay(setup.limits, setup.budget, processor).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits, "annotate").pipe(
+      makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
         Effect.map((bind) => ({ ...stage, assemble: bind(stage.assemble) }))
       )
     )

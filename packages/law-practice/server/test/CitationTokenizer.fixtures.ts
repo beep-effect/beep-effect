@@ -30,7 +30,7 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   makeCitationNativeManualClock,
   makeCitationObservedSpawner,
@@ -133,7 +133,7 @@ export const setupCitationTokenizer = Effect.fn("TokenizerTest.setup")(function*
   const timer = yield* makeCitationNativeManualClock(limits.regexDeadline);
   const tokenizer = yield* makeCitationTokenizer(limits, runtime, configuration).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(limits).pipe(
+      makeCitationTestScaffoldBinding(limits).pipe(
         Effect.map((bind) => ({ ...stage, port: { ...stage.port, tokenize: bind(stage.port.tokenize) } }))
       )
     ),

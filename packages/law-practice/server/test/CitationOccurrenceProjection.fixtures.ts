@@ -17,12 +17,13 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import type { CitationMention } from "@beep/law-practice-domain/values";
 import type { CitationExtractionLoopModel } from "@beep/law-practice-server/internal/Citation/ExtractionLoop";
 import type { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import type { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import type { installCitationDocumentExtractionFixture } from "./CitationDocumentExtraction.fixtures.ts";
+import type { CitationTestInvocationBound } from "./CitationInvocation.fixtures.ts";
 
 type Installed = Effect.Success<ReturnType<typeof installCitationDocumentExtractionFixture>>;
 type SourceRow = Installed["corpus"]["cases"][number];
@@ -110,7 +111,7 @@ const replaceModelAt = Effect.fnUntraced(function* (
   };
 });
 const verifyPinOverrides = Effect.fn("OccurrenceProjectionTest.pinOverrides")(function* (
-  stage: Effect.Success<ReturnType<typeof makeCitationOccurrenceProjection>>,
+  stage: CitationTestInvocationBound<Effect.Success<ReturnType<typeof makeCitationOccurrenceProjection>>>,
   source: VerifiedSourceText,
   expected: SourceRow,
   result: CitationSemanticExtractionResult
@@ -160,9 +161,7 @@ export const makeCitationOccurrenceTestAdapter = Effect.fn("OccurrenceProjection
   const install = (limits = setup.limits, engineArtifact = artifact) =>
     makeCitationOccurrenceProjection(limits, setup.runtime, { engineArtifact }).pipe(
       Effect.flatMap((stage) =>
-        makeCitationTestInvocationBinding(limits).pipe(
-          Effect.map((bind) => ({ ...stage, project: bind(stage.project) }))
-        )
+        makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, project: bind(stage.project) })))
       ),
       Effect.provideContext(provided)
     );

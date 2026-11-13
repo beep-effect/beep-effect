@@ -16,7 +16,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationMetadataFailure,
   assertCitationMetadataFixtureLifetime,
@@ -100,7 +100,7 @@ const install = Effect.fn("CaseNameScanTest.install")(function* (
   const configuration = { ...corpus.configuration, patterns: { ...corpus.configuration.patterns } };
   const scanner = yield* makeCitationCaseNameScan(setup.limits, setup.runtime, configuration).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(Effect.map((bind) => ({ ...stage, scan: bind(stage.scan) })))
+      makeCitationTestScaffoldBinding(setup.limits).pipe(Effect.map((bind) => ({ ...stage, scan: bind(stage.scan) })))
     ),
     Effect.provideContext(setup.provided)
   );
@@ -176,7 +176,7 @@ export const assertCitationCaseNameScanBudget = Effect.fn("CaseNameScanTest.budg
     exact.configuration
   ).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding({ ...exact.limits, tokens: 1 }).pipe(
+      makeCitationTestScaffoldBinding({ ...exact.limits, tokens: 1 }).pipe(
         Effect.map((bind) => ({ ...stage, scan: bind(stage.scan) }))
       )
     ),
@@ -217,9 +217,7 @@ export const assertCitationCaseNameScanDefaultPolicy = Effect.fn("CaseNameScanTe
   ]) {
     const rejected = yield* makeCitationCaseNameScan(setup.limits, setup.runtime, configuration).pipe(
       Effect.flatMap((stage) =>
-        makeCitationTestInvocationBinding(setup.limits).pipe(
-          Effect.map((bind) => ({ ...stage, scan: bind(stage.scan) }))
-        )
+        makeCitationTestScaffoldBinding(setup.limits).pipe(Effect.map((bind) => ({ ...stage, scan: bind(stage.scan) })))
       ),
       Effect.provideContext(setup.provided),
       Effect.flip
@@ -228,7 +226,7 @@ export const assertCitationCaseNameScanDefaultPolicy = Effect.fn("CaseNameScanTe
   }
   const scanner = yield* makeCitationCaseNameScan(setup.limits, setup.runtime, corpus.configuration).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(Effect.map((bind) => ({ ...stage, scan: bind(stage.scan) })))
+      makeCitationTestScaffoldBinding(setup.limits).pipe(Effect.map((bind) => ({ ...stage, scan: bind(stage.scan) })))
     ),
     Effect.provideContext(setup.provided)
   );

@@ -16,7 +16,7 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
 import { makeCitationCleanerRegistryHarness as setup } from "./CitationCleanerRegistry.fixtures.ts";
-import { makeCitationTestInvocationBinding, withCitationTestTextBudget } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestTextBudget } from "./CitationInvocation.fixtures.ts";
 
 const failure = (reason: CitationCleanerFailure["reason"]) => CitationCleanerFailure.make({ reason });
 
@@ -40,7 +40,7 @@ it.effect("charges an unchanged owned value against the local ceiling and closes
       h.select([]);
       const tight = yield* makeCitationCleanerPipeline({ ...limits, producedTextUtf16: 3 }).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding({ ...limits, producedTextUtf16: 3 }, "clean").pipe(
+          makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 3 }, "clean").pipe(
             Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
           )
         ),
@@ -91,7 +91,7 @@ const parentedPipeline = Effect.fn("CleanerCoverageTest.parented")(function* (
   const parent = (yield* CitationInvocation).budget;
   const pipeline = yield* makeCitationCleanerPipeline({ ...limits, producedTextUtf16: 8 }).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding({ ...limits, producedTextUtf16: 8 }, "clean").pipe(
+      makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 8 }, "clean").pipe(
         Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
       )
     ),

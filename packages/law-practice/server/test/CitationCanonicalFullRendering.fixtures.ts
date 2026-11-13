@@ -11,7 +11,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { readCitationCanonicalCaptures } from "./CitationCanonicalCaptures.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   installCitationParsedResourceReplay,
   prepareCitationParsedResource,
@@ -107,9 +107,7 @@ export const replayCitationCanonicalFullRendering = Effect.fn("CanonicalFullRend
   } = yield* installCitationParsedResourceReplay(kind, (...args: Parameters<typeof makeCitationRendering>) =>
     makeCitationRendering(...args).pipe(
       Effect.flatMap((stage) =>
-        makeCitationTestInvocationBinding(args[0]).pipe(
-          Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
-        )
+        makeCitationTestScaffoldBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, render: bind(stage.render) })))
       )
     )
   );

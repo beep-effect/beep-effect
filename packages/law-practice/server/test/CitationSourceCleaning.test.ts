@@ -23,8 +23,9 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeCitationCleanerRegistryHarness } from "./CitationCleanerRegistry.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
+import type { CitationAdmissionFailure } from "@beep/law-practice-server/internal/Citation/Admission";
 import type { CitationEngineFailure } from "@beep/law-practice-use-cases/server";
 
 const setup = Effect.fn("SourceCleaningTest.setup")(function* () {
@@ -41,7 +42,7 @@ const setup = Effect.fn("SourceCleaningTest.setup")(function* () {
   const install = (policy = limits, resolver = sourceResolver, reader = h.values) =>
     makeCitationSourceCleaning(policy, artifact).pipe(
       Effect.flatMap((stage) =>
-        makeCitationTestInvocationBinding(policy, "clean").pipe(
+        makeCitationTestScaffoldBinding(policy, "clean").pipe(
           Effect.map((bind) => ({ ...stage, clean: bind(stage.clean) }))
         )
       ),
@@ -82,7 +83,8 @@ it.layer(BunCrypto.layer)("verified source cleaner", (it) => {
       });
       const stage = yield* install(limits, resolver);
       const invocation = stage.clean(request);
-      const closed: Effect.Effect<CitationEngineCleanResult, CitationEngineFailure> = invocation;
+      const closed: Effect.Effect<CitationEngineCleanResult, CitationEngineFailure | CitationAdmissionFailure> =
+        invocation;
       const result = yield* closed;
       expect(S.is(CitationEngineCleanResult)(result)).toBe(true);
       const text = yield* Effect.fromOption(result.text);

@@ -33,7 +33,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import type {
   CitationCleanerCursor,
   CitationCleanerWork,
@@ -174,7 +174,7 @@ const pipeline = Effect.fn("CleanerTest.pipeline")(function* (
   const citationResult1 = yield* defaultCitationEnginePolicy;
   return yield* makeCitationCleanerPipeline({ ...citationResult1.limits, ...overrides }).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding({ ...citationResult1.limits, ...overrides }, "clean").pipe(
+      makeCitationTestScaffoldBinding({ ...citationResult1.limits, ...overrides }, "clean").pipe(
         Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
       )
     ),
@@ -667,7 +667,7 @@ it.effect("rejects malformed policy, reservation amounts and nested plan names",
     const h = yield* harness;
     const invalidPolicy = yield* makeCitationCleanerPipeline(null).pipe(
       Effect.flatMap((stage) =>
-        makeCitationTestInvocationBinding(null, "clean").pipe(
+        makeCitationTestScaffoldBinding(null, "clean").pipe(
           Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
         )
       ),
@@ -696,7 +696,7 @@ it.effect("rejects negative text accounting from unchanged and produced runtime 
     const limits = (yield* defaultCitationEnginePolicy).limits;
     const p = yield* makeCitationCleanerPipeline(limits).pipe(
       Effect.flatMap((stage) =>
-        makeCitationTestInvocationBinding(limits, "clean").pipe(
+        makeCitationTestScaffoldBinding(limits, "clean").pipe(
           Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
         )
       ),

@@ -5,7 +5,7 @@ import { expect } from "@effect/vitest";
 import { deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import { readCitationCaseNameCorpus } from "./CitationCaseName.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
@@ -23,7 +23,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("plain case-
       const setup = yield* setupCitationMetadataRuntime("bun", undefined, false, true, 8192);
       const malformed = yield* makeCitationCaseName(setup.limits, setup.runtime, { scan: null }).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(setup.limits).pipe(
+          makeCitationTestScaffoldBinding(setup.limits).pipe(
             Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
           )
         ),
@@ -34,7 +34,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("plain case-
       const loaded = yield* readCitationCaseNameCorpus();
       const stage = yield* makeCitationCaseName(setup.limits, setup.runtime, loaded.configuration).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(setup.limits).pipe(
+          makeCitationTestScaffoldBinding(setup.limits).pipe(
             Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
           )
         ),

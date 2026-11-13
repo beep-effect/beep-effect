@@ -21,7 +21,7 @@ import {
   installCitationHtmlGeometryFixture,
   prepareCitationOptionalHtmlGeometry,
 } from "./CitationHtmlGeometryPreparation.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationGeneratedReferenceSource } from "./CitationReferenceNames.fixtures.ts";
 import {
   CitationReferenceSourceNames,
@@ -36,6 +36,7 @@ import { CitationNativeUnicodeHex, readCitationModelMetadata } from "./CitationT
 import type { CitationGeneratedReferencesResult } from "@beep/law-practice-server/internal/Citation/GeneratedReferences";
 import type { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import type { CitationTestInvocationBound } from "./CitationInvocation.fixtures.ts";
 
 const $I = $LawPracticeServerId.create("test/CitationGeneratedReferences");
 const Corpus = S.fromJsonString(
@@ -79,7 +80,7 @@ const Corpus = S.fromJsonString(
   })
 );
 const assertGeometryRefusal = Effect.fn("GeneratedReferencesTest.geometryRefusal")(function* (
-  stage: Effect.Success<ReturnType<typeof makeCitationGeneratedMarkupReferences>>,
+  stage: CitationTestInvocationBound<Effect.Success<ReturnType<typeof makeCitationGeneratedMarkupReferences>>>,
   request: CitationGeneratedMarkupInput
 ) {
   if (O.isNone(request.geometry)) return;
@@ -105,7 +106,7 @@ export const replayCitationGeneratedReferences = Effect.fn("GeneratedReferencesT
     disallowedNames: corpus.disallowedNames,
   }).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
         Effect.map((bind) => ({ ...stage, pincited: bind(stage.pincited) }))
       )
     ),
@@ -114,7 +115,7 @@ export const replayCitationGeneratedReferences = Effect.fn("GeneratedReferencesT
   const configuration = { patterns: template.patterns, disallowedNames: corpus.disallowedNames };
   const markup = yield* makeCitationGeneratedMarkupReferences(setup.limits, setup.runtime, configuration).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
         Effect.map((bind) => ({ ...stage, markup: bind(stage.markup) }))
       )
     ),
@@ -122,7 +123,7 @@ export const replayCitationGeneratedReferences = Effect.fn("GeneratedReferencesT
   );
   const combined = yield* makeCitationGeneratedCombinedReferences(setup.limits, setup.runtime, configuration).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
         Effect.map((bind) => ({ ...stage, combined: bind(stage.combined) }))
       )
     ),
@@ -187,7 +188,7 @@ export const replayCitationGeneratedReferences = Effect.fn("GeneratedReferencesT
     disallowedNames: corpus.disallowedNames,
   }).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding({ ...setup.limits, candidates: 1 }).pipe(
+      makeCitationTestScaffoldBinding({ ...setup.limits, candidates: 1 }).pipe(
         Effect.map((bind) => ({ ...stage, pincited: bind(stage.pincited) }))
       )
     ),

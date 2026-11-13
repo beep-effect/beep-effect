@@ -18,7 +18,7 @@ import * as Num from "effect/Number";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
   makeCitationReferenceNameMetadata,
   readCitationGeneratedReferenceSource,
@@ -56,9 +56,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("reference p
         const { budget, names, limits } = yield* install();
         const policy = yield* makeCitationReferenceNames({}, names).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding({}).pipe(
-              Effect.map((bind) => ({ ...stage, collect: bind(stage.collect) }))
-            )
+            makeCitationTestScaffoldBinding({}).pipe(Effect.map((bind) => ({ ...stage, collect: bind(stage.collect) })))
           ),
           Effect.provideService(CitationTextBudget, budget),
           Effect.flip
@@ -68,7 +66,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("reference p
         strictEqual(altered.length, 93);
         const mismatch = yield* makeCitationReferenceNames(limits, altered).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(limits).pipe(
+            makeCitationTestScaffoldBinding(limits).pipe(
               Effect.map((bind) => ({ ...stage, collect: bind(stage.collect) }))
             )
           ),

@@ -15,7 +15,7 @@ import { deepStrictEqual } from "@effect/vitest/utils";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { installCitationTokenizedExtractionFixture } from "./CitationTokenizedExtraction.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
@@ -63,7 +63,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("extraction 
       const { setup, provided } = yield* installation();
       const failure = yield* makeCitationTokenizedExtraction(setup.limits, setup.runtime, {}).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(setup.limits).pipe(
+          makeCitationTestScaffoldBinding(setup.limits).pipe(
             Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
           )
         ),
@@ -82,7 +82,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("extraction 
       const { setup, provided } = yield* installation();
       const failure = yield* makeCitationDocumentExtraction(setup.limits, setup.runtime, { document: {} }).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(setup.limits).pipe(
+          makeCitationTestScaffoldBinding(setup.limits).pipe(
             Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
           )
         ),
@@ -101,7 +101,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("extraction 
       const { setup, provided } = yield* installation();
       const failure = yield* makeCitationInputDocument(setup.limits, setup.runtime, { discovery: null }).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(setup.limits).pipe(
+          makeCitationTestScaffoldBinding(setup.limits).pipe(
             Effect.map((bind) => ({ ...stage, initialize: bind(stage.initialize) }))
           )
         ),

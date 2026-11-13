@@ -11,7 +11,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
-import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
   makeCitationUnicodePipelineHarness as harness,
   loadCitationUnicodeHistories,
@@ -58,7 +58,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("lossless literal comp
           producedTextUtf16: input.budget,
         }).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(
+            makeCitationTestScaffoldBinding(
               {
                 ...citationResult5.limits,
                 producedTextUtf16: input.budget,
@@ -168,7 +168,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("lossless literal comp
         producedTextUtf16: 2,
       }).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(
+          makeCitationTestScaffoldBinding(
             {
               ...citationResult16.limits,
               producedTextUtf16: 2,

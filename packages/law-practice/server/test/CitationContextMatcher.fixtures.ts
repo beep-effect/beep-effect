@@ -13,7 +13,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { setupCitationRegexRuntime } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
@@ -75,7 +75,7 @@ const install = Effect.fn("ContextMatcherTest.install")(function* (
     row.bindings
   ).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
         Effect.map((bind) => ({ ...stage, search: bind(stage.search) }))
       )
     ),

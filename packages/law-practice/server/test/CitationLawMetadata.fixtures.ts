@@ -32,7 +32,7 @@ import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
 import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
-import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationWorkerCapturedDeadline,
   assertCitationWorkerClosedLifetime,
@@ -109,7 +109,7 @@ const install = Effect.fn("LawMetadataTest.install")(function* (
   const installed = enclosing === true ? context.pipe(Context.add(CitationTextBudget, owner)) : context;
   const metadata = yield* makeCitationLawMetadata(limits, setup.runtime, configuration).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(limits).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
+      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
     ),
     Effect.provideContext(installed)
   );
@@ -218,7 +218,7 @@ export const assertCitationLawMetadataConfiguration = Effect.fn("LawMetadataTest
   ]) {
     const failed = yield* makeCitationLawMetadata(policy, runtime, configuration).pipe(
       Effect.flatMap((stage) =>
-        makeCitationTestInvocationBinding(policy).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
+        makeCitationTestScaffoldBinding(policy).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
       ),
       Effect.provideContext(setup.provided),
       Effect.flip
@@ -258,9 +258,7 @@ export const assertCitationLawMetadataDigest = Effect.fn("LawMetadataTest.digest
   const setup = yield* setupCitationMetadataRuntime("bun");
   const failed = yield* makeCitationLawMetadata(setup.limits, setup.runtime, corpus.configuration).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
-        Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) }))
-      )
+      makeCitationTestScaffoldBinding(setup.limits).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
     ),
     Effect.provideContext(setup.provided),
     Effect.provideService(
@@ -275,9 +273,7 @@ export const assertCitationLawMetadataDigest = Effect.fn("LawMetadataTest.digest
   expect(before).toEqual({ spawned: 0, confirmed: 0 });
   const metadata = yield* makeCitationLawMetadata(setup.limits, setup.runtime, corpus.configuration).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
-        Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) }))
-      )
+      makeCitationTestScaffoldBinding(setup.limits).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
     ),
     Effect.provideContext(setup.provided)
   );

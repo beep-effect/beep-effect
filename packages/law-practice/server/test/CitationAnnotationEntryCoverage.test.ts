@@ -4,7 +4,7 @@ import { it } from "@beep/test-runner";
 import { deepStrictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import { installCitationAnnotationEntryFixture } from "./CitationAnnotationEntry.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
@@ -21,7 +21,7 @@ const install = Effect.fnUntraced(function* (narrow: Partial<CitationEngineLimit
   const setup = yield* installCitationAnnotationEntryFixture();
   return yield* makeCitationAnnotationEntry({ ...setup.limits, ...narrow }, setup.runtime, setup.configuration).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding({ ...setup.limits, ...narrow }, "annotate").pipe(
+      makeCitationTestScaffoldBinding({ ...setup.limits, ...narrow }, "annotate").pipe(
         Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
       )
     ),
@@ -35,7 +35,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("annotation 
       const setup = yield* installCitationAnnotationEntryFixture();
       const failure = yield* makeCitationAnnotationEntry(setup.limits, setup.runtime, {}).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(setup.limits, "annotate").pipe(
+          makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
             Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
           )
         ),

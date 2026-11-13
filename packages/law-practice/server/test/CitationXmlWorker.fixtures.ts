@@ -8,7 +8,7 @@ import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { makeCitationBundledTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import {
   assertCitationWorkerCompositionReleased,
@@ -38,8 +38,8 @@ export const installCitationXmlWorker = Effect.fn("XmlWorkerTest.install")(funct
   const runtime = yield* makeCitationXmlTestRuntime(kind);
   const worker = yield* makeCitationXmlWorker(setup.limits, runtime).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits, "annotate").pipe(
-        Effect.map((bind) => ({ ...stage, balance: bind(stage.balance) }))
+      makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
+        Effect.map((bind) => ({ ...stage, raw: stage, balance: bind(stage.balance) }))
       )
     ),
     Effect.provideContext(setup.provided)

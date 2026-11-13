@@ -5,7 +5,7 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { installCitationDocumentExtractionFixture } from "./CitationDocumentExtraction.fixtures.ts";
-import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
 const refusal = (failure: { readonly _tag: string }) => ({
@@ -27,7 +27,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("retained Do
             configuration
           ).pipe(
             Effect.flatMap((stage) =>
-              makeCitationTestInvocationBinding(setup.limits).pipe(
+              makeCitationTestScaffoldBinding(setup.limits).pipe(
                 Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
               )
             ),

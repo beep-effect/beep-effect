@@ -16,7 +16,7 @@ import {
   installCitationHtmlGeometryFixture,
   prepareCitationOptionalHtmlGeometry,
 } from "./CitationHtmlGeometryPreparation.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationWorkerCompositionReleased,
   readCitationOracleFixture,
@@ -69,7 +69,7 @@ const install = Effect.fn("CaseNameSelectionTest.install")(function* (kind: Cita
     html: html.configuration,
   }).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
         Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
       )
     ),

@@ -7,7 +7,7 @@ import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Str from "effect/String";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationNativeRenderingAsset } from "./CitationNativeRendering.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
@@ -22,7 +22,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         const table = yield* readCitationNativeRenderingAsset("python-printability");
         const repr = yield* makeCitationPythonRepr(limits, table).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(limits).pipe(Effect.map((bind) => ({ ...stage, text: bind(stage.text) })))
+            makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, text: bind(stage.text) })))
           )
         );
         const input = Str.repeat(5000)("x");
@@ -38,7 +38,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         const table = yield* readCitationNativeRenderingAsset("python-printability");
         const malformed = yield* makeCitationPythonRepr({}, table).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding({}).pipe(Effect.map((bind) => ({ ...stage, text: bind(stage.text) })))
+            makeCitationTestScaffoldBinding({}).pipe(Effect.map((bind) => ({ ...stage, text: bind(stage.text) })))
           ),
           Effect.flip
         );

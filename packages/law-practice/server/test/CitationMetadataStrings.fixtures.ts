@@ -12,7 +12,7 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 import { assertCitationRegexRuntimeReleased, setupCitationRegexRuntime } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
@@ -67,7 +67,7 @@ const install = Effect.fn("MetadataStringsTest.install")(function* (
     controlledDeadline === true ? { ...setup.limits, extractDeadline: Duration.millis(997) } : setup.limits;
   const helpers = yield* makeCitationMetadataStrings(limits, setup.runtime, corpus.yearPattern, corpus.bindings).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(limits).pipe(
+      makeCitationTestScaffoldBinding(limits).pipe(
         Effect.map((bind) => ({
           ...stage,
           cleanPinCite: bind(stage.cleanPinCite),
@@ -104,7 +104,7 @@ const native = (text: string) => ({ width: 1, bytes: new TextEncoder().encode(te
 export const assertCitationMetadataStringBudget = Effect.fn("MetadataStringsTest.budget")(function* () {
   const invalidPolicy = yield* makeCitationMetadataStrings(null, null, null, null).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(null).pipe(
+      makeCitationTestScaffoldBinding(null).pipe(
         Effect.map((bind) => ({
           ...stage,
           cleanPinCite: bind(stage.cleanPinCite),

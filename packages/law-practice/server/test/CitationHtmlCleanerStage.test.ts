@@ -20,7 +20,7 @@ import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { citationHtmlWorkerTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import type { CitationCleanerWork } from "@beep/law-practice-use-cases/server";
 
@@ -138,7 +138,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         const h = owned(worker, units, () => `${Str.repeat(1_000_001)("A")}😀`);
         const pipeline = yield* makeCitationCleanerPipeline(policy).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(policy, "clean").pipe(
+            makeCitationTestScaffoldBinding(policy, "clean").pipe(
               Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
             )
           ),
@@ -157,7 +157,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         const empty = owned(zeroWorker, zeroUnits, () => `<div><script>${Str.repeat(1_000_000)("A")}</script></div>`);
         const zeroPipeline = yield* makeCitationCleanerPipeline(zeroPolicy).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(zeroPolicy, "clean").pipe(
+            makeCitationTestScaffoldBinding(zeroPolicy, "clean").pipe(
               Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
             )
           ),
@@ -174,7 +174,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         const full = owned(fullWorker, 1, () => "A");
         const fullPipeline = yield* makeCitationCleanerPipeline(fullPolicy).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(fullPolicy, "clean").pipe(
+            makeCitationTestScaffoldBinding(fullPolicy, "clean").pipe(
               Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
             )
           ),
@@ -238,7 +238,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         const h = owned(worker, 1, () => "x");
         const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(limits, "clean").pipe(
+            makeCitationTestScaffoldBinding(limits, "clean").pipe(
               Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
             )
           ),
@@ -282,7 +282,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         const h = owned(worker, 0, () => new TextEncoder().encode("<div>A</div>"));
         const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(limits, "clean").pipe(
+            makeCitationTestScaffoldBinding(limits, "clean").pipe(
               Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
             )
           ),
@@ -295,7 +295,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         const wide = owned(worker, 0, () => new TextEncoder().encode('<meta charset="utf-8"><div>😀</div>'));
         const widePipeline = yield* makeCitationCleanerPipeline(limits).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(limits, "clean").pipe(
+            makeCitationTestScaffoldBinding(limits, "clean").pipe(
               Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
             )
           ),

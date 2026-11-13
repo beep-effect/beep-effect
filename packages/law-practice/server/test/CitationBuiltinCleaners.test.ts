@@ -27,7 +27,7 @@ import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { citationHtmlWorkerTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import { makeCitationUnicodePipelineHarness } from "./CitationUnicodePipeline.fixtures.ts";
 import type { CitationCleanerObject } from "@beep/law-practice-use-cases/server";
@@ -160,7 +160,7 @@ it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner i
         const makePipeline = (value: CitationCleanerObject, name: unknown, repeat = false) =>
           makeCitationCleanerPipeline(policy).pipe(
             Effect.flatMap((stage) =>
-              makeCitationTestInvocationBinding(policy, "clean").pipe(
+              makeCitationTestScaffoldBinding(policy, "clean").pipe(
                 Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
               )
             ),

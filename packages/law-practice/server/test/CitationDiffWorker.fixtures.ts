@@ -11,8 +11,9 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import { readCitationDiffCorpus } from "./CitationDiffCorpus.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { makeCitationBundledTestRuntime, makeCitationObservedSpawner } from "./CitationNativeSpawner.fixtures.ts";
+import type { CitationAdmissionFailure } from "@beep/law-practice-server/internal/Citation/Admission";
 import type { CitationDiffKernelFailure } from "@beep/law-practice-server/internal/Citation/DiffKernel";
 import type { CitationDiffWorkerFailure } from "@beep/law-practice-server/internal/Citation/DiffWorkerProtocol";
 import type { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
@@ -59,9 +60,7 @@ export const makeCitationDiffWorkerFixture = Effect.fn("DiffWorkerTest.fixture")
   const observed = yield* makeCitationObservedSpawner();
   const worker = yield* makeCitationDiffWorker(policy, runtime, useDmp).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(policy).pipe(
-        Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
-      )
+      makeCitationTestScaffoldBinding(policy).pipe(Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) })))
     ),
     Effect.provideService(CitationNativeProcessAdmission, admission),
     Effect.provideService(ChildProcessSpawner, observed.spawner)
@@ -79,7 +78,7 @@ export const replayCitationDiffWorker = Effect.fn("DiffWorkerTest.replay")(funct
   for (const row of rows) {
     const evaluation = worker.evaluate(row.before, row.after) satisfies Effect.Effect<
       ReadonlyArray<CitationSpanDiffStep>,
-      CitationDiffKernelFailure | CitationDiffWorkerFailure | CitationSafetyLimitExceeded,
+      CitationAdmissionFailure | CitationDiffKernelFailure | CitationDiffWorkerFailure | CitationSafetyLimitExceeded,
       CitationInvocation
     >;
     const actual = yield* evaluation;

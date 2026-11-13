@@ -18,7 +18,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { makeCitationDiffTestRuntime } from "./CitationDiffWorker.fixtures.ts";
 import { citationPrimitiveCleanerProtocols } from "./CitationDocumentServices.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { makeCitationHtmlTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import {
@@ -87,7 +87,7 @@ export const installCitationDocumentExtractionFixture = Effect.fn("DocumentExtra
   });
   const stage = yield* makeCitationDocumentExtraction(setup.limits, setup.runtime, documentConfiguration).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
         Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
       )
     ),
@@ -121,7 +121,7 @@ const replayRetained = Effect.fnUntraced(function* (
   const { setup, provided, configuration, translated } = installed;
   const retained = yield* makeCitationRetainedDocumentExtraction(setup.limits, setup.runtime, configuration).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
         Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
       )
     ),

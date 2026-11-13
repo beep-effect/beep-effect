@@ -26,7 +26,7 @@ import {
   installCitationHtmlGeometryFixture,
   prepareCitationOptionalHtmlGeometry,
 } from "./CitationHtmlGeometryPreparation.fixtures.ts";
-import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { readCitationPostCaseMetadataCorpus } from "./CitationPostCaseMetadata.fixtures.ts";
 import { readCitationPreCaseMetadataCorpus } from "./CitationPreCaseMetadata.fixtures.ts";
 import {
@@ -146,7 +146,7 @@ const install = Effect.fn("CaseMetadataTest.install")(function* (
   const prepare = yield* installCitationHtmlGeometryFixture(kind, { ...setup, provided });
   const stage = yield* makeCitationCaseMetadata(setup.limits, setup.runtime, configuration).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
         Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
       )
     ),

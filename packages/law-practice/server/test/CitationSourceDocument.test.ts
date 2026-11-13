@@ -19,10 +19,11 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { installCitationSourceDocumentConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
-import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
+import type { CitationAdmissionFailure } from "@beep/law-practice-server/internal/Citation/Admission";
 import type { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import type { CitationEngineFailure } from "@beep/law-practice-use-cases/server";
 
@@ -60,7 +61,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
                 engineArtifact,
               }).pipe(
                 Effect.flatMap((stage) =>
-                  makeCitationTestInvocationBinding(setup.limits).pipe(
+                  makeCitationTestScaffoldBinding(setup.limits).pipe(
                     Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
                   )
                 ),
@@ -84,7 +85,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
               );
               const closed: Effect.Effect<
                 Effect.Success<typeof invocation>,
-                CitationEngineFailure,
+                CitationEngineFailure | CitationAdmissionFailure,
                 CitationInvocation
               > = invocation;
               const result = yield* closed;
@@ -170,7 +171,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
               engineArtifact,
             }).pipe(
               Effect.flatMap((stage) =>
-                makeCitationTestInvocationBinding(setup.limits).pipe(
+                makeCitationTestScaffoldBinding(setup.limits).pipe(
                   Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
                 )
               ),

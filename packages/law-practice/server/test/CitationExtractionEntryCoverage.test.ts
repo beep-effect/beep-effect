@@ -8,7 +8,7 @@ import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { installCitationDocumentExtractionFixture } from "./CitationDocumentExtraction.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { assertCitationWorkerCompositionReleased } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
@@ -24,7 +24,7 @@ const install = Effect.fnUntraced(function* (narrow: Partial<CitationEngineLimit
     installed.configuration
   ).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding({ ...installed.setup.limits, ...narrow }).pipe(
+      makeCitationTestScaffoldBinding({ ...installed.setup.limits, ...narrow }).pipe(
         Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
       )
     ),
@@ -41,7 +41,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("primitive e
       const before = yield* setup.observed.snapshot;
       const failure = yield* makeCitationExtractionEntry(setup.limits, setup.runtime, {}).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(setup.limits).pipe(
+          makeCitationTestScaffoldBinding(setup.limits).pipe(
             Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
           )
         ),

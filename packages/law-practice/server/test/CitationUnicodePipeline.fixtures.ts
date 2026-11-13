@@ -31,7 +31,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { citationHtmlWorkerTestRuntime, makeCitationObservedSpawner } from "./CitationNativeSpawner.fixtures.ts";
 import type { CitationCleanerObject, CitationCleanerWork } from "@beep/law-practice-use-cases/server";
 
@@ -142,7 +142,7 @@ export const makeCitationUnicodePipelineHarness = Effect.fn("UnicodePipelineTest
   });
   const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(limits, "clean").pipe(
+      makeCitationTestScaffoldBinding(limits, "clean").pipe(
         Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
       )
     ),

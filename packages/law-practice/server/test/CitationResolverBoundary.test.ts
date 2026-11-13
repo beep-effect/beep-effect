@@ -29,7 +29,8 @@ import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import { CitationCallbackObservation, prepareCallbackObservation } from "./CitationCallbackSession.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
+import type { CitationAdmissionFailure } from "@beep/law-practice-server/internal/Citation/Admission";
 import type { CitationEngineFailure } from "@beep/law-practice-use-cases/server";
 
 const context = Effect.fn("ResolverBoundaryTest.context")((name: string) =>
@@ -79,7 +80,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered resolver
       });
       const stage = yield* makeCitationSourceResolution(input.limits, input.engineArtifact).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(input.limits, "resolve").pipe(
+          makeCitationTestScaffoldBinding(input.limits, "resolve").pipe(
             Effect.map((bind) => ({ ...stage, resolve: bind(stage.resolve) }))
           )
         ),
@@ -88,7 +89,10 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered resolver
         Effect.provideService(SourceTextResolver, sourceResolver)
       );
       const invocation = stage.resolve(request);
-      const closed: Effect.Effect<Effect.Success<typeof invocation>, CitationEngineFailure> = invocation;
+      const closed: Effect.Effect<
+        Effect.Success<typeof invocation>,
+        CitationEngineFailure | CitationAdmissionFailure
+      > = invocation;
       const result = yield* closed;
       expect(S.is(CitationEngineResolutionResult)(result.output)).toBe(true);
       expect(result.output.document.mentions).toHaveLength(2);
@@ -132,7 +136,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered resolver
       const install = (limits = input.limits) =>
         makeCitationSourceResolution(limits, input.engineArtifact).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(limits, "resolve").pipe(
+            makeCitationTestScaffoldBinding(limits, "resolve").pipe(
               Effect.map((bind) => ({ ...stage, resolve: bind(stage.resolve) }))
             )
           ),
@@ -218,7 +222,10 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered resolver
           Effect.provideService(CitationOperationAdmission, replacement),
           Effect.provideService(CitationRegexOperation, "clean")
         );
-      const closed: Effect.Effect<Effect.Success<typeof invocation>, CitationEngineFailure> = invocation;
+      const closed: Effect.Effect<
+        Effect.Success<typeof invocation>,
+        CitationEngineFailure | CitationAdmissionFailure
+      > = invocation;
       const after = yield* closed;
       expect(after.receipt).toEqual(before.receipt);
       expect(after.document.authorities).toHaveLength(1);
@@ -310,7 +317,10 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered resolver
       );
       const input = yield* context("resolver-boundary");
       const invocation = resolver.resolve(input);
-      const closed: Effect.Effect<Effect.Success<typeof invocation>, CitationEngineFailure> = invocation;
+      const closed: Effect.Effect<
+        Effect.Success<typeof invocation>,
+        CitationEngineFailure | CitationAdmissionFailure
+      > = invocation;
       const before = yield* closed;
       expect(before.document.mentions).toHaveLength(2);
       expect(before.document.authorities).toHaveLength(1);

@@ -21,7 +21,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import {
-  makeCitationTestInvocationBinding,
+  makeCitationTestScaffoldBinding,
   withCitationTestInvocation,
   withCitationTestTextBudget,
 } from "./CitationInvocation.fixtures.ts";
@@ -116,7 +116,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("composed pa
         const budget = (yield* CitationInvocation).budget;
         const context = yield* makeCitationTokenContext(limits).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(limits).pipe(Effect.map((bind) => ({ ...stage, plan: bind(stage.plan) })))
+            makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, plan: bind(stage.plan) })))
           ),
           Effect.provideService(CitationTextBudget, budget)
         );
@@ -140,7 +140,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("composed pa
             const fresh = (yield* CitationInvocation).budget;
             const freshContext = yield* makeCitationTokenContext({ ...limits, producedTextUtf16: 12 }).pipe(
               Effect.flatMap((stage) =>
-                makeCitationTestInvocationBinding({ ...limits, producedTextUtf16: 12 }).pipe(
+                makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 12 }).pipe(
                   Effect.map((bind) => ({ ...stage, plan: bind(stage.plan) }))
                 )
               ),
@@ -196,7 +196,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("composed pa
             corpus.bindings
           ).pipe(
             Effect.flatMap((stage) =>
-              makeCitationTestInvocationBinding(setup.limits).pipe(
+              makeCitationTestScaffoldBinding(setup.limits).pipe(
                 Effect.map((bind) => ({
                   ...stage,
                   cleanPinCite: bind(stage.cleanPinCite),

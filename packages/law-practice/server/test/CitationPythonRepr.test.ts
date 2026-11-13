@@ -12,7 +12,7 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
-import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
   authenticateCitationRenderingProducer,
   readCitationNativeRenderingAsset,
@@ -43,7 +43,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
           const raw = yield* table;
           const repr = yield* makeCitationPythonRepr(policy.limits, raw).pipe(
             Effect.flatMap((stage) =>
-              makeCitationTestInvocationBinding(policy.limits).pipe(
+              makeCitationTestScaffoldBinding(policy.limits).pipe(
                 Effect.map((bind) => ({ ...stage, text: bind(stage.text) }))
               )
             )
@@ -70,7 +70,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
           for (const corrupt of [null, "{}", `${raw} `]) {
             const error = yield* makeCitationPythonRepr(policy.limits, corrupt).pipe(
               Effect.flatMap((stage) =>
-                makeCitationTestInvocationBinding(policy.limits).pipe(
+                makeCitationTestScaffoldBinding(policy.limits).pipe(
                   Effect.map((bind) => ({ ...stage, text: bind(stage.text) }))
                 )
               ),
@@ -81,7 +81,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
           }
           const repr = yield* makeCitationPythonRepr(policy.limits, raw).pipe(
             Effect.flatMap((stage) =>
-              makeCitationTestInvocationBinding(policy.limits).pipe(
+              makeCitationTestScaffoldBinding(policy.limits).pipe(
                 Effect.map((bind) => ({ ...stage, text: bind(stage.text) }))
               )
             )
@@ -96,7 +96,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
           }
           const small = yield* makeCitationPythonRepr({ ...policy.limits, producedTextUtf16: 8 }, raw).pipe(
             Effect.flatMap((stage) =>
-              makeCitationTestInvocationBinding({ ...policy.limits, producedTextUtf16: 8 }).pipe(
+              makeCitationTestScaffoldBinding({ ...policy.limits, producedTextUtf16: 8 }).pipe(
                 Effect.map((bind) => ({ ...stage, text: bind(stage.text) }))
               )
             )
@@ -113,14 +113,14 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         const raw = yield* table;
         const refused = yield* makeCitationPythonRepr({}, raw).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding({}).pipe(Effect.map((bind) => ({ ...stage, text: bind(stage.text) })))
+            makeCitationTestScaffoldBinding({}).pipe(Effect.map((bind) => ({ ...stage, text: bind(stage.text) })))
           ),
           Effect.flip
         );
         expect(refused).toMatchObject({ reason: "invalid-policy" });
         const repr = yield* makeCitationPythonRepr(policy.limits, raw).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(policy.limits).pipe(
+            makeCitationTestScaffoldBinding(policy.limits).pipe(
               Effect.map((bind) => ({ ...stage, text: bind(stage.text) }))
             )
           )
@@ -167,7 +167,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
           raw
         ).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding({ ...policy.limits, extractDeadline: Duration.seconds(1) }).pipe(
+            makeCitationTestScaffoldBinding({ ...policy.limits, extractDeadline: Duration.seconds(1) }).pipe(
               Effect.map((bind) => ({ ...stage, text: bind(stage.text) }))
             )
           ),

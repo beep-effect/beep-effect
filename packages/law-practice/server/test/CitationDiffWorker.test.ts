@@ -26,7 +26,7 @@ import {
   makeCitationDiffWorkerFixture,
   replayCitationDiffWorker,
 } from "./CitationDiffWorker.fixtures.ts";
-import { makeCitationTestInvocationBinding, withCitationTestTextBudget } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestTextBudget } from "./CitationInvocation.fixtures.ts";
 import {
   makeCitationNativeAcknowledgementSpawner,
   makeCitationNativeManualClock,
@@ -54,7 +54,7 @@ const controlled = Effect.fn("DiffWorkerTest.controlled")(function* (
   const observed = yield* makeCitationNativeAcknowledgementSpawner(afterKill);
   const worker = yield* makeCitationDiffWorker(limits, fixture).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding({ ...limits, extractDeadline: Duration.millis(1601) }).pipe(
+      makeCitationTestScaffoldBinding({ ...limits, extractDeadline: Duration.millis(1601) }).pipe(
         Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
       )
     ),
@@ -73,7 +73,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned defau
       const observed = yield* makeCitationNativeAcknowledgementSpawner(Effect.void);
       const invalidRuntime = yield* makeCitationDiffWorker(limits, { ...fixture, kind: "unsupported" }).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(limits).pipe(
+          makeCitationTestScaffoldBinding(limits).pipe(
             Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
           )
         ),
@@ -83,7 +83,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned defau
       expect(invalidRuntime).toMatchObject({ reason: "invalid-runtime" });
       const worker = yield* makeCitationDiffWorker(limits, fixture).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(limits).pipe(
+          makeCitationTestScaffoldBinding(limits).pipe(
             Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
           )
         ),
@@ -106,7 +106,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned defau
         const observed = yield* makeCitationNativeAcknowledgementSpawner(Effect.void);
         const worker = yield* makeCitationDiffWorker(limits, fixture).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(limits).pipe(
+            makeCitationTestScaffoldBinding(limits).pipe(
               Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
             )
           ),

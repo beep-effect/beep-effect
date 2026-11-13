@@ -13,7 +13,7 @@ import {
   readCitationCaseNameProcessCorpus,
 } from "./CitationCaseNameProcess.fixtures.ts";
 import { citationCaseNameScanErrorReason, readCitationCaseNameScanCorpus } from "./CitationCaseNameScan.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationWorkerCompositionReleased,
   makeCitationMetadataFixture,
@@ -59,7 +59,7 @@ const install = makeCitationMetadataFixture({
   make: (...args: Parameters<typeof makeCitationCaseName>) =>
     makeCitationCaseName(...args).pipe(
       Effect.flatMap((stage) =>
-        makeCitationTestInvocationBinding(args[0]).pipe(
+        makeCitationTestScaffoldBinding(args[0]).pipe(
           Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
         )
       )

@@ -11,7 +11,7 @@ import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { makeCitationCleanerRegistryHarness } from "./CitationCleanerRegistry.fixtures.ts";
-import { makeCitationTestInvocationBinding, withCitationTestTextBudget } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestTextBudget } from "./CitationInvocation.fixtures.ts";
 import { makeCitationObservedSpawner } from "./CitationNativeSpawner.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
@@ -25,7 +25,7 @@ const install = Effect.fn("CleanerParentBudgetTest.install")(function* (_maximum
       : yield* makeCitationCleanerRegistryHarness();
   const pipeline = yield* makeCitationCleanerPipeline({ ...policy, producedTextUtf16: 8 }).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding({ ...policy, producedTextUtf16: 8 }, "clean").pipe(
+      makeCitationTestScaffoldBinding({ ...policy, producedTextUtf16: 8 }, "clean").pipe(
         Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
       )
     ),

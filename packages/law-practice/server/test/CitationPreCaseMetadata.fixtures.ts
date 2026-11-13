@@ -13,7 +13,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationMetadataFixtureLifetime,
   assertCitationMetadataInstallControls,
@@ -75,7 +75,7 @@ export const readCitationPreCaseMetadataCorpus = Effect.fn("PreCaseMetadataTest.
 const install = makeCitationMetadataFixtureInstaller((...args: Parameters<typeof makeCitationPreCaseMetadata>) =>
   makeCitationPreCaseMetadata(...args).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
+      makeCitationTestScaffoldBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
     )
   )
 )(readCitationPreCaseMetadataCorpus());
@@ -148,9 +148,7 @@ export const assertCitationPreCaseMetadataConfiguration = Effect.fn("PreCaseMeta
     (...args: Parameters<typeof makeCitationPreCaseMetadata>) =>
       makeCitationPreCaseMetadata(...args).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(args[0]).pipe(
-            Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) }))
-          )
+          makeCitationTestScaffoldBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
         )
       ),
     setup,

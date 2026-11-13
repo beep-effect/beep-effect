@@ -20,7 +20,7 @@ import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 
@@ -77,7 +77,7 @@ export const replayCitationExtractionSelection = Effect.fn("ExtractionSelectionT
   const owner = yield* makeCitationOperationAdmission(limits);
   const service = yield* makeCitationExtractionSelection(limits).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(limits).pipe(Effect.map((bind) => ({ ...stage, select: bind(stage.select) })))
+      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, select: bind(stage.select) })))
     ),
     Effect.provideService(CitationOperationAdmission, owner)
   );
@@ -94,7 +94,7 @@ export const replayCitationExtractionSelection = Effect.fn("ExtractionSelectionT
   expect(duplicate).toMatchObject({ _tag: "CitationExtractionSelectionFailure", reason: "duplicate-id" });
   const bounded = yield* makeCitationExtractionSelection({ ...limits, candidates: 1 }).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding({ ...limits, candidates: 1 }).pipe(
+      makeCitationTestScaffoldBinding({ ...limits, candidates: 1 }).pipe(
         Effect.map((bind) => ({ ...stage, select: bind(stage.select) }))
       )
     ),
@@ -107,7 +107,7 @@ export const replayCitationExtractionSelection = Effect.fn("ExtractionSelectionT
   });
   const tight = yield* makeCitationExtractionSelection({ ...limits, resolutionIterations: 1 }).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding({ ...limits, resolutionIterations: 1 }).pipe(
+      makeCitationTestScaffoldBinding({ ...limits, resolutionIterations: 1 }).pipe(
         Effect.map((bind) => ({ ...stage, select: bind(stage.select) }))
       )
     ),

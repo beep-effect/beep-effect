@@ -43,7 +43,7 @@ import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   makeCitationNativeAcknowledgementSpawner,
   makeCitationNativeManualClock,
@@ -116,9 +116,7 @@ const controlled = Effect.fn("RegexWorkerTest.controlled")(function* (
   const spawner = observed.spawner;
   const worker = yield* makeCitationRegexWorker(limits, fixture, [descriptor]).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(limits).pipe(
-        Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
-      )
+      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) })))
     ),
     Effect.provideService(Clock.Clock, timer.clock),
     Effect.provideService(CitationNativeProcessAdmission, admission),
@@ -150,7 +148,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
       const limits = (yield* defaultCitationEnginePolicy).limits;
       const invalidPolicy = yield* makeCitationRegexWorker(null, null, []).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(null).pipe(
+          makeCitationTestScaffoldBinding(null).pipe(
             Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
           )
         ),
@@ -159,7 +157,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
       expect(invalidPolicy).toMatchObject({ reason: "invalid-runtime" });
       const invalidRuntime = yield* makeCitationRegexWorker(limits, null, []).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(limits).pipe(
+          makeCitationTestScaffoldBinding(limits).pipe(
             Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
           )
         ),

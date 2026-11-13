@@ -142,7 +142,12 @@ const make = Effect.fn("Citation.makeEngine")(function* (raw: unknown) {
     extract: Effect.fn("Citation.Engine.extract")((input) =>
       invoke("extract", extraction.extract(input)).pipe(
         Effect.map((result) => result.output),
-        Effect.catchTag("CitationAdmissionFailure", failCitationExtractionBoundary)
+        Effect.catch(failCitationExtractionBoundary),
+        Effect.tapError((error) =>
+          Effect.logDebug("Citation extraction boundary refused").pipe(
+            Effect.annotateLogs({ operation: "extract", failureClass: error._tag })
+          )
+        )
       )
     ),
     resolve: Effect.fn("Citation.Engine.resolve")((input) =>
@@ -155,7 +160,12 @@ const make = Effect.fn("Citation.makeEngine")(function* (raw: unknown) {
     ),
     annotate: Effect.fn("Citation.Engine.annotate")((input) =>
       invoke("annotate", annotation.annotate(input)).pipe(
-        Effect.catchTag("CitationAdmissionFailure", (error) => failCitationAnnotationBoundary(limits, error))
+        Effect.catch((error) => failCitationAnnotationBoundary(limits, error)),
+        Effect.tapError((error) =>
+          Effect.logDebug("Citation annotation boundary refused").pipe(
+            Effect.annotateLogs({ operation: "annotate", failureClass: error._tag })
+          )
+        )
       )
     ),
   });

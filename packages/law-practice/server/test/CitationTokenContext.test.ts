@@ -19,7 +19,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { makeCitationNativeManualClock, makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 
 const $I = $LawPracticeServerId.create("test/CitationTokenContext");
@@ -72,9 +72,7 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
           const limits = (yield* defaultCitationEnginePolicy).limits;
           const context = yield* makeCitationTokenContext(limits).pipe(
             Effect.flatMap((stage) =>
-              makeCitationTestInvocationBinding(limits).pipe(
-                Effect.map((bind) => ({ ...stage, plan: bind(stage.plan) }))
-              )
+              makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, plan: bind(stage.plan) })))
             )
           );
           const outcomes = yield* Effect.forEach(
@@ -114,7 +112,7 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         const limits = (yield* defaultCitationEnginePolicy).limits;
         const context = yield* makeCitationTokenContext(limits).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(limits).pipe(Effect.map((bind) => ({ ...stage, plan: bind(stage.plan) })))
+            makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, plan: bind(stage.plan) })))
           )
         );
         const data = native("word");
@@ -137,7 +135,7 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         expect(invalid).toMatchObject({ reason: "invalid-input" });
         const bounded = yield* makeCitationTokenContext({ ...limits, producedTextUtf16: 8 }).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding({ ...limits, producedTextUtf16: 8 }).pipe(
+            makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 8 }).pipe(
               Effect.map((bind) => ({ ...stage, plan: bind(stage.plan) }))
             )
           )
@@ -159,7 +157,7 @@ it.effect("retains its captured deadline under a disabled caller Clock", () =>
     const limits = (yield* defaultCitationEnginePolicy).limits;
     const context = yield* makeCitationTokenContext({ ...limits, extractDeadline: Duration.millis(997) }).pipe(
       Effect.flatMap((stage) =>
-        makeCitationTestInvocationBinding({ ...limits, extractDeadline: Duration.millis(997) }).pipe(
+        makeCitationTestScaffoldBinding({ ...limits, extractDeadline: Duration.millis(997) }).pipe(
           Effect.map((bind) => ({ ...stage, plan: bind(stage.plan) }))
         )
       ),

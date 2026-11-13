@@ -22,7 +22,7 @@ import { readCitationCanonicalCaptures } from "./CitationCanonicalCaptures.fixtu
 import { readCitationCanonicalPlainExtraction } from "./CitationCanonicalCriteria.fixtures.ts";
 import { compareCitationCanonicalModel } from "./CitationCanonicalModel.fixtures.ts";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationNativeRenderingAsset } from "./CitationNativeRendering.fixtures.ts";
 import { assertCitationMentionRanges, citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
@@ -60,7 +60,7 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
     yield* installCitationDefaultConfigurationFixture(kind);
   const stage = yield* makeCitationSemanticExtraction(setup.limits, setup.runtime, defaultConfiguration).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
         Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
       )
     ),
@@ -98,7 +98,7 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
   const utilityBudget = yield* makeCitationTextBudget(setup.limits);
   const adapter = yield* makeCitationBuiltinDump(setup.limits, profile).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
         Effect.map((bind) => ({ ...stage, project: bind(stage.project) }))
       )
     ),
@@ -159,7 +159,7 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
   const printability = yield* readCitationNativeRenderingAsset("python-printability");
   const dump = yield* makeCitationDump(setup.limits, printability).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
         Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
       )
     ),

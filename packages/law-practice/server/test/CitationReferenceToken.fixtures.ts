@@ -22,7 +22,7 @@ import {
   installCitationHtmlGeometryFixture,
   prepareCitationOptionalHtmlGeometry,
 } from "./CitationHtmlGeometryPreparation.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationPinExtractionCorpus } from "./CitationPinExtraction.fixtures.ts";
 import { assertCitationWorkerCompositionReleased, readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
 import {
@@ -99,7 +99,7 @@ const install = Effect.fn("ReferenceTokenTest.install")(function* (kind: Citatio
     supra: corpus.configuration.supra,
   }).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
         Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
       )
     ),

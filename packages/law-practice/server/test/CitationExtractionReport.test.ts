@@ -10,7 +10,7 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as TestClock from "effect/testing/TestClock";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
-import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
@@ -37,7 +37,7 @@ it.layer(citationTokenizerTestLayer)("captured extraction report timing", (it) =
               extraction: defaultConfiguration,
             }).pipe(
               Effect.flatMap((stage) =>
-                makeCitationTestInvocationBinding(setup.limits).pipe(
+                makeCitationTestScaffoldBinding(setup.limits).pipe(
                   Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
                 )
               ),

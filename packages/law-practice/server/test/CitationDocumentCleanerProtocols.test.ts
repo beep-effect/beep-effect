@@ -16,7 +16,7 @@ import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as Scope from "effect/Scope";
 import { makeCitationCleanerRegistryHarness } from "./CitationCleanerRegistry.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 
 const setup = Effect.fn("DocumentCleanerProtocolsTest.setup")(function* (
   host?: CitationDocumentInputProtocols["Service"],
@@ -41,7 +41,7 @@ const setup = Effect.fn("DocumentCleanerProtocolsTest.setup")(function* (
   );
   const pipeline = yield* makeCitationCleanerPipeline(policy.limits).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(policy.limits, "clean").pipe(
+      makeCitationTestScaffoldBinding(policy.limits, "clean").pipe(
         Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
       )
     ),

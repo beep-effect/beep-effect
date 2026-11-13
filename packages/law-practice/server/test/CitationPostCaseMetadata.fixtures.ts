@@ -17,7 +17,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationMetadataFixtureLifetime,
   assertCitationMetadataInstallControls,
@@ -91,7 +91,7 @@ export const readCitationPostCaseMetadataCorpus = Effect.fn("PostCaseMetadataTes
 const install = makeCitationMetadataFixtureInstaller((...args: Parameters<typeof makeCitationPostCaseMetadata>) =>
   makeCitationPostCaseMetadata(...args).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
+      makeCitationTestScaffoldBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
     )
   )
 )(readCitationPostCaseMetadataCorpus());
@@ -149,9 +149,7 @@ export const assertCitationPostCaseBudget = Effect.fn("PostCaseMetadataTest.budg
   const configuration = { ...exact.corpus.configuration };
   const captured = yield* makeCitationPostCaseMetadata(exact.limits, exact.runtime, configuration).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(exact.limits).pipe(
-        Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) }))
-      )
+      makeCitationTestScaffoldBinding(exact.limits).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
     ),
     Effect.provideContext(exact.provided)
   );
@@ -204,7 +202,7 @@ export const assertCitationPostCaseMetadataConfiguration = Effect.fn("PostCaseMe
       (...args: Parameters<typeof makeCitationPostCaseMetadata>) =>
         makeCitationPostCaseMetadata(...args).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(args[0]).pipe(
+            makeCitationTestScaffoldBinding(args[0]).pipe(
               Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) }))
             )
           )

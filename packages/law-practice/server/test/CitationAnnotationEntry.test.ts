@@ -15,7 +15,7 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { installCitationAnnotationEntryFixture } from "./CitationAnnotationEntry.fixtures.ts";
 import { CitationAnnotationReplayReplacement } from "./CitationAnnotationReplay.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
@@ -48,7 +48,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
             const setup = yield* installCitationAnnotationEntryFixture(kind);
             const entry = yield* makeCitationAnnotationEntry(setup.limits, setup.runtime, setup.configuration).pipe(
               Effect.flatMap((stage) =>
-                makeCitationTestInvocationBinding(setup.limits, "annotate").pipe(
+                makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
                   Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
                 )
               ),
@@ -97,7 +97,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
         const setup = yield* installCitationAnnotationEntryFixture();
         const entry = yield* makeCitationAnnotationEntry(setup.limits, setup.runtime, setup.configuration).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(setup.limits, "annotate").pipe(
+            makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
               Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
             )
           ),
@@ -140,7 +140,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
         });
         const entry = yield* makeCitationAnnotationEntry(setup.limits, setup.runtime, setup.configuration).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(setup.limits, "annotate").pipe(
+            makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
               Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
             )
           ),
@@ -178,7 +178,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
         });
         const entry = yield* makeCitationAnnotationEntry(setup.limits, setup.runtime, setup.configuration).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(setup.limits, "annotate").pipe(
+            makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
               Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
             )
           ),

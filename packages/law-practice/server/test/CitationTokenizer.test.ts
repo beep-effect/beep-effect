@@ -10,7 +10,7 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import {
   assertCitationTokenizerCase,
@@ -32,14 +32,12 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
         snapshot: Effect.succeed(CitationAdmissionSnapshot.make({ active: 0, queued: 0, closed: true })),
       });
       const tokenizer = yield* makeCitationTokenizer(setup.limits, setup.runtime, controls.configuration).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(setup.limits).pipe(
-            Effect.map((bind) => ({ ...stage, port: { ...stage.port, tokenize: bind(stage.port.tokenize) } }))
-          )
-        ),
         Effect.provideContext(Context.add(setup.provided, CitationOperationAdmission, closed))
       );
-      const result = yield* tokenizer.port.tokenize({ width: 1, bytes: new Uint8Array() });
+      const result = yield* withCitationTestInvocation(
+        tokenizer.port.tokenize({ width: 1, bytes: new Uint8Array() }),
+        setup.limits
+      );
       expect(result.tokens).toEqual([]);
       const native = yield* setup.observed.snapshot;
       expect(native).toEqual({ spawned: 0, confirmed: 0 });
@@ -55,7 +53,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
         controls.configuration
       ).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding({ ...runtime.limits, patterns: 1 }).pipe(
+          makeCitationTestScaffoldBinding({ ...runtime.limits, patterns: 1 }).pipe(
             Effect.map((bind) => ({ ...stage, port: { ...stage.port, tokenize: bind(stage.port.tokenize) } }))
           )
         ),
@@ -78,7 +76,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
         extractors: [first, contradictory],
       }).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(runtime.limits).pipe(
+          makeCitationTestScaffoldBinding(runtime.limits).pipe(
             Effect.map((bind) => ({ ...stage, port: { ...stage.port, tokenize: bind(stage.port.tokenize) } }))
           )
         ),
@@ -96,7 +94,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
       const runtime = yield* setupCitationMetadataRuntime("bun");
       const invalidPolicy = yield* makeCitationTokenizer({}, runtime.runtime, controls.configuration).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding({}).pipe(
+          makeCitationTestScaffoldBinding({}).pipe(
             Effect.map((bind) => ({ ...stage, port: { ...stage.port, tokenize: bind(stage.port.tokenize) } }))
           )
         ),

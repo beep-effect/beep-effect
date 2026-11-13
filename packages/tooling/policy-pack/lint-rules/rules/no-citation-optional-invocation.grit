@@ -1,6 +1,6 @@
 language js
 
-// Syntactic names only: aliases introduced by named imports require semantic linting.
+// Syntactic names only: local aliases and aliased named imports require semantic linting.
 pattern citation_authority() {
   or {
     `CitationTextBudget`,
@@ -18,7 +18,11 @@ pattern citation_authority() {
 
 or {
   `$effect.serviceOption($service)`,
-  `$context.getOption($_, $service)`
+  `$context.getOption($_, $service)`,
+  `$context.getOption($service)`,
+  `$context.getOrUndefined($_, $service)`,
+  `$context.getOrUndefined($service)`,
+  `serviceOption($service)`
 } as $lookup where {
   $service <: citation_authority(),
   register_diagnostic(span=$lookup, message="Rule: citation request authority must be explicit. Why: optional install-time lookups silently lose accounting or acquire another permit when installs move. Fix: read CitationInvocation at call time in parent-only stages, or pass an explicit reservation to code shared with a child process.", severity="error")

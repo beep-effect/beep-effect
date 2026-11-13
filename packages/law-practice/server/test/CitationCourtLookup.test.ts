@@ -19,7 +19,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
-import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { makeCitationNativeManualClock, makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
@@ -90,7 +90,7 @@ const install = Effect.fn("CourtLookupTest.install")(function* (maximum?: number
   const table = yield* readFixture("court-table", Table);
   const parser = yield* makeCitationCourtLookup(limits, table.payload).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(limits).pipe(Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) })))
+      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) })))
     )
   );
   return { ...parser, limits, table };
@@ -103,25 +103,21 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
       const { limits, table } = yield* install();
       const invalidPolicy = yield* makeCitationCourtLookup(null, table.payload).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(null).pipe(Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) })))
+          makeCitationTestScaffoldBinding(null).pipe(Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) })))
         ),
         Effect.flip
       );
       expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
       const invalidPayload = yield* makeCitationCourtLookup(limits, null).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(limits).pipe(
-            Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) }))
-          )
+          makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) })))
         ),
         Effect.flip
       );
       expect(invalidPayload).toMatchObject({ reason: "invalid-table" });
       const invalidDigest = yield* makeCitationCourtLookup(limits, table.payload).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(limits).pipe(
-            Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) }))
-          )
+          makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) })))
         ),
         Effect.provideService(
           Digest.Digest,
@@ -159,9 +155,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
       const { limits, table } = yield* install();
       const refused = yield* makeCitationCourtLookup(limits, Str.replace("alacirct", "xlacirct")(table.payload)).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(limits).pipe(
-            Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) }))
-          )
+          makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) })))
         ),
         Effect.flip
       );
@@ -198,7 +192,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
       const disabled = yield* makeCitationNativeSleepClock(() => Effect.never);
       const parser = yield* makeCitationCourtLookup({ ...limits, extractDeadline: deadline }, table.payload).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding({ ...limits, extractDeadline: deadline }).pipe(
+          makeCitationTestScaffoldBinding({ ...limits, extractDeadline: deadline }).pipe(
             Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) }))
           )
         ),
@@ -218,7 +212,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
       for (const operation of ["clean", "extract", "resolve", "annotate"] as const) {
         const parser = yield* makeCitationCourtLookup({ ...limits, sourceUtf16: 3 }, table.payload).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding({ ...limits, sourceUtf16: 3 }).pipe(
+            makeCitationTestScaffoldBinding({ ...limits, sourceUtf16: 3 }).pipe(
               Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) }))
             )
           ),
@@ -230,7 +224,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
         expect(source).toMatchObject({ _tag: "CitationSafetyLimitExceeded", operation, limit: "sourceUtf16" });
         const tight = yield* makeCitationCourtLookup({ ...limits, producedTextUtf16: 2 }, table.payload).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding({ ...limits, producedTextUtf16: 2 }).pipe(
+            makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 2 }).pipe(
               Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) }))
             )
           ),
@@ -259,7 +253,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
           table.payload
         ).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding({ ...limits, [`${operation}Deadline`]: deadline }).pipe(
+            makeCitationTestScaffoldBinding({ ...limits, [`${operation}Deadline`]: deadline }).pipe(
               Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) }))
             )
           ),
@@ -289,7 +283,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
       const captured = { ...limits, sourceUtf16: 3 };
       const parser = yield* makeCitationCourtLookup(captured, table.payload).pipe(
         Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(captured).pipe(
+          makeCitationTestScaffoldBinding(captured).pipe(
             Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) }))
           )
         )

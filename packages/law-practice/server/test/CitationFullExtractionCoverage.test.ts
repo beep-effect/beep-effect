@@ -7,7 +7,7 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { readCitationCaseMetadataConfiguration } from "./CitationCaseMetadata.fixtures.ts";
 import { installCitationFrozenMetadataRuntime } from "./CitationFrozenEditions.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationJournalMetadataCorpus } from "./CitationJournalMetadata.fixtures.ts";
 import { loadCitationLawMetadataFixtures } from "./CitationLawMetadata.fixtures.ts";
 import { readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
@@ -33,7 +33,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("full-citati
         const make = (configuration: unknown) =>
           makeCitationFullExtraction(setup.limits, setup.runtime, configuration).pipe(
             Effect.flatMap((stage) =>
-              makeCitationTestInvocationBinding(setup.limits).pipe(
+              makeCitationTestScaffoldBinding(setup.limits).pipe(
                 Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
               )
             ),

@@ -14,7 +14,7 @@ import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 import { invokeCitationRawExtraction } from "./CitationExtractionEntry.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { makeCitationOccurrenceTestAdapter } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import { makeCitationVocabularyAssertion } from "./CitationSemanticVocabulary.fixtures.ts";
@@ -164,9 +164,7 @@ export const replayCitationSemanticExtraction = Effect.fn("SemanticExtractionTes
   const install = (limits: typeof setup.limits, input = config) =>
     makeCitationSemanticExtraction(limits, setup.runtime, input).pipe(
       Effect.flatMap((stage) =>
-        makeCitationTestInvocationBinding(limits).pipe(
-          Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-        )
+        makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) })))
       ),
       Effect.provideContext(provided),
       DateTime.withCurrentZoneOffset(0)

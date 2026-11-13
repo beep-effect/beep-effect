@@ -3,7 +3,7 @@ import { it } from "@beep/test-runner";
 import { deepStrictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import { installCitationDocumentExtractionFixture } from "./CitationDocumentExtraction.fixtures.ts";
-import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("input Document request boundary", (it) => {
@@ -19,7 +19,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("input Docum
             configuration.document
           ).pipe(
             Effect.flatMap((stage) =>
-              makeCitationTestInvocationBinding(setup.limits).pipe(
+              makeCitationTestScaffoldBinding(setup.limits).pipe(
                 Effect.map((bind) => ({ ...stage, initialize: bind(stage.initialize) }))
               )
             ),

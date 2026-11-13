@@ -13,7 +13,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Ref from "effect/Ref";
 import * as TestClock from "effect/testing/TestClock";
-import { withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 
 it.layer(TestClock.layer())("request-local ledgers", (it) => {
   it.effect("binds one installed source preparer to a fresh ledger on every invocation", () =>
@@ -30,6 +30,26 @@ it.layer(TestClock.layer())("request-local ledgers", (it) => {
       const second = yield* withCitationTestInvocation(prepare, limits);
       expect(first).toEqual({ text: "abc", used: 3 });
       expect(second).toEqual({ text: "abc", used: 3 });
+    })
+  );
+
+  it.effect("preserves a closed admission unless a scaffold binding explicitly replaces it", () =>
+    Effect.gen(function* () {
+      const { limits } = yield* defaultCitationEnginePolicy;
+      const calls = yield* withCitationTestInvocation(
+        Effect.gen(function* () {
+          const retained = yield* makeCitationTestInvocationBinding(limits, "extract");
+          const independent = yield* makeCitationTestInvocationBinding(limits, "extract", true);
+          return {
+            retained: retained(() => Effect.succeed("retained")),
+            independent: independent(() => Effect.succeed("independent")),
+          };
+        })
+      );
+      const refused = yield* calls.retained().pipe(Effect.flip);
+      expect(refused).toMatchObject({ _tag: "CitationAdmissionFailure", reason: "closed" });
+      const result = yield* calls.independent();
+      expect(result).toBe("independent");
     })
   );
 

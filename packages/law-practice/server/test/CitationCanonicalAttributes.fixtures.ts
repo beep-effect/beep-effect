@@ -17,7 +17,7 @@ import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { projectCitationSemanticMetadata } from "./CitationSemanticExtraction.fixtures.ts";
 import type { FullCitation, ShortFormCaseCitation } from "@beep/law-practice-domain/values";
 import type { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
@@ -169,7 +169,7 @@ export const makeCitationCanonicalAttributeAssertion = Effect.fn("CanonicalAttri
   const unicode = yield* makeCitationPythonUnicode(setup.limits).pipe(Effect.provideContext(provided));
   const correction = yield* makeCitationResourceCorrection(setup.limits).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
         Effect.map((bind) => ({
           ...stage,
           reporter: bind(stage.reporter),

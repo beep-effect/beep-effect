@@ -55,11 +55,9 @@ export const withCitationTestInvocation = Effect.fn("CitationInvocationTest.run"
     Effect.gen(function* () {
       const supplied =
         environment === undefined ? O.none<CitationOperationAdmission["Service"]>() : environment.admission;
-      const closed = O.isSome(supplied) ? (yield* supplied.value.snapshot).closed : true;
-      const admission =
-        O.isSome(supplied) && !closed
-          ? supplied.value
-          : yield* makeCitationOperationAdmission(limits).pipe(Effect.provideService(Clock.Clock, clock), Effect.orDie);
+      const admission = O.isSome(supplied)
+        ? supplied.value
+        : yield* makeCitationOperationAdmission(limits).pipe(Effect.provideService(Clock.Clock, clock), Effect.orDie);
       return yield* openCitationInvocation(
         CitationInvocationPolicy.make({
           limits,
@@ -71,18 +69,15 @@ export const withCitationTestInvocation = Effect.fn("CitationInvocationTest.run"
           Effect.provideService(CitationTestExplicitInvocation, policy !== undefined),
           Effect.provideService(CitationTestScaffoldAdmission, policy === undefined ? O.some(admission) : O.none())
         )
-      ).pipe(
-        Effect.provideService(CitationOperationAdmission, admission),
-        Effect.provideService(Clock.Clock, clock),
-        Effect.catchTag("CitationAdmissionFailure", Effect.die)
-      );
+      ).pipe(Effect.provideService(CitationOperationAdmission, admission), Effect.provideService(Clock.Clock, clock));
     })
   );
 });
 /** Capture installation constants for standalone fixture methods, retaining each method's own request policy. */
 export const makeCitationTestInvocationBinding = Effect.fn("CitationInvocationTest.bind")(function* (
   policy: unknown,
-  selectedOperation?: CitationEngineOperation
+  selectedOperation?: CitationEngineOperation,
+  replaceScaffoldAdmission?: boolean
 ) {
   const ownedPolicy = yield* captureCitationSnapshot(
     S.toType(CitationEngineLimits),
@@ -96,7 +91,7 @@ export const makeCitationTestInvocationBinding = Effect.fn("CitationInvocationTe
   const supplied = yield* Effect.serviceOption(CitationOperationAdmission);
   const scaffold = yield* CitationTestScaffoldAdmission;
   const admission =
-    O.isSome(supplied) && O.isSome(scaffold) && supplied.value === scaffold.value
+    replaceScaffoldAdmission === true && O.isSome(supplied) && O.isSome(scaffold) && supplied.value === scaffold.value
       ? O.none<CitationOperationAdmission["Service"]>()
       : supplied;
   const environment = { clock, operation, admission };
@@ -158,4 +153,19 @@ export const withCitationTestTextBudget = Effect.fn("CitationInvocationTest.text
 ) {
   const { limits } = yield* defaultCitationEnginePolicy;
   return yield* withCitationTestInvocation(body, { ...limits, producedTextUtf16: maximum });
+});
+
+/** A direct-call adapter retains typed admission refusal in addition to the stage errors. */
+export type CitationTestInvocationBound<T> = {
+  readonly [K in keyof T]: T[K] extends (...args: infer Args) => Effect.Effect<infer A, infer E, infer R>
+    ? (...args: Args) => Effect.Effect<A, E | CitationAdmissionFailure, Exclude<R, CitationInvocation>>
+    : T[K];
+};
+
+/** Explicitly bind independent calls installed inside the untimed test scaffold. Real supplied owners are retained. */
+export const makeCitationTestScaffoldBinding = Effect.fn("CitationInvocationTest.bindScaffold")(function* (
+  policy: unknown,
+  operation?: CitationEngineOperation
+) {
+  return yield* makeCitationTestInvocationBinding(policy, operation, true);
 });

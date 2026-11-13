@@ -29,7 +29,7 @@ import * as Str from "effect/String";
 import {
   CitationTestBudgetObservation,
   makeCitationTestBudgetObservation,
-  makeCitationTestInvocationBinding,
+  makeCitationTestScaffoldBinding,
 } from "./CitationInvocation.fixtures.ts";
 import {
   makeCitationNativeManualClock,
@@ -194,9 +194,7 @@ export const setupCitationRegexWorker = Effect.fn("RegexWorkerTest.setup")(funct
 
   const worker = yield* makeCitationRegexWorker(limits, runtime, bindings, engineInput).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(limits).pipe(
-        Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
-      )
+      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) })))
     ),
     Effect.provideContext(context)
   );

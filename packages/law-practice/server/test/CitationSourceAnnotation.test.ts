@@ -21,9 +21,10 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { installCitationAnnotationEntryFixture } from "./CitationAnnotationEntry.fixtures.ts";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
+import type { CitationAdmissionFailure } from "@beep/law-practice-server/internal/Citation/Admission";
 import type { CitationSourceAnnotationResult } from "@beep/law-practice-server/internal/Citation/SourceAnnotation";
 import type { CitationEngineFailure } from "@beep/law-practice-use-cases/server";
 
@@ -52,7 +53,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
         });
         const entry = yield* makeCitationSourceAnnotation(setup.limits, setup.runtime, setup.configuration).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(setup.limits, "annotate").pipe(
+            makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
               Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
             )
           ),
@@ -109,7 +110,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
               artifact
             ).pipe(
               Effect.flatMap((stage) =>
-                makeCitationTestInvocationBinding(policy, "annotate").pipe(
+                makeCitationTestScaffoldBinding(policy, "annotate").pipe(
                   Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
                 )
               ),
@@ -118,7 +119,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
             );
             expect(Reflect.set(policy, "producedTextUtf16", 1)).toBe(true);
             const invocation = entry.annotate({ ...request, engineArtifact: "ignored", limits: null });
-            const closed: Effect.Effect<CitationEngineAnnotationResult, CitationEngineFailure> = invocation;
+            const closed: Effect.Effect<
+              CitationEngineAnnotationResult,
+              CitationEngineFailure | CitationAdmissionFailure
+            > = invocation;
             const result = yield* closed;
             expect(S.is(CitationEngineAnnotationResult)(result)).toBe(true);
             expect(result.report).toMatchObject({ operation: "annotate", engineArtifact: artifact, extraction: null });
@@ -159,7 +163,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
         });
         const entry = yield* makeCitationSourceAnnotation(setup.limits, setup.runtime, setup.configuration).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(setup.limits, "annotate").pipe(
+            makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
               Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
             )
           ),
@@ -198,7 +202,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
         });
         const entry = yield* makeCitationSourceAnnotation(setup.limits, setup.runtime, setup.configuration).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(setup.limits, "annotate").pipe(
+            makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
               Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
             )
           ),
@@ -206,7 +210,8 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
           Effect.provideContext(setup.provided)
         );
         const invocation = entry.annotate({ plain: { source: proof.source, sourceText: "abc" }, replacements });
-        const closed: Effect.Effect<CitationSourceAnnotationResult, CitationEngineFailure> = invocation;
+        const closed: Effect.Effect<CitationSourceAnnotationResult, CitationEngineFailure | CitationAdmissionFailure> =
+          invocation;
         const result = yield* closed;
         expect(result.text).toEqual(word("a[b]c"));
         expect(S.is(VerifiedSourceText)(result.source)).toBe(true);
@@ -236,7 +241,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
           setup.configuration
         ).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding({ ...setup.limits, sourceUtf16: 3 }, "annotate").pipe(
+            makeCitationTestScaffoldBinding({ ...setup.limits, sourceUtf16: 3 }, "annotate").pipe(
               Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
             )
           ),

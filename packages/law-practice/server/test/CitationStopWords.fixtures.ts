@@ -11,7 +11,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
-import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationMetadataFailure,
   assertCitationMetadataRefusal,
@@ -74,7 +74,7 @@ const install = makeCitationMetadataFixture({
   make: (...args: Parameters<typeof makeCitationStopWords>) =>
     makeCitationStopWords(...args).pipe(
       Effect.flatMap((stage) =>
-        makeCitationTestInvocationBinding(args[0], "clean").pipe(
+        makeCitationTestScaffoldBinding(args[0], "clean").pipe(
           Effect.map((bind) => ({ ...stage, clean: bind(stage.clean) }))
         )
       )
@@ -142,7 +142,7 @@ export const assertCitationStopWordsLifetime = Effect.fn("StopWordsTest.lifetime
   ]) {
     const rejected = yield* makeCitationStopWords(closed.limits, closed.runtime, configuration).pipe(
       Effect.flatMap((stage) =>
-        makeCitationTestInvocationBinding(closed.limits, "clean").pipe(
+        makeCitationTestScaffoldBinding(closed.limits, "clean").pipe(
           Effect.map((bind) => ({ ...stage, clean: bind(stage.clean) }))
         )
       ),

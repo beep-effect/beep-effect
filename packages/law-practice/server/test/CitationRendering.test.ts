@@ -13,7 +13,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as S from "effect/Schema";
-import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { makeCitationNativeManualClock, makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 import { loadCitationRendering, replayCitationRendering } from "./CitationRendering.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
@@ -27,9 +27,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original bu
         const { owner, limits } = yield* loadCitationRendering();
         const invalidPolicy = yield* makeCitationRendering(null).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(null).pipe(
-              Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
-            )
+            makeCitationTestScaffoldBinding(null).pipe(Effect.map((bind) => ({ ...stage, render: bind(stage.render) })))
           ),
           Effect.provideService(CitationFrozenEditions, owner),
           Effect.flip
@@ -37,7 +35,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original bu
         expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
         const renderer = yield* makeCitationRendering(limits).pipe(
           Effect.flatMap((stage) =>
-            makeCitationTestInvocationBinding(limits).pipe(
+            makeCitationTestScaffoldBinding(limits).pipe(
               Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
             )
           ),
@@ -67,7 +65,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original bu
           const value = yield* unicode.fromText(text);
           const rendering = yield* makeCitationRendering(limits).pipe(
             Effect.flatMap((stage) =>
-              makeCitationTestInvocationBinding(limits).pipe(
+              makeCitationTestScaffoldBinding(limits).pipe(
                 Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
               )
             ),
@@ -91,7 +89,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original bu
         const make = (maximum: number) =>
           makeCitationRendering({ ...limits, producedTextUtf16: maximum }).pipe(
             Effect.flatMap((stage) =>
-              makeCitationTestInvocationBinding({ ...limits, producedTextUtf16: maximum }).pipe(
+              makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: maximum }).pipe(
                 Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
               )
             ),
@@ -113,7 +111,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original bu
             yield* budget.reserve(3);
             const enclosing = yield* makeCitationRendering({ ...limits, producedTextUtf16: 16 }).pipe(
               Effect.flatMap((stage) =>
-                makeCitationTestInvocationBinding({ ...limits, producedTextUtf16: 16 }).pipe(
+                makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 16 }).pipe(
                   Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
                 )
               ),
@@ -148,7 +146,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original bu
           });
           const installed = yield* makeCitationRendering(limits).pipe(
             Effect.flatMap((stage) =>
-              makeCitationTestInvocationBinding(limits).pipe(
+              makeCitationTestScaffoldBinding(limits).pipe(
                 Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
               )
             ),
@@ -162,7 +160,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original bu
           const timer = yield* makeCitationNativeManualClock(Duration.millis(997));
           const timed = yield* makeCitationRendering({ ...limits, extractDeadline: Duration.millis(997) }).pipe(
             Effect.flatMap((stage) =>
-              makeCitationTestInvocationBinding({ ...limits, extractDeadline: Duration.millis(997) }).pipe(
+              makeCitationTestScaffoldBinding({ ...limits, extractDeadline: Duration.millis(997) }).pipe(
                 Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
               )
             ),

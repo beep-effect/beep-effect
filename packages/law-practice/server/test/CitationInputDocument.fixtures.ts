@@ -25,7 +25,7 @@ import * as Str from "effect/String";
 import { makeCitationCleanerRegistryHarness } from "./CitationCleanerRegistry.fixtures.ts";
 import { makeCitationDiffTestRuntime } from "./CitationDiffWorker.fixtures.ts";
 import { readCitationHtmlDiscoveryCorpus } from "./CitationHtmlDiscovery.fixtures.ts";
-import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { makeCitationHtmlTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import { readCitationOracleFixture, setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
@@ -236,7 +236,7 @@ const makeCase = Effect.fn("InputDocumentTest.case")(function* (
     diffRuntime,
   }).pipe(
     Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
         Effect.map((bind) => ({ ...stage, initialize: bind(stage.initialize) }))
       )
     ),
