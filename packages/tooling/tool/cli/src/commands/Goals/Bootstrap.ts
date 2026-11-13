@@ -467,6 +467,19 @@ const sourcesPayload = (input: BootstrapInput): string => {
   corpus during the first research phase.`
       : `- **Source exploration:** \`explorations/${input.provenanceExploration}\` — primary ledger:
   \`explorations/${input.provenanceExploration}/research/SOURCES.md\`.`;
+  // Repo-root paths, never `../RESEARCH.md`: a relative link copied from the
+  // exploration's ledger resolves inside the goal and fails `knowledge refs`.
+  const crossLinkLines =
+    input.provenanceExploration === undefined
+      ? ""
+      : `
+- Source exploration packet: \`explorations/${input.provenanceExploration}/RESEARCH.md\`,
+  \`explorations/${input.provenanceExploration}/DECISIONS.md\`,
+  \`explorations/${input.provenanceExploration}/BRIEF.md\`,
+  \`explorations/${input.provenanceExploration}/MAP.md\`.
+- Write every path in this file from the repo root. Do not copy a relative
+  link out of the exploration's ledger.
+`;
   return `# ${input.title} — Sources & Provenance
 
 ${provenanceLines}
@@ -486,7 +499,7 @@ ${provenanceLines}
 ## 4. In-repo capability references
 
 ## 5. Cross-links & provenance
-`;
+${crossLinkLines}`;
 };
 
 /**

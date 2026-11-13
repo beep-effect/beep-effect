@@ -71,7 +71,7 @@
         ".claude/skills/explore",
         ".agents/skills/explore"
       ],
-      "installedTreeHash": "f60d5e151d2b39be9acb1bfe7eeae161030e0d5a0272cbf14565ff2e6ff69201"
+      "installedTreeHash": "29c1e57827b3c8cca1b1718003e22991ada409d0b32da986499dfbaf918cf347"
     },
     "grill-me": {
       "_tag": "vendored",
@@ -251,7 +251,7 @@
         ".claude/skills/orchestrate",
         ".agents/skills/orchestrate"
       ],
-      "installedTreeHash": "aa7c186390252128853832663bedcc7a25e51e2cc5de24ba527f8f229e2963ee"
+      "installedTreeHash": "b5dac4da29b27d890779ee7dc9fc84db90f93547f70fe30333c3c1230fd62996"
     },
     "plasma-sensitive-entry": {
       "_tag": "local",
@@ -676,7 +676,7 @@
         ".claude/skills/update-harnesses",
         ".agents/skills/update-harnesses"
       ],
-      "installedTreeHash": "d924a954931ef7d2181977e8c37e6f74b08c9517b0f491cf062f3b46faaa7cbf"
+      "installedTreeHash": "8fbd57f4ee048f5bc3957051deca09181d754fbb6d3cd5e085e9152d9780de3a"
     },
     "yeet": {
       "_tag": "local",
@@ -684,7 +684,7 @@
         ".claude/skills/yeet",
         ".agents/skills/yeet"
       ],
-      "installedTreeHash": "5fa9679e778f06e2c178a96f85cce1ce2533be185b6a42a267c50b976debdec5"
+      "installedTreeHash": "ddc93af2892aa0e08d0a0adb815586a1bfc624e88b792536b8ebda635275eaee"
     }
   }
 }
