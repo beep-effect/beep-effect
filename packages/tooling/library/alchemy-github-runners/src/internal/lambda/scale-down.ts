@@ -16,7 +16,7 @@ import { fleetLive, lambdaHandler } from "./Runtime.ts";
  */
 export const handler = lambdaHandler({
   config: PoolRuntimeConfig,
-  layer: (config) => fleetLive({ app: config.app, ghesApiUrl: config.ghesApiUrl }),
+  layer: fleetLive,
   run: (config) =>
     handleScaleDown(config).pipe(
       Effect.tap((decisions) => Effect.logInfo("scale-down decisions", decisions)),

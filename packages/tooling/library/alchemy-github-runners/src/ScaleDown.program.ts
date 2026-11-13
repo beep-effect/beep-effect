@@ -18,6 +18,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Ec2Fleet } from "./Ec2Fleet.service.ts";
@@ -36,25 +37,8 @@ const minuteMillis = 60_000;
 
 const isRunnerType = S.is(RunnerType);
 
-/**
- * Whether `minutes` have passed since a runner launched; a runner without a
- * launch time counts as launched now.
- *
- * **Example** (Five minutes after launch)
- *
- * ```ts
- * import { minutesElapsed } from "@beep/alchemy-github-runners/ScaleDown.program"
- * import * as O from "effect/Option"
- *
- * console.log(minutesElapsed({ launchTime: O.some(0), minutes: 5, now: 300_001 })) // true
- * ```
- *
- * @param input - Launch time (epoch ms), the threshold in minutes and now (epoch ms).
- * @returns Whether the threshold has passed.
- * @category use-cases
- * @since 0.0.0
- */
-export const minutesElapsed = (input: {
+/** Whether `minutes` have passed since launch; a runner without a launch time counts as launched now. */
+const minutesElapsed = (input: {
   readonly launchTime: O.Option<number>;
   readonly minutes: number;
   readonly now: number;
@@ -172,6 +156,41 @@ const sweepOrphans = Effect.fn("ScaleDown.sweepOrphans")(function* (config: Pool
   );
 });
 
+const evaluateRunner = Effect.fn("ScaleDown.evaluateRunner")(function* (input: {
+  readonly config: PoolRuntimeConfig;
+  readonly runner: RunnerInstance;
+  readonly owner: RunnerOwner;
+  readonly token: InstallationToken;
+  readonly list: ReadonlyArray<SelfHostedRunner>;
+  readonly now: number;
+  readonly idleBudget: Ref.Ref<number>;
+}) {
+  const { config, runner, now } = input;
+  if (runner.bypassRemoval) {
+    return O.some(decide(runner.instanceId, "skipped"));
+  }
+  const githubRunners = A.filter(input.list, (gh) => Str.endsWith(runner.instanceId)(gh.name));
+  if (A.isReadonlyArrayEmpty(githubRunners)) {
+    if (!minutesElapsed({ launchTime: runner.launchTime, minutes: config.pool.bootTimeMinutes, now })) {
+      return O.none();
+    }
+    const ec2 = yield* Ec2Fleet;
+    yield* ec2.tag(runner.instanceId, { [RunnerTag.orphan]: "true" }).pipe(Effect.ignore);
+    return O.some(decide(runner.instanceId, "orphaned"));
+  }
+  if (!minutesElapsed({ launchTime: runner.launchTime, minutes: config.pool.minimumRunningTimeMinutes, now })) {
+    return O.none();
+  }
+  const keptIdle = yield* Ref.modify(input.idleBudget, (left) => (left > 0 ? [true, left - 1] : [false, left]));
+  if (keptIdle) {
+    return O.some(decide(runner.instanceId, "kept-idle"));
+  }
+  const action = yield* removeRunner({ runner, owner: input.owner, token: input.token, githubRunners }).pipe(
+    Effect.orElseSucceed(() => "skipped" as const)
+  );
+  return O.some(decide(runner.instanceId, action));
+});
+
 /**
  * Runs one scale-down pass over a pool and returns the decision per instance.
  *
@@ -213,42 +232,22 @@ export const handleScaleDown = Effect.fn("ScaleDown.handle")(function* (config: 
   const evictionOrder = config.pool.evictionStrategy === "oldest_first" ? Order.flip(byLaunch) : byLaunch;
   const groups = A.groupBy(runners, (runner) => O.getOrElse(runner.owner, () => ""));
 
-  let idleBudget = config.pool.idleCount;
-  const decisions: Array<ScaleDownDecision> = [];
-  for (const group of R.values(groups)) {
-    const owner = O.getOrThrow(ownerOfRunner(group[0]));
-    const registry = yield* installationTokenFor(owner, 0).pipe(
-      Effect.flatMap((token) => github.listRunners(token, owner).pipe(Effect.map((list) => ({ token, list })))),
-      Effect.option
-    );
-    if (O.isNone(registry)) {
-      continue;
-    }
-    const { token, list } = registry.value;
-    for (const runner of A.sort(group, evictionOrder)) {
-      if (runner.bypassRemoval) {
-        decisions.push(decide(runner.instanceId, "skipped"));
-        continue;
+  const idleBudget = yield* Ref.make(config.pool.idleCount);
+  const decisions = yield* Effect.forEach(R.values(groups), (group) =>
+    Effect.gen(function* () {
+      const owner = O.getOrThrow(ownerOfRunner(group[0]));
+      const registry = yield* installationTokenFor(owner, 0).pipe(
+        Effect.flatMap((token) => github.listRunners(token, owner).pipe(Effect.map((list) => ({ token, list })))),
+        Effect.option
+      );
+      if (O.isNone(registry)) {
+        return [];
       }
-      const githubRunners = A.filter(list, (gh) => Str.endsWith(runner.instanceId)(gh.name));
-      if (A.isReadonlyArrayNonEmpty(githubRunners)) {
-        if (!minutesElapsed({ launchTime: runner.launchTime, minutes: config.pool.minimumRunningTimeMinutes, now })) {
-          continue;
-        }
-        if (idleBudget > 0) {
-          idleBudget -= 1;
-          decisions.push(decide(runner.instanceId, "kept-idle"));
-          continue;
-        }
-        const action = yield* removeRunner({ runner, owner, token, githubRunners }).pipe(
-          Effect.orElseSucceed(() => "skipped" as const)
-        );
-        decisions.push(decide(runner.instanceId, action));
-      } else if (minutesElapsed({ launchTime: runner.launchTime, minutes: config.pool.bootTimeMinutes, now })) {
-        yield* ec2.tag(runner.instanceId, { [RunnerTag.orphan]: "true" }).pipe(Effect.ignore);
-        decisions.push(decide(runner.instanceId, "orphaned"));
-      }
-    }
-  }
-  return A.appendAll(orphanDecisions, decisions);
+      const evaluated = yield* Effect.forEach(A.sort(group, evictionOrder), (runner) =>
+        evaluateRunner({ config, runner, owner, now, idleBudget, ...registry.value })
+      );
+      return A.getSomes(evaluated);
+    })
+  );
+  return A.appendAll(orphanDecisions, A.flatten(decisions));
 });

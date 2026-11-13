@@ -223,10 +223,8 @@ describe("handleScaleUp", () => {
 
 describe("sanitizeAllocationStrategy", () => {
   it("keeps strategies valid for the capacity type and falls back to lowest-price otherwise", () => {
-    expect(sanitizeAllocationStrategy({ strategy: "price-capacity-optimized", capacityType: "spot" })).toBe(
-      "price-capacity-optimized"
-    );
-    expect(sanitizeAllocationStrategy({ strategy: "prioritized", capacityType: "on-demand" })).toBe("prioritized");
-    expect(sanitizeAllocationStrategy({ strategy: "prioritized", capacityType: "spot" })).toBe("lowest-price");
+    expect(sanitizeAllocationStrategy("price-capacity-optimized", "spot")).toBe("price-capacity-optimized");
+    expect(sanitizeAllocationStrategy("prioritized", "on-demand")).toBe("prioritized");
+    expect(sanitizeAllocationStrategy("prioritized", "spot")).toBe("lowest-price");
   });
 });

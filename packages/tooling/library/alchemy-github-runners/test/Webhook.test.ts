@@ -58,6 +58,10 @@ const config = WebhookRuntimeConfig.make({
   pools: [heavy, overflow],
 });
 
+const decodeSent = S.decodeUnknownEffect(
+  S.fromJsonString(S.Struct({ id: S.Int, installationId: S.Int, queueId: S.String }))
+);
+
 const encodePayload = S.encodeEffect(S.fromJsonString(S.Unknown));
 
 const payload = (input: {
@@ -152,9 +156,7 @@ describe("handleWebhook", () => {
       const response = yield* deliver(world, payload({ labels: ["beep-shard-overflow"] }));
       expect(response.statusCode).toBe(201);
       expect(A.map(world.sent, ({ queueUrl }) => queueUrl)).toStrictEqual(["https://sqs/overflow"]);
-      const sent = yield* S.decodeUnknownEffect(
-        S.fromJsonString(S.Struct({ id: S.Int, installationId: S.Int, queueId: S.String }))
-      )(world.sent[0]?.body);
+      const sent = yield* decodeSent(world.sent[0]?.body);
       expect(sent).toStrictEqual({ id: 11, installationId: 42, queueId: "https://sqs/overflow" });
     })
   );
