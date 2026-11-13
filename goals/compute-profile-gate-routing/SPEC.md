@@ -35,7 +35,7 @@ Higher sources outrank lower sources when they conflict.
 - `packages/tooling/tool/cli/src/internal/repo-run/` (ComputeProfile service, MemoryStats ceiling, GateRoute table, QualityScheduler refusal, facts carrying the profile).
 - `packages/tooling/tool/cli/src/commands/Yeet/**` (publish→open posture, final-check auto-skips, ready accepting hosted green), and a NET-NEW profile probe subcommand of the repo CLI (name fixed in P0).
 - `lefthook.yml` (`skip: - run:` on `schema-catalog` and `instrumentation-catalog`).
-- `.github/workflows/check.yml` (draft-only hosted shard regeneration job, relock push pattern).
+- `.github/workflows/catalog-regeneration.yml` (draft-only hosted shard regeneration job keyed on the `compute-profile-worker` label, relock push pattern; its own workflow so it fires on `labeled`).
 - `AGENTS.md` Quality Operator, `docs/runbooks/agent-pools.md`, `.claude/skills/remote-development-agents/SKILL.md`, `.claude/skills/yeet/references/gates-and-proof.md`, Palantiri host-pressure parcel.
 
 ## Constraints
@@ -133,6 +133,14 @@ Bun and Node expose no cgroup memory.current, and the packet forbids parsing /sy
 
 Reverse: Drop the clamp so availableGib is MemAvailable again
 
+### Catalog regeneration runs in its own workflow so it fires on the labeled event, 2026-11-08
+
+yeet open pushes the head, creates the PR and then applies compute-profile-worker; check.yml listens to the default pull_request types (opened, synchronize, reopened), so the job would first run on the lane's next push. Adding `labeled` to Check's types would re-run every tier-1 lane on each label change, which ruling 51 (time-to-certainty B8) forbids. catalog-regeneration.yml listens to labeled, synchronize and reopened; the if guard keeps every other PR a skipped run. The label, not a receipt or a body marker, is the trigger because it is visible in the event payload with no extra API call.
+
+Lane goals/compute-profile-gate-routing-p2
+
+Reverse: Move the regenerate-catalogs job back into check.yml and accept that a single-push worker PR gets no regeneration
+
 ### computeProfile stays out of every proof digest and reuse key, 2026-11-08
 
 ProofInputDigest, ProofLedgerShadowRow and ProofShadowAttemptFacts record computeProfile as evidence beside envProfile, but proofInputKey still hashes only laneId, commandDigest, envProfile, inputDigest and epochDigest, and ProofLedger key equivalence is unchanged. Existing digests and reuse decisions are untouched; documented on ProofInputKeyComponents.
@@ -153,6 +161,14 @@ AdmissionRequest gains gateRoute and forceLocal (defaults none and false). Ticke
 
 Reverse: Add a journal event for worker bypass runs that records forceLocal
 
+### Palantiri carries its own HostComputeProfile literal and optional ceiling and profile keys, 2026-11-08
+
+`@beep/palantiri` is a library that `@beep/repo-cli` depends on, so it cannot import repo-cli's `ComputeProfile`. A two-value `LiteralKit` in the library keeps the dependency direction; the repo-cli value is assignable to it. Both keys are optional with a `None` default so recorded parcel envelopes without them still decode.
+
+Lane goals/compute-profile-gate-routing-p2
+
+Reverse: Make the keys required, or move the literal domain into a shared package both import
+
 ### The probe service is a Context.Reference named ComputeProfileProbe, 2026-11-08
 
 ComputeProfile is the LiteralKit; the service is ComputeProfileProbe, a Context.Reference whose default reads the live process (process.constrainedMemory, os.totalmem). A Reference keeps withQualityAdmission and every Yeet caller compiling with no new layer; tests provide makeComputeProfileProbe over an injected ComputeMemorySource instead of patching process. The shape is resolve (default 20 GiB envelope) plus resolveFor(envelopeGib) so a custom AdmissionConfig envelope is honored.
@@ -164,6 +180,14 @@ Reverse: Turn ComputeProfileProbe into a required Context.Service and provide it
 New command group compute with subcommand profile: prints the profile, --is <profile> exits 0 or 1 silently through the CliReportedExit path, --json prints the encoded ComputeProfileResolution (Options as null). An invalid BEEP_COMPUTE_PROFILE exits 2 with ComputeProfileError. No repo scan or git; measured about 0.5 s wall.
 
 Reverse: Rename the compute command group and update the dispatch manifest and Root registration
+
+### The regeneration push uses BEEP_SKILLS_TRAIN_TOKEN with the github.token fallback, 2026-11-08
+
+A push with `github.token` does not start new workflow runs, so hosted CI would never prove the regenerated head. The skills train token already has contents write on this repo and is used on an explicit URL only, never in git config. `github.token` stays as the fallback so a missing secret degrades to an unproven push instead of a failed job.
+
+Lane goals/compute-profile-gate-routing-p2
+
+Reverse: Swap the PUSH_TOKEN expression in the regenerate-catalogs job
 
 ### The scheduler derives its compute profile from the MemoryStats ceiling, 2026-11-08
 
@@ -191,6 +215,14 @@ The GateRouteId to hosted-context table sits next to GateRoute in GateRoute.sche
 Lane goals/compute-profile-gate-routing-p1
 
 Reverse: Drop gateHostedContextTable and the hostedChecks read in ReadyGate.ts; profile skips then behave like operator skips (named, never checked).
+
+### P2 lane taken over and rebased onto main, 2026-11-13
+
+The P2 lane's owner session has been gone since 2026-11-08: no process, no session file, and branch goals/compute-profile-gate-routing-p2 untouched with no PR while main moved 222 commits. The CI-goals-finish driver took the slice over: its single commit 574c4b77212 was cherry-picked onto origin/main 8de1571f088 in lane goals/compute-profile-p2-takeover, and the old branch and worktree were left as they were. Conflict resolutions: the Palantiri.service.ts import block keeps main's GithubLedger imports beside ComputeProfileProbe; skills-lock.json takes main's side and is regenerated by skills update; the PLAN.md and SPEC.md generated blocks take main's side and are rewritten by goals decisions write. AGENTS.md takes main's current paragraph with the worker-profile rule appended as one sentence instead of the reflowed paragraph. The rebase also drops the workflow's unused beep CI binary fetch, sets LEFTHOOK=0 on its commit step, exempts the job in the CI job-to-descriptor test, points the runbook's dankserver evidence at the archived exploration, and folds the superseded default-event-types decision into the own-workflow decision.
+
+Lane goals/compute-profile-p2-takeover
+
+Reverse: Close the takeover PR; the original commit 574c4b77212 stays on branch goals/compute-profile-gate-routing-p2
 
 <!-- beep:decisions:end -->
 

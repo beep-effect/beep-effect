@@ -95,17 +95,17 @@ one at a time and every lane keeps its own Turbo concurrency cap (2-4), so it
 fits a 4-core worker. By default every gate runs and every red is collected;
 `--fail-fast` stops at the first red and leaves the receipt incomplete.
 
-| Gate | Hosted context | Command | Caught on main |
-| --- | --- | --- | --- |
-| `expectation-rewrite` | Test Unit | rewritten assertions in the diff's tests and snapshots, old file replayed on the merge base | #2215 |
-| `cheap-gates` | Repo Sanity, JSDoc Ratchet, catalogs | `beep quality github-checks cheap-gates` | #2207, #2221 span |
-| `lint-policy` | Heavy / Lint Policy | `beep lint policy --base`, root docs `oxlint .`, `beep lint deprecated-apis --full` | #2186, #2189, #2201 |
-| `lint` | Lint (package Biome, GritQL), lefthook | `beep ci lane lint --affected`, plus the pre-commit `biome check` over the diff's files | #2187 |
-| `repo-sanity` | Repo Sanity | `beep ci lane repo-sanity --changeset-status` | #2207 |
-| `check` | Heavy / Check | `beep ci lane check --affected`; a declaration-only package's `check` includes its own `build` (Turbo edge) and leads `beep:check` with the build program, while bundler and no-emit packages keep `check` on `^build` only | #2208 |
-| `docgen` | Heavy / Docgen | `beep ci lane docgen --mode auto` | #2208 |
-| `fallow` | Fallow Advisory Envelopes | `beep ci lane fallow --validate-envelopes` | #2215 |
-| `coverage` | Coverage Regression, Test Unit | `TURBO_SCM_BASE=<merge-base> beep-cli coverage --affected` | #2215, #2221 |
+| Gate | Hosted context | Command | Caught on main | Worker profile |
+| --- | --- | --- | --- | --- |
+| `expectation-rewrite` | Test Unit | rewritten assertions in the diff's tests and snapshots, old file replayed on the merge base | #2215 | local |
+| `cheap-gates` | Repo Sanity, JSDoc Ratchet, catalogs | `beep quality github-checks cheap-gates` | #2207, #2221 span | hosted-only |
+| `lint-policy` | Heavy / Lint Policy | `beep lint policy --base`, root docs `oxlint .`, `beep lint deprecated-apis --full` | #2186, #2189, #2201 | hosted-only |
+| `lint` | Lint (package Biome, GritQL), lefthook | `beep ci lane lint --affected`, plus the pre-commit `biome check` over the diff's files | #2187 | local |
+| `repo-sanity` | Repo Sanity | `beep ci lane repo-sanity --changeset-status` | #2207 | local |
+| `check` | Heavy / Check | `beep ci lane check --affected`; a declaration-only package's `check` includes its own `build` (Turbo edge) and leads `beep:check` with the build program, while bundler and no-emit packages keep `check` on `^build` only | #2208 | hosted-only |
+| `docgen` | Heavy / Docgen | `beep ci lane docgen --mode auto` | #2208 | hosted-only |
+| `fallow` | Fallow Advisory Envelopes | `beep ci lane fallow --validate-envelopes` | #2215 | hosted-only |
+| `coverage` | Coverage Regression, Test Unit | `TURBO_SCM_BASE=<merge-base> beep-cli coverage --affected` | #2215, #2221 | hosted-only |
 
 Coverage selects owners through the planner hosted CI shares: a goal or
 exploration path selects only the readers its `ciGoalDataConsumers` row names,
@@ -148,6 +148,22 @@ untracked, non-ignored files, which the gates read) is refused, because
 the receipt pins the committed head; amend or merge `main` and the receipt
 must be produced again. HEAD and the tree are re-read after the gates, and a
 checkout that changed during the run gets no receipt.
+
+On a `worker` compute profile (`bun run beep compute profile`; table and
+per-host ceilings in `docs/runbooks/agent-pools.md` "Compute profiles"),
+`final-check` skips every gate marked `hosted-only` above on its own, with
+the reason `compute-profile=worker`. `--force-local` runs them anyway, and
+the receipt records `forceLocal: true`. `yeet ready` treats only that exact
+reason as deferred to hosted CI: for each deferred gate it reads the newest
+check run of the gate's hosted context on the PR head (`Repo Sanity`,
+`Heavy / Lint Policy`, `Heavy / Check`, `Heavy / Docgen`,
+`Fallow Advisory Envelopes`, `Heavy / Coverage Regression`). Success,
+skipped or neutral accepts the gate; a pending or missing run refuses with
+"wait for hosted <context>", and any other conclusion refuses naming the
+red. Operator `--skip` reasons are still only named, never judged. On the
+same profile `yeet publish` takes the `yeet open` posture and labels the PR
+`compute-profile-worker`, which arms the draft-only `Catalog Regeneration`
+job in `.github/workflows/catalog-regeneration.yml`.
 
 ## Plan mode
 

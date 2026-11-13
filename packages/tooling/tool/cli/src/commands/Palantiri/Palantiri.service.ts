@@ -53,6 +53,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { bucketKeyString, ReserveState, reserveFloor } from "../../internal/github/GithubLedger.schemas.ts";
 import { GithubBudgetLedger, layerGithubBudgetLedgerLive } from "../../internal/github/GithubLedger.service.ts";
+import { ComputeProfileProbe } from "../../internal/repo-run/ComputeProfile.ts";
 import { admissionStatus, MemoryStats } from "../../internal/repo-run/QualityScheduler.ts";
 import { writePrivateFile } from "../../internal/state/PrivateFile.ts";
 import { resolveWorkstationStateDir } from "../../internal/state/WorkstationState.ts";
@@ -816,16 +817,23 @@ export const makeHostPressureSource = Effect.fnUntraced(function* <R>(readers: H
     return PressureSourceInput.cases.Read.make({ files: A.getSomes(files) });
   });
 
+  // An unreadable BEEP_COMPUTE_PROFILE override drops the profile from the
+  // line instead of failing the parcel.
+  const computeProfileReading = ComputeProfileProbe.use((probe) => probe.resolve).pipe(
+    Effect.map((resolution) => resolution.profile),
+    Effect.option
+  );
+
   const snapshot = Effect.gen(function* () {
     const readAt = yield* DateTime.now;
-    const [read, availableGib, totalGib, slots] = yield* Effect.all(
-      [pressure, stats.availableGib, stats.totalGib, readers.admission],
-      { concurrency: 4 }
+    const [read, availableGib, totalGib, ceilingGib, computeProfile, slots] = yield* Effect.all(
+      [pressure, stats.availableGib, stats.totalGib, stats.ceilingGib, computeProfileReading, readers.admission],
+      { concurrency: 6 }
     );
     return HostPressureInput.make({
       readAt,
       pressure: read,
-      memory: O.some(HostMemoryInput.make({ availableGib, totalGib })),
+      memory: O.some(HostMemoryInput.make({ availableGib, totalGib, ceilingGib: O.some(ceilingGib), computeProfile })),
       admission: slots,
     });
   }).pipe(Effect.provide(context), Effect.withSpan("PalantiriSource.hostPressure"));

@@ -623,6 +623,49 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("skills update over a v2 l
     }).pipe(Effect.provideService(HttpClient.HttpClient, makeSkillsClient()))
   );
 
+  it.effect("checks offline from tracked files only, with no request to a floating upstream", () =>
+    Effect.gen(function* () {
+      const root = yield* temporaryRepository;
+      yield* writeProjectFile(root, ".codex/config.toml", "[skills]\n  include_instructions = true\n");
+      yield* writeProjectFile(root, "skills-lock.json", `${yield* encodeSkillsLockDocumentJson(emptyLockV2)}\n`);
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.makeDirectory(`${root}/.agents`, { recursive: true });
+      yield* fs.symlink("../.claude/skills", `${root}/.agents/skills`);
+      yield* runSkillsUpdate({ mode: "write", skill: O.some("grill-me") }).pipe(
+        Effect.provideService(HttpClient.HttpClient, makeSkillsClient())
+      );
+      // Every request fails from here on, as on a rate-limited runner address.
+      const refusing = makeWebHandlerClient(() => Effect.succeed(new Response("rate limited", { status: 403 })));
+      const offline = (options: { readonly offline: boolean }) =>
+        runSkillsUpdate({ mode: "check", skill: O.none(), ...options }).pipe(
+          Effect.provideService(HttpClient.HttpClient, refusing)
+        );
+
+      // The online check needs the floating upstream; the offline one agrees with the lock without it.
+      const online = yield* offline({ offline: false }).pipe(Effect.flip);
+      expect(online.message).toContain("non-2xx");
+      const clean = yield* offline({ offline: true });
+      expect(clean).toEqual([]);
+
+      // A skill edited without refreshing the lock is the drift the hosted step exists for.
+      yield* writeProjectFile(
+        root,
+        ".claude/skills/grill-me/SKILL.md",
+        `${remoteGrillMeSkill}\nEdited after the lock.\n`
+      );
+      const stale = yield* offline({ offline: true }).pipe(Effect.flip);
+      expect(stale.message).toBe("Repo-local skills are stale.");
+    })
+  );
+
+  it.effect("refuses --offline outside a check, which would record a lock no upstream snapshot backs", () =>
+    Effect.gen(function* () {
+      yield* temporaryRepository;
+      const refused = yield* runSkillsCommand(["update", "--offline"]).pipe(Effect.flip);
+      expect(String(refused)).toContain("The --offline flag is only valid with --check.");
+    }).pipe(Effect.provideService(HttpClient.HttpClient, makeSkillsClient()))
+  );
+
   it.effect("fails closed on a lock that is neither a valid v2 nor a v1 lock", () =>
     Effect.gen(function* () {
       const root = yield* temporaryRepository;
