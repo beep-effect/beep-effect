@@ -16,16 +16,16 @@ import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertFailure, assertTrue } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
 import { pipe } from "effect/Function";
-import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const decodeUnknownEvidenceResult = S.decodeUnknownResult(Evidence);
 const decodeUnknownEvidenceVerificationModelResult = S.decodeUnknownResult(EvidenceVerificationModel);
@@ -91,17 +91,13 @@ const evidence = evidenceFor(evidenceId, verifiedAnchor.anchor);
 
 // The manifestation key hashes RFC 8785 bytes from the canonical digest owner,
 // which refuses an unpaired surrogate. Schema-derived free text (quotes,
-// source refs, versions) can hold one; the key function then throws the
-// owner's typed error, read back here as its message.
+// source refs, versions) can hold one; the key function then fails typed, in
+// its SchemaError channel, with a message naming the owner's refusal.
 const manifestationKeyOrRefusal = (manifestation: EvidenceVerificationManifestation) =>
-  Result.try({
-    try: () =>
-      Result.getOrThrow(
-        manifestationKeyFor(manifestation.evidenceId, TextAnchorVerificationReceipt.make(manifestation.verifiedAnchor))
-      ),
-    catch: (thrown) =>
-      P.isTagged(thrown, "JsoncCanonicalizeError") && P.isError(thrown) ? thrown.message : "not refused",
-  });
+  Result.mapError(
+    manifestationKeyFor(manifestation.evidenceId, TextAnchorVerificationReceipt.make(manifestation.verifiedAnchor)),
+    (error) => error.message
+  );
 
 describe("EvidenceVerificationTable", () => {
   it("projects the immutable sidecar column shape", () => {
@@ -180,6 +176,20 @@ describe("EvidenceVerificationTable", () => {
     },
     { arbitrary: fcRuns(25) }
   );
+
+  it("fails typed when the manifestation holds an unpaired surrogate", () => {
+    const illFormedAnchor = TextAnchorVerificationReceipt.make({
+      anchor: TextAnchor.make({ ...verifiedAnchor.anchor, quote: "controlling \ud800act" }),
+      source: verifiedAnchor.source,
+    });
+
+    assertFailure(
+      Result.mapError(manifestationKeyFor(evidenceId, illFormedAnchor), (error) =>
+        Str.includes('LoneSurrogate at "/verifiedAnchor/anchor/quote"')(error.message)
+      ),
+      true
+    );
+  });
 
   it("round-trips rows through schema-derived converters", () => {
     const verification = Result.getOrThrow(decodeUnknownEvidenceVerificationModelResult(input));

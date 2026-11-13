@@ -32,7 +32,6 @@ import {
 } from "@beep/epistemics/EvidenceVerification";
 import { makeLogicalEdgeIdentity, makeLogicalEdgeKey } from "@beep/epistemics/LogicalEdgeIdentity";
 import { $EpistemicsId } from "@beep/identity/packages";
-import { JsoncCanonicalizeError } from "@beep/jsonc/JsoncFingerprint";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
@@ -45,7 +44,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import { flow, pipe } from "effect/Function";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
@@ -296,13 +295,14 @@ const ref = (edgeVersionId: string, key: string) =>
 
 const evidenceIds = (values: A.NonEmptyReadonlyArray<string>) => A.map(values, (id) => PartyEvidenceId.make(id));
 
-// A sealing function's outcome: its own result, or the owner's typed refusal
-// it now throws, as code and JSON pointer.
-const sealOrRefusal = <A>(seal: () => A): Result.Result<A, string> =>
-  Result.try({
-    try: seal,
-    catch: (thrown) => (S.is(JsoncCanonicalizeError)(thrown) ? `${thrown.code} at ${thrown.path}` : "not refused"),
-  });
+// A digest helper's failure as its message: the canonical JSON owner's refusal
+// arrives in the helper's own `SchemaError` channel, naming its code and pointer.
+const failureMessage = <A>(result: Result.Result<A, S.SchemaError>): Result.Result<A, string> =>
+  Result.mapError(result, (error) => error.message);
+
+// `true` in the failure channel when that message names the given refusal.
+const refusedAt = <A>(result: Result.Result<A, S.SchemaError>, refusal: string): Result.Result<A, boolean> =>
+  Result.mapError(failureMessage(result), Str.includes(refusal));
 
 const basisFor = (left: A.NonEmptyReadonlyArray<string>, right: A.NonEmptyReadonlyArray<string>) =>
   MatchBasis.make({
@@ -367,14 +367,11 @@ describe("second binding of the contradiction factories", () => {
       A.forEach(samples, (content) => {
         expect(S.is(CandidateContent)(content)).toBe(true);
         // This binding's ids are free `S.String`, so a sample can hold an
-        // unpaired surrogate, which the seal refuses (pinned below).
-        Result.match(
-          sealOrRefusal(() => behavior.contradictionCandidateDigest(content)),
-          {
-            onSuccess: flow(Result.isSuccess, assertTrue),
-            onFailure: (refusal) => expect(refusal).toMatch(/^LoneSurrogate at \//),
-          }
-        );
+        // unpaired surrogate, which the seal refuses typed (pinned below).
+        Result.match(failureMessage(behavior.contradictionCandidateDigest(content)), {
+          onSuccess: (digest) => expect(digest).toMatch(/^[0-9a-f]{64}$/),
+          onFailure: (message) => expect(message).toMatch(/LoneSurrogate at "\//),
+        });
       });
       const matchBases = yield* Arbitrary.sampleEffect(arbitraries.ContradictionMatchBasisArbitrary, { count: 10 });
       A.forEach(matchBases, (basis) => expect(S.is(MatchBasis)(basis)).toBe(true));
@@ -409,7 +406,7 @@ describe("second binding of the contradiction factories", () => {
     })
   );
 
-  it("throws the owner's typed refusal instead of sealing an unpaired surrogate", () => {
+  it("fails typed, in the SchemaError channel, instead of sealing an unpaired surrogate", () => {
     const content = ProposalContent.make({
       fact: { value: 1 },
       losingBelief: ref("v-\ud800", "a"),
@@ -425,12 +422,15 @@ describe("second binding of the contradiction factories", () => {
     });
 
     assertFailure(
-      sealOrRefusal(() => behavior.contradictionProposalDigest(content)),
-      "LoneSurrogate at /losingBelief/edgeVersionId"
+      refusedAt(behavior.contradictionProposalDigest(content), 'LoneSurrogate at "/losingBelief/edgeVersionId"'),
+      true
     );
     assertFailure(
-      sealOrRefusal(() => detectionProposalId(ref("v-1", "a"), { subject: "s", value: "\udc00" })),
-      "LoneSurrogate at /fact/value"
+      refusedAt(
+        detectionProposalId(ref("v-1", "a"), { subject: "s", value: "\udc00" }),
+        'LoneSurrogate at "/fact/value"'
+      ),
+      true
     );
   });
 

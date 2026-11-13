@@ -259,6 +259,12 @@ AgentConventionTrial compares one declared pair of receipts with digest controls
 
 Reverse: Fold the probe into AgentConventionTrial if a later comparison needs one shape for both.
 
+### Re-final the closeout through a goals-only PR, 2026-11-13
+
+goals completion refresh marked #3167 unsatisfied on one check: no yeet publish verdict at its accepted head (the last wave was pushed with git push) and it merged before the readiness monitor printed merge-ready. Per the repo's re-final route, a goals-only PR carries the proposedCloseout, is published through yeet and merges only after merge-ready: yes; the packet-state PR follows. This takes the packet to three PRs, one over the two-PR budget, because the closeout cannot be verified otherwise.
+
+Reverse: None needed: the re-final changes only goal metadata; if the operator prefers, adopt the closeout manually after reviewing #3167.
+
 ### Repair three scorer-drift items for this probe only, 2026-11-13
 
 Ignore tsgo missingPipeableSignature (enabled 2026-08-10, stated nowhere), accept S.Opaque where tasks require extends S.Class (skill default since 2026-10-14), and accept S.decodeTo( where tasks require S.decode( (the skill's idiom; an author's call, since it fails the post-corpus test). Implemented as scorer profile skill-probe-scorer/v2 in SkillProbe.ts; the shared evals score command is unchanged.

@@ -60,6 +60,7 @@ import {
 import {
   canonicalJsonText,
   canonicalJsonTextPretty,
+  canonicalJsonTextResult,
   sha256Hex,
   sha256HexBytes,
 } from "../Goals/PacketCore/PacketDigest.ts";
@@ -687,11 +688,12 @@ const appendPendingEvents = Effect.fn("Explore.appendPendingEvents")(function* (
   );
   const recordedSuffix = A.takeRight(pending.events, A.length(owed));
   const encodedEventBodies = yield* encodeEventBodies(owed);
-  const owedText = canonicalJsonText(encodedEventBodies);
-  if (
-    A.length(recordedSuffix) !== A.length(owed) ||
-    (yield* Effect.map(encodeEventBodies(recordedSuffix), canonicalJsonText)) !== owedText
-  ) {
+  const owedText = yield* Effect.fromResult(canonicalJsonTextResult(encodedEventBodies));
+  const recordedText = yield* Effect.flatMap(
+    encodeEventBodies(recordedSuffix),
+    flow(canonicalJsonTextResult, Effect.fromResult)
+  );
+  if (A.length(recordedSuffix) !== A.length(owed) || recordedText !== owedText) {
     return yield* GraduationRecoveryError.new(
       pending.exploration,
       `The ops/events stream of explorations/${pending.exploration} moved since the pending graduation events were recorded; it now owes ${owedText}, which is not what was recorded. Repair the stream by hand.`
