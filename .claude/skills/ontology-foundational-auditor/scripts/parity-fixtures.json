@@ -1,0 +1,41 @@
+[
+  {
+    "args": ["--self-test"],
+    "status": 0,
+    "stdoutSha256": "d0665c4bede1abeb0535e51ff876cb5e7265f865b8e4240f7401bc13492740be",
+    "stderrSha256": "6b6f782efcf5a00fef6d49aab1cf523978052b0943efe0b9159926bb110d9c79",
+    "stdoutLines": 1
+  },
+  {
+    "args": [
+      "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops"
+    ],
+    "status": 1,
+    "stdoutSha256": "55b89134b6d4b3caa7f1d65a14c46f81c1deae2068cc062f14ff667644921a44",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdoutLines": 1331
+  },
+  {
+    "args": [
+      "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops",
+      "--gate"
+    ],
+    "status": 1,
+    "stdoutSha256": "eed0914afa607f4604c84566b8ddd80d274d2c216741b5371eeb60627e0cd02b",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdoutLines": 1366
+  },
+  {
+    "args": [
+      "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops",
+      "--gate",
+      "--repo",
+      "."
+    ],
+    "status": 1,
+    "stdoutSha256": "225c44d70707073c32d9991728f43a515f57d06ffde20c8cc28604e77c040e09",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdoutLines": 1365,
+    "normalization": "git-dirty-meter-only"
+  }
+]
