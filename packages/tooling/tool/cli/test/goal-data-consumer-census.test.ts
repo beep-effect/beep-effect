@@ -112,6 +112,12 @@ const exclusions: ReadonlyArray<CensusExclusion> = [
     kind: "synthetic-fixture",
     reason: "contract data with a placeholder digest; the file is never read",
   }),
+  CensusExclusion.make({
+    reference: "explorations/stacked-pr-adoption/research/",
+    source: "packages/tooling/tool/cli/test/support/YeetHeadMove.ts",
+    kind: "synthetic-fixture",
+    reason: "the head-move harness inits its own temp repository and writes stack-probe files under this prefix",
+  }),
 ];
 
 // One census finding: a consumed tracked path and the source file whose reference reaches it.

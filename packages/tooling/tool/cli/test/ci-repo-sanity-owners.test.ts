@@ -1,4 +1,9 @@
-import { CI_LANE_ID_VALUES, CiLaneRunOptions, ciLaneStepsForTesting } from "@beep/repo-cli/commands/Ci";
+import {
+  CI_LANE_ID_VALUES,
+  CiLaneRunOptions,
+  ciLaneFailurePolicyForTesting,
+  ciLaneStepsForTesting,
+} from "@beep/repo-cli/commands/Ci";
 import {
   githubCheckRepoSanityLanesForTesting,
   LintPolicyAffectedTargets,
@@ -146,6 +151,31 @@ describe("one hosted lint:shadcn owner (PERIH-02)", () => {
       isText
     );
     expect(A.some(scripts, Str.includes("shadcn-lint"))).toBe(false);
+  });
+
+  // A separate check.yml step that fails before "Run verification lane" skips
+  // the whole lane body. Workflow policy therefore runs inside the body.
+  it("runs workflow policy inside the Repo Sanity body, ahead of the shadcn step", () => {
+    const workflow = readCheckWorkflow();
+    const steps = yamlAt(workflow, ["jobs", "verify", "steps"]);
+    assertTrue(A.isArray(steps));
+    const scripts = A.filter(
+      A.map(steps, (step) => yamlAt(step, ["run"])),
+      isText
+    );
+    expect(A.some(scripts, Str.includes("ci workflow-lint"))).toBe(false);
+    A.forEach([pullRequestOptions, pushOptions], (options) => {
+      const labels = A.map(ciLaneStepsForTesting(REPO_ROOT, "repo-sanity", options), (step) => step.label);
+      expect(A.findFirstIndex(labels, (label) => label === "ci:repo-sanity:workflow-lint")).toEqual(O.some(0));
+      expect(A.contains(labels, SHADCN_STEP)).toBe(true);
+    });
+  });
+
+  // The masking test below drives the collecting step group; this pins that
+  // the repo-sanity lane is the one runCiStepLane hands to it.
+  it("runs the Repo Sanity body under the collecting policy", () => {
+    expect(ciLaneFailurePolicyForTesting("repo-sanity")).toBe("collect-all");
+    expect(ciLaneFailurePolicyForTesting("jsdoc-ratchet")).toBe("fail-fast");
   });
 });
 
