@@ -5,7 +5,7 @@ import {
   admissionStatus,
   admissionTokenWeight,
   MemoryStats,
-  MemoryStatsLive,
+  memoryStatsLayerFor,
   noAdmissionOriginGate,
   provideRuntimeRootForTesting,
   RuntimeRootChoice,
@@ -63,6 +63,14 @@ const readMemoryStats = Effect.fnUntraced(function* () {
   return { availableGib, totalGib };
 });
 
+// The live layer clamps availableGib to the process cgroup ceiling; under a memory-capped scope
+// that returns the host's ceiling instead of the fixed procfs data. Use an uncapped, fixed source.
+const uncappedMemorySource = {
+  constrainedMemoryBytes: () => undefined,
+  residentBytes: () => 0,
+  totalMemoryBytes: () => undefined,
+};
+
 const readMemoryStatsFrom = Effect.fnUntraced(function* (meminfo: string) {
   const fileSystem = yield* FileSystem.FileSystem;
   const fixedFileSystem = FileSystem.FileSystem.of({
@@ -71,7 +79,7 @@ const readMemoryStatsFrom = Effect.fnUntraced(function* (meminfo: string) {
   });
 
   return yield* readMemoryStats().pipe(
-    provideScopedLayer(MemoryStatsLive),
+    provideScopedLayer(memoryStatsLayerFor(uncappedMemorySource)),
     provideScopedLayer(Layer.succeed(FileSystem.FileSystem, fixedFileSystem))
   );
 });
