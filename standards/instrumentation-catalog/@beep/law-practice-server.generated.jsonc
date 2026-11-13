@@ -368,6 +368,7 @@
     {"name":"Citation.installLawMetadata","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.installLawMetadataPatch","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.installMarkupReferences","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"Citation.installMetadataConfigurationStage","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.installMetadataContextMatch","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.installMetadataStage","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.installMetadataStringProcessing","owner":"@beep/law-practice-server","family":"slice","conforms":true},

@@ -13,11 +13,10 @@ import { CitationLawMetadataInput, CitationLawMetadataPatch, CitationLawMetadata
 import {
   CitationPublicationMetadataConfiguration,
   citationMetadataContext,
-  decodeCitationMetadataConfiguration,
+  installCitationMetadataConfigurationStage,
   installCitationMetadataContextMatch,
   makeCitationMetadataOperation,
   prepareCitationPublicationMetadata,
-  provideCitationStageAdmission,
 } from "./MetadataComposition.ts";
 import { makeCitationMetadataStrings } from "./MetadataStrings.ts";
 import { makeCitationMetadataYearFromBound } from "./MetadataYear.ts";
@@ -187,33 +186,31 @@ export const makeCitationPostCaseMetadata = Effect.fn("Citation.makePostCaseMeta
   runtimeInput: unknown,
   configurationInput: unknown
 ) {
-  const { limits, configuration: decoded } = yield* decodeCitationMetadataConfiguration(
+  return yield* installCitationMetadataConfigurationStage(
     policy,
     configurationInput,
     Config,
-    invalidConfiguration
-  );
-  return yield* provideCitationStageAdmission(
-    limits,
-    Effect.gen(function* () {
-      // Installation authenticates even when later input has no raw court capture.
-      yield* makeCitationCourtLookup(limits, decoded.courtTable);
-      const { runtime, config } = yield* prepareCitationPublicationMetadata(
-        limits,
-        runtimeInput,
-        decoded,
-        "173f538b2d3f8f2522eeb298388114e59bca173d00e03ac7f7b844f02c1be040",
-        invalidConfiguration
-      );
-      const prepare = yield* installCitationPostCaseMetadataExtraction(limits, runtime, config, decoded.courtTable);
-      const installed = yield* makeCitationMetadataOperation(prepare);
-      const apply = Effect.fn("Citation.addPostCaseMetadata")((raw: unknown) =>
-        Effect.gen(function* () {
-          const [patch, reservedUnits] = yield* installed.run(raw);
-          return CitationPostCaseMetadataResult.make({ patch, reservedUnits });
-        })
-      );
-      return { apply };
-    })
+    invalidConfiguration,
+    (limits, decoded) =>
+      Effect.gen(function* () {
+        // Installation authenticates even when later input has no raw court capture.
+        yield* makeCitationCourtLookup(limits, decoded.courtTable);
+        const { runtime, config } = yield* prepareCitationPublicationMetadata(
+          limits,
+          runtimeInput,
+          decoded,
+          "173f538b2d3f8f2522eeb298388114e59bca173d00e03ac7f7b844f02c1be040",
+          invalidConfiguration
+        );
+        const prepare = yield* installCitationPostCaseMetadataExtraction(limits, runtime, config, decoded.courtTable);
+        const installed = yield* makeCitationMetadataOperation(prepare);
+        const apply = Effect.fn("Citation.addPostCaseMetadata")((raw: unknown) =>
+          Effect.gen(function* () {
+            const [patch, reservedUnits] = yield* installed.run(raw);
+            return CitationPostCaseMetadataResult.make({ patch, reservedUnits });
+          })
+        );
+        return { apply };
+      })
   );
 });

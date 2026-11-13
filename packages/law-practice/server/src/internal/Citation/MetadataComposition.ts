@@ -238,6 +238,22 @@ export const decodeCitationMetadataConfiguration = Effect.fn("Citation.decodeMet
   const configuration = yield* S.decodeUnknownEffect(schema)(input).pipe(Effect.mapError(invalid));
   return { limits, configuration };
 });
+/** Decode a stage's policy/configuration pair, then run its install with one
+ * native admission for the whole install (provideCitationStageAdmission).
+ * @internal @category operations @since 0.0.0
+ */
+export const installCitationMetadataConfigurationStage = Effect.fn("Citation.installMetadataConfigurationStage")(
+  function* <A, I, E, B, InstallError, InstallEnv>(
+    policy: unknown,
+    input: unknown,
+    schema: S.Codec<A, I>,
+    invalid: () => E,
+    install: (limits: CitationEngineLimits, configuration: A) => Effect.Effect<B, InstallError, InstallEnv>
+  ) {
+    const { limits, configuration } = yield* decodeCitationMetadataConfiguration(policy, input, schema, invalid);
+    return yield* provideCitationStageAdmission(limits, install(limits, configuration));
+  }
+);
 /** Decode and snapshot the shared trusted runtime/configuration boundary.
  * @internal @category operations @since 0.0.0
  */

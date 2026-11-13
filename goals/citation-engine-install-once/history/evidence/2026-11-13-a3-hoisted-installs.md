@@ -379,6 +379,20 @@ one commit on top of a merge of `origin/main`.
 | 2 | Scope capture by a hoisted install is only partly guarded | The `no-citation-optional-invocation` summary now states what the syntactic rule does not catch: local aliases and aliased named imports, raw context map access, a picked or omitted Context passed along, and any `Scope.Scope` capture. A finalizer-count test on the engine Scope was not added: the public `Scope` API exposes no finalizer count, and the engine Scope also carries the Layer, admission-owner, HTML cleaner worker and temporary-directory finalizers, so such a test would read internal state and break with unrelated owner changes. The probe's construction row (1 process owner, the HTML cleaner worker's; 0 Diff/Xml workers) already fails if a stage install starts a process owner, the Scope-capturing object this slice could hoist. |
 | 3 | Dead `_limits` parameter on `makeCitationMetadataOperation` | Removed, with its eight call sites. The design's contract sketch in section 3.4 still shows a `limits` parameter; the implementation no longer needs it because the stage install provides the admission. |
 
+Follow-up after round 2: `yeet final-check` on `45a2d8d18bb` (whole-repo heavy
+gates skipped by the owner) found one introduced `fallow:audit` duplication
+(`audit-introduced-duplication-1`, 14 lines): the decode-then-provide-admission
+prologue repeated in `JournalMetadata.ts` (lines 152 to 165) and
+`PostCaseMetadata.ts` (lines 185 to 198). It is now one helper,
+`installCitationMetadataConfigurationStage` in `MetadataComposition.ts` (decode
+the policy/configuration pair, then run the install under
+`provideCitationStageAdmission`), called from both; behavior and error labels
+are unchanged. The fallow audit check then reports no introduced finding (the
+two inherited-adjacent, non-blocking findings are unchanged), and locally
+`package-verify --quick`, changed-file biome, `CitationJournalMetadata.test.ts`
+(4/4), `CitationPostCaseMetadata.test.ts` (5/5) and the full-span replay alone
+(12/12, count table unchanged) pass.
+
 ### Checks in review round 2
 
 Host pressure continued (load average about 75 to 97). By operator ruling only
