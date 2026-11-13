@@ -179,6 +179,51 @@ const assertPrunesAptSourcesBefore = (run: string, command: string): void => {
   );
 };
 
+const PRODUCER_BUILD_TOOL_PIN_KEYS = [
+  "ZIG_VERSION",
+  "ZIG_URL",
+  "ZIG_SHA256",
+  "CARGO_ZIGBUILD_VERSION",
+  "CARGO_ZIGBUILD_URL",
+  "CARGO_ZIGBUILD_SHA256",
+];
+
+// The pins file is the single source of the installed producer build tools and is digested into build.json.
+const expectPinnedProducerBuildTools = (installRun: string, buildTools: string): void => {
+  expect(installRun).not.toMatch(/python3|pip install|venv/u);
+  expect(installRun).toContain("pins=infra/r2-cache/policy-build-tools.txt");
+  for (const key of PRODUCER_BUILD_TOOL_PIN_KEYS) expect(installRun).toContain(`"$(pin ${key})"`);
+  expect(installRun).not.toMatch(/https:\/\/|[0-9a-f]{64}/u);
+  expect(installRun).toContain('fetch zig.tar.xz "$zig_url"');
+  expect(installRun).toContain('"$zig_sha256" "$tools/downloads/zig.tar.xz"');
+  expect(installRun).toContain('"$zigbuild_sha256" "$tools/downloads/cargo-zigbuild.whl"');
+  expect(installRun).toContain("sha256sum --check --strict");
+  expect(installRun).toContain('test "$("$tools/bin/zig" version)" = "$zig_version"');
+  expect(installRun).toContain('test "$("$tools/bin/cargo-zigbuild" --version)" = "cargo-zigbuild $zigbuild_version"');
+  expect(buildTools).toContain("\nZIG_VERSION=0.14.1\n");
+  expect(buildTools).toContain("\nZIG_URL=https://ziglang.org/download/0.14.1/zig-x86_64-linux-0.14.1.tar.xz\n");
+  expect(buildTools).toContain("\nZIG_SHA256=24aeeec8af16c381934a6cd7d95c807a8cb2cf7df9fa40d359aa884195c4716c\n");
+  expect(buildTools).toContain("\nCARGO_ZIGBUILD_VERSION=0.20.1\n");
+  expect(buildTools).toContain(
+    "\nCARGO_ZIGBUILD_SHA256=cb9508149ee63d60e5110ff24b527ab25ed418a6329252aa4f86868197c55bf6\n"
+  );
+  expect(buildTools).not.toMatch(/ziglang==|--hash=/u);
+};
+
+// Only the cleanup step carries env; no step may set up the monorepo, touch caches, read secrets or run producers.
+const expectCredentialFreeProducerSteps = (steps: ReadonlyArray<WorkflowStep>, cleanupName: string): void => {
+  for (const step of steps) {
+    if (step.name !== cleanupName) expect(step.env).toBeUndefined();
+    expect(step.uses).not.toBe(SETUP_MONOREPO_ACTION);
+    const uses = step.uses ?? "";
+    const run = step.run ?? "";
+    expect(uses).not.toContain("actions/cache");
+    for (const forbidden of ["secrets.", "producer-install", "producer-run", "op read"]) {
+      expect(run).not.toContain(forbidden);
+    }
+  }
+};
+
 const setupMonorepoStep = (jobs: WorkflowJobs, jobId: string): WorkflowStep =>
   O.getOrThrowWith(
     A.findFirst(jobSteps(jobs, jobId), (step) => step.uses === SETUP_MONOREPO_ACTION),
@@ -2696,38 +2741,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(hostSetup).toContain("perl --version");
       assertPrunesAptSourcesBefore(hostSetup, '"${privilege[@]}" apt-get update');
       expect(stepIndexByName(steps, hostTools)).toBeLessThan(stepIndexByName(steps, "Build pinned portable candidate"));
-      const install = stepByName(steps, "Install pinned portable build tools");
-      expect(install.run).not.toMatch(/python3|pip install|venv/u);
-      // The pins file is the single source of the installed tools and is digested into build.json.
-      expect(install.run).toContain("pins=infra/r2-cache/policy-build-tools.txt");
-      for (const key of [
-        "ZIG_VERSION",
-        "ZIG_URL",
-        "ZIG_SHA256",
-        "CARGO_ZIGBUILD_VERSION",
-        "CARGO_ZIGBUILD_URL",
-        "CARGO_ZIGBUILD_SHA256",
-      ]) {
-        expect(install.run).toContain(`"$(pin ${key})"`);
-      }
-      expect(install.run).not.toMatch(/https:\/\/|[0-9a-f]{64}/u);
-      expect(install.run).toContain('fetch zig.tar.xz "$zig_url"');
-      expect(install.run).toContain('"$zig_sha256" "$tools/downloads/zig.tar.xz"');
-      expect(install.run).toContain('"$zigbuild_sha256" "$tools/downloads/cargo-zigbuild.whl"');
-      expect(install.run).toContain("sha256sum --check --strict");
-      expect(install.run).toContain('test "$("$tools/bin/zig" version)" = "$zig_version"');
-      expect(install.run).toContain(
-        'test "$("$tools/bin/cargo-zigbuild" --version)" = "cargo-zigbuild $zigbuild_version"'
-      );
       const buildTools = yield* fs.readFileString(`${root}/infra/r2-cache/policy-build-tools.txt`);
-      expect(buildTools).toContain("\nZIG_VERSION=0.14.1\n");
-      expect(buildTools).toContain("\nZIG_URL=https://ziglang.org/download/0.14.1/zig-x86_64-linux-0.14.1.tar.xz\n");
-      expect(buildTools).toContain("\nZIG_SHA256=24aeeec8af16c381934a6cd7d95c807a8cb2cf7df9fa40d359aa884195c4716c\n");
-      expect(buildTools).toContain("\nCARGO_ZIGBUILD_VERSION=0.20.1\n");
-      expect(buildTools).toContain(
-        "\nCARGO_ZIGBUILD_SHA256=cb9508149ee63d60e5110ff24b527ab25ed418a6329252aa4f86868197c55bf6\n"
-      );
-      expect(buildTools).not.toMatch(/ziglang==|--hash=/u);
+      expectPinnedProducerBuildTools(stepRun(steps, "Install pinned portable build tools"), buildTools);
       const build = stepByName(steps, "Build pinned portable candidate");
       expect(build.run).toContain("infra/r2-cache/policy.sh cargo-build-musl");
       expect(build.run).toContain("infra/r2-cache/policy.sh prepare");
@@ -2748,19 +2763,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "retention-days": 1,
         "compression-level": 0,
       });
-      const cleanup = stepByName(steps, "Remove only this job's build scratch");
+      const cleanupName = "Remove only this job's build scratch";
+      const cleanup = stepByName(steps, cleanupName);
       expect(cleanup.if).toBe("always() && steps.scratch.outputs.root != ''");
       expect(cleanup.env).toEqual({ BUILD_SCRATCH_ROOT: "${{ steps.scratch.outputs.root }}" });
       expect(cleanup.run).toContain("*/beep/cache-producer-build.??????)");
-      for (const step of steps) {
-        if (step.name !== cleanup.name) expect(step.env).toBeUndefined();
-        expect(step.uses).not.toBe(SETUP_MONOREPO_ACTION);
-        expect(step.uses ?? "").not.toContain("actions/cache");
-        expect(step.run ?? "").not.toContain("secrets.");
-        expect(step.run ?? "").not.toContain("producer-install");
-        expect(step.run ?? "").not.toContain("producer-run");
-        expect(step.run ?? "").not.toContain("op read");
-      }
+      expectCredentialFreeProducerSteps(steps, cleanupName);
       const workflowPolicyDiagnostics28 = yield* workflowPolicyDiagnostics("cache-producer-prepare.yml", text);
       expect(workflowPolicyDiagnostics28).toEqual([]);
       const workflowPolicyDiagnostics29 = yield* workflowPolicyDiagnostics("heavy.yml", heavyText);
