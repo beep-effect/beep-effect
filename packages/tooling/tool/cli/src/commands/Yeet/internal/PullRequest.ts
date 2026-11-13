@@ -1115,6 +1115,67 @@ export const applyComputeProfileLabel = Effect.fn("Yeet.applyComputeProfileLabel
 });
 
 /**
+ * Label the pull request a publish created or found: the compute-profile
+ * worker label first (only for `yeet open`'s hosted-proof route), then the
+ * heavy-admission label.
+ *
+ * **Details**
+ *
+ * Every label event starts a Heavy Admit run, and the base ruleset reads only
+ * the newest run's check suite. On a same-repository pull request that carries
+ * `ready-for-heavy`, a later label's run waits behind the admitted run in the
+ * shared concurrency group, then re-reports that run's passing proof (every
+ * `Heavy / <lane>` skipped, no EC2 work) or skips (`heavy-admit.yml`). Adding
+ * the worker label first leaves the `ready-for-heavy` run the newest, so
+ * opening a pull request queues no second run behind the admitted matrix and
+ * leaves one Heavy Admit suite for the ruleset to read.
+ *
+ * **Example** (Build the label effect)
+ *
+ * ```ts
+ * import { applyPublishLabels, RepoRunContext, YeetEnsuredPullRequest } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ * import * as Ref from "effect/Ref"
+ *
+ * const context = RepoRunContext.make({
+ *   base: "origin/main", branch: "feature/x", cwd: ".", head: "HEAD", originalArgv: [],
+ *   packetDir: ".beep/yeet", repoRoot: ".", turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
+ * })
+ * const program = Effect.gen(function* () {
+ *   const recorder = yield* Ref.make([])
+ *   yield* applyPublishLabels(context, recorder, O.none(), YeetEnsuredPullRequest.make({ number: 1, created: true }), false)
+ * })
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param context - Repo context whose branch diff decides the docs-only skip.
+ * @param recorder - Execution recorder updated with the heavy-admission label lane.
+ * @param labelStep - Planned heavy-admission label step; `None` skips that label.
+ * @param pullRequest - The pull request the publish created or found.
+ * @param hostedProof - Whether this is `yeet open`'s hosted-proof route, which adds the worker label.
+ * @param dependencies - Injectable changed-path reader for tests.
+ * @returns An Effect that completes after both labels are added or skipped.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const applyPublishLabels = Effect.fn("Yeet.applyPublishLabels")(function* (
+  context: RepoRunContext,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  labelStep: O.Option<RepoPlanStep>,
+  pullRequest: YeetEnsuredPullRequest,
+  hostedProof: boolean,
+  dependencies: HeavyAdmissionLabelDependencies = {}
+): Effect.fn.Return<
+  void,
+  YeetCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git | YeetGithubServices
+> {
+  if (hostedProof) yield* applyComputeProfileLabel(pullRequest);
+  yield* applyHeavyAdmissionLabel(context, recorder, labelStep, pullRequest, dependencies);
+});
+
+/**
  * Ensure the current branch has an open PR whose head matches the branch.
  *
  * **Example** (Validate matching open PR)

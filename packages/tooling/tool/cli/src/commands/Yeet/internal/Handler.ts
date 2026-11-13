@@ -162,12 +162,7 @@ import {
   validatePublishBranch,
   warnOnMismatchedPublishUpstream,
 } from "./PublishScope.ts";
-import {
-  applyComputeProfileLabel,
-  applyHeavyAdmissionLabel,
-  ensurePullRequest,
-  YeetPrBodyRequest,
-} from "./PullRequest.ts";
+import { applyPublishLabels, ensurePullRequest, YeetPrBodyRequest } from "./PullRequest.ts";
 import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
 import { collectRemoteChecks, collectYeetStatus, renderYeetStatusSummary, writeYeetStatusSnapshot } from "./Status.ts";
 import { collectTurboPlanSnapshot } from "./TurboQuery.ts";
@@ -1278,13 +1273,15 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
       message,
       bodyRequest
     );
-    yield* applyHeavyAdmissionLabel(
+    // The worker label goes first, so the ready-for-heavy run is the newest Heavy Admit run and no later
+    // label run queues behind its matrix only to re-report it.
+    yield* applyPublishLabels(
       plan.context,
       recorder,
       A.findFirst(plan.steps, (step) => step.id === PR_HEAVY_ADMISSION_LABEL_STEP_ID),
-      ensured
+      ensured,
+      options.hostedProof
     );
-    if (options.hostedProof) yield* applyComputeProfileLabel(ensured);
     return ensured;
   }).pipe(provideYeetGhLogin(plan.context.repoRoot));
   const submitSteps = A.filter(monitorSteps, (step) => step.id === MONITOR_READY_SUBMIT_STEP_ID);

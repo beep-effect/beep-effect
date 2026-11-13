@@ -2,9 +2,11 @@ import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { GitHubError } from "@beep/github/GitHubError";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
+import { ComputeProfileProbe, makeComputeProfileProbe } from "@beep/repo-cli/test/RepoRun";
 import { GithubRest } from "@beep/repo-cli/test/SharedInternals";
 import {
   applyHeavyAdmissionLabel,
+  applyPublishLabels,
   buildYeetRunPlan,
   defaultYeetRunOptions,
   findOpenPullRequest,
@@ -31,7 +33,7 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
-import { captureGithub, provideLegacyGh, restPullRequest } from "./support/YeetGithub.ts";
+import { captureGithub, provideLegacyGh, recordedGithub, restPullRequest } from "./support/YeetGithub.ts";
 import type { YeetExecutedStep } from "@beep/repo-cli/test/Yeet";
 
 const context = RepoRunContext.make({
@@ -399,6 +401,30 @@ describe("Yeet pull request lifecycle boundaries", () => {
         expect(A.map(recorderValue6, (entry) => [entry.status, entry.result.exitCode])).toEqual([
           ["skipped", 0],
           ["failed", 1],
+        ]);
+      }).pipe(withGh(""))
+    );
+
+    // Every label starts a Heavy Admit run and admission is sticky, so the worker label goes first:
+    // the ready-for-heavy run is then the newest, the one suite the base ruleset reads.
+    it.effect("requests the worker label before ready-for-heavy when a worker opens a pull request", () =>
+      Effect.gen(function* () {
+        const github = recordedGithub((call) =>
+          Str.endsWith("/issues/42/labels")(call.path) ? { body: [{ name: "label" }] } : undefined
+        );
+        const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
+        const worker = makeComputeProfileProbe({
+          constrainedMemoryBytes: () => 7 * 1024 ** 3,
+          totalMemoryBytes: () => 125 * 1024 ** 3,
+          residentBytes: () => 0,
+        });
+        yield* applyPublishLabels(context, recorder, O.some(labelStep), created, true, {
+          changedPaths: () => Effect.succeed(["package.json"]),
+        }).pipe(github.provide, Effect.provideService(ComputeProfileProbe, worker));
+        const labelled = A.filter(github.calls, (call) => Str.endsWith("/issues/42/labels")(call.path));
+        expect(A.map(labelled, (call) => call.body)).toEqual([
+          { labels: ["compute-profile-worker"] },
+          { labels: ["ready-for-heavy"] },
         ]);
       }).pipe(withGh(""))
     );

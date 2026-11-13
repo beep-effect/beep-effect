@@ -21,7 +21,7 @@ P1 Implement and P3 Yeet run once per slice; a slice is a PR.
 | Slice | Status | First step | Done when |
 | --- | --- | --- | --- |
 | A, async merge | in-review: port published; P0 probes in [`research/merge-async-p0-probes-2026-11.md`](research/merge-async-p0-probes-2026-11.md); legacy call deleted on or after 2026-11-11 | Schema for the request and the outcome union; then the `GithubRest` call and poll. | The slice's own PR merges through the new path and a blocked PR shows the hold. |
-| B, rewrite-stable proof | in-review: head-move classifier, window carry and receipt carry on lane `feat/yeet-rewrite-stable-proof`; decisions `2026-11-12-*` | Head-move classifier over patch-ids, with the test's rewritten heads as fixtures. | Window and receipt survive an unchanged rewrite and restart on a changed one. |
+| B, rewrite-stable proof | done: merged as #3130 (`fc28855f26b`); decisions `2026-11-12-*` | Head-move classifier over patch-ids, with the test's rewritten heads as fixtures. | Window and receipt survive an unchanged rewrite and restart on a changed one. |
 | C, two-layer stacks | pending | Decide in P0 whether layers are linked through `gh stack` or the Stacks REST API. | One real two-layer stack lands through Yeet end to end. |
 | D, pilot | pending | Start the pilot record on the first routine stack. | Two weeks measured and the continue-or-stop decision filed. |
 

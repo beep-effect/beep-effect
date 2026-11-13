@@ -14,9 +14,24 @@ turbo work, so they are cheap to run mid-loop.
   is a PR that already existed before the publish, or one whose label edit
   failed. Only then run `bun run beep yeet gh pr label add <n> ready-for-heavy` (REST) yourself;
   the held `monitor --until-ready` loop prints that exact command and does not
-  burn its settle budget. Never remove and re-add the label.
+  burn its settle budget. Never remove and re-add the label, with one
+  exception: a `required-shadowed` hold from `yeet merge-gate` or `yeet gh`
+  (a required `Heavy / *` check green only in a Heavy Admit suite a newer run
+  replaced). Re-apply the label once: that admission label event runs the
+  heavy matrix again, so the newest run reports the check itself.
   The label triggers `heavy-admit.yml`, which runs only the admission job and
-  the heavy matrix for that head; tier 1 is neither cancelled nor re-run.
+  the heavy matrix for that head; tier 1 is neither cancelled nor re-run. On a
+  same-repository PR that already carries the label, any later label re-reports
+  a passing heavy proof on that head as passed without work (no EC2 run),
+  because the base ruleset reads only the newest Heavy Admit run's suite. With
+  no passing proof, a proof that ran another `heavy.yml@main` commit than the
+  later run calls (main moved since, so its lanes may differ), or a newer copy
+  of a heavy lane (Check's own suite on a reopened head) that is red or
+  unfinished, the later run skips, and the gates judge each hidden required
+  check by its newest copy: a red one is still `required-red` (relaxed mode
+  runs the own-red check on it), a green one is `required-shadowed`. An
+  optional check is judged on its newest run in any suite, so its red there
+  still holds strict mode and is recorded by a relaxed merge.
   Docs-only PRs (`docs/**`, `explorations/**`, `research/**`, `.changeset/*.md`,
   any `*.md`, packet prose) need no label: every heavy lane passes without work on
   a hosted runner and satisfies the ruleset. Removing the label changes nothing already reported;

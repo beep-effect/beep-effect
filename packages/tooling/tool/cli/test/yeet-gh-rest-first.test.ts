@@ -15,6 +15,7 @@ import {
   GithubCheckRunRecord,
   GithubPullRequestRecord,
   GithubRest,
+  GithubTransportFetch,
   GraphqlBudget,
   GraphqlBudgetDecisionInput,
   GraphqlBudgetExhausted,
@@ -30,15 +31,19 @@ import {
   decideYeetGhMergeGate,
   foldCommitMessage,
   latestCheckRunsByName,
+  layerYeetHeadMoveClassifierTest,
   provideYeetGhLogin,
   recordInheritedRedsWithRest,
   replacePullRequestBodyWithRest,
+  runYeetGhMerge,
+  SHADOWED_REQUIRED_REMEDY,
   spliceYeetInheritedRedsSection,
   YeetGhGateFacts,
+  YeetHeadMoveUnknown,
   YeetReadyInheritedRed,
   YeetReviewWindowUnknown,
 } from "@beep/repo-cli/test/Yeet";
-import { NodeCrypto } from "@effect/platform-node";
+import { NodeCrypto, NodeFileSystem } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertInstanceOf, assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -59,8 +64,24 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
+import {
+  ADMITTED_SUITE,
+  admittedSuite,
+  CHECK_SUITE,
+  checkSuite,
+  HEAVY_ADMIT_WORKFLOW,
+  LIVE_SUITE,
+  liveSuite,
+  pr3133Suites,
+  SHADOWED_CONTEXTS,
+  SKIPPED_RUN,
+  SKIPPED_SUITE,
+  skippedSuite,
+  workflowSuite,
+} from "./support/ShadowedSuites.ts";
 import { recordedGithub } from "./support/YeetGithub.ts";
 import type { GraphQLDocument } from "@beep/github/GraphQL";
+import type { GithubAnswer, GithubCall } from "./support/YeetGithub.ts";
 
 // Recorded REST payloads (trimmed to the fields the wire schemas read).
 const pullPayload = {
@@ -695,6 +716,97 @@ describe("REST merge gate", () => {
     expect(reasons(facts({ checkRuns: red, tolerated: ["Heavy / Coverage Regression"] }))).toEqual([]);
     expect(reasons(facts({ now: DateTime.makeUnsafe("2026-10-06T16:12:00Z"), forceWindow: true }))).toEqual([]);
   });
+
+  // #3133 (2026-11-12): a later label's Heavy Admit run skipped, so the ruleset read the heavy
+  // checks the earlier run reported as "expected".
+  it("refuses a required context green only in a suite a newer skipped Heavy Admit run replaced", () => {
+    const required = ["Lint", "Heavy / Test Integration", ...SHADOWED_CONTEXTS];
+    const suiteRun = (id: number, name: string, suite: number, conclusion = "success") =>
+      GithubCheckRunRecord.make({
+        id,
+        name,
+        status: "completed",
+        conclusion: O.some(conclusion),
+        checkSuiteId: O.some(suite),
+      });
+    const shadowFacts = (workflowSuites: typeof pr3133Suites, heavy = "success") =>
+      facts({
+        requiredContexts: O.some(required),
+        checkRuns: [
+          suiteRun(1, "Lint", CHECK_SUITE),
+          suiteRun(2, "Heavy / Test Integration", CHECK_SUITE),
+          ...A.map(SHADOWED_CONTEXTS, (name, index) => suiteRun(10 + index, name, ADMITTED_SUITE, heavy)),
+          suiteRun(20, "Heavy Admission", SKIPPED_SUITE, "skipped"),
+          suiteRun(21, "Heavy", SKIPPED_SUITE, "skipped"),
+        ],
+        workflowSuites,
+      });
+    const refused = decideYeetGhMergeGate(shadowFacts(pr3133Suites));
+    expect(refused.findings).toMatchObject([
+      {
+        reason: "required-shadowed",
+        detail: `the ruleset reads these as expected: Heavy / Check, Heavy / Docgen, Heavy / Doctest passed only in check suite ${ADMITTED_SUITE}, replaced by newer ${HEAVY_ADMIT_WORKFLOW} pull_request run ${SKIPPED_RUN} (skipped); ${SHADOWED_REQUIRED_REMEDY}`,
+      },
+    ]);
+    // A refusal, not a hold: `yeet gh merge` exits 1, as for a required red.
+    expect(refused.onlyHolds).toBe(false);
+    expect(decideYeetGhMergeGate(shadowFacts([checkSuite, admittedSuite])).met).toBe(true);
+    // While the newer run is still going it may yet re-report them: a hold (exit 75).
+    const running = decideYeetGhMergeGate(
+      shadowFacts([
+        checkSuite,
+        admittedSuite,
+        workflowSuite({ ...skippedSuite, status: "in_progress", conclusion: O.none() }),
+      ])
+    );
+    expect(A.map(running.findings, (finding) => finding.reason)).toEqual(["required-pending"]);
+    expect(running.onlyHolds).toBe(true);
+    // A red admitted run hidden by the later skipped run is a refusal (exit 1), never a pending
+    // hold (exit 75) that time cannot clear, even while the replacing run is still going.
+    for (const suites of [
+      pr3133Suites,
+      [checkSuite, admittedSuite, workflowSuite({ ...skippedSuite, status: "in_progress", conclusion: O.none() })],
+    ]) {
+      const hiddenRed = decideYeetGhMergeGate(shadowFacts(suites, "failure"));
+      expect(A.map(hiddenRed.findings, (finding) => finding.reason)).toEqual(["required-red"]);
+      expect(hiddenRed.onlyHolds).toBe(false);
+    }
+    expect(decideYeetGhMergeGate(shadowFacts(pr3133Suites, "failure")).findings).toMatchObject([
+      {
+        reason: "required-red",
+        detail: `red in a replaced check suite: Heavy / Check=failure, Heavy / Docgen=failure, Heavy / Doctest=failure failed only in check suite ${ADMITTED_SUITE}, replaced by newer ${HEAVY_ADMIT_WORKFLOW} pull_request run ${SKIPPED_RUN} (skipped)`,
+      },
+    ]);
+    // The admitted run re-run after a later run reported the heavy checks: the copy's higher ids
+    // never override the live suite, so a red copy holds nothing and a green copy hides no red.
+    const rerunFacts = (live: string, copy: string) =>
+      facts({
+        requiredContexts: O.some(required),
+        checkRuns: [
+          ...shadowFacts(pr3133Suites).checkRuns,
+          ...A.map(SHADOWED_CONTEXTS, (name, index) => suiteRun(30 + index, name, LIVE_SUITE, live)),
+          ...A.map(SHADOWED_CONTEXTS, (name, index) => suiteRun(40 + index, name, ADMITTED_SUITE, copy)),
+        ],
+        workflowSuites: [...pr3133Suites, liveSuite],
+      });
+    expect(decideYeetGhMergeGate(rerunFacts("success", "failure")).met).toBe(true);
+    expect(reasons(rerunFacts("failure", "success"))).toEqual(["required-red"]);
+    // A re-report (heavy.yml with `admitted: false`) reports each lane skipped, which passes.
+    expect(decideYeetGhMergeGate(rerunFacts("skipped", "success")).met).toBe(true);
+    // An optional red the admitted run reported is still `check-red`: the ruleset reads required contexts only.
+    const optionalRed = facts({
+      requiredContexts: O.some(required),
+      checkRuns: [
+        ...shadowFacts(pr3133Suites).checkRuns,
+        suiteRun(15, "Heavy / Lint Policy", ADMITTED_SUITE, "failure"),
+      ],
+      workflowSuites: pr3133Suites,
+    });
+    expect(decideYeetGhMergeGate(optionalRed).findings).toMatchObject([
+      { reason: "required-shadowed" },
+      { reason: "check-red", detail: `Heavy / Lint Policy=failure (attribute it, then --tolerate "<name>")` },
+    ]);
+  });
 });
 
 const comment = (login: string, isBot = false) =>
@@ -807,6 +919,112 @@ it.layer(NodeCrypto.layer)("the gh-login edge", (it) => {
       expect(error.message).toMatch(/^GitHub access failed \(/u);
       expect(error._tag).toBe("YeetCommandError");
     }).pipe(withSpawner(""))
+  );
+});
+
+// #3133 end to end: `yeet gh merge` reads the head's check runs with their suites and its workflow
+// runs over the recorded REST transport, refuses the shadowed checks and never sends the merge.
+// The window and head-move reads have nothing to classify here (the window is forced).
+it.layer(
+  Layer.mergeAll(
+    NodeCrypto.layer,
+    NodeFileSystem.layer,
+    layerYeetHeadMoveClassifierTest((request) => YeetHeadMoveUnknown.make({ ...request, reason: "fixture" }))
+  )
+)("yeet gh merge over recorded REST (#3133)", (it) => {
+  const headSha = pullPayload.head.sha;
+  const required = ["Lint", ...SHADOWED_CONTEXTS];
+  const checkRun = (id: number, name: string, suite: number, conclusion: string) => ({
+    id,
+    name,
+    status: "completed",
+    conclusion,
+    check_suite: { id: suite },
+  });
+  const routes =
+    (heavy: string) =>
+    (call: GithubCall): GithubAnswer | undefined => {
+      if (call.path === "{repo}/pulls/1501") return { body: pullPayload };
+      if (call.path === "{repo}/rules/branches/main")
+        return {
+          body: [
+            {
+              type: "required_status_checks",
+              parameters: { required_status_checks: A.map(required, (context) => ({ context })) },
+            },
+          ],
+        };
+      if (call.path === `{repo}/commits/${headSha}/check-runs`)
+        return {
+          body: {
+            total_count: 6,
+            check_runs: [
+              checkRun(1, "Lint", CHECK_SUITE, "success"),
+              ...A.map(SHADOWED_CONTEXTS, (name, index) => checkRun(10 + index, name, ADMITTED_SUITE, heavy)),
+              checkRun(20, "Heavy Admission", SKIPPED_SUITE, "skipped"),
+              checkRun(21, "Heavy", SKIPPED_SUITE, "skipped"),
+            ],
+          },
+        };
+      if (call.path === "{repo}/actions/runs" && call.query.get("head_sha") === headSha)
+        return {
+          body: {
+            total_count: A.length(pr3133Suites),
+            workflow_runs: A.map(pr3133Suites, (suite) => ({
+              id: suite.runId,
+              name: "Heavy Admit",
+              head_sha: headSha,
+              status: suite.status,
+              conclusion: O.getOrNull(suite.conclusion),
+              check_suite_id: suite.checkSuiteId,
+              path: suite.workflowPath,
+              event: suite.event,
+              created_at: DateTime.formatIso(suite.createdAt),
+            })),
+          },
+        };
+      // No inline review comments: the REST fallback proves zero threads when GraphQL is not served.
+      if (call.path === "{repo}/pulls/1501/comments") return { body: [] };
+      return undefined;
+    };
+  const ghAuthToken = ScriptedSpawner.make((command, args) =>
+    A.join([command, ...args], " ") === "gh auth token"
+      ? { stdout: "gho_operator\n" }
+      : { exit: 1, stderr: "yeet gh merge spawns only gh auth token here" }
+  );
+
+  // The admitted run's heavy lanes green (shadowed) or red (a hidden red): both refuse with exit 1.
+  const refusesWithoutMerging = Effect.fnUntraced(function* (heavy: string, reason: string) {
+    const github = recordedGithub(routes(heavy));
+    const failure = yield* runYeetGhMerge({
+      tokenRef: O.none(),
+      number: 1501,
+      sha: headSha,
+      tolerate: [],
+      forceWindow: true,
+      dryRun: false,
+      noWait: true,
+    }).pipe(
+      Effect.flip,
+      Effect.provideService(GithubTransportFetch, O.some(github.fetch)),
+      provideSpawner(ghAuthToken),
+      Effect.provideService(
+        ConfigProvider.ConfigProvider,
+        ConfigProvider.fromUnknown({ GH_REPO: "beep-effect/beep-effect" })
+      )
+    );
+    expect(failure).toMatchObject({ _tag: "CliReportedExit", exitCode: 1 });
+    expect(failure.message).toBe(`[gh] not merging #1501: ${reason}`);
+    expect(A.some(github.calls, (call) => call.path === "{repo}/actions/runs")).toBe(true);
+    expect(A.some(github.calls, (call) => call.method === "PUT" || Str.includes("/merge")(call.path))).toBe(false);
+  });
+
+  it.effect("refuses required-shadowed with exit 1 and sends no merge request", () =>
+    refusesWithoutMerging("success", "required-shadowed")
+  );
+
+  it.effect("refuses a hidden red as required-red with exit 1, not a pending hold (75)", () =>
+    refusesWithoutMerging("failure", "required-red")
   );
 });
 

@@ -6,10 +6,36 @@ name: Heavy Admit
 # `labeled` type on check.yml would cancel and re-run them), and it never
 # skips them either: a tier-1 job skipped on a `labeled` run would report a
 # skipped check run that GitHub counts as success, masking an earlier red on
-# the same SHA. Other labels are ignored at job level, so `size/*` from the
-# pr-size job uses GITHUB_TOKEN and does not trigger workflows. Human or
-# agent labels do start runs, in a separate non-admission concurrency group. Pushes after the label go through check.yml's own admission job,
-# which reads the sticky label.
+# the same SHA. `size/*` from the pr-size job uses GITHUB_TOKEN and does not
+# trigger workflows. Pushes after the label go through check.yml's own
+# admission job, which reads the sticky label.
+#
+# Every other label still starts a run (GitHub cannot filter `labeled` by
+# label name), and at merge the base ruleset reads, per workflow and event on
+# the head, only the newest run's check suite. A run that skipped would hide
+# the `Heavy / *` checks an earlier admitted run reported: they read as
+# "expected" (#3133, 2026-11-12, after `unblocks-main`). So on a
+# same-repository pull request that carries `ready-for-heavy`, a later label
+# re-reports instead of re-running. The admission job lists this head's
+# earlier Heavy Admit runs; when the newest one that reported heavy lanes
+# succeeded, ran the same heavy.yml commit this run calls (a lane main added
+# or renamed since then never ran on this head), and every other copy of
+# those lanes on the head that is newer than that proof has passed (a
+# reopened head's Check suite re-runs them), it
+# calls heavy.yml with `admitted: false`, and every `Heavy / <lane>` is
+# reported `skipped`, which the ruleset counts as passing, in the newest suite
+# with no EC2 work. Cost: one short hosted job per label. Re-running the
+# matrix instead would repeat every affected heavy task on EC2, because
+# pull-request runs only read the Turbo main cache. Otherwise the label skips,
+# as before: no proof on this head to repeat (none yet, a red or cancelled
+# matrix, or one still running), a proof that ran another heavy.yml commit
+# (any later commit on main, since `@main` resolves per run), or a newer copy
+# that is red or unfinished, so a skipped re-report never masks a red or a
+# lane the proof never ran. What remains: fork admission is
+# event-label-only, and a label on a head without passing proof records a
+# skipped suite too. `yeet merge-gate`, `yeet gh` and `yeet gate-table` judge
+# a check it hides by its newest hidden copy: a red copy stays red (and goes
+# through the relaxed own-red check), a green one is held as shadowed.
 
 on:
   pull_request:
@@ -17,13 +43,16 @@ on:
     types: [labeled]
 
 # No cancel-in-progress: every `labeled` event (any label, from any actor)
-# starts a run. Admission labels have a distinct group so unrelated labels
-# cannot replace a pending admission. Cancelling would kill the heavy matrix a
-# previous `ready-for-heavy` run is executing. Runs for other labels skip at
-# job level; a superseded head's matrix is cancelled by check.yml's
-# admission job, never by a later label.
+# starts a run, and cancelling would kill the heavy matrix an earlier admitted
+# run is executing. Runs that admit or re-report (the admission job's
+# predicate) share one group: a later label's run waits behind an executing
+# admitted run and decides once that run has completed, and a newer run in
+# the group replaces only a pending one. Runs that skip outright use the other
+# group and cannot replace a pending admission. A superseded head's runs are
+# cancelled by check.yml's admission job, pending ones included, never by a
+# later label.
 concurrency:
-  group: heavy-admit-${{ github.ref }}-${{ github.event.label.name == 'ready-for-heavy' || github.event.label.name == 'ready-for-heavy-fork' }}
+  group: heavy-admit-${{ github.ref }}-${{ (github.event.pull_request.head.repo.full_name == github.repository && contains(github.event.pull_request.labels.*.name, 'ready-for-heavy')) || github.event.label.name == 'ready-for-heavy' || github.event.label.name == 'ready-for-heavy-fork' }}
   cancel-in-progress: false
 
 permissions:
@@ -36,19 +65,131 @@ env:
 jobs:
   admission:
     name: Heavy Admission
-    if: github.event.label.name == 'ready-for-heavy' || github.event.label.name == 'ready-for-heavy-fork'
+    # An admission label event admits; a later label on a same-repository head that carries
+    # `ready-for-heavy` re-reports or skips. Forks admit only on an admission label event.
+    if: (github.event.pull_request.head.repo.full_name == github.repository && contains(github.event.pull_request.labels.*.name, 'ready-for-heavy')) || github.event.label.name == 'ready-for-heavy' || github.event.label.name == 'ready-for-heavy-fork'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
+      # The re-report step lists this head's earlier Heavy Admit runs and their jobs,
+      actions: read
+      # and every check run on the head, so it never masks a newer copy of a lane it re-reports.
+      checks: read
+    env:
+      ADMISSION_LABEL_EVENT: ${{ github.event.label.name == 'ready-for-heavy' || github.event.label.name == 'ready-for-heavy-fork' }}
     outputs:
-      verdict: ${{ steps.decide.outputs.verdict || steps.docs.outputs.verdict }}
-      admitted: ${{ steps.decide.outputs.admitted || steps.docs.outputs.admitted }}
+      verdict: ${{ steps.decide.outputs.verdict || steps.docs.outputs.verdict || steps.rereport.outputs.verdict }}
+      admitted: ${{ steps.decide.outputs.admitted || steps.docs.outputs.admitted || steps.rereport.outputs.admitted }}
       docs_only: ${{ steps.decide.outputs.docs_only || steps.docs.outputs.docs_only }}
       route_skips: ${{ steps.decide.outputs.route_skips }}
       route_receipt: ${{ steps.decide.outputs.route_receipt }}
     steps:
+      # A later label never decides admission again: it repeats a passing proof
+      # without work, or leaves the heavy caller skipped. A read that fails
+      # skips, and the merge gates judge any check that leaves hidden by its
+      # newest hidden copy.
+      - name: Re-report the head's heavy proof
+        id: rereport
+        if: env.ADMISSION_LABEL_EVENT != 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          # The commit of heavy.yml a run calls, from its referenced workflows; "none" when it names none.
+          heavy_def='def heavy_sha: [(.referenced_workflows // [])[]
+            | select((.path // "") | split("@") | .[0] | endswith("/.github/workflows/heavy.yml"))
+            | .sha] | first // "none";'
+          # This head's earlier Heavy Admit runs for this event, newest first, this run excluded.
+          if ! runs="$(gh api --method GET --paginate \
+              "repos/${GH_REPO}/actions/workflows/heavy-admit.yml/runs" \
+              -f head_sha="$HEAD_SHA" -f event=pull_request -f per_page=100 </dev/null \
+            | jq -rs --argjson self "$RUN_ID" "${heavy_def}"'
+                [.[].workflow_runs[]? | select(.id != $self)]
+                | sort_by(.created_at, .id) | reverse | .[]
+                | [.id, .status, (.conclusion // "none"), (.check_suite_id // 0), heavy_sha] | @tsv')"; then
+            echo "::warning::Could not list this head's Heavy Admit runs; skipping without a re-report."
+            exit 0
+          fi
+          proof_suite=""
+          proof_heavy=""
+          while IFS=$'\t' read -r run_id status conclusion suite_id run_heavy; do
+            [[ -n "$run_id" ]] || continue
+            if [[ "$status" != "completed" ]]; then
+              echo "Heavy Admit run ${run_id} is still ${status}: no finished proof to re-report."
+              break
+            fi
+            # A run that skipped, held or was cancelled before its matrix started reports no lane.
+            if ! lanes="$(gh api --method GET --paginate "repos/${GH_REPO}/actions/runs/${run_id}/jobs" \
+                -f filter=latest -f per_page=100 </dev/null \
+              | jq -s '[.[].jobs[]? | select(.name | startswith("Heavy / "))] | length')"; then
+              echo "::warning::Could not read the jobs of Heavy Admit run ${run_id}; skipping without a re-report."
+              break
+            fi
+            if [[ "$lanes" == "0" ]]; then
+              echo "Heavy Admit run ${run_id} (${conclusion}) reported no heavy lane; reading the run before it."
+              continue
+            fi
+            if [[ "$conclusion" != "success" ]]; then
+              echo "Heavy Admit run ${run_id} concluded ${conclusion}: nothing to re-report."
+            elif [[ "$suite_id" == "0" ]]; then
+              echo "::warning::Heavy Admit run ${run_id} names no check suite; skipping without a re-report."
+            else
+              proof_suite="$suite_id"
+              proof_heavy="$run_heavy"
+              echo "Heavy Admit run ${run_id} proved this head in check suite ${suite_id}."
+            fi
+            break
+          done <<< "$runs"
+          if [[ -z "$proof_suite" ]]; then
+            echo "No passing heavy proof on this head: the heavy caller skips."
+            exit 0
+          fi
+          # The re-report emits the lanes of the heavy.yml this run calls (`@main`, resolved when the
+          # run was created). A lane main added or renamed since the proof never ran on this head, so
+          # re-report only when the proof ran the same heavy.yml commit.
+          if ! self_heavy="$(gh api "repos/${GH_REPO}/actions/runs/${RUN_ID}" </dev/null \
+            | jq -r "${heavy_def} heavy_sha")"; then
+            echo "::warning::Could not read which heavy.yml this run calls; skipping without a re-report."
+            exit 0
+          fi
+          if [[ "$proof_heavy" == "none" || "$self_heavy" == "none" || "$proof_heavy" != "$self_heavy" ]]; then
+            echo "The proof ran heavy.yml at ${proof_heavy}, this run calls it at ${self_heavy}: its lanes may differ, so the heavy caller skips without a re-report."
+            exit 0
+          fi
+          # The re-report adds newer skipped copies of the proof's `Heavy / <lane>` checks. Every
+          # other copy of those lanes newer than the proof's own (a reopened head's Check suite
+          # re-runs them) must already have passed, or the skipped copy would mask it.
+          if ! unproven="$(gh api --method GET --paginate "repos/${GH_REPO}/commits/${HEAD_SHA}/check-runs" \
+              -f filter=all -f per_page=100 </dev/null \
+            | jq -rs --argjson suite "$proof_suite" '
+                [.[].check_runs[]?] as $runs
+                | [$runs[] | select(.check_suite.id == $suite and (.name | startswith("Heavy / ")))] as $proof
+                | $runs[]
+                | select(.check_suite.id != $suite)
+                | . as $copy
+                | ([$proof[] | select(.name == $copy.name) | .id] | max) as $proved
+                | select($proved != null and .id > $proved)
+                | select(.status != "completed" or ((.conclusion // "") | IN("success", "skipped", "neutral") | not))
+                | "\(.name): \(.status), \(.conclusion // "no conclusion") (check run \(.id))"')"; then
+            echo "::warning::Could not read this head's check runs; skipping without a re-report."
+            exit 0
+          fi
+          if [[ -n "$unproven" ]]; then
+            echo "A newer copy of the proof's heavy lanes has not passed; skipping so the re-report masks nothing:"
+            printf '%s\n' "$unproven"
+            exit 0
+          fi
+          echo "Re-reporting the proof's heavy lanes as passed without work."
+          echo "verdict=skip-satisfied" >> "$GITHUB_OUTPUT"
+          echo "admitted=false" >> "$GITHUB_OUTPUT"
+
       - name: Checkout repository
+        if: env.ADMISSION_LABEL_EVENT == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
@@ -56,21 +197,24 @@ jobs:
           persist-credentials: false
 
       - name: Fetch pull request base
+        if: env.ADMISSION_LABEL_EVENT == 'true'
         shell: bash
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       - name: Fetch beep CI binary
+        if: env.ADMISSION_LABEL_EVENT == 'true'
         uses: ./.github/actions/fetch-beep-ci
 
       - name: Classify pinned pull request diff
         id: profile
+        if: env.ADMISSION_LABEL_EVENT == 'true'
         shell: bash
         run: beep ci change-profile
 
       - name: Satisfy documentation-only admission
         id: docs
-        if: steps.profile.outputs.docs_only == 'true' && github.event.pull_request.head.repo.full_name == github.repository
+        if: env.ADMISSION_LABEL_EVENT == 'true' && steps.profile.outputs.docs_only == 'true' && github.event.pull_request.head.repo.full_name == github.repository
         shell: bash
         run: |
           echo "verdict=skip-satisfied" >> "$GITHUB_OUTPUT"
@@ -79,13 +223,13 @@ jobs:
           echo "Documentation-only diff: no dependency installation or heavy proof needed."
 
       - name: Setup monorepo CI
-        if: steps.docs.outputs.verdict != 'skip-satisfied'
+        if: env.ADMISSION_LABEL_EVENT == 'true' && steps.docs.outputs.verdict != 'skip-satisfied'
         uses: ./.github/actions/setup-monorepo-ci
         with:
           free-disk: "false"
 
       - name: Decide heavy admission
-        if: steps.docs.outputs.verdict != 'skip-satisfied'
+        if: env.ADMISSION_LABEL_EVENT == 'true' && steps.docs.outputs.verdict != 'skip-satisfied'
         id: decide
         shell: bash
         run: bun run beep ci admission --github-output
@@ -105,6 +249,8 @@ jobs:
     uses: beep-effect/beep-effect/.github/workflows/heavy.yml@main
     secrets: inherit
     with:
+      # `skip-satisfied` (a documentation-only head, or a re-reported proof) reports every lane
+      # `skipped` before runner allocation.
       admitted: ${{ needs.admission.outputs.verdict == 'run' }}
       # Verification route: the label path is usually a PR's first admission, so it forwards the
       # same route skips and receipt as check.yml.

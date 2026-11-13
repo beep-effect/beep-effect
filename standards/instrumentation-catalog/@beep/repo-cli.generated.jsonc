@@ -3656,6 +3656,7 @@
     {"name":"Yeet.appendYeetInboxRowOnce","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.applyComputeProfileLabel","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.applyHeavyAdmissionLabel","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Yeet.applyPublishLabels","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.artifactDirForContext","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.assertMergeOnlyPublish","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.assertNoUnresolvedReviewThreads","owner":"@beep/repo-cli","family":"tooling","conforms":true},

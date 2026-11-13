@@ -6,6 +6,8 @@ import {
   decideMergeGate,
   GateTableCommandOptions,
   GateTableReportJson,
+  HeadSuiteCheck,
+  hiddenRequiredChecks,
   MERGE_GATE_OWNER_HOLD_LABEL,
   MERGE_GATE_S11_DEFAULT_ATTRIBUTION,
   MERGE_GATE_UNBLOCKS_MAIN_LABEL,
@@ -20,15 +22,19 @@ import {
   MergeGateRead,
   MergeGateRunOptions,
   MergeGateTolerance,
+  mergeGateGoodConclusion,
+  mergeGateRequestsBypass,
   parseMergeGateTolerance,
   provenanceFooterBeforeMergeForTesting,
   RepoRunContext,
+  RequiredShadowInput,
   readAuthenticatedMergeGate,
   readMergeGate,
   renderMergeGateDecision,
   runMergeGate,
   runYeetGateTable,
   runYeetMergeGate,
+  SHADOWED_REQUIRED_REMEDY,
   SquashCommitlintFail,
   SquashCommitlintOffendingLine,
   SquashCommitlintPass,
@@ -66,6 +72,23 @@ import openThreadsFixture from "./fixtures/yeet-merge-gate/threads-open.json" wi
 import timelineFixture from "./fixtures/yeet-merge-gate/timeline.json" with { type: "json" };
 import { githubFetch, reply } from "./support/GithubFetch.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
+import {
+  ADMITTED_SUITE,
+  admittedSuite,
+  CHECK_SUITE,
+  checkSuite,
+  HEAVY_ADMIT_WORKFLOW,
+  LIVE_SUITE,
+  liveSuite,
+  pr3133Suites,
+  SHADOWED_CONTEXTS,
+  SKIPPED_RUN,
+  SKIPPED_SUITE,
+  skippedSuite,
+  skippedSuiteChecks,
+  suiteOfCheck,
+  workflowSuite,
+} from "./support/ShadowedSuites.ts";
 import { legacyGhAnswer, legacyGhArgs, recordedGithub } from "./support/YeetGithub.ts";
 import { rewriteWindowScenario } from "./support/YeetHeadMove.ts";
 import type { GithubAnswer, GithubCall } from "./support/YeetGithub.ts";
@@ -883,6 +906,314 @@ describe("yeet merge-gate --relaxed own versus inherited reds (S11, 2026-11-02)"
   });
 });
 
+// #3133 (2026-11-12): a later label's Heavy Admit run skipped, so the ruleset read the
+// heavy checks the earlier run reported as "expected" while the gate read them green.
+describe("yeet merge-gate shadowed required checks (#3133)", () => {
+  // The recorded #1459 head, each run tagged with the suite it reported into on #3133, plus the
+  // skipped run's two jobs.
+  const suiteRuns = (suiteOf: (name: string) => O.Option<number>) => [
+    ...A.map(fixtureRuns, (run) => MergeGateCheckRun.make({ ...run, checkSuiteId: suiteOf(run.name) })),
+    ...A.map(skippedSuiteChecks, ({ id, name }) =>
+      MergeGateCheckRun.make({
+        id,
+        name,
+        status: "completed",
+        conclusion: "skipped",
+        checkSuiteId: O.some(SKIPPED_SUITE),
+      })
+    ),
+  ];
+  const pr3133Runs = suiteRuns(flow(suiteOfCheck, O.some));
+  const shadowRead = (overrides: Partial<Parameters<typeof MergeGateRead.make>[0]> = {}) =>
+    read({ checkRuns: pr3133Runs, workflowSuites: pr3133Suites, ...overrides });
+  const decide = (observed: MergeGateRead, relaxed = false) =>
+    decideMergeGate(MergeGateInput.make({ read: observed, options: options({ relaxed }) }));
+  const hiddenOf = (observed: MergeGateRead) =>
+    hiddenRequiredChecks(
+      RequiredShadowInput.make({
+        requiredContexts: requiredContexts,
+        checks: A.map(observed.checkRuns, (run) =>
+          HeadSuiteCheck.make({
+            id: run.id,
+            name: run.name,
+            checkSuiteId: run.checkSuiteId,
+            verdict: run.status !== "completed" ? "pending" : mergeGateGoodConclusion(run.conclusion) ? "green" : "red",
+            conclusion: O.fromNullishOr(run.conclusion),
+          })
+        ),
+        suites: observed.workflowSuites,
+      })
+    );
+  const replaced = `replaced by newer ${HEAVY_ADMIT_WORKFLOW} pull_request run ${SKIPPED_RUN} (skipped)`;
+
+  it("names the three heavy checks green only in the replaced suite, and nothing else", () => {
+    const shadowed = hiddenOf(shadowRead());
+    expect(A.map(shadowed, (entry) => entry.context)).toEqual(SHADOWED_CONTEXTS);
+    expect(A.dedupe(A.map(shadowed, (entry) => entry.state))).toEqual(["shadowed"]);
+    expect(A.dedupe(A.map(shadowed, (entry) => entry.hiddenIn.checkSuiteId))).toEqual([ADMITTED_SUITE]);
+    expect(A.dedupe(A.map(shadowed, (entry) => entry.replacedBy.runId))).toEqual([SKIPPED_RUN]);
+    assertSome(A.head(A.map(shadowed, (entry) => entry.replacedBy.conclusion)), O.some("skipped"));
+  });
+
+  it("strict: holds required-shadowed naming the checks, the replacing run and the remedy", () => {
+    const decision = decide(shadowRead());
+    expect(holdReason(decision)).toBe("required-shadowed");
+    expect(renderMergeGateDecision(decision)).toBe(
+      `#${pullFixture.number} HOLD required-shadowed: required context(s) the ruleset reads as expected: ` +
+        `Heavy / Check, Heavy / Docgen, Heavy / Doctest passed only in check suite ${ADMITTED_SUITE}, ${replaced}; ` +
+        SHADOWED_REQUIRED_REMEDY
+    );
+  });
+
+  it("relaxed: merges with every shadowed check attributed and asks for the rules bypass", () => {
+    const tolerated = MergeGateTolerance.make({ check: "Heavy / Docgen", attribution: "re-applied in #3135" });
+    const decision = decideMergeGate(
+      MergeGateInput.make({ read: shadowRead(), options: options({ relaxed: true, tolerate: [tolerated] }) })
+    );
+    expect(decision._tag).toBe("merge");
+    if (decision._tag !== "merge") return;
+    const evidence = `shadowed: passed in check suite ${ADMITTED_SUITE}; newer ${HEAVY_ADMIT_WORKFLOW} pull_request run ${SKIPPED_RUN} (skipped) replaced it, so the ruleset reads it as expected`;
+    expect(A.map(decision.atMerge, (entry) => [entry.check, entry.state, entry.required, entry.attribution])).toEqual([
+      ["Heavy / Check", "shadowed", true, evidence],
+      ["Heavy / Docgen", "shadowed", true, "re-applied in #3135"],
+      ["Heavy / Doctest", "shadowed", true, evidence],
+    ]);
+    expect(mergeGateRequestsBypass(decision)).toBe(true);
+    assertInclude(renderMergeGateDecision(decision), `GATE-MET (S11)`);
+    assertInclude(renderMergeGateDecision(decision), `shadowed at merge: Heavy / Check [${evidence}]`);
+  });
+
+  it("one admitted Heavy Admit run only: no hold", () => {
+    const observed = shadowRead({
+      checkRuns: A.take(pr3133Runs, A.length(fixtureRuns)),
+      workflowSuites: [checkSuite, admittedSuite],
+    });
+    expect(hiddenOf(observed)).toEqual([]);
+    expect(decide(observed)._tag).toBe("merge");
+  });
+
+  // The heavy checks with one conclusion, all reported into `suite`, ids from `firstId`.
+  const heavyRuns = (conclusion: string, suite: number, firstId: number) =>
+    A.map(SHADOWED_CONTEXTS, (name, index) =>
+      MergeGateCheckRun.make({
+        id: firstId + index,
+        name,
+        status: "completed",
+        conclusion,
+        checkSuiteId: O.some(suite),
+      })
+    );
+
+  it("a newer successful run that re-reports the checks: no hold", () => {
+    // `skipped` is how a re-report (heavy.yml called with `admitted: false`) reports each lane.
+    for (const conclusion of ["success", "skipped"]) {
+      const observed = shadowRead({
+        checkRuns: [...pr3133Runs, ...heavyRuns(conclusion, LIVE_SUITE, 112231400000)],
+        workflowSuites: [...pr3133Suites, liveSuite],
+      });
+      expect(hiddenOf(observed)).toEqual([]);
+      expect(decide(observed)._tag).toBe("merge");
+    }
+  });
+
+  // rerun-runner-loss re-ran the admitted run after a later run reported the heavy checks: the
+  // re-run keeps the older created_at, so its suite stays replaced while its check runs take ids
+  // above the live suite's. The gate judges the live run, as the ruleset does.
+  const rerunRead = (live: string, copy: string) =>
+    shadowRead({
+      checkRuns: [
+        ...pr3133Runs,
+        ...heavyRuns(live, LIVE_SUITE, 112231400000),
+        ...heavyRuns(copy, ADMITTED_SUITE, 112231500000),
+      ],
+      workflowSuites: [...pr3133Suites, liveSuite],
+    });
+
+  it("(a) a red copy in a replaced suite, re-run with higher ids, never holds the green live run", () => {
+    const observed = rerunRead("success", "failure");
+    expect(hiddenOf(observed)).toEqual([]);
+    expect(decide(observed)._tag).toBe("merge");
+    const relaxed = decide(observed, true);
+    expect(relaxed._tag).toBe("merge");
+    if (relaxed._tag !== "merge") return;
+    expect(relaxed.atMerge).toEqual([]);
+    expect(mergeGateRequestsBypass(relaxed)).toBe(false);
+  });
+
+  it("(b) a green copy in a replaced suite, re-run with higher ids, never hides the red live run", () => {
+    const observed = rerunRead("failure", "success");
+    expect(hiddenOf(observed)).toEqual([]);
+    const strict = decide(observed);
+    expect(holdReason(strict)).toBe("required-red");
+    for (const context of SHADOWED_CONTEXTS) assertInclude(renderMergeGateDecision(strict), context);
+    // Relaxed mode gets the own-red check (green on the merge-base), so it holds: no merge, no bypass.
+    const relaxed = decide(observed, true);
+    expect(holdReason(relaxed)).toBe("own-red");
+    assertInclude(renderMergeGateDecision(relaxed), `Heavy / Check (base run ${baseRunIdOf("Heavy / Check")} green`);
+  });
+
+  it("a newer run still going holds as required-pending, not as a remedy to apply", () => {
+    const running = workflowSuite({
+      runId: SKIPPED_RUN,
+      checkSuiteId: SKIPPED_SUITE,
+      createdAt: DateTime.makeUnsafe("2026-11-12T23:28:51Z"),
+      status: "in_progress",
+      conclusion: O.none(),
+    });
+    const decision = decide(shadowRead({ workflowSuites: [checkSuite, admittedSuite, running] }));
+    expect(holdReason(decision)).toBe("required-pending");
+    assertInclude(renderMergeGateDecision(decision), `run ${SKIPPED_RUN} (still in_progress)`);
+  });
+
+  it("a red newest run is reported red, not shadowed", () => {
+    const red = MergeGateCheckRun.make({
+      id: 112231300003,
+      name: "Heavy / Check",
+      status: "completed",
+      conclusion: "failure",
+      checkSuiteId: O.some(SKIPPED_SUITE),
+    });
+    const observed = shadowRead({ checkRuns: [...pr3133Runs, red] });
+    expect(A.map(hiddenOf(observed), (entry) => entry.context)).toEqual(["Heavy / Docgen", "Heavy / Doctest"]);
+    expect(holdReason(decide(observed))).toBe("required-red");
+  });
+
+  // A required red that exists only in a replaced suite is judged red, never dropped: a later
+  // label's skipped run must not let a relaxed merge bypass the rules over the PR's own red.
+  const hiddenRedRuns = A.map(pr3133Runs, (run) =>
+    A.contains(SHADOWED_CONTEXTS, run.name) ? MergeGateCheckRun.make({ ...run, conclusion: "failure" }) : run
+  );
+  const hiddenRed =
+    `Heavy / Check=failure, Heavy / Docgen=failure, Heavy / Doctest=failure failed only in check suite ` +
+    `${ADMITTED_SUITE}, ${replaced}`;
+
+  it("one red admitted run, then a later skip run: strict required-red, relaxed own-red, no bypass", () => {
+    const observed = shadowRead({ checkRuns: hiddenRedRuns });
+    expect(A.dedupe(A.map(hiddenOf(observed), (entry) => entry.state))).toEqual(["red"]);
+    expect(renderMergeGateDecision(decide(observed))).toBe(
+      `#${pullFixture.number} HOLD required-red: required red in a replaced check suite: ${hiddenRed}`
+    );
+    // The base is green, so the red is the PR's own: relaxed mode holds, so nothing merges or bypasses.
+    const relaxed = decide(observed, true);
+    expect(holdReason(relaxed)).toBe("own-red");
+    assertInclude(renderMergeGateDecision(relaxed), `Heavy / Check (base run ${baseRunIdOf("Heavy / Check")} green`);
+    // A replacing run still going changes nothing: a red copy is red, never pending.
+    const running = workflowSuite({ ...skippedSuite, status: "in_progress", conclusion: O.none() });
+    const whileRunning = shadowRead({ checkRuns: hiddenRedRuns, workflowSuites: [checkSuite, admittedSuite, running] });
+    expect(holdReason(decide(whileRunning))).toBe("required-red");
+    expect(holdReason(decide(whileRunning, true))).toBe("own-red");
+  });
+
+  it("a hidden red the base shares is attributed only as inherited, like a live red", () => {
+    const decision = decideMergeGate(
+      MergeGateInput.make({
+        read: shadowRead({ checkRuns: hiddenRedRuns, baseRuns: baseRedOn(...SHADOWED_CONTEXTS) }),
+        options: options({ relaxed: true }),
+      })
+    );
+    expect(decision._tag).toBe("merge");
+    if (decision._tag !== "merge") return;
+    expect(
+      A.map(decision.atMerge, (entry) => [entry.check, entry.state, Str.startsWith("inherited: ")(entry.attribution)])
+    ).toEqual(A.map(SHADOWED_CONTEXTS, (context) => [context, "red", true]));
+    expect(mergeGateRequestsBypass(decision)).toBe(true);
+  });
+
+  it("green R1, red R2, skip R3: the newest replaced suite's red copy decides, not the green one", () => {
+    const redRun = 43329100002;
+    const redSuite = 117334700002;
+    const r2 = workflowSuite({
+      runId: redRun,
+      checkSuiteId: redSuite,
+      createdAt: DateTime.makeUnsafe("2026-11-12T23:28:10Z"),
+      conclusion: O.some("failure"),
+    });
+    // R1 was re-run after R2, so its green copies carry the highest ids: suite order decides, never id.
+    const observed = shadowRead({
+      checkRuns: [
+        ...pr3133Runs,
+        ...heavyRuns("failure", redSuite, 112231400000),
+        ...heavyRuns("success", ADMITTED_SUITE, 112231500000),
+      ],
+      workflowSuites: [checkSuite, admittedSuite, r2, skippedSuite],
+    });
+    expect(A.map(hiddenOf(observed), (entry) => [entry.context, entry.state, entry.hiddenIn.runId])).toEqual(
+      A.map(SHADOWED_CONTEXTS, (context) => [context, "red", redRun])
+    );
+    expect(holdReason(decide(observed))).toBe("required-red");
+    expect(holdReason(decide(observed, true))).toBe("own-red");
+  });
+
+  // The ruleset reads required contexts only, so an optional check keeps origin/main's view, its
+  // newest run over every suite: a red the admitted run reported stays red after a later skip.
+  const lintPolicyRed = A.map(pr3133Runs, (run) =>
+    run.name === "Heavy / Lint Policy" ? MergeGateCheckRun.make({ ...run, conclusion: "failure" }) : run
+  );
+
+  it("an optional red in the replaced admitted suite is recorded when relaxed and held when strict", () => {
+    const relaxed = decide(shadowRead({ checkRuns: lintPolicyRed }), true);
+    expect(relaxed._tag).toBe("merge");
+    if (relaxed._tag !== "merge") return;
+    expect(
+      A.map(
+        A.filter(relaxed.atMerge, (entry) => entry.state === "red"),
+        (entry) => [entry.check, entry.required, entry.attribution]
+      )
+    ).toEqual([["Heavy / Lint Policy", false, MERGE_GATE_S11_DEFAULT_ATTRIBUTION]]);
+    assertInclude(
+      renderMergeGateDecision(relaxed),
+      `reds at merge: Heavy / Lint Policy [${MERGE_GATE_S11_DEFAULT_ATTRIBUTION}] shadowed at merge: Heavy / Check`
+    );
+    // On the #3133 shape itself the shadowed required lanes hold strict mode first.
+    expect(holdReason(decide(shadowRead({ checkRuns: lintPolicyRed })))).toBe("required-shadowed");
+    // With the required lanes live (Check's own heavy run reported them, and Lint Policy, green
+    // before the admitted run's newer red), strict holds the optional red where origin/main did.
+    const checkSuiteLanes = A.map([...SHADOWED_CONTEXTS, "Heavy / Lint Policy"], (name, index) =>
+      MergeGateCheckRun.make({
+        id: 112226500000 + index,
+        name,
+        status: "completed",
+        conclusion: "success",
+        checkSuiteId: O.some(CHECK_SUITE),
+      })
+    );
+    const strict = shadowRead({ checkRuns: [...lintPolicyRed, ...checkSuiteLanes] });
+    expect(hiddenOf(strict)).toEqual([]);
+    expect(renderMergeGateDecision(decide(strict))).toBe(
+      `#${pullFixture.number} HOLD red: red, attribute it before tolerating: Heavy / Lint Policy`
+    );
+  });
+
+  it("a check whose suite no Actions run owns, or that names no suite, is unaffected", () => {
+    const otherApp = 990000000001;
+    for (const suiteOf of [
+      (name: string) => (A.contains(SHADOWED_CONTEXTS, name) ? O.some(otherApp) : O.some(CHECK_SUITE)),
+      (name: string) => (A.contains(SHADOWED_CONTEXTS, name) ? O.none() : O.some(CHECK_SUITE)),
+    ]) {
+      const observed = shadowRead({ checkRuns: suiteRuns(suiteOf) });
+      expect(hiddenOf(observed)).toEqual([]);
+      expect(decide(observed)._tag).toBe("merge");
+    }
+  });
+
+  it("a newer run of another event (push) does not shadow the pull_request suite", () => {
+    const pushRun = workflowSuite({ ...skippedSuite, event: "push" });
+    const observed = shadowRead({ workflowSuites: [checkSuite, admittedSuite, pushRun] });
+    expect(hiddenOf(observed)).toEqual([]);
+    expect(decide(observed)._tag).toBe("merge");
+  });
+
+  it("orders runs by creation, then run id, per workflow and event", () => {
+    // Same instant: the higher run id is the newer run.
+    const tied = workflowSuite({ ...skippedSuite, createdAt: admittedSuite.createdAt });
+    expect(
+      A.map(hiddenOf(shadowRead({ workflowSuites: [checkSuite, admittedSuite, tied] })), (e) => e.context)
+    ).toEqual(SHADOWED_CONTEXTS);
+    // An older run listed last never replaces a newer one, and the Check run never shadows a Heavy Admit suite.
+    expect(hiddenOf(shadowRead({ workflowSuites: [skippedSuite, checkSuite, admittedSuite] }))).toHaveLength(3);
+  });
+});
+
 // A scripted `gh` whose answers are the recorded fixtures, routed by argv; the
 // merge PUT is captured so the test proves what would have been sent.
 interface ScriptedAnswer {
@@ -902,6 +1233,8 @@ interface GhScript {
   readonly commits?: ReadonlyArray<string>;
   readonly compareExit?: number;
   readonly mergeResponse: string;
+  /** Set by the harness: whether the merge request was already sent when this call arrived. */
+  readonly mergeSent?: boolean;
   readonly pull?: unknown;
   readonly queuedExit?: number;
   readonly reviewerRequired?: boolean;
@@ -914,6 +1247,8 @@ interface GhScript {
   /** The first thread page's cursor; a second page (the same threads) follows when it names one. */
   readonly threadsPageInfo?: { readonly hasNextPage: boolean; readonly endCursor: string | null };
   readonly windowExit: number;
+  /** The head's workflow-run pages, in place of the recorded leftover runs. */
+  readonly workflowRuns?: ReadonlyArray<unknown>;
 }
 
 const defaultScript: GhScript = {
@@ -937,26 +1272,35 @@ const context = RepoRunContext.make({
   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
 });
 
+// One REST workflow run with the fields the gate keys its suites by (the recorded check runs
+// name no suite, so none of these shadows anything).
+const workflowRun = (id: number, status: string, conclusion: string | null, sha: string = pullFixture.head.sha) => ({
+  id,
+  head_sha: sha,
+  status,
+  conclusion,
+  check_suite_id: 900 + id,
+  path: ".github/workflows/check.yml",
+  event: "pull_request",
+  created_at: "2026-10-06T07:50:00Z",
+});
 const workflowRunPages = (additionalActiveRuns: GhScript["additionalActiveRuns"]) => [
   {
     workflow_runs: [
-      { id: 11, head_sha: pullFixture.head.sha, status: "queued", conclusion: null },
-      { id: 12, head_sha: pullFixture.head.sha, status: "in_progress", conclusion: null },
-      { id: 12, head_sha: pullFixture.head.sha, status: "in_progress", conclusion: null },
-      { id: 13, head_sha: pullFixture.head.sha, status: "in_progress", conclusion: null },
-      { id: 14, head_sha: Str.repeat(40)("0"), status: "waiting", conclusion: null },
-      { id: 19, head_sha: pullFixture.head.sha, status: "completed", conclusion: "success" },
+      workflowRun(11, "queued", null),
+      workflowRun(12, "in_progress", null),
+      workflowRun(12, "in_progress", null),
+      workflowRun(13, "in_progress", null),
+      workflowRun(14, "waiting", null, Str.repeat(40)("0")),
+      workflowRun(19, "completed", "success"),
     ],
   },
   ...(additionalActiveRuns === true
     ? [
         {
-          workflow_runs: A.map(["waiting", "requested", "pending", "future_status"], (status, index) => ({
-            id: 15 + index,
-            head_sha: pullFixture.head.sha,
-            status,
-            conclusion: null,
-          })),
+          workflow_runs: A.map(["waiting", "requested", "pending", "future_status"], (status, index) =>
+            workflowRun(15 + index, status, null)
+          ),
         },
       ]
     : []),
@@ -1025,7 +1369,8 @@ const answer = (exitCode: number, output: string): ScriptedAnswer => ({ exitCode
 
 // The merge PUT and the S11 post-merge steps: the PR comment, the leftover-run listing
 // (run 14 belongs to another head; the server-side filter should not return it, and the
-// gate never cancels it) and each cancel.
+// gate never cancels it) and each cancel. The gate's own read lists the same runs before
+// the merge; `queuedExit` fails only the listing after it.
 const postMergeAnswers = (script: ResolvedGhScript): ReadonlyArray<GhAnswerRoute> => [
   ["/merge", answer(0, script.mergeResponse)],
   [
@@ -1038,7 +1383,13 @@ const postMergeAnswers = (script: ResolvedGhScript): ReadonlyArray<GhAnswerRoute
       })
     ),
   ],
-  ["/actions/runs?", answer(script.queuedExit, encodeJson(workflowRunPages(script.additionalActiveRuns)))],
+  [
+    "/actions/runs?",
+    answer(
+      script.mergeSent === true ? script.queuedExit : 0,
+      encodeJson(script.workflowRuns ?? workflowRunPages(script.additionalActiveRuns))
+    ),
+  ],
   [`/runs/${script.cancelFailId}/cancel`, answer(1, "cancel refused")],
   ["/cancel", answer(0, "")],
 ];
@@ -1230,8 +1581,9 @@ const withScriptedGh = <A, E, R>(
     Effect.flatMap((calls) => {
       const github = recordedGithub((call) => {
         const line = A.join(["gh", ...legacyGhArgs(call)], " ");
+        const mergeSent = A.some(MutableRef.get(calls.ref), Str.includes("/merge"));
         MutableRef.update(calls.ref, A.append(line));
-        return githubAnswer(script, call, line);
+        return githubAnswer({ ...script, mergeSent }, call, line);
       });
       return use(calls, github.calls).pipe(
         github.provide,
@@ -1277,6 +1629,14 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
           expect(result.squashCommitlint.verdict._tag).toBe("pass");
           expect(result.squashCommitlint.message.header).toBe(`${pullFixture.title} (#${pullFixture.number})`);
           expect(result.squashCommitlint.message.body).toBe("The one commit.");
+          // The head's workflow runs, with run 14 (another head) dropped.
+          expect(A.map(result.workflowSuites, (suite) => [suite.runId, suite.checkSuiteId])).toEqual([
+            [11, 911],
+            [12, 912],
+            [12, 912],
+            [13, 913],
+            [19, 919],
+          ]);
           const mergeWasSent1 = yield* mergeWasSent(calls);
           expect(mergeWasSent1).toBe(false);
         })
@@ -1879,7 +2239,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
             `reds at merge: Lint [inherited: run ${lintRunId} failure on merge-base 2c1cb448ba]`
           );
           expect(comment).toContain('Merged under operator ruling S11 (AGENTS.md "Mergeable")');
-          expect(indexOf(lines, `head_sha=${headSha}`)).toBeGreaterThan(mergeAt);
+          // The gate lists the head's runs before deciding, and again after the merge to cancel the leftovers.
+          expect(indexOf(lines, `head_sha=${headSha}`)).toBeLessThan(mergeAt);
+          expect(O.getOrElse(A.findLastIndex(lines, Str.includes(`head_sha=${headSha}`)), () => -1)).toBeGreaterThan(
+            mergeAt
+          );
           // A duplicate run in the listing is cancelled once.
           expect(A.filter(lines, Str.includes("/cancel"))).toEqual(
             A.map([11, 12, 13], (id) => `gh api -X POST repos/{owner}/{repo}/actions/runs/${id}/cancel`)
@@ -1943,8 +2307,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
           // Relaxed with every check green records no red, so it asks for no bypass.
           expect(lines[indexOf(lines, "/merge-async")]).toContain("bypass_rules=false");
           const listings = A.filter(lines, Str.includes("/actions/runs?"));
-          expect(listings).toHaveLength(1);
-          expect(listings[0]).toContain("per_page=100");
+          // The gate read's listing, then the post-merge one; both read every page.
+          expect(listings).toHaveLength(2);
+          expect(A.every(listings, Str.includes("per_page=100"))).toBe(true);
           expect(A.filter(lines, Str.includes("/cancel"))).toEqual(
             A.map([11, 12, 13, 15, 16, 17, 18], (id) => `gh api -X POST repos/{owner}/{repo}/actions/runs/${id}/cancel`)
           );
@@ -1976,6 +2341,77 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
           const logLines20 = yield* TestConsole.logLines;
           const printed = A.join(A.map(logLines20, String), "\n");
           expect(printed).toContain("cancelled 0 of 0 active workflow run(s)");
+        })
+      )
+    );
+
+    // #3133 through the real reads: each check run names its suite, and the head's workflow runs
+    // carry the two Heavy Admit runs, the later one skipped.
+    const shadowScript: GhScript = {
+      ...defaultScript,
+      checkRuns: {
+        ...checkRunsFixture,
+        check_runs: [
+          ...A.map(checkRunsFixture.check_runs, (run) => ({ ...run, check_suite: { id: suiteOfCheck(run.name) } })),
+          ...A.map(skippedSuiteChecks, ({ id, name }) => ({
+            id,
+            name,
+            status: "completed",
+            conclusion: "skipped",
+            check_suite: { id: SKIPPED_SUITE },
+          })),
+        ],
+      },
+      workflowRuns: [
+        {
+          workflow_runs: A.map(pr3133Suites, (suite) => ({
+            id: suite.runId,
+            name: "Heavy Admit",
+            head_sha: headSha,
+            status: suite.status,
+            conclusion: O.getOrNull(suite.conclusion),
+            check_suite_id: suite.checkSuiteId,
+            path: suite.workflowPath,
+            event: suite.event,
+            created_at: DateTime.formatIso(suite.createdAt),
+          })),
+        },
+      ],
+    };
+
+    it.effect("a strict gate holds the checks a newer skipped Heavy Admit run shadows and never merges", () =>
+      withScriptedGh(shadowScript, (calls) =>
+        Effect.gen(function* () {
+          const failure = yield* runMergeGate(
+            context,
+            MergeGateRunOptions.make({
+              prNumber: pullFixture.number,
+              wantSha: headSha,
+              tolerate: [],
+              forceWindow: false,
+              relaxed: false,
+              dryRun: false,
+            })
+          ).pipe(Effect.flip);
+          assertInclude(
+            failure.message,
+            `HOLD required-shadowed: required context(s) the ruleset reads as expected: Heavy / Check, Heavy / Docgen, Heavy / Doctest passed only in check suite ${ADMITTED_SUITE}`
+          );
+          assertInclude(failure.message, SHADOWED_REQUIRED_REMEDY);
+          const sent = yield* mergeWasSent(calls);
+          expect(sent).toBe(false);
+        })
+      )
+    );
+
+    it.effect("a relaxed gate merges over shadowed checks with a rules bypass and records them", () =>
+      withScriptedGh(shadowScript, (calls) =>
+        Effect.gen(function* () {
+          expect((yield* relaxedRun(false))._tag).toBe("merge");
+          const lines = yield* Ref.get(calls);
+          expect(lines[indexOf(lines, "/merge-async")]).toContain("bypass_rules=true");
+          const comment = lines[indexOf(lines, `/issues/${pullFixture.number}/comments`)] ?? "";
+          assertInclude(comment, `shadowed at merge: Heavy / Check [shadowed: passed in check suite ${ADMITTED_SUITE}`);
         })
       )
     );
@@ -2012,13 +2448,16 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
 
     it.effect("a relaxed dry run, and a strict merge, neither comment nor cancel", () =>
       Effect.gen(function* () {
+        // The gate read lists the head's runs once; neither path lists them again, comments or cancels.
         const postMerge = (lines: ReadonlyArray<string>) =>
-          A.filter(lines, (line) => Str.includes("/comments")(line) || Str.includes("actions/runs")(line));
+          A.filter(lines, (line) => Str.includes("/comments")(line) || Str.includes("/cancel")(line));
+        const listings = (lines: ReadonlyArray<string>) => A.filter(lines, Str.includes("actions/runs"));
         const dryRun = yield* withScriptedGh({ ...defaultScript, checkRuns: lintRed }, (calls) =>
           relaxedRun(true).pipe(Effect.andThen(Ref.get(calls)))
         );
         expect(A.some(dryRun, Str.includes("/merge"))).toBe(false);
         expect(postMerge(dryRun)).toEqual([]);
+        expect(listings(dryRun)).toHaveLength(1);
         const strict = yield* withScriptedGh(defaultScript, (calls) =>
           runMergeGate(
             context,
@@ -2034,6 +2473,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
         );
         expect(A.some(strict, Str.includes("/merge"))).toBe(true);
         expect(postMerge(strict)).toEqual([]);
+        expect(listings(strict)).toHaveLength(1);
       })
     );
 
