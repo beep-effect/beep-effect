@@ -45511,13 +45511,13 @@
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/HeadMove.ts": {
           "lines": 100,
-          "statements": 99.49,
-          "branches": 94.82,
+          "statements": 100,
+          "branches": 100,
           "functions": 100,
           "uncovered": {
             "lines": 0,
-            "statements": 1,
-            "branches": 3,
+            "statements": 0,
+            "branches": 0,
             "functions": 0
           }
         },

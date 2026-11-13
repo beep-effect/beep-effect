@@ -7,6 +7,7 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -303,6 +304,22 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         expect(A.some(plinkLines, Str.includes("BatchMode"))).toBe(false);
       })
     );
+    it.effect("keeps a GIT_SSH program untouched instead of forcing an OpenSSH command", () =>
+      Effect.gen(function* () {
+        const remote = yield* stack();
+        const local = yield* init();
+        yield* git(local, ["remote", "add", "origin", remote.root]);
+        // A GIT_SSH program with no configured command adds no GIT_SSH_COMMAND override;
+        // a local-path origin proves the fetch still completes without one.
+        const verdict = yield* classify(local, remote.l2, remote.c2, remote.squash).pipe(
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromUnknown({ GIT_SSH: "/nonexistent/plink" })
+          )
+        );
+        expect(verdict).toMatchObject({ _tag: "unchanged", commits: 1 });
+      })
+    );
     it.effect("returns unknown when a missing object cannot be fetched from origin", () =>
       Effect.gen(function* () {
         const s = yield* stack();
@@ -336,7 +353,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const result = yield* service.classify(request);
         expect(result._tag).toBe("unknown");
         const instant = yield* service.committerInstant("a");
-        expect(O.isNone(instant)).toBe(true);
+        assertNone(instant);
       })
     );
   }

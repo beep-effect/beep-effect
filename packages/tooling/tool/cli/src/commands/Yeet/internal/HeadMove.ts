@@ -237,7 +237,9 @@ const rawEntries = Effect.fn("Yeet.headMoveRawEntries")(function* (root: string,
   const tokens = Str.split(entryText, "\0");
   const entries: Array<Entry> = [];
   for (let i = 0; i < A.length(tokens) - 1; i += 2) {
-    const [oldMode, newMode, , , status] = yield* decodeRawEntry(Str.split(tokens[i] ?? "", " "));
+    // In bounds by construction: i < length - 1.
+    const meta = yield* Effect.fromOption(A.get(tokens, i));
+    const [oldMode, newMode, , , status] = yield* decodeRawEntry(Str.split(meta, " "));
     const path = yield* decodePath(tokens[i + 1]);
     entries.push(Entry.make({ oldMode, newMode, status, path }));
   }
@@ -287,12 +289,11 @@ const patches = Effect.fn("Yeet.headMovePatches")(function* (
     return changed(
       request,
       "patch",
-      `Commit ${index}: raw entries differ at ${
-        A.join(
-          A.map(newEntries, (entry) => entry.path),
-          ", "
-        ) || "deleted path"
-      }.`
+      // `after` holds only non-empty commits, so the new side always lists at least one path.
+      `Commit ${index}: raw entries differ at ${A.join(
+        A.map(newEntries, (entry) => entry.path),
+        ", "
+      )}.`
     );
   for (const entry of newEntries) {
     const oldDigest = yield* patchDigest(root, before, entry.path);
