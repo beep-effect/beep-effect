@@ -165,11 +165,13 @@ const passingFinalCheck = (_context: RepoRunContext, head: string) =>
       expectationRewrites: [],
     })
   );
-// A passing receipt as a pre-versioning `yeet final-check` wrote it: v1, no gate set.
+// A passing receipt stamped `yeet-final-check/v1`, the pre-versioning tag. The
+// version check runs before the digest check, so the digest `make` fills in
+// does not change the refusal.
 const legacyV1Receipt = (head: string) =>
-  S.decodeEffect(S.fromJsonString(FinalCheckReceipt))(
-    `{"schemaVersion":"yeet-final-check/v1","headSha":"${head}","mergeBase":"${Str.repeat(40)("0")}","base":"origin/main","complete":true,"verdict":"pass","startedAt":"2026-10-24T00:00:00.000Z","finishedAt":"2026-10-24T00:01:00.000Z","steps":[],"expectationRewrites":[]}`
-  ).pipe(Effect.orDie);
+  Effect.map(passingFinalCheck(context, head), (receipt) =>
+    FinalCheckReceipt.make({ ...O.getOrThrow(receipt), schemaVersion: "yeet-final-check/v1" })
+  );
 const passingSquashCommitlint = () =>
   Effect.succeed(SquashCommitlintReport.make({ message: squashMessage, verdict: SquashCommitlintPass.make({}) }));
 const longBullet = `* ${Str.repeat(100)("a")}`;
