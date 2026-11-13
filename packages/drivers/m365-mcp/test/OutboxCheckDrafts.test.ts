@@ -23,7 +23,13 @@ import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
-import { EVENT_ID, OutboxWorld, OutboxWorldServices, SETTINGS } from "./OutboxWorld.fixture.ts";
+import {
+  DELETED_ITEMS_FOLDER_ID,
+  EVENT_ID,
+  OutboxWorld,
+  OutboxWorldServices,
+  SETTINGS,
+} from "./OutboxWorld.fixture.ts";
 import type { OutboxAuditRecord } from "@beep/m365-mcp";
 
 const HandlersLayer = makeOutboxToolkitHandlers(SETTINGS).pipe(Layer.provideMerge(OutboxWorldServices));
@@ -73,7 +79,7 @@ const created = (draftId: string, pinned = true, internetMessageId?: string) =>
 const draft = (
   id: string,
   categories: ReadonlyArray<string>,
-  fields: { readonly internetMessageId?: string; readonly isDraft?: boolean } = {}
+  fields: { readonly internetMessageId?: string; readonly isDraft?: boolean; readonly parentFolderId?: string } = {}
 ) =>
   GraphMessage.make({
     categories: O.some(categories),
@@ -81,6 +87,7 @@ const draft = (
     id,
     internetMessageId: O.fromUndefinedOr(fields.internetMessageId),
     isDraft: O.some(fields.isDraft ?? true),
+    parentFolderId: O.fromUndefinedOr(fields.parentFolderId),
   });
 
 const markRecord = (draftId: string) =>
@@ -161,6 +168,8 @@ describe("@beep/m365-mcp outbox check_drafts", () => {
         assert.deepStrictEqual(tagsOf(records), ["draft-created", "draft-basis-marked", "draft-basis-cleared"]);
         const markRecord = records[1];
         assert.deepStrictEqual(markRecord?._tag === "draft-basis-marked" ? markRecord.fields : [], ["start"]);
+        // No moved draft, so Deleted Items is never asked for.
+        assert.strictEqual(countOf(calls, "getMailFolder"), 0);
         // Two category writes in three calls, and no other write verb at all.
         assert.deepStrictEqual(writes(calls), ["updateMessageCategories", "updateMessageCategories"]);
       })
@@ -506,6 +515,8 @@ describe("@beep/m365-mcp outbox check_drafts", () => {
         assert.deepStrictEqual(movedCategories, ["Client", OUTBOX_BASIS_STALE_CATEGORY]);
         // One list call per 404 with a recorded message id; none for a draft found by its id.
         assert.strictEqual(countOf(firstCalls, "listMessages"), 3);
+        // No hit names a folder, so Deleted Items is never asked for.
+        assert.strictEqual(countOf(firstCalls, "getMailFolder"), 0);
         // Records keep the recorded id as the draft's identity.
         assert.deepStrictEqual(
           A.map(
@@ -586,6 +597,154 @@ describe("@beep/m365-mcp outbox check_drafts", () => {
           A.map(result.unreadable, (entry) => [entry.draftId, entry.reason]),
           [["odd", "invalid-id"]]
         );
+      })
+    );
+  });
+
+  it.layer(HandlersLayer, { timeout: "10 seconds" })("a draft deleted in Outlook", (it) => {
+    it.effect(
+      "retires a draft whose only copy is in Deleted Items, prefers a live copy, and asks for the folder once per call",
+      Effect.fnUntraced(function* () {
+        const world = yield* OutboxWorld;
+        yield* world.script({
+          event: movedEvent,
+          messages: [
+            draft("trashed", [], {
+              internetMessageId: "<trashed@example.test>",
+              parentFolderId: DELETED_ITEMS_FOLDER_ID,
+            }),
+            draft("live-copy", [], { internetMessageId: "<live@example.test>", parentFolderId: "archive-folder" }),
+            draft("live-trash", [], {
+              internetMessageId: "<live@example.test>",
+              parentFolderId: DELETED_ITEMS_FOLDER_ID,
+            }),
+            // A sent copy beside a deleted one: the draft was sent.
+            draft("sent-trash", [], {
+              internetMessageId: "<sent@example.test>",
+              parentFolderId: DELETED_ITEMS_FOLDER_ID,
+            }),
+            draft("sent-copy", [], { internetMessageId: "<sent@example.test>", isDraft: false }),
+          ],
+          missingMessageIds: ["deleted", "moved", "sent"],
+          records: [
+            created("deleted", true, "<trashed@example.test>"),
+            created("moved", true, "<live@example.test>"),
+            created("sent", true, "<sent@example.test>"),
+          ],
+        });
+
+        const first = yield* check;
+        const firstCalls = yield* world.calls;
+        const live = yield* categoriesOf("live-copy");
+        const trashed = yield* categoriesOf("trashed");
+        const liveTrash = yield* categoriesOf("live-trash");
+        yield* world.script({ calls: [] });
+        const second = yield* check;
+        const secondCalls = yield* world.calls;
+
+        assert.deepStrictEqual(
+          A.map(first.closed, (closed) => [closed.draftId, closed.reason]),
+          [
+            ["deleted", "missing"],
+            ["sent", "sent"],
+          ]
+        );
+        assert.deepStrictEqual(marks(first), [["moved", "pinned-stale", "set"]]);
+        assert.deepStrictEqual(live, [OUTBOX_BASIS_STALE_CATEGORY]);
+        assert.deepStrictEqual(trashed, []);
+        assert.deepStrictEqual(liveTrash, []);
+        // The deleted draft is never rechecked: one event read for the one live draft.
+        assert.strictEqual(countOf(firstCalls, "getEvent"), 1);
+        assert.strictEqual(countOf(firstCalls, "getMailFolder"), 1);
+        assert.deepStrictEqual(writes(firstCalls), ["updateMessageCategories"]);
+        assert.deepStrictEqual(second.closed, []);
+        assert.deepStrictEqual(marks(second), [["moved", "pinned-stale", "already-set"]]);
+        assert.strictEqual(countOf(secondCalls, "getMessage"), 1);
+        assert.strictEqual(countOf(secondCalls, "getMailFolder"), 1);
+      })
+    );
+  });
+
+  it.layer(HandlersLayer, { timeout: "10 seconds" })("Deleted Items that cannot be read", (it) => {
+    it.effect(
+      "keeps a moved draft open as unreadable when the folder cannot be resolved",
+      Effect.fnUntraced(function* () {
+        const world = yield* OutboxWorld;
+        yield* world.script({
+          event: movedEvent,
+          mailFolderFailure: O.some(M365Error.fromReason("throttled", { status: 429 })),
+          messages: [draft("copy", [], { internetMessageId: "<copy@example.test>", parentFolderId: "archive-folder" })],
+          missingMessageIds: ["moved"],
+          records: [created("moved", true, "<copy@example.test>")],
+        });
+
+        const failed = yield* check;
+        const again = yield* check;
+        const calls = yield* world.calls;
+
+        assert.deepStrictEqual(
+          A.map([...failed.unreadable, ...again.unreadable], (entry) => [entry.draftId, entry.reason]),
+          [
+            ["moved", "throttled"],
+            ["moved", "throttled"],
+          ]
+        );
+        assert.deepStrictEqual([...failed.closed, ...again.closed], []);
+        assert.deepStrictEqual(writes(calls), []);
+      })
+    );
+  });
+
+  it.layer(HandlersLayer, { timeout: "10 seconds" })("a draft recorded without a message id", (it) => {
+    it.effect(
+      "learns the message id once, retries a failed record, and then finds the draft after it moves",
+      Effect.fnUntraced(function* () {
+        const world = yield* OutboxWorld;
+        yield* world.script({
+          appendFailsOnce: ["draft-identified"],
+          event: pinnedEvent,
+          messages: [draft("old", [], { internetMessageId: "<old@example.test>" }), draft("anonymous", [])],
+          records: [created("old"), created("anonymous")],
+        });
+        const identified = Effect.map(world.records, (records) =>
+          A.map(
+            A.filter(records, (record) => record._tag === "draft-identified"),
+            (record) => (record._tag === "draft-identified" ? [record.draftId, record.internetMessageId] : [])
+          )
+        );
+
+        const failedBackfill = yield* check;
+        const afterFailed = yield* identified;
+        yield* check;
+        const afterRetry = yield* identified;
+        yield* world.script({ calls: [] });
+        yield* check;
+        const afterThird = yield* identified;
+        const thirdCalls = yield* world.calls;
+        yield* world.script({
+          calls: [],
+          messages: [draft("old-moved", [], { internetMessageId: "<old@example.test>" })],
+          missingMessageIds: ["old", "anonymous"],
+        });
+        const moved = yield* check;
+        const movedCalls = yield* world.calls;
+
+        assert.deepStrictEqual(marks(failedBackfill), [
+          ["old", "pinned-current", "none"],
+          ["anonymous", "pinned-current", "none"],
+        ]);
+        assert.deepStrictEqual(afterFailed, []);
+        assert.deepStrictEqual(afterRetry, [["old", "<old@example.test>"]]);
+        assert.deepStrictEqual(afterThird, [["old", "<old@example.test>"]]);
+        // The backfill costs no Graph call of its own.
+        assert.deepStrictEqual(thirdCalls, ["getMessage", "getEvent", "getMessage", "getEvent"]);
+        // The draft that learned its id is found after the move; the one Graph gave no id is retired.
+        assert.deepStrictEqual(marks(moved), [["old", "pinned-current", "none"]]);
+        assert.deepStrictEqual(
+          A.map(moved.closed, (closed) => [closed.draftId, closed.reason]),
+          [["anonymous", "missing"]]
+        );
+        assert.strictEqual(countOf(movedCalls, "listMessages"), 1);
       })
     );
   });

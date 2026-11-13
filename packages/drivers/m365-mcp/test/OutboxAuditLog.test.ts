@@ -8,6 +8,7 @@ import {
   OutboxDraftClosedRecord,
   OutboxDraftCreatedRecord,
   OutboxDraftDeletedRecord,
+  OutboxDraftIdentifiedRecord,
   OutboxEventCreatedRecord,
   OutboxSendIntentRecord,
   OutboxSendOutcomeRecord,
@@ -137,6 +138,45 @@ describe("@beep/m365-mcp outbox audit log", () => {
         ["marked", true, 0],
         ["cleared", false, 0],
         ["refused", false, 1],
+      ]
+    );
+  });
+
+  it("resolves a draft's message id from its creation record, else from the latest one learned", () => {
+    const withId = OutboxDraftCreatedRecord.make({
+      ...draftCreated(january, [], "with-id"),
+      internetMessageId: O.some("<own@example.test>"),
+    });
+    const open = openOutboxDrafts([
+      withId,
+      draftCreated(january, [], "learned"),
+      draftCreated(january, [], "unknown"),
+      OutboxDraftIdentifiedRecord.make({
+        at: january,
+        auditId: "i1",
+        draftId: "with-id",
+        internetMessageId: "<other@example.test>",
+      }),
+      OutboxDraftIdentifiedRecord.make({
+        at: january,
+        auditId: "i2",
+        draftId: "learned",
+        internetMessageId: "<first@example.test>",
+      }),
+      OutboxDraftIdentifiedRecord.make({
+        at: february,
+        auditId: "i3",
+        draftId: "learned",
+        internetMessageId: "<latest@example.test>",
+      }),
+    ]);
+
+    assert.deepStrictEqual(
+      A.map(open, (draft) => [draft.created.draftId, draft.internetMessageId]),
+      [
+        ["with-id", O.some("<own@example.test>")],
+        ["learned", O.some("<latest@example.test>")],
+        ["unknown", O.none()],
       ]
     );
   });

@@ -31,6 +31,7 @@ import {
   M365DeleteDraftMessageRequest,
   M365EventPatch,
   M365GetEventRequest,
+  M365GetMailFolderRequest,
   M365GetMessageRequest,
   M365IdempotencyKey,
   M365ListMessagesRequest,
@@ -62,6 +63,7 @@ import {
   OutboxDraftClosedRecord,
   OutboxDraftCreatedRecord,
   OutboxDraftDeletedRecord,
+  OutboxDraftIdentifiedRecord,
   OutboxEventCreatedRecord,
   OutboxEventUpdatedRecord,
   OutboxSendOutcomeRecord,
@@ -86,7 +88,7 @@ import {
   OutboxToolError,
   OutboxToolkit,
 } from "./OutboxTools.ts";
-import type { M365Error, M365EventDraft } from "@beep/m365";
+import type { GraphMessage, M365Error, M365EventDraft } from "@beep/m365";
 import type * as Tool from "effect/ai/Tool";
 import type * as Layer from "effect/Layer";
 import type { OutboxAttachmentError } from "./OutboxAttachmentSource.ts";
@@ -198,7 +200,12 @@ const PRECONDITION_FAILED_STATUS = 412;
 const MOVED_DRAFT_PAGE_SIZE = 5;
 
 // The fields check_drafts reads from a draft: never a body, a subject or a recipient.
-const CHECK_DRAFT_SELECT = "id,isDraft,categories,changeKey";
+const CHECK_DRAFT_SELECT = "id,isDraft,categories,changeKey,internetMessageId";
+
+// The lookup of a moved draft also asks for its folder, to tell a deleted draft from a moved one.
+const MOVED_DRAFT_SELECT = `${CHECK_DRAFT_SELECT},parentFolderId`;
+
+const DELETED_ITEMS_FOLDER = "deleteditems";
 
 const INTERNET_MESSAGE_ID_SELECT = "id,internetMessageId";
 
@@ -376,6 +383,12 @@ export const makeOutboxToolkitHandlers = (
         return yield* audit.append(OutboxDraftBasisMarkedRecord.make({ at, auditId, draftId, fields }));
       });
 
+      const appendIdentified = Effect.fnUntraced(function* (draftId: string, internetMessageId: string) {
+        const at = yield* DateTime.now;
+        const auditId = yield* audit.nextAuditId;
+        return yield* audit.append(OutboxDraftIdentifiedRecord.make({ at, auditId, draftId, internetMessageId }));
+      });
+
       const appendClear = Effect.fnUntraced(function* (draftId: string) {
         const at = yield* DateTime.now;
         const auditId = yield* audit.nextAuditId;
@@ -446,15 +459,15 @@ export const makeOutboxToolkitHandlers = (
       // Where an open draft is now: by its recorded id, or after a 404 by its RFC 5322 message id,
       // because Graph gives a message a new id when it moves to another folder. Fails with an
       // unreadable reason.
-      const locateDraft = (created: OutboxOpenDraft["created"]) =>
-        decodeSegment(created.draftId).pipe(
+      const locateDraft = (open: OutboxOpenDraft, deletedItemsId: Effect.Effect<string, string>) =>
+        decodeSegment(open.created.draftId).pipe(
           Effect.mapError(() => "invalid-id"),
           Effect.flatMap((messageId) =>
             m365.getMessage(M365GetMessageRequest.make({ messageId, select: O.some(CHECK_DRAFT_SELECT), userId })).pipe(
               Effect.asSome,
               Effect.catch((error) =>
                 O.contains(error.status, NOT_FOUND_STATUS) && error.reason === "response status"
-                  ? findMoved(created.internetMessageId)
+                  ? findMoved(open.internetMessageId, deletedItemsId)
                   : Effect.fail(error.reason)
               )
             )
@@ -473,8 +486,24 @@ export const makeOutboxToolkitHandlers = (
           )
         );
 
-      // One list call, only after a 404: the draft's current copy, preferring one still a draft.
-      const findMoved = (internetMessageId: O.Option<string>) =>
+      // A hit in Deleted Items is a draft someone deleted in Outlook, not a moved one. The folder's
+      // id is asked for only when a draft hit names a folder.
+      const liveDraftHit = (
+        drafts: ReadonlyArray<GraphMessage>,
+        deletedItemsId: Effect.Effect<string, string>
+      ): Effect.Effect<O.Option<GraphMessage>, string> =>
+        A.some(drafts, (message) => O.isSome(message.parentFolderId))
+          ? Effect.map(deletedItemsId, (deleted) =>
+              A.findFirst(drafts, (message) => !O.contains(message.parentFolderId, deleted))
+            )
+          : Effect.succeed(A.head(drafts));
+
+      // One list call, only after a 404: the draft's current copy. A draft outside Deleted Items
+      // wins; otherwise a copy that is no longer a draft (sent); otherwise none (missing).
+      const findMoved = (
+        internetMessageId: O.Option<string>,
+        deletedItemsId: Effect.Effect<string, string>
+      ): Effect.Effect<O.Option<GraphMessage>, string> =>
         O.match(internetMessageId, {
           onNone: () => Effect.succeedNone,
           onSome: (id) =>
@@ -482,31 +511,37 @@ export const makeOutboxToolkitHandlers = (
               .listMessages(
                 M365ListMessagesRequest.make({
                   filter: O.some(odataEquals("internetMessageId", id)),
-                  select: O.some(CHECK_DRAFT_SELECT),
+                  select: O.some(MOVED_DRAFT_SELECT),
                   top: O.some(MOVED_DRAFT_PAGE_SIZE),
                   userId,
                 })
               )
               .pipe(
-                Effect.mapBoth({
-                  onFailure: (error) => error.reason,
-                  onSuccess: (page) =>
-                    O.orElse(
-                      A.findFirst(page.value, (message) => O.contains(message.isDraft, true)),
-                      () => A.head(page.value)
-                    ),
+                Effect.mapError((error) => error.reason),
+                Effect.flatMap((page) => {
+                  const isStillDraft = (message: GraphMessage): boolean => O.contains(message.isDraft, true);
+                  const drafts = A.filter(page.value, isStillDraft);
+                  const others = A.filter(page.value, (message) => !isStillDraft(message));
+                  return A.isReadonlyArrayEmpty(drafts)
+                    ? Effect.succeed(A.head(others))
+                    : Effect.map(liveDraftHit(drafts, deletedItemsId), (live) =>
+                        O.orElse(live, () => A.findFirst(others, (message) => O.contains(message.isDraft, false)))
+                      );
                 })
               ),
         });
 
       // One open draft: closed when sent or missing, unreadable when Graph could not be asked,
       // otherwise rechecked and marked.
-      const checkOpenDraft = Effect.fnUntraced(function* (open: OutboxOpenDraft) {
+      const checkOpenDraft = Effect.fnUntraced(function* (
+        open: OutboxOpenDraft,
+        deletedItemsId: Effect.Effect<string, string>
+      ) {
         const { basis, draftId, subject } = open.created;
         const unreadable = (reason: string) => OutboxDraftUnreadable.make({ draftId, reason, subject });
         const closed = (reason: OutboxDraftClosedReason) =>
           closeDraft(open, reason).pipe(Effect.map((entry) => DraftOutcome.cases.Closed.make({ entry })));
-        const located = yield* Effect.result(locateDraft(open.created));
+        const located = yield* Effect.result(locateDraft(open, deletedItemsId));
         if (located._tag === "Failure") {
           return DraftOutcome.cases.Unreadable.make({ entry: unreadable(located.failure) });
         }
@@ -520,6 +555,14 @@ export const makeOutboxToolkitHandlers = (
         }
         if (!message.isDraft.value) {
           return yield* closed("sent");
+        }
+        // A draft recorded without a message id learns it now, so a later move can still find it.
+        // Best effort: a failed append is retried on the next call.
+        if (O.isNone(open.internetMessageId)) {
+          yield* O.match(nonEmpty(message.internetMessageId), {
+            onNone: () => Effect.void,
+            onSome: (internetMessageId) => Effect.ignore(appendIdentified(draftId, internetMessageId)),
+          });
         }
         const statuses = yield* Effect.forEach(basis, reader.recheck);
         const report = makeBasisReport(basis, statuses);
@@ -783,7 +826,13 @@ export const makeOutboxToolkitHandlers = (
         m365_outbox_check_drafts: Effect.fn("M365Outbox.m365_outbox_check_drafts")(
           function* () {
             const open = yield* audit.openDrafts;
-            const outcomes = yield* Effect.forEach(open, checkOpenDraft);
+            // Deleted Items is resolved at most once per call, and only when a moved draft needs it.
+            const deletedItemsId = yield* Effect.cached(
+              m365
+                .getMailFolder(M365GetMailFolderRequest.make({ folder: DELETED_ITEMS_FOLDER, userId }))
+                .pipe(Effect.mapBoth({ onFailure: (error) => error.reason, onSuccess: (folder) => folder.id }))
+            );
+            const outcomes = yield* Effect.forEach(open, (draft) => checkOpenDraft(draft, deletedItemsId));
             const drafts = A.map(A.filter(outcomes, DraftOutcome.guards.Checked), entryOf);
             const closed = A.map(A.filter(outcomes, DraftOutcome.guards.Closed), entryOf);
             const unreadable = A.map(A.filter(outcomes, DraftOutcome.guards.Unreadable), entryOf);

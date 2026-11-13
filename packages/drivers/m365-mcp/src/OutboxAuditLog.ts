@@ -495,6 +495,50 @@ export class OutboxDraftClosedRecord extends S.Opaque<OutboxDraftClosedRecord, {
 ) {}
 
 /**
+ * Audit record of the RFC 5322 message id `check_drafts` learned for a
+ * draft whose `draft-created` record has none.
+ *
+ * **Details**
+ *
+ * A draft recorded before message ids were stored learns its id the next
+ * time `check_drafts` reads it, so it can still be found after it moves to
+ * another folder.
+ *
+ * **Example** (Record a learned message id)
+ *
+ * ```ts
+ * import { OutboxDraftIdentifiedRecord } from "@beep/m365-mcp/OutboxAuditLog"
+ * import * as DateTime from "effect/DateTime"
+ *
+ * const record = OutboxDraftIdentifiedRecord.make({
+ *   at: DateTime.makeUnsafe("2030-01-15T00:00:00Z"),
+ *   auditId: "audit-10",
+ *   draftId: "message-id",
+ *   internetMessageId: "<draft@example.test>"
+ * })
+ * console.log(record._tag)
+ * // "draft-identified"
+ * ```
+ *
+ * @category models
+ * @since 0.1.0
+ */
+export class OutboxDraftIdentifiedRecord extends S.Opaque<
+  OutboxDraftIdentifiedRecord,
+  { readonly brand: unique symbol }
+>()(
+  S.TaggedStruct("draft-identified", {
+    ...stamp,
+    draftId: S.NonEmptyString.annotateKey({ description: "Graph id of the draft, as recorded at creation." }),
+    internetMessageId: S.NonEmptyString.annotateKey({ description: "RFC 5322 message id Graph returned for it." }),
+  }).pipe(
+    $I.annoteSchema("OutboxDraftIdentifiedRecord", {
+      description: "Audit record of the message id check_drafts learned for a draft recorded without one.",
+    })
+  )
+) {}
+
+/**
  * One line of the outbox audit log.
  *
  * **Example** (Match a record by tag)
@@ -524,6 +568,7 @@ export const OutboxAuditRecord = S.Union([
   OutboxDraftBasisMarkedRecord,
   OutboxDraftBasisClearedRecord,
   OutboxDraftClosedRecord,
+  OutboxDraftIdentifiedRecord,
 ]).pipe(
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("OutboxAuditRecord", { description: "One versioned line of the outbox audit log." })
@@ -582,6 +627,12 @@ export class OutboxOpenDraft extends S.Opaque<OutboxOpenDraft, { readonly brand:
       description: "Whether the latest mark or clear record of the draft is a mark.",
     }),
     created: OutboxDraftCreatedRecord.annotateKey({ description: "The latest draft-created record of the draft." }),
+    internetMessageId: S.OptionFromOptionalKey(S.NonEmptyString)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description:
+          "The draft's RFC 5322 message id: its draft-created record's own, else the latest one check_drafts learned.",
+      }),
   }).pipe(
     $I.annoteSchema("OutboxOpenDraft", {
       description: "A draft the server created and has not seen deleted, sent or closed.",
@@ -591,6 +642,7 @@ export class OutboxOpenDraft extends S.Opaque<OutboxOpenDraft, { readonly brand:
 
 const isDraftCreated = S.is(OutboxDraftCreatedRecord);
 const isBasisMarked = S.is(OutboxDraftBasisMarkedRecord);
+const isDraftIdentified = S.is(OutboxDraftIdentifiedRecord);
 const isBasisCleared = S.is(OutboxDraftBasisClearedRecord);
 const isDraftDeleted = S.is(OutboxDraftDeletedRecord);
 const isDraftClosed = S.is(OutboxDraftClosedRecord);
@@ -615,7 +667,8 @@ const isMarkOrClear = (
  * A draft is open while it has a `draft-created` record and no
  * `draft-deleted`, `draft-closed` or `sent` `send-outcome` record. Its
  * `basisMarked` flag is true when its latest `draft-basis-marked` or
- * `draft-basis-cleared` record is a mark.
+ * `draft-basis-cleared` record is a mark. Its `internetMessageId` is the
+ * `draft-created` record's own, else the latest `draft-identified` one.
  *
  * **Example** (A deleted draft is not open)
  *
@@ -643,6 +696,9 @@ export const openOutboxDrafts = (records: ReadonlyArray<OutboxAuditRecord>): Rea
   const marked = A.reduce(A.filter(records, isMarkOrClear), HashMap.empty<string, boolean>(), (states, record) =>
     HashMap.set(states, record.draftId, isBasisMarked(record))
   );
+  const learned = A.reduce(A.filter(records, isDraftIdentified), HashMap.empty<string, string>(), (ids, record) =>
+    HashMap.set(ids, record.draftId, record.internetMessageId)
+  );
   return pipe(
     A.filter(records, isDraftCreated),
     A.reverse,
@@ -653,6 +709,7 @@ export const openOutboxDrafts = (records: ReadonlyArray<OutboxAuditRecord>): Rea
       OutboxOpenDraft.make({
         basisMarked: O.getOrElse(HashMap.get(marked, created.draftId), constFalse),
         created,
+        internetMessageId: O.orElse(created.internetMessageId, () => HashMap.get(learned, created.draftId)),
       })
     )
   );

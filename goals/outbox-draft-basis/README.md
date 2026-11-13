@@ -106,6 +106,13 @@ be left on a draft without a record; a draft moved to another folder is
 found by its message id and not retired; a read without an `isDraft`
 value no longer retires a draft. 29 of 29 cheap gates passed.
 
+2026-11-13: two round-two review findings on #3172 fixed in one push: a
+draft deleted in Outlook is retired and never marked, and a draft recorded
+without a message id learns it on the next read (`draft-identified`). 136
+package tests pass and 29 of 29 cheap gates passed. Three Graph facts the
+lookup rests on are still unverified on the tenant and are listed in the
+decision file of that date.
+
 ## Notes
 
 - `m365_outbox_send_draft` refuses every send with `version-unbound`. The

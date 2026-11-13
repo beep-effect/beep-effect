@@ -114,7 +114,9 @@ after, so the audit log never misses a category this server set: when the
 log cannot be written, nothing is set, and a removal whose record is still
 missing is reported as `cleared-unrecorded` and recorded on the next call.
 A draft moved out of Drafts into another folder gets a new Graph id; it is
-still found by its RFC 5322 message id. A draft that is no longer a draft, or
+still found by its RFC 5322 message id. A copy in Deleted Items does not
+count: a draft deleted in Outlook is retired as missing. A draft recorded
+before message ids were stored learns its id on the next check. A draft that is no longer a draft, or
 is gone, is reported, recorded as closed and not checked again. The result lists each draft with its recorded
 subject, verdict and what was done to the category, the closed and the
 unreadable drafts, and a count per verdict.
@@ -197,8 +199,9 @@ be written, nothing is sent. A send the guard refuses writes one refused
 `send-outcome`, and so does a send of a draft the log has no creation record
 for. Draft creation, draft deletion and event writes write one record each; a
 refused event update writes none. `check_drafts` writes `draft-basis-marked` or
-`draft-basis-cleared` for each category it sets or removes, and `draft-closed`
-for a draft it finds sent or missing. Records hold recipients, subjects, attachment names, sizes and
+`draft-basis-cleared` for each category it sets or removes, `draft-closed`
+for a draft it finds sent or missing, and `draft-identified` once for a draft
+recorded without a message id. Records hold recipients, subjects, attachment names, sizes and
 digests, never a body or bytes. The log stays on the workstation.
 
 Each append writes a newline, the record and a newline, so a file has an empty

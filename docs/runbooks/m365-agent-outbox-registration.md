@@ -299,7 +299,9 @@ the tools that write drafts (`create_draft`), not like the read-only ones: it
 changes the draft's category list and nothing else, keeps every category a
 person set, and never changes a subject or body. A draft the attorney files
 into another folder is still found by its message id and keeps being
-checked. Do not call it against the
+checked; one the attorney deletes is retired, even while it sits in Deleted
+Items. A draft recorded before message ids were stored learns its id on the
+next check. Do not call it against the
 attorney's mailbox until the tenant proof recorded in `goals/outbox-draft-basis`
 shows that a category on a draft does not reach the recipients; the tool
 itself has no switch that holds the write back.

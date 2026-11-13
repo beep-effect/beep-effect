@@ -8,6 +8,7 @@ import {
   GraphAttachment,
   GraphEmailAddress,
   GraphEvent,
+  GraphMailFolder,
   GraphMessage,
   GraphRecipient,
   M365,
@@ -46,6 +47,8 @@ import type { OutboxAttachmentDigest, OutboxAuditRecord } from "@beep/m365-mcp";
 export const MAILBOX = "mailbox@example.test";
 export const DRAFT_ID = "draft-1";
 export const EVENT_ID = "event-1";
+/** The id the stub gives the mailbox's Deleted Items folder. */
+export const DELETED_ITEMS_FOLDER_ID = "deleteditems-folder";
 export const SETTINGS = OutboxHandlerSettings.make({
   mailbox: MAILBOX,
   maxAttachments: 4,
@@ -133,6 +136,8 @@ type WorldState = {
   readonly missingMessageIds: ReadonlyArray<string>;
   /** When set, a category write fails with it, such as a 412 for a message changed since it was read. */
   readonly categoryFailure: O.Option<M365Error>;
+  /** When set, reading the Deleted Items folder fails with it. */
+  readonly mailFolderFailure: O.Option<M365Error>;
   /** Mail other than the draft: `getMessage` finds it by id, `listMessages` by conversation. */
   readonly messages: ReadonlyArray<GraphMessage>;
   readonly nextId: number;
@@ -161,6 +166,7 @@ const initialState: WorldState = {
   failingMessageIds: [],
   missingMessageIds: [],
   categoryFailure: O.none(),
+  mailFolderFailure: O.none(),
   messages: [],
   nextId: 1,
   pagedConversation: false,
@@ -283,7 +289,13 @@ const StubM365Layer = Layer.effect(
         );
       }),
       getListItem: notScripted,
-      getMailFolder: notScripted,
+      // Only the well-known Deleted Items folder is asked for.
+      getMailFolder: Effect.fn("StubM365.getMailFolder")(function* (request) {
+        yield* called("getMailFolder", request);
+        const current = yield* Ref.get(state);
+        yield* pipe(current.mailFolderFailure, O.match({ onNone: () => Effect.void, onSome: Effect.fail }));
+        return GraphMailFolder.make({ id: `${request.folder}-folder` });
+      }),
       getMessage: Effect.fn("StubM365.getMessage")(function* (request) {
         yield* called("getMessage", request);
         const current = yield* Ref.get(state);
