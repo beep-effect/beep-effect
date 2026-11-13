@@ -495,11 +495,12 @@ const LANE_WORK_ENTRY_STEPS: ReadonlyArray<string> = [
 ];
 // Steps that run before a lane's entry step and are classified as the lane's own work on purpose, so their reds
 // stay on the lane: Repo Sanity's documentation and merge-driver checks, and the coverage comparison's
-// evidence authentication and download (missing evidence is that lane's verdict).
+// evidence authentication, download and layout (missing or foreign evidence is that lane's verdict).
 const LANE_WORK_PRELUDE_STEPS: ReadonlyArray<string> = [
   "Authenticate latest Labs execution",
   "Check documentation sanity",
   "Download coverage evidence",
+  "Normalize coverage evidence layout",
   "Verify regenerate merge-driver bootstrap",
 ];
 
