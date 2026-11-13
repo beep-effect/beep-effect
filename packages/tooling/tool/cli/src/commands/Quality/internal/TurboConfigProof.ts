@@ -83,6 +83,7 @@ const TURBO_CONFIG_PROOF_TASK_VALUES = [
   "//#lint:retired-iri-authorities",
   "//#lint:private-home-paths",
   "//#lint:tracked-shell-allowlist",
+  "//#lint:no-tracked-python",
   "//#lint:schema-tag-idioms",
   "//#lint:holds",
   "//#lint:ecosystem-polarity",

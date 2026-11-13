@@ -1827,6 +1827,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:retired-iri-authorities",
         "lint:private-home-paths",
         "lint:tracked-shell-allowlist",
+        "lint:no-tracked-python",
         "lint:schema-tag-idioms",
         "lint:holds",
         "lint:schema-first",
@@ -1880,6 +1881,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       );
       expect(qualityLaneArgs(lanes, "lint:tracked-shell-allowlist")).toEqual(
         expectedTurboArgs("lint:tracked-shell-allowlist", ["--summarize"])
+      );
+      expect(qualityLaneArgs(lanes, "lint:no-tracked-python")).toEqual(
+        expectedTurboArgs("lint:no-tracked-python", ["--summarize"])
       );
       expect(qualityLaneArgs(lanes, "lint:schema-tag-idioms")).toEqual(
         expectedTurboArgs("lint:schema-tag-idioms", ["--summarize"])
@@ -5722,6 +5726,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:retired-iri-authorities",
         "lint:private-home-paths",
         "lint:tracked-shell-allowlist",
+        "lint:no-tracked-python",
         "lint:opaque-roundtrips",
         "lint:schema-tag-idioms",
         "lint:jsdoc-module-tags",
@@ -5785,6 +5790,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:retired-iri-authorities",
         "lint:private-home-paths",
         "lint:tracked-shell-allowlist",
+        "lint:no-tracked-python",
         "lint:opaque-roundtrips",
         "lint:schema-tag-idioms",
         "lint:jsdoc-module-tags",
@@ -5917,6 +5923,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           "lint:retired-iri-authorities",
           "lint:private-home-paths",
           "lint:tracked-shell-allowlist",
+          "lint:no-tracked-python",
           "lint:schema-tag-idioms",
           "lint:holds",
           "quality:test-tsgo",

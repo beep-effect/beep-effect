@@ -1,0 +1,15 @@
+{
+  "previous": "53683ff9d25bfa271753ef5625f0ac8a685693227fb51be0786da6c47c65774e",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (python-free-repo law lane, chore/python-free-repo-law)",
+    "reason": "Record the root drift of the new uncached lint:no-tracked-python root script: the root package.json gained one script, so every cached root computation drifts on the manifest bytes. No existing command, cache flag, input, output or environment changed; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/no-tracked-python-cache-review-2026-11-13.md",
+      "sha256": "83f92f8ac64c32cb055cc20bf5ea7e3fba27ddd5257309cad544e3c88f9ae8fd"
+    }
+  },
+  "subjects": ["//"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

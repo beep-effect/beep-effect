@@ -1816,6 +1816,8 @@
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/MarkdownFences.model.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/MarkdownFences.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/NoTrackedPython.model.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/NoTrackedPython.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/PrivateHomePaths.model.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/PrivateHomePaths.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/RetiredEffectPaths.model.ts",
@@ -2710,6 +2712,8 @@
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/LawsPackage.model.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/LawsPackage.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/NoTrackedPython.model.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/NoTrackedPython.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/TrackedShellAllowlist.model.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/TrackedShellAllowlist.ts",
@@ -6493,6 +6497,27 @@
       ]
     },
     "//#lint:tracked-shell-allowlist": {
+      "cache": false,
+      "env": ["BEEP_CACHE_TOOLCHAIN_DIGEST"],
+      "outputs": [],
+      "dependsOn": ["@beep/repo-cli#lint:policy-fingerprint:laws"],
+      "inputs": [
+        "**/*",
+        "!.git/**",
+        "!**/.git/**",
+        "!.repos/**",
+        "!**/node_modules/**",
+        "!**/.beep/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/coverage/**",
+        "!**/.next/**",
+        "!**/storybook-static/**",
+        "!.claude/worktrees/**",
+        "!**/src-tauri/target/**"
+      ]
+    },
+    "//#lint:no-tracked-python": {
       "cache": false,
       "env": ["BEEP_CACHE_TOOLCHAIN_DIGEST"],
       "outputs": [],

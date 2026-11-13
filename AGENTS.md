@@ -158,6 +158,7 @@ the agent 1Password lane take precedence; a dialog never replaces those routes.
   keep `SKILL.md` under 500 lines and move depth into `references/`.
   `bun run beep skills update --check` enforces the keys and advises on
   length.
+- No Python in tracked source; run it outside the repo if you must, never commit it.
 
 ## Autonomy
 
