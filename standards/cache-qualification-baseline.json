@@ -8,11 +8,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 medium, @chore/organizing-goal-packets",
-      "reason": "Record the six cached task slots of the new @beep/lane-cockpit lab (#3107), which inherit the root build, check, lint, lint:deprecated-apis, lint:laws and test definitions except for build: build.outputs is [] and build.inputs is the root build.inputs without !test/**, as in apps/labs/api-docs, because the lab's noEmit tsconfig.check.json build compiles test/ and a test edit must re-key it. Re-stamp // for the lab package.json added to //#lint:policy-fingerprint inputs and the turbo.json $schema bump to 2.11.11. Preserve commands, cache flags, outputs, environment, epoch and qualification scope; inputs only grow; no qualification or exception.",
+      "reviewer": "Claude Opus 5.5 medium, claude/stoic-torvalds-00017b",
+      "reason": "Record the @beep/repo-cli test and test:property input growth from YEET-08 slice 1: packages/tooling/tool/cli/turbo.json declares AGENTS.md, the yeet SKILL.md and its gates-and-proof reference as inputs because the new final-check docs-drift test reads them. Re-stamp // only for origin/main's unchanged root turbo.json bytes, which main's baseline lags. Preserve commands, cache flags, outputs, environment, epoch and qualification scope; inputs only grow; no qualification or exception.",
       "basis": {
-        "path": "docs/reports/lane-cockpit-cache-review-2026-11-12.md",
-        "sha256": "5211c359b40fb982623dc64f8c93d357d176e4d580c22697ad5b3a3392d4ca78"
+        "path": "goals/route-soundness-repair/research/yeet-08-slice-1-cache-review.md",
+        "sha256": "819e109a72e8c33a4bb06267b9810178fc52bd6c4e9466b82b28409c8adc3ef8"
       }
     },
     "@beep/acp": {
@@ -1232,11 +1232,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
-      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 medium, claude/stoic-torvalds-00017b",
+      "reason": "Record the @beep/repo-cli test and test:property input growth from YEET-08 slice 1: packages/tooling/tool/cli/turbo.json declares AGENTS.md, the yeet SKILL.md and its gates-and-proof reference as inputs because the new final-check docs-drift test reads them. Re-stamp // only for origin/main's unchanged root turbo.json bytes, which main's baseline lags. Preserve commands, cache flags, outputs, environment, epoch and qualification scope; inputs only grow; no qualification or exception.",
       "basis": {
-        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
-        "sha256": "2a5f7a96ae72b4694af7dea220b85bb51c51f357199b502d10287a31c7ac0965"
+        "path": "goals/route-soundness-repair/research/yeet-08-slice-1-cache-review.md",
+        "sha256": "819e109a72e8c33a4bb06267b9810178fc52bd6c4e9466b82b28409c8adc3ef8"
       }
     },
     "@beep/repo-cli-kit": {
@@ -98850,7 +98850,10 @@
             "!../../../../packages/architecture-lab/**/docs/**",
             "!../../../../packages/architecture-lab/**/node_modules/**",
             "../../../../.bun-version",
+            "../../../../.claude/skills/yeet/SKILL.md",
+            "../../../../.claude/skills/yeet/references/gates-and-proof.md",
             "../../../../.nvmrc",
+            "../../../../AGENTS.md",
             "../../../../apps/architecture-lab-proof/**",
             "../../../../goals/time-to-certainty/research/economics.json",
             "../../../../goals/time-to-certainty/research/gate-order-handoff.json",
@@ -99568,7 +99571,10 @@
             "!LICENSE",
             "!README.md",
             "../../../../.bun-version",
+            "../../../../.claude/skills/yeet/SKILL.md",
+            "../../../../.claude/skills/yeet/references/gates-and-proof.md",
             "../../../../.nvmrc",
+            "../../../../AGENTS.md",
             "../../../../apps/architecture-lab-proof/**",
             "../../../../goals/time-to-certainty/research/economics.json",
             "../../../../goals/time-to-certainty/research/gate-order-handoff.json",
@@ -99709,7 +99715,10 @@
             "!LICENSE",
             "!README.md",
             "../../../../.bun-version",
+            "../../../../.claude/skills/yeet/SKILL.md",
+            "../../../../.claude/skills/yeet/references/gates-and-proof.md",
             "../../../../.nvmrc",
+            "../../../../AGENTS.md",
             "../../../../apps/architecture-lab-proof/**",
             "../../../../goals/time-to-certainty/research/economics.json",
             "../../../../goals/time-to-certainty/research/gate-order-handoff.json",
@@ -128858,11 +128867,11 @@
       },
       {
         "path": "packages/tooling/tool/cli/turbo.json",
-        "sha256": "fa4c13c011c943c82ca643c48dbbf4162f76a208d1f5d93466ca91c749793f96"
+        "sha256": "74d8ac3e3ea89c40ed8c8104437866669b6f244d7634eb0aec70844756cfc1dd"
       },
       {
         "path": "turbo.json",
-        "sha256": "e7c7d83c6c64b418ef149d6e32eb39caebcacd7e487a9370506c702f5f847d3c"
+        "sha256": "64aba35814c83d2a8c9f8b8a90429b0807a33ef204423e538c90bd574f20b0c9"
       }
     ]
   }

@@ -60,7 +60,12 @@ import {
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { FinalCheckGate } from "./FinalCheck.schemas.ts";
-import { finalCheckRefusal, readFinalCheckReceipt, YEET_FINAL_CHECK_COMMAND } from "./FinalCheck.ts";
+import {
+  finalCheckGateSetRefusal,
+  finalCheckRefusal,
+  readFinalCheckReceipt,
+  YEET_FINAL_CHECK_COMMAND,
+} from "./FinalCheck.ts";
 import { FinalCheckRefreshVerdict } from "./FinalCheckRefresh.schemas.ts";
 import { checkFinalCheckRefresh, checkFinalCheckRewriteCarry } from "./FinalCheckRefresh.ts";
 import {
@@ -1168,10 +1173,17 @@ const judgeHostedGate =
  * **Example** (Accept a green hosted Check)
  *
  * ```ts
- * import { FinalCheckReceipt, FinalCheckStepResult, judgeHostedDeferrals, MergeGateCheckRun } from "@beep/repo-cli/test/Yeet"
+ * import {
+ *   FINAL_CHECK_GATE_SET_DIGEST,
+ *   FinalCheckReceipt,
+ *   FinalCheckStepResult,
+ *   judgeHostedDeferrals,
+ *   MergeGateCheckRun,
+ * } from "@beep/repo-cli/test/Yeet"
  *
  * const receipt = FinalCheckReceipt.make({
- *   schemaVersion: "yeet-final-check/v1",
+ *   schemaVersion: "yeet-final-check/v2",
+ *   gateSetDigest: FINAL_CHECK_GATE_SET_DIGEST,
  *   headSha: "a".repeat(40),
  *   mergeBase: "b".repeat(40),
  *   base: "origin/main",
@@ -1318,6 +1330,20 @@ const acceptOwnReceipt = Effect.fn("Yeet.acceptOwnReceipt")(function* (
   }
 });
 
+// A carried receipt must be written under the current schema version and gate
+// set, whichever carry produced it: the refresh and rewrite readers refuse one
+// already, and this keeps the flip closed if a carry ever skips that check.
+const refuseStaleCarriedReceipt = (receipt: FinalCheckReceipt, missing: string, carry: string) =>
+  O.match(finalCheckGateSetRefusal(receipt), {
+    onNone: () => Effect.void,
+    onSome: (detail) =>
+      Effect.fail(
+        refuseFinalCheck(
+          `${missing}; the receipt of ${Str.slice(0, 12)(receipt.headSha)} does not carry ${carry}: ${detail}`
+        )
+      ),
+  });
+
 // The flip is the content-final claim, so it requires the head-pinned
 // final-check receipt: every hosted gate the cheap tier skips, replayed on
 // this exact head. Skipped gates are named so the owner states them in the PR.
@@ -1348,12 +1374,14 @@ const requireFinalCheck = Effect.fn("Yeet.requireFinalCheck")(function* (
     refused: (refused) =>
       Effect.fail(refuseFinalCheck(carriedReceiptRefusal(refused, refusal.value, O.isNone(ancestor)))),
     rewrite: Effect.fnUntraced(function* (passed) {
+      yield* refuseStaleCarriedReceipt(passed.receipt, refusal.value, "across the GitHub rewrite");
       yield* Console.log(
         `[yeet] head ${headSha} carries the receipt of ${passed.receipt.headSha}: it replays ${passed.receipt.headSha}'s ${passed.move.commits} commits onto ${passed.move.base} with identical patches`
       );
       yield* acceptCarriedReceipt(context, dependencies, passed.receipt, headSha, prNumber, "GitHub rewrite");
     }),
     pass: Effect.fnUntraced(function* (passed) {
+      yield* refuseStaleCarriedReceipt(passed.receipt, refusal.value, "from the ancestor");
       const receiptHead = passed.receipt.headSha;
       yield* Console.log(
         `[yeet] final-check refresh: pass; head ${Str.slice(0, 12)(headSha)} carries the receipt of ancestor ${receiptHead}; own changes since the receipt: ${
