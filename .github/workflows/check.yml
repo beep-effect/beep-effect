@@ -148,6 +148,13 @@ jobs:
       # head's label-triggered `Heavy Admit` matrix may still be queued or
       # running: concurrency groups never cross workflows, so cancel those
       # superseded runs explicitly instead of paying seven heavy lanes twice.
+      # A later label's run can also wait `pending` in the admitting group
+      # behind one that is executing. The branch's runs are listed once
+      # (paginated) and filtered to the unfinished ones here, so a pass costs
+      # one call on the shared GITHUB_TOKEN budget; after any cancel the list
+      # is read once more, because cancelling the executing run promotes the
+      # one waiting behind it. Cancelling only saves EC2 time, so a listing
+      # that fails is a warning and never fails admission.
       - name: Cancel superseded Heavy Admit runs
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         shell: bash
@@ -159,23 +166,39 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
-          for status in queued in_progress; do
+          # This pull request's unfinished Heavy Admit runs for an older head, from one listing.
+          superseded_runs() {
             gh api --method GET --paginate \
               "repos/${GH_REPO}/actions/workflows/heavy-admit.yml/runs" \
-              -f branch="$HEAD_REF" -f status="$status" -f per_page=100 \
+              -f branch="$HEAD_REF" -f per_page=100 </dev/null \
               | jq --arg repo "$GH_REPO" --arg sha "$HEAD_SHA" --argjson pr "$PR_NUMBER" '
-                  .workflow_runs[]
+                  .workflow_runs[]?
+                  | select(.status | IN("pending", "waiting", "requested", "queued", "in_progress"))
                   | select(.head_repository.full_name == $repo)
                   | select(any(.pull_requests[]?; .number == $pr))
                   | select(.head_sha | strings | test("^[0-9a-f]{40}$"))
                   | select(.head_sha != $sha)
-                  | .id | select(type == "number")' \
-              | while read -r run_id; do
-                  [[ -n "$run_id" ]] || continue
-                  echo "cancelling superseded Heavy Admit run $run_id"
-                  gh run cancel "$run_id" || true
-                done
-          done
+                  | .id | select(type == "number")'
+          }
+          cancelled=0
+          cancel_superseded() {
+            local runs run_id
+            if ! runs="$(superseded_runs)"; then
+              echo "::warning::Could not list this branch's Heavy Admit runs; a superseded run may keep running."
+              return 0
+            fi
+            while read -r run_id; do
+              [[ -n "$run_id" ]] || continue
+              echo "cancelling superseded Heavy Admit run $run_id"
+              gh run cancel "$run_id" </dev/null || true
+              cancelled=$((cancelled + 1))
+            done <<< "$runs"
+          }
+          cancel_superseded
+          # Cancelling the executing run promotes the one waiting `pending` behind it.
+          if (( cancelled > 0 )); then
+            cancel_superseded
+          fi
 
   heavy:
     name: Heavy
