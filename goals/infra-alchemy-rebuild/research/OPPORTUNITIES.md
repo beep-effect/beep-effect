@@ -24,3 +24,36 @@ identifiers are redacted.
   the pushed head records the gate as skipped and hosted CI measures it.
 - **Would have prevented it:** scope the coverage replay by the workspaces whose resolved dependencies
   changed in the lockfile diff, not by the lockfile path alone.
+
+## 2026-11-13: `@alchemy.run/test` `test(name, effect)` takes an Effect, not a thunk
+
+- **Doing:** P4 hosts stacks (lane `goals/infra-alchemy-rebuild-p4-hosts`), first hermetic stack tests on
+  `Test.make(...)` from `@alchemy.run/test/Vitest`.
+- **Evidence:** written in the `@effect/vitest` shape `test("…", () => Effect.gen(…))`, every test failed with
+  `TypeError: (testDev ? provideTestServices(body) : body).pipe is not a function` from
+  `@alchemy.run/test/src/Core.ts:575`. The harness's `TestFn` is `(name, eff: TestEffect<void>)`: the second
+  argument is the Effect itself. The type checker did not flag the thunk because the call was not yet checked.
+- **Would have prevented it:** a worked stack-test example in `docs/runbooks/alchemy-infra.md` ("Adding an
+  infra package") showing `test("…", Effect.gen(…))`, fake providers and `inMemoryState`, or an upstream
+  `Test.make` overload that rejects a function.
+
+## 2026-11-13: adopting a Compose-managed Docker volume would replace it
+
+- **Doing:** the same lane, mapping the AI metrics Compose volume onto `Docker.Volume`.
+- **Evidence:** `@alchemy.run/docker` `Volume.diff` returns `replace` with `deleteFirst: true` whenever the
+  observed user labels differ from the declared ones (`node_modules/@alchemy.run/docker/src/Volume.ts`, diff),
+  and a Compose volume carries `com.docker.compose.*` labels, so `adopt(true)` on the Phoenix data volume
+  would plan a delete of the data. `Docker.Volume.lookup` (read, never created or removed) is the safe
+  primitive; the stack uses it.
+- **Would have prevented it:** a note in the P0 matrix row for `@beep/infra-hosts` that named data volumes
+  are looked up, not adopted.
+
+## 2026-11-13: Fallow does not know a second Alchemy entry file
+
+- **Doing:** the same lane; the OpenClaw stack is a second entry, `openclaw.alchemy.run.ts`, beside the
+  package's `alchemy.run.ts`.
+- **Evidence:** `fallow dead-code --config .fallowrc.jsonc` reported
+  `unused-file packages/tooling/infra/infra-hosts/openclaw.alchemy.run.ts` (the CLI loads it by path,
+  `alchemy deploy <file>`); fixed with an entry glob `packages/tooling/infra/*/*.alchemy.run.ts`.
+- **Would have prevented it:** the `infra` package kind registering `*.alchemy.run.ts` entries with Fallow
+  when it registers `alchemy.run.ts`.

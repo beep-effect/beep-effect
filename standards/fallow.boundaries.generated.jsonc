@@ -498,6 +498,12 @@
         ]
       },
       {
+        "name": "@beep/infra-hosts",
+        "patterns": [
+          "packages/tooling/infra/infra-hosts/src/**"
+        ]
+      },
+      {
         "name": "@beep/jsonc",
         "patterns": [
           "packages/foundation/modeling/jsonc/src/**"
@@ -3011,6 +3017,7 @@
         "allow": [
           "@beep/identity",
           "@beep/infra",
+          "@beep/infra-hosts",
           "@beep/openclaw",
           "@beep/repo-ai-metrics",
           "@beep/schema",
@@ -3021,8 +3028,30 @@
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/infra",
+          "@beep/infra-hosts",
           "@beep/openclaw",
           "@beep/repo-ai-metrics",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/infra-hosts",
+        "allow": [
+          "@beep/identity",
+          "@beep/infra-hosts",
+          "@beep/openclaw",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/infra-hosts",
+          "@beep/openclaw",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",

@@ -2342,5 +2342,7 @@
     "./packages/tooling/library/agent-memory-store/src/*"
   ],
   "@beep/sqlite": ["./packages/drivers/sqlite/src/index.ts"],
-  "@beep/sqlite/*": ["./packages/drivers/sqlite/src/*"]
+  "@beep/sqlite/*": ["./packages/drivers/sqlite/src/*"],
+  "@beep/infra-hosts": ["./packages/tooling/infra/infra-hosts/src/index.ts"],
+  "@beep/infra-hosts/*": ["./packages/tooling/infra/infra-hosts/src/*"]
 }

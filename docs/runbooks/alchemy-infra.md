@@ -122,6 +122,133 @@ CLOUDFLARE_ACCOUNT_ID=op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_CLOUDFLARE_ACCOUNT_ID
 
 Destroy it with the same command and `destroy` in place of `deploy`.
 
+## Host stacks (`@beep/infra-hosts`, workstation only)
+
+Two stacks, no deploy workflow (D21, SPEC Exception Ledger):
+
+| Stack | Entry | Target | Config file variable |
+| --- | --- | --- | --- |
+| `HostsAiMetrics` | `packages/tooling/infra/infra-hosts/alchemy.run.ts` | Arize Phoenix on dankserver, over SSH | `BEEP_AI_METRICS_HOST_CONFIG` |
+| `HostsOpenClaw` | `packages/tooling/infra/infra-hosts/openclaw.alchemy.run.ts` | the OpenClaw generation applicator on the operator workstation | `BEEP_OPENCLAW_HOST_CONFIG` |
+
+`prod` runs only from the operator workstation: both programs fail with a
+`ConfigError` when `CI` is true, and the S3 stage lease stops a second
+concurrent deploy. Every other stage is a rehearsal that touches no
+production data (AI metrics: a throwaway Phoenix on stage-suffixed names and
+loopback port 16006; OpenClaw: renders the generation and runs nothing).
+Design and resource graphs: the package README and the 2026-11-13 decision
+files in `goals/infra-alchemy-rebuild/decisions/`.
+
+### Configuration files
+
+Each stack decodes one JSON file named by its variable. Keep both files on the
+workstation outside the repo, under `~/.local/state/beep/infra-hosts/`. They
+hold machine facts and `op://` references, never a resolved secret; the schema
+rejects anything else before a resource is read.
+
+- AI metrics (`AiMetricsHostConfig`): `sshDestination` (the ssh_config alias of
+  the wrapped dankserver route), `phoenix.image` (pinned; the Pulumi stack
+  config pins `arizephoenix/phoenix:15.5.0`), `tailnet.fqdn`,
+  `legacyCompose.configRoot` (the directory holding today's Compose file and the
+  Tailscale port state file), `secretRefs.hashSalt` and
+  `secretRefs.rawArchiveKey`. Container, network, volume, unit and port fields
+  default to the Compose deployment's values.
+- OpenClaw (`OpenClawStackArgs`, encoded): `identity` (home, hostname,
+  machine id, runtime dir, uid, username of the workstation), `deployment`
+  (hosted and local provider, Telegram token reference), optional `backup`
+  (host, user, remote directory, passphrase reference).
+
+### Session setup
+
+1. Export the aws-vault session for the state store (the recipe under
+   "Bootstrap"): `eval "$(aws configure export-credentials --profile elpresidank-vault --format env)"`
+   and `export AWS_REGION=us-east-1`.
+2. AI metrics only: load the dankserver key through the wrapped route named in
+   the `remote-development-agents` skill (`ssh-dankserver-yubi -G >/dev/null`
+   loads the key handle into the dedicated agent without opening a session;
+   announce the YubiKey touch). Point `SSH_AUTH_SOCK` at that agent for the
+   rest of the session: Docker's `ssh://` endpoint and every host step use
+   plain non-interactive `ssh` (`BatchMode=yes`) with the configured
+   destination. Prove the route before any plan:
+   `ssh -o BatchMode=yes <destination> docker version --format '{{.Server.Version}}'`.
+3. OpenClaw only: arm sudo in the same terminal with
+   `yubi-sudo -v` (the canonical local wrapper); the preflight
+   fails closed without an armed ticket.
+4. Work from `packages/tooling/infra/infra-hosts`. Pass every secret as an
+   `op://` reference through `op run`; nothing resolved goes on the command
+   line, into the config file or into a log.
+
+### AI metrics: rehearsal, cutover, rollback
+
+```sh
+export BEEP_AI_METRICS_HOST_CONFIG=~/.local/state/beep/infra-hosts/ai-metrics.json
+# 1. Rehearse on dankserver without touching the live Phoenix or its data.
+op run -- bunx alchemy deploy --stage "dev_$USER" --yes --env-file /dev/null
+op run -- bunx alchemy destroy --stage "dev_$USER" --yes --env-file /dev/null
+# 2. Plan prod. Expect creates only: Context, Network, Container and four Exec
+#    steps; the data volume is a lookup. Any replace or delete stops the cutover.
+op run -- bunx alchemy plan --stage prod --env-file /dev/null
+```
+
+The AI metrics stack resolves no secret at deploy time, so `op run` here only
+guards against a stray resolved variable; add an env file of `op://`
+references if a later step needs one.
+
+Cutover, in order:
+
+1. Snapshot the data with Phoenix stopped: on dankserver,
+   `systemctl --user stop ai-metrics-phoenix.service` (its `ExecStop` is
+   `docker compose down`, which keeps the named volume), then archive the volume
+   `beep-ai-metrics-dankserver_phoenix_data` with a throwaway container into a
+   dated tarball outside the volume. Record the tarball path and sha256.
+2. `op run -- bunx alchemy deploy --stage prod --yes --env-file /dev/null`.
+   Preflight checks the volume exists; RetireCompose disables the unit, archives
+   it under `<legacy config root>/retired-compose/` and refuses to continue if a
+   Compose container named `beep-ai-metrics-phoenix` is still present; the
+   container starts on the same volume; TailscaleServe re-points HTTPS 8447 at
+   loopback 6006; Health waits for the Docker healthcheck, then checks loopback,
+   Serve and the public URL. A failure in any step fails the deploy.
+3. Verify by hand: the Phoenix UI at the stack's `phoenixUrl` lists the existing
+   projects (the data survived), and a test span posted to `otlpTraceUrl`
+   appears. Then `bunx alchemy drift --stage prod` exits 0.
+4. Save the outputs for rollback:
+   `bunx alchemy state read HostsAiMetrics/prod/output > ~/.local/state/beep/infra-hosts/ai-metrics-prod-output.json`.
+
+Rollback, in this order, because the Alchemy and Compose containers share one
+name:
+
+1. `op run -- bunx alchemy destroy --stage prod --yes --env-file /dev/null`
+   removes the Alchemy container, network and context. The volume is a lookup
+   and stays; Tailscale Serve stays on 8447 (Exec deletes nothing).
+2. Run the saved `operatorCommands.rollbackToCompose` command. It restores the
+   archived unit and starts it; `docker compose up` reattaches the same volume.
+3. If the data itself is damaged, restore the step-1 snapshot into the volume
+   with Phoenix stopped.
+
+To retire Phoenix entirely, run the saved `operatorCommands.tailscaleServeOff`
+after the destroy.
+
+### OpenClaw: rehearsal, apply, rollback
+
+```sh
+export BEEP_OPENCLAW_HOST_CONFIG=~/.local/state/beep/infra-hosts/openclaw.json
+# 1. Rehearse: decodes the config and renders the generation; runs nothing.
+bunx alchemy deploy openclaw.alchemy.run.ts --stage "dev_$USER" --yes --env-file /dev/null
+# 2. Prod plan, then apply, in the terminal that holds the armed sudo ticket.
+OPENCLAW_BACKUP_PASSPHRASE=op://<vault>/<item>/<field> \
+  op run -- bunx alchemy plan openclaw.alchemy.run.ts --stage prod --env-file /dev/null
+OPENCLAW_BACKUP_PASSPHRASE=op://<vault>/<item>/<field> \
+  op run -- bunx alchemy deploy openclaw.alchemy.run.ts --stage prod --yes --env-file /dev/null
+```
+
+The steps run Preflight, Stage, Apply, Probe and (with a `backup` block)
+BackupShip in order; each fails the deploy on a non-zero exit. The passphrase
+reference is resolved by `op run` into the process environment only, so it
+never reaches stack props or state. After the apply, run the stack output's
+`operatorCommands.liveAcceptance` and `operatorCommands.driftAudit`. Roll back
+with `operatorCommands.rollback` (it restores the previous generation from its
+snapshot); `alchemy destroy` leaves the workstation untouched by design.
+
 ## Acceptance evidence
 
 `alchemy plan` has no changes-pending exit code and GitHub secrets re-upload on

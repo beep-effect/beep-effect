@@ -1,0 +1,922 @@
+// The rendered acceptance script is executed once to prove its fail-closed
+// usage path through Effect's real Node child-process service.
+
+import {
+  makeOpenClawBundleHash,
+  makeOpenClawDeploymentIntent,
+  makeOpenClawGeneration,
+  OpenClawBackupConfig,
+  OpenClawBackupShipScriptInput,
+  OpenClawBundleHashInput,
+  OpenClawDeploymentConfig,
+  OpenClawExpectedIdentity,
+  OpenClawGenerationIdentityScriptInput,
+  OpenClawHostedProviderConfig,
+  OpenClawStackArgs,
+  OpenClawWorkstationPaths,
+  renderOpenClawApplyScript,
+  renderOpenClawBackupShipScript,
+  renderOpenClawDriftAuditScript,
+  renderOpenClawGenerationTree,
+  renderOpenClawLiveAcceptanceScript,
+  renderOpenClawPreflightScript,
+  renderOpenClawProbeScript,
+  renderOpenClawRollbackScript,
+  renderOpenClawRunScript,
+  renderOpenClawStageScript,
+  renderOpenClawUnit,
+} from "@beep/infra-hosts/OpenClawGeneration";
+import { OpenclawSecretReference, OpenclawSha256Hex } from "@beep/openclaw";
+import { fcRuns } from "@beep/test-utils";
+import * as A from "@beep/utils/Array";
+import * as O from "@beep/utils/Option";
+import * as R from "@beep/utils/Record";
+import * as Str from "@beep/utils/Str";
+import * as NodeServices from "@effect/platform-node/NodeServices";
+import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
+import { describe, expect } from "@effect/vitest";
+import * as Digest from "effect/crypto/Digest";
+import * as Effect from "effect/Effect";
+import * as Hex from "effect/encoding/Hex";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as P from "effect/Predicate";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
+
+const decodeJsonResult = S.decodeResult(S.fromJsonString(S.Unknown));
+
+const decodeOpenClawHostedProviderConfigResult = S.decodeResult(OpenClawHostedProviderConfig);
+const encodeUnknownOpenClawBackupConfig = S.encodeUnknownEffect(OpenClawBackupConfig);
+const encodeUnknownOpenClawWorkstationPaths = S.encodeUnknownEffect(OpenClawWorkstationPaths);
+const isOpenClawBackupShipScriptInput = S.is(OpenClawBackupShipScriptInput);
+const isOpenClawGenerationIdentityScriptInput = S.is(OpenClawGenerationIdentityScriptInput);
+
+import {
+  openClawLegalSoulMarkdown,
+  openClawProofSkillMarkdown,
+  openClawProofSkillRelativePath,
+  openClawSoulRelativePath,
+} from "@beep/infra-hosts/OpenClawArtifacts";
+import { it } from "@beep/test-runner";
+import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
+import { expectSchemaRoundTrip } from "./schemaParity.ts";
+
+const identity = OpenClawExpectedIdentity.make({
+  home: "/home/example",
+  hostname: "DankStation",
+  machineId: "0bffc9bc5a6b48928f1ab4794df5244b",
+  runtimeDir: "/run/user/1000",
+  uid: 1000,
+  username: "operator",
+});
+
+const backupTarget = { host: "backup-host", remoteDir: "/srv/backups/openclaw", user: "backup-user" };
+
+const deploymentConfig = OpenClawDeploymentConfig.make({
+  hostedProvider: {
+    apiKeyRef: OpenclawSecretReference.make("op://beep-openclaw/hosted/api-key"),
+    baseUrl: "https://hosted.example.test/v1",
+    modelId: "hosted-model",
+    modelName: "Hosted Model",
+    providerId: "hosted",
+  },
+  localProvider: {
+    baseUrl: "http://127.0.0.1:11434/v1",
+    modelId: "local-model",
+    modelName: "Local Model",
+    providerId: "local",
+  },
+  telegramBotTokenRef: OpenclawSecretReference.make("op://beep-openclaw/telegram/bot-token"),
+});
+
+const sha256Hex = Effect.fnUntraced(function* (text: string) {
+  const crypto = yield* Digest.Digest;
+  const digest = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(text));
+  return Hex.encode(digest);
+});
+
+const runCaptured = Effect.fnUntraced(function* (command: ChildProcess.Command) {
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  return yield* Effect.scoped(
+    Effect.gen(function* () {
+      const handle = yield* spawner.spawn(command);
+      return yield* Effect.all([handle.stderr.pipe(Stream.decodeText(), Stream.mkString), handle.exitCode], {
+        concurrency: "unbounded",
+      });
+    })
+  );
+});
+const defaultArgs = OpenClawStackArgs.new(identity, deploymentConfig);
+const defaultGenerationEffect = NodeCrypto.layerDigest.pipe(
+  Layer.build,
+  Effect.flatMap((context) => makeOpenClawGeneration(defaultArgs).pipe(Effect.provideContext(context))),
+  Effect.scoped
+);
+const TestPlatform = Layer.merge(NodeServices.layer, NodeCrypto.layerDigest);
+const parseDocument = (json: string): { readonly [key: string]: unknown } => {
+  const parsed = decodeJsonResult(json);
+  const decoded = parsed.pipe(Result.getOrThrow);
+  const validated = O.liftPredicate(P.isObject)(decoded);
+  return validated.pipe(O.getOrThrow);
+};
+
+/**
+ * Unwrap a rendered `/bin/bash --noprofile --norc -p -c '<body>'` command back into the body the
+ * shell actually executes, so assertions read as the script an operator sees.
+ */
+const scriptWrapperPrefix = "/bin/bash --noprofile --norc -p -c '";
+
+const scriptBody = (rendered: string): string =>
+  pipe(rendered, Str.slice(scriptWrapperPrefix.length, -1), Str.replace(/'"'"'/gu, "'"));
+
+/** Index of the first line matching `needle`, or `-1` when absent. */
+const lineIndexOf = (script: string, needle: string): number =>
+  O.getOrElse(
+    A.findFirstIndex(Str.split("\n")(script), (line) => Str.includes(needle)(line)),
+    () => -1
+  );
+
+/**
+ * The executed part of a script, with the leading shell function definitions
+ * dropped, so ordering assertions read the sequence rather than the helpers a
+ * failure path calls into.
+ */
+const mainSequence = (script: string): string => {
+  const lines = Str.split("\n")(script);
+  const lastFunctionEnd = A.reduce(lines, -1, (acc, line, index) => (line === "}" ? index : acc));
+
+  return A.join(lines.slice(lastFunctionEnd + 1), "\n");
+};
+
+const goldenUnitText = (generationId: string) => `# BEEP_OPENCLAW_MANAGED
+[Unit]
+Description=OpenClaw workstation gateway (beep-managed generation ${generationId})
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=PATH=/opt/beep/openclaw/node/bin:/usr/bin:/bin
+Environment=HOME=/home/example
+Environment=OPENCLAW_CONFIG_PATH=/etc/beep/openclaw/current/openclaw.json
+Environment=OPENCLAW_STATE_DIR=/var/lib/beep/openclaw
+Environment=OPENCLAW_NIX_MODE=1
+LoadCredential=op-service-account-token:/etc/beep/openclaw/credentials/op-service-account-token
+UnsetEnvironment=OP_SERVICE_ACCOUNT_TOKEN OP_SESSION OP_CONNECT_TOKEN OPENCLAW_GATEWAY_TOKEN
+ExecStartPre=/etc/beep/openclaw/current/run.sh preflight
+ExecStart=/etc/beep/openclaw/current/run.sh
+Restart=no
+StandardOutput=append:/var/lib/beep/openclaw/log/openclaw.log
+StandardError=append:/var/lib/beep/openclaw/log/openclaw.log
+
+[Install]
+WantedBy=default.target
+`;
+
+describe("@beep/infra-hosts OpenClaw generation", () => {
+  it("rejects plaintext HTTP for hosted provider credentials", () => {
+    const provider = {
+      apiKeyRef: "op://beep-openclaw/hosted/api-key",
+      baseUrl: "https://hosted.example.test/v1",
+      modelId: "model",
+      modelName: "Model",
+      providerId: "hosted",
+    };
+
+    pipe(decodeOpenClawHostedProviderConfigResult(provider), Result.isSuccess, assertTrue);
+    pipe(
+      decodeOpenClawHostedProviderConfigResult({
+        ...provider,
+        baseUrl: "http://hosted.example.test/v1",
+      }),
+      Result.isFailure,
+      assertTrue
+    );
+  });
+
+  it("applies workstation defaults around a declared identity", () => {
+    expect(defaultArgs.identity.machineId).toBe("0bffc9bc5a6b48928f1ab4794df5244b");
+    expect(defaultArgs.paths.configRoot).toBe("/etc/beep/openclaw");
+    expect(defaultArgs.paths.stateDir).toBe("/var/lib/beep/openclaw");
+    expect(defaultArgs.paths.unitName).toBe("openclaw.service");
+    expect(defaultArgs.deployment.gatewayPort).toBe(19_031);
+    expect(defaultArgs.deployment.openclawVersion).toBe("2026.7.1-2");
+    expect(defaultArgs.deployment.gatewayAuthTokenRef).toBe("op://beep-openclaw/gateway/token");
+    expect(defaultArgs.deployment.telegramDmPolicy).toBe("pairing");
+    expect(defaultArgs.deployment.telegramGroupPolicy).toBe("disabled");
+    assertNone(defaultArgs.backup);
+  });
+
+  it.layer(TestPlatform)((it) => {
+    it.effect(
+      "renders exactly two providers, hosted primary, DM-only Telegram, and loopback Control UI",
+      Effect.fnUntraced(function* () {
+        const defaultGeneration = yield* defaultGenerationEffect;
+        const intent = yield* makeOpenClawDeploymentIntent(deploymentConfig);
+        const intentFromExplicitDefault = yield* makeOpenClawDeploymentIntent(undefined)(deploymentConfig);
+        const document = parseDocument(defaultGeneration.canonicalJson);
+
+        expect(intentFromExplicitDefault).toEqual(intent);
+        expect(intent.agent.model).toBe("hosted/hosted-model");
+        expect(intent.agent.workspace).toBe("/etc/beep/openclaw/current/workspace");
+        expect(intent.providers).toHaveLength(2);
+        expect(intent.providers[0]?.id).toBe("hosted");
+        expect(intent.providers[1]?.id).toBe("local");
+        expect(intent.providers[1]?.baseUrl).toBe("http://127.0.0.1:11434/v1");
+        expect(intent.skills).toHaveLength(1);
+        expect(intent.skills[0]?.name).toBe("beep-proof-ping");
+        expect(O.getOrThrow(intent.telegram).groups).toEqual({});
+        expect(document).toMatchObject({
+          channels: { telegram: { configWrites: false, groups: {} } },
+          gateway: {
+            controlUi: {
+              allowedOrigins: ["http://127.0.0.1:19031", "http://localhost:19031"],
+              enabled: true,
+            },
+          },
+          models: {
+            providers: {
+              hosted: {
+                api: "openai-compat",
+                apiKey: { id: "value", provider: "op_provider_hosted", source: "exec" },
+              },
+              local: {
+                api: "openai-compat",
+                apiKey: "local-no-secret",
+                baseUrl: "http://127.0.0.1:11434/v1",
+              },
+            },
+          },
+        });
+        expect(defaultGeneration.canonicalJson).toContain("op://beep-openclaw/hosted/api-key");
+        expect(defaultGeneration.canonicalJson).not.toContain("raw-credential");
+        expect(defaultGeneration.canonicalJson).not.toContain("allowInsecureAuth");
+        expect(defaultGeneration.canonicalJson).not.toContain("dangerouslyDisableDeviceAuth");
+        expect(defaultGeneration.canonicalJson).not.toContain("dangerouslyAllowHostHeaderOriginFallback");
+      })
+    );
+  });
+
+  it.effect(
+    "encodes OpenClaw config classes with unchanged optional-key wire shapes",
+    Effect.fnUntraced(function* () {
+      const encodedPaths = yield* encodeUnknownOpenClawWorkstationPaths(
+        OpenClawWorkstationPaths.make({ unitName: "beep.service" })
+      );
+      const encodedBackup = yield* encodeUnknownOpenClawBackupConfig(
+        OpenClawBackupConfig.make({
+          ...backupTarget,
+          host: "backup-host",
+          passphraseSecretRef: "op://beep-openclaw/backup/passphrase",
+          remoteDir: "/srv/backups/openclaw",
+          user: "backup-user",
+        })
+      );
+
+      expect(encodedPaths).toEqual({
+        configRoot: "/etc/beep/openclaw",
+        nodeBinDir: "/opt/beep/openclaw/node/bin",
+        stateDir: "/var/lib/beep/openclaw",
+        unitName: "beep.service",
+      });
+      expect(encodedBackup).toEqual({
+        host: "backup-host",
+        passphraseSecretRef: "op://beep-openclaw/backup/passphrase",
+        remoteDir: "/srv/backups/openclaw",
+        user: "backup-user",
+      });
+    })
+  );
+
+  it.effect.prop(
+    "round-trips OpenClawExpectedIdentity through its encoded wire codec",
+    [Arbitrary.schema(OpenClawExpectedIdentity)],
+    ([value]) => expectSchemaRoundTrip(OpenClawExpectedIdentity, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips OpenClawWorkstationPaths through its encoded wire codec",
+    [Arbitrary.schema(OpenClawWorkstationPaths)],
+    ([value]) => expectSchemaRoundTrip(OpenClawWorkstationPaths, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips OpenClawDeploymentConfig through its encoded wire codec",
+    [Arbitrary.schema(OpenClawDeploymentConfig)],
+    ([value]) => expectSchemaRoundTrip(OpenClawDeploymentConfig, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips OpenClawBackupConfig through its encoded wire codec",
+    [Arbitrary.schema(OpenClawBackupConfig)],
+    ([value]) => expectSchemaRoundTrip(OpenClawBackupConfig, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect.prop(
+    "round-trips OpenClawBundleHashInput through its encoded wire codec",
+    [Arbitrary.schema(OpenClawBundleHashInput)],
+    ([value]) => expectSchemaRoundTrip(OpenClawBundleHashInput, value),
+    { arbitrary: fcRuns(25) }
+  );
+
+  it.effect("models renderer input contracts as schemas", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const backup = OpenClawBackupConfig.make({
+        ...backupTarget,
+        passphraseSecretRef: "op://beep-openclaw/backup/passphrase",
+      });
+      const generationIdentityInput = OpenClawGenerationIdentityScriptInput.make({
+        generation: defaultGeneration,
+        identity,
+      });
+      const backupInput = OpenClawBackupShipScriptInput.make({ backup, generation: defaultGeneration });
+
+      pipe(isOpenClawGenerationIdentityScriptInput(generationIdentityInput), assertTrue);
+      pipe(isOpenClawBackupShipScriptInput(backupInput), assertTrue);
+    })
+  );
+
+  it.layer(TestPlatform)(
+    "addresses a generation by the length-delimited config/persona/skill/compatibility bundle",
+    (it) =>
+      it.effect(
+        "matches the platform SHA-256 digest",
+        Effect.fnUntraced(function* () {
+          const defaultGeneration = yield* defaultGenerationEffect;
+          const expectation = expect(defaultGeneration.configHash);
+          const sha256Hex1 = yield* sha256Hex(defaultGeneration.canonicalJson);
+          expectation.toBe(sha256Hex1);
+          expect(defaultGeneration.generationId).not.toBe(defaultGeneration.configHash);
+          expect(defaultGeneration.generationId).toMatch(/^[0-9a-f]{64}$/u);
+          expect((yield* makeOpenClawGeneration(defaultArgs)).generationId).toBe(defaultGeneration.generationId);
+        })
+      )
+  );
+
+  it.layer(TestPlatform)((it) => {
+    it.effect(
+      "re-addresses the generation when the deployment intent changes",
+      Effect.fnUntraced(function* () {
+        const defaultGeneration = yield* defaultGenerationEffect;
+        const other = yield* makeOpenClawGeneration(
+          OpenClawStackArgs.new(identity, OpenClawDeploymentConfig.make({ ...deploymentConfig, gatewayPort: 19_040 }))
+        );
+
+        expect(other.generationId).not.toBe(defaultGeneration.generationId);
+      })
+    );
+  });
+
+  it.layer(TestPlatform)("re-addresses the generation when only SOUL bytes change", (it) =>
+    it.effect(
+      "hashes the changed SOUL through the platform crypto service",
+      Effect.fnUntraced(function* () {
+        const defaultGeneration = yield* defaultGenerationEffect;
+        const sha256Hex2 = yield* sha256Hex(`${openClawLegalSoulMarkdown}\n`);
+        const changedSoulHash = OpenclawSha256Hex.make(sha256Hex2);
+
+        const madeOpenClawBundleHash = yield* makeOpenClawBundleHash(
+          OpenClawBundleHashInput.make({
+            configHash: defaultGeneration.configHash,
+            proofSkillHash: defaultGeneration.proofSkillHash,
+            soulHash: changedSoulHash,
+          })
+        );
+        expect(madeOpenClawBundleHash).not.toBe(defaultGeneration.generationId);
+      })
+    )
+  );
+
+  it.effect("renders the systemd unit byte-identically to the recorded golden text", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      expect(renderOpenClawUnit(defaultGeneration)).toBe(goldenUnitText(defaultGeneration.generationId));
+    })
+  );
+
+  it.effect("renders a run script that resolves the pointer and dispatches on mode", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const runScript = renderOpenClawRunScript(defaultGeneration);
+
+      pipe(Str.startsWith("#!/usr/bin/env bash\n# BEEP_OPENCLAW_MANAGED\nset -euo pipefail\n")(runScript), assertTrue);
+      expect(runScript).toContain('generation_dir="$(dirname "$(readlink -f "$0")")"');
+      expect(runScript).toContain("unset OP_SERVICE_ACCOUNT_TOKEN OP_SESSION OP_CONNECT_TOKEN OPENCLAW_GATEWAY_TOKEN");
+      expect(runScript).toContain('"${op_binary}" whoami >/dev/null');
+      expect(runScript).toContain('export OP_SERVICE_ACCOUNT_TOKEN="$(cat "${credential_file}")"');
+      expect(runScript).toContain('exec "${openclaw_bin}" config validate');
+      expect(runScript).toContain('gateway) exec "${openclaw_bin}" gateway ;;');
+    })
+  );
+
+  it.effect("renders the generation tree with exact paths and modes", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const tree = renderOpenClawGenerationTree(defaultGeneration);
+
+      expect(A.sort(R.keys(tree), Str.Order)).toEqual([
+        "manifest.json",
+        "openclaw.json",
+        "run.sh",
+        openClawSoulRelativePath,
+        openClawProofSkillRelativePath,
+      ]);
+      expect(tree).toMatchObject({
+        "manifest.json": { mode: "0644" },
+        "openclaw.json": { content: defaultGeneration.canonicalJson, mode: "0644" },
+        "run.sh": { mode: "0755" },
+        [openClawSoulRelativePath]: { content: openClawLegalSoulMarkdown, mode: "0644" },
+        [openClawProofSkillRelativePath]: { content: openClawProofSkillMarkdown, mode: "0644" },
+      });
+      const manifestContent = tree["manifest.json"]?.content ?? "";
+      expect(manifestContent).toContain(`"openclawVersion": "2026.7.1-2"`);
+      expect(manifestContent).toContain(`"nodeVersion": "24.22.1"`);
+      expect(manifestContent).toContain(`"generationId": "${defaultGeneration.generationId}"`);
+      expect(manifestContent).toContain(`"configHash": "${defaultGeneration.configHash}"`);
+      expect(manifestContent).toContain(`"soulSha256": "${defaultGeneration.soulHash}"`);
+      expect(manifestContent).toContain(`"proofSkillSha256": "${defaultGeneration.proofSkillHash}"`);
+    })
+  );
+
+  it.effect("stages every generation file root-owned with its declared mode", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const script = scriptBody(renderOpenClawStageScript(defaultGeneration));
+      const generationDir = `/etc/beep/openclaw/${defaultGeneration.generationId}`;
+
+      expect(script).toContain(
+        `/usr/bin/sudo -n install -o root -g root -m 0644 /dev/stdin '${generationDir}/openclaw.json'`
+      );
+      expect(script).toContain(
+        `/usr/bin/sudo -n install -o root -g root -m 0644 /dev/stdin '${generationDir}/manifest.json'`
+      );
+      expect(script).toContain(`/usr/bin/sudo -n install -o root -g root -m 0755 /dev/stdin '${generationDir}/run.sh'`);
+      expect(script).toContain(
+        `/usr/bin/sudo -n install -o root -g root -m 0644 /dev/stdin '${generationDir}/${openClawSoulRelativePath}'`
+      );
+      expect(script).toContain(
+        `/usr/bin/sudo -n install -o root -g root -m 0644 /dev/stdin '${generationDir}/${openClawProofSkillRelativePath}'`
+      );
+      expect(script).toContain("STAGE-FAIL: symlink parent");
+      expect(script).toContain("BEEP_OPENCLAW_CONFIG");
+      expect(script).toContain("BEEP_OPENCLAW_MANIFEST");
+      expect(script).toContain("BEEP_OPENCLAW_RUN");
+      expect(script).toContain("BEEP_OPENCLAW_UNIT");
+    })
+  );
+
+  it.effect("proves the node toolchain is root-owned before running the privileged install", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const script = scriptBody(renderOpenClawStageScript(defaultGeneration));
+      const nodeBinDir = defaultGeneration.nodeBinDir;
+
+      // The privileged install must never resolve `npm` through PATH: a user-writable directory
+      // ahead of it would execute an attacker's package manager as root, and `--ignore-scripts`
+      // is no defense once the package manager binary itself is attacker-controlled.
+      expect(script).not.toMatch(/sudo -n env PATH=\S+ npm install/u);
+      expect(script).toContain('"${npm_bin}" install --prefix');
+      expect(script).toContain(`node_dir="$(/usr/bin/readlink -f '${nodeBinDir}')"`);
+      expect(script).toContain(`node_bin="$(/usr/bin/readlink -f '${nodeBinDir}/node')"`);
+      expect(script).toContain(`npm_bin="$(/usr/bin/readlink -f '${nodeBinDir}/npm')"`);
+      expect(script).toContain("assert_trusted_path \"${node_dir}\" 'pinned node bin dir'");
+      expect(script).toContain("assert_trusted_path \"${node_bin}\" 'pinned node binary'");
+      expect(script).toContain("assert_trusted_path \"${npm_bin}\" 'pinned npm binary'");
+      expect(script).toContain('[ "${owner}" = 0 ] || fail "${label} is not root-owned: ${probe}"');
+      expect(script).toContain('[ "$(( 8#${mode} & 8#22 ))" -eq 0 ]');
+      // The walk must terminate at the root inode, so a writable ancestor cannot be swapped.
+      expect(script).toContain('if [ "${probe}" = / ]; then break; fi');
+      // The guard runs before any privileged mutation the stage script performs.
+      const guard = lineIndexOf(script, 'assert_trusted_path "${npm_bin}"');
+      const install = lineIndexOf(script, "/usr/bin/sudo -n install -d");
+      const privilegedNpm = lineIndexOf(script, '"${npm_bin}" install --prefix');
+
+      expect(guard).toBeGreaterThanOrEqual(0);
+      expect(guard).toBeLessThan(install);
+      expect(guard).toBeLessThan(privilegedNpm);
+    })
+  );
+
+  it("pins the node toolchain default inside the root-owned trusted tree", () => {
+    expect(OpenClawWorkstationPaths.make({}).nodeBinDir).toBe("/opt/beep/openclaw/node/bin");
+  });
+
+  it.effect("never renders a login shell and never resolves sudo by name", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const rendered = [
+        renderOpenClawPreflightScript(
+          OpenClawGenerationIdentityScriptInput.make({ generation: defaultGeneration, identity })
+        ),
+        renderOpenClawStageScript(defaultGeneration),
+        renderOpenClawApplyScript(defaultGeneration),
+        renderOpenClawRollbackScript(defaultGeneration),
+        renderOpenClawDriftAuditScript(
+          OpenClawGenerationIdentityScriptInput.make({ generation: defaultGeneration, identity })
+        ),
+        renderOpenClawProbeScript(
+          OpenClawGenerationIdentityScriptInput.make({ generation: defaultGeneration, identity })
+        ),
+        renderOpenClawLiveAcceptanceScript(defaultGeneration),
+        renderOpenClawBackupShipScript(
+          OpenClawBackupShipScriptInput.make({
+            backup: OpenClawBackupConfig.make({
+              ...backupTarget,
+              passphraseSecretRef: "op://beep-openclaw/backup/passphrase",
+            }),
+            generation: defaultGeneration,
+          })
+        ),
+      ];
+
+      for (const command of rendered) {
+        // A login shell sources the user-writable ~/.bash_profile before the first rendered line,
+        // which lets an unprivileged user define a `sudo` function and hijack the armed ticket.
+        pipe(Str.startsWith(scriptWrapperPrefix)(command), assertTrue);
+        expect(command).not.toContain("/bin/bash -lc");
+
+        const body = scriptBody(command);
+
+        // Every privilege-granting call is absolute: a bare `sudo` is satisfied by any shim
+        // earlier on PATH, and PATH is attacker-influenced until the pinned export runs.
+        expect(body).not.toMatch(/(?<!\/usr\/bin\/)\bsudo -n\b/u);
+        const pinnedPath = lineIndexOf(body, "export PATH=/usr/bin:/bin");
+        const firstSudo = lineIndexOf(body, "/usr/bin/sudo");
+
+        expect(pinnedPath).toBeGreaterThanOrEqual(0);
+        // PATH is pinned before the first privileged call, never after it.
+        if (firstSudo >= 0) {
+          expect(pinnedPath).toBeLessThan(firstSudo);
+        }
+      }
+    })
+  );
+
+  it.effect("asserts sudo is the real setuid binary rather than trusting a name lookup", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const script = scriptBody(
+        renderOpenClawPreflightScript(
+          OpenClawGenerationIdentityScriptInput.make({ generation: defaultGeneration, identity })
+        )
+      );
+
+      expect(script).toContain("[ -u /usr/bin/sudo ] || fail '/usr/bin/sudo is missing or not setuid root'");
+      expect(script).not.toContain("command -v sudo");
+    })
+  );
+
+  it.effect("validates the candidate config with the candidate's own staged binary before apply", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const script = scriptBody(renderOpenClawStageScript(defaultGeneration));
+      const generationDir = `/etc/beep/openclaw/${defaultGeneration.generationId}`;
+
+      expect(script).toContain(`'${generationDir}/node_modules/.bin/openclaw' config validate`);
+      expect(script).toContain(`OPENCLAW_CONFIG_PATH='${generationDir}/openclaw.json'`);
+      expect(script).toContain("STAGE-OK");
+      // Staging renders the unit (which targets `current`) but never moves the
+      // pointer itself — switching generations is the apply step's job alone.
+      expect(script).not.toContain("mv -T");
+      expect(script).not.toContain("ln -s");
+    })
+  );
+
+  it.effect("binds preflight to the declared identity and fails closed on unreadable values", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const script = scriptBody(
+        renderOpenClawPreflightScript(
+          OpenClawGenerationIdentityScriptInput.make({ generation: defaultGeneration, identity })
+        )
+      );
+
+      expect(script).toContain("PREFLIGHT-FAIL");
+      expect(script).toContain("exit 78");
+      expect(script).toContain("expected_machine_id='0bffc9bc5a6b48928f1ab4794df5244b'");
+      expect(script).toContain("malformed expected identity: empty machine-id (failing closed)");
+      expect(script).toContain("unreadable machine-id on the target (failing closed)");
+      expect(script).toContain("unreadable hostname on the target (failing closed)");
+      expect(script).toContain("machine-id mismatch: expected");
+    })
+  );
+
+  it.effect("checks linger, a real bus round-trip, the socket cap, and an armed sudo ticket in preflight", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const script = scriptBody(
+        renderOpenClawPreflightScript(
+          OpenClawGenerationIdentityScriptInput.make({ generation: defaultGeneration, identity })
+        )
+      );
+
+      expect(script).toContain("loginctl show-user 'operator' -p Linger --value");
+      expect(script).toContain("linger not enabled for operator");
+      expect(script).toContain("systemctl --user show -p UnitsLoadTimestampMonotonic --value");
+      expect(script).toContain("user bus round-trip failed (systemctl --user show)");
+      expect(script).toContain("running|degraded|maintenance|starting) : ;;");
+      expect(script).toContain("108-byte UNIX socket cap");
+      expect(script).toContain("/usr/bin/sudo -n -v");
+      expect(script).toContain("no armed sudo ticket");
+      expect(script).toContain("PREFLIGHT-OK");
+    })
+  );
+
+  it.effect("accepts a degraded user manager without depending on is-system-running's exit code", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const script = scriptBody(
+        renderOpenClawPreflightScript(
+          OpenClawGenerationIdentityScriptInput.make({ generation: defaultGeneration, identity })
+        )
+      );
+
+      expect(script).toContain('manager_state="$(systemctl --user is-system-running 2>&1 || true)"');
+      expect(script).toContain("user manager unreachable (state=");
+    })
+  );
+
+  it.effect("orders apply as stop, snapshot, pointer switch, reload, start, health, commit", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const script = mainSequence(scriptBody(renderOpenClawApplyScript(defaultGeneration)));
+      const stop = lineIndexOf(script, 'systemctl --user stop "${unit}" || true');
+      const snapshot = lineIndexOf(script, '/usr/bin/sudo -n cp -a -- "${state_dir}" "${snapshot}"');
+      const pointer = lineIndexOf(script, '/usr/bin/sudo -n mv -T -- "${pointer}.tmp.$$" "${pointer}"');
+      const reload = lineIndexOf(script, "systemctl --user daemon-reload");
+      const start = lineIndexOf(script, 'if ! systemctl --user start "${unit}"; then');
+      const health = lineIndexOf(script, "for attempt in $(seq 1 30); do");
+      const commit = lineIndexOf(script, ".beep-openclaw-committed");
+
+      expect(stop).toBeGreaterThan(-1);
+      expect(snapshot).toBeGreaterThan(stop);
+      expect(pointer).toBeGreaterThan(snapshot);
+      expect(reload).toBeGreaterThan(pointer);
+      expect(start).toBeGreaterThan(reload);
+      expect(health).toBeGreaterThan(start);
+      expect(commit).toBeGreaterThan(health);
+    })
+  );
+
+  it.effect("snapshots the stopped state including SQLite WAL sidecars before switching", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const script = scriptBody(renderOpenClawApplyScript(defaultGeneration));
+
+      expect(script).toContain("APPLY-SNAPSHOT");
+      expect(script).toContain("includes SQLite WAL sidecars");
+      expect(script).toContain(`snapshot='/etc/beep/openclaw/.snapshots/${defaultGeneration.generationId}'`);
+    })
+  );
+
+  it.effect("switches the pointer atomically with ln -s followed by mv -T", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const script = scriptBody(renderOpenClawApplyScript(defaultGeneration));
+
+      expect(script).toContain(`/usr/bin/sudo -n ln -s -- '${defaultGeneration.generationId}' "\${pointer}.tmp.$$"`);
+      expect(script).toContain('/usr/bin/sudo -n mv -T -- "${pointer}.tmp.$$" "${pointer}"');
+      expect(script).toContain("APPLY-POINTER");
+    })
+  );
+
+  it.effect("restores the snapshot and prior pointer on a failed start or failed health wait", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const script = scriptBody(renderOpenClawApplyScript(defaultGeneration));
+
+      expect(script).toContain("restore_snapshot() {");
+      expect(script).toContain("APPLY-ROLLBACK: restoring snapshot");
+      expect(script).toContain('/usr/bin/sudo -n cp -a -- "${snapshot}" "${state_dir}"');
+      expect(script).toContain('/usr/bin/sudo -n ln -s -- "${prior_pointer}" "${pointer}.rollback.$$"');
+      expect(Str.split("restore_snapshot")(script).length - 1).toBeGreaterThanOrEqual(3);
+      expect(script).toContain("APPLY-FAIL: unit failed to start; snapshot and prior pointer restored");
+      expect(script).toContain("never succeeded within 30s; snapshot and prior pointer restored");
+    })
+  );
+
+  it.effect("refuses to start a generation older than the migrated live state", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const script = scriptBody(renderOpenClawApplyScript(defaultGeneration));
+      const guard = lineIndexOf(script, "APPLY-REFUSED: downgrade guard");
+      const firstPrivilegedStep = lineIndexOf(script, "/usr/bin/sudo -n");
+
+      expect(script).toContain("PRAGMA user_version;");
+      expect(script).toContain('if [ "${candidate_user_version}" -lt "${live_user_version}" ]; then');
+      expect(script).toContain("restore a snapshot before switching");
+      expect(script).toContain("exit 75");
+      expect(script).toContain("downgrade guard read a malformed recorded user_version");
+      // The guard must refuse before any privileged mutation is even reachable.
+      expect(guard).toBeGreaterThan(-1);
+      expect(guard).toBeLessThan(firstPrivilegedStep);
+    })
+  );
+
+  it.effect("restores state before switching binaries in the operator rollback script", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const script = scriptBody(renderOpenClawRollbackScript(defaultGeneration));
+      const restore = lineIndexOf(script, '/usr/bin/sudo -n cp -a -- "${snapshot}" "${state_dir}"');
+      const pointer = lineIndexOf(script, '/usr/bin/sudo -n mv -T -- "${pointer}.rollback.$$" "${pointer}"');
+      const start = lineIndexOf(script, 'systemctl --user start "${unit}"');
+
+      expect(script).toContain("ROLLBACK-FAIL: no snapshot at");
+      expect(script).toContain("ROLLBACK-FAIL: no recorded previous pointer at");
+      expect(restore).toBeGreaterThan(-1);
+      expect(pointer).toBeGreaterThan(restore);
+      expect(start).toBeGreaterThan(pointer);
+      expect(script).toContain("ROLLBACK-OK");
+    })
+  );
+
+  it.effect("audits every drift dimension with alert-only output", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const script = scriptBody(
+        renderOpenClawDriftAuditScript(
+          OpenClawGenerationIdentityScriptInput.make({ generation: defaultGeneration, identity })
+        )
+      );
+
+      expect(script).toContain("ALERT: OPENCLAW_CONFIG_DRIFT %s expected=%s actual=%s");
+      expect(script).toContain("alert generation-pointer");
+      expect(script).toContain("alert openclaw-version");
+      expect(script).toContain("alert node-version");
+      expect(script).toContain("alert unit-content");
+      expect(script).toContain("alert unit-enabled");
+      expect(script).toContain("alert unit-active");
+      expect(script).toContain("alert config-hash");
+      expect(script).toContain("alert config-validate");
+      expect(script).toContain("alert identity-machine-id");
+      expect(script).toContain("alert identity-runtime-dir");
+      expect(script).toContain("DRIFT-AUDIT-COMPLETE");
+      // Alert-only: the audit reports, an operator redeploys.
+      pipe(Str.endsWith("exit 0")(script), assertTrue);
+      expect(script).not.toContain("systemctl --user restart");
+    })
+  );
+
+  it.effect("normalizes file modes through stat's octal form so 33188 can never read as drift", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const script = scriptBody(
+        renderOpenClawDriftAuditScript(
+          OpenClawGenerationIdentityScriptInput.make({ generation: defaultGeneration, identity })
+        )
+      );
+
+      expect(script).toContain("stat -c '%a'");
+      expect(script).toContain("alert config-mode 644");
+      expect(script).toContain("alert run-script-mode 755");
+      expect(script).not.toContain("33188");
+    })
+  );
+
+  it.effect("mutates nothing in the drift audit", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const script = scriptBody(
+        renderOpenClawDriftAuditScript(
+          OpenClawGenerationIdentityScriptInput.make({ generation: defaultGeneration, identity })
+        )
+      );
+
+      expect(script).not.toContain("/usr/bin/sudo -n");
+      expect(script).not.toContain("mv -T");
+      expect(script).not.toContain("rm -rf");
+      expect(script).not.toContain("install -o root");
+    })
+  );
+
+  it.effect("folds the drift inventory into the alert-only acceptance probe", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const script = scriptBody(
+        renderOpenClawProbeScript(
+          OpenClawGenerationIdentityScriptInput.make({ generation: defaultGeneration, identity })
+        )
+      );
+
+      expect(script).toContain("PROBE-LIVENESS");
+      expect(script).toContain("http://127.0.0.1:19031/health");
+      expect(script).toContain("gateway call health");
+      expect(script).toContain("channels status --probe");
+      expect(script).toContain("ALERT: OPENCLAW_CONFIG_DRIFT");
+      expect(script).toContain("PROBE-COMPLETE");
+      pipe(Str.endsWith("exit 0")(script), assertTrue);
+    })
+  );
+
+  it.layer(TestPlatform)("renders a separate fail-closed live acceptance command", (it) =>
+    it.effect(
+      "executes the rendered Bash script for real",
+      Effect.fnUntraced(function* () {
+        const defaultGeneration = yield* defaultGenerationEffect;
+        const script = scriptBody(renderOpenClawLiveAcceptanceScript(defaultGeneration));
+
+        expect(script).toContain("LIVE-ACCEPTANCE-FAIL");
+        expect(script).toContain("skills list --json --eligible --agent");
+        expect(script).toContain("message send --channel telegram");
+        expect(script).toContain("channels status --channel telegram --probe --json");
+        expect(script).toContain("secrets reload --json");
+        expect(script).toContain("P3_MODEL_OK");
+        expect(script).toContain("P3_SKILL_OK");
+        expect(script).toContain("export OPENCLAW_CONFIG_PATH='/etc/beep/openclaw/current/openclaw.json'");
+        expect(script).toContain("export OPENCLAW_STATE_DIR='/var/lib/beep/openclaw'");
+        pipe(Str.endsWith("exit 0")(Str.trimEnd(script)), assertFalse);
+        const [stderr, exitCode] = yield* runCaptured(
+          ChildProcess.make("/bin/bash", ["--noprofile", "--norc", "-p", "-c", script])
+        );
+        expect(exitCode).toBe(1);
+        expect(stderr).toContain("usage: live-acceptance degraded|restored");
+      })
+    )
+  );
+
+  it.effect("encrypts snapshot archives locally and verifies a remote sha256 receipt", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const script = scriptBody(
+        renderOpenClawBackupShipScript(
+          OpenClawBackupShipScriptInput.make({
+            backup: OpenClawBackupConfig.make({
+              ...backupTarget,
+              agentSocketPath: O.some("/run/user/1000/gcr/ssh"),
+              passphraseSecretRef: "op://beep-openclaw/backup/passphrase",
+            }),
+            generation: defaultGeneration,
+          })
+        )
+      );
+
+      expect(script).toContain("export SSH_AUTH_SOCK='/run/user/1000/gcr/ssh'");
+      expect(script).toContain("OPENCLAW_BACKUP_PASSPHRASE is unset");
+      expect(script).toContain("op://beep-openclaw/backup/passphrase");
+      expect(script).toContain("gpg --batch --yes --symmetric --cipher-algo AES256");
+      // The backup host is dumb storage: mkdir, scp, and a sha256 read-back, nothing else.
+      expect(script).toContain("scp -q");
+      expect(script).toContain("mkdir -p /srv/backups/openclaw");
+      expect(script).toContain("BACKUP-FAIL: receipt sha256 mismatch");
+      expect(script).toContain("BACKUP-OK");
+      // The passphrase reference travels; the material never does.
+      expect(script).not.toContain("--passphrase ");
+    })
+  );
+
+  it.effect("omits the ssh agent export when no agent socket is declared", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const script = scriptBody(
+        renderOpenClawBackupShipScript(
+          OpenClawBackupShipScriptInput.make({
+            backup: OpenClawBackupConfig.make({
+              ...backupTarget,
+              passphraseSecretRef: "op://beep-openclaw/backup/passphrase",
+            }),
+            generation: defaultGeneration,
+          })
+        )
+      );
+
+      expect(script).not.toContain("SSH_AUTH_SOCK");
+      expect(script).toContain("BACKUP-OK");
+    })
+  );
+
+  it.effect("keeps secret material out of every rendered artifact", () =>
+    Effect.gen(function* () {
+      const defaultGeneration = yield* defaultGenerationEffect;
+      const artifacts = [
+        renderOpenClawUnit(defaultGeneration),
+        renderOpenClawRunScript(defaultGeneration),
+        scriptBody(renderOpenClawStageScript(defaultGeneration)),
+        scriptBody(renderOpenClawApplyScript(defaultGeneration)),
+        scriptBody(
+          renderOpenClawProbeScript(
+            OpenClawGenerationIdentityScriptInput.make({ generation: defaultGeneration, identity })
+          )
+        ),
+        defaultGeneration.canonicalJson,
+      ];
+
+      for (const artifact of artifacts) {
+        expect(artifact).not.toContain("OPENCLAW_GATEWAY_TOKEN=");
+      }
+      // The unit strips inherited credentials rather than carrying them.
+      expect(renderOpenClawUnit(defaultGeneration)).toContain(
+        "UnsetEnvironment=OP_SERVICE_ACCOUNT_TOKEN OP_SESSION OP_CONNECT_TOKEN OPENCLAW_GATEWAY_TOKEN"
+      );
+    })
+  );
+});
