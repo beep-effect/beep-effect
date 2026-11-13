@@ -3,6 +3,9 @@
   "tasks": {
     "build": {
       "outputs": []
+    },
+    "check": {
+      "dependsOn": ["^build"]
     }
   }
 }

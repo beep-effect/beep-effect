@@ -17,9 +17,14 @@ permissions:
   contents: read
 
 env:
-  # The event payload is fixed across jobs and partial reruns. Never bind
-  # coverage identity or affected scope to a freshly fetched moving ref.
-  BEEP_COVERAGE_BASE_SHA: ${{ github.event.pull_request.base.sha || github.sha }}
+  # Event facts only. The coverage lanes (Test Plan's unit plan, Test Unit,
+  # Labs, Coverage Regression) pass --event-base: the CLI diffs a pull request
+  # against the first parent of the checked-out merge commit once HEAD is
+  # proven to be it (GITHUB_SHA, two parents, the second the PR head), keeps
+  # pull_request.base.sha when the proof fails, and uses GITHUB_SHA on push.
+  # GITHUB_SHA and the payload are fixed across jobs and partial reruns, so
+  # producers and comparator resolve one base. Never bind coverage identity
+  # or affected scope to a freshly fetched moving ref.
   # Classify the PR itself; HEAD remains the synthetic merge used for proof.
   BEEP_CI_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
   BEEP_CI_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -265,6 +270,7 @@ jobs:
           set -euo pipefail
           should_run=true
           docs_path=false
+          skills_lock=true
           # Job-level guards already skip Codegen and Ecosystem on docs_only
           # diffs and on a false `<lane>_relevant` output. Repo Sanity is the
           # required gate for documentation diffs, so it keeps a short path.
@@ -290,11 +296,25 @@ jobs:
                   should_run=false
                 fi
                 ;;
+              repo-sanity)
+                # The skills lock step (`beep skills update --check --offline`) of the lane
+                # body, on the documentation path too: skipped only when the pull
+                # request changes none of the `skills` row's paths. An absent row,
+                # an unreadable diff and every push keep it.
+                base_ref="origin/${GITHUB_BASE_REF:-main}"
+                pattern="$(jq -r '.skills // empty' \
+                  packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json)"
+                if [[ -n "$pattern" ]] && changed_files="$(git diff --name-only --no-renames "${base_ref}...HEAD")" \
+                  && ! grep -Eq "$pattern" <<< "$changed_files"; then
+                  skills_lock=false
+                fi
+                ;;
             esac
           fi
 
           echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
           echo "docs_path=$docs_path" >> "$GITHUB_OUTPUT"
+          echo "skills_lock=$skills_lock" >> "$GITHUB_OUTPUT"
 
       - name: Setup monorepo CI
         if: steps.lane-gate.outputs.should_run == 'true' || steps.lane-gate.outputs.docs_path == 'true'
@@ -316,7 +336,15 @@ jobs:
 
       - name: Check documentation sanity
         if: steps.lane-gate.outputs.docs_path == 'true'
-        run: bun run beep ci lane repo-sanity --docs-only
+        env:
+          SKILLS_LOCK: ${{ steps.lane-gate.outputs.skills_lock }}
+        run: |
+          set -euo pipefail
+          if [[ "$SKILLS_LOCK" == "false" ]]; then
+            bun run beep ci lane repo-sanity --docs-only --skip-skills-lock
+          else
+            bun run beep ci lane repo-sanity --docs-only
+          fi
 
       - name: Verify regenerate merge-driver bootstrap
         if: env.BEEP_CI_LANE_ID == 'codegen' && steps.lane-gate.outputs.should_run == 'true'
@@ -364,7 +392,9 @@ jobs:
               run_lane ci lane "${{ env.BEEP_CI_LANE_ID }}"
               ;;
             repo-sanity)
-              if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+              if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "${{ steps.lane-gate.outputs.skills_lock }}" == "false" ]]; then
+                run_lane ci lane repo-sanity --changeset-status --skip-skills-lock
+              elif [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
                 run_lane ci lane repo-sanity --changeset-status
               else
                 run_lane ci lane repo-sanity
@@ -564,7 +594,7 @@ jobs:
             return "$status"
           }
 
-          shape_args=(--base "$BEEP_COVERAGE_BASE_SHA")
+          shape_args=(--event-base)
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             shape_args+=(--affected)
           fi
@@ -724,16 +754,31 @@ jobs:
           fi
 
   # Required-context aggregates (Lint, Test Unit, Heavy / Test Integration,
-  # Property Laws). On a confirmed documentation-only diff the shards are never
-  # created (their own guards read the same output), so nothing can fail and
-  # the aggregate is skipped before it requests a runner: GitHub reports a
-  # job-level skip as a passing required check. A Change Profile that failed
-  # or reported anything else still runs the aggregate, which fails closed.
+  # Property Laws). Each is skipped at job level, before it requests a runner,
+  # only in a state whose verdict is already a pass, and GitHub reports a
+  # job-level skip as a passing required check (#3215; goals/ci-lane-economics,
+  # 2026-11-13):
+  # - documentation diff: Change Profile succeeded and reported `docs_only`, the
+  #   shard matrix was skipped (its own guard reads the same output) and, for
+  #   the planned lanes, Test Plan succeeded and planned nothing;
+  # - skip on success: Change Profile succeeded and reported a code diff, every
+  #   job the aggregate's script checks succeeded, and the shard matrix
+  #   concluded `success`, which GitHub reports only when every leg of the
+  #   matrix the plan expanded passed. The queue hop after the last shard goes.
+  # Every other state runs the aggregate and its script decides: a failed,
+  # cancelled or skipped shard matrix, a failed or skipped Change Profile, Test
+  # Plan or Heavy Admission, an unknown classification. `!cancelled()` makes the
+  # condition a status function, so GitHub evaluates it whatever the needs
+  # concluded instead of skipping the job on an implicit `success()`, and a
+  # cancelled run reports the aggregate `cancelled`, never `skipped`.
+  # ci-docs-job-admission.test.ts runs every combination of the needs results
+  # through the condition and the script; it fails if a shard that did not
+  # succeed could leave an aggregate skipped or the verdict could change.
   lint:
     name: Lint
     timeout-minutes: 5
     needs: [change-profile, lint-shard]
-    if: ${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true') }}
+    if: ${{ !cancelled() && !(needs.change-profile.result == 'success' && ((needs.change-profile.outputs.docs_only == 'true' && needs.lint-shard.result == 'skipped') || (needs.change-profile.outputs.docs_only == 'false' && needs.lint-shard.result == 'success'))) }}
     runs-on: ubuntu-24.04
     steps:
       - name: Require every Lint shard
@@ -807,7 +852,7 @@ jobs:
         id: unit
         if: github.event_name == 'pull_request' && steps.profile.outputs.docs_only != 'true'
         shell: bash
-        run: bun run beep ci lane test-unit --plan-partitions --affected --base "$BEEP_COVERAGE_BASE_SHA"
+        run: bun run beep ci lane test-unit --plan-partitions --affected --event-base
 
       - name: Plan Test Integration partitions
         id: integration
@@ -941,7 +986,7 @@ jobs:
             return "$status"
           }
 
-          shape_args=(--base "$BEEP_COVERAGE_BASE_SHA")
+          shape_args=(--event-base)
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             shape_args+=(--affected)
           fi
@@ -1007,7 +1052,7 @@ jobs:
     name: Test Unit
     timeout-minutes: 5
     needs: [change-profile, test-plan, test-unit-shard]
-    if: ${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true') }}
+    if: ${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.test-plan.result == 'success' && ((needs.change-profile.outputs.docs_only == 'true' && needs.test-plan.outputs.test_unit == '[]' && needs.test-unit-shard.result == 'skipped') || (needs.change-profile.outputs.docs_only == 'false' && needs.test-plan.outputs.test_unit != '[]' && needs.test-unit-shard.result == 'success'))) }}
     runs-on: ubuntu-24.04
     steps:
       - name: Require every planned Test Unit shard
@@ -1159,7 +1204,7 @@ jobs:
     name: Heavy / Test Integration
     timeout-minutes: 5
     needs: [admission, change-profile, test-plan, test-integration-shard]
-    if: ${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true') }}
+    if: ${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.test-plan.result == 'success' && ((needs.change-profile.outputs.docs_only == 'true' && needs.test-plan.outputs.test_integration == '[]' && needs.test-integration-shard.result == 'skipped') || (needs.admission.result == 'success' && needs.change-profile.outputs.docs_only == 'false' && contains(needs.test-plan.outputs.test_integration, '"int-rest"') && needs.test-integration-shard.result == 'success'))) }}
     runs-on: ubuntu-24.04
     steps:
       - name: Require every planned Test Integration partition
@@ -1184,7 +1229,9 @@ jobs:
     # legacy producer. After main retires that producer this becomes the exact
     # existing coverage context, without a ruleset edit or duplicate check name.
     name: ${{ needs.admission.outputs.legacy_coverage == 'true' && 'Coverage Artifact Migration' || 'Heavy / Coverage Regression' }}
-    needs: [change-profile, admission, test-unit, labs]
+    # `test-unit-shard` is read directly: a Test Unit aggregate skipped on success
+    # (see the aggregates above) is a pass only beside a successful shard matrix.
+    needs: [change-profile, admission, test-unit, test-unit-shard, labs]
     if: ${{ !cancelled() && needs.change-profile.outputs.docs_only != 'true' && needs.admission.outputs.docs_only != 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -1214,10 +1261,13 @@ jobs:
         env:
           ADMISSION_RESULT: ${{ needs.admission.result }}
           UNIT_RESULT: ${{ needs.test-unit.result }}
+          UNIT_SHARDS_RESULT: ${{ needs.test-unit-shard.result }}
         run: |
           set -euo pipefail
           [[ "$ADMISSION_RESULT" == "success" ]]
-          [[ "$UNIT_RESULT" == "success" ]]
+          # The Test Unit verdict passed: the aggregate ran green, or it was skipped on success
+          # beside a shard matrix that succeeded (this job never runs on a documentation diff).
+          [[ "$UNIT_RESULT" == "success" || ( "$UNIT_RESULT" == "skipped" && "$UNIT_SHARDS_RESULT" == "success" ) ]]
           eval "$(beep ci change-profile)"
           echo "should_run=$([[ "$docs_only" == "true" ]] && echo false || echo true)" >> "$GITHUB_OUTPUT"
 
@@ -1309,7 +1359,7 @@ jobs:
           jq -e --arg run "$GITHUB_RUN_ID" --argjson attempt "$LABS_PRODUCER_ATTEMPT" '
             .partitionId == "labs" and .identity.runId == $run and .identity.runAttempt == $attempt
           ' "$labs_manifest" > /dev/null
-          shape_args=(--base "$BEEP_COVERAGE_BASE_SHA")
+          shape_args=(--event-base)
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             shape_args+=(--affected)
           fi
@@ -1575,7 +1625,7 @@ jobs:
     name: Property Laws
     timeout-minutes: 5
     needs: [change-profile, property-laws-shard]
-    if: ${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true') }}
+    if: ${{ !cancelled() && !(needs.change-profile.result == 'success' && ((needs.change-profile.outputs.docs_only == 'true' && needs.property-laws-shard.result == 'skipped') || (needs.change-profile.outputs.docs_only == 'false' && needs.property-laws-shard.result == 'success'))) }}
     runs-on: ubuntu-24.04
     steps:
       - name: Require every Property Laws slice

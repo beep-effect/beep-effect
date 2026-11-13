@@ -6,6 +6,7 @@ import {
   testTsgoPrograms,
 } from "@beep/repo-cli/test/Quality";
 import { workspaceManifests } from "@beep/repo-cli/test/SharedInternals";
+import { checkLeadsWithBuild } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas";
 import { TsconfigLoader } from "@beep/repo-tsconfig/TsconfigLoader";
 import { FsUtilsLive, readPackageJsonFile, toSortedRecord } from "@beep/repo-utils";
 import { findRepoRoot } from "@beep/repo-utils/Root";
@@ -408,9 +409,15 @@ it.layer(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)), { timeout: "6
         const actual = yield* effectDiagnosticsProjects(root);
         for (const [name, workspace] of HashMap.toEntries(workspaces)) {
           const candidates = O.getOrElse(HashMap.get(actual, name), () => A.empty<string>());
+          const servedByBuild = pipe(
+            toSortedRecord(workspace.manifest.scripts),
+            R.get("beep:check"),
+            O.exists(checkLeadsWithBuild)
+          );
           for (const kind of ["tsconfig.check.json", "tsconfig.test.json", "test/tsconfig.json"]) {
             const previous = path.join(workspace.dir, kind);
-            if (yield* fs.exists(previous)) expect(A.contains(candidates, previous), previous).toBe(true);
+            const expected = path.join(workspace.dir, retainedProjectName(kind, servedByBuild));
+            if (yield* fs.exists(previous)) expect(A.contains(candidates, expected), previous).toBe(true);
           }
         }
       })
@@ -432,6 +439,11 @@ it.layer(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)), { timeout: "6
     );
   });
 });
+
+// Check once: a package whose check leads with the build program runs its Effect rules there, so the
+// build config stands in for the no-emit overlay it replaced.
+const retainedProjectName = (kind: string, servedByBuild: boolean): string =>
+  servedByBuild && kind === "tsconfig.check.json" ? "tsconfig.json" : kind;
 
 const encodeTurboConfiguration = S.encodeEffect(TurboConfigurationJson);
 const encodeTurboRunSummary = S.encodeEffect(TurboRunSummaryJson);

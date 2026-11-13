@@ -5,9 +5,10 @@
  * **Details**
  *
  * A coverage owner row says which workspace packages a repository file feeds
- * when it changes. For generated standards files the row is derived, not
- * asserted: a package reads the file when one of its TypeScript sources holds
- * a string token whose path segments include the file's basename. Comments
+ * when it changes. For generated standards files and root tooling inputs the
+ * row is derived, not asserted: a package reads the file when one of its
+ * TypeScript sources holds a string token whose path segments include the
+ * file's basename. Comments
  * never count, a basename embedded in a longer segment never counts, and a
  * name split across `path.join` arguments or `+` concatenation of literals
  * still counts. `bun run beep lint coverage-owners` compares this scan with
@@ -29,11 +30,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { ts } from "ts-morph";
-import {
-  COVERAGE_GENERATED_STANDARDS_OWNER_ROWS,
-  coverageDependentOwners,
-  workspaceCoverageScopeOwners,
-} from "./CoverageScope.ts";
+import { COVERAGE_SCANNED_OWNER_ROWS, coverageDependentOwners, workspaceCoverageScopeOwners } from "./CoverageScope.ts";
 import type { CoverageScopeOwner } from "./CoverageScope.ts";
 
 const $I = $RepoCliId.create("commands/Quality/internal/CoverageScopeReaders");
@@ -266,7 +263,7 @@ export const coverageReaderOwners: {
 );
 
 /**
- * One generated standards path whose owner rows disagree with the reader scan.
+ * One scanned repository path whose owner rows disagree with the reader scan.
  *
  * **Example** (Describe one drift row)
  *
@@ -287,7 +284,7 @@ export class CoverageOwnerDrift extends S.Opaque<CoverageOwnerDrift, { readonly 
     scannedOwners: S.Array(S.String),
   }).pipe(
     $I.annoteSchema("CoverageOwnerDrift", {
-      description: "A generated standards path whose coverage owner rows differ from the reader scan.",
+      description: "A scanned repository path whose coverage owner rows differ from the reader scan.",
     })
   )
 ) {}
@@ -319,7 +316,7 @@ export class CoverageOwnerDriftReport extends S.Opaque<CoverageOwnerDriftReport,
 
 const rowOwnersFor = (readerPath: string): ReadonlyArray<string> =>
   pipe(
-    COVERAGE_GENERATED_STANDARDS_OWNER_ROWS,
+    COVERAGE_SCANNED_OWNER_ROWS,
     A.filter(([path]) => path === readerPath),
     A.map(([, , owner]) => owner),
     A.dedupe,
@@ -327,7 +324,7 @@ const rowOwnersFor = (readerPath: string): ReadonlyArray<string> =>
   );
 
 /**
- * Compare every generated standards owner row with the reader scan.
+ * Compare every scanned owner row with the reader scan.
  *
  * **Details**
  *
@@ -366,7 +363,7 @@ export const coverageOwnerDriftRows: {
     sources: ReadonlyArray<CoverageReaderSource>
   ): ReadonlyArray<CoverageOwnerDrift> =>
     pipe(
-      COVERAGE_GENERATED_STANDARDS_OWNER_ROWS,
+      COVERAGE_SCANNED_OWNER_ROWS,
       A.map(([readerPath]) => readerPath),
       A.dedupe,
       A.flatMap((readerPath) => {
@@ -425,7 +422,7 @@ export const workspaceCoverageReaderSources = Effect.fn("CoverageScopeReaders.wo
 );
 
 /**
- * Scan the live workspace and compare it with the generated standards owner rows.
+ * Scan the live workspace and compare it with the scanned owner rows.
  *
  * **Example** (Check the drift scan is an Effect function)
  *

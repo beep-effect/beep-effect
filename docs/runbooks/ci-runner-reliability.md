@@ -85,7 +85,7 @@ A `docs_only` pull request runs only the checks a documentation diff can fail:
 
 | Job | What it checks |
 | --- | --- |
-| Repo Sanity (required) | `beep ci lane repo-sanity --docs-only`: the private home path law, the changeset graph and the changeset status |
+| Repo Sanity (required) | `beep ci lane repo-sanity --docs-only`: the private home path law, the changeset graph, the changeset status and the skills lock (`beep skills update --check --offline`) |
 | Docs Policy | The knowledge, packet and Markdown root tasks listed in `DocsPolicy.ts`, plus `knowledge doctor ci --base` |
 | Secret Scanning, Commitlint | The commit range, as on every head |
 
@@ -96,9 +96,13 @@ more queue turn for a runner) and stops after its own classification, and PR
 Size Label sets its label. Nothing else requests a runner. The required-context
 aggregates (Lint, Test Unit, Property Laws, Heavy / Test Integration) and Heavy
 Admission are skipped at job level once Change Profile has succeeded and
-reported `docs_only`; GitHub reports a job-level skip as a passing required
-check, and any other profile result still runs each aggregate, which fails
-closed. The heavy matrix is called with `admitted: false` and allocates no
+reported `docs_only` (the aggregates also need their shard matrix skipped and,
+for the planned lanes, an empty plan from a successful Test Plan); GitHub
+reports a job-level skip as a passing required check. On a code diff the
+aggregates are skipped the same way when every job their script checks
+succeeded and the shard matrix concluded `success` (skip on success,
+2026-11-13), so a green run takes no aggregate runner after its last shard.
+Any other state runs the aggregate, which fails closed. The heavy matrix is called with `admitted: false` and allocates no
 runner, and Security, SAST, the code lanes and the test shards skip the same
 way. Vercel Deploy is created on a pull request only when it changes an app
 root the plan deploys (`pull_request.paths`), and Storybook is not created for
@@ -109,6 +113,20 @@ diff requests any other runner. `packages/tooling/tool/cli/test/ci-docs-policy.t
 Policy's obligations from `turbo.json`: every root task whose inputs match a
 docs-classified path, and every uncached root task, either runs in the lane or
 has a written reason in `DOCS_POLICY_EXCLUSIONS`.
+
+Repo Sanity is the one hosted owner of the skills lock check, on its
+documentation path and its full path alike, because a `SKILL.md` edit is a
+documentation diff. The check compares the installed skill trees, their
+`.agents` mirror and the Codex skill configuration with `skills-lock.json`. The
+step passes `--offline`, so it reads tracked files only and takes about a
+second: the plain check also refetches each floating upstream skill through the
+unauthenticated GitHub API, which rate-limits shared runner addresses and would
+turn an upstream push into a red on an unrelated pull request. Upstream drift
+stays with the Skills Update Train and local `beep skills update --check`. On a pull request the job's
+lane gate reads the `skills` row of the change-profile pattern data and passes
+`--skip-skills-lock` when the diff touches none of its paths (skills, mirror,
+patch series, lock, Codex configuration, the `skills` command, the
+`@beep/ai-sync` schemas it decodes the lock with and the gate's own sources). Pushes, local replays and `yeet final-check` always run it.
 
 On code pull requests, Change Profile also reports per-lane relevance
 (`codegen_relevant`, `ecosystem_relevant`, `nix_relevant`,

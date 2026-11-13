@@ -53,8 +53,11 @@ import {
   RunAgentEffectivenessEvalScoreCommandOptions,
   runAgentEffectivenessEvalScoreCommand,
 } from "./internal/EvalScorer.ts";
+import { SkillLaneProbeOptions } from "./internal/SkillLaneProbeSchemas.ts";
+import { SKILL_LANE_PROBE_RELABELINGS, SKILL_LANE_PROBE_SEED } from "./internal/SkillLaneProbeStats.ts";
 import {
   preflightSkillProbe,
+  runSkillLaneProbeReport,
   runSkillProbeReport,
   runSkillProbeSelect,
   SkillProbePreflightOptions,
@@ -788,9 +791,33 @@ const probeReportCommand = Command.make(
     primary: Flag.ChoiceWithValue("primary", [
       ["all-lanes", "all-lanes" as const],
       ["law-pass", "law-pass" as const],
-    ]).pipe(Flag.withDescription("Primary measure the verdict reads, as selected by probe select (required)")),
+      ["lane-fraction", "lane-fraction" as const],
+    ]).pipe(
+      Flag.withDescription(
+        "Primary measure the verdict reads: all-lanes or law-pass under the first probe's rule, lane-fraction under the lane probe's rule (required)"
+      )
+    ),
+    pilot: Flag.Boolean("pilot").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("lane-fraction only: label the report as pilot data and write no verdict")
+    ),
+    seed: Flag.Int("seed").pipe(
+      Flag.withDefault(SKILL_LANE_PROBE_SEED),
+      Flag.withDescription("lane-fraction only: seed of the permutation test")
+    ),
+    relabelings: Flag.Int("relabelings").pipe(
+      Flag.withDefault(SKILL_LANE_PROBE_RELABELINGS),
+      Flag.withDescription("lane-fraction only: relabelings drawn by the permutation test")
+    ),
   },
-  ({ records, preflight, primary }) => runSkillProbeReport(records, preflight, primary).pipe(Effect.asVoid)
+  ({ records, preflight, primary, pilot, seed, relabelings }) =>
+    primary === "lane-fraction"
+      ? runSkillLaneProbeReport(
+          records,
+          preflight,
+          SkillLaneProbeOptions.make({ data: pilot ? "pilot" : "scored", seed, relabelings })
+        ).pipe(Effect.asVoid)
+      : runSkillProbeReport(records, preflight, primary).pipe(Effect.asVoid)
 ).pipe(Command.withDescription("Report cell means, paired differences and the verdict as JSON"));
 
 const probeSelectCommand = Command.make(

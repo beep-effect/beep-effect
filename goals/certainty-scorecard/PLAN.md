@@ -32,7 +32,9 @@ graduation merges. Lever gates are in `SPEC.md` (Levers).
 | 8 | chore(fleet): T3 root in roots.json; split monitor time out of economics | PERIL-11 slice 2 | S | `yeet economics --fleet` counts the T3 lane; runbook list updated | 7 |
 | 9 | feat(yeet): optional host and seat fields on started rows; read fleet hosts read-only | PERIL-11 slice 3 | M | Old rows decode; fleet read uses only existing SSH routes and writes nothing remote; no raw rows leave local state | 7 |
 | 10 | fix(yeet): report terminations apart from reds | MEAS-03 | S | Adjudicated fixtures; denominator change recorded | 3, 6 |
+| 10b | fix(yeet): type the handler errors still read as unlocated | MEAS-03 slice 2 (unscheduled) | S | Adjudicated fixtures for the residual classes (publish input refusals, GitHub transport and rate limits, review-thread readiness refusals) drawn from a stratified sample of the live `unlocated` rows; `actionableLaneMix` total equals `redAttempts`; an unknown bucket stays | 10 |
 | 11 | feat(ci): optional step and per-task outcome fields under v1 | ROUT-05 slice 2 | M | v1 corpora still decode; aggregator and setup reds become unknown | 2 |
+| 11b | feat(ci): emit per-task outcome records the route capture reads into `tasks` | ROUT-05 slice 2b (the ROUT-06 producer) | S | Each lane step writes one `{task, outcome}` record per Turbo task from its run summary, uploaded with the run, and the capture fills `HostedJob.tasks` from it with its extra reads counted against the REST budget; a `check.yml` change, so the operator hand-merges it (the App token cannot merge a workflow PR) and the cache-policy baseline is re-recorded in the same PR; emitted rows decode under `route-corpus/v1`; a seeded failing task is classified `task` and a seeded setup failure `setup` | 11 |
 | 12 | chore(route): capture 2026-10-31..now | ROUT-05 slice 3 | S | Captured by date range as a bounded background reader under github-budget-ledger's reserve signal (by hand and checkpointed until the signal lands); census conservation holds | 11 |
 | 13 | feat(ci): project unit-results.json timings | MEAS-06 | S | Adds its own every-event upload (today's is failure-only); rows for every executed package; file counts equal expectedTestFiles by event; `check.yml` only, no `heavy.yml` edit; cache-policy baseline re-recorded in the same PR; merge identity planned (App token cannot merge workflow PRs) | 1 |
 | 14 | refactor(ci): consolidate the lane-id maps | MEAS-05 slice 1 | S | One map; existing census and corpus tests unchanged | 2 |
@@ -41,7 +43,8 @@ graduation merges. Lever gates are in `SPEC.md` (Levers).
 | 17 | docs(goals): certainty-scorecard closeout | evidence | S | 7-night evidence note, fleet census note, reflection, `proposedCloseout` | all |
 
 Waves under the three-PR limit: {1, 2, 3}, then {4, 5, 6} as each of the first wave merges, then {7, 10, 11},
-{8, 9, 12}, {5b, 13, 14}, then 15, then 16, then 17.
+{8, 9, 12}, {5b, 13, 14}, then {11b, 15}, then 16, then 17. Slice 10b is unscheduled: it takes a free slot in
+any wave after 10 merges and does not gate the closeout.
 
 ## Closeout Checklist
 
@@ -109,6 +112,30 @@ Reverse: Delete this checkpoint and restore the slice-1 checkpoint as the latest
 #3208 merged at d8326d55935849b4bf6fd29ec4ef80327efd6af8 (2026-11-13T05:44:35Z). Library builds are now `tsrs -p tsconfig.json --emitDeclarationOnly` with no Babel step and no JavaScript in a library dist. Every #build cache entry misses once from that commit, and the first cold run is not a regression. Any wall-time, cache-size or dist-size baseline recorded before it is not comparable with a reading after it, and the first certified nightly must be taken after it. Measured by the owning goal over 181 packages: build 80.9 s to 32.9 s, dist 232.5 MB to 147.9 MB (goals/declaration-only-builds/research/2026-11-13-build-after.md).
 
 Reverse: Delete this checkpoint; it records a fact about main and changes no behaviour.
+
+### Check-lane baselines before 3e822c71c5 are not comparable (check once), 2026-11-13
+
+#3242 merged at 3e822c71c5 (2026-11-13). The root Turbo `check` task now depends on the package's own `build` for declaration-only packages, and their `beep:check` runs the declaration-only build command. Every `check` hash misses once, and the first cold run is not a regression. Build minutes now sit inside the check lane (Heavy / Check and Heavy / Build start together on separate VMs and both compute the build on a cold hash), so a check-lane wall-time or runner-minute baseline from before that commit is not comparable, and the first certified nightly must be taken after it. The cache-qualification and check-census baselines were re-recorded in that PR. `TSRS_FAST` is a global Turbo input and part of tsrs incremental state, so each baseline records whether it was set.
+
+Lane fix/certainty-meas-03-terminations
+
+Reverse: Delete this checkpoint; it records a fact about main and changes no behaviour.
+
+### Slice 6 merged; slice 10 (MEAS-03) reports terminations apart from reds, 2026-11-13
+
+Slice 6 (MEAS-07) merged as #3228. Slice 10 (MEAS-03) classes every economics attempt green, red or terminated in `packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.ts`: a terminated attempt leaves `firstFailure.redAttempts` and its mixes, `attempts.*.classMix` reports the classes, `modeDurations` reports each run mode's elapsed p50 and p95 (final-check included), and a final-check moved-tree refusal is typed `refusal:moved-tree`. The report is `yeet-economics/v3` (decision `terminations-apart-from-reds`, which states the denominator before and after). The admission gate is `packages/tooling/tool/cli/test/yeet-economics-adjudicated.test.ts` over the committed journal `test/fixtures/yeet-economics/adjudicated-terminations.ndjson`, every attempt classified by hand with its reason. Other second- and third-wave slices run in their own lanes.
+
+Lane fix/certainty-meas-03-terminations
+
+Reverse: Delete this checkpoint so the slice-6 checkpoint is the latest PLAN status note, and revert the slice-10 PR.
+
+### Slices 5 and 6 merged; slice 11 (ROUT-05 slice 2) in review: failed jobs keep their steps, uncharged reds become unknown, 2026-11-13
+
+Slices 5 (SCHE-09 slice 1, #3227) and 6 (MEAS-07, #3228) merged; 11 is in review; 7 (PERIL-11 slice 1) and 10 (MEAS-03) started. Slice 11 adds optional `steps` and `tasks` keys to the v1 route corpus row and an origin for every failed job's red; aggregate, setup and harness reds are charged to no lane and reported as unknown in the replay (decision `step-classes-and-red-origins`). The old 2026-09-01..10-30 receipt still replays to 242 skipped lane runs and 0 skipped reds. The 2026-10-31..now capture (slice 12) starts once slice 11 merges, and is the first corpus whose failed jobs carry steps. New slice 11b, after 11, is the producer of per-task outcome records, a `check.yml` change the operator hand-merges; until it lands `tasks` stays absent.
+
+Lane feat/certainty-rout-05-step-outcomes
+
+Reverse: Delete this checkpoint so the slice-6 checkpoint is the latest PLAN status note, and revert the slice-11 commits.
 
 ### Slice 2 merged; slice 3 (MEAS-02 with DEPS-10) attributes refusals by failure kind, 2026-11-13
 

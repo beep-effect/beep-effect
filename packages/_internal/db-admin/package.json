@@ -21,7 +21,7 @@
     "test:integration:parallel": "bun run beep:test:integration",
     "test:property": "bun run beep:test",
     "beep:build": "tsrs -p tsconfig.json --emitDeclarationOnly",
-    "beep:check": "tsrs -p tsconfig.check.json && tsrs -p tsconfig.drizzle.json && tsrs -p tsconfig.scripts.json --noEmit && bun run beep:check:tests && bun run migrations:check",
+    "beep:check": "tsrs -p tsconfig.json --emitDeclarationOnly && tsrs -p tsconfig.drizzle.json && tsrs -p tsconfig.scripts.json --noEmit && bun run beep:check:tests && bun run migrations:check",
     "beep:docgen": "bunx --bun --no-install docgen",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",

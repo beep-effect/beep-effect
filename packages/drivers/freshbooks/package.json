@@ -28,7 +28,7 @@
     "test": "bun run beep:test",
     "test:integration": "bun run beep:test:integration",
     "beep:build": "tsrs -p tsconfig.json --emitDeclarationOnly",
-    "beep:check": "tsrs -p tsconfig.check.json && bun run beep:check:tests",
+    "beep:check": "tsrs -p tsconfig.json --emitDeclarationOnly && bun run beep:check:tests",
     "beep:docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",

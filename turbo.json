@@ -780,6 +780,7 @@
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.step.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Ci/Ci.errors.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Ci/CiCoverage.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Ci/CiEventBase.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
@@ -1362,6 +1363,7 @@
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.step.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Ci/Ci.errors.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Ci/CiCoverage.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Ci/CiEventBase.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
@@ -3555,6 +3557,7 @@
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.step.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Ci/Ci.errors.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Ci/CiCoverage.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Ci/CiEventBase.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
@@ -5326,7 +5329,7 @@
       ]
     },
     "check": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "build"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "!README.md",

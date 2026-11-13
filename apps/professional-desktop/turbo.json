@@ -3,6 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "check": {
+      "dependsOn": ["^build"],
       "inputs": [
         "$TURBO_EXTENDS$",
         "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**",
