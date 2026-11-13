@@ -26,3 +26,11 @@ Only the generated `inputs` lists of ten root-declared tasks differ:
 `:quality-bun-audit`, `:quality-changeset-graph`, `:quality-jsdoc-inventory`, `:quality-jsdoc-module-tags`,
 `:quality-jsdoc-ratchet` and `:quality-tsgo-rules`. They follow source files those PRs added, moved or removed;
 no task, command, output, environment or dependency edge changed. This lane's diff does not touch `turbo.json`.
+
+## Root subject `//`, this lane
+
+`bun run beep lint policy-fingerprint --write` adds
+`packages/tooling/library/alchemy-aws-extras/package.json` to the generated `inputs` list of
+`//#lint:policy-fingerprint` in `turbo.json` and to `standards/policy-tools.fingerprint.json`, because the
+fingerprint covers every workspace manifest. That task's command, outputs, environment and dependency edges are
+unchanged; it only reads one more manifest.

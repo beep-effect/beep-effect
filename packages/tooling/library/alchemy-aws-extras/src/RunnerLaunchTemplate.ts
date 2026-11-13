@@ -192,7 +192,7 @@ export type SpotInterruptionBehavior = typeof SpotInterruptionBehavior.Type;
  * @since 0.0.0
  */
 export const LaunchTemplateMarketOptions = S.Struct({
-  marketType: S.Literal("spot"),
+  marketType: S.tag("spot"),
   spotOptions: S.optionalKey(
     S.Struct({
       maxPrice: S.optionalKey(S.NonEmptyString),

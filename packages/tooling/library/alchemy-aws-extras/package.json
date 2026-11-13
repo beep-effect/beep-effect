@@ -70,9 +70,9 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@alchemy.run/test": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
-    "bun-types": "catalog:",
-    "@alchemy.run/test": "catalog:"
+    "bun-types": "catalog:"
   }
 }
