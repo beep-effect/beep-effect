@@ -18,6 +18,14 @@ export type RuleSource = {
 };
 
 export const SOURCES: { readonly [K in RuleName]: RuleSource } = {
+  "no-citation-optional-invocation": {
+    invalidCount: 2,
+    messageIncludes: "citation request authority must be explicit",
+    invalid:
+      "const a = Effect.serviceOption(CitationTextBudget); const b = Effect.serviceOption(CitationOperationAdmission);",
+    valid:
+      "const a = Effect.serviceOption(CitationNativeProcessAdmission); const b = reserveCitationInvocationText(4);",
+  },
   "no-file-url-pathname": {
     invalidCount: 4,
     messageIncludes: "NodeURL.fileURLToPath(new URL(...))",

@@ -1,3 +1,4 @@
+import type { CitationInvocation } from "./Invocation.ts";
 /** Native builtin models to source-ordered dump observations, eyecite 2.7.6.
  * Free Law Project, BSD-2-Clause; see THIRD_PARTY_NOTICES.md.
  * @internal @packageDocumentation @since 0.0.0
@@ -97,8 +98,9 @@ export const makeCitationBuiltinDump = Effect.fn("Citation.makeBuiltinDump")(fun
       fields: A.append(fields, CitationDumpField.cases.Scalar.make({ name: "year", value: scalar(year) })),
     });
   }, timing.timed);
-  const projectClosed: (input: unknown) => Effect.Effect<CitationDumpRow, Effect.Error<ReturnType<typeof project>>> =
-    project;
+  const projectClosed: (
+    input: unknown
+  ) => Effect.Effect<CitationDumpRow, Effect.Error<ReturnType<typeof project>>, CitationInvocation> = project;
   return { project: projectClosed };
 });
 

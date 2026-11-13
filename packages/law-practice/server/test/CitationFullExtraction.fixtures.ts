@@ -14,6 +14,7 @@ import * as S from "effect/Schema";
 import { readCitationCaseMetadataConfiguration } from "./CitationCaseMetadata.fixtures.ts";
 import { makeCitationParallelAssertion } from "./CitationExtractionSelection.fixtures.ts";
 import { installCitationFrozenMetadataRuntime } from "./CitationFrozenEditions.fixtures.ts";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationJournalMetadataCorpus } from "./CitationJournalMetadata.fixtures.ts";
 import { loadCitationLawMetadataFixtures } from "./CitationLawMetadata.fixtures.ts";
 import { assertCitationWorkerCompositionReleased, readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
@@ -74,6 +75,11 @@ const install = Effect.fn("FullExtractionTest.install")(function* (kind: Citatio
     journal: journals.configuration,
   };
   const stage = yield* makeCitationFullExtraction(setup.limits, setup.runtime, configuration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(setup.limits).pipe(
+        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
+      )
+    ),
     Effect.provideContext(provided),
     DateTime.withCurrentZoneOffset(0)
   );

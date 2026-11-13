@@ -1,0 +1,8 @@
+# Implementation friction
+
+| Date | Work | Evidence | What would prevent it |
+| --- | --- | --- | --- |
+| 2026-11-13 | Bind request state without crossing the worker boundary | Historical stop: `history/evidence/2026-11-13-a2-binding-stop.md`; resolved by the explicit-reservation ruling in `decisions/2026-11-13-a2-worker-input-stop.md`. | Include the runtime entrypoint import closure in the design before classifying an installer as parent-only. |
+| 2026-11-13 | Verify the touched package on a shared host | Full law-practice `package-verify` invokes the whole suite, conflicting with file-by-file local tests. The operator selected `--quick` plus separate docgen; full audit remains hosted. | Expose an audit mode that selects test files without requiring the full suite, and document the full audit workload in command help. |
+| 2026-11-13 | Migrate direct-stage fixtures | Legacy fixtures supplied budgets and admission at installation. Plain Effect wrappers do not retain each installed policy/Clock or observe the real request ledger. See `decisions/2026-11-13-a2-direct-stage-fixtures.md` and the shared invocation fixture. | Provide an explicit standalone invocation fixture at the first private-stage boundary; avoid implicitly encoding request ownership in fixture installation. |
+| 2026-11-13 | Publish a scoped GritQL override | The first Yeet pre-commit stopped with `Identity lint profile is stale`; `bun run beep cache profile --write` repaired the generated projection. | Include the generated profile in scoped-plugin registration guidance. |

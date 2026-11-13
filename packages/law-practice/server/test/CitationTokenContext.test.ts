@@ -19,6 +19,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import { makeCitationNativeManualClock, makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 
 const $I = $LawPracticeServerId.create("test/CitationTokenContext");
@@ -69,7 +70,13 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
           expect(hash).toBe("252231fd5180ba20cfce5ccece24cac7572edcde834e1187467f64671d0181ca");
           const corpus = yield* S.decodeEffect(Corpus)(new TextDecoder().decode(bytes));
           const limits = (yield* defaultCitationEnginePolicy).limits;
-          const context = yield* makeCitationTokenContext(limits);
+          const context = yield* makeCitationTokenContext(limits).pipe(
+            Effect.flatMap((stage) =>
+              makeCitationTestInvocationBinding(limits).pipe(
+                Effect.map((bind) => ({ ...stage, plan: bind(stage.plan) }))
+              )
+            )
+          );
           const outcomes = yield* Effect.forEach(
             corpus.cases,
             Effect.fn("ContextTest.checkSourceRow")(function* (row) {
@@ -105,7 +112,11 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
     it.effect("owns output, rejects invalid words and enforces cumulative receiving allocations", () =>
       Effect.gen(function* () {
         const limits = (yield* defaultCitationEnginePolicy).limits;
-        const context = yield* makeCitationTokenContext(limits);
+        const context = yield* makeCitationTokenContext(limits).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestInvocationBinding(limits).pipe(Effect.map((bind) => ({ ...stage, plan: bind(stage.plan) })))
+          )
+        );
         const data = native("word");
         const request = {
           words: [{ kind: "Text", data }],
@@ -124,7 +135,13 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         expect(fresh.source).toEqual(native("Pword"));
         const invalid = yield* context.plan({ ...request, words: [{ kind: "Text", data: null }] }).pipe(Effect.flip);
         expect(invalid).toMatchObject({ reason: "invalid-input" });
-        const bounded = yield* makeCitationTokenContext({ ...limits, producedTextUtf16: 8 });
+        const bounded = yield* makeCitationTokenContext({ ...limits, producedTextUtf16: 8 }).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestInvocationBinding({ ...limits, producedTextUtf16: 8 }).pipe(
+              Effect.map((bind) => ({ ...stage, plan: bind(stage.plan) }))
+            )
+          )
+        );
         const refused = yield* bounded
           .plan({ ...request, words: [{ kind: "Text", data: native("word") }] })
           .pipe(Effect.flip);
@@ -141,6 +158,11 @@ it.effect("retains its captured deadline under a disabled caller Clock", () =>
     const disabled = yield* makeCitationNativeSleepClock(() => Effect.never);
     const limits = (yield* defaultCitationEnginePolicy).limits;
     const context = yield* makeCitationTokenContext({ ...limits, extractDeadline: Duration.millis(997) }).pipe(
+      Effect.flatMap((stage) =>
+        makeCitationTestInvocationBinding({ ...limits, extractDeadline: Duration.millis(997) }).pipe(
+          Effect.map((bind) => ({ ...stage, plan: bind(stage.plan) }))
+        )
+      ),
       Effect.provideService(Clock.Clock, timer.clock)
     );
     const pending = yield* context

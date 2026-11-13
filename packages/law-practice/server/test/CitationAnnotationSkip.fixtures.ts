@@ -19,6 +19,7 @@ import {
   makeCitationAnnotationReplay,
   makeCitationAnnotationXmlTrace,
 } from "./CitationAnnotationReplay.fixtures.ts";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import { assertCitationWorkerCompositionReleased, readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import { installCitationXmlWorker } from "./CitationXmlWorker.fixtures.ts";
@@ -74,7 +75,13 @@ export const replayCitationSkipAnnotations = Effect.fn("AnnotationSkipTest.repla
       return decision;
     }),
   });
-  const assembly = yield* makeCitationAnnotationReplay(setup.limits, setup.budget, observed);
+  const assembly = yield* makeCitationAnnotationReplay(setup.limits, setup.budget, observed).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(setup.limits, "annotate").pipe(
+        Effect.map((bind) => ({ ...stage, assemble: bind(stage.assemble) }))
+      )
+    )
+  );
   const rows = full ? corpus.cases : A.filter(corpus.cases, (row) => row.id % 7 === 2 || row.id % 7 === 5);
   let children = 0;
   for (const row of rows) {

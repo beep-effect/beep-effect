@@ -36,7 +36,8 @@ const $I = $LintRulesId;
  *   "prefer-identity-annote-pipe",
  *   "no-hand-built-identity-annotation",
  *   "prefer-exact-optional-key",
- *   "no-hand-rolled-canonical-json"
+ *   "no-hand-rolled-canonical-json",
+ *   "no-citation-optional-invocation"
  * ])
  * ```
  *
@@ -53,6 +54,7 @@ export const RULE_NAMES = [
   "no-hand-built-identity-annotation",
   "prefer-exact-optional-key",
   "no-hand-rolled-canonical-json",
+  "no-citation-optional-invocation",
 ] as const;
 
 /**
@@ -176,6 +178,7 @@ export class RuleRegistrySchema extends S.Opaque<RuleRegistrySchema, { readonly 
     "no-hand-built-identity-annotation": RuleMetadataSchema,
     "prefer-exact-optional-key": RuleMetadataSchema,
     "no-hand-rolled-canonical-json": RuleMetadataSchema,
+    "no-citation-optional-invocation": RuleMetadataSchema,
   }).pipe(
     $I.annoteSchema("RuleRegistrySchema", {
       description: "Schema for the finite rule registry keyed by rule slug.",
@@ -200,6 +203,14 @@ export class RuleRegistrySchema extends S.Opaque<RuleRegistrySchema, { readonly 
  * @since 0.1.0
  */
 export const RULES: { readonly [K in RuleName]: RuleMetadata } = RuleRegistrySchema.make({
+  "no-citation-optional-invocation": RuleMetadataSchema.make({
+    name: "no-citation-optional-invocation",
+    severity: "error",
+    replaces: O.none(),
+    summary:
+      "Require explicit citation invocation authority instead of optional install-time budget or admission lookups.",
+    scope: O.some("packages/law-practice/server/src/internal/Citation/**"),
+  }),
   "no-file-url-pathname": RuleMetadataSchema.make({
     name: "no-file-url-pathname",
     severity: "error",

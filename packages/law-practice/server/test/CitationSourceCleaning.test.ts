@@ -23,6 +23,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeCitationCleanerRegistryHarness } from "./CitationCleanerRegistry.fixtures.ts";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import type { CitationEngineFailure } from "@beep/law-practice-use-cases/server";
 
@@ -39,6 +40,11 @@ const setup = Effect.fn("SourceCleaningTest.setup")(function* () {
   });
   const install = (policy = limits, resolver = sourceResolver, reader = h.values) =>
     makeCitationSourceCleaning(policy, artifact).pipe(
+      Effect.flatMap((stage) =>
+        makeCitationTestInvocationBinding(policy, "clean").pipe(
+          Effect.map((bind) => ({ ...stage, clean: bind(stage.clean) }))
+        )
+      ),
       Effect.provideService(CitationOperationAdmission, admission),
       Effect.provideService(CitationCleaner, h.registry.runtime),
       Effect.provideService(CitationCleanerValues, reader),

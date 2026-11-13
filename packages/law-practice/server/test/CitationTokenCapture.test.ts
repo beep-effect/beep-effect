@@ -1,4 +1,7 @@
-import { makeCitationRegexInput } from "@beep/law-practice-server/internal/Citation/RegexInput";
+import {
+  citationUnaccountedText,
+  makeCitationRegexInput,
+} from "@beep/law-practice-server/internal/Citation/RegexInput";
 import {
   CitationRegexCapturedRange,
   makeCitationRegexResult,
@@ -27,7 +30,7 @@ import type { CitationTokenCaptureObservation } from "./CitationTokenObjects.fix
 const allow = Effect.fn("CaptureTest.allow")(() => Effect.void);
 const prepare = Effect.fn("CaptureTest.prepareFrame")(function* (row: typeof CitationTokenCaptureObservation.Type) {
   const limits = (yield* defaultCitationEnginePolicy).limits;
-  const input = yield* makeCitationRegexInput(limits);
+  const input = yield* makeCitationRegexInput(limits, citationUnaccountedText);
   const source = yield* input.prepareUnicode(row.source, allow);
   const codec = yield* makeCitationRegexResult(limits, row.bindings.groups, source.layout.pythonLength);
   let pulls = 0;

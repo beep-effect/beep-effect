@@ -16,7 +16,6 @@ import * as Effect from "effect/Effect";
 import * as MutableList from "effect/MutableList";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { CitationOperationAdmission } from "./Admission.ts";
 import { captureCitationExtractionChildren } from "./ExtractionChildren.ts";
 import { CitationTokenExtractionInput } from "./ExtractionContext.ts";
 import {
@@ -236,30 +235,24 @@ export const makeCitationExtractionLoop = Effect.fn("Citation.makeExtractionLoop
   const config = yield* detachCitationMetadataConfiguration(ConfigurationJson, configuration, () =>
     fail("invalid-configuration")
   );
-  const admission = yield* CitationOperationAdmission;
   const children = yield* captureCitationExtractionChildren();
   const installed = yield* makeCitationMetadataOperation(
     limits,
     (raw: unknown) => prepare(limits, runtime, config, raw).pipe(Effect.provideContext(children)),
     () => fail("invalid-configuration")
   );
-  const extract = Effect.fn("Citation.extractDocumentLoop")(
-    (raw: unknown) =>
-      admission.run(
-        "extract",
-        Effect.gen(function* () {
-          const [result, reservedUnits] = yield* installed.run(raw);
-          const completed = CitationExtractionLoopResult.make({ ...result, reservedUnits });
-          // Struct construction validates each occurrence independently. Reconnect
-          // returned entries to that one validated model list by original ids.
-          const restored: CitationExtractionLoopResult = {
-            ...completed,
-            citations: A.map(result.retained, (id) => A.getUnsafe(completed.models, id)),
-          };
-          return restored;
-        })
-      ),
-    installed.timing.timed
+  const extract = Effect.fn("Citation.extractDocumentLoop")((raw: unknown) =>
+    Effect.gen(function* () {
+      const [result, reservedUnits] = yield* installed.run(raw);
+      const completed = CitationExtractionLoopResult.make({ ...result, reservedUnits });
+      // Struct construction validates each occurrence independently. Reconnect
+      // returned entries to that one validated model list by original ids.
+      const restored: CitationExtractionLoopResult = {
+        ...completed,
+        citations: A.map(result.retained, (id) => A.getUnsafe(completed.models, id)),
+      };
+      return restored;
+    })
   );
   return { extract };
 });

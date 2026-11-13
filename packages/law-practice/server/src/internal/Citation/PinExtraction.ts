@@ -133,16 +133,11 @@ export const makeCitationPinExtraction = Effect.fn("Citation.makePinExtraction")
     extractCitationPinCite,
     () => fail("invalid-configuration")
   );
-  const apply = Effect.fn("Citation.extractPinCite")(
-    (raw: unknown) =>
-      installed.operation.run(
-        "extract",
-        Effect.gen(function* () {
-          const [result, reservedUnits] = yield* installed.run(raw);
-          return CitationPinExtractionResult.make({ ...result, reservedUnits });
-        })
-      ),
-    installed.timing.timed
+  const apply = Effect.fn("Citation.extractPinCite")((raw: unknown) =>
+    Effect.gen(function* () {
+      const [result, reservedUnits] = yield* installed.run(raw);
+      return CitationPinExtractionResult.make({ ...result, reservedUnits });
+    })
   );
   return { apply };
 });

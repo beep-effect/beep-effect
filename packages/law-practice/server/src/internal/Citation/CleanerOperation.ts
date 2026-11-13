@@ -2,7 +2,6 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import * as Effect from "effect/Effect";
-import { CitationOperationAdmission } from "./Admission.ts";
 import { makeCitationCleanerPipeline } from "./CleanerPipeline.ts";
 import { failCitationCleanerBoundary } from "./PortFailure.ts";
 
@@ -12,14 +11,13 @@ import { failCitationCleanerBoundary } from "./PortFailure.ts";
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationCleanerOperation = Effect.fn("Citation.makeCleanerOperation")(function* (policy: unknown) {
-  const admission = yield* CitationOperationAdmission;
   const pipeline = yield* makeCitationCleanerPipeline(policy);
   return {
     run: Effect.fn("Citation.runAdmittedCleaner")((input: unknown) =>
-      admission.run("clean", pipeline.run(input)).pipe(Effect.catch(failCitationCleanerBoundary))
+      pipeline.run(input).pipe(Effect.catch(failCitationCleanerBoundary))
     ),
     runOwned: Effect.fn("Citation.runAdmittedOwnedCleaner")((input: unknown) =>
-      admission.run("clean", pipeline.runOwned(input)).pipe(Effect.catch(failCitationCleanerBoundary))
+      pipeline.runOwned(input).pipe(Effect.catch(failCitationCleanerBoundary))
     ),
   };
 });

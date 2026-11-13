@@ -1,3 +1,4 @@
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 /** Native text to original get_citations outcomes through the complete catalog.
  * @internal @packageDocumentation @since 0.0.0
  */
@@ -53,6 +54,11 @@ export const installCitationTokenizedExtractionFixture = Effect.fn("TokenizedExt
   ).pipe(Effect.provideContext(provided), DateTime.withCurrentZoneOffset(0));
   const nativeConfiguration = CitationTokenizedExtractionConfiguration.make({ tokenizer, loop: helpers.loop });
   const stage = yield* makeCitationTokenizedExtraction(setup.limits, setup.runtime, nativeConfiguration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(setup.limits).pipe(
+        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
+      )
+    ),
     Effect.provideContext(provided),
     DateTime.withCurrentZoneOffset(0)
   );

@@ -17,8 +17,10 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import type { CitationMention } from "@beep/law-practice-domain/values";
 import type { CitationExtractionLoopModel } from "@beep/law-practice-server/internal/Citation/ExtractionLoop";
+import type { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import type { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import type { installCitationDocumentExtractionFixture } from "./CitationDocumentExtraction.fixtures.ts";
 
@@ -156,7 +158,14 @@ export const makeCitationOccurrenceTestAdapter = Effect.fn("OccurrenceProjection
   provided: Installed["provided"]
 ) {
   const install = (limits = setup.limits, engineArtifact = artifact) =>
-    makeCitationOccurrenceProjection(limits, setup.runtime, { engineArtifact }).pipe(Effect.provideContext(provided));
+    makeCitationOccurrenceProjection(limits, setup.runtime, { engineArtifact }).pipe(
+      Effect.flatMap((stage) =>
+        makeCitationTestInvocationBinding(limits).pipe(
+          Effect.map((bind) => ({ ...stage, project: bind(stage.project) }))
+        )
+      ),
+      Effect.provideContext(provided)
+    );
   const stage = yield* install();
   const verify = Effect.fn("OccurrenceProjectionTest.verify")(function* (
     unicode: Effect.Success<ReturnType<typeof makeCitationPythonUnicode>>,
@@ -168,7 +177,11 @@ export const makeCitationOccurrenceTestAdapter = Effect.fn("OccurrenceProjection
     const proof = yield* citationFixtureSourceProof(source.text);
     expect(S.is(VerifiedSourceText)(proof)).toBe(true);
     const invocation = stage.project({ source: proof, result });
-    const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
+    const closed: Effect.Effect<
+      Effect.Success<typeof invocation>,
+      Effect.Error<typeof invocation>,
+      CitationInvocation
+    > = invocation;
     const actual = yield* closed;
     expect(actual.unverified).toEqual([]);
     expect(actual.unverifiedComponents).toEqual([]);

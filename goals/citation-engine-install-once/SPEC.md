@@ -136,6 +136,30 @@ Lane explore/citation-engine-install-and-worker-reuse
 
 Reverse: Reintroduce captureCitationTextReservation and the nested admission view.
 
+### Bind direct-stage fixtures to installed constants and observe the real invocation budget, 2026-11-13
+
+Direct-stage tests use one shared fixture helper that opens an invocation per standalone method call with that fixture policy and installed Clock. The enclosing test scaffold is untimed; method invocations retain their real configured deadlines. A test-only observation service points legacy diagnostic snapshots and callback reservations at the actual budget constructed by openCitationInvocation, rather than the discarded install-time budget. Obsolete EnclosingRefusal assertions and install guards are removed. No production deadline or limit value changes.
+
+Reverse: Restore the standalone stage fixtures and their captured-budget assertions.
+
+### Keep worker-v3 invocation fields out of A2, 2026-11-13
+
+Slice A2 models only the invocation policy, parent text budget and Scope. Native lane, regex session and receipt fields remain with citation-regex-worker-v3, as required by the implementation brief. No process, lease or protocol changes are authorized in A2.
+
+Reverse: Add lane, regex session and receipt when the worker-v3 goal owns their implementation.
+
+### Text reservation is an explicit argument across the process boundary, 2026-11-13
+
+Operator ruling, 2026-11-13: constructors shared with isolated worker entrypoints take text reservation as an explicit generic Effect callback and propagate its requirements. Parent callers pass reserveCitationInvocationText, which reads CitationInvocation at call time. Worker callers and pattern preparation pass an explicit named no-op. Reservation ordering before allocation is unchanged. Worker entrypoints, wire protocols, processes, leases and limits stay unchanged. This resolves the historical stop in history/evidence/2026-11-13-a2-binding-stop.md; the stop rule remains active for any second incompatible site.
+
+Reverse: Restore the optional budget lookup in RegexInput.
+
+### Keep the full law-practice audit on hosted CI, 2026-11-13
+
+The operator clarified on 2026-11-13 that file-by-file local tests govern because the full law-practice package audit runs the whole suite. Run package-verify --quick and docgen:local locally, and leave the full audit to hosted CI. The smaller lint-rules package receives its full package-verify.
+
+Reverse: Run full package-verify locally when the operator permits a whole-package suite.
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

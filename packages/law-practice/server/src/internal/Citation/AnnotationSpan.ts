@@ -18,6 +18,7 @@ import { CitationXmlKernelFailure } from "./XmlBalanceKernel.ts";
 import { CitationXmlBalance } from "./XmlWorker.ts";
 import { CitationXmlWorkerFailure } from "./XmlWorkerProtocol.ts";
 import type { CitationAnnotationReplacement } from "@beep/law-practice-use-cases/server";
+import type { CitationInvocation } from "./Invocation.ts";
 import type { CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/AnnotationSpan");
@@ -69,7 +70,7 @@ export class CitationAnnotationSpanProcessor extends Context.Service<
     readonly prepare: (
       source: CitationPythonUnicodeValue,
       replacement: CitationAnnotationReplacement
-    ) => Effect.Effect<CitationAnnotationSpanDecision, CitationAnnotationSpanFailure>;
+    ) => Effect.Effect<CitationAnnotationSpanDecision, CitationAnnotationSpanFailure, CitationInvocation>;
   }
 >()($I`CitationAnnotationSpanProcessor`) {}
 
@@ -99,7 +100,7 @@ export const makeCitationMarkupAnnotationSpans = Effect.fn("Citation.makeMarkupA
     source: CitationPythonUnicodeValue,
     replacement: CitationAnnotationReplacement,
     text: CitationPythonUnicodeStorage
-  ) => Effect.Effect<CitationAnnotationSpanDecision, CitationAnnotationSpanFailure>
+  ) => Effect.Effect<CitationAnnotationSpanDecision, CitationAnnotationSpanFailure, CitationInvocation>
 ) {
   const reserve = yield* captureCitationAnnotationReservation;
   const xml = yield* CitationXmlBalance;

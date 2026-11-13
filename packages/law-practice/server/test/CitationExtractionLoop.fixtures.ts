@@ -28,6 +28,7 @@ import {
   installCitationHtmlGeometryFixture,
   prepareCitationOptionalHtmlGeometry,
 } from "./CitationHtmlGeometryPreparation.fixtures.ts";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationJournalMetadataCorpus } from "./CitationJournalMetadata.fixtures.ts";
 import { loadCitationLawMetadataFixtures } from "./CitationLawMetadata.fixtures.ts";
 import { readCitationPinExtractionCorpus } from "./CitationPinExtraction.fixtures.ts";
@@ -172,6 +173,9 @@ export const installCitationExtractionLoopFixture = Effect.fn("ExtractionLoopTes
     generated: { patterns: template.patterns, disallowedNames: names.disallowedNames },
   });
   const stage = yield* makeCitationExtractionLoop(limits, setup.runtime, configuration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(limits).pipe(Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) })))
+    ),
     Effect.provideContext(setup.provided),
     DateTime.withCurrentZoneOffset(0)
   );
@@ -196,6 +200,11 @@ export const replayCitationExtractionLoop = Effect.fn("ExtractionLoopTest.replay
     if (row.id === 2) {
       const budget = yield* makeCitationTextBudget({ ...limits, producedTextUtf16: result.reservedUnits - 1 });
       const tight = yield* makeCitationExtractionLoop(limits, setup.runtime, configuration).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestInvocationBinding(limits).pipe(
+            Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
+          )
+        ),
         Effect.provideContext(Context.add(setup.provided, CitationTextBudget, budget)),
         DateTime.withCurrentZoneOffset(0)
       );

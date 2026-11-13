@@ -5,6 +5,7 @@ import {
   citationCanonicalPageCorrectionCalls,
   replayCitationCanonicalPageCorrection,
 } from "./CitationCanonicalPageCorrection.fixtures.ts";
+import { withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
 // Bun replays the whole cohort; node replays the first call so the node parity
@@ -14,12 +15,15 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
   (it) => {
     it.effect(
       "recomputes all twelve original page-correction equalities on bun",
-      () => replayCitationCanonicalPageCorrection("bun", 0, citationCanonicalPageCorrectionCalls),
+      () =>
+        withCitationTestInvocation(
+          replayCitationCanonicalPageCorrection("bun", 0, citationCanonicalPageCorrectionCalls)
+        ),
       { timeout: 180000 }
     );
     it.effect(
       "recomputes the first original page-correction call on node",
-      () => replayCitationCanonicalPageCorrection("node", 0, 1),
+      () => withCitationTestInvocation(replayCitationCanonicalPageCorrection("node", 0, 1)),
       { timeout: 180000 }
     );
   }

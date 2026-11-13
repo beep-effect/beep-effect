@@ -10,6 +10,7 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import {
   assertCitationTokenizerCase,
@@ -20,7 +21,7 @@ import {
 import { loadCitationTokenObjectsControls } from "./CitationTokenObjects.fixtures.ts";
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned tokenizer composition", (it) => {
-  it.effect("translates a closed admission owner into a declared port refusal without native work", () =>
+  it.effect("uses invocation admission instead of a closed install-time view", () =>
     Effect.gen(function* () {
       const controls = yield* loadCitationTokenizerControls();
       const setup = yield* setupCitationMetadataRuntime("bun");
@@ -31,10 +32,15 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
         snapshot: Effect.succeed(CitationAdmissionSnapshot.make({ active: 0, queued: 0, closed: true })),
       });
       const tokenizer = yield* makeCitationTokenizer(setup.limits, setup.runtime, controls.configuration).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestInvocationBinding(setup.limits).pipe(
+            Effect.map((bind) => ({ ...stage, port: { ...stage.port, tokenize: bind(stage.port.tokenize) } }))
+          )
+        ),
         Effect.provideContext(Context.add(setup.provided, CitationOperationAdmission, closed))
       );
-      const failure = yield* tokenizer.port.tokenize({ width: 1, bytes: new Uint8Array() }).pipe(Effect.flip);
-      expect(failure).toMatchObject({ _tag: "CitationTokenizerFailure", reason: "stage-failed" });
+      const result = yield* tokenizer.port.tokenize({ width: 1, bytes: new Uint8Array() });
+      expect(result.tokens).toEqual([]);
       const native = yield* setup.observed.snapshot;
       expect(native).toEqual({ spawned: 0, confirmed: 0 });
     })
@@ -47,7 +53,15 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
         { ...runtime.limits, patterns: 1 },
         runtime.runtime,
         controls.configuration
-      ).pipe(Effect.provideContext(runtime.provided), Effect.flip);
+      ).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestInvocationBinding({ ...runtime.limits, patterns: 1 }).pipe(
+            Effect.map((bind) => ({ ...stage, port: { ...stage.port, tokenize: bind(stage.port.tokenize) } }))
+          )
+        ),
+        Effect.provideContext(runtime.provided),
+        Effect.flip
+      );
       expect(overPatterns).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "patterns" });
       const first = A.getUnsafe(controls.configuration.extractors, 0);
       const contradictory = {
@@ -62,7 +76,15 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
       const profileConflict = yield* makeCitationTokenizer(runtime.limits, runtime.runtime, {
         ...controls.configuration,
         extractors: [first, contradictory],
-      }).pipe(Effect.provideContext(runtime.provided), Effect.flip);
+      }).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestInvocationBinding(runtime.limits).pipe(
+            Effect.map((bind) => ({ ...stage, port: { ...stage.port, tokenize: bind(stage.port.tokenize) } }))
+          )
+        ),
+        Effect.provideContext(runtime.provided),
+        Effect.flip
+      );
       expect(profileConflict).toMatchObject({ _tag: "CitationTokenizerFailure", reason: "invalid-configuration" });
       const observed = yield* runtime.observed.snapshot;
       expect(observed).toEqual({ spawned: 0, confirmed: 0 });
@@ -73,6 +95,11 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
       const controls = yield* loadCitationTokenizerControls();
       const runtime = yield* setupCitationMetadataRuntime("bun");
       const invalidPolicy = yield* makeCitationTokenizer({}, runtime.runtime, controls.configuration).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestInvocationBinding({}).pipe(
+            Effect.map((bind) => ({ ...stage, port: { ...stage.port, tokenize: bind(stage.port.tokenize) } }))
+          )
+        ),
         Effect.provideContext(runtime.provided),
         Effect.flip
       );

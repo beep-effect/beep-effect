@@ -201,16 +201,11 @@ export const makeCitationPostCaseMetadata = Effect.fn("Citation.makePostCaseMeta
     (raw: unknown) => extractCitationPostCaseMetadata(limits, runtime, config, decoded.courtTable, raw),
     invalidConfiguration
   );
-  const apply = Effect.fn("Citation.addPostCaseMetadata")(
-    (raw: unknown) =>
-      installed.operation.run(
-        "extract",
-        Effect.gen(function* () {
-          const [patch, reservedUnits] = yield* installed.run(raw);
-          return CitationPostCaseMetadataResult.make({ patch, reservedUnits });
-        })
-      ),
-    installed.timing.timed
+  const apply = Effect.fn("Citation.addPostCaseMetadata")((raw: unknown) =>
+    Effect.gen(function* () {
+      const [patch, reservedUnits] = yield* installed.run(raw);
+      return CitationPostCaseMetadataResult.make({ patch, reservedUnits });
+    })
   );
   return { apply };
 });

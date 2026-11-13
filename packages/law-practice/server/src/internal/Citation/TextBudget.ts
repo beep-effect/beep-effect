@@ -8,8 +8,6 @@ import {
   CitationTextBudget,
 } from "@beep/law-practice-use-cases/server";
 import * as Effect from "effect/Effect";
-import { constant } from "effect/Function";
-import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
@@ -50,24 +48,15 @@ export const makeCitationTextBudget = Effect.fn("Citation.makeTextBudget")(funct
     );
   return CitationTextBudget.of({ maximum: limits.producedTextUtf16, reserve, snapshot: Ref.get(used), withCapacity });
 });
-/** Capture an optional composed owner at installation, preserving standalone
- * stage policy behavior. Later caller contexts cannot replace this authority.
- * @internal @category operations @since 0.0.0
- */
-export const captureCitationTextReservation = Effect.serviceOption(CitationTextBudget).pipe(
-  Effect.map(O.match({ onNone: () => constant(Effect.void), onSome: (budget) => budget.reserve }))
-);
-
-/** Measure a standalone operation under one fresh parent text budget. The
- * enclosing admitted caller owns Scope and finalizers; this helper composes
- * Effect timing and service provision without another admission or child owner.
+/** Measure work under the explicitly supplied invocation text budget.
+ * The admitted boundary owns Scope and finalizers; this helper records timing
+ * and provides the legacy budget port without allocating another ledger.
  * @internal @category operations @since 0.0.0
  */
 export const measureCitationTextWork = Effect.fn("Citation.measureTextWork")(function* <A, E, R>(
-  policy: unknown,
+  budget: CitationTextBudget["Service"],
   work: Effect.Effect<A, E, R>
 ) {
-  const budget = yield* makeCitationTextBudget(policy);
   const [workDuration, result] = yield* Effect.timed(work.pipe(Effect.provideService(CitationTextBudget, budget)));
   const producedTextUtf16 = yield* budget.snapshot;
   return { workDuration, result, producedTextUtf16 };

@@ -13,6 +13,7 @@ import {
   readCitationCaseNameProcessCorpus,
 } from "./CitationCaseNameProcess.fixtures.ts";
 import { citationCaseNameScanErrorReason, readCitationCaseNameScanCorpus } from "./CitationCaseNameScan.fixtures.ts";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationWorkerCompositionReleased,
   makeCitationMetadataFixture,
@@ -53,7 +54,17 @@ export const readCitationCaseNameCorpus = Effect.fn("CaseNameTest.load")(functio
   ).pipe(Effect.flatMap(S.decodeEffect(Corpus)));
   return { scan, corpus, configuration: { scan: scan.configuration, process: process.configuration } };
 });
-const install = makeCitationMetadataFixture({ load: readCitationCaseNameCorpus, make: makeCitationCaseName });
+const install = makeCitationMetadataFixture({
+  load: readCitationCaseNameCorpus,
+  make: (...args: Parameters<typeof makeCitationCaseName>) =>
+    makeCitationCaseName(...args).pipe(
+      Effect.flatMap((stage) =>
+        makeCitationTestInvocationBinding(args[0]).pipe(
+          Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
+        )
+      )
+    ),
+});
 type Row = (typeof Corpus.Type.cases)[number];
 const assertRow = Effect.fn("CaseNameTest.row")(function* (
   setup: Effect.Success<ReturnType<typeof install>>,

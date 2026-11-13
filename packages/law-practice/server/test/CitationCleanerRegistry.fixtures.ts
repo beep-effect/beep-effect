@@ -26,6 +26,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import { citationHtmlWorkerTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import type { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type {
@@ -125,6 +126,11 @@ export const makeCitationCleanerRegistryHarness = Effect.fn("CleanerRegistryTest
     Effect.provideService(CitationCleanerProtocols, protocols)
   );
   const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(limits, "clean").pipe(
+        Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
+      )
+    ),
     Effect.provideService(CitationCleaner, registry.runtime)
   );
   return {

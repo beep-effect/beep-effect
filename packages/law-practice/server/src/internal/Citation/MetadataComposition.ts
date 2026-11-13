@@ -20,21 +20,20 @@ import * as Path from "effect/Path";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Scope from "effect/Scope";
 import * as Tuple from "effect/Tuple";
-import { CitationOperationAdmission } from "./Admission.ts";
 import { makeCitationContextMatcher } from "./ContextMatcher.ts";
+import { CitationInvocation, reserveCitationInvocationText } from "./Invocation.ts";
 import { makeCitationMetadataStrings } from "./MetadataStrings.ts";
 import { CitationMetadataYearBound, makeCitationMetadataYearFromBound } from "./MetadataYear.ts";
 import { CitationNativeProcessAdmission, makeCitationNativeProcessAdmission } from "./NativeAdmission.ts";
 import { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import { concatCitationPythonRanges } from "./PythonUnicode.ts";
 import { CitationRegexPatternDescriptor, copyCitationRegexDescriptor } from "./RegexDescriptors.ts";
-import { makeCitationRegexInput } from "./RegexInput.ts";
-import { CitationRegexOperation, decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
-import { makeCitationTextBudget } from "./TextBudget.ts";
+import { citationUnaccountedText, makeCitationRegexInput } from "./RegexInput.ts";
+import { CitationRegexOperation, decodeCitationRegexPolicy } from "./RegexPolicy.ts";
 import { CitationTokenContextInput } from "./TokenContext.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
-import type * as Scope from "effect/Scope";
 import type { CitationContextMatch } from "./ContextMatcher.ts";
 import type { CitationPreparedRegexInput } from "./RegexInput.ts";
 import type { makeCitationRegexWorker } from "./RegexWorker.ts";
@@ -121,7 +120,7 @@ export const copyCitationMetadataPatterns = Effect.fn("Citation.copyMetadataPatt
   fingerprints: R.ReadonlyRecord<K, string>,
   invalid: () => E
 ) {
-  const input = yield* makeCitationRegexInput(limits, "pattern");
+  const input = yield* makeCitationRegexInput(limits, citationUnaccountedText, "pattern");
   const entries = yield* Effect.forEach(
     R.toEntries(raw),
     Effect.fn("Citation.ownMetadataPattern")(function* ([name, value]) {
@@ -156,7 +155,8 @@ type Dependencies =
   | ChildProcessSpawner
   | CitationNativeProcessAdmission
   | CitationTextBudget
-  | Scope.Scope;
+  | Scope.Scope
+  | CitationInvocation;
 /** Decode a built-in word request before enforcing its captured token ceiling.
  * Schema errors retain the caller's closed family error; oversize input uses
  * the shared extraction safety failure before word preparation.
@@ -188,10 +188,10 @@ const captureDependencies = Effect.fn("Citation.captureMetadataDependencies")(fu
     Context.add(CitationNativeProcessAdmission, admission)
   );
 });
-/** Install shared admission/timing with an explicit trusted stage callback.
- * The callback is server composition, never request data. Each run owns a fresh
- * Scope and retains the installed or fresh invocation budget. No outer Scope is
- * captured in the dependency Context. The returned run requires no services.
+/** Install engine constants with an explicit trusted stage callback.
+ * The callback is server composition, never request data. Each run reads the
+ * invocation budget and Scope without admitting again or opening another Scope.
+ * The dependency Context contains only installation constants.
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationMetadataOperation = Effect.fn("Citation.makeMetadataOperation")(function* <
@@ -202,20 +202,20 @@ export const makeCitationMetadataOperation = Effect.fn("Citation.makeMetadataOpe
 >(
   limits: CitationEngineLimits,
   prepare: (request: Request) => Effect.Effect<Patch, E, Dependencies>,
-  invalid: () => Invalid
+  _invalid: () => Invalid
 ) {
-  const operation = yield* CitationOperationAdmission;
   const dependencies = yield* captureDependencies(limits);
-  const enclosing = yield* Effect.serviceOption(CitationTextBudget);
-  if (O.isSome(enclosing) && enclosing.value.maximum > limits.producedTextUtf16) return yield* Effect.fail(invalid());
-  const timing = yield* makeCitationRegexTiming(limits, true);
   const run = Effect.fn("Citation.runMetadataStage")(function* (request: Request) {
-    const budget = O.isSome(enclosing) ? enclosing.value : yield* makeCitationTextBudget(limits);
-    const patch = yield* Effect.scoped(prepare(request)).pipe(Effect.provideService(CitationTextBudget, budget));
+    const budget = (yield* CitationInvocation).budget;
+    const { scope } = yield* CitationInvocation;
+    const patch = yield* prepare(request).pipe(
+      Effect.provideService(CitationTextBudget, budget),
+      Effect.provideService(Scope.Scope, scope)
+    );
     const reserved = yield* budget.snapshot;
     return Tuple.make(patch, reserved);
   }, Effect.provideContext(dependencies));
-  return { operation, timing, run };
+  return { run };
 });
 
 const $I = $LawPracticeServerId.create("internal/Citation/MetadataComposition");
@@ -245,7 +245,7 @@ export const decodeCitationMetadataRuntimeConfiguration = Effect.fn("Citation.de
 );
 /** Compose typed server callbacks with the existing captured metadata owner.
  * Callbacks are installation-time composition, never request fields. The returned
- * invocation has R=never and shares the common admission/timing/result boundary.
+ * invocation requires CitationInvocation and shares its budget and resource lifetime.
  * @internal @category constructors @since 0.0.0
  */
 export const makeCitationMetadataStage = <
@@ -286,16 +286,11 @@ export const makeCitationMetadataStage = <
       (raw: unknown) => definition.prepare(limits, runtime, config, raw),
       definition.invalid
     );
-    const invoke = Effect.fn("Citation.invokeMetadataStage")(
-      (raw: unknown) =>
-        installed.operation.run(
-          installed.timing.operation,
-          Effect.gen(function* () {
-            const [patch, units] = yield* installed.run(raw);
-            return definition.project(patch, units);
-          })
-        ),
-      installed.timing.timed
+    const invoke = Effect.fn("Citation.invokeMetadataStage")((raw: unknown) =>
+      Effect.gen(function* () {
+        const [patch, units] = yield* installed.run(raw);
+        return definition.project(patch, units);
+      })
     );
     return R.singleton(definition.method, invoke);
   });
@@ -410,7 +405,7 @@ export const prepareCitationPublicationMetadata = Effect.fn("Citation.preparePub
     Effect.mapError(invalid)
   );
   const runtime = CitationNativeProcessRuntime.make({ ...decodedRuntime });
-  const patterns = yield* makeCitationRegexInput(limits, "pattern");
+  const patterns = yield* makeCitationRegexInput(limits, citationUnaccountedText, "pattern");
   const pattern = (yield* patterns.prepareUnicode(decoded.pattern, () => Effect.void)).value.storage;
   const yearPattern = (yield* patterns.prepareUnicode(decoded.yearPattern, () => Effect.void)).value.storage;
   const hash = yield* fingerprintCitationMetadataPattern(pattern, invalid);
@@ -500,7 +495,7 @@ export const matchCitationMetadataContext = Effect.fn("Citation.matchMetadataCon
   if (matched.match === null) return O.none();
   const whole = yield* Effect.fromOption(A.head(matched.match.captures), missing);
   if (whole._tag === "Unmatched") return yield* Effect.fail(missing());
-  const input = yield* makeCitationRegexInput(limits);
+  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText);
   const source = yield* input.prepareUnicode(matched.context, () => Effect.void);
   return O.some({
     start: whole.start,

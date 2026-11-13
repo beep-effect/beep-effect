@@ -105,7 +105,7 @@ const prepare = Effect.fn("Citation.extractSemanticCitations")(function* (
 /** One admitted raw request through original extraction and the domain Citation
  * codec. Native admission, one cumulative budget and the enclosing deadline are
  * retained. No partial citation list escapes on projection failure. All returned
- * methods require no caller services; verified mention adaptation remains separate.
+ * methods require CitationInvocation; verified mention adaptation remains separate.
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationSemanticExtraction = makeCitationMetadataStage({

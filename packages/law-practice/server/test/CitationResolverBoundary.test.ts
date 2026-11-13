@@ -29,6 +29,7 @@ import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import { CitationCallbackObservation, prepareCallbackObservation } from "./CitationCallbackSession.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import type { CitationEngineFailure } from "@beep/law-practice-use-cases/server";
 
 const context = Effect.fn("ResolverBoundaryTest.context")((name: string) =>
@@ -77,6 +78,11 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered resolver
         }),
       });
       const stage = yield* makeCitationSourceResolution(input.limits, input.engineArtifact).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestInvocationBinding(input.limits, "resolve").pipe(
+            Effect.map((bind) => ({ ...stage, resolve: bind(stage.resolve) }))
+          )
+        ),
         Effect.provideService(CitationOperationAdmission, admission),
         Effect.provideService(CitationFrozenEditions, frozen),
         Effect.provideService(SourceTextResolver, sourceResolver)
@@ -125,6 +131,11 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered resolver
       });
       const install = (limits = input.limits) =>
         makeCitationSourceResolution(limits, input.engineArtifact).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestInvocationBinding(limits, "resolve").pipe(
+              Effect.map((bind) => ({ ...stage, resolve: bind(stage.resolve) }))
+            )
+          ),
           Effect.provideService(CitationOperationAdmission, admission),
           Effect.provideService(CitationFrozenEditions, frozen),
           Effect.provideService(SourceTextResolver, sourceResolver)

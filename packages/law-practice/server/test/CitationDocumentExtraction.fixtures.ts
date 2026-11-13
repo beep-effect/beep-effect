@@ -18,12 +18,14 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { makeCitationDiffTestRuntime } from "./CitationDiffWorker.fixtures.ts";
 import { citationPrimitiveCleanerProtocols } from "./CitationDocumentServices.fixtures.ts";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import { makeCitationHtmlTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import {
   assertCitationTokenizedExtractionRow,
   installCitationTokenizedExtractionFixture,
 } from "./CitationTokenizedExtraction.fixtures.ts";
+import type { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 
@@ -84,6 +86,11 @@ export const installCitationDocumentExtractionFixture = Effect.fn("DocumentExtra
     extraction: configuration,
   });
   const stage = yield* makeCitationDocumentExtraction(setup.limits, setup.runtime, documentConfiguration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(setup.limits).pipe(
+        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
+      )
+    ),
     Effect.provideContext(provided),
     DateTime.withCurrentZoneOffset(0)
   );
@@ -113,12 +120,21 @@ const replayRetained = Effect.fnUntraced(function* (
 ) {
   const { setup, provided, configuration, translated } = installed;
   const retained = yield* makeCitationRetainedDocumentExtraction(setup.limits, setup.runtime, configuration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(setup.limits).pipe(
+        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
+      )
+    ),
     Effect.provideContext(provided),
     Effect.provideService(CitationDocumentInputProtocols, retainedProtocols),
     DateTime.withCurrentZoneOffset(0)
   );
   const invocation = retained.extract({ document, removeAmbiguous: row.removeAmbiguous });
-  const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
+  const closed: Effect.Effect<
+    Effect.Success<typeof invocation>,
+    Effect.Error<typeof invocation>,
+    CitationInvocation
+  > = invocation;
   const result = yield* closed;
   expect(result.document).toBe(document);
   expect(result.document.plain).toBe(document.plain);
@@ -149,7 +165,11 @@ export const replayCitationDocumentExtraction = Effect.fn("DocumentExtractionTes
   for (const row of rows) {
     const request = yield* documentRequest(values, adapter, row);
     const invocation = stage.extract(request);
-    const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
+    const closed: Effect.Effect<
+      Effect.Success<typeof invocation>,
+      Effect.Error<typeof invocation>,
+      CitationInvocation
+    > = invocation;
     const result = yield* closed;
     yield* assertCitationTokenizedExtractionRow(result.extraction, row, translated);
     const sourceIdentity = yield* values.same(result.document.source, request.source);

@@ -31,6 +31,7 @@ import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
 import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationWorkerCapturedDeadline,
   assertCitationWorkerClosedLifetime,
@@ -106,6 +107,9 @@ const install = Effect.fn("LawMetadataTest.install")(function* (
   const context = setup.context.pipe(Context.add(CitationOperationAdmission, operation));
   const installed = enclosing === true ? context.pipe(Context.add(CitationTextBudget, owner)) : context;
   const metadata = yield* makeCitationLawMetadata(limits, setup.runtime, configuration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(limits).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
+    ),
     Effect.provideContext(installed)
   );
   return { ...setup, operation, owner, metadata };
@@ -145,12 +149,6 @@ export const assertCitationLawMetadataBudget = Effect.fn("LawMetadataTest.budget
   expect(actual.reservedUnits).toBe(41);
   const repeated = yield* exact.metadata.apply(row.request);
   expect(repeated.reservedUnits).toBe(41);
-  const outer = yield* install("bun", corpus.configuration, 44, true);
-  yield* outer.owner.reserve(4);
-  const enclosing = yield* outer.metadata.apply(row.request).pipe(Effect.flip);
-  expect(enclosing).toMatchObject({ limit: "producedTextUtf16" });
-  const reserved = yield* outer.owner.snapshot;
-  expect(reserved).toBe(36);
   const ownedConfig = { ...corpus.configuration, highestValidYear: corpus.configuration.highestValidYear };
   const owned = yield* install("bun", ownedConfig);
   ownedConfig.highestValidYear = 9999;
@@ -206,20 +204,14 @@ export const assertCitationLawMetadataConfiguration = Effect.fn("LawMetadataTest
     [setup.limits, setup.runtime, { ...corpus.configuration, lawPattern: changedPattern }],
   ]) {
     const failed = yield* makeCitationLawMetadata(policy, runtime, configuration).pipe(
+      Effect.flatMap((stage) =>
+        makeCitationTestInvocationBinding(policy).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
+      ),
       Effect.provideContext(setup.provided),
       Effect.flip
     );
     expect(failed).toMatchObject({ reason: "invalid-configuration" });
   }
-  const oversized = yield* makeCitationTextBudget({
-    ...setup.limits,
-    producedTextUtf16: setup.limits.producedTextUtf16 + 1,
-  });
-  const failed = yield* makeCitationLawMetadata(setup.limits, setup.runtime, corpus.configuration).pipe(
-    Effect.provideContext(Context.add(setup.provided, CitationTextBudget, oversized)),
-    Effect.flip
-  );
-  expect(failed).toMatchObject({ reason: "invalid-configuration" });
   const observed = yield* setup.observed.snapshot;
   expect(observed).toEqual({ spawned: 0, confirmed: 0 });
 });
@@ -252,6 +244,11 @@ export const assertCitationLawMetadataDigest = Effect.fn("LawMetadataTest.digest
   const corpus = yield* loadCitationLawMetadataFixtures();
   const setup = yield* setupCitationMetadataRuntime("bun");
   const failed = yield* makeCitationLawMetadata(setup.limits, setup.runtime, corpus.configuration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(setup.limits).pipe(
+        Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) }))
+      )
+    ),
     Effect.provideContext(setup.provided),
     Effect.provideService(
       Digest.Digest,
@@ -264,6 +261,11 @@ export const assertCitationLawMetadataDigest = Effect.fn("LawMetadataTest.digest
   const before = yield* setup.observed.snapshot;
   expect(before).toEqual({ spawned: 0, confirmed: 0 });
   const metadata = yield* makeCitationLawMetadata(setup.limits, setup.runtime, corpus.configuration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(setup.limits).pipe(
+        Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) }))
+      )
+    ),
     Effect.provideContext(setup.provided)
   );
   const row = A.getUnsafe(corpus.cases, 11);

@@ -43,6 +43,7 @@ import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import {
   makeCitationNativeAcknowledgementSpawner,
   makeCitationNativeManualClock,
@@ -114,6 +115,11 @@ const controlled = Effect.fn("RegexWorkerTest.controlled")(function* (
   const observed = yield* makeCitationNativeAcknowledgementSpawner(afterKill);
   const spawner = observed.spawner;
   const worker = yield* makeCitationRegexWorker(limits, fixture, [descriptor]).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(limits).pipe(
+        Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
+      )
+    ),
     Effect.provideService(Clock.Clock, timer.clock),
     Effect.provideService(CitationNativeProcessAdmission, admission),
     Effect.provideService(ChildProcessSpawner, spawner)
@@ -142,9 +148,23 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
   it.effect("rejects malformed policy, runtime and match quotas before spawning", () =>
     Effect.gen(function* () {
       const limits = (yield* defaultCitationEnginePolicy).limits;
-      const invalidPolicy = yield* makeCitationRegexWorker(null, null, []).pipe(Effect.flip);
+      const invalidPolicy = yield* makeCitationRegexWorker(null, null, []).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestInvocationBinding(null).pipe(
+            Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
+          )
+        ),
+        Effect.flip
+      );
       expect(invalidPolicy).toMatchObject({ reason: "invalid-runtime" });
-      const invalidRuntime = yield* makeCitationRegexWorker(limits, null, []).pipe(Effect.flip);
+      const invalidRuntime = yield* makeCitationRegexWorker(limits, null, []).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestInvocationBinding(limits).pipe(
+            Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
+          )
+        ),
+        Effect.flip
+      );
       expect(invalidRuntime).toMatchObject({ reason: "invalid-runtime" });
       const { worker, observed } = yield* setup([descriptor]);
       const invalidQuota = yield* worker.evaluate(pattern, native("b ab"), 0, -1).pipe(Effect.flip);

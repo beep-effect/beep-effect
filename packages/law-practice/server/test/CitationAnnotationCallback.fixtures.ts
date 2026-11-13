@@ -24,6 +24,7 @@ import {
   CitationAnnotationReplayReplacement,
   makeCitationAnnotationReplay,
 } from "./CitationAnnotationReplay.fixtures.ts";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import { assertCitationWorkerCompositionReleased, readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import { installCitationXmlWorker } from "./CitationXmlWorker.fixtures.ts";
@@ -153,6 +154,11 @@ export const replayCitationAnnotationCallbacks = Effect.fn("AnnotationCallbackTe
       Effect.provideService(CitationXmlBalance, setup.worker)
     );
     const replay = yield* makeCitationAnnotationReplay(setup.limits, setup.budget, O.getOrUndefined(processor)).pipe(
+      Effect.flatMap((stage) =>
+        makeCitationTestInvocationBinding(setup.limits, "annotate").pipe(
+          Effect.map((bind) => ({ ...stage, assemble: bind(stage.assemble) }))
+        )
+      ),
       Effect.provideService(CitationAnnotationAnnotator, port)
     );
     const output = replay.assemble(row.source, row.input);

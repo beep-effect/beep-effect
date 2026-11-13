@@ -8,6 +8,7 @@ import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import { makeCitationBundledTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import {
   assertCitationWorkerCompositionReleased,
@@ -35,7 +36,14 @@ export const makeCitationXmlTestRuntime = Effect.fn("XmlWorkerTest.runtime")(fun
 export const installCitationXmlWorker = Effect.fn("XmlWorkerTest.install")(function* (kind: CitationNativeRuntimeKind) {
   const setup = yield* setupCitationMetadataRuntime(kind, undefined, true);
   const runtime = yield* makeCitationXmlTestRuntime(kind);
-  const worker = yield* makeCitationXmlWorker(setup.limits, runtime).pipe(Effect.provideContext(setup.provided));
+  const worker = yield* makeCitationXmlWorker(setup.limits, runtime).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(setup.limits, "annotate").pipe(
+        Effect.map((bind) => ({ ...stage, balance: bind(stage.balance) }))
+      )
+    ),
+    Effect.provideContext(setup.provided)
+  );
   return { ...setup, regexRuntime: setup.runtime, runtime, worker };
 });
 /** @internal @category testing @since 0.0.0 */

@@ -8,7 +8,6 @@ import {
   makeCitationNativeProcessAdmission,
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
 import { makeCitationRegexWorker } from "@beep/law-practice-server/internal/Citation/RegexWorker";
-import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { CitationTokenContextInput } from "@beep/law-practice-server/internal/Citation/TokenContext";
 import { CitationPythonUnicodeStorage, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
@@ -27,6 +26,11 @@ import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
+import {
+  CitationTestBudgetObservation,
+  makeCitationTestBudgetObservation,
+  makeCitationTestInvocationBinding,
+} from "./CitationInvocation.fixtures.ts";
 import {
   makeCitationNativeManualClock,
   makeCitationNativeSleepClock,
@@ -124,8 +128,11 @@ export const setupCitationMetadataRuntime = Effect.fn("RegexWorkerTest.metadataR
   const setup = yield* setupCitationRegexRuntime(kind, maximum, patternUtf16);
   const limits = controlled === true ? { ...setup.limits, extractDeadline: Duration.millis(997) } : setup.limits;
   const operation = yield* makeCitationOperationAdmission(limits).pipe(Effect.provideContext(setup.context));
-  const budget = yield* makeCitationTextBudget(limits);
-  const context = Context.add(setup.context, CitationOperationAdmission, operation);
+  const { budget, observation } = yield* makeCitationTestBudgetObservation(limits);
+  const context = setup.context.pipe(
+    Context.add(CitationOperationAdmission, operation),
+    Context.add(CitationTestBudgetObservation, observation)
+  );
   const provided = enclosing === true ? Context.add(context, CitationTextBudget, budget) : context;
   return { ...setup, limits, operation, budget, provided };
 });
@@ -165,8 +172,8 @@ export const citationMetadataDeadlineText = () =>
 /** Assert a closed source helper failure through the shared Effect error channel.
  * @internal @category testing @since 0.0.0
  */
-export const assertCitationMetadataFailure = Effect.fn("RegexWorkerTest.metadataFailure")(function* <A, E>(
-  body: Effect.Effect<A, E>,
+export const assertCitationMetadataFailure = Effect.fn("RegexWorkerTest.metadataFailure")(function* <A, E, R>(
+  body: Effect.Effect<A, E, R>,
   expected: object
 ) {
   const failed = yield* body.pipe(Effect.flip);
@@ -186,6 +193,11 @@ export const setupCitationRegexWorker = Effect.fn("RegexWorkerTest.setup")(funct
   );
 
   const worker = yield* makeCitationRegexWorker(limits, runtime, bindings, engineInput).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(limits).pipe(
+        Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
+      )
+    ),
     Effect.provideContext(context)
   );
   return { worker, admission, observed };
@@ -227,8 +239,8 @@ export const assertCitationRegexRuntimeReleased = Effect.fn("RegexWorkerTest.run
   );
 });
 /** Budget refusal must still independently retire the expected native children. */
-export const assertCitationMetadataRefusal = Effect.fn("RegexWorkerTest.metadataRefusal")(function* <Value, E>(
-  body: Effect.Effect<Value, E>,
+export const assertCitationMetadataRefusal = Effect.fn("RegexWorkerTest.metadataRefusal")(function* <Value, E, R>(
+  body: Effect.Effect<Value, E, R>,
   operation: CitationOperationAdmission["Service"],
   admission: CitationNativeProcessAdmission["Service"],
   observed: Effect.Effect<CitationNativeExitCounts>,
@@ -238,23 +250,12 @@ export const assertCitationMetadataRefusal = Effect.fn("RegexWorkerTest.metadata
   expect(failure).toMatchObject({ limit: "producedTextUtf16" });
   yield* assertCitationWorkerCompositionReleased(operation, admission, observed, calls);
 });
-/** Prime a captured enclosing budget and retain its exact refusal counter. */
-export const assertCitationMetadataEnclosingRefusal = Effect.fn("RegexWorkerTest.enclosingRefusal")(function* <
+/** Release the captured manual deadline while the caller's sleep is disabled. */
+export const assertCitationWorkerCapturedDeadline = Effect.fn("RegexWorkerTest.capturedDeadline")(function* <
   Value,
   E,
->(body: Effect.Effect<Value, E>, budget: CitationTextBudget["Service"], prime: number, expected: number) {
-  yield* budget.reserve(prime);
-  const failure = yield* body.pipe(Effect.flip);
-  expect(failure).toMatchObject({ limit: "producedTextUtf16" });
-  const used = yield* budget.snapshot;
-  expect(used).toBe(expected);
-});
-
-/** Release the captured manual deadline while the caller's sleep is disabled. */
-export const assertCitationWorkerCapturedDeadline = Effect.fn("RegexWorkerTest.capturedDeadline")(function* <Value, E>(
-  body: Effect.Effect<Value, E>,
-  trigger: Effect.Effect<void>
-) {
+  R,
+>(body: Effect.Effect<Value, E, R>, trigger: Effect.Effect<void>) {
   const disabled = yield* makeCitationNativeSleepClock(() => Effect.never);
   const pending = yield* body.pipe(Effect.provideService(Clock.Clock, disabled), Effect.forkChild);
   yield* trigger;
@@ -278,9 +279,9 @@ export const makeCitationMetadataTestContext = Effect.fn("RegexWorkerTest.metada
 });
 
 /** Close the captured installation scope and prove rejection before any child. */
-export const assertCitationWorkerClosedLifetime = Effect.fn("RegexWorkerTest.closedLifetime")(function* <Value, E>(
+export const assertCitationWorkerClosedLifetime = Effect.fn("RegexWorkerTest.closedLifetime")(function* <Value, E, R>(
   scope: Scope.Closeable,
-  body: Effect.Effect<Value, E>,
+  body: Effect.Effect<Value, E, R>,
   observed: Effect.Effect<CitationNativeExitCounts>
 ) {
   yield* Scope.close(scope, Exit.void);

@@ -16,9 +16,9 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { CitationOperationAdmission } from "./Admission.ts";
 import { makeCitationCleanerPipeline } from "./CleanerPipeline.ts";
 import { CitationCleanerValues } from "./CleanerValues.ts";
+import { CitationInvocation } from "./Invocation.ts";
 import { failCitationCleanerBoundary } from "./PortFailure.ts";
 import { CitationRegexOperation, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { captureCitationOperationPolicy, snapshotCitationValue } from "./Snapshot.ts";
@@ -41,7 +41,6 @@ export const makeCitationSourceCleaning = Effect.fn("Citation.makeSourceCleaning
   function* (policy: unknown, artifact: unknown) {
     const invalid = () => CitationInputError.make({ operation: "clean" });
     const { limits, engineArtifact } = yield* captureCitationOperationPolicy(policy, artifact, invalid);
-    const admission = yield* CitationOperationAdmission;
     const cleaner = yield* CitationCleaner;
     const values = yield* CitationCleanerValues;
     const clock = yield* Clock.Clock;
@@ -79,40 +78,32 @@ export const makeCitationSourceCleaning = Effect.fn("Citation.makeSourceCleaning
       Effect.provideService(Clock.Clock, clock)
     );
     return {
-      clean: Effect.fn("Citation.cleanSourceBoundary")(
-        (raw: unknown) =>
-          admission
-            .run(
-              "clean",
-              Effect.scoped(
-                Effect.gen(function* () {
-                  const { workDuration, result, producedTextUtf16 } = yield* measureCitationTextWork(
-                    limits,
-                    prepare(raw)
-                  );
-                  const reportPolicy = yield* captureCitationOperationPolicy(limits, engineArtifact, invalid);
-                  return CitationEngineCleanResult.make({
-                    ...result,
-                    report: CitationEngineReport.make({
-                      operation: "clean",
-                      engineArtifact,
-                      limits: reportPolicy.limits,
-                      producedTextUtf16,
-                      workDuration,
-                      extraction: null,
-                    }),
-                  });
-                })
-              )
-            )
-            .pipe(
-              Effect.catchTags({
-                CitationCleanerFailure: failCitationCleanerBoundary,
-                CitationAdmissionFailure: failCitationCleanerBoundary,
-                CitationSafetyLimitExceeded: timing.failSafety,
-              })
-            ),
-        timing.timed
+      clean: Effect.fn("Citation.cleanSourceBoundary")((raw: unknown) =>
+        Effect.scoped(
+          Effect.gen(function* () {
+            const { workDuration, result, producedTextUtf16 } = yield* measureCitationTextWork(
+              (yield* CitationInvocation).budget,
+              prepare(raw)
+            );
+            const reportPolicy = yield* captureCitationOperationPolicy(limits, engineArtifact, invalid);
+            return CitationEngineCleanResult.make({
+              ...result,
+              report: CitationEngineReport.make({
+                operation: "clean",
+                engineArtifact,
+                limits: reportPolicy.limits,
+                producedTextUtf16,
+                workDuration,
+                extraction: null,
+              }),
+            });
+          })
+        ).pipe(
+          Effect.catchTags({
+            CitationCleanerFailure: failCitationCleanerBoundary,
+            CitationSafetyLimitExceeded: timing.failSafety,
+          })
+        )
       ),
     };
   },

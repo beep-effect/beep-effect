@@ -21,6 +21,7 @@ import {
   installCitationHtmlGeometryFixture,
   prepareCitationOptionalHtmlGeometry,
 } from "./CitationHtmlGeometryPreparation.fixtures.ts";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationGeneratedReferenceSource } from "./CitationReferenceNames.fixtures.ts";
 import {
   CitationReferenceSourceNames,
@@ -33,6 +34,7 @@ import {
 } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex, readCitationModelMetadata } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationGeneratedReferencesResult } from "@beep/law-practice-server/internal/Citation/GeneratedReferences";
+import type { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
 const $I = $LawPracticeServerId.create("test/CitationGeneratedReferences");
@@ -101,12 +103,29 @@ export const replayCitationGeneratedReferences = Effect.fn("GeneratedReferencesT
   const stage = yield* makeCitationGeneratedReferences(setup.limits, setup.runtime, {
     patterns: template.patterns,
     disallowedNames: corpus.disallowedNames,
-  }).pipe(Effect.provideContext(setup.provided));
+  }).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(setup.limits).pipe(
+        Effect.map((bind) => ({ ...stage, pincited: bind(stage.pincited) }))
+      )
+    ),
+    Effect.provideContext(setup.provided)
+  );
   const configuration = { patterns: template.patterns, disallowedNames: corpus.disallowedNames };
   const markup = yield* makeCitationGeneratedMarkupReferences(setup.limits, setup.runtime, configuration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(setup.limits).pipe(
+        Effect.map((bind) => ({ ...stage, markup: bind(stage.markup) }))
+      )
+    ),
     Effect.provideContext(setup.provided)
   );
   const combined = yield* makeCitationGeneratedCombinedReferences(setup.limits, setup.runtime, configuration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(setup.limits).pipe(
+        Effect.map((bind) => ({ ...stage, combined: bind(stage.combined) }))
+      )
+    ),
     Effect.provideContext(setup.provided)
   );
   const geometryStage = yield* installCitationHtmlGeometryFixture(kind, setup);
@@ -127,7 +146,11 @@ export const replayCitationGeneratedReferences = Effect.fn("GeneratedReferencesT
       metadata: citationReferenceMetadataFromSource(row.citation.metadata),
     };
     const invocation = { pin: stage.pincited, markup: markup.markup, combined: combined.combined }[row.mode](request);
-    const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
+    const closed: Effect.Effect<
+      Effect.Success<typeof invocation>,
+      Effect.Error<typeof invocation>,
+      CitationInvocation
+    > = invocation;
     const result: CitationGeneratedReferencesResult = yield* closed;
     if (row.mode === "markup") yield* assertGeometryRefusal(markup, CitationGeneratedMarkupInput.make(request));
     expect(result.references).toHaveLength(row.expected.length);
@@ -162,7 +185,14 @@ export const replayCitationGeneratedReferences = Effect.fn("GeneratedReferencesT
   const tight = yield* makeCitationGeneratedReferences({ ...setup.limits, candidates: 1 }, setup.runtime, {
     patterns: template.patterns,
     disallowedNames: corpus.disallowedNames,
-  }).pipe(Effect.provideContext(setup.provided));
+  }).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding({ ...setup.limits, candidates: 1 }).pipe(
+        Effect.map((bind) => ({ ...stage, pincited: bind(stage.pincited) }))
+      )
+    ),
+    Effect.provideContext(setup.provided)
+  );
   const refused = yield* tight
     .pincited({
       plain: multiple.plain,

@@ -12,6 +12,7 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
+import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
   authenticateCitationRenderingProducer,
   readCitationNativeRenderingAsset,
@@ -40,7 +41,13 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         Effect.gen(function* () {
           const policy = yield* defaultCitationEnginePolicy;
           const raw = yield* table;
-          const repr = yield* makeCitationPythonRepr(policy.limits, raw);
+          const repr = yield* makeCitationPythonRepr(policy.limits, raw).pipe(
+            Effect.flatMap((stage) =>
+              makeCitationTestInvocationBinding(policy.limits).pipe(
+                Effect.map((bind) => ({ ...stage, text: bind(stage.text) }))
+              )
+            )
+          );
           const corpusText = yield* readCitationOracleFixture(
             "python-repr-cases",
             "078f625b97d636e72ce566a836db5e1e3726b4222ef71edb79b57faa53e88ed5"
@@ -61,11 +68,24 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
           const policy = yield* defaultCitationEnginePolicy;
           const raw = yield* table;
           for (const corrupt of [null, "{}", `${raw} `]) {
-            const error = yield* makeCitationPythonRepr(policy.limits, corrupt).pipe(Effect.flip);
+            const error = yield* makeCitationPythonRepr(policy.limits, corrupt).pipe(
+              Effect.flatMap((stage) =>
+                makeCitationTestInvocationBinding(policy.limits).pipe(
+                  Effect.map((bind) => ({ ...stage, text: bind(stage.text) }))
+                )
+              ),
+              Effect.flip
+            );
             expect(error).toMatchObject({ reason: "invalid-table" });
             expect("cause" in error).toBe(false);
           }
-          const repr = yield* makeCitationPythonRepr(policy.limits, raw);
+          const repr = yield* makeCitationPythonRepr(policy.limits, raw).pipe(
+            Effect.flatMap((stage) =>
+              makeCitationTestInvocationBinding(policy.limits).pipe(
+                Effect.map((bind) => ({ ...stage, text: bind(stage.text) }))
+              )
+            )
+          );
           for (const input of [
             { width: 3, bytes: new Uint8Array() },
             { width: 2, bytes: new Uint8Array([65]) },
@@ -74,47 +94,60 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
             const error = yield* repr.text(input).pipe(Effect.flip);
             expect(error).toMatchObject({ reason: "invalid-input" });
           }
-          const small = yield* makeCitationPythonRepr({ ...policy.limits, producedTextUtf16: 8 }, raw);
+          const small = yield* makeCitationPythonRepr({ ...policy.limits, producedTextUtf16: 8 }, raw).pipe(
+            Effect.flatMap((stage) =>
+              makeCitationTestInvocationBinding({ ...policy.limits, producedTextUtf16: 8 }).pipe(
+                Effect.map((bind) => ({ ...stage, text: bind(stage.text) }))
+              )
+            )
+          );
           const refused = yield* small.text({ width: 1, bytes: new Uint8Array([0, 0, 0]) }).pipe(Effect.flip);
           expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
           const recovered = yield* small.text({ width: 1, bytes: new Uint8Array() });
           expect(recovered).toEqual({ width: 1, bytes: new Uint8Array([39, 39]) });
         })
     );
-    it.effect("refuses an invalid policy or oversized budget and keeps long text whole across chunks", () =>
+    it.effect("refuses an invalid policy and keeps long text whole across chunks", () =>
       Effect.gen(function* () {
         const policy = yield* defaultCitationEnginePolicy;
         const raw = yield* table;
-        const refused = yield* makeCitationPythonRepr({}, raw).pipe(Effect.flip);
+        const refused = yield* makeCitationPythonRepr({}, raw).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestInvocationBinding({}).pipe(Effect.map((bind) => ({ ...stage, text: bind(stage.text) })))
+          ),
+          Effect.flip
+        );
         expect(refused).toMatchObject({ reason: "invalid-policy" });
-        const repr = yield* makeCitationPythonRepr(policy.limits, raw);
+        const repr = yield* makeCitationPythonRepr(policy.limits, raw).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestInvocationBinding(policy.limits).pipe(
+              Effect.map((bind) => ({ ...stage, text: bind(stage.text) }))
+            )
+          )
+        );
         // Longer than one assembly chunk (1024) and one cooperative yield interval (4096).
         const bytes = new Uint8Array(5000).fill(97);
         const output = yield* repr.text({ width: 1, bytes });
         expect(new TextDecoder().decode(output.bytes)).toBe(`'${new TextDecoder().decode(bytes)}'`);
-        const larger = yield* makeCitationTextBudget(policy.limits);
-        const oversized = yield* makeCitationPythonRepr({ ...policy.limits, producedTextUtf16: 1 }, raw).pipe(
-          Effect.provideService(CitationTextBudget, larger),
-          Effect.flip
-        );
-        expect(oversized).toMatchObject({ reason: "invalid-policy" });
       })
     );
-    it.effect("retains the captured shared text budget when the caller supplies a replacement", () =>
+    it.effect("reads the invocation budget at call time despite a legacy service replacement", () =>
       Effect.gen(function* () {
         const policy = yield* defaultCitationEnginePolicy;
         const raw = yield* table;
         const limits = { ...policy.limits, producedTextUtf16: 12 };
-        const captured = yield* makeCitationTextBudget(limits);
         const replacement = yield* makeCitationTextBudget(limits);
-        const repr = yield* makeCitationPythonRepr(limits, raw).pipe(
-          Effect.provideService(CitationTextBudget, captured)
+        yield* withCitationTestInvocation(
+          Effect.gen(function* () {
+            const repr = yield* makeCitationPythonRepr(limits, raw);
+            yield* repr.text({ width: 1, bytes: new Uint8Array([65]) });
+            const refused = yield* repr
+              .text({ width: 1, bytes: new Uint8Array() })
+              .pipe(Effect.provideService(CitationTextBudget, replacement), Effect.flip);
+            expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
+          }),
+          limits
         );
-        yield* repr.text({ width: 1, bytes: new Uint8Array([65]) });
-        const refused = yield* repr
-          .text({ width: 1, bytes: new Uint8Array() })
-          .pipe(Effect.provideService(CitationTextBudget, replacement), Effect.flip);
-        expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
         const usedReplacement = yield* replacement.snapshot;
         expect(usedReplacement).toBe(0);
       })
@@ -132,7 +165,14 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         const repr = yield* makeCitationPythonRepr(
           { ...policy.limits, extractDeadline: Duration.seconds(1) },
           raw
-        ).pipe(Effect.provideService(Clock.Clock, controlled));
+        ).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestInvocationBinding({ ...policy.limits, extractDeadline: Duration.seconds(1) }).pipe(
+              Effect.map((bind) => ({ ...stage, text: bind(stage.text) }))
+            )
+          ),
+          Effect.provideService(Clock.Clock, controlled)
+        );
         const running = yield* repr
           .text({ width: 1, bytes: new Uint8Array(200000) })
           .pipe(Effect.provideService(Clock.Clock, replacement), Effect.forkChild);

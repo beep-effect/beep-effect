@@ -5,6 +5,7 @@ import {
   CitationFrozenEditions,
   makeCitationFrozenEditions,
 } from "@beep/law-practice-server/internal/Citation/FrozenEditions";
+import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import {
   makeCitationPythonUnicode,
   replaceCitationPythonStorage,
@@ -31,6 +32,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
+import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { makeCitationNativeManualClock, makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
@@ -130,288 +132,430 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
     "replacing a native word by itself preserves every source point",
     [ReplacementText, ReplacementText],
     ([text, search]) =>
-      Effect.gen(function* () {
-        const limits = (yield* defaultCitationEnginePolicy).limits;
-        const unicode = yield* makeCitationPythonUnicode(limits);
-        const source = yield* unicode.fromText(text);
-        const needle = yield* unicode.fromText(search);
-        const budget = yield* makeCitationTextBudget(limits);
-        const actual = yield* replaceCitationPythonStorage(source.storage, needle.storage, needle.storage, (layout) =>
-          budget.reserve(layout.utf16Units)
-        );
-        expect(actual).toEqual(source.storage);
-      }),
+      withCitationTestInvocation(
+        Effect.gen(function* () {
+          const limits = (yield* defaultCitationEnginePolicy).limits;
+          const unicode = yield* makeCitationPythonUnicode(limits);
+          const source = yield* unicode.fromText(text);
+          const needle = yield* unicode.fromText(search);
+          const budget = yield* makeCitationTextBudget(limits);
+          const actual = yield* replaceCitationPythonStorage(source.storage, needle.storage, needle.storage, (layout) =>
+            budget.reserve(layout.utf16Units)
+          );
+          expect(actual).toEqual(source.storage);
+        })
+      ),
     { arbitrary: fcRuns(50) }
   );
   it.effect("rejects malformed correction policy and requests before consulting editions", () =>
-    Effect.gen(function* () {
-      const { owner, limits } = yield* load();
-      const invalidPolicy = yield* makeCitationResourceCorrection(null).pipe(
-        Effect.provideService(CitationFrozenEditions, owner),
-        Effect.flip
-      );
-      expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
-      const correction = yield* makeCitationResourceCorrection(limits).pipe(
-        Effect.provideService(CitationFrozenEditions, owner)
-      );
-      for (const method of [correction.reporter, correction.page, correction.citation]) {
-        const failure = yield* method(null).pipe(Effect.flip);
-        expect(failure).toMatchObject({ reason: "invalid-input" });
-        expect("cause" in failure).toBe(false);
-      }
-    })
+    withCitationTestInvocation(
+      Effect.gen(function* () {
+        const { owner, limits } = yield* load();
+        const invalidPolicy = yield* makeCitationResourceCorrection(null).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestInvocationBinding(null).pipe(
+              Effect.map((bind) => ({
+                ...stage,
+                reporter: bind(stage.reporter),
+                page: bind(stage.page),
+                citation: bind(stage.citation),
+              }))
+            )
+          ),
+          Effect.provideService(CitationFrozenEditions, owner),
+          Effect.flip
+        );
+        expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
+        const correction = yield* makeCitationResourceCorrection(limits).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestInvocationBinding(limits).pipe(
+              Effect.map((bind) => ({
+                ...stage,
+                reporter: bind(stage.reporter),
+                page: bind(stage.page),
+                citation: bind(stage.citation),
+              }))
+            )
+          ),
+          Effect.provideService(CitationFrozenEditions, owner)
+        );
+        for (const method of [correction.reporter, correction.page, correction.citation]) {
+          const failure = yield* method(null).pipe(Effect.flip);
+          expect(failure).toMatchObject({ reason: "invalid-input" });
+          expect("cause" in failure).toBe(false);
+        }
+      })
+    )
   );
   it.effect(
     "preflights amplified output and interrupts adversarial native scanning",
     () =>
-      Effect.gen(function* () {
-        const limits = (yield* defaultCitationEnginePolicy).limits;
-        const unicode = yield* makeCitationPythonUnicode(limits);
-        const replacement = yield* unicode.fromText("😀");
-        const small = yield* unicode.fromText("aaa");
-        const empty = yield* unicode.fromText("");
-        const budget = yield* makeCitationTextBudget({ ...limits, producedTextUtf16: 10 });
-        const refused = yield* replaceCitationPythonStorage(
-          small.storage,
-          empty.storage,
-          replacement.storage,
-          (layout) =>
-            Effect.gen(function* () {
-              expect(layout).toEqual({ width: 4, pythonLength: 7, utf16Units: 11, byteLength: 28 });
-              yield* budget.reserve(layout.utf16Units);
-            })
-        ).pipe(Effect.flip);
-        expect(refused).toMatchObject({ limit: "producedTextUtf16" });
-        const source = yield* unicode.fromText(Str.repeat(64000)("a"));
-        const needle = yield* unicode.fromText(`${Str.repeat(32000)("a")}b`);
-        const timer = yield* makeCitationNativeManualClock(Duration.millis(997));
-        const timing = yield* makeCitationRegexTiming({ ...limits, extractDeadline: Duration.millis(997) }, true).pipe(
-          Effect.provideService(Clock.Clock, timer.clock)
-        );
-        const disabled = yield* makeCitationNativeSleepClock(() => Effect.never);
-        const pending = yield* replaceCitationPythonStorage(
-          source.storage,
-          needle.storage,
-          replacement.storage,
-          () => Effect.void
-        ).pipe(timing.timed, Effect.provideService(Clock.Clock, disabled), Effect.forkChild);
-        yield* timer.trigger;
-        const expired = yield* Fiber.join(pending).pipe(Effect.flip);
-        expect(expired).toMatchObject({ limit: "extractDeadline" });
-        expect(source.storage.bytes[0]).toBe(97);
-      }),
+      withCitationTestInvocation(
+        Effect.gen(function* () {
+          const limits = (yield* defaultCitationEnginePolicy).limits;
+          const unicode = yield* makeCitationPythonUnicode(limits);
+          const replacement = yield* unicode.fromText("😀");
+          const small = yield* unicode.fromText("aaa");
+          const empty = yield* unicode.fromText("");
+          const budget = yield* makeCitationTextBudget({ ...limits, producedTextUtf16: 10 });
+          const refused = yield* replaceCitationPythonStorage(
+            small.storage,
+            empty.storage,
+            replacement.storage,
+            (layout) =>
+              Effect.gen(function* () {
+                expect(layout).toEqual({ width: 4, pythonLength: 7, utf16Units: 11, byteLength: 28 });
+                yield* budget.reserve(layout.utf16Units);
+              })
+          ).pipe(Effect.flip);
+          expect(refused).toMatchObject({ limit: "producedTextUtf16" });
+          const source = yield* unicode.fromText(Str.repeat(64000)("a"));
+          const needle = yield* unicode.fromText(`${Str.repeat(32000)("a")}b`);
+          const timer = yield* makeCitationNativeManualClock(Duration.millis(997));
+          const timing = yield* makeCitationRegexTiming(
+            { ...limits, extractDeadline: Duration.millis(997) },
+            true
+          ).pipe(Effect.provideService(Clock.Clock, timer.clock));
+          const disabled = yield* makeCitationNativeSleepClock(() => Effect.never);
+          const pending = yield* replaceCitationPythonStorage(
+            source.storage,
+            needle.storage,
+            replacement.storage,
+            () => Effect.void
+          ).pipe(timing.timed, Effect.provideService(Clock.Clock, disabled), Effect.forkChild);
+          yield* timer.trigger;
+          const expired = yield* Fiber.join(pending).pipe(Effect.flip);
+          expect(expired).toMatchObject({ limit: "extractDeadline" });
+          expect(source.storage.bytes[0]).toBe(97);
+        })
+      ),
     { timeout: 60000 }
   );
   it.effect(
     "matches 2592 original native replacements",
     () =>
-      Effect.gen(function* () {
-        const corpus = yield* loadCitationCorpus();
-        const { limits } = yield* load();
-        const unicode = yield* makeCitationPythonUnicode(limits);
-        const words = yield* Effect.forEach(corpus.replacementWords, (word) => unicode.fromStorage(word));
-        for (const [source, old, replacement, result] of corpus.replacements) {
-          const input = yield* at(words, source);
-          const needle = yield* at(words, old);
-          const next = yield* at(words, replacement);
-          const budget = yield* makeCitationTextBudget(limits);
-          const actual = yield* replaceCitationPythonStorage(input.storage, needle.storage, next.storage, (layout) =>
-            budget.reserve(layout.utf16Units)
-          );
-          const expected = yield* at(corpus.outputs, result);
-          expect(actual).toEqual(expected);
-        }
-      }),
+      withCitationTestInvocation(
+        Effect.gen(function* () {
+          const corpus = yield* loadCitationCorpus();
+          const { limits } = yield* load();
+          const unicode = yield* makeCitationPythonUnicode(limits);
+          const words = yield* Effect.forEach(corpus.replacementWords, (word) => unicode.fromStorage(word));
+          for (const [source, old, replacement, result] of corpus.replacements) {
+            const input = yield* at(words, source);
+            const needle = yield* at(words, old);
+            const next = yield* at(words, replacement);
+            const budget = yield* makeCitationTextBudget(limits);
+            const actual = yield* replaceCitationPythonStorage(input.storage, needle.storage, next.storage, (layout) =>
+              budget.reserve(layout.utf16Units)
+            );
+            const expected = yield* at(corpus.outputs, result);
+            expect(actual).toEqual(expected);
+          }
+        })
+      ),
     { timeout: 120000 }
   );
   it.effect(
     "matches all 4117 original resource renderings",
     () =>
-      Effect.gen(function* () {
-        const corpus = yield* loadCitationCorpus();
-        const { owner, limits } = yield* load();
-        const correction = yield* makeCitationResourceCorrection(limits).pipe(
-          Effect.provideService(CitationFrozenEditions, owner)
-        );
-        for (const [group, edition, text, result, error] of corpus.controls) {
-          const groups = yield* at(corpus.groups, group);
-          const editionGuess = yield* at(corpus.editions, edition);
-          const matchedText = yield* at(corpus.texts, text);
-          const request = CitationResourceCitationCorrectionInput.make({ ...groups, editionGuess, matchedText });
-          if (error !== null) {
-            const failed = yield* correction.citation(request).pipe(Effect.flip);
-            expect(failed).toMatchObject({ reason: error });
-          } else {
-            const actual = yield* correction.citation(request);
-            expect(result).not.toBeNull();
-            if (result !== null) {
-              const expected = yield* at(corpus.outputs, result);
-              expect(actual).toEqual(expected);
+      withCitationTestInvocation(
+        Effect.gen(function* () {
+          const corpus = yield* loadCitationCorpus();
+          const { owner, limits } = yield* load();
+          const correction = yield* makeCitationResourceCorrection(limits).pipe(
+            Effect.flatMap((stage) =>
+              makeCitationTestInvocationBinding(limits).pipe(
+                Effect.map((bind) => ({
+                  ...stage,
+                  reporter: bind(stage.reporter),
+                  page: bind(stage.page),
+                  citation: bind(stage.citation),
+                }))
+              )
+            ),
+            Effect.provideService(CitationFrozenEditions, owner)
+          );
+          for (const [group, edition, text, result, error] of corpus.controls) {
+            const groups = yield* at(corpus.groups, group);
+            const editionGuess = yield* at(corpus.editions, edition);
+            const matchedText = yield* at(corpus.texts, text);
+            const request = CitationResourceCitationCorrectionInput.make({ ...groups, editionGuess, matchedText });
+            if (error !== null) {
+              const failed = yield* correction.citation(request).pipe(Effect.flip);
+              expect(failed).toMatchObject({ reason: error });
+            } else {
+              const actual = yield* correction.citation(request);
+              expect(result).not.toBeNull();
+              if (result !== null) {
+                const expected = yield* at(corpus.outputs, result);
+                expect(actual).toEqual(expected);
+              }
             }
           }
-        }
-        for (const [editionGuess, result] of corpus.canonical) {
-          const actual = yield* correction.citation({
-            matchedText: native("X 1[U][A] X"),
-            reporter: native("X"),
-            page: native("1[U][A]"),
-            editionGuess,
-          });
-          const expected = yield* at(corpus.outputs, result);
-          expect(actual).toEqual(expected);
-        }
-      }),
+          for (const [editionGuess, result] of corpus.canonical) {
+            const actual = yield* correction.citation({
+              matchedText: native("X 1[U][A] X"),
+              reporter: native("X"),
+              page: native("1[U][A]"),
+              editionGuess,
+            });
+            const expected = yield* at(corpus.outputs, result);
+            expect(actual).toEqual(expected);
+          }
+        })
+      ),
     { timeout: 120000 }
   );
   it.effect("bounds complete correction and preserves input/output ownership", () =>
-    Effect.gen(function* () {
-      const { owner, limits } = yield* load();
-      const request = {
-        matchedText: native("[U] [U]"),
-        reporter: native("NY Slip Op"),
-        page: native("[U]"),
-        editionGuess: null,
-      };
-      const make = (maximum: number) =>
-        makeCitationResourceCorrection({ ...limits, producedTextUtf16: maximum }).pipe(
-          Effect.provideService(CitationFrozenEditions, owner)
+    withCitationTestInvocation(
+      Effect.gen(function* () {
+        const { owner, limits } = yield* load();
+        const request = {
+          matchedText: native("[U] [U]"),
+          reporter: native("NY Slip Op"),
+          page: native("[U]"),
+          editionGuess: null,
+        };
+        const make = (maximum: number) =>
+          makeCitationResourceCorrection({ ...limits, producedTextUtf16: maximum }).pipe(
+            Effect.flatMap((stage) =>
+              makeCitationTestInvocationBinding({ ...limits, producedTextUtf16: maximum }).pipe(
+                Effect.map((bind) => ({
+                  ...stage,
+                  reporter: bind(stage.reporter),
+                  page: bind(stage.page),
+                  citation: bind(stage.citation),
+                }))
+              )
+            ),
+            Effect.provideService(CitationFrozenEditions, owner)
+          );
+        const below = yield* make(32);
+        const failure = yield* below.citation(request).pipe(Effect.flip);
+        expect(failure).toMatchObject({ limit: "producedTextUtf16" });
+        const exact = yield* make(33);
+        const actual = yield* exact.citation(request);
+        expect(actual).toEqual(native("(U) (U)"));
+        actual.bytes.fill(0);
+        const repeated = yield* exact.citation(request);
+        expect(repeated).toEqual(native("(U) (U)"));
+        expect(request.matchedText).toEqual(native("[U] [U]"));
+        expect(request.page).toEqual(native("[U]"));
+        yield* withCitationTestInvocation(
+          Effect.gen(function* () {
+            const budget = (yield* CitationInvocation).budget;
+            yield* budget.reserve(2);
+            const enclosing = yield* makeCitationResourceCorrection({ ...limits, producedTextUtf16: 34 }).pipe(
+              Effect.flatMap((stage) =>
+                makeCitationTestInvocationBinding({ ...limits, producedTextUtf16: 34 }).pipe(
+                  Effect.map((bind) => ({
+                    ...stage,
+                    reporter: bind(stage.reporter),
+                    page: bind(stage.page),
+                    citation: bind(stage.citation),
+                  }))
+                )
+              ),
+              Effect.provideService(CitationFrozenEditions, owner),
+              Effect.provideService(CitationTextBudget, budget)
+            );
+            const caller = yield* makeCitationTextBudget(limits);
+            const exhausted = yield* enclosing
+              .citation(request)
+              .pipe(Effect.provideService(CitationTextBudget, caller), Effect.flip);
+            expect(exhausted).toMatchObject({ limit: "producedTextUtf16" });
+            const used = yield* budget.snapshot;
+            const uncharged = yield* caller.snapshot;
+            expect(used).toBe(28);
+            expect(uncharged).toBe(0);
+          }),
+          { ...limits, producedTextUtf16: 34 }
         );
-      const below = yield* make(32);
-      const failure = yield* below.citation(request).pipe(Effect.flip);
-      expect(failure).toMatchObject({ limit: "producedTextUtf16" });
-      const exact = yield* make(33);
-      const actual = yield* exact.citation(request);
-      expect(actual).toEqual(native("(U) (U)"));
-      actual.bytes.fill(0);
-      const repeated = yield* exact.citation(request);
-      expect(repeated).toEqual(native("(U) (U)"));
-      expect(request.matchedText).toEqual(native("[U] [U]"));
-      expect(request.page).toEqual(native("[U]"));
-      const budget = yield* makeCitationTextBudget({ ...limits, producedTextUtf16: 34 });
-      yield* budget.reserve(2);
-      const enclosing = yield* makeCitationResourceCorrection({ ...limits, producedTextUtf16: 34 }).pipe(
-        Effect.provideService(CitationFrozenEditions, owner),
-        Effect.provideService(CitationTextBudget, budget)
-      );
-      const caller = yield* makeCitationTextBudget(limits);
-      const exhausted = yield* enclosing
-        .citation(request)
-        .pipe(Effect.provideService(CitationTextBudget, caller), Effect.flip);
-      expect(exhausted).toMatchObject({ limit: "producedTextUtf16" });
-      const used = yield* budget.snapshot;
-      const uncharged = yield* caller.snapshot;
-      expect(used).toBe(28);
-      expect(uncharged).toBe(0);
-    })
+      })
+    )
   );
   it.effect(
     "matches all 5858 source calls with exact native payloads",
     () =>
-      Effect.gen(function* () {
-        const { corpus, owner, limits } = yield* load();
-        const correction = yield* makeCitationResourceCorrection(limits).pipe(
-          Effect.provideService(CitationFrozenEditions, owner)
-        );
-        for (const row of corpus.cases) {
-          if (row.missingReporter) {
-            const failed = yield* correction.reporter(row.request).pipe(Effect.flip);
-            expect(failed).toMatchObject({ reason: "missing-reporter" });
-          } else {
-            const reporter = yield* correction.reporter(row.request);
-            expect(reporter).toEqual(row.reporter);
+      withCitationTestInvocation(
+        Effect.gen(function* () {
+          const { corpus, owner, limits } = yield* load();
+          const correction = yield* makeCitationResourceCorrection(limits).pipe(
+            Effect.flatMap((stage) =>
+              makeCitationTestInvocationBinding(limits).pipe(
+                Effect.map((bind) => ({
+                  ...stage,
+                  reporter: bind(stage.reporter),
+                  page: bind(stage.page),
+                  citation: bind(stage.citation),
+                }))
+              )
+            ),
+            Effect.provideService(CitationFrozenEditions, owner)
+          );
+          for (const row of corpus.cases) {
+            if (row.missingReporter) {
+              const failed = yield* correction.reporter(row.request).pipe(Effect.flip);
+              expect(failed).toMatchObject({ reason: "missing-reporter" });
+            } else {
+              const reporter = yield* correction.reporter(row.request);
+              expect(reporter).toEqual(row.reporter);
+            }
+            const page = yield* correction.page(row.request);
+            expect(page).toEqual(row.page);
           }
-          const page = yield* correction.page(row.request);
-          expect(page).toEqual(row.page);
-        }
-        for (const [ref, reporter, page] of corpus.canonical) {
-          const request = { reporter: native("X"), page: native("1[U][A]"), editionGuess: ref };
-          const actualReporter = yield* correction.reporter(request);
-          const actualPage = yield* correction.page(request);
-          expect(actualReporter).toEqual(reporter);
-          expect(actualPage).toEqual(page);
-        }
-      }),
+          for (const [ref, reporter, page] of corpus.canonical) {
+            const request = { reporter: native("X"), page: native("1[U][A]"), editionGuess: ref };
+            const actualReporter = yield* correction.reporter(request);
+            const actualPage = yield* correction.page(request);
+            expect(actualReporter).toEqual(reporter);
+            expect(actualPage).toEqual(page);
+          }
+        })
+      ),
     { timeout: 60000 }
   );
   it.effect("reserves before output, preserves owned bytes and retains enclosing authority", () =>
-    Effect.gen(function* () {
-      const { owner, limits } = yield* load();
-      const request = { reporter: native("NY Slip Op"), page: native("[U]"), editionGuess: null };
-      const bounded = yield* makeCitationResourceCorrection({ ...limits, producedTextUtf16: 15 }).pipe(
-        Effect.provideService(CitationFrozenEditions, owner)
-      );
-      const failure = yield* bounded.page(request).pipe(Effect.flip);
-      expect(failure).toMatchObject({ limit: "producedTextUtf16" });
-      const exact = yield* makeCitationResourceCorrection({ ...limits, producedTextUtf16: 16 }).pipe(
-        Effect.provideService(CitationFrozenEditions, owner)
-      );
-      const result = yield* exact.page(request);
-      expect(result).toEqual(native("(U)"));
-      expect(request.page).toEqual(native("[U]"));
-      if (result !== null) result.bytes.fill(0);
-      const repeated = yield* exact.page(request);
-      expect(repeated).toEqual(native("(U)"));
-      const budget = yield* makeCitationTextBudget({ ...limits, producedTextUtf16: 17 });
-      yield* budget.reserve(2);
-      const enclosing = yield* makeCitationResourceCorrection({ ...limits, producedTextUtf16: 17 }).pipe(
-        Effect.provideService(CitationFrozenEditions, owner),
-        Effect.provideService(CitationTextBudget, budget)
-      );
-      const caller = yield* makeCitationTextBudget(limits);
-      const exhausted = yield* enclosing
-        .page(request)
-        .pipe(Effect.provideService(CitationTextBudget, caller), Effect.flip);
-      expect(exhausted).toMatchObject({ limit: "producedTextUtf16" });
-      const used = yield* budget.snapshot;
-      expect(used).toBe(15);
-      const uncharged = yield* caller.snapshot;
-      expect(uncharged).toBe(0);
-    })
+    withCitationTestInvocation(
+      Effect.gen(function* () {
+        const { owner, limits } = yield* load();
+        const request = { reporter: native("NY Slip Op"), page: native("[U]"), editionGuess: null };
+        const bounded = yield* makeCitationResourceCorrection({ ...limits, producedTextUtf16: 15 }).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestInvocationBinding({ ...limits, producedTextUtf16: 15 }).pipe(
+              Effect.map((bind) => ({
+                ...stage,
+                reporter: bind(stage.reporter),
+                page: bind(stage.page),
+                citation: bind(stage.citation),
+              }))
+            )
+          ),
+          Effect.provideService(CitationFrozenEditions, owner)
+        );
+        const failure = yield* bounded.page(request).pipe(Effect.flip);
+        expect(failure).toMatchObject({ limit: "producedTextUtf16" });
+        const exact = yield* makeCitationResourceCorrection({ ...limits, producedTextUtf16: 16 }).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestInvocationBinding({ ...limits, producedTextUtf16: 16 }).pipe(
+              Effect.map((bind) => ({
+                ...stage,
+                reporter: bind(stage.reporter),
+                page: bind(stage.page),
+                citation: bind(stage.citation),
+              }))
+            )
+          ),
+          Effect.provideService(CitationFrozenEditions, owner)
+        );
+        const result = yield* exact.page(request);
+        expect(result).toEqual(native("(U)"));
+        expect(request.page).toEqual(native("[U]"));
+        if (result !== null) result.bytes.fill(0);
+        const repeated = yield* exact.page(request);
+        expect(repeated).toEqual(native("(U)"));
+        yield* withCitationTestInvocation(
+          Effect.gen(function* () {
+            const budget = (yield* CitationInvocation).budget;
+            yield* budget.reserve(2);
+            const enclosing = yield* makeCitationResourceCorrection({ ...limits, producedTextUtf16: 17 }).pipe(
+              Effect.flatMap((stage) =>
+                makeCitationTestInvocationBinding({ ...limits, producedTextUtf16: 17 }).pipe(
+                  Effect.map((bind) => ({
+                    ...stage,
+                    reporter: bind(stage.reporter),
+                    page: bind(stage.page),
+                    citation: bind(stage.citation),
+                  }))
+                )
+              ),
+              Effect.provideService(CitationFrozenEditions, owner),
+              Effect.provideService(CitationTextBudget, budget)
+            );
+            const caller = yield* makeCitationTextBudget(limits);
+            const exhausted = yield* enclosing
+              .page(request)
+              .pipe(Effect.provideService(CitationTextBudget, caller), Effect.flip);
+            expect(exhausted).toMatchObject({ limit: "producedTextUtf16" });
+            const used = yield* budget.snapshot;
+            expect(used).toBe(15);
+            const uncharged = yield* caller.snapshot;
+            expect(uncharged).toBe(0);
+          }),
+          { ...limits, producedTextUtf16: 17 }
+        );
+      })
+    )
   );
   it.effect(
     "uses captured owner and deadlines under caller replacement",
     () =>
-      Effect.gen(function* () {
-        const { corpus, owner, limits } = yield* load();
-        const row = yield* Effect.fromOption(A.head(corpus.canonical));
-        const waiting = CitationFrozenEditions.of({
-          ...owner,
-          source: Effect.fn("ResourceCorrectionTest.wait")(() => Effect.never),
-        });
-        const installed = yield* makeCitationResourceCorrection(limits).pipe(
-          Effect.provideService(CitationFrozenEditions, owner)
-        );
-        const reporter = yield* installed
-          .reporter({ editionGuess: row[0] })
-          .pipe(Effect.provideService(CitationFrozenEditions, waiting));
-        expect(reporter).toEqual(row[1]);
-        const corrected = yield* installed
-          .citation({ matchedText: native("X"), reporter: native("X"), page: null, editionGuess: row[0] })
-          .pipe(Effect.provideService(CitationFrozenEditions, waiting));
-        expect(corrected).toEqual(row[1]);
-        for (const method of ["reporter", "citation"] as const) {
-          const timer = yield* makeCitationNativeManualClock(Duration.millis(997));
-          const timed = yield* makeCitationResourceCorrection({
-            ...limits,
-            extractDeadline: Duration.millis(997),
-          }).pipe(
-            Effect.provideService(CitationFrozenEditions, waiting),
-            Effect.provideService(Clock.Clock, timer.clock)
+      withCitationTestInvocation(
+        Effect.gen(function* () {
+          const { corpus, owner, limits } = yield* load();
+          const row = yield* Effect.fromOption(A.head(corpus.canonical));
+          const waiting = CitationFrozenEditions.of({
+            ...owner,
+            source: Effect.fn("ResourceCorrectionTest.wait")(() => Effect.never),
+          });
+          const installed = yield* makeCitationResourceCorrection(limits).pipe(
+            Effect.flatMap((stage) =>
+              makeCitationTestInvocationBinding(limits).pipe(
+                Effect.map((bind) => ({
+                  ...stage,
+                  reporter: bind(stage.reporter),
+                  page: bind(stage.page),
+                  citation: bind(stage.citation),
+                }))
+              )
+            ),
+            Effect.provideService(CitationFrozenEditions, owner)
           );
-          const disabled = yield* makeCitationNativeSleepClock(() => Effect.never);
-          const bypass = yield* timed.page({ reporter: native(""), page: native("[U]"), editionGuess: row[0] });
-          expect(bypass).toEqual(native("[U]"));
-          const pending = yield* timed[method]({
-            matchedText: native("X"),
-            reporter: native("X"),
-            page: null,
-            editionGuess: row[0],
-          }).pipe(Effect.provideService(Clock.Clock, disabled), Effect.forkChild);
-          yield* timer.trigger;
-          const expired = yield* Fiber.join(pending).pipe(Effect.flip);
-          expect(expired).toMatchObject({ limit: "extractDeadline" });
-        }
-      }),
+          const reporter = yield* installed
+            .reporter({ editionGuess: row[0] })
+            .pipe(Effect.provideService(CitationFrozenEditions, waiting));
+          expect(reporter).toEqual(row[1]);
+          const corrected = yield* installed
+            .citation({ matchedText: native("X"), reporter: native("X"), page: null, editionGuess: row[0] })
+            .pipe(Effect.provideService(CitationFrozenEditions, waiting));
+          expect(corrected).toEqual(row[1]);
+          for (const method of ["reporter", "citation"] as const) {
+            const timer = yield* makeCitationNativeManualClock(Duration.millis(997));
+            const timed = yield* makeCitationResourceCorrection({
+              ...limits,
+              extractDeadline: Duration.millis(997),
+            }).pipe(
+              Effect.flatMap((stage) =>
+                makeCitationTestInvocationBinding({
+                  ...limits,
+                  extractDeadline: Duration.millis(997),
+                }).pipe(
+                  Effect.map((bind) => ({
+                    ...stage,
+                    reporter: bind(stage.reporter),
+                    page: bind(stage.page),
+                    citation: bind(stage.citation),
+                  }))
+                )
+              ),
+              Effect.provideService(CitationFrozenEditions, waiting),
+              Effect.provideService(Clock.Clock, timer.clock)
+            );
+            const disabled = yield* makeCitationNativeSleepClock(() => Effect.never);
+            const bypass = yield* timed.page({ reporter: native(""), page: native("[U]"), editionGuess: row[0] });
+            expect(bypass).toEqual(native("[U]"));
+            const pending = yield* timed[method]({
+              matchedText: native("X"),
+              reporter: native("X"),
+              page: null,
+              editionGuess: row[0],
+            }).pipe(Effect.provideService(Clock.Clock, disabled), Effect.forkChild);
+            yield* timer.trigger;
+            const expired = yield* Fiber.join(pending).pipe(Effect.flip);
+            expect(expired).toMatchObject({ limit: "extractDeadline" });
+          }
+        })
+      ),
     { timeout: 60000 }
   );
 });

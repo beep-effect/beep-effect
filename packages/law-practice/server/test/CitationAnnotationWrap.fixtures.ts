@@ -20,6 +20,7 @@ import {
   makeCitationAnnotationXmlTrace,
 } from "./CitationAnnotationReplay.fixtures.ts";
 import { readCitationAnnotationWrapCorpus } from "./CitationAnnotationTemplate.fixtures.ts";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import { makeCitationRegexTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import {
   assertCitationWorkerCompositionReleased,
@@ -103,7 +104,13 @@ export const replayCitationWrapComposition = Effect.fn("AnnotationWrapTest.compo
     Effect.provideService(CitationTextBudget, setup.budget),
     Effect.provideService(CitationXmlBalance, observedXml.xml)
   );
-  const assembly = yield* makeCitationAnnotationReplay(setup.limits, setup.budget, processor);
+  const assembly = yield* makeCitationAnnotationReplay(setup.limits, setup.budget, processor).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(setup.limits, "annotate").pipe(
+        Effect.map((bind) => ({ ...stage, assemble: bind(stage.assemble) }))
+      )
+    )
+  );
   const rows = full ? corpus.cases : A.filter(corpus.cases, (row) => row.id % 9 === 2 || row.id % 9 === 8);
   let children = 0;
   for (const row of rows) {

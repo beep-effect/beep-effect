@@ -9,19 +9,16 @@ import {
   CitationPostCaseMetadataInput,
   makeCitationPostCaseMetadata,
 } from "@beep/law-practice-server/internal/Citation/PostCaseMetadata";
-import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
-import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import {
-  assertCitationMetadataEnclosingRefusal,
   assertCitationMetadataFixtureLifetime,
   assertCitationMetadataInstallControls,
   assertCitationMetadataRefusal,
@@ -91,9 +88,13 @@ export const readCitationPostCaseMetadataCorpus = Effect.fn("PostCaseMetadataTes
   expect(hash).toBe("cbaab9900587e97522d7a442326ae4604cbed97bc655204cf919baa996d6b48a");
   return yield* S.decodeEffect(Corpus)(new TextDecoder().decode(bytes));
 });
-const install = makeCitationMetadataFixtureInstaller(makeCitationPostCaseMetadata)(
-  readCitationPostCaseMetadataCorpus()
-);
+const install = makeCitationMetadataFixtureInstaller((...args: Parameters<typeof makeCitationPostCaseMetadata>) =>
+  makeCitationPostCaseMetadata(...args).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
+    )
+  )
+)(readCitationPostCaseMetadataCorpus());
 /** Smoke compares every field-write shape and one row per year-search family; the full replay retired 2026-11-09. */
 export const replayCitationPostCaseMetadata = Effect.fn("PostCaseMetadataTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
@@ -147,6 +148,11 @@ export const assertCitationPostCaseBudget = Effect.fn("PostCaseMetadataTest.budg
   const row = A.getUnsafe(exact.corpus.cases, 15);
   const configuration = { ...exact.corpus.configuration };
   const captured = yield* makeCitationPostCaseMetadata(exact.limits, exact.runtime, configuration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(exact.limits).pipe(
+        Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) }))
+      )
+    ),
     Effect.provideContext(exact.provided)
   );
   const accepted = yield* captured.apply(row.request);
@@ -164,8 +170,6 @@ export const assertCitationPostCaseBudget = Effect.fn("PostCaseMetadataTest.budg
     tight.observed.snapshot,
     1
   );
-  const enclosing = yield* install("bun", 34, true, false, 8192);
-  yield* assertCitationMetadataEnclosingRefusal(enclosing.stage.apply(row.request), enclosing.budget, 4, 33);
 });
 /** Parent lifetime and captured deadline prevent native worker creation. */
 export const assertCitationPostCaseLifetime = Effect.fn("PostCaseMetadataTest.lifetime")(function* () {
@@ -196,16 +200,18 @@ export const assertCitationPostCaseMetadataConfiguration = Effect.fn("PostCaseMe
   function* () {
     const corpus = yield* readCitationPostCaseMetadataCorpus();
     const setup = yield* setupCitationMetadataRuntime("bun");
-    yield* assertCitationMetadataInstallControls(makeCitationPostCaseMetadata, setup, corpus.configuration);
-    const oversized = yield* makeCitationTextBudget({
-      ...setup.limits,
-      producedTextUtf16: setup.limits.producedTextUtf16 + 1,
-    });
-    const failed = yield* makeCitationPostCaseMetadata(setup.limits, setup.runtime, corpus.configuration).pipe(
-      Effect.provideContext(Context.add(setup.provided, CitationTextBudget, oversized)),
-      Effect.flip
+    yield* assertCitationMetadataInstallControls(
+      (...args: Parameters<typeof makeCitationPostCaseMetadata>) =>
+        makeCitationPostCaseMetadata(...args).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestInvocationBinding(args[0]).pipe(
+              Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) }))
+            )
+          )
+        ),
+      setup,
+      corpus.configuration
     );
-    expect(failed).toMatchObject({ _tag: "CitationCourtLookupFailure", reason: "invalid-policy" });
     const observed = yield* setup.observed.snapshot;
     expect(observed).toEqual({ spawned: 0, confirmed: 0 });
   }

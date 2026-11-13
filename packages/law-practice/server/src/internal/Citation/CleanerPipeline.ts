@@ -18,7 +18,6 @@ import {
   CitationEngineLimits,
   CitationLiveCleanerObject,
   CitationSafetyLimitExceeded,
-  CitationTextBudget,
 } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
@@ -29,6 +28,7 @@ import * as P from "effect/Predicate";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { CitationInvocation } from "./Invocation.ts";
 import { makeCitationTextCapacity } from "./TextCapacity.ts";
 import type { CitationCleanerObject, CitationCleanerWork } from "@beep/law-practice-use-cases/server";
 
@@ -71,9 +71,7 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
   );
   const clock = yield* Clock.Clock;
   const runtime = yield* CitationCleaner;
-  const parent = yield* Effect.serviceOption(CitationTextBudget);
-  if (O.isSome(parent) && parent.value.maximum > limits.producedTextUtf16) return yield* fail("invalid-input");
-  const sanitize = <A>(body: Effect.Effect<A, Failure>): Effect.Effect<A, Failure> =>
+  const sanitize = <A, R>(body: Effect.Effect<A, Failure, R>): Effect.Effect<A, Failure, R> =>
     body.pipe(
       Effect.catchCause((cause) => {
         if (Cause.hasInterrupts(cause))
@@ -92,6 +90,7 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
       })
     );
   const makeWork = Effect.gen(function* () {
+    const parent = O.some((yield* CitationInvocation).budget);
     const state = yield* Ref.make(CitationCleanerWorkSnapshot.make({ producedTextUtf16: 0, closed: false }));
     const issued = new WeakMap<CitationCleanerTextCharge, number>();
     const capacity = yield* makeCitationTextCapacity(() => fail("invalid-reservation"));

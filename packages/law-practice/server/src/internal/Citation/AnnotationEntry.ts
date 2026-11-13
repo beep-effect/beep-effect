@@ -15,7 +15,6 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { captureCitationOperationChildren } from "./Admission.ts";
 import { makeCitationAnnotationAssembly } from "./AnnotationAssembly.ts";
 import {
   captureCitationAnnotationReservation,
@@ -125,7 +124,7 @@ export const ownCitationAnnotationEntry = Effect.fn("Citation.ownAnnotationEntry
   configuration: CitationAnnotationEntryConfiguration
 ) {
   const geometry = yield* copyCitationHtmlGeometryConfiguration(limits, configuration.geometry);
-  const children = yield* captureCitationOperationChildren();
+  const children = Context.empty();
   const callback = yield* Effect.serviceOption(CitationAnnotationAnnotator);
   const updater = yield* Effect.serviceOption(CitationAnnotationOffsetUpdater);
   return {

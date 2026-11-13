@@ -3,7 +3,12 @@ import {
   makeCitationOperationAdmission,
 } from "@beep/law-practice-server/internal/Citation/Admission";
 import { makeCitationCleanerOperation } from "@beep/law-practice-server/internal/Citation/CleanerOperation";
-import { CitationCleaner, CitationCleanerFailure, CitationCleanerProduced } from "@beep/law-practice-use-cases/server";
+import {
+  CitationCleaner,
+  CitationCleanerFailure,
+  CitationCleanerProduced,
+  CitationEngineOperation,
+} from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -11,6 +16,7 @@ import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -19,6 +25,7 @@ import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
 import * as TestClock from "effect/testing/TestClock";
 import { makeCitationCleanerRegistryHarness } from "./CitationCleanerRegistry.fixtures.ts";
+import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import type { CitationEngineFailure } from "@beep/law-practice-use-cases/server";
 
 it.layer(BunCrypto.layer)("admitted cleaner operations", (it) => {
@@ -28,6 +35,11 @@ it.layer(BunCrypto.layer)("admitted cleaner operations", (it) => {
       const h = yield* makeCitationCleanerRegistryHarness();
       const admission = yield* makeCitationOperationAdmission(limits);
       const cleaner = yield* makeCitationCleanerOperation(limits).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestInvocationBinding(limits, "clean").pipe(
+            Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
+          )
+        ),
         Effect.provideService(CitationOperationAdmission, admission),
         Effect.provideService(CitationCleaner, h.registry.runtime)
       );
@@ -69,6 +81,11 @@ it.layer(BunCrypto.layer)("admitted cleaner operations", (it) => {
       const h = yield* makeCitationCleanerRegistryHarness();
       const admission = yield* makeCitationOperationAdmission(limits);
       const cleaner = yield* makeCitationCleanerOperation(limits).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestInvocationBinding(limits, "clean").pipe(
+            Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
+          )
+        ),
         Effect.provideService(CitationOperationAdmission, admission),
         Effect.provideService(CitationCleaner, h.registry.runtime)
       );
@@ -90,10 +107,20 @@ it.layer(BunCrypto.layer)("admitted cleaner operations", (it) => {
         const h = yield* makeCitationCleanerRegistryHarness();
         const admission = yield* makeCitationOperationAdmission(limits);
         const first = yield* makeCitationCleanerOperation(limits).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestInvocationBinding(limits, "clean").pipe(
+              Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
+            )
+          ),
           Effect.provideService(CitationOperationAdmission, admission),
           Effect.provideService(CitationCleaner, h.registry.runtime)
         );
         const second = yield* makeCitationCleanerOperation(limits).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestInvocationBinding(limits, "clean").pipe(
+              Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
+            )
+          ),
           Effect.provideService(CitationOperationAdmission, admission),
           Effect.provideService(CitationCleaner, h.registry.runtime)
         );
@@ -121,9 +148,22 @@ it.layer(BunCrypto.layer)("admitted cleaner operations", (it) => {
             return CitationCleanerProduced.make({ value: result, charges: [charge] });
           }),
         });
-        const outer = yield* first.run({ text: "a__b", plan: "outer" }).pipe(Effect.forkChild);
+        const boundary = {
+          clock: yield* Clock.Clock,
+          operation: CitationEngineOperation.Enum.clean,
+          admission: O.some(admission),
+        };
+        const outer = yield* withCitationTestInvocation(
+          first.run({ text: "a__b", plan: "outer" }),
+          limits,
+          boundary
+        ).pipe(Effect.forkChild);
         yield* Deferred.await(entered);
-        const queued = yield* second.run({ text: "c__d", plan: "inner" }).pipe(Effect.forkChild);
+        const queued = yield* withCitationTestInvocation(
+          second.run({ text: "c__d", plan: "inner" }),
+          limits,
+          boundary
+        ).pipe(Effect.forkChild);
         yield* TestClock.adjust(Duration.zero);
         const citationResult2 = yield* admission.snapshot;
         expect(citationResult2).toEqual({ active: 1, queued: 1, closed: false });

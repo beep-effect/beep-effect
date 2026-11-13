@@ -15,6 +15,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import { installCitationHtmlGeometryFixture } from "./CitationHtmlGeometryPreparation.fixtures.ts";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationWorkerClosedLifetime,
   assertCitationWorkerCompositionReleased,
@@ -116,6 +117,11 @@ const install = Effect.fn("HtmlCaseNameTest.install")(function* (kind: CitationN
   const setup = yield* setupCitationMetadataRuntime(kind);
   const prepare = yield* installCitationHtmlGeometryFixture(kind, setup);
   const stage = yield* makeCitationHtmlCaseName(setup.limits, setup.runtime, original.configuration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(setup.limits).pipe(
+        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
+      )
+    ),
     Effect.provideContext(setup.provided)
   );
   return { original, setup, prepare, stage };
@@ -177,6 +183,11 @@ export const assertCitationHtmlCaseNameRefusal = Effect.fn("HtmlCaseNameTest.ref
   const prepared = yield* prepare.prepare({ plain: row.plain, markup: row.markup });
   const budget = yield* makeCitationTextBudget({ ...setup.limits, producedTextUtf16: 1 });
   const tight = yield* makeCitationHtmlCaseName(setup.limits, setup.runtime, original.configuration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(setup.limits).pipe(
+        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
+      )
+    ),
     Effect.provideContext(setup.provided),
     Effect.provideService(CitationTextBudget, budget)
   );

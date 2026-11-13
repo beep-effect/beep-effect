@@ -16,7 +16,7 @@ import { makeCitationNativeFrameReader } from "./ByteFrames.ts";
 import { citationNativeBase64Length, citationNativeBytes, makeCitationNativeJsonDecoder } from "./NativeJson.ts";
 import { CitationNativeProcessFailureReason } from "./NativeProcess.ts";
 import { CitationRegexSourceFlags } from "./RegexEngine.ts";
-import { CitationRegexInputLayout, makeCitationRegexInput } from "./RegexInput.ts";
+import { CitationRegexInputLayout, citationUnaccountedText, makeCitationRegexInput } from "./RegexInput.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import type { CitationPreparedRegexInput } from "./RegexInput.ts";
 
@@ -172,17 +172,23 @@ export const readCitationRegexFrames = makeCitationNativeFrameReader({
 /** Join native pattern/source preparation with exact full-frame preflight.
  * Both layouts exist before either payload/map is allocated. The captured
  * server hook can reserve shared process/work capacity at that boundary.
- * No callable is included in the resulting job. Methods have R = never.
+ * No callable is included in the resulting job. Methods retain their explicit
+ * reservation requirements.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationRegexJobPreparation = Effect.fn("Citation.makeRegexJobPreparation")(function* (
-  policy: unknown
+export const makeCitationRegexJobPreparation = Effect.fn("Citation.makeRegexJobPreparation")(function* <R>(
+  policy: unknown,
+  reserveCitationInvocationText: (units: number) => Effect.Effect<void, CitationSafetyLimitExceeded, R>
 ) {
   const badRuntime = () => CitationRegexWorkerFailure.make({ reason: "invalid-runtime" });
   const limits = yield* decodeCitationRegexPolicy(policy, badRuntime);
   const { timed } = yield* makeCitationRegexTiming(limits, true);
-  const patternInput = yield* makeCitationRegexInput(limits, "pattern").pipe(Effect.mapError(badRuntime));
-  const sourceInput = yield* makeCitationRegexInput(limits).pipe(Effect.mapError(badRuntime));
+  const patternInput = yield* makeCitationRegexInput(limits, citationUnaccountedText, "pattern").pipe(
+    Effect.mapError(badRuntime)
+  );
+  const sourceInput = yield* makeCitationRegexInput(limits, reserveCitationInvocationText).pipe(
+    Effect.mapError(badRuntime)
+  );
   const prepare = Effect.fn("Citation.prepareRegexJob")(function* (
     pattern: unknown,
     source: unknown,
@@ -196,7 +202,7 @@ export const makeCitationRegexJobPreparation = Effect.fn("Citation.makeRegexJobP
     const mode = yield* S.decodeUnknownEffect(CitationRegexMatchMode)(modeInput).pipe(Effect.mapError(invalid));
     const flags = yield* S.decodeUnknownEffect(Flags)(flagsInput).pipe(Effect.mapError(invalid));
     const maxMatches = yield* S.decodeUnknownEffect(Matches)(maxMatchesInput).pipe(Effect.mapError(invalid));
-    let preparedSource = O.none<CitationPreparedRegexInput>();
+    let preparedSource = O.none<CitationPreparedRegexInput<R>>();
     let measuredBytes = O.none<number>();
     const preparedPattern = yield* patternInput
       .prepareUnicode(pattern, (patternLayout) =>

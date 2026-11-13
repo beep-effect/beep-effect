@@ -17,9 +17,11 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 import { citationEngineCorpusAmbiguousTwins } from "./CitationEngineCorpus.fixtures.ts";
+import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { assertCitationNativeRange, citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import { assertCitationTokenizedExtractionRow } from "./CitationTokenizedExtraction.fixtures.ts";
+import type { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
@@ -106,6 +108,11 @@ const assertResolvedRequest = Effect.fnUntraced(function* (
     engineArtifact,
     extraction: defaultConfiguration,
   }).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(setup.limits).pipe(
+        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
+      )
+    ),
     Effect.provideContext(provided),
     Effect.provideService(SourceTextResolver, resolver),
     DateTime.withCurrentZoneOffset(0)
@@ -115,7 +122,11 @@ const assertResolvedRequest = Effect.fnUntraced(function* (
     source: input.source.source,
     sourceText: input.rawText,
   });
-  const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
+  const closed: Effect.Effect<
+    Effect.Success<typeof invocation>,
+    Effect.Error<typeof invocation>,
+    CitationInvocation
+  > = invocation;
   const actual = yield* closed;
   expect(calls).toBe(1);
   expect(actual.source).toEqual(expected.source);
@@ -148,55 +159,65 @@ const assertResolvedRequest = Effect.fnUntraced(function* (
   expect(released).toMatchObject({ active: 0, queued: 0 });
 });
 /** No test-generated output evidence: the production composition derives it. */
-export const replayCitationVerifiedExtraction = Effect.fn("VerifiedExtractionTest.replay")(function* (
-  kind: CitationNativeRuntimeKind,
-  full: boolean
-) {
-  const installed = yield* installCitationDefaultConfigurationFixture(kind);
-  const { corpus, setup, defaultConfiguration, engineArtifact, translated, provided } = installed;
-  const rows = A.filter(corpus.cases, (row) =>
-    full ? !A.contains(citationEngineCorpusAmbiguousTwins, row.id) : A.contains([4, 26, 32], row.id)
-  );
-  const config = { engineArtifact, extraction: defaultConfiguration };
-  const stage = yield* makeCitationVerifiedExtraction(setup.limits, setup.runtime, config).pipe(
-    Effect.provideContext(provided),
-    DateTime.withCurrentZoneOffset(0)
-  );
-  const input = yield* citationFixtureSourceProof("eyecite");
-  let ignored = 0;
-  const shortcut = yield* stage.extract({
-    source: input,
-    role: "plain",
-    get cleanSteps() {
-      ignored++;
-      return Symbol("ignored");
-    },
-  });
-  expect(ignored).toBe(0);
-  expect(shortcut.source._tag).toBe("Unchanged");
-  expect(shortcut.source.source).toBe(input);
-  expect(shortcut.occurrences.mentions).toEqual([]);
-  expect(shortcut.occurrences.unverified).toHaveLength(1);
-  const noChildren = yield* setup.observed.snapshot;
-  expect(noChildren).toEqual({ spawned: 0, confirmed: 0 });
-  const forged = yield* stage
-    .extract({ source: { source: input.source, sourceText: "eyecite" }, role: "plain" })
-    .pipe(Effect.flip);
-  expect(forged).toMatchObject({ reason: "invalid-input" });
-  const unicode = yield* makeCitationPythonUnicode(setup.limits).pipe(Effect.provideContext(provided));
-  for (const row of rows) {
-    const input = yield* inputForRow(unicode, row, setup.limits).pipe(Effect.provideContext(provided));
-    const invocation = stage.extract(input.request);
-    const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
-    const actual = yield* closed;
-    if (actual.semantic.raw.outcome._tag !== "Document") return yield* Effect.die("expected original Document branch");
-    yield* assertCitationTokenizedExtractionRow(actual.semantic.raw.outcome.result.extraction, row, translated);
-    assertManifestation(actual, input.source, input.rawText, input.markup);
-    yield* assertOutputEvidence(actual, row);
-    expect(actual.reservedUnits).toBe(actual.occurrences.reservedUnits);
-    expect(actual.reservedUnits).toBeGreaterThan(actual.semantic.reservedUnits);
-    if (!full) yield* assertResolvedRequest(installed, input, actual, row);
-  }
-  expect(rows).toHaveLength(full ? 22 : 3);
-  yield* assertCitationWorkerCompositionObserved(setup.operation, setup.admission, setup.observed.snapshot);
-});
+export const replayCitationVerifiedExtraction = Effect.fn("VerifiedExtractionTest.replay")(
+  function* (kind: CitationNativeRuntimeKind, full: boolean) {
+    const installed = yield* installCitationDefaultConfigurationFixture(kind);
+    const { corpus, setup, defaultConfiguration, engineArtifact, translated, provided } = installed;
+    const rows = A.filter(corpus.cases, (row) =>
+      full ? !A.contains(citationEngineCorpusAmbiguousTwins, row.id) : A.contains([4, 26, 32], row.id)
+    );
+    const config = { engineArtifact, extraction: defaultConfiguration };
+    const stage = yield* makeCitationVerifiedExtraction(setup.limits, setup.runtime, config).pipe(
+      Effect.flatMap((stage) =>
+        makeCitationTestInvocationBinding(setup.limits).pipe(
+          Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
+        )
+      ),
+      Effect.provideContext(provided),
+      DateTime.withCurrentZoneOffset(0)
+    );
+    const input = yield* citationFixtureSourceProof("eyecite");
+    let ignored = 0;
+    const shortcut = yield* stage.extract({
+      source: input,
+      role: "plain",
+      get cleanSteps() {
+        ignored++;
+        return Symbol("ignored");
+      },
+    });
+    expect(ignored).toBe(0);
+    expect(shortcut.source._tag).toBe("Unchanged");
+    expect(shortcut.source.source).toBe(input);
+    expect(shortcut.occurrences.mentions).toEqual([]);
+    expect(shortcut.occurrences.unverified).toHaveLength(1);
+    const noChildren = yield* setup.observed.snapshot;
+    expect(noChildren).toEqual({ spawned: 0, confirmed: 0 });
+    const forged = yield* stage
+      .extract({ source: { source: input.source, sourceText: "eyecite" }, role: "plain" })
+      .pipe(Effect.flip);
+    expect(forged).toMatchObject({ reason: "invalid-input" });
+    const unicode = yield* makeCitationPythonUnicode(setup.limits).pipe(Effect.provideContext(provided));
+    for (const row of rows) {
+      const input = yield* inputForRow(unicode, row, setup.limits).pipe(Effect.provideContext(provided));
+      const invocation = stage.extract(input.request);
+      const closed: Effect.Effect<
+        Effect.Success<typeof invocation>,
+        Effect.Error<typeof invocation>,
+        CitationInvocation
+      > = invocation;
+      const actual = yield* closed;
+      if (actual.semantic.raw.outcome._tag !== "Document")
+        return yield* Effect.die("expected original Document branch");
+      yield* assertCitationTokenizedExtractionRow(actual.semantic.raw.outcome.result.extraction, row, translated);
+      assertManifestation(actual, input.source, input.rawText, input.markup);
+      yield* assertOutputEvidence(actual, row);
+      expect(actual.reservedUnits).toBe(actual.occurrences.reservedUnits);
+      expect(actual.reservedUnits).toBeGreaterThan(actual.semantic.reservedUnits);
+      if (!full) yield* assertResolvedRequest(installed, input, actual, row);
+    }
+    expect(rows).toHaveLength(full ? 22 : 3);
+    yield* assertCitationWorkerCompositionObserved(setup.operation, setup.admission, setup.observed.snapshot);
+  },
+  (effect) => withCitationTestInvocation(effect)
+);

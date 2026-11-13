@@ -11,6 +11,7 @@ import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { makeCitationContextMatcher } from "./ContextMatcher.ts";
+import { reserveCitationInvocationText } from "./Invocation.ts";
 import { citationPythonTextData } from "./PythonTextData.ts";
 import { citationPythonPointAt } from "./PythonUnicode.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
@@ -80,7 +81,7 @@ const installStrings = Effect.fn("Citation.installMetadataStrings")(function* (p
     CitationMetadataStringsFailure.make({ reason: "invalid-policy" })
   );
   const timing = yield* makeCitationRegexTiming(limits, true);
-  const input = yield* makeCitationRegexInput(limits, "source");
+  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText, "source");
   return { limits, timing, input };
 });
 /** Cleaned pin and the original source length after right-only comma/space trim.

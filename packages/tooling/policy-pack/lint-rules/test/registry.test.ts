@@ -120,6 +120,14 @@ describe("rule registry", () => {
     Effect.fnUntraced(function* () {
       const encodedRuleRegistry = yield* encodeRuleRegistry(RuleRegistrySchema.make(RULES));
       expect(encodedRuleRegistry).toEqual({
+        "no-citation-optional-invocation": {
+          name: "no-citation-optional-invocation",
+          severity: "error",
+          replaces: null,
+          summary:
+            "Require explicit citation invocation authority instead of optional install-time budget or admission lookups.",
+          scope: "packages/law-practice/server/src/internal/Citation/**",
+        },
         "no-file-url-pathname": {
           name: "no-file-url-pathname",
           severity: "error",

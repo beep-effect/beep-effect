@@ -14,6 +14,7 @@ import {
 } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
@@ -21,10 +22,11 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CitationOperationAdmission } from "../internal/Citation/Admission.ts";
+import { CitationInvocationPolicy, openCitationInvocation } from "../internal/Citation/Invocation.ts";
 import { makeCitationAdmissionOwners } from "../internal/Citation/NativeAdmission.ts";
 import { CitationNativeProcessRuntime } from "../internal/Citation/NativeProcess.ts";
 import { makeCitationRecognizerWorker } from "../internal/Citation/RecognizerWorker.ts";
-import { CitationRegexOperation, makeCitationRegexTiming } from "../internal/Citation/RegexPolicy.ts";
+import { CitationRegexOperation } from "../internal/Citation/RegexPolicy.ts";
 import { resolveSixFormCitationMentions } from "../internal/Citation/Resolve.ts";
 import {
   CitationSixFormArtifactDescriptor,
@@ -75,6 +77,7 @@ const make = Effect.fn("Citation.makeExtractor")(function* (raw: unknown) {
   const { limits } = installation;
   if (runtime.kind !== installation.runtime.kind) return yield* invalid();
   const digest = yield* Digest.Digest;
+  const invocationClock = yield* Clock.Clock;
   const admissions = yield* makeCitationAdmissionOwners(limits).pipe(Effect.mapError(invalid));
   const owners = Context.add(admissions, CitationRegexOperation, "extract");
   const operation = Context.get(owners, CitationOperationAdmission);
@@ -83,7 +86,6 @@ const make = Effect.fn("Citation.makeExtractor")(function* (raw: unknown) {
   if (projection.vocabularyVersion !== installation.vocabularyVersion) return yield* invalid();
   const engineArtifact = yield* makeCitationSixFormArtifact(installation);
   const worker = yield* makeCitationRecognizerWorker(limits, runtime).pipe(Effect.provideContext(owners));
-  const timing = yield* makeCitationRegexTiming(limits, true).pipe(Effect.provideContext(owners));
   const extract: typeof CitationExtractor.Service.extract = Effect.fn("Citation.Extractor.extract")((input) => {
     const body = Effect.gen(function* () {
       const source = yield* sourceEvidence.resolve(input);
@@ -122,8 +124,12 @@ const make = Effect.fn("Citation.makeExtractor")(function* (raw: unknown) {
         outsideProfile: output.outsideProfile,
       });
       return yield* decodeExtractorResult({ source, document, report }).pipe(Effect.mapError(invalidObservation));
-    }).pipe(timing.timed);
-    return operation.run("extract", body).pipe(Effect.catchCause(normalize));
+    });
+    return openCitationInvocation(CitationInvocationPolicy.make({ limits, operation: "extract" }), body).pipe(
+      Effect.provideService(CitationOperationAdmission, operation),
+      Effect.provideService(Clock.Clock, invocationClock),
+      Effect.catchCause(normalize)
+    );
   });
   return CitationExtractor.of({ extract });
 });

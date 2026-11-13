@@ -174,20 +174,15 @@ export const makeCitationJournalMetadata = Effect.fn("Citation.makeJournalMetada
     invalidConfiguration
   );
   const inference = yield* makeCitationEditionInference(limits);
-  const apply = Effect.fn("Citation.addJournalMetadata")(
-    (raw: unknown) =>
-      installed.operation.run(
-        "extract",
-        Effect.gen(function* () {
-          const selection = yield* prepareCitationEditionInferenceInput(limits, raw);
-          const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
-          const [patch, reservedUnits] = yield* installed.run(request);
-          const year = O.match(patch, { onNone: () => request.year, onSome: (value) => value.year });
-          const editionGuess = yield* inference.guess({ ...selection, year });
-          return CitationJournalMetadataResult.make({ patch, editionGuess, reservedUnits });
-        })
-      ),
-    installed.timing.timed
+  const apply = Effect.fn("Citation.addJournalMetadata")((raw: unknown) =>
+    Effect.gen(function* () {
+      const selection = yield* prepareCitationEditionInferenceInput(limits, raw);
+      const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
+      const [patch, reservedUnits] = yield* installed.run(request);
+      const year = O.match(patch, { onNone: () => request.year, onSome: (value) => value.year });
+      const editionGuess = yield* inference.guess({ ...selection, year });
+      return CitationJournalMetadataResult.make({ patch, editionGuess, reservedUnits });
+    })
   );
   return { apply };
 });

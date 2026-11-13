@@ -10,6 +10,7 @@ import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationMetadataRefusal,
   assertCitationWorkerCompositionReleased,
@@ -64,7 +65,17 @@ export const readCitationHtmlDiscoveryCorpus = Effect.fn("HtmlDiscoveryTest.load
   ).pipe(Effect.flatMap(S.decodeEffect(Corpus)));
   return { configuration: configuration.configuration, corpus };
 });
-const install = makeCitationMetadataFixture({ load: readCitationHtmlDiscoveryCorpus, make: makeCitationHtmlDiscovery });
+const install = makeCitationMetadataFixture({
+  load: readCitationHtmlDiscoveryCorpus,
+  make: (...args: Parameters<typeof makeCitationHtmlDiscovery>) =>
+    makeCitationHtmlDiscovery(...args).pipe(
+      Effect.flatMap((stage) =>
+        makeCitationTestInvocationBinding(args[0]).pipe(
+          Effect.map((bind) => ({ ...stage, discover: bind(stage.discover) }))
+        )
+      )
+    ),
+});
 /** Replay complete original observations and independently confirm both exits per call. */
 export const replayCitationHtmlDiscovery = Effect.fn("HtmlDiscoveryTest.replay")(function* (
   kind: CitationNativeRuntimeKind,

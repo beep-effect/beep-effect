@@ -9,6 +9,7 @@ import * as HashMap from "effect/HashMap";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { readCitationCanonicalCaptures } from "./CitationCanonicalCaptures.fixtures.ts";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import {
   installCitationParsedResourceReplay,
   prepareCitationParsedResource,
@@ -87,7 +88,20 @@ export const replayCitationCanonicalPageCorrection = Effect.fn("CanonicalPageCor
     replay,
     unicode,
     service: correction,
-  } = yield* installCitationParsedResourceReplay(kind, makeCitationResourceCorrection);
+  } = yield* installCitationParsedResourceReplay(kind, (...args: Parameters<typeof makeCitationResourceCorrection>) =>
+    makeCitationResourceCorrection(...args).pipe(
+      Effect.flatMap((stage) =>
+        makeCitationTestInvocationBinding(args[0]).pipe(
+          Effect.map((bind) => ({
+            ...stage,
+            reporter: bind(stage.reporter),
+            page: bind(stage.page),
+            citation: bind(stage.citation),
+          }))
+        )
+      )
+    )
+  );
   for (const row of rows) {
     const actual = yield* replay.extract(row.raw, "plain", row.models, row.id, null);
     const input = yield* prepareCitationParsedResource(unicode, actual);

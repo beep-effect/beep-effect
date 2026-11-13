@@ -1,6 +1,5 @@
 import { makeCitationPythonRepr } from "@beep/law-practice-server/internal/Citation/PythonRepr";
-import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
-import { CitationPythonUnicodeStorage, CitationTextBudget } from "@beep/law-practice-use-cases/server";
+import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -8,6 +7,7 @@ import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Str from "effect/String";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationNativeRenderingAsset } from "./CitationNativeRendering.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
@@ -20,7 +20,11 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
       Effect.gen(function* () {
         const { limits } = yield* defaultCitationEnginePolicy;
         const table = yield* readCitationNativeRenderingAsset("python-printability");
-        const repr = yield* makeCitationPythonRepr(limits, table);
+        const repr = yield* makeCitationPythonRepr(limits, table).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestInvocationBinding(limits).pipe(Effect.map((bind) => ({ ...stage, text: bind(stage.text) })))
+          )
+        );
         const input = Str.repeat(5000)("x");
         const actual = yield* repr.text(word(input));
         expect(actual).toEqual(word(`'${input}'`));
@@ -29,21 +33,16 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
       })
     );
 
-    it.effect("refuses malformed policy and a captured budget above its own ceiling without charging it", () =>
+    it.effect("refuses malformed policy before rendering", () =>
       Effect.gen(function* () {
-        const { limits } = yield* defaultCitationEnginePolicy;
         const table = yield* readCitationNativeRenderingAsset("python-printability");
-        const malformed = yield* makeCitationPythonRepr({}, table).pipe(Effect.flip);
-        expect(malformed).toMatchObject({ _tag: "CitationPythonReprFailure", reason: "invalid-policy" });
-        const enclosing = yield* makeCitationTextBudget(limits);
-        const mismatch = yield* makeCitationPythonRepr({ ...limits, producedTextUtf16: 12 }, table).pipe(
-          Effect.provideService(CitationTextBudget, enclosing),
+        const malformed = yield* makeCitationPythonRepr({}, table).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestInvocationBinding({}).pipe(Effect.map((bind) => ({ ...stage, text: bind(stage.text) })))
+          ),
           Effect.flip
         );
-        expect(mismatch).toMatchObject({ _tag: "CitationPythonReprFailure", reason: "invalid-policy" });
-        expect("cause" in mismatch).toBe(false);
-        const used = yield* enclosing.snapshot;
-        expect(used).toBe(0);
+        expect(malformed).toMatchObject({ _tag: "CitationPythonReprFailure", reason: "invalid-policy" });
       })
     );
   }

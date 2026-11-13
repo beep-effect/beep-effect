@@ -9,7 +9,10 @@ import {
 } from "@beep/law-practice-server/internal/Citation/CaseNameProcess";
 import { makeCitationMetadataStage } from "@beep/law-practice-server/internal/Citation/MetadataComposition";
 import { parseCitationPythonInteger } from "@beep/law-practice-server/internal/Citation/PythonInteger";
-import { makeCitationRegexInput } from "@beep/law-practice-server/internal/Citation/RegexInput";
+import {
+  citationUnaccountedText,
+  makeCitationRegexInput,
+} from "@beep/law-practice-server/internal/Citation/RegexInput";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -22,8 +25,8 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Tuple from "effect/Tuple";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import {
-  assertCitationMetadataEnclosingRefusal,
   assertCitationMetadataFailure,
   assertCitationMetadataRefusal,
   assertCitationWorkerCapturedDeadline,
@@ -148,7 +151,12 @@ export const readCitationCaseNameProcessCorpus = Effect.fn("CaseNameProcessTest.
 });
 const install = makeCitationMetadataFixture({
   load: readCitationCaseNameProcessCorpus,
-  make: makeCitationCaseNameProcess,
+  make: (...args: Parameters<typeof makeCitationCaseNameProcess>) =>
+    makeCitationCaseNameProcess(...args).pipe(
+      Effect.flatMap((stage) =>
+        makeCitationTestInvocationBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
+      )
+    ),
 });
 type Row = (typeof Corpus.Type.cases)[number];
 const request = (row: Row) => ({
@@ -189,7 +197,7 @@ export const replayCitationCaseNameProcess = Effect.fn("CaseNameProcessTest.repl
 export const assertCitationPythonIntegers = Effect.fn("CaseNameProcessTest.integers")(function* () {
   const { patterns } = yield* readCitationCaseNameProcessCorpus();
   const limits = (yield* defaultCitationEnginePolicy).limits;
-  const input = yield* makeCitationRegexInput(limits);
+  const input = yield* makeCitationRegexInput(limits, citationUnaccountedText);
   for (const row of patterns.integers) {
     const source = yield* input.prepareUnicode(row.source, () => Effect.void);
     const actual = yield* parseCitationPythonInteger(source.value);
@@ -206,7 +214,14 @@ export const assertCitationCaseNameProcessBudget = Effect.fn("CaseNameProcessTes
     { ...setup.limits, tokens: 1 },
     setup.runtime,
     setup.configuration
-  ).pipe(Effect.provideContext(setup.provided));
+  ).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding({ ...setup.limits, tokens: 1 }).pipe(
+        Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) }))
+      )
+    ),
+    Effect.provideContext(setup.provided)
+  );
   const tokens = yield* bounded.apply(request(row)).pipe(Effect.flip);
   expect(tokens).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "tokens" });
   setup.configuration.patterns.splitV.bytes.fill(0);
@@ -222,14 +237,6 @@ export const assertCitationCaseNameProcessBudget = Effect.fn("CaseNameProcessTes
     tight.observed.snapshot,
     3
   );
-  const enclosing = yield* install("bun", 54, true);
-  yield* assertCitationMetadataEnclosingRefusal(enclosing.stage.apply(request(row)), enclosing.budget, 1, 52);
-  yield* assertCitationWorkerCompositionReleased(
-    enclosing.operation,
-    enclosing.admission,
-    enclosing.observed.snapshot,
-    3
-  );
 });
 /** Captured lifetime/timer reject before a child; no nested admission deadlock. */
 export const assertCitationCaseNameProcessLifetime = Effect.fn("CaseNameProcessTest.lifetime")(function* () {
@@ -243,6 +250,11 @@ export const assertCitationCaseNameProcessLifetime = Effect.fn("CaseNameProcessT
     },
   ]) {
     const rejected = yield* makeCitationCaseNameProcess(closed.limits, closed.runtime, configuration).pipe(
+      Effect.flatMap((stage) =>
+        makeCitationTestInvocationBinding(closed.limits).pipe(
+          Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) }))
+        )
+      ),
       Effect.provideContext(closed.provided),
       Effect.flip
     );
@@ -280,7 +292,12 @@ export const assertCitationMetadataStageDeadline = Effect.fn("CaseNameProcessTes
     prepare,
     project: identity,
   });
-  const stage = yield* make(setup.limits, setup.runtime, undefined).pipe(Effect.provideContext(setup.provided));
+  const stage = yield* make(setup.limits, setup.runtime, undefined).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(setup.limits).pipe(Effect.map((bind) => ({ apply: bind(stage.apply) })))
+    ),
+    Effect.provideContext(setup.provided)
+  );
   yield* assertCitationWorkerCapturedDeadline(
     stage.apply(undefined),
     Deferred.await(started).pipe(Effect.andThen(setup.timer.trigger))

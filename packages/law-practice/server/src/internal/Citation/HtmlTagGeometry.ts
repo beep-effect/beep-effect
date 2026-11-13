@@ -16,6 +16,7 @@ import * as Effect from "effect/Effect";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { reserveCitationInvocationText } from "./Invocation.ts";
 import { CitationRegexInputLayout, makeCitationRegexInput } from "./RegexInput.ts";
 import { decodeCitationRegexPolicy } from "./RegexPolicy.ts";
 import { CitationSpanOffsetsPlan, makeCitationSpanOffsets } from "./SpanOffsets.ts";
@@ -97,7 +98,7 @@ export const makeCitationHtmlTagGeometry = Effect.fn("Citation.makeHtmlTagGeomet
   const decoded = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
   if (decoded.tags.length > limits.tokens)
     return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "tokens" });
-  const input = yield* makeCitationRegexInput(limits);
+  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText);
   const plain = yield* input.prepareUnicode(decoded.plain, () => Effect.void);
   // Forward targets placeholder markup; backward starts at original markup.
   // Masking preserves Python point count but can change width and UTF-16 units.

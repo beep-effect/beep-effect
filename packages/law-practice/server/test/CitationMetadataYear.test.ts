@@ -20,6 +20,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import { makeCitationNativeManualClock, makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
@@ -68,7 +69,14 @@ it.layer(citationTokenizerTestLayer)("source metadata year", (it) => {
           const limits = (yield* defaultCitationEnginePolicy).limits;
           for (const highest of [1600, 2026, 2027, 9999, 10000]) {
             yield* setYear(highest - 1);
-            const parser = yield* makeCitationMetadataYear(limits).pipe(DateTime.withCurrentZoneOffset(0));
+            const parser = yield* makeCitationMetadataYear(limits).pipe(
+              Effect.flatMap((stage) =>
+                makeCitationTestInvocationBinding(limits).pipe(
+                  Effect.map((bind) => ({ ...stage, getYear: bind(stage.getYear) }))
+                )
+              ),
+              DateTime.withCurrentZoneOffset(0)
+            );
             expect(parser.highestValidYear).toBe(highest);
             const rows = A.filter(corpus.cases, (row) => row.highest === highest);
             for (const row of rows) {
@@ -87,8 +95,22 @@ it.layer(citationTokenizerTestLayer)("source metadata year", (it) => {
         const epoch = DateTime.toEpochMillis(date);
         yield* TestClock.setTime(epoch);
         const limits = (yield* defaultCitationEnginePolicy).limits;
-        const east = yield* makeCitationMetadataYear(limits).pipe(DateTime.withCurrentZoneOffset(2 * 60 * 60 * 1000));
-        const west = yield* makeCitationMetadataYear(limits).pipe(DateTime.withCurrentZoneOffset(-2 * 60 * 60 * 1000));
+        const east = yield* makeCitationMetadataYear(limits).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestInvocationBinding(limits).pipe(
+              Effect.map((bind) => ({ ...stage, getYear: bind(stage.getYear) }))
+            )
+          ),
+          DateTime.withCurrentZoneOffset(2 * 60 * 60 * 1000)
+        );
+        const west = yield* makeCitationMetadataYear(limits).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestInvocationBinding(limits).pipe(
+              Effect.map((bind) => ({ ...stage, getYear: bind(stage.getYear) }))
+            )
+          ),
+          DateTime.withCurrentZoneOffset(-2 * 60 * 60 * 1000)
+        );
         expect(east.highestValidYear).toBe(2028);
         expect(west.highestValidYear).toBe(2027);
         yield* setYear(2030);
@@ -98,6 +120,11 @@ it.layer(citationTokenizerTestLayer)("source metadata year", (it) => {
         assertNone(refused);
         yield* setYear(10000);
         const invalidClock = yield* makeCitationMetadataYear(limits).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestInvocationBinding(limits).pipe(
+              Effect.map((bind) => ({ ...stage, getYear: bind(stage.getYear) }))
+            )
+          ),
           DateTime.withCurrentZoneOffset(0),
           Effect.flip
         );
@@ -109,6 +136,11 @@ it.layer(citationTokenizerTestLayer)("source metadata year", (it) => {
     it.effect("refuses malformed or oversized native input and recovers", () =>
       Effect.gen(function* () {
         const invalidPolicy = yield* makeCitationMetadataYear(null).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestInvocationBinding(null).pipe(
+              Effect.map((bind) => ({ ...stage, getYear: bind(stage.getYear) }))
+            )
+          ),
           DateTime.withCurrentZoneOffset(0),
           Effect.flip
         );
@@ -118,6 +150,11 @@ it.layer(citationTokenizerTestLayer)("source metadata year", (it) => {
         yield* setYear(2026);
         const limits = (yield* defaultCitationEnginePolicy).limits;
         const parser = yield* makeCitationMetadataYear({ ...limits, producedTextUtf16: 4 }).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestInvocationBinding({ ...limits, producedTextUtf16: 4 }).pipe(
+              Effect.map((bind) => ({ ...stage, getYear: bind(stage.getYear) }))
+            )
+          ),
           DateTime.withCurrentZoneOffset(0)
         );
         const invalid = yield* parser.getYear({ width: 2, bytes: new Uint8Array([0]) }).pipe(Effect.flip);
@@ -137,6 +174,11 @@ it.layer(citationTokenizerTestLayer)("source metadata year", (it) => {
         const disabled = yield* makeCitationNativeSleepClock(() => Effect.never);
         const limits = (yield* defaultCitationEnginePolicy).limits;
         const parser = yield* makeCitationMetadataYear({ ...limits, extractDeadline: Duration.millis(997) }).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestInvocationBinding({ ...limits, extractDeadline: Duration.millis(997) }).pipe(
+              Effect.map((bind) => ({ ...stage, getYear: bind(stage.getYear) }))
+            )
+          ),
           DateTime.withCurrentZoneOffset(0),
           Effect.provideService(Clock.Clock, timer.clock)
         );

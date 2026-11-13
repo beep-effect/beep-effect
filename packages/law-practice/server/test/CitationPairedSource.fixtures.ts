@@ -14,8 +14,10 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
+import { makeCitationTestInvocationBinding } from "./CitationInvocation.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
+import type { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 
@@ -32,6 +34,11 @@ const installPair = Effect.fnUntraced(function* (
     engineArtifact,
     extraction: defaultConfiguration,
   }).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(setup.limits).pipe(
+        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
+      )
+    ),
     Effect.provideContext(provided),
     Effect.provideService(
       SourceTextResolver,
@@ -100,8 +107,21 @@ export const replayCitationPairedSource = Effect.fn("PairedSourceTest.replay")(f
   const verified = yield* makeCitationVerifiedExtraction(setup.limits, setup.runtime, {
     engineArtifact,
     extraction: defaultConfiguration,
-  }).pipe(Effect.provideContext(provided), DateTime.withCurrentZoneOffset(0));
+  }).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(setup.limits).pipe(
+        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
+      )
+    ),
+    Effect.provideContext(provided),
+    DateTime.withCurrentZoneOffset(0)
+  );
   const semantic = yield* makeCitationSemanticExtraction(setup.limits, setup.runtime, defaultConfiguration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestInvocationBinding(setup.limits).pipe(
+        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
+      )
+    ),
     Effect.provideContext(provided),
     DateTime.withCurrentZoneOffset(0)
   );
@@ -121,7 +141,11 @@ export const replayCitationPairedSource = Effect.fn("PairedSourceTest.replay")(f
             cleanSteps: [],
           })
         : verified.extract({ source, companion, role, cleanSteps: [] });
-    const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
+    const closed: Effect.Effect<
+      Effect.Success<typeof invocation>,
+      Effect.Error<typeof invocation>,
+      CitationInvocation
+    > = invocation;
     const actual = yield* closed;
     yield* assertPairResult(actual, expected, plain, markup);
   }

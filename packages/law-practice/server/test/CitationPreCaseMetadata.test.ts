@@ -8,10 +8,7 @@ import {
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source pre-case metadata", (it) => {
-  it.effect(
-    "rejects malformed installation and oversized enclosing budgets",
-    assertCitationPreCaseMetadataConfiguration
-  );
+  it.effect("rejects malformed installation", assertCitationPreCaseMetadataConfiguration);
   it.effect("owns budgets and preserves early source guards", assertCitationPreCaseBudget, { timeout: 120000 });
   it.effect("retains closed lifetime and captured timing", assertCitationPreCaseLifetime, { timeout: 120000 });
   for (const kind of ["bun"] as const)
