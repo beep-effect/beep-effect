@@ -72,6 +72,7 @@ import { ChangeClassifierLive } from "../../Ci/RouteClassify.ts";
 import { routeFootprintCanonicalJson, routeLaneDecision } from "../../Ci/RouteFootprints.ts";
 import { sha256Hex } from "../../Goals/PacketCore/PacketDigest.ts";
 import { isEffectVitestScopePath } from "../../Lint/Lint.schemas.ts";
+import { CoverageSelectedScope } from "../../Quality/internal/CoverageScope.ts";
 import {
   hasReusableLaneProof,
   persistLaneProofs,
@@ -610,6 +611,78 @@ const profileRoutedGates = (
     (gate) => gateRouteFor(gate, profile) === "hosted-only" && !A.some(operatorSkips, (skip) => skip.gate === gate)
   );
 
+// Forced coverage measures the diff's own packages only when its affected plan selected them (or
+// none): a whole-workspace fallback, or a plan the probe could not read, may cover the whole repo,
+// which has no measured worker budget (goals/compute-profile-gate-routing, 2026-11-13 decision).
+const forcedCoverageScopeRefusal = (scope: O.Option<CoverageAffectedScope>): O.Option<string> =>
+  O.match(scope, {
+    onNone: () =>
+      O.some(
+        "its affected plan could not be read, so the run may cover the whole workspace: no measured worker budget"
+      ),
+    onSome: (planned) =>
+      planned._tag === "full"
+        ? O.some(
+            `its affected plan falls back to the whole workspace (${A.join(planned.reasons, "; ")}): no measured worker budget`
+          )
+        : O.none(),
+  });
+
+// The routing input of a final-check run on its compute profile. `coverageScope` is the affected
+// coverage plan the run probed, present only when the coverage gate is requested and not skipped;
+// `O.none()` means the probe could not read it.
+type FinalCheckProfileRouting = {
+  readonly gates: ReadonlyArray<FinalCheckGate>;
+  readonly operatorSkips: ReadonlyArray<FinalCheckSkip>;
+  readonly profile: ComputeProfile;
+  readonly forceLocal: boolean;
+  readonly coverageScope?: O.Option<CoverageAffectedScope>;
+};
+
+const forcedRefusalFor =
+  (coverageScope: O.Option<CoverageAffectedScope> | undefined) =>
+  (gate: FinalCheckGate): O.Option<string> =>
+    gate === "coverage" && coverageScope !== undefined
+      ? forcedCoverageScopeRefusal(coverageScope)
+      : workerForcedRefusal(gate);
+
+/**
+ * The hosted-only gates `--force-local` actually runs on this host.
+ *
+ * **Details**
+ *
+ * Empty without `--force-local` and off `worker`. On `worker` these are the
+ * profile-routed gates that are neither operator-skipped nor refused
+ * ({@link workerForcedRefusal}); coverage is also refused when its probed
+ * affected plan is not a selected set of packages. The receipt records
+ * `forceLocal: true` only when this list is non-empty.
+ *
+ * **Example** (Force coverage, refuse fallow)
+ *
+ * ```ts
+ * import { forcedWorkerGates } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(forcedWorkerGates({ gates: ["fallow", "coverage"], operatorSkips: [], profile: "worker", forceLocal: true })) // [ "coverage" ]
+ * ```
+ *
+ * @param input - The run's routing input.
+ * @returns The forced gates, in gate order.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const forcedWorkerGates = ({
+  gates,
+  operatorSkips,
+  profile,
+  forceLocal,
+  coverageScope,
+}: FinalCheckProfileRouting): ReadonlyArray<FinalCheckGate> =>
+  forceLocal
+    ? A.filter(profileRoutedGates(gates, operatorSkips, profile), (gate) =>
+        O.isNone(forcedRefusalFor(coverageScope)(gate))
+      )
+    : [];
+
 /**
  * The skips the compute profile adds to a final-check run.
  *
@@ -618,8 +691,10 @@ const profileRoutedGates = (
  * Every requested gate that is hosted-only on `profile` and has no operator
  * `--skip` is skipped with reason `compute-profile=worker`; an operator skip
  * for the same gate wins and keeps its own reason. With `forceLocal` only the
- * gates a worker refuses to force ({@link workerForcedRefusal}: one of their
- * processes alone outgrows the worker budget) stay skipped; the rest run here.
+ * gates a worker refuses to force stay skipped: those whose measured run did
+ * not complete inside the worker slice or that have no measured budget
+ * ({@link workerForcedRefusal}), and coverage whose probed affected plan is
+ * not a selected set of packages. The rest run here.
  *
  * **Example** (Defer check on a worker)
  *
@@ -631,95 +706,93 @@ const profileRoutedGates = (
  * ```
  *
  * @param input - The planned gates, the parsed `--skip` values, the resolved
- *   profile and whether `--force-local` keeps every gate local.
+ *   profile, whether `--force-local` was passed and the probed coverage plan.
  * @returns The profile skips, in gate order.
  * @category utilities
  * @since 0.0.0
  */
-export const computeProfileFinalCheckSkips = ({
-  gates,
-  operatorSkips,
-  profile,
-  forceLocal,
-}: {
-  readonly gates: ReadonlyArray<FinalCheckGate>;
-  readonly operatorSkips: ReadonlyArray<FinalCheckSkip>;
-  readonly profile: ComputeProfile;
-  readonly forceLocal: boolean;
-}): ReadonlyArray<FinalCheckSkip> =>
-  pipe(
-    profileRoutedGates(gates, operatorSkips, profile),
-    A.filter((gate) => !forceLocal || O.isSome(workerForcedRefusal(gate))),
+export const computeProfileFinalCheckSkips = (input: FinalCheckProfileRouting): ReadonlyArray<FinalCheckSkip> => {
+  const forced = forcedWorkerGates(input);
+  return pipe(
+    profileRoutedGates(input.gates, input.operatorSkips, input.profile),
+    A.filter((gate) => !A.contains(forced, gate)),
     A.map((gate) => FinalCheckSkip.make({ gate, reason: COMPUTE_PROFILE_WORKER_SKIP_REASON }))
   );
+};
+
+const FORCED_REFUSAL_ROUTE = "push with `bun run beep yeet open --body-file <md>` and let hosted CI prove it";
+
+const isSelectedCoverageScope = S.is(CoverageSelectedScope);
 
 /**
  * The lines `yeet final-check --force-local` prints on a `worker` host.
  *
  * **Details**
  *
- * A forced gate on `worker` runs one task at a time (concurrency 1); a gate
- * whose single process outgrows the worker budget is refused and stays with
- * hosted CI, and `repo-sanity` keeps its changeset status narrowing. Each
- * refusal names its measurement ({@link workerForcedRefusal}). Nothing is
- * printed without `--force-local` or off `worker`.
+ * A forced gate on `worker` runs one task at a time (concurrency 1), and
+ * forced coverage names the packages its affected plan measures. A gate
+ * whose measured run did not fit the worker slice, or that has no measured
+ * budget, is refused and stays with hosted CI: the line names the
+ * measurement and tells the operator to push and let hosted CI prove it.
+ * `repo-sanity` keeps its changeset status narrowing. Nothing is printed
+ * without `--force-local` or off `worker`.
  *
- * **Example** (Force fallow and check on a worker)
+ * **Example** (Force coverage and check on a worker)
  *
  * ```ts
  * import { forcedWorkerFinalCheckLines } from "@beep/repo-cli/test/Yeet"
  *
- * const lines = forcedWorkerFinalCheckLines({ gates: ["check", "fallow"], operatorSkips: [], profile: "worker", forceLocal: true })
+ * const lines = forcedWorkerFinalCheckLines({ gates: ["check", "coverage"], operatorSkips: [], profile: "worker", forceLocal: true })
  * console.log(lines.length) // 2
  * ```
  *
  * @param input - The planned gates, the parsed `--skip` values, the resolved
- *   profile and whether `--force-local` was passed.
- * @returns The refusal lines, then the concurrency line, in gate order.
+ *   profile, whether `--force-local` was passed and the probed coverage plan.
+ * @returns The refusal lines, then the concurrency and coverage-scope lines, in gate order.
  * @category utilities
  * @since 0.0.0
  */
-export const forcedWorkerFinalCheckLines = ({
-  gates,
-  operatorSkips,
-  profile,
-  forceLocal,
-}: {
-  readonly gates: ReadonlyArray<FinalCheckGate>;
-  readonly operatorSkips: ReadonlyArray<FinalCheckSkip>;
-  readonly profile: ComputeProfile;
-  readonly forceLocal: boolean;
-}): ReadonlyArray<string> => {
+export const forcedWorkerFinalCheckLines = (input: FinalCheckProfileRouting): ReadonlyArray<string> => {
+  const { gates, operatorSkips, profile, forceLocal, coverageScope } = input;
   if (!forceLocal || profile !== "worker") return [];
   const requested = A.filter(gates, (gate) => !A.some(operatorSkips, (skip) => skip.gate === gate));
   const refused = A.getSomes(
     A.map(requested, (gate) =>
       O.map(
-        workerForcedRefusal(gate),
-        (reason) => `[yeet] final-check --force-local refused ${gate} on the worker profile: ${reason}`
+        forcedRefusalFor(coverageScope)(gate),
+        (reason) =>
+          `[yeet] final-check --force-local refused ${gate} on the worker profile: ${reason}; ${FORCED_REFUSAL_ROUTE}`
       )
     )
   );
-  const serial = A.filter(profileRoutedGates(gates, operatorSkips, profile), (gate) =>
-    O.isNone(workerForcedRefusal(gate))
+  const measures = pipe(
+    O.fromUndefinedOr(coverageScope),
+    O.flatten,
+    O.toArray,
+    A.filter(isSelectedCoverageScope),
+    A.map(
+      (scope) =>
+        `[yeet] final-check --force-local measures coverage for ${A.join(scope.packageNames, ", ")} (this diff's affected plan)`
+    )
   );
   return A.appendAll(
     refused,
-    A.match(serial, {
+    A.match(forcedWorkerGates(input), {
       onEmpty: () => [],
       onNonEmpty: (forced) => [
         `[yeet] final-check --force-local on the worker profile runs ${A.join(forced, ", ")} one task at a time (concurrency 1)`,
+        ...measures,
       ],
     })
   );
 };
 
-// What a forced gate adds to its argv on `worker` to run one task at a time: the Fallow
-// sub-lanes one after another, the coverage Turbo graph one package at a time.
-const FORCED_WORKER_SERIAL_ARGS = HashMap.make<ReadonlyArray<readonly [FinalCheckGate, ReadonlyArray<string>]>>(
-  ["fallow", ["--serial"]],
-  ["coverage", ["--concurrency=1"]]
-);
+// What a forced gate adds to its argv on `worker` to run one task at a time: coverage's prebuild,
+// shard group and Turbo graph one task at a time. Fallow is refused (GateRoute.schemas.ts).
+const FORCED_WORKER_SERIAL_ARGS = HashMap.make<ReadonlyArray<readonly [FinalCheckGate, ReadonlyArray<string>]>>([
+  "coverage",
+  ["--concurrency=1"],
+]);
 
 const appendStepArgs = (entry: FinalCheckPlannedStep, args: ReadonlyArray<string>): FinalCheckPlannedStep =>
   FinalCheckPlannedStep.make({
@@ -773,8 +846,8 @@ const effectVitestFilesStep = (cwd: string, files: A.NonEmptyReadonlyArray<strin
  * without `--force-local`, and hosted Repo Sanity proves the rest. The
  * decision lives here rather than in `beep ci lane` because hosted runners
  * execute that same lane and must keep the full scan. With `--force-local` on
- * `worker`, Fallow runs its sub-lanes one at a time (`--serial`) and coverage
- * its Turbo graph one package at a time (`--concurrency=1`). Lint Policy never
+ * `worker`, coverage runs its prebuild, shards and Turbo graph one task at a
+ * time (`--concurrency=1`). Lint Policy never
  * runs on `worker`, so the `lint` gate gains `lint effect-vitest --files` over
  * the diff's files in the effect-vitest scope: the part of Lint Policy that
  * costs one syntax parse per file. `workstation` keeps the plan unchanged.
@@ -1598,6 +1671,29 @@ type OpenFinalCheckAttempt = {
 const reportJournalFailure = (error: YeetCommandError) =>
   Console.error(`[yeet] final-check attempt journal not written: ${error.message}`);
 
+// Every skip (operator, compute profile, route) decides before the coverage probe (C5), so a
+// skipped coverage gate stays skipped. A forced worker run then re-routes with the probed plan:
+// coverage whose plan is not a selected set of packages is refused like a measured gate.
+const routeFinalCheckRun = Effect.fnUntraced(function* (plannedRun: FinalCheckRun, routing: FinalCheckProfileRouting) {
+  const probesCoverage = A.contains(routing.gates, "coverage") && O.isNone(skipFor(plannedRun, "coverage"));
+  const coverageScope = probesCoverage
+    ? yield* resolveFinalCheckCoverageScope(plannedRun.repoRoot, plannedRun.mergeBase)
+    : O.none<CoverageAffectedScope>();
+  const scoped: FinalCheckProfileRouting = probesCoverage ? { ...routing, coverageScope } : routing;
+  const profileSkips = computeProfileFinalCheckSkips(scoped);
+  const run: FinalCheckRun = {
+    ...plannedRun,
+    skips: A.appendAll(routing.operatorSkips, profileSkips),
+    ...O.getSomesStruct({ coverageScope }),
+  };
+  return {
+    run,
+    profileSkips,
+    forcedLines: forcedWorkerFinalCheckLines(scoped),
+    forced: A.isReadonlyArrayNonEmpty(forcedWorkerGates(scoped)),
+  };
+});
+
 // The run's start row, in the branch journal Yeet attempts use. Without it no
 // terminal row is written either, so the journal never holds a lone terminal.
 const openFinalCheckAttempt = Effect.fn("Yeet.openFinalCheckAttempt")(
@@ -1755,12 +1851,6 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
     options.forceLocal
   );
   const skips = A.appendAll(operatorSkips, profileSkips);
-  const forcedLines = forcedWorkerFinalCheckLines({
-    gates,
-    operatorSkips,
-    profile: computeProfile,
-    forceLocal: options.forceLocal,
-  });
   const headSha = yield* resolveYeetRev(repoRoot, "HEAD");
   const mergeBase = yield* resolveYeetMergeBase(repoRoot, options.base, "HEAD");
   const changedFiles = yield* changedYeetPaths(
@@ -1792,15 +1882,17 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
     route,
     headSha,
   };
-  // Every skip (operator, compute profile, route) decides before the probe (C5), so a skipped
-  // coverage gate stays skipped. The probe runs before `--dry-run` returns, so the plan matches.
-  const coverageScope =
-    A.contains(gates, "coverage") && O.isNone(skipFor(plannedRun, "coverage"))
-      ? yield* resolveFinalCheckCoverageScope(repoRoot, mergeBase)
-      : O.none<CoverageAffectedScope>();
-  const run: FinalCheckRun = O.match(coverageScope, {
-    onNone: () => plannedRun,
-    onSome: (scope) => ({ ...plannedRun, coverageScope: scope }),
+  // The probe runs before `--dry-run` returns, so the plan matches.
+  const {
+    run,
+    profileSkips: routedSkips,
+    forcedLines,
+    forced,
+  } = yield* routeFinalCheckRun(plannedRun, {
+    gates,
+    operatorSkips,
+    profile: computeProfile,
+    forceLocal: options.forceLocal,
   });
 
   if (options.dryRun) {
@@ -1808,7 +1900,7 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
       `[yeet] final-check plan for ${Str.slice(0, 12)(headSha)} (merge base ${Str.slice(0, 12)(mergeBase)}):`
     );
     yield* Effect.forEach(gates, (gate) => printGatePlan(run, gate), { discard: true });
-    yield* printProfileSkips(profileSkips);
+    yield* printProfileSkips(routedSkips);
     yield* Effect.forEach(forcedLines, (line) => Console.log(line), { discard: true });
     return O.none();
   }
@@ -1836,12 +1928,12 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
       expectationRewrites: verdicts,
       route: FinalCheckRoute.make({ ...route, shadowMisses }),
       computeProfile,
-      forceLocal: options.forceLocal,
+      forceLocal: forced,
     });
     const file = yield* writeReceipt(repoRoot, receipt);
     yield* Ref.set(ran, { steps, receipt: O.some(receipt) });
     yield* Console.log(renderSummary(receipt));
-    yield* printProfileSkips(profileSkips);
+    yield* printProfileSkips(routedSkips);
     yield* Console.log(`[yeet] final-check receipt: ${file}`);
     if (receipt.verdict === "fail") {
       return yield* YeetCommandError.make({
@@ -1859,7 +1951,7 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
       recordWorkerFinalCheckRoutes(
         repoRoot,
         opened,
-        finalCheckWorkerRoutes(run, gates, profileSkips, computeProfile),
+        finalCheckWorkerRoutes(run, gates, routedSkips, computeProfile),
         options.forceLocal
       ).pipe(Effect.andThen(execute)),
     (opened, exit) =>

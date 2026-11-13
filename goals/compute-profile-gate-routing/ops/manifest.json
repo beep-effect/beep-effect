@@ -11,7 +11,7 @@
   },
   "packetPath": "goals/compute-profile-gate-routing",
   "lifecycle": "active",
-  "statusNote": "P0 to P2 merged (#2925, #2959, #2972, #3226). The 2026-11-13 dankserver acceptance run (#3267) failed criterion 3; this lane fixes its findings. Repeat acceptance on dankserver before the final PR and reflection.",
+  "statusNote": "P0 to P2 merged (#2925, #2959, #2972, #3226). #3276 fixed the first dankserver run's findings; the repeat run of 2026-11-13 (#3277) closed findings 1, 2, 4 and 6. This lane settles criterion 2b: a forced gate on a worker completes serially or refuses with its measured reason. Remaining before the final PR and reflection: one short dankserver run showing a forced gate (coverage over a small package) completing with forceLocal: true on its receipt, and the lane's own draft-to-ready flip through yeet ready.",
   "mission": "Typed workstation|worker compute profile; worker hosts defer hosted-only gates, catalog hooks and local proof to hosted CI by construction.",
   "executionCapable": true,
   "reflectionRequired": true,
