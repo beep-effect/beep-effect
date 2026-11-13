@@ -663,6 +663,33 @@ describe("session resolve", () => {
         expect(A.map(resolution.steps, (step) => [step.rung, step.instruction])).toStrictEqual([
           ["wake", `${renderT3Send(parent)}  # wakes the idle thread`],
         ]);
+        assertNone(resolution.routes[1]?.send ?? O.some("missing"));
+      })
+    );
+
+    it.effect("never sends to a finished child whose parent cannot be read", () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeFixture({
+          threads: [{ id: "orphan-child", status: "completed", archived: false, parent: "garbled-parent" }],
+          malformedThread: "garbled-parent",
+        });
+        const child = T3ThreadRoute.make({ environmentId: LOCAL_ENV, threadId: "orphan-child", provider: "codex" });
+        const resolution = yield* resolveWith({
+          env: fixture.env,
+          rows: [ledgerRow({ checkout: "/work/t3", at: 1, pr: 9, sessionId: "codex-9", harness: "codex" })],
+          presence: [presenceRow("codex-9", [child], "codex")],
+          query: "9",
+        });
+        expect(liveness(resolution)).toStrictEqual([
+          ["via-parent", "unknown"],
+          ["t3-thread", "dormant"],
+        ]);
+        const parent = T3ThreadRoute.make({ environmentId: LOCAL_ENV, threadId: "garbled-parent", provider: "codex" });
+        expect(A.map(resolution.steps, (step) => [step.rung, step.instruction])).toStrictEqual([
+          ["send", `${renderT3Send(parent)}  # liveness unknown: send, then confirm with t3_thread_read`],
+          ["pr-comment", 'bun run beep yeet gh pr comment 9 --body "<message>"'],
+          ["takeover", resolution.steps[2]?.instruction ?? ""],
+        ]);
       })
     );
 

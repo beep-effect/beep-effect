@@ -246,7 +246,12 @@ const readRoute = (probe: SessionRouteProbeShape, route: SessionRoute): Effect.E
         liveness: probed.liveness,
         detail: probed.detail,
         currentName: probed.currentName,
-        send: probed.liveness === "dead" ? O.none() : O.some(renderT3Send(route)),
+        // A child keeps its own send only while it runs; a finished child would
+        // start a fresh task, so its parent's route below carries the send.
+        send:
+          probed.liveness === "dead" || (O.isSome(probed.parentThreadId) && probed.liveness !== "live")
+            ? O.none()
+            : O.some(renderT3Send(route)),
       });
       // A T3 child thread's working route is its parent: a send to a
       // finished child starts a fresh task instead of reaching the work, so

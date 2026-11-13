@@ -252,8 +252,11 @@ export const makeSessionRouteProbeLive = Effect.fn("SessionRouteProbe.makeLive")
         ),
     });
 
-  const environments = runT3(["environment", "list", "--json"], T3_ENVIRONMENTS_TIMEOUT).pipe(
-    Effect.map(O.flatMap((output) => (output.exitCode === 0 ? decodeEnvironments(output.stdout) : O.none())))
+  // One listing per probe: it pings every link, so each remote route must not pay for it again.
+  const environments = yield* Effect.cached(
+    runT3(["environment", "list", "--json"], T3_ENVIRONMENTS_TIMEOUT).pipe(
+      Effect.map(O.flatMap((output) => (output.exitCode === 0 ? decodeEnvironments(output.stdout) : O.none())))
+    )
   );
 
   const claudePeer = Effect.fn("SessionRouteProbe.claudePeer")(
