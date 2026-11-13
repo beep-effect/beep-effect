@@ -689,6 +689,10 @@ interface YeetReadyGateDependencies {
  *
  * This fallback remains for authors/repositories without the configured
  * pr-comment routine. Covered requests use an exact-head comment instead.
+ * A pull request in a native stack never takes the fallback, top layer
+ * included: a push below the top moves the head the layer above is based on,
+ * and a push on the top restarts the review window the merge gate reads. An
+ * uncovered layer gets a warning with the manual request comment instead.
  *
  * **Example** (Read the re-request subject)
  *
@@ -818,12 +822,24 @@ const ReviewerRequestHead = GitObjectId.check(
   })
 );
 
+const ReviewerRequestStack = S.Struct({
+  number: S.Int,
+  position: S.Int,
+  size: S.Int,
+}).pipe(
+  $I.annoteSchema("ReviewerRequestStack", {
+    description: "The native stack a pull request sits in: the stack number and the layer's position and size.",
+  })
+);
+
 const ReviewerRequestPull = S.Struct({
   state: S.String,
   draft: S.Boolean,
   head: S.Struct({ sha: ReviewerRequestHead }),
   user: S.Struct({ login: S.NonEmptyString }),
   base: S.Struct({ repo: S.Struct({ full_name: S.NonEmptyString }) }),
+  // `null` or absent outside a native stack.
+  stack: S.OptionFromOptionalNullOr(ReviewerRequestStack),
 }).pipe(
   $I.annoteSchema("ReviewerRequestPull", { description: "Live REST pull request identity for a reviewer request." })
 );
@@ -853,6 +869,11 @@ const reviewerCommentManual = (prNumber: number, head: string) =>
   S.is(ReviewerRequestHead)(head)
     ? `retry \`bun run beep yeet ready\` or, as ${REVIEWER_COMMENT_AUTHOR}, post this canonical request body: ${reviewerCommentBody(head)} on #${prNumber} after confirming it is open, ready, and still at ${head}`
     : "retry `bun run beep yeet ready` after the current full head can be read";
+// A push below the top moves the head the layer above is based on, and a push
+// on the top restarts the review window the merge gate is about to read
+// (decision 2026-11-13-ready-never-pushes-on-a-layer), so no layer takes S32.
+const reviewerStackLayerHeld = (prNumber: number, head: string, stack: typeof ReviewerRequestStack.Type) =>
+  `[yeet] warning: #${prNumber} is layer ${stack.position} of stack #${stack.number} (${stack.size} layers); no review-trigger commit was pushed because a push on a stack layer moves the head the stack is built on; ${reviewerCommentManual(prNumber, head)}`;
 
 const decodeReviewerResponse = Effect.fnUntraced(function* <T, I>(schema: S.Codec<T, I>, value: string) {
   return yield* S.decodeEffect(S.fromJsonString(schema))(value).pipe(
@@ -992,6 +1013,7 @@ const requestReviewerReview = Effect.fn("Yeet.requestReviewerReview")(function* 
     });
   }
   if (!reviewerCommentCovered(pull)) {
+    if (O.isSome(pull.stack)) return reviewerStackLayerHeld(prNumber, confirmedHead, pull.stack.value);
     return allowPush
       ? yield* pushReviewerRequest(context, prNumber, confirmedHead)
       : `[yeet] no comment routine configured for this pull request author/repository; no repeated review-trigger push`;
@@ -1451,6 +1473,9 @@ const recordAndConfirmInherited = Effect.fn("Yeet.recordAndConfirmInherited")(fu
  * Already-ready pull requests also verify the current-head receipt, including
  * the existing ancestor refresh rule after a base-only merge; no flip or
  * review-trigger push is repeated; a covered comment request can be repaired.
+ * After a flip, an author or repository the comment routine does not cover
+ * falls back to the empty S32 commit, except on a native stack layer, where
+ * nothing is pushed and the warning names the manual request comment.
  * Before a flip, and for an already-ready pull request, the squash commit
  * message GitHub will write is predicted and linted as an advisory
  * (`SquashCommitlint.ts`): a failing verdict prints the rule and the offending
@@ -1569,7 +1594,7 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
         }),
       ]);
       // Draft pushes are ignored by the reviewer. Request the proven head by
-      // comment where configured, otherwise retain S32; a failure warns.
+      // comment where configured, otherwise retain S32 off a stack layer; a failure warns.
       yield* ensureReviewerRequest(context, dependencies, prNumber, sameHead, true);
       if (A.isReadonlyArrayNonEmpty(applied)) {
         yield* Console.log(`[yeet] recorded ${A.length(applied)} inherited red(s) in the PR body`);

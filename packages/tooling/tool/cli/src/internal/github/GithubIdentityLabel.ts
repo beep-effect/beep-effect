@@ -18,11 +18,11 @@
  */
 
 import { GitHubClient } from "@beep/github/GitHubClient";
+import { credentialFingerprint } from "@beep/github/Resilience";
 import { $RepoCliId } from "@beep/identity/packages";
 import { configStringOption } from "@beep/repo-cli-kit/cli/EnvConfig";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -40,12 +40,11 @@ import {
 } from "./GithubLedger.schemas.ts";
 import { GithubBudgetLedger } from "./GithubLedger.service.ts";
 import type { GitHubClientOptions } from "@beep/github/GitHubClient";
+import type * as Digest from "effect/crypto/Digest";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GithubIdentityKind } from "./GithubIdentity.ts";
 
 const $I = $RepoCliId.create("internal/github/GithubIdentityLabel");
-
-const textEncoder = new TextEncoder();
 
 /**
  * The degraded `token:<12 hex>` label of a token: the first twelve hex digits
@@ -73,9 +72,8 @@ const textEncoder = new TextEncoder();
  * @since 0.0.0
  */
 export const tokenHashLabel = Effect.fn("GithubIdentityLabel.tokenHash")(function* (token: Redacted.Redacted<string>) {
-  const digest = yield* Digest.Digest;
-  const hex = yield* digest.digestHex(Digest.sha256, textEncoder.encode(Redacted.value(token)));
-  return GithubIdentityLabel.make(`token:${Str.slice(0, 12)(hex)}`);
+  const hex = yield* credentialFingerprint(token);
+  return GithubIdentityLabel.make(`token:${hex}`);
 });
 
 const UserLogin = S.Struct({ login: GithubLogin }).pipe(
@@ -109,6 +107,29 @@ const ghEnvToken = Effect.gen(function* () {
     Redacted.make
   );
 });
+
+/**
+ * Fingerprint the environment token gh would use, without reading its stored token.
+ *
+ * **Example** (Build the environment read)
+ *
+ * ```ts
+ * import { ghSpawnCredential } from "@beep/repo-cli/test/SharedInternals"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(ghSpawnCredential)) // true
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const ghSpawnCredential = ghEnvToken.pipe(
+  Effect.flatMap(
+    O.match({
+      onNone: () => Effect.succeedNone,
+      onSome: (token) => credentialFingerprint(token).pipe(Effect.asSome),
+    })
+  )
+);
 
 /**
  * The label of the identity a spawned `gh` spends: the env token's identity
