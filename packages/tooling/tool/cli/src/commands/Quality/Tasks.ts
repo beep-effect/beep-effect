@@ -222,6 +222,10 @@ const ROOT_COVERAGE_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 // and the eight mixed shards use one each, bounding aggregate test-process
 // fan-out at 11 on the 8-vCPU runner.
 const COVERAGE_FULL_SHARD_COUNT = 10;
+// A caller that pins `--concurrency=1` (a forced `yeet final-check` on a worker compute profile)
+// asks for one task at a time end to end: the prebuild and the shard group follow it too, not only
+// the Turbo graph of each shard (goals/compute-profile-gate-routing, 2026-11-13 repeat run).
+const SERIAL_TURBO_CONCURRENCY_ARG = "--concurrency=1";
 const COVERAGE_FULL_TWO_WORKER_PACKAGE_NAMES = ["@beep/repo-cli"] as const;
 // repo-cli deliberately disables file parallelism for ordinary package runs,
 // but serial imports consumed 728.76 seconds in the rejected live coverage
@@ -4652,12 +4656,15 @@ export const rootQualityStepsForTesting: {
     rootStepsFor(repoRoot, invocation)
 );
 
+const requestsSerialTurbo = (args: ReadonlyArray<string>): boolean => A.contains(args, SERIAL_TURBO_CONCURRENCY_ARG);
+
 const coverageShardedSteps = (
   repoRoot: string,
   packageNames: ReadonlyArray<string>,
   passthroughArgs: ReadonlyArray<string>,
   writeBaseline: boolean,
-  prebuildFilterArgs: ReadonlyArray<string>
+  prebuildFilterArgs: ReadonlyArray<string>,
+  serial: boolean
 ): readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>] => {
   // A shard count above the owner count leaves empty shards; an empty shard
   // would hand turbo a filter-less `coverage` run over the whole workspace.
@@ -4671,7 +4678,12 @@ const coverageShardedSteps = (
       repoRoot,
       "coverage:prebuild",
       ["build"],
-      [CI_TURBO_CONCURRENCY_ARG, "--summarize", ...prebuildFilterArgs, ...passthroughArgs]
+      [
+        serial ? SERIAL_TURBO_CONCURRENCY_ARG : CI_TURBO_CONCURRENCY_ARG,
+        "--summarize",
+        ...prebuildFilterArgs,
+        ...passthroughArgs,
+      ]
     ),
     ...A.map(shards, (shard) =>
       coverageFullShardStep(repoRoot, shard.index, shard.packageNames, passthroughArgs, writeBaseline)
@@ -4692,7 +4704,8 @@ const coverageFullSteps = (
     // Build only the coverage owners (turbo adds their `^build` closure). An
     // unfiltered prebuild also built @beep/storybook, which owns no coverage
     // task and sits in no owner's build closure (quality audit A2, 2026-11-02).
-    packageFilterArgs(packageNames)
+    packageFilterArgs(packageNames),
+    requestsSerialTurbo(args)
   );
 
 const packageFilterArgs: (packageNames: ReadonlyArray<string>) => ReadonlyArray<string> = A.map(
@@ -4710,7 +4723,8 @@ const coverageSelectedShardedSteps = (
     options.writeBaseline,
     // Build only the selected owners (turbo adds their `^build` dependencies);
     // the shards then run `--only` against that prebuilt graph.
-    packageFilterArgs(options.expectedPackageNames)
+    packageFilterArgs(options.expectedPackageNames),
+    requestsSerialTurbo(options.args)
   );
 
 // Baseline writes and ratchet checks must use the same worker topology. Repo-cli
@@ -4882,19 +4896,46 @@ const runFullShardedCoverage = Effect.fn("QualityTasks.runFullShardedCoverage")(
     return yield* QualityTaskConfigurationError.new("No workspace packages define coverage.");
   }
 
-  yield* runShardedCoverage("coverage:full", coverageFullSteps(repoRoot, packageNames, args));
+  yield* runShardedCoverage("coverage:full", coverageFullSteps(repoRoot, packageNames, args), args);
 });
+
+/**
+ * How many coverage shards run at once for one set of caller args.
+ *
+ * **Details**
+ *
+ * The weighted shards run side by side, one per shard, unless the caller
+ * pinned `--concurrency=1`: then they run one after another, like the
+ * prebuild before them, so a forced worker run holds one Turbo task at a time.
+ *
+ * **Example** (Serial shards under concurrency 1)
+ *
+ * ```ts
+ * import { coverageShardConcurrencyForTesting } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(coverageShardConcurrencyForTesting(["--affected", "--concurrency=1"])) // 1
+ * console.log(coverageShardConcurrencyForTesting([])) // 10
+ * ```
+ *
+ * @param args - Caller-visible coverage args.
+ * @returns The shard group concurrency.
+ * @category testing
+ * @since 0.0.0
+ */
+export const coverageShardConcurrencyForTesting = (args: ReadonlyArray<string>): number =>
+  requestsSerialTurbo(args) ? 1 : COVERAGE_FULL_SHARD_COUNT;
 
 const runShardedCoverage = Effect.fn("QualityTasks.runShardedCoverage")(function* (
   label: string,
-  steps: readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>]
+  steps: readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>],
+  args: ReadonlyArray<string>
 ) {
   const [prebuildStep, ...shardSteps] = steps;
   yield* Console.log(
     `[beep-cli] ${label}: prebuild once, then ${A.length(shardSteps)} weighted in-job shard(s) with aggregate Vitest worker cap ${COVERAGE_FULL_VITEST_WORKER_CAP}`
   );
   yield* runStep(prebuildStep);
-  yield* runStreamingStepGroup(label, shardSteps, COVERAGE_FULL_SHARD_COUNT);
+  yield* runStreamingStepGroup(label, shardSteps, coverageShardConcurrencyForTesting(args));
 });
 
 const runSelectedCoverage = Effect.fn("QualityTasks.runSelectedCoverage")(function* (
@@ -4912,7 +4953,7 @@ const runSelectedCoverage = Effect.fn("QualityTasks.runSelectedCoverage")(functi
         ? "[beep-cli] coverage:affected: baseline regeneration uses the weighted shard executor for verifier-equivalent worker topology"
         : `[beep-cli] coverage:affected: selection weighs ${Math.round(coverageScopeWeightSeconds(options.expectedPackageNames))}s of planner budget (> ${COVERAGE_SELECTED_SINGLE_RUN_MAX_WEIGHT_SECONDS}s); using the weighted shard executor`
     );
-    return yield* runShardedCoverage("coverage:selected", steps);
+    return yield* runShardedCoverage("coverage:selected", steps, options.args);
   }
   yield* runStep(A.headNonEmpty(steps));
 });
