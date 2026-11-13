@@ -5798,6 +5798,34 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       ]);
     });
 
+    // heavy-pool-diet LINT-05: the required JSDoc Ratchet lane runs the inventory and the ratchet on
+    // the same head, so only a hosted plan whose ruleset requires that context drops the pair.
+    it("leaves the JSDoc inventory and ratchet to the JSDoc Ratchet lane only while it is required", () => {
+      const jsdocPair = ["jsdoc:inventory:check", "jsdoc:ratchet:check"];
+      const required = { requiredContexts: ["Lint", "JSDoc Ratchet"] };
+      const notRequired = { requiredContexts: ["Lint"] };
+      const plannedArgs = (steps: ReadonlyArray<QualityTaskStep>) => A.flatMap(steps, (step) => step.args);
+      const withoutPair = (steps: ReadonlyArray<QualityTaskStep>) =>
+        A.map(steps, (step) => ({ ...step, args: A.filter(step.args, (arg) => !A.contains(jsdocPair, arg)) }));
+      for (const base of [undefined, "review-base"]) {
+        const plan = (hosted: boolean, options?: { readonly requiredContexts: ReadonlyArray<string> }) =>
+          rootLintPolicyStepsForTesting("/repo", undefined, base, undefined, hosted, undefined, options);
+        const hostedRequired = plan(true, required);
+        const hostedNotRequired = plan(true, notRequired);
+        for (const task of jsdocPair) {
+          expect(plannedArgs(hostedRequired)).not.toContain(task);
+          expect(plannedArgs(hostedNotRequired)).toContain(task);
+          expect(plannedArgs(plan(true))).toContain(task);
+          expect(plannedArgs(plan(false, required))).toContain(task);
+        }
+        // Without the snapshot the hosted plan is the pre-LINT-05 plan, and dropping the pair is
+        // the only difference the required context makes.
+        expect(plan(true)).toEqual(hostedNotRequired);
+        expect(plan(false, required)).toEqual(plan(false));
+        expect(withoutPair(hostedRequired)).toEqual(withoutPair(hostedNotRequired));
+      }
+    });
+
     it("preserves every pre-D policy check as a task or aggregate with explicit additions", () => {
       const before = [
         "lint:deprecated-apis",
@@ -8898,7 +8926,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             // The same pinned comparison passes once the package measures at its merge-base floor.
             yield* compareRootCoverageForTesting(repoRoot, options, A.take(measuredAt(80), 1)).pipe(bareRun);
             const passedReport = yield* newErrorText;
-            expect(passedReport).not.toContain(withheldLowering);
+            expect(passedReport).toBe("");
 
             // Pre-fix control: without the planned base the dirty row (50) is its own floor and 60 passes.
             const { comparisonBase: _planned, ...unpinned } = options;
