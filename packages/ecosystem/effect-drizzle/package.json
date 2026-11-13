@@ -65,7 +65,7 @@
     }
   },
   "peerDependencies": {
-    "drizzle-orm": "1.0.0-rc.5-ab785fc",
+    "drizzle-orm": "1.0.0-rc.5",
     "effect": "catalog:"
   },
   "devDependencies": {

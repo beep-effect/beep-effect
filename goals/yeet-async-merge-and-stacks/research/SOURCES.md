@@ -28,7 +28,7 @@ The exploration's ledger lists every URL. The ones this goal builds on:
 
 | Brick | Path | Disposition |
 |-------|------|-------------|
-| Legacy merge call | `packages/tooling/tool/cli/src/internal/github/GithubRest.ts` (`mergePullRequest`) | extend with the async request and poll, then delete |
+| Legacy merge call | `packages/tooling/tool/cli/src/internal/github/GithubRest.ts` | replaced by the async request and poll in slice A; deleted 2026-11-13 |
 | Merge gate and merge porcelain | `packages/tooling/tool/cli/src/commands/Yeet/internal/MergeGate.ts` and its neighbours for merge, GitHub operations and owner-checkpoint merge | extend |
 | Review window | `packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewWindow.ts` | extend |
 | Receipt carry rule | `packages/tooling/tool/cli/src/commands/Yeet/internal/FinalCheckRefresh.ts` | extend |

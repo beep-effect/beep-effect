@@ -63,9 +63,7 @@
   },
   "packageManager": "bun@1.4.4",
   "patchedDependencies": {
-    "drizzle-orm@1.0.0-rc.5-ab785fc": "patches/drizzle-orm@1.0.0-rc.5-ab785fc.patch",
     "@alchemy.run/domain@2.0.0-beta.85": "patches/@alchemy.run%2Fdomain@2.0.0-beta.85.patch",
-    "rdf-validation@0.1.1": "patches/rdf-validation@0.1.1.patch",
     "alchemy@2.0.0-beta.85": "patches/alchemy@2.0.0-beta.85.patch"
   },
   "private": true,
