@@ -30,6 +30,7 @@ export class ReserveBudget extends Domain.Command(
     input: { reservation: ReservationId, units: S.Int },
     events: [BudgetReserved],
     rejects: [RunNotRunning, NotThisRun, BudgetExceeded],
+    reply: { remaining: S.Int },
   },
   { description: "Reserve budget before an inference or tool call, as the run itself." },
 ) {}

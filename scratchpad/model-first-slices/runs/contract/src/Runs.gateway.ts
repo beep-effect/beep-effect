@@ -56,6 +56,19 @@ export const RunRequest = S.Struct({
 export type RunRequest = typeof RunRequest.Type;
 
 /**
+ * The live run of a lineage and the provenance it acts under.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CurrentRun = S.Struct({ run: RunId, provenance: Provenance });
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export type CurrentRun = typeof CurrentRun.Type;
+
+/**
  * The run could not be started, and why.
  *
  * @category errors
@@ -89,12 +102,16 @@ export class RunsGateway extends Context.Service<
   {
     /** Request the run, wait until it is granted and running, and return the provenance it acts under. */
     readonly request: (request: RunRequest) => Effect.Effect<{ readonly provenance: Provenance }, RunRequestRefused>;
-    /** Report to the run, re-admitted as the run for this hop. */
+    /**
+     * Report to the run, re-admitted as the run for this hop. A run that has
+     * continued as a new run is followed: the report goes to the live run of
+     * its lineage, which is returned so the caller reports to it next.
+     */
     readonly report: (report: {
       readonly provenance: Provenance;
       readonly hop: Hop;
       readonly run: RunId;
       readonly report: RunReport;
-    }) => Effect.Effect<void, RunReportRefused>;
+    }) => Effect.Effect<CurrentRun, RunReportRefused>;
   }
 >()("Runs/Gateway") {}

@@ -35,15 +35,14 @@ export class AdmissionGateUnmet extends Domain.Rejection(
 ) {}
 
 /**
- * The fact, with the outcome decide worked out and the invocation it ran under.
+ * The fact, with the invocation it ran under. Phase 3 removed its
+ * `corroboration` (D22): older stored events still carry the key, and a read
+ * ignores it.
  *
  * @category events
  * @since 0.0.0
  */
-export class ClaimAccepted extends Domain.Event(
-  "ClaimAccepted",
-  carry({ proposition: Proposition, corroboration: S.Int }),
-) {}
+export class ClaimAccepted extends Domain.Event("ClaimAccepted", carry({ proposition: Proposition })) {}
 
 /**
  * Accept a pending claim once its admission gate is met.

@@ -1,4 +1,5 @@
 import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
+import { EvidenceSignal } from "@proto/party-contract/Evidence";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
 import { Proposition } from "@proto/party-contract/Proposition";
 import { ContactSource } from "@proto/party-model/Evidence/ContactSource.external";
@@ -31,7 +32,7 @@ export const FixtureContactSource = ContactSource.toLayer(
               scheme: "email",
               value: "dana@acme.test",
             }),
-            signals: [{ source: mailbox, excerpt: "From: Dana Smith <dana@acme.test>" }],
+            signals: [EvidenceSignal.make({ source: mailbox, quote: "From: Dana Smith <dana@acme.test>" })],
           },
         ],
       }),

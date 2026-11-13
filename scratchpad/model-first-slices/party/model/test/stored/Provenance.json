@@ -1,0 +1,28 @@
+{
+  "root": {
+    "_tag": "Agent",
+    "run": "review:claim_1:1",
+    "accountable": "p_intake"
+  },
+  "onBehalfOf": "p_intake",
+  "grants": [
+    {
+      "grant": "g_intake_propose",
+      "delegation": "dlg:review:claim_1:1"
+    }
+  ],
+  "chain": [
+    {
+      "by": {
+        "_tag": "Agent",
+        "run": "review:claim_1:1"
+      },
+      "cause": {
+        "_tag": "SagaStep",
+        "saga": "ReviewAssist",
+        "key": "review:claim_1:1",
+        "step": "propose"
+      }
+    }
+  ]
+}

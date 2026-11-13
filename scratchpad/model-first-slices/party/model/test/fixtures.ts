@@ -30,7 +30,7 @@ export const human = (principal: string, grants: ReadonlyArray<CapabilityGrant>)
     chain: [],
   });
 
-export const signalFrom = (source: string) => EvidenceSignal.make({ source, excerpt: `${source} says so` });
+export const signalFrom = (source: string) => EvidenceSignal.make({ source, quote: `${source} says so` });
 export const twoSources = [signalFrom("mailbox:intake"), signalFrom("crm")];
 // Two signals, one source: one source for the gate.
 export const oneSource = [signalFrom("mailbox:intake"), signalFrom("mailbox:intake")];

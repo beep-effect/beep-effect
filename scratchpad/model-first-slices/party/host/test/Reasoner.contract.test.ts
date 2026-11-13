@@ -24,7 +24,7 @@ const request = (key: string, signals: number, maxAllowance = 40): AssessRequest
   promptVersion: "review-v1",
   maxAllowance,
   proposition,
-  signals: Array.from({ length: signals }, (_, i) => EvidenceSignal.make({ source: `source-${i}`, excerpt: "says so" })),
+  signals: Array.from({ length: signals }, (_, i) => EvidenceSignal.make({ source: `source-${i}`, quote: "says so" })),
 });
 const keys = [request("k-one", 1), request("k-two", 2), request("k-many", 12, 20)];
 

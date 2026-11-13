@@ -1,0 +1,35 @@
+import { RunId } from "@proto/kernel/Ids";
+import { byProcess, eventCause, extend } from "@proto/kernel/Invocation";
+import { ChildFinished } from "@proto/runs-contract/Run/ChildFinished.command";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import { AgentRun, recordOf, unspent } from "./AgentRun.aggregate.ts";
+import { ResumeParent } from "./ResumeParent.policy.ts";
+
+/**
+ * Reads the finished run; when it has a parent, tells the parent what its
+ * lineage did not spend. The event names no parent, so the handler reads the
+ * run, whose terminal state no longer changes.
+ *
+ * @category handlers
+ * @since 0.0.0
+ */
+export const ResumeParentLive = ResumeParent.toLayer(
+  Effect.gen(function* () {
+    const runs = yield* AgentRun;
+    return Effect.fn(function* (trigger) {
+      const finished = yield* runs.get(RunId.make(trigger.source.id));
+      const run = recordOf(finished);
+      if (O.isNone(run) || run.value.parent === null) return;
+      yield* runs.send(
+        run.value.parent,
+        new ChildFinished({
+          child: run.value.lineage,
+          returned: unspent(run.value.budget),
+          outcome: trigger.event._tag === "RunCompleted" ? trigger.event.outcome : trigger.event._tag,
+          provenance: extend(trigger.event.provenance, byProcess(ResumeParent.policyName, eventCause(trigger))),
+        }),
+      );
+    });
+  }),
+);

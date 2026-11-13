@@ -31,8 +31,8 @@ const hasIdentifier = Proposition.cases.HasIdentifier.make({
 });
 // Two sources: the fixture reasoner proposes to accept.
 const twoSources = [
-  EvidenceSignal.make({ source: "mailbox:intake", excerpt: "From: Dana Smith <dana@acme.test>" }),
-  EvidenceSignal.make({ source: "crm", excerpt: "dana@acme.test on file" }),
+  EvidenceSignal.make({ source: "mailbox:intake", quote: "From: Dana Smith <dana@acme.test>" }),
+  EvidenceSignal.make({ source: "crm", quote: "dana@acme.test on file" }),
 ];
 
 /** A tool's final result, through the toolkit's own handler. */
@@ -115,13 +115,30 @@ it.live(
         .pipe(Effect.flip);
       expect(byAgent._tag).toBe("HumanApprovalRequired");
 
-      // One authenticated human command decides the claim and wakes the run, which completes.
+      // One authenticated human command decides the claim; Party publishes the decision and the
+      // runs context's inbox concludes the run under its own provenance plus the fact's hop.
       const approved = yield* reviewer.ApproveProposal(claimId, { digest, evidenceRevision: 1 }, asHuman("p_rev"));
       const decided = yield* reviewer.ClaimReview.get(claimId, { ...asHuman("p_rev"), atLeast: approved });
       expect(decided).toMatchObject({ status: "accepted" });
       const finished = yield* access.run(run, (state) => state._tag !== "AwaitingApproval");
-      expect(finished).toMatchObject({ _tag: "Completed", run: { budget: { allowance: 100, reserved: 0 } } });
-      expect(finished._tag === "Completed" && finished.outcome.startsWith("approved:")).toBe(true);
+      expect(finished).toMatchObject({ _tag: "Completed", outcome: "accepted", run: { budget: { allowance: 100, reserved: 0 } } });
     }).pipe(Effect.scoped, Effect.provide(World)),
 );
 
+
+it.live("a claim a person decides directly, with no approval, still concludes its waiting run", () =>
+  Effect.gen(function* () {
+    const access = yield* Access;
+    yield* access.issue("g_intake", "p_intake", PartyIntake, acme);
+    yield* access.issue("g_intake_propose", "p_intake", PartyPropose, acme);
+    yield* access.issue("g_rev", "p_rev", PartyReview, acme);
+    const intake = yield* IntakeApi.clientInProcess;
+    const reviewer = yield* ReviewerApi.clientInProcess;
+    yield* intake.AssertClaim(claimId, { org: acme, proposition: hasIdentifier, signals: twoSources }, asHuman("p_intake"));
+    yield* access.run(run, (state) => state._tag === "AwaitingApproval");
+    // The reviewer accepts the claim outright; the run's proposal is never approved.
+    yield* reviewer.AcceptClaim(claimId, {}, asHuman("p_rev"));
+    const finished = yield* access.run(run, (state) => state._tag !== "AwaitingApproval");
+    expect(finished).toMatchObject({ _tag: "Completed", outcome: "accepted", run: { budget: { reserved: 0 } } });
+  }).pipe(Effect.scoped, Effect.provide(World)),
+);

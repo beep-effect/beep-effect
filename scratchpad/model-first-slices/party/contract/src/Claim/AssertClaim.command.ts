@@ -1,5 +1,5 @@
 import * as Domain from "@alchemy.run/domain";
-import { OrgId } from "@proto/kernel/Ids";
+import { OrgId, RunId } from "@proto/kernel/Ids";
 import { carry } from "@proto/kernel/Invocation";
 import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { Session } from "@proto/kernel/Session.middleware";
@@ -48,6 +48,7 @@ export class AssertClaim extends Domain.Command(
     input: { org: OrgId, proposition: Proposition, signals: S.Array(EvidenceSignal) },
     events: [ClaimAsserted, ReviewRequested],
     rejects: [ClaimAlreadyAsserted, MissingGrant],
+    reply: { reviewRun: S.NullOr(RunId) },
   },
   { description: "Assert a proposition about parties in an organization, with its evidence, for review." },
 ) {}

@@ -1,0 +1,290 @@
+[
+  {
+    "_tag": "RunRequested",
+    "session": "session_1",
+    "purpose": "review",
+    "versions": {
+      "prompt": "p1",
+      "model": "m1",
+      "tools": "t1"
+    },
+    "allowance": 100,
+    "historyBound": 2,
+    "source": {
+      "grant": "g_req",
+      "delegation": null
+    },
+    "terms": {
+      "capability": "party.propose",
+      "operations": [
+        "ProposeDisposition"
+      ],
+      "resource": {
+        "_tag": "Org",
+        "org": "org_acme"
+      },
+      "expires": null
+    },
+    "requester": "p_req",
+    "provenance": {
+      "root": {
+        "_tag": "Human",
+        "principal": "p_req"
+      },
+      "onBehalfOf": "p_req",
+      "grants": [
+        {
+          "grant": "g_req",
+          "delegation": null
+        }
+      ],
+      "chain": []
+    }
+  },
+  {
+    "_tag": "RunActivated",
+    "session": "session_1",
+    "delegation": "dlg:run_1",
+    "accountable": "p_req",
+    "runProvenance": {
+      "root": {
+        "_tag": "Agent",
+        "run": "run_1",
+        "accountable": "p_req"
+      },
+      "onBehalfOf": "p_req",
+      "grants": [
+        {
+          "grant": "g_req",
+          "delegation": "dlg:run_1"
+        }
+      ],
+      "chain": []
+    },
+    "provenance": {
+      "root": {
+        "_tag": "Human",
+        "principal": "p_req"
+      },
+      "onBehalfOf": "p_req",
+      "grants": [
+        {
+          "grant": "g_req",
+          "delegation": null
+        }
+      ],
+      "chain": [
+        {
+          "by": {
+            "_tag": "Process",
+            "process": "GrantOnRequest"
+          },
+          "cause": {
+            "_tag": "Event",
+            "stream": "AgentRun/run_1",
+            "seq": 1,
+            "event": "RunRequested"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "_tag": "BudgetReserved",
+    "session": "session_1",
+    "reservation": "r1",
+    "units": 40,
+    "remaining": 60,
+    "provenance": {
+      "root": {
+        "_tag": "Agent",
+        "run": "run_1",
+        "accountable": "p_req"
+      },
+      "onBehalfOf": "p_req",
+      "grants": [
+        {
+          "grant": "g_req",
+          "delegation": "dlg:run_1"
+        }
+      ],
+      "chain": [
+        {
+          "by": {
+            "_tag": "Agent",
+            "run": "run_1"
+          },
+          "cause": {
+            "_tag": "SagaStep",
+            "saga": "ReviewAssist",
+            "key": "run_1",
+            "step": "reserve"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "_tag": "UsageSettled",
+    "session": "session_1",
+    "reservation": "r1",
+    "reserved": 40,
+    "units": 12,
+    "remaining": 88,
+    "provenance": {
+      "root": {
+        "_tag": "Agent",
+        "run": "run_1",
+        "accountable": "p_req"
+      },
+      "onBehalfOf": "p_req",
+      "grants": [
+        {
+          "grant": "g_req",
+          "delegation": "dlg:run_1"
+        }
+      ],
+      "chain": [
+        {
+          "by": {
+            "_tag": "Agent",
+            "run": "run_1"
+          },
+          "cause": {
+            "_tag": "SagaStep",
+            "saga": "ReviewAssist",
+            "key": "run_1",
+            "step": "settle"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "_tag": "StepRecorded",
+    "session": "session_1",
+    "step": "assess",
+    "count": 1,
+    "provenance": {
+      "root": {
+        "_tag": "Agent",
+        "run": "run_1",
+        "accountable": "p_req"
+      },
+      "onBehalfOf": "p_req",
+      "grants": [
+        {
+          "grant": "g_req",
+          "delegation": "dlg:run_1"
+        }
+      ],
+      "chain": [
+        {
+          "by": {
+            "_tag": "Agent",
+            "run": "run_1"
+          },
+          "cause": {
+            "_tag": "SagaStep",
+            "saga": "ReviewAssist",
+            "key": "run_1",
+            "step": "step"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "_tag": "StepRecorded",
+    "session": "session_1",
+    "step": "propose",
+    "count": 2,
+    "provenance": {
+      "root": {
+        "_tag": "Agent",
+        "run": "run_1",
+        "accountable": "p_req"
+      },
+      "onBehalfOf": "p_req",
+      "grants": [
+        {
+          "grant": "g_req",
+          "delegation": "dlg:run_1"
+        }
+      ],
+      "chain": [
+        {
+          "by": {
+            "_tag": "Agent",
+            "run": "run_1"
+          },
+          "cause": {
+            "_tag": "SagaStep",
+            "saga": "ReviewAssist",
+            "key": "run_1",
+            "step": "step2"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "_tag": "RunContinued",
+    "session": "session_1",
+    "next": "run_1~1",
+    "lineage": "run_1",
+    "generation": 1,
+    "remaining": 88,
+    "purpose": "review",
+    "versions": {
+      "prompt": "p1",
+      "model": "m1",
+      "tools": "t1"
+    },
+    "historyBound": 2,
+    "source": {
+      "grant": "g_req",
+      "delegation": "dlg:run_1"
+    },
+    "terms": {
+      "capability": "party.propose",
+      "operations": [
+        "ProposeDisposition"
+      ],
+      "resource": {
+        "_tag": "Org",
+        "org": "org_acme"
+      },
+      "expires": null
+    },
+    "requester": "p_req",
+    "provenance": {
+      "root": {
+        "_tag": "Agent",
+        "run": "run_1",
+        "accountable": "p_req"
+      },
+      "onBehalfOf": "p_req",
+      "grants": [
+        {
+          "grant": "g_req",
+          "delegation": "dlg:run_1"
+        }
+      ],
+      "chain": [
+        {
+          "by": {
+            "_tag": "Agent",
+            "run": "run_1"
+          },
+          "cause": {
+            "_tag": "SagaStep",
+            "saga": "ReviewAssist",
+            "key": "run_1",
+            "step": "step2"
+          }
+        }
+      ]
+    }
+  }
+]

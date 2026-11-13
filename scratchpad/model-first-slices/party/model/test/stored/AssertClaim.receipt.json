@@ -1,0 +1,87 @@
+{
+  "stream": "Claim/claim_1",
+  "version": 2,
+  "events": [
+    {
+      "_tag": "ClaimAsserted",
+      "org": "org_acme",
+      "proposition": {
+        "_tag": "HasIdentifier",
+        "party": "party_dana",
+        "scheme": "email",
+        "value": "dana@acme.test"
+      },
+      "signals": [
+        {
+          "source": "mailbox:intake",
+          "excerpt": "From: Dana Smith <dana@acme.test>"
+        },
+        {
+          "source": "crm",
+          "excerpt": "dana@acme.test on file"
+        }
+      ],
+      "provenance": {
+        "root": {
+          "_tag": "Human",
+          "principal": "p_intake"
+        },
+        "onBehalfOf": "p_intake",
+        "grants": [
+          {
+            "grant": "g_intake",
+            "delegation": null
+          },
+          {
+            "grant": "g_intake_propose",
+            "delegation": null
+          }
+        ],
+        "chain": []
+      }
+    },
+    {
+      "_tag": "ReviewRequested",
+      "run": "review:claim_1:1",
+      "org": "org_acme",
+      "proposition": {
+        "_tag": "HasIdentifier",
+        "party": "party_dana",
+        "scheme": "email",
+        "value": "dana@acme.test"
+      },
+      "signals": [
+        {
+          "source": "mailbox:intake",
+          "excerpt": "From: Dana Smith <dana@acme.test>"
+        },
+        {
+          "source": "crm",
+          "excerpt": "dana@acme.test on file"
+        }
+      ],
+      "evidenceRevision": 1,
+      "provenance": {
+        "root": {
+          "_tag": "Human",
+          "principal": "p_intake"
+        },
+        "onBehalfOf": "p_intake",
+        "grants": [
+          {
+            "grant": "g_intake",
+            "delegation": null
+          },
+          {
+            "grant": "g_intake_propose",
+            "delegation": null
+          }
+        ],
+        "chain": []
+      }
+    }
+  ],
+  "reply": {
+    "reviewRun": "review:claim_1:1"
+  }
+}

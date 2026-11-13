@@ -10,6 +10,7 @@
     "./Run/ContinueAtBound.policy": "./src/Run/ContinueAtBound.policy.ts",
     "./Run/GrantOnRequest.policy": "./src/Run/GrantOnRequest.policy.ts",
     "./Run/OpenChildOnRequest.policy": "./src/Run/OpenChildOnRequest.policy.ts",
+    "./Run/ResumeParent.policy": "./src/Run/ResumeParent.policy.ts",
     "./Run/SessionRuns.view": "./src/Run/SessionRuns.view.ts",
     "./Runs.handlers": "./src/Runs.handlers.ts",
     "./Runs.model": "./src/Runs.model.ts",

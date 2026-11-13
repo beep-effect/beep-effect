@@ -14,6 +14,10 @@ import {
   Root,
 } from "@proto/kernel/Invocation";
 import { RunActivated } from "@proto/runs-contract/Run/ActivateRun.command";
+import { AwaitApproval, RunAwaitingApproval } from "@proto/runs-contract/Run/AwaitApproval.command";
+import { ChildRunFinished } from "@proto/runs-contract/Run/ChildFinished.command";
+import { CompleteRun, RunCompleted } from "@proto/runs-contract/Run/CompleteRun.command";
+import { ConcludeRun } from "@proto/runs-contract/Run/ConcludeRun.command";
 import { BudgetExceeded } from "@proto/runs-contract/Run/BudgetExceeded.rejection";
 import { ChildGrantWidens, ChildRequested, DelegateRun } from "@proto/runs-contract/Run/DelegateRun.command";
 import { NotThisRun } from "@proto/runs-contract/Run/NotThisRun.rejection";
@@ -35,7 +39,7 @@ import { SessionRuns } from "@proto/runs-model/Run/SessionRuns.view";
 import { RunsHandlers } from "@proto/runs-model/Runs.handlers";
 import { RunsModel } from "@proto/runs-model/Runs.model";
 
-const { call, fail, given, provide, rejected, state, succeed, then, view, when } = Story;
+const { call, fail, given, provide, rejected, replied, state, succeed, then, view, when } = Story;
 const as = (invocation: Invocation) => provide(CurrentInvocation, invocation);
 
 const story = Story.make(RunsModel, { layer: RunsHandlers, stub: [Authority] });
@@ -335,7 +339,9 @@ it.effect("a run at its history bound continues as a new run, and the session's 
         next: RunId.make("run_1~1"),
         lineage: RunId.make("run_1"),
         generation: 1,
+        parent: null,
         remaining: 100,
+        reservations: [],
         purpose: "review",
         versions,
         historyBound: 2,
@@ -363,9 +369,11 @@ it.effect("a run at its history bound continues as a new run, and the session's 
         previous: RunId.make("run_1"),
         lineage: RunId.make("run_1"),
         generation: 1,
+        parent: null,
         purpose: "review",
         versions,
         allowance: 100,
+        reservations: [],
         historyBound: 2,
         source: nextSource,
         terms: parentTerms,
@@ -385,3 +393,181 @@ it.effect("a run at its history bound continues as a new run, and the session's 
     }),
   );
 });
+
+it.effect("completing a run releases its open reservations, so a finished run holds no budget", () =>
+  story(
+    ...active(100),
+    as(asRun("run_1", "dlg:run_1")),
+    when(run1, new ReserveBudget({ reservation: reservation("r1"), units: 60 })),
+    then(run1, new BudgetReserved({ session, reservation: reservation("r1"), units: 60, remaining: 40, provenance: self("run_1", "dlg:run_1") })),
+    when(run1, new CompleteRun({ outcome: "done" })),
+    then(run1, new RunCompleted({ session, outcome: "done", released: 60, provenance: self("run_1", "dlg:run_1") })),
+    state(run1, (current) => {
+      expect(current).toMatchObject({
+        _tag: "Completed",
+        run: { budget: { allowance: 100, reserved: 0, spent: 0 }, reservations: [] },
+      });
+    }),
+  ),
+);
+
+it.effect("a child that finishes resumes its parent, which keeps what the child did not spend", () => {
+  const child = AgentRun.ref("run_child");
+  const childTerms = terms(["ProposeDisposition"]);
+  const childSource = GrantRef.make({ grant: GrantId.make("g_req"), delegation: DelegationId.make("dlg:run_1") });
+  const asChild = asRun("run_child", "dlg:run_child", childTerms);
+  return story(
+    ...active(100),
+    as(asRun("run_1", "dlg:run_1")),
+    when(
+      run1,
+      new DelegateRun({
+        child: RunId.make("run_child"),
+        delegation: DelegationId.make("dlg:run_child"),
+        purpose: "sub-review",
+        allowance: 30,
+        terms: childTerms,
+      }),
+    ),
+    then(
+      run1,
+      new ChildRequested({
+        session,
+        child: RunId.make("run_child"),
+        delegation: DelegationId.make("dlg:run_child"),
+        purpose: "sub-review",
+        allowance: 30,
+        terms: childTerms,
+        versions,
+        historyBound: 20,
+        source: childSource,
+        provenance: self("run_1", "dlg:run_1"),
+      }),
+    ),
+    call(Authority.grantRun, { run: RunId.make("run_child"), source: childSource }),
+    succeed(Authority.grantRun, {
+      delegation: DelegationId.make("dlg:run_child"),
+      accountable: PrincipalId.make("p_req"),
+      provenance: provenanceOf(asChild),
+    }),
+    then(
+      child,
+      new ChildRunOpened({
+        session,
+        parent: RunId.make("run_1"),
+        purpose: "sub-review",
+        versions,
+        allowance: 30,
+        historyBound: 20,
+        source: childSource,
+        terms: childTerms,
+        delegation: DelegationId.make("dlg:run_child"),
+        accountable: PrincipalId.make("p_req"),
+        requester: PrincipalId.make("p_req"),
+        runProvenance: provenanceOf(asChild),
+        provenance: extend(self("run_1", "dlg:run_1"), hopOn("OpenChildOnRequest", "AgentRun/run_1", 3, "ChildRequested")),
+      }),
+    ),
+    as(asChild),
+    when(child, new ReserveBudget({ reservation: reservation("c1"), units: 20 })),
+    then(child, new BudgetReserved({ session, reservation: reservation("c1"), units: 20, remaining: 10, provenance: provenanceOf(asChild) })),
+    when(child, new SettleUsage({ reservation: reservation("c1"), units: 12 })),
+    then(
+      child,
+      new UsageSettled({ session, reservation: reservation("c1"), reserved: 20, units: 12, remaining: 18, provenance: provenanceOf(asChild) }),
+    ),
+    when(child, new CompleteRun({ outcome: "done" })),
+    then(child, new RunCompleted({ session, outcome: "done", released: 0, provenance: provenanceOf(asChild) })),
+    // The policy reads the finished child and tells its parent: 18 of 30 come back.
+    then(
+      run1,
+      new ChildRunFinished({
+        session,
+        child: RunId.make("run_child"),
+        allowance: 30,
+        spent: 12,
+        outcome: "done",
+        provenance: extend(provenanceOf(asChild), hopOn("ResumeParent", "AgentRun/run_child", 4, "RunCompleted")),
+      }),
+    ),
+    state(run1, (current) => {
+      expect(current).toMatchObject({ _tag: "Running", run: { budget: { allowance: 100, allocated: 0, spent: 12 } } });
+    }),
+    as(asRun("run_1", "dlg:run_1")),
+    when(run1, new ReserveBudget({ reservation: reservation("p1"), units: 88 })),
+    then(run1, new BudgetReserved({ session, reservation: reservation("p1"), units: 88, remaining: 0, provenance: self("run_1", "dlg:run_1") })),
+  );
+});
+
+it.effect("a fact that decided the run's subject concludes it under its own provenance, once", () => {
+  const factHop = byProcess(
+    "ClaimDecisionInbox",
+    Cause.cases.Fact.make({ producer: "party", contract: "ClaimDecided", version: 1, fact: "claim_1:decided" }),
+  );
+  return story(
+    ...active(100),
+    as(asRun("run_1", "dlg:run_1")),
+    when(run1, new ReserveBudget({ reservation: reservation("r1"), units: 10 })),
+    then(run1, new BudgetReserved({ session, reservation: reservation("r1"), units: 10, remaining: 90, provenance: self("run_1", "dlg:run_1") })),
+    when(run1, new AwaitApproval()),
+    then(run1, new RunAwaitingApproval({ session, provenance: self("run_1", "dlg:run_1") })),
+    when(run1, new ConcludeRun({ outcome: "accepted", hop: factHop })),
+    then(run1, new RunCompleted({ session, outcome: "accepted", released: 10, provenance: extend(self("run_1", "dlg:run_1"), factHop) })),
+    // The same fact again finds the run finished and records nothing.
+    when(run1, new ConcludeRun({ outcome: "accepted", hop: factHop })),
+    then(run1),
+    state(run1, (current) => {
+      expect(current).toMatchObject({ _tag: "Completed", outcome: "accepted", run: { budget: { reserved: 0 } } });
+    }),
+  );
+});
+
+// Idempotency (D14), pinned as the library behaves today: the receipt is looked up by command
+// id before the command is decoded, authorized or decided (InMemory.ts:646-650).
+it.effect("a reused command id with the same payload returns the first receipt and records nothing", () =>
+  story(
+    ...active(100),
+    as(asRun("run_1", "dlg:run_1")),
+    when(run1, new ReserveBudget({ reservation: reservation("r1"), units: 40 }), { commandId: "reserve-1" }),
+    then(run1, new BudgetReserved({ session, reservation: reservation("r1"), units: 40, remaining: 60, provenance: self("run_1", "dlg:run_1") })),
+    replied({ remaining: 60 }),
+    when(run1, new ReserveBudget({ reservation: reservation("r1"), units: 40 }), { commandId: "reserve-1" }),
+    then(run1),
+    replied({ remaining: 60 }),
+  ),
+);
+
+it.effect("PINNED HAZARD: a reused command id with a different payload returns the first request's receipt", () =>
+  story(
+    ...active(100),
+    as(asRun("run_1", "dlg:run_1")),
+    when(run1, new ReserveBudget({ reservation: reservation("r1"), units: 40 }), { commandId: "reserve-1" }),
+    then(run1, new BudgetReserved({ session, reservation: reservation("r1"), units: 40, remaining: 60, provenance: self("run_1", "dlg:run_1") })),
+    replied({ remaining: 60 }),
+    // A different reservation under the same id: not decided, not refused, answered with the old reply.
+    when(run1, new ReserveBudget({ reservation: reservation("r2"), units: 50 }), { commandId: "reserve-1" }),
+    then(run1),
+    replied({ remaining: 60 }),
+    state(run1, (current) => {
+      expect(current).toMatchObject({ run: { reservations: [{ reservation: "r1", units: 40 }] } });
+    }),
+  ),
+);
+
+it.effect("PINNED HAZARD: a caller without the grant, reusing the id, receives the stored result", () =>
+  story(
+    ...active(100),
+    as(asRun("run_1", "dlg:run_1")),
+    when(run1, new ReserveBudget({ reservation: reservation("r1"), units: 40 }), { commandId: "reserve-1" }),
+    then(run1, new BudgetReserved({ session, reservation: reservation("r1"), units: 40, remaining: 60, provenance: self("run_1", "dlg:run_1") })),
+    replied({ remaining: 60 }),
+    // The requester is not the run, so a fresh id is refused ...
+    as(requester),
+    when(run1, new ReserveBudget({ reservation: reservation("r9"), units: 1 })),
+    rejected(new NotThisRun()),
+    // ... but the reused id is answered from the receipt, before any check runs.
+    when(run1, new ReserveBudget({ reservation: reservation("r1"), units: 40 }), { commandId: "reserve-1" }),
+    then(run1),
+    replied({ remaining: 60 }),
+  ),
+);

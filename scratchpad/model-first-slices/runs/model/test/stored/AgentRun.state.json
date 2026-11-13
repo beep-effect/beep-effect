@@ -1,0 +1,63 @@
+{
+  "_tag": "Running",
+  "run": {
+    "session": "session_1",
+    "lineage": "run_1",
+    "generation": 1,
+    "parent": null,
+    "previous": "run_1",
+    "purpose": "review",
+    "versions": {
+      "prompt": "p1",
+      "model": "m1",
+      "tools": "t1"
+    },
+    "requester": "p_req",
+    "accountable": "p_req",
+    "source": {
+      "grant": "g_req",
+      "delegation": "dlg:run_1"
+    },
+    "terms": {
+      "capability": "party.propose",
+      "operations": [
+        "ProposeDisposition"
+      ],
+      "resource": {
+        "_tag": "Org",
+        "org": "org_acme"
+      },
+      "expires": null
+    },
+    "delegation": "dlg:run_1~1",
+    "provenance": {
+      "root": {
+        "_tag": "Agent",
+        "run": "run_1~1",
+        "accountable": "p_req"
+      },
+      "onBehalfOf": "p_req",
+      "grants": [
+        {
+          "grant": "g_req",
+          "delegation": "dlg:run_1~1"
+        }
+      ],
+      "chain": []
+    },
+    "budget": {
+      "allowance": 88,
+      "reserved": 30,
+      "spent": 0,
+      "allocated": 0
+    },
+    "reservations": [
+      {
+        "reservation": "r2",
+        "units": 30
+      }
+    ],
+    "steps": 0,
+    "historyBound": 2
+  }
+}

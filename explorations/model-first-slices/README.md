@@ -29,11 +29,14 @@ name is still open (D18).
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
 2. [`CAPTURE.md`](./CAPTURE.md) - the operator's brief and ground rules.
 3. [`RESEARCH.md`](./RESEARCH.md) - the proposal, the prototype, the outside reviews.
-4. [`DECISIONS.md`](./DECISIONS.md) - grilling log, D1 to D31.
+4. [`DECISIONS.md`](./DECISIONS.md) - grilling log, D1 to D36.
 5. [`BRIEF.md`](./BRIEF.md) - shaped pitch, awaiting the operator's confirmation.
 
 ## Trail
 
+- 2026-11-13: phase 3 verified (13 packages type-check, 98 tests pass); notes in `research/10`.
+  D32 to D36 settled. Committed locally. Phase 4 (web package, proof inventory, deployment
+  descriptors as data) launched.
 - 2026-11-13: phase 2 verified (13 packages type-check, 68 tests pass); notes in `research/09`.
   D29 to D31 settled. Work committed locally on `explore/model-first-slices`, not pushed. Phase 3
   (a second product context, an integration fact, projection rebuild, stored-format compatibility)

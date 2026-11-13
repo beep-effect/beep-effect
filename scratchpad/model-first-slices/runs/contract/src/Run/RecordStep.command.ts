@@ -5,7 +5,9 @@ import { GrantRef } from "@proto/kernel/Invocation";
 import { Session } from "@proto/kernel/Session.middleware";
 import * as S from "effect/Schema";
 import { NotThisRun } from "./NotThisRun.rejection.ts";
+import { HeldReservation } from "./Reservation.id.ts";
 import { RunEvent } from "./RunEvent.ts";
+import { Since } from "./Since.ts";
 import { RunNotRunning } from "./RunNotRunning.rejection.ts";
 import { RunVersions } from "./RunVersions.ts";
 
@@ -19,7 +21,8 @@ export class StepRecorded extends Domain.Event("StepRecorded", RunEvent.fields({
 
 /**
  * The fact: the run reached its history bound and continues as `next`,
- * carrying its remaining budget, purpose, versions and grant forward.
+ * carrying its parent, remaining budget, open reservations, purpose,
+ * versions and grant forward.
  *
  * @category events
  * @since 0.0.0
@@ -30,7 +33,9 @@ export class RunContinued extends Domain.Event(
     next: RunId,
     lineage: RunId,
     generation: S.Int,
+    parent: Since.phase3(S.NullOr(RunId), null),
     remaining: S.Int,
+    reservations: Since.phase3(S.Array(HeldReservation), []),
     purpose: S.String,
     versions: RunVersions,
     historyBound: S.Int,

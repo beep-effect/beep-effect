@@ -9,7 +9,9 @@
     "./Run/AwaitApproval.command": "./src/Run/AwaitApproval.command.ts",
     "./Run/BudgetExceeded.rejection": "./src/Run/BudgetExceeded.rejection.ts",
     "./Run/CancelRun.command": "./src/Run/CancelRun.command.ts",
+    "./Run/ChildFinished.command": "./src/Run/ChildFinished.command.ts",
     "./Run/CompleteRun.command": "./src/Run/CompleteRun.command.ts",
+    "./Run/ConcludeRun.command": "./src/Run/ConcludeRun.command.ts",
     "./Run/DelegateRun.command": "./src/Run/DelegateRun.command.ts",
     "./Run/ExhaustRun.command": "./src/Run/ExhaustRun.command.ts",
     "./Run/NotThisRun.rejection": "./src/Run/NotThisRun.rejection.ts",
@@ -29,6 +31,7 @@
     "./Run/Session.id": "./src/Run/Session.id.ts",
     "./Run/SessionRuns.read": "./src/Run/SessionRuns.read.ts",
     "./Run/SettleUsage.command": "./src/Run/SettleUsage.command.ts",
+    "./Run/Since": "./src/Run/Since.ts",
     "./Run/UnknownReservation.rejection": "./src/Run/UnknownReservation.rejection.ts",
     "./Runs.gateway": "./src/Runs.gateway.ts",
     "./RunsApi.contract": "./src/RunsApi.contract.ts"

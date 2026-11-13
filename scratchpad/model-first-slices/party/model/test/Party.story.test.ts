@@ -6,7 +6,7 @@ import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { ReadmissionRefused } from "@proto/kernel/ReadmissionRefused.rejection";
 import { AcceptClaim, AdmissionGateUnmet, ClaimAccepted } from "@proto/party-contract/Claim/AcceptClaim.command";
 import { ClaimAsserted } from "@proto/party-contract/Claim/AssertClaim.command";
-import { MergeRefused } from "@proto/party-contract/Claim/RecordMergeRefused.command";
+import { MergeRefused, MergeRefusal } from "@proto/party-contract/Claim/RecordMergeRefused.command";
 import { PartyIntake, PartyPropose, PartyRead, PartyReview } from "@proto/party-contract/Party.capabilities";
 import { PartiesMerged } from "@proto/party-contract/Party/MergeParties.command";
 import { PartyRegistered, RegisterParty } from "@proto/party-contract/Party/RegisterParty.command";
@@ -70,7 +70,7 @@ it.effect("a policy's command runs under the reviewer's root, re-admitted for it
     asserted(),
     as(reviewer),
     when(claim, new AcceptClaim()),
-    then(claim, new ClaimAccepted({ proposition: sameParty, corroboration: 2, provenance: provenanceOf(reviewer) })),
+    then(claim, new ClaimAccepted({ proposition: sameParty, provenance: provenanceOf(reviewer) })),
     // The policy asks the authority context for this hop, and sends under what comes back.
     call(Authority.readmit, { provenance: provenanceOf(reviewer), hop: mergeHop(2) }),
     succeed(Authority.readmit, merging),
@@ -85,14 +85,14 @@ it.effect("a grant revoked between two hops stops the second hop, and the refusa
     asserted(),
     as(reviewer),
     when(claim, new AcceptClaim()),
-    then(claim, new ClaimAccepted({ proposition: sameParty, corroboration: 2, provenance: provenanceOf(reviewer) })),
+    then(claim, new ClaimAccepted({ proposition: sameParty, provenance: provenanceOf(reviewer) })),
     call(Authority.readmit, { provenance: provenanceOf(reviewer), hop: mergeHop(2) }),
     // The review grant was revoked after the accept: authority re-admits with the read grant alone.
     succeed(Authority.readmit, readmitted(reviewer, mergeHop(2), [onOrg("g_rev_read", PartyRead, acme)])),
     then(
       claim,
       new MergeRefused({
-        reason: "missing-grant:party.review",
+        reason: MergeRefusal.cases.MissingGrant.make({ capability: "party.review" }),
         provenance: extend(provenanceOf(reviewer), mergeHop(2)),
       }),
     ),
@@ -106,10 +106,10 @@ it.effect("a refused re-admission and a veto are recorded, never dropped", () =>
     asserted(),
     as(reviewer),
     when(claim, new AcceptClaim()),
-    then(claim, new ClaimAccepted({ proposition: sameParty, corroboration: 2, provenance: provenanceOf(reviewer) })),
+    then(claim, new ClaimAccepted({ proposition: sameParty, provenance: provenanceOf(reviewer) })),
     call(Authority.readmit, { provenance: provenanceOf(reviewer), hop: mergeHop(2) }),
     fail(Authority.readmit, new ReadmissionRefused({ reason: "lapsed", lapsed: [] })),
-    then(claim, new MergeRefused({ reason: "readmission:lapsed", provenance: extend(provenanceOf(reviewer), mergeHop(2)) })),
+    then(claim, new MergeRefused({ reason: MergeRefusal.cases.Readmission.make({ reason: "lapsed" }), provenance: extend(provenanceOf(reviewer), mergeHop(2)) })),
   ),
 );
 
@@ -119,12 +119,12 @@ it.effect("a merge the survivor cannot take is a recorded veto", () =>
     asserted(),
     as(reviewer),
     when(claim, new AcceptClaim()),
-    then(claim, new ClaimAccepted({ proposition: sameParty, corroboration: 2, provenance: provenanceOf(reviewer) })),
+    then(claim, new ClaimAccepted({ proposition: sameParty, provenance: provenanceOf(reviewer) })),
     call(Authority.readmit, { provenance: provenanceOf(reviewer), hop: mergeHop(2) }),
     succeed(Authority.readmit, readmitted(reviewer, mergeHop(2))),
     then(
       claim,
-      new MergeRefused({ reason: "vetoed:not-registered", provenance: extend(provenanceOf(reviewer), mergeHop(2)) }),
+      new MergeRefused({ reason: MergeRefusal.cases.Vetoed.make({ reason: "not-registered" }), provenance: extend(provenanceOf(reviewer), mergeHop(2)) }),
     ),
   ),
 );

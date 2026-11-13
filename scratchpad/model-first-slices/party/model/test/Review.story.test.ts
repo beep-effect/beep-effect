@@ -79,10 +79,16 @@ const rationale = "the intake mailbox names the address";
 const proposal = { disposition: "accept" as const, rationale, run: run1, evidenceRevision: 1 };
 const digest = proposalDigest(proposal);
 
+/** What the runs context answers each report with: the live run, here unchanged. */
+const liveAs = (run: RunId, accountable: string, grant: string) => ({
+  run,
+  provenance: provenanceOf(runInvocation(run, accountable, grant)),
+});
+
 /** The steps of a run that is opened, reserves, assesses and settles, up to its proposal. */
-const assessUpToPropose = (run: RunId) => [
+const assessUpToPropose = (run: RunId, live = liveAs(run, "p_intake", "g_intake_propose"), stepped = live) => [
   call(ReviewRuns.reserve, { run, units: 40 }),
-  succeed(ReviewRuns.reserve, undefined),
+  succeed(ReviewRuns.reserve, live),
   call(Reasoner.assess, { run, step: "assess", idempotencyKey: `${run}:assess`, promptVersion: "review-v1", maxAllowance: 40 }),
   succeed(Reasoner.assess, {
     assessment: { disposition: "accept", rationale },
@@ -90,9 +96,9 @@ const assessUpToPropose = (run: RunId) => [
     receipt: { idempotencyKey: `${run}:assess`, promptVersion: "review-v1", model: "fixture" },
   }),
   call(ReviewRuns.settle, { run, units: 12 }),
-  succeed(ReviewRuns.settle, undefined),
+  succeed(ReviewRuns.settle, live),
   call(ReviewRuns.step, { run, step: "assess" }),
-  succeed(ReviewRuns.step, undefined),
+  succeed(ReviewRuns.step, stepped),
 ];
 
 const assertedByIntake = [
@@ -126,7 +132,7 @@ const assertedByIntake = [
   succeed(ReviewRuns.open, { provenance: provenanceOf(runInvocation(run1, "p_intake", "g_intake_propose")) }),
 ];
 
-it.effect("a review run proposes under its delegation; a person approves; the approval decides the claim and completes the run", () => {
+it.effect("a review run proposes under its delegation and waits; a person's approval decides the claim", () => {
   const runProvenance = provenanceOf(runInvocation(run1, "p_intake", "g_intake_propose"));
   const proposing = readmitted(runInvocation(run1, "p_intake", "g_intake_propose"), sagaHop(run1, "propose"));
   return story(
@@ -137,10 +143,11 @@ it.effect("a review run proposes under its delegation; a person approves; the ap
     // Rooted at the run and its accountable human; its only grant is the delegation.
     then(claim, new DispositionProposed({ ...proposal, digest, provenance: provenanceOf(proposing) })),
     call(ReviewRuns.awaitApproval, { run: run1 }),
-    succeed(ReviewRuns.awaitApproval, undefined),
-    saga(ReviewAssist, run1, { _tag: "Running" }),
+    succeed(ReviewRuns.awaitApproval, liveAs(run1, "p_intake", "g_intake_propose")),
+    // The executor's work ends at the wait; the runs context concludes the run from Party's fact.
+    saga(ReviewAssist, run1, { _tag: "Completed", result: undefined }),
     view(ClaimReview, claim, { status: "pending", reviews: [run1], proposal: { ...proposal, digest } }),
-    // One authenticated human command decides the claim and wakes the run.
+    // One authenticated human command decides the claim; no port call follows.
     as(reviewer),
     when(claim, new ApproveProposal({ digest, evidenceRevision: 1 }), { commandId: "approval_1" }),
     then(
@@ -156,9 +163,6 @@ it.effect("a review run proposes under its delegation; a person approves; the ap
         provenance: provenanceOf(reviewer),
       }),
     ),
-    call(ReviewRuns.complete, { run: run1, outcome: "approved:approval_1" }),
-    succeed(ReviewRuns.complete, undefined),
-    saga(ReviewAssist, run1, { _tag: "Completed", result: undefined }),
     view(ClaimReview, claim, { status: "accepted" }),
   );
 });
@@ -242,7 +246,7 @@ it.effect("a second review of the same claim is a second run; out of budget, it 
     call(ReviewRuns.reserve, { run: run2, units: 40 }),
     fail(ReviewRuns.reserve, new BudgetRefused({ remaining: 10 })),
     call(ReviewRuns.exhaust, { run: run2 }),
-    succeed(ReviewRuns.exhaust, undefined),
+    succeed(ReviewRuns.exhaust, { run: run2, provenance: run2Provenance }),
     saga(ReviewAssist, run2, { _tag: "Completed", result: undefined }),
     view(ClaimReview, claim, { reviews: [run1, run2] }),
   );
@@ -265,8 +269,29 @@ it.effect("a delegation revoked mid-run: the next hop is refused at re-admission
       }),
     ),
     call(ReviewRuns.refuse, { run: run1, reason: "readmission:lapsed" }),
-    succeed(ReviewRuns.refuse, undefined),
+    succeed(ReviewRuns.refuse, liveAs(run1, "p_intake", "g_intake_propose")),
     saga(ReviewAssist, run1, { _tag: "Completed", result: undefined }),
     view(ClaimReview, claim, { status: "pending", notes: [{ _tag: "ReviewRefused", run: run1, reason: "readmission:lapsed" }] }),
+  );
+});
+
+it.effect("a run that continues at its history bound is followed: the next step acts as the run it continued as", () => {
+  const next = RunId.make("review:claim_1:1~1");
+  const nextRun = runInvocation(next, "p_intake", "g_intake_propose");
+  // The saga stays keyed by the run it started as; the relayer is the live run.
+  const proposeHop = byAgent(next, sagaStep("ReviewAssist", run1, "propose"));
+  const proposing = readmitted(nextRun, proposeHop);
+  const continued = { run: next, provenance: provenanceOf(nextRun) };
+  return story(
+    ...assertedByIntake,
+    // The step report reached the bound: the runs context answers with the continuation.
+    ...assessUpToPropose(run1, liveAs(run1, "p_intake", "g_intake_propose"), continued),
+    // The proposal is made as the continuation, under its own delegation.
+    call(Authority.readmit, { provenance: provenanceOf(nextRun), hop: proposeHop }),
+    succeed(Authority.readmit, proposing),
+    then(claim, new DispositionProposed({ ...proposal, run: next, digest: proposalDigest({ ...proposal, run: next }), provenance: provenanceOf(proposing) })),
+    call(ReviewRuns.awaitApproval, { run: next, provenance: provenanceOf(nextRun) }),
+    succeed(ReviewRuns.awaitApproval, continued),
+    saga(ReviewAssist, run1, { _tag: "Completed", result: undefined }),
   );
 });

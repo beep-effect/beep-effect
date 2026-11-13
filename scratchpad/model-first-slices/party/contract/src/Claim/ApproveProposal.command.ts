@@ -51,7 +51,8 @@ export class ProposalApproved extends Domain.Event(
     evidenceRevision: S.Int,
     outcome: S.Literals(["accepted", "retracted"]),
     proposition: Proposition,
-    corroboration: S.Int,
+    // Widened in phase 3 (D22): every stored integer still reads.
+    corroboration: S.NullOr(S.Int),
   }),
 ) {}
 

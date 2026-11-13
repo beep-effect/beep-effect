@@ -2,6 +2,7 @@ import * as Domain from "@alchemy.run/domain";
 import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { Session } from "@proto/kernel/Session.middleware";
 import { ClaimNote, ClaimReviewInitial, ClaimReviewState } from "@proto/party-contract/Claim/ClaimReview.read";
+import { renderMergeRefusal } from "@proto/party-contract/Claim/RecordMergeRefused.command";
 import * as A from "effect/Array";
 import { Claim } from "./Claim.aggregate.ts";
 
@@ -56,7 +57,7 @@ export class ClaimReview extends Domain.View(
       }),
       MergeRefused: (view, event) => ({
         ...view,
-        notes: A.append(view.notes, ClaimNote.cases.MergeRefused.make({ reason: event.reason })),
+        notes: A.append(view.notes, ClaimNote.cases.MergeRefused.make({ reason: renderMergeRefusal(event.reason) })),
       }),
       ReviewRefused: (view, event) => ({
         ...view,

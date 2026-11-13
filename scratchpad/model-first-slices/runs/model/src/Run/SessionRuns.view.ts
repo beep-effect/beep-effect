@@ -48,6 +48,7 @@ export class SessionRuns extends Domain.View(
       ChildRunOpened: (view, event, { source }) => upsert(view, source.id, "running", { parent: event.parent }),
       ChildRunRefused: (view, _event, { source }) => upsert(view, source.id, "running"),
       ContinuationOpened: (view, event, { source }) => upsert(view, source.id, "running", { previous: event.previous }),
+      ChildRunFinished: (view, _event, { source }) => upsert(view, source.id, "running"),
     },
   },
   { description: "A session's chain of runs: requests, children and continuations, with their status." },

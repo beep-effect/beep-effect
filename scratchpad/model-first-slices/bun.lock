@@ -155,9 +155,16 @@
         "@alchemy.run/domain": "2.0.0-beta.87",
         "@proto/authority-contract": "workspace:*",
         "@proto/kernel": "workspace:*",
+        "@proto/party-contract": "workspace:*",
         "@proto/runs-contract": "workspace:*",
         "@proto/runs-model": "workspace:*",
         "effect": "4.1.4",
+      },
+      "devDependencies": {
+        "@effect/vitest": "4.1.4",
+        "@proto/authority-host": "workspace:*",
+        "@proto/authority-model": "workspace:*",
+        "vitest": "5.0.4",
       },
     },
     "runs/model": {

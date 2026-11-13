@@ -19,7 +19,7 @@ import { Party } from "@proto/party-model/Party/Party.aggregate";
 import { Reasoner } from "@proto/party-model/Review/Reasoner.external";
 import { ReviewRuns } from "@proto/party-model/Review/ReviewRuns.external";
 import { Authority } from "@proto/party-model/Authority.external";
-import { MergeRefused } from "@proto/party-contract/Claim/RecordMergeRefused.command";
+import { MergeRefused, MergeRefusal } from "@proto/party-contract/Claim/RecordMergeRefused.command";
 import * as DateTime from "effect/DateTime";
 import * as Layer from "effect/Layer";
 import { acme, globex, human, onOrg, readmitted, twoSources } from "./fixtures.ts";
@@ -80,11 +80,11 @@ it.effect("a grant on one record reaches that record only", () => {
     when(otherClaim, new AcceptClaim()),
     rejected(new MissingGrant({ capability: PartyReview.id, operation: "AcceptClaim" })),
     when(claim, new AcceptClaim()),
-    then(claim, new ClaimAccepted({ proposition: sameParty, corroboration: 2, provenance: provenanceOf(narrow) })),
+    then(claim, new ClaimAccepted({ proposition: sameParty, provenance: provenanceOf(narrow) })),
     // Re-admitted for the merge, the same grant reaches Claim/claim_1 only: the merge is refused, and recorded.
     call(Authority.readmit, { provenance: provenanceOf(narrow), hop: mergeHop }),
     succeed(Authority.readmit, readmitted(narrow, mergeHop)),
-    then(claim, new MergeRefused({ reason: "missing-grant:party.review", provenance: extend(provenanceOf(narrow), mergeHop) })),
+    then(claim, new MergeRefused({ reason: MergeRefusal.cases.MissingGrant.make({ capability: "party.review" }), provenance: extend(provenanceOf(narrow), mergeHop) })),
     then(dana),
   );
 });
@@ -132,11 +132,11 @@ it.effect("a merge runs under the reviewer's re-admitted grants, so a reviewer w
     given(claim, asserted),
     as(reviewer),
     when(claim, new AcceptClaim()),
-    then(claim, new ClaimAccepted({ proposition: sameParty, corroboration: 2, provenance: provenanceOf(reviewer) })),
+    then(claim, new ClaimAccepted({ proposition: sameParty, provenance: provenanceOf(reviewer) })),
     // The policy acts with no more authority than the root has now: the merge is refused, and recorded.
     call(Authority.readmit, { provenance: provenanceOf(reviewer), hop: mergeHop }),
     succeed(Authority.readmit, readmitted(reviewer, mergeHop)),
-    then(claim, new MergeRefused({ reason: "missing-grant:party.review", provenance: extend(provenanceOf(reviewer), mergeHop) })),
+    then(claim, new MergeRefused({ reason: MergeRefusal.cases.MissingGrant.make({ capability: "party.review" }), provenance: extend(provenanceOf(reviewer), mergeHop) })),
     then(dana),
   );
 });

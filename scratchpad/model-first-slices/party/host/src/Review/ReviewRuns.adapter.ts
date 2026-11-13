@@ -47,7 +47,6 @@ export const PartyReviewRuns = ReviewRuns.toLayer(
         report(call, RunReport.cases.Release.make({ reservation: ReservationId.make(reservation) })),
       step: ({ step, ...call }) => report(call, RunReport.cases.Step.make({ step })),
       awaitApproval: (call) => report(call, RunReport.cases.AwaitApproval.make({})),
-      complete: ({ outcome, ...call }) => report(call, RunReport.cases.Complete.make({ outcome })),
       exhaust: (call) => report(call, RunReport.cases.Exhausted.make({})),
       refuse: ({ reason, ...call }) => report(call, RunReport.cases.Refused.make({ reason })),
     };

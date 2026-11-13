@@ -31,6 +31,7 @@ import { PartyIntake, PartyPropose, PartyReview } from "@proto/party-contract/Pa
 import { Proposition } from "@proto/party-contract/Proposition";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import { identity } from "effect/Function";
 import * as S from "effect/Schema";
 import { reviewRun } from "../Review/ReviewPlan.ts";
@@ -137,14 +138,8 @@ export class Claim extends Domain.Aggregate(
       AcceptClaim: Effect.fn(function* (state, command, { stream, now }) {
         const invocation = yield* requireGranted(PartyReview, command._tag, state, stream, now);
         const pending = yield* requirePending(state);
-        const gate = yield* requireAdmission(pending);
-        return [
-          new ClaimAccepted({
-            proposition: pending.proposition,
-            corroboration: gate.have,
-            provenance: provenanceOf(invocation),
-          }),
-        ];
+        yield* requireAdmission(pending);
+        return [new ClaimAccepted({ proposition: pending.proposition, provenance: provenanceOf(invocation) })];
       }),
 
       RetractClaim: Effect.fn(function* (state, command, { stream, now }) {
@@ -298,6 +293,14 @@ export class Claim extends Domain.Aggregate(
         ),
       MergeRefused: identity,
       ReviewRefused: identity,
+    },
+    reply: {
+      // The review run the assertion asked for, so a caller can follow it.
+      AssertClaim: (_, events) => ({
+        reviewRun: O.getOrNull(
+          A.findFirst(events, (event) => (event._tag === "ReviewRequested" ? O.some(event.run) : O.none())),
+        ),
+      }),
     },
   },
   { description: "A proposition about parties, from assertion through review to acceptance or retraction." },

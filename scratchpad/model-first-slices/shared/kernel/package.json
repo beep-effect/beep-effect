@@ -7,10 +7,12 @@
   "exports": {
     "./Capability": "./src/Capability.ts",
     "./CurrentInvocation.context": "./src/CurrentInvocation.context.ts",
+    "./Fact": "./src/Fact.ts",
     "./Ids": "./src/Ids.ts",
     "./Invocation": "./src/Invocation.ts",
     "./MissingGrant.rejection": "./src/MissingGrant.rejection.ts",
     "./ReadmissionRefused.rejection": "./src/ReadmissionRefused.rejection.ts",
+    "./RequestKey": "./src/RequestKey.ts",
     "./Session.middleware": "./src/Session.middleware.ts"
   },
   "dependencies": {

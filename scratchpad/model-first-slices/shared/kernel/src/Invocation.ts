@@ -50,7 +50,8 @@ export type Relayer = typeof Relayer.Type;
 
 /**
  * Why a hop happened: a committed event a policy reacted to, a saga step,
- * or the boundary admitting a process under a credential.
+ * the boundary admitting a process under a credential, or an integration
+ * fact another context published.
  *
  * @category models
  * @since 0.0.0
@@ -59,6 +60,7 @@ export const Cause = S.TaggedUnion({
   Event: { stream: S.String, seq: S.Int, event: S.String },
   SagaStep: { saga: S.String, key: S.String, step: S.String },
   Session: { scheme: S.String },
+  Fact: { producer: S.String, contract: S.String, version: S.Int, fact: S.String },
 });
 /**
  * @category models

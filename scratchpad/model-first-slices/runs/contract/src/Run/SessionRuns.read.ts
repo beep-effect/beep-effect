@@ -6,6 +6,7 @@ import { RunActivated } from "./ActivateRun.command.ts";
 import { RunAwaitingApproval } from "./AwaitApproval.command.ts";
 import { RunCancelled } from "./CancelRun.command.ts";
 import { RunCompleted } from "./CompleteRun.command.ts";
+import { ChildRunFinished } from "./ChildFinished.command.ts";
 import { ChildRequested } from "./DelegateRun.command.ts";
 import { RunExhausted } from "./ExhaustRun.command.ts";
 import { ChildRunOpened } from "./OpenChildRun.command.ts";
@@ -91,6 +92,7 @@ export class SessionRunsRead extends Domain.View("SessionRuns", {
     ChildRunOpened,
     ChildRunRefused,
     ContinuationOpened,
+    ChildRunFinished,
   ],
   middleware: [Session],
   rejects: [NotInSession],

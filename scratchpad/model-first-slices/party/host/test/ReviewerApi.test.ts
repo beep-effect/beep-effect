@@ -31,8 +31,8 @@ const dana = PartyId.make("party_dana");
 const duplicate = PartyId.make("party_dup");
 const sameParty = Proposition.cases.SameParty.make({ survivor: dana, absorbed: duplicate });
 const twoSources = [
-  EvidenceSignal.make({ source: "mailbox:intake", excerpt: "Dana Smith is D. Smith" }),
-  EvidenceSignal.make({ source: "crm", excerpt: "same phone number" }),
+  EvidenceSignal.make({ source: "mailbox:intake", quote: "Dana Smith is D. Smith" }),
+  EvidenceSignal.make({ source: "crm", quote: "same phone number" }),
 ];
 
 /** The grants each principal holds, issued by the authority context. */

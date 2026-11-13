@@ -9,6 +9,7 @@
     "./Evidence/FixtureContactSource.adapter": "./src/Evidence/FixtureContactSource.adapter.ts",
     "./Evidence/MailboxPoller.handler": "./src/Evidence/MailboxPoller.handler.ts",
     "./Evidence/MailboxPoller.singleton": "./src/Evidence/MailboxPoller.singleton.ts",
+    "./Facts/PartyFactsFeed.adapter": "./src/Facts/PartyFactsFeed.adapter.ts",
     "./Host": "./src/Host.ts",
     "./Review/FixtureReasoner.adapter": "./src/Review/FixtureReasoner.adapter.ts",
     "./Review/ReasonerTape": "./src/Review/ReasonerTape.ts",

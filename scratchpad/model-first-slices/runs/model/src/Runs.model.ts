@@ -3,6 +3,7 @@ import { AgentRun } from "./Run/AgentRun.aggregate.ts";
 import { ContinueAtBound } from "./Run/ContinueAtBound.policy.ts";
 import { GrantOnRequest } from "./Run/GrantOnRequest.policy.ts";
 import { OpenChildOnRequest } from "./Run/OpenChildOnRequest.policy.ts";
+import { ResumeParent } from "./Run/ResumeParent.policy.ts";
 import { SessionRuns } from "./Run/SessionRuns.view.ts";
 
 /**
@@ -18,7 +19,7 @@ export class RunsModel extends Domain.Model(
   {
     aggregates: [AgentRun],
     views: [SessionRuns],
-    policies: [GrantOnRequest, OpenChildOnRequest, ContinueAtBound],
+    policies: [GrantOnRequest, OpenChildOnRequest, ContinueAtBound, ResumeParent],
   },
   { description: "Agent runs: lifecycle, budget, grants, lineage and continuation." },
 ) {}

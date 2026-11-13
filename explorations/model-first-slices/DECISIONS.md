@@ -513,3 +513,74 @@ host authenticate?
 
 **Rationale:** The remote form can be tested only against a real pool. Rejected: designing it
 before phase 3. Recommended answer accepted.
+
+## 2026-11-13 — Phase 3 of the rework
+
+Phase 3 is built: 13 packages type-check and 98 tests in 28 files pass, re-run by the orchestrating
+session. Its notes are in `research/10-rework-phase3-notes.md`. It fixed the four defects phase 2
+left, and built: a `ClaimDecided` integration fact from Party to runs with an inbox; a directory
+store that tracks its position per source stream, with a rebuild that serves the old generation
+until it switches; frozen stored-format fixtures with the five kinds of change converted on read;
+tests pinning command-id reuse.
+
+Two library facts it pinned as tests: a reused command id is answered from the stored receipt
+before the payload is decoded or the grant checked; and a top-level event field cannot be renamed
+with the library's Event builder. Both are upstream asks.
+
+## 2026-11-13 — D32 authority for a fact-started command
+
+**Question:** Under what authority does a command run when an integration fact starts it?
+
+**Answer:** Under the consuming record's own provenance plus a hop naming the fact (producer,
+contract, version, fact id). Facts carry no provenance and nobody is re-admitted.
+
+**Rationale:** The consumer acts on its own record because the producer committed a fact; no grant
+in the consumer's world authorises "a claim was decided" (`research/10`, D11 entry). Rejected:
+facts carrying a publishable provenance summary that the consumer re-admits. Recommended answer
+accepted.
+
+## 2026-11-13 — D33 outbox placement
+
+**Question:** D11 put the outbox in the producer's host. Phase 3 built it in the model. Where does
+it live?
+
+**Answer:** In the model. This amends D11's wording: translating private events into public facts
+is a model-level projection into a `Domain.Stream`, covered by stories. The host serves that stream
+as a feed. No second delivery mechanism is written.
+
+**Rationale:** The library's stream already appends nothing twice for a replayed or redelivered
+input (`research/10`, D11 entry). Rejected: a host-owned outbox table. Recommended answer accepted.
+
+## 2026-11-13 — D34 retiring a fact version
+
+**Question:** When may a producer stop publishing an old fact version?
+
+**Answer:** When no deployment descriptor consumes it. Each slice's descriptor (D13) declares the
+fact versions it consumes. A producer may drop a version once no descriptor in any app lists it. A
+checker in the proof inventory enforces this.
+
+**Rationale:** Retirement needs a registry of consumers and their versions, and the descriptors are
+that registry. Rejected: a fixed deprecation window regardless of consumers; never retiring a
+version. Recommended answer accepted.
+
+## 2026-11-13 — D35 saga activity results
+
+**Question:** A saga's activity results are a stored format D22 did not list. What is the rule?
+
+**Answer:** They join the D22 compatibility contract. A compatible change converts on read, as for
+events. An incompatible change gets a new saga version, and runs in flight finish on the version
+they started.
+
+**Rationale:** Phase 3 changed the review saga's results, and a run in flight across that change
+would fail to decode them (`research/10`, findings). Rejected: no rule, with deploys waiting until
+no run of the saga is in flight. Recommended answer accepted.
+
+## 2026-11-13 — D36 tenant in a request key
+
+**Question:** Command ids are derived from tenant, operation and a request fingerprint. What is the
+tenant?
+
+**Answer:** The org, the same resource scope grants are checked against.
+
+**Rationale:** Phase 3 used stand-ins (the principal acted for, the producing context). Rejected:
+the principal acted for; deferring. Recommended answer accepted.

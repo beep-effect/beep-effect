@@ -20,3 +20,16 @@ export const ReservationId = S.String.pipe(S.brand("ReservationId"));
  * @since 0.0.0
  */
 export type ReservationId = typeof ReservationId.Type;
+
+/**
+ * A reservation a run holds open, and its units.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HeldReservation = S.Struct({ reservation: ReservationId, units: S.Int });
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export type HeldReservation = typeof HeldReservation.Type;

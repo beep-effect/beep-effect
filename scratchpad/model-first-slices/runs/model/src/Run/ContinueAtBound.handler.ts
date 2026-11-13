@@ -2,6 +2,7 @@ import { DelegationId, RunId } from "@proto/kernel/Ids";
 import { byProcess, eventCause, extend } from "@proto/kernel/Invocation";
 import { OpenContinuation } from "@proto/runs-contract/Run/OpenContinuation.command";
 import { RejectRun } from "@proto/runs-contract/Run/RejectRun.command";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { Authority } from "../Authority.external.ts";
 import { AgentRun } from "./AgentRun.aggregate.ts";
@@ -10,7 +11,8 @@ import { ContinueAtBound } from "./ContinueAtBound.policy.ts";
 /**
  * Asks the authority context to pass the bounded run's delegation on to the
  * run it continues as, as the bounded run, then opens that run with the
- * remaining budget; a refusal is recorded as the new run's rejection.
+ * remaining budget and the open reservations; a refusal is recorded as the
+ * new run's rejection.
  *
  * @category handlers
  * @since 0.0.0
@@ -42,9 +44,12 @@ export const ContinueAtBoundLive = ContinueAtBound.toLayer(
                 previous,
                 lineage: event.lineage,
                 generation: event.generation,
+                parent: event.parent,
                 purpose: event.purpose,
                 versions: event.versions,
-                allowance: event.remaining,
+                // What the open reservations hold moves with them.
+                allowance: event.remaining + A.reduce(event.reservations, 0, (sum, held) => sum + held.units),
+                reservations: event.reservations,
                 historyBound: event.historyBound,
                 source: event.source,
                 terms: event.terms,

@@ -1,6 +1,6 @@
 import { CurrentInvocation } from "@proto/kernel/CurrentInvocation.context";
 import { byProcess, eventCause, extend } from "@proto/kernel/Invocation";
-import { RecordMergeRefused } from "@proto/party-contract/Claim/RecordMergeRefused.command";
+import { MergeRefusal, RecordMergeRefused } from "@proto/party-contract/Claim/RecordMergeRefused.command";
 import { MergeParties } from "@proto/party-contract/Party/MergeParties.command";
 import { Proposition } from "@proto/party-contract/Proposition";
 import * as Effect from "effect/Effect";
@@ -38,14 +38,16 @@ export const MergeOnSamePartyLive = MergeOnSameParty.toLayer(
                 .send(survivor, new MergeParties({ absorbed }))
                 .pipe(Effect.provideService(CurrentInvocation, invocation)),
             ),
-            Effect.as(O.none<string>()),
+            Effect.as(O.none<MergeRefusal>()),
             Effect.catchTags({
-              ReadmissionRefused: (refused) => Effect.succeed(O.some(`readmission:${refused.reason}`)),
-              MergeVetoed: (vetoed) => Effect.succeed(O.some(`vetoed:${vetoed.reason}`)),
-              MissingGrant: (missing) => Effect.succeed(O.some(`missing-grant:${missing.capability}`)),
+              ReadmissionRefused: (refused) =>
+                Effect.succeed(O.some(MergeRefusal.cases.Readmission.make({ reason: refused.reason }))),
+              MergeVetoed: (vetoed) => Effect.succeed(O.some(MergeRefusal.cases.Vetoed.make({ reason: vetoed.reason }))),
+              MissingGrant: (missing) =>
+                Effect.succeed(O.some(MergeRefusal.cases.MissingGrant.make({ capability: missing.capability }))),
             }),
           ),
-        HasIdentifier: () => Effect.succeed(O.none<string>()),
+        HasIdentifier: () => Effect.succeed(O.none<MergeRefusal>()),
       });
       yield* O.match(refusal, {
         onNone: () => Effect.void,

@@ -10,9 +10,12 @@ import { HolderGrants } from "@proto/authority-model/Grant/HolderGrants.view";
 import { type Capability, ResourceScope } from "@proto/kernel/Capability";
 import { CurrentInvocation } from "@proto/kernel/CurrentInvocation.context";
 import { GrantId, type OrgId, PrincipalId, RunId } from "@proto/kernel/Ids";
+import { PartyFactsFeedLive } from "@proto/party-host/Facts/PartyFactsFeed.adapter";
 import { hostParty } from "@proto/party-host/Host";
 import { RunsGatewayLive } from "@proto/runs-host/RunsGateway.adapter";
 import { hostRuns } from "@proto/runs-host/Host";
+import { ClaimDecidedInboxLive, ClaimDecidedInboxPoller } from "@proto/runs-host/Inbox/ClaimDecided.inbox";
+import { MemoryInboxStore } from "@proto/runs-host/Inbox/Inbox.store";
 import { AgentRun, type AgentRunState } from "@proto/runs-model/Run/AgentRun.aggregate";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -29,6 +32,12 @@ export const Session = SessionLive.pipe(Layer.provide(AuthorityWorld));
 export const RunsWorld = hostRuns(Domain.InMemory).pipe(Layer.provide(Gateway));
 export const Runs = RunsGatewayLive.pipe(Layer.provide(Layer.merge(RunsWorld, Gateway)));
 export const PartyWorld = hostParty(Domain.InMemory).pipe(Layer.provide(Layer.merge(Gateway, Runs)));
+// The runs context consumes Party's published facts through its own inbox, polled.
+export const PartyFeed = PartyFactsFeedLive.pipe(Layer.provide(PartyWorld));
+export const RunsInbox = ClaimDecidedInboxPoller.pipe(
+  Layer.provide(ClaimDecidedInboxLive),
+  Layer.provide(Layer.mergeAll(RunsWorld, PartyFeed, MemoryInboxStore)),
+);
 
 /** Test-side access to the authority and runs models, without their `Model.Internals` reaching the Party context. */
 export class Access extends Context.Service<
@@ -74,9 +83,10 @@ const AuthorityAccess = Layer.effect(
 
 /**
  * The world an Api test runs in: the Party model (whose internals the Party
- * Apis' in-process clients use), the real Session, and test access.
+ * Apis' in-process clients use), the real Session, the runs context's fact
+ * inbox, and test access.
  */
-export const World = Layer.mergeAll(Session, AuthorityAccess).pipe(Layer.provideMerge(PartyWorld));
+export const World = Layer.mergeAll(Session, AuthorityAccess, RunsInbox).pipe(Layer.provideMerge(PartyWorld));
 
 /** The headers a human presents. */
 export const asHuman = (principal: string) => ({

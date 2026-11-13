@@ -1,0 +1,33 @@
+{
+  "_tag": "Pending",
+  "org": "org_acme",
+  "proposition": {
+    "_tag": "HasIdentifier",
+    "party": "party_dana",
+    "scheme": "email",
+    "value": "dana@acme.test"
+  },
+  "signals": [
+    {
+      "source": "mailbox:intake",
+      "excerpt": "From: Dana Smith <dana@acme.test>"
+    },
+    {
+      "source": "crm",
+      "excerpt": "dana@acme.test on file"
+    },
+    {
+      "source": "phone",
+      "excerpt": "confirmed by phone"
+    }
+  ],
+  "revision": 2,
+  "reviews": 1,
+  "proposal": {
+    "disposition": "accept",
+    "rationale": "three sources agree",
+    "run": "review:claim_1:1",
+    "evidenceRevision": 2,
+    "digest": "pdf3524c"
+  }
+}

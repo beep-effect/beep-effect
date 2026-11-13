@@ -1,20 +1,48 @@
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 /**
- * One piece of evidence for a claim: what a source said. Two signals from
- * the same `source` are one source for an admission gate.
+ * How far a signal's source is trusted.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const Trust = S.Literals(["low", "normal", "high"]);
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export type Trust = typeof Trust.Type;
+
+/**
+ * One piece of evidence for a claim: what a source said, and how far the
+ * source is trusted. Two signals from the same `source` are one source for
+ * an admission gate.
+ *
+ * **Details**
+ *
+ * Its stored form changed in phase 3, converted on read (D22): `quote` was
+ * `excerpt` and is still stored under that key, and `trust`, absent from
+ * older signals, reads as `"normal"`. No stored byte is rewritten.
  *
  * **Example** (A signal from a mailbox)
  * ```ts
  * import { EvidenceSignal } from "@proto/party-contract/Evidence";
  *
- * const signal = EvidenceSignal.make({ source: "mailbox:intake", excerpt: "Dana Smith, also d.smith@acme" });
+ * const signal = EvidenceSignal.make({ source: "mailbox:intake", quote: "Dana Smith, also d.smith@acme" });
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const EvidenceSignal = S.Struct({ source: S.String, excerpt: S.String });
+export const EvidenceSignal = S.Struct({
+  source: S.String,
+  quote: S.String,
+  trust: Trust.pipe(
+    S.withDecodingDefaultKey(Effect.succeed("normal" as const)),
+    S.withConstructorDefault(Effect.succeed("normal" as const)),
+  ),
+}).pipe(S.encodeKeys({ quote: "excerpt" }));
 /**
  * @category models
  * @since 0.0.0

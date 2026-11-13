@@ -24,6 +24,8 @@
     "./Directory/FindParties.read": "./src/Directory/FindParties.read.ts",
     "./Disposition": "./src/Disposition.ts",
     "./Evidence": "./src/Evidence.ts",
+    "./Facts/ClaimDecided.fact": "./src/Facts/ClaimDecided.fact.ts",
+    "./Facts/PartyFacts.gateway": "./src/Facts/PartyFacts.gateway.ts",
     "./IntakeApi.contract": "./src/IntakeApi.contract.ts",
     "./Party.capabilities": "./src/Party.capabilities.ts",
     "./Party.catalog": "./src/Party.catalog.ts",
