@@ -38,6 +38,7 @@ import { describeInotifyWatcher, invokerExemption } from "../../Worktree/Worktre
 import { WorktreeRemovalRequest } from "../../Worktree/Worktree.schemas.ts";
 import { WorktreeRemovalService } from "../../Worktree/Worktree.service.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import { renderAttemptJournalExport } from "./AttemptJournalStore.ts";
 import { packetFromPath } from "./PacketProvenance.ts";
 import { isSettledProofJob, isTerminalProofJobPhase } from "./ProofJob.ts";
 import { ProofJobLauncher } from "./ProofJobLauncher.ts";
@@ -728,7 +729,8 @@ export const renderRetirePlan: {
  *
  * An idle Claude Desktop Terminal panel shell the fence left in the lane gets
  * a note: the lane was removed under it, so its working directory no longer
- * exists until the operator runs `cd ~` in that Terminal tab.
+ * exists until the operator runs `cd ~` in that Terminal tab. A lane that held
+ * Yeet attempt journals gets one line saying where they were filed.
  *
  * **Example** (Render a receipt)
  *
@@ -756,6 +758,7 @@ export const renderRetirement: {
         onSome: (manifest) => ` (archived under ${manifest.residueRoot})`,
       })}`,
       `  branch ${plan.branch}: ${receipt.branchDeleted ? "deleted" : "kept"}`,
+      ...O.toArray(O.map(receipt.attemptJournals, (journalExport) => `  ${renderAttemptJournalExport(journalExport)}`)),
       ...A.map(
         receipt.idleTerminalShells,
         (pid) =>

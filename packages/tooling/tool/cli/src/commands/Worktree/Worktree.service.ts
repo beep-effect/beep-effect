@@ -14,6 +14,10 @@
  * moved into the residue root (a clean lane that carries them is archived for
  * them alone), and only then is the fenced copy deleted and its branch ref
  * removed by compare-and-swap on the archived head.
+ * Every removal, plain or archive, first files the checkout's git-ignored Yeet
+ * attempt journals in the workstation attempt-journal store (inside the fence
+ * for an archive retirement, before any capture); a failed export refuses the
+ * removal and deletes nothing.
  * A pruned upstream never fails the retirement: the manifest records the
  * pruned upstream together with the verdict that judged the tip pushed (a tip
  * on the remote default branch, or a merged pull request at exactly that
@@ -84,6 +88,7 @@ import {
   scanProcessAttachments,
   sessionRootOf,
 } from "../../internal/repo-run/index.ts";
+import { AttemptJournalStore } from "../Yeet/internal/AttemptJournalStore.ts";
 import { isRetainedCheckoutResidueName } from "./internal/ResidueReap.ts";
 import { CLAUDE_WORKTREES_RELATIVE_ROOT } from "./Worktree.constants.ts";
 import { WorktreeCommandError, WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";
@@ -109,6 +114,7 @@ import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GithubIdentityError } from "../../internal/github/index.ts";
 import type { GitCommandErrorAdapter, GitKitError, ProcessAttachment } from "../../internal/repo-run/index.ts";
+import type { AttemptJournalExport } from "../Yeet/internal/AttemptJournalStore.schemas.ts";
 import type {
   WorktreeListEntry,
   WorktreeResidueReason as WorktreeResidueReasonType,
@@ -565,7 +571,8 @@ type WorktreeRemovalServiceRequirements =
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Git
-  | WorktreeMergedPullRequestProbe;
+  | WorktreeMergedPullRequestProbe
+  | AttemptJournalStore;
 
 type UpstreamProbeRequirements =
   | SecureRandom.SecureRandom
@@ -1598,7 +1605,8 @@ const makeRemovalReceipt = (
   branchDeleted: boolean,
   unpushedInspection: O.Option<WorktreeUnpushedInspection>,
   idleTerminalShells: ReadonlyArray<number> = A.empty(),
-  inotifyWatchers: ReadonlyArray<WorktreeInotifyWatcher> = A.empty()
+  inotifyWatchers: ReadonlyArray<WorktreeInotifyWatcher> = A.empty(),
+  attemptJournals: O.Option<AttemptJournalExport> = O.none()
 ): WorktreeRemovalReceipt =>
   WorktreeRemovalReceipt.make({
     targetPath: request.targetPath,
@@ -1609,7 +1617,27 @@ const makeRemovalReceipt = (
     unpushedInspection,
     idleTerminalShells,
     inotifyWatchers,
+    attemptJournals,
   });
+
+// `.beep/yeet` is not retained material (residue-reap classes it as job state),
+// so the lane's attempt journals would be deleted with the checkout (PERIL-11).
+// They are filed in the workstation store first; a failed export refuses the
+// removal before anything is deleted (decision D18: a copy failure blocks deletion).
+const exportAttemptJournals = Effect.fn("WorktreeRemovalService.exportAttemptJournals")(function* (
+  checkout: string,
+  mainCheckout: string
+): Effect.fn.Return<O.Option<AttemptJournalExport>, WorktreePreservationError, AttemptJournalStore> {
+  const store = yield* AttemptJournalStore;
+  return yield* store.retain(checkout, mainCheckout).pipe(
+    Effect.mapError((error) =>
+      WorktreePreservationError.new("export-attempt-journals", error.message, {
+        cause: error,
+        ...O.getSomesStruct({ path: O.fromUndefinedOr(error.path) }),
+      })
+    )
+  );
+});
 
 const REMOVAL_STATUS_OPTIONS = { untrackedFiles: "all", ignoreSubmodules: "none" } as const;
 
@@ -1847,8 +1875,13 @@ const removeLegacyWorktree = Effect.fn("WorktreeRemovalService.removeLegacyWorkt
   request: WorktreeRemovalRequest
 ): Effect.fn.Return<
   WorktreeRemovalReceipt,
-  WorktreeCommandError | WorktreeDirtyError,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
+  WorktreeCommandError | WorktreeDirtyError | WorktreePreservationError,
+  | FileSystem.FileSystem
+  | Path.Path
+  | SecureRandom.SecureRandom
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git
+  | AttemptJournalStore
 > {
   if (O.isSome(request.expectedHead)) {
     const head = yield* resolveGitCommit(
@@ -1864,8 +1897,23 @@ const removeLegacyWorktree = Effect.fn("WorktreeRemovalService.removeLegacyWorkt
   );
   return yield* A.match(changes, {
     onEmpty: () =>
-      removeWorktree(request, false).pipe(
-        Effect.as(makeRemovalReceipt(request, WorktreeResidueReason.Enum.clean, O.none(), false, O.none()))
+      exportAttemptJournals(request.targetPath, request.mainCheckout).pipe(
+        Effect.flatMap((attemptJournals) =>
+          removeWorktree(request, false).pipe(
+            Effect.as(
+              makeRemovalReceipt(
+                request,
+                WorktreeResidueReason.Enum.clean,
+                O.none(),
+                false,
+                O.none(),
+                A.empty(),
+                A.empty(),
+                attemptJournals
+              )
+            )
+          )
+        )
       ),
     onNonEmpty: (dirtyChanges) => WorktreeDirtyError.new(request.targetPath, A.length(dirtyChanges)),
   });
@@ -2261,7 +2309,11 @@ const fencedArchivePlan = Effect.fn("WorktreeRemovalService.fencedArchivePlan")(
   request: WorktreeRemovalRequest,
   fenced: WorktreeRemovalRequest
 ): Effect.fn.Return<
-  ArchiveRemovalPlan & { readonly head: GitObjectId; readonly quietShells: QuietShells },
+  ArchiveRemovalPlan & {
+    readonly head: GitObjectId;
+    readonly quietShells: QuietShells;
+    readonly attemptJournals: O.Option<AttemptJournalExport>;
+  },
   WorktreeCommandError | WorktreePreservationError,
   WorktreeRemovalServiceRequirements
 > {
@@ -2284,8 +2336,11 @@ const fencedArchivePlan = Effect.fn("WorktreeRemovalService.fencedArchivePlan")(
   // Authority is re-tied to the state actually being archived: the fenced HEAD must
   // still be the object id the caller's decision was made under.
   yield* assertAuthorizedHead(request, head);
+  // Filed before the capture moves any material: a failed export leaves the fenced
+  // copy exactly as it was fenced, so the caller's restore puts the lane back whole.
+  const attemptJournals = yield* exportAttemptJournals(fenced.targetPath, request.mainCheckout);
   const plan = yield* planArchiveRemoval(fenced, head, A.isReadonlyArrayNonEmpty(changes));
-  return { ...plan, head, quietShells };
+  return { ...plan, head, quietShells, attemptJournals };
 });
 
 // A writer that reopens the lane by path, such as a detached job appending its log
@@ -2365,7 +2420,7 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
         ),
     });
   }
-  const { reason, manifest, head, unpushedInspection, quietShells } = planned.value;
+  const { reason, manifest, head, unpushedInspection, quietShells, attemptJournals } = planned.value;
   // Re-verify quiescence after capture and before the destructive remove. A scan is a
   // one-time observation, so a same-uid process could have attached to the fenced copy
   // during the capture phase (git status, patch, file copy) — the longest part of the
@@ -2395,7 +2450,16 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
   const argument1 = O.some(unpushedInspection);
   const argument2 = A.sort(A.fromIterable(HashMap.keys(reQuiescent.success.quietShells)), N.Order);
   const nameInotifyWatchers1 = yield* nameInotifyWatchers(reQuiescent.success.watchers);
-  return makeRemovalReceipt(request, reason, manifest, branchDeleted, argument1, argument2, nameInotifyWatchers1);
+  return makeRemovalReceipt(
+    request,
+    reason,
+    manifest,
+    branchDeleted,
+    argument1,
+    argument2,
+    nameInotifyWatchers1,
+    attemptJournals
+  );
 });
 
 const removeImpl = Effect.fn("WorktreeRemovalService.remove")(function* (
@@ -2483,13 +2547,14 @@ export const installRegenerateMergeDriver = Effect.fn("Worktree.installRegenerat
 );
 
 /**
- * Removal layer that still requires a {@link WorktreeMergedPullRequestProbe}.
+ * Removal layer that still requires a {@link WorktreeMergedPullRequestProbe} and an attempt-journal store.
  *
  * **When to use**
  *
- * Use when the merged-pull-request probe must be substituted, such as a test
- * that asserts the verdict recorded for a pruned upstream without reaching
- * GitHub. Command wiring uses {@link WorktreeRemovalServiceLive} instead.
+ * Use when the merged-pull-request probe or the attempt-journal store must be
+ * substituted, such as a test that asserts the verdict recorded for a pruned
+ * upstream without reaching GitHub. Command wiring uses
+ * {@link WorktreeRemovalServiceLive} instead.
  *
  * **Example** (Provide a stub probe to the removal layer)
  *
@@ -2517,7 +2582,7 @@ export const WorktreeRemovalServiceLayer: Layer.Layer<
 > = Layer.effect(WorktreeRemovalService, makeWorktreeRemovalService());
 
 /**
- * Live layer for preservation-first worktree removal with the GitHub-backed probe.
+ * Live layer for preservation-first worktree removal with the GitHub-backed probe and the filesystem attempt-journal store.
  *
  * **Example** (Reference the live removal layer)
  *
@@ -2539,4 +2604,6 @@ export const WorktreeRemovalServiceLive: Layer.Layer<
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Git
-> = WorktreeRemovalServiceLayer.pipe(Layer.provide(WorktreeMergedPullRequestProbeLive));
+> = WorktreeRemovalServiceLayer.pipe(
+  Layer.provide(Layer.mergeAll(WorktreeMergedPullRequestProbeLive, AttemptJournalStore.layer))
+);
