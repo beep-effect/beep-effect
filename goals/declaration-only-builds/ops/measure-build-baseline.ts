@@ -9,7 +9,9 @@
  * For every workspace package whose generated `beep:build` emits through
  * `tsrs -p tsconfig.json`, each run:
  *
- * 1. removes `dist`, then times `tsrs -p tsconfig.json` (cold emit);
+ * 1. removes `dist`, then times the compiler step of the package's own
+ *    `beep:build`, flags included (cold emit): `tsrs -p tsconfig.json` before
+ *    the declaration-only change, the same with `--emitDeclarationOnly` after;
  * 2. sizes `dist` by class: JavaScript, JavaScript maps, declarations,
  *    declaration maps, incremental state, anything else;
  * 3. times `bun run babel` when the manifest has that script, and sizes the
@@ -45,7 +47,12 @@ const emitBuildPrefix = "tsrs -p tsconfig.json";
 const scratchRelative = ".beep/declaration-only-baseline";
 
 type Manifest = { readonly name?: string; readonly scripts?: Readonly<Record<string, string>> };
-type Package = { readonly name: string; readonly dir: string; readonly hasBabel: boolean };
+type Package = {
+  readonly name: string;
+  readonly dir: string;
+  readonly emitArgs: ReadonlyArray<string>;
+  readonly hasBabel: boolean;
+};
 
 const tracked = spawnSync("git", ["ls-files", "--", "apps", "packages", "infra", "tools"], {
   cwd: root,
@@ -61,7 +68,16 @@ const packages: ReadonlyArray<Package> = tracked.stdout
     const build = manifest.scripts?.["beep:build"];
     if (manifest.name === undefined || build === undefined || !build.startsWith(emitBuildPrefix)) return [];
     if (filter !== undefined && !manifest.name.includes(filter)) return [];
-    return [{ name: manifest.name, dir: join(root, dirname(file)), hasBabel: manifest.scripts?.babel !== undefined }];
+    // The compiler step is the first `&&` segment; its arguments follow the `tsrs` word.
+    const emitArgs = (build.split("&&")[0] ?? "").trim().split(/\s+/).slice(1);
+    return [
+      {
+        name: manifest.name,
+        dir: join(root, dirname(file)),
+        emitArgs,
+        hasBabel: manifest.scripts?.babel !== undefined,
+      },
+    ];
   });
 
 type Sizes = {
@@ -147,7 +163,7 @@ for (const pkg of packages) {
   for (let run = 1; run <= runs; run += 1) {
     const dist = join(pkg.dir, "dist");
     rmSync(dist, { recursive: true, force: true });
-    const emit = timed(tsrs, ["-p", "tsconfig.json"], pkg.dir);
+    const emit = timed(tsrs, pkg.emitArgs, pkg.dir);
     const before = sizeOf(dist);
     const babel = pkg.hasBabel ? timed("bun", ["run", "babel"], pkg.dir) : undefined;
     const after = sizeOf(dist);
