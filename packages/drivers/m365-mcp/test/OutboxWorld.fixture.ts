@@ -110,6 +110,10 @@ export const fixtureFile = storedFile({ content: FIXTURE_CONTENT, name: "fixture
 
 type WorldState = {
   readonly appendFailsFor: ReadonlyArray<OutboxAuditRecord["_tag"]>;
+  /** Record kinds whose next append fails once; each entry is used up by one failure. */
+  readonly appendFailsOnce: ReadonlyArray<OutboxAuditRecord["_tag"]>;
+  /** The RFC 5322 message id a create returns. */
+  readonly createdInternetMessageId: O.Option<string>;
   readonly calls: ReadonlyArray<string>;
   readonly corruptUploads: boolean;
   readonly draft: GraphMessage;
@@ -142,6 +146,8 @@ type WorldState = {
 
 const initialState: WorldState = {
   appendFailsFor: [],
+  appendFailsOnce: [],
+  createdInternetMessageId: storedDraft.internetMessageId,
   calls: [],
   corruptUploads: false,
   draft: storedDraft,
@@ -235,7 +241,13 @@ const StubM365Layer = Layer.effect(
       createDraftMessage: Effect.fn("StubM365.createDraftMessage")(function* (request) {
         yield* called("createDraftMessage", request);
         yield* Ref.update(state, (current) => ({ ...current, files: [] }));
-        return GraphMessage.make({ id: DRAFT_ID, isDraft: O.some(true), webLink: storedDraft.webLink });
+        const current = yield* Ref.get(state);
+        return GraphMessage.make({
+          id: DRAFT_ID,
+          internetMessageId: current.createdInternetMessageId,
+          isDraft: O.some(true),
+          webLink: storedDraft.webLink,
+        });
       }),
       createEvent: Effect.fn("StubM365.createEvent")(function* (request) {
         yield* called("createEvent", request);
@@ -316,11 +328,14 @@ const StubM365Layer = Layer.effect(
         yield* pipe(current.listFailure, O.match({ onNone: () => Effect.void, onSome: Effect.fail }));
         return M365MessageCollection.make({
           "@odata.nextLink": current.pagedConversation ? O.some("https://graph.example.test/v1.0/next-page") : O.none(),
-          value: A.filter(current.messages, (message) =>
-            O.exists(message.conversationId, (id) =>
-              O.contains(request.filter, `conversationId eq '${Str.replaceAll("'", "''")(id)}'`)
-            )
-          ),
+          value: A.filter(current.messages, (message) => {
+            const matches = (property: string) => (id: string) =>
+              O.contains(request.filter, `${property} eq '${Str.replaceAll("'", "''")(id)}'`);
+            return (
+              O.exists(message.conversationId, matches("conversationId")) ||
+              O.exists(message.internetMessageId, matches("internetMessageId"))
+            );
+          }),
         });
       }),
       listSites: notScripted,
@@ -376,6 +391,13 @@ const StubAuditLogLayer = Layer.effect(
     return OutboxAuditLog.of({
       append: Effect.fn("StubAuditLog.append")(function* (record) {
         const current = yield* Ref.get(state);
+        if (A.contains(current.appendFailsOnce, record._tag)) {
+          yield* Ref.update(state, (latest) => ({
+            ...latest,
+            appendFailsOnce: A.filter(latest.appendFailsOnce, (tag) => tag !== record._tag),
+          }));
+          return yield* OutboxAuditError.make({ message: "The audit record could not be appended.", reason: "append" });
+        }
         if (A.contains(current.appendFailsFor, record._tag)) {
           return yield* OutboxAuditError.make({ message: "The audit record could not be appended.", reason: "append" });
         }

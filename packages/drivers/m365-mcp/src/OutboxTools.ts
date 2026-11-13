@@ -408,9 +408,11 @@ export const OUTBOX_BASIS_STALE_CATEGORY = "Draft - recheck before sending";
  *
  * `set`: the category was added. `cleared`: the category this server added
  * was removed. `already-set`: the draft is stale and already carries it.
- * `none`: nothing was written. `failed`: the category write was refused or
- * failed; the next call retries. `set-unrecorded` and `cleared-unrecorded`:
- * the category was written but its audit record could not be appended.
+ * `none`: no category was written. `failed`: nothing was set, because the
+ * mark record could not be appended or the category write was refused or
+ * failed; the next call retries. `cleared-unrecorded`: the category was
+ * removed but its record could not be appended, even on a retry; the next
+ * call records it.
  *
  * **Example** (Guard a mark outcome)
  *
@@ -430,7 +432,6 @@ export const OutboxDraftMarkOutcome = LiteralKit([
   "already-set",
   "none",
   "failed",
-  "set-unrecorded",
   "cleared-unrecorded",
 ]).pipe(
   $I.annoteSchema("OutboxDraftMarkOutcome", {
@@ -485,7 +486,7 @@ export class OutboxDraftCheck extends S.Opaque<OutboxDraftCheck, { readonly bran
     draftId: recordedDraftId,
     markFailure: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description:
-        "Why the category write failed when mark is failed: changed-since-read (the draft was edited after it was read), no-change-key, or a driver failure reason.",
+        "Why nothing was set or cleared when mark is failed: audit (the record could not be appended), changed-since-read (the draft was edited after it was read), no-change-key, or a driver failure reason.",
     }),
     mark: OutboxDraftMarkOutcome.annotateKey({ description: "What was done to the stale-basis category." }),
     subject: recordedSubject,
@@ -779,7 +780,7 @@ export const OutboxUpdateEventTool = annotateFourHints(
  */
 export const OutboxCheckDraftsTool = annotateFourHints(
   Tool.make("m365_outbox_check_drafts", {
-    description: `Recheck every unsent draft this server created against the calendar events and messages it was pinned to, and mark it in Outlook: a draft whose basis changed gets the category "${OUTBOX_BASIS_STALE_CATEGORY}", and the category this server set is removed once the basis is current again. A draft whose pinned item could not be read keeps its category as it is; an unpinned draft is never touched. Categories a person added are kept, and no subject or body is changed. Drafts found sent or missing are reported and retired. The mark is advisory: Outlook's Send is not blocked, and a draft that changes between calls is marked only on the next call. Call this before preparing or reviewing outbox drafts; use get_draft for one draft's per-pin detail.`,
+    description: `Recheck every unsent draft this server created against the calendar events and messages it was pinned to, and mark it in Outlook: a draft whose basis changed gets the category "${OUTBOX_BASIS_STALE_CATEGORY}", and the category this server set is removed once the basis is current again (if the local audit log keeps failing, a set is not attempted and a removal is reported as cleared-unrecorded). A draft whose pinned item could not be read keeps its category as it is; an unpinned draft is never touched. Categories a person added are kept, and no subject or body is changed. A draft moved to another folder is found again by its message id; drafts found sent or missing are reported and retired. The mark is advisory: Outlook's Send is not blocked, and a draft that changes between calls is marked only on the next call. Call this before preparing or reviewing outbox drafts; use get_draft for one draft's per-pin detail.`,
     failure: OutboxToolError,
     failureMode: "return",
     success: OutboxDraftsChecked,

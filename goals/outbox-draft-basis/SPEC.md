@@ -293,6 +293,14 @@ Lane @chore/organizing-goal-packets · PR #3120
 
 Reverse: Drop the caller view from the create_draft pin parameter and pin the server's read alone; no record with pins exists before the first pull request merges, so nothing migrates.
 
+### check-drafts records a mark before writing it and finds a moved draft by its message id, 2026-11-13
+
+Review fixes on pull request 3172, agent-decided. First: the audit log is the only way the server knows a category on a draft is its own, so a mark is now recorded before it is written. If the record cannot be appended nothing is written; if the write then fails, the journal says marked with no category, and the next call appends the missing clear record without touching Graph. A clear writes first and records after, retrying the record once. The failure direction is always 'recorded but absent', never 'present but unrecorded', which had left the server's own category on a draft for good. Second: a message's Graph id changes when it moves, so a draft filed into a folder read as missing and was retired. The draft-created record now keeps the draft's RFC 5322 message id, and on a 404 check-drafts makes one lookup by it: a draft that moved keeps being checked under its recorded id, a hit that is no longer a draft closes as sent, and no hit closes as missing. Immutable Graph ids were rejected: the driver has no such header and recorded ids would need migrating. Third: a read without an isDraft value no longer retires a draft; it is unreadable for that run. Not verified on the tenant, which was down: that a draft carries a message id from creation and keeps it when moved or sent. The tenant proof checks it.
+
+Lane feat/outbox-draft-basis-check · PR #3172
+
+Reverse: Write the category before the record again and drop the message-id lookup; draft-created lines that carry internetMessageId stay readable and the field is ignored.
+
 ### check-drafts retires a sent or missing draft with one draft-closed record, 2026-11-13
 
 Operator ruling, 2026-11-13 (grill session). The attorney sends prepared drafts from Outlook, so the audit log never learns that a draft was sent, and without a closing record check-drafts would re-read every draft the server ever created on every call. When check-drafts finds a draft missing, or no longer a draft, it reports it and appends one draft-closed record with the reason; later calls skip it. A draft is open while it has a draft-created record and no draft-deleted, sent send-outcome or draft-closed record. The audit journal gains a record kind and no existing record changes, as the m365-agent-outbox packet's D-28 requires. Rejected: an age cutoff (a draft older than the cutoff would silently stop being checked while still unsent) and re-reading everything (cost grows without bound).

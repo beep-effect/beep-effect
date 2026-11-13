@@ -100,6 +100,12 @@ it lists is a `@beep/repo-cli` file added on `main` without a baseline row
 (#3138, #3144, #3165); none is under `m365-mcp`. No review thread was
 opened. The session was paused there, with tenant mail still down.
 
+2026-11-13: three review findings on #3172 fixed in one push: a mark is
+recorded before it is written, so the server's own category can no longer
+be left on a draft without a record; a draft moved to another folder is
+found by its message id and not retired; a read without an `isDraft`
+value no longer retires a draft. 29 of 29 cheap gates passed.
+
 ## Notes
 
 - `m365_outbox_send_draft` refuses every send with `version-unbound`. The

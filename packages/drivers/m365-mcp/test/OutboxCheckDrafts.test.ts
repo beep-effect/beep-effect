@@ -56,7 +56,7 @@ const eventPin = OutboxBasisPin.cases.event.make({
   }),
 });
 
-const created = (draftId: string, pinned = true) =>
+const created = (draftId: string, pinned = true, internetMessageId?: string) =>
   OutboxDraftCreatedRecord.make({
     at: AT,
     attachments: [],
@@ -65,17 +65,28 @@ const created = (draftId: string, pinned = true) =>
     bcc: [],
     cc: [],
     draftId,
+    internetMessageId: O.fromUndefinedOr(internetMessageId),
     subject: `Subject of ${draftId}`,
     to: [],
   });
 
-const draft = (id: string, categories: ReadonlyArray<string>, fields: { readonly isDraft?: boolean } = {}) =>
+const draft = (
+  id: string,
+  categories: ReadonlyArray<string>,
+  fields: { readonly internetMessageId?: string; readonly isDraft?: boolean } = {}
+) =>
   GraphMessage.make({
     categories: O.some(categories),
     changeKey: O.some(`${id}-key`),
     id,
+    internetMessageId: O.fromUndefinedOr(fields.internetMessageId),
     isDraft: O.some(fields.isDraft ?? true),
   });
+
+const markRecord = (draftId: string) =>
+  OutboxDraftBasisMarkedRecord.make({ at: AT, auditId: `mark-${draftId}`, draftId, fields: ["start"] });
+
+const countOf = (calls: ReadonlyArray<string>, verb: string) => A.length(A.filter(calls, (call) => call === verb));
 
 const check = Effect.gen(function* () {
   const toolkit = yield* OutboxToolkit;
@@ -273,7 +284,7 @@ describe("@beep/m365-mcp outbox check_drafts", () => {
 
   it.layer(HandlersLayer, { timeout: "10 seconds" })("a category write that fails", (it) => {
     it.effect(
-      "reports a 412 or a missing change key as failed, writes no record, and marks on the next call",
+      "records the mark first, reports a 412, a transport failure or a missing change key as failed, and marks on a later call",
       Effect.fnUntraced(function* () {
         const world = yield* OutboxWorld;
         yield* world.script({
@@ -301,7 +312,13 @@ describe("@beep/m365-mcp outbox check_drafts", () => {
           A.map(refused.unreadable, (entry) => [entry.draftId, entry.reason]),
           [["bad/id", "invalid-id"]]
         );
-        assert.deepStrictEqual(tagsOf(recordsAfterRefused), ["draft-created", "draft-created", "draft-created"]);
+        // The mark is recorded before the write; a draft without a change key is not attempted at all.
+        assert.deepStrictEqual(tagsOf(recordsAfterRefused), [
+          "draft-created",
+          "draft-created",
+          "draft-created",
+          "draft-basis-marked",
+        ]);
         assert.deepStrictEqual(
           A.map(transport.drafts, (entry) => entry.markFailure),
           [O.some("transport"), O.some("no-change-key")]
@@ -314,39 +331,298 @@ describe("@beep/m365-mcp outbox check_drafts", () => {
     );
   });
 
-  it.layer(HandlersLayer, { timeout: "10 seconds" })("an audit log that refuses the record", (it) => {
+  it.layer(HandlersLayer, { timeout: "10 seconds" })("a mark recorded but never written", (it) => {
     it.effect(
-      "says the category was written without its record, and that a closing was not recorded",
+      "reconciles the journal without a Graph write once the basis is current, then leaves a person's category alone",
       Effect.fnUntraced(function* () {
         const world = yield* OutboxWorld;
         yield* world.script({
-          appendFailsFor: ["draft-basis-marked", "draft-basis-cleared", "draft-closed"],
+          categoryFailure: O.some(M365Error.fromReason("transport")),
           event: movedEvent,
-          messages: [draft("stale", []), draft("marked", [OUTBOX_BASIS_STALE_CATEGORY])],
+          messages: [draft("stranded", [])],
+          records: [created("stranded")],
+        });
+        const failed = yield* check;
+        yield* world.script({ calls: [], categoryFailure: O.none(), event: pinnedEvent });
+        const reconciled = yield* check;
+        const reconcileCalls = yield* world.calls;
+        const records = yield* world.records;
+        yield* world.script({ messages: [draft("stranded", ["Client", OUTBOX_BASIS_STALE_CATEGORY])] });
+        const byHand = yield* check;
+        const kept = yield* categoriesOf("stranded");
+
+        assert.deepStrictEqual(marks(failed), [["stranded", "pinned-stale", "failed"]]);
+        assert.deepStrictEqual(marks(reconciled), [["stranded", "pinned-current", "none"]]);
+        assert.deepStrictEqual(tagsOf(records), ["draft-created", "draft-basis-marked", "draft-basis-cleared"]);
+        assert.deepStrictEqual(writes(reconcileCalls), []);
+        assert.deepStrictEqual(marks(byHand), [["stranded", "pinned-current", "none"]]);
+        assert.deepStrictEqual(kept, ["Client", OUTBOX_BASIS_STALE_CATEGORY]);
+      })
+    );
+  });
+
+  it.layer(HandlersLayer, { timeout: "10 seconds" })("an audit log that refuses a mark", (it) => {
+    it.effect(
+      "writes no category when the mark cannot be recorded, sets it once the log works, and reports an unrecorded closing",
+      Effect.fnUntraced(function* () {
+        const world = yield* OutboxWorld;
+        yield* world.script({
+          appendFailsFor: ["draft-basis-marked", "draft-closed"],
+          event: movedEvent,
+          messages: [draft("stale", [])],
           missingMessageIds: ["missing"],
           records: [created("stale"), created("missing")],
         });
 
-        const result = yield* check;
-        yield* world.script({
-          event: pinnedEvent,
-          records: [
-            created("marked"),
-            OutboxDraftBasisMarkedRecord.make({ at: AT, auditId: "m", draftId: "marked", fields: ["start"] }),
-          ],
-        });
-        const clearing = yield* check;
-        const clearedCategories = yield* categoriesOf("marked");
+        const refused = yield* check;
+        const untouched = yield* categoriesOf("stale");
+        const callsAfterRefused = yield* world.calls;
+        yield* world.script({ appendFailsFor: [] });
+        const retried = yield* check;
+        const marked = yield* categoriesOf("stale");
         const records = yield* world.records;
 
-        assert.deepStrictEqual(marks(result), [["stale", "pinned-stale", "set-unrecorded"]]);
         assert.deepStrictEqual(
-          A.map(result.closed, (closed) => [closed.draftId, closed.recorded]),
+          A.map(refused.drafts, (entry) => [entry.draftId, entry.mark, entry.markFailure]),
+          [["stale", "failed", O.some("audit")]]
+        );
+        assert.deepStrictEqual(untouched, []);
+        assert.deepStrictEqual(writes(callsAfterRefused), []);
+        assert.deepStrictEqual(
+          A.map(refused.closed, (closed) => [closed.draftId, closed.recorded]),
           [["missing", false]]
         );
-        assert.deepStrictEqual(marks(clearing), [["marked", "pinned-current", "cleared-unrecorded"]]);
-        assert.deepStrictEqual(clearedCategories, []);
-        assert.deepStrictEqual(tagsOf(records), ["draft-created", "draft-basis-marked"]);
+        assert.deepStrictEqual(marks(retried), [["stale", "pinned-stale", "set"]]);
+        assert.deepStrictEqual(marked, [OUTBOX_BASIS_STALE_CATEGORY]);
+        assert.deepStrictEqual(tagsOf(records), [
+          "draft-created",
+          "draft-created",
+          "draft-basis-marked",
+          "draft-closed",
+        ]);
+      })
+    );
+  });
+
+  it.layer(HandlersLayer, { timeout: "10 seconds" })("an audit log that refuses a clear", (it) => {
+    it.effect(
+      "retries the record once, reports cleared-unrecorded when it still fails, and records it on the next call",
+      Effect.fnUntraced(function* () {
+        const world = yield* OutboxWorld;
+        yield* world.script({
+          appendFailsFor: ["draft-basis-cleared"],
+          event: pinnedEvent,
+          messages: [draft("marked", [OUTBOX_BASIS_STALE_CATEGORY]), draft("flaky-log", [OUTBOX_BASIS_STALE_CATEGORY])],
+          records: [created("marked"), markRecord("marked")],
+        });
+
+        const unrecorded = yield* check;
+        const cleared = yield* categoriesOf("marked");
+        yield* world.script({ appendFailsFor: [] });
+        const reconciled = yield* check;
+        const recordsAfterReconcile = yield* world.records;
+        yield* world.script({
+          appendFailsOnce: ["draft-basis-cleared"],
+          messages: [
+            draft("marked", ["Client", OUTBOX_BASIS_STALE_CATEGORY]),
+            draft("flaky-log", [OUTBOX_BASIS_STALE_CATEGORY]),
+          ],
+          records: [...recordsAfterReconcile, created("flaky-log"), markRecord("flaky-log")],
+        });
+        const retried = yield* check;
+        const kept = yield* categoriesOf("marked");
+        const flakyCleared = yield* categoriesOf("flaky-log");
+        const records = yield* world.records;
+
+        assert.deepStrictEqual(marks(unrecorded), [["marked", "pinned-current", "cleared-unrecorded"]]);
+        assert.deepStrictEqual(cleared, []);
+        assert.deepStrictEqual(marks(reconciled), [["marked", "pinned-current", "none"]]);
+        assert.deepStrictEqual(tagsOf(recordsAfterReconcile), [
+          "draft-created",
+          "draft-basis-marked",
+          "draft-basis-cleared",
+        ]);
+        // A category a person adds to the reconciled draft is not this server's to remove.
+        assert.deepStrictEqual(marks(retried), [
+          ["marked", "pinned-current", "none"],
+          ["flaky-log", "pinned-current", "cleared"],
+        ]);
+        assert.deepStrictEqual(kept, ["Client", OUTBOX_BASIS_STALE_CATEGORY]);
+        assert.deepStrictEqual(flakyCleared, []);
+        assert.strictEqual(A.length(A.filter(records, (record) => record._tag === "draft-basis-cleared")), 2);
+      })
+    );
+  });
+
+  it.layer(HandlersLayer, { timeout: "10 seconds" })("a draft moved out of Drafts", (it) => {
+    it.effect(
+      "finds a moved draft by its message id with one list call after a 404, and closes only what is really gone",
+      Effect.fnUntraced(function* () {
+        const world = yield* OutboxWorld;
+        yield* world.script({
+          event: movedEvent,
+          messages: [
+            draft("here", [], { internetMessageId: "<here@example.test>" }),
+            draft("moved-now", ["Client"], { internetMessageId: "<moved@example.test>" }),
+            draft("sent-copy", [], { internetMessageId: "<sent@example.test>", isDraft: false }),
+            GraphMessage.make({ id: "bare" }),
+          ],
+          missingMessageIds: ["moved", "sent", "gone", "no-id"],
+          records: [
+            created("here", true, "<here@example.test>"),
+            created("moved", true, "<moved@example.test>"),
+            created("sent", true, "<sent@example.test>"),
+            created("gone", true, "<gone@example.test>"),
+            created("no-id"),
+            created("bare"),
+          ],
+        });
+
+        const first = yield* check;
+        const firstCalls = yield* world.calls;
+        const movedCategories = yield* categoriesOf("moved-now");
+        yield* world.script({ calls: [] });
+        const second = yield* check;
+        const secondCalls = yield* world.calls;
+        const records = yield* world.records;
+
+        assert.deepStrictEqual(marks(first), [
+          ["here", "pinned-stale", "set"],
+          ["moved", "pinned-stale", "set"],
+        ]);
+        assert.deepStrictEqual(
+          A.map(first.closed, (closed) => [closed.draftId, closed.reason]),
+          [
+            ["sent", "sent"],
+            ["gone", "missing"],
+            ["no-id", "missing"],
+          ]
+        );
+        // Only an explicit isDraft false means sent: a message with only an id stays open.
+        assert.deepStrictEqual(
+          A.map(first.unreadable, (entry) => [entry.draftId, entry.reason]),
+          [["bare", "incomplete-draft"]]
+        );
+        assert.deepStrictEqual(movedCategories, ["Client", OUTBOX_BASIS_STALE_CATEGORY]);
+        // One list call per 404 with a recorded message id; none for a draft found by its id.
+        assert.strictEqual(countOf(firstCalls, "listMessages"), 3);
+        // Records keep the recorded id as the draft's identity.
+        assert.deepStrictEqual(
+          A.map(
+            A.filter(records, (record) => record._tag === "draft-basis-marked"),
+            (record) => record.draftId
+          ),
+          ["here", "moved"]
+        );
+        assert.deepStrictEqual(marks(second), [
+          ["here", "pinned-stale", "already-set"],
+          ["moved", "pinned-stale", "already-set"],
+        ]);
+        assert.deepStrictEqual(
+          A.map(second.unreadable, (entry) => entry.draftId),
+          ["bare"]
+        );
+        assert.strictEqual(countOf(secondCalls, "listMessages"), 1);
+        assert.deepStrictEqual(writes(secondCalls), []);
+      })
+    );
+  });
+
+  it.layer(HandlersLayer, { timeout: "10 seconds" })("a failing lookup by message id", (it) => {
+    it.effect(
+      "keeps a draft open as unreadable when the lookup by message id fails",
+      Effect.fnUntraced(function* () {
+        const world = yield* OutboxWorld;
+        yield* world.script({
+          calls: [],
+          listFailure: O.some(M365Error.fromReason("throttled", { status: 429 })),
+          messages: [],
+          missingMessageIds: ["lost"],
+          records: [created("lost", true, "<lost@example.test>")],
+        });
+
+        const failed = yield* check;
+        const again = yield* check;
+
+        assert.deepStrictEqual(
+          A.map([...failed.unreadable, ...again.unreadable], (entry) => [entry.draftId, entry.reason]),
+          [
+            ["lost", "throttled"],
+            ["lost", "throttled"],
+          ]
+        );
+        assert.deepStrictEqual(failed.closed, []);
+      })
+    );
+  });
+
+  it.layer(HandlersLayer, { timeout: "10 seconds" })("a clear that cannot be written", (it) => {
+    it.effect(
+      "keeps the mark record and the category when the write fails, and reports a moved copy with an unusable id",
+      Effect.fnUntraced(function* () {
+        const world = yield* OutboxWorld;
+        yield* world.script({
+          categoryFailure: O.some(M365Error.fromReason("transport")),
+          event: pinnedEvent,
+          messages: [
+            draft("marked", [OUTBOX_BASIS_STALE_CATEGORY]),
+            draft("odd/id", [], { internetMessageId: "<odd@example.test>" }),
+          ],
+          missingMessageIds: ["odd"],
+          records: [created("marked"), markRecord("marked"), created("odd", true, "<odd@example.test>")],
+        });
+
+        const result = yield* check;
+        const kept = yield* categoriesOf("marked");
+        const records = yield* world.records;
+
+        assert.deepStrictEqual(
+          A.map(result.drafts, (entry) => [entry.draftId, entry.mark, entry.markFailure]),
+          [["marked", "failed", O.some("transport")]]
+        );
+        assert.deepStrictEqual(kept, [OUTBOX_BASIS_STALE_CATEGORY]);
+        assert.deepStrictEqual(tagsOf(records), ["draft-created", "draft-basis-marked", "draft-created"]);
+        assert.deepStrictEqual(
+          A.map(result.unreadable, (entry) => [entry.draftId, entry.reason]),
+          [["odd", "invalid-id"]]
+        );
+      })
+    );
+  });
+
+  it.layer(HandlersLayer, { timeout: "10 seconds" })("create_draft and the message id", (it) => {
+    it.effect(
+      "records the message id from the create response, or from one narrow read, or not at all",
+      Effect.fnUntraced(function* () {
+        const world = yield* OutboxWorld;
+        const toolkit = yield* OutboxToolkit;
+        const create = toolkit
+          .handle("m365_outbox_create_draft", {
+            body: "Synthetic body for a fixture.",
+            bodyType: "text",
+            subject: "Fixture subject",
+            to: ["first@example.test"],
+          })
+          .pipe(Effect.flatMap((handle) => Stream.runHead(handle)));
+        const recordedIds = Effect.map(world.records, (records) =>
+          A.map(
+            A.filter(records, (record) => record._tag === "draft-created"),
+            (record) => record.internetMessageId
+          )
+        );
+
+        yield* create;
+        const fromCreate = yield* world.calls;
+        yield* world.script({ calls: [], createdInternetMessageId: O.none() });
+        yield* create;
+        const fromRead = yield* world.calls;
+        yield* world.script({ calls: [], failingMessageIds: ["draft-1"] });
+        yield* create;
+        const ids = yield* recordedIds;
+
+        assert.strictEqual(countOf(fromCreate, "getMessage"), 0);
+        assert.strictEqual(countOf(fromRead, "getMessage"), 1);
+        assert.deepStrictEqual(ids, [O.some("<fixture@example.test>"), O.some("<fixture@example.test>"), O.none()]);
       })
     );
   });

@@ -109,8 +109,13 @@ the category `Draft - recheck before sending`:
 Every other category stays, in order, and the write is conditional on the
 draft's `changeKey`, so an edit in Outlook in between makes it fail; the next
 call retries. The only change the tool makes to a draft is its category list.
-A draft that is gone, or is no longer a draft, is reported, recorded as
-closed and not checked again. The result lists each draft with its recorded
+Each mark is recorded before the category is written, and each removal right
+after, so the audit log never misses a category this server set: when the
+log cannot be written, nothing is set, and a removal whose record is still
+missing is reported as `cleared-unrecorded` and recorded on the next call.
+A draft moved out of Drafts into another folder gets a new Graph id; it is
+still found by its RFC 5322 message id. A draft that is no longer a draft, or
+is gone, is reported, recorded as closed and not checked again. The result lists each draft with its recorded
 subject, verdict and what was done to the category, the closed and the
 unreadable drafts, and a count per verdict.
 

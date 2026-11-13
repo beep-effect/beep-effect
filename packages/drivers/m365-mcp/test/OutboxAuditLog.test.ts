@@ -106,6 +106,7 @@ describe("@beep/m365-mcp outbox audit log", () => {
     assert.isTrue(S.is(OutboxDraftCreatedRecord)(record));
     if (S.is(OutboxDraftCreatedRecord)(record)) {
       assert.deepStrictEqual(record.basis, []);
+      assertNone(record.internetMessageId);
       assert.strictEqual(record.draftId, DRAFT_ID);
     }
   });

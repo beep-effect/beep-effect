@@ -33,6 +33,7 @@ import {
   M365GetEventRequest,
   M365GetMessageRequest,
   M365IdempotencyKey,
+  M365ListMessagesRequest,
   M365MailBody,
   M365MailDraft,
   M365UpdateEventRequest,
@@ -48,6 +49,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
+import { odataEquals } from "./internal/ODataFilter.ts";
 import {
   OUTBOX_DEFAULT_MAX_ATTACHMENT_BYTES,
   OUTBOX_DEFAULT_MAX_ATTACHMENTS,
@@ -192,43 +194,52 @@ const STORED_BYTES_ALLOWANCE = 2;
 
 const PRECONDITION_FAILED_STATUS = 412;
 
+// A moved draft and, at most, a sent copy share one RFC 5322 message id.
+const MOVED_DRAFT_PAGE_SIZE = 5;
+
 // The fields check_drafts reads from a draft: never a body, a subject or a recipient.
 const CHECK_DRAFT_SELECT = "id,isDraft,categories,changeKey";
+
+const INTERNET_MESSAGE_ID_SELECT = "id,internetMessageId";
 
 const decodeSegment = S.decodeUnknownEffect(GraphPathSegment);
 
 const nonEmpty = O.filter(Str.isNonEmpty);
 
-// What check_drafts does to one draft's categories: write a new list, or keep the draft as it is.
+// What check_drafts does to one draft's categories.
+// Keep: nothing is written. Set or Clear: a new category list. Reconcile: the journal says this
+// server marked the draft but the category is gone, so only a draft-basis-cleared record is written.
 type MarkPlan =
   | { readonly _tag: "Keep"; readonly outcome: OutboxDraftMarkOutcome }
-  | { readonly _tag: "Write"; readonly categories: ReadonlyArray<string>; readonly kind: "set" | "cleared" };
+  | { readonly _tag: "Set"; readonly categories: ReadonlyArray<string> }
+  | { readonly _tag: "Clear"; readonly categories: ReadonlyArray<string> }
+  | { readonly _tag: "Reconcile" };
 
 const keep = (outcome: OutboxDraftMarkOutcome): MarkPlan => ({ _tag: "Keep", outcome });
 
 // The category is set on a stale draft and removed from a current one only when this server set it.
-// Every other category stays, in order.
+// Every other category stays, in order. `basisMarked` holds exactly when the journal says this
+// server's category is on the draft; a mark the draft no longer carries is reconciled in the journal.
 const planMark = (verdict: OutboxBasisVerdict, categories: ReadonlyArray<string>, basisMarked: boolean): MarkPlan => {
   const carries = A.contains(categories, OUTBOX_BASIS_STALE_CATEGORY);
-  return Match.value(verdict).pipe(
+  const without = (): ReadonlyArray<string> =>
+    A.filter(categories, (category) => category !== OUTBOX_BASIS_STALE_CATEGORY);
+  return Match.value({
+    basisMarked,
+    carries,
+    stale: verdict === "pinned-stale",
+    current: verdict === "pinned-current",
+  }).pipe(
+    Match.when({ carries: true, stale: true }, () => keep("already-set")),
     Match.when(
-      "pinned-stale",
-      (): MarkPlan =>
-        carries
-          ? keep("already-set")
-          : { _tag: "Write", categories: A.append(categories, OUTBOX_BASIS_STALE_CATEGORY), kind: "set" }
+      { stale: true },
+      (): MarkPlan => ({ _tag: "Set", categories: A.append(categories, OUTBOX_BASIS_STALE_CATEGORY) })
     ),
     Match.when(
-      "pinned-current",
-      (): MarkPlan =>
-        carries && basisMarked
-          ? {
-              _tag: "Write",
-              categories: A.filter(categories, (category) => category !== OUTBOX_BASIS_STALE_CATEGORY),
-              kind: "cleared",
-            }
-          : keep("none")
+      { basisMarked: true, carries: true, current: true },
+      (): MarkPlan => ({ _tag: "Clear", categories: without() })
     ),
+    Match.when({ basisMarked: true, carries: false }, (): MarkPlan => ({ _tag: "Reconcile" })),
     Match.orElse(() => keep("none"))
   );
 };
@@ -359,49 +370,134 @@ export const makeOutboxToolkitHandlers = (
         return OutboxDraftClosed.make({ draftId, reason, recorded, subject });
       });
 
-      // The only Graph write check_drafts makes, always conditional on the change key just read.
-      const writeMark = Effect.fnUntraced(function* (
-        messageId: GraphPathSegment,
-        changeKey: O.Option<string>,
-        plan: Extract<MarkPlan, { readonly _tag: "Write" }>,
-        fields: ReadonlyArray<OutboxBasisChangedField>
-      ) {
-        const failed = (markFailure: string) => ({ mark: "failed" as const, markFailure: O.some(markFailure) });
-        if (O.isNone(changeKey)) {
-          return failed("no-change-key");
-        }
-        const written = yield* m365
-          .updateMessageCategories(
-            M365UpdateMessageCategoriesRequest.make({
-              categories: plan.categories,
-              changeKey,
-              messageId,
-              userId,
-            })
-          )
-          .pipe(
-            Effect.map(() => O.none<string>()),
-            Effect.catch((error) =>
-              Effect.succeedSome(
-                O.contains(error.status, PRECONDITION_FAILED_STATUS) ? "changed-since-read" : error.reason
-              )
-            )
-          );
-        if (O.isSome(written)) {
-          return failed(written.value);
-        }
+      const appendMark = Effect.fnUntraced(function* (draftId: string, fields: ReadonlyArray<OutboxBasisChangedField>) {
         const at = yield* DateTime.now;
         const auditId = yield* audit.nextAuditId;
-        const recorded = yield* Effect.isSuccess(
-          audit.append(
-            plan.kind === "set"
-              ? OutboxDraftBasisMarkedRecord.make({ at, auditId, draftId: messageId, fields })
-              : OutboxDraftBasisClearedRecord.make({ at, auditId, draftId: messageId })
+        return yield* audit.append(OutboxDraftBasisMarkedRecord.make({ at, auditId, draftId, fields }));
+      });
+
+      const appendClear = Effect.fnUntraced(function* (draftId: string) {
+        const at = yield* DateTime.now;
+        const auditId = yield* audit.nextAuditId;
+        return yield* audit.append(OutboxDraftBasisClearedRecord.make({ at, auditId, draftId }));
+      });
+
+      // The only Graph write check_drafts makes, always conditional on the change key just read.
+      const writeCategories = (messageId: GraphPathSegment, changeKey: string, categories: ReadonlyArray<string>) =>
+        m365
+          .updateMessageCategories(
+            M365UpdateMessageCategoriesRequest.make({ categories, changeKey: O.some(changeKey), messageId, userId })
+          )
+          .pipe(
+            Effect.asVoid,
+            Effect.mapError((error) =>
+              O.contains(error.status, PRECONDITION_FAILED_STATUS) ? "changed-since-read" : error.reason
+            )
+          );
+
+      const marked = (mark: OutboxDraftMarkOutcome, markFailure: O.Option<string> = O.none()) => ({
+        mark,
+        markFailure,
+      });
+
+      // Records always lead or follow the category so that a failure leaves "recorded as marked,
+      // category absent" (repaired by Reconcile next call), never "category present, no record".
+      const applyMark = Effect.fnUntraced(function* (
+        draftId: string,
+        messageId: GraphPathSegment,
+        changeKey: O.Option<string>,
+        plan: MarkPlan,
+        fields: ReadonlyArray<OutboxBasisChangedField>
+      ) {
+        if (plan._tag === "Keep") {
+          return marked(plan.outcome);
+        }
+        if (plan._tag === "Reconcile") {
+          yield* Effect.ignore(appendClear(draftId));
+          return marked("none");
+        }
+        if (O.isNone(changeKey)) {
+          return marked("failed", O.some("no-change-key"));
+        }
+        if (plan._tag === "Set") {
+          // Intent first, as a send records its intent before acting.
+          const recorded = yield* Effect.isSuccess(appendMark(draftId, fields));
+          if (!recorded) {
+            return marked("failed", O.some("audit"));
+          }
+          return yield* writeCategories(messageId, changeKey.value, plan.categories).pipe(
+            Effect.match({
+              onFailure: (reason) => marked("failed", O.some(reason)),
+              onSuccess: () => marked("set"),
+            })
+          );
+        }
+        const cleared = yield* writeCategories(messageId, changeKey.value, plan.categories).pipe(
+          Effect.mapError(O.some),
+          Effect.result
+        );
+        if (cleared._tag === "Failure") {
+          return marked("failed", cleared.failure);
+        }
+        const recorded = yield* Effect.isSuccess(appendClear(draftId).pipe(Effect.retry({ times: 1 })));
+        return marked(recorded ? "cleared" : "cleared-unrecorded");
+      });
+
+      // Where an open draft is now: by its recorded id, or after a 404 by its RFC 5322 message id,
+      // because Graph gives a message a new id when it moves to another folder. Fails with an
+      // unreadable reason.
+      const locateDraft = (created: OutboxOpenDraft["created"]) =>
+        decodeSegment(created.draftId).pipe(
+          Effect.mapError(() => "invalid-id"),
+          Effect.flatMap((messageId) =>
+            m365.getMessage(M365GetMessageRequest.make({ messageId, select: O.some(CHECK_DRAFT_SELECT), userId })).pipe(
+              Effect.asSome,
+              Effect.catch((error) =>
+                O.contains(error.status, NOT_FOUND_STATUS) && error.reason === "response status"
+                  ? findMoved(created.internetMessageId)
+                  : Effect.fail(error.reason)
+              )
+            )
+          ),
+          Effect.flatMap(
+            O.match({
+              onNone: () => Effect.succeedNone,
+              onSome: (message) =>
+                decodeSegment(message.id).pipe(
+                  Effect.mapBoth({
+                    onFailure: () => "invalid-id",
+                    onSuccess: (messageId) => O.some({ message, messageId }),
+                  })
+                ),
+            })
           )
         );
-        const mark: OutboxDraftMarkOutcome = recorded ? plan.kind : `${plan.kind}-unrecorded`;
-        return { mark, markFailure: O.none<string>() };
-      });
+
+      // One list call, only after a 404: the draft's current copy, preferring one still a draft.
+      const findMoved = (internetMessageId: O.Option<string>) =>
+        O.match(internetMessageId, {
+          onNone: () => Effect.succeedNone,
+          onSome: (id) =>
+            m365
+              .listMessages(
+                M365ListMessagesRequest.make({
+                  filter: O.some(odataEquals("internetMessageId", id)),
+                  select: O.some(CHECK_DRAFT_SELECT),
+                  top: O.some(MOVED_DRAFT_PAGE_SIZE),
+                  userId,
+                })
+              )
+              .pipe(
+                Effect.mapBoth({
+                  onFailure: (error) => error.reason,
+                  onSuccess: (page) =>
+                    O.orElse(
+                      A.findFirst(page.value, (message) => O.contains(message.isDraft, true)),
+                      () => A.head(page.value)
+                    ),
+                })
+              ),
+        });
 
       // One open draft: closed when sent or missing, unreadable when Graph could not be asked,
       // otherwise rechecked and marked.
@@ -410,28 +506,19 @@ export const makeOutboxToolkitHandlers = (
         const unreadable = (reason: string) => OutboxDraftUnreadable.make({ draftId, reason, subject });
         const closed = (reason: OutboxDraftClosedReason) =>
           closeDraft(open, reason).pipe(Effect.map((entry) => DraftOutcome.cases.Closed.make({ entry })));
-        const read = yield* decodeSegment(draftId).pipe(
-          Effect.mapError(() => "invalid-id"),
-          Effect.flatMap((messageId) =>
-            m365.getMessage(M365GetMessageRequest.make({ messageId, select: O.some(CHECK_DRAFT_SELECT), userId })).pipe(
-              Effect.map((message) => O.some({ message, messageId })),
-              Effect.catch((error) =>
-                O.contains(error.status, NOT_FOUND_STATUS) && error.reason === "response status"
-                  ? Effect.succeedNone
-                  : Effect.fail(error.reason)
-              )
-            )
-          ),
-          Effect.result
-        );
-        if (read._tag === "Failure") {
-          return DraftOutcome.cases.Unreadable.make({ entry: unreadable(read.failure) });
+        const located = yield* Effect.result(locateDraft(open.created));
+        if (located._tag === "Failure") {
+          return DraftOutcome.cases.Unreadable.make({ entry: unreadable(located.failure) });
         }
-        if (O.isNone(read.success)) {
+        if (O.isNone(located.success)) {
           return yield* closed("missing");
         }
-        const { message, messageId } = read.success.value;
-        if (!O.contains(message.isDraft, true)) {
+        const { message, messageId } = located.success.value;
+        // Only an explicit false means sent; a missing flag is not evidence either way.
+        if (O.isNone(message.isDraft)) {
+          return DraftOutcome.cases.Unreadable.make({ entry: unreadable("incomplete-draft") });
+        }
+        if (!message.isDraft.value) {
           return yield* closed("sent");
         }
         const statuses = yield* Effect.forEach(basis, reader.recheck);
@@ -441,12 +528,15 @@ export const makeOutboxToolkitHandlers = (
           A.filter(O.getOrElse(message.categories, A.empty), Str.isNonEmpty),
           open.basisMarked
         );
-        const marked =
-          plan._tag === "Keep"
-            ? { mark: plan.outcome, markFailure: O.none<string>() }
-            : yield* writeMark(messageId, nonEmpty(message.changeKey), plan, changedFieldsOf(report));
+        const markResult = yield* applyMark(
+          draftId,
+          messageId,
+          nonEmpty(message.changeKey),
+          plan,
+          changedFieldsOf(report)
+        );
         return DraftOutcome.cases.Checked.make({
-          entry: OutboxDraftCheck.make({ draftId, ...marked, subject, verdict: report.verdict }),
+          entry: OutboxDraftCheck.make({ draftId, ...markResult, subject, verdict: report.verdict }),
         });
       });
 
@@ -474,6 +564,24 @@ export const makeOutboxToolkitHandlers = (
                 userId,
               })
             );
+            // The RFC 5322 message id lets check_drafts find the draft after it moves; one narrow read
+            // when the create response lacks it, and none recorded when that read fails.
+            const internetMessageId = yield* O.match(nonEmpty(message.internetMessageId), {
+              onNone: () =>
+                m365
+                  .getMessage(
+                    M365GetMessageRequest.make({
+                      messageId: message.id,
+                      select: O.some(INTERNET_MESSAGE_ID_SELECT),
+                      userId,
+                    })
+                  )
+                  .pipe(
+                    Effect.map((read) => nonEmpty(read.internetMessageId)),
+                    Effect.orElseSucceed(O.none<string>)
+                  ),
+              onSome: Effect.succeedSome,
+            });
             const digests = A.map(attachments, (attachment) => attachment.digest);
             // A failed prepare leaves nothing in Drafts: any failure from here on removes the draft.
             yield* Effect.gen(function* () {
@@ -509,6 +617,7 @@ export const makeOutboxToolkitHandlers = (
                   bcc: params.bcc,
                   cc: params.cc,
                   draftId: message.id,
+                  internetMessageId,
                   subject: params.subject,
                   to: params.to,
                 })

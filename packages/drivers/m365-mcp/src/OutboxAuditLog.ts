@@ -141,6 +141,12 @@ export class OutboxDraftCreatedRecord extends S.Opaque<OutboxDraftCreatedRecord,
     bcc: addresses("Blind-carbon-copy addresses."),
     cc: addresses("Carbon-copy addresses."),
     draftId: S.NonEmptyString.annotateKey({ description: "Graph id of the draft." }),
+    internetMessageId: S.OptionFromOptionalKey(S.NonEmptyString)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description:
+          "RFC 5322 message id of the draft, when Graph returned one; finds the draft again after it moves to another folder.",
+      }),
     subject: S.String.annotateKey({ description: "Draft subject." }),
     to: addresses("Primary recipient addresses."),
   }).pipe(
