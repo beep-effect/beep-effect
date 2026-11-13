@@ -667,6 +667,43 @@ export const yeetBaseMergeableFor: {
 );
 
 /**
+ * The ref a conflicted pull request head has to merge.
+ *
+ * **Details**
+ *
+ * GitHub computes a conflict against the pull request's own base branch. For
+ * an ordinary pull request that is the trunk the run was planned against. For
+ * a stack layer it is the parent's branch, while the run's base keeps meaning
+ * the trunk. The view's `baseRefName` therefore wins whenever it is reported:
+ * merging the trunk into a layer does not clear a conflict with its parent,
+ * and it puts the trunk's changes into the layer's diff. With no reported base
+ * the run's base is the answer, as it was before stacks.
+ *
+ * **Example** (A stack layer merges its parent's branch)
+ *
+ * ```ts
+ * import { yeetConflictBaseFor } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * console.log(yeetConflictBaseFor(O.some("feat/parent"), "origin/main")) // "origin/feat/parent"
+ * console.log(yeetConflictBaseFor(O.some("main"), "origin/main")) // "origin/main"
+ * console.log(yeetConflictBaseFor(O.none(), "origin/main")) // "origin/main"
+ * ```
+ *
+ * @param baseRefName - The view's `baseRefName` field, when reported.
+ * @param runBase - The run's base ref, which is the trunk.
+ * @returns The remote-tracking ref to merge into the head.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const yeetConflictBaseFor: {
+  (runBase: string): (baseRefName: O.Option<string>) => string;
+  (baseRefName: O.Option<string>, runBase: string): string;
+} = dual(2, (baseRefName: O.Option<string>, runBase: string): string =>
+  O.match(O.filter(baseRefName, Str.isNonEmpty), { onNone: () => runBase, onSome: (ref) => `origin/${ref}` })
+);
+
+/**
  * What {@link rememberRegistered} hands back: the head's registration memory
  * after this poll, the poll's checks with one synthetic pending row per
  * remembered name the poll did not report, and those recalled names.
@@ -848,7 +885,9 @@ const yeetSettleInputFamiliesDefault = A.empty<YeetGatedContextFamily>();
  * the expected set and `admission` the head's heavy admission verdict; `None`
  * (the default) is the B7 rule with no gating. `baseConflict` says the pull
  * request no longer merges into its base (see {@link yeetBaseConflictFor}),
- * the state in which GitHub empties the check rollup.
+ * the state in which GitHub empties the check rollup. `conflictBase` is the
+ * ref that conflict is with (see {@link yeetConflictBaseFor}); the verdict
+ * carries it so the wait line names the ref to merge.
  *
  * **Example** (Construct an input)
  *
@@ -878,10 +917,11 @@ export class YeetSettleInput extends S.Opaque<YeetSettleInput, { readonly brand:
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
     ),
+    conflictBase: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("YeetSettleInput", {
       description:
-        "Expected contexts, reported checks, closeout binding, elapsed wait, gated families, heavy admission, and base-conflict state for one settle evaluation.",
+        "Expected contexts, reported checks, closeout binding, elapsed wait, gated families, heavy admission, base-conflict state and the ref the conflict is with for one settle evaluation.",
     })
   )
 ) {}
@@ -1033,6 +1073,7 @@ export const deriveSettleVerdict = (input: YeetSettleInput): YeetSettleVerdict =
       timeoutMs: input.timeoutMs,
       budgetApplies: false,
       admission: input.admission,
+      conflictBase: input.conflictBase,
     });
   }
   const held = heldOutsideRegistration(input.admission, census, inRegistrationWindow(input, census));
@@ -1203,6 +1244,9 @@ const renderCensusTail = (verdict: YeetSettleVerdict): ReadonlyArray<string> => 
   ...renderNames("tolerated matrix parents", verdict.census.unmatched),
 ];
 
+// A verdict built without a conflict ref (an older artifact, a caller that has none) names no branch.
+const unnamedConflictBase = (): string => "the pull request's base";
+
 /**
  * Render the settle half of the monitor gate line, always naming the current
  * wait reason.
@@ -1236,7 +1280,8 @@ const renderCensusTail = (verdict: YeetSettleVerdict): ReadonlyArray<string> => 
  *   census: YeetExpectedContextCensus.make({ matched: [], unmatched: [], pending: [], missing: ["Lint", "Test Unit"] }),
  *   waitedMs: 120_000,
  *   timeoutMs: 1_800_000,
- *   budgetApplies: false
+ *   budgetApplies: false,
+ *   conflictBase: O.some("origin/main")
  * })
  * console.log(renderYeetSettleDetail(verdict))
  * // settle: base-conflict; merge origin/main and push; waited 2m (not counted toward the 30m settle timeout)
@@ -1280,7 +1325,11 @@ export const renderYeetSettleDetail = (verdict: YeetSettleVerdict): string =>
       ...renderNames("tolerated matrix parents", verdict.census.unmatched),
       ...renderDocsOnly(verdict),
     ]),
-    Match.when("base-conflict", () => ["settle: base-conflict", "merge origin/main and push", renderWaited(verdict)]),
+    Match.when("base-conflict", () => [
+      "settle: base-conflict",
+      `merge ${O.getOrElse(verdict.conflictBase, unnamedConflictBase)} and push`,
+      renderWaited(verdict),
+    ]),
     Match.when("registration", () => [
       "settle: registration; no checks reported for this head yet",
       renderWaited(verdict),

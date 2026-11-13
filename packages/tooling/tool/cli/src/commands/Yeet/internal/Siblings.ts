@@ -110,9 +110,12 @@ export class PacketSibling extends S.Opaque<PacketSibling, { readonly brand: uni
     probe: PacketSiblingProbe,
     /** Files `merge-tree` predicts will conflict against the base; empty unless `probe` is `conflict`. */
     conflicts: S.Array(S.String),
+    /** The parent's branch when this sibling is a stack layer; a layer merges that branch, never the trunk. */
+    layerOn: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("PacketSibling", {
-      description: "An open pull request sharing a goal packet with the subject, with its predicted conflicts.",
+      description:
+        "An open pull request sharing a goal packet with the subject, with its predicted conflicts and, for a stack layer, its parent's branch.",
     })
   )
 ) {}
@@ -265,10 +268,16 @@ export const renderSiblingBroadcast = ({ mergedPr, mergeSha, baseSha, sibling }:
     ),
     Match.exhaustive
   );
+  // A stack layer never merges the trunk: its diff would carry the trunk's changes until its parent catches up.
+  const instruction = O.match(sibling.layerOn, {
+    onNone: () => "Merge `origin/main` into this lane now, resolve, regenerate generated files, push once.",
+    onSome: (parent) =>
+      `This pull request is a stack layer on \`${parent}\`: do not merge \`origin/main\` into it. Its parent merges \`origin/main\` now; once the parent has pushed, merge \`origin/${parent}\` into this lane, resolve, regenerate generated files, push once.`,
+  });
   return A.join(
     [
       `yeet merge-gate: sibling #${mergedPr} merged on ${listOf(sibling.slugs)} (${sha10(mergeSha)}).`,
-      `Merge \`origin/main\` into this lane now, resolve, regenerate generated files, push once. This instruction holds whatever your brief says about acceptance or merge authority (operator ruling 2026-11-05, B1; AGENTS.md "Autonomy").`,
+      `${instruction} This instruction holds whatever your brief says about acceptance or merge authority (operator ruling 2026-11-05, B1; AGENTS.md "Autonomy").`,
       expectation,
     ],
     "\n\n"
@@ -307,7 +316,8 @@ export const renderPacketSiblingsReport = (report: PacketSiblingsReport): string
       Match.when("unavailable", () => "probe unavailable"),
       Match.exhaustive
     );
-    return `  #${sibling.prNumber} ${sibling.headRef} (${sha10(sibling.headSha)}) shares ${listOf(sibling.slugs)}; ${outcome}`;
+    const layer = O.match(sibling.layerOn, { onNone: () => "", onSome: (parent) => `; stack layer on ${parent}` });
+    return `  #${sibling.prNumber} ${sibling.headRef} (${sha10(sibling.headSha)}) shares ${listOf(sibling.slugs)}; ${outcome}${layer}`;
   });
   return A.join([header, ...lines], "\n");
 };
@@ -425,6 +435,12 @@ export const readPacketSiblings = Effect.fn("Yeet.readPacketSiblings")(function*
           slugs: shared,
           probe,
           conflicts,
+          // A layer's own base is the parent's branch; the stack's base is the trunk. After the
+          // layer below merges alone GitHub retargets the layer, and the two agree again.
+          layerOn: O.map(
+            O.filter(pull.stack, (stack) => stack.baseRef !== pull.baseRef),
+            () => pull.baseRef
+          ),
         })
       )
     )

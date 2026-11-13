@@ -70,8 +70,10 @@ bun run beep yeet publish --push-only
 
   The merge gate holds as `stack-out-of-date` until the layer contains the
   parent's head.
-- A base-conflict row on the layer means "merge the parent's branch", not
-  "merge `origin/main`".
+- A base-conflict row on the layer names the parent's branch
+  (`base conflict with origin/<parent-branch>`), and so does the settle
+  line. Merge that branch, never `origin/main`. A "sibling merged" comment on
+  a layer says the same.
 
 ## Ready
 

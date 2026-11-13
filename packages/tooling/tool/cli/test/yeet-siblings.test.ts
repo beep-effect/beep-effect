@@ -160,6 +160,21 @@ describe("renderSiblingBroadcast", () => {
     );
     expect(unavailable).toContain("The conflict probe could not run");
   });
+
+  it("tells a stack layer to merge its parent's branch, never the trunk", () => {
+    const body = renderSiblingBroadcast(
+      SiblingBroadcast.make({
+        mergedPr: 2688,
+        mergeSha: MERGE_SHA,
+        baseSha: O.some(BASE_SHA),
+        sibling: PacketSibling.make({ ...sibling, layerOn: O.some("feat/parent") }),
+      })
+    );
+    expect(body).toContain("This pull request is a stack layer on `feat/parent`: do not merge `origin/main` into it.");
+    expect(body).toContain("merge `origin/feat/parent` into this lane");
+    expect(body).not.toContain("Merge `origin/main` into this lane now");
+    expect(body).toContain("whatever your brief says about acceptance or merge authority");
+  });
 });
 
 describe("renderPacketSiblingsReport", () => {
@@ -214,6 +229,36 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, TestConsole.layer), { timeout: "30 sec
         // #9 shares nothing, so its head was never fetched; the subject is never its own sibling.
         expect(A.some(gitCalls, Str.includes("refs/pull/9/head"))).toBe(false);
         expect(A.some(gitCalls, Str.includes("refs/pull/7/head"))).toBe(false);
+      })
+    );
+
+    it.effect("marks a sibling that is a stack layer with its parent's branch", () =>
+      Effect.gen(function* () {
+        const stack = { number: 10, position: 2, size: 2, base: { ref: "main" } };
+        const stackedRoutes = (layerBase: string) => (call: GithubCall) =>
+          call.path === "{repo}/pulls" && call.query.get("state") === "open"
+            ? {
+                body: [
+                  pull(7, "lane/seven", "7777777777777777777777777777777777777777"),
+                  { ...pull(8, "lane/eight", SIBLING_SHA), base: { ref: layerBase, sha: "base000000" }, stack },
+                ],
+              }
+            : routes(call);
+        const read = (layerBase: string) =>
+          readPacketSiblings(context, 7).pipe(
+            recordedGithub(stackedRoutes(layerBase)).provide,
+            Effect.provideServiceEffect(Git, Git.make),
+            provideSpawner(scriptedGit([]))
+          );
+        const layered = yield* read("lane/seven");
+        assertSome(
+          O.flatMap(A.head(layered.siblings), (found) => found.layerOn),
+          "lane/seven"
+        );
+        expect(renderPacketSiblingsReport(layered)).toContain("; stack layer on lane/seven");
+        // After the parent merges alone GitHub retargets the layer to the trunk: an ordinary pull request again.
+        const cascaded = yield* read("main");
+        assertNone(O.flatMap(A.head(cascaded.siblings), (found) => found.layerOn));
       })
     );
 

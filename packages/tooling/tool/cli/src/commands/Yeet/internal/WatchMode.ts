@@ -88,6 +88,7 @@ import {
   YeetSettleCheck,
   YeetSettleInput,
   yeetBaseConflictFor,
+  yeetConflictBaseFor,
   yeetGatedFamiliesFor,
   yeetSettleClockReset,
 } from "./Settle.ts";
@@ -131,6 +132,8 @@ class WatchPullRequestLabel extends S.Opaque<WatchPullRequestLabel, { readonly b
 const watchPullRequestViewLabelsDefault = A.empty<WatchPullRequestLabel>();
 class WatchPullRequestView extends S.Opaque<WatchPullRequestView, { readonly brand: unique symbol }>()(
   S.Struct({
+    // Absent only in a payload read before the field was asked for.
+    baseRefName: S.NullOr(S.String).pipe(S.withDecodingDefaultTypeKey(Effect.succeed(null))),
     headRefOid: S.NonEmptyString,
     id: S.NonEmptyString,
     isDraft: S.Boolean,
@@ -290,7 +293,7 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
       "pr",
       "view",
       "--json",
-      "id,number,state,isDraft,isCrossRepository,mergeable,mergeStateStatus,reviewDecision,headRefOid,labels",
+      "id,number,state,baseRefName,isDraft,isCrossRepository,mergeable,mergeStateStatus,reviewDecision,headRefOid,labels",
     ],
     context.repoRoot
   ).pipe(Effect.mapError(YeetCommandError.new("Failed to read the pull request for yeet watch.")));
@@ -372,6 +375,7 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
   });
 
   return YeetWatchSnapshot.make({
+    baseRefName: O.fromNullishOr(view.baseRefName),
     checks,
     headSha: view.headRefOid,
     isCrossRepository: view.isCrossRepository,
@@ -894,6 +898,7 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
           families: state.families,
           admission: state.admission,
           baseConflict: yeetBaseConflictFor(O.some(snapshot.mergeable), O.some(snapshot.mergeStateStatus)),
+          conflictBase: O.some(yeetConflictBaseFor(snapshot.baseRefName, context.base)),
         })
       );
     const currentHead = yield* resumeWatchSettleClock(step.head, settleAt(step.head), millis);
