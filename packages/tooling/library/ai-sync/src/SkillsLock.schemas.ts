@@ -9,9 +9,14 @@
  * - `vendored`: a skill with a ratified upstream. It carries the full
  *   immutable-origin, snapshot, license, provenance, patch, and effective-tree
  *   record (`SkillLockV2Entry`'s fields).
- * - `local`: a repo-authored skill. It carries only its installed targets and
- *   their mode-aware tree hash, which is the same drift oracle the v1
- *   `computedHash` provided.
+ * - `local`: a skill with no ratified upstream. A repo-authored one carries
+ *   only its installed targets: its content is tracked by git, so the lock
+ *   records no hash of it and the entry changes only when the skill is added,
+ *   removed or retargeted. A skill refetched from a floating upstream also
+ *   carries `installedTreeHash`, the tree `skills update` last fetched, which
+ *   is what an offline check has to compare with. Locks written before
+ *   2026-11-13 carry that hash on every local entry; they still decode, and
+ *   `skills update` drops it from the repo-authored ones.
  *
  * Migration from v1 is plan-first: {@link SkillsLockMigrationPlan} reports,
  * per skill, the disposition, the computed v2 entry, a pin proposal, and every
@@ -75,17 +80,30 @@ export class VendoredSkillLockEntry extends S.Opaque<VendoredSkillLockEntry, { r
 ) {}
 
 /**
- * A repo-authored skill: installed targets and their tree hash.
+ * A skill with no ratified upstream: its installed targets.
+ *
+ * **Details**
+ *
+ * A repo-authored skill's entry holds no content hash. Its files are tracked
+ * by git, so a committed hash repeated what git already held and made every
+ * pull request that edited the skill rewrite the same lock line. The check
+ * (`skills update --check`) hashes the installed targets on the fly and
+ * compares them with each other instead.
+ *
+ * **Gotchas**
+ *
+ * `installedTreeHash` is written only for a skill refetched from a floating
+ * upstream, where it records the fetched tree. On a repo-authored entry it is
+ * a leftover from locks written before 2026-11-13: it decodes, counts as lock
+ * drift, and `skills update` rewrites the entry without it.
  *
  * **Example** (Record a local skill)
  *
  * ```ts
  * import { LocalSkillLockEntry } from "@beep/ai-sync/SkillsLock.schemas"
- * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const entry = LocalSkillLockEntry.make({
  *   installedTargets: [".claude/skills/yeet", ".agents/skills/yeet"],
- *   installedTreeHash: Sha256Hex.make("0".repeat(64)),
  * })
  * console.log(entry._tag) // "local"
  * ```
@@ -96,10 +114,11 @@ export class VendoredSkillLockEntry extends S.Opaque<VendoredSkillLockEntry, { r
 export class LocalSkillLockEntry extends S.Opaque<LocalSkillLockEntry, { readonly brand: unique symbol }>()(
   S.TaggedStruct("local", {
     installedTargets: S.Array(S.String),
-    installedTreeHash: Sha256Hex,
+    installedTreeHash: S.optionalKey(Sha256Hex),
   }).pipe(
     $I.annoteSchema("LocalSkillLockEntry", {
-      description: "A repo-authored skill identified by its installed targets' mode-aware tree hash.",
+      description:
+        "A skill with no ratified upstream, identified by its installed targets; installedTreeHash is kept only for one refetched from a floating upstream.",
     })
   )
 ) {}
@@ -564,11 +583,10 @@ export class VendoredMigrationRow extends S.Opaque<VendoredMigrationRow, { reado
  *
  * ```ts
  * import { LocalMigrationRow, LocalSkillLockEntry } from "@beep/ai-sync/SkillsLock.schemas"
- * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const row = LocalMigrationRow.make({
  *   skill: "yeet",
- *   entry: LocalSkillLockEntry.make({ installedTargets: [], installedTreeHash: Sha256Hex.make("0".repeat(64)) }),
+ *   entry: LocalSkillLockEntry.make({ installedTargets: [] }),
  * })
  * console.log(row.disposition) // "local"
  * ```

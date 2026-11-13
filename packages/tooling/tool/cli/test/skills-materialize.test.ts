@@ -184,7 +184,10 @@ type Layout = "linked" | "split";
 // A temp repository holding the lock, the patch series, and both install targets. `linked`
 // mirrors this repository (`.agents/skills` is a symlink onto `.claude/skills`); `split` gives
 // each target its own directory, so the clearing house publishes two physical trees.
-const makeRepo = Effect.fn("SkillsMaterializeTest.makeRepo")(function* (layout: Layout) {
+const makeRepo = Effect.fn("SkillsMaterializeTest.makeRepo")(function* (
+  layout: Layout,
+  localEntry: "authored" | "floating" = "authored"
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: `skills-materialize-${layout}-` });
@@ -250,16 +253,19 @@ const makeRepo = Effect.fn("SkillsMaterializeTest.makeRepo")(function* (layout: 
       ),
     }),
   });
-  const local = LocalSkillLockEntry.make({
-    installedTargets: [".claude/skills/local-one", ".agents/skills/local-one"],
-    installedTreeHash: yield* installedTargetsHash(
-      [
-        [".claude/skills/local-one", localTree.treeHash],
-        [".agents/skills/local-one", localTree.treeHash],
-      ],
-      "local-one"
-    ),
-  });
+  const localTargets = [".claude/skills/local-one", ".agents/skills/local-one"];
+  // A repo-authored entry holds no hash; one fetched from a floating upstream records the fetched tree.
+  const local = LocalSkillLockEntry.make(
+    localEntry === "floating"
+      ? {
+          installedTargets: localTargets,
+          installedTreeHash: yield* installedTargetsHash(
+            A.map(localTargets, (target) => [target, localTree.treeHash] as const),
+            "local-one"
+          ),
+        }
+      : { installedTargets: localTargets }
+  );
   const lock = SkillsLockDocument.make({ version: 2, skills: { [SKILL]: vendored, "local-one": local } });
   yield* fs.writeFileString(path.join(repoRoot, "skills-lock.json"), `${yield* encodeSkillsLockDocumentJson(lock)}\n`);
   return repoRoot;
@@ -651,16 +657,40 @@ layer(TestLayer, { timeout: "60 seconds" })("skills materialize", (it) => {
     })
   );
 
-  it.effect("reports local drift without rewriting the local skill", () =>
+  it.effect("reports drift from a floating upstream's recorded tree without rewriting the local skill", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const repoRoot = yield* makeRepo("linked");
+      const repoRoot = yield* makeRepo("linked", "floating");
       yield* fs.writeFileString(path.join(repoRoot, ".claude/skills/local-one/SKILL.md"), "edited\n");
       const report = yield* materialize(repoRoot, "write");
       expect(rowOf(report, "local-one").status).toBe("local-drift");
       const readText25 = yield* readText(repoRoot, ".claude/skills/local-one/SKILL.md");
       expect(readText25).toBe("edited\n");
+    })
+  );
+
+  it.effect("keeps an edited repo-authored skill current: its lock entry holds no hash to drift from", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* makeRepo("linked");
+      yield* fs.writeFileString(path.join(repoRoot, ".claude/skills/local-one/SKILL.md"), "edited\n");
+      const report = yield* materialize(repoRoot, "check");
+      expect(rowOf(report, "local-one").status).toBe("current");
+    })
+  );
+
+  it.effect("reports a repo-authored skill whose two targets disagree as local drift", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* makeRepo("split");
+      yield* fs.writeFileString(path.join(repoRoot, ".agents/skills/local-one/SKILL.md"), "only this copy moved\n");
+      const report = yield* materialize(repoRoot, "check");
+      expect(rowOf(report, "local-one").status).toBe("local-drift");
+      const readText26 = yield* readText(repoRoot, ".claude/skills/local-one/SKILL.md");
+      expect(readText26).toBe("---\nname: local-one\n---\n");
     })
   );
 });
