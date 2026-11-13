@@ -99,7 +99,7 @@ const renderNumber = (value: number | O.Option<number>): string =>
 export const renderGithubLedgerHour = (rollup: LedgerHourResult): ReadonlyArray<string> => {
   const hour = rollup.hour.pipe(DateTime.formatIso, Str.slice(0, 13));
   const flag =
-    rollup.schemaVersion === "github-ledger-rollup/v1"
+    rollup.schemaVersion !== "github-ledger-rollup/v3"
       ? " (legacy-unrecomputable)"
       : rollup.complete
         ? ""

@@ -112,6 +112,11 @@ Higher sources outrank lower sources when they conflict.
       moves, and a decision file records continue or stop against the kill
       criteria.
 - [ ] No workflow, ruleset or admission file changed.
+      Exception, recorded 2026-11-13: #3217 changed `heavy-admit.yml`,
+      `check.yml` and one comment in `heavy.yml`, so that a label added
+      after `ready-for-heavy` no longer shadows the admitted Heavy run
+      (decision `2026-11-12-shadowed-heavy-suite`). It was merged by hand on
+      the shared login. No slice changed a ruleset.
 - [ ] No unrelated refactors or formatting churn.
 
 Kill criteria for slice D, any one of which ends routine stack use and
@@ -288,6 +293,14 @@ Lane fix/merge-gate-shadowed-heavy-suite
 
 Reverse: Drop the re-report step from heavy-admit.yml (admission back to event-label-only) and the gate's shadow classification; strict merges after a later label then fail again at GitHub.
 
+### GitHub does not restack a layer when the trunk moves; only the cascade rewrites, 2026-11-13
+
+This settles the fact the 2026-11-10 decision left open (the second server-side rewrite in the stack test). Measured on 2026-11-13 and recorded in research/stack-pilot-2026-11.md: an unmerged two-layer stack on main saw 11 trunk pushes and no rewrite (#3190); on a throwaway base, unmerged and partially merged stacks with one and with two layers left saw five trunk moves and no rewrite beyond the cascade (#3238, #3239); and on main a layer that `yeet merge-gate --alone` had cascaded kept its head through the next trunk move (#3244, layer #3243). The cascade, seconds after a lower layer merges alone, is the only rewrite GitHub made by itself. The stack test rewrite stays unattributed: its commits are GitHub-signed where a cascade leaves them unsigned, GitHub documents Rebase stack and `gh stack rebase` as the remedies when the trunk has moved ahead, and no audit log is available. For a lane this means a layer moves only when the lane pushes or the layer below merges alone, so `--alone` and the unstack procedure stand. It does not mean the review window survives a cascade: on #3243 it restarted, because the parent had changed after the layer was cut.
+
+Lane docs/stack-pilot-main-observed · PR #3243
+
+Reverse: None needed for a measured fact. Reopen the question if a pilot row shows a rewrite after a trunk move that nobody asked for.
+
 ### Legacy merge call, its switch and the endpoint field deleted, 2026-11-13
 
 The watch day set by the legacy-merge-switch decision ended on 2026-11-11. This PR deletes the legacy REST merge call from GithubRest, the BEEP_YEET_MERGE_ENDPOINT switch and its config from AsyncMerge.ts, and the endpoint field from YeetMergeSettlement and MergeGateMerged. A field that can hold one value distinguishes nothing, so it goes with the switch rather than staying as a one-literal union; merge lines keep ending 'via merge-async' through one constant. The merge queue, if it is ever routed, is a merge_action on the same endpoint, not a second endpoint.
@@ -295,6 +308,30 @@ The watch day set by the legacy-merge-switch decision ended on 2026-11-11. This 
 Lane chore/yeet-delete-legacy-merge
 
 Reverse: Revert this PR; the legacy call returns behind BEEP_YEET_MERGE_ENDPOINT=legacy.
+
+### How the pilot's kill criteria are measured, 2026-11-13
+
+The criteria in SPEC.md are sentences; the record gives each one a number a later session can read. Used: stacks in `GET /repos/{owner}/{repo}/stacks` created inside the clock on base main whose two layers each carry a lane's own change. Fewer than four in the fourteen days fires the first criterion, because two a week is a rate, not a floor for each week. Probe, test and acceptance stacks do not count, nor does a stack that was unstacked or closed with nothing merged. Wait: the minutes a review window was the only thing holding the stack, from every other gate criterion being met on both layers to the later window elapsing. A median above 40 minutes, two windows at the default length, fires the second. Time spent on hosted CI or on review fixes is not window wait: an ordinary pull request pays it too, and stack #3190 took 77 minutes with none of them spent on a window. Force-push: one stack that landed only after a lane rewrote a published branch, or after someone pressed Rebase stack for it, fires the third. The stack listing is the count of record, so a lane that forgets its row does not shrink the census.
+
+Lane docs/stack-pilot-record
+
+Reverse: Judge the second criterion on ready-to-merge minutes, or the first on each week separately; the GitHub API still holds the instants needed for either.
+
+### The base-conflict row on a layer is fixed now; the label on a docs-only layer stays, 2026-11-13
+
+Slice C left two items for the pilot to justify. No pilot stack exists yet, so both are judged on what the code, the stack test and the repository's rules show. The base-conflict row: the monitor builds it from the run's base, which for a layer is the trunk, so a layer's row reads `base conflict with origin/main` and its remedy `merge origin/main and push`, while GitHub computes the layer's conflict against the parent's branch. Following the row does not clear the conflict and puts main's changes into the layer's diff. The yeet skill calls the row the instruction and AGENTS.md makes it unconditional, so it is fixed in its own small PR before a pilot stack meets it; otherwise the pilot would be measuring a wrong sentence in the tool. The label: a docs-only layer on a code parent gets `ready-for-heavy` because the label step reads the whole range above main. Hosted CI reads the layer's own diff and skips Heavy (`verdict=skip-satisfied`), as it did on the three hand-labelled docs-only layers of the stack test, so the cost is one Heavy Admit run whose jobs skip. The label stays, and is revisited if a pilot row shows a labelled docs-only layer running a Heavy lane or holding on a required Heavy context.
+
+Lane docs/stack-pilot-record
+
+Reverse: Revert the base-conflict fix PR; or decide the label from the layer's own paths in applyHeavyAdmissionLabel.
+
+### The pilot record opens before the first stack and its clock runs from 2026-11-13, 2026-11-13
+
+PLAN.md said to start the pilot record on the first routine stack. None was open on 2026-11-13: the stack listing held only the test, probe and acceptance stacks, and no open pull request had a base other than main. The record opens anyway (research/stack-pilot-2026-11.md), and its clock is set instead of left waiting: fourteen days from 2026-11-13, the day `yeet publish --stack-on` reached main (#3224), to the end of 2026-11-26. A clock that starts on the first stack never starts if nobody stacks, and then the first kill criterion, fewer than two stacks a week, could never fire. Lanes learn of the row from the orchestrator, which was told on 2026-11-13, and from a step in the yeet skill (references/stacks.md) that lands with the base-conflict fix PR. The verdict session adds a row for any stack whose lane left none. Stack #3190 is the reference row and is not counted.
+
+Lane docs/stack-pilot-record
+
+Reverse: Restart the clock on the first routine stack's creation date and move the verdict date with it.
 
 ### yeet ready never pushes on a stack layer; the request comment is the wake, 2026-11-13
 

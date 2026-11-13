@@ -154,3 +154,94 @@ machine or session identifiers.
 - **Would have prevented it:** the coverage ratchet attributing rows for
   files the head does not touch as inherited instead of failing, and
   `--resume` reusing the gates that passed on the same head.
+
+## 2026-11-13 — A skill reference edit turned a docs PR into a Heavy PR after it opened
+
+- **Doing:** publishing the pilot record (#3241), which adds one step to
+  `.claude/skills/yeet/references/stacks.md`.
+- **Evidence:**
+  - `bun run beep skills update --check` reported `skills-lock.json` drift
+    only after the PR was open. The publish cheap gates had passed without
+    it.
+  - `skills-lock.json` is not a docs-only path, so the second push made the
+    diff non-docs. `yeet publish` decides the label when it creates the PR
+    and an existing PR keeps its labels, so #3241 had no `ready-for-heavy`
+    until the lane added it by hand at 07:13:57Z. The Heavy lanes then ran
+    for a change of one hash.
+  - `yeet final-check` coverage printed `coverage:affected: full fallback
+    (.claude/skills/yeet/references/stacks.md: no current workspace owner;
+    skills-lock.json: no current workspace owner)` and started a 10-shard
+    run of the whole repository. The gate was skipped with that reason.
+  - #3217 and #3245 each edited another yeet reference and left the lock as
+    it was, so `main`'s lock went stale twice. #3225 then rewrote the same
+    hash line and #3241 conflicted with it at 08:48Z. Its window and its
+    Heavy run had already restarted once for the lock.
+  - #3241 dropped the step and the lock at its third push and became a
+    goals-only pull request. Coverage then planned nothing and its Check run
+    finished in ten minutes. The step moved to #3254.
+- **Would have prevented it:** the lock check in the cheap gates whenever a
+  diff touches a skill directory; a docs-only class for `skills-lock.json` and
+  skill references in Heavy admission and in coverage ownership; or a lock
+  that hashes each file, so two edits to one skill do not meet on one line.
+
+## 2026-11-13 — The hold thread the stacks reference asks for arms the owner's inbox
+
+- **Doing:** holding both layers of stack #3244 with one unresolved review
+  thread each, as `references/stacks.md` says.
+- **Evidence:** each thread became a P1 `review-thread` row in the owning
+  lane's inbox, and the tool-call hook asked for an ack before every command.
+  The parent's row came back under a new id after its next push. Each row
+  was acked `--wontfix` with the reason.
+- **Would have prevented it:** a hold the inbox recognises, such as a thread
+  whose first line is a fixed marker, or a `yeet` command that opens the hold
+  and resolves it at the gate.
+
+## 2026-11-13 — Both layers were flipped ready by the shared login, not by the lane
+
+- **Doing:** keeping the layer #3243 a draft until its parent had merged
+  alone and the observation was written.
+- **Evidence:** the timelines show `ready_for_review` on #3241 at 07:42:00Z
+  and on #3243 at 07:42:29Z, both by the shared login. The lane ran
+  `yeet ready` on #3241 at 07:46Z and was told it was already ready, with
+  nothing to flip. Both review windows therefore started at a flip the lane
+  did not make, and the layer's started before its content was final. The
+  hold threads kept both from merging.
+- **Would have prevented it:** nothing within the lane's reach. A draft is
+  not a hold. It is recorded so that a pilot row whose window starts early is
+  read correctly.
+
+## 2026-11-13 — A parent that changes costs the cascaded layer its review window
+
+- **Doing:** landing stack #3244 bottom-up with `merge-gate 3241 --alone`.
+- **Evidence:**
+  - The layer's own commit kept its patch-id across the cascade, and
+    `git merge-tree --merge-base=<old base> <new base> <old head>` gave the
+    cascaded tree exactly. `yeet gh pr status 3243` still read
+    `review window: ready=07:42:29Z pushed=09:26:45Z age=1m`.
+  - The head-move classifier's step 8 holds a squash to "the new base absorbs
+    all old base content". `git merge-tree <squash> <old base>` was not the
+    squash's tree: the parent had rewritten lines of its own and dropped a
+    step after the layer was cut.
+  - The other route, merging the parent's branch into the layer after each
+    parent push, puts a merge commit in the layer's range, which step 2
+    rejects.
+- **Would have prevented it:** a rule for the case "the layer's own patches
+  and replay tree are unchanged, and the base moved only by the parent's own
+  later commits", or `--alone` warning that the layer's window will restart.
+  Slice B's carry was built from recorded heads whose parents never changed.
+
+## 2026-11-13 — Two small traps on the way to a push
+
+- **Doing:** pushing a commit made with `git commit`, and handing a code
+  change back after `quality package-verify`.
+- **Evidence:**
+  - `yeet publish --push-only` refused the hand-made commit: "requires
+    --reuse-verified unless HEAD is a reproducible merge of the base into the
+    published branch". `yeet publish --amend --no-edit` pushed the same
+    commit unchanged ("skipped commit; clean local HEAD … is ahead").
+  - `quality package-verify @beep/repo-cli` passed (lint, audit, docgen) on a
+    file where a helper had been inserted between a JSDoc block and its
+    exported function. The pre-commit `jsdoc` hook then rejected the commit:
+    `check-param-names` and `require-jsdoc`.
+- **Would have prevented it:** the refusal naming the command that works, and
+  the package's `lint:jsdoc` in the package handoff.

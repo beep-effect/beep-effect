@@ -45,7 +45,7 @@ import { writePrivateFile } from "../state/PrivateFile.ts";
 import { resolveWorkstationStateDir } from "../state/WorkstationState.ts";
 import {
   credentialKeyOf,
-  expiredUnknownReading,
+  expiredInstanceReading,
   hourFileKey,
   hourStartOf,
   readingsOfSample,
@@ -82,6 +82,13 @@ import type {
 const $I = $RepoCliId.create("internal/github/GithubLedger.store");
 const decodeRollupRead = S.decodeUnknownOption(S.fromJsonString(LedgerRollupRead));
 
+// v3 keeps one file per GraphQL window instance. A v2 writer consolidates every
+// `transport-` file of one credential into one and deletes the rest, so v3 files
+// live outside that namespace. v2 files stay readable as extra reserve candidates
+// and are pruned like v3 files, but v3 never rewrites them.
+const TRANSPORT_PREFIX = "v3-transport-";
+const LEGACY_TRANSPORT_PREFIX = "transport-";
+
 const decodeReading = S.decodeUnknownOption(BucketReadingJson);
 const decodeSample = S.decodeUnknownOption(SampleRowJson);
 const sampleKeyOf = (row: SampleRow): string => `${fileKeyOf(row.identity)}-${fileKeyOf(credentialKeyOf(row))}`;
@@ -110,13 +117,16 @@ export interface GithubLedgerStoreShape {
   readonly calibrations: Effect.Effect<ReadonlyArray<CalibrationRow>, GithubLedgerError>;
   /** The newest sample per identity and credential source, including legacy files. */
   readonly latestSamples: Effect.Effect<ReadonlyArray<SampleRow>, GithubLedgerError>;
-  /** Latest transport readings per known credential or unknown reset instance. */
+  /**
+   * Latest transport readings per known REST credential or per window instance,
+   * plus readings an older (v2) writer left in its own files.
+   */
   readonly latestTransport: Effect.Effect<ReadonlyArray<BucketReading>, GithubLedgerError>;
   /** The alias map; empty when absent or unreadable. */
   readonly readAliases: Effect.Effect<IdentityAliases, GithubLedgerError>;
   /**
    * A version-tagged current or legacy rollup. Unreadable or unsupported
-   * versions are absent; valid v1 history remains available for migration.
+   * versions are absent; valid v1 and v2 history remains available for migration.
    */
   readonly readRollup: (hour: DateTime.Utc) => Effect.Effect<O.Option<LedgerRollupRead>, GithubLedgerError>;
   /** The hot-parcel summary, when one was written. */
@@ -388,16 +398,20 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
   });
 
   const writeLatestTransport = Effect.fnUntraced(function* (reading: BucketReading) {
-    const entries = yield* readLatestEntries("transport-", decodeReading);
+    const entries = yield* readLatestEntries(TRANSPORT_PREFIX, decodeReading);
     const retained = retainLatestReading(reading, entries);
     const [key, newest] = A.lastNonEmpty(retained);
     const text = yield* encodeWith(BucketReadingJson, "encode a reading")(newest);
     const latest = yield* dir("latest");
     const keys = A.map(retained, ([key]) => key);
-    yield* writePrivate(path.join(latest, `transport-${key}.json`), text, "write the latest transport reading");
+    yield* writePrivate(
+      path.join(latest, `${TRANSPORT_PREFIX}${key}.json`),
+      text,
+      "write the latest transport reading"
+    );
     yield* Effect.forEach(
       A.filter(entries, ([key]) => !A.contains(keys, key)),
-      ([key]) => removeIfPresent(path.join(latest, `transport-${key}.json`), "remove a superseded instance"),
+      ([key]) => removeIfPresent(path.join(latest, `${TRANSPORT_PREFIX}${key}.json`), "remove a superseded instance"),
       { discard: true }
     );
   });
@@ -414,7 +428,7 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
   const readRollup = Effect.fnUntraced(function* (hour: DateTime.Utc) {
     const rollups = yield* dir("rollups");
     const text = yield* readOptional(path.join(rollups, `${hourFileKey(hour)}.json`), "read an hour rollup");
-    // Preserve v1 as a distinct version so expired raw history can be reported explicitly.
+    // Preserve v1 and v2 as distinct versions so expired raw history can be reported explicitly.
     return O.flatMap(text, decodeRollupRead);
   });
 
@@ -489,15 +503,19 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
             decodeSample(text),
             (sample) =>
               DateTime.toEpochMillis(sample.at) < limitMillis ||
-              A.every(readingsOfSample(sample), expiredUnknownReading(now))
+              A.every(readingsOfSample(sample), expiredInstanceReading(now))
           )
         : O.map(
             decodeReading(text),
-            (reading) => DateTime.toEpochMillis(reading.asOf) < limitMillis || expiredUnknownReading(reading, now)
+            (reading) => DateTime.toEpochMillis(reading.asOf) < limitMillis || expiredInstanceReading(reading, now)
           );
     const readings = A.filter(
       listed,
-      (name) => (Str.startsWith("sample-")(name) || Str.startsWith("transport-")(name)) && Str.endsWith(".json")(name)
+      (name) =>
+        (Str.startsWith("sample-")(name) ||
+          Str.startsWith(TRANSPORT_PREFIX)(name) ||
+          Str.startsWith(LEGACY_TRANSPORT_PREFIX)(name)) &&
+        Str.endsWith(".json")(name)
     );
     yield* Effect.forEach(
       readings,
@@ -587,7 +605,13 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
     writeLatestSample,
     latestSamples: readLatestEntries("sample-", decodeSample).pipe(Effect.map(A.map(([, value]) => value))),
     writeLatestTransport,
-    latestTransport: readLatestEntries("transport-", decodeReading).pipe(Effect.map(A.map(([, value]) => value))),
+    latestTransport: Effect.map(
+      Effect.all([
+        readLatestEntries(TRANSPORT_PREFIX, decodeReading),
+        readLatestEntries(LEGACY_TRANSPORT_PREFIX, decodeReading),
+      ]),
+      ([current, legacy]) => A.map(A.appendAll(current, legacy), ([, value]) => value)
+    ),
     readAliases,
     writeAlias,
     readRollup,
@@ -739,14 +763,14 @@ export const makeGithubLedgerStoreMemory = Effect.sync((): GithubLedgerStoreShap
             A.fromIterable(samples),
             ([, sample]) =>
               DateTime.toEpochMillis(sample.at) < latestLimit ||
-              A.every(readingsOfSample(sample), expiredUnknownReading(now))
+              A.every(readingsOfSample(sample), expiredInstanceReading(now))
           ),
           ([key]) => MutableHashMap.remove(samples, key)
         );
         A.forEach(
           A.filter(
             A.fromIterable(transports),
-            ([, reading]) => DateTime.toEpochMillis(reading.asOf) < latestLimit || expiredUnknownReading(reading, now)
+            ([, reading]) => DateTime.toEpochMillis(reading.asOf) < latestLimit || expiredInstanceReading(reading, now)
           ),
           ([key]) => MutableHashMap.remove(transports, key)
         );
