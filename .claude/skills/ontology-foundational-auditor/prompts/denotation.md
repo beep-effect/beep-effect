@@ -31,4 +31,4 @@ For every observation:
 
 Output only DenotationHypothesis records conforming to
 _shared/schemas/denotation-hypothesis.schema.yaml (enforced by
-scripts/validate_artifacts.py).
+scripts/validate_artifacts.ts).

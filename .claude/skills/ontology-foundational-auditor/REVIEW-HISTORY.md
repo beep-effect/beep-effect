@@ -17,7 +17,7 @@ dishonest-actor walkthrough that stays within accurately disclosed limits is
 a residual-verification item, not a blocker — the Known Limits section of
 SKILL.md is the honest boundary the loop forced into existence.
 
-Verification stack, every round: `validate_artifacts.py --self-test` (the
+Verification stack, every round: `validate_artifacts.ts --self-test` (the
 rule-family count below is the number of distinct rule families the
 self-test proves fire), a mechanical round-0 lint over the skill package,
 replay of every attack tree both seats produced (each must FAIL for the
@@ -82,7 +82,7 @@ each names its provenance and ships with self-test families.
   `../archives/<root-name>/`, outside the scan root, so no in-root
   exemption exists to hide live records in. Shadow manifests/indexes under
   `runs/` still fall through to the authoritative-location checks.
-  (2) *Strict-first loop resolution*: Python 3.13 changed non-strict
+  (2) *Strict-first loop resolution*: Bun.13 changed non-strict
   `Path.resolve()` to swallow symlink loops, breaking `safe_join`'s
   fail-closed confinement (the symlink-loop self-test family caught it —
   the 3.12 runtime pin during run 2 was the workaround). `safe_join` now

@@ -126,6 +126,18 @@ Lane chore/finish-board-pause-b1
 
 Reverse: goals set-status python-free-repo active when it is picked up
 
+### Run standalone skill ports and parity tests with Bun, 2026-11-13
+
+This lane ports only the Python in the four assigned skills. No existing TypeScript skill-script test precedent was found. Use bun:test, strict standalone TypeScript checking, and root node_modules without a workspace build. Preserve the validator checks through a direct TypeScript lowering with a local data-semantics namespace in the same digest-locked file; no Python interpreter or source evaluator remains. Retain all 103 original self-test assertions and replay recorded Python output digests for normal, gate, and repository-fidelity runs on the existing beep-ci-ops extraction tree. Its existing violations are parity evidence, not a green ontology acceptance. Harness plan output and original synthetic host classifiers are replayed offline.
+
+Reverse: Revert this lane commit to restore the Python skills and their commands
+
+### Preserve Plasma FIFO delivery and sandbox TypeScript adapters, 2026-11-13
+
+Use the current Effect process leaves and scoped owned-process cleanup for kdialog. Linux pipe2 creates an actual inherited FIFO because generic child-process extra pipes can be sockets; only the write descriptor is inherited, with no secret in argv, env, logs, or files. Bun FFI is limited to pipe2, fcntl, and the harness flock lock. Bun native PTYs replace Python openpty for fleet auth. Tests use synthetic dialogs only. The ontology sandbox binds the resolved native Bun executable read-only, runs TS adapters with --smol under the existing 2 GiB address-space limit, and disables automatic env-file and bunfig loading. Repository adapters stay provenance copies; only externally authored, owned, non-writable trusted adapters execute.
+
+Reverse: Revert the skill transport and sandbox changes together with their documentation
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger
