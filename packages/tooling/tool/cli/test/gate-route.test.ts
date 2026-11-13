@@ -9,7 +9,7 @@ import {
 } from "@beep/repo-cli/test/RepoRun";
 import { FinalCheckGate } from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, deepStrictEqual } from "@effect/vitest/utils";
+import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
@@ -58,26 +58,49 @@ describe("gate route table (D6)", () => {
   });
 });
 
-// goals/compute-profile-gate-routing P3: what --force-local does on a worker, from the dankserver
-// measurements of 2026-11-13 (research/2026-11-13-worker-host-acceptance.md).
+// goals/compute-profile-gate-routing: what --force-local does on a worker, from the dankserver
+// measurements of 2026-11-13 (research/2026-11-13-worker-host-acceptance.md and its -repeat.md) and
+// the 2026-11-13 decision "A forced gate on a worker completes serially inside its measured budget
+// or refuses with the reason".
 describe("worker --force-local routes", () => {
-  it("runs fallow and coverage one task at a time and refuses the gates whose one process outgrows a worker", () => {
-    const tags = A.map(
-      ["fallow", "coverage", "cheap-gates", "lint-policy", "repo-sanity", "check", "docgen"] as const,
-      (gate) => O.map(HashMap.get(workerForcedRouteTable, gate), (route) => route._tag)
-    );
-    deepStrictEqual(tags, [
-      O.some("Serial"),
-      O.some("Serial"),
-      O.some("Refused"),
-      O.some("Refused"),
-      O.some("Refused"),
-      O.some("Refused"),
-      O.some("Refused"),
+  const reason = (gate: GateRouteId) => O.getOrElse(workerForcedRefusal(gate), () => "");
+
+  it("keeps only coverage forceable and refuses every other gate a worker does not run in full", () => {
+    const tags = A.map(GateRouteId.literals, (gate) => [
+      gate,
+      O.getOrUndefined(O.map(HashMap.get(workerForcedRouteTable, gate), (route) => route._tag)),
     ]);
-    assertNone(workerForcedRefusal("fallow"));
+    expect(tags).toStrictEqual([
+      ["expectation-rewrite", undefined],
+      ["cheap-gates", "Refused"],
+      ["lint-policy", "Refused"],
+      ["lint", undefined],
+      ["repo-sanity", "Refused"],
+      ["check", "Refused"],
+      ["docgen", "Refused"],
+      ["fallow", "Refused"],
+      ["coverage", "Serial"],
+      ["effect-vitest-files", undefined],
+      ["hook:schema-catalog", undefined],
+      ["hook:instrumentation-catalog", undefined],
+    ]);
+    assertNone(workerForcedRefusal("coverage"));
     assertNone(workerForcedRefusal("lint"));
-    expect(O.getOrUndefined(workerForcedRefusal("check"))).toContain("4.07 GB");
+  });
+
+  it("names the measured figure and where it is recorded in each refusal", () => {
+    const cheapGates = reason("cheap-gates");
+    const fallow = reason("fallow");
+    expect(cheapGates).toContain("5.2 GB");
+    expect(cheapGates).toContain("worker-final-check-runs-only-changeset-status-for-repo-sanity");
+    expect(reason("lint-policy")).toContain("2.59 GB");
+    expect(reason("check")).toContain("2.59 GB for one process");
+    expect(reason("check")).toContain("(2026-11-13-worker-host-acceptance.md)");
+    expect(reason("repo-sanity")).toMatch(/^only its changeset status check runs here; .*5\.2 GB/);
+    expect(reason("docgen")).toBe("no measured worker budget on dankserver");
+    expect(fallow).toContain("2.15 GB aggregate");
+    expect(fallow).toContain("523 s (2026-11-13-worker-host-acceptance-repeat.md)");
+    expect(fallow).toContain("3.06 GB");
   });
 
   it("names a route for every gate a worker leaves to hosted CI", () => {
