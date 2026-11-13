@@ -3,13 +3,14 @@
   "initiative": {
     "id": "session-route-resolver",
     "title": "Session Route Resolver",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-12",
     "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/session-route-resolver",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
+  "retentionReason": "Documents a live system: `beep session resolve`, the SessionPresence rows the SessionStart hooks write, and the route and liveness contract the orchestrate and closeout skills point agents at. The cut readers (Codex thread table, `t3 thread list`) and the gated candidates in explorations/session-addressing/MAP.md build on this packet.",
   "mission": "Any agent runs one command with a PR, branch, lane or checkout and gets the owning session, its message routes, their liveness and the exact send call.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -22,7 +23,13 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 3297,
+        "role": "final"
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -57,17 +64,17 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -82,5 +89,9 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3297
+  }
 }

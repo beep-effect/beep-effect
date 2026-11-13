@@ -10,9 +10,9 @@ Status: `active`
 | --- | --- | --- | --- |
 | P0 Research | complete | Check from inside a T3-hosted Codex session whether `T3CODE_THREAD_ID` is set; confirm the Effect v4 APIs for the recursive union. | Both facts are recorded as checkpoint files. |
 | P1 Implement | complete | Schemas, then presence capture in the identity reader and hooks, then `session resolve` over ledger, presence and the Claude live index; then the Codex thread-table and `t3` CLI readers (first to cut). | Acceptance criteria are met. |
-| P2 Verify | in-progress | Run required checks and capture evidence. | Verification is green or blockers are documented. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P2 Verify | complete | Run required checks and capture evidence. | Verification is green or blockers are documented. |
+| P3 Yeet: PR to mergeable | complete | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P4 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 <!--
 Phase ids MUST match ops/manifest.json `phases[]` exactly. Until 2026-08-06 this
