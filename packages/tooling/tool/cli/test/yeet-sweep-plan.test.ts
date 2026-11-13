@@ -73,8 +73,9 @@ const mergedFacts = {
   pullRequestHeadOid: O.some(mergedTip),
 };
 
-const stateWith = (overrides: Partial<typeof mergedFacts>): SweepGitState =>
-  SweepGitState.make({ ...mergedFacts, ...overrides });
+const stateWith = (
+  overrides: Partial<typeof mergedFacts & { readonly pullRequestNumber: O.Option<number> }>
+): SweepGitState => SweepGitState.make({ ...mergedFacts, ...overrides });
 
 const mergedState = stateWith({});
 
@@ -148,6 +149,38 @@ describe("local branch deletion contract", () => {
 
   it("blocks -D when the local tip has moved past the pull request head", () => {
     expect(blockerText(stateWith({ localTip: O.some("cccc3333") }), "delete-local-branch")).toEqual([
+      "local tip cccc3333 equals pull request head aaaa1111bbbb2222",
+    ]);
+  });
+
+  it("names the pull request's own head ref when GitHub rewrote a merged head", () => {
+    // A cascade or restack moved the head after the lane last fetched; GitHub
+    // deleted the merged branch, so only refs/pull/<n>/head still serves it.
+    const rewritten = stateWith({ localTip: O.some("cccc3333"), pullRequestNumber: O.some(3149) });
+    expect(blockerText(rewritten, "delete-local-branch")).toEqual([
+      "local tip cccc3333 equals pull request head aaaa1111bbbb2222; to adopt the pull request head, run: git fetch origin refs/pull/3149/head && git switch -C 'feat/merge-loop' FETCH_HEAD, safe only when the local tip holds no commit of your own that the pull request head lacks (after the fetch, `git log aaaa1111bbbb2222..cccc3333` prints nothing)",
+    ]);
+    const step = stepFor(rewritten, "delete-local-branch");
+    expect(step.action).toBe("git branch -D 'feat/merge-loop'");
+    expect(step.requiresOperator).toBe(false);
+  });
+
+  it("keeps the plain tip text when the tips match, a tip is unknown, or the pull request is not MERGED", () => {
+    const numbered = { pullRequestNumber: O.some(3149) };
+    expect(blockerText(stateWith(numbered), "delete-local-branch")).toEqual([]);
+    expect(
+      A.map(stepFor(stateWith(numbered), "delete-local-branch").preconditions, (observed) => observed.description)
+    ).toContain("local tip aaaa1111bbbb2222 equals pull request head aaaa1111bbbb2222");
+    expect(blockerText(stateWith({ ...numbered, pullRequestHeadOid: O.none() }), "delete-local-branch")).toEqual([
+      "local tip aaaa1111bbbb2222 equals pull request head <absent>",
+    ]);
+    expect(
+      blockerText(
+        stateWith({ ...numbered, localTip: O.some("cccc3333"), pullRequestState: O.some("OPEN") }),
+        "delete-local-branch"
+      )
+    ).toEqual([
+      "pull request for feat/merge-loop is MERGED",
       "local tip cccc3333 equals pull request head aaaa1111bbbb2222",
     ]);
   });

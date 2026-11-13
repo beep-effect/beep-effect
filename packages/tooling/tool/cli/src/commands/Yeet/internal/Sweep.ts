@@ -178,6 +178,10 @@ const permissionDenialMarkers = [
  * check it, so a pull request `gh` resolved by some other route cannot authorize
  * deleting a branch it never belonged to.
  *
+ * `pullRequestNumber` only words the local-tip blocker of a merged pull
+ * request: it names `refs/pull/<n>/head`, the head GitHub still serves after
+ * it deleted the merged branch. It authorizes nothing.
+ *
  * `remoteBranchAbsent` is true only when the remote itself answered that it has
  * no `refs/heads/<branch>`. A missing remote-tracking ref proves nothing (it may
  * never have been fetched), so the observer asks `git ls-remote` before the
@@ -238,6 +242,7 @@ export class SweepGitState extends S.Opaque<SweepGitState, { readonly brand: uni
     localTip: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     remoteTip: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     remoteBranchAbsent: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    pullRequestNumber: S.Int.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     pullRequestState: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     pullRequestHeadBranch: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     pullRequestHeadOid: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
@@ -438,6 +443,28 @@ const pullRequestIdentityPrecondition = (state: SweepGitState): SweepPreconditio
 const tipsMatch = (left: O.Option<string>, right: O.Option<string>): boolean =>
   O.isSome(left) && O.isSome(right) && left.value === right.value;
 
+// After GitHub rewrites a merged layer's head (the cascade when the layer below
+// merges alone, or a restack) the lane's local tip is the older head, and
+// GitHub deleted the merged branch, so `origin/<branch>` cannot supply the new
+// one: name the pull request's own head ref. Only the text changes; a
+// mismatching tip still blocks the `-D` delete.
+const localTipPrecondition = (state: SweepGitState): SweepPrecondition => {
+  const satisfied = tipsMatch(state.localTip, state.pullRequestHeadOid);
+  const claim = `local tip ${optionText(state.localTip)} equals pull request head ${optionText(state.pullRequestHeadOid)}`;
+  const adoption = pipe(
+    O.all({ number: state.pullRequestNumber, local: state.localTip, head: state.pullRequestHeadOid }),
+    O.filter(() => pullRequestIsMerged(state) && !satisfied),
+    O.map(
+      ({ number, local, head }) =>
+        `${claim}; to adopt the pull request head, run: git fetch origin refs/pull/${number}/head && git switch -C ${shellQuote(state.branch)} FETCH_HEAD, safe only when the local tip holds no commit of your own that the pull request head lacks (after the fetch, \`git log ${head}..${local}\` prints nothing)`
+    )
+  );
+  return precondition(
+    O.getOrElse(adoption, () => claim),
+    satisfied
+  );
+};
+
 const fetchPrunePlanStep = (): SweepPlanStep =>
   SweepPlanStep.make({
     id: "fetch-prune",
@@ -507,13 +534,7 @@ const deleteLocalBranchPlanStep = (state: SweepGitState): SweepPlanStep => {
     : SweepPlanStep.make({
         id: "delete-local-branch",
         action: `git branch -D ${shellQuote(state.branch)}`,
-        preconditions: A.append(
-          shared,
-          precondition(
-            `local tip ${optionText(state.localTip)} equals pull request head ${optionText(state.pullRequestHeadOid)}`,
-            tipsMatch(state.localTip, state.pullRequestHeadOid)
-          )
-        ),
+        preconditions: A.append(shared, localTipPrecondition(state)),
         requiresOperator: false,
       });
 };
@@ -1092,6 +1113,7 @@ export const observeSweepGitState = Effect.fn("Yeet.observeSweepGitState")(funct
     localTip,
     remoteTip: remote.tip,
     remoteBranchAbsent: remote.absent,
+    pullRequestNumber: O.map(pullRequest, (view) => view.number),
     pullRequestState: O.flatMap(pullRequest, (view) => optionFromNonEmpty(view.state)),
     pullRequestHeadBranch: O.flatMap(pullRequest, (view) => optionFromNonEmpty(view.headRefName)),
     // `git worktree list` names the owning clone first, so any other top level
