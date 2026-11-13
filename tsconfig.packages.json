@@ -532,6 +532,9 @@
       "path": "packages/tooling/library/ai-sync"
     },
     {
+      "path": "packages/tooling/library/alchemy-vercel"
+    },
+    {
       "path": "packages/tooling/library/codegen-kit"
     },
     {

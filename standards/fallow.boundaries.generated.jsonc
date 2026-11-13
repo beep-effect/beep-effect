@@ -66,6 +66,12 @@
         ]
       },
       {
+        "name": "@beep/alchemy-vercel",
+        "patterns": [
+          "packages/tooling/library/alchemy-vercel/src/**"
+        ]
+      },
+      {
         "name": "@beep/anthropic",
         "patterns": [
           "packages/drivers/anthropic/src/**"
@@ -1461,6 +1467,15 @@
           "@beep/postgres",
           "@beep/schema",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/alchemy-vercel",
+        "allow": [
+          "@beep/alchemy-vercel"
+        ],
+        "allowTypeOnly": [
+          "@beep/alchemy-vercel"
         ]
       },
       {
