@@ -1038,7 +1038,8 @@ const requestReviewerReview = Effect.fn("Yeet.requestReviewerReview")(function* 
       ? yield* pushReviewerRequest(context, prNumber, confirmedHead)
       : `[yeet] no comment routine configured for this pull request author/repository; no repeated review-trigger push`;
   }
-  // Only a ready open may anchor on the open time. After a flip the timeline
+  // The open time may anchor only when no flip just happened: at a ready open,
+  // or for a pull request found already ready. Right after a flip the timeline
   // can lag, and a pull request created as a draft records no convert_to_draft
   // event, so its open time would validate a draft-era request.
   return yield* requestReviewerComment(
@@ -1623,7 +1624,9 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
       yield* adviseSquashCommitlint(context, dependencies, prNumber);
       // Repairs a ready pull request whose label edit failed at the open or the flip.
       yield* ensureHeavyAdmission(context, dependencies, prNumber, read.remote.labels);
-      yield* ensureReviewerRequest(context, dependencies, prNumber, currentHead, false);
+      // No flip just happened here, so a timeline with no ready event means the
+      // pull request was opened ready: its open may anchor the request.
+      yield* ensureReviewerRequest(context, dependencies, prNumber, currentHead, false, true);
     }),
     flip: Effect.fnUntraced(function* ({ prNumber, headSha }) {
       yield* requireFinalCheck(

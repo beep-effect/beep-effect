@@ -531,17 +531,22 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
     it.effect("repairs a ready pull request that lacks the heavy-admission label", () =>
       Effect.gen(function* () {
         const admitted = yield* Ref.make<ReadonlyArray<number>>([]);
+        const anchors = yield* Ref.make<ReadonlyArray<readonly [boolean | undefined, boolean | undefined]>>([]);
         const decision = yield* runYeetReadyGate(context, {
           rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           read: () => Effect.succeed(prView({ isDraft: false, labels: [] })),
           admitHeavy: (_context, prNumber) => Ref.update(admitted, A.append(prNumber)),
-          requestReview: stubReviewerRequest,
+          // An already-ready pull request may anchor its request on the open; a flip may not.
+          requestReview: (_context, _prNumber, _head, allowPush, openedReady) =>
+            Ref.update(anchors, A.append([allowPush, openedReady] as const)).pipe(Effect.as("[yeet] requested")),
         });
         expect(decision._tag).toBe("already-ready");
         const got = yield* Ref.get(admitted);
         expect(got).toEqual([42]);
+        const asked = yield* Ref.get(anchors);
+        expect(asked).toEqual([[false, true]]);
       })
     );
 
@@ -618,8 +623,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           recordInherited: () => Effect.void,
           read: () => Effect.succeed(prView()),
           markReady: recordingMarkReady(calls),
-          requestReview: (_context, prNumber, confirmedHead) =>
-            Ref.update(requests, A.append([prNumber, confirmedHead] as const)).pipe(Effect.as("[yeet] pushed")),
+          requestReview: (_context, prNumber, confirmedHead, _allowPush, openedReady) =>
+            // A flip never anchors on the open: the timeline may not show its ready event yet.
+            Effect.sync(() => expect(openedReady ?? false).toBe(false)).pipe(
+              Effect.andThen(Ref.update(requests, A.append([prNumber, confirmedHead] as const))),
+              Effect.as("[yeet] pushed")
+            ),
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
