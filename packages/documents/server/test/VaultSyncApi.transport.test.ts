@@ -32,6 +32,7 @@ import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Command from "effect/cli/Command";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -79,7 +80,7 @@ class PassStarts extends Context.Service<PassStarts, Ref.Ref<ReadonlyArray<strin
   "@beep/documents-server/test/VaultSyncApi.transport.test/PassStarts"
 ) {}
 
-const recordingPass = VaultSyncPass.toLayer<never, PassStarts, never>(
+const recordingPass = VaultSyncPass.toLayer(
   Effect.gen(function* () {
     const starts = yield* PassStarts;
     return Effect.fn("test.pass")(function* ({
@@ -134,7 +135,10 @@ const revoke = Effect.flatMap(
 // One hosted model over PGlite membership; each entrypoint adds its own session adapter.
 // Open subscriptions re-read grants only when `pause` completes: never, unless a test signals it.
 const hosted = (kind: V.TransportKind, pause: Effect.Effect<void> = Effect.never) => {
-  const model = VaultSyncModel.layer(VaultSyncPolicies).pipe(Layer.provide(Domain.InMemory));
+  const model = VaultSyncModel.layer(VaultSyncPolicies).pipe(
+    Layer.provide(SecureRandom.layerWebCrypto),
+    Layer.provide(Domain.InMemory)
+  );
   return layerVaultSyncTransportSession(kind).pipe(
     Layer.provideMerge(model),
     Layer.provideMerge(
@@ -232,7 +236,12 @@ describe("vault-sync production session adapters", () => {
     Effect.gen(function* () {
       const context = yield* Layer.build(
         layerVaultSyncLaunchTokenResolver("http").pipe(
-          Layer.provideMerge(VaultSyncModel.layer(VaultSyncPolicies).pipe(Layer.provide(Domain.InMemory))),
+          Layer.provideMerge(
+            VaultSyncModel.layer(VaultSyncPolicies).pipe(
+              Layer.provide(SecureRandom.layerWebCrypto),
+              Layer.provide(Domain.InMemory)
+            )
+          ),
           Layer.provideMerge(Layer.mergeAll(binding, VaultSyncMembershipLive)),
           Layer.provideMerge(Layer.fresh(PgliteTestLayer))
         )
@@ -263,7 +272,12 @@ describe("vault-sync production session adapters", () => {
       const context = yield* Layer.build(
         VaultSyncSessionLive.pipe(
           Layer.provideMerge(VaultSyncLocalOperatorLive),
-          Layer.provideMerge(VaultSyncModel.layer(VaultSyncPolicies).pipe(Layer.provide(Domain.InMemory))),
+          Layer.provideMerge(
+            VaultSyncModel.layer(VaultSyncPolicies).pipe(
+              Layer.provide(SecureRandom.layerWebCrypto),
+              Layer.provide(Domain.InMemory)
+            )
+          ),
           Layer.provideMerge(Layer.mergeAll(binding, VaultSyncMembershipLive)),
           Layer.provideMerge(Layer.effectDiscard(schema)),
           Layer.provideMerge(Layer.fresh(PgliteTestLayer))
@@ -315,8 +329,9 @@ describe("vault-sync production session adapters", () => {
   it.effect("public pass and probe initiators start durable workflows only for authorized callers", () =>
     Effect.gen(function* () {
       const starts = yield* Ref.make<ReadonlyArray<string>>([]);
-      const model = InitiatorModel.layer(Layer.merge(VaultSyncRequestsLive, recordingPass)).pipe(
+      const model = InitiatorModel.layer(Layer.mergeAll(VaultSyncRequestsLive, recordingPass, VaultSyncPolicies)).pipe(
         Layer.provide(Layer.succeed(PassStarts, starts)),
+        Layer.provide(SecureRandom.layerWebCrypto),
         Layer.provide(Domain.InMemory)
       );
       const context = yield* Layer.build(

@@ -18,6 +18,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
@@ -120,7 +121,12 @@ const setup = Effect.fn("VaultSyncRpcsTest.setup")(function* (extraRows: Readonl
   );
   const host = VaultSyncSessionLive.pipe(
     Layer.provideMerge(VaultSyncSidecarChannelLive),
-    Layer.provideMerge(VaultSyncModel.layer(VaultSyncPolicies).pipe(Layer.provide(Domain.InMemory))),
+    Layer.provideMerge(
+      VaultSyncModel.layer(VaultSyncPolicies).pipe(
+        Layer.provide(SecureRandom.layerWebCrypto),
+        Layer.provide(Domain.InMemory)
+      )
+    ),
     Layer.provideMerge(Layer.mergeAll(binding, VaultSyncMembershipLive)),
     Layer.provideMerge(Layer.fresh(PgliteTestLayer))
   );

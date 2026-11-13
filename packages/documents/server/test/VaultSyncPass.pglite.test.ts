@@ -18,6 +18,7 @@ import { BunServices } from "@effect/platform-bun";
 import { describe, expect, layer } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
@@ -80,6 +81,7 @@ describe("VaultSyncPass SQL durability", () => {
             PassScenario.layer(Layer.mergeAll(VaultSyncPolicies, VaultSyncPassLive)).pipe(
               Layer.provide(adapters),
               Layer.provide(rootLayer),
+              Layer.provide(SecureRandom.layerWebCrypto),
               Layer.provide(AlchemyPostgres.layer())
             )
           );
@@ -206,6 +208,7 @@ describe("VaultSyncPass SQL durability", () => {
         const runtime = yield* PassScenario.layer(Layer.mergeAll(VaultSyncPolicies, VaultSyncPassLive)).pipe(
           Layer.provide(adapters),
           Layer.provide(rootLayer),
+          Layer.provide(SecureRandom.layerWebCrypto),
           Layer.provide(AlchemyPostgres.layer()),
           Layer.fresh,
           Layer.build

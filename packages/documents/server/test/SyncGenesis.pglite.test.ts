@@ -14,11 +14,13 @@ import {
   LegacySyncItem,
   LegacySyncOperation,
   VaultSyncModel,
+  VaultSyncReadAccess,
 } from "@beep/documents-use-cases/aggregates/VaultSync";
 import { PgliteTestLayer } from "@beep/pglite/Pglite.test-layer";
 import { BunServices } from "@effect/platform-bun";
 import { describe, expect, layer } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
@@ -318,7 +320,12 @@ const assertRedeliveryStable = Effect.fnUntraced(function* (replayScope: Scope.C
   const before = yield* diffLegacySyncTables();
   yield* Scope.close(replayScope, Exit.void);
   yield* sql`UPDATE alchemy_projection_partition SET processed=0,checkpoints='{}'::jsonb WHERE model='GenesisAcceptance'`;
-  yield* Layer.build(ReplayModel.layer(LegacySyncProjections).pipe(Layer.provide(AlchemyPostgresPlatform.layer())));
+  yield* Layer.build(
+    ReplayModel.layer(Layer.merge(VaultSyncReadAccess, LegacySyncProjections)).pipe(
+      Layer.provide(SecureRandom.layerWebCrypto),
+      Layer.provide(AlchemyPostgresPlatform.layer())
+    )
+  );
   yield* awaitCursorProjection();
   const after = yield* diffLegacySyncTables();
   expect(after).toEqual(before);
@@ -336,7 +343,10 @@ describe("lossless offline genesis", () => {
         yield* seedCursors();
         const scope = yield* Scope.make();
         const runtime = yield* Layer.buildWithScope(
-          ImportModel.layer(Layer.empty).pipe(Layer.provide(genesisPlatform)),
+          ImportModel.layer(Layer.empty).pipe(
+            Layer.provide(SecureRandom.layerWebCrypto),
+            Layer.provide(genesisPlatform)
+          ),
           scope
         );
         yield* importAfterCrash(runtime);
@@ -346,7 +356,10 @@ describe("lossless offline genesis", () => {
         yield* clearLegacyTables();
         const replayScope = yield* Scope.make();
         const replay = yield* Layer.buildWithScope(
-          ReplayModel.layer(LegacySyncProjections).pipe(Layer.provide(genesisPlatform)),
+          ReplayModel.layer(Layer.merge(VaultSyncReadAccess, LegacySyncProjections)).pipe(
+            Layer.provide(SecureRandom.layerWebCrypto),
+            Layer.provide(genesisPlatform)
+          ),
           replayScope
         );
         yield* assertReplayDiffs();

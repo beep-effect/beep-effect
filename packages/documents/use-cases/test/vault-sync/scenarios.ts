@@ -11,6 +11,7 @@ import {
 import { describe, expect, it, layer } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as H from "effect/HashMap";
@@ -59,7 +60,10 @@ export const scenarios = <E>({
   readonly name: string;
   readonly platform: Layer.Layer<Platform.Platform, E>;
 }) => {
-  const hosted = VaultSyncModel.layer(VaultSyncPolicies).pipe(Layer.provide(platform));
+  const hosted = VaultSyncModel.layer(VaultSyncPolicies).pipe(
+    Layer.provide(platform),
+    Layer.provideMerge(SecureRandom.layerWebCrypto)
+  );
   describe(name, () => {
     it("declarations are valid", () => expect(Domain.verify(VaultSyncModel)).toEqual([]));
     layer(VaultSyncPolicies.pipe(Layer.provideMerge(hosted)), {

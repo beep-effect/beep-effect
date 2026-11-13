@@ -29,7 +29,7 @@ class PureVault extends Domain.Model("PureVault", {
     V.OperationQueue,
   ],
 }) {}
-const allowReads = Effect.succeed(constant(Effect.void));
+const allowReads = Effect.void.pipe(constant, Effect.succeed);
 const hosted = PureVault.layer(
   Layer.mergeAll(
     V.DestinationList.toLayer(allowReads),

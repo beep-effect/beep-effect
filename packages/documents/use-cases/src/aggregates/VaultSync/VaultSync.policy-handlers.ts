@@ -228,13 +228,11 @@ export const VaultSyncPolicies = Layer.mergeAll(
       return Effect.fn(function* ({ event, source, envelope }) {
         const expiry = event._tag === "OperationLeased";
         const at = DateTime.makeUnsafe(expiry ? event.expiresAt : event.retryAt);
-        yield* operations
-          .schedule(
-            source.id,
-            expiry ? V.ExpireLease.make({ attempt: event.attempt }) : V.RetryOperation.make({ attempt: event.attempt }),
-            { at, commandId: `${envelope.stream}:${envelope.seq}:deadline` }
-          )
-          .pipe(Effect.catchTag("AlreadyExecuted", () => Effect.void));
+        yield* operations.schedule(
+          source.id,
+          expiry ? V.ExpireLease.make({ attempt: event.attempt }) : V.RetryOperation.make({ attempt: event.attempt }),
+          { at, commandId: `${envelope.stream}:${envelope.seq}:deadline` }
+        );
       });
     })
   ),

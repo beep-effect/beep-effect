@@ -163,17 +163,7 @@ export const VaultSyncCheckpoint = Context.Reference<(phase: string) => Effect.E
  * @category workflows
  * @since 0.0.0
  */
-export const VaultSyncPassLive = VaultSyncPass.toLayer<
-  never,
-  | import("@alchemy.run/domain/Aggregate").Key<
-      "SyncDestination" | "SyncItem" | "SyncOperation" | "ConflictEventRegistry"
-    >
-  | import("@alchemy.run/domain/ExternalSystem").Identifier<typeof BoxMirror>
-  | VaultSyncRoot
-  | FileSystem.FileSystem
-  | Path.Path,
-  WorkflowEngine.WorkflowEngine | WorkflowEngine.WorkflowInstance
->(
+export const VaultSyncPassLive = VaultSyncPass.toLayer(
   Effect.gen(function* () {
     const destinations = yield* V.SyncDestination;
     const items = yield* V.SyncItem;

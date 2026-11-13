@@ -22,7 +22,19 @@ import * as TestClock from "effect/testing/TestClock";
 
 it("derives a CLI without internal command targets", () => {
   const command = vaultSyncCli({ headers: {} });
-  expect(command).toBeDefined();
+  expect(A.flatMap(command.subcommands, (group) => A.map(group.commands, (child) => child.name))).toEqual([
+    "request-vault-sync",
+    "probe-destination",
+    "claim-destination-name",
+    "record-conflict",
+    "pause-destination",
+    "resume-destination",
+    "review-conflict",
+    "vault-sync-status",
+    "open-conflicts",
+    "destination-list",
+    "operation-queue",
+  ]);
   expect(A.map(VaultSyncApi.commands, (command) => command.tag)).toEqual([
     "RequestVaultSync",
     "ProbeDestination",
@@ -49,7 +61,7 @@ class Starts extends Context.Service<Starts, Ref.Ref<ReadonlyArray<string>>>()(
   "@beep/documents-use-cases/test/vault-sync/api.test/Starts"
 ) {}
 
-const recordingPass = VaultSyncPass.toLayer<never, Starts, never>(
+const recordingPass = VaultSyncPass.toLayer(
   Effect.gen(function* () {
     const starts = yield* Starts;
     return Effect.fn("test.pass")(function* ({
