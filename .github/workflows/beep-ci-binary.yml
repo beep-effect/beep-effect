@@ -10,8 +10,9 @@ name: Beep CI Binary
 #
 # The path list below is only a coarse prefilter. A release is cut only when
 # the binary's closure digest (`beep ci binary-closure`: the static import
-# closure of bin-ci.ts, the workspace manifests it reaches, bun.lock,
-# .bun-version, bunfig.toml, patches/, the compile recipe and this file) differs from
+# closure of bin-ci.ts, the workspace manifests and tsconfig chains it reaches,
+# the root tsconfig, bun.lock, .bun-version, bunfig.toml, patches/, the compile
+# recipe and this file) differs from
 # the digest recorded on the latest `beep-ci-*` release; every release records
 # its digest in its notes and a `beep-linux-x64.closure.json` asset
 # (goals/heavy-pool-diet PERIH-11).
@@ -28,6 +29,8 @@ on:
       - .bun-version
       - bunfig.toml
       - patches/**
+      - tsconfig.json
+      - tsconfig.base.json
       - .github/workflows/beep-ci-binary.yml
   workflow_dispatch:
     inputs:
@@ -42,9 +45,11 @@ on:
 # the previous run published: two overlapping runs both read the older release and
 # published the same closure twice (ad71f5cdb67, run 43347787888). A run in flight
 # is never cancelled; a newer main push only replaces a still-pending run, and that
-# newer commit's closure includes the pending one's changes.
+# newer commit's closure includes the pending one's changes. The group is keyed
+# on the ref, so a dispatch from another ref (which fails without publishing)
+# never takes main's pending slot and cancels a main push.
 concurrency:
-  group: beep-ci-binary
+  group: beep-ci-binary-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
@@ -53,13 +58,25 @@ permissions:
 jobs:
   publish:
     name: Publish Beep CI Binary
-    # Publish only default-branch commits; a dispatch from another ref is a no-op.
-    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
       contents: write
     steps:
+      # Publish only default-branch commits. A dispatch from another ref fails
+      # here instead of skipping, so a verify_reproducible run never reports a
+      # green check without comparing any bytes.
+      - name: Require the default branch
+        shell: bash
+        env:
+          RUN_REF: ${{ github.ref }}
+          DEFAULT_REF: refs/heads/${{ github.event.repository.default_branch }}
+        run: |
+          if [[ "$RUN_REF" != "$DEFAULT_REF" ]]; then
+            echo "::error::Beep CI Binary runs only on ${DEFAULT_REF}; this run is on ${RUN_REF}, so nothing was compiled, compared or published."
+            exit 1
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -76,6 +93,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          VERIFY_REPRODUCIBLE: ${{ inputs.verify_reproducible }}
         run: |
           set -euo pipefail
           bun run beep ci binary-closure --out dist/beep-linux-x64.closure.json >/dev/null
@@ -101,6 +119,9 @@ jobs:
             echo "- latest release: \`${latest:-none}\` (recorded digest \`${recorded:-none}\`)"
             if [[ "$changed" == "true" ]]; then
               echo "- closure changed: compile and publish."
+              if [[ "$VERIFY_REPRODUCIBLE" == "true" ]]; then
+                echo "- not verified: the closure changed, so no release records this digest to reproduce."
+              fi
             else
               echo "- closure unchanged: no compile, no release."
             fi

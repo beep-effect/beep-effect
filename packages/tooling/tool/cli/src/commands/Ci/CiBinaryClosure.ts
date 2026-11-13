@@ -7,7 +7,11 @@
  * The closure is the static runtime import graph of `src/bin-ci.ts` (every
  * workspace module `bun build --compile` bundles, walked from source text by
  * the policy-fingerprint graph reader), the manifest of each workspace it
- * reaches, and the build inputs outside the graph: `bun.lock`, `.bun-version`,
+ * reaches, the `tsconfig.json` of each such workspace with every file on its
+ * relative `extends` chain plus the root `tsconfig.json` (Bun resolves
+ * `compilerOptions.paths` and honours emit options such as `jsx` and
+ * `verbatimModuleSyntax` when it bundles), and the build inputs outside the
+ * graph: `bun.lock`, `.bun-version`,
  * `bunfig.toml`, the dependency patches under `patches/`, the compile recipe
  * and the release workflow. External packages end the walk; `bun.lock` pins
  * their versions and the patch files pin what `bun install` applies to them.
@@ -25,13 +29,15 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { findRepoRoot } from "@beep/repo-utils/Root";
-import { A, O } from "@beep/utils";
+import { A, O, Str } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
@@ -69,6 +75,27 @@ const CI_BINARY_BUILD_INPUTS = [
  * path, not its content, so every file here is a closure input.
  */
 const PATCHES_DIRECTORY = "patches";
+
+/**
+ * The repository's root TypeScript configuration: it carries the `@beep/*`
+ * `compilerOptions.paths` aliases, which Bun resolves before `node_modules`.
+ */
+const ROOT_TSCONFIG = "tsconfig.json";
+
+/**
+ * The one field of a `tsconfig.json` the closure walk follows: the
+ * configurations it extends.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+class TsconfigExtends extends S.Opaque<TsconfigExtends, { readonly brand: unique symbol }>()(
+  S.Struct({
+    extends: S.optionalKey(S.Union([S.String, S.Array(S.String)])),
+  }).pipe($I.annoteSchema("TsconfigExtends", { description: "The `extends` field of a TypeScript configuration." }))
+) {}
+
+const decodeTsconfigExtends = S.decodeUnknownEffect(TsconfigExtends);
 
 /**
  * One file of the CI binary closure and the sha256 of its content.
@@ -142,24 +169,71 @@ const readRequired = Effect.fnUntraced(function* (tree: PolicySourceTree, file: 
   return yield* CiCommandError.make({ message: `CI binary closure file ${file} does not exist.` });
 });
 
+// Normalise a repo-relative POSIX path, resolving `.` and `..` segments.
+const normalizePosix = (path: string): string =>
+  A.join(
+    A.reduce(Str.split(path, "/"), A.empty<string>(), (segments, part) => {
+      if (part === "..") return A.dropRight(segments, 1);
+      return part === "." || part === "" ? segments : A.append(segments, part);
+    }),
+    "/"
+  );
+
+// The configurations a tsconfig extends by relative path. A package
+// specifier resolves into `node_modules`, which `bun.lock` already pins.
+const extendedConfigs = (file: string, config: TsconfigExtends): ReadonlyArray<string> => {
+  const directory = A.join(A.dropRight(Str.split(file, "/"), 1), "/");
+  const targets = A.ensure(config.extends ?? []);
+  return A.map(A.filter(targets, Str.startsWith(".")), (target) => {
+    const path = normalizePosix(`${directory}/${target}`);
+    return Str.endsWith(".json")(path) ? path : `${path}.json`;
+  });
+};
+
+// Every tsconfig reachable from the starting ones through `extends`. A
+// starting workspace without a tsconfig contributes nothing.
+const tsconfigChain = Effect.fnUntraced(function* (tree: PolicySourceTree, starts: ReadonlyArray<string>) {
+  let visited = HashSet.empty<string>();
+  const pending = [...starts];
+  for (let file = pending.pop(); file !== undefined; file = pending.pop()) {
+    if (HashSet.has(visited, file)) continue;
+    const text = yield* tree.read(file);
+    if (O.isNone(text)) continue;
+    visited = HashSet.add(visited, file);
+    const parsed = yield* Jsonc.parse(text.value);
+    const config = yield* decodeTsconfigExtends(parsed);
+    pending.push(...extendedConfigs(file, config));
+  }
+  return A.fromIterable(visited);
+});
+
+const listFiles = (tree: PolicySourceTree, directory: string) =>
+  tree.files(directory).pipe(Effect.mapError(CiCommandError.new(`Cannot list ${directory}.`)));
+
 // The closure's file list: reached modules, their workspace manifests, every
 // source file of a workspace holding a non-literal dynamic import, and the
 // build inputs.
 const closurePaths = Effect.fnUntraced(function* (tree: PolicySourceTree, workspaces: ReadonlyArray<PolicyWorkspace>) {
   const graph = makePolicyGraph({ tree, workspaces });
-  const reached = yield* graph.moduleClosure([CI_BINARY_ENTRY]);
+  const reached = yield* graph
+    .moduleClosure([CI_BINARY_ENTRY])
+    .pipe(Effect.mapError(CiCommandError.new("Failed to walk the CI binary import closure.")));
   const modules = A.fromIterable(reached.modules);
-  const manifests = A.map(
-    A.getSomes(A.map(modules, graph.workspaceOf)),
-    (workspace) => `${workspace.directory}/package.json`
+  const directories = A.dedupe(
+    A.map(A.getSomes(A.map(modules, graph.workspaceOf)), (workspace) => workspace.directory)
   );
+  const manifests = A.map(directories, (directory) => `${directory}/package.json`);
+  const tsconfigs = yield* tsconfigChain(tree, [
+    ROOT_TSCONFIG,
+    ...A.map(directories, (directory) => `${directory}/tsconfig.json`),
+  ]).pipe(Effect.mapError(CiCommandError.new("Cannot read the TypeScript configurations of the CI binary closure.")));
   const opaque = yield* Effect.forEach(A.fromIterable(reached.opaqueWorkspaces), (directory) =>
-    tree.files(`${directory}/src`)
+    listFiles(tree, `${directory}/src`)
   );
   // `bun.lock` names each patch by path only, so the patch bytes enter here.
-  const patches = yield* tree.files(PATCHES_DIRECTORY);
+  const patches = yield* listFiles(tree, PATCHES_DIRECTORY);
   return A.sort(
-    A.dedupe([...modules, ...manifests, ...A.flatten(opaque), ...patches, ...CI_BINARY_BUILD_INPUTS]),
+    A.dedupe([...modules, ...manifests, ...tsconfigs, ...A.flatten(opaque), ...patches, ...CI_BINARY_BUILD_INPUTS]),
     Order.String
   );
 });
@@ -198,9 +272,7 @@ export const ciBinaryClosureOf: (source: {
   readonly tree: PolicySourceTree;
   readonly workspaces: ReadonlyArray<PolicyWorkspace>;
 }) {
-  const paths = yield* closurePaths(tree, workspaces).pipe(
-    Effect.mapError(CiCommandError.new("Failed to walk the CI binary import closure."))
-  );
+  const paths = yield* closurePaths(tree, workspaces);
   const files = yield* Effect.forEach(paths, (path) =>
     Effect.flatMap(readRequired(tree, path), (text) =>
       Effect.map(sha256Hex(text), (sha256) => CiBinaryClosureFile.make({ path, sha256 }))
