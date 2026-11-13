@@ -481,8 +481,10 @@ const sourcesPayload = (input: BootstrapInput): string => {
         A.map((file) => `\`explorations/${exploration}/${file}\``),
         A.join(",\n  ")
       )}.
-- Write every path in this file from the repo root. Do not copy a relative
-  link out of the exploration's ledger.
+- Write each backticked path in this file from the repo root. A Markdown link
+  target resolves from this file's directory instead, so point it three levels
+  up to the repo root first; never copy a relative link out of the
+  exploration's ledger unchanged.
 `,
     })
   );
