@@ -70,8 +70,6 @@ const CI_BINARY_BUILD_INPUTS = [
  */
 const PATCHES_DIRECTORY = "patches";
 
-const isCiCommandError = S.is(CiCommandError);
-
 /**
  * One file of the CI binary closure and the sha256 of its content.
  *
@@ -139,7 +137,7 @@ export class CiBinaryClosure extends S.Opaque<CiBinaryClosure, { readonly brand:
 const encodeClosureJson = S.encodeEffect(S.fromJsonString(CiBinaryClosure, { space: 2 }));
 
 const readRequired = Effect.fnUntraced(function* (tree: PolicySourceTree, file: string) {
-  const text = yield* tree.read(file);
+  const text = yield* tree.read(file).pipe(Effect.mapError(CiCommandError.new(`Cannot read ${file}.`)));
   if (O.isSome(text)) return text.value;
   return yield* CiCommandError.make({ message: `CI binary closure file ${file} does not exist.` });
 });
@@ -193,28 +191,25 @@ const closurePaths = Effect.fnUntraced(function* (tree: PolicySourceTree, worksp
 export const ciBinaryClosureOf: (source: {
   readonly tree: PolicySourceTree;
   readonly workspaces: ReadonlyArray<PolicyWorkspace>;
-}) => Effect.Effect<CiBinaryClosure, CiCommandError, Digest.Digest> = Effect.fn("Ci.ciBinaryClosureOf")(
-  function* ({
-    tree,
-    workspaces,
-  }: {
-    readonly tree: PolicySourceTree;
-    readonly workspaces: ReadonlyArray<PolicyWorkspace>;
-  }) {
-    const paths = yield* closurePaths(tree, workspaces);
-    const files = yield* Effect.forEach(paths, (path) =>
-      Effect.flatMap(readRequired(tree, path), (text) =>
-        Effect.map(sha256Hex(text), (sha256) => CiBinaryClosureFile.make({ path, sha256 }))
-      )
-    );
-    const listing = A.join([CLOSURE_VERSION, ...A.map(files, (file) => `${file.sha256}  ${file.path}`), ""], "\n");
-    const digest = yield* sha256Hex(listing);
-    return CiBinaryClosure.make({ schemaVersion: CLOSURE_VERSION, entry: CI_BINARY_ENTRY, files, digest });
-  },
-  Effect.mapError((error) =>
-    isCiCommandError(error) ? error : CiCommandError.new(error, "Failed to compute the CI binary closure.")
-  )
-);
+}) => Effect.Effect<CiBinaryClosure, CiCommandError, Digest.Digest> = Effect.fn("Ci.ciBinaryClosureOf")(function* ({
+  tree,
+  workspaces,
+}: {
+  readonly tree: PolicySourceTree;
+  readonly workspaces: ReadonlyArray<PolicyWorkspace>;
+}) {
+  const paths = yield* closurePaths(tree, workspaces).pipe(
+    Effect.mapError(CiCommandError.new("Failed to walk the CI binary import closure."))
+  );
+  const files = yield* Effect.forEach(paths, (path) =>
+    Effect.flatMap(readRequired(tree, path), (text) =>
+      Effect.map(sha256Hex(text), (sha256) => CiBinaryClosureFile.make({ path, sha256 }))
+    )
+  );
+  const listing = A.join([CLOSURE_VERSION, ...A.map(files, (file) => `${file.sha256}  ${file.path}`), ""], "\n");
+  const digest = yield* sha256Hex(listing);
+  return CiBinaryClosure.make({ schemaVersion: CLOSURE_VERSION, entry: CI_BINARY_ENTRY, files, digest });
+});
 
 /**
  * Compute the CI binary closure of the live checkout under `root`.
@@ -233,24 +228,25 @@ export const ciBinaryClosureOf: (source: {
  * @category use-cases
  * @since 0.0.0
  */
-export const computeCiBinaryClosure = Effect.fn("Ci.computeCiBinaryClosure")(
-  function* (root: string) {
-    const tree = yield* livePolicySourceTree(root);
-    const workspaces = yield* readPolicyWorkspaces(root);
-    return yield* ciBinaryClosureOf({ tree, workspaces });
-  },
-  Effect.mapError((error) =>
-    isCiCommandError(error) ? error : CiCommandError.new(error, "Failed to compute the CI binary closure.")
-  )
-);
-
-const writeClosure = Effect.fnUntraced(function* (closure: CiBinaryClosure, out: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const target = path.resolve(out);
-  yield* fs.makeDirectory(path.dirname(target), { recursive: true });
-  yield* fs.writeFileString(target, `${yield* encodeClosureJson(closure)}\n`);
+export const computeCiBinaryClosure = Effect.fn("Ci.computeCiBinaryClosure")(function* (root: string) {
+  const tree = yield* livePolicySourceTree(root);
+  const workspaces = yield* readPolicyWorkspaces(root).pipe(
+    Effect.mapError(CiCommandError.new(`Cannot read the workspaces under ${root}.`))
+  );
+  return yield* ciBinaryClosureOf({ tree, workspaces });
 });
+
+const writeClosure = Effect.fnUntraced(
+  function* (closure: CiBinaryClosure, out: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const target = path.resolve(out);
+    const json = yield* encodeClosureJson(closure);
+    yield* fs.makeDirectory(path.dirname(target), { recursive: true });
+    yield* fs.writeFileString(target, `${json}\n`);
+  },
+  (effect, _closure, out) => effect.pipe(Effect.mapError(CiCommandError.new(`Failed to write ${out}.`)))
+);
 
 /**
  * `beep ci binary-closure [--out <path>] [--list]`.
@@ -286,15 +282,10 @@ export const ciBinaryClosureCommand = Command.make(
   },
   ({ out, list }) =>
     Effect.gen(function* () {
-      const root = yield* findRepoRoot();
+      const root = yield* findRepoRoot().pipe(Effect.mapError(CiCommandError.new("Cannot find the repository root.")));
       const closure = yield* computeCiBinaryClosure(root);
       if (O.isSome(out)) yield* writeClosure(closure, out.value);
       yield* Console.log(closure.digest);
       if (list) yield* Effect.forEach(closure.files, (file) => Console.log(`${file.sha256}  ${file.path}`));
-    }).pipe(
-      Effect.mapError((error) =>
-        isCiCommandError(error) ? error : CiCommandError.new(error, "Failed to write the CI binary closure.")
-      ),
-      Effect.catchTag("CiCommandError", reportCiCommandError)
-    )
+    }).pipe(Effect.catchTag("CiCommandError", reportCiCommandError))
 ).pipe(Command.withDescription("Print the content digest of the compiled CI binary's closure"));

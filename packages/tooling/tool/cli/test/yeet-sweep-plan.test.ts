@@ -158,7 +158,7 @@ describe("local branch deletion contract", () => {
     // deleted the merged branch, so only refs/pull/<n>/head still serves it.
     const rewritten = stateWith({ localTip: O.some("cccc3333"), pullRequestNumber: O.some(3149) });
     expect(blockerText(rewritten, "delete-local-branch")).toEqual([
-      "local tip cccc3333 equals pull request head aaaa1111bbbb2222; to adopt the pull request head, run: git fetch origin refs/pull/3149/head && git switch -C 'feat/merge-loop' FETCH_HEAD, safe only when the local tip holds no commit of your own that the pull request head lacks (after the fetch, `git log aaaa1111bbbb2222..cccc3333` prints nothing)",
+      "local tip cccc3333 equals pull request head aaaa1111bbbb2222; to adopt the pull request head, run: git fetch origin refs/pull/3149/head && git switch -C 'feat/merge-loop' FETCH_HEAD, safe only when the local tip holds no commit of your own that the pull request head lacks (after the fetch, `git log --cherry-pick --right-only --no-merges aaaa1111bbbb2222...cccc3333` prints nothing)",
     ]);
     const step = stepFor(rewritten, "delete-local-branch");
     expect(step.action).toBe("git branch -D 'feat/merge-loop'");
@@ -181,6 +181,23 @@ describe("local branch deletion contract", () => {
       )
     ).toEqual([
       "pull request for feat/merge-loop is MERGED",
+      "local tip cccc3333 equals pull request head aaaa1111bbbb2222",
+    ]);
+  });
+
+  it("offers no adoption command for a merged pull request that heads another branch", () => {
+    // Adopting that head would move this branch onto an unrelated pull request.
+    expect(
+      blockerText(
+        stateWith({
+          localTip: O.some("cccc3333"),
+          pullRequestNumber: O.some(3149),
+          pullRequestHeadBranch: O.some("feat/other"),
+        }),
+        "delete-local-branch"
+      )
+    ).toEqual([
+      "pull request head branch feat/other is feat/merge-loop",
       "local tip cccc3333 equals pull request head aaaa1111bbbb2222",
     ]);
   });

@@ -8,6 +8,13 @@
  */
 
 /**
+ * Live store-side admission layer exports.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export * from "./Admission.layer.ts";
+/**
  * Admission outcome and typed finding exports.
  *
  * @category models
@@ -22,12 +29,33 @@ export * from "./Admission.models.ts";
  */
 export * from "./Admission.service.ts";
 /**
+ * In-memory admission test layer exports.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export * from "./Admission.test-layer.ts";
+/**
  * Typed error exports.
  *
  * @category errors
  * @since 0.0.0
  */
 export * from "./AgentMemoryStore.errors.ts";
+/**
+ * Agent write path model exports: admitted and exported writes.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./AgentWrite.models.ts";
+/**
+ * Agent write path exports: capture, admit and export in one call.
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export * from "./AgentWrite.program.ts";
 /**
  * Near-duplicate finding exports.
  *
@@ -148,6 +176,41 @@ export * from "./ObservationLog.service.ts";
  */
 export * from "./Operation.models.ts";
 /**
+ * Op capture apply helper exports.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export * from "./OperationCapture.apply.ts";
+/**
+ * Op capture exports: edited files to node operations against a base.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export * from "./OperationCapture.diff.ts";
+/**
+ * Op capture typed error exports.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export * from "./OperationCapture.errors.ts";
+/**
+ * Op capture model exports.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./OperationCapture.models.ts";
+/**
+ * Op capture status typing exports: status token swaps as `setStatus`.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export * from "./OperationCapture.status.ts";
+/**
  * Recall query, candidate and result model exports.
  *
  * @category models
@@ -182,6 +245,13 @@ export * from "./Scip.models.ts";
  * @since 0.0.0
  */
 export * from "./SpanAnchor.models.ts";
+/**
+ * Typed status field set and status token exports.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./StatusField.models.ts";
 /**
  * Status lifecycle model and guard exports.
  *

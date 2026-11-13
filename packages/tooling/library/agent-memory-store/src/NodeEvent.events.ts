@@ -35,7 +35,7 @@ import {
   StaleParentsError,
   UnplacedNodeError,
 } from "./AgentMemoryStore.errors.ts";
-import { ContentHash, MemoryFilePath, NodeId, NodeKind, RevisionId } from "./NodeIdentity.models.ts";
+import { ContentHash, isWellFormedText, MemoryFilePath, NodeId, NodeKind, RevisionId } from "./NodeIdentity.models.ts";
 import { LineageId } from "./Observation.events.ts";
 import { NodeOperation } from "./Operation.models.ts";
 import { OccurrenceAnchor } from "./SpanAnchor.models.ts";
@@ -74,7 +74,7 @@ export class NodeCreated extends S.Opaque<NodeCreated, { readonly brand: unique 
     kind: NodeKind.annotateKey({ description: "Markdown construct of the node." }),
     contentHash: ContentHash.annotateKey({ description: "Hash of the node's normalized text." }),
     revisionId: RevisionId.annotateKey({ description: "Root revision of the node." }),
-    text: S.String.annotateKey({ description: "Exact node text." }),
+    text: S.String.check(isWellFormedText).annotateKey({ description: "Exact node text." }),
     anchor: S.OptionFromOptionalKey(OccurrenceAnchor).annotateKey({
       description: "Span of the imported file the node was read from; absent for a node an agent wrote.",
     }),
@@ -110,7 +110,7 @@ export class NodeRevised extends S.Opaque<NodeRevised, { readonly brand: unique 
     revisionId: RevisionId.annotateKey({ description: "Revision this event produces." }),
     parents: S.NonEmptyArray(RevisionId).annotateKey({ description: "Revisions this revision follows." }),
     contentHash: ContentHash.annotateKey({ description: "Hash of the new normalized text." }),
-    text: S.String.annotateKey({ description: "New node text." }),
+    text: S.String.check(isWellFormedText).annotateKey({ description: "New node text." }),
     author: LineageId.annotateKey({ description: "Lineage that wrote the revision." }),
   }).pipe(
     $I.annoteSchema("NodeRevised", {
@@ -148,7 +148,7 @@ export class NodeStatusChanged extends S.Opaque<NodeStatusChanged, { readonly br
     revisionId: RevisionId.annotateKey({ description: "Revision this event produces." }),
     parents: S.NonEmptyArray(RevisionId).annotateKey({ description: "Revisions this revision follows." }),
     contentHash: ContentHash.annotateKey({ description: "Hash of the node's normalized text after the move." }),
-    text: S.String.annotateKey({ description: "Node text with the status field moved." }),
+    text: S.String.check(isWellFormedText).annotateKey({ description: "Node text with the status field moved." }),
     transition: StatusTransition.annotateKey({ description: "Admitted status change." }),
     author: LineageId.annotateKey({ description: "Lineage that moved the status." }),
   }).pipe(
