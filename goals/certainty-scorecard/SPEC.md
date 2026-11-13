@@ -120,7 +120,7 @@ Status checked against the live checkout at 6eb2e0588e2 and re-checked at c90929
 | MEAS-03 | Separate terminations and type unlocated failures | partly landed (terminations census at `Economics.ts:1399`; terminated attempts still count as red, `Economics.ts:1013`) | Adjudicated fixtures; the denominator change is recorded | MEAS-02, MEAS-07 |
 | MEAS-07 | Journal final-check invocations and keep per-run history | open (`FinalCheck.ts` writes no attempt journal) | Journaling unit test plus a ready-gate regression fixture | none |
 | PERIL-11 | Keep attempt journals outside the reaped residue root; T3 lanes via `roots.json`; seat and host fields (merges MEAS-09) | open (`ResidueReap.ts:1776`, `yeet` not retained; no T3 row in the runbook list) | Fixture: retire, simulate a copy failure, restore, import duplicates, run residue-reap with maxAgeDays=0, re-census; each (runId, attemptId) appears exactly once and a copy failure blocks deletion | MEAS-07 |
-| ROUT-05 | Route corpus with partition mapping, step classes and per-lane outcomes in one capture (merges ROUT-06) | partly landed (slice 1: partition and alias mapping with a lane, support or unknown conservation census, decision `job-attribution-classes`; guarded by literal per-class minutes from the fixture's raw timestamps, and the replay marks recall uncertain when a skipping head has a failed job no rule maps, decision `replay-unknown-reds`; step classes and per-task outcomes remain) | An old receipt restored to a scratch `--corpus` dir reproduces 242 skipped and 0 skippedReds; a post-#3043/#3046 fixture maps every job (conservation test: mapped plus unknown minutes equal total); aggregator and setup reds become unknown, never dropped | none |
+| ROUT-05 | Route corpus with partition mapping, step classes and per-lane outcomes in one capture (merges ROUT-06) | partly landed (slice 1: partition and alias mapping with a lane, support or unknown conservation census, decision `job-attribution-classes`; guarded by literal per-class minutes from the fixture's raw timestamps, and the replay marks recall uncertain when a skipping head has a failed job no rule maps, decision `replay-unknown-reds`; slice 2 in review: failed jobs keep their steps and rows take optional per-task outcomes under v1, and aggregate, setup and harness reds are charged to no lane and reported as unknown, decision `step-classes-and-red-origins`; the 2026-10-31..now capture remains) | An old receipt restored to a scratch `--corpus` dir reproduces 242 skipped and 0 skippedReds; a post-#3043/#3046 fixture maps every job (conservation test: mapped plus unknown minutes equal total); aggregator and setup reds become unknown, never dropped | none |
 | MEAS-06 | Project the existing Vitest unit-results.json into per-file and per-package timing on every event | open (unit-results.json is uploaded only by the failure-only step at `.github/workflows/check.yml:924-934`; nothing projects it) | Rows exist for every executed package and file counts equal expectedTestFiles, stratified by event | MEAS-01 |
 | MEAS-05 | Joined per-check cost ledger at (lane, partition) grain with asymmetric digests | open | At least 95% of job-minutes mapped on the three reference runs; an umbrella-plus-partition fixture shows no double count | ROUT-05, MEAS-04 |
 | MEAS-08 | Time-join PSI samples onto attempts (no hot-path stamps) | open | None | MEAS-05 |
@@ -442,6 +442,29 @@ The MEAS-01 admission gate names three fixture-replay anchors from the explorati
 Lane fix/certainty-scoring-fixes · PR #3144
 
 Reverse: Delete this file and set the MEAS-01 lever back to open until a corpus reproducing the 4-of-30 and about-315 anchors is recovered.
+
+### Failed hosted jobs keep their steps; aggregate, setup and harness reds are charged to no lane, 2026-11-13
+
+ROUT-05 slice 2 (PLAN slice 11). `HostedJob` gains two optional keys under `route-corpus/v1`: `steps` (each step's name and conclusion) and `tasks` (per-task outcomes, `RouteTaskOutcome`: pass, fail, not-run, unknown). An absent key decodes as `None` and encodes back to an absent key, so every v1 row decodes and re-encodes byte for byte. The capture keeps steps only on a job that concluded `failure`, the only jobs the replay judges by their steps, which keeps the committed corpus small. The step list comes with the jobs payload the capture already reads, so it costs no API call; check-run annotations (about 40k calls) are not read. No capture fills `tasks` yet. The key is there for a job that carries per-task outcome records, and no emitter is planned in this packet.
+
+A failed job's red now has an origin (`RouteRedOrigin`), read by `hostedJobRedOrigin` in `RouteCensus.ts`:
+- `task`: a recorded task failed, or the job stopped in a step of the lane's own work;
+- `aggregate`: it stopped in a `Require every …` step, where an aggregate job checks its shards;
+- `setup`: it stopped in GitHub's `Set up job` or a named preparation step of a lane job (checkout, fetching the base or the CI binary, the lane gate, toolchain setup, installs);
+- `harness`: every recorded task passed, yet the job failed;
+- `unattributed`: no steps and no tasks, which is every row captured before this slice.
+
+The step a job stopped in is its first failed step, else its first step that never concluded or was cancelled (a timeout, a lost runner). Step classes (`RouteStepClass`) come from exact step names in check.yml and heavy.yml at 4f247da7a78. An unlisted or renamed step counts as the lane's own work, so a name the table does not know never moves a red off its lane.
+
+`task` and `unattributed` reds are charged to the lane, so an old corpus replays exactly as before. `aggregate`, `setup` and `harness` reds are charged to no lane, on the head and on the base. They are not dropped: a skipped lane whose only head reds are uncharged, and which is not red on the base, is listed in the new `RouteReplayHead.unknownReds`. Its jobs join `unknownRedJobNames` and count in `unknownRedHeads`, so `recallCertain` turns false and the text output says recall is an upper bound. On the base, an uncharged red no longer excuses a head red: the lane is then neither green nor red there, so the head's red counts as a skipped red and the head is base-unknown (fail-closed).
+
+Gate evidence: the 2026-09-01..10-30 receipt (sha256 e840ea6d…), copied to a scratch `--corpus` directory, replays on this branch to 5,083 heads, 242 skipped lane runs (build 121, check 121), 0 skipped reds, 0 base-unknown, 0 unresolved, recall 1, 0 unknown-red heads, recall certain (8 min 13 s). Five rows of that corpus, branch names replaced, are committed as `test/fixtures/ci-route/corpus/v1-rows-2026-09.ndjson`; they decode with no steps or tasks, their 15 failed jobs are `unattributed`, and they re-encode byte for byte.
+
+Rejected: dropping aggregate and setup reds from recall, which would hide reds the route itself causes (an install failure on a lockfile change, a skip-satisfied aggregate that failed); classifying aggregates by job name, because before #3005 `Heavy / Test Integration` was the lane's own job; reusing `detectGithubJobShapeClass` (`internal/github/JobShape.ts`), whose install pattern does not see `Setup monorepo CI`, where check.yml lanes install, and which answers rerun policy rather than attribution; a `route-corpus/v2`, which a continuing capture would refuse on every v1 receipt.
+
+Lane feat/certainty-rout-05-step-outcomes
+
+Reverse: Revert this PR: every failed lane job is charged to its lane again; rows captured with steps still decode, because decoding drops keys the schema does not name.
 
 <!-- beep:decisions:end -->
 

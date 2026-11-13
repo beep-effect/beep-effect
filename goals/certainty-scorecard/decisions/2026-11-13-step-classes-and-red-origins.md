@@ -1,0 +1,23 @@
+---
+title: "Failed hosted jobs keep their steps; aggregate, setup and harness reds are charged to no lane"
+date: 2026-11-13
+lane: "feat/certainty-rout-05-step-outcomes"
+reversal: "Revert this PR: every failed lane job is charged to its lane again; rows captured with steps still decode, because decoding drops keys the schema does not name."
+---
+
+ROUT-05 slice 2 (PLAN slice 11). `HostedJob` gains two optional keys under `route-corpus/v1`: `steps` (each step's name and conclusion) and `tasks` (per-task outcomes, `RouteTaskOutcome`: pass, fail, not-run, unknown). An absent key decodes as `None` and encodes back to an absent key, so every v1 row decodes and re-encodes byte for byte. The capture keeps steps only on a job that concluded `failure`, the only jobs the replay judges by their steps, which keeps the committed corpus small. The step list comes with the jobs payload the capture already reads, so it costs no API call; check-run annotations (about 40k calls) are not read. No capture fills `tasks` yet. The key is there for a job that carries per-task outcome records, and no emitter is planned in this packet.
+
+A failed job's red now has an origin (`RouteRedOrigin`), read by `hostedJobRedOrigin` in `RouteCensus.ts`:
+- `task`: a recorded task failed, or the job stopped in a step of the lane's own work;
+- `aggregate`: it stopped in a `Require every …` step, where an aggregate job checks its shards;
+- `setup`: it stopped in GitHub's `Set up job` or a named preparation step of a lane job (checkout, fetching the base or the CI binary, the lane gate, toolchain setup, installs);
+- `harness`: every recorded task passed, yet the job failed;
+- `unattributed`: no steps and no tasks, which is every row captured before this slice.
+
+The step a job stopped in is its first failed step, else its first step that never concluded or was cancelled (a timeout, a lost runner). Step classes (`RouteStepClass`) come from exact step names in check.yml and heavy.yml at 4f247da7a78. An unlisted or renamed step counts as the lane's own work, so a name the table does not know never moves a red off its lane.
+
+`task` and `unattributed` reds are charged to the lane, so an old corpus replays exactly as before. `aggregate`, `setup` and `harness` reds are charged to no lane, on the head and on the base. They are not dropped: a skipped lane whose only head reds are uncharged, and which is not red on the base, is listed in the new `RouteReplayHead.unknownReds`. Its jobs join `unknownRedJobNames` and count in `unknownRedHeads`, so `recallCertain` turns false and the text output says recall is an upper bound. On the base, an uncharged red no longer excuses a head red: the lane is then neither green nor red there, so the head's red counts as a skipped red and the head is base-unknown (fail-closed).
+
+Gate evidence: the 2026-09-01..10-30 receipt (sha256 e840ea6d…), copied to a scratch `--corpus` directory, replays on this branch to 5,083 heads, 242 skipped lane runs (build 121, check 121), 0 skipped reds, 0 base-unknown, 0 unresolved, recall 1, 0 unknown-red heads, recall certain (8 min 13 s). Five rows of that corpus, branch names replaced, are committed as `test/fixtures/ci-route/corpus/v1-rows-2026-09.ndjson`; they decode with no steps or tasks, their 15 failed jobs are `unattributed`, and they re-encode byte for byte.
+
+Rejected: dropping aggregate and setup reds from recall, which would hide reds the route itself causes (an install failure on a lockfile change, a skip-satisfied aggregate that failed); classifying aggregates by job name, because before #3005 `Heavy / Test Integration` was the lane's own job; reusing `detectGithubJobShapeClass` (`internal/github/JobShape.ts`), whose install pattern does not see `Setup monorepo CI`, where check.yml lanes install, and which answers rerun policy rather than attribution; a `route-corpus/v2`, which a continuing capture would refuse on every v1 receipt.

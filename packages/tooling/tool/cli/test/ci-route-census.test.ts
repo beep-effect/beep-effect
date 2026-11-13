@@ -5,10 +5,13 @@ import {
   CI_LANE_ID_VALUES,
   HostedJob,
   HostedRun,
+  HostedStep,
+  HostedTaskOutcome,
   RouteCensusReader,
   RouteCorpusLoaded,
   RouteCorpusReceipt,
   RouteError,
+  RouteRedOrigin,
   routeFootprintCanonicalJson,
   VerificationRoute,
 } from "@beep/repo-cli/commands/Ci";
@@ -17,6 +20,7 @@ import {
   ensureRouteHeads,
   hostedJobAttribution,
   hostedJobCostMs,
+  hostedJobRedOrigin,
   hostedLaneJobs,
   jobNameToLane,
   missingFromBatchCheck,
@@ -25,6 +29,8 @@ import {
   RouteCensusReaderLive,
   RouteGit,
   routeJobMinutes,
+  routeRedOriginChargesLane,
+  routeStepClass,
   verificationRouteLayer,
 } from "@beep/repo-cli/commands/Ci/RouteCensus";
 import { sha256Hex } from "@beep/repo-cli/test/Goals";
@@ -33,11 +39,12 @@ import { DEFAULT_GATE_ORDER_SEED, orderWaveLanes, WaveOrder } from "@beep/repo-c
 import { provideScopedLayer } from "@beep/test-utils/Layer";
 import { NodeCrypto } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -47,7 +54,14 @@ import * as Str from "effect/String";
 import censusRunsJson from "./fixtures/ci-route/census/census-runs.json" with { type: "json" };
 import partitionRunsJson from "./fixtures/ci-route/census/partition-runs-2026-11-12.json" with { type: "json" };
 import replayRunsJson from "./fixtures/ci-route/census/replay-runs.json" with { type: "json" };
-import type { ChangeAtomKind, CiLaneId, RouteCensus, RouteLaneCost, RouteReplay } from "@beep/repo-cli/commands/Ci";
+import type {
+  ChangeAtomKind,
+  CiLaneId,
+  RouteCensus,
+  RouteLaneCost,
+  RouteReplay,
+  RouteTaskOutcome,
+} from "@beep/repo-cli/commands/Ci";
 
 const decodeRuns = S.decodeUnknownEffect(S.Array(HostedRun));
 
@@ -301,6 +315,119 @@ describe("route job attribution", () => {
     ]);
     expect(minutes.unknownNames).toEqual(["Knip", "Shadcn Lint"]);
     assertNone(hostedJobAttribution("Knip").lane);
+  });
+});
+
+const step = (name: string, conclusion?: string): HostedStep =>
+  HostedStep.make({ name, conclusion: O.fromUndefinedOr(conclusion) });
+
+const tasks = (...outcomes: ReadonlyArray<RouteTaskOutcome>): O.Option<ReadonlyArray<HostedTaskOutcome>> =>
+  O.some(A.map(outcomes, (outcome, index) => HostedTaskOutcome.make({ task: `@beep/pkg-${index}#test`, outcome })));
+
+const failedJob = (
+  name: string,
+  steps: O.Option<ReadonlyArray<HostedStep>>,
+  outcomes: O.Option<ReadonlyArray<HostedTaskOutcome>> = O.none()
+): HostedJob => HostedJob.make({ name, conclusion: O.some("failure"), steps, tasks: outcomes });
+
+// A job that failed while installing dependencies, before its lane ran.
+const SETUP_FAILURE: ReadonlyArray<HostedStep> = [
+  step("Set up job", "success"),
+  step("Checkout repository", "success"),
+  step("Setup monorepo CI", "failure"),
+  step("Run verification lane", "skipped"),
+  step("Complete job", "success"),
+];
+
+describe("route red origins", () => {
+  it("classes steps as setup, aggregate or the lane's own work", () => {
+    expect(
+      A.map(
+        [
+          "Set up job",
+          "Checkout repository",
+          "Setup monorepo CI",
+          "Determine lane execution",
+          "Require every planned Test Unit shard",
+          "Require every Lint shard",
+          "Require independent frozen trial selection",
+          "Run Test Unit shard",
+          "Post Run actions/checkout",
+        ],
+        routeStepClass
+      )
+    ).toEqual(["setup", "setup", "setup", "setup", "aggregate", "aggregate", "task", "task", "task"]);
+  });
+
+  it("reads a failed job's red origin from the step it stopped in and its tasks", () => {
+    const originOf = (job: HostedJob): string => O.getOrElse(hostedJobRedOrigin(job), () => "none");
+    const lane = step("Run Test Unit shard", "failure");
+    expect(
+      A.map(
+        [
+          HostedJob.make({ name: "Lint", conclusion: O.some("success") }),
+          HostedJob.make({ name: "Lint", conclusion: O.some("cancelled"), steps: O.some(SETUP_FAILURE) }),
+          failedJob("Heavy / Check", O.none()),
+          failedJob("Heavy / Check", O.some([])),
+          failedJob("Heavy / Check", O.some([step("Set up job", "success"), step("Run verification lane", "success")])),
+          failedJob("Heavy / Check", O.some(SETUP_FAILURE)),
+          failedJob(
+            "Test Unit",
+            O.some([step("Set up job", "success"), step("Require every planned Test Unit shard", "failure")])
+          ),
+          failedJob(
+            "Test Unit (unit-a)",
+            O.some([step("Set up job", "success"), lane, step("Complete job", "success")])
+          ),
+          // A timeout or a lost runner: the step running at the time never concluded.
+          failedJob("Heavy / Check", O.some([step("Set up job", "success"), step("Run verification lane")])),
+          failedJob("Heavy / Check", O.some([step("Set up job"), step("Checkout repository")])),
+          failedJob("Heavy / Docgen", O.some([step("Set up job", "success"), step("Setup monorepo CI", "cancelled")])),
+          // The failed step decides over an earlier one that was cancelled.
+          failedJob(
+            "Heavy / Docgen",
+            O.some([step("Restore main Docgen Turbo cache", "cancelled"), step("Run verification lane", "failure")])
+          ),
+          // A failed task decides; every task passing moves a lane-step red to the harness.
+          failedJob("Test Unit (unit-a)", O.some(SETUP_FAILURE), tasks("pass", "fail")),
+          failedJob("Test Unit (unit-a)", O.some([lane]), tasks("pass", "pass")),
+          failedJob("Test Unit (unit-a)", O.none(), tasks("pass")),
+          failedJob("Test Unit (unit-a)", O.some([lane]), tasks("pass", "not-run")),
+          failedJob("Test Unit (unit-a)", O.none(), tasks("unknown")),
+          failedJob("Test Unit (unit-a)", O.some(SETUP_FAILURE), tasks("pass")),
+        ],
+        originOf
+      )
+    ).toEqual([
+      "none",
+      "none",
+      "unattributed",
+      "unattributed",
+      "unattributed",
+      "setup",
+      "aggregate",
+      "task",
+      "task",
+      "setup",
+      "setup",
+      "task",
+      "task",
+      "harness",
+      "harness",
+      "task",
+      "unattributed",
+      "setup",
+    ]);
+  });
+
+  it("charges only task and unattributed reds to the lane", () => {
+    expect(A.map(RouteRedOrigin.literals, (origin) => [origin, routeRedOriginChargesLane(origin)])).toEqual([
+      ["task", true],
+      ["aggregate", false],
+      ["setup", false],
+      ["harness", false],
+      ["unattributed", true],
+    ]);
   });
 });
 
@@ -617,6 +744,85 @@ describe("route replay", () => {
     })
   );
 
+  it.effect("charges a skipped lane's setup or aggregate red to no lane and reports it as unknown", () =>
+    Effect.gen(function* () {
+      const original = yield* decodeRuns(replayRunsJson);
+      const jobsOf = (headSha: string, jobs: ReadonlyArray<HostedJob>): ReadonlyArray<HostedJob> =>
+        Match.value(headSha).pipe(
+          // a1's check failed while installing.
+          Match.when("a1", () =>
+            A.map(jobs, (job) => (job.name === "Heavy / Check" ? failedJob(job.name, O.some(SETUP_FAILURE)) : job))
+          ),
+          // b2's sast red stays charged, and codegen is red on its base: neither setup red can hide a skip.
+          Match.when("b2", () =>
+            A.appendAll(jobs, [
+              failedJob("SAST", O.some(SETUP_FAILURE)),
+              failedJob("Codegen Drift", O.some(SETUP_FAILURE)),
+            ])
+          ),
+          // c3's only lint red is the aggregate's: its shard was cancelled, not failed.
+          Match.when("c3", () => [
+            HostedJob.make({ name: "Lint (lint-a)", conclusion: O.some("cancelled") }),
+            failedJob("Lint", O.some([step("Set up job", "success"), step("Require every Lint shard", "failure")])),
+          ]),
+          Match.orElse(() => jobs)
+        );
+      const runs = A.map(original, (run) => HostedRun.make({ ...run, jobs: jobsOf(run.headSha, run.jobs) }));
+      const ensured = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const replay = yield* runReplay(
+        runs,
+        classifierLayer(noAtoms),
+        gitLayer(REPLAY_MERGE_BASES, REPLAY_ANCESTORS, ensured)
+      );
+
+      expect(
+        A.map(replay.perHead, (head) => [head.headSha, head.skippedReds, head.unknownReds, head.baseUnknown])
+      ).toEqual([
+        ["a1", [], ["check"], false],
+        ["b2", ["sast"], [], false],
+        ["c3", [], ["lint"], true],
+      ]);
+      expect(replay.skippedReds).toBe(1);
+      expect(replay.recall).toBe(1 - 1 / (3 * SKIPPED_WITHOUT_ATOMS));
+      expect([replay.recallCertain, replay.unknownRedHeads, replay.unknownRedJobNames]).toEqual([
+        false,
+        2,
+        ["Heavy / Check", "Lint"],
+      ]);
+    })
+  );
+
+  it.effect("judges the base by charged reds, so a setup red on the base excuses no head red", () =>
+    Effect.gen(function* () {
+      const original = yield* decodeRuns(replayRunsJson);
+      // m1, a1's base, fails Heavy / Check: with no steps the red is check's, while installing it is no one's.
+      const withBaseCheck = (job: HostedJob) =>
+        A.map(original, (run) =>
+          run.headSha === "m1"
+            ? HostedRun.make({
+                ...run,
+                jobs: A.map(run.jobs, (candidate) => (candidate.name === "Heavy / Check" ? job : candidate)),
+              })
+            : run
+        );
+      const replayA1 = Effect.fnUntraced(function* (runs: ReadonlyArray<HostedRun>) {
+        const ensured = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+        const replay = yield* runReplay(
+          runs,
+          classifierLayer(noAtoms),
+          gitLayer(REPLAY_MERGE_BASES, REPLAY_ANCESTORS, ensured)
+        );
+        const a1 = yield* Effect.fromOption(A.findFirst(replay.perHead, (head) => head.headSha === "a1"));
+        return [a1.skippedReds, a1.unknownReds, a1.baseUnknown] as const;
+      });
+
+      const inherited = yield* replayA1(withBaseCheck(failedJob("Heavy / Check", O.none())));
+      const uncharged = yield* replayA1(withBaseCheck(failedJob("Heavy / Check", O.some(SETUP_FAILURE))));
+      expect(inherited).toEqual([[], [], false]);
+      expect(uncharged).toEqual([["check"], [], true]);
+    })
+  );
+
   it.effect("has recall 1 at all-unknown", () =>
     Effect.gen(function* () {
       const runs = yield* decodeRuns(replayRunsJson);
@@ -678,6 +884,9 @@ describe("route replay", () => {
         expect(replay.unresolvedHeads).toBe(0);
         expect(replay.recall).toBe(1 - 3 / (3 * SKIPPED_WITHOUT_ATOMS));
         expect(replay.corpusSha256).toBe("c0ffee");
+        // Rows without steps or tasks keep every red on its lane: nothing is unknown.
+        assertTrue(A.every(replay.perHead, (head) => A.isReadonlyArrayEmpty(head.unknownReds)));
+        expect([replay.recallCertain, replay.unknownRedHeads]).toEqual([true, 0]);
       })
   );
 
