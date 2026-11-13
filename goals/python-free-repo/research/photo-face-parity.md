@@ -77,5 +77,5 @@ candidate scan using these fixtures, wrote a schema-valid manifest and reported
 one solo match, with no Python executable or subprocess on the inference path.
 The Buffalo run also exercised extraction of the verified pinned ZIP archive.
 The focused run covering parity, Files commands, portability and dependency
-review passed 125 tests. Publication and final quality receipts are recorded by
+review passed 126 tests. Publication and final quality receipts are recorded by
 Yeet on the final head.

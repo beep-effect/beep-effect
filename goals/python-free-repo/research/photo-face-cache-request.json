@@ -1,0 +1,15 @@
+{
+  "previous": "53683ff9d25bfa271753ef5625f0ac8a685693227fb51be0786da6c47c65774e",
+  "review": {
+    "reviewer": "Codex GPT-6.1 Sol (photo-face lane input review)",
+    "reason": "Re-record changed root catalog and repo-cli manifest inputs for native CPU inference; unchanged cache posture and qualification.",
+    "basis": {
+      "path": "goals/python-free-repo/research/photo-face-cache-review.md",
+      "sha256": "2d3d642fbd8d6947eb73e65cc556459e6a3edd10d9103054e2678ff645af3f8c"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//", "@beep/repo-cli"]
+}

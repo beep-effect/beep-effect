@@ -348,9 +348,13 @@ const makeFaceInferenceImpl = (
   PersonMatchInference.of({
     detect: Effect.fn("Files.PersonMatchInference.detect")(function* (image, threshold) {
       const runtime = yield* loadRuntime();
-      const ratio = Math.min(640 / image.width, 640 / image.height);
-      const width = Math.floor(image.width * ratio);
-      const height = Math.floor(image.height * ratio);
+      const width = image.height > image.width ? Math.floor((640 * image.width) / image.height) : 640;
+      const height = image.height > image.width ? 640 : Math.floor((640 * image.height) / image.width);
+      if (width < 1 || height < 1)
+        return yield* MatchPersonError.runtimeFromWorker(
+          "worker-failed",
+          "Image aspect ratio is too extreme for the detector."
+        );
       const resized = new Uint8Array(width * height * 3);
       for (let y = 0; y < height; y++)
         for (let x = 0; x < width; x++) {
