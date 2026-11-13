@@ -1837,7 +1837,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const heavyContexts = A.filter(contexts.requiredStatusChecks, Str.startsWith("Heavy / "));
       assert.isAbove(A.length(heavyContexts), 0);
       for (const context of heavyContexts) {
-        const lane = Str.slice(A.length("Heavy / "))(context);
+        const lane = Str.slice(Str.length("Heavy / "))(context);
         const heavyOwners = A.filter(laneJobs, (job) => jobText(heavyJobs, job, "name") === lane);
         const checkOwners = A.filter(R.keys(checkJobs), (job) => jobText(checkJobs, job, "name") === context);
         assert.lengthOf([...heavyOwners, ...checkOwners], 1, context);

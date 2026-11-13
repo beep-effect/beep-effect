@@ -915,8 +915,15 @@ const payloadWithShas = (shas: { readonly base?: string; readonly head?: string 
       pull_request: {
         draft: false,
         labels: [{ name: HEAVY_ADMISSION_LABEL }],
-        head: { repo: { full_name: "beep-effect/beep-effect" }, ...(shas.head ? { sha: shas.head } : {}) },
-        base: { ref: "main", repo: { full_name: "beep-effect/beep-effect" }, ...(shas.base ? { sha: shas.base } : {}) },
+        head: {
+          repo: { full_name: "beep-effect/beep-effect" },
+          ...(shas.head === undefined ? {} : { sha: shas.head }),
+        },
+        base: {
+          ref: "main",
+          repo: { full_name: "beep-effect/beep-effect" },
+          ...(shas.base === undefined ? {} : { sha: shas.base }),
+        },
       },
     }),
     identity
@@ -967,20 +974,19 @@ it.layer(platform, { timeout: "30 seconds" })("HOST-06 heavy lane skips", (layer
       laneIt.effect("publishes lane_skips and leaves verdict, route_skips and route_receipt unchanged", () =>
         temporary((root) =>
           Effect.gen(function* () {
+            const change = yield* classifyChangedPaths(
+              ClassifyDiff.make({
+                base: "base",
+                head: "head",
+                commits: 1,
+                entries: A.map(O.getOrElse(row.paths, A.empty<string>), (path) =>
+                  ChangedPathEntry.make({ path, status: "M" })
+                ),
+              }),
+              () => Effect.succeedNone
+            );
             const classifier = ChangeClassifier.of({
-              classify: Effect.fn("ChangeClassifier.classify")(() =>
-                classifyChangedPaths(
-                  ClassifyDiff.make({
-                    base: "base",
-                    head: "head",
-                    commits: 1,
-                    entries: A.map(O.getOrElse(row.paths, A.empty<string>), (path) =>
-                      ChangedPathEntry.make({ path, status: "M" })
-                    ),
-                  }),
-                  () => Effect.succeedNone
-                )
-              ),
+              classify: Effect.fn("ChangeClassifier.classify")(() => Effect.succeed(change)),
             });
             const decide = Effect.fn("admissionTest.decide")(function* (content: string, spawner: ScriptedSpawner) {
               const path = yield* writeEvent(root, content);
@@ -1041,12 +1047,14 @@ it.layer(platform, { timeout: "30 seconds" })("HOST-06 heavy lane skips", (layer
             provideSpawner(spawner)
           );
         const headOnly = pinnedDiffSpawner(goals);
-        expect(yield* read(payloadWithShas({ head: "head-sha" }), headOnly)).toEqual([]);
+        const headOnlySkips = yield* read(payloadWithShas({ head: "head-sha" }), headOnly);
+        expect(headOnlySkips).toEqual([]);
         expect(pinnedDiffSpawns(headOnly)).toEqual([]);
         // An unreadable pattern file drops only the goals-only reason; the Docgen reason stands.
         yield* fs.makeDirectory(`${root}/packages/tooling/tool/cli/src/commands/Ci`, { recursive: true });
         yield* fs.writeFileString(`${root}/packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json`, "{");
-        expect(yield* read(payloadWithShas({ base: "b", head: "h" }), pinnedDiffSpawner(goals))).toEqual(["docgen"]);
+        const unreadablePatternSkips = yield* read(payloadWithShas({ base: "b", head: "h" }), pinnedDiffSpawner(goals));
+        expect(unreadablePatternSkips).toEqual(["docgen"]);
         // A missing payload is an error the read swallows.
         const missing = yield* readHeavyLaneSkips(
           HeavyAdmissionReadInput.make({
