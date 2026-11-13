@@ -1312,6 +1312,83 @@ describe("ci lane timing admission window", () => {
         expect(attributionStat(report, "Test Unit").incompleteEffectiveSpans).toBe(1);
       })
     );
+
+    // Shard overflow (2026-11-13): a partition routed to the self-hosted pool reports as
+    // `Test Unit (<partition>) / Overflow`; it is the same shard of the same layout.
+    it.effect("measures a shard routed to the overflow pool as part of its layout and pickup", () =>
+      Effect.gen(function* () {
+        const run = windowRun({ id: 450 });
+        const routed = job({
+          completed_at: "2026-11-10T00:12:00Z",
+          id: 4504,
+          labels: ["beep-shard-overflow"],
+          name: "Test Unit (repo-cli-7) / Overflow",
+          run_id: run.id,
+          started_at: "2026-11-10T00:01:30Z",
+        });
+        const [, ...hosted] = subset(run);
+        const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+          windowRunJobs(run, [testPlan(run), routed, ...hosted, aggregator(run)]),
+        ]);
+        expect(laneStat(report, "Test Unit").n).toBe(1);
+        // The routed shard started first, at 00:01:30, and the aggregator completed at 00:15.
+        assertSome(laneStat(report, "Test Unit").p95Seconds, 810);
+        expect(attributionStat(report, "Test Unit").incompleteEffectiveSpans).toBe(0);
+        const pickups = A.filter(report.rows, (row) => row.population === "pickup" && row.lane === "Test Unit");
+        expect(A.map(pickups, (row) => row.jobName)).toContain("Test Unit (repo-cli-7) / Overflow");
+        expect(A.length(pickups)).toBe(3);
+      })
+    );
+
+    it.effect("refuses a run whose shard ran both hosted and on the overflow pool", () =>
+      Effect.gen(function* () {
+        const run = windowRun({ id: 460 });
+        const twice = job({
+          completed_at: "2026-11-10T00:12:00Z",
+          id: 4604,
+          name: "Test Unit (repo-cli-7) / Overflow",
+          run_id: run.id,
+          started_at: "2026-11-10T00:01:30Z",
+        });
+        const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+          windowRunJobs(run, [testPlan(run), ...subset(run), twice, aggregator(run)]),
+        ]);
+        expect(laneStat(report, "Test Unit").n).toBe(0);
+        expect(attributionStat(report, "Test Unit").incompleteEffectiveSpans).toBe(1);
+      })
+    );
+
+    // Skip on success across both halves: a skipped Test Unit aggregator is a pass only when every planned
+    // shard passed, whether it ran hosted or on the overflow pool.
+    it.effect("passes a skipped aggregator only when the hosted and the overflow shards all passed", () =>
+      Effect.gen(function* () {
+        const routedRun = (id: number, conclusion: string) => {
+          const run = windowRun({ id });
+          const routed = job({
+            completed_at: "2026-11-10T00:12:00Z",
+            conclusion,
+            id: id * 10 + 4,
+            labels: ["beep-shard-overflow"],
+            name: "Test Unit (repo-cli-7) / Overflow",
+            run_id: run.id,
+            started_at: "2026-11-10T00:01:30Z",
+          });
+          const [, ...hosted] = subset(run);
+          return windowRunJobs(run, [testPlan(run), routed, ...hosted, aggregator(run, "skipped")]);
+        };
+        const green = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [routedRun(470, "success")]);
+        expect(laneStat(green, "Test Unit").n).toBe(1);
+        expect(durationRowFor(green, "Test Unit").conclusion).toBe("success");
+        const red = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+          routedRun(471, "failure"),
+          routedRun(472, "cancelled"),
+          routedRun(473, "skipped"),
+        ]);
+        expect(laneStat(red, "Test Unit").n).toBe(0);
+        expect(attributionStat(red, "Test Unit").failures).toBe(2);
+        expect(attributionStat(red, "Test Unit").cancellations).toBe(1);
+      })
+    );
   });
 
   // The default window run is created at 2026-09-04T00:00:00Z.
