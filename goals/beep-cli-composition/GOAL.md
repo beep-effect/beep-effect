@@ -61,9 +61,8 @@ irreversible change (a tested down-migration, a backup of deleted state) before
 the change merges, and ship a breaking public API or schema change with a major
 changeset. Escalate only what AGENTS.md "Autonomy" lists.
 
-Ship proposedCloseout and the reflection in the final PR (status stays active or
-paused). After that merge, verify with `bun run beep goals completion refresh --slug beep-cli-composition`,
-then adopt with `bun run beep goals set-status beep-cli-composition <status>` in a
-packet-state PR. Done only once it merges and this passes, or an operator
-blocker is reported with evidence:
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug beep-cli-composition` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
 `git show origin/main:goals/beep-cli-composition/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

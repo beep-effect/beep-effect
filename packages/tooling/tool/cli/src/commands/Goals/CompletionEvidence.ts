@@ -18,14 +18,21 @@ import { Git } from "@beep/git/Git";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { GitHubContent } from "@beep/github/GitHubContent";
 import { Repo } from "@beep/github/Repo";
+import { ReviewThread } from "@beep/github/ReviewThread";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
+import * as Cache from "effect/Cache";
 import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
@@ -52,6 +59,7 @@ import {
 } from "./CompletionEvidence.schemas.ts";
 import { GoalCompletionIo, GoalMergeTimeEvidenceProvider } from "./CompletionEvidence.service.ts";
 import {
+  GoalAttributedRedFact,
   GoalCheckConclusion,
   GoalCompletionEvidenceGap,
   GoalCompletionEvidenceUnknown,
@@ -61,6 +69,7 @@ import {
   GoalMergeTimeRuleSource,
   GoalRequiredCheckFact,
   GoalRequiredCheckSnapshot,
+  goalClaimSourceRank,
 } from "./Goals.schemas.ts";
 import type * as Context from "effect/Context";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -69,7 +78,12 @@ import type {
   GoalMergeTimeEvidenceRequest,
   GoalObservedCheckRun,
 } from "./CompletionEvidence.schemas.ts";
-import type { GoalCompletionEvidenceVerdict, GoalCompletionOutcome, GoalRuleSourceHistory } from "./Goals.schemas.ts";
+import type {
+  GoalCompletionEvidenceVerdict,
+  GoalCompletionOutcome,
+  GoalRedAttributionClaim,
+  GoalRuleSourceHistory,
+} from "./Goals.schemas.ts";
 
 const decodeObservation =
   <Schema extends S.Top & { readonly DecodingServices: never }>(schema: Schema) =>
@@ -241,8 +255,91 @@ export const goalCompletionIo = Effect.fn("Goals.Completion.io")(function* () {
           .pipe(Effect.map((rows) => [rows]))
       ).pipe(Effect.flatMap(decodeObservation(GoalCompletionRulesetList)))
     ),
+    reviewThreads: Effect.fn("GoalCompletionIo.reviewThreads")((root, number) =>
+      github(
+        root,
+        Effect.flatMap(Layer.build(ReviewThread.layer), (services) =>
+          Effect.provideContext(
+            ReviewThread.use((threads) => threads.list(number)),
+            services
+          )
+        ).pipe(Effect.scoped)
+      )
+    ),
   });
 });
+
+// The listing key joins the checkout root and ref with a NUL, which neither a
+// path nor a git ref can contain.
+const RULE_SUITES_KEY_SEPARATOR = "\u0000";
+
+/**
+ * Wraps a completion port so each `ruleSuites` listing is read once per root and ref.
+ *
+ * **Details**
+ *
+ * One command run observes many packets that share a base branch, and each
+ * listing pages a month of rule suites. A successful listing is kept for the
+ * life of the returned port; a failed one is not kept, so the next call reads
+ * again. Every other read passes through unchanged.
+ *
+ * **Example** (Memoize a port's rule-suite listing)
+ *
+ * ```ts
+ * import { goalCompletionIo, memoizeGoalCompletionRuleSuites } from "@beep/repo-cli/commands/Goals/CompletionEvidence"
+ * import * as Effect from "effect/Effect"
+ *
+ * const port = Effect.flatMap(goalCompletionIo(), memoizeGoalCompletionRuleSuites)
+ * console.log(Effect.isEffect(port)) // true
+ * ```
+ *
+ * @param port - The completion port whose listing reads are memoized.
+ * @returns The same port with a memoized `ruleSuites`.
+ * @category combinators
+ * @since 0.0.0
+ */
+export const memoizeGoalCompletionRuleSuites = Effect.fn("Goals.CompletionEvidence.memoizeRuleSuites")(function* (
+  port: GoalCompletionIo["Service"]
+) {
+  const listings = yield* Cache.makeWith(
+    (key: string) => {
+      const parts = Str.split(key, RULE_SUITES_KEY_SEPARATOR);
+      return port.ruleSuites(A.headNonEmpty(parts), A.lastNonEmpty(parts));
+    },
+    {
+      capacity: 64,
+      timeToLive: (exit) => (Exit.isSuccess(exit) ? Duration.infinity : Duration.zero),
+    }
+  );
+  return GoalCompletionIo.of({
+    ...port,
+    ruleSuites: Effect.fn("GoalCompletionIo.ruleSuites")((root, ref) =>
+      Cache.get(listings, `${root}${RULE_SUITES_KEY_SEPARATOR}${ref}`)
+    ),
+  });
+});
+
+/**
+ * The completion port for one command run: a provided port or the live kits, with memoized rule-suite listings.
+ *
+ * **Details**
+ *
+ * Provide it once around a whole run. A port already provided outside the run
+ * (a test fixture) is the one it wraps.
+ *
+ * **Example** (Provide the run's completion port)
+ *
+ * ```ts
+ * import { GoalCompletionIoLive } from "@beep/repo-cli/commands/Goals/CompletionEvidence"
+ * import * as Layer from "effect/Layer"
+ * console.log(Layer.isLayer(GoalCompletionIoLive)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const GoalCompletionIoLive: Layer.Layer<GoalCompletionIo, never, ChildProcessSpawner.ChildProcessSpawner> =
+  Layer.effect(GoalCompletionIo, Effect.flatMap(goalCompletionIo(), memoizeGoalCompletionRuleSuites));
 
 /**
  * Read one decoded observation through the typed completion port.
@@ -357,13 +454,20 @@ const SuiteLookup = S.Struct({
   gap: S.Option(GoalCompletionEvidenceGap),
 });
 
-// GitHub lists rule suites for the last month at most; an older merge push has
-// no listed suite and stays rule-suite-unavailable rather than being guessed.
+// GitHub lists rule suites for the last month at most.
+const RULE_SUITE_LISTING_DAYS = 31;
+
+// An older merge push has no listed suite and stays rule-suite-unavailable
+// rather than being guessed; past the listing window the listing is not read.
 const readMergeRuleSuite = Effect.fn("Goals.CompletionEvidence.ruleSuite")(function* (
   root: string,
   base: string,
-  mergeCommit: string
+  mergeCommit: string,
+  mergedAt: DateTime.Utc
 ) {
+  const now = yield* DateTime.now;
+  if (DateTime.isGreaterThan(now, DateTime.add(mergedAt, { days: RULE_SUITE_LISTING_DAYS })))
+    return SuiteLookup.make({ found: O.none(), gap: O.some("rule-suite-unavailable") });
   const ref = `refs/heads/${base}`;
   const pages = yield* readGoalCompletion(root, (io, root) => io.ruleSuites(root, ref));
   const listed = A.flatten(pages);
@@ -388,27 +492,23 @@ const readMergeRuleSuite = Effect.fn("Goals.CompletionEvidence.ruleSuite")(funct
 const successful = (conclusion: GoalCheckConclusion): boolean =>
   conclusion === "success" || conclusion === "neutral" || conclusion === "skipped";
 
-const notAfter = (time: O.Option<DateTime.Utc>, limit: DateTime.Utc): boolean =>
-  O.exists(time, (value) => DateTime.toEpochMillis(value) <= DateTime.toEpochMillis(limit));
-
-// Binds each required context to the newest run on the accepted head that
-// started before merge. Newer runs (higher check-run id) supersede older ones,
-// so a pre-merge green rerun replaces an older red. A run not completed by merge
-// is pending and unknown; a context with no pre-merge run on the head is unknown.
+// Binds each required context to the newest run on the accepted head when the
+// facts are read, whenever that run started or finished. Newer runs (higher
+// check-run id) supersede older ones, so any rerun replaces an older result,
+// before or after the merge. A run not yet completed is pending and unknown; a
+// context with no run on the head is unknown.
 const goalRequiredCheckFacts = ({
   contexts,
   checkRuns,
   head,
-  mergedAt,
 }: {
   readonly contexts: ReadonlyArray<string>;
   readonly checkRuns: ReadonlyArray<GoalObservedCheckRun>;
   readonly head: string;
-  readonly mergedAt: DateTime.Utc;
 }): ReadonlyArray<GoalRequiredCheckFact> =>
   A.map(A.dedupe(A.filter(contexts, Str.isNonEmpty)), (context) => {
     const newest = A.reduce(
-      A.filter(checkRuns, (run) => run.name === context && run.head_sha === head && notAfter(run.started_at, mergedAt)),
+      A.filter(checkRuns, (run) => run.name === context && run.head_sha === head),
       O.none<GoalObservedCheckRun>(),
       (found, run) => (O.isNone(found) || run.id > found.value.id ? O.some(run) : found)
     );
@@ -423,7 +523,7 @@ const goalRequiredCheckFacts = ({
           source: "check-run",
         }),
       onSome: (run) => {
-        const completed = run.status === "completed" && notAfter(run.completed_at, mergedAt);
+        const completed = run.status === "completed";
         const conclusion: GoalCheckConclusion = completed
           ? S.is(GoalCheckConclusion)(run.conclusion)
             ? run.conclusion
@@ -465,25 +565,76 @@ const missingVersionGap = (source: GoalMergeTimeRuleSource): GoalCompletionEvide
     ? "deleted-ruleset-unrecoverable"
     : "unsupported-rule-source";
 
+const ClaimStrength = Order.mapInput(Order.Number, (claim: GoalRedAttributionClaim) =>
+  goalClaimSourceRank(claim.source)
+);
+
+const claimValue = (claim: GoalRedAttributionClaim): string => `${claim.attribution}#${claim.fixPullRequest}`;
+
+// One claim per context. Claims that agree collapse to the strongest source;
+// claims that disagree leave the context unattributed (fail closed).
+const attributionsByContext = (
+  claims: ReadonlyArray<GoalRedAttributionClaim>
+): HashMap.HashMap<string, GoalRedAttributionClaim> =>
+  HashMap.fromIterable(
+    A.getSomes(
+      A.map(R.values(A.groupBy(claims, (claim) => claim.context)), (group) =>
+        A.length(A.dedupe(A.map(group, claimValue))) === 1
+          ? O.some([A.headNonEmpty(group).context, A.headNonEmpty(A.sort(group, ClaimStrength))] as const)
+          : O.none()
+      )
+    )
+  );
+
+// The fact a claim attributes for one context: a head-bound red, or, when no
+// run on the head ever reported, the context's missing fact. A pending run is
+// neither, so it is never attributed.
+const attributedRedOf = (
+  facts: ReadonlyArray<GoalRequiredCheckFact>,
+  claim: O.Option<GoalRedAttributionClaim>
+): O.Option<GoalAttributedRedFact> =>
+  O.flatMap(claim, (claim) =>
+    O.map(
+      O.orElse(
+        A.findFirst(facts, (fact) => fact.outcome === "unsatisfied"),
+        () => (A.every(facts, (fact) => O.isNone(fact.checkRunId)) ? A.head(facts) : O.none())
+      ),
+      (fact) =>
+        GoalAttributedRedFact.make({
+          context: fact.context,
+          checkRunId: fact.checkRunId,
+          conclusion: O.isNone(fact.checkRunId) ? "unknown" : fact.conclusion,
+          observed: O.isNone(fact.checkRunId) ? "missing" : "red",
+          attribution: claim.attribution,
+          fixPullRequest: claim.fixPullRequest,
+          decisionFile: claim.decisionFile,
+          source: claim.source,
+        })
+    )
+  );
+
 /**
- * Decides merge-time completion evidence without IO: verified only on complete, head-bound, green facts.
+ * Decides merge-time completion evidence without IO: verified only when every required context is green or attributed.
  *
  * **Details**
  *
- * A head-bound required red, or a failed required-status-checks rule from a
- * source active at the merge push, is `unsatisfied` even when other evidence is
- * missing. A failed rule from a ruleset deleted since then whose recovered
- * history shows it gated the merge is `unsatisfied` once the rest of the
- * evidence is complete, and `unknown` before that; it is never `verified`. A
- * recovered evaluate-mode version does not gate; a recovered inactive or
- * non-matching version contradicts the merge-push rule suite and is an
- * `inventory-mismatch`, so the outcome is `unknown`. Otherwise any gap is
- * `unknown`: no inventory, no rule suite for the
- * merge commit, a rule suite bound to another commit, partial ruleset reads, a
- * required-check source with no recovered history version (deleted or
- * unsupported), stored provider gaps, no required contexts, or a context
- * without a green fact on the accepted head. Completeness is re-derived from
- * the stored rule suite; the `inventoryComplete` flag alone never verifies.
+ * A head-bound required red that no claim in `redAttributions` covers is
+ * `unsatisfied` even when other evidence is missing. A claim covers a red, or a
+ * required context that never reported a run on the accepted head, with the
+ * same context; two claims that disagree about one context cover nothing. A
+ * context whose run is still pending is neither red nor missing, so a claim
+ * cannot cover it. GitHub's failed required-status-checks evaluation in the
+ * merge-push rule suite (a bypass merge) is not a red by itself: the verdict
+ * records it as `ruleSuiteBypassed`. A recovered evaluate-mode version does
+ * not gate; a recovered inactive or non-matching version contradicts the
+ * merge-push rule suite and is an `inventory-mismatch`, so the outcome is
+ * `unknown`. Otherwise any gap is `unknown`, attributions or not: no
+ * inventory, no rule suite for the merge commit, a rule suite bound to another
+ * commit, partial ruleset reads, a required-check source with no recovered
+ * history version (deleted or unsupported), stored provider gaps, no required
+ * contexts, or a context neither green nor attributed on the accepted head.
+ * Completeness is re-derived from the stored rule suite; the
+ * `inventoryComplete` flag alone never verifies.
  *
  * **Example** (No inventory is unknown)
  *
@@ -498,7 +649,7 @@ const missingVersionGap = (source: GoalMergeTimeRuleSource): GoalCompletionEvide
  * console.log(verdict._tag) // "unknown"
  * ```
  *
- * @param input - Accepted head, merge commit, stored inventory and head-bound facts.
+ * @param input - Accepted head, merge commit, stored inventory, head-bound facts and red attributions.
  * @returns The verified, unsatisfied or unknown verdict.
  * @category validation
  * @since 0.0.0
@@ -509,24 +660,33 @@ export const decideGoalCompletionEvidence = (input: GoalCompletionEvidenceInput)
   const relevant = A.filter(input.facts, (fact) => A.contains(contexts, fact.context));
   const inventory = O.flatMap(input.requiredChecks, (snapshot) => snapshot.mergeTimeInventory);
   const boundInventory = O.filter(inventory, (value) => O.contains(input.mergeCommit, value.afterSha));
+  const claims = attributionsByContext(input.redAttributions);
   const reds = A.filter(relevant, (fact) => fact.outcome === "unsatisfied" && headBound(fact));
+  const unattributed = A.filter(reds, (fact) => !HashMap.has(claims, fact.context));
   const boundSources = O.match(boundInventory, {
     onNone: A.empty<GoalMergeTimeRuleSource>,
     onSome: (value) => value.ruleSources,
   });
-  // Active at push: GitHub's own failed evaluation is a known required red.
+  // Active at push: GitHub's own failed evaluation, recorded but not a red by itself.
   const activeRed = A.some(
     boundSources,
     (source) => source.enforcement === "active" && source.history !== "not-gating" && failedRequiredChecks(source)
   );
-  // Deleted since merge, with history showing it gated the merge: a red too,
-  // but reported as unsatisfied only once the rest of the evidence is complete.
+  // Deleted since merge, with history showing it gated the merge: also a bypass.
   const recoveredRed = A.some(
     boundSources,
     (source) => source.enforcement === "deleted ruleset" && source.history === "gating" && failedRequiredChecks(source)
   );
-  if (A.isReadonlyArrayNonEmpty(reds) || activeRed)
-    return GoalCompletionEvidenceUnsatisfied.make({ reds, ruleSuiteRed: activeRed });
+  if (A.isReadonlyArrayNonEmpty(unattributed))
+    return GoalCompletionEvidenceUnsatisfied.make({ reds: unattributed, ruleSuiteRed: activeRed });
+  const headFacts = (context: string): ReadonlyArray<GoalRequiredCheckFact> =>
+    A.filter(relevant, (fact) => fact.context === context && headBound(fact));
+  const attributedReds = A.getSomes(
+    A.map(A.dedupe(contexts), (context) => attributedRedOf(headFacts(context), HashMap.get(claims, context)))
+  );
+  const covered = (context: string): boolean =>
+    A.some(headFacts(context), (fact) => fact.outcome === "verified") ||
+    A.some(attributedReds, (red) => red.context === context);
   const gaps = O.match(input.requiredChecks, {
     onNone: () => A.of<GoalCompletionEvidenceGap>("inventory-unobserved"),
     onSome: (snapshot) =>
@@ -548,25 +708,42 @@ export const decideGoalCompletionEvidence = (input: GoalCompletionEvidenceInput)
               missingVersionGap
             ),
         }),
-        ...(A.isReadonlyArrayEmpty(contexts) ||
-        A.some(
-          contexts,
-          (context) =>
-            !A.some(relevant, (fact) => fact.context === context && fact.outcome === "verified" && headBound(fact))
-        )
+        ...(A.isReadonlyArrayEmpty(contexts) || !A.every(contexts, covered)
           ? A.of<GoalCompletionEvidenceGap>("required-check-unobserved")
           : []),
       ]),
   });
+  // Gaps win over attributions: without the inventory nobody knows which contexts were required.
   if (A.isReadonlyArrayNonEmpty(gaps)) return GoalCompletionEvidenceUnknown.make({ gaps });
-  if (recoveredRed) return GoalCompletionEvidenceUnsatisfied.make({ reds, ruleSuiteRed: true });
-  // No gap means contexts is non-empty and each has a green fact, so `relevant`
-  // is non-empty; the verified schema enforces that minimum.
-  return GoalCompletionEvidenceVerified.make({ facts: relevant });
+  // No gap means contexts is non-empty and each has a green or attributed head
+  // fact, so `relevant` is non-empty; the verified schema enforces that minimum.
+  return GoalCompletionEvidenceVerified.make({
+    facts: relevant,
+    attributedReds,
+    ruleSuiteBypassed: activeRed || recoveredRed,
+  });
+};
+
+const describeAttributedRed = (red: GoalAttributedRedFact): string =>
+  `${red.context} (${red.observed === "missing" ? "never reported, " : ""}${red.attribution}, fix #${red.fixPullRequest}, ${red.decisionFile})`;
+
+const describeVerified = (value: GoalCompletionEvidenceVerified): string => {
+  const green = A.length(A.filter(value.facts, (fact) => fact.outcome === "verified"));
+  const attributed = A.isReadonlyArrayNonEmpty(value.attributedReds)
+    ? `; attributed: ${A.join(A.map(value.attributedReds, describeAttributedRed), "; ")}`
+    : "";
+  const bypassed = value.ruleSuiteBypassed ? "; bypassed: the merge-push rule suite failed required status checks" : "";
+  return `Merge-time evidence verified: complete rule-suite inventory and ${green} green required contexts at the accepted head${attributed}${bypassed}.`;
 };
 
 /**
  * Describes a completion-evidence verdict in one line for receipts and doctor output.
+ *
+ * **Details**
+ *
+ * A verified verdict lists every attributed red with its cause, fix PR and
+ * decision file, and says `bypassed` when the merge-push rule suite failed
+ * its required-status-checks evaluation.
  *
  * **Example** (Describe an unknown verdict)
  *
@@ -584,10 +761,9 @@ export const decideGoalCompletionEvidence = (input: GoalCompletionEvidenceInput)
  */
 export const describeGoalCompletionEvidence = (verdict: GoalCompletionEvidenceVerdict): string =>
   Match.valueTags(verdict, {
-    verified: (value) =>
-      `Merge-time evidence verified: complete rule-suite inventory and ${A.length(value.facts)} green required contexts at the accepted head.`,
+    verified: describeVerified,
     unsatisfied: (value) =>
-      `Merge-time evidence unsatisfied: ${A.length(value.reds)} required red(s) at the accepted head${value.ruleSuiteRed ? "; the merge-push rule suite failed required status checks" : ""}.`,
+      `Merge-time evidence unsatisfied: ${A.length(value.reds)} unattributed required red(s) at the accepted head${value.ruleSuiteRed ? "; the merge-push rule suite failed required status checks" : ""}.`,
     unknown: (value) => `Merge-time evidence unknown: ${A.join(value.gaps, ", ")}.`,
   });
 
@@ -630,7 +806,10 @@ const ruleSourcesOf = (
  * `deleted-ruleset-unrecoverable` for a rule-suite ruleset that current
  * enumeration no longer lists and whose history GitHub no longer serves.
  * A surviving ruleset that history says applied but the rule suite did not
- * evaluate, or the reverse, is `inventory-mismatch`.
+ * evaluate, or the reverse, is `inventory-mismatch`. GitHub lists rule suites
+ * for one month, so a merge older than 31 days skips the listing and records
+ * `rule-suite-unavailable`. Each required context binds to the newest run on
+ * the accepted head at read time, whether it ran before or after the merge.
  *
  * **Example** (Inspect the live provider operation)
  *
@@ -661,7 +840,7 @@ export const observeGoalMergeTimeEvidence = Effect.fn("Goals.CompletionEvidence.
       return { ruleset, read };
     })
   );
-  const lookup = yield* readMergeRuleSuite(root, base, mergeCommit).pipe(
+  const lookup = yield* readMergeRuleSuite(root, base, mergeCommit, mergedAt).pipe(
     Effect.orElseSucceed(() => SuiteLookup.make({ found: O.none(), gap: O.some("network-failure") }))
   );
   const surviving = A.map(current, (ruleset) => ruleset.id);
@@ -811,7 +990,7 @@ export const observeGoalMergeTimeEvidence = Effect.fn("Goals.CompletionEvidence.
         gaps,
       })
     ),
-    facts: goalRequiredCheckFacts({ contexts, checkRuns: request.checkRuns, head: acceptedHead, mergedAt }),
+    facts: goalRequiredCheckFacts({ contexts, checkRuns: request.checkRuns, head: acceptedHead }),
   });
 });
 

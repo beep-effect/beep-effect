@@ -8,7 +8,10 @@
  * merged branch is the one checked out right here. `--retire` closes that gap
  * for the post-merge closeout an agent performs from its lane: it archives any
  * residue, removes the worktree and its branch through the worktree removal
- * service, and hands the sweep the owning clone as its repo root.
+ * service, and hands the sweep the owning clone as its repo root. After the
+ * sweep it classifies the committed closeout of every goal packet the branch
+ * touched, the same online check `goals doctor --online` runs, and raises a
+ * P0 inbox row in the owning clone for a merged closeout that did not verify.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -22,6 +25,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import { constant, dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
@@ -34,6 +38,16 @@ import {
   RepoRunContext,
   resolveFallowAuditCacheSettings,
 } from "../../../internal/repo-run/index.ts";
+import { readGoalCloseoutCheck } from "../../Goals/CloseoutCheck.ts";
+import {
+  GoalCloseoutShardUpdate,
+  goalCloseoutRefreshCommand,
+  updateGoalCloseoutShards,
+  withGoalCompletionIo,
+} from "../../Goals/Completion.ts";
+import { GoalManifest } from "../../Goals/Goals.schemas.ts";
+import { parseGoalManifestText } from "../../Goals/Inventory.ts";
+import { GoalClaimScope } from "../../Goals/RedAttribution.ts";
 import { describeInotifyWatcher, invokerExemption } from "../../Worktree/Worktree.command.ts";
 import { WorktreeRemovalRequest } from "../../Worktree/Worktree.schemas.ts";
 import { WorktreeRemovalService } from "../../Worktree/Worktree.service.ts";
@@ -45,6 +59,7 @@ import { ProofJobLauncher } from "./ProofJobLauncher.ts";
 import { StoppedLaneJob, YeetRetirePlan, YeetRetireVerdict } from "./Retire.schemas.ts";
 import type { GitInvocation } from "@beep/git/GitCommand";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/index.ts";
+import type { GoalCloseoutCheck, GoalCloseoutCheckOutcome } from "../../Goals/CloseoutCheck.ts";
 import type { WorktreeRemovalReceipt } from "../../Worktree/Worktree.schemas.ts";
 import type { ProofJobRecord } from "./ProofJob.ts";
 import type { SweepGitState } from "./Sweep.ts";
@@ -541,20 +556,96 @@ const branchPaths = Effect.fn("Yeet.branchPaths")(function* (plan: YeetRetirePla
 });
 
 /**
- * The goal packets the retired branch touched whose lifecycle is still `active`.
+ * The goal packets the retired branch touched.
+ *
+ * **Details**
+ *
+ * The touched paths are the union of the pull request's file list on GitHub
+ * and the branch's diff against the main branch, so a clone whose main
+ * already contains the merge still names the packets. Only paths under
+ * `goals/<slug>/` count; any probe failure contributes no paths rather than
+ * failing the retirement. Read it before the lane is retired: the diff runs
+ * in the lane.
+ *
+ * **Example** (Build the probe effect)
+ *
+ * ```ts
+ * import { touchedPacketsOnBranch } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect";
+ * console.log(Effect.isEffect(Effect.succeed(touchedPacketsOnBranch))) // true
+ * ```
+ *
+ * @param plan - The retirement plan naming the lane and its branch.
+ * @param state - The observed git facts, for the main branch name.
+ * @returns The sorted, distinct slugs of every packet the branch touched.
+ * @category planning
+ * @since 0.0.0
+ */
+export const touchedPacketsOnBranch = Effect.fn("Yeet.touchedPacketsOnBranch")(function* (
+  plan: YeetRetirePlan,
+  state: SweepGitState
+) {
+  const none = constant(A.empty<string>());
+  const fromPullRequest = yield* pullRequestPaths(plan).pipe(Effect.orElseSucceed(none));
+  const fromBranch = yield* branchPaths(plan, state).pipe(Effect.orElseSucceed(none));
+  const slugs: ReadonlyArray<string> = pipe(
+    A.appendAll(fromPullRequest, fromBranch),
+    A.map(packetSlugFromPath),
+    A.getSomes,
+    A.dedupe,
+    A.sort(Str.Order)
+  );
+  return slugs;
+});
+
+/**
+ * The touched packets whose lifecycle is still `active` with nothing saying why.
  *
  * **Details**
  *
  * A branch that carried a packet and merged should also have flipped that
- * packet's lifecycle (same-PR packet-state flips). The touched paths are the
- * union of the pull request's file list on GitHub and the branch's diff
- * against the main branch, so a clone whose main already contains the merge
- * still names the packets. A packet whose manifest carries a `statusNote` or
- * a non-empty `blockedBy` stays open on purpose and is not named, the same
- * deferral the goals doctor applies. Each packet's lifecycle is read from the manifest
- * committed at the lane's `HEAD`, never from its working tree, so an
- * uncommitted edit cannot hide what the merged PR left open. It is an
- * advisory: any probe failure yields no slugs rather than failing the
+ * packet's lifecycle (same-PR packet-state flips). A packet whose manifest
+ * carries a `statusNote` or a non-empty `blockedBy` stays open on purpose and
+ * is not named, the same deferral the goals doctor applies. Each packet's
+ * lifecycle is read from the manifest committed at the lane's `HEAD`, never
+ * from its working tree, so an uncommitted edit cannot hide what the merged
+ * PR left open. A manifest that is missing or fails to decode is not active.
+ *
+ * **Example** (Build the filter effect)
+ *
+ * ```ts
+ * import { activePacketsAmong } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect";
+ * console.log(Effect.isEffect(Effect.succeed(activePacketsAmong))) // true
+ * ```
+ *
+ * @param plan - The retirement plan naming the lane.
+ * @param slugs - Touched packet slugs, from {@link touchedPacketsOnBranch}.
+ * @returns The slugs, in order, of the packets still marked active.
+ * @category planning
+ * @since 0.0.0
+ */
+export const activePacketsAmong = Effect.fn("Yeet.activePacketsAmong")(function* (
+  plan: YeetRetirePlan,
+  slugs: ReadonlyArray<string>
+) {
+  return yield* Effect.filter(slugs, (slug) =>
+    Effect.flatMap(Git, (git) => git.show(plan.worktreePath, "HEAD", `goals/${slug}/ops/manifest.json`)).pipe(
+      Effect.flatMap(Effect.fromOption),
+      Effect.flatMap(decodePacketLifecycle),
+      Effect.map(isOpenWithoutContext),
+      Effect.orElseSucceed(constant(false))
+    )
+  );
+});
+
+/**
+ * The goal packets the retired branch touched whose lifecycle is still `active`.
+ *
+ * **Details**
+ *
+ * {@link touchedPacketsOnBranch} filtered by {@link activePacketsAmong}. It is
+ * an advisory: any probe failure yields no slugs rather than failing the
  * retirement.
  *
  * **Example** (Build the probe effect)
@@ -575,24 +666,8 @@ export const activePacketsOnBranch = Effect.fn("Yeet.activePacketsOnBranch")(fun
   plan: YeetRetirePlan,
   state: SweepGitState
 ) {
-  const none = constant(A.empty<string>());
-  const fromPullRequest = yield* pullRequestPaths(plan).pipe(Effect.orElseSucceed(none));
-  const fromBranch = yield* branchPaths(plan, state).pipe(Effect.orElseSucceed(none));
-  const slugs: ReadonlyArray<string> = pipe(
-    A.appendAll(fromPullRequest, fromBranch),
-    A.map(packetSlugFromPath),
-    A.getSomes,
-    A.dedupe,
-    A.sort(Str.Order)
-  );
-  return yield* Effect.filter(slugs, (slug) =>
-    Effect.flatMap(Git, (git) => git.show(plan.worktreePath, "HEAD", `goals/${slug}/ops/manifest.json`)).pipe(
-      Effect.flatMap(Effect.fromOption),
-      Effect.flatMap(decodePacketLifecycle),
-      Effect.map(isOpenWithoutContext),
-      Effect.orElseSucceed(constant(false))
-    )
-  );
+  const touched = yield* touchedPacketsOnBranch(plan, state);
+  return yield* activePacketsAmong(plan, touched);
 });
 
 /**
@@ -616,10 +691,188 @@ export const renderActivePackets = (slugs: ReadonlyArray<string>): string =>
     A.map(
       slugs,
       (slug) =>
-        `[yeet] packet still active after merge: goals/${slug} (this branch touched it); flip its lifecycle in a closeout PR`
+        `[yeet] packet still active after merge: goals/${slug} (this branch touched it); if the merged PR was the goal's final, bind it with \`bun run beep goals set-status ${slug} completed-retained --final-pr <n> --adopt-merged\`, otherwise record a statusNote`
     ),
     "\n"
   );
+
+const decodeCloseoutManifest = S.decodeUnknownOption(GoalManifest);
+
+// The manifest `mainRef` commits for a packet, when it decodes; an absent or
+// unparsable manifest (or a failed read) is neither checked nor reconciled.
+const mainManifest = Effect.fn("Yeet.mainManifest")(
+  function* (cloneRoot: string, mainRef: string, slug: string) {
+    const text = yield* Effect.flatMap(Git, (git) => git.show(cloneRoot, mainRef, `goals/${slug}/ops/manifest.json`));
+    return pipe(text, O.flatMap(parseGoalManifestText), O.flatMap(decodeCloseoutManifest));
+  },
+  Effect.orElseSucceed(O.none<GoalManifest>)
+);
+
+const boundFinalOf = (manifest: GoalManifest): O.Option<number> =>
+  O.map(O.fromUndefinedOr(manifest.closeout), (closeout) => closeout.finalPullRequest);
+
+// The inbox exit a classification records: a blocking outcome raises the P0
+// row, a closed one (verified, or closed by an operator ruling) acknowledges
+// it, and everything else leaves the inbox alone.
+const closeoutShardExit = (outcome: GoalCloseoutCheckOutcome): O.Option<number> =>
+  Match.value(outcome).pipe(
+    Match.when("unverified", () => O.some(1)),
+    Match.whenOr("verified", "operator-ruling", () => O.some(0)),
+    Match.orElse(O.none<number>)
+  );
+
+// One inbox update per touched packet whose manifest decodes at `mainRef`:
+// the bound final's row takes the check's exit, and the rows of any final main
+// no longer binds (a reopened or rebound packet) are acknowledged.
+const reconcileCloseoutRows = (
+  cloneRoot: string,
+  headSha: string,
+  slug: string,
+  manifest: GoalManifest,
+  check: O.Option<GoalCloseoutCheck>
+) =>
+  updateGoalCloseoutShards(
+    cloneRoot,
+    GoalCloseoutShardUpdate.make({
+      slug,
+      boundFinal: boundFinalOf(manifest),
+      exitCode: O.flatMap(check, (value) => closeoutShardExit(value.outcome)),
+      headSha,
+      label: `[yeet] closeout check goals/${slug}`,
+    })
+  );
+
+/**
+ * Classify the committed closeout of every touched packet online, and keep the clone's inbox in step.
+ *
+ * **Details**
+ *
+ * Run after the sweep, whose `fetch-prune` step refreshed `mainRef`. For each
+ * slug whose manifest at `mainRef` commits a `closeout`, the check is the one
+ * `goals doctor --online` runs ({@link readGoalCloseoutCheck}, under one
+ * memoized completion port for the whole call), except that only the claims
+ * on `origin/main` count: the clone's `HEAD` can be any branch. A blocking
+ * `unverified` outcome appends a P0 `local-shard-failed` row under
+ * `goal-closeout:<slug>#<n>` to `cloneRoot`'s inbox; a `verified` or
+ * `operator-ruling` outcome acknowledges an earlier row for the same shard;
+ * the other outcomes only print. For every touched slug whose manifest
+ * decodes at `mainRef`, the rows of a final it no longer binds (reopened, or
+ * rebound to another final) are acknowledged. Nothing here fails the sweep:
+ * an unreadable `mainRef` checks nothing, and a failed inbox write is
+ * reported.
+ *
+ * **Example** (Build the check effect)
+ *
+ * ```ts
+ * import { checkTouchedCloseouts } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect";
+ * console.log(Effect.isEffect(checkTouchedCloseouts("/repo", [], "origin/main"))) // true
+ * ```
+ *
+ * @param cloneRoot - The owning clone whose inbox carries the rows.
+ * @param slugs - Touched packet slugs, from {@link touchedPacketsOnBranch}.
+ * @param mainRef - The remote-tracking main ref the manifests are read at, such as `origin/main`.
+ * @returns One classification per touched packet with a committed closeout.
+ * @category services
+ * @since 0.0.0
+ */
+export const checkTouchedCloseouts = Effect.fn("Yeet.checkTouchedCloseouts")(function* (
+  cloneRoot: string,
+  slugs: ReadonlyArray<string>,
+  mainRef: string
+) {
+  const headSha = yield* Effect.flatMap(Git, (git) => git.revParse(cloneRoot, mainRef)).pipe(Effect.option);
+  if (O.isNone(headSha)) return A.empty<GoalCloseoutCheck>();
+  const candidates = yield* Effect.forEach(slugs, (slug) =>
+    Effect.map(
+      mainManifest(cloneRoot, mainRef, slug),
+      O.map((manifest) => [slug, manifest] as const)
+    )
+  );
+  const decoded = A.getSomes(candidates);
+  const committed = A.filter(decoded, ([, manifest]) => manifest.closeout !== undefined);
+  // The sweep speaks for main, so only claims on origin/main count (DN-6).
+  const classified = A.isReadonlyArrayEmpty(committed)
+    ? A.empty<O.Option<GoalCloseoutCheck>>()
+    : yield* withGoalCompletionIo(
+        Effect.forEach(
+          committed,
+          ([slug, manifest]) => readGoalCloseoutCheck(cloneRoot, slug, manifest, GoalClaimScope.Enum["origin-main"]),
+          { concurrency: 1 }
+        )
+      );
+  const checks = A.getSomes(classified);
+  yield* Effect.forEach(
+    decoded,
+    ([slug, manifest]) =>
+      reconcileCloseoutRows(
+        cloneRoot,
+        headSha.value,
+        slug,
+        manifest,
+        A.findFirst(checks, (check) => check.packet === slug)
+      ),
+    { discard: true }
+  );
+  return checks;
+});
+
+const describeCloseoutAttributedRed = (red: GoalCloseoutCheck["attributedReds"][number]): string =>
+  `${red.context} (${red.attribution}, fix #${red.fixPullRequest}, ${red.decisionFile})`;
+
+const renderCloseoutCheck = (check: GoalCloseoutCheck): string => {
+  const subject = `goals/${check.packet} #${check.finalPullRequest}`;
+  const detail = A.isReadonlyArrayNonEmpty(check.reasons) ? `: ${A.join(check.reasons, "; ")}` : "";
+  return Match.value(check.outcome).pipe(
+    Match.when(
+      "unverified",
+      () =>
+        `[yeet] P0 closeout-unverified ${subject}${detail}; fix with a redAttribution or operatorRuling decision file on main`
+    ),
+    Match.when(
+      "transient",
+      () =>
+        `[yeet] advisory completion-gate-unknown ${subject}${detail}; rerun ${goalCloseoutRefreshCommand(check.packet)} once GitHub facts are readable`
+    ),
+    Match.when("verified", () =>
+      A.isReadonlyArrayNonEmpty(check.attributedReds)
+        ? `[yeet] closeout verified ${subject} (attributed: ${A.join(A.map(check.attributedReds, describeCloseoutAttributedRed), "; ")})${detail}`
+        : `[yeet] closeout verified ${subject}${detail}`
+    ),
+    Match.when(
+      "operator-ruling",
+      () =>
+        `[yeet] closeout ${subject} closed by operator ruling ${O.getOrElse(check.rulingFile, unknownText)}${detail}`
+    ),
+    Match.whenOr("beyond-window", "final-open", () => `[yeet] closeout note ${subject}${detail}`),
+    Match.exhaustive
+  );
+};
+
+/**
+ * Render the closeout-check lines of a retirement report.
+ *
+ * **Example** (Render a blocking check)
+ *
+ * ```ts
+ * import { GoalCloseoutCheck } from "@beep/repo-cli/commands/Goals/CloseoutCheck"
+ * import { renderCloseoutChecks } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(
+ *   renderCloseoutChecks([
+ *     GoalCloseoutCheck.make({ packet: "demo", finalPullRequest: 7, outcome: "unverified", reasons: ["unattributed red: Lint"] }),
+ *   ])
+ * )
+ * // [yeet] P0 closeout-unverified goals/demo #7: unattributed red: Lint; fix with a redAttribution or operatorRuling decision file on main
+ * ```
+ *
+ * @param checks - The classifications {@link checkTouchedCloseouts} returned.
+ * @returns One line per check, or the empty string.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderCloseoutChecks = (checks: ReadonlyArray<GoalCloseoutCheck>): string =>
+  A.join(A.map(checks, renderCloseoutCheck), "\n");
 
 /**
  * The message a failed retirement reports, with the working form appended when a holder blocked it.

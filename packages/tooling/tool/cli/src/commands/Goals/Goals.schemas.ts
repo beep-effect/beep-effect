@@ -21,6 +21,7 @@ import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
@@ -223,6 +224,14 @@ export type GoalPullRequestRole = typeof GoalPullRequestRole.Type;
 /**
  * Names the evidence provider used to accept a goal.
  *
+ * **Details**
+ *
+ * Only the hosted kinds ({@link GoalHostedEvidenceKind}) can gate completion:
+ * `hosted-required-checks` (every required check green at the merged head, or
+ * attributed) and `hosted-review-threads` (no outstanding review thread). A
+ * declared `yeet-verdict`, `proof-fact` or `packet-history` ref is recorded and
+ * never gates.
+ *
  * **Example** (GoalAcceptanceEvidenceKind boundary)
  *
  * ```ts
@@ -235,6 +244,7 @@ export type GoalPullRequestRole = typeof GoalPullRequestRole.Type;
  */
 export const GoalAcceptanceEvidenceKind = LiteralKit([
   "hosted-required-checks",
+  "hosted-review-threads",
   "yeet-verdict",
   "proof-fact",
   "packet-history",
@@ -248,6 +258,43 @@ export const GoalAcceptanceEvidenceKind = LiteralKit([
  * @since 0.0.0
  */
 export type GoalAcceptanceEvidenceKind = typeof GoalAcceptanceEvidenceKind.Type;
+
+/**
+ * The evidence kinds that may gate goal completion: hosted facts read from GitHub.
+ *
+ * **Details**
+ *
+ * Completion gates only on evidence whose ref is `gating` and whose kind is one
+ * of these. The local Yeet verdict is not read.
+ *
+ * **Example** (Tell gating kinds from advisory ones)
+ *
+ * ```ts
+ * import { GoalHostedEvidenceKind } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(GoalHostedEvidenceKind)("hosted-review-threads")) // true
+ * console.log(S.is(GoalHostedEvidenceKind)("yeet-verdict")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GoalHostedEvidenceKind = GoalAcceptanceEvidenceKind.pick([
+  "hosted-required-checks",
+  "hosted-review-threads",
+]).pipe(
+  $I.annoteSchema("GoalHostedEvidenceKind", {
+    description: "Evidence kinds that may gate goal completion: hosted facts read from GitHub.",
+  })
+);
+/**
+ * An evidence kind that may gate goal completion.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GoalHostedEvidenceKind = typeof GoalHostedEvidenceKind.Type;
 
 /**
  * Names the independently observed GitHub merge workflow.
@@ -324,6 +371,411 @@ export const GoalRedAttribution = LiteralKit(["inherited", "introduced", "mixed"
  * @since 0.0.0
  */
 export type GoalRedAttribution = typeof GoalRedAttribution.Type;
+
+/**
+ * Names why a required check was red at a goal's final merge; `unknown` cannot attribute.
+ *
+ * **Example** (Reject an unknown cause)
+ *
+ * ```ts
+ * import { GoalAttributedRedCause } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(GoalAttributedRedCause)("inherited")) // true
+ * console.log(S.is(GoalAttributedRedCause)("unknown")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GoalAttributedRedCause = GoalRedAttribution.pick(["inherited", "introduced", "mixed"]).pipe(
+  $I.annoteSchema("GoalAttributedRedCause", {
+    description: "Why a required check was red at a goal's final merge; unknown cannot attribute.",
+  })
+);
+/**
+ * Why a required check was red at a goal's final merge.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GoalAttributedRedCause = typeof GoalAttributedRedCause.Type;
+
+const PositivePullRequest = S.Int.check(S.isGreaterThan(0)).pipe(
+  $I.annoteSchema("PositivePullRequest", { description: "A GitHub pull request number." })
+);
+
+/**
+ * One red (or never-reported) required check named with its cause and fix PR, as authored.
+ *
+ * **Details**
+ *
+ * `context` must equal the required context exactly as GitHub reports it
+ * (`GoalRequiredCheckFact.context`).
+ *
+ * **Example** (Attribute one inherited red)
+ *
+ * ```ts
+ * import { GoalAttributedRed } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ *
+ * const red = GoalAttributedRed.make({ context: "Heavy / Check", attribution: "inherited", fixPullRequest: 2994 })
+ * console.log(red.fixPullRequest) // 2994
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GoalAttributedRed extends S.Opaque<GoalAttributedRed, { readonly brand: unique symbol }>()(
+  S.Struct({
+    context: S.NonEmptyString,
+    attribution: GoalAttributedRedCause,
+    fixPullRequest: PositivePullRequest,
+  }).pipe(
+    $I.annoteSchema("GoalAttributedRed", {
+      description: "One red required check named with its cause and fix PR.",
+    })
+  )
+) {}
+
+const GoalRedAttributionUniqueContexts = S.makeFilter(
+  (block: { readonly reds: ReadonlyArray<GoalAttributedRed> }) =>
+    A.length(A.dedupe(A.map(block.reds, (red) => red.context))) === A.length(block.reds),
+  $I.annote("GoalRedAttributionUniqueContexts", {
+    title: "Unique Attributed Contexts",
+    description: "A red-attribution block names each required context at most once.",
+    message: "Each red context may be attributed only once per block",
+  })
+);
+
+const GoalRedAttributionFixIsNotFinal = S.makeFilter(
+  (block: { readonly finalPullRequest: number; readonly reds: ReadonlyArray<GoalAttributedRed> }) =>
+    A.every(block.reds, (red) => red.fixPullRequest !== block.finalPullRequest),
+  $I.annote("GoalRedAttributionFixIsNotFinal", {
+    title: "Fix PR Is Not The Final",
+    description: "A red's fix PR is a later PR, never the final that merged over the red.",
+    message: "A red's fixPullRequest must differ from the block's finalPullRequest",
+  })
+);
+
+/**
+ * The `redAttribution` decision-file block: the reds one final merged over.
+ *
+ * **Details**
+ *
+ * One block per final. Contexts are unique within the block, and no fix PR may
+ * be the final itself. Only a committed `kind: decision` file counts.
+ *
+ * **Example** (Attribute two reds of one final)
+ *
+ * ```ts
+ * import { GoalRedAttributionBlock } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ *
+ * const block = GoalRedAttributionBlock.make({
+ *   finalPullRequest: 2966,
+ *   reds: [
+ *     { context: "Heavy / Check", attribution: "inherited", fixPullRequest: 2994 },
+ *     { context: "Heavy / Docgen", attribution: "inherited", fixPullRequest: 2994 },
+ *   ],
+ * })
+ * console.log(block.reds.length) // 2
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GoalRedAttributionBlock extends S.Opaque<GoalRedAttributionBlock, { readonly brand: unique symbol }>()(
+  S.Struct({
+    finalPullRequest: PositivePullRequest,
+    reds: S.NonEmptyArray(GoalAttributedRed),
+  })
+    .check(GoalRedAttributionUniqueContexts, GoalRedAttributionFixIsNotFinal)
+    .pipe(
+      $I.annoteSchema("GoalRedAttributionBlock", {
+        description: "Reds one goal final merged over, each attributed with its cause and fix PR.",
+      })
+    )
+) {}
+
+/**
+ * The `operatorRuling` decision-file block: the operator closes an unverifiable final.
+ *
+ * **Example** (Record an operator ruling)
+ *
+ * ```ts
+ * import { GoalOperatorRuling } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ *
+ * console.log(GoalOperatorRuling.make({ finalPullRequest: 2080 }).finalPullRequest) // 2080
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GoalOperatorRuling extends S.Opaque<GoalOperatorRuling, { readonly brand: unique symbol }>()(
+  S.Struct({ finalPullRequest: PositivePullRequest }).pipe(
+    $I.annoteSchema("GoalOperatorRuling", {
+      description: "An operator ruling that closes a goal final hosted facts cannot verify.",
+    })
+  )
+) {}
+
+/**
+ * Where a decision file carrying a claim was found.
+ *
+ * **Details**
+ *
+ * `origin-main` is `origin/main`'s tree and `head` the checkout's `HEAD`
+ * commit; both are committed ({@link GoalCommittedClaimSource}). A
+ * `working-tree` file only previews and never counts toward a stored receipt.
+ *
+ * **Example** (Enumerate claim sources)
+ *
+ * ```ts
+ * import { GoalClaimSource } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ * console.log(GoalClaimSource.literals) // ["origin-main", "head", "working-tree"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GoalClaimSource = LiteralKit(["origin-main", "head", "working-tree"]).pipe(
+  $I.annoteSchema("GoalClaimSource", {
+    description: "Where a decision file carrying a completion claim was found.",
+  })
+);
+/**
+ * Where a decision file carrying a claim was found.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GoalClaimSource = typeof GoalClaimSource.Type;
+
+/**
+ * Ranks a claim source by strength: `origin-main` is 0, `head` 1, `working-tree` 2.
+ *
+ * **Details**
+ *
+ * Lower is stronger. Claims that agree collapse to the strongest source, so a
+ * file found both on `origin/main` and at `HEAD` counts as an `origin-main`
+ * claim.
+ *
+ * **Example** (Rank the sources)
+ *
+ * ```ts
+ * import { goalClaimSourceRank } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ *
+ * console.log(goalClaimSourceRank("origin-main")) // 0
+ * console.log(goalClaimSourceRank("working-tree")) // 2
+ * ```
+ *
+ * @param source - Where the decision file carrying the claim was found.
+ * @returns 0 for `origin-main`, 1 for `head` and 2 for `working-tree`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const goalClaimSourceRank = (source: GoalClaimSource): number =>
+  Match.value(source).pipe(
+    Match.when("origin-main", () => 0),
+    Match.when("head", () => 1),
+    Match.when("working-tree", () => 2),
+    Match.exhaustive
+  );
+
+/**
+ * The claim sources that count: committed on `origin/main` or at the checkout's `HEAD`.
+ *
+ * **Example** (Reject a working-tree source)
+ *
+ * ```ts
+ * import { GoalCommittedClaimSource } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(GoalCommittedClaimSource)("head")) // true
+ * console.log(S.is(GoalCommittedClaimSource)("working-tree")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GoalCommittedClaimSource = GoalClaimSource.pick(["origin-main", "head"]).pipe(
+  $I.annoteSchema("GoalCommittedClaimSource", {
+    description: "Claim sources that count toward a stored completion receipt.",
+  })
+);
+/**
+ * A claim source that counts toward a stored completion receipt.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GoalCommittedClaimSource = typeof GoalCommittedClaimSource.Type;
+
+/**
+ * One attributed red as read from a decision file, with the file and its source.
+ *
+ * **Details**
+ *
+ * The one claim shape the reader, the observation, the receipt and the
+ * evaluator input all carry (`redAttributions`), so a stored receipt
+ * re-resolves without the decision files. `decisionFile` is repo-relative.
+ *
+ * **Example** (Construct a committed claim)
+ *
+ * ```ts
+ * import { GoalRedAttributionClaim } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ *
+ * const claim = GoalRedAttributionClaim.make({
+ *   context: "Heavy / Check",
+ *   attribution: "inherited",
+ *   fixPullRequest: 2994,
+ *   decisionFile: "goals/demo/decisions/2026-11-14-final-merged-over-reds.md",
+ *   source: "origin-main",
+ * })
+ * console.log(claim.source) // "origin-main"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GoalRedAttributionClaim extends S.Opaque<GoalRedAttributionClaim, { readonly brand: unique symbol }>()(
+  S.Struct({
+    context: S.NonEmptyString,
+    attribution: GoalAttributedRedCause,
+    fixPullRequest: PositivePullRequest,
+    decisionFile: S.NonEmptyString,
+    source: GoalClaimSource,
+  }).pipe(
+    $I.annoteSchema("GoalRedAttributionClaim", {
+      description: "One attributed red read from a decision file, with the file and where it was found.",
+    })
+  )
+) {}
+
+/**
+ * One operator ruling as read from a decision file, with the file and its source.
+ *
+ * **Example** (Construct a ruling claim)
+ *
+ * ```ts
+ * import { GoalOperatorRulingClaim } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ *
+ * const claim = GoalOperatorRulingClaim.make({
+ *   finalPullRequest: 2080,
+ *   decisionFile: "goals/demo/decisions/2026-11-14-operator-closes-2080.md",
+ *   source: "origin-main",
+ * })
+ * console.log(claim.finalPullRequest) // 2080
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GoalOperatorRulingClaim extends S.Opaque<GoalOperatorRulingClaim, { readonly brand: unique symbol }>()(
+  S.Struct({
+    finalPullRequest: PositivePullRequest,
+    decisionFile: S.NonEmptyString,
+    source: GoalClaimSource,
+  }).pipe(
+    $I.annoteSchema("GoalOperatorRulingClaim", {
+      description: "One operator ruling read from a decision file, with the file and where it was found.",
+    })
+  )
+) {}
+
+/**
+ * A required context that two decision files attribute differently; it stays unattributed.
+ *
+ * **Example** (Record a conflict)
+ *
+ * ```ts
+ * import { GoalAttributionConflict } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ *
+ * const conflict = GoalAttributionConflict.make({
+ *   context: "Heavy / Check",
+ *   decisionFiles: ["goals/demo/decisions/2026-11-14-a.md", "goals/demo/decisions/2026-11-14-b.md"],
+ * })
+ * console.log(conflict.decisionFiles.length) // 2
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GoalAttributionConflict extends S.Opaque<GoalAttributionConflict, { readonly brand: unique symbol }>()(
+  S.Struct({
+    context: S.NonEmptyString,
+    decisionFiles: S.NonEmptyArray(S.NonEmptyString),
+  }).pipe(
+    $I.annoteSchema("GoalAttributionConflict", {
+      description: "A required context two decision files attribute differently; it fails closed.",
+    })
+  )
+) {}
+
+/**
+ * The claims for one final from one set of sources: attributed reds, rulings and conflicts.
+ *
+ * **Details**
+ *
+ * Every array defaults to empty, so `GoalClaimSet.make({})` is the empty set.
+ * A context listed in `conflicts` is never in `redAttributions` (fail closed).
+ *
+ * **Example** (Construct the empty set)
+ *
+ * ```ts
+ * import { GoalClaimSet } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ *
+ * console.log(GoalClaimSet.make({}).redAttributions.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GoalClaimSet extends S.Opaque<GoalClaimSet, { readonly brand: unique symbol }>()(
+  S.Struct({
+    redAttributions: ArrayKeyDefaultEmpty(GoalRedAttributionClaim),
+    operatorRulings: ArrayKeyDefaultEmpty(GoalOperatorRulingClaim),
+    conflicts: ArrayKeyDefaultEmpty(GoalAttributionConflict),
+  }).pipe(
+    $I.annoteSchema("GoalClaimSet", {
+      description: "Attributed reds, operator rulings and attribution conflicts for one goal final.",
+    })
+  )
+) {}
+
+const emptyGoalClaimSet = Effect.succeed(GoalClaimSet.make({}));
+
+/**
+ * Completion claims for one final: the committed set that counts and a preview set.
+ *
+ * **Details**
+ *
+ * `committed` holds claims from `origin/main` and `HEAD` only and is the set a
+ * stored receipt, doctor and the sweep use. `preview` adds working-tree files,
+ * so refresh can say what would verify once they are committed.
+ * `GoalCompletionClaims.make({})` is the empty value.
+ *
+ * **Example** (Construct empty claims)
+ *
+ * ```ts
+ * import { GoalCompletionClaims } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ *
+ * const claims = GoalCompletionClaims.make({})
+ * console.log(claims.committed.redAttributions.length, claims.preview.conflicts.length) // 0 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GoalCompletionClaims extends S.Opaque<GoalCompletionClaims, { readonly brand: unique symbol }>()(
+  S.Struct({
+    committed: GoalClaimSet.pipe(S.withConstructorDefault(emptyGoalClaimSet)),
+    preview: GoalClaimSet.pipe(S.withConstructorDefault(emptyGoalClaimSet)),
+  }).pipe(
+    $I.annoteSchema("GoalCompletionClaims", {
+      description: "Committed completion claims for one final, plus a preview that includes working-tree files.",
+    })
+  )
+) {}
 
 /**
  * Declares one pull request by number and delivery role.
@@ -811,7 +1263,152 @@ export class GoalRequiredCheckFact extends S.Opaque<GoalRequiredCheckFact, { rea
 ) {}
 
 /**
- * Completion evidence that is complete and green at the accepted head.
+ * Whether an attributed required context was red at the head or never reported a run.
+ *
+ * **Details**
+ *
+ * `missing` is a required context with no run on the accepted head (GitHub's
+ * "expected"), which a bypass merge can leave behind.
+ *
+ * **Example** (Recognize a never-reported context)
+ *
+ * ```ts
+ * import { GoalAttributedRedObservation } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ * console.log(GoalAttributedRedObservation.is.missing("missing")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GoalAttributedRedObservation = LiteralKit(["red", "missing"]).pipe(
+  $I.annoteSchema("GoalAttributedRedObservation", {
+    description: "Whether an attributed required context was red at the head or never reported a run.",
+  })
+);
+/**
+ * Whether an attributed required context was red or never reported a run.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GoalAttributedRedObservation = typeof GoalAttributedRedObservation.Type;
+
+const GoalAttributedRedFactRunCheck = S.makeFilter(
+  (fact: { readonly checkRunId: O.Option<number>; readonly observed: GoalAttributedRedObservation }) =>
+    O.isNone(fact.checkRunId) === GoalAttributedRedObservation.is.missing(fact.observed),
+  $I.annote("GoalAttributedRedFactRunCheck", {
+    title: "Attributed Red Run",
+    description: "An attributed red has a check run; a missing context has none.",
+    message: "checkRunId must be absent exactly when observed is missing",
+  })
+);
+
+/**
+ * One required context a committed claim attributed in a verified verdict.
+ *
+ * **Details**
+ *
+ * `checkRunId` is absent exactly when `observed` is `missing`, and a missing
+ * context's conclusion is `unknown`. The attribution, fix PR, decision file and
+ * source come from the claim, so the verdict lists every red it accepted.
+ *
+ * **Example** (Construct an attributed red)
+ *
+ * ```ts
+ * import { GoalAttributedRedFact } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ * import * as O from "effect/Option"
+ *
+ * const fact = GoalAttributedRedFact.make({
+ *   context: "Heavy / Check",
+ *   checkRunId: O.some(51),
+ *   conclusion: "cancelled",
+ *   observed: "red",
+ *   attribution: "inherited",
+ *   fixPullRequest: 2994,
+ *   decisionFile: "goals/demo/decisions/2026-11-14-final-merged-over-reds.md",
+ *   source: "origin-main",
+ * })
+ * console.log(fact.observed) // "red"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GoalAttributedRedFact extends S.Opaque<GoalAttributedRedFact, { readonly brand: unique symbol }>()(
+  S.Struct({
+    context: S.NonEmptyString,
+    checkRunId: S.OptionFromNullOr(S.Finite),
+    conclusion: GoalCheckConclusion,
+    observed: GoalAttributedRedObservation,
+    attribution: GoalAttributedRedCause,
+    fixPullRequest: PositivePullRequest,
+    decisionFile: S.NonEmptyString,
+    source: GoalClaimSource,
+  })
+    .check(GoalAttributedRedFactRunCheck)
+    .pipe(
+      $I.annoteSchema("GoalAttributedRedFact", {
+        description: "One required context a committed claim attributed, with its run, cause, fix PR and file.",
+      })
+    )
+) {}
+
+const GoalReviewThreadTallyBoundCheck = S.makeFilter(
+  (tally: { readonly total: number; readonly outstanding: number }) => tally.outstanding <= tally.total,
+  $I.annote("GoalReviewThreadTallyBoundCheck", {
+    title: "Outstanding Within Total",
+    description: "Outstanding review threads are a subset of all review threads.",
+    message: "outstanding must not exceed total",
+  })
+);
+
+const ThreadCount = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
+  $I.annoteSchema("ThreadCount", { description: "A non-negative review-thread count." })
+);
+
+/**
+ * Counts a final PR's review threads and the outstanding ones when refresh ran.
+ *
+ * **Details**
+ *
+ * A thread is outstanding when it is unresolved, or resolved with a later
+ * human comment the author has not answered. Zero outstanding verifies the
+ * `hosted-review-threads` evidence; any outstanding thread is unsatisfied.
+ *
+ * **Example** (Record a clean thread read)
+ *
+ * ```ts
+ * import { GoalReviewThreadTally } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ *
+ * console.log(GoalReviewThreadTally.make({ total: 3, outstanding: 0 }).outstanding) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GoalReviewThreadTally extends S.Opaque<GoalReviewThreadTally, { readonly brand: unique symbol }>()(
+  S.Struct({
+    total: ThreadCount,
+    outstanding: ThreadCount,
+  })
+    .check(GoalReviewThreadTallyBoundCheck)
+    .pipe(
+      $I.annoteSchema("GoalReviewThreadTally", {
+        description: "A final PR's review-thread count and how many are outstanding.",
+      })
+    )
+) {}
+
+/**
+ * Completion evidence whose every required context is green, or attributed, at the accepted head.
+ *
+ * **Details**
+ *
+ * `facts` holds every relevant required fact, attributed reds included, so it
+ * is never empty. `attributedReds` lists each red or never-reported context a
+ * committed `redAttribution` claim covered. `ruleSuiteBypassed` records that
+ * GitHub's merge-push rule suite failed its required-status-checks evaluation
+ * (a bypass merge); it is information, not a red.
  *
  * **Example** (Inspect the verified case)
  *
@@ -827,9 +1424,16 @@ export class GoalCompletionEvidenceVerified extends S.Opaque<
   GoalCompletionEvidenceVerified,
   { readonly brand: unique symbol }
 >()(
-  S.TaggedStruct("verified", { facts: S.Array(GoalRequiredCheckFact).check(S.isMinLength(1)) }).pipe(
+  S.TaggedStruct("verified", {
+    facts: S.Array(GoalRequiredCheckFact).check(S.isMinLength(1)),
+    attributedReds: ArrayKeyDefaultEmpty(GoalAttributedRedFact),
+    ruleSuiteBypassed: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultKey(Effect.succeed(false))
+    ),
+  }).pipe(
     $I.annoteSchema("GoalCompletionEvidenceVerified", {
-      description: "Every required fact is complete and green at the accepted head.",
+      description: "Every required fact is green, or attributed by a committed claim, at the accepted head.",
     })
   )
 ) {}
@@ -839,8 +1443,10 @@ export class GoalCompletionEvidenceVerified extends S.Opaque<
  *
  * **Details**
  *
- * `reds` are head-bound required check failures. `ruleSuiteRed` is true when
- * GitHub's merge-push rule suite itself failed an active required-status-checks rule.
+ * `reds` are head-bound required check failures that no committed
+ * `redAttribution` claim covers. `ruleSuiteRed` is true when GitHub's
+ * merge-push rule suite itself failed an active required-status-checks rule;
+ * it is recorded for information only and never makes the verdict red alone.
  *
  * **Example** (Inspect the unsatisfied case)
  *
@@ -858,7 +1464,7 @@ export class GoalCompletionEvidenceUnsatisfied extends S.Opaque<
 >()(
   S.TaggedStruct("unsatisfied", { reds: S.Array(GoalRequiredCheckFact), ruleSuiteRed: S.Boolean }).pipe(
     $I.annoteSchema("GoalCompletionEvidenceUnsatisfied", {
-      description: "A known required red: a head-bound required check failure or a failed merge-push rule suite.",
+      description: "A known required red: a head-bound required check failure that no committed claim attributes.",
     })
   )
 ) {}
@@ -993,7 +1599,50 @@ export class GoalNonRequiredRed extends S.Opaque<GoalNonRequiredRed, { readonly 
 ) {}
 
 /**
+ * Known completion-receipt schema versions.
+ *
+ * **Details**
+ *
+ * `goal-completion-receipt/v2` is written by the hosted-only rules and adds
+ * `merged`, `reviewThreads` and `redAttributions`. `goal-completion-receipt/v1`
+ * rows still decode; the new keys take their defaults.
+ *
+ * **Example** (Recognize the current receipt version)
+ *
+ * ```ts
+ * import { GoalCompletionReceiptVersion } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ * console.log(GoalCompletionReceiptVersion.is["goal-completion-receipt/v2"]("goal-completion-receipt/v2")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GoalCompletionReceiptVersion = LiteralKit([
+  "goal-completion-receipt/v1",
+  "goal-completion-receipt/v2",
+]).pipe(
+  $I.annoteSchema("GoalCompletionReceiptVersion", {
+    description: "Known goal completion-receipt schema versions (v2 current, v1 legacy).",
+  })
+);
+/**
+ * A known goal completion-receipt schema version.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GoalCompletionReceiptVersion = typeof GoalCompletionReceiptVersion.Type;
+
+/**
  * Binds a derived completion observation to the repository, packet, declaration and accepted head.
+ *
+ * **Details**
+ *
+ * `schemaVersion` defaults to `goal-completion-receipt/v2`. `merged` tells an
+ * open final from an unreadable one, `reviewThreads` is the thread tally read
+ * at refresh, and `redAttributions` holds the committed claims the verdict
+ * used, so a stored row re-resolves without the decision files. A v1 row
+ * decodes with `merged` and `reviewThreads` absent and no attributions.
  *
  * **Example** (GoalCompletionReceipt boundary)
  *
@@ -1007,7 +1656,9 @@ export class GoalNonRequiredRed extends S.Opaque<GoalNonRequiredRed, { readonly 
  */
 export class GoalCompletionReceipt extends S.Opaque<GoalCompletionReceipt, { readonly brand: unique symbol }>()(
   S.Struct({
-    schemaVersion: S.tag("goal-completion-receipt/v1"),
+    schemaVersion: GoalCompletionReceiptVersion.pipe(
+      S.withConstructorDefault(Effect.succeed<GoalCompletionReceiptVersion>("goal-completion-receipt/v2"))
+    ),
     repository: S.NonEmptyString,
     packet: S.NonEmptyString,
     declarationDigest: S.NonEmptyString,
@@ -1018,9 +1669,18 @@ export class GoalCompletionReceipt extends S.Opaque<GoalCompletionReceipt, { rea
     ),
     finalPullRequest: S.Int.check(S.isGreaterThan(0)),
     acceptedHead: S.OptionFromNullOr(S.NonEmptyString),
+    merged: S.OptionFromNullOr(S.Boolean).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.withDecodingDefaultKey(Effect.succeed(null))
+    ),
     merge: S.OptionFromNullOr(GoalMergeResult),
     evidence: S.Array(GoalEvidenceCheck),
     requiredCheckFacts: ArrayKeyDefaultEmpty(GoalRequiredCheckFact),
+    reviewThreads: S.OptionFromNullOr(GoalReviewThreadTally).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.withDecodingDefaultKey(Effect.succeed(null))
+    ),
+    redAttributions: ArrayKeyDefaultEmpty(GoalRedAttributionClaim),
     nonRequiredReds: S.Array(GoalNonRequiredRed),
     subClaims: S.Array(GoalEvidenceCheck),
     outcome: GoalCompletionOutcome,
@@ -1274,47 +1934,26 @@ const GoalManifestCapabilitySelfCycleCheck = S.makeFilter(
 );
 
 /**
- * Declares the closeout to activate only after hosted readiness and merge proof.
+ * Commits a closeout naming the goal's final delivery PR.
  *
  * **Details**
  *
- * Keep initiative.status and lifecycle operative while this proposal and its
- * reflection ship in the final PR. A proposal is never completion evidence;
- * once its completion receipt verifies, `goals set-status` adopts it as a
- * {@link GoalCloseoutRecord}.
+ * `goals set-status <slug> completed-retained` writes this record with the
+ * matching `initiative.status`, once the final PR is open, and the commit
+ * ships in that PR. The gate must not be grandfathered and must declare no
+ * other final PR; no declared readiness evidence is required, because hosted
+ * facts read by `goals completion refresh` verify the final. The completion
+ * declaration digest reads the record under the slot label a retired
+ * proposal used, so receipts written before the proposal shape was removed
+ * still match.
  *
- * **Example** (Propose closeout in the final PR)
+ * **Gotchas**
  *
- * ```ts
- * import { GoalProposedCloseout } from "@beep/repo-cli/commands/Goals/Goals.schemas"
- * const proposal = GoalProposedCloseout.make({ status: "completed-retained", finalPullRequest: 1582 })
- * console.log(proposal.status)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class GoalProposedCloseout extends S.Opaque<GoalProposedCloseout, { readonly brand: unique symbol }>()(
-  S.Struct({
-    status: S.tag("completed-retained"),
-    finalPullRequest: S.Int.check(S.isGreaterThan(0)),
-  }).pipe(
-    $I.annoteSchema("GoalProposedCloseout", {
-      description: "Prospective final-PR closeout, separate from operative lifecycle and completion evidence.",
-    })
-  )
-) {}
-
-/**
- * Commits a verified closeout once `goals set-status` adopts its proposal.
- *
- * **Details**
- *
- * `goals set-status <slug> completed-retained` replaces a proposal with this
- * record only when the shared completion receipt for the proposed final PR
- * verifies. It keeps the final PR in the committed manifest, and the
- * completion declaration digest reads it exactly as it read the proposal, so
- * the receipt that verified the closeout still matches afterwards.
+ * The retired `proposedCloseout` key is no longer modeled: a manifest that
+ * still carries it decodes with the key stripped, and `goals doctor` reports
+ * it as a blocking `manifest-invalid` until
+ * `goals set-status <slug> completed-retained` deletes it, binding its final
+ * when no closeout is committed yet.
  *
  * **Example** (Record an adopted closeout)
  *
@@ -1333,20 +1972,21 @@ export class GoalCloseoutRecord extends S.Opaque<GoalCloseoutRecord, { readonly 
     finalPullRequest: S.Int.check(S.isGreaterThan(0)),
   }).pipe(
     $I.annoteSchema("GoalCloseoutRecord", {
-      description: "Committed closeout adopted from a proposal whose completion receipt verified.",
+      description: "Committed closeout naming the goal's final delivery PR, verified from hosted facts.",
     })
   )
 ) {}
 
 /**
- * Whether this clone holds a verified completion receipt for a proposed closeout.
+ * Whether this clone holds a verified completion receipt for a committed closeout.
  *
  * **Details**
  *
- * `verified` means the clone-scoped receipt for the proposed final PR passed the
- * strict projection (merge facts, exact-head hosted evidence, readiness
- * verdict), so the proposal is the operative lifecycle here. `unverified` means
- * no such receipt is present in this clone: the manifest field stays operative.
+ * `verified` means the newest matching receipt this clone can read (the
+ * workstation store or the clone's legacy file) resolves `verified` for the
+ * closeout's final PR under the hosted-only rules. `unverified` means no such
+ * receipt is present here: the closeout is committed, and nothing in this
+ * clone proves its final yet. The token never changes `initiative.status`.
  *
  * **Example** (Guard a verification token)
  *
@@ -1360,12 +2000,12 @@ export class GoalCloseoutRecord extends S.Opaque<GoalCloseoutRecord, { readonly 
  */
 export const GoalCloseoutVerification = LiteralKit(["verified", "unverified"]).pipe(
   $I.annoteSchema("GoalCloseoutVerification", {
-    description: "Whether a proposed closeout is backed by a verified clone-scoped completion receipt.",
+    description: "Whether a committed closeout is backed by a verified clone-scoped completion receipt.",
   })
 );
 
 /**
- * Verification token of a proposed closeout in one clone.
+ * Verification token of a committed closeout in one clone.
  *
  * @category type-level
  * @since 0.0.0
@@ -1373,20 +2013,26 @@ export const GoalCloseoutVerification = LiteralKit(["verified", "unverified"]).p
 export type GoalCloseoutVerification = typeof GoalCloseoutVerification.Type;
 
 /**
- * Shows operative and proposed closeout separately in local session reports.
+ * Shows a packet's committed closeout and whether this clone has verified it.
  *
  * **Details**
  *
- * `operativeStatus` is the projected lifecycle for this clone: the proposal's
- * status when a verified receipt exists, the manifest field otherwise.
- * `verification` names which of the two it is, so renderers never have to
- * compare the fields themselves.
+ * `closeout` is the manifest's committed record; `verification` says whether
+ * this clone's newest matching completion receipt verifies its final PR, so
+ * renderers never read receipts themselves. `session open` and
+ * `goals explain` print it through {@link renderGoalCloseoutView}.
  *
- * **Example** (Read the session projection fields)
+ * **Example** (Build a closeout view)
  *
  * ```ts
- * import { GoalCloseoutView } from "@beep/repo-cli/commands/Goals/Goals.schemas"
- * console.log(GoalCloseoutView.fields.operativeStatus)
+ * import { GoalCloseoutRecord, GoalCloseoutView } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ *
+ * const view = GoalCloseoutView.make({
+ *   packet: "demo",
+ *   closeout: GoalCloseoutRecord.make({ status: "completed-retained", finalPullRequest: 7 }),
+ *   verification: "unverified",
+ * })
+ * console.log(view.closeout.finalPullRequest) // 7
  * ```
  *
  * @category read-models
@@ -1395,89 +2041,22 @@ export type GoalCloseoutVerification = typeof GoalCloseoutVerification.Type;
 export class GoalCloseoutView extends S.Opaque<GoalCloseoutView, { readonly brand: unique symbol }>()(
   S.Struct({
     packet: S.NonEmptyString,
-    operativeStatus: GoalStatus,
-    proposedCloseout: GoalProposedCloseout,
+    closeout: GoalCloseoutRecord,
     verification: GoalCloseoutVerification,
   }).pipe(
     $I.annoteSchema("GoalCloseoutView", {
-      description: "Local goal session view separating operative lifecycle from a prospective closeout.",
+      description: "Local goal view of a committed closeout and whether this clone's receipt verifies its final PR.",
     })
   )
 ) {}
-
-/**
- * Classifies a projected lifecycle against its proposal.
- *
- * **Example** (Classify a projected status)
- *
- * ```ts
- * import { GoalProposedCloseout, goalCloseoutVerification } from "@beep/repo-cli/commands/Goals/Goals.schemas"
- *
- * const proposal = GoalProposedCloseout.make({ status: "completed-retained", finalPullRequest: 7 })
- * console.log(goalCloseoutVerification(proposal, "completed-retained")) // "verified"
- * console.log(goalCloseoutVerification(proposal, "active")) // "unverified"
- * ```
- *
- * @param proposal - The manifest's proposed closeout.
- * @param operativeStatus - The lifecycle projected for this clone.
- * @returns `verified` when the projection adopted the proposal, `unverified` otherwise.
- * @category read-models
- * @since 0.0.0
- */
-export const goalCloseoutVerification: {
-  (operativeStatus: GoalStatus): (proposal: GoalProposedCloseout) => GoalCloseoutVerification;
-  (proposal: GoalProposedCloseout, operativeStatus: GoalStatus): GoalCloseoutVerification;
-} = dual(
-  2,
-  (proposal: GoalProposedCloseout, operativeStatus: GoalStatus): GoalCloseoutVerification =>
-    operativeStatus === proposal.status ? "verified" : "unverified"
-);
-
-/**
- * Renders the derived operative status of a proposed closeout for operator surfaces.
- *
- * **Details**
- *
- * Every operator-facing surface that has the clone-scoped receipt at hand
- * (`session open`, `goals doctor`, `goals explain`) prints this one form, so a
- * verified proposal reads as `completed-retained (verified via #N, adoption pending)`
- * everywhere until `goals set-status` adopts it, and an unverified one never
- * hides that the field is still derived.
- *
- * **Example** (Render both verification states)
- *
- * ```ts
- * import { GoalCloseoutView, GoalProposedCloseout, renderGoalCloseoutView } from "@beep/repo-cli/commands/Goals/Goals.schemas"
- *
- * const proposedCloseout = GoalProposedCloseout.make({ status: "completed-retained", finalPullRequest: 7 })
- * const verified = GoalCloseoutView.make({
- *   packet: "demo",
- *   operativeStatus: "completed-retained",
- *   proposedCloseout,
- *   verification: "verified",
- * })
- * console.log(renderGoalCloseoutView(verified)) // "completed-retained (verified via #7, adoption pending)"
- * console.log(renderGoalCloseoutView(GoalCloseoutView.make({ ...verified, operativeStatus: "active", verification: "unverified" })))
- * // "completed-retained (proposed via #7, unverified)"
- * ```
- *
- * @param view - The clone-scoped closeout view.
- * @returns One line naming the derived status, its final PR and its verification.
- * @category formatting
- * @since 0.0.0
- */
-export const renderGoalCloseoutView = (view: GoalCloseoutView): string =>
-  GoalCloseoutVerification.is.verified(view.verification)
-    ? `${view.proposedCloseout.status} (verified via #${view.proposedCloseout.finalPullRequest}, adoption pending)`
-    : `${view.proposedCloseout.status} (proposed via #${view.proposedCloseout.finalPullRequest}, unverified)`;
 
 /**
  * Renders a committed closeout record against its completion receipt for operator surfaces.
  *
  * **Details**
  *
- * A verified record prints `completed-retained (verified via #N)`; only a
- * committed record drops the `adoption pending` suffix a verified proposal carries.
+ * A verified record prints `completed-retained (verified via #N)`; a record
+ * this clone has not verified prints `completed-retained (committed via #N, unverified)`.
  *
  * **Example** (Render both verification states)
  *
@@ -1505,83 +2084,60 @@ export const renderGoalCloseoutRecordView: {
 );
 
 /**
- * Renders a proposed closeout from the committed manifest alone.
+ * Renders a closeout view for operator surfaces.
  *
  * **Details**
  *
- * The generated `goals/INDEX.md` must stay byte-identical across clones, and the
- * completion receipt is clone-scoped, so the index never consults it: this form
- * states only what the manifest commits to.
+ * Every operator-facing surface that has the clone-scoped receipt at hand
+ * (`session open`, `goals doctor`, `goals explain`) prints this one form,
+ * the same line {@link renderGoalCloseoutRecordView} prints for the record.
  *
- * **Example** (Render the committed proposal)
+ * **Example** (Render both verification states)
  *
  * ```ts
- * import { GoalProposedCloseout, renderGoalProposedCloseout } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ * import { GoalCloseoutRecord, GoalCloseoutView, renderGoalCloseoutView } from "@beep/repo-cli/commands/Goals/Goals.schemas"
  *
- * const proposal = GoalProposedCloseout.make({ status: "completed-retained", finalPullRequest: 7 })
- * console.log(renderGoalProposedCloseout(proposal)) // "proposed completed-retained via #7"
+ * const closeout = GoalCloseoutRecord.make({ status: "completed-retained", finalPullRequest: 7 })
+ * const verified = GoalCloseoutView.make({ packet: "demo", closeout, verification: "verified" })
+ * console.log(renderGoalCloseoutView(verified)) // "completed-retained (verified via #7)"
+ * console.log(renderGoalCloseoutView(GoalCloseoutView.make({ ...verified, verification: "unverified" })))
+ * // "completed-retained (committed via #7, unverified)"
  * ```
  *
- * @param proposal - The manifest's proposed closeout.
- * @returns The receipt-free rendering of the proposal.
+ * @param view - The clone-scoped closeout view.
+ * @returns One line naming the committed status, its final PR and its verification.
  * @category formatting
  * @since 0.0.0
  */
-export const renderGoalProposedCloseout = (proposal: GoalProposedCloseout): string =>
-  `proposed ${proposal.status} via #${proposal.finalPullRequest}`;
+export const renderGoalCloseoutView = (view: GoalCloseoutView): string =>
+  renderGoalCloseoutRecordView(view.closeout, view.verification);
 
-// Proposed and committed closeouts both need a non-grandfathered gate with
-// gating Yeet readiness evidence and no other declared final PR.
+// A committed closeout needs a non-grandfathered gate and no other declared
+// final PR. Hosted facts, not declared evidence, verify it.
 const closeoutGateAdmits = (gate: GoalCompletionGate, finalPullRequest: number): boolean =>
   !gate.grandfathered &&
-  A.some(gate.acceptanceEvidence ?? [], (ref) => ref.kind === "yeet-verdict" && ref.gating) &&
   !O.exists(
     A.findFirst(gate.pullRequests ?? [], (ref) => ref.role === "final"),
     (ref) => ref.number !== finalPullRequest
   );
 
-const GoalProposedCloseoutCheck = S.makeFilter(
-  (manifest: {
-    readonly initiative: GoalInitiative;
-    readonly completionGate: GoalCompletionGate;
-    readonly proposedCloseout?: GoalProposedCloseout;
-  }) => {
-    const proposal = manifest.proposedCloseout;
-    if (proposal === undefined) return true;
-    return (
-      (manifest.initiative.status === "active" || manifest.initiative.status === "paused") &&
-      closeoutGateAdmits(manifest.completionGate, proposal.finalPullRequest)
-    );
-  },
-  $I.annote("GoalProposedCloseoutCheck", {
-    title: "Prospective Closeout Identity",
-    description: "A closeout proposal retains active or paused operative status and matches any declared final PR.",
-    message:
-      "Proposed closeout requires active/paused status, a non-grandfathered gate and a matching final PR and gating Yeet readiness evidence",
-  })
-);
-
 const GoalCloseoutRecordCheck = S.makeFilter(
   (manifest: {
     readonly initiative: GoalInitiative;
     readonly completionGate: GoalCompletionGate;
-    readonly proposedCloseout?: GoalProposedCloseout;
     readonly closeout?: GoalCloseoutRecord;
   }) => {
     const record = manifest.closeout;
     if (record === undefined) return true;
     return (
       manifest.initiative.status === record.status &&
-      manifest.proposedCloseout === undefined &&
       closeoutGateAdmits(manifest.completionGate, record.finalPullRequest)
     );
   },
   $I.annote("GoalCloseoutRecordCheck", {
     title: "Committed Closeout Identity",
-    description:
-      "A committed closeout matches the declared status, replaces its proposal and matches any declared final PR.",
-    message:
-      "Committed closeout requires completed-retained status, no proposal, a non-grandfathered gate, gating Yeet readiness evidence and a matching final PR",
+    description: "A committed closeout matches the declared status and any declared final PR.",
+    message: "Committed closeout requires completed-retained status, a non-grandfathered gate and a matching final PR",
   })
 );
 
@@ -1780,7 +2336,6 @@ export class GoalManifest extends S.Opaque<GoalManifest, { readonly brand: uniqu
     completionGate: GoalCompletionGate,
     schemaVersion: S.optionalKey(GoalManifestSchemaVersion),
     lifecycle: S.optionalKey(GoalStatus),
-    proposedCloseout: S.optionalKey(GoalProposedCloseout),
     closeout: S.optionalKey(GoalCloseoutRecord),
     mergedPullRequest: S.optionalKey(S.Int.check(S.isGreaterThan(0))),
     mergedPullRequests: S.Int.check(S.isGreaterThan(0)).pipe(S.Array, S.optionalKey),
@@ -1804,7 +2359,7 @@ export class GoalManifest extends S.Opaque<GoalManifest, { readonly brand: uniqu
     provides: CapabilitySlugList,
     requires: CapabilitySlugList,
   })
-    .check(GoalManifestCapabilitySelfCycleCheck, GoalProposedCloseoutCheck, GoalCloseoutRecordCheck)
+    .check(GoalManifestCapabilitySelfCycleCheck, GoalCloseoutRecordCheck)
     .pipe(
       $I.annoteSchema("GoalManifest", {
         description: "Canonical goal-packet manifest with defaulted capability edges and legacy wire compatibility.",
@@ -1847,7 +2402,7 @@ export const decodeGoalManifest: {
  * @since 0.0.0
  */
 export const goalPullRequestRefs = (manifest: GoalManifest): ReadonlyArray<GoalPullRequestRef> => {
-  const closing = manifest.proposedCloseout ?? manifest.closeout;
+  const closing = manifest.closeout;
   if (manifest.completionGate.pullRequests !== undefined) {
     const refs = manifest.completionGate.pullRequests;
     if (closing === undefined || A.some(refs, (ref) => ref.role === "final")) return refs;

@@ -94,6 +94,13 @@ const writeActiveGoal = Effect.fn("writeActiveGoal")(function* (slug: string) {
   );
 });
 
+const writeManifest = Effect.fn("writeManifest")(function* (slug: string, manifest: unknown) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs.makeDirectory(path.join("goals", slug, "ops"), { recursive: true });
+  yield* fs.writeFileString(path.join("goals", slug, "ops", "manifest.json"), `${encodeJson(manifest)}\n`);
+});
+
 const writeReflection = Effect.fn("writeReflection")(function* (slug: string, file: string, body: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -139,7 +146,7 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
       20_000
     );
 
-    it.effect("requires a same-PR reflection for an active closeout proposal, including an attempted opt-out", () =>
+    it.effect("requires a same-PR reflection for a committed closeout, including an attempted opt-out", () =>
       Effect.andThen(
         temporaryWorkingDirectory,
         Effect.gen(function* () {
@@ -148,8 +155,8 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
           yield* fs.writeFileString(
             "goals/example/ops/manifest.json",
             encodeJson({
-              initiative: { id: "example", status: "active" },
-              proposedCloseout: { status: "completed-retained", finalPullRequest: 1429 },
+              initiative: { id: "example", status: "completed-retained" },
+              closeout: { status: "completed-retained", finalPullRequest: 1429 },
               reflectionRequired: false,
             })
           );
@@ -158,6 +165,38 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
           yield* writeReflection("example", "2026-06-09-claude.md", VALID_REFLECTION);
           const exit = yield* Effect.exit(runLintCommand(["reflection-artifacts"]));
           expect(exit._tag).toBe("Success");
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    // One-PR closeout: a legacy `proposedCloseout` key no longer enters the gate or overrides
+    // `initiative.status`, and the gate reads no other status field.
+    it.effect("keys the gate on initiative.status and a committed closeout, never on a legacy proposal", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const proposedCloseout = { status: "completed-retained", finalPullRequest: 1429 };
+          // Was gated through the proposal's status; `initiative.status` says active.
+          yield* writeManifest("active-proposal", {
+            initiative: { id: "active-proposal", status: "active" },
+            proposedCloseout,
+          });
+          // Was gated despite the opt-out; without a committed closeout the opt-out is an advisory.
+          yield* writeManifest("opted-out-proposal", {
+            initiative: { id: "opted-out-proposal", status: "completed-retained" },
+            proposedCloseout,
+            reflectionRequired: false,
+          });
+          // A top-level lifecycle token does not stand in for `initiative.status`.
+          yield* writeManifest("lifecycle-only", {
+            initiative: { id: "lifecycle-only" },
+            lifecycle: "completed-retained",
+          });
+          const exit = yield* Effect.exit(runLintCommand(["reflection-artifacts"]));
+          exit.pipe(Exit.isSuccess, assertTrue);
+          const logs = yield* TestConsole.logLines;
+          expect(logs).toContain("[reflection] blocking_findings=0");
+          expect(logs).toContain("[reflection] advisory_findings=1");
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );

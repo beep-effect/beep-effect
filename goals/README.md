@@ -171,7 +171,7 @@ packet's original token in `statusNote`.
 Archiving is an operation, not a status. `bun run beep goals archive` moves a
 terminal packet (`completed-retained`, `superseded`) to the public
 `beep-effect/beep-effect-goals-archive` repo at the same path, then leaves a
-tombstone on `main`. It is the default closeout step once the adoption PR merges:
+tombstone on `main`. It is the default closeout step once the closeout verifies:
 
 1. `bun run beep goals archive --kind goals --slug <slug> --plan` prints the plan
    (files kept and moved, HEAD tree hash, inbound links) and its `planId`.
@@ -202,42 +202,27 @@ each row citing file, line and commit; `--check` fails when it drifts.
 
 ## Completion gate
 
-A goal is **achieved** only after exact-head hosted readiness and merge evidence
-verify its final delivery PR. Local proof, a proposed lifecycle, and GitHub's
-structural mergeability field do not establish achievement.
+A goal is **achieved** only when hosted facts verify its final delivery PR:
+the PR merged; every required check at the merged head succeeded (the
+newest run per required context; `skipped` and `neutral` count), or each red
+is named in a committed `decisions/` file's `redAttribution` block with its
+cause (`inherited`, `introduced` or `mixed`) and fix PR; and no review thread
+is outstanding. The local Yeet verdict is not read.
 
-Ship the lifecycle intent and reflection in the final implementation PR. Keep
-`initiative.status`, `lifecycle` (when present), the README `Lifecycle:` line,
-and any external execution/session ledger operative (`active` or `paused`).
-Declare the prospective closeout separately in `ops/manifest.json`:
-
-```json
-"proposedCloseout": {
-  "status": "completed-retained",
-  "finalPullRequest": 1582
-}
-```
-
-The PR number identifies the final delivery PR, not this documentation's issue.
-If `completionGate.pullRequests` declares a final PR, it must match the proposal.
-`completionGate.acceptanceEvidence` must include a gating `yeet-verdict` reference
-to the retained final-head verdict. Its `resolvedHeadSha` must match the accepted
-head and `mergeReady.ready` must be true; missing or failed review/window/readiness
-proof blocks promotion even when required hosted checks passed.
-The reflection is required in this same PR even while the operative status stays
-active. Phase entries may record completed implementation work; phase completion
-and a proposal are neither hosted readiness nor merge evidence.
-
-After merge, `bun run beep goals completion refresh --slug <slug>` explicitly observes
-GitHub and writes a clone-scoped receipt. Portfolio and capability views derive
-`completed-retained` only from a matching declaration/packet/final-PR receipt
-whose merge facts, accepted head, hosted gating evidence and complete merge-time
-required-check inventory revalidate. Unknown reads, stale heads, failed gates and
-unmerged PRs retain the operative status. The proposal remains in the merged
-manifest; no second PR is required to rewrite it as achieved. New clones refresh
-their own receipts. Session `done` records session work, and must never be used
-as goal completion proof; keep goal execution open until this verification passes.
-Launchers must resume the outstanding gate work when a proposal is present.
+Closeout is one PR. Once the final PR is open, run
+`bun run beep goals set-status <slug> completed-retained`. It writes
+`"closeout": { "status": "completed-retained", "finalPullRequest": 1234 }`
+with `initiative.status` to match and marks #1234 `final` in
+`completionGate.pullRequests`. A PR that already merged binds only with
+`--final-pr 1234 --adopt-merged`. After the merge,
+`bun run beep goals completion refresh --slug <slug>` re-derives the facts at
+any later time and appends a workstation receipt. `goals doctor --online`
+reports a merged, unverified closeout as the blocking `closeout-unverified`,
+and `yeet sweep --retire` raises the same check as a P0 inbox row for the
+packets the merged branch touched. GitHub lists rule suites for one month; a
+final it can no longer verify closes only through an operator ruling,
+recorded as an `operatorRuling: { finalPullRequest: 1234 }` block in a
+`decisions/` file.
 
 The gate is declared in every goal manifest as `completionGate` and binds
 regardless of phase names. Legacy packets without a proposal retain their
@@ -275,6 +260,8 @@ cp -R goals/_template goals/<slug>
 ```sh
 test "$(wc -m < goals/<slug>/GOAL.md)" -le 4000
 ```
+
+`wc -m` counts bytes under `LC_ALL=C`; doctor measures characters.
 
 5. Validate the manifest and packet references:
 

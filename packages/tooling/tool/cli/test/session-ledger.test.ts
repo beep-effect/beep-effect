@@ -1,7 +1,21 @@
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { sessionCommand } from "@beep/repo-cli";
-import { GoalManifest } from "@beep/repo-cli/commands/Goals";
+import {
+  GoalAcceptanceEvidenceRef,
+  GoalCompletionObservation,
+  GoalCompletionReceipt,
+  GoalCompletionVerifier,
+  GoalEvidenceCheck,
+  GoalManifest,
+  GoalMergeResult,
+  GoalMergeTimeInventory,
+  GoalMergeTimeRuleSource,
+  GoalRequiredCheckFact,
+  GoalRequiredCheckSnapshot,
+  GoalReviewThreadTally,
+  goalCompletionDeclarationDigest,
+} from "@beep/repo-cli/commands/Goals";
 import { WorktreeRemovalServiceLive, worktreeCommand } from "@beep/repo-cli/commands/Worktree";
 import {
   decodeSessionLedger,
@@ -47,10 +61,12 @@ import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 
 const encodeGoalManifestJson = S.encodeEffect(S.fromJsonString(GoalManifest));
+const encodeGoalCompletionReceiptJson = S.encodeEffect(S.fromJsonString(GoalCompletionReceipt));
 
 const repository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
 
@@ -477,31 +493,115 @@ describe("beep session", () => {
       )
     );
 
-    it.effect("shows prospective goal closeouts while retaining the operative status", () =>
+    it.effect("lists committed goal closeouts that are unverified or recent, and hides old verified ones", () =>
       withScratchCheckout(({ clone }) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
-          const directory = `${clone}/goals/proposed/ops`;
-          yield* fs.makeDirectory(directory, { recursive: true });
-          const argument = `${directory}/manifest.json`;
-          const encodedGoalManifestJson = yield* encodeGoalManifestJson(
+          const mergedAt = DateTime.makeUnsafe("2026-10-06T00:00:00Z");
+          // 37 days after the merge: a verified closeout is past the window.
+          yield* DateTime.makeUnsafe("2026-11-12T00:00:00Z").pipe(DateTime.toEpochMillis, TestClock.setTime);
+          const manifestFor = (id: string) =>
             GoalManifest.make({
-              initiative: { id: "proposed", status: "active" },
+              initiative: { id, status: "completed-retained" },
               completionGate: {
                 operator: "yeet",
                 requiresPullRequest: true,
                 requiresMergeable: true,
                 statement: "Ship via yeet.",
                 grandfathered: false,
-                acceptanceEvidence: [{ kind: "yeet-verdict", ref: ".beep/yeet/verdict.json", gating: true }],
               },
-              proposedCloseout: { status: "completed-retained", finalPullRequest: 1429 },
+              closeout: { status: "completed-retained", finalPullRequest: 1429 },
+            });
+          const committed = manifestFor("committed");
+          const verified = manifestFor("verified");
+          for (const manifest of [committed, verified]) {
+            const directory = `${clone}/goals/${manifest.initiative.id}/ops`;
+            yield* fs.makeDirectory(directory, { recursive: true });
+            const text = yield* encodeGoalManifestJson(manifest);
+            yield* fs.writeFileString(`${directory}/manifest.json`, text);
+          }
+          const digest = yield* goalCompletionDeclarationDigest(verified);
+          const hosted = (kind: "hosted-required-checks" | "hosted-review-threads", ref: string) =>
+            GoalEvidenceCheck.make({
+              ref: GoalAcceptanceEvidenceRef.make({ kind, ref, gating: true }),
+              outcome: "verified",
+              observedHead: O.some("accepted-head"),
+              detail: "Green",
+            });
+          const receipt = yield* GoalCompletionVerifier.resolve(
+            GoalCompletionObservation.make({
+              repository: "Beep-Effect/Beep-Effect",
+              packet: "verified",
+              declarationDigest: digest,
+              acceptedDeclarationDigest: O.some(digest),
+              requiredChecks: O.some(
+                GoalRequiredCheckSnapshot.make({
+                  contexts: ["Lint"],
+                  sources: ["repos/{owner}/{repo}/rulesets/42/history/1"],
+                  effectiveAt: mergedAt,
+                  inventoryComplete: true,
+                  mergeTimeInventory: O.some(
+                    GoalMergeTimeInventory.make({
+                      source: "repos/{owner}/{repo}/rulesets/rule-suites/1",
+                      ruleSuiteId: 1,
+                      ref: "refs/heads/main",
+                      afterSha: "merge-result",
+                      pushedAt: mergedAt,
+                      result: "pass",
+                      ruleSources: [
+                        GoalMergeTimeRuleSource.make({
+                          sourceType: "ruleset",
+                          rulesetId: O.some(42),
+                          name: O.some("main"),
+                          enforcement: "active",
+                          requiredStatusChecks: O.some("pass"),
+                          survives: true,
+                          version: O.some("repos/{owner}/{repo}/rulesets/42/history/1"),
+                        }),
+                      ],
+                    })
+                  ),
+                })
+              ),
+              requiredCheckFacts: [
+                GoalRequiredCheckFact.make({
+                  context: "Lint",
+                  head: "accepted-head",
+                  checkRunId: O.some(1),
+                  conclusion: "success",
+                  outcome: "verified",
+                  source: "check-run",
+                }),
+              ],
+              finalPullRequest: 1429,
+              acceptedHead: O.some("accepted-head"),
+              merged: O.some(true),
+              merge: O.some(
+                GoalMergeResult.make({
+                  mergeCommit: "merge-result",
+                  tree: "merge-tree",
+                  mergedAt,
+                  method: O.none(),
+                  baseRef: "main",
+                })
+              ),
+              grandfathered: false,
+              evidence: [hosted("hosted-required-checks", "required"), hosted("hosted-review-threads", "outstanding")],
+              reviewThreads: O.some(GoalReviewThreadTally.make({ total: 0, outstanding: 0 })),
+              nonRequiredReds: [],
+              subClaims: [],
+              verifiedAt: mergedAt,
             })
           );
-          yield* fs.writeFileString(argument, encodedGoalManifestJson);
+          expect(receipt.outcome).toBe("verified");
+          yield* fs.makeDirectory(`${clone}/.beep/goals`, { recursive: true });
+          const receiptJson = yield* encodeGoalCompletionReceiptJson(receipt);
+          yield* fs.writeFileString(`${clone}/.beep/goals/completion-receipts.ndjson`, `${receiptJson}\n`);
           const output = yield* captureOutput(withCwd(clone, runSession(["open"])));
-          // No receipt in this clone: the derived status names the proposal and says it is unverified.
-          expect(output).toContain("[session:goal] proposed: completed-retained (proposed via #1429, unverified)");
+          // No receipt for this one in the clone: it reads as committed and unverified.
+          expect(output).toContain("[session:goal] committed: completed-retained (committed via #1429, unverified)");
+          // Verified, and its final merged before the 28-day window: nothing left to look at.
+          expect(output).not.toContain("[session:goal] verified:");
           expect(output).toContain("no live sessions recorded");
         })
       )

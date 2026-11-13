@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active` (P0-P3 complete; `completed-retained` proposed by the final PR)
+Lifecycle: `completed-retained` (P0-P3 complete; closed by final PR #2756)
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -41,8 +41,12 @@ Use this command for execution-capable sessions:
 
 Closed. The lab, bundle builder, projections, rule checks, provider recording and
 offline replay merged in #872 (2026-08-30). That PR predates the Yeet publish
-verdict and was pushed without one, so this docs-only final PR (#2756) carries the
-`completed-retained` proposal and the gating verdict. The closeout reflection is
+verdict and was pushed without one, so the docs-only #2756 is the final PR. It
+merged on 2026-11-06 through a ruleset bypass before Test Unit ran, and Test Unit
+went green on its head afterwards, so it verifies under the hosted-only completion
+rules. The
+[batch migration](../goal-closeout-hosted-verification/history/migration-2026-11-13.md)
+adopted the legacy proposal. The closeout reflection is
 `history/reflections/2026-08-27-codex.md`.
 
 ## Latest Evidence

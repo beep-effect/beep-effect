@@ -64,6 +64,10 @@ entry, green required verification, and no unrelated churn. Run every command in
 
 Stop on an unmet prerequisite, unratified batch map, authority conflict,
 successor-scope leak, unauthorized egress/security change, unplanned migration,
-dependency/lockfile change, or unavailable required proof. Done only after
-acceptance, exact-head hosted checks, zero unresolved threads, and
-`merge-ready: yes`.
+dependency/lockfile change, or unavailable required proof.
+
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug configurable-full-document-editor` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/configurable-full-document-editor/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

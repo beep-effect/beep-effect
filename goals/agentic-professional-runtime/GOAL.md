@@ -67,5 +67,8 @@ Stop and report before changing auth, privilege policy, tenancy boundaries,
 public API outside the selected target, dependencies, lockfiles, generated
 files, infrastructure, external systems of record, or destructive state.
 
-Done only when acceptance and verification complete, or a blocker is reported
-with file and command evidence.
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug agentic-professional-runtime` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/agentic-professional-runtime/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

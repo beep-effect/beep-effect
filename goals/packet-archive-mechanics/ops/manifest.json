@@ -4,13 +4,13 @@
     "id": "packet-archive-mechanics",
     "packetId": "goal-packet/v1:14f8ff5bd00db4bd77acb24ba0ba4af32966ed296452a7b7652c837c0c612dd9",
     "title": "Packet Archive Mechanics",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-06",
-    "updated": "2026-11-06",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/packet-archive-mechanics",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Ship `beep goals harvest` and `beep goals archive` (Goals family, `--kind goals|explorations`), the manifest `archive` block and `retentionReason`, doctor and INDEX support, the public archive repo, then sweep every terminal packet off `main` in sequential hash-verified batches of about 50; the harvest ledger is committed before batch 1.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -42,10 +42,6 @@
         "gating": true
       }
     ]
-  },
-  "proposedCloseout": {
-    "status": "completed-retained",
-    "finalPullRequest": 2998
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -92,12 +88,12 @@
     {
       "id": "P3",
       "name": "Yeet",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -114,5 +110,9 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2998
+  }
 }

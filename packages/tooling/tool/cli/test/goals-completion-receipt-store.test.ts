@@ -1,16 +1,33 @@
 import {
+  GoalAcceptanceEvidenceRef,
+  GoalCompletionIo,
   GoalCompletionReceipt,
   GoalCompletionReceiptStore,
+  GoalEvidenceCheck,
+  GoalManifest,
+  GoalMergeResult,
+  GoalMergeTimeInventory,
+  GoalMergeTimeRuleSource,
+  GoalPullRequestRef,
+  GoalRedAttributionClaim,
+  GoalRequiredCheckFact,
+  GoalRequiredCheckSnapshot,
+  GoalReviewThreadTally,
+  goalCompletionDeclarationDigest,
   goalCompletionReceiptPartition,
   goalCompletionReceiptStore,
+  goalCompletionUnknownReasons,
+  goalCompletionVerdict,
   layerGoalCompletionReceiptStoreLive,
   layerGoalCompletionReceiptStoreMemory,
   makeGoalCompletionReceiptStoreAt,
   makeGoalCompletionReceiptStoreLive,
+  storedGoalCompletion,
 } from "@beep/repo-cli/test/Goals";
 import { YeetCommandError } from "@beep/repo-cli/test/Yeet";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
@@ -20,7 +37,9 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 import { NodeTestLayer } from "./support/CommandTest.ts";
+import { completionIoFixture } from "./support/CompletionIo.ts";
 
 const receipt = (repository: string, packet: string) =>
   GoalCompletionReceipt.make({
@@ -155,6 +174,173 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("goal completion receipt stor
       const listError = yield* store.list("example/repo").pipe(Effect.flip);
       expect(listError).toBeInstanceOf(YeetCommandError);
       expect(listError.message).toMatch(/^Goal completion receipt store: /u);
+    })
+  );
+});
+
+const decodeGoalManifest = S.decodeEffect(GoalManifest);
+const final = GoalPullRequestRef.make({ number: 7, role: "final" });
+const at = DateTime.makeUnsafe("2026-11-01T00:00:00Z");
+const verifiedCheck = (kind: "hosted-required-checks" | "hosted-review-threads", ref: string) =>
+  GoalEvidenceCheck.make({
+    ref: GoalAcceptanceEvidenceRef.make({ kind, ref, gating: true }),
+    outcome: "verified",
+    observedHead: O.some("accepted-head"),
+    detail: "Recorded hosted result",
+  });
+const claim = GoalRedAttributionClaim.make({
+  context: "Lint",
+  attribution: "inherited",
+  fixPullRequest: 2994,
+  decisionFile: "goals/demo/decisions/2026-11-14-final-merged-over-lint.md",
+  source: "origin-main",
+});
+
+// A complete merged receipt for `demo` whose one required context, Lint, is red.
+const storedRow = Effect.fn("ReceiptStoreTest.storedRow")(function* (
+  overrides: Partial<Pick<GoalCompletionReceipt, "schemaVersion" | "outcome" | "redAttributions" | "evidence">>
+) {
+  const manifest = yield* decodeGoalManifest({
+    initiative: { id: "demo", status: "completed-retained" },
+    completionGate: {
+      operator: "yeet",
+      requiresPullRequest: true,
+      requiresMergeable: true,
+      statement: "Ship via yeet",
+      grandfathered: false,
+      pullRequests: [{ number: 7, role: "final" }],
+    },
+  });
+  const digest = yield* goalCompletionDeclarationDigest(manifest);
+  const row = GoalCompletionReceipt.make({
+    repository: "example/repo",
+    packet: "demo",
+    declarationDigest: digest,
+    acceptedDeclarationDigest: O.some(digest),
+    requiredChecks: O.some(
+      GoalRequiredCheckSnapshot.make({
+        contexts: ["Lint"],
+        sources: ["repos/{owner}/{repo}/rulesets/42/history/1"],
+        effectiveAt: at,
+        inventoryComplete: true,
+        mergeTimeInventory: O.some(
+          GoalMergeTimeInventory.make({
+            source: "repos/{owner}/{repo}/rulesets/rule-suites/1",
+            ruleSuiteId: 1,
+            ref: "refs/heads/main",
+            afterSha: "merge-result",
+            pushedAt: at,
+            result: "pass",
+            ruleSources: [
+              GoalMergeTimeRuleSource.make({
+                sourceType: "ruleset",
+                rulesetId: O.some(42),
+                name: O.some("main"),
+                enforcement: "active",
+                requiredStatusChecks: O.some("pass"),
+                survives: true,
+                version: O.some("repos/{owner}/{repo}/rulesets/42/history/1"),
+              }),
+            ],
+          })
+        ),
+      })
+    ),
+    finalPullRequest: 7,
+    acceptedHead: O.some("accepted-head"),
+    merged: O.some(true),
+    merge: O.some(
+      GoalMergeResult.make({
+        mergeCommit: "merge-result",
+        tree: "merge-tree",
+        mergedAt: at,
+        method: O.none(),
+        baseRef: "main",
+      })
+    ),
+    evidence: [
+      verifiedCheck("hosted-required-checks", "required"),
+      verifiedCheck("hosted-review-threads", "outstanding"),
+    ],
+    requiredCheckFacts: [
+      GoalRequiredCheckFact.make({
+        context: "Lint",
+        head: "accepted-head",
+        checkRunId: O.some(51),
+        conclusion: "cancelled",
+        outcome: "unsatisfied",
+        source: "check-run",
+      }),
+    ],
+    reviewThreads: O.some(GoalReviewThreadTally.make({ total: 1, outstanding: 0 })),
+    nonRequiredReds: [],
+    subClaims: [],
+    outcome: "unsatisfied",
+    verifiedAt: at,
+    ...overrides,
+  });
+  return { manifest, row };
+});
+
+const readBack = Effect.fn("ReceiptStoreTest.readBack")(function* (manifest: GoalManifest, row: GoalCompletionReceipt) {
+  const fs = yield* FileSystem.FileSystem;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "goal-receipts-" });
+  const store = yield* makeGoalCompletionReceiptStoreAt(root);
+  yield* store.append(row);
+  return yield* storedGoalCompletion(root, "demo", manifest, final).pipe(
+    Effect.provideService(
+      GoalCompletionIo,
+      completionIoFixture({
+        manifest: Effect.succeed(""),
+        origin: Effect.succeed("git@github.com:example/repo.git"),
+        respond: () => Effect.die("re-resolving a stored receipt reads no GitHub endpoint"),
+      })
+    ),
+    Effect.provideService(GoalCompletionReceiptStore, store)
+  );
+});
+
+it.layer(NodeTestLayer, { timeout: "30 seconds" })("stored receipt re-resolution", (it) => {
+  it.effect("a v1 row that verified stays verified as stored, without thread evidence", () =>
+    Effect.gen(function* () {
+      const { manifest, row } = yield* storedRow({
+        schemaVersion: "goal-completion-receipt/v1",
+        outcome: "verified",
+        evidence: [verifiedCheck("hosted-required-checks", "required")],
+      });
+      const stored = yield* readBack(manifest, row);
+      assertSome(stored, row);
+    })
+  );
+  it.effect("any other v1 row re-resolves as unknown and names the rerun", () =>
+    Effect.gen(function* () {
+      const { manifest, row } = yield* storedRow({
+        schemaVersion: "goal-completion-receipt/v1",
+        outcome: "unsatisfied",
+      });
+      const read = yield* readBack(manifest, row);
+      const stored = O.getOrThrow(read);
+      expect(stored.outcome).toBe("unknown");
+      expect(stored.schemaVersion).toBe("goal-completion-receipt/v1");
+      expect(goalCompletionUnknownReasons(stored)).toContain("v1 receipt predates hosted-only rules; rerun refresh");
+    })
+  );
+  it.effect("a v2 row re-resolves from its own facts and keeps its committed claims", () =>
+    Effect.gen(function* () {
+      const attributed = yield* storedRow({ outcome: "verified", redAttributions: [claim] });
+      const read = yield* readBack(attributed.manifest, attributed.row);
+      const stored = O.getOrThrow(read);
+      expect(stored.outcome).toBe("verified");
+      expect(stored.schemaVersion).toBe("goal-completion-receipt/v2");
+      expect(stored.redAttributions).toEqual([claim]);
+      assertSome(stored.reviewThreads, GoalReviewThreadTally.make({ total: 1, outstanding: 0 }));
+      const verdict = goalCompletionVerdict(stored);
+      expect(verdict._tag === "verified" ? A.map(verdict.attributedReds, (red) => red.context) : []).toEqual(["Lint"]);
+      // The same row stored without its claim cannot verify: the red is unattributed.
+      const bare = yield* storedRow({ outcome: "verified" });
+      const bareRead = yield* readBack(bare.manifest, bare.row);
+      const unattributed = O.getOrThrow(bareRead);
+      expect(unattributed.outcome).toBe("unsatisfied");
     })
   );
 });
