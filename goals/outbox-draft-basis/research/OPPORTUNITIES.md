@@ -77,3 +77,17 @@ Receipts recorded while the work happened, newest last.
   listed. The inbox row was waived with that attribution.
 - Would have prevented it: the ratchet judging only packages a pull
   request can change, or new files landing with their baseline rows.
+
+## 2026-11-13: "sent" was reported three times before the message was sent
+
+- Doing: the tenant proof; waiting for a person to send one test draft
+  from the attorney's mailbox.
+- Evidence: three answers of "sent" came back while Graph still showed the
+  message in Drafts with `isDraft` true. Each was caught by re-reading the
+  mailbox before recording anything. The real send showed 50 minutes later.
+  The agent's own click on Send in the browser was refused by its
+  permission layer, and its mail connector was signed in to a different
+  account from the outside recipient, so it could not see that copy.
+- Would have prevented it: asking for an observable ("the draft left
+  Drafts") instead of a yes/no, and naming at the start which session's
+  connector can read each recipient mailbox.

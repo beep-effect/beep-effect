@@ -301,10 +301,11 @@ person set, and never changes a subject or body. A draft the attorney files
 into another folder is still found by its message id and keeps being
 checked; one the attorney deletes is retired, even while it sits in Deleted
 Items. A draft recorded before message ids were stored learns its id on the
-next check. Do not call it against the
-attorney's mailbox until the tenant proof recorded in `goals/outbox-draft-basis`
-shows that a category on a draft does not reach the recipients; the tool
-itself has no switch that holds the write back.
+next check. The tenant proof of 2026-11-13, recorded in
+`goals/outbox-draft-basis`, showed that a category on a draft stays on the
+sender's side: it reached neither a recipient inside the firm nor one at an
+outside mail provider, and the Sent Items copy keeps it. The tool has no
+switch that holds the write back.
 
 Nothing runs it on a schedule. A session that prepares or reviews outbox
 drafts calls `m365_outbox_check_drafts` first; that call is what keeps the

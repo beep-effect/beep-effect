@@ -36,14 +36,12 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement, in progress, with one P0 item still open. The first pull
-request merged as #3137. The second is being built: the check-drafts tool,
-the category mark, the package README and the runbook. Still open in P0:
-the tenant proof that a draft category does not reach recipients. Its route
-is chosen (a test draft in the attorney's mailbox, sent by a person); the
-first attempt was blocked by Microsoft Graph gateway errors on that
-mailbox. Next action: run the proof, record it as a decision file, then
-merge the second pull request. No category is written before that.
+P4 Close. Both pull requests are built: #3137 merged, and #3172 (the
+check-drafts tool, the category mark, the package README and the runbook)
+is the final. The tenant proof ran on 2026-11-13: a category on a draft
+reaches neither an internal nor an external recipient, so the mark ships as
+built. Remaining for the operator: the one-time red category in the
+attorney's Outlook.
 
 ## Latest Evidence
 
@@ -94,6 +92,12 @@ tenant proof is recorded.
 HTTP 502 or 504 for mail reads on two mailboxes of the tenant, through the
 outbox app and through the Microsoft 365 connector, for over an hour.
 
+2026-11-13, later: Graph recovered and the tenant proof ran. The test
+message, sent by the operator from the attorney's mailbox, reached a firm
+mailbox and an outside mailbox with no category; its message id survived
+the send, and a draft discarded in Outlook kept its draft flag and message
+id in Deleted Items. Decision file: tenant proof, 2026-11-13.
+
 2026-11-13: #3172 finished hosted checks with 47 passed and one red,
 `Heavy / Coverage Regression`, which is not required on `main`. Every row
 it lists is a `@beep/repo-cli` file added on `main` without a baseline row
@@ -120,5 +124,5 @@ decision file of that date.
   advisory.
 - `m365-agent-outbox` slice 3 edits the same files and has no live session.
   Whichever packet opens a pull request second merges `main` first.
-- The tenant proof needs one message sent from the attorney's mailbox by a
-  person.
+- The tenant proof is recorded (decision file of 2026-11-13); it covers one
+  tenant, Outlook on the web and one outside mail provider.
