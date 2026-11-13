@@ -1119,9 +1119,16 @@ const runStandardPublishPhases = Effect.fn("Yeet.runStandardPublishPhases")(func
     O.some(attempt)
   );
 
-  yield* requireOpenReadyProof(plan, options, preparedHead);
-  yield* runPublishPushPhase(plan.context, publishSteps, recorder, extras, preparedHead);
-  return yield* finishPublishWithPullRequest(plan, options, monitorSteps, recorder, extras, skipCommit);
+  return yield* pushAndFinishPublish(
+    plan,
+    options,
+    publishSteps,
+    monitorSteps,
+    recorder,
+    extras,
+    skipCommit,
+    preparedHead
+  );
 });
 
 /**
@@ -1299,6 +1306,30 @@ const requireOpenReadyProof = Effect.fn("Yeet.requireOpenReadyProof")(function* 
  */
 export const requireOpenReadyProofForTesting = requireOpenReadyProof;
 
+// What follows the create of a pull request, by how it opened. Opened ready,
+// the open is the ready transition: record the review round and request the
+// reviewer, as a flip does. A `--draft` open plans no label step, so its owner
+// is told how its monitor behaves. Returns whether it opened ready.
+const settleOpenedPullRequest = Effect.fn("Yeet.settleOpenedPullRequest")(function* (
+  plan: RepoRunPlan,
+  prNumber: number,
+  created: boolean
+) {
+  if (!created) return false;
+  if (planOpensReady(plan.steps)) {
+    const hooks = yield* YeetOpenReady;
+    const openedHead = yield* readPublishedHead(plan.context);
+    yield* hooks.afterOpen(plan.context, prNumber, openedHead);
+    return true;
+  }
+  if (!A.some(plan.steps, (step) => step.id === PR_HEAVY_ADMISSION_LABEL_STEP_ID)) {
+    yield* Console.log(
+      `[yeet] draft #${prNumber} runs the cheap hosted tier only. Its readiness monitor reports cheap-tier reds, then holds at heavy-not-admitted instead of ending green. When the content is final: \`bun run beep yeet final-check\`, then \`bun run beep yeet ready\` (flips it and applies ${HEAVY_ADMISSION_LABEL}).`
+    );
+  }
+  return false;
+});
+
 // The pull-request tail every publish path shares (push-first-publish D4, D7):
 // ensure the pull request, apply the heavy-admission label, then reuse
 // the readiness monitor already polling that pull request, submit a detached
@@ -1357,23 +1388,7 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
     );
     return ensured;
   }).pipe(provideYeetGhLogin(plan.context.repoRoot));
-  const openedReady = pullRequest.created && planOpensReady(plan.steps);
-  // The open is the ready transition: record the review round and request the reviewer, as a flip does.
-  if (openedReady) {
-    const hooks = yield* YeetOpenReady;
-    const openedHead = yield* readPublishedHead(plan.context);
-    yield* hooks.afterOpen(plan.context, pullRequest.number, openedHead);
-  }
-  // A `--draft` open plans no label step: the monitor reports cheap-tier reds, then holds unadmitted.
-  if (
-    pullRequest.created &&
-    !openedReady &&
-    !A.some(plan.steps, (step) => step.id === PR_HEAVY_ADMISSION_LABEL_STEP_ID)
-  ) {
-    yield* Console.log(
-      `[yeet] draft #${pullRequest.number} runs the cheap hosted tier only. Its readiness monitor reports cheap-tier reds, then holds at heavy-not-admitted instead of ending green. When the content is final: \`bun run beep yeet final-check\`, then \`bun run beep yeet ready\` (flips it and applies ${HEAVY_ADMISSION_LABEL}).`
-    );
-  }
+  const openedReady = yield* settleOpenedPullRequest(plan, pullRequest.number, pullRequest.created);
   const submitSteps = A.filter(monitorSteps, (step) => step.id === MONITOR_READY_SUBMIT_STEP_ID);
   if (A.isReadonlyArrayEmpty(submitSteps)) {
     return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
@@ -1430,6 +1445,23 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
     onSome: (record) => Console.log(renderReadyMonitorJob(record, O.isSome(running))),
   });
   return yield* publishResult(plan.context, !skipCommit);
+});
+
+// The end every publish route shares once its local gates have passed: the
+// receipt a ready open needs, the push, then the pull-request tail.
+const pushAndFinishPublish = Effect.fn("Yeet.pushAndFinishPublish")(function* (
+  plan: RepoRunPlan,
+  options: YeetRunOptions,
+  publishSteps: ReadonlyArray<RepoPlanStep>,
+  monitorSteps: ReadonlyArray<RepoPlanStep>,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  extras: Ref.Ref<YeetVerdictExtras>,
+  skipCommit: boolean,
+  preparedHead: GitObjectId
+) {
+  yield* requireOpenReadyProof(plan, options, preparedHead);
+  yield* runPublishPushPhase(plan.context, publishSteps, recorder, extras, preparedHead);
+  return yield* finishPublishWithPullRequest(plan, options, monitorSteps, recorder, extras, skipCommit);
 });
 
 /**
@@ -1555,9 +1587,16 @@ const runHostedProofPublishPhases = Effect.fn("Yeet.runHostedProofPublishPhases"
   | Git
 > {
   const preparedHead = yield* readPublishedHead(plan.context);
-  yield* requireOpenReadyProof(plan, options, preparedHead);
-  yield* runPublishPushPhase(plan.context, publishSteps, recorder, extras, preparedHead);
-  return yield* finishPublishWithPullRequest(plan, options, monitorSteps, recorder, extras, skipCommit);
+  return yield* pushAndFinishPublish(
+    plan,
+    options,
+    publishSteps,
+    monitorSteps,
+    recorder,
+    extras,
+    skipCommit,
+    preparedHead
+  );
 });
 
 /**
@@ -1626,9 +1665,16 @@ const runPushFirstPublishPhases = Effect.fn("Yeet.runPushFirstPublishPhases")(fu
     recorder,
     "yeet clean-HEAD install preflight failed before push."
   );
-  yield* requireOpenReadyProof(plan, options, preparedHead);
-  yield* runPublishPushPhase(plan.context, publishSteps, recorder, extras, preparedHead);
-  return yield* finishPublishWithPullRequest(plan, options, monitorSteps, recorder, extras, skipCommit);
+  return yield* pushAndFinishPublish(
+    plan,
+    options,
+    publishSteps,
+    monitorSteps,
+    recorder,
+    extras,
+    skipCommit,
+    preparedHead
+  );
 });
 
 /**

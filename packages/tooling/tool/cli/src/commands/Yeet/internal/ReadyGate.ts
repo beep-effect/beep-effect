@@ -1072,6 +1072,29 @@ const ensureReviewerRequest = Effect.fn("Yeet.ensureReviewerRequest")(function* 
   yield* Console.log(message);
 });
 
+// The moment a pull request became ready, a flip or a ready open, with its
+// author: the start of the rounds-to-ready window (ruling 81).
+const recordReadyTransition = Effect.fn("Yeet.recordReadyTransition")(function* (
+  context: RepoRunContext,
+  dependencies: YeetReadyGateDependencies,
+  prNumber: number,
+  headSha: string
+) {
+  const at = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+  const author = yield* (dependencies.readAuthor ?? readPullRequestAuthor)(context, prNumber);
+  yield* recordYeetReviewLaneRows(context.repoRoot, [
+    ReviewLaneFlipRow.make({
+      schemaVersion: YEET_REVIEW_LANE_SCHEMA_VERSION,
+      prNumber,
+      branch: context.branch,
+      recordedAt: at,
+      headSha,
+      at,
+      author,
+    }),
+  ]);
+});
+
 const admitHeavyForReady = (context: RepoRunContext, prNumber: number) =>
   admitPullRequestToHeavy(context, prNumber).pipe(provideYeetGhLogin(context.repoRoot), Effect.asVoid);
 
@@ -1631,19 +1654,7 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
       yield* ensureHeavyAdmission(context, dependencies, prNumber, value2.remote.labels);
       // The flip opens the rounds-to-ready window (ruling 81); a failed
       // record is one warning and never touches the flip.
-      const flippedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-      const author = yield* (dependencies.readAuthor ?? readPullRequestAuthor)(context, prNumber);
-      yield* recordYeetReviewLaneRows(context.repoRoot, [
-        ReviewLaneFlipRow.make({
-          schemaVersion: YEET_REVIEW_LANE_SCHEMA_VERSION,
-          prNumber,
-          branch: context.branch,
-          recordedAt: flippedAt,
-          headSha: sameHead,
-          at: flippedAt,
-          author,
-        }),
-      ]);
+      yield* recordReadyTransition(context, dependencies, prNumber, sameHead);
       // Draft pushes are ignored by the reviewer. Request the proven head by
       // comment where configured, otherwise retain S32 off a stack layer; a failure warns.
       yield* ensureReviewerRequest(context, dependencies, prNumber, sameHead, true);
@@ -1712,19 +1723,7 @@ export const yeetOpenReadyHooks = (dependencies: YeetReadyGateDependencies = {})
       )
     ),
   afterOpen: Effect.fnUntraced(function* (context, prNumber, headSha) {
-    const openedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-    const author = yield* (dependencies.readAuthor ?? readPullRequestAuthor)(context, prNumber);
-    yield* recordYeetReviewLaneRows(context.repoRoot, [
-      ReviewLaneFlipRow.make({
-        schemaVersion: YEET_REVIEW_LANE_SCHEMA_VERSION,
-        prNumber,
-        branch: context.branch,
-        recordedAt: openedAt,
-        headSha,
-        at: openedAt,
-        author,
-      }),
-    ]);
+    yield* recordReadyTransition(context, dependencies, prNumber, headSha);
     yield* ensureReviewerRequest(context, dependencies, prNumber, headSha, false);
     yield* Console.log(
       `[yeet] the review window starts now: the merge gate opens no sooner than the review window (default ${Duration.toMinutes(YEET_REVIEW_WINDOW_DEFAULT)} minutes) after this open or the last push, whichever is later`
