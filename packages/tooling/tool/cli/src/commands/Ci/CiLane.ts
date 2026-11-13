@@ -67,6 +67,7 @@ import {
   runCiCoveragePartition,
   runCiLabsCoverage,
 } from "./CiCoverage.ts";
+import { CI_LANE_DEFAULT_BASE, resolveCiLaneBase } from "./CiEventBase.ts";
 import {
   CI_LANE_PARTITION_TABLE_PATH,
   CI_LANE_PARTITIONS,
@@ -2951,8 +2952,16 @@ export const ciLaneCommand = Command.make(
       Flag.withDescription("Storybook only: write should_run to GITHUB_OUTPUT without building or testing")
     ),
     base: Flag.String("base").pipe(
-      Flag.withDefault("origin/main"),
-      Flag.withDescription("Base git ref for affected/docgen/fallow/commitlint shapes")
+      Flag.withDescription(
+        `Base git ref for affected/docgen/fallow/commitlint shapes (default ${CI_LANE_DEFAULT_BASE})`
+      ),
+      Flag.optional
+    ),
+    eventBase: Flag.Boolean("event-base").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "Resolve the base from the workflow event instead of --base: a pull request's verified merge commit first parent (else pull_request.base.sha), otherwise GITHUB_SHA"
+      )
     ),
     head: Flag.String("head").pipe(Flag.withDefault("HEAD"), Flag.withDescription("Head git ref for docgen shapes")),
     summarize: Flag.Boolean("summarize").pipe(
@@ -3056,9 +3065,10 @@ export const ciLaneCommand = Command.make(
   },
   Effect.fnUntraced(function* ({
     affected,
-    base,
+    base: baseFlag,
     changesetStatus,
     docsOnly,
+    eventBase,
     coverageOutput,
     coverageInput,
     compareOnly,
@@ -3102,6 +3112,9 @@ export const ciLaneCommand = Command.make(
           Effect.catchTag("CiCommandError", reportCiCommandError)
         ),
     });
+    const base = yield* resolveCiLaneBase(baseFlag, eventBase).pipe(
+      Effect.catchTag("CiCommandError", reportCiCommandError)
+    );
     const options = CiLaneRunOptions.make({
       affected,
       base,
