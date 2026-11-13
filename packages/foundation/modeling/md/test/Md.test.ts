@@ -1,3 +1,4 @@
+import { JsoncCanonicalizeError } from "@beep/jsonc/JsoncFingerprint";
 import { Md } from "@beep/md";
 import {
   renderPlainTextBlock,
@@ -516,9 +517,17 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
       expect(decodedDocument).toEqual(document);
       expect(renderMarkdownInline(decodedInline)).toEqual(expect.any(String));
       expect(renderMarkdownBlock(decodedBlock)).toEqual(expect.any(String));
-      assertSuccess(
-        Result.map(Md.render(decodedDocument), (rendered) => typeof rendered),
-        "string"
+      // JSON frontmatter renders through the canonical digest owner, which
+      // refuses an unpaired surrogate. Schema-derived frontmatter holds one
+      // now and then; the render then fails typed, with the refusal as cause.
+      Result.match(
+        Result.mapError(Md.render(decodedDocument), (error) =>
+          S.is(JsoncCanonicalizeError)(error.cause) ? error.cause.code : "not refused"
+        ),
+        {
+          onSuccess: (rendered) => expect(typeof rendered).toBe("string"),
+          onFailure: (refusal) => expect(refusal).toBe("LoneSurrogate"),
+        }
       );
 
       return true;

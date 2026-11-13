@@ -9,7 +9,9 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { QualityTaskStep } from "@beep/repo-cli-kit/process/index";
 import { LiteralKit } from "@beep/schema";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { ComputeProfile } from "../../../internal/repo-run/ComputeProfile.schemas.ts";
 import { CI_LANE_ID_VALUES } from "../../Ci/CiLane.ts";
@@ -59,6 +61,73 @@ export const FinalCheckGate = LiteralKit([
  * @since 0.0.0
  */
 export type FinalCheckGate = typeof FinalCheckGate.Type;
+
+/**
+ * The schema versions a final-check receipt file may carry.
+ *
+ * **Details**
+ *
+ * `yeet-final-check/v1` receipts predate gate-set versioning: they decode so
+ * `yeet ready` can name the cause, and every path refuses them. Only
+ * `yeet-final-check/v2` receipts, which record the gate-set digest, admit a
+ * flip.
+ *
+ * **Example** (Recognise a legacy receipt version)
+ *
+ * ```ts
+ * import { FinalCheckReceiptVersion } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(FinalCheckReceiptVersion.is["yeet-final-check/v1"]("yeet-final-check/v1")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const FinalCheckReceiptVersion = LiteralKit(["yeet-final-check/v1", "yeet-final-check/v2"]).pipe(
+  $I.annoteSchema("FinalCheckReceiptVersion", {
+    description: "Schema version of a final-check receipt; v1 predates the gate-set digest and is always refused.",
+  })
+);
+
+/**
+ * A final-check receipt schema version.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FinalCheckReceiptVersion = typeof FinalCheckReceiptVersion.Type;
+
+/**
+ * The receipt schema version `yeet final-check` writes and `yeet ready` accepts.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const FINAL_CHECK_RECEIPT_VERSION = "yeet-final-check/v2" satisfies FinalCheckReceiptVersion;
+
+/**
+ * Digest of the current final-check gate set: the sorted
+ * {@link FinalCheckGate} literals joined by commas.
+ *
+ * **Details**
+ *
+ * The digest is the canonical gate list itself, so a refusal can name the
+ * gates that were added or removed. Reordering the gates leaves it unchanged;
+ * adding or removing one changes it, and every receipt written under the old
+ * set stops admitting the flip.
+ *
+ * **Example** (Read the current gate-set digest)
+ *
+ * ```ts
+ * import { FINAL_CHECK_GATE_SET_DIGEST } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(FINAL_CHECK_GATE_SET_DIGEST.includes("coverage")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const FINAL_CHECK_GATE_SET_DIGEST: string = A.join(A.sort(FinalCheckGate.literals, Order.String), ",");
 
 /**
  * Outcome of one final-check step.
@@ -344,15 +413,19 @@ export class FinalCheckRoute extends S.Opaque<FinalCheckRoute, { readonly brand:
  *
  * `complete` is true only when every {@link FinalCheckGate} ran or was skipped
  * with a reason; a `--gates` subset run is never complete and never admits
- * the flip.
+ * the flip. `gateSetDigest` records the gate set the run replayed; a receipt
+ * whose digest differs from the current gate set, or a `yeet-final-check/v1`
+ * receipt with no digest, never admits the flip on its own head or through a
+ * carry.
  *
  * **Example** (Build a receipt)
  *
  * ```ts
- * import { FinalCheckReceipt } from "@beep/repo-cli/test/Yeet"
+ * import { FINAL_CHECK_GATE_SET_DIGEST, FinalCheckReceipt } from "@beep/repo-cli/test/Yeet"
  *
  * const receipt = FinalCheckReceipt.make({
- *   schemaVersion: "yeet-final-check/v1",
+ *   schemaVersion: "yeet-final-check/v2",
+ *   gateSetDigest: FINAL_CHECK_GATE_SET_DIGEST,
  *   headSha: "a".repeat(40),
  *   mergeBase: "b".repeat(40),
  *   base: "origin/main",
@@ -371,7 +444,13 @@ export class FinalCheckRoute extends S.Opaque<FinalCheckRoute, { readonly brand:
  */
 export class FinalCheckReceipt extends S.Opaque<FinalCheckReceipt, { readonly brand: unique symbol }>()(
   S.Struct({
-    schemaVersion: S.tag("yeet-final-check/v1"),
+    schemaVersion: FinalCheckReceiptVersion.pipe(S.withConstructorDefault(Effect.succeed(FINAL_CHECK_RECEIPT_VERSION))),
+    // The sorted FinalCheckGate set the run replayed. Optional only so a v1
+    // receipt still decodes and is refused by name; `make` fills the current
+    // set and every v2 write records it.
+    gateSetDigest: S.optionalKey(S.NonEmptyString).pipe(
+      S.withConstructorDefault(Effect.succeed(FINAL_CHECK_GATE_SET_DIGEST))
+    ),
     headSha: S.String,
     mergeBase: S.String,
     base: S.String,

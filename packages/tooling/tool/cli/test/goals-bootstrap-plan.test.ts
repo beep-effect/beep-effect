@@ -48,6 +48,7 @@ import {
   temporaryWorkingDirectory,
   writeProjectFile,
 } from "./support/CommandTest.ts";
+import { holdsOnlyWellFormedText } from "./support/WellFormedText.ts";
 
 const decodeGoalSlugEffect = S.decodeEffect(GoalSlug);
 const decodeUnknownGoalSlug = S.decodeUnknownEffect(GoalSlug);
@@ -165,7 +166,9 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
 
     it.effect.prop(
       "property: schema-generated inputs compile deterministic schema-valid plans",
-      [Arbitrary.schema(BootstrapInput)],
+      // A plan id digests the canonical payload, which exists only for
+      // well-formed text: the owner refuses an unpaired surrogate.
+      [Arbitrary.schema(BootstrapInput).pipe(Arbitrary.filter(holdsOnlyWellFormedText))],
       Effect.fnUntraced(
         function* ([input]) {
           const first = yield* compileMaterializationPlan(input, []);

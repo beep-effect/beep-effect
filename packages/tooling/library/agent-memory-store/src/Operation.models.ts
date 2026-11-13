@@ -9,7 +9,7 @@
 import { $AgentMemoryStoreId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as S from "effect/Schema";
-import { LogCursor, MemoryFilePath, NodeId, NodeKind, RevisionId } from "./NodeIdentity.models.ts";
+import { isWellFormedText, LogCursor, MemoryFilePath, NodeId, NodeKind, RevisionId } from "./NodeIdentity.models.ts";
 import { LineageId } from "./Observation.events.ts";
 import { OccurrenceAnchor } from "./SpanAnchor.models.ts";
 import { StatusTransition } from "./StatusLifecycle.models.ts";
@@ -193,7 +193,7 @@ export const NodeOperation = NodeOperationKind.toTaggedUnion("op")({
   replace: {
     nodeId: NodeId.annotateKey({ description: "Node to replace." }),
     expectedRevision: RevisionId.annotateKey({ description: "Revision the agent edited against." }),
-    text: S.NonEmptyString.annotateKey({ description: "Replacement node text." }),
+    text: S.NonEmptyString.check(isWellFormedText).annotateKey({ description: "Replacement node text." }),
   },
   insert: {
     nodeId: NodeId.annotateKey({ description: "Identity the capture step minted for the new node." }),
@@ -202,7 +202,7 @@ export const NodeOperation = NodeOperationKind.toTaggedUnion("op")({
     }),
     filePath: MemoryFilePath.annotateKey({ description: "File the new node belongs to." }),
     kind: NodeKind.annotateKey({ description: "Markdown construct of the new node." }),
-    text: S.NonEmptyString.annotateKey({ description: "Text of the new node." }),
+    text: S.NonEmptyString.check(isWellFormedText).annotateKey({ description: "Text of the new node." }),
   },
   delete: {
     nodeId: NodeId.annotateKey({ description: "Node to retire." }),

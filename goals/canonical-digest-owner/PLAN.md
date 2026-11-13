@@ -23,7 +23,7 @@ exploration's `MAP.md` calls these P0 to P3.
 | --- | --- | --- | --- |
 | A, census and proof | done | The first vertical slice: property test of the epistemics encoder against the owner, plus the execution-record seal replay. | Census table tracked; property test covers every candidate; PacketCore and seal replays pass or name their legacy rows. No production code changed. |
 | B, owner surface | done | Schema for the prefixed digest in `@beep/schema`, then the `undefined`-member pre-pass in `@beep/jsonc`. | Grammar exported; `ContentDigest` and `SourceTextDigest` derive from it with encoded forms unchanged; refusal table fixed by test. |
-| C, swaps | pending | Epistemics first (most seal consumers), then PacketCore, then semantica, one commit each. | Each body delegates to the owner; exports unchanged; slice A's tests still green; PartyKey v1 has a parity proof or a pinned row. |
+| C, swaps | done | Epistemics first (most seal consumers), then PacketCore, then semantica, one commit each. | Each body delegates to the owner; exports unchanged; slice A's tests still green; PartyKey v1 has a parity proof or a pinned row. |
 | D, guard | pending | Write the rule against the tree as it stands after C. | Rule active in the lint pass with no exceptions beyond census rows. |
 
 P0 Research settled, before slice A: how many stored PacketCore events the
@@ -91,6 +91,85 @@ Carried into slice C, from this slice:
 - `@beep/sbom` exports a `Sha256Digest` for the bare 64-character form. It is
   a separate contract ported with that package; record it in the census as
   pinned and leave it.
+
+### Slice C evidence
+
+Done 2026-11-13. Each encoder's body is now the owner, one commit per encoder
+so each reverts alone. No stored digest, event file name, seal or parent
+chain changed: all 76 stored packet events and the 13 fixture events still
+recompute and render back byte for byte, the four golden execution seals and
+the W1 `corpusHash` still recompute, after every commit.
+
+| Encoder | `omitUndefinedMembers` | Why |
+| --- | --- | --- |
+| E1 epistemics `canonicalJson` (`canonicalDetectionJson`, two domain aliases) | no | Inputs are schema wire forms with exact optional keys; nothing relies on a dropped member. |
+| E2 PacketCore `canonicalJsonText` | yes | `Goals/Completion.ts` leaves `packetId` and `proposedCloseout` undefined when absent. |
+| E3 semantica `canonicalJson` | no | No lab schema encodes a member as undefined. |
+| E4 `@beep/md` JSON frontmatter | no | Its input is `S.JsonObject`; the legacy encoder already threw on an undefined member. |
+
+The indented renderer `canonicalJsonTextPretty` stays; its compact branch,
+reachable only from the old `canonicalJsonText`, was removed. The two
+`sha256:` regular expressions, the GitHub artifact digest in
+`packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts` and
+`FileSha256Hash` in
+`packages/tooling/tool/cli/src/commands/Files/internal/Media.schemas.ts`,
+accepted exactly what `Sha256PrefixedDigest` accepts and are now that schema,
+in a commit of their own; a rejected value reports the template-literal
+message instead of the pattern message.
+
+PartyKey v1 is not swapped. A test-only commit adds a parity proof to
+`packages/party/domain/test/PartyKey.test.ts`: on 200 seeded bases and on
+hand-written cases for every escape it writes, its bytes equal the owner's
+for the encoded basis, and the owner reproduces the pinned email bytes. The
+census row stays pinned.
+
+Dependency edges added: `@beep/epistemics`, `@beep/md` and the semantica lab
+depend on `@beep/jsonc` (the lab's moved from devDependency);
+`@beep/party-domain` has it as a devDependency. The `@beep/md` import boundary
+test exempts `@beep/jsonc/JsoncFingerprint` by name.
+
+#### Behaviour changes (refusal direction only)
+
+Every swapped export now throws the owner's `JsoncCanonicalizeError` (code
+and JSON pointer) where the legacy encoder coerced: an unpaired surrogate in a
+string or key, nesting past 256 levels, an `undefined` member (except through
+PacketCore's option), an `undefined` element or root, `NaN` or an infinity, a
+bigint, and a non-plain object such as a `Date`. The exports are synchronous,
+so the digest helpers above them keep their `Result` and `Effect` signatures:
+the throw escapes `Result.map`, and inside an Effect generator it is a defect.
+
+Where an unpaired surrogate is reachable from a free-text schema field, it
+surfaces as follows. No stored value holds one.
+
+| Call site | Free text | Surfaces as |
+| --- | --- | --- |
+| Contradiction proposal fact, and detection beliefs through the same check (`isBoundedProposalFact`) | the `S.Json` fact | Typed: the bound check now treats a refusal as out of bounds, so decode, `make` and `S.is` fail with the schema's `SchemaError`. |
+| `contradictionProposalDigest`, `contradictionCandidateDigest` (detection layer, triage repo, `hasValidSeals`, the tables converter) | proposal `rationale`; ids in bindings that use free strings | Thrown from a `Result`-returning function; a defect in the detection and triage Effects. |
+| `detectionProposalId` | the fact, when called without decoding it | Thrown; a defect in the detection layer. |
+| `evidenceVerificationManifestationKey`, `manifestationKeyFor`, `hasValidManifestationKey`, the tables converters | anchor `quote`, source refs, `normalizationVersion`, extractor name and version | Thrown from `Result`-returning functions to their callers. |
+| `freezeGrantSet`, `verifyFrozenGrantSetDigest` (and `evaluateExecutionRequest`, which calls it) | grant destination, operation, purpose, resource | Thrown; a defect in the tier gate's run freeze and in the egress layer's construction. Values come from gate and egress options. |
+| `sealExecutionDecision`, `sealExecutionOutcome` | none: digests, literals and a semantic version | Not reachable. |
+| `retentionPayloadBytes` | the edge fact (a record of unknown) | Thrown; a defect in the retention service. Read from a jsonb column, which refuses unpaired-surrogate escapes. |
+| retention calibration script | operator JSON | Thrown; the script fails. |
+| `packetEventDigest` (writer and `PacketEventStore` read path) | event `actor`, body reasons | A defect, where a digest mismatch would have been a chain issue. Command-line input cannot carry one; a hand-edited event file could. |
+| PacketCore plan digests (bootstrap, materialize, graduate, archive, harvest, skills relock and patch, adopt, completion) | plan payload text | A defect in the command's Effect. |
+| Lab content ids, digest checks and `manifestHashMatchesRows` | document and model text | A defect, or a throw out of `S.is` and `*Result` decoders: the lab's schema checks call the sync digests, whose `Result` arms do not see the throw. |
+| `@beep/md` `render`, `renderHtml` entry points; `renderUnsafe` | frontmatter strings and keys | Typed: `RenderError` with the owner's error as `cause`; `renderUnsafe` throws it. |
+| `@beep/skill-contract` `renderSkillMarkdown`, `verifySkillArtifact` | every contract string | Typed: `RenderError` in the render `Result`; verification denies with `rerender-mismatch`. |
+
+Decisions: the seven files dated 2026-11-13.
+
+Carried into slice D:
+
+- The guard rule runs against this tree: no sorted-key JSON encoder remains
+  outside `@beep/jsonc` except the census rows classed pinned (PartyKey v1,
+  the eyecite parity encoders, the in-source pins), renderer (including
+  `canonicalJsonTextPretty`) and outside.
+- Open for the orchestrator, not done here: whether free-text fields that
+  feed a digest get a well-formedness check at their boundary, or whether the
+  digest helpers carry `JsoncCanonicalizeError` in their channels instead of
+  throwing. The table above lists every reachable site. The lab's schema checks
+  are the ones where a guard can now throw.
 
 ## Closeout Checklist
 

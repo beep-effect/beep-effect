@@ -9,6 +9,9 @@
       "path": "../identity/tsconfig.json"
     },
     {
+      "path": "../jsonc/tsconfig.json"
+    },
+    {
       "path": "../markdown/tsconfig.json"
     },
     {

@@ -40,8 +40,11 @@ const $I = $AgentMemoryStoreId.create("Admission.service");
  *   resolve time; `ours` writes none. A held insert is created by `theirs`
  *   or `merged`, at the resolver's `placement` when it gives one. It records
  *   a `HoldResolved` event and returns the resulting outcome (decision
- *   `held-writes-are-log-events`). A hold that is unknown or already resolved
- *   fails with `HoldNotOpenError`.
+ *   `held-writes-are-log-events`). When the node moved on to another text
+ *   since the hold, `theirs` or `merged` is not applied: the write is held
+ *   again on the current head and `resolve` returns `held` with a new hold id.
+ *   A hold that is unknown or already resolved, including one another
+ *   resolver closes while this resolve runs, fails with `HoldNotOpenError`.
  *
  * **Example** (Admit a batch)
  *

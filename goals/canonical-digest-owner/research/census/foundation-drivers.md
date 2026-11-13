@@ -82,3 +82,14 @@ These match the rg seeds but are not sorted-key JSON encoders and feed no digest
 - `packages/drivers/duckdb/src/DuckDbMessageStorage.service.ts:125`: hashes the `entityType/entityId/tag/id` key that upstream `@effect/cluster` composes, only when it exceeds 255 chars. I treated it as an opaque id.
 - Row 1 swap safety: whether any `@beep/epistemics` or downstream encoded schema emits members whose value is `undefined` (dropped today, rejected by the owner) was **not determined**. Check it before replacing.
 - Row 11 (`Md.render`): whether any consumer outside this partition hashes rendered Markdown (and so its frontmatter) was **not determined**.
+
+## Slice C dispositions
+
+Rows whose disposition changed in slice C (the consolidated census and
+`PLAN.md`, "Slice C evidence", hold the detail):
+
+- Row 1 (epistemics `canonicalJson`): replaced; its body is the owner, strict.
+  Rows 2 to 5 keep their bytes through it. The undefined-member question in
+  "Uncertain" is settled: no encoded schema in these domains emits one.
+- Row 11 (`@beep/md` frontmatter): replaced; the frontmatter is the owner's
+  text, strict. A lone surrogate is now a `RenderError`, not raw output.

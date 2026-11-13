@@ -64,7 +64,10 @@ export const loadGoalsMarkdownSample = Effect.gen(function* () {
 });
 
 /** Writes every sample file under `root`, creating parent folders. */
-export const writeSampleFolder = Effect.fnUntraced(function* (root: string, files: ReadonlyArray<SampleFile>) {
+export const writeSampleFolder = Effect.fnUntraced(function* (
+  root: string,
+  files: ReadonlyArray<Pick<SampleFile, "path" | "text">>
+) {
   const fs = yield* FileSystem.FileSystem;
   for (const file of files) {
     const target = `${root}/${file.path}`;

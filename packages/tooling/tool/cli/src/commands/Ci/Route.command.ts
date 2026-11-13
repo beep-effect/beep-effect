@@ -184,7 +184,7 @@ const renderCensus = (census: RouteCensus): ReadonlyArray<string> => [
 ];
 
 const renderReplay = (replay: RouteReplay): ReadonlyArray<string> => [
-  `[ci route] replay over ${replay.heads} pull-request heads: recall ${(replay.recall * 100).toFixed(2)}% (${replay.skippedReds} skipped red(s) of ${replay.skippedLaneRuns} skipped lane run(s); base unknown on ${replay.baseUnknownHeads} head(s); ${replay.unresolvedHeads} unresolved head(s); footprint ${Str.slice(0, 12)(replay.footprintDigest)})`,
+  `[ci route] replay over ${replay.heads} pull-request heads: recall ${(replay.recall * 100).toFixed(2)}% (${replay.skippedReds} skipped red(s) of ${replay.skippedLaneRuns} skipped lane run(s); base unknown on ${replay.baseUnknownHeads} head(s); ${replay.unresolvedHeads} unresolved head(s); footprint ${Str.slice(0, 12)(replay.footprintDigest)})${replay.recallCertain ? "" : ` — recall is an upper bound: ${replay.unknownRedHeads} skipping head(s) have failed jobs no rule maps (${A.join(replay.unknownRedJobNames, ", ")})`}`,
   ...pipe(
     replay.perHead,
     A.filter((head) => head.skippedReds.length > 0),

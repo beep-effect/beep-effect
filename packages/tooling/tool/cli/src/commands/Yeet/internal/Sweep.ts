@@ -178,6 +178,10 @@ const permissionDenialMarkers = [
  * check it, so a pull request `gh` resolved by some other route cannot authorize
  * deleting a branch it never belonged to.
  *
+ * `pullRequestNumber` only words the local-tip blocker of a merged pull
+ * request: it names `refs/pull/<n>/head`, the head GitHub still serves after
+ * it deleted the merged branch. It authorizes nothing.
+ *
  * `remoteBranchAbsent` is true only when the remote itself answered that it has
  * no `refs/heads/<branch>`. A missing remote-tracking ref proves nothing (it may
  * never have been fetched), so the observer asks `git ls-remote` before the
@@ -238,6 +242,7 @@ export class SweepGitState extends S.Opaque<SweepGitState, { readonly brand: uni
     localTip: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     remoteTip: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     remoteBranchAbsent: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    pullRequestNumber: S.Int.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     pullRequestState: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     pullRequestHeadBranch: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     pullRequestHeadOid: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
@@ -429,14 +434,85 @@ const switchToMainPreconditions = (state: SweepGitState): ReadonlyArray<SweepPre
  * @param state - Observed git state carrying the resolved PR's head branch.
  * @returns A precondition holding only when the PR's head equals the branch.
  */
+const pullRequestHeadsBranch = (state: SweepGitState): boolean =>
+  O.exists(state.pullRequestHeadBranch, (head) => head === state.branch);
+
 const pullRequestIdentityPrecondition = (state: SweepGitState): SweepPrecondition =>
   precondition(
     `pull request head branch ${optionText(state.pullRequestHeadBranch)} is ${state.branch}`,
-    O.exists(state.pullRequestHeadBranch, (head) => head === state.branch)
+    pullRequestHeadsBranch(state)
   );
 
 const tipsMatch = (left: O.Option<string>, right: O.Option<string>): boolean =>
   O.isSome(left) && O.isSome(right) && left.value === right.value;
+
+/**
+ * The `git` arguments that list a local tip's own commits: the ones whose patch
+ * a pull request head lacks.
+ *
+ * **Details**
+ *
+ * After GitHub rewrites a head, every commit on the old local tip has a new
+ * sha on the pull request head, so a plain `<head>..<local>` range lists them
+ * all. `--cherry-pick --right-only` over the symmetric difference drops the
+ * commits whose patch the head already carries, and what is left is work the
+ * lane never pushed. An empty listing means adopting the pull request head
+ * loses nothing. Merge commits carry no patch of their own and are left out.
+ *
+ * **Example** (Build the check)
+ *
+ * ```ts
+ * import { sweepAdoptionOwnCommitsArgs } from "@beep/repo-cli/test/Yeet"
+ * import * as A from "effect/Array"
+ *
+ * console.log(A.join(sweepAdoptionOwnCommitsArgs("bbbb2222", "aaaa1111"), " "))
+ * // log --cherry-pick --right-only --no-merges bbbb2222...aaaa1111
+ * ```
+ *
+ * @param pullRequestHead - The pull request's head, as GitHub serves it under `refs/pull/<n>/head`.
+ * @param localTip - The local branch tip that would be replaced.
+ * @returns The arguments for `git`.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const sweepAdoptionOwnCommitsArgs: {
+  (pullRequestHead: string, localTip: string): ReadonlyArray<string>;
+  (localTip: string): (pullRequestHead: string) => ReadonlyArray<string>;
+} = dual(
+  2,
+  (pullRequestHead: string, localTip: string): ReadonlyArray<string> => [
+    "log",
+    "--cherry-pick",
+    "--right-only",
+    "--no-merges",
+    `${pullRequestHead}...${localTip}`,
+  ]
+);
+
+// After GitHub rewrites a merged layer's head (the cascade when the layer below
+// merges alone, or a restack) the lane's local tip is the older head, and
+// GitHub deleted the merged branch, so `origin/<branch>` cannot supply the new
+// one: name the pull request's own head ref. The rewrite keeps every patch
+// under a new sha, so the safety check compares by patch, not by ancestry.
+// A pull request that heads another branch gets no adoption command: its head
+// is not this branch's. Only the text changes; a mismatching tip still blocks
+// the `-D` delete.
+const localTipPrecondition = (state: SweepGitState): SweepPrecondition => {
+  const satisfied = tipsMatch(state.localTip, state.pullRequestHeadOid);
+  const claim = `local tip ${optionText(state.localTip)} equals pull request head ${optionText(state.pullRequestHeadOid)}`;
+  const adoption = pipe(
+    O.all({ number: state.pullRequestNumber, local: state.localTip, head: state.pullRequestHeadOid }),
+    O.filter(() => pullRequestIsMerged(state) && pullRequestHeadsBranch(state) && !satisfied),
+    O.map(
+      ({ number, local, head }) =>
+        `${claim}; to adopt the pull request head, run: git fetch origin refs/pull/${number}/head && git switch -C ${shellQuote(state.branch)} FETCH_HEAD, safe only when the local tip holds no commit of your own that the pull request head lacks (after the fetch, \`git ${A.join(sweepAdoptionOwnCommitsArgs(head, local), " ")}\` prints nothing)`
+    )
+  );
+  return precondition(
+    O.getOrElse(adoption, () => claim),
+    satisfied
+  );
+};
 
 const fetchPrunePlanStep = (): SweepPlanStep =>
   SweepPlanStep.make({
@@ -507,13 +583,7 @@ const deleteLocalBranchPlanStep = (state: SweepGitState): SweepPlanStep => {
     : SweepPlanStep.make({
         id: "delete-local-branch",
         action: `git branch -D ${shellQuote(state.branch)}`,
-        preconditions: A.append(
-          shared,
-          precondition(
-            `local tip ${optionText(state.localTip)} equals pull request head ${optionText(state.pullRequestHeadOid)}`,
-            tipsMatch(state.localTip, state.pullRequestHeadOid)
-          )
-        ),
+        preconditions: A.append(shared, localTipPrecondition(state)),
         requiresOperator: false,
       });
 };
@@ -1092,6 +1162,7 @@ export const observeSweepGitState = Effect.fn("Yeet.observeSweepGitState")(funct
     localTip,
     remoteTip: remote.tip,
     remoteBranchAbsent: remote.absent,
+    pullRequestNumber: O.map(pullRequest, (view) => view.number),
     pullRequestState: O.flatMap(pullRequest, (view) => optionFromNonEmpty(view.state)),
     pullRequestHeadBranch: O.flatMap(pullRequest, (view) => optionFromNonEmpty(view.headRefName)),
     // `git worktree list` names the owning clone first, so any other top level
