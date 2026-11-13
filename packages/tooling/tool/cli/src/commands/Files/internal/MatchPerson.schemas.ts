@@ -10,13 +10,10 @@ import { PosInt } from "@beep/repo-cli-kit/schema/PosInt";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Sha256Hex } from "@beep/schema/Sha256";
-import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as SchemaTransformation from "effect/SchemaTransformation";
-import * as Str from "effect/String";
 import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Files/internal/MatchPerson.schemas");
@@ -799,65 +796,11 @@ export const PersonMatchDeviceIndexes = S.UniqueArray(S.Natural).pipe(
  */
 export type PersonMatchDeviceIndexes = typeof PersonMatchDeviceIndexes.Type;
 
-const PersonMatchDeviceIndexFromString = S.NonEmptyString.pipe(
-  S.decodeTo(S.Finite, SchemaTransformation.numberFromString),
-  S.decodeTo(S.Natural),
-  $I.annoteSchema("PersonMatchDeviceIndexFromString", {
-    description: "A non-empty decimal string decoded into a non-negative integer device index.",
-  })
-);
-
 const PersonMatchRequestedDeviceIndexes = S.Tuple([S.Natural]).pipe(
   $I.annoteSchema("PersonMatchRequestedDeviceIndexes", {
     description: "Exactly one explicitly requested ROCm device index.",
   })
 );
-
-const PersonMatchDeviceIndexList = S.Tuple([PersonMatchDeviceIndexFromString]).pipe(
-  $I.annoteSchema("PersonMatchDeviceIndexList", {
-    description: "Exactly one ROCm device index decoded from its decimal string.",
-  })
-);
-
-/**
- * Decodes a CLI value into exactly one requested ROCm device index.
- *
- * **Example** (Decode one device index)
- *
- * ```ts
- * import { PersonMatchDeviceIndexesFromCsv } from "@beep/repo-cli/commands/Files"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const decoded = S.decodeUnknownOption(PersonMatchDeviceIndexesFromCsv)("0")
- *
- * console.log(O.getOrNull(decoded))
- * // [0]
- * ```
- *
- * @category decoding
- * @since 0.0.0
- */
-export const PersonMatchDeviceIndexesFromCsv = S.NonEmptyString.pipe(
-  S.decodeTo(
-    PersonMatchDeviceIndexList,
-    SchemaTransformation.transform<readonly [string], string>({
-      decode: (value) => [Str.trim(value)],
-      encode: A.headNonEmpty,
-    })
-  ),
-  $I.annoteSchema("PersonMatchDeviceIndexesFromCsv", {
-    description: "A CLI value decoded into exactly one explicitly requested ROCm device index.",
-  })
-);
-
-/**
- * A singleton ROCm device-index tuple decoded from a CLI value.
- *
- * @category type-level
- * @since 0.0.0
- */
-export type PersonMatchDeviceIndexesFromCsv = typeof PersonMatchDeviceIndexesFromCsv.Type;
 
 /**
  * Command inputs for a local person-matching run.

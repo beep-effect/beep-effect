@@ -3,7 +3,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { $RepoCliId } from "@beep/identity/packages";
+import { Sha256Hex } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { sha256 } from "@noble/hashes/sha2.js";
 import * as A from "effect/Array";
@@ -143,7 +145,98 @@ export const PersonMatchModelArtifactVerifier = Context.Reference<PersonMatchMod
   $I`PersonMatchModelArtifactVerifier`,
   { defaultValue: () => verifyPersonMatchModelArtifacts }
 );
-type Requirements = FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | HttpClient.HttpClient;
+/**
+ * Graph compiler boundary for verified source tensors.
+ *
+ * **Example** (Inspect services)
+ * ```ts
+ * import { PersonMatchGraphCompiler } from "@beep/repo-cli/test/Files"
+ * import * as Effect from "effect/Effect"
+ * const operation = Effect.gen(function* () { return yield* PersonMatchGraphCompiler })
+ * console.log(Effect.isEffect(operation))
+ * ```
+ * @internal
+ * @category services
+ * @since 0.0.0
+ */
+export const PersonMatchGraphCompiler = Context.Reference<typeof compileAdaFaceOnnx>($I`PersonMatchGraphCompiler`, {
+  defaultValue: () => compileAdaFaceOnnx,
+});
+/**
+ * Pinned source digests used by graph verification.
+ *
+ * **Example** (Inspect models)
+ * ```ts
+ * import { PersonMatchGraphPins } from "@beep/repo-cli/test/Files"
+ * console.log(PersonMatchGraphPins.fields.aligner)
+ * ```
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export class PersonMatchGraphPins extends S.Opaque<PersonMatchGraphPins, { readonly brand: unique symbol }>()(
+  S.Struct({ aligner: Sha256Hex, recognizer: Sha256Hex }).pipe(
+    $I.annoteSchema("PersonMatchGraphPins", {
+      description: "SHA-256 identities of the source tensors compiled into cached graphs.",
+    })
+  )
+) {}
+/**
+ * Source provenance for the fixed graph compiler.
+ *
+ * **Example** (Inspect services)
+ * ```ts
+ * import { PersonMatchGraphSourcePins } from "@beep/repo-cli/test/Files"
+ * import * as Effect from "effect/Effect"
+ * const hashes = Effect.gen(function* () { return (yield* PersonMatchGraphSourcePins).aligner })
+ * console.log(Effect.isEffect(hashes))
+ * ```
+ * @internal
+ * @category services
+ * @since 0.0.0
+ */
+export const PersonMatchGraphSourcePins = Context.Reference<PersonMatchGraphPins>($I`PersonMatchGraphSourcePins`, {
+  defaultValue: () =>
+    PersonMatchGraphPins.make({
+      aligner: Sha256Hex.make("80b6e922e4c76c10d5e24061fe47cd96112d18689bf5ae7e34af52e641c18c4a"),
+      recognizer: Sha256Hex.make("99d16ed4aac0fdf0fcc82526b9b70703f3ec8c3041bf1bf44bd22751536e65db"),
+    }),
+});
+/**
+ * Native model acquisition and scoped session boundary.
+ *
+ * **Example** (Inspect services)
+ * ```ts
+ * import { PersonMatchOnnxResources } from "@beep/repo-cli/test/Files"
+ * const version = PersonMatchOnnxResources.use(resources => resources.version())
+ * console.log(version)
+ * ```
+ * @internal
+ * @category services
+ * @since 0.0.0
+ */
+export class PersonMatchOnnxResources extends Context.Service<
+  PersonMatchOnnxResources,
+  {
+    readonly prepare: typeof preparePersonMatchOnnxModels;
+    readonly graph: typeof compiledGraph;
+    readonly open: (
+      path: string
+    ) => Effect.Effect<
+      import("./MatchPerson.inference.ts").FaceSession,
+      import("./MatchPerson.errors.ts").MatchPersonRuntimeError,
+      import("effect/Scope").Scope
+    >;
+    readonly version: typeof faceRuntimeVersion;
+  }
+>()($I`PersonMatchOnnxResources`) {}
+
+type Requirements =
+  | PersonMatchOnnxResources
+  | FileSystem.FileSystem
+  | Path.Path
+  | SecureRandom.SecureRandom
+  | HttpClient.HttpClient;
 const error = MatchPersonError.runtimeFromWorker;
 const round = (value: number, digits = 6) => Number(value.toFixed(digits));
 const dot = (a: ReadonlyArray<number>, b: ReadonlyArray<number>) =>
@@ -180,12 +273,14 @@ const compiledGraph = Effect.fn("Files.PersonMatch.compiledGraph")(function* (
   const data = yield* fs
     .readFile(source)
     .pipe(Effect.mapError((cause) => MatchPersonError.modelIntegrity("Cannot read pinned safetensors.", cause)));
-  const alignerHash = "80b6e922e4c76c10d5e24061fe47cd96112d18689bf5ae7e34af52e641c18c4a";
-  const recognizerHash = "99d16ed4aac0fdf0fcc82526b9b70703f3ec8c3041bf1bf44bd22751536e65db";
+  const pins = yield* PersonMatchGraphSourcePins;
+  const alignerHash = pins.aligner;
+  const recognizerHash = pins.recognizer;
   const hash = Hex.encode(sha256(data));
   if (hash !== (component === "aligner" ? alignerHash : recognizerHash))
     return yield* MatchPersonError.modelIntegrity("Safetensors changed after model verification.");
-  const graph = yield* compileAdaFaceOnnx(data, component);
+  const compile = yield* PersonMatchGraphCompiler;
+  const graph = yield* compile(data, component);
   const target = path.join(root, `${component}-${alignerHash}-${recognizerHash}-fixed-v1.onnx`);
   const canonical = yield* canonicalizeFileTargetPath(target, "generated ONNX graph").pipe(
     Effect.mapError((cause) => MatchPersonError.modelIntegrity("Unsafe generated graph path.", cause))
@@ -509,19 +604,19 @@ const runWorker = Effect.fn("Files.PersonMatch.run")(function* (
   const referencePaths = yield* discover(inputs.referenceDirectory, options.recursive, 256);
   const candidates = yield* discover(inputs.candidateDirectory, options.recursive, 10000);
   if (referencePaths.length === 0) return yield* error("no-reference-images", "No supported reference images.");
-  const runtimeVersion = yield* faceRuntimeVersion();
-  const prepared = yield* preparePersonMatchOnnxModels(inputs.modelRoot, options.backend);
-  const detector = yield* openFaceSession(prepared.detectorPath);
+  const resources = yield* PersonMatchOnnxResources;
+  const runtimeVersion = yield* resources.version();
+  const prepared = yield* resources.prepare(inputs.modelRoot, options.backend);
+  const detector = yield* resources.open(prepared.detectorPath);
   const aligner = O.isSome(prepared.ada)
-    ? yield* compiledGraph(prepared.ada.value.alignerPath, inputs.modelRoot, "aligner").pipe(
-        Effect.flatMap(openFaceSession),
-        Effect.asSome
-      )
+    ? yield* resources
+        .graph(prepared.ada.value.alignerPath, inputs.modelRoot, "aligner")
+        .pipe(Effect.flatMap(resources.open), Effect.asSome)
     : O.none();
   const recognizerPath = O.isSome(prepared.ada)
-    ? yield* compiledGraph(prepared.ada.value.recognizerPath, inputs.modelRoot, "recognizer")
+    ? yield* resources.graph(prepared.ada.value.recognizerPath, inputs.modelRoot, "recognizer")
     : prepared.recognizerPath;
-  const recognizer = yield* openFaceSession(recognizerPath);
+  const recognizer = yield* resources.open(recognizerPath);
   const inference = makeFaceInference(detector, recognizer, aligner);
   const referenceSet = yield* collectReferences(referencePaths, inference, options);
   const references = referenceSet.references;
@@ -605,21 +700,44 @@ const makeService = Effect.fn("Files.PersonMatchWorkerService.make")(function* (
   });
 });
 /**
- * Live matcher layer that captures filesystem, paths, HTTP and secure randomness.
+ * Matcher layer requiring explicit native resources, filesystem, HTTP and secure randomness.
  *
  * **Example** (Provide the live matcher)
  *
  * ```ts
- * import { PersonMatchWorkerServiceLive } from "./MatchPerson.worker-service.ts"
+ * import { PersonMatchWorkerServiceLayer } from "./MatchPerson.worker-service.ts"
  * import * as Layer from "effect/Layer"
- * console.log(Layer.isLayer(PersonMatchWorkerServiceLive))
+ * console.log(Layer.isLayer(PersonMatchWorkerServiceLayer))
  * ```
  *
  * @internal
  * @category layers
  * @since 0.0.0
  */
-export const PersonMatchWorkerServiceLive = Layer.effect(PersonMatchWorkerService, makeService());
+export const PersonMatchWorkerServiceLayer = Layer.effect(PersonMatchWorkerService, makeService());
+/**
+ * Production native resources for the in-process matcher.
+ *
+ * **Example** (Inspect layers)
+ * ```ts
+ * import { PersonMatchWorkerServiceLive } from "./MatchPerson.worker-service.ts"
+ * import * as Layer from "effect/Layer"
+ * console.log(Layer.isLayer(PersonMatchWorkerServiceLive))
+ * ```
+ * @internal
+ * @category layers
+ * @since 0.0.0
+ */
+export const PersonMatchWorkerServiceLive = PersonMatchWorkerServiceLayer.pipe(
+  Layer.provide(
+    Layer.succeed(PersonMatchOnnxResources, {
+      prepare: preparePersonMatchOnnxModels,
+      graph: compiledGraph,
+      open: openFaceSession,
+      version: faceRuntimeVersion,
+    })
+  )
+);
 
 /**
  * Collect reference decisions through the production image and inference boundary.

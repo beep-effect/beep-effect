@@ -11,6 +11,7 @@ import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { sha256 } from "@noble/hashes/sha2.js";
+import * as Context from "effect/Context";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -110,6 +111,53 @@ const buffaloRecognizerArtifact = PinnedModelArtifact.make({
   url: "https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip",
 });
 
+const buffaloArchiveArtifact = PinnedModelArtifact.make({
+  ...detectorArtifact,
+  fileName: "buffalo_l.zip",
+  sizeBytes: PosInt.make(288621354),
+  sha256: Sha256Hex.make("80ffe37d8a5940d59a7384c201a2a38d4741f2f3c51eef46ebb28218a7b0ca2f"),
+});
+/**
+ * Model-store artifact pins, including the authenticated extraction archive.
+ *
+ * **Example** (Inspect models)
+ * ```ts
+ * import { BuffaloArtifactPins } from "@beep/repo-cli/test/Files"
+ * console.log(BuffaloArtifactPins.fields.archive)
+ * ```
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export class BuffaloArtifactPins extends S.Opaque<BuffaloArtifactPins, { readonly brand: unique symbol }>()(
+  S.Struct({ detector: PinnedModelArtifact, recognizer: PinnedModelArtifact, archive: PinnedModelArtifact }).pipe(
+    $I.annoteSchema("BuffaloArtifactPins", {
+      description: "Pinned Buffalo source archive and independently authenticated ONNX entries.",
+    })
+  )
+) {}
+/**
+ * Pin set consumed by the production installer.
+ *
+ * **Example** (Inspect services)
+ * ```ts
+ * import { PersonMatchBuffaloPins } from "@beep/repo-cli/test/Files"
+ * import * as Effect from "effect/Effect"
+ * const detector = Effect.gen(function* () { return (yield* PersonMatchBuffaloPins).detector.fileName })
+ * console.log(Effect.isEffect(detector))
+ * ```
+ * @internal
+ * @category services
+ * @since 0.0.0
+ */
+export const PersonMatchBuffaloPins = Context.Reference<BuffaloArtifactPins>($I`PersonMatchBuffaloPins`, {
+  defaultValue: () =>
+    BuffaloArtifactPins.make({
+      detector: detectorArtifact,
+      recognizer: buffaloRecognizerArtifact,
+      archive: buffaloArchiveArtifact,
+    }),
+});
 const pinnedArtifacts = [alignerArtifact, recognizerArtifact] as const;
 const pinnedComponents = ["aligner", "recognizer"] as const;
 
@@ -812,7 +860,19 @@ export const verifyPersonMatchModelArtifacts = Effect.fn("Files.PersonMatchModel
   }
 );
 
-class PreparedOnnxModels extends S.Opaque<PreparedOnnxModels, { readonly brand: unique symbol }>()(
+/**
+ * Verified model paths passed to native sessions.
+ *
+ * **Example** (Inspect models)
+ * ```ts
+ * import { PreparedOnnxModels } from "@beep/repo-cli/test/Files"
+ * console.log(PreparedOnnxModels.fields.detectorPath)
+ * ```
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export class PreparedOnnxModels extends S.Opaque<PreparedOnnxModels, { readonly brand: unique symbol }>()(
   S.Struct({
     detectorPath: S.NonEmptyString,
     recognizerPath: S.NonEmptyString,
@@ -862,12 +922,8 @@ const installBuffaloArchive = Effect.fn("Files.installBuffaloArchive")(function*
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const archive = PinnedModelArtifact.make({
-    ...detectorArtifact,
-    fileName: "buffalo_l.zip",
-    sizeBytes: PosInt.make(288621354),
-    sha256: Sha256Hex.make("80ffe37d8a5940d59a7384c201a2a38d4741f2f3c51eef46ebb28218a7b0ca2f"),
-  });
+  const pins = yield* PersonMatchBuffaloPins;
+  const archive = pins.archive;
   const archivePath = path.join(root, archive.fileName);
   yield* ensureArtifact(archive, archivePath, root);
   const data = yield* fs
@@ -906,10 +962,11 @@ export const preparePersonMatchOnnxModels = Effect.fn("Files.preparePersonMatchO
   backend: "buffalo-l" | "adaface-kprpe"
 ) {
   const path = yield* Path.Path;
+  const pins = yield* PersonMatchBuffaloPins;
   const root = yield* ensureCanonicalDirectory(modelRoot, "person-match model root");
   const models = yield* ensureCanonicalDirectory(path.join(root, "models"), "ONNX models directory");
   const directory = yield* ensureCanonicalDirectory(path.join(models, "beep_buffalo_l_v1"), "pinned ONNX directory");
-  const required = backend === "buffalo-l" ? [detectorArtifact, buffaloRecognizerArtifact] : [detectorArtifact];
+  const required = backend === "buffalo-l" ? [pins.detector, pins.recognizer] : [pins.detector];
   yield* Effect.acquireUseRelease(
     acquireModelStoreLock(directory),
     Effect.fnUntraced(function* () {
@@ -926,10 +983,10 @@ export const preparePersonMatchOnnxModels = Effect.fn("Files.preparePersonMatchO
     backend === "adaface-kprpe"
       ? yield* prepareAdaFaceArtifacts(root).pipe(Effect.asSome)
       : O.none<PreparedAdaFaceArtifacts>();
-  const artifacts = backend === "adaface-kprpe" ? [detectorArtifact, alignerArtifact, recognizerArtifact] : required;
+  const artifacts = backend === "adaface-kprpe" ? [pins.detector, alignerArtifact, recognizerArtifact] : required;
   return PreparedOnnxModels.make({
-    detectorPath: path.join(directory, detectorArtifact.fileName),
-    recognizerPath: path.join(directory, buffaloRecognizerArtifact.fileName),
+    detectorPath: path.join(directory, pins.detector.fileName),
+    recognizerPath: path.join(directory, pins.recognizer.fileName),
     ada,
     components: A.map(artifacts, (artifact) =>
       PersonMatchModelComponent.make({

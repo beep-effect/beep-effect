@@ -121,6 +121,23 @@ export class PersonMatchInference extends Context.Service<
   }
 >()($I`PersonMatchInference`) {}
 
+/**
+ * Native session operations consumed by the face inference pipeline.
+ * **Example** (Reference a session contract)
+ * ```ts
+ * import type { FaceSession } from "@beep/repo-cli/test/Files"
+ * const names = (session: FaceSession) => session.outputNames
+ * console.log(names)
+ * ```
+ * @internal
+ * @category services
+ * @since 0.0.0
+ */
+export interface FaceSession {
+  readonly inputNames: ReadonlyArray<string>;
+  readonly outputNames: ReadonlyArray<string>;
+  readonly run: ort.InferenceSession["run"];
+}
 const loadRuntime = Effect.fn("Files.loadFaceRuntime")(() =>
   Effect.tryPromise({
     try: () => import("onnxruntime-node"),
@@ -318,7 +335,7 @@ const outputValues = (output: ort.InferenceSession.ReturnType, name: string): Fl
   const tensor = output[name];
   return tensor?.data instanceof Float32Array ? tensor.data : new Float32Array();
 };
-const run = (session: ort.InferenceSession, inputs: ort.InferenceSession.FeedsType) =>
+const run = (session: FaceSession, inputs: ort.InferenceSession.FeedsType) =>
   Effect.tryPromise({
     try: () => session.run(inputs),
     catch: (cause) => failure("ONNX inference failed.", cause),
@@ -413,8 +430,8 @@ const decodeLevel = (
 };
 const embedFace = (
   image: FaceImage,
-  recognizer: ort.InferenceSession,
-  aligner: O.Option<ort.InferenceSession>,
+  recognizer: FaceSession,
+  aligner: O.Option<FaceSession>,
   runtime: typeof import("onnxruntime-node")
 ) =>
   Effect.fnUntraced(function* (face: InferredFace) {
@@ -496,11 +513,7 @@ const selectDetections = (
         32
       )
     : kept;
-const makeFaceInferenceImpl = (
-  detector: ort.InferenceSession,
-  recognizer: ort.InferenceSession,
-  aligner: O.Option<ort.InferenceSession>
-) =>
+const makeFaceInferenceImpl = (detector: FaceSession, recognizer: FaceSession, aligner: O.Option<FaceSession>) =>
   PersonMatchInference.of({
     detect: Effect.fn("Files.PersonMatchInference.detect")(function* (image, threshold) {
       const runtime = yield* loadRuntime();
@@ -551,14 +564,14 @@ const makeFaceInferenceImpl = (
  */
 export const makeFaceInference: {
   (
-    detector: ort.InferenceSession,
-    recognizer: ort.InferenceSession,
-    aligner: O.Option<ort.InferenceSession>
+    detector: FaceSession,
+    recognizer: FaceSession,
+    aligner: O.Option<FaceSession>
   ): Context.Service.Shape<typeof PersonMatchInference>;
   (
-    recognizer: ort.InferenceSession,
-    aligner: O.Option<ort.InferenceSession>
-  ): (detector: ort.InferenceSession) => Context.Service.Shape<typeof PersonMatchInference>;
+    recognizer: FaceSession,
+    aligner: O.Option<FaceSession>
+  ): (detector: FaceSession) => Context.Service.Shape<typeof PersonMatchInference>;
 } = dual(3, makeFaceInferenceImpl);
 
 /**

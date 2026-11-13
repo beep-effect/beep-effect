@@ -7,14 +7,22 @@
 
 export { makeFilesMatchPersonCommand } from "../commands/Files/Files.command.ts";
 export * from "../commands/Files/index.ts";
-export { MatchPersonProtocolError } from "../commands/Files/internal/MatchPerson.errors.ts";
+export {
+  MatchPersonError,
+  MatchPersonProtocolError,
+  toFilesCommandError,
+} from "../commands/Files/internal/MatchPerson.errors.ts";
 export * from "../commands/Files/internal/MatchPerson.inference.ts";
 export {
   acquirePinnedPersonMatchArtifactForTest,
+  BuffaloArtifactPins,
+  PersonMatchBuffaloPins,
   PreparedAdaFaceArtifacts,
+  PreparedOnnxModels,
   prepareAdaFaceArtifacts,
   preparePersonMatchOnnxModels,
   verifyPersonMatchModelArtifacts,
+  writePersonMatchModelBytes,
 } from "../commands/Files/internal/MatchPerson.model-store.ts";
 export { compileAdaFaceOnnx } from "../commands/Files/internal/MatchPerson.onnx.ts";
 export {
@@ -29,7 +37,12 @@ export {
   collectReferencesForTesting,
   compiledGraphForTesting,
   faceQualityForTesting,
+  PersonMatchGraphCompiler,
+  PersonMatchGraphPins,
+  PersonMatchGraphSourcePins,
   PersonMatchModelArtifactVerifier,
+  PersonMatchOnnxResources,
   PersonMatchWorkerService,
+  PersonMatchWorkerServiceLayer,
 } from "../commands/Files/internal/MatchPerson.worker-service.ts";
 export { probeMediaCreationDate } from "../commands/Files/internal/MediaExec.ts";
