@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,18 +31,20 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement, the runner retirement in review (#2753). `research/w7-site-census-2026-11-03.md` counted 279 remaining git and gh
-argv templates, 208 without a recorded outcome (SPEC D-16); the W7 kit (#2665, SPEC D-17) added the `@beep/git` members
-and options the 37 (B) rows need and moved `patientGit` to `internal/repo-run/PatientGit.ts`; W7a (#2708, SPEC D-18)
-moved the Yeet census rows Y1-Y88 onto it; W7b (#2721, SPEC D-19) moved the other command groups' rows B1-B136; W7c (#2736, SPEC D-20) moved
-the Worktree rows W1-W45; #2753 deletes the generic runners from `internal/repo-run/GitExec.ts` (census rows
-X1-X10, SPEC D-21). Earlier
-waves merged: W0 (#2514), the W1 kit (#2522), W1a (#2539), W1b (#2546), W2 (#2593, D-10), W2b (#2606, D-11), the W3 kit
-(#2556), W3 sites (#2614, D-12), the W4 kit (#2600), W4 sites (#2622, D-13), W5 (#2642, D-14), W6 (#2648, D-15), the W7
-kit (#2665, D-17), W7a (#2708, D-18), W7b (#2721, D-19) and W7c (#2736, D-20). Next: closeout C.
+P4 Close. Every wave merged: W0 (#2514), the W1 kit (#2522), W1a (#2539), W1b (#2546), W2 (#2593, D-10), W2b (#2606,
+D-11), the W3 kit (#2556), W3 sites (#2614, D-12), the W4 kit (#2600), W4 sites (#2622, D-13), W5 (#2642, D-14), W6
+(#2648, D-15), the W7 kit (#2665, D-17), W7a (#2708, D-18), W7b (#2721, D-19), W7c (#2736, D-20) and the runner
+retirement (#2753, D-21). The closeout PR carries W8 (D-22): the drift merged after the W7 census
+(`research/w8-drift-census-2026-11-13.md`) migrated where a kit member is exact and kept with a named reason
+otherwise, the site-list ledger (`research/closeout-ledger-2026-11-13.md`), the reflection and `closeout`.
 
 ## Latest Evidence
 
+- 2026-11-13 W8 and closeout C: re-census at origin/main `05ed8bc6b6c` found 34 drift argv templates in 14 files and
+  24 test doubles without an `// Own double:` reason; 9 rows migrated, 26 `KEEP (D-22)`, the rest compliant or
+  comment-only (D-22). `quality package-verify --quick` passes for `@beep/repo-cli` and `@beep/repo-ai-metrics`;
+  `lint effect-vitest` introduces 0; the changed repo-cli suites (8 files, 76 tests) and ai-metrics suites (165
+  tests) pass on Node.
 - 2026-11-06 runner retirement: `runGitOutput`, `runGitPathList`, `runGitLines`, `runGitRawOutput` and their capture
   helpers deleted from `internal/repo-run/GitExec.ts` (X1 and X2 onto the kit, X3-X10 KEEP as censused, D-21); repo-cli
   `check` clean, `goals/tsconfig.ops.json` clean, the git-exec, goals-doctor, knowledge and laws suites green on Node;

@@ -17,6 +17,8 @@ let handledLintFixNoop = false;
 if (rawArgv.length === 2 && rawArgv[0] === "lint" && rawArgv[1] === "--fix") {
   const [A, Str] = await Promise.all([import("effect/Array"), import("effect/String")]);
   const CHANGED_PATH_DIFF_FILTER = "ACMRTUXB";
+  // KEEP (D-21, X4-X6): the three `lint --fix` no-op reads run before any Effect runtime exists, so
+  // no `Git` service can be provided; a failed read just falls through to the full CLI.
   const runGit = (args: ReadonlyArray<string>) =>
     Bun.spawnSync({
       cmd: ["git", ...args],

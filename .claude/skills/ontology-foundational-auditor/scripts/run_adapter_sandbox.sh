@@ -66,6 +66,10 @@ case "${lib64_runtime}" in
     ;;
 esac
 
+# Resolve the actual executable, not a version-manager shim requiring HOME/cache.
+bun_runtime="$(bun --no-env-file --config=/dev/null -p 'process.execPath')"
+[ -x "${bun_runtime}" ] || { echo "refusing: Bun runtime is unavailable" >&2; exit 69; }
+
 common=(
   --unshare-all
   --die-with-parent
@@ -73,16 +77,16 @@ common=(
   --clearenv
   --setenv HOME /nonexistent
   --setenv PATH /usr/bin
-  --setenv PYTHONHASHSEED 0
   --setenv LC_ALL C.UTF-8
   --ro-bind /usr /usr
+  --ro-bind "${bun_runtime}" /bun
   --symlink usr/bin /bin
   --symlink usr/lib /lib
   --symlink "${lib64_target}" /lib64
   --proc /proc
   --dev /dev
   --tmpfs /tmp
-  --ro-bind "${adapter}" /adapter.py
+  --ro-bind "${adapter}" /adapter.ts
   --ro-bind "${repo}" /repo
   --chdir /repo
 )
@@ -104,7 +108,7 @@ case "${mode}" in
         exit 65
         ;;
     esac
-    sandbox_args=("${common[@]}" --ro-bind "${golden}" /golden "${resource_limits[@]}" /usr/bin/python3 /adapter.py --self-check /golden)
+    sandbox_args=("${common[@]}" --ro-bind "${golden}" /golden "${resource_limits[@]}" /bun --smol --no-env-file --config=/dev/null /adapter.ts --self-check /golden)
     ;;
   observe)
     output_lexical="$(realpath -ms -- "${target_input}")"
@@ -140,7 +144,7 @@ case "${mode}" in
         exit 65
         ;;
     esac
-    sandbox_args=("${common[@]}" --bind "${output}" /out "${resource_limits[@]}" /usr/bin/python3 /adapter.py --repo /repo --out /out)
+    sandbox_args=("${common[@]}" --bind "${output}" /out "${resource_limits[@]}" /bun --smol --no-env-file --config=/dev/null /adapter.ts --repo /repo --out /out)
     ;;
   *) usage ;;
 esac

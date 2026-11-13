@@ -336,6 +336,8 @@ const FixtureCheckout = Layer.mergeAll(
   MemoryFileSystem.layer,
   NodePath.layer,
   NodeCrypto.layer,
+  // Own double: dies on any spawn, so a fixture that must not spawn Biome fails loudly;
+  // `ScriptedSpawner` records and answers every spawn instead.
   Layer.succeed(
     ChildProcessSpawner.ChildProcessSpawner,
     ChildProcessSpawner.make(() => Effect.die("a bare fixture checkout must not spawn Biome"))

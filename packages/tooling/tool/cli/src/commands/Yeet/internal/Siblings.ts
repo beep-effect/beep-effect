@@ -24,6 +24,7 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { shellQuote } from "@beep/repo-utils/Shell";
 import { LiteralKit } from "@beep/schema";
@@ -36,12 +37,10 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GithubRest } from "../../../internal/github/index.ts";
-import { runRepoCommandCaptureRaw } from "../../../internal/repo-run/RepoRun.executor.ts";
-import { parseMergeTreeConflictNames } from "../../Worktree/Fleet.service.ts";
+import { patientGit } from "../../../internal/repo-run/PatientGit.ts";
 import { provideYeetGhLogin, yeetGithubFailure } from "./GhOps.ts";
 import { refreshBaseRef, resolveYeetRev } from "./GitExec.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
-import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
@@ -414,38 +413,34 @@ type ProbeOutcome = { readonly probe: PacketSiblingProbe; readonly conflicts: Re
 const PROBE_UNAVAILABLE: ProbeOutcome = { probe: "unavailable", conflicts: A.empty() };
 
 // Objects only: the pull ref is fetched without writing a local ref or FETCH_HEAD, so the probe
-// leaves the checkout's refs untouched. GitHub keeps `refs/pull/<n>/head` for every open PR.
-const fetchSiblingHead = (repoRoot: string, prNumber: number) =>
-  runRepoCommandCaptureRaw(
-    "git",
-    ["fetch", "--quiet", "--no-tags", "--no-write-fetch-head", "origin", `refs/pull/${prNumber}/head`],
-    repoRoot
-  );
-
-// `merge-tree --write-tree` exits 0 clean and 1 conflicted; every other exit (a missing object
-// included) is a failed probe, never clean.
+// leaves the checkout's refs untouched. GitHub keeps `refs/pull/<n>/head` for every open PR. The
+// fetch runs on the patient instance (a network call may outlive the 30 s default) and the
+// merge-tree on the context `Git` (W8, SPEC D-22).
+// `Git.mergeTree` answers clean or conflicted; every failure (a missing object included) is a
+// failed probe, never clean, as the exit-code match it replaces read it.
 const probeSibling = Effect.fnUntraced(function* (
   context: RepoRunContext,
   sibling: { prNumber: number; headSha: string }
 ) {
-  const fetched = yield* fetchSiblingHead(context.repoRoot, sibling.prNumber).pipe(Effect.option);
-  if (O.isNone(fetched) || fetched.value.exitCode !== 0) return PROBE_UNAVAILABLE;
-  const probe = yield* runRepoCommandCaptureRaw(
-    "git",
-    ["merge-tree", "--write-tree", "--name-only", context.base, sibling.headSha],
-    context.repoRoot
-  ).pipe(Effect.option);
+  const fetching = yield* patientGit;
+  const fetched = yield* fetching
+    .fetch(context.repoRoot, {
+      remote: "origin",
+      ref: `refs/pull/${sibling.prNumber}/head`,
+      noTags: true,
+      noWriteFetchHead: true,
+    })
+    .pipe(Effect.option);
+  if (O.isNone(fetched)) return PROBE_UNAVAILABLE;
+  const git = yield* Git;
+  const probe = yield* git.mergeTree(context.repoRoot, context.base, sibling.headSha).pipe(Effect.option);
   return O.match(probe, {
     onNone: () => PROBE_UNAVAILABLE,
     onSome: (result): ProbeOutcome =>
-      Match.value(result.exitCode).pipe(
-        Match.when(0, (): ProbeOutcome => ({ probe: "clean", conflicts: A.empty() })),
-        Match.when(
-          1,
-          (): ProbeOutcome => ({ probe: "conflict", conflicts: parseMergeTreeConflictNames(result.output) })
-        ),
-        Match.orElse(() => PROBE_UNAVAILABLE)
-      ),
+      Match.valueTags(result, {
+        clean: (): ProbeOutcome => ({ probe: "clean", conflicts: A.empty() }),
+        conflicted: ({ paths }): ProbeOutcome => ({ probe: "conflict", conflicts: paths }),
+      }),
   });
 });
 

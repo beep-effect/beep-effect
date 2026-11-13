@@ -1,5 +1,8 @@
 # Review history — how this skill was hardened
 
+Current runner: `bun scripts/validate_artifacts.ts --self-test`. The history
+below records the original Python verification runs.
+
 This skill was not merely written; it survived an adversarial quality-review
 fix loop. Two independent review seats attacked every round — seat H
 (codex `gpt-5.6-sol`, reasoning max, later ultra: conformance, coherence,
