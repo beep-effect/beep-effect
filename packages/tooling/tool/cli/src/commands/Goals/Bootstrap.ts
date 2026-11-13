@@ -37,12 +37,12 @@ import {
 import { GOAL_DECISION_TARGETS, renderGoalDecisionBlock } from "./Decisions.projection.ts";
 import { GoalPlanInputError, GoalPlanOperationalError } from "./Goals.errors.ts";
 import { isCapabilitySlug } from "./Goals.schemas.ts";
-import { listGoalPackets } from "./Inventory.ts";
+import { listExplorationPacketFiles, listGoalPackets } from "./Inventory.ts";
 import { materializeExpectFlag, materializeWriteFlag, requireOneMode, writeReviewedPlan } from "./Materialize.ts";
 import { canonicalJsonText, canonicalJsonTextPretty, sha256Hex } from "./PacketCore/PacketDigest.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as PlatformError from "effect/PlatformError";
-import type { PlanMode, PlanOwnership, ValidationRequirement } from "./Bootstrap.schemas.ts";
+import type { ExplorationPacketFile, PlanMode, PlanOwnership, ValidationRequirement } from "./Bootstrap.schemas.ts";
 import type { CapabilitySlug } from "./Goals.schemas.ts";
 
 const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
@@ -467,19 +467,25 @@ const sourcesPayload = (input: BootstrapInput): string => {
   corpus during the first research phase.`
       : `- **Source exploration:** \`explorations/${input.provenanceExploration}\` — primary ledger:
   \`explorations/${input.provenanceExploration}/research/SOURCES.md\`.`;
-  // Repo-root paths, never `../RESEARCH.md`: a relative link copied from the
-  // exploration's ledger resolves inside the goal and fails `knowledge refs`.
-  const crossLinkLines =
-    input.provenanceExploration === undefined
-      ? ""
-      : `
-- Source exploration packet: \`explorations/${input.provenanceExploration}/RESEARCH.md\`,
-  \`explorations/${input.provenanceExploration}/DECISIONS.md\`,
-  \`explorations/${input.provenanceExploration}/BRIEF.md\`,
-  \`explorations/${input.provenanceExploration}/MAP.md\`.
+  // Repo-root paths to the packet files the caller found on disk. A relative
+  // link copied from the exploration's ledger would resolve inside the goal,
+  // and a path to a file the packet lacks is a broken target either way.
+  const crossLinkLines = pipe(
+    O.fromUndefinedOr(input.provenanceExploration),
+    O.filter(() => A.isReadonlyArrayNonEmpty(input.provenanceFiles)),
+    O.match({
+      onNone: () => "",
+      onSome: (exploration) => `
+- Source exploration packet: ${pipe(
+        input.provenanceFiles,
+        A.map((file) => `\`explorations/${exploration}/${file}\``),
+        A.join(",\n  ")
+      )}.
 - Write every path in this file from the repo root. Do not copy a relative
   link out of the exploration's ledger.
-`;
+`,
+    })
+  );
   return `# ${input.title} — Sources & Provenance
 
 ${provenanceLines}
@@ -1066,6 +1072,10 @@ const runBootstrapPlan = Effect.fn("Goals.runBootstrapPlan")(function* (options:
     );
   }
   const today = yield* resolveToday(options.today);
+  const provenanceFiles = yield* O.match(options.fromExploration, {
+    onNone: () => Effect.succeed(A.empty<ExplorationPacketFile>()),
+    onSome: (exploration) => listExplorationPacketFiles(exploration),
+  });
   const input = BootstrapInput.make({
     slug,
     title: options.title,
@@ -1074,6 +1084,7 @@ const runBootstrapPlan = Effect.fn("Goals.runBootstrapPlan")(function* (options:
     provides,
     requires,
     ...(O.isSome(options.fromExploration) ? { provenanceExploration: options.fromExploration.value } : {}),
+    provenanceFiles,
     today,
   });
   const records = yield* listGoalPackets();
