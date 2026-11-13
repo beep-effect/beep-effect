@@ -274,6 +274,54 @@ const heldWithBothTexts = (
       (write.operation.op === "insert" || O.isSome(conflict.ours) || !MutableHashMap.has(final, write.operation.nodeId))
   );
 
+// What the sequential lifecycle model of one node has counted so far, and the
+// node's current value under that model.
+interface StatusTally {
+  readonly backward: number;
+  readonly backwardRejected: number;
+  readonly heldMoves: number;
+  readonly value: O.Option<StatusValue>;
+  readonly wrong: number;
+}
+
+const oneIf = (condition: boolean): number => (condition ? 1 : 0);
+
+// A typed move from `current` to `to`: outside the lifecycle it must be
+// refused as such, behind `current` it must be rejected as backward, and
+// otherwise it must land and becomes the model's value.
+const judgeMove = (
+  tally: StatusTally,
+  current: StatusValue,
+  to: StatusValue,
+  outcome: AdmissionOutcome
+): StatusTally => {
+  const target = positionIn(to);
+  if (target < 0) {
+    return { ...tally, wrong: tally.wrong + oneIf(!A.contains(codesOf(outcome), "statusOutsideLifecycle")) };
+  }
+  if (target < positionIn(current)) {
+    const refused = outcome.outcome === "rejected" && A.contains(codesOf(outcome), "backwardStatusMove");
+    return {
+      ...tally,
+      backward: tally.backward + 1,
+      backwardRejected: tally.backwardRejected + oneIf(refused),
+      wrong: tally.wrong + oneIf(!refused),
+    };
+  }
+  return { ...tally, value: O.some(to), wrong: tally.wrong + oneIf(outcome.outcome !== "landed") };
+};
+
+// One move of the model: a move that is no typed status move, has no
+// outcome or starts from no lifecycle value is wrong.
+const stepStatus = (tally: StatusTally, move: Judged): StatusTally => {
+  const to = move.operation.op === "setStatus" ? move.operation.transition.to : undefined;
+  const outcome = O.getOrUndefined(move.outcome);
+  if (to === undefined || outcome === undefined || O.isNone(tally.value)) {
+    return { ...tally, wrong: tally.wrong + 1 };
+  }
+  return judgeMove({ ...tally, heldMoves: tally.heldMoves + oneIf(isHeld(outcome)) }, tally.value.value, to, outcome);
+};
+
 // The sequential lifecycle model of the status moves of one node.
 const statusVerdict = (
   final: MutableHashMap.MutableHashMap<NodeId, string>,
@@ -281,69 +329,48 @@ const statusVerdict = (
   nodeId: NodeId,
   moves: ReadonlyArray<Judged>
 ) => {
-  let wrong = 0;
-  let backward = 0;
-  let backwardRejected = 0;
-  let heldMoves = 0;
   const baseText = O.getOrElse(MutableHashMap.get(baseTexts, nodeId), () => "");
   const from = statusValueIn(phaseStatus, baseText);
-  let value = from;
-  for (const move of moves) {
-    const to = move.operation.op === "setStatus" ? move.operation.transition.to : undefined;
-    const outcome = O.getOrUndefined(move.outcome);
-    if (to === undefined || outcome === undefined || O.isNone(value)) {
-      wrong += 1;
-      continue;
-    }
-    heldMoves += isHeld(outcome) ? 1 : 0;
-    const target = positionIn(to);
-    if (target < 0) {
-      wrong += A.contains(codesOf(outcome), "statusOutsideLifecycle") ? 0 : 1;
-    } else if (target < positionIn(value.value)) {
-      backward += 1;
-      const refused = outcome.outcome === "rejected" && A.contains(codesOf(outcome), "backwardStatusMove");
-      backwardRejected += refused ? 1 : 0;
-      wrong += refused ? 0 : 1;
-    } else {
-      wrong += outcome.outcome === "landed" ? 0 : 1;
-      value = O.some(to);
-    }
-  }
-  const expected = O.match(O.all([from, value]), {
-    onNone: () => O.none<string>(),
-    onSome: ([start, end]) => O.some(replaceStatusValue(baseText, start, end)),
-  });
-  wrong += sameText(expected, MutableHashMap.get(final, nodeId)) ? 0 : 1;
-  return { wrong, backward, backwardRejected, heldMoves };
+  const start: StatusTally = { backward: 0, backwardRejected: 0, heldMoves: 0, value: from, wrong: 0 };
+  const tally = A.reduce(moves, start, stepStatus);
+  const expected = O.map(O.all([from, tally.value]), ([start, end]) => replaceStatusValue(baseText, start, end));
+  return {
+    wrong: tally.wrong + oneIf(!sameText(expected, MutableHashMap.get(final, nodeId))),
+    backward: tally.backward,
+    backwardRejected: tally.backwardRejected,
+    heldMoves: tally.heldMoves,
+  };
 };
 
-/** Checks one run with the oracle. */
-export const verdictOf = (run: ReplayRun): RunVerdict => {
-  const final = textsOf(run.exported);
-  const baseTexts = textsOf(run.base);
-  const judged = judgedOf(run);
-  const losses: Array<string> = [];
+type Texts = MutableHashMap.MutableHashMap<NodeId, string>;
 
-  // Every writer's text: in the export, superseded or held with both texts.
-  for (const write of judged) {
-    O.match(textOf(write.operation), {
-      onNone: () => undefined,
-      onSome: (text) => {
-        const kept =
-          O.contains(MutableHashMap.get(final, write.operation.nodeId), text) ||
-          supersededBy(judged, write, text) ||
-          heldWithBothTexts(run, final, write, text);
-        if (!kept) {
-          losses.push(`${write.author} ${write.operation.op} ${write.operation.nodeId}`);
-        }
-      },
-    });
+// What one run's oracle reads: its export and base texts and its judged operations.
+interface Oracle {
+  readonly baseTexts: Texts;
+  readonly final: Texts;
+  readonly judged: ReadonlyArray<Judged>;
+  readonly run: ReplayRun;
+}
+
+// The judged operations of one kind, by node, in admission order.
+const byNode = (judged: ReadonlyArray<Judged>, op: NodeOperation["op"]) => {
+  const grouped = MutableHashMap.empty<NodeId, Array<Judged>>();
+  for (const write of A.filter(judged, (candidate) => candidate.operation.op === op)) {
+    const writes = O.getOrElse(MutableHashMap.get(grouped, write.operation.nodeId), (): Array<Judged> => []);
+    writes.push(write);
+    MutableHashMap.set(grouped, write.operation.nodeId, writes);
   }
+  return grouped;
+};
 
-  // Base nodes: kept unless retired, unchanged unless written.
-  const retired = MutableHashSet.fromIterable(
-    A.flatMap(judged, (write) => (write.operation.op === "delete" ? [write.operation.nodeId] : []))
+// The node ids the judged operations of one kind touch.
+const nodesWith = (judged: ReadonlyArray<Judged>, op: NodeOperation["op"]) =>
+  MutableHashSet.fromIterable(
+    A.flatMap(judged, (write) => (write.operation.op === op ? [write.operation.nodeId] : []))
   );
+
+// Every text some writer submitted, by node.
+const writtenTexts = (judged: ReadonlyArray<Judged>) => {
   const written = MutableHashMap.empty<NodeId, MutableHashSet.MutableHashSet<string>>();
   for (const write of judged) {
     const texts = O.getOrElse(MutableHashMap.get(written, write.operation.nodeId), () =>
@@ -352,6 +379,30 @@ export const verdictOf = (run: ReplayRun): RunVerdict => {
     O.map(textOf(write.operation), (text) => MutableHashSet.add(texts, text));
     MutableHashMap.set(written, write.operation.nodeId, texts);
   }
+  return written;
+};
+
+// Every writer's text: in the export, superseded or held with both texts.
+const writerLosses = ({ final, judged, run }: Oracle): ReadonlyArray<string> =>
+  A.flatMap(judged, (write) =>
+    O.match(textOf(write.operation), {
+      onNone: (): ReadonlyArray<string> => [],
+      onSome: (text) =>
+        O.contains(MutableHashMap.get(final, write.operation.nodeId), text) ||
+        supersededBy(judged, write, text) ||
+        heldWithBothTexts(run, final, write, text)
+          ? []
+          : [`${write.author} ${write.operation.op} ${write.operation.nodeId}`],
+    })
+  );
+
+// Base nodes: kept unless retired, unchanged unless written.
+const baseNodeLosses = (
+  { baseTexts, final, judged }: Oracle,
+  written: ReturnType<typeof writtenTexts>
+): ReadonlyArray<string> => {
+  const retired = nodesWith(judged, "delete");
+  const losses: Array<string> = [];
   for (const [nodeId, baseText] of baseTexts) {
     const exported = MutableHashMap.get(final, nodeId);
     if (O.isNone(exported) && !MutableHashSet.has(retired, nodeId)) {
@@ -361,72 +412,79 @@ export const verdictOf = (run: ReplayRun): RunVerdict => {
       losses.push(`base node ${nodeId} changed with no writer`);
     }
   }
+  return losses;
+};
 
-  // Exported texts: each one some base or some writer held. A status cell may
-  // also hold its base text with the token moved to another lifecycle value.
-  const moved = MutableHashSet.fromIterable(
-    A.flatMap(judged, (write) => (write.operation.op === "setStatus" ? [write.operation.nodeId] : []))
+// Whether `text` is the base text of a moved status cell with its token at
+// some lifecycle value.
+const isStatusForm = (
+  baseTexts: Texts,
+  moved: MutableHashSet.MutableHashSet<NodeId>,
+  nodeId: NodeId,
+  text: string
+): boolean =>
+  MutableHashSet.has(moved, nodeId) &&
+  O.exists(MutableHashMap.get(baseTexts, nodeId), (baseText) =>
+    O.exists(statusValueIn(phaseStatus, baseText), (from) =>
+      A.some(phaseStatus.order, (value) => replaceStatusValue(baseText, from, value) === text)
+    )
   );
+
+// Exported texts: each one some base or some writer held. A status cell may
+// also hold its base text with the token moved to another lifecycle value.
+const exportedLosses = (
+  { baseTexts, final, judged }: Oracle,
+  written: ReturnType<typeof writtenTexts>
+): ReadonlyArray<string> => {
+  const moved = nodesWith(judged, "setStatus");
+  const losses: Array<string> = [];
   for (const [nodeId, text] of final) {
     const fromBase = O.contains(MutableHashMap.get(baseTexts, nodeId), text);
     const fromWriter = O.exists(MutableHashMap.get(written, nodeId), (texts) => MutableHashSet.has(texts, text));
-    const statusForm =
-      MutableHashSet.has(moved, nodeId) &&
-      O.exists(MutableHashMap.get(baseTexts, nodeId), (baseText) =>
-        O.exists(statusValueIn(phaseStatus, baseText), (from) =>
-          A.some(phaseStatus.order, (value) => replaceStatusValue(baseText, from, value) === text)
-        )
-      );
-    if (!fromBase && !fromWriter && !statusForm) {
+    if (!fromBase && !fromWriter && !isStatusForm(baseTexts, moved, nodeId, text)) {
       losses.push(`exported node ${nodeId} holds a text nobody wrote`);
     }
   }
+  return losses;
+};
 
-  // Contested nodes: two writers, two different replace texts for one node.
-  const replaceTexts = MutableHashMap.empty<NodeId, Array<Judged>>();
-  for (const write of judged) {
-    if (write.operation.op === "replace") {
-      const writes = O.getOrElse(MutableHashMap.get(replaceTexts, write.operation.nodeId), (): Array<Judged> => []);
-      writes.push(write);
-      MutableHashMap.set(replaceTexts, write.operation.nodeId, writes);
-    }
-  }
+// Whether every writer of a contested node whose text the export lacks has a
+// hold with the exported text as `ours` and its own text as `theirs`, and
+// exactly one writer's text was exported.
+const contestedHeld = ({ final, run }: Oracle, nodeId: NodeId, writes: ReadonlyArray<Judged>): boolean => {
+  const exported = MutableHashMap.get(final, nodeId);
+  const others = A.filter(writes, (write) => !O.exists(exported, (text) => O.contains(textOf(write.operation), text)));
+  const bothKept = A.every(others, (write) =>
+    A.some(
+      run.held,
+      (conflict) =>
+        conflict.nodeId === nodeId &&
+        conflict.author === write.author &&
+        O.isSome(conflict.ours) &&
+        sameText(conflict.ours, exported) &&
+        sameText(conflict.theirs, textOf(write.operation))
+    )
+  );
+  return others.length === writes.length - 1 && bothKept;
+};
+
+// Contested nodes: two writers, two different replace texts for one node.
+const contestedCounts = (oracle: Oracle) => {
   let contestedNodes = 0;
   let contestedHeldWithBothTexts = 0;
-  for (const [nodeId, writes] of replaceTexts) {
+  for (const [nodeId, writes] of byNode(oracle.judged, "replace")) {
     const texts = A.dedupe(A.getSomes(A.map(writes, (write) => textOf(write.operation))));
-    if (writes.length < 2 || texts.length < 2) {
-      continue;
+    if (writes.length >= 2 && texts.length >= 2) {
+      contestedNodes += 1;
+      contestedHeldWithBothTexts += oneIf(contestedHeld(oracle, nodeId, writes));
     }
-    contestedNodes += 1;
-    const exported = MutableHashMap.get(final, nodeId);
-    const others = A.filter(
-      writes,
-      (write) => !O.exists(exported, (text) => O.contains(textOf(write.operation), text))
-    );
-    const bothKept = A.every(others, (write) =>
-      A.some(
-        run.held,
-        (conflict) =>
-          conflict.nodeId === nodeId &&
-          conflict.author === write.author &&
-          O.isSome(conflict.ours) &&
-          sameText(conflict.ours, exported) &&
-          sameText(conflict.theirs, textOf(write.operation))
-      )
-    );
-    contestedHeldWithBothTexts += others.length === writes.length - 1 && bothKept ? 1 : 0;
   }
+  return { contestedNodes, contestedHeldWithBothTexts };
+};
 
-  // Status moves, node by node in admission order.
-  const statusMoves = MutableHashMap.empty<NodeId, Array<Judged>>();
-  for (const write of judged) {
-    if (write.operation.op === "setStatus") {
-      const moves = O.getOrElse(MutableHashMap.get(statusMoves, write.operation.nodeId), (): Array<Judged> => []);
-      moves.push(write);
-      MutableHashMap.set(statusMoves, write.operation.nodeId, moves);
-    }
-  }
+// Status moves, node by node in admission order.
+const statusCounts = ({ baseTexts, final, judged }: Oracle) => {
+  const statusMoves = byNode(judged, "setStatus");
   let statusWrong = 0;
   let backwardMoves = 0;
   let backwardRejected = 0;
@@ -438,42 +496,54 @@ export const verdictOf = (run: ReplayRun): RunVerdict => {
     backwardRejected += verdict.backwardRejected;
     statusHeld += verdict.heldMoves;
   }
-
-  const outcomes = A.flatMap(run.writes, (write) => write.outcomes);
-  const strata = A.dedupe(A.map(run.writes, (write) => write.cluster.stratum));
   return {
     backwardMoves,
     backwardRejected,
-    contestedHeldWithBothTexts,
-    contestedNodes,
-    deleteVersusEditHeld: A.filter(outcomes, (outcome) => A.contains(codesOf(outcome), "deleteVersusEdit")).length,
-    exportMatchesDisk: A.every(run.disk, ([path, text]) =>
-      O.exists(
-        A.findFirst(run.exported.files, (file) => file.path === path),
-        (file) =>
-          A.join(
-            A.map(file.nodes, (node) => node.anchor.anchor.quote),
-            ""
-          ) === text
-      )
-    ),
-    heldOperations: A.filter(outcomes, isHeld).length,
-    landedOperations: A.filter(outcomes, (outcome) => outcome.outcome === "landed").length,
-    losses,
-    operations: judged.length,
-    resolverNeededWrites: A.filter(run.writes, (write) => A.some(write.outcomes, isHeld)).length,
     statusConflicts: MutableHashMap.size(statusMoves),
     statusHeld,
     statusWrong,
+  };
+};
+
+// Whether every file on disk holds exactly the joined texts of its exported nodes.
+const exportMatchesDisk = (run: ReplayRun): boolean =>
+  A.every(run.disk, ([path, text]) =>
+    O.exists(
+      A.findFirst(run.exported.files, (file) => file.path === path),
+      (file) =>
+        A.join(
+          A.map(file.nodes, (node) => node.anchor.anchor.quote),
+          ""
+        ) === text
+    )
+  );
+
+const holdsAny = (write: AdmittedFixtureWrite): boolean => A.some(write.outcomes, isHeld);
+
+// Per stratum, in first-admission order: its writes and those with a held operation.
+const writesByStratum = (run: ReplayRun): RunVerdict["writesByStratum"] =>
+  A.map(A.dedupe(A.map(run.writes, (write) => write.cluster.stratum)), (stratum) => {
+    const inStratum = A.filter(run.writes, (write) => write.cluster.stratum === stratum);
+    return [stratum, inStratum.length, A.filter(inStratum, holdsAny).length] as const;
+  });
+
+/** Checks one run with the oracle. */
+export const verdictOf = (run: ReplayRun): RunVerdict => {
+  const oracle: Oracle = { baseTexts: textsOf(run.base), final: textsOf(run.exported), judged: judgedOf(run), run };
+  const written = writtenTexts(oracle.judged);
+  const outcomes = A.flatMap(run.writes, (write) => write.outcomes);
+  return {
+    ...contestedCounts(oracle),
+    ...statusCounts(oracle),
+    deleteVersusEditHeld: A.filter(outcomes, (outcome) => A.contains(codesOf(outcome), "deleteVersusEdit")).length,
+    exportMatchesDisk: exportMatchesDisk(run),
+    heldOperations: A.filter(outcomes, isHeld).length,
+    landedOperations: A.filter(outcomes, (outcome) => outcome.outcome === "landed").length,
+    losses: [...writerLosses(oracle), ...baseNodeLosses(oracle, written), ...exportedLosses(oracle, written)],
+    operations: oracle.judged.length,
+    resolverNeededWrites: A.filter(run.writes, holdsAny).length,
     structuralFloorWrites: A.filter(run.writes, (write) => A.some(write.outcomes, structural)).length,
     writes: run.writes.length,
-    writesByStratum: A.map(strata, (stratum) => {
-      const inStratum = A.filter(run.writes, (write) => write.cluster.stratum === stratum);
-      return [
-        stratum,
-        inStratum.length,
-        A.filter(inStratum, (write) => A.some(write.outcomes, isHeld)).length,
-      ] as const;
-    }),
+    writesByStratum: writesByStratum(run),
   };
 };

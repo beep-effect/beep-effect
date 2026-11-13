@@ -50,7 +50,7 @@ import type { BaseExport, NodeKind, NodeOperation, PartitionNode } from "@beep/a
 import type { SampleFile } from "./fixtures/goals-markdown-sample.ts";
 
 /** The generator seed. */
-export const fixtureSeed = 20261112;
+const fixtureSeed = 20261112;
 
 const pending = StatusValue.make("pending");
 const inProgress = StatusValue.make("in-progress");
@@ -63,7 +63,7 @@ export const phaseStatus = StatusLifecycle.make({ field: "status", order: [pendi
 export const fixtureStatusFields = StatusFields.make({ lifecycles: [phaseStatus] });
 
 /** A status token outside the lifecycle. */
-export const outsideLifecycle = StatusValue.make("blocked");
+const outsideLifecycle = StatusValue.make("blocked");
 
 /**
  * The declared strata, in generation order, with the number of clusters each
@@ -130,7 +130,7 @@ const isStatusRow = (node: PartitionNode): boolean =>
  * the first files of at most 16,000 characters holding at least three table
  * rows and three list items, up to fourteen files in all.
  */
-export const fixtureFiles = (files: ReadonlyArray<SampleFile>): ReadonlyArray<SampleFile> => {
+const fixtureFiles = (files: ReadonlyArray<SampleFile>): ReadonlyArray<SampleFile> => {
   const sorted = A.sort(
     files,
     Order.mapInput(Order.String, (file: SampleFile) => file.path)
@@ -353,23 +353,20 @@ const positionOf = (value: StatusValue): number =>
 
 const last = phaseStatus.order.length - 1;
 
-const statusDraft = (plan: FilePlan, index: number, stratum: Stratum): O.Option<Draft> =>
-  O.flatMap(
-    O.filter(nodeAt(plan, index), isStatusRow),
-    (node): O.Option<Draft> =>
-      O.flatMap(statusValueIn(phaseStatus, node.text), (from) => {
-        const at = positionOf(from);
-        const targets: O.Option<readonly [StatusValue, StatusValue]> =
-          stratum === "statusForward" && at === 0
-            ? O.some([inProgress, complete])
-            : stratum === "statusEqual" && at < last
-              ? O.some([phaseStatus.order[at + 1] ?? complete, phaseStatus.order[at + 1] ?? complete])
-              : stratum === "statusBackward" && at >= 1
-                ? O.some([pending, at < last ? complete : inProgress])
-                : stratum === "statusOutsideLifecycle" && at < last
-                  ? O.some([phaseStatus.order[at + 1] ?? complete, outsideLifecycle])
-                  : O.none();
-        return O.flatMap(targets, ([toA, toB]) =>
+// The lifecycle value right after the one at `at`.
+const nextOf = (at: number): StatusValue => phaseStatus.order[at + 1] ?? complete;
+
+// The two writers' target values for a status cell at lifecycle position `at`,
+// when the stratum can move a cell from there.
+type StatusTargets = (at: number) => O.Option<readonly [StatusValue, StatusValue]>;
+
+// Two writers moving the status cell at `index` to the values `targetsOf` picks.
+const statusDraft =
+  (targetsOf: StatusTargets) =>
+  (plan: FilePlan, index: number): O.Option<Draft> =>
+    O.flatMap(O.filter(nodeAt(plan, index), isStatusRow), (node) =>
+      O.flatMap(statusValueIn(phaseStatus, node.text), (from) =>
+        O.flatMap(targetsOf(positionOf(from)), ([toA, toB]) =>
           O.map(
             O.all([statusMoveWriter(plan, index, "a", toA), statusMoveWriter(plan, index, "b", toB)]),
             (writers) => ({
@@ -378,106 +375,125 @@ const statusDraft = (plan: FilePlan, index: number, stratum: Stratum): O.Option<
               expect: [movesStatus(index, toA), movesStatus(index, toB)],
             })
           )
-        );
-      })
-  );
+        )
+      )
+    );
 
 // The draft of one stratum's cluster around the content node at `index`.
-const draftOf = (plan: FilePlan, index: number, stratum: Stratum): O.Option<Draft> => {
-  switch (stratum) {
-    case "reviseVersusRevise":
-      return reviseDraft(plan, index, ["a", "b"]);
-    case "identicalText":
-      return O.map(reviseDraft(plan, index, ["same"]), (draft) => ({
-        touched: draft.touched,
-        writers: [
-          { tag: "a", texts: draft.writers[0]?.texts ?? [] },
-          { tag: "b", texts: draft.writers[0]?.texts ?? [] },
-        ],
-        expect: [replaces(index), replaces(index)],
-      }));
-    case "reviseVersusRetire":
-      return O.flatMap(reviseDraft(plan, index, ["a"]), (draft) =>
-        O.map(retireWriter(plan, index, "b"), (retire) => ({
-          touched: [index - 1, index + 1] as const,
-          writers: [...draft.writers, retire],
-          expect: [replaces(index), retires(index)],
-        }))
-      );
-    case "insertUnderRetiredAnchor":
-    case "contestedChainHead": {
-      const count = stratum === "contestedChainHead" ? 2 : 1;
-      return O.map(O.all([retireWriter(plan, index, "a"), insertWriter(plan, index, "b", count)]), (writers) => ({
-        touched: [index - 1, index + 2] as const,
-        writers,
-        expect: [retires(index), insertsAfter([index, index + 1], count)],
-        cross: anchoredOnRetired,
-      }));
-    }
-    case "insertsAfterOnePredecessor":
-      return O.map(O.all([insertWriter(plan, index, "a", 1), insertWriter(plan, index, "b", 1)]), (writers) => ({
-        touched: [index, index + 2] as const,
-        writers,
-        expect: [insertsAfter([index, index + 1], 1), insertsAfter([index, index + 1], 1)],
-      }));
-    case "differentNodesOneFile":
-      return O.flatMap(
-        O.all([
-          reviseDraft(plan, index, ["a"]),
-          reviseDraft(plan, index + 4, ["b"]),
-          reviseDraft(plan, index + 8, ["c"]),
-        ]),
-        (drafts) =>
-          A.every(drafts, (draft) => draft.writers.length === 1)
-            ? O.some({
-                touched: [index, index + 8] as const,
-                writers: A.flatMap(drafts, (draft) => draft.writers),
-                expect: [replaces(index), replaces(index + 4), replaces(index + 8)],
-              })
-            : O.none()
-      );
-    case "tableRowNeighbours":
-    case "listItemNeighbours": {
-      const kind: NodeKind = stratum === "tableRowNeighbours" ? "tableRow" : "listItem";
-      return O.exists(nodeAt(plan, index), (node) => node.kind === kind) &&
-        O.exists(nodeAt(plan, index + 2), (node) => node.kind === kind) &&
-        isGap(plan, index + 1)
-        ? O.flatMap(O.all([reviseDraft(plan, index, ["a"]), reviseDraft(plan, index + 2, ["b"])]), ([first, second]) =>
-            O.some({
-              touched: [index, index + 2] as const,
-              writers: [...first.writers, ...second.writers],
-              expect: [replaces(index), replaces(index + 2)],
-            })
-          )
-        : O.none();
-    }
-    case "gapNodeEdits":
-      return O.exists(nodeAt(plan, index + 1), (gap) => gap.kind === "gap" && gap.text === "\n\n")
-        ? O.map(reviseDraft(plan, index + 2, ["b"]), (draft) => ({
-            touched: [index + 1, index + 2] as const,
-            writers: [{ tag: "a", texts: replaced(plan.texts, index + 1, "\n\n\n") }, ...draft.writers],
-            expect: [replaces(index + 1), replaces(index + 2)],
-          }))
-        : O.none();
-    case "mixedCleanAndContested":
-      return O.flatMap(nodeAt(plan, index), (node) =>
-        O.flatMap(O.all([revisedText(node, "a"), revisedText(node, "b")]), ([textA, textB]) =>
-          O.flatMap(nodeAt(plan, index + 4), (clean) =>
-            O.map(revisedText(clean, "a-clean"), (cleanText) => ({
-              touched: [index, index + 4] as const,
-              writers: [
-                { tag: "a", texts: replaced(replaced(plan.texts, index, textA), index + 4, cleanText) },
-                { tag: "b", texts: replaced(plan.texts, index, textB) },
-              ],
-              expect: [replacesBoth(index, index + 4), replaces(index)],
-            }))
-          )
+type DraftBuilder = (plan: FilePlan, index: number) => O.Option<Draft>;
+
+const identicalTextDraft: DraftBuilder = (plan, index) =>
+  O.map(reviseDraft(plan, index, ["same"]), (draft) => ({
+    touched: draft.touched,
+    writers: [
+      { tag: "a", texts: draft.writers[0]?.texts ?? [] },
+      { tag: "b", texts: draft.writers[0]?.texts ?? [] },
+    ],
+    expect: [replaces(index), replaces(index)],
+  }));
+
+const reviseVersusRetireDraft: DraftBuilder = (plan, index) =>
+  O.flatMap(reviseDraft(plan, index, ["a"]), (draft) =>
+    O.map(retireWriter(plan, index, "b"), (retire) => ({
+      touched: [index - 1, index + 1] as const,
+      writers: [...draft.writers, retire],
+      expect: [replaces(index), retires(index)],
+    }))
+  );
+
+// One writer retires the node at `index`, the other inserts `count` nodes after it.
+const retiredAnchorDraft =
+  (count: number): DraftBuilder =>
+  (plan, index) =>
+    O.map(O.all([retireWriter(plan, index, "a"), insertWriter(plan, index, "b", count)]), (writers) => ({
+      touched: [index - 1, index + 2] as const,
+      writers,
+      expect: [retires(index), insertsAfter([index, index + 1], count)],
+      cross: anchoredOnRetired,
+    }));
+
+const insertsAfterOnePredecessorDraft: DraftBuilder = (plan, index) =>
+  O.map(O.all([insertWriter(plan, index, "a", 1), insertWriter(plan, index, "b", 1)]), (writers) => ({
+    touched: [index, index + 2] as const,
+    writers,
+    expect: [insertsAfter([index, index + 1], 1), insertsAfter([index, index + 1], 1)],
+  }));
+
+const differentNodesOneFileDraft: DraftBuilder = (plan, index) =>
+  O.flatMap(
+    O.all([reviseDraft(plan, index, ["a"]), reviseDraft(plan, index + 4, ["b"]), reviseDraft(plan, index + 8, ["c"])]),
+    (drafts) =>
+      A.every(drafts, (draft) => draft.writers.length === 1)
+        ? O.some({
+            touched: [index, index + 8] as const,
+            writers: A.flatMap(drafts, (draft) => draft.writers),
+            expect: [replaces(index), replaces(index + 4), replaces(index + 8)],
+          })
+        : O.none()
+  );
+
+// Two writers revising two nodes of `kind` that one gap separates.
+const neighboursDraft =
+  (kind: NodeKind): DraftBuilder =>
+  (plan, index) =>
+    O.exists(nodeAt(plan, index), (node) => node.kind === kind) &&
+    O.exists(nodeAt(plan, index + 2), (node) => node.kind === kind) &&
+    isGap(plan, index + 1)
+      ? O.flatMap(O.all([reviseDraft(plan, index, ["a"]), reviseDraft(plan, index + 2, ["b"])]), ([first, second]) =>
+          O.some({
+            touched: [index, index + 2] as const,
+            writers: [...first.writers, ...second.writers],
+            expect: [replaces(index), replaces(index + 2)],
+          })
         )
-      );
-    default:
-      return statusDraft(plan, index, stratum);
-  }
+      : O.none();
+
+const gapNodeEditsDraft: DraftBuilder = (plan, index) =>
+  O.exists(nodeAt(plan, index + 1), (gap) => gap.kind === "gap" && gap.text === "\n\n")
+    ? O.map(reviseDraft(plan, index + 2, ["b"]), (draft) => ({
+        touched: [index + 1, index + 2] as const,
+        writers: [{ tag: "a", texts: replaced(plan.texts, index + 1, "\n\n\n") }, ...draft.writers],
+        expect: [replaces(index + 1), replaces(index + 2)],
+      }))
+    : O.none();
+
+const mixedCleanAndContestedDraft: DraftBuilder = (plan, index) =>
+  O.flatMap(nodeAt(plan, index), (node) =>
+    O.flatMap(O.all([revisedText(node, "a"), revisedText(node, "b")]), ([textA, textB]) =>
+      O.flatMap(nodeAt(plan, index + 4), (clean) =>
+        O.map(revisedText(clean, "a-clean"), (cleanText) => ({
+          touched: [index, index + 4] as const,
+          writers: [
+            { tag: "a", texts: replaced(replaced(plan.texts, index, textA), index + 4, cleanText) },
+            { tag: "b", texts: replaced(plan.texts, index, textB) },
+          ],
+          expect: [replacesBoth(index, index + 4), replaces(index)],
+        }))
+      )
+    )
+  );
+
+// The draft builder of every stratum.
+const draftBuilders: { readonly [K in Stratum]: DraftBuilder } = {
+  reviseVersusRevise: (plan, index) => reviseDraft(plan, index, ["a", "b"]),
+  identicalText: identicalTextDraft,
+  reviseVersusRetire: reviseVersusRetireDraft,
+  insertUnderRetiredAnchor: retiredAnchorDraft(1),
+  insertsAfterOnePredecessor: insertsAfterOnePredecessorDraft,
+  contestedChainHead: retiredAnchorDraft(2),
+  differentNodesOneFile: differentNodesOneFileDraft,
+  tableRowNeighbours: neighboursDraft("tableRow"),
+  listItemNeighbours: neighboursDraft("listItem"),
+  gapNodeEdits: gapNodeEditsDraft,
+  statusForward: statusDraft((at) => (at === 0 ? O.some([inProgress, complete]) : O.none())),
+  statusEqual: statusDraft((at) => (at < last ? O.some([nextOf(at), nextOf(at)]) : O.none())),
+  statusBackward: statusDraft((at) => (at >= 1 ? O.some([pending, at < last ? complete : inProgress]) : O.none())),
+  statusOutsideLifecycle: statusDraft((at) => (at < last ? O.some([nextOf(at), outsideLifecycle]) : O.none())),
+  mixedCleanAndContested: mixedCleanAndContestedDraft,
 };
+
+const draftOf = (plan: FilePlan, index: number, stratum: Stratum): O.Option<Draft> =>
+  draftBuilders[stratum](plan, index);
 
 // --- Generation -------------------------------------------------------------------
 
@@ -519,19 +535,22 @@ const capturesAsDeclared = (base: BaseExport, plan: FilePlan, draft: Draft): boo
   });
 };
 
-/**
- * Builds the fixture over the sample files. Throws when a stratum runs out of
- * candidate places, so the composition can never silently shrink.
- */
-export const buildAdversarialFixture = (sample: ReadonlyArray<SampleFile>): AdversarialFixture => {
-  const files = fixtureFiles(sample);
-  const base = seededBaseOf(fixtureSeed)(A.map(files, (file) => [file.path, file.text] as const));
-  const plans: ReadonlyArray<FilePlan> = A.map(files, (file) => {
+// One candidate place: a content node of one file.
+interface Candidate {
+  readonly index: number;
+  readonly plan: FilePlan;
+}
+
+const plansOf = (files: ReadonlyArray<SampleFile>): ReadonlyArray<FilePlan> =>
+  A.map(files, (file) => {
     const nodes = partition(file.text).nodes;
     return { path: file.path, nodes, texts: A.map(nodes, (node) => node.text) };
   });
+
+// Every content node of every file, in the order the fixture seed ranks them.
+const candidatesOf = (plans: ReadonlyArray<FilePlan>): ReadonlyArray<Candidate> => {
   const random = seededRandom(fixtureSeed);
-  const candidates = A.map(
+  return A.map(
     A.sort(
       A.flatMap(plans, (plan) =>
         A.flatMap(plan.nodes, (node, index) => (node.kind === "gap" ? [] : [{ plan, index, rank: random() }]))
@@ -540,50 +559,87 @@ export const buildAdversarialFixture = (sample: ReadonlyArray<SampleFile>): Adve
     ),
     ({ plan, index }) => ({ plan, index })
   );
-  const reserved = MutableHashMap.empty<string, MutableHashSet.MutableHashSet<number>>();
-  const isFree = (path: string, from: number, to: number): boolean =>
-    O.match(MutableHashMap.get(reserved, path), {
-      onNone: () => true,
-      onSome: (taken) => A.every(A.range(from, to), (at) => !MutableHashSet.has(taken, at)),
-    });
-  const reserve = (path: string, from: number, to: number): void => {
-    const taken = O.getOrElse(MutableHashMap.get(reserved, path), () => MutableHashSet.empty<number>());
-    for (const at of A.range(from, to)) {
-      MutableHashSet.add(taken, at);
+};
+
+// The node indices clusters already own, by file path.
+type Reserved = MutableHashMap.MutableHashMap<string, MutableHashSet.MutableHashSet<number>>;
+
+const isFree = (reserved: Reserved, path: string, from: number, to: number): boolean =>
+  O.match(MutableHashMap.get(reserved, path), {
+    onNone: () => true,
+    onSome: (taken) => A.every(A.range(from, to), (at) => !MutableHashSet.has(taken, at)),
+  });
+
+const reserve = (reserved: Reserved, path: string, from: number, to: number): void => {
+  const taken = O.getOrElse(MutableHashMap.get(reserved, path), () => MutableHashSet.empty<number>());
+  for (const at of A.range(from, to)) {
+    MutableHashSet.add(taken, at);
+  }
+  MutableHashMap.set(reserved, path, taken);
+};
+
+// What one stratum's placement reads and the clusters it adds to.
+interface Placement {
+  readonly base: BaseExport;
+  readonly candidates: ReadonlyArray<Candidate>;
+  readonly clusters: Array<FixtureCluster>;
+  readonly reserved: Reserved;
+}
+
+// The draft a candidate yields for `stratum`, when its window (with margins)
+// is free and every writer captures as the stratum declares.
+const placedAt = (placement: Placement, { plan, index }: Candidate, stratum: Stratum): O.Option<Draft> =>
+  O.filter(draftOf(plan, index, stratum), (draft) => {
+    const [lo, hi] = draft.touched;
+    return (
+      isFree(placement.reserved, plan.path, lo - margin, hi + margin) && capturesAsDeclared(placement.base, plan, draft)
+    );
+  });
+
+const clusterOf = (id: number, plan: FilePlan, stratum: Stratum, draft: Draft): FixtureCluster => ({
+  id,
+  path: plan.path,
+  stratum,
+  writers: A.map(draft.writers, (writer) => ({
+    author: authorOf(id, writer.tag),
+    edit: FileEdit.cases.edited.make({ path: plan.path, text: A.join(writer.texts, "") }),
+  })),
+});
+
+// Takes the first `wanted` free places of `stratum` in candidate order.
+const placeStratum = (placement: Placement, stratum: Stratum, wanted: number): void => {
+  let taken = 0;
+  for (const candidate of placement.candidates) {
+    if (taken === wanted) {
+      break;
     }
-    MutableHashMap.set(reserved, path, taken);
-  };
-  const clusters: Array<FixtureCluster> = [];
-  for (const { stratum, clusters: wanted } of strata) {
-    let taken = 0;
-    for (const { plan, index } of candidates) {
-      if (taken === wanted) {
-        break;
-      }
-      const draft = draftOf(plan, index, stratum);
-      if (O.isNone(draft)) {
-        continue;
-      }
+    const draft = placedAt(placement, candidate, stratum);
+    if (O.isSome(draft)) {
       const [lo, hi] = draft.value.touched;
-      if (!isFree(plan.path, lo - margin, hi + margin) || !capturesAsDeclared(base, plan, draft.value)) {
-        continue;
-      }
-      reserve(plan.path, lo - margin, hi + margin);
-      const id = clusters.length;
-      clusters.push({
-        id,
-        path: plan.path,
-        stratum,
-        writers: A.map(draft.value.writers, (writer) => ({
-          author: authorOf(id, writer.tag),
-          edit: FileEdit.cases.edited.make({ path: plan.path, text: A.join(writer.texts, "") }),
-        })),
-      });
+      reserve(placement.reserved, candidate.plan.path, lo - margin, hi + margin);
+      placement.clusters.push(clusterOf(placement.clusters.length, candidate.plan, stratum, draft.value));
       taken += 1;
     }
-    if (taken < wanted) {
-      throw new Error(`The fixture found ${taken} of ${wanted} places for stratum ${stratum}.`);
-    }
   }
-  return { clusters, files };
+  if (taken < wanted) {
+    throw new Error(`The fixture found ${taken} of ${wanted} places for stratum ${stratum}.`);
+  }
+};
+
+/**
+ * Builds the fixture over the sample files. Throws when a stratum runs out of
+ * candidate places, so the composition can never silently shrink.
+ */
+export const buildAdversarialFixture = (sample: ReadonlyArray<SampleFile>): AdversarialFixture => {
+  const files = fixtureFiles(sample);
+  const placement: Placement = {
+    base: seededBaseOf(fixtureSeed)(A.map(files, (file) => [file.path, file.text] as const)),
+    candidates: candidatesOf(plansOf(files)),
+    clusters: [],
+    reserved: MutableHashMap.empty(),
+  };
+  for (const { stratum, clusters: wanted } of strata) {
+    placeStratum(placement, stratum, wanted);
+  }
+  return { clusters: placement.clusters, files };
 };

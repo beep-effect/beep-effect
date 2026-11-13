@@ -37,7 +37,7 @@ import type { LazyArg } from "effect/Function";
 export const author = LineageId.make("operation-capture-test");
 
 /** SHA-256 of the empty string: the digest the synthetic bases record. */
-export const emptyDigest = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+const emptyDigest = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 
 const extractor = SourceTextExtractor.make({ name: "operation-capture-test", version: "1" });
 
@@ -117,7 +117,7 @@ export const seededBaseOf =
 export const baseOf = seededBaseOf(1);
 
 /** The operations of a captured batch; none when nothing changed. */
-export const operationsOf = (batch: O.Option<OperationBatch>): ReadonlyArray<NodeOperation> =>
+const operationsOf = (batch: O.Option<OperationBatch>): ReadonlyArray<NodeOperation> =>
   O.match(batch, { onNone: () => [], onSome: (value) => value.operations });
 
 const roundTripOf = (base: BaseExport, edits: ReadonlyArray<FileEdit>) => {
@@ -193,20 +193,8 @@ export const costOf: {
   (nodes: ReadonlyArray<BaseNode>, editedText: string): CaptureCost;
 } = dual(2, costOfAlignment);
 
-/** A deterministic pseudo-random sequence (mulberry32). */
-export const seededRandom = (seed: number) => {
-  let state = seed >>> 0;
-  return (): number => {
-    state = (state + 0x6d2b79f5) >>> 0;
-    let value = state;
-    value = Math.imul(value ^ (value >>> 15), value | 1);
-    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
-    return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
-  };
-};
-
 /** Markdown-like pieces the generators insert and splice. */
-export const fragments: ReadonlyArray<string> = [
+const fragments: ReadonlyArray<string> = [
   "# Heading",
   "Setext\n===",
   "plain text",
@@ -228,10 +216,10 @@ export const fragments: ReadonlyArray<string> = [
 ];
 
 /** Separators the generators put after a fragment. */
-export const separators: ReadonlyArray<string> = ["\n", "\n\n", "\r\n", "", " ", "\r\n\r\n"];
+const separators: ReadonlyArray<string> = ["\n", "\n\n", "\r\n", "", " ", "\r\n\r\n"];
 
 /** Short strings a raw character mutation splices in. */
-export const splices: ReadonlyArray<string> = ["", "\n", "\r\n", "\n\n", "- ", "|", "#", "x", "﻿", "`", " "];
+const splices: ReadonlyArray<string> = ["", "\n", "\r\n", "\n\n", "- ", "|", "#", "x", "﻿", "`", " "];
 
 const pick = <X>(random: LazyArg<number>, values: ReadonlyArray<X>): X =>
   A.getUnsafe(values, Math.floor(random() * values.length));
@@ -245,6 +233,68 @@ const codePointBoundary = (text: string, index: number): number =>
 
 /** One generated piece of Markdown-like text. */
 export const piece = (random: LazyArg<number>): string => `${pick(random, fragments)}${pick(random, separators)}`;
+
+// One node-level edit: the node counts it applies to, and the edit itself,
+// made in place on the node texts.
+interface NodeEdit {
+  readonly applies: (length: number) => boolean;
+  readonly apply: (nodes: Array<string>, index: number, random: LazyArg<number>) => void;
+}
+
+// The node-level edits by choice: revise, insert, delete, move. Any other
+// choice, or an edit the node count rules out, splices raw characters.
+const nodeEdits: ReadonlyArray<NodeEdit> = [
+  {
+    applies: (length) => length > 0,
+    apply: (nodes, index, random) => {
+      nodes[index] = piece(random);
+    },
+  },
+  {
+    applies: () => true,
+    apply: (nodes, _index, random) => {
+      nodes.splice(at(random, nodes.length), 0, piece(random));
+    },
+  },
+  {
+    applies: (length) => length > 0,
+    apply: (nodes, index) => {
+      nodes.splice(index, 1);
+    },
+  },
+  {
+    applies: (length) => length > 1,
+    apply: (nodes, index, random) => {
+      const [moved = ""] = nodes.splice(index, 1);
+      nodes.splice(at(random, nodes.length), 0, moved);
+    },
+  },
+];
+
+// A raw character splice over the joined node texts, crossing node boundaries.
+const spliceCharacters = (nodes: ReadonlyArray<string>, random: LazyArg<number>): string => {
+  const joined = A.join(nodes, "");
+  const start = codePointBoundary(joined, at(random, joined.length));
+  const end = codePointBoundary(joined, Math.min(joined.length, start + Math.floor(random() * 4)));
+  return `${Str.slice(0, start)(joined)}${pick(random, splices)}${Str.slice(end)(joined)}`;
+};
+
+// One random edit of `current`.
+const mutateOnce = (current: string, random: LazyArg<number>): string => {
+  const nodes: Array<string> = A.map(partition(current).nodes, (node) => node.text);
+  const choice = Math.floor(random() * 5);
+  const index = Math.floor(random() * nodes.length);
+  return O.match(
+    O.filter(A.get(nodeEdits, choice), (edit) => edit.applies(nodes.length)),
+    {
+      onNone: () => spliceCharacters(nodes, random),
+      onSome: (edit) => {
+        edit.apply(nodes, index, random);
+        return A.join(nodes, "");
+      },
+    }
+  );
+};
 
 /**
  * Applies `count` random edits to `text`: node revisions, inserts, deletions
@@ -262,26 +312,7 @@ export const mutate = ({
 }): string => {
   let current = text;
   for (let round = 0; round < count; round += 1) {
-    const nodes: Array<string> = A.map(partition(current).nodes, (node) => node.text);
-    const choice = Math.floor(random() * 5);
-    const index = Math.floor(random() * nodes.length);
-    if (choice === 0 && nodes.length > 0) {
-      nodes[index] = piece(random);
-    } else if (choice === 1) {
-      nodes.splice(at(random, nodes.length), 0, piece(random));
-    } else if (choice === 2 && nodes.length > 0) {
-      nodes.splice(index, 1);
-    } else if (choice === 3 && nodes.length > 1) {
-      const [moved = ""] = nodes.splice(index, 1);
-      nodes.splice(at(random, nodes.length), 0, moved);
-    } else {
-      const joined = A.join(nodes, "");
-      const start = codePointBoundary(joined, at(random, joined.length));
-      const end = codePointBoundary(joined, Math.min(joined.length, start + Math.floor(random() * 4)));
-      current = `${Str.slice(0, start)(joined)}${pick(random, splices)}${Str.slice(end)(joined)}`;
-      continue;
-    }
-    current = A.join(nodes, "");
+    current = mutateOnce(current, random);
   }
   return current;
 };

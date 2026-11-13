@@ -18,17 +18,8 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { loadGoalsMarkdownSample } from "./fixtures/goals-markdown-sample.ts";
-import {
-  appliedAt,
-  author,
-  baseOf,
-  costOf,
-  mutate,
-  piece,
-  roundTrip,
-  seededRandom,
-} from "./OperationCapture.support.ts";
-import { report, TestPlatform } from "./projector-support.ts";
+import { appliedAt, author, baseOf, costOf, mutate, piece, roundTrip } from "./OperationCapture.support.ts";
+import { report, seededRandom, TestPlatform } from "./projector-support.ts";
 import type { CaptureCost } from "./OperationCapture.support.ts";
 
 const path = "notes/generated.md";
