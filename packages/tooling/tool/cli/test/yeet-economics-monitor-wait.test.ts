@@ -355,9 +355,9 @@ describe("yeet economics monitor wait", () => {
       A.map(ADJUDICATED, (entry) => [entry.attempt.attemptId, economicsAttemptClass(entry.attempt)]),
       A.map(ADJUDICATED, (entry) => [entry.attempt.attemptId, entry.attemptClass])
     );
-    for (const entry of ADJUDICATED) {
-      expect([entry.recorded, "monitor"]).toContain(entry.attemptClass);
-    }
+    expect(
+      A.filter(ADJUDICATED, (entry) => entry.attemptClass !== entry.recorded && entry.attemptClass !== "monitor")
+    ).toEqual([]);
   });
 
   it("keeps the classes a partition and the red mixes equal to the red count", () => {
@@ -412,11 +412,15 @@ describe("yeet economics monitor wait", () => {
         ["repair", 1, 1, 0, 0, 1, O.some(MINUTE), O.some(MINUTE)],
       ]
     );
-    for (const row of report.modeDurations) {
-      const members = A.filter(ADJUDICATED, (entry) => O.contains(entry.attempt.mode, row.mode));
-      const green = A.countBy(members, (entry) => entry.attemptClass === "green");
-      expect(row.redAttempts + row.terminatedAttempts + row.monitorAttempts + green).toBe(row.attempts);
-    }
+    const greenOf = (mode: string): number =>
+      A.countBy(ADJUDICATED, (entry) => O.contains(entry.attempt.mode, mode) && entry.attemptClass === "green");
+    deepStrictEqual(
+      A.map(
+        report.modeDurations,
+        (row) => row.redAttempts + row.terminatedAttempts + row.monitorAttempts + greenOf(row.mode)
+      ),
+      A.map(report.modeDurations, (row) => row.attempts)
+    );
   });
 
   it("reports the waits as their own row and keeps their lanes out of both populations", () => {
@@ -465,14 +469,13 @@ describe("yeet economics monitor wait", () => {
       uncut.rightCensoredMonitorAttempts,
     ]).toEqual([2, 3, 0, 1]);
     const text = renderYeetEconomicsReport(report);
-    for (const line of [
+    const lines = [
       "  classes (terminations and monitor-decided attempts apart from reds): red 7, monitor 5, green 2, terminated 1;",
       "  publish: 5 attempt(s), 2 red, 0 terminated, 2 monitor-decided; 5 measured, p50 3.2m, p95 5.0m",
       "monitor waits (hosted CI; outside local work and the lane populations): 7 attempt(s), 4 ended failed; wall p50 20.0m, p95 40.0m, total 2.42h; modes: publish 4, monitor 3",
       "first failure (M2): 7 red attempt(s) (1 terminated and 5 monitor-decided, counted apart),",
       "right 2 streak(s) (3 red, 0 terminated and 1 monitor-decided attempt(s),",
-    ]) {
-      expect(Str.includes(line)(text)).toBe(true);
-    }
+    ];
+    expect(A.filter(lines, (line) => !Str.includes(line)(text))).toEqual([]);
   });
 });

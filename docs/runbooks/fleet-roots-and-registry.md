@@ -85,8 +85,8 @@ projects directory.
   passes the origin rule through its `.git` file, which names the clone. In
   derived mode (no `roots.json`, no `BEEP_FLEET_ROOTS`) T3 lanes are not
   counted. A checkout that two roots reach, such as a lane under a symlinked
-  alias of the T3 root, or a nested lane listed under its clone and under a
-  `.claude/worktrees` root, is read once.
+  alias of the T3 root, or a nested lane listed under its clone and again under
+  a root at the clone's Claude Code worktrees directory, is read once.
 - Writing the list switches economics from the derived root to configured
   mode, which admits only checkouts whose clone shares the invoking clone's
   origin. Two kinds of checkout that the derived root counted then leave the
@@ -94,11 +94,11 @@ projects directory.
   `beep-effect-private`), and an orphaned lane whose clone was deleted, since
   its `.git` file names a clone that no longer exists.
 - Removal does not know the T3 root. `beep worktree remove`, `beep yeet sweep
-  --retire` and `beep worktree reap` remove only lanes under
-  `<clone>-worktrees/` or `<clone>/.claude/worktrees/`; for a T3 lane the
-  removal service refuses ("Removal target must be an exact registered
-  worktree beneath the managed or nested worktrees root") before it exports,
-  fences or deletes anything. T3 removes its own lanes with `git worktree
+  --retire` and `beep worktree reap` remove only lanes in the clone's sibling
+  `-worktrees` directory or in the worktrees Claude Code nests inside the
+  clone. For a T3 lane the removal service refuses ("Removal target must be an
+  exact registered worktree beneath the managed or nested worktrees root")
+  before it exports, fences or deletes anything. T3 removes its own lanes with `git worktree
   remove`, which deletes the git-ignored `.beep/yeet/runs` without filing the
   journals in the attempt-journal store, so economics counts a T3 lane's
   attempts only while the lane exists.
