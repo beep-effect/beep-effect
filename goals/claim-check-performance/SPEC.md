@@ -356,6 +356,18 @@ Lane fix/redact-ten-minute-certainty-home-path
 
 Reverse: Re-capture the sealed artifacts with ~-relative paths, update their digest manifests, and delete the matching rows from privateHomePathExemptions
 
+### Paused by operator ruling (finish board, 2026-11-13): Gains are slow and incremental, and it is far from its gates with nothing concrete next, so it should not hold an active slot, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
+
+Triage rationale: Gains are slow and incremental, and it is far from its gates with nothing concrete next, so it should not hold an active slot.
+
+No lane is working on it. Resume with `bun run beep goals set-status claim-check-performance active` when it is picked up.
+
+Lane chore/finish-board-pause-b1
+
+Reverse: goals set-status claim-check-performance active when it is picked up
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

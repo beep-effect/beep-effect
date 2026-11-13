@@ -3,19 +3,17 @@
   "exploration": {
     "slug": "skillopt-corpus-headroom",
     "title": "SkillOpt Corpus Headroom",
-    "status": "active",
-    "stage": "decompose",
-    "openQuestions": [
-      "goals/skill-effect-probe reported Insensitive: the archived completion contract is unreachable for toolless runs. Its fired rate (17 of 24, 0.71, pilot evidence) fired the activation gate. Decompose skill-activation-probe, and decide whether the gated skill-lane-probe (same tooling, a lane-level primary fixed before any run) is worth a goal."
-    ],
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": ["goals/skill-effect-probe"],
+      "goals": ["goals/skill-effect-probe", "goals/skill-lane-probe"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-10-01",
     "updated": "2026-11-13",
-    "retentionReason": "Reopened at decompose on 2026-11-13: the activation gate fired in goals/skill-effect-probe; MAP.md holds the outcome and the gated candidates."
+    "retentionReason": "Graduated into goals/skill-effect-probe (2026-11-10) and goals/skill-lane-probe (2026-11-13). MAP.md holds the first probe's outcome and three gated candidates as re-entry points."
   }
 }

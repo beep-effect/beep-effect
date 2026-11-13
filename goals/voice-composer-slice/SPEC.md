@@ -86,6 +86,23 @@ Rationale and rejected options remain in the exploration rather than being copie
 | 2026-07-14 | Manual, interruptible speaker button on completed agent turns; no auto/streaming read-aloud. | [`DECISIONS.md` — read-aloud-ux](../../explorations/local-first-voice/DECISIONS.md) |
 | 2026-07-14 | Five-day cap and quantitative load, latency, teardown, egress, and seam thresholds. | [`DECISIONS.md` — p0-thresholds-and-timebox](../../explorations/local-first-voice/DECISIONS.md) |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug voice-composer-slice`; add a `kind: decision` file there, never edit this block._
+
+### Paused by operator ruling (finish board, 2026-11-13): A nice-to-have UX feature, unstarted, that depends on a spike; it does not serve the current customer-first priorities, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
+
+Triage rationale: A nice-to-have UX feature, unstarted, that depends on a spike; it does not serve the current customer-first priorities.
+
+No lane is working on it. Resume with `bun run beep goals set-status voice-composer-slice active` when it is picked up.
+
+Lane chore/finish-board-pause-b1
+
+Reverse: goals set-status voice-composer-slice active when it is picked up
+
+<!-- beep:decisions:end -->
+
 ## Acceptance Criteria
 
 - [ ] P0 is completed within five engineering days and its evidence records a

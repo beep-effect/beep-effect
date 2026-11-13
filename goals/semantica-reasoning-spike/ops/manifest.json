@@ -4,13 +4,13 @@
     "id": "semantica-reasoning-spike",
     "packetId": "goal-packet/v1:e224fb3059f490505bb04385457c81dcb221bf50729c2143073dbffce6629720",
     "title": "Semantica Reasoning Spike",
-    "status": "active",
+    "status": "superseded",
     "created": "2026-09-03",
-    "updated": "2026-09-03",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/semantica-reasoning-spike",
-  "lifecycle": "active",
+  "lifecycle": "superseded",
   "mission": "Dated NET-NEW reasoning spike: P1 builds the G-entailment/rules fixture (g-entailment-rules/v1: twenty cases in five classes under the restricted EYE pins, no negation class), then P2-P4 run the adhd probes (proof-ledger kernel, budget-certified rules, evidence-graph workspace) as kill criteria ablated against EYE, with the v3 rete salvage entering at P3 once the archive is located; one S1 candidate (MAP v1.1 section R, R2).",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -102,5 +102,7 @@
     "Verification requires credentials, cost, destructive side effects, or policy approval not named in SPEC.md.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Scaffolded 2026-09-03 at the semantica-lab graduation ceremony (MAP v1.1 §R, R2); execution not started. P1 (the g-entailment-rules/v1 fixture, minus R-c) can begin now; R-c and P2-P4 wait for semantica-storage-inversion P-S1; P3 waits for the archived beep-effect-logos root to be located."
+  "statusNote": "Closed (superseded) 2026-11-13 by operator ruling (finish board): Unstarted spike that depends on another unstarted packet. Re-open with `bun run beep goals set-status semantica-reasoning-spike active` and re-graduate the next slice. Before the ruling: Scaffolded 2026-09-03 at the semantica-lab graduation ceremony (MAP v1.1 §R, R2); execution not started. P1 (the g-entailment-rules/v1 fixture, minus R-c) can begin now; R-c and P2-P4 wait for semantica-storage-inversion P-S1; P3 waits for the archived beep-effect-logos root to be located.",
+  "supersededNote": "Closed by operator ruling (finish board, 2026-11-13) without meeting its completion gate; see goals/semantica-reasoning-spike/decisions/2026-11-13-finish-board-ruling-close.md.",
+  "retentionReason": "Closed by operator ruling (finish board, 2026-11-13) with a re-open path: the full packet stays on main so `bun run beep goals set-status semantica-reasoning-spike active` can resume it or re-graduate the next slice without restoring from the archive."
 }

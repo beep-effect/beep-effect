@@ -3,13 +3,13 @@
   "initiative": {
     "id": "agent-outcome-experiments",
     "title": "Useful agent outcomes and Phoenix experiments",
-    "status": "paused",
+    "status": "superseded",
     "created": "2026-10-27",
-    "updated": "2026-10-27",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/agent-outcome-experiments",
-  "lifecycle": "paused",
+  "lifecycle": "superseded",
   "mission": "Turn qualified telemetry into understandable task outcomes, calibrated annotations and repeatable experiments that improve harness experience and accepted work.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -115,12 +115,14 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Authored but not started; operator requested implementation-packet preparation, not execution.",
+  "statusNote": "Closed (superseded) 2026-11-13 by operator ruling (finish board): It was never started, has no next step and depends on telemetry work that is not in flight; the only recent touch was the bulk research-intake routing sweep. Re-open with `bun run beep goals set-status agent-outcome-experiments active` and re-graduate the next slice. Before the ruling: Authored but not started; operator requested implementation-packet preparation, not execution.",
   "resumeConditions": [
     "Explicit launch of this packet after dependency proof; refresh live state before changes."
   ],
   "dependencies": [
     "goals/agent-observability-foundation",
     "goals/harness-telemetry-enrollment"
-  ]
+  ],
+  "supersededNote": "Closed by operator ruling (finish board, 2026-11-13) without meeting its completion gate; see goals/agent-outcome-experiments/decisions/2026-11-13-finish-board-ruling-close.md.",
+  "retentionReason": "Closed by operator ruling (finish board, 2026-11-13) with a re-open path: the full packet stays on main so `bun run beep goals set-status agent-outcome-experiments active` can resume it or re-graduate the next slice without restoring from the archive."
 }

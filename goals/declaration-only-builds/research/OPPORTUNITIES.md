@@ -60,3 +60,50 @@ machine or session identifiers.
 - **Would have prevented it:** `package-verify` running its test step through
   the admission wrapper, so it waits for a token instead of starting on a
   saturated machine.
+
+## 2026-11-12 — The check-census gate had been red on `main` for weeks
+
+- **Doing:** running this packet's verification matrix
+  (`bun run beep quality check-census`).
+- **Evidence:** `FAIL compiler changed: baseline measured with
+  7.0.2+effect-tsgo.0.59.0, this run used 7.0.2+effect-tsgo.0.68.0`. The
+  baseline dates from #2288; no hosted lane runs the gate, so later compiler
+  bumps never re-measured it. Three packages had also grown past the noise
+  floor unseen (`@beep/repo-cli` by 1,092,314 instantiations).
+- **Would have prevented it:** the census gate in a hosted lane, or a step in
+  the compiler-bump runbook that fails the bump PR until the baseline carries
+  the new compiler stamp.
+
+## 2026-11-12 — "Declarations only in the base tsconfig" breaks every overlay
+
+- **Doing:** planning PR 2 as the SPEC worded it: set the emit option in
+  `tsconfig.base.json`.
+- **Evidence:** `tsrs -p tsconfig.check.json --emitDeclarationOnly` prints
+  TS5069. 404 tracked overlays turn `declaration` and `composite` off and
+  would all fail. The flag went onto the generated build command instead.
+- **Would have prevented it:** one compile of a check overlay with the option
+  set, during the exploration that wrote the SPEC line.
+
+## 2026-11-12 — The scripts policy could not retire a key or a value
+
+- **Doing:** removing the `babel` script key and the Babel build value from
+  169 manifests through `bun run beep lint package-scripts --write`.
+- **Evidence:** the policy only seeds a missing implementation value and never
+  touches extra keys, so `--write` changed nothing. A retirement rule
+  (retired key names, retired values with their replacement) had to be added
+  first.
+- **Would have prevented it:** nothing cheaper; recorded so the next generated
+  script migration starts from the retirement tables.
+
+## 2026-11-13 — Drafts merged while the owner's final-check was still running
+
+- **Doing:** running `bun run beep yeet final-check` on #3178 and #3192 before
+  calling either final.
+- **Evidence:** both drafts were flipped ready and merged by the gate 20
+  minutes after they opened, on green hosted checks plus one inherited red.
+  The local final-check for #3178 was 45 minutes into its coverage gate at
+  load average 60 to 110 and had one 90-second test timeout to show for it.
+  The same happened to #3110 on 2026-11-10.
+- **Would have prevented it:** nothing was lost here, since hosted CI was the
+  proof. The waste is the local run: a final-check that stops itself when its
+  PR merges, or an owner signal the gate reads before flipping a draft.

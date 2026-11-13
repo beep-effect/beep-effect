@@ -4,13 +4,13 @@
     "id": "claim-check-performance",
     "packetId": "goal-packet/v1:68b07801068fb5da2893f634809961475b3587061eb72f38872eaf61f8e5a3cd",
     "title": "Claim Checker Measurable Usefulness",
-    "status": "active",
+    "status": "paused",
     "created": "2026-11-03",
-    "updated": "2026-11-03",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/claim-check-performance",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "Deliver useful deterministic claim checking with frozen precision, recall, coverage and structural-recovery gates while preserving all original evidence.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -198,5 +198,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Active: latest unchanged538 replay 43 strict,537 parsed,453 abstained; all original37 and prior41 retained,43 now protected. Two owner-context gains in one family. All1213 original artifacts preserved via1209original paths+3runnerarchives+1generatedmetadataarchive. Accepted-main dependency/retired-source/verifier baselines separately reviewed and archived; priorresults and failedcaptures intact. Fixed24family/567claim/572context source-only independent assessments underway; no new structural/truth admission. Broadclause candidate unmeasured; all usefulness/delivery gates required."
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): Gains are slow and incremental, and it is far from its gates with nothing concrete next, so it should not hold an active slot. Resume with `bun run beep goals set-status claim-check-performance active` when it is picked up. Before the ruling: Active: latest unchanged538 replay 43 strict,537 parsed,453 abstained; all original37 and prior41 retained,43 now protected. Two owner-context gains in one family. All1213 original artifacts preserved via1209original paths+3runnerarchives+1generatedmetadataarchive. Accepted-main dependency/retired-source/verifier baselines separately reviewed and archived; priorresults and failedcaptures intact. Fixed24family/567claim/572context source-only independent assessments underway; no new structural/truth admission. Broadclause candidate unmeasured; all usefulness/delivery gates required."
 }

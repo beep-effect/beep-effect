@@ -2,7 +2,11 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `superseded`
+
+**Closed by operator ruling (finish board, 2026-11-13).** It has not started since it graduated on 10-05, and it depends on fleet-root-registry. The fleet layout has since moved on (T3 fleet hosts). The packet is `superseded` without meeting its completion gate. To resume, run `bun run beep goals set-status ops-seat-timers active` and re-graduate the next slice. Decision: [`decisions/2026-11-13-finish-board-ruling-close.md`](./decisions/2026-11-13-finish-board-ruling-close.md).
+
+It is the only provider of the `fleet/ops-seat` capability, which goals/legacy-drain and goals/ai-metrics-raw-retention require. Both are paused by the same ruling; whichever resumes first re-opens or re-graduates the ops-seat work.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

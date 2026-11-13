@@ -1938,7 +1938,6 @@ type PackageScriptsKind = Exclude<ScriptsPackageKind, "lab">;
 
 const packageScripts = (kind: PackageScriptsKind, withStoriesTsconfig: boolean) => ({
   ...scaffoldPackageScripts(kind, ["lint:fix", "test:integration", "docgen"]),
-  babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
   "beep:check:tests": "tsrs -p tsconfig.test.json --noEmit",
   ...(withStoriesTsconfig
     ? {

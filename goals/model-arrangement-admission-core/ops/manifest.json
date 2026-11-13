@@ -3,13 +3,13 @@
   "initiative": {
     "id": "model-arrangement-admission-core",
     "title": "Model Arrangement Admission Core",
-    "status": "paused",
+    "status": "superseded",
     "created": "2026-08-17",
-    "updated": "2026-08-17",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/model-arrangement-admission-core",
-  "lifecycle": "paused",
+  "lifecycle": "superseded",
   "mission": "Content-addressed model-arrangement identity, qualification evidence, and five-status immutable dispositions with a two-axis as-of eligibility query — proven by admitting the repo's live chat arrangement as a restricted fixture.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -17,7 +17,7 @@
     "exploration": "explorations/model-artifact-admission",
     "graduated": "2026-08-17"
   },
-  "statusNote": "Paused at scaffold (queue goal): authored-but-not-started; no free program-lane slot at graduation. Resume when a lane slot frees or the roadmap pulls it.",
+  "statusNote": "Closed (superseded) 2026-11-13 by operator ruling (finish board): It has been parked at scaffold for nearly three months with no pull from the roadmap; close it by ruling and re-graduate it if it becomes needed. Re-open with `bun run beep goals set-status model-arrangement-admission-core active` and re-graduate the next slice. Before the ruling: Paused at scaffold (queue goal): authored-but-not-started; no free program-lane slot at graduation. Resume when a lane slot frees or the roadmap pulls it.",
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
@@ -76,5 +76,7 @@
     "The component set cannot close without digesting volatile runtime state.",
     "Eligibility cannot derive from immutable records alone.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval."
-  ]
+  ],
+  "supersededNote": "Closed by operator ruling (finish board, 2026-11-13) without meeting its completion gate; see goals/model-arrangement-admission-core/decisions/2026-11-13-finish-board-ruling-close.md.",
+  "retentionReason": "Closed by operator ruling (finish board, 2026-11-13) with a re-open path: the full packet stays on main so `bun run beep goals set-status model-arrangement-admission-core active` can resume it or re-graduate the next slice without restoring from the archive."
 }

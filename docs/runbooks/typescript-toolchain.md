@@ -40,7 +40,7 @@ prints `Version 7.1.0-beta+effect-tsgo.0.67.5 (tsrs 0.23.0-ts7.1.0-beta, …)`:
 node_modules/.bin/tsrs     -> tsrs/bin/tsrs  (tsrs's JS launcher; execs the patched @tsrs/<platform>/tsrs)
 ```
 
-`beep:build` (`tsrs -p tsconfig.json && bun run babel`), `beep:check`
+`beep:build` (`tsrs -p tsconfig.json --emitDeclarationOnly`), `beep:check`
 (`tsrs -p tsconfig.check.json`), `beep:check:tests`
 (`tsrs -p tsconfig.test.json --noEmit`), the root `check:configs` and infra's
 `tsrs -b tsconfig.json` all run the Rust compiler. Measured on 2026-10-26
@@ -69,6 +69,42 @@ compiler (3.7× faster at half the RSS) is in `goals/tsc-rs-gates`. Rules of the
   equality test covers the Go binary; `EffectTsgoEffectFnPolicy.test.ts`
   verifies that the tsrs identity matches both catalog pins, that both an Effect-only
   finding and a TypeScript error fail tsrs.
+
+### Declaration-only library builds
+
+The generated `beep:build` of the library, tool, ecosystem and infra kinds is
+`tsrs -p tsconfig.json --emitDeclarationOnly` (`DECLARATION_ONLY_BUILD_COMMAND`
+in `@beep/repo-cli-kit/package-scripts/PackageScripts.schemas`). It type-checks
+the package's `tsconfig.json` program, Effect rules included, and writes only
+`.d.ts` and `.d.ts.map` files plus `dist/tsconfig.tsbuildinfo`. No `*.js` or
+`*.js.map` lands in `dist`: workspace consumers, tests and binaries resolve
+`exports` to `src`, so the declaration is the only `dist` artifact anything
+reads, and declaration maps keep go-to-source working.
+
+- Babel is gone. The `annotate-pure-calls` pass and the `babel` script key
+  retired from every scripts block, and `@babel/cli`, `@babel/core` and
+  `babel-plugin-annotate-pure-calls` left the root catalog. The policy rejects a
+  `babel` script key (`retired-script`) and a `beep:build` that still holds a
+  retired value (`retired-impl`: the Babel build, a plain JavaScript-emitting
+  `tsrs -p tsconfig.json`, or the codegen-first Babel build);
+  `bun run beep lint package-scripts --write` repairs both.
+- The flag is on the command, not in `tsconfig.base.json`: the no-emit overlays
+  (`tsconfig.check.json`, `tsconfig.test.json`) extend the base config with
+  `declaration: false` and `composite: false`, and `emitDeclarationOnly` there
+  fails them with TS5069.
+- `publishConfig.exports` still points at `dist/*.js`. That is accepted while
+  every package is `private: true`; a publish lane designs its own output at
+  Release Lane activation.
+- A package with a real reader of its `dist/*.js` keeps JavaScript through a
+  named override: add a `JavaScriptBuildOverride` row (manifest path and the
+  reader) to `javaScriptBuildOverrides` in `PackageScripts.schemas.ts`, set the
+  package's `beep:build` to `tsrs -p tsconfig.json`, record the row in the owning
+  goal's Exception Ledger, and run `bun run beep lint package-scripts`.
+  `--write` leaves an overridden `beep:build` as written. The list is empty.
+- `packages/tooling/tool/cli/test/build-turbo-outputs.test.ts` holds the
+  contract: no generated or workspace `beep:build` runs Babel or emits
+  JavaScript outside an override, and a fixture built with the generated command
+  has a `.d.ts` and `.d.ts.map` for every `exports` subpath and no JavaScript.
 
 ### Updating tsrs and @effect/tsgo
 
@@ -250,9 +286,9 @@ and [persistent scheduling history](https://github.com/oxc-project/tsrs/blob/ed7
 ### Build and check program equivalence
 
 A library package type-checks its `src` twice per run: `beep:build`
-(`tsrs -p tsconfig.json`, emitting and incremental, build info in
-`dist/tsconfig.tsbuildinfo`) and `beep:check` (`tsrs -p tsconfig.check.json`,
-`noEmit`, not incremental). Before the build may serve as the check, the two
+(`tsrs -p tsconfig.json --emitDeclarationOnly`, declarations and incremental,
+build info in `dist/tsconfig.tsbuildinfo`) and `beep:check`
+(`tsrs -p tsconfig.check.json`, `noEmit`, not incremental). Before the build may serve as the check, the two
 programs must report the same diagnostics. The check census proves it:
 
 ```bash
@@ -263,12 +299,14 @@ bun run beep quality check-census --build-equivalence [--seed] \
 
 The mode runs alone: no overlay census, no baseline gate. It selects every
 workspace package with `tsconfig.json`, `tsconfig.check.json`, a `src`
-directory, and a `beep:build` that runs `tsrs -p tsconfig.json`; no-emit
-builds (`tsrs -p tsconfig.check.json`) and framework builds are skipped, and a
-selection with no package fails. Both programs run as
-`tsrs -p <config> --pretty false` from the package directory with the caller's
-environment, so `TSRS_FAST` reaches the compiler and the report records its
-literal value (or `unset`). Two runs are identical when their exit codes and
+directory, and a `beep:build` with an `&&` segment equal to the generated
+`tsrs -p tsconfig.json --emitDeclarationOnly`; no-emit builds
+(`tsrs -p tsconfig.check.json`), framework builds and JavaScript-emit overrides
+are skipped, and a selection with no package fails. The check runs as
+`tsrs -p tsconfig.check.json --pretty false` and the build as the generated
+invocation, `tsrs -p tsconfig.json --emitDeclarationOnly --pretty false`, both
+from the package directory with the caller's environment, so `TSRS_FAST`
+reaches the compiler and the report records its literal value (or `unset`). Two runs are identical when their exit codes and
 their sorted, trimmed, non-empty output lines are equal; a failing compiler is
 data, not a command failure.
 

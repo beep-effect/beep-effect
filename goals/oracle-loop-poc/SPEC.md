@@ -197,6 +197,23 @@ them and record each in the Decision Log.
 | 2026-10-28 | Inherits exploration D-01..D-12 (agent output is the center; lab app POC with third-party deps; harness loop first; `@beep/doc`; parse5 in the lab; profile 2 consumes the antecedent checker; .docx is in scope; model-path-first findings; separate domain graph; spokes prove their projections; Pandoc intake; lab named `oracle-loop`). | Graduation seeds the contract from the exploration's rulings. | Reopen the exploration at decompose and amend. |
 | 2026-11-05 | Operator authorized D-13 and the bounded question-binding fixture: unresolved obligations, occurrence-bound answers, replay, authority, and feedback-rule counterexamples. Original profiles and numeric gates remain required; implementation remains pending. | An edit can silence a finding without resolving its obligation, and a source location does not identify an approval. | Remove the extra fixture through a dated scope decision, retain receipts, and withdraw promotion claims depending on it; keep original document-loop criteria. |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug oracle-loop-poc`; add a `kind: decision` file there, never edit this block._
+
+### Paused by operator ruling (finish board, 2026-11-13): It is a proof of concept with no execution yet. It is worth doing later, but it should not be active, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
+
+Triage rationale: It is a proof of concept with no execution yet. It is worth doing later, but it should not be active.
+
+No lane is working on it. Resume with `bun run beep goals set-status oracle-loop-poc active` when it is picked up.
+
+Lane chore/finish-board-pause-b1
+
+Reverse: goals set-status oracle-loop-poc active when it is picked up
+
+<!-- beep:decisions:end -->
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |
