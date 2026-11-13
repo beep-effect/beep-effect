@@ -362,11 +362,12 @@ The earlier policy candidate's statically linked x86_64 musl release build passe
 all20 wire, one startup-boundary and12 native controls on the current workstation. Earlier glibc
 receipts retain their original source inputs. The portable build uses installed
 Rust1.96.0 plus cargo-zigbuild0.20.1/Zig0.14.1, pinned in
-`policy-build-requirements.txt`; its checksum and byte size are retained beside
-the source patch. `cargo-build-musl` reproduces that build inside admission.
-The requirements now lock the reviewed Linux x86_64 wheel hashes. Candidate
-CI installs with `--require-hashes` and records actual compiler/linker
-executable digests alongside their versions; other host wheels fail closed.
+`policy-build-tools.txt` (the Zig release tarball and the `cargo-zigbuild`
+wheel, each with its URL, sha256 and version). `cargo-build-musl` reproduces
+that build inside admission. Candidate CI reads every pin from that file,
+verifies each download's sha256 before extracting it, checks the installed
+versions, and records the compiler and linker executable digests next to their
+versions. Each candidate's build.json digests the pins file as a source input.
 Remote fleet execution, R2 grant negatives, producer attribution, rotation/rollback,
 deployment and representative observation remain required before activation.
 

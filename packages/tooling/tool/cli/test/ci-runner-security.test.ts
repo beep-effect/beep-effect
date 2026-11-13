@@ -2695,20 +2695,36 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(stepIndexByName(steps, hostTools)).toBeLessThan(stepIndexByName(steps, "Build pinned portable candidate"));
       const install = stepByName(steps, "Install pinned portable build tools");
       expect(install.run).not.toMatch(/python3|pip install|venv/u);
-      expect(install.run).toContain("https://ziglang.org/download/0.14.1/zig-x86_64-linux-0.14.1.tar.xz");
-      expect(install.run).toContain("24aeeec8af16c381934a6cd7d95c807a8cb2cf7df9fa40d359aa884195c4716c");
-      expect(install.run).toContain("cb9508149ee63d60e5110ff24b527ab25ed418a6329252aa4f86868197c55bf6");
+      // The pins file is the single source of the installed tools and is digested into build.json.
+      expect(install.run).toContain("pins=infra/r2-cache/policy-build-tools.txt");
+      for (const key of [
+        "ZIG_VERSION",
+        "ZIG_URL",
+        "ZIG_SHA256",
+        "CARGO_ZIGBUILD_VERSION",
+        "CARGO_ZIGBUILD_URL",
+        "CARGO_ZIGBUILD_SHA256",
+      ]) {
+        expect(install.run).toContain(`"$(pin ${key})"`);
+      }
+      expect(install.run).not.toMatch(/https:\/\/|[0-9a-f]{64}/u);
+      expect(install.run).toContain('fetch zig.tar.xz "$zig_url"');
+      expect(install.run).toContain('"$zig_sha256" "$tools/downloads/zig.tar.xz"');
+      expect(install.run).toContain('"$zigbuild_sha256" "$tools/downloads/cargo-zigbuild.whl"');
       expect(install.run).toContain("sha256sum --check --strict");
-      expect(install.run).toContain('test "$("$tools/bin/zig" version)" = "0.14.1"');
-      const buildRequirements = yield* fs.readFileString(`${root}/infra/r2-cache/policy-build-requirements.txt`);
-      expect(buildRequirements).toContain("cargo-zigbuild==0.20.1");
-      expect(buildRequirements).toContain(
-        "--hash=sha256:cb9508149ee63d60e5110ff24b527ab25ed418a6329252aa4f86868197c55bf6"
+      expect(install.run).toContain('test "$("$tools/bin/zig" version)" = "$zig_version"');
+      expect(install.run).toContain(
+        'test "$("$tools/bin/cargo-zigbuild" --version)" = "cargo-zigbuild $zigbuild_version"'
       );
-      expect(buildRequirements).toContain("ziglang==0.14.1");
-      expect(buildRequirements).toContain(
-        "--hash=sha256:6eb9d4d759b292c83810dbee2e9e8e3fbfbf01d864e6e9811bae711fd74e1c2f"
+      const buildTools = yield* fs.readFileString(`${root}/infra/r2-cache/policy-build-tools.txt`);
+      expect(buildTools).toContain("\nZIG_VERSION=0.14.1\n");
+      expect(buildTools).toContain("\nZIG_URL=https://ziglang.org/download/0.14.1/zig-x86_64-linux-0.14.1.tar.xz\n");
+      expect(buildTools).toContain("\nZIG_SHA256=24aeeec8af16c381934a6cd7d95c807a8cb2cf7df9fa40d359aa884195c4716c\n");
+      expect(buildTools).toContain("\nCARGO_ZIGBUILD_VERSION=0.20.1\n");
+      expect(buildTools).toContain(
+        "\nCARGO_ZIGBUILD_SHA256=cb9508149ee63d60e5110ff24b527ab25ed418a6329252aa4f86868197c55bf6\n"
       );
+      expect(buildTools).not.toMatch(/ziglang==|--hash=/u);
       const build = stepByName(steps, "Build pinned portable candidate");
       expect(build.run).toContain("infra/r2-cache/policy.sh cargo-build-musl");
       expect(build.run).toContain("infra/r2-cache/policy.sh prepare");

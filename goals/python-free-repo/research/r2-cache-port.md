@@ -1,4 +1,4 @@
-# infra/r2-cache Python port
+| `policy-build-requirements.txt` | `.github/workflows/heavy.yml` producer build, `ci-runner-security.test.ts` | Replaced by `policy-build-tools.txt`. heavy.yml no longer installs the `ziglang` wheel, so the file now pins what the producer step really installs: the Zig release tarball URL, sha256 and version, and the `cargo-zigbuild` wheel URL, sha256 and version. The install step reads every pin from it, and build.json digests it as a source input |# infra/r2-cache Python port
 
 Lane: `chore/python-free-repo`, 2026-11-13. The SPEC listed `infra/r2-cache` as a
 non-goal because `infra-alchemy-rebuild` deletes the directory at its P6. Parts are

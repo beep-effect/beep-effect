@@ -1,4 +1,8 @@
-name: Heavy
+name: Heavy          fetch zig.tar.xz "$zig_url"
+          fetch cargo-zigbuild.whl "$zigbuild_url"
+          printf '%s  %s\n' \
+            "$zig_sha256" "$tools/downloads/zig.tar.xz" \
+            "$zigbuild_sha256" "$tools/downloads/cargo-zigbuild.whl" |
 
 on:
   workflow_call:
@@ -594,25 +598,38 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # The official Zig 0.14.1 release tarball and the reviewed cargo-zigbuild
-          # 0.20.1 wheel (hash pinned in policy-build-requirements.txt), each verified
-          # against its sha256 before extraction. No Python interpreter is involved.
+          # The official Zig release tarball and the reviewed cargo-zigbuild wheel, each
+          # pinned (URL, sha256, version) in infra/r2-cache/policy-build-tools.txt and
+          # verified against its sha256 before extraction. No Python interpreter is involved.
+          pins=infra/r2-cache/policy-build-tools.txt
+          pin() {
+            local value
+            value="$(sed -n "s/^$1=//p" "$pins")"
+            [[ -n "$value" && "$value" != *$'\n'* ]] || { echo "::error::Missing or repeated pin $1 in $pins" >&2; exit 1; }
+            printf '%s' "$value"
+          }
+          zig_version="$(pin ZIG_VERSION)"
+          zig_url="$(pin ZIG_URL)"
+          zig_sha256="$(pin ZIG_SHA256)"
+          zigbuild_version="$(pin CARGO_ZIGBUILD_VERSION)"
+          zigbuild_url="$(pin CARGO_ZIGBUILD_URL)"
+          zigbuild_sha256="$(pin CARGO_ZIGBUILD_SHA256)"
           tools="$BEEP_CACHE_PRODUCER_BUILD_ROOT/tools"
           mkdir -p "$tools/bin" "$tools/zig" "$tools/downloads"
           fetch() { curl --fail --silent --show-error --location --retry 3 --max-time 300 --output "$tools/downloads/$1" "$2"; }
-          fetch zig.tar.xz https://ziglang.org/download/0.14.1/zig-x86_64-linux-0.14.1.tar.xz
-          fetch cargo-zigbuild.whl https://files.pythonhosted.org/packages/32/dd/ccec85254c252a784ed795639b51f7ea75dadbcba6b0a8c58b983ff20c96/cargo_zigbuild-0.20.1-py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.whl
+          fetch zig.tar.xz "$zig_url"
+          fetch cargo-zigbuild.whl "$zigbuild_url"
           printf '%s  %s\n' \
-            24aeeec8af16c381934a6cd7d95c807a8cb2cf7df9fa40d359aa884195c4716c "$tools/downloads/zig.tar.xz" \
-            cb9508149ee63d60e5110ff24b527ab25ed418a6329252aa4f86868197c55bf6 "$tools/downloads/cargo-zigbuild.whl" |
+            "$zig_sha256" "$tools/downloads/zig.tar.xz" \
+            "$zigbuild_sha256" "$tools/downloads/cargo-zigbuild.whl" |
             sha256sum --check --strict --quiet
           tar -xJf "$tools/downloads/zig.tar.xz" -C "$tools/zig" --strip-components=1 --no-same-owner
-          unzip -q -j "$tools/downloads/cargo-zigbuild.whl" cargo_zigbuild-0.20.1.data/scripts/cargo-zigbuild -d "$tools/bin"
+          unzip -q -j "$tools/downloads/cargo-zigbuild.whl" "cargo_zigbuild-$zigbuild_version.data/scripts/cargo-zigbuild" -d "$tools/bin"
           chmod 0755 "$tools/bin/cargo-zigbuild"
           ln -s "$tools/zig/zig" "$tools/bin/zig"
           rm -rf -- "$tools/downloads"
-          test "$("$tools/bin/zig" version)" = "0.14.1"
-          test "$("$tools/bin/cargo-zigbuild" --version)" = "cargo-zigbuild 0.20.1"
+          test "$("$tools/bin/zig" version)" = "$zig_version"
+          test "$("$tools/bin/cargo-zigbuild" --version)" = "cargo-zigbuild $zigbuild_version"
           printf '%s/tools/bin\n' "$BEEP_CACHE_PRODUCER_BUILD_ROOT" >> "$GITHUB_PATH"
 
       - name: Build pinned portable candidate
@@ -648,7 +665,7 @@ jobs:
           chmod 0500 "$binary"
           # Every value is captured by its own assignment, so any failing command fails the step.
           inputs='{}'
-          for input in infra/r2-cache/policy.sh infra/r2-cache/policy-build-requirements.txt \
+          for input in infra/r2-cache/policy.sh infra/r2-cache/policy-build-tools.txt \
             infra/r2-cache/patches/4.0.20-signed-policy.patch infra/r2-cache/patches/4.0.20-signed-policy.json; do
             digest="$(sha "$input")"
             inputs="$(jq -c --arg path "$input" --arg sha256 "$digest" '. + {($path): $sha256}' <<< "$inputs")"
@@ -833,7 +850,7 @@ jobs:
             '.binary == {file: "decay", bytes: $bytes, sha256: $sha256}' "$manifest" > /dev/null ||
             fail 'Candidate manifest does not describe the selected executable.'
           inputs='{}'
-          for input in infra/r2-cache/policy.sh infra/r2-cache/policy-build-requirements.txt \
+          for input in infra/r2-cache/policy.sh infra/r2-cache/policy-build-tools.txt \
             infra/r2-cache/patches/4.0.20-signed-policy.patch infra/r2-cache/patches/4.0.20-signed-policy.json; do
             input_sha256="$(sha "$input")"
             inputs="$(jq -c --arg path "$input" --arg sha256 "$input_sha256" '. + {($path): $sha256}' <<< "$inputs")"
