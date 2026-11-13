@@ -29,7 +29,7 @@ const failures = (ids: ReadonlyArray<string>) => ({
 export const handler = lambdaHandler({
   config: PoolRuntimeConfig,
   layer: (config) => fleetLive({ app: config.app, ghesApiUrl: config.ghesApiUrl }),
-  run: Effect.fn("scale-up.run")(function* (config, raw) {
+  run: Effect.fn("ScaleUpLambda.run")(function* (config, raw) {
     const event = yield* decodeEvent(raw);
     const batch = A.getSomes(
       A.map(

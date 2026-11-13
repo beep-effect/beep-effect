@@ -24,7 +24,7 @@ import type { AppParameterNames } from "../../SsmParameters.models.ts";
  *
  * @internal
  */
-export const loadRuntimeConfig = Effect.fn("loadRuntimeConfig")(function* <
+export const loadRuntimeConfig = Effect.fn("LambdaRuntime.loadRuntimeConfig")(function* <
   SC extends S.Codec<unknown, unknown, never, never>,
 >(schema: SC) {
   const raw = yield* Config.String(runtimeConfigEnvName).pipe(

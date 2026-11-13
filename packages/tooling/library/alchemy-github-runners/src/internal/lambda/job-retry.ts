@@ -23,7 +23,7 @@ const decodeMessage = S.decodeEffect(S.fromJsonString(ActionRequestMessage));
 export const handler = lambdaHandler({
   config: PoolRuntimeConfig,
   layer: (config) => fleetLive({ app: config.app, ghesApiUrl: config.ghesApiUrl }),
-  run: Effect.fn("job-retry.run")(function* (config, raw) {
+  run: Effect.fn("JobRetryLambda.run")(function* (config, raw) {
     const event = yield* decodeEvent(raw);
     yield* Effect.forEach(
       event.Records,

@@ -29,7 +29,7 @@ const decodeEvent = S.decodeUnknownEffect(FunctionUrlEvent);
 export const handler = lambdaHandler({
   config: WebhookRuntimeConfig,
   layer: () => Layer.mergeAll(awsLive, Layer.empty),
-  run: Effect.fn("webhook.run")(function* (config, raw) {
+  run: Effect.fn("WebhookLambda.run")(function* (config, raw) {
     const ssm = yield* SsmStore;
     const event = yield* decodeEvent(raw);
     const secret = yield* ssm.get(config.webhookSecretParameterName).pipe(

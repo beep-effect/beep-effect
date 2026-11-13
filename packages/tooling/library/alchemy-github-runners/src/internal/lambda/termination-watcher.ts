@@ -27,7 +27,7 @@ const decodeRetry = S.decodeEffect(S.fromJsonString(DeregisterRetryMessage));
 export const handler = lambdaHandler({
   config: TerminationWatcherRuntimeConfig,
   layer: (config) => fleetLive({ app: config.app, ghesApiUrl: config.ghesApiUrl }),
-  run: Effect.fn("termination-watcher.run")(function* (config, raw) {
+  run: Effect.fn("TerminationWatcherLambda.run")(function* (config, raw) {
     const sqs = decodeSqs(raw);
     if (sqs._tag === "Some") {
       yield* Effect.forEach(
