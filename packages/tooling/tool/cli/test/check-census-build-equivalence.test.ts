@@ -42,6 +42,8 @@ const encodeJsonString = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const FIXTURE_COMPILER = "Version 7.1.0-beta+fixture (tsrs fixture)";
 const EMITTING_BUILD = DECLARATION_ONLY_BUILD_COMMAND;
 const CHECK_CALL = "-p tsconfig.check.json --pretty false";
+const LIST_CALLS = ["-p tsconfig.check.json --listFilesOnly", "-p tsconfig.json --listFilesOnly"];
+const SERVED_CHECK = `${DECLARATION_ONLY_BUILD_COMMAND} && bun run beep:check:tests`;
 const BUILD_CALL = "-p tsconfig.json --emitDeclarationOnly --pretty false";
 const PROBE_LINES = [
   "src/__census_probe.ts(3,14): error TS2322: Type 'string' is not assignable to type 'number'.",
@@ -50,7 +52,10 @@ const PROBE_LINES = [
 const BUILD_ONLY_LINE = "src/index.ts(1,1): error TS6133: 'unused' is declared but its value is never read.";
 
 // A fake `tsrs`, run from the package directory as `tsrs -p <config> [flags]
-// --pretty false`. It appends its arguments to `calls.log` and copies a present
+// --pretty false`. A `--listFilesOnly` call is logged to `lists.log` and prints
+// the absolute `src/*.ts` paths; the check config also lists a file outside the
+// package and, with a `check-lists-scripts` marker, `scripts/generate.ts`.
+// Any other call appends its arguments to `calls.log` and copies a present
 // probe to `probe-seen.ts`; the build emits one `dist/<name>.d.ts` per source file; both
 // programs print the probe's two diagnostics, unsorted, with exit 2 while
 // `src/__census_probe.ts` exists. Markers in the package directory bend it:
@@ -67,6 +72,20 @@ if [ "$1" = "--version" ]; then
   exit 0
 fi
 config="$2"
+if [ "$3" = "--listFilesOnly" ]; then
+  echo "$*" >> lists.log
+  here=$(pwd -P)
+  for source in src/*.ts; do
+    echo "$here/$source"
+  done
+  if [ "$config" = "tsconfig.check.json" ]; then
+    echo "$(dirname "$here")/shared/upstream.d.ts"
+    if [ -f check-lists-scripts ]; then
+      echo "$here/scripts/generate.ts"
+    fi
+  fi
+  exit 0
+fi
 echo "$*" >> calls.log
 if [ -f src/__census_probe.ts ]; then
   cp src/__census_probe.ts probe-seen.ts
@@ -116,20 +135,25 @@ const writeFixtureJson = Effect.fn("CheckCensusBuildEquivalenceTest.writeFixture
   yield* writeFixtureFile(root, relativePath, `${yield* encodeJsonString(document)}\n`);
 });
 
-// One workspace package: a manifest with the given `beep:build`, a build
-// config, a check overlay unless `check` is false, and `src/index.ts` unless
-// `src` is false.
+// One workspace package: a manifest with the given `beep:build` (and
+// `beep:check` when given), a build config, a check overlay unless `check` is
+// false, and `src/index.ts` unless `src` is false.
 const writeFixturePackage = Effect.fn("CheckCensusBuildEquivalenceTest.writeFixturePackage")(function* (
   root: string,
   dir: string,
   name: string,
   build: O.Option<string>,
-  layout: { readonly check: boolean; readonly src: boolean } = { check: true, src: true }
+  layout: { readonly check: boolean; readonly src: boolean } = { check: true, src: true },
+  beepCheck: O.Option<string> = O.none()
 ) {
+  const checkScript = O.match(beepCheck, { onNone: () => ({}), onSome: (script) => ({ "beep:check": script }) });
   yield* writeFixtureJson(root, `packages/${dir}/package.json`, {
     name,
     private: true,
-    ...O.match(build, { onNone: () => ({}), onSome: (script) => ({ scripts: { "beep:build": script } }) }),
+    ...O.match(build, {
+      onNone: () => ({}),
+      onSome: (script) => ({ scripts: { "beep:build": script, ...checkScript } }),
+    }),
   });
   yield* writeFixtureJson(root, `packages/${dir}/tsconfig.json`, { include: ["src"] });
   if (layout.check) {
@@ -141,8 +165,13 @@ const writeFixturePackage = Effect.fn("CheckCensusBuildEquivalenceTest.writeFixt
 });
 
 // A workspace root with the fake compiler at `node_modules/.bin/tsrs` and one
-// emitting package, `@fixture/emitting` under `packages/emitting`.
-const writeFixtureRepo = Effect.fn("CheckCensusBuildEquivalenceTest.writeFixtureRepo")(function* (root: string) {
+// emitting package, `@fixture/emitting` under `packages/emitting`, whose
+// `beep:check` leads with the build when `served` is true.
+const writeFixtureRepo = Effect.fn("CheckCensusBuildEquivalenceTest.writeFixtureRepo")(function* (
+  root: string,
+  served?: boolean
+) {
+  const isServed = served === true;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const tsrsPath = path.join(root, "node_modules", ".bin", "tsrs");
@@ -155,11 +184,22 @@ const writeFixtureRepo = Effect.fn("CheckCensusBuildEquivalenceTest.writeFixture
   });
   yield* writeFixtureFile(root, "node_modules/.bin/tsrs", fakeCompiler);
   yield* fs.chmod(tsrsPath, 0o755);
-  yield* writeFixturePackage(root, "emitting", "@fixture/emitting", O.some(EMITTING_BUILD));
+  yield* writeFixturePackage(
+    root,
+    "emitting",
+    "@fixture/emitting",
+    O.some(EMITTING_BUILD),
+    { check: true, src: true },
+    isServed ? O.some(SERVED_CHECK) : O.none()
+  );
 
   return {
     tsrsPath,
-    pkg: BuildEquivalencePackage.make({ name: "@fixture/emitting", dir: path.join(root, "packages", "emitting") }),
+    pkg: BuildEquivalencePackage.make({
+      name: "@fixture/emitting",
+      dir: path.join(root, "packages", "emitting"),
+      servedByBuild: isServed,
+    }),
   };
 });
 
@@ -174,10 +214,13 @@ const withTsrsFast = (value: O.Option<string>) =>
     ConfigProvider.fromUnknown(O.match(value, { onNone: () => ({}), onSome: (tsrsFast) => ({ TSRS_FAST: tsrsFast }) }))
   );
 
-const readCalls = Effect.fn("CheckCensusBuildEquivalenceTest.readCalls")(function* (packageDir: string) {
+const readCalls = Effect.fn("CheckCensusBuildEquivalenceTest.readCalls")(function* (
+  packageDir: string,
+  logFile = "calls.log"
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const log = yield* fs.readFileString(path.join(packageDir, "calls.log"));
+  const log = yield* fs.readFileString(path.join(packageDir, logFile));
   return A.filter(Str.split(log, "\n"), Str.isNonEmpty);
 });
 
@@ -213,7 +256,12 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census build equivalence",
         root,
         "codegen",
         "@fixture/codegen",
-        O.some(`bun run codegen && ${DECLARATION_ONLY_BUILD_COMMAND}`)
+        O.some(`bun run codegen && ${DECLARATION_ONLY_BUILD_COMMAND}`),
+        { check: true, src: true },
+        // The build program with flags of its own still serves the check.
+        O.some(
+          `${DECLARATION_ONLY_BUILD_COMMAND} --checkerCostCache source.tsrs-cost-cache && bun run beep:check:tests`
+        )
       );
       // A JavaScript-emitting build (the retired default, or a reviewed override) runs another program.
       yield* writeFixturePackage(root, "javascript", "@fixture/javascript", O.some("tsrs -p tsconfig.json"));
@@ -229,7 +277,10 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census build equivalence",
       const all = yield* selectBuildEquivalencePackages(root, O.none());
       const filtered = yield* selectBuildEquivalencePackages(root, O.some("codegen"));
 
-      expect(A.map(all, (pkg) => pkg.name)).toStrictEqual(["@fixture/codegen", "@fixture/emitting"]);
+      expect(A.map(all, (pkg) => [pkg.name, pkg.servedByBuild])).toStrictEqual([
+        ["@fixture/codegen", true],
+        ["@fixture/emitting", false],
+      ]);
       expect(A.map(filtered, (pkg) => pkg.name)).toStrictEqual(["@fixture/codegen"]);
     })
   );
@@ -243,7 +294,7 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census build equivalence",
         BuildEquivalenceOptions.make({ repoRoot: root, tsrsPath, packages: [pkg], initialState: "restored" })
       ).pipe(withTsrsFast(O.some("1")));
 
-      expect(report.schemaVersion).toBe("check-census-build-equivalence/v1");
+      expect(report.schemaVersion).toBe("check-census-build-equivalence/v2");
       expect(report.compiler).toBe(FIXTURE_COMPILER);
       expect(report.tsrsFast).toBe("1");
       expect(report.mode).toBe("clean");
@@ -251,15 +302,28 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census build equivalence",
       const row = yield* firstRow(report);
       expect(A.every(row.comparisons, (comparison) => comparison.identical)).toBe(true);
       assertNone(row.probeEffective);
-      expect(report.summary).toMatchObject({ packages: 1, comparisons: 3, identical: 3, different: 0 });
+      // The file outside the package that only the check lists does not count.
+      expect(row.checkOnlyFiles).toStrictEqual([]);
+      expect(report.summary).toMatchObject({
+        packages: 1,
+        comparisons: 3,
+        identical: 3,
+        different: 0,
+        widerChecks: 0,
+        servedWiderChecks: 0,
+      });
       // The check is stateless and runs once; the cold build rebuilt the outDir.
       const calls = yield* readCalls(pkg.dir);
       expect(calls).toStrictEqual([CHECK_CALL, BUILD_CALL, BUILD_CALL, BUILD_CALL]);
+      const lists = yield* readCalls(pkg.dir, "lists.log");
+      expect(lists).toStrictEqual(LIST_CALLS);
       const entries = yield* distEntries(pkg.dir);
       expect(entries).toStrictEqual(["index.d.ts"]);
       const lines = renderBuildEquivalenceLines(report);
       expect(lines[1]).toContain("restored/clean=  warm/clean=  cold/clean=");
-      expect(lines[2]).toBe("summary: 1 package(s), 3 comparison(s), 3 identical, 0 different, 0 ineffective probe(s)");
+      expect(lines[2]).toBe(
+        "summary: 1 package(s), 3 comparison(s), 3 identical, 0 different, 0 ineffective probe(s), 0 wider check program(s) (0 of them served by the build)"
+      );
     })
   );
 
@@ -308,7 +372,7 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census build equivalence",
       const options = {
         repoRoot: root,
         tsrsPath: path.join(repoRoot, "node_modules", ".bin", "tsrs"),
-        packages: [BuildEquivalencePackage.make({ name: "@fixture/real", dir: packageDir })],
+        packages: [BuildEquivalencePackage.make({ name: "@fixture/real", dir: packageDir, servedByBuild: true })],
       };
 
       const clean = yield* runCheckCensusBuildEquivalence(BuildEquivalenceOptions.make(options));
@@ -327,6 +391,8 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census build equivalence",
       expect(seeded.summary).toMatchObject({ comparisons: 5, identical: 5, different: 0, ineffectiveProbes: 0 });
       const row = yield* firstRow(seeded);
       assertSome(row.probeEffective, true);
+      // The overlay adds no file, and the probe written after the listing never takes part.
+      expect(row.checkOnlyFiles).toStrictEqual([]);
       const [seededComparison] = row.comparisons;
       expect(seededComparison?.check.exitCode).not.toBe(0);
       expect(A.some(seededComparison?.check.lines ?? [], Str.includes("error TS2322"))).toBe(true);
@@ -341,6 +407,89 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census build equivalence",
       expect(entries).toContain("index.d.ts.map");
       expect(A.some(entries, Str.endsWith(".js"))).toBe(false);
       expect(A.some(entries, Str.startsWith("__census_probe"))).toBe(false);
+    })
+  );
+
+  it.effect("records the package files only the check program lists and passes when the check is not served", () =>
+    Effect.gen(function* () {
+      const root = yield* fixtureRoot;
+      const { tsrsPath, pkg } = yield* writeFixtureRepo(root);
+      yield* writeFixtureFile(pkg.dir, "check-lists-scripts", "");
+
+      const report = yield* runCheckCensusBuildEquivalence(
+        BuildEquivalenceOptions.make({ repoRoot: root, tsrsPath, packages: [pkg] })
+      );
+
+      const row = yield* firstRow(report);
+      expect(row.checkOnlyFiles).toStrictEqual(["scripts/generate.ts"]);
+      expect(row.servedByBuild).toBe(false);
+      expect(report.summary).toMatchObject({ widerChecks: 1, servedWiderChecks: 0, different: 0 });
+      const lines = renderBuildEquivalenceLines(report);
+      expect(lines[1]).toContain("+1 check-only file(s)");
+      expect(lines).toContain("+ @fixture/emitting: check program lists 1 package file(s) the build program does not");
+      expect(lines).toContain("  - scripts/generate.ts");
+    })
+  );
+
+  it.effect("fails the command when a check the build serves lists package files the build does not", () =>
+    Effect.gen(function* () {
+      const root = yield* temporaryWorkingDirectory;
+      const { pkg } = yield* writeFixtureRepo(root, true);
+      yield* writeFixtureFile(pkg.dir, "check-lists-scripts", "");
+      const mark = yield* logMark;
+
+      const exit = yield* Effect.exit(runCheckCensusCommand(["--build-equivalence"]));
+
+      expectReportedExit(exit);
+      const report = yield* readProjectFile(CHECK_CENSUS_BUILD_EQUIVALENCE_OUTPUT_PATH).pipe(
+        Effect.flatMap(decodeReport)
+      );
+      expect(report.summary).toMatchObject({ different: 0, widerChecks: 1, servedWiderChecks: 1 });
+      const row = yield* firstRow(report);
+      expect([row.servedByBuild, row.checkOnlyFiles]).toStrictEqual([true, ["scripts/generate.ts"]]);
+      const logged = yield* loggedSince(mark);
+      expect(logged).toContain(
+        "+ @fixture/emitting: check program lists 1 package file(s) the build program does not, but beep:check leads with the build"
+      );
+    })
+  );
+
+  it.effect("lists the files a wider real tsrs check program adds", () =>
+    Effect.gen(function* () {
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const root = yield* fixtureRoot;
+      const packageDir = path.join(root, "pkg");
+      const compilerOptions = {
+        target: "ES2022",
+        module: "ESNext",
+        moduleResolution: "Bundler",
+        strict: true,
+        skipLibCheck: true,
+        types: [],
+        outDir: "dist",
+        rootDir: "src",
+      };
+      yield* writeFixtureJson(packageDir, "tsconfig.json", { compilerOptions, include: ["src"] });
+      yield* writeFixtureJson(packageDir, "tsconfig.check.json", {
+        extends: "./tsconfig.json",
+        include: ["src", "scripts"],
+        compilerOptions: { noEmit: true, rootDir: "." },
+      });
+      yield* writeFixtureFile(packageDir, "src/index.ts", "export const value: number = 1;\n");
+      yield* writeFixtureFile(packageDir, "scripts/generate.ts", 'export const generated: string = "x";\n');
+
+      const report = yield* runCheckCensusBuildEquivalence(
+        BuildEquivalenceOptions.make({
+          repoRoot: root,
+          tsrsPath: path.join(repoRoot, "node_modules", ".bin", "tsrs"),
+          packages: [BuildEquivalencePackage.make({ name: "@fixture/wide", dir: packageDir, servedByBuild: false })],
+        })
+      );
+
+      const row = yield* firstRow(report);
+      expect(row.checkOnlyFiles).toStrictEqual(["scripts/generate.ts"]);
+      expect(report.summary).toMatchObject({ widerChecks: 1, servedWiderChecks: 0 });
     })
   );
 

@@ -46,10 +46,12 @@ the Yeet economics fold attributes refusals by failure kind as rows of the same 
 #3168 (decision `main-listing-unread`) and #3181 (coverage). Slice 5 (SCHE-09 slice 1) merged as #3227: rows the
 admission ring trims go to UTC day segments kept for 30 days, and `bun run beep quality scheduler history` folds
 them with the live journal (decision `sche-09-admission-archive`); the pressure fields are slice 5b. Slice 6
-(final-check attempt journals, MEAS-07) is in review as #3228. Slice 11 (ROUT-05 slice 2) is in review: failed
-jobs keep their steps in the v1 route corpus, rows take optional per-task outcomes, and aggregate, setup and
-harness reds are charged to no lane and reported as unknown by the replay (decision
-`step-classes-and-red-origins`). Still startable: the certainty-nightly workflow (slice 4). Wall-time, cache and
+(MEAS-07) merged as #3228: each `yeet final-check` run is a `final-check` attempt in the branch's Yeet attempt
+journal, carrying the receipt it wrote (decision `final-check-attempt-journal`). Slice 11 (ROUT-05 slice 2) is
+in review: failed jobs keep their steps in the v1 route corpus, rows take optional per-task outcomes, and
+aggregate, setup and harness reds are charged to no lane and reported as unknown by the replay (decision
+`step-classes-and-red-origins`); its producer of per-task outcome records is the new slice 11b. Slices 7
+(PERIL-11 slice 1) and 10 (MEAS-03) have started. Still startable: the certainty-nightly workflow (slice 4). Wall-time, cache and
 dist baselines taken before d8326d55935 (#3208, declaration-only builds) are not comparable with later readings
 (checkpoint `baselines-before-d8326d5593-not-comparable`).
 
@@ -73,7 +75,7 @@ dist baselines taken before d8326d55935 (#3208, declaration-only builds) are not
 - Merged: MEAS-01 slice 1 with MEAS-04 (#3118), "feat(ci): beep ci certainty head-level required-green and
   main-verdict report" (M, CLI only), with fixes #3144, #3168 and #3181; ROUT-05 slice 1 (partition job
   mapping, #3141); MEAS-02 (refusal attribution, slice 3, #3176); SCHE-09 slice 1 (admission archive, slice 5,
-  #3227). The nightly workflow is its own later PR.
+  #3227); MEAS-07 (final-check attempt journals, slice 6, #3228). The nightly workflow is its own later PR.
 - Order constraints: MEAS-02 lands before any WaveOrder re-seed in `local-proof-under-ten`; ROUT-05 lands
   before any census or cost ledger (MEAS-05) is trusted and before any route refinement replay; MEAS-07 lands
   before journal retention (PERIL-11); SCHE-09 is owned here and consumed by `local-proof-under-ten` (D23); nightly reads are budgeted against

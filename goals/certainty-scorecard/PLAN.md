@@ -111,13 +111,13 @@ Reverse: Delete this checkpoint and restore the slice-1 checkpoint as the latest
 
 Reverse: Delete this checkpoint; it records a fact about main and changes no behaviour.
 
-### Slice 5 merged; slice 11 (ROUT-05 slice 2) in review: failed jobs keep their steps, uncharged reds become unknown, 2026-11-13
+### Slices 5 and 6 merged; slice 11 (ROUT-05 slice 2) in review: failed jobs keep their steps, uncharged reds become unknown, 2026-11-13
 
-Slice 5 (SCHE-09 slice 1) merged as #3227. Slice 6 (MEAS-07, #3228) is in review. Slice 11 adds optional `steps` and `tasks` keys to the v1 route corpus row and an origin for every failed job's red; aggregate, setup and harness reds are charged to no lane and reported as unknown in the replay (decision `step-classes-and-red-origins`). The old 2026-09-01..10-30 receipt still replays to 242 skipped lane runs and 0 skipped reds. Next in this wave: PERIL-11 slice 1 (slice 7, after slice 6) and MEAS-03 (slice 10); the 2026-10-31..now capture (slice 12) starts once slice 11 merges, and is the first corpus whose failed jobs carry steps. New slice 11b, after 11, is the producer of per-task outcome records, a `check.yml` change the operator hand-merges; until it lands `tasks` stays absent.
+Slices 5 (SCHE-09 slice 1, #3227) and 6 (MEAS-07, #3228) merged; 11 is in review; 7 (PERIL-11 slice 1) and 10 (MEAS-03) started. Slice 11 adds optional `steps` and `tasks` keys to the v1 route corpus row and an origin for every failed job's red; aggregate, setup and harness reds are charged to no lane and reported as unknown in the replay (decision `step-classes-and-red-origins`). The old 2026-09-01..10-30 receipt still replays to 242 skipped lane runs and 0 skipped reds. The 2026-10-31..now capture (slice 12) starts once slice 11 merges, and is the first corpus whose failed jobs carry steps. New slice 11b, after 11, is the producer of per-task outcome records, a `check.yml` change the operator hand-merges; until it lands `tasks` stays absent.
 
 Lane feat/certainty-rout-05-step-outcomes
 
-Reverse: Delete this checkpoint so the slice-5 checkpoint is the latest PLAN status note, and revert the slice-11 commit.
+Reverse: Delete this checkpoint so the slice-6 checkpoint is the latest PLAN status note, and revert the slice-11 commits.
 
 ### Slice 2 merged; slice 3 (MEAS-02 with DEPS-10) attributes refusals by failure kind, 2026-11-13
 
@@ -134,5 +134,13 @@ Slice 3 (MEAS-02 with DEPS-10) merged as #3176. Slice 5 archives the rows the 20
 Lane feat/certainty-sche-09-admission-archive
 
 Reverse: Delete this checkpoint so the slice-3 checkpoint is the latest PLAN status note, and revert the slice-5 commit.
+
+### Slice 6 (MEAS-07) journals final-check attempts, 2026-11-13
+
+Slice 3 (MEAS-02 with DEPS-10) merged as #3176. Slice 6 writes every `yeet final-check` run past the dirty-tree refusal to the branch's Yeet attempt journal as a `final-check` attempt, with the receipt it wrote, through `packages/tooling/tool/cli/src/commands/Yeet/internal/FinalCheck.ts` and `AttemptJournal.ts` (decision `final-check-attempt-journal`). The admission gate is `packages/tooling/tool/cli/test/yeet-final-check-journal.test.ts`: unit tests for the terminal rows (pass, red gate, refusal, interrupt, defect, codec round-trip), a scratch-repository run that journals three attempts and folds them in economics, and the ready-gate regression fixture, in which `yeet ready` admits and refuses on the head receipt exactly as before while the journal holds an earlier passing receipt for the same head. Next startable once this merges: PERIL-11 slice 1 (slice 7, export attempt journals on retire) and MEAS-03 (slice 10, terminations apart from reds). Slices 4 and 5 run in their own lanes.
+
+Lane feat/certainty-meas-07-final-check-journal
+
+Reverse: Delete this checkpoint so the slice-3 checkpoint is the latest PLAN status note, and revert the slice-6 PR.
 
 <!-- beep:decisions:end -->

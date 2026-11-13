@@ -7,7 +7,7 @@ import { $RepoCliKitId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { dual } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -15,6 +15,7 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as Str from "effect/String";
 
 const $I = $RepoCliKitId.create("package-scripts/PackageScripts.schemas");
 /**
@@ -285,6 +286,38 @@ export const DECLARATION_ONLY_BUILD_FLAG = "--emitDeclarationOnly";
  */
 export const DECLARATION_ONLY_BUILD_COMMAND = `tsrs -p tsconfig.json ${DECLARATION_ONLY_BUILD_FLAG}`;
 
+const commandSegments = flow(Str.split("&&"), A.map(Str.trim));
+
+/**
+ * Whether a `beep:build` runs `DECLARATION_ONLY_BUILD_COMMAND` as one of its
+ * `&&` segments.
+ *
+ * **Details**
+ *
+ * A codegen step before the build still counts, as in
+ * `bun run codegen && tsrs -p tsconfig.json --emitDeclarationOnly`. A segment
+ * with extra flags does not,
+ * because it runs a different program. A declaration-only package's check
+ * leads with its build, and the root Turbo `check` task depends on the
+ * package's own `build`; every other package overrides that edge.
+ *
+ * **Example** (Classify three builds)
+ *
+ * ```ts
+ * import { isDeclarationOnlyBuild } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * console.log(isDeclarationOnlyBuild("bun run codegen && tsrs -p tsconfig.json --emitDeclarationOnly")) // true
+ * console.log(isDeclarationOnlyBuild("tsrs -p tsconfig.check.json")) // false
+ * console.log(isDeclarationOnlyBuild("vite build")) // false
+ * ```
+ *
+ * @param build - The manifest's `beep:build` command.
+ * @returns `true` when one `&&` segment is exactly the declaration-only build command.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isDeclarationOnlyBuild = (build: string): boolean =>
+  A.contains(commandSegments(build), DECLARATION_ONLY_BUILD_COMMAND);
+
 /**
  * Script keys the policy no longer generates; the gate rejects them and `--write` removes them.
  *
@@ -373,6 +406,100 @@ export class JavaScriptBuildOverride extends S.Opaque<JavaScriptBuildOverride, {
   S.Struct({ manifest: S.String, reason: S.NonEmptyString }).pipe(
     $I.annoteSchema("JavaScriptBuildOverride", {
       description: "Reviewed permission for one package's beep:build to keep emitting JavaScript.",
+    })
+  )
+) {}
+
+/**
+ * The no-emit own-source check program, `tsrs -p tsconfig.check.json`.
+ *
+ * **Details**
+ *
+ * It leads the generated `beep:check` of a package whose build only type-checks
+ * (apps, labs) and of a declaration-only package listed in
+ * `ownSourceCheckOverrides`. Every other declaration-only package leads its
+ * `beep:check` with `DECLARATION_ONLY_BUILD_COMMAND` instead, because its build
+ * type-checks the same program.
+ *
+ * **Example** (Recognise the no-emit check)
+ *
+ * ```ts
+ * import { OWN_SOURCE_CHECK_COMMAND } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * console.log(OWN_SOURCE_CHECK_COMMAND) // "tsrs -p tsconfig.check.json"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const OWN_SOURCE_CHECK_COMMAND = "tsrs -p tsconfig.check.json";
+
+/**
+ * Leading `beep:check` segment that a package's build program now serves, with
+ * the build command `--write` puts in its place.
+ *
+ * **Details**
+ *
+ * The rewrite applies to a package whose `beep:build` runs `replacement` as one
+ * of its `&&` segments, whose `beep:check` opens with `segment` (alone, or
+ * followed by compiler flags of its own), and whose manifest has no
+ * `ownSourceCheckOverrides` row. Only `segment` is replaced: its flags follow
+ * the replacement in the same order, and later segments stay as written.
+ *
+ * **Example** (Serve the own-source check from the build)
+ *
+ * ```ts
+ * import { RetiredCheckSegment } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * const row = RetiredCheckSegment.make({
+ *   segment: "tsrs -p tsconfig.check.json",
+ *   replacement: "tsrs -p tsconfig.json --emitDeclarationOnly",
+ * })
+ * console.log(row.replacement) // "tsrs -p tsconfig.json --emitDeclarationOnly"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RetiredCheckSegment extends S.Opaque<RetiredCheckSegment, { readonly brand: unique symbol }>()(
+  S.Struct({ segment: S.NonEmptyString, replacement: S.NonEmptyString }).pipe(
+    $I.annoteSchema("RetiredCheckSegment", {
+      description:
+        "Leading beep:check segment a package's build program now serves, with the build command --write puts in its place.",
+    })
+  )
+) {}
+
+/**
+ * Reviewed permission for one declaration-only package's `beep:check` to keep
+ * the no-emit own-source check.
+ *
+ * **Details**
+ *
+ * A declaration-only package's check leads with its build program, which
+ * type-checks the files `tsconfig.json` includes. A package whose
+ * `tsconfig.check.json` checks more than that (for example it adds `scripts` to
+ * `include`) keeps `tsrs -p tsconfig.check.json` through a row naming its
+ * manifest and what the check program adds. Remove the row when the two
+ * programs list the same files again.
+ *
+ * **Example** (Keep the own-source check for one package)
+ *
+ * ```ts
+ * import { OwnSourceCheckOverride } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * const row = OwnSourceCheckOverride.make({
+ *   manifest: "packages/drivers/example/package.json",
+ *   reason: "tsconfig.check.json adds scripts to include",
+ * })
+ * console.log(row.manifest) // "packages/drivers/example/package.json"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class OwnSourceCheckOverride extends S.Opaque<OwnSourceCheckOverride, { readonly brand: unique symbol }>()(
+  S.Struct({ manifest: S.String, reason: S.NonEmptyString }).pipe(
+    $I.annoteSchema("OwnSourceCheckOverride", {
+      description:
+        "Reviewed permission for one declaration-only package's beep:check to keep the no-emit own-source check.",
     })
   )
 ) {}
@@ -602,7 +729,7 @@ export const PackageScriptsDrift = S.TaggedUnion({
   "wrong-binding": { name: TaskScriptName, expected: S.String, actual: S.String },
   "missing-impl": { name: ImplScriptName },
   placeholder: { name: S.tag("codegen"), actual: S.String },
-  "derivation-conflict": { name: S.Literals(["doctest", "build"]), reason: S.String },
+  "derivation-conflict": { name: S.Literals(["doctest", "build", "check"]), reason: S.String },
   "checker-engine": { name: CheckerScriptName, engine: NonCanonicalChecker, actual: S.String },
   "retired-impl": { name: ImplScriptName, expected: S.String, actual: S.String },
   "retired-script": { name: RetiredScriptName, actual: S.String },
@@ -1702,6 +1829,147 @@ export const retiredImplScripts: ReadonlyArray<RetiredImplScript> = A.flatMap(Ma
  */
 export const javaScriptBuildOverrides: ReadonlyArray<JavaScriptBuildOverride> = [];
 
+/**
+ * Leading `beep:check` segments the build program serves; `--write` replaces
+ * each with the build command a package's `beep:build` runs.
+ *
+ * **Details**
+ *
+ * One row: a declaration-only package's check no longer runs the separate
+ * no-emit program `tsrs -p tsconfig.check.json` first. It runs
+ * `DECLARATION_ONLY_BUILD_COMMAND` instead, which Turbo's own-build edge has
+ * just run, so a warm unchanged package pays a no-op incremental build, and a
+ * direct `bun run check` in the package still type-checks every source file.
+ * Flags on the first segment carry over, so `@beep/repo-cli` keeps its
+ * `--checkerCostCache source.tsrs-cost-cache` after the build command.
+ *
+ * **Example** (Inspect the retired check segment)
+ *
+ * ```ts
+ * import { retiredCheckSegments } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * console.log(retiredCheckSegments.map((row) => row.segment)) // ["tsrs -p tsconfig.check.json"]
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const retiredCheckSegments: ReadonlyArray<RetiredCheckSegment> = [
+  RetiredCheckSegment.make({ segment: OWN_SOURCE_CHECK_COMMAND, replacement: DECLARATION_ONLY_BUILD_COMMAND }),
+];
+
+/**
+ * Reviewed own-source check overrides: declaration-only packages whose
+ * `tsconfig.check.json` checks files the build program does not.
+ *
+ * **Details**
+ *
+ * `@beep/effect-drizzle` and `@beep/markdown` add `scripts` to their check
+ * program's `include`, so their build cannot stand in for their check. The
+ * contract test in `@beep/repo-cli` asserts this list is exactly the set of
+ * declaration-only packages whose `tsconfig.check.json` adds anything to the
+ * build program.
+ *
+ * **Example** (List the packages that keep the no-emit check)
+ *
+ * ```ts
+ * import { ownSourceCheckOverrides } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * console.log(ownSourceCheckOverrides.length) // 2
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const ownSourceCheckOverrides: ReadonlyArray<OwnSourceCheckOverride> = [
+  OwnSourceCheckOverride.make({
+    manifest: "packages/ecosystem/effect-drizzle/package.json",
+    reason: "tsconfig.check.json adds scripts to include, so the check program is wider than the build program",
+  }),
+  OwnSourceCheckOverride.make({
+    manifest: "packages/foundation/modeling/markdown/package.json",
+    reason: "tsconfig.check.json adds scripts to include, so the check program is wider than the build program",
+  }),
+];
+
+// A program ends where the command does, at whitespace before its own flags, or at `&&`.
+const opensAtBoundary = (rest: string): boolean =>
+  Str.isEmpty(rest) || Str.startsWith("&&")(rest) || Str.trimStart(rest) !== rest;
+
+// The text after `program` when it opens the command's first `&&` segment: nothing, the
+// program's own flags, or `&&` and the later segments; the caller keeps it verbatim.
+const afterLeadingProgram = (command: string, program: string): O.Option<string> =>
+  pipe(O.liftPredicate(command, Str.startsWith(program)), O.map(Str.slice(program.length)), O.filter(opensAtBoundary));
+
+const servedCheck = (check: string, build: string): O.Option<string> =>
+  A.findFirst(retiredCheckSegments, (row) =>
+    A.contains(commandSegments(build), row.replacement)
+      ? O.map(afterLeadingProgram(check, row.segment), (rest) => `${row.replacement}${rest}`)
+      : O.none()
+  );
+
+/**
+ * Whether a `beep:check` opens with the declaration-only build program, alone
+ * or followed by compiler flags of its own.
+ *
+ * **Details**
+ *
+ * This is the shape `buildServedCheck` writes. The program must end at the end
+ * of the command, at whitespace before its flags, or at `&&`; a longer config
+ * name that merely starts with the same text does not count.
+ *
+ * **Example** (Recognise build-served checks)
+ *
+ * ```ts
+ * import { checkLeadsWithBuild } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * console.log(checkLeadsWithBuild("tsrs -p tsconfig.json --emitDeclarationOnly && bun run beep:check:tests")) // true
+ * console.log(checkLeadsWithBuild("tsrs -p tsconfig.json --emitDeclarationOnly --checkerCostCache a.cache")) // true
+ * console.log(checkLeadsWithBuild("tsrs -p tsconfig.check.json && bun run beep:check:tests")) // false
+ * ```
+ *
+ * @param check - The manifest's `beep:check` command.
+ * @returns `true` when the command opens with the declaration-only build program.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const checkLeadsWithBuild = (check: string): boolean =>
+  O.isSome(afterLeadingProgram(check, DECLARATION_ONLY_BUILD_COMMAND));
+
+/**
+ * The `beep:check` a package runs once its build program serves the
+ * own-source check, or `None` when no `retiredCheckSegments` row applies.
+ *
+ * **Details**
+ *
+ * A row applies when the build runs the row's replacement as one of its `&&`
+ * segments and the check opens with the row's segment, alone or followed by
+ * compiler flags. Only that program text is replaced: its flags follow the
+ * replacement in the same order and every later segment is kept as written.
+ * The caller decides whether the package keeps its own-source check through
+ * `ownSourceCheckOverrides`.
+ *
+ * **Example** (Serve a library check from its build)
+ *
+ * ```ts
+ * import { buildServedCheck } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * import * as O from "effect/Option"
+ * const check = buildServedCheck(
+ *   "tsrs -p tsconfig.check.json && bun run beep:check:tests",
+ *   "tsrs -p tsconfig.json --emitDeclarationOnly"
+ * )
+ * console.log(O.getOrElse(check, () => "unchanged")) // "tsrs -p tsconfig.json --emitDeclarationOnly && bun run beep:check:tests"
+ * const servedBy = buildServedCheck("tsrs -p tsconfig.json --emitDeclarationOnly")
+ * const flagged = servedBy("tsrs -p tsconfig.check.json --checkerCostCache a.cache && bun run beep:check:tests")
+ * console.log(O.getOrElse(flagged, () => "unchanged")) // "tsrs -p tsconfig.json --emitDeclarationOnly --checkerCostCache a.cache && bun run beep:check:tests"
+ * console.log(O.isNone(servedBy("tsrs -p tsconfig.check.jsonc"))) // true
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const buildServedCheck: {
+  (check: string, build: string): O.Option<string>;
+  (build: string): (check: string) => O.Option<string>;
+} = dual(2, servedCheck);
+
 const scaffoldRule = (scripts: HashMap.HashMap<string, string>, rule: TaskScriptRule) => {
   const binding = rule.binding;
   if (binding._tag === "owned") return scripts;
@@ -1737,6 +2005,15 @@ export const applyScaffoldRuleForTesting: {
   (rule: TaskScriptRule): (scripts: HashMap.HashMap<string, string>) => HashMap.HashMap<string, string>;
 } = dual(2, scaffoldRule);
 
+// A scaffolded declaration-only package leads its `beep:check` with its build, as the writer would.
+const serveScaffoldCheck = (scripts: HashMap.HashMap<string, string>): HashMap.HashMap<string, string> =>
+  pipe(
+    O.all([HashMap.get(scripts, "beep:check"), HashMap.get(scripts, "beep:build")]),
+    O.flatMap(([check, build]) => servedCheck(check, build)),
+    O.map((check) => HashMap.set(scripts, "beep:check", check)),
+    O.getOrElse(() => scripts)
+  );
+
 const scaffoldRuleEnabled =
   (kind: PackageKind, optionalTasks: ReadonlyArray<TaskScriptName>) => (rule: TaskScriptRule) =>
     rule.kind === kind &&
@@ -1746,7 +2023,9 @@ const scaffoldRuleEnabled =
  * Construct required scaffold bindings and explicitly selected optional tasks from the rule table.
  *
  * **Details**
- * Includes defaults behind enabled indirections.
+ * Includes defaults behind enabled indirections. A declaration-only kind's
+ * `beep:check` leads with its build command (`buildServedCheck`), as the policy
+ * writer would rewrite it.
  * Package-owned tasks and extra scripts remain the caller's responsibility. Derived tasks
  * require filesystem evidence and are left to the policy writer.
  *
@@ -1770,5 +2049,6 @@ export const scaffoldPackageScripts: {
     HashMap.empty<string, string>(),
     scaffoldRule
   );
-  return R.fromEntries(A.sortWith(HashMap.toEntries(scripts), ([key]) => key, Order.String));
+  const entries = scripts.pipe(serveScaffoldCheck, HashMap.toEntries);
+  return R.fromEntries(A.sortWith(entries, ([key]) => key, Order.String));
 });

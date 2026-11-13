@@ -1,14 +1,19 @@
 /**
- * Compiler-output and name-filter helpers shared by the check census and its
- * single-checker gate.
+ * Compiler-output, program-file and name-filter helpers shared by the check
+ * census, its single-checker gate and its build-equivalence mode.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
+import { runCaptured } from "@beep/repo-cli-kit/process/index";
 import { A, Str } from "@beep/utils";
+import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import { QualityScriptCommandError } from "../Quality.errors.ts";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const diagnosticLinePattern = /\berror TS\d+:/u;
 
@@ -73,3 +78,53 @@ export const nameFilterPredicate =
   (filter: O.Option<string>) =>
   (name: string): boolean =>
     O.match(filter, { onNone: () => true, onSome: (needle) => Str.includes(needle)(name) });
+
+/**
+ * List the files a compiler program holds by running the compiler with
+ * `-p <config> --listFilesOnly` from `cwd` and dropping diagnostic lines.
+ *
+ * **Details**
+ *
+ * The compiler prints one absolute path per line, in the order it loaded the
+ * files. A diagnostic (for example a missing referenced declaration) does not
+ * fail the listing; the file lines are still returned.
+ *
+ * **Example** (List the build program of one package)
+ *
+ * ```ts
+ * import { listProgramFiles } from "@beep/repo-cli/test/Quality"
+ * import * as Effect from "effect/Effect"
+ *
+ * const files = listProgramFiles("/repo/node_modules/.bin/tsrs", "tsconfig.json", "/repo/packages/foundation/modeling/schema")
+ * console.log(Effect.isEffect(files)) // true
+ * ```
+ *
+ * @param compilerPath - Absolute path of the compiler binary.
+ * @param configPath - Config passed to `-p`, relative to `cwd` or absolute.
+ * @param cwd - Directory the compiler runs from.
+ * @returns The listed file paths in compiler order.
+ * @category queries
+ * @since 0.0.0
+ */
+export const listProgramFiles = Effect.fn("CheckCensus.listProgramFiles")(function* (
+  compilerPath: string,
+  configPath: string,
+  cwd: string
+): Effect.fn.Return<
+  ReadonlyArray<string>,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const result = yield* runCaptured({
+    command: compilerPath,
+    args: ["-p", configPath, "--listFilesOnly"],
+    cwd,
+    source: "stdout",
+    trim: true,
+  }).pipe(QualityScriptCommandError.mapError(`Failed to list program files for ${configPath}.`));
+
+  return pipe(
+    compilerOutputLines(result.output),
+    A.filter((line) => !isCompilerDiagnosticLine(line))
+  );
+});

@@ -31,11 +31,13 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Not started. First slice: A1, the measurement fixture and baseline.
+Slice A1 in review: the probe fixture and recorded baseline.
 
 ## Latest Evidence
 
-Not started.
+[`history/evidence/2026-11-13-a1-baseline.md`](./history/evidence/2026-11-13-a1-baseline.md):
+per call, 14 metadata-operation installs, 8 configuration detaches and 1
+tokenizer build; 291 child processes across the ten calls.
 
 ## Notes
 

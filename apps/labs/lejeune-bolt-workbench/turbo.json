@@ -4,6 +4,9 @@
   "tasks": {
     "build": {
       "inputs": ["$TURBO_EXTENDS$", ".env*"]
+    },
+    "check": {
+      "dependsOn": ["^build"]
     }
   }
 }
