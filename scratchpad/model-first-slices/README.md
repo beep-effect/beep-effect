@@ -2,8 +2,8 @@
 
 A standalone prototype of the "model-first slices" design: one bounded context
 (Party) on `@alchemy.run/domain` 2.0.0-beta.87, split by runtime closure into a
-kernel, a model package, a host package and an app. Results and every place the
-design's sketches disagreed with the library are in [FINDINGS.md](FINDINGS.md).
+kernel, a model package, a host package and an app. The story and HTTP tests
+exercise the model and its in-memory host; the app is type-checked only.
 
 This directory is not part of the monorepo's bun workspace. It has its own
 `package.json` (with `workspaces`), `bun.lock` and `node_modules`, and the

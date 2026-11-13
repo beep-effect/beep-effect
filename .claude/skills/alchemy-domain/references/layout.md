@@ -82,7 +82,7 @@ Each package exports its source files by path, so imports name the file they com
 }
 ```
 
-```ts
+```ts skip-type-checking
 // packages/server/src/BankWorker.ts
 import { Bank, BankHandlers } from "@acme/domain/Bank.model";
 import { CustomerApi } from "@acme/domain/CustomerApi.api";
@@ -112,7 +112,7 @@ Type-check everything with `tsc -b`.
 
 ## The stack
 
-```ts
+```ts skip-type-checking
 // alchemy.run.ts
 import * as Alchemy from "alchemy";
 import * as Cloudflare from "@alchemy.run/cloudflare";

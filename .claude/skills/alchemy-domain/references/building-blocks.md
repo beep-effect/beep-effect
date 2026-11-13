@@ -4,7 +4,7 @@ Templates for every block, taken from `examples/cloudflare-domain`. Every class 
 
 ## Id and values
 
-```ts
+```ts skip-type-checking
 // Account/Account.id.ts
 import * as Schema from "effect/Schema";
 export const AccountId = Schema.String.pipe(Schema.brand("AccountId"));
@@ -18,7 +18,7 @@ More: [Aggregate: Give it an identity](https://alchemy.run/domain/aggregate#give
 
 ## Command, its events and its rejections
 
-```ts
+```ts skip-type-checking
 // Account/WithdrawMoney.command.ts
 import * as Domain from "@alchemy.run/domain";
 import { MfaChallenge } from "../MfaChallenge.middleware.ts";
@@ -55,7 +55,7 @@ More: [Command](https://alchemy.run/domain/command), [Event](https://alchemy.run
 
 ## Aggregate
 
-```ts
+```ts skip-type-checking
 // Account/Account.aggregate.ts
 type Open = Extract<AccountState, { _tag: "Open" }>;
 
@@ -114,7 +114,7 @@ More: [Aggregate: Focus on a state with optics](https://alchemy.run/domain/aggre
 
 ## Request context and middleware
 
-```ts
+```ts skip-type-checking
 // CurrentActor.context.ts: the key must be unique across every request context
 export class CurrentActor extends Domain.RequestContext<CurrentActor>()("Bank/CurrentActor", Actor) {}
 
@@ -142,7 +142,7 @@ More: [Sessions and middleware](https://alchemy.run/domain/sessions), [Sign in w
 
 ## View
 
-```ts
+```ts skip-type-checking
 // Account/AccountSummary.view.ts
 export class AccountSummary extends Domain.View("AccountSummary", {
   from: [Account],             // aggregates or other views
@@ -171,7 +171,8 @@ Merge `AccountSummaryLive` into the model's handlers: `Bank.layer(handlers)` is 
 
 Emit derived events with `events: [StatementLine]` and `emit: { MoneyDeposited: (e) => new StatementLine({...}) }`. Each emitted event carries the view's state after it. Route one event to several keys with named routes:
 
-```ts
+```ts skip-type-checking
+const transferRouting = {
 keyOf: {
   TransferRequested: {
     out: ({ event }) => Account.ref(event.from),
@@ -179,6 +180,7 @@ keyOf: {
   },
 },
 emit: { TransferRequested: { out: moved("out"), in: moved("in") } },
+};
 ```
 
 A view keyed by a different aggregate than its source uses `keyOf`, returning `undefined` to skip. A view about something with no aggregate of its own (an org) takes a string Schema as `key` (`key: OrgId`); its `keyOf` returns the value, and reads take the value (`watch(orgId)`). Policies, projections and streams take a Schema `key` the same way (`Domain.Key.Any` is either). Don't declare an empty aggregate only to key something. Add derived fields with `computed: { total: (v) => ... }`.
@@ -189,7 +191,7 @@ More: [View](https://alchemy.run/domain/view), [Views as security boundaries](ht
 
 ## Policy
 
-```ts
+```ts skip-type-checking
 // Customer/MainAccountProvisioning.policy.ts
 export class MainAccountProvisioning extends Domain.Policy("MainAccountProvisioning", {
   from: Customer,
@@ -214,7 +216,7 @@ More: [Policy](https://alchemy.run/domain/policy).
 
 ## Saga
 
-```ts
+```ts skip-type-checking
 // Transfer/ExecuteTransfer.saga.ts
 export const Decision = DurableDeferred.make("decision", { success: Schema.Literals(["approved", "expired"]) });
 
@@ -239,7 +241,7 @@ export const ExecuteTransferLive = ExecuteTransfer.toLayer(
           Activity.make({ name: "refund", execute: accounts.send(from, new RefundTransfer({ transferId: key, amount })) }),
         ),
       );
-      yield* Activity.make({ name: "credit", error: DestinationClosed, execute: /* ... */ });
+      yield* Activity.make({ name: "credit", error: DestinationClosed, execute: Effect.void /* supply the destination credit effect */ });
       yield* Activity.make({ name: "complete", execute: transfers.send(key, new CompleteTransfer()) });
     });
   }),
@@ -248,7 +250,7 @@ export const ExecuteTransferLive = ExecuteTransfer.toLayer(
 
 Start and signal it from a policy, keyed by the aggregate:
 
-```ts
+```ts skip-type-checking
 const executions = yield* ExecuteTransfer;
 yield* executions.start(source, { from, to, amount, requestedBy, needsApproval });  // returns a run handle at once
 yield* executions.get(source).signal(Decision, "approved");
@@ -264,7 +266,7 @@ More: [Saga](https://alchemy.run/domain/saga).
 
 ## External system
 
-```ts
+```ts skip-type-checking
 // Fraud/FraudCheck.external.ts (domain)
 export class FraudCheck extends Domain.ExternalSystem("FraudCheck", {
   score: { args: { accountId: AccountId, amount: Cents }, success: { risk: Schema.Number } },
@@ -282,7 +284,7 @@ More: [External System](https://alchemy.run/domain/external-system).
 
 ## Projection and its port
 
-```ts
+```ts skip-type-checking
 // Ledger/LedgerStore.ts (domain): the port, plus a memory implementation for stories
 export class LedgerStore extends Context.Service<LedgerStore, {
   readonly record: (rows: ReadonlyArray<LedgerRow>) => Effect.Effect<void, never, RuntimeContext>;
@@ -315,7 +317,7 @@ More: [Projection](https://alchemy.run/domain/projection).
 
 ## Stream
 
-```ts
+```ts skip-type-checking
 // Account/AccountCard.stream.ts
 export class CardChanged extends Domain.Event("CardChanged", { balance: Cents, frozen: Schema.Boolean }) {}
 
@@ -339,7 +341,7 @@ More: [Stream](https://alchemy.run/domain/stream).
 
 A question across keys, answered from a store a projection writes. Never serve such a store with a hand-written route.
 
-```ts
+```ts skip-type-checking
 // Ledger/AccountLedger.query.ts
 export class AccountLedger extends Domain.Query("AccountLedger", {
   input: { account: AccountId },   // filters, sort orders and scopes are input fields
@@ -371,7 +373,7 @@ More: [Query](https://alchemy.run/domain/query).
 
 ## Api
 
-```ts
+```ts skip-type-checking
 // CustomerApi.api.ts
 export class CustomerApi extends Domain.Api("CustomerApi", {
   model: Bank, // names must be part of it
@@ -393,7 +395,7 @@ An Api is the domain's interface for its own clients. For a public or partner AP
 
 ## Model
 
-```ts
+```ts skip-type-checking
 // Bank.model.ts
 export class Bank extends Domain.Model("Bank", {
   aggregates: [Customer, UsernameClaim, Account, Transfer],

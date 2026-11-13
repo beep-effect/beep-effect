@@ -1,7 +1,12 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["ESNext"],
-    "types": ["node"],
+    "lib": [
+      "ESNext"
+    ],
+    "types": [
+      "node"
+    ],
     "target": "ESNext",
     "moduleDetection": "force",
     "module": "Preserve",
@@ -16,6 +21,12 @@
     "skipLibCheck": true,
     "noEmit": true,
     "composite": false,
-    "noErrorTruncation": true
+    "noErrorTruncation": true,
+    "rootDir": ".",
+    "incremental": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "paths": {}
   }
 }

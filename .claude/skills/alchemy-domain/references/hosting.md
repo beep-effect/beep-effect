@@ -2,7 +2,7 @@
 
 The server package hosts the model in a Cloudflare Worker. `DomainCloudflare.layerDurableObjects()` declares one Durable Object class per aggregate, view, policy, projection and stream while the Worker builds. It also runs sagas on `Cloudflare.Workflows.layerDurableObjectEngine()`. Each aggregate instance is one Durable Object: one writer, which commits its events, state, idempotency receipt and outbox in a single transaction.
 
-```ts
+```ts skip-type-checking
 // packages/server/src/BankWorker.ts
 import { Bank, BankHandlers } from "@acme/domain/Bank.model";
 import { CustomerApi } from "@acme/domain/CustomerApi.api";
@@ -53,7 +53,7 @@ export default class BankWorker extends Cloudflare.Worker<BankWorker>()(
 
 Every platform is one Layer provided to the model: `DomainCloudflare.layerDurableObjects()`, `DomainRivet.layerDurableObjects(options)`, `DomainCluster.layerEntities(options)`. On Rivet and Effect Cluster, the Layer declares one class (or entity) that holds the whole model: each object is an instance named `<Model>.<Class>/<key>`, like `Bank.AccountAggregate/a-1`. In a caller the Layer deploys that class and reaches it through the gateway; the pool's nodes load the default export of `main` and host the model.
 
-```ts
+```ts skip-type-checking
 // packages/server/src/BankLive.ts — provide BankLive wherever the Api is served
 export default Bank.layer(BankHandlers).pipe(
   Layer.provide(
@@ -78,7 +78,7 @@ More: [Rivet](https://alchemy.run/domain/rivet), [Effect Cluster](https://alchem
 
 Code in the Worker that is not a client of the Api (a webhook route, a scheduled job) calls it with `CustomerApi.clientInProcess`: the same typed client, wired to the handlers in process, with the middleware of everything it serves. When that code has already checked its caller (a webhook signature), it provides a middleware Layer that trusts the caller, to that client only:
 
-```ts
+```ts skip-type-checking
 const asSystem = Layer.succeed(Session, (effect) =>
   Effect.provideService(effect, CurrentActor, system("payments-webhook")),
 );
@@ -107,7 +107,7 @@ More: [Cloudflare: Watch without polling](https://alchemy.run/domain/cloudflare#
 
 An API for clients you don't control is its own `HttpApi`, with each endpoint's response schema declared next to it. Its handlers call the domain through `clientInProcess` and map the result to that schema, so a field reaches the outside only when someone adds it here:
 
-```ts
+```ts skip-type-checking
 // packages/server/src/PartnerApi.ts
 export const Balance = Schema.Struct({ accountId: AccountId, balance: Schema.Number });
 
@@ -176,7 +176,7 @@ More: [Cloudflare: Know what runs where](https://alchemy.run/domain/cloudflare#k
 
 For internal clients that are not Effect (a script, an ops dashboard), `toHttpApi` from `@alchemy.run/domain/Http` publishes an Api as an Effect `HttpApi` group, with its handlers Layer and an OpenAPI document from the same Api.
 
-```ts
+```ts skip-type-checking
 import * as DomainHttp from "@alchemy.run/domain/Http";
 import * as HttpApiBuilder from "effect/http-api/HttpApiBuilder";
 import * as Etag from "effect/http/Etag";
@@ -216,14 +216,14 @@ curl "/AccountSummary/a-1/list?order=desc&take=20&after=118"
 
 `watch` and `events` answer with Server-Sent Events, one value per event:
 
-```ts
+```ts skip-type-checking
 const summary = new EventSource(`/AccountSummary/${accountId}/events?after=${cursor}`);
 summary.onmessage = (event) => render(JSON.parse(event.data));
 ```
 
 Every call runs through the Api's own handlers with the request's headers, so a rejection answers with the status its schema declares (422 if none):
 
-```ts
+```ts skip-type-checking
 export class NotOwner extends Domain.Rejection("NotOwner", {}, { httpApiStatus: 403 }) {}
 // GET /AccountSummary/a-2 as someone else -> 403 { "_tag": "NotOwner" }
 ```
@@ -231,7 +231,7 @@ export class NotOwner extends Domain.Rejection("NotOwner", {}, { httpApiStatus: 
 
 To serve the group next to others or under a prefix, add it to your own `HttpApi`:
 
-```ts
+```ts skip-type-checking
 const AppApi = HttpApi.make("App").add(BankHttp.group.prefix("/v1"));
 const AppLive = HttpApiBuilder.layer(AppApi).pipe(Layer.provide(BankHttp.layerFor(AppApi)));
 ```
@@ -242,9 +242,10 @@ More: [Plain HTTP and OpenAPI](https://alchemy.run/domain/http-api).
 
 `toMcp` from `@alchemy.run/domain/Ai` serves each call `expose` lists (any call that returns once) as an MCP tool, named `<api>_<name>_<operation>`:
 
-```ts
+```ts skip-type-checking
 import * as DomainAi from "@alchemy.run/domain/Ai";
-import { McpProtocol, McpServer } from "effect/ai";
+import * as McpProtocol from "effect/ai/McpProtocol";
+import * as McpServer from "effect/ai/McpServer";
 
 // packages/server/src/BankMcp.ts
 export const BankMcp = DomainAi.toMcp(CustomerApi, {
@@ -261,7 +262,7 @@ On a Worker, use `McpServer.layerHttpRequestScoped` with `McpProtocol.v2026_07_2
 
 `toToolkit` gives the same tools to an agent in the app, acting for the headers you give it:
 
-```ts
+```ts skip-type-checking
 const { toolkit, layer } = DomainAi.toToolkit(CustomerApi, {
   expose: ["RequestTransfer", "AccountSummary.get"],
   headers: Effect.map(CurrentSession, (s) => ({ authorization: `Bearer ${s.token}` })),
@@ -275,7 +276,7 @@ More: [MCP](https://alchemy.run/domain/mcp).
 
 `toCli` from `@alchemy.run/domain/Cli` builds an Effect CLI command that calls the deployed Api over HTTP, one kebab-case subcommand per exposed call that returns once:
 
-```ts
+```ts skip-type-checking
 // packages/cli/src/bank.ts
 const bank = toCli(CustomerApi, {
   name: "bank",

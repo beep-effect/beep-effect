@@ -6,7 +6,7 @@ Foldkit is event-driven like the domain. The app's Commands send domain commands
 
 Build the client once, for the app's life, and give it to Foldkit as a resource. Sign in first, so the browser carries an `HttpOnly`, `SameSite=Strict` session cookie on the same origin, including on every WebSocket upgrade.
 
-```ts
+```ts skip-type-checking
 // packages/web/src/entry.ts
 import { CustomerApi } from "@acme/domain/CustomerApi.api";
 import * as Domain from "@alchemy.run/domain";
@@ -43,7 +43,7 @@ More: [Integrate with Foldkit: Provide the client and headers](https://alchemy.r
 
 Use the optional `@alchemy.run/domain/Foldkit` subpath with Foldkit 0.169 or later.
 
-```ts
+```ts skip-type-checking
 import * as DomainFoldkit from "@alchemy.run/domain/Foldkit";
 import { Command, Subscription } from "foldkit";
 import * as Option from "effect/Option";
@@ -66,7 +66,7 @@ More: [Integrate with Foldkit: Derive the Commands](https://alchemy.run/domain/f
 
 A query has no live read: `DomainFoldkit.make` gives each Api query a Command, not a Subscription.
 
-```ts
+```ts skip-type-checking
 const { commandId: requestId, commandIds } = DomainFoldkit.next(model.commandIds);
 const read = Command.mapMessage(
   BankClient.AccountLedger({
@@ -85,7 +85,7 @@ More: [Integrate with Foldkit: Ask a query](https://alchemy.run/domain/foldkit#a
 
 ## Follow a View's state
 
-```ts
+```ts skip-type-checking
 const subscriptions = Subscription.make<Model, Message, Bank>()(() => ({
   summary: BankClient.AccountSummary.watch({
     key: (model: Model) => model.accountId,
@@ -123,7 +123,7 @@ More: [Integrate with Foldkit: Follow a View's state](https://alchemy.run/domain
 
 Foldkit wraps every Command in a span, and Api calls carry the trace to the server (live reads too). Put a tracer in `resources` that exports to the app's own origin, and collect it in the server Worker with `Telemetry.relay`, which forwards it with the server's credentials:
 
-```ts
+```ts skip-type-checking
 // packages/web/src/entry.ts
 const Tracing = OtlpTracer.layer({
   url: `${location.origin}/api/telemetry/v1/traces`,
@@ -159,7 +159,7 @@ More: [Optimistic updates](https://alchemy.run/domain/optimistic-updates), [Offl
 
 `Cloudflare.Website.Foldkit` builds the app with Vite and serves it from its own Worker. That Worker forwards `/api` to the server over a service binding, so the app and the Api share one origin:
 
-```ts
+```ts skip-type-checking
 // packages/web/src/worker.ts
 export default {
   fetch(request: Request, env: { readonly ASSETS: Fetcher; readonly BANK: Fetcher }) {

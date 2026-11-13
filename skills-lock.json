@@ -6,24 +6,21 @@
       "installedTargets": [
         ".claude/skills/adhd",
         ".agents/skills/adhd"
-      ],
-      "installedTreeHash": "91f1a3d559b6a3c1c243d7e08e11130b575c1025368e181f3143c496c9caad7b"
+      ]
     },
     "alchemy-domain": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/alchemy-domain",
         ".agents/skills/alchemy-domain"
-      ],
-      "installedTreeHash": "f56c979401fa8b0e4f39ad3725c4428b8665a218da5a0ee9d104cf9b168053e8"
+      ]
     },
     "alchemy-provider": {
       "_tag": "local",
       "installedTargets": [
         ".claude/skills/alchemy-provider",
         ".agents/skills/alchemy-provider"
-      ],
-      "installedTreeHash": "4a97e1b9036eb3b7512c534ac558bc4fb0264c7f52c0f7a09faf66ba0658a288"
+      ]
     },
     "atom-reactivity-specialist": {
       "_tag": "local",

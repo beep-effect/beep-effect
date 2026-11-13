@@ -332,10 +332,13 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
 
           const executed = yield* accounts.unschedule(id, "remind-1").pipe(Effect.flip);
           strictEqual(executed._tag, "AlreadyExecuted");
-          const again = yield* accounts
-            .schedule(id, Remind.make({}), { after: "1 second", commandId: "remind-1" })
-            .pipe(Effect.flip);
-          strictEqual(again._tag, "AlreadyExecuted");
+          const again = yield* accounts.schedule(id, Remind.make({}), {
+            after: "1 second",
+            commandId: "remind-1",
+          });
+          strictEqual(again.commandId, "remind-1");
+          yield* elapse(target.clock, 1000);
+          yield* eventually(accounts.state(id), (state) => state._tag === "Open" && state.reminders === 2);
 
           yield* accounts.schedule(id, Remind.make({}), { after: "1 hour", commandId: "remind-2" });
           yield* accounts.unschedule(id, "remind-2");

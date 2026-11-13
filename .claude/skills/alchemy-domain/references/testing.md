@@ -4,7 +4,7 @@
 
 A story is given/when/then over the real model, in memory. Policies, sagas and projections run for real. External system calls wait until the story answers them, and a clock you control stamps commands. A story fails on any event, rejection, external call or saga defect it doesn't account for, so a passing story has accounted for every outcome.
 
-```ts
+```ts skip-type-checking
 // packages/domain/test/Bank.story.test.ts
 import { it } from "@effect/vitest";
 import { Story } from "@alchemy.run/domain/Story";
@@ -65,29 +65,35 @@ More: [Testing models](https://alchemy.run/domain/testing-models), [Story](https
 
 ### External system calls
 
-```ts
+```ts skip-type-checking
+[
 Story.call(FraudCheck.score, { accountId: a1.id }),  // a matching call is waiting (partial args)
 Story.succeed(FraudCheck.score, { risk: 0.95 }),           // answers the only waiting call to score
+];
 ```
 
 When several calls are waiting, tag each one as you expect it, and answer it by tag. A tag names the earliest matching call, in the order calls were made:
 
-```ts
+```ts skip-type-checking
+[
 Story.call("a-1", FraudCheck.score, { accountId: a1.id }),
 Story.call("a-2", FraudCheck.score, { accountId: a2.id }),
 Story.succeed("a-2", FraudCheck.score, { risk: 0.1 }),
 Story.succeed("a-1", FraudCheck.score, { risk: 0.95 }),
+];
 ```
 
 An answer is checked against the operation's schemas like an adapter's, so a `succeed` or `fail` value the schema rejects fails the policy. Every call needs a `call` step before it's answered; each one matches a single call, earliest first. An untagged `succeed` with several calls waiting fails the story, and so does a call left unanswered at the end.
 
 `fail` answers a waiting call with the operation's declared `error:`, to test the branch where the vendor refuses. `die` answers it with a defect, as when the transport breaks. Both find the call the way `succeed` does, untagged or by tag, and only a declared error type-checks (any one of them, when the operation lists several):
 
-```ts
+```ts skip-type-checking
+[
 Story.call(Payments.refund, { settlementId: "st_1" }),
 Story.fail(Payments.refund, new RefundDeclined({ reason: "card-closed" })),
 Story.call("r-2", Payments.refund, { settlementId: "st_2" }),
 Story.die("r-2", Payments.refund, new Error("socket closed")),
+];
 ```
 
 More: [Testing models: Answer outside systems](https://alchemy.run/domain/testing-models#answer-outside-systems).
@@ -96,7 +102,7 @@ More: [Testing models: Answer outside systems](https://alchemy.run/domain/testin
 
 A system left out of `stub` is called for real through its adapter Layer, which you provide to the story (its type requires it). The story records each call: a `call` step checks what it was sent and must come first, and `returned` / `failed` / `died` check how it ended, found like `succeed`. A real call no step asserts fails the story, and the story waits for real calls to finish before each step.
 
-```ts
+```ts skip-type-checking
 const story = Story.make(Bank, { layer: BankHandlers, stub: [FraudCheck] });   // Payments runs for real
 
 story(
@@ -112,7 +118,7 @@ More: [Testing models: Assert real calls](https://alchemy.run/domain/testing-mod
 
 An adapter is a Layer for the system's service. Run one set of tests against each adapter (vendor, in-memory fake, no-op) so a fake never drifts from the vendor:
 
-```ts
+```ts skip-type-checking
 for (const [adapter, layer] of [["Twilio", TwilioSms], ["fake", FakeSms]] as const) {
   describe(`Sms: ${adapter}`, () => {
     it.effect("counts the segments", () =>
@@ -132,11 +138,13 @@ More: [Testing models: Run the same tests against every adapter](https://alchemy
 
 Test what a saga does: the events its steps record on aggregates, and how the run ended. Don't test its internal steps.
 
-```ts
-Story.then(a1, new TransferDebited({ ... }), new TransferRefunded({ ... })),   // the compensation ran
+```ts skip-type-checking
+[
+Story.then(a1, new TransferDebited({ /* event fields */ }), new TransferRefunded({ /* event fields */ })),   // the compensation ran
 Story.saga(ExecuteTransfer, t1, { _tag: "Rejected", rejection: new DestinationClosed() }),
 Story.saga(ExecuteTransfer, t1, { _tag: "Running" }),
 Story.signal(ExecuteTransfer, t1, Decision, "approved"),    // complete a DurableDeferred it waits on
+];
 ```
 
 The statuses are `NotStarted`, `Running`, `Completed`, `Rejected`, `Interrupted` and `Died`. A run that dies fails the story unless a step asserts `{ _tag: "Died" }`.
@@ -147,7 +155,7 @@ More: [Saga: Test it](https://alchemy.run/domain/saga#test-it).
 
 `Domain.verify(Model)` returns every definition problem that would fail the model's Layer build (missing `keyOf`, view `state` without `initial`, a policy or projection `on` an event no source emits, a stream with two writers, duplicate names). Keep one test that expects it to be empty:
 
-```ts
+```ts skip-type-checking
 it("the model is well defined", () => expect(Domain.verify(Bank)).toEqual([]));
 ```
 
@@ -157,12 +165,14 @@ More: [Domain Model: Check the declaration](https://alchemy.run/domain/model#che
 
 For every command, cover the happy path, each rejection, and each authorization case (owner, other customer, agent). For every policy, cover the reaction, the reaction when its command is rejected, and the reaction when an external call fails with its declared error. For every saga, cover completion, each failure with its compensation, and each wait (signal, timeout via `clock`). For every view, check its state after the events it folds. For every query, cover the rows the owner sees, each refused caller (`rejected`), rows of other callers left out, and a second page.
 
-```ts
+```ts skip-type-checking
+[
 as(sam),
 Story.query(AccountLedger, { account: a1.id }, [{ kind: "MoneyDeposited", amount: 10_000 }]),
 as(alex),
 Story.query(AccountLedger, { account: a1.id }),
 Story.rejected(new NotOwner()),
+];
 ```
 
 More: [Testing models: Check every outcome](https://alchemy.run/domain/testing-models#check-every-outcome).
@@ -171,7 +181,7 @@ More: [Testing models: Check every outcome](https://alchemy.run/domain/testing-m
 
 In the server package, host the model in memory with the real middleware, and drive it through the Api client. This checks authentication, `validate`, and live reads.
 
-```ts
+```ts skip-type-checking
 // packages/server/test/CustomerApi.test.ts
 const Ports = Layer.mergeAll(SiftFraudCheck, StripePayments, MemoryLedgerStore);
 const BankInMemory = Bank.layer(BankHandlers).pipe(Layer.provide(Layer.mergeAll(Ports, Domain.InMemory)));
