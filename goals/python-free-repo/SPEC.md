@@ -126,6 +126,22 @@ Lane chore/finish-board-pause-b1
 
 Reverse: goals set-status python-free-repo active when it is picked up
 
+### Split the work into three PRs plus a final law PR, 2026-11-13
+
+The packet allows three concurrently open PRs. Lane 1 (chore/python-free-repo): triage, per-packet probe deletion, small ports (ciops CQ checks into vitest, markdown corpus extractor, cloud-agent-readiness helpers, compute-profile renderer), the heavy.yml/fleet-shadow-check workflow Python and infra/r2-cache. Lane 2 (Codex Sol): photo-face to onnxruntime-node. Lane 3 (Codex Sol): .claude/skills scripts. The no-tracked-python law, lefthook, cheap-tier check and AGENTS.md line land last on chore/python-free-repo-law, because the law fails on main until every lane has merged and heavy.yml is consumed at @main (its old script can only be deleted after the switch merges).
+
+Lane chore/python-free-repo
+
+Reverse: Fold remaining lanes into one PR
+
+### Port the live infra/r2-cache Python in this goal instead of waiting for infra-alchemy-rebuild P6, 2026-11-13
+
+SPEC lists infra/r2-cache Python as a non-goal because infra-alchemy-rebuild deletes it. That packet is at P1 and deletes r2-cache only at P6, while policy_runtime.py (spawned by Cache.adapter.ts) and probe.py (cache-warm.yml) are live. Waiting would hold acceptance item 1 (no tracked .py on main) open indefinitely. This goal ports the live scripts to repo-cli TypeScript and deletes the one-shot ones; infra-alchemy-rebuild later deletes TypeScript instead of Python. Details: research/r2-cache-port.md.
+
+Lane chore/python-free-repo
+
+Reverse: Restore infra/r2-cache/*.py from 05ed8bc6b6cc and point Cache.adapter.ts and cache-warm.yml back at them
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger
