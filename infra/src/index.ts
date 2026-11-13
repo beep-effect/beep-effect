@@ -56,6 +56,21 @@ export * from "./AIMetrics.ts";
  */
 export * from "./CiFleetController.ts";
 /**
+ * Runner pool profiles (heavy lanes, Test Unit shard overflow) and the Spot vCPU budget they share.
+ *
+ * **Example** (Read the overflow pool's cap)
+ *
+ * ```ts
+ * import { ciShardOverflowRunnerPool } from "@beep/infra"
+ *
+ * console.log(ciShardOverflowRunnerPool.maximumCount) // 48
+ * ```
+ *
+ * @category resources
+ * @since 0.0.0
+ */
+export * from "./CiRunnerPool.ts";
+/**
  * CI runner fleet groundwork Pulumi orchestration exports.
  *
  * **Example** (Reference the CI runners stack)
@@ -70,6 +85,21 @@ export * from "./CiFleetController.ts";
  * @since 0.0.0
  */
 export * from "./CiRunners.ts";
+/**
+ * The Test Unit shard overflow pool's switch and controller configuration.
+ *
+ * **Example** (Reference the loader)
+ *
+ * ```ts
+ * import { loadCiShardOverflowPoolConfig } from "@beep/infra"
+ *
+ * console.log(typeof loadCiShardOverflowPoolConfig) // "function"
+ * ```
+ *
+ * @category resources
+ * @since 0.0.0
+ */
+export * from "./CiShardOverflowPool.ts";
 /**
  * Asymmetric Turbo remote-cache component exports.
  *
