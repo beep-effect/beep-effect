@@ -7,14 +7,14 @@
 import * as Effect from "effect/Effect";
 import { HousekeeperRuntimeConfig } from "../../RunnerRuntime.models.ts";
 import { handleSsmHousekeeping } from "../../SsmHousekeeper.program.ts";
-import { awsLive, lambdaHandler } from "./Runtime.ts";
+import { awsLive, defineLambda, lambdaHandler } from "./Runtime.ts";
 
 /**
  * Lambda handler: delete stale runner tokens.
  *
  * @internal
  */
-export const handler = lambdaHandler({
+export const definition = defineLambda({
   config: HousekeeperRuntimeConfig,
   layer: () => awsLive,
   run: (config) =>
@@ -24,3 +24,10 @@ export const handler = lambdaHandler({
     ),
   fallback: (): void => undefined,
 });
+
+/**
+ * The Lambda entry point.
+ *
+ * @internal
+ */
+export const handler = lambdaHandler(definition);

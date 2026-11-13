@@ -11,7 +11,7 @@ import { TerminationEvent } from "../../Ec2Events.models.ts";
 import { DeregisterRetryMessage } from "../../RunnerMessages.models.ts";
 import { TerminationWatcherRuntimeConfig } from "../../RunnerRuntime.models.ts";
 import { handleDeregisterRetry, handleTerminationEvent } from "../../TerminationWatcher.program.ts";
-import { fleetLive, lambdaHandler, SqsEvent } from "./Runtime.ts";
+import { defineLambda, fleetLive, lambdaHandler, SqsEvent } from "./Runtime.ts";
 
 const decodeSqs = S.decodeUnknownOption(SqsEvent);
 const decodeEvent = S.decodeUnknownEffect(TerminationEvent);
@@ -24,7 +24,7 @@ const decodeRetry = S.decodeEffect(S.fromJsonString(DeregisterRetryMessage));
  *
  * @internal
  */
-export const handler = lambdaHandler({
+export const definition = defineLambda({
   config: TerminationWatcherRuntimeConfig,
   layer: fleetLive,
   run: Effect.fn("TerminationWatcherLambda.run")(function* (config, raw) {
@@ -44,3 +44,10 @@ export const handler = lambdaHandler({
   }),
   fallback: (): void => undefined,
 });
+
+/**
+ * The Lambda entry point.
+ *
+ * @internal
+ */
+export const handler = lambdaHandler(definition);

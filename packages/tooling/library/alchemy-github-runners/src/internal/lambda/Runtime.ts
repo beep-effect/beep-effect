@@ -8,6 +8,7 @@
 import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import * as AwsCredentials from "@distilled.cloud/aws/Credentials";
 import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
@@ -88,19 +89,42 @@ export class FunctionUrlEvent extends S.Opaque<FunctionUrlEvent, { readonly bran
 ) {}
 
 /**
- * Builds a Lambda handler: decode the runtime config once, build the live
- * runtime once, run the program per event, and answer `fallback` when the
- * config is unusable or the program fails unexpectedly.
+ * A Lambda: its runtime-config schema, live layer, per-event program and the
+ * answer it gives when the config is unusable or the program fails.
  *
  * @internal
  */
-export const lambdaHandler = <SC extends S.Codec<unknown, unknown, never, never>, ROut, Out, E>(options: {
+export interface LambdaDefinition<SC extends S.Codec<unknown, unknown, never, never>, ROut, Out, E> {
   readonly config: SC;
+  /** Where the runtime config is read from; the process environment unless set (tests). */
+  readonly configProvider?: ConfigProvider.ConfigProvider | undefined;
+  readonly fallback: (event: unknown) => Out;
   readonly layer: (config: SC["Type"]) => Layer.Layer<ROut>;
   readonly run: (config: SC["Type"], event: unknown) => Effect.Effect<Out, E, ROut>;
-  readonly fallback: (event: unknown) => Out;
-}): ((event: unknown) => Promise<Out>) => {
-  const loaded = loadRuntimeConfig(options.config).pipe(Effect.result, Effect.runSync);
+}
+
+/**
+ * Types a Lambda definition so its `run` can be tested apart from its live layer.
+ *
+ * @internal
+ */
+export const defineLambda = <SC extends S.Codec<unknown, unknown, never, never>, ROut, Out, E>(
+  definition: LambdaDefinition<SC, ROut, Out, E>
+): LambdaDefinition<SC, ROut, Out, E> => definition;
+
+/**
+ * Builds the Lambda handler from a definition.
+ *
+ * @internal
+ */
+export const lambdaHandler = <SC extends S.Codec<unknown, unknown, never, never>, ROut, Out, E>(
+  options: LambdaDefinition<SC, ROut, Out, E>
+): ((event: unknown) => Promise<Out>) => {
+  const loaded = loadRuntimeConfig(options.config).pipe(
+    Effect.provideService(ConfigProvider.ConfigProvider, options.configProvider ?? ConfigProvider.fromEnv()),
+    Effect.result,
+    Effect.runSync
+  );
   if (loaded._tag === "Failure") {
     const failure = loaded.failure;
     return (event) =>

@@ -7,14 +7,14 @@
 import * as Effect from "effect/Effect";
 import { PoolRuntimeConfig } from "../../RunnerRuntime.models.ts";
 import { handleScaleDown } from "../../ScaleDown.program.ts";
-import { fleetLive, lambdaHandler } from "./Runtime.ts";
+import { defineLambda, fleetLive, lambdaHandler } from "./Runtime.ts";
 
 /**
  * Lambda handler: one scale-down pass over the pool.
  *
  * @internal
  */
-export const handler = lambdaHandler({
+export const definition = defineLambda({
   config: PoolRuntimeConfig,
   layer: fleetLive,
   run: (config) =>
@@ -24,3 +24,10 @@ export const handler = lambdaHandler({
     ),
   fallback: (): void => undefined,
 });
+
+/**
+ * The Lambda entry point.
+ *
+ * @internal
+ */
+export const handler = lambdaHandler(definition);
