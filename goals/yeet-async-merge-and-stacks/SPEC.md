@@ -49,7 +49,7 @@ Higher sources outrank lower sources when they conflict.
 ## Target Surfaces
 
 - `packages/tooling/tool/cli/src/internal/github/GithubRest.ts`: the async
-  merge request and its poll beside the legacy `mergePullRequest`.
+  merge request and its poll, which replaced the legacy merge call.
 - `packages/tooling/tool/cli/src/commands/Yeet/internal/`: the merge gate,
   merge porcelain, GitHub operations and owner-checkpoint merge (slice A);
   the review window, the final-check refresh rule and a new head-move
@@ -92,12 +92,12 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] Slice A: `yeet merge-gate` and `yeet merge` merge an ordinary PR
+- [x] Slice A: `yeet merge-gate` and `yeet merge` merge an ordinary PR
       through `merge-async` with the gated `sha`; a PR with an unresolved
       thread holds with GitHub's sentence; strict mode sends no bypass and
       relaxed mode records the one it sends; the legacy call is deleted
       after its watch day.
-- [ ] Slice B: a GitHub-initiated rewrite with unchanged patch-ids keeps
+- [x] Slice B: a GitHub-initiated rewrite with unchanged patch-ids keeps
       the review-window start and carries the final-check receipt; a
       changed patch-id or a lane push restarts both. The rewritten heads of
       #3050 and #3051 from the test record are fixtures.
@@ -261,6 +261,14 @@ For a GitHub rewrite the classifier calls unchanged, the 2026-11-10 window-on-re
 Lane feat/yeet-rewrite-stable-proof
 
 Reverse: Restore the exploration rule: any new sha voids the old proof and receipts.
+
+### Legacy merge call, its switch and the endpoint field deleted, 2026-11-13
+
+The watch day set by the legacy-merge-switch decision ended on 2026-11-11. This PR deletes the legacy REST merge call from GithubRest, the BEEP_YEET_MERGE_ENDPOINT switch and its config from AsyncMerge.ts, and the endpoint field from YeetMergeSettlement and MergeGateMerged. A field that can hold one value distinguishes nothing, so it goes with the switch rather than staying as a one-literal union; merge lines keep ending 'via merge-async' through one constant. The merge queue, if it is ever routed, is a merge_action on the same endpoint, not a second endpoint.
+
+Lane chore/yeet-delete-legacy-merge
+
+Reverse: Revert this PR; the legacy call returns behind BEEP_YEET_MERGE_ENDPOINT=legacy.
 
 <!-- beep:decisions:end -->
 

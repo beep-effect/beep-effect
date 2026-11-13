@@ -69,9 +69,9 @@ import {
 import { enforceReviewerGate } from "../../Reviewer/ReviewerRuleset.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import {
-  renderYeetMergeEndpoint,
   renderYeetMergeSettlement,
   settleYeetMerge,
+  YEET_MERGE_ENDPOINT_NAME,
   YeetMergeSettlement,
 } from "./AsyncMerge.ts";
 import { provideYeetHeadMoveClassifier } from "./HeadMove.ts";
@@ -1498,7 +1498,7 @@ export const mergeYeetGhAtHead = Effect.fn("Yeet.gh.mergeAtHead")(function* (
     return yield* report(YEET_GH_EXIT_HOLD)(`[gh] not merged #${number}: ${renderYeetMergeSettlement(settled)}`);
   }
   yield* Console.log(
-    `[gh] merged=true #${number} ${Str.slice(0, 10)(settled.sha)} via ${renderYeetMergeEndpoint(settled.endpoint)}${O.getOrElse(
+    `[gh] merged=true #${number} ${Str.slice(0, 10)(settled.sha)} via ${YEET_MERGE_ENDPOINT_NAME}${O.getOrElse(
       O.map(toleratedNote, (note) => ` tolerated=[${note}]`),
       () => ""
     )}`
