@@ -33,7 +33,7 @@ import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 import { Confidence } from "../EvidenceSpan/index.ts";
-import { canonicalJson } from "../internal/CanonicalJson.ts";
+import { canonicalJsonResult } from "../internal/CanonicalJson.ts";
 import type { FieldSchema, IdentityConfig, KeyedFieldSchema, SchemaIdentity } from "../Factory/index.ts";
 
 const TrimmedText = S.String.pipe(S.decodeTo(S.NonEmptyString, SchemaTransformation.trim()));
@@ -1461,18 +1461,24 @@ export const makeContradictionBehavior = <
     return ContradictionCandidateKey.make(sha256Hex(canonical));
   });
 
+  // A content the canonical JSON owner refuses fails in the same `SchemaError`
+  // channel as an encoding failure.
   const contradictionProposalDigest = (
     content: ProposalContent
   ): Result.Result<typeof ContradictionProposalDigest.Type, S.SchemaError> =>
-    Result.map(encodeProposalContent(content), (encoded) =>
-      ContradictionProposalDigest.make(sha256Hex(`v1\n${canonicalJson(encoded)}`))
+    Result.flatMap(encodeProposalContent(content), (encoded) =>
+      Result.map(canonicalJsonResult(encoded), (canonical) =>
+        ContradictionProposalDigest.make(sha256Hex(`v1\n${canonical}`))
+      )
     );
 
   const contradictionCandidateDigest = (
     content: CandidateContent
   ): Result.Result<typeof ContradictionCandidateDigest.Type, S.SchemaError> =>
-    Result.map(encodeCandidateContent(content), (encoded) =>
-      ContradictionCandidateDigest.make(sha256Hex(`v1\n${canonicalJson(encoded)}`))
+    Result.flatMap(encodeCandidateContent(content), (encoded) =>
+      Result.map(canonicalJsonResult(encoded), (canonical) =>
+        ContradictionCandidateDigest.make(sha256Hex(`v1\n${canonical}`))
+      )
     );
 
   return {

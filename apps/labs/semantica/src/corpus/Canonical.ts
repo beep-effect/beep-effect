@@ -1,6 +1,8 @@
 import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
 import { identity } from "effect/Function";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 
 /**
  * Encodes a JSON-compatible value with recursively sorted object keys and no whitespace.
@@ -33,3 +35,32 @@ import * as Result from "effect/Result";
  */
 export const canonicalJson = (value: unknown): string =>
   Result.getOrThrowWith(JsoncFingerprint.canonicalizeResult(value), identity);
+
+/**
+ * {@link canonicalJson} returning a `Result`, for the lab's digest helpers and
+ * schema checks, which already carry a `SchemaError` channel or a boolean.
+ *
+ * **Details**
+ *
+ * The owner's refusal of a value outside plain JSON becomes an `S.SchemaError`
+ * whose message names the owner's code and JSON pointer, instead of a thrown
+ * `JsoncCanonicalizeError`.
+ *
+ * **Example** (Refuse an unpaired surrogate without throwing)
+ *
+ * ```ts
+ * import { canonicalJsonResult } from "@/corpus/Canonical"
+ * import * as Result from "effect/Result"
+ *
+ * console.log(Result.getOrThrow(canonicalJsonResult({ b: 2, a: 1 }))) // {"a":1,"b":2}
+ * console.log(Result.isFailure(canonicalJsonResult({ a: "\ud800" }))) // true
+ * ```
+ *
+ * @category encoding
+ * @since 0.0.0
+ */
+export const canonicalJsonResult = (value: unknown): Result.Result<string, S.SchemaError> =>
+  Result.mapError(
+    JsoncFingerprint.canonicalizeResult(value),
+    (error) => new S.SchemaError(new SchemaIssue.InvalidValue({ message: error.message }))
+  );
