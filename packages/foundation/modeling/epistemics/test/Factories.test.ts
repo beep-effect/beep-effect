@@ -281,7 +281,7 @@ const arbitraries = makeContradictionArbitraries({
   CanonicalContradictionBeliefPair: CanonicalPair,
   ContradictionMatchBasisStruct: matchBasis.ContradictionMatchBasisStructSchema,
   ContradictionMatchBasis: MatchBasis,
-  ContradictionResolutionProposalStruct: proposals.ContradictionResolutionProposalStructSchema,
+  ContradictionResolutionProposalStructArbitrary: proposals.ContradictionResolutionProposalStructArbitrary,
   ContradictionResolutionProposal: Proposal,
   proposalsShareId: assessment.proposalsShareId,
   ContradictionAssessment: Assessment,
@@ -304,6 +304,8 @@ const failureMessage = <A>(result: Result.Result<A, S.SchemaError>): Result.Resu
   Result.mapError(result, (error) => error.message);
 
 // `true` in the failure channel when that message names the given refusal.
+const SEED_COUNT = 64;
+
 const refusedAt = <A>(result: Result.Result<A, S.SchemaError>, refusal: string): Result.Result<A, boolean> =>
   Result.mapError(failureMessage(result), Str.includes(refusal));
 
@@ -378,6 +380,31 @@ describe("second binding of the contradiction factories", () => {
       });
       const matchBases = yield* Arbitrary.sampleEffect(arbitraries.ContradictionMatchBasisArbitrary, { count: 10 });
       A.forEach(matchBases, (basis) => expect(S.is(MatchBasis)(basis)).toBe(true));
+    })
+  );
+
+  // The contradiction arbitraries construct their facts; they do not filter
+  // generated JSON. Deriving the fact from its checked schema discarded about
+  // a quarter of the samples and exhausted this sampler on some seeds,
+  // 433213354620349 among them (ep94).
+  it.effect("samples candidate content on fixed seeds without exhausting the generator", () =>
+    Effect.gen(function* () {
+      const seeds = A.prepend(
+        A.makeBy(SEED_COUNT, (index) => index + 1),
+        433213354620349
+      );
+      for (const seed of seeds) {
+        const samples = yield* Arbitrary.sampleEffect(arbitraries.ContradictionCandidateContentArbitrary, {
+          count: 10,
+          seed,
+        });
+        expect(A.every(samples, S.is(CandidateContent))).toBe(true);
+      }
+      const facts = yield* Arbitrary.sampleEffect(vocabulary.ContradictionProposalFactArbitrary, {
+        count: 200,
+        seed: 1,
+      });
+      expect(A.every(facts, S.is(vocabulary.ContradictionProposalFact))).toBe(true);
     })
   );
 
