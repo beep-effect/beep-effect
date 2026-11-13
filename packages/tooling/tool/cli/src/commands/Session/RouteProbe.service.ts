@@ -6,9 +6,11 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { repoRunOutputBound, runCapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -16,13 +18,12 @@ import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { processStartTimeForPid } from "../../internal/repo-run/ProcessIdentity.ts";
 import { RouteProbeReading } from "./Route.schemas.ts";
+import type { CapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
 import type { RouteLiveness, T3ThreadRoute } from "./Route.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Session/RouteProbe.service");
@@ -114,8 +115,6 @@ class T3ThreadShow extends S.Opaque<T3ThreadShow, { readonly brand: unique symbo
   }).pipe($I.annoteSchema("T3ThreadShow", { description: "The fields route probing reads from `t3 thread show`." }))
 ) {}
 
-type T3CliOutput = { readonly stdout: string; readonly stderr: string; readonly exitCode: number };
-
 const decodeLiveIndexEntry = S.decodeUnknownOption(S.fromJsonString(ClaudeLiveIndexEntry));
 const decodeThreadShow = S.decodeUnknownOption(S.fromJsonString(T3ThreadShow));
 const decodeEnvironments = S.decodeUnknownOption(S.fromJsonString(S.Array(LinkedT3Environment)));
@@ -133,7 +132,25 @@ const MISSING_THREAD = "no longer available";
 const reading = (liveness: RouteLiveness, detail: string, currentName: O.Option<string> = O.none()) =>
   RouteProbeReading.make({ liveness, detail, currentName, parentThreadId: O.none() });
 
-const optionalConfig = (name: string): Effect.Effect<O.Option<string>> =>
+/**
+ * A configuration value that is set and not blank, or none; a config failure
+ * reads as none.
+ *
+ * **Example** (Read an optional variable)
+ *
+ * ```ts
+ * import { nonBlankConfig } from "@beep/repo-cli/test/Session"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(nonBlankConfig("T3CODE_HOME"))) // true
+ * ```
+ *
+ * @param name - The configuration (environment) key.
+ * @returns The trimmed-non-empty value, if any.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const nonBlankConfig = (name: string): Effect.Effect<O.Option<string>> =>
   Config.option(Config.String(name)).pipe(
     Effect.map(O.filter((value) => Str.isNonEmpty(Str.trim(value)))),
     Effect.orElseSucceed(O.none<string>)
@@ -160,9 +177,9 @@ const readEnvironmentId = (fs: FileSystem.FileSystem, homeDir: string): Effect.E
  * @since 0.0.0
  */
 export const t3HomeDirectory: Effect.Effect<O.Option<string>> = Effect.gen(function* () {
-  const configured = yield* optionalConfig("T3CODE_HOME");
+  const configured = yield* nonBlankConfig("T3CODE_HOME");
   if (O.isSome(configured)) return configured;
-  const home = yield* optionalConfig("HOME");
+  const home = yield* nonBlankConfig("HOME");
   return O.map(home, (value) => `${value}/.t3`);
 });
 
@@ -211,36 +228,28 @@ export const makeSessionRouteProbeLive = Effect.fn("SessionRouteProbe.makeLive")
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  const home = yield* optionalConfig("HOME");
-  const configuredClaudeDir = yield* optionalConfig("CLAUDE_CONFIG_DIR");
+  const secureRandom = yield* SecureRandom.SecureRandom;
+  const home = yield* nonBlankConfig("HOME");
+  const configuredClaudeDir = yield* nonBlankConfig("CLAUDE_CONFIG_DIR");
   const claudeDir = O.orElse(configuredClaudeDir, () => O.map(home, (value) => path.join(value, ".claude")));
   const t3Home = yield* t3HomeDirectory;
-  const configuredCli = yield* optionalConfig("T3CODE_CLI_PATH");
+  const configuredCli = yield* nonBlankConfig("T3CODE_CLI_PATH");
   const t3Cli = O.orElse(configuredCli, () => O.map(t3Home, (value) => path.join(value, "bin", "t3")));
   const localEnvironmentId = O.match(t3Home, {
     onNone: () => Effect.succeed(O.none<string>()),
     onSome: (homeDir) => readEnvironmentId(fs, homeDir),
   });
 
-  const runT3 = (args: ReadonlyArray<string>, timeout: Duration.Duration): Effect.Effect<O.Option<T3CliOutput>> =>
+  const runT3 = (args: ReadonlyArray<string>, timeout: Duration.Duration): Effect.Effect<O.Option<CapturedStreams>> =>
     O.match(t3Cli, {
-      onNone: () => Effect.succeed(O.none<T3CliOutput>()),
+      onNone: () => Effect.succeed(O.none<CapturedStreams>()),
       onSome: (cli) =>
-        Effect.scoped(
-          Effect.gen(function* () {
-            const handle = yield* spawner.spawn(ChildProcess.make(cli, args, { stdin: "ignore", extendEnv: true }));
-            const [stdout, stderr, exitCode] = yield* Effect.all(
-              [
-                handle.stdout.pipe(Stream.decodeText(), Stream.mkString),
-                handle.stderr.pipe(Stream.decodeText(), Stream.mkString),
-                handle.exitCode,
-              ],
-              { concurrency: "unbounded" }
-            );
-            const output: T3CliOutput = { stdout, stderr, exitCode: Number(exitCode) };
-            return output;
-          })
-        ).pipe(Effect.timeoutOption(timeout), Effect.orElseSucceed(O.none<T3CliOutput>)),
+        runCapturedStreams({ command: cli, args, bound: repoRunOutputBound }).pipe(
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+          Effect.provideService(SecureRandom.SecureRandom, secureRandom),
+          Effect.timeoutOption(timeout),
+          Effect.orElseSucceed(O.none<CapturedStreams>)
+        ),
     });
 
   const environments = runT3(["environment", "list", "--json"], T3_ENVIRONMENTS_TIMEOUT).pipe(

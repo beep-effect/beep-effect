@@ -15,7 +15,12 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { layerSessionPresenceStoreLive, recordPresence } from "./Presence.service.ts";
-import { layerSessionResolver, renderSessionResolution, SessionResolver } from "./Resolve.service.ts";
+import {
+  layerSessionResolver,
+  renderSessionResolution,
+  SessionResolveInput,
+  SessionResolver,
+} from "./Resolve.service.ts";
 import { SessionPresenceJson, SessionResolutionJson } from "./Route.schemas.ts";
 import { layerSessionRouteProbeLive } from "./RouteProbe.service.ts";
 import { reportSessionFailure, SessionLedgerError, sessionUsageError } from "./Session.errors.ts";
@@ -55,7 +60,9 @@ export const sessionResolveCommand = Command.make(
       const cwd = process.cwd();
       const facts = yield* sessionCheckoutFacts(cwd);
       const resolver = yield* SessionResolver;
-      const resolution = yield* resolver.resolve({ repository: facts.repository, query: key, cwd });
+      const resolution = yield* resolver.resolve(
+        SessionResolveInput.make({ repository: facts.repository, query: key, cwd })
+      );
       if (json) {
         yield* SessionResolutionJson.encode(resolution).pipe(
           Effect.mapError(encodeError("session resolution")),

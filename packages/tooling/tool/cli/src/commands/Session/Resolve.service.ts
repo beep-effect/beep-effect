@@ -49,33 +49,26 @@ const $I = $RepoCliId.create("commands/Session/Resolve.service");
  * **Example** (Describe a query)
  *
  * ```ts
- * import { PrRepository } from "@beep/repo-cli/test/Session"
- * import type { SessionResolveInput } from "@beep/repo-cli/test/Session"
+ * import { PrRepository, SessionResolveInput } from "@beep/repo-cli/test/Session"
  *
- * const input: SessionResolveInput = {
+ * const input = SessionResolveInput.make({
  *   repository: PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
  *   query: "#3172",
  *   cwd: "/work/beep-effect",
- * }
+ * })
  * console.log(input.query) // "#3172"
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const SessionResolveInput = S.Struct({ repository: PrRepository, query: S.String, cwd: S.String }).pipe(
-  $I.annoteSchema("SessionResolveInput", {
-    description: "A resolve key, its repository and the directory it is read in.",
-  })
-);
-
-/**
- * A resolve key, its repository and the directory it is read in.
- *
- * @category models
- * @since 0.0.0
- */
-export type SessionResolveInput = typeof SessionResolveInput.Type;
+export class SessionResolveInput extends S.Opaque<SessionResolveInput, { readonly brand: unique symbol }>()(
+  S.Struct({ repository: PrRepository, query: S.String, cwd: S.String }).pipe(
+    $I.annoteSchema("SessionResolveInput", {
+      description: "A resolve key, its repository and the directory it is read in.",
+    })
+  )
+) {}
 
 /**
  * Service contract: resolve one key to its owner and routes.

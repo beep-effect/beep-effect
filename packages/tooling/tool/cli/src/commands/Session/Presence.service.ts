@@ -7,7 +7,6 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
-import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -15,7 +14,6 @@ import { dual, flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import { makeJsonLinesStore, makeMemoryJsonLinesStore, newestPerKey } from "../../internal/state/JsonLinesStore.ts";
 import { resolveWorkstationStateDir } from "../../internal/state/WorkstationState.ts";
 import { PrProvenanceEntrypoint, PrRepository } from "../Yeet/internal/Provenance.ts";
@@ -26,7 +24,7 @@ import {
   T3ThreadRoute,
   UnroutableRoute,
 } from "./Route.schemas.ts";
-import { localT3EnvironmentId } from "./RouteProbe.service.ts";
+import { localT3EnvironmentId, nonBlankConfig } from "./RouteProbe.service.ts";
 import { SessionLedgerError, sessionStatePlatformError } from "./Session.errors.ts";
 import { sessionHarness } from "./SessionLedger.service.ts";
 import type { PrProvenanceHarness } from "../Yeet/internal/Provenance.ts";
@@ -203,12 +201,6 @@ export const latestPresence: {
     )
 );
 
-const optionalConfig = (name: string): Effect.Effect<O.Option<string>> =>
-  Config.option(Config.String(name)).pipe(
-    Effect.map(O.filter((value) => Str.isNonEmpty(Str.trim(value)))),
-    Effect.orElseSucceed(O.none<string>)
-  );
-
 const UNROUTABLE_REASON: Record<PrProvenanceHarness, string> = {
   "claude-code": "Claude Code session without a recorded route",
   codex: "Codex outside T3 accepts no inbound message",
@@ -299,10 +291,10 @@ export const routesFor = (input: {
 export const capturePresence = Effect.fn("SessionPresence.capture")(function* (facts: SessionCheckoutFacts) {
   const identity = yield* sessionHarness;
   if (O.isNone(identity.sessionId)) return O.none<SessionPresence>();
-  const threadId = yield* optionalConfig("T3CODE_THREAD_ID");
+  const threadId = yield* nonBlankConfig("T3CODE_THREAD_ID");
   const environmentId = O.isSome(threadId) ? yield* localT3EnvironmentId : O.none<string>();
   const t3 = O.zipWith(environmentId, threadId, (env, thread) => ({ environmentId: env, threadId: thread }));
-  const rawEntrypoint = yield* optionalConfig("CLAUDE_CODE_ENTRYPOINT");
+  const rawEntrypoint = yield* nonBlankConfig("CLAUDE_CODE_ENTRYPOINT");
   const claudeEntrypoint = O.flatMap(rawEntrypoint, decodeEntrypoint);
   const recordedAt = yield* DateTime.now;
   const entrypoint: PrProvenanceEntrypoint =

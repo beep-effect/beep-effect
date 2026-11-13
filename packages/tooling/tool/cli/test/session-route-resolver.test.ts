@@ -23,6 +23,7 @@ import {
   SessionPresenceStore,
   SessionResolution,
   SessionResolutionJson,
+  SessionResolveInput,
   SessionResolver,
   SessionRoute,
   sessionPresenceFileName,
@@ -30,6 +31,7 @@ import {
   UnroutableRoute,
   ViaParentRoute,
 } from "@beep/repo-cli/test/Session";
+import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
@@ -53,6 +55,10 @@ const repository = PrRepository.make({ host: "github.com", owner: "beep-effect",
 const hookPath = NodeURL.fileURLToPath(new URL("../../../../../.claude/hooks/session-ledger.sh", import.meta.url));
 const decodeRoute = S.decodeUnknownEffect(SessionRoute);
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const encodeRouteJson = S.encodeEffect(S.fromJsonString(SessionRoute));
+const decodeRouteJson = S.decodeEffect(S.fromJsonString(SessionRoute));
+const routeEquivalence = S.toEquivalence(SessionRoute);
+const presenceEquivalence = S.toEquivalence(SessionPresence);
 const LOCAL_ENV = "env-local";
 const DEAD_PID = 4_194_311;
 
@@ -220,7 +226,9 @@ const resolveWith = Effect.fn("SessionRouteResolverTest.resolveWith")(function* 
     yield* Effect.forEach(input.rows, ledger.append, { discard: true });
     yield* Effect.forEach(input.presence ?? [], presence.append, { discard: true });
     const resolver = yield* SessionResolver;
-    return yield* resolver.resolve({ repository, query: input.query, cwd: input.cwd ?? "/work" });
+    return yield* resolver.resolve(
+      SessionResolveInput.make({ repository, query: input.query, cwd: input.cwd ?? "/work" })
+    );
   }).pipe(Effect.provideContext(context), Effect.provideService(ConfigProvider.ConfigProvider, config));
 });
 
@@ -262,6 +270,22 @@ describe("session route schemas", () => {
       const rejected = yield* decodeRoute({ _tag: "relay", target: "x" }).pipe(Effect.flip);
       expect(rejected._tag).toBe("SchemaError");
     })
+  );
+
+  it.effect.prop(
+    "round-trips every generated route and presence row through JSON",
+    { route: SessionRoute, presence: SessionPresence },
+    ({ route, presence: generated }) =>
+      Effect.gen(function* () {
+        const presence = SessionPresence.make(generated);
+        const routeJson = yield* encodeRouteJson(route);
+        const decodedRoute = yield* decodeRouteJson(routeJson);
+        expect(routeEquivalence(decodedRoute, route)).toBe(true);
+        const line = yield* SessionPresenceJson.encode(presence);
+        const decodedPresence = yield* SessionPresenceJson.decode(line);
+        expect(presenceEquivalence(decodedPresence, presence)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
   );
 
   it.effect("round-trips presence and resolution JSON, keeping long opaque thread ids verbatim", () =>
