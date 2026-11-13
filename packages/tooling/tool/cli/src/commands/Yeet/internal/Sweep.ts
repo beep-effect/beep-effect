@@ -434,29 +434,78 @@ const switchToMainPreconditions = (state: SweepGitState): ReadonlyArray<SweepPre
  * @param state - Observed git state carrying the resolved PR's head branch.
  * @returns A precondition holding only when the PR's head equals the branch.
  */
+const pullRequestHeadsBranch = (state: SweepGitState): boolean =>
+  O.exists(state.pullRequestHeadBranch, (head) => head === state.branch);
+
 const pullRequestIdentityPrecondition = (state: SweepGitState): SweepPrecondition =>
   precondition(
     `pull request head branch ${optionText(state.pullRequestHeadBranch)} is ${state.branch}`,
-    O.exists(state.pullRequestHeadBranch, (head) => head === state.branch)
+    pullRequestHeadsBranch(state)
   );
 
 const tipsMatch = (left: O.Option<string>, right: O.Option<string>): boolean =>
   O.isSome(left) && O.isSome(right) && left.value === right.value;
 
+/**
+ * The `git` arguments that list a local tip's own commits: the ones whose patch
+ * a pull request head lacks.
+ *
+ * **Details**
+ *
+ * After GitHub rewrites a head, every commit on the old local tip has a new
+ * sha on the pull request head, so a plain `<head>..<local>` range lists them
+ * all. `--cherry-pick --right-only` over the symmetric difference drops the
+ * commits whose patch the head already carries, and what is left is work the
+ * lane never pushed. An empty listing means adopting the pull request head
+ * loses nothing. Merge commits carry no patch of their own and are left out.
+ *
+ * **Example** (Build the check)
+ *
+ * ```ts
+ * import { sweepAdoptionOwnCommitsArgs } from "@beep/repo-cli/test/Yeet"
+ * import * as A from "effect/Array"
+ *
+ * console.log(A.join(sweepAdoptionOwnCommitsArgs("bbbb2222", "aaaa1111"), " "))
+ * // log --cherry-pick --right-only --no-merges bbbb2222...aaaa1111
+ * ```
+ *
+ * @param pullRequestHead - The pull request's head, as GitHub serves it under `refs/pull/<n>/head`.
+ * @param localTip - The local branch tip that would be replaced.
+ * @returns The arguments for `git`.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const sweepAdoptionOwnCommitsArgs: {
+  (pullRequestHead: string, localTip: string): ReadonlyArray<string>;
+  (localTip: string): (pullRequestHead: string) => ReadonlyArray<string>;
+} = dual(
+  2,
+  (pullRequestHead: string, localTip: string): ReadonlyArray<string> => [
+    "log",
+    "--cherry-pick",
+    "--right-only",
+    "--no-merges",
+    `${pullRequestHead}...${localTip}`,
+  ]
+);
+
 // After GitHub rewrites a merged layer's head (the cascade when the layer below
 // merges alone, or a restack) the lane's local tip is the older head, and
 // GitHub deleted the merged branch, so `origin/<branch>` cannot supply the new
-// one: name the pull request's own head ref. Only the text changes; a
-// mismatching tip still blocks the `-D` delete.
+// one: name the pull request's own head ref. The rewrite keeps every patch
+// under a new sha, so the safety check compares by patch, not by ancestry.
+// A pull request that heads another branch gets no adoption command: its head
+// is not this branch's. Only the text changes; a mismatching tip still blocks
+// the `-D` delete.
 const localTipPrecondition = (state: SweepGitState): SweepPrecondition => {
   const satisfied = tipsMatch(state.localTip, state.pullRequestHeadOid);
   const claim = `local tip ${optionText(state.localTip)} equals pull request head ${optionText(state.pullRequestHeadOid)}`;
   const adoption = pipe(
     O.all({ number: state.pullRequestNumber, local: state.localTip, head: state.pullRequestHeadOid }),
-    O.filter(() => pullRequestIsMerged(state) && !satisfied),
+    O.filter(() => pullRequestIsMerged(state) && pullRequestHeadsBranch(state) && !satisfied),
     O.map(
       ({ number, local, head }) =>
-        `${claim}; to adopt the pull request head, run: git fetch origin refs/pull/${number}/head && git switch -C ${shellQuote(state.branch)} FETCH_HEAD, safe only when the local tip holds no commit of your own that the pull request head lacks (after the fetch, \`git log ${head}..${local}\` prints nothing)`
+        `${claim}; to adopt the pull request head, run: git fetch origin refs/pull/${number}/head && git switch -C ${shellQuote(state.branch)} FETCH_HEAD, safe only when the local tip holds no commit of your own that the pull request head lacks (after the fetch, \`git ${A.join(sweepAdoptionOwnCommitsArgs(head, local), " ")}\` prints nothing)`
     )
   );
   return precondition(
