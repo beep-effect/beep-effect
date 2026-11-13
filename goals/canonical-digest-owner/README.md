@@ -34,8 +34,12 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 All four slices, A to D, listed in [`PLAN.md`](./PLAN.md), are done: A
-(census and proof), B (owner surface), C (swaps) and D (guard). Closeout is
-next.
+(census and proof), B (owner surface), C (swaps) and D (guard). The slice D
+pull request (3209) is the final one: it carries the reflection
+([`history/reflections/2026-11-13-claude.md`](./history/reflections/2026-11-13-claude.md))
+and proposes closeout as `completed-retained`. The status changes in a
+packet-state pull request after 3209 merges and the completion refresh
+verifies it.
 
 ## Latest Evidence
 
