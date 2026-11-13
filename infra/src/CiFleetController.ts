@@ -1126,8 +1126,13 @@ export class CiFleetController extends pulumi.ComponentResource {
       `${pool.prefix}-spot-termination-handler`,
       `${pool.prefix}-deregister-retry`,
     ]) {
+      // The name waits on the module's build-queue ARN, which a preview leaves unknown only while the module
+      // is being created (an existing queue keeps its ARN through any update). Pulumi skips an invoke whose
+      // input is unknown, so the first preview of a new pool plans these grants instead of failing on
+      // functions the apply has not created yet, and a plan can be saved; `dependsOn` alone does not defer
+      // the lookup in a preview (2026-11-13). The apply looks the functions up once the module exists.
       const watcher = aws.lambda.getFunctionOutput(
-        { functionName, region: args.region },
+        { functionName: pulumi.output(controller.queues).apply(() => functionName), region: args.region },
         { dependsOn: [controller], parent: this }
       );
       const role = aws.iam.getRoleOutput(

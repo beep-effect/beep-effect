@@ -292,12 +292,46 @@ export const VaultSyncDeliveryClient: Effect.Effect<
  * @category aggregates
  * @since 0.0.0
  */
-export const VaultSyncHttp = Http.toHttpApi({
-  apiName: VaultSyncApi.apiName,
-  serves: VaultSyncApi.serves,
-  group: VaultSyncApi.group,
-  clientInProcess: VaultSyncDeliveryClient,
-});
+export const VaultSyncHttp = Http.toHttpApi(
+  {
+    apiName: VaultSyncApi.apiName,
+    annotations: VaultSyncApi.annotations,
+    serves: VaultSyncApi.serves,
+    group: VaultSyncApi.group,
+    clientInProcess: VaultSyncDeliveryClient,
+  },
+  {
+    expose: [
+      "RequestVaultSync",
+      "ProbeDestination",
+      "ClaimDestinationName",
+      "RecordConflict",
+      "PauseDestination",
+      "ResumeDestination",
+      "ReviewConflict",
+      "VaultSyncStatus.get",
+      "VaultSyncStatus.watch",
+      "VaultSyncStatus.events",
+      "VaultSyncStatus.list",
+      "VaultSyncStatus.snapshot",
+      "OpenConflicts.get",
+      "OpenConflicts.watch",
+      "OpenConflicts.events",
+      "OpenConflicts.list",
+      "OpenConflicts.snapshot",
+      "DestinationList.get",
+      "DestinationList.watch",
+      "DestinationList.events",
+      "DestinationList.list",
+      "DestinationList.snapshot",
+      "OperationQueue.get",
+      "OperationQueue.watch",
+      "OperationQueue.events",
+      "OperationQueue.list",
+      "OperationQueue.snapshot",
+    ],
+  }
+);
 
 /**
  * OpenAPI document for the same HTTP contract.

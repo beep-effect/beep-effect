@@ -1,0 +1,4 @@
+# Standalone prototype: its own lockfile and node_modules, never the monorepo's.
+[install]
+linker = "hoisted"
+saveTextLockfile = true

@@ -5,6 +5,7 @@
   "outDir": ".jsdoc-loop/generated-docs",
   "include": ["**/*.ts"],
   "exclude": [
+    "model-first-slices/**",
     "docs/**",
     ".jsdoc-loop/**",
     "**/test/**",

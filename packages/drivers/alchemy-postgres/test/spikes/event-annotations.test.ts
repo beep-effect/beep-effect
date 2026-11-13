@@ -1,11 +1,11 @@
 /**
  * P0 spike (goals/alchemy-vault-sync-slice): annotation propagation and the
- * event schema-version slot in `@alchemy.run/domain` 2.0.0-beta.85.
+ * event schema-version slot in `@alchemy.run/domain` 2.0.0-beta.86.
  *
  * Findings this test pins:
  * - field schemas keep their Effect annotations and `LiteralKit` identity;
- * - beta.85 `Domain.Event` takes `{ attributes }` only (no class annotations), so the
- *   schema version lives as a static on the declaring class, read by the driver.
+ * - beta.86 Domain and Schema annotations are retained on the event class;
+ * - the schema version remains a static read by the driver.
  */
 
 import * as Domain from "@alchemy.run/domain";
@@ -24,12 +24,12 @@ const DestinationName = S.String.annotate({
 class DestinationRegistered extends Domain.Event(
   "DestinationRegistered",
   { kind: DestinationKind, name: DestinationName },
-  { attributes: (event) => ({ "vault.kind": event.kind }) }
+  { description: "A destination was registered in the vault." }
 ) {
   static readonly schemaVersion = 2;
 }
 
-describe("alchemy beta.85 event annotations (P0 spike)", () => {
+describe("alchemy beta.86 event annotations (P0 spike)", () => {
   it.effect("keeps field-level annotations and LiteralKit identity through Domain.Event", () =>
     Effect.sync(() => {
       const fields = DestinationRegistered.fields;
@@ -40,13 +40,12 @@ describe("alchemy beta.85 event annotations (P0 spike)", () => {
     })
   );
 
-  it.effect("exposes the tag, the telemetry attributes and the class identifier", () =>
+  it.effect("exposes the tag, Domain annotations and the class identifier", () =>
     Effect.sync(() => {
       expect(DestinationRegistered.tag).toBe("DestinationRegistered");
       expect(DestinationRegistered.kind).toBe("Event");
-      expect(DestinationRegistered.attributes?.(DestinationRegistered.make({ kind: "box", name: "n" }))).toEqual({
-        "vault.kind": "box",
-      });
+      expect(DestinationRegistered.annotations.description).toBe("A destination was registered in the vault.");
+      expect(DestinationRegistered.ast.annotations?.description).toBe("A destination was registered in the vault.");
       expect(DestinationRegistered.ast.annotations?.identifier).toBe("DestinationRegistered");
     })
   );

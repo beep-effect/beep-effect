@@ -1,0 +1,24 @@
+{
+  "name": "@proto/party-host",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@alchemy.run/domain": "2.0.0-beta.87",
+    "@alchemy.run/effect-cluster": "2.0.0-beta.87",
+    "@proto/kernel": "workspace:*",
+    "@proto/party": "workspace:*",
+    "alchemy": "2.0.0-beta.87",
+    "effect": "4.1.4"
+  },
+  "devDependencies": {
+    "@effect/vitest": "4.1.4",
+    "vitest": "5.0.4"
+  }
+}

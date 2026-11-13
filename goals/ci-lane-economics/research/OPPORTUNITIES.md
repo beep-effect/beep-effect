@@ -1207,3 +1207,21 @@ evidence, what would have prevented it). Redact for the public repo.
   pinned toolchain versions against the installed binaries before launching
   a 30-minute coverage replay), and a version-pin test that reads the pin
   from the lockfile instead of asserting a literal.
+
+## 2026-11-13 — a saved plan refused six grants after creating the pool
+
+- **Doing:** applying the shard overflow pool to `infra/ci-runners` from a reviewed saved plan
+  (142 creates).
+- **Evidence:** `pulumi up --plan` created 136 resources, then failed six KMS grants with
+  `violates plan: dependencies changed: added …ci-shard-overflow-controller`. #3275 had made
+  those grants wait on the module so that the preview could run at all; the dependency exists only
+  once the module does, so the plan could not record it. A second saved plan held exactly the six
+  grants and applied cleanly; `--expect-no-changes` then read 366 unchanged.
+- **Cost:** one extra preview and apply (about 15 minutes) and a stop to ask the operator, with
+  the pool half-built in between (overflow was still switched off).
+- **Would have prevented it:** the runbook saying that a dependency added for preview correctness
+  makes the first apply two-pass. It says so now (`docs/runbooks/ci-runner-reliability.md`,
+  "Deploy and verify").
+- **Also:** the passphrase label the secrets-layout runbook lists for Pulumi does not resolve yet;
+  the current label does. A wrong guess costs one failed `op run`.
+
