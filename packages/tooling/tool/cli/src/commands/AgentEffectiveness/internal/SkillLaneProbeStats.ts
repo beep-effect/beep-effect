@@ -21,14 +21,16 @@ import * as R from "effect/Record";
 import { roundScore } from "./EvalScoring.ts";
 import {
   SkillLaneFamilyTest,
+  SkillLanePermutationResult,
   SkillLanePermutationTest,
   SkillLaneProbeReport,
   SkillLaneProbeTask,
   SkillLaneProbeVerdict,
+  SkillLaneTaskValues,
 } from "./SkillLaneProbeSchemas.ts";
 import { SkillProbeEstimate, SkillProbeOutcome } from "./SkillProbeSchemas.ts";
-import { buildSkillProbeReport, estimateClusteredMean } from "./SkillProbeStats.ts";
-import type { SkillLaneProbeData } from "./SkillLaneProbeSchemas.ts";
+import { buildSkillProbeReport, estimateClusteredMean, sampleMean, sampleVariance } from "./SkillProbeStats.ts";
+import type { SkillLaneProbeOptions } from "./SkillLaneProbeSchemas.ts";
 import type { SkillProbeRunRecord } from "./SkillProbeSchemas.ts";
 
 /**
@@ -58,30 +60,7 @@ const RUNS_PER_CELL = 5;
 const COMPLETE_TASK_FLOOR = 10;
 const NORMAL_975 = 1.96;
 
-/**
- * One task's counted lane fractions per cell, the unit the test relabels.
- *
- * @category models
- * @since 0.0.0
- */
-export type SkillLaneTaskValues = {
-  readonly taskId: string;
-  readonly family: string;
-  readonly valuesB: ReadonlyArray<number>;
-  readonly valuesC: ReadonlyArray<number>;
-};
-
-const mean = (values: ReadonlyArray<number>): number =>
-  A.isReadonlyArrayNonEmpty(values) ? Num.sumAll(values) / A.length(values) : 0;
-
-const sampleVariance = (values: ReadonlyArray<number>): number => {
-  const n = A.length(values);
-  if (n < 2) return 0;
-  const center = mean(values);
-  return Num.sumAll(A.map(values, (value) => (value - center) ** 2)) / (n - 1);
-};
-
-const taskDifference = (task: SkillLaneTaskValues): number => mean(task.valuesC) - mean(task.valuesB);
+const taskDifference = (task: SkillLaneTaskValues): number => sampleMean(task.valuesC) - sampleMean(task.valuesB);
 
 /**
  * `D` with the fixed-task interval `D ± 1.96 * SE`, where
@@ -95,11 +74,11 @@ const taskDifference = (task: SkillLaneTaskValues): number => mean(task.valuesC)
  * **Example** (Two tasks)
  *
  * ```ts
- * import { fixedTaskInterval } from "@beep/repo-cli/test/AgentEffectiveness"
+ * import { fixedTaskInterval, SkillLaneTaskValues } from "@beep/repo-cli/test/AgentEffectiveness"
  *
  * const interval = fixedTaskInterval([
- *   { taskId: "a", family: "f", valuesB: [0.2, 0.4], valuesC: [0.6, 0.8] },
- *   { taskId: "b", family: "g", valuesB: [0.5, 0.5, 0.5], valuesC: [0.5, 0.7] }
+ *   SkillLaneTaskValues.make({ taskId: "a", family: "f", valuesB: [0.2, 0.4], valuesC: [0.6, 0.8] }),
+ *   SkillLaneTaskValues.make({ taskId: "b", family: "g", valuesB: [0.5, 0.5, 0.5], valuesC: [0.5, 0.7] })
  * ])
  * console.log(interval.mean) // 0.25
  * ```
@@ -111,7 +90,7 @@ const taskDifference = (task: SkillLaneTaskValues): number => mean(task.valuesC)
  */
 export const fixedTaskInterval = (tasks: ReadonlyArray<SkillLaneTaskValues>): SkillProbeEstimate => {
   const count = A.length(tasks);
-  const center = mean(A.map(tasks, taskDifference));
+  const center = sampleMean(A.map(tasks, taskDifference));
   const standardError =
     count === 0
       ? 0
@@ -171,18 +150,63 @@ export const holmAdjust = (pValues: ReadonlyArray<number>): ReadonlyArray<number
   );
 };
 
-/**
- * Overall and per-family permutation p-values for lane-fraction differences.
- *
- * @category models
- * @since 0.0.0
- */
-export type SkillLanePermutationResult = {
-  readonly pValue: number;
-  readonly familyPValues: Readonly<Record<string, number>>;
+const pValueOf = (exceed: number, relabelings: number): number => roundScore((1 + exceed) / (1 + relabelings));
+
+type NextDouble = () => number;
+
+// Fisher-Yates over the whole buffer, one draw per position from the top down.
+const shuffleInPlace = (buffer: Float64Array, nextDouble: NextDouble): void => {
+  for (let i = buffer.length - 1; i >= 1; i--) {
+    const j = Math.min(i, Math.floor(nextDouble() * (i + 1)));
+    const value = buffer[i]!;
+    buffer[i] = buffer[j]!;
+    buffer[j] = value;
+  }
 };
 
-const pValueOf = (exceed: number, relabelings: number): number => roundScore((1 + exceed) / (1 + relabelings));
+const sumRange = (buffer: Float64Array, from: number, to: number): number => {
+  let sum = 0;
+  for (let i = from; i < to; i++) sum += buffer[i]!;
+  return sum;
+};
+
+// Mean of the first `sizeC` entries minus the mean of the rest.
+const splitDifference = (buffer: Float64Array, sizeC: number): number =>
+  sumRange(buffer, 0, sizeC) / sizeC - sumRange(buffer, sizeC, buffer.length) / (buffer.length - sizeC);
+
+type RelabelingPlan = {
+  readonly pooled: ReadonlyArray<Float64Array>;
+  readonly buffers: ReadonlyArray<Float64Array>;
+  readonly sizesC: ReadonlyArray<number>;
+  readonly familyOf: ReadonlyArray<number>;
+  readonly familySums: Float64Array;
+};
+
+// One relabeling of every task in input order; fills `familySums`, returns the overall sum.
+const drawRelabeling = (plan: RelabelingPlan, nextDouble: NextDouble): number => {
+  plan.familySums.fill(0);
+  let overallSum = 0;
+  for (let t = 0; t < plan.pooled.length; t++) {
+    const buffer = plan.buffers[t]!;
+    buffer.set(plan.pooled[t]!);
+    shuffleInPlace(buffer, nextDouble);
+    const difference = splitDifference(buffer, plan.sizesC[t]!);
+    overallSum += difference;
+    plan.familySums[plan.familyOf[t]!]! += difference;
+  }
+  return overallSum;
+};
+
+const countFamilyExceedances = (
+  familySums: Float64Array,
+  familySizes: ReadonlyArray<number>,
+  observedFamilies: ReadonlyArray<number>,
+  exceedFamilies: Float64Array
+): void => {
+  for (let f = 0; f < familySums.length; f++) {
+    if (Math.abs(roundScore(familySums[f]! / familySizes[f]!)) >= observedFamilies[f]!) exceedFamilies[f]!++;
+  }
+};
 
 /**
  * The within-task permutation test: each relabeling shuffles every task's
@@ -202,12 +226,12 @@ const pValueOf = (exceed: number, relabelings: number): number => roundScore((1 
  * **Example** (Seeded test)
  *
  * ```ts
- * import { skillLanePermutationTest } from "@beep/repo-cli/test/AgentEffectiveness"
+ * import { SkillLaneTaskValues, skillLanePermutationTest } from "@beep/repo-cli/test/AgentEffectiveness"
  * import * as Effect from "effect/Effect"
  * import * as Random from "effect/Random"
  *
  * const program = skillLanePermutationTest(
- *   [{ taskId: "a", family: "f", valuesB: [0, 0], valuesC: [1, 1] }],
+ *   [SkillLaneTaskValues.make({ taskId: "a", family: "f", valuesB: [0, 0], valuesC: [1, 1] })],
  *   1000
  * ).pipe(Random.withSeed(20261113))
  * console.log(Effect.isEffect(program)) // true
@@ -235,11 +259,11 @@ export const skillLanePermutationTest: {
     );
     const familySizes = A.map(families, (family) => A.length(A.filter(tasks, (task) => task.family === family)));
     const observed = A.map(tasks, taskDifference);
-    const observedOverall = Math.abs(roundScore(mean(observed)));
+    const observedOverall = Math.abs(roundScore(sampleMean(observed)));
     const observedFamilies = A.map(families, (family) =>
       Math.abs(
         roundScore(
-          mean(
+          sampleMean(
             A.map(
               A.filter(tasks, (task) => task.family === family),
               taskDifference
@@ -249,45 +273,28 @@ export const skillLanePermutationTest: {
       )
     );
     const pooled = A.map(tasks, (task) => Float64Array.from([...task.valuesC, ...task.valuesB]));
-    const sizesC = A.map(tasks, (task) => A.length(task.valuesC));
-    const buffers = A.map(pooled, (values) => new Float64Array(values.length));
     const familySums = new Float64Array(A.length(families));
+    const plan: RelabelingPlan = {
+      pooled,
+      buffers: A.map(pooled, (values) => new Float64Array(values.length)),
+      sizesC: A.map(tasks, (task) => A.length(task.valuesC)),
+      familyOf,
+      familySums,
+    };
+    const nextDouble: NextDouble = () => random.nextDoubleUnsafe();
     let exceedOverall = 0;
     const exceedFamilies = new Float64Array(A.length(families));
     for (let draw = 0; draw < relabelings; draw++) {
-      familySums.fill(0);
-      let overallSum = 0;
-      for (let t = 0; t < pooled.length; t++) {
-        const buffer = buffers[t]!;
-        buffer.set(pooled[t]!);
-        for (let i = buffer.length - 1; i >= 1; i--) {
-          const j = Math.min(i, Math.floor(random.nextDoubleUnsafe() * (i + 1)));
-          const value = buffer[i]!;
-          buffer[i] = buffer[j]!;
-          buffer[j] = value;
-        }
-        const sizeC = sizesC[t]!;
-        let sumC = 0;
-        let sumB = 0;
-        for (let i = 0; i < buffer.length; i++) {
-          if (i < sizeC) sumC += buffer[i]!;
-          else sumB += buffer[i]!;
-        }
-        const difference = sumC / sizeC - sumB / (buffer.length - sizeC);
-        overallSum += difference;
-        familySums[familyOf[t]!]! += difference;
-      }
+      const overallSum = drawRelabeling(plan, nextDouble);
       if (Math.abs(roundScore(overallSum / pooled.length)) >= observedOverall) exceedOverall++;
-      for (let f = 0; f < families.length; f++) {
-        if (Math.abs(roundScore(familySums[f]! / familySizes[f]!)) >= observedFamilies[f]!) exceedFamilies[f]!++;
-      }
+      countFamilyExceedances(familySums, familySizes, observedFamilies, exceedFamilies);
     }
-    return {
+    return SkillLanePermutationResult.make({
       pValue: pValueOf(exceedOverall, relabelings),
       familyPValues: R.fromEntries(
         A.map(families, (family, index) => [family, pValueOf(exceedFamilies[index] ?? 0, relabelings)] as const)
       ),
-    };
+    });
   })
 );
 
@@ -345,18 +352,6 @@ const laneValues = (records: ReadonlyArray<SkillProbeRunRecord>): ReadonlyArray<
   );
 
 /**
- * Options for a lane probe report.
- *
- * @category models
- * @since 0.0.0
- */
-export type SkillLaneProbeOptions = {
-  readonly data: SkillLaneProbeData;
-  readonly seed: number;
-  readonly relabelings: number;
-};
-
-/**
  * Build the lane probe report from run records under the lane probe's rule.
  *
  * **Details**
@@ -369,10 +364,13 @@ export type SkillLaneProbeOptions = {
  * **Example** (Report no records)
  *
  * ```ts
- * import { buildSkillLaneProbeReport } from "@beep/repo-cli/test/AgentEffectiveness"
+ * import { buildSkillLaneProbeReport, SkillLaneProbeOptions } from "@beep/repo-cli/test/AgentEffectiveness"
  * import * as Effect from "effect/Effect"
  *
- * const program = buildSkillLaneProbeReport([], { data: "pilot", seed: 20261113, relabelings: 10 })
+ * const program = buildSkillLaneProbeReport(
+ *   [],
+ *   SkillLaneProbeOptions.make({ data: "pilot", seed: 20261113, relabelings: 10 })
+ * )
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
@@ -397,8 +395,8 @@ export const buildSkillLaneProbeReport: {
       A.map(taskIds, (taskId) =>
         pipe(
           R.get(byTask, taskId),
-          O.map(
-            (members): SkillLaneTaskValues => ({
+          O.map((members) =>
+            SkillLaneTaskValues.make({
               taskId,
               family: A.headNonEmpty(members).family,
               valuesB: laneValues(A.filter(members, (record) => record.cell === "B")),
@@ -428,7 +426,7 @@ export const buildSkillLaneProbeReport: {
     const adjusted = holmAdjust(A.map(familyNames, (family) => permutation.familyPValues[family] ?? 1));
     const families = A.map(familyNames, (family, index) => {
       const members = A.filter(counted, (task) => task.family === family);
-      const familyDifference = roundScore(mean(A.map(members, taskDifference)));
+      const familyDifference = roundScore(sampleMean(A.map(members, taskDifference)));
       const adjustedPValue = adjusted[index] ?? 1;
       return SkillLaneFamilyTest.make({
         family,
@@ -459,8 +457,8 @@ export const buildSkillLaneProbeReport: {
           family: task.family,
           countedB: A.length(task.valuesB),
           countedC: A.length(task.valuesC),
-          meanB: roundScore(mean(task.valuesB)),
-          meanC: roundScore(mean(task.valuesC)),
+          meanB: roundScore(sampleMean(task.valuesB)),
+          meanC: roundScore(sampleMean(task.valuesC)),
           difference: roundScore(taskDifference(task)),
           standardError: roundScore(
             Math.sqrt(

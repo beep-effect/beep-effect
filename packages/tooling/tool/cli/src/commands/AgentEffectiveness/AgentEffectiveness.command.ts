@@ -53,6 +53,7 @@ import {
   RunAgentEffectivenessEvalScoreCommandOptions,
   runAgentEffectivenessEvalScoreCommand,
 } from "./internal/EvalScorer.ts";
+import { SkillLaneProbeOptions } from "./internal/SkillLaneProbeSchemas.ts";
 import { SKILL_LANE_PROBE_RELABELINGS, SKILL_LANE_PROBE_SEED } from "./internal/SkillLaneProbeStats.ts";
 import {
   preflightSkillProbe,
@@ -811,9 +812,11 @@ const probeReportCommand = Command.make(
   },
   ({ records, preflight, primary, pilot, seed, relabelings }) =>
     primary === "lane-fraction"
-      ? runSkillLaneProbeReport(records, preflight, { data: pilot ? "pilot" : "scored", seed, relabelings }).pipe(
-          Effect.asVoid
-        )
+      ? runSkillLaneProbeReport(
+          records,
+          preflight,
+          SkillLaneProbeOptions.make({ data: pilot ? "pilot" : "scored", seed, relabelings })
+        ).pipe(Effect.asVoid)
       : runSkillProbeReport(records, preflight, primary).pipe(Effect.asVoid)
 ).pipe(Command.withDescription("Report cell means, paired differences and the verdict as JSON"));
 

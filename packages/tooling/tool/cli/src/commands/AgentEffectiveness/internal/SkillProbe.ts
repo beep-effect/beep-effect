@@ -49,7 +49,7 @@ import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { AgentEffectivenessEvalScoreReport } from "../AgentEffectiveness.schemas.ts";
-import type { SkillLaneProbeOptions } from "./SkillLaneProbeStats.ts";
+import type { SkillLaneProbeOptions } from "./SkillLaneProbeSchemas.ts";
 import type { PluginEvalRun, SkillProbeCell, SkillProbePrimary } from "./SkillProbeSchemas.ts";
 
 const SKILL_NAME = "schema-first-development";
@@ -1109,14 +1109,14 @@ const encodeLaneReport = S.encodeEffect(S.fromJsonString(SkillLaneProbeReport));
  * **Example** (Report pilot records)
  *
  * ```ts
- * import { runSkillLaneProbeReport } from "@beep/repo-cli/test/AgentEffectiveness"
+ * import { runSkillLaneProbeReport, SkillLaneProbeOptions } from "@beep/repo-cli/test/AgentEffectiveness"
  * import * as Effect from "effect/Effect"
  *
- * const program = runSkillLaneProbeReport(["runs.jsonl"], "preflight.json", {
- *   data: "pilot",
- *   seed: 20261113,
- *   relabelings: 100000
- * })
+ * const program = runSkillLaneProbeReport(
+ *   ["runs.jsonl"],
+ *   "preflight.json",
+ *   SkillLaneProbeOptions.make({ data: "pilot", seed: 20261113, relabelings: 100000 })
+ * )
  * console.log(Effect.isEffect(program)) // true
  * ```
  *

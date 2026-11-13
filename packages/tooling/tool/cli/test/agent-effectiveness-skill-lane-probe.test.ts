@@ -9,8 +9,11 @@ import {
   fixedTaskInterval,
   holmAdjust,
   runSkillLaneProbeReport,
+  SkillLanePermutationResult,
+  SkillLaneProbeOptions,
   SkillLaneProbeReport,
   SkillLaneProbeVerdict,
+  SkillLaneTaskValues,
   SkillProbeFingerprint,
   SkillProbeOutcome,
   SkillProbePreflight,
@@ -24,6 +27,7 @@ import { A } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
@@ -35,7 +39,6 @@ import * as Random from "effect/Random";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import type { SkillLaneTaskValues } from "@beep/repo-cli/test/AgentEffectiveness";
 
 const fingerprint = SkillProbeFingerprint.make({
   modelId: "claude-opus-5-5",
@@ -103,8 +106,8 @@ const TASKS = A.flatMap(FAMILIES, (family) =>
 
 // Two tasks in two families, small enough to enumerate every relabeling.
 const HAND: ReadonlyArray<SkillLaneTaskValues> = [
-  { taskId: "t1", family: "f1", valuesB: [0.2, 0.4], valuesC: [0.6, 0.8] },
-  { taskId: "t2", family: "f2", valuesB: [0.5, 0.5, 0.5], valuesC: [0.5, 0.7] },
+  SkillLaneTaskValues.make({ taskId: "t1", family: "f1", valuesB: [0.2, 0.4], valuesC: [0.6, 0.8] }),
+  SkillLaneTaskValues.make({ taskId: "t2", family: "f2", valuesB: [0.5, 0.5, 0.5], valuesC: [0.5, 0.7] }),
 ];
 
 const subsets = (size: number, choose: number): ReadonlyArray<ReadonlyArray<number>> =>
@@ -170,10 +173,12 @@ describe("skill lane probe arithmetic", () => {
 
   it.effect("detects one strong family that the family-clustered interval cannot", () =>
     Effect.gen(function* () {
-      const tasks: ReadonlyArray<SkillLaneTaskValues> = A.map(TASKS, ({ taskId, family }) =>
-        family === "fn-schema"
-          ? { taskId, family, valuesB: [0.2, 0.25, 0.3, 0.25, 0.25], valuesC: [0.7, 0.75, 0.8, 0.75, 0.75] }
-          : { taskId, family, valuesB: [0.5, 0.45, 0.55, 0.5, 0.5], valuesC: [0.5, 0.55, 0.45, 0.5, 0.5] }
+      const tasks = A.map(TASKS, ({ taskId, family }) =>
+        SkillLaneTaskValues.make(
+          family === "fn-schema"
+            ? { taskId, family, valuesB: [0.2, 0.25, 0.3, 0.25, 0.25], valuesC: [0.7, 0.75, 0.8, 0.75, 0.75] }
+            : { taskId, family, valuesB: [0.5, 0.45, 0.55, 0.5, 0.5], valuesC: [0.5, 0.55, 0.45, 0.5, 0.5] }
+        )
       );
       const clustered = estimateClusteredMean(
         A.map(tasks, (task) => ({
@@ -235,11 +240,10 @@ const fullRecords = (effectFamily: string, shift: number) =>
 describe("skill lane probe report", () => {
   it.effect("returns Effect with a keep flag on the family that carries it", () =>
     Effect.gen(function* () {
-      const report = yield* buildSkillLaneProbeReport(fullRecords("fn-schema", 0.5), {
-        data: "scored",
-        seed: 20261113,
-        relabelings: 2000,
-      });
+      const report = yield* buildSkillLaneProbeReport(
+        fullRecords("fn-schema", 0.5),
+        SkillLaneProbeOptions.make({ data: "scored", seed: 20261113, relabelings: 2000 })
+      );
       expect(report.difference.mean).toBe(0.125);
       expect(report.completeTasks).toBe(12);
       expect(report.attempts).toBe(120);
@@ -262,7 +266,10 @@ describe("skill lane probe report", () => {
         rest,
         dropped === undefined ? [] : [run(dropped.taskId, dropped.family, "B", 0, O.none(), 1)]
       );
-      const report = yield* buildSkillLaneProbeReport(records, { data: "scored", seed: 20261113, relabelings: 500 });
+      const report = yield* buildSkillLaneProbeReport(
+        records,
+        SkillLaneProbeOptions.make({ data: "scored", seed: 20261113, relabelings: 500 })
+      );
       expect(report.excludedRuns).toBe(1);
       expect(report.completeTasks).toBe(11);
       const short = A.findFirst(report.tasks, (task) => task.countedB === 4);
@@ -277,7 +284,7 @@ describe("skill lane probe report", () => {
       );
       const sparse = yield* buildSkillLaneProbeReport(
         A.filter(records, (record) => record.family === "fn-schema"),
-        { data: "scored", seed: 20261113, relabelings: 100 }
+        SkillLaneProbeOptions.make({ data: "scored", seed: 20261113, relabelings: 100 })
       );
       assertSome(
         O.map(sparse.verdict, (verdict) => (verdict._tag === "Incomplete" ? verdict.missing : [])),
@@ -288,15 +295,54 @@ describe("skill lane probe report", () => {
 
   it.effect("labels pilot data and writes no verdict", () =>
     Effect.gen(function* () {
-      const report = yield* buildSkillLaneProbeReport(fullRecords("fn-schema", 0.5), {
-        data: "pilot",
-        seed: 20261113,
-        relabelings: 200,
-      });
+      const report = yield* buildSkillLaneProbeReport(
+        fullRecords("fn-schema", 0.5),
+        SkillLaneProbeOptions.make({ data: "pilot", seed: 20261113, relabelings: 200 })
+      );
       expect(report.data).toBe("pilot");
       expect(report.note).toContain("Pilot data");
       assertNone(report.verdict);
     })
+  );
+});
+
+const LaneReportJson = S.fromJsonString(SkillLaneProbeReport);
+const PermutationResultJson = S.fromJsonString(SkillLanePermutationResult);
+
+describe("skill lane probe schemas", () => {
+  it.effect.prop(
+    "round-trips schema-derived reports and permutation results through JSON",
+    [Arbitrary.schema(SkillLaneProbeReport), Arbitrary.schema(SkillLanePermutationResult)],
+    ([report, result]) =>
+      Effect.gen(function* () {
+        const encodedReport = yield* S.encodeEffect(LaneReportJson)(report);
+        const decodedReport = yield* S.decodeEffect(LaneReportJson)(encodedReport);
+        const reencodedReport = yield* S.encodeEffect(LaneReportJson)(decodedReport);
+        expect(reencodedReport).toBe(encodedReport);
+        const encodedResult = yield* S.encodeEffect(PermutationResultJson)(result);
+        const decodedResult = yield* S.decodeEffect(PermutationResultJson)(encodedResult);
+        const reencodedResult = yield* S.encodeEffect(PermutationResultJson)(decodedResult);
+        expect(reencodedResult).toBe(encodedResult);
+      })
+  );
+
+  it.effect.prop(
+    "keeps the fixed-task interval ordered around D for schema-derived tasks",
+    [S.Array(SkillLaneTaskValues).pipe(Arbitrary.schema)],
+    ([tasks]) =>
+      Effect.sync(() => {
+        const counted = A.filter(
+          tasks,
+          (task) =>
+            A.isReadonlyArrayNonEmpty(task.valuesB) &&
+            A.isReadonlyArrayNonEmpty(task.valuesC) &&
+            A.every(A.appendAll(task.valuesB, task.valuesC), (value) => value <= 1)
+        );
+        const interval = fixedTaskInterval(counted);
+        expect(interval.n).toBe(A.length(counted));
+        expect(interval.lower).toBeLessThanOrEqual(interval.mean);
+        expect(interval.mean).toBeLessThanOrEqual(interval.upper);
+      })
   );
 });
 
@@ -347,11 +393,11 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("skill lane probe command"
       expect(first.data).toBe("scored");
       expect(first.test.seed).toBe(20261113);
       expect(first.test.relabelings).toBe(300);
-      const again = yield* runSkillLaneProbeReport([recordsPath], preflightPath, {
-        data: "pilot",
-        seed: 20261113,
-        relabelings: 300,
-      });
+      const again = yield* runSkillLaneProbeReport(
+        [recordsPath],
+        preflightPath,
+        SkillLaneProbeOptions.make({ data: "pilot", seed: 20261113, relabelings: 300 })
+      );
       expect(again.test.pValue).toBe(first.test.pValue);
       assertNone(again.verdict);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -362,7 +408,11 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("skill lane probe command"
       const extra = A.map(A.range(0, 29), (index) => run("fn-schema-1", "fn-schema", "B", 10 + index, O.some(0.5)));
       const { recordsPath, preflightPath } = yield* writeFixture(A.appendAll(fullRecords("none", 0), extra));
       const error = yield* Effect.flip(
-        runSkillLaneProbeReport([recordsPath], preflightPath, { data: "scored", seed: 1, relabelings: 10 })
+        runSkillLaneProbeReport(
+          [recordsPath],
+          preflightPath,
+          SkillLaneProbeOptions.make({ data: "scored", seed: 1, relabelings: 10 })
+        )
       );
       expect(String(error.message)).toContain("cap of 144");
     })

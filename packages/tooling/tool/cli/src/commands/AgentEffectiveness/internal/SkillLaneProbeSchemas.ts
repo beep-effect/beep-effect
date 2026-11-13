@@ -22,6 +22,8 @@ const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/SkillLaneProb
 
 const Count = S.Int.check(S.isGreaterThanOrEqualTo(0));
 const Probability = S.Finite.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(1));
+const LaneFraction = S.Finite.check(S.isGreaterThanOrEqualTo(0));
+const Relabelings = S.Int.check(S.isGreaterThanOrEqualTo(1));
 
 /**
  * Primary measure a probe report reads: the pass candidates of the first
@@ -100,6 +102,91 @@ export const SkillLaneProbeData = LiteralKit(["pilot", "scored"]).pipe(
 export type SkillLaneProbeData = typeof SkillLaneProbeData.Type;
 
 /**
+ * One task's counted lane fractions per cell, the unit the permutation test
+ * relabels.
+ *
+ * **Example** (Make a task's values)
+ *
+ * ```ts
+ * import { SkillLaneTaskValues } from "@beep/repo-cli/test/AgentEffectiveness"
+ *
+ * const task = SkillLaneTaskValues.make({ taskId: "a", family: "f", valuesB: [0.2, 0.4], valuesC: [0.6, 0.8] })
+ * console.log(task.valuesC.length) // 2
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SkillLaneTaskValues extends S.Opaque<SkillLaneTaskValues, { readonly brand: unique symbol }>()(
+  S.Struct({
+    taskId: S.NonEmptyString,
+    family: S.NonEmptyString,
+    valuesB: S.Array(LaneFraction),
+    valuesC: S.Array(LaneFraction),
+  }).pipe(
+    $I.annoteSchema("SkillLaneTaskValues", {
+      description: "A task's family and the lane fractions of its counted runs in cells B and C.",
+    })
+  )
+) {}
+
+/**
+ * Overall and per-family permutation p-values for lane-fraction differences.
+ *
+ * **Example** (Make a permutation result)
+ *
+ * ```ts
+ * import { SkillLanePermutationResult } from "@beep/repo-cli/test/AgentEffectiveness"
+ *
+ * const result = SkillLanePermutationResult.make({ pValue: 0.2, familyPValues: { f: 0.4 } })
+ * console.log(result.familyPValues.f) // 0.4
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SkillLanePermutationResult extends S.Opaque<
+  SkillLanePermutationResult,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    pValue: Probability,
+    familyPValues: S.Record(S.String, Probability),
+  }).pipe(
+    $I.annoteSchema("SkillLanePermutationResult", {
+      description: "Two-sided permutation p-value of the overall difference and one p-value per family.",
+    })
+  )
+) {}
+
+/**
+ * Options for a lane probe report.
+ *
+ * **Example** (Make pilot options)
+ *
+ * ```ts
+ * import { SkillLaneProbeOptions } from "@beep/repo-cli/test/AgentEffectiveness"
+ *
+ * const options = SkillLaneProbeOptions.make({ data: "pilot", seed: 20261113, relabelings: 100000 })
+ * console.log(options.data) // "pilot"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SkillLaneProbeOptions extends S.Opaque<SkillLaneProbeOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
+    data: SkillLaneProbeData,
+    seed: S.Int,
+    relabelings: Relabelings,
+  }).pipe(
+    $I.annoteSchema("SkillLaneProbeOptions", {
+      description: "Data label, permutation seed and relabeling count of a lane probe report.",
+    })
+  )
+) {}
+
+/**
  * One task's lane-fraction difference, C minus B, over its counted runs.
  *
  * **Details**
@@ -153,7 +240,7 @@ export class SkillLaneProbeTask extends S.Opaque<SkillLaneProbeTask, { readonly 
 export class SkillLanePermutationTest extends S.Opaque<SkillLanePermutationTest, { readonly brand: unique symbol }>()(
   S.Struct({
     seed: S.Int,
-    relabelings: S.Int.check(S.isGreaterThanOrEqualTo(1)),
+    relabelings: Relabelings,
     pValue: Probability,
     detected: S.Boolean,
   }).pipe(
@@ -271,7 +358,7 @@ export class SkillLaneProbeReport extends S.Opaque<SkillLaneProbeReport, { reado
     schemaVersion: S.tag("skill-lane-probe-report/v1"),
     data: SkillLaneProbeData,
     note: S.NonEmptyString,
-    primary: S.Literal("lane-fraction"),
+    primary: S.tag("lane-fraction"),
     scorerProfile: S.NonEmptyString,
     fingerprints: S.Array(SkillProbeFingerprint),
     attempts: Count,
