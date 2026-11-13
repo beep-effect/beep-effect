@@ -67,6 +67,7 @@ const encodeCanonicalValue = (value: unknown, indent: string): string => {
     return A.match(A.sort(R.toEntries(value), jsonEntryOrder), {
       onEmpty: () => "{}",
       onNonEmpty: (entries) =>
+        // biome-ignore lint/plugin/no-hand-rolled-canonical-json: census E8, renderer: openclaw.json file text
         `{\n${A.join(
           A.map(entries, ([key, entry]) => `${nested}${encodeJsonLeaf(key)}: ${encodeCanonicalValue(entry, nested)}`),
           ",\n"

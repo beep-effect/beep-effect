@@ -6,7 +6,7 @@
     "title": "Canonical Digest Owner",
     "status": "active",
     "created": "2026-11-10",
-    "updated": "2026-11-12",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/canonical-digest-owner",
@@ -23,7 +23,48 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 3096,
+        "role": "supporting"
+      },
+      {
+        "number": 3129,
+        "role": "supporting"
+      },
+      {
+        "number": 3173,
+        "role": "supporting"
+      },
+      {
+        "number": 3193,
+        "role": "supporting"
+      },
+      {
+        "number": 3204,
+        "role": "supporting"
+      },
+      {
+        "number": 3211,
+        "role": "supporting"
+      },
+      {
+        "number": 3209,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/feat_canonical-digest-owner-guard-2121c956b047/verdict.json",
+        "gating": true
+      }
+    ]
+  },
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3209
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -65,22 +106,22 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [
