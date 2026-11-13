@@ -498,6 +498,12 @@
         ]
       },
       {
+        "name": "@beep/infra-turbo-cache",
+        "patterns": [
+          "packages/tooling/infra/turbo-cache/src/**"
+        ]
+      },
+      {
         "name": "@beep/jsonc",
         "patterns": [
           "packages/foundation/modeling/jsonc/src/**"
@@ -3027,6 +3033,21 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/infra-turbo-cache",
+        "allow": [
+          "@beep/identity",
+          "@beep/infra-turbo-cache",
+          "@beep/memfs",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/infra-turbo-cache",
+          "@beep/memfs",
+          "@beep/schema"
         ]
       },
       {

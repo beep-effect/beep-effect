@@ -3916,6 +3916,27 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/tooling/infra/turbo-cache": {
+      "name": "@beep/infra-turbo-cache",
+      "version": "0.0.0",
+      "dependencies": {
+        "@alchemy.run/aws": "catalog:",
+        "@alchemy.run/cloudflare": "catalog:",
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@effect/platform-node": "catalog:",
+        "alchemy": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@alchemy.run/test": "catalog:",
+        "@beep/memfs": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+        "vitest": "catalog:",
+      },
+    },
     "packages/tooling/library/agent-memory-store": {
       "name": "@beep/agent-memory-store",
       "version": "0.0.0",
@@ -4535,7 +4556,6 @@
       "name": "@beep/scratchpad",
       "version": "0.0.0",
       "dependencies": {
-        "@alchemy.run/cloudflare": "catalog:",
         "@beep/dock": "workspace:^",
         "@beep/dock-react": "workspace:^",
         "@beep/drizzle": "workspace:^",
@@ -4568,14 +4588,12 @@
         "@google-cloud/pubsub": "catalog:",
         "@google-cloud/storage": "catalog:",
         "@xenova/transformers": "catalog:",
-        "alchemy": "catalog:",
         "drizzle-orm": "catalog:",
         "effect": "catalog:",
         "lexical": "catalog:",
         "n3": "catalog:",
       },
       "devDependencies": {
-        "@alchemy.run/test": "catalog:",
         "@beep/pglite": "workspace:^",
         "@beep/repo-cli": "workspace:^",
         "@beep/test-utils": "workspace:^",
@@ -5191,6 +5209,8 @@
     "@beep/identity": ["@beep/identity@workspace:packages/foundation/modeling/identity"],
 
     "@beep/infra": ["@beep/infra@workspace:infra"],
+
+    "@beep/infra-turbo-cache": ["@beep/infra-turbo-cache@workspace:packages/tooling/infra/turbo-cache"],
 
     "@beep/jsonc": ["@beep/jsonc@workspace:packages/foundation/modeling/jsonc"],
 

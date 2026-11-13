@@ -468,6 +468,7 @@
     "packages/shared/use-cases",
     "packages/shared/tables",
     "packages/tooling/library/*",
+    "packages/tooling/infra/*",
     "packages/tooling/policy-pack/*",
     "packages/tooling/test-kit/*",
     "packages/tooling/tool/*",
