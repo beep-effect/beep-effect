@@ -59,6 +59,7 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
@@ -1359,6 +1360,9 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
         openReadyHead
       ).pipe(Effect.provideService(YeetOpenReady, { ...unwired, findOpen: () => Effect.succeedNone }), Effect.flip);
       expect(error.message).toContain("refused to open the pull request ready");
+      // The unwired follow-up does nothing: with no ready open there is no review round to record.
+      const recorded = yield* unwired.afterOpen(fixture.plan.context, 1427, openReadyHead).pipe(Effect.exit);
+      expect(Exit.isSuccess(recorded)).toBe(true);
     })
   );
 
