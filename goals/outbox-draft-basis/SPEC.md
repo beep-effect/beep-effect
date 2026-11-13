@@ -131,9 +131,12 @@ BasisReport  = unpinned | pinned-current | pinned-stale | pinned-unverified,
   `checkSendExpectation`, with its statuses as a named literal domain.
 - The stale reason word is `basis-changed`, the word
   `ClaimEvidenceReviewStatus.Stale` already uses in `@beep/epistemics`.
-- The mark is one Outlook category written through the driver's
-  `updateMessageCategories`, conditional on the draft's current
-  `changeKey`, keeping every category the server did not add.
+- The mark is one Outlook category, `Draft - recheck before sending`,
+  written through the driver's `updateMessageCategories`, conditional on
+  the draft's current `changeKey`, keeping every category the server did
+  not add. The server clears only a mark its own audit log records.
+- The check-drafts tool retires a draft it finds sent or missing with one
+  `draft-closed` audit record, so later calls skip it.
 
 ## Constraints
 
@@ -184,20 +187,20 @@ BasisReport  = unpinned | pinned-current | pinned-stale | pinned-unverified,
       moving a pinned event's start yields `pinned-stale` naming `start`,
       editing only its reminder yields `pinned-current`, and a failed read
       yields `pinned-unverified`.
-- [ ] The check-drafts tool rechecks every draft this server created that
+- [x] The check-drafts tool rechecks every draft this server created that
       has no terminal audit record, sets the category on a stale draft,
       clears it when the basis is current again, leaves it unchanged when a
       read failed, skips and reports missing
       or sent drafts, and appends an audit record for each mark and clear.
       It never changes a subject or body.
-- [ ] The tenant proof for the category is recorded as a decision file. If
+- [x] The tenant proof for the category is recorded as a decision file. If
       the mark was dropped, the criterion above is amended in the same
       change.
 - [x] The message pin is either shipped under the one-list-call rule or cut
       by decision file. Shipped: decision file of 2026-11-10.
-- [ ] `m365_outbox_send_draft` still returns `version-unbound`; its existing
+- [x] `m365_outbox_send_draft` still returns `version-unbound`; its existing
       tests are unchanged and green.
-- [ ] The `@beep/m365-mcp` README and the registration runbook describe
+- [x] The `@beep/m365-mcp` README and the registration runbook describe
       pins, the report, the category and the advisory limit.
 - [ ] `bun run beep quality package-verify @beep/m365-mcp` passes and no
       coverage ratchet row for the package is lowered.
@@ -289,6 +292,60 @@ A review of #3120 found a gap: an agent reads an event at A, the event changes t
 Lane @chore/organizing-goal-packets · PR #3120
 
 Reverse: Drop the caller view from the create_draft pin parameter and pin the server's read alone; no record with pins exists before the first pull request merges, so nothing migrates.
+
+### A deleted draft is retired, and a draft without a recorded message id learns it on the next read, 2026-11-13
+
+Round-two review fixes on pull request 3172, agent-decided; they amend the same day's decision on finding a moved draft by its message id. First: that lookup spans every folder, so a draft the attorney deletes in Outlook was found in Deleted Items, kept open and could even be marked. A hit in the mailbox's Deleted Items folder no longer counts as the moved draft, so a deleted draft closes as missing; the folder id is read at most once per call and only when a draft hit names a folder, and if it cannot be read the draft is unreadable for that run. Second: a draft-created record written before message ids were stored, or one whose id could not be read at creation, had no fallback. check-drafts now appends one draft-identified record with the message id Graph returns the next time such a draft is read under its recorded id, at no extra Graph call, and the lookup uses it. Keeping id-less records open forever was rejected because it brings back the unbounded re-read that draft-closed prevents. Not verified on the tenant, which was down: that a deleted draft keeps its draft flag and message id in Deleted Items, and that a message's parentFolderId equals the id Graph returns for the deleteditems folder. The tenant proof checks both.
+
+Lane feat/outbox-draft-basis-check · PR #3172
+
+Reverse: Drop the Deleted Items test and the draft-identified record; recorded draft-identified lines stay readable and are ignored.
+
+### check-drafts records a mark before writing it and finds a moved draft by its message id, 2026-11-13
+
+Review fixes on pull request 3172, agent-decided. First: the audit log is the only way the server knows a category on a draft is its own, so a mark is now recorded before it is written. If the record cannot be appended nothing is written; if the write then fails, the journal says marked with no category, and the next call appends the missing clear record without touching Graph. A clear writes first and records after, retrying the record once. The failure direction is always 'recorded but absent', never 'present but unrecorded', which had left the server's own category on a draft for good. Second: a message's Graph id changes when it moves, so a draft filed into a folder read as missing and was retired. The draft-created record now keeps the draft's RFC 5322 message id, and on a 404 check-drafts makes one lookup by it: a draft that moved keeps being checked under its recorded id, a hit that is no longer a draft closes as sent, and no hit closes as missing. Immutable Graph ids were rejected: the driver has no such header and recorded ids would need migrating. Third: a read without an isDraft value no longer retires a draft; it is unreadable for that run. Not verified on the tenant, which was down: that a draft carries a message id from creation and keeps it when moved or sent. The tenant proof checks it.
+
+Lane feat/outbox-draft-basis-check · PR #3172
+
+Reverse: Write the category before the record again and drop the message-id lookup; draft-created lines that carry internetMessageId stay readable and the field is ignored.
+
+### check-drafts retires a sent or missing draft with one draft-closed record, 2026-11-13
+
+Operator ruling, 2026-11-13 (grill session). The attorney sends prepared drafts from Outlook, so the audit log never learns that a draft was sent, and without a closing record check-drafts would re-read every draft the server ever created on every call. When check-drafts finds a draft missing, or no longer a draft, it reports it and appends one draft-closed record with the reason; later calls skip it. A draft is open while it has a draft-created record and no draft-deleted, sent send-outcome or draft-closed record. The audit journal gains a record kind and no existing record changes, as the m365-agent-outbox packet's D-28 requires. Rejected: an age cutoff (a draft older than the cutoff would silently stop being checked while still unsent) and re-reading everything (cost grows without bound).
+
+Lane feat/outbox-draft-basis-check
+
+Reverse: Stop appending draft-closed and bound the check by draft age instead; recorded draft-closed lines stay readable and are ignored.
+
+### Sessions call check-drafts; this goal ships no scheduled caller, 2026-11-13
+
+Operator ruling, 2026-11-13 (grill session). SPEC.md forbids a timer inside the server, and a scheduled caller needs an entry point that is not an MCP tool call, which is a third pull request and so outside the appetite. The second pull request ships the tool and a runbook line: a session that prepares or reviews outbox drafts calls check-drafts first. Known limit, accepted: a draft that goes stale between calls stays unmarked until the next call, and the mark is as fresh as the last session that touched the outbox.
+
+Lane feat/outbox-draft-basis-check
+
+Reverse: Record a decision file that raises the appetite to a third pull request with a command-line entry and a workstation timer, and rule there whether the message pin stays.
+
+### Tenant proof: the category stays on the sender's side, 2026-11-13
+
+Run on 2026-11-13 in the firm tenant, by the route the operator ruled. Two test drafts were written to the attorney's mailbox through the outbox's app-only Graph path, and the category 'Draft - recheck before sending' was set on each with updateMessageCategories under the change key just read. One was addressed to a firm mailbox and to an outside mailbox the operator owns at another mail provider; the operator sent it from Outlook at 16:21Z. An agent's click on Send was refused by its permission layer, so the send was a person's. The other draft had no recipients and was discarded in Outlook on the web by the agent, on the operator's instruction, to test deletion.
+
+Recipients. The firm recipient's copy, read through Graph, has an empty category list. The outside recipient's raw message (52 headers, read by the orchestrator session) has no Keywords header and no occurrence of the category text in headers or body; its Message-ID equals the draft's. The category reaches neither an internal nor an external recipient, so the mark ships as built and the check-drafts criterion stands unamended. The Sent Items copy in the attorney's mailbox keeps the category; that copy is the sender's own.
+
+The three points the review fixes left unverified, now observed. First: the create response already carries an internetMessageId, the value is unchanged after the category write, and the sent copy has the same value under a new Graph id, with isDraft false; the recorded draft id answers 404 after the send. Second: the discarded draft has a new Graph id, keeps isDraft true and the same internetMessageId, and its recorded id answers 404. Third: that copy's parentFolderId equals the id Graph returns for the deleteditems folder. The moved-draft lookup, the sent test and the Deleted Items rule therefore rest on observed behaviour.
+
+Limits. One tenant, one day, Outlook on the web, plain-text body, one outside provider. Whether a filing rule or another client would behave differently was not tested. The colour of the category still needs the one-time manual red category in the attorney's Outlook.
+
+Lane feat/outbox-draft-basis-check · PR #3172
+
+Reverse: Drop the mark by decision file and amend the check-drafts criterion if a later tenant or client shows the category on a recipient copy.
+
+### The stale mark is the category 'Draft - recheck before sending', coloured by hand once, 2026-11-13
+
+Operator ruling, 2026-11-13 (grill session). The attorney reads this label on a draft in his Drafts folder, so it says what to do and uses no system word; the internal reason word stays basis-changed. Rejected: 'Draft - basis changed' (our term, not his) and 'Draft - source changed'. Colour: the outbox app holds Mail.ReadWrite, Mail.Send and Calendars.ReadWrite on the one mailbox and cannot create an entry in the mailbox's category list, which needs MailboxSettings.ReadWrite. The runbook therefore gains one manual step: create the category once in the attorney's Outlook, in red. The server only writes the name and Outlook matches it to the coloured entry. Rejected: an uncoloured label (easy to miss) and a fourth Exchange role for the app (it would also let the app change other mailbox settings).
+
+Lane feat/outbox-draft-basis-check
+
+Reverse: Rename the category constant and the runbook step; drafts already carrying the old name keep it until check-drafts next clears them, so rename only while no draft is marked.
 
 <!-- beep:decisions:end -->
 

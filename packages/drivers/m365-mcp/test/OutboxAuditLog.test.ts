@@ -3,10 +3,16 @@ import {
   OutboxAuditIds,
   OutboxAuditLog,
   OutboxAuditRecord,
+  OutboxDraftBasisClearedRecord,
+  OutboxDraftBasisMarkedRecord,
+  OutboxDraftClosedRecord,
   OutboxDraftCreatedRecord,
+  OutboxDraftDeletedRecord,
+  OutboxDraftIdentifiedRecord,
   OutboxEventCreatedRecord,
   OutboxSendIntentRecord,
   OutboxSendOutcomeRecord,
+  openOutboxDrafts,
   outboxAuditFileName,
 } from "@beep/m365-mcp";
 import { it } from "@beep/test-runner";
@@ -101,8 +107,78 @@ describe("@beep/m365-mcp outbox audit log", () => {
     assert.isTrue(S.is(OutboxDraftCreatedRecord)(record));
     if (S.is(OutboxDraftCreatedRecord)(record)) {
       assert.deepStrictEqual(record.basis, []);
+      assertNone(record.internetMessageId);
       assert.strictEqual(record.draftId, DRAFT_ID);
     }
+  });
+
+  it("keeps a draft open until it is deleted, sent or closed, with its latest mark state", () => {
+    const at = january;
+    const open = openOutboxDrafts([
+      draftCreated(at, [], "deleted"),
+      OutboxDraftDeletedRecord.make({ at, auditId: "a", draftId: "deleted" }),
+      draftCreated(at, [], "sent"),
+      OutboxSendOutcomeRecord.make({ at, auditId: "b", draftId: "sent", outcome: "sent" }),
+      draftCreated(at, [], "refused"),
+      OutboxSendOutcomeRecord.make({ at, auditId: "c", draftId: "refused", outcome: "refused" }),
+      draftCreated(at, [], "closed"),
+      OutboxDraftClosedRecord.make({ at, auditId: "d", draftId: "closed", reason: "missing" }),
+      draftCreated(at, [], "marked"),
+      OutboxDraftBasisMarkedRecord.make({ at, auditId: "e", draftId: "marked", fields: [] }),
+      draftCreated(at, [], "cleared"),
+      OutboxDraftBasisMarkedRecord.make({ at, auditId: "f", draftId: "cleared", fields: ["start"] }),
+      OutboxDraftBasisClearedRecord.make({ at, auditId: "g", draftId: "cleared" }),
+      // A later draft-created record of the same draft wins and moves it to the end.
+      draftCreated(february, [digest], "refused"),
+    ]);
+
+    assert.deepStrictEqual(
+      A.map(open, (draft) => [draft.created.draftId, draft.basisMarked, A.length(draft.created.attachments)]),
+      [
+        ["marked", true, 0],
+        ["cleared", false, 0],
+        ["refused", false, 1],
+      ]
+    );
+  });
+
+  it("resolves a draft's message id from its creation record, else from the latest one learned", () => {
+    const withId = OutboxDraftCreatedRecord.make({
+      ...draftCreated(january, [], "with-id"),
+      internetMessageId: O.some("<own@example.test>"),
+    });
+    const open = openOutboxDrafts([
+      withId,
+      draftCreated(january, [], "learned"),
+      draftCreated(january, [], "unknown"),
+      OutboxDraftIdentifiedRecord.make({
+        at: january,
+        auditId: "i1",
+        draftId: "with-id",
+        internetMessageId: "<other@example.test>",
+      }),
+      OutboxDraftIdentifiedRecord.make({
+        at: january,
+        auditId: "i2",
+        draftId: "learned",
+        internetMessageId: "<first@example.test>",
+      }),
+      OutboxDraftIdentifiedRecord.make({
+        at: february,
+        auditId: "i3",
+        draftId: "learned",
+        internetMessageId: "<latest@example.test>",
+      }),
+    ]);
+
+    assert.deepStrictEqual(
+      A.map(open, (draft) => [draft.created.draftId, draft.internetMessageId]),
+      [
+        ["with-id", O.some("<own@example.test>")],
+        ["learned", O.some("<latest@example.test>")],
+        ["unknown", O.none()],
+      ]
+    );
   });
 
   it.layer(PlatformLayer, { timeout: "10 seconds" })("on disk", (it) => {
@@ -190,6 +266,31 @@ describe("@beep/m365-mcp outbox audit log", () => {
         );
 
         assert.deepStrictEqual(found, [false, true, true, false]);
+      })
+    );
+
+    it.effect(
+      "reads the open drafts from a journal of only earlier record kinds and after a closing",
+      Effect.fnUntraced(function* () {
+        const directory = yield* tempDirectory;
+
+        const [before, after] = yield* useLog(directory, (log) =>
+          Effect.gen(function* () {
+            yield* log.append(draftCreated(january, []));
+            const earlier = yield* log.openDrafts;
+            yield* log.append(
+              OutboxDraftClosedRecord.make({ at: february, auditId: "x", draftId: DRAFT_ID, reason: "sent" })
+            );
+            const later = yield* log.openDrafts;
+            return [earlier, later] as const;
+          })
+        );
+
+        assert.deepStrictEqual(
+          A.map(before, (draft) => draft.created.draftId),
+          [DRAFT_ID]
+        );
+        assert.deepStrictEqual(after, []);
       })
     );
 

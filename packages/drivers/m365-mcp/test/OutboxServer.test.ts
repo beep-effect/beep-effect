@@ -33,6 +33,7 @@ import * as Str from "effect/String";
 import { DRAFT_ID, OutboxWorldServices, SETTINGS } from "./OutboxWorld.fixture.ts";
 
 const OUTBOX_TOOL_NAMES = [
+  "m365_outbox_check_drafts",
   "m365_outbox_create_draft",
   "m365_outbox_create_event",
   "m365_outbox_delete_draft",
@@ -156,6 +157,7 @@ describe("@beep/m365-mcp outbox server", () => {
     });
     assert.deepStrictEqual(hints(tools.m365_outbox_get_draft), { destructive: false, openWorld: true, readOnly: true });
     for (const tool of [
+      tools.m365_outbox_check_drafts,
       tools.m365_outbox_create_draft,
       tools.m365_outbox_create_event,
       tools.m365_outbox_update_event,
@@ -172,7 +174,7 @@ describe("@beep/m365-mcp outbox server", () => {
   });
 
   it.effect(
-    "answers a Claude-style initialize handshake (2025-11-25) and then lists the six outbox tools",
+    "answers a Claude-style initialize handshake (2025-11-25) and then lists the seven outbox tools",
     Effect.fnUntraced(function* () {
       const output = yield* handshake((stdio) =>
         makeOutboxServerLayer(
