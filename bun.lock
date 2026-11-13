@@ -630,6 +630,7 @@
       "dependencies": {
         "@beep/epistemic-ui": "workspace:^",
         "@beep/graph-3d": "workspace:^",
+        "@beep/public-site": "workspace:^",
         "@beep/ui": "workspace:^",
         "@storybook/addon-a11y": "catalog:",
         "@storybook/addon-docs": "catalog:",
@@ -648,12 +649,15 @@
         "vite": "catalog:",
       },
       "devDependencies": {
+        "@alchemy.run/aws": "catalog:",
+        "@alchemy.run/cloudflare": "catalog:",
         "@beep/utils": "workspace:^",
         "@types/node": "catalog:",
         "@types/react": "catalog:",
         "@types/react-dom": "catalog:",
         "@vitest/browser": "catalog:",
         "@vitest/browser-playwright": "catalog:",
+        "alchemy": "catalog:",
         "bippy": "catalog:",
         "playwright": "catalog:",
         "react-grab": "catalog:",
