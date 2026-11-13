@@ -62,6 +62,7 @@ import {
   scanProcessAttachments,
 } from "../../../internal/repo-run/ProcessAttachment.ts";
 import { runRepoCommandCapture } from "../../../internal/repo-run/RepoRun.executor.ts";
+import { AttemptJournalStore } from "../../Yeet/internal/AttemptJournalStore.ts";
 import { ReplyDrafts } from "../../Yeet/internal/Reply.schemas.ts";
 import {
   QualificationViewReceipt,
@@ -1548,12 +1549,42 @@ const archiveCandidate = Effect.fnUntraced(function* (
   };
 });
 
+// The classes whose removal deletes whole directories that can hold checkouts.
+const CheckoutHoldingResidueClass = ResidueReapClass.pick([
+  "codex-worktrees",
+  "beep-cache-disposable",
+  "merged-preview",
+]);
+const isCheckoutHoldingResidueClass = S.is(CheckoutHoldingResidueClass);
+
+// Removing such a directory deletes every checkout inside it, and with each its
+// `.beep/yeet/runs` attempt journals, so they are filed in the workstation store
+// first (PERIL-11). The checkouts are the embedded ones the census finds, the same
+// set the clean-tree gate demands, or the merged preview itself, which is a
+// checkout and is never censused. A failed export keeps the directory: the janitor
+// never loses data to make progress. Checkout classes never need this: they move
+// `.beep` entries and only `.beep/yeet/jobs/*` of the `yeet` entry, never its runs.
+const retainEmbeddedAttemptJournals = Effect.fnUntraced(function* (
+  candidate: ResidueReapCandidate,
+  policy: ReapPolicy
+): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem | Path.Path | AttemptJournalStore> {
+  if (!isCheckoutHoldingResidueClass(candidate.reapClass)) return O.none();
+  const checkouts = ResidueReapClass.is["merged-preview"](candidate.reapClass)
+    ? A.of(candidate.path)
+    : (yield* censusDirectory(candidate.path, policy.entryCap)).gitMarkers;
+  const store = yield* AttemptJournalStore;
+  return yield* Effect.forEach(checkouts, store.retain, { discard: true }).pipe(
+    Effect.as(O.none<string>()),
+    Effect.catchTag("AttemptJournalStoreError", (error) => Effect.succeedSome(error.message))
+  );
+});
+
 const applyCandidate = Effect.fnUntraced(function* (
   assessed: ResidueReapCandidate,
   outerBoundary: O.Option<string>,
   policy: ReapPolicy,
   checkpoint: (phase: "intent" | "moved") => Effect.Effect<void>
-): Effect.fn.Return<AppliedCandidate, never, DiscoveryRequirements | ResidueArchive> {
+): Effect.fn.Return<AppliedCandidate, never, DiscoveryRequirements | ResidueArchive | AttemptJournalStore> {
   if (ResidueReapAction.is.skip(assessed.action)) return unapplied(assessed);
   // Reports keep speaking the operator's lexical path even though the checks and the
   // removal below run on the resolved one.
@@ -1579,6 +1610,10 @@ const applyCandidate = Effect.fnUntraced(function* (
   const skipped = skippedAppliedCandidate(assessed, rechecked);
   if (ResidueReapAction.is["archive-move"](rechecked.action)) {
     return yield* archiveCandidate(assessed, resolved.value, rechecked, checkpoint);
+  }
+  const exportFailure = yield* retainEmbeddedAttemptJournals(rechecked, policy);
+  if (O.isSome(exportFailure)) {
+    return skipped("journal-export-failed", `${assessed.path}: ${exportFailure.value}; left in place.`);
   }
   const outcome = yield* removeResolvedCandidate(rechecked, resolved.value.identity).pipe(Effect.scoped);
   return Match.value(outcome).pipe(
@@ -2622,7 +2657,11 @@ const applyResidue = (
   candidates: ReadonlyArray<ResidueReapCandidate>,
   apply: boolean,
   checkpoint: (phase: "intent" | "moved") => Effect.Effect<void>
-): Effect.Effect<ReadonlyArray<AppliedCandidate>, never, DiscoveryRequirements | ResidueArchive> =>
+): Effect.Effect<
+  ReadonlyArray<AppliedCandidate>,
+  never,
+  DiscoveryRequirements | ResidueArchive | AttemptJournalStore
+> =>
   apply
     ? Effect.forEach(
         candidates,
@@ -3037,6 +3076,14 @@ const executeResidueReap = Effect.fnUntraced(function* (settings: ResidueReapSet
  * Fleet discovery observes other owners; checkout archives apply only in the
  * invoking owner checkout. Run reports and archives remain durable until a separate
  * owner retention decision authorizes their retirement.
+ *
+ * Before an applied removal of a directory that can hold checkouts (a Codex
+ * worktree, a disposable beep cache entry, a merged preview), the Yeet attempt
+ * journals of every checkout inside it are filed in the workstation
+ * {@link AttemptJournalStore}; a failed export keeps the directory with skip
+ * reason `journal-export-failed` and a warning. Checkout classes move `.beep`
+ * entries, and of the `yeet` entry only `.beep/yeet/jobs/*`, so they never
+ * move attempt journals.
  *
  * Repository-scoped classes (`turbo-cache`, `turbo-runs`, `merged-preview`)
  * are discovered in every checkout named by `checkoutRoots` (deduplicated by

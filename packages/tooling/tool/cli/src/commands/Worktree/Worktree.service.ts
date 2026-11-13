@@ -1625,11 +1625,10 @@ const makeRemovalReceipt = (
 // They are filed in the workstation store first; a failed export refuses the
 // removal before anything is deleted (decision D18: a copy failure blocks deletion).
 const exportAttemptJournals = Effect.fn("WorktreeRemovalService.exportAttemptJournals")(function* (
-  checkout: string,
-  mainCheckout: string
+  checkout: string
 ): Effect.fn.Return<O.Option<AttemptJournalExport>, WorktreePreservationError, AttemptJournalStore> {
   const store = yield* AttemptJournalStore;
-  return yield* store.retain(checkout, mainCheckout).pipe(
+  return yield* store.retain(checkout).pipe(
     Effect.mapError((error) =>
       WorktreePreservationError.new("export-attempt-journals", error.message, {
         cause: error,
@@ -1897,7 +1896,7 @@ const removeLegacyWorktree = Effect.fn("WorktreeRemovalService.removeLegacyWorkt
   );
   return yield* A.match(changes, {
     onEmpty: () =>
-      exportAttemptJournals(request.targetPath, request.mainCheckout).pipe(
+      exportAttemptJournals(request.targetPath).pipe(
         Effect.flatMap((attemptJournals) =>
           removeWorktree(request, false).pipe(
             Effect.as(
@@ -2338,7 +2337,7 @@ const fencedArchivePlan = Effect.fn("WorktreeRemovalService.fencedArchivePlan")(
   yield* assertAuthorizedHead(request, head);
   // Filed before the capture moves any material: a failed export leaves the fenced
   // copy exactly as it was fenced, so the caller's restore puts the lane back whole.
-  const attemptJournals = yield* exportAttemptJournals(fenced.targetPath, request.mainCheckout);
+  const attemptJournals = yield* exportAttemptJournals(fenced.targetPath);
   const plan = yield* planArchiveRemoval(fenced, head, A.isReadonlyArrayNonEmpty(changes));
   return { ...plan, head, quietShells, attemptJournals };
 });
@@ -2556,10 +2555,11 @@ export const installRegenerateMergeDriver = Effect.fn("Worktree.installRegenerat
  * upstream without reaching GitHub. Command wiring uses
  * {@link WorktreeRemovalServiceLive} instead.
  *
- * **Example** (Provide a stub probe to the removal layer)
+ * **Example** (Provide a stub probe and the attempt-journal store to the removal layer)
  *
  * ```ts
  * import { WorktreeMergedPullRequestProbe, WorktreeRemovalServiceLayer } from "@beep/repo-cli/commands/Worktree"
+ * import { AttemptJournalStore } from "@beep/repo-cli/test/Yeet"
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer";
  * import * as O from "effect/Option"
@@ -2568,8 +2568,8 @@ export const installRegenerateMergeDriver = Effect.fn("Worktree.installRegenerat
  *   WorktreeMergedPullRequestProbe,
  *   WorktreeMergedPullRequestProbe.of({ mergedAtHead: () => Effect.succeed(O.none()) })
  * )
- * const removal = WorktreeRemovalServiceLayer.pipe(Layer.provide(probe))
- * console.log(typeof removal) // "object"
+ * const removal = WorktreeRemovalServiceLayer.pipe(Layer.provide(Layer.mergeAll(probe, AttemptJournalStore.layer)))
+ * console.log(Layer.isLayer(removal)) // true
  * ```
  *
  * @category layers

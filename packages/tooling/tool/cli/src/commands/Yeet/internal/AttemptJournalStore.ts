@@ -7,7 +7,8 @@
  * `.beep/yeet/runs/<runId>/attempts.ndjson`. Removing the checkout deletes
  * them, and an archive retirement does not keep `.beep/yeet` as material, so
  * `yeet economics --fleet` lost every retired lane. Before the worktree
- * removal service deletes a checkout, {@link AttemptJournalStore} files each
+ * removal service deletes a checkout, and before residue-reap deletes a
+ * directory that holds checkouts, {@link AttemptJournalStore} files each
  * readable journal under
  * `<yeet state>/attempts/<host__owner__name>/runs/<runId>/attempts.ndjson`:
  * the checkout's own run layout, so economics reads the store with the reader
@@ -36,7 +37,7 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { resolveWorkstationStateDir } from "../../../internal/state/WorkstationState.ts";
-import { fleetRepositoryKey, readCloneFleetRepository } from "../../Worktree/internal/FleetRoots.ts";
+import { fleetRepositoryKey, readCheckoutClone, readCloneFleetRepository } from "../../Worktree/internal/FleetRoots.ts";
 import {
   AttemptJournalExport,
   AttemptJournalExported,
@@ -175,10 +176,14 @@ export const attemptJournalStoreRunsDirectory = Effect.fn("AttemptJournalStore.r
   return path.join(root, STORE_DIRECTORY_NAME, fleetRepositoryKey(repository), RUNS_DIRECTORY_NAME);
 });
 
-const retainAttemptJournals = Effect.fnUntraced(function* (checkout: string, clone: string) {
+// The partition comes from the checkout's own git metadata: a linked worktree's
+// `.git` file names its clone, even for a fenced or nested copy, so no caller can
+// file a lane under another repository.
+const retainAttemptJournals = Effect.fnUntraced(function* (checkout: string) {
   const journals = yield* readCheckoutJournals(checkout);
   if (A.isReadonlyArrayEmpty(journals)) return O.none<AttemptJournalExport>();
-  const repository = yield* readCloneFleetRepository(clone);
+  const clone = yield* readCheckoutClone(checkout);
+  const repository = yield* readCloneFleetRepository(O.getOrElse(clone, () => checkout));
   if (O.isNone(repository)) {
     return O.some<AttemptJournalExport>(AttemptJournalExportUnpartitioned.make({ journals: A.length(journals) }));
   }
@@ -202,7 +207,7 @@ const retainAttemptJournals = Effect.fnUntraced(function* (checkout: string, clo
  * ```ts
  * import type { AttemptJournalStoreShape } from "@beep/repo-cli/test/Yeet"
  *
- * const retainLane = (store: AttemptJournalStoreShape) => store.retain("/repo/.claude/worktrees/lane", "/repo")
+ * const retainLane = (store: AttemptJournalStoreShape) => store.retain("/repo/.claude/worktrees/lane")
  * console.log(retainLane.length) // 1
  * ```
  *
@@ -213,15 +218,11 @@ export interface AttemptJournalStoreShape {
   /**
    * File a checkout's attempt journals in the store before the checkout is removed.
    *
-   * @param checkout - The checkout whose `.beep/yeet/runs` journals are exported.
-   * @param clone - The clone that owns the checkout; its `origin` names the store partition.
+   * @param checkout - The checkout whose `.beep/yeet/runs` journals are exported; the `origin` of the clone its git metadata names is the store partition.
    * @returns What the export did, or `O.none()` when the checkout holds no journal.
    * @since 0.0.0
    */
-  readonly retain: (
-    checkout: string,
-    clone: string
-  ) => Effect.Effect<O.Option<AttemptJournalExport>, AttemptJournalStoreError>;
+  readonly retain: (checkout: string) => Effect.Effect<O.Option<AttemptJournalExport>, AttemptJournalStoreError>;
 }
 
 /**
@@ -232,10 +233,12 @@ export interface AttemptJournalStoreShape {
  * `retain` reads every readable `.beep/yeet/runs/<runId>/attempts.ndjson` of
  * the checkout and appends each row its store journal does not hold yet, so
  * exporting the same journals twice, or a restored lane's grown journal,
- * stores each row once. A clone whose `origin` names no GitHub repository has
- * no partition: its journals are reported `unpartitioned` and not copied. Any
- * read or write failure fails the call, and the worktree removal service then
- * deletes nothing.
+ * stores each row once. The partition is the GitHub repository named by the
+ * `origin` of the clone the checkout's git metadata points to; a clone with no
+ * such origin has no partition, so its journals are reported `unpartitioned`
+ * and not copied. Any read or write failure fails the call: the worktree
+ * removal service then deletes nothing, and residue-reap leaves the directory
+ * in place.
  *
  * **Example** (Export a lane's journals)
  *
@@ -243,7 +246,7 @@ export interface AttemptJournalStoreShape {
  * import { AttemptJournalStore } from "@beep/repo-cli/test/Yeet"
  * import * as Effect from "effect/Effect"
  *
- * const program = AttemptJournalStore.use((store) => store.retain("/repo/.claude/worktrees/lane", "/repo"))
+ * const program = AttemptJournalStore.use((store) => store.retain("/repo/.claude/worktrees/lane"))
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
@@ -262,8 +265,8 @@ export class AttemptJournalStore extends Context.Service<AttemptJournalStore, At
     Effect.map(Effect.context<FileSystem.FileSystem | Path.Path>(), (runtime) => {
       const context = Context.pick(FileSystem.FileSystem, Path.Path)(runtime);
       return AttemptJournalStore.of({
-        retain: Effect.fn("AttemptJournalStore.retain")((checkout: string, clone: string) =>
-          retainAttemptJournals(checkout, clone).pipe(Effect.provide(context))
+        retain: Effect.fn("AttemptJournalStore.retain")((checkout: string) =>
+          retainAttemptJournals(checkout).pipe(Effect.provide(context))
         ),
       });
     })
@@ -293,5 +296,5 @@ export const renderAttemptJournalExport: (journalExport: AttemptJournalExport) =
   exported: ({ journals, runsDirectory, appendedRows, retainedRows }) =>
     `attempt journals: ${journals} exported to ${runsDirectory} (${appendedRows} new rows, ${retainedRows} already retained)`,
   unpartitioned: ({ journals }) =>
-    `attempt journals: ${journals} not exported; the clone's origin names no GitHub repository to file them under`,
+    `attempt journals: ${journals} not exported; the owning clone's origin names no GitHub repository to file them under`,
 });

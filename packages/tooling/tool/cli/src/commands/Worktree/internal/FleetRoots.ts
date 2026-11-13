@@ -18,7 +18,7 @@ import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -366,6 +366,71 @@ export const readCloneFleetOrigin = Effect.fn("FleetRoots.readCloneOrigin")(func
 export const readCloneFleetRepository = Effect.fn("FleetRoots.readCloneRepository")(function* (clone: string) {
   const url = yield* readCloneOriginUrl(clone);
   return O.flatMap(url, fleetRepositoryFromOriginUrl);
+});
+
+const GIT_METADATA_NAME = ".git";
+const GIT_WORKTREES_DIRECTORY_NAME = "worktrees";
+const GITDIR_PREFIX = "gitdir:";
+
+// A linked worktree's `.git` file holds `gitdir: <clone>/.git/worktrees/<name>`.
+const gitDirOfGitFile = (path: Path.Path, checkout: string, content: string): O.Option<string> =>
+  pipe(
+    A.findFirst(A.map(Str.split(content, "\n"), Str.trim), Str.startsWith(GITDIR_PREFIX)),
+    O.map(flow(Str.slice(Str.length(GITDIR_PREFIX)), Str.trim)),
+    O.filter(Str.isNonEmpty),
+    O.map((target) => path.resolve(checkout, target))
+  );
+
+const cloneOfGitDir = (path: Path.Path, gitDir: string): O.Option<string> => {
+  const worktrees = path.dirname(gitDir);
+  const metadata = path.dirname(worktrees);
+  return O.liftPredicate(
+    path.dirname(metadata),
+    () =>
+      Str.Equivalence(path.basename(worktrees), GIT_WORKTREES_DIRECTORY_NAME) &&
+      Str.Equivalence(path.basename(metadata), GIT_METADATA_NAME)
+  );
+};
+
+/**
+ * Resolve the clone that owns a checkout from its git metadata, without spawning git.
+ *
+ * **Details**
+ *
+ * A `.git` directory makes the checkout its own clone; a `.git` file names the
+ * clone's `.git/worktrees/<name>`, so a linked worktree resolves to the clone it
+ * was added from even after it is renamed. `O.none()` when `.git` is missing,
+ * unreadable, or names any other layout.
+ *
+ * **Example** (Build the read)
+ *
+ * ```ts
+ * import { readCheckoutClone } from "@beep/repo-cli/test/Worktree"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(readCheckoutClone("/p/beep-effect-worktrees/lane"))) // true
+ * ```
+ *
+ * @param checkout - A clone or linked worktree root.
+ * @returns The owning clone's root, when the git metadata names one.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const readCheckoutClone = Effect.fn("FleetRoots.readCheckoutClone")(function* (checkout: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const gitPath = path.join(checkout, GIT_METADATA_NAME);
+  const gitStat = yield* fs.stat(gitPath).pipe(Effect.option);
+  const kind = O.map(gitStat, (info) => info.type);
+  if (O.contains(kind, "Directory")) {
+    return O.some(checkout);
+  }
+  const content = O.contains(kind, "File") ? yield* fs.readFileString(gitPath).pipe(Effect.option) : O.none<string>();
+  return pipe(
+    content,
+    O.flatMap((text) => gitDirOfGitFile(path, checkout, text)),
+    O.flatMap((gitDir) => cloneOfGitDir(path, gitDir))
+  );
 });
 
 /**

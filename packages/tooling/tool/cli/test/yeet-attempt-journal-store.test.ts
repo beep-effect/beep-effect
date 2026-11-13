@@ -9,7 +9,12 @@ import {
   WorktreeRemovalServiceLayer,
 } from "@beep/repo-cli/commands/Worktree";
 import { UUID } from "@beep/repo-cli/test/SharedInternals";
-import { layerResidueTerminalLaneProbeTest, runResidueReap } from "@beep/repo-cli/test/Worktree";
+import {
+  layerResidueTerminalLaneProbeTest,
+  ResidueTerminalLaneAuthority,
+  ResidueTerminalLaneProbe,
+  runResidueReap,
+} from "@beep/repo-cli/test/Worktree";
 import {
   AttemptJournalExported,
   AttemptJournalExportUnpartitioned,
@@ -37,6 +42,7 @@ import {
 } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -50,9 +56,10 @@ import { NodeCommandTestLayer } from "./support/CommandTest.ts";
 import { git } from "./support/YeetHeadMove.ts";
 import type { EconomicsJournal } from "@beep/repo-cli/test/Yeet";
 
-// PERIL-11 slice 1: a removal files the lane's Yeet attempt journals in the
-// workstation store before it deletes the checkout, and `yeet economics --fleet`
-// counts each (runId, attemptId) once across live lanes and the store.
+// PERIL-11 slice 1: a removal, or a residue-reap directory removal, files the
+// Yeet attempt journals it would delete in the workstation store first, and
+// `yeet economics --fleet` counts each (runId, attemptId) once across live lanes
+// and the store.
 
 const ORIGIN_URL = "https://github.com/beep-effect/attempt-journal-fixture.git";
 const REPOSITORY = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "attempt-journal-fixture" });
@@ -191,6 +198,34 @@ const storedJournal = Effect.fnUntraced(function* (runId: string) {
   return yield* fs.readFileString(path.join(runs, runId, "attempts.ndjson"));
 });
 
+const storeRootOf = Effect.fnUntraced(function* (home: string) {
+  const path = yield* Path.Path;
+  return path.join(home, ".local", "state", "beep", "yeet", "attempts");
+});
+
+// A file where the store's directory belongs: every export to it fails.
+const plantCopyFailure = Effect.fnUntraced(function* (home: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const storeRoot = yield* storeRootOf(home);
+  yield* fs.makeDirectory(path.dirname(storeRoot), { recursive: true });
+  yield* fs.writeFileString(storeRoot, "not a directory\n");
+  return storeRoot;
+});
+
+// The reaper ages entries against an instant thirty days after a fixture file was
+// written, past its seven-day live-write fence (the test clock stands at the epoch).
+const reapInstantAfter = Effect.fnUntraced(function* (file: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const info = yield* fs.stat(file);
+  return O.getOrElse(O.map(info.mtime, DateTime.makeUnsafe), () => DateTime.makeUnsafe(0)).pipe(
+    DateTime.add({ days: 30 }),
+    DateTime.toEpochMillis
+  );
+});
+const noLiveCwd = () => Effect.succeedSome(false);
+const noLivePid = () => Effect.succeedSome(false);
+
 const noMergedPullRequest = Layer.succeed(
   WorktreeMergedPullRequestProbe,
   WorktreeMergedPullRequestProbe.of({
@@ -231,9 +266,7 @@ describe("attempt journal store", () => {
 
           // Copy failure: a file where the store's directory belongs. The removal refuses
           // before any capture, and the lane, its journal and its branch stay where they were.
-          const storeRoot = path.join(fixture.home, ".local", "state", "beep", "yeet", "attempts");
-          yield* fs.makeDirectory(path.dirname(storeRoot), { recursive: true });
-          yield* fs.writeFileString(storeRoot, "not a directory\n");
+          const storeRoot = yield* plantCopyFailure(fixture.home);
           const refused = yield* remove(fixture.clone, true).pipe(Effect.flip);
           assertInstanceOf(refused, WorktreePreservationError);
           deepStrictEqual(refused.step, "export-attempt-journals");
@@ -285,13 +318,131 @@ describe("attempt journal store", () => {
             apply: true,
             homeRoot: fixture.home,
             maxAgeDays: 0,
-            probeLiveCwd: () => Effect.succeedSome(false),
+            probeLiveCwd: noLiveCwd,
             repoRoot: fixture.clone,
           });
           assertTrue(reap.applied);
           const reaped = yield* fleetCensus(fixture.clone);
           deepStrictEqual(attemptKeys(reaped), keysOf(RUN_ID, a1, a2, a3));
           deepStrictEqual(duplicatesOf(reaped), { starts: 0, terminals: 0 });
+        }).pipe(withHome(fixture.home));
+      })
+    );
+
+    it.effect(
+      "residue-reap before the retirement archives only the lane's yeet jobs, so the journals are filed once",
+      Effect.fnUntraced(function* () {
+        const fixture = yield* scratchClone(O.some(ORIGIN_URL));
+        yield* Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const a6 = attemptId("6");
+          const lane = yield* addLane(fixture.clone);
+          yield* appendJournal(lane, RUN_ID, attempt(a6));
+          const journal = path.join(lane, ".beep", "yeet", "runs", RUN_ID, "attempts.ndjson");
+          const job = path.join(lane, ".beep", "yeet", "jobs", "7c1aa8c8-e336-4970-9e98-ec7898ff6fa2.json");
+          yield* fs.makeDirectory(path.dirname(job), { recursive: true });
+          yield* fs.writeFileString(job, "{}\n");
+          const head = yield* git(lane, ["rev-parse", "HEAD"]);
+          const authority = ResidueTerminalLaneAuthority.make({
+            checkoutRoot: yield* fs.realPath(lane),
+            commonDir: yield* git(lane, ["rev-parse", "--path-format=absolute", "--git-common-dir"]),
+            branch: "feat/lane",
+            pullRequest: 1,
+            pullRequestHead: head,
+            head,
+            headRelation: "equal",
+            verifiedAt: DateTime.makeUnsafe(0),
+          });
+          // A merged lane's checkout residue is the janitor's to archive, but the `yeet`
+          // entry contributes only `.beep/yeet/jobs/*`: its runs are never a candidate.
+          const reap = yield* runResidueReap({
+            apply: true,
+            classes: ["checkout-jobs"],
+            homeRoot: fixture.home,
+            maxAgeDays: 0,
+            nowMillis: yield* reapInstantAfter(job),
+            probeLiveCwd: noLiveCwd,
+            probePidAlive: noLivePid,
+            repoRoot: lane,
+          }).pipe(
+            Effect.provideService(
+              ResidueTerminalLaneProbe,
+              ResidueTerminalLaneProbe.of({
+                verify: Effect.fn("ResidueTerminalLaneProbe.verify")(() => Effect.succeedSome(authority)),
+              })
+            )
+          );
+          deepStrictEqual(reap.reapedCount, 1);
+          deepStrictEqual(
+            A.map(reap.candidates, (candidate) => path.basename(candidate.path)),
+            [path.basename(job)]
+          );
+          const jobArchived = yield* fs.exists(job);
+          assertTrue(!jobArchived);
+          const journalKept = yield* fs.exists(journal);
+          assertTrue(journalKept);
+          const reaped = yield* fleetCensus(fixture.clone);
+          deepStrictEqual(attemptKeys(reaped), keysOf(RUN_ID, a6));
+
+          const retired = yield* remove(fixture.clone, true);
+          const runs = yield* attemptJournalStoreRunsDirectory(REPOSITORY);
+          assertSome(
+            retired.attemptJournals,
+            AttemptJournalExported.make({ runsDirectory: runs, journals: 1, appendedRows: 2, retainedRows: 0 })
+          );
+          const census = yield* fleetCensus(fixture.clone);
+          deepStrictEqual(attemptKeys(census), keysOf(RUN_ID, a6));
+          deepStrictEqual(duplicatesOf(census), { starts: 0, terminals: 0 });
+        }).pipe(withHome(fixture.home));
+      })
+    );
+
+    it.effect(
+      "a residue-reap directory removal files embedded checkouts' journals first and keeps the directory when it cannot",
+      Effect.fnUntraced(function* () {
+        const fixture = yield* scratchClone(O.some(ORIGIN_URL));
+        yield* Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const a7 = attemptId("7");
+          // A Codex worktree: a linked worktree of the clone, one level inside the container.
+          const container = path.join(fixture.home, ".codex", "worktrees", "abcd");
+          const codexLane = path.join(container, "beep-effect");
+          yield* fs.makeDirectory(container, { recursive: true });
+          yield* git(fixture.clone, ["worktree", "add", "-b", "feat/codex", codexLane]);
+          yield* appendJournal(codexLane, OTHER_RUN_ID, attempt(a7, OTHER_RUN_ID));
+          const journal = path.join(codexLane, ".beep", "yeet", "runs", OTHER_RUN_ID, "attempts.ndjson");
+          const reapCodex = Effect.flatMap(reapInstantAfter(journal), (nowMillis) =>
+            runResidueReap({
+              apply: true,
+              classes: ["codex-worktrees"],
+              homeRoot: fixture.home,
+              maxAgeDays: 0,
+              nowMillis,
+              probeLiveCwd: noLiveCwd,
+              repoRoot: fixture.clone,
+            })
+          );
+
+          const storeRoot = yield* plantCopyFailure(fixture.home);
+          const kept = yield* reapCodex;
+          deepStrictEqual(kept.reapedCount, 0);
+          deepStrictEqual(
+            A.map(kept.candidates, (candidate) => candidate.skipReason),
+            ["journal-export-failed"]
+          );
+          assertTrue(A.some(kept.warnings, Str.includes("left in place")));
+          const containerKept = yield* fs.exists(path.join(codexLane, ".beep", "yeet", "runs", OTHER_RUN_ID));
+          assertTrue(containerKept);
+
+          yield* fs.remove(storeRoot);
+          const reaped = yield* reapCodex;
+          deepStrictEqual(reaped.reapedCount, 1);
+          const containerGone = yield* fs.exists(container);
+          assertTrue(!containerGone);
+          const census = yield* fleetCensus(fixture.clone);
+          deepStrictEqual(attemptKeys(census), keysOf(OTHER_RUN_ID, a7));
         }).pipe(withHome(fixture.home));
       })
     );
@@ -354,9 +505,9 @@ describe("attempt journal store", () => {
       return { home, clone };
     });
 
-    const retain = Effect.fnUntraced(function* (checkout: string, clone: string) {
+    const retain = Effect.fnUntraced(function* (checkout: string) {
       const store = yield* AttemptJournalStore;
-      return yield* store.retain(checkout, clone);
+      return yield* store.retain(checkout);
     });
 
     it.effect(
@@ -366,8 +517,13 @@ describe("attempt journal store", () => {
         yield* Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
-          const none = yield* retain(clone, clone);
+          const none = yield* retain(clone);
           assertNone(none);
+          // A directory with no git metadata names no clone and no partition.
+          const bare = path.join(home, "bare");
+          yield* appendJournal(bare, RUN_ID, attempt(attemptId("a")));
+          const unpartitioned = yield* retain(bare);
+          assertSome(unpartitioned, AttemptJournalExportUnpartitioned.make({ journals: 1 }));
           const runsRoot = path.join(clone, ".beep", "yeet", "runs");
           yield* appendJournal(clone, RUN_ID, attempt(attemptId("6")));
           yield* fs.writeFileString(path.join(runsRoot, RUN_ID, "attempts.ndjson"), '{"_tag":"attempt-sta', {
@@ -379,12 +535,12 @@ describe("attempt journal store", () => {
           yield* appendJournal(elsewhere, "linked", attempt(attemptId("7"), "linked"));
           yield* fs.symlink(path.join(elsewhere, ".beep", "yeet", "runs", "linked"), path.join(runsRoot, "linked"));
           const runs = yield* attemptJournalStoreRunsDirectory(REPOSITORY);
-          const first = yield* retain(clone, clone);
+          const first = yield* retain(clone);
           assertSome(
             first,
             AttemptJournalExported.make({ runsDirectory: runs, journals: 1, appendedRows: 3, retainedRows: 0 })
           );
-          const second = yield* retain(clone, clone);
+          const second = yield* retain(clone);
           assertSome(
             second,
             AttemptJournalExported.make({ runsDirectory: runs, journals: 1, appendedRows: 0, retainedRows: 3 })
@@ -406,14 +562,14 @@ describe("attempt journal store", () => {
           const path = yield* Path.Path;
           // `.beep` written as a file holds no journal: nothing to export.
           yield* fs.writeFileString(path.join(clone, ".beep"), "not a directory\n");
-          const crossed = yield* retain(clone, clone);
+          const crossed = yield* retain(clone);
           assertNone(crossed);
           yield* fs.remove(path.join(clone, ".beep"));
 
           const runsRoot = path.join(clone, ".beep", "yeet", "runs");
           yield* fs.makeDirectory(runsRoot, { recursive: true });
           yield* fs.chmod(runsRoot, 0o000);
-          const unlisted = yield* retain(clone, clone).pipe(
+          const unlisted = yield* retain(clone).pipe(
             Effect.flip,
             Effect.ensuring(Effect.orDie(fs.chmod(runsRoot, 0o700)))
           );
@@ -421,14 +577,14 @@ describe("attempt journal store", () => {
           assertInclude(unlisted.message, "Could not list the attempt journals");
 
           yield* fs.makeDirectory(path.join(runsRoot, RUN_ID, "attempts.ndjson"), { recursive: true });
-          const unread = yield* retain(clone, clone).pipe(Effect.flip);
+          const unread = yield* retain(clone).pipe(Effect.flip);
           assertInclude(unread.message, "Could not read the attempt journal");
 
           yield* fs.remove(runsRoot, { recursive: true });
           yield* appendJournal(clone, RUN_ID, attempt(attemptId("8")));
           const runs = yield* attemptJournalStoreRunsDirectory(REPOSITORY);
           yield* fs.makeDirectory(path.join(runs, RUN_ID, "attempts.ndjson"), { recursive: true });
-          const unstored = yield* retain(clone, clone).pipe(Effect.flip);
+          const unstored = yield* retain(clone).pipe(Effect.flip);
           assertInclude(unstored.message, "Could not read the retained journal");
         }).pipe(withHome(home));
       })

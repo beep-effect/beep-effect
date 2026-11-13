@@ -1745,6 +1745,7 @@
     {"name":"FleetRegistry.loadJoin","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"FleetRegistryStore.read","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"FleetRegistryStore.update","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"FleetRoots.readCheckoutClone","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"FleetRoots.readCloneOrigin","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"FleetRoots.readCloneRepository","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"FleetRoots.readConfigured","owner":"@beep/repo-cli","family":"tooling","conforms":true},

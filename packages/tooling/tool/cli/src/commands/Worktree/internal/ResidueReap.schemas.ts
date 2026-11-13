@@ -106,6 +106,11 @@ export type ResidueReapAction = typeof ResidueReapAction.Type;
 /**
  * Fail-closed reason that prevented removal of a residue candidate.
  *
+ * **Details**
+ *
+ * `journal-export-failed` keeps a directory whose checkouts' Yeet attempt
+ * journals could not be filed in the workstation attempt-journal store.
+ *
  * **Example** (Recognize a liveness refusal)
  *
  * ```ts
@@ -141,6 +146,7 @@ export const ResidueReapSkipReason = LiteralKit([
   "lock-held",
   "draft-unresolved",
   "checkout-recent-write",
+  "journal-export-failed",
 ]).pipe(
   $I.annoteSchema("ResidueReapSkipReason", {
     description: "Precise missing or negative safety evidence that prevented residue removal.",

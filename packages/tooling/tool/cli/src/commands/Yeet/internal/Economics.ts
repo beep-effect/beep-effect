@@ -45,6 +45,7 @@ import * as Str from "effect/String";
 import { YeetAttemptTerminationReason } from "../../../internal/repo-run/AttemptTerminationJournal.ts";
 import { repoRunArtifactId } from "../../../internal/repo-run/RepoRunArtifacts.ts";
 import {
+  readCheckoutClone,
   readCloneFleetOrigin,
   readCloneFleetRepository,
   readConfiguredFleetRoots,
@@ -95,9 +96,6 @@ const RUNS_DIRECTORY_NAME = "runs";
 const JOURNAL_FILE_NAME = "attempts.ndjson";
 const VERDICT_FILE_NAME = "verdict.json";
 const CHECKOUT_PREFIX = "beep-effect";
-const GIT_METADATA_NAME = ".git";
-const GIT_WORKTREES_DIRECTORY_NAME = "worktrees";
-const GITDIR_PREFIX = "gitdir:";
 const FLEET_READ_CONCURRENCY = 8;
 const COMPARABLE_EPISODE_CUT = Duration.hours(24);
 const UNKNOWN_KEY = "unknown";
@@ -687,53 +685,13 @@ const realDirectoryNames = Effect.fnUntraced(function* (directory: string, keep:
   return yield* Effect.filter(A.filter(listDirectory3, keep), (name) => isRealDirectory(path.join(directory, name)));
 });
 
-// A linked worktree's `.git` file holds `gitdir: <clone>/.git/worktrees/<name>`.
-const gitDirOfGitFile = (path: Path.Path, checkout: string, content: string): O.Option<string> =>
-  pipe(
-    A.findFirst(A.map(Str.split(content, "\n"), Str.trim), Str.startsWith(GITDIR_PREFIX)),
-    O.map(flow(Str.slice(Str.length(GITDIR_PREFIX)), Str.trim)),
-    O.filter(Str.isNonEmpty),
-    O.map((target) => path.resolve(checkout, target))
-  );
-
-const cloneOfGitDir = (path: Path.Path, gitDir: string): O.Option<string> => {
-  const worktrees = path.dirname(gitDir);
-  const metadata = path.dirname(worktrees);
-  return O.liftPredicate(
-    path.dirname(metadata),
-    () =>
-      Str.Equivalence(path.basename(worktrees), GIT_WORKTREES_DIRECTORY_NAME) &&
-      Str.Equivalence(path.basename(metadata), GIT_METADATA_NAME)
-  );
-};
-
-// The clone that owns a checkout, read from its git metadata without spawning
-// git: a `.git` directory makes the checkout its own clone, a `.git` file
-// names the clone's `.git/worktrees/<name>`. None when `.git` is unreadable.
-const cloneRootOf = Effect.fnUntraced(function* (checkout: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const gitPath = path.join(checkout, GIT_METADATA_NAME);
-  const pipe4 = yield* fs.stat(gitPath).pipe(Effect.option);
-  const kind = O.map(pipe4, (info) => info.type);
-  if (O.contains(kind, "Directory")) {
-    return O.some(checkout);
-  }
-  const content = O.contains(kind, "File") ? yield* fs.readFileString(gitPath).pipe(Effect.option) : O.none<string>();
-  return pipe(
-    content,
-    O.flatMap((text) => gitDirOfGitFile(path, checkout, text)),
-    O.flatMap((gitDir) => cloneOfGitDir(path, gitDir))
-  );
-});
-
 // The projects root is the clone's parent (ruling 73). Only when `.git` is
 // unreadable does the directory name decide: a lane under `<clone>-worktrees/`
 // sits one level deeper than a clone.
 const projectsRootOf = Effect.fnUntraced(function* (repoRoot: string) {
   const path = yield* Path.Path;
   const parent = path.dirname(repoRoot);
-  const cloneRootOf5 = yield* cloneRootOf(repoRoot);
+  const cloneRootOf5 = yield* readCheckoutClone(repoRoot);
   return O.getOrElse(
     O.map(cloneRootOf5, (clone) => path.dirname(clone)),
     () => (Str.endsWith(WORKTREES_ROOT_SUFFIX)(path.basename(parent)) ? path.dirname(parent) : parent)
@@ -772,7 +730,7 @@ const fleetCandidates = Effect.fnUntraced(function* (
 // The fleet's candidates: the configured roots list shared with `worktree fleet`
 // (`BEEP_FLEET_ROOTS`, then `roots.json`) when set, else the derived projects root.
 const fleetScopeCandidates = Effect.fnUntraced(function* (repoRoot: string, projectsRoot: string) {
-  const clone = yield* cloneRootOf(repoRoot);
+  const clone = yield* readCheckoutClone(repoRoot);
   const repository = yield* readCloneFleetRepository(O.getOrElse(clone, () => repoRoot));
   // A report never fails over its scope: an undecodable roots.json warns and falls back to the derived root,
   // where `worktree fleet` refuses it outright.
@@ -794,7 +752,7 @@ const fleetScopeCandidates = Effect.fnUntraced(function* (repoRoot: string, proj
   // the rule the fleet mirror applies. Without a readable origin of our own, nothing else is admitted.
   const ownOrigin = yield* readCloneFleetOrigin(O.getOrElse(clone, () => repoRoot));
   const sharesOrigin = Effect.fnUntraced(function* (candidate: string) {
-    const candidateClone = yield* cloneRootOf(candidate);
+    const candidateClone = yield* readCheckoutClone(candidate);
     const origin = yield* readCloneFleetOrigin(O.getOrElse(candidateClone, () => candidate));
     return O.isSome(ownOrigin) && O.contains(origin, ownOrigin.value);
   });
@@ -906,7 +864,7 @@ const readRetainedJournals = Effect.fnUntraced(function* (
 ) {
   const path = yield* Path.Path;
   const root = path.resolve(repoRoot);
-  const clone = yield* cloneRootOf(root);
+  const clone = yield* readCheckoutClone(root);
   const repository = yield* readCloneFleetRepository(O.getOrElse(clone, () => root));
   const runsDirectory = yield* Effect.transposeOption(O.map(repository, attemptJournalStoreRunsDirectory)).pipe(
     Effect.catchTag("AttemptJournalStoreError", (error) =>
