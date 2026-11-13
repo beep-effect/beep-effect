@@ -4,13 +4,13 @@
     "id": "repo-cli-gh-git-consolidation",
     "packetId": "goal-packet/v1:676200a5a873b8b0c1e94aa4e1a2a3cc4fc0faf54dbc51a12181fc3781a76ed0",
     "title": "repo-cli gh/git consolidation",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-01",
-    "updated": "2026-11-02",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/repo-cli-gh-git-consolidation",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Move repo-cli and its tests off hand-rolled gh and git spawning onto @beep/github, @beep/git and @beep/commands, extending the kits where they lack the feature",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -19,7 +19,13 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 3287,
+        "role": "final"
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -53,6 +59,7 @@
     "research/cache-baseline-review-w7-retire.md",
     "research/cache-baseline-review-w7b.md",
     "research/cache-baseline-review-w7c.md",
+    "research/closeout-ledger-2026-11-13.md",
     "research/dirty-axis-differential-w2.json",
     "research/git-readers-differential-w1a.json",
     "research/groups-differential-w7.json",
@@ -62,6 +69,7 @@
     "research/reviewer-ci-github-differential-w3.json",
     "research/site-list.md",
     "research/w7-site-census-2026-11-03.md",
+    "research/w8-drift-census-2026-11-13.md",
     "research/worktree-differential-w7.json",
     "research/yeet-differential-w7.json",
     "research/yeet-gh-seams-differential-w6.json",
@@ -88,22 +96,22 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -351,5 +359,9 @@
       "path": "ops/frozen-w7c/ResidueTerminalLaneLive.old.ts",
       "purpose": "Frozen pre-W7 ResidueTerminalLaneLive git facts (lane base 8602b24203), replayed by ops/worktree-differential-w7.ts."
     }
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3287
+  }
 }

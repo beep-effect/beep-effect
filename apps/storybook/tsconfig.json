@@ -4,6 +4,7 @@
   "include": [
     ".storybook/**/*.ts",
     ".storybook/**/*.tsx",
+    "alchemy.run.ts",
     "vitest.config.ts",
     "vitest.storybook.config.ts",
     "vitest.storybook.setup.ts"
@@ -33,6 +34,9 @@
     },
     {
       "path": "../../packages/epistemic/ui/tsconfig.json"
+    },
+    {
+      "path": "../../packages/foundation/modeling/public-site/tsconfig.json"
     },
     {
       "path": "../../packages/foundation/modeling/utils/tsconfig.json"

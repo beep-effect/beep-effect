@@ -17,16 +17,6 @@ no exception row is added, and scope, profile and epoch are unchanged.
 The registration in `packages/foundation/modeling/identity/src/packages.ts` changes `@beep/identity`
 source only, and the audit reports no drift for `@beep/identity`.
 
-## Root subject `//`, inherited from `main`
-
-The baseline was last recorded at `3e822c71c5d` (#3242). Since then #3263, #3271, #3274 and #3276 regenerated
-root `turbo.json`, which the audit reports as `REVIEW configuration-source-drift: turbo.json` on `main` itself.
-Only the generated `inputs` lists of ten root-declared tasks differ:
-`@beep/repo-cli#lint:policy-fingerprint:goals-doctor`, `:knowledge`, `:lint-roadmap-refs`, `:quality`,
-`:quality-bun-audit`, `:quality-changeset-graph`, `:quality-jsdoc-inventory`, `:quality-jsdoc-module-tags`,
-`:quality-jsdoc-ratchet` and `:quality-tsgo-rules`. They follow source files those PRs added, moved or removed;
-no task, command, output, environment or dependency edge changed. This lane's diff does not touch `turbo.json`.
-
 ## Root subject `//`, this lane
 
 `bun run beep lint policy-fingerprint --write` adds

@@ -81,6 +81,8 @@ const handleFor = (reply: Reply) =>
 // A spawner that records each launch (argv, options, the prompt piped to stdin) and answers with `reply`.
 const fakeSpawner = Effect.fnUntraced(function* (reply: Reply) {
   const spawned = yield* Ref.make<ReadonlyArray<Spawned>>([]);
+  // Own double: reads the prompt piped to each spawn's stdin and answers with hanging or failing
+  // handles, per-spawn behaviour `ScriptedSpawner` cannot express.
   const spawner = ChildProcessSpawner.make(
     Effect.fnUntraced(function* (command) {
       if (!ChildProcess.isStandardCommand(command)) return yield* Effect.die("Mining spawns a standard command.");
