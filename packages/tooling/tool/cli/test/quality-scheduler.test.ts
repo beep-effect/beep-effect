@@ -1881,7 +1881,9 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             ).toBe(true);
             const unreadable = yield* Effect.flip(readAdmissionJournalHistory(tempRoot.root));
             expect(unreadable).toBeInstanceOf(QualitySchedulerError);
-            expect(unreadable.message).toBe(`Failed to list admission journal archive "${archiveDirectory}".`);
+            expect(unreadable.message).toBe(
+              `Failed to list admission journal archive "${archiveDirectory}" (BadResource).`
+            );
             const prunedWhileBlocked = yield* pruneAgedAdmissionJournalArchive(tempRoot.root);
             expect(prunedWhileBlocked).toBe(0);
 
@@ -1941,6 +1943,78 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
       );
+
+      const archiveBlockers = [
+        {
+          name: "a file",
+          reason: "BadResource",
+          block: Effect.fnUntraced(function* (directory: string) {
+            const fs = yield* FileSystem.FileSystem;
+            yield* fs.writeFileString(directory, "blocked\n");
+          }),
+          unblock: (_directory: string) => Effect.void,
+        },
+        {
+          name: "an unreadable directory",
+          reason: "PermissionDenied",
+          block: Effect.fnUntraced(function* (directory: string) {
+            const fs = yield* FileSystem.FileSystem;
+            yield* fs.makeDirectory(directory, { recursive: true, mode: 0o700 });
+            yield* fs.chmod(directory, 0o000);
+          }),
+          unblock: Effect.fnUntraced(function* (directory: string) {
+            const fs = yield* FileSystem.FileSystem;
+            yield* fs.chmod(directory, 0o700);
+          }),
+        },
+      ];
+
+      for (const blocker of archiveBlockers) {
+        it.effect(`reaps dead state and reports the listing failure when the archive is ${blocker.name}`, () =>
+          withAdmissionRoot((tempRoot) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const archiveDirectory = yield* archiveDirectoryOf(tempRoot);
+              const deadTicket = yield* writeFakeTicket(tempRoot, {
+                pid: DEAD_PID,
+                procStart: "dead-archive-owner",
+                nonce: "dead-archive-ticket",
+                originKey: "dead-archive-origin",
+              });
+              const listingFailure = `Failed to list admission journal archive "${archiveDirectory}" (${blocker.reason}).`;
+              yield* Effect.acquireUseRelease(
+                blocker.block(archiveDirectory),
+                () =>
+                  Effect.gen(function* () {
+                    yield* runQualityCommand(["scheduler", "reap", "--no-apply"]);
+                    const dryRunLines = yield* TestConsole.logLines;
+                    const dryRunOutput = A.map(dryRunLines, String);
+                    expect(dryRunOutput).toContain("dry run — would reap:");
+                    expect(dryRunOutput).toContain(`- ${deadTicket}`);
+                    expect(dryRunOutput).toContain(`could not list admission journal archive: ${listingFailure}`);
+                    const keptByDryRun = yield* fs.exists(deadTicket);
+                    expect(keptByDryRun).toBe(true);
+
+                    yield* runQualityCommand(["scheduler", "reap", "--apply"]);
+                    const applyLines = yield* TestConsole.logLines;
+                    const applyOutput = A.map(A.drop(applyLines, A.length(dryRunLines)), String);
+                    expect(applyOutput).toContain("reaped dead admission state:");
+                    expect(applyOutput).toContain(`- ${deadTicket}`);
+                    expect(applyOutput).toContain(`could not list admission journal archive: ${listingFailure}`);
+                    expect(A.some(applyOutput, Str.startsWith("reconciled owner-dead attempts: "))).toBe(true);
+                    const keptByApply = yield* fs.exists(deadTicket);
+                    expect(keptByApply).toBe(false);
+
+                    // The history read is a measurement: it fails rather than report a partial history.
+                    const unreadable = yield* Effect.flip(admissionJournalHistory());
+                    expect(unreadable.message).toBe(listingFailure);
+                  }),
+                () => blocker.unblock(archiveDirectory).pipe(Effect.orDie)
+              );
+            })
+          ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+        );
+      }
 
       it.effect("renders the folded history and its JSON from the scheduler history command", () =>
         withAdmissionRoot((tempRoot) =>

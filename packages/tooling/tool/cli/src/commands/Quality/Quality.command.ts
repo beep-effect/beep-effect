@@ -136,7 +136,11 @@ import type { JsoncParseError } from "@beep/jsonc/Jsonc";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { AdmissionSnapshot } from "../../internal/repo-run/index.ts";
+import type {
+  AdmissionJournalArchive,
+  AdmissionSnapshot,
+  QualitySchedulerError,
+} from "../../internal/repo-run/index.ts";
 import type {
   GithubCheckFailurePolicy as GithubCheckFailurePolicyType,
   GithubCheckLaneSpec,
@@ -3931,6 +3935,32 @@ const renderAdmissionArchivePruneLine = (
       `${verb} ${A.length(names)} admission journal archive segment(s) older than ${formatQuarantineAge(ADMISSION_JOURNAL_ARCHIVE_RETENTION_MILLIS)} -> ${directory}`,
   });
 
+// The archive listing never blocks or hides the reap: when either listing
+// failed, the prune line reports the typed error instead of a prune count.
+// A dry run prunes nothing, so every aged segment is a preview; after
+// `--apply`, only aged segments that are gone count as pruned.
+const renderAdmissionArchivePruneOutcome = (
+  apply: boolean,
+  beforeMillis: number,
+  archiveBefore: Result.Result<AdmissionJournalArchive, QualitySchedulerError>,
+  archiveRemaining: Result.Result<ReadonlyArray<string>, QualitySchedulerError>
+): string =>
+  pipe(
+    Result.all([archiveBefore, archiveRemaining]),
+    Result.match({
+      onFailure: (error) => `could not list admission journal archive: ${error.message}`,
+      onSuccess: ([before, remaining]) =>
+        renderAdmissionArchivePruneLine(
+          apply ? "pruned" : "would prune",
+          before.directory,
+          A.filter(
+            before.segments,
+            (name) => isAgedAdmissionJournalArchiveSegment(name, beforeMillis) && !A.contains(remaining, name)
+          )
+        ),
+    })
+  );
+
 const formatAdmissionInstant = (millis: number): string => DateTime.formatIso(DateTime.makeUnsafe(millis));
 const formatAdmissionWait = (millis: number): string => `${(millis / 1000).toFixed(1)}s`;
 
@@ -4054,21 +4084,14 @@ const schedulerReapCommand = Command.make(
   Effect.fn(function* ({ apply }) {
     // Read-only pre-scan: the aged set the reap pass is about to archive.
     const before = apply ? yield* Effect.asSome(admissionStatus()) : O.none<AdmissionSnapshot>();
-    const archiveBefore = yield* admissionJournalArchiveStatus();
+    const archiveBefore = yield* Effect.result(admissionJournalArchiveStatus());
     const beforeMillis = yield* Clock.currentTimeMillis;
     const snapshot = yield* reapAdmissionState({ apply });
     const nowMillis = yield* Clock.currentTimeMillis;
-    // A dry run prunes nothing, so every aged segment is a preview; after
-    // `--apply`, only aged segments that are gone count as pruned.
-    const archiveRemaining = apply ? (yield* admissionJournalArchiveStatus()).segments : A.empty<string>();
-    const pruneLine = renderAdmissionArchivePruneLine(
-      apply ? "pruned" : "would prune",
-      archiveBefore.directory,
-      A.filter(
-        archiveBefore.segments,
-        (name) => isAgedAdmissionJournalArchiveSegment(name, beforeMillis) && !A.contains(archiveRemaining, name)
-      )
-    );
+    const archiveRemaining = apply
+      ? yield* Effect.result(Effect.map(admissionJournalArchiveStatus(), (archive) => archive.segments))
+      : Result.succeed(A.empty<string>());
+    const pruneLine = renderAdmissionArchivePruneOutcome(apply, beforeMillis, archiveBefore, archiveRemaining);
     const reconciledAttempts = apply ? yield* reconcileCurrentCheckoutAttemptJournals() : 0;
     const deadLines = A.map(snapshot.dead, (path) => `- ${path}`);
     const archiveLine = O.match(before, {

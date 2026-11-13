@@ -2107,8 +2107,11 @@ const listArchiveSegmentNames = Effect.fnUntraced(function* (directory: string) 
  * **Details**
  *
  * A missing archive directory (no row has been trimmed yet) lists no segments.
- * Any other listing failure is a typed error: a history read must not pass off
- * an unreadable archive as an empty one.
+ * Any other listing failure is a typed error whose message names the platform
+ * reason (for example `PermissionDenied`, or `BadResource` when the path is a
+ * file): a history read must not pass off an unreadable archive as an empty
+ * one. Callers that must not be blocked by the archive, such as the scheduler
+ * reap command, report the error instead of failing on it.
  *
  * **Example** (List the archive segments)
  *
@@ -2130,7 +2133,11 @@ export const readAdmissionJournalArchive = Effect.fn("AdmissionJournal.readArchi
   const path = yield* Path.Path;
   const directory = path.join(root, ADMISSION_JOURNAL_ARCHIVE_DIRECTORY_NAME);
   const segments = yield* listArchiveSegmentNames(directory).pipe(
-    Effect.mapError(QualitySchedulerError.new(`Failed to list admission journal archive "${directory}".`))
+    Effect.mapError((error) =>
+      QualitySchedulerError.new(`Failed to list admission journal archive "${directory}" (${error.reason._tag}).`)(
+        error
+      )
+    )
   );
   return AdmissionJournalArchive.make({ directory, segments });
 });
