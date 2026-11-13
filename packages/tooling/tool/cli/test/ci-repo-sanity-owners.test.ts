@@ -35,12 +35,15 @@ import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
 import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
 
 // hosted-setup-tax slice 2 (PERIH-02, PERIL-04): Repo Sanity is the one hosted
-// owner of `lint:shadcn`, and the changeset graph check runs once in it.
+// owner of `lint:shadcn`, and the changeset graph check runs once in it. It is
+// also the one hosted owner of the check-census compiler stamp check.
 
 const REPO_ROOT = "/repo";
 const SHADCN_TASK = "lint:shadcn";
 const SHADCN_STEP = "ci:repo-sanity:shadcn";
-const MARKER_FILE = "shadcn-ran.txt";
+const STAMP_FLAG = "--stamp-only";
+const STAMP_STEP = "ci:repo-sanity:check-census-stamp";
+const MARKER_FILE = "target-ran.txt";
 const isQualityTaskGroupFailed = S.is(QualityTaskGroupFailed);
 
 const checkWorkflowText = import.meta.glob<string>("../../../../../.github/workflows/check.yml", {
@@ -70,12 +73,19 @@ const pushOptions = CiLaneRunOptions.make({
 const pullRequestOptions = CiLaneRunOptions.make({ ...pushOptions, changesetStatus: true });
 
 const runsShadcn = (step: QualityTaskStep): boolean => A.contains(step.args, SHADCN_TASK);
+const runsCensusStamp = (step: QualityTaskStep): boolean =>
+  A.contains(step.args, "check-census") && A.contains(step.args, STAMP_FLAG);
 
 type HostedOwner = { readonly owner: string; readonly event: string };
 
-// Every place a hosted job could run `lint:shadcn`: a check.yml job's CiLane
-// body (per event shape) or a literal `run:` script naming the task.
-const checkWorkflowOwners = (workflow: unknown): ReadonlyArray<HostedOwner> => {
+// Every place a hosted job could run a check: a check.yml job's CiLane body
+// (per event shape) where a step satisfies `runs`, or a literal `run:` script
+// containing `scriptNeedle`.
+const checkWorkflowOwners = (
+  workflow: unknown,
+  runs: (step: QualityTaskStep) => boolean,
+  scriptNeedle: string
+): ReadonlyArray<HostedOwner> => {
   const jobs = yamlAt(workflow, ["jobs"]);
   assertTrue(P.isObject(jobs));
   return A.flatMap(R.keys(jobs as Record<string, unknown>), (job) => {
@@ -87,7 +97,7 @@ const checkWorkflowOwners = (workflow: unknown): ReadonlyArray<HostedOwner> => {
             ["push", pushOptions],
           ] as const,
           ([event, options]) =>
-            A.some(ciLaneStepsForTesting(REPO_ROOT, laneId, options), runsShadcn)
+            A.some(ciLaneStepsForTesting(REPO_ROOT, laneId, options), runs)
               ? [{ owner: `check.yml#${job}`, event }]
               : []
         )
@@ -95,7 +105,7 @@ const checkWorkflowOwners = (workflow: unknown): ReadonlyArray<HostedOwner> => {
     const steps = yamlAt(workflow, ["jobs", job, "steps"]);
     const scriptOwners = A.some(A.isArray(steps) ? steps : [], (step) => {
       const script = yamlAt(step, ["run"]);
-      return isText(script) && Str.includes(SHADCN_TASK)(script);
+      return isText(script) && Str.includes(scriptNeedle)(script);
     })
       ? [{ owner: `check.yml#${job}:run`, event: "any" }]
       : [];
@@ -106,8 +116,11 @@ const checkWorkflowOwners = (workflow: unknown): ReadonlyArray<HostedOwner> => {
 const turboTaskNames = (step: QualityTaskStep): ReadonlyArray<string> =>
   A.takeWhile(A.drop(step.args, 2), (arg) => !Str.startsWith("--")(arg));
 
+const shadcnInLintPolicy = (step: QualityTaskStep): boolean =>
+  A.contains(turboTaskNames(step), SHADCN_TASK) || runsShadcn(step);
+
 // The hosted Lint Policy plan in both scopes: full (no targets) and changed.
-const lintPolicyOwners = (): ReadonlyArray<HostedOwner> =>
+const lintPolicyOwners = (runs: (step: QualityTaskStep) => boolean): ReadonlyArray<HostedOwner> =>
   A.flatMap(
     [
       ["full", undefined],
@@ -123,7 +136,7 @@ const lintPolicyOwners = (): ReadonlyArray<HostedOwner> =>
             ...(targets === undefined ? {} : { targets }),
           })
         ),
-        (step) => A.contains(turboTaskNames(step), SHADCN_TASK) || runsShadcn(step)
+        runs
       )
         ? [{ owner: `lint-policy:${scope}`, event: "any" }]
         : []
@@ -132,7 +145,7 @@ const lintPolicyOwners = (): ReadonlyArray<HostedOwner> =>
 describe("one hosted lint:shadcn owner (PERIH-02)", () => {
   it("runs lint:shadcn in exactly one hosted job, Repo Sanity, on pull requests and pushes", () => {
     const workflow = readCheckWorkflow();
-    const owners = [...checkWorkflowOwners(workflow), ...lintPolicyOwners()];
+    const owners = [...checkWorkflowOwners(workflow, runsShadcn, SHADCN_TASK), ...lintPolicyOwners(shadcnInLintPolicy)];
     expect(owners).toEqual([
       { owner: "check.yml#verify", event: "pull_request" },
       { owner: "check.yml#verify", event: "push" },
@@ -208,40 +221,76 @@ describe("one changeset-graph execution in Repo Sanity (PERIL-04)", () => {
   });
 });
 
+describe("one hosted check-census stamp owner", () => {
+  it("runs the compiler stamp check in exactly one hosted job, Repo Sanity, on pull requests and pushes", () => {
+    const workflow = readCheckWorkflow();
+    const owners = [
+      ...checkWorkflowOwners(workflow, runsCensusStamp, STAMP_FLAG),
+      ...lintPolicyOwners(runsCensusStamp),
+    ];
+    expect(owners).toEqual([
+      { owner: "check.yml#verify", event: "pull_request" },
+      { owner: "check.yml#verify", event: "push" },
+    ]);
+    // One step per body, under its own label, running the stamp check alone.
+    A.forEach([pullRequestOptions, pushOptions], (options) => {
+      const stampSteps = A.filter(ciLaneStepsForTesting(REPO_ROOT, "repo-sanity", options), runsCensusStamp);
+      expect(A.map(stampSteps, (step) => step.label)).toEqual([STAMP_STEP]);
+      expect(A.map(stampSteps, (step) => [...step.args])).toEqual([
+        ["run", "beep", "quality", "check-census", STAMP_FLAG],
+      ]);
+    });
+  });
+
+  // A documentation-only diff can move neither the baseline nor the compiler.
+  it("keeps the stamp check off the documentation path", () => {
+    const docsBody = ciLaneStepsForTesting(
+      REPO_ROOT,
+      "repo-sanity",
+      CiLaneRunOptions.make({ ...pullRequestOptions, docsOnly: true })
+    );
+    expect(A.some(docsBody, runsCensusStamp)).toBe(false);
+  });
+});
+
 const testLayer = Layer.mergeAll(NodeTestLayer, TestConsole.layer);
 
-layer(testLayer, { timeout: "60 seconds" })("Repo Sanity step masking (PERIH-02)", (it) => {
-  // `beep ci lane repo-sanity` hands its planned body to runCiLaneSteps.
-  // Replay the real body's labels through that runner with every step before
-  // the shadcn step red and prove the shadcn step still ran.
-  it.effect("runs the shadcn step after every earlier Repo Sanity step fails", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const dir = yield* fs.makeTempDirectoryScoped({ prefix: "repo-sanity-mask-" });
-      const marker = path.join(dir, MARKER_FILE);
-      const body = ciLaneStepsForTesting(REPO_ROOT, "repo-sanity", pullRequestOptions);
-      const shadcnIndex = O.getOrThrow(A.findFirstIndex(body, (step) => step.label === SHADCN_STEP));
-      expect(shadcnIndex).toBeGreaterThan(0);
-      const replay = A.map(A.take(body, shadcnIndex + 1), (step, index) =>
-        QualityTaskStep.make({
-          label: step.label,
-          command: "bun",
-          // Each step runs in `dir`, so the marker is written by relative path.
-          args: ["-e", index === shadcnIndex ? `await Bun.write("${MARKER_FILE}", "yes")` : "process.exit(3)"],
-          cwd: dir,
-        })
-      );
-      const exit = yield* Effect.exit(runCiLaneSteps("repo-sanity", replay));
-      const shadcnRan = yield* fs.exists(marker);
-      expect(shadcnRan).toBe(true);
-      // A success leaves no failure, which the guard below rejects.
-      const failure = exit.pipe(Exit.match({ onSuccess: () => undefined, onFailure: Cause.squash }));
-      assertTrue(isQualityTaskGroupFailed(failure));
-      expect(A.map(failure.failures, (step) => step.label)).toEqual(
-        A.map(A.take(body, shadcnIndex), (step) => step.label)
-      );
+// `beep ci lane repo-sanity` hands its planned body to runCiLaneSteps. Replay
+// the real body's labels through that runner with every step before `label`
+// red, and prove the `label` step still ran and the run collected every earlier red.
+const replayWithEarlierReds = Effect.fn("RepoSanityOwnersTest.replayWithEarlierReds")(function* (label: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const dir = yield* fs.makeTempDirectoryScoped({ prefix: "repo-sanity-mask-" });
+  const marker = path.join(dir, MARKER_FILE);
+  const body = ciLaneStepsForTesting(REPO_ROOT, "repo-sanity", pullRequestOptions);
+  const targetIndex = O.getOrThrow(A.findFirstIndex(body, (step) => step.label === label));
+  expect(targetIndex).toBeGreaterThan(0);
+  const replay = A.map(A.take(body, targetIndex + 1), (step, index) =>
+    QualityTaskStep.make({
+      label: step.label,
+      command: "bun",
+      // Each step runs in `dir`, so the marker is written by relative path.
+      args: ["-e", index === targetIndex ? `await Bun.write("${MARKER_FILE}", "yes")` : "process.exit(3)"],
+      cwd: dir,
     })
+  );
+  const exit = yield* Effect.exit(runCiLaneSteps("repo-sanity", replay));
+  const targetRan = yield* fs.exists(marker);
+  expect(targetRan).toBe(true);
+  // A success leaves no failure, which the guard below rejects.
+  const failure = exit.pipe(Exit.match({ onSuccess: () => undefined, onFailure: Cause.squash }));
+  assertTrue(isQualityTaskGroupFailed(failure));
+  expect(A.map(failure.failures, (step) => step.label)).toEqual(A.map(A.take(body, targetIndex), (step) => step.label));
+});
+
+layer(testLayer, { timeout: "60 seconds" })("Repo Sanity step masking (PERIH-02)", (it) => {
+  it.effect("runs the shadcn step after every earlier Repo Sanity step fails", () =>
+    replayWithEarlierReds(SHADCN_STEP)
+  );
+
+  it.effect("runs the check-census stamp step after every earlier Repo Sanity step fails", () =>
+    replayWithEarlierReds(STAMP_STEP)
   );
 
   // The contrast: the same runner stops a fail-fast lane at its first red, so
