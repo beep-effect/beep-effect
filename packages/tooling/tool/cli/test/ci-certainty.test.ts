@@ -315,8 +315,35 @@ const labelAdmittedCorpus = CiCertaintyCorpus.make({
   until: SYNTHETIC_WINDOW_UNTIL,
 });
 
+// A heavy-admit.yml run created before the head's first check.yml run joins that first run.
+const earlyAdmitCorpus = CiCertaintyCorpus.make({
+  ...labelAdmittedCorpus,
+  pullRequestRuns: [
+    producerRun("heavy-admit.yml", 501, FIRST_PUSH, "2026-11-09T11:58:00Z", [
+      { completed_at: "2026-11-09T11:59:00Z", name: "Heavy Admission", started_at: "2026-11-09T11:58:00Z" },
+      {
+        completed_at: "2026-11-09T12:10:00Z",
+        labels: ["beep-ec2-heavy"],
+        name: "Heavy / Check",
+        started_at: "2026-11-09T12:00:00Z",
+      },
+    ]),
+    producerRun("check.yml", 502, FIRST_PUSH, "2026-11-09T12:00:00Z", [
+      { completed_at: "2026-11-09T12:04:00Z", started_at: "2026-11-09T12:01:00Z" },
+    ]),
+  ],
+});
+
 describe("ci certainty producer pairing", () => {
   it.layer(testLayer)((it) => {
+    it.effect("attaches a heavy-admit run that predates every check.yml run to the head's first attempt", () =>
+      Effect.gen(function* () {
+        const report = yield* buildCiCertaintyReport(earlyAdmitCorpus);
+        strictEqual(report.runnerMinutes.runs, 1);
+        assertSome(report.runnerMinutes.meanManaged, 10);
+      })
+    );
+
     it.effect("times admission to the heavy pool and bills heavy-admit minutes to the head attempt", () =>
       Effect.gen(function* () {
         const report = yield* buildCiCertaintyReport(labelAdmittedCorpus);
@@ -772,7 +799,7 @@ const liveGit = (
   });
 
 const withLiveCapture =
-  (calls: Array<GithubFetchCall>, spawner: ScriptedSpawner) =>
+  (calls: Array<GithubFetchCall>, spawner: ScriptedSpawner, github: (call: GithubFetchCall) => unknown = liveGithub) =>
   <A, E, R>(program: Effect.Effect<A, E, R>) =>
     program.pipe(
       Effect.provideService(
@@ -780,7 +807,7 @@ const withLiveCapture =
         O.some(
           githubFetch((call) => {
             A.appendInPlace(calls, call);
-            return liveGithub(call);
+            return github(call);
           }).fetch
         )
       ),
@@ -869,6 +896,38 @@ describe("ci certainty command", () => {
           "origin/main",
         ]);
       }).pipe(withLiveCapture(calls, spawner));
+    });
+
+    it.effect("marks main unread when the push listing cannot be read, and still reads the heads", () => {
+      const calls = A.empty<GithubFetchCall>();
+      const spawner = liveGit();
+      const pushListingRefused = (call: GithubFetchCall): unknown =>
+        Str.includes("/actions/workflows/check.yml/runs")(call.url.pathname) &&
+        call.url.searchParams.get("event") === "push"
+          ? reply(404)({ message: "Not Found" })
+          : liveGithub(call);
+      return Effect.gen(function* () {
+        const repoRoot = yield* seedRequiredContexts();
+        const corpusFile = `${repoRoot}/certainty-corpus.json`;
+        yield* runCertaintyCommand([...LIVE_WINDOW, "--preview", "--write-corpus", corpusFile]);
+        const markdown = yield* lastCertaintyLog();
+
+        const fs = yield* FileSystem.FileSystem;
+        const corpus = yield* fs.readFileString(corpusFile).pipe(Effect.flatMap(decodeCiCertaintyCorpus));
+        assertTrue(corpus.mainListingPartial);
+        assertTrue(A.every(corpus.mainCommits, (commit) => A.isReadonlyArrayEmpty(commit.runs)));
+        // The pull-request heads are still read in full.
+        deepStrictEqual(
+          A.map(corpus.pullRequestRuns, (run) => [run.run.id, A.length(run.jobs)]),
+          [
+            [11, 2],
+            [13, 0],
+            [12, 1],
+          ]
+        );
+        expect(markdown).toContain("> **Not certified, not acceptance evidence.** Refused: api-partial.");
+        expect(markdown).toContain("rate —; cancelled 0; no run 0; open 0; unread 2");
+      }).pipe(withLiveCapture(calls, spawner, pushListingRefused));
     });
 
     it.effect("writes the captured corpus and replays it without reading anything", () => {
