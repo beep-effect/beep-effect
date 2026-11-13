@@ -485,7 +485,10 @@ const judgeHead = (
     successor,
     (next) =>
       Str.equivalence(state, "open") ||
-      (!Str.equivalence(state, "green") && next.t0 < decidedAt) ||
+      // check.yml's cancel-in-progress cancels a head in the same second its successor's run is
+      // created, so a cancelled head ties with its successor; red stays strict (D5 monotonicity).
+      (Str.equivalence(state, "cancelled") && next.t0 <= decidedAt) ||
+      (!Str.equivalence(state, "green") && !Str.equivalence(state, "cancelled") && next.t0 < decidedAt) ||
       (Str.equivalence(state, "green") && O.exists(requiredGreen, (green) => next.t0 < green.at))
   );
   const censor: O.Option<CiCertaintyCensorReason> = superseded

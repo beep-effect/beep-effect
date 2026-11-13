@@ -80,10 +80,11 @@ describe("ci certainty fixture replay", () => {
         assertTrue(report.certified);
         strictEqual(A.length(report.requiredContexts), 15);
         // SLO statistic: code heads with misses counted; most misses are cancellations, not reds.
-        // f6c4a648 went red before its successor's push, so it counts as a miss rather than superseded.
-        strictEqual(report.slo.n, 18);
-        strictEqual(report.slo.misses, 7);
-        strictEqual(report.slo.censoredSuperseded, 13);
+        // f6c4a648 went red before its successor's push, so it counts as a miss; ecc04921 was cancelled in
+        // the same second its successor's run was created, so it is superseded.
+        strictEqual(report.slo.n, 17);
+        strictEqual(report.slo.misses, 6);
+        strictEqual(report.slo.censoredSuperseded, 14);
         strictEqual(report.slo.censoredOpen, 0);
         strictEqual(report.slo.withinTen, 1);
         assertSome(report.slo.p50Minutes, 63.35);
@@ -102,7 +103,7 @@ describe("ci certainty fixture replay", () => {
         assertSome(report.runnerMinutes.meanTotal, 251.08);
         assertSome(report.runnerMinutes.greenCodeRunP50, 278.85);
         assertSome(report.runnerMinutes.greenCodeRunP95, 385.35);
-        assertSome(report.supersededRunnerMinuteShare, 0.3737);
+        assertSome(report.supersededRunnerMinuteShare, 0.42);
         // The plan's spot check: 9f30182f ran 40.2 min to every required green on 315 runner-minutes.
         const spotCheck = headStartingWith(report.heads, "9f30182f");
         assertSome(spotCheck.requiredGreenMinutes, 40.18);
@@ -144,10 +145,15 @@ describe("ci certainty fixture replay", () => {
         assertSome(docs.requiredGreenMinutes, 2.77);
 
         // Cancelled without a successor: counted, and a miss.
-        const cancelled = headStartingWith(report.heads, "ecc04921");
+        const cancelled = headStartingWith(report.heads, "9294d40e");
         strictEqual(cancelled.state, "cancelled");
         assertNone(cancelled.censor);
         assertNone(cancelled.requiredGreenMinutes);
+
+        // Cancelled by cancel-in-progress in the same second cf49be58's run was created: superseded.
+        const cancelledByTie = headStartingWith(report.heads, "ecc04921");
+        strictEqual(cancelledByTie.state, "cancelled");
+        assertSome(cancelledByTie.censor, "superseded");
 
         // Red before the branch's next push started: counted as a miss, although later jobs ran past it.
         const redBeforeSuccessor = headStartingWith(report.heads, "f6c4a648");
