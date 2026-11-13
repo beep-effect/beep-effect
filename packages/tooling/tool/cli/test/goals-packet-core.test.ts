@@ -118,12 +118,21 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
       expect(canonicalJsonText({ a: undefined, b: 1 })).toBe('{"b":1}');
     });
 
-    it("pretty-prints empty containers and nested primitive values with stable indentation", () => {
-      expect(canonicalJsonTextPretty({ z: undefined, b: [], a: [null, true, false, 3, "quoted\\text", {}, []] })).toBe(
-        '{\n  "a": [\n    null,\n    true,\n    false,\n    3,\n    "quoted\\\\text",\n    {},\n    []\n  ],\n  "b": []\n}\n'
+    // The indented renderer keeps its own walk (census E7): the compact text
+    // is the canonical digest owner's since slice C, so these shapes no longer
+    // reach this walk through `canonicalJsonText`.
+    it("renders empty containers, null, nesting and non-JSON leaves in the pretty form", () => {
+      expect(canonicalJsonTextPretty({})).toBe("{}\n");
+      expect(canonicalJsonTextPretty([])).toBe("[]\n");
+      expect(canonicalJsonTextPretty(null)).toBe("null\n");
+      expect(canonicalJsonTextPretty({ b: [1, { d: null, c: "x" }], a: {}, e: [] })).toBe(
+        '{\n  "a": {},\n  "b": [\n    1,\n    {\n      "c": "x",\n      "d": null\n    }\n  ],\n  "e": []\n}\n'
       );
-      expect(canonicalJsonTextPretty({ absent: undefined })).toBe("{}\n");
-      expect(canonicalJsonTextPretty([undefined])).toBe("[\n  null\n]\n");
+      // An `undefined` member is absent; one whose every member is absent is empty.
+      expect(canonicalJsonTextPretty({ a: undefined, b: 1 })).toBe('{\n  "b": 1\n}\n');
+      expect(canonicalJsonTextPretty({ a: undefined })).toBe("{}\n");
+      // Anything that is neither a JSON scalar, an array nor a record renders as null.
+      expect(canonicalJsonTextPretty({ a: Symbol.for("not-json") })).toBe('{\n  "a": null\n}\n');
     });
 
     it("rejects an unknown event type even when the sequence and digest are valid", () => {
