@@ -1,0 +1,494 @@
+[
+  {
+    "runId": 43322847791,
+    "workflow": "Check",
+    "event": "pull_request",
+    "headBranch": "feat/fixture-head",
+    "headSha": "c8ecffa1a72c1ba7096ff83f366b4ba121fda982",
+    "createdAt": "2026-11-12T22:45:34Z",
+    "conclusion": "success",
+    "attempt": 1,
+    "jobs": [
+      {
+        "name": "Test Plan",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:45:37Z",
+        "completedAt": "2026-11-12T22:46:59Z"
+      },
+      {
+        "name": "Secret Scanning",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:46:11Z",
+        "completedAt": "2026-11-12T22:46:42Z"
+      },
+      {
+        "name": "Commitlint",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:45:37Z",
+        "completedAt": "2026-11-12T22:46:09Z"
+      },
+      {
+        "name": "SAST",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:45:42Z",
+        "completedAt": "2026-11-12T22:47:02Z"
+      },
+      {
+        "name": "Change Profile",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:46:12Z",
+        "completedAt": "2026-11-12T22:46:19Z"
+      },
+      {
+        "name": "PR Size Label",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:45:41Z",
+        "completedAt": "2026-11-12T22:46:55Z"
+      },
+      {
+        "name": "Security",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:46:05Z",
+        "completedAt": "2026-11-12T22:47:24Z"
+      },
+      {
+        "name": "Heavy Admission",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:46:27Z",
+        "completedAt": "2026-11-12T22:47:44Z"
+      },
+      {
+        "name": "Property Laws (repo-cli-2)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:00Z",
+        "completedAt": "2026-11-12T22:51:14Z"
+      },
+      {
+        "name": "Property Laws (rest)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:00Z",
+        "completedAt": "2026-11-12T22:49:21Z"
+      },
+      {
+        "name": "Property Laws (foundation-drivers)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:01Z",
+        "completedAt": "2026-11-12T22:48:44Z"
+      },
+      {
+        "name": "Property Laws (repo-cli-1)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:01Z",
+        "completedAt": "2026-11-12T22:51:55Z"
+      },
+      {
+        "name": "Test Integration (lps-int-5)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:01Z",
+        "completedAt": "2026-11-12T22:54:16Z"
+      },
+      {
+        "name": "Test Integration (lps-int-4)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:48:04Z",
+        "completedAt": "2026-11-12T22:53:21Z"
+      },
+      {
+        "name": "Test Integration (lps-int-10)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:00Z",
+        "completedAt": "2026-11-12T22:51:53Z"
+      },
+      {
+        "name": "Test Integration (lps-int-19)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:52Z",
+        "completedAt": "2026-11-12T22:54:54Z"
+      },
+      {
+        "name": "Test Integration (lps-int-3)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:48:22Z",
+        "completedAt": "2026-11-12T22:55:12Z"
+      },
+      {
+        "name": "Test Integration (lps-int-6)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:48:46Z",
+        "completedAt": "2026-11-12T22:54:48Z"
+      },
+      {
+        "name": "Test Integration (lps-int-7)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:51Z",
+        "completedAt": "2026-11-12T22:55:10Z"
+      },
+      {
+        "name": "Test Integration (lps-int-11)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:48:40Z",
+        "completedAt": "2026-11-12T22:54:13Z"
+      },
+      {
+        "name": "Test Integration (lps-int-15)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:48:15Z",
+        "completedAt": "2026-11-12T22:55:38Z"
+      },
+      {
+        "name": "Test Integration (lps-int-1)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:48:44Z",
+        "completedAt": "2026-11-12T22:55:38Z"
+      },
+      {
+        "name": "Test Integration (lps-int-9)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:48:00Z",
+        "completedAt": "2026-11-12T22:53:22Z"
+      },
+      {
+        "name": "Test Integration (lps-int-18)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:48:08Z",
+        "completedAt": "2026-11-12T22:54:06Z"
+      },
+      {
+        "name": "Test Integration (lps-int-12)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:48:48Z",
+        "completedAt": "2026-11-12T22:54:07Z"
+      },
+      {
+        "name": "Test Integration (lps-int-2)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:25Z",
+        "completedAt": "2026-11-12T22:53:02Z"
+      },
+      {
+        "name": "Test Integration (lps-int-14)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:48:35Z",
+        "completedAt": "2026-11-12T22:53:32Z"
+      },
+      {
+        "name": "Test Integration (int-rest)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:58Z",
+        "completedAt": "2026-11-12T22:54:13Z"
+      },
+      {
+        "name": "Test Unit (repo-cli-1)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:03Z",
+        "completedAt": "2026-11-12T22:53:34Z"
+      },
+      {
+        "name": "Test Integration (lps-int-13)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:48:27Z",
+        "completedAt": "2026-11-12T22:53:31Z"
+      },
+      {
+        "name": "Test Integration (lps-int-16)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:48:48Z",
+        "completedAt": "2026-11-12T22:54:12Z"
+      },
+      {
+        "name": "Test Integration (lps-int-17)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:48:01Z",
+        "completedAt": "2026-11-12T22:53:46Z"
+      },
+      {
+        "name": "Test Unit (repo-cli-3)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:45Z",
+        "completedAt": "2026-11-12T22:53:52Z"
+      },
+      {
+        "name": "Test Unit (repo-cli-4)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:01Z",
+        "completedAt": "2026-11-12T22:53:50Z"
+      },
+      {
+        "name": "Test Unit (repo-cli-7)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:58Z",
+        "completedAt": "2026-11-12T22:55:06Z"
+      },
+      {
+        "name": "Test Unit (repo-cli-8)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:49:48Z",
+        "completedAt": "2026-11-12T22:55:21Z"
+      },
+      {
+        "name": "Test Unit (repo-cli-5)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:50Z",
+        "completedAt": "2026-11-12T22:54:51Z"
+      },
+      {
+        "name": "Test Unit (repo-cli-6)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:49:11Z",
+        "completedAt": "2026-11-12T22:53:50Z"
+      },
+      {
+        "name": "Test Unit (repo-cli-9)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:53Z",
+        "completedAt": "2026-11-12T22:54:38Z"
+      },
+      {
+        "name": "Test Unit (repo-cli-2)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:49:05Z",
+        "completedAt": "2026-11-12T22:56:14Z"
+      },
+      {
+        "name": "Test Unit (law-practice-3)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:42Z",
+        "completedAt": "2026-11-12T22:55:06Z"
+      },
+      {
+        "name": "Test Unit (law-practice-6)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:40Z",
+        "completedAt": "2026-11-12T22:54:13Z"
+      },
+      {
+        "name": "Test Unit (unit-b)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:48:50Z",
+        "completedAt": "2026-11-12T22:57:17Z"
+      },
+      {
+        "name": "Test Unit (law-practice-8)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:15Z",
+        "completedAt": "2026-11-12T22:52:20Z"
+      },
+      {
+        "name": "Test Unit (law-practice-7)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:47Z",
+        "completedAt": "2026-11-12T22:55:08Z"
+      },
+      {
+        "name": "Test Unit (law-practice-2)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:49:26Z",
+        "completedAt": "2026-11-12T22:53:50Z"
+      },
+      {
+        "name": "Test Unit (law-practice-1)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:49:22Z",
+        "completedAt": "2026-11-12T22:54:14Z"
+      },
+      {
+        "name": "Test Unit (unit-e)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:59Z",
+        "completedAt": "2026-11-12T22:54:28Z"
+      },
+      {
+        "name": "Test Unit (unit-c)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:49:13Z",
+        "completedAt": "2026-11-12T22:57:17Z"
+      },
+      {
+        "name": "Test Unit (law-practice-5)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:49:04Z",
+        "completedAt": "2026-11-12T22:55:18Z"
+      },
+      {
+        "name": "Test Unit (unit-a)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:49:26Z",
+        "completedAt": "2026-11-12T22:56:30Z"
+      },
+      {
+        "name": "Test Unit (unit-g)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:49:22Z",
+        "completedAt": "2026-11-12T22:56:27Z"
+      },
+      {
+        "name": "Test Unit (law-practice-4)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:49:23Z",
+        "completedAt": "2026-11-12T22:54:21Z"
+      },
+      {
+        "name": "Test Unit (unit-d)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:49:10Z",
+        "completedAt": "2026-11-12T22:56:09Z"
+      },
+      {
+        "name": "Test Unit (unit-f)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:49:37Z",
+        "completedAt": "2026-11-12T22:55:30Z"
+      },
+      {
+        "name": "Test Integration (lps-int-8)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:49:52Z",
+        "completedAt": "2026-11-12T22:56:05Z"
+      },
+      {
+        "name": "Nix Shell",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:49:53Z",
+        "completedAt": "2026-11-12T22:50:16Z"
+      },
+      {
+        "name": "Codegen Drift",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:49:54Z",
+        "completedAt": "2026-11-12T22:51:31Z"
+      },
+      {
+        "name": "Fallow Advisory Envelopes",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:50:01Z",
+        "completedAt": "2026-11-12T22:52:50Z"
+      },
+      {
+        "name": "Professional Desktop IPC Stdio",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:50:22Z",
+        "completedAt": "2026-11-12T22:51:38Z"
+      },
+      {
+        "name": "Ecosystem Contracts",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:49:55Z",
+        "completedAt": "2026-11-12T22:51:31Z"
+      },
+      {
+        "name": "Repo Sanity",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:50:24Z",
+        "completedAt": "2026-11-12T22:54:08Z"
+      },
+      {
+        "name": "JSDoc Ratchet",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:50:09Z",
+        "completedAt": "2026-11-12T22:52:30Z"
+      },
+      {
+        "name": "Lint (lint-b)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:50:12Z",
+        "completedAt": "2026-11-12T22:51:30Z"
+      },
+      {
+        "name": "Lint (lint-a)",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:50:18Z",
+        "completedAt": "2026-11-12T22:52:43Z"
+      },
+      {
+        "name": "Labs",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:50:39Z",
+        "completedAt": "2026-11-12T22:53:05Z"
+      },
+      {
+        "name": "Heavy / Check",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:45Z",
+        "completedAt": "2026-11-12T22:49:26Z"
+      },
+      {
+        "name": "Heavy / Build",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:45Z",
+        "completedAt": "2026-11-12T22:49:04Z"
+      },
+      {
+        "name": "Heavy / Lint Policy",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:45Z",
+        "completedAt": "2026-11-12T22:52:59Z"
+      },
+      {
+        "name": "Heavy / Doctest",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:47:45Z",
+        "completedAt": "2026-11-12T22:49:45Z"
+      },
+      {
+        "name": "Heavy / Docgen",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:48:06Z",
+        "completedAt": "2026-11-12T22:53:32Z"
+      },
+      {
+        "name": "Heavy / Observe local cache pilot",
+        "conclusion": "skipped",
+        "startedAt": "2026-11-12T22:47:44Z",
+        "completedAt": "2026-11-12T22:47:44Z"
+      },
+      {
+        "name": "Heavy / Execute approved signed producer",
+        "conclusion": "skipped",
+        "startedAt": "2026-11-12T22:47:44Z",
+        "completedAt": "2026-11-12T22:47:44Z"
+      },
+      {
+        "name": "Heavy / Inspect producer sources and tools",
+        "conclusion": "skipped",
+        "startedAt": "2026-11-12T22:47:44Z",
+        "completedAt": "2026-11-12T22:47:44Z"
+      },
+      {
+        "name": "Heavy / Build candidate producer adapter",
+        "conclusion": "skipped",
+        "startedAt": "2026-11-12T22:47:44Z",
+        "completedAt": "2026-11-12T22:47:44Z"
+      },
+      {
+        "name": "Property Laws",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:51:57Z",
+        "completedAt": "2026-11-12T22:52:00Z"
+      },
+      {
+        "name": "Lint",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:53:36Z",
+        "completedAt": "2026-11-12T22:53:39Z"
+      },
+      {
+        "name": "Heavy / Test Integration",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:56:30Z",
+        "completedAt": "2026-11-12T22:56:33Z"
+      },
+      {
+        "name": "Test Unit",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:57:41Z",
+        "completedAt": "2026-11-12T22:57:44Z"
+      },
+      {
+        "name": "Heavy / Coverage Regression",
+        "conclusion": "success",
+        "startedAt": "2026-11-12T22:58:49Z",
+        "completedAt": "2026-11-12T23:03:52Z"
+      }
+    ]
+  }
+]
