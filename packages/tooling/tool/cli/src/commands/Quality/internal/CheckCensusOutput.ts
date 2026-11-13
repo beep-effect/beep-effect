@@ -80,8 +80,8 @@ export const nameFilterPredicate =
     O.match(filter, { onNone: () => true, onSome: (needle) => Str.includes(needle)(name) });
 
 /**
- * List the files a compiler program holds: `<compiler> -p <config>
- * --listFilesOnly`, run from `cwd`, with diagnostic lines dropped.
+ * List the files a compiler program holds by running the compiler with
+ * `-p <config> --listFilesOnly` from `cwd` and dropping diagnostic lines.
  *
  * **Details**
  *

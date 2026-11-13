@@ -294,8 +294,9 @@ const commandSegments = flow(Str.split("&&"), A.map(Str.trim));
  *
  * **Details**
  *
- * A codegen step before the build (`bun run codegen && tsrs -p tsconfig.json
- * --emitDeclarationOnly`) still counts. A segment with extra flags does not,
+ * A codegen step before the build still counts, as in
+ * `bun run codegen && tsrs -p tsconfig.json --emitDeclarationOnly`. A segment
+ * with extra flags does not,
  * because it runs a different program. A declaration-only package's check
  * leads with its build, and the root Turbo `check` task depends on the
  * package's own `build`; every other package overrides that edge.
@@ -309,6 +310,8 @@ const commandSegments = flow(Str.split("&&"), A.map(Str.trim));
  * console.log(isDeclarationOnlyBuild("vite build")) // false
  * ```
  *
+ * @param build - The manifest's `beep:build` command.
+ * @returns `true` when one `&&` segment is exactly the declaration-only build command.
  * @category predicates
  * @since 0.0.0
  */
@@ -1922,6 +1925,8 @@ const servedCheck = (check: string, build: string): O.Option<string> =>
  * console.log(checkLeadsWithBuild("tsrs -p tsconfig.check.json && bun run beep:check:tests")) // false
  * ```
  *
+ * @param check - The manifest's `beep:check` command.
+ * @returns `true` when the command opens with the declaration-only build program.
  * @category predicates
  * @since 0.0.0
  */
