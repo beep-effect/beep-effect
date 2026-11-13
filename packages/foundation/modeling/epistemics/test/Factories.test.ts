@@ -18,6 +18,8 @@ import {
   makeContradictionVocabulary,
 } from "@beep/epistemics/Contradiction";
 import {
+  canonicalDetectionJson,
+  canonicalDetectionJsonResult,
   makeContradictionDetectionSnapshot,
   makeContradictionDetectionVocabulary,
   makeDetectedContradiction,
@@ -32,6 +34,7 @@ import {
 } from "@beep/epistemics/EvidenceVerification";
 import { makeLogicalEdgeIdentity, makeLogicalEdgeKey } from "@beep/epistemics/LogicalEdgeIdentity";
 import { $EpistemicsId } from "@beep/identity/packages";
+import { JsoncCanonicalizeError } from "@beep/jsonc/JsoncFingerprint";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
@@ -39,7 +42,7 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertFailure, assertTrue } from "@effect/vitest/utils";
+import { assertFailure, assertSuccess, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -432,6 +435,21 @@ describe("second binding of the contradiction factories", () => {
       ),
       true
     );
+  });
+
+  // The synchronous export keeps its string return (the seal call sites and
+  // the two domain aliases use it), so its refusal is the owner's typed error,
+  // thrown; the Result twin reports the same refusal as a SchemaError.
+  it("canonicalDetectionJson throws the owner's refusal and its Result twin returns it", () => {
+    expect(canonicalDetectionJson({ b: 1, a: [true, null] })).toBe('{"a":[true,null],"b":1}');
+    assertSuccess(canonicalDetectionJsonResult({ b: 1, a: [true, null] }), '{"a":[true,null],"b":1}');
+
+    const refusal = Result.try(() => canonicalDetectionJson({ a: "\ud800" }));
+    assertFailure(
+      Result.mapError(refusal, (thrown) => (S.is(JsoncCanonicalizeError)(thrown) ? thrown.code : "not the owner's")),
+      "LoneSurrogate"
+    );
+    assertFailure(refusedAt(canonicalDetectionJsonResult({ a: "\ud800" }), 'LoneSurrogate at "/a"'), true);
   });
 
   it("validates detection beliefs, snapshots and detected contradictions", () => {
