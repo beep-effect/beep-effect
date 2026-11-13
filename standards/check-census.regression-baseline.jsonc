@@ -2,13 +2,14 @@
 // Re-measure every row with one command: bun run beep quality check-census --write-baseline
 // It needs a built tree: build each row's upstream declarations first, for example
 // bunx turbo run build --filter='@beep/repo-cli^...' --filter='@beep/law-practice-domain^...'.
-// Gate: single-checker instantiations must not increase on any row (failure); check time is
-// advisory within a 5% band; an instantiation decrease prints a tighten hint.
+// Gate: single-checker instantiations must not grow by more than 32 on a strict row, nor by more
+// than 10% since measuredAt on a band row (classes live in CheckCensusGate.ts, not here) (failure);
+// check time is advisory within a 5% band; an instantiation decrease prints a tighten hint.
 // A write refuses any sample whose compiler output reports a type error.
 {
   "schemaVersion": "check-census-baseline/v1",
-  "measuredAt": "2026-11-13T07:07:38.700Z",
-  "commit": "65953fc9290d77e73a53c13dc852aeaecacffe6a",
+  "measuredAt": "2026-11-13T14:38:26.159Z",
+  "commit": "b02df42c209fde219957ce919bc3dfe6a06729e6",
   "dirtyWorktree": false,
   "compiler": "7.0.2+effect-tsgo.0.68.1",
   "command": "bun run tsc -p <tsconfig> --noEmit --extendedDiagnostics --singleThreaded --tsBuildInfoFile <fresh>",
@@ -19,21 +20,21 @@
       "tsconfig": "packages/foundation/modeling/schema/tsconfig.json",
       "instantiations": 395702,
       "types": 118811,
-      "checkTimeMs": 844
+      "checkTimeMs": 813
     },
     {
       "name": "@beep/repo-cli",
       "tsconfig": "packages/tooling/tool/cli/tsconfig.json",
-      "instantiations": 7570986,
-      "types": 1684454,
-      "checkTimeMs": 19981
+      "instantiations": 7707907,
+      "types": 1716251,
+      "checkTimeMs": 19430
     },
     {
       "name": "@beep/law-practice-domain",
       "tsconfig": "packages/law-practice/domain/tsconfig.json",
       "instantiations": 1035137,
       "types": 271707,
-      "checkTimeMs": 2189
+      "checkTimeMs": 2297
     }
   ],
   "typeperfFixtures": [
@@ -42,35 +43,35 @@
       "tsconfig": "packages/foundation/modeling/schema/test/fixtures/typeperf/tsconfig.baseline.json",
       "instantiations": 19636,
       "types": 8716,
-      "checkTimeMs": 31
+      "checkTimeMs": 28
     },
     {
       "name": "@beep/schema#typeperf/literal-kit-tagged-union",
       "tsconfig": "packages/foundation/modeling/schema/test/fixtures/typeperf/tsconfig.literal-kit-tagged-union.json",
       "instantiations": 22881,
       "types": 9451,
-      "checkTimeMs": 31
+      "checkTimeMs": 36
     },
     {
       "name": "@beep/schema#typeperf/literal-kit-keyed-api",
       "tsconfig": "packages/foundation/modeling/schema/test/fixtures/typeperf/tsconfig.literal-kit-keyed-api.json",
       "instantiations": 20271,
       "types": 8888,
-      "checkTimeMs": 31
+      "checkTimeMs": 38
     },
     {
       "name": "@beep/schema#typeperf/literal-kit-large-untagged",
       "tsconfig": "packages/foundation/modeling/schema/test/fixtures/typeperf/tsconfig.literal-kit-large-untagged.json",
       "instantiations": 51903,
       "types": 99930,
-      "checkTimeMs": 226
+      "checkTimeMs": 228
     },
     {
       "name": "@beep/schema#typeperf/literal-kit-large-untagged-touched",
       "tsconfig": "packages/foundation/modeling/schema/test/fixtures/typeperf/tsconfig.literal-kit-large-untagged-touched.json",
       "instantiations": 55030,
       "types": 100167,
-      "checkTimeMs": 244
+      "checkTimeMs": 214
     }
   ]
 }
