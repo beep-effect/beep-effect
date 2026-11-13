@@ -178,6 +178,8 @@ const gitStep = (
   args: ReadonlyArray<string>,
   env: O.Option<Record<string, string | undefined>> = O.none()
 ): RepoPlanStep =>
+  // KEEP funnel: `gitStep` builds the KEEP (D-18) commit and push steps below; each step records its reason.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP funnel, reason above
   RepoPlanStep.make({
     id,
     label,
@@ -551,6 +553,8 @@ const headInstallPreflightStep = (context: RepoRunContext, phase: RepoPlanStep["
 // execution: the `--message` first line, else the first non-merge commit
 // subject.
 const prCreateStep = (context: RepoRunContext, openAs: YeetPullRequestOpenMode): RepoPlanStep =>
+  // not a spawn (W7 census, not a row): a lane record the publish handler hands to kit calls (#250e).
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: not a spawn (W7 census, not a row), reason above
   RepoPlanStep.make({
     id: "publish:02-pr-create",
     label: "publish:pr-create",
@@ -600,6 +604,8 @@ const prCreateStep = (context: RepoRunContext, openAs: YeetPullRequestOpenMode):
 export const PR_HEAVY_ADMISSION_LABEL_STEP_ID = "publish:02-pr-ready-for-heavy-label" as const;
 
 const prHeavyAdmissionLabelStep = (context: RepoRunContext): RepoPlanStep =>
+  // not a spawn (W7 census, not a row): a lane record the publish handler hands to kit calls (#250e).
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: not a spawn (W7 census, not a row), reason above
   RepoPlanStep.make({
     id: PR_HEAVY_ADMISSION_LABEL_STEP_ID,
     label: "publish:pr-ready-for-heavy-label",
@@ -621,6 +627,8 @@ const prHeavyAdmissionLabelStep = (context: RepoRunContext): RepoPlanStep =>
   });
 
 const prProvenanceStampStep = (context: RepoRunContext): RepoPlanStep =>
+  // not a spawn (W7 census, not a row): a lane record the publish handler hands to kit calls (#250e).
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: not a spawn (W7 census, not a row), reason above
   RepoPlanStep.make({
     id: "publish:03-pr-provenance-stamp",
     label: "publish:pr-provenance-stamp",
@@ -641,8 +649,9 @@ const prProvenanceStampStep = (context: RepoRunContext): RepoPlanStep =>
     verification: "registry-backed-provenance-footer",
   });
 
-// KEEP (D-13): a recorded step that resolves the pull request from the checked-out branch.
 const monitorContextStep = (context: RepoRunContext): RepoPlanStep =>
+  // KEEP (D-13): a recorded step that resolves the pull request from the checked-out branch.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
   RepoPlanStep.make({
     id: "monitor:01-pr-context",
     label: "monitor:pr-context",
@@ -656,8 +665,9 @@ const monitorContextStep = (context: RepoRunContext): RepoPlanStep =>
     verification: "current-branch-open-pr",
   });
 
-// KEEP (D-13): a recorded step over gh's checks rollup, which no kit member reads.
 const monitorChecksStep = (context: RepoRunContext): RepoPlanStep =>
+  // KEEP (D-13): a recorded step over gh's checks rollup, which no kit member reads.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
   RepoPlanStep.make({
     id: "monitor:02-pr-checks-watch",
     label: "monitor:pr-checks:watch",
@@ -728,8 +738,9 @@ const monitorReadySubmitStep = (context: RepoRunContext): RepoPlanStep =>
     },
   });
 
-// KEEP (D-13): a recorded step that resolves the pull request from the checked-out branch.
 const closeoutPrContextStep = (context: RepoRunContext): RepoPlanStep =>
+  // KEEP (D-13): a recorded step that resolves the pull request from the checked-out branch.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
   RepoPlanStep.make({
     id: "closeout:01-pr-context",
     label: "closeout:pr-context",
@@ -743,8 +754,9 @@ const closeoutPrContextStep = (context: RepoRunContext): RepoPlanStep =>
     verification: "current-branch-open-pr",
   });
 
-// KEEP (D-13): a recorded closeout step; its query is a placeholder the closeout reader fills.
 const closeoutReviewGateStep = (context: RepoRunContext): RepoPlanStep =>
+  // KEEP (D-13): a recorded closeout step; its query is a placeholder the closeout reader fills.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
   RepoPlanStep.make({
     id: "closeout:02-review-gates",
     label: "closeout:review-gates",
@@ -763,8 +775,9 @@ const closeoutSteps = (context: RepoRunContext): ReadonlyArray<RepoPlanStep> => 
   closeoutReviewGateStep(context),
 ];
 
-// KEEP (D-18): operator-facing step output; the `--branch` header line has no kit model.
 const statusLocalStep = (context: RepoRunContext): RepoPlanStep =>
+  // KEEP (D-18): operator-facing step output; the `--branch` header line has no kit model.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-18), reason above
   RepoPlanStep.make({
     id: "status:01-local",
     label: "status:local",
@@ -778,8 +791,9 @@ const statusLocalStep = (context: RepoRunContext): RepoPlanStep =>
     verification: "local-branch-and-worktree-status",
   });
 
-// KEEP (D-13): `mergeStateStatus` and `reviewDecision` are GraphQL-only fields.
 const statusRemoteStep = (context: RepoRunContext): RepoPlanStep =>
+  // KEEP (D-13): `mergeStateStatus` and `reviewDecision` are GraphQL-only fields.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
   RepoPlanStep.make({
     id: "status:02-remote-pr",
     label: "status:remote-pr",
@@ -817,8 +831,9 @@ const statusRemoteStep = (context: RepoRunContext): RepoPlanStep =>
  */
 export const YEET_STATUS_CHECK_FIELDS = "name,state,bucket,link,workflow,completedAt,startedAt,description" as const;
 
-// KEEP (D-13): a recorded step over gh's checks rollup, which no kit member reads.
 const statusRemoteChecksStep = (context: RepoRunContext): RepoPlanStep =>
+  // KEEP (D-13): a recorded step over gh's checks rollup, which no kit member reads.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
   RepoPlanStep.make({
     id: "status:03-remote-checks",
     label: "status:remote-checks",

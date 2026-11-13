@@ -1010,8 +1010,9 @@ const currentBranch = Effect.fn("QualityScriptCommands.currentBranch")(function*
   QualityScriptCommandError,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
-  // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
   return yield* collectSuccessfulOutput(
+    // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
     QualityTaskStep.make({
       label: "git:branch",
       command: "git",
@@ -1033,8 +1034,9 @@ const ensureOriginMain = Effect.fn("QualityScriptCommands.ensureOriginMain")(fun
   // reuse), so a battery whose pin still matches leaves the ref alone.
   const pinned = pinnedLaneProofBaseSha();
   if (O.isSome(pinned)) {
-    // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
     const current = yield* collectSuccessfulOutput(
+      // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
+      // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
       QualityTaskStep.make({
         label: "git:origin-main",
         command: "git",
@@ -1053,8 +1055,9 @@ const ensureOriginMain = Effect.fn("QualityScriptCommands.ensureOriginMain")(fun
     );
   }
   yield* Console.log("[github-checks] refreshing origin/main");
-  // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
   const shallow = yield* collectSuccessfulOutput(
+    // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
     QualityTaskStep.make({
       label: "git:shallow",
       command: "git",
@@ -1065,10 +1068,12 @@ const ensureOriginMain = Effect.fn("QualityScriptCommands.ensureOriginMain")(fun
 
   if (shallow === "true") {
     // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
     yield* runFixedStep(repoRoot, "git:fetch:unshallow", "git", ["fetch", "origin", "--quiet", "--unshallow"]);
   }
 
   // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
   yield* runFixedStep(repoRoot, "git:fetch:origin-main", "git", [
     "fetch",
     "origin",
@@ -1397,8 +1402,9 @@ const runSecretScan = Effect.fn("QualityScriptCommands.runSecretScan")(function*
   QualityScriptCommandError,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
-  // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
   const mergeBase = yield* collectSuccessfulOutput(
+    // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
     QualityTaskStep.make({
       label: "secrets:merge-base",
       command: "git",
@@ -3349,8 +3355,9 @@ export const isModuleTagScannedPathForTesting =
 export const runJSDocModuleTagsCheck = Effect.fn("QualityScriptCommands.runJSDocModuleTagsCheck")(
   function* (): Effect.fn.Return<void, QualityScriptCommandError, QualityScriptEnvironment> {
     const { fs, path, repoRoot } = yield* qualityFileContext();
-    // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
     const result = yield* collectOutput(
+      // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
+      // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
       QualityTaskStep.make({
         label: "lint:jsdoc-module-tags:git-ls-files",
         command: "git",

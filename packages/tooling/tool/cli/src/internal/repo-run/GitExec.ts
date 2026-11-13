@@ -360,6 +360,9 @@ const runGitStructured = <E>(
   capture: Omit<RunCapturedStreamsOptions, "command" | "args">
 ): Effect.Effect<string, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> => {
   const commandLine = formatCommandLine("git", args);
+  // owner: owner: GitExec's generic argv runners are repo-cli's bounded child-process owner for arbitrary git
+  // argv (module header).
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: owner, reason above
   return runCapturedStreams({ command: "git", args, ...capture }).pipe(
     Effect.mapError(adapter.onSpawnFailure(commandLine)),
     Effect.flatMap((captured) =>
@@ -443,6 +446,9 @@ export const runGitFoldedStdout = Effect.fn("GitExec.runGitFoldedStdout")(functi
   fold: RunFoldedStdoutOptions["fold"]
 ): Effect.fn.Return<string, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const commandLine = formatCommandLine("git", args);
+  // owner: owner: GitExec's generic argv runners are repo-cli's bounded child-process owner for arbitrary git
+  // argv (module header).
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: owner, reason above
   const folded = yield* runFoldedStdout({ command: "git", args, cwd, extendEnv: true, stdin: "ignore", fold }).pipe(
     Effect.mapError(adapter.onSpawnFailure(commandLine))
   );

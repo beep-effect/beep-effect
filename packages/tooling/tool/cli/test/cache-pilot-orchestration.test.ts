@@ -413,7 +413,9 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
   const profileMutations: Array<boolean> = [];
   const calls: Array<string> = [];
   const counts = MutableHashMap.empty<string, number>();
-  // Own double: each spawn reads and writes the sandbox fixture on disk; ScriptedSpawner scripts are synchronous.
+  // Own double: each spawn reads and writes the sandbox fixture on disk; ScriptedSpawner scripts are
+  // synchronous.
+  // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
   const spawner = ChildProcessSpawner.make(
     Effect.fnUntraced(
       function* (command) {

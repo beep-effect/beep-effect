@@ -311,4 +311,84 @@ export const SOURCES: { readonly [K in RuleName]: RuleSource } = {
       "\n"
     ),
   },
+  "no-hand-rolled-git-gh-spawn": {
+    invalidCount: 14,
+    messageIncludes: "hand-rolled git or gh spawn",
+    // One site per shape the repo-cli and ai-metrics census found: a program
+    // literal in the first three arguments followed by argv, a runner spec, a
+    // Bun argv and the shared gh-CLI route.
+    invalid: A.join(
+      [
+        'export const kitless = ChildProcess.make("git", ["status"], { cwd });',
+        'export const variableArgv = ChildProcess.make("gh", args, { cwd });',
+        "export const capture = runRepoCommandCapture(",
+        '  "gh",',
+        '  ["pr", "checks", "--json", "name"],',
+        "  root",
+        ");",
+        "export const singleQuoted = runRepoCommandCaptureRaw('git', ['ls-files', '-z'], root);",
+        'export const second = captureVersion(root, "git", ["rev-parse", "--git-common-dir"]);',
+        'export const third = mustRun(home, canonicalRoot, "git", ["clone", "--quiet"]);',
+        'export const computedArgv = captureCommand("git", leasedRemoteDeletionArgs(state), cwd);',
+        'export const pinned = runCapturedStreams({ command: "/usr/bin/git", args, cwd });',
+        'export const spec = runCaptured({ command: "gh", args: ["api", path], cwd });',
+        'export const step = QualityTaskStep.make({ label: "fetch", command: "git", args: ["fetch"] });',
+        'export const preRuntime = Bun.spawnSync({ cmd: ["git", ...args], stdout: "pipe" });',
+        'export const bunArgv = Bun.spawn(["gh", "api", "user"], { stdout: "pipe" });',
+        "export const sharedGh = ghOutput({ args, cwd, label, onFailure });",
+        'export const exitStatus = yield* status("git", ["diff", "--quiet", "HEAD"]);',
+      ],
+      "\n"
+    ),
+    valid: A.join(
+      [
+        'export const gitCommand = Command.make("git", {}, () => Console.log("git commands"));',
+        'export const ghCommand = Command.make("gh");',
+        'export const line = formatCommandLine("git", invocation.redactedArgs);',
+        'export const exited = withExitCode("lint:jsdoc-module-tags", "git", ["ls-files"], 1);',
+        'export const label = RouteError.new("git", `git diff ${base} failed`);',
+        'export const mapped = RouteError.mapError("git", "Failed to spawn git.");',
+        'export const detail = YeetCommandError.new("refused", { command: "git", exitCode: 1 });',
+        'export const otherProgram = runFixedStep(root, "secrets:gitleaks", "gitleaks", ["git", "--no-banner"]);',
+        'export const domain = LiteralKit(["op", "gh", "network"]);',
+        'export const prefix = spawn("github", ["x"]);',
+        'export const df = Bun.spawnSync(["df", "--output=avail"]);',
+        "export const dynamic = Bun.spawnSync({ cmd: [command, ...args] });",
+        'export const kit = Git.log({ revisions: ["HEAD"], limit: 1 });',
+        'export const helper = closeoutGhOutput(context, ["repo", "view"], "gh repo view");',
+        'export const quoted = "ChildProcess.make(\\"git\\", [\\"status\\"])";',
+        '// ChildProcess.make("git", ["status"]) in a comment',
+        "// biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-22): no kit member reads a commit's parent list",
+        'export const recorded = runRepoCommandCapture("git", ["show", "-s", "--format=%P", sha], root);',
+      ],
+      "\n"
+    ),
+  },
+  "no-unrecorded-spawner-double": {
+    invalidCount: 3,
+    messageIncludes: "hand-rolled ChildProcessSpawner test double",
+    invalid: A.join(
+      [
+        "export const decorator = ChildProcessSpawner.make((command) => real.spawn(command));",
+        "export const generator = ChildProcessSpawner.make(",
+        "  Effect.fnUntraced(function* (command) {",
+        "    return yield* real.spawn(command);",
+        "  })",
+        ");",
+        "export const canned = ChildProcessSpawner.make(() => Effect.succeed(handle));",
+      ],
+      "\n"
+    ),
+    valid: A.join(
+      [
+        'export const guard = ChildProcessSpawner.make(() => Effect.die("must not spawn"));',
+        'export const spread = { ...ChildProcessSpawner.make(() => Effect.die("Unexpected process spawn")) };',
+        'export const scripted = ScriptedSpawner.make({ script: () => ({ stdout: "ok", exit: 0 }) });',
+        "export const handle = ChildProcessSpawner.makeHandle({ pid: ChildProcessSpawner.ProcessId(1) });",
+        "// biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double: decorates the real platform spawner",
+        "export const recorded = ChildProcessSpawner.make((command) => real.spawn(command));",
+      ],
+      "\n"
+    ),
+  },
 };
