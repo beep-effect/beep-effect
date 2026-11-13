@@ -44,6 +44,8 @@ const MemoryFileSystem = FileSystem.layerNoop({
 });
 
 /** The command spawns nothing itself: every git call goes through the stubbed `Git`. */
+// Own double: dies on any spawn, so a git call that bypasses the stubbed `Git` fails loudly;
+// `ScriptedSpawner` records and answers every spawn instead.
 const NoSpawner = Layer.succeed(
   ChildProcessSpawner.ChildProcessSpawner,
   ChildProcessSpawner.make(() => Effect.die("history command tests spawn no processes"))

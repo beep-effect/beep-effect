@@ -39,6 +39,9 @@ export interface ScriptedProcess {
  */
 export const scriptedSpawner = (script: Readonly<Record<string, ScriptedProcess>>) => {
   const spawned: Array<string> = [];
+  // Own double: a value-level spawner keyed by the full command line (redacted words revealed) that
+  // dozens of suites pass to `Effect.provideService` and read back as `spawned` lines; `ScriptedSpawner`
+  // provides a layer and records structured spawns.
   const spawner = ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected piped command");
     const line = A.join(

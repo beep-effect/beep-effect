@@ -523,7 +523,7 @@ const refuseMergedDeclaredFinal = Effect.fn("Goals.refuseMergedDeclaredFinal")(f
     const candidate = yield* resolver.byNumber(root, declared.number);
     if (O.isNone(candidate)) {
       return yield* GoalStatusInputError.new(
-        `completionGate.pullRequests names #${declared.number} as the final and its state cannot be read; rerun once \`gh pr view ${declared.number}\` works.`
+        `completionGate.pullRequests names #${declared.number} as the final and its state cannot be read; rerun once the GitHub REST read \`GET /repos/{owner}/{repo}/pulls/${declared.number}\` (repository from \`GH_REPO\` or \`origin\`) works.`
       );
     }
     if (GoalFinalPullRequestState.is.MERGED(candidate.value.state)) {
@@ -544,7 +544,7 @@ const requestedFinal = Effect.fn("Goals.requestedFinal")(function* (
   const candidate = yield* resolver.byNumber(root, number);
   if (O.isNone(candidate)) {
     return yield* GoalStatusInputError.new(
-      `\`gh pr view ${number}\` found no pull request #${number}; check the number and rerun.`
+      `the GitHub REST read \`GET /repos/{owner}/{repo}/pulls/${number}\` (repository from \`GH_REPO\` or \`origin\`) found no pull request #${number}; check the number and rerun.`
     );
   }
   return yield* GoalFinalPullRequestState.match(candidate.value.state, {
