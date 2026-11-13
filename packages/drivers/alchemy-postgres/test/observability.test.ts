@@ -3,6 +3,7 @@
  * attributes, an outbox delivery span that continues the commit's trace, and
  * failure logs that carry a tag instead of the cause.
  */
+
 import * as Domain from "@alchemy.run/domain";
 import { AlchemyPostgresPlatform } from "@beep/alchemy-postgres";
 import {
@@ -16,6 +17,7 @@ import {
   TargetNameAttribute,
 } from "@beep/alchemy-postgres/AlchemyPostgres.instruments";
 import { PgliteTestLayer } from "@beep/pglite/Pglite.test-layer";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, layer } from "@effect/vitest";
 import { deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -95,7 +97,7 @@ const recorder = Logger.make(({ cause, fiber, message }) => {
 
 const hosted = Observed.layer(ProbeWatchLive).pipe(
   Layer.provideMerge(AlchemyPostgresPlatform.layer()),
-  Layer.provideMerge(PgliteTestLayer),
+  Layer.provideMerge(Layer.merge(PgliteTestLayer, NodeCrypto.layer)),
   Layer.provideMerge(Layer.succeed(Tracer.Tracer, tracer)),
   Layer.provideMerge(Logger.layer([recorder]))
 );

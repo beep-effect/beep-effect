@@ -302,7 +302,7 @@ export const LegacySyncProjections = Layer.mergeAll(
       // before any operation can name it, so its state is the owner whatever order the item and
       // operation projections run in; the item row, written by another projection, may not exist yet.
       const destinationWorkspace = Effect.fnUntraced(function* (destinationId: V.DestinationId) {
-        const destination = yield* destinations.state(destinationId).pipe(Effect.orDie);
+        const destination = yield* destinations.get(destinationId).pipe(Effect.orDie);
         return destination?._tag === "Registered" ? { workspace_id: destination.workspaceId } : {};
       });
       return Effect.fnUntraced(function* (batch) {

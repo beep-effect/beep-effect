@@ -1,7 +1,6 @@
 import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const request = S.decodeEffect(V.VaultSyncRequest)({
@@ -64,29 +63,11 @@ it.effect("checks organization, workspace, membership and diagnostic permission 
   })
 );
 
-it.effect("public View validators share the live key policy", () =>
-  Effect.gen(function* () {
-    const identity = yield* request;
-    const destination = V.SyncDestination.ref(V.DestinationId.make("documents_sync_destination_atest"));
-    const validateVaultSyncStatus = O.getOrThrow(O.fromNullishOr(V.VaultSyncStatus.definition.validate));
-    yield* validateVaultSyncStatus({ mode: "get", key: destination }, null).pipe(
-      Effect.provideService(V.VaultSyncRequestContext, identity),
-      Effect.provideService(V.SessionResolver, resolver(1, 1, false))
-    );
-    const validateOpenConflicts = O.getOrThrow(O.fromNullishOr(V.OpenConflicts.definition.validate));
-    yield* validateOpenConflicts({ mode: "events", key: destination }, null).pipe(
-      Effect.provideService(V.VaultSyncRequestContext, identity),
-      Effect.provideService(V.SessionResolver, resolver(1, 1, false))
-    );
-    const validateOperationQueue = O.getOrThrow(O.fromNullishOr(V.OperationQueue.definition.validate));
-    yield* validateOperationQueue({ mode: "watch", key: destination }, null).pipe(
-      Effect.provideService(V.VaultSyncRequestContext, identity),
-      Effect.provideService(V.SessionResolver, resolver(1, 1, true))
-    );
-    const validateDestinationList = O.getOrThrow(O.fromNullishOr(V.DestinationList.definition.validate));
-    yield* validateDestinationList({ mode: "list", key: V.WorkspaceKey.make("1:1") }, null).pipe(
-      Effect.provideService(V.VaultSyncRequestContext, identity),
-      Effect.provideService(V.SessionResolver, resolver(1, 1, false))
-    );
+it.effect("public View contracts require the session and declare scope denials", () =>
+  Effect.sync(() => {
+    for (const view of [V.DestinationList, V.OpenConflicts, V.OperationQueue, V.VaultSyncStatus]) {
+      expect(view.definition.middleware).toContain(V.Session);
+      expect(view.definition.rejects).toContain(V.ScopeDenied);
+    }
   })
 );

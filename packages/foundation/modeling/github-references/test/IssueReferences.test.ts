@@ -75,6 +75,24 @@ describe("IssueReferences.harvestIssueReferences", () => {
     for (const text of negatives) assert.lengthOf(harvestIssueReferences(text), 0, text);
   });
 
+  it("finds references wrapped in markdown and punctuation, spanning keyword through the last digit", () => {
+    // The keyword needs only a word boundary before it, so emphasis, brackets
+    // and list markers do not hide a reference, and none of them is in its span.
+    const cases: ReadonlyArray<readonly [string, string, number]> = [
+      ["(fixes #3).", "fixes #3", 3],
+      ["**Fixes #4**", "Fixes #4", 4],
+      ["- closes #5", "closes #5", 5],
+      ["`resolved #6`", "resolved #6", 6],
+      ["[closed #7](https://example.invalid)", "closed #7", 7],
+    ];
+    for (const [text, span, issueNumber] of cases) {
+      const found = harvestIssueReferences(text);
+      assert.lengthOf(found, 1, text);
+      assert.strictEqual(found[0]?.issueNumber, issueNumber, text);
+      assert.strictEqual(Str.slice(found[0]?.start, found[0]?.end)(text), span, text);
+    }
+  });
+
   it("skips a number too big to represent rather than misparsing it", () => {
     // 2^53 + 1 rounds under Number; a silently-wrong issue number is worse
     // than a skipped match, so the match is dropped and its neighbours kept.
