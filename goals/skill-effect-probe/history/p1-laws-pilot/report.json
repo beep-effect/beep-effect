@@ -1,0 +1,3246 @@
+{
+  "schemaVersion": "skill-probe-report/v1",
+  "scorerProfile": "skill-probe-scorer/v3",
+  "primary": "all-lanes",
+  "fingerprints": [
+    {
+      "modelId": "claude-opus-5-5",
+      "claudeVersion": "2.1.323",
+      "skillSha256": "78e11cecf4e3b0d1c0c484f6b9d7cade88e6ca0066be5985cca04e299c61813d",
+      "lawsSha256": "0d1e86e407395dde7ca4df3063b61fc081e95a5e8763d723e1aee2c7ee680142"
+    }
+  ],
+  "countedRuns": 48,
+  "excludedRuns": 0,
+  "cells": [
+    {
+      "taskId": "sfv4-fn-schema-001",
+      "family": "fn-schema",
+      "cell": "B",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 0,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.416667,
+        "standardError": 0,
+        "lower": 0.416667,
+        "upper": 0.416667
+      },
+      "turns": {
+        "n": 2,
+        "mean": 9.5,
+        "standardError": 0.5,
+        "lower": 8.52,
+        "upper": 10.48
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 37.5,
+        "standardError": 1.5,
+        "lower": 34.56,
+        "upper": 40.44
+      }
+    },
+    {
+      "taskId": "sfv4-fn-schema-001",
+      "family": "fn-schema",
+      "cell": "C",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 2,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.625,
+        "standardError": 0,
+        "lower": 0.625,
+        "upper": 0.625
+      },
+      "turns": {
+        "n": 2,
+        "mean": 12,
+        "standardError": 0,
+        "lower": 12,
+        "upper": 12
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 51,
+        "standardError": 2,
+        "lower": 47.08,
+        "upper": 54.92
+      }
+    },
+    {
+      "taskId": "sfv4-fn-schema-002",
+      "family": "fn-schema",
+      "cell": "B",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 0,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.466667,
+        "standardError": 0,
+        "lower": 0.466667,
+        "upper": 0.466667
+      },
+      "turns": {
+        "n": 2,
+        "mean": 10,
+        "standardError": 0,
+        "lower": 10,
+        "upper": 10
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 46,
+        "standardError": 4,
+        "lower": 38.16,
+        "upper": 53.84
+      }
+    },
+    {
+      "taskId": "sfv4-fn-schema-002",
+      "family": "fn-schema",
+      "cell": "C",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 2,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.733333,
+        "standardError": 0.066667,
+        "lower": 0.602666,
+        "upper": 0.864
+      },
+      "turns": {
+        "n": 2,
+        "mean": 13,
+        "standardError": 1,
+        "lower": 11.04,
+        "upper": 14.96
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 59,
+        "standardError": 1,
+        "lower": 57.04,
+        "upper": 60.96
+      }
+    },
+    {
+      "taskId": "sfv4-fn-schema-003",
+      "family": "fn-schema",
+      "cell": "B",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 0,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.383333,
+        "standardError": 0.016667,
+        "lower": 0.350667,
+        "upper": 0.416
+      },
+      "turns": {
+        "n": 2,
+        "mean": 10,
+        "standardError": 0,
+        "lower": 10,
+        "upper": 10
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 44,
+        "standardError": 2,
+        "lower": 40.08,
+        "upper": 47.92
+      }
+    },
+    {
+      "taskId": "sfv4-fn-schema-003",
+      "family": "fn-schema",
+      "cell": "C",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 2,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.666666,
+        "standardError": 0,
+        "lower": 0.666666,
+        "upper": 0.666666
+      },
+      "turns": {
+        "n": 2,
+        "mean": 11.5,
+        "standardError": 0.5,
+        "lower": 10.52,
+        "upper": 12.48
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 54.5,
+        "standardError": 2.5,
+        "lower": 49.6,
+        "upper": 59.4
+      }
+    },
+    {
+      "taskId": "sfv4-getsomes-struct-001",
+      "family": "getsomes-struct",
+      "cell": "B",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 0,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.184375,
+        "standardError": 0.003125,
+        "lower": 0.17825,
+        "upper": 0.1905
+      },
+      "turns": {
+        "n": 2,
+        "mean": 11,
+        "standardError": 1,
+        "lower": 9.04,
+        "upper": 12.96
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 68.5,
+        "standardError": 0.5,
+        "lower": 67.52,
+        "upper": 69.48
+      }
+    },
+    {
+      "taskId": "sfv4-getsomes-struct-001",
+      "family": "getsomes-struct",
+      "cell": "C",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 2,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.381944,
+        "standardError": 0.076389,
+        "lower": 0.232222,
+        "upper": 0.531666
+      },
+      "turns": {
+        "n": 2,
+        "mean": 12,
+        "standardError": 0,
+        "lower": 12,
+        "upper": 12
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 86.5,
+        "standardError": 8.5,
+        "lower": 69.84,
+        "upper": 103.16
+      }
+    },
+    {
+      "taskId": "sfv4-getsomes-struct-002",
+      "family": "getsomes-struct",
+      "cell": "B",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 0,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.208333,
+        "standardError": 0,
+        "lower": 0.208333,
+        "upper": 0.208333
+      },
+      "turns": {
+        "n": 2,
+        "mean": 10,
+        "standardError": 1,
+        "lower": 8.04,
+        "upper": 11.96
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 56.5,
+        "standardError": 8.5,
+        "lower": 39.84,
+        "upper": 73.16
+      }
+    },
+    {
+      "taskId": "sfv4-getsomes-struct-002",
+      "family": "getsomes-struct",
+      "cell": "C",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 0,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.177083,
+        "standardError": 0.03125,
+        "lower": 0.115833,
+        "upper": 0.238333
+      },
+      "turns": {
+        "n": 2,
+        "mean": 9.5,
+        "standardError": 1.5,
+        "lower": 6.56,
+        "upper": 12.44
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 56.5,
+        "standardError": 1.5,
+        "lower": 53.56,
+        "upper": 59.44
+      }
+    },
+    {
+      "taskId": "sfv4-getsomes-struct-003",
+      "family": "getsomes-struct",
+      "cell": "B",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 0,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.210194,
+        "standardError": 0.027901,
+        "lower": 0.155507,
+        "upper": 0.26488
+      },
+      "turns": {
+        "n": 2,
+        "mean": 11.5,
+        "standardError": 0.5,
+        "lower": 10.52,
+        "upper": 12.48
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 63.5,
+        "standardError": 6.5,
+        "lower": 50.76,
+        "upper": 76.24
+      }
+    },
+    {
+      "taskId": "sfv4-getsomes-struct-003",
+      "family": "getsomes-struct",
+      "cell": "C",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 2,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.338542,
+        "standardError": 0,
+        "lower": 0.338542,
+        "upper": 0.338542
+      },
+      "turns": {
+        "n": 2,
+        "mean": 14.5,
+        "standardError": 0.5,
+        "lower": 13.52,
+        "upper": 15.48
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 105,
+        "standardError": 16,
+        "lower": 73.64,
+        "upper": 136.36
+      }
+    },
+    {
+      "taskId": "sfv4-normalization-001",
+      "family": "normalization",
+      "cell": "B",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 0,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.694444,
+        "standardError": 0.046297,
+        "lower": 0.603703,
+        "upper": 0.785186
+      },
+      "turns": {
+        "n": 2,
+        "mean": 8,
+        "standardError": 1,
+        "lower": 6.04,
+        "upper": 9.96
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 62.5,
+        "standardError": 0.5,
+        "lower": 61.52,
+        "upper": 63.48
+      }
+    },
+    {
+      "taskId": "sfv4-normalization-001",
+      "family": "normalization",
+      "cell": "C",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 2,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.666667,
+        "standardError": 0.111111,
+        "lower": 0.448889,
+        "upper": 0.884445
+      },
+      "turns": {
+        "n": 2,
+        "mean": 13,
+        "standardError": 1,
+        "lower": 11.04,
+        "upper": 14.96
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 83.5,
+        "standardError": 5.5,
+        "lower": 72.72,
+        "upper": 94.28
+      }
+    },
+    {
+      "taskId": "sfv4-normalization-002",
+      "family": "normalization",
+      "cell": "B",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 0,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.691358,
+        "standardError": 0,
+        "lower": 0.691358,
+        "upper": 0.691358
+      },
+      "turns": {
+        "n": 2,
+        "mean": 11,
+        "standardError": 0,
+        "lower": 11,
+        "upper": 11
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 54,
+        "standardError": 2,
+        "lower": 50.08,
+        "upper": 57.92
+      }
+    },
+    {
+      "taskId": "sfv4-normalization-002",
+      "family": "normalization",
+      "cell": "C",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 1,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.691358,
+        "standardError": 0,
+        "lower": 0.691358,
+        "upper": 0.691358
+      },
+      "turns": {
+        "n": 2,
+        "mean": 12,
+        "standardError": 0,
+        "lower": 12,
+        "upper": 12
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 64,
+        "standardError": 7,
+        "lower": 50.28,
+        "upper": 77.72
+      }
+    },
+    {
+      "taskId": "sfv4-normalization-003",
+      "family": "normalization",
+      "cell": "B",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 0,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.555556,
+        "standardError": 0,
+        "lower": 0.555556,
+        "upper": 0.555556
+      },
+      "turns": {
+        "n": 2,
+        "mean": 9,
+        "standardError": 0,
+        "lower": 9,
+        "upper": 9
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 49.5,
+        "standardError": 0.5,
+        "lower": 48.52,
+        "upper": 50.48
+      }
+    },
+    {
+      "taskId": "sfv4-normalization-003",
+      "family": "normalization",
+      "cell": "C",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 2,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.475309,
+        "standardError": 0.04321,
+        "lower": 0.390617,
+        "upper": 0.560001
+      },
+      "turns": {
+        "n": 2,
+        "mean": 11.5,
+        "standardError": 0.5,
+        "lower": 10.52,
+        "upper": 12.48
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 77,
+        "standardError": 7,
+        "lower": 63.28,
+        "upper": 90.72
+      }
+    },
+    {
+      "taskId": "sfv4-null-return-001",
+      "family": "null-return",
+      "cell": "B",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 0,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.8,
+        "standardError": 0,
+        "lower": 0.8,
+        "upper": 0.8
+      },
+      "turns": {
+        "n": 2,
+        "mean": 11,
+        "standardError": 0,
+        "lower": 11,
+        "upper": 11
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 66.5,
+        "standardError": 4.5,
+        "lower": 57.68,
+        "upper": 75.32
+      }
+    },
+    {
+      "taskId": "sfv4-null-return-001",
+      "family": "null-return",
+      "cell": "C",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 1,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.733333,
+        "standardError": 0.066667,
+        "lower": 0.602666,
+        "upper": 0.864
+      },
+      "turns": {
+        "n": 2,
+        "mean": 12,
+        "standardError": 1,
+        "lower": 10.04,
+        "upper": 13.96
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 66.5,
+        "standardError": 9.5,
+        "lower": 47.88,
+        "upper": 85.12
+      }
+    },
+    {
+      "taskId": "sfv4-null-return-002",
+      "family": "null-return",
+      "cell": "B",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 0,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.575,
+        "standardError": 0.025,
+        "lower": 0.526,
+        "upper": 0.624
+      },
+      "turns": {
+        "n": 2,
+        "mean": 12,
+        "standardError": 0,
+        "lower": 12,
+        "upper": 12
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 54,
+        "standardError": 5,
+        "lower": 44.2,
+        "upper": 63.8
+      }
+    },
+    {
+      "taskId": "sfv4-null-return-002",
+      "family": "null-return",
+      "cell": "C",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 0,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.749999,
+        "standardError": 0.083334,
+        "lower": 0.586666,
+        "upper": 0.913333
+      },
+      "turns": {
+        "n": 2,
+        "mean": 9.5,
+        "standardError": 1.5,
+        "lower": 6.56,
+        "upper": 12.44
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 69,
+        "standardError": 8,
+        "lower": 53.32,
+        "upper": 84.68
+      }
+    },
+    {
+      "taskId": "sfv4-null-return-003",
+      "family": "null-return",
+      "cell": "B",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 0,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.7,
+        "standardError": 0,
+        "lower": 0.7,
+        "upper": 0.7
+      },
+      "turns": {
+        "n": 2,
+        "mean": 12,
+        "standardError": 1,
+        "lower": 10.04,
+        "upper": 13.96
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 61,
+        "standardError": 1,
+        "lower": 59.04,
+        "upper": 62.96
+      }
+    },
+    {
+      "taskId": "sfv4-null-return-003",
+      "family": "null-return",
+      "cell": "C",
+      "counted": 2,
+      "excluded": 0,
+      "fired": 1,
+      "allLanes": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "lawPass": {
+        "n": 2,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "laneFraction": {
+        "n": 2,
+        "mean": 0.7,
+        "standardError": 0,
+        "lower": 0.7,
+        "upper": 0.7
+      },
+      "turns": {
+        "n": 2,
+        "mean": 11.5,
+        "standardError": 1.5,
+        "lower": 8.56,
+        "upper": 14.44
+      },
+      "wallSeconds": {
+        "n": 2,
+        "mean": 61.5,
+        "standardError": 2.5,
+        "lower": 56.6,
+        "upper": 66.4
+      }
+    }
+  ],
+  "laneCensus": [
+    {
+      "taskId": "sfv4-fn-schema-001",
+      "family": "fn-schema",
+      "cell": "B",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 0,
+      "tsgo": 0,
+      "biome": 1,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-fn-schema-001",
+      "family": "fn-schema",
+      "cell": "C",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 1,
+      "tsgo": 0,
+      "biome": 1,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-fn-schema-002",
+      "family": "fn-schema",
+      "cell": "B",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 0,
+      "tsgo": 0,
+      "biome": 1,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-fn-schema-002",
+      "family": "fn-schema",
+      "cell": "C",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 1,
+      "tsgo": 0.5,
+      "biome": 1,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-fn-schema-003",
+      "family": "fn-schema",
+      "cell": "B",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 0,
+      "tsgo": 0,
+      "biome": 1,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-fn-schema-003",
+      "family": "fn-schema",
+      "cell": "C",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 1,
+      "tsgo": 0,
+      "biome": 1,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-getsomes-struct-001",
+      "family": "getsomes-struct",
+      "cell": "B",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 0,
+      "tsgo": 0,
+      "biome": 1,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-getsomes-struct-001",
+      "family": "getsomes-struct",
+      "cell": "C",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 0,
+      "tsgo": 0,
+      "biome": 1,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-getsomes-struct-002",
+      "family": "getsomes-struct",
+      "cell": "B",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 0,
+      "tsgo": 1,
+      "biome": 1,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-getsomes-struct-002",
+      "family": "getsomes-struct",
+      "cell": "C",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 0,
+      "tsgo": 0.5,
+      "biome": 0.5,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-getsomes-struct-003",
+      "family": "getsomes-struct",
+      "cell": "B",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 0,
+      "tsgo": 0,
+      "biome": 0.5,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-getsomes-struct-003",
+      "family": "getsomes-struct",
+      "cell": "C",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 0,
+      "tsgo": 0,
+      "biome": 1,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-normalization-001",
+      "family": "normalization",
+      "cell": "B",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 1,
+      "tsgo": 0,
+      "biome": 1,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-normalization-001",
+      "family": "normalization",
+      "cell": "C",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 1,
+      "tsgo": 0.5,
+      "biome": 1,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-normalization-002",
+      "family": "normalization",
+      "cell": "B",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 1,
+      "tsgo": 0,
+      "biome": 1,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-normalization-002",
+      "family": "normalization",
+      "cell": "C",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 1,
+      "tsgo": 0,
+      "biome": 1,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-normalization-003",
+      "family": "normalization",
+      "cell": "B",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 1,
+      "tsgo": 0,
+      "biome": 1,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-normalization-003",
+      "family": "normalization",
+      "cell": "C",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 1,
+      "tsgo": 0,
+      "biome": 1,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-null-return-001",
+      "family": "null-return",
+      "cell": "B",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 1,
+      "tsgo": 1,
+      "biome": 1,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-null-return-001",
+      "family": "null-return",
+      "cell": "C",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 1,
+      "tsgo": 0.5,
+      "biome": 1,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-null-return-002",
+      "family": "null-return",
+      "cell": "B",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 0,
+      "tsgo": 0,
+      "biome": 1,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-null-return-002",
+      "family": "null-return",
+      "cell": "C",
+      "counted": 2,
+      "completion": 0.5,
+      "schemaFirst": 0,
+      "tsgo": 1,
+      "biome": 1,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-null-return-003",
+      "family": "null-return",
+      "cell": "B",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 1,
+      "tsgo": 1,
+      "biome": 1,
+      "allLanes": 0,
+      "lawPass": 0
+    },
+    {
+      "taskId": "sfv4-null-return-003",
+      "family": "null-return",
+      "cell": "C",
+      "counted": 2,
+      "completion": 0,
+      "schemaFirst": 1,
+      "tsgo": 1,
+      "biome": 1,
+      "allLanes": 0,
+      "lawPass": 0
+    }
+  ],
+  "differences": [
+    {
+      "level": "task",
+      "scope": "sfv4-fn-schema-001",
+      "contrast": "C-B",
+      "measure": "all-lanes",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-fn-schema-001",
+      "contrast": "C-B",
+      "measure": "law-pass",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-fn-schema-001",
+      "contrast": "C-B",
+      "measure": "lane-fraction",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0.208333,
+        "standardError": 0,
+        "lower": 0.208333,
+        "upper": 0.208333
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0.208333,
+        "standardError": 0,
+        "lower": 0.208333,
+        "upper": 0.208333
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-fn-schema-001",
+      "contrast": "C-B",
+      "measure": "turns",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 2.5,
+        "standardError": 0.5,
+        "lower": 1.52,
+        "upper": 3.48
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 2.5,
+        "standardError": 0.5,
+        "lower": 1.52,
+        "upper": 3.48
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-fn-schema-001",
+      "contrast": "C-B",
+      "measure": "wall-seconds",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 13.5,
+        "standardError": 2.5,
+        "lower": 8.6,
+        "upper": 18.4
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 13.5,
+        "standardError": 2.5,
+        "lower": 8.6,
+        "upper": 18.4
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-fn-schema-002",
+      "contrast": "C-B",
+      "measure": "all-lanes",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-fn-schema-002",
+      "contrast": "C-B",
+      "measure": "law-pass",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-fn-schema-002",
+      "contrast": "C-B",
+      "measure": "lane-fraction",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0.266666,
+        "standardError": 0.066667,
+        "lower": 0.135999,
+        "upper": 0.397333
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0.266666,
+        "standardError": 0.066667,
+        "lower": 0.135999,
+        "upper": 0.397333
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-fn-schema-002",
+      "contrast": "C-B",
+      "measure": "turns",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 3,
+        "standardError": 1,
+        "lower": 1.04,
+        "upper": 4.96
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 3,
+        "standardError": 1,
+        "lower": 1.04,
+        "upper": 4.96
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-fn-schema-002",
+      "contrast": "C-B",
+      "measure": "wall-seconds",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 13,
+        "standardError": 4.123106,
+        "lower": 4.918713,
+        "upper": 21.081287
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 13,
+        "standardError": 4.123106,
+        "lower": 4.918713,
+        "upper": 21.081287
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-fn-schema-003",
+      "contrast": "C-B",
+      "measure": "all-lanes",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-fn-schema-003",
+      "contrast": "C-B",
+      "measure": "law-pass",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-fn-schema-003",
+      "contrast": "C-B",
+      "measure": "lane-fraction",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0.283332,
+        "standardError": 0.016667,
+        "lower": 0.250666,
+        "upper": 0.315999
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0.283332,
+        "standardError": 0.016667,
+        "lower": 0.250666,
+        "upper": 0.315999
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-fn-schema-003",
+      "contrast": "C-B",
+      "measure": "turns",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 1.5,
+        "standardError": 0.5,
+        "lower": 0.52,
+        "upper": 2.48
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 1.5,
+        "standardError": 0.5,
+        "lower": 0.52,
+        "upper": 2.48
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-fn-schema-003",
+      "contrast": "C-B",
+      "measure": "wall-seconds",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 10.5,
+        "standardError": 3.201562,
+        "lower": 4.224938,
+        "upper": 16.775062
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 10.5,
+        "standardError": 3.201562,
+        "lower": 4.224938,
+        "upper": 16.775062
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-getsomes-struct-001",
+      "contrast": "C-B",
+      "measure": "all-lanes",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-getsomes-struct-001",
+      "contrast": "C-B",
+      "measure": "law-pass",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-getsomes-struct-001",
+      "contrast": "C-B",
+      "measure": "lane-fraction",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0.197569,
+        "standardError": 0.076453,
+        "lower": 0.047721,
+        "upper": 0.347417
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0.197569,
+        "standardError": 0.076453,
+        "lower": 0.047721,
+        "upper": 0.347417
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-getsomes-struct-001",
+      "contrast": "C-B",
+      "measure": "turns",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 1,
+        "standardError": 1,
+        "lower": -0.96,
+        "upper": 2.96
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 1,
+        "standardError": 1,
+        "lower": -0.96,
+        "upper": 2.96
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-getsomes-struct-001",
+      "contrast": "C-B",
+      "measure": "wall-seconds",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 18,
+        "standardError": 8.514693,
+        "lower": 1.311201,
+        "upper": 34.688799
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 18,
+        "standardError": 8.514693,
+        "lower": 1.311201,
+        "upper": 34.688799
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-getsomes-struct-002",
+      "contrast": "C-B",
+      "measure": "all-lanes",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-getsomes-struct-002",
+      "contrast": "C-B",
+      "measure": "law-pass",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-getsomes-struct-002",
+      "contrast": "C-B",
+      "measure": "lane-fraction",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": -0.03125,
+        "standardError": 0.03125,
+        "lower": -0.0925,
+        "upper": 0.03
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": -0.03125,
+        "standardError": 0.03125,
+        "lower": -0.0925,
+        "upper": 0.03
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-getsomes-struct-002",
+      "contrast": "C-B",
+      "measure": "turns",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": -0.5,
+        "standardError": 1.802776,
+        "lower": -4.03344,
+        "upper": 3.03344
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": -0.5,
+        "standardError": 1.802776,
+        "lower": -4.03344,
+        "upper": 3.03344
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-getsomes-struct-002",
+      "contrast": "C-B",
+      "measure": "wall-seconds",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 8.631338,
+        "lower": -16.917423,
+        "upper": 16.917423
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 8.631338,
+        "lower": -16.917423,
+        "upper": 16.917423
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-getsomes-struct-003",
+      "contrast": "C-B",
+      "measure": "all-lanes",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-getsomes-struct-003",
+      "contrast": "C-B",
+      "measure": "law-pass",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-getsomes-struct-003",
+      "contrast": "C-B",
+      "measure": "lane-fraction",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0.128349,
+        "standardError": 0.027901,
+        "lower": 0.073662,
+        "upper": 0.183035
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0.128349,
+        "standardError": 0.027901,
+        "lower": 0.073662,
+        "upper": 0.183035
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-getsomes-struct-003",
+      "contrast": "C-B",
+      "measure": "turns",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 3,
+        "standardError": 0.707107,
+        "lower": 1.614071,
+        "upper": 4.385929
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 3,
+        "standardError": 0.707107,
+        "lower": 1.614071,
+        "upper": 4.385929
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-getsomes-struct-003",
+      "contrast": "C-B",
+      "measure": "wall-seconds",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 41.5,
+        "standardError": 17.269916,
+        "lower": 7.650965,
+        "upper": 75.349035
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 41.5,
+        "standardError": 17.269916,
+        "lower": 7.650965,
+        "upper": 75.349035
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-normalization-001",
+      "contrast": "C-B",
+      "measure": "all-lanes",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-normalization-001",
+      "contrast": "C-B",
+      "measure": "law-pass",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-normalization-001",
+      "contrast": "C-B",
+      "measure": "lane-fraction",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": -0.027777,
+        "standardError": 0.12037,
+        "lower": -0.263703,
+        "upper": 0.208148
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": -0.027777,
+        "standardError": 0.12037,
+        "lower": -0.263703,
+        "upper": 0.208148
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-normalization-001",
+      "contrast": "C-B",
+      "measure": "turns",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 5,
+        "standardError": 1.414214,
+        "lower": 2.228141,
+        "upper": 7.771859
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 5,
+        "standardError": 1.414214,
+        "lower": 2.228141,
+        "upper": 7.771859
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-normalization-001",
+      "contrast": "C-B",
+      "measure": "wall-seconds",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 21,
+        "standardError": 5.522681,
+        "lower": 10.175546,
+        "upper": 31.824454
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 21,
+        "standardError": 5.522681,
+        "lower": 10.175546,
+        "upper": 31.824454
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-normalization-002",
+      "contrast": "C-B",
+      "measure": "all-lanes",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-normalization-002",
+      "contrast": "C-B",
+      "measure": "law-pass",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-normalization-002",
+      "contrast": "C-B",
+      "measure": "lane-fraction",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-normalization-002",
+      "contrast": "C-B",
+      "measure": "turns",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 1,
+        "standardError": 0,
+        "lower": 1,
+        "upper": 1
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 1,
+        "standardError": 0,
+        "lower": 1,
+        "upper": 1
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-normalization-002",
+      "contrast": "C-B",
+      "measure": "wall-seconds",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 10,
+        "standardError": 7.28011,
+        "lower": -4.269015,
+        "upper": 24.269015
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 10,
+        "standardError": 7.28011,
+        "lower": -4.269015,
+        "upper": 24.269015
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-normalization-003",
+      "contrast": "C-B",
+      "measure": "all-lanes",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-normalization-003",
+      "contrast": "C-B",
+      "measure": "law-pass",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-normalization-003",
+      "contrast": "C-B",
+      "measure": "lane-fraction",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": -0.080247,
+        "standardError": 0.04321,
+        "lower": -0.164939,
+        "upper": 0.004445
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": -0.080247,
+        "standardError": 0.04321,
+        "lower": -0.164939,
+        "upper": 0.004445
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-normalization-003",
+      "contrast": "C-B",
+      "measure": "turns",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 2.5,
+        "standardError": 0.5,
+        "lower": 1.52,
+        "upper": 3.48
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 2.5,
+        "standardError": 0.5,
+        "lower": 1.52,
+        "upper": 3.48
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-normalization-003",
+      "contrast": "C-B",
+      "measure": "wall-seconds",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 27.5,
+        "standardError": 7.017834,
+        "lower": 13.745045,
+        "upper": 41.254955
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 27.5,
+        "standardError": 7.017834,
+        "lower": 13.745045,
+        "upper": 41.254955
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-null-return-001",
+      "contrast": "C-B",
+      "measure": "all-lanes",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-null-return-001",
+      "contrast": "C-B",
+      "measure": "law-pass",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-null-return-001",
+      "contrast": "C-B",
+      "measure": "lane-fraction",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": -0.066667,
+        "standardError": 0.066667,
+        "lower": -0.197334,
+        "upper": 0.064
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": -0.066667,
+        "standardError": 0.066667,
+        "lower": -0.197334,
+        "upper": 0.064
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-null-return-001",
+      "contrast": "C-B",
+      "measure": "turns",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 1,
+        "standardError": 1,
+        "lower": -0.96,
+        "upper": 2.96
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 1,
+        "standardError": 1,
+        "lower": -0.96,
+        "upper": 2.96
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-null-return-001",
+      "contrast": "C-B",
+      "measure": "wall-seconds",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 10.511898,
+        "lower": -20.60332,
+        "upper": 20.60332
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 10.511898,
+        "lower": -20.60332,
+        "upper": 20.60332
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-null-return-002",
+      "contrast": "C-B",
+      "measure": "all-lanes",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-null-return-002",
+      "contrast": "C-B",
+      "measure": "law-pass",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-null-return-002",
+      "contrast": "C-B",
+      "measure": "lane-fraction",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0.174999,
+        "standardError": 0.087003,
+        "lower": 0.004474,
+        "upper": 0.345525
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0.174999,
+        "standardError": 0.087003,
+        "lower": 0.004474,
+        "upper": 0.345525
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-null-return-002",
+      "contrast": "C-B",
+      "measure": "turns",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": -2.5,
+        "standardError": 1.5,
+        "lower": -5.44,
+        "upper": 0.44
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": -2.5,
+        "standardError": 1.5,
+        "lower": -5.44,
+        "upper": 0.44
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-null-return-002",
+      "contrast": "C-B",
+      "measure": "wall-seconds",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 15,
+        "standardError": 9.433981,
+        "lower": -3.490603,
+        "upper": 33.490603
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 15,
+        "standardError": 9.433981,
+        "lower": -3.490603,
+        "upper": 33.490603
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-null-return-003",
+      "contrast": "C-B",
+      "measure": "all-lanes",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-null-return-003",
+      "contrast": "C-B",
+      "measure": "law-pass",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-null-return-003",
+      "contrast": "C-B",
+      "measure": "lane-fraction",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-null-return-003",
+      "contrast": "C-B",
+      "measure": "turns",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": -0.5,
+        "standardError": 1.802776,
+        "lower": -4.03344,
+        "upper": 3.03344
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": -0.5,
+        "standardError": 1.802776,
+        "lower": -4.03344,
+        "upper": 3.03344
+      }
+    },
+    {
+      "level": "task",
+      "scope": "sfv4-null-return-003",
+      "contrast": "C-B",
+      "measure": "wall-seconds",
+      "families": 1,
+      "estimate": {
+        "n": 1,
+        "mean": 0.5,
+        "standardError": 2.692582,
+        "lower": -4.777462,
+        "upper": 5.777462
+      },
+      "unclustered": {
+        "n": 1,
+        "mean": 0.5,
+        "standardError": 2.692582,
+        "lower": -4.777462,
+        "upper": 5.777462
+      }
+    },
+    {
+      "level": "family",
+      "scope": "fn-schema",
+      "contrast": "C-B",
+      "measure": "all-lanes",
+      "families": 1,
+      "estimate": {
+        "n": 3,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 3,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "family",
+      "scope": "getsomes-struct",
+      "contrast": "C-B",
+      "measure": "all-lanes",
+      "families": 1,
+      "estimate": {
+        "n": 3,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 3,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "family",
+      "scope": "normalization",
+      "contrast": "C-B",
+      "measure": "all-lanes",
+      "families": 1,
+      "estimate": {
+        "n": 3,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 3,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "family",
+      "scope": "null-return",
+      "contrast": "C-B",
+      "measure": "all-lanes",
+      "families": 1,
+      "estimate": {
+        "n": 3,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 3,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "family",
+      "scope": "fn-schema",
+      "contrast": "C-B",
+      "measure": "law-pass",
+      "families": 1,
+      "estimate": {
+        "n": 3,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 3,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "family",
+      "scope": "getsomes-struct",
+      "contrast": "C-B",
+      "measure": "law-pass",
+      "families": 1,
+      "estimate": {
+        "n": 3,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 3,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "family",
+      "scope": "normalization",
+      "contrast": "C-B",
+      "measure": "law-pass",
+      "families": 1,
+      "estimate": {
+        "n": 3,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 3,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "family",
+      "scope": "null-return",
+      "contrast": "C-B",
+      "measure": "law-pass",
+      "families": 1,
+      "estimate": {
+        "n": 3,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 3,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "family",
+      "scope": "fn-schema",
+      "contrast": "C-B",
+      "measure": "lane-fraction",
+      "families": 1,
+      "estimate": {
+        "n": 3,
+        "mean": 0.252777,
+        "standardError": 0.022737,
+        "lower": 0.15494,
+        "upper": 0.350614
+      },
+      "unclustered": {
+        "n": 3,
+        "mean": 0.252777,
+        "standardError": 0.022737,
+        "lower": 0.15494,
+        "upper": 0.350614
+      }
+    },
+    {
+      "level": "family",
+      "scope": "getsomes-struct",
+      "contrast": "C-B",
+      "measure": "lane-fraction",
+      "families": 1,
+      "estimate": {
+        "n": 3,
+        "mean": 0.098222,
+        "standardError": 0.06775,
+        "lower": -0.193306,
+        "upper": 0.389751
+      },
+      "unclustered": {
+        "n": 3,
+        "mean": 0.098222,
+        "standardError": 0.06775,
+        "lower": -0.193306,
+        "upper": 0.389751
+      }
+    },
+    {
+      "level": "family",
+      "scope": "normalization",
+      "contrast": "C-B",
+      "measure": "lane-fraction",
+      "families": 1,
+      "estimate": {
+        "n": 3,
+        "mean": -0.036008,
+        "standardError": 0.023528,
+        "lower": -0.137249,
+        "upper": 0.065233
+      },
+      "unclustered": {
+        "n": 3,
+        "mean": -0.036008,
+        "standardError": 0.023528,
+        "lower": -0.137249,
+        "upper": 0.065233
+      }
+    },
+    {
+      "level": "family",
+      "scope": "null-return",
+      "contrast": "C-B",
+      "measure": "lane-fraction",
+      "families": 1,
+      "estimate": {
+        "n": 3,
+        "mean": 0.036111,
+        "standardError": 0.072062,
+        "lower": -0.273971,
+        "upper": 0.346192
+      },
+      "unclustered": {
+        "n": 3,
+        "mean": 0.036111,
+        "standardError": 0.072062,
+        "lower": -0.273971,
+        "upper": 0.346192
+      }
+    },
+    {
+      "level": "family",
+      "scope": "fn-schema",
+      "contrast": "C-B",
+      "measure": "turns",
+      "families": 1,
+      "estimate": {
+        "n": 3,
+        "mean": 2.333333,
+        "standardError": 0.440959,
+        "lower": 0.435889,
+        "upper": 4.230778
+      },
+      "unclustered": {
+        "n": 3,
+        "mean": 2.333333,
+        "standardError": 0.440959,
+        "lower": 0.435889,
+        "upper": 4.230778
+      }
+    },
+    {
+      "level": "family",
+      "scope": "getsomes-struct",
+      "contrast": "C-B",
+      "measure": "turns",
+      "families": 1,
+      "estimate": {
+        "n": 3,
+        "mean": 1.166667,
+        "standardError": 1.013794,
+        "lower": -3.195688,
+        "upper": 5.529021
+      },
+      "unclustered": {
+        "n": 3,
+        "mean": 1.166667,
+        "standardError": 1.013794,
+        "lower": -3.195688,
+        "upper": 5.529021
+      }
+    },
+    {
+      "level": "family",
+      "scope": "normalization",
+      "contrast": "C-B",
+      "measure": "turns",
+      "families": 1,
+      "estimate": {
+        "n": 3,
+        "mean": 2.833333,
+        "standardError": 1.166667,
+        "lower": -2.186833,
+        "upper": 7.8535
+      },
+      "unclustered": {
+        "n": 3,
+        "mean": 2.833333,
+        "standardError": 1.166667,
+        "lower": -2.186833,
+        "upper": 7.8535
+      }
+    },
+    {
+      "level": "family",
+      "scope": "null-return",
+      "contrast": "C-B",
+      "measure": "turns",
+      "families": 1,
+      "estimate": {
+        "n": 3,
+        "mean": -0.666667,
+        "standardError": 1.013794,
+        "lower": -5.029021,
+        "upper": 3.695688
+      },
+      "unclustered": {
+        "n": 3,
+        "mean": -0.666667,
+        "standardError": 1.013794,
+        "lower": -5.029021,
+        "upper": 3.695688
+      }
+    },
+    {
+      "level": "family",
+      "scope": "fn-schema",
+      "contrast": "C-B",
+      "measure": "wall-seconds",
+      "families": 1,
+      "estimate": {
+        "n": 3,
+        "mean": 12.333333,
+        "standardError": 0.927961,
+        "lower": 8.340318,
+        "upper": 16.326348
+      },
+      "unclustered": {
+        "n": 3,
+        "mean": 12.333333,
+        "standardError": 0.927961,
+        "lower": 8.340318,
+        "upper": 16.326348
+      }
+    },
+    {
+      "level": "family",
+      "scope": "getsomes-struct",
+      "contrast": "C-B",
+      "measure": "wall-seconds",
+      "families": 1,
+      "estimate": {
+        "n": 3,
+        "mean": 19.833333,
+        "standardError": 12.015037,
+        "lower": -31.86737,
+        "upper": 71.534037
+      },
+      "unclustered": {
+        "n": 3,
+        "mean": 19.833333,
+        "standardError": 12.015037,
+        "lower": -31.86737,
+        "upper": 71.534037
+      }
+    },
+    {
+      "level": "family",
+      "scope": "normalization",
+      "contrast": "C-B",
+      "measure": "wall-seconds",
+      "families": 1,
+      "estimate": {
+        "n": 3,
+        "mean": 19.5,
+        "standardError": 5.107184,
+        "lower": -2.476215,
+        "upper": 41.476215
+      },
+      "unclustered": {
+        "n": 3,
+        "mean": 19.5,
+        "standardError": 5.107184,
+        "lower": -2.476215,
+        "upper": 41.476215
+      }
+    },
+    {
+      "level": "family",
+      "scope": "null-return",
+      "contrast": "C-B",
+      "measure": "wall-seconds",
+      "families": 1,
+      "estimate": {
+        "n": 3,
+        "mean": 5.166667,
+        "standardError": 4.918785,
+        "lower": -15.998865,
+        "upper": 26.332198
+      },
+      "unclustered": {
+        "n": 3,
+        "mean": 5.166667,
+        "standardError": 4.918785,
+        "lower": -15.998865,
+        "upper": 26.332198
+      }
+    },
+    {
+      "level": "overall",
+      "scope": "overall",
+      "contrast": "C-B",
+      "measure": "all-lanes",
+      "families": 4,
+      "estimate": {
+        "n": 12,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 12,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "overall",
+      "scope": "overall",
+      "contrast": "C-B",
+      "measure": "law-pass",
+      "families": 4,
+      "estimate": {
+        "n": 12,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 12,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "overall",
+      "scope": "overall",
+      "contrast": "C-B",
+      "measure": "lane-fraction",
+      "families": 4,
+      "estimate": {
+        "n": 12,
+        "mean": 0.087776,
+        "standardError": 0.061459,
+        "lower": -0.107787,
+        "upper": 0.283338
+      },
+      "unclustered": {
+        "n": 12,
+        "mean": 0.087776,
+        "standardError": 0.039032,
+        "lower": 0.001867,
+        "upper": 0.173685
+      }
+    },
+    {
+      "level": "overall",
+      "scope": "overall",
+      "contrast": "C-B",
+      "measure": "turns",
+      "families": 4,
+      "estimate": {
+        "n": 12,
+        "mean": 1.416667,
+        "standardError": 0.777282,
+        "lower": -1.056643,
+        "upper": 3.889977
+      },
+      "unclustered": {
+        "n": 12,
+        "mean": 1.416667,
+        "standardError": 0.57351,
+        "lower": 0.15437,
+        "upper": 2.678963
+      }
+    },
+    {
+      "level": "overall",
+      "scope": "overall",
+      "contrast": "C-B",
+      "measure": "wall-seconds",
+      "families": 4,
+      "estimate": {
+        "n": 12,
+        "mean": 14.208333,
+        "standardError": 3.475027,
+        "lower": 3.150799,
+        "upper": 25.265868
+      },
+      "unclustered": {
+        "n": 12,
+        "mean": 14.208333,
+        "standardError": 3.489952,
+        "lower": 6.526949,
+        "upper": 21.889718
+      }
+    }
+  ],
+  "firedOnly": [
+    {
+      "level": "overall",
+      "scope": "overall",
+      "contrast": "C-B",
+      "measure": "all-lanes",
+      "families": 4,
+      "estimate": {
+        "n": 10,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 10,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "overall",
+      "scope": "overall",
+      "contrast": "C-B",
+      "measure": "law-pass",
+      "families": 4,
+      "estimate": {
+        "n": 10,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      },
+      "unclustered": {
+        "n": 10,
+        "mean": 0,
+        "standardError": 0,
+        "lower": 0,
+        "upper": 0
+      }
+    },
+    {
+      "level": "overall",
+      "scope": "overall",
+      "contrast": "C-B",
+      "measure": "lane-fraction",
+      "families": 4,
+      "estimate": {
+        "n": 10,
+        "mean": 0.097622,
+        "standardError": 0.075944,
+        "lower": -0.144033,
+        "upper": 0.339278
+      },
+      "unclustered": {
+        "n": 10,
+        "mean": 0.097622,
+        "standardError": 0.042454,
+        "lower": 0.001593,
+        "upper": 0.193652
+      }
+    },
+    {
+      "level": "overall",
+      "scope": "overall",
+      "contrast": "C-B",
+      "measure": "turns",
+      "families": 4,
+      "estimate": {
+        "n": 10,
+        "mean": 2.25,
+        "standardError": 0.273861,
+        "lower": 1.378573,
+        "upper": 3.121427
+      },
+      "unclustered": {
+        "n": 10,
+        "mean": 2.25,
+        "standardError": 0.396162,
+        "lower": 1.353881,
+        "upper": 3.146119
+      }
+    },
+    {
+      "level": "overall",
+      "scope": "overall",
+      "contrast": "C-B",
+      "measure": "wall-seconds",
+      "families": 4,
+      "estimate": {
+        "n": 10,
+        "mean": 16.95,
+        "standardError": 4.842541,
+        "lower": 1.541036,
+        "upper": 32.358964
+      },
+      "unclustered": {
+        "n": 10,
+        "mean": 16.95,
+        "standardError": 3.674575,
+        "lower": 8.638112,
+        "upper": 25.261888
+      }
+    }
+  ],
+  "firedRate": {
+    "n": 24,
+    "mean": 0.708333,
+    "standardError": 0.094776,
+    "lower": 0.522572,
+    "upper": 0.894094
+  },
+  "firedRateGate": true,
+  "verdict": {
+    "_tag": "Insensitive",
+    "sensitiveTasks": 0,
+    "reason": "0 counted tasks pass all-lanes at least once among their B and C runs; the floor is 4."
+  }
+}

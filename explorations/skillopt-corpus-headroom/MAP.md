@@ -7,9 +7,26 @@
 | `skill-effect-probe` | Measure whether `schema-first-development` changes Opus 5.5 output on the 12 archived tasks, across bare, code-laws and code-laws-plus-skill cells, and return a verdict against a rule agreed in advance. | none | Law scorer and trial comparison in `packages/tooling/tool/cli/src/commands/AgentEffectiveness/`; run storage in `packages/tooling/library/ai-metrics`; ledger rows in `packages/tooling/tool/cli/src/commands/HarnessLedger/`; archived corpus in the goals archive; `claude plugin eval` as the runner. NET-NEW: eval cases and scaffold scripts, a plugin wrapper for the skill, kept-directory scoring glue, paired-difference arithmetic. |
 | `skill-corpus-sizing` (gated) | Size and build a task corpus from the probe's measured effect and variance. | `skill-effect-probe` reports an effect that meets the rule | Same bricks, plus the probe's glue. NET-NEW: tasks mined from review findings and lint reds. |
 | `procedural-skill-probe` (gated) | Repeat the probe for a procedural skill such as yeet or closeout. | `skill-effect-probe` lands its glue; the operator names a skill | Probe glue. NET-NEW: tasks and judge-model graders. |
-| `skill-activation-probe` (gated) | Measure whether repo skills fire on natural prompts. | the probe reports a fired rate below 0.8, or the operator asks | `claude plugin eval` native graders. NET-NEW: prompts per skill. Related parked packet: [`remote-skill-activation-conformance`](../remote-skill-activation-conformance/README.md). |
+| `skill-activation-probe` (gate fired 2026-11-13) | Measure whether repo skills fire on natural prompts. | the probe reports a fired rate below 0.8, or the operator asks | `claude plugin eval` native graders. NET-NEW: prompts per skill. Related parked packet: [`remote-skill-activation-conformance`](../remote-skill-activation-conformance/README.md). |
+| `skill-lane-probe` (gated, not started) | Re-measure `schema-first-development` on the same tooling with a pre-registered lane-level primary (schema-first lane pass or lane fraction) instead of the unreachable completion contract. | the operator approves it as a new goal; the primary is fixed before any run | Probe glue from `skill-effect-probe` (`beep agent-effectiveness evals probe`), scorer profile v3. NET-NEW: an analysis rule with a lane-level primary. |
 
-Only `skill-effect-probe` is promised now. The three gated candidates stay
+## Outcome of `skill-effect-probe`, 2026-11-13
+
+- **Verdict: Insensitive.** On the laws-prompt pilot, no task had an
+  all-lanes or law pass among its pooled B and C runs (0 of 12), so there
+  was no scored run. The completion contracts require `@beep/*` packages
+  that a toolless, standalone run does not import. No verdict on the
+  trainer question and no prune proposal
+  ([findings](../../goals/skill-effect-probe/history/FINDINGS.md)).
+- **Activation gate: fired on pilot evidence.** The skill fired in 17 of 24
+  cell C pilot runs (0.71, below 0.8); no scored cell C runs exist. `skill-activation-probe` is now open for
+  decomposition.
+- **Corpus-sizing gate: not fired.** No effect was measured.
+- **Lane-level probe: named, not started.** The pilots' lane contrast was
+  seen, so a lane-level primary needs its own goal with the primary fixed
+  before any run; choosing it from this probe's pilot would be post hoc.
+
+Only `skill-effect-probe` was promised at graduation. The three gated candidates stay
 here as re-entry points; a fired gate reopens this packet at `decompose`.
 
 ## Sequencing

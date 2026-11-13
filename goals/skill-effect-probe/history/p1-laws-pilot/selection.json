@@ -1,0 +1,8 @@
+{
+  "schemaVersion": "skill-probe-primary-selection/v1",
+  "candidates": [
+    { "primary": "all-lanes", "tasks": [], "families": [], "qualifies": false },
+    { "primary": "law-pass", "tasks": [], "families": [], "qualifies": false }
+  ],
+  "selected": null
+}
