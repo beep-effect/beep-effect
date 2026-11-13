@@ -93,8 +93,8 @@ projects directory.
   census: a sibling clone of another repository named `beep-effect*` (such as
   `beep-effect-private`), and an orphaned lane whose clone was deleted, since
   its `.git` file names a clone that no longer exists.
-- Removal knows the T3 root. The removal fence behind `beep worktree remove`
-  and `beep yeet sweep --retire` admits a lane directly under any of its
+- Removal knows the T3 root. The removal fence behind `beep worktree remove`,
+  `beep yeet sweep --retire` and `beep worktree reap` admits a lane directly under any of its
   clone's worktree roots: the sibling `-worktrees` directory, the worktrees
   Claude Code nests inside the clone, `<home>/.t3/worktrees/<clone name>`
   (from `HOME`, with or without a roots list), and each root that
@@ -105,7 +105,10 @@ projects directory.
   invoker and `CLAUDE_PID` exemptions apply unchanged. A `roots.json` that
   does not decode adds no roots to the fence and never widens it.
   `beep worktree remove <name>` looks the name up under every root and refuses
-  a name registered under two of them. A lane T3 removes itself with `git
+  a name registered under two of them. `beep worktree reap` assesses every
+  registered worktree and archives each merged one through the same fence, so
+  it now also retires merged lanes under the T3 root and the fleet roots, which
+  it used to report as `retirement-failed`. A lane T3 removes itself with `git
   worktree remove` still skips the attempt-journal store, so retire T3 lanes
   through the fence to keep their journals.
 
