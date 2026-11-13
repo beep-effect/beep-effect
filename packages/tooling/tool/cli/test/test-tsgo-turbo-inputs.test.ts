@@ -409,8 +409,6 @@ it.layer(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)), { timeout: "6
         const actual = yield* effectDiagnosticsProjects(root);
         for (const [name, workspace] of HashMap.toEntries(workspaces)) {
           const candidates = O.getOrElse(HashMap.get(actual, name), () => A.empty<string>());
-          // Check once: a package whose check leads with the build program runs its Effect rules there, so
-          // the build config stands in for the no-emit overlay it replaced.
           const servedByBuild = pipe(
             toSortedRecord(workspace.manifest.scripts),
             R.get("beep:check"),
@@ -418,8 +416,7 @@ it.layer(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)), { timeout: "6
           );
           for (const kind of ["tsconfig.check.json", "tsconfig.test.json", "test/tsconfig.json"]) {
             const previous = path.join(workspace.dir, kind);
-            const expected =
-              servedByBuild && kind === "tsconfig.check.json" ? path.join(workspace.dir, "tsconfig.json") : previous;
+            const expected = path.join(workspace.dir, retainedProjectName(kind, servedByBuild));
             if (yield* fs.exists(previous)) expect(A.contains(candidates, expected), previous).toBe(true);
           }
         }
@@ -442,6 +439,11 @@ it.layer(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)), { timeout: "6
     );
   });
 });
+
+// Check once: a package whose check leads with the build program runs its Effect rules there, so the
+// build config stands in for the no-emit overlay it replaced.
+const retainedProjectName = (kind: string, servedByBuild: boolean): string =>
+  servedByBuild && kind === "tsconfig.check.json" ? "tsconfig.json" : kind;
 
 const encodeTurboConfiguration = S.encodeEffect(TurboConfigurationJson);
 const encodeTurboRunSummary = S.encodeEffect(TurboRunSummaryJson);
