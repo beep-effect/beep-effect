@@ -12,7 +12,7 @@
   "packetPath": "goals/skill-lane-probe",
   "lifecycle": "active",
   "mission": "Measure whether the schema-first-development skill changes Opus 5.5 lane-fraction scores on the 12 archived SkillOpt tasks, laws prompt with the skill against without it, and return a verdict against a rule merged before any scored run.",
-  "statusNote": "P0 done 2026-11-13: preflight 12 of 12 under profile v3, plan headroom confirmed. P1: lane-fraction report route, permutation test, fixed-task interval, Holm family tests and the four-outcome verdict, with tests; the first slice passes. Next: land the code PR, then the 120 scored runs.",
+  "statusNote": "P0 done 2026-11-13: preflight 12 of 12 under profile v3. P1 done 2026-11-13: PR #3240 merged the lane-fraction report route, permutation test, fixed-task interval, Holm family tests and the four-outcome verdict, with tests. Next: the 120 scored runs (P2), held until the Claude account that runs them has plan headroom; on 2026-11-13 the active account had 10% of its weekly quota left. Check accounts status before starting.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
