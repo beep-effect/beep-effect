@@ -16,6 +16,7 @@
     "exec.ts",
     "effect-ontology/**",
     "beep/**",
+    "osdk/**",
     "party/**",
     "turbo-cache-r2/**"
   ],
