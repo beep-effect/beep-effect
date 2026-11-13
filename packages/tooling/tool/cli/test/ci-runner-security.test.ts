@@ -448,9 +448,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         stepIndexByName(securitySteps, "Check hosted settings policy"),
         stepIndexByName(securitySteps, "Dependency review")
       );
-      const localPolicy = stepByName(jobSteps(jobs, "verify"), "Check workflow policy");
-      expect(localPolicy.env).toBeUndefined();
-      expect(localPolicy.run).toBe("bun run beep ci workflow-lint");
+      // Workflow policy runs in the Repo Sanity lane body (no separate step,
+      // so its red cannot skip the body); that step carries no secret env.
+      expect(A.some(jobSteps(jobs, "verify"), (step) => step.name === "Check workflow policy")).toBe(false);
+      expect(stepByName(jobSteps(jobs, "verify"), "Run verification lane").env).toBeUndefined();
     })
   );
 
