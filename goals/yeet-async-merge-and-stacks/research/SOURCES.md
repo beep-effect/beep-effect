@@ -23,6 +23,7 @@ The exploration's ledger lists every URL. The ones this goal builds on:
 - Stacked PR APIs and webhooks — https://docs.github.com/en/pull-requests/reference/stacked-pull-requests-apis-and-webhooks
 - Changelog, general availability (2026-10-06) — https://github.blog/changelog/2026-10-06-stacked-pull-requests-generally-available
 - `gh stack` releases — https://github.com/github/gh-stack/releases
+- Troubleshooting stacked pull requests, the remedy when the trunk has moved ahead (read 2026-11-13) — https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-stacked-pull-requests
 
 ## 4. In-repo capability references
 

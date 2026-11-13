@@ -1613,9 +1613,11 @@ export class OperationCost extends S.Opaque<OperationCost, { readonly brand: uni
  *
  * **Details**
  *
- * Version 2 computes windows per lane, so concurrent buckets of one key no
- * longer read as resets, and each window carries its `lane`. The current
- * calculation decodes as v2; the store returns valid v1 history as a
+ * Version 3 counts every GraphQL lane as one reset-scoped window instance,
+ * because one token can read two interleaved GraphQL windows at once; v2
+ * paired those windows' readings and read each switch as a reset. Windows are
+ * computed per lane, and each window carries its `lane`. The current
+ * calculation decodes as v3; the store returns valid v1 and v2 history as a
  * separate version-tagged legacy value. Raw-backed legacy hours recompute;
  * expired raw history remains explicitly legacy-unrecomputable. Unsupported
  * or unreadable versions are absent.
@@ -1630,7 +1632,7 @@ export class OperationCost extends S.Opaque<OperationCost, { readonly brand: uni
  *   hour: DateTime.makeUnsafe(0), host: HostLabel.make("hub"), complete: false,
  *   cells: [], keys: [], operationCosts: [], windows: []
  * })
- * console.log(rollup.schemaVersion) // "github-ledger-rollup/v2"
+ * console.log(rollup.schemaVersion) // "github-ledger-rollup/v3"
  * ```
  *
  * @category models
@@ -1638,7 +1640,7 @@ export class OperationCost extends S.Opaque<OperationCost, { readonly brand: uni
  */
 export class LedgerHourRollup extends S.Opaque<LedgerHourRollup, { readonly brand: unique symbol }>()(
   S.Struct({
-    schemaVersion: S.tag("github-ledger-rollup/v2"),
+    schemaVersion: S.tag("github-ledger-rollup/v3"),
     hour: S.DateTimeUtcFromString,
     host: HostLabel,
     complete: S.Boolean,
@@ -1650,7 +1652,35 @@ export class LedgerHourRollup extends S.Opaque<LedgerHourRollup, { readonly bran
 ) {}
 
 /**
- * Retained v1 wire data, whose request counts survive invalidated usage estimates.
+ * The rollup calculation versions whose usage estimates are no longer trusted.
+ *
+ * **Example** (Recognize a legacy version)
+ *
+ * ```ts
+ * import { LegacyLedgerRollupVersion } from "@beep/repo-cli/test/SharedInternals"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(LegacyLedgerRollupVersion)("github-ledger-rollup/v2")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const LegacyLedgerRollupVersion = LiteralKit(["github-ledger-rollup/v1", "github-ledger-rollup/v2"]).pipe(
+  $I.annoteSchema("LegacyLedgerRollupVersion", {
+    description: "A superseded rollup calculation version: v1 paired concurrent buckets, v2 paired GraphQL windows.",
+  })
+);
+
+/**
+ * Type of {@link LegacyLedgerRollupVersion}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type LegacyLedgerRollupVersion = typeof LegacyLedgerRollupVersion.Type;
+
+/**
+ * Retained v1 or v2 wire data, whose request counts survive invalidated usage estimates.
  *
  * **Example** (Inspect legacy decoding)
  *
@@ -1665,7 +1695,7 @@ export class LedgerHourRollup extends S.Opaque<LedgerHourRollup, { readonly bran
  */
 export class LegacyLedgerRollup extends S.Opaque<LegacyLedgerRollup, { readonly brand: unique symbol }>()(
   S.Struct({
-    schemaVersion: S.tag("github-ledger-rollup/v1"),
+    schemaVersion: LegacyLedgerRollupVersion,
     hour: S.DateTimeUtcFromString,
     host: HostLabel,
     complete: S.Boolean,
@@ -1673,7 +1703,7 @@ export class LegacyLedgerRollup extends S.Opaque<LegacyLedgerRollup, { readonly 
     keys: S.Array(LedgerHourKey),
   }).pipe(
     $I.annoteSchema("LegacyLedgerRollup", {
-      description: "Retained v1 rollup input; fleet and estimated points are invalid.",
+      description: "Retained v1 or v2 rollup input; fleet and estimated points are invalid.",
     })
   )
 ) {}
@@ -1693,7 +1723,6 @@ export class LegacyLedgerRollup extends S.Opaque<LegacyLedgerRollup, { readonly 
  * @since 0.0.0
  */
 export const LedgerRollupRead = S.Union([LedgerHourRollup, LegacyLedgerRollup]).pipe(
-  S.toTaggedUnion("schemaVersion"),
   $I.annoteSchema("LedgerRollupRead", {
     description: "Current or legacy rollup, discriminated by calculation version.",
   })
@@ -1721,7 +1750,7 @@ export type LedgerRollupRead = typeof LedgerRollupRead.Type;
  */
 export class LegacyLedgerHour extends S.Opaque<LegacyLedgerHour, { readonly brand: unique symbol }>()(
   S.Struct({
-    schemaVersion: S.tag("github-ledger-rollup/v1"),
+    schemaVersion: LegacyLedgerRollupVersion,
     legacyUnrecomputable: S.tag(true),
     hour: S.DateTimeUtcFromString,
     host: HostLabel,
@@ -1764,7 +1793,6 @@ export class LegacyLedgerHour extends S.Opaque<LegacyLedgerHour, { readonly bran
  * @since 0.0.0
  */
 export const LedgerHourResult = S.Union([LedgerHourRollup, LegacyLedgerHour]).pipe(
-  S.toTaggedUnion("schemaVersion"),
   $I.annoteSchema("LedgerHourResult", { description: "Calculated or explicitly unrecomputable hourly history." })
 );
 
@@ -1817,6 +1845,11 @@ export class UnattributedSpend extends S.Opaque<UnattributedSpend, { readonly br
 /**
  * The precomputed summary the hot parcel reads (`latest/summary.json`).
  *
+ * **Details**
+ *
+ * Version 3 follows the v3 rollup calculation. An older summary decodes as
+ * absent, so the parcel never shows usage from a superseded calculation.
+ *
  * **Example** (Build an empty summary)
  *
  * ```ts
@@ -1825,7 +1858,7 @@ export class UnattributedSpend extends S.Opaque<UnattributedSpend, { readonly br
  * import * as O from "effect/Option"
  *
  * const summary = LedgerSummary.make({ generatedAt: DateTime.makeUnsafe(0), spenders: [], unattributedLastHour: [], lastRowAt: O.none() })
- * console.log(summary.schemaVersion) // "github-ledger-summary/v2"
+ * console.log(summary.schemaVersion) // "github-ledger-summary/v3"
  * ```
  *
  * @category models
@@ -1833,7 +1866,7 @@ export class UnattributedSpend extends S.Opaque<UnattributedSpend, { readonly br
  */
 export class LedgerSummary extends S.Opaque<LedgerSummary, { readonly brand: unique symbol }>()(
   S.Struct({
-    schemaVersion: S.tag("github-ledger-summary/v2"),
+    schemaVersion: S.tag("github-ledger-summary/v3"),
     generatedAt: S.DateTimeUtcFromString,
     spenders: S.Array(CommandSpend),
     unattributedLastHour: S.Array(UnattributedSpend),

@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `in-progress` (slices A, B and C done; slice D, the pilot, next)
+Status: `in-progress` (slices A, B and C done; slice D, the pilot, in progress: verdict due on or after 2026-11-27)
 
 ## Phases
 
@@ -23,7 +23,7 @@ P1 Implement and P3 Yeet run once per slice; a slice is a PR.
 | A, async merge | done: port merged 2026-11-12 (#3099); legacy call and switch deleted 2026-11-13; evidence in [`history/2026-11-13-slice-a-closed.md`](history/2026-11-13-slice-a-closed.md) | Schema for the request and the outcome union; then the `GithubRest` call and poll. | The slice's own PR merges through the new path and a blocked PR shows the hold. |
 | B, rewrite-stable proof | done: head-move classifier, window carry and receipt carry merged 2026-11-12 (#3130); decisions `2026-11-12-*` | Head-move classifier over patch-ids, with the test's rewritten heads as fixtures. | Window and receipt survive an unchanged rewrite and restart on a changed one. |
 | C, two-layer stacks | done: stack #3190 (#3188 and #3189) landed from the top in one push on 2026-11-13; evidence in [`history/2026-11-13-slice-c-stack-landed.md`](history/2026-11-13-slice-c-stack-landed.md); P0 probes in [`research/stack-p0-probes-2026-11.md`](research/stack-p0-probes-2026-11.md) | Decide in P0 whether layers are linked through `gh stack` or the Stacks REST API. | One real two-layer stack lands through Yeet end to end. |
-| D, pilot | pending | Start the pilot record on the first routine stack. | Two weeks measured and the continue-or-stop decision filed. |
+| D, pilot | in progress: record opened 2026-11-13 ([`research/stack-pilot-2026-11.md`](research/stack-pilot-2026-11.md)); the clock runs 2026-11-13 to 2026-11-26; verdict due on or after 2026-11-27 | Open the pilot record; each lane that opens a stack adds its row. | Two weeks measured and the continue-or-stop decision filed. |
 
 P0 Research settles, before slice A: the async endpoint's behaviour for a
 409 and for an expired result (settled 2026-11-10, see
@@ -95,6 +95,14 @@ Stack #3190 landed on 2026-11-13: #3188 (parent) and #3189 (layer, published wit
 Lane feat/yeet-two-layer-stacks
 
 Reverse: Revert the slice C tooling PR; --stack-on and the stack gate go away, a stacked pull request holds on its parent branch's empty ruleset again, and step 2c returns to fold or publish-after-parent.
+
+### Slice D: the pilot record is open; the continue-or-stop decision is due on or after 2026-11-27, 2026-11-13
+
+The pilot record is research/stack-pilot-2026-11.md. It states the kill criteria and how each is measured, the clock (2026-11-13 to the end of 2026-11-26), the row a lane adds for each stack, and stack #3190 as the reference row. A probe on a throwaway base (stacks #3238 and #3239) saw no rewrite after five trunk moves under unmerged and partially merged stacks: the cascade after a lower layer merges alone is the only rewrite GitHub made. No routine stack was open when the record opened. Next: on or after 2026-11-27 a session reads the stack listing for the fourteen days, completes the rows from the API, judges the three criteria, and files the continue-or-stop decision in the PR that flips the slice D row and the SPEC.md checkbox.
+
+Lane docs/stack-pilot-record
+
+Reverse: Checkpoint only; nothing to reverse.
 
 ### Slices A and B merged; slice A closed, 2026-11-13
 
