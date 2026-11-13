@@ -333,7 +333,7 @@ export class ScheduleRow extends S.Opaque<ScheduleRow, { readonly brand: unique 
     command_id: S.String,
     command: S.Unknown,
     meta: StoredSendMeta,
-    due_at: S.Finite,
+    due_at: Int8,
     status: ScheduleStatus,
   }).pipe(
     $I.annoteSchema("ScheduleRow", {
