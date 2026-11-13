@@ -24,8 +24,9 @@ turbo work, so they are cheap to run mid-loop.
   same-repository PR that already carries the label, any later label re-reports
   a passing heavy proof on that head as passed without work (no EC2 run),
   because the base ruleset reads only the newest Heavy Admit run's suite. With
-  no passing proof, a proof that ran another `heavy.yml@main` commit than the
-  later run calls (main moved since, so its lanes may differ), or a newer copy
+  no passing proof, a proof that ran a different `heavy.yml` file than the
+  later run calls (the same commit, or two commits whose `heavy.yml` blobs
+  match, still re-reports; a changed file may add lanes), or a newer copy
   of a heavy lane (Check's own suite on a reopened head) that is red or
   unfinished, the later run skips, and the gates judge each hidden required
   check by its newest copy: a red one is still `required-red` (relaxed mode

@@ -269,7 +269,7 @@ On 2026-11-12 #3133 passed `yeet merge-gate`, and then merge-async failed with "
 Four changes follow.
 
 1. **Re-report in `heavy-admit.yml`.** A label other than an admission label, on a same-repository PR that carries `ready-for-heavy`, re-reports the heavy lanes. It never re-runs them. The admission job finds the newest earlier Heavy Admit run on the same head that reported lanes. It re-reports (`heavy.yml` `admitted: false`, so every `Heavy / *` lane is skipped in the newest suite and no EC2 work runs) only when two conditions hold:
-   - that earlier run succeeded and ran the same `heavy.yml` (the `referenced_workflows` sha matches);
+   - that earlier run succeeded and ran the same `heavy.yml` file (the same `referenced_workflows` commit, or two commits whose `heavy.yml` blobs match);
    - no newer copy of those lanes on the head, the Check workflow's included, is red or unfinished (the job reads the head's check runs with `checks: read`).
 
    Otherwise it skips, as before. GitHub counts a skipped required check as passing, and the gates and the settle logic read the label, so a re-reported head stays admitted. Fork admission is unchanged (event-label-only).

@@ -37,8 +37,9 @@ only the newest Heavy Admit run's check suite, so a run that skipped would hide
 the heavy checks. When the newest earlier Heavy Admit run on the head that
 reported heavy lanes succeeded, the later run calls the heavy caller with
 `admitted: false` and every lane is reported skipped without an EC2 runner,
-provided that proof ran the same `heavy.yml@main` commit the later run calls
-(a lane main added since never ran on the head) and every newer copy of those
+provided that proof ran the same `heavy.yml` file the later run calls (the
+same commit, or two commits whose `heavy.yml` blobs match; a lane main added
+since never ran on the head) and every newer copy of those
 lanes on the head (Check's own suite re-runs them on a reopened head) has
 passed. Otherwise it skips, and `yeet merge-gate`, `yeet gh` and
 `yeet gate-table` judge each hidden required check by its newest copy: a red
