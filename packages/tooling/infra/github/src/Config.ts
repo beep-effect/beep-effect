@@ -208,10 +208,8 @@ const Name = S.String.check(S.isNonEmpty()).pipe(
  * @category models
  * @since 0.0.0
  */
-export class RepositorySettings extends S.Class<RepositorySettings, { readonly brand: unique symbol }>(
-  $I`RepositorySettings`
-)(
-  {
+export class RepositorySettings extends S.Opaque<RepositorySettings, { readonly brand: unique symbol }>()(
+  S.Struct({
     homepage: S.String,
     defaultBranch: Name,
     hasIssues: S.Boolean,
@@ -225,8 +223,7 @@ export class RepositorySettings extends S.Class<RepositorySettings, { readonly b
     allowAutoMerge: S.Boolean,
     deleteBranchOnMerge: S.Boolean,
     topics: S.Array(Name),
-  },
-  $I.annote("RepositorySettings", { description: "Repository settings the stack converges." })
+  }).pipe($I.annoteSchema("RepositorySettings", { description: "Repository settings the stack converges." }))
 ) {}
 
 /**
@@ -244,12 +241,11 @@ export class RepositorySettings extends S.Class<RepositorySettings, { readonly b
  * @category models
  * @since 0.0.0
  */
-export class RequiredCheck extends S.Class<RequiredCheck, { readonly brand: unique symbol }>($I`RequiredCheck`)(
-  {
+export class RequiredCheck extends S.Opaque<RequiredCheck, { readonly brand: unique symbol }>()(
+  S.Struct({
     context: Name,
     integrationId: S.Int,
-  },
-  $I.annote("RequiredCheck", { description: "A required status check and the App that must report it." })
+  }).pipe($I.annoteSchema("RequiredCheck", { description: "A required status check and the App that must report it." }))
 ) {}
 
 /**
@@ -267,13 +263,12 @@ export class RequiredCheck extends S.Class<RequiredCheck, { readonly brand: uniq
  * @category models
  * @since 0.0.0
  */
-export class BypassActor extends S.Class<BypassActor, { readonly brand: unique symbol }>($I`BypassActor`)(
-  {
+export class BypassActor extends S.Opaque<BypassActor, { readonly brand: unique symbol }>()(
+  S.Struct({
     actorType: BypassActorType,
     actorId: S.Int,
     bypassMode: BypassMode,
-  },
-  $I.annote("BypassActor", { description: "One actor a ruleset lets bypass its rules." })
+  }).pipe($I.annoteSchema("BypassActor", { description: "One actor a ruleset lets bypass its rules." }))
 ) {}
 
 /**
@@ -290,8 +285,8 @@ export class BypassActor extends S.Class<BypassActor, { readonly brand: unique s
  * @category models
  * @since 0.0.0
  */
-export class PullRequestRule extends S.Class<PullRequestRule, { readonly brand: unique symbol }>($I`PullRequestRule`)(
-  {
+export class PullRequestRule extends S.Opaque<PullRequestRule, { readonly brand: unique symbol }>()(
+  S.Struct({
     requiredApprovingReviewCount: S.Int,
     dismissStaleReviewsOnPush: S.Boolean,
     requireCodeOwnerReview: S.Boolean,
@@ -299,8 +294,7 @@ export class PullRequestRule extends S.Class<PullRequestRule, { readonly brand: 
     requiredReviewThreadResolution: S.Boolean,
     requireExtraApprovalForUnattributedChanges: S.Boolean,
     allowedMergeMethods: S.Array(MergeMethod),
-  },
-  $I.annote("PullRequestRule", { description: "The pull request rule of a ruleset." })
+  }).pipe($I.annoteSchema("PullRequestRule", { description: "The pull request rule of a ruleset." }))
 ) {}
 
 /**
@@ -319,8 +313,8 @@ export class PullRequestRule extends S.Class<PullRequestRule, { readonly brand: 
  * @category models
  * @since 0.0.0
  */
-export class MainRuleset extends S.Class<MainRuleset, { readonly brand: unique symbol }>($I`MainRuleset`)(
-  {
+export class MainRuleset extends S.Opaque<MainRuleset, { readonly brand: unique symbol }>()(
+  S.Struct({
     name: Name,
     enforcement: RulesetEnforcement,
     include: S.Array(Name),
@@ -333,8 +327,7 @@ export class MainRuleset extends S.Class<MainRuleset, { readonly brand: unique s
     strictRequiredStatusChecksPolicy: S.Boolean,
     reviewerCheck: ReviewerCheck,
     reviewerIntegrationId: S.Int,
-  },
-  $I.annote("MainRuleset", { description: "The default-branch ruleset, with the beep-reviewer switch." })
+  }).pipe($I.annoteSchema("MainRuleset", { description: "The default-branch ruleset, with the beep-reviewer switch." }))
 ) {}
 
 /**
@@ -352,12 +345,11 @@ export class MainRuleset extends S.Class<MainRuleset, { readonly brand: unique s
  * @category models
  * @since 0.0.0
  */
-export class VariableSpec extends S.Class<VariableSpec, { readonly brand: unique symbol }>($I`VariableSpec`)(
-  {
+export class VariableSpec extends S.Opaque<VariableSpec, { readonly brand: unique symbol }>()(
+  S.Struct({
     name: Name,
     value: S.String,
-  },
-  $I.annote("VariableSpec", { description: "A GitHub Actions variable and its non-secret value." })
+  }).pipe($I.annoteSchema("VariableSpec", { description: "A GitHub Actions variable and its non-secret value." }))
 ) {}
 
 /**
@@ -376,13 +368,16 @@ export class VariableSpec extends S.Class<VariableSpec, { readonly brand: unique
  * @category models
  * @since 0.0.0
  */
-export class EnvironmentSpec extends S.Class<EnvironmentSpec, { readonly brand: unique symbol }>($I`EnvironmentSpec`)(
-  {
+export class EnvironmentSpec extends S.Opaque<EnvironmentSpec, { readonly brand: unique symbol }>()(
+  S.Struct({
     name: Name,
     branches: S.Array(Name),
     variables: S.Array(VariableSpec),
-  },
-  $I.annote("EnvironmentSpec", { description: "A deployment environment with its branch policy and variables." })
+  }).pipe(
+    $I.annoteSchema("EnvironmentSpec", {
+      description: "A deployment environment with its branch policy and variables.",
+    })
+  )
 ) {}
 
 /**
@@ -402,13 +397,12 @@ export class EnvironmentSpec extends S.Class<EnvironmentSpec, { readonly brand: 
  * @category models
  * @since 0.0.0
  */
-export class LabelSpec extends S.Class<LabelSpec, { readonly brand: unique symbol }>($I`LabelSpec`)(
-  {
+export class LabelSpec extends S.Opaque<LabelSpec, { readonly brand: unique symbol }>()(
+  S.Struct({
     name: Name,
     color: HexColor,
     description: S.OptionFromNullOr(S.String),
-  },
-  $I.annote("LabelSpec", { description: "An issue and pull request label." })
+  }).pipe($I.annoteSchema("LabelSpec", { description: "An issue and pull request label." }))
 ) {}
 
 /**
@@ -426,13 +420,12 @@ export class LabelSpec extends S.Class<LabelSpec, { readonly brand: unique symbo
  * @category models
  * @since 0.0.0
  */
-export class UnmanagedObject extends S.Class<UnmanagedObject, { readonly brand: unique symbol }>($I`UnmanagedObject`)(
-  {
+export class UnmanagedObject extends S.Opaque<UnmanagedObject, { readonly brand: unique symbol }>()(
+  S.Struct({
     objectClass: ObjectClass,
     name: Name,
     reason: Name,
-  },
-  $I.annote("UnmanagedObject", { description: "A live object the stack leaves alone, with the reason." })
+  }).pipe($I.annoteSchema("UnmanagedObject", { description: "A live object the stack leaves alone, with the reason." }))
 ) {}
 
 /**
@@ -451,8 +444,8 @@ export class UnmanagedObject extends S.Class<UnmanagedObject, { readonly brand: 
  * @category models
  * @since 0.0.0
  */
-export class StackConfig extends S.Class<StackConfig, { readonly brand: unique symbol }>($I`StackConfig`)(
-  {
+export class StackConfig extends S.Opaque<StackConfig, { readonly brand: unique symbol }>()(
+  S.Struct({
     owner: Name,
     repository: Name,
     settings: RepositorySettings,
@@ -461,8 +454,7 @@ export class StackConfig extends S.Class<StackConfig, { readonly brand: unique s
     variables: S.Array(VariableSpec),
     labels: S.Array(LabelSpec),
     unmanaged: S.Array(UnmanagedObject),
-  },
-  $I.annote("StackConfig", { description: "What the InfraGithub stack owns and what it leaves alone." })
+  }).pipe($I.annoteSchema("StackConfig", { description: "What the InfraGithub stack owns and what it leaves alone." }))
 ) {}
 
 /**

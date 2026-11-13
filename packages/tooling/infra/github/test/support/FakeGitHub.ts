@@ -21,6 +21,11 @@ import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 
 type Json = Record<string, unknown>;
 
+/** A response: HTTP status and JSON body (`undefined` for an empty body). */
+type Reply = readonly [number, unknown];
+
+const notFound: Reply = [404, { message: "Not Found" }];
+
 const JsonObject = S.fromJsonString(S.Record(S.String, S.Unknown));
 const decodeBody = S.decodeUnknownEffect(JsonObject);
 const encodeBody = S.encodeEffect(S.fromJsonString(S.Unknown));
@@ -99,35 +104,46 @@ export class FakeRepository {
     return O.getOrThrow(MutableHashMap.get(this.rulesets, id));
   }
 
-  handle(method: string, path: string, query: URLSearchParams, body: Json): readonly [number, unknown] {
-    const parts = A.map(A.filter(Str.split(path, "/"), Str.isNonEmpty), decodeURIComponent);
-    const [root, owner, repo, kind, ...rest] = parts;
+  handle(method: string, path: string, query: URLSearchParams, body: Json): Reply {
+    const [root, owner, repo, kind, ...rest] = A.map(
+      A.filter(Str.split(path, "/"), Str.isNonEmpty),
+      decodeURIComponent
+    );
     // A page past the first is always empty: every list fits one page.
     if (method === "GET" && Number(query.get("page") ?? "1") > 1) return [200, []];
-    if (root === "users") return [200, { login: owner, id: 1, type: "Organization" }];
-    if (root === "repositories") return [200, this.repoBody()];
-    if (root === "orgs" || root === "user") return [422, { message: "name already exists" }];
-    if (root !== "repos" || owner !== this.owner || repo !== this.name) return [404, { message: "Not Found" }];
-    if (kind === undefined) {
-      if (method === "PATCH") this.repo = { ...this.repo, ...body };
-      return [200, this.repoBody()];
-    }
-    if (kind === "topics") {
+    if (root !== "repos") return this.accountRoute(root, owner);
+    if (owner !== this.owner || repo !== this.name) return notFound;
+    const route = kind === undefined ? undefined : this.routes[kind];
+    if (route !== undefined) return route(method, rest, body);
+    if (kind === undefined && method === "PATCH") this.repo = { ...this.repo, ...body };
+    return kind === undefined ? [200, this.repoBody()] : notFound;
+  }
+
+  /** Routes below `/repos/{owner}/{repo}/<kind>`. */
+  private readonly routes: Record<string, (method: string, rest: ReadonlyArray<string>, body: Json) => Reply> = {
+    topics: (_method, _rest, body) => {
       this.topics = (body.names as ReadonlyArray<string> | undefined) ?? [];
       return [200, { names: this.topics }];
-    }
-    if (kind === "rulesets") return this.rulesetRoute(method, rest, body);
-    if (kind === "labels") return this.labelRoute(method, rest, body);
-    if (kind === "environments") return this.environmentRoute(method, rest, body);
-    if (kind === "actions" && rest[0] === "variables") return this.variableRoute(method, "", A.drop(rest, 1), body);
-    return [404, { message: "Not Found" }];
+    },
+    rulesets: (method, rest, body) => this.rulesetRoute(method, rest, body),
+    labels: (method, rest, body) => this.labelRoute(method, rest, body),
+    environments: (method, rest, body) => this.environmentRoute(method, rest, body),
+    actions: (method, rest, body) =>
+      rest[0] === "variables" ? this.variableRoute(method, "", A.drop(rest, 1), body) : notFound,
+  };
+
+  /** `/users`, `/repositories` and the create endpoints, which the stack never needs to succeed. */
+  private accountRoute(root: string | undefined, owner: string | undefined): Reply {
+    if (root === "users") return [200, { login: owner, id: 1, type: "Organization" }];
+    if (root === "repositories") return [200, this.repoBody()];
+    return root === "orgs" || root === "user" ? [422, { message: "name already exists" }] : notFound;
   }
 
   private repoBody(): Json {
     return { ...this.repo, topics: this.topics, full_name: `${this.owner}/${this.name}` };
   }
 
-  private rulesetRoute(method: string, rest: ReadonlyArray<string>, body: Json): readonly [number, unknown] {
+  private rulesetRoute(method: string, rest: ReadonlyArray<string>, body: Json): Reply {
     const [id] = rest;
     if (id === undefined) {
       if (method === "GET")
@@ -141,7 +157,7 @@ export class FakeRepository {
     }
     const key = Number(id);
     const found = MutableHashMap.get(this.rulesets, key);
-    if (O.isNone(found)) return [404, { message: "Not Found" }];
+    if (O.isNone(found)) return notFound;
     if (method === "PUT") MutableHashMap.set(this.rulesets, key, { ...body, id: key });
     if (method === "DELETE") {
       MutableHashMap.remove(this.rulesets, key);
@@ -150,7 +166,7 @@ export class FakeRepository {
     return [200, this.ruleset(key)];
   }
 
-  private labelRoute(method: string, rest: ReadonlyArray<string>, body: Json): readonly [number, unknown] {
+  private labelRoute(method: string, rest: ReadonlyArray<string>, body: Json): Reply {
     const [name] = rest;
     if (name === undefined) {
       if (method === "GET") return [200, this.labels.pipe(MutableHashMap.values, A.fromIterable)];
@@ -159,7 +175,7 @@ export class FakeRepository {
       return [201, created];
     }
     const found = MutableHashMap.get(this.labels, name);
-    if (O.isNone(found)) return [404, { message: "Not Found" }];
+    if (O.isNone(found)) return notFound;
     if (method === "DELETE") {
       MutableHashMap.remove(this.labels, name);
       return [204, undefined];
@@ -173,31 +189,37 @@ export class FakeRepository {
     return [200, found.value];
   }
 
-  private environmentRoute(method: string, rest: ReadonlyArray<string>, body: Json): readonly [number, unknown] {
+  private environmentRoute(method: string, rest: ReadonlyArray<string>, body: Json): Reply {
     const [name, sub, ...tail] = rest;
     if (name === undefined) {
       const environments = this.environments.pipe(MutableHashMap.values, A.fromIterable);
       return [200, { total_count: environments.length, environments }];
     }
     if (sub === "variables") return this.variableRoute(method, `${name}/`, tail, body);
-    if (sub === "deployment-branch-policies") {
-      const policies = O.getOrElse(MutableHashMap.get(this.branchPolicies, name), A.empty<Json>);
-      const [policyId] = tail;
-      if (method === "POST") {
-        const created = { id: this.nextId++, name: body.name, type: body.type ?? "branch" };
-        MutableHashMap.set(this.branchPolicies, name, [...policies, created]);
-        return [200, created];
-      }
-      if (method === "DELETE") {
-        MutableHashMap.set(
-          this.branchPolicies,
-          name,
-          A.filter(policies, (policy) => String(policy.id) !== policyId)
-        );
-        return [204, undefined];
-      }
-      return [200, { total_count: policies.length, branch_policies: policies }];
+    if (sub === "deployment-branch-policies") return this.branchPolicyRoute(method, name, tail, body);
+    return this.environmentObjectRoute(method, name, body);
+  }
+
+  private branchPolicyRoute(method: string, name: string, tail: ReadonlyArray<string>, body: Json): Reply {
+    const policies = O.getOrElse(MutableHashMap.get(this.branchPolicies, name), A.empty<Json>);
+    if (method === "POST") {
+      const created = { id: this.nextId++, name: body.name, type: body.type ?? "branch" };
+      MutableHashMap.set(this.branchPolicies, name, [...policies, created]);
+      return [200, created];
     }
+    if (method === "DELETE") {
+      const [policyId] = tail;
+      MutableHashMap.set(
+        this.branchPolicies,
+        name,
+        A.filter(policies, (policy) => String(policy.id) !== policyId)
+      );
+      return [204, undefined];
+    }
+    return [200, { total_count: policies.length, branch_policies: policies }];
+  }
+
+  private environmentObjectRoute(method: string, name: string, body: Json): Reply {
     const found = MutableHashMap.get(this.environments, name);
     if (method === "PUT") {
       const updated = {
@@ -207,7 +229,7 @@ export class FakeRepository {
       MutableHashMap.set(this.environments, name, updated);
       return [200, updated];
     }
-    if (O.isNone(found)) return [404, { message: "Not Found" }];
+    if (O.isNone(found)) return notFound;
     if (method === "DELETE") {
       MutableHashMap.remove(this.environments, name);
       MutableHashMap.remove(this.branchPolicies, name);
@@ -216,12 +238,7 @@ export class FakeRepository {
     return [200, found.value];
   }
 
-  private variableRoute(
-    method: string,
-    scope: string,
-    rest: ReadonlyArray<string>,
-    body: Json
-  ): readonly [number, unknown] {
+  private variableRoute(method: string, scope: string, rest: ReadonlyArray<string>, body: Json): Reply {
     const [name] = rest;
     if (name === undefined) {
       if (method === "POST") {
@@ -235,7 +252,7 @@ export class FakeRepository {
     }
     const key = `${scope}${name}`;
     const found = MutableHashMap.get(this.variables, key);
-    if (O.isNone(found)) return [404, { message: "Not Found" }];
+    if (O.isNone(found)) return notFound;
     if (method === "DELETE") {
       MutableHashMap.remove(this.variables, key);
       return [204, undefined];
