@@ -291,10 +291,6 @@ jobs:
           security-trusted-origins: ${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}
           liveblocks-secret-key: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
 
-      - name: Check workflow policy
-        if: env.BEEP_CI_LANE_ID == 'repo-sanity' && steps.lane-gate.outputs.should_run == 'true'
-        run: bun run beep ci workflow-lint
-
       - name: Check documentation sanity
         if: steps.lane-gate.outputs.docs_path == 'true'
         run: bun run beep ci lane repo-sanity --docs-only
