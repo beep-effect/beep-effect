@@ -276,8 +276,20 @@ namespace rt {
   export const and = (value: unknown, next: () => unknown) => (truth(value) ? next() : value);
   export const or = (value: unknown, next: () => unknown) => (truth(value) ? value : next());
   export const neg = (value: unknown) => -number(value);
+  function decimalText(value: string): string {
+    return value.replace(/\p{Nd}/gu, (character) => {
+      const code = character.codePointAt(0) ?? 0;
+      let start = code;
+      while (start > 0 && /\p{Nd}/u.test(String.fromCodePoint(start - 1))) start--;
+      return `${(code - start) % 10}`;
+    });
+  }
   function number(value: unknown): number {
-    return typeof value === "number" ? value : typeof value === "boolean" ? Number(value) : Number(text(value));
+    return typeof value === "number"
+      ? value
+      : typeof value === "boolean"
+        ? Number(value)
+        : Number(decimalText(text(value)));
   }
   function text(value: unknown): string {
     if (typeof value === "string") return value;
@@ -399,9 +411,16 @@ namespace rt {
       }
       return a.length - b.length;
     }
-    if (a instanceof IsoDate && b instanceof IsoDate) return a.value.localeCompare(b.value);
+    if (a instanceof FilePath && b instanceof FilePath) return ordering(a.value.split("/"), b.value.split("/"));
+    if (a instanceof IsoDate && b instanceof IsoDate) return ordering(a.value, b.value);
     if (typeof a === "number" && typeof b === "number") return a - b;
-    return text(a) < text(b) ? -1 : text(a) > text(b) ? 1 : 0;
+    const left = [...text(a)],
+      right = [...text(b)];
+    for (let i = 0; i < Math.min(left.length, right.length); i++) {
+      const delta = (left[i]?.codePointAt(0) ?? 0) - (right[i]?.codePointAt(0) ?? 0);
+      if (delta) return delta;
+    }
+    return left.length - right.length;
   }
   export function compare(operator: string, a: unknown, b: unknown): boolean {
     if (operator === "eq") return equal(a, b);
@@ -941,7 +960,20 @@ namespace rt {
       if (name === "isinstance") return instance(x, args[1]);
       if (name === "len") return x instanceof Dict ? x.pairs.length : iter(x).length;
       if (name === "bool") return truth(x);
-      if (name === "int" || name === "float") return number(x);
+      if (name === "int") {
+        if (!args.length) return 0;
+        if (typeof x === "string") {
+          const digits = decimalText(x.trim());
+          if (!/^[+-]?\d+(?:_\d+)*$/.test(digits))
+            return fail("ValueError", `invalid literal for int() with base 10: ${repr(x)}`);
+          return Number(digits.replaceAll("_", ""));
+        }
+        if (typeof x !== "number" && typeof x !== "boolean")
+          return fail("TypeError", "int() argument must be a string or a number");
+        if (!Number.isFinite(number(x))) return fail("ValueError", "cannot convert non-finite value to integer");
+        return Math.trunc(number(x));
+      }
+      if (name === "float") return number(x);
       if (name === "dict") {
         const result = x == null ? new Dict() : x instanceof Dict ? new Dict(x.pairs) : dict(x);
         if (result instanceof Dict) for (const [k, v] of Object.entries(kw)) result.put(k, v);

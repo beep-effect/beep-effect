@@ -74,3 +74,13 @@ test("trusted TypeScript adapters execute inside the existing sandbox", () => {
     Fs.rmSync(repo, { recursive: true, force: true });
   }
 });
+test("Python Unicode ordering, path ordering and decimal parsing remain compatible", async () => {
+  const { rt } = await import("./validate_artifacts.ts");
+  expect(rt.invoke(rt.builtin("sorted"), ["😀", "\ue000"])).toEqual(["\ue000", "😀"]);
+  expect(rt.invoke(rt.builtin("int"), "٠١")).toBe(1);
+  expect(rt.invoke(rt.builtin("int"), "１_２")).toBe(12);
+  expect(rt.invoke(rt.builtin("int"), 1.9)).toBe(1);
+  const paths = [rt.invoke(rt.builtin("Path"), "a.yaml"), rt.invoke(rt.builtin("Path"), "a/file")];
+  const sorted = rt.iter(rt.invoke(rt.builtin("sorted"), paths)).map((value) => rt.invoke(rt.builtin("str"), value));
+  expect(sorted).toEqual(["a/file", "a.yaml"]);
+});
