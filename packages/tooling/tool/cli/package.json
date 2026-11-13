@@ -184,7 +184,7 @@
     "test": "bun run beep:test",
     "test:property": "bun run beep:test",
     "beep:build": "tsrs -p tsconfig.json --emitDeclarationOnly",
-    "beep:check": "tsrs -p tsconfig.check.json --checkerCostCache source.tsrs-cost-cache && tsrs -p test/tsconfig.json --checkerCostCache test.tsrs-cost-cache",
+    "beep:check": "tsrs -p tsconfig.json --emitDeclarationOnly --checkerCostCache source.tsrs-cost-cache && tsrs -p test/tsconfig.json --checkerCostCache test.tsrs-cost-cache",
     "beep:docgen": "bunx --no-install docgen",
     "beep:doctest": "BEEP_VITEST_DOCTEST=1 bunx vitest run",
     "beep:lint": "biome check .",

@@ -2,7 +2,8 @@
  * Build-equivalence mode of the check census: proves that every emitting
  * package's `tsconfig.json` build program reports exactly the diagnostics of
  * its `tsconfig.check.json` check program, from a caller-declared initial
- * state, warm, and cold, with or without a seeded type error.
+ * state, warm, and cold, with or without a seeded type error, and lists the
+ * package files the check program holds and the build program does not.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -13,8 +14,9 @@ import { formatJsonc, renderTruncatedLines, writeArtifact } from "@beep/repo-cli
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import {
-  DECLARATION_ONLY_BUILD_COMMAND,
+  checkLeadsWithBuild,
   DECLARATION_ONLY_BUILD_FLAG,
+  isDeclarationOnlyBuild,
 } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas";
 import { runCaptured } from "@beep/repo-cli-kit/process/index";
 import { workspaceManifests } from "@beep/repo-cli-kit/RepoWorkspaces";
@@ -29,21 +31,27 @@ import * as Effect from "effect/Effect";
 import * as Equivalence from "effect/Equivalence";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
-import { flow, pipe } from "effect/Function";
+import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { compilerOutputLines, isCompilerDiagnosticLine, nameFilterPredicate } from "./internal/CheckCensusOutput.ts";
+import {
+  compilerOutputLines,
+  isCompilerDiagnosticLine,
+  listProgramFiles,
+  nameFilterPredicate,
+} from "./internal/CheckCensusOutput.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/Quality/CheckCensusBuildEquivalence");
 
-const BUILD_EQUIVALENCE_SCHEMA_VERSION = "check-census-build-equivalence/v1";
+const BUILD_EQUIVALENCE_SCHEMA_VERSION = "check-census-build-equivalence/v2";
 const BUILD_CONFIG = "tsconfig.json";
 const CHECK_CONFIG = "tsconfig.check.json";
 // The base config emits to `${configDir}/dist`; a package that sets no
@@ -334,7 +342,8 @@ export class BuildEquivalenceComparison extends S.Opaque<
 ) {}
 
 /**
- * One package's comparisons, in the order they ran.
+ * One package's comparisons, in the order they ran, and the files its check
+ * program adds to its build program.
  *
  * **Details**
  *
@@ -342,13 +351,25 @@ export class BuildEquivalenceComparison extends S.Opaque<
  * check exited 0 or printed no `error TS` line, so the probe proved nothing.
  * It is absent from the JSON of a clean row.
  *
+ * `checkOnlyFiles` lists, relative to the package and sorted, the files inside
+ * the package directory that `tsrs -p tsconfig.check.json --listFilesOnly`
+ * prints and `tsrs -p tsconfig.json --listFilesOnly` does not. `servedByBuild`
+ * records whether the package's `beep:check` leads with the declaration-only
+ * build; such a package must list none, because its build program is its
+ * own-source check.
+ *
  * **Example** (Build a clean row)
  *
  * ```ts
  * import { BuildEquivalenceRow } from "@beep/repo-cli/commands/Quality/CheckCensusBuildEquivalence"
  * import * as O from "effect/Option"
  *
- * const row = BuildEquivalenceRow.make({ package: "@beep/schema", comparisons: [] })
+ * const row = BuildEquivalenceRow.make({
+ *   package: "@beep/schema",
+ *   servedByBuild: true,
+ *   checkOnlyFiles: [],
+ *   comparisons: [],
+ * })
  * console.log(O.isNone(row.probeEffective)) // true
  * ```
  *
@@ -358,6 +379,8 @@ export class BuildEquivalenceComparison extends S.Opaque<
 export class BuildEquivalenceRow extends S.Opaque<BuildEquivalenceRow, { readonly brand: unique symbol }>()(
   S.Struct({
     package: S.String,
+    servedByBuild: S.Boolean,
+    checkOnlyFiles: S.Array(S.String),
     comparisons: S.Array(BuildEquivalenceComparison),
     probeEffective: S.OptionFromOptionalKey(S.Boolean).pipe(
       S.withConstructorDefault(Effect.succeed(O.none<boolean>()))
@@ -365,13 +388,19 @@ export class BuildEquivalenceRow extends S.Opaque<BuildEquivalenceRow, { readonl
   }).pipe(
     $I.annoteSchema("BuildEquivalenceRow", {
       description:
-        "Build-versus-check comparisons of one package, with whether the seeded probe produced a diagnostic on seeded rows.",
+        "Build-versus-check comparisons of one package, the package files its check program adds to its build program, whether its beep:check leads with the build, and whether the seeded probe produced a diagnostic on seeded rows.",
     })
   )
 ) {}
 
 /**
  * Totals of one build-equivalence run.
+ *
+ * **Details**
+ *
+ * `widerChecks` counts rows with a non-empty `checkOnlyFiles`, and
+ * `servedWiderChecks` those of them whose `beep:check` leads with the build;
+ * the latter fails the run.
  *
  * **Example** (Read the difference count)
  *
@@ -384,8 +413,10 @@ export class BuildEquivalenceRow extends S.Opaque<BuildEquivalenceRow, { readonl
  *   identical: 6,
  *   different: 0,
  *   ineffectiveProbes: 0,
+ *   widerChecks: 1,
+ *   servedWiderChecks: 0,
  * })
- * console.log(summary.different) // 0
+ * console.log(summary.servedWiderChecks) // 0
  * ```
  *
  * @category models
@@ -398,9 +429,12 @@ export class BuildEquivalenceSummary extends S.Opaque<BuildEquivalenceSummary, {
     identical: BuildEquivalenceCount,
     different: BuildEquivalenceCount,
     ineffectiveProbes: BuildEquivalenceCount,
+    widerChecks: BuildEquivalenceCount,
+    servedWiderChecks: BuildEquivalenceCount,
   }).pipe(
     $I.annoteSchema("BuildEquivalenceSummary", {
-      description: "Package, comparison, identical, different, and ineffective-probe counts of one run.",
+      description:
+        "Package, comparison, identical, different and ineffective-probe counts of one run, with the packages whose check program lists package files the build program does not, and how many of those lead their beep:check with the build.",
     })
   )
 ) {}
@@ -425,9 +459,17 @@ export class BuildEquivalenceSummary extends S.Opaque<BuildEquivalenceSummary, {
  *   mode: "seeded",
  *   initialState: "restored",
  *   rows: [],
- *   summary: BuildEquivalenceSummary.make({ packages: 0, comparisons: 0, identical: 0, different: 0, ineffectiveProbes: 0 }),
+ *   summary: BuildEquivalenceSummary.make({
+ *     packages: 0,
+ *     comparisons: 0,
+ *     identical: 0,
+ *     different: 0,
+ *     ineffectiveProbes: 0,
+ *     widerChecks: 0,
+ *     servedWiderChecks: 0,
+ *   }),
  * })
- * console.log(report.schemaVersion) // "check-census-build-equivalence/v1"
+ * console.log(report.schemaVersion) // "check-census-build-equivalence/v2"
  * ```
  *
  * @category models
@@ -446,7 +488,7 @@ export class BuildEquivalenceReport extends S.Opaque<BuildEquivalenceReport, { r
   }).pipe(
     $I.annoteSchema("BuildEquivalenceReport", {
       description:
-        "Build-versus-check diagnostic comparisons of every emitting package, with the compiler, TSRS_FAST, pass, and initial-state label they ran under.",
+        "Build-versus-check diagnostic and file-set comparisons of every emitting package, with the compiler, TSRS_FAST, pass, and initial-state label they ran under.",
     })
   )
 ) {}
@@ -454,12 +496,22 @@ export class BuildEquivalenceReport extends S.Opaque<BuildEquivalenceReport, { r
 /**
  * A workspace package whose build program emits and is compared.
  *
+ * **Details**
+ *
+ * `servedByBuild` is whether the package's `beep:check` leads with the
+ * declaration-only build command (alone or followed by its own compiler
+ * flags), so its build program is its own-source check.
+ *
  * **Example** (Describe a package)
  *
  * ```ts
  * import { BuildEquivalencePackage } from "@beep/repo-cli/commands/Quality/CheckCensusBuildEquivalence"
  *
- * const pkg = BuildEquivalencePackage.make({ name: "@beep/schema", dir: "/repo/packages/foundation/modeling/schema" })
+ * const pkg = BuildEquivalencePackage.make({
+ *   name: "@beep/schema",
+ *   dir: "/repo/packages/foundation/modeling/schema",
+ *   servedByBuild: true,
+ * })
  * console.log(pkg.name) // "@beep/schema"
  * ```
  *
@@ -470,9 +522,11 @@ export class BuildEquivalencePackage extends S.Opaque<BuildEquivalencePackage, {
   S.Struct({
     name: S.String,
     dir: S.String,
+    servedByBuild: S.Boolean,
   }).pipe(
     $I.annoteSchema("BuildEquivalencePackage", {
-      description: "Workspace package name and absolute directory compared by the build-equivalence census.",
+      description:
+        "Workspace package name, absolute directory, and whether its beep:check leads with the build, compared by the build-equivalence census.",
     })
   )
 ) {}
@@ -488,7 +542,7 @@ export class BuildEquivalencePackage extends S.Opaque<BuildEquivalencePackage, {
  * const options = BuildEquivalenceOptions.make({
  *   repoRoot: "/repo",
  *   tsrsPath: "/repo/node_modules/.bin/tsrs",
- *   packages: [{ name: "@beep/schema", dir: "/repo/packages/foundation/modeling/schema" }],
+ *   packages: [{ name: "@beep/schema", dir: "/repo/packages/foundation/modeling/schema", servedByBuild: true }],
  *   mode: "seeded",
  *   initialState: "restored",
  * })
@@ -563,10 +617,11 @@ type CompilerEnvironment = SecureRandom.SecureRandom | ChildProcessSpawner.Child
 type BuildEquivalenceEnvironment = FileSystem.FileSystem | Path.Path | CompilerEnvironment;
 
 const buildsWithEmittingConfig = (scripts: HashMap.HashMap<string, string>): boolean =>
-  O.exists(
-    HashMap.get(scripts, "beep:build"),
-    flow(Str.split("&&"), A.map(Str.trim), A.contains(DECLARATION_ONLY_BUILD_COMMAND))
-  );
+  O.exists(HashMap.get(scripts, "beep:build"), isDeclarationOnlyBuild);
+// The package's `beep:check` leads with the build command (its own flags allowed), so its build
+// program is its own-source check.
+const checkServedByBuild = (scripts: HashMap.HashMap<string, string>): boolean =>
+  O.exists(HashMap.get(scripts, "beep:check"), checkLeadsWithBuild);
 
 const hasBuildEquivalenceSources = Effect.fn("CheckCensusBuildEquivalence.hasSources")(function* (
   dir: string
@@ -589,7 +644,8 @@ const hasBuildEquivalenceSources = Effect.fn("CheckCensusBuildEquivalence.hasSou
  * Resolve the emitting workspace packages: both `tsconfig.json` and
  * `tsconfig.check.json`, a `src` directory, and a `beep:build` with an `&&`
  * segment equal to the generated `tsrs -p tsconfig.json --emitDeclarationOnly`,
- * optionally narrowed by a name substring.
+ * optionally narrowed by a name substring. Each records whether its
+ * `beep:check` leads with that build command.
  *
  * **Details**
  *
@@ -631,7 +687,13 @@ export const selectBuildEquivalencePackages = Effect.fn("CheckCensusBuildEquival
     A.filter(
       ([name, member]) => nameFilterPredicate(filter)(name) && buildsWithEmittingConfig(member.manifest.scripts)
     ),
-    A.map(([name, member]) => BuildEquivalencePackage.make({ name, dir: member.dir })),
+    A.map(([name, member]) =>
+      BuildEquivalencePackage.make({
+        name,
+        dir: member.dir,
+        servedByBuild: checkServedByBuild(member.manifest.scripts),
+      })
+    ),
     A.sortWith((pkg) => pkg.name, Order.String)
   );
 
@@ -743,10 +805,36 @@ const removeProbe = Effect.fn("CheckCensusBuildEquivalence.removeProbe")(functio
     .pipe(QualityScriptCommandError.mapError(`Failed to remove ${probePath}.`));
 });
 
+// Files inside the package that the check program lists and the build program does not, relative
+// to the package and sorted. Both run with `--listFilesOnly` before any pass, so a seeded probe
+// never takes part; the compiler prints physical paths, so the package directory is resolved too.
+const listCheckOnlyFiles = Effect.fn("CheckCensusBuildEquivalence.checkOnlyFiles")(function* (
+  tsrsPath: string,
+  target: BuildEquivalenceTarget
+): Effect.fn.Return<ReadonlyArray<string>, QualityScriptCommandError, BuildEquivalenceEnvironment> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const dir = yield* fs
+    .realPath(target.pkg.dir)
+    .pipe(QualityScriptCommandError.mapError(`Failed to resolve ${target.pkg.dir}.`));
+  const checkFiles = yield* listProgramFiles(tsrsPath, CHECK_CONFIG, target.pkg.dir);
+  const buildFiles = yield* listProgramFiles(tsrsPath, BUILD_CONFIG, target.pkg.dir);
+  const built = HashSet.fromIterable(buildFiles);
+
+  return pipe(
+    checkFiles,
+    A.filter((file) => isStrictlyInside(path, dir, file) && !HashSet.has(built, file)),
+    A.map((file) => path.relative(dir, file)),
+    A.dedupe,
+    A.sort(Str.Order)
+  );
+});
+
 // The check is stateless, so one check run serves every clean comparison.
 const cleanPass = Effect.fn("CheckCensusBuildEquivalence.cleanPass")(function* (
   options: BuildEquivalenceOptions,
-  target: BuildEquivalenceTarget
+  target: BuildEquivalenceTarget,
+  checkOnlyFiles: ReadonlyArray<string>
 ): Effect.fn.Return<BuildEquivalenceRow, QualityScriptCommandError, BuildEquivalenceEnvironment> {
   const check = yield* runProgram(options.tsrsPath, target, CHECK_ARGS);
   const asFound = yield* compareBuild(options.tsrsPath, target, check, options.initialState, "clean");
@@ -758,7 +846,12 @@ const cleanPass = Effect.fn("CheckCensusBuildEquivalence.cleanPass")(function* (
   yield* removeOutDir(target);
   const cold = yield* compareBuild(options.tsrsPath, target, check, "cold", "clean");
 
-  return BuildEquivalenceRow.make({ package: target.pkg.name, comparisons: [asFound, ...O.toArray(warm), cold] });
+  return BuildEquivalenceRow.make({
+    package: target.pkg.name,
+    servedByBuild: target.pkg.servedByBuild,
+    checkOnlyFiles,
+    comparisons: [asFound, ...O.toArray(warm), cold],
+  });
 });
 
 // The seeded probe bites when the check fails with at least one diagnostic.
@@ -768,7 +861,8 @@ const probeBit = (check: BuildEquivalenceRun): boolean =>
 const seededComparisons = Effect.fn("CheckCensusBuildEquivalence.seededComparisons")(function* (
   options: BuildEquivalenceOptions,
   target: BuildEquivalenceTarget,
-  probePath: string
+  probePath: string,
+  checkOnlyFiles: ReadonlyArray<string>
 ): Effect.fn.Return<BuildEquivalenceRow, QualityScriptCommandError, BuildEquivalenceEnvironment> {
   const seededCheck = yield* runProgram(options.tsrsPath, target, CHECK_ARGS);
   const asFound = yield* compareBuild(options.tsrsPath, target, seededCheck, options.initialState, "seeded");
@@ -785,6 +879,8 @@ const seededComparisons = Effect.fn("CheckCensusBuildEquivalence.seededCompariso
 
   return BuildEquivalenceRow.make({
     package: target.pkg.name,
+    servedByBuild: target.pkg.servedByBuild,
+    checkOnlyFiles,
     comparisons: [asFound, retry, cold, recovered, coldClean],
     probeEffective: O.some(probeBit(seededCheck)),
   });
@@ -805,7 +901,8 @@ const releaseProbe = Effect.fn("CheckCensusBuildEquivalence.releaseProbe")(funct
 
 const seededPass = Effect.fn("CheckCensusBuildEquivalence.seededPass")(function* (
   options: BuildEquivalenceOptions,
-  target: BuildEquivalenceTarget
+  target: BuildEquivalenceTarget,
+  checkOnlyFiles: ReadonlyArray<string>
 ): Effect.fn.Return<BuildEquivalenceRow, QualityScriptCommandError, BuildEquivalenceEnvironment> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -815,7 +912,7 @@ const seededPass = Effect.fn("CheckCensusBuildEquivalence.seededPass")(function*
     fs
       .writeFileString(probePath, CHECK_CENSUS_PROBE_SOURCE)
       .pipe(QualityScriptCommandError.mapError(`Failed to write ${probePath}.`)),
-    () => seededComparisons(options, target, probePath),
+    () => seededComparisons(options, target, probePath, checkOnlyFiles),
     (_, exit) => releaseProbe(target, probePath, exit)
   );
 });
@@ -826,15 +923,18 @@ const equivalencePass = (
 ): Effect.Effect<BuildEquivalenceRow, QualityScriptCommandError, BuildEquivalenceEnvironment> =>
   Effect.logInfo("check-census build equivalence: comparing package").pipe(
     Effect.annotateLogs({ package: target.pkg.name, mode: options.mode }),
-    Effect.andThen(
+    Effect.andThen(listCheckOnlyFiles(options.tsrsPath, target)),
+    Effect.flatMap((checkOnlyFiles) =>
       BuildEquivalenceMode.match(options.mode, {
-        clean: () => cleanPass(options, target),
-        seeded: () => seededPass(options, target),
+        clean: () => cleanPass(options, target, checkOnlyFiles),
+        seeded: () => seededPass(options, target, checkOnlyFiles),
       })
     )
   );
 
 const isIneffectiveProbe = (row: BuildEquivalenceRow): boolean => O.contains(row.probeEffective, false);
+const hasCheckOnlyFiles = (row: BuildEquivalenceRow): boolean => A.isReadonlyArrayNonEmpty(row.checkOnlyFiles);
+const servesWiderCheck = (row: BuildEquivalenceRow): boolean => row.servedByBuild && hasCheckOnlyFiles(row);
 
 const summarize = (rows: ReadonlyArray<BuildEquivalenceRow>): BuildEquivalenceSummary => {
   const comparisons = A.flatMap(rows, (row) => row.comparisons);
@@ -846,6 +946,8 @@ const summarize = (rows: ReadonlyArray<BuildEquivalenceRow>): BuildEquivalenceSu
     identical,
     different: A.length(comparisons) - identical,
     ineffectiveProbes: A.length(A.filter(rows, isIneffectiveProbe)),
+    widerChecks: A.length(A.filter(rows, hasCheckOnlyFiles)),
+    servedWiderChecks: A.length(A.filter(rows, servesWiderCheck)),
   });
 };
 
@@ -864,7 +966,9 @@ const summarize = (rows: ReadonlyArray<BuildEquivalenceRow>): BuildEquivalenceSu
  * probe, compares a recovered warm build and a cold clean build with a fresh
  * clean check, and marks the row `probeEffective: false` when the seeded check
  * passed. Its finalizer removes the probe and, unless the pass completed, the
- * outDir, so no probe output survives a failure or an interruption.
+ * outDir, so no probe output survives a failure or an interruption. Before
+ * either pass, both programs run with `--listFilesOnly` and the row records the
+ * package files only the check program lists.
  *
  * **Gotchas**
  *
@@ -886,7 +990,7 @@ const summarize = (rows: ReadonlyArray<BuildEquivalenceRow>): BuildEquivalenceSu
  *   BuildEquivalenceOptions.make({
  *     repoRoot: "/repo",
  *     tsrsPath: "/repo/node_modules/.bin/tsrs",
- *     packages: [{ name: "@beep/schema", dir: "/repo/packages/foundation/modeling/schema" }],
+ *     packages: [{ name: "@beep/schema", dir: "/repo/packages/foundation/modeling/schema", servedByBuild: true }],
  *     mode: "seeded",
  *   })
  * )
@@ -932,9 +1036,22 @@ const renderRow = (row: BuildEquivalenceRow): string =>
       Str.padEnd(packageColumnWidth)(row.package),
       ...A.map(row.comparisons, verdictCell),
       ...(isIneffectiveProbe(row) ? A.of("probe did not bite") : A.empty<string>()),
+      ...(hasCheckOnlyFiles(row) ? A.of(`+${A.length(row.checkOnlyFiles)} check-only file(s)`) : A.empty<string>()),
     ],
     "  "
   );
+
+const renderCheckOnlyFiles = (row: BuildEquivalenceRow): ReadonlyArray<string> =>
+  hasCheckOnlyFiles(row)
+    ? [
+        `+ ${row.package}: check program lists ${A.length(row.checkOnlyFiles)} package file(s) the build program does not${row.servedByBuild ? ", but beep:check leads with the build" : ""}`,
+        ...renderTruncatedLines({
+          items: row.checkOnlyFiles,
+          render: (file: string) => `  - ${file}`,
+          limit: renderedLineLimit,
+        }),
+      ]
+    : [];
 
 const renderRun = (label: string, run: BuildEquivalenceRun): ReadonlyArray<string> => [
   `  ${label}: exit ${run.exitCode}, ${A.length(run.lines)} line(s)`,
@@ -959,7 +1076,8 @@ const renderDifferences = (row: BuildEquivalenceRow): ReadonlyArray<string> =>
  *
  * One header, one verdict line per package (`state/seed=` identical,
  * `state/seed≠` different), both programs' lines of every differing
- * comparison (truncated), and the summary.
+ * comparison (truncated), the package files each wider check program adds
+ * (truncated), and the summary.
  *
  * **Example** (Render an empty report)
  *
@@ -978,7 +1096,15 @@ const renderDifferences = (row: BuildEquivalenceRow): ReadonlyArray<string> =>
  *     mode: "clean",
  *     initialState: "warm",
  *     rows: [],
- *     summary: BuildEquivalenceSummary.make({ packages: 0, comparisons: 0, identical: 0, different: 0, ineffectiveProbes: 0 }),
+ *     summary: BuildEquivalenceSummary.make({
+ *       packages: 0,
+ *       comparisons: 0,
+ *       identical: 0,
+ *       different: 0,
+ *       ineffectiveProbes: 0,
+ *       widerChecks: 0,
+ *       servedWiderChecks: 0,
+ *     }),
  *   })
  * )
  * console.log(lines.length) // 2
@@ -993,11 +1119,12 @@ export const renderBuildEquivalenceLines = (report: BuildEquivalenceReport): Rea
   `check census build equivalence (${report.mode} pass, initial state ${report.initialState}, TSRS_FAST=${report.tsrsFast}, ${report.compiler}, ${report.generatedAt})`,
   ...A.map(report.rows, renderRow),
   ...A.flatMap(report.rows, renderDifferences),
-  `summary: ${report.summary.packages} package(s), ${report.summary.comparisons} comparison(s), ${report.summary.identical} identical, ${report.summary.different} different, ${report.summary.ineffectiveProbes} ineffective probe(s)`,
+  ...A.flatMap(report.rows, renderCheckOnlyFiles),
+  `summary: ${report.summary.packages} package(s), ${report.summary.comparisons} comparison(s), ${report.summary.identical} identical, ${report.summary.different} different, ${report.summary.ineffectiveProbes} ineffective probe(s), ${report.summary.widerChecks} wider check program(s) (${report.summary.servedWiderChecks} of them served by the build)`,
 ];
 
 const buildEquivalenceFailed = (report: BuildEquivalenceReport): boolean =>
-  report.summary.different > 0 || report.summary.ineffectiveProbes > 0;
+  report.summary.different > 0 || report.summary.ineffectiveProbes > 0 || report.summary.servedWiderChecks > 0;
 
 const encodeBuildEquivalenceReport = S.encodeEffect(BuildEquivalenceReport);
 
@@ -1022,7 +1149,9 @@ const writeBuildEquivalenceReport = Effect.fn("CheckCensusBuildEquivalence.write
 /**
  * Run `beep quality check-census --build-equivalence`: select the emitting
  * packages, compare their programs, print the verdicts, write the report, and
- * exit non-zero when any comparison differs or a seeded probe did not bite.
+ * exit non-zero when any comparison differs, a seeded probe did not bite, or a
+ * package whose `beep:check` leads with the build has a check program that
+ * lists package files the build program does not.
  *
  * **Details**
  *
@@ -1054,7 +1183,7 @@ const writeBuildEquivalenceReport = Effect.fn("CheckCensusBuildEquivalence.write
  * ```
  *
  * @param options - Repository root, filter, pass, initial-state label, and report path.
- * @returns Succeeds when every comparison is identical and every seeded probe bit.
+ * @returns Succeeds when every comparison is identical, every seeded probe bit, and no build-served check is wider than its build.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1088,7 +1217,7 @@ export const runCheckCensusBuildEquivalenceCli = Effect.fn("CheckCensusBuildEqui
   yield* Console.log(`wrote ${path.relative(options.repoRoot, outputPath)}`);
   if (buildEquivalenceFailed(report)) {
     return yield* failWithReportedExit(
-      `check-census build equivalence failed: ${report.summary.different} comparison(s) differ and ${report.summary.ineffectiveProbes} seeded probe(s) did not bite.`
+      `check-census build equivalence failed: ${report.summary.different} comparison(s) differ, ${report.summary.ineffectiveProbes} seeded probe(s) did not bite, and ${report.summary.servedWiderChecks} build-served check(s) list package files the build does not.`
     );
   }
 });

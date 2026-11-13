@@ -17,6 +17,9 @@
         "$TURBO_ROOT$/vite.shared.ts",
         "$TURBO_ROOT$/vitest.aliases.generated.json"
       ]
+    },
+    "check": {
+      "dependsOn": ["^build"]
     }
   }
 }

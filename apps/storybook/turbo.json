@@ -3,11 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "check": {
-      "dependsOn": [
-        "$TURBO_EXTENDS$",
-        "@beep/dock-react#check",
-        "@beep/editor#check"
-      ]
+      "dependsOn": ["^build", "@beep/dock-react#check", "@beep/editor#check"]
     },
     "storybook": {
       "passThroughEnv": ["PORTLESS", "PORTLESS_URL"]
