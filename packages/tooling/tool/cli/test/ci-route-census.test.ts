@@ -66,6 +66,7 @@ import type {
   RouteReplay,
   RouteTaskOutcome,
 } from "@beep/repo-cli/commands/Ci";
+import type * as Cause from "effect/Cause";
 
 const decodeRuns = S.decodeUnknownEffect(S.Array(HostedRun));
 
@@ -214,6 +215,14 @@ describe("route joins", () => {
     assertSome(jobNameToLane("Property Laws (property-a)"), "property");
     assertNone(jobNameToLane("Test Integration"));
     assertNone(jobNameToLane("Test Plan"));
+  });
+
+  it("joins a reusable workflow's job to its caller's lane when the whole name joins none", () => {
+    assertSome(jobNameToLane("Test Unit (repo-cli-1) / Overflow"), "test-unit");
+    assertSome(jobNameToLane("Heavy / Test Integration / Overflow"), "test-integration");
+    // `Heavy` itself is no lane, so a retired heavy job stays unknown.
+    assertNone(jobNameToLane("Heavy / Effect Diagnostics"));
+    expect(hostedJobAttribution("Heavy / Effect Diagnostics").jobClass).toBe("unknown");
   });
 
   it("joins quality:<lane> pre-push ids to lanes both ways", () => {
@@ -524,56 +533,74 @@ const hostedNamesOf = (prefix: string, name: string): ReadonlyArray<string> => {
   return A.map(names, (candidate) => `${prefix}${candidate}`);
 };
 
-const contractJobsOf = (
-  workflow: string,
-  prefix: string,
-  jobs: Readonly<Record<string, typeof WorkflowJobDoc.Type>>
-): ReadonlyArray<ContractJob> =>
-  A.map(R.toEntries(jobs), ([key, job]) => ({
-    job: `${workflow}#${key}`,
-    lanes: A.dedupe(
-      A.getSomes(
-        A.map(
+type WorkflowJobs = Readonly<Record<string, typeof WorkflowJobDoc.Type>>;
+type ReadWorkflow = (file: string) => Effect.Effect<WorkflowJobs, Cause.NoSuchElementError | S.SchemaError>;
+// GitHub nests reusable workflows at most four levels deep.
+const MAX_WORKFLOW_DEPTH = 4;
+
+// Reads one workflow's jobs from `texts`, whose keys end with the workflow's repository path.
+const workflowReader =
+  (texts: Readonly<Record<string, string>>): ReadWorkflow =>
+  (file) =>
+    Effect.fromOption(
+      O.map(
+        A.findFirst(R.toEntries(texts), ([key]) => Str.endsWith(file)(key)),
+        ([, text]) => text
+      )
+    ).pipe(Effect.flatMap((text) => decodeWorkflowJobs(yamlAt(parseWorkflowYaml(text), ["jobs"]))));
+
+// Every job GitHub reports for `file` under each caller prefix. A job that calls a reusable workflow (`uses`)
+// has no steps and reports nothing itself: the called workflow's jobs report under `<caller> / `, and their steps
+// are read there, however the caller is named.
+const reportedJobsOf = (
+  read: ReadWorkflow,
+  file: string,
+  prefixes: ReadonlyArray<string>,
+  depth: number
+): Effect.Effect<ReadonlyArray<ContractJob>, Cause.NoSuchElementError | S.SchemaError> =>
+  Effect.flatMap(read(file), (jobs) =>
+    Effect.map(
+      Effect.forEach(R.toEntries(jobs), ([key, job]) => {
+        const names = A.flatMap(prefixes, (prefix) =>
           hostedNamesOf(
             prefix,
             O.getOrElse(O.fromUndefinedOr(job.name), () => key)
+          )
+        );
+        return O.match(
+          pipe(
+            O.fromUndefinedOr(job.uses),
+            O.flatMap(Str.match(REUSABLE_WORKFLOW)),
+            O.filter(() => depth < MAX_WORKFLOW_DEPTH)
           ),
-          (name) => hostedJobAttribution(name).lane
-        )
-      )
-    ),
-    steps: A.map(O.getOrElse(O.fromUndefinedOr(job.steps), A.empty<WorkflowStepDoc>), listedStepName),
-  }));
-
-const readWorkflowJobs = Effect.fnUntraced(function* (file: string) {
-  const text = yield* Effect.fromOption(
-    O.map(
-      A.findFirst(R.toEntries(WORKFLOW_TEXTS), ([key]) => Str.endsWith(file)(key)),
-      ([, workflow]) => workflow
+          {
+            onNone: () =>
+              Effect.succeed<ReadonlyArray<ContractJob>>([
+                {
+                  job: `${file}#${key}`,
+                  lanes: A.dedupe(A.getSomes(A.map(names, (name) => hostedJobAttribution(name).lane))),
+                  steps: A.map(O.getOrElse(O.fromUndefinedOr(job.steps), A.empty<WorkflowStepDoc>), listedStepName),
+                },
+              ]),
+            onSome: (match) =>
+              reportedJobsOf(
+                read,
+                match[0],
+                A.map(names, (name) => `${name} / `),
+                depth + 1
+              ),
+          }
+        );
+      }),
+      A.flatten
     )
   );
-  return yield* decodeWorkflowJobs(yamlAt(parseWorkflowYaml(text), ["jobs"]));
-});
 
-// Every lane job of check.yml and of each reusable workflow a check.yml job calls (heavy.yml).
-const workflowLaneJobs = Effect.fnUntraced(function* () {
-  const check = yield* readWorkflowJobs(CHECK_WORKFLOW);
-  const callers = A.getSomes(
-    A.map(R.toEntries(check), ([key, job]) =>
-      pipe(
-        O.fromUndefinedOr(job.uses),
-        O.flatMap(Str.match(REUSABLE_WORKFLOW)),
-        O.map((match) => [`${O.getOrElse(O.fromUndefinedOr(job.name), () => key)} / `, match[0]] as const)
-      )
-    )
+// Every lane job reported for check.yml, through every reusable workflow its jobs call (heavy.yml today).
+const workflowLaneJobs = (read: ReadWorkflow) =>
+  Effect.map(reportedJobsOf(read, CHECK_WORKFLOW, [""], 0), (jobs) =>
+    A.filter(jobs, (job) => A.isReadonlyArrayNonEmpty(job.lanes))
   );
-  const called = yield* Effect.forEach(callers, ([prefix, file]) =>
-    Effect.map(readWorkflowJobs(file), (jobs) => contractJobsOf(file, prefix, jobs))
-  );
-  return A.filter(A.appendAll(contractJobsOf(CHECK_WORKFLOW, "", check), A.flatten(called)), (job) =>
-    A.isReadonlyArrayNonEmpty(job.lanes)
-  );
-});
 
 const startsLaneWork = (name: string): boolean =>
   RouteStepClass.is.aggregate(routeStepClass(name)) || A.contains(LANE_WORK_ENTRY_STEPS, name);
@@ -623,12 +650,74 @@ describe("route step contract", () => {
       'check.yml#lint-shard: setup step "Setup monorepo CI" runs after the lane\'s work',
     ]);
   });
+
+  it.effect("checks a lane-named caller job's steps in the workflow it calls, not on the caller", () =>
+    Effect.gen(function* () {
+      // check.yml calls heavy.yml under a caller named for no lane, and shard-overflow.yml under one named for a
+      // Test Unit shard (the shape of the overflow job in #3256); neither caller has steps of its own.
+      const check = A.join(
+        [
+          "jobs:",
+          "  heavy:",
+          "    name: Heavy",
+          "    uses: beep-effect/beep-effect/.github/workflows/heavy.yml@main",
+          "  test-unit-overflow:",
+          "    name: Test Unit (${{ matrix.partition }})",
+          "    uses: ./.github/workflows/shard-overflow.yml",
+          "  lint:",
+          "    name: Lint",
+          "    steps:",
+          "      - name: Require every Lint shard",
+        ],
+        "\n"
+      );
+      const called = (job: string, name: string, steps: ReadonlyArray<string>): string =>
+        A.join(
+          [
+            "on:",
+            "  workflow_call: {}",
+            "jobs:",
+            `  ${job}:`,
+            `    name: ${name}`,
+            "    steps:",
+            ...A.map(steps, (step) => `      - name: ${step}`),
+          ],
+          "\n"
+        );
+      const texts = (overflowSteps: ReadonlyArray<string>) => ({
+        ".github/workflows/check.yml": check,
+        ".github/workflows/heavy.yml": called("check", "Check", [
+          "Checkout repository",
+          "Setup monorepo CI",
+          "Run verification lane",
+        ]),
+        ".github/workflows/shard-overflow.yml": called("test-unit-shard", "Overflow", overflowSteps),
+      });
+
+      const jobs = yield* workflowLaneJobs(
+        workflowReader(texts(["Checkout repository", "Setup monorepo CI", "Run Test Unit shard"]))
+      );
+      expect(A.map(jobs, (job) => [job.job, job.lanes, job.steps.length])).toEqual([
+        [".github/workflows/heavy.yml#check", ["check"], 3],
+        [".github/workflows/shard-overflow.yml#test-unit-shard", ["test-unit"], 3],
+        [".github/workflows/check.yml#lint", ["lint"], 1],
+      ]);
+      expect(A.flatMap(jobs, stepContractViolations)).toEqual([]);
+
+      const unclassified = yield* workflowLaneJobs(
+        workflowReader(texts(["Checkout repository", "Setup Python", "Run Test Unit shard"]))
+      );
+      expect(A.flatMap(unclassified, stepContractViolations)).toEqual([
+        '.github/workflows/shard-overflow.yml#test-unit-shard: "Setup Python" runs before the lane\'s work and is neither setup nor declared lane work',
+      ]);
+    })
+  );
 });
 
 describe("route step contract over the workflows", () => {
   it.effect("keeps the setup step names in step with the lane jobs of check.yml and the workflows it calls", () =>
     Effect.gen(function* () {
-      const jobs = yield* workflowLaneJobs();
+      const jobs = yield* workflowLaneJobs(workflowReader(WORKFLOW_TEXTS));
       const listed = HashSet.fromIterable(A.flatMap(jobs, (job) => job.steps));
       const covered = HashSet.fromIterable(A.flatMap(jobs, (job) => job.lanes));
       // The reusable heavy.yml call, the shards and their aggregates are all read.

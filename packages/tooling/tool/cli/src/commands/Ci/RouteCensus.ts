@@ -78,6 +78,8 @@ const PRE_PUSH_LANE_PREFIX = "quality:";
 const PRE_PUSH_SPEC_ROOT = ".";
 // Partitioned hosted jobs report as `<context> (<partition>)`, e.g. `Lint (lint-a)`.
 const PARTITION_SUFFIX = / \([^()]*\)$/;
+// A job of a reusable workflow reports as `<caller> / <job>`, e.g. `Heavy / Check`.
+const REUSABLE_JOB_SEPARATOR = " / ";
 // Heads classified at once; each classification spawns git.
 const ROUTE_HEAD_CONCURRENCY = 4;
 // Missing head commits fetched by sha at once.
@@ -251,7 +253,10 @@ const LANE_BY_PARTITION_FAMILY: HashMap.HashMap<string, CiLaneId> = HashMap.unio
  * (`Build`, `Coverage Artifact Migration`, `Test Integration Partitions`)
  * join their lane. Descriptors whose id is not a {@link CiLaneId}
  * (`pr-size`, `dependency-review`) never match, so `Security` is the
- * `security` lane.
+ * `security` lane. A job of a reusable workflow reports as
+ * `<caller> / <job>`; when that whole name joins no lane, the job joins its
+ * caller's lane, so a shard run through a called workflow
+ * (`Test Unit (repo-cli-1) / Overflow`) stays on the shard's lane.
  *
  * **Example** (Join hosted job names to lanes)
  *
@@ -262,6 +267,7 @@ const LANE_BY_PARTITION_FAMILY: HashMap.HashMap<string, CiLaneId> = HashMap.unio
  * O.getOrNull(jobNameToLane("Heavy / Check")) // => "check"
  * O.getOrNull(jobNameToLane("Lint (lint-a)")) // => "lint"
  * O.getOrNull(jobNameToLane("Test Integration (lps-int-1)")) // => "test-integration"
+ * O.getOrNull(jobNameToLane("Test Unit (repo-cli-1) / Overflow")) // => "test-unit"
  * O.isNone(jobNameToLane("PR Size Label")) // => true
  * ```
  *
@@ -277,6 +283,12 @@ export const jobNameToLane = (name: string): O.Option<CiLaneId> =>
       pipe(
         O.liftPredicate(Str.replace(PARTITION_SUFFIX, "")(name), (family) => !Str.Equivalence(family, name)),
         O.flatMap((family) => HashMap.get(LANE_BY_PARTITION_FAMILY, family))
+      )
+    ),
+    O.orElse(() =>
+      pipe(
+        Str.lastIndexOf(REUSABLE_JOB_SEPARATOR)(name),
+        O.flatMap((index) => jobNameToLane(Str.slice(0, index)(name)))
       )
     )
   );
