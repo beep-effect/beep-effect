@@ -107,3 +107,42 @@ machine or session identifiers.
 - **Would have prevented it:** nothing was lost here, since hosted CI was the
   proof. The waste is the local run: a final-check that stops itself when its
   PR merges, or an owner signal the gate reads before flipping a draft.
+
+## 2026-11-13 — Three introduced reds reached hosted CI on PR 3
+
+- **Doing:** opening PR 3 (#3242) with the local coverage gate skipped for
+  compute, after the cheap gates and the touched tests passed.
+- **Evidence:** hosted CI failed on three things this change caused, over two
+  pushes. `test-tsgo-turbo-inputs.test.ts` expected every package's check
+  script to name `tsconfig.check.json`. `architecture-operation-plan.test.ts`
+  held the old generated check as a literal. `lint:jsdoc` found eight warnings
+  (two code spans broken across lines, two exported predicates without
+  `@param` and `@returns`), and a document-relative path in the runbook read
+  as a missing tracked file. The JSDoc lane only ran on the second push
+  because the first failed earlier in the same job.
+- **Would have prevented it:** the touched packages' full unit suites and
+  `bun run beep lint policy --affected` before the first push. Both together
+  are about ten minutes; each hosted round was thirty.
+
+## 2026-11-13 — A dependency edge without a cache baseline re-record blocked every publish
+
+- **Doing:** publishing PR 2 after merging `main`.
+- **Evidence:** `bun run beep quality cache-policy` printed 14
+  `BLOCK configuration-drift` lines for three packages that a merged change
+  had given a new workspace dependency. The gate is in the cheap tier, so
+  `yeet publish` refused in every lane that had merged `main` until #3206.
+- **Would have prevented it:** the cache-policy gate as a required hosted
+  check on the PR that adds the edge, or a failure message that names the
+  re-record command.
+
+## 2026-11-13 — PR 2 merged `main` five times before it could open
+
+- **Doing:** opening PR 2, which regenerates 182 manifests, the root catalog,
+  the lockfile, `turbo.json`, the policy seal and the cache baseline.
+- **Evidence:** `yeet publish` refused a stale base four times in two hours;
+  each merge of `main` conflicted in a generated file (the cache baseline
+  twice, the root manifest and lockfile once, the skills lock once) and
+  needed the generators re-run.
+- **Would have prevented it:** a short announced freeze on generated files
+  while a repo-wide regeneration opens, or generated files that merge
+  key-by-key.

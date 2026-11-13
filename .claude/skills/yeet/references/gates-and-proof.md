@@ -102,10 +102,16 @@ fits a 4-core worker. By default every gate runs and every red is collected;
 | `lint-policy` | Heavy / Lint Policy | `beep lint policy --base`, root docs `oxlint .`, `beep lint deprecated-apis --full` | #2186, #2189, #2201 |
 | `lint` | Lint (package Biome, GritQL), lefthook | `beep ci lane lint --affected`, plus the pre-commit `biome check` over the diff's files | #2187 |
 | `repo-sanity` | Repo Sanity | `beep ci lane repo-sanity --changeset-status` | #2207 |
-| `check` | Heavy / Check | `beep ci lane check --affected` | #2208 |
+| `check` | Heavy / Check | `beep ci lane check --affected`; a declaration-only package's `check` includes its own `build` (Turbo edge) and leads `beep:check` with the build program, while bundler and no-emit packages keep `check` on `^build` only | #2208 |
 | `docgen` | Heavy / Docgen | `beep ci lane docgen --mode auto` | #2208 |
 | `fallow` | Fallow Advisory Envelopes | `beep ci lane fallow --validate-envelopes` | #2215 |
 | `coverage` | Coverage Regression, Test Unit | `TURBO_SCM_BASE=<merge-base> beep-cli coverage --affected` | #2215, #2221 |
+
+Coverage selects owners through the planner hosted CI shares: a goal or
+exploration path selects only the readers its `ciGoalDataConsumers` row names,
+and a packet document (prose, `ops/manifest.json`, `.gitkeep`) selects none.
+When nothing is selected, the receipt's coverage step passes with reason
+`no affected packages` and nothing runs; `--dry-run` prints the same plan.
 
 `expectation-rewrite` lists the modified and renamed `*.test.ts`/`*.spec.ts`
 and `__snapshots__` files, diffs each one on its own (added and deleted files

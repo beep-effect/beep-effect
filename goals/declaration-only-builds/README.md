@@ -36,13 +36,28 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement, in progress. PR 1 (#3178, baseline and proof harness) is merged.
-PR 2, the declaration-only build, is open. Next: PR 3 (check once) once its
-Turbo edge is agreed with `goals/route-soundness-repair`, per
-[`PLAN.md`](./PLAN.md).
+P4 Close. The three work PRs are merged: #3178 (baseline and proof harness),
+#3208 (declaration-only build) and #3242 (check once). The final PR, #3259,
+carries the closeout reflection and the closeout proposal; the packet stays
+`active` until the proposal is verified and adopted.
 
 ## Latest Evidence
 
+- [`history/reflections/2026-11-13-claude.md`](./history/reflections/2026-11-13-claude.md):
+  the closeout reflection.
+- PR 3's hosted gate (#3242) passed Build, Check, Docgen, Doctest, Lint Policy
+  and every unit and integration shard; its one red was inherited coverage
+  ratchet rows in files it does not touch.
+- [`research/2026-11-13-check-once-cost.md`](./research/2026-11-13-check-once-cost.md):
+  the own-source check costs 35.4 s serial over 182 packages and a warm
+  unchanged build 19.7 s. PR 3 runs the build program as the check's first
+  step for 180 packages (15.5 s less compiler work per full check run) and a
+  file-set sweep finds the check program wider than the build program in
+  exactly the two packages that keep the old step.
+- PR 2's hosted gate (#3208) passed Build, Check, Docgen, Storybook, Test Unit,
+  Test Integration and the Vercel plan with no JavaScript in any library
+  `dist`; its one red was an inherited coverage ratchet row. Nothing reads
+  `dist/*.js`. The Exception Ledger is empty.
 - [`research/2026-11-13-build-after.md`](./research/2026-11-13-build-after.md):
   before and after, back to back on one machine state. Serial build work of
   181 packages falls from 80.9 s to 32.9 s (59%); `dist` shrinks from 232.5 MB
@@ -60,8 +75,11 @@ Turbo edge is agreed with `goals/route-soundness-repair`, per
   `tsconfig.base.json`: the base option would break 404 no-emit overlays
   (TS5069).
 - A package that needs JavaScript keeps it through `javaScriptBuildOverrides`
-  in the scripts policy. The list is empty and so is the Exception Ledger.
-- PR 2 invalidates every build cache entry once. Land it when the merge queue
-  is quiet.
-- The check-once step survived PR 1's census. It is still the first thing
-  cut if the appetite runs out.
+  in the scripts policy; one whose check program is wider than its build
+  program keeps the no-emit check through `ownSourceCheckOverrides`
+  (`@beep/effect-drizzle`, `@beep/markdown`).
+- A package whose build is not the declaration-only command must override the
+  Turbo `check` task to depend on `^build` only. The scripts lint enforces it
+  and `bun run beep create-package` emits it.
+- `TSRS_FAST` is part of the compiler's incremental state. A build made with
+  it unset is rebuilt, not reused, by a run that sets it.

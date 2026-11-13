@@ -1,13 +1,13 @@
 /**
- * `bun run beep lint coverage-owners`: keep the generated standards coverage
- * owner rows equal to the reader scan.
+ * `bun run beep lint coverage-owners`: keep the scanned coverage owner rows
+ * (generated standards files and root tooling inputs) equal to the reader scan.
  *
  * **Details**
  *
- * The rows in `CoverageScope.ts` decide which package tests a regenerated
- * standards file selects. A pull request that adds or removes a reader in
- * another package does not select `@beep/repo-cli`, so a repo-cli test alone
- * would go red on a later, unrelated pull request. Repo Sanity runs this lint
+ * The rows in `CoverageScope.ts` decide which package tests a changed
+ * standards file or root tooling input selects. A pull request that adds or
+ * removes a reader in another package does not select the row's owners, so a
+ * repo-cli test alone would go red on a later, unrelated pull request. Repo Sanity runs this lint
  * on every code and docs pull request instead (`goals/hosted-setup-tax`,
  * TURB-01).
  *
@@ -66,7 +66,7 @@ export const runCoverageOwnersLint = Effect.fn("CoverageOwners.runCoverageOwners
       );
     }
     return yield* failWithReportedExit(
-      "coverage-owners: set COVERAGE_GENERATED_STANDARDS_OWNER_ROWS in CoverageScope.ts to the scanned owners."
+      "coverage-owners: set the rows in COVERAGE_SCANNED_OWNER_ROWS (CoverageScope.ts) to the scanned owners."
     );
   }
 });
@@ -94,4 +94,4 @@ export const lintCoverageOwnersCommand = Command.make(
     ),
   },
   ({ repoRoot }) => runCoverageOwnersLint(repoRoot)
-).pipe(Command.withDescription("Fail when the generated standards coverage owner rows differ from the reader scan"));
+).pipe(Command.withDescription("Fail when the scanned coverage owner rows differ from the reader scan"));

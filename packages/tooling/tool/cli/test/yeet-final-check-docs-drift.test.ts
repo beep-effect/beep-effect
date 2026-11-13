@@ -1,5 +1,9 @@
 import { isHeavyDocsOnlyPath } from "@beep/repo-cli/commands/Ci";
-import { CoverageScopeOwner, planCoverageAffectedScope } from "@beep/repo-cli/test/Quality";
+import {
+  COVERAGE_SCANNED_OWNER_ROWS,
+  CoverageScopeOwner,
+  planCoverageAffectedScope,
+} from "@beep/repo-cli/test/Quality";
 import { FinalCheckGate } from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
 import { assertInclude } from "@effect/vitest/utils";
@@ -7,6 +11,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
+import { rowOwnerNames } from "./support/CoverageOwnerRows.ts";
 
 // route-soundness-repair YEET-08 slice 1: the prose that tells a lane what
 // `yeet final-check` replays must name exactly the FinalCheckGate gates.
@@ -132,19 +137,20 @@ describe("final-check gate names in the docs", () => {
     expect(A.filter(docs, isHeavyDocsOnlyPath)).toStrictEqual([]);
   });
 
-  it("selects only the repo-cli tests for an edit to a document it reads, never a full coverage scope", () => {
-    const owners = [
-      CoverageScopeOwner.make({
-        packageName: "@beep/repo-cli",
-        packagePath: "packages/tooling/tool/cli",
-        hasCoverage: true,
-      }),
-    ];
+  // The skill files also select the skill tree's scanned readers (TURB-01 slice 1b), so every
+  // package a scanned owner row names is a coverage-bearing owner here.
+  it("selects the repo-cli tests for an edit to a document it reads, never a full coverage scope", () => {
+    const owners = A.map(rowOwnerNames(COVERAGE_SCANNED_OWNER_ROWS), (packageName) =>
+      CoverageScopeOwner.make({ packageName, packagePath: `packages/${packageName}`, hasCoverage: true })
+    );
     const docs = A.map(R.keys(DOC_TEXT), Str.replace("../../../../../", ""));
     const scopes = A.map(docs, (doc) => planCoverageAffectedScope(owners, [doc]));
-    expect(A.map(scopes, (scope) => (scope._tag === "selected" ? scope.packageNames : [scope._tag]))).toStrictEqual(
-      A.map(docs, () => ["@beep/repo-cli"])
-    );
+    expect(
+      A.map(scopes, (scope) => [
+        scope._tag,
+        scope._tag === "selected" && A.contains(scope.packageNames, "@beep/repo-cli"),
+      ])
+    ).toStrictEqual(A.map(docs, () => ["selected", true]));
   });
 
   it(`${GATE_TABLE} tables every final-check gate in run order`, () => {

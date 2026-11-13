@@ -23,6 +23,12 @@
  * receipt. A gate that cannot run locally is skipped only with a recorded
  * reason (`--skip <gate>=<reason>`), which the receipt and the flip both show.
  *
+ * Every run on a clean tree is also journaled as one attempt in the branch's
+ * Yeet attempt journal (`.beep/yeet/runs/<runId>/attempts.ndjson`, mode
+ * `final-check`), with the receipt it wrote. The head receipt is overwritten
+ * by each run on that head; the journal keeps every run for economics.
+ * `yeet ready` reads only the head receipt.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -31,21 +37,27 @@ import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { QualityTaskStep, runToExit } from "@beep/repo-cli-kit/process/index";
 import { findRepoRoot } from "@beep/repo-utils";
+import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
-import { dual, pipe } from "effect/Function";
+import { constant, dual, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as Match from "effect/Match";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { COMPUTE_PROFILE_WORKER_SKIP_REASON, gateRouteFor } from "../../../internal/repo-run/GateRoute.schemas.ts";
+import { processStartIdentityForPid } from "../../../internal/repo-run/ProcessIdentity.ts";
+import { repoRunArtifactId } from "../../../internal/repo-run/RepoRunArtifacts.ts";
 import { CiLocalStepPlan, ciLaneDispatchStep } from "../../Ci/CiLane.ts";
 import { ChangeAtomKind, RouteSentinel } from "../../Ci/Route.schemas.ts";
 import { ChangeClassifier, ClassifyInput } from "../../Ci/Route.service.ts";
@@ -59,8 +71,15 @@ import {
 } from "../../Quality/internal/LaneProofReuse.ts";
 import { resolveLintPolicyScope } from "../../Quality/internal/LintPolicyScope.ts";
 import { GithubCheckLaneSpec } from "../../Quality/Quality.schemas.ts";
-import { readLintPolicySweeps } from "../../Quality/Tasks.ts";
+import { readLintPolicySweeps, resolveAffectedCoverageScope } from "../../Quality/Tasks.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import {
+  appendYeetAttemptJournalEventForCheckout,
+  generateYeetAttemptId,
+  YeetAttemptFinished,
+  YeetAttemptStarted,
+  YeetAttemptTerminated,
+} from "./AttemptJournal.ts";
 import { readYeetComputeProfile } from "./ComputeProfileRead.ts";
 import { collectExpectationRewrites, verifyExpectationRewrites } from "./ExpectationRewrite.ts";
 import {
@@ -76,6 +95,7 @@ import {
 } from "./FinalCheck.schemas.ts";
 import {
   changedYeetPaths,
+  currentYeetBranch,
   resolveYeetMergeBase,
   resolveYeetRev,
   YeetChangedPathsQuery,
@@ -87,12 +107,14 @@ import {
   YeetLocalShardFailureCapsule,
   yeetLocalShardFailedRowId,
 } from "./Inbox.ts";
+import { YeetFailureKind, YeetVerdict, YeetVerdictLane } from "./Verdict.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { ComputeProfile } from "../../../internal/repo-run/ComputeProfile.schemas.ts";
 import type { CiLaneId } from "../../Ci/CiLane.ts";
 import type { ChangeAtom } from "../../Ci/Route.schemas.ts";
+import type { CoverageAffectedScope } from "../../Quality/internal/CoverageScope.ts";
 import type { LaneProofSession } from "../../Quality/internal/LaneProofReuse.ts";
 import type { LintPolicySweeps } from "../../Quality/Quality.schemas.ts";
 import type { ExpectationRewriteVerdict, YeetFinalCheckOptions } from "./FinalCheck.schemas.ts";
@@ -104,6 +126,41 @@ import type { ExpectationRewriteVerdict, YeetFinalCheckOptions } from "./FinalCh
  * @since 0.0.0
  */
 export const YEET_FINAL_CHECK_COMMAND = "bun run beep yeet final-check";
+
+/**
+ * The `mode` a `yeet final-check` run records on its attempt-journal rows and
+ * verdict, beside the Yeet run modes (`verify`, `publish`, ...).
+ *
+ * **Example** (Recognise a final-check attempt)
+ *
+ * ```ts
+ * import { FINAL_CHECK_ATTEMPT_MODE } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(FINAL_CHECK_ATTEMPT_MODE) // "final-check"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const FINAL_CHECK_ATTEMPT_MODE = "final-check";
+
+/**
+ * The reason a `--resume` step records when it reused a completed proof
+ * instead of running; its journal lane reads `reused`.
+ *
+ * **Example** (Read the reuse reason)
+ *
+ * ```ts
+ * import { FINAL_CHECK_REUSED_STEP_REASON } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(FINAL_CHECK_REUSED_STEP_REASON.startsWith("reused")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const FINAL_CHECK_REUSED_STEP_REASON =
+  "reused completed step with matching source, head, base, command and environment";
 
 const gateSetDiff = (recorded: string): string => {
   const before = Str.split(",")(recorded);
@@ -435,6 +492,25 @@ const resolveFullLintPolicySweeps = Effect.fn("Yeet.resolveFullLintPolicySweeps"
     Console.log(
       `[yeet] final-check lint-policy: scope probe unavailable; retaining standalone root sweeps (${error.message})`
     ).pipe(Effect.as(O.none<LintPolicySweeps>()))
+  )
+);
+
+// The receipt reason for a coverage gate whose affected plan is noop. The step passes rather
+// than skips: `yeet ready` requires every skipped gate to be named in the PR body.
+const FINAL_CHECK_COVERAGE_NOOP_REASON = "no affected packages";
+
+// Same planner, base and changed-file collection as the coverage subprocess (Tasks.ts), so a
+// noop here is the subprocess's noop. Never pass final-check's own changedFiles: they drop
+// deletions. A failed probe leaves the subprocess to plan for itself.
+const resolveFinalCheckCoverageScope = Effect.fn("Yeet.resolveFinalCheckCoverageScope")(
+  function* (repoRoot: string, base: string) {
+    const scope = yield* resolveAffectedCoverageScope(repoRoot, base);
+    return O.some(scope);
+  },
+  Effect.catch((error) =>
+    Console.log(
+      `[yeet] final-check coverage: scope probe unavailable; the coverage step plans for itself (${error.message})`
+    ).pipe(Effect.as(O.none<CoverageAffectedScope>()))
   )
 );
 
@@ -869,7 +945,7 @@ const makeFinalCheckStepRunner = (planned: ReadonlyArray<FinalCheckPlannedStep>,
     if (O.isSome(started) && resume && hasReusableLaneProof(started.value, lane.id)) {
       // A reused step executes no command, so there is no intervening command
       // boundary to re-identify before the next reuse decision.
-      const reason = "reused completed step with matching source, head, base, command and environment";
+      const reason = FINAL_CHECK_REUSED_STEP_REASON;
       yield* Console.log(`[yeet] final-check ${entry.gate}: ${reason}`);
       return FinalCheckStepResult.make({
         gate: entry.gate,
@@ -972,10 +1048,13 @@ const skippedStep = (skip: FinalCheckSkip, hostedContext: string): FinalCheckSte
     reason: skip.reason,
   });
 
+const receiptHeadline = (receipt: FinalCheckReceipt): string =>
+  `final-check ${receipt.verdict} for ${Str.slice(0, 12)(receipt.headSha)} (merge base ${Str.slice(0, 12)(receipt.mergeBase)}${receipt.complete ? "" : ", gate subset"})`;
+
 const renderSummary = (receipt: FinalCheckReceipt): string =>
   A.join(
     [
-      `[yeet] final-check ${receipt.verdict} for ${Str.slice(0, 12)(receipt.headSha)} (merge base ${Str.slice(0, 12)(receipt.mergeBase)}${receipt.complete ? "" : ", gate subset"})`,
+      `[yeet] ${receiptHeadline(receipt)}`,
       ...A.map(
         receipt.steps,
         (step) =>
@@ -993,6 +1072,7 @@ type FinalCheckRun = {
   readonly resume: boolean;
   readonly route?: FinalCheckRoute;
   readonly headSha?: string;
+  readonly coverageScope?: CoverageAffectedScope;
 };
 
 type GateOutcome = {
@@ -1024,15 +1104,40 @@ const skipFor = (run: FinalCheckRun, gate: FinalCheckGate) =>
     )
   );
 
+// The coverage gate's affected plan selected nothing: the step passes without spawning. A skip
+// is decided before this (C5), so it only applies when `skipFor` returned None.
+const plansNoCoverage = (run: FinalCheckRun, gate: FinalCheckGate): boolean =>
+  gate === "coverage" && run.coverageScope?._tag === "noop";
+
+const noopCoverageStep = (entry: FinalCheckPlannedStep): FinalCheckStepResult =>
+  FinalCheckStepResult.make({
+    gate: entry.gate,
+    label: entry.step.label,
+    hostedContext: entry.hostedContext,
+    command: renderCommand(entry.step),
+    status: "passed",
+    durationMs: 0,
+    reason: FINAL_CHECK_COVERAGE_NOOP_REASON,
+  });
+
 const printGatePlan = (run: FinalCheckRun, gate: FinalCheckGate) =>
   O.match(skipFor(run, gate), {
     onSome: (skip) => Console.log(`  skip ${gate}: ${skip.reason}`),
     onNone: () =>
-      gate === "expectation-rewrite"
-        ? Console.log(`  ${gate}: scan the diff's test files and snapshots; replay rewritten tests on the merge base`)
-        : Effect.forEach(plannedFor(run, gate), (entry) => Console.log(`  ${gate}: ${renderCommand(entry.step)}`), {
+      Match.value(gate).pipe(
+        Match.when("expectation-rewrite", () =>
+          Console.log(`  ${gate}: scan the diff's test files and snapshots; replay rewritten tests on the merge base`)
+        ),
+        Match.when(
+          (candidate: FinalCheckGate) => plansNoCoverage(run, candidate),
+          () => Console.log(`  ${gate}: ${FINAL_CHECK_COVERAGE_NOOP_REASON} (planner noop); nothing runs`)
+        ),
+        Match.orElse(() =>
+          Effect.forEach(plannedFor(run, gate), (entry) => Console.log(`  ${gate}: ${renderCommand(entry.step)}`), {
             discard: true,
-          }),
+          })
+        )
+      ),
   });
 
 const runGate = (run: FinalCheckRun, gate: FinalCheckGate, runner: ReturnType<typeof makeFinalCheckStepRunner>) =>
@@ -1040,24 +1145,46 @@ const runGate = (run: FinalCheckRun, gate: FinalCheckGate, runner: ReturnType<ty
     onSome: (skip): Effect.Effect<GateOutcome> =>
       Effect.succeed({ steps: [skippedStep(skip, hostedContextFor(run, gate))], verdicts: [], shadowMisses: [] }),
     onNone: () =>
-      gate === "expectation-rewrite"
-        ? Effect.map(
+      Match.value(gate).pipe(
+        Match.when("expectation-rewrite", () =>
+          Effect.map(
             runner.invalidate.pipe(Effect.andThen(runExpectationRewriteGate(run.repoRoot, run.mergeBase))),
-            (result) => ({
+            (result): GateOutcome => ({
               steps: [result.step],
               verdicts: result.verdicts,
               shadowMisses: [],
             })
           )
-        : Effect.map(Effect.forEach(plannedFor(run, gate), runner.execute), (steps) => ({
-            steps,
-            verdicts: [],
-            shadowMisses: [],
-          })),
+        ),
+        // Spawns nothing and moves no tree, so it writes no lane proof and needs no invalidate;
+        // a `--resume` run probes again.
+        Match.when(
+          (candidate: FinalCheckGate) => plansNoCoverage(run, candidate),
+          () =>
+            Console.log(`[yeet] final-check ${gate}: ${FINAL_CHECK_COVERAGE_NOOP_REASON} (planner noop)`).pipe(
+              Effect.as<GateOutcome>({
+                steps: A.map(plannedFor(run, gate), noopCoverageStep),
+                verdicts: [],
+                shadowMisses: [],
+              })
+            )
+        ),
+        Match.orElse(() =>
+          Effect.map(
+            Effect.forEach(plannedFor(run, gate), runner.execute),
+            (steps): GateOutcome => ({
+              steps,
+              verdicts: [],
+              shadowMisses: [],
+            })
+          )
+        )
+      ),
   });
 
-const hasFailure = (steps: ReadonlyArray<FinalCheckStepResult>): boolean =>
-  A.some(steps, (step) => step.status === "failed");
+const isFailedStep = (step: FinalCheckStepResult): boolean => step.status === "failed";
+
+const hasFailure = (steps: ReadonlyArray<FinalCheckStepResult>): boolean => A.some(steps, isFailedStep);
 
 // A shadow-skipped gate failed: one P0 inbox row per responsible refinement, naming the sentinel
 // revocation that turns the refinement off.
@@ -1167,12 +1294,231 @@ const refuseMovedTree = Effect.fn("Yeet.refuseMovedFinalCheckTree")(function* (r
 
 const failedLabels = (steps: ReadonlyArray<FinalCheckStepResult>): string =>
   A.join(
-    A.map(
-      A.filter(steps, (step) => step.status === "failed"),
-      (step) => step.label
-    ),
+    A.map(A.filter(steps, isFailedStep), (step) => step.label),
     ", "
   );
+
+// One journal lane per receipt step: the phase is the gate family, and a
+// resumed step that reused its proof reads `reused`, as in a Yeet verdict.
+const finalCheckVerdictLane = (step: FinalCheckStepResult): YeetVerdictLane =>
+  YeetVerdictLane.make({
+    id: step.label,
+    label: step.label,
+    phase: step.gate,
+    status: step.status === "passed" && step.reason === FINAL_CHECK_REUSED_STEP_REASON ? "reused" : step.status,
+    durationMs: step.durationMs,
+  });
+
+type FinalCheckFailureFacts = Pick<YeetVerdict, "failureKind" | "failedStepId">;
+
+// A written receipt means a gate went red (`step-exit`, naming the first failed
+// step); none means the run refused or failed before it wrote one.
+const finalCheckFailureFacts = (written: O.Option<FinalCheckReceipt>): FinalCheckFailureFacts =>
+  O.match(written, {
+    onNone: () => ({ failureKind: YeetFailureKind.Enum["handler-error"] }),
+    onSome: (receipt) => ({
+      failureKind: YeetFailureKind.Enum["step-exit"],
+      ...O.getSomesStruct({ failedStepId: O.map(A.findFirst(receipt.steps, isFailedStep), (step) => step.label) }),
+    }),
+  });
+
+/**
+ * Build the terminal attempt-journal row for one `yeet final-check` run.
+ *
+ * **Details**
+ *
+ * A run that returned its passing receipt, or failed through the command
+ * error channel, ends in an `attempt-finished` row. Its verdict has mode
+ * {@link FINAL_CHECK_ATTEMPT_MODE} and one lane per step (phase = gate). A
+ * failure after the receipt was written, a red gate, is a `step-exit` failure
+ * naming the first failed step; one before it (the tree moved, the receipt
+ * could not be written) is a `handler-error` and carries no receipt. The
+ * written receipt rides the row as `finalCheckReceipt`. An interrupt ends in
+ * `attempt-terminated` with reason `interrupted`, a defect with
+ * `unrecorded-failure`; neither carries a verdict.
+ *
+ * **Example** (Journal an interrupted run)
+ *
+ * ```ts
+ * import { FINAL_CHECK_ATTEMPT_MODE, finalCheckAttemptTerminal, YeetAttemptStarted } from "@beep/repo-cli/test/Yeet"
+ * import { UUID } from "@beep/repo-cli/test/SharedInternals"
+ * import * as Exit from "effect/Exit"
+ * import * as O from "effect/Option"
+ *
+ * const attempt = YeetAttemptStarted.make({
+ *   schemaVersion: "yeet-attempt-journal/v1",
+ *   _tag: "attempt-started",
+ *   attemptId: UUID.make("7c9f5b1e-2d4a-4f6b-9a8c-1e2d3f4a5b6c"),
+ *   runId: "feature-0123456789ab",
+ *   branch: "feature",
+ *   base: "origin/main",
+ *   head: "a".repeat(40),
+ *   mode: FINAL_CHECK_ATTEMPT_MODE,
+ *   startedAt: "2026-11-12T00:00:00.000Z",
+ * })
+ * const row = finalCheckAttemptTerminal({
+ *   attempt,
+ *   exit: Exit.interrupt(),
+ *   steps: [],
+ *   receipt: O.none(),
+ *   recordedAt: "2026-11-12T00:05:00.000Z",
+ *   elapsedMs: 300_000,
+ *   failFast: false,
+ * })
+ * console.log(row._tag) // "attempt-terminated"
+ * ```
+ *
+ * @param input - The started row, how the run ended, the steps and receipt it
+ *   recorded before it ended, the end instant, the elapsed time and the
+ *   `--fail-fast` flag.
+ * @returns The `attempt-finished` or `attempt-terminated` row for the journal.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const finalCheckAttemptTerminal = ({
+  attempt,
+  exit,
+  steps,
+  receipt,
+  recordedAt,
+  elapsedMs,
+  failFast,
+}: {
+  readonly attempt: YeetAttemptStarted;
+  readonly exit: Exit.Exit<FinalCheckReceipt, YeetCommandError>;
+  readonly steps: ReadonlyArray<FinalCheckStepResult>;
+  readonly receipt: O.Option<FinalCheckReceipt>;
+  readonly recordedAt: string;
+  readonly elapsedMs: number;
+  readonly failFast: boolean;
+}): YeetAttemptFinished | YeetAttemptTerminated => {
+  const finished = (
+    written: O.Option<FinalCheckReceipt>,
+    ran: ReadonlyArray<FinalCheckStepResult>,
+    outcome: YeetVerdict["outcome"],
+    message: string,
+    failure: FinalCheckFailureFacts
+  ) =>
+    YeetAttemptFinished.make({
+      schemaVersion: "yeet-attempt-journal/v1",
+      _tag: "attempt-finished",
+      attemptId: attempt.attemptId,
+      recordedAt,
+      verdict: YeetVerdict.make({
+        schemaVersion: "yeet-verdict/v2",
+        attemptId: O.some(attempt.attemptId),
+        base: attempt.base,
+        branch: attempt.branch,
+        committed: false,
+        createdAt: recordedAt,
+        failurePolicy: failFast ? "fail-fast" : "collect-all",
+        head: attempt.head,
+        lanes: A.map(ran, finalCheckVerdictLane),
+        message,
+        mode: attempt.mode,
+        outcome,
+        packetPaths: [],
+        pushed: false,
+        runId: attempt.runId,
+        resolvedHeadSha: attempt.resolvedHeadSha,
+        startedAt: O.some(attempt.startedAt),
+        endedAt: O.some(recordedAt),
+        elapsedMs: O.some(elapsedMs),
+        ...failure,
+      }),
+      resolvedHeadSha: attempt.resolvedHeadSha,
+      envProfile: attempt.envProfile,
+      computeProfile: attempt.computeProfile,
+      finalCheckReceipt: written,
+    });
+  const terminated = (reason: YeetAttemptTerminated["reason"]) =>
+    YeetAttemptTerminated.make({
+      schemaVersion: "yeet-attempt-journal/v1",
+      _tag: "attempt-terminated",
+      attemptId: attempt.attemptId,
+      recordedAt,
+      reason,
+      resolvedHeadSha: attempt.resolvedHeadSha,
+      envProfile: attempt.envProfile,
+      computeProfile: attempt.computeProfile,
+    });
+  return Exit.match(exit, {
+    onSuccess: (written) => finished(O.some(written), written.steps, "success", `yeet ${receiptHeadline(written)}`, {}),
+    onFailure: (cause) =>
+      O.match(Cause.findErrorOption(cause), {
+        onSome: (error) => finished(receipt, steps, "failure", error.message, finalCheckFailureFacts(receipt)),
+        onNone: () => terminated(Cause.hasInterruptsOnly(cause) ? "interrupted" : "unrecorded-failure"),
+      }),
+  });
+};
+
+// What a run recorded before it ended: the steps once the gates ran, and the
+// receipt once it was written.
+type FinalCheckRan = {
+  readonly steps: ReadonlyArray<FinalCheckStepResult>;
+  readonly receipt: O.Option<FinalCheckReceipt>;
+};
+
+type OpenFinalCheckAttempt = {
+  readonly attempt: YeetAttemptStarted;
+  readonly branch: string;
+  readonly startedMillis: number;
+};
+
+// The journal is measurement: a row that cannot be written is reported and
+// never fails, delays or changes the run, its receipt or its exit.
+const reportJournalFailure = (error: YeetCommandError) =>
+  Console.error(`[yeet] final-check attempt journal not written: ${error.message}`);
+
+// The run's start row, in the branch journal Yeet attempts use. Without it no
+// terminal row is written either, so the journal never holds a lone terminal.
+const openFinalCheckAttempt = Effect.fn("Yeet.openFinalCheckAttempt")(
+  function* (repoRoot: string, options: YeetFinalCheckOptions, headSha: string, computeProfile: ComputeProfile) {
+    const branch = yield* currentYeetBranch(repoRoot);
+    const now = yield* DateTime.now;
+    const attempt = YeetAttemptStarted.make({
+      schemaVersion: "yeet-attempt-journal/v1",
+      _tag: "attempt-started",
+      attemptId: yield* generateYeetAttemptId(),
+      runId: yield* repoRunArtifactId(branch),
+      branch,
+      base: options.base,
+      head: headSha,
+      mode: FINAL_CHECK_ATTEMPT_MODE,
+      startedAt: DateTime.formatIso(now),
+      ownerPid: O.some(process.pid),
+      ownerProcStart: yield* processStartIdentityForPid(process.pid),
+      resolvedHeadSha: O.some(headSha),
+      envProfile: O.some("local"),
+      computeProfile: O.some(computeProfile),
+      forceLocal: options.forceLocal ? O.some(true) : O.none(),
+    });
+    yield* appendYeetAttemptJournalEventForCheckout(repoRoot, branch, attempt);
+    return O.some<OpenFinalCheckAttempt>({ attempt, branch, startedMillis: DateTime.toEpochMillis(now) });
+  },
+  Effect.catch((error) => reportJournalFailure(error).pipe(Effect.as(O.none<OpenFinalCheckAttempt>())))
+);
+
+const closeFinalCheckAttempt = Effect.fn("Yeet.closeFinalCheckAttempt")(function* (
+  repoRoot: string,
+  open: OpenFinalCheckAttempt,
+  ran: Ref.Ref<FinalCheckRan>,
+  exit: Exit.Exit<FinalCheckReceipt, YeetCommandError>,
+  failFast: boolean
+) {
+  const now = yield* DateTime.now;
+  const { steps, receipt } = yield* Ref.get(ran);
+  const row = finalCheckAttemptTerminal({
+    attempt: open.attempt,
+    exit,
+    steps,
+    receipt,
+    recordedAt: DateTime.formatIso(now),
+    elapsedMs: DateTime.toEpochMillis(now) - open.startedMillis,
+    failFast,
+  });
+  yield* appendYeetAttemptJournalEventForCheckout(repoRoot, open.branch, row).pipe(Effect.catch(reportJournalFailure));
+});
 
 /**
  * Run `yeet final-check` on the committed head and write its receipt.
@@ -1186,6 +1532,10 @@ const failedLabels = (steps: ReadonlyArray<FinalCheckStepResult>): string =>
  * after the first red. A `--gates` subset still writes a receipt, marked
  * incomplete, so it can never admit `yeet ready`. `--dry-run` prints the plan
  * and runs nothing.
+ *
+ * A run past the dirty-tree refusal appends a start row and a terminal row
+ * ({@link finalCheckAttemptTerminal}) to the branch attempt journal. A journal
+ * that cannot be written is reported on stderr and changes nothing else.
  *
  * **Example** (Build the command effect)
  *
@@ -1241,7 +1591,7 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
       )
     )
   );
-  const run: FinalCheckRun = {
+  const plannedRun: FinalCheckRun = {
     repoRoot,
     mergeBase,
     planned: routeFinalCheckStepsForProfile({
@@ -1254,6 +1604,16 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
     route,
     headSha,
   };
+  // Every skip (operator, compute profile, route) decides before the probe (C5), so a skipped
+  // coverage gate stays skipped. The probe runs before `--dry-run` returns, so the plan matches.
+  const coverageScope =
+    A.contains(gates, "coverage") && O.isNone(skipFor(plannedRun, "coverage"))
+      ? yield* resolveFinalCheckCoverageScope(repoRoot, mergeBase)
+      : O.none<CoverageAffectedScope>();
+  const run: FinalCheckRun = O.match(coverageScope, {
+    onNone: () => plannedRun,
+    onSome: (scope) => ({ ...plannedRun, coverageScope: scope }),
+  });
 
   if (options.dryRun) {
     yield* Console.log(
@@ -1265,35 +1625,52 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
   }
 
   yield* refuseDirtyTree(repoRoot);
-  const startedAt = yield* nowIso;
-  const { steps, verdicts, shadowMisses } = yield* runGates(run, gates, options.failFast);
-  yield* refuseMovedTree(repoRoot, headSha);
-  const ranGates = A.dedupe(A.map(steps, (step) => step.gate));
-  const receipt = FinalCheckReceipt.make({
-    schemaVersion: FINAL_CHECK_RECEIPT_VERSION,
-    gateSetDigest: FINAL_CHECK_GATE_SET_DIGEST,
-    headSha,
-    mergeBase,
-    base: options.base,
-    complete: A.every(FinalCheckGate.literals, (gate) => A.contains(ranGates, gate)),
-    verdict: hasFailure(steps) ? "fail" : "pass",
-    startedAt,
-    finishedAt: yield* nowIso,
-    steps,
-    expectationRewrites: verdicts,
-    route: FinalCheckRoute.make({ ...route, shadowMisses }),
-    computeProfile,
-    forceLocal: options.forceLocal,
-  });
-  const file = yield* writeReceipt(repoRoot, receipt);
-  yield* Console.log(renderSummary(receipt));
-  yield* printProfileSkips(profileSkips);
-  yield* Console.log(`[yeet] final-check receipt: ${file}`);
-  if (receipt.verdict === "fail") {
-    return yield* YeetCommandError.make({
-      message: `yeet final-check failed: ${failedLabels(steps)}. These gates red hosted CI too; fix them before calling the pull request final.`,
-      exitCode: 1,
+  const ran = yield* Ref.make<FinalCheckRan>({ steps: [], receipt: O.none() });
+  const execute = Effect.gen(function* () {
+    const startedAt = yield* nowIso;
+    const { steps, verdicts, shadowMisses } = yield* runGates(run, gates, options.failFast);
+    yield* Ref.set(ran, { steps, receipt: O.none() });
+    yield* refuseMovedTree(repoRoot, headSha);
+    const ranGates = A.dedupe(A.map(steps, (step) => step.gate));
+    const receipt = FinalCheckReceipt.make({
+      schemaVersion: FINAL_CHECK_RECEIPT_VERSION,
+      gateSetDigest: FINAL_CHECK_GATE_SET_DIGEST,
+      headSha,
+      mergeBase,
+      base: options.base,
+      complete: A.every(FinalCheckGate.literals, (gate) => A.contains(ranGates, gate)),
+      verdict: hasFailure(steps) ? "fail" : "pass",
+      startedAt,
+      finishedAt: yield* nowIso,
+      steps,
+      expectationRewrites: verdicts,
+      route: FinalCheckRoute.make({ ...route, shadowMisses }),
+      computeProfile,
+      forceLocal: options.forceLocal,
     });
-  }
+    const file = yield* writeReceipt(repoRoot, receipt);
+    yield* Ref.set(ran, { steps, receipt: O.some(receipt) });
+    yield* Console.log(renderSummary(receipt));
+    yield* printProfileSkips(profileSkips);
+    yield* Console.log(`[yeet] final-check receipt: ${file}`);
+    if (receipt.verdict === "fail") {
+      return yield* YeetCommandError.make({
+        message: `yeet final-check failed: ${failedLabels(steps)}. These gates red hosted CI too; fix them before calling the pull request final.`,
+        exitCode: 1,
+      });
+    }
+    return receipt;
+  });
+  // The run is journaled as one attempt; the head receipt above stays the only
+  // thing `yeet ready` reads.
+  const receipt = yield* Effect.acquireUseRelease(
+    openFinalCheckAttempt(repoRoot, options, headSha, computeProfile),
+    constant(execute),
+    (opened, exit) =>
+      O.match(opened, {
+        onNone: constant(Effect.void),
+        onSome: (open) => closeFinalCheckAttempt(repoRoot, open, ran, exit, options.failFast),
+      })
+  );
   return O.some(receipt);
 });

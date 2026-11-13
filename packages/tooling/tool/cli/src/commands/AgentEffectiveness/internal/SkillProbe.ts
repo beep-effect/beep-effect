@@ -31,6 +31,8 @@ import {
 } from "../AgentEffectiveness.schemas.ts";
 import { buildAgentEffectivenessEvalScoreReport, evaluateTaskFixture } from "./EvalScorer.ts";
 import { LawEvaluation } from "./EvalScoring.ts";
+import { SkillLaneProbeReport } from "./SkillLaneProbeSchemas.ts";
+import { buildSkillLaneProbeReport, SKILL_LANE_PROBE_MAX_ATTEMPTS } from "./SkillLaneProbeStats.ts";
 import {
   PluginEvalResult,
   SkillProbeFingerprint,
@@ -47,6 +49,7 @@ import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { AgentEffectivenessEvalScoreReport } from "../AgentEffectiveness.schemas.ts";
+import type { SkillLaneProbeOptions } from "./SkillLaneProbeSchemas.ts";
 import type { PluginEvalRun, SkillProbeCell, SkillProbePrimary } from "./SkillProbeSchemas.ts";
 
 const SKILL_NAME = "schema-first-development";
@@ -289,6 +292,11 @@ export const skillProbePrompt: {
   variant === "bare" ? prompt : `${prompt}\n\nFollow the repository code laws below.\n\n${laws}`
 );
 
+const pathExists = Effect.fn("SkillProbe.pathExists")(function* (target: string) {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* fs.exists(target).pipe(Effect.mapError(mapFail(`Cannot check whether ${target} exists.`, target)));
+});
+
 const shellQuote = (value: string): string => `'${Str.replaceAll("'", "'\\''")(value)}'`;
 
 const readText = Effect.fn("SkillProbe.readText")(function* (file: string) {
@@ -399,10 +407,10 @@ const guardStageOutDir = Effect.fn("SkillProbe.guardStageOutDir")(function* (
   if (O.isSome(clash)) {
     return yield* fail(`Refusing to stage into ${outDir}: it overlaps ${clash.value}.`, outDir);
   }
-  const exists = yield* fs.exists(outDir).pipe(Effect.orElseSucceed(() => false));
+  const exists = yield* pathExists(outDir);
   if (!exists) return;
   const entries = yield* fs.readDirectory(outDir).pipe(Effect.mapError(mapFail(`Cannot list ${outDir}.`, outDir)));
-  const priorStage = yield* fs.exists(path.join(outDir, "stage.json")).pipe(Effect.orElseSucceed(() => false));
+  const priorStage = yield* pathExists(path.join(outDir, "stage.json"));
   if (A.isReadonlyArrayNonEmpty(entries) && !priorStage) {
     return yield* fail(`Refusing to replace ${outDir}: it is not empty and holds no prior stage.json.`, outDir);
   }
@@ -624,7 +632,6 @@ export class SkillProbePreflightOptions extends S.Opaque<
 export const preflightSkillProbe = Effect.fn("SkillProbe.preflight")(function* (
   options: SkillProbePreflightOptions
 ): Effect.fn.Return<SkillProbePreflight, AgentEffectivenessEvalScorerError | S.SchemaError, ScoreEnv | Digest.Digest> {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const stage = yield* readText(options.stagePath).pipe(Effect.flatMap(decodeStage));
   const rows = yield* Effect.forEach(
@@ -633,7 +640,7 @@ export const preflightSkillProbe = Effect.fn("SkillProbe.preflight")(function* (
       const taskPath = path.join(options.archiveRoot, task.taskPath);
       const fixture = yield* scoreProbeFixture(path.join(options.archiveRoot, task.fixture), taskPath);
       const knownGoodDir = path.join(options.knownGoodRoot, task.id);
-      const hasKnownGood = yield* fs.exists(knownGoodDir).pipe(Effect.orElseSucceed(() => false));
+      const hasKnownGood = yield* pathExists(knownGoodDir);
       const knownGood = hasKnownGood
         ? yield* Effect.asSome(scoreProbeFixture(knownGoodDir, taskPath))
         : O.none<AgentEffectivenessEvalScoreReport>();
@@ -760,7 +767,7 @@ const scoreKeptDir = Effect.fn("SkillProbe.scoreKeptDir")(function* (
   yield* fs.chmod(keptDir, 0o700).pipe(Effect.ignore);
   yield* fs.chmod(path.join(keptDir, "sealed"), 0o700).pipe(Effect.ignore);
   const fixtureDir = path.join(keptDir, "sealed", "home", "cwd", task.fixture);
-  const exists = yield* fs.exists(fixtureDir).pipe(Effect.orElseSucceed(() => false));
+  const exists = yield* pathExists(fixtureDir);
   if (!exists) return SkillProbeOutcome.cases.Excluded.make({ reason: "The fixture is missing." });
   const attempt = scoreProbeFixture(fixtureDir, path.join(archiveRoot, task.taskPath));
   const first = yield* attempt;
@@ -857,17 +864,10 @@ const assignSlots = (
         `Rerun has ${A.length(group)} runs for ${first.task.id} cell ${first.cell} but only ${A.length(slots)} excluded slots.`
       );
     }
-    return Effect.forEach(group, (job, index) =>
-      pipe(
-        A.get(slots, index),
-        O.match({
-          onNone: () => fail(`No excluded slot for rerun ${index} of ${first.task.id} cell ${first.cell}.`),
-          onSome: (slot) =>
-            slot.attempt + 1 > 3
-              ? fail(`Slot ${slot.slot} would reach attempt ${slot.attempt + 1}; at most two reruns are allowed.`)
-              : Effect.succeed({ ...job, slot: slot.slot, attempt: slot.attempt + 1 }),
-        })
-      )
+    return Effect.forEach(A.zip(group, slots), ([job, slot]) =>
+      slot.attempt + 1 > 3
+        ? fail(`Slot ${slot.slot} would reach attempt ${slot.attempt + 1}; at most two reruns are allowed.`)
+        : Effect.succeed({ ...job, slot: slot.slot, attempt: slot.attempt + 1 })
     );
   }).pipe(Effect.map(A.flatten));
 };
@@ -925,8 +925,7 @@ export const scoreSkillProbeRuns = Effect.fn("SkillProbe.score")(function* (
     skillSha256: stage.skillSha256,
     lawsSha256: stage.lawsSha256,
   });
-  const fs = yield* FileSystem.FileSystem;
-  const outExists = yield* fs.exists(options.out).pipe(Effect.orElseSucceed(() => false));
+  const outExists = yield* pathExists(options.out);
   if (outExists) {
     return yield* fail(
       `Refusing to overwrite ${options.out}; write each invocation to its own records file.`,
@@ -1091,4 +1090,49 @@ export const runSkillProbeSelect = Effect.fn("SkillProbe.select")(function* (
   const selection = selectSkillProbePrimary(records);
   yield* encodeSelection(selection).pipe(Effect.flatMap(Console.log));
   return selection;
+});
+
+const encodeLaneReport = S.encodeEffect(S.fromJsonString(SkillLaneProbeReport));
+
+/**
+ * Build the lane probe report from run record files and print it as JSON.
+ *
+ * **Details**
+ *
+ * Refuses records the first probe's pooling checks reject and more than 144
+ * attempts. A pilot report is labelled as such and carries no verdict.
+ *
+ * **Example** (Report pilot records)
+ *
+ * ```ts
+ * import { runSkillLaneProbeReport, SkillLaneProbeOptions } from "@beep/repo-cli/test/AgentEffectiveness"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = runSkillLaneProbeReport(
+ *   ["runs.jsonl"],
+ *   "preflight.json",
+ *   SkillLaneProbeOptions.make({ data: "pilot", seed: 20261113, relabelings: 100000 })
+ * )
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param files - JSON Lines files of `SkillProbeRunRecord`.
+ * @param preflightPath - Preflight receipt; records of its dropped tasks are refused.
+ * @param options - Data label, seed and relabeling count.
+ * @returns The report that was printed, with its verdict on scored data.
+ * @category commands
+ * @since 0.0.0
+ */
+export const runSkillLaneProbeReport = Effect.fn("SkillProbe.laneReport")(function* (
+  files: ReadonlyArray<string>,
+  preflightPath: string,
+  options: SkillLaneProbeOptions
+): Effect.fn.Return<SkillLaneProbeReport, AgentEffectivenessEvalScorerError | S.SchemaError, ProbeEnv> {
+  const records = yield* readPoolableRecords(files, preflightPath);
+  if (A.length(records) > SKILL_LANE_PROBE_MAX_ATTEMPTS) {
+    return yield* fail(`${A.length(records)} attempts exceed the cap of ${SKILL_LANE_PROBE_MAX_ATTEMPTS}.`);
+  }
+  const report = yield* buildSkillLaneProbeReport(records, options);
+  yield* encodeLaneReport(report).pipe(Effect.flatMap(Console.log));
+  return report;
 });
