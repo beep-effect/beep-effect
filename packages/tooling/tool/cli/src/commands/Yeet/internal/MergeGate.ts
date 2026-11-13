@@ -857,12 +857,16 @@ const withHiddenReds = (
   read: MergeGateRead,
   live: HashMap.HashMap<string, MergeGateCheckRun>,
   hidden: ReadonlyArray<HiddenRequiredCheck>
-): HashMap.HashMap<string, MergeGateCheckRun> =>
-  A.reduce(hiddenIn(hidden, "red"), live, (judged, entry) =>
-    A.findFirst(read.checkRuns, (run) => run.id === entry.copy.id).pipe(
-      O.match({ onNone: () => judged, onSome: (run) => HashMap.set(judged, entry.context, run) })
-    )
+): HashMap.HashMap<string, MergeGateCheckRun> => {
+  // Every hidden copy is one of the read's own check runs, so select them directly; a copy
+  // reports its own context, so the run's name is the context it judges.
+  const redCopies = HashSet.fromIterable(A.map(hiddenIn(hidden, "red"), (entry) => entry.copy.id));
+  return A.reduce(
+    A.filter(read.checkRuns, (run) => HashSet.has(redCopies, run.id)),
+    live,
+    (judged, run) => HashMap.set(judged, run.name, run)
   );
+};
 
 // A hidden red holds as a red; a passing copy whose replacing run finished
 // needs a person; a copy or replacing run still going may yet report it.
