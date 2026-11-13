@@ -191,7 +191,6 @@ describe("yeet merge-gate stack layout", () => {
       prNumber: TOP,
       mergeSha: topSquash,
       commitTitle: `${TOP_TITLE} (#${TOP})`,
-      endpoint: "async",
       bypassRequested: false,
       layers: [
         YeetStackMergedLayer.make({

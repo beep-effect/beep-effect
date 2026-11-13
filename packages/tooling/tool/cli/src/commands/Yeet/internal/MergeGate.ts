@@ -69,10 +69,9 @@ import { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import { enforceReviewerGate, withReviewerOperatorClient } from "../../Reviewer/ReviewerRuleset.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import {
-  renderYeetMergeEndpoint,
   renderYeetMergeSettlement,
   settleYeetMerge,
-  YeetMergeEndpoint,
+  YEET_MERGE_ENDPOINT_NAME,
   YeetMergeSettlement,
 } from "./AsyncMerge.ts";
 import {
@@ -1398,7 +1397,6 @@ export const readAuthenticatedMergeGate = Effect.fn("Yeet.readAuthenticatedMerge
  *
  * **Details**
  *
- * `endpoint` names the call that merged (`async` is `merge-async`), and
  * `bypassRequested` is true only for an S11 merge that asked GitHub to bypass
  * the base's rules over the reds it recorded. `layers` is present only for a
  * stack merge: every layer the one request landed, bottom to top, each with its
@@ -1413,7 +1411,6 @@ export const readAuthenticatedMergeGate = Effect.fn("Yeet.readAuthenticatedMerge
  *   prNumber: 7,
  *   mergeSha: "feedface",
  *   commitTitle: "fix: x (#7)",
- *   endpoint: "async",
  *   bypassRequested: false,
  * })
  * console.log(merged.prNumber) // 7
@@ -1427,7 +1424,6 @@ export class MergeGateMerged extends S.Opaque<MergeGateMerged, { readonly brand:
     prNumber: S.Finite,
     mergeSha: S.String,
     commitTitle: S.NonEmptyString,
-    endpoint: YeetMergeEndpoint,
     bypassRequested: S.Boolean,
     layers: YeetStackMergedLayer.pipe(S.Array, S.optionalKey),
   }).pipe($I.annoteSchema("MergeGateMerged", { description: "The squash merge GitHub confirmed." }))
@@ -1529,13 +1525,12 @@ export const executeMergeGate = Effect.fn("Yeet.executeMergeGate")(function* (
     })
   ).pipe(Effect.mapError(yeetGithubFailure(`gh api merge-async #${decision.prNumber}`)));
   return YeetMergeSettlement.match(settled, {
-    Merged: ({ endpoint, sha, bypassRules }): MergeGateMerged | MergeGateHold =>
+    Merged: ({ sha, bypassRules }): MergeGateMerged | MergeGateHold =>
       MergeGateMerged.make({
         prNumber: decision.prNumber,
         mergeSha: sha,
         commitTitle: decision.commitTitle,
-        endpoint,
-        // What the merging request sent: the legacy call cannot send a bypass at all.
+        // What the merging request sent, read back from the settlement.
         bypassRequested: bypassRules,
       }),
     Failed: () => hold(decision.prNumber, "merge-failed", renderYeetMergeSettlement(settled)),
@@ -1633,7 +1628,7 @@ const warnAfterMerge = (what: string) => (error: YeetCommandError) =>
  * The line `yeet merge-gate` prints for a confirmed merge: the merge sha, the
  * endpoint that merged it, and whether a rules bypass was requested.
  *
- * **Example** (A strict async merge)
+ * **Example** (A strict merge)
  *
  * ```ts
  * import { MergeGateMerged, renderMergeGateMergedLine } from "@beep/repo-cli/test/Yeet"
@@ -1643,7 +1638,6 @@ const warnAfterMerge = (what: string) => (error: YeetCommandError) =>
  *     prNumber: 7,
  *     mergeSha: "feedfacefeedface",
  *     commitTitle: "fix: x (#7)",
- *     endpoint: "async",
  *     bypassRequested: false,
  *   })
  * )
@@ -1656,9 +1650,9 @@ const warnAfterMerge = (what: string) => (error: YeetCommandError) =>
  * @since 0.0.0
  */
 export const renderMergeGateMergedLine = (merged: MergeGateMerged): string =>
-  `MERGED #${merged.prNumber} -> ${Str.slice(0, 10)(merged.mergeSha)} "${merged.commitTitle}" via ${renderYeetMergeEndpoint(
-    merged.endpoint
-  )}${merged.bypassRequested ? ", rules bypass requested (S11)" : ""}`;
+  `MERGED #${merged.prNumber} -> ${Str.slice(0, 10)(merged.mergeSha)} "${merged.commitTitle}" via ${YEET_MERGE_ENDPOINT_NAME}${
+    merged.bypassRequested ? ", rules bypass requested (S11)" : ""
+  }`;
 
 /**
  * The lines `yeet merge-gate` prints for a confirmed merge: one for a single
@@ -1667,7 +1661,7 @@ export const renderMergeGateMergedLine = (merged: MergeGateMerged): string =>
  * **Details**
  *
  * Each layer's line names its own squash commit and ends with its place in the
- * stack; the endpoint and bypass are the one request's.
+ * stack; the bypass flag is the one request's.
  *
  * **Example** (A single pull request prints one line)
  *
@@ -1679,7 +1673,6 @@ export const renderMergeGateMergedLine = (merged: MergeGateMerged): string =>
  *     prNumber: 7,
  *     mergeSha: "feedfacefeedface",
  *     commitTitle: "fix: x (#7)",
- *     endpoint: "async",
  *     bypassRequested: false,
  *   })
  * )
@@ -1701,7 +1694,6 @@ export const renderMergeGateMergedLines = (merged: MergeGateMerged): ReadonlyArr
             prNumber: layer.prNumber,
             mergeSha: layer.mergeSha,
             commitTitle: layer.commitTitle,
-            endpoint: merged.endpoint,
             bypassRequested: merged.bypassRequested,
           })
         )}${renderYeetStackLayerSuffix(layer)}`
@@ -1711,7 +1703,7 @@ export const renderMergeGateMergedLines = (merged: MergeGateMerged): ReadonlyArr
 const s11MergeComment = (decision: MergeGateMerge, merged: MergeGateMerged, windowForced: boolean): string =>
   A.join(
     [
-      `yeet merge-gate (S11): merged ${Str.slice(0, 10)(decision.headSha)} as ${Str.slice(0, 10)(merged.mergeSha)} via ${renderYeetMergeEndpoint(merged.endpoint)}${
+      `yeet merge-gate (S11): merged ${Str.slice(0, 10)(decision.headSha)} as ${Str.slice(0, 10)(merged.mergeSha)} via ${YEET_MERGE_ENDPOINT_NAME}${
         merged.bypassRequested ? ", with a rules bypass requested over the checks below" : ", with no rules bypass"
       }.`,
       ...atMergeLists(decision.atMerge),

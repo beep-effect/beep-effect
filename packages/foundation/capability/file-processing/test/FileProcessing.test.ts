@@ -35,12 +35,14 @@ import {
 } from "@beep/file-processing/Strategy";
 import { TestFileProcessingEngine } from "@beep/file-processing/test";
 import { PosixPath } from "@beep/schema/PosixPath";
+import { Sha256PrefixedDigest } from "@beep/schema/Sha256";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import { pipe } from "effect/Function";
@@ -409,4 +411,18 @@ describe("@beep/file-processing", () => {
       })
     );
   });
+
+  it.effect(
+    "defines ContentDigest over the shared sha256: grammar with its encoded form unchanged",
+    Effect.fnUntraced(function* () {
+      const hex = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+      const digest = yield* S.decodeEffect(ContentDigest)(`sha256:${hex}`);
+      const general: Sha256PrefixedDigest = digest;
+      const encoded = yield* S.encodeEffect(ContentDigest)(digest);
+
+      expect(encoded).toBe(`sha256:${hex}`);
+      expect(S.is(Sha256PrefixedDigest)(general)).toBe(true);
+      expect(A.filter([hex, `sha256:${hex}0`, `SHA256:${hex}`], S.is(ContentDigest))).toEqual([]);
+    })
+  );
 });

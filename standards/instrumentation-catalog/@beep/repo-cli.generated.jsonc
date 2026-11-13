@@ -4001,8 +4001,6 @@
     {"name":"Yeet.runYeetReady","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.runYeetReadyGate","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.runYeetWatchStream","owner":"@beep/repo-cli","family":"tooling","conforms":true},
-    {"name":"Yeet.settleAsyncMerge","owner":"@beep/repo-cli","family":"tooling","conforms":true},
-    {"name":"Yeet.settleLegacyMerge","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.settleMerge","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.shouldSkipCommitForReusablePublish","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.stageAndCommitPublishIntent","owner":"@beep/repo-cli","family":"tooling","conforms":true},
