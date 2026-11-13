@@ -37,23 +37,33 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement — slice 1 (MEAS-01 slice 1 with MEAS-04) is in review: `beep ci certainty` and per-attempt
-job reads. P0 Research is complete (decision `p0-recheck-at-a0c7f356`). Next startable: ROUT-05 slice 1 (slice 2)
-and MEAS-02 (slice 3); the nightly (slice 4) waits on slice 1.
+P1 Implement — slice 1 (MEAS-01 slice 1 with MEAS-04) merged as #3118 (`beep ci certainty` and per-attempt
+job reads; coverage rows fixed by #3121, decision `slice-1-coverage-reds`). Slice 2 (ROUT-05 slice 1) merged
+as #3141: every hosted job is attributed to a lane, a support job or unknown, and `beep ci route census` reports
+the conservation census (decision `job-attribution-classes`). Slice 3 (MEAS-02 with DEPS-10) merged as #3176:
+the Yeet economics fold attributes refusals by failure kind as rows of the same `actionableLaneMix` (checkpoint
+`slice-3-refusal-attribution`). Slice 1's scoring was then fixed by #3144 (decision `certainty-scoring-fixes`),
+#3168 (decision `main-listing-unread`) and #3181 (coverage). Next startable, the second wave: the
+certainty-nightly workflow (slice 4), archived admission rows (SCHE-09, slice 5) and final-check attempt journals
+(MEAS-07, slice 6).
 
 ## Latest Evidence
 
-- Slice 1 replays two committed real captures (`packages/tooling/tool/cli/test/fixtures/ci-certainty/`): on
-  the 2026-11-09 12:00-18:00Z window the SLO statistic is p50 63.35 min with p95 not attained (6 misses of 17
-  counted code heads, 14 superseded); green-only p95 101.9 min; 4 heads under ten minutes; runner-minutes per
-  producer run 219.7 on average; superseded share 40.8%. Decision `fixture-corpus-real-captures`.
+- Slice 1 replays two committed real captures (`packages/tooling/tool/cli/test/fixtures/ci-certainty/`). On
+  the 2026-11-09 12:00-18:00Z window, after the #3144 scoring fixes, the SLO statistic is p50 63.35 min with p95
+  not attained (6 misses of 17 counted code heads, 14 superseded); green-only p95 101.9 min; 1 code head and 3
+  docs heads under ten minutes; runner-minutes per head attempt 251.08 on average over 35; superseded share 42%.
+  On the post-#3030 window, admission to heavy-pool pickup has p50 1.22 min. Decisions
+  `fixture-corpus-real-captures` and `certainty-scoring-fixes`.
+- Slice 2 maps all 80 jobs of Check run 43322847791 (2026-11-12): 72 lane jobs, among them 21 test-integration
+  (20 partitions and the aggregate), 25 test-unit and 5 property, and 8 support jobs; 0 unknown, and lane,
+  support and unknown time sum to the total. Before it, the 20 Test Integration partition jobs joined no lane.
 
 ## Notes
 
-- First slice, ready now: MEAS-01 slice 1 with MEAS-04, "feat(ci): beep ci certainty head-level
-  required-green and main-verdict report" (M, CLI only). The nightly workflow is its own later PR. ROUT-05
-  slice 1 (partition job mapping) and MEAS-02 (refusal attribution) can open beside it; that is the packet's
-  three-PR limit.
+- Merged: MEAS-01 slice 1 with MEAS-04 (#3118), "feat(ci): beep ci certainty head-level required-green and
+  main-verdict report" (M, CLI only), with fixes #3144, #3168 and #3181; ROUT-05 slice 1 (partition job
+  mapping, #3141); MEAS-02 (refusal attribution, slice 3, #3176). The nightly workflow is its own later PR.
 - Order constraints: MEAS-02 lands before any WaveOrder re-seed in `local-proof-under-ten`; ROUT-05 lands
   before any census or cost ledger (MEAS-05) is trusted and before any route refinement replay; MEAS-07 lands
   before journal retention (PERIL-11); SCHE-09 is owned here and consumed by `local-proof-under-ten` (D23); nightly reads are budgeted against

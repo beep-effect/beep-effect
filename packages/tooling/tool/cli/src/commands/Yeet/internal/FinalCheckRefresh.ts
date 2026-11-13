@@ -49,6 +49,7 @@ import * as Str from "effect/String";
 import { EffectVitestInventoryPath } from "../../Lint/Lint.schemas.ts";
 import {
   FINAL_CHECK_RECEIPT_DIR,
+  finalCheckGateSetRefusal,
   finalCheckRefusal,
   readFinalCheckReceipt,
   YEET_FINAL_CHECK_COMMAND,
@@ -152,13 +153,19 @@ const renderDrift = (drift: FinalCheckStatusDrift): string =>
  * **Example** (A code change refuses)
  *
  * ```ts
- * import { decideFinalCheckRefresh, FinalCheckReceipt, FinalCheckRefreshFacts } from "@beep/repo-cli/test/Yeet"
+ * import {
+ *   decideFinalCheckRefresh,
+ *   FINAL_CHECK_GATE_SET_DIGEST,
+ *   FinalCheckReceipt,
+ *   FinalCheckRefreshFacts,
+ * } from "@beep/repo-cli/test/Yeet"
  * import * as O from "effect/Option"
  *
  * const verdict = decideFinalCheckRefresh(
  *   FinalCheckRefreshFacts.make({
  *     receipt: FinalCheckReceipt.make({
- *       schemaVersion: "yeet-final-check/v1", headSha: "r".repeat(40), mergeBase: "m".repeat(40), base: "origin/main",
+ *       schemaVersion: "yeet-final-check/v2", gateSetDigest: FINAL_CHECK_GATE_SET_DIGEST,
+ *       headSha: "r".repeat(40), mergeBase: "m".repeat(40), base: "origin/main",
  *       complete: true, verdict: "pass", startedAt: "2026-10-28T00:00:00.000Z",
  *       finishedAt: "2026-10-28T00:40:00.000Z", steps: [], expectationRewrites: [],
  *     }),
@@ -417,6 +424,15 @@ const receiptFileExists = Effect.fn("Yeet.finalCheckRefreshReceiptFileExists")(f
     .pipe(Effect.orElseSucceed(constTrue));
 });
 
+const gateSetMismatch = (receiptHead: string, finalHead: string, detail: string) =>
+  FinalCheckRefreshRefused.make({
+    receiptHead,
+    finalHead,
+    reason: "receipt-gate-set-mismatch",
+    ownChanges: [],
+    detail,
+  });
+
 /**
  * Apply the refresh rule to a head with no receipt of its own.
  *
@@ -425,7 +441,9 @@ const receiptFileExists = Effect.fn("Yeet.finalCheckRefreshReceiptFileExists")(f
  * Returns none when no strict ancestor carries a receipt, so the caller keeps
  * its ordinary "no final-check receipt" refusal. A receipt file for the head
  * itself that exists but does not decode refuses (`malformed-receipt`), as
- * does an undecodable, failing or partial receipt on the nearest ancestor;
+ * does an undecodable, failing or partial receipt on the nearest ancestor; a
+ * nearest-ancestor receipt written under another schema version or gate set
+ * refuses (`receipt-gate-set-mismatch`);
  * otherwise the rule judges the lane's own changes since that receipt.
  *
  * **Example** (Build the refresh check)
@@ -474,6 +492,10 @@ export const checkFinalCheckRefresh = Effect.fn("Yeet.checkFinalCheckRefresh")(f
   if (O.isNone(receiptHead)) return O.none();
   const receipt = yield* readFinalCheckReceipt(repoRoot, receiptHead.value);
   if (O.isNone(receipt)) return malformed(receiptHead.value, "ancestor");
+  // A receipt written under an older schema version or gate set never
+  // carries, however its own verdict reads.
+  const gateSet = finalCheckGateSetRefusal(receipt.value);
+  if (O.isSome(gateSet)) return O.some(gateSetMismatch(receiptHead.value, finalHead, gateSet.value));
   // The file name chose this receipt, so it is the head the receipt must
   // record: a receipt copied or renamed under another sha is refused here.
   const notPassing = finalCheckRefusal(receipt, receiptHead.value);
@@ -535,6 +557,8 @@ const judgeRewriteReceipt = Effect.fn("Yeet.judgeRewriteReceipt")(function* (
   move: YeetHeadMoveUnchanged
 ) {
   const receipt = yield* readFinalCheckReceipt(repoRoot, move.before);
+  const gateSet = O.flatMap(receipt, finalCheckGateSetRefusal);
+  if (O.isSome(gateSet)) return gateSetMismatch(move.before, finalHead, gateSet.value);
   const refusal = finalCheckRefusal(receipt, move.before);
   if (O.isSome(refusal))
     return FinalCheckRefreshRefused.make({

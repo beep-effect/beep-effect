@@ -4,13 +4,13 @@
     "id": "semantica-storage-inversion",
     "packetId": "goal-packet/v1:c92385a2f57988c9ed227fb8d3981b62de4cf80c02640fcac17fd0c10f33a2b1",
     "title": "Semantica Storage Inversion",
-    "status": "active",
+    "status": "superseded",
     "created": "2026-09-03",
-    "updated": "2026-09-03",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/semantica-storage-inversion",
-  "lifecycle": "active",
+  "lifecycle": "superseded",
   "mission": "Spike the storage semantics D16 needs before it can bind: Invalidated retraction with derived reach, Redacted document erasure with a ledger-computed closure and an atomic purge protocol, Compacted trust-root snapshots and checkpoint continuity in chain order, proven by probes P-S0..3 on the offline-regenerated C2 ledger as one S1 candidate (MAP v1.1 section S, R1).",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -101,5 +101,7 @@
     "Verification requires credentials, cost, destructive side effects, or policy approval not named in SPEC.md.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Scaffolded 2026-09-03 at the semantica-lab graduation ceremony (MAP v1.1 §S, R1); execution not started. Opens with the P-S0 fixture gate (offline regeneration of the C2 ledger must reproduce the archived report digest); P-S1 must land before the reasoning spike's R-c class and P2-P4."
+  "statusNote": "Closed (superseded) 2026-11-13 by operator ruling (finish board): Stale for two months and not aligned with current priorities. Re-open with `bun run beep goals set-status semantica-storage-inversion active` and re-graduate the next slice. Before the ruling: Scaffolded 2026-09-03 at the semantica-lab graduation ceremony (MAP v1.1 §S, R1); execution not started. Opens with the P-S0 fixture gate (offline regeneration of the C2 ledger must reproduce the archived report digest); P-S1 must land before the reasoning spike's R-c class and P2-P4.",
+  "supersededNote": "Closed by operator ruling (finish board, 2026-11-13) without meeting its completion gate; see goals/semantica-storage-inversion/decisions/2026-11-13-finish-board-ruling-close.md.",
+  "retentionReason": "Closed by operator ruling (finish board, 2026-11-13) with a re-open path: the full packet stays on main so `bun run beep goals set-status semantica-storage-inversion active` can resume it or re-graduate the next slice without restoring from the archive."
 }

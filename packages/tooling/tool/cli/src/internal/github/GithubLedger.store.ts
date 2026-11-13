@@ -39,13 +39,20 @@ import * as Random from "effect/Random";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { partitionJsonLines } from "../state/JsonLinesStore.ts";
 import { writePrivateFile } from "../state/PrivateFile.ts";
 import { resolveWorkstationStateDir } from "../state/WorkstationState.ts";
-import { hourFileKey, hourStartOf } from "./GithubLedger.reducers.ts";
+import {
+  credentialKeyOf,
+  expiredUnknownReading,
+  hourFileKey,
+  hourStartOf,
+  readingsOfSample,
+  retainLatestReading,
+} from "./GithubLedger.reducers.ts";
 import {
   BucketReadingJson,
-  bucketKeyString,
   emptyIdentityAliases,
   fileKeyOf,
   GITHUB_LEDGER_MAX_LINE_BYTES,
@@ -55,6 +62,7 @@ import {
   IdentityAliases,
   IdentityAliasesJson,
   LedgerHourRollupJson,
+  LedgerRollupRead,
   LedgerSummary,
   LedgerSummaryJson,
   SampleRowJson,
@@ -72,6 +80,11 @@ import type {
 } from "./GithubLedger.schemas.ts";
 
 const $I = $RepoCliId.create("internal/github/GithubLedger.store");
+const decodeRollupRead = S.decodeUnknownOption(S.fromJsonString(LedgerRollupRead));
+
+const decodeReading = S.decodeUnknownOption(BucketReadingJson);
+const decodeSample = S.decodeUnknownOption(SampleRowJson);
+const sampleKeyOf = (row: SampleRow): string => `${fileKeyOf(row.identity)}-${fileKeyOf(credentialKeyOf(row))}`;
 
 const HOUR_MILLIS = Duration.toMillis(Duration.hours(1));
 const CALIBRATION_FILE = "calibration.jsonl";
@@ -95,14 +108,17 @@ export interface GithubLedgerStoreShape {
   readonly appendCalibration: (row: CalibrationRow) => Effect.Effect<void, GithubLedgerError>;
   /** The retained calibration pairs, oldest first; torn or corrupt lines are skipped. */
   readonly calibrations: Effect.Effect<ReadonlyArray<CalibrationRow>, GithubLedgerError>;
-  /** The newest sample per identity. */
+  /** The newest sample per identity and credential source, including legacy files. */
   readonly latestSamples: Effect.Effect<ReadonlyArray<SampleRow>, GithubLedgerError>;
-  /** The newest transport reading per key. */
+  /** Latest transport readings per known credential or unknown reset instance. */
   readonly latestTransport: Effect.Effect<ReadonlyArray<BucketReading>, GithubLedgerError>;
   /** The alias map; empty when absent or unreadable. */
   readonly readAliases: Effect.Effect<IdentityAliases, GithubLedgerError>;
-  /** The rollup of an hour, when one was written. */
-  readonly readRollup: (hour: DateTime.Utc) => Effect.Effect<O.Option<LedgerHourRollup>, GithubLedgerError>;
+  /**
+   * A version-tagged current or legacy rollup. Unreadable or unsupported
+   * versions are absent; valid v1 history remains available for migration.
+   */
+  readonly readRollup: (hour: DateTime.Utc) => Effect.Effect<O.Option<LedgerRollupRead>, GithubLedgerError>;
   /** The hot-parcel summary, when one was written. */
   readonly readSummary: Effect.Effect<O.Option<LedgerSummary>, GithubLedgerError>;
   /** Delete raw hours, rollups, `latest/` readings and calibration pairs past retention. */
@@ -116,9 +132,9 @@ export interface GithubLedgerStoreShape {
     token: GithubIdentityLabel,
     user: GithubIdentityLabel
   ) => Effect.Effect<void, GithubLedgerError>;
-  /** Replace the newest sample of the row's identity. */
+  /** Replace the newest sample of the row's identity and credential source. */
   readonly writeLatestSample: (row: SampleRow) => Effect.Effect<void, GithubLedgerError>;
-  /** Replace the newest transport reading of the reading's key. */
+  /** Retain the newest reading of its credential or inferred reset instance. */
   readonly writeLatestTransport: (reading: BucketReading) => Effect.Effect<void, GithubLedgerError>;
   /** Replace an hour's rollup. */
   readonly writeRollup: (rollup: LedgerHourRollup) => Effect.Effect<void, GithubLedgerError>;
@@ -270,14 +286,19 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
     (value: A) =>
       S.encodeEffect(codec)(value).pipe(Effect.mapError(GithubLedgerError.fromUnknown("decode", detail)));
 
-  const readLatestFiles = Effect.fnUntraced(function* <A>(prefix: string, decode: (input: string) => O.Option<A>) {
+  const readLatestEntries = Effect.fnUntraced(function* <A>(prefix: string, decode: (input: string) => O.Option<A>) {
     const latest = yield* dir("latest");
     const listed = yield* listNames(latest, "list latest readings");
     const names = A.filter(listed, (name) => Str.startsWith(prefix)(name) && Str.endsWith(".json")(name));
-    const texts = yield* Effect.forEach(names, (name) => readOptional(path.join(latest, name), "read a reading"), {
-      concurrency: 8,
-    });
-    return A.getSomes(A.map(texts, O.flatMap(decode)));
+    const entries = yield* Effect.forEach(
+      names,
+      Effect.fnUntraced(function* (name) {
+        const text = yield* readOptional(path.join(latest, name), "read a reading");
+        return O.map(O.flatMap(text, decode), (value) => Tuple.make(Str.slice(prefix.length, -5)(name), value));
+      }),
+      { concurrency: 8 }
+    );
+    return A.getSomes(entries);
   });
 
   const readAliases = Effect.gen(function* () {
@@ -363,14 +384,22 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
   const writeLatestSample = Effect.fnUntraced(function* (row: SampleRow) {
     const text = yield* encodeWith(SampleRowJson, "encode a sample")(row);
     const latest = yield* dir("latest");
-    yield* writePrivate(path.join(latest, `sample-${fileKeyOf(row.identity)}.json`), text, "write the latest sample");
+    yield* writePrivate(path.join(latest, `sample-${sampleKeyOf(row)}.json`), text, "write the latest sample");
   });
 
   const writeLatestTransport = Effect.fnUntraced(function* (reading: BucketReading) {
-    const text = yield* encodeWith(BucketReadingJson, "encode a reading")(reading);
+    const entries = yield* readLatestEntries("transport-", decodeReading);
+    const retained = retainLatestReading(reading, entries);
+    const [key, newest] = A.lastNonEmpty(retained);
+    const text = yield* encodeWith(BucketReadingJson, "encode a reading")(newest);
     const latest = yield* dir("latest");
-    const file = path.join(latest, `transport-${fileKeyOf(reading.key.identity)}-${reading.key.resource}.json`);
-    yield* writePrivate(file, text, "write the latest transport reading");
+    const keys = A.map(retained, ([key]) => key);
+    yield* writePrivate(path.join(latest, `transport-${key}.json`), text, "write the latest transport reading");
+    yield* Effect.forEach(
+      A.filter(entries, ([key]) => !A.contains(keys, key)),
+      ([key]) => removeIfPresent(path.join(latest, `transport-${key}.json`), "remove a superseded instance"),
+      { discard: true }
+    );
   });
 
   const writeAlias = Effect.fnUntraced(function* (token: GithubIdentityLabel, user: GithubIdentityLabel) {
@@ -385,7 +414,8 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
   const readRollup = Effect.fnUntraced(function* (hour: DateTime.Utc) {
     const rollups = yield* dir("rollups");
     const text = yield* readOptional(path.join(rollups, `${hourFileKey(hour)}.json`), "read an hour rollup");
-    return O.flatMap(text, S.decodeUnknownOption(LedgerHourRollupJson));
+    // Preserve v1 as a distinct version so expired raw history can be reported explicitly.
+    return O.flatMap(text, decodeRollupRead);
   });
 
   const writeRollup = Effect.fnUntraced(function* (rollup: LedgerHourRollup) {
@@ -452,10 +482,19 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
     const latest = yield* dir("latest");
     const listed = yield* listNames(latest, "list latest readings");
     const limitMillis = DateTime.toEpochMillis(limit);
-    const takenAt = (name: string) => (text: string) =>
+    const now = yield* DateTime.now;
+    const isExpired = (name: string) => (text: string) =>
       Str.startsWith("sample-")(name)
-        ? O.map(S.decodeOption(SampleRowJson)(text), (sample) => sample.at)
-        : O.map(S.decodeOption(BucketReadingJson)(text), (reading) => reading.asOf);
+        ? O.map(
+            decodeSample(text),
+            (sample) =>
+              DateTime.toEpochMillis(sample.at) < limitMillis ||
+              A.every(readingsOfSample(sample), expiredUnknownReading(now))
+          )
+        : O.map(
+            decodeReading(text),
+            (reading) => DateTime.toEpochMillis(reading.asOf) < limitMillis || expiredUnknownReading(reading, now)
+          );
     const readings = A.filter(
       listed,
       (name) => (Str.startsWith("sample-")(name) || Str.startsWith("transport-")(name)) && Str.endsWith(".json")(name)
@@ -468,8 +507,7 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
         // An unreadable reading is dropped by every read, so it is removed too.
         const expired = O.exists(text, (content) =>
           pipe(
-            takenAt(name)(content),
-            O.map((at) => DateTime.toEpochMillis(at) < limitMillis),
+            isExpired(name)(content),
             O.getOrElse(() => true)
           )
         );
@@ -547,9 +585,9 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
     rows: readRows,
     rowHours,
     writeLatestSample,
-    latestSamples: readLatestFiles("sample-", S.decodeUnknownOption(SampleRowJson)),
+    latestSamples: readLatestEntries("sample-", decodeSample).pipe(Effect.map(A.map(([, value]) => value))),
     writeLatestTransport,
-    latestTransport: readLatestFiles("transport-", S.decodeUnknownOption(BucketReadingJson)),
+    latestTransport: readLatestEntries("transport-", decodeReading).pipe(Effect.map(A.map(([, value]) => value))),
     readAliases,
     writeAlias,
     readRollup,
@@ -651,10 +689,14 @@ export const makeGithubLedgerStoreMemory = Effect.sync((): GithubLedgerStoreShap
         )
       ),
     rowHours: Effect.sync(hoursOf),
-    writeLatestSample: (row) => Effect.sync(() => MutableHashMap.set(samples, row.identity, row)),
+    writeLatestSample: (row) => Effect.sync(() => MutableHashMap.set(samples, sampleKeyOf(row), row)),
     latestSamples: Effect.sync(() => valuesOf(samples)),
     writeLatestTransport: (reading) =>
-      Effect.sync(() => MutableHashMap.set(transports, bucketKeyString(reading.key), reading)),
+      Effect.sync(() => {
+        const retained = retainLatestReading(reading, A.fromIterable(transports));
+        MutableHashMap.clear(transports);
+        A.forEach(retained, ([key, value]) => MutableHashMap.set(transports, key, value));
+      }),
     latestTransport: Effect.sync(() => valuesOf(transports)),
     readAliases: Effect.sync(aliasesNow),
     writeAlias: (token, user) =>
@@ -678,8 +720,9 @@ export const makeGithubLedgerStoreMemory = Effect.sync((): GithubLedgerStoreShap
           true
         );
       }),
-    removeBefore: (cutoffs) =>
-      Effect.sync(() => {
+    removeBefore: Effect.fnUntraced(function* (cutoffs: RetentionCutoffs) {
+      const now = yield* DateTime.now;
+      yield* Effect.sync(() => {
         const rowsLimit = hourKey(cutoffs.rowsBefore);
         const rollupsLimit = hourKey(cutoffs.rollupsBefore);
         A.forEach(
@@ -692,18 +735,27 @@ export const makeGithubLedgerStoreMemory = Effect.sync((): GithubLedgerStoreShap
         );
         const latestLimit = DateTime.toEpochMillis(cutoffs.latestBefore);
         A.forEach(
-          A.filter(A.fromIterable(samples), ([, sample]) => DateTime.toEpochMillis(sample.at) < latestLimit),
+          A.filter(
+            A.fromIterable(samples),
+            ([, sample]) =>
+              DateTime.toEpochMillis(sample.at) < latestLimit ||
+              A.every(readingsOfSample(sample), expiredUnknownReading(now))
+          ),
           ([key]) => MutableHashMap.remove(samples, key)
         );
         A.forEach(
-          A.filter(A.fromIterable(transports), ([, reading]) => DateTime.toEpochMillis(reading.asOf) < latestLimit),
+          A.filter(
+            A.fromIterable(transports),
+            ([, reading]) => DateTime.toEpochMillis(reading.asOf) < latestLimit || expiredUnknownReading(reading, now)
+          ),
           ([key]) => MutableHashMap.remove(transports, key)
         );
         const calibrationLimit = DateTime.toEpochMillis(cutoffs.calibrationsBefore);
         MutableHashMap.modify(calibrationRows, "calibrations", (kept) =>
           A.filter(kept, (row) => DateTime.toEpochMillis(row.at) >= calibrationLimit)
         );
-      }),
+      });
+    }),
   };
   return store;
 });

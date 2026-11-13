@@ -1,6 +1,10 @@
 /**
  * Frozen pre-W4 body for `ops/review-thread-differential-w4.ts`: `packages/tooling/tool/cli/src/commands/Yeet/internal/GhOps.ts`, verbatim from
- * main 930758e06b except for import paths and the identity namespace.
+ * main 930758e06b except for import paths, the identity namespace and the last step of `runYeetGhMerge`.
+ *
+ * That step sent the legacy `PUT pulls/{n}/merge` call, which was deleted from `GithubRest` on 2026-11-13
+ * (goals/yeet-async-merge-and-stacks, slice A). It now refuses instead of merging. The differential reads
+ * only `countOutstandingThreads` from this file, so no compared behaviour changed.
  */
 
 import { GitHubClient } from "@beep/github/GitHubClient";
@@ -1100,7 +1104,6 @@ export const runYeetGhMerge = (
   runGh(
     options,
     Effect.gen(function* () {
-      const rest = yield* GithubRest;
       const facts = yield* readGateFacts({
         number: options.number,
         pinnedSha: O.some(Str.trim(options.sha)),
@@ -1123,22 +1126,9 @@ export const runYeetGhMerge = (
         yield* Console.log(`[gh] dry run: #${options.number} would merge at ${facts.pullRequest.headSha}`);
         return;
       }
-      const merged = yield* rest.mergePullRequest(options.number, {
-        sha: facts.pullRequest.headSha,
-        commitTitle: `${facts.pullRequest.title} (#${options.number})`,
-        // GitHub would default the squash body to the commit list, whose lines can
-        // break server-side commitlint (body lines under 100 characters).
-        commitMessage: foldCommitMessage(
-          `Squash-merged at ${facts.pullRequest.headSha} by beep yeet gh merge.${
-            A.isReadonlyArrayNonEmpty(options.tolerate) ? ` Tolerated: ${A.join(options.tolerate, "; ")}.` : ""
-          }`
-        ),
-        method: "squash",
-      });
-      yield* Console.log(
-        `[gh] merged=${merged.merged} #${options.number} ${Str.slice(0, 10)(merged.sha)}${
-          A.isReadonlyArrayNonEmpty(options.tolerate) ? ` tolerated=[${A.join(options.tolerate, "; ")}]` : ""
-        }`
+      // The legacy merge call this frozen body sent no longer exists (see the file header).
+      return yield* report(1)(
+        `[gh] frozen pre-W4 body: the legacy merge call was deleted; #${options.number} not merged at ${facts.pullRequest.headSha}`
       );
     })
   );

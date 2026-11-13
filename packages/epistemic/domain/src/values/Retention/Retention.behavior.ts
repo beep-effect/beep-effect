@@ -9,7 +9,7 @@ import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as Match from "effect/Match";
 import * as S from "effect/Schema";
-import { canonicalJson } from "../internal/CanonicalJson.ts";
+import { canonicalJson, canonicalJsonResult } from "../internal/CanonicalJson.ts";
 import { RetentionPolicy, RetentionTier } from "./Retention.model.ts";
 
 /**
@@ -26,7 +26,8 @@ import { RetentionPolicy, RetentionTier } from "./Retention.model.ts";
  */
 export const retentionPolicyDigest = Effect.fn("Retention.policyDigest")(function* (policy: RetentionPolicy) {
   const encoded = yield* S.encodeEffect(RetentionPolicy)(policy);
-  return bytesToHex(sha256(utf8ToBytes(canonicalJson(encoded))));
+  const canonical = yield* Effect.fromResult(canonicalJsonResult(encoded));
+  return bytesToHex(sha256(utf8ToBytes(canonical)));
 });
 
 /**

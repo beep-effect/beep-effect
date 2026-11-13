@@ -18,7 +18,7 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertInclude, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -47,7 +47,6 @@ const receiptFor = (
   overrides: Partial<{ readonly verdict: "pass" | "fail"; readonly complete: boolean }> = {}
 ) =>
   FinalCheckReceipt.make({
-    schemaVersion: "yeet-final-check/v1",
     headSha,
     mergeBase: Str.repeat(40)("0"),
     base: "main",
@@ -61,6 +60,10 @@ const receiptFor = (
   });
 
 const encodeReceipt = S.encodeEffect(S.fromJsonString(FinalCheckReceipt));
+
+// A receipt as a pre-versioning `yeet final-check` wrote it: v1, no gate set.
+const legacyV1ReceiptJson = (headSha: string) =>
+  `{"schemaVersion":"yeet-final-check/v1","headSha":"${headSha}","mergeBase":"${Str.repeat(40)("0")}","base":"main","complete":true,"verdict":"pass","startedAt":"2026-10-28T00:00:00.000Z","finishedAt":"2026-10-28T00:40:00.000Z","steps":[],"expectationRewrites":[]}\n`;
 
 // Effect-vitest inventory text with one finding per listed status.
 const effectVitestInventory = (statuses: ReadonlyArray<string>, idPrefix = "EV", evidenceBytes = 0) =>
@@ -417,6 +420,33 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       })
     );
 
+    it.effect("refuses to carry a v1 ancestor receipt across a bare main merge", () =>
+      Effect.gen(function* () {
+        const { repoRoot, receiptHead, mergeHead } = yield* makeMergedLane();
+        yield* writeFile(repoRoot, `${FINAL_CHECK_RECEIPT_DIR}/${receiptHead}.json`, legacyV1ReceiptJson(receiptHead));
+        const verdict = yield* refreshAt(repoRoot, mergeHead);
+        assertTrue(verdict._tag === "refused");
+        expect(verdict.reason).toBe("receipt-gate-set-mismatch");
+        expect(verdict.receiptHead).toBe(receiptHead);
+        assertInclude(verdict.detail, "yeet-final-check/v1");
+        assertInclude(verdict.detail, "re-run `bun run beep yeet final-check`");
+      })
+    );
+
+    it.effect("refuses to carry an ancestor receipt written under a smaller gate set", () =>
+      Effect.gen(function* () {
+        const { repoRoot, receiptHead, mergeHead } = yield* makeMergedLane();
+        yield* writeReceipt(
+          repoRoot,
+          FinalCheckReceipt.make({ ...receiptFor(receiptHead), gateSetDigest: "cheap-gates,check" })
+        );
+        const verdict = yield* refreshAt(repoRoot, mergeHead);
+        assertTrue(verdict._tag === "refused");
+        expect(verdict.reason).toBe("receipt-gate-set-mismatch");
+        assertInclude(verdict.detail, "written under another gate set (added expectation-rewrite");
+      })
+    );
+
     it.effect("refuses on the nearest ancestor receipt when it failed, never falling back to an older pass", () =>
       Effect.gen(function* () {
         const { repoRoot, receiptHead } = yield* makeMergedLane();
@@ -768,6 +798,37 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const result = yield* checkFinalCheckRewriteCarry(s.root, s.squash, s.c2, s.squash, priorHeads).pipe(
           Effect.provideContext(classifierContext)
         );
+        assertNone(result);
+      })
+    );
+    it.effect("refuses to carry a v1 receipt across an unchanged rewrite", () =>
+      Effect.gen(function* () {
+        const s = yield* stack();
+        yield* writeFile(s.root, `${FINAL_CHECK_RECEIPT_DIR}/${s.l2}.json`, legacyV1ReceiptJson(s.l2));
+        const result = yield* checkRewrite(s.root, s.squash, s.c2, s.squash);
+        const verdict = O.getOrThrow(result);
+        expect(verdict).toMatchObject({ _tag: "refused", receiptHead: s.l2, reason: "receipt-gate-set-mismatch" });
+        assertTrue(verdict._tag === "refused");
+        assertInclude(verdict.detail, "yeet-final-check/v1");
+      })
+    );
+    it.effect("returns none when the receipt directory is absent", () =>
+      Effect.gen(function* () {
+        const s = yield* stack();
+        const context = yield* Layer.build(YeetHeadMoveClassifier.layer(s.root));
+        const result = yield* checkFinalCheckRewriteCarry(s.root, s.squash, s.c2, s.squash, HashSet.make(s.l2)).pipe(
+          Effect.provideContext(context)
+        );
+        assertNone(result);
+      })
+    );
+    it.effect("leaves the head's own receipt and ancestor receipts to the refresh rule", () =>
+      Effect.gen(function* () {
+        const s = yield* stack();
+        const parent = yield* git(s.root, ["rev-parse", `${s.c2}^`]);
+        yield* writeReceipt(s.root, receiptFor(s.c2));
+        yield* writeReceipt(s.root, receiptFor(parent));
+        const result = yield* checkRewrite(s.root, s.squash, s.c2, s.squash);
         assertNone(result);
       })
     );

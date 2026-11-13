@@ -36,18 +36,32 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research, not started. First action: PR 1 (baseline and proof harness, no
-behaviour change), per [`PLAN.md`](./PLAN.md).
+P1 Implement, in progress. PR 1 (#3178, baseline and proof harness) is merged.
+PR 2, the declaration-only build, is open. Next: PR 3 (check once) once its
+Turbo edge is agreed with `goals/route-soundness-repair`, per
+[`PLAN.md`](./PLAN.md).
 
 ## Latest Evidence
 
-Not started.
+- [`research/2026-11-13-build-after.md`](./research/2026-11-13-build-after.md):
+  before and after, back to back on one machine state. Serial build work of
+  181 packages falls from 80.9 s to 32.9 s (59%); `dist` shrinks from 232.5 MB
+  to 147.9 MB (36%); the compile itself is unchanged.
+- [`research/2026-11-10-build-check-equivalence.md`](./research/2026-11-10-build-check-equivalence.md):
+  2,912 build-versus-check comparisons over 182 packages, all identical, from
+  a cache restore, warm and cold, with `TSRS_FAST` unset and `1`. Check-once
+  is kept for the 180 packages whose check program is the build program.
+- [`research/2026-11-10-build-baseline.md`](./research/2026-11-10-build-baseline.md):
+  the first baseline, taken at higher load on an older compiler.
 
 ## Notes
 
-- The numbers this packet starts from were taken at load average 59 to 63.
-  Re-measure before quoting them as a baseline.
-- The check-once step is conditional on PR 1's census result and is the first
-  thing cut.
+- The declaration-only flag sits on the generated build command, not in
+  `tsconfig.base.json`: the base option would break 404 no-emit overlays
+  (TS5069).
+- A package that needs JavaScript keeps it through `javaScriptBuildOverrides`
+  in the scripts policy. The list is empty and so is the Exception Ledger.
 - PR 2 invalidates every build cache entry once. Land it when the merge queue
   is quiet.
+- The check-once step survived PR 1's census. It is still the first thing
+  cut if the appetite runs out.

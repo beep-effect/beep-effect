@@ -51,7 +51,7 @@ import {
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertInclude, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -154,7 +154,6 @@ const stubReviewerRequest = () => Effect.succeed("[yeet] reviewer re-request stu
 const passingFinalCheck = (_context: RepoRunContext, head: string) =>
   Effect.succeedSome(
     FinalCheckReceipt.make({
-      schemaVersion: "yeet-final-check/v1",
       headSha: head,
       mergeBase: Str.repeat(40)("0"),
       base: "origin/main",
@@ -165,6 +164,13 @@ const passingFinalCheck = (_context: RepoRunContext, head: string) =>
       steps: [],
       expectationRewrites: [],
     })
+  );
+// A passing receipt stamped `yeet-final-check/v1`, the pre-versioning tag. The
+// version check runs before the digest check, so the digest `make` fills in
+// does not change the refusal.
+const legacyV1Receipt = (head: string) =>
+  Effect.map(passingFinalCheck(context, head), (receipt) =>
+    FinalCheckReceipt.make({ ...O.getOrThrow(receipt), schemaVersion: "yeet-final-check/v1" })
   );
 const passingSquashCommitlint = () =>
   Effect.succeed(SquashCommitlintReport.make({ message: squashMessage, verdict: SquashCommitlintPass.make({}) }));
@@ -634,6 +640,68 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       })
     );
 
+    it.effect("refuses a v1 receipt on the head, carried from an ancestor, or carried across a rewrite", () =>
+      Effect.gen(function* () {
+        const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+        const receiptHead = Str.repeat(40)("r");
+        const base = {
+          rewriteCarry: () => Effect.succeedNone,
+          finalCheck: () => Effect.succeedNone,
+          refresh: () => Effect.succeedNone,
+          squashCommitlint: passingSquashCommitlint,
+          recordInherited: () => Effect.void,
+          read: () => Effect.succeed(prView()),
+          markReady: recordingMarkReady(calls),
+          requestReview: stubReviewerRequest,
+          findMonitor: () => Effect.succeedNone,
+        };
+        const own = yield* runYeetReadyGate(context, {
+          ...base,
+          finalCheck: (_context, head) => Effect.asSome(legacyV1Receipt(head)),
+        }).pipe(Effect.flip);
+        expect(own).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
+        assertInclude(own.message, "the final-check receipt is yeet-final-check/v1");
+        assertInclude(own.message, "re-run `bun run beep yeet final-check`");
+        const ancestor = yield* runYeetReadyGate(context, {
+          ...base,
+          refresh: (_context, head) =>
+            Effect.map(legacyV1Receipt(receiptHead), (receipt) =>
+              O.some(FinalCheckRefreshPass.make({ receipt, finalHead: head, ownChanges: [] }))
+            ),
+        }).pipe(Effect.flip);
+        expect(ancestor).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
+        assertInclude(
+          ancestor.message,
+          "does not carry from the ancestor: the final-check receipt is yeet-final-check/v1"
+        );
+        const rewrite = yield* runYeetReadyGate(context, {
+          ...base,
+          rewriteCarry: (_context, _pr, head) =>
+            Effect.map(legacyV1Receipt(receiptHead), (receipt) =>
+              O.some(
+                FinalCheckRefreshRewrite.make({
+                  receipt,
+                  finalHead: head,
+                  move: YeetHeadMoveUnchanged.make({
+                    before: receiptHead,
+                    after: head,
+                    base: "synchronized-base",
+                    commits: 1,
+                  }),
+                })
+              )
+            ),
+        }).pipe(Effect.flip);
+        expect(rewrite).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
+        assertInclude(
+          rewrite.message,
+          "does not carry across the GitHub rewrite: the final-check receipt is yeet-final-check/v1"
+        );
+        const flips = yield* Ref.get(calls);
+        expect(flips).toEqual([]);
+      })
+    );
+
     it.effect("the default rewrite reader uses the pull's synchronized base and refuses a racing head", () =>
       Effect.gen(function* () {
         const scenario = yield* rewriteWindowScenario();
@@ -667,6 +735,25 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         );
         const racing = yield* runYeetReadyGate(repo, dependencies).pipe(racingGithub.provide, Effect.flip);
         expect(racing.message).toContain(`no final-check receipt for head ${Str.slice(0, 12)(scenario.s.c2)}`);
+        // The pull still names this head, but its branch activity is unreadable: no prior
+        // heads means no candidate receipt, so the missing-receipt refusal stands.
+        const unreadableActivity = recordedGithub((call) =>
+          call.path === "{repo}/pulls/3050"
+            ? {
+                body: restPullRequest({
+                  number: 3050,
+                  head: { ref: "probe", sha: scenario.s.c2 },
+                  base: { ref: "main", sha: scenario.s.squash },
+                }),
+              }
+            : call.path === "{repo}/activity"
+              ? { status: 503 }
+              : undefined
+        );
+        const blind = yield* runYeetReadyGate(repo, dependencies).pipe(unreadableActivity.provide, Effect.flip);
+        expect(blind).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
+        expect(blind.message).toContain(`no final-check receipt for head ${Str.slice(0, 12)(scenario.s.c2)}`);
+        expect(A.some(unreadableActivity.calls, (call) => call.path === "{repo}/activity")).toBe(true);
       })
     );
     it.effect("renders a rewrite carry and uses the carried receipt on the current head", () =>
@@ -2565,7 +2652,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
 describe("judgeHostedDeferrals", () => {
   const deferredReceipt = (gate: "check" | "lint") =>
     FinalCheckReceipt.make({
-      schemaVersion: "yeet-final-check/v1",
       headSha: Str.repeat(40)("a"),
       mergeBase: Str.repeat(40)("b"),
       base: "origin/main",

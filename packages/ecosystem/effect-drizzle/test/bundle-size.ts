@@ -1,6 +1,7 @@
-// Below this floor the artifact is a tree-shaken stub, not a real bundle —
-// the Bun.build failure mode this harness exists to catch. Roughly half the
-// initial 7864-byte baseline; adjust deliberately alongside baselines.
+// Below this floor the artifact is a tree-shaken stub, not a real bundle.
+// Roughly half the initial 7864-byte baseline; adjust deliberately alongside
+// baselines. The floor is a coarse guard only: `importBundleConsumer` in
+// `bundle-build.ts` proves the artifact is a valid module with its export.
 import { dual } from "effect/Function";
 
 export const minimumBundleRawBytes = 4096;

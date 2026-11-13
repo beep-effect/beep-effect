@@ -170,3 +170,12 @@ About **300** hash call sites in this partition were skipped. This is an estimat
 - **A1** hashes a JSON array that contains 1Password field values (`RedactedFromValue`). It is kept as a row because the preimage is a structured layout fingerprint, not a password hash. The owner may want it treated as secret material.
 - **Display-only sorted joiners** were not listed (for example `cli/Quality/internal/TurboConfigProof.ts:665` `countRecordSummary` and the various CLI summary renderers). They sort entries for human-readable lines, emit no JSON, and are neither hashed nor stored.
 - **Row ordering versus key ordering.** Many files sort rows or entries before emitting JSONL or iterating (`EffectVitestStore.ts:179`, `History.service.ts:211`, `CiLane.ts:993`, `SkillsMaterialize.service.ts:90`, `Knowledge.command-surface.ts:1128`, etc.). These control array or row order, not object key order, and are not hashed, so they were not listed.
+
+## Slice C dispositions
+
+Rows whose disposition changed in slice C (the consolidated census and
+`PLAN.md`, "Slice C evidence", hold the detail):
+
+- P1 (`canonicalJsonText`): replaced; its body is the owner with
+  `omitUndefinedMembers`. P3 and the nine hashing callers keep their bytes
+  through it. `canonicalJsonTextPretty` (the renderer) stays.

@@ -123,6 +123,11 @@ export * from "../commands/Yeet/internal/Settle.schemas.ts";
 export * from "../commands/Yeet/internal/Settle.ts";
 export * from "../commands/Yeet/internal/Siblings.ts";
 export * from "../commands/Yeet/internal/SquashCommitlint.ts";
+export * from "../commands/Yeet/internal/Stack.schemas.ts";
+export * from "../commands/Yeet/internal/Stack.ts";
+export * from "../commands/Yeet/internal/StackGate.ts";
+export * from "../commands/Yeet/internal/StackPublish.ts";
+export * from "../commands/Yeet/internal/StackTrunk.ts";
 export * from "../commands/Yeet/internal/Status.schemas.ts";
 export {
   collectRemoteChecks as collectRemoteChecksForTesting,
@@ -132,6 +137,7 @@ export {
   yeetStatusArtifactFromCloseoutForTesting,
   yeetStatusThreadTriageForTesting,
 } from "../commands/Yeet/internal/Status.ts";
+export * from "../commands/Yeet/internal/SuiteShadow.ts";
 export * from "../commands/Yeet/internal/Sweep.schemas.ts";
 export * from "../commands/Yeet/internal/Sweep.ts";
 export * from "../commands/Yeet/internal/TurboQuery.ts";

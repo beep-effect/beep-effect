@@ -4,7 +4,7 @@
 
 Deliver the prerequisites for a per-commit `main` verdict and raise the interim verdict rate. Today about 13%
 of non-docs `main` commits get a completed hosted verdict, a `Check` push run for that exact SHA ending in
-success or failure (D7). Main pushes share one concurrency group (`.github/workflows/check.yml` lines 12 to 14:
+success or failure (D7). Main pushes share one concurrency group (the top-level `concurrency` block of `.github/workflows/check.yml`:
 `${{ github.workflow }}-${{ github.ref }}`, with `cancel-in-progress` true only for pull requests), so GitHub
 keeps one pending run and every later merge cancels it, and in-progress main runs are cancelled by hand: 27 of
 60 sampled main runs were cancelled mid-run, traced to ad hoc agent `gh run cancel` calls licensed by the
@@ -63,8 +63,9 @@ Source exploration: [`explorations/ten-minute-certainty`](../../explorations/ten
 - Not the runner-loss classifier's flake classes or the `workflow_run.workflows` list of
   `.github/workflows/rerun-runner-loss.yml`; those belong to
   [`yeet-monitor-app-identity`](../yeet-monitor-app-identity/README.md) (3a).
-- No CLI guard on `cancel-queued`: it cannot reach main SHAs (`GhOps.ts` reads runs per PR head SHA), so the fix
-  is policy plus re-dispatch.
+- No further CLI guard. `GhOps.ts` reads runs per PR head SHA, but a main push run on the same SHA was reachable;
+  #3140 closed that (checkpoint `cancel-guard-in-commands`): `cancel-queued` and the merge gate cancel only
+  pull-request runs. The rest of the fix is policy plus re-dispatch.
 - Not trusting the hosted concurrent-job ceiling as measured, and no organization plan or limit change (money).
 - Not restoring main-run Turbo summary uploads for test bodies (the critique's "missing from the plan" note).
 
@@ -82,22 +83,25 @@ Higher sources outrank lower sources when they conflict.
 
 ## Target Surfaces
 
-Line numbers re-read at `origin/main` c90929b1ff1.
+Workflow surfaces are cited by job, step and key name, not line number: open PR #3122 rewrites
+`.github/workflows/check.yml`. Re-read at `origin/main` 7a462a27d4f.
 
-- `AGENTS.md`, Autonomy, the "Inherited reds" bullet (lines 198 to 202). It tells the orchestrator to declare
+- `AGENTS.md`, Autonomy, the "Inherited reds" bullet. Before slice 1 it told the orchestrator to declare
   one unblocker and cancel "runs, running ones included, on PRs that must re-run anyway so the unblocker gets
-  runners and merges first". The amendment adds one clause: never a `refs/heads/main` run, queued or running.
+  runners and merges first"; slice 1 (#3111) added the clause: never a `refs/heads/main` run, queued or running.
   `CLAUDE.md` is a symlink to `AGENTS.md`; edit `AGENTS.md`.
-- `.claude/skills/orchestrate/SKILL.md`: the "Red check" row (line 255, which runs `yeet gh checks
-  cancel-queued` and notes it "also cancels running runs") and the "Queue starved" row (line 261, "Cancel queued
-  runs on PRs that must re-run anyway") gain the same exclusion.
+- `.claude/skills/orchestrate/SKILL.md`: the "Red check" row (which runs `yeet gh checks cancel-queued` and
+  notes it "also cancels running runs") and the "Queue starved" row ("Cancel queued runs on PRs that must re-run
+  anyway") carry the same exclusion since #3111. #3140 enforces it in the commands: `cancel-queued` and the merge
+  gate's `cancelMergedHeadRuns` cancel only pull-request runs (`isAgentCancellableWorkflowRun`).
 - `.github/workflows/check.yml`:
-  - the `test-plan` job (lines 721 to 818), whose push branch (line 798) publishes every partition:
-    `ALL_TEST_UNIT_PARTITIONS` (24 since #3043) and `ALL_TEST_INTEGRATION_PARTITIONS` (20) at lines 739 and
-    740 (throughput layout);
-  - the Test Unit and Test Integration shard timeouts, 20 minutes since #3046 (lines 825 and 1014);
-  - the admission job's resolved `heavy.yml@main` identity (line 149) and the `heavy` caller (line 214);
-  - lines 12 to 14, the concurrency group, read only: re-dispatch is designed around the shared main group.
+  - the `test-plan` job, whose `Publish partition plan` step publishes every partition on a push: env
+    `ALL_TEST_UNIT_PARTITIONS` (24 since #3043) and `ALL_TEST_INTEGRATION_PARTITIONS` (20) (throughput layout);
+  - `timeout-minutes` on the `test-unit-shard` and `test-integration-shard` jobs, 20 minutes since #3046;
+  - the `heavy` job, which calls `heavy.yml@main`. The admission job's `Determine coverage rollout context`
+    step, which resolved that identity from the run's `referenced_workflows`, was deleted by #3116; the run
+    payload's `referenced_workflows[].sha` still carries it;
+  - the top-level `concurrency` block, read only: re-dispatch is designed around the shared main group.
 - `.github/workflows/rerun-runner-loss.yml`: a separate re-dispatch job on the same `workflow_run` trigger
   (the existing job runs only on `conclusion == 'failure'`). `.github/workflows/heavy.yml` only if the replay
   shows the push layout must batch heavy lanes (two-PR rule below).
@@ -106,10 +110,10 @@ Line numbers re-read at `origin/main` c90929b1ff1.
     `packages/tooling/tool/cli/vitest.shards.json`: the push layout, derived from the same generator as the PR
     plans, with a census-parity test;
   - `CiRerunRunnerLoss.ts` and `RunnerLossRerun.ts`: the re-dispatch pattern (bounded attempts, head gate,
-    rendered summary). The `superseded-head` gate (`RunnerLossRerun.ts` lines 28 to 32) exists because a rerun
+    rendered summary). The `superseded-head` reason of `RunnerLossRerunReason` exists because a rerun
     in the shared group cancels the tip's run, which is why re-dispatch fills only idle time;
-  - `CiGovernance.ts`: the workflow-lint rule "main pushes must not be cancelled by workflow concurrency"
-    (lines 385 to 392), which every workflow slice keeps passing;
+  - `CiGovernance.ts`: the workflow-lint rule "main pushes must not be cancelled by workflow concurrency",
+    which every workflow slice keeps passing;
   - `LaneTimings.ts`: hosted job and step reads the replay can reuse;
   - a planned merge-timestamp replay subcommand on `@beep/repo-cli` and a planned re-dispatch subcommand,
     both NET-NEW, beside these files;
@@ -122,12 +126,12 @@ No new workspace package is planned.
 
 ### Levers
 
-Status from the lever check of 2026-11-09, re-read on `origin/main` c90929b1ff1.
+Status from the lever check of 2026-11-09, re-read on `origin/main` 7a462a27d4f (2026-11-13).
 
 | Id | What | Status | Admission gate before landing | Depends on |
 | --- | --- | --- | --- | --- |
-| HOST-01 a | AGENTS.md and orchestrate skill: never cancel a `refs/heads/main` run | landed (slice 1, `docs(agents): never cancel refs/heads/main runs`): the AGENTS.md Inherited-reds clause and the skill's Red check and Queue starved rows; start date 2026-11-10 (checkpoint `cancel-ban-start-anchor`) | none (policy text); batched with other always-loaded edits only if one is ready the same day | nothing |
-| HOST-01 b | Throughput layout for main push runs: fewer, coarser push partitions from the same generator, full profile | open: #3030 kept full allocation on push (`check.yml:798`) | census of canonical test ids equals the full profile exactly; every push leg projected, from measured file seconds, to finish inside its 20-minute shard timeout (`check.yml:825`, `:1014`); Coverage Regression receives a manifest from every push partition; the replay with the layout shows PR first-wave pickup p95 and heavy-wait p95 regressed by at most 1 min and reports projected heavy slot-hours per day | scorecard queue numbers |
+| HOST-01 a | AGENTS.md and orchestrate skill: never cancel a `refs/heads/main` run | landed (slice 1, #3111): the AGENTS.md Inherited-reds clause and the skill's Red check and Queue starved rows; start date 2026-11-10 (checkpoint `cancel-ban-start-anchor`); enforced in `cancel-queued` and the merge gate by #3140 (checkpoint `cancel-guard-in-commands`) | none (policy text); batched with other always-loaded edits only if one is ready the same day | nothing |
+| HOST-01 b | Throughput layout for main push runs: fewer, coarser push partitions from the same generator, full profile | open: #3030 kept full allocation on push (`test-plan` job, `Publish partition plan` step) | census of canonical test ids equals the full profile exactly; every push leg projected, from measured file seconds, to finish inside its 20-minute shard timeout (`timeout-minutes` on `test-unit-shard` and `test-integration-shard`); Coverage Regression receives a manifest from every push partition; the replay with the layout shows PR first-wave pickup p95 and heavy-wait p95 regressed by at most 1 min and reports projected heavy slot-hours per day | scorecard queue numbers |
 | HOST-01 c | Re-dispatch of missing or cancelled non-docs main verdicts | open: `rerun-runner-loss.yml` handles failures only | decision tests per case; never displaces a pending main run; attempt ceiling; kill switch; the replay with re-dispatch shows PR first-wave pickup p95 and heavy-wait p95 regressed by at most 1 min | replay; scorecard main census |
 | HOST-01 d | Per-SHA verdict for every main commit | handed to `merge-queue-activation` (`verdict-placement`, D28): delivered as the merge-group run | not built here | b (the queue's gate waits on the landed layout) |
 | replay | 7 to 14 days of real main merge timestamps and PR Check runs, simulated at the documented 60-job ceiling and the cap-2 heavy pool, current layout vs throughput layout, with and without re-dispatch | open (measurement, NET-NEW) | the current-layout replay is calibrated against the scorecard's measured week | scorecard |
@@ -144,14 +148,18 @@ Status from the lever check of 2026-11-09, re-read on `origin/main` c90929b1ff1.
   jobs each per #3046) while no main run is queued or pending, so it is the one job-adding slice here and lands
   only if the replay shows PR first-wave pickup p95 and heavy-wait p95 regressed by at most 1 min.
 - **The ceiling is a documented default, not a measurement.** The ~60 concurrent hosted-job limit is the
-  documented Team default with no admin-side read; 59 concurrent were measured. The replay runs at 60 and
+  documented Team default with no admin-side read; a peak of exactly 60 concurrent hosted jobs was observed on
+  each of three measured days (research note `2026-11-13-check-run-queue-day-measure.md`, decision
+  `check-run-queue-measurements`), which bounds the ceiling from below without an admin read. The replay runs at 60 and
   states its sensitivity at the highest concurrency the scorecard has observed.
 - **Heavy pool at cap 2 (D11):** no slice assumes more. Heavy EC2 minutes are paid while GitHub-hosted minutes
   are free for this public repository, so the replay reports projected heavy slot-hours per day. Raising the
   cap or the runner class is money and goes to the operator with the measured post-diet residual.
-- **Jobs per run, unverified figures.** D7 costed a full run at about 62 jobs (12 Heavy). At c90929b1ff1 a push
-  allocates every partition, 24 Test Unit and 20 Test Integration (`check.yml:739-740`, `:798`), and #3046's
-  commit message puts a full Check run at about 75 hosted jobs against the 60-job cap. The per-commit cost
+- **Jobs per run.** D7 costed a full run at about 62 jobs (12 Heavy). A push allocates every partition, 24 Test
+  Unit and 20 Test Integration (`test-plan` job, `Publish partition plan` step), and #3046's commit message put a
+  full Check run at about 75 hosted jobs. Measured on 2026-11-10 and 2026-11-12: every main push run that
+  started a job had 44 test shards and 69 to 71 hosted jobs; the median full run on 2026-11-12 had 70 (decision
+  `check-run-queue-measurements`). The per-commit cost
   figures (about 9.7k runner-min/day claimed by the lever, 20 to 36k recomputed by the skeptic, docs-only skip
   share unmeasured) now bear on `merge-queue-activation`; the replay reports runner-minutes for the layout and
   re-dispatch only, from the scorecard.
@@ -162,16 +170,19 @@ Status from the lever check of 2026-11-09, re-read on `origin/main` c90929b1ff1.
   do not treat the estimate as a gate.
 - **Verdict identity:** a verdict counts for its event SHA (`github.sha` on push). A queued main run resolves
   `heavy.yml@main` when it starts, and a re-dispatched run resolves it again, so a verdict can certify a commit
-  under a later heavy profile. The admission job already resolves that identity (`check.yml:149`); the
-  scorecard reports both, and the re-dispatch path is tested for it.
-- **Re-dispatch never displaces a pending main run** (own decision): main pushes share one group, so it re-runs
+  under a later heavy profile. The run payload's `referenced_workflows[].sha` records that identity (the
+  admission step that read it was deleted by #3116); the
+  scorecard is to report both (it does not yet: decision `scorecard-field-census`), and the re-dispatch path
+  is tested for it.
+- **Re-dispatch never displaces a pending main run** (own decision; the re-run API facts are in decision
+  `rerun-api-cancelled-push-runs`): main pushes share one group, so it re-runs
   only when no main Check run is queued or pending, newest unverdicted non-docs SHA first, with an attempt
   ceiling and a repository-variable kill switch like `BEEP_RERUN_RUNNER_LOSS`. It reads missing verdicts from
   the scorecard's main census and builds no second census. Its GitHub reads run on `GITHUB_TOKEN` (shared
   1,000 requests per hour per repository), bounded per evaluation.
 - **`workflow_run` runs the default branch's copy:** the re-dispatch job takes effect only after it merges; its
   pre-merge proof is decision tests, its post-merge proof is the first re-dispatch on `main`.
-- **`heavy.yml` is called at `@main`** (`check.yml:214`, pin at `:149`): any hosted heavy-lane input change is
+- **`heavy.yml` is called at `@main`** (the `heavy` job of `check.yml`): any hosted heavy-lane input change is
   two PRs. The first ships additive under a migration name, the second retires it after `main` resolves it, and
   each runs the post-merge Heavy probe in `docs/runbooks/ci-hosted-settings.md`.
 - **Global inputs and baselines:** any PR that touches a workflow file, `turbo.json`, `bun.lock` or the root
@@ -213,7 +224,8 @@ Read from the certainty scorecard unless stated; windows are UTC days.
       produced each. The bar is the plan's: at least 95% of non-docs main SHAs verdicted over 7 days. Whatever
       gap remains is recorded as `merge-queue-activation`'s to close with the merge-group run, not this goal's.
 - [ ] The throughput layout's census of canonical test ids equals the full profile's exactly (a test in
-      `@beep/repo-cli`), no push partition hits its 20-minute shard timeout (`check.yml:825`, `:1014`) over its
+      `@beep/repo-cli`), no push partition hits its 20-minute shard timeout (`timeout-minutes` on
+      `test-unit-shard` and `test-integration-shard`) over its
       first 7 days, and Coverage Regression on main pushes receives a manifest from every push partition.
 - [ ] The merge-timestamp replay is published under `history/`: 7 to 14 days of real main merge timestamps and
       PR Check runs at the 60-job ceiling and the cap-2 heavy pool, for the current layout, the throughput
@@ -326,6 +338,86 @@ D7 staged main verdicts as a cancel ban, a throughput layout for main pushes, th
 Source: exploration `explorations/ten-minute-certainty/DECISIONS.md` (D7, as amended by D28) and `explorations/github-merge-queue/DECISIONS.md` (`verdict-placement`).
 
 Reverse: Restore the per-SHA stage here only after a ruling that the merge queue will not carry the verdict (D28's reversal); revert the AGENTS.md clause to re-allow main cancels.
+
+### Check-run measurements: the 60-job peak, 70 jobs per full run and main pre-job waits are settled; the cancel actor and 7-day p95s are not, 2026-11-13
+
+Another session measured Check runs on 2026-11-10 (day A, first day on the final shard layout) and 2026-11-12 (day B, after the cancel ban) against a 2026-11-09 baseline and handed the results to the certainty packets on the operator's instruction. They are filed as `research/2026-11-13-check-run-queue-day-measure.md`. Its clock runs from a run's first job start to the `Test Unit` and `Heavy / Test Integration` aggregate verdicts: it is not the scorecard's push-to-green clock and excludes the wait before the first job. Limits: three runs missing on HTTP 502 and re-run attempts mixed by `filter=latest`.
+
+What it settles for this goal:
+
+- The hosted concurrency cap: a peak of exactly 60 concurrent hosted jobs on all three days, with 78 to 257 minutes per day at 55 or more. That bounds the documented ~60 ceiling from below without an admin read; the replay (slice 2) runs at 60 as the SPEC says, and a higher ceiling is not supported by any reading.
+- Jobs per run: every main push run that started a job had 44 test shards (24 Test Unit + 20 Test Integration) and 69 to 71 hosted jobs; the median full run on day B had 70 hosted jobs and 44 test shards. This replaces #3046's commit-message estimate of about 75 as the replay's per-run input, pending a scorecard row.
+- Wait before the first job on main pushes: median 5.6 and p90 16.3 min on day A, median 4.2 and p90 13.8 min on day B (baseline median 7.0, p90 36.0). This is the queue a throughput layout and re-dispatch compete in.
+- Main push cancels: 14 of 20 runs cancelled on day A, 11 of 20 on day B. Derived from the sender's per-run table: 13 of 14 and 11 of 11 were cancelled before any job started (one day A run had 69 jobs). Runs cancelled before their first job match GitHub's replacement of the one pending run per group (decision `rerun-api-cancelled-push-runs`), the pattern `goals/ci-lane-economics` found (82 of 100) and the reason D7's 55 to 65% estimate is at risk.
+
+What it does not settle:
+
+- The cancel actor. Day B is after the ban (#3111, guard #3140), but the measurement does not separate concurrency supersession from an agent cancel, so day B's 11 cancels are not evidence of a ban violation, and the zero-agent-cancel acceptance stays unread. The actor is still the missing field (decision `scorecard-field-census`).
+- PR first-wave pickup p95 and heavy-wait p95 over 7 days. Two single days in five-hour bursts, on a first-job clock, are not the scorecard's populations, so slice 2 stays held under SPEC "Stop Conditions" and none of these numbers is an acceptance read.
+- The main verdict rate: verdicts per run, not per non-docs first-parent SHA; the history note `2026-11-13-pre-ban-main-verdict-rate` is the scorecard read.
+
+Statements in other packets the measurements bear on (not edited here; their next PRs can cite the research note):
+
+- `goals/hosted-setup-tax/SPEC.md`: the decision that job removals precede `merge-group-parity` calls the ~60 concurrent hosted job ceiling unverified, and its reversal waits on "the scorecard measures the hosted concurrent-job ceiling"; a 60 peak was observed on three days. Its "ROUT-01 and HOST-07 are one lever" constraint says the Test Plan job's own setup "the exploration did not measure" is netted in the scorecard: the Test Plan ran a median 1.2 min on pull requests on both days.
+- `goals/heavy-pool-diet/SPEC.md`: the job-ceiling constraint (HOST-08 lands "inside the unverified ~60 concurrent hosted job ceiling") and the HOST-08 steady-state rule: slowest shard per full run median 8.7 / 8.4 min, p90 9.9 / 9.7 min; shards of 10 min or longer in 2 and 3 runs, the worst a `law-practice-6` leg of 16.9 min on a main push that ran 5 to 7 min in 26 other runs; runner waits cost a median 2.4 / 2.2 min and p90 8.9 / 9.6 min per full run, and no full run whose shards waited 1 min or more met 10 min.
+- `goals/heavy-pool-diet` and `goals/certainty-scorecard`, the admission-to-Heavy and heavy-wait rows: the hosted `Heavy / Test Integration` aggregate waited for a hosted runner after its last shard finished, p90 5.0 min (day A) and 8.7 min (day B), maximum 10.6. That is hosted-pool wait inside a `Heavy / ` context, which the pre-#3144 `admissionToHeavy` row timed; #3144 moves the row to heavy-pool pickup.
+- `goals/certainty-scorecard/SPEC.md`: "Inherited risks" says the ~60 ceiling "is documented, not measured, and the scorecard does not claim it", and `CI_CERTAINTY_NOT_COVERED` lists "the hosted concurrent-job ceiling (no admin read)": the observed peak is now a lower bound it can cite. The "Numbers the scorecard reports" row for hosted jobs per run (replay input) has two days of measured values to calibrate against. Its "Test Integration partition setup versus body" not-covered entry is unchanged: the note reports per-shard run time, not setup.
+Source: research note `research/2026-11-13-check-run-queue-day-measure.md`; the sender's report, day summaries, baseline summary and per-run tables (outside the repository).
+
+Lane claude/amazing-swirles-67011b
+
+Reverse: If the scorecard's 7-day reads contradict these two days, cite the scorecard and restate this decision; the research note stays as evidence.
+
+### The re-run API accepts a cancelled push run; whether it re-enters the shared main group is undocumented, so re-dispatch fires only when nothing is pending, 2026-11-13
+
+P0 fact for slice 4 (re-dispatch): does `POST /repos/{owner}/{repo}/actions/runs/{run_id}/rerun` accept a cancelled push run, and does the rerun re-enter `check.yml`'s shared main concurrency group? Read from GitHub's documentation and read-only `gh api` calls on 2026-11-13; no main run was re-run or cancelled.
+
+Documented:
+
+- The REST reference for "Re-run a workflow" ("Re-runs your workflow run using its id") states no restriction on the run's conclusion, documents only `201 Created`, and takes only `enable_debug_logging`. `rerun-failed-jobs` re-runs "failed jobs and their dependent jobs"; the docs do not say a cancelled job counts as failed, so re-dispatch uses the whole-run endpoint.
+- "Re-running workflows and jobs": re-runs are possible up to 30 days after the initial run, use the original event's `GITHUB_SHA` and `GITHUB_REF`, and run with the privileges of the actor who triggered the original run. A re-run therefore stays a `push` run on `refs/heads/main` for the same SHA, which the verdict definition (decision `every-main-commit-verdict`) counts.
+- Neither the REST reference nor the re-run page nor the concurrency pages mention re-runs and concurrency together. The concurrency reference says a group holds at most one running and, under the default `queue: single`, one pending run, and that a newly queued run cancels and replaces the pending one.
+
+Observed (read-only):
+
+- Cancelled main push runs expose `rerun_url` and no `concurrency` field in the run payload; for example run 43337600976 (head 7b8116b26cb, attempt 1, cancelled before any job: `total_count` 0).
+- On 2026-11-12 between 19:20:42Z and 19:22:00Z four consecutive main push runs (43289187669, 43289242017, 43289284656, 43289325218) were each cancelled 15 to 30 s after creation, when the next push's run was created, with no job started: GitHub's pending-run replacement in the shared group.
+- The only main push re-runs in the last 100 main push runs are re-runs of failed attempts (43289409901 attempt 2 by `github-actions[bot]`, 42642693204 attempts 2 and 3). No cancelled main push run has been re-run, so no live record shows whether a re-run queues behind, or displaces, a pending run in the group.
+
+Conclusion: the endpoint accepts a completed run with no documented conclusion restriction, so a cancelled push run is re-runnable by contract, within 30 days and for its original SHA. Whether the re-run joins the `${{ github.workflow }}-${{ github.ref }}` group is undocumented; this goal keeps the conservative reading the runner-loss classifier already encodes (the `superseded-head` reason in `RunnerLossRerun.ts`: "re-running it would cancel the current head's run") and the decision `redispatch-never-displaces-a-pending-run`: re-dispatch fires only when no main Check run is queued or pending. Slice 4 proves both halves on its first post-merge re-dispatch (a `workflow_run` job runs from `main`'s copy) and records the attempt's `run_attempt`, start time and any concurrently pending main run; a 4xx on a cancelled run there reopens this decision.
+
+Found in passing: the concurrency reference now documents `queue: max` (up to 100 pending runs per group, FIFO not guaranteed, not combinable with `cancel-in-progress: true`). It would keep superseded main pushes pending instead of cancelling them, which bears on the 82-of-100 pending-supersession finding in the SPEC's Constraints. `check.yml` sets `cancel-in-progress` by expression (true for pull requests), so adopting it needs a design for the PR branch and a replay of the queueing cost. It is not adopted here; it is recorded as an input for slice 2's replay and slice 4's design.
+Source: docs.github.com REST "Workflow runs" (re-run a workflow, re-run failed jobs), "Re-running workflows and jobs", workflow syntax `concurrency` and "Control the concurrency of workflows and jobs", read 2026-11-13; `gh api repos/{owner}/{repo}/actions/workflows/check.yml/runs?branch=main&event=push` and `.../actions/runs/{id}/attempts/{n}` (read-only).
+
+Lane claude/amazing-swirles-67011b
+
+Reverse: If slice 4's first post-merge re-dispatch shows the re-run bypasses the concurrency group (or is refused), restate this decision with that run's evidence and widen or drop the idle-only gate.
+
+### Scorecard field census: the main verdict rate is reported, pickup p95, heavy-wait p95, job counts and the cancel actor are not, 2026-11-13
+
+P0 fact: which certainty-scorecard fields this goal is judged on exist on `main` (read at 7a462a27d4f, after #3118). `bun run beep ci certainty` emits `CiCertaintyReport` (`schemaVersion` `ci-certainty-report/v1`) from `packages/tooling/tool/cli/src/commands/Ci/Certainty.schemas.ts`.
+
+Present:
+
+- Main verdict rate over non-docs first-parent SHAs: `CiCertaintyReport.main` (`CiCertaintyMainStat`: `commits`, `docsCommits`, `verdicts`, `cancelled`, `noRun`, `open`, `unread`, `rate`) and `CiCertaintyReport.mainRows` (`CiCertaintyMainRow`: `sha`, `committedAt`, `docsOnly`, `runIds`, and `verdict`, a `CiCertaintyMainVerdict` of `success`, `failure`, `cancelled`, `no-run`, `open` or `unread`). Since #3168 (3b85830d051) the push listing is read before the pull-request job reads, and an incomplete listing marks every main commit `unread` and leaves `rate` empty instead of folding them to `no-run`; a consumer of `mainRows` (re-dispatch, slice 4) must treat `unread` as unknown, never as missing. This is the before/after verdict read and the missing-verdict list re-dispatch (slice 4) needs; history note `2026-11-13-pre-ban-main-verdict-rate` records the first read (refused before #3168, the main block an artifact) and the second, complete main read after it: 70 of 283 non-docs commits verdicted, rate 24.7%.
+- Admission to Heavy: `CiCertaintyReport.admissionToHeavy` (`CiCertaintyAdmissionStat`: `n`, `p50Minutes`). #3144 (merged) redefined it as heavy-pool pickup per producer run and the runner-minutes rows (`CiCertaintyRunnerStat`) as per head attempt, keeping the field names; cite #3144 when reading either.
+- Push-to-required-green latency (`slo`, `mergeable`, `greenOnly`: `CiCertaintyLatencyStat`) and the Test Unit conversion row (`CiCertaintyTestUnitConversion.fullLayoutJobs`, Test Unit partition jobs only).
+
+Missing:
+
+- PR first-wave pickup p95: no field. `CiCertaintyLatencyStat` measures push to required green, not run creation to first job.
+- Heavy-wait p95: `CiCertaintyAdmissionStat` has a p50 and no p95; `CI_CERTAINTY_NOT_COVERED` in `packages/tooling/tool/cli/src/commands/Ci/Certainty.ts` defers "the main run cancel actor and heavy-queue pickup p95 (later slices)".
+- Hosted jobs per run: no field (runner-minutes, not job counts). The research note `2026-11-13-check-run-queue-day-measure.md` has two measured days (decision `check-run-queue-measurements`), not a scorecard row.
+- Main run cancel actor: `CiCertaintyMainStat.cancelled` counts cancelled verdicts with no actor; deferred by the same `CI_CERTAINTY_NOT_COVERED` entry. Zero-agent-cancel acceptance cannot be read without it.
+- Heavy identity beside each main verdict: `CiCertaintyMainRow` carries no resolved `heavy.yml@main` identity, although the SPEC's verdict-identity constraint says the scorecard reports it.
+- The hosted concurrent-job ceiling: `CI_CERTAINTY_NOT_COVERED` ("no admin read").
+
+The certainty-scorecard SPEC lists first-wave pickup p95, heavy-wait p95, the cancel actor and the replay inputs among the numbers it reports for this goal ("Numbers the scorecard reports"), but its PLAN has no slice that builds any of them: slices 1 to 17 cover the report, partition mapping, refusal attribution, the nightly workflow, journals, fleet reads, terminations, step fields, unit-result timings, the ledger fold and PSI joins. Under SPEC "Stop Conditions" ("cannot report the main verdict rate, first-wave pickup or heavy wait") slice 2 (the replay) stays held, and with it slices 3 and 4, which gate on the replay. This goal builds no second census; the gap is reported to the certainty-scorecard owner.
+Source: `Certainty.schemas.ts` and `Certainty.ts` at 7a462a27d4f; goals/certainty-scorecard/SPEC.md ("Numbers the scorecard reports") and PLAN.md (Slices); PR #3144 body ("Report rows that change meaning").
+
+Lane claude/amazing-swirles-67011b
+
+Reverse: When a certainty-scorecard slice adds the missing fields, record a decision naming them and release slice 2 from the stop condition.
 
 <!-- beep:decisions:end -->
 

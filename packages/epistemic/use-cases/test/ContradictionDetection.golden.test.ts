@@ -155,7 +155,14 @@ describe("Contradiction detection golden vectors", () => {
     }
     it.effect.prop(
       "schema-derived values preserve negation and permutation invariants",
-      [S.String.check(S.isMaxLength(32))],
+      // Well-formed text only: the proposal-fact bound refuses an unpaired
+      // surrogate, which has no canonical form to digest.
+      [
+        S.String.check(
+          S.isMaxLength(32),
+          S.makeFilter((value: string) => value.isWellFormed())
+        ),
+      ],
       Effect.fnUntraced(function* ([value]) {
         const input = A.getUnsafe(vectors, 0).snapshot;
         const snapshot = yield* S.decodeUnknownEffect(ContradictionDetectionSnapshot)({

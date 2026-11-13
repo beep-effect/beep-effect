@@ -391,6 +391,23 @@ Taken under the autonomy charter. Each entry names how to reverse it.
 | D-27 | Recorded, not decided here: the outbox registration shares the Exchange management scope `beep-docket-intake-mailbox` with the docket registration. The role assignments were made on 2026-10-06. | Exchange refuses two management scopes with the same recipient filter, and both registrations are limited to the same mailbox. D-2 still holds: the service principals, certificates and role assignments are separate, and only the outbox principal holds `Application Mail.Send`. | Give the outbox a scope with a different but equivalent filter. |
 | D-28 | Keep request acceptance, observed send and recipient delivery distinct; reconcile unknown sends only from positive identity-bound evidence. | Research I-01 found that missing draft is ambiguous under documented Graph visibility and identifier behavior. Current v1 `sent` records acceptance; preserve its historical meaning through a compatible versioned journal evolution. This is required follow-up in the active packet, not an implemented runtime or mailbox repair. | Revert the amendment only with primary provider evidence and a reproducing consumer fixture establishing a stronger contract; retain historical receipts. |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug m365-agent-outbox`; add a `kind: decision` file there, never edit this block._
+
+### Paused by operator ruling (finish board, 2026-11-13): Progress is blocked on the tenant mail proof, so it should be paused rather than shown as active, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
+
+Triage rationale: Progress is blocked on the tenant mail proof, so it should be paused rather than shown as active.
+
+No lane is working on it. Resume with `bun run beep goals set-status m365-agent-outbox active` when it is picked up.
+
+Lane chore/finish-board-pause-b2
+
+Reverse: goals set-status m365-agent-outbox active when it is picked up
+
+<!-- beep:decisions:end -->
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |

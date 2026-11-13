@@ -55,7 +55,8 @@ Higher sources outrank lower sources when they conflict.
 - `packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts`
   and `packages/tooling/tool/cli/src/commands/Architecture/OperationPlanPackageJson.ts`:
   the scaffolds that write a `babel` script key.
-- `tsconfig.base.json`: emit settings.
+- `tsconfig.base.json`: emit settings (read only; the flag goes on the build
+  command).
 - `turbo.json`: the `build` outputs and, for the check-once step, the `check`
   task's dependencies.
 - `packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts` and
@@ -86,9 +87,10 @@ Higher sources outrank lower sources when they conflict.
 - Adding a `build` edge to `check` changes what a filtered run executes.
   `goals/verification-route` and `goals/route-soundness-repair` own
   affected-routing: agree the change with them through the orchestrator first.
-- `tsconfig.base.json` is a global Turbo input. The declaration-only PR
-  invalidates every build cache entry once: land it when the merge queue is
-  quiet.
+- The declaration-only PR changes every generated manifest and the `build`
+  task outputs, so it invalidates every build cache entry once: land it when
+  the merge queue is quiet. `tsconfig.base.json` does not change (decision
+  `2026-11-13-declaration-only-flag-on-the-build-command`).
 - Wall-time baselines move under `goals/local-proof-under-ten`,
   `goals/hosted-setup-tax`, `goals/heavy-pool-diet` and
   `goals/certainty-scorecard`. Tell them before and after each behaviour-changing
@@ -103,32 +105,35 @@ Higher sources outrank lower sources when they conflict.
 
 Baseline and proof harness (PR 1, no behaviour change):
 
-- [ ] `research/` holds a repo-wide baseline measured under one admission job:
+- [x] `research/` holds a repo-wide baseline measured under one admission job:
       per-package build wall with and without the Babel step, and `dist` bytes
       split into JavaScript plus maps and declarations plus maps.
-- [ ] `research/` holds the build-versus-check diagnostics comparison for every
+- [x] `research/` holds the build-versus-check diagnostics comparison for every
       emitting package in the three states and both `TSRS_FAST` settings named
       in Constraints, produced through the check-program census.
-- [ ] The effect-drizzle bundle probe asserts that the expected export is
+- [x] The effect-drizzle bundle probe asserts that the expected export is
       present and that the bundle imports, not only a size floor, and its
       comment no longer blames `Bun.build 1.3.14`.
-- [ ] `turbo.json` `build.outputs` no longer lists the
-      `node_modules/.tmp` tsbuildinfo glob, or the package that still writes
-      there is named in the Exception Ledger.
 
 Declaration-only build (PR 2):
 
-- [ ] No generated `beep:build` runs Babel and no workspace manifest or
+- [x] `turbo.json` `build.outputs` no longer lists the
+      `node_modules/.tmp` tsbuildinfo glob, or the package that still writes
+      there is named in the Exception Ledger. Moved here from PR 1: removing
+      it changes every build task hash (decision
+      `2026-11-10-tmp-glob-rides-pr-2`).
+
+- [x] No generated `beep:build` runs Babel and no workspace manifest or
       scaffold carries a `babel` script key; `bun run beep lint package-scripts`
       passes.
-- [ ] After a clean `bun run build`, no library package's `dist` holds `*.js`
+- [x] After a clean `bun run build`, no library package's `dist` holds `*.js`
       or `*.js.map` outside Exception Ledger rows, and every `exports` subpath
       has its `.d.ts` and `.d.ts.map`. The build output contract test asserts
       both.
 - [ ] The PR's hosted gate is green on its head, or each red is attributed as
       inherited. This run is the proof that nothing reads `dist/*.js`.
-- [ ] `docs/runbooks/typescript-toolchain.md` describes the new `beep:build`.
-- [ ] `research/` holds the after numbers, measured the same way as the
+- [x] `docs/runbooks/typescript-toolchain.md` describes the new `beep:build`.
+- [x] `research/` holds the after numbers, measured the same way as the
       baseline.
 
 Check once (PR 3, conditional):
@@ -240,6 +245,54 @@ The `Bun.build 1.3.14` comment in the effect-drizzle bundle probe (retired by Ex
 Source: exploration `explorations/build-pipeline-simplification/DECISIONS.md` (Q9).
 
 Reverse: Revert the PR.
+
+### The stale tsbuildinfo glob is removed in PR 2, not PR 1, 2026-11-10
+
+Turbo hashes a task's `outputs`, so removing the `node_modules/.tmp` tsbuildinfo glob from `turbo.json` `build.outputs` changes the hash of every generic `build` task. Measured on `@beep/api-transport#build`: `88125a686fd34b63` with the glob, `1d0ce7463b38978d` without; `bun run beep cache audit` reports 188 `#build` subjects as configuration drift. PR 1 is meant to change no behaviour and PR 2 already invalidates every build cache entry through `tsconfig.base.json`, so the removal moves to PR 2 and the repo rebuilds from cold once, not twice. The glob is confirmed stale: no package build writes there, and it restores three compiler-0.51.1 tsbuildinfo files into every fresh checkout. This amends "Three stale findings land in the first PR" for the glob only; the two effect-drizzle findings stay in PR 1.
+
+Evidence: `goals/declaration-only-builds/research/2026-11-10-build-check-equivalence.md`.
+
+Lane chore/declaration-only-builds-baseline
+
+Reverse: Remove the glob in a PR of its own and re-record the cache qualification baseline there.
+
+### Check-once survives the census; PR 3 goes ahead for 180 packages, 2026-11-13
+
+The census build-equivalence mode compared each emitting package's build with its own-source check in 2,912 runs: 182 packages, a clean pass and a seeded pass, from a Turbo cache restore, a warm retry and a cold build, with `TSRS_FAST` unset and `1`. Every comparison matched and every probe was effective. A warm or restored build never hid an error the check reported and never kept one after the fix. The cross-package case (an upstream export renamed under stale downstream incremental state) matched too.
+
+So PR 3 is kept. Its scope is the 180 packages whose check program is the build program. `@beep/effect-drizzle` and `@beep/markdown` add `scripts` to their check config, so their check is wider than their build and stays. Declaration-emit diagnostics remain build-only, which makes the build the stricter of the two.
+
+PR 3 still needs the Turbo `check` to own-`build` edge agreed with `goals/verification-route` and `goals/route-soundness-repair`, and it is still the first thing cut if the appetite runs out.
+
+Evidence: `goals/declaration-only-builds/research/2026-11-10-build-check-equivalence.md`.
+
+Lane chore/declaration-only-builds-baseline
+
+Reverse: Record a decision that cuts PR 3 and leave the own-source check in every generated check script; the census mode stays as a diagnostic.
+
+### Declaration-only is set on the generated build command, not in the base tsconfig, 2026-11-13
+
+The plan was to make `tsconfig.base.json` emit declarations only. `emitDeclarationOnly` needs `declaration` or `composite`, and 404 tracked overlays turn both off (200 `tsconfig.check.json`, 177 `tsconfig.test.json`, 12 `tsconfig.scripts.json`, 5 `tsconfig.stories.json` and ten others). Each would fail with TS5069 the moment the base set the option. Measured: `tsrs -p tsconfig.check.json --emitDeclarationOnly` in `@beep/types` prints TS5069.
+
+So the generated `beep:build` for the four emitting kinds becomes `tsrs -p tsconfig.json --emitDeclarationOnly` and the base config stays as it is. The blast radius is the four policy rows and the manifests they generate. One exported constant in `@beep/repo-cli-kit` carries the command, and the census build-equivalence mode reads it, so nothing else invokes the build program with different emit flags.
+
+Consequence for the plan: PR 2 no longer changes a global Turbo input. It still invalidates every build cache entry once, because every manifest and the `build` task outputs change.
+
+Lane feat/declaration-only-build
+
+Reverse: Move the flag into the base config and add an explicit opt-out to every no-emit overlay through the overlay generators.
+
+### Every tsrs-emitting generated build becomes declaration-only, three apps included, 2026-11-13
+
+The scripts policy only seeds a missing implementation value and never touches extra keys, so regenerating could not migrate anything. PR 2 adds a retirement rule: retired script names (`babel`) that the lint rejects and the writer removes, and retired `beep:build` values with their replacement.
+
+The retired values are the Babel build, the bare `tsrs -p tsconfig.json` build that 13 packages used, and the codegen-prefixed Babel build of `@beep/repo-configs`. They are retired for every managed kind, not only library, tool, ecosystem and infra, because three apps carried the library build: `apps/architecture-lab-proof` and `apps/practice-gateway` called `bun run babel`, so dropping the key alone would have broken them, and `apps/practice-kg-mcp` used the bare build. All three run from `src` (their `bin` entries point there) and nothing reads their `dist` JavaScript. 182 manifests changed.
+
+A package that needs JavaScript keeps it through `javaScriptBuildOverrides`, a named per-package list that starts empty. The search for readers of `dist/*.js` across manifests, CI lane code, workflows, Vitest and Vite configs, docgen and Dockerfiles found none, so the Exception Ledger stays empty. The hosted gate on PR 2 is the proof.
+
+Lane feat/declaration-only-build
+
+Reverse: Add a JavaScriptBuildOverride row for the manifest in the scripts policy and run the package-scripts writer; that package emits JavaScript again.
 
 <!-- beep:decisions:end -->
 

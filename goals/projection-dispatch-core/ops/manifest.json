@@ -3,15 +3,15 @@
   "initiative": {
     "id": "projection-dispatch-core",
     "title": "Projection Dispatch Core",
-    "status": "active",
+    "status": "paused",
     "created": "2026-07-14",
-    "updated": "2026-07-14",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/projection-dispatch-core",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "Deliver one restart-safe accepted-record projection cycle with durable target isolation and a disposable authenticated desktop freshness hint.",
-  "statusNote": "P0 is blocked until effect-v4-workflow-engine-spike lands its persistence adapter and crash evidence.",
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): Blocked on another goal and nothing is in flight. Resume with `bun run beep goals set-status projection-dispatch-core active` when it is picked up. Before the ruling: P0 is blocked until effect-v4-workflow-engine-spike lands its persistence adapter and crash evidence.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

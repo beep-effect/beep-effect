@@ -3758,8 +3758,6 @@ const policyStateTasks = [
   "jsdoc:ratchet:check",
   ...policyTrackedDiscoveryTasks,
 ];
-const fullScopeStateTasks = (hosted: boolean): ReadonlyArray<string> =>
-  hosted ? policyStateTasks : A.filter(policyStateTasks, (task) => !A.contains(policyGitDeltaTasks, task));
 // Changed scope splits the state phase by cache contract. The cached tasks' inputs are certified
 // (standards/cache-qualification-baseline.json), so Turbo's task-input selection skips them exactly
 // when a cache hit would replay them; they join the affected medium graph. The D2 git-delta and
@@ -3767,6 +3765,18 @@ const fullScopeStateTasks = (hosted: boolean): ReadonlyArray<string> =>
 // in a graph that runs abreast of the medium one, so its long poles overlap as they do in the
 // single full-scope graph.
 const policyCachedStateTasks = ["jsdoc:inventory:check", "jsdoc:ratchet:check"];
+// A hosted plan whose ruleset requires `JSDoc Ratchet` leaves the JSDoc inventory and ratchet to
+// that lane (heavy-pool-diet LINT-05): `beep ci lane jsdoc-ratchet` runs both on every head the
+// Lint Policy lane runs on (each skips a documentation-only diff), so the policy copy only
+// duplicated the cached Turbo pair. A local plan, and a hosted plan without that required
+// context, keep both.
+const fullScopeStateTasks = (hosted: boolean, leaveJSDocToRatchet: boolean): ReadonlyArray<string> =>
+  A.filter(
+    policyStateTasks,
+    (task) =>
+      (hosted || !A.contains(policyGitDeltaTasks, task)) &&
+      !(leaveJSDocToRatchet && A.contains(policyCachedStateTasks, task))
+  );
 const policyUnscopedStateTasks = A.filter(policyStateTasks, (task) => !A.contains(policyCachedStateTasks, task));
 // Retain one slot of the existing width for state checks, independently of
 // changed-file selection. Tracked discovery remains unfiltered until qualified.
@@ -3882,10 +3892,39 @@ const knowledgeDoctorPolicySteps = (repoRoot: string, base: string | undefined, 
 
 // Inputs the runtime resolves before planning; a pure plan reads the source docs config and has no
 // Turbo target probe, so its changed-scope medium graph keeps the per-package `lint:jsdoc` tasks.
+// `requiredContexts` is the ruleset snapshot (`standards/branch-protection-contexts.json`); a pure
+// plan without it, like a checkout without the snapshot, keeps the JSDoc pair.
 type LintPolicyPlanOptions = {
   readonly docsConfig?: string | undefined;
   readonly targets?: LintPolicyAffectedTargets | undefined;
+  readonly requiredContexts?: ReadonlyArray<string> | undefined;
 };
+
+const JSDOC_RATCHET_REQUIRED_CONTEXT = "JSDoc Ratchet";
+
+const leavesJSDocToRatchet = (hosted: boolean, options: LintPolicyPlanOptions): boolean =>
+  hosted && A.contains(options.requiredContexts ?? A.empty<string>(), JSDOC_RATCHET_REQUIRED_CONTEXT);
+
+const BranchProtectionContexts = S.Struct({ requiredStatusChecks: S.Array(S.NonEmptyString) });
+const decodeBranchProtectionContexts = S.decodeUnknownEffect(S.fromJsonString(BranchProtectionContexts));
+
+// Only a hosted plan consults the snapshot. A missing snapshot keeps the pair (the duplicate
+// costs time, never coverage); an unreadable or malformed one fails the lane.
+const readRequiredContexts = Effect.fn("QualityTasks.readRequiredContexts")(function* (
+  repoRoot: string,
+  hosted: boolean
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const file = path.join(repoRoot, "standards", "branch-protection-contexts.json");
+  const message = `Cannot read the branch-protection contexts snapshot: ${file}`;
+  const present = hosted && (yield* fs.exists(file).pipe(QualityTaskConfigurationError.mapError(message)));
+  if (!present) return A.empty<string>();
+  const decoded = yield* fs
+    .readFileString(file)
+    .pipe(Effect.flatMap(decodeBranchProtectionContexts), QualityTaskConfigurationError.mapError(message));
+  return decoded.requiredStatusChecks;
+});
 
 // A stage's steps run abreast; stages run in order.
 type LintPolicyStage = A.NonEmptyReadonlyArray<QualityTaskStep>;
@@ -3932,14 +3971,15 @@ const fullScopePolicyStages = (
   sweeps: LintPolicySweeps,
   hosted: boolean,
   docsConfig: string,
-  plan: QualityConcurrencyPlan
+  plan: QualityConcurrencyPlan,
+  leaveJSDocToRatchet: boolean
 ): ReadonlyArray<LintPolicyStage> => [
   policyStage(policyLintTurboStep(repoRoot, "lint:policy:cheap", policyCheapTasks, undefined, plan)),
   policyStage(
     policyLintTurboStep(
       repoRoot,
       "lint:policy:medium",
-      [...policyMediumTasks, ...fullScopeStateTasks(hosted)],
+      [...policyMediumTasks, ...fullScopeStateTasks(hosted, leaveJSDocToRatchet)],
       undefined,
       plan
     ),
@@ -3998,7 +4038,8 @@ const changedScopePolicyStages = (
   hosted: boolean,
   docsConfig: string,
   targets: O.Option<LintPolicyAffectedTargets>,
-  plan: QualityConcurrencyPlan
+  plan: QualityConcurrencyPlan,
+  leaveJSDocToRatchet: boolean
 ): ReadonlyArray<LintPolicyStage> => [
   policyStage(policyLintTurboStep(repoRoot, "lint:policy:cheap", policyCheapTasks, base, plan)),
   policyStage(
@@ -4009,7 +4050,7 @@ const changedScopePolicyStages = (
         ...policyMediumTasks,
         ...(O.isNone(targets) ? ["lint:jsdoc"] : []),
         "lint:jsdoc:root",
-        ...policyCachedStateTasks,
+        ...(leaveJSDocToRatchet ? A.empty<string>() : policyCachedStateTasks),
       ],
       base,
       plan,
@@ -4045,10 +4086,20 @@ const rootRepoLintPolicyStages = (
   options: LintPolicyPlanOptions = {}
 ): ReadonlyArray<LintPolicyStage> => {
   const docsConfig = options.docsConfig ?? DOCS_OXLINT_CONFIG;
+  const leaveJSDocToRatchet = leavesJSDocToRatchet(hosted, options);
   return O.match(O.fromUndefinedOr(base), {
-    onNone: () => fullScopePolicyStages(repoRoot, sweeps, hosted, docsConfig, plan),
+    onNone: () => fullScopePolicyStages(repoRoot, sweeps, hosted, docsConfig, plan, leaveJSDocToRatchet),
     onSome: (ref) =>
-      changedScopePolicyStages(repoRoot, ref, sweeps, hosted, docsConfig, O.fromUndefinedOr(options.targets), plan),
+      changedScopePolicyStages(
+        repoRoot,
+        ref,
+        sweeps,
+        hosted,
+        docsConfig,
+        O.fromUndefinedOr(options.targets),
+        plan,
+        leaveJSDocToRatchet
+      ),
   });
 };
 
@@ -4317,10 +4368,12 @@ const runRootLintPolicyTaskInternal = Effect.fn("QualityTasks.runRootLintPolicyT
   const docsConfig = yield* prepareDocsOxlintConfig(repoRoot);
   const docsCacheKey = yield* rootDocsCacheKey(repoRoot);
   const plan = yield* qualityConcurrencyPlan;
+  const requiredContexts = yield* readRequiredContexts(repoRoot, isCiSync());
   yield* runPolicyStages(
     rootRepoLintPolicyStages(repoRoot, runFull ? undefined : base, sweeps, isCiSync(), docsCacheKey, plan, {
       docsConfig,
       targets: O.getOrUndefined(targets),
+      requiredContexts,
     }),
     runFull || isCiSync()
   );

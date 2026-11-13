@@ -4,16 +4,17 @@
  * **Details**
  *
  * An event's identity is the sha-256 digest of its canonical JSON encoding:
- * recursively key-sorted, compact, with absent keys omitted. The digest is
- * never stored inside the event file — it is recomputed at read time and
- * verified against the file name, so a tampered or corrupted event surfaces
- * as a chain issue instead of being trusted.
+ * RFC 8785 text from `JsoncFingerprint` in `@beep/jsonc`, with absent keys
+ * omitted. The digest is never stored inside the event file — it is
+ * recomputed at read time and verified against the file name, so a tampered
+ * or corrupted event surfaces as a chain issue instead of being trusted.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { JsoncCanonicalizeOptions, JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
 import { A, O, pipe, Str } from "@beep/utils";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
@@ -23,6 +24,7 @@ import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 import * as Struct from "effect/Struct";
 import { isJsonRecord } from "../Inventory.ts";
 import { PacketEvent, PacketEventType } from "./PacketCore.schemas.ts";
@@ -75,9 +77,6 @@ type CanonicalPads = {
 };
 
 const canonicalPads = (indent: number, depth: number): CanonicalPads => {
-  if (indent === 0) {
-    return { open: "", close: "", joiner: ",", keyGap: "" };
-  }
   const open = `\n${Str.repeat(indent * (depth + 1))(" ")}`;
   return { open, close: `\n${Str.repeat(indent * depth)(" ")}`, joiner: `,${open}`, keyGap: " " };
 };
@@ -117,9 +116,28 @@ const canonicalAtDepth = (value: unknown, indent: number, depth: number): string
   return isJsonRecord(value) ? canonicalObject(value, indent, depth) : "null";
 };
 
+// Callers build records with optional members left `undefined` (the goal
+// completion declaration does), and the digests over them treat such a member
+// as absent, as the encoder this replaced did.
+const omitUndefinedMembers = JsoncCanonicalizeOptions.make({ omitUndefinedMembers: true });
+
 /**
  * Render a value as compact canonical JSON: keys recursively sorted, absent
  * keys omitted, no whitespace.
+ *
+ * **Details**
+ *
+ * The text is RFC 8785 from `JsoncFingerprint` in `@beep/jsonc`, the owner of
+ * every canonical digest preimage, with `omitUndefinedMembers` set: an object
+ * member whose value is `undefined` is left out, as if absent.
+ *
+ * **Gotchas**
+ *
+ * Any other value outside plain JSON throws the owner's
+ * `JsoncCanonicalizeError` instead of being coerced: an `undefined` array
+ * element or root, a non-finite number, a bigint, a non-plain object such as a
+ * `Date`, a string or key with an unpaired surrogate, and nesting past the
+ * owner's depth cap.
  *
  * **Example** (Key order never changes the rendering)
  *
@@ -135,7 +153,39 @@ const canonicalAtDepth = (value: unknown, indent: number, depth: number): string
  * @category encoding
  * @since 0.0.0
  */
-export const canonicalJsonText = (value: unknown): string => canonicalAtDepth(value, 0, 0);
+export const canonicalJsonText = (value: unknown): string =>
+  Result.getOrThrowWith(JsoncFingerprint.canonicalizeResult(value, omitUndefinedMembers), identity);
+
+/**
+ * {@link canonicalJsonText} returning a `Result`, for digest helpers that
+ * already carry a `SchemaError` channel.
+ *
+ * **Details**
+ *
+ * Same bytes and the same `omitUndefinedMembers` relaxation. A value the owner
+ * refuses becomes an `S.SchemaError` whose message names the owner's code and
+ * JSON pointer, instead of a thrown `JsoncCanonicalizeError`.
+ *
+ * **Example** (Refuse an unpaired surrogate without throwing)
+ *
+ * ```ts
+ * import { canonicalJsonTextResult } from "@beep/repo-cli/test/Goals"
+ * import * as Result from "effect/Result"
+ *
+ * console.log(Result.getOrThrow(canonicalJsonTextResult({ b: 1, a: undefined }))) // {"b":1}
+ * console.log(Result.isFailure(canonicalJsonTextResult({ actor: "\ud800" }))) // true
+ * ```
+ *
+ * @param value - Plain JSON-encodable value.
+ * @returns The compact canonical text, or the owner's refusal as a `SchemaError`.
+ * @category encoding
+ * @since 0.0.0
+ */
+export const canonicalJsonTextResult = (value: unknown): Result.Result<string, S.SchemaError> =>
+  Result.mapError(
+    JsoncFingerprint.canonicalizeResult(value, omitUndefinedMembers),
+    (error) => new S.SchemaError(new SchemaIssue.InvalidValue({ message: error.message }))
+  );
 
 /**
  * Render a value as pretty canonical JSON: keys recursively sorted, 2-space
@@ -242,7 +292,8 @@ const encodePacketEvent = S.encodeUnknownEffect(PacketEvent);
 export const packetEventDigest: (event: PacketEvent) => Effect.Effect<PacketEventId, S.SchemaError, Digest.Digest> =
   Effect.fnUntraced(function* (event: PacketEvent) {
     const encoded = yield* encodePacketEvent(event);
-    return yield* sha256Hex(canonicalJsonText(encoded));
+    const canonical = yield* Effect.fromResult(canonicalJsonTextResult(encoded));
+    return yield* sha256Hex(canonical);
   });
 
 /**

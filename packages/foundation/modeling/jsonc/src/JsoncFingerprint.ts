@@ -26,6 +26,7 @@ import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { dual, flow, identity } from "effect/Function";
 import * as I from "effect/Iterable";
+import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -44,6 +45,8 @@ const $I = $JsoncId.create("JsoncFingerprint");
  *
  * - `UnrepresentableValue`: an `undefined`, function or symbol anywhere in the
  *   value, an array hole, or a property getter or Proxy trap that threw during inspection.
+ *   The one exception is an object member read as `undefined` under
+ *   {@link JsoncCanonicalizeOptions} `omitUndefinedMembers`, which is left out.
  * - `BigIntValue`: a `bigint` anywhere.
  * - `NonFiniteNumber`: `NaN` or an infinity, which RFC 8785 forbids.
  * - `LoneSurrogate`: a string value or member key with an unpaired UTF-16
@@ -145,6 +148,51 @@ export class JsoncCanonicalizeError extends S.TaggedError<JsoncCanonicalizeError
 }
 
 /**
+ * Options controlling canonicalization and the value fingerprints built on
+ * it. Every field has a schema default.
+ *
+ * **Details**
+ *
+ * `omitUndefinedMembers` leaves out an object member whose value reads as
+ * `undefined`, the way `JSON.stringify` does, so a wire-form object whose
+ * optional members are present but unset canonicalizes as if they were absent.
+ * Defaults to `false`: such a member is an `UnrepresentableValue` failure.
+ *
+ * This is the only relaxation. An `undefined` array element or array hole, an
+ * `undefined` root, a function, a symbol and every other non-JSON value still
+ * fail typed with the option set, and so does a member key with an unpaired
+ * surrogate even when its value is `undefined`.
+ *
+ * **Example** (Leave out unset optional members)
+ *
+ * ```ts
+ * import * as Result from "effect/Result"
+ * import { JsoncCanonicalizeOptions, JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint"
+ *
+ * const options = JsoncCanonicalizeOptions.make({ omitUndefinedMembers: true })
+ *
+ * console.log(Result.getOrThrow(JsoncFingerprint.canonicalizeResult({ b: 1, a: undefined }, options))) // '{"b":1}'
+ * console.log(Result.isFailure(JsoncFingerprint.canonicalizeResult([undefined], options))) // true
+ * console.log(JsoncCanonicalizeOptions.make({}).omitUndefinedMembers) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class JsoncCanonicalizeOptions extends S.Opaque<JsoncCanonicalizeOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
+    omitUndefinedMembers: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultKey(Effect.succeed(false))
+    ),
+  }).pipe(
+    $I.annoteSchema("JsoncCanonicalizeOptions", {
+      description: "Whether an object member read as undefined is left out of the canonical form or refused.",
+    })
+  )
+) {}
+
+/**
  * Options controlling {@link JsoncFingerprint.hashText}. Every field has a
  * schema default.
  *
@@ -202,6 +250,17 @@ export type JsoncDigest = (bytes: Uint8Array) => Uint8Array;
 
 type Emit = Result.Result<string, JsoncCanonicalizeError>;
 
+// What one walk carries down: the nesting depth, and whether an object member
+// read as `undefined` is left out instead of refused.
+type Walk = { readonly depth: number; readonly omitUndefinedMembers: boolean };
+
+const startWalk = (options?: JsoncCanonicalizeOptions): Walk => ({
+  depth: 0,
+  omitUndefinedMembers: options?.omitUndefinedMembers ?? false,
+});
+
+const descend = (walk: Walk): Walk => ({ depth: walk.depth + 1, omitUndefinedMembers: walk.omitUndefinedMembers });
+
 const escapePointerSegment = flow(Str.replaceAll("~", "~0"), Str.replaceAll("/", "~1"));
 
 const fail: {
@@ -248,27 +307,67 @@ const isPlainObject = (value: object): boolean => {
   return prototype === Object.prototype || prototype === null;
 };
 
-// One member: read it through the getter guard, then canonicalize the value
-// it produced one level deeper.
-const emitMember: {
-  (container: object, key: string | number, memberPath: string, depth: number): Emit;
-  (key: string | number, memberPath: string, depth: number): (container: object) => Emit;
+// One array element: read it through the getter guard, then canonicalize the
+// value it produced one level deeper.
+const emitElement: {
+  (container: object, index: number, elementPath: string, walk: Walk): Emit;
+  (index: number, elementPath: string, walk: Walk): (container: object) => Emit;
 } = dual(
   4,
-  (container: object, key: string | number, memberPath: string, depth: number): Emit =>
-    readProperty(container, key, memberPath).pipe(Result.flatMap(emit(memberPath, depth + 1)))
+  (container: object, index: number, elementPath: string, walk: Walk): Emit =>
+    readProperty(container, index, elementPath).pipe(Result.flatMap(emit(elementPath, descend(walk))))
+);
+
+// One object member, as its `"key":value` text. The value is read once,
+// through the getter guard. Under `omitUndefinedMembers` a value read as
+// `undefined` yields no text, so a getter decides once whether its member
+// exists; anything else canonicalizes one level deeper.
+const emitMember: {
+  (
+    container: object,
+    key: string,
+    memberPath: string,
+    walk: Walk
+  ): Result.Result<O.Option<string>, JsoncCanonicalizeError>;
+  (
+    key: string,
+    memberPath: string,
+    walk: Walk
+  ): (container: object) => Result.Result<O.Option<string>, JsoncCanonicalizeError>;
+} = dual(
+  4,
+  (
+    container: object,
+    key: string,
+    memberPath: string,
+    walk: Walk
+  ): Result.Result<O.Option<string>, JsoncCanonicalizeError> =>
+    readProperty(container, key, memberPath).pipe(
+      Result.flatMap((read) =>
+        walk.omitUndefinedMembers && P.isUndefined(read)
+          ? Result.succeed(O.none())
+          : emit(read, memberPath, descend(walk)).pipe(Result.map((item) => O.some(`${emitScalar(key)}:${item}`)))
+      )
+    )
 );
 
 // Members are produced lazily and `Result.all` stops pulling at the first
 // failure, as upstream's throw carrier stops its walk: after a member fails no
 // later getter runs, and no later exception can replace the typed failure.
 const emitMembers: {
-  <K>(keys: Iterable<K>, member: (key: K) => Emit): Result.Result<Array<string>, JsoncCanonicalizeError>;
-  <K>(member: (key: K) => Emit): (keys: Iterable<K>) => Result.Result<Array<string>, JsoncCanonicalizeError>;
+  <K, A>(
+    keys: Iterable<K>,
+    member: (key: K) => Result.Result<A, JsoncCanonicalizeError>
+  ): Result.Result<Array<A>, JsoncCanonicalizeError>;
+  <K, A>(
+    member: (key: K) => Result.Result<A, JsoncCanonicalizeError>
+  ): (keys: Iterable<K>) => Result.Result<Array<A>, JsoncCanonicalizeError>;
 } = dual(
   2,
-  <K>(keys: Iterable<K>, member: (key: K) => Emit): Result.Result<Array<string>, JsoncCanonicalizeError> =>
-    Result.all(I.map(keys, member))
+  <K, A>(
+    keys: Iterable<K>,
+    member: (key: K) => Result.Result<A, JsoncCanonicalizeError>
+  ): Result.Result<Array<A>, JsoncCanonicalizeError> => Result.all(I.map(keys, member))
 );
 
 // The indices of an array, counted here and compared against `length` before
@@ -279,22 +378,23 @@ const indices = (value: ReadonlyArray<unknown>): Iterable<number> =>
   I.takeWhile(I.range(0), (index) => index < value.length);
 
 const emitArray: {
-  (value: ReadonlyArray<unknown>, path: string, depth: number): Emit;
-  (path: string, depth: number): (value: ReadonlyArray<unknown>) => Emit;
+  (value: ReadonlyArray<unknown>, path: string, walk: Walk): Emit;
+  (path: string, walk: Walk): (value: ReadonlyArray<unknown>) => Emit;
 } = dual(
   3,
-  (value: ReadonlyArray<unknown>, path: string, depth: number): Emit =>
+  (value: ReadonlyArray<unknown>, path: string, walk: Walk): Emit =>
     // Indexed reads, never `map`: `map` skips holes, which must instead read as
-    // `undefined` and fail typed at the hole's index.
-    emitMembers(indices(value), (index: number) => emitMember(value, index, `${path}/${index}`, depth)).pipe(
+    // `undefined` and fail typed at the hole's index. `omitUndefinedMembers`
+    // does not reach here: leaving an element out would shift every later one.
+    emitMembers(indices(value), (index: number) => emitElement(value, index, `${path}/${index}`, walk)).pipe(
       Result.map((items) => `[${A.join(items, ",")}]`)
     )
 );
 
 const emitRecord: {
-  (value: { readonly [x: PropertyKey]: unknown }, path: string, depth: number): Emit;
-  (path: string, depth: number): (value: { readonly [x: PropertyKey]: unknown }) => Emit;
-} = dual(3, (value: { readonly [x: PropertyKey]: unknown }, path: string, depth: number): Emit => {
+  (value: { readonly [x: PropertyKey]: unknown }, path: string, walk: Walk): Emit;
+  (path: string, walk: Walk): (value: { readonly [x: PropertyKey]: unknown }) => Emit;
+} = dual(3, (value: { readonly [x: PropertyKey]: unknown }, path: string, walk: Walk): Emit => {
   if (!isPlainObject(value)) {
     return fail(
       "NonPlainObject",
@@ -308,15 +408,18 @@ const emitRecord: {
     // Member keys are strings too: an unpaired surrogate in a key is the same
     // RFC 8785 I-JSON violation as one in a value. The key is checked just
     // before its own member is read (upstream order), so an earlier member's
-    // failure wins over a later ill-formed key.
+    // failure wins over a later ill-formed key. The check also comes before
+    // `omitUndefinedMembers` can leave the member out.
     return key.isWellFormed()
-      ? emitMember(value, key, memberPath, depth).pipe(Result.map((item) => `${emitScalar(key)}:${item}`))
-      : fail(
-          "LoneSurrogate",
-          memberPath,
-          "object member key contains an unpaired surrogate; RFC 8785 requires well-formed Unicode"
+      ? emitMember(value, key, memberPath, walk)
+      : Result.fail(
+          JsoncCanonicalizeError.make({
+            code: "LoneSurrogate",
+            path: memberPath,
+            detail: "object member key contains an unpaired surrogate; RFC 8785 requires well-formed Unicode",
+          })
         );
-  }).pipe(Result.map((members) => `{${A.join(members, ",")}}`));
+  }).pipe(Result.map((members) => `{${A.join(A.getSomes(members), ",")}}`));
 });
 
 const isFiniteNumber = S.is(S.Finite);
@@ -351,30 +454,30 @@ const emitPrimitive = (value: unknown, path: string): Emit => {
 const emitContainer = (
   value: Array<unknown> | { readonly [x: PropertyKey]: unknown },
   path: string,
-  depth: number
+  walk: Walk
 ): Emit => {
-  if (depth >= MAX_NESTING_DEPTH) {
+  if (walk.depth >= MAX_NESTING_DEPTH) {
     return fail(
       "NestingDepthExceeded",
       path,
       `nesting exceeds ${MAX_NESTING_DEPTH} levels (a cyclic value also fails here)`
     );
   }
-  return A.isArray(value) ? emitArray(value, path, depth) : emitRecord(value, path, depth);
+  return A.isArray(value) ? emitArray(value, path, walk) : emitRecord(value, path, walk);
 };
 
 // Inspect each container inside its own boundary: Proxy metadata traps can
 // throw before member reads, including Array.isArray on a revoked Proxy. Keep
 // the current path and preserve an existing typed failure from a nested emit.
 const emit: {
-  (value: unknown, path: string, depth: number): Emit;
-  (path: string, depth: number): (value: unknown) => Emit;
+  (value: unknown, path: string, walk: Walk): Emit;
+  (path: string, walk: Walk): (value: unknown) => Emit;
 } = dual(
   3,
-  (value: unknown, path: string, depth: number): Emit =>
+  (value: unknown, path: string, walk: Walk): Emit =>
     P.isObjectOrArray(value)
       ? Result.try({
-          try: () => emitContainer(value, path, depth),
+          try: () => emitContainer(value, path, walk),
           catch: () =>
             JsoncCanonicalizeError.make({
               code: "UnrepresentableValue",
@@ -448,6 +551,10 @@ const prepareText: {
  * the application edge. Their `Result` twins take the digest as a plain
  * function so a synchronous host hook can fingerprint at all.
  *
+ * Every value entry point refuses a non-JSON value. The one opt-in relaxation
+ * is {@link JsoncCanonicalizeOptions} `omitUndefinedMembers`, accepted by
+ * `canonicalizeResult`, `canonicalize`, `hashResult` and `hash` alike.
+ *
  * **Example** (Key order never matters)
  *
  * ```ts
@@ -477,7 +584,8 @@ export abstract class JsoncFingerprint {
    * non-JSON value fails typed with the JSON-pointer path to fix: a
    * fingerprint of a silently altered document would be a lie.
    * {@link JsoncFingerprint.canonicalize} is defined in terms of this
-   * function.
+   * function. With `omitUndefinedMembers` set, an object member read as
+   * `undefined` is left out and nothing else changes.
    *
    * **Example** (Canonicalize nested values)
    *
@@ -489,11 +597,28 @@ export abstract class JsoncFingerprint {
    * // '{"a":null,"b":{"c":[1],"d":2}}'
    * ```
    *
+   * **Example** (Leave out unset members, refuse everything else)
+   *
+   * ```ts
+   * import * as Result from "effect/Result"
+   * import { JsoncCanonicalizeOptions, JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint"
+   *
+   * const options = JsoncCanonicalizeOptions.make({ omitUndefinedMembers: true })
+   *
+   * console.log(Result.getOrThrow(JsoncFingerprint.canonicalizeResult({ a: 1, b: undefined }, options))) // '{"a":1}'
+   * console.log(Result.isFailure(JsoncFingerprint.canonicalizeResult({ a: 1, b: undefined }))) // true
+   * console.log(Result.isFailure(JsoncFingerprint.canonicalizeResult({ a: Number.NaN }, options))) // true
+   * ```
+   *
    * @param value - The plain JSON value to serialize.
+   * @param options - Canonicalize options; omitted fields take their defaults.
    * @returns The canonical JSON text, or a {@link JsoncCanonicalizeError}.
    */
-  static canonicalizeResult(value: unknown): Result.Result<string, JsoncCanonicalizeError> {
-    return emit(value, Str.empty, 0);
+  static canonicalizeResult(
+    value: unknown,
+    options?: JsoncCanonicalizeOptions
+  ): Result.Result<string, JsoncCanonicalizeError> {
+    return emit(value, Str.empty, startWalk(options));
   }
 
   /**
@@ -515,9 +640,11 @@ export abstract class JsoncFingerprint {
    * ```
    *
    * @param value - The plain JSON value to serialize.
+   * @param options - Canonicalize options; omitted fields take their defaults.
    */
-  static readonly canonicalize = Effect.fn("JsoncFingerprint.canonicalize")((value: unknown) =>
-    Effect.fromResult(JsoncFingerprint.canonicalizeResult(value))
+  static readonly canonicalize = Effect.fn("JsoncFingerprint.canonicalize")(
+    (value: unknown, options?: JsoncCanonicalizeOptions) =>
+      Effect.fromResult(JsoncFingerprint.canonicalizeResult(value, options))
   );
 
   /**
@@ -567,17 +694,31 @@ export abstract class JsoncFingerprint {
    *
    * @param value - The plain JSON value to fingerprint.
    * @param digest - The consumer's SHA-256 implementation.
+   * @param options - Canonicalize options; omitted fields take their defaults.
    * @returns The 64-character lowercase-hex SHA-256, or a
    *   {@link JsoncCanonicalizeError} carrying the canonicalization failure or
    *   `InvalidDigest`.
    */
   static readonly hashResult: {
-    (value: unknown, digest: JsoncDigest): Result.Result<string, JsoncCanonicalizeError>;
-    (digest: JsoncDigest): (value: unknown) => Result.Result<string, JsoncCanonicalizeError>;
+    (
+      value: unknown,
+      digest: JsoncDigest,
+      options?: JsoncCanonicalizeOptions
+    ): Result.Result<string, JsoncCanonicalizeError>;
+    (
+      digest: JsoncDigest,
+      options?: JsoncCanonicalizeOptions
+    ): (value: unknown) => Result.Result<string, JsoncCanonicalizeError>;
   } = dual(
-    2,
-    (value: unknown, digest: JsoncDigest): Result.Result<string, JsoncCanonicalizeError> =>
-      Result.flatMap(JsoncFingerprint.canonicalizeResult(value), digestHexResult(digest))
+    // The digest is the only function among the arguments that can sit second:
+    // data-last calls put it first and follow it with options or nothing.
+    (args) => P.isFunction(args[1]),
+    (
+      value: unknown,
+      digest: JsoncDigest,
+      options?: JsoncCanonicalizeOptions
+    ): Result.Result<string, JsoncCanonicalizeError> =>
+      Result.flatMap(JsoncFingerprint.canonicalizeResult(value, options), digestHexResult(digest))
   );
 
   /**
@@ -603,10 +744,14 @@ export abstract class JsoncFingerprint {
    * ```
    *
    * @param value - The plain JSON value to fingerprint.
+   * @param options - Canonicalize options; omitted fields take their defaults.
    */
   static readonly hash = Effect.fn("JsoncFingerprint.hash")(
-    (value: unknown): Effect.Effect<string, JsoncCanonicalizeError, Digest.Digest> =>
-      Effect.flatMap(Effect.fromResult(JsoncFingerprint.canonicalizeResult(value)), digestHex)
+    (
+      value: unknown,
+      options?: JsoncCanonicalizeOptions
+    ): Effect.Effect<string, JsoncCanonicalizeError, Digest.Digest> =>
+      Effect.flatMap(Effect.fromResult(JsoncFingerprint.canonicalizeResult(value, options)), digestHex)
   );
 
   /**

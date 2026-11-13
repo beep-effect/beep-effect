@@ -79,10 +79,11 @@ const COVERAGE_NOOP_PREFIXES = [".changeset/", "docs/", "explorations/", "goals/
  * scan looks for, the changed-file pattern the row matches, and one coverage
  * owner. Before these rows each file fell through to the "no current
  * workspace owner" fallback, so regenerating one ran the full Test Unit
- * matrix. The rows are the scan's result, not an assertion: the live drift
- * check in the repo-cli tests runs `coverageReaderOwners` over every
- * workspace source and fails when a row and the scan disagree
- * (`goals/hosted-setup-tax`, TURB-01).
+ * matrix. The rows are the scan's result, not an assertion:
+ * `bun run beep lint coverage-owners` runs `coverageReaderOwners` over every
+ * workspace source in the Repo Sanity lane and fails when a row and the scan
+ * disagree, so the pull request that adds or removes a reader is the one
+ * that fails (`goals/hosted-setup-tax`, TURB-01).
  *
  * **Example** (List the mapped reader paths)
  *
@@ -120,6 +121,10 @@ const COVERAGE_REPOSITORY_FIXTURE_OWNER_FILES: ReadonlyArray<readonly [string, s
   ["standards/schema-catalog/**/*.generated.jsonc", "@beep/repo-cli-kit"],
   ["standards/effect-laws.allowlist.jsonc", "@beep/repo-configs"],
   [".claude/skills/effect-first-development/SKILL.md", "@beep/repo-configs"],
+  // The final-check docs-drift test reads these documents (ciTestedDocumentPatterns).
+  ["AGENTS.md", "@beep/repo-cli"],
+  [".claude/skills/yeet/SKILL.md", "@beep/repo-cli"],
+  [".claude/skills/yeet/references/gates-and-proof.md", "@beep/repo-cli"],
   [".claude/hooks/yeet-inbox.sh", "@beep/repo-cli"],
   [".claude/hooks/circuit-breaker.sh", "@beep/repo-ai-metrics"],
   [".claude/hooks/hook-pulse.sh", "@beep/repo-ai-metrics"],

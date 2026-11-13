@@ -6,7 +6,7 @@
     "title": "Yeet Async Merge and Native Stacks",
     "status": "active",
     "created": "2026-11-10",
-    "updated": "2026-11-10",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/yeet-async-merge-and-stacks",
@@ -37,7 +37,8 @@
   "researchReports": [
     "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
-    "research/merge-async-p0-probes-2026-11.md"
+    "research/merge-async-p0-probes-2026-11.md",
+    "research/stack-p0-probes-2026-11.md"
   ],
   "agentLaunchers": [
     {

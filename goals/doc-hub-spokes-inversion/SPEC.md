@@ -129,6 +129,23 @@ them and record each in the Decision Log.
 | --- | --- | --- | --- |
 | 2026-10-28 | Inherits exploration D-04 (`@beep/doc`, namespace `Doc`), D-08 (model-path-first finding address, which the hub's source-map contract must support), D-10 (`SafeDocument` hub-native only). | Graduation seeds the contract from the exploration's rulings. | Reopen the exploration at decompose and amend. |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug doc-hub-spokes-inversion`; add a `kind: decision` file there, never edit this block._
+
+### Paused by operator ruling (finish board, 2026-11-13): It is a worthwhile refactor but nothing has started; set it to paused so it stops counting as active, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
+
+Triage rationale: It is a worthwhile refactor but nothing has started; set it to paused so it stops counting as active.
+
+No lane is working on it. Resume with `bun run beep goals set-status doc-hub-spokes-inversion active` when it is picked up.
+
+Lane chore/finish-board-pause-b2
+
+Reverse: goals set-status doc-hub-spokes-inversion active when it is picked up
+
+<!-- beep:decisions:end -->
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |

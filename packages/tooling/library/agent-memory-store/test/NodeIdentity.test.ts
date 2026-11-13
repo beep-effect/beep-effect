@@ -1,4 +1,13 @@
-import { NodeKind, RevisionPreimage, revisionPreimage, toMarkdownRange } from "@beep/agent-memory-store";
+import {
+  FileEdit,
+  isWellFormedText,
+  LineageId,
+  NodeKind,
+  RevisionPreimage,
+  revisionPreimage,
+  StatusValue,
+  toMarkdownRange,
+} from "@beep/agent-memory-store";
 import { describe, expect, it } from "@effect/vitest";
 import { assertInstanceOf } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
@@ -8,7 +17,23 @@ import { anchor, contentHash, nodeId, revisionA, revisionB, revisionC } from "./
 const decodePreimage = S.decodeUnknownEffect(S.fromJsonString(RevisionPreimage));
 const decodeNodeKind = S.decodeUnknownEffect(NodeKind);
 
+const isText = S.is(S.String.check(isWellFormedText));
+const isLineage = S.is(LineageId);
+const isStatusValue = S.is(StatusValue);
+const isFileEdit = S.is(FileEdit);
+
 describe("NodeIdentity", () => {
+  it("refuses a lone surrogate in every string the log stores, which UTF-8 cannot carry", () => {
+    expect(isText("Plain text, \u{1F600} included.")).toBe(true);
+    expect(isText("\uD800")).toBe(false);
+    expect(isText("trailing \uDC00")).toBe(false);
+    expect(isLineage("session-\uD800")).toBe(false);
+    expect(isStatusValue("done\uDFFF")).toBe(false);
+    expect(isFileEdit({ edit: "edited", path: "notes.md", text: "half a pair \uD83D" })).toBe(false);
+    expect(isFileEdit({ edit: "created", path: "notes.md", text: "\uDE00 the other half" })).toBe(false);
+    expect(isFileEdit({ edit: "edited", path: "notes.md", text: "a whole pair \u{1F600}" })).toBe(true);
+  });
+
   it.effect(
     "builds a deterministic, parent-order independent revision preimage",
     Effect.fnUntraced(function* () {

@@ -6,13 +6,15 @@ import { dual } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
-import { canonicalJson } from "@/corpus/Canonical";
+import { canonicalJson, canonicalJsonResult } from "@/corpus/Canonical";
 import type * as Digest from "effect/crypto/Digest";
 
 const utf8Encoder = new TextEncoder();
 
 const sha256CanonicalEffect = (value: unknown) =>
-  S.decodeEffect(Sha256HexFromBytes)(utf8Encoder.encode(canonicalJson(value)));
+  Effect.fromResult(canonicalJsonResult(value)).pipe(
+    Effect.flatMap((canonical) => S.decodeEffect(Sha256HexFromBytes)(utf8Encoder.encode(canonical)))
+  );
 
 /**
  * Hashes an already encoded JSON-compatible preimage with canonical key order.
@@ -36,6 +38,34 @@ const sha256CanonicalEffect = (value: unknown) =>
  */
 export const sha256CanonicalSync = (value: unknown): Sha256Hex =>
   Sha256Hex.make(Hex.encode(sha256(utf8Encoder.encode(canonicalJson(value)))));
+
+/**
+ * Hashes an encoded preimage with canonical key order, returning a `Result`.
+ *
+ * **Details**
+ *
+ * The same bytes as {@link sha256CanonicalSync}. A preimage the canonical JSON
+ * owner refuses (free text holding an unpaired surrogate, say) is an
+ * `S.SchemaError` naming the owner's code and pointer, so content ids and
+ * schema checks fail typed instead of throwing.
+ *
+ * **Example** (Refuse an unpaired surrogate without throwing)
+ *
+ * ```ts
+ * import { sha256CanonicalResult } from "@/schema/Digest"
+ * import * as Result from "effect/Result"
+ *
+ * console.log(Result.isSuccess(sha256CanonicalResult({ document: "example" }))) // true
+ * console.log(Result.isFailure(sha256CanonicalResult({ document: "\ud800" }))) // true
+ * ```
+ *
+ * @category encoding
+ * @since 0.0.0
+ */
+export const sha256CanonicalResult = (value: unknown): Result.Result<Sha256Hex, S.SchemaError> =>
+  Result.map(canonicalJsonResult(value), (canonical) =>
+    Sha256Hex.make(Hex.encode(sha256(utf8Encoder.encode(canonical))))
+  );
 
 type DigestEffect<Type> = Type extends unknown
   ? (value: Type) => Effect.Effect<Sha256Hex, S.SchemaError, Digest.Digest>
@@ -132,7 +162,7 @@ export const digestOmitting: {
 export const contentDigestSync =
   <Type, Encoded>(schema: S.Codec<Type, Encoded, never, never>) =>
   (value: Type): Result.Result<Sha256Hex, S.SchemaError> =>
-    Result.map(S.encodeResult(schema)(value), sha256CanonicalSync);
+    Result.flatMap(S.encodeResult(schema)(value), sha256CanonicalResult);
 
 /**
  * Synchronous field-omitting digest twin used by self-digest refinements.
@@ -169,7 +199,7 @@ export const digestOmittingSync: {
   2,
   <Type, Encoded extends object, Key extends keyof Encoded>(schema: S.Codec<Type, Encoded, never, never>, field: Key) =>
     (value: Type): Result.Result<Sha256Hex, S.SchemaError> =>
-      Result.map(S.encodeResult(schema)(value), (encoded) => sha256CanonicalSync(Struct.omit(encoded, [field])))
+      Result.flatMap(S.encodeResult(schema)(value), (encoded) => sha256CanonicalResult(Struct.omit(encoded, [field])))
 );
 
 /**

@@ -57,7 +57,7 @@ import {
   goalPullRequestRefs,
 } from "./Goals.schemas.ts";
 import { listGoalPackets, parseGoalManifestText } from "./Inventory.ts";
-import { canonicalJsonText, sha256Hex } from "./PacketCore/PacketDigest.ts";
+import { canonicalJsonText, canonicalJsonTextResult, sha256Hex } from "./PacketCore/PacketDigest.ts";
 import type { FsGuardError } from "@beep/repo-cli-kit/cli/FsGuards";
 import type * as FileSystem from "effect/FileSystem";
 import type { GoalObservedCheckRun } from "./CompletionEvidence.schemas.ts";
@@ -293,8 +293,8 @@ export const goalCompletionDeclarationDigest = Effect.fn("Goals.Completion.decla
   manifest: GoalManifest
 ) {
   const gate = yield* S.encodeEffect(GoalManifest)(manifest);
-  return yield* sha256Hex(
-    canonicalJsonText({
+  const declaration = yield* Effect.fromResult(
+    canonicalJsonTextResult({
       initiative: { id: manifest.initiative.id },
       packetId: manifest.initiative.packetId,
       completionGate: gate.completionGate,
@@ -302,6 +302,7 @@ export const goalCompletionDeclarationDigest = Effect.fn("Goals.Completion.decla
       pullRequests: goalPullRequestRefs(manifest),
     })
   );
+  return yield* sha256Hex(declaration);
 });
 const evidenceCheck = (
   ref: GoalAcceptanceEvidenceRef,

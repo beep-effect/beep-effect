@@ -16,6 +16,8 @@ export { validateLintProgramAssignment } from "../commands/Lint/internal/LintPro
  * @since 0.0.0
  */
 export {
+  directoryOf,
+  joinPath,
   makePolicyGraph,
   moduleSyntax,
   renderClosureInputs,

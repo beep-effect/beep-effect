@@ -1,3 +1,4 @@
+import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
 import {
   E164Phone,
   EmailAddress,
@@ -6,6 +7,8 @@ import {
   exchangeDn,
   externalId,
   Identifier,
+  IdentifierNamespace,
+  IdentifierValue,
   NativeAccountIdInput,
   nativeAccountId,
   normalizeEmail,
@@ -19,14 +22,18 @@ import {
 import {
   canonicalBytes,
   canonicalJson,
+  decodePartyKeyBasis,
   IdentifierBasis,
   identifierBasis,
   PartyKey,
+  PartyKeyBasis,
   partyKeyOf,
+  SourceRecordBasis,
   SourceRecordInput,
   sourceRecordPartyKey,
 } from "@beep/party-domain/PartyKey";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -519,6 +526,80 @@ describe("review findings (PR 2588)", () => {
       expect(basis.input).toBe("");
       const email = yield* Effect.flip(normalizeEmail("a@@example.test"));
       expect(email.field).toBe("value");
+    })
+  );
+});
+
+// Goal canonical-digest-owner, slice C. PartyKey v1 keeps its own serializer:
+// its bytes are pinned by the party-slice specification and this package's
+// fixture, so it is not swapped for the canonical digest owner. This block is
+// the parity proof instead: on every basis the PartyKey boundary accepts, its
+// canonical bytes equal the RFC 8785 bytes `JsoncFingerprint` emits for the
+// same encoded basis. A future change to either side that broke that would
+// show here, while the pinned digest above keeps PartyKey's bytes fixed.
+describe("PartyKey v1 bytes against the canonical digest owner", () => {
+  const encodeBasis = S.encodeEffect(PartyKeyBasis);
+
+  const ownerBytes = Effect.fnUntraced(function* (basis: PartyKeyBasis) {
+    const encoded = yield* encodeBasis(basis);
+    return yield* Effect.fromResult(JsoncFingerprint.canonicalizeResult(encoded));
+  });
+
+  // Basis strings: generated text of at least one code unit (a check starts
+  // at size zero and an empty string is never a basis), kept when it is
+  // already canonical. Each pair is checked as a source-record basis and as
+  // a namespaced identifier basis (scheme `ext`), covering both key sets.
+  // Deriving identifier bases from their own schema would discard almost
+  // every sample: each scheme's graduated value is a narrow grammar.
+  const someText = Arbitrary.schema(S.String.check(S.isMinLength(1)));
+  const basisText = Arbitrary.all({
+    authority: someText.pipe(Arbitrary.filter(S.is(IdentifierNamespace))),
+    value: someText.pipe(Arbitrary.filter(S.is(IdentifierValue))),
+  });
+
+  it.effect.prop(
+    "emits the owner's bytes for every source-record and identifier basis",
+    [basisText],
+    Effect.fnUntraced(function* ([{ authority, value }]) {
+      const bases: ReadonlyArray<PartyKeyBasis> = [
+        SourceRecordBasis.make({ kind: "source-record", authority, value }),
+        IdentifierBasis.make({ kind: "identifier", scheme: "ext", authority, value }),
+      ];
+      for (const basis of bases) {
+        const owner = yield* ownerBytes(basis);
+        const partyKeyBytes = yield* canonicalJson(basis);
+        expect(partyKeyBytes).toBe(owner);
+      }
+    }),
+    { arbitrary: { runs: 200, seed: "partykey-canonical-parity" } }
+  );
+
+  // The escapes PartyKey writes by hand: quote, backslash, the two-character
+  // control escapes, other C0 controls as lowercase `\u00xx`, and nothing
+  // else (U+2028, DEL, precomposed and astral characters stay literal). The
+  // basis accepts NFC text without surrounding whitespace only.
+  it.effect("matches the owner's escapes and key order on the hand-written cases", () =>
+    Effect.gen(function* () {
+      const bases = [
+        { kind: "source-record", authority: 'src\t"q"\\', value: "a\u0001b\u001fc\u2028\u00e9" },
+        { kind: "source-record", authority: "urn:x\u007f\b\f\n\ry", value: "\u{1f600}\u00e9\ufb00\u{10000}" },
+        { kind: "identifier", scheme: "email", authority: "", value: "dana@example.test" },
+      ];
+      for (const input of bases) {
+        const basis = yield* decodePartyKeyBasis(input);
+        const owner = yield* ownerBytes(basis);
+        const partyKeyBytes = yield* canonicalJson(input);
+        expect(partyKeyBytes).toBe(owner);
+      }
+      // The owner reproduces the bytes the specification pins.
+      const pinnedBasis = yield* decodePartyKeyBasis({
+        kind: "identifier",
+        scheme: "email",
+        authority: "",
+        value: "dana@example.test",
+      });
+      const pinned = yield* ownerBytes(pinnedBasis);
+      expect(pinned).toBe(PINNED_EMAIL_BYTES);
     })
   );
 });

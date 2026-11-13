@@ -30,7 +30,12 @@ const decode = S.decodeUnknownResult(DetectionBelief);
 describe("Detection input bounds and content identities", () => {
   it.prop(
     "round-trips bounded values with either polarity",
-    [Arbitrary.schema(S.String.check(S.isMaxLength(32))), Arbitrary.schema(DetectionPolarity)],
+    [
+      // An unpaired surrogate has no canonical form, so the proposal-fact bound
+      // refuses it; the refusal is pinned in the next test.
+      Arbitrary.schema(S.String.check(S.isMaxLength(32))).pipe(Arbitrary.filter((value) => value.isWellFormed())),
+      Arbitrary.schema(DetectionPolarity),
+    ],
     ([value, polarity]) => {
       const original = Result.getOrThrow(decode({ ...belief, value, polarity }));
       const encoded = Result.getOrThrow(S.encodeResult(DetectionBelief)(original));
@@ -52,6 +57,7 @@ describe("Detection input bounds and content identities", () => {
       { ...belief, polarity: "unknown" },
       { ...belief, subject: "" },
       { ...belief, value: Str.repeat(65536)("x") },
+      { ...belief, value: "\ud800" },
     ])
       decode(bad).pipe(Result.isFailure, assertTrue);
     decode(belief).pipe(Result.isSuccess, assertTrue);

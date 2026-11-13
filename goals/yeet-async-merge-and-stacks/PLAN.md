@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `in-progress` (slice A)
+Status: `in-progress` (slices A, B and C done; slice D, the pilot, next)
 
 ## Phases
 
@@ -20,16 +20,17 @@ P1 Implement and P3 Yeet run once per slice; a slice is a PR.
 
 | Slice | Status | First step | Done when |
 | --- | --- | --- | --- |
-| A, async merge | in-review: port published; P0 probes in [`research/merge-async-p0-probes-2026-11.md`](research/merge-async-p0-probes-2026-11.md); legacy call deleted on or after 2026-11-11 | Schema for the request and the outcome union; then the `GithubRest` call and poll. | The slice's own PR merges through the new path and a blocked PR shows the hold. |
-| B, rewrite-stable proof | in-review: head-move classifier, window carry and receipt carry on lane `feat/yeet-rewrite-stable-proof`; decisions `2026-11-12-*` | Head-move classifier over patch-ids, with the test's rewritten heads as fixtures. | Window and receipt survive an unchanged rewrite and restart on a changed one. |
-| C, two-layer stacks | pending | Decide in P0 whether layers are linked through `gh stack` or the Stacks REST API. | One real two-layer stack lands through Yeet end to end. |
+| A, async merge | done: port merged 2026-11-12 (#3099); legacy call and switch deleted 2026-11-13; evidence in [`history/2026-11-13-slice-a-closed.md`](history/2026-11-13-slice-a-closed.md) | Schema for the request and the outcome union; then the `GithubRest` call and poll. | The slice's own PR merges through the new path and a blocked PR shows the hold. |
+| B, rewrite-stable proof | done: head-move classifier, window carry and receipt carry merged 2026-11-12 (#3130); decisions `2026-11-12-*` | Head-move classifier over patch-ids, with the test's rewritten heads as fixtures. | Window and receipt survive an unchanged rewrite and restart on a changed one. |
+| C, two-layer stacks | done: stack #3190 (#3188 and #3189) landed from the top in one push on 2026-11-13; evidence in [`history/2026-11-13-slice-c-stack-landed.md`](history/2026-11-13-slice-c-stack-landed.md); P0 probes in [`research/stack-p0-probes-2026-11.md`](research/stack-p0-probes-2026-11.md) | Decide in P0 whether layers are linked through `gh stack` or the Stacks REST API. | One real two-layer stack lands through Yeet end to end. |
 | D, pilot | pending | Start the pilot record on the first routine stack. | Two weeks measured and the continue-or-stop decision filed. |
 
 P0 Research settles, before slice A: the async endpoint's behaviour for a
 409 and for an expired result (settled 2026-11-10, see
 [`research/merge-async-p0-probes-2026-11.md`](research/merge-async-p0-probes-2026-11.md)); and before slice C: how to wake
 `beep-reviewer` without the S32 commit, and how a layer is created and
-linked.
+linked (settled 2026-11-13, see
+[`research/stack-p0-probes-2026-11.md`](research/stack-p0-probes-2026-11.md)).
 
 ## Closeout Checklist
 
@@ -82,5 +83,21 @@ Slice B adds YeetHeadMoveClassifier (HeadMove.ts), the repository-activity read 
 Lane feat/yeet-rewrite-stable-proof
 
 Reverse: Revert the slice B PR; every head move restarts the window and voids the receipt again.
+
+### Slice C: a two-layer stack landed through Yeet and the tooling is published, 2026-11-13
+
+Stack #3190 landed on 2026-11-13: #3188 (parent) and #3189 (layer, published with yeet open --stack-on) were flipped by yeet ready with their heads unchanged, merged from the top by one yeet merge-gate 3189 request as 238dc10536 and b634505651 in a single push, and retired with yeet sweep --retire. The record is history/2026-11-13-slice-c-stack-landed.md. The tooling adds the Stacks REST read and create to GithubRest, the stack model (Stack.schemas.ts, Stack.ts), StackTrunk.ts, StackPublish.ts and StackGate.ts, the --stack-on and --alone flags, guards on yeet merge and yeet gh merge, and the skill text (step 2c, references/stacks.md). Next: slice D opens its pilot record on the first routine stack.
+
+Lane feat/yeet-two-layer-stacks
+
+Reverse: Revert the slice C tooling PR; --stack-on and the stack gate go away, a stacked pull request holds on its parent branch's empty ruleset again, and step 2c returns to fold or publish-after-parent.
+
+### Slices A and B merged; slice A closed, 2026-11-13
+
+Slice A's port merged on 2026-11-12 as #3099 and slice B merged the same day as #3130. Four relaxed merges that day (#3121, #3125, #3126, #3119) left gate comments naming merge-async, the gated head and the bypass sent; history/2026-11-13-slice-a-closed.md quotes them and says what was not observed (a strict merge leaves no trace on GitHub, and whether #3099 itself merged through the new path is not known). The legacy call is deleted in this PR, which closes slice A. Next: slice C, two-layer stacks, then the pilot.
+
+Lane chore/yeet-delete-legacy-merge
+
+Reverse: Checkpoint only; nothing to reverse.
 
 <!-- beep:decisions:end -->

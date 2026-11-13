@@ -36,7 +36,7 @@ import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { canonicalJsonText } from "../Goals/PacketCore/PacketDigest.ts";
+import { canonicalJsonTextResult } from "../Goals/PacketCore/PacketDigest.ts";
 import { latestClassification, readHunkLedger } from "./internal/HunkLedger.ts";
 import { readSkillsLockDocument, requireVendoredEntry, SKILLS_LOCK_PATH } from "./internal/LockFile.ts";
 import { decodePatchText, PatchSeriesFile, readVerifiedPatchSeries } from "./internal/PatchSeries.ts";
@@ -117,7 +117,10 @@ const requireVendored = (
   );
 
 const digestOf = Effect.fn("SkillsPatch.digestOf")(function* (preimage: unknown, label: string) {
-  return yield* hashBytes(textEncoder.encode(canonicalJsonText(preimage)), label);
+  const canonical = yield* Effect.fromResult(canonicalJsonTextResult(preimage)).pipe(
+    SkillsCommandError.mapError(`Failed to canonicalize the ${label} preimage.`, label)
+  );
+  return yield* hashBytes(textEncoder.encode(canonical), label);
 });
 
 const requireExpected = (expect: string, planDigest: Sha256Hex, rerun: string) =>

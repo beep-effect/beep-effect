@@ -395,7 +395,24 @@ export const resolvePackageSubpath: {
   return P.isObject(map) ? recordSubpath(map as Readonly<Record<string, unknown>>, key) : O.none();
 });
 
-const joinPath = (...parts: ReadonlyArray<string>): string =>
+/**
+ * Join repo-relative POSIX path parts, resolving `.` and `..` segments.
+ *
+ * **Example** (Resolve a relative path)
+ *
+ * ```ts
+ * import { joinPath } from "@beep/repo-cli/test/Lint"
+ *
+ * console.log(joinPath("packages/a/src", "../tsconfig.json")) // "packages/a/tsconfig.json"
+ * ```
+ *
+ * @param parts - Path parts, each possibly holding several segments.
+ * @returns The normalized repo-relative path.
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
+export const joinPath = (...parts: ReadonlyArray<string>): string =>
   A.join(
     A.reduce(A.flatMap(parts, Str.split("/")), A.empty<string>(), (segments, part) => {
       if (part === "..") return A.dropRight(segments, 1);
@@ -404,7 +421,24 @@ const joinPath = (...parts: ReadonlyArray<string>): string =>
     "/"
   );
 
-const directoryOf = (file: string): string => A.join(A.dropRight(Str.split(file, "/"), 1), "/");
+/**
+ * The directory part of a repo-relative POSIX file path.
+ *
+ * **Example** (Take a file's directory)
+ *
+ * ```ts
+ * import { directoryOf } from "@beep/repo-cli/test/Lint"
+ *
+ * console.log(directoryOf("packages/a/tsconfig.json")) // "packages/a"
+ * ```
+ *
+ * @param file - A repo-relative file path.
+ * @returns Its directory, or `""` for a root-level file.
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
+export const directoryOf = (file: string): string => A.join(A.dropRight(Str.split(file, "/"), 1), "/");
 
 const resolutionCandidates = (base: string): ReadonlyArray<string> =>
   Str.endsWith(".js")(base)
@@ -461,7 +495,8 @@ interface PolicyGraphOptions {
  * ```
  *
  * @param options - The source tree and the workspaces specifiers may enter.
- * @returns The graph reader: workspace lookup, command-path walk and closures.
+ * @returns The graph reader: workspace lookup, command-path walk, and the shell,
+ *   command and whole-module closures.
  * @internal
  * @category constructors
  * @since 0.0.0
@@ -785,7 +820,16 @@ export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
     return yield* walk(entries, followAll);
   });
 
-  return { workspaceOf, commandPath, shellClosure, commandClosure, resolve, syntaxOf } as const;
+  // The full static runtime closure of entry modules: every edge is followed,
+  // with no command-tree pruning. The CI binary closure digest walks
+  // `bin-ci.ts` this way, since `bun build` bundles every module it reaches.
+  const moduleClosure = (entries: ReadonlyArray<string>) =>
+    walk(
+      A.map(entries, (module): WalkItem => ({ module, follow: followAll, transitive: false })),
+      followAll
+    );
+
+  return { workspaceOf, commandPath, shellClosure, commandClosure, moduleClosure, resolve, syntaxOf } as const;
 };
 
 /**

@@ -15,7 +15,9 @@ import {
   computeProfileFinalCheckSkips,
   EXPECTATION_DIFF_OVERFLOW,
   ExpectationRewrite,
+  FINAL_CHECK_GATE_SET_DIGEST,
   FINAL_CHECK_RECEIPT_DIR,
+  FINAL_CHECK_RECEIPT_VERSION,
   FinalCheckGate,
   FinalCheckPlannedStep,
   FinalCheckReceipt,
@@ -23,6 +25,7 @@ import {
   FinalCheckRouteGate,
   FinalCheckSkip,
   FinalCheckStepResult,
+  finalCheckGateSetRefusal,
   finalCheckRefusal,
   findExpectationRewrites,
   parseFinalCheckGates,
@@ -49,7 +52,7 @@ import {
 import { QualityTaskStep } from "@beep/repo-cli-kit/process/index";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertInclude, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -57,6 +60,7 @@ import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as R from "effect/Record";
@@ -74,6 +78,7 @@ const encodeJsonText = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const HEAD = Str.repeat(40)("a");
 const encodeReceiptJson = S.encodeUnknownEffect(S.fromJsonString(FinalCheckReceipt));
+const decodeReceiptJson = S.decodeEffect(S.fromJsonString(FinalCheckReceipt));
 const BASE = Str.repeat(40)("b");
 
 // #2215 rewrote this expectation to match #2212's over-escaped `@`
@@ -100,7 +105,6 @@ type ReceiptOverrides = {
 
 const receiptOf = (overrides: ReceiptOverrides = {}) =>
   FinalCheckReceipt.make({
-    schemaVersion: "yeet-final-check/v1",
     headSha: overrides.headSha ?? HEAD,
     mergeBase: BASE,
     base: "origin/main",
@@ -111,6 +115,10 @@ const receiptOf = (overrides: ReceiptOverrides = {}) =>
     steps: overrides.steps ?? [],
     expectationRewrites: [],
   });
+
+// A receipt as a pre-versioning `yeet final-check` wrote it: v1, no gate set.
+const legacyV1ReceiptJson = (headSha: string, schemaVersion = "yeet-final-check/v1") =>
+  `{"schemaVersion":"${schemaVersion}","headSha":"${headSha}","mergeBase":"${BASE}","base":"origin/main","complete":true,"verdict":"pass","startedAt":"2026-10-24T00:00:00.000Z","finishedAt":"2026-10-24T00:10:00.000Z","steps":[],"expectationRewrites":[]}\n`;
 
 const failedStep = (gate: FinalCheckGate) =>
   FinalCheckStepResult.make({
@@ -494,6 +502,41 @@ describe("finalCheckRefusal", () => {
       )
     ).toContain("final-check failed on check, docgen");
   });
+
+  it("records the sorted gate set and writes v2 by default", () => {
+    const receipt = receiptOf();
+    expect(receipt.schemaVersion).toBe(FINAL_CHECK_RECEIPT_VERSION);
+    expect(receipt.gateSetDigest).toBe(FINAL_CHECK_GATE_SET_DIGEST);
+    expect(FINAL_CHECK_GATE_SET_DIGEST).toBe(A.join(A.sort(FinalCheckGate.literals, Order.String), ","));
+  });
+
+  it.effect("refuses a v1 receipt on the head itself, naming the version and the re-run", () =>
+    Effect.gen(function* () {
+      const legacy = yield* decodeReceiptJson(legacyV1ReceiptJson(HEAD));
+      expect(legacy.schemaVersion).toBe("yeet-final-check/v1");
+      const refusal = finalCheckRefusal(O.some(legacy), HEAD);
+      assertSome(
+        refusal,
+        "the final-check receipt is yeet-final-check/v1, written before receipts recorded their gate set; re-run `bun run beep yeet final-check` on the committed head"
+      );
+    })
+  );
+
+  it.effect("refuses a v2 receipt written under another gate set and names the difference", () =>
+    Effect.gen(function* () {
+      const smaller = FinalCheckReceipt.make({ ...receiptOf(), gateSetDigest: "cheap-gates,check,retired-gate" });
+      const refusal = O.getOrThrow(finalCheckRefusal(O.some(smaller), HEAD));
+      assertInclude(refusal, "written under another gate set");
+      assertInclude(refusal, "added expectation-rewrite, lint-policy, lint, repo-sanity, docgen, fallow, coverage");
+      assertInclude(refusal, "removed retired-gate");
+      assertInclude(refusal, "re-run `bun run beep yeet final-check`");
+      const unrecorded = yield* decodeReceiptJson(legacyV1ReceiptJson(HEAD, FINAL_CHECK_RECEIPT_VERSION));
+      assertSome(
+        finalCheckGateSetRefusal(unrecorded),
+        "the final-check receipt records no gate set; re-run `bun run beep yeet final-check` on the committed head"
+      );
+    })
+  );
 });
 
 // git and bun install succeed unless their command names a failing step; the
@@ -796,6 +839,19 @@ it.layer(platformWith(), { timeout: "30 seconds" })("final-check receipts on dis
     })
   );
 
+  it.effect("reads a v1 receipt from disk so the refusal can name it", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const dir = path.join("/repo", FINAL_CHECK_RECEIPT_DIR);
+      yield* fs.makeDirectory(dir, { recursive: true });
+      yield* fs.writeFileString(path.join(dir, `${HEAD}.json`), legacyV1ReceiptJson(HEAD));
+      const legacy = yield* readFinalCheckReceipt("/repo", HEAD);
+      const refusal = O.getOrThrow(finalCheckRefusal(legacy, HEAD));
+      assertInclude(refusal, "yeet-final-check/v1");
+    })
+  );
+
   it.effect("creates no merge-base worktree when nothing was rewritten", () =>
     Effect.gen(function* () {
       const verifyExpectationRewrites7 = yield* verifyExpectationRewrites("/nonexistent-repo", BASE, []);
@@ -888,7 +944,7 @@ describe("final-check verification routing", () => {
     Effect.gen(function* () {
       const decoded = yield* S.decodeEffect(FinalCheckReceipt)(receiptOf());
       expect(decoded.route).toBeUndefined();
-      expect(decoded.schemaVersion).toBe("yeet-final-check/v1");
+      expect(decoded.schemaVersion).toBe("yeet-final-check/v2");
     })
   );
 

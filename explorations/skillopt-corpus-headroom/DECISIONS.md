@@ -129,3 +129,99 @@ sizing, a procedural-skill probe and an activation probe stay gated in
 
 **Rationale:** Rejected at the review: dropping the prune proposal from a null
 result, and promising the activation probe alongside the first goal.
+
+## 2026-11-13 — which fired gate is worked first
+
+**Question:** `skill-effect-probe` returned Insensitive, and its pilot fired
+rate (17 of 24) fired the activation gate. Which candidate is worked now: the
+activation probe or the lane probe?
+
+**Answer:** The lane probe graduates now as `goals/skill-lane-probe`.
+DEFERRED: decomposing `skill-activation-probe` waits for the lane probe's
+fired rate.
+
+**Rationale:** The lane probe reuses the first probe's tooling and answers
+the question the first one could not reach. It also yields a fired rate from
+60 scored runs, a better basis for an activation probe than 24 pilot runs.
+Rejected: working the activation probe first, and stopping with both gated.
+
+## 2026-11-13 — lane probe: primary measure
+
+**Question:** The pass-or-fail measures sat at zero because the completion
+contract is unreachable without tools. Which measure is fixed in advance as
+the primary?
+
+**Answer:** Lane fraction: the scorer's per-run score in `[0, 1]`, weighted
+per the task manifest, under scorer profile v3.
+
+**Rationale:** The task manifests defined it before any of this data, and it
+is the soft score the September runs used. In the laws-prompt pilot it moved
+(0.490 without the skill, 0.578 with) and the run-to-run standard deviation
+inside a task and cell was 0.058. Rejected: schema-first lane pass, because a
+run that writes no schema passes it (bare-prompt pilot runs scored 1 on
+fn-schema while laws-prompt runs scored 0); and new per-task checks written
+from the skill text, because they would be authored after the contrast was
+seen and are new corpus work.
+
+## 2026-11-13 — lane probe: inference
+
+**Question:** The first rule required an interval clustered over the four
+task families to exclude zero. What decides the verdict now?
+
+**Answer:** The 12 tasks are treated as a fixed set. A permutation test
+shuffles the with-skill and without-skill labels inside each task. The
+family-clustered interval is still reported and carries no verdict.
+
+**Rationale:** The pilot's family differences were +0.25, +0.10, -0.04 and
++0.04. Clustered over four families that gives about ±0.20 however many runs
+are added, so an effect confined to one or two families can never clear it.
+The clustered interval answers whether an effect would hold for a new rule
+family; four families cannot settle that. The fixed-task test answers whether
+the skill changes output on these tasks, which is the question. Rejected:
+keeping the clustered interval as the decision.
+
+## 2026-11-13 — lane probe: cells and budget
+
+**Question:** How many cells and runs?
+
+**Answer:** Two cells, the laws prompt with and without the skill, 12 tasks,
+5 runs each: 120 scored runs on the existing plan.
+
+**Rationale:** Pilot noise projects an overall interval of about ±0.02 and a
+per-family one of about ±0.04 at that size. The bare-prompt cell is dropped:
+it sat at the floor by construction, and the first probe's decision file
+named this as its reversal. Rejected: 8 runs per cell (192 runs) and keeping
+three cells (180 runs).
+
+## 2026-11-13 — lane probe: verdicts
+
+**Question:** Which outcomes does the rule have, and does the 0.10 size
+threshold stay?
+
+**Answer:** Three outcomes, with 0.10 kept. Effect: the test rejects no
+difference and the difference is at least 0.10; corpus sizing opens. Small
+effect: the test rejects no difference and the difference is under 0.10;
+reported by family, no trainer work and no prune proposal. Null: the test
+does not reject; the trainer question closes for lint-enforceable skills and
+a prune proposal goes to a human.
+
+**Rationale:** The 0.10 threshold was fixed on 2026-11-10, before any data.
+The pilot difference was 0.088, so a new threshold chosen near that value now
+would be suspect. Rejected: two outcomes where any detected difference counts
+as an effect, because a 0.03 difference would then open corpus sizing.
+
+## 2026-11-13 — lane probe: agent-decided details
+
+**Question:** What else is fixed before the first scored run?
+
+**Answer:** The 72 pilot runs and the six P0 runs are not evidence; every
+scored run is fresh. Scorer profile v3 is frozen as merged. Opus 5.5 only.
+The test is two-sided at 0.05 with a recorded seed. A detected negative
+difference is reported as harm inside the Null outcome. Family-level tests
+are secondary, adjusted for four comparisons, and shape what a prune proposal
+says without changing the verdict.
+
+**Rationale:** The primary was chosen after the pilot contrast was seen. The
+only defence is fresh data and a rule merged to `main` before the first
+scored run. Reversal: any of these changes through a new dated analysis rule
+before the scored run starts.

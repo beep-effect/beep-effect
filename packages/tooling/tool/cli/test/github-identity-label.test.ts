@@ -10,6 +10,7 @@ import {
   GithubIdentityLabel,
   GithubLedgerStore,
   GithubTransportFetch,
+  ghSpawnCredential,
   ghSpawnIdentity,
   LedgerRange,
   layerGithubBudgetLedger,
@@ -304,3 +305,17 @@ describe("GitHub identity labels", () => {
     );
   });
 });
+
+it.effect("fingerprints only gh's selected environment token", () =>
+  Effect.gen(function* () {
+    const read = (env: Readonly<Record<string, string>>) =>
+      ghSpawnCredential.pipe(Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env)));
+    const missing = yield* read({});
+    assertNone(missing);
+    const selected = yield* read({ GH_TOKEN: FIXTURE_TOKEN, GITHUB_TOKEN: "ignored" });
+    const fallback = yield* read({ GH_TOKEN: "", GITHUB_TOKEN: FIXTURE_TOKEN });
+    const hash = yield* hashOf(FIXTURE_TOKEN);
+    assertSome(selected, Str.slice(6)(hash));
+    assertSome(fallback, Str.slice(6)(hash));
+  })
+);

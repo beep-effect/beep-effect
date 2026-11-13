@@ -31,6 +31,7 @@ const subcommands = <const T extends ReadonlyArray<string>>(...values: T): T => 
  */
 const LINT_POLICY_SUBCOMMANDS = subcommands(
   "circular",
+  "coverage-owners",
   "deprecated-apis",
   "ecosystem-polarity",
   "effect-schema-inventory",

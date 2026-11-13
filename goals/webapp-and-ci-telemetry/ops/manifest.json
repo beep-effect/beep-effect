@@ -4,13 +4,13 @@
     "id": "webapp-and-ci-telemetry",
     "packetId": "goal-packet/v1:d88eb833f02484b8ce66dbc71d1f39072075824c6b987d59d70ffd2b1b5b295b",
     "title": "Web App and CI Telemetry",
-    "status": "active",
+    "status": "paused",
     "created": "2026-10-14",
-    "updated": "2026-10-14",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/webapp-and-ci-telemetry",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "@vercel/otel + Effect bridge for oip-web and todox (no drains), Turborepo/CI spans from run summaries, dev-loop LGTM sink, WebStorm note.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -89,5 +89,6 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): A broad six-phase observability goal with nothing started; it overlaps the CI-efficiency work and is not urgent. Resume with `bun run beep goals set-status webapp-and-ci-telemetry active` when it is picked up."
 }
