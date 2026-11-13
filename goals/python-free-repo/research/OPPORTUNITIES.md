@@ -22,3 +22,14 @@ string literals`. Production now uses a statically declared command definition;
 the test factory only applies its service Layer to that definition. Both static
 command-surface tests passed after this fix. A documented injection pattern for
 commands would prevent this extra test cycle.
+
+## 2026-11-13: local aggregate proof exceeded available compute
+
+`quality package-verify @beep/repo-cli` spent 894 seconds in its audit and
+reported twelve test, hook or watchdog timeouts, with no assertion failures.
+The host's load average exceeded 90 while independent proof lanes were active.
+The lane retained its passing package lint, source/test checks, 126 focused tests
+and successful native CLI scans, and reran the aggregate proof. Scheduler
+admission and elapsed gate time must be visible continuously rather than only
+at the aggregate command's exit; this would make the workstation's ten-minute
+constrained-compute rule easier to apply without starting duplicate proofs.
