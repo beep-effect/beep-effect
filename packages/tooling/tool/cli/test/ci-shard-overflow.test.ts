@@ -532,7 +532,7 @@ it.layer(CommandLayer, { timeout: "30 seconds" })("ci shard-overflow", (it) => {
     })
   );
 
-  it.effect("routes only while the switch is on, and only as far as the overflow call is pinned", () =>
+  it.effect("routes only while the switch is on, through the caller pinned to shard-overflow.yml at main", () =>
     Effect.gen(function* () {
       const { document: check } = readWorkflow("check.yml");
       const steps = yamlAt(check, ["jobs", "test-plan", "steps"]);
@@ -548,14 +548,14 @@ it.layer(CommandLayer, { timeout: "30 seconds" })("ci shard-overflow", (it) => {
         O.flatMap(O.fromNullishOr(/--callee (local|pinned)/u.exec(run)), (match) => O.fromUndefinedOr(match[1])),
         () => ""
       );
-      // A local call resolves to main only on a push, so the command may route pushes only; the cutover
-      // to the pinned reference changes both lines together.
-      const expectedUses =
-        callee === "pinned"
-          ? "beep-effect/beep-effect/.github/workflows/shard-overflow.yml@main"
-          : "./.github/workflows/shard-overflow.yml";
-      expect(["local", "pinned"]).toContain(callee);
-      expect(yamlAt(check, ["jobs", "test-unit-overflow", "uses"])).toBe(expectedUses);
+      // After the cutover (enablement step 4) the caller names shard-overflow.yml at main, the one definition
+      // the overflow runner group admits, so a pull request cannot substitute its own; the command is told so
+      // and routes pull requests from this repository too. A local call resolves to main only on a push, so
+      // going back to it means `--callee local` again, both lines together.
+      expect(callee).toBe("pinned");
+      expect(yamlAt(check, ["jobs", "test-unit-overflow", "uses"])).toBe(
+        "beep-effect/beep-effect/.github/workflows/shard-overflow.yml@main"
+      );
       expect(yamlAt(check, ["jobs", "test-unit-overflow", "secrets"])).toBe("inherit");
     })
   );

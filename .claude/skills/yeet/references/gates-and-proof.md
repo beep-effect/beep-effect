@@ -143,7 +143,10 @@ the reason, and the receipt still admits the flip; `yeet ready` prints the
 skipped gates so the PR body names them as hosted-only. Use it for the
 constrained-compute ruling (a gate parked behind admission for 10 minutes),
 never to step around a red. `--gates <list>` runs a subset for iteration and
-writes an incomplete receipt that never admits the flip. `--dry-run` prints
+writes an incomplete receipt that never admits the flip, to a file of its own
+(`.beep/yeet/final-check/subsets/<sha>/<ulid>.json`, one per run), never to
+`<sha>.json`: a complete receipt already on the head keeps admitting the flip,
+and a later subset run keeps the earlier one's receipt. `--dry-run` prints
 the plan for the head without running it. A dirty tree (uncommitted edits or
 untracked, non-ignored files, which the gates read) is refused, because
 the receipt pins the committed head; amend or merge `main` and the receipt
@@ -155,10 +158,12 @@ per-host ceilings in `docs/runbooks/agent-pools.md` "Compute profiles"),
 `final-check` skips every gate marked `hosted-only` above on its own, with
 the reason `compute-profile=worker`, and runs `lint effect-vitest --files`
 over the diff's test files inside the `lint` gate. `--force-local` runs
-`fallow` and `coverage` one task at a time (concurrency 1) and the receipt
-records `forceLocal: true`; it still refuses `cheap-gates`, `lint-policy`,
-`check`, `docgen` and the full `repo-sanity` lane, whose full runs exceed
-the worker budget or have no proven budget (see the runbook). `yeet ready` treats only that exact
+only `coverage`, over the packages of the diff's affected plan, one task
+at a time (concurrency 1), and the receipt records `forceLocal: true`. It
+refuses `cheap-gates`, `lint-policy`, `check`, `fallow`, `docgen`, the full
+`repo-sanity` lane, and coverage whose plan is whole-workspace: each
+refusal names the dankserver measurement (or "no measured worker budget")
+and says to push and let hosted CI prove it (see the runbook). `yeet ready` treats only that exact
 reason as deferred to hosted CI: for each deferred gate it reads the newest
 check run of the gate's hosted context on the PR head (`Repo Sanity`,
 `Heavy / Lint Policy`, `Heavy / Check`, `Heavy / Docgen`,

@@ -59,7 +59,23 @@ const enabled = CiShardOverflowPoolConfig.make({
 });
 const isString = S.is(S.String);
 
+// The roles the hand-maintained `beep-ci-fleet-boundary` (v5) lets a pool's scale-up Lambda pass to EC2.
+const passOwnRoles = ["role/beep-ci/beep-ci-", "role/beep-ovf/beep-ovf-"];
+// github-aws-runners v7.10.1 creates the runner role at `role_path` (default `/<prefix>/`), named
+// `<prefix>-runner-<md5 of it>`; the hash suffix does not change what the boundary admits.
+const runnerRole = (module: Record<string, unknown>): string =>
+  `role${isString(module.role_path) ? module.role_path : `/${String(module.prefix)}/`}${String(module.prefix)}-runner-0123abcd`;
+const passableToEc2 = (role: string): boolean => A.some(passOwnRoles, (admitted) => Str.startsWith(admitted)(role));
+
 describe("@beep/infra CiRunnerPool", () => {
+  // The termination watcher matches `ghr:environment` (the prefix) by `startsWith`, so neither pool's prefix may
+  // start with the other's, or one pool's handler deregisters the other's runners.
+  it("keeps the two pools' prefixes apart", () => {
+    expect(ciShardOverflowRunnerPool.prefix).toBe("beep-ovf");
+    expect(Str.startsWith(ciHeavyRunnerPool.prefix)(ciShardOverflowRunnerPool.prefix)).toBe(false);
+    expect(Str.startsWith(ciShardOverflowRunnerPool.prefix)(ciHeavyRunnerPool.prefix)).toBe(false);
+  });
+
   it("keeps the heavy pool's former controller values", () => {
     expect(ciHeavyRunnerPool.prefix).toBe("beep-ci");
     expect(ciHeavyRunnerPool.runnerGroupName).toBe("beep-ec2-heavy");
@@ -225,7 +241,7 @@ describe("@beep/infra CiFleetController with the overflow pool", () => {
       const h = heavyModule.value;
       const o = overflowModule.value;
       // What differs: the pool's identity and limits.
-      expect(o.prefix).toBe("beep-ci-ovf");
+      expect(o.prefix).toBe("beep-ovf");
       expect(o.runner_group_name).toBe("beep-shard-overflow");
       expect(o.runner_name_prefix).toBe("beep-ovf-");
       expect(o.runner_extra_labels).toStrictEqual(["beep-shard-overflow"]);
@@ -242,6 +258,14 @@ describe("@beep/infra CiFleetController with the overflow pool", () => {
           name: "/github-action-runners/shard-overflow/github_app_webhook_secret",
         },
       });
+      // Neither controller sets a role path, so each runner role lands under its own prefix, inside the
+      // boundary's PassOwnRoles; anything else would make every scale-up fail on iam:PassRole.
+      expect(o.role_path).toBeUndefined();
+      expect(h.role_path).toBeUndefined();
+      expect(runnerRole(o)).toBe("role/beep-ovf/beep-ovf-runner-0123abcd");
+      expect(passableToEc2(runnerRole(o))).toBe(true);
+      expect(passableToEc2(runnerRole(h))).toBe(true);
+      expect(passableToEc2(runnerRole({ prefix: "beep-ci-ovf" }))).toBe(false);
       // The heavy pool keeps its literals.
       expect(h.prefix).toBe("beep-ci");
       expect(h.runner_group_name).toBe("beep-ec2-heavy");
@@ -281,18 +305,18 @@ describe("@beep/infra CiFleetController with the overflow pool", () => {
       // The controller's own resources and the termination-watcher grants are named by prefix.
       const amiParameter = MutableHashMap.get(resources, "ci-shard-overflow-controller-runner-ami");
       assertTrue(O.isSome(amiParameter));
-      expect(amiParameter.value.name).toBe("/beep-ci-ovf/controller/runner-ami-id");
+      expect(amiParameter.value.name).toBe("/beep-ovf/controller/runner-ami-id");
       const imdsPolicy = MutableHashMap.get(resources, "ci-shard-overflow-controller-runner-imds-disable");
       assertTrue(O.isSome(imdsPolicy));
-      expect(imdsPolicy.value.name).toBe("beep-ci-ovf-runner-imds-disable");
-      expect(imdsPolicy.value.path).toBe("/beep-ci-ovf/");
+      expect(imdsPolicy.value.name).toBe("beep-ovf-runner-imds-disable");
+      expect(imdsPolicy.value.path).toBe("/beep-ovf/");
       expect(imdsPolicy.value.policy).toBe(
         O.getOrUndefined(MutableHashMap.get(resources, "heavy-runner-imds-disable"))?.policy
       );
-      expect(A.filter(lambdaNames, Str.startsWith("beep-ci-ovf-"))).toStrictEqual([
-        "beep-ci-ovf-spot-termination-notification",
-        "beep-ci-ovf-spot-termination-handler",
-        "beep-ci-ovf-deregister-retry",
+      expect(A.filter(lambdaNames, Str.startsWith("beep-ovf-"))).toStrictEqual([
+        "beep-ovf-spot-termination-notification",
+        "beep-ovf-spot-termination-handler",
+        "beep-ovf-deregister-retry",
       ]);
     })
   );

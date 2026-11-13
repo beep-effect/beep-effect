@@ -3098,6 +3098,7 @@
     {"name":"RegistrationGeometryService.planForward","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"RegistrationGeometryService.planInverse","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"RegistrationGeometryService.surfacesFor","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"RemovalRoots.resolve","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"RepoCards.discoverClones","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"RepoCards.inspectClone","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"RepoCards.listDirs","owner":"@beep/repo-cli","family":"tooling","conforms":true},

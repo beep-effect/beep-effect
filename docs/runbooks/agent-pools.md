@@ -286,34 +286,41 @@ check, which stays with hosted `Heavy / Check` and `Heavy / Lint Policy`.
 
 ### Forced gates on a worker
 
-`yeet final-check --force-local` on `worker` runs a forced gate one task at a time
-(concurrency 1) and prints that line; the receipt records `forceLocal: true`. A gate whose single
-process already exceeds the worker bar (1.5 GB, SPEC criterion 3), or whose full run has no
-proven worker budget, stays hosted-only: `--force-local` refuses it with that reason and leaves it to hosted CI with the
-reason `compute-profile=worker`. The table in `GateRoute.schemas.ts` (`workerForcedRouteTable`) is
-the truth. Figures are dankserver measurements from
-`goals/compute-profile-gate-routing/research/2026-11-13-worker-host-acceptance.md` only.
+`yeet final-check --force-local` on `worker` either runs a forced gate to completion one task at a
+time (concurrency 1), and the receipt records `forceLocal: true`, or refuses it. A gate whose
+measured run did not complete inside dankserver's 7 GiB slice, or that has no measured worker
+budget, is refused: final-check prints the measurement and where it is recorded, tells you to push
+with `bun run beep yeet open --body-file <md>` and let hosted CI prove it, and skips the gate with
+the reason `compute-profile=worker`. Refusing is the correct result on a 7 GiB slice. A run that
+forced nothing writes `forceLocal: false`. The table in `GateRoute.schemas.ts`
+(`workerForcedRouteTable`) is the truth; the decision of 2026-11-13 ("A forced gate on a worker
+completes serially inside its measured budget or refuses with the reason") records why. Figures
+come only from `goals/compute-profile-gate-routing/research/2026-11-13-worker-host-acceptance.md`
+(first run), its `-repeat.md` sibling (repeat run) and the 2026-11-08 repo-sanity decision.
 
-| Gate | `--force-local` on `worker` | Memory budget measured on dankserver |
+| Gate | `--force-local` on `worker` | Measured on dankserver |
 | --- | --- | --- |
-| `fallow` | runs, one sub-lane at a time (`ci lane fallow --serial`) | one sub-lane is a `bun` CLI of about 275 MB under its `op run` wrapper plus a `fallow` analyzer of up to 398 MB, about 0.7 GB together. Three abreast reached 3.06 GB and did not finish in 29.5 minutes under a 3 GiB cap. |
-| `coverage` | runs, one package at a time (`--concurrency=1`) | not measured as a gate; one `vitest run` of one test file peaked at 684 MB |
-| `check` | refused | an ad-hoc `tsgo` package check peaked at 4.07 GB |
-| `docgen` | refused | builds the same TypeScript programs as `check` |
-| `lint-policy` | refused | owns the test-file type check: `tsc` held 2.59 GB for `@beep/repo-cli` and gave no result in 30 minutes under a 3 GiB cap; the full `lint effect-vitest` scan reached 2.24 GB before a pressure watchdog stopped it |
-| `cheap-gates` | refused | no per-gate budget measured in the acceptance note; its whole-repo scan remains hosted-only |
-| `repo-sanity` | changeset status only; the full lane is refused | no full-lane budget measured in the acceptance note; the narrowed worker final-check peaked at 600–602 MB |
+| `coverage` | runs when the affected plan selects the diff's own packages: prebuild, shards and the Turbo graph all at `--concurrency=1`, and final-check names the packages it will measure. Refused when the plan falls back to the whole workspace or cannot be read | repeat run: the prebuild still ran `turbo run build --concurrency=4` and was stopped at 565 s at 2.15 GB (fixed: the prebuild and shard group now follow `--concurrency=1`). No completed forced run yet |
+| `fallow` | refused | repeat run: serial, its first sub-lane `fallow:audit:check` (204 packages) held a 2G-capped scope at its ceiling, 2.15 GB aggregate, until slice pressure passed 15 at 523 s. First run: three abreast reached 3.06 GB and gave no result in 29.5 minutes under a 3 GiB cap |
+| `check` | refused | first run: the `@beep/repo-cli` test type-check's `tsc` held 2.59 GB for one process and gave no result in 30 minutes under a 3 GiB cap |
+| `lint-policy` | refused | owns that test-file type check (2.59 GB, above); the full `lint effect-vitest` scan reached 2.24 GB before a pressure watchdog stopped it |
+| `cheap-gates` | refused | its whole-repo schema catalog scan held 5.2 GB of the 7 GiB slice for 25 minutes (2026-11-08 decision) |
+| `repo-sanity` | changeset status only; the full lane is refused | the full lane runs the same 5.2 GB scan; the narrowed worker final-check peaked at 600–609 MB |
+| `docgen` | refused | no measured worker budget |
 
 Run a forced gate the way the acceptance run did, inside a capped scope, so a misjudged budget
 throttles the scope instead of the slice that hosts `t3 serve`:
 
 ```sh
 systemd-run --user --scope -q -p MemoryHigh=2G -p MemoryMax=3G -p MemorySwapMax=0 \
-  bun run beep yeet final-check --force-local --gates fallow
+  bun run beep yeet final-check --force-local --gates coverage
 ```
 
-A `--gates` run writes an incomplete receipt, which never admits `yeet ready`; run the plain
-`yeet final-check` on the head again afterwards.
+A `--gates` run writes an incomplete receipt to a file of its own,
+`.beep/yeet/final-check/subsets/<head>/<ulid>.json`, which never admits `yeet ready`. It leaves
+the head receipt `.beep/yeet/final-check/<head>.json` as it was, and a later `--gates` run on the
+same head adds another file, so a forced run's receipt survives the refusal run after it. If the
+head has no complete passing receipt yet, run the plain `yeet final-check` on it.
 
 ### Hosted catalog regeneration
 

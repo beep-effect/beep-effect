@@ -5,19 +5,26 @@ returns a credential to the assistant. Exit codes: 0 delivered, 1 cancelled or
 rejected by dialog, 2 unavailable/invalid/error, 3 timeout. Treat every nonzero
 exit as no usable answer. Never display captured stderr or exception details.
 
-The adapter must create `os.pipe()`, launch `prompt.py` with `--write-fd` naming
-its write end and `pass_fds=(write_fd,)`, close its own write end, and drain the
-read end while the child runs. Bound the read and child's lifetime; terminate
-and reap only owned children on cancellation. Never reuse another agent's pipe.
-Do not wait before draining: a long answer can fill the pipe. Limit accepted
-answer bytes for the specific consumer, and reject oversize input without
-printing it. Before delivery, line-oriented authentication consumers must reject
-CR, LF, NUL and every other control character incompatible with that consumer.
-The helper already rejects CR/LF/NUL; adapters must still enforce their own
-protocol rules. A remote sudo PTY adapter must never forward multiline text
-that could be interpreted as shell input after authentication. Send successful bytes directly to the authorized consumer; close
-both descriptors in `finally`. Parent cancellation must also terminate its
-owned helper and dialog, not leave a background prompt.
+Use the checkout's [transport.ts](../scripts/transport.ts) `requestCode(title, label, timeout,
+env)` Effect from a trusted adapter. It creates a real Linux FIFO with
+`pipe2(O_CLOEXEC)`, launches `bun scripts/prompt.ts --write-fd 3` with only the
+write end inherited as descriptor 3, closes the parent's write end, and drains
+the read end concurrently. It accepts at most 4096 bytes, bounds the helper's
+lifetime, and terminates/reaps only its owned child on cancellation. The secret
+never enters argv, environment variables, logs, or temporary files. Do not
+replace the FIFO with a socket or redirect helper output to a tool transcript.
+
+An adapter creating its own FIFO must follow the same lifecycle. Never reuse
+another agent's pipe or wait for helper exit before draining it: a long answer
+can fill the pipe. Before delivery, line-oriented authentication consumers
+must reject CR, LF, NUL and every other incompatible control character. The
+helper already rejects CR/LF/NUL; adapters still enforce their own protocol
+rules and size limits. A remote sudo PTY adapter must never forward multiline
+text that could become shell input after authentication. Send successful bytes
+directly to the authorized consumer, wipe buffers after use, and close both
+descriptors in cleanup. Parent cancellation must terminate its owned helper
+and dialog, never leave a background prompt. `runAdapter` provides a silent
+SIGINT/SIGTERM boundary for standalone adapters.
 
 For remote SSH text challenges, prefer the existing remote wrapper. An SSH
 askpass adapter may call the pipe helper and return the answer to SSH's private
@@ -49,47 +56,55 @@ user's** runtime/bus context as below. Preserve an already complete selected
 GUI context; do not run this recipe to replace a different selected bus.
 Never inspect another UID's session or print a user-manager environment dump.
 
-```python
-import os
-import stat
-import subprocess
+```ts
+import * as Fs from "node:fs";
+import * as Effect from "effect/Effect";
+import * as ChildProcess from "effect/process/ChildProcess";
 
-def current_user_gui_env():
-    uid = os.geteuid()
-    if uid == 0 or uid != os.getuid():
-        raise RuntimeError("Plasma session unavailable")
-    runtime = f"/run/user/{uid}"
-    bus = f"{runtime}/bus"
-    directory, socket = os.lstat(runtime), os.lstat(bus)
-    if (not stat.S_ISDIR(directory.st_mode) or directory.st_uid != uid
-            or directory.st_mode & 0o077 or not stat.S_ISSOCK(socket.st_mode)
-            or socket.st_uid != uid):
-        raise RuntimeError("Plasma session unavailable")
-    metadata = {"XDG_RUNTIME_DIR": runtime,
-                "DBUS_SESSION_BUS_ADDRESS": f"unix:path={bus}"}
-    if any(os.environ.get(key, value) != value for key, value in metadata.items()):
-        raise RuntimeError("Plasma session unavailable")
-    env = os.environ | metadata
-    reachable = subprocess.run(
-        ["busctl", "--user", "status"], env=env, stdin=subprocess.DEVNULL,
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
-    if reachable.returncode != 0:
-        raise RuntimeError("Plasma session unavailable")
-    return env
+const currentUserGuiEnv = Effect.gen(function* () {
+  const uid = process.geteuid?.();
+  if (!uid || uid !== process.getuid?.()) return undefined;
+  const runtime = `/run/user/${uid}`;
+  const bus = `${runtime}/bus`;
+  const [directory, socket] = yield* Effect.try(() => [
+    Fs.lstatSync(runtime), Fs.lstatSync(bus),
+  ]);
+  if (!directory?.isDirectory() || directory.uid !== uid ||
+      (directory.mode & 0o077) || !socket?.isSocket() || socket.uid !== uid)
+    return undefined;
+  const metadata = {
+    XDG_RUNTIME_DIR: runtime,
+    DBUS_SESSION_BUS_ADDRESS: `unix:path=${bus}`,
+  };
+  if (Object.entries(metadata).some(([key, value]) =>
+      process.env[key] !== undefined && process.env[key] !== value))
+    return undefined;
+  const env = { ...process.env, ...metadata };
+  const reachable = yield* Effect.scoped(Effect.gen(function* () {
+    const child = yield* ChildProcess.make("busctl", ["--user", "status"], {
+      env, extendEnv: false, stdin: "ignore", stdout: "ignore", stderr: "ignore",
+      killSignal: "SIGKILL", forceKillAfter: "1 second",
+    });
+    return yield* child.exitCode;
+  }).pipe(Effect.timeout("5 seconds")));
+  return reachable === 0 ? env : undefined;
+}).pipe(Effect.catchCause(() => Effect.succeed(undefined)));
 ```
 
-Use the returned environment only for the owned helper/authentication lane's
-`Popen(..., env=env, pass_fds=(write_fd,))`. Catch preparation errors and timeout
-at the adapter boundary and report only unavailable; never print exceptions.
-This sets only nonsecret runtime/bus metadata. `prompt.py` then resolves display
-metadata consistently through the user manager, refusing mixed sessions. Do not
-guess a display or run `kdialog --password` directly. Successful ownership,
-socket and bus probes qualify GUI infrastructure; only a live masked-dialog
-acceptance check can qualify actual dialog delivery.
+Use the returned environment only for the owned helper/authentication lane.
+Provide `BunServices.layer` at the adapter's runtime boundary for the bus probe.
+Treat `undefined` as unavailable and stop; never print exception details.
+This sets only nonsecret runtime/bus metadata. `prompt.ts` preserves a complete
+caller-selected GUI context. Otherwise it resolves display metadata from
+`systemctl --user show-environment` as one consistent unit, refusing any
+conflicting supplied GUI key, missing bus, or missing display. Do not guess a
+display or run `kdialog --password` directly. Ownership, socket and bus probes
+qualify infrastructure; only a live masked-dialog acceptance check qualifies
+actual dialog delivery.
 
 ## Concrete SSH consumer
 
-Use the [SSH askpass adapter](../scripts/ssh-askpass.py) as `SSH_ASKPASS` only inside the existing approved
+Use the [SSH askpass adapter](../scripts/ssh-askpass.ts) as `SSH_ASKPASS` only inside the existing approved
 remote SSH wrapper when it needs a text challenge. The executable must have an
 absolute path. Set `SSH_ASKPASS_REQUIRE=force` for that single SSH invocation;
 set `NumberOfPasswordPrompts=1`, restrict `PreferredAuthentications` to the
@@ -159,8 +174,9 @@ master can then carry the authorized operation without another text prompt.
 
 ## Workstation discovery installation
 
-Run `python3 <skill>/scripts/install.py` once from the reviewed checkout. It
-adds discovery links at the current-user installation destinations
+Run `bun <skill>/scripts/install.ts` once from the reviewed checkout. It
+requires Bun and checkout root dependencies (`bun install --frozen-lockfile`),
+then adds discovery links at the current-user installation destinations
 `$HOME/.agents/skills` and `$HOME/.claude/skills`, and a
 marked default rule to `~/.codex/AGENTS.md`, preserving existing instructions.
 It refuses a competing skill directory/link. New Codex chats discover the
@@ -173,4 +189,8 @@ them to the retained main checkout only after it contains this skill. Do not
 retire a worktree that still owns installed discovery links. To roll back,
 remove only the two links after verifying their targets, and remove only the
 marked block from `~/.codex/AGENTS.md`; preserve the rest of the file.
-Installation is local activation, separate from PR publication or merge.
+The links expose the TypeScript prompt, askpass, installer and transport scripts
+in that checkout; the installer does not copy a standalone Python executable or
+modify SSH wrappers. Invocation uses `bun` (the askpass entrypoint has an env-bun
+shebang), so its PATH must resolve Bun. Installation is local activation,
+separate from PR publication or merge.

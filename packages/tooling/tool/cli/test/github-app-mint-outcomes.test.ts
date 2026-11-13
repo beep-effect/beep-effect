@@ -117,6 +117,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("github app mint callbac
     Effect.fnUntraced(function* () {
       const store = yield* scripted(17);
       // The vault write exits 17; op-doctor then dies instead of failing, which `Effect.ignore` passes on.
+      // Own double: decorates the scripted store, dying only on the `op-doctor` spawn (a defect, which
+      // `ScriptedSpawner` cannot script).
       const spawner = ChildProcessSpawner.make((command) =>
         ChildProcess.isStandardCommand(command) && command.command === "op-doctor"
           ? Effect.die("injected op-doctor defect")

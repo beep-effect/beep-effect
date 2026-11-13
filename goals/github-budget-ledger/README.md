@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -33,11 +33,17 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P4 Close: the final PR carries the baseline, the T3 threshold decision, the reflection and the closeout.
 
 ## Latest Evidence
 
-Not started.
+- Implementation: #3068 (ledger, sampler, reserve signal, `github-headroom` parcel, gh attribution, ledger-first
+  `GraphqlBudget`), #3200 (per-credential buckets), #3247 (GraphQL windows as reset-scoped instances).
+- Baseline: [`history/2026-11-13-hub-baseline.md`](./history/2026-11-13-hub-baseline.md). Over 24 h the token
+  spent 66,701 GraphQL points (median 2,495/h, p90 5,197/h). `yeet monitor` spends about 94 points per process-hour,
+  which resolves the 430 vs 720-1,440 conflict in favour of the sample.
+- T3 share: upper bound median 45.6%, p90 66.4%. Threshold 60% median share and 1,500 points/h median residual
+  ([decision](./decisions/2026-11-13-t3-share-threshold.md)); not fired.
 
 ## Notes
 

@@ -3,8 +3,10 @@
  * projections, streams, catch-up and upcasting, run against `Domain.InMemory`
  * (the reference) and the Postgres driver from the same module.
  */
+
 import * as Domain from "@alchemy.run/domain";
 import { Internals } from "@alchemy.run/domain/Model";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, layer } from "@effect/vitest";
 import { deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -79,8 +81,15 @@ class CustomerTotals extends Domain.View("CustomerTotals", {
     CustomerJoined: (totals, event) => ({ ...totals, name: event.name }),
     OrderPlaced: (totals, event) => ({ ...totals, total: totals.total + event.amount, orders: totals.orders + 1 }),
   },
-  validate: (_request, totals) => (totals?.name === "hidden" ? Effect.fail(Hidden.make({})) : Effect.void),
 }) {}
+
+const CustomerTotalsLive = CustomerTotals.toLayer(
+  Effect.succeed(
+    Effect.fnUntraced(function* (_request, totals) {
+      if (totals?.name === "hidden") return yield* Hidden.make({});
+    })
+  )
+);
 
 class OrderNoted extends Domain.Event("OrderNoted", { order: S.String, amount: S.Int }) {}
 class OrderFeed extends Domain.Stream("OrderFeed", { key: Customer, entries: [OrderNoted] }) {}
@@ -302,10 +311,11 @@ const eventsOf = (name: string, id: string) =>
 
 /** Register every consumer scenario for one platform. */
 export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
-  const hosted = Shop.layer(OrderLedgerLive).pipe(
+  const hosted = Shop.layer(Layer.merge(OrderLedgerLive, CustomerTotalsLive)).pipe(
     Layer.provideMerge(LedgerRowsLive),
     Layer.provideMerge(target.platform),
-    Layer.provideMerge(target.base)
+    Layer.provideMerge(target.base),
+    Layer.provideMerge(NodeCrypto.layer)
   );
   describe(`Consumer conformance: ${target.name}`, () => {
     const scope = Str.toLowerCase(Str.replace(/[^A-Za-z0-9]+/g, "-")(target.name));
@@ -322,12 +332,12 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
           yield* customers.send(ada, JoinCustomer.make({ name: "ada" }));
           yield* orders.send(orderId("ada-1"), PlaceOrder.make({ customer: ada, amount: 5 }));
           const placed = yield* orders.send(orderId("ada-2"), PlaceOrder.make({ customer: ada, amount: 7 }));
-          const folded = yield* totals.query(Customer.ref(ada), { atLeast: placed, timeout: "5 seconds" });
+          const folded = yield* totals.get(Customer.ref(ada), { atLeast: placed, timeout: "5 seconds" });
           deepStrictEqual(folded, O.some({ name: "ada", total: 12, orders: 2 }));
 
           const joined = yield* customers.send(hidden, JoinCustomer.make({ name: "hidden" }));
           const api = yield* ShopApi.clientInProcess;
-          yield* totals.query(Customer.ref(hidden), { atLeast: joined, timeout: "5 seconds" });
+          yield* totals.get(Customer.ref(hidden), { atLeast: joined, timeout: "5 seconds" });
           const refused = yield* api.CustomerTotals.get(hidden).pipe(Effect.flip);
           strictEqual(refused._tag, "Hidden");
           const allowed = yield* api.CustomerTotals.get(ada);
@@ -341,7 +351,7 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
           const totals = yield* CustomerTotals;
           const bo = customerId("bo");
           const joined = yield* customers.send(bo, JoinCustomer.make({ name: "bo" }));
-          yield* totals.query(Customer.ref(bo), { atLeast: joined, timeout: "5 seconds" });
+          yield* totals.get(Customer.ref(bo), { atLeast: joined, timeout: "5 seconds" });
           const view = yield* viewStore("CustomerTotals");
           const events = yield* eventsOf("Customer", bo);
           const first = yield* Effect.fromOption(A.head(events));
@@ -416,7 +426,7 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
             const names = Context.get(context, JoinedNames);
             const history = yield* eventually(names.history, ({ complete }) => complete);
             strictEqual(history.complete, true);
-            const caught = yield* eventually(names.query(Customer.ref(dee)), O.isSome);
+            const caught = yield* eventually(names.get(Customer.ref(dee)), O.isSome);
             deepStrictEqual(caught, O.some({ name: "dee" }));
           }).pipe(Effect.scoped);
           // The same consumer reading another source at the same version: the deploy dies, saying to bump it.
@@ -436,7 +446,7 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
           yield* Effect.gen(function* () {
             const context = yield* Layer.build(ArchiveRebuilt.layer(Layer.empty));
             const names = Context.get(context, JoinedNamesV1);
-            const rebuilt = yield* eventually(names.query(Customer.ref(dee)), (found) =>
+            const rebuilt = yield* eventually(names.get(Customer.ref(dee)), (found) =>
               O.exists(found, ({ name }) => name === "DEE")
             );
             deepStrictEqual(rebuilt, O.some({ name: "DEE" }));
@@ -455,7 +465,7 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
             const context = yield* Layer.build(LazyAfter.layer(Layer.empty, { lazy: ["JoinedNames"] }));
             const names = Context.get(context, JoinedNames);
             // No waiting: the first read itself fills the key from the instance's events.
-            const first = yield* names.query(Customer.ref(eve));
+            const first = yield* names.get(Customer.ref(eve));
             deepStrictEqual(first, O.some({ name: "eve" }));
             const history = yield* names.history;
             strictEqual(history.complete, true);
@@ -490,7 +500,7 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
           const gus = customerId("gus");
           yield* customers.send(gus, JoinCustomer.make({ name: "gus" }));
           const first = yield* orders.send(orderId("gus-1"), PlaceOrder.make({ customer: gus, amount: 2 }));
-          yield* totals.query(Customer.ref(gus), { atLeast: first, timeout: "5 seconds" });
+          yield* totals.get(Customer.ref(gus), { atLeast: first, timeout: "5 seconds" });
           yield* eventually(feed.list(gus), (entries) => A.length(entries) === 1);
           const versions = yield* Stream.runCollect(view.changes(gus).pipe(Stream.take(2))).pipe(Effect.forkChild);
           const metas = yield* Stream.runCollect(feed.changes(gus).pipe(Stream.take(2))).pipe(Effect.forkChild);
@@ -547,12 +557,14 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
           }).pipe(Effect.scoped);
           yield* Effect.gen(function* () {
             const context = yield* Layer.build(
-              BacklogAfter.layer(TotalsLedgerLive).pipe(Layer.provideMerge(LedgerRowsLive))
+              BacklogAfter.layer(Layer.merge(TotalsLedgerLive, CustomerTotalsLive)).pipe(
+                Layer.provideMerge(LedgerRowsLive)
+              )
             );
             const totals = Context.get(context, CustomerTotals);
             const viewHistory = yield* eventually(totals.history, ({ complete }) => complete);
             strictEqual(viewHistory.complete, true);
-            const folded = yield* eventually(totals.query(Customer.ref(hal)), (found) =>
+            const folded = yield* eventually(totals.get(Customer.ref(hal)), (found) =>
               O.exists(found, ({ orders }) => orders === 2)
             );
             deepStrictEqual(folded, O.some({ name: "hal", total: 7, orders: 2 }));
@@ -596,7 +608,7 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
             );
           }).pipe(Effect.scoped);
           yield* Effect.gen(function* () {
-            const context = yield* Layer.build(LedgerbookAfter.layer(Layer.empty));
+            const context = yield* Layer.build(LedgerbookAfter.layer(CustomerTotalsLive));
             // Commits while the backfill runs: an instance it has not reached yet asks for a reader,
             // and neither the history nor the new events are lost.
             const first = yield* Effect.fromOption(A.head(customers));
@@ -612,17 +624,17 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
             );
             strictEqual(history.complete, true);
             const folded = yield* Effect.forEach(customers, (customer) =>
-              eventually(totals.query(Customer.ref(customer)), (found) => O.exists(found, ({ orders }) => orders >= 3))
+              eventually(totals.get(Customer.ref(customer)), (found) => O.exists(found, ({ orders }) => orders >= 3))
             );
             deepStrictEqual(
               A.drop(folded, 1),
               A.map(A.range(1, 5), (index) => O.some({ name: `n${index}`, total: 6, orders: 3 }))
             );
-            const withLate = yield* eventually(totals.query(Customer.ref(first)), (found) =>
+            const withLate = yield* eventually(totals.get(Customer.ref(first)), (found) =>
               O.exists(found, ({ orders }) => orders === 4)
             );
             deepStrictEqual(withLate, O.some({ name: "n0", total: 10, orders: 4 }));
-            const joinedLate = yield* eventually(totals.query(Customer.ref(late)), O.isSome);
+            const joinedLate = yield* eventually(totals.get(Customer.ref(late)), O.isSome);
             deepStrictEqual(joinedLate, O.some({ name: "late", total: 0, orders: 0 }));
           }).pipe(Effect.scoped);
         })
@@ -649,16 +661,16 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
             );
           }).pipe(Effect.scoped);
           // Stopped right after it starts: its run, directory, scanner and source jobs are left mid-way.
-          yield* Layer.build(ResumingAfter.layer(Layer.empty)).pipe(Effect.scoped);
+          yield* Layer.build(ResumingAfter.layer(CustomerTotalsLive)).pipe(Effect.scoped);
           yield* Effect.gen(function* () {
-            const context = yield* Layer.build(ResumingAfter.layer(Layer.empty));
+            const context = yield* Layer.build(ResumingAfter.layer(CustomerTotalsLive));
             const totals = Context.get(context, CustomerTotals);
             const history = yield* eventually(totals.history, ({ complete }) => complete).pipe(
               Effect.timeout(Duration.seconds(20))
             );
             strictEqual(history.complete, true);
             const folded = yield* Effect.forEach(customers, (customer) =>
-              eventually(totals.query(Customer.ref(customer)), (found) => O.exists(found, ({ orders }) => orders === 2))
+              eventually(totals.get(Customer.ref(customer)), (found) => O.exists(found, ({ orders }) => orders === 2))
             );
             deepStrictEqual(
               folded,
@@ -794,7 +806,7 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
             );
           }).pipe(Effect.scoped);
           // Built and torn down at once: its backfill run and the jobs it scheduled are left behind.
-          yield* Layer.build(LeavingWith.layer(Layer.empty)).pipe(Effect.scoped);
+          yield* Layer.build(LeavingWith.layer(CustomerTotalsLive)).pipe(Effect.scoped);
           yield* Effect.gen(function* () {
             const context = yield* Layer.build(LeavingWithout.layer(Layer.empty));
             // What is left runs against roles that are gone; live commits route only to what is hosted.
@@ -807,7 +819,7 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
               PlaceOrder.make({ customer: late, amount: 2 })
             );
             strictEqual(placed.version, 1);
-            const state = yield* Context.get(context, Customer).state(late);
+            const state = yield* Context.get(context, Customer).get(late);
             deepStrictEqual(state, { _tag: "Member", name: "late" });
           }).pipe(Effect.scoped);
         })
@@ -828,7 +840,7 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
             yield* Effect.gen(function* () {
               const context = yield* Layer.build(FlakyAfter.layer(Layer.empty));
               const totals = Context.get(context, FlakyTotals);
-              const folded = yield* eventually(totals.query(Customer.ref(flaky)), (found) =>
+              const folded = yield* eventually(totals.get(Customer.ref(flaky)), (found) =>
                 O.exists(found, ({ orders }) => orders === 1)
               ).pipe(Effect.timeout(Duration.seconds(15)));
               deepStrictEqual(folded, O.some({ name: "flaky", orders: 1 }));

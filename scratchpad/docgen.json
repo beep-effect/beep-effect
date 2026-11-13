@@ -5,6 +5,7 @@
   "outDir": ".jsdoc-loop/generated-docs",
   "include": ["**/*.ts"],
   "exclude": [
+    "model-first-slices/**",
     "docs/**",
     ".jsdoc-loop/**",
     "**/test/**",
@@ -16,6 +17,7 @@
     "exec.ts",
     "effect-ontology/**",
     "beep/**",
+    "osdk/**",
     "party/**",
     "turbo-cache-r2/**"
   ],
