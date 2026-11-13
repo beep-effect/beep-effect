@@ -390,6 +390,7 @@ const renderCanonicalValue = (value: unknown, indent: string): string => {
     return A.match(pipe(R.toEntries(value), A.sort(jsonEntryOrder)), {
       onEmpty: () => "{}",
       onNonEmpty: (entries) =>
+        // biome-ignore lint/plugin/no-hand-rolled-canonical-json: census E9, renderer: collision report, not hashed
         `{\n${pipe(
           entries,
           A.map(([key, entry]) => `${nested}${encodeJsonLeaf(key)}: ${renderCanonicalValue(entry, nested)}`),

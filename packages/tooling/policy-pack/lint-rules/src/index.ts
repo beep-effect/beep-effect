@@ -35,7 +35,8 @@ const $I = $LintRulesId;
  *   "prefer-array-flat-map",
  *   "prefer-identity-annote-pipe",
  *   "no-hand-built-identity-annotation",
- *   "prefer-exact-optional-key"
+ *   "prefer-exact-optional-key",
+ *   "no-hand-rolled-canonical-json"
  * ])
  * ```
  *
@@ -51,6 +52,7 @@ export const RULE_NAMES = [
   "prefer-identity-annote-pipe",
   "no-hand-built-identity-annotation",
   "prefer-exact-optional-key",
+  "no-hand-rolled-canonical-json",
 ] as const;
 
 /**
@@ -173,6 +175,7 @@ export class RuleRegistrySchema extends S.Opaque<RuleRegistrySchema, { readonly 
     "prefer-identity-annote-pipe": RuleMetadataSchema,
     "no-hand-built-identity-annotation": RuleMetadataSchema,
     "prefer-exact-optional-key": RuleMetadataSchema,
+    "no-hand-rolled-canonical-json": RuleMetadataSchema,
   }).pipe(
     $I.annoteSchema("RuleRegistrySchema", {
       description: "Schema for the finite rule registry keyed by rule slug.",
@@ -255,6 +258,14 @@ export const RULES: { readonly [K in RuleName]: RuleMetadata } = RuleRegistrySch
     summary:
       "Schema fields use exact optional keys (EF-40): `S.optionalKey`, `S.withDecodingDefaultKey` and `S.OptionFromOptionalKey`, never `S.optional`, `S.withDecodingDefault` or `S.OptionFromOptional`.",
     scope: O.none(),
+  }),
+  "no-hand-rolled-canonical-json": RuleMetadataSchema.make({
+    name: "no-hand-rolled-canonical-json",
+    severity: "error",
+    replaces: O.none(),
+    summary:
+      "Disallow hand-rolled JSON object text (braces around a join of members) outside `@beep/jsonc`; canonical bytes come from `JsoncFingerprint.canonicalizeResult`.",
+    scope: O.some("**/src/** except packages/foundation/modeling/jsonc/**"),
   }),
 });
 

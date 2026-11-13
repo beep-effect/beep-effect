@@ -163,6 +163,7 @@ export const makeCitationPublicationResourceHash = Effect.fn("Citation.makePubli
     ([name, json]) => quote(name).pipe(Effect.map((name) => `${name}: ${json}`)),
     { concurrency: 1 }
   );
+  // biome-ignore lint/plugin/no-hand-rolled-canonical-json: census E6, pinned: eyecite 2.7.6 json.dumps bytes
   const citationHash = yield* hashCitationRuntimePreimage(`{${A.join(encodedFields, ", ")}}`).pipe(
     Effect.mapError(runtimeFailure)
   );
