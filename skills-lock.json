@@ -251,7 +251,7 @@
         ".claude/skills/orchestrate",
         ".agents/skills/orchestrate"
       ],
-      "installedTreeHash": "aa7c186390252128853832663bedcc7a25e51e2cc5de24ba527f8f229e2963ee"
+      "installedTreeHash": "4cbb2298a4102c83e5e5cb6d0343e73cb5eb3c049b0ae4eb6fe27cdb030bcd94"
     },
     "plasma-sensitive-entry": {
       "_tag": "local",
@@ -676,7 +676,7 @@
         ".claude/skills/update-harnesses",
         ".agents/skills/update-harnesses"
       ],
-      "installedTreeHash": "d924a954931ef7d2181977e8c37e6f74b08c9517b0f491cf062f3b46faaa7cbf"
+      "installedTreeHash": "8fbd57f4ee048f5bc3957051deca09181d754fbb6d3cd5e085e9152d9780de3a"
     },
     "yeet": {
       "_tag": "local",
@@ -684,7 +684,7 @@
         ".claude/skills/yeet",
         ".agents/skills/yeet"
       ],
-      "installedTreeHash": "5fa9679e778f06e2c178a96f85cce1ce2533be185b6a42a267c50b976debdec5"
+      "installedTreeHash": "3a239c57532cecaf1c022a0c137e07a95472f803b13be476fff8e3e06f25882b"
     }
   }
 }

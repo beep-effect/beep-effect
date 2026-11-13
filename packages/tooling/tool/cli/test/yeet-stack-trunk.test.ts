@@ -13,7 +13,7 @@ import {
   YeetTrunkHealth,
 } from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
-import { deepStrictEqual } from "@effect/vitest/utils";
+import { assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -181,8 +181,9 @@ describe("readYeetTrunkHealth", () => {
       deepStrictEqual(health, green(1));
       expect(fixture.checkRunReads()).toHaveLength(3);
       const revList = A.findFirst(fixture.spawner.spawns, (spawn) => A.contains(spawn.args, "rev-list"));
-      expect(O.map(revList, (spawn) => A.join(spawn.args, " "))).toEqual(
-        O.some(`rev-list --max-count=${YEET_TRUNK_HEALTH_COMMIT_LIMIT} --first-parent origin/main`)
+      assertSome(
+        O.map(revList, (spawn) => A.join(spawn.args, " ")),
+        `rev-list --max-count=${YEET_TRUNK_HEALTH_COMMIT_LIMIT} --first-parent origin/main`
       );
     })
   );

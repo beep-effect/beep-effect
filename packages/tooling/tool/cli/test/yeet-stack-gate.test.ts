@@ -21,7 +21,7 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as DateTime from "effect/DateTime";
@@ -156,26 +156,26 @@ describe("yeet merge-gate stack layout", () => {
       yeetStackUngatedRefusal(belowTop, LOWER),
       "#3157 has open layer #3158 above it in stack #3159; merge from the top with `bun run beep yeet merge-gate 3158 <sha>`, or land this layer by itself with `bun run beep yeet merge-gate 3157 <sha> --alone`"
     );
-    expect(
-      O.isSome(
-        yeetStackUngatedRefusal(YeetStackMergeScope.cases.TooDeep.make({ stackNumber: STACK, openLayers: 3 }), TOP)
-      )
-    ).toBe(true);
-    expect(
-      O.isSome(
-        yeetStackUngatedRefusal(YeetStackMergeScope.cases.Unknown.make({ stackNumber: STACK, detail: "gone" }), TOP)
-      )
-    ).toBe(true);
+    assertSome(
+      yeetStackUngatedRefusal(YeetStackMergeScope.cases.TooDeep.make({ stackNumber: STACK, openLayers: 3 }), TOP),
+      "stack #3159 has 3 open layers; one merge lands 2 at most"
+    );
+    assertSome(
+      yeetStackUngatedRefusal(YeetStackMergeScope.cases.Unknown.make({ stackNumber: STACK, detail: "gone" }), TOP),
+      "gone; the gate never merges a stacked pull request whose merge scope is unknown"
+    );
   });
 
   it("reads the lower layer's own squash commit back, and fails loudly when it did not land", () => {
-    expect(yeetStackLowerMergeCommit(lowerLayer, pullRecord())).toEqual(Result.succeed(lowerSquash));
-    expect(yeetStackLowerMergeCommit(lowerLayer, pullRecord({ mergeCommitSha: O.none() }))).toEqual(
+    deepStrictEqual(yeetStackLowerMergeCommit(lowerLayer, pullRecord()), Result.succeed(lowerSquash));
+    deepStrictEqual(
+      yeetStackLowerMergeCommit(lowerLayer, pullRecord({ mergeCommitSha: O.none() })),
       Result.fail("#3157 reads merged but GitHub reports no merge commit for it")
     );
-    expect(
-      yeetStackLowerMergeCommit(lowerLayer, pullRecord({ state: "open", merged: false, mergeCommitSha: O.none() }))
-    ).toEqual(Result.fail("#3157 reads state open, merged=false, after the stack merge"));
+    deepStrictEqual(
+      yeetStackLowerMergeCommit(lowerLayer, pullRecord({ state: "open", merged: false, mergeCommitSha: O.none() })),
+      Result.fail("#3157 reads state open, merged=false, after the stack merge")
+    );
   });
 
   it("warns when the lower layer merged at a head the gate never read", () => {
