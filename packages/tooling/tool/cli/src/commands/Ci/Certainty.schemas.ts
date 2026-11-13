@@ -81,9 +81,11 @@ export type CiCertaintyHeadState = typeof CiCertaintyHeadState.Type;
  *
  * **Details**
  *
- * A head is `docs` when its check.yml Heavy Admission job ran the
- * documentation-only admission step; docs heads finish in minutes and are
- * reported as their own class so they never flatter the code-head statistic.
+ * A head is `docs` when its check.yml run created the Docs Policy job, which
+ * only a documentation-only change profile does, or (runs before 2026-11-13)
+ * when its Heavy Admission job ran the documentation-only admission step.
+ * Docs heads finish in minutes and are reported as their own class so they
+ * never flatter the code-head statistic.
  *
  * **Example** (List the head classes)
  *
