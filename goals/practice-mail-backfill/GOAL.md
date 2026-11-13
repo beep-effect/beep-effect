@@ -1,8 +1,6 @@
 # GOAL: Import the historical mail estate into Outlook search
 
-Repo root: the current working directory — the `beep-effect` checkout you are
-running in. Do not assume an absolute path; several checkouts exist. All paths
-below are repo-relative.
+Repo root: the current `beep-effect` checkout; all paths below are repo-relative.
 
 Outcome: the attorney's archive mailbox holds the historical PST estate under
 `/Historical-PST`, imported via Purview network upload in reconciled ≤100 GB
@@ -76,5 +74,8 @@ contradicting support-case verdict, or an unexplained reconciliation loss.
 Every tenant mutation is operator-attended — never run one from an
 unattended session.
 
-Done only when acceptance passes and verification is complete, or when a
-blocker is reported with file/command evidence.
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug practice-mail-backfill` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/practice-mail-backfill/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

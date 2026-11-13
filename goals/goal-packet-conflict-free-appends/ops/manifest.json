@@ -4,13 +4,13 @@
     "id": "goal-packet-conflict-free-appends",
     "packetId": "goal-packet/v1:909a8f068e6e238622182d000e23cb2c400a6e96ede14c9d0781ac6eede2687b",
     "title": "Goal packet conflict-free appends",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-05",
-    "updated": "2026-11-06",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/goal-packet-conflict-free-appends",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Lanes record decisions as their own files; SPEC.md and PLAN.md blocks are generated projections, so sibling PRs never conflict on a shared tail.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -32,6 +32,10 @@
       {
         "number": 2869,
         "role": "final"
+      },
+      {
+        "number": 2874,
+        "role": "supporting"
       }
     ],
     "acceptanceEvidence": [
@@ -82,12 +86,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -102,7 +106,7 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "proposedCloseout": {
+  "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2869
   }

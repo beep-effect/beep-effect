@@ -36,7 +36,7 @@ zero unclassified differences). Each PR flips its own row.
 | W7b | none (the W7 kit) | the other command groups plus Qa and Refs, census rows B1-B136 (D-16) | merged, #2721 (D-19) |
 | W7c | none (the W7 kit) | `R/commands/Worktree/**` census rows W1-W45 (D-16) | merged, #2736 (D-20) |
 | W7 retire | none | delete the generic runners from `internal/repo-run/GitExec.ts`, census rows X1-X10 (D-16) | in review, #2753 (D-21) |
-| C | none | Closeout: ledger of every site-list row (migrated or kept with reason), reflection, `proposedCloseout` | pending |
+| C | none | Closeout: ledger of every site-list row (migrated or kept with reason), reflection, `closeout` | pending |
 
 ## Closeout Checklist
 
@@ -47,9 +47,13 @@ Before marking the packet closed:
    validate against `ReflectionFrontmatter`.
 2. Run `bun run beep lint reflection-artifacts`.
 3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase
-   statuses and a typed `proposedCloseout` with status `completed-retained`
-   and finalPullRequest. Keep `initiative.status` operative until completion
-   evidence verifies; do not close the external execution/session ledger from a proposal.
+   statuses. Once the final PR is open, run
+   `bun run beep goals set-status repo-cli-gh-git-consolidation completed-retained`: it writes
+   `closeout` naming that PR with the matching `initiative.status`, and the
+   commit ships in the final PR. After the merge,
+   `bun run beep goals completion refresh --slug repo-cli-gh-git-consolidation` must print verified;
+   name any red required check in a committed decision file
+   (`redAttribution`).
 
 ## Execution Notes
 

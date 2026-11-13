@@ -386,14 +386,19 @@ If you touch this, load or run this first. Do not hand-author around it.
   is per-packet `claims.jsonl` + single-writer `research/ledger/`, and the
   machine proposes via `SUGGESTED_ACTIONS.md` — agents never auto-append to
   `explorations/INBOX.md` or `goals/` from research output.
-- Goal closeout is two PRs: the final PR lands the work, the reflection and
-  `proposedCloseout` (status stays active or paused); after it merges,
-  `goals completion refresh --slug <slug>` verifies it and
-  `goals set-status <slug> <status>` adopts it in a packet-state PR that also
-  rewrites the packet's status prose (README, `statusNote`). A goal is
-  done only once that PR merges and `origin/main`'s manifest has
-  `closeout.status == initiative.status`; `goals doctor` reports a verified,
-  unadopted proposal as `closeout-adoption-pending`.
+- Goal closeout is one PR: once the final PR is open,
+  `goals set-status <slug> completed-retained` writes the `closeout` record
+  naming it, and that commit ships with the work and the reflection. After
+  the merge, `goals completion refresh --slug <slug>` verifies it from hosted
+  facts alone, at any later time: merged; every required check green at the
+  merged head, or each red named with its cause and fix PR in a committed
+  `decisions/` file (`redAttribution`); no outstanding review thread.
+  `goals doctor --online` and `yeet sweep --retire` (a P0 inbox row) block on
+  a merged, unverified closeout. A goal is done once `origin/main`'s manifest
+  has `closeout.status == initiative.status` and refresh prints verified, or
+  a `decisions/` file records the operator's ruling (`operatorRuling`);
+  GitHub lists rule suites for one month, so an older unverified final needs
+  that ruling.
 - Friction is a first-class output: when work is slower, harder, or riskier
   than it should be, record a receipt — what you were doing, the evidence
   (command, error text, PR/file), what would have prevented it — in the

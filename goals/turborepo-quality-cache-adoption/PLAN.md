@@ -87,22 +87,22 @@ admission/worktree workflows for heavy experiments.
 
 ## P6 closeout checklist
 
-P6 preparation can occur during P5. Land final evidence, reflection and
-proposedCloseout with the final implementation while the goal stays active or
-paused. After that PR merges, verify and adopt its proposal through the
-required separate packet-state PR. Acceptance still requires final Yeet proof
-and the merged adoption; a proposal alone is not completion.
+P6 preparation can occur during P5. Land final evidence, the reflection and
+the `closeout` record with the final implementation PR. Acceptance still
+requires final Yeet proof, and after the merge `goals completion refresh` must
+verify the closeout from hosted facts; a merged closeout that does not verify
+is not completion.
 
 1. Confirm every SPEC criterion and applicable representative observation.
 2. Use the reflect skill and copied reflection template to record tooling
    friction, implementation opportunities and prompt critique.
 3. Run `bun run beep lint reflection-artifacts`.
-4. After the final implementation PR merges, run
-   `bun run beep goals completion refresh --slug turborepo-quality-cache-adoption`.
-   Only after verification succeeds, use
+4. Once the final implementation PR is open, run
    `bun run beep goals set-status turborepo-quality-cache-adoption completed-retained`
-   in a separate packet-state PR, updating README and statusNote prose too.
-   Merge it and confirm origin/main has matching closeout and initiative statuses.
+   and commit it in that PR, updating README and statusNote prose too. After
+   the merge, `bun run beep goals completion refresh --slug turborepo-quality-cache-adoption`
+   must print verified, and origin/main must show matching closeout and
+   initiative statuses.
 5. Regenerate/check the goal index and preserve exploration links. Completion
    of this goal alone does not establish the whole cache program's completion.
 

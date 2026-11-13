@@ -180,10 +180,9 @@ secret failure through desktop sign-in.
   introduced regression remains.
 - [ ] The final implementation PR reaches Yeet `merge-ready: yes`, with
   required checks and reviews handled.
-- [ ] Final evidence, reflection and proposedCloseout land in the final implementation
-  PR; after it merges, completion refresh verifies the proposal and a separate
-  packet-state PR adopts completed-retained. That PR is merged and origin/main
-  has matching closeout and initiative statuses.
+- [ ] Final evidence, the reflection and the `closeout` record land in the final
+  implementation PR; after it merges, completion refresh verifies it from
+  hosted facts, and origin/main has matching closeout and initiative statuses.
 
 Packet creation satisfies no implementation criterion. A partial or blocked
 result remains active/paused with receipts, not completed-retained.

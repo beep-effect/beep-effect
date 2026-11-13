@@ -67,15 +67,35 @@ cd <clone> && bun run <lane>/packages/tooling/tool/cli/src/bin.ts -- yeet sweep 
   `--branch` is refused with `--retire`. `bun run beep worktree remove <name>
   --archive --delete-branch` runs behind the same fence and the same
   invoker/session exemption, so a desktop session can remove its own lane
-  that way too. Both
-  the plan and the report name every goal packet the retired branch touched
-  whose lifecycle is still `active` and whose manifest carries no
+  that way too.
+
+  Both the plan and the report name every goal packet the retired branch
+  touched whose lifecycle is still `active` and whose manifest carries no
   `statusNote` or `blockedBy` saying why it stays open (`[yeet] packet still
-  active after merge: goals/<slug> …`, `activePackets` in JSON): that packet's
-  lifecycle flip belonged in the merged PR, so open the closeout PR before
-  moving on. `bun run beep goals doctor` applies the same deferral and keeps
-  flagging the packet as `active-after-merge` while a merge commit cites the
-  slug and nobody touches it.
+  active after merge: goals/<slug> …`, `activePackets` in JSON). If the merged
+  PR was the goal's final, bind it in a follow-up PR with
+  `bun run beep goals set-status <slug> completed-retained --final-pr <n> --adopt-merged`;
+  otherwise record a `statusNote`. `bun run beep goals doctor` applies the
+  same deferral and keeps flagging the packet as `active-after-merge` while a
+  merge commit cites the slug and nobody touches it.
+
+  The report (not `--plan`) also checks every touched packet whose
+  `origin/main` manifest has a committed `closeout`, with the same online
+  classification as `goals doctor --online` (`closeoutChecks` in JSON),
+  except that only the decision files on `origin/main` count as claims: the
+  owning clone's `HEAD` can be any branch. A merged, unverified closeout
+  appends a P0 inbox row to the owning clone (shard
+  `goal-closeout:<slug>#<n>`) and prints
+  `[yeet] P0 closeout-unverified goals/<slug> #<n>: …`; the exit status stays
+  0 because the lane is already gone. Fix it with a `redAttribution` or
+  `operatorRuling` decision file on `main`, then run
+  `goals completion refresh --slug <slug>` in that clone: a plain `verified`,
+  or an `operatorRuling` for the final on `origin/main`, clears the row (so
+  does the next sweep that touches the packet). Rows for a final `main` no
+  longer binds, after a reopen or a rebind, are cleared by the next sweep
+  that touches the packet or by a refresh that closes the new final. A
+  transient read failure or a still-running required check prints an
+  advisory instead.
 
 ## Post-merge closeout law (moved from `AGENTS.md`)
 

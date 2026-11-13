@@ -16,7 +16,7 @@ Status: `active`
 | P5 Runner fleet | pending | `@beep/infra-ci-runners` deployed beside the live fleet, CI moved over, old fleet destroyed. | Hosted CI green on the new fleet for a full day; `beep-ci-runners` destroyed; export archived. |
 | P6 Retire | pending | Delete `infra/`, Pulumi and TS6 pins, root `postinstall` hook, runbook rewrite. | Verification matrix rows "Pulumi gone" and "Infra gone" pass on `main`. |
 | P7 Yeet: final PR to mergeable | pending | Publish through yeet and drive the final PR to mergeable. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P8 Close | pending | Closeout reflection, `proposedCloseout`, packet-state PR. | `closeout.status == initiative.status` on `origin/main`. |
+| P8 Close | pending | Closeout reflection and the `closeout` record in the final PR; completion refresh verifies it after the merge. | `closeout.status == initiative.status` on `origin/main`. |
 
 Each phase ships as its own PR wave (at most three open at once per packet). Stacks inside P3
 and P4 may ship as separate PRs.
@@ -30,9 +30,13 @@ Before marking the packet closed:
    validate against `ReflectionFrontmatter`.
 2. Run `bun run beep lint reflection-artifacts`.
 3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase
-   statuses and a typed `proposedCloseout` with status `completed-retained`
-   and finalPullRequest. Keep `initiative.status` operative until completion
-   evidence verifies; do not close the external execution/session ledger from a proposal.
+   statuses. Once the final PR is open, run
+   `bun run beep goals set-status infra-alchemy-rebuild completed-retained`: it writes
+   `closeout` naming that PR with the matching `initiative.status`, and the
+   commit ships in the final PR. After the merge,
+   `bun run beep goals completion refresh --slug infra-alchemy-rebuild` must print verified;
+   name any red required check in a committed decision file
+   (`redAttribution`).
 
 ## Execution Notes
 

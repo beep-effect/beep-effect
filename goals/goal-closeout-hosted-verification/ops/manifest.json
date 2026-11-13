@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "goal-closeout-hosted-verification",
+    "packetId": "goal-packet/v1:e225d44a9240e95661e0e723e8ed4a9ca20fb2ef12723286f179c5e822306344",
+    "title": "Goal Closeout Hosted Verification",
+    "status": "active",
+    "created": "2026-11-13",
+    "updated": "2026-11-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/goal-closeout-hosted-verification",
+  "lifecycle": "active",
+  "mission": "Verify goal completion from hosted GitHub facts after the merge, close goals in one PR, and stop goals-only finals from running unrelated coverage",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/goal-closeout-hosted-verification/README.md",
+    "goals/goal-closeout-hosted-verification/SPEC.md",
+    "goals/goal-closeout-hosted-verification/PLAN.md",
+    "goals/goal-closeout-hosted-verification/GOAL.md",
+    "goals/goal-closeout-hosted-verification/research/SOURCES.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/design-pr-a.md",
+    "research/design-pr-b.md",
+    "research/map-completion.md",
+    "research/map-coverage.md",
+    "research/map-migration.md",
+    "research/map-schema-status-doctor.md",
+    "research/map-template-docs.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/goal-closeout-hosted-verification/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/goal-closeout-hosted-verification/GOAL.md)\" -le 4000",
+    "jq . goals/goal-closeout-hosted-verification/ops/manifest.json",
+    "rg -n \"goal-closeout-hosted-verification|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/goal-closeout-hosted-verification",
+    "git diff --check -- goals/goal-closeout-hosted-verification",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
