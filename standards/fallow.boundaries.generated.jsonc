@@ -4122,6 +4122,7 @@
         "allow": [
           "@beep/epistemics",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/party-domain",
           "@beep/schema",
           "@beep/shared-domain",
@@ -4130,6 +4131,7 @@
         "allowTypeOnly": [
           "@beep/epistemics",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/party-domain",
           "@beep/schema",
           "@beep/shared-domain",
