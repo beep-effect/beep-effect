@@ -156,11 +156,11 @@ export interface CitationNativeProcessOperation<E> {
  * This composes the existing owner/admission capabilities; it adds no scheduler.
  * @internal @category operations @since 0.0.0
  */
-export const withCitationNativeProcess = Effect.fn("Citation.withNativeProcess")(function* <E, A, F>(
+export const withCitationNativeProcess = Effect.fn("Citation.withNativeProcess")(function* <E, A, F, R>(
   owner: CitationNativeProcessStarter<E>,
   acquire: Effect.Effect<CitationNativeProcessLease, E>,
   invalid: () => E,
-  task: (operation: CitationNativeProcessOperation<E>) => Effect.Effect<A, F>
+  task: (operation: CitationNativeProcessOperation<E>) => Effect.Effect<A, F, R>
 ) {
   return yield* Effect.uninterruptibleMask(
     Effect.fnUntraced(function* (restore) {

@@ -1,7 +1,10 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationPythonSliceLayout } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
-import { makeCitationRegexInput } from "@beep/law-practice-server/internal/Citation/RegexInput";
+import {
+  citationUnaccountedText,
+  makeCitationRegexInput,
+} from "@beep/law-practice-server/internal/Citation/RegexInput";
 import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
@@ -56,7 +59,7 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         expect(citationResult1).toBe("8c2e33785c8f38fd84875570f6e293c4e573384926e9bc7ba58b1ce8baccdec3");
         const controls = yield* S.decodeEffect(Corpus)(new TextDecoder().decode(bytes));
         const citationResult2 = yield* defaultCitationEnginePolicy;
-        const input = yield* makeCitationRegexInput(citationResult2.limits);
+        const input = yield* makeCitationRegexInput(citationResult2.limits, citationUnaccountedText);
         for (const row of controls.cases) {
           const source = yield* input.prepareUnicode(row.source, allow);
           let calls = 0;
@@ -80,7 +83,7 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
     it.effect("rejects invalid bounds and preserves an allocation refusal without yielding a payload", () =>
       Effect.gen(function* () {
         const citationResult4 = yield* defaultCitationEnginePolicy;
-        const input = yield* makeCitationRegexInput(citationResult4.limits);
+        const input = yield* makeCitationRegexInput(citationResult4.limits, citationUnaccountedText);
         const source = yield* input.prepareText("abc", allow);
         const denied = CitationSafetyLimitExceeded.make({ operation: "extract", limit: "producedTextUtf16" });
         const callerCause = new Error("synthetic caller diagnostic");
@@ -121,10 +124,13 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
           const disabled = yield* makeCitationNativeSleepClock(() => Effect.never);
           const entered = yield* Deferred.make<void>();
           const citationResult8 = yield* defaultCitationEnginePolicy;
-          const input = yield* makeCitationRegexInput({
-            ...citationResult8.limits,
-            extractDeadline: Duration.millis(997),
-          }).pipe(Effect.provideService(Clock.Clock, timer.clock));
+          const input = yield* makeCitationRegexInput(
+            {
+              ...citationResult8.limits,
+              extractDeadline: Duration.millis(997),
+            },
+            citationUnaccountedText
+          ).pipe(Effect.provideService(Clock.Clock, timer.clock));
           const source = yield* input.prepareText("abc", allow);
           const pending = yield* source
             .slice(

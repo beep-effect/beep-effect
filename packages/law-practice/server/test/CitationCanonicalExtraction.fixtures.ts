@@ -1,3 +1,4 @@
+import { withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 /** Original canonical extraction inputs and independently constructed expectations.
  * @internal @packageDocumentation @since 0.0.0
  */
@@ -146,51 +147,49 @@ export const readCitationCanonicalExtractions = Effect.fn("CanonicalExtractionTe
  * Shards bound individual test duration without removing any full-corpus input.
  * @internal @category testing @since 0.0.0
  */
-export const replayCitationCanonicalExtraction = Effect.fn("CanonicalExtractionTest.replay")(function* (
-  kind: CitationNativeRuntimeKind,
-  shard: number,
-  size: number,
-  family: keyof typeof families = "case"
-) {
-  const rows = yield* readCitationCanonicalExtractions(family);
-  const selected = rows.slice(shard * size, (shard + 1) * size);
-  expect(selected.length).toBeGreaterThan(0);
-  const installed = yield* installCitationSourceDocumentConfigurationFixture(kind);
-  let proof = yield* citationFixtureSourceProof("initial");
-  const resolver = SourceTextResolver.of({
-    resolve: Effect.fn("CanonicalExtractionTest.resolve")(() =>
-      Effect.succeed(ResolvedSourceText.make({ identity: proof.source, text: proof.sourceText }))
-    ),
-  });
-  const { engine } = yield* buildCitationDefaultEngineFixture(installed, resolver);
-  const assertAttributes = yield* makeCitationCanonicalAttributeAssertion(installed);
-  const replayRow = Effect.fn("CanonicalExtractionTest.replayRow")(function* (row: (typeof rows)[number]) {
-    proof = yield* citationFixtureSourceProof(row.input.q);
-    const source = { source: proof.source, sourceText: proof.sourceText };
-    const html = row.input.kwargs.markup_text !== undefined;
-    const input = CitationEngineSourcePairInput.make({
-      plain: html ? null : source,
-      markup: html ? source : null,
-      cleanSteps: row.input.kwargs.clean_steps ?? [],
-      removeAmbiguous: row.input.kwargs.remove_ambiguous ?? false,
-      container: "list",
+export const replayCitationCanonicalExtraction = Effect.fn("CanonicalExtractionTest.replay")(
+  function* (kind: CitationNativeRuntimeKind, shard: number, size: number, family: keyof typeof families = "case") {
+    const rows = yield* readCitationCanonicalExtractions(family);
+    const selected = rows.slice(shard * size, (shard + 1) * size);
+    expect(selected.length).toBeGreaterThan(0);
+    const installed = yield* installCitationSourceDocumentConfigurationFixture(kind);
+    let proof = yield* citationFixtureSourceProof("initial");
+    const resolver = SourceTextResolver.of({
+      resolve: Effect.fn("CanonicalExtractionTest.resolve")(() =>
+        Effect.succeed(ResolvedSourceText.make({ identity: proof.source, text: proof.sourceText }))
+      ),
     });
-    const result = yield* engine.extract(input);
-    expect(result.citations, row.id).toHaveLength(row.input.expected_cites.length);
-    for (const [actual, expected] of A.zip(result.citations, row.input.expected_cites))
-      yield* assertCitation(actual, expected, row.id);
-    for (const [actual, attribute] of A.zip(result.citations, row.attributes))
-      yield* assertAttributes(actual, attribute);
-    expect(result.document.mentions, row.id).toHaveLength(row.input.cites_found.length);
-    for (const [mention, original] of A.zip(result.document.mentions, row.input.cites_found))
-      yield* assertCitationMentionRanges(result.source.source.sourceText, mention, original);
-    expect(result.diagnostics.unverified, row.id).toEqual([]);
-    expect(result.diagnostics.unverifiedComponents, row.id).toEqual([]);
-  });
-  for (const row of selected) yield* replayRow(row);
-  const counts = yield* installed.setup.observed.snapshot;
-  expect(counts.confirmed).toBe(counts.spawned);
-});
+    const { engine } = yield* buildCitationDefaultEngineFixture(installed, resolver);
+    const assertAttributes = yield* makeCitationCanonicalAttributeAssertion(installed);
+    const replayRow = Effect.fn("CanonicalExtractionTest.replayRow")(function* (row: (typeof rows)[number]) {
+      proof = yield* citationFixtureSourceProof(row.input.q);
+      const source = { source: proof.source, sourceText: proof.sourceText };
+      const html = row.input.kwargs.markup_text !== undefined;
+      const input = CitationEngineSourcePairInput.make({
+        plain: html ? null : source,
+        markup: html ? source : null,
+        cleanSteps: row.input.kwargs.clean_steps ?? [],
+        removeAmbiguous: row.input.kwargs.remove_ambiguous ?? false,
+        container: "list",
+      });
+      const result = yield* engine.extract(input);
+      expect(result.citations, row.id).toHaveLength(row.input.expected_cites.length);
+      for (const [actual, expected] of A.zip(result.citations, row.input.expected_cites))
+        yield* assertCitation(actual, expected, row.id);
+      for (const [actual, attribute] of A.zip(result.citations, row.attributes))
+        yield* assertAttributes(actual, attribute);
+      expect(result.document.mentions, row.id).toHaveLength(row.input.cites_found.length);
+      for (const [mention, original] of A.zip(result.document.mentions, row.input.cites_found))
+        yield* assertCitationMentionRanges(result.source.source.sourceText, mention, original);
+      expect(result.diagnostics.unverified, row.id).toEqual([]);
+      expect(result.diagnostics.unverifiedComponents, row.id).toEqual([]);
+    });
+    for (const row of selected) yield* replayRow(row);
+    const counts = yield* installed.setup.observed.snapshot;
+    expect(counts.confirmed).toBe(counts.spawned);
+  },
+  (effect) => withCitationTestInvocation(effect)
+);
 
 const canonicalFamilyGroups = [
   ["law", 10],

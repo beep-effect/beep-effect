@@ -17,10 +17,13 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import type { CitationMention } from "@beep/law-practice-domain/values";
 import type { CitationExtractionLoopModel } from "@beep/law-practice-server/internal/Citation/ExtractionLoop";
+import type { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import type { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import type { installCitationDocumentExtractionFixture } from "./CitationDocumentExtraction.fixtures.ts";
+import type { CitationTestInvocationBound } from "./CitationInvocation.fixtures.ts";
 
 type Installed = Effect.Success<ReturnType<typeof installCitationDocumentExtractionFixture>>;
 type SourceRow = Installed["corpus"]["cases"][number];
@@ -108,7 +111,7 @@ const replaceModelAt = Effect.fnUntraced(function* (
   };
 });
 const verifyPinOverrides = Effect.fn("OccurrenceProjectionTest.pinOverrides")(function* (
-  stage: Effect.Success<ReturnType<typeof makeCitationOccurrenceProjection>>,
+  stage: CitationTestInvocationBound<Effect.Success<ReturnType<typeof makeCitationOccurrenceProjection>>>,
   source: VerifiedSourceText,
   expected: SourceRow,
   result: CitationSemanticExtractionResult
@@ -156,7 +159,12 @@ export const makeCitationOccurrenceTestAdapter = Effect.fn("OccurrenceProjection
   provided: Installed["provided"]
 ) {
   const install = (limits = setup.limits, engineArtifact = artifact) =>
-    makeCitationOccurrenceProjection(limits, setup.runtime, { engineArtifact }).pipe(Effect.provideContext(provided));
+    makeCitationOccurrenceProjection(limits, setup.runtime, { engineArtifact }).pipe(
+      Effect.flatMap((stage) =>
+        makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, project: bind(stage.project) })))
+      ),
+      Effect.provideContext(provided)
+    );
   const stage = yield* install();
   const verify = Effect.fn("OccurrenceProjectionTest.verify")(function* (
     unicode: Effect.Success<ReturnType<typeof makeCitationPythonUnicode>>,
@@ -168,7 +176,11 @@ export const makeCitationOccurrenceTestAdapter = Effect.fn("OccurrenceProjection
     const proof = yield* citationFixtureSourceProof(source.text);
     expect(S.is(VerifiedSourceText)(proof)).toBe(true);
     const invocation = stage.project({ source: proof, result });
-    const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
+    const closed: Effect.Effect<
+      Effect.Success<typeof invocation>,
+      Effect.Error<typeof invocation>,
+      CitationInvocation
+    > = invocation;
     const actual = yield* closed;
     expect(actual.unverified).toEqual([]);
     expect(actual.unverifiedComponents).toEqual([]);

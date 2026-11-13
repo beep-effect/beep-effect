@@ -1,10 +1,9 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { makeCitationCourtLookup } from "@beep/law-practice-server/internal/Citation/CourtLookup";
+import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { CitationRegexOperation } from "@beep/law-practice-server/internal/Citation/RegexPolicy";
-import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
-import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -20,6 +19,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { makeCitationNativeManualClock, makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
@@ -88,7 +88,11 @@ const install = Effect.fn("CourtLookupTest.install")(function* (maximum?: number
   const policy = yield* defaultCitationEnginePolicy;
   const limits = maximum === undefined ? policy.limits : { ...policy.limits, producedTextUtf16: maximum };
   const table = yield* readFixture("court-table", Table);
-  const parser = yield* makeCitationCourtLookup(limits, table.payload);
+  const parser = yield* makeCitationCourtLookup(limits, table.payload).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) })))
+    )
+  );
   return { ...parser, limits, table };
 });
 const native = (text: string) => ({ width: 1, bytes: new TextEncoder().encode(text) });
@@ -97,11 +101,24 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
   it.effect("rejects malformed policy, table payload and digest output", () =>
     Effect.gen(function* () {
       const { limits, table } = yield* install();
-      const invalidPolicy = yield* makeCitationCourtLookup(null, table.payload).pipe(Effect.flip);
+      const invalidPolicy = yield* makeCitationCourtLookup(null, table.payload).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestScaffoldBinding(null).pipe(Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) })))
+        ),
+        Effect.flip
+      );
       expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
-      const invalidPayload = yield* makeCitationCourtLookup(limits, null).pipe(Effect.flip);
+      const invalidPayload = yield* makeCitationCourtLookup(limits, null).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) })))
+        ),
+        Effect.flip
+      );
       expect(invalidPayload).toMatchObject({ reason: "invalid-table" });
       const invalidDigest = yield* makeCitationCourtLookup(limits, table.payload).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) })))
+        ),
         Effect.provideService(
           Digest.Digest,
           makeTestCitationDigest(() => Effect.succeed(new Uint8Array(1)))
@@ -137,6 +154,9 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
     Effect.gen(function* () {
       const { limits, table } = yield* install();
       const refused = yield* makeCitationCourtLookup(limits, Str.replace("alacirct", "xlacirct")(table.payload)).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) })))
+        ),
         Effect.flip
       );
       expect(refused).toMatchObject({ _tag: "CitationCourtLookupFailure", reason: "invalid-table" });
@@ -150,13 +170,18 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
       const tight = yield* install(11);
       const refused = yield* tight.lookup(native("S.C.")).pipe(Effect.flip);
       expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
-      const budget = yield* makeCitationTextBudget(exact.limits);
-      yield* budget.reserve(1);
-      const composed = yield* install(12).pipe(Effect.provideService(CitationTextBudget, budget));
-      const composedRefused = yield* composed.lookup(native("S.C.")).pipe(Effect.flip);
-      expect(composedRefused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
-      const reserved = yield* budget.snapshot;
-      expect(reserved).toBe(11);
+      yield* withCitationTestInvocation(
+        Effect.gen(function* () {
+          const budget = (yield* CitationInvocation).budget;
+          yield* budget.reserve(1);
+          const composed = yield* install(12);
+          const composedRefused = yield* composed.lookup(native("S.C.")).pipe(Effect.flip);
+          expect(composedRefused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
+          const reserved = yield* budget.snapshot;
+          expect(reserved).toBe(11);
+        }),
+        exact.limits
+      );
     })
   );
   it.effect("retains captured Clock despite caller replacement and returns no partial output", () =>
@@ -166,6 +191,11 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
       const timer = yield* makeCitationNativeManualClock(deadline);
       const disabled = yield* makeCitationNativeSleepClock(() => Effect.never);
       const parser = yield* makeCitationCourtLookup({ ...limits, extractDeadline: deadline }, table.payload).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestScaffoldBinding({ ...limits, extractDeadline: deadline }).pipe(
+            Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) }))
+          )
+        ),
         Effect.provideService(Clock.Clock, timer.clock)
       );
       const pending = yield* parser
@@ -181,6 +211,11 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
       const { limits, table } = yield* install();
       for (const operation of ["clean", "extract", "resolve", "annotate"] as const) {
         const parser = yield* makeCitationCourtLookup({ ...limits, sourceUtf16: 3 }, table.payload).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestScaffoldBinding({ ...limits, sourceUtf16: 3 }).pipe(
+              Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) }))
+            )
+          ),
           Effect.provideService(CitationRegexOperation, operation)
         );
         const source = yield* parser
@@ -188,6 +223,11 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
           .pipe(Effect.provideService(CitationRegexOperation, "extract"), Effect.flip);
         expect(source).toMatchObject({ _tag: "CitationSafetyLimitExceeded", operation, limit: "sourceUtf16" });
         const tight = yield* makeCitationCourtLookup({ ...limits, producedTextUtf16: 2 }, table.payload).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 2 }).pipe(
+              Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) }))
+            )
+          ),
           Effect.provideService(CitationRegexOperation, operation)
         );
         const allocation = yield* tight
@@ -212,6 +252,11 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
           { ...limits, [`${operation}Deadline`]: deadline },
           table.payload
         ).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestScaffoldBinding({ ...limits, [`${operation}Deadline`]: deadline }).pipe(
+              Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) }))
+            )
+          ),
           Effect.provideService(Clock.Clock, timer.clock),
           Effect.provideService(CitationRegexOperation, operation)
         );
@@ -236,7 +281,13 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
     Effect.gen(function* () {
       const { limits, table } = yield* install();
       const captured = { ...limits, sourceUtf16: 3 };
-      const parser = yield* makeCitationCourtLookup(captured, table.payload);
+      const parser = yield* makeCitationCourtLookup(captured, table.payload).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestScaffoldBinding(captured).pipe(
+            Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) }))
+          )
+        )
+      );
       captured.sourceUtf16 = 100;
       const sourceRefused = yield* parser.lookup(native("S.C.")).pipe(Effect.flip);
       expect(sourceRefused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "sourceUtf16" });

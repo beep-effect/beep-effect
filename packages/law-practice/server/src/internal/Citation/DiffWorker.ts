@@ -18,6 +18,7 @@ import {
   preflightCitationDiffJob,
 } from "./DiffWorkerProtocol.ts";
 import { CitationDiffWorkerStartup, callCitationDiffRpc, encodeCitationDiffStartup } from "./DiffWorkerRpc.ts";
+import { CitationInvocation } from "./Invocation.ts";
 import { acquireCitationNativeLease, captureCitationNativeAdmission } from "./NativeAdmission.ts";
 import {
   citationNativeProcessCommand,
@@ -27,7 +28,6 @@ import {
 } from "./NativeProcess.ts";
 import { CitationPythonSliceLayout, makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { makeCitationRegexTiming } from "./RegexPolicy.ts";
-import { captureCitationTextReservation } from "./TextBudget.ts";
 import type { CitationPythonUnicodeFailure, CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/DiffWorker");
@@ -44,7 +44,7 @@ const UnicodeValue = S.toType(CitationPythonUnicodeStorage).pipe(
   $I.annoteSchema("UnicodeValue", { description: "Captured static boundary codec for bounded citation processing." })
 );
 /** Capture policy, runtime, Clock, Scope, process spawner and optional composed
- * text/admission owners. Methods have R=never. Both layouts and the complete
+ * native admission owners. Methods require CitationInvocation. Both layouts and the complete
  * request are preflighted before receiving copies or native admission. One
  * extraction timer covers preparation, queueing, startup and RPC; the existing
  * physical owner independently confirms retirement before publication/reuse.
@@ -79,7 +79,6 @@ export const makeCitationDiffWorker = Effect.fn("Citation.makeDiffWorker")(funct
     },
     engineOperation
   );
-  const reserve = yield* captureCitationTextReservation;
   const admission = yield* captureCitationNativeAdmission(limits, () => failure("invalid-runtime"));
   const owner = yield* makeCitationNativeProcessOwner(limits, engineOperation, failure);
   const path = yield* Path.Path;
@@ -104,6 +103,7 @@ export const makeCitationDiffWorker = Effect.fn("Citation.makeDiffWorker")(funct
         () => failure("invalid-runtime"),
         (operation) =>
           Effect.gen(function* () {
+            const { reserve } = (yield* CitationInvocation).budget;
             const quota = yield* S.decodeUnknownEffect(CitationDiffWorkerJob.fields.maximumSteps)(maximumSteps).pipe(
               Effect.mapError(() => failure("invalid-runtime"))
             );

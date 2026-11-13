@@ -9,10 +9,10 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import { CitationInvocation } from "./Invocation.ts";
 import { makeCitationMarkupWorker } from "./MarkupWorker.ts";
 import { prepareCitationNativeRuntime } from "./NativeProcess.ts";
 import { makeCitationPythonUnicode } from "./PythonUnicode.ts";
-import { captureCitationTextReservation } from "./TextBudget.ts";
 import { CitationXmlKernelFailure } from "./XmlBalanceKernel.ts";
 import {
   CitationXmlWorkerFailure,
@@ -30,7 +30,7 @@ const $I = $LawPracticeServerId.create("internal/Citation/XmlWorker");
 /** Capture per-operation text authority, policy, native lifetime and explicit
  * runtime. Inputs are immutable adapter-owned native values through preflight;
  * raw callers must first use their owning source adapter. The returned method
- * has R=never and never publishes a reply before acknowledged physical exit.
+ * requires CitationInvocation and never publishes a reply before acknowledged physical exit.
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationXmlWorker = Effect.fn("Citation.makeXmlWorker")(function* (
@@ -49,12 +49,12 @@ export const makeCitationXmlWorker = Effect.fn("Citation.makeXmlWorker")(functio
   ).pipe(Effect.mapError(invalid));
   const owner = yield* makeCitationMarkupWorker(limits, runtime, argument, "annotate", failure);
   const unicode = yield* makeCitationPythonUnicode({ ...limits, producedTextUtf16: limits.sourceUtf16 }, "annotate");
-  const reserve = yield* captureCitationTextReservation;
   const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
     CitationSafetyLimitExceeded.make({ operation: "annotate", limit });
   const balance = Effect.fn("Citation.balanceXmlInWorker")((source: CitationPythonUnicodeStorage) =>
     owner.run(
       Effect.gen(function* () {
+        const { reserve } = (yield* CitationInvocation).budget;
         yield* preflightCitationXmlJob(source.width, source.bytes.byteLength, limits.processMessageBytes);
         for (const reply of [
           CitationXmlWorkerReply.cases.Ready.make({}),

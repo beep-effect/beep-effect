@@ -4,12 +4,13 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEditionRef } from "@beep/law-practice-domain/values";
-import { CitationPythonUnicodeStorage, CitationTextBudget } from "@beep/law-practice-use-cases/server";
+import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CitationFrozenEditions, readCitationFrozenEdition } from "./FrozenEditions.ts";
+import { CitationInvocation } from "./Invocation.ts";
 import {
   citationPythonPointAt,
   makeCitationPythonUnicode,
@@ -17,7 +18,7 @@ import {
   sliceCitationPythonStorage,
 } from "./PythonUnicode.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
-import { makeCitationTextBudget } from "./TextBudget.ts";
+import type { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import type { CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ResourceCorrection");
@@ -103,9 +104,8 @@ const correctPageMarkers = Effect.fn("Citation.correctNativePageMarkers")(functi
   }
   return output;
 });
-/** Capture existing edition, Unicode, budget and Clock owners. Each method has
- * R = never. A standalone call gets a fresh invocation budget; installed outer
- * budgets stay authoritative. Native ASCII substitution preserves literal
+/** Capture existing edition, Unicode and Clock owners. Each method reads the
+ * invocation budget at call time. Native ASCII substitution preserves literal
  * surrogate points that a JavaScript projection would coalesce on re-encoding.
  * @internal @category operations @since 0.0.0
  */
@@ -114,11 +114,9 @@ export const makeCitationResourceCorrection = Effect.fn("Citation.makeResourceCo
   const owner = yield* CitationFrozenEditions;
   const unicode = yield* makeCitationPythonUnicode(limits);
   const timing = yield* makeCitationRegexTiming(limits, true);
-  const enclosing = yield* Effect.serviceOption(CitationTextBudget);
-  if (O.isSome(enclosing) && enclosing.value.maximum > limits.producedTextUtf16) return yield* fail("invalid-policy");
   const prepare = Effect.fn("Citation.prepareResourceCorrection")(function* (raw: unknown) {
     const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
-    const budget = O.isSome(enclosing) ? enclosing.value : yield* makeCitationTextBudget(limits);
+    const budget = (yield* CitationInvocation).budget;
     return { request, budget };
   });
   const reporter = Effect.fn("Citation.correctedReporter")(function* (raw: unknown) {

@@ -120,6 +120,14 @@ describe("rule registry", () => {
     Effect.fnUntraced(function* () {
       const encodedRuleRegistry = yield* encodeRuleRegistry(RuleRegistrySchema.make(RULES));
       expect(encodedRuleRegistry).toEqual({
+        "no-citation-optional-invocation": {
+          name: "no-citation-optional-invocation",
+          severity: "error",
+          replaces: null,
+          summary:
+            "Require explicit citation authority; reject optional serviceOption/getOption/getOrUndefined lookups. Local aliases and aliased named imports require semantic linting.",
+          scope: "packages/law-practice/server/src/internal/Citation/**",
+        },
         "no-file-url-pathname": {
           name: "no-file-url-pathname",
           severity: "error",

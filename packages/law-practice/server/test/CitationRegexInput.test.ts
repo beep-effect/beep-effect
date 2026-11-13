@@ -4,6 +4,7 @@ import { convertTextOffsetRange, TextOffsetRange } from "@beep/langextract/Verif
 import {
   CitationRegexInputLayout,
   CitationRegexProjection,
+  citationUnaccountedText,
   makeCitationRegexInput,
 } from "@beep/law-practice-server/internal/Citation/RegexInput";
 import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
@@ -77,7 +78,7 @@ const load = Effect.fn("RegexInputTest.load")(function* () {
 it.effect("rejects incoherent layout and projection data through their own codecs", () =>
   Effect.gen(function* () {
     const citationResult3 = yield* defaultCitationEnginePolicy;
-    const input = yield* makeCitationRegexInput(citationResult3.limits);
+    const input = yield* makeCitationRegexInput(citationResult3.limits, citationUnaccountedText);
     const { layout } = yield* input.prepareText("x", preflight);
     yield* Effect.forEach(
       [
@@ -103,7 +104,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native regex input so
     ([bytes]) =>
       Effect.gen(function* () {
         const citationResult4 = yield* defaultCitationEnginePolicy;
-        const input = yield* makeCitationRegexInput(citationResult4.limits);
+        const input = yield* makeCitationRegexInput(citationResult4.limits, citationUnaccountedText);
         const prepared = yield* input.prepareUnicode({ width: 1, bytes }, () => Effect.void);
         expect(prepared.value.storage.bytes).toEqual(bytes);
         expect(prepared.value.pythonLength).toBe(bytes.byteLength);
@@ -123,7 +124,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native regex input so
     Effect.gen(function* () {
       const corpus = yield* load();
       const citationResult5 = yield* defaultCitationEnginePolicy;
-      const input = yield* makeCitationRegexInput(citationResult5.limits);
+      const input = yield* makeCitationRegexInput(citationResult5.limits, citationUnaccountedText);
       let projections = 0;
       let ambiguous = 0;
       yield* Effect.forEach(
@@ -181,7 +182,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native regex input so
 it.effect("retains empty and split projections without manufacturing a verified range", () =>
   Effect.gen(function* () {
     const citationResult7 = yield* defaultCitationEnginePolicy;
-    const input = yield* makeCitationRegexInput(citationResult7.limits);
+    const input = yield* makeCitationRegexInput(citationResult7.limits, citationUnaccountedText);
     const pair = yield* input.prepareUnicode({ width: 2, bytes: new Uint8Array([0x35, 0xd8, 0xce, 0xdf]) }, preflight);
     const citationResult8 = yield* pair.project({ start: 0, end: 1 });
     expect(citationResult8).toEqual({ _tag: "Split", startChar: 0, endChar: 1 });
@@ -213,8 +214,12 @@ it.effect("retains empty and split projections without manufacturing a verified 
 it.effect("rejects malformed native layouts and invalid point ranges with closed failures", () =>
   Effect.gen(function* () {
     const citationResult13 = yield* defaultCitationEnginePolicy;
-    const input = yield* makeCitationRegexInput(citationResult13.limits);
-    const invalidRole = yield* makeCitationRegexInput(citationResult13.limits, "unknown-role").pipe(Effect.flip);
+    const input = yield* makeCitationRegexInput(citationResult13.limits, citationUnaccountedText);
+    const invalidRole = yield* makeCitationRegexInput(
+      citationResult13.limits,
+      citationUnaccountedText,
+      "unknown-role"
+    ).pipe(Effect.flip);
     expect(invalidRole).toMatchObject({ reason: "invalid-policy" });
     const invalidText = yield* input.prepareText(42, preflight).pipe(Effect.flip);
     expect(invalidText).toMatchObject({ reason: "invalid-input" });
@@ -268,7 +273,7 @@ it.effect("checks source, intermediate and byte ceilings before trusted transpor
         [{ ...base, processMessageBytes: 1 }, "Ā", "processMessageBytes"],
       ] as const,
       Effect.fnUntraced(function* ([policy, value, limit]) {
-        const input = yield* makeCitationRegexInput(policy);
+        const input = yield* makeCitationRegexInput(policy, citationUnaccountedText);
         let called = false;
         const citationResult16 = yield* input
           .prepareText(value, () =>
@@ -282,12 +287,15 @@ it.effect("checks source, intermediate and byte ceilings before trusted transpor
       }),
       { concurrency: 1, discard: true }
     );
-    const exact = yield* makeCitationRegexInput({
-      ...base,
-      sourceUtf16: 2,
-      producedTextUtf16: 2,
-      processMessageBytes: 4,
-    });
+    const exact = yield* makeCitationRegexInput(
+      {
+        ...base,
+        sourceUtf16: 2,
+        producedTextUtf16: 2,
+        processMessageBytes: 4,
+      },
+      citationUnaccountedText
+    );
     const citationResult17 = yield* exact.prepareText("𝟎", preflight);
     expect(citationResult17.layout.byteLength).toBe(4);
   })
@@ -296,7 +304,7 @@ it.effect("checks source, intermediate and byte ceilings before trusted transpor
 it.effect("preflights before receiving allocation, propagates rejection and owns the completed snapshot", () =>
   Effect.gen(function* () {
     const citationResult18 = yield* defaultCitationEnginePolicy;
-    const input = yield* makeCitationRegexInput(citationResult18.limits);
+    const input = yield* makeCitationRegexInput(citationResult18.limits, citationUnaccountedText);
     const rejected = yield* input.prepareText("x", () => Effect.fail("transport-rejected")).pipe(Effect.flip);
     expect(rejected).toBe("transport-rejected");
     const source = new Uint8Array([65]);
@@ -314,11 +322,14 @@ it.effect("preflights before receiving allocation, propagates rejection and owns
 it.effect("captures extract timing independently of clean timing and caller Clock changes", () =>
   Effect.gen(function* () {
     const base = (yield* defaultCitationEnginePolicy).limits;
-    const input = yield* makeCitationRegexInput({
-      ...base,
-      cleanDeadline: Duration.millis(1),
-      extractDeadline: Duration.millis(20),
-    });
+    const input = yield* makeCitationRegexInput(
+      {
+        ...base,
+        cleanDeadline: Duration.millis(1),
+        extractDeadline: Duration.millis(20),
+      },
+      citationUnaccountedText
+    );
     const clock = yield* Clock.Clock;
     const changed: Clock.Clock = { ...clock, sleep: () => Effect.never };
     const timed = yield* input
@@ -342,7 +353,7 @@ it.effect("captures policy and gives a shorter total deadline precedence during 
       operationDeadline: Duration.millis(5),
       extractDeadline: Duration.millis(20),
     };
-    const input = yield* makeCitationRegexInput(policy);
+    const input = yield* makeCitationRegexInput(policy, citationUnaccountedText);
     policy.sourceUtf16 = 2;
     policy.operationDeadline = Duration.seconds(1);
     const citationResult21 = yield* input.prepareText("xx", preflight).pipe(Effect.flip);
@@ -360,7 +371,7 @@ it.effect("captures policy and gives a shorter total deadline precedence during 
 it.effect("rejects malformed policy with a closed failure before installing operations", () =>
   Effect.gen(function* () {
     for (const policy of [null, {}, { sourceUtf16: 0 }]) {
-      const failure = yield* makeCitationRegexInput(policy).pipe(Effect.flip);
+      const failure = yield* makeCitationRegexInput(policy, citationUnaccountedText).pipe(Effect.flip);
       expect(failure).toMatchObject({ reason: "invalid-policy" });
       expect("cause" in failure).toBe(false);
     }
@@ -375,7 +386,7 @@ it.effect("rejects native UTF-16 expansion and byte ceilings before transport pr
       { limits: { ...policy.limits, producedTextUtf16: 1 }, limit: "producedTextUtf16" },
       { limits: { ...policy.limits, processMessageBytes: 3 }, limit: "processMessageBytes" },
     ]) {
-      const input = yield* makeCitationRegexInput(limits);
+      const input = yield* makeCitationRegexInput(limits, citationUnaccountedText);
       const failure = yield* input
         .prepareUnicode(storage, () => Effect.die("rejected native layout reached preflight"))
         .pipe(Effect.flip);
@@ -389,7 +400,7 @@ it.effect("translates native preparation expiry while its enclosing timer remain
     const policy = yield* defaultCitationEnginePolicy;
     const clock = yield* Clock.Clock;
     let timers = 0;
-    const input = yield* makeCitationRegexInput(policy.limits).pipe(
+    const input = yield* makeCitationRegexInput(policy.limits, citationUnaccountedText).pipe(
       Effect.provideService(Clock.Clock, {
         ...clock,
         sleep: () => (++timers === 2 ? Effect.void : Effect.never),

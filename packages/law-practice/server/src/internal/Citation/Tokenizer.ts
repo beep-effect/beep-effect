@@ -6,7 +6,6 @@ import {
   CitationEngineAbsoluteMaxima,
   CitationPythonUnicodeStorage,
   CitationSafetyLimitExceeded,
-  CitationTokenizer,
   CitationTokenizerFailure,
   CitationTokenizerResult,
 } from "@beep/law-practice-use-cases/server";
@@ -20,16 +19,16 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import * as TxRef from "effect/TxRef";
-import { CitationOperationAdmission } from "./Admission.ts";
 import { CitationExtractorOrderingBinding, makeCitationExtractorOrdering } from "./ExtractorOrdering.ts";
 import {
   CitationExtractorEditionId,
   CitationExtractorRecipe,
   makeCitationExtractorRecipes,
 } from "./ExtractorRecipes.ts";
+import { reserveCitationInvocationText } from "./Invocation.ts";
 import { CitationRegexPatternDescriptor, CitationRegexPatternProfile } from "./RegexDescriptors.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { decodeCitationRegexPolicy } from "./RegexPolicy.ts";
 import { makeCitationRegexWorker } from "./RegexWorker.ts";
 import { CitationTokenAssemblyFailure, CitationTokenAssemblyHost, makeCitationTokenAssembly } from "./TokenAssembly.ts";
 import { CitationTokenCaptureRuntime, makeCitationTokenCapture } from "./TokenCapture.ts";
@@ -99,6 +98,7 @@ export class CitationTokenizerConfiguration extends S.Opaque<
 ) {}
 const Configuration = S.toType(CitationTokenizerConfiguration);
 const failure = (reason: CitationTokenizerFailure["reason"]) => CitationTokenizerFailure.make({ reason });
+const invalidConfiguration = () => failure("invalid-configuration");
 const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
   CitationSafetyLimitExceeded.make({ operation: "extract", limit });
 const preserveSafety = (error: unknown) => (S.is(CitationSafetyLimitExceeded)(error) ? error : failure("stage-failed"));
@@ -109,7 +109,7 @@ const prepareTokenizerConfiguration = Effect.fn("Citation.prepareTokenizerConfig
   configurationInput: unknown
 ) {
   const config = yield* S.decodeUnknownEffect(Configuration)(configurationInput).pipe(
-    Effect.mapError(() => failure("invalid-configuration"))
+    Effect.mapError(invalidConfiguration)
   );
   if (config.extractors.length > limits.patterns) return yield* safety("patterns");
   const installed = A.map(config.extractors, (row) => ({
@@ -151,7 +151,7 @@ const prepareTokenizerConfiguration = Effect.fn("Citation.prepareTokenizerConfig
  * remains in the existing isolated worker and acknowledged retirement precedes
  * capture consumption. One transactional produced-text counter covers all token
  * fields and text gaps; assembly owns the combined output-token ceiling.
- * Methods have R = never. Frozen hash facts, current native regex profiles and
+ * Methods read CitationInvocation at call time. Frozen hash facts, current native regex profiles and
  * immutable built-in token semantics retain their explicit proof boundaries.
  * @internal @category operations @since 0.0.0
  */
@@ -160,9 +160,7 @@ export const makeCitationTokenizer = Effect.fn("Citation.makeTokenizer")(functio
   runtime: unknown,
   configurationInput: unknown
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () => failure("invalid-configuration"));
-  const timing = yield* makeCitationRegexTiming(limits, true);
-  const admission = yield* CitationOperationAdmission;
+  const limits = yield* decodeCitationRegexPolicy(policy, invalidConfiguration);
   const { installed, editionRows, entries, descriptors } = yield* prepareTokenizerConfiguration(
     limits,
     configurationInput
@@ -180,7 +178,7 @@ export const makeCitationTokenizer = Effect.fn("Citation.makeTokenizer")(functio
   const worker = yield* makeCitationRegexWorker(limits, runtime, descriptors.pipe(HashMap.values, A.fromIterable)).pipe(
     Effect.mapError(preserveSafety)
   );
-  const input = yield* makeCitationRegexInput(limits, "source");
+  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText, "source");
   const text = yield* makeCitationTokenText(limits).pipe(Effect.mapError(preserveSafety));
   const tokenize = Effect.fn("Citation.tokenizeNativeSource")(function* (sourceInput: unknown) {
     const source = yield* input
@@ -199,9 +197,7 @@ export const makeCitationTokenizer = Effect.fn("Citation.makeTokenizer")(functio
     const ids = MutableList.make<number>();
     let rawMatches = 0;
     for (const id of selected.indices) {
-      const row = yield* Effect.fromOption(HashMap.get(entries, id)).pipe(
-        Effect.mapError(() => failure("invalid-configuration"))
-      );
+      const row = yield* Effect.fromOption(HashMap.get(entries, id)).pipe(Effect.mapError(invalidConfiguration));
       const remainingMatches = limits.patternMatches - rawMatches;
       const remainingCandidates = limits.candidates - ids.length;
       const maximum = Num.min(remainingMatches, remainingCandidates);
@@ -270,15 +266,11 @@ export const makeCitationTokenizer = Effect.fn("Citation.makeTokenizer")(functio
       assembly: result,
       tokens,
     });
-  }, timing.timed);
+  });
   return {
-    port: CitationTokenizer.of({
-      tokenize: Effect.fn("Citation.runAdmittedTokenizer")((source) =>
-        admission
-          .run("extract", tokenize(source))
-          .pipe(Effect.catchTag("CitationAdmissionFailure", () => Effect.fail(failure("stage-failed"))))
-      ),
-    }),
+    port: {
+      tokenize: Effect.fn("Citation.runAdmittedTokenizer")((source) => tokenize(source)),
+    },
     snapshot: worker.snapshot,
     reap: worker.reap,
   };

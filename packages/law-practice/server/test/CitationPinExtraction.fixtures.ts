@@ -10,17 +10,14 @@ import {
   CitationPinExtractionResult,
   makeCitationPinExtraction,
 } from "@beep/law-practice-server/internal/Citation/PinExtraction";
-import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
-import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
-  assertCitationMetadataEnclosingRefusal,
   assertCitationMetadataFailure,
   assertCitationMetadataFixtureLifetime,
   assertCitationMetadataInstallControls,
@@ -90,7 +87,13 @@ export const readCitationPinExtractionCorpus = Effect.fn("PinExtractionTest.load
   expect(digest).toBe("0874170bf716c53337fbb17f75819b2af7ed890b999de4d86b0b585902c82f75");
   return yield* S.decodeEffect(Corpus)(new TextDecoder().decode(bytes));
 });
-const install = makeCitationMetadataFixtureInstaller(makeCitationPinExtraction)(readCitationPinExtractionCorpus());
+const install = makeCitationMetadataFixtureInstaller((...args: Parameters<typeof makeCitationPinExtraction>) =>
+  makeCitationPinExtraction(...args).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
+    )
+  )
+)(readCitationPinExtractionCorpus());
 /** Smoke retains source errors and every result shape; the full source replay retired 2026-11-09. */
 export const replayCitationPinExtraction = Effect.fn("PinExtractionTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
@@ -143,8 +146,6 @@ export const assertCitationPinExtractionBudget = Effect.fn("PinExtractionTest.bu
     bounded.observed.snapshot,
     1
   );
-  const enclosing = yield* install("bun", 47, true);
-  yield* assertCitationMetadataEnclosingRefusal(enclosing.stage.apply(row.request), enclosing.budget, 4, 43);
 });
 /** Closed lifetime and captured deadline precede native worker creation. */
 export const assertCitationPinExtractionLifetime = Effect.fn("PinExtractionTest.lifetime")(function* () {
@@ -158,16 +159,16 @@ export const assertCitationPinExtractionLifetime = Effect.fn("PinExtractionTest.
 export const assertCitationPinExtractionConfiguration = Effect.fn("PinExtractionTest.configuration")(function* () {
   const corpus = yield* readCitationPinExtractionCorpus();
   const setup = yield* setupCitationMetadataRuntime("bun");
-  yield* assertCitationMetadataInstallControls(makeCitationPinExtraction, setup, corpus.configuration);
-  const oversized = yield* makeCitationTextBudget({
-    ...setup.limits,
-    producedTextUtf16: setup.limits.producedTextUtf16 + 1,
-  });
-  const failed = yield* makeCitationPinExtraction(setup.limits, setup.runtime, corpus.configuration).pipe(
-    Effect.provideContext(Context.add(setup.provided, CitationTextBudget, oversized)),
-    Effect.flip
+  yield* assertCitationMetadataInstallControls(
+    (...args: Parameters<typeof makeCitationPinExtraction>) =>
+      makeCitationPinExtraction(...args).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestScaffoldBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
+        )
+      ),
+    setup,
+    corpus.configuration
   );
-  expect(failed).toMatchObject({ reason: "invalid-configuration" });
   const valid = yield* install("bun");
   const request = A.getUnsafe(valid.corpus.cases, 22).request;
   const invalidIndex = yield* valid.stage.apply({ ...request, index: request.words.length + 1 }).pipe(Effect.flip);

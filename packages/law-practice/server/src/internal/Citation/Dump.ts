@@ -29,6 +29,7 @@ import {
 } from "./PythonUnicode.ts";
 import { CitationRegexOperation } from "./RegexPolicy.ts";
 import type { CitationEngineLimits, CitationEngineOperation } from "@beep/law-practice-use-cases/server";
+import type { CitationInvocation } from "./Invocation.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/Dump");
 /** Closed builtin formatting failure without input data or parser causes.
@@ -243,7 +244,7 @@ const renderFields = Effect.fn("Citation.dumpFields")(function* (
     });
 });
 /** Render builtin source observations with exact ANSI/context behavior and no logging.
- * Inputs remain immutable for the invocation. Every returned method captures R=never.
+ * Inputs remain immutable for the invocation. Returned methods require CitationInvocation.
  * General citation.dump callbacks, dictionary subclasses and repr hooks stay separate.
  * @internal @category operations @since 0.0.0
  */
@@ -287,6 +288,7 @@ export const makeCitationDump = Effect.fn("Citation.makeDump")(function* (policy
   );
   const renderClosed: (
     input: unknown
-  ) => Effect.Effect<CitationPythonUnicodeStorage, Effect.Error<ReturnType<typeof render>>> = render;
+  ) => Effect.Effect<CitationPythonUnicodeStorage, Effect.Error<ReturnType<typeof render>>, CitationInvocation> =
+    render;
   return { render: renderClosed };
 });

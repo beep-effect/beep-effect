@@ -20,6 +20,7 @@ import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { citationHtmlWorkerTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import type { CitationCleanerWork } from "@beep/law-practice-use-cases/server";
 
@@ -136,6 +137,11 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         const units = 1_000_003;
         const h = owned(worker, units, () => `${Str.repeat(1_000_001)("A")}😀`);
         const pipeline = yield* makeCitationCleanerPipeline(policy).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestScaffoldBinding(policy, "clean").pipe(
+              Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
+            )
+          ),
           Effect.provideService(CitationCleaner, h.runtime)
         );
         const result = yield* pipeline.run({ text: "x", plan: "expand-html" });
@@ -150,6 +156,11 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         const zeroWorker = yield* makeCitationHtmlWorker(zeroPolicy, paths);
         const empty = owned(zeroWorker, zeroUnits, () => `<div><script>${Str.repeat(1_000_000)("A")}</script></div>`);
         const zeroPipeline = yield* makeCitationCleanerPipeline(zeroPolicy).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestScaffoldBinding(zeroPolicy, "clean").pipe(
+              Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
+            )
+          ),
           Effect.provideService(CitationCleaner, empty.runtime)
         );
         const zero = yield* zeroPipeline.run({ text: "x", plan: "zero-html" });
@@ -162,6 +173,11 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         const fullWorker = yield* makeCitationHtmlWorker(fullPolicy, paths);
         const full = owned(fullWorker, 1, () => "A");
         const fullPipeline = yield* makeCitationCleanerPipeline(fullPolicy).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestScaffoldBinding(fullPolicy, "clean").pipe(
+              Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
+            )
+          ),
           Effect.provideService(CitationCleaner, full.runtime)
         );
         const citationResult6 = yield* Effect.flip(fullPipeline.run({ text: "x", plan: "full-html" }));
@@ -221,6 +237,11 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         );
         const h = owned(worker, 1, () => "x");
         const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestScaffoldBinding(limits, "clean").pipe(
+              Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
+            )
+          ),
           Effect.provideService(CitationCleaner, h.runtime)
         );
         const running = yield* pipeline.run({ text: "x", plan: "cancel-html" }).pipe(Effect.forkChild);
@@ -260,6 +281,11 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         });
         const h = owned(worker, 0, () => new TextEncoder().encode("<div>A</div>"));
         const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestScaffoldBinding(limits, "clean").pipe(
+              Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
+            )
+          ),
           Effect.provideService(CitationCleaner, h.runtime)
         );
         const result = yield* pipeline.run({ text: "x", plan: "bytes-html" });
@@ -268,6 +294,11 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         expect(result.producedTextUtf16).toBe(1);
         const wide = owned(worker, 0, () => new TextEncoder().encode('<meta charset="utf-8"><div>😀</div>'));
         const widePipeline = yield* makeCitationCleanerPipeline(limits).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestScaffoldBinding(limits, "clean").pipe(
+              Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
+            )
+          ),
           Effect.provideService(CitationCleaner, wide.runtime)
         );
         const citationResult19 = yield* Effect.flip(widePipeline.run({ text: "x", plan: "bytes-html" }));

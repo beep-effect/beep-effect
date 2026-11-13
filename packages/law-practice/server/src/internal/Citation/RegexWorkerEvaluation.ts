@@ -9,7 +9,7 @@ import * as O from "effect/Option";
 import * as RegExp from "effect/RegExp";
 import { makeCitationRegexAlphabet } from "./RegexAlphabet.ts";
 import { makeCitationRegexDescriptorRegistry } from "./RegexDescriptors.ts";
-import { makeCitationRegexInput } from "./RegexInput.ts";
+import { citationUnaccountedText, makeCitationRegexInput } from "./RegexInput.ts";
 import { makeCitationRegexProgram } from "./RegexProgram.ts";
 import { makeCitationRegexResult } from "./RegexResult.ts";
 import { CitationRegexWorkerFailure } from "./RegexWorkerProtocol.ts";
@@ -46,7 +46,7 @@ export const makeCitationRegexEvaluation = Effect.fn("Citation.makeRegexEvaluati
   const registry = yield* makeCitationRegexDescriptorRegistry(limits, [descriptor], engine);
   const alphabet = yield* makeCitationRegexAlphabet(limits);
   const compiler = yield* makeCitationRegexProgram(limits, engine);
-  const sourceInput = yield* makeCitationRegexInput(limits);
+  const sourceInput = yield* makeCitationRegexInput(limits, citationUnaccountedText);
   const evaluate = Effect.fn("Citation.evaluateNativeRegex")(
     function* (job: CitationRegexWorkerJob) {
       if (job.maxMatches > limits.patternMatches)

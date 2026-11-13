@@ -196,21 +196,14 @@ export const makeCitationPostCaseMetadata = Effect.fn("Citation.makePostCaseMeta
     "173f538b2d3f8f2522eeb298388114e59bca173d00e03ac7f7b844f02c1be040",
     invalidConfiguration
   );
-  const installed = yield* makeCitationMetadataOperation(
-    limits,
-    (raw: unknown) => extractCitationPostCaseMetadata(limits, runtime, config, decoded.courtTable, raw),
-    invalidConfiguration
+  const installed = yield* makeCitationMetadataOperation(limits, (raw: unknown) =>
+    extractCitationPostCaseMetadata(limits, runtime, config, decoded.courtTable, raw)
   );
-  const apply = Effect.fn("Citation.addPostCaseMetadata")(
-    (raw: unknown) =>
-      installed.operation.run(
-        "extract",
-        Effect.gen(function* () {
-          const [patch, reservedUnits] = yield* installed.run(raw);
-          return CitationPostCaseMetadataResult.make({ patch, reservedUnits });
-        })
-      ),
-    installed.timing.timed
+  const apply = Effect.fn("Citation.addPostCaseMetadata")((raw: unknown) =>
+    Effect.gen(function* () {
+      const [patch, reservedUnits] = yield* installed.run(raw);
+      return CitationPostCaseMetadataResult.make({ patch, reservedUnits });
+    })
   );
   return { apply };
 });

@@ -6,164 +6,175 @@ import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { readCitationSpanOffsetsCorpus as load } from "./CitationSpanOffsets.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source diff offsets and HTML geometry", (it) => {
   it.effect("preserves every original constructor entry and left/right lookup", () =>
-    Effect.gen(function* () {
-      const { corpus, limits, plans } = yield* load();
-      let count = 0;
-      for (const row of corpus.maps) {
-        const map = yield* makeCitationSpanOffsets(limits, A.getUnsafe(plans, row.id));
-        const snapshot = yield* map.snapshot;
-        expect(snapshot).toEqual(row.entries);
-        for (const query of row.queries) {
-          if (query.error !== null) {
-            const failure = yield* map.update(query.position, query.side).pipe(Effect.flip);
-            expect(failure).toMatchObject({ _tag: "CitationSpanOffsetsFailure", reason: "empty-map" });
-          } else {
-            const value = yield* map.update(query.position, query.side);
-            expect(value, `${row.id}:${query.side}:${query.position}`).toBe(query.value);
+    withCitationTestInvocation(
+      Effect.gen(function* () {
+        const { corpus, limits, plans } = yield* load();
+        let count = 0;
+        for (const row of corpus.maps) {
+          const map = yield* makeCitationSpanOffsets(limits, A.getUnsafe(plans, row.id));
+          const snapshot = yield* map.snapshot;
+          expect(snapshot).toEqual(row.entries);
+          for (const query of row.queries) {
+            if (query.error !== null) {
+              const failure = yield* map.update(query.position, query.side).pipe(Effect.flip);
+              expect(failure).toMatchObject({ _tag: "CitationSpanOffsetsFailure", reason: "empty-map" });
+            } else {
+              const value = yield* map.update(query.position, query.side);
+              expect(value, `${row.id}:${query.side}:${query.position}`).toBe(query.value);
+            }
+            count++;
           }
-          count++;
         }
-      }
-      expect(count).toBe(2492);
-    })
+        expect(count).toBe(2492);
+      })
+    )
   );
   it.effect("finds unique emphasis matches and converts native spans from prepared original plans", () =>
-    Effect.gen(function* () {
-      const { corpus, limits, plans } = yield* load();
-      let queries = 0;
-      let conversions = 0;
-      for (const document of corpus.documents) {
-        const budget = yield* makeCitationTextBudget(limits);
-        const geometry = yield* makeCitationHtmlTagGeometry(limits, {
+    withCitationTestInvocation(
+      Effect.gen(function* () {
+        const { corpus, limits, plans } = yield* load();
+        let queries = 0;
+        let conversions = 0;
+        for (const document of corpus.documents) {
+          const budget = yield* makeCitationTextBudget(limits);
+          const geometry = yield* makeCitationHtmlTagGeometry(limits, {
+            plain: document.plain,
+            tags: document.tags,
+            forward: A.getUnsafe(plans, document.forwardMap),
+            backward: A.getUnsafe(plans, document.backwardMap),
+          }).pipe(Effect.provideService(CitationTextBudget, budget));
+          for (const query of document.queries) {
+            const tags = yield* geometry.find(query.position);
+            expect(tags).toEqual(query.tags);
+            queries++;
+          }
+          for (const conversion of document.conversions) {
+            const mapped = yield* geometry.convert([conversion.tag]);
+            expect(mapped).toEqual({ text: conversion.text, start: conversion.start, end: conversion.end });
+            const duplicated = yield* geometry.convert([conversion.tag, conversion.tag]);
+            expect(duplicated).toEqual(mapped);
+            conversions++;
+          }
+        }
+        expect(queries).toBe(362);
+        expect(conversions).toBe(17);
+      })
+    )
+  );
+  it.effect("preflights input/step budgets and owns map state after installation", () =>
+    withCitationTestInvocation(
+      Effect.gen(function* () {
+        const { limits, plans } = yield* load();
+        const source = A.getUnsafe(plans, 8);
+        const raw = { ...source, steps: A.map(source.steps, (step) => ({ ...step })) };
+        const map = yield* makeCitationSpanOffsets(limits, raw);
+        const before = yield* map.snapshot;
+        A.getUnsafe(raw.steps, 0).amount = 0;
+        const after = yield* map.snapshot;
+        expect(after).toEqual(before);
+        const tooMany = yield* makeCitationSpanOffsets({ ...limits, diffSteps: 1 }, source).pipe(Effect.flip);
+        expect(tooMany).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "diffSteps" });
+        const tooLong = yield* makeCitationSpanOffsets({ ...limits, diffInputUtf16: 1 }, source).pipe(Effect.flip);
+        expect(tooLong).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "diffInputUtf16" });
+        const incoherent = yield* makeCitationSpanOffsets(limits, raw).pipe(Effect.flip);
+        expect(incoherent).toMatchObject({ _tag: "CitationSpanOffsetsFailure", reason: "invalid-plan" });
+        const invalid = yield* map.update(0.5, "right").pipe(Effect.flip);
+        expect(invalid).toMatchObject({ reason: "invalid-offset" });
+        const invalidSide = yield* map.update(0, "middle").pipe(Effect.flip);
+        expect(invalidSide).toMatchObject({ reason: "invalid-offset" });
+        const invalidPolicy = yield* makeCitationSpanOffsets({}, source).pipe(Effect.flip);
+        expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
+        const invalidPlan = yield* makeCitationSpanOffsets(limits, {}).pipe(Effect.flip);
+        expect(invalidPlan).toMatchObject({ reason: "invalid-plan" });
+      })
+    )
+  );
+  it.effect("copies exposed tag buffers and rejects ambiguous geometry without partial text", () =>
+    withCitationTestInvocation(
+      Effect.gen(function* () {
+        const { corpus, limits, plans } = yield* load();
+        const document = A.getUnsafe(corpus.documents, 0);
+        const raw = {
           plain: document.plain,
           tags: document.tags,
           forward: A.getUnsafe(plans, document.forwardMap),
           backward: A.getUnsafe(plans, document.backwardMap),
-        }).pipe(Effect.provideService(CitationTextBudget, budget));
-        for (const query of document.queries) {
-          const tags = yield* geometry.find(query.position);
-          expect(tags).toEqual(query.tags);
-          queries++;
-        }
-        for (const conversion of document.conversions) {
-          const mapped = yield* geometry.convert([conversion.tag]);
-          expect(mapped).toEqual({ text: conversion.text, start: conversion.start, end: conversion.end });
-          const duplicated = yield* geometry.convert([conversion.tag, conversion.tag]);
-          expect(duplicated).toEqual(mapped);
-          conversions++;
-        }
-      }
-      expect(queries).toBe(362);
-      expect(conversions).toBe(17);
-    })
-  );
-  it.effect("preflights input/step budgets and owns map state after installation", () =>
-    Effect.gen(function* () {
-      const { limits, plans } = yield* load();
-      const source = A.getUnsafe(plans, 8);
-      const raw = { ...source, steps: A.map(source.steps, (step) => ({ ...step })) };
-      const map = yield* makeCitationSpanOffsets(limits, raw);
-      const before = yield* map.snapshot;
-      A.getUnsafe(raw.steps, 0).amount = 0;
-      const after = yield* map.snapshot;
-      expect(after).toEqual(before);
-      const tooMany = yield* makeCitationSpanOffsets({ ...limits, diffSteps: 1 }, source).pipe(Effect.flip);
-      expect(tooMany).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "diffSteps" });
-      const tooLong = yield* makeCitationSpanOffsets({ ...limits, diffInputUtf16: 1 }, source).pipe(Effect.flip);
-      expect(tooLong).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "diffInputUtf16" });
-      const incoherent = yield* makeCitationSpanOffsets(limits, raw).pipe(Effect.flip);
-      expect(incoherent).toMatchObject({ _tag: "CitationSpanOffsetsFailure", reason: "invalid-plan" });
-      const invalid = yield* map.update(0.5, "right").pipe(Effect.flip);
-      expect(invalid).toMatchObject({ reason: "invalid-offset" });
-      const invalidSide = yield* map.update(0, "middle").pipe(Effect.flip);
-      expect(invalidSide).toMatchObject({ reason: "invalid-offset" });
-      const invalidPolicy = yield* makeCitationSpanOffsets({}, source).pipe(Effect.flip);
-      expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
-      const invalidPlan = yield* makeCitationSpanOffsets(limits, {}).pipe(Effect.flip);
-      expect(invalidPlan).toMatchObject({ reason: "invalid-plan" });
-    })
-  );
-  it.effect("copies exposed tag buffers and rejects ambiguous geometry without partial text", () =>
-    Effect.gen(function* () {
-      const { corpus, limits, plans } = yield* load();
-      const document = A.getUnsafe(corpus.documents, 0);
-      const raw = {
-        plain: document.plain,
-        tags: document.tags,
-        forward: A.getUnsafe(plans, document.forwardMap),
-        backward: A.getUnsafe(plans, document.backwardMap),
-      };
-      const budget = yield* makeCitationTextBudget(limits);
-      const geometry = yield* makeCitationHtmlTagGeometry(limits, raw).pipe(
-        Effect.provideService(CitationTextBudget, budget)
-      );
-      const invalidPolicy = yield* makeCitationHtmlTagGeometry(null, raw).pipe(
-        Effect.provideService(CitationTextBudget, budget),
-        Effect.flip
-      );
-      expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
-      const invalidInput = yield* makeCitationHtmlTagGeometry(limits, null).pipe(
-        Effect.provideService(CitationTextBudget, budget),
-        Effect.flip
-      );
-      expect(invalidInput).toMatchObject({ reason: "invalid-input" });
-      const invalidTags = yield* geometry.convert(null).pipe(Effect.flip);
-      expect(invalidTags).toMatchObject({ reason: "invalid-input" });
-      const query = yield* Effect.fromOption(A.findFirst(document.queries, (row) => row.tags.length === 1));
-      const tags = yield* geometry.find(query.position);
-      A.getUnsafe(tags, 0).text.bytes.fill(0);
-      const repeated = yield* geometry.find(query.position);
-      expect(repeated).toEqual(query.tags);
-      const empty = yield* geometry.convert([]).pipe(Effect.flip);
-      expect(empty).toMatchObject({ reason: "empty-tags" });
-      const tag = A.getUnsafe(document.tags, 0);
-      const ambiguous = yield* makeCitationHtmlTagGeometry(limits, { ...raw, tags: [tag, tag] }).pipe(
-        Effect.provideService(CitationTextBudget, budget)
-      );
-      const rejected = yield* ambiguous.find(query.position);
-      expect(rejected).toEqual([]);
-      const tightBudget = yield* makeCitationTextBudget({ ...limits, producedTextUtf16: 1 });
-      const tight = yield* makeCitationHtmlTagGeometry({ ...limits, producedTextUtf16: 1 }, raw).pipe(
-        Effect.provideService(CitationTextBudget, tightBudget),
-        Effect.flip
-      );
-      expect(tight).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
-    })
+        };
+        const budget = yield* makeCitationTextBudget(limits);
+        const geometry = yield* makeCitationHtmlTagGeometry(limits, raw).pipe(
+          Effect.provideService(CitationTextBudget, budget)
+        );
+        const invalidPolicy = yield* makeCitationHtmlTagGeometry(null, raw).pipe(
+          Effect.provideService(CitationTextBudget, budget),
+          Effect.flip
+        );
+        expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
+        const invalidInput = yield* makeCitationHtmlTagGeometry(limits, null).pipe(
+          Effect.provideService(CitationTextBudget, budget),
+          Effect.flip
+        );
+        expect(invalidInput).toMatchObject({ reason: "invalid-input" });
+        const invalidTags = yield* geometry.convert(null).pipe(Effect.flip);
+        expect(invalidTags).toMatchObject({ reason: "invalid-input" });
+        const query = yield* Effect.fromOption(A.findFirst(document.queries, (row) => row.tags.length === 1));
+        const tags = yield* geometry.find(query.position);
+        A.getUnsafe(tags, 0).text.bytes.fill(0);
+        const repeated = yield* geometry.find(query.position);
+        expect(repeated).toEqual(query.tags);
+        const empty = yield* geometry.convert([]).pipe(Effect.flip);
+        expect(empty).toMatchObject({ reason: "empty-tags" });
+        const tag = A.getUnsafe(document.tags, 0);
+        const ambiguous = yield* makeCitationHtmlTagGeometry(limits, { ...raw, tags: [tag, tag] }).pipe(
+          Effect.provideService(CitationTextBudget, budget)
+        );
+        const rejected = yield* ambiguous.find(query.position);
+        expect(rejected).toEqual([]);
+        const tightBudget = yield* makeCitationTextBudget({ ...limits, producedTextUtf16: 1 });
+        const tight = yield* makeCitationHtmlTagGeometry({ ...limits, producedTextUtf16: 1 }, raw).pipe(
+          Effect.provideService(CitationTextBudget, tightBudget),
+          Effect.flip
+        );
+        expect(tight).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
+      })
+    )
   );
   it.effect("bounds installed and supplied tag counts and rejects inconsistent source layouts", () =>
-    Effect.gen(function* () {
-      const { corpus, limits, plans } = yield* load();
-      const document = A.getUnsafe(corpus.documents, 0);
-      const tag = A.getUnsafe(document.tags, 0);
-      const raw = {
-        plain: document.plain,
-        tags: [tag],
-        forward: A.getUnsafe(plans, document.forwardMap),
-        backward: A.getUnsafe(plans, document.backwardMap),
-      };
-      const policy = { ...limits, tokens: 1 };
-      const budget = yield* makeCitationTextBudget(policy);
-      const excessive = yield* makeCitationHtmlTagGeometry(policy, { ...raw, tags: [tag, tag] }).pipe(
-        Effect.provideService(CitationTextBudget, budget),
-        Effect.flip
-      );
-      expect(excessive).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "tokens" });
-      expect(raw.forward.before).not.toEqual(raw.backward.before);
-      const mismatched = yield* makeCitationHtmlTagGeometry(limits, {
-        ...raw,
-        forward: { ...raw.forward, before: raw.backward.before },
-      }).pipe(Effect.provideService(CitationTextBudget, budget), Effect.flip);
-      expect(mismatched).toMatchObject({ reason: "invalid-input" });
-      const geometry = yield* makeCitationHtmlTagGeometry(policy, raw).pipe(
-        Effect.provideService(CitationTextBudget, budget)
-      );
-      const converted = yield* geometry.convert([tag, tag]).pipe(Effect.flip);
-      expect(converted).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "tokens" });
-    })
+    withCitationTestInvocation(
+      Effect.gen(function* () {
+        const { corpus, limits, plans } = yield* load();
+        const document = A.getUnsafe(corpus.documents, 0);
+        const tag = A.getUnsafe(document.tags, 0);
+        const raw = {
+          plain: document.plain,
+          tags: [tag],
+          forward: A.getUnsafe(plans, document.forwardMap),
+          backward: A.getUnsafe(plans, document.backwardMap),
+        };
+        const policy = { ...limits, tokens: 1 };
+        const budget = yield* makeCitationTextBudget(policy);
+        const excessive = yield* makeCitationHtmlTagGeometry(policy, { ...raw, tags: [tag, tag] }).pipe(
+          Effect.provideService(CitationTextBudget, budget),
+          Effect.flip
+        );
+        expect(excessive).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "tokens" });
+        expect(raw.forward.before).not.toEqual(raw.backward.before);
+        const mismatched = yield* makeCitationHtmlTagGeometry(limits, {
+          ...raw,
+          forward: { ...raw.forward, before: raw.backward.before },
+        }).pipe(Effect.provideService(CitationTextBudget, budget), Effect.flip);
+        expect(mismatched).toMatchObject({ reason: "invalid-input" });
+        const geometry = yield* makeCitationHtmlTagGeometry(policy, raw).pipe(
+          Effect.provideService(CitationTextBudget, budget)
+        );
+        const converted = yield* geometry.convert([tag, tag]).pipe(Effect.flip);
+        expect(converted).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "tokens" });
+      })
+    )
   );
 });

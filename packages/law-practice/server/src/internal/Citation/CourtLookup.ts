@@ -12,7 +12,6 @@ import {
   CitationEngineAbsoluteMaxima,
   CitationPythonUnicodeStorage,
   CitationSafetyLimitExceeded,
-  CitationTextBudget,
 } from "@beep/law-practice-use-cases/server";
 import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
@@ -20,12 +19,12 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { CitationInvocation } from "./Invocation.ts";
 import { makeCitationPythonLower } from "./PythonCase.ts";
 import { filterCitationPythonStorage, makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { citationRegexCellFor } from "./RegexAlphabet.ts";
 import { makeCitationRegexPointSets } from "./RegexPointSets.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
-import { makeCitationTextBudget } from "./TextBudget.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CourtLookup");
 const Reason = LiteralKit(["invalid-policy", "invalid-table", "incompatible-vocabulary"]).pipe(
@@ -74,8 +73,8 @@ const authenticateTable = Effect.fn("Citation.authenticateCourtTable")(function*
   if (A.some(table, ([id]) => O.isNone(findCourtById(id)))) return yield* fail("incompatible-vocabulary");
   return table;
 });
-/** Authenticate the exact frozen court order and capture Clock/optional parent
- * budget once. Each standalone call owns a fresh budget. All methods have R = never.
+/** Authenticate the exact frozen court order and capture Clock. Methods read
+ * CitationInvocation at call time.
  * lookupNormalized is a trusted pure composition helper for an already normalized
  * string; raw native words must enter lookup. No host regex or lowercase is used.
  * @internal @category operations @since 0.0.0
@@ -95,8 +94,6 @@ export const makeCitationCourtLookup = Effect.fn("Citation.makeCourtLookup")(fun
     const range = A.getUnsafe(word, citationRegexCellFor(starts, point));
     return range.start <= point && point <= range.end;
   };
-  const enclosing = yield* Effect.serviceOption(CitationTextBudget);
-  if (O.isSome(enclosing) && enclosing.value.maximum > limits.producedTextUtf16) return yield* fail("invalid-policy");
   const lookupNormalized = (key: string): O.Option<CourtId> => {
     if (Str.isEmpty(key)) return O.none();
     let result = O.none<CourtId>();
@@ -108,7 +105,7 @@ export const makeCitationCourtLookup = Effect.fn("Citation.makeCourtLookup")(fun
   };
   const lookup = Effect.fn("Citation.lookupCourt")(
     function* (raw: unknown) {
-      const budget = O.isSome(enclosing) ? enclosing.value : yield* makeCitationTextBudget(limits);
+      const budget = (yield* CitationInvocation).budget;
       const source = yield* unicode.fromStorageReserved(raw, (units) =>
         units > limits.sourceUtf16
           ? Effect.fail(CitationSafetyLimitExceeded.make({ operation: timing.operation, limit: "sourceUtf16" }))

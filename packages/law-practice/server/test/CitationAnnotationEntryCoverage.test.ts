@@ -4,6 +4,7 @@ import { it } from "@beep/test-runner";
 import { deepStrictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import { installCitationAnnotationEntryFixture } from "./CitationAnnotationEntry.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
@@ -19,6 +20,11 @@ const refusal = (failure: { readonly _tag: string }) => ({
 const install = Effect.fnUntraced(function* (narrow: Partial<CitationEngineLimits> = {}) {
   const setup = yield* installCitationAnnotationEntryFixture();
   return yield* makeCitationAnnotationEntry({ ...setup.limits, ...narrow }, setup.runtime, setup.configuration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding({ ...setup.limits, ...narrow }, "annotate").pipe(
+        Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
+      )
+    ),
     Effect.provideContext(setup.provided)
   );
 });
@@ -28,6 +34,11 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("annotation 
     Effect.gen(function* () {
       const setup = yield* installCitationAnnotationEntryFixture();
       const failure = yield* makeCitationAnnotationEntry(setup.limits, setup.runtime, {}).pipe(
+        Effect.flatMap((stage) =>
+          makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
+            Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
+          )
+        ),
         Effect.provideContext(setup.provided),
         Effect.flip
       );

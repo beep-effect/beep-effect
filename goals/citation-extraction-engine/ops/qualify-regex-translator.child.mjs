@@ -10,7 +10,10 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { makeCitationRegexAlphabet } from "../../../packages/law-practice/server/src/internal/Citation/RegexAlphabet.ts";
 import { makeCitationRegexDescriptorRegistry } from "../../../packages/law-practice/server/src/internal/Citation/RegexDescriptors.ts";
-import { makeCitationRegexInput } from "../../../packages/law-practice/server/src/internal/Citation/RegexInput.ts";
+import {
+  citationUnaccountedText,
+  makeCitationRegexInput,
+} from "../../../packages/law-practice/server/src/internal/Citation/RegexInput.ts";
 import { makeCitationRegexProgram } from "../../../packages/law-practice/server/src/internal/Citation/RegexProgram.ts";
 import { makeCitationRegexResult } from "../../../packages/law-practice/server/src/internal/Citation/RegexResult.ts";
 import { makeCitationRegexTranslator } from "../../../packages/law-practice/server/src/internal/Citation/RegexTranslator.ts";
@@ -115,8 +118,9 @@ await Effect.runPromise(
     const limits = (yield* defaultCitationEnginePolicy).limits;
     const compiler = yield* makeCitationRegexProgram(limits);
     const programAlphabet = yield* makeCitationRegexAlphabet(limits);
-    const patternInput = yield* makeCitationRegexInput(limits, "pattern");
-    const sourceInput = yield* makeCitationRegexInput(limits);
+    // Standalone qualification has no request budget; retain unaccounted local preparation.
+    const patternInput = yield* makeCitationRegexInput(limits, citationUnaccountedText, "pattern");
+    const sourceInput = yield* makeCitationRegexInput(limits, citationUnaccountedText);
     const descriptorVector = [];
     let programInstances = 0;
     let programMaxUtf16 = 0;
