@@ -46,7 +46,7 @@ const encodeActionRequest = S.encodeEffect(S.fromJsonString(ActionRequestMessage
  *
  * @param input - The webhook secret, the raw body and the header value when present.
  * @returns Success when the signature matches; `WebhookRejected` with status 401 otherwise.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export const verifySignature = Effect.fn("Webhook.verifySignature")(function* (input: {
@@ -82,7 +82,7 @@ export const verifySignature = Effect.fn("Webhook.verifySignature")(function* (i
  *
  * @param input - The job's labels, the pool's labels and the match mode.
  * @returns Whether the pool accepts the job.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export const canRunJob = (input: {
@@ -118,7 +118,7 @@ const isStrict = (matcher: PoolMatcher) => matcher.labelMatch !== "any";
  *
  * @param input - The fleet's pools in declaration order and the job's labels.
  * @returns The selected pool, if any accepts the job.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export const selectPool = ({
@@ -161,7 +161,7 @@ const respond = (statusCode: number, body: string) => WebhookResponse.make({ sta
  *
  * @param input - Runtime config, webhook secret and the delivery.
  * @returns The HTTP response to send back.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export const handleWebhook = Effect.fn("Webhook.handle")(function* (input: {

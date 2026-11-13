@@ -41,7 +41,7 @@ const encodeActionRequest = S.encodeEffect(S.fromJsonString(ActionRequestMessage
  *
  * @param input - Pool runtime config and the retry message.
  * @returns Whether the job was re-queued.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export const handleJobRetry = Effect.fn("JobRetry.handle")(function* (input: {

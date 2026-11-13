@@ -51,7 +51,7 @@ const isRunnerType = S.is(RunnerType);
  *
  * @param input - Launch time (epoch ms), the threshold in minutes and now (epoch ms).
  * @returns Whether the threshold has passed.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export const minutesElapsed = (input: {
@@ -198,7 +198,7 @@ const sweepOrphans = Effect.fn("ScaleDown.sweepOrphans")(function* (config: Pool
  *
  * @param config - The pool runtime config.
  * @returns One decision per instance considered.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export const handleScaleDown = Effect.fn("ScaleDown.handle")(function* (config: PoolRuntimeConfig) {

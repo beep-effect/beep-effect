@@ -38,7 +38,7 @@ const dayMillis = 86_400_000;
  *
  * @param config - Token paths, age threshold and dry-run switch.
  * @returns The stale parameter names.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export const handleSsmHousekeeping = Effect.fn("SsmHousekeeper.handle")(function* (config: HousekeeperRuntimeConfig) {

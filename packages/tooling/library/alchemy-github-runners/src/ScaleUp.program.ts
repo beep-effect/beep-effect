@@ -63,7 +63,7 @@ const onDemandStrategies: ReadonlyArray<AllocationStrategy> = ["lowest-price", "
  *
  * @param input - The configured strategy and the capacity type being launched.
  * @returns A strategy valid for that capacity type.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export const sanitizeAllocationStrategy = (input: {
@@ -95,7 +95,7 @@ export const sanitizeAllocationStrategy = (input: {
  *
  * @param input - Pool config, owner, runner count, capacity type and optional AMI override.
  * @returns An instant, tagged request for `count` instances across every type and subnet.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export const fleetLaunchRequest = (input: {
@@ -194,7 +194,7 @@ const failedLaunch = (count: number, retryable: boolean): LaunchOutcome =>
  *
  * @param input - Pool config, owner, count, capacity type and AMI override.
  * @returns Launched instance ids and the retryable and non-retryable shortfall.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export const launchRunners: (input: {
@@ -273,7 +273,7 @@ const resolveRunnerGroupId = Effect.fn("ScaleUp.resolveRunnerGroupId")(function*
  *
  * @param input - Pool config, installation token, owner and launched instance ids.
  * @returns The instance ids that failed configuration.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export const configureRunners = Effect.fn("ScaleUp.configureRunners")(function* (input: {
@@ -357,7 +357,7 @@ export const configureRunners = Effect.fn("ScaleUp.configureRunners")(function* 
  *
  * @param input - Pool config and the message to re-check later.
  * @returns Nothing; a disabled policy or exhausted attempts publish nothing.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export const publishJobRetry = Effect.fn("ScaleUp.publishJobRetry")(function* (input: {
@@ -494,7 +494,7 @@ const scaleUpGroup = Effect.fn("ScaleUp.group")(function* (
  *
  * @param input - Pool runtime config and the decoded batch.
  * @returns Message ids to retry.
- * @category programs
+ * @category use-cases
  * @since 0.0.0
  */
 export const handleScaleUp = Effect.fn("ScaleUp.handle")(function* (input: {
