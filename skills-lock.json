@@ -71,7 +71,7 @@
         ".claude/skills/explore",
         ".agents/skills/explore"
       ],
-      "installedTreeHash": "16310bd45ce9bc005db4da77a283049e5a9b3d0cff3fb22a1a5c97e90af71c25"
+      "installedTreeHash": "d1aa78aad3493c517588c54952aef4e5530c93bf2101de3591f0f769ad1bfd01"
     },
     "grill-me": {
       "_tag": "vendored",
