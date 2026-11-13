@@ -23,11 +23,12 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { yeetStateRootEnvVar } from "@beep/repo-cli-kit/cli/Flags";
 import { ContainedFileRead, readContainedFileStringNoFollow } from "@beep/repo-cli-kit/cli/FsGuards";
+import { isWithinRoot } from "@beep/repo-cli-kit/PathContainment";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { flow } from "effect/Function";
+import { constant, flow } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
@@ -37,7 +38,7 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { resolveWorkstationStateDir } from "../../../internal/state/WorkstationState.ts";
-import { fleetRepositoryKey, readCheckoutClone, readCloneFleetRepository } from "../../Worktree/internal/FleetRoots.ts";
+import { fleetRepositoryKey, readCheckoutFleetRepository } from "../../Worktree/internal/FleetRoots.ts";
 import {
   AttemptJournalExport,
   AttemptJournalExported,
@@ -79,15 +80,20 @@ type CheckoutJournal = {
   readonly lines: ReadonlyArray<string>;
 };
 
+// The guard refusals that mean "no journal here": a symlinked run directory or
+// journal, which economics skips too, and a stray file under `runs/`.
+const isSkippedRunEntry = S.is(S.Literals(["symlink", "parent-not-directory"]));
+
 // A run's journal as the economics reader sees it: a symlinked run directory or
-// journal is refused by the no-follow read and skipped, as economics skips it; a
-// run directory without a journal is skipped; a journal that exists but cannot be
-// read fails the export, so the removal keeps the checkout.
+// journal, a stray file and a run directory without a journal are skipped; a
+// journal the guard cannot inspect, or that exists but cannot be read, fails the
+// export, so the removal keeps the checkout.
 const readCheckoutJournal = Effect.fnUntraced(function* (runsDirectory: string, runId: string) {
   const path = yield* Path.Path;
   const journal = path.join(runsDirectory, runId, JOURNAL_FILE_NAME);
   const read = yield* readContainedFileStringNoFollow(runsDirectory, journal).pipe(
-    Effect.catchTag("FsGuardError", () => Effect.succeed(unread))
+    Effect.catchIf((error) => isSkippedRunEntry(error.reason), constant(Effect.succeed(unread))),
+    Effect.mapError(storeError(`Could not inspect the attempt journal ${journal}.`, journal))
   );
   if (read.exists && O.isNone(read.contents)) {
     return yield* AttemptJournalStoreError.make({
@@ -147,7 +153,7 @@ const fileJournal = Effect.fnUntraced(function* (storeRunsDirectory: string, jou
  * `<yeet state>/attempts/<host__owner__name>/runs`, where the yeet state root
  * is `BEEP_YEET_STATE_ROOT`, else `$XDG_STATE_HOME/beep/yeet`, else
  * `$HOME/.local/state/beep/yeet`. Fails when neither variable holds an
- * absolute path.
+ * absolute path, and when the `BEEP_YEET_STATE_ROOT` override is relative.
  *
  * **Example** (Locate a repository's retained journals)
  *
@@ -173,21 +179,45 @@ export const attemptJournalStoreRunsDirectory = Effect.fn("AttemptJournalStore.r
       AttemptJournalStoreError.make({ message: "Could not resolve the yeet state root for attempt journals.", cause })
     )
   );
+  if (!path.isAbsolute(root)) {
+    return yield* AttemptJournalStoreError.make({
+      message: `The yeet state root ${root} is not absolute; set ${yeetStateRootEnvVar} to an absolute path.`,
+      path: root,
+    });
+  }
   return path.join(root, STORE_DIRECTORY_NAME, fleetRepositoryKey(repository), RUNS_DIRECTORY_NAME);
+});
+
+// A store inside the checkout would be deleted with it after reporting success.
+const assertOutsideCheckout = Effect.fnUntraced(function* (checkout: string, runsDirectory: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const realCheckout = yield* fs
+    .realPath(checkout)
+    .pipe(Effect.mapError(storeError(`Could not resolve the checkout ${checkout}.`, checkout)));
+  if (A.some([path.resolve(checkout), realCheckout], (root) => isWithinRoot(path, root, runsDirectory))) {
+    return yield* AttemptJournalStoreError.make({
+      message: `The attempt-journal store ${runsDirectory} lies inside ${checkout}, which is being removed; set ${yeetStateRootEnvVar} outside it.`,
+      path: runsDirectory,
+    });
+  }
 });
 
 // The partition comes from the checkout's own git metadata: a linked worktree's
 // `.git` file names its clone, even for a fenced or nested copy, so no caller can
-// file a lane under another repository.
+// file a lane under another repository. Metadata that exists but cannot be read
+// fails the export rather than passing for "no repository".
 const retainAttemptJournals = Effect.fnUntraced(function* (checkout: string) {
   const journals = yield* readCheckoutJournals(checkout);
   if (A.isReadonlyArrayEmpty(journals)) return O.none<AttemptJournalExport>();
-  const clone = yield* readCheckoutClone(checkout);
-  const repository = yield* readCloneFleetRepository(O.getOrElse(clone, () => checkout));
+  const repository = yield* readCheckoutFleetRepository(checkout).pipe(
+    Effect.mapError(storeError(`Could not read the git metadata of ${checkout}.`, checkout))
+  );
   if (O.isNone(repository)) {
     return O.some<AttemptJournalExport>(AttemptJournalExportUnpartitioned.make({ journals: A.length(journals) }));
   }
   const runsDirectory = yield* attemptJournalStoreRunsDirectory(repository.value);
+  yield* assertOutsideCheckout(checkout, runsDirectory);
   const filed = yield* Effect.forEach(journals, (journal) => fileJournal(runsDirectory, journal));
   return O.some<AttemptJournalExport>(
     AttemptJournalExported.make({
@@ -236,9 +266,10 @@ export interface AttemptJournalStoreShape {
  * stores each row once. The partition is the GitHub repository named by the
  * `origin` of the clone the checkout's git metadata points to; a clone with no
  * such origin has no partition, so its journals are reported `unpartitioned`
- * and not copied. Any read or write failure fails the call: the worktree
- * removal service then deletes nothing, and residue-reap leaves the directory
- * in place.
+ * and not copied. Any read or write failure fails the call, as do git metadata
+ * that exists but cannot be read, a relative state root and a store inside the
+ * checkout: the worktree removal service then deletes nothing, and residue-reap
+ * leaves the directory in place.
  *
  * **Example** (Export a lane's journals)
  *

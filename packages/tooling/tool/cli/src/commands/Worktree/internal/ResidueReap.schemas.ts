@@ -109,7 +109,8 @@ export type ResidueReapAction = typeof ResidueReapAction.Type;
  * **Details**
  *
  * `journal-export-failed` keeps a directory whose checkouts' Yeet attempt
- * journals could not be filed in the workstation attempt-journal store.
+ * journals could not be filed in the workstation attempt-journal store,
+ * including journals whose clone names no store partition.
  *
  * **Example** (Recognize a liveness refusal)
  *
@@ -337,6 +338,9 @@ export type ResidueReapHomeRoot = typeof ResidueReapHomeRoot.Type;
  * which is also its apply-time outer boundary. `mtimeMillis` is the modification
  * time the assessment saw; size-evicted entries are removed only while it is
  * unchanged. `groupKey` ties together the files of one shared Turbo cache entry.
+ * `embeddedCheckouts` names the git checkouts the census found inside a
+ * directory removal, the set its clean-tree gate checked; their Yeet attempt
+ * journals are filed in the workstation store before the directory is removed.
  *
  * **Example** (Describe an eligible session file)
  *
@@ -374,6 +378,7 @@ export class ResidueReapCandidate extends S.Opaque<ResidueReapCandidate, { reado
     recoveryDestination: S.optionalKey(S.String),
     retentionReason: S.optionalKey(S.String),
     bytesExclusive: S.optionalKey(ResidueReapByteCap),
+    embeddedCheckouts: S.String.pipe(S.Array, S.optionalKey),
   }).pipe(
     $I.annoteSchema("ResidueReapCandidate", {
       description: "One home-residue candidate with age, census, action, and fail-closed skip evidence.",

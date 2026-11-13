@@ -18,7 +18,7 @@ import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { flow, pipe } from "effect/Function";
+import { constant, flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -29,6 +29,7 @@ import { canonicalRepositoryIdentity } from "../../Yeet/internal/ArtifactPaths.t
 import { PrRepository } from "../../Yeet/internal/Provenance.ts";
 import { WorktreeCommandError } from "../Worktree.errors.ts";
 import { ConfiguredFleetRoots, FleetRootEntry, FleetRootsDocument } from "./FleetRoots.schemas.ts";
+import type * as PlatformError from "effect/PlatformError";
 
 const $I = $RepoCliId.create("commands/Worktree/internal/FleetRoots");
 
@@ -310,13 +311,27 @@ export const canonicalFleetOrigin = (url: string): string => {
   return Str.endsWith(".git")(withoutSlash) ? Str.slice(0, -4)(withoutSlash) : withoutSlash;
 };
 
-// The raw `origin` URL from a clone's `.git/config`, read without spawning git; unreadable is `O.none()`.
-const readCloneOriginUrl = Effect.fnUntraced(function* (clone: string) {
+// A missing entry, or a path that crosses a file, is absent; any other read failure is an error.
+const isAbsentEntryReason = S.is(S.Literals(["NotFound", "BadResource"]));
+const optionalWhenAbsent = <A, R>(
+  read: Effect.Effect<A, PlatformError.PlatformError, R>
+): Effect.Effect<O.Option<A>, PlatformError.PlatformError, R> =>
+  read.pipe(
+    Effect.asSome,
+    Effect.catchIf((error) => isAbsentEntryReason(error.reason._tag), constant(Effect.succeedNone))
+  );
+
+// The raw `origin` URL from a clone's `.git/config`, read without spawning git. A
+// missing config is `O.none()`; an unreadable one fails.
+const readCloneOriginUrlStrict = Effect.fnUntraced(function* (clone: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const config = yield* fs.readFileString(path.join(clone, ".git", "config")).pipe(Effect.option);
+  const config = yield* optionalWhenAbsent(fs.readFileString(path.join(clone, ".git", "config")));
   return O.flatMap(config, originUrlFromGitConfig);
 });
+
+// The lenient form fleet readers use: unreadable is `O.none()`.
+const readCloneOriginUrl = (clone: string) => readCloneOriginUrlStrict(clone).pipe(Effect.orElseSucceed(O.none));
 
 /**
  * Read a clone's canonical origin from its `.git/config` without spawning git.
@@ -392,6 +407,24 @@ const cloneOfGitDir = (path: Path.Path, gitDir: string): O.Option<string> => {
   );
 };
 
+// The strict clone resolution: a missing `.git` is `O.none()`, an unreadable one fails.
+const resolveCheckoutClone = Effect.fnUntraced(function* (checkout: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const gitPath = path.join(checkout, GIT_METADATA_NAME);
+  const gitStat = yield* optionalWhenAbsent(fs.stat(gitPath));
+  const kind = O.map(gitStat, (info) => info.type);
+  if (O.contains(kind, "Directory")) {
+    return O.some(checkout);
+  }
+  const content = O.contains(kind, "File") ? yield* optionalWhenAbsent(fs.readFileString(gitPath)) : O.none<string>();
+  return pipe(
+    content,
+    O.flatMap((text) => gitDirOfGitFile(path, checkout, text)),
+    O.flatMap((gitDir) => cloneOfGitDir(path, gitDir))
+  );
+});
+
 /**
  * Resolve the clone that owns a checkout from its git metadata, without spawning git.
  *
@@ -416,21 +449,41 @@ const cloneOfGitDir = (path: Path.Path, gitDir: string): O.Option<string> => {
  * @category utilities
  * @since 0.0.0
  */
-export const readCheckoutClone = Effect.fn("FleetRoots.readCheckoutClone")(function* (checkout: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const gitPath = path.join(checkout, GIT_METADATA_NAME);
-  const gitStat = yield* fs.stat(gitPath).pipe(Effect.option);
-  const kind = O.map(gitStat, (info) => info.type);
-  if (O.contains(kind, "Directory")) {
-    return O.some(checkout);
-  }
-  const content = O.contains(kind, "File") ? yield* fs.readFileString(gitPath).pipe(Effect.option) : O.none<string>();
-  return pipe(
-    content,
-    O.flatMap((text) => gitDirOfGitFile(path, checkout, text)),
-    O.flatMap((gitDir) => cloneOfGitDir(path, gitDir))
-  );
+export const readCheckoutClone = Effect.fn("FleetRoots.readCheckoutClone")((checkout: string) =>
+  resolveCheckoutClone(checkout).pipe(Effect.orElseSucceed(O.none))
+);
+
+/**
+ * Resolve a checkout's fleet repository, failing on git metadata it cannot read.
+ *
+ * **Details**
+ *
+ * The strict form of {@link readCheckoutClone} then {@link readCloneFleetRepository}:
+ * a missing `.git` or `.git/config`, or a path that crosses a file, means no
+ * repository (`O.none()`), as does an origin that names no GitHub repository.
+ * Any other read failure, such as a permission denial, fails, so a caller that
+ * must not lose data can tell "no repository" from "could not tell".
+ *
+ * **Example** (Build the read)
+ *
+ * ```ts
+ * import { readCheckoutFleetRepository } from "@beep/repo-cli/test/Worktree"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(readCheckoutFleetRepository("/p/beep-effect-worktrees/lane"))) // true
+ * ```
+ *
+ * @param checkout - A clone or linked worktree root.
+ * @returns The repository identity of the owning clone, when its origin names one.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const readCheckoutFleetRepository = Effect.fn("FleetRoots.readCheckoutRepository")(function* (
+  checkout: string
+): Effect.fn.Return<O.Option<PrRepository>, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path> {
+  const clone = yield* resolveCheckoutClone(checkout);
+  const url = yield* readCloneOriginUrlStrict(O.getOrElse(clone, () => checkout));
+  return O.flatMap(url, fleetRepositoryFromOriginUrl);
 });
 
 /**

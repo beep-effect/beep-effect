@@ -62,6 +62,7 @@ import {
   scanProcessAttachments,
 } from "../../../internal/repo-run/ProcessAttachment.ts";
 import { runRepoCommandCapture } from "../../../internal/repo-run/RepoRun.executor.ts";
+import { AttemptJournalExport } from "../../Yeet/internal/AttemptJournalStore.schemas.ts";
 import { AttemptJournalStore } from "../../Yeet/internal/AttemptJournalStore.ts";
 import { ReplyDrafts } from "../../Yeet/internal/Reply.schemas.ts";
 import {
@@ -375,6 +376,7 @@ const candidate = (
     readonly ageDays?: number;
     readonly bytes?: number;
     readonly checkoutRoot?: string;
+    readonly embeddedCheckouts?: ReadonlyArray<string>;
     readonly entriesScanned?: number;
     readonly groupKey?: string;
     readonly mtimeMillis?: number;
@@ -669,10 +671,13 @@ const directoryCandidate = Effect.fnUntraced(function* (
       skipReason: liveness.value,
     });
   }
+  // The checkouts this complete census found travel with the candidate, so the
+  // removal files their attempt journals from the census that authorized it.
   return candidate(root, shape.success, reapClass, "remove-dir", {
     ageDays: measuredAge,
     bytes: census.bytes,
     entriesScanned: census.entriesScanned,
+    ...O.getSomesStruct({ embeddedCheckouts: O.liftPredicate(census.gitMarkers, A.isReadonlyArrayNonEmpty) }),
   });
 });
 
@@ -1549,32 +1554,35 @@ const archiveCandidate = Effect.fnUntraced(function* (
   };
 });
 
-// The classes whose removal deletes whole directories that can hold checkouts.
-const CheckoutHoldingResidueClass = ResidueReapClass.pick([
-  "codex-worktrees",
-  "beep-cache-disposable",
-  "merged-preview",
-]);
-const isCheckoutHoldingResidueClass = S.is(CheckoutHoldingResidueClass);
-
-// Removing such a directory deletes every checkout inside it, and with each its
+// A directory removal deletes every checkout inside it, and with each its
 // `.beep/yeet/runs` attempt journals, so they are filed in the workstation store
-// first (PERIL-11). The checkouts are the embedded ones the census finds, the same
-// set the clean-tree gate demands, or the merged preview itself, which is a
-// checkout and is never censused. A failed export keeps the directory: the janitor
-// never loses data to make progress. Checkout classes never need this: they move
-// `.beep` entries and only `.beep/yeet/jobs/*` of the `yeet` entry, never its runs.
+// first (PERIL-11). The checkouts are the ones the census that authorized the
+// removal recorded (`embeddedCheckouts`, from any class assessed by
+// `directoryCandidate`, Turbo cache directories included), or the merged preview
+// itself, which is a checkout and is never censused. An export that fails, or that
+// finds journals with no store partition, keeps the directory: the janitor never
+// loses data to make progress. Checkout classes never need this: they move `.beep`
+// entries, and of the `yeet` entry only `.beep/yeet/jobs/*`, never its runs.
+const unpartitionedRefusal = (checkout: string) =>
+  flow(
+    O.filter(AttemptJournalExport.guards.unpartitioned),
+    O.map(
+      (unpartitioned) =>
+        `${checkout} holds ${unpartitioned.journals} attempt journal(s) whose clone names no GitHub repository to file them under`
+    )
+  );
+
 const retainEmbeddedAttemptJournals = Effect.fnUntraced(function* (
-  candidate: ResidueReapCandidate,
-  policy: ReapPolicy
-): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem | Path.Path | AttemptJournalStore> {
-  if (!isCheckoutHoldingResidueClass(candidate.reapClass)) return O.none();
+  candidate: ResidueReapCandidate
+): Effect.fn.Return<O.Option<string>, never, AttemptJournalStore> {
   const checkouts = ResidueReapClass.is["merged-preview"](candidate.reapClass)
     ? A.of(candidate.path)
-    : (yield* censusDirectory(candidate.path, policy.entryCap)).gitMarkers;
+    : O.getOrElse(O.fromUndefinedOr(candidate.embeddedCheckouts), A.empty<string>);
   const store = yield* AttemptJournalStore;
-  return yield* Effect.forEach(checkouts, store.retain, { discard: true }).pipe(
-    Effect.as(O.none<string>()),
+  return yield* Effect.forEach(checkouts, (checkout) =>
+    Effect.map(store.retain(checkout), unpartitionedRefusal(checkout))
+  ).pipe(
+    Effect.map(flow(A.getSomes, A.head)),
     Effect.catchTag("AttemptJournalStoreError", (error) => Effect.succeedSome(error.message))
   );
 });
@@ -1611,7 +1619,7 @@ const applyCandidate = Effect.fnUntraced(function* (
   if (ResidueReapAction.is["archive-move"](rechecked.action)) {
     return yield* archiveCandidate(assessed, resolved.value, rechecked, checkpoint);
   }
-  const exportFailure = yield* retainEmbeddedAttemptJournals(rechecked, policy);
+  const exportFailure = yield* retainEmbeddedAttemptJournals(rechecked);
   if (O.isSome(exportFailure)) {
     return skipped("journal-export-failed", `${assessed.path}: ${exportFailure.value}; left in place.`);
   }
@@ -3077,11 +3085,12 @@ const executeResidueReap = Effect.fnUntraced(function* (settings: ResidueReapSet
  * invoking owner checkout. Run reports and archives remain durable until a separate
  * owner retention decision authorizes their retirement.
  *
- * Before an applied removal of a directory that can hold checkouts (a Codex
- * worktree, a disposable beep cache entry, a merged preview), the Yeet attempt
- * journals of every checkout inside it are filed in the workstation
- * {@link AttemptJournalStore}; a failed export keeps the directory with skip
- * reason `journal-export-failed` and a warning. Checkout classes move `.beep`
+ * Before an applied directory removal, the Yeet attempt journals of every
+ * checkout inside it (the candidate's `embeddedCheckouts`, recorded by the census
+ * that authorized the removal, or a merged preview itself) are filed in the
+ * workstation {@link AttemptJournalStore}; an export that fails, or that finds
+ * journals with no store partition, keeps the directory with skip reason
+ * `journal-export-failed` and a warning. Checkout classes move `.beep`
  * entries, and of the `yeet` entry only `.beep/yeet/jobs/*`, so they never
  * move attempt journals.
  *

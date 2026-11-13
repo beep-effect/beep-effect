@@ -56,6 +56,7 @@ import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { NodeCommandTestLayer } from "./support/CommandTest.ts";
 import { git } from "./support/YeetHeadMove.ts";
+import type { ResidueReapClass, ResidueReapReport } from "@beep/repo-cli/test/Worktree";
 import type { EconomicsJournal } from "@beep/repo-cli/test/Yeet";
 
 // PERIL-11 slice 1: a removal, or a residue-reap directory removal, files the
@@ -236,6 +237,45 @@ const reapInstantAfter = Effect.fnUntraced(function* (file: string) {
   );
 });
 const noLiveCwd = () => Effect.succeedSome(false);
+
+// A linked worktree of the clone inside `<home>/.codex/worktrees/<id>`, as Codex lays them out.
+const addCodexWorktree = Effect.fnUntraced(function* (fixture: Fixture, id: string, branch: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const container = path.join(fixture.home, ".codex", "worktrees", id);
+  yield* fs.makeDirectory(container, { recursive: true });
+  yield* git(fixture.clone, ["worktree", "add", "-b", branch, path.join(container, "beep-effect")]);
+  // Candidate paths are canonical, so expectations use the real path.
+  return yield* fs.realPath(container);
+});
+
+// An applied residue-reap of directory classes, aged past the journal's own write.
+const reapDirectories = Effect.fnUntraced(function* (
+  fixture: Fixture,
+  classes: ReadonlyArray<ResidueReapClass>,
+  checkout: string
+) {
+  const path = yield* Path.Path;
+  const nowMillis = yield* reapInstantAfter(
+    path.join(checkout, ".beep", "yeet", "runs", OTHER_RUN_ID, "attempts.ndjson")
+  );
+  return yield* runResidueReap({
+    apply: true,
+    classes,
+    homeRoot: fixture.home,
+    maxAgeDays: 0,
+    turboMaxAgeDays: 0,
+    nowMillis,
+    probeLiveCwd: noLiveCwd,
+    repoRoot: fixture.clone,
+  });
+});
+
+const dispositions = (report: ResidueReapReport) =>
+  A.sort(
+    A.map(report.candidates, (candidate) => [candidate.path, candidate.action, candidate.skipReason] as const),
+    Order.mapInput(Order.String, (row: readonly [string, string, string | undefined]) => row[0])
+  );
 const noLivePid = () => Effect.succeedSome(false);
 
 const noMergedPullRequest = Layer.succeed(
@@ -415,50 +455,96 @@ describe("attempt journal store", () => {
     );
 
     it.effect(
-      "a residue-reap directory removal files embedded checkouts' journals first and keeps the directory when it cannot",
+      "a residue-reap directory removal files the journals its census recorded and keeps the directory when it cannot",
       Effect.fnUntraced(function* () {
         const fixture = yield* scratchClone(O.some(ORIGIN_URL));
         yield* Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
           const a7 = attemptId("7");
-          // A Codex worktree: a linked worktree of the clone, one level inside the container.
-          const container = path.join(fixture.home, ".codex", "worktrees", "abcd");
+          // Codex worktrees: linked worktrees of the clone, one level inside their containers.
+          const container = yield* addCodexWorktree(fixture, "abcd", "feat/codex");
           const codexLane = path.join(container, "beep-effect");
-          yield* fs.makeDirectory(container, { recursive: true });
-          yield* git(fixture.clone, ["worktree", "add", "-b", "feat/codex", codexLane]);
           yield* appendJournal(codexLane, OTHER_RUN_ID, attempt(a7, OTHER_RUN_ID));
-          const journal = path.join(codexLane, ".beep", "yeet", "runs", OTHER_RUN_ID, "attempts.ndjson");
-          const reapCodex = Effect.flatMap(reapInstantAfter(journal), (nowMillis) =>
-            runResidueReap({
-              apply: true,
-              classes: ["codex-worktrees"],
-              homeRoot: fixture.home,
-              maxAgeDays: 0,
-              nowMillis,
-              probeLiveCwd: noLiveCwd,
-              repoRoot: fixture.clone,
-            })
-          );
+          // A census that meets a symlink is incomplete: that directory is never removed.
+          const linked = yield* addCodexWorktree(fixture, "efgh", "feat/codex-linked");
+          yield* fs.symlink("/nonexistent", path.join(linked, "dangling"));
+          const reapCodex = reapDirectories(fixture, ["codex-worktrees"], codexLane);
 
           const storeRoot = yield* plantCopyFailure(fixture.home);
           const kept = yield* reapCodex;
           deepStrictEqual(kept.reapedCount, 0);
-          deepStrictEqual(
-            A.map(kept.candidates, (candidate) => candidate.skipReason),
-            ["journal-export-failed"]
-          );
+          deepStrictEqual(dispositions(kept), [
+            [container, "skip", "journal-export-failed"],
+            [linked, "skip", "census-failed"],
+          ]);
           assertTrue(A.some(kept.warnings, Str.includes("left in place")));
-          const containerKept = yield* fs.exists(path.join(codexLane, ".beep", "yeet", "runs", OTHER_RUN_ID));
-          assertTrue(containerKept);
+          const journalKept = yield* fs.exists(path.join(codexLane, ".beep", "yeet", "runs", OTHER_RUN_ID));
+          assertTrue(journalKept);
 
           yield* fs.remove(storeRoot);
           const reaped = yield* reapCodex;
           deepStrictEqual(reaped.reapedCount, 1);
+          deepStrictEqual(dispositions(reaped), [
+            [container, "remove-dir", undefined],
+            [linked, "skip", "census-failed"],
+          ]);
+          deepStrictEqual(
+            A.map(reaped.candidates, (candidate) => candidate.embeddedCheckouts),
+            [[codexLane], undefined]
+          );
           const containerGone = yield* fs.exists(container);
           assertTrue(!containerGone);
+          const linkedKept = yield* fs.exists(linked);
+          assertTrue(linkedKept);
           const census = yield* fleetCensus(fixture.clone);
           deepStrictEqual(attemptKeys(census), keysOf(OTHER_RUN_ID, a7));
+        }).pipe(withHome(fixture.home));
+      })
+    );
+
+    it.effect(
+      "a residue-reap directory removal keeps checkouts whose journals have no store partition",
+      Effect.fnUntraced(function* () {
+        const fixture = yield* scratchClone(O.none());
+        yield* Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const container = yield* addCodexWorktree(fixture, "abcd", "feat/codex");
+          const codexLane = path.join(container, "beep-effect");
+          yield* appendJournal(codexLane, OTHER_RUN_ID, attempt(attemptId("b"), OTHER_RUN_ID));
+          const kept = yield* reapDirectories(fixture, ["codex-worktrees"], codexLane);
+          deepStrictEqual(dispositions(kept), [[container, "skip", "journal-export-failed"]]);
+          assertTrue(A.some(kept.warnings, Str.includes("names no GitHub repository")));
+          const containerKept = yield* fs.exists(container);
+          assertTrue(containerKept);
+        }).pipe(withHome(fixture.home));
+      })
+    );
+
+    it.effect(
+      "a residue-reap Turbo cache directory removal files the journals of a checkout inside it",
+      Effect.fnUntraced(function* () {
+        const fixture = yield* scratchClone(O.some(ORIGIN_URL));
+        yield* Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* fs.makeDirectory(path.join(fixture.clone, ".turbo", "cache", "entry"), { recursive: true });
+          const entry = yield* fs.realPath(path.join(fixture.clone, ".turbo", "cache", "entry"));
+          const checkout = path.join(entry, "beep-effect");
+          yield* git(fixture.clone, ["worktree", "add", "-b", "feat/turbo", checkout]);
+          const ac = attemptId("c");
+          yield* appendJournal(checkout, OTHER_RUN_ID, attempt(ac, OTHER_RUN_ID));
+          const reaped = yield* reapDirectories(fixture, ["turbo-cache"], checkout);
+          deepStrictEqual(reaped.reapedCount, 1);
+          deepStrictEqual(
+            A.map(reaped.candidates, (candidate) => candidate.embeddedCheckouts),
+            [[checkout]]
+          );
+          const entryGone = yield* fs.exists(entry);
+          assertTrue(!entryGone);
+          const census = yield* fleetCensus(fixture.clone);
+          deepStrictEqual(attemptKeys(census), keysOf(OTHER_RUN_ID, ac));
         }).pipe(withHome(fixture.home));
       })
     );
@@ -603,6 +689,51 @@ describe("attempt journal store", () => {
           const unstored = yield* retain(clone).pipe(Effect.flip);
           assertInclude(unstored.message, "Could not read the retained journal");
         }).pipe(withHome(home));
+      })
+    );
+
+    it.effect(
+      "fails closed on a journal it cannot inspect and on git metadata it cannot read",
+      Effect.fnUntraced(function* () {
+        const { home, clone } = yield* checkoutWithOrigin();
+        yield* Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* appendJournal(clone, RUN_ID, attempt(attemptId("d")));
+          const runDirectory = path.join(clone, ".beep", "yeet", "runs", RUN_ID);
+          yield* fs.chmod(runDirectory, 0o000);
+          const uninspected = yield* retain(clone).pipe(
+            Effect.flip,
+            Effect.ensuring(Effect.orDie(fs.chmod(runDirectory, 0o700)))
+          );
+          assertInclude(uninspected.message, "Could not inspect the attempt journal");
+
+          const config = path.join(clone, ".git", "config");
+          yield* fs.chmod(config, 0o000);
+          const unreadMetadata = yield* retain(clone).pipe(
+            Effect.flip,
+            Effect.ensuring(Effect.orDie(fs.chmod(config, 0o600)))
+          );
+          assertInclude(unreadMetadata.message, "Could not read the git metadata");
+        }).pipe(withHome(home));
+      })
+    );
+
+    it.effect(
+      "needs a state-root override that is absolute and outside the checkout",
+      Effect.fnUntraced(function* () {
+        const { home, clone } = yield* checkoutWithOrigin();
+        const path = yield* Path.Path;
+        yield* appendJournal(clone, RUN_ID, attempt(attemptId("e")));
+        const withStateRoot = (root: string) =>
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromEnv({ env: { HOME: home, BEEP_YEET_STATE_ROOT: root } })
+          );
+        const relative = yield* retain(clone).pipe(Effect.flip, withStateRoot("relative/state"));
+        assertInclude(relative.message, "is not absolute");
+        const inside = yield* retain(clone).pipe(Effect.flip, withStateRoot(path.join(clone, "state")));
+        assertInclude(inside.message, "lies inside");
       })
     );
 
