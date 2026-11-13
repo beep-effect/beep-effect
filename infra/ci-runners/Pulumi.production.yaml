@@ -16,6 +16,11 @@ config:
   ciFleetController:terminationWatcherLambdaZip: gha-runner/v7.10.1/termination-watcher.zip
   ciFleetController:webhookLambdaZip: gha-runner/v7.10.1/webhook.zip
   ciFleetController:runnerLabel: beep-ec2-heavy
+  # Shard overflow pool (goals/ci-lane-economics, #3256): declared only while enabled. The secret is
+  # the overflow controller's own webhook secret, never the heavy pool's; the heavy burst cap stays at
+  # its default of 8 (512-vCPU Spot quota).
+  ciShardOverflow:enabled: "true"
+  ciShardOverflow:githubAppWebhookSecretSsmParameterArn: arn:aws:ssm:us-east-1:832907639880:parameter/github-action-runners/shard-overflow/github_app_webhook_secret
   ciTurboCache:bucketName: beep-turbo-cache-832907639880
   # Version dir tracks the pinned turborepo-remote-cache release inside the zip.
   ciTurboCache:lambdaZipPath: turbo-cache/2.12.0/turbo-cache.zip
