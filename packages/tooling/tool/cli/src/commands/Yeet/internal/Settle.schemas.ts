@@ -116,6 +116,8 @@ export const isMatrixChildOf: {
  * `closeout-pending` when settled but no closeout artifact binds the head, and
  * `None` when settled with the closeout bound — the state in which merge
  * readiness is evaluated.
+ * `conflictBase` is set only with the `base-conflict` reason: the ref the head
+ * has to merge, which is the parent's branch for a stack layer.
  *
  * **Example** (A settled head awaiting closeout)
  *
@@ -148,10 +150,11 @@ export class YeetSettleVerdict extends S.Opaque<YeetSettleVerdict, { readonly br
       S.withConstructorDefault(Effect.succeed(true))
     ),
     admission: HeavyAdmission.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    conflictBase: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("YeetSettleVerdict", {
       description:
-        "Whether the required census settled, the wait reason the gate line names, the census behind it, whether the registration budget still applies, and the heavy admission it was judged under.",
+        "Whether the required census settled, the wait reason the gate line names, the census behind it, whether the registration budget still applies, the heavy admission it was judged under, and the ref a base conflict is with.",
     })
   )
 ) {}

@@ -85,6 +85,17 @@ merge. It does not, and nothing may.
   delegation model overrides it; a lane that may not publish may still merge
   main and push the catch-up. The monitor keeps polling across that push, so
   do not re-submit it.
+- **A stack layer merges its parent's branch.** On a layer both texts name
+  the parent's branch instead: the row reads `base conflict with
+  origin/<parent-branch>`, and the comment tells the layer not to merge
+  `origin/main`. The parent merges `origin/main`; the layer then merges
+  `origin/<parent-branch>` and pushes
+  ([`stacks.md`](stacks.md#keep-the-layer-on-the-parent)). When the merged
+  pull request was the layer's own parent (`--alone`), the comment says so:
+  GitHub is cascading the layer onto `main`, so it merges nothing, waits for
+  `head_ref_force_pushed` on its timeline and then adopts the rewritten head
+  with `git switch -C`. That layer is not probed. A stacked sibling whose
+  relation to the merged pull request could not be read is told both cases.
 - **The broadcast.** When `yeet merge-gate` merges a PR that touched
   `goals/<slug>/**`, it comments on every other open PR touching the same
   packet in the same run, naming the merged sibling, the slug, the base it

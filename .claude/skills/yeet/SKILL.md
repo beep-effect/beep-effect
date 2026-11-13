@@ -54,6 +54,8 @@ git fetch origin && git merge origin/main
    A base-conflict P0 inbox row or a merge-gate "sibling #N merged" comment is
    this same merge, now, whatever your brief says about acceptance or merge
    authority (2026-11-05; [`references/merge-loop.md`](references/merge-loop.md#base-conflict-rows-and-packet-siblings)).
+   A stack layer (2c) never merges `origin/main`: it merges `origin/<parent-branch>`,
+   or adopts GitHub's cascade once the parent merged; the row and comment say which.
    Do not rebase a published branch: rebase implies a force-push, and this
    repository denies `git push --force*`. GitHub squash-merge erases
    feature-branch merge commits at land time anyway. `--allow-stale-base` is
@@ -380,15 +382,6 @@ changed inputs before requesting a baseline update. Follow
 [the reviewed baseline recipe](references/gates-and-proof.md#cache-baseline-after-a-script-word-or-root-config-change)
 for S31b subject limits, exact-text hashes and main-merge changes.
 
-## CI / security fixes: validate against the CI token's permissions
-
-A change that alters CI or security-gate behavior (for example making a `gh api`
-call fail-closed, or tightening a workflow permission) must be validated against
-the **actual CI token's permissions**, not just locally. A gate that reads, say,
-`security_and_analysis` will block every PR if the CI token cannot read it.
-Confirm the token scope (or fail *open* on a genuine permission error, distinct
-from a real security failure) before shipping such a fix.
-
 ## Mergeable PR Workflow
 
 1. Run `bun run beep yeet repair` when local changes need deterministic fixers,
@@ -530,7 +523,7 @@ Load these on demand; `SKILL.md` keeps the path, the references keep the depth.
 | Read | When |
 | --- | --- |
 | [`references/detached-jobs.md`](references/detached-jobs.md) | submitting or waiting on a `--detach` job |
-| [`references/gates-and-proof.md`](references/gates-and-proof.md) | a cheap gate is red, reproducing a hosted red locally, plan mode |
+| [`references/gates-and-proof.md`](references/gates-and-proof.md) | a cheap gate is red, reproducing a hosted red locally, plan mode, a CI or security-gate change (CI token permissions) |
 | [`references/monitor-and-inbox.md`](references/monitor-and-inbox.md) | monitor exits, `--watch` rows, resume, settle rule, inbox rows and waves |
 | [`references/review-threads.md`](references/review-threads.md) | thread states, review bodies, comment replay, `yeet reply` drafts |
 | [`references/merge-loop.md`](references/merge-loop.md) | heavy admission label, job triage, branch-deletion contract, base-conflict rows, `yeet siblings` |

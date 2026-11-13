@@ -238,3 +238,12 @@ after the reviewed request. A main merge that adds root tasks adds drifted
 subjects: update the basis to name those tasks and input changes, recompute its
 SHA-256 in the request, and refresh `previous` from the exact current baseline
 text before re-running. Keep scope/profile/epoch and qualification unchanged.
+
+## CI / security fixes: validate against the CI token's permissions
+
+A change that alters CI or security-gate behavior (for example making a `gh api`
+call fail-closed, or tightening a workflow permission) must be validated against
+the **actual CI token's permissions**, not just locally. A gate that reads, say,
+`security_and_analysis` will block every PR if the CI token cannot read it.
+Confirm the token scope (or fail *open* on a genuine permission error, distinct
+from a real security failure) before shipping such a fix.

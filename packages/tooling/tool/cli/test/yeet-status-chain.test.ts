@@ -459,7 +459,7 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("yeet status chain (W10)", (i
       expect(A.length(gh)).toBe(5);
       expect(A.length(invocations) - A.length(gh)).toBe(7);
       expect(A.map(A.take(gh, 1), ghKey)).toStrictEqual([
-        "pr view --json id,number,url,state,mergeable,mergeStateStatus,isDraft,isCrossRepository,reviewDecision,headRefOid,labels",
+        "pr view --json id,number,url,state,baseRefName,mergeable,mergeStateStatus,isDraft,isCrossRepository,reviewDecision,headRefOid,labels",
       ]);
       expect(A.sort(A.map(A.drop(gh, 1), ghKey), Order.String)).toStrictEqual([
         "api graphql -f -F id=PR_chain",

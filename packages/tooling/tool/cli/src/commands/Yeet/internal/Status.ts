@@ -218,6 +218,8 @@ const ghStatusPullRequestLabelsDefault = A.empty<GhStatusLabel>();
 class GhStatusPullRequest extends S.Opaque<GhStatusPullRequest, { readonly brand: unique symbol }>()(
   S.Struct({
     id: S.String,
+    // Absent only in a payload read before the field was asked for.
+    baseRefName: S.NullOr(S.String).pipe(S.withDecodingDefaultTypeKey(Effect.succeed(null))),
     headRefOid: S.String,
     isDraft: S.Boolean,
     isCrossRepository: S.Boolean.pipe(S.withDecodingDefaultTypeKey(Effect.succeed(false))),
@@ -1098,7 +1100,7 @@ const readRemotePullRequest = Effect.fn("YeetStatus.readRemotePullRequest")(func
       "pr",
       "view",
       "--json",
-      "id,number,url,state,mergeable,mergeStateStatus,isDraft,isCrossRepository,reviewDecision,headRefOid,labels",
+      "id,number,url,state,baseRefName,mergeable,mergeStateStatus,isDraft,isCrossRepository,reviewDecision,headRefOid,labels",
     ],
     cwd: context.repoRoot,
     label: "gh pr view",
@@ -1130,7 +1132,7 @@ const readRemotePullRequest = Effect.fn("YeetStatus.readRemotePullRequest")(func
         "api",
         `repos/{owner}/{repo}/pulls/${found.value.number}`,
         "--jq",
-        '{id: .node_id, number, url: .html_url, state: (if .merged then "MERGED" else (.state | ascii_upcase) end), mergeable: (if .mergeable == null then "UNKNOWN" elif .mergeable then "MERGEABLE" else "CONFLICTING" end), mergeStateStatus: (.mergeable_state // "unknown" | ascii_upcase), isDraft: .draft, isCrossRepository: (.head.repo.full_name != .base.repo.full_name), reviewDecision: null, headRefOid: .head.sha, labels}',
+        '{id: .node_id, number, url: .html_url, state: (if .merged then "MERGED" else (.state | ascii_upcase) end), baseRefName: .base.ref, mergeable: (if .mergeable == null then "UNKNOWN" elif .mergeable then "MERGEABLE" else "CONFLICTING" end), mergeStateStatus: (.mergeable_state // "unknown" | ascii_upcase), isDraft: .draft, isCrossRepository: (.head.repo.full_name != .base.repo.full_name), reviewDecision: null, headRefOid: .head.sha, labels}',
       ],
       cwd: context.repoRoot,
       label: "gh api pull request status",
@@ -1283,6 +1285,7 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
       rerunFailedDecision,
     }),
     ...O.getSomesStruct({
+      baseRefName: O.fromNullishOr(view.baseRefName),
       mergeStateStatus: O.fromNullishOr(view.mergeStateStatus),
       mergeable: O.fromNullishOr(view.mergeable),
       reviewDecision: O.fromNullishOr(view.reviewDecision),
