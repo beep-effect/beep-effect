@@ -102,17 +102,20 @@ interface Fixture {
   readonly trunkCheck?: string;
 }
 
+// Every read the resolve makes, by path; anything else is a 404.
+const readTable = (fixture: Fixture): Readonly<Record<string, GithubAnswer>> => ({
+  "{repo}/pulls": fixture.own ?? { body: [] },
+  [`{repo}/pulls/${PARENT}`]: fixture.parent ?? { body: parentBody() },
+  "{repo}": { body: { default_branch: "main" } },
+  "{repo}/rules/branches/main": rules,
+  [`{repo}/commits/${MAIN}/check-runs`]: lintOnMain(fixture.trunkCheck ?? "success"),
+  [`{repo}/stacks/${STACK}`]: { body: stackBody },
+});
+
 const routes =
   (fixture: Fixture) =>
-  (call: GithubCall): GithubAnswer | undefined => {
-    if (call.method === "GET" && call.path === "{repo}/pulls") return fixture.own ?? { body: [] };
-    if (call.path === `{repo}/pulls/${PARENT}`) return fixture.parent ?? { body: parentBody() };
-    if (call.path === "{repo}") return { body: { default_branch: "main" } };
-    if (call.path === "{repo}/rules/branches/main") return rules;
-    if (call.path === `{repo}/commits/${MAIN}/check-runs`) return lintOnMain(fixture.trunkCheck ?? "success");
-    if (call.path === `{repo}/stacks/${STACK}`) return { body: stackBody };
-    return undefined;
-  };
+  (call: GithubCall): GithubAnswer | undefined =>
+    call.method === "GET" ? readTable(fixture)[call.path] : undefined;
 
 const gitSpawner = (builtOnParent: boolean) =>
   ScriptedSpawner.make((command, args) => {

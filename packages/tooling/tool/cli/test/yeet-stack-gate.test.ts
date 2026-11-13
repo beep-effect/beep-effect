@@ -295,7 +295,42 @@ const mergedResponse: GithubAnswer = {
   body: { status: "merged", details: { message: "Pull request was merged.", sha: topSquash } },
 };
 
-// Every REST read either merge path makes, by method and path; anything else is a 404.
+const badGateway: GithubAnswer = { status: 502, body: { message: "Bad Gateway" } };
+
+const stackAnswer = (scenario: StackScenario): GithubAnswer =>
+  scenario.stackUnreadable === true ? badGateway : { body: stackPayload };
+
+const containmentAnswer = (scenario: StackScenario): GithubAnswer => {
+  const containment = scenario.contains ?? "yes";
+  return containment === "unreadable"
+    ? badGateway
+    : { body: { status: "ahead", behind_by: containment === "yes" ? 0 : 1 } };
+};
+
+// Every REST read either merge path makes, by path; anything else is a 404.
+const stackReadTable = (scenario: StackScenario, merged: boolean): Readonly<Record<string, GithubAnswer>> => ({
+  [`{repo}/pulls/${LOWER}`]: { body: lowerPullPayload(scenario, merged) },
+  [`{repo}/pulls/${TOP}`]: { body: topPullPayload },
+  [`{repo}/stacks/${STACK}`]: stackAnswer(scenario),
+  [`{repo}/pulls/${LOWER}/commits`]: { body: commits(LOWER_SUBJECT, "Why the lower layer.") },
+  [`{repo}/pulls/${TOP}/commits`]: { body: commits(TOP_TITLE, "The top layer.") },
+  [`{repo}/pulls/${LOWER}/files`]: { body: [] },
+  [`{repo}/pulls/${TOP}/files`]: { body: [] },
+  [`{repo}/commits/${lowerHead}/check-runs`]: { body: checkRunsFixture },
+  [`{repo}/commits/${topHead}/check-runs`]: { body: checkRunsFixture },
+  [`{repo}/commits/${lowerHead}/check-suites`]: { body: checkSuitesFixture },
+  [`{repo}/commits/${topHead}/check-suites`]: { body: checkSuitesFixture },
+  [`{repo}/issues/${LOWER}/timeline`]: { body: timelineFixture },
+  [`{repo}/issues/${TOP}/timeline`]: { body: timelineFixture },
+  [`{repo}/rules/branches/${TRUNK}`]: { body: rulesFixture },
+  [`{repo}/rules/branches/${LOWER_REF}`]: { body: [] },
+  [`{repo}/compare/${lowerHead}...${topHead}`]: containmentAnswer(scenario),
+  "{repo}": {
+    body: { squash_merge_commit_title: "COMMIT_OR_PR_TITLE", squash_merge_commit_message: "COMMIT_MESSAGES" },
+  },
+});
+
+// GraphQL is the thread read, the one PUT is the merge, and every other call is a read from the table.
 const stackRoutes =
   (scenario: StackScenario, mergeSent: MutableRef.MutableRef<boolean>) =>
   (call: GithubCall): GithubAnswer | undefined => {
@@ -304,34 +339,7 @@ const stackRoutes =
       MutableRef.set(mergeSent, true);
       return mergedResponse;
     }
-    const merged = MutableRef.get(mergeSent);
-    const containment = scenario.contains ?? "yes";
-    const table: Readonly<Record<string, GithubAnswer>> = {
-      [`{repo}/pulls/${LOWER}`]: { body: lowerPullPayload(scenario, merged) },
-      [`{repo}/pulls/${TOP}`]: { body: topPullPayload },
-      [`{repo}/stacks/${STACK}`]:
-        scenario.stackUnreadable === true ? { status: 502, body: { message: "Bad Gateway" } } : { body: stackPayload },
-      [`{repo}/pulls/${LOWER}/commits`]: { body: commits(LOWER_SUBJECT, "Why the lower layer.") },
-      [`{repo}/pulls/${TOP}/commits`]: { body: commits(TOP_TITLE, "The top layer.") },
-      [`{repo}/pulls/${LOWER}/files`]: { body: [] },
-      [`{repo}/pulls/${TOP}/files`]: { body: [] },
-      [`{repo}/commits/${lowerHead}/check-runs`]: { body: checkRunsFixture },
-      [`{repo}/commits/${topHead}/check-runs`]: { body: checkRunsFixture },
-      [`{repo}/commits/${lowerHead}/check-suites`]: { body: checkSuitesFixture },
-      [`{repo}/commits/${topHead}/check-suites`]: { body: checkSuitesFixture },
-      [`{repo}/issues/${LOWER}/timeline`]: { body: timelineFixture },
-      [`{repo}/issues/${TOP}/timeline`]: { body: timelineFixture },
-      [`{repo}/rules/branches/${TRUNK}`]: { body: rulesFixture },
-      [`{repo}/rules/branches/${LOWER_REF}`]: { body: [] },
-      [`{repo}/compare/${lowerHead}...${topHead}`]:
-        containment === "unreadable"
-          ? { status: 502, body: { message: "Bad Gateway" } }
-          : { body: { status: "ahead", behind_by: containment === "yes" ? 0 : 1 } },
-      "{repo}": {
-        body: { squash_merge_commit_title: "COMMIT_OR_PR_TITLE", squash_merge_commit_message: "COMMIT_MESSAGES" },
-      },
-    };
-    return call.method === "GET" ? table[call.path] : undefined;
+    return call.method === "GET" ? stackReadTable(scenario, MutableRef.get(mergeSent))[call.path] : undefined;
   };
 
 // The reviewer gate and `yeet gh` speak through the raw transport; the same table answers them.
@@ -360,21 +368,34 @@ const commitlintFail = {
   exit: 1,
 };
 
+// What `gh` prints for the three argv shapes the gate spawns, first match wins.
+const ghReplies = (
+  prView: unknown
+): ReadonlyArray<readonly [matches: (line: string) => boolean, stdout: (line: string) => string]> => [
+  [(line) => line === "auth token", () => "gho_fixture\n"],
+  [Str.startsWith("pr view"), () => encodeJson(prView)],
+  [
+    Str.startsWith("api repos/{owner}/{repo}/rules/branches/"),
+    (line) => encodeJson(Str.endsWith(`/${TRUNK}`)(line) ? rulesFixture : []),
+  ],
+];
+
 const stackSpawner = (scenario: StackScenario, prView: unknown) => {
   const commitlintRuns = MutableRef.make(0);
+  const commitlint = () =>
+    MutableRef.incrementAndGet(commitlintRuns) === scenario.commitlintFailsOn ? commitlintFail : commitlintPass;
+  const gh = (line: string) =>
+    O.map(
+      A.findFirst(ghReplies(prView), ([matches]) => matches(line)),
+      ([, stdout]) => ({ stdout: stdout(line) })
+    );
   return ScriptedSpawner.make((command, args) => {
     const line = A.join(args, " ");
-    if (command === "bunx") {
-      return MutableRef.incrementAndGet(commitlintRuns) === scenario.commitlintFailsOn
-        ? commitlintFail
-        : commitlintPass;
-    }
-    if (command === "gh" && line === "auth token") return { stdout: "gho_fixture\n" };
-    if (command === "gh" && Str.startsWith("pr view")(line)) return { stdout: encodeJson(prView) };
-    if (command === "gh" && Str.startsWith("api repos/{owner}/{repo}/rules/branches/")(line)) {
-      return { stdout: encodeJson(Str.endsWith(`/${TRUNK}`)(line) ? rulesFixture : []) };
-    }
-    return { stderr: `unexpected command: ${command} ${line}`, exit: 1 };
+    if (command === "bunx") return commitlint();
+    return O.match(command === "gh" ? gh(line) : O.none<{ readonly stdout: string }>(), {
+      onNone: () => ({ stderr: `unexpected command: ${command} ${line}`, exit: 1 }),
+      onSome: (reply) => reply,
+    });
   });
 };
 
