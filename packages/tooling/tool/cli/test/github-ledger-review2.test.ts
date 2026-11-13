@@ -260,7 +260,8 @@ describe("GitHub ledger second review regressions", () => {
       yield* store.writeLatestTransport(readingOfTransport(row(9, 300, 40 * MINUTE + 4 * SECOND, O.none())));
       yield* store.writeLatestTransport(readingOfTransport(row(6, 400, 40 * MINUTE + 5 * SECOND, O.none())));
       const merged = yield* store.latestTransport;
-      expect(A.map(merged, (reading) => reading.remaining)).toStrictEqual([4700]);
+      // A window's count only rises: the instance keeps its peak (400, read at minute 6), not the newest 300.
+      expect(A.map(merged, (reading) => reading.remaining)).toStrictEqual([4600]);
       yield* store.writeLatestTransport(readingOfTransport(row(9, 0, 40 * MINUTE + 4 * SECOND, O.none())));
       const idleAndBusy = yield* store.latestTransport;
       expect(A.length(idleAndBusy)).toBe(2);
@@ -459,7 +460,7 @@ it.layer(Layer.merge(MemoryFileSystem.layerWith({}), Path.layer), { timeout: "30
       yield* checkBelow(graphql).pipe(withLayer(live), root("drift"));
       const fs = yield* FileSystem.FileSystem;
       const files = yield* fs.readDirectory("/review2-drift/latest");
-      assertTrue(A.contains(files, `transport-user_alice-graphql-instance-busy-${T / SECOND + 100}-1.json`));
+      assertTrue(A.contains(files, `v3-transport-user_alice-graphql-instance-busy-${T / SECOND + 100}-1.json`));
       expect(A.length(files)).toBe(2);
       yield* TestClock.setTime(T + 110_001);
       yield* Effect.gen(function* () {

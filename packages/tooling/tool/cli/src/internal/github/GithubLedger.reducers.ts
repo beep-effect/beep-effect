@@ -338,40 +338,17 @@ const mostConstrained = Order.combine(
   Order.flip(byAsOf)
 );
 
-// Use the same credential lanes as window accounting. The newest fresh live
-// reading per lane competes on headroom; with none, retain the newest fallback.
-const judgedReadingOf = (
-  now: DateTime.Utc,
-  resource: GitHubRateLimitResource,
-  usable: ReadonlyArray<BucketReading>
-): O.Option<BucketReading> => {
+// A live window's count only rises, so every fresh live reading is a lower
+// bound on its window: the most constrained one decides, whichever window or
+// credential it reads. With none, the newest reading is the fallback.
+const judgedReadingOf = (now: DateTime.Utc, usable: ReadonlyArray<BucketReading>): O.Option<BucketReading> => {
   const live = A.filter(
     usable,
     (reading) =>
       millis(now) - millis(reading.asOf) <= Duration.toMillis(RESERVE_READING_BOUND) &&
       millis(reading.resetAt) > millis(now)
   );
-  const [lanes] = partitionCredentials(
-    usable,
-    (reading) => ({
-      source: reading.source,
-      at: reading.asOf,
-      resetAt: reading.resetAt,
-      used: O.getOrElse(reading.used, () => reading.limit - reading.remaining),
-    }),
-    resource
-  );
-  const buckets = A.flatMap(lanes, (lane) =>
-    A.fromOption(
-      A.last(
-        A.sort(
-          A.filter(lane, (reading) => A.contains(live, reading)),
-          byAsOf
-        )
-      )
-    )
-  );
-  return A.match(buckets, {
+  return A.match(live, {
     onEmpty: () => A.last(A.sort(usable, byAsOf)),
     onNonEmpty: (present) => O.some(A.min(present, mostConstrained)),
   });
@@ -390,8 +367,11 @@ const judgedReadingOf = (
  * idle and busy readings. Unmatched instances allocate an unused stem or
  * numeric suffix; a drifting instance never gives up its occupied key. All
  * matching neighbours consolidate into that key. This preserves distinct
- * windows even when one process or token observes both. The last entry is the
- * updated instance, so persistence, cache and throttling share its exact key.
+ * windows even when one process or token observes both. A window instance
+ * keeps its most used reading (then the newest), because a window's count only
+ * rises and a lower late reading is a lagging response; a REST credential keeps
+ * its newest reading, which may follow a reset. The last entry is the updated
+ * instance, so persistence, cache and throttling share its exact key.
  *
  * **Example** (Start a retention table)
  *
@@ -453,9 +433,11 @@ export const retainLatestReading: {
         return available(0);
       })
     );
-    const newest = A.reduce(matches, reading, (newest, [, other]) =>
-      millis(other.asOf) > millis(newest.asOf) ? other : newest
-    );
+    const newer = (self: BucketReading, that: BucketReading) => millis(that.asOf) > millis(self.asOf);
+    // A window instance keeps its peak; a REST credential keeps its newest reading.
+    const replaces = (self: BucketReading, that: BucketReading) =>
+      scoped ? used(that) > used(self) || (used(that) === used(self) && newer(self, that)) : newer(self, that);
+    const newest = A.reduce(matches, reading, (kept, [, other]) => (replaces(kept, other) ? other : kept));
     return A.append(
       A.filter(entries, (entry) => !A.contains(matches, entry)),
       Tuple.make(key, newest)
@@ -509,11 +491,11 @@ export const expiredInstanceReading: {
  * For a `graphql` key, sample-basis readings count only when
  * `admitGraphqlSamples`, because REST misreports the GraphQL bucket. Every
  * other key takes readings of either basis. A key may hold several concurrent
- * buckets, such as two GraphQL windows of one token: the fresh (at most ten
- * minutes old) and live (reset after `now`) readings use the same credential
- * and co-observation partition as window accounting, and the newest reading of the
- * most constrained group (least `remaining − floor`) is the one returned. With
- * no fresh live reading it is the newest reading. This is the reading
+ * buckets, such as two GraphQL windows of one token. A live window's count
+ * only rises, so every fresh (at most ten minutes old) and live (reset after
+ * `now`) reading is a lower bound on its window, and the most constrained one
+ * (least `remaining − floor`, then the newest) is returned whichever window or
+ * credential it reads. With no fresh live reading it is the newest reading. This is the reading
  * {@link reserveOf} judges, so a caller that shows a bucket's numbers next to
  * its verdict shows the same reading.
  *
@@ -548,7 +530,6 @@ export const usableReadingOf =
   (key: BucketKey, readings: ReadonlyArray<BucketReading>): O.Option<BucketReading> =>
     judgedReadingOf(
       now,
-      key.resource,
       A.filter(
         readings,
         (reading) =>
@@ -565,8 +546,9 @@ export const usableReadingOf =
  * For a `graphql` key, sample-basis readings count only when
  * `admitGraphqlSamples`; with only sample readings and no admission the state is
  * `Unknown{uncalibrated}`. No reading is `Unknown{no-reading}`. A key may hold
- * several concurrent buckets (such as two GraphQL windows of one token): the signal is the most constrained live bucket, judged on the newest
- * fresh reading of each (see {@link usableReadingOf}). It is `Below` when that
+ * several concurrent buckets (such as two GraphQL windows of one token): the
+ * signal rests on the most constrained fresh live reading (see
+ * {@link usableReadingOf}). It is `Below` when that
  * bucket's `remaining < ceil(0.15 × limit)`, so when any live bucket is below
  * its floor, and `Clear` otherwise. With no reading that is both fresh and
  * live, the newest reading decides: older than ten minutes is

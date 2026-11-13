@@ -5,6 +5,7 @@ import {
   anchorsOf,
   BucketKey,
   BucketReading,
+  BucketReadingJson,
   CommandSpend,
   GhSpawnObservation,
   GithubBudgetLedger,
@@ -34,6 +35,7 @@ import {
   ReserveState,
   readingOfTransport,
   reserveOf,
+  retainLatestReading,
   SampleBucket,
   usableReadingOf,
   windowsOf,
@@ -246,10 +248,10 @@ const judge = reserveOf({ now: DateTime.makeUnsafe(NOW), admitGraphqlSamples: fa
 const usable = usableReadingOf({ now: DateTime.makeUnsafe(NOW), admitGraphqlSamples: false });
 
 describe("GithubLedger reserve over concurrent lanes", () => {
-  it("signals on the more depleted of two live lanes, each judged on its newest reading", () => {
-    // Lane A's older 100 is superseded by its newer 4000; lane B is the more depleted bucket.
-    const laneAOld = graphqlReading(100, 6, RESET_A);
-    const laneANew = graphqlReading(4000, 1, RESET_A + 2 * SECOND);
+  it("signals on the most constrained fresh live reading of any lane", () => {
+    // Lane A's count rises 1000 -> 1010 within its window; lane B is the more depleted bucket.
+    const laneAOld = graphqlReading(4000, 6, RESET_A);
+    const laneANew = graphqlReading(3990, 1, RESET_A + 2 * SECOND);
     const laneB = graphqlReading(900, 3, RESET_B);
     const readings = [laneAOld, laneANew, laneB];
     deepStrictEqual(
@@ -693,8 +695,8 @@ it.layer(Layer.merge(MemoryFileSystem.layerWith({}), Path.layer), { timeout: "30
         const files = yield* fs.readDirectory(`${STATE_ROOT}/latest`);
         // GraphQL readings are retained per credential window instance.
         const window = `busy-${(H + 50 * MINUTE) / SECOND}`;
-        assertTrue(A.contains(files, `transport-user_alice-graphql-aaaaaaaaaaaa-${window}.json`));
-        assertTrue(A.contains(files, `transport-user_alice-graphql-bbbbbbbbbbbb-${window}.json`));
+        assertTrue(A.contains(files, `v3-transport-user_alice-graphql-aaaaaaaaaaaa-${window}.json`));
+        assertTrue(A.contains(files, `v3-transport-user_alice-graphql-bbbbbbbbbbbb-${window}.json`));
       }).pipe(withLayer(liveLedger), withStateRoot);
       // Restart reads both readings from disk, independently of the previous cache.
       yield* Effect.gen(function* () {
@@ -1017,6 +1019,73 @@ it.effect("D2f retains and judges each GraphQL window of one token", () =>
     }).pipe(withLayer(layerGithubBudgetLedger({ host }).pipe(Layer.provide(Layer.succeed(GithubLedgerStore, store)))));
   })
 );
+
+it("D2f keeps reserve consistent when retention drops a reset-jitter bridge", () => {
+  // The independent review's reproduction: one window whose reported reset drifts 0..8 s, then a lower late reading.
+  const readings = A.map(
+    [
+      observed(6, 4300, 50 * MINUTE + 8 * SECOND, tokenA),
+      observed(7, 4301, 50 * MINUTE + 4 * SECOND, tokenA),
+      observed(8, 4302, 50 * MINUTE, tokenA),
+      observed(9, 1000, 50 * MINUTE + 8 * SECOND, tokenA),
+    ],
+    readingOfTransport
+  );
+  const retainAll = (entries: ReadonlyArray<readonly [string, BucketReading]>, reading: BucketReading) =>
+    retainLatestReading(reading, entries);
+  const retained = A.reduce(readings, A.empty<readonly [string, BucketReading]>(), retainAll);
+  // The bridge at +4 s is gone, so retention keeps two entries; the full history is one lane.
+  expect(A.length(retained)).toBe(2);
+  const judgeAt = reserveOf({ now: at(10 * MINUTE), admitGraphqlSamples: false });
+  const full = judgeAt(graphqlKey, readings).state;
+  deepStrictEqual(
+    judgeAt(
+      graphqlKey,
+      A.map(retained, ([, reading]) => reading)
+    ).state,
+    full
+  );
+  expect(full._tag).toBe("Below");
+  // A later bridging reading consolidates both entries and keeps their peak, so the verdict holds.
+  const bridged = retainAll(retained, readingOfTransport(observed(9.5, 1001, 50 * MINUTE + 4 * SECOND, tokenA)));
+  expect(A.length(bridged)).toBe(1);
+  deepStrictEqual(
+    judgeAt(
+      graphqlKey,
+      A.map(bridged, ([, reading]) => reading)
+    ).state,
+    full
+  );
+});
+
+it.layer(Layer.merge(MemoryFileSystem.layerWith({}), Path.layer), { timeout: "30 seconds" })((it) => {
+  it.effect("D2f keeps window files outside the v2 namespace and reads v2 files as candidates", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(H + 10 * MINUTE);
+      const fs = yield* FileSystem.FileSystem;
+      const healthy = readingOfTransport(observed(9.5, 938, W34, tokenA));
+      yield* Effect.gen(function* () {
+        const store = yield* GithubLedgerStore;
+        yield* store.writeLatestTransport(readingOfTransport(observed(9, 4300, W19, tokenA)));
+        yield* store.writeLatestTransport(healthy);
+      }).pipe(withLayer(liveLedger), withStateRoot);
+      // A v2 writer consolidates every `transport-` file of one credential, so it cannot collapse these windows.
+      const files = yield* fs.readDirectory(`${STATE_ROOT}/latest`);
+      assertFalse(A.some(files, Str.startsWith("transport-")));
+      // What a v2 writer leaves behind: one file for the token, holding the healthy window.
+      const text = yield* S.encodeEffect(BucketReadingJson)(healthy);
+      yield* fs.writeFileString(`${STATE_ROOT}/latest/transport-user_alice-graphql-aaaaaaaaaaaa.json`, text);
+      yield* Effect.gen(function* () {
+        const store = yield* GithubLedgerStore;
+        const readings = yield* store.latestTransport;
+        expect(A.length(readings)).toBe(3);
+        const ledger = yield* GithubBudgetLedger;
+        const signal = yield* ledger.reserve(graphqlKey);
+        expect(signal.state._tag).toBe("Below");
+      }).pipe(withLayer(liveLedger), withStateRoot);
+    })
+  );
+});
 
 const anchorTime = (anchor: LedgerAnchor) => DateTime.toEpochMillis(anchor.at);
 const byAnchorTime = Order.mapInput(Order.Number, anchorTime);
