@@ -37,3 +37,8 @@ profile and epoch verbatim, and changes no qualification or exception. Its
 `previous` field hashes the exact baseline text, and its evidence digest hashes
 this file's exact bytes. Re-recording accounts for changed inputs; it does not
 claim tests or hosted checks passed.
+
+Wave 1 review: sherif sorted only the repo-cli dependency keys alphabetically.
+Dependency names, versions, generated scripts and cache policy are unchanged.
+This formatting changes the manifest bytes, so the same two previously reviewed
+subjects are re-recorded without broadening scope or qualification.

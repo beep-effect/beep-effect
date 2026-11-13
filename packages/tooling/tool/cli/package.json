@@ -274,16 +274,16 @@
     "effect": "catalog:",
     "fast-xml-parser": "catalog:",
     "fast-xml-validator": "catalog:",
+    "fflate": "catalog:",
     "handlebars": "catalog:",
     "image-size": "catalog:",
     "is-unsafe": "2.0.2",
+    "onnxruntime-node": "catalog:",
     "sharp": "catalog:",
     "tar": "catalog:",
     "ts-morph": "catalog:",
     "tsrs": "catalog:",
-    "vitest": "catalog:",
-    "onnxruntime-node": "catalog:",
-    "fflate": "catalog:"
+    "vitest": "catalog:"
   },
   "devDependencies": {
     "@beep/fc-runs": "workspace:^",

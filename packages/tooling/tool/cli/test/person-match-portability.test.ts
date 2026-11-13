@@ -98,7 +98,6 @@ describe("person-match backend portability", () => {
       [
         validatePersonMatchBackendPlatform("buffalo-l", "linux", "x64"),
         validatePersonMatchBackendPlatform("buffalo-l", "linux", "arm64"),
-        validatePersonMatchBackendPlatform("buffalo-l", "darwin", "x64"),
         validatePersonMatchBackendPlatform("buffalo-l", "darwin", "arm64"),
         validatePersonMatchBackendPlatform("buffalo-l", "win32", "x64"),
       ],
@@ -119,6 +118,8 @@ describe("person-match backend portability", () => {
 
   it.effect("rejects Buffalo where its native runtime is unsupported", () =>
     Effect.gen(function* () {
+      const intelMac = yield* Effect.flip(validatePersonMatchBackendPlatform("buffalo-l", "darwin", "x64"));
+      expect(intelMac.message).toContain("unavailable on darwin/x64");
       const windowsArm = yield* Effect.flip(validatePersonMatchBackendPlatform("buffalo-l", "win32", "arm64"));
       const freeBsd = yield* Effect.flip(validatePersonMatchBackendPlatform("buffalo-l", "freebsd", "x64"));
 

@@ -1150,8 +1150,8 @@ export class PersonMatchBuffaloModel extends S.Opaque<PersonMatchBuffaloModel, {
   S.Struct({
     backend: S.tag("buffalo-l"),
     name: S.tag("buffalo_l"),
-    packageName: S.tag("insightface"),
-    packageVersion: S.tag("1.0.1"),
+    packageName: S.Literals(["insightface", "onnxruntime-node"]),
+    packageVersion: S.NonEmptyString,
     runtime: PersonMatchOnnxRuntime,
     root: S.NonEmptyString,
     allowedModules: S.Tuple([S.Literal("detection"), S.Literal("recognition")]),

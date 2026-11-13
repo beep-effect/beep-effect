@@ -825,6 +825,36 @@ class PreparedOnnxModels extends S.Opaque<PreparedOnnxModels, { readonly brand: 
   )
 ) {}
 
+/**
+ * Publish verified model bytes with a same-directory atomic rename.
+ *
+ * **Example** (Stage verified bytes)
+ * ```ts
+ * import { writePersonMatchModelBytes } from "./MatchPerson.model-store.ts"
+ * console.log(writePersonMatchModelBytes("/cache/model.onnx", Uint8Array.of(1)))
+ * ```
+ * @internal
+ * @category model-store
+ * @since 0.0.0
+ */
+export const writePersonMatchModelBytes = Effect.fn("Files.writePersonMatchModelBytes")(function* (
+  target: string,
+  content: Uint8Array
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const canonical = yield* canonicalizeFileTargetPath(target, "model cache publication").pipe(
+    Effect.mapError((cause) => integrityError("Unsafe model cache publication path.", cause))
+  );
+  if (canonical !== target) return yield* integrityError("Refusing an aliased model cache path.");
+  yield* Effect.scoped(
+    Effect.gen(function* () {
+      const staged = yield* fs.makeTempFileScoped({ directory: path.dirname(target), prefix: ".beep-model-" });
+      yield* fs.writeFile(staged, content, { mode: 0o600 });
+      yield* fs.rename(staged, target);
+    })
+  ).pipe(Effect.mapError((cause) => acquisitionError("Cannot atomically publish model cache bytes.", cause)));
+});
 const installBuffaloArchive = Effect.fn("Files.installBuffaloArchive")(function* (
   root: string,
   directory: string,
@@ -857,9 +887,7 @@ const installBuffaloArchive = Effect.fn("Files.installBuffaloArchive")(function*
     if (content.length !== artifact.sizeBytes || digest !== artifact.sha256)
       return yield* integrityError(`Archive artifact mismatch: ${artifact.fileName}.`);
     const destination = path.join(directory, artifact.fileName);
-    yield* fs
-      .writeFile(destination, content, { flag: "wx" })
-      .pipe(Effect.mapError((cause) => acquisitionError("Cannot install ONNX artifact.", cause)));
+    yield* writePersonMatchModelBytes(destination, content);
   }
 });
 /**
@@ -877,7 +905,6 @@ export const preparePersonMatchOnnxModels = Effect.fn("Files.preparePersonMatchO
   modelRoot: string,
   backend: "buffalo-l" | "adaface-kprpe"
 ) {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const root = yield* ensureCanonicalDirectory(modelRoot, "person-match model root");
   const models = yield* ensureCanonicalDirectory(path.join(root, "models"), "ONNX models directory");
@@ -886,12 +913,11 @@ export const preparePersonMatchOnnxModels = Effect.fn("Files.preparePersonMatchO
   yield* Effect.acquireUseRelease(
     acquireModelStoreLock(directory),
     Effect.fnUntraced(function* () {
-      const missing = yield* Effect.forEach(required, (artifact) =>
-        fs
-          .exists(path.join(directory, artifact.fileName))
-          .pipe(Effect.mapError((cause) => acquisitionError("Cannot inspect ONNX artifact.", cause)))
+      const validation = yield* Effect.forEach(required, (artifact) =>
+        validateArtifactPath(artifact, path.join(directory, artifact.fileName)).pipe(Effect.isSuccess)
       );
-      if (A.some(missing, (exists) => !exists)) yield* installBuffaloArchive(root, directory, required);
+      const missing = A.filter(required, (_, index) => validation[index] !== true);
+      if (missing.length > 0) yield* installBuffaloArchive(root, directory, missing);
       for (const artifact of required) yield* validateArtifactPath(artifact, path.join(directory, artifact.fileName));
     }),
     releaseModelStoreLock

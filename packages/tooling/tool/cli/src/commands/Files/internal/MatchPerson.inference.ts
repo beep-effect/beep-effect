@@ -174,7 +174,7 @@ const at = (values: ArrayLike<number>, i: number) => values[i] ?? 0;
  * ```
  *
  * @param values - Finite embedding components with nonzero magnitude.
- * @returns The normalized components; callers reject non-finite output.
+ * @returns Normalized components, or an empty vector for zero or non-finite magnitude.
  * @internal
  * @category inference
  * @since 0.0.0
@@ -183,7 +183,7 @@ export const normalizeFaceVector = (values: ArrayLike<number>): ReadonlyArray<nu
   let sum = 0;
   for (let i = 0; i < values.length; i++) sum += at(values, i) ** 2;
   const magnitude = Math.sqrt(sum);
-  return A.makeBy(values.length, (i) => at(values, i) / magnitude);
+  return magnitude > 0 && Number.isFinite(magnitude) ? A.makeBy(values.length, (i) => at(values, i) / magnitude) : [];
 };
 const borderPixel = (image: FaceImage, x: number, y: number, channel: number): number =>
   x < 0 || x >= image.width || y < 0 || y >= image.height ? 0 : at(image.pixels, (y * image.width + x) * 3 + channel);
@@ -445,11 +445,6 @@ const embedFace = (
         "Recognizer returned an unexpected embedding shape."
       );
     const embedding = normalizeFaceVector(vector);
-    if (A.some(embedding, (n) => !Number.isFinite(n)))
-      return yield* MatchPersonError.runtimeFromWorker(
-        "missing-embedding",
-        "Recognizer returned an invalid embedding."
-      );
     return InferredFace.make({ ...face, confidence, embedding: O.some(embedding) });
   });
 class DetectorDimensions extends S.Opaque<DetectorDimensions, { readonly brand: unique symbol }>()(

@@ -246,7 +246,7 @@ Find photos containing one target person using a trusted directory of
 single-person reference photos. Matching stays on the workstation and never
 writes raw face embeddings to disk. On Linux x64, the default backend combines
 InsightFace's `det_10g` face detector with DFA MobileNet alignment and CVLFace
-AdaFace ViT-Base KP-RPE recognition. Linux arm64, macOS x64/arm64, and Windows
+AdaFace ViT-Base KP-RPE recognition. Linux arm64, macOS arm64, and Windows
 x64 hosts default to the InsightFace Buffalo CPU backend. Other host/architecture
 pairs, including Windows arm64, fail before cache or model acquisition because
 the native ONNX runtime is unsupported there. Explicit AdaFace

@@ -13,6 +13,7 @@ export {
   acquirePinnedPersonMatchArtifactForTest,
   PreparedAdaFaceArtifacts,
   prepareAdaFaceArtifacts,
+  preparePersonMatchOnnxModels,
   verifyPersonMatchModelArtifacts,
 } from "../commands/Files/internal/MatchPerson.model-store.ts";
 export { compileAdaFaceOnnx } from "../commands/Files/internal/MatchPerson.onnx.ts";
@@ -25,6 +26,8 @@ export {
 } from "../commands/Files/internal/MatchPerson.ts";
 export {
   CanonicalMatchPersonInputs,
+  collectReferencesForTesting,
+  compiledGraphForTesting,
   faceQualityForTesting,
   PersonMatchModelArtifactVerifier,
   PersonMatchWorkerService,

@@ -86,7 +86,7 @@ const adaFaceRuntimeSupportsPlatform = (platform: string, architecture: string):
 const buffaloRuntimeSupportsPlatform = (platform: string, architecture: string): boolean =>
   Match.value(platform).pipe(
     Match.when("linux", () => Str.Equivalence(architecture, "x64") || Str.Equivalence(architecture, "arm64")),
-    Match.when("darwin", () => Str.Equivalence(architecture, "x64") || Str.Equivalence(architecture, "arm64")),
+    Match.when("darwin", () => Str.Equivalence(architecture, "arm64")),
     Match.when("win32", () => Str.Equivalence(architecture, "x64")),
     Match.orElse(() => false)
   );
@@ -159,7 +159,7 @@ export const validatePersonMatchBackendPlatform = Effect.fn("Files.validatePerso
             "buffalo-l",
             () =>
               `InsightFace Buffalo is unavailable on ${platform}/${architecture}; its native ONNX runtime ` +
-              "supports Linux x64/arm64, macOS x64/arm64, and Windows x64."
+              "supports Linux x64/arm64, macOS arm64, and Windows x64."
           ),
           Match.when(
             "adaface-kprpe",

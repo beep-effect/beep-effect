@@ -7,8 +7,8 @@ still has a runtime consumer (a workflow, systemd timer, skill, hook, package sc
 `ops/` manifest) is ported to TypeScript: Effect code where it is repo tooling, vanilla
 TypeScript where it is a packet-local script. One-shot probes whose outputs are already recorded
 in their packet are deleted with a ledger note pointing at the retained output. The
-`beep files match-person` feature is kept by porting `packages/tooling/tool/cli/python/photo-face`
-to Effect over `onnxruntime-node` and `sharp` with the same ONNX model pins. A `beep lint laws`
+`beep files match-person` feature is kept by porting the former Python photo-face worker into
+`packages/tooling/tool/cli/src/commands/Files/internal/` as Effect code over `onnxruntime-node` and `sharp` with the same ONNX model pins. A `beep lint laws`
 law, a lefthook pre-commit check and a hosted CI check fail on any tracked `*.py`.
 
 Graduated 2026-11-06 from `explorations/pulumi-to-alchemy` (grill session decisions D4, D8, D15);
@@ -41,7 +41,7 @@ Inventory at graduation (`git ls-files '*.py'`, 2026-11-06): about 290 files.
 
 | Location | Count | Default disposition (triage confirms per file) |
 | --- | --- | --- |
-| `packages/tooling/tool/cli/python/photo-face` | 13 | port to `@beep/repo-cli` Files commands over `onnxruntime-node` (new `@beep/face-embedding` if the surface warrants it) |
+| Former Python photo-face worker, ported into `packages/tooling/tool/cli/src/commands/Files/internal/` | 13 | port to `@beep/repo-cli` Files commands over `onnxruntime-node` (new `@beep/face-embedding` if the surface warrants it) |
 | `packages/foundation/modeling/markdown/scripts/extract-gfm-corpora.py` | 1 | port to a package script in TypeScript |
 | `.claude/skills/plasma-sensitive-entry/scripts/*.py` | 4 | port to TypeScript over `effect/process` driving `kdialog`; the skill's install step updates |
 | `.claude/skills/ontology-foundational-auditor/scripts/validate_artifacts.py` | 1 | port to TypeScript (`bun` runnable from the skill) |

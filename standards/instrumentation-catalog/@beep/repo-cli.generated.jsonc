@@ -1682,6 +1682,7 @@
     {"name":"Files.validatePersonMatchWorkerSummary","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Files.validateRejectedPersonMatchWorkerReference","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Files.writeImageCurationJsonAtomically","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Files.writePersonMatchModelBytes","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Files.writeProcessManifestTree","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Files.writeProcessOutcomeArtifacts","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Files.writeProcessStringFile","owner":"@beep/repo-cli","family":"tooling","conforms":true},

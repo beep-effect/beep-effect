@@ -30,7 +30,11 @@ import {
   normalizeFaceVector,
   openFaceSession,
 } from "./MatchPerson.inference.ts";
-import { preparePersonMatchOnnxModels, verifyPersonMatchModelArtifacts } from "./MatchPerson.model-store.ts";
+import {
+  preparePersonMatchOnnxModels,
+  verifyPersonMatchModelArtifacts,
+  writePersonMatchModelBytes,
+} from "./MatchPerson.model-store.ts";
 import { compileAdaFaceOnnx } from "./MatchPerson.onnx.ts";
 import {
   PersonMatchEntry,
@@ -190,17 +194,12 @@ const compiledGraph = Effect.fn("Files.PersonMatch.compiledGraph")(function* (
   const exists = yield* fs
     .exists(target)
     .pipe(Effect.mapError((cause) => MatchPersonError.modelIntegrity("Cannot inspect generated graph cache.", cause)));
-  if (exists) {
-    const cached = yield* fs
-      .readFile(target)
-      .pipe(Effect.mapError((cause) => MatchPersonError.modelIntegrity("Cannot read generated graph cache.", cause)));
-    if (Hex.encode(sha256(cached)) !== Hex.encode(sha256(graph)))
-      return yield* MatchPersonError.modelIntegrity("Generated ONNX cache integrity mismatch.");
-  } else {
-    yield* fs
-      .writeFile(target, graph, { flag: "wx" })
-      .pipe(Effect.mapError((cause) => MatchPersonError.modelIntegrity("Cannot cache generated ONNX graph.", cause)));
-  }
+  const cached = exists
+    ? yield* fs
+        .readFile(target)
+        .pipe(Effect.mapError((cause) => MatchPersonError.modelIntegrity("Cannot read generated graph cache.", cause)))
+    : new Uint8Array();
+  if (Hex.encode(sha256(cached)) !== Hex.encode(sha256(graph))) yield* writePersonMatchModelBytes(target, graph);
   return target;
 });
 class FaceQuality extends S.Opaque<FaceQuality, { readonly brand: unique symbol }>()(
@@ -349,7 +348,11 @@ const readReference = Effect.fn("Files.PersonMatch.readReference")(function* (
   const face = faces[0];
   if (faces.length !== 1 || face === undefined)
     return rejectedReference(base, faces.length === 0 ? "no-face" : "multiple-faces", faces.length);
-  if (O.isNone(face.embedding) || A.some(face.embedding.value, (v) => !Number.isFinite(v)))
+  if (
+    O.isNone(face.embedding) ||
+    face.embedding.value.length === 0 ||
+    A.some(face.embedding.value, (v) => !Number.isFinite(v))
+  )
     return rejectedReference(base, "invalid-embedding", 1, O.some(round(face.score)));
   return ReferenceObservation.make({
     reference: PersonMatchReference.make({ ...base, accepted: true, faceCount: 1, detectionScore: round(face.score) }),
@@ -542,8 +545,8 @@ const runWorker = Effect.fn("Files.PersonMatch.run")(function* (
       ? { name: "cvlface_adaface_vit_base_kprpe_webface12m", codeRevision: "308142aa50adf2e187711354f7524635d3414f1e" }
       : {
           name: "buffalo_l",
-          packageName: "insightface",
-          packageVersion: "1.0.1",
+          packageName: "onnxruntime-node",
+          packageVersion: runtimeVersion,
           allowedModules: ["detection", "recognition"],
         }),
   };
@@ -617,3 +620,28 @@ const makeService = Effect.fn("Files.PersonMatchWorkerService.make")(function* (
  * @since 0.0.0
  */
 export const PersonMatchWorkerServiceLive = Layer.effect(PersonMatchWorkerService, makeService());
+
+/**
+ * Collect reference decisions through the production image and inference boundary.
+ * **Example** (Reference the regression seam)
+ * ```ts
+ * import { collectReferencesForTesting } from "@beep/repo-cli/test/Files"
+ * console.log(typeof collectReferencesForTesting)
+ * ```
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const collectReferencesForTesting = collectReferences;
+/**
+ * Compile and repair a pinned graph cache through the production path.
+ * **Example** (Reference the cache regression seam)
+ * ```ts
+ * import { compiledGraphForTesting } from "@beep/repo-cli/test/Files"
+ * console.log(typeof compiledGraphForTesting)
+ * ```
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const compiledGraphForTesting = compiledGraph;

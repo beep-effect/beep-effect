@@ -9,10 +9,10 @@
   "reviews": {
     "//": {
       "reviewer": "Codex GPT-6.1 Sol (photo-face lane input review)",
-      "reason": "Re-record changed root catalog and repo-cli manifest inputs for native CPU inference; unchanged cache posture and qualification.",
+      "reason": "Retain reviewed native inference inputs after sherif alphabetized repo-cli dependencies; no dependency versions, task settings or qualification changed.",
       "basis": {
         "path": "goals/python-free-repo/research/photo-face-cache-review.md",
-        "sha256": "2d3d642fbd8d6947eb73e65cc556459e6a3edd10d9103054e2678ff645af3f8c"
+        "sha256": "86d095d9aa6bd15e002ab4a4db600935cbf74ab7da60bc5b2caa5e2b9e138c5d"
       }
     },
     "@beep/acp": {
@@ -1233,10 +1233,10 @@
     },
     "@beep/repo-cli": {
       "reviewer": "Codex GPT-6.1 Sol (photo-face lane input review)",
-      "reason": "Re-record changed root catalog and repo-cli manifest inputs for native CPU inference; unchanged cache posture and qualification.",
+      "reason": "Retain reviewed native inference inputs after sherif alphabetized repo-cli dependencies; no dependency versions, task settings or qualification changed.",
       "basis": {
         "path": "goals/python-free-repo/research/photo-face-cache-review.md",
-        "sha256": "2d3d642fbd8d6947eb73e65cc556459e6a3edd10d9103054e2678ff645af3f8c"
+        "sha256": "86d095d9aa6bd15e002ab4a4db600935cbf74ab7da60bc5b2caa5e2b9e138c5d"
       }
     },
     "@beep/repo-cli-kit": {

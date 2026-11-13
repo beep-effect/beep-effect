@@ -79,3 +79,15 @@ The Buffalo run also exercised extraction of the verified pinned ZIP archive.
 The focused run covering parity, Files commands, portability and dependency
 review passed 126 tests. Publication and final quality receipts are recorded by
 Yeet on the final head.
+
+## Review wave 1 regressions
+
+The focused suite now passes 152 tests across six files, including the original
+embedding/box/quality tolerances, AdaFace followed by Buffalo in one cache,
+interrupted ONNX artifact repair, truncated generated-graph repair and concurrent
+graph publication. These integration checks reuse the pinned local models and
+Buffalo ZIP without downloads; the parity environment also needs buffalo_l.zip.
+A model-independent test rejects a zero-magnitude reference as invalid-embedding
+while retaining a valid second reference. Intel macOS fails native preflight.
+Buffalo reports the loaded onnxruntime-node package and runtime version, while
+historical InsightFace provenance remains readable.
