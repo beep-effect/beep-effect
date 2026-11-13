@@ -14,8 +14,9 @@
  * (B16). After the write, every target is re-read and must hash to the
  * effective tree and to `effective.installedTreeHash`.
  *
- * Local entries are never reconstructed: their targets are verified against
- * `installedTreeHash`, the same oracle `skills update --check` uses.
+ * Local entries are never reconstructed: their targets are read and must all
+ * exist and hold the same tree, and hash to `installedTreeHash` where the
+ * entry records one, the same rule `skills update --check` applies.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -276,7 +277,9 @@ const materializeVendored = Effect.fn("SkillsMaterialize.materializeVendored")(f
   return row("rebuilt");
 });
 
-// A local entry records only the cross-target hash, so a mismatch marks every present target as differing.
+// A local entry's targets are current when all exist and hold the same tree and, where the entry
+// records a floating upstream's fetched tree, hash to it. A mismatch does not say which target
+// moved, so it marks every present target as differing.
 const verifyLocal = Effect.fn("SkillsMaterialize.verifyLocal")(function* (
   repoRoot: string,
   skill: string,
@@ -288,7 +291,14 @@ const verifyLocal = Effect.fn("SkillsMaterialize.verifyLocal")(function* (
 > {
   const targets = yield* requireSafeTargets(skill, entry.installedTargets);
   const readings = yield* readTargets(repoRoot, skill, targets);
-  const current = yield* installMatches(readings, skill, entry.installedTreeHash);
+  const trees = A.getSomes(A.map(readings, (reading) => reading.treeHash));
+  const agree = A.length(trees) === A.length(readings) && A.length(A.dedupe(trees)) <= 1;
+  const current =
+    agree &&
+    (yield* O.match(O.fromUndefinedOr(entry.installedTreeHash), {
+      onNone: () => Effect.succeed(true),
+      onSome: (expected) => installMatches(readings, skill, expected),
+    }));
   return SkillMaterializeRow.make({
     skill,
     kind: "local",

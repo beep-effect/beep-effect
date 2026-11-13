@@ -116,8 +116,15 @@ has a written reason in `DOCS_POLICY_EXCLUSIONS`.
 
 Repo Sanity is the one hosted owner of the skills lock check, on its
 documentation path and its full path alike, because a `SKILL.md` edit is a
-documentation diff. The check compares the installed skill trees, their
-`.agents` mirror and the Codex skill configuration with `skills-lock.json`. The
+documentation diff. The check reads each skill's two installed targets
+(`.claude/skills` and its `.agents` mirror), hashes them on the fly and requires
+them to agree; it validates every `SKILL.md` frontmatter and the Codex skill
+configuration; and it compares the set of skills and their targets with
+`skills-lock.json`. The lock holds a content hash only where git cannot vouch
+for the content by itself: the five vendored skills (upstream pin, patch series
+and effective tree) and a skill refetched from a floating upstream. A
+repo-authored skill's entry is its targets alone, so editing one never changes
+the lock and two pull requests that edit the same skill do not conflict there. The
 step passes `--offline`, so it reads tracked files only and takes about a
 second: the plain check also refetches each floating upstream skill through the
 unauthenticated GitHub API, which rate-limits shared runner addresses and would
