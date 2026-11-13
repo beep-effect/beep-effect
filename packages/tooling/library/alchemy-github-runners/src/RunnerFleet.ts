@@ -147,7 +147,7 @@ const allow = (input: {
 
 const lambdaRole = (statements: ReadonlyArray<Statement>) => ({ policyStatements: A.copy(statements) });
 
-/** Collects an array of outputs into one output of the array, keeping order. */
+// Collects an array of outputs into one output of the array, keeping order.
 const collect = <T>(values: ReadonlyArray<Value<T>>): Output.Output<ReadonlyArray<T>> =>
   A.reduce(values, Output.asOutput<ReadonlyArray<T>>([]), (acc, value) =>
     Output.all(acc, Output.asOutput(value)).pipe(Output.map(([items, item]) => A.append(items, item)))
