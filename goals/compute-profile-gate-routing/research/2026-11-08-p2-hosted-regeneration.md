@@ -23,7 +23,9 @@ Steps: check out `pull_request.head.sha` with `fetch-depth: 0` and `persist-cred
 fetch the base and run `setup-monorepo-ci` (the `verify` matrix bootstrap, without app
 secrets). The job runs only `bun run beep`, so it does not fetch the pre-toolchain beep CI
 binary. The writers take the PR diff from the merge base,
-`--no-renames --diff-filter=ACMD`, filtered to the lefthook globs and excludes:
+`--no-renames --diff-filter=ACMD`, filtered with anchored regexes equivalent to the lefthook
+globs and excludes (git pathspec globs such as `'packages/**'` in a workflow `run:` are read by
+Fallow's workflow plugin as entry points and turned 35 dead-code suppressions stale on the PR):
 
 - `beep lint schema-catalog --write`: `{apps,packages,infra}/**/*.{ts,tsx}` minus `docs/`,
   `*.d.ts` and `node_modules/`;
