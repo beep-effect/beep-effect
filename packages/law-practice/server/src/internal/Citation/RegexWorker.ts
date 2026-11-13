@@ -2,10 +2,14 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import * as Clock from "effect/Clock";
+import * as Digest from "effect/crypto/Digest";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
-import { reserveCitationInvocationText } from "./Invocation.ts";
+import * as Scope from "effect/Scope";
+import { CitationInvocation, reserveCitationInvocationText } from "./Invocation.ts";
 import { acquireCitationNativeLease, captureCitationNativeAdmission } from "./NativeAdmission.ts";
 import {
   citationNativeProcessCommand,
@@ -14,7 +18,7 @@ import {
   withCitationNativeProcess,
 } from "./NativeProcess.ts";
 import { makeCitationRegexDescriptorRegistry } from "./RegexDescriptors.ts";
-import { makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { CitationRegexOperation, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { makeCitationRegexResult } from "./RegexResult.ts";
 import { callCitationRegexRpc } from "./RegexWorkerClient.ts";
 import {
@@ -30,14 +34,18 @@ import {
 
 const failure = (reason: CitationRegexWorkerFailure["reason"]) => CitationRegexWorkerFailure.make({ reason });
 const invalidRuntime = () => failure("invalid-runtime");
-/** Capture trusted descriptors, runtime, policy, Digest, Clock, admission and
- * Scope. Calls have R = never. Full job preflight precedes payload/map allocation
- * and native acquisition. A native timer includes spawn/startup/traffic/matching;
- * confirmed retirement alone releases the shared total/regex lease. This private
- * component supplies no public engine Layer or family approval.
+/** Install the engine-constant half of the regex supervisor once per call site
+ * and operation: snapshot limits and runtime, the descriptor registry, job
+ * preparation, control-frame preflight, Clock, spawner and the shared native
+ * admission. Each evaluation reads CitationInvocation at call time, reserves its
+ * source text on the invocation budget, and starts one physical owner in the
+ * invocation Scope (protocol v2: one child per job). Full job preflight precedes
+ * payload/map allocation and native acquisition. A native timer includes
+ * spawn/startup/traffic/matching; confirmed retirement alone releases the shared
+ * total/regex lease. This private component supplies no public engine Layer.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationRegexWorker = Effect.fn("Citation.makeRegexWorker")(function* (
+export const installCitationRegexEvaluator = Effect.fn("Citation.installRegexEvaluator")(function* (
   policy: unknown,
   runtimeInput: unknown,
   bindings: unknown,
@@ -48,51 +56,90 @@ export const makeCitationRegexWorker = Effect.fn("Citation.makeRegexWorker")(fun
   const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
     CitationSafetyLimitExceeded.make({ operation: engineOperation, limit });
   const admission = yield* captureCitationNativeAdmission(limits, invalidRuntime);
-  const owner = yield* makeCitationNativeProcessOwner(limits, engineOperation, failure);
-  const registry = yield* makeCitationRegexDescriptorRegistry(limits, bindings, engineInput);
+  const clock = yield* Clock.Clock;
+  const spawner = yield* ChildProcessSpawner;
+  const digest = yield* Digest.Digest;
+  const selected = yield* CitationRegexOperation;
+  const makeRegistry = (descriptors: unknown) =>
+    makeCitationRegexDescriptorRegistry(limits, descriptors, engineInput).pipe(
+      Effect.provideService(Clock.Clock, clock),
+      Effect.provideService(Digest.Digest, digest),
+      Effect.provideService(CitationRegexOperation, selected)
+    );
+  const registry = yield* makeRegistry(bindings);
   const preparation = yield* makeCitationRegexJobPreparation(limits, reserveCitationInvocationText);
   const regexDeadline = limits.regexDeadline.pipe(Duration.toMillis, Duration.millis);
   yield* preflightCitationRegexControlFrames(limits.processMessageBytes);
-  const evaluate = Effect.fn("Citation.evaluateRegexProcess")(
-    (
-      pattern: unknown,
-      source: unknown,
-      flags: unknown,
-      maximumMatches: unknown = limits.patternMatches,
-      mode: unknown = "finditer"
-    ) =>
-      withCitationNativeProcess(
-        owner,
-        acquireCitationNativeLease(admission, engineOperation, true, failure),
-        () => failure("invalid-runtime"),
-        Effect.fnUntraced(function* (operation) {
-          const quota = yield* S.decodeUnknownEffect(CitationRegexWorkerJob.fields.maxMatches)(maximumMatches).pipe(
-            Effect.mapError(() => failure("invalid-runtime"))
-          );
-          if (quota > limits.patternMatches) return yield* safety("patternMatches");
-          const prepared = yield* preparation.prepare(pattern, source, flags, quota, () => operation.acquire, mode);
-          const bound = yield* registry.bind(prepared.pattern.value.storage, flags);
-          const argument = yield* encodeCitationRegexStartup(
-            CitationRegexWorkerStartup.make({ limits, descriptor: bound.descriptor, engine: registry.engine })
-          );
-          const result = yield* makeCitationRegexResult(
-            limits,
-            bound.program.groups,
-            prepared.source.layout.pythonLength
-          );
-          return yield* Effect.gen(function* () {
-            const child = yield* operation.start(citationNativeProcessCommand(runtime, argument));
-            const body = yield* callCitationRegexRpc(child, prepared.job, prepared.frame, limits.processMessageBytes);
-            return {
-              result: yield* result.decode(body, quota),
-              source: prepared.source,
-              descriptor: bound.descriptor,
-            };
-          }).pipe(
-            Effect.timeoutOrElse({ duration: regexDeadline, orElse: () => Effect.fail(safety("regexDeadline")) })
-          );
-        })
-      ).pipe(timed, Effect.catchTag("CitationSafetyLimitExceeded", failSafety))
+  // The physical owner captures a Scope, so it belongs to the invocation, never the engine.
+  const startOwner = Effect.flatMap(CitationInvocation, ({ scope }) =>
+    makeCitationNativeProcessOwner(limits, engineOperation, failure).pipe(
+      Effect.provideService(Scope.Scope, scope),
+      Effect.provideService(Clock.Clock, clock),
+      Effect.provideService(ChildProcessSpawner, spawner)
+    )
   );
-  return { evaluate, snapshot: owner.snapshot, reap: owner.reap };
+  const evaluateWith = (registry: Effect.Success<ReturnType<typeof makeRegistry>>) =>
+    Effect.fn("Citation.evaluateRegexProcess")(
+      (
+        pattern: unknown,
+        source: unknown,
+        flags: unknown,
+        maximumMatches: unknown = limits.patternMatches,
+        mode: unknown = "finditer"
+      ) =>
+        Effect.flatMap(startOwner, (owner) =>
+          withCitationNativeProcess(
+            owner,
+            acquireCitationNativeLease(admission, engineOperation, true, failure),
+            () => failure("invalid-runtime"),
+            Effect.fnUntraced(function* (operation) {
+              const quota = yield* S.decodeUnknownEffect(CitationRegexWorkerJob.fields.maxMatches)(maximumMatches).pipe(
+                Effect.mapError(() => failure("invalid-runtime"))
+              );
+              if (quota > limits.patternMatches) return yield* safety("patternMatches");
+              const prepared = yield* preparation.prepare(pattern, source, flags, quota, () => operation.acquire, mode);
+              const bound = yield* registry.bind(prepared.pattern.value.storage, flags);
+              const argument = yield* encodeCitationRegexStartup(
+                CitationRegexWorkerStartup.make({ limits, descriptor: bound.descriptor, engine: registry.engine })
+              );
+              const result = yield* makeCitationRegexResult(
+                limits,
+                bound.program.groups,
+                prepared.source.layout.pythonLength
+              );
+              return yield* Effect.gen(function* () {
+                const child = yield* operation.start(citationNativeProcessCommand(runtime, argument));
+                const body = yield* callCitationRegexRpc(
+                  child,
+                  prepared.job,
+                  prepared.frame,
+                  limits.processMessageBytes
+                );
+                return {
+                  result: yield* result.decode(body, quota),
+                  source: prepared.source,
+                  descriptor: bound.descriptor,
+                };
+              }).pipe(
+                Effect.timeoutOrElse({ duration: regexDeadline, orElse: () => Effect.fail(safety("regexDeadline")) })
+              );
+            })
+          )
+        ).pipe(timed, Effect.catchTag("CitationSafetyLimitExceeded", failSafety))
+    );
+  // Request-generated patterns (generated references) bind their own descriptors
+  // per call; the registry is request state, every other constant is shared.
+  const bindDescriptors = Effect.fn("Citation.bindRegexDescriptors")(function* (descriptors: unknown) {
+    const generated = yield* makeRegistry(descriptors);
+    return { evaluate: evaluateWith(generated) };
+  });
+  return { evaluate: evaluateWith(registry), bindDescriptors };
 });
+/** One installed regex evaluator.
+ * @internal @category models @since 0.0.0
+ */
+export type CitationRegexEvaluator = Effect.Success<ReturnType<typeof installCitationRegexEvaluator>>;
+/** One completed regex evaluation.
+ * @internal @category models @since 0.0.0
+ */
+export type CitationRegexEvaluation = Effect.Success<ReturnType<CitationRegexEvaluator["evaluate"]>>;

@@ -17,7 +17,8 @@ const $I = $LawPracticeServerId.create("test/CitationEngineProbe");
  * **Details**
  *
  * Each field counts spans of one name, except `nativeProcesses`, which counts
- * child processes the observed spawner started. The goals
+ * child processes the observed spawner started. `regexWorkerConstructions`
+ * counts installed regex evaluators (`Citation.installRegexEvaluator`). The goals
  * `citation-engine-install-once` and `citation-regex-worker-v3` move these
  * numbers on purpose and update the recorded baseline in the same change.
  *
@@ -55,7 +56,7 @@ const spanNames = {
   metadataOperationInstalls: "Citation.makeMetadataOperation",
   configurationDetaches: "Citation.detachMetadataConfiguration",
   tokenizerBuilds: "Citation.makeTokenizer",
-  regexWorkerConstructions: "Citation.makeRegexWorker",
+  regexWorkerConstructions: "Citation.installRegexEvaluator",
   regexEvaluations: "Citation.evaluateRegexProcess",
 } satisfies Record<Exclude<keyof typeof CitationEngineWorkCounts.fields, "nativeProcesses">, string>;
 const zero = constant(0);

@@ -12,7 +12,7 @@ import {
   CitationCaseNameSelectionConfiguration,
   CitationCaseNameSelectionInput,
   copyCitationCaseNameSelectionConfiguration,
-  selectCitationCaseName,
+  installCitationCaseNameSelection,
 } from "./CaseNameSelection.ts";
 import { makeCitationCourtLookup } from "./CourtLookup.ts";
 import {
@@ -32,9 +32,9 @@ import {
 import {
   CitationPostCaseMetadataConfiguration,
   CitationPostCaseMetadataInput,
-  extractCitationPostCaseMetadata,
+  installCitationPostCaseMetadataExtraction,
 } from "./PostCaseMetadata.ts";
-import { extractCitationPreCaseMetadata } from "./PreCaseMetadata.ts";
+import { installCitationPreCaseMetadataExtraction } from "./PreCaseMetadata.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationCaseNameProcessPatch } from "./CaseNameProcess.ts";
@@ -150,34 +150,35 @@ const applyNames = (metadata: CitationCaseMetadataFields, patch: CitationCaseNam
     antecedentGuess: O.getOrElse(patch.antecedentGuess, () => metadata.antecedentGuess),
     year: O.getOrElse(patch.year, () => metadata.year),
   });
-const postMetadata = Effect.fn("Citation.applyFullCasePostMetadata")(function* (
+const installPostMetadata = Effect.fn("Citation.installFullCasePostMetadata")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
-  config: CitationPostCaseMetadataConfiguration,
-  request: CitationCaseMetadataInput
+  config: CitationPostCaseMetadataConfiguration
 ) {
-  const post = yield* extractCitationPostCaseMetadata(
+  const extractPost = yield* installCitationPostCaseMetadataExtraction(
     limits,
     runtime,
     CitationPublicationMetadataConfiguration.make(config),
-    config.courtTable,
-    request
+    config.courtTable
   );
-  if (O.isNone(post)) return request;
-  const next = post.value;
-  const court = O.getOrNull(next.metadata.court);
   const strings = yield* makeCitationRegexInput(limits, reserveCitationInvocationText);
-  const projected = court === null ? null : (yield* strings.prepareText(court, () => Effect.void)).value.storage;
-  return CitationCaseMetadataInput.make({
-    ...request,
-    year: next.year,
-    fullSpanEnd: next.fullSpanEnd,
-    metadata: CitationCaseMetadataFields.make({
-      ...request.metadata,
-      ...next.metadata,
-      court: O.isSome(next.metadata.court) ? projected : request.metadata.court,
-      pinCiteSpanEnd: O.getOrElse(next.metadata.pinCiteSpanEnd, () => request.metadata.pinCiteSpanEnd),
-    }),
+  return Effect.fn("Citation.applyFullCasePostMetadata")(function* (request: CitationCaseMetadataInput) {
+    const post = yield* extractPost(request);
+    if (O.isNone(post)) return request;
+    const next = post.value;
+    const court = O.getOrNull(next.metadata.court);
+    const projected = court === null ? null : (yield* strings.prepareText(court, () => Effect.void)).value.storage;
+    return CitationCaseMetadataInput.make({
+      ...request,
+      year: next.year,
+      fullSpanEnd: next.fullSpanEnd,
+      metadata: CitationCaseMetadataFields.make({
+        ...request.metadata,
+        ...next.metadata,
+        court: O.isSome(next.metadata.court) ? projected : request.metadata.court,
+        pinCiteSpanEnd: O.getOrElse(next.metadata.pinCiteSpanEnd, () => request.metadata.pinCiteSpanEnd),
+      }),
+    });
   });
 });
 /** Reuse original reporter-based court guessing inside an enclosing operation.
@@ -199,53 +200,57 @@ export const guessCitationCaseCourt = Effect.fn("Citation.guessFullCaseCourt")(f
   }
   return court;
 });
-const prepare = Effect.fn("Citation.prepareFullCaseMetadata")(function* (
+const installPrepare = Effect.fn("Citation.installFullCaseMetadata")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
   config: CitationCaseMetadataConfiguration,
   owner: CitationFrozenEditions["Service"],
-  editions: Effect.Success<ReturnType<typeof makeCitationEditionInference>>,
-  raw: unknown
+  editions: Effect.Success<ReturnType<typeof makeCitationEditionInference>>
 ) {
-  const request = yield* decodeCitationMetadataWordRequest(limits, S.toType(CitationCaseMetadataInput), raw, () =>
-    CitationCaseMetadataFailure.make({ reason: "invalid-input" })
-  );
-  const candidates = yield* prepareCitationEditionInferenceInput(limits, request);
-  const posted = yield* postMetadata(limits, runtime, config.post, request);
-  let metadata = posted.metadata;
-  let year: typeof CitationEditionInferenceInput.Type.year = posted.year;
-  let fullSpanStart = posted.fullSpanStart;
-  const fullSpanEnd = posted.fullSpanEnd;
-  const names = yield* selectCitationCaseName(limits, runtime, config.names, {
-    ...request,
-    mode: "Full",
-    currentName: metadata.defendant,
+  const postMetadata = yield* installPostMetadata(limits, runtime, config.post);
+  const selectCaseName = yield* installCitationCaseNameSelection(limits, runtime, config.names);
+  const extractPre = yield* installCitationPreCaseMetadataExtraction(limits, runtime, config.pre);
+  return Effect.fn("Citation.prepareFullCaseMetadata")(function* (raw: unknown) {
+    const request = yield* decodeCitationMetadataWordRequest(limits, S.toType(CitationCaseMetadataInput), raw, () =>
+      CitationCaseMetadataFailure.make({ reason: "invalid-input" })
+    );
+    const candidates = yield* prepareCitationEditionInferenceInput(limits, request);
+    const posted = yield* postMetadata(request);
+    let metadata = posted.metadata;
+    let year: typeof CitationEditionInferenceInput.Type.year = posted.year;
+    let fullSpanStart = posted.fullSpanStart;
+    const fullSpanEnd = posted.fullSpanEnd;
+    const names = yield* selectCaseName({
+      ...request,
+      mode: "Full",
+      currentName: metadata.defendant,
+    });
+    metadata = applyNames(metadata, names.patch);
+    year = O.isSome(names.patch.numericYear) ? names.patch.numericYear.value : year;
+    fullSpanStart = O.getOrElse(names.patch.fullSpanStart, () => fullSpanStart);
+    const pre = yield* extractPre({
+      ...request,
+      plaintiff: metadata.plaintiff,
+      defendant: metadata.defendant,
+      pinCiteSpanStart: metadata.pinCiteSpanStart,
+    });
+    if (O.isSome(pre)) {
+      metadata = CitationCaseMetadataFields.make({ ...metadata, ...pre.value.metadata });
+      fullSpanStart = pre.value.fullSpanStart;
+    }
+    const court = yield* guessCitationCaseCourt(limits, owner, candidates, metadata.court);
+    metadata = CitationCaseMetadataFields.make({ ...metadata, court });
+    const editionGuess = yield* editions.guess({ ...candidates, year });
+    return {
+      metadata,
+      year,
+      fullSpanStart,
+      fullSpanEnd,
+      editionGuess,
+      usedHtml: names.usedHtml,
+      usedPlain: names.usedPlain,
+    };
   });
-  metadata = applyNames(metadata, names.patch);
-  year = O.isSome(names.patch.numericYear) ? names.patch.numericYear.value : year;
-  fullSpanStart = O.getOrElse(names.patch.fullSpanStart, () => fullSpanStart);
-  const pre = yield* extractCitationPreCaseMetadata(limits, runtime, config.pre, {
-    ...request,
-    plaintiff: metadata.plaintiff,
-    defendant: metadata.defendant,
-    pinCiteSpanStart: metadata.pinCiteSpanStart,
-  });
-  if (O.isSome(pre)) {
-    metadata = CitationCaseMetadataFields.make({ ...metadata, ...pre.value.metadata });
-    fullSpanStart = pre.value.fullSpanStart;
-  }
-  const court = yield* guessCitationCaseCourt(limits, owner, candidates, metadata.court);
-  metadata = CitationCaseMetadataFields.make({ ...metadata, court });
-  const editionGuess = yield* editions.guess({ ...candidates, year });
-  return {
-    metadata,
-    year,
-    fullSpanStart,
-    fullSpanEnd,
-    editionGuess,
-    usedHtml: names.usedHtml,
-    usedPlain: names.usedPlain,
-  };
 });
 /** Run the complete original full-case metadata order under one captured operation,
  * Scope, text authority and deadline. Frozen edition inference requires no ambient
@@ -291,9 +296,8 @@ export const makeCitationCaseMetadata = Effect.fn("Citation.makeFullCaseMetadata
   });
   const owner = yield* CitationFrozenEditions;
   const editions = yield* makeCitationEditionInference(limits);
-  const installed = yield* makeCitationMetadataOperation(limits, (raw: unknown) =>
-    prepare(limits, runtime, config, owner, editions, raw)
-  );
+  const prepare = yield* installPrepare(limits, runtime, config, owner, editions);
+  const installed = yield* makeCitationMetadataOperation(limits, prepare);
   const extract = Effect.fn("Citation.addFullCaseMetadata")((raw: unknown) =>
     Effect.gen(function* () {
       const [result, reservedUnits] = yield* installed.run(raw);

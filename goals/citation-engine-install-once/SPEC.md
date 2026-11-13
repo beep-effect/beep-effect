@@ -160,11 +160,27 @@ The new public engine and extractor controls deliberately advance virtual time a
 
 Reverse: Replace the manual-clock controls when a harness can assert queue-plus-work deadline placement without advancing virtual time.
 
+### Bind generated reference descriptors per call and keep the pattern builder per request, 2026-11-13
+
+GeneratedReferences builds its regex pattern from each citation's metadata, so the descriptors are request data. The evaluator is installed once per generator with an empty static registry, and bindDescriptors builds a registry for the generated descriptors at the point the worker used to be constructed, sharing every other constant. makeCitationReferencePatterns stays per request (stop rule): constructing it reserves its fixed fragments on the request text budget and checks the enclosing budget against the policy, so hoisting it would change producedTextUtf16 in the report and drop a refusal. It constructs no regex evaluator.
+
+Lane perf/citation-hoist-installs
+
+Reverse: Construct the generated-reference regex worker inside each prepare again.
+
 ### Delete the unused cleaner operation adapter, 2026-11-13
 
 A repository-wide live source and test search found makeCitationCleanerOperation only in its defining module and CitationCleanerOperation.test.ts. No src caller, public engine boundary, or package composition uses it; SourceCleaning uses CleanerPipeline directly. The similarly named replay fixture independently wraps CleanerPipeline and does not call this adapter. Delete the test-only dead production adapter and its test rather than count fixture admission as a production proof. Public engine admission is now proved by the manual-clock engine test. Regenerate the instrumentation catalog and prune the generated shard plan with repository writers.
 
 Reverse: Restore CleanerOperation.ts and its test from head 99bb436ca0fc if a real production caller is introduced.
+
+### Judge MetadataComposition coverage against the same focused group on clean HEAD, 2026-11-13
+
+With twenty focused metadata test files MetadataComposition measures 98.46 lines, 97.88 statements, 91.42 branches and 100 functions, below the whole-suite floor (99.22, 98.58, 92.68, 100). The two uncovered lines, 64 (substitution invalid-match refusal) and 178 (fallback native admission when none is supplied), are unchanged by A3. The same twenty files on clean HEAD measure 98.38, 97.79, 91.42 and 100 with the same two lines uncovered, so the slice regresses nothing and the floor depends on tests outside the focused group. Hosted CI measures the whole suite. No floor was lowered.
+
+Lane perf/citation-hoist-installs
+
+Reverse: Add focused tests for the substitution invalid-match refusal and the fallback native admission.
 
 ### Keep coverage controls in independent request invocations, 2026-11-13
 
@@ -200,6 +216,14 @@ Review round 1 confirms a deliberate Scope lifetime difference from main: metada
 
 Reverse: Restore per-stage Effect.scoped around prepare(request).
 
+### Keep the Diff, Xml and annotation template owners per request, 2026-11-13
+
+Stop rule. The Diff and Xml workers wrap MarkupWorker, whose private semaphores would become engine-wide and whose native owner captures a Scope; sharing them would change process ownership and queueing between concurrent requests. They are not regex evaluator call sites, and goals/citation-regex-worker-v3 replaces them with the lane's one-occupant rule. makeCitationAnnotationTemplates captures the request reservation at construction, so AnnotationWrap installs its evaluator once and exposes the template constructor; makeCitationWrapAnnotationSpans builds the templates per request, where it built the whole wrapper before. The HTML discovery evaluator around the Diff worker is installed once (installCitationHtmlGeometry).
+
+Lane perf/citation-hoist-installs
+
+Reverse: Hoist makeCitationDiffWorker, makeCitationXmlWorker and makeCitationAnnotationTemplates once the worker-v3 lane replaces their per-owner state.
+
 ### Keep the full law-practice audit on hosted CI, 2026-11-13
 
 The operator clarified on 2026-11-13 that file-by-file local tests govern because the full law-practice package audit runs the whole suite. Run package-verify --quick and docgen:local locally, and leave the full audit to hosted CI. The smaller lint-rules package receives its full package-verify.
@@ -212,11 +236,27 @@ The syntax-only effect-vitest check passes with zero introduced and resolved fin
 
 Reverse: Regenerate and adopt the unrelated line-position rows
 
+### Let configuration detaches move to engine construction with the installs, 2026-11-13
+
+Hoisting the stage tree moves the eight per-call detaches to engine construction: the probe measures 0 per call and 10 at construction (the 8, plus the 2 the design counts at construction; A1 did not measure construction). Nothing was added or removed on purpose: no CitationOwned brand, no nested detach deleted. Slice A4 owns reducing the construction count to 1.
+
+Lane perf/citation-hoist-installs
+
+Reverse: Reinstall the child stages per request.
+
 ### Log extraction and annotation refusal once at the public engine, 2026-11-13
 
 The engine normalizes and logs every typed extract or annotate refusal after the invocation timer and admission boundary, so deadlines, admission refusals and stage refusals each emit exactly one fixed boundary-refused debug message. Inner normalizers remain silent and idempotent. Manual-clock tests on both runtime configurations count one deadline log and one subsequent source-stage refusal log, with zero native children.
 
 Reverse: Restore logging to the inner boundary normalizers
+
+### Measure engine construction by building one more identical engine in the probe, 2026-11-13
+
+The probe needs the replay's observed spawner, which exists only after the first engine is built. makeCitationCanonicalExtractionReplay therefore exposes construct, which builds a second identical default engine in the same layer scope, and prepareCitationCanonicalFullSpanReplay measures it. The row is asserted by its own Bun test (citationCanonicalFullSpanConstruction): 16 metadata-operation installs, 10 detaches, 1 tokenizer build, 26 regex evaluator installs, 0 evaluations and 0 child processes. The design estimated 12 evaluators; each parent installs its own helper chain (for example both CaseMetadata and ReferenceTokenExtraction install a case-name selection), which is once per call site and operation.
+
+Lane perf/citation-hoist-installs
+
+Reverse: Drop the construction row and the construct effect from the replay fixture.
 
 ### Preserve boundary-specific deadline placement around admission, 2026-11-13
 
@@ -232,6 +272,14 @@ Lane feat/citation-invocation-binding · PR #3265
 
 Reverse: Restore the tokenizer guard deletion and missing-ID defect conversion from 76b441e82d4.
 
+### Prove at compile time that engine stage installs read no request value, 2026-11-13
+
+The engine already installs its four stage trees in a Context without CitationOperationAdmission, and CitationInvocation exists only inside openCitationInvocation. A hoisted install that still yields CitationInvocation or CitationTextBudget would otherwise surface only as an extra Layer requirement at a use site. installedWithoutRequestValues makes each of the four engine installs pass true for a parameter typed false when the install's requirements contain either service, so such an install fails to typecheck at engine construction. Checked by adding a yield of CitationInvocation to the tokenized-extraction install: TS2345 at CitationEngine.layer.ts. The hoist also surfaced three factories that capture CitationTextBudget at construction (ReferencePatterns, ReferenceNames, AnnotationTemplate); none of them was hoisted.
+
+Lane perf/citation-hoist-installs
+
+Reverse: Remove installedWithoutRequestValues from CitationEngine.layer.ts.
+
 ### Remove only the deleted cleaner adapter coverage row, 2026-11-13
 
 Remove the orphan CleanerOperation.ts file row by hand. The baseline writer exists as coverage:baseline:write, but it consumes complete measured package snapshots and has no file-row deletion command. Regenerating law-practice-server would run its whole suite, which the task explicitly forbids locally. Keep every other coverage floor unchanged and leave frozen proof references under goals/citation-extraction-engine and the eyecite fixture untouched.
@@ -245,6 +293,22 @@ The invocation always supplies a parent budget, so CleanerPipeline no longer wra
 Lane feat/citation-invocation-binding · PR #3265
 
 Reverse: Restore the cleaner parent Option wrappers and parentless fallbacks.
+
+### Start the physical regex owner per evaluation inside the invocation Scope, 2026-11-13
+
+installCitationRegexEvaluator holds only engine constants: limits, runtime, timing, the shared native admission, Clock, spawner, Digest, descriptor registry, job preparation and the control-frame preflight. The process owner captures a Scope, a birth lock and a process list, so it is not shared: each evaluate reads CitationInvocation and starts one owner in the invocation Scope, then runs the unchanged withCitationNativeProcess sequence (one child per job, protocol v2, lease released only on confirmed retirement). Before A3 one owner served each helper call; now one serves each evaluation. The owner-level snapshot and reap had no production reader and are removed; the quarantine refusal a later evaluation sees now comes from the shared native admission with the same reason, quarantined. CitationRegexWorker.test.ts asserts the admission snapshot where it asserted the owner snapshot.
+
+Lane perf/citation-hoist-installs
+
+Reverse: Restore per-helper-call makeCitationRegexWorker construction with its owner snapshot and reap.
+
+### Surface a hoisted install failure where each request used to install the stage, 2026-11-13
+
+CitationSemanticExtraction.test.ts installs the semantic stage under a deliberately tiny producedTextUtf16 and expects the eyecite shortcut to succeed. Hoisted, the tokenizer install refused at construction (its extractor selection cannot hold extractor strings longer than the limit), so the whole stage failed to install. Before A3 that refusal reached only non-shortcut requests. Each stage-tree hoist site (source, verified, semantic, entry, document, tokenized, loop) and the annotation entry's HTML geometry and wrap installs now run once at construction under Effect.exit, and the request yields that Exit at the point where it used to install the stage. Results, refusal labels and their order are unchanged; the install still runs once and the probe counts are unaffected. The engine-construction type guard still rejects any install that reads a request value.
+
+Lane perf/citation-hoist-installs
+
+Reverse: Let hoisted stage installs fail engine construction directly.
 
 ### Update the existing draft without starting a readiness monitor, 2026-11-13
 

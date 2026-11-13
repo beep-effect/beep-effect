@@ -36,10 +36,10 @@ import { CitationTokenContextInput } from "./TokenContext.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationContextMatch } from "./ContextMatcher.ts";
 import type { CitationPreparedRegexInput } from "./RegexInput.ts";
-import type { makeCitationRegexWorker } from "./RegexWorker.ts";
+import type { installCitationRegexEvaluator } from "./RegexWorker.ts";
 
 type RegexEvaluation = Effect.Success<
-  ReturnType<Effect.Success<ReturnType<typeof makeCitationRegexWorker>>["evaluate"]>
+  ReturnType<Effect.Success<ReturnType<typeof installCitationRegexEvaluator>>["evaluate"]>
 >;
 /** Replace complete nonempty matches with a literal native value under the
  * enclosing budget. Nullable substitution and replacement templates are separate.
@@ -237,7 +237,8 @@ export const decodeCitationMetadataRuntimeConfiguration = Effect.fn("Citation.de
   }
 );
 /** Compose typed server callbacks with the existing captured metadata owner.
- * Callbacks are installation-time composition, never request fields. The returned
+ * Callbacks are installation-time composition, never request fields; `own`
+ * installs child stages and helpers once, so `prepare` only closes over them. The returned
  * invocation requires CitationInvocation and shares its budget and resource lifetime.
  * @internal @category constructors @since 0.0.0
  */
@@ -256,7 +257,11 @@ export const makeCitationMetadataStage = <
   readonly method: K;
   readonly schema: S.Codec<C, I>;
   readonly invalid: () => Invalid;
-  readonly own: (limits: CitationEngineLimits, configuration: C) => Effect.Effect<Owned, OwnError, Env>;
+  readonly own: (
+    limits: CitationEngineLimits,
+    configuration: C,
+    runtime: CitationNativeProcessRuntime
+  ) => Effect.Effect<Owned, OwnError, Env>;
   readonly prepare: (
     limits: CitationEngineLimits,
     runtime: CitationNativeProcessRuntime,
@@ -273,7 +278,7 @@ export const makeCitationMetadataStage = <
       definition.schema,
       definition.invalid
     );
-    const config = yield* definition.own(limits, configuration);
+    const config = yield* definition.own(limits, configuration, runtime);
     const installed = yield* makeCitationMetadataOperation(limits, (raw: unknown) =>
       definition.prepare(limits, runtime, config, raw)
     );
@@ -285,6 +290,20 @@ export const makeCitationMetadataStage = <
     );
     return R.singleton(definition.method, invoke);
   });
+/** Copy a stage configuration, then install its per-request call once.
+ * @internal @category constructors @since 0.0.0
+ */
+export const ownCitationStageCall =
+  <C, Owned, Call, OwnError, OwnEnv, InstallError, InstallEnv>(steps: {
+    readonly copy: (limits: CitationEngineLimits, configuration: C) => Effect.Effect<Owned, OwnError, OwnEnv>;
+    readonly install: (
+      limits: CitationEngineLimits,
+      runtime: CitationNativeProcessRuntime,
+      owned: Owned
+    ) => Effect.Effect<Call, InstallError, InstallEnv>;
+  }) =>
+  (limits: CitationEngineLimits, configuration: C, runtime: CitationNativeProcessRuntime) =>
+    Effect.flatMap(steps.copy(limits, configuration), (owned) => steps.install(limits, runtime, owned));
 /** Shared captured source year pattern and import-time calendar bound.
  * @internal @category models @since 0.0.0
  */
@@ -332,30 +351,33 @@ export class CitationMetadataStringPatch extends S.Opaque<
     })
   )
 ) {}
-/** Preserve source helper ordering using the existing string and year stages.
+/** Install the existing string and year stages once and preserve source helper ordering per call.
  * @internal @category operations @since 0.0.0
  */
-export const processCitationMetadataStrings = Effect.fn("Citation.processMetadataStrings")(function* (
+export const installCitationMetadataStringProcessing = Effect.fn("Citation.installMetadataStringProcessing")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
-  config: CitationMetadataStringConfiguration,
-  fields: CitationMetadataStringFields,
-  priorYear: number | null
+  config: CitationMetadataStringConfiguration
 ) {
   const strings = yield* makeCitationMetadataStrings(limits, runtime, config.yearPattern, config.yearBindings);
-  const cleaned = yield* strings.cleanPinCite(fields.pinCite);
-  const parenthetical = yield* strings.parenthetical(fields.parenthetical);
   const years = yield* makeCitationMetadataYearFromBound(limits, config.highestValidYear);
-  let numericYear = priorYear;
-  if (fields.year !== null && fields.year.bytes.length > 0) {
-    const parsed = yield* years.getYear(fields.year);
-    numericYear = O.getOrNull(parsed);
-  }
-  return CitationMetadataStringPatch.make({
-    pinCite: cleaned !== null && cleaned.bytes.length > 0 ? cleaned : null,
-    parenthetical,
-    year: fields.year,
-    numericYear,
+  return Effect.fn("Citation.processMetadataStrings")(function* (
+    fields: CitationMetadataStringFields,
+    priorYear: number | null
+  ) {
+    const cleaned = yield* strings.cleanPinCite(fields.pinCite);
+    const parenthetical = yield* strings.parenthetical(fields.parenthetical);
+    let numericYear = priorYear;
+    if (fields.year !== null && fields.year.bytes.length > 0) {
+      const parsed = yield* years.getYear(fields.year);
+      numericYear = O.getOrNull(parsed);
+    }
+    return CitationMetadataStringPatch.make({
+      pinCite: cleaned !== null && cleaned.bytes.length > 0 ? cleaned : null,
+      parenthetical,
+      year: fields.year,
+      numericYear,
+    });
   });
 });
 
@@ -416,22 +438,22 @@ export const prepareCitationPublicationMetadata = Effect.fn("Citation.preparePub
 });
 
 /** Authenticate shared publication patterns and capture one existing metadata
- * operation. The stage callback is trusted server composition, never request
- * data; all invocation ownership remains with makeCitationMetadataOperation.
+ * operation. The install callback is trusted server composition, never request
+ * data; it runs once and returns the per-request stage body. All invocation
+ * ownership remains with makeCitationMetadataOperation.
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationPublicationMetadataOperation = Effect.fn("Citation.makePublicationMetadataOperation")(
-  function* <Patch, E, Invalid>(
+  function* <Patch, E, Invalid, IE, IR>(
     policy: unknown,
     runtimeInput: unknown,
     configurationInput: unknown,
     expectedPatternSha256: string,
-    prepare: (
+    install: (
       limits: CitationEngineLimits,
       runtime: CitationNativeProcessRuntime,
-      config: CitationPublicationMetadataConfiguration,
-      raw: unknown
-    ) => Effect.Effect<Patch, E, Dependencies>,
+      config: CitationPublicationMetadataConfiguration
+    ) => Effect.Effect<(raw: unknown) => Effect.Effect<Patch, E, Dependencies>, IE, IR>,
     invalid: () => Invalid
   ) {
     const limits = yield* decodeCitationRegexPolicy(policy, invalid);
@@ -442,7 +464,8 @@ export const makeCitationPublicationMetadataOperation = Effect.fn("Citation.make
       expectedPatternSha256,
       invalid
     );
-    return yield* makeCitationMetadataOperation(limits, (raw: unknown) => prepare(limits, runtime, config, raw));
+    const prepare = yield* install(limits, runtime, config);
+    return yield* makeCitationMetadataOperation(limits, prepare);
   }
 );
 
@@ -467,28 +490,32 @@ export const citationMetadataContext = (origin: typeof ContextOrigin.Type) =>
     forward: origin.forward,
     stringsOnly: true,
   });
-/** Match and prepare one owned context for source law/journal field capture.
+/** Install the context matcher once; each call matches and prepares one owned
+ * context for source law/journal field capture.
  * @internal @category operations @since 0.0.0
  */
-export const matchCitationMetadataContext = Effect.fn("Citation.matchMetadataContext")(function* <E>(
+export const installCitationMetadataContextMatch = Effect.fn("Citation.installMetadataContextMatch")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
-  config: Pick<CitationPublicationMetadataConfiguration, "pattern" | "bindings">,
-  request: CitationTokenContextInput,
-  missing: () => E
+  config: Pick<CitationPublicationMetadataConfiguration, "pattern" | "bindings">
 ) {
   const matcher = yield* makeCitationContextMatcher(limits, runtime, config.pattern, 64, config.bindings);
-  const matched = yield* matcher.search(request);
-  if (matched.match === null) return O.none();
-  const whole = yield* Effect.fromOption(A.head(matched.match.captures), missing);
-  if (whole._tag === "Unmatched") return yield* Effect.fail(missing());
   const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText);
-  const source = yield* input.prepareUnicode(matched.context, () => Effect.void);
-  return O.some({
-    start: whole.start,
-    end: whole.end,
-    capture: Effect.fn("Citation.captureOwnedMetadata")((name: string) =>
-      captureCitationMetadataValue(matched, source, name, missing)
-    ),
+  return Effect.fn("Citation.matchMetadataContext")(function* <E>(
+    request: CitationTokenContextInput,
+    missing: () => E
+  ) {
+    const matched = yield* matcher.search(request);
+    if (matched.match === null) return O.none();
+    const whole = yield* Effect.fromOption(A.head(matched.match.captures), missing);
+    if (whole._tag === "Unmatched") return yield* Effect.fail(missing());
+    const source = yield* input.prepareUnicode(matched.context, () => Effect.void);
+    return O.some({
+      start: whole.start,
+      end: whole.end,
+      capture: Effect.fn("Citation.captureOwnedMetadata")((name: string) =>
+        captureCitationMetadataValue(matched, source, name, missing)
+      ),
+    });
   });
 });

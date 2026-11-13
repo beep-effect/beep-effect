@@ -39,15 +39,16 @@ export const replayCitationNativeWrap = Effect.fn("AnnotationWrapTest.native")(f
   const corpus = yield* readCitationAnnotationWrapCorpus;
   const setup = yield* setupCitationMetadataRuntime(kind, undefined, true);
   const wrapper = yield* makeCitationAnnotationWrap(setup.limits, setup.runtime).pipe(
-    Effect.provideContext(setup.provided),
-    Effect.provideService(CitationTextBudget, setup.budget)
+    Effect.provideContext(setup.provided)
   );
+  const templates = yield* wrapper.templates.pipe(Effect.provideService(CitationTextBudget, setup.budget));
   const rows = full
     ? corpus.cases
     : A.filter(corpus.cases, (row) => row.id % 110 === 0 || row.id % 110 === 34 || row.id % 110 === 16);
   let children = 0;
   for (const row of rows) {
     const output = wrapper.wrap(
+      templates,
       CitationPythonUnicodeStorage.make(row.source),
       CitationPythonUnicodeStorage.make(row.before),
       CitationPythonUnicodeStorage.make(row.after)
@@ -99,7 +100,8 @@ export const replayCitationWrapComposition = Effect.fn("AnnotationWrapTest.compo
   const regexDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-wrap-regex-" });
   const runtime = yield* makeCitationRegexTestRuntime(kind, regexDirectory);
   const observedXml = yield* makeCitationAnnotationXmlTrace(setup.worker.raw);
-  const processor = yield* makeCitationWrapAnnotationSpans(setup.limits, runtime).pipe(
+  const processor = yield* makeCitationAnnotationWrap(setup.limits, runtime).pipe(
+    Effect.flatMap(makeCitationWrapAnnotationSpans),
     Effect.provideContext(setup.provided),
     Effect.provideService(CitationTextBudget, setup.budget),
     Effect.provideService(CitationXmlBalance, observedXml.xml)

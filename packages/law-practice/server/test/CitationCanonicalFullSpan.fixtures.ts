@@ -117,16 +117,16 @@ const observeFullSpan = (range: readonly [number, number], combined: boolean, id
  */
 export const citationCanonicalFullSpanWork: ReadonlyArray<CitationEngineWorkCounts> = A.map(
   [
-    [14, 8, 1, 15, 70, 70],
-    [14, 8, 1, 3, 15, 15],
-    [14, 8, 1, 3, 15, 15],
-    [14, 8, 1, 3, 24, 24],
-    [14, 8, 1, 5, 19, 19],
-    [14, 8, 1, 5, 15, 15],
-    [14, 8, 1, 8, 65, 65],
-    [14, 8, 1, 8, 38, 38],
-    [14, 8, 1, 3, 15, 15],
-    [14, 8, 1, 3, 15, 15],
+    [0, 0, 0, 0, 70, 70],
+    [0, 0, 0, 0, 15, 15],
+    [0, 0, 0, 0, 15, 15],
+    [0, 0, 0, 0, 24, 24],
+    [0, 0, 0, 0, 19, 19],
+    [0, 0, 0, 0, 15, 15],
+    [0, 0, 0, 0, 65, 65],
+    [0, 0, 0, 0, 38, 38],
+    [0, 0, 0, 0, 15, 15],
+    [0, 0, 0, 0, 15, 15],
   ] as const,
   ([
     metadataOperationInstalls,
@@ -145,14 +145,65 @@ export const citationCanonicalFullSpanWork: ReadonlyArray<CitationEngineWorkCoun
       nativeProcesses,
     })
 );
+/** Engine work done once, when one default engine is constructed.
+ *
+ * **Details**
+ *
+ * The install-once goal moves stage installs, configuration detaches, the
+ * tokenizer build and regex evaluator installs from every call to engine
+ * construction. This row keeps that moved work visible; per-call rows count
+ * only work a call performs.
+ *
+ * **Example** (Reading the construction row)
+ * ```ts
+ * import { citationCanonicalFullSpanConstruction } from "./CitationCanonicalFullSpan.fixtures.ts";
+ * const installs = citationCanonicalFullSpanConstruction.metadataOperationInstalls;
+ * ```
+ * @internal @category testing @since 0.0.0
+ */
+export const citationCanonicalFullSpanConstruction = CitationEngineWorkCounts.make({
+  metadataOperationInstalls: 16,
+  configurationDetaches: 10,
+  tokenizerBuilds: 1,
+  regexWorkerConstructions: 26,
+  regexEvaluations: 0,
+  nativeProcesses: 0,
+});
+/** Check and log the work one engine construction performed.
+ *
+ * **Example** (Checking the Bun construction)
+ * ```ts
+ * import * as Effect from "effect/Effect";
+ * import {
+ *   prepareCitationCanonicalFullSpanReplay,
+ *   checkCitationCanonicalFullSpanConstruction,
+ * } from "./CitationCanonicalFullSpan.fixtures.ts";
+ * const checked = prepareCitationCanonicalFullSpanReplay("bun").pipe(
+ *   Effect.flatMap(checkCitationCanonicalFullSpanConstruction)
+ * );
+ * ```
+ * @internal @category testing @since 0.0.0
+ */
+export const checkCitationCanonicalFullSpanConstruction = Effect.fn("CanonicalFullSpanTest.construction")(function* (
+  prepared: CitationCanonicalFullSpanReplay["Service"]
+) {
+  yield* Effect.logInfo("Full-span engine construction work").pipe(
+    Effect.annotateLogs({
+      runtime: prepared.kind,
+      elapsedMillis: prepared.construction.elapsedMillis,
+      ...prepared.construction.counts,
+    })
+  );
+  expect(prepared.construction.counts).toEqual(citationCanonicalFullSpanConstruction);
+});
 /** Original parser calls in the full-span cohort; together they carry all thirteen equalities. */
 export const citationCanonicalFullSpanCalls = 10;
 /** Read the pinned captures and their ten parser calls once, and install one default replay engine.
  *
  * **Details**
  *
- * Every original call is a full production extraction (a fresh one-job regex worker per pattern
- * evaluation plus the per-request stage installation), so one call costs seconds of real work.
+ * Every original call is a full production extraction (a fresh one-job regex child per pattern
+ * evaluation over stages installed once per engine), so one call costs seconds of real work.
  * Preparing once lets each call run as its own test against the same installed engine instead of
  * serializing the whole cohort under one watchdog.
  *
@@ -170,7 +221,8 @@ export const prepareCitationCanonicalFullSpanReplay = Effect.fn("CanonicalFullSp
   const calls = yield* readCalls(operations);
   const replay = yield* makeCitationCanonicalExtractionReplay(kind);
   const probe = yield* makeCitationEngineProbe(replay.native);
-  return { kind, calls, assertions, replay, probe };
+  const construction = yield* probe.measure(replay.construct);
+  return { kind, calls, assertions, replay, probe, construction };
 });
 /** One prepared full-span cohort shared by the per-call tests of a runtime.
  * @internal @category testing @since 0.0.0

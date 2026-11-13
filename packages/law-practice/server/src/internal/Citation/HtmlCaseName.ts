@@ -16,16 +16,17 @@ import {
   copyCitationMetadataPatternConfiguration,
   decodeCitationMetadataWordRequest,
   makeCitationMetadataStage,
+  ownCitationStageCall,
 } from "./MetadataComposition.ts";
 import { citationMetadataWhitespaceBoundary, trimCitationMetadataBoundary } from "./MetadataStrings.ts";
 import { citationPythonPointAt } from "./PythonUnicode.ts";
 import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
-import { makeCitationRegexWorker } from "./RegexWorker.ts";
+import { installCitationRegexEvaluator } from "./RegexWorker.ts";
 import {
   CitationStopWordsConfiguration,
-  cleanCitationStopWords,
   copyCitationStopWordsConfiguration,
+  installCitationStopWordCleanup,
 } from "./StopWords.ts";
 import { CitationTokenContextInput } from "./TokenContext.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
@@ -131,172 +132,183 @@ const versus = (source: CitationPythonUnicodeStorage) =>
 /** Run the built-in name helper inside an existing captured operation.
  * @internal @category operations @since 0.0.0
  */
-export const extractCitationHtmlCaseName = Effect.fn("Citation.extractHtmlCaseName")(function* (
+export const installCitationHtmlCaseName = Effect.fn("Citation.installHtmlCaseName")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
-  config: CitationHtmlCaseNameConfiguration,
-  raw: unknown
+  config: CitationHtmlCaseNameConfiguration
 ) {
-  const request = yield* decodeCitationMetadataWordRequest(limits, S.toType(CitationHtmlCaseNameInput), raw, () =>
-    fail("invalid-input")
-  );
-  if (request.index < 0 || request.index >= request.words.length) return yield* fail("invalid-index");
   const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText);
-  const words = yield* Effect.forEach(
-    request.words,
-    Effect.fnUntraced(function* (word) {
-      const prepared = yield* input.prepareUnicode(word.data, () => Effect.void);
-      const stopWord =
-        word.stopWord === null ? null : (yield* input.prepareUnicode(word.stopWord, () => Effect.void)).value.storage;
-      return { ...word, stopWord, prepared };
-    })
-  );
-  const geometry = yield* makeCitationHtmlTagGeometry(limits, request.geometry);
-  const clean = (text: CitationPythonUnicodeStorage) => cleanCitationStopWords(limits, runtime, config.cleaner, text);
-  const length = (first: number, last: number) => {
-    const start = bound(first, words.length);
-    const end = bound(last, words.length);
-    return A.reduce(
-      A.take(A.drop(words, start), Num.max(0, end - start)),
-      0,
-      (sum, word) => sum + word.prepared.value.pythonLength
+  const clean = yield* installCitationStopWordCleanup(limits, runtime, config.cleaner);
+  const worker = yield* installCitationRegexEvaluator(limits, runtime, config.bindings, "python-regex-v0");
+  return Effect.fn("Citation.extractHtmlCaseName")(function* (raw: unknown) {
+    const request = yield* decodeCitationMetadataWordRequest(limits, S.toType(CitationHtmlCaseNameInput), raw, () =>
+      fail("invalid-input")
     );
-  };
-  const location = (index: number) =>
-    Effect.fromOption(O.fromNullOr(A.getUnsafe(words, index).start), () => fail("missing-location"));
-  const trim = Effect.fn("Citation.trimHtmlName")(function* (
-    source: CitationPythonUnicodeStorage,
-    predicate: (point: number) => boolean
-  ) {
-    const prepared = yield* input.prepareUnicode(source, () => Effect.void);
-    const first = yield* trimCitationMetadataBoundary(prepared.value, 0, prepared.value.pythonLength, 1, predicate);
-    const last =
-      1 +
-      (yield* trimCitationMetadataBoundary(prepared.value, prepared.value.pythonLength - 1, first - 1, -1, predicate));
-    return yield* prepared.slice({ start: first, end: last }, () => Effect.void);
-  });
-  const overlap = Effect.fn("Citation.trimOverlappingHtmlName")(function* (
-    source: CitationPythonUnicodeStorage,
-    end: number
-  ) {
-    if (end <= request.spanStart) return source;
-    const prepared = yield* input.prepareUnicode(source, () => Effect.void);
-    return yield* prepared.slice(
-      { start: 0, end: bound(request.spanStart - end, prepared.value.pythonLength) },
-      () => Effect.void
+    if (request.index < 0 || request.index >= request.words.length) return yield* fail("invalid-index");
+    const words = yield* Effect.forEach(
+      request.words,
+      Effect.fnUntraced(function* (word) {
+        const prepared = yield* input.prepareUnicode(word.data, () => Effect.void);
+        const stopWord =
+          word.stopWord === null ? null : (yield* input.prepareUnicode(word.stopWord, () => Effect.void)).value.storage;
+        return { ...word, stopWord, prepared };
+      })
     );
-  });
-  const skip = Effect.fn("Citation.skipHtmlNameWord")(function* (index: number) {
-    const word = A.getUnsafe(words, index).prepared;
-    const first = yield* trimCitationMetadataBoundary(word.value, 0, word.value.pythonLength, 1, commaSpace);
-    return first === word.value.pythonLength;
-  });
-  const short = Effect.fn("Citation.extractShortHtmlName")(function* (index: number) {
-    const start = yield* location(request.index);
-    const tags = yield* geometry.find(start - length(index, request.index));
-    if (tags.length === 0) return unchanged;
-    const projected = yield* geometry.convert(tags);
-    const text = yield* overlap(projected.text, projected.end);
-    const cleaned = yield* clean(text);
-    return CitationHtmlCaseNamePatch.make({
-      ...unchanged,
-      antecedentGuess: O.some(cleaned),
-      fullSpanStart: O.some(projected.start),
-    });
-  });
-  const parties = Effect.fn("Citation.assignHtmlParties")(function* (
-    plaintiff: CitationPythonUnicodeStorage,
-    defendant: CitationPythonUnicodeStorage,
-    start: number
-  ) {
-    const cleanedPlaintiff = yield* clean(plaintiff);
-    const plainLength = plaintiff.bytes.length / plaintiff.width;
-    const cleanedLength = cleanedPlaintiff.bytes.length / cleanedPlaintiff.width;
-    const stripped = yield* trim(cleanedPlaintiff, citationMetadataWhitespaceBoundary);
-    const commas = yield* trim(stripped, (point) => point === 44);
-    const finalPlaintiff = yield* trim(commas, (point) => point === 40);
-    const cleanedDefendant = yield* clean(defendant);
-    const defendantSpace = yield* trim(cleanedDefendant, citationMetadataWhitespaceBoundary);
-    const finalDefendant = yield* trim(defendantSpace, (point) => point === 44);
-    return CitationHtmlCaseNamePatch.make({
-      ...unchanged,
-      plaintiff: O.some(finalPlaintiff),
-      defendant: O.some(finalDefendant),
-      fullSpanStart: O.some(start + plainLength - cleanedLength),
-    });
-  });
-  const single = Effect.fn("Citation.extractSingleElementHtmlName")(function* (
-    tags: ReadonlyArray<CitationHtmlEmphasis>
-  ) {
-    const projected = yield* geometry.convert(tags);
-    const worker = yield* makeCitationRegexWorker(limits, runtime, config.bindings, "python-regex-v0");
-    const evaluated = yield* worker.evaluate(config.patterns.splitV, projected.text, 2, 1, "search");
-    if (evaluated.result.matches === 0)
-      return yield* parties(
-        CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array(0) }),
-        projected.text,
-        projected.start
+    const geometry = yield* makeCitationHtmlTagGeometry(limits, request.geometry);
+    const length = (first: number, last: number) => {
+      const start = bound(first, words.length);
+      const end = bound(last, words.length);
+      return A.reduce(
+        A.take(A.drop(words, start), Num.max(0, end - start)),
+        0,
+        (sum, word) => sum + word.prepared.value.pythonLength
       );
-    const capture = yield* evaluated.result.capture(0, 0);
-    if (capture._tag === "Unmatched") return yield* fail("invalid-match");
-    const plaintiff = yield* evaluated.source.slice({ start: 0, end: capture.start }, () => Effect.void);
-    const defendant = yield* evaluated.source.slice(
-      { start: capture.end, end: evaluated.source.value.pythonLength },
-      () => Effect.void
-    );
-    return yield* parties(plaintiff, defendant, projected.start);
-  });
-  const fromVersus = Effect.fn("Citation.extractHtmlVersusParties")(function* (index: number) {
-    const start = yield* location(index);
-    const left = yield* geometry.find(start - length(index - 2, index));
-    const right = yield* geometry.find(start + length(index, index + 2));
-    if (left.length !== 1 || right.length !== 1) return unchanged;
-    // A unique lookup of the same original interval returns the same tuple.
-    if (
-      A.getUnsafe(left, 0).start === A.getUnsafe(right, 0).start &&
-      A.getUnsafe(left, 0).end === A.getUnsafe(right, 0).end
-    )
-      return yield* single(left);
-    const plaintiff = yield* geometry.convert(left);
-    const defendant = yield* geometry.convert(right);
-    return yield* parties(plaintiff.text, defendant.text, plaintiff.start);
-  });
-  const afterStop = Effect.fn("Citation.extractHtmlDefendantAfterStop")(function* (index: number) {
-    let shift = 3;
-    while (index + shift < words.length) {
-      const word = A.getUnsafe(words, index + shift);
-      if (word.kind !== "Text" || word.prepared.value.pythonLength !== 1 || citationPythonPointAt(word.data, 0) !== 32)
-        break;
-      shift++;
-      yield* Effect.yieldNow;
-    }
-    const start = yield* location(index);
-    const tags = yield* geometry.find(start + length(index, index + shift) - 1);
-    if (tags.length !== 1) return unchanged;
-    const projected = yield* geometry.convert(tags);
-    const text = yield* overlap(projected.text, projected.end);
-    const cleaned = yield* clean(text);
-    const defendant = yield* trim(cleaned, commaSpace);
-    return CitationHtmlCaseNamePatch.make({
-      ...unchanged,
-      defendant: O.some(defendant),
-      fullSpanStart: O.some(projected.start),
+    };
+    const location = (index: number) =>
+      Effect.fromOption(O.fromNullOr(A.getUnsafe(words, index).start), () => fail("missing-location"));
+    const trim = Effect.fn("Citation.trimHtmlName")(function* (
+      source: CitationPythonUnicodeStorage,
+      predicate: (point: number) => boolean
+    ) {
+      const prepared = yield* input.prepareUnicode(source, () => Effect.void);
+      const first = yield* trimCitationMetadataBoundary(prepared.value, 0, prepared.value.pythonLength, 1, predicate);
+      const last =
+        1 +
+        (yield* trimCitationMetadataBoundary(
+          prepared.value,
+          prepared.value.pythonLength - 1,
+          first - 1,
+          -1,
+          predicate
+        ));
+      return yield* prepared.slice({ start: first, end: last }, () => Effect.void);
     });
+    const overlap = Effect.fn("Citation.trimOverlappingHtmlName")(function* (
+      source: CitationPythonUnicodeStorage,
+      end: number
+    ) {
+      if (end <= request.spanStart) return source;
+      const prepared = yield* input.prepareUnicode(source, () => Effect.void);
+      return yield* prepared.slice(
+        { start: 0, end: bound(request.spanStart - end, prepared.value.pythonLength) },
+        () => Effect.void
+      );
+    });
+    const skip = Effect.fn("Citation.skipHtmlNameWord")(function* (index: number) {
+      const word = A.getUnsafe(words, index).prepared;
+      const first = yield* trimCitationMetadataBoundary(word.value, 0, word.value.pythonLength, 1, commaSpace);
+      return first === word.value.pythonLength;
+    });
+    const short = Effect.fn("Citation.extractShortHtmlName")(function* (index: number) {
+      const start = yield* location(request.index);
+      const tags = yield* geometry.find(start - length(index, request.index));
+      if (tags.length === 0) return unchanged;
+      const projected = yield* geometry.convert(tags);
+      const text = yield* overlap(projected.text, projected.end);
+      const cleaned = yield* clean(text);
+      return CitationHtmlCaseNamePatch.make({
+        ...unchanged,
+        antecedentGuess: O.some(cleaned),
+        fullSpanStart: O.some(projected.start),
+      });
+    });
+    const parties = Effect.fn("Citation.assignHtmlParties")(function* (
+      plaintiff: CitationPythonUnicodeStorage,
+      defendant: CitationPythonUnicodeStorage,
+      start: number
+    ) {
+      const cleanedPlaintiff = yield* clean(plaintiff);
+      const plainLength = plaintiff.bytes.length / plaintiff.width;
+      const cleanedLength = cleanedPlaintiff.bytes.length / cleanedPlaintiff.width;
+      const stripped = yield* trim(cleanedPlaintiff, citationMetadataWhitespaceBoundary);
+      const commas = yield* trim(stripped, (point) => point === 44);
+      const finalPlaintiff = yield* trim(commas, (point) => point === 40);
+      const cleanedDefendant = yield* clean(defendant);
+      const defendantSpace = yield* trim(cleanedDefendant, citationMetadataWhitespaceBoundary);
+      const finalDefendant = yield* trim(defendantSpace, (point) => point === 44);
+      return CitationHtmlCaseNamePatch.make({
+        ...unchanged,
+        plaintiff: O.some(finalPlaintiff),
+        defendant: O.some(finalDefendant),
+        fullSpanStart: O.some(start + plainLength - cleanedLength),
+      });
+    });
+    const single = Effect.fn("Citation.extractSingleElementHtmlName")(function* (
+      tags: ReadonlyArray<CitationHtmlEmphasis>
+    ) {
+      const projected = yield* geometry.convert(tags);
+      const evaluated = yield* worker.evaluate(config.patterns.splitV, projected.text, 2, 1, "search");
+      if (evaluated.result.matches === 0)
+        return yield* parties(
+          CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array(0) }),
+          projected.text,
+          projected.start
+        );
+      const capture = yield* evaluated.result.capture(0, 0);
+      if (capture._tag === "Unmatched") return yield* fail("invalid-match");
+      const plaintiff = yield* evaluated.source.slice({ start: 0, end: capture.start }, () => Effect.void);
+      const defendant = yield* evaluated.source.slice(
+        { start: capture.end, end: evaluated.source.value.pythonLength },
+        () => Effect.void
+      );
+      return yield* parties(plaintiff, defendant, projected.start);
+    });
+    const fromVersus = Effect.fn("Citation.extractHtmlVersusParties")(function* (index: number) {
+      const start = yield* location(index);
+      const left = yield* geometry.find(start - length(index - 2, index));
+      const right = yield* geometry.find(start + length(index, index + 2));
+      if (left.length !== 1 || right.length !== 1) return unchanged;
+      // A unique lookup of the same original interval returns the same tuple.
+      if (
+        A.getUnsafe(left, 0).start === A.getUnsafe(right, 0).start &&
+        A.getUnsafe(left, 0).end === A.getUnsafe(right, 0).end
+      )
+        return yield* single(left);
+      const plaintiff = yield* geometry.convert(left);
+      const defendant = yield* geometry.convert(right);
+      return yield* parties(plaintiff.text, defendant.text, plaintiff.start);
+    });
+    const afterStop = Effect.fn("Citation.extractHtmlDefendantAfterStop")(function* (index: number) {
+      let shift = 3;
+      while (index + shift < words.length) {
+        const word = A.getUnsafe(words, index + shift);
+        if (
+          word.kind !== "Text" ||
+          word.prepared.value.pythonLength !== 1 ||
+          citationPythonPointAt(word.data, 0) !== 32
+        )
+          break;
+        shift++;
+        yield* Effect.yieldNow;
+      }
+      const start = yield* location(index);
+      const tags = yield* geometry.find(start + length(index, index + shift) - 1);
+      if (tags.length !== 1) return unchanged;
+      const projected = yield* geometry.convert(tags);
+      const text = yield* overlap(projected.text, projected.end);
+      const cleaned = yield* clean(text);
+      const defendant = yield* trim(cleaned, commaSpace);
+      return CitationHtmlCaseNamePatch.make({
+        ...unchanged,
+        defendant: O.some(defendant),
+        fullSpanStart: O.some(projected.start),
+      });
+    });
+    const visit = Effect.fn("Citation.visitHtmlCaseNameWord")(function* (index: number) {
+      if (yield* skip(index)) return O.none<CitationHtmlCaseNamePatch>();
+      if (request.short) return yield* short(index).pipe(Effect.asSome);
+      const word = A.getUnsafe(words, index);
+      if (word.kind !== "StopWordToken") return O.none<CitationHtmlCaseNamePatch>();
+      const selected = word.stopWord !== null && versus(word.stopWord) ? fromVersus(index) : afterStop(index);
+      return yield* selected.pipe(Effect.asSome);
+    });
+    for (let index = request.index - 1; index >= Num.max(request.index - 28, 0); index--) {
+      yield* Effect.yieldNow;
+      const selected = yield* visit(index);
+      if (O.isSome(selected)) return selected.value;
+    }
+    return unchanged;
   });
-  const visit = Effect.fn("Citation.visitHtmlCaseNameWord")(function* (index: number) {
-    if (yield* skip(index)) return O.none<CitationHtmlCaseNamePatch>();
-    if (request.short) return yield* short(index).pipe(Effect.asSome);
-    const word = A.getUnsafe(words, index);
-    if (word.kind !== "StopWordToken") return O.none<CitationHtmlCaseNamePatch>();
-    const selected = word.stopWord !== null && versus(word.stopWord) ? fromVersus(index) : afterStop(index);
-    return yield* selected.pipe(Effect.asSome);
-  });
-  for (let index = request.index - 1; index >= Num.max(request.index - 28, 0); index--) {
-    yield* Effect.yieldNow;
-    const selected = yield* visit(index);
-    if (O.isSome(selected)) return selected.value;
-  }
-  return unchanged;
 });
 /** Copy trusted helper configuration for enclosing metadata composition.
  * @internal @category operations @since 0.0.0
@@ -316,6 +328,10 @@ export const copyCitationHtmlCaseNameConfiguration = Effect.fn("Citation.ownHtml
   const cleaner = yield* copyCitationStopWordsConfiguration(limits, config.cleaner);
   return CitationHtmlCaseNameConfiguration.make({ ...patterns, cleaner });
 });
+const ownHtmlCaseName = ownCitationStageCall({
+  copy: copyCitationHtmlCaseNameConfiguration,
+  install: installCitationHtmlCaseName,
+});
 /** Captured operation, Scope, text authority and workers; extract requires R=never.
  * @internal @category constructors @since 0.0.0
  */
@@ -323,7 +339,7 @@ export const makeCitationHtmlCaseName = makeCitationMetadataStage({
   method: "extract",
   schema: S.toType(CitationHtmlCaseNameConfiguration),
   invalid: () => fail("invalid-configuration"),
-  own: copyCitationHtmlCaseNameConfiguration,
-  prepare: extractCitationHtmlCaseName,
+  own: ownHtmlCaseName,
+  prepare: (_limits, _runtime, run: Effect.Success<ReturnType<typeof ownHtmlCaseName>>, raw) => run(raw),
   project: (patch, reservedUnits) => CitationHtmlCaseNameResult.make({ patch, reservedUnits }),
 });

@@ -16,7 +16,7 @@ import { makeCitationAnnotationTemplates } from "./AnnotationTemplate.ts";
 import { CitationPythonSliceBounds } from "./PythonUnicode.ts";
 import { CitationRegexPatternDescriptor, CitationRegexPatternProfile } from "./RegexDescriptors.ts";
 import { CitationRegexOperation } from "./RegexPolicy.ts";
-import { makeCitationRegexWorker } from "./RegexWorker.ts";
+import { installCitationRegexEvaluator } from "./RegexWorker.ts";
 import type {
   CitationAnnotationReplacement,
   CitationEngineLimits,
@@ -44,25 +44,27 @@ const queryFailure = (error: { readonly _tag: string }) =>
   S.is(CitationSafetyLimitExceeded)(error)
     ? CitationSafetyLimitExceeded.make({ operation: "annotate", limit: error.limit })
     : nativeFailure();
-/** Capture the existing native regex worker with annotation timing, the original
- * fixed pattern and native template adapter. No alternate matcher or process
- * owner is introduced. Returned methods have R=never.
+/** Install the native regex evaluator with annotation timing, the original
+ * fixed pattern and native template adapter once. No alternate matcher or process
+ * owner is introduced. Returned methods read CitationInvocation at call time.
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationAnnotationWrap = Effect.fn("Citation.makeAnnotationWrap")(function* (
   limits: CitationEngineLimits,
   runtime: unknown
 ) {
-  const templates = yield* makeCitationAnnotationTemplates(limits);
-  const worker = yield* makeCitationRegexWorker(limits, runtime, bindings, "python-re").pipe(
+  const worker = yield* installCitationRegexEvaluator(limits, runtime, bindings, "python-re").pipe(
     Effect.provideService(CitationRegexOperation, "annotate")
   );
+  // Templates capture the request's reservation, so each request builds its own.
+  const templates = makeCitationAnnotationTemplates(limits);
   const wrap = Effect.fn("Citation.wrapAnnotationTags")(function* (
+    template: Effect.Success<typeof templates>,
     source: CitationPythonUnicodeStorage,
     before: CitationPythonUnicodeStorage,
     after: CitationPythonUnicodeStorage
   ) {
-    const plan = yield* templates.compile(before, after);
+    const plan = yield* template.compile(before, after);
     const evaluated = yield* worker.evaluate(pattern, source, 0).pipe(Effect.mapError(queryFailure));
     const matches = A.empty<CitationPythonSliceBounds>();
     for (let i = 0; i < evaluated.result.matches; i++) {
@@ -72,26 +74,26 @@ export const makeCitationAnnotationWrap = Effect.fn("Citation.makeAnnotationWrap
       if (whole.start !== tag.start || whole.end !== tag.end) return yield* invalidCapture();
       matches.push(CitationPythonSliceBounds.make({ start: whole.start, end: whole.end }));
     }
-    return yield* templates.substitute(plan, evaluated.source.value.storage, matches);
+    return yield* template.substitute(plan, evaluated.source.value.storage, matches);
   });
-  return { wrap, snapshot: worker.snapshot, reap: worker.reap };
+  return { templates, wrap };
 });
 /** Compose original XML fast paths and reverse after/before tag wrapping before
- * the existing assembly inserts the outer annotation. Lifetime belongs to the
- * enclosing admitted operation Scope; every dependency is captured once.
+ * the existing assembly inserts the outer annotation. The tag wrapper is
+ * installed once by the caller; the per-request processor captures the request's
+ * XML balance and reservation.
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationWrapAnnotationSpans = Effect.fn("Citation.makeWrapAnnotationSpans")(function* (
-  limits: CitationEngineLimits,
-  runtime: unknown
+  tags: Effect.Success<ReturnType<typeof makeCitationAnnotationWrap>>
 ) {
-  const tags = yield* makeCitationAnnotationWrap(limits, runtime);
+  const templates = yield* tags.templates;
   const prepare = Effect.fn("Citation.wrapUnbalancedAnnotationSpan")(function* (
     _source: CitationPythonUnicodeValue,
     replacement: CitationAnnotationReplacement,
     text: CitationPythonUnicodeStorage
   ) {
-    const selected = yield* tags.wrap(text, replacement.after, replacement.before);
+    const selected = yield* tags.wrap(templates, text, replacement.after, replacement.before);
     return CitationAnnotationSpanDecision.cases.WrapText.make({
       start: replacement.start,
       end: replacement.end,

@@ -21,8 +21,8 @@ Each slice is one PR and runs the phases above. They land in order.
 | Slice | Status | Content | Count that must move |
 | --- | --- | --- | --- |
 | A1 | merged (#3253) | Measurement fixture and recorded baseline. Test-only. | none; records the baseline |
-| A2 | in review | `CitationInvocation` binding: budget and admission read at call time, optional lookups deleted, lint rule. Children still installed per request. | optional lookups to 0 |
-| A3 | pending | Hoist the stage tree, tokenizer and regex evaluators to engine construction. | per-request installs 14 to 0; tokenizer builds 10 to 1 |
+| A2 | merged (#3265) | `CitationInvocation` binding: budget and admission read at call time, optional lookups deleted, lint rule. Children still installed per request. | optional lookups to 0 |
+| A3 | in review | Hoist the stage tree, tokenizer and regex evaluators to engine construction. | per-request installs 14 to 0; tokenizer builds 10 to 1 |
 | A4 | pending | `CitationOwned` at the boundary; nested detaches, per-stage decodes and repeated fingerprints removed. | detaches 2 + 8 per call to 1 |
 
 First slice: A1, the measurement fixture and baseline.
@@ -75,6 +75,14 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 A1 merged as #3253. A2 removes the optional request-authority captures, binds public calls through CitationInvocation, and preserves every A1 full-span count. Local proof uses file-by-file tests, quick law-practice verification plus docgen, and full lint-rules verification. The draft PR leaves the full law-practice audit and integration cohort to hosted CI; no ready transition or merge is authorized for this slice handoff.
 
 Reverse: Return A2 to in progress if the focused proof or hosted acceptance fails.
+
+### A3 is in review with per-call install, tokenizer and evaluator counts at zero, 2026-11-13
+
+A1 merged as #3253 and A2 as #3265. A3 hoists the stage tree, tokenizer and every regex evaluator call site to engine construction: per call 0 metadata-operation installs, 0 detaches, 0 tokenizer builds and 0 evaluator installs, with 291 evaluations and child processes unchanged; construction counts 16, 10, 1 and 26. Local proof is file by file; the full law-practice audit and integration cohort run on hosted CI. Draft PR only; no ready transition, merge or readiness monitor.
+
+Lane perf/citation-hoist-installs
+
+Reverse: Return A3 to in progress if hosted CI or review finds a result or accounting change.
 
 ### Keep A2 in review after the second review repair, 2026-11-13
 

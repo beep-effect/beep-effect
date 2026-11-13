@@ -16,7 +16,7 @@ import {
 } from "./HtmlDiscovery.ts";
 import { CitationHtmlTagGeometryInput } from "./HtmlTagGeometry.ts";
 import { reserveCitationInvocationText } from "./Invocation.ts";
-import { makeCitationMetadataStage } from "./MetadataComposition.ts";
+import { makeCitationMetadataStage, ownCitationStageCall } from "./MetadataComposition.ts";
 import { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
 import { CitationSpanOffsetsPlan } from "./SpanOffsets.ts";
@@ -90,73 +90,74 @@ export const copyCitationHtmlGeometryConfiguration = Effect.fn("Citation.ownHtml
     diffRuntime: CitationNativeProcessRuntime.make({ ...config.diffRuntime }),
   });
 });
-/** Prepare the original forward placeholder/diff path once. Document geometry
- * continues with backward mapping/emphasis; annotation needs only this direction.
+/** Install the HTML discovery evaluator once. Each call prepares the original
+ * forward placeholder/diff path; document geometry continues with backward
+ * mapping/emphasis, annotation needs only this direction. The Diff worker stays
+ * per call: it owns the Markup worker's semaphores and a Scope-bound process owner.
  * Callers retain captured configuration, admission, Scope and text authority.
  * @internal @category operations @since 0.0.0
  */
-export const prepareCitationForwardHtmlMap = Effect.fn("Citation.prepareForwardHtmlMap")(function* <E>(
+export const installCitationHtmlGeometry = Effect.fn("Citation.installHtmlGeometry")(function* (
   limits: CitationEngineLimits,
   regexRuntime: CitationNativeProcessRuntime,
-  config: CitationHtmlGeometryPreparationConfiguration,
-  markup: unknown,
-  plainInput: Effect.Effect<unknown, E>,
-  useDmp = true
+  config: CitationHtmlGeometryPreparationConfiguration
 ) {
   const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText);
   const discovery = yield* makeCitationHtmlDiscoveryRunner(limits, regexRuntime, config.discovery);
-  const masked = yield* discovery.placeholder(markup);
-  const plainValue = yield* plainInput;
-  const plain = yield* input.prepareUnicode(plainValue, () => Effect.void);
-  const placeholder = yield* input.prepareUnicode(masked.placeholder, () => Effect.void);
-  const diff = yield* makeCitationDiffWorker(limits, config.diffRuntime, useDmp);
-  const forwardSteps = yield* diff.evaluate(plain.value.storage, placeholder.value.storage);
-  return {
-    discovery,
-    diff,
-    plain,
-    source: masked.source,
-    forward: CitationSpanOffsetsPlan.make({ before: plain.layout, after: placeholder.layout, steps: forwardSteps }),
-  };
+  const forward = Effect.fn("Citation.prepareForwardHtmlMap")(function* <E>(
+    markup: unknown,
+    plainInput: Effect.Effect<unknown, E>,
+    useDmp = true
+  ) {
+    const masked = yield* discovery.placeholder(markup);
+    const plainValue = yield* plainInput;
+    const plain = yield* input.prepareUnicode(plainValue, () => Effect.void);
+    const placeholder = yield* input.prepareUnicode(masked.placeholder, () => Effect.void);
+    const diff = yield* makeCitationDiffWorker(limits, config.diffRuntime, useDmp);
+    const forwardSteps = yield* diff.evaluate(plain.value.storage, placeholder.value.storage);
+    return {
+      diff,
+      plain,
+      source: masked.source,
+      forward: CitationSpanOffsetsPlan.make({ before: plain.layout, after: placeholder.layout, steps: forwardSteps }),
+    };
+  });
+  /** Continue the same prepared forward path with the original backward diff and
+   * emphasis discovery. Source order and four physical worker exits are retained. */
+  const geometry = Effect.fn("Citation.prepareOwnedHtmlGeometry")(function* <E>(
+    markup: unknown,
+    plainInput: Effect.Effect<unknown, E>
+  ) {
+    const prepared = yield* forward(markup, plainInput);
+    const backwardSteps = yield* prepared.diff.evaluate(prepared.source.value.storage, prepared.plain.value.storage);
+    const tags = yield* discovery.emphasis(prepared.source.value.storage);
+    return CitationHtmlTagGeometryInput.make({
+      plain: prepared.plain.value.storage,
+      forward: prepared.forward,
+      backward: CitationSpanOffsetsPlan.make({
+        before: prepared.source.layout,
+        after: prepared.plain.layout,
+        steps: backwardSteps,
+      }),
+      tags,
+    });
+  });
+  return { forward, geometry };
 });
-/** Continue the same prepared forward path with the original backward diff and
- * emphasis discovery. Source order and four physical worker exits are retained.
- * @internal @category operations @since 0.0.0
- */
-export const prepareCitationHtmlGeometry = Effect.fn("Citation.prepareOwnedHtmlGeometry")(function* <E>(
+const installPrepare = Effect.fn("Citation.installHtmlGeometryPreparation")(function* (
   limits: CitationEngineLimits,
   regexRuntime: CitationNativeProcessRuntime,
-  config: CitationHtmlGeometryPreparationConfiguration,
-  markup: unknown,
-  plainInput: Effect.Effect<unknown, E>
+  config: CitationHtmlGeometryPreparationConfiguration
 ) {
-  const { discovery, diff, plain, source, forward } = yield* prepareCitationForwardHtmlMap(
-    limits,
-    regexRuntime,
-    config,
-    markup,
-    plainInput
-  );
-  const backwardSteps = yield* diff.evaluate(source.value.storage, plain.value.storage);
-  const tags = yield* discovery.emphasis(source.value.storage);
-  return CitationHtmlTagGeometryInput.make({
-    plain: plain.value.storage,
-    forward,
-    backward: CitationSpanOffsetsPlan.make({ before: source.layout, after: plain.layout, steps: backwardSteps }),
-    tags,
+  const html = yield* installCitationHtmlGeometry(limits, regexRuntime, config);
+  return Effect.fn("Citation.prepareHtmlGeometry")(function* (raw: unknown) {
+    const source = yield* S.decodeUnknownEffect(PreparedHtmlValue)(raw).pipe(
+      Effect.mapError(() => CitationHtmlGeometryPreparationFailure.make({ reason: "invalid-input" }))
+    );
+    return yield* html.geometry(source.markup, Effect.succeed(source.plain));
   });
 });
-const prepare = Effect.fn("Citation.prepareHtmlGeometry")(function* (
-  limits: CitationEngineLimits,
-  regexRuntime: CitationNativeProcessRuntime,
-  config: CitationHtmlGeometryPreparationConfiguration,
-  raw: unknown
-) {
-  const source = yield* S.decodeUnknownEffect(PreparedHtmlValue)(raw).pipe(
-    Effect.mapError(() => CitationHtmlGeometryPreparationFailure.make({ reason: "invalid-input" }))
-  );
-  return yield* prepareCitationHtmlGeometry(limits, regexRuntime, config, source.markup, Effect.succeed(source.plain));
-});
+const ownPrepare = ownCitationStageCall({ copy: copyCitationHtmlGeometryConfiguration, install: installPrepare });
 /** Capture the existing admitted operation and cumulative native text owner.
  * The method has R=never and preserves placeholder/forward/backward/emphasis
  * source order. Four independently retired children precede publication.
@@ -167,7 +168,7 @@ export const makeCitationHtmlGeometryPreparation = makeCitationMetadataStage({
   method: "prepare",
   schema: S.toType(CitationHtmlGeometryPreparationConfiguration),
   invalid,
-  own: copyCitationHtmlGeometryConfiguration,
-  prepare,
+  own: ownPrepare,
+  prepare: (_limits, _runtime, run: Effect.Success<ReturnType<typeof ownPrepare>>, raw) => run(raw),
   project: (geometry, reservedUnits) => CitationPreparedHtmlGeometry.make({ geometry, reservedUnits }),
 });

@@ -16,11 +16,16 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CitationHtmlEmphasis } from "./HtmlTagGeometry.ts";
-import { copyCitationMetadataPatternConfiguration, makeCitationMetadataStage } from "./MetadataComposition.ts";
+import { CitationInvocation } from "./Invocation.ts";
+import {
+  copyCitationMetadataPatternConfiguration,
+  makeCitationMetadataStage,
+  ownCitationStageCall,
+} from "./MetadataComposition.ts";
 import { citationMetadataWhitespaceBoundary, trimCitationMetadataBoundary } from "./MetadataStrings.ts";
 import { citationPythonPointAt, concatCitationPythonRanges } from "./PythonUnicode.ts";
 import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
-import { makeCitationRegexWorker } from "./RegexWorker.ts";
+import { installCitationRegexEvaluator } from "./RegexWorker.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import type { CitationRegexCapturedRange } from "./RegexResult.ts";
@@ -77,7 +82,9 @@ export class CitationHtmlDiscoveryResult extends S.Opaque<
   )
 ) {}
 const fail = (reason: typeof Reason.Type) => CitationHtmlDiscoveryFailure.make({ reason });
-type Evaluation = Effect.Success<ReturnType<Effect.Success<ReturnType<typeof makeCitationRegexWorker>>["evaluate"]>>;
+type Evaluation = Effect.Success<
+  ReturnType<Effect.Success<ReturnType<typeof installCitationRegexEvaluator>>["evaluate"]>
+>;
 const matchAt = Effect.fn("Citation.htmlDiscoveryMatch")(function* (evaluated: Evaluation, ordinal: number) {
   const match = yield* evaluated.result.capture(ordinal, 0);
   if (match._tag === "Unmatched" || match.start === match.end) return yield* fail("invalid-match");
@@ -141,7 +148,7 @@ const emphasisTags = Effect.fn("Citation.discoverHtmlEmphasis")(function* (
   }
   return tags;
 });
-/** Use only inside an enclosing captured operation, Scope and text budget.
+/** Install once; calls read the invocation budget and Scope at call time.
  * Separate calls preserve Document's placeholder/diffs/emphasis source order.
  * @internal @category operations @since 0.0.0
  */
@@ -150,9 +157,9 @@ export const makeCitationHtmlDiscoveryRunner = Effect.fn("Citation.prepareHtmlDi
   runtime: CitationNativeProcessRuntime,
   config: CitationHtmlDiscoveryConfiguration
 ) {
-  const budget = yield* CitationTextBudget;
-  const worker = yield* makeCitationRegexWorker(limits, runtime, config.bindings);
+  const worker = yield* installCitationRegexEvaluator(limits, runtime, config.bindings);
   const placeholder = Effect.fn("Citation.runHtmlPlaceholder")(function* (raw: unknown) {
+    const { budget } = yield* CitationInvocation;
     const evaluated = yield* worker.evaluate(config.patterns.placeholder, raw, 0);
     const placeholder = yield* placeholderText(evaluated).pipe(Effect.provideService(CitationTextBudget, budget));
     return { placeholder, source: evaluated.source };
@@ -164,12 +171,9 @@ export const makeCitationHtmlDiscoveryRunner = Effect.fn("Citation.prepareHtmlDi
   return { placeholder, emphasis };
 });
 const discover = Effect.fn("Citation.prepareHtmlDiscovery")(function* (
-  limits: CitationEngineLimits,
-  runtime: CitationNativeProcessRuntime,
-  config: CitationHtmlDiscoveryConfiguration,
+  runner: Effect.Success<ReturnType<typeof makeCitationHtmlDiscoveryRunner>>,
   raw: unknown
 ) {
-  const runner = yield* makeCitationHtmlDiscoveryRunner(limits, runtime, config);
   const masked = yield* runner.placeholder(raw);
   const tags = yield* runner.emphasis(masked.source.value.storage);
   return { placeholder: masked.placeholder, tags };
@@ -183,6 +187,10 @@ export const copyCitationHtmlDiscoveryConfiguration = Effect.fn("Citation.copyHt
       fail("invalid-configuration")
     ).pipe(Effect.map(CitationHtmlDiscoveryConfiguration.make))
 );
+const ownDiscovery = ownCitationStageCall({
+  copy: copyCitationHtmlDiscoveryConfiguration,
+  install: makeCitationHtmlDiscoveryRunner,
+});
 /** Reuse captured operation admission, Clock, text budget, Effect RPC and owned
  * regex retirement. Both fixed jobs complete and retire before publication.
  * Native source identity and Python coordinates survive all transformations;
@@ -193,7 +201,7 @@ export const makeCitationHtmlDiscovery = makeCitationMetadataStage({
   method: "discover",
   schema: S.toType(CitationHtmlDiscoveryConfiguration),
   invalid: () => fail("invalid-configuration"),
-  own: copyCitationHtmlDiscoveryConfiguration,
-  prepare: discover,
+  own: ownDiscovery,
+  prepare: (_limits, _runtime, runner: Effect.Success<ReturnType<typeof ownDiscovery>>, raw) => discover(runner, raw),
   project: (patch, reservedUnits) => CitationHtmlDiscoveryResult.make({ ...patch, reservedUnits }),
 });

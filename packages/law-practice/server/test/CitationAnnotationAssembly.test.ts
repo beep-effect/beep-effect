@@ -5,7 +5,10 @@ import {
   prepareCitationAnnotations,
 } from "@beep/law-practice-server/internal/Citation/AnnotationPreparation";
 import { CitationHtmlDiscoveryConfiguration } from "@beep/law-practice-server/internal/Citation/HtmlDiscovery";
-import { CitationHtmlGeometryPreparationConfiguration } from "@beep/law-practice-server/internal/Citation/HtmlGeometryPreparation";
+import {
+  CitationHtmlGeometryPreparationConfiguration,
+  installCitationHtmlGeometry,
+} from "@beep/law-practice-server/internal/Citation/HtmlGeometryPreparation";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import {
   citationUnaccountedText,
@@ -196,13 +199,17 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
                 const output = yield* setup.operation.run(
                   "annotate",
                   Effect.gen(function* () {
-                    const mapped = yield* prepareCitationAnnotationSourceMap(
+                    const html = yield* installCitationHtmlGeometry(
                       setup.limits,
                       setup.runtime,
                       CitationHtmlGeometryPreparationConfiguration.make({
                         discovery: CitationHtmlDiscoveryConfiguration.make(discovery.configuration),
                         diffRuntime,
-                      }),
+                      })
+                    );
+                    const mapped = yield* prepareCitationAnnotationSourceMap(
+                      setup.limits,
+                      html,
                       CitationPythonUnicodeStorage.make(row.plain),
                       CitationPythonUnicodeStorage.make(row.source)
                     );

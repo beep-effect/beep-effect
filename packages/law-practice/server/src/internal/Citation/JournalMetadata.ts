@@ -16,10 +16,10 @@ import {
   CitationMetadataStringFields,
   citationMetadataContext,
   decodeCitationMetadataConfiguration,
+  installCitationMetadataContextMatch,
+  installCitationMetadataStringProcessing,
   makeCitationMetadataOperation,
-  matchCitationMetadataContext,
   prepareCitationPublicationMetadata,
-  processCitationMetadataStrings,
 } from "./MetadataComposition.ts";
 import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
@@ -109,41 +109,39 @@ export class CitationJournalMetadataResult extends S.Opaque<
 ) {}
 const Input = S.toType(CitationJournalMetadataInput);
 const Config = S.toType(CitationJournalMetadataConfiguration);
-const preparePatch = Effect.fn("Citation.prepareJournalMetadataPatch")(function* (
+const installPatch = Effect.fn("Citation.installJournalMetadataPatch")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
-  config: CitationPublicationMetadataConfiguration,
-  request: CitationJournalMetadataInput
+  config: CitationPublicationMetadataConfiguration
 ) {
-  const owned = yield* matchCitationMetadataContext(
+  const match = yield* installCitationMetadataContextMatch(limits, runtime, config);
+  const processStrings = yield* installCitationMetadataStringProcessing(
     limits,
     runtime,
-    config,
-    citationMetadataContext({ ...request, forward: true }),
-    () => fail("missing-capture")
+    CitationMetadataStringConfiguration.make(config)
   );
-  if (O.isNone(owned)) return O.none<CitationJournalMetadataPatch>();
-  const pinCite = yield* owned.value.capture("pin_cite");
-  const parenthetical = yield* owned.value.capture("parenthetical");
-  const year = yield* owned.value.capture("year");
-  const common = yield* processCitationMetadataStrings(
-    limits,
-    runtime,
-    CitationMetadataStringConfiguration.make(config),
-    CitationMetadataStringFields.make({ pinCite, parenthetical, year }),
-    request.year
-  );
-  return O.some(
-    CitationJournalMetadataPatch.make({
-      fullSpanEnd: request.spanEnd + owned.value.end,
-      year: common.numericYear,
-      metadata: CitationMetadataStringFields.make({
-        pinCite: common.pinCite,
-        parenthetical: common.parenthetical,
-        year: common.year,
-      }),
-    })
-  );
+  return Effect.fn("Citation.prepareJournalMetadataPatch")(function* (request: CitationJournalMetadataInput) {
+    const owned = yield* match(citationMetadataContext({ ...request, forward: true }), () => fail("missing-capture"));
+    if (O.isNone(owned)) return O.none<CitationJournalMetadataPatch>();
+    const pinCite = yield* owned.value.capture("pin_cite");
+    const parenthetical = yield* owned.value.capture("parenthetical");
+    const year = yield* owned.value.capture("year");
+    const common = yield* processStrings(
+      CitationMetadataStringFields.make({ pinCite, parenthetical, year }),
+      request.year
+    );
+    return O.some(
+      CitationJournalMetadataPatch.make({
+        fullSpanEnd: request.spanEnd + owned.value.end,
+        year: common.numericYear,
+        metadata: CitationMetadataStringFields.make({
+          pinCite: common.pinCite,
+          parenthetical: common.parenthetical,
+          year: common.year,
+        }),
+      })
+    );
+  });
 });
 /** Compose source journal helper and superclass inference under shared owners.
  * Each native call owns a fresh Scope; one admission/deadline covers both stages.
@@ -168,9 +166,8 @@ export const makeCitationJournalMetadata = Effect.fn("Citation.makeJournalMetada
     "1b0484f822d2762ae3517e7a1152feea80d96791582a126e0bd3f8789cb66200",
     invalidConfiguration
   );
-  const installed = yield* makeCitationMetadataOperation(limits, (request: CitationJournalMetadataInput) =>
-    preparePatch(limits, runtime, config, request)
-  );
+  const preparePatch = yield* installPatch(limits, runtime, config);
+  const installed = yield* makeCitationMetadataOperation(limits, preparePatch);
   const inference = yield* makeCitationEditionInference(limits);
   const apply = Effect.fn("Citation.addJournalMetadata")((raw: unknown) =>
     Effect.gen(function* () {

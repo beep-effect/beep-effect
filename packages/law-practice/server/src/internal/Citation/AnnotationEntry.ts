@@ -25,10 +25,11 @@ import { CitationAnnotationAnnotator } from "./AnnotationCallback.ts";
 import { prepareCitationAnnotationSourceMap, prepareCitationAnnotations } from "./AnnotationPreparation.ts";
 import { makeCitationSkipAnnotationSpans } from "./AnnotationSkip.ts";
 import { CitationAnnotationSpanProcessor } from "./AnnotationSpan.ts";
-import { makeCitationWrapAnnotationSpans } from "./AnnotationWrap.ts";
+import { makeCitationAnnotationWrap, makeCitationWrapAnnotationSpans } from "./AnnotationWrap.ts";
 import {
   CitationHtmlGeometryPreparationConfiguration,
   copyCitationHtmlGeometryConfiguration,
+  installCitationHtmlGeometry,
 } from "./HtmlGeometryPreparation.ts";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
 import { CitationNativeProcessRuntime } from "./NativeProcess.ts";
@@ -121,13 +122,19 @@ const nativeEqual = S.toEquivalence(S.toType(CitationPythonUnicodeStorage));
  */
 export const ownCitationAnnotationEntry = Effect.fn("Citation.ownAnnotationEntry")(function* (
   limits: CitationEngineLimits,
-  configuration: CitationAnnotationEntryConfiguration
+  configuration: CitationAnnotationEntryConfiguration,
+  runtime: CitationNativeProcessRuntime
 ) {
   const geometry = yield* copyCitationHtmlGeometryConfiguration(limits, configuration.geometry);
+  // Installed once; an install failure surfaces where each request used to install it.
+  const html = yield* Effect.exit(installCitationHtmlGeometry(limits, runtime, geometry));
+  const wrap = yield* Effect.exit(makeCitationAnnotationWrap(limits, runtime));
   const callback = yield* Effect.serviceOption(CitationAnnotationAnnotator);
   const updater = yield* Effect.serviceOption(CitationAnnotationOffsetUpdater);
   return {
     geometry,
+    html,
+    wrap,
     callback,
     updater,
     xmlRuntime: CitationNativeProcessRuntime.make({ ...configuration.xmlRuntime }),
@@ -170,7 +177,7 @@ export const ownCitationAnnotationReplacements = Effect.fn("Citation.ownAnnotati
 });
 const prepare = Effect.fn("Citation.prepareAnnotationEntry")(function* (
   limits: CitationEngineLimits,
-  runtime: CitationNativeProcessRuntime,
+  _runtime: CitationNativeProcessRuntime,
   owned: Effect.Success<ReturnType<typeof own>>,
   raw: unknown
 ) {
@@ -199,10 +206,10 @@ const prepare = Effect.fn("Citation.prepareAnnotationEntry")(function* (
     if (source.pythonLength === 0 || nativeEqual(source.storage, plain.storage))
       return { source: plain, updater: O.none() };
     const algorithm = yield* S.decodeUnknownEffect(DiffProbe)(raw).pipe(Effect.mapError(invalid));
+    const html = yield* owned.html;
     const mapped = yield* prepareCitationAnnotationSourceMap(
       limits,
-      runtime,
-      owned.geometry,
+      html,
       plain.storage,
       source.storage,
       algorithm.useDmp
@@ -219,7 +226,9 @@ const prepare = Effect.fn("Citation.prepareAnnotationEntry")(function* (
     }
     const xml = yield* makeCitationXmlWorker(limits, owned.xmlRuntime);
     const processor = yield* (
-      mode.mode === "skip" ? makeCitationSkipAnnotationSpans() : makeCitationWrapAnnotationSpans(limits, runtime)
+      mode.mode === "skip"
+        ? makeCitationSkipAnnotationSpans()
+        : Effect.flatMap(owned.wrap, makeCitationWrapAnnotationSpans)
     ).pipe(Effect.provideService(CitationXmlBalance, xml));
     const assembly = yield* makeCitationAnnotationAssembly(limits).pipe(
       Effect.provideService(CitationAnnotationSpanProcessor, processor)

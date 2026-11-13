@@ -20,14 +20,14 @@ import * as Tuple from "effect/Tuple";
 import { CitationCaseMetadataFields } from "./CaseMetadata.ts";
 import { CitationHtmlTagGeometryInput } from "./HtmlTagGeometry.ts";
 import { reserveCitationInvocationText } from "./Invocation.ts";
-import { makeCitationMetadataStage } from "./MetadataComposition.ts";
+import { makeCitationMetadataStage, ownCitationStageCall } from "./MetadataComposition.ts";
 import {
   CitationReferencePatternConfiguration,
   copyCitationReferencePatternConfiguration,
   makeCitationReferencePatterns,
 } from "./ReferencePatterns.ts";
 import { CitationRegexInputLayout, makeCitationRegexInput } from "./RegexInput.ts";
-import { makeCitationRegexWorker } from "./RegexWorker.ts";
+import { installCitationRegexEvaluator } from "./RegexWorker.ts";
 import { makeCitationSpanOffsets } from "./SpanOffsets.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
@@ -114,7 +114,9 @@ export class CitationGeneratedReferencesResult extends S.Opaque<
 const Input = S.toType(CitationGeneratedReferenceInput);
 const Configuration = S.toType(CitationReferencePatternConfiguration);
 const fail = (reason: typeof Reason.Type) => CitationGeneratedReferenceFailure.make({ reason });
-type Evaluation = Effect.Success<ReturnType<Effect.Success<ReturnType<typeof makeCitationRegexWorker>>["evaluate"]>>;
+type Evaluation = Effect.Success<
+  ReturnType<Effect.Success<ReturnType<typeof installCitationRegexEvaluator>>["evaluate"]>
+>;
 const readNamedCaptures = Effect.fn("Citation.readReferenceCaptures")(function* (evaluated: Evaluation, index: number) {
   const named = yield* Effect.forEach(
     R.toEntries(evaluated.descriptor.profile.names),
@@ -162,40 +164,44 @@ const referenceFromCaptures = (
     },
   });
 const bound = (index: number, length: number) => Num.max(0, Num.min(length, index < 0 ? length + index : index));
-const prepare = Effect.fn("Citation.extractPincitedReferences")(function* (
+const installPincited = Effect.fn("Citation.installPincitedReferences")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
-  config: CitationReferencePatternConfiguration,
-  raw: unknown
+  config: CitationReferencePatternConfiguration
 ) {
-  const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
-  const builder = yield* makeCitationReferencePatterns(limits, config);
-  const pattern = yield* builder.build(request.metadata, "pin");
-  if (O.isNone(pattern)) return A.empty<CitationGeneratedReference>();
   const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText, "source");
-  const plain = yield* input.prepareUnicode(request.plain, () => Effect.void);
-  const length = plain.value.pythonLength;
-  const start = Num.max(0, Num.min(length, request.offset < 0 ? length + request.offset : request.offset));
-  const remainder = yield* plain.slice({ start, end: length }, () => Effect.void);
-  const worker = yield* makeCitationRegexWorker(limits, runtime, [pattern.value.descriptor]);
-  const evaluated = yield* worker.evaluate(pattern.value.pattern, remainder, pattern.value.descriptor.flags);
-  if (evaluated.result.matches === 0) return A.empty<CitationGeneratedReference>();
-  if (evaluated.result.matches > limits.candidates)
-    return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "candidates" });
-  return yield* Effect.forEach(
-    A.makeBy(evaluated.result.matches, (index) => index),
-    Effect.fnUntraced(function* (index) {
-      const whole = yield* evaluated.result.capture(index, 0);
-      if (whole._tag === "Unmatched") return yield* fail("invalid-match");
-      const data = yield* evaluated.source.slice(whole, () => Effect.void);
-      const values = yield* readNamedCaptures(evaluated, index);
-      const first = whole.start + request.offset;
-      const last = whole.end + request.offset;
-      return referenceFromCaptures(data, first, last, first, last, values);
-    }),
-    { concurrency: 1 }
-  );
+  const generated = yield* installCitationRegexEvaluator(limits, runtime, []);
+  return Effect.fn("Citation.extractPincitedReferences")(function* (raw: unknown) {
+    const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
+    // Per request: the builder charges its fixed fragments to the request budget.
+    const builder = yield* makeCitationReferencePatterns(limits, config);
+    const pattern = yield* builder.build(request.metadata, "pin");
+    if (O.isNone(pattern)) return A.empty<CitationGeneratedReference>();
+    const plain = yield* input.prepareUnicode(request.plain, () => Effect.void);
+    const length = plain.value.pythonLength;
+    const start = Num.max(0, Num.min(length, request.offset < 0 ? length + request.offset : request.offset));
+    const remainder = yield* plain.slice({ start, end: length }, () => Effect.void);
+    const worker = yield* generated.bindDescriptors([pattern.value.descriptor]);
+    const evaluated = yield* worker.evaluate(pattern.value.pattern, remainder, pattern.value.descriptor.flags);
+    if (evaluated.result.matches === 0) return A.empty<CitationGeneratedReference>();
+    if (evaluated.result.matches > limits.candidates)
+      return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "candidates" });
+    return yield* Effect.forEach(
+      A.makeBy(evaluated.result.matches, (index) => index),
+      Effect.fnUntraced(function* (index) {
+        const whole = yield* evaluated.result.capture(index, 0);
+        if (whole._tag === "Unmatched") return yield* fail("invalid-match");
+        const data = yield* evaluated.source.slice(whole, () => Effect.void);
+        const values = yield* readNamedCaptures(evaluated, index);
+        const first = whole.start + request.offset;
+        const last = whole.end + request.offset;
+        return referenceFromCaptures(data, first, last, first, last, values);
+      }),
+      { concurrency: 1 }
+    );
+  });
 });
+const ownPincited = ownCitationStageCall({ copy: copyCitationReferencePatternConfiguration, install: installPincited });
 /** Run original plain-name reference generation through shared admission, captured
  * Scope/deadline/text authority, existing typed regex RPC and retirement barrier.
  * No partial references publish; whole-loop assembly follows.
@@ -205,8 +211,8 @@ export const makeCitationGeneratedReferences = makeCitationMetadataStage({
   method: "pincited",
   schema: Configuration,
   invalid: () => fail("invalid-configuration"),
-  own: copyCitationReferencePatternConfiguration,
-  prepare,
+  own: ownPincited,
+  prepare: (_limits, _runtime, run: Effect.Success<ReturnType<typeof ownPincited>>, raw) => run(raw),
   project: (references, reservedUnits) => CitationGeneratedReferencesResult.make({ references, reservedUnits }),
 });
 
@@ -250,64 +256,65 @@ const prepareMarkupGeometry = Effect.fn("Citation.prepareReferenceMarkupGeometry
   const backward = yield* makeCitationSpanOffsets(limits, geometry.backward);
   return { plain, markup, forward, backward };
 });
-const prepareMarkup = Effect.fn("Citation.extractMarkupReferences")(function* (
+const installMarkup = Effect.fn("Citation.installMarkupReferences")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
-  config: CitationReferencePatternConfiguration,
-  raw: unknown
+  config: CitationReferencePatternConfiguration
 ) {
-  const request = yield* S.decodeUnknownEffect(MarkupInput)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
-  const builder = yield* makeCitationReferencePatterns(limits, config);
-  const pattern = yield* builder.build(request.metadata, "markup");
-  if (O.isNone(pattern) || O.isNone(request.geometry) || request.markup.bytes.length === 0)
-    return A.empty<CitationGeneratedReference>();
-  const { plain, markup, forward, backward } = yield* prepareMarkupGeometry(limits, request, request.geometry.value);
-  const offset = yield* forward.update(request.start, "right");
-  const suffix = yield* markup.slice(
-    { start: bound(offset, markup.value.pythonLength), end: markup.value.pythonLength },
-    () => Effect.void
-  );
-  const worker = yield* makeCitationRegexWorker(limits, runtime, [
-    pattern.value.descriptor,
-    builder.rejection.descriptor,
-  ]);
-  const evaluated = yield* worker.evaluate(pattern.value.pattern, suffix, pattern.value.descriptor.flags);
-  if (evaluated.result.matches === 0) return A.empty<CitationGeneratedReference>();
-  const references = yield* Effect.forEach(
-    A.makeBy(evaluated.result.matches, (index) => index),
-    Effect.fnUntraced(function* (index) {
-      const whole = yield* evaluated.result.capture(index, 0);
-      const name = yield* evaluated.result.capture(index, 1);
-      if (whole._tag === "Unmatched" || name._tag === "Unmatched") return yield* fail("invalid-match");
-      const fullFirst = yield* backward.update(offset + whole.start, "left");
-      const fullLast = yield* backward.update(offset + whole.end, "right");
-      const first = yield* backward.update(offset + name.start, "left");
-      const last = yield* backward.update(offset + name.end, "right");
-      const after = yield* plain.slice(
-        { start: bound(fullLast, plain.value.pythonLength), end: plain.value.pythonLength },
-        () => Effect.void
-      );
-      const rejected = yield* worker.evaluate(
-        builder.rejection.pattern,
-        after,
-        builder.rejection.descriptor.flags,
-        1,
-        "match"
-      );
-      if (rejected.result.matches !== 0) return O.none<CitationGeneratedReference>();
-      const start = bound(first, plain.value.pythonLength);
-      const end = Num.max(start, bound(last, plain.value.pythonLength));
-      const data = yield* plain.slice({ start, end }, () => Effect.void);
-      const values = yield* readNamedCaptures(evaluated, index);
-      return O.some(referenceFromCaptures(data, first, last, fullFirst, fullLast, values));
-    }),
-    { concurrency: 1 }
-  );
-  const kept = A.getSomes(references);
-  if (kept.length > limits.candidates)
-    return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "candidates" });
-  return kept;
+  const generated = yield* installCitationRegexEvaluator(limits, runtime, []);
+  return Effect.fn("Citation.extractMarkupReferences")(function* (raw: unknown) {
+    const request = yield* S.decodeUnknownEffect(MarkupInput)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
+    // Per request: the builder charges its fixed fragments to the request budget.
+    const builder = yield* makeCitationReferencePatterns(limits, config);
+    const pattern = yield* builder.build(request.metadata, "markup");
+    if (O.isNone(pattern) || O.isNone(request.geometry) || request.markup.bytes.length === 0)
+      return A.empty<CitationGeneratedReference>();
+    const { plain, markup, forward, backward } = yield* prepareMarkupGeometry(limits, request, request.geometry.value);
+    const offset = yield* forward.update(request.start, "right");
+    const suffix = yield* markup.slice(
+      { start: bound(offset, markup.value.pythonLength), end: markup.value.pythonLength },
+      () => Effect.void
+    );
+    const worker = yield* generated.bindDescriptors([pattern.value.descriptor, builder.rejection.descriptor]);
+    const evaluated = yield* worker.evaluate(pattern.value.pattern, suffix, pattern.value.descriptor.flags);
+    if (evaluated.result.matches === 0) return A.empty<CitationGeneratedReference>();
+    const references = yield* Effect.forEach(
+      A.makeBy(evaluated.result.matches, (index) => index),
+      Effect.fnUntraced(function* (index) {
+        const whole = yield* evaluated.result.capture(index, 0);
+        const name = yield* evaluated.result.capture(index, 1);
+        if (whole._tag === "Unmatched" || name._tag === "Unmatched") return yield* fail("invalid-match");
+        const fullFirst = yield* backward.update(offset + whole.start, "left");
+        const fullLast = yield* backward.update(offset + whole.end, "right");
+        const first = yield* backward.update(offset + name.start, "left");
+        const last = yield* backward.update(offset + name.end, "right");
+        const after = yield* plain.slice(
+          { start: bound(fullLast, plain.value.pythonLength), end: plain.value.pythonLength },
+          () => Effect.void
+        );
+        const rejected = yield* worker.evaluate(
+          builder.rejection.pattern,
+          after,
+          builder.rejection.descriptor.flags,
+          1,
+          "match"
+        );
+        if (rejected.result.matches !== 0) return O.none<CitationGeneratedReference>();
+        const start = bound(first, plain.value.pythonLength);
+        const end = Num.max(start, bound(last, plain.value.pythonLength));
+        const data = yield* plain.slice({ start, end }, () => Effect.void);
+        const values = yield* readNamedCaptures(evaluated, index);
+        return O.some(referenceFromCaptures(data, first, last, fullFirst, fullLast, values));
+      }),
+      { concurrency: 1 }
+    );
+    const kept = A.getSomes(references);
+    if (kept.length > limits.candidates)
+      return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "candidates" });
+    return kept;
+  });
 });
+const ownMarkup = ownCitationStageCall({ copy: copyCitationReferencePatternConfiguration, install: installMarkup });
 /** Original markup-name reference generation using existing offset plans and
  * typed regex RPC under one captured operation, deadline and text authority.
  * @internal @category operations @since 0.0.0
@@ -316,8 +323,8 @@ export const makeCitationGeneratedMarkupReferences = makeCitationMetadataStage({
   method: "markup",
   schema: Configuration,
   invalid: () => fail("invalid-configuration"),
-  own: copyCitationReferencePatternConfiguration,
-  prepare: prepareMarkup,
+  own: ownMarkup,
+  prepare: (_limits, _runtime, run: Effect.Success<ReturnType<typeof ownMarkup>>, raw) => run(raw),
   project: (references, reservedUnits) => CitationGeneratedReferencesResult.make({ references, reservedUnits }),
 });
 
@@ -347,24 +354,28 @@ export class CitationGeneratedCombinedInput extends S.Opaque<
   )
 ) {}
 const CombinedInput = S.toType(CitationGeneratedCombinedInput);
-const prepareCombined = Effect.fn("Citation.extractGeneratedReferences")(function* (
+const installCombined = Effect.fn("Citation.installGeneratedReferences")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
-  config: CitationReferencePatternConfiguration,
-  raw: unknown
+  config: CitationReferencePatternConfiguration
 ) {
-  const request = yield* S.decodeUnknownEffect(CombinedInput)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
   const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText, "source");
-  const plain = yield* input.prepareUnicode(request.plain, () => Effect.void);
-  if (plain.value.pythonLength <= request.offset || request.kind !== "FullCaseCitation")
-    return A.empty<CitationGeneratedReference>();
-  const pin = yield* prepare(limits, runtime, config, request);
-  if (request.markup.bytes.length === 0) return pin;
-  const markup = yield* prepareMarkup(limits, runtime, config, request);
-  if (pin.length + markup.length > limits.candidates)
-    return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "candidates" });
-  return A.appendAll(pin, markup);
+  const prepare = yield* installPincited(limits, runtime, config);
+  const prepareMarkup = yield* installMarkup(limits, runtime, config);
+  return Effect.fn("Citation.extractGeneratedReferences")(function* (raw: unknown) {
+    const request = yield* S.decodeUnknownEffect(CombinedInput)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
+    const plain = yield* input.prepareUnicode(request.plain, () => Effect.void);
+    if (plain.value.pythonLength <= request.offset || request.kind !== "FullCaseCitation")
+      return A.empty<CitationGeneratedReference>();
+    const pin = yield* prepare(request);
+    if (request.markup.bytes.length === 0) return pin;
+    const markup = yield* prepareMarkup(request);
+    if (pin.length + markup.length > limits.candidates)
+      return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "candidates" });
+    return A.appendAll(pin, markup);
+  });
 });
+const ownCombined = ownCitationStageCall({ copy: copyCitationReferencePatternConfiguration, install: installCombined });
 /** Original ordered plain/markup caller, sharing one Scope, deadline and
  * cumulative text budget across both generators; final filtering stays separate.
  * @internal @category operations @since 0.0.0
@@ -373,7 +384,7 @@ export const makeCitationGeneratedCombinedReferences = makeCitationMetadataStage
   method: "combined",
   schema: Configuration,
   invalid: () => fail("invalid-configuration"),
-  own: copyCitationReferencePatternConfiguration,
-  prepare: prepareCombined,
+  own: ownCombined,
+  prepare: (_limits, _runtime, run: Effect.Success<ReturnType<typeof ownCombined>>, raw) => run(raw),
   project: (references, reservedUnits) => CitationGeneratedReferencesResult.make({ references, reservedUnits }),
 });
