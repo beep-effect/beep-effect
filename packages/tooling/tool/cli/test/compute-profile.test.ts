@@ -133,21 +133,27 @@ describe("compute profile probe", () => {
 
 const ceilingMemoryStats = memoryStatsLayerFor(source(7 * GIB, 15 * GIB)).pipe(Layer.provide(FileSystem.layerNoop({})));
 
+const reservationCapacitySpans = Effect.gen(function* () {
+  const spans = MutableRef.make<ReadonlyArray<string>>([]);
+  const tracer = Tracer.make({
+    span(options) {
+      MutableRef.update(spans, A.append(options.name));
+      return new Tracer.NativeSpan(options);
+    },
+  });
+  const stats = yield* MemoryStats;
+  assertDefined(stats.reservationCapacity);
+  yield* stats.reservationCapacity([], AdmissionConfig.make({})).pipe(Effect.withTracer(tracer));
+  return MutableRef.get(spans);
+});
+
 it.layer(ceilingMemoryStats, { timeout: "30 seconds" })("memory stats under a compute ceiling", (it) => {
   it.effect("traces the cgroup reservation-capacity read as MemoryStats.reservationCapacity", () =>
-    Effect.gen(function* () {
-      const spans = MutableRef.make<ReadonlyArray<string>>([]);
-      const tracer = Tracer.make({
-        span(options) {
-          MutableRef.update(spans, A.append(options.name));
-          return new Tracer.NativeSpan(options);
-        },
-      });
-      const stats = yield* MemoryStats;
-      assertDefined(stats.reservationCapacity);
-      yield* stats.reservationCapacity([], AdmissionConfig.make({})).pipe(Effect.withTracer(tracer));
-      expect(MutableRef.get(spans)).toContain("MemoryStats.reservationCapacity");
-    })
+    Effect.map(reservationCapacitySpans, (spans) => expect(spans).toContain("MemoryStats.reservationCapacity"))
+  );
+
+  it.effect("traces the caller's cgroup membership read as MemoryStats.readCgroupMembership", () =>
+    Effect.map(reservationCapacitySpans, (spans) => expect(spans).toContain("MemoryStats.readCgroupMembership"))
   );
 });
 
