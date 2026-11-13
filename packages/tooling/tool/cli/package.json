@@ -88,15 +88,14 @@
   "files": [
     "src/**/*.ts",
     "!src/test/**/*.ts",
-    "python/photo-face/**",
-    "!python/photo-face/.venv/**",
-    "!python/photo-face/**/__pycache__/**",
     "src/commands/CreatePackage/templates/**/*.hbs",
     "src/commands/CreatePackage/templates/assets/**",
     "dist/**/*.js",
     "dist/**/*.js.map",
     "dist/**/*.d.ts",
-    "dist/**/*.d.ts.map"
+    "dist/**/*.d.ts.map",
+    "PHOTO-FACE.md",
+    "UPSTREAM-CVLFACE-LICENSE.txt"
   ],
   "publishConfig": {
     "access": "public",
@@ -190,8 +189,6 @@
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run",
-    "beep:lint:python": "uv run --isolated --project python/photo-face --frozen --python 3.12 --no-python-downloads ruff check python/photo-face && uv run --isolated --project python/photo-face --frozen --python 3.12 --no-python-downloads ruff format --check python/photo-face",
-    "beep:test:python": "uv run --isolated --project python/photo-face --frozen --python 3.12 --no-python-downloads pytest",
     "test:watch": "vitest"
   },
   "dependencies": {
@@ -284,7 +281,9 @@
     "tar": "catalog:",
     "ts-morph": "catalog:",
     "tsrs": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "onnxruntime-node": "catalog:",
+    "fflate": "catalog:"
   },
   "devDependencies": {
     "@beep/fc-runs": "workspace:^",

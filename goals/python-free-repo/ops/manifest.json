@@ -34,7 +34,7 @@
     "goals/python-free-repo/GOAL.md",
     "goals/python-free-repo/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/SOURCES.md", "research/photo-face-parity.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

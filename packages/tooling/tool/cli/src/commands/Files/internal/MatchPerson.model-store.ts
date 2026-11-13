@@ -26,10 +26,12 @@ import * as P from "effect/Predicate";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+import { unzipSync } from "fflate";
 import { canonicalizeFileTargetPath } from "./FileTransaction.ts";
 import { MatchPersonError } from "./MatchPerson.errors.ts";
+import { PersonMatchModelArtifact, PersonMatchModelComponent } from "./MatchPerson.schemas.ts";
 import type { MatchPersonModelAcquisitionError, MatchPersonModelIntegrityError } from "./MatchPerson.errors.ts";
-import type { PersonMatchModel, PersonMatchModelArtifact } from "./MatchPerson.schemas.ts";
+import type { PersonMatchModel } from "./MatchPerson.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Files/internal/MatchPerson.model-store");
 
@@ -809,3 +811,113 @@ export const verifyPersonMatchModelArtifacts = Effect.fn("Files.PersonMatchModel
     );
   }
 );
+
+class PreparedOnnxModels extends S.Opaque<PreparedOnnxModels, { readonly brand: unique symbol }>()(
+  S.Struct({
+    detectorPath: S.NonEmptyString,
+    recognizerPath: S.NonEmptyString,
+    ada: PreparedAdaFaceArtifacts.pipe(S.Option),
+    components: S.Array(PersonMatchModelComponent),
+  }).pipe(
+    $I.annoteSchema("PreparedOnnxModels", {
+      description: "Verified ONNX and safetensors model paths with original component provenance.",
+    })
+  )
+) {}
+
+/**
+ * Acquire and verify the same Buffalo archive used by the former worker.
+ * **Example** (Reference model preparation)
+ * ```ts
+ * import { preparePersonMatchOnnxModels } from "./MatchPerson.model-store.ts"
+ * console.log(typeof preparePersonMatchOnnxModels)
+ * ```
+ * @internal
+ * @category model-store
+ * @since 0.0.0
+ */
+export const preparePersonMatchOnnxModels = Effect.fn("Files.preparePersonMatchOnnxModels")(function* (
+  modelRoot: string,
+  backend: "buffalo-l" | "adaface-kprpe"
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = yield* ensureCanonicalDirectory(modelRoot, "person-match model root");
+  const models = yield* ensureCanonicalDirectory(path.join(root, "models"), "ONNX models directory");
+  const directory = yield* ensureCanonicalDirectory(path.join(models, "beep_buffalo_l_v1"), "pinned ONNX directory");
+  const required = backend === "buffalo-l" ? [detectorArtifact, buffaloRecognizerArtifact] : [detectorArtifact];
+  yield* Effect.acquireUseRelease(
+    acquireModelStoreLock(directory),
+    Effect.fnUntraced(function* () {
+      const missing = yield* Effect.forEach(required, (artifact) =>
+        fs
+          .exists(path.join(directory, artifact.fileName))
+          .pipe(Effect.mapError((cause) => acquisitionError("Cannot inspect ONNX artifact.", cause)))
+      );
+      if (A.some(missing, (exists) => !exists)) {
+        const archive = PinnedModelArtifact.make({
+          ...detectorArtifact,
+          fileName: "buffalo_l.zip",
+          sizeBytes: PosInt.make(288621354),
+          sha256: Sha256Hex.make("80ffe37d8a5940d59a7384c201a2a38d4741f2f3c51eef46ebb28218a7b0ca2f"),
+        });
+        const archivePath = path.join(root, archive.fileName);
+        yield* ensureArtifact(archive, archivePath, root);
+        const data = yield* fs
+          .readFile(archivePath)
+          .pipe(Effect.mapError((cause) => acquisitionError("Cannot read verified Buffalo archive.", cause)));
+        const extracted = yield* Effect.try({
+          try: () =>
+            unzipSync(data, {
+              filter: (entry) =>
+                A.some(required, (a) => a.fileName === entry.name) && entry.originalSize <= 175_000_000,
+            }),
+          catch: (cause) => integrityError("Cannot decode verified Buffalo archive.", cause),
+        });
+        for (const artifact of required) {
+          const content = extracted[artifact.fileName];
+          if (content === undefined) return yield* integrityError(`Archive omitted ${artifact.fileName}.`);
+          const digest = Hex.encode(sha256(content));
+          if (content.length !== artifact.sizeBytes || digest !== artifact.sha256)
+            return yield* integrityError(`Archive artifact mismatch: ${artifact.fileName}.`);
+          const destination = path.join(directory, artifact.fileName);
+          yield* fs
+            .writeFile(destination, content, { flag: "wx" })
+            .pipe(Effect.mapError((cause) => acquisitionError("Cannot install ONNX artifact.", cause)));
+        }
+      }
+      for (const artifact of required) yield* validateArtifactPath(artifact, path.join(directory, artifact.fileName));
+    }),
+    releaseModelStoreLock
+  );
+  const ada =
+    backend === "adaface-kprpe"
+      ? yield* prepareAdaFaceArtifacts(root).pipe(Effect.asSome)
+      : O.none<PreparedAdaFaceArtifacts>();
+  const artifacts = backend === "adaface-kprpe" ? [detectorArtifact, alignerArtifact, recognizerArtifact] : required;
+  return PreparedOnnxModels.make({
+    detectorPath: path.join(directory, detectorArtifact.fileName),
+    recognizerPath: path.join(directory, buffaloRecognizerArtifact.fileName),
+    ada,
+    components: A.map(artifacts, (artifact) =>
+      PersonMatchModelComponent.make({
+        role: artifact.component,
+        name: artifact.name,
+        revision: artifact.revision,
+        source: artifact.url,
+        licenseNotice: artifact.licenseNotice,
+        artifacts: [
+          PersonMatchModelArtifact.make({
+            name: artifact.fileName,
+            path:
+              artifact.component === "detector" || backend === "buffalo-l"
+                ? path.join(directory, artifact.fileName)
+                : artifactPath(path, root, artifact),
+            sha256: artifact.sha256,
+            sizeBytes: artifact.sizeBytes,
+          }),
+        ],
+      })
+    ),
+  });
+});

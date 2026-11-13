@@ -897,11 +897,11 @@ export class MatchPersonOptions extends S.Opaque<MatchPersonOptions, { readonly 
     outDir: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
     cacheDir: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
     backend: PersonMatchBackend,
-    compute: PersonMatchComputePolicy.pipe(S.withConstructorDefault(Effect.succeed("auto"))),
+    compute: PersonMatchComputePolicy.pipe(S.withConstructorDefault(Effect.succeed("cpu"))),
     devices: S.Option(PersonMatchRequestedDeviceIndexes).pipe(
       S.withConstructorDefault(Effect.succeed(O.none<typeof PersonMatchRequestedDeviceIndexes.Type>()))
     ),
-    batchSize: PosInt.pipe(S.withConstructorDefault(Effect.succeed(PosInt.make(32)))),
+    batchSize: PosInt.pipe(S.withConstructorDefault(Effect.succeed(PosInt.make(1)))),
     thresholdSource: PersonMatchThresholdSource.pipe(S.withConstructorDefault(Effect.succeed("calibrated-default"))),
     recursive: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     detectionThreshold: PersonMatchConfidence,
@@ -995,7 +995,7 @@ export class PersonMatchModelComponent extends S.Opaque<PersonMatchModelComponen
 ) {}
 
 /**
- * Describes one runtime device that actually participated in inference.
+ * Describes a device in saved runtime provenance.
  *
  * **Example** (Create a ROCm device record)
  *
@@ -1050,7 +1050,7 @@ export class PersonMatchRuntimeDevice extends S.Opaque<PersonMatchRuntimeDevice,
 export class PersonMatchOnnxRuntime extends S.Opaque<PersonMatchOnnxRuntime, { readonly brand: unique symbol }>()(
   S.Struct({
     framework: S.tag("onnxruntime"),
-    packageVersion: S.tag("1.23.2"),
+    packageVersion: S.NonEmptyString,
     actualCompute: S.tag("cpu"),
     precision: PersonMatchPrecision,
     providers: S.Tuple([S.Literal("CPUExecutionProvider")]),
@@ -1058,13 +1058,13 @@ export class PersonMatchOnnxRuntime extends S.Opaque<PersonMatchOnnxRuntime, { r
     warnings: S.Array(PersonMatchRuntimeWarning),
   }).pipe(
     $I.annoteSchema("PersonMatchOnnxRuntime", {
-      description: "Pinned CPU ONNX Runtime provenance for the InsightFace Buffalo backend.",
+      description: "CPU ONNX Runtime provenance for person matching.",
     })
   )
 ) {}
 
 /**
- * Records the PyTorch runtime and concrete device used by the AdaFace backend.
+ * Decodes historical PyTorch runtime and device provenance from saved AdaFace reports.
  *
  * **Details**
  *
@@ -1202,12 +1202,12 @@ export class PersonMatchAdaFaceModel extends S.Opaque<PersonMatchAdaFaceModel, {
     backend: S.tag("adaface-kprpe"),
     name: S.tag("cvlface_adaface_vit_base_kprpe_webface12m"),
     codeRevision: S.tag("308142aa50adf2e187711354f7524635d3414f1e"),
-    runtime: PersonMatchPyTorchRuntime,
+    runtime: S.Union([PersonMatchPyTorchRuntime, PersonMatchOnnxRuntime]),
     root: S.NonEmptyString,
     components: S.Array(PersonMatchModelComponent),
   }).pipe(
     $I.annoteSchema("PersonMatchAdaFaceModel", {
-      description: "Pinned CVLFace AdaFace ViT-Base KP-RPE model, component, and PyTorch runtime provenance.",
+      description: "Pinned CVLFace model components with current ONNX or historical PyTorch provenance.",
     })
   )
 ) {}
@@ -1589,7 +1589,7 @@ export class PersonMatchWorkerLimits extends S.Opaque<PersonMatchWorkerLimits, {
 ) {}
 
 /**
- * Defines a successful response from the local person-matching Python worker.
+ * Defines a successful report from the in-process person matcher.
  *
  * **Example** (Validate an empty worker success)
  *

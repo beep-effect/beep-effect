@@ -126,6 +126,40 @@ Lane chore/finish-board-pause-b1
 
 Reverse: goals set-status python-free-repo active when it is picked up
 
+### Generate fixed AdaFace ONNX graphs from the existing safetensors pins, 2026-11-13
+
+Port the fixed DFA MobileNet and 24-block ViT KP-RPE inference graphs to a typed TypeScript ONNX writer. Retain the exact source SHA-256 pins, generate graphs locally, and key the cache by both source hashes and graph version. Preserve the 25% context crop and 0.20 confidence floor. No remote executable code or separately hosted graph is admitted.
+
+Lane t3/python-free-photo-face
+
+Reverse: Restore the prior photo-face implementation from the parent commit.
+
+### Preserve Buffalo preprocessing and pinned artifact provenance, 2026-11-13
+
+Run the original det_10g.onnx and w600k_r50.onnx pins with CPUExecutionProvider. Port SCRFD decoding and NMS, five-point similarity alignment, OpenCV-compatible bilinear resampling, embedding normalization, quality flags and aggregate scoring. Keep existing report schemas and failure reasons, extending AdaFace runtime provenance to admit ONNX while retaining decoding of historical PyTorch reports. Photo-face parity evidence is in research/photo-face-parity.md.
+
+Lane t3/python-free-photo-face
+
+Reverse: Restore the prior Buffalo worker from the parent commit and its retained external parity reference.
+
+### Run photo-face on CPU with onnxruntime-node and sharp, 2026-11-13
+
+Add onnxruntime-node 1.31.1 through the root catalog and use the existing sharp catalog dependency. CPUExecutionProvider is the sole provider. Delete compute and devices CLI flags and the ROCm/uv environment machinery; retain actual CPU provenance in reports. Buffalo uses the unchanged det_10g and w600k_r50 ONNX pins with SCRFD decoding, NMS, similarity alignment and normalized embeddings.
+
+The fixed CPU graphs execute one face per call. Remove the batch-size flag as well, and report the actual batch size of one rather than retain a no-op batch control. Historical report schemas remain readable.
+
+Lane t3/python-free-photo-face
+
+Reverse: Revert this lane and restore its Python environment and CLI flags.
+
+### Add native CPU inference and bounded ZIP decoding dependencies, 2026-11-13
+
+Pin onnxruntime-node 1.31.1 in the root catalog and add it to repo-cli. Reuse catalog sharp and fflate 0.8.3; fflate extracts only the bounded checksum-pinned Buffalo entries from the original verified ZIP. No new model hosting or model artifact is introduced. Python implementation scripts are package-owned implementation hooks rather than generated task aliases; remove those two dead hooks and regenerate the remaining scripts through package-scripts --write.
+
+Lane t3/python-free-photo-face
+
+Reverse: Revert the lane catalog, dependency and lockfile changes together.
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

@@ -249,7 +249,7 @@ InsightFace's `det_10g` face detector with DFA MobileNet alignment and CVLFace
 AdaFace ViT-Base KP-RPE recognition. Linux arm64, macOS x64/arm64, and Windows
 x64 hosts default to the InsightFace Buffalo CPU backend. Other host/architecture
 pairs, including Windows arm64, fail before cache or model acquisition because
-the frozen environment has no complete wheel set for them. Explicit AdaFace
+the native ONNX runtime is unsupported there. Explicit AdaFace
 selection outside Linux x64 fails at the same preflight boundary.
 
 ```bash
@@ -258,8 +258,6 @@ bun run beep files match-person \
   --dir ./mixed-photos \
   --manifest ./person-match.json \
   --out-dir ./person-match-output \
-  --compute rocm \
-  --devices 0 \
   --accept-model-license
 ```
 
@@ -271,22 +269,11 @@ and [InsightFace detector](https://github.com/deepinsight/insightface/blob/maste
 terms before passing `--accept-model-license`. The flag records the caller's
 confirmation; it does not grant or change a license.
 
-On Linux x64, the first AdaFace run creates a pinned Python 3.12 environment
-and downloads the hash-verified aligner and recognizer into
-`${XDG_CACHE_HOME:-$HOME/.cache}/beep/photo-face`. The AMD runtime also needs a
-compatible `libhipsparselt.so.0`. Install the matching ROCm `hipsparselt`
-package, or set `BEEP_PHOTO_FACE_ROCM_LIBRARY_PATH` to the one directory that
-contains that library. An explicit `--cache-dir` moves the isolated environment
-and model cache. Set `BEEP_UV_PATH` to an absolute trusted `uv` executable when
-it is not installed in a standard system location or `$HOME/.local/bin`.
-
-`--devices` accepts at most one non-negative ROCm device index. A worker uses
-one GPU; run separate workers with different device indices to use multiple
-GPUs. `--compute rocm` fails closed if the requested GPU or pinned runtime is
-unavailable. `--compute auto` may fall back to the separate pinned CPU
-environment and records that fallback in the manifest. Before either attempt,
-the CLI verifies the committed uv lock; lock, process, and worker-protocol
-failures remain terminal.
+The CLI runs inference in process with ONNX Runtime on CPU. Models and locally
+generated AdaFace graphs are cached under
+`${XDG_CACHE_HOME:-$HOME/.cache}/beep/photo-face`; `--cache-dir` overrides this.
+See [local person matching](PHOTO-FACE.md) for model terms, crop rules,
+rejection reasons, cache behavior, and removed compute flags.
 
 References must contain exactly one detected face. Use several clear photos
 covering different ages, expressions, lighting, eyewear, and hair styles. A
