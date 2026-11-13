@@ -11,7 +11,7 @@ import * as Str from "effect/String";
 // run passes `--concurrency=1`, and the prebuild ran `turbo run build --concurrency=4` anyway. Every
 // Turbo invocation the run spawns now follows a caller's `--concurrency=1`; other shapes keep theirs.
 
-const concurrencyArgs = A.filter(Str.startsWith("--concurrency"));
+const concurrencyArgs = (args: ReadonlyArray<string>) => A.filter(args, Str.startsWith("--concurrency"));
 const OWNERS = ["@beep/types", "@beep/utils"];
 
 describe("serial coverage under --concurrency=1", () => {

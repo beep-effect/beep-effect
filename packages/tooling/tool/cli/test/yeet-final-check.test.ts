@@ -542,8 +542,9 @@ describe("forced final-check on a worker", () => {
   });
 
   it("names the packages a selected coverage plan measures", () => {
-    const lines = forcedWorkerFinalCheckLines(forcedRouting(O.some(selected)));
-    const gates = forcedWorkerGates(forcedRouting(O.some(selected)));
+    const routing = O.some(selected).pipe(forcedRouting);
+    const lines = forcedWorkerFinalCheckLines(routing);
+    const gates = forcedWorkerGates(routing);
     expect(A.takeRight(lines, 2)).toEqual([
       "[yeet] final-check --force-local on the worker profile runs coverage one task at a time (concurrency 1)",
       "[yeet] final-check --force-local measures coverage for @beep/types, @beep/utils (this diff's affected plan)",
@@ -552,7 +553,8 @@ describe("forced final-check on a worker", () => {
   });
 
   it("forces a noop coverage plan without naming packages", () => {
-    const lines = forcedWorkerFinalCheckLines(forcedRouting(O.some(CoverageNoopScope.make({}))));
+    const routing = O.some(CoverageNoopScope.make({})).pipe(forcedRouting);
+    const lines = forcedWorkerFinalCheckLines(routing);
     const last = A.last(lines);
     assertSome(
       last,
@@ -561,13 +563,15 @@ describe("forced final-check on a worker", () => {
   });
 
   it("refuses coverage whose plan falls back to the whole workspace or could not be read", () => {
-    const fullSkips = computeProfileFinalCheckSkips(forcedRouting(O.some(full)));
-    const fullLines = forcedWorkerFinalCheckLines(forcedRouting(O.some(full)));
-    const unreadLines = forcedWorkerFinalCheckLines(forcedRouting(O.none()));
-    const unreadGates = forcedWorkerGates(forcedRouting(O.none()));
+    const fullRouting = O.some(full).pipe(forcedRouting);
+    const unreadRouting = O.none().pipe(forcedRouting);
+    const fullSkips = computeProfileFinalCheckSkips(fullRouting);
+    const fullLines = forcedWorkerFinalCheckLines(fullRouting);
+    const unreadLines = forcedWorkerFinalCheckLines(unreadRouting);
+    const unreadGates = forcedWorkerGates(unreadRouting);
     expect(A.map(fullSkips, (skip) => skip.gate)).toContain("coverage");
     const fullLast = A.last(fullLines);
-    const unreadLast = O.map(A.last(unreadLines), Str.includes("could not be read"));
+    const unreadLast = A.last(unreadLines).pipe(O.map(Str.includes("could not be read")));
     assertSome(
       fullLast,
       `[yeet] final-check --force-local refused coverage on the worker profile: its affected plan falls back to the whole workspace (package.json changed): no measured worker budget; ${PUSH_ROUTE}`
