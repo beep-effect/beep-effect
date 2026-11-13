@@ -154,6 +154,12 @@ Operator ruling, 2026-11-13: constructors shared with isolated worker entrypoint
 
 Reverse: Restore the optional budget lookup in RegexInput.
 
+### Keep direct invocation fixtures scoped to each request, 2026-11-13
+
+Effect/Vitest EV003 reports 108 unresolved-resource-wrapper judgments at the shared invocation fixture calls (95 withCitationTestInvocation and 13 withCitationTestTextBudget). Each opens request-scoped admission, a fresh budget and cleanup; it.layer sharing would turn independent method calls into one request and change queue, deadline and ledger assertions. These two reviewed wrapper families receive explicit owned inventory exceptions, without changing detector policy. The existing it.layer platform services remain shared.
+
+Reverse: Replace the fixture wrappers with a test Layer when the harness can preserve per-call admission, budget, deadline and cleanup semantics.
+
 ### Keep the full law-practice audit on hosted CI, 2026-11-13
 
 The operator clarified on 2026-11-13 that file-by-file local tests govern because the full law-practice package audit runs the whole suite. Run package-verify --quick and docgen:local locally, and leave the full audit to hosted CI. The smaller lint-rules package receives its full package-verify.

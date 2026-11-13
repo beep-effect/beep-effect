@@ -113,36 +113,33 @@ export const makeCitationSourceResolution = Effect.fn("Citation.makeSourceResolu
       Effect.provideService(Digest.Digest, digest)
     );
     return {
-      resolve: Effect.fn("Citation.resolveSourceBoundary")((raw: unknown) =>
-        Effect.scoped(
-          Effect.gen(function* () {
-            const { workDuration, result, producedTextUtf16 } = yield* measureCitationTextWork(
-              (yield* CitationInvocation).budget,
-              prepare(raw)
-            );
-            const reportPolicy = yield* captureCitationOperationPolicy(limits, engineArtifact, invalid);
-            const report = CitationEngineReport.make({
-              operation: "resolve",
-              engineArtifact,
-              limits: reportPolicy.limits,
-              workDuration,
-              producedTextUtf16,
-              extraction: null,
-            });
-            return CitationSourceResolutionResult.make({
-              ...result,
-              output: CitationEngineResolutionResult.make({
-                source: result.source,
-                document: result.document,
-                report,
-              }),
-            });
-          })
-        ).pipe(
-          Effect.catchTags({
-            CitationSafetyLimitExceeded: timing.failSafety,
-          })
-        )
+      resolve: Effect.fn("Citation.resolveSourceBoundary")(
+        function* (raw: unknown) {
+          const { workDuration, result, producedTextUtf16 } = yield* measureCitationTextWork(
+            (yield* CitationInvocation).budget,
+            prepare(raw)
+          );
+          const reportPolicy = yield* captureCitationOperationPolicy(limits, engineArtifact, invalid);
+          const report = CitationEngineReport.make({
+            operation: "resolve",
+            engineArtifact,
+            limits: reportPolicy.limits,
+            workDuration,
+            producedTextUtf16,
+            extraction: null,
+          });
+          return CitationSourceResolutionResult.make({
+            ...result,
+            output: CitationEngineResolutionResult.make({
+              source: result.source,
+              document: result.document,
+              report,
+            }),
+          });
+        },
+        Effect.catchTags({
+          CitationSafetyLimitExceeded: timing.failSafety,
+        })
       ),
     };
   },

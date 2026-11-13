@@ -136,6 +136,17 @@ The first publication attempt stopped before committing at the stale identity-pr
 hook. The canonical profile writer regenerated `biome.identity.jsonc`; the hook
 also refreshed the law-practice schema and instrumentation catalogs. These
 projections were reviewed and staged by name before retrying publication.
+The subsequent collected gates found stale schema-first inventory locations,
+108 EV003 judgments on the two request-scoped fixture wrappers, and duplicated
+clean/resolve Scope wrappers. Schema inventory was regenerated without new
+schema exceptions. The EV003 judgments were reviewed and given explicit owned
+exceptions: sharing one request in `it.layer` changes admission, budget and
+cleanup semantics. See `decisions/2026-11-13-keep-direct-invocation-fixtures-scoped-to-each-request.md`.
+The redundant clean/resolve Scopes were removed in favor of the invocation's
+Scope and the existing `Effect.fn` generator form. Both affected tests, quick
+package verification, separate docgen and the Fallow audit pass after that fix.
+Fallow reports zero introduced blocking findings; test-clone advisories remain
+nonblocking under the existing pilot policy.
 
 | Command | Result |
 | --- | --- |

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-11-12",
+  "generatedOn": "2026-11-13",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -1200,14 +1200,6 @@
       "reason": "Fixed reviewed source grammar regression controls decode 54 authored source plans and three route families to assert exact UTF-16 terms, head/outer extents, kinds, topology, frame argument provenance, functional partitions and route verdicts, plus atomic negative controls. Random codec round trips cannot establish those source grammar obligations. Public claim/tree model properties remain covered by the existing domain model tests; no arbitrary padding is introduced. This exception is limited to @beep/law-practice-domain fixed source-regression tests and must be re-reviewed when this file or its asserted invariants change."
     },
     {
-      "file": "packages/law-practice/server/src/internal/Citation/RegexInput.ts",
-      "symbol": "CitationPreparedRegexInput",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/law-practice-server",
-      "reason": "Private live capability combines schema-owned layout and Python Unicode value with a closure over the owned point-boundary map. Data halves already use annotated schemas; decoding data must not manufacture the project operation. This interface never crosses the worker wire, whose job is a separate closed schema."
-    },
-    {
       "file": "packages/law-practice/server/test/CandorRecord.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
@@ -1273,7 +1265,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 327,
+      "line": 333,
       "owner": "@beep/law-practice-server",
       "reason": "Exercises a live registry cursor, membership-before-lookup and fixed source cleaner observations. The fixture codec only authenticates recorded input; stateful runtime callback ordering is tested explicitly. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
     },

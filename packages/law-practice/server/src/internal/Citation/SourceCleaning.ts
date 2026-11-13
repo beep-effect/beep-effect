@@ -78,32 +78,29 @@ export const makeCitationSourceCleaning = Effect.fn("Citation.makeSourceCleaning
       Effect.provideService(Clock.Clock, clock)
     );
     return {
-      clean: Effect.fn("Citation.cleanSourceBoundary")((raw: unknown) =>
-        Effect.scoped(
-          Effect.gen(function* () {
-            const { workDuration, result, producedTextUtf16 } = yield* measureCitationTextWork(
-              (yield* CitationInvocation).budget,
-              prepare(raw)
-            );
-            const reportPolicy = yield* captureCitationOperationPolicy(limits, engineArtifact, invalid);
-            return CitationEngineCleanResult.make({
-              ...result,
-              report: CitationEngineReport.make({
-                operation: "clean",
-                engineArtifact,
-                limits: reportPolicy.limits,
-                producedTextUtf16,
-                workDuration,
-                extraction: null,
-              }),
-            });
-          })
-        ).pipe(
-          Effect.catchTags({
-            CitationCleanerFailure: failCitationCleanerBoundary,
-            CitationSafetyLimitExceeded: timing.failSafety,
-          })
-        )
+      clean: Effect.fn("Citation.cleanSourceBoundary")(
+        function* (raw: unknown) {
+          const { workDuration, result, producedTextUtf16 } = yield* measureCitationTextWork(
+            (yield* CitationInvocation).budget,
+            prepare(raw)
+          );
+          const reportPolicy = yield* captureCitationOperationPolicy(limits, engineArtifact, invalid);
+          return CitationEngineCleanResult.make({
+            ...result,
+            report: CitationEngineReport.make({
+              operation: "clean",
+              engineArtifact,
+              limits: reportPolicy.limits,
+              producedTextUtf16,
+              workDuration,
+              extraction: null,
+            }),
+          });
+        },
+        Effect.catchTags({
+          CitationCleanerFailure: failCitationCleanerBoundary,
+          CitationSafetyLimitExceeded: timing.failSafety,
+        })
       ),
     };
   },
