@@ -1952,9 +1952,10 @@ describe("ciLaneStepsForTesting", () => {
     expect(step.env).toBeUndefined();
   });
 
-  it("always checks the schema catalog, catalog usage, home paths and shadcn lint and appends changeset status on request", () => {
+  it("always checks workflow policy, the schema catalog, catalog usage, home paths and shadcn lint and appends changeset status on request", () => {
     const withoutFlag = ciLaneStepsForTesting(REPO_ROOT, "repo-sanity", baseOptions);
     expect(A.map(withoutFlag, (step) => step.label)).toEqual([
+      "ci:repo-sanity:workflow-lint",
       "lint:schema-catalog",
       "ci:repo-sanity:catalog-usage",
       "lint:private-home-paths",
@@ -1963,7 +1964,7 @@ describe("ciLaneStepsForTesting", () => {
     ]);
     expect(firstOf(withoutFlag)).toMatchObject({
       command: "bun",
-      args: ["run", "beep", "lint", "schema-catalog"],
+      args: ["run", "beep", "ci", "workflow-lint"],
       cwd: REPO_ROOT,
     });
     // Heavy / Lint Policy skips docs-only diffs, so the hosted home path
@@ -1980,6 +1981,7 @@ describe("ciLaneStepsForTesting", () => {
       CiLaneRunOptions.make({ ...baseOptions, changesetStatus: true })
     );
     expect(A.map(withFlag, (step) => step.label)).toEqual([
+      "ci:repo-sanity:workflow-lint",
       "lint:schema-catalog",
       "ci:repo-sanity:catalog-usage",
       "lint:private-home-paths",
