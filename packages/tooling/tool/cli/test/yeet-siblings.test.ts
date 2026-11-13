@@ -225,6 +225,32 @@ describe("renderSiblingBroadcast", () => {
     expect(body).toContain("git switch -C 'lane/$(touch${IFS}pwned)'\\''x' 'origin/lane/$(touch${IFS}pwned)'\\''x'");
   });
 
+  it("names the cascade backup per branch, so two lanes cascading at once keep separate backups", () => {
+    const cascading = (headRef: string): string =>
+      renderSiblingBroadcast(
+        SiblingBroadcast.make({
+          mergedPr: 3241,
+          mergeSha: MERGE_SHA,
+          baseSha: O.some(BASE_SHA),
+          sibling: PacketSibling.make({
+            ...sibling,
+            headRef,
+            probe: "unavailable",
+            conflicts: [],
+            place: PacketSiblingPlace.cases.Cascading.make({ belowPr: 3241 }),
+          }),
+        })
+      );
+    const one = cascading("lane/one");
+    const two = cascading("lane/two");
+    // Linked worktrees share refs/heads: a shared name would let one lane overwrite the other's tip.
+    expect(one).toContain("git branch -f 'pre-cascade/lane/one' HEAD");
+    expect(two).toContain("git branch -f 'pre-cascade/lane/two' HEAD");
+    expect(one).not.toContain("pre-cascade/lane/two");
+    expect(two).not.toContain("pre-cascade/lane/one");
+    expect(one).not.toContain("git branch -f pre-cascade HEAD");
+  });
+
   it("tells a stacked sibling both cases when its relation to the merged pull request was not read", () => {
     const body = renderSiblingBroadcast(
       SiblingBroadcast.make({
