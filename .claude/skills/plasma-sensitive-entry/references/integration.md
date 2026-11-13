@@ -59,7 +59,7 @@ Never inspect another UID's session or print a user-manager environment dump.
 ```ts
 import * as Fs from "node:fs";
 import * as Effect from "effect/Effect";
-import { runOwned } from "../scripts/prompt.ts";
+import * as ChildProcess from "effect/process/ChildProcess";
 
 const currentUserGuiEnv = Effect.gen(function* () {
   const uid = process.geteuid?.();
@@ -80,13 +80,19 @@ const currentUserGuiEnv = Effect.gen(function* () {
       process.env[key] !== undefined && process.env[key] !== value))
     return undefined;
   const env = { ...process.env, ...metadata };
-  const reachable = yield* runOwned(["busctl", "--user", "status"], env, 5);
-  return reachable.status === 0 ? env : undefined;
+  const reachable = yield* Effect.scoped(Effect.gen(function* () {
+    const child = yield* ChildProcess.make("busctl", ["--user", "status"], {
+      env, extendEnv: false, stdin: "ignore", stdout: "ignore", stderr: "ignore",
+      killSignal: "SIGKILL", forceKillAfter: "1 second",
+    });
+    return yield* child.exitCode;
+  }).pipe(Effect.timeout("5 seconds")));
+  return reachable === 0 ? env : undefined;
 }).pipe(Effect.catchCause(() => Effect.succeed(undefined)));
 ```
 
 Use the returned environment only for the owned helper/authentication lane.
-Provide `BunServices.layer` at the adapter's runtime boundary for `runOwned`.
+Provide `BunServices.layer` at the adapter's runtime boundary for the bus probe.
 Treat `undefined` as unavailable and stop; never print exception details.
 This sets only nonsecret runtime/bus metadata. `prompt.ts` preserves a complete
 caller-selected GUI context. Otherwise it resolves display metadata from

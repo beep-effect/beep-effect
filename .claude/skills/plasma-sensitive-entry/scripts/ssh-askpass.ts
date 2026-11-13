@@ -52,6 +52,7 @@ const main = Effect.scoped(
           result.answer.fill(0);
         })
     );
+    if (result.status === -3) return 3;
     if (result.status === 1 || result.status === 3) return 1;
     if (result.status !== 0 || !result.answer.length) return 2;
     // Only the verified direct SSH parent receives this private callback channel.

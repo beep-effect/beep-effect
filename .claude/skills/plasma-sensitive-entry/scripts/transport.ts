@@ -93,7 +93,8 @@ export const requestCode = Effect.fn("Plasma.requestCode")(
           Promise.all([resource.done, resource.drained]).then(([code]) => code)
         ).pipe(
           Effect.timeout(`${timeout + 10} seconds`),
-          Effect.catchCause(() => Effect.succeed(3))
+          Effect.catchTag("TimeoutError", () => Effect.succeed(-3)),
+          Effect.catchCause(() => Effect.succeed(2))
         );
         const answer =
           status === 0 && resource.resource.length <= 4096 ? Buffer.concat(resource.resource.output) : Buffer.alloc(0);

@@ -169,7 +169,14 @@ const login = Effect.fn("Auth.login")((host: string, email: string) =>
           }
           if (!result.answer.length || result.answer.some((byte) => byte < 0x20 || byte === 0x7f)) {
             result.answer.fill(0);
-            log(host, result.status === 1 ? "cancelled" : result.status === 3 ? "timed out" : "dialog unavailable");
+            log(
+              host,
+              result.status === 1
+                ? "cancelled"
+                : result.status === 3 || result.status === -3
+                  ? "timed out"
+                  : "dialog unavailable"
+            );
             return false;
           }
           seen = "";
