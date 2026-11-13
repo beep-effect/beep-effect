@@ -197,12 +197,30 @@ describe("renderSiblingBroadcast", () => {
     expect(body).toContain("#3241 was the layer below this pull request and merged alone");
     expect(body).toContain("Merge nothing into it: wait for `head_ref_force_pushed` on its timeline");
     expect(body).toContain(
-      "`git fetch origin && git switch -C codex/cache-creation-mask-identity origin/codex/cache-creation-mask-identity`"
+      "`git fetch origin && git switch -C 'codex/cache-creation-mask-identity' 'origin/codex/cache-creation-mask-identity'`"
     );
     expect(body).not.toContain("Merge `origin/main` into this lane now");
     // No probe ran, and the comment does not pretend one did.
     expect(body).not.toContain("conflict probe");
     expect(body).not.toContain("Expected conflicting files");
+  });
+
+  it("shell-quotes the branch name in the adopt command, so a hostile name stays one argument", () => {
+    const body = renderSiblingBroadcast(
+      SiblingBroadcast.make({
+        mergedPr: 3241,
+        mergeSha: MERGE_SHA,
+        baseSha: O.some(BASE_SHA),
+        sibling: PacketSibling.make({
+          ...sibling,
+          headRef: "lane/$(touch${IFS}pwned)'x",
+          probe: "unavailable",
+          conflicts: [],
+          place: PacketSiblingPlace.cases.Cascading.make({ belowPr: 3241 }),
+        }),
+      })
+    );
+    expect(body).toContain("git switch -C 'lane/$(touch${IFS}pwned)'\\''x' 'origin/lane/$(touch${IFS}pwned)'\\''x'");
   });
 
   it("tells a stacked sibling both cases when its relation to the merged pull request was not read", () => {

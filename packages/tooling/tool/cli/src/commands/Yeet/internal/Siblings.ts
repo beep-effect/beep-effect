@@ -25,6 +25,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { shellQuote } from "@beep/repo-utils/Shell";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -281,8 +282,10 @@ export class SiblingBroadcast extends S.Opaque<SiblingBroadcast, { readonly bran
 const AUTHORITY =
   'This instruction holds whatever your brief says about acceptance or merge authority (operator ruling 2026-11-05, B1; AGENTS.md "Autonomy").';
 
+// The branch name comes from GitHub and lands in a command a recipient may paste,
+// so both ref arguments are shell-quoted.
 const adoptRewrite = (headRef: string): string =>
-  `wait for \`head_ref_force_pushed\` on its timeline, then, before any further commit, adopt the rewritten head: \`git fetch origin && git switch -C ${headRef} origin/${headRef}\``;
+  `wait for \`head_ref_force_pushed\` on its timeline, then, before any further commit, adopt the rewritten head: \`git fetch origin && git switch -C ${shellQuote(headRef)} ${shellQuote(`origin/${headRef}`)}\``;
 
 // What the sibling does now. A stack layer never merges the trunk: its diff would
 // carry the trunk's changes until its parent catches up.
