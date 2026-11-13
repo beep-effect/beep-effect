@@ -142,7 +142,6 @@ const PRODUCER_HEAVY_ADMIT: CiCertaintyProducer = "heavy-admit.yml";
 const TEN_MINUTES = 10;
 const HEAVY_ADMISSION_JOB = "Heavy Admission";
 const DOCS_ADMISSION_STEP = "Satisfy documentation-only admission";
-const HEAVY_JOB_PREFIX = "Heavy / ";
 const TEST_PLAN_JOB = "Test Plan";
 const TEST_UNIT_PARTITION_PREFIX = "Test Unit (";
 const COVERAGE_CONTEXTS: ReadonlyArray<string> = ["Heavy / Coverage Regression", "Coverage Artifact Migration"];
@@ -433,6 +432,33 @@ const groupHeads = (runs: ReadonlyArray<CiCertaintyRun>): ReadonlyArray<HeadRuns
   );
 };
 
+// The instant a non-green head's verdict was decided: the first red or cancelled required context's
+// completion, else the latest required job's completion. Jobs outside the required set never move it,
+// so a red head is judged against the same instant its green twin would be (D5 monotonicity).
+const verdictDecidedAt = (
+  jobs: ReadonlyArray<ProducedJob>,
+  requiredGroups: ReadonlyArray<ReadonlyArray<string>>,
+  state: CiCertaintyHeadState,
+  t0: number
+): number => {
+  const latest = A.getSomes(A.map(requiredGroups, (names) => latestJobNamed(jobs, names)));
+  const completions = (keep: (produced: ProducedJob) => boolean): ReadonlyArray<number> =>
+    A.getSomes(A.map(A.filter(latest, keep), (produced) => completedMillis(produced.job)));
+  const lastRequired = A.match(
+    completions(() => true),
+    {
+      onEmpty: () => t0,
+      onNonEmpty: (values) => A.max(values, Order.Number),
+    }
+  );
+  const failed = Str.equivalence(state, "red") || Str.equivalence(state, "cancelled");
+  const failedAt = completions((produced) => {
+    const context = jobContextState(produced.job);
+    return Str.equivalence(context, "red") || Str.equivalence(context, "cancelled");
+  });
+  return failed && A.isReadonlyArrayNonEmpty(failedAt) ? A.min(failedAt, Order.Number) : lastRequired;
+};
+
 const judgeHead = (
   head: HeadRuns,
   allHeads: ReadonlyArray<HeadRuns>,
@@ -446,10 +472,7 @@ const judgeHead = (
   const state = headStateOf(contexts, partial, A.every(head.runs, isRunComplete));
   const requiredGreen = groupsGreenAt(jobs, requiredGroups);
   const mergeableGreen = groupsGreenAt(jobs, A.appendAll(requiredGroups, MERGEABLE_EXTRA_CONTEXTS));
-  const terminalAt = pipe(
-    A.getSomes(A.map(jobs, (produced) => completedMillis(produced.job))),
-    A.match({ onEmpty: () => head.t0, onNonEmpty: (values) => A.max(values, Order.Number) })
-  );
+  const decidedAt = verdictDecidedAt(jobs, requiredGroups, state, head.t0);
   const successor = A.findFirst(
     allHeads,
     (other) =>
@@ -462,7 +485,10 @@ const judgeHead = (
     successor,
     (next) =>
       Str.equivalence(state, "open") ||
-      (!Str.equivalence(state, "green") && next.t0 < terminalAt) ||
+      // check.yml's cancel-in-progress cancels a head in the same second its successor's run is
+      // created, so a cancelled head ties with its successor; red stays strict (D5 monotonicity).
+      (Str.equivalence(state, "cancelled") && next.t0 <= decidedAt) ||
+      (!Str.equivalence(state, "green") && !Str.equivalence(state, "cancelled") && next.t0 < decidedAt) ||
       (Str.equivalence(state, "green") && O.exists(requiredGreen, (green) => next.t0 < green.at))
   );
   const censor: O.Option<CiCertaintyCensorReason> = superseded
@@ -520,9 +546,12 @@ const percentile = (
  *
  * Censored heads (superseded or open) are counted apart and never enter the
  * percentile. Every other head is counted: a head with a value contributes it,
- * a head without one is a miss and contributes an unbounded value. Turning a
- * counted head's value into a miss can therefore never lower `p50Minutes` or
- * `p95Minutes`; the monotonicity fixture in `ci-certainty.test.ts` pins this.
+ * a head without one is a miss and contributes an unbounded value. For a fixed
+ * censoring, turning a counted head's value into a miss can therefore never
+ * lower `p50Minutes` or `p95Minutes`. The report keeps censoring fixed under
+ * that flip because a non-green head is judged superseded against the instant
+ * its verdict was decided, never against jobs outside the required set; the
+ * monotonicity fixtures in `ci-certainty.test.ts` pin both halves.
  *
  * **Example** (Score an empty population)
  *
@@ -589,7 +618,13 @@ const admissionToHeavyMinutes = (run: CiCertaintyRun): O.Option<number> => {
   );
   const heavyStarts = A.getSomes(
     A.map(
-      A.filter(jobs, (job) => Str.startsWith(HEAVY_JOB_PREFIX)(job.name) && job.conclusion !== "skipped"),
+      A.filter(
+        jobs,
+        (job) =>
+          !Str.equivalence(job.name, HEAVY_ADMISSION_JOB) &&
+          job.conclusion !== "skipped" &&
+          Str.equivalence(ciRunnerClassForLabels(job.labels), "managed")
+      ),
       (job) => epochMillis(job.started_at)
     )
   );
@@ -599,6 +634,45 @@ const admissionToHeavyMinutes = (run: CiCertaintyRun): O.Option<number> => {
       onNonEmpty: (starts) => O.some(minutesBetween(start, A.min(starts, Order.Number))),
     })
   );
+};
+
+// A heavy-admit.yml run whose Heavy Admission was skipped (a label event that admitted nothing) is no
+// producer run; check.yml runs always are.
+const isAdmittedRun = (run: CiCertaintyRun): boolean =>
+  isCheckPullRequestRun(run) ||
+  A.some(run.jobs, (job) => Str.equivalence(job.name, HEAVY_ADMISSION_JOB) && job.conclusion !== "skipped");
+
+/** One check.yml run of a head with the admitted heavy-admit.yml runs it owns. */
+interface HeadAttempt {
+  readonly check: CiCertaintyRun;
+  readonly headSha: string;
+  readonly jobs: ReadonlyArray<CiWorkflowJob>;
+}
+
+// Each admitted heavy-admit.yml run joins the latest check.yml run of its head created at or before it
+// (the first one when it came earlier), so a label-admitted head carries its beep-ec2-heavy minutes too.
+const headAttempts = (head: HeadRuns): ReadonlyArray<HeadAttempt> => {
+  const checks = A.sort(A.filter(head.runs, isCheckPullRequestRun), Order.mapInput(Order.Number, runCreatedMillis));
+  const admits = A.filter(
+    head.runs,
+    (run) => Str.equivalence(run.workflow, PRODUCER_HEAVY_ADMIT) && isAdmittedRun(run)
+  );
+  const ownerOf = (admit: CiCertaintyRun): number =>
+    O.getOrElse(
+      A.findLastIndex(checks, (check) => runCreatedMillis(check) <= runCreatedMillis(admit)),
+      () => 0
+    );
+  return A.map(checks, (check, index): HeadAttempt => {
+    const owned: ReadonlyArray<CiCertaintyRun> = A.filter(admits, (admit) => ownerOf(admit) === index);
+    return {
+      check,
+      headSha: head.headSha,
+      jobs: A.appendAll(
+        check.jobs,
+        A.flatMap(owned, (admit: CiCertaintyRun) => admit.jobs)
+      ),
+    };
+  });
 };
 
 const testUnitPartitionJobCount = (run: CiCertaintyRun): number =>
@@ -677,7 +751,11 @@ const rulesetDigestOf = (contexts: ReadonlyArray<string>) =>
  * pull_request runs; only heads whose T0 falls inside `[since, until)` are
  * judged, and the others are read only to detect supersession. For each
  * required context the latest-starting job across both producers and every
- * attempt wins, and a skipped job satisfies it. Main commits are judged when
+ * attempt wins, and a skipped job satisfies it. A head is superseded when the
+ * next push to its branch starts before its verdict was decided: its
+ * required-green instant, or, for any other state, the first red or cancelled
+ * required context's completion (else the latest required job's), so jobs
+ * outside the required set never censor a head. Main commits are judged when
  * their commit time falls inside the window. The report is certified only when
  * no counted head is api-partial, the main listing was complete, and at least
  * one code head was counted.
@@ -722,12 +800,16 @@ export const buildCiCertaintyReport = Effect.fn("Ci.buildCiCertaintyReport")(fun
     headRuns,
     (run) => isCheckPullRequestRun(run) && HashSet.has(codeHeadShas, run.run.head_sha)
   );
-  const runTotals = A.map(headRuns, (run) => ciCertaintyRunnerMinutes(run.jobs));
+  const attempts = A.flatMap(windowHeads, headAttempts);
+  const runTotals = A.map(attempts, (attempt) => ciCertaintyRunnerMinutes(attempt.jobs));
   const greenCodeRunTotals = A.map(
-    A.filter(codeCheckRuns, (run) =>
-      O.exists(runConclusion(run.run), (conclusion) => Str.equivalence(conclusion, "success"))
+    A.filter(
+      attempts,
+      (attempt) =>
+        HashSet.has(codeHeadShas, attempt.headSha) &&
+        O.exists(runConclusion(attempt.check.run), (conclusion) => Str.equivalence(conclusion, "success"))
     ),
-    (run) => totalRunnerMinutes(ciCertaintyRunnerMinutes(run.jobs))
+    (attempt) => totalRunnerMinutes(ciCertaintyRunnerMinutes(attempt.jobs))
   );
   const allHeadMinutes = A.reduce(heads, 0, (total, head) => total + totalRunnerMinutes(head.runnerMinutes));
   const supersededMinutes = A.reduce(
@@ -737,7 +819,12 @@ export const buildCiCertaintyReport = Effect.fn("Ci.buildCiCertaintyReport")(fun
   );
   const plannedRuns = A.filter(codeCheckRuns, isPlannedRun);
   const ownerScopedRuns = A.filter(plannedRuns, (run) => testUnitPartitionJobCount(run) < TEST_UNIT_FULL_LAYOUT_JOBS);
-  const admissionMinutes = A.getSomes(A.map(codeCheckRuns, admissionToHeavyMinutes));
+  const admissionMinutes = A.getSomes(
+    A.map(
+      A.filter(headRuns, (run) => HashSet.has(codeHeadShas, run.run.head_sha)),
+      admissionToHeavyMinutes
+    )
+  );
   const mainRows = A.map(
     A.filter(corpus.mainCommits, (commit) =>
       insideWindow(corpus.since, corpus.until, DateTime.toEpochMillis(commit.committedAt))
@@ -873,10 +960,10 @@ export const renderCiCertaintyMarkdown = (report: CiCertaintyReport): string =>
       latencyRow("Coverage verdict, code heads", report.coverageVerdict),
       latencyRow("Docs heads", report.docsHeads),
       "",
-      "## Runner-minutes per run",
+      "## Runner-minutes per head attempt",
       "",
-      `- runs: ${report.runnerMinutes.runs}; mean ${formatMinutes(report.runnerMinutes.meanTotal)} (GitHub-hosted ${formatMinutes(report.runnerMinutes.meanGithubHosted)}, beep-ec2-heavy ${formatMinutes(report.runnerMinutes.meanManaged)}); p50 ${formatMinutes(report.runnerMinutes.p50Total)}; p95 ${formatMinutes(report.runnerMinutes.p95Total)}`,
-      `- green code check.yml runs: p50 ${formatMinutes(report.runnerMinutes.greenCodeRunP50)}; p95 ${formatMinutes(report.runnerMinutes.greenCodeRunP95)}`,
+      `- head attempts: ${report.runnerMinutes.runs}; mean ${formatMinutes(report.runnerMinutes.meanTotal)} (GitHub-hosted ${formatMinutes(report.runnerMinutes.meanGithubHosted)}, beep-ec2-heavy ${formatMinutes(report.runnerMinutes.meanManaged)}); p50 ${formatMinutes(report.runnerMinutes.p50Total)}; p95 ${formatMinutes(report.runnerMinutes.p95Total)}`,
+      `- green code head attempts (check.yml plus admitted heavy-admit.yml): p50 ${formatMinutes(report.runnerMinutes.greenCodeRunP50)}; p95 ${formatMinutes(report.runnerMinutes.greenCodeRunP95)}`,
       `- superseded-head runner-minute share: ${formatShare(report.supersededRunnerMinuteShare)}`,
       "",
       "## Main verdict rate",
@@ -885,7 +972,7 @@ export const renderCiCertaintyMarkdown = (report: CiCertaintyReport): string =>
       "",
       "## Rows for sibling goals",
       "",
-      `- admission-to-Heavy start p50 (non-docs PR runs, n=${report.admissionToHeavy.n}): ${formatMinutes(report.admissionToHeavy.p50Minutes)}`,
+      `- admission-to-heavy-pool start p50 (code-head producer runs, n=${report.admissionToHeavy.n}): ${formatMinutes(report.admissionToHeavy.p50Minutes)}`,
       `- owner-scoped Test Unit selection: ${report.testUnitConversion.ownerScopedRuns} of ${report.testUnitConversion.plannedRuns} planned runs (${formatShare(report.testUnitConversion.share)}; full layout ${report.testUnitConversion.fullLayoutJobs} jobs)`,
       "",
       "## Heads",

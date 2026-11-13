@@ -29,7 +29,20 @@ const lines = (logged: ReadonlyArray<unknown>) => A.map(logged, (line) => `${lin
 const loggedLines = Effect.map(TestConsole.logLines, lines);
 const errorLines = Effect.map(TestConsole.errorLines, lines);
 
-const PROFILE_FULL = "goals_only=false\ndocs_only=false\ndesktop_rust_relevant=true";
+const PROFILE_FULL = A.join(
+  [
+    "goals_only=false",
+    "docs_only=false",
+    "desktop_rust_relevant=true",
+    "codegen_relevant=true",
+    "ecosystem_relevant=true",
+    "nix_relevant=true",
+    "desktop_ipc_relevant=true",
+    "sast_relevant=true",
+    "security_relevant=true",
+  ],
+  "\n"
+);
 
 it.layer(Layer.mergeAll(NodeServices.layer, Digest.layerWebCrypto), { timeout: "60 seconds" })(
   "CI binary commands in-process",
