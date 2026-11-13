@@ -142,6 +142,7 @@ const PRODUCER_HEAVY_ADMIT: CiCertaintyProducer = "heavy-admit.yml";
 const TEN_MINUTES = 10;
 const HEAVY_ADMISSION_JOB = "Heavy Admission";
 const DOCS_ADMISSION_STEP = "Satisfy documentation-only admission";
+const DOCS_POLICY_JOB = "Docs Policy";
 const TEST_PLAN_JOB = "Test Plan";
 const TEST_UNIT_PARTITION_PREFIX = "Test Unit (";
 const COVERAGE_CONTEXTS: ReadonlyArray<string> = ["Heavy / Coverage Regression", "Coverage Artifact Migration"];
@@ -375,18 +376,24 @@ const isRunComplete = (run: CiCertaintyRun): boolean =>
     onSome: (status) => Str.equivalence(status, "completed"),
   });
 
-const headClassOf = (jobs: ReadonlyArray<ProducedJob>): CiCertaintyHeadClass =>
-  pipe(
-    A.filter(jobs, (produced) => Str.equivalence(produced.producer, PRODUCER_CHECK)),
-    (checkJobs) => latestJobNamed(checkJobs, [HEAVY_ADMISSION_JOB]),
-    O.exists((produced) =>
-      A.some(
-        produced.job.steps,
-        (step) => Str.equivalence(step.name, DOCS_ADMISSION_STEP) && step.conclusion === "success"
-      )
-    ),
-    (docs): CiCertaintyHeadClass => (docs ? "docs" : "code")
+// Two generations of check.yml mark a documentation-only head. Until 2026-11-13 its Heavy Admission
+// job ran the documentation-only admission step. Since then that job is skipped before runner
+// allocation on such a head, and Docs Policy, which only a docs_only change profile creates, is the
+// marker: any conclusion but `skipped` (a red or cancelled Docs Policy is still a docs head).
+const headClassOf = (jobs: ReadonlyArray<ProducedJob>): CiCertaintyHeadClass => {
+  const checkJobs = A.filter(jobs, (produced) => Str.equivalence(produced.producer, PRODUCER_CHECK));
+  const admittedAsDocs = O.exists(latestJobNamed(checkJobs, [HEAVY_ADMISSION_JOB]), (produced) =>
+    A.some(
+      produced.job.steps,
+      (step) => Str.equivalence(step.name, DOCS_ADMISSION_STEP) && step.conclusion === "success"
+    )
   );
+  const ranDocsPolicy = O.exists(
+    latestJobNamed(checkJobs, [DOCS_POLICY_JOB]),
+    (produced) => produced.job.conclusion !== "skipped"
+  );
+  return admittedAsDocs || ranDocsPolicy ? "docs" : "code";
+};
 
 /** A head's runs, its T0 and its branch, before judgement. */
 interface HeadRuns {

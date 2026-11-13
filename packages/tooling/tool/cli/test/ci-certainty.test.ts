@@ -166,6 +166,49 @@ describe("ci certainty fixture replay", () => {
       })
     );
 
+    it.effect("classes a head apart by its Docs Policy job once Heavy Admission is skipped on documentation", () =>
+      Effect.gen(function* () {
+        const corpus = yield* loadCorpus(BASELINE);
+        // The same docs head as check.yml shapes it since 2026-11-13: Heavy Admission is skipped before
+        // a runner is requested, and `policy` lists what the Docs Policy job reported (empty: no such job).
+        const reshaped = (policy: ReadonlyArray<string>) =>
+          CiCertaintyCorpus.make({
+            ...corpus,
+            pullRequestRuns: A.map(corpus.pullRequestRuns, (run) =>
+              Str.startsWith("b85ee265")(run.run.head_sha) && run.workflow === "check.yml"
+                ? CiCertaintyRun.make({
+                    ...run,
+                    jobs: A.flatMap(run.jobs, (job) =>
+                      job.name === "Heavy Admission"
+                        ? [
+                            CiWorkflowJob.make({ ...job, conclusion: "skipped", steps: [] }),
+                            ...A.map(policy, (conclusion) =>
+                              CiWorkflowJob.make({ ...job, conclusion, id: job.id + 1, name: "Docs Policy", steps: [] })
+                            ),
+                          ]
+                        : [job]
+                    ),
+                  })
+                : run
+            ),
+          });
+        const classOf = (policy: ReadonlyArray<string>) =>
+          buildCiCertaintyReport(reshaped(policy)).pipe(
+            Effect.map((report) => headStartingWith(report.heads, "b85ee265").headClass)
+          );
+
+        const green = yield* classOf(["success"]);
+        const red = yield* classOf(["failure"]);
+        const skipped = yield* classOf(["skipped"]);
+        const absent = yield* classOf([]);
+        strictEqual(green, "docs");
+        // A red Docs Policy is still a documentation head; a skipped or absent one is a code head.
+        strictEqual(red, "docs");
+        strictEqual(skipped, "code");
+        strictEqual(absent, "code");
+      })
+    );
+
     it.effect("reports the post-#3030 admission and Test Unit selection rows", () =>
       Effect.gen(function* () {
         const report = yield* loadCorpus(PLANNED).pipe(Effect.flatMap(buildCiCertaintyReport));

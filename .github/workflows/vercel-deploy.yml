@@ -20,11 +20,22 @@ name: Vercel Deploy
 #                     preview or production, unconditionally.
 #
 # Runbook: docs/runbooks/vercel-deploys.md.
+#
+# The pull_request `paths` filter is that preview rule stated to GitHub: one
+# `<root>/**` row per `auto` app in VERCEL_APPS, plus this file. A pull request
+# that touches none of them plans no deploy, so the workflow is never created
+# and takes no runner (it used to allocate one for 20 seconds on every pull
+# request to print three skips). ci-docs-job-admission.test.ts keeps the rows
+# equal to the app roots.
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+    paths:
+      - apps/todox/**
+      - apps/oip-web/**
+      - .github/workflows/vercel-deploy.yml
   workflow_dispatch:
     inputs:
       project:
