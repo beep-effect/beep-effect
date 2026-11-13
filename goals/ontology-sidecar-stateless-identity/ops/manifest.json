@@ -3,14 +3,14 @@
   "initiative": {
     "id": "ontology-sidecar-stateless-identity",
     "title": "Ontology Sidecar Stateless Identity",
-    "status": "active",
+    "status": "paused",
     "created": "2026-09-22",
-    "updated": "2026-09-22",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/ontology-sidecar-stateless-identity",
-  "lifecycle": "active",
-  "statusNote": "Starts after goals/mcp-stateless-kit-and-drivers PR 1 (kit dual-read, dispatch anchor, @beep/mcp-kit/client, conformance port) merges; may overlap that goal's later PRs.",
+  "lifecycle": "paused",
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): It is marked active but nothing is in flight; it is a bounded protocol migration worth doing later. Resume with `bun run beep goals set-status ontology-sidecar-stateless-identity active` when it is picked up. Before the ruling: Starts after goals/mcp-stateless-kit-and-drivers PR 1 (kit dual-read, dispatch anchor, @beep/mcp-kit/client, conformance port) merges; may overlap that goal's later PRs.",
   "mission": "Move the desktop ontology MCP sidecar to the stateless 2026-07-28 protocol with the GovernedTierGate run keyed on the verified per-launch bearer, the harness on the 2026 wire, and the Origin policy owned by config.",
   "executionCapable": true,
   "reflectionRequired": true,

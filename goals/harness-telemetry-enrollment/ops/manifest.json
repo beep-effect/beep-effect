@@ -3,13 +3,13 @@
   "initiative": {
     "id": "harness-telemetry-enrollment",
     "title": "Qualify every agent harness and surface",
-    "status": "active",
+    "status": "paused",
     "created": "2026-10-27",
-    "updated": "2026-11-03",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/harness-telemetry-enrollment",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "Enroll declared CLI, desktop and proxy routes without overstating coverage, preserving identity across clones, worktrees and hosts.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -126,7 +126,7 @@
     "New spend, plan changes or purchases require the operator.",
     "Never release the historical forwarder recovery hold as part of this packet."
   ],
-  "statusNote": "Enrollment remains active. Supporting PR2663 refreshes source-bound admission after accepted T3-only retirement2594:81 preparation inputs,87 disposable and86 live selected bindings, exact2synthetic events per stage, fresh backend readback and independent reviews. Separate actual-root identity proof passes. Historical470d609 receipts and prototype remain preserved; incompatible active session scripts removed without restoring messaging. All seven real harness populations remain Unknown. Native one-shot producer work proceeds separately; recovery forwarder service/timer remain masked/inactive.",
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): It isn't actively moving and is gated on agent-observability-foundation. Resume with `bun run beep goals set-status harness-telemetry-enrollment active` when it is picked up. Before the ruling: Enrollment remains active. Supporting PR2663 refreshes source-bound admission after accepted T3-only retirement2594:81 preparation inputs,87 disposable and86 live selected bindings, exact2synthetic events per stage, fresh backend readback and independent reviews. Separate actual-root identity proof passes. Historical470d609 receipts and prototype remain preserved; incompatible active session scripts removed without restoring messaging. All seven real harness populations remain Unknown. Native one-shot producer work proceeds separately; recovery forwarder service/timer remain masked/inactive.",
   "resumeConditions": [],
   "dependencies": ["goals/agent-observability-foundation"],
   "researchReferences": [

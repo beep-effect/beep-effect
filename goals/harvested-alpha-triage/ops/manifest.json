@@ -4,13 +4,13 @@
     "id": "harvested-alpha-triage",
     "packetId": "goal-packet/v1:80776222992fb5ab2b4290fb17c6449844700a184e859678cfd590b5324e024e",
     "title": "Harvested Alpha Triage",
-    "status": "active",
+    "status": "paused",
     "created": "2026-11-06",
-    "updated": "2026-11-06",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/harvested-alpha-triage",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "Judge the harvest ledger with three separate provider sessions (Opus 5.5 high, Grok 4.7 xhigh, GPT-6.1 Sol medium) into row-keyed verdict JSONL, merge deterministically, and seed `explorations/harvested-alpha-2026-11` at stage `shape` so its MAP graduates the still-open alpha into concrete goals.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -86,5 +86,6 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): It is blocked on an upstream ledger and nothing is in flight. Resume with `bun run beep goals set-status harvested-alpha-triage active` when it is picked up."
 }

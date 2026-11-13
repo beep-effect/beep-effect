@@ -2,7 +2,9 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `paused`
+
+**Paused by operator ruling (finish board, 2026-11-13).** It depends on the observability foundation and enrollment work and has never started. No lane is working on it; resume with `bun run beep goals set-status harness-emitters-all-providers active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

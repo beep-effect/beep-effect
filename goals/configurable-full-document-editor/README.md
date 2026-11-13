@@ -4,6 +4,8 @@
 
 Lifecycle: `paused`
 
+**Paused by operator ruling (finish board, 2026-11-13).** It has a clear resume gate on another goal, and nothing is in flight. No lane is working on it; resume with `bun run beep goals set-status configurable-full-document-editor active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
+
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Mission

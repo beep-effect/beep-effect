@@ -4,6 +4,8 @@
 
 Lifecycle: `paused` (authored-but-not-started; day 1 starts on Benjamin's signal)
 
+**Paused by operator ruling (finish board, 2026-11-13).** It waits on an explicit operator start signal and depends on the demo corpus goal finishing first. No lane is working on it; resume with `bun run beep goals set-status lejeune-knowledge-desk-lab active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
+
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Mission

@@ -3,15 +3,15 @@
   "initiative": {
     "id": "folio-lynx-taxonomy-browse",
     "title": "FOLIO and Lynx Taxonomy Browse",
-    "status": "active",
+    "status": "paused",
     "created": "2026-08-13",
-    "updated": "2026-08-13",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/folio-lynx-taxonomy-browse",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "Convert vetted FOLIO and Lynx slices through TaxonomySeed and expose read-only navigation in the existing ontology toolkit.",
-  "statusNote": "Graduated fourth from document-structure-ontologies; Lynx lkg.ttl remains blocked on the Lynx packet's artifact-level vetting and license proof.",
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): Its only activity was routed research-intake findings; it isn't on the critical path and nothing is in flight. Resume with `bun run beep goals set-status folio-lynx-taxonomy-browse active` when it is picked up. Before the ruling: Graduated fourth from document-structure-ontologies; Lynx lkg.ttl remains blocked on the Lynx packet's artifact-level vetting and license proof.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
