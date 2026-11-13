@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { PosInt } from "@beep/repo-cli-kit/schema/PosInt";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
@@ -355,46 +356,87 @@ const bucket = (relative: number) => {
     Math.sign(relative) * Math.min(3.8, roundEven(1.9 + (Math.log(absolute / 1.9) / Math.log(15.2 / 1.9)) * 1.9))
   );
 };
-const buildRecognizer = (g: Graph): Uint8Array => {
+/**
+ * Dimensions of the fixed KP-RPE topology, with smaller equivalent graphs for tests.
+ *
+ * **Example** (Small attention graph)
+ * ```ts
+ * const dimensions = RecognizerGraphDimensions.make({ gridSide: 4, patchSide: 2, heads: 2, headWidth: 4, blocks: 2 })
+ * ```
+ * @internal
+ * @category inference
+ * @since 0.0.0
+ */
+export class RecognizerGraphDimensions extends S.Opaque<RecognizerGraphDimensions, { readonly brand: unique symbol }>()(
+  S.Struct({ gridSide: PosInt, patchSide: PosInt, heads: PosInt, headWidth: PosInt, blocks: PosInt }).pipe(
+    $I.annoteSchema("RecognizerGraphDimensions", {
+      description: "Patch grid and attention dimensions; production uses the pinned ViT-Base topology.",
+    })
+  )
+) {}
+const pinnedRecognizerDimensions = RecognizerGraphDimensions.make({
+  gridSide: 14,
+  patchSide: 8,
+  heads: 16,
+  headWidth: 32,
+  blocks: 24,
+});
+const buildRecognizer = (g: Graph, dimensions: RecognizerGraphDimensions): Uint8Array => {
+  const { gridSide, patchSide, heads, headWidth, blocks } = dimensions;
+  const tokens = gridSide * gridSide;
+  const width = heads * headWidth;
+  const imageSide = gridSide * patchSide;
   // Patch projection has no padding, unlike the aligner's padded convolutions.
   const patch = g.node(
     "Conv",
     ["images", g.weight("patch_embed.proj.weight"), g.weight("patch_embed.proj.bias")],
-    [intsAttribute("kernel_shape", [8, 8]), intsAttribute("strides", [8, 8])]
+    [intsAttribute("kernel_shape", [patchSide, patchSide]), intsAttribute("strides", [patchSide, patchSide])]
   );
-  let x = g.node("Add", [g.transpose(g.reshape(patch, [1, 512, 196]), [0, 2, 1]), g.weight("pos_embed")]);
-  const grid = A.flatten(A.makeBy(196, (i) => [((i % 14) + 0.5) / 14, (Math.floor(i / 14) + 0.5) / 14]));
+  let x = g.node("Add", [g.transpose(g.reshape(patch, [1, width, tokens]), [0, 2, 1]), g.weight("pos_embed")]);
+  const grid = A.flatten(
+    A.makeBy(tokens, (i) => [((i % gridSide) + 0.5) / gridSide, (Math.floor(i / gridSide) + 0.5) / gridSide])
+  );
   const relative = g.reshape(
-    g.node("Sub", [g.constant(grid, [1, 196, 1, 2]), g.reshape("keypoints", [1, 1, 5, 2])]),
-    [1, 196, 10]
+    g.node("Sub", [g.constant(grid, [1, tokens, 1, 2]), g.reshape("keypoints", [1, 1, 5, 2])]),
+    [1, tokens, 10]
   );
-  const contexts = g.transpose(g.reshape(g.linear(relative, "keypoint_linear"), [1, 196, 384, 49]), [0, 2, 1, 3]);
+  const contexts = g.transpose(
+    g.reshape(g.linear(relative, "keypoint_linear"), [1, tokens, blocks * heads, 49]),
+    [0, 2, 1, 3]
+  );
   const ids = A.flatten(
-    A.makeBy(196, (i) =>
+    A.makeBy(tokens, (i) =>
       A.makeBy(
-        196,
-        (j) => (bucket(Math.floor(i / 14) - Math.floor(j / 14)) + 3) * 7 + bucket((i % 14) - (j % 14)) + 3 + i * 49
+        tokens,
+        (j) =>
+          (bucket(Math.floor(i / gridSide) - Math.floor(j / gridSide)) + 3) * 7 +
+          bucket((i % gridSide) - (j % gridSide)) +
+          3 +
+          i * 49
       )
     )
   );
-  const indices = g.constant(ids, [196 * 196], true);
-  for (let i = 0; i < 24; i++) {
+  const indices = g.constant(ids, [tokens * tokens], true);
+  for (let i = 0; i < blocks; i++) {
     const prefix = `blocks.${i}`;
     const qkv = g.transpose(
-      g.reshape(g.linear(g.norm(x, `${prefix}.norm1`), `${prefix}.attn.qkv`, false), [1, 196, 3, 16, 32]),
+      g.reshape(g.linear(g.norm(x, `${prefix}.norm1`), `${prefix}.attn.qkv`, false), [1, tokens, 3, heads, headWidth]),
       [2, 0, 3, 1, 4]
     );
-    const q = g.node("Mul", [g.reshape(g.slice(qkv, 0, 1, 0), [1, 16, 196, 32]), g.constant([32 ** -0.5], [])]);
-    const k = g.reshape(g.slice(qkv, 1, 2, 0), [1, 16, 196, 32]);
-    const v = g.reshape(g.slice(qkv, 2, 3, 0), [1, 16, 196, 32]);
-    const context = g.reshape(g.slice(contexts, i * 16, (i + 1) * 16, 1), [1, 16, 196 * 49]);
-    const rpe = g.reshape(g.node("Gather", [context, indices], [intAttribute("axis", 2)]), [1, 16, 196, 196]);
+    const q = g.node("Mul", [
+      g.reshape(g.slice(qkv, 0, 1, 0), [1, heads, tokens, headWidth]),
+      g.constant([headWidth ** -0.5], []),
+    ]);
+    const k = g.reshape(g.slice(qkv, 1, 2, 0), [1, heads, tokens, headWidth]);
+    const v = g.reshape(g.slice(qkv, 2, 3, 0), [1, heads, tokens, headWidth]);
+    const context = g.reshape(g.slice(contexts, i * heads, (i + 1) * heads, 1), [1, heads, tokens * 49]);
+    const rpe = g.reshape(g.node("Gather", [context, indices], [intAttribute("axis", 2)]), [1, heads, tokens, tokens]);
     const attention = g.node(
       "Softmax",
       [g.node("Add", [g.node("MatMul", [q, g.transpose(k, [0, 1, 3, 2])]), rpe])],
       [intAttribute("axis", -1)]
     );
-    const output = g.reshape(g.transpose(g.node("MatMul", [attention, v]), [0, 2, 1, 3]), [1, 196, 512]);
+    const output = g.reshape(g.transpose(g.node("MatMul", [attention, v]), [0, 2, 1, 3]), [1, tokens, width]);
     x = g.node("Add", [x, g.linear(output, `${prefix}.attn.proj`)]);
     const mlp = g.node("Clip", [
       g.linear(g.norm(x, `${prefix}.norm2`), `${prefix}.mlp.fc1`),
@@ -403,10 +445,10 @@ const buildRecognizer = (g: Graph): Uint8Array => {
     ]);
     x = g.node("Add", [x, g.linear(mlp, `${prefix}.mlp.fc2`)]);
   }
-  x = g.reshape(g.norm(x, "norm"), [1, 196 * 512]);
+  x = g.reshape(g.norm(x, "norm"), [1, tokens * width]);
   x = g.batchNorm(g.linear(x, "feature.0", false), "feature.1", 2e-5);
   x = g.batchNorm(g.linear(x, "feature.2", false), "feature.3", 2e-5);
-  return g.model([valueInfo("images", [1, 3, 112, 112]), valueInfo("keypoints", [1, 5, 2])], x, [1, 512]);
+  return g.model([valueInfo("images", [1, 3, imageSide, imageSide]), valueInfo("keypoints", [1, 5, 2])], x, [1, width]);
 };
 
 const decodeTensorSource = Effect.fn("Files.decodeFaceTensorSource")(function* (
@@ -426,7 +468,18 @@ const decodeTensorSource = Effect.fn("Files.decodeFaceTensorSource")(function* (
     data: payload.subarray(8 + size + start, 8 + size + end),
   });
 });
-const decodeSafetensors = Effect.fn("Files.decodeFaceSafetensors")(function* (payload: Uint8Array) {
+/**
+ * Validate safetensors headers and return named tensor payload views.
+ *
+ * **Example** (Decode a checkpoint)
+ * ```ts
+ * const decode = decodeFaceSafetensors(new Uint8Array())
+ * ```
+ * @internal
+ * @category inference
+ * @since 0.0.0
+ */
+export const decodeFaceSafetensors = Effect.fn("Files.decodeFaceSafetensors")(function* (payload: Uint8Array) {
   if (payload.length < 8) return yield* MatchPersonError.modelIntegrity("Truncated safetensors header.");
   const size = Number(new DataView(payload.buffer, payload.byteOffset, 8).getBigUint64(0, true));
   if (!Number.isSafeInteger(size) || size < 2 || size > payload.length - 8)
@@ -457,11 +510,12 @@ const decodeSafetensors = Effect.fn("Files.decodeFaceSafetensors")(function* (pa
  */
 export const compileAdaFaceOnnx = Effect.fn("Files.compileAdaFaceOnnx")(function* (
   payload: Uint8Array,
-  component: "aligner" | "recognizer"
+  component: "aligner" | "recognizer",
+  dimensions: RecognizerGraphDimensions = pinnedRecognizerDimensions
 ) {
-  const tensors = yield* decodeSafetensors(payload);
+  const tensors = yield* decodeFaceSafetensors(payload);
   const graph = new Graph(tensors);
-  const model = component === "aligner" ? buildAligner(graph) : buildRecognizer(graph);
+  const model = component === "aligner" ? buildAligner(graph) : buildRecognizer(graph, dimensions);
   // Missing inputs remain visible in the encoded graph; reject before caching or execution.
   if (A.some(graph.nodes, (node) => Str.includes("MISSING:")(new TextDecoder().decode(node))))
     return yield* MatchPersonError.modelIntegrity(`Missing required ${component} tensors.`);

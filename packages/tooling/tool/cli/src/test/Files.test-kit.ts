@@ -24,7 +24,11 @@ export {
   verifyPersonMatchModelArtifacts,
   writePersonMatchModelBytes,
 } from "../commands/Files/internal/MatchPerson.model-store.ts";
-export { compileAdaFaceOnnx } from "../commands/Files/internal/MatchPerson.onnx.ts";
+export {
+  compileAdaFaceOnnx,
+  decodeFaceSafetensors,
+  RecognizerGraphDimensions,
+} from "../commands/Files/internal/MatchPerson.onnx.ts";
 export {
   boundedPersonMatchDirectoryNamesForTesting,
   defaultPersonMatchBackendForPlatform,

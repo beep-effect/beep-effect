@@ -21,3 +21,14 @@ Run the gated parity tests with `BEEP_PHOTO_FACE_PARITY_MODELS` set to a directo
 containing the checksum-pinned `det_10g.onnx`, `w600k_r50.onnx`,
 `aligner.safetensors`, and `recognizer.safetensors`. The tests compile the graphs
 in TypeScript, verify pins before loading, and never download models implicitly.
+
+`adaface-aligner-shapes.json` contains tensor names, dtypes and dimensions from
+only the header of the pinned CVLFace DFA checkpoint (SHA-256
+`80b6e922e4c76c10d5e24061fe47cd96112d18689bf5ae7e34af52e641c18c4a`).
+It contains no trained weights. The model-free ONNX tests allocate synthetic
+zero weights and unit normalization scales from these shapes, compile the full
+DFA graph and execute it on CPU. The same tests use a 4x4 patch grid, two blocks
+and two attention heads to exercise the KP-RPE builder without ViT-Base weights.
+The production defaults remain the pinned 14x14 grid and 24-block topology.
+CVLFace source attribution and MIT license are retained in the CLI's photo-face
+documentation and graph module.
