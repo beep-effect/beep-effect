@@ -6,8 +6,6 @@
     }
   },
   "devDependencies": {
-    "@babel/cli": "catalog:",
-    "@babel/core": "catalog:",
     "@beep/fc-runs": "workspace:^",
     "@beep/glob": "workspace:^",
     "@beep/jsonc": "workspace:^",
@@ -29,7 +27,6 @@
     "@vitest/browser": "catalog:",
     "@vitest/coverage-istanbul": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "babel-plugin-annotate-pure-calls": "catalog:",
     "effect": "catalog:",
     "fallow": "catalog:",
     "lefthook": "catalog:",

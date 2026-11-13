@@ -182,7 +182,7 @@ const usesSubgraphBuilder = (script: string): boolean => {
 
 // `rm -rf dist` breaks single-project emit differently: the incremental
 // tsbuildinfo survives outside dist, so `tsc -p` sees an up-to-date build,
-// emits nothing, and the babel step dies on the missing directory.
+// emits nothing, and the package is left without its declarations.
 const deletesOwnEmit = (script: string): boolean => Str.includes("rm -rf dist")(script);
 
 const violatesSingleProjectEmit = (script: string): boolean => usesSubgraphBuilder(script) || deletesOwnEmit(script);
@@ -242,7 +242,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
         "tsc -p tsconfig.json",
         "tsgo -p tsconfig.check.json && bun run beep:check:tests",
         "tsrs -p tsconfig.check.json && bun run beep:check:tests",
-        "tsrs -p tsconfig.json && bun run babel",
+        "tsrs -p tsconfig.json --emitDeclarationOnly",
         "tsc -p tsconfig.json && echo -b",
         "echo -b && tsgo -p tsconfig.json",
         'echo "tsc -b"',

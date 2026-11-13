@@ -27,15 +27,23 @@ import {
   checkerEngineExemptions,
   ImplScriptDrift,
   implScriptDefaults,
+  javaScriptBuildOverrides,
   NonCanonicalChecker,
   PackageKind,
   PackageScriptsReport,
+  RetiredScriptName,
+  retiredImplScripts,
   ScriptsBlock,
   scriptsBlockFromRecord,
   TaskScriptName,
   taskScriptRules,
 } from "./PackageScripts.schemas.ts";
-import type { CheckerEngineExemption, PackageScriptsDrift, TaskScriptRule } from "./PackageScripts.schemas.ts";
+import type {
+  CheckerEngineExemption,
+  JavaScriptBuildOverride,
+  PackageScriptsDrift,
+  TaskScriptRule,
+} from "./PackageScripts.schemas.ts";
 
 const $I = $RepoCliKitId.create("package-scripts/PackageScriptsPolicy");
 
@@ -69,7 +77,12 @@ export class PackageScriptsPolicyError extends S.TaggedError<
  * ```ts
  * import { DerivationEvidence } from "@beep/repo-cli-kit/package-scripts/PackageScriptsPolicy"
  * import * as HashSet from "effect/HashSet"
- * const evidence = DerivationEvidence.make({ doctestOwners: HashSet.empty(), bypassingConfigs: HashSet.empty(), generators: HashSet.empty() })
+ * const evidence = DerivationEvidence.make({
+ *   doctestOwners: HashSet.empty(),
+ *   bypassingConfigs: HashSet.empty(),
+ *   generators: HashSet.empty(),
+ *   javaScriptBuilds: HashSet.empty(),
+ * })
  * console.log(HashSet.size(evidence.doctestOwners)) // 0
  * ```
  * @category models
@@ -80,9 +93,11 @@ export class DerivationEvidence extends S.Opaque<DerivationEvidence, { readonly 
     doctestOwners: S.HashSet(S.String),
     bypassingConfigs: S.HashSet(S.String),
     generators: S.HashSet(S.String),
+    // Manifests whose reviewed `javaScriptBuildOverrides` row keeps their `beep:build` as written.
+    javaScriptBuilds: S.HashSet(S.String),
   }).pipe(
     $I.annoteSchema("DerivationEvidence", {
-      description: "Derived task membership keyed by repository-relative manifest path.",
+      description: "Derived task membership and JavaScript-emit overrides keyed by repository-relative manifest path.",
     })
   )
 ) {}
@@ -110,6 +125,7 @@ const scriptCodecs = R.fromEntries(
 );
 const policyError = (message: string) => (cause: unknown) => PackageScriptsPolicyError.make({ message, cause });
 const rulesFor = (kind: PackageKind) => A.filter(taskScriptRules, (rule) => rule.kind === kind);
+const isRetiredScriptName = S.is(RetiredScriptName);
 const placeholder = S.String.check(S.isPattern(/(?:echo ['"]no codegen needed['"]|will be implemented)/u));
 const isPlaceholder = S.is(placeholder);
 const kindForDirectory = (dir: string): PackageKind =>
@@ -140,6 +156,16 @@ const seedImplementation = (
 
   return impls;
 };
+// Implementation values are package-owned; only an exact match of a retired generated value is
+// rewritten, and a package with a JavaScript-emit override keeps its `beep:build`.
+const retireImplementations = (kind: PackageKind, impls: ScriptsBlock["impls"], keepsJavaScriptBuild: boolean) =>
+  A.reduce(retiredImplScripts, impls, (current, row) =>
+    row.kind === kind &&
+    !(keepsJavaScriptBuild && row.name === "beep:build") &&
+    O.exists(HashMap.get(current, row.name), (value) => value === row.value)
+      ? HashMap.set(current, row.name, row.replacement)
+      : current
+  );
 const ruleEnabled = (rule: TaskScriptRule, actual: ScriptsBlock, evidence: DerivationEvidence) =>
   Match.value(rule.presence).pipe(
     Match.tag("required", () => true),
@@ -175,7 +201,10 @@ const expectedBlock: PackageScriptsPolicyShape["expected"] = (kind, actual, evid
   }
   const codegen = HashMap.get(tasks, "codegen");
   if (O.exists(codegen, isPlaceholder)) tasks = HashMap.remove(tasks, "codegen");
-  return ScriptsBlock.make({ kind, tasks, impls, extras: actual.extras });
+  // After seeding, so an implementation seeded from a retired task value is retired in the same pass.
+  impls = retireImplementations(kind, impls, HashSet.size(evidence.javaScriptBuilds) > 0);
+  const extras = HashMap.filter(actual.extras, (_, name) => !isRetiredScriptName(name));
+  return ScriptsBlock.make({ kind, tasks, impls, extras });
 };
 
 const taskDrift = (
@@ -230,6 +259,13 @@ const diffBlock: PackageScriptsPolicyShape["diff"] = (actual, expected) => {
   }
   for (const [name] of expected.impls) {
     if (!HashMap.has(actual.impls, name)) drift.push({ _tag: "missing-impl", name });
+  }
+  for (const [name, value] of actual.impls) {
+    const replacement = HashMap.get(expected.impls, name).pipe(O.filter((text) => text !== value));
+    if (O.isSome(replacement)) drift.push({ _tag: "retired-impl", name, expected: replacement.value, actual: value });
+  }
+  for (const [name, value] of actual.extras) {
+    if (isRetiredScriptName(name)) drift.push({ _tag: "retired-script", name, actual: value });
   }
   for (const rule of rulesFor(actual.kind)) {
     if (missingOwnedTask(actual, rule)) {
@@ -322,7 +358,8 @@ export class PackageScriptsPolicy extends Context.Service<PackageScriptsPolicy, 
   {
     make: Effect.fn("PackageScriptsPolicy.make")(function* (
       root: string,
-      exemptions: ReadonlyArray<CheckerEngineExemption> = checkerEngineExemptions
+      exemptions: ReadonlyArray<CheckerEngineExemption> = checkerEngineExemptions,
+      overrides: ReadonlyArray<JavaScriptBuildOverride> = javaScriptBuildOverrides
     ) {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -391,8 +428,14 @@ export class PackageScriptsPolicy extends Context.Service<PackageScriptsPolicy, 
             ]);
         }
         const bypasses = yield* collectBypasses(repoRoot, entries, owners);
+        const javaScriptBuilds = HashSet.fromIterable(A.map(overrides, (row) => row.manifest));
         return {
-          evidence: DerivationEvidence.make({ doctestOwners: owners, bypassingConfigs: bypasses, generators }),
+          evidence: DerivationEvidence.make({
+            doctestOwners: owners,
+            bypassingConfigs: bypasses,
+            generators,
+            javaScriptBuilds,
+          }),
           drift,
         };
       });
@@ -414,6 +457,7 @@ export class PackageScriptsPolicy extends Context.Service<PackageScriptsPolicy, 
           doctestOwners: HashSet.filter(evidence.doctestOwners, (entry) => entry === manifestPath),
           bypassingConfigs: HashSet.filter(evidence.bypassingConfigs, (entry) => entry === manifestPath),
           generators: HashSet.filter(evidence.generators, (entry) => entry === manifestPath),
+          javaScriptBuilds: HashSet.filter(evidence.javaScriptBuilds, (entry) => entry === manifestPath),
         });
         const expected = expectedBlock(kind, actual, local);
         const turboFile = path.join(dir, "turbo.json");

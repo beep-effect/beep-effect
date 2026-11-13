@@ -20,9 +20,9 @@ At most three, opened one at a time in this order.
 
 1. **Baseline and proof harness.** Measures and fixes only. It decides whether
    PR 3 exists.
-2. **Declaration-only build.** Changes `tsconfig.base.json`, a global Turbo
-   input, so it invalidates every build cache entry once. Tell the sibling
-   verification goals before it merges and after.
+2. **Declaration-only build.** Changes every generated `beep:build` and the
+   `build` task outputs, so it invalidates every build cache entry once. Tell
+   the sibling verification goals before it merges and after.
 3. **Check once.** Conditional. Cut first if the appetite runs out or any
    diagnostic difference shows up.
 
