@@ -123,6 +123,14 @@ Reverse: Delete this checkpoint and restore the slice-1 checkpoint as the latest
 
 Reverse: Delete this checkpoint; it records a fact about main and changes no behaviour.
 
+### Certainty nightly is live; first run recorded, 2026-11-13
+
+The workflow from slice 4 (#3266) is on main. Its first run, dispatched for 2026-11-12, certified: run 43433123124, attempt 1, 84 GitHub requests, 2m43s of job time (3 billed minutes), 43 heads judged. Readings for that day: push to every required green over 32 code heads has 14 misses and a p50 of 23.3 minutes with p95 not attained; green-only code heads p50 15.8 and p95 27.9 minutes; main verdict rate 47.1% (8 of 17 non-docs commits, 9 cancelled); runner-minutes per green code head attempt p50 108.7. The row and the aggregates-only summary are under `history/`. This day is before the first countable day (2026-11-14), so P2 has zero of seven nights. Slices on main: 1, 2, 3, 4, 5, 6, 10, 11; in review: 7 (#3263).
+
+Lane docs/certainty-nightly-first-run
+
+Reverse: Delete this checkpoint and the 2026-11-12 row; they record a measurement and change no behaviour.
+
 ### Check-lane baselines before 3e822c71c5 are not comparable (check once), 2026-11-13
 
 #3242 merged at 3e822c71c5 (2026-11-13). The root Turbo `check` task now depends on the package's own `build` for declaration-only packages, and their `beep:check` runs the declaration-only build command. Every `check` hash misses once, and the first cold run is not a regression. Build minutes now sit inside the check lane (Heavy / Check and Heavy / Build start together on separate VMs and both compute the build on a cold hash), so a check-lane wall-time or runner-minute baseline from before that commit is not comparable, and the first certified nightly must be taken after it. The cache-qualification and check-census baselines were re-recorded in that PR. `TSRS_FAST` is a global Turbo input and part of tsrs incremental state, so each baseline records whether it was set.
@@ -178,5 +186,13 @@ Slice 3 (MEAS-02 with DEPS-10) merged as #3176. Slice 6 writes every `yeet final
 Lane feat/certainty-meas-07-final-check-journal
 
 Reverse: Delete this checkpoint so the slice-3 checkpoint is the latest PLAN status note, and revert the slice-6 PR.
+
+### Slice 7 (PERIL-11 slice 1) files attempt journals on removal, 2026-11-13
+
+Slice 6 (MEAS-07) merged as #3228. Slice 7 files a checkout's Yeet attempt journals in the workstation attempt-journal store before any removal deletes it, and before residue-reap deletes a directory that holds checkouts; `yeet economics --fleet` reads the store as `(retained)`, so retired lanes stay in the fleet census (decision `attempt-journal-store`). The export runs in `packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts` (inside the archive fence, before any capture, and before a plain removal), where a copy failure refuses the removal with preservation step `export-attempt-journals`, and in `packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts`, where it keeps the directory with skip reason `journal-export-failed`. The admission gate is `packages/tooling/tool/cli/test/yeet-attempt-journal-store.test.ts`: retire against a planted copy failure, retire, restore from the archive ref, retire again (a duplicate import that appends only the new attempt), residue-reap with `maxAgeDays: 0`, residue-reap before a retirement, and a Codex worktree removal, with a fleet census after each step that holds each (runId, attemptId) once. Prune: the store has none; once it passes 256 MB, a prune needs its own decision (the store held 0 bytes at landing; the workstation's 371 live journals total 8.9 MB). Next startable once this merges: PERIL-11 slices 2 and 3 (slices 8 and 9).
+
+Lane fix/certainty-peril-11-journal-export
+
+Reverse: Delete this checkpoint so the slice-6 checkpoint is the latest PLAN status note, and revert the slice-7 PR.
 
 <!-- beep:decisions:end -->
