@@ -12,7 +12,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { NearDuplicateFlag } from "./Dedupe.models.ts";
-import { ContentHash, NodeId, RevisionId } from "./NodeIdentity.models.ts";
+import { ContentHash, isWellFormedText, NodeId, RevisionId } from "./NodeIdentity.models.ts";
 import { LineageId } from "./Observation.events.ts";
 import { InsertPlacement, NodeOperation } from "./Operation.models.ts";
 
@@ -40,6 +40,14 @@ export { ClaimGateSeverity, ClaimGateViolation } from "@beep/epistemics/ClaimGat
  * structural floor. `nodeIdAlreadyExists` rejects an insert whose minted id
  * the log already holds, as on a batch retried after an uncertain commit.
  *
+ * Decision `admission-refusal-codes`: the rejected outcome names what the
+ * store refused. `unknownNode` rejects an operation naming a node the log
+ * never held (or an insert whose predecessor is no node of its file),
+ * `unknownRevision` one whose expected revision was never a revision of its
+ * node, and `statusOutsideLifecycle` a status move whose field has no
+ * lifecycle, whose value is outside it, or whose node text holds no single
+ * value of it.
+ *
  * **Example** (Check a violation code)
  *
  * ```ts
@@ -62,6 +70,9 @@ export const MemoryViolationCode = LiteralKit([
   "insertAfterMissingNode",
   "nodeIdAlreadyExists",
   "staleExpectedRevision",
+  "unknownNode",
+  "unknownRevision",
+  "statusOutsideLifecycle",
 ]).pipe(
   $I.annoteSchema("MemoryViolationCode", {
     description: "Store-specific violation codes layered on the claim gate findings.",
@@ -368,7 +379,7 @@ export const ConflictResolution = ConflictChoice.toTaggedUnion("choice")({
     }),
   },
   merged: {
-    text: S.NonEmptyString.annotateKey({ description: "Resolver-written replacement text." }),
+    text: S.NonEmptyString.check(isWellFormedText).annotateKey({ description: "Resolver-written replacement text." }),
     placement: S.OptionFromOptionalKey(InsertPlacement).annotateKey({
       description: "New place for a held insert; absent keeps the submitted placement.",
     }),
