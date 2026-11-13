@@ -84,6 +84,9 @@ const decodeChildArtifactRecord = S.decodeUnknownEffect(S.fromJsonString(ChildAr
 const decodeFileProcessingCoverageSummary = S.decodeUnknownEffect(S.fromJsonString(FileProcessingCoverageSummary));
 const decodeFileProcessingFailureRecord = S.decodeUnknownEffect(S.fromJsonString(FileProcessingFailureRecord));
 const decodeNormalizeManifest = S.decodeUnknownEffect(S.fromJsonString(NormalizeManifest));
+const decodeWorkerSuccessJson = S.decodeEffect(S.fromJsonString(PersonMatchWorkerSuccess), {
+  onExcessProperty: "error",
+});
 const decodePersonMatchReport = S.decodeUnknownEffect(S.fromJsonString(PersonMatchReport));
 const decodeProcessRunManifest = S.decodeUnknownEffect(S.fromJsonString(ProcessRunManifest));
 const decodeSourceProcessingRecord = S.decodeUnknownEffect(S.fromJsonString(SourceProcessingRecord));
@@ -4739,7 +4742,7 @@ const stubbedMatchLayer = Layer.effect(
         const worker = PersonMatchWorkerService.of({
           run: Effect.fn("FilesTest.workerRun")(() =>
             Config.String("BEEP_TEST_MATCH_REPORT").pipe(
-              Effect.flatMap(S.decodeEffect(S.fromJsonString(PersonMatchWorkerSuccess), { onExcessProperty: "error" })),
+              Effect.flatMap(decodeWorkerSuccessJson),
               Effect.mapError((cause) =>
                 MatchPersonProtocolError.make({ message: "Person-match worker returned invalid report.", cause })
               )

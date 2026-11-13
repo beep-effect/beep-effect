@@ -48,6 +48,7 @@ import type { FaceImage, InferredFace } from "./MatchPerson.inference.ts";
 import type { MatchPersonOptions, PersonMatchDisposition, PersonMatchModel } from "./MatchPerson.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Files/internal/MatchPerson.worker-service");
+const encodeWorkerReportJson = S.encodeEffect(S.fromJsonString(PersonMatchWorkerSuccess));
 /**
  * Canonical directories and destinations admitted by person-match preflight.
  *
@@ -513,7 +514,7 @@ const runWorker = Effect.fn("Files.PersonMatch.run")(function* (
     },
     elapsedSeconds: round((now - started) / 1000, 3),
   }).pipe(Effect.mapError((cause) => MatchPersonError.protocol("Inference produced an invalid report.", cause)));
-  const encoded = yield* S.encodeEffect(S.fromJsonString(PersonMatchWorkerSuccess))(report).pipe(
+  const encoded = yield* encodeWorkerReportJson(report).pipe(
     Effect.mapError((cause) => MatchPersonError.protocol("Cannot encode inference report.", cause))
   );
   if (new TextEncoder().encode(encoded).byteLength + 1 > 67108864)
