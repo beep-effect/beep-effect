@@ -201,26 +201,20 @@ export type EnvVarProps = typeof EnvVarProps.Type;
  * @category models
  * @since 0.0.0
  */
-export const EnvVarRequestBody = S.Struct({
-  key: EnvKey,
-  value: S.String,
-  type: EnvVarType,
-  target: S.NonEmptyArray(EnvTarget),
-  gitBranch: S.optionalKey(S.NonEmptyString),
-  comment: S.optionalKey(S.String),
-}).pipe(
-  $I.annoteSchema("EnvVarRequestBody", {
-    description: "Wire body that creates or upserts one Vercel environment variable.",
-  })
-);
-
-/**
- * Type-level member of {@link EnvVarRequestBody}.
- *
- * @category models
- * @since 0.0.0
- */
-export type EnvVarRequestBody = typeof EnvVarRequestBody.Type;
+export class EnvVarRequestBody extends S.Opaque<EnvVarRequestBody, { readonly brand: unique symbol }>()(
+  S.Struct({
+    key: EnvKey,
+    value: S.String,
+    type: EnvVarType,
+    target: S.NonEmptyArray(EnvTarget),
+    gitBranch: S.optionalKey(S.NonEmptyString),
+    comment: S.optionalKey(S.String),
+  }).pipe(
+    $I.annoteSchema("EnvVarRequestBody", {
+      description: "Wire body that creates or upserts one Vercel environment variable.",
+    })
+  )
+) {}
 
 /**
  * Attributes of a deployed {@link EnvVar}. The value is never an attribute.
@@ -244,26 +238,20 @@ export type EnvVarRequestBody = typeof EnvVarRequestBody.Type;
  * @category models
  * @since 0.0.0
  */
-export const EnvVarAttributes = S.Struct({
-  envId: S.String,
-  projectId: S.String,
-  key: S.String,
-  type: S.String,
-  targets: S.Array(S.String),
-  gitBranch: S.optionalKey(S.String),
-}).pipe(
-  $I.annoteSchema("EnvVarAttributes", {
-    description: "Observed state of a Vercel environment variable, without its value.",
-  })
-);
-
-/**
- * Type-level member of {@link EnvVarAttributes}.
- *
- * @category models
- * @since 0.0.0
- */
-export type EnvVarAttributes = typeof EnvVarAttributes.Type;
+export class EnvVarAttributes extends S.Opaque<EnvVarAttributes, { readonly brand: unique symbol }>()(
+  S.Struct({
+    envId: S.String,
+    projectId: S.String,
+    key: S.String,
+    type: S.String,
+    targets: S.Array(S.String),
+    gitBranch: S.optionalKey(S.String),
+  }).pipe(
+    $I.annoteSchema("EnvVarAttributes", {
+      description: "Observed state of a Vercel environment variable, without its value.",
+    })
+  )
+) {}
 
 /**
  * Resource type of {@link EnvVar}.
@@ -328,14 +316,15 @@ const listEnvs = Effect.fn("Vercel.EnvVar.list")(function* (project: string, tea
 
 const toAttributes =
   (projectId: string) =>
-  (env: ListedEnv & { readonly id: string }): EnvVarAttributes => ({
-    envId: env.id,
-    projectId,
-    key: env.key,
-    type: env.type,
-    targets: listedTargets(env),
-    ...O.getSomesStruct({ gitBranch: O.fromUndefinedOr(env.gitBranch) }),
-  });
+  (env: ListedEnv & { readonly id: string }): EnvVarAttributes =>
+    EnvVarAttributes.make({
+      envId: env.id,
+      projectId,
+      key: env.key,
+      type: env.type,
+      targets: listedTargets(env),
+      ...O.getSomesStruct({ gitBranch: O.fromUndefinedOr(env.gitBranch) }),
+    });
 
 const hasId = (env: ListedEnv): env is ListedEnv & { readonly id: string } => P.isString(env.id);
 
@@ -361,16 +350,18 @@ const findEnv = Effect.fn("Vercel.EnvVar.find")(function* (
 });
 
 const requestBody = (news: EnvVarProps) =>
-  S.encodeEffect(EnvVarRequestBody)({
-    key: news.key,
-    value: Redacted.value(news.value),
-    type: news.type ?? EnvVarType.Enum.encrypted,
-    target: news.targets,
-    ...O.getSomesStruct({
-      gitBranch: O.fromUndefinedOr(news.gitBranch),
-      comment: O.fromUndefinedOr(news.comment),
-    }),
-  });
+  S.encodeEffect(EnvVarRequestBody)(
+    EnvVarRequestBody.make({
+      key: news.key,
+      value: Redacted.value(news.value),
+      type: news.type ?? EnvVarType.Enum.encrypted,
+      target: news.targets,
+      ...O.getSomesStruct({
+        gitBranch: O.fromUndefinedOr(news.gitBranch),
+        comment: O.fromUndefinedOr(news.comment),
+      }),
+    })
+  );
 
 /**
  * Provider layer for {@link EnvVar}.

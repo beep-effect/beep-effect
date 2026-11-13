@@ -64,7 +64,7 @@ profile; pass the token through `op run`.
 ## Tests
 
 `bun run test` runs the provider lifecycles on the `@alchemy.run/test`
-harness against an in-memory Vercel API (`test/fixtures/FakeVercel.ts`); no
+harness against an in-memory Vercel API (`test/harness/FakeVercel.ts`); no
 token is needed and nothing reaches Vercel.
 
 ## License

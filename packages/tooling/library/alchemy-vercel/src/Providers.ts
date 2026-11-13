@@ -16,6 +16,14 @@ import { Project, ProjectProvider } from "./Project.ts";
 /**
  * Provider collection of the Vercel resources.
  *
+ * **Example** (Find a registered provider)
+ *
+ * ```ts
+ * import { Providers } from "@beep/alchemy-vercel/Providers"
+ *
+ * console.log(Providers.key) // "Vercel"
+ * ```
+ *
  * @category providers
  * @since 0.0.0
  */

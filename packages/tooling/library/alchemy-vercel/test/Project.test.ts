@@ -3,9 +3,9 @@ import { describe, expect } from "@effect/vitest";
 import { adopt, Unowned } from "alchemy/AdoptPolicy";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { FakeVercel, TEAM_ID } from "./fixtures/FakeVercel.ts";
-import { failureTag, makeHarness, typed } from "./fixtures/Harness.ts";
-import { projectRead } from "./fixtures/Readers.ts";
+import { FakeVercel, TEAM_ID } from "./harness/FakeVercel.ts";
+import { failureTag, makeHarness, typed } from "./harness/Harness.ts";
+import { projectRead } from "./harness/Readers.ts";
 
 const { test } = makeHarness();
 

@@ -4,9 +4,9 @@ import { adopt, Unowned } from "alchemy/AdoptPolicy";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { FakeVercel, PENDING_SUFFIX, TEAM_ID } from "./fixtures/FakeVercel.ts";
-import { failureTag, makeHarness, typed } from "./fixtures/Harness.ts";
-import { domainRead } from "./fixtures/Readers.ts";
+import { FakeVercel, PENDING_SUFFIX, TEAM_ID } from "./harness/FakeVercel.ts";
+import { failureTag, makeHarness, typed } from "./harness/Harness.ts";
+import { domainRead } from "./harness/Readers.ts";
 
 const { test } = makeHarness();
 

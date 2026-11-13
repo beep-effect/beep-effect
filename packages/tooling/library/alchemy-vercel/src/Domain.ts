@@ -130,24 +130,18 @@ export type DomainProps = typeof DomainProps.Type;
  * @category models
  * @since 0.0.0
  */
-export const DomainVerification = S.Struct({
-  type: S.String,
-  domain: S.String,
-  value: S.String,
-  reason: S.String,
-}).pipe(
-  $I.annoteSchema("DomainVerification", {
-    description: "DNS record Vercel asks for before it verifies a project domain.",
-  })
-);
-
-/**
- * Type-level member of {@link DomainVerification}.
- *
- * @category models
- * @since 0.0.0
- */
-export type DomainVerification = typeof DomainVerification.Type;
+export class DomainVerification extends S.Opaque<DomainVerification, { readonly brand: unique symbol }>()(
+  S.Struct({
+    type: S.String,
+    domain: S.String,
+    value: S.String,
+    reason: S.String,
+  }).pipe(
+    $I.annoteSchema("DomainVerification", {
+      description: "DNS record Vercel asks for before it verifies a project domain.",
+    })
+  )
+) {}
 
 /**
  * Attributes of a deployed {@link Domain}.
@@ -171,28 +165,22 @@ export type DomainVerification = typeof DomainVerification.Type;
  * @category models
  * @since 0.0.0
  */
-export const DomainAttributes = S.Struct({
-  name: S.String,
-  apexName: S.String,
-  projectId: S.String,
-  verified: S.Boolean,
-  verification: S.Array(DomainVerification),
-  redirect: S.optionalKey(S.String),
-  redirectStatusCode: S.optionalKey(S.Finite),
-  gitBranch: S.optionalKey(S.String),
-}).pipe(
-  $I.annoteSchema("DomainAttributes", {
-    description: "Observed state of a Vercel project domain, verification included.",
-  })
-);
-
-/**
- * Type-level member of {@link DomainAttributes}.
- *
- * @category models
- * @since 0.0.0
- */
-export type DomainAttributes = typeof DomainAttributes.Type;
+export class DomainAttributes extends S.Opaque<DomainAttributes, { readonly brand: unique symbol }>()(
+  S.Struct({
+    name: S.String,
+    apexName: S.String,
+    projectId: S.String,
+    verified: S.Boolean,
+    verification: S.Array(DomainVerification),
+    redirect: S.optionalKey(S.String),
+    redirectStatusCode: S.optionalKey(S.Finite),
+    gitBranch: S.optionalKey(S.String),
+  }).pipe(
+    $I.annoteSchema("DomainAttributes", {
+      description: "Observed state of a Vercel project domain, verification included.",
+    })
+  )
+) {}
 
 /**
  * Resource type of {@link Domain}.
@@ -240,23 +228,26 @@ export const Domain: DeclaredResource<Domain> = DomainClass;
 
 type ObservedDomain = projects.GetProjectDomainResponse;
 
-const toAttributes = (domain: ObservedDomain): DomainAttributes => ({
-  name: domain.name,
-  apexName: domain.apexName,
-  projectId: domain.projectId,
-  verified: domain.verified,
-  verification: A.map(domain.verification ?? [], (challenge) => ({
-    type: challenge.type,
-    domain: challenge.domain,
-    value: challenge.value,
-    reason: challenge.reason,
-  })),
-  ...O.getSomesStruct({
-    redirect: O.fromNullishOr(domain.redirect),
-    redirectStatusCode: O.fromNullishOr(domain.redirectStatusCode),
-    gitBranch: O.fromNullishOr(domain.gitBranch),
-  }),
-});
+const toAttributes = (domain: ObservedDomain): DomainAttributes =>
+  DomainAttributes.make({
+    name: domain.name,
+    apexName: domain.apexName,
+    projectId: domain.projectId,
+    verified: domain.verified,
+    verification: A.map(domain.verification ?? [], (challenge) =>
+      DomainVerification.make({
+        type: challenge.type,
+        domain: challenge.domain,
+        value: challenge.value,
+        reason: challenge.reason,
+      })
+    ),
+    ...O.getSomesStruct({
+      redirect: O.fromNullishOr(domain.redirect),
+      redirectStatusCode: O.fromNullishOr(domain.redirectStatusCode),
+      gitBranch: O.fromNullishOr(domain.gitBranch),
+    }),
+  });
 
 const readDomain = Effect.fn("Vercel.Domain.read")(function* (
   project: string,

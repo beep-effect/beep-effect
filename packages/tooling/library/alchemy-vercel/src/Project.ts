@@ -16,6 +16,7 @@ import { createPhysicalName } from "alchemy/PhysicalName";
 import * as Provider from "alchemy/Provider";
 import { Resource } from "alchemy/Resource";
 import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as Match from "effect/Match";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -234,23 +235,17 @@ export type ProjectProps = typeof ProjectProps.Type;
  * @category models
  * @since 0.0.0
  */
-export const ProjectLink = S.Struct({
-  type: S.String,
-  repo: S.String,
-  productionBranch: S.String,
-}).pipe(
-  $I.annoteSchema("ProjectLink", {
-    description: "Git repository link reported by Vercel, with its production branch.",
-  })
-);
-
-/**
- * Type-level member of {@link ProjectLink}.
- *
- * @category models
- * @since 0.0.0
- */
-export type ProjectLink = typeof ProjectLink.Type;
+export class ProjectLink extends S.Opaque<ProjectLink, { readonly brand: unique symbol }>()(
+  S.Struct({
+    type: S.String,
+    repo: S.String,
+    productionBranch: S.String,
+  }).pipe(
+    $I.annoteSchema("ProjectLink", {
+      description: "Git repository link reported by Vercel, with its production branch.",
+    })
+  )
+) {}
 
 /**
  * Attributes of a deployed {@link Project}.
@@ -274,31 +269,25 @@ export type ProjectLink = typeof ProjectLink.Type;
  * @category models
  * @since 0.0.0
  */
-export const ProjectAttributes = S.Struct({
-  projectId: S.String,
-  name: S.String,
-  accountId: S.String,
-  framework: S.optionalKey(S.String),
-  buildCommand: S.optionalKey(S.String),
-  installCommand: S.optionalKey(S.String),
-  rootDirectory: S.optionalKey(S.String),
-  nodeVersion: S.String,
-  deploymentProtection: DeploymentProtection,
-  autoExposeSystemEnvs: S.optionalKey(S.Boolean),
-  link: S.optionalKey(ProjectLink),
-}).pipe(
-  $I.annoteSchema("ProjectAttributes", {
-    description: "Observed state of a Vercel project.",
-  })
-);
-
-/**
- * Type-level member of {@link ProjectAttributes}.
- *
- * @category models
- * @since 0.0.0
- */
-export type ProjectAttributes = typeof ProjectAttributes.Type;
+export class ProjectAttributes extends S.Opaque<ProjectAttributes, { readonly brand: unique symbol }>()(
+  S.Struct({
+    projectId: S.String,
+    name: S.String,
+    accountId: S.String,
+    framework: S.optionalKey(S.String),
+    buildCommand: S.optionalKey(S.String),
+    installCommand: S.optionalKey(S.String),
+    rootDirectory: S.optionalKey(S.String),
+    nodeVersion: S.String,
+    deploymentProtection: DeploymentProtection,
+    autoExposeSystemEnvs: S.optionalKey(S.Boolean),
+    link: S.optionalKey(ProjectLink),
+  }).pipe(
+    $I.annoteSchema("ProjectAttributes", {
+      description: "Observed state of a Vercel project.",
+    })
+  )
+) {}
 
 /**
  * Resource type of {@link Project}.
@@ -347,6 +336,13 @@ const ProjectClass = Resource<Project>("Vercel.Project");
 export const Project: DeclaredResource<Project> = ProjectClass;
 
 const gitRepositoryEquivalence = S.toEquivalence(S.UndefinedOr(ProjectGitRepository));
+
+/**
+ * A team or linked-repository change replaces the project: the project API cannot move a
+ * project between teams or relink its repository.
+ */
+const replacesProject = (news: ProjectProps, olds: ProjectProps): boolean =>
+  news.teamId !== olds.teamId || !gitRepositoryEquivalence(news.gitRepository, olds.gitRepository);
 
 const projectName = Effect.fn("Vercel.Project.name")(function* (
   id: string,
@@ -407,21 +403,22 @@ const toProtection = (protection: projects.GetProjectResponse["ssoProtection"]):
     O.getOrElse(() => DeploymentProtection.Enum.none)
   );
 
-const toAttributes = (project: projects.GetProjectResponse): ProjectAttributes => ({
-  projectId: project.id,
-  name: project.name,
-  accountId: project.accountId,
-  nodeVersion: project.nodeVersion,
-  deploymentProtection: toProtection(project.ssoProtection),
-  ...O.getSomesStruct({
-    framework: O.fromNullishOr(project.framework),
-    buildCommand: O.fromNullishOr(project.buildCommand),
-    installCommand: O.fromNullishOr(project.installCommand),
-    rootDirectory: O.fromNullishOr(project.rootDirectory),
-    autoExposeSystemEnvs: O.fromUndefinedOr(project.autoExposeSystemEnvs),
-    link: O.map(O.fromUndefinedOr(project.link), toLink),
-  }),
-});
+const toAttributes = (project: projects.GetProjectResponse): ProjectAttributes =>
+  ProjectAttributes.make({
+    projectId: project.id,
+    name: project.name,
+    accountId: project.accountId,
+    nodeVersion: project.nodeVersion,
+    deploymentProtection: toProtection(project.ssoProtection),
+    ...O.getSomesStruct({
+      framework: O.fromNullishOr(project.framework),
+      buildCommand: O.fromNullishOr(project.buildCommand),
+      installCommand: O.fromNullishOr(project.installCommand),
+      rootDirectory: O.fromNullishOr(project.rootDirectory),
+      autoExposeSystemEnvs: O.fromUndefinedOr(project.autoExposeSystemEnvs),
+      link: O.map(O.fromUndefinedOr(project.link), flow(toLink, ProjectLink.make)),
+    }),
+  });
 
 const readProject = Effect.fn("Vercel.Project.read")(function* (idOrName: string, teamId: string | undefined) {
   return yield* projects.getProject({ idOrName, ...teamScope(teamId) }).pipe(
@@ -476,14 +473,10 @@ export const ProjectProvider = Provider.succeed(ProjectClass, {
     // unless it is this resource's own previous generation (a delete-first replacement).
     return output !== undefined || state.projectId === previous?.projectId ? state : Unowned(state);
   }),
-  diff: Effect.fn("Vercel.Project.provider.diff")(function* ({ news, olds, output }) {
-    if (!isResolved(news)) return undefined;
-    if (news.teamId !== olds?.teamId || !gitRepositoryEquivalence(news.gitRepository, olds?.gitRepository)) {
-      // Names are unique within a team, so a replacement that keeps its name deletes first.
-      const keepsName = news.teamId === olds?.teamId && (news.name ?? output?.name) === output?.name;
-      return { action: "replace", deleteFirst: keepsName } as const;
-    }
-    return undefined;
+  diff: Effect.fn("Vercel.Project.provider.diff")(function* ({ news, olds }) {
+    if (!isResolved(news) || !replacesProject(news, olds)) return undefined;
+    // Names are unique within a team, so a replacement that keeps its team and name deletes first.
+    return { action: "replace", deleteFirst: news.teamId === olds.teamId && news.name === olds.name } as const;
   }),
   reconcile: Effect.fn("Vercel.Project.provider.reconcile")(function* ({ id, instanceId, news, output, session }) {
     const name = output?.name ?? (yield* projectName(id, news, instanceId));

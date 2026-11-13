@@ -5,9 +5,9 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
-import { FakeVercel, TEAM_ID } from "./fixtures/FakeVercel.ts";
-import { failureTag, makeHarness, typed } from "./fixtures/Harness.ts";
-import { envVarRead } from "./fixtures/Readers.ts";
+import { FakeVercel, TEAM_ID } from "./harness/FakeVercel.ts";
+import { failureTag, makeHarness, typed } from "./harness/Harness.ts";
+import { envVarRead } from "./harness/Readers.ts";
 
 const { test } = makeHarness();
 

@@ -40,6 +40,17 @@ identifiers are redacted.
   `effect(anyUnknownInErrorContext)` errors on `stack.deploy(...)`,
   `stack.destroy()` and `provider.read(...)`, whose error channels are `any`
   in `@alchemy.run/test` and `alchemy/Provider`. The tests go through a typed
-  view (`test/fixtures/Harness.ts` `typed`, `test/fixtures/Readers.ts`).
+  view (`test/harness/Harness.ts` `typed`, `test/harness/Readers.ts`).
 - **Would have prevented it:** a shared typed wrapper for the Alchemy test
   harness in a test-kit package, reused by every `@beep/alchemy-*` library.
+
+## 2026-11-13: fallow ignores `test/fixtures/`, so test-only dependencies look unused
+
+- **Doing:** the same package's final-check.
+- **Evidence:** `fallow dead-code` reported `@alchemy.run/test` as an unused dev
+  dependency of `@beep/alchemy-vercel`; its only importer was
+  `test/fixtures/Harness.ts`, and `.fallowrc.jsonc` ignores `**/test/fixtures/**`.
+  The harness moved to `test/harness/`.
+- **Would have prevented it:** a note in the effect-vitest new-test-file
+  checklist that `test/fixtures/` is invisible to fallow, so shared harness
+  modules that import packages belong elsewhere.
