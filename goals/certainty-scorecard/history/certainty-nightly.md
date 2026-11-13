@@ -41,3 +41,7 @@ streak can be audited.
 
 | UTC day | Run id | Attempt | Event | Re-run | Conclusion | Certified | GitHub requests | Job minutes | Code heads n / misses / superseded | SLO p50 / p95 | Main verdict rate |
 | --- | --- | ---: | --- | --- | --- | --- | ---: | ---: | --- | --- | --- |
+| 2026-11-12 | 43433123124 | 1 | workflow_dispatch | no | success | yes | 84 | 3 | 32 / 14 / 4 | 23.3 min / not-attained | 47.1% (8 of 17) |
+
+2026-11-12 is the workflow's first run (dispatched by hand after #3266 merged) and is recorded for its cost and
+shape. It does not count toward P2's seven: the first countable day is 2026-11-14.
