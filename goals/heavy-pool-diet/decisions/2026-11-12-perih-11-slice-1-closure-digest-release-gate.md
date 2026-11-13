@@ -3,6 +3,7 @@ title: "PERIH-11 slice 1: binary releases gated on a closure digest"
 date: 2026-11-12
 kind: checkpoint
 lane: "claude/jolly-hopper-9a2206"
+pullRequest: 3145
 reversal: "Revert the slice's squash commit; beep-ci-binary.yml then releases on its path list again and the closure command disappears."
 ---
 
