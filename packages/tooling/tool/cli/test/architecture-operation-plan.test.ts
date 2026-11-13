@@ -689,7 +689,7 @@ describe("architecture operation plan", () => {
         expect(packageJson).toContain('"./aggregates": "./src/aggregates/index.ts"');
         expect(parsedPackageJson.scripts).toEqual({
           "beep:build": "tsrs -p tsconfig.json --emitDeclarationOnly",
-          "beep:check": "tsrs -p tsconfig.check.json && bun run beep:check:tests",
+          "beep:check": "tsrs -p tsconfig.json --emitDeclarationOnly && bun run beep:check:tests",
           "beep:check:tests": "tsrs -p tsconfig.test.json --noEmit",
           "beep:docgen": "bunx --bun --no-install docgen",
           "beep:lint": "biome check .",

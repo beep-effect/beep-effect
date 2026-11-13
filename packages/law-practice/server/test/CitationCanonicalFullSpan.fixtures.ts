@@ -12,6 +12,7 @@ import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { readCitationCanonicalCaptures } from "./CitationCanonicalCaptures.fixtures.ts";
 import { makeCitationCanonicalExtractionReplay } from "./CitationCanonicalExtractionRuntime.fixtures.ts";
+import { CitationEngineWorkCounts, makeCitationEngineProbe } from "./CitationEngineProbe.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
 const Span = S.Tuple([S.Int, S.Int]);
@@ -96,6 +97,54 @@ const observeFullSpan = (range: readonly [number, number], combined: boolean, id
   return Str.includes(":1165:")(id) ? range[0] : range[1];
 };
 
+/** Engine work each original call performs, in call order, on either runtime.
+ *
+ * **Details**
+ *
+ * These are counts, not timings, so they hold on a loaded host. A change that
+ * moves one (installing stages once, owning configuration once, reusing the
+ * regex worker) updates the row here and reports before and after in its pull
+ * request. The recorded baseline is in
+ * `goals/citation-engine-install-once/history/evidence/`.
+ *
+ * **Example** (Reading the first call's baseline)
+ * ```ts
+ * import * as A from "effect/Array";
+ * import { citationCanonicalFullSpanWork } from "./CitationCanonicalFullSpan.fixtures.ts";
+ * const first = A.get(citationCanonicalFullSpanWork, 0);
+ * ```
+ * @internal @category testing @since 0.0.0
+ */
+export const citationCanonicalFullSpanWork: ReadonlyArray<CitationEngineWorkCounts> = A.map(
+  [
+    [14, 8, 1, 15, 70, 70],
+    [14, 8, 1, 3, 15, 15],
+    [14, 8, 1, 3, 15, 15],
+    [14, 8, 1, 3, 24, 24],
+    [14, 8, 1, 5, 19, 19],
+    [14, 8, 1, 5, 15, 15],
+    [14, 8, 1, 8, 65, 65],
+    [14, 8, 1, 8, 38, 38],
+    [14, 8, 1, 3, 15, 15],
+    [14, 8, 1, 3, 15, 15],
+  ] as const,
+  ([
+    metadataOperationInstalls,
+    configurationDetaches,
+    tokenizerBuilds,
+    regexWorkerConstructions,
+    regexEvaluations,
+    nativeProcesses,
+  ]) =>
+    CitationEngineWorkCounts.make({
+      metadataOperationInstalls,
+      configurationDetaches,
+      tokenizerBuilds,
+      regexWorkerConstructions,
+      regexEvaluations,
+      nativeProcesses,
+    })
+);
 /** Original parser calls in the full-span cohort; together they carry all thirteen equalities. */
 export const citationCanonicalFullSpanCalls = 10;
 /** Read the pinned captures and their ten parser calls once, and install one default replay engine.
@@ -120,7 +169,8 @@ export const prepareCitationCanonicalFullSpanReplay = Effect.fn("CanonicalFullSp
   const { operations, assertions } = yield* readCitationCanonicalCaptures();
   const calls = yield* readCalls(operations);
   const replay = yield* makeCitationCanonicalExtractionReplay(kind);
-  return { kind, calls, assertions, replay };
+  const probe = yield* makeCitationEngineProbe(replay.native);
+  return { kind, calls, assertions, replay, probe };
 });
 /** One prepared full-span cohort shared by the per-call tests of a runtime.
  * @internal @category testing @since 0.0.0
@@ -160,12 +210,12 @@ export const replayCitationCanonicalFullSpanCall = Effect.fn("CanonicalFullSpanT
   prepared: CitationCanonicalFullSpanReplay["Service"],
   index: number
 ) {
-  const { kind, calls, assertions, replay } = prepared;
+  const { kind, calls, assertions, replay, probe } = prepared;
   const { row, body, models, combined, simple, targets } = yield* Effect.fromOption(A.get(calls, index)).pipe(
     Effect.orDie
   );
   const extraction = replay.extract(body.input.plain_text, "plain", models, row.id, null);
-  const actual = yield* extraction.pipe(
+  const measured = yield* probe.measure(extraction).pipe(
     Effect.tapError((error) =>
       Effect.logWarning("Original full-span extraction refused").pipe(
         Effect.annotateLogs({
@@ -177,6 +227,11 @@ export const replayCitationCanonicalFullSpanCall = Effect.fn("CanonicalFullSpanT
       )
     )
   );
+  const actual = measured.value;
+  yield* Effect.logInfo("Original full-span call engine work").pipe(
+    Effect.annotateLogs({ runtime: kind, call: index, elapsedMillis: measured.elapsedMillis, ...measured.counts })
+  );
+  expect(measured.counts, row.id).toEqual(A.getUnsafe(citationCanonicalFullSpanWork, index));
   expect(actual.source.source.sourceText, row.id).toBe(body.stages.document.plainText);
   let checked = 0;
   for (const target of targets) {
