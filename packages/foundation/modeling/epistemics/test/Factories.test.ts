@@ -303,9 +303,11 @@ const evidenceIds = (values: A.NonEmptyReadonlyArray<string>) => A.map(values, (
 const failureMessage = <A>(result: Result.Result<A, S.SchemaError>): Result.Result<A, string> =>
   Result.mapError(result, (error) => error.message);
 
-// `true` in the failure channel when that message names the given refusal.
+// Fixed seeds the candidate-content sampler runs under, beside the seed that
+// exhausted it on `main` (ep94).
 const SEED_COUNT = 64;
 
+// `true` in the failure channel when that message names the given refusal.
 const refusedAt = <A>(result: Result.Result<A, S.SchemaError>, refusal: string): Result.Result<A, boolean> =>
   Result.mapError(failureMessage(result), Str.includes(refusal));
 
