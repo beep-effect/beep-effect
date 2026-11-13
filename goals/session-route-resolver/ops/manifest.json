@@ -33,7 +33,7 @@
     "goals/session-route-resolver/GOAL.md",
     "goals/session-route-resolver/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
