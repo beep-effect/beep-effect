@@ -692,7 +692,17 @@ export class CiCertaintyLatencyStat extends S.Opaque<CiCertaintyLatencyStat, { r
 ) {}
 
 /**
- * Runner-minutes per producer run.
+ * Runner-minutes per head attempt: one check.yml run with the admitted
+ * heavy-admit.yml runs of its head.
+ *
+ * **Details**
+ *
+ * A heavy-admit.yml run joins the latest check.yml run of its head created at
+ * or before it, so a head admitted by the `ready-for-heavy` label carries its
+ * beep-ec2-heavy minutes just as one admitted inside check.yml does. A
+ * heavy-admit.yml run whose Heavy Admission was skipped is not counted. `runs`
+ * counts head attempts; the green code-run percentiles cover the attempts of
+ * code heads whose check.yml run succeeded.
  *
  * **Example** (Describe an empty runner-minute statistic)
  *
@@ -728,7 +738,8 @@ export class CiCertaintyRunnerStat extends S.Opaque<CiCertaintyRunnerStat, { rea
     runs: NonNegativeInt,
   }).pipe(
     $I.annoteSchema("CiCertaintyRunnerStat", {
-      description: "Raw runner-minutes per pull-request producer run, split by pool, with green code-run percentiles.",
+      description:
+        "Raw runner-minutes per head attempt (a check.yml run plus its admitted heavy-admit.yml runs), split by pool, with green code-attempt percentiles.",
     })
   )
 ) {}
@@ -807,7 +818,14 @@ export class CiCertaintyTestUnitConversion extends S.Opaque<
 ) {}
 
 /**
- * Admission-to-Heavy start latency over non-docs pull-request runs.
+ * Admission-to-Heavy start latency over the producer runs of code heads.
+ *
+ * **Details**
+ *
+ * Each check.yml or heavy-admit.yml run pairs its own Heavy Admission start
+ * with its first executed job on the heavy pool (beep-ec2-heavy runner
+ * labels). Hosted jobs named `Heavy / ...`, such as the Test Integration
+ * aggregate, are not heavy-pool pickup and never count.
  *
  * **Example** (Describe an empty admission statistic)
  *
@@ -827,7 +845,8 @@ export class CiCertaintyAdmissionStat extends S.Opaque<CiCertaintyAdmissionStat,
     p50Minutes: S.OptionFromNullOr(NonNegativeMinutes),
   }).pipe(
     $I.annoteSchema("CiCertaintyAdmissionStat", {
-      description: "Median minutes from the Heavy Admission job's start to the first executed Heavy job's start.",
+      description:
+        "Median minutes from a run's Heavy Admission start to the start of its first executed job on the heavy pool.",
     })
   )
 ) {}
