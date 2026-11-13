@@ -31,6 +31,7 @@ import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { mulberry32 } from "./internal/Mulberry32.ts";
 import { alignFile, joinBaseTexts } from "./internal/OperationCapture.align.ts";
 import { sha256Hex } from "./NodeIdentity.digest.ts";
 import { MemoryFilePath, NodeId } from "./NodeIdentity.models.ts";
@@ -60,6 +61,40 @@ interface CaptureTarget {
 
 const byPath: Order.Order<CaptureTarget> = Order.mapInput(Order.String, (target: CaptureTarget) => target.path);
 
+type BaseRefusal = CaptureBaseRefusedError["reason"];
+
+// Records the node ids of one base file in `ids`, or names the first reason
+// its nodes are not exact, in-sequence anchors with ids no earlier node holds.
+const indexNodes = (file: BaseFile, ids: MutableHashSet.MutableHashSet<NodeId>): O.Option<BaseRefusal> => {
+  let offset = 0;
+  for (const node of file.nodes) {
+    const { startChar, endChar, quote } = node.anchor.anchor;
+    if (startChar !== offset || endChar !== offset + quote.length) {
+      return O.some("anchorOutOfSequence");
+    }
+    if (MutableHashSet.has(ids, node.nodeId)) {
+      return O.some("duplicateNodeId");
+    }
+    MutableHashSet.add(ids, node.nodeId);
+    offset = endChar;
+  }
+  return O.none();
+};
+
+// Records one base file in `files` and its node ids in `ids`, or names the
+// first reason it does not describe an exact, distinct file text.
+const indexFile = (
+  file: BaseFile,
+  files: MutableHashMap.MutableHashMap<MemoryFilePath, BaseFile>,
+  ids: MutableHashSet.MutableHashSet<NodeId>
+): O.Option<BaseRefusal> => {
+  if (MutableHashMap.has(files, file.path)) {
+    return O.some("duplicateFile");
+  }
+  MutableHashMap.set(files, file.path, file);
+  return indexNodes(file, ids);
+};
+
 // The base files by path and every node id the base holds, or the first
 // reason the base does not describe exact, distinct file texts.
 const indexBase = (
@@ -74,21 +109,9 @@ const indexBase = (
   const files = MutableHashMap.empty<MemoryFilePath, BaseFile>();
   const ids = MutableHashSet.empty<NodeId>();
   for (const file of base.files) {
-    if (MutableHashMap.has(files, file.path)) {
-      return Result.fail(CaptureBaseRefusedError.make({ path: file.path, reason: "duplicateFile" }));
-    }
-    MutableHashMap.set(files, file.path, file);
-    let offset = 0;
-    for (const node of file.nodes) {
-      const { startChar, endChar, quote } = node.anchor.anchor;
-      if (startChar !== offset || endChar !== offset + quote.length) {
-        return Result.fail(CaptureBaseRefusedError.make({ path: file.path, reason: "anchorOutOfSequence" }));
-      }
-      if (MutableHashSet.has(ids, node.nodeId)) {
-        return Result.fail(CaptureBaseRefusedError.make({ path: file.path, reason: "duplicateNodeId" }));
-      }
-      MutableHashSet.add(ids, node.nodeId);
-      offset = endChar;
+    const refusal = indexFile(file, files, ids);
+    if (O.isSome(refusal)) {
+      return Result.fail(CaptureBaseRefusedError.make({ path: file.path, reason: refusal.value }));
     }
   }
   return Result.succeed({ files, ids });
@@ -399,14 +422,7 @@ const hex32 = (value: number): string => Str.padStart(8, "0")((value >>> 0).toSt
  * @since 0.0.0
  */
 export const seededNodeIdMinter = (seed: number): LazyArg<NodeId> => {
-  let state = seed >>> 0;
-  const next = (): number => {
-    state = (state + 0x6d2b79f5) >>> 0;
-    let value = state;
-    value = Math.imul(value ^ (value >>> 15), value | 1);
-    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
-    return (value ^ (value >>> 14)) >>> 0;
-  };
+  const next = mulberry32(seed);
   return () => {
     const hex = `${hex32(next())}${hex32(next())}${hex32(next())}${hex32(next())}`;
     const part = (start: number, end: number): string => Str.slice(start, end)(hex);

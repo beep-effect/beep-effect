@@ -21,13 +21,13 @@ import * as S from "effect/Schema";
 import {
   HoldResolvedEvent,
   NodeCreatedEvent,
-  NodeRetiredEvent,
   NodeRevisedEvent,
   NodeStatusChangedEvent,
   WriteHeld,
   WriteHeldEvent,
 } from "../NodeEvent.events.ts";
 import { LogCursor, MemoryFilePath, NodeId, NodeKind, RevisionId } from "../NodeIdentity.models.ts";
+import { nodeEventDecoders } from "./MarkdownProjection.ts";
 import type { Entry } from "effect/eventlog/EventJournal";
 import type { HoldId } from "../Admission.models.ts";
 import type { MemoryLog } from "../MemoryLog.service.ts";
@@ -78,10 +78,6 @@ interface Step {
   readonly text: O.Option<string>;
 }
 
-const decodeCreated = S.decodeUnknownEffect(NodeCreatedEvent.payloadSchemaBinary);
-const decodeRevised = S.decodeUnknownEffect(NodeRevisedEvent.payloadSchemaBinary);
-const decodeStatusChanged = S.decodeUnknownEffect(NodeStatusChangedEvent.payloadSchemaBinary);
-const decodeRetired = S.decodeUnknownEffect(NodeRetiredEvent.payloadSchemaBinary);
 const decodeWriteHeld = S.decodeUnknownEffect(WriteHeldEvent.payloadSchemaBinary);
 const decodeHoldResolved = S.decodeUnknownEffect(HoldResolvedEvent.payloadSchemaBinary);
 
@@ -96,16 +92,16 @@ const liveStep = (payload: { readonly revisionId: RevisionId; readonly text: str
 const stepOf = (entry: Entry): Effect.Effect<Step, S.SchemaError> =>
   Match.value(entry.event).pipe(
     Match.when(NodeCreatedEvent.tag, () =>
-      Effect.map(decodeCreated(entry.payload), (payload) => ({
+      Effect.map(nodeEventDecoders.created(entry.payload), (payload) => ({
         place: O.some({ filePath: payload.filePath, kind: payload.kind }),
         revisionId: payload.revisionId,
         text: O.some(payload.text),
       }))
     ),
-    Match.when(NodeRevisedEvent.tag, () => Effect.map(decodeRevised(entry.payload), liveStep)),
-    Match.when(NodeStatusChangedEvent.tag, () => Effect.map(decodeStatusChanged(entry.payload), liveStep)),
+    Match.when(NodeRevisedEvent.tag, () => Effect.map(nodeEventDecoders.revised(entry.payload), liveStep)),
+    Match.when(NodeStatusChangedEvent.tag, () => Effect.map(nodeEventDecoders.statusChanged(entry.payload), liveStep)),
     Match.orElse(() =>
-      Effect.map(decodeRetired(entry.payload), (payload) => ({
+      Effect.map(nodeEventDecoders.retired(entry.payload), (payload) => ({
         place: O.none(),
         revisionId: payload.revisionId,
         text: O.none<string>(),
