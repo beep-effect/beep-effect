@@ -4,13 +4,13 @@
     "id": "semantica-atlas-sync",
     "packetId": "goal-packet/v1:16d01916bc8ad0601bf108988f91a6ce23df7ad147052e69d05212138aeb6892",
     "title": "Semantica Atlas Sync",
-    "status": "active",
+    "status": "superseded",
     "created": "2026-09-03",
-    "updated": "2026-09-03",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/semantica-atlas-sync",
-  "lifecycle": "active",
+  "lifecycle": "superseded",
   "mission": "Write the ratified positive Verdict and Beep counterpart values into the Notion @beep/semantica atlas from a schema-validated verdicts file (atlas-verdicts/v1) through the P5 method (render, diff against a live 33-catalog read, one canary write, apply, SQL read-back) on exactly the rows the file lists and with zero Notion schema; the IR facts lane stays a gated P2 on semantica 0.6.7+ (MAP v1.1 section A, R3).",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -92,5 +92,7 @@
     "Verification requires credentials, cost, destructive side effects, or policy approval not named in SPEC.md.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Scaffolded 2026-09-03 at the semantica-lab graduation ceremony (MAP v1.1 §A, R3); execution not started. Runs first of the three re-entry packets: P0 access check + live 33-catalog baseline, then the P1 verdict lane; P2 (facts lane) is gated on semantica 0.6.7+; if the gate has not fired when P1 ships, the P1 PR itself sets the packet paused (same-PR state flip)."
+  "statusNote": "Closed (superseded) 2026-11-13 by operator ruling (finish board): Untouched for more than two months since scaffolding, with an external gate. Re-open with `bun run beep goals set-status semantica-atlas-sync active` and re-graduate the next slice. Before the ruling: Scaffolded 2026-09-03 at the semantica-lab graduation ceremony (MAP v1.1 §A, R3); execution not started. Runs first of the three re-entry packets: P0 access check + live 33-catalog baseline, then the P1 verdict lane; P2 (facts lane) is gated on semantica 0.6.7+; if the gate has not fired when P1 ships, the P1 PR itself sets the packet paused (same-PR state flip).",
+  "supersededNote": "Closed by operator ruling (finish board, 2026-11-13) without meeting its completion gate; see goals/semantica-atlas-sync/decisions/2026-11-13-finish-board-ruling-close.md.",
+  "retentionReason": "Closed by operator ruling (finish board, 2026-11-13) with a re-open path: the full packet stays on main so `bun run beep goals set-status semantica-atlas-sync active` can resume it or re-graduate the next slice without restoring from the archive."
 }

@@ -1,6 +1,8 @@
 # Professional Desktop — Adversarial QA & Fix Loop
 
-Lifecycle: active
+Lifecycle: superseded
+
+**Closed by operator ruling (finish board, 2026-11-13).** It is stale (3+ weeks), it uses an old campaign charter and branch from July, and the browser-qa-loop skill now supersedes it. The packet is `superseded` without meeting its completion gate. To resume, run `bun run beep goals set-status professional-desktop-adversarial-qa active` and re-graduate the next slice. Decision: [`decisions/2026-11-13-finish-board-ruling-close.md`](./decisions/2026-11-13-finish-board-ruling-close.md).
 
 Campaign charter. Autonomous adversarial review-and-fix loop over the entire
 `apps/professional-desktop` frontend surface. Codex `gpt-6-astra` (effort
