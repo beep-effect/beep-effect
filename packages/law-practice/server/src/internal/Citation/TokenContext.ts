@@ -15,9 +15,9 @@ import * as Effect from "effect/Effect";
 import { constVoid } from "effect/Function";
 import * as Num from "effect/Number";
 import * as S from "effect/Schema";
+import { CitationInvocation } from "./Invocation.ts";
 import { concatCitationPythonRanges, makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
-import { captureCitationTextReservation } from "./TextBudget.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/TokenContext");
 const Kind = LiteralKit(["Text", ...CitationTokenSeed.fields.kind.literals]);
@@ -119,7 +119,7 @@ const selectContextRanges = Effect.fn("Citation.selectContextRanges")(function* 
 });
 
 /** Prepare source context text and anchoring before the third-party regex call.
- * Methods capture policy and Clock, have R = never, and return no partial text.
+ * Methods capture policy and Clock, require CitationInvocation, and return no partial text.
  * This built-in word profile does not implement regex matching or custom str protocols.
  * @internal @category operations @since 0.0.0
  */
@@ -127,8 +127,8 @@ export const makeCitationTokenContext = Effect.fn("Citation.makeTokenContext")(f
   const limits = yield* decodeCitationRegexPolicy(policy, invalid);
   const timing = yield* makeCitationRegexTiming(limits, true);
   const native = yield* makeCitationPythonUnicode(limits);
-  const reserve = yield* captureCitationTextReservation;
   const plan = Effect.fn("Citation.planTokenContext")(function* (input: unknown) {
+    const { reserve } = (yield* CitationInvocation).budget;
     const request = yield* S.decodeUnknownEffect(Input)(input).pipe(Effect.mapError(invalid));
     if (request.words.length > limits.tokens)
       return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "tokens" });

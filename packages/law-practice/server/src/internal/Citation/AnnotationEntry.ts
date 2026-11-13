@@ -15,7 +15,6 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { captureCitationOperationChildren } from "./Admission.ts";
 import { makeCitationAnnotationAssembly } from "./AnnotationAssembly.ts";
 import {
   captureCitationAnnotationReservation,
@@ -125,12 +124,10 @@ export const ownCitationAnnotationEntry = Effect.fn("Citation.ownAnnotationEntry
   configuration: CitationAnnotationEntryConfiguration
 ) {
   const geometry = yield* copyCitationHtmlGeometryConfiguration(limits, configuration.geometry);
-  const children = yield* captureCitationOperationChildren();
   const callback = yield* Effect.serviceOption(CitationAnnotationAnnotator);
   const updater = yield* Effect.serviceOption(CitationAnnotationOffsetUpdater);
   return {
     geometry,
-    children,
     callback,
     updater,
     xmlRuntime: CitationNativeProcessRuntime.make({ ...configuration.xmlRuntime }),
@@ -246,7 +243,6 @@ export const prepareCitationAnnotationEntry = Effect.fn("Citation.annotateOwnedE
         const clean = context.pipe(Context.omit(CitationAnnotationAnnotator, CitationAnnotationSpanProcessor));
         return O.isSome(owned.callback) ? Context.add(clean, CitationAnnotationAnnotator, owned.callback.value) : clean;
       }),
-      Effect.provideContext(owned.children),
       Effect.catchTag("CitationSafetyLimitExceeded", (error) => error.pipe(citationAnnotationSafety, Effect.fail))
     )
 );

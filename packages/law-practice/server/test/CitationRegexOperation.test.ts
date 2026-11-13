@@ -4,7 +4,10 @@ import {
   CitationOperationAdmission,
 } from "@beep/law-practice-server/internal/Citation/Admission";
 import { makeCitationMetadataStage } from "@beep/law-practice-server/internal/Citation/MetadataComposition";
-import { makeCitationRegexInput } from "@beep/law-practice-server/internal/Citation/RegexInput";
+import {
+  citationUnaccountedText,
+  makeCitationRegexInput,
+} from "@beep/law-practice-server/internal/Citation/RegexInput";
 import {
   CitationRegexOperation,
   makeCitationRegexTiming,
@@ -22,95 +25,104 @@ import * as Fiber from "effect/Fiber";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
+import { withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 import type { CitationEngineOperation } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("test/CitationRegexOperation");
 it.effect("captures annotation regex preparation timing despite later operation replacement", () =>
-  Effect.gen(function* () {
-    const defaults = (yield* defaultCitationEnginePolicy).limits;
-    const limits = {
-      ...defaults,
-      cleanDeadline: Duration.millis(1),
-      extractDeadline: Duration.millis(1),
-      annotateDeadline: Duration.millis(50),
-    };
-    const input = yield* makeCitationRegexInput(limits).pipe(Effect.provideService(CitationRegexOperation, "annotate"));
-    const entered = yield* Deferred.make<void>();
-    const completed = yield* Ref.make(false);
-    const pending = yield* input
-      .prepareUnicode(
-        { width: 1, bytes: new Uint8Array() },
-        Effect.fn("RegexOperationTest.blockPreparation")(() =>
-          Deferred.succeed(entered, undefined).pipe(Effect.andThen(Effect.never))
-        )
-      )
-      .pipe(
-        Effect.provideService(CitationRegexOperation, "extract"),
-        Effect.flip,
-        Effect.ensuring(Ref.set(completed, true)),
-        Effect.forkChild
+  withCitationTestInvocation(
+    Effect.gen(function* () {
+      const defaults = (yield* defaultCitationEnginePolicy).limits;
+      const limits = {
+        ...defaults,
+        cleanDeadline: Duration.millis(1),
+        extractDeadline: Duration.millis(1),
+        annotateDeadline: Duration.millis(50),
+      };
+      const input = yield* makeCitationRegexInput(limits, citationUnaccountedText).pipe(
+        Effect.provideService(CitationRegexOperation, "annotate")
       );
-    yield* Deferred.await(entered);
-    yield* TestClock.adjust(Duration.millis(1));
-    const early = yield* Ref.get(completed);
-    expect(early).toBe(false);
-    yield* TestClock.adjust(Duration.millis(49));
-    const error = yield* Fiber.join(pending);
-    expect(error).toEqual(CitationSafetyLimitExceeded.make({ operation: "annotate", limit: "annotateDeadline" }));
-  })
+      const entered = yield* Deferred.make<void>();
+      const completed = yield* Ref.make(false);
+      const pending = yield* input
+        .prepareUnicode(
+          { width: 1, bytes: new Uint8Array() },
+          Effect.fn("RegexOperationTest.blockPreparation")(() =>
+            Deferred.succeed(entered, undefined).pipe(Effect.andThen(Effect.never))
+          )
+        )
+        .pipe(
+          Effect.provideService(CitationRegexOperation, "extract"),
+          Effect.flip,
+          Effect.ensuring(Ref.set(completed, true)),
+          Effect.forkChild
+        );
+      yield* Deferred.await(entered);
+      yield* TestClock.adjust(Duration.millis(1));
+      const early = yield* Ref.get(completed);
+      expect(early).toBe(false);
+      yield* TestClock.adjust(Duration.millis(49));
+      const error = yield* Fiber.join(pending);
+      expect(error).toEqual(CitationSafetyLimitExceeded.make({ operation: "annotate", limit: "annotateDeadline" }));
+    })
+  )
 );
 it.effect("keeps extraction as the default and honors the enclosing operation deadline", () =>
-  Effect.gen(function* () {
-    const defaults = (yield* defaultCitationEnginePolicy).limits;
-    const limits = { ...defaults, extractDeadline: Duration.millis(20), operationDeadline: Duration.millis(5) };
-    const timing = yield* makeCitationRegexTiming(limits, false);
-    expect(timing.operation).toBe("extract");
-    expect(timing.deadlineLimit).toBe("operationDeadline");
-    const pending = yield* timing.timed(Effect.never).pipe(Effect.flip, Effect.forkChild);
-    yield* TestClock.adjust(Duration.millis(5));
-    const error = yield* Fiber.join(pending);
-    expect(error).toEqual(CitationSafetyLimitExceeded.make({ operation: "extract", limit: "operationDeadline" }));
-  })
+  withCitationTestInvocation(
+    Effect.gen(function* () {
+      const defaults = (yield* defaultCitationEnginePolicy).limits;
+      const limits = { ...defaults, extractDeadline: Duration.millis(20), operationDeadline: Duration.millis(5) };
+      const timing = yield* makeCitationRegexTiming(limits, false);
+      expect(timing.operation).toBe("extract");
+      expect(timing.deadlineLimit).toBe("operationDeadline");
+      const pending = yield* timing.timed(Effect.never).pipe(Effect.flip, Effect.forkChild);
+      yield* TestClock.adjust(Duration.millis(5));
+      const error = yield* Fiber.join(pending);
+      expect(error).toEqual(CitationSafetyLimitExceeded.make({ operation: "extract", limit: "operationDeadline" }));
+    })
+  )
 );
 
 it.layer(citationTokenizerTestLayer)("captured operation in the shared stage owner", (it) => {
-  it.effect("retains the selected operation for admission and children despite caller replacement", () =>
-    Effect.gen(function* () {
-      const setup = yield* setupCitationMetadataRuntime("bun");
-      const calls = yield* Ref.make<ReadonlyArray<CitationEngineOperation>>([]);
-      const admission = CitationOperationAdmission.of({
-        run: Effect.fn("RegexOperationTest.admit")(
-          <A, E>(operation: CitationEngineOperation, body: Effect.Effect<A, E>) =>
-            Ref.update(calls, A.append(operation)).pipe(Effect.andThen(body))
-        ),
-        snapshot: Effect.succeed(CitationAdmissionSnapshot.make({ active: 0, queued: 0, closed: false })),
-      });
-      const factory = makeCitationMetadataStage({
-        method: "probe",
-        schema: S.Struct({}).pipe(
-          $I.annoteSchema("OperationProbe", {
-            description: "No configuration is needed to observe captured operation routing.",
-          })
-        ),
-        invalid: () => CitationInputError.make({ operation: "annotate" }),
-        own: Effect.fn("RegexOperationTest.own")(() => Effect.void),
-        prepare: Effect.fn("RegexOperationTest.childOperation")(function* () {
-          return yield* CitationRegexOperation;
-        }),
-        project: (operation: CitationEngineOperation) => operation,
-      });
-      const stage = yield* factory(setup.limits, setup.runtime, {}).pipe(
-        Effect.provideContext(Context.add(setup.provided, CitationOperationAdmission, admission)),
-        Effect.provideService(CitationRegexOperation, "annotate")
-      );
-      const result = yield* stage.probe({}).pipe(Effect.provideService(CitationRegexOperation, "extract"));
-      expect(result).toBe("annotate");
-      const seen = yield* Ref.get(calls);
-      expect(seen).toEqual(["annotate"]);
-      const native = yield* setup.observed.snapshot;
-      expect(native).toEqual({ spawned: 0, confirmed: 0 });
-    })
+  it.effect("retains child operation labels without reacquiring admission", () =>
+    withCitationTestInvocation(
+      Effect.gen(function* () {
+        const setup = yield* setupCitationMetadataRuntime("bun");
+        const calls = yield* Ref.make<ReadonlyArray<CitationEngineOperation>>([]);
+        const admission = CitationOperationAdmission.of({
+          run: Effect.fn("RegexOperationTest.admit")(
+            <A, E, R>(operation: CitationEngineOperation, body: Effect.Effect<A, E, R>) =>
+              Ref.update(calls, A.append(operation)).pipe(Effect.andThen(body))
+          ),
+          snapshot: Effect.succeed(CitationAdmissionSnapshot.make({ active: 0, queued: 0, closed: false })),
+        });
+        const factory = makeCitationMetadataStage({
+          method: "probe",
+          schema: S.Struct({}).pipe(
+            $I.annoteSchema("OperationProbe", {
+              description: "No configuration is needed to observe captured operation routing.",
+            })
+          ),
+          invalid: () => CitationInputError.make({ operation: "annotate" }),
+          own: Effect.fn("RegexOperationTest.own")(() => Effect.void),
+          prepare: Effect.fn("RegexOperationTest.childOperation")(function* () {
+            return yield* CitationRegexOperation;
+          }),
+          project: (operation: CitationEngineOperation) => operation,
+        });
+        const stage = yield* factory(setup.limits, setup.runtime, {}).pipe(
+          Effect.provideContext(Context.add(setup.provided, CitationOperationAdmission, admission)),
+          Effect.provideService(CitationRegexOperation, "annotate")
+        );
+        const result = yield* stage.probe({}).pipe(Effect.provideService(CitationRegexOperation, "extract"));
+        expect(result).toBe("annotate");
+        const seen = yield* Ref.get(calls);
+        expect(seen).toEqual([]);
+        const native = yield* setup.observed.snapshot;
+        expect(native).toEqual({ spawned: 0, confirmed: 0 });
+      })
+    )
   );
 });

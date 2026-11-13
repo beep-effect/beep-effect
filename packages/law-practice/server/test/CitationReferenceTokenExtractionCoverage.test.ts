@@ -9,6 +9,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { readCitationCaseMetadataConfiguration } from "./CitationCaseMetadata.fixtures.ts";
 import { installCitationFrozenMetadataRuntime } from "./CitationFrozenEditions.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationPinExtractionCorpus } from "./CitationPinExtraction.fixtures.ts";
 import { readCitationReferenceTokenCorpus } from "./CitationReferenceToken.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
@@ -27,6 +28,11 @@ const install = Effect.fnUntraced(function* () {
   };
   const make = (input: unknown) =>
     makeCitationReferenceTokenExtraction(setup.limits, setup.runtime, input).pipe(
+      Effect.flatMap((stage) =>
+        makeCitationTestScaffoldBinding(setup.limits).pipe(
+          Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
+        )
+      ),
       Effect.provideContext(setup.provided),
       DateTime.withCurrentZoneOffset(0)
     );

@@ -18,7 +18,6 @@ import {
   CitationEngineLimits,
   CitationLiveCleanerObject,
   CitationSafetyLimitExceeded,
-  CitationTextBudget,
 } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
@@ -29,6 +28,7 @@ import * as P from "effect/Predicate";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { CitationInvocation } from "./Invocation.ts";
 import { makeCitationTextCapacity } from "./TextCapacity.ts";
 import type { CitationCleanerObject, CitationCleanerWork } from "@beep/law-practice-use-cases/server";
 
@@ -71,9 +71,7 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
   );
   const clock = yield* Clock.Clock;
   const runtime = yield* CitationCleaner;
-  const parent = yield* Effect.serviceOption(CitationTextBudget);
-  if (O.isSome(parent) && parent.value.maximum > limits.producedTextUtf16) return yield* fail("invalid-input");
-  const sanitize = <A>(body: Effect.Effect<A, Failure>): Effect.Effect<A, Failure> =>
+  const sanitize = <A, R>(body: Effect.Effect<A, Failure, R>): Effect.Effect<A, Failure, R> =>
     body.pipe(
       Effect.catchCause((cause) => {
         if (Cause.hasInterrupts(cause))
@@ -92,6 +90,7 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
       })
     );
   const makeWork = Effect.gen(function* () {
+    const parent = (yield* CitationInvocation).budget;
     const state = yield* Ref.make(CitationCleanerWorkSnapshot.make({ producedTextUtf16: 0, closed: false }));
     const issued = new WeakMap<CitationCleanerTextCharge, number>();
     const capacity = yield* makeCitationTextCapacity(() => fail("invalid-reservation"));
@@ -137,9 +136,7 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
             Effect.uninterruptibleMask((restore) =>
               reserveUnlocked(amount).pipe(
                 Effect.tap((ticket) =>
-                  O.isSome(parent)
-                    ? restore(parent.value.reserve(amount)).pipe(Effect.onError(() => releaseUnlocked(ticket)))
-                    : Effect.void
+                  restore(parent.reserve(amount)).pipe(Effect.onError(() => releaseUnlocked(ticket)))
                 )
               )
             )
@@ -163,19 +160,18 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
                   const charges = units === 0 ? [] : [yield* reserveUnlocked(units)];
                   return { value: { value: result.value, charges }, units };
                 });
-                const result = O.isSome(parent)
-                  ? yield* parent.value.withCapacity((available) => run(available < remaining ? available : remaining))
-                  : yield* run(remaining);
+                const result = yield* parent.withCapacity((available) =>
+                  run(available < remaining ? available : remaining)
+                );
                 return result.value;
               })
             )
           )
         )
       );
-    const takeCharge = Effect.fnUntraced(function* (charge: CitationCleanerTextCharge | undefined) {
-      const reserved = charge === undefined ? undefined : issued.get(charge);
-      if (reserved === undefined || charge === undefined || charge.units !== reserved)
-        return yield* fail("invalid-reservation");
+    const takeCharge = Effect.fnUntraced(function* (charge: CitationCleanerTextCharge) {
+      const reserved = issued.get(charge);
+      if (reserved === undefined || charge.units !== reserved) return yield* fail("invalid-reservation");
       issued.delete(charge);
       return reserved;
     });
@@ -185,12 +181,14 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
     ) {
       const actual = yield* S.decodeEffect(Units)(units).pipe(Effect.mapError(() => fail("invalid-reservation")));
       let total = 0;
-      for (let index = 0; index < charges.length; index++) {
+      let index = 0;
+      for (const charge of charges) {
         if (index % 4096 === 0) {
           yield* ensureOpen;
           yield* Effect.yieldNow;
         }
-        total += yield* takeCharge(charges[index]);
+        total += yield* takeCharge(charge);
+        index++;
         if (total > actual) return yield* fail("invalid-reservation");
       }
       yield* ensureOpen;

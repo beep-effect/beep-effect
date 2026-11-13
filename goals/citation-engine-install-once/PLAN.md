@@ -20,8 +20,8 @@ Each slice is one PR and runs the phases above. They land in order.
 
 | Slice | Status | Content | Count that must move |
 | --- | --- | --- | --- |
-| A1 | in review | Measurement fixture and recorded baseline. Test-only. | none; records the baseline |
-| A2 | pending | `CitationInvocation` binding: budget and admission read at call time, optional lookups deleted, lint rule. Children still installed per request. | optional lookups to 0 |
+| A1 | merged (#3253) | Measurement fixture and recorded baseline. Test-only. | none; records the baseline |
+| A2 | in review | `CitationInvocation` binding: budget and admission read at call time, optional lookups deleted, lint rule. Children still installed per request. | optional lookups to 0 |
 | A3 | pending | Hoist the stage tree, tokenizer and regex evaluators to engine construction. | per-request installs 14 to 0; tokenizer builds 10 to 1 |
 | A4 | pending | `CitationOwned` at the boundary; nested detaches, per-stage decodes and repeated fingerprints removed. | detaches 2 + 8 per call to 1 |
 
@@ -70,6 +70,16 @@ git diff --check -- goals/citation-engine-install-once
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug citation-engine-install-once`; add a `kind: checkpoint` file there, never edit this block._
 
-_No checkpoint files yet._
+### A2 invocation binding is in review with unchanged A1 counts, 2026-11-13
+
+A1 merged as #3253. A2 removes the optional request-authority captures, binds public calls through CitationInvocation, and preserves every A1 full-span count. Local proof uses file-by-file tests, quick law-practice verification plus docgen, and full lint-rules verification. The draft PR leaves the full law-practice audit and integration cohort to hosted CI; no ready transition or merge is authorized for this slice handoff.
+
+Reverse: Return A2 to in progress if the focused proof or hosted acceptance fails.
+
+### Keep A2 in review after the second review repair, 2026-11-13
+
+A1 remains merged as #3253 and A2 remains in review on draft #3265. Review round 2 fixes all seven findings: all-method deadline controls, expanded optional-authority lint forms, independent loop request budget, explicit scaffold binding with typed closed-admission refusal, one public-boundary refusal log, removal of the orphan cleaner coverage row, and restoration of unrelated inventory positions. All 87 focused files pass individually, the A1 full-span table remains unchanged, and package lint/check, full lint-rules audit, docgen, skills lock and policy fingerprint pass. The full law-practice audit is reserved for hosted CI under the file-by-file rule. No ready transition, merge or readiness monitor is authorized.
+
+Reverse: Restore the prior A2 review status note
 
 <!-- beep:decisions:end -->

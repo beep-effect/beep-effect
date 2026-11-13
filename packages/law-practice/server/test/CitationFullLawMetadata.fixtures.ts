@@ -19,6 +19,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
+import { withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { loadCitationLawMetadataFixtures } from "./CitationLawMetadata.fixtures.ts";
 import {
   assertCitationWorkerCompositionReleased,
@@ -91,39 +92,39 @@ const install = Effect.fn("FullLawMetadataTest.install")(function* (
   return { ...setup, metadata, law, reads, operation };
 });
 /** Compare original full method output and ordered payload reads through both actual runtimes. */
-export const replayCitationFullLawMetadata = Effect.fn("FullLawMetadataTest.replay")(function* (
-  kind: CitationNativeRuntimeKind,
-  full: boolean
-) {
-  const corpus = yield* load();
-  const setup = yield* install(kind);
-  const rows = full
-    ? corpus.cases
-    : A.filter(
-        corpus.cases,
-        (row) =>
-          A.getUnsafe(setup.law.cases, row.lawCase).smoke &&
-          (row.control === ((row.lawCase - 3) / 4) % 6 || (row.lawCase === 3 && row.control === 5))
-      );
-  let calls = 0;
-  for (const row of rows) {
-    const law = A.getUnsafe(setup.law.cases, row.lawCase);
-    setup.reads.length = 0;
-    const actual = yield* setup.metadata.apply({
-      ...law.request,
-      exact: row.exact,
-      variation: row.variation,
-      prior: row.prior,
-    });
-    const patch = yield* Effect.fromOption(actual.patch);
-    expect(patch).toEqual(law.patch);
-    expect(actual.editionGuess).toBe(row.guess);
-    expect(setup.reads).toEqual(patch.year !== null && patch.year <= 2026 ? row.checks : []);
-    calls += law.calls.length;
-  }
-  expect(rows).toHaveLength(full ? 768 : 11);
-  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, calls);
-});
+export const replayCitationFullLawMetadata = Effect.fn("FullLawMetadataTest.replay")(
+  function* (kind: CitationNativeRuntimeKind, full: boolean) {
+    const corpus = yield* load();
+    const setup = yield* install(kind);
+    const rows = full
+      ? corpus.cases
+      : A.filter(
+          corpus.cases,
+          (row) =>
+            A.getUnsafe(setup.law.cases, row.lawCase).smoke &&
+            (row.control === ((row.lawCase - 3) / 4) % 6 || (row.lawCase === 3 && row.control === 5))
+        );
+    let calls = 0;
+    for (const row of rows) {
+      const law = A.getUnsafe(setup.law.cases, row.lawCase);
+      setup.reads.length = 0;
+      const actual = yield* setup.metadata.apply({
+        ...law.request,
+        exact: row.exact,
+        variation: row.variation,
+        prior: row.prior,
+      });
+      const patch = yield* Effect.fromOption(actual.patch);
+      expect(patch).toEqual(law.patch);
+      expect(actual.editionGuess).toBe(row.guess);
+      expect(setup.reads).toEqual(patch.year !== null && patch.year <= 2026 ? row.checks : []);
+      calls += law.calls.length;
+    }
+    expect(rows).toHaveLength(full ? 768 : 11);
+    yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, calls);
+  },
+  (effect) => withCitationTestInvocation(effect)
+);
 /** Refuse candidates before workers and publish no helper patch after a late owner failure. */
 export const assertCitationFullLawMetadataFailure = Effect.fn("FullLawMetadataTest.failure")(function* () {
   const corpus = yield* load();

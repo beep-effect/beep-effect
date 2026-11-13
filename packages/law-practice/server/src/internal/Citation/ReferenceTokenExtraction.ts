@@ -312,21 +312,14 @@ export const makeCitationReferenceTokenExtraction = Effect.fn("Citation.makeRefe
   if (HashMap.size(refs) !== config.editions.length) return yield* fail("invalid-configuration");
   const owner = yield* CitationFrozenEditions;
   const inference = yield* makeCitationEditionInference(limits);
-  const installed = yield* makeCitationMetadataOperation(
-    limits,
-    (raw: unknown) => prepare(limits, runtime, config, refs, owner, inference, raw),
-    () => fail("invalid-configuration")
+  const installed = yield* makeCitationMetadataOperation(limits, (raw: unknown) =>
+    prepare(limits, runtime, config, refs, owner, inference, raw)
   );
-  const extract = Effect.fn("Citation.extractReferenceToken")(
-    (raw: unknown) =>
-      installed.operation.run(
-        "extract",
-        Effect.gen(function* () {
-          const [result, reservedUnits] = yield* installed.run(raw);
-          return CitationReferenceTokenResult.make({ ...result, reservedUnits });
-        })
-      ),
-    installed.timing.timed
+  const extract = Effect.fn("Citation.extractReferenceToken")((raw: unknown) =>
+    Effect.gen(function* () {
+      const [result, reservedUnits] = yield* installed.run(raw);
+      return CitationReferenceTokenResult.make({ ...result, reservedUnits });
+    })
   );
   return { extract };
 });

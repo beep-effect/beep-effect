@@ -15,7 +15,7 @@ import { CitationExtractorOrderingBinding } from "./ExtractorOrdering.ts";
 import { CitationExtractorRecipe } from "./ExtractorRecipes.ts";
 import { makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
-import { makeCitationRegexInput } from "./RegexInput.ts";
+import { citationUnaccountedText, makeCitationRegexInput } from "./RegexInput.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationTokenizerConfiguration, CitationTokenizerEdition, CitationTokenizerExtractor } from "./Tokenizer.ts";
 
@@ -109,7 +109,7 @@ export const makeCitationCanonicalTokenizerCatalog = Effect.fn("Citation.makeCan
     );
     if (HashMap.size(descriptors) !== metadata.descriptors.length) return yield* fail("metadata-mismatch");
     const unicode = yield* makeCitationPythonUnicode(limits);
-    const patterns = yield* makeCitationRegexInput(limits, "pattern");
+    const patterns = yield* makeCitationRegexInput(limits, citationUnaccountedText, "pattern");
     const extractors = yield* Effect.forEach(
       source,
       Effect.fn("Citation.prepareCanonicalExtractor")(function* (row, index) {

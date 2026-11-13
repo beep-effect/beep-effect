@@ -1093,7 +1093,7 @@ describe("yeet economics document", () => {
   it.effect("round-trips the JSON codec and encodes an empty report with null percentiles", () =>
     Effect.gen(function* () {
       const empty = report([]);
-      expect(empty.schemaVersion).toBe("yeet-economics/v3");
+      expect(empty.schemaVersion).toBe("yeet-economics/v4");
       expect(empty.modeDurations).toEqual([]);
       expect(empty.reviewLane.roundsToReady.closedPullRequests).toBe(0);
       assertNone(empty.reviewLane.roundsToReady.p50Rounds);
@@ -1131,9 +1131,9 @@ describe("yeet economics document", () => {
       const encoded = yield* YeetEconomicsReportJson.encode(populated);
       const decoded5 = yield* YeetEconomicsReportJson.decode(encoded);
       expect(decoded5).toEqual(populated);
-      // A v2 document counted terminations as reds; v3 refuses to read it as its own.
+      // A v3 document counted monitor waits as local work; v4 refuses to read it as its own.
       const invalid = yield* Effect.flip(
-        YeetEconomicsReportJson.decode(Str.replace('"yeet-economics/v3"', '"yeet-economics/v2"')(text))
+        YeetEconomicsReportJson.decode(Str.replace('"yeet-economics/v4"', '"yeet-economics/v3"')(text))
       );
       expect(S.isSchemaError(invalid)).toBe(true);
     })
@@ -1372,8 +1372,9 @@ describe("yeet economics rendering", () => {
   const sections = [
     "yeet economics",
     "attempts:",
-    "classes (terminations apart from reds):",
-    "durations by mode (elapsed of green and red attempts; terminated ones counted apart, outside the percentiles):",
+    "classes (terminations and monitor-decided attempts apart from reds):",
+    "durations by mode (local work: elapsed less monitor waits, of attempts that ran to their end; cut-off ones counted apart, outside the percentiles):",
+    "monitor waits (hosted CI; outside local work and the lane populations):",
     "wrapper lanes:",
     "inner lanes:",
     "review lane (rounds to ready; its own denominators, never summed with the lane populations):",
@@ -1422,10 +1423,14 @@ describe("yeet economics rendering", () => {
       "economics: terminations 0 start(s), 0 without a terminal row; 0 terminated apart from reds; reasons none",
     ]);
     const text = renderYeetEconomicsReport(populated);
-    expect(Str.includes("  verify: 2 attempt(s), 1 red, 0 terminated; 2 measured, p50 10.0m, p95 1.17h")(text)).toBe(
-      true
-    );
-    expect(Str.includes("first failure (M2): 1 red attempt(s) (0 terminated, counted apart),")(text)).toBe(true);
+    expect(
+      Str.includes("  verify: 2 attempt(s), 1 red, 0 terminated, 0 monitor-decided; 2 measured, p50 10.0m, p95 1.17h")(
+        text
+      )
+    ).toBe(true);
+    expect(
+      Str.includes("first failure (M2): 1 red attempt(s) (0 terminated and 0 monitor-decided, counted apart),")(text)
+    ).toBe(true);
     expect(Str.includes("+3 more lane(s)")(text)).toBe(true);
     expect(Str.includes("full:12-step / full:twelve (full)")(text)).toBe(true);
     expect(Str.includes("1.50h")(text)).toBe(true);
@@ -1434,7 +1439,7 @@ describe("yeet economics rendering", () => {
     );
     const fleetScope = EconomicsScope.make({ kind: "fleet", checkouts: ["a", "b", "c", "d"], branch: O.some("main") });
     expect(
-      Str.startsWith("yeet economics (yeet-economics/v3) — fleet main: a, b, c, +1 more;")(
+      Str.startsWith("yeet economics (yeet-economics/v4) — fleet main: a, b, c, +1 more;")(
         renderYeetEconomicsReport(buildYeetEconomicsReport([], fleetScope, NOW, []))
       )
     ).toBe(true);

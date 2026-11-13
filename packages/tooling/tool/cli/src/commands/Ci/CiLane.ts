@@ -53,6 +53,12 @@ import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import { assertCacheRuntimeKeyUnspecified, cacheRuntimeStep } from "../Cache/Cache.runtime.step.ts";
+import {
+  CHECK_CENSUS_BASELINE_PATH,
+  checkCensusBaselineRows,
+  checkCensusRowPackage,
+  readCheckCensusBaseline,
+} from "../Quality/CheckCensusGate.ts";
 import { QualityCheckConcurrency } from "../Quality/Quality.schemas.ts";
 import {
   QualityTaskStep,
@@ -353,8 +359,20 @@ const CiWorkflow = LiteralKit(["check", "heavy", "storybook"]).pipe(
   $I.annoteSchema("CiWorkflow", { description: "The workflow that produces a declared CI lane context." })
 );
 
+const ciLaneJobAliasesDefault: ReadonlyArray<string> = A.empty();
+
 /**
  * Machine-readable descriptor for a hosted workflow lane.
+ *
+ * **Details**
+ *
+ * The descriptors are the one map from a lane to the hosted jobs it reports
+ * through: `contextName` is the reporting job's name as GitHub prints it
+ * (`Heavy / <job>` for a job of the called heavy workflow), `jobAliases` are
+ * the earlier and conditional names that job has carried, and `shardFamily`
+ * names the lane's partition jobs (`<shardFamily> (<partition>)`) when they do
+ * not report under `contextName`. `CiLaneJobs.ts` derives every job-name join
+ * from these fields.
  *
  * **Example** (Configure a CI lane)
  *
@@ -379,6 +397,11 @@ export class CiLaneDescriptor extends S.Opaque<CiLaneDescriptor, { readonly bran
   S.Struct({
     id: S.String,
     contextName: S.String,
+    jobAliases: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(ciLaneJobAliasesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(ciLaneJobAliasesDefault))
+    ),
+    shardFamily: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     workflow: CiWorkflow.pipe(
       S.withConstructorDefault(Effect.succeed(CiWorkflow.Enum.check)),
       S.withDecodingDefaultTypeKey(Effect.succeed(CiWorkflow.Enum.check))
@@ -474,6 +497,8 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     laneClass: "cli-runnable",
     replay: "exact",
     flags: [...TURBO_SHAPE_FLAGS],
+    notes:
+      "After a green Turbo check run the lane runs the single-checker census gate as its own task step (`check-census --gate-only --defer-stale-stamp`): a full run gates every baselined row; an affected run replays its Turbo selection as a dry run and gates only the rows whose packages it checked (`--row-packages`), or prints one skip line when it checked none. A stale compiler stamp passes with a deferral line because Repo Sanity's stamp step owns that red.",
   }),
   CiLaneDescriptor.make({
     id: "test-unit",
@@ -488,6 +513,10 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   CiLaneDescriptor.make({
     id: "test-integration",
     contextName: "Heavy / Test Integration",
+    // check.yml's conditional name for the shards' aggregate on a legacy-integration head.
+    jobAliases: ["Test Integration Partitions"],
+    // Since #3005 the shards run in check.yml as `Test Integration (<partition>)`.
+    shardFamily: O.some("Test Integration"),
     required: true,
     laneClass: "cli-runnable",
     replay: "exact",
@@ -499,6 +528,8 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     id: "coverage",
     workflow: "check",
     contextName: "Heavy / Coverage Regression",
+    // check.yml's conditional name for this job on a legacy-coverage head.
+    jobAliases: ["Coverage Artifact Migration"],
     required: false,
     laneClass: "cli-runnable",
     replay: "exact",
@@ -586,6 +617,8 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     id: "build",
     workflow: "heavy",
     contextName: "Heavy / Build",
+    // The context's name before the lane moved under Heavy (until 2026-09-09).
+    jobAliases: ["Build"],
     required: false,
     laneClass: "cli-runnable",
     replay: "exact",
@@ -2297,49 +2330,161 @@ const isStorybookBuildTask = (entry: TurboDryRunTask): boolean =>
   entry.task === STORYBOOK_BUILD_TASK &&
   entry.command !== TURBO_NONEXISTENT_TASK_COMMAND;
 
-const resolveStorybookLaneAffected = Effect.fn("CiLane.resolveStorybookLaneAffected")(function* (
-  repoRoot: string,
-  base: string
-): Effect.fn.Return<boolean, CiCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  const probeArgs = storybookAffectedProbeArgs();
-  const step = yield* resolveTurboCacheStep(
-    QualityTaskStep.make({
-      label: "ci:storybook:selection",
-      command: "bunx",
-      args: probeArgs,
-      cwd: repoRoot,
-      env: { TURBO_SCM_BASE: base },
-    })
-  );
-  yield* Console.log(`[ci] ci:storybook: ${renderStepCommand(step)}`);
+// One Turbo JSON dry run of a lane's selection probe, read back as the plan's
+// tasks. `logLabel` prefixes the printed command and `subject` names the probe
+// in every failure message ("Turbo's <subject> dry run ...").
+const runTurboSelectionDryRun = Effect.fn("CiLane.runTurboSelectionDryRun")(function* (
+  probe: QualityTaskStep,
+  logLabel: string,
+  subject: string
+): Effect.fn.Return<TurboDryRun, CiCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
+  const step = yield* resolveTurboCacheStep(probe);
+  yield* Console.log(`[ci] ${logLabel}: ${renderStepCommand(step)}`);
   const envOverrides = yield* turboEnvOverrides(step.command, step.args, Bun.env);
   const result = yield* runCaptured({
     command: step.command,
     args: step.args,
-    cwd: repoRoot,
+    cwd: step.cwd,
     env: { ...envOverrides, ...(step.env ?? {}) },
     extendEnv: turboEnvExtendsAmbient(step.command, step.args),
     source: "stdout",
     trim: true,
-  }).pipe(CiCommandError.mapError("Failed to spawn Turbo's Storybook affected dry run."));
+  }).pipe(CiCommandError.mapError(`Failed to spawn Turbo's ${subject} dry run.`));
   if (result.exitCode !== 0) {
     return yield* CiCommandError.make({
-      message: `Turbo's Storybook affected dry run exited with code ${result.exitCode}.`,
+      message: `Turbo's ${subject} dry run exited with code ${result.exitCode}.`,
     });
   }
   if (result.truncated) {
     return yield* CiCommandError.make({
-      message: "Turbo's Storybook affected dry run exceeded the capture bound.",
+      message: `Turbo's ${subject} dry run exceeded the capture bound.`,
     });
   }
-  const dryRun = yield* decodeTurboDryRun(result.output).pipe(
-    CiCommandError.mapError("Turbo emitted invalid JSON for the Storybook affected dry run.")
+  return yield* decodeTurboDryRun(result.output).pipe(
+    CiCommandError.mapError(`Turbo emitted invalid JSON for the ${subject} dry run.`)
+  );
+});
+
+const resolveStorybookLaneAffected = Effect.fn("CiLane.resolveStorybookLaneAffected")(function* (
+  repoRoot: string,
+  base: string
+): Effect.fn.Return<boolean, CiCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
+  const dryRun = yield* runTurboSelectionDryRun(
+    QualityTaskStep.make({
+      label: "ci:storybook:selection",
+      command: "bunx",
+      args: storybookAffectedProbeArgs(),
+      cwd: repoRoot,
+      env: { TURBO_SCM_BASE: base },
+    }),
+    "ci:storybook",
+    "Storybook affected"
   );
   const affected = A.some(dryRun.tasks, isStorybookBuildTask);
   yield* Console.log(
     `[ci] storybook: Turbo's affected plan (${base}...HEAD) ${affected ? "selects" : "does not select"} ${STORYBOOK_PACKAGE_NAME}#${STORYBOOK_BUILD_TASK} (${A.length(dryRun.tasks)} task(s) selected)`
   );
   return affected;
+});
+
+// The check lane's census step: the single-checker gate after the lane's Turbo
+// run, as one more task of the lane. A stale compiler stamp is Repo Sanity's
+// red, so the lane defers it; `--row-packages` narrows the gate to the rows
+// whose packages this run's Turbo selection checked, the only rows whose
+// upstream declarations that run built.
+const CHECK_CENSUS_TURBO_TASK = "check";
+
+const checkCensusLaneStep = (repoRoot: string, rowPackages: O.Option<ReadonlyArray<string>>): QualityTaskStep =>
+  bunRunStep(repoRoot, "ci:check:census", [
+    "beep",
+    "quality",
+    "check-census",
+    "--gate-only",
+    "--defer-stale-stamp",
+    ...O.match(rowPackages, {
+      onNone: A.empty<string>,
+      onSome: (packages) => ["--row-packages", A.join(packages, ",")],
+    }),
+  ]);
+
+const runCheckCensusLaneStep = (repoRoot: string, rowPackages: O.Option<ReadonlyArray<string>>) =>
+  runQualityTaskStreamingStepGroup("ci:check", [checkCensusLaneStep(repoRoot, rowPackages)]);
+
+// The selection the lane's Turbo run made, replayed as a JSON dry run with the
+// same `--affected` and `--filter` shape. Without a lane `--filter`, the census
+// rows' packages are the positive filters, which keeps the plan to at most one
+// task per row package; a lane `--filter` is used as given, because Turbo
+// unions positive filters and the row filters would widen it. `--only` leaves
+// the dependency builds out of the plan.
+const checkCensusSelectionProbe = (
+  repoRoot: string,
+  rowPackages: ReadonlyArray<string>,
+  options: CiLaneRunOptions
+): QualityTaskStep =>
+  QualityTaskStep.make({
+    label: "ci:check:census-selection",
+    command: "bunx",
+    args: directTurboArgs(
+      [CHECK_CENSUS_TURBO_TASK],
+      [
+        ...(options.filter === undefined ? A.map(rowPackages, (name) => `--filter=${name}`) : A.empty<string>()),
+        ...turboShapeArgs(CiLaneRunOptions.make({ ...options, summarize: false })),
+        "--only",
+        "--dry-run=json",
+      ]
+    ),
+    cwd: repoRoot,
+    env: { TURBO_SCM_BASE: options.base },
+  });
+
+const isRunnableCheckTask = (entry: TurboDryRunTask): boolean =>
+  entry.task === CHECK_CENSUS_TURBO_TASK && entry.command !== TURBO_NONEXISTENT_TASK_COMMAND;
+
+const checkedRowPackages = Effect.fn("CiLane.checkedRowPackages")(function* (
+  repoRoot: string,
+  rowPackages: A.NonEmptyReadonlyArray<string>,
+  options: CiLaneRunOptions
+) {
+  const dryRun = yield* runTurboSelectionDryRun(
+    checkCensusSelectionProbe(repoRoot, rowPackages, options),
+    "ci:check",
+    "check-census selection"
+  );
+  const checked = A.map(A.filter(dryRun.tasks, isRunnableCheckTask), (entry) => entry.package);
+  return A.filter(rowPackages, (name) => A.contains(checked, name));
+});
+
+const readCheckCensusRowPackages = Effect.fn("CiLane.readCheckCensusRowPackages")(function* (repoRoot: string) {
+  const path = yield* Path.Path;
+  const baseline = yield* readCheckCensusBaseline(path.join(repoRoot, CHECK_CENSUS_BASELINE_PATH)).pipe(
+    CiCommandError.mapError(`Failed to read ${CHECK_CENSUS_BASELINE_PATH} for the check-census row selection.`)
+  );
+  return A.dedupe(A.map(checkCensusBaselineRows(baseline), (row) => checkCensusRowPackage(row.name)));
+});
+
+const runCheckLaneCensus = Effect.fn("CiLane.runCheckLaneCensus")(function* (
+  repoRoot: string,
+  options: CiLaneRunOptions
+) {
+  if (!options.affected && options.filter === undefined) {
+    yield* Console.log("[ci] check: check-census gates every baselined row (full run)");
+    return yield* runCheckCensusLaneStep(repoRoot, O.none());
+  }
+  const rowPackages = yield* readCheckCensusRowPackages(repoRoot);
+  const selected = yield* A.match(rowPackages, {
+    onEmpty: () => Effect.succeed(A.empty<string>()),
+    onNonEmpty: (rows) => checkedRowPackages(repoRoot, rows, options),
+  });
+  yield* A.match(selected, {
+    onEmpty: () =>
+      Console.log(
+        `[ci] check: check-census skipped: this run's Turbo selection checks no baselined row's package (${A.join(rowPackages, ", ")}), so no row can have moved`
+      ),
+    onNonEmpty: (packages) =>
+      Console.log(
+        `[ci] check: check-census gates the rows of ${A.join(packages, ", ")}, which this run's Turbo selection checks`
+      ).pipe(Effect.andThen(runCheckCensusLaneStep(repoRoot, O.some(packages)))),
+  });
 });
 
 /**
@@ -2376,7 +2521,8 @@ export const ciLaneFailurePolicy = (laneId: CiLaneId): GithubCheckFailurePolicy 
  * `beep ci lane <id>` plans the body and hands it to this runner, so a test
  * that substitutes the body steps exercises the same runner hosted CI uses.
  * The one exception is `docs-policy`: its steps run abreast as one buffered
- * collecting group, which still collects every red.
+ * collecting group, which still collects every red. The `check` lane runs its
+ * body here and, only once the body is green, its check-census gate step.
  *
  * **Example** (Run a lane body)
  *
@@ -2428,15 +2574,18 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
     return;
   }
 
-  if (laneId === "docs-policy") {
+  yield* Match.value(laneId).pipe(
     // The knowledge doctor reads only committed Git state (its own archive extractions of HEAD and
     // the merge-base), never a Turbo output, so it runs abreast of the task graph as it does in the
     // Lint Policy plan. Buffered output keeps each step's log whole; every red is still collected.
-    yield* runQualityTaskStreamingStepGroup(`ci:${laneId}`, steps, A.length(steps), true);
-    return;
-  }
-
-  yield* runCiLaneSteps(laneId, steps);
+    Match.when("docs-policy", () => runQualityTaskStreamingStepGroup(`ci:${laneId}`, steps, A.length(steps), true)),
+    // The census needs the declarations the Turbo run builds and a tree that type-checks, so it
+    // runs only after a green Turbo run; a red census fails the lane like any other task.
+    Match.when("check", () =>
+      runCiLaneSteps(laneId, steps).pipe(Effect.andThen(runCheckLaneCensus(repoRoot, options)))
+    ),
+    Match.orElse(() => runCiLaneSteps(laneId, steps))
+  );
 });
 
 const runCiDoctestLane = Effect.fn("CiLane.runCiDoctestLane")(function* (repoRoot: string) {

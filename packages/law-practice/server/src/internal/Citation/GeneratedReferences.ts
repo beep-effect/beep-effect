@@ -19,6 +19,7 @@ import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { CitationCaseMetadataFields } from "./CaseMetadata.ts";
 import { CitationHtmlTagGeometryInput } from "./HtmlTagGeometry.ts";
+import { reserveCitationInvocationText } from "./Invocation.ts";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
 import {
   CitationReferencePatternConfiguration,
@@ -171,7 +172,7 @@ const prepare = Effect.fn("Citation.extractPincitedReferences")(function* (
   const builder = yield* makeCitationReferencePatterns(limits, config);
   const pattern = yield* builder.build(request.metadata, "pin");
   if (O.isNone(pattern)) return A.empty<CitationGeneratedReference>();
-  const input = yield* makeCitationRegexInput(limits, "source");
+  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText, "source");
   const plain = yield* input.prepareUnicode(request.plain, () => Effect.void);
   const length = plain.value.pythonLength;
   const start = Num.max(0, Num.min(length, request.offset < 0 ? length + request.offset : request.offset));
@@ -234,7 +235,7 @@ const prepareMarkupGeometry = Effect.fn("Citation.prepareReferenceMarkupGeometry
   request: CitationGeneratedMarkupInput,
   geometry: CitationHtmlTagGeometryInput
 ) {
-  const input = yield* makeCitationRegexInput(limits, "source");
+  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText, "source");
   const plain = yield* input.prepareUnicode(request.plain, () => Effect.void);
   const markup = yield* input.prepareUnicode(request.markup, () => Effect.void);
   if (
@@ -353,7 +354,7 @@ const prepareCombined = Effect.fn("Citation.extractGeneratedReferences")(functio
   raw: unknown
 ) {
   const request = yield* S.decodeUnknownEffect(CombinedInput)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
-  const input = yield* makeCitationRegexInput(limits, "source");
+  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText, "source");
   const plain = yield* input.prepareUnicode(request.plain, () => Effect.void);
   if (plain.value.pythonLength <= request.offset || request.kind !== "FullCaseCitation")
     return A.empty<CitationGeneratedReference>();

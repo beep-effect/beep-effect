@@ -53,7 +53,7 @@ export const makeCitationRegexTiming = Effect.fn("Citation.makeRegexTiming")(fun
     isSafetyFailure(error) ? safetyFailure(error) : error;
   const timedFor =
     (duration: Duration.Duration, limit: typeof deadlineLimit) =>
-    <A, E>(body: Effect.Effect<A, E>) =>
+    <A, E, R>(body: Effect.Effect<A, E, R>) =>
       body.pipe(
         Effect.mapError(normalizeSafety),
         Effect.timeoutOrElse({
