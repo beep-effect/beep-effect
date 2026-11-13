@@ -169,6 +169,13 @@ export * from "./DependencyReviewCommand.ts";
  */
 export * from "./DependencyReviewSchemas.ts";
 /**
+ * Docs Policy lane task set and its justified exclusions.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./DocsPolicy.ts";
+/**
  * Public heavy-admission decision export.
  *
  * @category cli-commands

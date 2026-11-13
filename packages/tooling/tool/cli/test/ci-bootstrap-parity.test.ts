@@ -1,4 +1,4 @@
-import { CiOperationalPatterns, ciOperationalPatterns } from "@beep/repo-cli/commands/Ci";
+import { CI_RELEVANCE_LANE_VALUES, CiOperationalPatterns, ciOperationalPatterns } from "@beep/repo-cli/commands/Ci";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
@@ -98,22 +98,65 @@ it.layer(NodeServices.layer, { timeout: "120 seconds" })("CI bootstrap command g
       git(["commit", "-q", "-m", "rename source to docs"]);
       const renamedSource = git(["rev-parse", "HEAD"]);
 
-      const profileLines = (goals: boolean, docs: boolean, desktop: boolean) =>
-        `goals_only=${goals}\ndocs_only=${docs}\ndesktop_rust_relevant=${desktop}\n`;
-      const full = profileLines(false, false, true);
+      // The three retired-adapter lines keep their bytes; one `<lane>_relevant` line per
+      // relevance lane follows, true for the lanes named.
+      const profileLines = (
+        goals: boolean,
+        docs: boolean,
+        desktop: boolean,
+        relevant: ReadonlyArray<string> = A.empty<string>()
+      ) =>
+        A.join(
+          [
+            `goals_only=${goals}`,
+            `docs_only=${docs}`,
+            `desktop_rust_relevant=${desktop}`,
+            ...A.map(CI_RELEVANCE_LANE_VALUES, (lane) => `${lane}_relevant=${A.contains(relevant, lane)}`),
+            "",
+          ],
+          "\n"
+        );
+      const full = profileLines(false, false, true, CI_RELEVANCE_LANE_VALUES);
       const none = profileLines(false, false, false);
+      const sastOnly = profileLines(false, false, false, ["sast"]);
       // [label, event, positional args, pinned base, pinned head, golden stdout, warns unavailable]
       const cases: ReadonlyArray<readonly [string, string, ReadonlyArray<string>, string, string, string, boolean]> = [
         ["goals-only", "pull_request", [base, heads.goals], "", "", profileLines(true, true, false), false],
         ["docs-only", "pull_request", [base, heads.docs], "", "", profileLines(false, true, false), false],
         ["actual PR 2932 paths", "pull_request", [base, heads.pr2932], "", "", profileLines(false, true, false), false],
-        ["workflow with docs", "pull_request", [base, heads.workflow], "", "", profileLines(false, false, true), false],
-        ["security config with docs", "pull_request", [base, heads.security], "", "", none, false],
-        ["root config with docs", "pull_request", [base, heads.config], "", "", none, false],
-        ["source deletion", "pull_request", [base, deletedSource], "", "", none, false],
-        ["source renamed to docs", "pull_request", [base, renamedSource], "", "", none, false],
-        ["desktop", "pull_request", [base, heads.desktop], "", "", profileLines(false, false, true), false],
-        ["mixed", "pull_request", [base, heads.mixed], "", "", none, false],
+        // The workflow that hosts every relevance lane selects all of them.
+        ["workflow with docs", "pull_request", [base, heads.workflow], "", "", full, false],
+        [
+          "security config with docs",
+          "pull_request",
+          [base, heads.security],
+          "",
+          "",
+          profileLines(false, false, false, ["security"]),
+          false,
+        ],
+        [
+          "root config with docs",
+          "pull_request",
+          [base, heads.config],
+          "",
+          "",
+          profileLines(false, false, false, ["codegen", "ecosystem", "desktop_ipc", "sast", "security"]),
+          false,
+        ],
+        // A deleted or renamed source still names a JavaScript or TypeScript path (--no-renames).
+        ["source deletion", "pull_request", [base, deletedSource], "", "", sastOnly, false],
+        ["source renamed to docs", "pull_request", [base, renamedSource], "", "", sastOnly, false],
+        [
+          "desktop",
+          "pull_request",
+          [base, heads.desktop],
+          "",
+          "",
+          profileLines(false, false, true, ["desktop_ipc"]),
+          false,
+        ],
+        ["mixed", "pull_request", [base, heads.mixed], "", "", sastOnly, false],
         ["package docs", "pull_request", [base, heads.packageDocs], "", "", none, false],
         ["quoted path", "pull_request", [base, heads.quoted], "", "", none, false],
         ["empty diff", "pull_request", [base, base], "", "", none, false],
@@ -189,6 +232,17 @@ it.layer(NodeServices.layer, { timeout: "120 seconds" })("CI bootstrap command g
       const narrowed = profile();
       assert.strictEqual(narrowed.exitCode, 0, narrowed.stderr);
       assert.include(narrowed.stdout, "docs_only=false");
+      // A pattern file that predates per-lane relevance (no `lanes` key) keeps every lane
+      // relevant: an old checkout never skips a lane it cannot describe.
+      const { lanes: _lanes, ...withoutLanes } = ciOperationalPatterns;
+      const undescribedPatterns = yield* encodePatterns(CiOperationalPatterns.make(withoutLanes));
+      yield* fs.writeFileString(patternFile, undescribedPatterns);
+      const undescribed = profile();
+      assert.strictEqual(undescribed.exitCode, 0, undescribed.stderr);
+      assert.include(undescribed.stdout, "docs_only=true");
+      for (const lane of CI_RELEVANCE_LANE_VALUES) {
+        assert.include(undescribed.stdout, `${lane}_relevant=true`, lane);
+      }
       // Present but missing a key: fail closed.
       yield* fs.writeFileString(patternFile, '{ "goals": "^goals/" }\n');
       const invalid = profile();

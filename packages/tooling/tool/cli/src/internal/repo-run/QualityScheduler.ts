@@ -32,7 +32,7 @@ import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
-import { constant, dual, flow, pipe } from "effect/Function";
+import { constant, dual, flow, identity, pipe } from "effect/Function";
 import * as HS from "effect/HashSet";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
@@ -655,6 +655,137 @@ const quarantineEntry = Effect.fnUntraced(function* (
   yield* fs.rename(entryPath, destination).pipe(Effect.ignore);
 });
 
+/**
+ * Directory name, under the admission root, that holds archived quarantine entries.
+ *
+ * **Details**
+ *
+ * The reap pass moves quarantine entries older than
+ * {@link QUARANTINE_ARCHIVE_MIN_AGE_MILLIS} here instead of deleting them, so a
+ * quarantined lease or ticket can still be restored by moving it back.
+ *
+ * **Example** (Name the archive directory)
+ *
+ * ```ts
+ * import { QUARANTINE_ARCHIVE_DIRECTORY_NAME } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(QUARANTINE_ARCHIVE_DIRECTORY_NAME) // "quarantine-archive"
+ * ```
+ *
+ * @category admission
+ * @since 0.0.0
+ */
+export const QUARANTINE_ARCHIVE_DIRECTORY_NAME = "quarantine-archive";
+
+/**
+ * Minimum age before the reap pass archives a quarantine entry (seven days).
+ *
+ * **Example** (Read the archive age gate)
+ *
+ * ```ts
+ * import { QUARANTINE_ARCHIVE_MIN_AGE_MILLIS } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(QUARANTINE_ARCHIVE_MIN_AGE_MILLIS) // 604800000
+ * ```
+ *
+ * @category admission
+ * @since 0.0.0
+ */
+export const QUARANTINE_ARCHIVE_MIN_AGE_MILLIS = Duration.toMillis(Duration.days(7));
+
+/**
+ * Instant a quarantine entry was quarantined, read from its `.<nowMillis>` suffix.
+ *
+ * **Details**
+ *
+ * `quarantineEntry` appends the quarantine instant to the original file name.
+ * A path without that suffix (a malformed entry still in place) has no instant.
+ *
+ * **Example** (Read the quarantine instant)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { quarantinedAtMillisOf } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(O.getOrNull(quarantinedAtMillisOf("garbage.lease.json.1700000000000"))) // 1700000000000
+ * console.log(O.isNone(quarantinedAtMillisOf("garbage.lease.json"))) // true
+ * ```
+ *
+ * @param entryPath - Quarantine file name or path.
+ * @returns The quarantine instant in epoch milliseconds, when the suffix is present.
+ * @category admission
+ * @since 0.0.0
+ */
+export const quarantinedAtMillisOf = (entryPath: string): O.Option<number> =>
+  pipe(
+    entryPath,
+    Str.match(/\.(\d{10,})$/u),
+    O.flatMap((match) => O.fromUndefinedOr(match[1])),
+    O.map(Number),
+    O.filter(Number.isSafeInteger)
+  );
+
+const QUARANTINE_ARCHIVE_LOCK_NAME = "quarantine-archive.lock";
+
+// Archive, never delete: aged quarantine entries move under the admission
+// root's archive directory so a needed lease or ticket can be restored by a
+// plain move back. Runs only in the reap pass (never in the status snapshot)
+// and under an exclusive claims lock so concurrent reapers do not interleave.
+// Leases, tickets and claims are never touched.
+const archiveAgedQuarantine = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories,
+  minAgeMillis: number
+): Effect.fn.Return<number, never, SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const nowMillis = yield* Clock.currentTimeMillis;
+  const names = yield* fs.readDirectory(directories.quarantine).pipe(Effect.orElseSucceed(A.empty<string>));
+  const aged = A.filter(names, (name) =>
+    O.exists(quarantinedAtMillisOf(name), (quarantinedAt) => nowMillis - quarantinedAt >= minAgeMillis)
+  );
+  if (A.isReadonlyArrayEmpty(aged)) {
+    return 0;
+  }
+  const lockPath = path.join(directories.claims, QUARANTINE_ARCHIVE_LOCK_NAME);
+  const lockToken = yield* schedulerLockToken();
+  if (!(yield* acquireJournalFileLock(lockPath, lockToken))) {
+    return 0;
+  }
+  const archiveDirectory = path.join(directories.root, QUARANTINE_ARCHIVE_DIRECTORY_NAME);
+  return yield* Effect.ensuring(
+    Effect.gen(function* () {
+      const ready = yield* fs
+        .makeDirectory(archiveDirectory, { recursive: true, mode: 0o700 })
+        .pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
+      if (!ready) {
+        yield* Console.error(`[yeet] could not create quarantine archive ${archiveDirectory}; nothing archived.`);
+        return 0;
+      }
+      const moved = yield* Effect.forEach(
+        aged,
+        Effect.fnUntraced(function* (name: string) {
+          const destination = path.join(archiveDirectory, name);
+          // Never overwrite an archived entry: a collision keeps both copies.
+          if (yield* fs.exists(destination).pipe(Effect.orElseSucceed(constant(true)))) {
+            return false;
+          }
+          return yield* fs
+            .rename(path.join(directories.quarantine, name), destination)
+            .pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
+        })
+      );
+      const count = A.length(A.filter(moved, identity));
+      yield* count > 0
+        ? Console.error(
+            `[yeet] archived ${count} aged quarantine entr${count === 1 ? "y" : "ies"} -> ${archiveDirectory}`
+          )
+        : Effect.void;
+      return count;
+    }),
+    releaseJournalFileLock(lockPath, lockToken)
+  );
+});
+
 interface AdmissionEntryCodec<Entry, DecodeError> {
   readonly decode: (text: string) => Effect.Effect<Entry, DecodeError>;
   readonly ownerOf: (entry: Entry) => { readonly pid: number; readonly procStart: string };
@@ -1183,6 +1314,7 @@ const repairDeadAdmissionState = Effect.fnUntraced(function* (
   yield* Effect.forEach(readReapClaims5, ({ claimPath, claim }) => processReapClaim(directories, claimPath, claim), {
     discard: true,
   });
+  yield* archiveAgedQuarantine(directories, QUARANTINE_ARCHIVE_MIN_AGE_MILLIS);
 });
 
 const promotionTransitionPath = (path: Path.Path, directories: AdmissionDirectories, nonce: string): string =>
