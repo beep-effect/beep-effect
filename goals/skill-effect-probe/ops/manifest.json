@@ -12,7 +12,7 @@
   "packetPath": "goals/skill-effect-probe",
   "lifecycle": "active",
   "mission": "Measure whether the schema-first-development skill changes Opus 5.5 output on the 12 archived SkillOpt tasks across bare, code-laws and code-laws-plus-skill cells, and return a verdict against a rule fixed before any scored run.",
-  "statusNote": "P0 and P1 done; analysis rule amended 2026-11-13 (scorer drift repairs, Insensitive outcome) before any scored record. Blocked: the seven-day Claude plan limit ended the first P2 attempt (void); the headroom pilot and P2 resume after the reset on 2026-11-15 23:00 America/Chicago.",
+  "statusNote": "Headroom pilot (cell A, 24 runs) is a no-go: no all-lanes pass on 12 of 12 tasks; completion is 0 in every run because the archived prompts name neither Effect nor @beep packages. Scored run held; lane census is with the packet author.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

@@ -237,6 +237,12 @@ The seven-day limit resets 2026-11-15 23:00 America/Chicago. Per SPEC, no top-up
 
 Reverse: Resume earlier only if the operator assigns plan headroom; that is an operator decision, not an agent one.
 
+### Hold the scored run on the headroom pilot no-go, 2026-11-13
+
+Cell A had no all-lanes pass on 12 of 12 tasks and completion 0 in all 24 runs: the bare prompts name neither Effect nor @beep packages while the completion contract needs @beep/schema Fn and @beep/utils O. Per the amendment the scored run is held and the census goes to the packet author.
+
+Reverse: Start the scored run if the packet author directs a different gate (for example a cell B headroom pilot) in a new dated amendment.
+
 ### Known-good solutions stay out of the repository, 2026-11-13
 
 Preflight solutions are fixture TypeScript; they live beside the archive checkout and history records their sha256 and score reports only.
