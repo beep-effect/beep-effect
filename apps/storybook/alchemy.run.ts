@@ -2,6 +2,7 @@ import * as AWS from "@alchemy.run/aws";
 import * as Cloudflare from "@alchemy.run/cloudflare";
 import { hostedUrl, PublicOrigin, SiteRoute } from "@beep/public-site";
 import * as Alchemy from "alchemy";
+import * as Output from "alchemy/Output";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 
@@ -57,10 +58,15 @@ const state = AWS.state({
  * memo scope, so the build runs on every deploy; the Worker only changes when
  * the built output does.
  *
- * In `prod` the Worker has no workers.dev URL and no custom domain: two zone
- * routes put it in front of the apex Worker for `/storybook` and everything
- * below it. A request for a file the build did not produce is a 404 from the
- * asset layer and never falls through to the apex app.
+ * In `prod` the Worker has no workers.dev URL and no custom domain: one zone
+ * route, `<apex>/storybook*`, puts it in front of the apex Worker. A route
+ * pattern is matched against the whole URL, query string included, and may
+ * not contain one, so the exact pattern `<apex>/storybook` would miss
+ * `/storybook?path=...`; the trailing wildcard covers the bare slug, the
+ * slug with a query and everything below it. It also takes any other path
+ * that starts with the reserved slug, which the public route map already
+ * denies the apex app. A request for a file the build did not produce is a
+ * 404 from the asset layer and never falls through to the apex app.
  */
 export const Storybook = Cloudflare.Website.StaticSite(
   "Storybook",
@@ -73,10 +79,7 @@ export const Storybook = Cloudflare.Website.StaticSite(
       ? {
           name: productionWorkerName,
           workersDev: false,
-          routes: [
-            { pattern: `${apexHost}/${storybookRoute}`, zoneName: apexHost },
-            { pattern: `${apexHost}/${storybookRoute}/*`, zoneName: apexHost },
-          ],
+          routes: [{ pattern: `${apexHost}/${storybookRoute}*`, zoneName: apexHost }],
         }
       : {}),
   }))
@@ -100,8 +103,10 @@ export default Alchemy.Stack(
     }
     const site = yield* Storybook;
 
+    // The Worker origin serves nothing at its root: the site lives under the
+    // same path prefix on every stage.
     return {
-      url: site.url.as<string>(),
+      url: Output.interpolate`${site.url}/${storybookRoute}/`,
     };
   })
 );

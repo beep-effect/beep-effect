@@ -1,8 +1,8 @@
 name: Deploy Storybook
 
 # Deploys the `prod` stage of the Alchemy stack in apps/storybook: the static
-# Storybook build as an assets-only Cloudflare Worker on the zone routes
-# `beep-effect.com/storybook` and `beep-effect.com/storybook/*`
+# Storybook build as an assets-only Cloudflare Worker on the zone route
+# `beep-effect.com/storybook*`
 # (https://beep-effect.com/storybook/). State lives in the repo's shared AWS
 # S3 state store (goals/infra-alchemy-rebuild); its stage lease plus this
 # concurrency group serialize every prod deploy and never cancel one
@@ -84,16 +84,19 @@ jobs:
         run: bunx alchemy deploy --stage prod --yes --env-file /dev/null
 
       # The asset layer redirects `iframe.html` to `iframe` (query kept), so the
-      # iframe probe follows redirects. The apex probe proves the routes took
-      # only `/storybook` from the apex Worker.
+      # iframe probe follows redirects. The bare probe is the slug without a
+      # slash but with a query: the route must take it and the redirect must
+      # keep the query. The apex probe proves the route took only the slug.
       - name: Smoke-check the public route
         shell: bash
         run: |
           set -euo pipefail
           index="$(curl -sS -L -o /dev/null -w '%{http_code}' --retry 5 --retry-delay 5 --retry-all-errors https://beep-effect.com/storybook/)"
           frame="$(curl -sS -L -o /dev/null -w '%{http_code}' --retry 5 --retry-delay 5 --retry-all-errors https://beep-effect.com/storybook/iframe.html)"
+          bare="$(curl -sS -L -o /dev/null -w '%{http_code} %{url_effective}' --retry 5 --retry-delay 5 --retry-all-errors 'https://beep-effect.com/storybook?path=/docs/smoke')"
           apex="$(curl -sS -o /dev/null -w '%{http_code}' --retry 5 --retry-delay 5 --retry-all-errors https://beep-effect.com/)"
-          echo "index=${index} iframe=${frame} apex=${apex}"
+          echo "index=${index} iframe=${frame} bare=${bare} apex=${apex}"
           [[ "$index" == "200" ]]
           [[ "$frame" == "200" ]]
+          [[ "$bare" == "200 https://beep-effect.com/storybook/?path=/docs/smoke" ]]
           [[ "$apex" == "200" ]]

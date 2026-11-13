@@ -103,7 +103,7 @@ decision file per object).
 | Stack | Source | Workflow | Environment | Serves |
 | --- | --- | --- | --- | --- |
 | `BeepEffectWeb` | `apps/beep-effect-web/alchemy.run.ts` | `deploy-beep-effect-web.yml` | `beep-effect-web-prod` | `https://beep-effect.com` (custom domain, `www` redirect) |
-| `Storybook` | `apps/storybook/alchemy.run.ts` | `deploy-storybook.yml` | `storybook-prod` | `https://beep-effect.com/storybook/` (zone routes in front of the apex Worker) |
+| `Storybook` | `apps/storybook/alchemy.run.ts` | `deploy-storybook.yml` | `storybook-prod` | `https://beep-effect.com/storybook/` (zone route `beep-effect.com/storybook*` in front of the apex Worker) |
 
 Storybook is an assets-only Worker. Its build writes to `site/storybook` under the app
 (`bun run storybook:build:site`), so each asset path carries the `/storybook` prefix the
