@@ -121,16 +121,20 @@ export interface GithubBudgetLedgerShape {
   readonly aliases: Effect.Effect<IdentityAliases>;
   /** The repo-run `gh` sink bound to this ledger. */
   readonly ghSink: GhSpawnSinkShape;
-  /** The hourly rollups of a range, computing missing or incomplete ones from rows. */
+  /**
+   * The hourly rollups of a range, computing missing or incomplete ones from
+   * rows; a stored rollup of an older schema version reads as missing.
+   */
   readonly hours: (range: LedgerRange) => Effect.Effect<ReadonlyArray<LedgerHourRollup>, GithubLedgerError>;
   /** When the identity was last sampled. */
   readonly lastSampleAt: (identity: GithubIdentityLabel) => Effect.Effect<O.Option<DateTime.Utc>, GithubLedgerError>;
   /** The newest reading of a bucket, from memory and `latest/` only. */
   readonly latest: (key: BucketKey) => Effect.Effect<O.Option<BucketReading>, GithubLedgerError>;
   /**
-   * The newest reading of a bucket that its reserve verdict rests on: for a
-   * `graphql` key, sample readings only when calibration admits them. Reads
-   * memory, `latest/` and the calibration file only.
+   * The reading of a bucket that its reserve verdict rests on: the newest
+   * reading of the most constrained fresh, live bucket under the key, else the
+   * newest reading; for a `graphql` key, sample readings only when calibration
+   * admits them. Reads memory, `latest/` and the calibration file only.
    */
   readonly latestUsable: (key: BucketKey) => Effect.Effect<O.Option<BucketReading>, GithubLedgerError>;
   /** Write due rollups and the summary, then apply retention, `latest/` readings older than 24 h included. */
@@ -401,12 +405,13 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
   });
 
   const latestUsable = Effect.fnUntraced(function* (key: BucketKey) {
+    const now = yield* DateTime.now;
     const current = yield* aliases;
     const all = yield* readings;
     const target = canonicalKey(current)(key);
     const own = readingsFor(target, all);
     const admitGraphqlSamples = yield* admitsSamples(target, own);
-    return usableReadingOf({ admitGraphqlSamples })(target, own);
+    return usableReadingOf({ now, admitGraphqlSamples })(target, own);
   });
 
   const reserves = Effect.gen(function* () {

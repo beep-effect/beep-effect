@@ -5,7 +5,6 @@ import {
   BucketReading,
   BucketReadingJson,
   configStringOption,
-  epochsOf,
   GhSpawnObservation,
   GITHUB_LEDGER_MAX_LINE_BYTES,
   GithubBudgetLedger,
@@ -29,6 +28,7 @@ import {
   LedgerSummaryJson,
   LedgerWindow,
   LedgerWindowJson,
+  lanesOf,
   layerGithubBudgetLedger,
   layerGithubLedgerStoreLive,
   layerGithubLedgerStoreMemory,
@@ -217,6 +217,7 @@ describe("GithubLedger schemas", () => {
     Effect.gen(function* () {
       const window = LedgerWindow.make({
         key: key(alice, "core"),
+        lane: 0,
         from: at(0),
         to: at(5 * MINUTE),
         anchor: "sample",
@@ -360,13 +361,13 @@ describe("GithubLedger reserve", () => {
 describe("GithubLedger windows", () => {
   const coreAlice = key(alice, "core");
 
-  it("keeps an idle bucket in one epoch and flags a real reset with a peak-bounded lower bound", () => {
+  it("keeps an idle bucket in one lane and flags a real reset with a peak-bounded lower bound", () => {
     const idle = [
       sampleRow({ at: at(0), used: 0, reset: T0 + HOUR }),
       sampleRow({ at: at(5 * MINUTE), used: 0, reset: T0 + HOUR + 5 * MINUTE }),
       sampleRow({ at: at(10 * MINUTE), used: 4, reset: T0 + HOUR + 10 * MINUTE }),
     ];
-    expect(epochsOf(anchorsOf({ key: coreAlice, rows: idle, admitGraphqlSamples: false })).length).toBe(1);
+    expect(lanesOf(anchorsOf({ key: coreAlice, rows: idle, admitGraphqlSamples: false })).length).toBe(1);
     expect(
       A.some(windowsOf({ key: coreAlice, rows: idle, admitGraphqlSamples: false }), (window) => window.crossesReset)
     ).toBe(false);
@@ -375,7 +376,7 @@ describe("GithubLedger windows", () => {
       sampleRow({ at: at(0), used: 10, reset: T0 + HOUR }),
       sampleRow({ at: at(5 * MINUTE), used: 20, reset: T0 + HOUR + 3000 }),
     ];
-    expect(epochsOf(anchorsOf({ key: coreAlice, rows: jitter, admitGraphqlSamples: false })).length).toBe(1);
+    expect(lanesOf(anchorsOf({ key: coreAlice, rows: jitter, admitGraphqlSamples: false })).length).toBe(1);
 
     const reset = [
       sampleRow({ at: at(0), used: 100, reset: T0 + 10 * MINUTE }),

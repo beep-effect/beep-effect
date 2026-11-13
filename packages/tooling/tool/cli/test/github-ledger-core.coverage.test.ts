@@ -6,7 +6,6 @@ import {
   ConfiguredGithubIdentity,
   commandLabelOf,
   emptyIdentityAliases,
-  epochsOf,
   GithubBudgetLedger,
   GithubConfiguredIdentities,
   GithubIdentityLabel,
@@ -21,6 +20,7 @@ import {
   hostLabelOf,
   hourOf,
   LedgerAnchor,
+  lanesOf,
   layerGithubBudgetLedger,
   layerGithubLedgerStoreMemory,
   makeGithubLedgerStoreMemory,
@@ -132,16 +132,17 @@ const calibration = GithubLedgerRow.cases.Calibration.make({
 
 // Two same-epoch windows on either side of a reset-crossing window, three
 // transports split across two commands (one free, one rate limited) and a
-// calibration pairing.
+// calibration pairing. The first window resets at 12 minutes, before the
+// 20-minute sample opens the next one, so that sample continues the same lane.
 const crossingRows = [
-  sample({ at: at(5 * MINUTE), used: 100, reset: HOUR }),
+  sample({ at: at(5 * MINUTE), used: 100, reset: 12 * MINUTE }),
   transport({ at: at(6 * MINUTE), used: 101, command: beep, nominalCost: 1, outcome: "rate-limited" }),
   transport({ at: at(7 * MINUTE), used: 101, command: monitor, nominalCost: 0 }),
   transport({ at: at(8 * MINUTE), used: 102, command: monitor, nominalCost: 1 }),
-  sample({ at: at(10 * MINUTE), used: 200, reset: HOUR }),
+  sample({ at: at(10 * MINUTE), used: 200, reset: 12 * MINUTE }),
   calibration,
-  sample({ at: at(20 * MINUTE), used: 50, reset: 2 * HOUR }),
-  sample({ at: at(30 * MINUTE), used: 80, reset: 2 * HOUR }),
+  sample({ at: at(20 * MINUTE), used: 50, reset: 72 * MINUTE }),
+  sample({ at: at(30 * MINUTE), used: 80, reset: 72 * MINUTE }),
 ];
 
 const crossingRollup = (complete: boolean) =>
@@ -178,11 +179,32 @@ const anchor = (offset: number, used: number, reset: number) =>
   LedgerAnchor.make({ at: at(offset), used, resetAt: at(reset), anchor: "sample" });
 
 describe("GithubLedger reducers", () => {
-  it("splits anchors into epochs at a reset", () => {
+  it("opens a second lane for a reset that arrives before the first lane's window ends", () => {
     const first = anchor(0, 10, HOUR);
     const second = anchor(MINUTE, 20, HOUR);
-    const afterReset = anchor(2 * MINUTE, 5, 2 * HOUR);
-    expect(epochsOf([first, second, afterReset])).toStrictEqual([[first, second], [afterReset]]);
+    const concurrent = anchor(2 * MINUTE, 5, 2 * HOUR);
+    expect(lanesOf([first, second, concurrent])).toStrictEqual([[first, second], [concurrent]]);
+  });
+
+  it("joins the closest reset within jitter, then an idle lane, then the latest ended window", () => {
+    // Lanes 0 and 1 reset 8 s apart; a reset 5 s after lane 0's is 3 s from lane 1's.
+    const zero = anchor(0, 10, HOUR);
+    const one = anchor(MINUTE, 20, HOUR + 8000);
+    const closest = anchor(2 * MINUTE, 30, HOUR + 5000);
+    const nearZero = anchor(3 * MINUTE, 15, HOUR - 1000);
+    expect(lanesOf([zero, one, closest, nearZero])).toStrictEqual([
+      [zero, nearZero],
+      [one, closest],
+    ]);
+    // An idle reading's reset floats, so the next reading of any reset joins its lane.
+    const idle = anchor(0, 0, HOUR);
+    const afterIdle = anchor(MINUTE, 4, 2 * HOUR);
+    expect(lanesOf([idle, afterIdle])).toStrictEqual([[idle, afterIdle]]);
+    // Both windows end by 25 minutes; the post-reset reading continues the later one.
+    const early = anchor(0, 10, 10 * MINUTE);
+    const late = anchor(MINUTE, 20, 20 * MINUTE);
+    const fresh = anchor(25 * MINUTE, 3, 85 * MINUTE);
+    expect(lanesOf([early, late, fresh])).toStrictEqual([[early], [late, fresh]]);
   });
 
   it("rolls up an hour whose windows cross a reset between two same-epoch runs", () => {

@@ -1408,7 +1408,13 @@ export class LedgerAnchor extends S.Opaque<LedgerAnchor, { readonly brand: uniqu
 ) {}
 
 /**
- * The span between two consecutive anchors of one bucket.
+ * The span between two consecutive anchors of one lane of a bucket.
+ *
+ * **Details**
+ *
+ * A lane is one physical bucket. One key can hold several concurrent lanes,
+ * such as two credentials of one login that the alias map folds together.
+ * `lane` numbers them from 0 in order of first appearance within the key.
  *
  * **Example** (Build a window)
  *
@@ -1417,7 +1423,7 @@ export class LedgerAnchor extends S.Opaque<LedgerAnchor, { readonly brand: uniqu
  * import * as DateTime from "effect/DateTime"
  *
  * const window = LedgerWindow.make({
- *   key: BucketKey.make({ identity: GithubIdentityLabel.make("user:octocat"), resource: "core" }),
+ *   key: BucketKey.make({ identity: GithubIdentityLabel.make("user:octocat"), resource: "core" }), lane: 0,
  *   from: DateTime.makeUnsafe(0), to: DateTime.makeUnsafe(300_000), anchor: "sample",
  *   sameEpoch: true, delta: 12, crossesReset: false, resetLowerBound: 0, attributedNominal: 9, ghSpawns: 1
  * })
@@ -1430,6 +1436,7 @@ export class LedgerAnchor extends S.Opaque<LedgerAnchor, { readonly brand: uniqu
 export class LedgerWindow extends S.Opaque<LedgerWindow, { readonly brand: unique symbol }>()(
   S.Struct({
     key: BucketKey,
+    lane: S.Int.check(S.isGreaterThanOrEqualTo(0)),
     from: S.DateTimeUtcFromString,
     to: S.DateTimeUtcFromString,
     anchor: WindowAnchor,
@@ -1439,7 +1446,7 @@ export class LedgerWindow extends S.Opaque<LedgerWindow, { readonly brand: uniqu
     resetLowerBound: S.Int,
     attributedNominal: S.Int,
     ghSpawns: S.Int,
-  }).pipe($I.annoteSchema("LedgerWindow", { description: "The span between two anchors of one bucket." }))
+  }).pipe($I.annoteSchema("LedgerWindow", { description: "The span between two anchors of one lane of a bucket." }))
 ) {}
 
 /**
@@ -1574,6 +1581,13 @@ export class OperationCost extends S.Opaque<OperationCost, { readonly brand: uni
 /**
  * One hour of one host's ledger, rolled up.
  *
+ * **Details**
+ *
+ * Version 2 computes windows per lane, so concurrent buckets of one key no
+ * longer read as resets, and each window carries its `lane`. A rollup file of
+ * any other version does not decode, so the store reads it as absent and the
+ * hour is recomputed from its rows.
+ *
  * **Example** (Build an empty rollup)
  *
  * ```ts
@@ -1584,7 +1598,7 @@ export class OperationCost extends S.Opaque<OperationCost, { readonly brand: uni
  *   hour: DateTime.makeUnsafe(0), host: HostLabel.make("hub"), complete: false,
  *   cells: [], keys: [], operationCosts: [], windows: []
  * })
- * console.log(rollup.schemaVersion) // "github-ledger-rollup/v1"
+ * console.log(rollup.schemaVersion) // "github-ledger-rollup/v2"
  * ```
  *
  * @category models
@@ -1592,7 +1606,7 @@ export class OperationCost extends S.Opaque<OperationCost, { readonly brand: uni
  */
 export class LedgerHourRollup extends S.Opaque<LedgerHourRollup, { readonly brand: unique symbol }>()(
   S.Struct({
-    schemaVersion: S.tag("github-ledger-rollup/v1"),
+    schemaVersion: S.tag("github-ledger-rollup/v2"),
     hour: S.DateTimeUtcFromString,
     host: HostLabel,
     complete: S.Boolean,

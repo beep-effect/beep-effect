@@ -101,7 +101,10 @@ export interface GithubLedgerStoreShape {
   readonly latestTransport: Effect.Effect<ReadonlyArray<BucketReading>, GithubLedgerError>;
   /** The alias map; empty when absent or unreadable. */
   readonly readAliases: Effect.Effect<IdentityAliases, GithubLedgerError>;
-  /** The rollup of an hour, when one was written. */
+  /**
+   * The rollup of an hour, when one of the current schema version was written;
+   * a rollup of another version, or an unreadable one, is absent.
+   */
   readonly readRollup: (hour: DateTime.Utc) => Effect.Effect<O.Option<LedgerHourRollup>, GithubLedgerError>;
   /** The hot-parcel summary, when one was written. */
   readonly readSummary: Effect.Effect<O.Option<LedgerSummary>, GithubLedgerError>;
@@ -385,6 +388,7 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
   const readRollup = Effect.fnUntraced(function* (hour: DateTime.Utc) {
     const rollups = yield* dir("rollups");
     const text = yield* readOptional(path.join(rollups, `${hourFileKey(hour)}.json`), "read an hour rollup");
+    // The schemaVersion tag rejects any other version, so an older rollup is absent and its hour is recomputed.
     return O.flatMap(text, S.decodeUnknownOption(LedgerHourRollupJson));
   });
 
