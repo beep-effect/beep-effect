@@ -51,7 +51,7 @@ const decodeGoalSlug = S.decodeEffect(GoalSlug);
 const encodeUnknownMaterializationPlan = S.encodeUnknownEffect(MaterializationPlan);
 
 const COMPLETION_GATE_STATEMENT =
-  "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).";
+  "Not achieved until this goal's final PR, driven to mergeable via /yeet (bun run beep yeet: repair -> publish -> final-check -> ready -> monitor), merges and goals completion refresh verifies it from hosted facts.";
 
 const STOP_CONDITIONS: ReadonlyArray<string> = [
   "Required source files are missing or materially contradictory.",
@@ -330,11 +330,10 @@ irreversible change (a tested down-migration, a backup of deleted state) before
 the change merges, and ship a breaking public API or schema change with a major
 changeset. Escalate only what AGENTS.md "Autonomy" lists.
 
-Ship proposedCloseout and the reflection in the final PR (status stays active or
-paused). After that merge, verify with \`bun run beep goals completion refresh --slug ${input.slug}\`,
-then adopt with \`bun run beep goals set-status ${input.slug} <status>\` in a
-packet-state PR. Done only once it merges and this passes, or an operator
-blocker is reported with evidence:
+The final PR carries the reflection and writes \`closeout\` naming itself. Done
+only when this passes and \`goals completion refresh --slug ${input.slug}\` prints
+verified, when this passes under an operator ruling in \`decisions/\`, or when an
+operator blocker is reported with evidence:
 \`git show origin/main:goals/${input.slug}/ops/manifest.json | jq -e '.closeout.status == .initiative.status'\`
 `;
 
@@ -432,9 +431,13 @@ Before marking the packet closed:
    validate against \`ReflectionFrontmatter\`.
 2. Run \`bun run beep lint reflection-artifacts\`.
 3. Update \`README.md\` (status, latest evidence) and \`ops/manifest.json\` phase
-   statuses and a typed \`proposedCloseout\` with status \`completed-retained\`
-   and finalPullRequest. Keep \`initiative.status\` operative until completion
-   evidence verifies; do not close the external execution/session ledger from a proposal.
+   statuses. Once the final PR is open, run
+   \`bun run beep goals set-status ${input.slug} completed-retained\`: it writes
+   \`closeout\` naming that PR with the matching \`initiative.status\`, and the
+   commit ships in the final PR. After the merge,
+   \`bun run beep goals completion refresh --slug ${input.slug}\` must print verified;
+   name any red required check in a committed decision file
+   (\`redAttribution\`).
 
 ## Execution Notes
 

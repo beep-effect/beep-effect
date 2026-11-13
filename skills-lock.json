@@ -39,7 +39,7 @@
         ".claude/skills/closeout",
         ".agents/skills/closeout"
       ],
-      "installedTreeHash": "e99fc397c09603ac4286564a8ee5c438f69a23bcb1c7975709c286da31470d8e"
+      "installedTreeHash": "83f8037f99e3ba15e1831e3a7b4e8513ec982e37c53bbda87f414fe219d5cf01"
     },
     "codex-findings": {
       "_tag": "local",
@@ -251,7 +251,7 @@
         ".claude/skills/orchestrate",
         ".agents/skills/orchestrate"
       ],
-      "installedTreeHash": "aa7c186390252128853832663bedcc7a25e51e2cc5de24ba527f8f229e2963ee"
+      "installedTreeHash": "b5dac4da29b27d890779ee7dc9fc84db90f93547f70fe30333c3c1230fd62996"
     },
     "plasma-sensitive-entry": {
       "_tag": "local",
@@ -338,7 +338,7 @@
         ".claude/skills/reflect",
         ".agents/skills/reflect"
       ],
-      "installedTreeHash": "9aed2824097053bde41282c88b41709fa68be9fe7e5916124e406311eb92d6ef"
+      "installedTreeHash": "ae2988a5c9212d5c7d459a71dd71cdc5190130330205429f4358dbd8e752b1d3"
     },
     "remote-development-agents": {
       "_tag": "local",
@@ -676,7 +676,7 @@
         ".claude/skills/update-harnesses",
         ".agents/skills/update-harnesses"
       ],
-      "installedTreeHash": "d924a954931ef7d2181977e8c37e6f74b08c9517b0f491cf062f3b46faaa7cbf"
+      "installedTreeHash": "8fbd57f4ee048f5bc3957051deca09181d754fbb6d3cd5e085e9152d9780de3a"
     },
     "yeet": {
       "_tag": "local",
@@ -684,7 +684,7 @@
         ".claude/skills/yeet",
         ".agents/skills/yeet"
       ],
-      "installedTreeHash": "5fa9679e778f06e2c178a96f85cce1ce2533be185b6a42a267c50b976debdec5"
+      "installedTreeHash": "7b7e68affe170c1861efd0b96b4b8da0e36a3326596719bfb72415baf3c368a2"
     }
   }
 }
