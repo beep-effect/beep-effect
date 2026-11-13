@@ -90,6 +90,8 @@ import {
   YeetReviewWindowDuration,
   YeetReviewWindowUnknown,
 } from "./ReviewWindow.ts";
+import { yeetStackRulesBranch } from "./Stack.ts";
+import { readYeetStackUngatedRefusal } from "./StackGate.ts";
 import type { GitHubError } from "@beep/github/GitHubError";
 import type { Repo } from "@beep/github/Repo";
 import type { CliReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
@@ -1346,7 +1348,8 @@ const readGateFacts = Effect.fn("YeetGh.readGateFacts")(function* (options: {
     );
   const [requiredContexts, checkRuns, evidence] = yield* Effect.all(
     [
-      optional("required contexts", rest.requiredStatusContexts(pr.baseRef)),
+      // A stack layer is gated on its trunk's rules, which GitHub evaluates at merge.
+      optional("required contexts", rest.requiredStatusContexts(yeetStackRulesBranch(pr))),
       rest.checkRuns(pr.headSha),
       readYeetReviewWindowEvidence({ prNumber: options.number, headSha: pr.headSha, pull: pr }).pipe(
         provideYeetHeadMoveClassifier(options.repoRoot ?? process.cwd())
@@ -1507,7 +1510,10 @@ export const mergeYeetGhAtHead = Effect.fn("Yeet.gh.mergeAtHead")(function* (
 
 /**
  * `yeet gh merge <n> --sha <sha>`: re-verify the gate over REST (threads over
- * budget-guarded GraphQL) and squash-merge pinned to the head sha.
+ * budget-guarded GraphQL) and squash-merge pinned to the head sha. A pull
+ * request in a native stack whose merge would land anything but itself, or
+ * whose stack cannot be read, is refused (exit 1): it merges through
+ * `yeet merge-gate`, which gates every layer.
  *
  * @param options - The parsed command flags and arguments.
  * @returns The command effect; holds exit 75 and refusals exit 1 through `CliReportedExit`.
@@ -1537,6 +1543,12 @@ export const runYeetGhMerge = (
       });
       const verdict = decideYeetGhMergeGate(facts);
       yield* Effect.forEach(renderVerdictLines(facts, verdict), (line) => Console.log(line), { discard: true });
+      // This path gates one pull request; a stacked one merges through `yeet merge-gate`.
+      // The refusal is permanent, so it exits 1 before a hold (75) can send a waiter round again.
+      const stackRefusal = yield* readYeetStackUngatedRefusal(facts.pullRequest);
+      if (O.isSome(stackRefusal)) {
+        return yield* report(1)(`[gh] not merging #${options.number}: ${stackRefusal.value}`);
+      }
       if (!verdict.met) {
         return yield* report(verdict.onlyHolds ? YEET_GH_EXIT_HOLD : 1)(
           `[gh] not merging #${options.number}: ${A.join(
