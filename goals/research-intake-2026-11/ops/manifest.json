@@ -4,13 +4,13 @@
     "id": "research-intake-2026-11",
     "packetId": "goal-packet/v1:80023d9f5fe05da39442f58d63bf692a34b6ae7a3b73f4001b7b9fff99d33984",
     "title": "Research intake 2026-11",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-06",
-    "updated": "2026-11-07",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/research-intake-2026-11",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Run and mine the library's third intake: Box nightlies, the Nov-5 aggregation (papers, link list, VidBee bundles, private DM archive) at hop 0, hop 1 in full, gated hop 2; T1/T2/T3 mining into CiTO-typed, SKOS-routed findings; deep-research per gap cluster; per-hop coverage; routing amendments. Box legal-ontology pile: download, dedupe, T1 only.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -105,12 +105,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -125,7 +125,7 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "proposedCloseout": {
+  "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2963
   }

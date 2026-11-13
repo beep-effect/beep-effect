@@ -64,6 +64,8 @@ Stop and report before changing public API, schema, data migration, auth, infra,
 security behavior, dependencies, lockfiles, generated files, or destructive
 state unless `SPEC.md` explicitly requires it.
 
-Done only when the independent failure and recovery proof is green and the work
-ships as a PR driven to mergeable through Yeet; otherwise report blockers with
-file/command evidence.
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug law-docketing-reliability` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/law-docketing-reliability/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

@@ -68,6 +68,8 @@ bun run beep yeet verify
 Stop before P1 if a P0 gate cannot support an honest contract, or before unnamed
 credentials, cost, destructive state, dependency expansion, or broader API.
 
-Done only when the fixture contract, deterministic generation/drift proof,
-focused tests, reflection, and Yeet/GitHub mergeability are green; otherwise
-report the blocker with file/command evidence.
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug uspto-prosecution-read` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/uspto-prosecution-read/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

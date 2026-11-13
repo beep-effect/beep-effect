@@ -230,8 +230,8 @@ export const sessionOpenCommand = Command.make(
         yield* Console.log(encoded);
         return;
       }
-      // The derived lifecycle reads as the operative status; a packet without a
-      // verified receipt in this clone says so instead of showing the raw field.
+      // One line per committed closeout still worth a look: not verified in this
+      // clone, or verified with a final merged inside the closeout window.
       yield* Effect.forEach(
         goalCloseouts,
         (view) => Console.log(`[session:goal] ${view.packet}: ${renderGoalCloseoutView(view)}`),

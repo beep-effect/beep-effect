@@ -377,6 +377,12 @@ const checkFlag = Flag.Boolean("check").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Report skill drift without writing files and exit non-zero when changes are needed")
 );
+const offlineFlag = Flag.Boolean("offline").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
+    "With --check: fetch no floating upstream skill and judge only tracked files (lock, installed trees, .agents mirror, Codex configuration, frontmatter)"
+  )
+);
 const dryRunFlag = Flag.Boolean("dry-run").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Preview skill updates without writing files or failing on drift")
@@ -1043,11 +1049,23 @@ const printFrontmatterReport = Effect.fn("Skills.printFrontmatterReport")(functi
   );
 });
 
-const resolveMode = (check: boolean, dryRun: boolean): Effect.Effect<SkillsRunMode, SkillsCommandError> => {
+const resolveMode = (
+  check: boolean,
+  dryRun: boolean,
+  offline: boolean
+): Effect.Effect<SkillsRunMode, SkillsCommandError> => {
   if (check && dryRun) {
     return Effect.fail(
       SkillsCommandError.make({
         message: "The --check and --dry-run flags are mutually exclusive.",
+      })
+    );
+  }
+  // A write that skipped the refetch would record a lock no upstream snapshot backs.
+  if (offline && !check) {
+    return Effect.fail(
+      SkillsCommandError.make({
+        message: "The --offline flag is only valid with --check.",
       })
     );
   }
@@ -1291,6 +1309,7 @@ const evaluateLockState = Effect.fnUntraced(function* (
  */
 export const runSkillsUpdate = Effect.fn("Skills.runSkillsUpdate")(function* (options: {
   readonly mode: SkillsRunMode;
+  readonly offline?: boolean;
   readonly skill: O.Option<string>;
 }): Effect.fn.Return<
   ReadonlyArray<SkillDrift>,
@@ -1313,6 +1332,7 @@ const recoverBeforeWrite = Effect.fn("Skills.recoverBeforeWrite")(function* (rep
 
 const updateSkills = Effect.fn("Skills.updateSkills")(function* (options: {
   readonly mode: SkillsRunMode;
+  readonly offline?: boolean;
   readonly skill: O.Option<string>;
 }) {
   const path = yield* Path.Path;
@@ -1326,7 +1346,11 @@ const updateSkills = Effect.fn("Skills.updateSkills")(function* (options: {
   const lock = yield* readLockV2(repoRoot);
   yield* refuseVendoredRefetch(lock, options.skill);
   const resolvedSourcesToFetch = yield* resolveSourcesToFetch(options.skill);
-  const sources = yield* floatingSources(lock, resolvedSourcesToFetch);
+  // An offline check fetches nothing: it judges the lock, the installed trees, the .agents mirror,
+  // the Codex configuration and the frontmatter, all tracked files. Whether a floating source has
+  // moved upstream is the online check's question.
+  const sources =
+    options.offline === true ? A.empty<RemoteSkillSource>() : yield* floatingSources(lock, resolvedSourcesToFetch);
   yield* Effect.forEach(
     sources,
     (source) => resolveSkillDestination(repoRoot, path.join(repoRoot, CLAUDE_SKILLS_DIR, source.name)),
@@ -1372,11 +1396,12 @@ const skillsUpdateCommand = Command.make(
   {
     check: checkFlag,
     dryRun: dryRunFlag,
+    offline: offlineFlag,
     skill: skillFlag,
   },
-  Effect.fn(function* ({ check, dryRun, skill }) {
-    const mode = yield* resolveMode(check, dryRun);
-    yield* runSkillsUpdate({ mode, skill }).pipe(
+  Effect.fn(function* ({ check, dryRun, offline, skill }) {
+    const mode = yield* resolveMode(check, dryRun, offline);
+    yield* runSkillsUpdate({ mode, offline, skill }).pipe(
       Effect.catchTags({
         SkillFrontmatterError: Effect.fn(function* (error) {
           yield* Console.error(`skills:update: ${error.message}`);

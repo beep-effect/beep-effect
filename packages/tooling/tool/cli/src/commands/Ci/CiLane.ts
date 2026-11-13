@@ -452,9 +452,9 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     required: true,
     laneClass: "cli-runnable",
     replay: "exact",
-    flags: ["--changeset-status", "--docs-only"],
+    flags: ["--changeset-status", "--docs-only", "--skip-skills-lock"],
     notes:
-      "Always validates the changeset graph and runs the private home path law; CI also passes --changeset-status on pull requests. A docs_only pull request runs --docs-only: the law, the changeset graph and the changeset status, and nothing that reads code-route paths.",
+      "Always validates the changeset graph and runs the private home path law; CI also passes --changeset-status on pull requests. A docs_only pull request runs --docs-only: the law, the changeset graph and the changeset status, and nothing that reads code-route paths. Both shapes run `beep skills update --check --offline` (installed skills, their .agents mirror and Codex configuration against skills-lock.json, from tracked files only); CI passes --skip-skills-lock on a pull request that changes none of the `skills` pattern row's paths.",
   }),
   CiLaneDescriptor.make({
     id: "docs-policy",
@@ -747,6 +747,7 @@ export class CiLaneRunOptions extends S.Opaque<CiLaneRunOptions, { readonly bran
     dryRun: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     force: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     docsOnly: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    skipSkillsLock: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
   }).pipe(
     $I.annoteSchema("CiLaneRunOptions", {
       description: "Shape and optional Turbo scope for running one CI lane body.",
@@ -2018,11 +2019,22 @@ export const ciLaneStepsForTesting: {
         // checks; every other step reads code-route paths (sources, manifests,
         // tool configuration, workflows). Docs Policy runs the knowledge and
         // packet policy on the same diffs.
+        // No other hosted lane compared the installed skills with skills-lock.json, and pull
+        // requests kept merging over a stale lock (#3225, #3246). A SKILL.md edit is a
+        // documentation diff, so the step sits on both paths. `--offline` keeps it to tracked
+        // files: the plain check also refetches each floating upstream skill through the
+        // unauthenticated GitHub API, which rate-limits shared runner addresses and would turn an
+        // upstream push into a red on an unrelated pull request. It takes about a second;
+        // check.yml skips it on a pull request that changes none of the `skills` pattern row's paths.
+        const skillsLock = options.skipSkillsLock
+          ? A.empty<QualityTaskStep>()
+          : [bunRunStep(repoRoot, "ci:repo-sanity:skills-lock", ["beep", "skills", "update", "--check", "--offline"])];
         if (options.docsOnly) {
           return [
             homePaths,
             bunRunStep(repoRoot, "ci:repo-sanity:changeset-graph", ["beep", "quality", "changeset-graph"]),
             changesetStatus,
+            ...skillsLock,
           ];
         }
         return [
@@ -2032,6 +2044,17 @@ export const ciLaneStepsForTesting: {
           bunRunStep(repoRoot, "ci:repo-sanity:workflow-lint", ["beep", "ci", "workflow-lint"]),
           bunRunStep(repoRoot, "lint:schema-catalog", ["beep", "lint", "schema-catalog"]),
           bunRunStep(repoRoot, "ci:repo-sanity:catalog-usage", ["beep", "quality", "catalog-usage"]),
+          // The single-checker census baseline records the compiler it was measured with, and a
+          // compiler bump that leaves it behind makes the gate's counts incomparable; no lane
+          // noticed two such bumps. The stamp check reads the baseline and one `tsc --version`
+          // (no build, about a second), so it runs on every full pass. A documentation-only diff
+          // can move neither input, so the documentation path leaves it out.
+          bunRunStep(repoRoot, "ci:repo-sanity:check-census-stamp", [
+            "beep",
+            "quality",
+            "check-census",
+            "--stamp-only",
+          ]),
           // Required on every head: Heavy / Lint Policy also runs the law on
           // code PRs, but it is not a required context.
           homePaths,
@@ -2052,6 +2075,7 @@ export const ciLaneStepsForTesting: {
           // step and fails with all reds, so an earlier red cannot hide it.
           rootTaskStep(repoRoot, "ci:repo-sanity:shadcn", "lint:shadcn"),
           ...(options.changesetStatus ? [changesetStatus] : A.empty<QualityTaskStep>()),
+          ...skillsLock,
         ];
       },
       sast: () => [bunRunStep(repoRoot, "ci:sast", ["beep", "quality", "github-checks", "sast"])],
@@ -2988,6 +3012,12 @@ export const ciLaneCommand = Command.make(
         "repo-sanity: run only the checks a documentation-only diff can fail (home path law, changeset graph and status)"
       )
     ),
+    skipSkillsLock: Flag.Boolean("skip-skills-lock").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "repo-sanity: leave out the skills lock check (CI passes this when a pull request changes no skill, lock or checker path)"
+      )
+    ),
     validateEnvelopes: Flag.Boolean("validate-envelopes").pipe(
       Flag.withDefault(false),
       Flag.withDescription("Also replay the fallow envelope validation steps locally")
@@ -3068,6 +3098,7 @@ export const ciLaneCommand = Command.make(
     base: baseFlag,
     changesetStatus,
     docsOnly,
+    skipSkillsLock,
     eventBase,
     coverageOutput,
     coverageInput,
@@ -3142,6 +3173,7 @@ export const ciLaneCommand = Command.make(
       dryRun,
       force,
       docsOnly,
+      skipSkillsLock,
     });
 
     if (list) {

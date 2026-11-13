@@ -243,33 +243,43 @@ needed only for the escalation list below.
   the tier is `GithubCheckLaneSpec.tier`, never an id prefix, and the step label
   is the log prefix (TTC ruling 28).
 - Yeet is the canonical repo-quality path: `bun run beep yeet repair`,
-  `... publish --message "..."`, `... job wait <id>`, `... ready`. `publish`
-  gates the push on cheap-gates and the head-install preflight only, opens a
-  draft PR labelled `ready-for-heavy`, and submits the detached readiness
-  monitor; hosted CI is the authoritative proof and `yeet verify` is
-  on-demand. Never wait on a queued local full proof to publish. One push per
-  fully addressed wave, never per file or comment (push-first-publish D1–D11).
-- When local compute is constrained (operator 2026-10-24), push straight to
-  hosted CI instead of queueing: if scheduler admission or a local gate has
-  waited 10 minutes, stop that local run, keep the package-scoped checks that
-  already passed (`quality package-verify`, or lint and check of the touched
-  packages), and run `bun run beep yeet open --body-file <md>` on the
-  committed HEAD. It pushes and opens the draft with `ready-for-heavy`, the
-  provenance footer and the readiness monitor, and runs no local gate. Flip it
-  with `bun run beep yeet ready` at content-final as usual. Hosted CI is the
-  proof; the body file records which local checks ran and which were skipped.
-  Never open a PR with raw `gh pr create` or replace a body with
-  `gh pr edit --body*`: both drop the Yeet provenance footer. Use
+  `... final-check`, `... open` or `... publish --message "..."`,
+  `... job wait <id>`. A PR opens ready for review, at content-final
+  (operator 2026-11-13): commit, run `bun run beep yeet final-check` on that
+  head, then `bun run beep yeet open`. `publish` commits and runs cheap-gates
+  and the head-install preflight; it pushes a fix to an open PR as before,
+  and refuses before the push when it would open a new PR on a head without
+  a passing receipt. The open applies `ready-for-heavy`, starts the review
+  window and submits the detached readiness monitor; hosted CI is the
+  authoritative proof and `yeet verify` is on-demand. One push per fully
+  addressed wave, never per file or comment; a push after the open restarts
+  the review window (push-first-publish D1–D11).
+- "Final" means the head passed `bun run beep yeet final-check`: the scoped
+  local replay of every hosted gate the cheap tier skips (Lint Policy, Lint,
+  Check, Docgen, Repo Sanity, Fallow, Coverage, and test expectations
+  rewritten to match new output). Do not wait for hosted heavy CI, which
+  doubles as the review window.
+- Drafts are opt-in (`--draft` on `publish` or `open`) for work that needs a
+  hosted run before it is final. A draft needs no receipt and gets the cheap
+  hosted tier only: no `ready-for-heavy`, no heavy runners.
+  `bun run beep yeet ready` flips it on the head's passing receipt and applies
+  the label. Yeet opens a heavy-admitted draft on its own for a stack layer
+  and on a worker compute profile, whose gates only hosted CI can prove.
+- When local compute is constrained (operator 2026-10-24): if scheduler
+  admission or a local gate has waited 10 minutes, stop that local run and
+  keep the package-scoped checks that already passed (`quality
+  package-verify`, or lint and check of the touched packages). Record each
+  final-check gate that could not run with
+  `bun run beep yeet final-check --skip <gate>=<reason>` (a skipped gate
+  does not run), then `bun run beep yeet open [--body-file <md>]`. The PR
+  body names the skipped gates from the receipt; `yeet open` never opens a
+  ready PR without one. Never open a PR with raw `gh pr create` or replace a
+  body with `gh pr edit --body*`: both drop the Yeet provenance footer. Use
   `bun run beep yeet gh pr body <n> --body-file <md>`, which keeps it.
-- Draft means only "the owner is still pushing". "Final" means the pushed
-  head passed `bun run beep yeet final-check`: the scoped local replay of
-  every hosted gate the cheap tier skips (Lint Policy, Lint, Check,
-  Docgen, Repo Sanity, Fallow, Coverage, and test expectations rewritten
-  to match new output). Flip the PR ready with
-  `bun run beep yeet ready`, which refuses without that head's passing
-  receipt; do not wait for hosted heavy CI, which doubles as the review
-  window. A gate parked by constrained compute is skipped only with
-  `--skip <gate>=<reason>`, named in the PR body.
+  The 10-minute rule is the `workstation` profile's: on the `worker` profile
+  (`bun run beep compute profile`) the scheduler refuses hosted-only gates and
+  `yeet publish` takes the `yeet open` posture with a heavy-admitted draft, so
+  no local proof queues.
 - Heavy admitted work and detached proofs run under systemd
   (`agent-run-<ticket>.scope`, `beep-proof-<jobId>.service`): use `--detach`
   plus `yeet job wait <jobId>` for a proof that may outlive the repair loop.
@@ -315,9 +325,11 @@ needed only for the escalation list below.
   included, when the thread and window conditions hold and it has no base
   conflict; record each red with its attribution. Every required red that
   reaches `main` gets a named owner and a fix PR the same working day.
-- PR closeout: flip the PR ready at content-final, then run
-  `bun run beep yeet monitor --until-ready --detach` and block on
-  `bun run beep yeet job wait <jobId>` until it prints `merge-ready: yes`;
+- PR closeout: open the PR at content-final (or flip an opt-in draft with
+  `bun run beep yeet ready`), then block on the readiness monitor the open
+  submitted, `bun run beep yeet job wait <jobId>`
+  (`bun run beep yeet monitor --until-ready --detach` re-submits one), until
+  it prints `merge-ready: yes`;
   exit 2 is a wave of inbox rows to act on. Unanswered review threads are a
   hard merge gate: answer and resolve every actionable one via
   `bun run beep yeet reply`; never ask the operator to relay them.
@@ -386,14 +398,19 @@ If you touch this, load or run this first. Do not hand-author around it.
   is per-packet `claims.jsonl` + single-writer `research/ledger/`, and the
   machine proposes via `SUGGESTED_ACTIONS.md` — agents never auto-append to
   `explorations/INBOX.md` or `goals/` from research output.
-- Goal closeout is two PRs: the final PR lands the work, the reflection and
-  `proposedCloseout` (status stays active or paused); after it merges,
-  `goals completion refresh --slug <slug>` verifies it and
-  `goals set-status <slug> <status>` adopts it in a packet-state PR that also
-  rewrites the packet's status prose (README, `statusNote`). A goal is
-  done only once that PR merges and `origin/main`'s manifest has
-  `closeout.status == initiative.status`; `goals doctor` reports a verified,
-  unadopted proposal as `closeout-adoption-pending`.
+- Goal closeout is one PR: once the final PR is open,
+  `goals set-status <slug> completed-retained` writes the `closeout` record
+  naming it, and that commit ships with the work and the reflection. After
+  the merge, `goals completion refresh --slug <slug>` verifies it from hosted
+  facts alone, at any later time: merged; every required check green at the
+  merged head, or each red named with its cause and fix PR in a committed
+  `decisions/` file (`redAttribution`); no outstanding review thread.
+  `goals doctor --online` and `yeet sweep --retire` (a P0 inbox row) block on
+  a merged, unverified closeout. A goal is done once `origin/main`'s manifest
+  has `closeout.status == initiative.status` and refresh prints verified, or
+  a `decisions/` file records the operator's ruling (`operatorRuling`);
+  GitHub lists rule suites for one month, so an older unverified final needs
+  that ruling.
 - Friction is a first-class output: when work is slower, harder, or riskier
   than it should be, record a receipt — what you were doing, the evidence
   (command, error text, PR/file), what would have prevented it — in the

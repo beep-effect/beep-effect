@@ -73,8 +73,8 @@ requires an explicit recorded decision and new effort budget.
 The current task is to retain in-flight work in mergeable PRs, amend the goals,
 and archive the owned worktrees. Neither packet is completed-retained.
 Future operational completion still needs final evidence, a reflection and
-proposedCloseout with the implementation; after merge, completion refresh and
-a separate merged status-adoption PR with matching origin/main statuses.
+the `closeout` record in the implementation PR; after merge, completion
+refresh must verify it, with matching origin/main statuses.
 
 Read [PAUSED-HANDOFF.md](PAUSED-HANDOFF.md) before resuming. Recheck live PRs,
 accepted source, deployment and credentials; old observations are historical,

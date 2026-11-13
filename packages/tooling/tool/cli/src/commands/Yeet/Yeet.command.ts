@@ -49,7 +49,8 @@ import { runYeetInboxAck, runYeetInboxAppend, runYeetInboxList } from "./interna
 import { renderYeetPrWaveLine } from "./internal/InboxView.ts";
 import { MergeGateCommandOptions, runYeetMergeGate } from "./internal/MergeGate.ts";
 import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS, YeetUntilReadyPolicy } from "./internal/MonitorPolicy.ts";
-import { DEFAULT_YEET_PACKET_DIR } from "./internal/Planner.schemas.ts";
+import { YeetOpenReady } from "./internal/OpenReady.ts";
+import { DEFAULT_YEET_PACKET_DIR, YeetPullRequestOpenMode, yeetRequestedOpenMode } from "./internal/Planner.schemas.ts";
 import {
   YeetProofTier,
   YeetPublishOwnRouteFlags,
@@ -85,7 +86,7 @@ import {
 } from "./internal/ProofJob.ts";
 import { ProofJobLauncher, ProofJobWaitResult, reportProofJobCommand } from "./internal/ProofJobLauncher.ts";
 import { runYeetProofReportCommand } from "./internal/ProofShadow.ts";
-import { runYeetReady } from "./internal/ReadyGate.ts";
+import { runYeetReady, yeetOpenReadyHooks } from "./internal/ReadyGate.ts";
 import { PositiveInt, ResumeOptions } from "./internal/Resume.schemas.ts";
 import { parsePrRef, runYeetResume } from "./internal/Resume.ts";
 import { runYeetSiblings, SiblingsCommandOptions } from "./internal/Siblings.ts";
@@ -287,7 +288,14 @@ const titleFlag = Flag.String("title").pipe(
 const prFlag = Flag.Boolean("pr").pipe(
   Flag.withDefault(true),
   Flag.withDescription(
-    "Open a draft pull request labelled ready-for-heavy after the push unless one is already open (default); --no-pr pushes without one, so no hosted checks run"
+    "Open a pull request after the push unless one is already open (default): ready for review and labelled ready-for-heavy, which needs the head's passing final-check receipt; --no-pr pushes without one, so no hosted checks run"
+  )
+);
+
+const draftFlag = Flag.Boolean("draft").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
+    "Open the pull request as a draft with no ready-for-heavy label, so only the cheap hosted tier runs and no final-check receipt is needed; yeet ready flips it and applies the label. For work that needs a hosted run before it is final"
   )
 );
 
@@ -478,6 +486,7 @@ const publishFlags = {
   allowStaleBase: allowStaleBaseFlag,
   amend: amendFlag,
   bodyFile: bodyFileFlag,
+  draft: draftFlag,
   message: messageFlag,
   monitor: monitorFlag,
   noEdit: noEditFlag,
@@ -503,6 +512,7 @@ const openFlags = {
   allowStaleBase: allowStaleBaseFlag,
   base: baseFlag,
   bodyFile: bodyFileFlag,
+  draft: draftFlag,
   head: headFlag,
   json: jsonFlag,
   monitor: monitorFlag,
@@ -685,6 +695,10 @@ class SharedOptions extends S.Opaque<SharedOptions, { readonly brand: unique sym
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
     ),
+    openAs: YeetPullRequestOpenMode.pipe(
+      S.withConstructorDefault(Effect.succeed("ready" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("ready" as const))
+    ),
     packetDir: S.String,
     plan: S.Boolean,
     pr: S.Boolean.pipe(
@@ -772,6 +786,7 @@ const runYeetMode = (mode: YeetRunMode, options: SharedOptionsInput & { readonly
       mode,
       monitor: sharedOptions.monitor,
       noEdit: sharedOptions.noEdit,
+      openAs: sharedOptions.openAs,
       pr: sharedOptions.pr,
       proveFirst: sharedOptions.proveFirst,
       pushOnly: sharedOptions.pushOnly,
@@ -789,7 +804,7 @@ const runYeetMode = (mode: YeetRunMode, options: SharedOptionsInput & { readonly
       summary: sharedOptions.summary,
       tier: sharedOptions.tier,
     })
-  ).pipe(Effect.asVoid);
+  ).pipe(Effect.asVoid, Effect.provideService(YeetOpenReady, yeetOpenReadyHooks()));
 };
 
 const writeSynthesizedWorkerBody = Effect.fnUntraced(function* (message: string) {
@@ -811,7 +826,11 @@ const workerPublishBodyFile = (bodyFile: string, message: string) =>
 // (goal compute-profile-gate-routing P1): the cheap gates it would run are
 // hosted-only there, so it pushes the committed HEAD and lets hosted CI prove
 // them. `--force-local` and the commit-reusing flags keep the local publish.
-const runYeetPublish = Effect.fnUntraced(function* (options: SharedOptionsInput & { readonly message: string }) {
+const runYeetPublish = Effect.fnUntraced(function* ({
+  draft,
+  ...flags
+}: SharedOptionsInput & { readonly message: string; readonly draft: boolean }) {
+  const options = { ...flags, openAs: yeetRequestedOpenMode({ draft, hostedOnlyProof: false }) };
   const shared = SharedOptions.make(options);
   const profile = yield* readYeetComputeProfile("yeet publish");
   const posture = yeetPublishPostureFor(
@@ -834,11 +853,35 @@ const runYeetPublish = Effect.fnUntraced(function* (options: SharedOptionsInput 
   );
   if (posture === "publish") return yield* runYeetMode("publish", options);
   yield* Console.log(
-    "[yeet] compute-profile=worker: publish takes the yeet open posture (push the committed HEAD, draft PR, no local proof; hosted CI is the proof). Pass --force-local to run the local publish."
+    "[yeet] compute-profile=worker: publish takes the yeet open posture (push the committed HEAD, draft PR admitted to heavy, no local proof; hosted CI is the proof, then yeet ready flips it). Pass --force-local to run the local publish."
   );
   const bodyFile = yield* workerPublishBodyFile(shared.bodyFile, options.message);
-  return yield* runYeetMode("publish", { ...options, bodyFile, hostedProof: true, pr: true });
+  return yield* runYeetMode("publish", {
+    ...options,
+    bodyFile,
+    hostedProof: true,
+    openAs: yeetRequestedOpenMode({ draft, hostedOnlyProof: true }),
+    pr: true,
+  });
 }, Effect.scoped);
+
+// `yeet open` pushes the committed HEAD with no cheap gate. On a worker
+// compute profile the final-check gates are hosted-only, so it opens a
+// heavy-admitted draft; everywhere else it opens ready on the head's receipt.
+const runYeetOpen = Effect.fnUntraced(function* ({
+  draft,
+  title,
+  ...options
+}: SharedOptionsInput & { readonly title: string; readonly draft: boolean }) {
+  const profile = yield* readYeetComputeProfile("yeet open");
+  return yield* runYeetMode("publish", {
+    ...options,
+    hostedProof: true,
+    message: title,
+    openAs: yeetRequestedOpenMode({ draft, hostedOnlyProof: profile === "worker" }),
+    pr: true,
+  });
+});
 
 const jobIdArgument = Argument.String("jobId").pipe(Argument.withSchema(UUID));
 const decodeDuration = S.decodeEffect(S.DurationFromString);
@@ -1116,15 +1159,15 @@ const yeetPublishCommand = Command.make("publish", publishFlags, ({ stateRoot, .
   provideYeetStateRoot(runYeetPublish(options), stateRoot)
 ).pipe(
   Command.withDescription(
-    "Commit reviewed staged changes, run cheap-gates, push to a draft PR, and submit the detached readiness monitor"
+    "Commit reviewed staged changes, run cheap-gates, push, open the PR ready for review (needs the head's passing final-check receipt; --draft opens a cheap-tier draft instead), and submit the detached readiness monitor"
   )
 );
 
-const yeetOpenCommand = Command.make("open", openFlags, ({ stateRoot, title, ...options }) =>
-  provideYeetStateRoot(runYeetMode("publish", { ...options, hostedProof: true, message: title, pr: true }), stateRoot)
+const yeetOpenCommand = Command.make("open", openFlags, ({ stateRoot, ...options }) =>
+  provideYeetStateRoot(runYeetOpen(options), stateRoot)
 ).pipe(
   Command.withDescription(
-    "Push the committed HEAD and open (or reuse) its draft PR with the heavy-admission label, provenance footer and detached readiness monitor, running no local gate; hosted CI is the proof"
+    "Push the committed HEAD and open (or reuse) its PR ready for review with the heavy-admission label, provenance footer and detached readiness monitor, running no cheap gate. Needs the head's passing final-check receipt, where each gate this machine could not run is a recorded --skip; --draft opens a cheap-tier draft instead"
   )
 );
 
@@ -1388,7 +1431,7 @@ const yeetReadyCommand = Command.make("ready", { ...porcelainFlags, inherited: r
   runYeetReady(YeetReadyOptions.make(options))
 ).pipe(
   Command.withDescription(
-    "Flip this branch's draft pull request to ready once its head has a passing yeet final-check receipt, every review thread is answered, and no required check is red; under S11, --inherited attributes a required red inherited from main and records it in the PR body first"
+    "Flip this branch's draft pull request to ready and apply the ready-for-heavy label once its head has a passing yeet final-check receipt, every review thread is answered, and no required check is red; under S11, --inherited attributes a required red inherited from main and records it in the PR body first"
   )
 );
 
@@ -1438,7 +1481,7 @@ const yeetFinalCheckCommand = Command.make(
   (options) => runYeetFinalCheck(YeetFinalCheckOptions.make(options)).pipe(Effect.asVoid)
 ).pipe(
   Command.withDescription(
-    "Replay, scoped to the diff, every hosted gate the cheap tier skips (Lint Policy, Lint, Check, Docgen, Repo Sanity, Fallow, Coverage, rewritten test expectations) and write the head-pinned receipt yeet ready requires"
+    "Replay, scoped to the diff, every hosted gate the cheap tier skips (Lint Policy, Lint, Check, Docgen, Repo Sanity, Fallow, Coverage, rewritten test expectations) and write the head-pinned receipt that opening a ready pull request (yeet publish, yeet open) and yeet ready require"
   )
 );
 
@@ -1553,7 +1596,7 @@ const yeetEconomicsCommand = Command.make(
   {
     json: Flag.Boolean("json").pipe(
       Flag.withDefault(false),
-      Flag.withDescription("Render the economics report as JSON (yeet-economics/v2)")
+      Flag.withDescription("Render the economics report as JSON (yeet-economics/v3)")
     ),
     branch: Flag.String("branch").pipe(
       Flag.optional,

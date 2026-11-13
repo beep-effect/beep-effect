@@ -65,5 +65,8 @@ git diff --check -- goals/m365-agent-outbox
 Escalate only a step that costs money. Decide everything else, record it, and
 continue.
 
-Done only when acceptance passes and verification is complete, or when a blocker
-is reported with file/command evidence.
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug m365-agent-outbox` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
+`git show origin/main:goals/m365-agent-outbox/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

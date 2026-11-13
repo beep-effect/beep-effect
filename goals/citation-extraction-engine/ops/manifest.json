@@ -3,15 +3,15 @@
   "initiative": {
     "id": "citation-extraction-engine",
     "title": "Citation Extraction Engine",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-14",
-    "updated": "2026-11-08",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/citation-extraction-engine",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Deliver bounded six-form citation extraction and document-local linking on supplied plain text, with schema-first semantic values, exact verified source anchors, explicit ambiguity and Effect-native resource boundaries.",
-  "statusNote": "PR #2966 is the prospective final six-form delivery. Hosted unit shards pass. The first coverage repair restored file-level gaps; fresh comparison then exposed independent server aggregate floors. The current repair consolidates the bounded writer, uses supplied Effect String.search/fromResult and test I/O/transport services, and adds startup, encoded-output and acquisition-cancellation controls. Seven focused suites pass 61 tests, including actual Bun/Node frozen-profile replay. The unchanged aggregate floors clear in diagnostic projection; exact final-head hosted proof remains pending. Four reviewed new file identities were recorded from frozen-source complete per-file counters through the canonical additions-only writer; every existing package/file floor and uncovered count is unchanged. Merge and retained lifecycle adoption remain pending; historical exhaustive obligations are superseded, not passed.",
+  "statusNote": "Closed completed-retained through final #2966 (merged 2026-11-09T02:51Z, 9f44753a8c1, through a ruleset bypass). Its cancelled Heavy / Check, Heavy / Test Integration, Heavy / Docgen and Heavy / Doctest are attributed with their fix PRs (#2984, #2994) in decisions/2026-11-13-final-2966-attributed-reds.md. The goal-closeout-hosted-verification batch migration adopted the legacy proposal. Historical exhaustive obligations are superseded, not passed.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -139,7 +139,7 @@
     {
       "id": "P9",
       "name": "Hosted proof, reflection and verified retention",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -597,9 +597,9 @@
       "purpose": "Capture actual builtin dataclass comparison fields, 1454 independent token comparisons and three merge/equality histories at the exact clean source pin, with frozen edition value and provenance validation."
     }
   ],
-  "proposedCloseout": {
+  "retentionReason": "Retain the bounded six-form public Layer, frozen selection/comparison, source and identity contracts, attribution, resource evidence and historical superseded parity records. Adopt completed-retained only after accepted-head hosted proof and merged retention verify.",
+  "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2966
-  },
-  "retentionReason": "Retain the bounded six-form public Layer, frozen selection/comparison, source and identity contracts, attribution, resource evidence and historical superseded parity records. Adopt completed-retained only after accepted-head hosted proof and merged retention verify."
+  }
 }

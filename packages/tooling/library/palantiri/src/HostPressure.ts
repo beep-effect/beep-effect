@@ -28,7 +28,7 @@ import { ParcelSpec } from "./Parcel.models.ts";
 import { makeParcelEnvelope, ParcelDraft } from "./ParcelEnvelope.models.ts";
 import type * as DateTime from "effect/DateTime";
 import type { Freshness as FreshnessType } from "./Freshness.ts";
-import type { HostPressureInput, PressureFile } from "./HostPressure.models.ts";
+import type { HostComputeProfile, HostPressureInput, PressureFile } from "./HostPressure.models.ts";
 import type { ParcelBudget } from "./Parcel.models.ts";
 import type { ParcelEnvelope } from "./ParcelEnvelope.models.ts";
 
@@ -218,6 +218,8 @@ export const hostPressureItems: {
       HostMemory.make({
         availableGib: reading.availableGib,
         totalGib: reading.totalGib,
+        ceilingGib: reading.ceilingGib,
+        computeProfile: reading.computeProfile,
         asOf: input.readAt,
         freshness: fresh,
       })
@@ -265,6 +267,34 @@ export const freshPressureStalls = (
       : A.empty()
   );
 
+/**
+ * The ` (ceiling …, profile)` suffix of a memory line, or an empty string
+ * when the reading carries neither a ceiling nor a profile.
+ *
+ * **Example** (Tag a workstation reading)
+ *
+ * ```ts
+ * import { hostMemoryCeilingTag } from "@beep/palantiri/HostPressure"
+ * import * as O from "effect/Option"
+ *
+ * console.log(hostMemoryCeilingTag({ ceilingGib: O.some(125.08), computeProfile: O.some("workstation") }))
+ * // " (ceiling 125.1 GiB, workstation)"
+ * ```
+ *
+ * @param memory - A memory reading or item.
+ * @returns The suffix to append after "GiB available".
+ * @category formatting
+ * @since 0.0.0
+ */
+export const hostMemoryCeilingTag = (memory: {
+  readonly ceilingGib: O.Option<number>;
+  readonly computeProfile: O.Option<HostComputeProfile>;
+}): string =>
+  A.match(
+    A.getSomes([O.map(memory.ceilingGib, (ceiling) => `ceiling ${Num.round(ceiling, 1)} GiB`), memory.computeProfile]),
+    { onEmpty: () => "", onNonEmpty: (parts) => ` (${A.join(parts, ", ")})` }
+  );
+
 const labelOf = HostPressureItem.match({
   PressureStall: (stall) => stall.resource,
   HostMemory: () => "meminfo",
@@ -291,7 +321,8 @@ const describe = (input: HostPressureInput, items: ReadonlyArray<HostPressureIte
     }),
     O.map(
       input.memory,
-      (memory) => `${Num.round(memory.availableGib, 1)} of ${Num.round(memory.totalGib, 1)} GiB available`
+      (memory) =>
+        `${Num.round(memory.availableGib, 1)} of ${Num.round(memory.totalGib, 1)} GiB available${hostMemoryCeilingTag(memory)}`
     ),
     O.map(
       input.admission,

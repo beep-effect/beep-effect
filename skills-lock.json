@@ -55,7 +55,7 @@
         ".claude/skills/closeout",
         ".agents/skills/closeout"
       ],
-      "installedTreeHash": "e99fc397c09603ac4286564a8ee5c438f69a23bcb1c7975709c286da31470d8e"
+      "installedTreeHash": "fc4638f3b8ff71888c79e0ff4131810ebcf7aad79b6cdc979c531a28a11813d2"
     },
     "codex-findings": {
       "_tag": "local",
@@ -267,7 +267,7 @@
         ".claude/skills/orchestrate",
         ".agents/skills/orchestrate"
       ],
-      "installedTreeHash": "4cbb2298a4102c83e5e5cb6d0343e73cb5eb3c049b0ae4eb6fe27cdb030bcd94"
+      "installedTreeHash": "e0413903c8959ea7c0e0adb24e1354c6a3b86301842bd2c7bd40ae2230f8649f"
     },
     "plasma-sensitive-entry": {
       "_tag": "local",
@@ -354,7 +354,7 @@
         ".claude/skills/reflect",
         ".agents/skills/reflect"
       ],
-      "installedTreeHash": "9aed2824097053bde41282c88b41709fa68be9fe7e5916124e406311eb92d6ef"
+      "installedTreeHash": "ae2988a5c9212d5c7d459a71dd71cdc5190130330205429f4358dbd8e752b1d3"
     },
     "remote-development-agents": {
       "_tag": "local",
@@ -362,7 +362,7 @@
         ".claude/skills/remote-development-agents",
         ".agents/skills/remote-development-agents"
       ],
-      "installedTreeHash": "505662d7ea6247cf507ae75f31c33c7f131d88be023c1c106203b02235bc7ef3"
+      "installedTreeHash": "ac1514428e40e1268ab01ea7fec920d0ff2f500200e0b9827294dfe97cd5921d"
     },
     "schema-first-development": {
       "_tag": "local",
@@ -700,7 +700,7 @@
         ".claude/skills/yeet",
         ".agents/skills/yeet"
       ],
-      "installedTreeHash": "da5c08de49780e9379517c21a3335b4feeca916d01014ea329bf3c17478655e9"
+      "installedTreeHash": "e6c7a9f57d95f223a8265e2a755d2b0630de848ab3ac683c2a49644aff67c02a"
     }
   }
 }

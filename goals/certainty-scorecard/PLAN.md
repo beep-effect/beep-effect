@@ -32,16 +32,19 @@ graduation merges. Lever gates are in `SPEC.md` (Levers).
 | 8 | chore(fleet): T3 root in roots.json; split monitor time out of economics | PERIL-11 slice 2 | S | `yeet economics --fleet` counts the T3 lane; runbook list updated | 7 |
 | 9 | feat(yeet): optional host and seat fields on started rows; read fleet hosts read-only | PERIL-11 slice 3 | M | Old rows decode; fleet read uses only existing SSH routes and writes nothing remote; no raw rows leave local state | 7 |
 | 10 | fix(yeet): report terminations apart from reds | MEAS-03 | S | Adjudicated fixtures; denominator change recorded | 3, 6 |
+| 10b | fix(yeet): type the handler errors still read as unlocated | MEAS-03 slice 2 (unscheduled) | S | Adjudicated fixtures for the residual classes (publish input refusals, GitHub transport and rate limits, review-thread readiness refusals) drawn from a stratified sample of the live `unlocated` rows; `actionableLaneMix` total equals `redAttempts`; an unknown bucket stays | 10 |
 | 11 | feat(ci): optional step and per-task outcome fields under v1 | ROUT-05 slice 2 | M | v1 corpora still decode; aggregator and setup reds become unknown | 2 |
+| 11b | feat(ci): emit per-task outcome records the route capture reads into `tasks` | ROUT-05 slice 2b (the ROUT-06 producer) | S | Each lane step writes one `{task, outcome}` record per Turbo task from its run summary, uploaded with the run, and the capture fills `HostedJob.tasks` from it with its extra reads counted against the REST budget; a `check.yml` change, so the operator hand-merges it (the App token cannot merge a workflow PR) and the cache-policy baseline is re-recorded in the same PR; emitted rows decode under `route-corpus/v1`; a seeded failing task is classified `task` and a seeded setup failure `setup` | 11 |
 | 12 | chore(route): capture 2026-10-31..now | ROUT-05 slice 3 | S | Captured by date range as a bounded background reader under github-budget-ledger's reserve signal (by hand and checkpointed until the signal lands); census conservation holds | 11 |
 | 13 | feat(ci): project unit-results.json timings | MEAS-06 | S | Adds its own every-event upload (today's is failure-only); rows for every executed package; file counts equal expectedTestFiles by event; `check.yml` only, no `heavy.yml` edit; cache-policy baseline re-recorded in the same PR; merge identity planned (App token cannot merge workflow PRs) | 1 |
 | 14 | refactor(ci): consolidate the lane-id maps | MEAS-05 slice 1 | S | One map; existing census and corpus tests unchanged | 2 |
 | 15 | feat(quality): ledger fold with absent-source rows | MEAS-05 slice 2 | M | At least 95% of job-minutes mapped on three reference runs; no umbrella double count; the empty-leg runner-minutes row computed per run, with a fixture for a run that allocated an empty partition | 14, 1 |
 | 16 | feat(yeet): join PSI samples | MEAS-08 | S | None (pure join, no hot-path stamps) | 15 |
-| 17 | docs(goals): certainty-scorecard closeout | evidence | S | 7-night evidence note, fleet census note, reflection, `proposedCloseout` | all |
+| 17 | docs(goals): certainty-scorecard closeout | evidence | S | 7-night evidence note, fleet census note, reflection, `closeout` | all |
 
 Waves under the three-PR limit: {1, 2, 3}, then {4, 5, 6} as each of the first wave merges, then {7, 10, 11},
-{8, 9, 12}, {5b, 13, 14}, then 15, then 16, then 17.
+{8, 9, 12}, {5b, 13, 14}, then {11b, 15}, then 16, then 17. Slice 10b is unscheduled: it takes a free slot in
+any wave after 10 merges and does not gate the closeout.
 
 ## Closeout Checklist
 
@@ -52,9 +55,13 @@ Before marking the packet closed:
    validate against `ReflectionFrontmatter`.
 2. Run `bun run beep lint reflection-artifacts`.
 3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase
-   statuses and a typed `proposedCloseout` with status `completed-retained`
-   and finalPullRequest. Keep `initiative.status` operative until completion
-   evidence verifies; do not close the external execution/session ledger from a proposal.
+   statuses. Once the final PR is open, run
+   `bun run beep goals set-status certainty-scorecard completed-retained`: it writes
+   `closeout` naming that PR with the matching `initiative.status`, and the
+   commit ships in the final PR. After the merge,
+   `bun run beep goals completion refresh --slug certainty-scorecard` must print verified;
+   name any red required check in a committed decision file
+   (`redAttribution`).
 
 ## Execution Notes
 
@@ -63,6 +70,12 @@ Before marking the packet closed:
 - **Baseline before after-numbers:** the first certified nightly is the "before" for every sibling goal. Record
   it under `history/` with run ids and aggregates only; never a raw head list with branch names that carry
   session ids.
+- **The nightly does not re-poll main (7-day horizon not built):** each night reads its day's main SHAs once,
+  at its capture (decision `certainty-nightly-workflow`), so a verdict that lands later is counted only if that
+  day is re-run. Build the re-poll when either holds: a recorded night in `history/certainty-nightly.md` has
+  main commits still `open` or `no-run` at capture that later received a completed push run, or
+  `main-verdict-every-commit` lands re-dispatch of missing main verdicts (its verdicts arrive after the push run
+  they replace, so a once-read rate would understate main).
 - **Merge `main` before touching `LaneTimings.ts`:** `goals/ci-lane-economics` edits its shard layouts with
   every partition change.
 - **Hand-offs:** slice 2 unblocks route refinement replays in `route-soundness-repair` and `hosted-setup-tax`;
@@ -110,6 +123,30 @@ Reverse: Delete this checkpoint and restore the slice-1 checkpoint as the latest
 
 Reverse: Delete this checkpoint; it records a fact about main and changes no behaviour.
 
+### Check-lane baselines before 3e822c71c5 are not comparable (check once), 2026-11-13
+
+#3242 merged at 3e822c71c5 (2026-11-13). The root Turbo `check` task now depends on the package's own `build` for declaration-only packages, and their `beep:check` runs the declaration-only build command. Every `check` hash misses once, and the first cold run is not a regression. Build minutes now sit inside the check lane (Heavy / Check and Heavy / Build start together on separate VMs and both compute the build on a cold hash), so a check-lane wall-time or runner-minute baseline from before that commit is not comparable, and the first certified nightly must be taken after it. The cache-qualification and check-census baselines were re-recorded in that PR. `TSRS_FAST` is a global Turbo input and part of tsrs incremental state, so each baseline records whether it was set.
+
+Lane fix/certainty-meas-03-terminations
+
+Reverse: Delete this checkpoint; it records a fact about main and changes no behaviour.
+
+### Slice 6 merged; slice 10 (MEAS-03) reports terminations apart from reds, 2026-11-13
+
+Slice 6 (MEAS-07) merged as #3228. Slice 10 (MEAS-03) classes every economics attempt green, red or terminated in `packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.ts`: a terminated attempt leaves `firstFailure.redAttempts` and its mixes, `attempts.*.classMix` reports the classes, `modeDurations` reports each run mode's elapsed p50 and p95 (final-check included), and a final-check moved-tree refusal is typed `refusal:moved-tree`. The report is `yeet-economics/v3` (decision `terminations-apart-from-reds`, which states the denominator before and after). The admission gate is `packages/tooling/tool/cli/test/yeet-economics-adjudicated.test.ts` over the committed journal `test/fixtures/yeet-economics/adjudicated-terminations.ndjson`, every attempt classified by hand with its reason. Other second- and third-wave slices run in their own lanes.
+
+Lane fix/certainty-meas-03-terminations
+
+Reverse: Delete this checkpoint so the slice-6 checkpoint is the latest PLAN status note, and revert the slice-10 PR.
+
+### Slices 5 and 6 merged; slice 11 (ROUT-05 slice 2) in review: failed jobs keep their steps, uncharged reds become unknown, 2026-11-13
+
+Slices 5 (SCHE-09 slice 1, #3227) and 6 (MEAS-07, #3228) merged; 11 is in review; 7 (PERIL-11 slice 1) and 10 (MEAS-03) started. Slice 11 adds optional `steps` and `tasks` keys to the v1 route corpus row and an origin for every failed job's red; aggregate, setup and harness reds are charged to no lane and reported as unknown in the replay (decision `step-classes-and-red-origins`). The old 2026-09-01..10-30 receipt still replays to 242 skipped lane runs and 0 skipped reds. The 2026-10-31..now capture (slice 12) starts once slice 11 merges, and is the first corpus whose failed jobs carry steps. New slice 11b, after 11, is the producer of per-task outcome records, a `check.yml` change the operator hand-merges; until it lands `tasks` stays absent.
+
+Lane feat/certainty-rout-05-step-outcomes
+
+Reverse: Delete this checkpoint so the slice-6 checkpoint is the latest PLAN status note, and revert the slice-11 commits.
+
 ### Slice 2 merged; slice 3 (MEAS-02 with DEPS-10) attributes refusals by failure kind, 2026-11-13
 
 Slice 2 (ROUT-05 slice 1) merged as #3141. Slice 3 fixes `actionableLane` in `packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.ts` on the read side: a handler-error verdict names the first unexecuted planned step as `failedStepId` (`Handler.ts`), so refusals were charged to `publish:00-head-install-preflight`. Refusals are now classified first, as rows of the same `actionableLaneMix`: `refusal:lock-bounce`, `refusal:stale-base` (the publish stale-base refusal sentence) and `refusal:closeout` (any red closeout). Then the first failed inner lane, then `failedStepId` only for a `step-exit` failure, then the first failed lane, then `unexecuted` (a handler error that ran no lane) or `unlocated`. Every red attempt stays one row, so the mix total equals `redAttempts` and the WaveOrder `mixSum` check keeps holding; `unchangedFingerprint.byActionableLane` uses the same classes. The writer in `Handler.ts`, `WaveOrder.ts`, `EconomicsSeedSourceView` and the frozen `goals/time-to-certainty/research/economics.json` are unchanged; the re-seed belongs to local-proof-under-ten (YEET-07). Rejected: filtering refusals out of the mix (breaks the `redAttempts` invariant and the seed check) and changing the writer (old journal rows would still carry the preflight id).
@@ -117,6 +154,14 @@ Slice 2 (ROUT-05 slice 1) merged as #3141. Slice 3 fixes `actionableLane` in `pa
 Lane claude/determined-morse-ea66a8
 
 Reverse: Revert the slice-3 commit (actionableLane returns to the failed-step fallback) and delete this checkpoint so the slice-2 checkpoint is the latest PLAN status note.
+
+### Slice 4 (MEAS-01 slice 2) in review: the certainty nightly workflow, 2026-11-13
+
+Slices 10 (MEAS-03, #3262) and 11 (ROUT-05 slice 2, #3257) merged; slice 7 (PERIL-11 slice 1, #3263) is in review. Slice 4 (MEAS-01 slice 2) adds `.github/workflows/certainty-nightly.yml`: each night it scores the previous UTC day with `bun run beep ci certainty` from main's code, under the workflow token's `actions: read` and `contents: read`, with a request bound of the token bucket's remaining reads less the 15% reserve, and the run turns red when the report is not certified (decision `certainty-nightly-workflow`). The CLI gains `--summary-out`, an aggregates-only Markdown rendering used as the job summary. The record of each night goes to `history/certainty-nightly.md`, written by the driver from the run's artifact. A workflow change cannot be merged with the orchestrator App token, so the operator merges slice 4 by hand; P2's seven nights start at 2026-11-14, the first whole UTC day after both baseline breaks.
+
+Lane ci/certainty-nightly-workflow
+
+Reverse: Delete this checkpoint so the slice-6 checkpoint is the latest PLAN status note, and revert the slice-4 PR.
 
 ### Slice 5 (SCHE-09 slice 1) in review: trimmed admission rows archived and folded, 2026-11-13
 

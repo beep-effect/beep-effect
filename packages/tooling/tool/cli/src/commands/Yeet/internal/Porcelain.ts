@@ -56,10 +56,12 @@ import {
   YeetRetireVerdict,
 } from "./Retire.schemas.ts";
 import {
-  activePacketsOnBranch,
+  activePacketsAmong,
+  checkTouchedCloseouts,
   owningCloneContext,
   planRetire,
   renderActivePackets,
+  renderCloseoutChecks,
   renderRetireGate,
   renderRetirement,
   renderRetirePlan,
@@ -67,6 +69,7 @@ import {
   retireInvokingWorktree,
   retireVerdict,
   stopLaneJobs,
+  touchedPacketsOnBranch,
   withStoppedLaneJobs,
 } from "./Retire.ts";
 import { SweepPlanJson, SweepReportJson } from "./Sweep.schemas.ts";
@@ -80,6 +83,7 @@ import type * as Duration from "effect/Duration";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { GoalCloseoutCheck } from "../../Goals/CloseoutCheck.ts";
 import type { WorktreeRemovalReceipt } from "../../Worktree/Worktree.schemas.ts";
 import type { WorktreeRemovalService } from "../../Worktree/Worktree.service.ts";
 import type { runYeetAutomaticCloseout } from "./Closeout.ts";
@@ -298,7 +302,8 @@ const printRetireReport = Effect.fn("Yeet.printRetireReport")(function* (
   receipt: WorktreeRemovalReceipt,
   activePackets: ReadonlyArray<string>,
   sweep: SweepReport,
-  stoppedJobs: ReadonlyArray<StoppedLaneJob>
+  stoppedJobs: ReadonlyArray<StoppedLaneJob>,
+  closeoutChecks: ReadonlyArray<GoalCloseoutCheck>
 ) {
   const text = options.json
     ? yield* encodeRetireSweepReport(
@@ -310,6 +315,7 @@ const printRetireReport = Effect.fn("Yeet.printRetireReport")(function* (
           activePackets,
           sweep,
           stoppedJobs,
+          closeoutChecks,
         })
       )
     : A.join(
@@ -320,6 +326,7 @@ const printRetireReport = Effect.fn("Yeet.printRetireReport")(function* (
             renderRetireGate(verdict),
             renderActivePackets(activePackets),
             renderSweepReport(sweep),
+            renderCloseoutChecks(closeoutChecks),
           ],
           Str.isNonEmpty
         ),
@@ -352,7 +359,8 @@ const retireThenSweep = Effect.fn("Yeet.retireThenSweep")(function* (
   const state = yield* observeSweepGitState(laneContext);
   const cloneContext = owningCloneContext(laneContext, retire);
   // Read before the lane is archived: the merged packet content lives there.
-  const activePackets = yield* activePacketsOnBranch(retire, state);
+  const touchedPackets = yield* touchedPacketsOnBranch(retire, state);
+  const activePackets = yield* activePacketsAmong(retire, touchedPackets);
   if (options.plan) {
     const planSweep3 = yield* planSweep(cloneContext);
     return yield* printRetirePlan(options, retire, state, activePackets, planSweep3);
@@ -365,7 +373,24 @@ const retireThenSweep = Effect.fn("Yeet.retireThenSweep")(function* (
   // The lane is gone; the sweep closes the lane's ledger row, not the clone's,
   // on the strength of the gate the retirement just passed.
   const sweep = yield* executeSweep(cloneContext, { ledgerCheckout: retire.worktreePath });
-  yield* printRetireReport(options, retire, retireVerdict(retire, state), receipt, activePackets, sweep, stoppedJobs);
+  // The sweep's fetch refreshed origin/<main>: classify every touched packet's
+  // committed closeout there, raising a P0 inbox row in the clone for one that
+  // did not verify. The lane is already gone, so the exit status stays 0.
+  const closeoutChecks = yield* checkTouchedCloseouts(
+    cloneContext.repoRoot,
+    touchedPackets,
+    `origin/${state.mainBranch}`
+  );
+  yield* printRetireReport(
+    options,
+    retire,
+    retireVerdict(retire, state),
+    receipt,
+    activePackets,
+    sweep,
+    stoppedJobs,
+    closeoutChecks
+  );
 });
 
 /**
@@ -376,7 +401,10 @@ const retireThenSweep = Effect.fn("Yeet.retireThenSweep")(function* (
  * A sweep never fails on a step: every outcome is recorded, `needs-operator`
  * outcomes are batched into a handoff block, and the command exits 0 whether the
  * clone was already clean or every step skipped. That is the point — "merged,
- * cleanup skipped: reason" is a success, not a red run.
+ * cleanup skipped: reason" is a success, not a red run. With `--retire` (not
+ * `--plan`), the report also classifies the committed closeout of every goal
+ * packet the retired branch touched; a merged closeout that did not verify
+ * raises a P0 inbox row in the owning clone, and the exit status stays 0.
  *
  * **Example** (Build the sweep runner effect)
  *

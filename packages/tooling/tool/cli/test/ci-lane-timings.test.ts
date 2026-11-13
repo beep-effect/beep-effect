@@ -66,6 +66,7 @@ import * as Fiber from "effect/Fiber";
 import { flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -1373,6 +1374,89 @@ describe("ci lane timing admission window", () => {
         assertSome(laneStat(report, "Lint").waitP95Seconds, 840);
       })
     );
+
+    // Skip on success (2026-11-13): an aggregator that took no runner because every shard passed concludes
+    // `skipped`; the verdict is the last shard's completion.
+    describe("aggregators skipped on success", () => {
+      const isLintDurationRow = (row: CiLaneTimingWindowRowShape): row is CiLaneTimingDurationRowShape =>
+        row.population === "duration" && row.lane === "Lint";
+      const lintRun = (
+        id: number,
+        aggregator: { readonly conclusion: string; readonly completedAt: string | null },
+        lintB = "success"
+      ) => {
+        const run = windowRun({ id });
+        return windowRunJobs(run, [
+          job({
+            completed_at: "2026-09-04T00:12:00Z",
+            created_at: "2026-09-04T00:07:00Z",
+            id: id * 10 + 1,
+            name: "Lint (lint-a)",
+            run_id: run.id,
+            started_at: "2026-09-04T00:09:00Z",
+          }),
+          job({
+            completed_at: "2026-09-04T00:13:00Z",
+            conclusion: lintB,
+            created_at: "2026-09-04T00:07:00Z",
+            id: id * 10 + 2,
+            name: "Lint (lint-b)",
+            run_id: run.id,
+            started_at: "2026-09-04T00:10:00Z",
+          }),
+          job({
+            completed_at: aggregator.completedAt,
+            conclusion: aggregator.conclusion,
+            created_at: "2026-09-04T00:13:02Z",
+            id: id * 10 + 3,
+            name: "Lint",
+            run_id: run.id,
+            started_at: aggregator.completedAt,
+          }),
+        ]);
+      };
+
+      it.effect("measures a skipped aggregator to its last shard's completion as a success", () =>
+        Effect.gen(function* () {
+          const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+            lintRun(520, { conclusion: "skipped", completedAt: "2026-09-04T00:13:03Z" }),
+          ]);
+          const row = durationRowFor(report, "Lint");
+          // Earliest shard start 00:09 to the last shard's completion 00:13; the run was created at 00:00.
+          expect(row.durationSeconds).toBe(240);
+          assertSome(row.verdictWaitSeconds, 780);
+          expect(row.conclusion).toBe("success");
+          expect(laneStat(report, "Lint").n).toBe(1);
+          expect(attributionStat(report, "Lint").failures).toBe(0);
+        })
+      );
+
+      it.effect("keeps a ran aggregator's verdict and mixes both shapes in one window", () =>
+        Effect.gen(function* () {
+          const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+            lintRun(530, { conclusion: "success", completedAt: "2026-09-04T00:14:00Z" }),
+            lintRun(540, { conclusion: "skipped", completedAt: "2026-09-04T00:13:03Z" }),
+          ]);
+          const waits = A.getSomes(A.map(A.filter(report.rows, isLintDurationRow), (row) => row.verdictWaitSeconds));
+          // The aggregator that ran reports at 00:14; the skipped one at its last shard, 00:13.
+          expect(A.sort(waits, Order.Number)).toStrictEqual([780, 840]);
+          expect(laneStat(report, "Lint").n).toBe(2);
+        })
+      );
+
+      it.effect("keeps a skipped aggregator beside a failed or cancelled shard a failure", () =>
+        Effect.gen(function* () {
+          const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+            lintRun(550, { conclusion: "skipped", completedAt: "2026-09-04T00:13:03Z" }, "failure"),
+            lintRun(560, { conclusion: "skipped", completedAt: "2026-09-04T00:13:03Z" }, "cancelled"),
+            lintRun(570, { conclusion: "skipped", completedAt: "2026-09-04T00:13:03Z" }, "skipped"),
+          ]);
+          expect(laneStat(report, "Lint").n).toBe(0);
+          expect(attributionStat(report, "Lint").failures).toBe(2);
+          expect(attributionStat(report, "Lint").cancellations).toBe(1);
+        })
+      );
+    });
 
     it.effect("records no wait for a later attempt and keeps an attempt-one wait in a re-run run", () =>
       Effect.gen(function* () {

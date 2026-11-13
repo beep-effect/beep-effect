@@ -20,7 +20,7 @@ prose when they conflict.
 
 Scope:
 
-- In: `packages/tooling/tool/cli/src/internal/repo-run/**`, `packages/tooling/tool/cli/src/commands/Yeet/**`, a NET-NEW profile probe subcommand of the repo CLI, `lefthook.yml`, `.github/workflows/check.yml`, `AGENTS.md` Quality Operator, `docs/runbooks/agent-pools.md`, `.claude/skills/remote-development-agents/SKILL.md`, `.claude/skills/yeet/references/gates-and-proof.md`, Palantiri host-pressure.
+- In: `packages/tooling/tool/cli/src/internal/repo-run/**`, `packages/tooling/tool/cli/src/commands/Yeet/**`, a NET-NEW profile probe subcommand of the repo CLI, `lefthook.yml`, `.github/workflows/catalog-regeneration.yml`, `AGENTS.md` Quality Operator, `docs/runbooks/agent-pools.md`, `.claude/skills/remote-development-agents/SKILL.md`, `.claude/skills/yeet/references/gates-and-proof.md`, Palantiri host-pressure.
 - Out: the catalog writer internals (goal `catalog-writer-incremental`), hosted heavy admission, dankserver provisioning, workstation hook behavior.
 
 Workflow:
@@ -57,9 +57,8 @@ irreversible change (a tested down-migration, a backup of deleted state) before
 the change merges, and ship a breaking public API or schema change with a major
 changeset. Escalate only what AGENTS.md "Autonomy" lists.
 
-Ship proposedCloseout and the reflection in the final PR (status stays active or
-paused). After that merge, verify with `bun run beep goals completion refresh --slug compute-profile-gate-routing`,
-then adopt with `bun run beep goals set-status compute-profile-gate-routing <status>` in a
-packet-state PR. Done only once it merges and this passes, or an operator
-blocker is reported with evidence:
+The final PR carries the reflection and writes `closeout` naming itself. Done
+only when this passes and `goals completion refresh --slug compute-profile-gate-routing` prints
+verified, when this passes under an operator ruling in `decisions/`, or when an
+operator blocker is reported with evidence:
 `git show origin/main:goals/compute-profile-gate-routing/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

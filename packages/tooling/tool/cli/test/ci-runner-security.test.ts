@@ -1417,10 +1417,23 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.include(verifyGate, 'echo "docs_path=$docs_path" >> "$GITHUB_OUTPUT"');
       const docsSanity = stepByName(verifySteps, "Check documentation sanity");
       assert.strictEqual(docsSanity.if, "steps.lane-gate.outputs.docs_path == 'true'");
-      assert.strictEqual(
-        stepRun(verifySteps, "Check documentation sanity"),
-        "bun run beep ci lane repo-sanity --docs-only"
+      // The skills lock step of the lane body is skipped, on either path, only when the pull
+      // request changes none of the `skills` pattern row's paths; an absent row keeps it.
+      assert.include(verifyGate, "skills_lock=true");
+      assert.include(verifyGate, "jq -r '.skills // empty'");
+      assert.include(verifyGate, 'echo "skills_lock=$skills_lock" >> "$GITHUB_OUTPUT"');
+      assert.strictEqual(yamlAt(docsSanity, ["env", "SKILLS_LOCK"]), "${{ steps.lane-gate.outputs.skills_lock }}");
+      const docsSanityRun = stepRun(verifySteps, "Check documentation sanity");
+      assert.include(docsSanityRun, 'if [[ "$SKILLS_LOCK" == "false" ]]; then');
+      assert.include(docsSanityRun, "bun run beep ci lane repo-sanity --docs-only --skip-skills-lock\nelse");
+      assert.include(docsSanityRun, "else\n  bun run beep ci lane repo-sanity --docs-only\nfi");
+      const laneRun = stepRun(verifySteps, "Run verification lane");
+      assert.include(
+        laneRun,
+        'if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "${{ steps.lane-gate.outputs.skills_lock }}" == "false" ]]; then\n      run_lane ci lane repo-sanity --changeset-status --skip-skills-lock'
       );
+      // A push never passes the skip.
+      assert.include(laneRun, "else\n      run_lane ci lane repo-sanity\n    fi");
       // Codegen and Ecosystem read their path gates from the change-profile pattern data.
       assert.include(verifyGate, "'.lanes[$lane] // empty'");
       assert.include(laneRow("ecosystem"), "^packages/ecosystem/");
@@ -1444,12 +1457,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       );
       assert.include(stepRun(sast, "Run SAST"), "bun run beep ci lane sast");
 
+      // Docs-only (and green-shard) aggregates skip before any install; the exact conditions and their
+      // every needs combination are pinned in ci-docs-job-admission.test.ts.
       for (const jobId of ["lint", "test-unit"]) {
-        assert.strictEqual(
-          yamlAt(policy.workflow, ["jobs", jobId, "if"]),
-          "${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true') }}",
-          jobId
-        );
+        const guard = String(yamlAt(policy.workflow, ["jobs", jobId, "if"]));
+        assert.include(guard, "!cancelled() && !(needs.change-profile.result == 'success' && ", jobId);
+        assert.include(guard, "needs.change-profile.outputs.docs_only == 'true' && ", jobId);
+        assert.include(guard, `needs.${jobId}-shard.result == 'skipped'`, jobId);
       }
     })
   );
@@ -2005,6 +2019,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "check.yml:Property Laws (${{ matrix.partition }})",
         "check.yml:Coverage Artifact Migration",
         "cache-warm.yml:Warm Turbo cache",
+        // Scheduled read-only scorecard of hosted runs (goals/certainty-scorecard MEAS-01); it judges no head.
+        "certainty-nightly.yml:Certainty Nightly Report",
         // Manual source inspection is operational evidence, not a required quality lane.
         "cache-local-observe.yml:Observe local cache pilot",
         "heavy.yml:Heavy / Observe local cache pilot",
@@ -2016,6 +2032,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         // Protected execution authenticates observations; required quality proof stays separate.
         "cache-producer.yml:Execute approved signed producer",
         "heavy.yml:Heavy / Execute approved signed producer",
+        // Draft-only writer of the catalog shards a worker-profile lane skipped;
+        // Repo Sanity still proves the shards, so it grants no quality verdict.
+        "catalog-regeneration.yml:Catalog Regeneration",
         "data-sync.yml:Sync Official Data",
         // Post-merge publisher of the commit-message overlay ref; it proves the
         // ref with `beep history notes --check` and grants no quality verdict.
@@ -2073,6 +2092,225 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       }
       // A stale exemption would silently admit a future job of that name without a lane descriptor.
       expect(A.filter(exemptions, (exemption) => !A.contains(observedContexts, exemption))).toEqual([]);
+    })
+  );
+
+  // goals/certainty-scorecard MEAS-01 slice 2: a scheduled scorer that reads Actions runs with the
+  // workflow token, runs default-branch code only, publishes no branch names, and turns red when the
+  // night's report is not certified, so a refused night can never be counted toward the seven.
+  it.effect("keeps the certainty nightly read-only, default-branch only and red on an uncertified night", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const ambientPath = yield* Config.String("PATH");
+      const root = yield* findRepoRoot();
+      const text = yield* fs.readFileString(path.join(root, ".github/workflows/certainty-nightly.yml"));
+      const workflow = parseWorkflowYaml(text);
+      const triggers = yield* decodeYamlRecord(yamlAt(workflow, ["on"]));
+      expect(A.sort(R.keys(triggers), Order.String)).toEqual(["schedule", "workflow_dispatch"]);
+      expect(yamlAt(workflow, ["on", "schedule", 0, "cron"])).toBe("41 4 * * *");
+      expect(yamlAt(workflow, ["permissions"])).toEqual({});
+      expect(yamlAt(workflow, ["concurrency"])).toEqual({ group: "certainty-nightly", "cancel-in-progress": false });
+      const job = (segments: ReadonlyArray<string | number>) => yamlAt(workflow, ["jobs", "report", ...segments]);
+      expect(job(["if"])).toBe("github.ref == format('refs/heads/{0}', github.event.repository.default_branch)");
+      expect(job(["runs-on"])).toBe("ubuntu-24.04");
+      expect(job(["timeout-minutes"])).toBe(30);
+      expect(job(["permissions"])).toEqual({ actions: "read", contents: "read" });
+      const jobs = yield* workflowJobs(workflow);
+      const steps = jobSteps(jobs, "report");
+      expect(stepByName(steps, "Checkout repository").with).toEqual({
+        "fetch-depth": 0,
+        filter: "blob:none",
+        "persist-credentials": false,
+      });
+      expect(stepByName(steps, "Setup Bun").uses).toBe("./.github/actions/setup-bun");
+      expect(stepRun(steps, "Install dependencies")).toBe("bun install --frozen-lockfile --ignore-scripts");
+      expect(
+        A.filter(
+          steps,
+          (step) =>
+            step.uses !== undefined && !/^(\.\/\.github\/actions\/|[\w-]+\/[\w-]+@[0-9a-f]{40}$)/.test(step.uses)
+        )
+      ).toEqual([]);
+      const code = pipe(
+        Str.split(text, "\n"),
+        A.filter((line) => !Str.startsWith("#")(Str.trim(line))),
+        A.join("\n")
+      );
+      expect(code).not.toContain("secrets.");
+      expect(code).not.toContain("beep-ec2-heavy");
+      // An uncertified report must fail the run, and the captured corpus names branches.
+      expect(code).not.toContain("--preview");
+      expect(code).not.toContain("--write-corpus");
+      expect(stepByName(steps, "Upload the report").with).toEqual({
+        name: "certainty-report-${{ steps.plan.outputs.day }}-attempt-${{ github.run_attempt }}",
+        path: "${{ runner.temp }}/certainty/report.json\n${{ runner.temp }}/certainty/summary.md\n",
+        "if-no-files-found": "warn",
+        "retention-days": 90,
+      });
+      expect(stepByName(steps, "Publish the job summary").if).toBe("always()");
+
+      const temp = yield* fs.makeTempDirectoryScoped();
+      const bin = path.join(temp, "bin");
+      yield* fs.makeDirectory(bin);
+      // `gh` logs every call and answers by endpoint: the scripted core bucket for `rate_limit`, the
+      // run's created_at for `actions/runs/<id>` (or a failure), and a later per-attempt created_at that
+      // the plan must never read. `bun` records its argv and answers as the certainty command would.
+      yield* fs.writeFileString(
+        path.join(bin, "gh"),
+        A.join(
+          [
+            "#!/usr/bin/env bash",
+            'printf "%s\\n" "$*" >> "$FAKE_GH_CALLS"',
+            'case "$*" in',
+            '  *rate_limit*) printf "%s\\n" "$FAKE_RATE_LIMIT" ;;',
+            '  */attempts/*) printf "%s\\n" "$FAKE_ATTEMPT_CREATED_AT" ;;',
+            '  *actions/runs/*) [[ "${FAKE_RUN_API:-}" == fail ]] && { echo "HTTP 502" >&2; exit 1; }',
+            '    printf "%s\\n" "$FAKE_CREATED_AT" ;;',
+            "  *) exit 1 ;;",
+            "esac",
+            "",
+          ],
+          "\n"
+        )
+      );
+      yield* fs.writeFileString(
+        path.join(bin, "bun"),
+        A.join(
+          [
+            "#!/usr/bin/env bash",
+            `printf '<%s>' "$@" > "$FAKE_ARGS"`,
+            'case "$FAKE_MODE" in',
+            `  certified) echo '{"certified":true,"refusals":[]}' ;;`,
+            `  refused) echo '{"certified":false,"refusals":["api-partial"]}'; exit 1 ;;`,
+            `  lenient) echo '{"certified":false,"refusals":["empty-population"]}' ;;`,
+            "  *) echo 'capture failed' >&2; exit 1 ;;",
+            "esac",
+            "",
+          ],
+          "\n"
+        )
+      );
+      yield* fs.chmod(path.join(bin, "gh"), 0o755);
+      yield* fs.chmod(path.join(bin, "bun"), 0o755);
+      const plan = stepRun(steps, "Choose the day and the request bound");
+      const requestCap = String(stepEnvironment(stepByName(steps, "Choose the day and the request bound")).REQUEST_CAP);
+      const score = stepRun(steps, "Score the day");
+      let run = 0;
+      const runStep = Effect.fnUntraced(function* (script: string, env: Readonly<Record<string, string>>) {
+        const output = path.join(temp, `output-${run}`);
+        const exported = path.join(temp, `env-${run}`);
+        const ghCalls = path.join(temp, `gh-calls-${run}`);
+        run += 1;
+        yield* fs.writeFileString(output, "");
+        yield* fs.writeFileString(exported, "");
+        yield* fs.writeFileString(ghCalls, "");
+        const result = Bun.spawnSync(["bash", "-c", script], {
+          cwd: temp,
+          env: {
+            PATH: `${bin}:${ambientPath}`,
+            GITHUB_ENV: exported,
+            GITHUB_OUTPUT: output,
+            RUNNER_TEMP: temp,
+            REQUEST_CAP: requestCap,
+            GITHUB_REPOSITORY: "beep-effect/beep-effect",
+            GITHUB_RUN_ID: "43500000001",
+            FAKE_ARGS: path.join(temp, "bun-args"),
+            FAKE_GH_CALLS: ghCalls,
+            ...env,
+          },
+          stderr: "pipe",
+          stdout: "pipe",
+        });
+        return {
+          calls: yield* fs.readFileString(ghCalls),
+          exit: result.exitCode,
+          output: yield* fs.readFileString(output),
+          stdout: result.stdout.toString(),
+        };
+      });
+
+      // The day is a whole UTC day, and the bound is the bucket's remaining reads less the 15% reserve.
+      const planned = yield* runStep(plan, { DAY_INPUT: "2026-10-31", FAKE_RATE_LIMIT: "1000 900" });
+      expect(planned.exit).toBe(0);
+      expect(planned.output).toBe(
+        "day=2026-10-31\nsince=2026-10-31T00:00:00Z\nuntil=2026-11-01T00:00:00Z\nbound=750\nlimit=1000\nremaining=900\n"
+      );
+      // An explicit day is taken as given: the run's own record is never read.
+      expect(planned.calls).toBe('api rate_limit --jq .resources.core | "\\(.limit) \\(.remaining)"\n');
+
+      // Without a day the plan scores the UTC day before the run's created_at, read from the run, not
+      // from an attempt. A GitHub re-run keeps the run's created_at (run 43374964920: attempt 2 reads
+      // created_at 05:53:32Z at the run and 06:24:33Z at /attempts/2), so a schedule re-run days later
+      // still scores the night it repeats, never "yesterday" as of the re-run.
+      const runRecord = "api repos/beep-effect/beep-effect/actions/runs/43500000001 --jq .created_at\n";
+      const scheduled = yield* runStep(plan, {
+        DAY_INPUT: "",
+        FAKE_CREATED_AT: "2026-11-10T04:41:12Z",
+        FAKE_ATTEMPT_CREATED_AT: "2026-11-10T04:41:12Z",
+        FAKE_RATE_LIMIT: "1000 900",
+      });
+      expect(scheduled.exit).toBe(0);
+      expect(scheduled.output).toContain("day=2026-11-09\nsince=2026-11-09T00:00:00Z\nuntil=2026-11-10T00:00:00Z\n");
+      expect(Str.startsWith(runRecord)(scheduled.calls)).toBe(true);
+      const rerun = yield* runStep(plan, {
+        DAY_INPUT: "",
+        FAKE_CREATED_AT: "2026-11-10T04:41:12Z",
+        FAKE_ATTEMPT_CREATED_AT: "2026-11-12T08:15:00Z",
+        FAKE_RATE_LIMIT: "1000 900",
+      });
+      expect(rerun.output).toBe(scheduled.output);
+      expect(rerun.calls).not.toContain("/attempts/");
+      // A dispatch without a day follows the same rule from its own creation time.
+      const dispatched = yield* runStep(plan, {
+        DAY_INPUT: "",
+        FAKE_CREATED_AT: "2026-11-01T00:00:05Z",
+        FAKE_ATTEMPT_CREATED_AT: "2026-11-01T00:00:05Z",
+        FAKE_RATE_LIMIT: "1000 900",
+      });
+      expect(dispatched.output).toContain("day=2026-10-31\n");
+      // An unreadable or malformed run record refuses the night before the budget is read.
+      for (const failure of [{ FAKE_RUN_API: "fail" }, { FAKE_CREATED_AT: "null" }]) {
+        const closed = yield* runStep(plan, { DAY_INPUT: "", FAKE_RATE_LIMIT: "1000 900", ...failure });
+        expect([closed.exit, closed.output]).toEqual([1, ""]);
+        expect(closed.stdout).toContain("::error::could not read this run's created_at; the day is not scored.");
+        expect(closed.calls).not.toContain("rate_limit");
+      }
+      const capped = yield* runStep(plan, { DAY_INPUT: "2026-11-12", FAKE_RATE_LIMIT: "5000 4980" });
+      expect(capped.output).toContain(`bound=${requestCap}\n`);
+      const inReserve = yield* runStep(plan, { DAY_INPUT: "2026-11-12", FAKE_RATE_LIMIT: "1000 150" });
+      expect([inReserve.exit, inReserve.output]).toEqual([1, ""]);
+      expect(inReserve.stdout).toContain("inside the 15% reserve (150 of 1000 left, reserve 150)");
+      const unread = yield* runStep(plan, { DAY_INPUT: "2026-11-12", FAKE_RATE_LIMIT: "" });
+      expect([unread.exit, unread.output]).toEqual([1, ""]);
+      for (const day of ["2026-02-30", "2999-01-01", "2026-11-12; touch pwned", "$(touch pwned)"]) {
+        const refused = yield* runStep(plan, { DAY_INPUT: day, FAKE_RATE_LIMIT: "1000 900" });
+        expect([refused.exit, refused.output], day).toEqual([1, ""]);
+      }
+      const pwned = yield* fs.exists(path.join(temp, "pwned"));
+      expect(pwned).toBe(false);
+
+      // The score step passes the plan to the CLI and fails on anything but a certified report.
+      const window = { DAY: "2026-11-12", SINCE: "2026-11-12T00:00:00Z", UNTIL: "2026-11-13T00:00:00Z", BOUND: "750" };
+      const certified = yield* runStep(score, { ...window, FAKE_MODE: "certified" });
+      expect(certified.exit).toBe(0);
+      const bunArgs = yield* fs.readFileString(path.join(temp, "bun-args"));
+      expect(bunArgs).toBe(
+        `<run><beep><ci><certainty><--since><2026-11-12T00:00:00Z><--until><2026-11-13T00:00:00Z><--main-ref><HEAD><--max-requests><750><--json><--summary-out><${temp}/certainty/summary.md>`
+      );
+      const report = yield* fs.readFileString(path.join(temp, "certainty", "report.json"));
+      expect(report).toBe('{"certified":true,"refusals":[]}\n');
+      const refused = yield* runStep(score, { ...window, FAKE_MODE: "refused" });
+      expect(refused.exit).toBe(1);
+      expect(refused.stdout).toContain(
+        "::error title=Certainty not certified::The 2026-11-12 report was refused (api-partial); this night does not count toward the seven."
+      );
+      const lenient = yield* runStep(score, { ...window, FAKE_MODE: "lenient" });
+      expect(lenient.exit).toBe(1);
+      expect(lenient.stdout).toContain("was refused (empty-population)");
+      const crashed = yield* runStep(score, { ...window, FAKE_MODE: "crash" });
+      expect(crashed.exit).toBe(1);
+      expect(crashed.stdout).toContain("::error title=Certainty capture failed::No report for 2026-11-12");
     })
   );
   it.effect("keeps reusable Heavy callers compatible with the protected producer permission ceiling", () =>
@@ -2710,11 +2948,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const comparison = jobSteps(jobs, "coverage-regression");
       expect(yamlAt(policy.workflow, ["jobs", "heavy", "needs"])).toEqual(["change-profile", "admission"]);
       // Audit M4: the comparison waits for Test Unit and the Labs producer, not
-      // the whole verify matrix, and never starts inside a cancelled run.
+      // the whole verify matrix, and never starts inside a cancelled run. It reads
+      // the Test Unit shard matrix too: an aggregate skipped on success passes only
+      // beside a matrix that succeeded.
       expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "needs"])).toEqual([
         "change-profile",
         "admission",
         "test-unit",
+        "test-unit-shard",
         "labs",
       ]);
       expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "if"])).toBe(
@@ -2765,7 +3006,32 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(labs.run).toContain("--coverage-output .beep/ci-coverage/labs");
       expect(labs.run).toContain("--coverage-only");
       const gate = stepByName(comparison, "Determine comparison execution");
-      expect(gate.run).toContain('[[ "$UNIT_RESULT" == "success" ]]');
+      expect(gate.run).toContain(
+        '[[ "$UNIT_RESULT" == "success" || ( "$UNIT_RESULT" == "skipped" && "$UNIT_SHARDS_RESULT" == "success" ) ]]'
+      );
+      expect(gate.env).toMatchObject({
+        UNIT_RESULT: "${{ needs.test-unit.result }}",
+        UNIT_SHARDS_RESULT: "${{ needs.test-unit-shard.result }}",
+      });
+      // Every Test Unit outcome the comparison can meet: the checked-in line proceeds on a passed verdict only.
+      const unitLine = O.getOrThrow(
+        A.findFirst(Str.split(gate.run ?? "", "\n"), (line) => Str.includes("$UNIT_RESULT")(line))
+      );
+      for (const [unit, shards, proceeds] of [
+        ["success", "success", true],
+        ["skipped", "success", true],
+        ["skipped", "failure", false],
+        ["skipped", "skipped", false],
+        ["skipped", "cancelled", false],
+        ["failure", "success", false],
+        ["cancelled", "success", false],
+        ["", "", false],
+      ] as const) {
+        const check = Bun.spawnSync(["bash", "-c", Str.trim(unitLine)], {
+          env: { UNIT_RESULT: unit, UNIT_SHARDS_RESULT: shards },
+        });
+        expect(check.exitCode === 0, `${unit}/${shards}`).toBe(proceeds);
+      }
       expect(gate.run).toContain('[[ "$ADMISSION_RESULT" == "success" ]]');
       expect(gate.run).not.toContain("verify.result");
     })
