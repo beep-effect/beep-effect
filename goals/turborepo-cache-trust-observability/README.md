@@ -4,8 +4,10 @@
 
 Lifecycle: `paused`
 
+**Paused by operator ruling (finish board, 2026-11-13).** Already paused with recent decisions; keep paused, ensure no lane in flight. No lane is working on it; resume with `bun run beep goals set-status turborepo-cache-trust-observability active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
+
 Source: [ops/manifest.json](./ops/manifest.json).
-Active for the early handoff consumed by task qualification. See
+Before the 2026-11-08 pause it was active for the early handoff consumed by task qualification. See
 [PLAN.md](./PLAN.md) for current evidence and remaining milestone gates.
 
 ## Paused operational scope

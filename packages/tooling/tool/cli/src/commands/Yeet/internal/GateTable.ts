@@ -57,6 +57,7 @@ import { provideYeetHeadMoveClassifier } from "./HeadMove.ts";
 import { MergeGateCheckRun } from "./MergeGate.schemas.ts";
 import { MERGE_GATE_OWNER_HOLD_LABEL, mergeGateGoodConclusion, mergeGateLatestRunPerName } from "./MergeGate.ts";
 import { readYeetReviewWindow, YeetReviewWindow } from "./ReviewWindow.ts";
+import { yeetStackRulesBranch } from "./Stack.ts";
 import type { Git } from "@beep/git/Git";
 import type { Repo } from "@beep/github/Repo";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -640,7 +641,7 @@ const readRow = Effect.fnUntraced(function* (
         headSha: pull.headSha,
         mergeableState: O.getOrElse(pull.mergeableState, () => "unknown"),
         labels: pull.labels,
-        requiredContexts: O.flatten(HashMap.get(rules, pull.baseRef)).pipe(
+        requiredContexts: O.flatten(HashMap.get(rules, yeetStackRulesBranch(pull))).pipe(
           O.filter(A.isReadonlyArrayNonEmpty),
           O.map(A.filter(Str.isNonEmpty))
         ),
@@ -687,7 +688,8 @@ export const readGateTable = Effect.fn("Yeet.readGateTable")(function* (): Effec
 > {
   const rest = yield* GithubRest;
   const open = yield* rest.openPullRequests.pipe(Effect.mapError(yeetGithubFailure("gh api open pulls")));
-  const bases = A.dedupe(A.map(open, (pull) => pull.baseRef));
+  // A stack layer is gated on its trunk's rules, which GitHub evaluates at merge.
+  const bases = A.dedupe(A.map(open, yeetStackRulesBranch));
   const rules = yield* Effect.forEach(bases, (base) =>
     rest.requiredStatusContexts(base).pipe(
       Effect.option,

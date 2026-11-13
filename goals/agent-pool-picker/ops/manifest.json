@@ -5,7 +5,7 @@
     "title": "Agent Pool Picker",
     "status": "paused",
     "created": "2026-09-16",
-    "updated": "2026-09-16",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/agent-pool-picker",
@@ -85,5 +85,5 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Authored, not started. Resumes when goals/agent-pool-doctrine ships (its seat map and floors are this packet's input)."
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): It is cleanly gated on a dependency that is still open, and nothing is in flight. Resume with `bun run beep goals set-status agent-pool-picker active` when it is picked up. Before the ruling: Authored, not started. Resumes when goals/agent-pool-doctrine ships (its seat map and floors are this packet's input)."
 }

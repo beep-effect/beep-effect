@@ -3,13 +3,13 @@
   "initiative": {
     "id": "coding-agent-effectiveness-evidence-loop",
     "title": "Coding Agent Effectiveness Evidence Loop",
-    "status": "active",
+    "status": "superseded",
     "created": "2026-07-31",
-    "updated": "2026-10-06",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/coding-agent-effectiveness-evidence-loop",
-  "lifecycle": "active",
+  "lifecycle": "superseded",
   "mission": "Make coding-agent effectiveness measurable with trustworthy schema-first evidence, then reduce at least one dominant agent wait behind controlled, guardrailed experiments.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -122,5 +122,8 @@
   "researchReferences": [
     "history/evidence/2026-08-01-hook-pulse-spike.ndjson",
     "history/outputs/2026-09-03-p1-sharp-cutover.md"
-  ]
+  ],
+  "statusNote": "Closed (superseded) 2026-11-13 by operator ruling (finish board): An eight-phase plan has been stuck in P2 since September and its value has already been captured, while the remaining phases overlap ten-minute-certainty and the verification work. Re-open with `bun run beep goals set-status coding-agent-effectiveness-evidence-loop active` and re-graduate the next slice.",
+  "supersededNote": "Closed by operator ruling (finish board, 2026-11-13) without meeting its completion gate; see goals/coding-agent-effectiveness-evidence-loop/decisions/2026-11-13-finish-board-ruling-close.md.",
+  "retentionReason": "Closed by operator ruling (finish board, 2026-11-13) with a re-open path: the full packet stays on main so `bun run beep goals set-status coding-agent-effectiveness-evidence-loop active` can resume it or re-graduate the next slice without restoring from the archive."
 }

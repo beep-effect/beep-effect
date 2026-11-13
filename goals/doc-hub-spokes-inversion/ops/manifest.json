@@ -4,13 +4,13 @@
     "id": "doc-hub-spokes-inversion",
     "packetId": "goal-packet/v1:12da71f3ed124618fbdd52887a68214d7fe7a5853e1bb3d5da549da56ea3f1d7",
     "title": "Doc Hub and Spokes Inversion",
-    "status": "active",
+    "status": "paused",
     "created": "2026-10-28",
-    "updated": "2026-10-28",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/doc-hub-spokes-inversion",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "Rename `@beep/md` to `@beep/doc` (namespace `Doc`), move the parse bridge and the HTML projection into their spokes, replace the Markdown string writer with a projection through `Markdown.stringify`, trim `SafeDocument` to hub-native rules, and amend effected-promotion D-02/D-50.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -84,5 +84,6 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): It is a worthwhile refactor but nothing has started; set it to paused so it stops counting as active. Resume with `bun run beep goals set-status doc-hub-spokes-inversion active` when it is picked up."
 }

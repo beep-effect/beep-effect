@@ -74,6 +74,25 @@ viable.
 | Evaluation | Consume `effect-native-legal-eval`; do not recreate its framework. |
 | Re-entry | Corpus generator and DMS taxonomy remain exploration MAP re-entry points. |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug tracked-changes-ingest-wedge`; add a `kind: decision` file there, never edit this block._
+
+### Paused by operator ruling (finish board, 2026-11-13): Product-relevant but unstarted; nothing in flight, so park until text-knowledge foundation direction settles, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
+
+Triage rationale: Product-relevant but unstarted; nothing in flight, so park until text-knowledge foundation direction settles.
+
+Its blocker goals/effect-native-legal-eval was closed by the same ruling; resuming this packet must first decide whether to re-open that packet or drop the dependency.
+
+No lane is working on it. Resume with `bun run beep goals set-status tracked-changes-ingest-wedge active` when it is picked up.
+
+Lane chore/finish-board-pause-b2
+
+Reverse: goals set-status tracked-changes-ingest-wedge active when it is picked up
+
+<!-- beep:decisions:end -->
+
 ## First Vertical Slice
 
 Run a tracked-change OOXML fixture through OOXML, Pandoc, and canonical Md;
