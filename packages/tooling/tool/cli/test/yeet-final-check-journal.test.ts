@@ -333,7 +333,9 @@ it.layer(JournalTestLayer, { timeout: "60 seconds" })("final-check attempt journ
       ).toEqual([["final-check:repo-sanity", "passed"]]);
 
       // Economics folds the rows as their own mode, outside the comparable
-      // red-to-green modes; the red gate is an actionable lane.
+      // red-to-green modes; the red gate is an actionable lane and the moved
+      // tree a typed refusal (MEAS-03). The dirty-tree refusal never opened an
+      // attempt, so the mode row counts three runs and none of them terminated.
       const journals = yield* YeetEconomicsSource.use((source) =>
         source.read(EconomicsScopeRequest.make({ repoRoot: root, branch: O.some("main"), fleet: false }))
       );
@@ -347,8 +349,22 @@ it.layer(JournalTestLayer, { timeout: "60 seconds" })("final-check attempt journ
       expect(report.attempts.comparable.modeMix).toEqual([]);
       expect(A.map(report.firstFailure.actionableLaneMix, (row) => [row.key, row.count])).toEqual([
         ["final-check:repo-sanity", 1],
-        ["unlocated", 1],
+        ["refusal:moved-tree", 1],
       ]);
+      expect(A.map(report.attempts.all.classMix, (row) => [row.key, row.count])).toEqual([
+        ["red", 2],
+        ["green", 1],
+      ]);
+      expect(
+        A.map(report.modeDurations, (row) => [
+          row.mode,
+          row.attempts,
+          row.redAttempts,
+          row.terminatedAttempts,
+          row.measuredAttempts,
+          O.isSome(row.p50ElapsedMs) && O.isSome(row.p95ElapsedMs),
+        ])
+      ).toEqual([["final-check", 3, 2, 0, 3, true]]);
     })
   );
 
