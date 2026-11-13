@@ -372,6 +372,12 @@ describe("B8 heavy admission contracts", () => {
       ],
       ["explorations/legal-ontology-landscape/assets/manifest.jsonl", false],
       ["explorations/legal-ontology-landscape/assets/other.jsonl", true],
+      ["explorations/beep-ci-operational-ontology/research/control-interventions.yaml", false],
+      [
+        "explorations/beep-ci-operational-ontology/research/evidence/journal-snapshot-2026-10-01/journal.redacted.ndjson",
+        false,
+      ],
+      ["explorations/beep-ci-operational-ontology/research/other.yaml", true],
       ["docs/runbooks/ci-runner-reliability.md", true],
       ["docs/assets/diagram.svg", true],
       ["explorations/INBOX.md", true],
