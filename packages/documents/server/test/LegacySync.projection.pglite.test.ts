@@ -9,11 +9,13 @@ import {
   LegacySyncItem,
   LegacySyncOperation,
   VaultSyncModel,
+  VaultSyncReadAccess,
 } from "@beep/documents-use-cases/aggregates/VaultSync";
 import { PgliteTestLayer } from "@beep/pglite/Pglite.test-layer";
 import { BunServices } from "@effect/platform-bun";
 import { describe, expect, layer } from "@effect/vitest";
 import * as Context from "effect/Context";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -44,6 +46,7 @@ describe("legacy sync SQL projections", () => {
         const runtime = yield* Layer.build(
           ReadModels.layer(
             LegacySyncProjections.pipe(
+              Layer.merge(VaultSyncReadAccess),
               Layer.provide(
                 Layer.succeed(LegacySyncAudit, {
                   resolve: Effect.fn("fixture.audit")(() =>
@@ -57,7 +60,7 @@ describe("legacy sync SQL projections", () => {
                 })
               )
             )
-          ).pipe(Layer.provide(AlchemyPostgresPlatform.layer()))
+          ).pipe(Layer.provide(SecureRandom.layerWebCrypto), Layer.provide(AlchemyPostgresPlatform.layer()))
         );
         const destinationId = V.DestinationId.make("documents_sync_destination_aprojection");
         const itemId = V.ItemId.make("documents_sync_item_a999");

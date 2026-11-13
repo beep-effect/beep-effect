@@ -136,7 +136,7 @@ export class PersonMatchInference extends Context.Service<
 export interface FaceSession {
   readonly inputNames: ReadonlyArray<string>;
   readonly outputNames: ReadonlyArray<string>;
-  readonly run: ort.InferenceSession["run"];
+  run(inputs: ort.InferenceSession.FeedsType): Promise<ort.InferenceSession.ReturnType>;
 }
 const loadRuntime = Effect.fn("Files.loadFaceRuntime")(() =>
   Effect.tryPromise({

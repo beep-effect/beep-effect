@@ -3,7 +3,7 @@
  * columns as numbers, postgres.js as decimal strings, and `@effect/sql-pg` as
  * native `bigint`. Every row with such a column decodes all three.
  */
-import { AcceptedJson, DeliveryRow } from "@beep/alchemy-postgres";
+import { AcceptedJson, DeliveryRow, ScheduleRow } from "@beep/alchemy-postgres";
 import { describe, it } from "@effect/vitest";
 import { deepStrictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -33,6 +33,25 @@ describe("bigint columns", () => {
           )
         );
         deepStrictEqual(positions, [position, position, position]);
+      })
+  );
+
+  it.effect.prop(
+    "a schedule deadline decodes the same across SQL drivers",
+    [Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0)))],
+    ([deadline]) =>
+      Effect.gen(function* () {
+        const deadlines = yield* Effect.forEach([deadline, `${deadline}`, BigInt(deadline)], (due_at) =>
+          S.decodeEffect(ScheduleRow)({
+            id: "a-1",
+            command_id: "reminder",
+            command: { _tag: "Remind" },
+            meta: { commandId: "arming-1", context: {} },
+            status: "pending",
+            due_at,
+          }).pipe(Effect.map((row) => row.due_at))
+        );
+        deepStrictEqual(deadlines, [deadline, deadline, deadline]);
       })
   );
 

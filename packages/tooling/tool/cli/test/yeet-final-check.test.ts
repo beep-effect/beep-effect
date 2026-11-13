@@ -4,7 +4,7 @@ import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { LenientManifest } from "@beep/package-json/LenientManifest";
 import { ChangeAtom, ChangeAtomKind, ChangeClassifier, ChangeSet, RouteError } from "@beep/repo-cli/commands/Ci";
 import { LintPolicySweeps } from "@beep/repo-cli/commands/Quality/Quality.schemas";
-import { CoverageNoopScope, CoverageSelectedScope } from "@beep/repo-cli/test/Quality";
+import { CoverageFullScope, CoverageNoopScope, CoverageSelectedScope } from "@beep/repo-cli/test/Quality";
 import { ComputeProfileError, ComputeProfileProbe, makeComputeProfileProbe } from "@beep/repo-cli/test/RepoRun";
 import { configStringOption } from "@beep/repo-cli/test/SharedInternals";
 import {
@@ -29,6 +29,7 @@ import {
   finalCheckRefusal,
   findExpectationRewrites,
   forcedWorkerFinalCheckLines,
+  forcedWorkerGates,
   parseFinalCheckGates,
   parseFinalCheckSkips,
   planFinalCheckRoute,
@@ -37,6 +38,7 @@ import {
   readYeetComputeProfile,
   resolveFinalCheckProfileSkips,
   rewrittenTestFiles,
+  routeFinalCheckRunForTesting,
   routeFinalCheckStepsForProfile,
   runFinalCheckGatesForTesting,
   verifyExpectationRewrites,
@@ -431,9 +433,10 @@ describe("routeFinalCheckStepsForProfile", () => {
     ).toEqual(withTests);
   });
 
-  // goals/compute-profile-gate-routing P3: a forced worker run holds one task at a time, and the
-  // full repo-sanity lane's catalog scan (5.2 GB on dankserver) stays refused.
-  it("runs forced Fallow and coverage one task at a time on worker and keeps repo-sanity narrowed", () => {
+  // goals/compute-profile-gate-routing: forced coverage holds one task at a time, Fallow is refused
+  // (GateRoute.schemas.ts) so its argv is untouched, and the full repo-sanity lane's catalog scan
+  // (5.2 GB on dankserver) stays refused.
+  it("runs forced coverage one task at a time on worker and keeps repo-sanity narrowed", () => {
     const routed = routeFinalCheckStepsForProfile({ planned, profile: "worker", forceLocal: true });
     const argsOf = (gate: string) =>
       A.map(
@@ -441,14 +444,12 @@ describe("routeFinalCheckStepsForProfile", () => {
         (entry) => entry.step.args
       );
 
-    expect(argsOf("fallow")).toEqual([
-      ["run", "beep", "ci", "lane", "fallow", "--base", BASE, "--validate-envelopes", "--serial"],
-    ]);
-    expect(argsOf("coverage")).toEqual([["run", "coverage", "--affected", "--concurrency=1"]]);
-    expect(repoSanityArgs(routed)).toEqual([["run", "beep", "quality", "changeset-status", "--since", "origin/main"]]);
-    expect(A.filter(routed, (entry) => !A.contains(["fallow", "coverage", "repo-sanity"], entry.gate))).toEqual(
-      A.filter(planned, (entry) => !A.contains(["fallow", "coverage", "repo-sanity"], entry.gate))
-    );
+    const coverageArgs = argsOf("coverage");
+    const sanityArgs = repoSanityArgs(routed);
+    const untouched = A.filter(routed, (entry) => !A.contains(["coverage", "repo-sanity"], entry.gate));
+    expect(coverageArgs).toEqual([["run", "coverage", "--affected", "--concurrency=1"]]);
+    expect(sanityArgs).toEqual([["run", "beep", "quality", "changeset-status", "--since", "origin/main"]]);
+    expect(untouched).toEqual(A.filter(planned, (entry) => !A.contains(["coverage", "repo-sanity"], entry.gate)));
   });
 
   // Lint Policy is hosted-only on worker; its effect-vitest pass costs one parse per file, so the
@@ -505,22 +506,97 @@ describe("routeFinalCheckStepsForProfile", () => {
 });
 
 describe("forced final-check on a worker", () => {
-  it("skips only the gates a worker cannot force and names each refusal", () => {
-    const gates = FinalCheckGate.literals;
-    const forced = computeProfileFinalCheckSkips({ gates, operatorSkips: [], profile: "worker", forceLocal: true });
-    expect(A.map(forced, (skip) => skip.gate)).toEqual(["cheap-gates", "lint-policy", "check", "docgen"]);
+  const PUSH_ROUTE = "push with `bun run beep yeet open --body-file <md>` and let hosted CI prove it";
+  const selected = CoverageSelectedScope.make({ packageNames: ["@beep/types", "@beep/utils"] });
+  const full = CoverageFullScope.make({ reasons: ["package.json changed"] });
+  const forcedRouting = (coverageScope?: O.Option<CoverageAffectedScope>) => ({
+    gates: FinalCheckGate.literals,
+    operatorSkips: [],
+    profile: "worker" as const,
+    forceLocal: true,
+    ...(coverageScope === undefined ? {} : { coverageScope }),
+  });
+
+  it("skips every gate but coverage and names each refusal with its measurement and the push route", () => {
+    const forced = computeProfileFinalCheckSkips(forcedRouting());
+    const lines = forcedWorkerFinalCheckLines(forcedRouting());
+    const refusals = A.dropRight(lines, 1);
+    expect(A.map(forced, (skip) => skip.gate)).toEqual(["cheap-gates", "lint-policy", "check", "docgen", "fallow"]);
     expect(A.every(forced, (skip) => skip.reason === "compute-profile=worker")).toBe(true);
-    const lines = forcedWorkerFinalCheckLines({ gates, operatorSkips: [], profile: "worker", forceLocal: true });
-    expect(A.map(A.dropRight(lines, 1), (line) => Str.split(line, " ")[4])).toEqual([
+    expect(A.map(refusals, (line) => Str.split(line, " ")[4])).toEqual([
       "cheap-gates",
       "lint-policy",
       "repo-sanity",
       "check",
       "docgen",
+      "fallow",
     ]);
-    expect(A.every(A.dropRight(lines, 1), Str.startsWith("[yeet] final-check --force-local refused "))).toBe(true);
-    expect(lines[5]).toContain("runs fallow, coverage one task at a time (concurrency 1)");
-    expect(lines[3]).toContain("4.07 GB");
+    expect(A.every(refusals, Str.startsWith("[yeet] final-check --force-local refused "))).toBe(true);
+    expect(A.every(refusals, Str.endsWith(`; ${PUSH_ROUTE}`))).toBe(true);
+    expect(lines[0]).toContain("5.2 GB");
+    expect(lines[3]).toContain("2.59 GB");
+    expect(lines[4]).toContain("no measured worker budget");
+    expect(lines[5]).toContain("523 s");
+    expect(lines[6]).toBe(
+      "[yeet] final-check --force-local on the worker profile runs coverage one task at a time (concurrency 1)"
+    );
+  });
+
+  it("names the packages a selected coverage plan measures", () => {
+    const routing = O.some(selected).pipe(forcedRouting);
+    const lines = forcedWorkerFinalCheckLines(routing);
+    const gates = forcedWorkerGates(routing);
+    expect(A.takeRight(lines, 2)).toEqual([
+      "[yeet] final-check --force-local on the worker profile runs coverage one task at a time (concurrency 1)",
+      "[yeet] final-check --force-local measures coverage for @beep/types, @beep/utils (this diff's affected plan)",
+    ]);
+    expect(gates).toEqual(["coverage"]);
+  });
+
+  it("forces a noop coverage plan without naming packages", () => {
+    const routing = O.some(CoverageNoopScope.make({})).pipe(forcedRouting);
+    const lines = forcedWorkerFinalCheckLines(routing);
+    const last = A.last(lines);
+    assertSome(
+      last,
+      "[yeet] final-check --force-local on the worker profile runs coverage one task at a time (concurrency 1)"
+    );
+  });
+
+  it("refuses coverage whose plan falls back to the whole workspace or could not be read", () => {
+    const fullRouting = O.some(full).pipe(forcedRouting);
+    const unreadRouting = O.none().pipe(forcedRouting);
+    const fullSkips = computeProfileFinalCheckSkips(fullRouting);
+    const fullLines = forcedWorkerFinalCheckLines(fullRouting);
+    const unreadLines = forcedWorkerFinalCheckLines(unreadRouting);
+    const unreadGates = forcedWorkerGates(unreadRouting);
+    expect(A.map(fullSkips, (skip) => skip.gate)).toContain("coverage");
+    const fullLast = A.last(fullLines);
+    const unreadLast = A.last(unreadLines).pipe(O.map(Str.includes("could not be read")));
+    assertSome(
+      fullLast,
+      `[yeet] final-check --force-local refused coverage on the worker profile: its affected plan falls back to the whole workspace (package.json changed): no measured worker budget; ${PUSH_ROUTE}`
+    );
+    assertSome(unreadLast, true);
+    expect(unreadGates).toEqual([]);
+  });
+
+  it("forces no gate the change route skips and keeps the profile skips unchanged", () => {
+    const routing = { ...O.some(selected).pipe(forcedRouting), routeSkipped: ["coverage" as const] };
+    const gates = forcedWorkerGates(routing);
+    const lines = forcedWorkerFinalCheckLines(routing);
+    const skips = computeProfileFinalCheckSkips(routing);
+    expect(gates).toEqual([]);
+    expect(A.filter(lines, Str.includes("coverage"))).toEqual([]);
+    expect(A.map(skips, (skip) => skip.gate)).toEqual(["cheap-gates", "lint-policy", "check", "docgen", "fallow"]);
+  });
+
+  it("forces nothing unforced or off worker", () => {
+    const gates = FinalCheckGate.literals;
+    const unforced = forcedWorkerGates({ gates, operatorSkips: [], profile: "worker", forceLocal: false });
+    const workstation = forcedWorkerGates({ gates, operatorSkips: [], profile: "workstation", forceLocal: true });
+    expect(unforced).toEqual([]);
+    expect(workstation).toEqual([]);
   });
 
   it("prints nothing unforced or off worker, and no concurrency line when every forced gate is refused", () => {
@@ -530,8 +606,8 @@ describe("forced final-check on a worker", () => {
       []
     );
     const onlyCheck = forcedWorkerFinalCheckLines({
-      gates: ["check", "fallow"],
-      operatorSkips: [FinalCheckSkip.make({ gate: "fallow", reason: "hosted CI proves it" })],
+      gates: ["check", "coverage"],
+      operatorSkips: [FinalCheckSkip.make({ gate: "coverage", reason: "hosted CI proves it" })],
       profile: "worker",
       forceLocal: true,
     });
@@ -1278,6 +1354,67 @@ describe("final-check verification routing", () => {
         expect(ran).toBe(false);
       })
     );
+
+    // PR #3281 review (beep-reviewer P2, CodeRabbit): a coverage gate the change route skips never
+    // runs, so a forced worker run must not count it as forced, print its concurrency line, record
+    // forceLocal: true, or journal a bypass row for it.
+    it.effect("does not count a route-skipped coverage gate as forced on a worker", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "final-check-route-forced-" });
+        const route = FinalCheckRoute.make({
+          footprintDigest: "footprint",
+          atomsByKind: R.map(ChangeAtomKind.Enum, () => 0),
+          gates: [
+            FinalCheckRouteGate.make({
+              gate: "coverage",
+              lane: "coverage",
+              decision: "skipped",
+              refinements: [],
+              reason: "route:test",
+            }),
+          ],
+          shadowMisses: [],
+          reason: "footprint",
+        });
+        const planned = {
+          repoRoot: root,
+          headSha: HEAD,
+          mergeBase: BASE,
+          planned: [
+            FinalCheckPlannedStep.make({
+              gate: "coverage",
+              hostedContext: "Heavy / Coverage Regression, Test Unit (affected packages)",
+              step: QualityTaskStep.make({
+                label: "final-check:coverage",
+                command: "sh",
+                args: ["-c", "echo ran > ran; exit 1"],
+                cwd: root,
+              }),
+            }),
+          ],
+          skips: [],
+          resume: false,
+          route,
+        };
+        const routed = yield* routeFinalCheckRunForTesting(planned, {
+          gates: ["check", "coverage"],
+          operatorSkips: [],
+          profile: "worker",
+          forceLocal: true,
+        });
+        const result = yield* runFinalCheckGatesForTesting(routed.run, ["coverage"], false);
+        const ran = yield* fs.exists(`${root}/ran`);
+        const skipGates = A.map(routed.profileSkips, (skip) => skip.gate);
+        expect(routed.forced).toBe(false);
+        expect(A.filter(routed.forcedLines, Str.includes("one task at a time"))).toEqual([]);
+        expect(A.map(routed.forcedLines, (line) => Str.split(line, " ")[4])).toEqual(["check"]);
+        expect(skipGates).toEqual(["check"]);
+        expect(routed.workerRoutes).toEqual([["check", "refusal"]]);
+        expect(result.steps[0]).toMatchObject({ gate: "coverage", status: "skipped", reason: "route:test" });
+        expect(ran).toBe(false);
+      })
+    );
   });
 });
 
@@ -1314,7 +1451,7 @@ describe("final-check compute-profile skips", () => {
       const { profileSkips } = yield* resolveFinalCheckProfileSkips(FinalCheckGate.literals, [], true);
       expect(skipLines(profileSkips)).toStrictEqual(
         A.map(
-          ["cheap-gates", "lint-policy", "check", "docgen"],
+          ["cheap-gates", "lint-policy", "check", "docgen", "fallow"],
           (gate) => `${gate}=${COMPUTE_PROFILE_WORKER_SKIP_REASON}`
         )
       );

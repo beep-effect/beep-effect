@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { $RepoCliId } from "@beep/identity/packages";
 import {
   BuffaloArtifactPins,
@@ -7,6 +8,7 @@ import {
   encodePersonMatchReport,
   MatchPersonError,
   MatchPersonOptions,
+  normalizeFaceVector,
   PersonMatchBuffaloPins,
   PersonMatchGraphCompiler,
   PersonMatchGraphPins,
@@ -28,6 +30,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect } from "@effect/vitest";
 import { sha256 } from "@noble/hashes/sha2.js";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -63,6 +66,7 @@ class Frame extends S.Opaque<Frame, { readonly brand: unique symbol }>()(
 ) {}
 const frame = (count = 1, vector: ReadonlyArray<number> = [1, 0], confidence: ReadonlyArray<number> = [1, 1]) =>
   Frame.make({ count, vector, confidence });
+const encodeRecordedWorker = S.encodeEffect(S.fromJsonString(PersonMatchWorkerSuccess));
 const outputs = ["s8", "s16", "s32", "b8", "b16", "b32", "k8", "k16", "k32"];
 const template: ReadonlyArray<readonly [number, number]> = [
   [38.2946, 51.6963],
@@ -341,7 +345,7 @@ it.layer(nativeLayer)((it) => {
     Effect.gen(function* () {
       const result = yield* runScan([frame(), frame()]);
       if (result._tag !== "Success") return expect.fail("scan failed");
-      const json = yield* S.encodeEffect(S.fromJsonString(PersonMatchWorkerSuccess))(result.success);
+      const json = yield* encodeRecordedWorker(result.success);
       expect((yield* decodePersonMatchWorkerReportJson(json)).ok).toBe(true);
       const decode = decodePersonMatchWorkerReportJson();
       const decoded = yield* decode(json);
@@ -548,3 +552,15 @@ it.layer(nativeLayer)((it) => {
     })
   );
 });
+
+it.effect.prop(
+  "normalizes schema-derived finite embedding vectors",
+  [Arbitrary.schema(Frame.fields.vector)],
+  ([vector]) =>
+    Effect.sync(() => {
+      const normalized = normalizeFaceVector(vector);
+      expect(A.every(normalized, Number.isFinite)).toBe(true);
+      if (normalized.length > 0) expect(A.reduce(normalized, 0, (sum, value) => sum + value * value)).toBeCloseTo(1, 6);
+    }),
+  { arbitrary: fcRuns(50) }
+);

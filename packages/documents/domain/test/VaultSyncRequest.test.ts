@@ -31,7 +31,7 @@ layer(hosted, { excludeTestServices: true, timeout: "20 seconds" })("public pass
       expect(paused.rule).toBe("destination-paused");
       const probe = yield* destinations.send(destination, V.ProbeDestination.make({ requestId: "p2" }));
       expect(probe.version).toBeGreaterThan(pass.version);
-      const state = yield* destinations.state(destination);
+      const state = yield* destinations.get(destination);
       expect(state._tag === "Registered" && state.paused).toBe(true);
     })
   );
