@@ -324,6 +324,9 @@
     "zod": "4.6.6"
   },
   "packageManager": "bun@1.4.4",
+  "patchedDependencies": {
+    "@alchemy.run/domain@2.0.0-beta.87": "patches/@alchemy.run%2Fdomain@2.0.0-beta.87.patch"
+  },
   "private": true,
   "repository": {
     "directory": ".",
