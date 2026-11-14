@@ -87,7 +87,14 @@ adopted settings and fails the job, before any deploy, unless every
 singleton plans as an adopt or no-op with no property change, each live
 setting already equals the declared one (tags Active, both enrollments
 Active for this account only, exactly one `DIMENSIONAL`/`SERVICE` monitor
-named `beep-account-services`), and nothing plans a delete or replace. A
+named `beep-account-services`), and nothing plans a delete, replace or
+orphan. One delete is allowed, by logical id: the stack's own `AnomalyAlerts`
+email subscription, so a return from `live` to `silent` (the cutover
+rollback) passes the gate. It is not an account setting and touches nothing
+that affects EC2, Spot or Lambda, so the window-5 condition (the nine
+settings may not change) is not weakened. The AWS reads reach the gate raw;
+`liveSettingsFromAws` shapes them and keeps a member-account flag only when
+AWS reports it. A
 resource outside the stack stops the job with an instruction to ask the CI
 goals driver through the orchestrator. The gate prints resources, actions
 and changed property names, never values. It applies to `prod` only:

@@ -194,9 +194,25 @@ out, or delete the services monitor Alchemy now owns. No step runs the
 program and none needs `pulumi up`; the PR deleting the component from the
 program must merge before the next `pulumi preview` of that stack.
 
-Rollback: `pulumi stack import` of the newest archive, `pulumi up --target`
-the old budget and subscription URNs, `prod` back to `silent`, and
-`aws budgets delete-budget` for the retained `beep-account-monthly-cost`.
+Rollback (decision "Cost controls cutover from Pulumi"):
+
+- Leave `live`: one PR back to `silent`. Its plan deletes the stack's own
+  `AnomalyAlerts` subscription, the only delete the gate allows (by logical
+  id, `delete` only); the nine adopted settings still may not change.
+- Restore the Pulumi budget and subscription before the component-removal PR
+  merges: `pulumi stack import` of the newest archive (state only), then
+  `pulumi refresh --target` the old budget and subscription URNs,
+  `pulumi preview --target` them and confirm exactly two creates,
+  `pulumi up --target` them, and check both exist in AWS. Then `prod` back to
+  `silent` and `aws budgets delete-budget` for the retained
+  `beep-account-monthly-cost`.
+- After the component-removal PR merged, `pulumi up` no longer sees the old
+  declarations: revert that PR first, then import, refresh, preview and up.
+
+Timing: the cutover's destroy step runs only once the `live` PR is open with
+its `final` posted and ready to merge. The gap without budget and anomaly mail
+is at most two hours from the destroy step; past that, run the restore. The
+component-removal PR merges only after `live` has been green for 24 hours.
 
 ## Acceptance evidence
 

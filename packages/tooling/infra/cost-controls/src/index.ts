@@ -13,7 +13,7 @@
  */
 export * as Config from "./Config.ts";
 /**
- * @category stacks
+ * @category resources
  * @since 0.0.0
  */
 export * as CostControls from "./CostControls.ts";
@@ -22,6 +22,11 @@ export * as CostControls from "./CostControls.ts";
  * @since 0.0.0
  */
 export * as Guards from "./Guards.ts";
+/**
+ * @category validation
+ * @since 0.0.0
+ */
+export * as PlanCheck from "./PlanCheck.ts";
 /**
  * @category providers
  * @since 0.0.0

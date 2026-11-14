@@ -1,8 +1,10 @@
 #!/usr/bin/env bun
 /**
  * The pre-deploy gate the `Deploy cost controls` workflow runs between plan
- * and deploy: `bun plan-check.ts <plan.log> <live.json>`. It prints each
- * planned resource with its action and the names (never the values) of the
+ * and deploy. It takes five file paths: the detailed plan log, then the raw
+ * AWS CLI outputs for the cost allocation tags, the Compute Optimizer
+ * enrollment, the Cost Optimization Hub enrollment and the anomaly monitors.
+ * It prints each planned resource with its action and the names (never the values) of the
  * properties it changes, then exits non-zero unless `checkPlan` passes.
  *
  * @internal
@@ -17,10 +19,11 @@ import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
-import { checkPlan, LiveSettings, parsePlanLog } from "./src/PlanCheck.ts";
+import { AwsSettingsOutputs, checkPlan, liveSettingsFromAws, parsePlanLog } from "./src/PlanCheck.ts";
 import type { PlanCheckFailed } from "./src/PlanCheck.ts";
 
-const decodeLive = S.decodeUnknownEffect(S.fromJsonString(LiveSettings));
+const decodeJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
+const decodeOutputs = S.decodeUnknownEffect(AwsSettingsOutputs);
 
 const report = Effect.fn("CostControls.planCheckReport")(function* (failure: PlanCheckFailed) {
   for (const violation of failure.violations) {
@@ -39,14 +42,28 @@ const planCheck = Command.make(
   "plan-check",
   {
     plan: Argument.String("plan").pipe(Argument.withDescription("Path of the detailed alchemy plan log")),
-    live: Argument.String("live").pipe(Argument.withDescription("Path of the live-settings JSON document")),
+    tags: Argument.String("tags").pipe(Argument.withDescription("Raw `aws ce list-cost-allocation-tags` output")),
+    computeOptimizer: Argument.String("compute-optimizer").pipe(
+      Argument.withDescription("Raw `aws compute-optimizer get-enrollment-status` output")
+    ),
+    hub: Argument.String("hub").pipe(
+      Argument.withDescription("Raw `aws cost-optimization-hub list-enrollment-statuses` output")
+    ),
+    monitors: Argument.String("monitors").pipe(Argument.withDescription("Raw `aws ce get-anomaly-monitors` output")),
   },
-  Effect.fn("CostControls.planCheckCli")(function* ({ plan, live }) {
+  Effect.fn("CostControls.planCheckCli")(function* ({ plan, tags, computeOptimizer, hub, monitors }) {
     const fs = yield* FileSystem.FileSystem;
+    const readJson = (path: string) => fs.readFileString(path).pipe(Effect.flatMap(decodeJson));
     const planLog = yield* fs.readFileString(plan);
-    const liveJson = yield* fs.readFileString(live);
+    const outputs = yield* Effect.all({
+      costAllocationTags: readJson(tags),
+      computeOptimizer: readJson(computeOptimizer),
+      costOptimizationHub: readJson(hub),
+      anomalyMonitors: readJson(monitors),
+    });
+    const raw = yield* decodeOutputs(outputs);
     const entries = parsePlanLog(planLog);
-    const settings = yield* decodeLive(liveJson);
+    const settings = liveSettingsFromAws(raw);
     for (const entry of entries) {
       const changed = A.isReadonlyArrayNonEmpty(entry.changedProperties)
         ? ` changes: ${A.join(entry.changedProperties, ", ")}`

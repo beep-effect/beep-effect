@@ -84,27 +84,27 @@ jobs:
       # deploy, unless the nine adopted account settings (six cost allocation
       # tags, two enrollments, the services anomaly monitor) plan as adopt or
       # no-op with no property change, their live values already equal the
-      # declared ones, and nothing plans a delete or replace. The check is
-      # src/PlanCheck.ts (tested); it prints resources, actions and changed
-      # property names, never values. Its printed lines are the acceptance
-      # record. A resource outside the stack stops the job for the CI goals
-      # driver (runbook: docs/runbooks/alchemy-infra.md, Cost controls).
+      # declared ones, and nothing plans a delete, replace or orphan (the one
+      # exception: deleting the stack's own AnomalyAlerts subscription, the
+      # live-to-silent rollback). The check is src/PlanCheck.ts (tested); it
+      # prints resources, actions and changed property names, never values.
+      # The AWS reads are passed raw and shaped in tested TypeScript
+      # (liveSettingsFromAws). Its printed lines are the acceptance record. A
+      # resource outside the stack stops the job for the CI goals driver
+      # (runbook: docs/runbooks/alchemy-infra.md, Cost controls).
       - name: Check the plan before deploy
         working-directory: packages/tooling/infra/cost-controls
         shell: bash
         run: |
           set -euo pipefail
-          jq -n \
-            --argjson tags "$(aws ce list-cost-allocation-tags --tag-keys App beep-ci DataClass ghr:environment ManagedBy Project --output json)" \
-            --argjson co "$(aws compute-optimizer get-enrollment-status --output json)" \
-            --argjson hub "$(aws cost-optimization-hub list-enrollment-statuses --output json)" \
-            --argjson mon "$(aws ce get-anomaly-monitors --output json)" \
-            '{costAllocationTags: [$tags.CostAllocationTags[] | {TagKey, Status}],
-              computeOptimizer: {status: $co.status, memberAccountsEnrolled: $co.memberAccountsEnrolled},
-              costOptimizationHub: {includeMemberAccounts: $hub.includeMemberAccounts, items: [$hub.items[] | {status}]},
-              anomalyMonitors: [$mon.AnomalyMonitors[] | {MonitorName, MonitorType} + (if .MonitorDimension then {MonitorDimension} else {} end)]}' \
-            > "$RUNNER_TEMP/cost-controls-live.json"
-          bun plan-check.ts "$RUNNER_TEMP/cost-controls-plan.log" "$RUNNER_TEMP/cost-controls-live.json"
+          aws ce list-cost-allocation-tags --tag-keys App beep-ci DataClass ghr:environment ManagedBy Project \
+            --output json > "$RUNNER_TEMP/cost-controls-tags.json"
+          aws compute-optimizer get-enrollment-status --output json > "$RUNNER_TEMP/cost-controls-compute-optimizer.json"
+          aws cost-optimization-hub list-enrollment-statuses --output json > "$RUNNER_TEMP/cost-controls-hub.json"
+          aws ce get-anomaly-monitors --output json > "$RUNNER_TEMP/cost-controls-monitors.json"
+          bun plan-check.ts "$RUNNER_TEMP/cost-controls-plan.log" "$RUNNER_TEMP/cost-controls-tags.json" \
+            "$RUNNER_TEMP/cost-controls-compute-optimizer.json" "$RUNNER_TEMP/cost-controls-hub.json" \
+            "$RUNNER_TEMP/cost-controls-monitors.json"
 
       - name: Deploy prod stage
         working-directory: packages/tooling/infra/cost-controls

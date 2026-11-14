@@ -6,7 +6,7 @@
  * declared ones, and nothing plans a delete or replace.
  *
  * @packageDocumentation
- * @category gates
+ * @category validation
  * @since 0.0.0
  */
 
@@ -115,6 +115,104 @@ export class LiveSettings extends S.Opaque<LiveSettings, { readonly brand: uniqu
     $I.annoteSchema("LiveSettings", { description: "Live values of the nine account settings the stack adopts." })
   )
 ) {}
+
+/**
+ * The raw AWS CLI outputs the workflow passes to the gate, unshaped: one
+ * document each from `ce list-cost-allocation-tags`,
+ * `compute-optimizer get-enrollment-status`,
+ * `cost-optimization-hub list-enrollment-statuses` and
+ * `ce get-anomaly-monitors`. Unknown fields are ignored; flags AWS omits stay
+ * absent.
+ *
+ * **Example** (Decode raw AWS outputs)
+ *
+ * ```ts
+ * import { AwsSettingsOutputs } from "@beep/infra-cost-controls/PlanCheck"
+ * import * as S from "effect/Schema"
+ *
+ * const raw = S.decodeUnknownSync(AwsSettingsOutputs)({
+ *   costAllocationTags: { CostAllocationTags: [{ TagKey: "App", Status: "Active", Type: "UserDefined" }] },
+ *   computeOptimizer: { status: "Active" },
+ *   costOptimizationHub: { items: [{ accountId: "123456789012", status: "Active" }] },
+ *   anomalyMonitors: { AnomalyMonitors: [] },
+ * })
+ * console.log(raw.computeOptimizer.status) // "Active"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AwsSettingsOutputs extends S.Opaque<AwsSettingsOutputs, { readonly brand: unique symbol }>()(
+  S.Struct({
+    costAllocationTags: S.Struct({
+      CostAllocationTags: S.Array(S.Struct({ TagKey: S.String, Status: S.String })).pipe(S.optionalKey),
+    }),
+    computeOptimizer: S.Struct({ status: S.String, memberAccountsEnrolled: S.optionalKey(S.Boolean) }),
+    costOptimizationHub: S.Struct({
+      includeMemberAccounts: S.optionalKey(S.Boolean),
+      items: S.Array(S.Struct({ status: S.String })).pipe(S.optionalKey),
+    }),
+    anomalyMonitors: S.Struct({
+      AnomalyMonitors: S.Array(
+        S.Struct({ MonitorName: S.String, MonitorType: S.String, MonitorDimension: S.optionalKey(S.String) })
+      ).pipe(S.optionalKey),
+    }),
+  }).pipe(
+    $I.annoteSchema("AwsSettingsOutputs", {
+      description: "Raw AWS CLI outputs for the nine adopted settings, before shaping.",
+    })
+  )
+) {}
+
+/**
+ * Shape the raw AWS outputs into {@link LiveSettings}, keeping each
+ * member-account flag only when AWS reported it.
+ *
+ * **Example** (Shape outputs without member-account flags)
+ *
+ * ```ts
+ * import { AwsSettingsOutputs, liveSettingsFromAws } from "@beep/infra-cost-controls/PlanCheck"
+ *
+ * const live = liveSettingsFromAws(
+ *   AwsSettingsOutputs.make({
+ *     costAllocationTags: {},
+ *     computeOptimizer: { status: "Active" },
+ *     costOptimizationHub: {},
+ *     anomalyMonitors: {},
+ *   })
+ * )
+ * console.log("memberAccountsEnrolled" in live.computeOptimizer) // false
+ * ```
+ *
+ * @param raw - The decoded raw AWS outputs.
+ * @returns The live settings the gate checks.
+ * @category validation
+ * @since 0.0.0
+ */
+export const liveSettingsFromAws = (raw: AwsSettingsOutputs): LiveSettings =>
+  LiveSettings.make({
+    costAllocationTags: A.map(raw.costAllocationTags.CostAllocationTags ?? [], ({ TagKey, Status }) => ({
+      TagKey,
+      Status,
+    })),
+    computeOptimizer: {
+      status: raw.computeOptimizer.status,
+      ...(raw.computeOptimizer.memberAccountsEnrolled === undefined
+        ? {}
+        : { memberAccountsEnrolled: raw.computeOptimizer.memberAccountsEnrolled }),
+    },
+    costOptimizationHub: {
+      items: A.map(raw.costOptimizationHub.items ?? [], ({ status }) => ({ status })),
+      ...(raw.costOptimizationHub.includeMemberAccounts === undefined
+        ? {}
+        : { includeMemberAccounts: raw.costOptimizationHub.includeMemberAccounts }),
+    },
+    anomalyMonitors: A.map(raw.anomalyMonitors.AnomalyMonitors ?? [], (monitor) => ({
+      MonitorName: monitor.MonitorName,
+      MonitorType: monitor.MonitorType,
+      ...(monitor.MonitorDimension === undefined ? {} : { MonitorDimension: monitor.MonitorDimension }),
+    })),
+  });
 
 /**
  * Why the gate refuses a plan.
@@ -228,7 +326,7 @@ const isPlanAction = S.is(PlanAction);
  *
  * @param log - The plan output, as written by `alchemy plan --detailed`.
  * @returns One entry per resource line, in log order.
- * @category gates
+ * @category validation
  * @since 0.0.0
  */
 export const parsePlanLog = (log: string): ReadonlyArray<PlanEntry> =>
@@ -254,6 +352,15 @@ export const parsePlanLog = (log: string): ReadonlyArray<PlanEntry> =>
     );
   });
 
+/**
+ * The one resource the gate lets a plan delete: the stack's own anomaly email
+ * subscription, so a return from `live` to `silent` (the cutover rollback)
+ * can pass the workflow. It is not an account singleton and touches nothing
+ * that can affect EC2, Spot or Lambda; every other delete, every replace and
+ * every orphan is still refused, and the nine adopted settings still may not
+ * change (packet gate ruling, 2026-11-14).
+ */
+const rollbackDeletable = "AnomalyAlerts";
 const allowedResources = HashSet.fromIterable([...SingletonIds, "MonthlyBudget", "AnomalyAlerts"]);
 const singletonSet = HashSet.fromIterable(SingletonIds);
 const violation = (subject: string, reason: ViolationReason, detail: string) =>
@@ -264,6 +371,7 @@ const planViolations = (entries: ReadonlyArray<PlanEntry>): ReadonlyArray<PlanVi
     if (!HashSet.has(allowedResources, entry.fqn)) {
       return [violation(entry.fqn, "unexpected-resource", entry.action)];
     }
+    if (PlanAction.is.delete(entry.action) && entry.fqn === rollbackDeletable) return [];
     if (
       PlanAction.is.delete(entry.action) ||
       PlanAction.is.replace(entry.action) ||
@@ -343,7 +451,7 @@ const planCheckViolations = (entries: ReadonlyArray<PlanEntry>, live: LiveSettin
  * @param entries - The parsed plan.
  * @param live - The live values of the nine adopted settings.
  * @returns The checked entries.
- * @category gates
+ * @category validation
  * @since 0.0.0
  */
 export const checkPlan = Effect.fn("CostControls.checkPlan")(function* (

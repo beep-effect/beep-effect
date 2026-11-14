@@ -1,7 +1,14 @@
-import { checkPlan, LiveSettings, parsePlanLog } from "@beep/infra-cost-controls/PlanCheck";
+import {
+  AwsSettingsOutputs,
+  checkPlan,
+  LiveSettings,
+  liveSettingsFromAws,
+  parsePlanLog,
+} from "@beep/infra-cost-controls/PlanCheck";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { PlanCheckFailed } from "@beep/infra-cost-controls/PlanCheck";
 
@@ -118,11 +125,11 @@ describe("checkPlan", () => {
 
   it.effect("refuses a delete and a replace anywhere in the plan", () =>
     Effect.gen(function* () {
-      const plan = A.join([cleanPlan, colored("AnomalyAlerts", "delete"), colored("MonthlyBudget", "replace")], "\n");
+      const plan = A.join([cleanPlan, colored("MonthlyBudget", "delete"), colored("AnomalyAlerts", "replace")], "\n");
       const failure = yield* refusal(plan);
       expect(A.map(failure.violations, (v) => [v.subject, v.reason])).toEqual([
-        ["AnomalyAlerts", "delete-or-replace"],
         ["MonthlyBudget", "delete-or-replace"],
+        ["AnomalyAlerts", "delete-or-replace"],
       ]);
     })
   );
@@ -157,6 +164,86 @@ describe("checkPlan", () => {
       const failure = yield* refusal(A.join([cleanPlan, colored("SpotQuota", "create")], "\n"));
       expect(A.map(failure.violations, (v) => [v.subject, v.reason])).toEqual([["SpotQuota", "unexpected-resource"]]);
       expect(failure.escalate).toBe(true);
+    })
+  );
+});
+
+describe("liveSettingsFromAws", () => {
+  it.effect("shapes raw AWS outputs that omit both member-account flags, and the gate passes", () =>
+    Effect.gen(function* () {
+      const raw = yield* S.decodeUnknownEffect(AwsSettingsOutputs)({
+        costAllocationTags: {
+          CostAllocationTags: A.map(live.costAllocationTags, (tag) => ({ ...tag, Type: "UserDefined" })),
+        },
+        computeOptimizer: { status: "Active", lastUpdatedTimestamp: "2026-09-09T12:45:40Z" },
+        costOptimizationHub: { items: [{ accountId: "832907639880", status: "Active" }] },
+        anomalyMonitors: {
+          AnomalyMonitors: [
+            {
+              MonitorArn: "arn:aws:ce::832907639880:anomalymonitor/x",
+              MonitorName: "beep-account-services",
+              MonitorType: "DIMENSIONAL",
+              MonitorDimension: "SERVICE",
+            },
+          ],
+        },
+      });
+      const settings = liveSettingsFromAws(raw);
+      expect(settings.computeOptimizer).toEqual({ status: "Active" });
+      expect(settings.costOptimizationHub).toEqual({ items: [{ status: "Active" }] });
+      yield* checkPlan(parsePlanLog(cleanPlan), settings);
+    })
+  );
+
+  it.effect("keeps a reported member-account flag, so an organization-wide enrollment is refused", () =>
+    Effect.gen(function* () {
+      const raw = yield* S.decodeEffect(AwsSettingsOutputs)({
+        costAllocationTags: { CostAllocationTags: live.costAllocationTags },
+        computeOptimizer: { status: "Active", memberAccountsEnrolled: true },
+        costOptimizationHub: { includeMemberAccounts: false, items: [{ status: "Active" }] },
+        anomalyMonitors: { AnomalyMonitors: live.anomalyMonitors },
+      });
+      const failure = yield* refusal(cleanPlan, liveSettingsFromAws(raw));
+      expect(A.map(failure.violations, (v) => [v.subject, v.reason])).toEqual([
+        ["ComputeOptimizer", "live-setting-differs"],
+      ]);
+    })
+  );
+});
+
+describe("checkPlan rollback exception", () => {
+  it.effect("lets a plan delete the stack's own AnomalyAlerts subscription (live back to silent)", () =>
+    Effect.gen(function* () {
+      const plan = A.join(
+        [
+          ...A.map(singletons, (fqn) => colored(fqn, "noop")),
+          colored("MonthlyBudget", "update"),
+          colored("AnomalyAlerts", "delete"),
+        ],
+        "\n"
+      );
+      yield* checkPlan(parsePlanLog(plan), live);
+    })
+  );
+
+  it.effect.each([...singletons, "MonthlyBudget"])("still refuses a delete of %s", (fqn) =>
+    Effect.gen(function* () {
+      const plan = A.join(
+        [
+          ...A.map(singletons, (id) => colored(id, id === fqn ? "delete" : "noop")),
+          colored("MonthlyBudget", fqn === "MonthlyBudget" ? "delete" : "noop"),
+        ],
+        "\n"
+      );
+      const failure = yield* refusal(plan);
+      expect(A.map(failure.violations, (v) => [v.subject, v.reason])).toContainEqual([fqn, "delete-or-replace"]);
+    })
+  );
+
+  it.effect.each(["replace", "orphaned"])("still refuses a %s of AnomalyAlerts", (action) =>
+    Effect.gen(function* () {
+      const failure = yield* refusal(A.join([cleanPlan, colored("AnomalyAlerts", action)], "\n"));
+      expect(A.map(failure.violations, (v) => [v.subject, v.reason])).toEqual([["AnomalyAlerts", "delete-or-replace"]]);
     })
   );
 });

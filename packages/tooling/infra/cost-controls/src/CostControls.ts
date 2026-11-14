@@ -4,7 +4,7 @@
  * enrollments.
  *
  * @packageDocumentation
- * @category stacks
+ * @category resources
  * @since 0.0.0
  */
 
@@ -226,7 +226,7 @@ const servicesMonitor = AWS.CostExplorer.AnomalyMonitor("AccountServicesMonitor"
  * @param config - The stage configuration.
  * @param stage - The Alchemy stage.
  * @returns The stack output: names and ARNs, never recipient addresses.
- * @category stacks
+ * @category resources
  * @since 0.0.0
  */
 export const declareCostControls = Effect.fn("CostControls.declare")(function* (
@@ -294,7 +294,7 @@ export const declareCostControls = Effect.fn("CostControls.declare")(function* (
  * console.log(typeof program) // "object"
  * ```
  *
- * @category stacks
+ * @category resources
  * @since 0.0.0
  */
 export const program = Effect.gen(function* () {
