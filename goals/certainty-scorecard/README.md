@@ -71,7 +71,11 @@ from the raise site into the verdict, and economics locates them as `refusal:pub
 (SCHE-09 slice 2) is open as #3344: admitted and v3 released admission rows carry an optional `pressure` stamp
 (capacity, active and queued tokens, MemAvailable, PSI some avg10 for cpu, memory and io, unadmitted
 `agent-runs.slice` memory), written only while the admission protocol's new `pressure` key is on
-(`bun run beep quality scheduler protocol --pressure on`; decision `sche-09-pressure-stamps`). Wall-time, cache and dist baselines taken before d8326d55935 (#3208,
+(`bun run beep quality scheduler protocol --pressure on`; decision `sche-09-pressure-stamps`). Slice 15 (MEAS-05
+slice 2) is in review: `beep ci ledger` folds named workflow runs into rows at (lane, partition) grain over the
+slice-14 lane map, joins every Test Unit and Test Integration partition job to the run's Test Plan output for
+the empty-leg row, and reports the turbo-task, final-check, economics and PSI sources as absent rows (decision
+`ledger-fold-absent-sources`). Wall-time, cache and dist baselines taken before d8326d55935 (#3208,
 declaration-only builds) are not comparable with later readings (checkpoint
 `baselines-before-d8326d5593-not-comparable`), nor are check-lane baselines taken before 3e822c71c5 (#3242).
 
@@ -103,6 +107,14 @@ declaration-only builds) are not comparable with later readings (checkpoint
   27. The 133 located are `refusal:publish-input` 57, `refusal:review-threads` 42, `github:rate-limit` 33 and
   `github:transport` 1; every other row, `redAttempts` and the mix total (1201) are unchanged. The largest
   residue is a since-fixed pull request number decode (8 rows, 5.0%).
+- Slice 15 on three Check runs read 2026-11-14
+  (`packages/tooling/tool/cli/test/fixtures/ci-cost-ledger/reference-runs.json`): 43604442987 (push, full
+  matrix) 307.1 job-minutes, 43585338714 (documentation only) 7.1 and 43605277972 (an empty
+  `int-rest` leg) 203.7 each map 100% of their job-minutes to a lane or a named support job, with lane shares of
+  99.4%, 78.2% and 98.2% and no unknown minute. Empty-leg runner-minutes per run: 0, 0 and 1.97 (the catch-all
+  partition the plan allocated with 0 of 24 integration tasks selected). Every aggregate skipped on success on
+  those runs; the umbrella, wrapper and rerun fixture in
+  `packages/tooling/tool/cli/test/ci-cost-ledger.test.ts` shows no double count.
 
 ## Notes
 
@@ -114,14 +126,15 @@ declaration-only builds) are not comparable with later readings (checkpoint
   workflow (slice 4, #3266, first run recorded by #3270); PERIL-11 slice 1 (journal retention, slice 7,
   #3263); PERIL-11 slice 2 (T3 root row and monitor waits apart, slice 8, #3273); MEAS-05 slice 1 (one lane map, slice 14,
   #3274); MEAS-03 slice 2 (residual handler errors typed and located, slice 10b, #3342). Open: SCHE-09 slice 2
-  (capacity and host-pressure stamps on admission rows, slice 5b, #3344).
+  (capacity and host-pressure stamps on admission rows, slice 5b, #3344). In review: MEAS-05 slice 2 (the ledger
+  fold with absent-source rows, slice 15).
 - Order constraints: MEAS-02 lands before any WaveOrder re-seed in `local-proof-under-ten`; ROUT-05 lands
   before any census or cost ledger (MEAS-05) is trusted and before any route refinement replay; MEAS-07 lands
   before journal retention (PERIL-11); SCHE-09 is owned here and consumed by `local-proof-under-ten` (D23); nightly reads are budgeted against
   `github-budget-ledger`'s reserve signal (D27).
 - Landed: MEAS-02 (slice 3), MEAS-07 (slice 6) and MEAS-03 (terminations apart from reds, slice 10, and the
   remaining `unlocated` reds typed, slice 10b, #3342). Partly landed: MEAS-01, MEAS-04, ROUT-05, SCHE-09 (slice 5; 5b, #3344, adds the
-  pressure fields), PERIL-11 (slices 1 and 2; host and seat fields are slice 9) and MEAS-05 (slice 14; the ledger fold is slice 15). The
+  pressure fields), PERIL-11 (slices 1 and 2; host and seat fields are slice 9) and MEAS-05 (slice 14; the ledger fold, slice 15, is in review). The
   #3007 and #3030 edits to `LaneTimings.ts` are shard-layout census upkeep owned by
   [`ci-lane-economics`](../ci-lane-economics/README.md), not MEAS-04.
 - The fixture corpora the plan's MEAS-01 gate names are not in the repository; slice 1 commits its own
