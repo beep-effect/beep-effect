@@ -194,7 +194,7 @@ const hasUnacknowledgedMention = (
 // the post-apply doctor judge a path needle the same way. Whole tokens stay for every needle that
 // cannot be a package path: package names (also in `pending-changeset` and `runtime-artifact`),
 // the identity slug and accessor, the membership keys of the name-keyed inventories
-// (`jsdoc-inventory`, `coverage-baseline`, `instrumentation-catalog`, `test-typecheck-baseline`)
+// (`coverage-baseline`, `instrumentation-catalog`, `test-typecheck-baseline`)
 // and the quoted workspace literal (its quotes anchor it).
 type NeedleMatcher = (needles: ReadonlyArray<string>) => (text: string) => boolean;
 
