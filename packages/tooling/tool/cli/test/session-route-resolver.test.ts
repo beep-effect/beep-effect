@@ -360,6 +360,9 @@ describe("session route schemas", () => {
       't3_thread_send({ threadId: "t", environmentId: "e", message: "<message>" })'
     );
     expect(renderPeerSend('say "hi"')).toBe('SendMessage({ to: "say \\"hi\\"", message: "<message>" })');
+    expect(renderPeerSend("C:\\work\\lane\nnext")).toBe(
+      'SendMessage({ to: "C:\\\\work\\\\lane\\nnext", message: "<message>" })'
+    );
   });
 });
 
@@ -977,6 +980,28 @@ describe("route probe and resolver edges", () => {
         expect(peer.liveness).toBe("dead");
         const thread = yield* probe.t3Thread(route(LOCAL_ENV, "home-thread"));
         expect(thread.liveness).toBe("live");
+      })
+    );
+
+    it.effect("finds the t3 CLI on PATH when neither T3CODE_CLI_PATH nor the T3 home has it", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeFixture({ threads: [{ id: "path-thread", status: "running", archived: false }] });
+        const bareHome = path.join(fixture.root, "bare-t3");
+        yield* fs.makeDirectory(path.join(bareHome, "userdata"), { recursive: true });
+        yield* fs.writeFileString(path.join(bareHome, "userdata", "environment-id"), LOCAL_ENV);
+        const probe = yield* makeSessionRouteProbeLive().pipe(
+          withEnv({
+            HOME: fixture.root,
+            T3CODE_HOME: bareHome,
+            PATH: `${path.dirname(fixture.env.T3CODE_CLI_PATH)}:/usr/bin:/bin`,
+          })
+        );
+        const thread = yield* probe.t3Thread(route(LOCAL_ENV, "path-thread"));
+        expect([thread.liveness, thread.detail]).toStrictEqual(["live", "thread is running"]);
+        const missing = yield* probe.t3Thread(route(LOCAL_ENV, "gone"));
+        expect(missing.liveness).toBe("dead");
       })
     );
 

@@ -14,7 +14,7 @@ import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { flow } from "effect/Function";
+import { constFalse, flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -115,6 +115,8 @@ class T3ThreadShow extends S.Opaque<T3ThreadShow, { readonly brand: unique symbo
   }).pipe($I.annoteSchema("T3ThreadShow", { description: "The fields route probing reads from `t3 thread show`." }))
 ) {}
 
+type T3Cli = { readonly command: string; readonly env: { readonly PATH: string } | undefined };
+
 const decodeLiveIndexEntry = S.decodeUnknownOption(S.fromJsonString(ClaudeLiveIndexEntry));
 const decodeThreadShow = S.decodeUnknownOption(S.fromJsonString(T3ThreadShow));
 const decodeEnvironments = S.decodeUnknownOption(S.fromJsonString(S.Array(LinkedT3Environment)));
@@ -210,7 +212,7 @@ export const localT3EnvironmentId: Effect.Effect<O.Option<string>, never, FileSy
 /**
  * Build the live probe over the Claude Code live index (`CLAUDE_CONFIG_DIR`,
  * else `$HOME/.claude`), `/proc`, and the `t3` CLI (`T3CODE_CLI_PATH`, else
- * the CLI in the T3 home).
+ * the CLI in the T3 home when it is installed there, else `t3` on `PATH`).
  *
  * **Example** (Build the live probe effect)
  *
@@ -233,8 +235,23 @@ export const makeSessionRouteProbeLive = Effect.fn("SessionRouteProbe.makeLive")
   const configuredClaudeDir = yield* nonBlankConfig("CLAUDE_CONFIG_DIR");
   const claudeDir = O.orElse(configuredClaudeDir, () => O.map(home, (value) => path.join(value, ".claude")));
   const t3Home = yield* t3HomeDirectory;
+  // The t3 CLI: T3CODE_CLI_PATH, else the CLI in the T3 home when it is installed there, else the bare
+  // command looked up on PATH like a shell would (tbk-worker installs it in ~/.local/bin). PATH is read
+  // through Config and handed to the child, so the lookup honours the same environment as the rest.
   const configuredCli = yield* nonBlankConfig("T3CODE_CLI_PATH");
-  const t3Cli = O.orElse(configuredCli, () => O.map(t3Home, (value) => path.join(value, "bin", "t3")));
+  const homeCli = O.map(t3Home, (value) => path.join(value, "bin", "t3"));
+  const homeCliInstalled = yield* O.match(homeCli, {
+    onNone: () => Effect.succeed(false),
+    onSome: (cli) => fs.exists(cli).pipe(Effect.orElseSucceed(constFalse)),
+  });
+  const searchPath = yield* nonBlankConfig("PATH");
+  const t3Cli: O.Option<T3Cli> = O.orElse(
+    O.map(configuredCli, (command): T3Cli => ({ command, env: undefined })),
+    () =>
+      homeCliInstalled
+        ? O.map(homeCli, (command): T3Cli => ({ command, env: undefined }))
+        : O.map(searchPath, (value): T3Cli => ({ command: "t3", env: { PATH: value } }))
+  );
   const localEnvironmentId = O.match(t3Home, {
     onNone: () => Effect.succeed(O.none<string>()),
     onSome: (homeDir) => readEnvironmentId(fs, homeDir),
@@ -244,7 +261,13 @@ export const makeSessionRouteProbeLive = Effect.fn("SessionRouteProbe.makeLive")
     O.match(t3Cli, {
       onNone: () => Effect.succeed(O.none<CapturedStreams>()),
       onSome: (cli) =>
-        runCapturedStreams({ command: cli, args, bound: repoRunOutputBound }).pipe(
+        runCapturedStreams({
+          command: cli.command,
+          args,
+          env: cli.env,
+          extendEnv: true,
+          bound: repoRunOutputBound,
+        }).pipe(
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
           Effect.provideService(SecureRandom.SecureRandom, secureRandom),
           Effect.timeoutOption(timeout),

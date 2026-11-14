@@ -12,7 +12,7 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import { dual } from "effect/Function";
+import { constant, dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -109,7 +109,10 @@ export class SessionResolver extends Context.Service<SessionResolver, SessionRes
 const PR_QUERY = /^#?([1-9][0-9]*)$/u;
 const MESSAGE = "<message>";
 const claimOrder = Order.mapInput(Order.Number, (claim: SessionClaim) => -DateTime.toEpochMillis(claim.claimedAt));
-const quote = (value: string): string => `"${Str.replaceAll('"', '\\"')(value)}"`;
+// A JSON string literal is also a valid JavaScript one, so the printed calls copy
+// literally whatever a display name holds: quotes, backslashes or control characters.
+const encodeStringLiteral = S.encodeOption(S.fromJsonString(S.String));
+const quote = (value: string): string => O.getOrElse(encodeStringLiteral(value), constant(value));
 
 type ClaimKey = { readonly query: string; readonly pr: O.Option<number>; readonly checkout: string };
 
