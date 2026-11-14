@@ -174,6 +174,9 @@ protocol and the cache-input review: the package README.
 (environment `turbo-cache-prod`, concurrency group `alchemy-turbo-cache-prod`):
 package tests, plan, deploy, then a smoke check that the Worker answers an
 anonymous status request with 401 and an unknown path with 404. The
+workflow also takes a bare `workflow_dispatch`; never dispatch it in a loop
+during a busy hour, because each run takes a hosted runner slot (the condition
+the ci-lane-economics window-5 owner cleared it on). The
 environment holds `ALCHEMY_STATE_ROLE_ARN`, `CLOUDFLARE_API_TOKEN`,
 `CLOUDFLARE_ACCOUNT_ID` and, optionally, `TURBO_CACHE_ALERT_EMAIL` (comma
 separated; unset means no error alert).

@@ -257,6 +257,7 @@ const generatedComposers = $I.compose(
   "agent-memory-store",
   "sqlite",
   "infra-turbo-cache",
+  "alchemy-github-runners",
   "alchemy-aws-extras"
 );
 
@@ -3825,6 +3826,24 @@ export const $SqliteId: Identity.IdentityComposer<"@beep/sqlite"> = composers.$S
  * @since 0.0.0
  */
 export const $InfraTurboCacheId: Identity.IdentityComposer<"@beep/infra-turbo-cache"> = composers.$InfraTurboCacheId;
+
+/**
+ * Identity composer for `@beep/alchemy-github-runners`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $AlchemyGithubRunnersId } from "@beep/identity/packages"
+ *
+ * const id = $AlchemyGithubRunnersId.make("AlchemyGithubRunners")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $AlchemyGithubRunnersId: Identity.IdentityComposer<"@beep/alchemy-github-runners"> =
+  composers.$AlchemyGithubRunnersId;
 
 /**
  * Identity composer for `@beep/alchemy-aws-extras`.
