@@ -22,7 +22,7 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
-import { describe, expect } from "@effect/vitest";
+import { describe, expect, vi } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -2066,6 +2066,101 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           expect(errors).toStrictEqual([
             "[delete-package] REFUSE [acknowledgement/hard] packages/consumer/README.md line `Reads `deploy/src/index.ts`.` is listed more than once; merge it into one entry.",
           ]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    const dryRunWith = Effect.fn("dryRunWith")(function* (file: string) {
+      const exit = yield* Effect.exit(runDeletePackage(["deploy", "--dry-run", "--acknowledge", file]));
+      const logs = yield* TestConsole.logLines;
+      const errors = yield* TestConsole.errorLines;
+      return { exit, logs, errors };
+    });
+
+    it.effect("accepts an acknowledgement file committed under a hard-scanned root", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const scannedAck = "packages/consumer/delete-deploy.acknowledgements.jsonc";
+          yield* writeLiveDeployFixture([[scannedAck, ackFile("@beep/deploy", [README_ENTRY, SCRIPT_ENTRY])]]);
+
+          const { exit, logs, errors } = yield* dryRunWith(scannedAck);
+          assertTrue(Exit.isSuccess(exit), Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined);
+          expect(errors).toStrictEqual([]);
+          expect(linesIncluding(logs, scannedAck)).toBe(false);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("skips only the acknowledgement file, never its neighbours", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const standardsAck = "standards/delete-deploy.acknowledgements.jsonc";
+          yield* writeLiveDeployFixture([
+            [standardsAck, ackFile("@beep/deploy", [README_ENTRY, SCRIPT_ENTRY])],
+            ["standards/notes.md", "Retires `deploy/src/index.ts`.\n"],
+            ["packages/consumer/notes.md", "Also reads `deploy/src/Stack.ts`.\n"],
+          ]);
+
+          const { exit, logs, errors } = yield* dryRunWith(standardsAck);
+          expectReportedExit(exit);
+          expect(linesIncluding(logs, standardsAck)).toBe(false);
+          expect(logs).toContain("  - baseline: @beep/root standards/notes.md:1");
+          expect(logs).toContain("  - file-path: @beep/consumer packages/consumer/notes.md:1");
+          expect(errors).toStrictEqual([
+            "[delete-package] REFUSE [dependent/hard] 1 unacknowledged production/test/script/path dependent hit(s); only file-path and script hits can be acknowledged.",
+          ]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("keeps the post-apply doctor clean with the acknowledgement file committed", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const standardsAck = "standards/delete-deploy.acknowledgements.jsonc";
+          const repoRoot = yield* writeDeletedDeployLayout([
+            ["packages/consumer/README.md", `${README_LINE}\n`],
+            [standardsAck, ackFile("@beep/deploy", [README_ENTRY])],
+          ]);
+          const acknowledgedOccurrences = acknowledgedPolicy([readmeAcknowledgement(1)]);
+
+          const scanned = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget, acknowledgedOccurrences);
+          expect(evidenceOf(scanned, "authored-references")).toStrictEqual([standardsAck]);
+          const skipped = yield* inspectTargetAtRoot(
+            repoRoot,
+            rootDeployTarget,
+            acknowledgedOccurrences,
+            O.some(standardsAck)
+          );
+          expect(statusOf(skipped, "authored-references")).toBe("clean");
+          expect(DeletePackagePolicyEvaluation.doctorIsClean(rootDeployTarget, skipped)).toBe(true);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("keeps fixture git off an inherited GIT_DIR", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const root = yield* fs.realPath(".");
+          const fixture = path.join(root, "fixture");
+          const planted = path.join(root, "planted.git");
+          yield* fs.makeDirectory(fixture);
+          // `vi.stubEnv` plants the variable in this isolated suite's inherited environment and
+          // `vi.unstubAllEnvs` restores it.
+          yield* Effect.acquireUseRelease(
+            Effect.sync(() => vi.stubEnv("GIT_DIR", planted)),
+            () => gitFixture(fixture),
+            () => Effect.sync(() => vi.unstubAllEnvs())
+          );
+          const fixtureRepository = yield* fs.exists(path.join(fixture, ".git"));
+          const plantedRepository = yield* fs.exists(planted);
+          expect(fixtureRepository).toBe(true);
+          expect(plantedRepository).toBe(false);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );

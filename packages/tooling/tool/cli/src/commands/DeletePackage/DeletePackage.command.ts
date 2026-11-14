@@ -865,7 +865,8 @@ const handler = Effect.fn("DeletePackage.handler")(function* (options: DeletePac
   const geometry = yield* makeRegistrationGeometryService(
     repoRoot,
     executePlan,
-    DeletePackagePolicyEvaluation.acknowledgedOccurrencesFor(policy)
+    DeletePackagePolicyEvaluation.acknowledgedOccurrencesFor(policy),
+    O.map(options.acknowledge, (file) => normalizePath(path.relative(repoRoot, path.resolve(repoRoot, file))))
   );
   const report = yield* geometry.dependentsOf(resolved.target);
   const plan = yield* geometry.planInverse(resolved.target);

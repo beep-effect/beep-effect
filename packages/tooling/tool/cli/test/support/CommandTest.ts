@@ -145,10 +145,23 @@ const FIXTURE_GIT_STEPS: ReadonlyArray<ReadonlyArray<string>> = [
   ["add", "-A"],
 ];
 
+// A repository-locating variable inherited from a git hook or a linked worktree would point the fixture's
+// `git init`/`git add` at the real checkout. With `extendEnv: true`, an `undefined` value removes the
+// variable from the child environment (Effect `ChildProcess` `env` docs; the Node spawner deletes the
+// key), so the rest of the inherited environment stays. Same scrub as ai-metrics `git-root-evidence.ts`.
+const FIXTURE_GIT_ENV = {
+  GIT_DIR: undefined,
+  GIT_WORK_TREE: undefined,
+  GIT_INDEX_FILE: undefined,
+  GIT_COMMON_DIR: undefined,
+};
+
 /**
  * Turns a fixture directory into a git work tree: `git init`, a local identity, and every file present
  * staged. Re-running it stages files written since; files written later and never staged stay
- * untracked, which a git-visible listing still includes unless a `.gitignore` excludes them.
+ * untracked, which a git-visible listing still includes unless a `.gitignore` excludes them. Inherited
+ * `GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE` and `GIT_COMMON_DIR` are removed from each git child, so
+ * the fixture never acts on the repository the tests run from.
  *
  * **Example** (Stage a fixture tree)
  * ```ts
@@ -165,7 +178,14 @@ export const gitFixture = Effect.fn("CommandTest.gitFixture")(function* (root: s
   for (const args of FIXTURE_GIT_STEPS) {
     const exitCode = yield* Effect.scoped(
       Effect.flatMap(
-        ChildProcess.make("git", args, { cwd: root, stdin: "ignore", stdout: "ignore", stderr: "ignore" }),
+        ChildProcess.make("git", args, {
+          cwd: root,
+          stdin: "ignore",
+          stdout: "ignore",
+          stderr: "ignore",
+          extendEnv: true,
+          env: FIXTURE_GIT_ENV,
+        }),
         (handle) => handle.exitCode
       )
     );

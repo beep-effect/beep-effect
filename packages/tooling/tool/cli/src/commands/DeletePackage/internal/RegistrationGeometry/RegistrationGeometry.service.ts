@@ -8,6 +8,7 @@ import * as Path from "effect/Path";
 import { RegistrationGeometryError } from "./RegistrationGeometry.errors.ts";
 import { planForwardForTarget, planInverseForTarget, surfacesForTarget } from "./RegistrationGeometry.plan.ts";
 import { dependentsOfAtRoot, inspectTargetAtRoot } from "./RegistrationGeometry.probes.ts";
+import type * as O from "effect/Option";
 import type { AcknowledgedOccurrences } from "./RegistrationGeometry.probes.ts";
 import type {
   DependentsReport,
@@ -107,13 +108,15 @@ export class RegistrationGeometryService extends Context.Service<
  * @param repoRoot - Repository root that inspection and dependent scans resolve against.
  * @param executePlan - Flag-aware executor that performs a plan's file operations.
  * @param acknowledgedOccurrences - Acknowledged occurrences per `(file, trimmed line)` for `inspect` and `apply`.
+ * @param acknowledgementFile - Repository-relative `--acknowledge` file every scan skips.
  * @category factories
  * @since 0.0.0
  */
 export const makeRegistrationGeometryService = Effect.fn("RegistrationGeometry.makeService")(function* <E, R>(
   repoRoot: string,
   executePlan: (plan: RegistrationPlan) => Effect.Effect<void, E, R>,
-  acknowledgedOccurrences?: AcknowledgedOccurrences
+  acknowledgedOccurrences?: AcknowledgedOccurrences,
+  acknowledgementFile?: O.Option<string>
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -121,7 +124,7 @@ export const makeRegistrationGeometryService = Effect.fn("RegistrationGeometry.m
   const git = yield* Git;
   const executorContext = yield* Effect.context<R>();
   const inspect = (target: RegistrationTarget) =>
-    inspectTargetAtRoot(repoRoot, target, acknowledgedOccurrences).pipe(
+    inspectTargetAtRoot(repoRoot, target, acknowledgedOccurrences, acknowledgementFile).pipe(
       Effect.provideService(FileSystem.FileSystem, fs),
       Effect.provideService(Path.Path, path),
       Effect.provideService(Git, git),
@@ -150,7 +153,7 @@ export const makeRegistrationGeometryService = Effect.fn("RegistrationGeometry.m
       )
     ),
     dependentsOf: Effect.fn("RegistrationGeometryService.dependentsOf")((target) =>
-      dependentsOfAtRoot(repoRoot, target).pipe(
+      dependentsOfAtRoot(repoRoot, target, acknowledgementFile).pipe(
         Effect.provideService(FileSystem.FileSystem, fs),
         Effect.provideService(Path.Path, path),
         Effect.provideService(FsUtils, fsUtils),

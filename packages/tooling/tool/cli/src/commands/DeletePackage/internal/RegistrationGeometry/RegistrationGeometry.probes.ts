@@ -125,9 +125,14 @@ const hasExcludedSegment = (file: string): boolean =>
 // does not ignore, so gitignored build output (docgen `docs/`, bundles, caches) is never read. A listed
 // path can be gone from disk (a deleted tree stays in the index until staged); readers skip it. A root
 // that is not a git work tree fails; there is no filesystem fallback, which would bring that output back.
-const gitVisibleFilesAt = Effect.fn("RegistrationGeometry.gitVisibleFilesAt")(function* (repoRoot: string) {
+// The `--acknowledge` file names the target by construction, so exactly that path is never scanned: a
+// committed acknowledgement file is not a dependent of the deletion it reviews, nor its residue.
+const gitVisibleFilesAt = Effect.fn("RegistrationGeometry.gitVisibleFilesAt")(function* (
+  repoRoot: string,
+  acknowledgementFile: O.Option<string>
+) {
   const files = yield* listGitVisiblePaths(repoRoot, A.empty(), gitListingAdapter(repoRoot));
-  return A.filter(files, (file) => !hasExcludedSegment(file));
+  return A.filter(files, (file) => !hasExcludedSegment(file) && !O.exists(acknowledgementFile, Str.equivalence(file)));
 });
 
 const isUnderRoot =
@@ -447,17 +452,19 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
  * @param repoRoot - Absolute or working-directory-relative repository root.
  * @param target - Package whose surfaces are probed.
  * @param acknowledgedOccurrences - Acknowledged occurrences per `(file, trimmed line)`; none by default.
+ * @param acknowledgementFile - Repository-relative `--acknowledge` file the scans skip; none by default.
  * @category queries
  * @since 0.0.0
  */
 export const inspectTargetAtRoot = Effect.fn("RegistrationGeometry.inspectTargetAtRoot")(function* (
   repoRoot: string,
   target: RegistrationTarget,
-  acknowledgedOccurrences: AcknowledgedOccurrences = noAcknowledgedOccurrences
+  acknowledgedOccurrences: AcknowledgedOccurrences = noAcknowledgedOccurrences,
+  acknowledgementFile: O.Option<string> = O.none()
 ) {
   const workspacePaths = yield* workspacePathsAt(repoRoot);
   const matchNeedles = needleMatcherFor(target, workspacePaths);
-  const visibleFiles = yield* gitVisibleFilesAt(repoRoot);
+  const visibleFiles = yield* gitVisibleFilesAt(repoRoot, acknowledgementFile);
   return yield* Effect.forEach(
     surfacesForTarget(target),
     (surface) => inspectSurface(repoRoot, target, surface, matchNeedles, visibleFiles, acknowledgedOccurrences),
@@ -769,6 +776,9 @@ const dedupedSortedHits = (hits: ReadonlyArray<DependentHit>): ReadonlyArray<Dep
  * console.log(Effect.isEffect(scan)) // true
  * ```
  *
+ * @param repoRoot - Repository root the scan reads.
+ * @param target - Package whose dependents are reported.
+ * @param acknowledgementFile - Repository-relative `--acknowledge` file the scan skips; none by default.
  * @effects Reads workspace manifests and authored repository files without
  * modifying the checkout.
  * @category queries
@@ -776,7 +786,8 @@ const dedupedSortedHits = (hits: ReadonlyArray<DependentHit>): ReadonlyArray<Dep
  */
 export const dependentsOfAtRoot = Effect.fn("RegistrationGeometry.dependentsOfAtRoot")(function* (
   repoRoot: string,
-  target: RegistrationTarget
+  target: RegistrationTarget,
+  acknowledgementFile: O.Option<string> = O.none()
 ) {
   const path = yield* Path.Path;
   const workspaceDirectories3 = yield* workspaceDirectories(repoRoot);
@@ -890,7 +901,7 @@ export const dependentsOfAtRoot = Effect.fn("RegistrationGeometry.dependentsOfAt
     return A.appendAll(sourceHits(absoluteFile, relativeFile, owner, content), textHits(relativeFile, owner, content));
   });
 
-  const gitVisibleFiles = yield* gitVisibleFilesAt(repoRoot);
+  const gitVisibleFiles = yield* gitVisibleFilesAt(repoRoot, acknowledgementFile);
   const visibleFiles = A.filter(gitVisibleFiles, isSuffixIn(TEXT_SUFFIXES));
   for (const root of SCAN_ROOTS) {
     for (const relativeFile of A.filter(visibleFiles, isUnderRoot(root))) {
