@@ -416,6 +416,15 @@ messages name FQNs and counts only. `CRM_HUBSPOT_SERVICE_KEY` must be set for th
 too: the stack reads it before declaring anything, so a missing key fails before any write, `alchemy deploy --yes`, then a curl poll of every hostname for its expected status.
 The job runs only while the repository variable `OIP_WEB_INFRA_DEPLOY` is `enabled`.
 
+```sh
+# Arm: every later push to main that matches the workflow's paths deploys.
+gh variable set OIP_WEB_INFRA_DEPLOY -R beep-effect/beep-effect --body enabled
+# Run the armed job now, without a push.
+gh workflow run deploy-oip-web-infra.yml -R beep-effect/beep-effect --ref main
+# Disarm.
+gh variable delete OIP_WEB_INFRA_DEPLOY -R beep-effect/beep-effect
+```
+
 The `oip-web-infra-prod` environment (branch policy `main`) carries:
 
 | Name | Kind | Source |
@@ -474,6 +483,21 @@ never a real secret. Run each step with `bunx alchemy <plan|deploy|destroy> test
 5. **Teardown:** `destroy`, and confirm the scratch project is gone.
 
 Then deploy and destroy the real `OipWeb` personal stage, which covers its project, variables and bucket.
+
+Known limits, recorded when the cutover lane retired (2026-11-14):
+
+- **Never exercised against a live stage.**
+  - A variable key rename (create first): rehearsed on a scratch project only.
+  - A variable type change (delete first): fake only.
+  - `gitBranch` and `comment` edits: fake only. Whether Vercel accepts a `comment` edit on a
+    sensitive variable is unconfirmed.
+  - A domain move from another project: fake only.
+  - Any new `Vercel.Project` setting: the stack declares only `name` and `teamId`. Rehearse a new
+    setting on a scratch stage before declaring it.
+- **Not encoded by the fake (unconfirmed against the real API).**
+  - An upsert onto a sensitive variable with a weaker declared type.
+  - A redirect to a domain that is not on the project.
+  - The exact error codes of the refusals it does encode.
 
 ### Cutover from Pulumi (done 2026-11-14)
 
