@@ -439,7 +439,7 @@ Hosted Heavy / Coverage Regression on PR #3319 (head 0e2b4c42e6d) reported eight
 
 Amended after the second hosted run (PR #3319 head d7f70bf8fc5). A sixth row joins the five: RecognizerWorker (functions 92.85, statements 98.3). Its uncovered function is the invalid-runtime thunk handed to the process lifecycle guard; the first repair hid it by giving the failure constructor a default reason and passing the constructor itself as the callback, which added an uncovered branch and would have let a caller-supplied argument become the reason. That is undone in RecognizerWorker and RegexWorker (RegexWorker stays above its floor). The coverage ratchet judges a row lowered by a pull request at the base floor when the pull request changes the package, so Heavy / Coverage Regression stays red on this PR for exactly these six files and passes on main once the rows land. The PR is final with that red accepted under the same operator ruling; Coverage Regression is not a required check.
 
-Reverse: Restore the five rows in standards/coverage.regression-baseline.jsonc to their previous values and either convert the unreachable refusals to defects or reintroduce raw-input decoding below the boundary.
+Reverse: Restore the six rows (AnnotationEntry, CleanerRegistry, ExtractorOrdering, MetadataYear, RegexWorkerProtocol, RecognizerWorker) in standards/coverage.regression-baseline.jsonc to their previous values and either convert the unreachable refusals to defects or reintroduce raw-input decoding below the boundary.
 
 ### Type the leaf helpers and drop their configuration decodes, 2026-11-14
 
