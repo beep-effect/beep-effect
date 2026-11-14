@@ -1842,7 +1842,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:schema-catalog",
         "lint:oxlint",
         "quality:jsdoc-ratchet:regenerated",
-        "quality:jsdoc-ratchet:committed",
         "fallow:audit",
         "fallow:dead-code",
         "fallow:health",
@@ -1907,12 +1906,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet:regenerated")).toEqual(
         expectedTurboArgs("jsdoc:ratchet:check", ["--summarize"])
       );
-      expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet:committed")).toEqual([
-        "run",
-        "beep",
-        "quality",
-        "jsdoc-ratchet",
-      ]);
       expect(A.map(githubCheckLanesForModeForTesting("/repo", "cheap-gates"), (lane) => lane.id)).toEqual(
         A.map(lanes, (lane) => lane.id)
       );
