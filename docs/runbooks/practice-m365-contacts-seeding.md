@@ -106,7 +106,7 @@ survive a later rename. The state location defaults to
 2. Run the read-only grant probe from the driver package:
 
    ```sh
-   beep-heavy op run --env-file=../../../apps/practice-m365-contacts/contacts.env -- env -u M365_LIVE_WRITE -u M365_LIVE_CONTACTS_WRITE bunx --bun vitest run test/integration/M365.appOnly.live.test.ts -t "contacts smoke: lists"
+   op run --env-file=../../../apps/practice-m365-contacts/contacts.env -- env -u M365_LIVE_WRITE -u M365_LIVE_CONTACTS_WRITE bunx --bun vitest run test/integration/M365.appOnly.live.test.ts -t "contacts smoke: lists"
    ```
 
 3. Export every contact in every folder before any write. The target must be
@@ -131,7 +131,7 @@ survive a later rename. The state location defaults to
    contact POST and one DELETE of that same contact. Do not set `M365_LIVE_WRITE`.
 
    ```sh
-   beep-heavy op run --env-file=../../../apps/practice-m365-contacts/contacts.env -- env -u M365_LIVE_WRITE M365_LIVE_CONTACTS_WRITE=1 bunx --bun vitest run test/integration/M365.appOnly.live.test.ts -t "contacts smoke"
+   op run --env-file=../../../apps/practice-m365-contacts/contacts.env -- env -u M365_LIVE_WRITE M365_LIVE_CONTACTS_WRITE=1 bunx --bun vitest run test/integration/M365.appOnly.live.test.ts -t "contacts smoke"
    ```
 
 6. Apply with the same CSV flags, then re-run dry-run. The first apply creates

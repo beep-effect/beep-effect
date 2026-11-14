@@ -1420,8 +1420,23 @@ jobs:
           jobs_file="${RUNNER_TEMP}/coverage-producer-jobs.json"
           # Read every attempt explicitly: successful carried records have new
           # attempt numbers, but the original execution must remain available.
+          # GitHub answers 502 to a 100-job page of a rerun attempt's listing,
+          # every time; pages of 30 succeed. Other 5xx answers are retried.
+          read_attempt_jobs() {
+            local attempt="$1" try
+            for try in 1 2 3 4; do
+              if gh api --paginate --slurp "/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/attempts/${attempt}/jobs?per_page=30" > "${jobs_directory}/${attempt}.partial"; then
+                mv -- "${jobs_directory}/${attempt}.partial" "${jobs_directory}/${attempt}.json"
+                return 0
+              fi
+              rm -f -- "${jobs_directory}/${attempt}.partial"
+              if ((try < 4)); then sleep "$((try * 10))"; fi
+            done
+            echo "::error::The jobs of run ${GITHUB_RUN_ID} attempt ${attempt} could not be listed after 4 tries."
+            return 1
+          }
           for ((attempt=1; attempt<=GITHUB_RUN_ATTEMPT; attempt++)); do
-            gh api --paginate --slurp "/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/attempts/${attempt}/jobs?per_page=100" > "${jobs_directory}/${attempt}.json"
+            read_attempt_jobs "$attempt"
           done
           jq -s 'add' "${jobs_directory}/"*.json > "$jobs_file"
           labs_attempt="$(jq -er --argjson current "$GITHUB_RUN_ATTEMPT" '
