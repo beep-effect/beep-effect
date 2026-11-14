@@ -18,10 +18,11 @@ import {
   CitationMetadataStringFields,
   CitationPublicationMetadataConfiguration,
   citationMetadataContext,
+  installCitationMetadataContextMatch,
+  installCitationMetadataStringProcessing,
   makeCitationMetadataOperation,
-  matchCitationMetadataContext,
   prepareCitationPublicationMetadata,
-  processCitationMetadataStrings,
+  provideCitationStageAdmission,
 } from "./MetadataComposition.ts";
 import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import { decodeCitationRegexPolicy } from "./RegexPolicy.ts";
@@ -144,50 +145,52 @@ const prepareConfiguration = Effect.fn("Citation.prepareLawMetadataConfiguration
     }),
   };
 });
-const preparePatch = Effect.fn("Citation.prepareLawMetadataPatch")(function* (
+const installPatch = Effect.fn("Citation.installLawMetadataPatch")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
-  config: CitationLawMetadataConfiguration,
-  request: CitationLawMetadataInput
+  config: CitationLawMetadataConfiguration
 ) {
-  const owned = yield* matchCitationMetadataContext(
+  const match = yield* installCitationMetadataContextMatch(
     limits,
     runtime,
     CitationPublicationMetadataConfiguration.make({
       ...config,
       pattern: config.lawPattern,
       bindings: config.lawBindings,
-    }),
-    citationMetadataContext({ ...request, forward: true }),
-    () => fail("missing-capture")
+    })
   );
-  if (O.isNone(owned)) return O.none<CitationLawMetadataPatch>();
-  const pin = yield* owned.value.capture("pin_cite");
-  const publisher = yield* owned.value.capture("publisher");
-  const day = yield* owned.value.capture("day");
-  const month = yield* owned.value.capture("month");
-  const parenthetical = yield* owned.value.capture("parenthetical");
-  const rawYear = yield* owned.value.capture("year");
-  const common = yield* processCitationMetadataStrings(
+  const processStrings = yield* installCitationMetadataStringProcessing(
     limits,
     runtime,
-    CitationMetadataStringConfiguration.make(config),
-    CitationMetadataStringFields.make({ pinCite: pin, parenthetical, year: rawYear }),
-    request.year
+    CitationMetadataStringConfiguration.make(config)
   );
-  const patch = CitationLawMetadataPatch.make({
-    fullSpanEnd: request.spanEnd + owned.value.end,
-    year: common.numericYear,
-    metadata: {
-      pinCite: common.pinCite,
-      publisher,
-      day,
-      month,
-      parenthetical: common.parenthetical,
-      year: common.year,
-    },
+  return Effect.fn("Citation.prepareLawMetadataPatch")(function* (request: CitationLawMetadataInput) {
+    const owned = yield* match(citationMetadataContext({ ...request, forward: true }), () => fail("missing-capture"));
+    if (O.isNone(owned)) return O.none<CitationLawMetadataPatch>();
+    const pin = yield* owned.value.capture("pin_cite");
+    const publisher = yield* owned.value.capture("publisher");
+    const day = yield* owned.value.capture("day");
+    const month = yield* owned.value.capture("month");
+    const parenthetical = yield* owned.value.capture("parenthetical");
+    const rawYear = yield* owned.value.capture("year");
+    const common = yield* processStrings(
+      CitationMetadataStringFields.make({ pinCite: pin, parenthetical, year: rawYear }),
+      request.year
+    );
+    const patch = CitationLawMetadataPatch.make({
+      fullSpanEnd: request.spanEnd + owned.value.end,
+      year: common.numericYear,
+      metadata: {
+        pinCite: common.pinCite,
+        publisher,
+        day,
+        month,
+        parenthetical: common.parenthetical,
+        year: common.year,
+      },
+    });
+    return O.some(patch);
   });
-  return O.some(patch);
 });
 const installLawMetadata = Effect.fn("Citation.installLawMetadata")(function* (
   policy: unknown,
@@ -195,15 +198,19 @@ const installLawMetadata = Effect.fn("Citation.installLawMetadata")(function* (
   configurationInput: unknown
 ) {
   const limits = yield* decodeCitationRegexPolicy(policy, invalidConfiguration);
-  const { runtime, config } = yield* prepareConfiguration(limits, runtimeInput, configurationInput);
-  const installed = yield* makeCitationMetadataOperation(limits, (request: CitationLawMetadataInput) =>
-    preparePatch(limits, runtime, config, request)
+  return yield* provideCitationStageAdmission(
+    limits,
+    Effect.gen(function* () {
+      const { runtime, config } = yield* prepareConfiguration(limits, runtimeInput, configurationInput);
+      const preparePatch = yield* installPatch(limits, runtime, config);
+      const installed = yield* makeCitationMetadataOperation(preparePatch);
+      const run = Effect.fn("Citation.runLawMetadata")(function* (request: CitationLawMetadataInput) {
+        const [patch, reservedUnits] = yield* installed.run(request);
+        return CitationLawMetadataResult.make({ patch, reservedUnits });
+      });
+      return { ...installed, limits, run };
+    })
   );
-  const run = Effect.fn("Citation.runLawMetadata")(function* (request: CitationLawMetadataInput) {
-    const [patch, reservedUnits] = yield* installed.run(request);
-    return CitationLawMetadataResult.make({ patch, reservedUnits });
-  });
-  return { ...installed, limits, run };
 });
 /** Install immutable source configuration and shared admission. Each call uses
  * a fresh Scope and captures no outer Scope in its dependency Context. An

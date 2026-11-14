@@ -11,6 +11,8 @@ export * from "../commands/Worktree/internal/FleetRegistry.ts";
 export * from "../commands/Worktree/internal/FleetRoots.schemas.ts";
 export * from "../commands/Worktree/internal/FleetRoots.ts";
 export { fleetScannerCacheRoot, selectFleetScannerDir } from "../commands/Worktree/internal/FleetScannerDir.ts";
+export * from "../commands/Worktree/internal/RemovalRoots.schemas.ts";
+export * from "../commands/Worktree/internal/RemovalRoots.ts";
 export * from "../commands/Worktree/internal/ResidueReap.schemas.ts";
 export * from "../commands/Worktree/internal/ResidueReap.ts";
 export * from "../commands/Worktree/internal/ResidueReapDrain.schemas.ts";

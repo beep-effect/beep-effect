@@ -139,6 +139,8 @@ export const makeCitationCanonicalExtractionReplay = Effect.fn("CanonicalExtract
     extract,
     annotate,
     assertRetired,
+    // Builds one more identical engine in the same scope, for construction-time counts.
+    construct: Effect.asVoid(build),
     native: installed.setup.observed.snapshot,
     limits: installed.setup.limits,
   };

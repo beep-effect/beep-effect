@@ -1,7 +1,7 @@
 # SourceObservation — EVIDENCE. Produced ONLY by a committed adapter script over
 # parseable source (the agent may AUTHOR the script; it may never hand-type
 # observation records for source a parser can read). Machine enforcement:
-# ontology-foundational-auditor/scripts/validate_artifacts.py.
+# ontology-foundational-auditor/scripts/validate_artifacts.ts.
 # The key set is CLOSED (validator-enforced): unknown keys are rejected, so
 # ontology_interpretation and friends cannot ride along. Under --repo every
 # fact object must OCCUR in the span text — an invented fact behind an honest

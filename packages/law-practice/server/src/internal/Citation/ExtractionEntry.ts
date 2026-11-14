@@ -98,12 +98,17 @@ const shortcut = O.map(getCitationExtractionShortcut("eyecite"), (citations): Ci
 });
 const own = Effect.fn("Citation.ownExtractionEntry")(function* (
   limits: CitationEngineLimits,
-  configuration: CitationDocumentExtractionConfiguration
+  configuration: CitationDocumentExtractionConfiguration,
+  runtime: CitationNativeProcessRuntime
 ) {
   const document = yield* ownCitationDocumentExtraction(limits, configuration);
   const containers = yield* CitationDocumentStepContainers;
   const plans = yield* Effect.serviceOption(CitationExtractionCleanerPlans);
-  return { ...document, containers, plans };
+  // Installed once; an install failure surfaces where each request used to install it.
+  const stage = yield* Effect.exit(
+    makeCitationDocumentExtraction(limits, runtime, document.config).pipe(Effect.provideContext(document.children))
+  );
+  return { ...document, containers, plans, stage };
 });
 const issue = Effect.fn("Citation.issueRawExtractionSource")(function* (
   limits: CitationEngineLimits,
@@ -120,7 +125,7 @@ const issue = Effect.fn("Citation.issueRawExtractionSource")(function* (
 });
 const prepare = Effect.fn("Citation.extractRawPrimitiveRequest")(function* (
   limits: CitationEngineLimits,
-  runtime: CitationNativeProcessRuntime,
+  _runtime: CitationNativeProcessRuntime,
   owned: Effect.Success<ReturnType<typeof own>>,
   raw: unknown
 ) {
@@ -144,7 +149,7 @@ const prepare = Effect.fn("Citation.extractRawPrimitiveRequest")(function* (
         ? yield* owned.values.retainHost(null)
         : yield* owned.containers.create({ kind: request.container, names: selection });
     yield* owned.values.assertOwned(steps);
-    const stage = yield* makeCitationDocumentExtraction(limits, runtime, owned.config);
+    const stage = yield* owned.stage;
     const result = yield* stage.extract({ plain, markup, steps, removeAmbiguous: request.removeAmbiguous });
     const validated = CitationExtractionEntryOutcome.cases.Document.make({ result });
     const outcome: CitationExtractionEntryOutcome = { ...validated, result };

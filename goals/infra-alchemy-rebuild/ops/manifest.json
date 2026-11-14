@@ -35,6 +35,7 @@
     "goals/infra-alchemy-rebuild/research/SOURCES.md"
   ],
   "researchReports": [
+    "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
     "research/alchemy-blog/reports/alchemy-blog-beta-35-to-49.md",
     "research/alchemy-blog/reports/alchemy-blog-beta-50-to-63.md",
@@ -120,7 +121,11 @@
     "research/alchemy-blog/research_notes/source/2026-07-17-beta-63.md",
     "research/alchemy-distilled-source-inventory.md",
     "research/alchemy-docs-catalog.md",
+    "research/cache-baseline-request-alchemy-aws-extras.json",
+    "research/cache-baseline-request-storybook-alchemy-stack.json",
     "research/cache-baseline-request-turbo-cache-r2.json",
+    "research/cache-baseline-review-alchemy-aws-extras.md",
+    "research/cache-baseline-review-storybook-alchemy-stack.md",
     "research/cache-baseline-review-turbo-cache-r2.md",
     "research/t3code-alchemy-patches.md",
     "research/t3code-stack-patterns.md",
@@ -146,12 +151,12 @@
     {
       "id": "P1",
       "name": "Foundations",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Providers",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",

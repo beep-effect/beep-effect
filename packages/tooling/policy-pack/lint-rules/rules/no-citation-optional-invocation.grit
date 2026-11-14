@@ -22,8 +22,14 @@ or {
   `$context.getOption($service)`,
   `$context.getOrUndefined($_, $service)`,
   `$context.getOrUndefined($service)`,
+  `$context.get($_, $service)`,
+  `$context.get($service)`,
+  `$context.getUnsafe($_, $service)`,
+  `$context.getUnsafe($service)`,
+  `$context.getOrElse($_, $service, $_)`,
+  `$context.getOrElse($service, $_)`,
   `serviceOption($service)`
 } as $lookup where {
   $service <: citation_authority(),
-  register_diagnostic(span=$lookup, message="Rule: citation request authority must be explicit. Why: optional install-time lookups silently lose accounting or acquire another permit when installs move. Fix: read CitationInvocation at call time in parent-only stages, or pass an explicit reservation to code shared with a child process.", severity="error")
+  register_diagnostic(span=$lookup, message="Rule: citation request authority must be explicit. Why: optional or captured-context lookups silently lose accounting, acquire another permit or bind one request's value when installs move. Fix: read CitationInvocation at call time in parent-only stages, or pass an explicit reservation to code shared with a child process.", severity="error")
 }

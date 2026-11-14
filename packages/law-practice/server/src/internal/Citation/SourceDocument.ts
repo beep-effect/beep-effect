@@ -57,9 +57,10 @@ export class CitationExtractedDocumentResult extends S.Opaque<
 ) {}
 const own = Effect.fn("Citation.ownSourceDocument")(function* (
   limits: CitationEngineLimits,
-  configuration: CitationVerifiedExtractionConfiguration
+  configuration: CitationVerifiedExtractionConfiguration,
+  runtime: CitationNativeProcessRuntime
 ) {
-  const extraction = yield* ownCitationSourceExtraction(limits, configuration);
+  const extraction = yield* ownCitationSourceExtraction(limits, configuration, runtime);
   const resolver = yield* makeCitationRegisteredResolver();
   const editions = yield* makeCitationResolutionEditions();
   return { extraction, resolver, editions };
