@@ -114,3 +114,42 @@ export const ownedStruct: {
   <F, A>(make: (fields: F) => A, fields: { readonly [K in keyof F]: CitationOwned<F[K]> }): CitationOwned<A> =>
     mint(make(fields))
 );
+
+/** Derive an owned value from an owned input by engine computation.
+ *
+ * **Details**
+ *
+ * The result is owned because the engine computes it from an already owned
+ * input and from values the engine itself creates or reads (sealed asset files,
+ * the clock). `derive` must not close over a caller-held value. It needs an
+ * owned witness, so it cannot mint from caller input: it is the same discipline
+ * as `ownedStruct`, not a public mint, and the brand constructor stays private.
+ * The default engine uses it once, to derive its installed configuration from
+ * the caller's configuration it owned with the engine's one detach.
+ *
+ * **Example** (Derive configuration from owned input)
+ * ```ts
+ * import * as Effect from "effect/Effect";
+ * import { ownedDerive } from "./ConfigurationOwnership.ts";
+ * import type { CitationOwned } from "./ConfigurationOwnership.ts";
+ * declare const owned: CitationOwned<{ readonly size: number }>;
+ * const doubled = ownedDerive(owned, (input) => Effect.succeed({ size: input.size * 2 }));
+ * ```
+ *
+ * @internal @category constructors @since 0.0.0
+ */
+export const ownedDerive: {
+  <T, B, E, R>(
+    derive: (input: T) => Effect.Effect<B, E, R>
+  ): (owned: CitationOwned<T>) => Effect.Effect<CitationOwned<B>, E, R>;
+  <T, B, E, R>(
+    owned: CitationOwned<T>,
+    derive: (input: T) => Effect.Effect<B, E, R>
+  ): Effect.Effect<CitationOwned<B>, E, R>;
+} = dual(
+  2,
+  <T, B, E, R>(
+    owned: CitationOwned<T>,
+    derive: (input: T) => Effect.Effect<B, E, R>
+  ): Effect.Effect<CitationOwned<B>, E, R> => Effect.map(derive(owned), mint)
+);

@@ -31,18 +31,18 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Slice A4 in review after owner round 2: configuration owned once at the
-engine boundary (`CitationOwned`), leaf helpers typed, reference-pattern
-authentication hoisted to install. One stop awaits a reshape: the default
-engine's second own. A1 (#3253), A2 (#3265) and A3 (#3282) are merged.
+Slice A4 in review after owner round 3: configuration owned once per engine
+(`CitationOwned`; the default engine derives its installed configuration from
+the owned caller configuration), leaf helpers typed, reference-pattern
+authentication hoisted to install. A1 (#3253), A2 (#3265) and A3 (#3282) are
+merged.
 
 ## Latest Evidence
 
 [`history/evidence/2026-11-13-a4-owned-configuration.md`](./history/evidence/2026-11-13-a4-owned-configuration.md):
 per call still 0 installs, 0 detaches, 0 tokenizer builds and 0 evaluator
 installs with 291 child processes over ten calls; engine construction now
-performs 2 configuration detaches (10 before), the two boundary owns of the
-default engine.
+performs 1 configuration detach (10 at A3).
 
 ## Notes
 

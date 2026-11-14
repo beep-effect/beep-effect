@@ -352,9 +352,11 @@ Publish this review wave through Yeet publish --staged-only --no-pr. PR #3265 al
 
 Reverse: Use the default Yeet PR tail to submit a readiness monitor
 
-### Assemble owned child configuration with ownedStruct, 2026-11-14
+### Assemble owned child configuration with ownedStruct and derive it with ownedDerive, 2026-11-14
 
 The design sketch has ownedField and ownedItems. VerifiedExtraction builds OccurrenceProjection's configuration ({ engineArtifact }) from its own owned configuration, so ConfigurationOwnership also exports ownedStruct(make, fields): every field must already be CitationOwned and the schema constructor builds a fresh container around them, so the result is owned without a detach. It cannot mint a value from non-owned parts, which is why it does not resolve the default engine stop.
+
+Owner ruling, round 3: `ownedDerive(owned, derive)` is the second projection of this kind. Its result is owned because the engine computes it from an already owned input and from values the engine itself creates or reads (sealed asset files, the clock); `derive` must not close over a caller-held value. It needs an owned witness, so it cannot mint from caller input, and the brand constructor stays private. It has exactly one production site: the default engine's installed configuration (decision "Own the default engine configuration by derivation from the owned caller configuration").
 
 Lane perf/citation-owned-configuration
 
@@ -378,26 +380,19 @@ Lane perf/citation-owned-configuration
 
 Reverse: Carry fingerprints on the owned value through a fingerprinted pattern codec and compare them at each stage, if a later design wants it.
 
-### Stop the default engine at two owns: the tokenizer catalog is derived, not decoded, 2026-11-14
+### Own the default engine configuration by derivation from the owned caller configuration, 2026-11-14
 
-Second stop, after the owner's round-2 ruling chose reshape (a): a sealed-text minting route whose input is an immutable string decoded through the schema's JSON codec, loaders and `makeCitationDefaultEngineConfiguration` returning owned parts assembled with `ownedStruct`, and `makeDefault` calling the internal owned install directly.
+Owner ruling, round 3, replacing the round-1 and round-2 stop on the default engine. The installed default configuration is owned by derivation: `makeDefault` owns the caller's raw `CitationEngineDefaultConfiguration` once with `ownCitationConfiguration` (the engine's only configuration detach), then derives the installed configuration from that owned value with `ownedDerive`. The derivation runs `makeCitationDefaultEngineConfiguration` (sealed asset reads, the tokenizer catalog and helper derivations, the clock-computed year) and assembles `CitationEngineConfiguration`, validated by its `make`, from the derived assets and the limits and runtimes of the owned default configuration. `makeDefault` then calls the internal `install`, which takes `CitationOwned<CitationEngineConfiguration>`. `make` (CitationEngineLive, the raw boundary) keeps its one own and calls the same `install`. Result: one configuration detach per engine; the full-span construction row shows 1.
 
-What the loaders do. `loadCitationTextAsset` reads at most the sealed length plus one byte through Effect FileSystem, checks the length and the SHA-256 of the bytes, and returns `new TextDecoder().decode(bytes)`. `loadCitationJsonAsset` decodes that text through the asset's `S.toCodecJson` + `S.fromJsonString` codec. So the parser catalog asset and the helper configurations asset are decoded from text, and the sealed route would be sound for them; the vocabulary is raw text.
+Aliasing check, by reading: `makeDefault` reads `raw` only in its first `ownCitationConfiguration`. Everything below reads the owned copy or values the engine reads itself, so nothing in the derived configuration can alias an object the caller still holds. The default-boundary mutation test already exists: `CitationEngineLayer.test.ts` › "four-operation engine Layer" › "captures default owners and executes all four operations on bun" and "… on node" mutate the caller's `limits.cleanDeadline` and `runtime.workerFile` after the default Layer is built and assert that the reported deadline is unchanged and all four operations still run.
 
-Why it still stops. The engine configuration is not those decoded assets; it is derived from them by engine computation:
+Outside the detach count, unchanged: `makeCitationDefaultEngineConfiguration`, `makeCitationEngineArtifact` and `makeCitationSixFormArtifact` keep their own raw-input snapshots, because each is a separately callable entry point with tests of raw input.
 
-- `makeCitationCanonicalTokenizerCatalog` (`TokenizerCatalog.ts`) takes the catalog's `payload` string and `metadata`, re-hashes the payload, decodes it into 6,805 source rows, converts each row's regex text into new native storage (`RegexInput.prepareText`), fingerprints it, looks the descriptor up in a `HashMap` built from metadata rows, converts each required string with `PythonUnicode.fromText`, and builds a new `CitationTokenizerExtractor` and ordering binding per row. The resulting `CitationTokenizerConfiguration` is the bulk of the engine configuration (`extraction.extraction.tokenizer`).
-- `makeCitationHelperConfigurations` splices a `highestValidYear` computed from the Clock into four nested configurations and decodes edition bindings that `makeCitationDefaultConfiguration` derives from the computed catalog.
-
-Those values are unshared by construction (new buffers from immutable strings, numbers, and objects built inside construction), but nothing types them owned: `ownedStruct` needs every field already `CitationOwned`, and the fresh pattern and string storages come out of `prepareText` and `fromText` as plain `CitationPythonUnicodeStorage`. Typing them owned needs a minting route for engine-encoded text (storage encoded from an immutable string) in `ConfigurationOwnership`, used by `PythonUnicode` and `RegexInput`, plus an owned primitive route for computed numbers; or the catalog derivation moves to build time and ships as sealed JSON. Neither is in the ruling, and a mint that accepts any engine-built value would be the brand constructor under another name, so this slice does not improvise one.
-
-State kept: `makeDefault` owns its caller configuration (`ownCitationConfiguration`) before the asynchronous asset reads, then calls `make`, which owns the assembled configuration: 2 configuration detaches at construction. `makeCitationDefaultEngineConfiguration`, `makeCitationEngineArtifact` and `makeCitationSixFormArtifact` keep their `snapshotCitationValue` copies: each is a separately callable entry point with its own tests of raw input (`CitationDefaultConfiguration.test.ts`, `CitationEngineArtifact.test.ts`, `CitationSixFormArtifact.test.ts`).
-
-Proposed reshapes, owner's choice: (1) an owned encoding route for text-to-storage in `ConfigurationOwnership` plus an owned-primitive route, threading `CitationOwned` through the catalog and helper derivations; or (2) precompute the tokenizer catalog and the year-free helper configuration at build time into sealed JSON assets, so the engine only decodes sealed text.
+The round-2 stop recorded what the loaders do: `loadCitationJsonAsset` decodes sealed text through each asset's JSON codec, and the tokenizer catalog and helper configurations are then derived from those assets by engine computation. That is why derivation, not a second detach or a string-storage route, is the owned path.
 
 Lane perf/citation-owned-configuration
 
-Reverse: Delete this stop once the owner picks how engine-derived configuration is typed owned; until then the default engine owns its caller configuration and its assembled configuration.
+Reverse: Have makeDefault call make with the assembled configuration again, so make's boundary detach owns it (two detaches per default engine).
 
 ### Type the leaf helpers and drop their configuration decodes, 2026-11-14
 
@@ -410,6 +405,8 @@ Kept, because they are guards rather than decodes: the pattern-count ceiling, du
 The per-request reference-pattern builder takes its configuration and limits at install (`installCitationReferencePatterns`, ruling 2) and decodes nothing per request.
 
 Direct tests that fed a malformed raw argument to a leaf helper now assert the same refusal at the boundary with `refuseCitationTestConfiguration` (the real `ownCitationConfiguration`), and tests that pass plain fixture objects own them through `ownCitationTestConfiguration` in a small per-file adapter. No test was deleted.
+
+Behaviour note: the descriptor registry decoded raw bindings with `onExcessProperty: "error"`, refusing unknown capture-name keys. That strictness now sits at the boundary decode, which drops excess keys as the old engine snapshot did. In the engine, descriptors already passed the engine's default decode before reaching the registry, so engine behaviour is unchanged; the direct registry test keeps the strict decode in its adapter.
 
 Lane perf/citation-owned-configuration
 

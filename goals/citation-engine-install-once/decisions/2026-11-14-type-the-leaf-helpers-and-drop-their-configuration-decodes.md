@@ -14,3 +14,5 @@ Kept, because they are guards rather than decodes: the pattern-count ceiling, du
 The per-request reference-pattern builder takes its configuration and limits at install (`installCitationReferencePatterns`, ruling 2) and decodes nothing per request.
 
 Direct tests that fed a malformed raw argument to a leaf helper now assert the same refusal at the boundary with `refuseCitationTestConfiguration` (the real `ownCitationConfiguration`), and tests that pass plain fixture objects own them through `ownCitationTestConfiguration` in a small per-file adapter. No test was deleted.
+
+Behaviour note: the descriptor registry decoded raw bindings with `onExcessProperty: "error"`, refusing unknown capture-name keys. That strictness now sits at the boundary decode, which drops excess keys as the old engine snapshot did. In the engine, descriptors already passed the engine's default decode before reaching the registry, so engine behaviour is unchanged; the direct registry test keeps the strict decode in its adapter.

@@ -1,5 +1,6 @@
 import {
   ownCitationConfiguration,
+  ownedDerive,
   ownedField,
   ownedItems,
   ownedStruct,
@@ -52,5 +53,21 @@ it.effect("projects and assembles owned values without another detach", () =>
     const first = A.getUnsafe(items, 0);
     const assembled = ownedStruct(Wrapped.make, { pattern: first });
     expect(assembled.pattern).toEqual(first);
+  })
+);
+
+it.effect("derives an owned value from an owned input without another detach", () =>
+  Effect.gen(function* () {
+    const owned = yield* ownCitationConfiguration(
+      Patterns,
+      { name: "fixed", patterns: [{ width: 1, bytes: new Uint8Array([68]) }] },
+      refused
+    );
+    const derived = yield* ownedDerive(owned, (input) =>
+      Effect.succeed({ count: input.patterns.length, name: input.name })
+    );
+    expect(derived).toEqual({ count: 1, name: "fixed" });
+    const failure = yield* ownedDerive(owned, () => Effect.fail("derivation refused" as const)).pipe(Effect.flip);
+    expect(failure).toBe("derivation refused");
   })
 );

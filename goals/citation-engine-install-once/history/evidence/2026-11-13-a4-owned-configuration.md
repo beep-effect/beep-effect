@@ -3,11 +3,11 @@
 Recorded 2026-11-13 on `perf/citation-owned-configuration`, based on
 `origin/main` at `2fd1c66ea55` (A3 merged as #3282).
 
-Status: in review after owner round 2, with one stop (the default engine,
-decision below). The per-call rows are unchanged and the construction row moves
-from 10 configuration detaches to 2, not to the design's 1. Round 2 (section at
-the end) adds the reference-pattern authentication hoist and the leaf-helper
-typing, and re-states the default-engine stop after reading the loader chain.
+Status: in review after owner round 3. The per-call rows are unchanged and the
+construction row moves from 10 configuration detaches to 1, the design's
+target. Round 2 added the reference-pattern authentication hoist and the
+leaf-helper typing; round 3 derives the default engine's installed
+configuration from the owned caller configuration (sections at the end).
 
 ## What moved
 
@@ -113,13 +113,14 @@ thirteen original full-span equalities hold.
 
 ## Stops and decisions
 
-- "Stop the default engine at two owns: the tokenizer catalog is derived, not
-  decoded" (stop, re-stated in round 2 with what the loaders do).
+- "Own the default engine configuration by derivation from the owned caller
+  configuration" (owner ruling, round 3; replaces the default-engine stop).
 - "Keep fixed-pattern authentication at the installed call site, once per
   engine" (owner ruling; replaces the round-1 fingerprint stop).
 - "Type the leaf helpers and drop their configuration decodes" (owner ruling;
   replaces the round-1 decision to keep them).
-- "Assemble owned child configuration with ownedStruct".
+- "Assemble owned child configuration with ownedStruct and derive it with
+  ownedDerive".
 - "Assert configuration refusals at the boundary in direct-stage tests".
 
 ## Wall time (reported, not a gate)
@@ -250,3 +251,46 @@ caller's buffer after owning and the owned bytes are unchanged.
 | effect-vitest | introduced 0, resolved 0; every changed inventory row is in a Citation test file this branch changed, the rest restored to the branch base |
 | biome, typecheck (source and tests), policy-fingerprint | pass, clean, current |
 | `beep models check` | fails on home-directory configuration only, as before |
+
+## Round 3 (owner ruling: derive, don't re-detach)
+
+Commit on top of `d7659d584cd` (see the report for the SHA). `ConfigurationOwnership.ts`
+gains `ownedDerive(owned, derive)`: the result is owned because the engine
+computes it from an owned input and from values it creates or reads itself.
+`makeDefault` owns the caller's raw default configuration once, derives the
+installed `CitationEngineConfiguration` (sealed assets, tokenizer catalog,
+helper configurations, limits and runtimes projected from the owned default
+configuration, validated by `CitationEngineConfiguration.make`) with
+`ownedDerive`, and calls the internal `install` directly. `make` keeps its one
+own and calls the same `install`.
+
+Aliasing: `makeDefault` reads `raw` only in its first own; nothing below reads
+it again. The default-boundary mutation test already exists:
+`CitationEngineLayer.test.ts` › "four-operation engine Layer" › "captures
+default owners and executes all four operations on bun" / "… on node" mutates
+the caller's `limits.cleanDeadline` and `runtime.workerFile` after the Layer is
+built; the reported deadline is unchanged and all four operations still run
+(15/15 pass).
+
+| Engine construction | Metadata-operation installs | Configuration detaches | Tokenizer builds | Regex evaluator installs | Regex evaluations | Child processes | Process owners | Diff/Xml workers |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| A3 | 16 | 10 | 1 | 26 | 0 | 0 | 1 | 0 |
+| A4, rounds 1 and 2 | 16 | 2 | 1 | 26 | 0 | 0 | 1 | 0 |
+| A4, round 3 | 16 | **1** | 1 | 26 | 0 | 0 | 1 | 0 |
+
+Per-call rows unchanged. Outside the detach count, as before:
+`makeCitationDefaultEngineConfiguration`, `makeCitationEngineArtifact` and
+`makeCitationSixFormArtifact` keep their raw-input snapshots (separately
+callable entry points with raw-input tests).
+
+| Run | Load average (1/5/15 min) | Calls 1 to 10 | Total | Node call 1 |
+| --- | --- | --- | --- | --- |
+| Round 3 | 15.2 / 33.5 / 41.8 at start, 10.1 / 28.9 / 39.7 at end | 8991, 1942, 1814, 3038, 2336, 1873, 8885, 4144, 1715, 1774 | 36.5 s | 14027 |
+
+Round-3 checks: `CitationCanonicalFullSpan` 12/12 twice; the engine layer,
+default configuration, engine resolution, corpus, artifact, extraction report,
+captured cleaner plan and ownership tests (4/4, one new `ownedDerive` case), and
+the 24 other test files that build the default engine, each run on its own: all
+pass. `package-verify --quick`, `lint:laws` (effect-fn 0), fallow audit vs
+`origin/main` (0 introduced), `docgen:local`, biome, typecheck and effect-vitest
+(0 introduced, 0 resolved) pass.

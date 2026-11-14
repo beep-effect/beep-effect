@@ -20,7 +20,7 @@ import { CitationAnnotationEntryConfiguration } from "../internal/Citation/Annot
 import { failCitationAnnotationBoundary } from "../internal/Citation/AnnotationFailure.ts";
 import { makeCitationAnnotationOperation } from "../internal/Citation/AnnotationOperation.ts";
 import { CitationMissingPageIdentityFactory } from "../internal/Citation/CallbackRuntimeIndex.ts";
-import { ownCitationConfiguration, ownedField } from "../internal/Citation/ConfigurationOwnership.ts";
+import { ownCitationConfiguration, ownedDerive, ownedField } from "../internal/Citation/ConfigurationOwnership.ts";
 import { CitationDefaultConfigurationInput } from "../internal/Citation/DefaultConfiguration.ts";
 import { makeCitationDocumentServices } from "../internal/Citation/DocumentServices.ts";
 import {
@@ -247,7 +247,25 @@ const makeDefault = Effect.fn("Citation.makeDefaultEngine")(function* (raw: unkn
   )
     return yield* invalid();
   const owners = yield* makeCitationAdmissionOwners(limits).pipe(Effect.mapError(invalid));
-  const installed = yield* makeCitationDefaultEngineConfiguration(limits, assets, build).pipe(Effect.mapError(invalid));
+  // The installed configuration is derived from the owned caller configuration
+  // and the engine-read sealed assets: owned by derivation, no second detach.
+  const installed = yield* ownedDerive(
+    configuration,
+    Effect.fnUntraced(function* (owned: CitationEngineDefaultConfiguration) {
+      const assembled = yield* makeCitationDefaultEngineConfiguration(owned.limits, owned.assets, owned.build).pipe(
+        Effect.mapError(invalid)
+      );
+      return {
+        editions: assembled.editions,
+        engine: CitationEngineConfiguration.make({
+          limits: owned.limits,
+          runtime: owned.runtime,
+          extraction: { extraction: assembled.configuration, engineArtifact: assembled.engineArtifact },
+          annotation: { geometry: assembled.configuration.extraction.document, xmlRuntime: owned.xmlRuntime },
+        }),
+      };
+    })
+  );
   const services = yield* makeCitationDocumentServices(limits, htmlRuntime).pipe(
     Effect.provideContext(owners),
     Effect.mapError((error) =>
@@ -259,16 +277,7 @@ const makeDefault = Effect.fn("Citation.makeDefaultEngine")(function* (raw: unkn
   const captured = Context.merge(owners, services.context).pipe(
     Context.add(CitationFrozenEditions, installed.editions)
   );
-  // The assembled configuration holds engine-loaded assets beside the owned
-  // default configuration; it is owned through make's boundary detach.
-  const engine = yield* make(
-    CitationEngineConfiguration.make({
-      limits,
-      runtime,
-      extraction: { extraction: installed.configuration, engineArtifact: installed.engineArtifact },
-      annotation: { geometry: installed.configuration.extraction.document, xmlRuntime },
-    })
-  ).pipe(Effect.provideContext(captured));
+  const engine = yield* install(ownedField(installed, "engine")).pipe(Effect.provideContext(captured));
   return Context.add(captured, CitationEngine, engine);
 });
 /** Install authenticated default parsing, cleaner/value/container owners, one
