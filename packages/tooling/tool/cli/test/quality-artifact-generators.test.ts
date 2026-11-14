@@ -3,8 +3,11 @@ import { Git } from "@beep/git/Git";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   buildJSDocDocumentationInventory,
+  defaultJSDocInventoryPath,
   JSDocDocumentationInventoryOptions,
   listSourceFiles,
+  RunJSDocRatchetOptions,
+  runJSDocRatchet,
   runTurboConfigProof,
   summarizeTurboDryRunOutput,
   summarizeTurboQueryAffectedOutput,
@@ -453,6 +456,43 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
       const expectation1 = expect(readFileString7);
       const readFileString3 = yield* fs.readFileString(outputMarkdownPath);
       expectation1.toBe(readFileString3);
+    })
+  );
+
+  it.effect(
+    "ratchets an introduced finding red from the ignored .beep/ci/ inventory with no committed standards copy",
+    Effect.fnUntraced(function* () {
+      const repoRoot = yield* acquireFixtureRepo();
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const inventoryPath = path.join(repoRoot, defaultJSDocInventoryPath);
+      const baselinePath = path.join(repoRoot, "standards", "jsdoc-totals.regression-baseline.jsonc");
+      const scan = writeJSDocDocumentationInventory(
+        JSDocDocumentationInventoryOptions.make({ rootDir: repoRoot, generatedAt: fixedGeneratedAt })
+      );
+      const ratchet = (writeBaseline: boolean) =>
+        runJSDocRatchet(RunJSDocRatchetOptions.make({ baselinePath, inventoryPath, writeBaseline }));
+
+      // Default outputs land in the ignored .beep/ci/ root; the totals baseline is
+      // the only committed ratchet input.
+      const clean = yield* scan;
+      expect(clean.outputJsonPath).toBe(inventoryPath);
+      yield* ratchet(true);
+
+      // Introduce one finding: drop the @since tag from an exported constant.
+      const indexPath = path.join(repoRoot, "packages", "demo", "src", "index.ts");
+      yield* fs.writeFileString(
+        indexPath,
+        Str.replace(" * @category constants\n * @since 0.0.0\n", " * @category constants\n")(packageSource)
+      );
+      const dirty = yield* scan;
+      expect(dirty.totals.missingExportSince).toBe(clean.totals.missingExportSince + 1);
+
+      const exit = yield* Effect.exit(ratchet(false));
+      assertTrue(Exit.isFailure(exit));
+      expect(Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "").toContain("JSDoc totals regression baseline grew.");
+      const committedCopy = yield* fs.exists(path.join(repoRoot, "standards", "jsdoc-documentation.inventory.jsonc"));
+      expect(committedCopy).toBe(false);
     })
   );
 
