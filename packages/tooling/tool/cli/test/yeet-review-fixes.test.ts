@@ -4,6 +4,7 @@ import {
   canonicalRuntimeRootForTesting,
   MemoryStats,
   provideRuntimeRootForTesting,
+  QualitySchedulerLive,
   RuntimeRootChoice,
 } from "@beep/repo-cli/test/RepoRun";
 import {
@@ -37,7 +38,7 @@ import * as TestConsole from "effect/testing/TestConsole";
 import type { YeetExecutedStep } from "@beep/repo-cli/test/Yeet";
 
 const PlatformLayer = Layer.provideMerge(
-  Git.layer,
+  Layer.merge(Git.layer, QualitySchedulerLive),
   NodeChildProcessSpawner.layer.pipe(
     Layer.provideMerge(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer))
   )

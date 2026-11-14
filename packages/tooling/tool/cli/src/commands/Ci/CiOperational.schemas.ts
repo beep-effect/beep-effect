@@ -249,7 +249,6 @@ export const ciGoalDataConsumers: A.NonEmptyReadonlyArray<CiGoalDataConsumer> = 
     modes: ["spawn", "import"],
     evidence: [
       "packages/law-practice/server/test/CitationHtmlBytes.test.ts",
-      "packages/law-practice/server/test/CitationNativeRendering.fixtures.ts",
       "packages/law-practice/server/test/CitationRegexCharacters.test.ts",
       "packages/law-practice/server/test/CitationRegexTranslator.fixtures.ts",
       "packages/law-practice/server/test/CitationTokenEquality.fixtures.ts",
@@ -293,8 +292,8 @@ export const ciGoalDataConsumers: A.NonEmptyReadonlyArray<CiGoalDataConsumer> = 
     pattern: "^goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics(\\.test)?\\.py$",
     reference: "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics",
     consumers: ["@beep/repo-cli"],
-    modes: ["spawn", "turbo-input"],
-    evidence: ["packages/tooling/tool/cli/test/cache-dependencies.test.ts", "packages/tooling/tool/cli/turbo.json"],
+    modes: ["turbo-input"],
+    evidence: ["packages/tooling/tool/cli/turbo.json"],
   }),
   CiGoalDataConsumer.make({
     pattern: "^goals/speed-loop/ops/runner-burst/",
@@ -329,6 +328,13 @@ export const ciGoalDataConsumers: A.NonEmptyReadonlyArray<CiGoalDataConsumer> = 
     consumers: ["@beep/ciops"],
     modes: ["read"],
     evidence: ["apps/labs/ciops/src/kpi/Pins.ts"],
+  }),
+  CiGoalDataConsumer.make({
+    pattern: "^explorations/beep-ci-operational-ontology/ontology/docs/competency-questions\\.yaml$",
+    reference: "explorations/beep-ci-operational-ontology/ontology/docs/competency-questions.yaml",
+    consumers: ["@beep/ciops"],
+    modes: ["read"],
+    evidence: ["apps/labs/ciops/test/cq-harness.ts"],
   }),
   CiGoalDataConsumer.make({
     pattern: "^explorations/legal-ontology-landscape/assets/manifest\\.jsonl$",

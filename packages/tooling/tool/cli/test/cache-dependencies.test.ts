@@ -1,11 +1,13 @@
-import { CacheCensusWorkspace, CacheDependencyMaterialization } from "@beep/repo-cli/commands/Cache";
+import { Git } from "@beep/git/Git";
 import {
-  CacheRuntimeProcess,
-  inspectCacheDependencyTree,
-  readCacheDependencyMaterialization,
-} from "@beep/repo-cli/test/Cache";
+  CacheCensusWorkspace,
+  CacheDependencyMaterialization,
+  materializeCacheDependencies,
+} from "@beep/repo-cli/commands/Cache";
+import { inspectCacheDependencyTree, readCacheDependencyMaterialization } from "@beep/repo-cli/test/Cache";
+import { MemoryStats, QualitySchedulerError } from "@beep/repo-cli/test/RepoRun";
 import { CacheEvidenceReference } from "@beep/repo-configs/cache";
-import { findRepoRoot } from "@beep/repo-utils/Root";
+import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
@@ -13,18 +15,16 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
-import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { makeAdmissionRecorder } from "./support/AdmissionRecorder.ts";
 
 const materializationJson = S.fromJsonString(CacheDependencyMaterialization);
 const encodeMaterialization = S.encodeEffect(materializationJson);
-const inspectionReportJson = S.fromJsonString(S.Unknown);
-const encodeInspectionReport = S.encodeEffect(inspectionReportJson);
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 
 const fixture = Effect.fn("CacheDependenciesTest.fixture")(function* () {
@@ -39,36 +39,6 @@ const fixture = Effect.fn("CacheDependenciesTest.fixture")(function* () {
 });
 
 it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("installed cache dependency integrity", (it) => {
-  it.effect("binds package diagnostics to the production digest and exercises real tiny-tree refusal controls", () =>
-    Effect.gen(function* () {
-      const f = yield* fixture();
-      const root = yield* findRepoRoot();
-      const dependencies = yield* inspectCacheDependencyTree(f.root, []);
-      const source = f.path.join(f.root, "source.json");
-      const report = yield* encodeInspectionReport({
-        schemaVersion: "cache-producer-workflow/v2",
-        revision: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        toolchain: { installedDependencies: dependencies },
-      });
-      yield* f.fs.writeFileString(source, report);
-      const result = yield* CacheRuntimeProcess.runCaptured({
-        command: "/usr/bin/python3",
-        args: [
-          "-I",
-          "-S",
-          `${root}/goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py`,
-          source,
-        ],
-        cwd: f.root,
-        extendEnv: false,
-        env: { PATH: "/usr/bin" },
-        source: "merge",
-        timeout: Duration.seconds(30),
-      });
-      expect(result.exitCode, result.output).toBe(0);
-    })
-  );
-
   it.prop(
     "roundtrips materialization evidence through its schema",
     { value: Arbitrary.schema(CacheDependencyMaterialization) },
@@ -162,6 +132,44 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("installed cache 
       const alternate = yield* fs.makeTempDirectoryScoped({ prefix: "cache-dependency-link-test-" });
       yield* fs.symlink(modules, path.join(alternate, "node_modules"));
       (yield* inspectCacheDependencyTree(alternate, []).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+    })
+  );
+});
+
+// Materialization reaches admission through the QualityScheduler service; the recorder refuses it here.
+const admissionRecorder = makeAdmissionRecorder();
+const AdmissionTestLayer = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
+  Git.layer.pipe(Layer.provide(NodeServices.layer)),
+  Layer.succeed(
+    MemoryStats,
+    MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(64), ceilingGib: Effect.succeed(64) })
+  ),
+  admissionRecorder.layer
+);
+
+it.layer(AdmissionTestLayer, { timeout: "30 seconds" })("dependency materialization admission", (it) => {
+  it.effect("requests the Cache work kind and copies nothing when admission refuses", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-dependency-admission-test-" });
+      const admitted = admissionRecorder.admitted.mockReset();
+      const refusal = QualitySchedulerError.make({ message: "Controlled admission refusal." });
+      admitted.mockReturnValue(Effect.fail(refusal));
+      const error = yield* materializeCacheDependencies(root).pipe(Effect.flip);
+      expect(error.message).toBe("Cannot materialize installed dependencies.");
+      expect(admitted).toHaveBeenCalledOnce();
+      expect(admitted.mock.calls[0]?.[0]).toMatchObject({
+        kind: "cache",
+        weightTokens: 1,
+        priority: "verify",
+        checkoutRoot: root,
+        command: "cache dependency materialization",
+      });
+      const entries = yield* fs.readDirectory(root);
+      expect(entries).toEqual([]);
     })
   );
 });

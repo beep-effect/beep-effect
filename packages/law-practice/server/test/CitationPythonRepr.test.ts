@@ -13,10 +13,7 @@ import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
-import {
-  authenticateCitationRenderingProducer,
-  readCitationNativeRenderingAsset,
-} from "./CitationNativeRendering.fixtures.ts";
+import { readCitationNativeRenderingAsset } from "./CitationNativeRendering.fixtures.ts";
 import { makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 import { readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
@@ -53,7 +50,9 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
             "078f625b97d636e72ce566a836db5e1e3726b4222ef71edb79b57faa53e88ed5"
           );
           const corpus = yield* S.decodeEffect(Corpus)(corpusText);
-          yield* authenticateCitationRenderingProducer("probe-python-repr.py", corpus.producerSha256);
+          // The Python producer was removed with the repository's Python (goal python-free-repo). Its
+          // digest stays pinned in the corpus as `producerSha256`; recover the exact producer with
+          // `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/probe-python-repr.py`.
           for (const [i, row] of corpus.cases.entries()) {
             const actual = yield* repr.text({ width: row.input.width, bytes: row.input.hex });
             expect(actual, `native repr case ${i}`).toEqual({ width: row.output.width, bytes: row.output.hex });

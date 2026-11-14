@@ -36,16 +36,15 @@ import {
   commandTextForStep,
   noAdmissionOriginGate,
   processStartIdentityForPid,
+  QualityScheduler,
   QualitySchedulerError,
   RepoPlanStep,
   RepoRunContext,
   RepoStepRunResult,
   repoProofStepDefinition,
   sortedUniquePaths,
-  withQualityAdmission,
 } from "../../../internal/repo-run/index.ts";
 import { patientGit } from "../../../internal/repo-run/PatientGit.ts";
-import { processIdentityStatus } from "../../../internal/repo-run/ProcessIdentity.ts";
 import { CiLocalStepPlan } from "../../Ci/CiLane.ts";
 import { HEAVY_ADMISSION_LABEL } from "../../Ci/HeavyAdmission.ts";
 import {
@@ -132,14 +131,20 @@ import {
   buildYeetRunPlanWithMode,
   CI_PARITY_STEP_ID,
   emptyTurboPlanSnapshot,
+  MONITOR_READY_SUBMIT_ARGV,
   MONITOR_READY_SUBMIT_STEP_ID,
   PR_HEAVY_ADMISSION_LABEL_STEP_ID,
   YeetProofTier,
   YeetRunPlanModeOptions,
 } from "./Planner.ts";
 import { enforcePortfolioIndexPublishIntent } from "./PortfolioIndexGuard.ts";
-import { findLiveReadyMonitorJob, ProofJobOutcome, ProofJobRecord, ProofJobRunner } from "./ProofJob.ts";
-import { ProofJobLauncher, updateProofJobBookkeeping } from "./ProofJobLauncher.ts";
+import { ProofJobOutcome, ProofJobRecord, ProofJobRunner, ReadyMonitorRequest } from "./ProofJob.ts";
+import {
+  findReusableReadyMonitor,
+  ProofJobLauncher,
+  readyMonitorRunnerStatus,
+  updateProofJobBookkeeping,
+} from "./ProofJobLauncher.ts";
 import {
   changedPackagesForAttempt,
   proofShadowAttemptFacts,
@@ -179,13 +184,12 @@ import { classifyYeetCheckOutcome, YeetCheckSignal } from "./WatchStream.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { AdmissionOriginGate, MemoryStats, RepoRunPlan } from "../../../internal/repo-run/index.ts";
-import type { ProcessIdentityStatus } from "../../../internal/repo-run/ProcessIdentity.ts";
 import type { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuarantine.ts";
 import type { QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 import type { YeetPublishIntent, YeetRunOptions, YeetRunResult } from "../Yeet.schemas.ts";
 import type { ParityLaneDecision, ProofEnvironment } from "./ParityReuse.ts";
 import type { ProofEnvProfile, ProofStage } from "./ProofFact.ts";
-import type { ProofJobLauncherShape } from "./ProofJobLauncher.ts";
+import type { ProofJobLauncherShape, ReadyMonitorRunnerProbe } from "./ProofJobLauncher.ts";
 import type { YeetStackLayerDecision } from "./StackPublish.ts";
 import type { YeetStatusReviewThread } from "./Status.schemas.ts";
 import type { YeetStatusSnapshot } from "./Status.ts";
@@ -621,7 +625,8 @@ const runWithFullProofCoordinator = Effect.fn("Yeet.runWithFullProofCoordinator"
     ...admissionAttemptFields(attempt),
   });
   const originGate = fullProofAdmissionOriginGate(lockPath, context, request.command);
-  return yield* schedulerErrorToYeetError(withQualityAdmission(request, originGate, use));
+  const scheduler = yield* QualityScheduler;
+  return yield* schedulerErrorToYeetError(scheduler.admit(request, originGate, use));
 });
 
 const runWithMergedPreviewAdmission = Effect.fn("Yeet.runWithMergedPreviewAdmission")(function* <
@@ -642,7 +647,8 @@ const runWithMergedPreviewAdmission = Effect.fn("Yeet.runWithMergedPreviewAdmiss
     ...admissionAttemptFields(O.some(attempt)),
   });
   const originGate = fullProofAdmissionOriginGate(lockPath, context, request.command);
-  return yield* schedulerErrorToYeetError(withQualityAdmission(request, originGate, use));
+  const scheduler = yield* QualityScheduler;
+  return yield* schedulerErrorToYeetError(scheduler.admit(request, originGate, use));
 });
 
 // Review-fix loops take one admission token (class-capped at three concurrent
@@ -663,7 +669,8 @@ const runWithReviewFixAdmission = Effect.fn("Yeet.runWithReviewFixAdmission")(fu
     command: "bun run beep yeet verify --tier review-fix",
     ...admissionAttemptFields(attempt),
   });
-  return yield* schedulerErrorToYeetError(withQualityAdmission(request, noAdmissionOriginGate, use));
+  const scheduler = yield* QualityScheduler;
+  return yield* schedulerErrorToYeetError(scheduler.admit(request, noAdmissionOriginGate, use));
 });
 
 /**
@@ -1164,49 +1171,8 @@ export interface PublishTailDependencies {
     | ChildProcessSpawner.ChildProcessSpawner
   >;
   readonly monitorSupport?: ProofJobLauncherShape["support"];
-  readonly runnerStatus?: (
-    record: ProofJobRecord
-  ) => Effect.Effect<ProcessIdentityStatus, never, FileSystem.FileSystem>;
+  readonly runnerStatus?: ReadyMonitorRunnerProbe;
 }
-
-// A job record can say `running` after its runner died without a finalizer
-// (the unit stays loaded, the record is never stamped). The record's runner
-// pid and process-start identity are the liveness evidence; a `submitted` job
-// has no runner yet because its unit is still starting.
-const readyMonitorRunnerStatus = (
-  record: ProofJobRecord
-): Effect.Effect<ProcessIdentityStatus, never, FileSystem.FileSystem> =>
-  O.match(record.runner, {
-    onNone: () => Effect.succeed<ProcessIdentityStatus>("alive"),
-    onSome: (runner) => processIdentityStatus({ pid: runner.pid, procStart: O.getOrElse(runner.procStart, () => "") }),
-  });
-
-// Newest live monitor whose runner is not provably dead; a dead one is named
-// and skipped so the publish submits a replacement instead of handing back a
-// job that no longer polls.
-const pickReusableReadyMonitor = (
-  records: ReadonlyArray<ProofJobRecord>,
-  target: { readonly branch: string; readonly prNumber: number },
-  runnerStatus: NonNullable<PublishTailDependencies["runnerStatus"]>
-): Effect.Effect<O.Option<ProofJobRecord>, never, FileSystem.FileSystem> =>
-  O.match(findLiveReadyMonitorJob(records, target), {
-    onNone: () => Effect.succeedNone,
-    onSome: (candidate) =>
-      Effect.flatMap(runnerStatus(candidate), (status) =>
-        status !== "dead"
-          ? Effect.succeedSome(candidate)
-          : Effect.andThen(
-              Console.error(
-                `[yeet] warning: readiness monitor job ${candidate.jobId} is recorded ${candidate.phase} but its runner process is gone; not reusing it`
-              ),
-              pickReusableReadyMonitor(
-                A.filter(records, (record) => record.jobId !== candidate.jobId),
-                target,
-                runnerStatus
-              )
-            )
-      ),
-  });
 
 // The checkout's own job registry: the same records `yeet job list` prints.
 const listCheckoutProofJobs = Effect.fn("Yeet.listCheckoutProofJobs")(function* (context: RepoRunContext) {
@@ -1214,32 +1180,20 @@ const listCheckoutProofJobs = Effect.fn("Yeet.listCheckoutProofJobs")(function* 
   return yield* launcher.list;
 });
 
-// A registry read failure must not block the publish: fall back to submitting
-// a fresh monitor and say why.
-const findRunningReadyMonitor = Effect.fn("Yeet.findRunningReadyMonitor")(function* (
+// The newest live monitor on the pull request with the readiness flags publish
+// would submit, whose runner is not provably dead. A dead one is named and
+// skipped, and a registry read failure falls back to submitting a fresh monitor.
+const findRunningReadyMonitor = (
   context: RepoRunContext,
   prNumber: number,
   listJobs: NonNullable<PublishTailDependencies["listJobs"]>,
-  runnerStatus: NonNullable<PublishTailDependencies["runnerStatus"]>
-): Effect.fn.Return<
-  O.Option<ProofJobRecord>,
-  never,
-  | SecureRandom.SecureRandom
-  | FileSystem.FileSystem
-  | Path.Path
-  | ChildProcessSpawner.ChildProcessSpawner
-  | Digest.Digest
-  | Git
-> {
-  return yield* listJobs(context).pipe(
-    Effect.flatMap((records) => pickReusableReadyMonitor(records, { branch: context.branch, prNumber }, runnerStatus)),
-    Effect.catch((error) =>
-      Console.error(`[yeet] warning: could not read the job registry; submitting a new monitor: ${error.message}`).pipe(
-        Effect.as(O.none<ProofJobRecord>())
-      )
-    )
+  runnerStatus: ReadyMonitorRunnerProbe
+) =>
+  findReusableReadyMonitor(
+    listJobs(context),
+    ReadyMonitorRequest.make({ branch: context.branch, prNumber: O.some(prNumber), argv: MONITOR_READY_SUBMIT_ARGV }),
+    runnerStatus
   );
-});
 
 const renderReadyMonitorJob = (record: ProofJobRecord, reused: boolean): string =>
   `[yeet] readiness monitor job: ${record.jobId}${reused ? ` (already ${record.phase}; not re-submitted)` : ""}\n[yeet] wait with: bun run beep yeet job wait ${record.jobId}`;
@@ -1627,6 +1581,7 @@ const runPushFirstPublishPhases = Effect.fn("Yeet.runPushFirstPublishPhases")(fu
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
+  | QualityScheduler
   | Digest.Digest
   | Git
 > {
@@ -1770,6 +1725,7 @@ const publishPostCommitPhases = (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
+  | QualityScheduler
   | Digest.Digest
   | Git
 > =>
@@ -1826,6 +1782,7 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
+  | QualityScheduler
   | Digest.Digest
   | Git
 > {
@@ -2903,6 +2860,7 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
+  | QualityScheduler
   | Digest.Digest
   | Git
 > {
@@ -3128,6 +3086,7 @@ const runMergedVerify = Effect.fn("Yeet.runMergedVerify")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
+  | QualityScheduler
   | Digest.Digest
   | Git
 > {
@@ -3202,6 +3161,7 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
+  | QualityScheduler
   | Digest.Digest
   | Git
 > {

@@ -12,10 +12,7 @@ import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { CitationDumpCorpus } from "./CitationDump.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestTextBudget } from "./CitationInvocation.fixtures.ts";
-import {
-  authenticateCitationRenderingProducer,
-  readCitationNativeRenderingAsset,
-} from "./CitationNativeRendering.fixtures.ts";
+import { readCitationNativeRenderingAsset } from "./CitationNativeRendering.fixtures.ts";
 import { readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
@@ -40,7 +37,9 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
             "803ef80f613730fad97a1744434263092f7d952ece80090efcbd9036f4477f18"
           );
           const corpus = yield* S.decodeEffect(CitationDumpCorpus)(text);
-          yield* authenticateCitationRenderingProducer("probe-dump.py", corpus.producerSha256);
+          // The Python producer was removed with the repository's Python (goal python-free-repo). Its
+          // digest stays pinned in the corpus as `producerSha256`; recover the exact producer with
+          // `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/probe-dump.py`.
           for (const [i, row] of corpus.cases.entries()) {
             const actual = yield* dump.render(row.input);
             expect(actual, `dump source observation ${i}`).toEqual(row.output);

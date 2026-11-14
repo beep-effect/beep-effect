@@ -2,14 +2,14 @@
 
 ## Status
 
-Status: `pending`
+Status: `in-progress`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
-| P1 Implement | pending | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
+| P0 Research | complete | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
+| P1 Implement | in-progress | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
 | P2 Verify | pending | Run required checks and capture evidence. | Verification is green or blockers are documented. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
@@ -54,6 +54,12 @@ git diff --check -- goals/python-free-repo
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug python-free-repo`; add a `kind: checkpoint` file there, never edit this block._
 
-_No checkpoint files yet._
+### P0 triage complete; P1 running in four lanes, 2026-11-13
+
+308 tracked .py on 05ed8bc6b6cc. 273 one-shot packet/exploration probes with no runtime consumer were deleted, one commit per packet, each with history/2026-11-13-python-removed.md naming where results are recorded. Live consumers found: heavy.yml (native-dependency-diagnostics.py), cache-warm.yml and Cache.adapter.ts (r2-cache), a systemd drop-in (cli-proxy-startup-check.py), four skills, photo-face. Note: the first consumer search missed hidden directories (rg skips .github by default); rerun with --hidden.
+
+Lane chore/python-free-repo
+
+Reverse: n/a (status note)
 
 <!-- beep:decisions:end -->

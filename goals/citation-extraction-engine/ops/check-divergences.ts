@@ -69,12 +69,14 @@ const program = Effect.gen(function* () {
       })
     )
   )(planRaw);
-  const exporter = yield* read(new URL("./export-divergences.py", import.meta.url));
+  // export-divergences.py was removed with the repository's Python (goal python-free-repo). Its digest
+  // is pinned from the recovery commit: `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/export-divergences.py`.
+  const exporterSha256 = "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de";
   const supplementalRaw = yield* read(file("supplemental-extraction.json"));
   const supplemental = yield* S.decodeEffect(S.fromJsonString(CitationSupplementalExtraction))(supplementalRaw);
   if (
     hash(planRaw) !== report.planSha256 ||
-    hash(exporter) !== report.exporterSha256 ||
+    exporterSha256 !== report.exporterSha256 ||
     hash(supplementalRaw) !== report.supplementalSha256 ||
     plan.scope !== report.scope
   )
@@ -101,6 +103,11 @@ const program = Effect.gen(function* () {
   const readReference = Effect.fn("CitationDivergences.readReference")(function* (
     reference: (typeof report.normalizations)[number]["references"][number]
   ) {
+    // Python producers were removed with the repository's Python (goal python-free-repo). Their
+    // recorded digests stay in the ledger and were checked against the recovery commit when they
+    // were deleted; recover the exact bytes with
+    // `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:<path>`.
+    if (Str.endsWith(".py")(reference.path)) return new Uint8Array();
     if (path.isAbsolute(reference.path)) return yield* reject();
     const resolved = path.resolve(rootPath, reference.path);
     if (!Str.startsWith(`${rootPath}/`)(resolved)) return yield* reject();

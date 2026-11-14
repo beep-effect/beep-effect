@@ -16,7 +16,7 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { MemoryStatsLive } from "../../internal/repo-run/QualityScheduler.ts";
+import { MemoryStatsLive, QualitySchedulerLive } from "../../internal/repo-run/QualityScheduler.ts";
 import { readGoalCloseoutViews } from "../Goals/Completion.ts";
 import { renderGoalCloseoutView } from "../Goals/Goals.schemas.ts";
 import { HOT_PARCELS_TIMEOUT, printHotParcels } from "../Palantiri/Palantiri.hot.ts";
@@ -257,11 +257,11 @@ export const sessionOpenCommand = Command.make(
     yield* reportSessionFailure(program);
     // The hot parcels follow the ledger rows in text mode; the block is
     // bounded in time and never fails the command. Its sources bring their
-    // own memory reader and HTTP client, so `session open` needs nothing more
-    // than the ledger does.
+    // own memory reader, admission scheduler and HTTP client, so `session
+    // open` needs nothing more than the ledger does.
     if (!json) {
       yield* layerPalantiriSourcesHot.pipe(
-        Layer.provide(Layer.mergeAll(MemoryStatsLive, FetchHttpClient.layer)),
+        Layer.provide(Layer.mergeAll(MemoryStatsLive, QualitySchedulerLive, FetchHttpClient.layer)),
         layerPalantiriRuntime(Layer.empty),
         printHotParcels(HOT_PARCELS_TIMEOUT)
       );
