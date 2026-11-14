@@ -150,6 +150,22 @@ Lane explore/session-addressing
 
 Reverse: Split presence capture and the resolve command into two packets.
 
+### Presence rows live in <repo>.presence.jsonl beside the ledger and hooks write them with jq, 2026-11-13
+
+The file sits in the sessions state directory as github.com__<owner>__<name>.presence.jsonl, owner-only like the ledger. The SessionStart hook writes the row with jq so session start never pays the CLI's start-up cost; the row's shape is pinned by a test that runs the hook and decodes every line through SessionPresence. session note and session presence write the same row from TypeScript. A Codex process with an inherited CLAUDE_CODE_SESSION_ID writes nothing, so a CLI worker keeps resolving to its launcher.
+
+Lane feat/session-route-resolver
+
+Reverse: Have the hooks call bun run beep session presence instead of writing the row themselves, or move the file to its own state directory.
+
+### Remote T3 threads read unknown unless their link is down, 2026-11-13
+
+The CLI cannot call MCP tools and `t3 thread show` has no environment flag, so a thread on a linked environment reads unknown with a pointer to t3_thread_read, and unreachable only when `t3 environment list` reports its link down. unknown keeps the send call and is never treated as dead. `t3 environment list` pings every link and took about 11 seconds with five links, so it has a 30-second budget and runs only for a remote thread or a key with no local owner.
+
+Lane feat/session-route-resolver
+
+Reverse: Have the resolver call the remote environment through the T3 server when the CLI gains an environment flag for thread show.
+
 ### Route liveness is computed at read time and unknown is never dead, 2026-11-13
 
 Settled in explorations/session-addressing/DECISIONS.md (D3). 74 of 128 open ledger rows were over a week old on 2026-11-12.
@@ -189,6 +205,14 @@ Settled in explorations/session-addressing/DECISIONS.md (D6, operator answer). S
 Lane explore/session-addressing
 
 Reverse: Open an agent-pool-doctrine ruling that permits a checkout inbox write.
+
+### The Codex thread-table and t3 thread list readers are cut from slice one, 2026-11-13
+
+BRIEF.md names these two as first to cut. Slice one resolves through the ledger, presence and the Claude live index, and reads T3 thread state with `t3 thread show` and link state with `t3 environment list`. A key with no ledger claim prints one t3_thread_search per linked environment, which covers T3-owned work on any host; Codex desktop sessions are discoverable but unroutable either way.
+
+Lane feat/session-route-resolver
+
+Reverse: Add a Codex state_5.sqlite reader and a t3 thread list reader as further claim sources in Resolve.service.ts.
 
 <!-- beep:decisions:end -->
 
