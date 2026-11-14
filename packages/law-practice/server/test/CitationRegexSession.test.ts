@@ -28,6 +28,7 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { identity } from "effect/Function";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
@@ -67,6 +68,7 @@ const setup = Effect.fn("RegexSessionTest.setup")(function* (
     readonly stage: string;
     readonly entered: Deferred.Deferred<void>;
     readonly release: Deferred.Deferred<void>;
+    readonly consumed?: Deferred.Deferred<void>;
   }
 ) {
   const fs = yield* FileSystem.FileSystem;
@@ -108,6 +110,7 @@ const setup = Effect.fn("RegexSessionTest.setup")(function* (
     barrier === undefined
       ? Effect.void
       : Deferred.succeed(barrier.entered, undefined).pipe(Effect.andThen(Deferred.await(barrier.release)));
+  const consumed = barrier?.consumed;
   const spawner = ChildProcessSpawner.of({
     ...observed.spawner,
     spawn: Effect.fn("RegexSessionTest.observeLiveKill")(function* (command) {
@@ -116,16 +119,45 @@ const setup = Effect.fn("RegexSessionTest.setup")(function* (
       if (barrier?.stage === "spawn") yield* wait;
       return {
         ...handle,
+        isRunning:
+          barrier?.stage === "uncertain"
+            ? Deferred.isDone(barrier.release).pipe(
+                Effect.flatMap((released) => (released ? handle.isRunning : Effect.succeed(true)))
+              )
+            : handle.isRunning,
         stdin:
           barrier?.stage === "write"
             ? handle.stdin.pipe(Sink.mapInputEffect((bytes: Uint8Array) => wait.pipe(Effect.as(bytes))))
-            : handle.stdin,
+            : barrier?.stage === "write-error"
+              ? handle.stdin.pipe(
+                  Sink.mapInputEffect(() =>
+                    Effect.fail(
+                      PlatformError.systemError({ module: "ChildProcessSpawner", method: "stdin", _tag: "Unknown" })
+                    )
+                  )
+                )
+              : handle.stdin,
         stdout: handle.stdout.pipe(
           Stream.tap((bytes) =>
             barrier?.stage === "startup" ||
             (barrier?.stage === "read" && Str.includes('"Complete"')(new TextDecoder().decode(bytes)))
               ? wait
               : Effect.void
+          ),
+          Stream.flatMap((bytes) =>
+            Stream.make(bytes).pipe(
+              Stream.concat(
+                Stream.fromEffectDrain(
+                  consumed === undefined ||
+                    barrier === undefined ||
+                    !Str.includes('"Ready"')(new TextDecoder().decode(bytes))
+                    ? Effect.void
+                    : Deferred.isDone(barrier.entered).pipe(
+                        Effect.flatMap((entered) => (entered ? Deferred.succeed(consumed, undefined) : Effect.void))
+                      )
+                )
+              )
+            )
           )
         ),
         kill: Effect.fn("RegexSessionTest.kill")(function* (options: Parameters<typeof handle.kill>[0]) {
@@ -265,6 +297,100 @@ it.layer(citationNativeNodeTestPlatform, { excludeTestServices: true, timeout: "
   "regex sessions with real child runtimes",
   (it) => {
     A.forEach(["bun", "node"] as const, (kind) => {
+      it.effect(`ignores a late ${kind} frame during an expected lane retirement`, () =>
+        Effect.gen(function* () {
+          const entered = yield* Deferred.make<void>();
+          const release = yield* Deferred.make<void>();
+          const consumed = yield* Deferred.make<void>();
+          const fixture = yield* setup(kind, "idle", { stage: "retire", entered, release, consumed });
+          yield* fixture.evaluate;
+          const yielding = yield* fixture.lane.yieldTo(Effect.void).pipe(Effect.forkChild);
+          yield* Deferred.await(entered);
+          yield* fixture.fs.writeFileString(`${fixture.workerFile}.release`, "release");
+          yield* Deferred.await(consumed);
+          yield* Deferred.succeed(release, undefined);
+          yield* Fiber.join(yielding);
+          const state = yield* fixture.session.snapshot;
+          expect(state.state).toBe("absent");
+          yield* assertRetired(fixture);
+        })
+      );
+      it.effect(`quarantines an unconfirmed ${kind} idle-protocol retirement and confirms it on Scope retry`, () =>
+        Effect.gen(function* () {
+          const entered = yield* Deferred.make<void>();
+          const release = yield* Deferred.make<void>();
+          const fixture = yield* setup(kind, "idle", { stage: "uncertain", entered, release });
+          yield* Effect.gen(function* () {
+            yield* fixture.evaluate;
+            yield* fixture.fs.writeFileString(`${fixture.workerFile}.release`, "release");
+            yield* waitForCitationNativeTest(
+              fixture.admission.snapshot.pipe(Effect.map((value) => value.quarantined === 1))
+            );
+            yield* Deferred.succeed(release, undefined);
+            yield* Scope.close(fixture.scope, Exit.void);
+            yield* assertRetired(fixture);
+            const capacity = yield* fixture.admission.snapshot;
+            expect(capacity).toMatchObject({ active: 0, quarantined: 0 });
+          }).pipe(Effect.ensuring(Deferred.succeed(release, undefined)));
+        })
+      );
+      it.effect(`fails closed after ${kind} reports a typed job failure`, () =>
+        Effect.gen(function* () {
+          const fixture = yield* setup(kind, "failure");
+          const failure = yield* fixture.evaluate.pipe(Effect.flip);
+          expect(failure).toMatchObject({ limit: "patternMatches" });
+          yield* assertRetired(fixture);
+          const later = yield* fixture.evaluate.pipe(Effect.flip);
+          expect(later).toEqual(failure);
+          yield* assertRetired(fixture);
+        })
+      );
+      it.effect(`confirms ${kind} retirement after the input adapter reports a pipe failure`, () =>
+        Effect.gen(function* () {
+          const entered = yield* Deferred.make<void>();
+          const release = yield* Deferred.make<void>();
+          const fixture = yield* setup(kind, "real", { stage: "write-error", entered, release });
+          const failure = yield* fixture.evaluate.pipe(Effect.flip);
+          expect(failure).toMatchObject({ reason: "channel-failed" });
+          yield* assertClosed(fixture, 1, "channel-failed");
+        })
+      );
+      it.effect(`refuses ${kind} dispatch with a stale prepared sequence`, () =>
+        Effect.gen(function* () {
+          const fixture = yield* setup(kind, "real");
+          const prepare = yield* makeCitationRegexSessionPreparation(fixture.limits, citationUnaccountedText);
+          const failure = yield* fixture.session
+            .evaluate(
+              fixture.runtime,
+              Effect.fnUntraced(function* (sequence, run, reserve) {
+                const prepared = yield* prepare.prepare(
+                  "python-re",
+                  fixture.bound,
+                  sequence + 1,
+                  native("(?P<maybe>a)?(b)"),
+                  native("ab"),
+                  0,
+                  1,
+                  () => reserve
+                );
+                return yield* run(prepared.job, prepared.frame);
+              })
+            )
+            .pipe(Effect.flip);
+          expect(failure).toMatchObject({ reason: "invalid-frame" });
+          yield* assertClosed(fixture, 1, "invalid-frame");
+        })
+      );
+      it.effect(`translates a closed ${kind} lane before direct session preparation`, () =>
+        Effect.gen(function* () {
+          const fixture = yield* setup(kind, "real");
+          yield* Scope.close(fixture.scope, Exit.void);
+          const failure = yield* fixture.evaluate.pipe(Effect.flip);
+          expect(failure).toMatchObject({ reason: "closed" });
+          const counts = yield* fixture.observed.snapshot;
+          expect(counts).toEqual({ spawned: 0, confirmed: 0 });
+        })
+      );
       it.effect(`preflights the installed ${kind} evaluator before pattern maps or compilation`, () =>
         Effect.gen(function* () {
           const fixture = yield* setup(kind, "preflight");

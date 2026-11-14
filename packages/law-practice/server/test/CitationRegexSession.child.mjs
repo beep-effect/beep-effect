@@ -8,8 +8,8 @@ const mode = basename(file, ".mjs");
 const version = "citation-regex-worker/v3";
 const ready = `{"_tag":"Ready","version":"${version}"}\n`;
 process.stdout.write(ready);
-function closeStdoutWhileAlive() {
-  const stdout = readlinkSync("/proc/self/fd/1");
+function closeCopies(descriptor) {
+  const stdout = readlinkSync(`/proc/self/fd/${descriptor}`);
   const copies = readdirSync("/proc/self/fd").filter((fd) => {
     try {
       return readlinkSync(`/proc/self/fd/${fd}`) === stdout;
@@ -17,26 +17,33 @@ function closeStdoutWhileAlive() {
       return false;
     }
   });
-  writeFileSync(`${file}.entered`, "alive-before-stdout-close");
   for (const fd of copies) closeSync(Number(fd));
+}
+function closeStdoutWhileAlive() {
+  writeFileSync(`${file}.entered`, "alive-before-stdout-close");
+  closeCopies(1);
   setInterval(() => {}, 1000);
 }
 
-let sequence = 0;
-createInterface({ input: process.stdin }).on("line", () => {
-  if (mode === "sent") return;
+function finishEarly() {
+  if (mode === "sent") return true;
   if (mode === "eof") {
     process.exit(0);
-    return;
+    return true;
   }
   if (mode === "eof-live") {
     closeStdoutWhileAlive();
-    return;
+    return true;
   }
   if (mode === "oversize") {
     process.stdout.write("x".repeat(8192));
-    return;
+    return true;
   }
+  return false;
+}
+let sequence = 0;
+createInterface({ input: process.stdin }).on("line", () => {
+  if (finishEarly()) return;
   const selected = mode === "wrong-sequence" ? sequence + 1 : sequence;
   process.stdout.write(`{"_tag":"Started","version":"${version}","sequence":${selected}}\n`);
   if (mode === "running") {
@@ -45,6 +52,12 @@ createInterface({ input: process.stdin }).on("line", () => {
     return;
   }
   if (mode === "wrong-sequence") return;
+  if (mode === "failure") {
+    process.stdout.write(
+      `{"_tag":"Failure","version":"${version}","sequence":${sequence},"failure":{"_tag":"CitationSafetyLimitExceeded","operation":"extract","limit":"patternMatches"}}\n`
+    );
+    return;
+  }
   if (mode === "result") {
     const timer = setInterval(() => {
       if (existsSync(`${file}.result-release`)) {

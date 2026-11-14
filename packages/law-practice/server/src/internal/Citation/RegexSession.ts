@@ -10,6 +10,7 @@ import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as Queue from "effect/Queue";
 import * as RpcClient from "effect/rpc/RpcClient";
@@ -19,8 +20,11 @@ import * as Semaphore from "effect/Semaphore";
 import { citationNativeProcessCommand } from "./NativeProcess.ts";
 import { makeCitationNativeRpcDelivery, makeCitationNativeRpcTransport } from "./NativeRpc.ts";
 import {
+  CitationRegexSessionComplete,
+  CitationRegexSessionReady,
   CitationRegexSessionReply,
   CitationRegexSessionRpcs,
+  CitationRegexSessionStarted,
   CitationRegexSessionStartup,
   citationRegexSessionResult,
   decodeCitationRegexSessionReply,
@@ -71,6 +75,9 @@ export class CitationRegexSession extends Context.Service<
 const isExecutionFailure = S.is(CitationRegexExecutionFailure);
 const invalid = () => CitationRegexWorkerFailure.make({ reason: "invalid-frame" });
 const closed = () => CitationRegexWorkerFailure.make({ reason: "closed" });
+const decodeReady = flow(S.decodeUnknownEffect(CitationRegexSessionReady), Effect.mapError(invalid));
+const decodeStarted = flow(S.decodeUnknownEffect(CitationRegexSessionStarted), Effect.mapError(invalid));
+const decodeComplete = flow(S.decodeUnknownEffect(CitationRegexSessionComplete), Effect.mapError(invalid));
 const mapLaneFailure = (error: Effect.Error<ReturnType<CitationNativeStart>>) =>
   error._tag === "CitationNativeLaneFailure" ? CitationRegexWorkerFailure.make({ reason: error.reason }) : error;
 
@@ -195,8 +202,7 @@ export const makeCitationRegexSession = Effect.fn("Citation.makeRegexSession")(f
       Effect.forkIn(scope)
     );
     const take = Queue.take(replies).pipe(Effect.tap(() => ensureOpen));
-    const ready = yield* take.pipe(Effect.interruptible);
-    if (!CitationRegexSessionReply.guards.Ready(ready)) return yield* invalid();
+    yield* take.pipe(Effect.flatMap(decodeReady), Effect.interruptible);
     return { child, take };
   }, Effect.uninterruptible);
   let transport = O.none<Effect.Success<ReturnType<typeof start>>>();
@@ -234,13 +240,12 @@ export const makeCitationRegexSession = Effect.fn("Citation.makeRegexSession")(f
                           requestId: native.requestId,
                         });
                         const receive = Effect.gen(function* () {
-                          const started = yield* connection.take;
-                          if (!CitationRegexSessionReply.guards.Started(started)) return yield* invalid();
+                          yield* connection.take.pipe(Effect.flatMap(decodeStarted));
                           const reply = yield* connection.take;
                           if (CitationRegexSessionReply.guards.Failure(reply))
                             return yield* reply.failure.pipe(Exit.fail, deliver);
-                          if (!CitationRegexSessionReply.guards.Complete(reply)) return yield* invalid();
-                          const body = yield* citationRegexSessionResult(reply);
+                          const complete = yield* decodeComplete(reply);
+                          const body = yield* citationRegexSessionResult(complete);
                           yield* deliver(Exit.succeed(body));
                         });
                         const body = yield* Effect.zipWith(

@@ -12,10 +12,10 @@ import { CitationRegexEngine } from "./RegexEngine.ts";
 import {
   CitationRegexWorkerFailure,
   CitationRegexWorkerJob,
-  citationRegexFrameBytes,
   decodeCitationRegexFrameInputs,
   makeCitationRegexJobEncoder,
   makeCitationRegexJobPreparationWith,
+  preflightCitationRegexFrameBytes,
 } from "./RegexWorkerProtocol.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
@@ -94,6 +94,7 @@ export const preflightCitationRegexSessionJob = Effect.fn("Citation.preflightReg
 ) {
   const decoded = yield* decodeCitationRegexFrameInputs(...inputs);
   const { mode, pattern, source, flags, maxMatches, limit } = decoded;
+  if (R.keys(descriptor.profile.names).length > CitationEngineAbsoluteMaxima.patternUtf16) return yield* exceeded();
   const header = yield* emptyJobHeader(
     limit,
     engine,
@@ -105,10 +106,7 @@ export const preflightCitationRegexSessionJob = Effect.fn("Citation.preflightReg
     maxMatches,
     mode
   );
-  if (R.keys(descriptor.profile.names).length > CitationEngineAbsoluteMaxima.patternUtf16) return yield* exceeded();
-  const bytes = citationRegexFrameBytes(header, pattern.byteLength, source.byteLength);
-  if (bytes > limit) return yield* exceeded();
-  return bytes;
+  return yield* preflightCitationRegexFrameBytes(header, pattern.byteLength, source.byteLength, limit);
 });
 /** Encode only after exact size preflight. The caller already owns immutable
  * prepared carriers; the receiver repeats native-layout and policy validation.

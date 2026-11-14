@@ -15,7 +15,7 @@ import * as Rpc from "effect/rpc/Rpc";
 import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { makeCitationNativeJsonDecoder } from "./NativeJson.ts";
+import { makeCitationNativeArgumentEncoder, makeCitationNativeJsonDecoder } from "./NativeJson.ts";
 import { CitationRegexDescriptorFailure, CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import { CitationRegexEngine } from "./RegexEngine.ts";
 import { CitationRegexResultEnvelope } from "./RegexResult.ts";
@@ -118,6 +118,13 @@ const Args = S.Tuple([S.String.check(S.isMaxLength(argumentBound)).pipe(S.decode
 const invalid = () => CitationRegexWorkerFailure.make({ reason: "invalid-frame" });
 const runtime = () => CitationRegexWorkerFailure.make({ reason: "invalid-runtime" });
 const encoder = new TextEncoder();
+const decodeArgs = S.decodeUnknownEffect(Args, { onExcessProperty: "error" });
+const encodeControl = S.encodeEffect(ControlJson);
+const encodeStartupArgument = makeCitationNativeArgumentEncoder({
+  codec: StartupJson,
+  maximum: argumentBound,
+  invalid: runtime,
+});
 /** @internal @category operations @since 0.0.0 */
 export const encodeCitationRegexStartup = Effect.fn("Citation.encodeRegexStartup")(function* (
   value: CitationRegexWorkerStartup
@@ -127,15 +134,11 @@ export const encodeCitationRegexStartup = Effect.fn("Citation.encodeRegexStartup
     units += Str.length(name) + 8;
     if (units > 4 * value.limits.patternUtf16) return yield* runtime();
   }
-  const encoded = yield* S.encodeEffect(StartupJson)(value).pipe(Effect.mapError(runtime));
-  if (Str.length(encoded) > argumentBound) return yield* runtime();
-  return encoded;
+  return yield* encodeStartupArgument(value);
 });
 /** @internal @category operations @since 0.0.0 */
 export const decodeCitationRegexStartup = Effect.fn("Citation.decodeRegexStartup")((args: unknown) =>
-  S.decodeUnknownEffect(Args, { onExcessProperty: "error" })(args).pipe(
-    Effect.mapBoth({ onSuccess: ([value]) => value, onFailure: runtime })
-  )
+  decodeArgs(args).pipe(Effect.mapBoth({ onSuccess: ([value]) => value, onFailure: runtime }))
 );
 /** Constant-size control data; variable capture payloads use the result codec.
  * @internal @category operations @since 0.0.0
@@ -144,7 +147,7 @@ export const encodeCitationRegexControl = Effect.fn("Citation.encodeRegexControl
   value: typeof Control.Type,
   maximum: number
 ) {
-  const text = yield* S.encodeEffect(ControlJson)(value).pipe(Effect.mapError(invalid));
+  const text = yield* encodeControl(value).pipe(Effect.mapError(invalid));
   const bytes = encoder.encode(`${text}\n`);
   if (bytes.byteLength > maximum)
     return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "processMessageBytes" });

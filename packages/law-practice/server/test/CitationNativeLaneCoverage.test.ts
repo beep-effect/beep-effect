@@ -31,6 +31,56 @@ it.layer(process.versions.bun === undefined ? citationNativeNodeTestPlatform : c
   excludeTestServices: true,
   timeout: "30 seconds",
 })("native lane refusal boundaries", (it) => {
+  it.effect("retains quarantine after Scope retirement cannot confirm a real child, then settles on retry", () =>
+    Effect.gen(function* () {
+      const { limits } = yield* defaultCitationEnginePolicy;
+      const admission = yield* makeCitationNativeProcessAdmission(limits);
+      const observed = yield* makeCitationObservedSpawner();
+      let uncertain = true;
+      const spawner = ChildProcessSpawner.of({
+        ...observed.spawner,
+        spawn: Effect.fn("NativeLaneCoverage.uncertainScopeSpawn")((command) =>
+          observed.spawner.spawn(command).pipe(
+            Effect.map((child) => ({
+              ...child,
+              isRunning: Effect.suspend(() => (uncertain ? Effect.succeed(true) : child.isRunning)),
+            }))
+          )
+        ),
+      });
+      const scope = yield* Effect.acquireRelease(Scope.make(), (scope) => Scope.close(scope, Exit.void));
+      const lane = yield* makeCitationNativeLane(limits, "extract").pipe(
+        Effect.provideService(Scope.Scope, scope),
+        Effect.provideService(CitationNativeProcessAdmission, admission),
+        Effect.provideService(ChildProcessSpawner, spawner)
+      );
+      const fixture = yield* makeCitationNativeWorkerFixture("busy");
+      const record = yield* lane.start(
+        "markup",
+        citationNativeProcessCommand(CitationNativeProcessRuntime.make(fixture), "")
+      );
+      yield* record.child;
+      yield* Effect.gen(function* () {
+        yield* Scope.close(scope, Exit.void);
+        const held = yield* admission.snapshot;
+        expect(held).toMatchObject({ active: 1, quarantined: 1 });
+        uncertain = false;
+        yield* record.process.retire(true);
+        const counts = yield* observed.snapshot;
+        expect(counts).toEqual({ spawned: 1, confirmed: 1 });
+        const receipt = yield* lane.snapshot;
+        expect(receipt).toMatchObject({ started: 1, confirmed: 1, acquired: false });
+        const settled = yield* admission.snapshot;
+        expect(settled).toMatchObject({ active: 0, quarantined: 0 });
+      }).pipe(
+        Effect.ensuring(
+          Effect.sync(() => {
+            uncertain = false;
+          })
+        )
+      );
+    })
+  );
   it.effect("refuses every lane entry after its Scope closes without acquiring or spawning", () =>
     Effect.gen(function* () {
       const { limits } = yield* defaultCitationEnginePolicy;

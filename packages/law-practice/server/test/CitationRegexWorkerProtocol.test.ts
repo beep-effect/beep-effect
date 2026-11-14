@@ -10,7 +10,9 @@ import {
   CitationRegexWorkerFailure,
   CitationRegexWorkerJob,
   decodeCitationRegexJob,
+  decodeCitationRegexJobOptions,
   encodeCitationRegexJob,
+  encodeCitationRegexPayloadFrame,
   makeCitationRegexJobPreparation,
   preflightCitationRegexJob,
   readCitationRegexFrames,
@@ -447,5 +449,27 @@ it.effect("keeps escaped delimiters inside JSON strings and rejects an unmatched
     yield* preflightCitationNativeJson(utf8.encode(text), 1, invalid);
     const failure = yield* preflightCitationNativeJson(utf8.encode("}"), 1, invalid).pipe(Effect.flip);
     expect(failure).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-frame" });
+  })
+);
+
+it.effect("retains default job mode and refuses encoder accounting drift or an invalid installed policy", () =>
+  Effect.gen(function* () {
+    const options = yield* decodeCitationRegexJobOptions(0, 1);
+    expect(options.mode).toBe("finditer");
+    const drift = yield* encodeCitationRegexPayloadFrame(
+      { patternBytes: new Uint8Array(0), sourceBytes: new Uint8Array(0) },
+      1024,
+      "{}",
+      () => Effect.succeed('{"extra":true}')
+    ).pipe(Effect.flip);
+    expect(drift).toMatchObject({ reason: "invalid-frame" });
+    const { limits } = yield* defaultCitationEnginePolicy;
+    const policy = yield* makeCitationRegexJobPreparation(
+      { ...limits, processMessageBytes: 0 },
+      citationUnaccountedText
+    ).pipe(Effect.flip);
+    expect(policy).toMatchObject({ reason: "invalid-runtime" });
+    const control = yield* encodeCitationRegexControl(CitationRegexWorkerStarted.make({}), 1).pipe(Effect.flip);
+    expect(control).toMatchObject({ limit: "processMessageBytes" });
   })
 );

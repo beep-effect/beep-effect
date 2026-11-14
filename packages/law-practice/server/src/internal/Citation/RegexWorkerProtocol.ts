@@ -157,9 +157,7 @@ export const preflightCitationRegexJob = Effect.fn("Citation.preflightRegexJob")
     modeInput
   );
   const header = yield* emptyJobHeader(pattern.width, source.width, flags, maxMatches, mode);
-  const bytes = citationRegexFrameBytes(header, pattern.byteLength, source.byteLength);
-  if (bytes > limit) return yield* exceeded();
-  return bytes;
+  return yield* preflightCitationRegexFrameBytes(header, pattern.byteLength, source.byteLength, limit);
 });
 /** @internal @category services @since 0.0.0 */
 export interface CitationRegexFrameCodec<Job> {
@@ -224,15 +222,31 @@ export const citationRegexFrameBytes: {
     citationNativeBase64Length(patternBytes) +
     citationNativeBase64Length(sourceBytes)
 );
+/** Retain one exact encoded-byte guard for preflight and payload encoding.
+ * @internal @category operations @since 0.0.0
+ */
+export const preflightCitationRegexFrameBytes = Effect.fn("Citation.preflightRegexFrameBytes")(function* (
+  header: string,
+  patternBytes: number,
+  sourceBytes: number,
+  maximum: number
+) {
+  const bytes = citationRegexFrameBytes(header, patternBytes, sourceBytes);
+  if (bytes > maximum) return yield* exceeded();
+  return bytes;
+});
 /** Encode a schema-owned job only after its exact header/payload size check.
  * @internal @category operations @since 0.0.0
  */
 export const encodeCitationRegexPayloadFrame = Effect.fn("Citation.encodeRegexPayloadFrame")(function* <
   Job extends { readonly patternBytes: Uint8Array; readonly sourceBytes: Uint8Array },
 >(job: Job, maximum: number, header: string, encode: (job: Job) => Effect.Effect<string, CitationRegexWorkerFailure>) {
-  const count = citationRegexFrameBytes(header, job.patternBytes.byteLength, job.sourceBytes.byteLength);
-  if (count > maximum)
-    return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "processMessageBytes" });
+  const count = yield* preflightCitationRegexFrameBytes(
+    header,
+    job.patternBytes.byteLength,
+    job.sourceBytes.byteLength,
+    maximum
+  );
   const text = yield* encode(job);
   const frame = encoder.encode(`${text}\n`);
   if (frame.byteLength !== count) return yield* invalid();

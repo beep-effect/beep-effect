@@ -260,7 +260,7 @@ export const assertCitationCaseMetadataBudget = Effect.fn("CaseMetadataTest.shar
     regular.setup.operation,
     regular.setup.admission,
     regular.setup.observed.snapshot,
-    18
+    1
   );
   const tight = yield* install("bun", total - 1, true);
   const tightRequest = yield* requestOf(tight, row);
@@ -287,6 +287,6 @@ export const assertCitationCaseMetadataBudget = Effect.fn("CaseMetadataTest.shar
     tight.setup.operation,
     tight.setup.admission,
     tight.setup.observed.snapshot,
-    18
+    1
   );
 });

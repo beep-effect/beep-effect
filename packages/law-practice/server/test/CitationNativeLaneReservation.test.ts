@@ -240,7 +240,7 @@ const proveJobDeadline = Effect.fn("NativeReservationTest.jobDeadline")(function
       expect(snapshot).toMatchObject(
         family === "html"
           ? { unitsAcquired: 0, acquired: false }
-          : { unitsAcquired: 1, acquired: true, started: 1, confirmed: 1 }
+          : { unitsAcquired: 1, acquired: family !== "regex", started: 1, confirmed: 1 }
       );
     })
   ).pipe(Effect.forkChild);

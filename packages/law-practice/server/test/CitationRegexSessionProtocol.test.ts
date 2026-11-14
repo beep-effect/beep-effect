@@ -3,17 +3,23 @@ import {
   preflightCitationNativeJson,
 } from "@beep/law-practice-server/internal/Citation/NativeJson";
 import { CitationRegexPatternDescriptor } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
-import { citationUnaccountedText } from "@beep/law-practice-server/internal/Citation/RegexInput";
+import {
+  CitationRegexInputLayout,
+  citationUnaccountedText,
+} from "@beep/law-practice-server/internal/Citation/RegexInput";
 import {
   CitationRegexSessionJob,
   decodeCitationRegexSessionJob,
   encodeCitationRegexSessionJob,
   makeCitationRegexSessionPreparation,
+  preflightCitationRegexSessionJob,
 } from "@beep/law-practice-server/internal/Citation/RegexSessionProtocol";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect, vi } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -132,5 +138,42 @@ it.effect("rejects unknown properties after structural preflight and preserves t
     const unknown = `${Str.slice(0, -1)(text)},"unexpected":true}`;
     const failure = yield* decodeCitationRegexSessionJob(new TextEncoder().encode(unknown)).pipe(Effect.flip);
     expect(failure).toMatchObject({ reason: "invalid-frame" });
+  })
+);
+
+it.effect("refuses exact descriptor-bearing size and excess capture names before header encoding", () =>
+  Effect.gen(function* () {
+    const bound = yield* descriptor;
+    const preparation = yield* makeCitationRegexSessionPreparation(
+      { ...(yield* defaultCitationEnginePolicy).limits, processMessageBytes: 1024 },
+      citationUnaccountedText
+    );
+    const refused = yield* preparation
+      .prepare("python-re", bound, 0, native("(?P<maybe>a)?(b)"), native(Str.repeat(700)("a")), 0, 1, () => Effect.void)
+      .pipe(Effect.flip);
+    expect(refused).toMatchObject({ limit: "processMessageBytes" });
+    const names = R.fromEntries(A.makeBy(8192, (index) => [`g${index}`, index + 1]));
+    const large = yield* decodeDescriptor({ ...bound, profile: { ...bound.profile, groups: 8192, names } });
+    Reflect.set(large.profile.names, "extra", 1);
+    const pattern = CitationRegexInputLayout.make({
+      width: 1,
+      byteLength: 1,
+      pythonLength: 1,
+      utf16Units: 1,
+      mapBytes: 8,
+      projectionAmbiguous: false,
+    });
+    const failure = yield* preflightCitationRegexSessionJob(
+      "python-re",
+      large,
+      0,
+      pattern,
+      pattern,
+      0,
+      1,
+      1024,
+      "finditer"
+    ).pipe(Effect.flip);
+    expect(failure).toMatchObject({ limit: "processMessageBytes" });
   })
 );

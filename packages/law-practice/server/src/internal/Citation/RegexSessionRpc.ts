@@ -11,7 +11,7 @@ import * as Effect from "effect/Effect";
 import * as Rpc from "effect/rpc/Rpc";
 import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as S from "effect/Schema";
-import { makeCitationNativeJsonDecoder } from "./NativeJson.ts";
+import { makeCitationNativeArgumentEncoder, makeCitationNativeJsonDecoder } from "./NativeJson.ts";
 import { CitationRegexResultEnvelope } from "./RegexResult.ts";
 import { CitationRegexSessionJob } from "./RegexSessionProtocol.ts";
 import { CitationRegexWorkerFailure } from "./RegexWorkerProtocol.ts";
@@ -89,7 +89,7 @@ export type CitationRegexSessionReply = typeof CitationRegexSessionReply.Type;
 const invalid = () => CitationRegexWorkerFailure.make({ reason: "invalid-frame" });
 const runtime = () => CitationRegexWorkerFailure.make({ reason: "invalid-runtime" });
 const exceeded = () => CitationSafetyLimitExceeded.make({ operation: "extract", limit: "processMessageBytes" });
-const encodeStartup = S.encodeEffect(S.fromJsonString(CitationRegexSessionStartup));
+
 const Args = S.Tuple([
   S.String.check(S.isMaxLength(8192)).pipe(S.decodeTo(S.fromJsonString(CitationRegexSessionStartup))),
 ]);
@@ -98,12 +98,10 @@ const encodeReply = S.encodeEffect(S.fromJsonString(CitationRegexSessionReply));
 const encodeResult = S.encodeEffect(S.fromJsonString(CitationRegexResultEnvelope));
 const encoder = new TextEncoder();
 /** @internal @category operations @since 0.0.0 */
-export const encodeCitationRegexSessionStartup = Effect.fn("Citation.encodeRegexSessionStartup")(function* (
-  startup: CitationRegexSessionStartup
-) {
-  const text = yield* encodeStartup(startup).pipe(Effect.mapError(runtime));
-  if (text.length > 8192) return yield* runtime();
-  return text;
+export const encodeCitationRegexSessionStartup = makeCitationNativeArgumentEncoder({
+  codec: S.fromJsonString(CitationRegexSessionStartup),
+  maximum: 8192,
+  invalid: runtime,
 });
 /** @internal @category operations @since 0.0.0 */
 export const decodeCitationRegexSessionStartup = Effect.fn("Citation.decodeRegexSessionStartup")((args: unknown) =>

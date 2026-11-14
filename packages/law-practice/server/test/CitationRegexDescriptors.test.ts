@@ -62,6 +62,21 @@ it.effect("refuses capture names that are empty, out of range or shared, and dro
 );
 
 it.layer(BunCrypto.layer)("source-bound regex descriptors", (it) => {
+  it.effect("checks native layout and both pattern ceilings during descriptor selection", () =>
+    Effect.gen(function* () {
+      const { limits } = yield* defaultCitationEnginePolicy;
+      const registry = yield* makeCitationRegexDescriptorRegistry({ ...limits, processMessageBytes: 1024 }, [
+        descriptor(),
+      ]);
+      const invalid = yield* registry.select({ width: 3, bytes: new Uint8Array([97]) }, 0).pipe(Effect.flip);
+      expect(invalid).toMatchObject({ reason: "unknown-pattern" });
+      const oversized = yield* registry.select({ width: 1, bytes: new Uint8Array(1025) }, 0).pipe(Effect.flip);
+      expect(oversized).toMatchObject({ limit: "processMessageBytes" });
+      const short = yield* makeCitationRegexDescriptorRegistry({ ...limits, patternUtf16: 1 }, [descriptor()]);
+      const tooLong = yield* short.select(pattern(), 0).pipe(Effect.flip);
+      expect(tooLong).toMatchObject({ limit: "patternUtf16" });
+    })
+  );
   it.effect("retains its captured Clock and total deadline precedence", () =>
     Effect.gen(function* () {
       const limits = (yield* defaultCitationEnginePolicy).limits;
