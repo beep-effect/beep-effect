@@ -1,5 +1,5 @@
 {
-  "previous": "bdfe507b7babede6b53810e4ab227949184623b5a4f128f34607f2832b421160",
+  "previous": "04badd83193d15cbfc4f587d9a8467ad7158e9ab264796f41bdb3edadb5ff785",
   "review": {
     "reviewer": "Codex GPT-6.1 Sol (photo-face lane input review)",
     "reason": "Preserve the merged main lint pin and existing ONNX catalog entry; regenerated lockfile, unchanged cache posture and qualification.",
