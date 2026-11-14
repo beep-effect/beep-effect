@@ -5,13 +5,17 @@
  * @since 0.0.0
  */
 
+import * as NodeOS from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
 import { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import { SchemaUtils } from "@beep/schema";
+import * as Config from "effect/Config";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { HostLabel, hostLabelOf } from "../../../internal/github/GithubLedger.schemas.ts";
 import {
   appendEncodedAttemptJournalEvent,
   attemptJournalPathForCheckout,
@@ -22,6 +26,7 @@ import { attemptInputFactFields } from "../../../internal/repo-run/QualitySchedu
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { FinalCheckReceipt } from "./FinalCheck.schemas.ts";
+import { PrProvenanceHarness } from "./Provenance.ts";
 import { TurboForceReceipt } from "./TurboForce.ts";
 import { YeetVerdict } from "./Verdict.ts";
 import type * as Digest from "effect/crypto/Digest";
@@ -37,6 +42,15 @@ export { YeetAttemptJournalCompacted, YeetAttemptTerminationReason };
 
 /**
  * A durable marker written immediately before a Yeet attempt executes.
+ *
+ * **Details**
+ *
+ * `host` and `seat` (PERIL-11 slice 3) name where the attempt ran: the
+ * writer's short host label ({@link hostLabelOf}) and the agent harness whose
+ * shell started it, in the PR provenance footer's vocabulary
+ * ({@link PrProvenanceHarness}). Both are optional keys, so rows written before
+ * they existed decode with them absent, and readers that predate them ignore
+ * them as excess keys.
  *
  * **Example** (Use YeetAttemptStarted)
  *
@@ -68,6 +82,9 @@ export class YeetAttemptStarted extends S.Opaque<YeetAttemptStarted, { readonly 
     // Set on repair, verify and publish attempts: why Turbo was forced, and the TURB-05 shadow.
     // Rows written before the field existed decode with it absent.
     turboForce: TurboForceReceipt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    // PERIL-11 slice 3: the writer's host label and agent seat; absent on older rows.
+    host: HostLabel.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    seat: PrProvenanceHarness.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("YeetAttemptStarted", {
       description: "A durable marker written immediately before a Yeet attempt executes.",
@@ -359,4 +376,45 @@ export const generateYeetAttemptId = Effect.fn("Yeet.generateAttemptId")(functio
       Effect.flatMap(decodeAttemptId),
       Effect.mapError(YeetCommandError.new("Failed to generate Yeet attempt id."))
     );
+});
+
+const optionalConfigString = (name: string): Effect.Effect<O.Option<string>> =>
+  Config.option(Config.String(name)).pipe(Effect.orElseSucceed(O.none<string>));
+
+/**
+ * The `host` and `seat` a new attempt-started row carries.
+ *
+ * **Details**
+ *
+ * `host` is this machine's short host label (`unknown-host` when the
+ * hostname is not a valid label). `seat` follows the PR provenance footer's
+ * fallback order: `codex` when `CODEX_THREAD_ID` is set (a Codex shell, even
+ * one a Claude Code session launched), else `claude-code` when
+ * `CLAUDE_CODE_SESSION_ID` is set, else `unknown`. Session ids are read only
+ * to tell the harness apart and are never stored.
+ *
+ * **Example** (Stamp a start row)
+ *
+ * ```ts
+ * import { currentYeetAttemptOrigin } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(currentYeetAttemptOrigin)) // true
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const currentYeetAttemptOrigin: Effect.Effect<{
+  readonly host: O.Option<HostLabel>;
+  readonly seat: O.Option<PrProvenanceHarness>;
+}> = Effect.gen(function* () {
+  const codex = yield* optionalConfigString("CODEX_THREAD_ID");
+  const claude = yield* optionalConfigString("CLAUDE_CODE_SESSION_ID");
+  const seat: PrProvenanceHarness = pipe(
+    O.as(codex, PrProvenanceHarness.Enum.codex),
+    O.orElse(() => O.as(claude, PrProvenanceHarness.Enum["claude-code"])),
+    O.getOrElse(() => PrProvenanceHarness.Enum.unknown)
+  );
+  return { host: O.some(hostLabelOf(NodeOS.hostname())), seat: O.some(seat) };
 });

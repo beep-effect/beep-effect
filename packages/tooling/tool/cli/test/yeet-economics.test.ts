@@ -11,6 +11,7 @@ import {
   EconomicsLane,
   EconomicsScope,
   EconomicsScopeRequest,
+  FleetHostsRead,
   printYeetEconomicsCloseoutSummary,
   RepoPlanStep,
   RepoStepRunResult,
@@ -30,6 +31,7 @@ import {
   YeetEconomicsReportJson,
   YeetEconomicsSource,
   YeetExecutedStep,
+  YeetFleetHostSource,
   YeetReviewLaneSource,
   YeetVerdict,
   YeetVerdictJson,
@@ -63,7 +65,19 @@ const PACKET_DIR = ".beep/yeet";
 const at = (minutes: number): string => DateTime.formatIso(DateTime.makeUnsafe(BASE_MS + minutes * MINUTE));
 
 const Platform = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer, NodeCrypto.layer);
-const LiveSource = Layer.provideMerge(Layer.mergeAll(YeetEconomicsSource.layer, YeetReviewLaneSource.layer), Platform);
+// No test here reads fleet hosts; their source is `test/yeet-economics-fleet-hosts.test.ts`'s.
+const NoFleetHosts = Layer.succeed(
+  YeetFleetHostSource,
+  YeetFleetHostSource.of({
+    read: Effect.fn("YeetFleetHostSource.read")(() =>
+      Effect.succeed(FleetHostsRead.make({ journals: [], receipts: [] }))
+    ),
+  })
+);
+const LiveSource = Layer.provideMerge(
+  Layer.mergeAll(YeetEconomicsSource.layer, YeetReviewLaneSource.layer, NoFleetHosts),
+  Platform
+);
 const LiveSourceWithConsole = Layer.mergeAll(LiveSource, TestConsole.layer);
 const JournalEventJson = JsonStringCodec(YeetAttemptJournalEvent);
 
@@ -291,6 +305,7 @@ const failingSource = (read: YeetEconomicsSourceShape["read"]) =>
       YeetReviewLaneSource,
       YeetReviewLaneSource.of({ read: Effect.fn("YeetReviewLaneSource.read")(() => Effect.succeed([])) })
     ),
+    NoFleetHosts,
     TestConsole.layer
   );
 
