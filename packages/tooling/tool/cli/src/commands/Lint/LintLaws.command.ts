@@ -7,33 +7,48 @@
 
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { findRepoRoot } from "@beep/repo-utils";
-import { Str } from "@beep/utils";
+import { A, Str } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { resolveLawsPackageScope, scanLawsPackage } from "../Laws/LawsPackage.ts";
+import { NoTrackedPythonOptions } from "../Laws/NoTrackedPython.model.ts";
+import { formatNoTrackedPythonFinding, runNoTrackedPython } from "../Laws/NoTrackedPython.ts";
 import { TrackedShellAllowlistOptions } from "../Laws/TrackedShellAllowlist.model.ts";
 import { formatTrackedShellFinding, runTrackedShellAllowlist } from "../Laws/TrackedShellAllowlist.ts";
 import { resolveLintPackage } from "./internal/LintPackage.ts";
 
-// The repository-wide laws `lint laws` runs when no package is named.
+// The repository-wide laws `lint laws` runs when no package is named. Every law reports
+// before the command fails, so one run lists the findings of all of them.
 const repositoryLaws = Effect.gen(function* () {
-  const summary = yield* runTrackedShellAllowlist(
+  const shell = yield* runTrackedShellAllowlist(
     TrackedShellAllowlistOptions.make({ cwd: process.cwd(), strictCheck: true })
   );
   yield* Console.log(
-    `lint laws: tracked-shell-allowlist; tracked_shell_files=${summary.trackedShellFiles}; findings=${summary.findings.length}`
+    `lint laws: tracked-shell-allowlist; tracked_shell_files=${shell.trackedShellFiles}; findings=${shell.findings.length}`
+  );
+  yield* Effect.forEach(shell.findings, (finding) => Console.log(`lint laws: ${formatTrackedShellFinding(finding)}`), {
+    discard: true,
+  });
+  const python = yield* runNoTrackedPython(NoTrackedPythonOptions.make({ cwd: process.cwd(), strictCheck: true }));
+  yield* Console.log(
+    `lint laws: no-tracked-python; tracked_python_files=${python.trackedPythonFiles}; findings=${python.findings.length}`
   );
   yield* Effect.forEach(
-    summary.findings,
-    (finding) => Console.log(`lint laws: ${formatTrackedShellFinding(finding)}`),
+    python.findings,
+    (finding) => Console.log(`lint laws: ${formatNoTrackedPythonFinding(finding)}`),
     {
       discard: true,
     }
   );
-  if (summary.strictFailure) return yield* failWithReportedExit("lint laws: tracked-shell-allowlist failed.");
+  const failed = A.getSomes([
+    O.liftPredicate("tracked-shell-allowlist", () => shell.strictFailure),
+    O.liftPredicate("no-tracked-python", () => python.strictFailure),
+  ]);
+  if (A.isReadonlyArrayNonEmpty(failed))
+    return yield* failWithReportedExit(`lint laws: ${A.join(failed, ", ")} failed.`);
 }).pipe(Effect.withSpan("Lint.repositoryLaws"));
 
 /**
@@ -43,7 +58,8 @@ const repositoryLaws = Effect.gen(function* () {
  * **Details**
  *
  * `--package <dir>` scans one workspace's TypeScript sources. Without it the
- * command runs the repository-wide `tracked-shell-allowlist` law over the git
+ * command runs the repository-wide `tracked-shell-allowlist` and
+ * `no-tracked-python` laws over the git
  * index in check mode.
  *
  * **Example** (Inspect the subcommand name)

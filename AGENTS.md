@@ -158,6 +158,7 @@ the agent 1Password lane take precedence; a dialog never replaces those routes.
   keep `SKILL.md` under 500 lines and move depth into `references/`.
   `bun run beep skills update --check` enforces the keys and advises on
   length.
+- No Python in tracked source; run it outside the repo if you must, never commit it.
 
 ## Autonomy
 
@@ -351,7 +352,10 @@ needed only for the escalation list below.
   (sibling root or the clone's `.claude/worktrees/<name>`; its archive fence
   grants the same invoker and `CLAUDE_PID` session exemption as `--retire`, so
   a desktop session removes its own lane), or from inside it after
-  the merge with `bun run beep yeet sweep --retire`.
+  the merge with `bun run beep yeet sweep --retire`. Never create another
+  `beep-effectN` clone; abandoned lanes and legacy clones drain through
+  `beep quality residue-reap --fleet --classes drainable --apply`
+  (`standards/git-worktrees.md`, "Seats, Lanes, Registry And Drain").
 
 ## Touch → Skill / Command
 

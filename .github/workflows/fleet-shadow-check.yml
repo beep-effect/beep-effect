@@ -276,14 +276,14 @@ jobs:
             *) echo "Unsupported AWS CLI architecture: $(uname -m)"; exit 1 ;;
           esac
           command -v curl >/dev/null
-          command -v python3 >/dev/null
+          command -v unzip >/dev/null
           install_dir="${RUNNER_TEMP}/aws-cli"
           bin_dir="${RUNNER_TEMP}/bin"
           mkdir -p "${bin_dir}"
           curl --silent --show-error --fail --location \
             "https://awscli.amazonaws.com/awscli-exe-linux-${aws_arch}.zip" \
             --output "${RUNNER_TEMP}/awscliv2.zip"
-          python3 -m zipfile -e "${RUNNER_TEMP}/awscliv2.zip" "${RUNNER_TEMP}/awscliv2"
+          unzip -q "${RUNNER_TEMP}/awscliv2.zip" -d "${RUNNER_TEMP}/awscliv2"
           "${RUNNER_TEMP}/awscliv2/aws/install" \
             --install-dir "${install_dir}" --bin-dir "${bin_dir}"
           echo "${bin_dir}" >> "${GITHUB_PATH}"
@@ -367,21 +367,16 @@ jobs:
             exit 1
           fi
 
+          # The JIT value stays on stdin (printf is a builtin), never in any argv.
+          # URL-safe base64 is padded, decoded and parsed; only a safe runner name prints.
           replay_runner_name="$(
-            printf '%s' "${jit_value}" | python3 -c '
-          import base64, json, re, sys
-          encoded = sys.stdin.read().strip()
-          encoded += "=" * (-len(encoded) % 4)
-          try:
-              payload = json.loads(base64.urlsafe_b64decode(encoded))
-          except Exception:
-              payload = {}
-          runner = payload.get("runner")
-          name = runner.get("name") if isinstance(runner, dict) else None
-          name = name if isinstance(name, str) else payload.get("agentName")
-          if isinstance(name, str) and re.fullmatch(r"[A-Za-z0-9._-]{1,128}", name):
-              print(name)
-          ' || true
+            printf '%s' "${jit_value}" | tr -- '-_' '+/' |
+              awk '{ pad = (4 - length($0) % 4) % 4; printf "%s", $0; while (pad-- > 0) printf "=" }' |
+              base64 -d 2>/dev/null |
+              jq -r 'if type == "object" then . else {} end
+                | (.runner | if type == "object" then .name else null end) as $name
+                | if ($name | type) == "string" then $name else .agentName end
+                | select(type == "string" and test("\\A[A-Za-z0-9._-]{1,128}\\z"))' 2>/dev/null || true
           )"
 
           set +e

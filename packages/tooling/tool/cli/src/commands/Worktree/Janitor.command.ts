@@ -30,6 +30,7 @@ import { AttemptJournalStore } from "../Yeet/internal/AttemptJournalStore.ts";
 import { FleetMirrorService, FleetMirrorServiceLive } from "./Fleet.service.ts";
 import { ResidueReapClass, ResidueReapReport } from "./internal/ResidueReap.schemas.ts";
 import { runResidueReap } from "./internal/ResidueReap.ts";
+import { ResidueDrainProbeLive } from "./internal/ResidueReapDrainLive.ts";
 import { ResidueTerminalLaneProbeLive } from "./internal/ResidueTerminalLaneLive.ts";
 import { TmpfsReapReport } from "./internal/TmpfsReap.schemas.ts";
 import { runTmpfsReap } from "./internal/TmpfsReap.ts";
@@ -140,7 +141,19 @@ const renderResidueCandidateLine = (candidate: ResidueReapReport["candidates"][n
   const entries = optionalCandidateField(candidate.entriesScanned, "entries");
   const bytes = optionalCandidateField(candidate.bytes, "bytes");
   const skip = optionalCandidateField(candidate.skipReason, "reason");
-  return `- ${candidate.action} class=${candidate.reapClass}${age}${entries}${bytes}${skip} ${candidate.path}`;
+  const blockedBy = pipe(
+    O.fromUndefinedOr(candidate.drain),
+    O.map((drain) =>
+      A.map(
+        A.filter(drain.checks, (check) => check.outcome === "fail" || check.outcome === "probe-failed"),
+        (check) => check.check
+      )
+    ),
+    O.filter((checks) => A.isReadonlyArrayNonEmpty(checks)),
+    O.map((checks) => ` blocked-by=${A.join(checks, ",")}`),
+    O.getOrElse(() => "")
+  );
+  return `- ${candidate.action} class=${candidate.reapClass}${age}${entries}${bytes}${skip}${blockedBy} ${candidate.path}`;
 };
 
 // Human output caps rows per class and section; the JSON report always lists every
@@ -152,10 +165,21 @@ type ResidueCandidate = ResidueReapReport["candidates"][number];
 type ResidueSection = readonly [string, ReadonlyArray<ResidueCandidate>];
 
 const residueSectionLabel = (candidate: ResidueCandidate): string =>
+  ResidueReapClass.is.drainable(candidate.reapClass)
+    ? "fleet drain"
+    : pipe(
+        O.fromUndefinedOr(candidate.checkoutRoot),
+        O.map((checkoutRoot) => `checkout: ${checkoutRoot}`),
+        O.getOrElse(() => "home")
+      );
+
+const renderDrainDisk = (label: string, disk: ResidueReapReport["drainDiskBefore"]): ReadonlyArray<string> =>
   pipe(
-    O.fromUndefinedOr(candidate.checkoutRoot),
-    O.map((checkoutRoot) => `checkout: ${checkoutRoot}`),
-    O.getOrElse(() => "home")
+    O.fromUndefinedOr(disk),
+    O.map((value) => [
+      `legacy clones ${label}: ${value.legacyClones} clone(s), ${value.bytes} bytes${A.isReadonlyArrayNonEmpty(value.unmeasured) ? `, unmeasured: ${A.join(value.unmeasured, ", ")}` : ""}`,
+    ]),
+    O.getOrElse(A.empty<string>)
   );
 
 const byResidueSectionLabel = Order.mapInput(Order.String, ([label]: ResidueSection) => label);
@@ -223,6 +247,13 @@ const renderResidueReportLines = (report: ResidueReapReport): ReadonlyArray<stri
     A.sort(byResidueSectionLabel),
     A.flatMap(renderResidueSection)
   ),
+  ...pipe(
+    O.fromUndefinedOr(report.drainGraceDays),
+    O.map((days) => [`drain grace window: ${days}d (removes only when --classes names drainable)`]),
+    O.getOrElse(A.empty<string>)
+  ),
+  ...renderDrainDisk("before", report.drainDiskBefore),
+  ...renderDrainDisk("after", report.drainDiskAfter),
   `totals: candidates=${A.length(report.candidates)} reaped=${report.reapedCount} reclaimed-bytes=${report.reclaimedBytes}`,
   ...A.map(report.warnings, (warning) => `warning: ${warning}`),
 ];
@@ -263,7 +294,11 @@ export const renderResidueReportLinesForTesting: (report: ResidueReapReport) => 
  * Defaults to a non-mutating report and revalidates every apply action.
  * `--fleet` sweeps the repository-scoped classes (per-checkout Turbo cache,
  * Turbo run summaries, interrupted merged previews) in every clone and linked
- * worktree sharing this origin. The shared Turbo cache is aged, then
+ * worktree sharing this origin, and assesses every such checkout against the
+ * `drainable` predicate. A drainable checkout is removed only by an applied run
+ * whose `--classes` names `drainable`, after `--drain-grace-days` of unbroken
+ * drainable observations; such a run also reports the disk held by registered
+ * legacy clones before and after the wave. The shared Turbo cache is aged, then
  * size-evicted down to `--shared-turbo-max-bytes`; qualification views keep the
  * newest `--qualification-views-keep` plus every view a receipt cites. SQLite
  * databases are never VACUUMed.
@@ -328,12 +363,19 @@ export const residueReapCommand = Command.make(
       Flag.withDefault(2),
       Flag.withDescription("Newest qualification dependency views always kept, besides any a receipt cites")
     ),
+    drainGraceDays: Flag.Finite("drain-grace-days").pipe(
+      Flag.withDefault(7),
+      Flag.withDescription(
+        "Days a fleet checkout must stay drainable at one HEAD before --classes drainable removes it"
+      )
+    ),
   },
   Effect.fn(function* ({
     apply,
     resume,
     restore,
     classes,
+    drainGraceDays,
     fleet,
     json,
     maxAgeDays,
@@ -349,6 +391,7 @@ export const residueReapCommand = Command.make(
       ...getSomesStruct({ resume, restore }),
       checkoutRoots,
       classes,
+      drainGraceDays,
       fleet,
       maxAgeDays,
       qualificationViewsKeep,
@@ -368,5 +411,12 @@ export const residueReapCommand = Command.make(
   Command.withDescription(
     "Dry-run-first janitor for bounded Codex, Turbo, merged-preview, qualification-view, and beep cache residue"
   ),
-  Command.provide(Layer.mergeAll(FleetMirrorServiceLive, ResidueTerminalLaneProbeLive, AttemptJournalStore.layer))
+  Command.provide(
+    Layer.mergeAll(
+      FleetMirrorServiceLive,
+      ResidueTerminalLaneProbeLive,
+      ResidueDrainProbeLive,
+      AttemptJournalStore.layer
+    )
+  )
 );

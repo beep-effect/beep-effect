@@ -49,10 +49,10 @@ const PR_3101 = [
 
 const CITATION_MANIFEST = "goals/citation-extraction-engine/ops/manifest.json";
 
-// One sample path per registry row, keyed by the row's pattern. The citation ops sample is a
-// `.py` file so it does not also match the ops `.ts` row.
+// One sample path per registry row, keyed by the row's pattern. The citation ops sample is an
+// `.mjs` file so it does not also match the ops `.ts` row.
 const SAMPLES: Readonly<Record<string, string>> = {
-  "^goals/citation-extraction-engine/ops/": "goals/citation-extraction-engine/ops/audit-oracle.py",
+  "^goals/citation-extraction-engine/ops/": "goals/citation-extraction-engine/ops/qualify-regex-translator.child.mjs",
   "^goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-selection/profile\\.frozen\\.json\\.txt$":
     "goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-selection/profile.frozen.json.txt",
   "^goals/semantica-canary/history/c2/full-w1\\.replay\\.eval-report\\.json$":
@@ -60,8 +60,6 @@ const SAMPLES: Readonly<Record<string, string>> = {
   "^goals/time-to-certainty/research/economics\\.json$": "goals/time-to-certainty/research/economics.json",
   "^goals/time-to-certainty/research/gate-order-handoff\\.json$":
     "goals/time-to-certainty/research/gate-order-handoff.json",
-  "^goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics(\\.test)?\\.py$":
-    "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py",
   "^goals/speed-loop/ops/runner-burst/": "goals/speed-loop/ops/runner-burst/teardown-burst-runners.sh",
   "^explorations/beep-ci-operational-ontology/ontology/extraction/s6/(graphs/abox\\.ttl|snapshot/raw/journal\\.ndjson)$":
     "explorations/beep-ci-operational-ontology/ontology/extraction/s6/graphs/abox.ttl",
@@ -69,6 +67,8 @@ const SAMPLES: Readonly<Record<string, string>> = {
     "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/MANIFEST.yaml",
   "^explorations/beep-ci-operational-ontology/research/(control-interventions\\.yaml|evidence/journal-snapshot-2026-10-01/journal\\.redacted\\.ndjson)$":
     "explorations/beep-ci-operational-ontology/research/control-interventions.yaml",
+  "^explorations/beep-ci-operational-ontology/ontology/docs/competency-questions\\.yaml$":
+    "explorations/beep-ci-operational-ontology/ontology/docs/competency-questions.yaml",
   "^explorations/legal-ontology-landscape/assets/manifest\\.jsonl$":
     "explorations/legal-ontology-landscape/assets/manifest.jsonl",
   "^goals/[^/]+/ops/.+\\.ts$": "goals/demo-packet/ops/check-scope.ts",

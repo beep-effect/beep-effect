@@ -72,10 +72,12 @@ const program = Effect.gen(function* () {
       })
     )
   )(planRaw);
-  const producer = yield* read(new URL("./export-supplemental.py", import.meta.url));
+  // export-supplemental.py was removed with the repository's Python (goal python-free-repo). Its digest
+  // is pinned from the recovery commit: `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/export-supplemental.py`.
+  const producerSha256 = "0956031da431202af17e180ede316a647b5d5720846cc850332bf8b16ad10377";
   if (
     hash(planRaw) !== report.planSha256 ||
-    hash(producer) !== report.exporterSha256 ||
+    producerSha256 !== report.exporterSha256 ||
     !same(plan.remainingCoverage, report.remainingCoverage)
   )
     return yield* reject();
@@ -185,11 +187,13 @@ const program = Effect.gen(function* () {
       })
     )
   )(textPlanRaw);
-  const observer = yield* read(new URL("./observe-supplemental-text.py", import.meta.url));
+  // observe-supplemental-text.py was removed with the repository's Python (goal python-free-repo). Its
+  // digest is pinned from the recovery commit: `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/observe-supplemental-text.py`.
+  const observerSha256 = "c1f6eed4d3e94c6b363875953c7058573b9c4d900d56a0ff64a1d5c8cfd26728";
   const textIds = A.map(report.textCases, (row) => row.id);
   if (
     hash(textPlanRaw) !== report.textPlanSha256 ||
-    hash(observer) !== report.observerSha256 ||
+    observerSha256 !== report.observerSha256 ||
     textIds.length !== 26 ||
     A.dedupe([...ids, ...textIds]).length !== 39 ||
     !same(

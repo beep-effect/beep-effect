@@ -17,14 +17,14 @@ const withEnvironment = (values: Record<string, string>) =>
 const decodeRecipients = S.decodeUnknownEffect(NotificationRecipients);
 
 describe("CostControlsConfig", () => {
-  it.effect("resolves prod to the guarded account and its thresholds, silent", () =>
+  it.effect("resolves prod to the guarded account and its thresholds, live", () =>
     Effect.gen(function* () {
       const config = yield* resolveStageConfig("prod");
       expect(config.expectedAccountId).toBe("832907639880");
       expect(config.region).toBe("us-east-1");
       expect(config.monthlyBudgetUsd).toBe(200);
       expect(config.anomalyImpactUsd).toBe(10);
-      expect(config.notifications).toBe("silent");
+      expect(config.notifications).toBe("live");
     })
   );
 
