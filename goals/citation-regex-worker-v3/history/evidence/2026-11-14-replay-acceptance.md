@@ -93,15 +93,23 @@ File: packages/law-practice/server/test/CitationCanonicalParsedEquality.test.ts
 
 All listed after tests have explicit outcome=success; none is inferred merely from a green workflow. The corresponding *.fixtures.ts files assert pinned semantic observations: FullSpan compares source text and each independently computed full-span observation to captured operands (lines 303–329); PinSpan compares source text, Unicode-coordinate start/end and extracted substring (lines 102–116); PageCorrection compares corrected citation/page text to captured expected operands (lines 112–114); ParsedEquality compares exact source citation hashes to captured hashes and the original equality predicate (lines 130–138). ExtractionLoop compares tag, index, token, metadata, spans, full-span boundaries, year, edition and document attachment, then selected IDs, warning pairs and returned-object identities (lines 111–145, 225–234). These are exact assertions against pinned observations, not timing-only checks. Passes establish identical results for those asserted observations; they do not establish byte identity of every unasserted internal field. FullSpan additionally checks the new process-count expectations, which intentionally differ from before. No output digest was invented or substituted for these assertions.
 
-## Remote worker route and blocker
+## Remote worker run
 
-Applied .claude/skills/remote-development-agents/SKILL.md and its references/hosts.md and references/jobs.md; consulted docs/runbooks/agent-pools.md compute-profile rules and docs/runbooks/t3code-fleet.md as the linked-host route. The documented SSH wrappers are ssh-beep-worker-yubi and ssh-tbk-worker. Read their local implementations: ordinary connections use hardware-backed SSH identities, no forwarding, and announce a required YubiKey touch unless an authenticated multiplex channel already exists. Configuration-only ssh -G -F /dev/null probes returned no ControlPath for either destination. Both wrapper -O check probes returned exit 255, “No ControlPath specified for \"-O\" command”. No login/authentication attempt or touch request was started.
+The owner ran the replays on beep-worker through its T3 environment link (an Opus 5.5 child there, no SSH and no human step), in a disposable detached worktree of the existing clone at main `34964a3fdc0`, with bun 1.4.4 (the repo pin), one file at a time with the Bun parent (`bunx --bun vitest run test/<file>.test.ts`). The machine has 4 CPUs; the 1-minute load at each file start was 0.67 to 1.79. All 33 tests in the five files passed; the worktree was removed afterwards.
 
-T3 environment-links reports both beep-worker and tbk-worker reachable with Full access. That proves control-plane reachability, not shell access or replay completion. The skill's T3 execution route is delegate_task / a new thread; this task explicitly prohibits subagents, and the available T3 tools expose no direct remote shell execution. No delegate or new thread was launched. Thus there is no available direct noninteractive execution route within this assignment: SSH needs a human hardware touch, while T3 execution needs prohibited delegation. No workaround, credential operation or remote mutation was attempted. Remote durations and pass/fail: not run for all five. No replay job remains running.
+| Replay file | Tests | Vitest file duration | Slowest test | Its timeout | Ratio |
+| --- | ---: | ---: | --- | ---: | ---: |
+| CitationCanonicalFullSpan | 12/12 | 95.83 s | node first-call parity, 25.79 s | 180 s | 14% |
+| CitationExtractionLoop | 15/15 | 60.52 s | bun cases 33-35, 6.03 s | 30 s (package default) | 20% |
+| CitationCanonicalPinSpan | 2/2 | 45.86 s | bun all nine equalities, 24.07 s | 180 s | 13% |
+| CitationCanonicalPageCorrection | 2/2 | 42.70 s | bun all twelve equalities, 20.91 s | 180 s | 12% |
+| CitationCanonicalParsedEquality | 2/2 | 40.82 s | bun all four equalities and hashes, 18.72 s | 180 s | 10% |
+
+The bun full-span calls are timed individually (0.97 s to 4.03 s each). FullSpan spent about 27% of its file time in transform on a cold cache in the fresh worktree.
 
 ## Criterion verdicts
 
 - Hosted timing: **met**, on the permitted green B3 PR head, for all five families' current individual replay tests, including Node parity tests; split families have no aggregate watchdog. Main-head hosted proof remains unobserved.
 - Identical asserted results: **met**, every after replay test passed exact pinned-observation assertions described above.
-- Remote-worker replay recorded: **not run**, hardware-touch SSH gate and no direct T3 shell route; this file records the blocker, not a successful remote replay.
-- Combined Citation replays verification row: **not met**, because the required remote-worker replay is still missing. This evidence does not certify unrelated B3 obligations (v2 deletion, shard timing regeneration, isolation-contract documentation).
+- Remote-worker replay recorded: **met**, all 33 tests passed on beep-worker with every slowest test at 10% to 20% of its timeout (section above).
+- Combined Citation replays verification row: **met**: identical asserted results and under half the watchdog on hosted CI and on the remote worker.
