@@ -38,3 +38,12 @@ lists follow the manifests of the two new infra packages (`cost-controls`, `turb
 sources those PRs added under `packages/tooling/tool/cli/src/commands/Cache`. No task was added or removed, and no
 command, output, environment or dependency edge changed; everything outside `tasks` is identical. This lane's diff
 does not touch `turbo.json`. Re-recording `//` and `@beep/oip-web` adopts both digests; no qualification is granted.
+
+## Root subject `//` again, after merging `origin/main` at `00e2e35dbae` (2026-11-14)
+
+#3322 changed root `turbo.json` after `1f34884a98c`: it adds the root task `//#lint:no-tracked-python`
+(`cache: false`, no outputs, env `BEEP_CACHE_TOOLCHAIN_DIGEST`, depending on
+`@beep/repo-cli#lint:policy-fingerprint:laws`), and regenerates the `inputs` lists of
+`@beep/repo-cli#lint:policy-fingerprint:laws` and `:lint-laws`. The new task is uncached, so it grants no reuse;
+nothing outside `tasks` changed, and this lane's diff does not touch `turbo.json`. Re-recording `//` and
+`@beep/oip-web` on `main`'s baseline adopts both digests; no qualification is granted.
