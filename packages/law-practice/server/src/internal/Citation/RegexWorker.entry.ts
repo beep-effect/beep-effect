@@ -6,11 +6,11 @@ import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunStdio from "@effect/platform-bun/BunStdio";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import { citationRegexWorkerProgram } from "./RegexWorkerProgram.ts";
+import { citationRegexSessionProgram } from "./RegexSessionProgram.ts";
 
 const main = Layer.merge(BunCrypto.layerDigest, BunStdio.layer).pipe(
   Layer.build,
-  Effect.flatMap((context) => Effect.provide(citationRegexWorkerProgram, context)),
+  Effect.flatMap((context) => Effect.provide(citationRegexSessionProgram, context)),
   Effect.scoped
 );
 BunRuntime.runMain(main);

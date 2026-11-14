@@ -47,10 +47,10 @@ import * as PlatformError from "effect/PlatformError";
 import * as Predicate from "effect/Predicate";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
+import * as Scope from "effect/Scope";
 import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
-import * as SynchronizedRef from "effect/SynchronizedRef";
 import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
@@ -559,8 +559,13 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
       const stranger = yield* install(second.spawner);
       const otherClock = yield* makeCitationNativeSleepClock(() => Effect.never);
       const foreignClock = yield* install(first.spawner).pipe(Effect.provideService(Clock.Clock, otherClock));
+      const installation = yield* Scope.make();
+      const closedStranger = yield* install(second.spawner).pipe(Effect.provideService(Scope.Scope, installation));
+      yield* Scope.close(installation, Exit.void);
       yield* withCitationTestInvocation(
         Effect.gen(function* () {
+          const closedMismatch = yield* closedStranger.evaluate(pattern, native("b"), 0).pipe(Effect.flip);
+          expect(closedMismatch).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "closed" });
           const firstMismatch = yield* stranger.evaluate(pattern, native("b"), 0).pipe(Effect.flip);
           expect(firstMismatch).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-runtime" });
           const clockMismatch = yield* foreignClock.evaluate(pattern, native("b"), 0).pipe(Effect.flip);
@@ -569,8 +574,8 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
           const invalidQuota = yield* creator.evaluate(pattern, native("b"), 0, -1).pipe(Effect.flip);
           expect(invalidQuota).toMatchObject({ reason: "invalid-runtime" });
           const invocation = yield* CitationInvocation;
-          const adapter = yield* SynchronizedRef.get(invocation.regexOwner);
-          expect(adapter._tag).toBe("Some");
+          const session = yield* invocation.regex.snapshot;
+          expect(session).toMatchObject({ state: "absent", jobs: 0 });
           const refused = yield* stranger.evaluate(pattern, native("b"), 0).pipe(Effect.flip);
           expect(refused).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-runtime" });
         }),

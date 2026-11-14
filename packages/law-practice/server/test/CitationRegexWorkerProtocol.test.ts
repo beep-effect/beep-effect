@@ -4,13 +4,14 @@ import {
   citationUnaccountedText,
   makeCitationRegexInput,
 } from "@beep/law-practice-server/internal/Citation/RegexInput";
-import { callCitationRegexRpc } from "@beep/law-practice-server/internal/Citation/RegexWorkerClient";
 import {
   CitationRegexMatchMode,
   CitationRegexWorkerFailure,
   CitationRegexWorkerJob,
   decodeCitationRegexJob,
+  decodeCitationRegexJobOptions,
   encodeCitationRegexJob,
+  encodeCitationRegexPayloadFrame,
   makeCitationRegexJobPreparation,
   preflightCitationRegexJob,
   readCitationRegexFrames,
@@ -29,7 +30,6 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
@@ -384,44 +384,6 @@ it.effect("rejects malformed preparation inputs and closes platform stream failu
   })
 );
 
-it.effect("rejects out-of-order RPC controls and does not retry failed writes", () =>
-  Effect.gen(function* () {
-    const limits = (yield* defaultCitationEnginePolicy).limits;
-    const preparation = yield* makeCitationRegexJobPreparation(limits, citationUnaccountedText);
-    const native = { width: 1, bytes: utf8.encode("a") };
-    const { job, frame } = yield* preparation.prepare(native, native, 0, 1, nothing);
-    const wrongOrder = yield* encodeCitationRegexControl(
-      CitationRegexWorkerStarted.make({}),
-      limits.processMessageBytes
-    );
-    const invalid = yield* callCitationRegexRpc(
-      { stdin: Sink.drain, stdout: Stream.make(wrongOrder) },
-      job,
-      frame,
-      limits.processMessageBytes
-    ).pipe(Effect.flip);
-    expect(invalid).toMatchObject({ reason: "invalid-frame" });
-    let sends = 0;
-    const failed = yield* callCitationRegexRpc(
-      {
-        stdout: Stream.never,
-        stdin: Sink.forEach(() =>
-          Effect.gen(function* () {
-            sends++;
-            return yield* PlatformError.badArgument({ module: "test", method: "stdin", description: "private-source" });
-          })
-        ),
-      },
-      job,
-      frame,
-      limits.processMessageBytes
-    ).pipe(Effect.flip);
-    expect(failed).toMatchObject({ reason: "channel-failed" });
-    expect("cause" in failed).toBe(false);
-    expect(sends).toBe(1);
-  })
-);
-
 it.effect("checks the absolute pattern ceiling even when handed a valid source-role layout", () =>
   Effect.gen(function* () {
     const { input, pattern } = yield* setup();
@@ -447,5 +409,27 @@ it.effect("keeps escaped delimiters inside JSON strings and rejects an unmatched
     yield* preflightCitationNativeJson(utf8.encode(text), 1, invalid);
     const failure = yield* preflightCitationNativeJson(utf8.encode("}"), 1, invalid).pipe(Effect.flip);
     expect(failure).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-frame" });
+  })
+);
+
+it.effect("retains default job mode and refuses encoder accounting drift or an invalid installed policy", () =>
+  Effect.gen(function* () {
+    const options = yield* decodeCitationRegexJobOptions(0, 1);
+    expect(options.mode).toBe("finditer");
+    const drift = yield* encodeCitationRegexPayloadFrame(
+      { patternBytes: new Uint8Array(0), sourceBytes: new Uint8Array(0) },
+      1024,
+      "{}",
+      () => Effect.succeed('{"extra":true}')
+    ).pipe(Effect.flip);
+    expect(drift).toMatchObject({ reason: "invalid-frame" });
+    const { limits } = yield* defaultCitationEnginePolicy;
+    const policy = yield* makeCitationRegexJobPreparation(
+      { ...limits, processMessageBytes: 0 },
+      citationUnaccountedText
+    ).pipe(Effect.flip);
+    expect(policy).toMatchObject({ reason: "invalid-runtime" });
+    const control = yield* encodeCitationRegexControl(CitationRegexWorkerStarted.make({}), 1).pipe(Effect.flip);
+    expect(control).toMatchObject({ limit: "processMessageBytes" });
   })
 );

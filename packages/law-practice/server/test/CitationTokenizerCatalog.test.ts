@@ -126,7 +126,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("canonical t
           A.map(output.assembly.citations, ([index, id]) => ({ index, id, action: "FullCaseCitation" }))
         );
         const snapshot = yield* setup.observed.snapshot;
-        expect(snapshot).toEqual({ spawned: 11, confirmed: 11 });
+        expect(snapshot).toEqual({ spawned: 1, confirmed: 1 });
         const changed = yield* makeCitationCanonicalTokenizerCatalog(
           limits,
           `${controls.payload} `,

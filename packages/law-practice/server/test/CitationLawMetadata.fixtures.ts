@@ -142,7 +142,12 @@ export const replayCitationLawMetadata = Effect.fn("LawMetadataTest.replay")(fun
   expect(rows).toHaveLength(full ? 128 : 14);
   const calls = A.reduce(rows, 0, (total, row) => total + row.calls.length);
   expect(calls).toBe(full ? 156 : 17);
-  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, calls);
+  yield* assertCitationWorkerCompositionReleased(
+    setup.operation,
+    setup.admission,
+    setup.observed.snapshot,
+    A.filter(rows, (row) => row.calls.length > 0).length
+  );
 });
 /** Partial allocation failure cannot publish a patch; caller mutation cannot change configuration. */
 export const assertCitationLawMetadataBudget = Effect.fn("LawMetadataTest.budget")(function* () {

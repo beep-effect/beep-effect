@@ -153,6 +153,50 @@ Lane explore/citation-engine-install-and-worker-reuse
 
 Reverse: Restore policy v1 and protocol v2.
 
+### A cancelled waiter leaves the regex session untouched, 2026-11-14
+
+An evaluation interrupted before acquiring the session permit owns no job or child and leaves the session, process and capacity untouched. Interruption cleanup encloses only the permit-held lane transaction; all holder awaits still poison, SIGKILL and confirm retirement before acknowledging interruption. This narrows round 1 to awaits owned by the evaluation. The lane handover wait already has its cleanup inside its permit and remains side-effect free on cancellation. Real-process regressions on both child runtimes prove a cancelled waiter leaves the holder successful and a later job reuses the same child. The never-respawn rule is unchanged.
+
+Reverse: Restore whole-evaluation interruption cleanup only if queued evaluations acquire ownership before waiting, with matching isolation proofs
+
+### Bound revoked lane drains while retaining unresolved native ownership, 2026-11-14
+
+Each withUse call retains admitted operations independently of caller cancellation. After callback revocation, reserve gets queueDeadline, release gets cleanupDeadline, and start gets queueDeadline plus two cleanupDeadline windows for prior-occupant retirement, admission and spawn transfer. These are conservative post-revocation completion budgets from existing policy fields, not new limits. Expiry poisons the lane and quarantines an acquired lease; the outer semaphore is released with typed cleanup-unconfirmed, while the retained operation and its private owner Scope keep unresolved resources. Invocation closure skips unresolved ownership, and late completion releases an unspawned lease or confirms the exact child through NativeProcess before returning capacity. Public retirement cannot release a pending spawn's lease. Interruption during masked drain is acknowledged within the same finite timer window. Callback context carries revocable call frames to reject nesting before lock acquisition, including nested child fibers, without fiber identity. No new start is handed to the spawner after poisoning. A previously authorized hand-off may still produce a child during lazy platform preparation; its retained owner must SIGKILL and confirm that child before returning capacity, as clarified by the round-5 owner ruling.
+
+Reverse: Replace the retained-work drain only with a protocol that preserves quarantine and late confirmed retirement without blocking invocation finalizers.
+
+### Carry the regex engine on each v3 job; startup keeps limits only, 2026-11-14
+
+Owner ruling on the second B2 stop. One invocation uses two dialects: the tokenizer installs `python-re` and the context matcher `python-regex-v0`. Design section 2.4 put the engine in the startup argv, which fits one process per evaluation and not one process per invocation. The engine becomes a required, parent-selected field of `CitationRegexWorkerJob`, beside the descriptor it already carries, and leaves `CitationRegexWorkerStartup`. It follows the earlier decision that each job carries its parent-selected descriptor: the worker never chooses or infers a dialect. Required with it: the engine is inside the exact size preflight and the finite property ceiling; the worker compiles each job under that job's engine and keeps no compiled program, cache or other state from one job to the next; a job whose engine fails its schema is a protocol deviation and kills; a real-process regression runs a `python-re` job then a `python-regex-v0` job (pattern `a(?i)b`, accepted by the second and refused by the first) in one process on both child runtimes. Rejected: restarting the process on an engine change (breaks one process per invocation and the never-respawn rule) and a common dialect (changes extraction output).
+
+Lane feat/citation-regex-session
+
+Reverse: Return the engine to startup only if every evaluator in an invocation is proved to use one dialect.
+
+### Delete the v2 regex RPC client once no evaluator calls it, 2026-11-14
+
+Owner ruling for PR 3352: RegexWorkerClient.ts has no production importer after evaluator migration to CitationRegexSession. Delete it and the client-only out-of-order-control and failed-write test blocks, whose shared test can no longer exercise a production caller. Retain all other v2 tests, program, protocol and RPC schemas. Hosted coverage lost its old evaluator-driven reachability; adding coverage for this unused client would preserve dead production code. The remaining v2 program importers and coverage-baseline deletion handling are recorded in the PR review round 1 evidence.
+
+Remove only its coverage baseline file row: CoverageRegression.perFileDroppedMetrics fails closed for vanished covered paths, as for the earlier CleanerOperation.ts deletion (2026-11-13 decision). Preserve package aggregates and all surviving file floors. RegexWorkerProgram.ts has only CitationRegexWorker.test.ts as a runtime importer and is retained for B3; RegexWorkerProtocol.ts and RegexWorkerRpc.ts remain imported by production session modules.
+
+Reverse: Restore RegexWorkerClient.ts from main if a v2 evaluator returns
+
+### Fence lane authority at the spawner hand-off, not at OS process birth, 2026-11-14
+
+Owner ruling on review round 5. The physical owner checks lane authority synchronously and then calls `ChildProcessSpawner.spawn(command)`, which returns an Effect. In Effect v4 the platform spawner (`NodeChildProcessSpawner`, re-exported by Bun) yields `fs.access(cwd)` before it calls `NodeChildProcess.spawn` inside a later callback, and the citation commands supply `cwd`. So a revocation or drain expiry that lands during that preparation can still be followed by an OS birth; no check placed around a generic `ChildProcessSpawner` call can close that window under its Effect-returning contract. The guarantee is therefore stated at the hand-off: no start is handed to the spawner after revocation, closure or poisoning. A start handed off before that point is owned from its registration: its lease stays held (quarantined, so the concurrency ceiling is never exceeded), the post-start authority check retires the child at once through the existing SIGKILL and confirmed-retirement path, the lease is returned exactly once after confirmation, and the lane refuses every later start. Rejected: a repository-owned spawner implementation that re-checks authority inside its spawn callback (a second platform spawner to maintain for a window bounded by one directory check, with no capacity or ownership exposure) and removing `cwd` from the command (the worker needs its per-request directory). The regression parks inside the returned spawner Effect and asserts the hand-off outcome above.
+
+Lane feat/citation-regex-session
+
+Reverse: Fence at OS birth only by owning a spawner implementation that checks authority synchronously inside its spawn callback.
+
+### Fence spawner hand-offs after all owner waits, 2026-11-14
+
+Round 4 revalidates lane closed/poisoned state and the specific withUse call after admission acquisition, its accounting span and its snapshot. The concrete physical owner's optional typed fence executes after the birth lock, owner checks, Scope/Ref/semaphore construction and record registration. The check and call to the captured spawner execute inside one synchronous Effect.suspend callback. Fence refusals remain typed child Exit failures; the lane retires the registered empty resource and returns its lease through the existing release path. An admitted hand-off that has already called the spawner retains the existing late-resolution retirement protocol. The permanent test failed on the review base with one real Bun/Node spawn, then passes with zero hand-offs, zero starts and exactly one return when revocation precedes the hand-off; it also revokes before drain expiry and sweeps every measured pre-hand-off owner scheduler boundary. Accepted limit: work that never resolves retains its private Scope and any quarantined capacity indefinitely. The guarantee is a bounded caller wait, not eventual settlement; releasing unresolved ownership would violate the one-occupant and confirmed-death guards.
+
+The round-5 owner ruling clarifies that the platform returns a lazy Effect and may yield while preparing cwd. The fence prevents a new hand-off after revocation, closure or poisoning; it cannot prevent OS birth from a previously authorized hand-off. Such work remains owned and quarantined until confirmed retirement, with one lease return.
+
+Reverse: Replace the synchronous fence only with an equivalent authority protocol that proves zero spawner hand-offs after revocation at every admission and owner continuation.
+
 ### Keep Diff and Xml preparation per request and retain Markup private queues, 2026-11-14
 
 B1 does not require hoisting Diff or Xml to engine construction. Their preparation and per-job diagnostics remain per request. Markup private semaphores and queue/deadline guards remain: the default HTML cleaner serves the closed standalone port, whose callers need that queue. Xml passes lane.start explicitly. Diff receives both the starter and text reservation explicitly and performs no Invocation or native-admission lookup. No installed-stage, tokenizer, evaluator or detach count is moved.
@@ -187,6 +231,12 @@ three Node-parent red files with six passes / 26 failures due to Bun.version.
 Existing goal references are retained; no new test goal-path reference is added.
 
 Reverse: Restore aggregate bookkeeping only with an equivalent per-record confirmation proof; retain deterministic overlap.
+
+### Prove closed and blocked stdin with paired real-pipe regressions, 2026-11-14
+
+The owner accepts prompt channel-failed from genuine EPIPE and separately requires the job deadline on a child that leaves stdin open without reading. Neither error is delayed or suppressed. Both regressions use a real frame larger than 1 MiB, observe the incomplete real sink write, assert parent SIGKILL and confirmed death before evaluate returns, started equals confirmed, one capacity return, and fail-closed reuse without a spawn. The earlier Bun-parent probe did not distinguish write completion from awaiting a reply and left its manual clock undriven; the new probe measures backpressure and drives the job timer explicitly. No production sink patch or Effect version change is needed. Review round 2 evidence records the results.
+
+Reverse: Replace the paired proofs only with equivalent real-process lifecycle assertions on both runtimes.
 
 ### Prove reachable coverage paths and retain typed native invariants, 2026-11-14
 
@@ -233,6 +283,14 @@ Reverse: Add a major changeset for @beep/law-practice-use-cases if the package b
 regexOwner retains only the protocol-v2 start adapter and the evaluator spawner/Clock identity guard. It no longer creates a physical regex owner or claims native capacity. The lane owns the exact children. The existing per-job wrapper confirms retirement before returning a result, while its adapter has no independent lease. The lane and its physical owner are invocation-scoped; the lane unit and physical owner are lazy. The named standalone cleaner starter stays separate.
 
 Reverse: Replace the adapter with the protocol-v3 session in B2; restore per-job native leases only with a policy reversal.
+
+### Set the v3 job frame depth ceiling to 4, the exact nesting of the designed shape, 2026-11-14
+
+Owner ruling on the B2 stop. Design section 2.4 embeds `CitationRegexPatternDescriptor` in the job and also says depth 3. Under the shared guard's root-inclusive count (`NativeJson.ts`, where flat v2 messages are depth 1) the designed shape is job 1, descriptor 2, profile 3, names 4. The 3 is a counting slip in the design: its intent, stated in the same paragraph and in review finding 6, is that the ceiling grows by exactly what the per-job descriptor forces and that the exact preflight measures it. The ceiling is therefore 4, the tightest value that admits the designed shape; nothing deeper is admitted. The shared guard's semantics do not change and v2 stays at depth 1. Required with it: a regression that accepts a job with a names object and one that refuses depth 5 before any payload allocation; the finite property ceiling (flat fields plus descriptor fields plus the capture-name bound); the name-length bound at job encoding against `processMessageBytes`; strict schema decoding after the preflight. Rejected: flattening the descriptor on the wire (a second codec for the same value, with its own identity validation, for no added bound) and a v3-only depth convention (two meanings of depth in one guard).
+
+Lane feat/citation-regex-session
+
+Reverse: Return to depth 3 only together with a flattened descriptor wire codec designed and reviewed first.
 
 ### Settle job bookkeeping on exact confirmed retirement, 2026-11-14
 
@@ -392,6 +450,147 @@ amendment carrying starter authority. No such change is implemented here.
 
 Reverse: Replace the explicit starter route only through a new owner ruling with equivalent capacity proofs.
 
+### Stop B2 at startup-only engine selection for mixed-dialect invocations, 2026-11-14
+
+B2 is stopped again under the implementation brief's explicit conflict rule.
+The depth stop is resolved by owner ruling 3195ce21182. This stop concerns source
+engine identity, not depth, the B1 spawner/Clock fixture fixes or capacity.
+
+## Binding contract and live source
+
+- Design rev 2, explorations/citation-engine-install-and-worker-reuse/research/design-2026-11-12.md:102-110
+  puts limits and engine in startup; the v3 job has sequence, descriptor and the
+  v2 payload fields, with no engine.
+- packages/law-practice/server/src/internal/Citation/RegexEngine.ts:8-14 defines
+  two exact pinned dialects, python-re and python-regex-v0, and explicitly says
+  the engine is never inferred from flags.
+- Tokenizer.ts:150-154 installs its evaluator without an engine argument;
+  RegexWorker.ts:32-36 defaults that evaluator to python-re.
+- ContextMatcher.ts:88 installs its evaluator with python-regex-v0. Its search
+  calls evaluate at lines 89-98. These evaluators share CitationInvocation.regex.
+- RegexSessionProgram.ts:42-44 decodes startup once; lines 63-65 pass that same
+  startup engine plus each job's descriptor to makeCitationRegexEvaluation.
+- RegexWorkerEvaluation.ts:45-48 creates the descriptor registry and compiler
+  under startup.engine. RegexSession.ts starts the process only when no transport
+  exists. A subsequent evaluator's engine has no wire field to change it.
+- RegexProgram.ts:701-702 rejects a global inline case directive after tokens in
+  python-re, while python-regex-v0 permits that construct. Other dialect branches
+  exist at lines 419, 436, 595, 663, 803 and 907.
+
+One invocation therefore needs both dialects, but the designed wire fixes one
+dialect for all jobs in that process. A descriptor carries hash, flags and
+profile, not engine identity. Inferring the engine or silently using one dialect
+for both changes matching behavior. Restarting on an engine change abandons the
+one-process plain-text count target.
+
+## Observations
+
+The real-child session transport proofs pass 18/18, including both Bun and Node
+children, and the structural regressions pass 4/4. Those homogeneous-engine tests
+do not prove mixed-engine extraction.
+
+The serial public replay exposed the conflict: CitationCanonicalDump.test.ts
+fails on both Bun and Node with CitationRegexTranslationFailure,
+reason unsupported-syntax, while running ContextMatcher from post-case metadata
+after the session is already in use. CitationCanonicalAnnotationWorkflow,
+CitationCanonicalCourts, CitationCanonicalExtraction and further public replays
+fail at the public boundary with CitationInputError. Do not attribute these B2
+mixed-engine failures to the B1 fixture work.
+
+A separate read-only probe compiled the same synthetic native ASCII pattern
+a(?i)b with flags 0 under both current compilers and unchanged default limits:
+python-re rejected it with CitationRegexTranslationFailure/unsupported-syntax;
+python-regex-v0 accepted it. This confirms a real dialect distinction without
+relaxing a guard or running regex in the parent.
+
+The queued test batch was stopped after its current file completed. Remaining
+tests and the final canonical count gate are not claimed. Full receipts and
+limits are in history/evidence/2026-11-14-b2-regex-session.md.
+
+## Resolution options
+
+1. Recommended: amend protocol v3 so every job carries the explicit
+   parent-selected CitationRegexEngine. The worker must construct that job's
+   registry/compiler with the job engine. Move engine out of startup, or specify
+   why a startup copy remains. Include the engine in exact size preflight and
+   the finite property ceiling; retain depth 4, descriptor binding, strict
+   decoding, all timers and confirmed retirement. Add a real-process regression
+   alternating dialects in one process and then run the unchanged ten-process,
+   291-evaluation count gate.
+2. Define and prove a new common execution dialect that is equivalent to both
+   pinned sources for every admitted pattern and Unicode/case/verbose behavior.
+   This needs a new design and source-family evidence, not an implementation
+   substitution.
+3. Restart on engine changes and explicitly revise the lifetime/count objective.
+   This cannot claim the current ten-process acceptance target.
+
+No resolution was implemented. No per-job engine field, inferred engine,
+shared dialect, new pool or engine-switch respawn was added. The transport work
+is committed locally for review of the stop; B2 is incomplete and not in review.
+No success checkpoint, push, PR, rebase or base merge was performed.
+
+Lane feat/citation-regex-session
+
+Reverse: Specify per-job engine authority or another reviewed mixed-dialect contract, then resume B2.
+
+### Stop B2 at the descriptor depth conflict, 2026-11-14
+
+B2 is stopped before implementation under the implementation brief's explicit
+conflict rule. The required per-job descriptor shape and the required structural
+depth ceiling cannot both be honored by the existing JSON preflight.
+
+## Evidence
+
+- Binding design rev 2, explorations/citation-engine-install-and-worker-reuse/research/design-2026-11-12.md:106-110 requires
+  descriptor: CitationRegexPatternDescriptor inside Evaluate.
+- The same design at lines 125-128 requires depth 3, an expanded property ceiling
+  and capture-name length accounting. The implementation brief repeats depth 3
+  as a hard deliverable and forbids weakening safety guards.
+- packages/law-practice/server/src/internal/Citation/RegexDescriptors.ts:77-80
+  puts profile inside the descriptor; lines 41-46 put names inside profile.
+- packages/law-practice/server/src/internal/Citation/RegexProgram.ts:162 defines
+  names as a required S.Record. Empty names still encode as an object.
+- packages/law-practice/server/src/internal/Citation/NativeJson.ts:78-87 starts
+  depth at zero and increments at every opening object, including the root.
+  Lines 104-106 apply that rule to every unquoted opening brace.
+
+The required nesting is Evaluate (1), descriptor (2), profile (3), names (4).
+Even a job with no named captures therefore exceeds depth 3.
+
+A read-only Bun probe in the server package built an S.Struct from the existing
+CitationRegexWorkerJob.fields, replaced the version with the v3 tag, and added
+sequence: S.Natural and descriptor: CitationRegexPatternDescriptor, exactly as
+the design specifies. Schema encoding succeeded and retained an empty names
+object. Calling the actual preflightCitationNativeJson with propertyCeiling 100
+rejected the encoded bytes at maximumDepth 3 and accepted the identical bytes
+at maximumDepth 4. The synthetic fingerprint was schema-valid placeholder data;
+this probe proves structure only, not registry binding or execution authority.
+A second minimal structural probe gave the same result.
+
+## Options for the owner
+
+1. Recommended: amend the v3 design and implementation brief to depth 4 using
+   the existing root-inclusive guard semantics. Retain the exact encoded-byte
+   preflight, a finite total property ceiling, the capture-name bounds, strict
+   schema decoding and all other safety guards. Add regression cases accepting
+   the required names object and refusing depth 5 before implementing B2.
+2. Redesign the descriptor wire representation to fit depth 3. Specify the
+   codec, identity/profile validation and exact preflight before implementation;
+   this changes the currently required descriptor schema on the wire.
+3. Explicitly define a different v3-only depth convention or structural guard,
+   with equivalent limits proved. Do not silently change the shared guard's
+   root-inclusive semantics, which would affect existing protocols.
+
+No option was implemented. No production code or tests changed; no guard was
+weakened and no existing test was deleted. B2 remains pending and has no
+ten-process count result, real-process proof result or in-review checkpoint.
+Protocol v2 and B1 remain intact. The implementation lane is
+feat/citation-regex-session; publication remains with the owner.
+
+Lane feat/citation-regex-session
+
+Reverse: Resolve the v3 depth and descriptor contract explicitly, then resume B2.
+
 ### Yield lane capacity across closed cleaner port calls, 2026-11-14
 
 Owner ruling 2 supersedes the second stop. CitationCleaner and CitationCleanerWork
@@ -460,6 +659,12 @@ two-entrant unconfirmed-retirement proof asserts depth zero directly. This adds
 an observation only; it changes no transition, failure or lane lifetime.
 
 Reverse: Restore request-long lane ownership only after replacing the cleaner boundary with an owner-approved explicit authority contract.
+
+### Use incremental Noble hashing only for descriptor candidate selection, 2026-11-14
+
+Effect v4 Digest accepts one contiguous byte array and provides no streaming or multi-part input. The existing catalog dependency @noble/hashes is declared by the server package to hash the width byte and borrowed bytes incrementally without a pattern-sized concatenation before exact frame preflight. Selection chooses only a candidate; the captured Effect Digest service remains authoritative after preparation. The permanent registry regression compares selection with that service for all three widths, empty storage and 36 SHA-256 boundary vectors. No cache or compiled program is retained. Dependency and cache-policy validation is included in the root beep lint receipt.
+
+Reverse: Replace selection with a multi-part Effect Digest API when available, retaining exact preflight allocation ordering and the cross-implementation vectors.
 
 ### Validate evaluator runtime against the lane and retain installation closure, 2026-11-14
 

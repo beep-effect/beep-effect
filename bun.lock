@@ -3619,6 +3619,7 @@
         "@beep/wink": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "@effect/platform-node": "catalog:",
+        "@noble/hashes": "catalog:",
         "drizzle-orm": "catalog:",
         "effect": "catalog:",
       },

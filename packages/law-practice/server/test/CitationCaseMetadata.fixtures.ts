@@ -225,7 +225,7 @@ const assertRow = Effect.fn("CaseMetadataTest.row")(function* (
     0,
     (total, call) => total + (call.phase === "Post" && call.method === "sub" ? 0 : call.count)
   );
-  return regex + (document.hasMarkup ? 4 : 0);
+  return (regex > 0 ? 1 : 0) + (document.hasMarkup ? 4 : 0);
 });
 /** Assert final original model fields after all five phase families, on both runtimes. */
 export const replayCitationCaseMetadata = Effect.fn("CaseMetadataTest.replay")(function* (
@@ -260,7 +260,7 @@ export const assertCitationCaseMetadataBudget = Effect.fn("CaseMetadataTest.shar
     regular.setup.operation,
     regular.setup.admission,
     regular.setup.observed.snapshot,
-    18
+    1
   );
   const tight = yield* install("bun", total - 1, true);
   const tightRequest = yield* requestOf(tight, row);
@@ -287,6 +287,6 @@ export const assertCitationCaseMetadataBudget = Effect.fn("CaseMetadataTest.shar
     tight.setup.operation,
     tight.setup.admission,
     tight.setup.observed.snapshot,
-    18
+    1
   );
 });

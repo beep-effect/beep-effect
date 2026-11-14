@@ -166,8 +166,9 @@ export const replayCitationHtmlCaseName = Effect.fn("HtmlCaseNameTest.replay")(f
     ).toEqual(row.after.fullSpanStart);
     expectedChildren +=
       4 +
-      3 * A.filter(row.calls, (call) => call.operation === "clean").length +
-      A.filter(row.calls, (call) => call.name === "_extract_from_single_html_element").length;
+      (A.some(row.calls, (call) => call.operation === "clean" || call.name === "_extract_from_single_html_element")
+        ? 1
+        : 0);
   }
   expect(rows).toHaveLength(full ? 128 : 11);
   yield* assertCitationWorkerCompositionReleased(

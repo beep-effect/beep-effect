@@ -31,18 +31,16 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-B1 is locally verified and in review on `feat/citation-native-lane`. Owner ruling 3
-resolves the admission/deadline stop: explicit lane reservation now runs at the
-base acquisition points for regex, Diff and Xml. Both review race fixes remain.
-[PR #3336](https://github.com/beep-effect/beep-effect/pull/3336) is open after the
-owner merged A4 and main and published hosted round 1 repairs. The current local
-review follow-through fixes record-local quarantine and synchronizes the overlap
-proof, and adds the owner-requested bounded coverage tests. Six typed invariant
-guards remain documented with measured rows. Owner publication remains separate.
+B1 merged as #3336 (`fa8f0f0757`): one native lane per invocation and limits policy v2.
+B2 is in review on [PR #3352](https://github.com/beep-effect/beep-effect/pull/3352): protocol v3
+and `CitationRegexSession`, one regex child process per invocation, taking ten plain-text calls
+from 291 regex children to 10. B3 (delete v2, rewrite spawn-count assertions, re-record shard
+timings) follows once B2 merges.
 
 ## Latest Evidence
 
-[Review follow-through and file-by-file evidence](history/evidence/2026-11-14-b1-native-lane.md#review-follow-through-after-owner-head-b749cd91e7e).
+[B2 regex session evidence](history/evidence/2026-11-14-b2-regex-session.md), including five
+independent review rounds and the full file-by-file run.
 
 ## Notes
 

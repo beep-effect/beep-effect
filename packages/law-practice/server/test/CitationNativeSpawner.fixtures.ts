@@ -14,6 +14,7 @@ import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -315,16 +316,42 @@ export const makeCitationNativeManualClock = Effect.fn("WorkerTest.manualSleep")
   duration: Duration.Duration
 ) {
   const clock = yield* Clock.Clock;
-  const requested = yield* Deferred.make<void>();
-  const wake = yield* Deferred.make<void>();
+  let active = HashSet.empty<number>();
+  let sleeps = A.empty<Deferred.Deferred<void>>();
   const controlled = yield* makeCitationNativeSleepClock((input) =>
     Duration.equals(input, duration)
-      ? Deferred.succeed(requested, undefined).pipe(Effect.andThen(Deferred.await(wake)))
+      ? Effect.gen(function* () {
+          const wake = yield* Deferred.make<void>();
+          const index = sleeps.length;
+          sleeps = A.append(sleeps, wake);
+          active = HashSet.add(active, index);
+          yield* Deferred.await(wake).pipe(
+            Effect.ensuring(
+              Effect.sync(() => {
+                active = HashSet.remove(active, index);
+              })
+            )
+          );
+        })
       : clock.sleep(input)
+  );
+  const triggerSleep = Effect.fn("WorkerTest.triggerSleep")((index: number) =>
+    Effect.suspend(() =>
+      O.match(A.get(sleeps, index), {
+        onNone: () => Effect.never,
+        onSome: (wake) => Deferred.succeed(wake, undefined).pipe(Effect.asVoid),
+      })
+    )
   );
   return {
     clock: controlled,
-    trigger: Deferred.await(requested).pipe(Effect.andThen(Deferred.succeed(wake, undefined))),
+    sleeps: Effect.sync(() => sleeps.length),
+    triggerSleep,
+    trigger: Effect.yieldNow.pipe(
+      Effect.andThen(Effect.sync(() => A.findFirstIndex(sleeps, (_, index) => HashSet.has(active, index)))),
+      Effect.repeat({ until: O.isSome }),
+      Effect.flatMap(O.match({ onNone: () => Effect.never, onSome: triggerSleep }))
+    ),
   };
 });
 /** @internal @category testing @since 0.0.0 */
@@ -333,9 +360,9 @@ export const makeCitationNativeWorkerFixture = Effect.fn("WorkerTest.fixture")(f
   family: "html" | "regex" | "diff" = "html",
   runtimeKind: CitationNativeRuntimeKind = "bun"
 ) {
-  const version = family === "regex" ? "v2" : "v1";
+  const version = family === "regex" ? "v3" : "v1";
   const ready = `{"_tag":"Ready","version":"citation-${family}-worker/${version}"}\\n`;
-  const started = `{"_tag":"Started","version":"citation-${family}-worker/${version}"}\\n`;
+  const started = `{"_tag":"Started","version":"citation-${family}-worker/${version}"${family === "regex" ? ',"sequence":0' : ""}}\\n`;
   const success = '{"_tag":"Success","version":"citation-html-worker/v1","text":"released"}\\n';
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -351,7 +378,7 @@ export const makeCitationNativeWorkerFixture = Effect.fn("WorkerTest.fixture")(f
       : `const timer=setInterval(()=>{if(existsSync(${releaseLiteral})){clearInterval(timer);process.stdout.write('${success}');}},10);`;
   yield* fs.writeFileString(
     workerFile,
-    `import {writeFileSync,existsSync} from 'node:fs';process.stdout.write('${ready}');process.stdin.resume();process.stdin.on('end',()=>process.stdout.write('${started}',()=>{writeFileSync(${markerLiteral},'entered');${action}}));`
+    `import {writeFileSync,existsSync} from 'node:fs';process.stdout.write('${ready}');process.stdin.resume();process.stdin.on('${family === "regex" ? "data" : "end"}',()=>process.stdout.write('${started}',()=>{writeFileSync(${markerLiteral},'entered');${action}}));`
   );
   const executable = yield* runtimeKind === "node" ? citationNodeTestExecutable : citationBunTestExecutable;
   return { fs, cwd, workerFile, marker, release, kind: runtimeKind, executable };

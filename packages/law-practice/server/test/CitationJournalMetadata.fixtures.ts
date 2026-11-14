@@ -159,7 +159,7 @@ export const replayCitationJournalMetadata = Effect.fn("JournalMetadataTest.repl
     expect(patch).toEqual(input.patch);
     expect(result.editionGuess).toBe(guess);
     expect(setup.reads).toEqual(patch.year !== null && patch.year <= 2026 ? checks : []);
-    calls += input.calls.length;
+    calls += input.calls.length > 0 ? 1 : 0;
   }
   expect(rows).toHaveLength(full ? 1152 : 17);
   yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, calls);

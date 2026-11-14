@@ -111,7 +111,7 @@ export const replayCitationStopWords = Effect.fn("StopWordsTest.replay")(functio
     setup.operation,
     setup.admission,
     setup.observed.snapshot,
-    rows.length * 3
+    rows.length
   );
 });
 /** Refuse cumulative over-allocation and preserve configuration after caller mutation. */
@@ -125,14 +125,14 @@ export const assertCitationStopWordsBudget = Effect.fn("StopWordsTest.budget")(f
   setup.configuration.patterns.leadingIn.bytes.fill(0);
   const repeated = yield* setup.stage.clean(row.source);
   expect(repeated).toEqual(accepted);
-  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 6);
+  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 2);
   const tight = yield* install("bun", 80);
   yield* assertCitationMetadataRefusal(
     tight.stage.clean(row.source),
     tight.operation,
     tight.admission,
     tight.observed.snapshot,
-    3
+    1
   );
 });
 /** Preserve closed parent lifetime, captured timer and closed invalid-input failure. */

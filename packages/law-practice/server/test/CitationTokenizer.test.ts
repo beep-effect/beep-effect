@@ -244,7 +244,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
           for (const key of original.ordering.strings) key.bytes.fill(0);
           yield* assertCitationTokenizerCase(setup, A.getUnsafe(controls.cases, 2));
           const snapshot = yield* setup.observed.snapshot;
-          expect(snapshot).toEqual({ spawned: 7, confirmed: 7 });
+          expect(snapshot).toEqual({ spawned: 3, confirmed: 3 });
         }),
       { timeout: 30000 }
     );
