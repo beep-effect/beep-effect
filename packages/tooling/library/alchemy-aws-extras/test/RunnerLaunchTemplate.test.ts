@@ -12,6 +12,7 @@ const fleetProps = {
   associatePublicIpAddress: true,
   userData: "#!/bin/bash\necho ready\n",
   ebsOptimized: true,
+  instanceInitiatedShutdownBehavior: "terminate",
   blockDeviceMappings: [
     {
       deviceName: "/dev/xvda",
@@ -69,6 +70,7 @@ describe("RunnerLaunchTemplate", () => {
         EbsOptimized: "true",
         "IamInstanceProfile.Name": "beep-ci-runner",
         ImageId: "resolve:ssm:/beep-ci/runner-ami-id",
+        InstanceInitiatedShutdownBehavior: "terminate",
         "InstanceMarketOptions.MarketType": "spot",
         "InstanceMarketOptions.SpotOptions.InstanceInterruptionBehavior": "terminate",
         "InstanceMarketOptions.SpotOptions.SpotInstanceType": "one-time",
@@ -115,6 +117,7 @@ describe("RunnerLaunchTemplate", () => {
       expect(updated.tags).not.toHaveProperty("Project");
       expect(defaultVersion(lifecycle, "beep-ci-runners")).toMatchObject({
         "BlockDeviceMapping.1.Ebs.VolumeSize": "200",
+        InstanceInitiatedShutdownBehavior: "terminate",
       });
 
       yield* stack.destroy();

@@ -96,11 +96,11 @@
       }
     },
     "@beep/alchemy-github-runners": {
-      "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p2-github-runners)",
-      "reason": "Record the new generated tooling library @beep/alchemy-github-runners, the policy-fingerprint seal it required, and the root turbo.json input-list regeneration inherited from main (#3263, #3271, #3274, #3276); no command, output or environment changes, no qualification granted.",
+      "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p2-github-runners-composite)",
+      "reason": "Record the new workspace and catalog dependency edges of @beep/alchemy-github-runners (RunnerFleet composite), plus the root turbo.json input-list drift inherited from main (#3317); no command, output or environment changes, no qualification granted.",
       "basis": {
-        "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-alchemy-github-runners.md",
-        "sha256": "1d3d2d0289a9e9999d69c1424718dd90b8939f9d66c89f08c75ceb3461114e4e"
+        "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-alchemy-github-runners-composite.md",
+        "sha256": "1e66e76a89a51d0ea7b824ea5ad953f6f0b843f642bc3670041c8d365a68b3ef"
       }
     },
     "@beep/alchemy-postgres": {
@@ -10928,6 +10928,7 @@
         "command": "bun run beep:build",
         "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
         "dependencies": [
+          "@beep/alchemy-aws-extras#build",
           "@beep/identity#build",
           "@beep/schema#build"
         ],
@@ -10982,6 +10983,7 @@
         "command": "bun run beep:check",
         "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
         "dependencies": [
+          "@beep/alchemy-aws-extras#build",
           "@beep/alchemy-github-runners#build",
           "@beep/identity#build",
           "@beep/schema#build"
@@ -11025,6 +11027,7 @@
         "command": "bunx vitest run --coverage --exclude=test/integration/**",
         "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
         "dependencies": [
+          "@beep/alchemy-aws-extras#build",
           "@beep/identity#build",
           "@beep/schema#build"
         ],
@@ -11150,6 +11153,7 @@
         "command": "beep-cli lint deprecated-apis --package .",
         "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
         "dependencies": [
+          "@beep/alchemy-aws-extras#transit",
           "@beep/identity#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/schema#transit"
@@ -11348,6 +11352,7 @@
         "command": "beep-cli quality test-tsgo-package",
         "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
         "dependencies": [
+          "@beep/alchemy-aws-extras#transit",
           "@beep/identity#transit",
           "@beep/schema#transit"
         ],
@@ -11392,6 +11397,7 @@
         "command": "bun run beep:test",
         "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
         "dependencies": [
+          "@beep/alchemy-aws-extras#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
           "@beep/utils#transit"
@@ -11444,6 +11450,7 @@
         "command": "bun run beep:test:integration",
         "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
         "dependencies": [
+          "@beep/alchemy-aws-extras#build",
           "@beep/identity#build",
           "@beep/schema#build"
         ],

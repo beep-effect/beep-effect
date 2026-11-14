@@ -4,16 +4,21 @@ import {
   handleDeregisterRetry,
   handleTerminationEvent,
   InstanceStateChange,
+  RunnerSweepIncomplete,
   SelfHostedRunner,
   SpotInterruptionWarning,
+  sweepRunners,
   TerminationWatcherRuntimeConfig,
 } from "@beep/alchemy-github-runners";
 import { describe, expect, it } from "@effect/vitest";
-import { deepStrictEqual } from "@effect/vitest/utils";
+import { assertInstanceOf, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as TestClock from "effect/testing/TestClock";
 import { World, worldContext } from "./support/FakeWorld.ts";
 
 const config = TerminationWatcherRuntimeConfig.make({
@@ -149,6 +154,59 @@ describe("handleDeregisterRetry", () => {
       world.busyOnDelete = [];
       const done = yield* handleDeregisterRetry({ config, message }).pipe(Effect.provideContext(worldContext(world)));
       expect(done).toBe("deregistered");
+    })
+  );
+});
+
+describe("sweepRunners", () => {
+  const sweepInput = { environments: ["beep-ci-heavy"], tokenPaths: ["/beep-ci/heavy/tokens"] };
+  const idle = (world: World) => {
+    const [instanceId = ""] = world.launch(1, { ...tags, "ghr:Application": "github-action-runner" });
+    world.githubRunners.push(
+      SelfHostedRunner.make({ id: 42, name: `beep-ci-${instanceId}`, status: "online", busy: false })
+    );
+    world.ssm["/beep-ci/heavy/tokens/i-stale"] = { value: "x", modified: 0, tags: {} };
+    return instanceId;
+  };
+
+  it.effect("retries a runner that is still busy and deregisters it once it goes idle", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      const instanceId = idle(world);
+      world.busyDeletesLeft[42] = 2;
+      const fiber = yield* sweepRunners(sweepInput).pipe(Effect.provideContext(worldContext(world)), Effect.forkChild);
+      yield* TestClock.adjust("1 minute");
+      const report = yield* Fiber.join(fiber);
+      expect([report.terminated, report.deregistered, report.tokensDeleted]).toStrictEqual([[instanceId], 1, 1]);
+      expect(world.deletedRunners).toStrictEqual([42]);
+    })
+  );
+
+  it.effect("fails loudly when a runner stays busy, after terminating and deleting tokens", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      const instanceId = idle(world);
+      world.busyOnDelete.push(42);
+      const fiber = yield* sweepRunners(sweepInput).pipe(
+        Effect.provideContext(worldContext(world)),
+        Effect.flip,
+        Effect.forkChild
+      );
+      yield* TestClock.adjust("5 minutes");
+      const error = yield* Fiber.join(fiber);
+      assertInstanceOf(error, RunnerSweepIncomplete);
+      expect([error.instanceIds, world.terminated, R.keys(world.ssm)]).toStrictEqual([[instanceId], [instanceId], []]);
+    })
+  );
+
+  it.effect("fails without retrying when GitHub refuses the deregistration", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      const instanceId = idle(world);
+      world.failOnDelete.push(42);
+      const error = yield* sweepRunners(sweepInput).pipe(Effect.provideContext(worldContext(world)), Effect.flip);
+      assertInstanceOf(error, RunnerSweepIncomplete);
+      expect([error.instanceIds, world.deletedRunners]).toStrictEqual([[instanceId], []]);
     })
   );
 });
