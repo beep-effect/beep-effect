@@ -31,6 +31,12 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
+P3 Low-risk stacks (started 2026-11-13), in parallel with P2: Storybook is live on Alchemy
+(PR #3289; Pulumi stack `beep-storybook/production` removed); the turbo cache's stage 1 (the
+`@beep/infra-turbo-cache` Worker and R2 stack, deployed beside the live caches) is in its PR; cost
+controls and GitHub are in flight. Turbo-cache stage 2 (CI enrolment) and the P5 runner fleet wait for
+the ci-lane-economics window-5 verdict (2026-11-20T20:10Z).
+
 P2 Providers (started 2026-11-13), run as three parallel lanes with one PR each:
 `@beep/alchemy-aws-extras` (cost-allocation tags, the Compute Optimizer and Cost Optimization Hub
 enrollments, `RunnerLaunchTemplate`; `KmsGrant` dropped because the GitHub App key delegates to
@@ -41,6 +47,8 @@ or replace.
 
 ## Latest Evidence
 
+- 2026-11-13 P3 turbo cache stage 1: personal-stage live proof on the Worker (remote miss then hit, read-only upload refused), stage destroyed (`decisions/2026-11-13-personal-stage-deploy-proof-blocked-the-alchemy-cloudflare-token-has-no-r2-permission.md`).
+- 2026-11-13 P3 Storybook live: `decisions/2026-11-13-storybook-is-live-on-alchemy-pulumi-stack-beep-storybook-production-removed.md`.
 - 2026-11-13 P1 exit: PRs #3021 and #3133 merged; hosted run 43407236289 (`Deploy beep-effect-web`, `main`) logged `Plan: 1 to update`, `[Website] update` and `Done: 1 succeeded`, no create or replace (`decisions/2026-11-13-p1-complete-p2-providers-in-progress.md`).
 - 2026-11-13 P2 aws-extras lane: `decisions/2026-11-13-*.md` (KmsGrant dropped, resource shape, fake-HTTP provider tests, launch template placement).
 - 2026-11-09 P1 bootstrap receipts: `decisions/2026-11-09-*.md` (state bucket, OIDC role, state move, bun patch).

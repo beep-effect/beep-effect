@@ -8,6 +8,7 @@ import {
   MemoryStats,
   makeComputeProfileProbe,
   provideRuntimeRootForTesting,
+  QualitySchedulerLive,
   RepoPlanStep,
   RepoRunPlan,
   RuntimeRootChoice,
@@ -112,7 +113,8 @@ const commandTestLayer = Layer.provideMerge(
         totalGib: Effect.succeed(128),
         ceilingGib: Effect.succeed(128),
       })
-    )
+    ),
+    QualitySchedulerLive
   )
 );
 

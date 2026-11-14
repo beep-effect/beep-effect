@@ -37,8 +37,9 @@ Use this command for execution-capable sessions:
 
 P1 Implement — in progress. P0 closed with the baseline checkpoint
 (`decisions/2026-11-10-p0-baseline.md`). Slices 1 (PERIL-13), 2 (PERIL-10 summary and archive), 3 (SCHE-08, the
-admission unit schema, #3308), 4 (the beep-heavy retirement, which completes PERIL-10, #3312) and 5 (PERIL-02,
-one live readiness monitor per pull request and readiness argv) are done; slice 6 (the scheduler facade) is next.
+admission unit schema, #3308), 4 (the beep-heavy retirement, which completes PERIL-10, #3312) and 6 (SCHE-08, the
+scheduler service facade and the Cache work kind, #3317) are done; slice 5 (PERIL-02, one live readiness monitor
+per pull request and readiness argv) is open as #3316.
 
 ## Latest Evidence
 
@@ -74,6 +75,12 @@ one live readiness monitor per pull request and readiness argv) are done; slice 
   is skipped. Publish keys its reuse on the same argv, and `yeet ready` no longer names a dead-runner job as the
   monitor still watching (the defect at the old `ReadyGate.ts:565`). Tests use a fake registry and runner probe,
   on Node and Bun.
+- 2026-11-14: slice 6 (SCHE-08) puts the scheduler behind one `QualityScheduler` service (`admit`, `observe`,
+  `reap`, the protocol gates, history, archive, worker route rows) with a live Layer over the existing functions,
+  and moves Yeet, Cache, `quality scheduler`, Palantiri and the quality concurrency plan onto it. Cache commands
+  request their own `cache` kind at weight 1, kept in the review-fix class cap. With the units gate off a Cache
+  admission writes origin/main's `review-fix` bytes (fixture captured from its encoder); with it on, `cache`.
+  The scheduler suites pass on Node and Bun.
 
 ## Notes
 

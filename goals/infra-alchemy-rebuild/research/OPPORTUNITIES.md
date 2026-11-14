@@ -3,6 +3,48 @@
 Receipts recorded while the work happened. Secrets, home paths and machine
 identifiers are redacted.
 
+## 2026-11-13: the stack's Cloudflare token could not reach R2, found only at deploy time
+
+- **Doing:** P3 turbo cache, personal-stage deploy proof (lane goals/infra-alchemy-rebuild-p3-turbo-cache).
+- **Evidence:** `bunx alchemy plan --stage dev_<user>` fails in `plan.diff.resource` with
+  `Unauthorized: Authentication error` (Cloudflare code 10000); `GET /accounts/<id>/r2/buckets`
+  with the same token returns `Authentication error`. The token was minted for one Worker stack
+  (`mint-alchemy-token.sh`, 2026-10-28) and every later stack reuses it through each environment's
+  `CLOUDFLARE_API_TOKEN` secret.
+- **Would have prevented it:** a per-stack permission manifest checked before a lane starts
+  (`beep` command that verifies the token against the groups each stack's resources need), or
+  minting the stack token from IaC (`Cloudflare.ApiToken.AccountApiToken`, matrix row) so a new
+  resource type widens it in the same PR.
+
+## 2026-11-13: a stack's own `state` wins over `Test.make({ state })` for top-level deploys
+
+- **Doing:** stack test for `TurboCache` on the `@alchemy.run/test` harness.
+- **Evidence:** `deploy(Stack)` with `Test.make({ state: inMemoryState(), dev: true })` failed with
+  `AuthError: Provider 'AWS' is not configured in profile 'default'`: the stack effect provides its
+  declared `AWS.state(...)` inside, so the harness's state layer never applies.
+- **Would have prevented it:** a documented pattern in `docs/runbooks/alchemy-infra.md`: export the
+  stack program and deploy it on a `test.provider` scratch stack (what the package now does).
+
+## 2026-11-13: Worker fixtures bundled by Alchemy cannot import a package's `internal/` modules
+
+- **Doing:** moving the scratchpad handler into the package and its Worker fixtures into `test/`.
+- **Evidence:** the scaffold's exports map sets `"./internal/*": null`; vitest resolves
+  `@beep/<pkg>/internal/*` through aliases, but a fixture passed as a Worker `main` is bundled
+  with package resolution, which honours the exports map.
+- **Would have prevented it:** the `tooling/infra` file-role anchors saying that Worker runtime
+  modules are public package modules.
+
+## 2026-11-13: the `infra` scaffold's tsconfig does not own `alchemy.run.ts`
+
+- **Doing:** final-check for `@beep/infra-turbo-cache`.
+- **Evidence:** `lint deprecated-apis: TypeScript files have no tsconfig owner:` listing
+  `alchemy.run.ts`, `token.ts` and `test/fixtures/*.ts`. `create-package --kind infra` emits the
+  library tsconfig (`include: ["src"]`, `rootDir: "src"`), yet the kind's anchor puts
+  `alchemy.run.ts` at the package root. The package now sets `rootDir: "."` with the root files
+  included (declarations under `dist/src/`, `publishConfig.exports` pointed there) and gives
+  `test/fixtures/` its own `tsconfig.json`, as `@beep/palantiri` does.
+- **Would have prevented it:** the `infra` kind template emitting that tsconfig shape and a
+  fixtures tsconfig, so the next infra package starts owned.
 ## 2026-11-13: Alchemy's provider shape trips two repo-wide Effect diagnostics
 
 - **Doing:** P2 `@beep/alchemy-vercel` (lane goals/infra-alchemy-rebuild-p2-vercel).
@@ -157,3 +199,47 @@ to the gap between the reference checkout (main) and the pinned release.
   the pushed head records the gate as skipped and hosted CI measures it.
 - **Would have prevented it:** scope the coverage replay by the workspaces whose resolved dependencies
   changed in the lockfile diff, not by the lockfile path alone.
+
+## 2026-11-14: the plan cannot show that an AWS services anomaly monitor is an account singleton
+
+- **Doing:** P3 cost controls stack (lane `goals/infra-alchemy-rebuild-p3-cost-controls`); the brief and the
+  matrix treated the anomaly monitor as a greenfield named resource to run beside the Pulumi one.
+- **Evidence:** AWS allows one `DIMENSIONAL`/`SERVICE` anomaly monitor per account (Cost Management quotas
+  page); the account has one, `beep-account-services`. `alchemy plan` never calls `CreateAnomalyMonitor`, so
+  a second monitor plans as a clean create and would fail only at deploy. The stack adopts the live monitor
+  in `prod` instead (`adopt(true)`).
+- **Would have prevented it:** a quota column in the "use this, never roll that" matrix for every resource
+  planned as greenfield beside a live one, filled from the service's quotas page.
+
+## 2026-11-14: `create-package --kind infra` names the directory after the package, unlike its sibling
+
+- **Doing:** the same lane, bootstrapping `@beep/infra-cost-controls`.
+- **Evidence:** `bun run beep create-package infra-cost-controls --family tooling --kind infra` wrote
+  `packages/tooling/infra/infra-cost-controls`; the turbo-cache lane's package lives at
+  `packages/tooling/infra/turbo-cache`. Reverted and re-ran with `--dir-name cost-controls`. The scaffold also
+  gives `alchemy.run.ts` no tsconfig owner; it was added to `tsconfig.test.json` by hand.
+- **Would have prevented it:** the infra kind strips the `infra-` prefix for the directory, and its tsconfig
+  template includes `alchemy.run.ts`.
+
+## 2026-11-14: `AWS.Region.of` has no effect beside `AWS.providers()`
+
+- **Doing:** the same lane, pinning the stack to `us-east-1` as the matrix row says.
+- **Evidence:** `AWS.providers()` and `@beep/alchemy-aws-extras`' `providers` both `provideMerge` a fresh
+  `Region.fromEnvironment` inside their own layer, so a `Region.of(...)` provided from outside is shadowed
+  and the region still comes from `AWS_REGION`. The stack builds its own collection of the five providers it
+  uses with `Region.of("us-east-1")` in that chain, and the account guard also checks the region.
+- **Would have prevented it:** a `region` option on `AWS.providers()` and the extras layer, or the matrix row
+  naming where `Region.of` must sit.
+
+## 2026-11-14: every Alchemy package grows its own copy of the fake-AWS test harness
+
+- **Doing:** P3 cost controls stack (lane `goals/infra-alchemy-rebuild-p3-cost-controls`), pushing the
+  round-2 review fixes for #3310.
+- **Evidence:** cheap-gates `fallow:audit` refused the push with `audit-introduced-duplication-1`: the
+  package's `test/support/FakeAws.ts` repeated the generic parts of `@beep/alchemy-aws-extras`'
+  fake (operation log, failure-tag walk, deploy-failure helper, typed `test.provider` wrapper, the
+  awsJson `HttpClient`), seven clone groups. The PR shrank its fake to what its tests need instead of
+  adding a package mid-review.
+- **Would have prevented it:** a small shared test-kit for `@alchemy.run/test` suites (fake AWS
+  environment layer, awsJson `HttpClient` from a route table, typed scratch-stack view, failure
+  helpers) that every `@beep/alchemy-*` and `@beep/infra-*` package imports.

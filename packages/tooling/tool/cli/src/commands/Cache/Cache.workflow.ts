@@ -26,8 +26,9 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { gitPathListFromNulOutput } from "../../internal/repo-run/GitExec.ts";
-import { AdmissionRequest } from "../../internal/repo-run/QualityScheduler.schemas.ts";
-import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo-run/QualityScheduler.ts";
+import { AdmissionRequest, admissionTokenWeight } from "../../internal/repo-run/QualityScheduler.schemas.ts";
+import { QualityScheduler } from "../../internal/repo-run/QualityScheduler.service.ts";
+import { noAdmissionOriginGate } from "../../internal/repo-run/QualityScheduler.ts";
 import { CacheProducerAdapterLaunch } from "./Cache.adapter.schemas.ts";
 import { CacheConformanceBearers, CacheConformanceTarget } from "./Cache.conformance.schemas.ts";
 import { loadCacheConformanceBearers } from "./Cache.conformance.ts";
@@ -807,10 +808,11 @@ export const runCacheProducerWorkflow = Effect.fn("CacheWorkflow.run")(function*
   }
   const runtime = yield* assertCacheProducerUploadRuntime(trusted, uploadRuntime);
   const issuer = yield* openCacheProducerIssuer(directory, trusted);
-  const verifyWorkflow = withQualityAdmission(
+  const scheduler = yield* QualityScheduler;
+  const verifyWorkflow = scheduler.admit(
     AdmissionRequest.make({
-      kind: "review-fix",
-      weightTokens: 1,
+      kind: "cache",
+      weightTokens: admissionTokenWeight("cache"),
       priority: "verify",
       originKey: "",
       checkoutRoot: root,

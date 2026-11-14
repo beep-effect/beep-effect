@@ -31,18 +31,27 @@ const $I = $RepoCliId.create("internal/repo-run/QualityScheduler.schemas");
 /**
  * Kind of heavy repository work admitted through the machine-wide scheduler.
  *
+ * **Details**
+ *
+ * `cache` is the work `beep cache` admits: dependency materialization, the
+ * pilot, signed-pilot and protocol experiments, and producer workflow
+ * verification. Before SCHE-08 those commands requested `review-fix`; a ticket
+ * records `cache` only while the admission protocol's `units` gate is on,
+ * because a reader older than SCHE-08 quarantines a kind it does not know.
+ *
  * **Example** (Match on an admission kind)
  *
  * ```ts
  * import { AdmissionWorkKind } from "@beep/repo-cli/test/RepoRun"
  *
  * console.log(AdmissionWorkKind.is["full-proof"]("full-proof")) // true
+ * console.log(AdmissionWorkKind.is.cache("cache")) // true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const AdmissionWorkKind = LiteralKit(["full-proof", "merged-preview", "review-fix", "publish"]).pipe(
+export const AdmissionWorkKind = LiteralKit(["full-proof", "merged-preview", "review-fix", "publish", "cache"]).pipe(
   $I.annoteSchema("AdmissionWorkKind", {
     description: "Class of heavyweight repository work admitted through the machine-wide scheduler.",
   })
@@ -337,13 +346,16 @@ export const attemptInputFactFields = {
  * embedded full proof is requested as `full-proof` with publish priority, so
  * no caller requests the `publish` kind yet (reserved with `hotPaths` for the
  * chartered follow-ups; see goals/ship-velocity/research/d1-admission-scheduler.md).
+ * The `cache` weight is the review-fix weight Cache commands paid while they
+ * borrowed that kind.
  *
- * **Example** (Read the full-proof weight)
+ * **Example** (Read the full-proof and cache weights)
  *
  * ```ts
  * import { admissionTokenWeight } from "@beep/repo-cli/test/RepoRun"
  *
  * console.log(admissionTokenWeight("full-proof")) // 3
+ * console.log(admissionTokenWeight("cache")) // 1
  * ```
  *
  * @param kind - Admission work kind to weigh.
@@ -357,6 +369,7 @@ export const admissionTokenWeight = (kind: AdmissionWorkKind): number =>
     "merged-preview": () => 5,
     "review-fix": () => 1,
     publish: () => 1,
+    cache: () => 1,
   });
 
 const admissionOwnerFields = {

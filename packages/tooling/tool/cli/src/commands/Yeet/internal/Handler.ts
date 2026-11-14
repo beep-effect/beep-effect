@@ -36,13 +36,13 @@ import {
   commandTextForStep,
   noAdmissionOriginGate,
   processStartIdentityForPid,
+  QualityScheduler,
   QualitySchedulerError,
   RepoPlanStep,
   RepoRunContext,
   RepoStepRunResult,
   repoProofStepDefinition,
   sortedUniquePaths,
-  withQualityAdmission,
 } from "../../../internal/repo-run/index.ts";
 import { patientGit } from "../../../internal/repo-run/PatientGit.ts";
 import { CiLocalStepPlan } from "../../Ci/CiLane.ts";
@@ -625,7 +625,8 @@ const runWithFullProofCoordinator = Effect.fn("Yeet.runWithFullProofCoordinator"
     ...admissionAttemptFields(attempt),
   });
   const originGate = fullProofAdmissionOriginGate(lockPath, context, request.command);
-  return yield* schedulerErrorToYeetError(withQualityAdmission(request, originGate, use));
+  const scheduler = yield* QualityScheduler;
+  return yield* schedulerErrorToYeetError(scheduler.admit(request, originGate, use));
 });
 
 const runWithMergedPreviewAdmission = Effect.fn("Yeet.runWithMergedPreviewAdmission")(function* <
@@ -646,7 +647,8 @@ const runWithMergedPreviewAdmission = Effect.fn("Yeet.runWithMergedPreviewAdmiss
     ...admissionAttemptFields(O.some(attempt)),
   });
   const originGate = fullProofAdmissionOriginGate(lockPath, context, request.command);
-  return yield* schedulerErrorToYeetError(withQualityAdmission(request, originGate, use));
+  const scheduler = yield* QualityScheduler;
+  return yield* schedulerErrorToYeetError(scheduler.admit(request, originGate, use));
 });
 
 // Review-fix loops take one admission token (class-capped at three concurrent
@@ -667,7 +669,8 @@ const runWithReviewFixAdmission = Effect.fn("Yeet.runWithReviewFixAdmission")(fu
     command: "bun run beep yeet verify --tier review-fix",
     ...admissionAttemptFields(attempt),
   });
-  return yield* schedulerErrorToYeetError(withQualityAdmission(request, noAdmissionOriginGate, use));
+  const scheduler = yield* QualityScheduler;
+  return yield* schedulerErrorToYeetError(scheduler.admit(request, noAdmissionOriginGate, use));
 });
 
 /**
@@ -1578,6 +1581,7 @@ const runPushFirstPublishPhases = Effect.fn("Yeet.runPushFirstPublishPhases")(fu
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
+  | QualityScheduler
   | Digest.Digest
   | Git
 > {
@@ -1721,6 +1725,7 @@ const publishPostCommitPhases = (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
+  | QualityScheduler
   | Digest.Digest
   | Git
 > =>
@@ -1777,6 +1782,7 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
+  | QualityScheduler
   | Digest.Digest
   | Git
 > {
@@ -2854,6 +2860,7 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
+  | QualityScheduler
   | Digest.Digest
   | Git
 > {
@@ -3079,6 +3086,7 @@ const runMergedVerify = Effect.fn("Yeet.runMergedVerify")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
+  | QualityScheduler
   | Digest.Digest
   | Git
 > {
@@ -3153,6 +3161,7 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
+  | QualityScheduler
   | Digest.Digest
   | Git
 > {
