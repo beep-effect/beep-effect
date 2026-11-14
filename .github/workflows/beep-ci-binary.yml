@@ -272,6 +272,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           PIN_BRANCH: ci/beep-ci-pin-bump
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           set -euo pipefail
           tag="$(gh release list --limit 100 --json tagName,createdAt \
@@ -290,8 +291,42 @@ jobs:
           fi
           target="$(gh release view "$tag" --json targetCommitish --jq .targetCommitish)"
           bun run beep ci binary-pin --tag "$tag" --sha256 "$sha256" --write
+          # Decide only from state actually read: a failed lookup fails the step
+          # (no push, no pull request) instead of reading as "nothing there".
+          lookup_failed() {
+            echo "::error::Beep CI pin bump: $1 failed, so the bump state is unknown; no branch was pushed and no pull request was opened. Re-run the job."
+            echo "- $1 failed: bump state unknown; nothing pushed, no pull request opened." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          }
+          # Read the pin file at a ref into pin_text. A 404 is "no such branch"
+          # only where $3 allows it; any other failure fails the step.
+          read_error="${RUNNER_TEMP}/pin-read.err"
+          read_pin() {
+            local content
+            pin_text=""
+            if content="$(gh api "repos/${GH_REPO}/contents/.github/actions/fetch-beep-ci/action.yml?ref=$1" \
+              --jq .content 2>"$read_error")"; then
+              pin_text="$(base64 --decode <<<"$content")"
+            elif [[ "$3" == "allow-missing" ]] && grep -q "HTTP 404" "$read_error"; then
+              pin_text=""
+            else
+              cat "$read_error" >&2
+              lookup_failed "$2"
+            fi
+          }
+          pins_release() {
+            grep -Eq "^[[:space:]]*BEEP_CI_RELEASE_TAG:[[:space:]]*${tag}[[:space:]]*$" <<<"$1" \
+              && grep -Eq "^[[:space:]]*BEEP_CI_SHA256:[[:space:]]*${sha256}[[:space:]]*$" <<<"$1"
+          }
           changed=false
           if ! git diff --quiet -- .github/actions/fetch-beep-ci/action.yml; then changed=true; fi
+          # The checkout is this run's commit, not the branch tip: a re-run of an
+          # older job after the bump merged still sees the old pin. Live main
+          # pinning this release means there is nothing to bump.
+          if [[ "$changed" == "true" ]]; then
+            read_pin "$DEFAULT_BRANCH" "the live ${DEFAULT_BRANCH} pin read" require
+            if pins_release "$pin_text"; then changed=false; fi
+          fi
           # The newest release T is read from state, in this order (#3299 review):
           # - a CLOSED, unmerged pin-bump pull request titled for T: the bump was
           #   declined on purpose, so it stays parked (no push, no reopen) until a
@@ -303,41 +338,26 @@ jobs:
           # - anything else (no branch, a stale branch, no pull request because
           #   creation failed after the push, a missing label, a re-run after a
           #   failed pull-request step): run the pull-request step, which opens or
-          #   repairs the pull request and its label. A missing branch reads as empty.
+          #   repairs the pull request and its label.
+          # Only pull requests from this repository into the default branch count:
+          # a fork can use the same branch name and title (this repository is
+          # public), and --head matches by branch name alone.
           bump=false
           parked=false
           if [[ "$changed" == "true" ]]; then
             title="ci: bump the beep CI binary pin to ${tag}"
-            # Decide only from state actually read: a failed lookup fails the step
-            # (no push, no pull request) instead of reading as "nothing there".
-            # A 404 on the contents read is the one failure that means "no branch".
-            lookup_failed() {
-              echo "::error::Beep CI pin bump: $1 failed, so the bump state is unknown; no branch was pushed and no pull request was opened. Re-run the job."
-              echo "- $1 failed: bump state unknown; nothing pushed, no pull request opened." >> "$GITHUB_STEP_SUMMARY"
-              exit 1
-            }
-            pulls="$(gh pr list --head "$PIN_BRANCH" --state all --json number,state,title,labels)" \
+            pulls="$(gh pr list --head "$PIN_BRANCH" --base "$DEFAULT_BRANCH" --state all --limit 1000 \
+              --json number,state,title,labels,isCrossRepository,baseRefName)" \
               || lookup_failed "the pin-bump pull request lookup"
-            closed="$(jq --arg title "$title" \
-              '[.[] | select(.state == "CLOSED" and .title == $title)] | length' <<<"$pulls")"
-            open_labelled="$(jq --arg title "$title" \
-              '[.[] | select(.state == "OPEN" and .title == $title and any(.labels[]; .name == "ready-for-heavy"))] | length' \
+            own='.[] | select(.isCrossRepository == false and .baseRefName == $base and .title == $title)'
+            closed="$(jq --arg title "$title" --arg base "$DEFAULT_BRANCH" \
+              "[${own} | select(.state == \"CLOSED\")] | length" <<<"$pulls")"
+            open_labelled="$(jq --arg title "$title" --arg base "$DEFAULT_BRANCH" \
+              "[${own} | select(.state == \"OPEN\" and any(.labels[]; .name == \"ready-for-heavy\"))] | length" \
               <<<"$pulls")"
-            branch_error="${RUNNER_TEMP}/pin-branch-read.err"
-            if branch_content="$(gh api "repos/${GH_REPO}/contents/.github/actions/fetch-beep-ci/action.yml?ref=${PIN_BRANCH}" \
-              --jq .content 2>"$branch_error")"; then
-              branch_pin="$(base64 --decode <<<"$branch_content")"
-            elif grep -q "HTTP 404" "$branch_error"; then
-              branch_pin=""
-            else
-              cat "$branch_error" >&2
-              lookup_failed "the pin-bump branch read"
-            fi
+            read_pin "$PIN_BRANCH" "the pin-bump branch read" allow-missing
             branch_current=false
-            if grep -Eq "^[[:space:]]*BEEP_CI_RELEASE_TAG:[[:space:]]*${tag}[[:space:]]*$" <<<"$branch_pin" \
-              && grep -Eq "^[[:space:]]*BEEP_CI_SHA256:[[:space:]]*${sha256}[[:space:]]*$" <<<"$branch_pin"; then
-              branch_current=true
-            fi
+            if pins_release "$pin_text"; then branch_current=true; fi
             if [[ "$closed" -ge 1 ]]; then
               parked=true
             elif [[ "$branch_current" != "true" || "$open_labelled" -lt 1 ]]; then
@@ -358,7 +378,7 @@ jobs:
             echo ""
             echo "- newest release: \`$tag\` (sha256 \`$sha256\`, closure digest \`$digest\`, built from \`$target\`)"
             if [[ "$changed" != "true" ]]; then
-              echo "- main already pins it: no pin-bump pull request."
+              echo "- main already pins it (checked against live \`$DEFAULT_BRANCH\`): no pin-bump pull request."
               exit 0
             fi
             if [[ "$parked" == "true" ]]; then
