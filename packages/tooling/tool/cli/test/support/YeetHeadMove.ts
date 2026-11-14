@@ -220,6 +220,50 @@ export const rewriteWindowScenario = Effect.fn("HeadMoveTest.rewriteWindowScenar
   return { s, context, github, target: { prNumber: 3050, headSha: s.c2 } };
 });
 
+/** The hostile config's attributes file, inside a scratch checkout. */
+const HOSTILE_ATTRIBUTES = ".git/hostile.attributes";
+
+/**
+ * Every setting here changes what an unpinned `git diff` prints. `diff.relative` is a no-op at the
+ * top level and stays in to prove it; the `hostile` driver reaches every path through the
+ * attributes file.
+ */
+export const hostileGitConfig = (root: string): ReadonlyArray<readonly [string, string]> => [
+  ["color.ui", "always"],
+  ["color.diff", "always"],
+  ["diff.renames", "copies"],
+  ["diff.relative", "true"],
+  ["diff.ignoreSubmodules", "all"],
+  ["diff.submodule", "log"],
+  ["diff.external", "true"],
+  ["diff.noprefix", "true"],
+  ["diff.mnemonicPrefix", "true"],
+  ["diff.context", "0"],
+  ["diff.interHunkContext", "10"],
+  ["diff.algorithm", "histogram"],
+  ["diff.indentHeuristic", "false"],
+  ["core.abbrev", "4"],
+  ["core.attributesFile", `${root}/${HOSTILE_ATTRIBUTES}`],
+  ["diff.hostile.textconv", "cksum <"],
+  ["diff.hostile.binary", "true"],
+  ["diff.hostile.algorithm", "patience"],
+];
+
+/** Route every path of a scratch checkout through the `hostile` diff driver. */
+export const writeHostileGitAttributes = Effect.fn("HeadMoveTest.writeHostileGitAttributes")(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs.writeFileString(path.join(root, HOSTILE_ATTRIBUTES), "* diff=hostile\n");
+});
+
+/** Apply the hostile config and its attributes file to a scratch checkout. */
+export const configureHostileGit = Effect.fn("HeadMoveTest.configureHostileGit")(function* (root: string) {
+  yield* writeHostileGitAttributes(root);
+  yield* Effect.forEach(hostileGitConfig(root), ([key, value]) => git(root, ["config", key, value]), {
+    discard: true,
+  });
+});
+
 // Real git subprocesses must observe the same filesystem the fixture builder writes.
 export const yeetRealGitTestLayer = Layer.mergeAll(
   NodeServices.layer,

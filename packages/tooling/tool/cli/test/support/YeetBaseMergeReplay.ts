@@ -123,6 +123,8 @@ export interface BaseMergeReplay {
   /** `rev-parse <ref>` answers. */
   readonly revisions: Readonly<Record<string, string>>;
   readonly shallow: boolean;
+  /** Per-path `diff` output by `<from> <to> <path>` when the argv omits `--text`, if it differs. */
+  readonly unpinnedDiffs?: Readonly<Record<string, string>>;
   /** `diff-tree` output by `<from> <to>` when the argv omits `--ignore-submodules=none`, if it differs. */
   readonly unpinnedDiffTrees?: Readonly<Record<string, string>>;
 }
@@ -219,6 +221,116 @@ export const gitlinkReplay: BaseMergeReplay = {
   shallow: false,
 };
 
+/**
+ * The commits of the binary-diff recording, made 2026-11-14 with git 2.56.1 in a
+ * third scratch repository with `data.txt -diff` in `.git/info/attributes` and
+ * the hostile config of `yeet-final-check-refresh.test.ts` applied. `O` holds
+ * thirty numbered lines; the pull request commit `B` retags line 120. `MX`
+ * retags line 118 on the base, keeping its length, so `HX` (`git merge` of
+ * `MX` on `B`) is clean but changes a context line of the PR hunk. `MS` inserts
+ * four lines above the hunk, so `HS` moves it and keeps its patch. The `--text`
+ * reads printed the same bytes as before the config was applied; without
+ * `--text` (the `--binary` argv the classifier passed before) git printed
+ * binary deltas, the same bytes for `B` and `HX` and other bytes for `HS`.
+ */
+export const binarySha = {
+  O: "0cb47a981a86141f896c2f4229e3f2228bf9fbb8",
+  B: "2c6baae63a5243788e637c08178a5fc8791b294f",
+  MX: "9f4b95727ff5310679acdb23d7d4577fae82e43d",
+  HX: "4b11ec45f5d30e2667fbbcabe4fa4fb0bd1b9473",
+  MS: "d764b4d25abefe631538b11da8886e8e5cd4ac49",
+  HS: "5ba173defad399f324925cc3083717f5a111fec0",
+} as const;
+
+type Blobs = readonly [string, string];
+const binaryBlobs = {
+  B: ["85661bc8abb00014ea8d608a2eb460e3099280f4", "97d535a71c1e9c1130fdd8d4961b3d0bace12803"],
+  HX: ["74db663cf07631e25a36840868a8829372e4c26a", "1d281d4cf1a72678fdd17bb2573e4e6fd61d34fd"],
+  HS: ["26d7583543032bd718fb2d44cfeb4e71f84b4f77", "9ad2c1b08042e2e217acb7bb1bc606b24fbedab4"],
+} as const;
+
+const dataEntry = ([from, to]: Blobs) => `:100644 100644 ${from} ${to} M\0data.txt\0`;
+
+// The pinned read: the PR hunk at line `at`, with line 118 as the base left it.
+const dataText = ([from, to]: Blobs, at: number, line118: string) => `diff --git a/data.txt b/data.txt
+index ${from}..${to} 100644
+--- a/data.txt
++++ b/data.txt
+@@ -${at},7 +${at},7 @@ line 116 base
+ line 117 base
+ line 118 ${line118}
+ line 119 base
+-line 120 base
++line 120 lane
+ line 121 base
+ line 122 base
+ line 123 base
+`;
+
+// The `--binary` read: a forward and a reverse delta, each copying the bytes around the edit by offset.
+const dataDeltas = ([from, to]: Blobs, forward: string, reverse: string) => `diff --git a/data.txt b/data.txt
+index ${from}..${to} 100644
+GIT binary patch
+delta 15
+${forward}
+
+delta 15
+${reverse}
+
+`;
+
+/** The binary-diff recording: a base merge that changed a PR hunk's context, and one that only moved it. */
+export const binaryReplay: BaseMergeReplay = {
+  parents: {
+    [binarySha.B]: binarySha.O,
+    [binarySha.HX]: `${binarySha.B} ${binarySha.MX}`,
+    [binarySha.HS]: `${binarySha.B} ${binarySha.MS}`,
+  },
+  ancestors: [`${binarySha.MX} ${binarySha.MX}`, `${binarySha.MS} ${binarySha.MS}`],
+  mergeTrees: {
+    [`${binarySha.B} ${binarySha.MX}`]: clean("c9e6402734b18ed22ece8ff796c6851c6232c9d5"),
+    [`${binarySha.B} ${binarySha.MS}`]: clean("2e7e0b0a2b632edd91db078d6a2107a84ca3fd8a"),
+  },
+  revisions: {
+    [`${binarySha.HX}^{tree}`]: "c9e6402734b18ed22ece8ff796c6851c6232c9d5",
+    [`${binarySha.HS}^{tree}`]: "2e7e0b0a2b632edd91db078d6a2107a84ca3fd8a",
+  },
+  mergeBases: {
+    [`${binarySha.MX} ${binarySha.B}`]: binarySha.O,
+    [`${binarySha.MX} ${binarySha.HX}`]: binarySha.MX,
+    [`${binarySha.MS} ${binarySha.B}`]: binarySha.O,
+    [`${binarySha.MS} ${binarySha.HS}`]: binarySha.MS,
+  },
+  diffTrees: {
+    [`${binarySha.O} ${binarySha.B}`]: dataEntry(binaryBlobs.B),
+    [`${binarySha.MX} ${binarySha.HX}`]: dataEntry(binaryBlobs.HX),
+    [`${binarySha.MS} ${binarySha.HS}`]: dataEntry(binaryBlobs.HS),
+  },
+  diffs: {
+    [`${binarySha.O} ${binarySha.B} data.txt`]: dataText(binaryBlobs.B, 18, "base"),
+    [`${binarySha.MX} ${binarySha.HX} data.txt`]: dataText(binaryBlobs.HX, 18, "main"),
+    [`${binarySha.MS} ${binarySha.HS} data.txt`]: dataText(binaryBlobs.HS, 22, "base"),
+  },
+  unpinnedDiffs: {
+    [`${binarySha.O} ${binarySha.B} data.txt`]: dataDeltas(
+      binaryBlobs.B,
+      "WcmZ3&yo7m!A|rE7V%}sG#s&Z-;slof",
+      "WcmZ3&yo7m!A|rEBV)0}Z#s&Z-wFHs?"
+    ),
+    [`${binarySha.MX} ${binarySha.HX} data.txt`]: dataDeltas(
+      binaryBlobs.HX,
+      "WcmZ3&yo7m!A|rE7V%}sG#s&Z-;slof",
+      "WcmZ3&yo7m!A|rEBV)0}Z#s&Z-wFHs?"
+    ),
+    [`${binarySha.MS} ${binarySha.HS} data.txt`]: dataDeltas(
+      binaryBlobs.HS,
+      "WcmX@We1Lg_EhBSIV%}s2#s&Z?UIhmL",
+      "WcmX@We1Lg_EhBSMV)0}L#s&Z?F$Dqu"
+    ),
+  },
+  shallow: false,
+};
+
 const unrecorded = (args: ReadonlyArray<string>) =>
   GitCommandError.make({ kind: "failed", args, cwd: REPLAY_ROOT, exitCode: 128, stderr: "fatal: not recorded" });
 
@@ -242,6 +354,14 @@ export interface ReplayCheckout extends CheckoutState {
 
 const isLocal = (state: CheckoutState, sha: string): boolean => !MutableHashSet.has(state.absent, sha);
 
+// The table an argv reads: what git printed without `pin` when it was recorded, else the pinned one.
+const pinnedOr = (
+  args: ReadonlyArray<string>,
+  pin: string,
+  unpinned: Readonly<Record<string, string>> | undefined,
+  pinned: Readonly<Record<string, string>>
+) => (A.contains(args, pin) ? pinned : (unpinned ?? pinned));
+
 // `show -s --format=%P <sha>` prints the parents and a newline (and fails for an absent commit);
 // `diff-tree ... <from> <to> --` and `diff ... <from> <to> -- <path>` print exactly what was recorded.
 const rawRead = (state: CheckoutState, args: ReadonlyArray<string>): O.Option<string> => {
@@ -255,11 +375,11 @@ const rawRead = (state: CheckoutState, args: ReadonlyArray<string>): O.Option<st
     );
   if (A.contains(args, "diff-tree")) {
     const [from, to] = A.takeRight(args, 3);
-    const pinned = A.contains(args, "--ignore-submodules=none");
-    return R.get((pinned ? undefined : state.replay.unpinnedDiffTrees) ?? state.replay.diffTrees, `${from} ${to}`);
+    const table = pinnedOr(args, "--ignore-submodules=none", state.replay.unpinnedDiffTrees, state.replay.diffTrees);
+    return R.get(table, `${from} ${to}`);
   }
   const [from, to, , path] = A.takeRight(args, 4);
-  return R.get(state.replay.diffs, `${from} ${to} ${path}`);
+  return R.get(pinnedOr(args, "--text", state.replay.unpinnedDiffs, state.replay.diffs), `${from} ${to} ${path}`);
 };
 
 // A fetch from origin hangs, fails, or brings every commit the checkout lacked.

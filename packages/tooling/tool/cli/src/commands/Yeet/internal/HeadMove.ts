@@ -29,7 +29,7 @@ import {
   YeetHeadMoveUnchanged,
   YeetHeadMoveUnknown,
 } from "./HeadMove.schemas.ts";
-import { finalCheckPatchIdentityDigest } from "./PatchIdentity.ts";
+import { finalCheckPatchIdentityDigest, PATCH_IDENTITY_DIFF_FLAGS } from "./PatchIdentity.ts";
 import type * as DateTime from "effect/DateTime";
 import type { YeetBaseMerge, YeetHeadMove, YeetHeadMoveChange, YeetHeadMoveRequest } from "./HeadMove.schemas.ts";
 
@@ -326,36 +326,15 @@ const rawEntries = Effect.fn("Yeet.headMoveRawEntries")(function* (root: string,
   }
   return entries;
 });
-// Every porcelain `diff` default the patch identity keeps a byte of is pinned, so local config
-// cannot change it: submodule visibility (`diff.ignoreSubmodules`, a submodule's `ignore`) and
-// format (`diff.submodule`), context and hunk joining (`diff.context`, `diff.interHunkContext`),
-// the algorithm and heuristic (`diff.algorithm`, `diff.indentHeuristic`), `diff.relative`, renames,
-// color, external diff and textconv. The prefixes (`diff.noprefix`, `diff.mnemonicPrefix`) and path
-// quoting (`core.quotePath`) only change the per-file header lines the identity drops; the prefixes
-// are pinned anyway so the bytes are the same on every checkout.
-const PatchDiffFlags = [
-  "--no-color",
-  "--no-renames",
-  "--ignore-submodules=none",
-  "--submodule=short",
-  "--no-ext-diff",
-  "--no-textconv",
-  "--binary",
-  "--full-index",
-  "--src-prefix=a/",
-  "--dst-prefix=b/",
-  "--unified=3",
-  "--inter-hunk-context=0",
-  "--diff-algorithm=myers",
-  "--indent-heuristic",
-  "--no-relative",
-];
 // KEEP (D-22): the per-path patch identity is a streamed byte fold that keeps invalid UTF-8 (the
-// Y33 reason, D-18); the kit buffers decoded text.
+// Y33 reason, D-18); the kit buffers decoded text. The flags are the refresh rule's, so local
+// config cannot change the bytes, and `--text` diffs a file git treats as binary as text: a binary
+// delta copies bytes by offset and would miss a base change to the bytes around the edit.
+// `--literal-pathspecs` keeps a path such as `:(top)a` from being read as pathspec magic.
 const patchDigest = Effect.fn("Yeet.headMovePatchDigest")((root: string, range: PatchRange, path: string) =>
   runGitFoldedStdout(
     root,
-    ["--literal-pathspecs", "diff", ...PatchDiffFlags, range.from, range.to, "--", path],
+    ["--literal-pathspecs", "diff", ...PATCH_IDENTITY_DIFF_FLAGS, range.from, range.to, "--", path],
     finalCheckPatchIdentityDigest
   )
 );
