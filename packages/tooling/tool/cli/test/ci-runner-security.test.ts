@@ -110,6 +110,9 @@ const decodeInspectionPolicy = S.decodeUnknownEffect(
 );
 const encodeJobsFixture = S.encodeEffect(S.fromJsonString(S.Unknown));
 const decodeYamlRecord = S.decodeUnknownEffect(S.Record(S.String, S.Unknown));
+const decodeBranchProtectionContexts = S.decodeUnknownEffect(
+  S.fromJsonString(S.Struct({ requiredStatusChecks: S.Array(S.String) }))
+);
 
 const workflowJobs = Effect.fnUntraced(function* (document: unknown) {
   return yield* decodeWorkflowJobs(yamlAt(document, ["jobs"]));
@@ -1838,9 +1841,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const repoRoot = yield* findRepoRoot();
       const contexts = yield* fs
         .readFileString(path.join(repoRoot, "standards/branch-protection-contexts.json"))
-        .pipe(
-          Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(S.Struct({ requiredStatusChecks: S.Array(S.String) }))))
-        );
+        .pipe(Effect.flatMap(decodeBranchProtectionContexts));
       const heavyJobs = yield* decodeYamlRecord(yamlAt(heavyWorkflow, ["jobs"]));
       const checkJobs = yield* decodeYamlRecord(yamlAt(workflow, ["jobs"]));
       const jobText = (jobs: unknown, job: string, key: string): string => {
