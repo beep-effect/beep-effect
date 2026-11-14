@@ -176,6 +176,20 @@ export * from "./CiShardOverflow.ts";
  */
 export * from "./CiShardOverflowPreflight.ts";
 /**
+ * Public per-check cost ledger schemas.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./CostLedger.schemas.ts";
+/**
+ * Public per-check cost ledger (`beep ci ledger`).
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CostLedger.ts";
+/**
  * Dependency review service, live layer and verdict rendering.
  *
  * @category cli-commands
