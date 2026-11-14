@@ -607,9 +607,20 @@ export interface StackFailure {
 }
 
 /** Typed view of the harness scratch stack. */
+/** The part of a plan the enforcement test reads: each resource's action, type and declared props. */
+export interface PlannedResources {
+  readonly resources: Readonly<
+    Record<
+      string,
+      { readonly action: string; readonly props?: unknown; readonly resource: { readonly Type: string } } | undefined
+    >
+  >;
+}
+
 export interface TypedStack {
   deploy<A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<Input.Resolve<A>, StackFailure>;
   destroy(options?: { readonly include?: never; readonly exclude?: never }): Effect.Effect<void, StackFailure>;
+  plan<A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<PlannedResources, StackFailure>;
 }
 
 /**

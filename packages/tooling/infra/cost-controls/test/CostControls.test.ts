@@ -1,11 +1,19 @@
 import { decodeCostControlsConfig, productionConfig } from "@beep/infra-cost-controls/Config";
-import { budgetName, declareCostControls, PhysicalNames, program } from "@beep/infra-cost-controls/CostControls";
+import {
+  budgetName,
+  DeclaredResourceTypes,
+  declareCostControls,
+  PhysicalNames,
+  program,
+} from "@beep/infra-cost-controls/CostControls";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
+import * as Str from "effect/String";
 import * as FakeAws from "./support/FakeAws.ts";
 
 const environmentOf = (values: Record<string, string>) =>
@@ -186,6 +194,32 @@ describe("CostControls guards", () => {
       const error = yield* FakeAws.deployFailure(stack)(declareCostControls(config, "prod").pipe(environmentOf({})));
       expect(FakeAws.failureTags(error)).toContain("ConfigError");
       expect(noRecipients.account.calls).toEqual([]);
+    })
+  );
+});
+
+describe("CostControls never enforces", () => {
+  // A budget action, an SCP, a quota change or an anomaly response could stop,
+  // throttle or deny EC2 or Spot launches for the runner pools. The stack
+  // declares none; adding one needs a new ruling from the CI window owner.
+  const launchControls = ["BudgetAction", "Organizations", "ServiceQuotas", "EC2", "AutoScaling", "Lambda", "IAM"];
+  const enforcement = FakeAws.harness({ seed: FakeAws.liveAccount, stage: "prod" });
+  enforcement.provider("declares only the six cost types, and the budget carries no action", (stack) =>
+    Effect.gen(function* () {
+      const config = yield* decodeCostControlsConfig({ ...productionConfig, notifications: "live" });
+      const plan = yield* stack.plan(declareCostControls(config, "prod").pipe(environmentOf(recipientsVariable)));
+      const planned = A.filter(R.values(plan.resources), (item) => item !== undefined);
+      const types = A.map(planned, (item) => item?.resource.Type ?? "");
+
+      expect(A.length(types)).toBe(11);
+      for (const type of types) {
+        expect(DeclaredResourceTypes).toContain(type);
+        for (const control of launchControls) expect(type).not.toContain(control);
+      }
+      const budgetProps = plan.resources.MonthlyBudget?.props;
+      const budgetKeys = budgetProps !== null && typeof budgetProps === "object" ? R.keys(budgetProps) : [];
+      expect(budgetKeys.length).toBeGreaterThan(0);
+      for (const key of budgetKeys) expect(Str.toLowerCase(key)).not.toContain("action");
     })
   );
 });

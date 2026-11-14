@@ -157,6 +157,18 @@ enrollments) with no property changes. A personal deploy creates a free
 budget with no notifications; `destroy` deletes that budget and leaves every
 account setting untouched.
 
+Pre-deploy gate. Between plan and deploy, the workflow's "Check the plan
+before deploy" step (`plan-check.ts`, tested in `test/PlanCheck.test.ts`)
+fails the job unless the nine adopted account settings (six tags, two
+enrollments, the services monitor) plan as adopt or no-op with no property
+change, their live values equal the declared ones, and nothing plans a
+delete or replace. If it fails, or if any plan ever shows a change to a
+setting that touches EC2, Spot or Lambda concurrency, do not re-run or work
+around it: the job has stopped before any deploy, and the next step is to ask
+the CI goals driver through the orchestrator. The stack declares no budget
+action, SCP, quota change or anomaly response (no enforcement without a new
+ruling from the CI window owner).
+
 Phases. `prod` starts `silent`: the new budget has no notifications and there
 is no new anomaly subscription, so recipients are not mailed twice while the
 Pulumi budget and subscription still exist. The environment secret

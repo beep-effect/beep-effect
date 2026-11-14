@@ -67,6 +67,32 @@ The stack output names the budget, its ARN, the phase, the monitor and
 subscription ARNs, the tag keys and both enrollment statuses. It never
 contains a recipient.
 
+### No enforcement
+
+The stack only budgets, alerts, tags and enrolls. It declares no budget
+action, no service control policy, no quota change and no anomaly response,
+so nothing it owns can stop, throttle or deny an EC2 or Spot launch for the
+heavy runner pool or the `beep-ovf` overflow pool. `DeclaredResourceTypes`
+lists the six resource types it may declare, the provider layer registers
+only those, and the test "declares only the six cost types, and the budget
+carries no action" fails if any other type, or a budget action, appears.
+Adding enforcement needs a new ruling from the CI window owner. The later
+switch from `silent` to `live` adds email notifications only.
+
+### Pre-deploy gate (`src/PlanCheck.ts`, `plan-check.ts`)
+
+Between plan and deploy the workflow runs `bun plan-check.ts <plan.log>
+<live.json>`: it parses the detailed plan and the live values of the nine
+adopted settings and fails the job, before any deploy, unless every
+singleton plans as an adopt or no-op with no property change, each live
+setting already equals the declared one (tags Active, both enrollments
+Active for this account only, exactly one `DIMENSIONAL`/`SERVICE` monitor
+named `beep-account-services`), and nothing plans a delete or replace. A
+resource outside the stack stops the job with an instruction to ask the CI
+goals driver through the orchestrator. The gate prints resources, actions
+and changed property names, never values. It is meant for `prod`: a personal
+stage does not declare the monitor, so its plan is refused.
+
 ## Running it
 
 `alchemy.run.ts` declares the shared S3 state store and the stack. A

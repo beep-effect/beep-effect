@@ -117,6 +117,56 @@ const tagLogicalId = (tagKey: CostAllocationTagKey) =>
   });
 
 /**
+ * Logical ids of the nine adopted account singletons: the six cost
+ * allocation tags, the two enrollments and the services anomaly monitor.
+ * The pre-deploy gate requires each to plan as an adopt or no-op with no
+ * property change.
+ *
+ * **Example** (Count the singletons)
+ *
+ * ```ts
+ * import { SingletonIds } from "@beep/infra-cost-controls/CostControls"
+ *
+ * console.log(SingletonIds.length) // 9
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const SingletonIds: ReadonlyArray<string> = [
+  ...A.map(CostAllocationTagKey.literals, tagLogicalId),
+  "ComputeOptimizer",
+  "CostOptimizationHub",
+  "AccountServicesMonitor",
+];
+
+/**
+ * Every resource type the stack may declare. None of them can stop,
+ * throttle or deny an EC2 or Spot launch: no budget action, no SCP, no
+ * quota change, no anomaly response. The provider layer registers exactly
+ * these, and a test fails if the stack declares any other type.
+ *
+ * **Example** (Read the declared types)
+ *
+ * ```ts
+ * import { DeclaredResourceTypes } from "@beep/infra-cost-controls/CostControls"
+ *
+ * console.log(DeclaredResourceTypes.length) // 6
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const DeclaredResourceTypes: ReadonlyArray<string> = [
+  "AWS.Budgets.Budget",
+  "AWS.CostExplorer.AnomalyMonitor",
+  "AWS.CostExplorer.AnomalySubscription",
+  "BeepAWS.CostExplorer.CostAllocationTag",
+  "BeepAWS.ComputeOptimizer.Enrollment",
+  "BeepAWS.CostOptimizationHub.Enrollment",
+];
+
+/**
  * The account singletons: six cost allocation tags and two enrollments.
  * Their `read` reports plain attributes, so each live setting adopts without
  * `--adopt`, and their default removal policy is `retain`, so removing one

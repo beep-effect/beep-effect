@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../../../../tsconfig.base.json",
-  "include": ["src", "test", "alchemy.run.ts"],
+  "include": ["src", "test", "alchemy.run.ts", "plan-check.ts"],
   "compilerOptions": {
     "composite": false,
     "declaration": false,

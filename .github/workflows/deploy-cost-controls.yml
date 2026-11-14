@@ -12,8 +12,11 @@ name: Deploy cost controls
 # AWS credentials come from the stack-scoped GitHub OIDC deploy role
 # (vars.COST_CONTROLS_DEPLOY_ROLE_ARN on the cost-controls-prod environment),
 # which may touch only these cost APIs and the stack's state objects. The
-# recipient list is that environment's secret; plan and deploy run without
-# `--detailed`, so no property value reaches the log.
+# recipient list is that environment's secret; the detailed plan goes to a
+# file and the deploy runs without `--detailed`, so no property value reaches
+# the log. A tested pre-deploy gate (plan-check.ts) stops the job unless the
+# nine adopted account settings plan with no change and nothing is deleted
+# or replaced.
 # Runbook: docs/runbooks/alchemy-infra.md.
 on:
   push:
@@ -58,9 +61,10 @@ jobs:
           role-session-name: alchemy-cost-controls-prod
           aws-region: us-east-1
 
-      # The plan log is the acceptance evidence: after the first deploy it
-      # shows no create or replace (alchemy plan has no changes-pending exit
-      # code, so the log is the record).
+      # The plan runs with --detailed so the gate below can see property
+      # changes, and writes to a file only: in the live phase the declared
+      # props include recipient addresses, so the raw log never reaches the
+      # job output. On failure only the non-property lines are printed.
       - name: Plan prod stage
         working-directory: packages/tooling/infra/cost-controls
         shell: bash
@@ -68,7 +72,39 @@ jobs:
           CI: "true"
           ALCHEMY_TELEMETRY_DISABLED: "1"
           COST_CONTROLS_NOTIFICATION_EMAILS: ${{ secrets.COST_CONTROLS_NOTIFICATION_EMAILS }}
-        run: bunx alchemy plan --stage prod --env-file /dev/null --no-input
+        run: |
+          set -euo pipefail
+          if ! bunx alchemy plan --stage prod --env-file /dev/null --no-input --detailed \
+            > "$RUNNER_TEMP/cost-controls-plan.log" 2>&1; then
+            grep -v -E 'INFO: {3}' "$RUNNER_TEMP/cost-controls-plan.log" || true
+            exit 1
+          fi
+
+      # Pre-deploy gate (window-5 ruling): the job stops here, before any
+      # deploy, unless the nine adopted account settings (six cost allocation
+      # tags, two enrollments, the services anomaly monitor) plan as adopt or
+      # no-op with no property change, their live values already equal the
+      # declared ones, and nothing plans a delete or replace. The check is
+      # src/PlanCheck.ts (tested); it prints resources, actions and changed
+      # property names, never values. Its printed lines are the acceptance
+      # record. A resource outside the stack stops the job for the CI goals
+      # driver (runbook: docs/runbooks/alchemy-infra.md, Cost controls).
+      - name: Check the plan before deploy
+        working-directory: packages/tooling/infra/cost-controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          jq -n \
+            --argjson tags "$(aws ce list-cost-allocation-tags --tag-keys App beep-ci DataClass ghr:environment ManagedBy Project --output json)" \
+            --argjson co "$(aws compute-optimizer get-enrollment-status --output json)" \
+            --argjson hub "$(aws cost-optimization-hub list-enrollment-statuses --output json)" \
+            --argjson mon "$(aws ce get-anomaly-monitors --output json)" \
+            '{costAllocationTags: [$tags.CostAllocationTags[] | {TagKey, Status}],
+              computeOptimizer: {status: $co.status, memberAccountsEnrolled: $co.memberAccountsEnrolled},
+              costOptimizationHub: {includeMemberAccounts: $hub.includeMemberAccounts, items: [$hub.items[] | {status}]},
+              anomalyMonitors: [$mon.AnomalyMonitors[] | {MonitorName, MonitorType} + (if .MonitorDimension then {MonitorDimension} else {} end)]}' \
+            > "$RUNNER_TEMP/cost-controls-live.json"
+          bun plan-check.ts "$RUNNER_TEMP/cost-controls-plan.log" "$RUNNER_TEMP/cost-controls-live.json"
 
       - name: Deploy prod stage
         working-directory: packages/tooling/infra/cost-controls
