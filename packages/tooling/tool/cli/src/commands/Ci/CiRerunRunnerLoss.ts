@@ -65,8 +65,8 @@ const JOBS_PER_PAGE = 30;
 const ANNOTATIONS_PER_PAGE = 100;
 // Ten pages bound the loop; a failed heavy job carries one or two annotations.
 const ANNOTATIONS_MAX_PAGES = 10;
-// Ten pages is 1000 jobs; a Check run has about forty.
-const JOBS_MAX_PAGES = 10;
+// Thirty-four pages of 30 is 1020 jobs, the bound the loop had at 100 per page; a full Check run has about eighty.
+const JOBS_MAX_PAGES = 34;
 
 /**
  * The resolved inputs of one `ci rerun-runner-loss` invocation.
