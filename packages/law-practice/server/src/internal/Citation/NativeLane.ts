@@ -325,30 +325,29 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
                   // The detached task retains ownership if its caller stops waiting.
                   const task = yield* admitted
                     .withPermit(
-                      Effect.suspend(
-                        Effect.fnUntraced(function* () {
-                          if (!live) return yield* CitationNativeLaneFailure.make({ reason: "closed" });
-                          const done = yield* Deferred.make<void>();
-                          pending = O.some({ done, bound });
-                          outstanding++;
-                          return yield* operation.pipe(
-                            Effect.ensuring(
-                              Effect.gen(function* () {
-                                if (poisoned || closed)
-                                  yield* release.pipe(
-                                    Effect.catchCause(() =>
-                                      Effect.logError("Citation late lane retirement remains quarantined")
-                                    )
-                                  );
-                                outstanding--;
-                                pending = O.none();
-                                yield* closeOwner;
-                                yield* Deferred.succeed(done, undefined);
-                              })
-                            )
-                          );
-                        })
-                      )
+                      Effect.suspend((): Effect.Effect<A, E | CitationNativeLaneFailure, R> => {
+                        if (!live) return Effect.fail(CitationNativeLaneFailure.make({ reason: "closed" }));
+                        // Admission publication and revocation share one synchronous turn.
+                        const done = Deferred.makeUnsafe<void>();
+                        pending = O.some({ done, bound });
+                        outstanding++;
+                        return operation.pipe(
+                          Effect.ensuring(
+                            Effect.gen(function* () {
+                              if (poisoned || closed)
+                                yield* release.pipe(
+                                  Effect.catchCause(() =>
+                                    Effect.logError("Citation late lane retirement remains quarantined")
+                                  )
+                                );
+                              outstanding--;
+                              pending = O.none();
+                              yield* closeOwner;
+                              yield* Deferred.succeed(done, undefined);
+                            })
+                          )
+                        );
+                      })
                     )
                     .pipe(Effect.forkDetach);
                   return yield* restore(Fiber.join(task));
