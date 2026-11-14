@@ -13,13 +13,13 @@ import { CitationRegexOperation, makeCitationRegexTiming } from "./RegexPolicy.t
 import { makeCitationRegexResult } from "./RegexResult.ts";
 import { makeCitationRegexSessionPreparation } from "./RegexSessionProtocol.ts";
 import { preflightCitationRegexSessionControls } from "./RegexSessionRpc.ts";
-import { CitationRegexWorkerFailure, CitationRegexWorkerJob } from "./RegexWorkerProtocol.ts";
+import { CitationRegexPayload, CitationRegexWorkerFailure } from "./RegexWorkerProtocol.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import type { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import type { CitationRegexEngine } from "./RegexEngine.ts";
 
-const decodeQuota = S.decodeUnknownEffect(CitationRegexWorkerJob.fields.maxMatches);
+const decodeQuota = S.decodeUnknownEffect(CitationRegexPayload.fields.maxMatches);
 const failure = (reason: CitationRegexWorkerFailure["reason"]) => CitationRegexWorkerFailure.make({ reason });
 /** Install descriptor binding and job preparation once per call site. Each
  * evaluation reads the invocation's regex session and verifies its Clock/spawner

@@ -2,20 +2,22 @@ import {
   acquireCitationNativeLease,
   makeCitationNativeProcessAdmission,
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
-import {
-  CitationRegexWorkerFailure,
-  makeCitationRegexJobPreparation,
-} from "@beep/law-practice-server/internal/Citation/RegexWorkerProtocol";
+import { CitationRegexPatternDescriptor } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
+import { makeCitationRegexSessionPreparation } from "@beep/law-practice-server/internal/Citation/RegexSessionProtocol";
+import { CitationRegexWorkerFailure } from "@beep/law-practice-server/internal/Citation/RegexWorkerProtocol";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
+import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
+import * as Str from "effect/String";
 import type { CitationNativeProcessLease } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
+import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 
 it.effect("does not retain a native slot while regex input waits for borrowed text capacity", () =>
   Effect.gen(function* () {
@@ -81,3 +83,20 @@ it.effect("does not retain a native slot while regex input waits for borrowed te
     expect(used).toBe(0);
   })
 );
+
+const descriptor = CitationRegexPatternDescriptor.make({
+  patternSha256: Sha256Hex.make(Str.repeat(64)("a")),
+  flags: 0,
+  profile: { groups: 0, names: {}, minimumWidthFloor: 1, repeatedCaptures: false, nullableMultiRepeat: false },
+});
+const makeCitationRegexJobPreparation = Effect.fnUntraced(function* <R>(
+  limits: Parameters<typeof makeCitationRegexSessionPreparation>[0],
+  reserve: (units: number) => Effect.Effect<void, CitationSafetyLimitExceeded, R>
+) {
+  const payload = yield* makeCitationRegexSessionPreparation(limits, reserve);
+  return {
+    prepare: (
+      ...inputs: Parameters<typeof payload.prepare> extends [unknown, unknown, unknown, ...infer Args] ? Args : never
+    ) => payload.prepare("python-re", descriptor, 0, ...inputs),
+  };
+});

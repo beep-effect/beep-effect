@@ -21362,18 +21362,6 @@
             "functions": 2
           }
         },
-        "packages/law-practice/server/src/internal/Citation/RegexWorkerProgram.ts": {
-          "lines": 96.87,
-          "statements": 91.42,
-          "branches": 83.33,
-          "functions": 75,
-          "uncovered": {
-            "lines": 1,
-            "statements": 3,
-            "branches": 1,
-            "functions": 3
-          }
-        },
         "packages/law-practice/server/src/internal/Citation/RegexWorkerProtocol.ts": {
           "lines": 100,
           "statements": 97.26,

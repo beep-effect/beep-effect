@@ -23,8 +23,7 @@ import {
   preflightCitationRegexSessionControls,
 } from "./RegexSessionRpc.ts";
 import { makeCitationRegexEvaluation } from "./RegexWorkerEvaluation.ts";
-import { CitationRegexWorkerFailure, CitationRegexWorkerJob, readCitationRegexFrames } from "./RegexWorkerProtocol.ts";
-import { CitationRegexWorkerStartup } from "./RegexWorkerRpc.ts";
+import { CitationRegexPayload, CitationRegexWorkerFailure, readCitationRegexFrames } from "./RegexWorkerProtocol.ts";
 import type * as RpcGroup from "effect/rpc/RpcGroup";
 import type { CitationRegexSessionReply } from "./RegexSessionRpc.ts";
 
@@ -60,14 +59,16 @@ export const citationRegexSessionProgram = Effect.gen(function* () {
       sequence++;
       yield* send(CitationRegexSessionStarted.make({ sequence: job.sequence }));
       // Re-derive the program against this job's descriptor. No cross-job cache.
-      const evaluator = yield* makeCitationRegexEvaluation(
-        CitationRegexWorkerStartup.make({ ...startup, engine: job.engine, descriptor: job.descriptor })
-      );
+      const evaluator = yield* makeCitationRegexEvaluation({
+        ...startup,
+        engine: job.engine,
+        descriptor: job.descriptor,
+      });
       const handlers = yield* CitationRegexSessionRpcs.toHandlers({
         Evaluate: (request) =>
           evaluator
             .evaluate(
-              CitationRegexWorkerJob.make({
+              CitationRegexPayload.make({
                 patternWidth: request.patternWidth,
                 patternBytes: request.patternBytes,
                 sourceWidth: request.sourceWidth,

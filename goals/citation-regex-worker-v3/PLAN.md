@@ -22,7 +22,7 @@ Each slice is one PR and runs the phases above. They land in order.
 | --- | --- | --- | --- |
 | B1 | merged (#3336) | `CitationNativeLane`; regex v2, Diff and Markup start through it; limits cross-field check; policy v2. | none; adds the markup interleave proofs |
 | B2 | in review | Protocol v3 messages, looping worker, `CitationRegexSession`, sleep-counting clock, the real-process proofs; every regex call site switches. | regex processes 291 to 10 |
-| B3 | pending | Delete v2; rewrite spawn-count assertions; re-record shard timings; append isolation evidence. | none |
+| B3 | in review | Delete v2; retain exact spawn-count assertions; append isolation evidence. Shard timings held for CI-driver ruling. | none |
 
 First slice: B1, the native lane, once slice A2 of `citation-engine-install-once` has merged.
 
@@ -175,6 +175,12 @@ Reverse: Return B2 to in progress if independent review finds a remaining owners
 Applied owner ruling a7b55238cda: no start is handed to the spawner after revocation, closure or poisoning. A prior authorized hand-off may produce an OS child later; registration retains its quarantined lease until existing SIGKILL and confirmed retirement, then returns it once. Updated comments, names, earlier current-claim wording and evidence without changing executable production code or cwd. The new real Bun/Node cases pause inside the returned platform Effect and before confirmation, proving bounded typed caller failure, held capacity, confirmed death, single return and refusal of later starts; before-fence cases prove zero hand-offs. Nineteen focused files pass 204 tests; FullSpan ran last and passes 12/12. With five additional coverage-only contributors, 25 unique files and 256 tests pass without skips. All 25 single-file coverage measurements pass; NativeLane, NativeProcess and all four session files are 100 percent on all four metrics. Required checks pass, Fallow introduces zero against origin/main. Count remains 10 regex processes and 291 evaluations, every other column unchanged; wall 30.41 seconds at load 3.26/5.44/4.19. Whole-directory rerun omitted per owner scope because only comments/JSDoc and tests changed. Evidence: history/evidence/2026-11-14-b2-regex-session.md, Review round 5. B2 remains in review; no push, merge, rebase or subagents.
 
 Reverse: Return B2 to in progress if review finds an ownership or retirement defect under the hand-off ruling.
+
+### B3 is in review with protocol v2 deleted, 2026-11-14
+
+Protocol v2 deletion and v3 test migration are implemented locally. B3 evidence records verification, isolation changes, deletion reasons and count gates. No publication is authorized in this implementation lane. Shard timing re-record and hosted replay acceptance remain held for the CI driver; B3 is in review, not accepted.
+
+Reverse: Return B3 to pending and restore v2 from the B2 parent
 
 ### Record hosted round 1 repairs and the completed provider audit, 2026-11-14
 

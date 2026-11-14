@@ -1,26 +1,14 @@
+import { $LawPracticeServerId } from "@beep/identity/packages";
 /** Typed regex procedure and closed native conversation; no process authority.
  * @internal @packageDocumentation @since 0.0.0
  */
 
-import { $LawPracticeServerId } from "@beep/identity/packages";
-import {
-  CitationEngineAbsoluteMaxima,
-  CitationEngineLimits,
-  CitationSafetyLimitExceeded,
-} from "@beep/law-practice-use-cases/server";
+import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
-import * as Effect from "effect/Effect";
-import * as R from "effect/Record";
-import * as Rpc from "effect/rpc/Rpc";
-import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
-import { makeCitationNativeArgumentEncoder, makeCitationNativeJsonDecoder } from "./NativeJson.ts";
-import { CitationRegexDescriptorFailure, CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
-import { CitationRegexEngine } from "./RegexEngine.ts";
-import { CitationRegexResultEnvelope } from "./RegexResult.ts";
+import { CitationRegexDescriptorFailure } from "./RegexDescriptors.ts";
 import { CitationRegexTranslationFailure } from "./RegexTranslator.ts";
-import { CitationRegexWorkerFailure, CitationRegexWorkerJob } from "./RegexWorkerProtocol.ts";
+import { CitationRegexWorkerFailure } from "./RegexWorkerProtocol.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RegexWorkerRpc");
 const Reason = LiteralKit(["unsupported-profile", "native-failed"]).pipe(
@@ -52,134 +40,3 @@ export const CitationRegexExecutionFailure = S.Union([
 );
 /** @internal @category models @since 0.0.0 */
 export type CitationRegexExecutionFailure = typeof CitationRegexExecutionFailure.Type;
-/** @internal @category models @since 0.0.0 */
-export class CitationRegexWorkerReady extends S.Opaque<CitationRegexWorkerReady, { readonly brand: unique symbol }>()(
-  S.TaggedStruct("Ready", { version: S.tag("citation-regex-worker/v2") }).pipe(
-    $I.annoteSchema("CitationRegexWorkerReady", { description: "Explicit startup configuration was decoded." })
-  )
-) {}
-/** @internal @category models @since 0.0.0 */
-export class CitationRegexWorkerStarted extends S.Opaque<
-  CitationRegexWorkerStarted,
-  { readonly brand: unique symbol }
->()(
-  S.TaggedStruct("Started", { version: S.tag("citation-regex-worker/v2") }).pipe(
-    $I.annoteSchema("CitationRegexWorkerStarted", { description: "One complete job was decoded before evaluation." })
-  )
-) {}
-/** @internal @category models @since 0.0.0 */
-export class CitationRegexWorkerError extends S.Opaque<CitationRegexWorkerError, { readonly brand: unique symbol }>()(
-  S.TaggedStruct("Failure", {
-    version: S.tag("citation-regex-worker/v2"),
-    failure: CitationRegexExecutionFailure,
-  }).pipe(
-    $I.annoteSchema("CitationRegexWorkerError", {
-      description: "Only closed source-free failures cross the child boundary.",
-    })
-  )
-) {}
-const Control = S.Union([CitationRegexWorkerReady, CitationRegexWorkerStarted, CitationRegexWorkerError]).pipe(
-  S.toTaggedUnion("_tag")
-);
-const ControlJson = S.fromJsonString(Control);
-/** @internal @category models @since 0.0.0 */
-export const CitationRegexWorkerReply = S.Union([
-  CitationRegexWorkerReady,
-  CitationRegexWorkerStarted,
-  CitationRegexWorkerError,
-  CitationRegexResultEnvelope,
-]).pipe(
-  S.toTaggedUnion("_tag"),
-  $I.annoteSchema("CitationRegexWorkerReply", {
-    description: "Ready, Started, then a complete result or closed failure.",
-  })
-);
-const ReplyJson = S.fromJsonString(CitationRegexWorkerReply);
-/** @internal @category models @since 0.0.0 */
-export class CitationRegexWorkerStartup extends S.Opaque<
-  CitationRegexWorkerStartup,
-  { readonly brand: unique symbol }
->()(
-  S.Struct({
-    limits: CitationEngineLimits,
-    descriptor: CitationRegexPatternDescriptor,
-    engine: CitationRegexEngine,
-  }).pipe(
-    $I.annoteSchema("CitationRegexWorkerStartup", {
-      description: "Trusted parent-selected policy and descriptor, containing no pattern or source text.",
-    })
-  )
-) {}
-const StartupJson = S.fromJsonString(CitationRegexWorkerStartup);
-const argumentBound = 8 * CitationEngineAbsoluteMaxima.patternUtf16 + 8192;
-const Args = S.Tuple([S.String.check(S.isMaxLength(argumentBound)).pipe(S.decodeTo(StartupJson))]).pipe(
-  $I.annoteSchema("Args", { description: "One bounded explicit startup argument; no environment is read." })
-);
-const invalid = () => CitationRegexWorkerFailure.make({ reason: "invalid-frame" });
-const runtime = () => CitationRegexWorkerFailure.make({ reason: "invalid-runtime" });
-const encoder = new TextEncoder();
-const decodeArgs = S.decodeUnknownEffect(Args, { onExcessProperty: "error" });
-const encodeControl = S.encodeEffect(ControlJson);
-const encodeStartupArgument = makeCitationNativeArgumentEncoder({
-  codec: StartupJson,
-  maximum: argumentBound,
-  invalid: runtime,
-});
-/** @internal @category operations @since 0.0.0 */
-export const encodeCitationRegexStartup = Effect.fn("Citation.encodeRegexStartup")(function* (
-  value: CitationRegexWorkerStartup
-) {
-  let units = 0;
-  for (const name of R.keys(value.descriptor.profile.names)) {
-    units += Str.length(name) + 8;
-    if (units > 4 * value.limits.patternUtf16) return yield* runtime();
-  }
-  return yield* encodeStartupArgument(value);
-});
-/** @internal @category operations @since 0.0.0 */
-export const decodeCitationRegexStartup = Effect.fn("Citation.decodeRegexStartup")((args: unknown) =>
-  decodeArgs(args).pipe(Effect.mapBoth({ onSuccess: ([value]) => value, onFailure: runtime }))
-);
-/** Constant-size control data; variable capture payloads use the result codec.
- * @internal @category operations @since 0.0.0
- */
-export const encodeCitationRegexControl = Effect.fn("Citation.encodeRegexControl")(function* (
-  value: typeof Control.Type,
-  maximum: number
-) {
-  const text = yield* encodeControl(value).pipe(Effect.mapError(invalid));
-  const bytes = encoder.encode(`${text}\n`);
-  if (bytes.byteLength > maximum)
-    return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "processMessageBytes" });
-  return bytes;
-});
-/** @internal @category operations @since 0.0.0 */
-export const decodeCitationRegexReply = makeCitationNativeJsonDecoder({
-  codec: ReplyJson,
-  propertyCeiling: 8,
-  maximumDepth: 2,
-  invalid,
-});
-/** A resource failure must fit even when the original result/error cannot.
- * @internal @category operations @since 0.0.0
- */
-export const preflightCitationRegexControlFrames = Effect.fn("Citation.preflightRegexControlFrames")(function* (
-  maximum: number
-) {
-  yield* encodeCitationRegexControl(CitationRegexWorkerReady.make({}), maximum);
-  yield* encodeCitationRegexControl(CitationRegexWorkerStarted.make({}), maximum);
-  yield* encodeCitationRegexControl(
-    CitationRegexWorkerError.make({
-      failure: CitationSafetyLimitExceeded.make({ operation: "extract", limit: "processMessageBytes" }),
-    }),
-    maximum
-  );
-});
-/** @internal @category services @since 0.0.0 */
-export const CitationRegexRpcs = RpcGroup.make(
-  Rpc.make("Evaluate", {
-    payload: CitationRegexWorkerJob,
-    success: S.Uint8Array.check(S.isMaxLength(CitationEngineAbsoluteMaxima.processMessageBytes)),
-    error: CitationRegexExecutionFailure,
-  })
-);

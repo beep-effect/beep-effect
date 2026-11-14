@@ -9,10 +9,10 @@ import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal
 import { CitationRegexPatternDescriptor } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
 import { citationUnaccountedText } from "@beep/law-practice-server/internal/Citation/RegexInput";
 import { makeCitationRegexProgram } from "@beep/law-practice-server/internal/Citation/RegexProgram";
+import { CitationRegexResultEnvelope } from "@beep/law-practice-server/internal/Citation/RegexResult";
 import { makeCitationRegexSession } from "@beep/law-practice-server/internal/Citation/RegexSession";
 import { makeCitationRegexSessionPreparation } from "@beep/law-practice-server/internal/Citation/RegexSessionProtocol";
 import { installCitationRegexEvaluator } from "@beep/law-practice-server/internal/Citation/RegexWorker";
-import { decodeCitationRegexReply } from "@beep/law-practice-server/internal/Citation/RegexWorkerRpc";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
@@ -734,7 +734,7 @@ it.layer(citationNativeNodeTestPlatform, { excludeTestServices: true, timeout: "
             expect(before).toEqual({ spawned: 1, confirmed: 0 });
             yield* Deferred.succeed(release, undefined);
             const result = yield* Fiber.join(pending);
-            expect((yield* decodeCitationRegexReply(result))._tag).toBe("Complete");
+            expect((yield* decodeCitationRegexReply(new TextDecoder().decode(result)))._tag).toBe("Complete");
             yield* Fiber.join(switched);
             expect((yield* fixture.session.snapshot).state).toBe("absent");
             yield* fixture.evaluate;
@@ -756,7 +756,7 @@ it.layer(citationNativeNodeTestPlatform, { excludeTestServices: true, timeout: "
         Effect.gen(function* () {
           const fixture = yield* setup(kind, "real");
           const first = yield* fixture.evaluate;
-          const reply = yield* decodeCitationRegexReply(first);
+          const reply = yield* decodeCitationRegexReply(new TextDecoder().decode(first));
           expect(reply).toMatchObject({ _tag: "Complete", matches: 2 });
           yield* fixture.evaluate;
           const reused = yield* fixture.observed.snapshot;
@@ -795,7 +795,7 @@ it.layer(citationNativeNodeTestPlatform, { excludeTestServices: true, timeout: "
             },
           });
           const body = yield* fixture.evaluateJob("python-regex-v0", selected, pattern, native("aB"));
-          const reply = yield* decodeCitationRegexReply(body);
+          const reply = yield* decodeCitationRegexReply(new TextDecoder().decode(body));
           expect(reply).toMatchObject({ _tag: "Complete", matches: 1 });
           const active = yield* fixture.observed.snapshot;
           expect(active).toEqual({ spawned: 1, confirmed: 0 });
@@ -931,3 +931,5 @@ it.layer(citationNativeNodeTestPlatform, { excludeTestServices: true, timeout: "
     });
   }
 );
+
+const decodeCitationRegexReply = S.decodeEffect(S.fromJsonString(CitationRegexResultEnvelope));

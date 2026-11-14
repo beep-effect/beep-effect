@@ -1,26 +1,30 @@
 import { readCitationByteFrames } from "@beep/law-practice-server/internal/Citation/ByteFrames";
 import { preflightCitationNativeJson } from "@beep/law-practice-server/internal/Citation/NativeJson";
+import { CitationRegexPatternDescriptor } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
 import {
   citationUnaccountedText,
   makeCitationRegexInput,
 } from "@beep/law-practice-server/internal/Citation/RegexInput";
 import {
+  CitationRegexSessionJob,
+  decodeCitationRegexSessionJob as decodeCitationRegexJob,
+  encodeCitationRegexSessionJob as encodeCitationRegexJob,
+  makeCitationRegexSessionPreparation,
+  preflightCitationRegexSessionJob,
+} from "@beep/law-practice-server/internal/Citation/RegexSessionProtocol";
+import {
+  CitationRegexSessionStarted,
+  encodeCitationRegexSessionReply,
+} from "@beep/law-practice-server/internal/Citation/RegexSessionRpc";
+import {
   CitationRegexMatchMode,
   CitationRegexWorkerFailure,
-  CitationRegexWorkerJob,
-  decodeCitationRegexJob,
   decodeCitationRegexJobOptions,
-  encodeCitationRegexJob,
   encodeCitationRegexPayloadFrame,
-  makeCitationRegexJobPreparation,
-  preflightCitationRegexJob,
   readCitationRegexFrames,
 } from "@beep/law-practice-server/internal/Citation/RegexWorkerProtocol";
-import {
-  CitationRegexWorkerStarted,
-  encodeCitationRegexControl,
-} from "@beep/law-practice-server/internal/Citation/RegexWorkerRpc";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
+import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -33,6 +37,7 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
+import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 
 const encodeDelimiterMessage = S.encodeEffect(S.fromJsonString(S.Struct({ message: S.String })));
 const utf8 = new TextEncoder();
@@ -127,7 +132,10 @@ it.effect("preserves distinct native source and pattern carriers with identical 
     expect(A.getUnsafe(sources, 0).value.text).toBe(A.getUnsafe(sources, 1).value.text);
     for (const pattern of sources) {
       for (const source of sources) {
-        const job = CitationRegexWorkerJob.make({
+        const job = CitationRegexSessionJob.make({
+          engine: "python-re",
+          descriptor,
+          sequence: 0,
           mode: "finditer",
           patternWidth: pattern.layout.width,
           patternBytes: pattern.value.storage.bytes,
@@ -158,7 +166,10 @@ it.effect("charges both base64 residues and the full envelope before payload enc
     const { input, pattern } = yield* setup();
     for (let length = 0; length < 40; length++) {
       const source = yield* input.prepareText(Str.repeat(length)("A"), nothing);
-      const job = CitationRegexWorkerJob.make({
+      const job = CitationRegexSessionJob.make({
+        engine: "python-re",
+        descriptor,
+        sequence: 0,
         mode: "finditer",
         patternWidth: pattern.layout.width,
         patternBytes: pattern.value.storage.bytes,
@@ -194,7 +205,10 @@ it.effect("handles every split and one-byte input fragments without accepting pa
   Effect.gen(function* () {
     const { input, pattern } = yield* setup();
     const source = yield* input.prepareText("A😀B", nothing);
-    const job = CitationRegexWorkerJob.make({
+    const job = CitationRegexSessionJob.make({
+      engine: "python-re",
+      descriptor,
+      sequence: 0,
       mode: "finditer",
       patternWidth: pattern.layout.width,
       patternBytes: pattern.value.storage.bytes,
@@ -205,7 +219,7 @@ it.effect("handles every split and one-byte input fragments without accepting pa
     });
     const bytes = yield* encodeCitationRegexJob(job, 4096);
     const collect = Effect.fn("RegexProtocolTest.collect")(function* (chunks: ReadonlyArray<Uint8Array>) {
-      let result = A.empty<CitationRegexWorkerJob>();
+      let result = A.empty<CitationRegexSessionJob>();
       yield* readCitationRegexFrames(Stream.fromIterable(chunks), bytes.byteLength, 1, (frame) =>
         Effect.gen(function* () {
           const citationResult16 = yield* decodeCitationRegexJob(frame);
@@ -284,20 +298,20 @@ it.effect("preflights the exact frame for each mode and rejects unknown modes be
 it.effect("rejects structural amplification, malformed UTF-8, unknown fields and invalid encoded carriers", () =>
   Effect.gen(function* () {
     const header =
-      '"_tag":"Evaluate","version":"citation-regex-worker/v2","patternWidth":1,"patternBytes":"YQ==","sourceWidth":1,"sourceBytes":"Yg==","flags":0,"maxMatches":1,"mode":"finditer"';
+      '"engine":"python-re","sequence":0,"descriptor":{"patternSha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","flags":0,"profile":{"groups":0,"names":{},"minimumWidthFloor":1,"repeatedCaptures":false,"nullableMultiRepeat":false}},"_tag":"Evaluate","version":"citation-regex-worker/v3","patternWidth":1,"patternBytes":"YQ==","sourceWidth":1,"sourceBytes":"Yg==","flags":0,"maxMatches":1,"mode":"finditer"';
     for (const bytes of [
       utf8.encode(Str.repeat(20000)("[") + Str.repeat(20000)("]")),
       utf8.encode(`{${header},"callback":"private source"}`),
       utf8.encode(`{${Str.replace('"mode":"finditer"', '"mode":"unknown"')(header)}}`),
       utf8.encode(`{${Str.replace(',"mode":"finditer"', "")(header)}}`),
       utf8.encode(
-        `{${Str.replace('"version":"citation-regex-worker/v2"', '"version":"citation-regex-worker/v1"')(header)}}`
+        `{${Str.replace('"version":"citation-regex-worker/v3"', '"version":"citation-regex-worker/v1"')(header)}}`
       ),
       utf8.encode(`{${header},"sourceBytes":{"nested":0}}`),
       utf8.encode(`{${Str.replace('"sourceBytes":"Yg=="', '"sourceBytes":"!"')(header)}}`),
       utf8.encode(`{${Str.replace('"flags":0', '"flags":8')(header)}}`),
-      utf8.encode(`{${Str.replace('"version":"citation-regex-worker/v2"', '"version":"unknown"')(header)}}`),
-      utf8.encode(`{${Str.replace('"version":"citation-regex-worker/v2",', "")(header)}}`),
+      utf8.encode(`{${Str.replace('"version":"citation-regex-worker/v3"', '"version":"unknown"')(header)}}`),
+      utf8.encode(`{${Str.replace('"version":"citation-regex-worker/v3",', "")(header)}}`),
       utf8.encode(`{${Str.replace('"patternBytes":"YQ=="', `"patternBytes":"${Str.repeat(43692)("A")}"`)(header)}}`),
       utf8.encode(`{${Str.slice(0, -1)(header)}`),
       new Uint8Array([255]),
@@ -429,7 +443,35 @@ it.effect("retains default job mode and refuses encoder accounting drift or an i
       citationUnaccountedText
     ).pipe(Effect.flip);
     expect(policy).toMatchObject({ reason: "invalid-runtime" });
-    const control = yield* encodeCitationRegexControl(CitationRegexWorkerStarted.make({}), 1).pipe(Effect.flip);
+    const control = yield* encodeCitationRegexSessionReply(CitationRegexSessionStarted.make({ sequence: 0 }), 1).pipe(
+      Effect.flip
+    );
     expect(control).toMatchObject({ limit: "processMessageBytes" });
   })
 );
+
+const descriptor = CitationRegexPatternDescriptor.make({
+  patternSha256: Sha256Hex.make(Str.repeat(64)("a")),
+  flags: 0,
+  profile: { groups: 0, names: {}, minimumWidthFloor: 1, repeatedCaptures: false, nullableMultiRepeat: false },
+});
+const makeCitationRegexJobPreparation = Effect.fnUntraced(function* <R>(
+  limits: Parameters<typeof makeCitationRegexSessionPreparation>[0],
+  reserve: (units: number) => Effect.Effect<void, CitationSafetyLimitExceeded, R>
+) {
+  const payload = yield* makeCitationRegexSessionPreparation(limits, reserve);
+  return {
+    prepare: (
+      ...inputs: Parameters<typeof payload.prepare> extends [unknown, unknown, unknown, ...infer Args] ? Args : never
+    ) => payload.prepare("python-re", descriptor, 0, ...inputs),
+  };
+});
+
+const preflightCitationRegexJob = (
+  pattern: Parameters<typeof preflightCitationRegexSessionJob>[3],
+  source: Parameters<typeof preflightCitationRegexSessionJob>[4],
+  flags: unknown,
+  matches: unknown,
+  maximum: number,
+  mode: unknown = "finditer"
+) => preflightCitationRegexSessionJob("python-re", descriptor, 0, pattern, source, flags, matches, maximum, mode);
