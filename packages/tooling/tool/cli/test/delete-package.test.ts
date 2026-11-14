@@ -899,6 +899,27 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       ...overrides,
     });
 
+  describe("delete-package hit locations", () => {
+    it("renders a line as file:line, a root script as package.json#name, and neither as the bare file", () => {
+      const at = (fields: { readonly file: string; readonly line?: number; readonly script?: string }) =>
+        DeletePackagePolicyEvaluation.hitLocation(
+          DependentHit.make({
+            kind: fields.script === undefined ? "file-path" : "script",
+            owner: "@beep/root",
+            file: PosixPath.make(fields.file),
+            line: O.fromUndefinedOr(fields.line),
+            direct: true,
+            script: O.fromUndefinedOr(fields.script),
+          })
+        );
+
+      expect(at({ file: "packages/consumer/README.md", line: 3 })).toBe("packages/consumer/README.md:3");
+      expect(at({ file: "package.json", script: "postinstall" })).toBe("package.json#postinstall");
+      // Root policy-file, manifest and nested-workspace hits carry neither a line nor a script name.
+      expect(at({ file: "turbo.json" })).toBe("turbo.json");
+    });
+  });
+
   describe("delete-package hard-refuse table", () => {
     const published = RegistrationTarget.make({ ...target, private: false });
     const protectedTarget = RegistrationTarget.make({
