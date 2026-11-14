@@ -289,8 +289,26 @@ jobs:
           bun run beep ci binary-pin --tag "$tag" --sha256 "$sha256" --write
           changed=false
           if ! git diff --quiet -- .github/actions/fetch-beep-ci/action.yml; then changed=true; fi
+          # create-pull-request resets an existing branch whenever main has moved,
+          # which would restart the open pull request's heavy Check on every main
+          # push until it merges. Touch the branch only when it does not already
+          # pin this release (tag and sha256): a newer release updates it, a main push
+          # alone does not.
+          # A missing branch reads as empty, so it is never current.
+          branch_current=false
+          if [[ "$changed" == "true" ]]; then
+            branch_pin="$(gh api "repos/${GH_REPO}/contents/.github/actions/fetch-beep-ci/action.yml?ref=${PIN_BRANCH}" \
+              --jq .content 2>/dev/null | base64 --decode 2>/dev/null || true)"
+            if grep -Eq "^[[:space:]]*BEEP_CI_RELEASE_TAG:[[:space:]]*${tag}[[:space:]]*$" <<<"$branch_pin" \
+              && grep -Eq "^[[:space:]]*BEEP_CI_SHA256:[[:space:]]*${sha256}[[:space:]]*$" <<<"$branch_pin"; then
+              branch_current=true
+            fi
+          fi
+          bump=false
+          if [[ "$changed" == "true" && "$branch_current" != "true" ]]; then bump=true; fi
           {
             echo "changed=$changed"
+            echo "bump=$bump"
             echo "tag=$tag"
             echo "sha256=$sha256"
             echo "digest=$digest"
@@ -302,6 +320,10 @@ jobs:
             echo "- newest release: \`$tag\` (sha256 \`$sha256\`, closure digest \`$digest\`, built from \`$target\`)"
             if [[ "$changed" != "true" ]]; then
               echo "- main already pins it: no pin-bump pull request."
+              exit 0
+            fi
+            if [[ "$bump" != "true" ]]; then
+              echo "- main pins an older release, and \`$PIN_BRANCH\` already pins \`$tag\` and its sha256: no push, no pull-request edit."
               exit 0
             fi
             echo "- main pins an older release: open or update the pin-bump pull request on \`$PIN_BRANCH\`."
@@ -319,7 +341,7 @@ jobs:
       # Fail closed: without the App credential the only token left is
       # github.token, whose pull request would start no Check run.
       - name: Check the pin-bump App credential
-        if: steps.pin.outputs.changed == 'true'
+        if: steps.pin.outputs.bump == 'true'
         shell: bash
         env:
           APP_CLIENT_ID: ${{ vars.KNOWLEDGE_MINT_APP_CLIENT_ID }}
@@ -334,7 +356,7 @@ jobs:
 
       - name: Create pin-bump App token
         id: app-token
-        if: steps.pin.outputs.changed == 'true'
+        if: steps.pin.outputs.bump == 'true'
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           client-id: ${{ vars.KNOWLEDGE_MINT_APP_CLIENT_ID }}
@@ -344,12 +366,15 @@ jobs:
           # create-pull-request applies `ready-for-heavy` through the Issues labels API.
           permission-issues: write
 
-      # One fixed branch: when a pin-bump pull request is already open, the
-      # action force-updates its branch to the newest release and refreshes the
-      # title and body instead of opening a second one. The repo's lefthook
-      # hooks are for people.
+      # One fixed branch: this step runs only when the branch does not already
+      # pin the newest release, so an open pin-bump pull request is force-updated
+      # (and its title and body refreshed) by a newer release only, never by a
+      # main push alone, and a second one is never opened. A pin-bump pull request
+      # closed unmerged keeps its branch, so the bump stays parked until a newer
+      # release or until that branch is deleted. The repo's lefthook hooks are for
+      # people.
       - name: Open or update the pin-bump pull request
-        if: steps.pin.outputs.changed == 'true'
+        if: steps.pin.outputs.bump == 'true'
         env:
           LEFTHOOK: "0"
         uses: peter-evans/create-pull-request@15733dbdfeedb4f7fdb73d13c6f5ac83b710fab8 # v8.1.2
