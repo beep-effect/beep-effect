@@ -201,7 +201,7 @@ it.layer(citationNativeNodeTestPlatform, { excludeTestServices: true, timeout: "
           expect(before.state).toBe("idle");
           yield* fixture.fs.writeFileString(`${fixture.workerFile}.release`, "release");
           yield* waitForCitationNativeTest(
-            fixture.observed.snapshot.pipe(Effect.map((counts) => counts.confirmed === 1))
+            fixture.session.snapshot.pipe(Effect.map((snapshot) => snapshot.state === "killed"))
           );
           const failed = yield* fixture.evaluate.pipe(Effect.flip);
           expect(failed).toMatchObject({ reason: "invalid-frame" });

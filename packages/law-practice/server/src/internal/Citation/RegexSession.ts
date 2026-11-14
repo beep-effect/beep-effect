@@ -95,9 +95,13 @@ export const makeCitationRegexSession = Effect.fn("Citation.makeRegexSession")(f
   let jobs = 0;
   let failure = O.none<CitationRegexExecutionFailure>();
   let current = O.none<Effect.Success<ReturnType<CitationNativeStart>>>();
-  const ensureOpen = Effect.suspend(() =>
-    O.isSome(failure) ? Effect.fail(failure.value) : lane.ensureOpen.pipe(Effect.mapError(mapLaneFailure))
-  );
+  const ensureOpen = Effect.gen(function* () {
+    if (O.isSome(failure)) {
+      yield* retire;
+      return yield* failure.value;
+    }
+    yield* lane.ensureOpen.pipe(Effect.mapError(mapLaneFailure));
+  });
   const poison = (error: CitationRegexExecutionFailure) =>
     Effect.sync(() => {
       if (O.isNone(failure)) failure = O.some(error);
@@ -256,7 +260,7 @@ export const makeCitationRegexSession = Effect.fn("Citation.makeRegexSession")(f
           const before = jobs;
           return yield* prepare(sequence, run).pipe(
             Effect.onExit((outcome) =>
-              Exit.isFailure(outcome) && jobs > before
+              Exit.isFailure(outcome) && jobs > before && state !== "killed"
                 ? outcome.cause.pipe(
                     Cause.findErrorOption,
                     O.filter(isExecutionFailure),
