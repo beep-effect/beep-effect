@@ -246,18 +246,15 @@ Additional failures found by this audit were fixed as follows:
 - Native-lane composition/reservation proofs: construct operation admission in the
   same controlled Clock Context as the lane and evaluator. Preserve all contention,
   timer, quarantine and confirmed-exit assertions; both files pass unchanged counts.
-- Configuration ownership, extractor controls and six-form projection: replace
-  parent-dependent Bun.version identities with the existing explicit fixture build
-  identity. Deliberate wrong-runtime negative controls remain. No production build
-  attestation is implied by these synthetic identities.
-- The touched six-form test had an inherited goal-packet data path. Keep the original
-  artifact and use a package-local copy with independently checked decoded equality;
-  record both hashes in its decision. Expected projection observations are unchanged.
+- Owner review reverted three out-of-scope test edits (configuration ownership, extractor
+  controls, six-form projection) and a copied six-form oracle file. Those tests read
+  `Bun.version` and fail only under a Node parent runner; hosted CI runs them green, so
+  they are environment-only here and are unchanged from the base.
 
 The first audit had six red files (annotation assembly, case metadata,
 configuration ownership, extractor controls, journal metadata and law metadata).
-All six pass their individual reruns. Six-form projection also passes a final
-rerun after its fixture-path repair. The table records the latest successful run
+All six pass their individual reruns. Configuration ownership and extractor controls are red only under the Node
+parent runner (see the owner note above). The table records the latest successful run
 of every audited file; it does not hide these earlier failures.
 
 ### Per-file audit receipts
@@ -453,10 +450,7 @@ No other integration file was launched in this hosted repair round.
 | Additional root oxlint and local docgen | Pass |
 
 An import-order error introduced during fixture repair was corrected before the
-successful quick verification. A newly added redundant codec assertion on the
-copied six-form fixture triggered schema-first's advisory threshold; it was
-removed before the final scan, leaving every pre-existing assertion intact and
-no inventory growth. An accidentally started root check was cancelled; the
+successful quick verification. The schema-first inventory did not grow. An accidentally started root check was cancelled; the
 requested server-only check completed successfully. No test process was
 cancelled or left running.
 
