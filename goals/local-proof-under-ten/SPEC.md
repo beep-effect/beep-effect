@@ -157,7 +157,7 @@ every citation below was re-checked at c90929b1ff1). Ids are the rows in
 | YEET-05 | final-check reuses same-head cheap-lane proofs, pinned base, shadow first | open (`LaneProofReuse.ts:47` `BEEP_YEET_PROOF_BASE` seam exists) | Shadow with the base pinned: hits above 0, zero disagreements; a modified tracked file, an untracked file and a moved `origin/main` all miss; changeset-status non-reusable until PERIL-12 | MEAS-07 |
 | YEET-06 | ProofLedger C4.2 enforcement for cheap-tier lanes after C5 fixtures pass on the flip HEAD | open (`ProofLedger.ts:8`: the module never skips or enforces) | C5 must-fail fixtures green on the flip HEAD; official report with 0 malformed rows; narrowed receipts rejected; ruling 80 bar after ruling 83's instant | YEET-05; carries the receipt-grain refusal fixture itself and lands before YEET-02 slice 1 (critique; reverses the plan row's YEET-06-after-YEET-02 order); D14 |
 | YEET-07 | Re-seed WaveOrder from current economics | open (handoff seed `measurementAsOf` 2026-09-03) | Trace-replay simulation that preserves first-red identity on a fresh post-MEAS-02 snapshot | MEAS-02 |
-| TURB-05 | Scope local `TURBO_FORCE` to path-detected patches and overrides, shadow first | open (`Planner.ts:950` forces on every bun.lock change, `Handler.ts:3082`) | Shadow receipts with the narrowed decision and a per-package installed-tree digest; undeclared-import invariant; patch-only commits still forced | D14 |
+| TURB-05 | Scope local `TURBO_FORCE` to path-detected patches and overrides, shadow first | shadow landed (slice 9: `decideTurboForce` in `Yeet/internal/TurboForce.ts` forces every dependency-sensitive step on a bun.lock change as before and, from this slice, on a patch-only (`patches/` or root `patchedDependencies`) or override-only (root `overrides` or `resolutions`) change, closing that stale-green hole; nothing else in the forced set changed. Every repair, verify and publish attempt-started row carries `turboForce`: the actual reasons, the narrowed shadow (the reasons without `lockfile-changed`) and, on lockfile attempts, each package's locked installed-tree digest at the merge base and HEAD. Open: the undeclared-import invariant, the shadow ledger over lockfile attempts in both layouts, and the flip) | Shadow receipts with the narrowed decision and a per-package installed-tree digest; undeclared-import invariant; patch-only commits still forced | D14 |
 | TURB-10 | Attribute first-cold cross-host cache reuse on fleet hosts | open | Same-head hashes across hosts | D14, PERIL-11 fleet roots |
 | PERIL-02 | One readiness monitor per PR in a checkout, reuse keyed on normalized readiness argv | landed (slice 5: `monitor --until-ready --detach` hands back a live monitor with the same branch and `readyMonitorArgvKey` through `submitProofJobReusingReadyMonitor` in `ProofJobLauncher.ts`; publish keys its reuse on the same argv; `yeet ready`'s watcher hint, formerly `ReadyGate.ts:565`, runs the shared runner check `pickLiveReadyMonitor`) | Two submissions with the same PR and argv yield one job; stricter argv not reused; a dead-runner record skipped; `ReadyGate.ts:565` fixed in the same PR | none |
 | PERIL-03 | State-aware monitor cadence with a wake on a local ref change | partly landed (#3032, fda98a2c4bd: 90 s default at `MonitorLoop.ts:210`, rate-limit sleep in `MonitorRateLimit.ts`) | TestClock mutation fixtures: the first terminal after each mutation follows a full read taken after it; a dirty-file re-edit still flags stale gates; then a 7-day A/B of polls per monitor-hour | PERIL-02 |
@@ -463,6 +463,48 @@ The gate is an additive `units` key (`off` or `on`, default `off`) on the existi
 Lane feat/local-proof-admission-unit
 
 Reverse: Run bun run beep quality scheduler protocol --units off; writers stop at once and records already written keep decoding.
+
+### TURB-05 force receipt rides the attempt-started row, 2026-11-14
+
+Every repair, verify and publish attempt writes a `turboForce` key on its `attempt-started` journal row: a `TurboForceReceipt` whose `reasons` is the actual decision (forced exactly when non-empty) and whose `shadow` is the narrowed TURB-05 decision. Monitor, closeout and status attempts never decide a force and write no key. The reasons come from the closed `TurboForceReason` kit, and each one forces every dependency-sensitive step:
+
+- `lockfile-changed`: `bun.lock` differs between the merge base and HEAD.
+- `patches-changed`: a file under `patches/` or the root `patchedDependencies` changed.
+- `overrides-changed`: the root `overrides` or `resolutions` changed.
+
+The attempt row is the per-attempt receipt Yeet economics already reads, and the exploration found no receipt that records the force. Its optional keys decode on older revisions: they ignore keys they do not know, and rows written before this key decode with it absent. The force decision moved from `Handler.ts` into `decideTurboForce` in `Yeet/internal/TurboForce.ts`, kept the same modes, lockfile log line and tolerance of a failed diff, and gained the patch and override triggers (decision file `turb-05-patch-only-commits-unforced-today`). `runYeet` builds the receipt after the `--plan` return, so a plan render reads no lockfile for the shadow and prints no shadow line.
+
+Rejected: a new ProofLedger row kind, because older readers count an unknown row as malformed and YEET-06 needs zero malformed rows; and a separate shadow file, which would need a second writer and its own retention for one field.
+
+Lane perf/local-proof-force-reason
+
+Reverse: Drop the turboForce key from YeetAttemptStarted and the receipt call in runYeet; rows that carry it still decode on revisions without the key.
+
+### TURB-05 installed-tree digest is each package's locked closure, 2026-11-14
+
+Today an installed tree is identified two ways. `HeadInstallInputs` names what a frozen install reads at a commit (the `bun.lock` blob, the manifests, `patches/`, `bunfig.toml`, `.npmrc`, the Bun version and host), at repository grain. `Cache.dependencies.ts` takes a tar digest of the whole `node_modules` for cache experiments, which also covers the whole repository and takes minutes. The per-package digest refines the first without reading `node_modules`.
+
+A package's installed tree is every instance its resolved edges reach in the parsed `bun.lock` (`@beep/lockfiles`), plus everything the root reaches. The root is added because the hoisted linker lets every package load the root's tools, and Turbo folds the root's external-dependency hash into every task in the same way. Each instance contributes one line: its `bun.lock` key (its install position under the hoisted linker), `name@version` and integrity. The digest is SHA-256 over the sorted lines (`Sha256HexFromBytes`). The root package is named `//`.
+
+The digests are computed only when `bun.lock` changed, from `git show` of the lockfile at the decision's merge base and at HEAD, so the shadow records which packages a per-package narrowed force would force. Three things are left out on purpose: patch content (path-detected as `patches-changed`), drift between `node_modules` and `bun.lock` (the frozen head-install preflight checks that), and undeclared imports (the separate undeclared-import invariant in the SPEC gate).
+
+Measured on this checkout in single runs on a shared host under load, for a range of three lockfile commits that also changed the root `package.json` (209 packages compared, 4 changed): the decision took 55 ms (the diff, the merge base and the two root manifest reads) and the shadow 0.62 s (the two lockfile reads, parses and digests). A cold separate runtime took up to 2.5 s for the shadow. With `bun.lock` unchanged the decision is one `git diff --name-only` (43 ms) and the shadow reads nothing more (17 ms).
+
+Rejected: walking `node_modules`, because only the HEAD side is on disk, so there is nothing to compare against, and its cost grows with the install; and the full tar digest, which covers the whole repository and takes minutes.
+
+Lane perf/local-proof-force-reason
+
+Reverse: Replace packageInstalledTreeDigests with another digest; recorded digests are shadow evidence only and nothing reads them to decide.
+
+### Patch-only and override-only commits are forced from slice 9, 2026-11-14
+
+Before this slice the actual decision forced only when `bun.lock` was in the three-dot diff. A patch-content edit leaves `bun.lock` alone, because `bun.lock` records patch paths and no patch content, and Turbo hashes no patch content either. A commit that touched only `patches/` was therefore never forced and could replay a cached green; #2873 (d8ef9b3839b) was such a commit. An override-only commit that left `bun.lock` alone was in the same position. A stale green is a correctness defect, so the orchestrator ruled to close the gap where it was found, in this slice. Widening the force is not the narrowing that ruling D14 defers.
+
+From this slice the actual decision also forces when a file under `patches/` or the root `patchedDependencies` changed (`patches-changed`), or when the root `overrides` or `resolutions` changed (`overrides-changed`). The recorded `reasons` list every trigger that applied. The same `git diff --name-only <base>...HEAD -- bun.lock patches package.json` finds the path triggers, and the root `package.json` is read at the merge base and HEAD only when it is in that diff. Nothing else about the forced set changed: a `bun.lock` change forces as before with the same log line, a run that touches none of the three is not forced, the forced steps are the ones a lockfile force always set, and a failed diff still forces nothing. If the merge base or the root manifest cannot be read, the path triggers stand and the shadow is recorded as unavailable. The narrowed shadow is unchanged and still drives nothing.
+
+Lane perf/local-proof-force-reason
+
+Reverse: Drop the patch and override triggers from decideTurboForce (pathReasons and rootPolicyReasons in Yeet/internal/TurboForce.ts) so only a bun.lock change forces; the shadow keeps recording them.
 
 <!-- beep:decisions:end -->
 

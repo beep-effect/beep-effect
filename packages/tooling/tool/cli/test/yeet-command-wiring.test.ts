@@ -24,6 +24,7 @@ import {
   FINAL_CHECK_SUBSET_RECEIPT_DIR,
   findLiveReadyMonitorJob,
   finishPublishWithPullRequestForTesting,
+  InstalledTreesLockfileUnchanged,
   isLiveReadyMonitorJob,
   MONITOR_READY_SUBMIT_STEP_ID,
   PR_HEAVY_ADMISSION_LABEL_STEP_ID,
@@ -40,6 +41,8 @@ import {
   runPlanExecutionForTesting,
   runPushFirstPublishPhasesForTesting,
   runStandardPublishPhasesForTesting,
+  TurboForceReceipt,
+  TurboForceShadowComputed,
   TurboPlanSnapshot,
   YeetAttemptJournalEvent,
   YeetAttemptStarted,
@@ -2047,6 +2050,16 @@ const decodeLedgerFactHead = S.decodeUnknownOption(
 
 type CommittingPublishOutcome = "pushed" | "push-failed" | "commit-failed" | "interrupted-after-commit";
 
+// The force receipt `runYeet` hands the plan; the attempt-started row carries it unchanged.
+const publishTurboForce = TurboForceReceipt.make({
+  reasons: ["lockfile-changed"],
+  shadow: TurboForceShadowComputed.make({
+    kind: "computed",
+    reasons: ["patches-changed"],
+    installedTrees: InstalledTreesLockfileUnchanged.make({ kind: "lockfile-unchanged" }),
+  }),
+});
+
 it.layer(commandTestLayer, { timeout: "60 seconds" })("committing publish verdict identity", (it) => {
   const publish = Effect.fn("YeetCommittingPublishTest.publish")(function* (outcome: CommittingPublishOutcome) {
     const fs = yield* FileSystem.FileSystem;
@@ -2173,7 +2186,9 @@ it.layer(commandTestLayer, { timeout: "60 seconds" })("committing publish verdic
     const run = yield* runPlanExecutionForTesting(
       RepoRunPlan.make({ context, steps: [commit, gate, push] }),
       defaultYeetRunOptions({ mode: "publish", pr: false, message }),
-      O.some(message)
+      O.some(message),
+      O.none(),
+      O.some(publishTurboForce)
     ).pipe(
       provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
       Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -2249,6 +2264,15 @@ it.layer(commandTestLayer, { timeout: "60 seconds" })("committing publish verdic
       expect(verdict.head).toBe(run.startingHead);
       assertSome(startedHead(run.events), run.startingHead);
       assertSome(finishedHead(run.events), run.finalHead);
+      // The started row records the run's force receipt as it was handed in.
+      assertSome(
+        pipe(
+          A.findFirst(run.events, YeetAttemptJournalEvent.guards["attempt-started"]),
+          O.flatMap((started) => started.turboForce),
+          O.map((receipt) => receipt.reasons)
+        ),
+        ["lockfile-changed"]
+      );
       // The cheap-gates admission ran after the commit, on the commit's tree.
       assertSome(run.leaseHead, run.finalHead);
       expect(run.ledgerHeads).toEqual([run.finalHead]);
