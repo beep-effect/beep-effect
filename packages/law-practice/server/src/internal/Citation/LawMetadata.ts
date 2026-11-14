@@ -25,9 +25,9 @@ import {
   provideCitationStageAdmission,
 } from "./MetadataComposition.ts";
 import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
-import { decodeCitationRegexPolicy } from "./RegexPolicy.ts";
 import { CitationTokenContextInput } from "./TokenContext.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/LawMetadata");
@@ -121,29 +121,22 @@ export class CitationLawMetadataResult extends S.Opaque<CitationLawMetadataResul
     })
   )
 ) {}
-const Config = S.toType(CitationLawMetadataConfiguration);
 const Input = S.toType(CitationLawMetadataInput);
 const prepareConfiguration = Effect.fn("Citation.prepareLawMetadataConfiguration")(function* (
   limits: CitationEngineLimits,
-  runtimeInput: unknown,
-  configurationInput: unknown
+  decoded: CitationOwned<CitationLawMetadataConfiguration>
 ) {
-  const decoded = yield* S.decodeUnknownEffect(Config)(configurationInput).pipe(Effect.mapError(invalidConfiguration));
   const prepared = yield* prepareCitationPublicationMetadata(
     limits,
-    runtimeInput,
     { ...decoded, pattern: decoded.lawPattern, bindings: decoded.lawBindings },
     "bcfd81892211f7373d1a515cebf32c58ad43da653d5f20dab85df00dbcc6edef",
     invalidConfiguration
   );
-  return {
-    runtime: prepared.runtime,
-    config: CitationLawMetadataConfiguration.make({
-      ...prepared.config,
-      lawPattern: prepared.config.pattern,
-      lawBindings: prepared.config.bindings,
-    }),
-  };
+  return CitationLawMetadataConfiguration.make({
+    ...prepared,
+    lawPattern: prepared.pattern,
+    lawBindings: prepared.bindings,
+  });
 });
 const installPatch = Effect.fn("Citation.installLawMetadataPatch")(function* (
   limits: CitationEngineLimits,
@@ -193,15 +186,14 @@ const installPatch = Effect.fn("Citation.installLawMetadataPatch")(function* (
   });
 });
 const installLawMetadata = Effect.fn("Citation.installLawMetadata")(function* (
-  policy: unknown,
-  runtimeInput: unknown,
-  configurationInput: unknown
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  configuration: CitationOwned<CitationLawMetadataConfiguration>
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, invalidConfiguration);
   return yield* provideCitationStageAdmission(
     limits,
     Effect.gen(function* () {
-      const { runtime, config } = yield* prepareConfiguration(limits, runtimeInput, configurationInput);
+      const config = yield* prepareConfiguration(limits, configuration);
       const preparePatch = yield* installPatch(limits, runtime, config);
       const installed = yield* makeCitationMetadataOperation(preparePatch);
       const run = Effect.fn("Citation.runLawMetadata")(function* (request: CitationLawMetadataInput) {
@@ -219,11 +211,11 @@ const installLawMetadata = Effect.fn("Citation.installLawMetadata")(function* (
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationLawMetadata = Effect.fn("Citation.makeLawMetadata")(function* (
-  policy: unknown,
-  runtimeInput: unknown,
-  configurationInput: unknown
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  configuration: CitationOwned<CitationLawMetadataConfiguration>
 ) {
-  const installed = yield* installLawMetadata(policy, runtimeInput, configurationInput);
+  const installed = yield* installLawMetadata(limits, runtime, configuration);
   const apply = Effect.fn("Citation.addLawMetadata")((raw: unknown) =>
     Effect.gen(function* () {
       const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(invalidInput));
@@ -264,11 +256,11 @@ export class CitationFullLawMetadataResult extends S.Opaque<
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationFullLawMetadata = Effect.fn("Citation.makeFullLawMetadata")(function* (
-  policy: unknown,
-  runtimeInput: unknown,
-  configurationInput: unknown
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  configuration: CitationOwned<CitationLawMetadataConfiguration>
 ) {
-  const installed = yield* installLawMetadata(policy, runtimeInput, configurationInput);
+  const installed = yield* installLawMetadata(limits, runtime, configuration);
   const inference = yield* makeCitationEditionInference(installed.limits);
   const apply = Effect.fn("Citation.addFullLawMetadata")((raw: unknown) =>
     Effect.gen(function* () {

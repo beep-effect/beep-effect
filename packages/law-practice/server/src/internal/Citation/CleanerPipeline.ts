@@ -15,7 +15,6 @@ import {
   CitationCleanerWorkSnapshot,
   CitationEngineAbsoluteMaxima,
   CitationEngineCleanInput,
-  CitationEngineLimits,
   CitationLiveCleanerObject,
   CitationSafetyLimitExceeded,
 } from "@beep/law-practice-use-cases/server";
@@ -30,9 +29,11 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CitationInvocation } from "./Invocation.ts";
 import { makeCitationTextCapacity } from "./TextCapacity.ts";
-import type { CitationCleanerObject, CitationCleanerWork } from "@beep/law-practice-use-cases/server";
-
-const CitationEngineLimitsType = S.toType(CitationEngineLimits);
+import type {
+  CitationCleanerObject,
+  CitationCleanerWork,
+  CitationEngineLimits,
+} from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CleanerPipeline");
 const Plan = CitationEngineCleanInput.fields.plan;
@@ -65,10 +66,9 @@ const Units = S.Natural.check(S.isLessThanOrEqualTo(CitationEngineAbsoluteMaxima
  * @category operations
  * @since 0.0.0
  */
-export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeline")(function* (policy: unknown) {
-  const limits = yield* S.decodeUnknownEffect(CitationEngineLimitsType)(policy).pipe(
-    Effect.mapError(() => fail("invalid-input"))
-  );
+export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeline")(function* (
+  limits: CitationEngineLimits
+) {
   const clock = yield* Clock.Clock;
   const runtime = yield* CitationCleaner;
   const sanitize = <A, R>(body: Effect.Effect<A, Failure, R>): Effect.Effect<A, Failure, R> =>

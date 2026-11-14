@@ -64,7 +64,7 @@ export class CitationEngineWorkCounts extends S.Opaque<CitationEngineWorkCounts,
 
 const spanNames = {
   metadataOperationInstalls: ["Citation.makeMetadataOperation"],
-  configurationDetaches: ["Citation.detachMetadataConfiguration"],
+  configurationDetaches: ["Citation.ownConfiguration"],
   tokenizerBuilds: ["Citation.makeTokenizer"],
   regexWorkerConstructions: ["Citation.installRegexEvaluator"],
   regexEvaluations: ["Citation.evaluateRegexProcess"],

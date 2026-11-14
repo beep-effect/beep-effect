@@ -19,11 +19,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { makeCitationCleanerPipeline } from "./CleanerPipeline.ts";
 import { CitationCleanerValues, copyCitationCleanerUnicode } from "./CleanerValues.ts";
-import {
-  CitationHtmlGeometryPreparationConfiguration,
-  copyCitationHtmlGeometryConfiguration,
-  installCitationHtmlGeometry,
-} from "./HtmlGeometryPreparation.ts";
+import { installCitationHtmlGeometry, verifyCitationHtmlGeometryConfiguration } from "./HtmlGeometryPreparation.ts";
 import { CitationHtmlTagGeometryInput } from "./HtmlTagGeometry.ts";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
 import type {
@@ -32,6 +28,8 @@ import type {
   CitationEngineLimits,
   CitationSafetyLimitExceeded,
 } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
+import type { CitationHtmlGeometryPreparationConfiguration } from "./HtmlGeometryPreparation.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/InputDocument");
@@ -135,10 +133,10 @@ const selectMode = Effect.fn("Citation.selectInputDocumentMode")(function* (
 });
 const own = Effect.fn("Citation.captureInputDocument")(function* (
   limits: CitationEngineLimits,
-  config: CitationHtmlGeometryPreparationConfiguration,
+  config: CitationOwned<CitationHtmlGeometryPreparationConfiguration>,
   runtime: CitationNativeProcessRuntime
 ) {
-  const configuration = yield* copyCitationHtmlGeometryConfiguration(limits, config);
+  const configuration = yield* verifyCitationHtmlGeometryConfiguration(limits, config);
   const html = yield* installCitationHtmlGeometry(limits, runtime, configuration);
   const values = yield* CitationCleanerValues;
   const protocols = yield* CitationDocumentInputProtocols;
@@ -245,8 +243,6 @@ const prepare = Effect.fn("Citation.initializeInputDocument")(function* (
  */
 export const makeCitationInputDocument = makeCitationMetadataStage({
   method: "initialize",
-  schema: S.toType(CitationHtmlGeometryPreparationConfiguration),
-  invalid: () => fail("invalid-input", "TypeError"),
   own,
   prepare,
   project: (patch, reservedUnits) => CitationInputDocument.make({ ...patch, reservedUnits }),

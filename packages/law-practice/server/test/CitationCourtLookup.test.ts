@@ -4,6 +4,7 @@ import { makeCitationCourtLookup } from "@beep/law-practice-server/internal/Cita
 import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { CitationRegexOperation } from "@beep/law-practice-server/internal/Citation/RegexPolicy";
+import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -18,6 +19,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { makeCitationNativeManualClock, makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
@@ -98,23 +100,9 @@ const install = Effect.fn("CourtLookupTest.install")(function* (maximum?: number
 const native = (text: string) => ({ width: 1, bytes: new TextEncoder().encode(text) });
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source court lookup", (it) => {
-  it.effect("rejects malformed policy, table payload and digest output", () =>
+  it.effect("rejects malformed digest output", () =>
     Effect.gen(function* () {
       const { limits, table } = yield* install();
-      const invalidPolicy = yield* makeCitationCourtLookup(null, table.payload).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding(null).pipe(Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) })))
-        ),
-        Effect.flip
-      );
-      expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
-      const invalidPayload = yield* makeCitationCourtLookup(limits, null).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) })))
-        ),
-        Effect.flip
-      );
-      expect(invalidPayload).toMatchObject({ reason: "invalid-table" });
       const invalidDigest = yield* makeCitationCourtLookup(limits, table.payload).pipe(
         Effect.flatMap((stage) =>
           makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) })))
@@ -281,7 +269,9 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
     Effect.gen(function* () {
       const { limits, table } = yield* install();
       const captured = { ...limits, sourceUtf16: 3 };
-      const parser = yield* makeCitationCourtLookup(captured, table.payload).pipe(
+      // The limits cross into the engine here; mutating the caller's copy later changes nothing installed.
+      const owned = yield* ownCitationTestConfiguration(CitationEngineLimits, captured);
+      const parser = yield* makeCitationCourtLookup(owned, table.payload).pipe(
         Effect.flatMap((stage) =>
           makeCitationTestScaffoldBinding(captured).pipe(
             Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) }))

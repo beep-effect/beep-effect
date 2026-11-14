@@ -21,10 +21,10 @@ import * as Str from "effect/String";
 import { makeCitationCaseNamePredicates } from "./CaseNamePredicates.ts";
 import { reserveCitationInvocationText } from "./Invocation.ts";
 import {
-  copyCitationMetadataPatternConfiguration,
   decodeCitationMetadataWordRequest,
   makeCitationMetadataStage,
   ownCitationStageCall,
+  prepareCitationMetadataPatternConfiguration,
 } from "./MetadataComposition.ts";
 import { citationPythonPointAt, concatCitationPythonRanges } from "./PythonUnicode.ts";
 import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
@@ -32,6 +32,7 @@ import { makeCitationRegexInput } from "./RegexInput.ts";
 import { installCitationRegexEvaluator } from "./RegexWorker.ts";
 import { CitationTokenContextInput } from "./TokenContext.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CaseNameScan");
@@ -142,7 +143,6 @@ export class CitationCaseNameScanResult extends S.Opaque<
   )
 ) {}
 const Input = S.toType(CitationCaseNameScanInput);
-const Config = S.toType(CitationCaseNameScanConfiguration);
 const Step = LiteralKit(["next", "continue", "stop"]);
 const bound = (index: number, length: number) => Num.max(0, Num.min(length, index < 0 ? length + index : index));
 /** Execute default source scan inside an existing operation, Scope and text authority.
@@ -360,16 +360,15 @@ export const installCitationCaseNameScan = Effect.fn("Citation.installCaseNameSc
     return yield* Ref.get(state);
   });
 });
-/** Copy the source-bound scan configuration for enclosing composition.
+/** Authenticate the owned source-bound scan configuration for enclosing composition.
  * @internal @category operations @since 0.0.0
  */
-export const copyCitationCaseNameScanConfiguration = Effect.fn("Citation.copyCaseNameScanConfiguration")(function* (
+export const verifyCitationCaseNameScanConfiguration = Effect.fn("Citation.verifyCaseNameScanConfiguration")(function* (
   limits: CitationEngineLimits,
-  decoded: CitationCaseNameScanConfiguration
+  decoded: CitationOwned<CitationCaseNameScanConfiguration>
 ) {
-  const owned = yield* copyCitationMetadataPatternConfiguration(
+  const owned = yield* prepareCitationMetadataPatternConfiguration(
     limits,
-    Patterns,
     decoded.patterns,
     decoded.bindings,
     fingerprints,
@@ -378,7 +377,7 @@ export const copyCitationCaseNameScanConfiguration = Effect.fn("Citation.copyCas
   return CitationCaseNameScanConfiguration.make(owned);
 });
 const ownScan = ownCitationStageCall({
-  copy: copyCitationCaseNameScanConfiguration,
+  verify: verifyCitationCaseNameScanConfiguration,
   install: installCitationCaseNameScan,
 });
 /** Capture fixed patterns and existing operation/runtime ownership. Every scan
@@ -389,8 +388,6 @@ const ownScan = ownCitationStageCall({
  */
 export const makeCitationCaseNameScan = makeCitationMetadataStage({
   method: "scan",
-  schema: Config,
-  invalid: invalidConfiguration,
   own: ownScan,
   prepare: (_limits, _runtime, scan: Effect.Success<ReturnType<typeof ownScan>>, raw) =>
     scan(raw).pipe(Effect.catchTag("CitationCaseNamePredicateFailure", () => Effect.fail(fail("empty-word")))),

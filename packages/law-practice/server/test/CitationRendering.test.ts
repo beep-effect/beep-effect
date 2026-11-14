@@ -25,14 +25,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original bu
     withCitationTestInvocation(
       Effect.gen(function* () {
         const { owner, limits } = yield* loadCitationRendering();
-        const invalidPolicy = yield* makeCitationRendering(null).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(null).pipe(Effect.map((bind) => ({ ...stage, render: bind(stage.render) })))
-          ),
-          Effect.provideService(CitationFrozenEditions, owner),
-          Effect.flip
-        );
-        expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
         const renderer = yield* makeCitationRendering(limits).pipe(
           Effect.flatMap((stage) =>
             makeCitationTestScaffoldBinding(limits).pipe(

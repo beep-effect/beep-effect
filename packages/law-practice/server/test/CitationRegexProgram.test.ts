@@ -74,8 +74,6 @@ it.effect("rejects expanded Unicode boundaries that exceed the rendered pattern 
 
 it.effect("rejects malformed policy, flags and native carriers before producing a program", () =>
   Effect.gen(function* () {
-    const invalidPolicy = yield* makeCitationRegexProgram({}).pipe(Effect.flip);
-    expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
     const { compiler } = yield* setup();
     const invalidFlags = yield* compiler.compile({ width: 1, bytes: new Uint8Array(0) }, -1).pipe(Effect.flip);
     expect(invalidFlags).toMatchObject({ reason: "invalid-input" });

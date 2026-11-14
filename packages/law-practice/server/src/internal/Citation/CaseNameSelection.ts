@@ -2,6 +2,7 @@
  * Free Law Project eyecite 2.7.6, BSD-2-Clause; see THIRD_PARTY_NOTICES.md.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineAbsoluteMaxima, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
@@ -14,15 +15,16 @@ import {
   CitationCaseNameConfiguration,
   CitationCaseNameInput,
   citationCaseNameWordText,
-  copyCitationCaseNameConfiguration,
   installCitationPlainCaseName,
+  verifyCitationCaseNameConfiguration,
 } from "./CaseName.ts";
 import { CitationCaseNameProcessPatch, citationUnchangedCaseNamePatch } from "./CaseNameProcess.ts";
 import { CitationCaseNameScanFailure } from "./CaseNameScan.ts";
+import { ownedField } from "./ConfigurationOwnership.ts";
 import {
   CitationHtmlCaseNameConfiguration,
-  copyCitationHtmlCaseNameConfiguration,
   installCitationHtmlCaseName,
+  verifyCitationHtmlCaseNameConfiguration,
 } from "./HtmlCaseName.ts";
 import { CitationHtmlTagGeometryInput } from "./HtmlTagGeometry.ts";
 import {
@@ -31,6 +33,7 @@ import {
   ownCitationStageCall,
 } from "./MetadataComposition.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CaseNameSelection");
@@ -86,7 +89,6 @@ export class CitationCaseNameSelectionResult extends S.Opaque<
     })
   )
 ) {}
-const invalid = () => CitationCaseNameScanFailure.make({ reason: "invalid-configuration" });
 const merge = (before: CitationCaseNameProcessPatch, after: CitationCaseNameProcessPatch) =>
   CitationCaseNameProcessPatch.make({
     plaintiff: O.orElse(after.plaintiff, () => before.plaintiff),
@@ -141,16 +143,16 @@ export const installCitationCaseNameSelection = Effect.fn("Citation.installCaseN
 /** Reuse the original helper within an enclosing captured metadata operation.
  * @internal @category operations @since 0.0.0
  */
-export const copyCitationCaseNameSelectionConfiguration = Effect.fn("Citation.ownCaseNameSelection")(function* (
+export const verifyCitationCaseNameSelectionConfiguration = Effect.fn("Citation.ownCaseNameSelection")(function* (
   limits: CitationEngineLimits,
-  config: CitationCaseNameSelectionConfiguration
+  config: CitationOwned<CitationCaseNameSelectionConfiguration>
 ) {
-  const plain = yield* copyCitationCaseNameConfiguration(limits, config.plain);
-  const html = yield* copyCitationHtmlCaseNameConfiguration(limits, config.html);
+  const plain = yield* verifyCitationCaseNameConfiguration(limits, ownedField(config, "plain"));
+  const html = yield* verifyCitationHtmlCaseNameConfiguration(limits, ownedField(config, "html"));
   return CitationCaseNameSelectionConfiguration.make({ plain, html });
 });
 const ownSelection = ownCitationStageCall({
-  copy: copyCitationCaseNameSelectionConfiguration,
+  verify: verifyCitationCaseNameSelectionConfiguration,
   install: installCitationCaseNameSelection,
 });
 /** HTML and fallback share one operation, Scope, text budget and deadline. The
@@ -159,8 +161,6 @@ const ownSelection = ownCitationStageCall({
  */
 export const makeCitationCaseNameSelection = makeCitationMetadataStage({
   method: "extract",
-  schema: S.toType(CitationCaseNameSelectionConfiguration),
-  invalid,
   own: ownSelection,
   prepare: (_limits, _runtime, run: Effect.Success<ReturnType<typeof ownSelection>>, raw) => run(raw),
   project: (result, reservedUnits) => CitationCaseNameSelectionResult.make({ ...result, reservedUnits }),

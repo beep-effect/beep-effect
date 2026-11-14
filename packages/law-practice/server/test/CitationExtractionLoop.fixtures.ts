@@ -9,7 +9,7 @@ import {
 } from "@beep/law-practice-server/internal/Citation/Admission";
 import {
   CitationExtractionLoopConfiguration,
-  makeCitationExtractionLoop,
+  makeCitationExtractionLoop as makeOwnedCitationExtractionLoop,
 } from "@beep/law-practice-server/internal/Citation/ExtractionLoop";
 import { projectCitationExtractionSelection } from "@beep/law-practice-server/internal/Citation/ExtractionSelection";
 import { CitationGeneratedReference } from "@beep/law-practice-server/internal/Citation/GeneratedReferences";
@@ -21,6 +21,7 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { readCitationCaseMetadataConfiguration } from "./CitationCaseMetadata.fixtures.ts";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { installCitationFrozenMetadataRuntime } from "./CitationFrozenEditions.fixtures.ts";
 import {
   installCitationHtmlGeometryFixture,
@@ -45,6 +46,11 @@ import type {
   CitationExtractionLoopResult,
 } from "@beep/law-practice-server/internal/Citation/ExtractionLoop";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+const makeCitationExtractionLoop = installCitationOwnedTestStage({
+  schema: CitationExtractionLoopConfiguration,
+  install: makeOwnedCitationExtractionLoop,
+});
 
 const $I = $LawPracticeServerId.create("test/CitationExtractionLoop");
 const GeneratedNames = S.fromJsonString(S.Struct({ disallowedNames: S.Array(S.String) })).pipe(

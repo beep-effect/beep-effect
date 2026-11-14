@@ -1,8 +1,8 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
+  CitationMetadataYearBound,
   makeCitationMetadataYear,
-  makeCitationMetadataYearFromBound,
 } from "@beep/law-practice-server/internal/Citation/MetadataYear";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
@@ -53,6 +53,14 @@ const setYear = Effect.fn("MetadataYearTest.setYear")(function* (year: number) {
   const epoch = DateTime.toEpochMillis(date);
   yield* TestClock.setTime(epoch);
 });
+// The clock-computed year ceiling is decoded where it is computed; the range is the guard.
+it.effect("bounds the computed year ceiling to 2 through 10000", () =>
+  Effect.sync(() => {
+    const isBound = S.is(CitationMetadataYearBound);
+    for (const bound of [1, 10001, 2.5]) expect(isBound(bound)).toBe(false);
+    for (const bound of [2, 2027, 10000]) expect(isBound(bound)).toBe(true);
+  })
+);
 it.layer(citationTokenizerTestLayer)("source metadata year", (it) => {
   it.layer(TestClock.layer())("source integer observations", (it) => {
     it.effect(
@@ -135,18 +143,6 @@ it.layer(citationTokenizerTestLayer)("source metadata year", (it) => {
   it.layer(TestClock.layer())("native input refusal", (it) => {
     it.effect("refuses malformed or oversized native input and recovers", () =>
       Effect.gen(function* () {
-        const invalidPolicy = yield* makeCitationMetadataYear(null).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(null).pipe(
-              Effect.map((bind) => ({ ...stage, getYear: bind(stage.getYear) }))
-            )
-          ),
-          DateTime.withCurrentZoneOffset(0),
-          Effect.flip
-        );
-        expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
-        const invalidReinstall = yield* makeCitationMetadataYearFromBound(null, 2027).pipe(Effect.flip);
-        expect(invalidReinstall).toMatchObject({ reason: "invalid-policy" });
         yield* setYear(2026);
         const limits = (yield* defaultCitationEnginePolicy).limits;
         const parser = yield* makeCitationMetadataYear({ ...limits, producedTextUtf16: 4 }).pipe(

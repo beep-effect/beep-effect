@@ -61,6 +61,10 @@ const fixture = Effect.fnUntraced(function* (
     readonly resolver?: SourceTextResolver["Service"];
     readonly wrongRuntime?: boolean;
     readonly wrongVocabulary?: boolean;
+    // Boundary tests replace a field of a fresh copy with a malformed value and
+    // observe the spawner themselves, because the Layer refuses to build.
+    readonly tamper?: (configuration: CitationExtractorConfiguration) => CitationExtractorConfiguration;
+    readonly observed?: Effect.Success<ReturnType<typeof makeCitationObservedSpawner>>;
   } = {}
 ) {
   const source = yield* citationFixtureSourceProof(text);
@@ -73,7 +77,7 @@ const fixture = Effect.fnUntraced(function* (
     ),
     cwd
   );
-  const observed = yield* makeCitationObservedSpawner();
+  const observed = options.observed ?? (yield* makeCitationObservedSpawner());
   const limits = { ...(yield* defaultCitationEnginePolicy).limits, ...options.limits };
   const implementation = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode("extractor-controls"));
   const resolver =
@@ -95,7 +99,7 @@ const fixture = Effect.fnUntraced(function* (
           : Result.getOrThrow(CourtReporterArtifact).artifactVersion,
     },
   });
-  const context = yield* Layer.build(CitationExtractorLive(configuration)).pipe(
+  const context = yield* Layer.build(CitationExtractorLive(options.tamper?.(configuration) ?? configuration)).pipe(
     Effect.provideService(SourceTextResolver, resolver),
     Effect.provideService(ChildProcessSpawner, observed.spawner)
   );
@@ -125,6 +129,42 @@ it.layer(testLayer, { excludeTestServices: true })("public extractor refusal con
         expect(failure).toMatchObject({ _tag: "CitationInputError", operation: "extract" });
         expect(failure).not.toHaveProperty("cause");
       }
+    })
+  );
+  it.effect("refuses malformed limits, runtime and installation configuration at the boundary before spawning", () =>
+    Effect.gen(function* () {
+      const observed = yield* makeCitationObservedSpawner();
+      const replaced =
+        (field: keyof CitationExtractorConfiguration, malformed: (c: CitationExtractorConfiguration) => unknown) =>
+        (configuration: CitationExtractorConfiguration) => {
+          const copy = CitationExtractorConfiguration.make({ ...configuration });
+          expect(Reflect.set(copy, field, malformed(configuration))).toBe(true);
+          return copy;
+        };
+      for (const tamper of [
+        replaced("installation", (c) => ({ ...c.installation, limits: { ...c.installation.limits, sourceUtf16: -1 } })),
+        replaced("runtime", (c) => ({ ...c.runtime, kind: "unsupported" })),
+        replaced("installation", (c) => ({ ...c.installation, vocabularyVersion: 42 })),
+      ]) {
+        const failure = yield* fixture("35 U.S.C. 101", { tamper, observed }).pipe(Effect.flip);
+        expect(failure).toMatchObject({ _tag: "CitationInputError", operation: "extract" });
+        expect(failure).not.toHaveProperty("cause");
+      }
+      yield* expectPhysical(observed.snapshot, 0);
+    })
+  );
+  it.effect("keeps installed limits when a caller mutates a returned report", () =>
+    Effect.gen(function* () {
+      const control = yield* fixture("35 U.S.C. 101");
+      const first = yield* control.extractor.extract(control.input);
+      const deadline = Duration.toMillis(first.report.limits.extractDeadline);
+      const tokens = first.report.limits.tokens;
+      expect(Reflect.set(first.report.limits.extractDeadline.value, "millis", 1)).toBe(true);
+      expect(Reflect.set(first.report.limits, "tokens", 1)).toBe(true);
+      const second = yield* control.extractor.extract(control.input);
+      expect(Duration.toMillis(second.report.limits.extractDeadline)).toBe(deadline);
+      expect(second.report.limits.tokens).toBe(tokens);
+      expect(second.document.mentions).toHaveLength(first.document.mentions.length);
     })
   );
   it.effect("redacts a resolver defect and preserves resolver interruption before spawning", () =>

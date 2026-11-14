@@ -12,7 +12,7 @@ import {
   CitationRegexOperation,
   makeCitationRegexTiming,
 } from "@beep/law-practice-server/internal/Citation/RegexPolicy";
-import { CitationInputError, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -25,12 +25,19 @@ import * as Fiber from "effect/Fiber";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
+import type { CitationOwned } from "@beep/law-practice-server/internal/Citation/ConfigurationOwnership";
 import type { CitationEngineOperation } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("test/CitationRegexOperation");
+const OperationProbe = S.Struct({}).pipe(
+  $I.annoteSchema("OperationProbe", {
+    description: "No configuration is needed to observe captured operation routing.",
+  })
+);
 it.effect("captures annotation regex preparation timing despite later operation replacement", () =>
   withCitationTestInvocation(
     Effect.gen(function* () {
@@ -100,19 +107,16 @@ it.layer(citationTokenizerTestLayer)("captured operation in the shared stage own
         });
         const factory = makeCitationMetadataStage({
           method: "probe",
-          schema: S.Struct({}).pipe(
-            $I.annoteSchema("OperationProbe", {
-              description: "No configuration is needed to observe captured operation routing.",
-            })
+          own: Effect.fn("RegexOperationTest.own")(
+            (_limits, _configuration: CitationOwned<typeof OperationProbe.Type>) => Effect.void
           ),
-          invalid: () => CitationInputError.make({ operation: "annotate" }),
-          own: Effect.fn("RegexOperationTest.own")(() => Effect.void),
           prepare: Effect.fn("RegexOperationTest.childOperation")(function* () {
             return yield* CitationRegexOperation;
           }),
           project: (operation: CitationEngineOperation) => operation,
         });
-        const stage = yield* factory(setup.limits, setup.runtime, {}).pipe(
+        const configuration = yield* ownCitationTestConfiguration(OperationProbe, {});
+        const stage = yield* factory(setup.limits, setup.runtime, configuration).pipe(
           Effect.provideContext(Context.add(setup.provided, CitationOperationAdmission, admission)),
           Effect.provideService(CitationRegexOperation, "annotate")
         );

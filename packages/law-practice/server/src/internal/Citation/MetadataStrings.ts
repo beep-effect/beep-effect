@@ -15,8 +15,11 @@ import { reserveCitationInvocationText } from "./Invocation.ts";
 import { citationPythonTextData } from "./PythonTextData.ts";
 import { citationPythonPointAt } from "./PythonUnicode.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import type { CitationPythonUnicodeValue } from "./PythonUnicode.ts";
+import type { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/MetadataStrings");
 const Reason = LiteralKit(["invalid-policy"]).pipe(
@@ -76,10 +79,7 @@ export const trimCitationMetadataBoundary = Effect.fn("Citation.trimMetadataBoun
   }
   return index;
 });
-const installStrings = Effect.fn("Citation.installMetadataStrings")(function* (policy: unknown) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () =>
-    CitationMetadataStringsFailure.make({ reason: "invalid-policy" })
-  );
+const installStrings = Effect.fn("Citation.installMetadataStrings")(function* (limits: CitationEngineLimits) {
   const timing = yield* makeCitationRegexTiming(limits, true);
   const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText, "source");
   return { limits, timing, input };
@@ -97,8 +97,10 @@ export class CitationPinCiteDetails extends S.Opaque<CitationPinCiteDetails, { r
 /** Capture the shared native pincite boundary cleaner without a year matcher.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationPinCiteCleaner = Effect.fn("Citation.makePinCiteCleaner")(function* (policy: unknown) {
-  const { limits, timing, input } = yield* installStrings(policy);
+export const makeCitationPinCiteCleaner = Effect.fn("Citation.makePinCiteCleaner")(function* (
+  limits: CitationEngineLimits
+) {
+  const { timing, input } = yield* installStrings(limits);
   const inspectPinCite = Effect.fn("Citation.inspectPinCite")(function* (raw: unknown) {
     if (raw === null) return CitationPinCiteDetails.make({ pinCite: null, trailingEnd: 0 });
     const source = yield* input.prepareUnicode(raw, () => Effect.void);
@@ -149,12 +151,12 @@ export const makeCitationPinCiteCleaner = Effect.fn("Citation.makePinCiteCleaner
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationMetadataStrings = Effect.fn("Citation.makeMetadataStrings")(function* (
-  policy: unknown,
-  runtime: unknown,
-  yearPattern: unknown,
-  bindings: unknown
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  yearPattern: CitationPythonUnicodeStorage,
+  bindings: ReadonlyArray<CitationRegexPatternDescriptor>
 ) {
-  const { limits, timing, input } = yield* installStrings(policy);
+  const { timing, input } = yield* installStrings(limits);
   const year = yield* makeCitationContextMatcher(limits, runtime, yearPattern, 64, bindings);
   const { cleanPinCite, inspectPinCite, stripWhitespace } = yield* makeCitationPinCiteCleaner(limits);
   const parenthetical = Effect.fn("Citation.processParenthetical")(function* (raw: unknown) {

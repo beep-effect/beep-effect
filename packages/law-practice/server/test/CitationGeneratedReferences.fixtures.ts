@@ -1,22 +1,25 @@
 /** Original direct pin-reference construction through actual owned regex workers.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { projectCitationExtractionSelection } from "@beep/law-practice-server/internal/Citation/ExtractionSelection";
 import {
   CitationGeneratedCombinedInput,
   CitationGeneratedMarkupInput,
   CitationGeneratedReferenceInput,
-  makeCitationGeneratedCombinedReferences,
-  makeCitationGeneratedMarkupReferences,
-  makeCitationGeneratedReferences,
+  makeCitationGeneratedCombinedReferences as makeOwnedCitationGeneratedCombinedReferences,
+  makeCitationGeneratedMarkupReferences as makeOwnedCitationGeneratedMarkupReferences,
+  makeCitationGeneratedReferences as makeOwnedCitationGeneratedReferences,
 } from "@beep/law-practice-server/internal/Citation/GeneratedReferences";
+import { CitationReferencePatternConfiguration } from "@beep/law-practice-server/internal/Citation/ReferencePatterns";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import {
   installCitationHtmlGeometryFixture,
   prepareCitationOptionalHtmlGeometry,
@@ -37,6 +40,19 @@ import type { CitationGeneratedReferencesResult } from "@beep/law-practice-serve
 import type { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type { CitationTestInvocationBound } from "./CitationInvocation.fixtures.ts";
+
+const makeCitationGeneratedReferences = installCitationOwnedTestStage({
+  schema: CitationReferencePatternConfiguration,
+  install: makeOwnedCitationGeneratedReferences,
+});
+const makeCitationGeneratedMarkupReferences = installCitationOwnedTestStage({
+  schema: CitationReferencePatternConfiguration,
+  install: makeOwnedCitationGeneratedMarkupReferences,
+});
+const makeCitationGeneratedCombinedReferences = installCitationOwnedTestStage({
+  schema: CitationReferencePatternConfiguration,
+  install: makeOwnedCitationGeneratedCombinedReferences,
+});
 
 const $I = $LawPracticeServerId.create("test/CitationGeneratedReferences");
 const Corpus = S.fromJsonString(

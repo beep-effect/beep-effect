@@ -1,7 +1,13 @@
 import * as NodeURL from "node:url";
 import { getCitationExtractionShortcut } from "@beep/law-practice-server/internal/Citation/ExtractionShortcut";
-import { makeCitationOccurrenceProjection } from "@beep/law-practice-server/internal/Citation/OccurrenceProjection";
-import { makeCitationSemanticProjection } from "@beep/law-practice-server/internal/Citation/SemanticProjection";
+import {
+  CitationOccurrenceProjectionConfiguration,
+  makeCitationOccurrenceProjection as makeOwnedCitationOccurrenceProjection,
+} from "@beep/law-practice-server/internal/Citation/OccurrenceProjection";
+import {
+  CitationSemanticProjectionConfiguration,
+  makeCitationSemanticProjection as makeOwnedCitationSemanticProjection,
+} from "@beep/law-practice-server/internal/Citation/SemanticProjection";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { deepStrictEqual } from "@effect/vitest/utils";
@@ -9,11 +15,21 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Str from "effect/String";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+
+const makeCitationSemanticProjection = installCitationOwnedTestStage({
+  schema: CitationSemanticProjectionConfiguration,
+  install: makeOwnedCitationSemanticProjection,
+});
+const makeCitationOccurrenceProjection = installCitationOwnedTestStage({
+  schema: CitationOccurrenceProjectionConfiguration,
+  install: makeOwnedCitationOccurrenceProjection,
+});
 
 const artifact = Sha256Hex.make(Str.repeat(64)("a"));
 const refusal = (failure: { readonly _tag: string }) => ({
@@ -49,20 +65,6 @@ const install = Effect.fnUntraced(function* (narrow: Partial<CitationEngineLimit
 });
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("occurrence projection refusals", (it) => {
-  it.effect("refuses an engine artifact configuration that is not a trusted digest", () =>
-    withCitationTestInvocation(
-      Effect.gen(function* () {
-        const setup = yield* setupCitationMetadataRuntime("bun");
-        const failure = yield* makeCitationOccurrenceProjection(setup.limits, setup.runtime, {
-          engineArtifact: "not-a-digest",
-        }).pipe(Effect.provideContext(setup.provided), Effect.flip);
-        deepStrictEqual(refusal(failure), {
-          _tag: "CitationOccurrenceProjectionFailure",
-          detail: "invalid-configuration",
-        });
-      })
-    )
-  );
   it.effect("refuses a projection request without a completed semantic extraction", () =>
     withCitationTestInvocation(
       Effect.gen(function* () {

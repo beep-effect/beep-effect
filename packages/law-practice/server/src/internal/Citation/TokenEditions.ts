@@ -11,7 +11,7 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
 import {
   CitationRuntimeDictionaryComparison,
   CitationRuntimeDictionaryFailure,
@@ -19,6 +19,7 @@ import {
 } from "./RuntimeDictionary.ts";
 import { makeCitationRuntimeSet } from "./RuntimeSet.ts";
 import { CitationTokenAssemblyFailure } from "./TokenAssembly.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/TokenEditions");
 /** @internal @category models @since 0.0.0 */
@@ -38,9 +39,6 @@ export class CitationTokenEditionBinding extends S.Opaque<
     })
   )
 ) {}
-const Bindings = CitationTokenEditionBinding.pipe(S.toType, S.Array)
-  .check(S.isMaxLength(2533))
-  .pipe($I.annoteSchema("Bindings", { description: "At most the canonical source's 2533 immutable edition facts." }));
 const Ids = S.Array(S.Natural)
   .check(S.isMaxLength(CitationEngineAbsoluteMaxima.candidates))
   .pipe($I.annoteSchema("Ids", { description: "Candidate occurrences before source set deduplication." }));
@@ -69,15 +67,11 @@ const probeFailure = (error: CitationRuntimeDictionaryFailure) =>
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationTokenEditions = Effect.fn("Citation.makeTokenEditions")(function* (
-  policy: unknown,
-  input: unknown
+  limits: CitationEngineLimits,
+  bindings: ReadonlyArray<CitationTokenEditionBinding>
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, failure);
   const timing = yield* makeCitationRegexTiming(limits, true);
-  const bindings = yield* S.decodeUnknownEffect(Bindings)(input).pipe(Effect.mapError(failure));
-  const rows = HashMap.fromIterable(
-    A.map(bindings, (row) => Tuple.make(row.id, CitationTokenEditionBinding.make({ ...row })))
-  );
+  const rows = HashMap.fromIterable(A.map(bindings, (row) => Tuple.make(row.id, row)));
   if (HashMap.size(rows) !== bindings.length) return yield* failure();
   const read = Effect.fn("Citation.tokenEditionFact")((id: number) =>
     Effect.fromOption(HashMap.get(rows, id)).pipe(Effect.mapError(failure))

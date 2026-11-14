@@ -15,7 +15,8 @@ import * as MutableList from "effect/MutableList";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/TokenAssembly");
 const Position = S.Natural.check(S.isLessThanOrEqualTo(CitationEngineAbsoluteMaxima.producedTextUtf16));
@@ -85,10 +86,9 @@ const order = Order.Struct({ start: Order.Number, end: Order.flip(Order.Number) 
  * Host effects are captured once; no partial assembly result escapes failure.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationTokenAssembly = Effect.fn("Citation.makeTokenAssembly")(function* (policy: unknown) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () =>
-    CitationTokenAssemblyFailure.make({ reason: "invalid-policy" })
-  );
+export const makeCitationTokenAssembly = Effect.fn("Citation.makeTokenAssembly")(function* (
+  limits: CitationEngineLimits
+) {
   const timing = yield* makeCitationRegexTiming(limits, true);
   const host = yield* CitationTokenAssemblyHost;
   const assemble = Effect.fn("Citation.assembleTokens")(function* (input: unknown) {

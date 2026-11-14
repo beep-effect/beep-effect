@@ -3,7 +3,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 
-import { CitationCleaner, CitationCleanerFailure } from "@beep/law-practice-use-cases/server";
+import { CitationCleaner } from "@beep/law-practice-use-cases/server";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { CitationBuiltinCleaners, makeCitationBuiltinCleaners } from "./BuiltinCleaners.ts";
@@ -12,12 +12,8 @@ import { CitationCleanerProtocols, makeCitationCleanerRegistry } from "./Cleaner
 import { CitationCleanerValues, makeCitationCleanerValues } from "./CleanerValues.ts";
 import { CitationDocumentStepContainers, makeCitationDocumentCleanerProtocols } from "./DocumentCleanerProtocols.ts";
 import { CitationDocumentInputProtocols } from "./InputDocument.ts";
-import { prepareCitationNativeRuntime } from "./NativeProcess.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
-
-const prepareRuntime = (policy: unknown, htmlRuntime: unknown) =>
-  prepareCitationNativeRuntime(policy, htmlRuntime, () => CitationCleanerFailure.make({ reason: "invalid-input" }));
 
 /** Compose document services around an explicitly provided scoped value owner.
  * This supports host protocol Layers which capture that same owner. Callers own
@@ -25,11 +21,10 @@ const prepareRuntime = (policy: unknown, htmlRuntime: unknown) =>
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationDocumentServicesFromValues = Effect.fn("Citation.makeDocumentServicesFromValues")(function* (
-  policy: unknown,
-  htmlRuntime: unknown
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime
 ) {
   const host = yield* CitationCleanerProtocols;
-  const { limits, runtime } = yield* prepareRuntime(policy, htmlRuntime);
   const values = yield* CitationCleanerValues;
   return yield* assemble(limits, runtime, values, host);
 });
@@ -42,10 +37,9 @@ export const makeCitationDocumentServicesFromValues = Effect.fn("Citation.makeDo
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationDocumentServices = Effect.fn("Citation.makeDocumentServices")(function* (
-  policy: unknown,
-  htmlRuntime: unknown
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime
 ) {
-  const { limits, runtime } = yield* prepareRuntime(policy, htmlRuntime);
   const values = yield* makeCitationCleanerValues(limits);
   return yield* makeCitationDocumentServicesFromValues(limits, runtime).pipe(
     Effect.provideService(CitationCleanerValues, values)

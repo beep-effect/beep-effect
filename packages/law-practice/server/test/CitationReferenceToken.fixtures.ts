@@ -6,7 +6,7 @@ import { CitationEditionRef } from "@beep/law-practice-domain/values";
 import { projectCitationExtractionSelection } from "@beep/law-practice-server/internal/Citation/ExtractionSelection";
 import {
   CitationReferenceTokenConfiguration,
-  makeCitationReferenceTokenExtraction,
+  makeCitationReferenceTokenExtraction as makeOwnedCitationReferenceTokenExtraction,
 } from "@beep/law-practice-server/internal/Citation/ReferenceTokenExtraction";
 import { CitationTokenDispatchBindings } from "@beep/law-practice-server/internal/Citation/TokenDispatch";
 import { expect } from "@effect/vitest";
@@ -17,6 +17,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { readCitationCaseMetadataConfiguration } from "./CitationCaseMetadata.fixtures.ts";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { installCitationFrozenMetadataRuntime } from "./CitationFrozenEditions.fixtures.ts";
 import {
   installCitationHtmlGeometryFixture,
@@ -33,6 +34,11 @@ import {
 } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type { CitationReferenceTokenOutcome } from "@beep/law-practice-server/internal/Citation/ReferenceTokenExtraction";
+
+const makeCitationReferenceTokenExtraction = installCitationOwnedTestStage({
+  schema: CitationReferenceTokenConfiguration,
+  install: makeOwnedCitationReferenceTokenExtraction,
+});
 
 const $I = $LawPracticeServerId.create("test/CitationReferenceToken");
 const Corpus = S.fromJsonString(

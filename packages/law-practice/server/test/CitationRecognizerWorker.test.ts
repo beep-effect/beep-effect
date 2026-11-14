@@ -155,8 +155,6 @@ it.layer(BunServices.layer, { excludeTestServices: true })("actual pinned recogn
       const { runtime } = yield* fixture("bun");
       const { limits } = yield* defaultCitationEnginePolicy;
       const observed = yield* makeCitationObservedSpawner();
-      const invalid = yield* makeCitationRecognizerWorker(limits, {}).pipe(Effect.flip);
-      expect(invalid).toMatchObject({ _tag: "CitationRecognizerFailure", reason: "invalid-runtime" });
       const worker = yield* makeCitationRecognizerWorker(limits, runtime).pipe(
         Effect.provideService(ChildProcessSpawner, observed.spawner)
       );

@@ -2,6 +2,7 @@
  * Free Law Project, BSD-2-Clause; see THIRD_PARTY_NOTICES.md.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationPythonUnicodeStorage, CitationTokenSeed } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
@@ -16,9 +17,10 @@ import * as Tuple from "effect/Tuple";
 import { guessCitationCaseCourt } from "./CaseMetadata.ts";
 import {
   CitationCaseNameSelectionConfiguration,
-  copyCitationCaseNameSelectionConfiguration,
   installCitationCaseNameSelection,
+  verifyCitationCaseNameSelectionConfiguration,
 } from "./CaseNameSelection.ts";
+import { ownedField } from "./ConfigurationOwnership.ts";
 import {
   CitationEditionInferenceInput,
   makeCitationEditionInference,
@@ -32,11 +34,10 @@ import {
 import { CitationFrozenEditions } from "./FrozenEditions.ts";
 import {
   CitationPublicationMetadataConfiguration,
-  copyCitationMetadataPatternConfiguration,
-  decodeCitationMetadataRuntimeConfiguration,
   decodeCitationMetadataWordRequest,
   installCitationMetadataContextMatch,
   makeCitationMetadataOperation,
+  prepareCitationMetadataPatternConfiguration,
   prepareCitationPublicationMetadata,
   provideCitationStageAdmission,
 } from "./MetadataComposition.ts";
@@ -44,6 +45,7 @@ import { installCitationPinCiteExtraction } from "./PinExtraction.ts";
 import { CitationTokenContextInput } from "./TokenContext.ts";
 import { CitationTokenDispatchBindings } from "./TokenDispatch.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ReferenceTokenExtraction");
@@ -274,45 +276,32 @@ const installPrepare = Effect.fn("Citation.installReferenceToken")(function* (
  * @internal @category constructors @since 0.0.0
  */
 export const makeCitationReferenceTokenExtraction = Effect.fn("Citation.makeReferenceTokenExtraction")(function* (
-  policy: unknown,
-  runtimeInput: unknown,
-  configurationInput: unknown
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  decoded: CitationOwned<CitationReferenceTokenConfiguration>
 ) {
-  const {
-    limits,
-    runtime,
-    configuration: decoded,
-  } = yield* decodeCitationMetadataRuntimeConfiguration(
-    policy,
-    runtimeInput,
-    configurationInput,
-    S.toType(CitationReferenceTokenConfiguration),
-    () => fail("invalid-configuration")
-  );
   return yield* provideCitationStageAdmission(
     limits,
     Effect.gen(function* () {
       const pin = yield* prepareCitationPublicationMetadata(
         limits,
-        runtime,
         decoded.pin,
         "3d1b06d98647ef244e02b08aee15ff80a0fb3971528a8a9c97854dd35916bb3d",
         () => fail("invalid-configuration")
       );
-      const names = yield* copyCitationCaseNameSelectionConfiguration(limits, decoded.names);
-      const supra = yield* copyCitationMetadataPatternConfiguration(
+      const names = yield* verifyCitationCaseNameSelectionConfiguration(limits, ownedField(decoded, "names"));
+      const supra = yield* prepareCitationMetadataPatternConfiguration(
         limits,
-        S.toType(S.Struct({ pattern: CitationPythonUnicodeStorage })),
         { pattern: decoded.supra.pattern },
         decoded.supra.bindings,
         { pattern: "5e82e531e754da20a304f03d9a0ff46f1e5c89e30c9f2e661f8ec196e584e30d" },
         () => fail("invalid-configuration")
       );
       const config = CitationReferenceTokenConfiguration.make({
-        pin: pin.config,
+        pin,
         names,
         supra: { pattern: supra.patterns.pattern, bindings: supra.bindings },
-        editions: A.map(decoded.editions, (row) => ({ ...row })),
+        editions: decoded.editions,
       });
       const refs = HashMap.fromIterable(A.map(config.editions, (row) => Tuple.make(row.id, row.ref)));
       if (HashMap.size(refs) !== config.editions.length) return yield* fail("invalid-configuration");
