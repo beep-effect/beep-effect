@@ -99,8 +99,6 @@ import type { YeetHeadMoveUnchanged } from "./HeadMove.schemas.ts";
  * @since 0.0.0
  */
 export const FINAL_CHECK_REFRESH_INVENTORIES: ReadonlyArray<string> = [
-  "standards/jsdoc-documentation.inventory.jsonc",
-  "standards/jsdoc-documentation.inventory.md",
   EffectVitestInventoryPath,
   "standards/schema-first.inventory.jsonc",
   "standards/fallow.boundaries.generated.jsonc",

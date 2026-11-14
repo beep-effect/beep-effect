@@ -1909,9 +1909,9 @@ export const ciLaneStepsForTesting: {
       ],
       fallow: () => fallowRunPhaseSteps(repoRoot, options),
       // Hosted CI regenerates the inventory into .beep/ci/ and ratchets it. A
-      // caller that already ran the scan (root beep:preflight writes both the
-      // committed artifact and the CI mirror from one `jsdoc-inventory`) passes
-      // `--inventory <path>` and only the ratchet runs (quality-lane audit A3).
+      // caller that already ran the scan (root beep:preflight's `jsdoc-inventory`
+      // writes this same ignored .beep/ci/ copy) passes `--inventory <path>` and
+      // only the ratchet runs (quality-lane audit A3).
       "jsdoc-ratchet": () =>
         pipe(
           O.fromUndefinedOr(options.inventory),
