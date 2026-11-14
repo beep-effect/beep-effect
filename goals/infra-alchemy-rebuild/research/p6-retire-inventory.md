@@ -20,7 +20,7 @@ Method, so a later lane can re-run it:
 
 Line numbers are for the tree above. They drift, so re-run the search, not the line.
 
-Revision 4 (2026-11-14, after #3341 merged) marks R1 and R2 done, records the gate's rulings on R6.6 and on references in hard-scanned files, rewrites this document's mentions of paths #3341 deleted as plain text, and re-measures the dependents on its own tree (325; R7 starts at 235, section 6.2). Revision 3 (2026-11-14) adds section 6: what `delete-package` offers for acknowledged residue, the 330 remaining dependents classified by PR, the true residue, and the R6.6 design. Revision 2 (2026-11-14, same day) records the gate's rulings on Q1 to Q10 (section 4), the lab
+Revision 4 (2026-11-14, after #3341 merged) marks R1 and R2 done, records the gate's rulings on R6.6 and on references in hard-scanned files, rewrites this document's mentions of paths #3341 deleted as plain text, and re-measures the dependents on its own tree (325; R7 starts at 235, section 6.2). Revision 3 (2026-11-14) adds section 6: what `delete-package` offers for acknowledged residue, the remaining dependents classified by PR (330 at `4810cc93ccc`; 325 after #3341 and this PR, section 6.2), the true residue, and the R6.6 design. Revision 2 (2026-11-14, same day) records the gate's rulings on Q1 to Q10 (section 4), the lab
 check (Q6, seven more read-only AWS calls), the changeset and coverage answers (Q7, Q8) and
 the new PR R6.5.
 
@@ -676,8 +676,8 @@ Everything left: `infra/package.json`, `CHANGELOG.md`, `README.md`, `docgen.json
   rebuild tsconfig-sync, the lockfile, fallow boundaries, the jsdoc inventory, the coverage
   baseline, fallow health and dead-code baselines, the schema-first inventory, the schema catalog,
   the instrumentation catalog and the test-typecheck baseline; remove modeled authored references;
-  no changeset (private); preserve historical records. It refuses today with three findings that R7
-  must clear: (1) 353 dependent hits; R6.5 removes the false matches on `packages/tooling/infra/`, and
+  no changeset (private); preserve historical records. At `653c2cdef18` it refused with three findings that R7
+  must clear: (1) 353 dependent hits (325 on this PR's tree with the R6.5 matcher, section 6.2); R6.5 removes the false matches on `packages/tooling/infra/`, and
   the rest are the R7 rows of section 1.5; (2) `--prune-catalog` needs proof that no survivor lists
   `@pulumi/pulumi`, so R2, R4 and R6 must have removed every other `@pulumi/*` user; (3) a packet
   reference in `goals/_template/GOAL.md`, which takes `--rewrite-packets` (Q3 ruling).
@@ -1266,7 +1266,7 @@ Each line names `infra` as a word, not as the root package or path. None of them
 | `packages/tooling/tool/cli/test/yeet-ack.test.ts:54` | `"wontfix: flaky infra lane"` | example text |
 | `packages/tooling/tool/cli/test/yeet-base-conflict.test.ts:1103` | `reason: "flaky infra lane"` | example text |
 
-The four borrowed fixture lines (counted in R7's 212; they survive unless R7 renames them):
+The four borrowed fixture lines (counted in R7's 207; they survive unless R7 renames them):
 `packages/tooling/tool/cli/test/Holds.inventory.test.ts:222`, `:239` and `:269` (the retired hold
 label "infra keeps TypeScript 6" used as fixture data), and
 `packages/foundation/capability/walker/test/Descend.test.ts:604` (`{apps,packages,infra}/**` as a
@@ -1276,8 +1276,8 @@ glob example). Renaming them costs nothing and changes no behaviour.
 
 **(a) rejected: it is not correct.** The residue matches only because the needle is the bare
 package path `infra`. Matching the name `@beep/infra` plus a root-anchored `infra/` segment, and
-never the bare word, would clear the 28 residue lines. But it would also hide 117 real dependents
-(106 of R7's 212, plus 11 in R4 to R6) that name the root directory without a slash, for example:
+never the bare word, would clear the 28 residue lines. But it would also hide 112 real dependents
+(104 of R7's 207, plus 8 in R4 to R6; counted on this PR's tree) that name the root directory without a slash, for example:
 
 - scan-root lists: `["apps", "packages", "infra"]` in `Quality.command.ts:358`,
   `TestTsgoPrograms.ts:36`, `PackageTestTypecheck.ts:72` and `TsconfigOverlay.ts:64`;
@@ -1351,7 +1351,7 @@ Measured on 2026-11-14: after `package-verify` ran docgen, the scan read
 `packages/tooling/tool/cli/docs/modules/**` and `packages/tooling/library/repo-cli-kit/docs/modules/**`
 (gitignored by `.gitignore:56` `**/docs`). It also read the docs-lint bundle under
 `packages/tooling/policy-pack/lint-rules/.prebuilt/` (`.gitignore:52`). That added 23 phantom
-dependents: 353 instead of 330.
+dependents: 353 instead of 330 (both measured at #3343's `4810cc93ccc`).
 
 Smallest correct change, in R6.6:
 
