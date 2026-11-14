@@ -32,15 +32,15 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 B1 merged as #3336 (`fa8f0f0757`): one native lane per invocation and limits policy v2.
-B2 is in review on [PR #3352](https://github.com/beep-effect/beep-effect/pull/3352): protocol v3
-and `CitationRegexSession`, one regex child process per invocation, taking ten plain-text calls
-from 291 regex children to 10. B3 (delete v2, rewrite spawn-count assertions, re-record shard
-timings) follows once B2 merges.
+B2 merged as #3352 (`bbf67b946b`): protocol v3 and `CitationRegexSession`, one regex child
+process per invocation, taking ten plain-text calls from 291 regex children to 10. B3 is in review
+on [PR #3355](https://github.com/beep-effect/beep-effect/pull/3355): protocol v2 deleted and the
+law-practice unit shard plan re-recorded from its own hosted run.
 
 ## Latest Evidence
 
-[B2 regex session evidence](history/evidence/2026-11-14-b2-regex-session.md), including five
-independent review rounds and the full file-by-file run.
+[B3 evidence](history/evidence/2026-11-14-b3-remove-v2.md) (deletions, test migration, isolation
+contract); B2 evidence in [history/evidence/2026-11-14-b2-regex-session.md](history/evidence/2026-11-14-b2-regex-session.md).
 
 ## Notes
 

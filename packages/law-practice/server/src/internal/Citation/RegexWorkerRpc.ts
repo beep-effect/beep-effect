@@ -1,8 +1,8 @@
-import { $LawPracticeServerId } from "@beep/identity/packages";
 /** Typed regex procedure and closed native conversation; no process authority.
  * @internal @packageDocumentation @since 0.0.0
  */
 
+import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";

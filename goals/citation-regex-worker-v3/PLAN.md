@@ -21,8 +21,8 @@ Each slice is one PR and runs the phases above. They land in order.
 | Slice | Status | Content | Count that must move |
 | --- | --- | --- | --- |
 | B1 | merged (#3336) | `CitationNativeLane`; regex v2, Diff and Markup start through it; limits cross-field check; policy v2. | none; adds the markup interleave proofs |
-| B2 | in review | Protocol v3 messages, looping worker, `CitationRegexSession`, sleep-counting clock, the real-process proofs; every regex call site switches. | regex processes 291 to 10 |
-| B3 | in review | Delete v2; retain exact spawn-count assertions; append isolation evidence. Shard timings held for CI-driver ruling. | none |
+| B2 | merged (#3352) | Protocol v3 messages, looping worker, `CitationRegexSession`, sleep-counting clock, the real-process proofs; every regex call site switches. | regex processes 291 to 10 |
+| B3 | in review (#3355) | Delete v2; retain exact spawn-count assertions; re-record shard timings; append isolation evidence. | none |
 
 First slice: B1, the native lane, once slice A2 of `citation-engine-install-once` has merged.
 
@@ -181,6 +181,14 @@ Reverse: Return B2 to in progress if review finds an ownership or retirement def
 Protocol v2 deletion and v3 test migration are implemented locally. B3 evidence records verification, isolation changes, deletion reasons and count gates. No publication is authorized in this implementation lane. Shard timing re-record and hosted replay acceptance remain held for the CI driver; B3 is in review, not accepted.
 
 Reverse: Return B3 to pending and restore v2 from the B2 parent
+
+### B3 is open as #3355 and B2 merged as #3352, 2026-11-14
+
+B2 merged as #3352 (bbf67b946b) and the ep103 unblocker as #3353 (4e27e01463). B3 is open as #3355: protocol v2 deleted, five v2-only test cases removed with reasons, reply-stage failure coverage moved to the v3 session-program test. The CI goals driver ruled on 2026-11-14 that the law-practice unit shard plan and its weightSeconds are re-recorded from #3355's own first green hosted run in one commit; not lane-affecting for window 5.
+
+Lane feat/citation-remove-regex-v2 · PR #3355
+
+Reverse: Return B3 to in progress if hosted CI or review finds a v3 path that depended on deleted v2 code.
 
 ### Record hosted round 1 repairs and the completed provider audit, 2026-11-14
 
