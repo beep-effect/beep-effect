@@ -1,5 +1,8 @@
 # B2 regex session evidence
 
+The initial receipt below is retained as history. [Review round 1](#review-round-1)
+records the accepted findings, fixes and latest verification.
+
 B2 is implemented on `feat/citation-regex-session` in
 `~/YeeBois/projects/beep-effect-worktrees/citation-regex-session`.
 Both design stops are resolved. The real-process proofs and count gate pass.
@@ -544,3 +547,491 @@ framing is an added mode preserving exact-count callers; legacy manual-trigger
 selection ignores cancelled sleeps. The two protocol departures from design
 rev 2 are precisely the owner's depth-4 and per-job-engine rulings. No further
 design conflict was encountered.
+
+## Review round 1
+
+Implementation commits: `4c11b6b65b5` and `8c8f819ed1f`.
+
+Independent review of `608c232c61e` accepted two BLOCKERs, one MAJOR and one
+MINOR. This section supersedes the initial receipt's claims about preparation
+allocation order and interruption/handover coverage. The initial tests did not
+cover those gaps. The nine fixture-mismatch files were not edited in this round.
+No push, merge, rebase or subagent was used.
+
+### Reproduction and base attribution
+
+The four supplied probes in `~/.cache/beep/b2-review/` were read and executed
+before implementation. The allocation probe refused the 700-byte ASCII source
+at processMessageBytes=1024 but had already allocated two 17-entry Uint32Array
+pattern maps and a two-entry compiler array. The preparation-interruption probe
+returned with one live unconfirmed child, then successfully reused it. Both the
+Diff-start and cleaner-yield probes returned invalid-frame and killed a healthy
+session after an expected retirement reset its sequence during preparation.
+
+Base attribution was established from the actual refs, rather than assumed:
+
+- `origin/main` at `01bc82b91ae9aaf13ab2e679da0281e9e9985341` calls
+  preparation.prepare at RegexWorker.ts:118 before registry.bind at line 119.
+- B1 (`origin/feat/citation-native-lane`) at
+  `b749cd91e7e72065104d5f7c60d2b34157ebbdd4` calls preparation.prepare at
+  RegexWorker.ts:138 before registry.bind at line 146.
+- Both refs' RegexWorkerProtocol.ts:207-229 run the exact v2 preflight in the
+  nested layout callbacks before either receiving capture/map is allocated.
+
+Thus neither base allocated the pattern map before its own job preflight; B2
+introduced the reversal while moving descriptor binding before v3 preparation.
+This is static source attribution, not a separately executed base benchmark.
+The fix keeps the design's stronger descriptor/engine/sequence-bearing exact
+preflight, rather than reverting to the smaller v2 envelope.
+
+The weak depth witness was also checked with maximumDepth=5: structural
+preflight succeeds, yet the original invalid names/base64 input still fails
+schema decoding. That demonstrates why the former invalid-frame assertion
+could pass with the intended depth-4 protection missing.
+
+### Findings, fixes and committed regressions
+
+| Finding | Cause and fix | Regression name (each runtime placeholder is bun and node) |
+| --- | --- | --- |
+| BLOCKER: frame refusal after pattern allocation | registry.bind captured/projected the pattern and compiled before v3 preflight. The installed evaluator now selects the descriptor from bounded borrowed native words, enters serialized preparation, and checks the complete descriptor/engine/sequence/pattern/source frame before receiving payload/map allocation or lane reservation. It verifies the immutable captured fingerprint and compiler profile afterward. Standalone v2 bind keeps capture-before-fingerprint ordering. | preflights the installed {runtime} evaluator before pattern maps or compilation |
+| BLOCKER: preparation interruption leaves reusable child | Cleanup was conditional on jobs increasing, so preparation was outside retirement. All preparation exits now pass through the same masked settlement as dispatch; interruption poisons, awaits confirmed retirement and returns the lease before acknowledgment, even without a child. | poisons {runtime} on preparation interruption with an idle child; poisons {runtime} on preparation interruption with no child |
+| MAJOR: expected handover invalidates pending transport/sequence | The session mutex did not exclude lane retirement. lane.withUse now holds the lane's existing handover semaphore across sequence selection, preparation and dispatch, passing trusted already-locked start/reserve/release capabilities into timer fibers. Diff/cleaner handover waits for the evaluation to finish. | serializes {runtime} preparation against diff handover; serializes {runtime} preparation against cleaner handover |
+| MINOR: depth test has independent schema/base64 failures | The witness now uses valid JSON/base64 at depth five accepted by its generic proof codec, a direct guard with distinct depth-exceeded failure, a passing depth-four parse control, and a JSON.parse spy. Neither the shared decoder nor the production v3 decoder reaches JSON/schema/base64 decoding on that depth-five input. | refuses depth five in structural preflight before base64 payload allocation |
+
+The installed preflight regression observes the real global Uint32Array
+constructor only around evaluate, restoring it in a finalizer. The reviewed
+pattern `(?P<maybe>a)?(b)`, its names descriptor, 700 ASCII bytes and a 1024-byte
+frame ceiling now refuse with zero map/compiler-array allocations, zero lane
+acquisitions and zero spawns. The supplied original probe independently now
+reports `receiving map allocations before refusal []`.
+
+Descriptor selection still authenticates the bounded borrowed native words with
+SHA-256; the width-prefixed fingerprint scratch buffer is not a receiving
+Unicode payload/projection/map. Receiving capture and compilation follow exact
+frame preflight. A second fingerprint on the immutable captured pattern rejects
+caller mutation during the first asynchronous digest. The extra regression
+`rechecks {runtime} captured pattern identity after descriptor selection awaits`
+uses Deferred barriers and requires unknown-pattern with no spawned child.
+The existing standalone descriptor ownership test remains intact.
+
+For preparation interruption before any child exists, the implemented behavior
+is permanent poisoning, not a reset to absent: it returns any already-reserved
+lane unit and later jobs refuse without spawning. The no-child regression
+reserves a unit before the preparation barrier, so it proves the stronger
+no-stranded-unit case. This follows the never-respawn-after-interruption rule.
+For an idle child, the same regression observes a real SIGKILL and PID removal
+before Fiber.interrupt returns. The original supplied interruption probe now
+reports confirmed=1, acquired=false and state=killed before its later refusal.
+
+The chosen handover rule makes an in-progress evaluation finish before expected
+retirement. A fiber-reentrant lock was rejected during implementation because
+preparation timers fork fibers; reacquiring it in those fibers deadlocked. The
+explicit already-locked capabilities avoid that reacquisition. yieldTo holds
+the handover lock only for entry/exit, never for the cleaner body, so nested
+cleaner plans can still fork. Both handover regressions hold preparation behind
+a Deferred, start a concurrent handover, assert the child is still idle and
+unretired, release preparation and require a successful result. After handover,
+the session is absent; the next job starts a fresh child with sequence zero.
+This is expected handover, the legitimate new spawn allowed by the lane
+contract, not respawn after a fault. Diff interleave confirms 3 children and
+one lane acquisition; cleaner yield confirms 2 children and two acquisitions.
+Plain-text calls have no such handover, so their count target stays 10.
+
+### Remaining await coverage
+
+`confirms {runtime} retirement on interruption during {stage} await` covers
+spawn acknowledgment, startup before Ready, request write, result read and
+retirement itself. The real child/spawner streams and kill are wrapped with
+Deferred barriers; no fake process is substituted. Result-read testing observes
+Running, releases a child-side result barrier and interrupts while the one
+stdout reader is paused on the terminal frame. Spawn and retirement tests prove
+interruption acknowledgment waits while ownership/kill acknowledgment is still
+held, with native capacity still active, then release that barrier.
+
+`poisons {runtime} when interrupted waiting for evaluation serialization` covers
+the session mutex wait. The original Sent and Running interruption tests remain.
+Every new interruption case asserts started=confirmed, no occupied/acquired
+lane, admission active/queued/quarantined=0, one observed live SIGKILL when a
+child exists, and absent `/proc/<pid>` before interruption acknowledgment.
+They directly count the real lease's release calls: exactly one before
+acknowledgment and still one after Scope closure. Later evaluation must refuse
+without a spawn or another lane acquisition. The no-child case has zero
+starts/confirmed and still exactly one returned pre-reserved lease.
+
+### Round 1 checks
+
+These receipts use implementation head `8c8f819ed1f` (or its identical staged
+source tree immediately before committing). Settlement preserves typed
+retirement failures and the existing quarantine path; no typed cleanup refusal
+was converted to orDie/getOrThrow or hidden by a safety suppression.
+
+| Command | Result |
+| --- | --- |
+| Server bun run check | Pass: declaration emit/check and test typecheck |
+| bun run beep quality package-verify @beep/law-practice-server --quick | Pass: lint 0.8 s, check 6.8 s |
+| Server bun run lint:laws | Pass; the same three inherited terse-effect advisories |
+| bunx fallow audit --config .fallowrc.jsonc --base origin/feat/citation-native-lane | Pass on 8c8f819ed1f: zero introduced dead code, complexity, duplication, styling or diff-risk; 33 inherited duplicate groups |
+| bun run docgen:local | Pass: five successful tasks, 24.285 s |
+| bun run beep lint effect-vitest | Pass: 3929 files, introduced=0, resolved=0 |
+| bun run beep lint schema-first | Pass; no inventory growth accepted and no --write |
+| Root lint:oxlint on the four changed source files, two test files and MJS child | Pass |
+| Biome and commit hooks | Pass; the MJS child is formatted and instrumentation catalogs are generated by hooks |
+| git diff --check | Pass |
+
+Initial local check findings were repaired: the failure-only finalizer needed
+an Exit/mask settlement to preserve typed retirement errors under Effect v4;
+shared settlement removed a new clone; test registration was split with the
+Array helper to remove new complexity; vi imports come from @effect/vitest;
+and the transaction callback uses Effect.fnUntraced. None was waived and no
+inventory baseline was enlarged. The exploratory fiber-reentrant-lock test run
+was interrupted after exposing the timer-fiber deadlock; it is not a proof
+receipt. The corrected final session file passed all 48 tests in the serial run.
+The package check inbox row was acknowledged with fix commit `4c11b6b65b5`.
+
+### Round 1 count gate and final file receipts
+
+CitationCanonicalFullSpan.test.ts ran last and passed 12/12, after all other
+files and final-implementation reruns. Its ten Bun rows still assert every
+column, construction still asserts its full unchanged row, and Node parity
+still passes. No count assertion was changed in this review round.
+
+| Count | B1 per ten calls | Reviewed B2 per ten | Round 1 fixed per ten | Construction before / after review |
+| --- | ---: | ---: | ---: | ---: |
+| Regex child processes | 291 | 10 | **10** | 0 / 0 |
+| Regex evaluations | 291 | 291 | **291** | 0 / 0 |
+| Metadata-operation installs | 0 | 0 | 0 | 16 / 16 |
+| Configuration detaches | 0 | 0 | 0 | 1 / 1 |
+| Tokenizer builds | 0 | 0 | 0 | 1 / 1 |
+| Regex evaluator constructions | 0 | 0 | 0 | 26 / 26 |
+| Descriptor bindings | 4 | 4 | 4 | 0 / 0 |
+| Physical native owners | 10 | 10 | 10 | 1 / 1 |
+| Native lane acquisitions | 10 | 10 | 10 | 0 / 0 |
+| Diff/Xml worker constructions | 0 | 0 | 0 | 0 / 0 |
+
+Round 1 full-file wall time was **38.18 seconds** (vitest 36.73 seconds),
+including construction and Node parity, at launch load **10.39 / 15.47 / 15.57**.
+The reviewed B2 receipt was 34.81 seconds; B1's recorded receipt was 58.86.
+These are different loaded-host runs, not a latency comparison; timing gates
+nothing. The eight original real-process obligations still pass on both child
+runtimes. Final focused file totals: session **48/48**, session protocol **4/4**,
+descriptors **8/8**, retained v2 worker **19/19** and v2 protocol **14/14**.
+
+The selected scope is every server Citation test in the transitive import
+closure of RegexWorker, RegexDescriptors, RegexSession, RegexSessionProtocol or
+NativeLane, plus the explicit FullSpan gate. The import walk included server
+aliases, relative imports/re-exports and type dependencies, so it conservatively
+includes callers beyond direct evaluator/lane imports. Standing B1 and runner
+exclusions were retained. There were **195 initial file runs, 75 reruns for
+files started before the final implementation commit, then FullSpan last**:
+**271 file runs, 196 unique files, 187 passing files, 808 passing tests and 23
+failing tests across the same nine fixture-authority files**. Every selected
+file has a receipt for the final implementation. The table below records the
+last result per file without double-counting reruns. All commands used nice -n
+19 and ran one file at a time. Ordered manifests, logs and raw TSV remain in the
+ignored .beep directory.
+
+The nine unchanged red files retain the same counts and runtime-guard failure
+paths listed earlier: AnnotationAssembly 4/1, CaseMetadata 0/2,
+JournalMetadata 2/2, LawMetadata 4/2, NativeLaneComposition 0/4,
+NativeLaneReservation 24/8, TokenizerCatalog 2/1, integration/CanonicalTokenizer
+0/2 and integration/JournalMetadata 0/1 (passed/failed). No fixture was edited to
+bypass the captured Clock/spawner identity guard. This remains a locally
+verified review handoff with B1 alignment pending, not a green branch or hosted
+acceptance claim.
+
+| File | Passed | Failed | Skipped | Final wall seconds |
+| --- | ---: | ---: | ---: | ---: |
+| `test/CitationAnnotationAssembly.test.ts` | 4 | 1 | 0 | 4 |
+| `test/CitationAnnotationCallback.test.ts` | 2 | 0 | 0 | 16 |
+| `test/CitationAnnotationCallbackBoundary.test.ts` | 2 | 0 | 0 | 2 |
+| `test/CitationAnnotationEntry.test.ts` | 5 | 0 | 0 | 6 |
+| `test/CitationAnnotationEntryCoverage.test.ts` | 2 | 0 | 0 | 4 |
+| `test/CitationAnnotationFailure.test.ts` | 2 | 0 | 0 | 2 |
+| `test/CitationAnnotationSkip.test.ts` | 1 | 0 | 0 | 10 |
+| `test/CitationAnnotationStyle.test.ts` | 2 | 0 | 0 | 3 |
+| `test/CitationAnnotationTemplate.test.ts` | 2 | 0 | 0 | 2 |
+| `test/CitationAnnotationWrap.test.ts` | 3 | 0 | 0 | 8 |
+| `test/CitationBuiltinCleaners.test.ts` | 2 | 0 | 0 | 4 |
+| `test/CitationBuiltinDiff.test.ts` | 6 | 0 | 0 | 31 |
+| `test/CitationCallbackRuntimeIndex.test.ts` | 5 | 0 | 0 | 4 |
+| `test/CitationCallbackSession.test.ts` | 16 | 0 | 0 | 3 |
+| `test/CitationCanonicalAnnotation.test.ts` | 2 | 0 | 0 | 47 |
+| `test/CitationCanonicalAnnotationWorkflow.test.ts` | 1 | 0 | 0 | 22 |
+| `test/CitationCanonicalCourts.test.ts` | 1 | 0 | 0 | 16 |
+| `test/CitationCanonicalDefaultFactory.test.ts` | 2 | 0 | 0 | 4 |
+| `test/CitationCanonicalDump.test.ts` | 2 | 0 | 0 | 22 |
+| `test/CitationCanonicalEditionYears.test.ts` | 1 | 0 | 0 | 3 |
+| `test/CitationCanonicalExtraction.test.ts` | 7 | 0 | 0 | 49 |
+| `test/CitationCanonicalExtractionRanges.test.ts` | 6 | 0 | 0 | 4 |
+| `test/CitationCanonicalFullRendering.test.ts` | 2 | 0 | 0 | 19 |
+| `test/CitationCanonicalFullSpan.test.ts` | 12 | 0 | 0 | 38.18 |
+| `test/CitationCanonicalLongDiff.test.ts` | 2 | 0 | 0 | 30 |
+| `test/CitationCanonicalMissingConversion.test.ts` | 2 | 0 | 0 | 18 |
+| `test/CitationCanonicalPageCorrection.test.ts` | 2 | 0 | 0 | 34 |
+| `test/CitationCanonicalParsedEquality.test.ts` | 2 | 0 | 0 | 22 |
+| `test/CitationCanonicalParserOperations.test.ts` | 1 | 0 | 0 | 14 |
+| `test/CitationCanonicalPinSpan.test.ts` | 2 | 0 | 0 | 23 |
+| `test/CitationCanonicalRanges.test.ts` | 2 | 0 | 0 | 18 |
+| `test/CitationCanonicalReferenceMarkup.test.ts` | 2 | 0 | 0 | 20 |
+| `test/CitationCanonicalRemainingExtraction.test.ts` | 1 | 0 | 0 | 18 |
+| `test/CitationCanonicalResourceComparison.test.ts` | 1 | 0 | 0 | 5 |
+| `test/CitationCanonicalSource.test.ts` | 1 | 0 | 0 | 4 |
+| `test/CitationCanonicalSourceCoverage.test.ts` | 2 | 0 | 0 | 4 |
+| `test/CitationCanonicalStyle.test.ts` | 1 | 0 | 0 | 3 |
+| `test/CitationCapturedCleanerPlan.test.ts` | 2 | 0 | 0 | 22 |
+| `test/CitationCaseMetadata.test.ts` | 0 | 2 | 0 | 3 |
+| `test/CitationCaseName.test.ts` | 2 | 0 | 0 | 5 |
+| `test/CitationCaseNameCoverage.test.ts` | 2 | 0 | 0 | 3 |
+| `test/CitationCaseNamePredicates.test.ts` | 4 | 0 | 0 | 4 |
+| `test/CitationCaseNameProcess.test.ts` | 5 | 0 | 0 | 8 |
+| `test/CitationCaseNameScan.test.ts` | 4 | 0 | 0 | 10 |
+| `test/CitationCaseNameSelection.test.ts` | 1 | 0 | 0 | 10 |
+| `test/CitationCleanerCustomCorpus.test.ts` | 3 | 0 | 0 | 6 |
+| `test/CitationCleanerNamedCorpus.test.ts` | 1 | 0 | 0 | 5 |
+| `test/CitationCleanerOwnedInput.test.ts` | 4 | 0 | 0 | 2 |
+| `test/CitationCleanerParentBudget.test.ts` | 5 | 0 | 0 | 3 |
+| `test/CitationCleanerPipeline.test.ts` | 18 | 0 | 0 | 3 |
+| `test/CitationCleanerPipelineCoverage.test.ts` | 6 | 0 | 0 | 3 |
+| `test/CitationCleanerRegistry.test.ts` | 12 | 0 | 0 | 3 |
+| `test/CitationConfigurationOwnership.test.ts` | 6 | 0 | 0 | 19 |
+| `test/CitationContextMatcher.test.ts` | 2 | 0 | 0 | 8 |
+| `test/CitationCourtLookup.test.ts` | 8 | 0 | 0 | 13 |
+| `test/CitationDefaultCallbacks.test.ts` | 10 | 0 | 0 | 4 |
+| `test/CitationDefaultConfiguration.test.ts` | 3 | 0 | 0 | 15 |
+| `test/CitationDiffKernel.test.ts` | 13 | 0 | 0 | 3 |
+| `test/CitationDiffWorker.input-admission.test.ts` | 1 | 0 | 0 | 3 |
+| `test/CitationDiffWorker.test.ts` | 14 | 0 | 0 | 5 |
+| `test/CitationDocumentCleanerProtocols.test.ts` | 10 | 0 | 0 | 4 |
+| `test/CitationDocumentExtraction.test.ts` | 1 | 0 | 0 | 13 |
+| `test/CitationDocumentExtractionCoverage.test.ts` | 1 | 0 | 0 | 10 |
+| `test/CitationDocumentServices.test.ts` | 1 | 0 | 0 | 6 |
+| `test/CitationDump.test.ts` | 9 | 0 | 0 | 5 |
+| `test/CitationDumpCoverage.test.ts` | 4 | 0 | 0 | 2 |
+| `test/CitationEditionInference.test.ts` | 3 | 0 | 0 | 4 |
+| `test/CitationEngineArtifact.test.ts` | 3 | 0 | 0 | 4 |
+| `test/CitationEngineBoundaryRefusal.test.ts` | 2 | 0 | 0 | 27 |
+| `test/CitationEngineCorpus.test.ts` | 1 | 0 | 0 | 24 |
+| `test/CitationEngineFailure.test.ts` | 2 | 0 | 0 | 4 |
+| `test/CitationEngineLayer.test.ts` | 15 | 0 | 0 | 161 |
+| `test/CitationEngineResolution.test.ts` | 2 | 0 | 0 | 26 |
+| `test/CitationExtractionContext.test.ts` | 2 | 0 | 0 | 3 |
+| `test/CitationExtractionEntry.test.ts` | 1 | 0 | 0 | 12 |
+| `test/CitationExtractionEntryCoverage.test.ts` | 2 | 0 | 0 | 12 |
+| `test/CitationExtractionLoop.test.ts` | 15 | 0 | 0 | 32 |
+| `test/CitationExtractionReport.test.ts` | 1 | 0 | 0 | 11 |
+| `test/CitationExtractionSelection.test.ts` | 1 | 0 | 0 | 2 |
+| `test/CitationExtractionShortcut.test.ts` | 1 | 0 | 0 | 3 |
+| `test/CitationExtractorOrdering.test.ts` | 2 | 0 | 0 | 3 |
+| `test/CitationExtractorRecipes.test.ts` | 2 | 0 | 0 | 2 |
+| `test/CitationExtractorSelection.test.ts` | 5 | 0 | 0 | 3 |
+| `test/CitationFrozenEditions.test.ts` | 6 | 0 | 0 | 3 |
+| `test/CitationFullExtraction.test.ts` | 2 | 0 | 0 | 10 |
+| `test/CitationFullExtractionCoverage.test.ts` | 1 | 0 | 0 | 9 |
+| `test/CitationGeneratedReferences.test.ts` | 2 | 0 | 0 | 32 |
+| `test/CitationHelperConfigurations.test.ts` | 3 | 0 | 0 | 10 |
+| `test/CitationHostResources.test.ts` | 8 | 0 | 0 | 5 |
+| `test/CitationHtmlCleanerStage.test.ts` | 3 | 0 | 0 | 5 |
+| `test/CitationHtmlDiscovery.test.ts` | 2 | 0 | 0 | 6 |
+| `test/CitationHtmlDiscoveryCoverage.test.ts` | 2 | 0 | 0 | 3 |
+| `test/CitationHtmlGeometryPreparation.test.ts` | 3 | 0 | 0 | 5 |
+| `test/CitationHtmlNativeInput.test.ts` | 5 | 0 | 0 | 3 |
+| `test/CitationHtmlWorker.test.ts` | 11 | 0 | 0 | 4 |
+| `test/CitationHtmlWorkerCorpus.test.ts` | 3 | 0 | 0 | 47 |
+| `test/CitationHtmlWorkerCoverage.test.ts` | 2 | 0 | 0 | 7 |
+| `test/CitationInputDocument.test.ts` | 1 | 0 | 0 | 9 |
+| `test/CitationInputDocumentCoverage.test.ts` | 2 | 0 | 0 | 13 |
+| `test/CitationInvocation.test.ts` | 4 | 0 | 0 | 4 |
+| `test/CitationJournalMetadata.test.ts` | 2 | 2 | 0 | 7 |
+| `test/CitationLawMetadata.test.ts` | 4 | 2 | 0 | 6 |
+| `test/CitationLiteralUnicodeComposition.test.ts` | 4 | 0 | 0 | 7 |
+| `test/CitationMetadataStrings.test.ts` | 3 | 0 | 0 | 6 |
+| `test/CitationMetadataYear.test.ts` | 5 | 0 | 0 | 4 |
+| `test/CitationMixedResourceObjects.test.ts` | 2 | 0 | 0 | 3 |
+| `test/CitationNativeLane.test.ts` | 16 | 0 | 0 | 4 |
+| `test/CitationNativeLaneCleaner.test.ts` | 2 | 0 | 0 | 24 |
+| `test/CitationNativeLaneComposition.test.ts` | 0 | 4 | 0 | 5 |
+| `test/CitationNativeLaneReservation.test.ts` | 24 | 8 | 0 | 84 |
+| `test/CitationNativeLaneTransfer.test.ts` | 4 | 0 | 0 | 3 |
+| `test/CitationOccurrenceProjectionCoverage.test.ts` | 4 | 0 | 0 | 2 |
+| `test/CitationPairedSource.test.ts` | 2 | 0 | 0 | 26 |
+| `test/CitationParserCatalog.test.ts` | 2 | 0 | 0 | 7 |
+| `test/CitationPinExtraction.test.ts` | 4 | 0 | 0 | 6 |
+| `test/CitationPostCaseMetadata.test.ts` | 5 | 0 | 0 | 9 |
+| `test/CitationPreCaseMetadata.test.ts` | 4 | 0 | 0 | 5 |
+| `test/CitationPythonRepr.test.ts` | 5 | 0 | 0 | 4 |
+| `test/CitationPythonReprCoverage.test.ts` | 2 | 0 | 0 | 2 |
+| `test/CitationReferenceNames.test.ts` | 1 | 0 | 0 | 3 |
+| `test/CitationReferencePatterns.test.ts` | 1 | 0 | 0 | 6 |
+| `test/CitationReferencePatternsCoverage.test.ts` | 4 | 0 | 0 | 4 |
+| `test/CitationReferenceToken.test.ts` | 2 | 0 | 0 | 9 |
+| `test/CitationReferenceTokenExtractionCoverage.test.ts` | 3 | 0 | 0 | 4 |
+| `test/CitationRegexBoundaries.test.ts` | 2 | 0 | 0 | 12 |
+| `test/CitationRegexCaptureReuse.test.ts` | 2 | 0 | 0 | 13 |
+| `test/CitationRegexCaseFlags.test.ts` | 2 | 0 | 0 | 8 |
+| `test/CitationRegexDescriptors.test.ts` | 8 | 0 | 0 | 3 |
+| `test/CitationRegexEngine.test.ts` | 4 | 0 | 0 | 5 |
+| `test/CitationRegexLookahead.test.ts` | 2 | 0 | 0 | 7 |
+| `test/CitationRegexNullable.test.ts` | 2 | 0 | 0 | 4 |
+| `test/CitationRegexOperation.test.ts` | 3 | 0 | 0 | 3 |
+| `test/CitationRegexSession.test.ts` | 48 | 0 | 0 | 9 |
+| `test/CitationRegexSessionProtocol.test.ts` | 4 | 0 | 0 | 3 |
+| `test/CitationRegexVerbose.test.ts` | 3 | 0 | 0 | 9 |
+| `test/CitationRegexWorker.test.ts` | 19 | 0 | 0 | 5 |
+| `test/CitationRegexWorkerProtocol.test.ts` | 14 | 0 | 0 | 3 |
+| `test/CitationRendering.test.ts` | 5 | 0 | 0 | 25 |
+| `test/CitationRenderingOperation.test.ts` | 1 | 0 | 0 | 3 |
+| `test/CitationResolverBoundary.test.ts` | 6 | 0 | 0 | 4 |
+| `test/CitationResourceCorrection.test.ts` | 9 | 0 | 0 | 11 |
+| `test/CitationSemanticExtraction.test.ts` | 1 | 0 | 0 | 26 |
+| `test/CitationSemanticProjection.test.ts` | 6 | 0 | 0 | 6 |
+| `test/CitationSemanticProjectionCoverage.test.ts` | 3 | 0 | 0 | 5 |
+| `test/CitationSessionDescriptors.test.ts` | 3 | 0 | 0 | 5 |
+| `test/CitationShortMissingPage.test.ts` | 3 | 0 | 0 | 34 |
+| `test/CitationSixFormProjection.test.ts` | 2 | 0 | 0 | 8 |
+| `test/CitationSixFormProjectionControls.test.ts` | 7 | 0 | 0 | 2 |
+| `test/CitationSourceAnnotation.test.ts` | 6 | 0 | 0 | 6 |
+| `test/CitationSourceAnnotationTiming.test.ts` | 2 | 0 | 0 | 3 |
+| `test/CitationSourceCleaning.test.ts` | 3 | 0 | 0 | 3 |
+| `test/CitationSourceDocument.test.ts` | 4 | 0 | 0 | 16 |
+| `test/CitationSourceEvidence.test.ts` | 3 | 0 | 0 | 3 |
+| `test/CitationSourceRequest.test.ts` | 10 | 0 | 0 | 3 |
+| `test/CitationSpanOffsets.test.ts` | 5 | 0 | 0 | 2 |
+| `test/CitationStopWords.test.ts` | 3 | 0 | 0 | 8 |
+| `test/CitationTokenAssembly.test.ts` | 2 | 0 | 0 | 2 |
+| `test/CitationTokenCapture.test.ts` | 3 | 0 | 0 | 3 |
+| `test/CitationTokenContext.test.ts` | 3 | 0 | 0 | 4 |
+| `test/CitationTokenDispatch.test.ts` | 3 | 0 | 0 | 3 |
+| `test/CitationTokenEditions.test.ts` | 3 | 0 | 0 | 3 |
+| `test/CitationTokenEquality.test.ts` | 2 | 0 | 0 | 3 |
+| `test/CitationTokenObjects.test.ts` | 3 | 0 | 0 | 2 |
+| `test/CitationTokenText.test.ts` | 4 | 0 | 0 | 5 |
+| `test/CitationTokenizedExtraction.test.ts` | 1 | 0 | 0 | 14 |
+| `test/CitationTokenizedExtractionCoverage.test.ts` | 1 | 0 | 0 | 7 |
+| `test/CitationTokenizerCatalog.test.ts` | 2 | 1 | 0 | 6 |
+| `test/CitationVerifiedExtraction.test.ts` | 1 | 0 | 0 | 21 |
+| `test/CitationXmlBalanceKernel.test.ts` | 2 | 0 | 0 | 3 |
+| `test/CitationXmlBalanceKernelCoverage.test.ts` | 3 | 0 | 0 | 2 |
+| `test/CitationXmlWorker.test.ts` | 3 | 0 | 0 | 7 |
+| `test/integration/CitationCanonicalAnnotationWorkflow.test.ts` | 4 | 0 | 0 | 52 |
+| `test/integration/CitationCanonicalCourts.test.ts` | 3 | 0 | 0 | 42 |
+| `test/integration/CitationCanonicalExtraction.test.ts` | 4 | 0 | 0 | 42 |
+| `test/integration/CitationCanonicalExtractionRange2.test.ts` | 4 | 0 | 0 | 49 |
+| `test/integration/CitationCanonicalExtractionRange3.test.ts` | 4 | 0 | 0 | 49 |
+| `test/integration/CitationCanonicalExtractionRange4.test.ts` | 4 | 0 | 0 | 42 |
+| `test/integration/CitationCanonicalExtractionRange5.test.ts` | 4 | 0 | 0 | 62 |
+| `test/integration/CitationCanonicalExtractionRange6.test.ts` | 2 | 0 | 0 | 29 |
+| `test/integration/CitationCanonicalParserOperations.test.ts` | 4 | 0 | 0 | 41 |
+| `test/integration/CitationCanonicalParserOperationsRange2.test.ts` | 4 | 0 | 0 | 42 |
+| `test/integration/CitationCanonicalReferenceMarkup.test.ts` | 2 | 0 | 0 | 25 |
+| `test/integration/CitationCanonicalRemainingExtraction.test.ts` | 4 | 0 | 0 | 44 |
+| `test/integration/CitationCanonicalRemainingExtractionRange2.test.ts` | 3 | 0 | 0 | 35 |
+| `test/integration/CitationCanonicalTokenizer.test.ts` | 0 | 2 | 0 | 5 |
+| `test/integration/CitationCleanerNamedHtml.test.ts` | 1 | 0 | 0 | 54 |
+| `test/integration/CitationCleanerNativeCustom.test.ts` | 1 | 0 | 0 | 9 |
+| `test/integration/CitationDiffWorker.test.ts` | 2 | 0 | 0 | 95 |
+| `test/integration/CitationEditionInference.test.ts` | 1 | 0 | 0 | 4 |
+| `test/integration/CitationEngineCorpus.test.ts` | 2 | 0 | 0 | 48 |
+| `test/integration/CitationHtmlUnicode.test.ts` | 1 | 0 | 0 | 61 |
+| `test/integration/CitationInputDocument.test.ts` | 2 | 0 | 0 | 11 |
+| `test/integration/CitationJournalMetadata.test.ts` | 0 | 1 | 0 | 3 |
+| `test/integration/CitationRegexBoundaries.test.ts` | 16 | 0 | 0 | 111 |
+| `test/integration/CitationRegexCaseFlags.test.ts` | 16 | 0 | 0 | 197 |
+| `test/integration/CitationVerifiedExtraction.test.ts` | 1 | 0 | 0 | 36 |
+
+### Round 1 scope exclusions and interpretation
+
+Not rerun this round: the six standing B1-reserved files and
+CitationExtractorControls, plus 67 other Citation files outside the changed
+import closure (pure schemas, input/compiler kernels and unrelated services).
+Their earlier full-directory receipts are retained above. Explicit inventory:
+
+- `test/CitationAdmission.test.ts`
+- `test/CitationAssetCoverage.test.ts`
+- `test/CitationAuthorityIdentity.test.ts`
+- `test/CitationCallbackMutations.test.ts`
+- `test/CitationCallbackSessionCoverage.test.ts`
+- `test/CitationCaseResourceHash.test.ts`
+- `test/CitationCleanerUnicodeValues.test.ts`
+- `test/CitationCleanerValues.test.ts`
+- `test/CitationDictionaryReentrancy.test.ts`
+- `test/CitationDiffKernelCoverage.test.ts`
+- `test/CitationDiffStepsCoverage.test.ts`
+- `test/CitationDiffWorkerProtocol.test.ts`
+- `test/CitationDocumentPersistence.test.ts`
+- `test/CitationExtractorControls.test.ts`
+- `test/CitationFullLawMetadata.test.ts`
+- `test/CitationHtmlBytes.test.ts`
+- `test/CitationHtmlCaseName.test.ts`
+- `test/CitationHtmlCompletion.test.ts`
+- `test/CitationHtmlInput.test.ts`
+- `test/CitationHtmlKernel.test.ts`
+- `test/CitationHtmlWorkerProgram.test.ts`
+- `test/CitationHtmlWorkerProtocol.test.ts`
+- `test/CitationHtmlWorkerRpc.test.ts`
+- `test/CitationLiteralCleaners.test.ts`
+- `test/CitationMention.test.ts`
+- `test/CitationMentionIdentity.test.ts`
+- `test/CitationModelMutation.test.ts`
+- `test/CitationNativeAdmission.test.ts`
+- `test/CitationNativeAdmissionCoverage.test.ts`
+- `test/CitationNativeProcess.test.ts`
+- `test/CitationNativeProcessCoverage.test.ts`
+- `test/CitationNativeRpc.test.ts`
+- `test/CitationNativeSlices.test.ts`
+- `test/CitationNativeSocket.test.ts`
+- `test/CitationPortFailure.test.ts`
+- `test/CitationPriorFulls.test.ts`
+- `test/CitationPublicationResourceHash.test.ts`
+- `test/CitationPythonCase.test.ts`
+- `test/CitationPythonCaseCoverage.test.ts`
+- `test/CitationPythonHash.test.ts`
+- `test/CitationPythonUnicode.test.ts`
+- `test/CitationPythonUnicodeCoverage.test.ts`
+- `test/CitationRecognizerProgram.test.ts`
+- `test/CitationRecognizerWorker.test.ts`
+- `test/CitationRegexAlphabet.test.ts`
+- `test/CitationRegexCharacters.test.ts`
+- `test/CitationRegexInput.test.ts`
+- `test/CitationRegexInputCoverage.test.ts`
+- `test/CitationRegexPolicyCoverage.test.ts`
+- `test/CitationRegexProgram.test.ts`
+- `test/CitationRegexResult.test.ts`
+- `test/CitationRegexTranslator.test.ts`
+- `test/CitationReplayBudget.test.ts`
+- `test/CitationResolutionLimit.test.ts`
+- `test/CitationResolve.test.ts`
+- `test/CitationResolverText.test.ts`
+- `test/CitationResourceIdentity.test.ts`
+- `test/CitationResourceObjects.test.ts`
+- `test/CitationRuntimeDictionary.test.ts`
+- `test/CitationRuntimeDictionaryCoverage.test.ts`
+- `test/CitationRuntimeSet.test.ts`
+- `test/CitationSixFormArtifact.test.ts`
+- `test/CitationSixFormResolution.test.ts`
+- `test/CitationTableCapacity.test.ts`
+- `test/CitationTextBudget.test.ts`
+- `test/CitationTextCapacity.test.ts`
+- `test/CitationTextNativeOrder.test.ts`
+- `test/CitationTokenizer.test.ts`
+- `test/CitationUnicodeDictionary.test.ts`
+- `test/CitationXmlWorkerProtocol.test.ts`
+- `test/integration/CitationExtractorSelection.test.ts`
+- `test/integration/CitationFullLawMetadata.test.ts`
+- `test/integration/CitationRegexTranslator.test.ts`
+- `test/integration/CitationRegexTranslatorNode.test.ts`
+
+No coverage, parallel whole-suite run, hosted CI, push, PR opening, merge,
+rebase, stash or subagent was used. No safety ceiling, strict wire decoder,
+fingerprint/profile guard, extraction output or public CitationEngine shape was
+relaxed or changed. V2 remains in the tree. The only new lifetime behavior is
+the accepted review requirement: preparation interruption poisons and confirms
+retirement (including a reserved unit without a child), and expected handover
+waits for active evaluation before resetting to absent. The already-locked lane
+capabilities and immutable fingerprint recheck are the implementation choices
+explained above. No further conflict with the design was encountered.
+
+The round 1 checkpoint is
+`decisions/2026-11-14-review-round-1-closes-preflight-and-session-lifetime-findings.md`.
+The final decisions projection reports packets=1, decisions=20, invalid=0 and
+drift_remaining=0. PLAN keeps B2 in review. The final checkout inbox is readable
+and has no unacknowledged entries.
