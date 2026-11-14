@@ -527,8 +527,15 @@ describe("attempt journal store", () => {
             [linked, "skip", "census-failed"],
           ]);
           deepStrictEqual(
-            A.map(reaped.candidates, (candidate) => candidate.embeddedCheckouts),
-            [[codexLane], undefined]
+            // Directory listings have no stable order; keep each census attached to its path.
+            A.sort(
+              A.map(reaped.candidates, (candidate) => [candidate.path, candidate.embeddedCheckouts] as const),
+              Order.mapInput(Order.String, (row: readonly [string, ReadonlyArray<string> | undefined]) => row[0])
+            ),
+            [
+              [container, [codexLane]],
+              [linked, undefined],
+            ]
           );
           const containerGone = yield* fs.exists(container);
           assertTrue(!containerGone);
