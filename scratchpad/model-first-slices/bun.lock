@@ -21,6 +21,7 @@
         "@effect/platform-node": "4.1.4",
         "@proto/authority-host": "workspace:*",
         "@proto/authority-model": "workspace:*",
+        "@proto/conformance": "workspace:*",
         "@proto/kernel": "workspace:*",
         "@proto/party-contract": "workspace:*",
         "@proto/party-host": "workspace:*",
@@ -79,6 +80,23 @@
         "vitest": "5.0.4",
       },
     },
+    "conformance": {
+      "name": "@proto/conformance",
+      "version": "0.0.0",
+      "dependencies": {
+        "@alchemy.run/domain": "2.0.0-beta.87",
+        "@proto/kernel": "workspace:*",
+        "effect": "4.1.4",
+      },
+      "devDependencies": {
+        "@effect/platform-node": "4.1.4",
+        "@effect/vitest": "4.1.4",
+        "@proto/authority-host": "workspace:*",
+        "@proto/party-contract": "workspace:*",
+        "@proto/runs-contract": "workspace:*",
+        "vitest": "5.0.4",
+      },
+    },
     "party/contract": {
       "name": "@proto/party-contract",
       "version": "0.0.0",
@@ -101,6 +119,7 @@
       "dependencies": {
         "@alchemy.run/domain": "2.0.0-beta.87",
         "@alchemy.run/effect-cluster": "2.0.0-beta.87",
+        "@effect/sql-pg": "4.1.4",
         "@proto/authority-contract": "workspace:*",
         "@proto/kernel": "workspace:*",
         "@proto/party-contract": "workspace:*",
@@ -186,6 +205,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@alchemy.run/domain": "2.0.0-beta.87",
+        "@effect/sql-pg": "4.1.4",
         "@proto/authority-contract": "workspace:*",
         "@proto/kernel": "workspace:*",
         "@proto/party-contract": "workspace:*",
@@ -299,6 +319,8 @@
     "@proto/authority-host": ["@proto/authority-host@workspace:authority/host"],
 
     "@proto/authority-model": ["@proto/authority-model@workspace:authority/model"],
+
+    "@proto/conformance": ["@proto/conformance@workspace:conformance"],
 
     "@proto/contract-kit": ["@proto/contract-kit@workspace:shared/contract-kit"],
 

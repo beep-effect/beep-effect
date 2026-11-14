@@ -17,7 +17,7 @@ export class UnpublishedFact extends S.TaggedError<UnpublishedFact>()("Unpublish
 /**
  * What the composed descriptors say about published facts: versions some
  * consumer needs that nobody publishes, and versions published that nobody
- * consumes (retirable, D34).
+ * consumes (retirable, D34), except each producer's newest version (D40).
  *
  * @category models
  * @since 0.0.0
@@ -46,7 +46,13 @@ export const ledgerOf = (descriptors: ReadonlyArray<DeploymentDescriptor>): Fact
   const consumed = A.flatMap(descriptors, (d) => A.map(d.consumes, (fact) => ({ consumer: d.context, fact })));
   return {
     missing: A.filter(consumed, ({ fact }) => !A.some(published, (p) => sameFact(fact)(p.fact))),
-    retirable: A.filter(published, ({ fact }) => !A.some(consumed, (c) => sameFact(fact)(c.fact))),
+    // A producer's newest version is never retirable: with no consumer yet it is being introduced (D40).
+    retirable: A.filter(
+      published,
+      ({ fact }) =>
+        !A.some(consumed, (c) => sameFact(fact)(c.fact)) &&
+        A.some(published, (p) => p.fact.producer === fact.producer && p.fact.contract === fact.contract && p.fact.version > fact.version),
+    ),
   };
 };
 

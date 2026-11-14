@@ -97,6 +97,8 @@ export const rules: Readonly<Record<string, Rule>> = {
   fact: { name: noun(""), is: (value) => P.hasProperty(value, "versions") },
   capabilities: { name: noun("Capabilities"), is: A.isArray },
   descriptor: { name: noun("Deployment"), is: (value) => P.hasProperty(value, "context") },
+  cluster: { name: noun("Cluster"), is: isFunction },
+  route: { name: (n) => `${lowerFirst(n)}Route`, is: isObject },
   singleton: { name: noun(""), is: isFunction },
   machine: { name: () => "update", is: isFunction, requires: ["Screen", "Message"] },
   controller: { name: (n) => `make${n}Controller`, is: isFunction },

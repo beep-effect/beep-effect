@@ -1,19 +1,20 @@
 # model-first-slices
 
 A standalone prototype of the model-first slices design, reworked to
-`explorations/model-first-slices/DECISIONS.md` through phase 4 of 4 (the last in-memory phase):
+`explorations/model-first-slices/DECISIONS.md` through phase 5 (phase 4 was the last in-memory phase; phase 5 ran it on Effect Cluster):
 file grammar, contract packages, the authority context, re-admission at each hop, the `runs`
 context, approval as an authenticated command, the Reasoner evaluation contract, an integration fact
 through an outbox and an inbox, a projection rebuild with no side effects, stored-format
 compatibility (saga activity results included), idempotency keys scoped by org, deployment
-descriptors, a web package on generated bindings, and a proof inventory (`PROOFS.md`). Three
+descriptors, a web package on generated bindings, a proof inventory (`PROOFS.md`), and a
+conformance suite run against the stack on a local Docker swarm (`notes/phase-5.md`). Three
 bounded contexts (Party,
 authority, runs), each split by dependency closure into `contract`, `model` and `host` packages, on
 `@alchemy.run/domain` 2.0.0-beta.87 and effect 4.1.4. Stories run each model alone; the Api tests
 run all three on one `Domain.InMemory`. The app is type-checked only.
 
-Phase notes: `FINDINGS.md` (phase 1), `notes/phase-2.md`, `notes/phase-3.md`, `notes/phase-4.md`
-(phase 4, with the D16 gate table). Every invariant and its checker: `PROOFS.md` (generated).
+Phase notes: `FINDINGS.md` (phase 1), `notes/phase-2.md`, `notes/phase-3.md`, `notes/phase-4.md`,
+`notes/phase-5.md` (the cluster run, the conformance table and the D16 gate). Every invariant and its checker: `PROOFS.md` (generated).
 
 This directory is not part of the monorepo's bun workspace. It has its own `package.json` (with
 `workspaces`), `bun.lock` and `node_modules`, and the monorepo's `scratchpad/tsconfig.json` excludes it.
@@ -77,6 +78,9 @@ runs/host              @proto/runs-host           RunsGateway's live half (follo
 apps/practice          @proto/practice            Deployment.ts (the composed descriptors, checked for fact retirement),
                                                   Cluster.ts (Docker database + swarm pool), hand-written entry modules
                                                   for each model, gateways, Session and poller; PracticeApi; alchemy.run.ts
+conformance            @proto/conformance         upstream's Domain conformance model, app and cases (vendored at
+                                                  33c10dd), the two-runners slot (D38), the prototype's own cases
+                                                  and backup/restore, run against a deployed stack only
 scripts/, proofs/                                 proofs.ts renders PROOFS.md from proofs/Proofs.data.ts; outcomes.ts
                                                   checks executed outcomes against proofs/Outcomes.allow.ts
 ```
@@ -175,5 +179,28 @@ bun run outcomes            # declared command outcomes the last test run did no
 (cd runs/model && ../../node_modules/.bin/vitest run)
 ```
 
-Do not run `alchemy deploy` or `alchemy dev` here: the stack would create a Docker swarm database and
-runners. `probes/` holds the earlier probes against the pre-rework layout; their paths are stale.
+## Cluster stage and conformance (phase 5)
+
+Only with the owner's approval: the stack creates a Docker swarm service for Postgres (with a
+volume), a pool of two runners and a front on host port 18640 (swarm ingress publishes it on all
+interfaces). Run the CLI on Bun; under Node it fails importing the stack (`notes/phase-5.md`).
+
+```sh
+docker swarm init --advertise-addr 127.0.0.1      # once, if the node is not in a swarm
+bun run entries                                   # regenerate apps/practice/generated/ from the descriptors
+(cd apps/practice && bun run deploy)              # alchemy deploy --stage mfs-conformance (local state)
+export CONFORMANCE_URL=http://127.0.0.1:18640
+export POSTGRES_SERVICE=$(docker service ls --format '{{.Name}}' | grep practicepostgres-mfs-conformance)
+export EVIDENCE_FILE=$PWD/evidence.log
+(cd conformance && ../node_modules/.bin/vitest run --config vitest.config.ts test/Upstream.conformance.ts)
+(cd conformance && ../node_modules/.bin/vitest run --config vitest.config.ts test/Own.conformance.ts)
+```
+
+Backup and restore is two halves around manual steps: `RESTORE_PHASE=before` (seeds and records
+to `RESTORE_FILE`), scale the runner and front services to 0, `pg_dump -Fc` inside the Postgres
+container, destroy, deploy, scale to 0, `pg_restore --clean --if-exists`, scale back, then
+`RESTORE_PHASE=after`. `bun run conformance` runs whatever cases match.
+
+Teardown, always: `(cd apps/practice && bun run destroy)`, check that no `practice-*` service,
+container, network, volume or image remains, `docker swarm leave --force`, remove base images that
+were pulled for the run, and delete `apps/practice/.alchemy/`. `probes/` holds the earlier probes against the pre-rework layout; their paths are stale.

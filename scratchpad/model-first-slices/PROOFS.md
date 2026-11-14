@@ -3,7 +3,7 @@
 <!-- Generated from proofs/Proofs.data.ts by scripts/proofs.ts. Do not edit: `bun run proofs`
      rewrites it, and `bun run proofs --check` fails on drift. -->
 
-Every invariant this prototype enforces (D8): 22 entries. Mechanical laws run in
+Every invariant this prototype enforces (D8): 27 entries. Mechanical laws run in
 `bun run check`, `bun run test` and `bun run generated:check`; semantic questions stay with a
 reviewer who did not write the change.
 
@@ -96,7 +96,7 @@ Only the authority boundary builds a root invocation or provides an invocation t
 - **Checker:** `shared/tooling/src/SourceScan.ts`, `authority/host/test/RootConstruction.test.ts`
 - **Reads:** Every package's source text, comments stripped, against three patterns.
 - **Assumes:** Construction is spelled as the patterns expect.
-- **Gaps:** A text scan: an aliased import, a re-export or a constructed object literal passes. Tests are not scanned. Re-admission trusts the provenance it is handed (D25).
+- **Gaps:** A text scan: an aliased import, a re-export or a constructed object literal passes. Tests are not scanned. Re-admission trusts the provenance it is handed (D25). One named exception besides the boundary: the conformance-only control route (Control.route.ts).
 - **Left to a reviewer:** Any new code path that hands an invocation to a send.
 
 ### no-grant-terms-in-events
@@ -131,7 +131,7 @@ A published fact's shape changes only on purpose: each version's JSON Schema equ
 
 ### fact-retirement
 
-A producer publishes every fact version some composed descriptor consumes; versions nobody consumes are reported as retirable (D34).
+A producer publishes every fact version some composed descriptor consumes; versions nobody consumes are reported as retirable (D34), except each producer's newest (D40).
 
 - **Checker:** `shared/tooling/src/FactRetirement.ts`, `apps/practice/test/Deployment.test.ts`
 - **Reads:** The deployment descriptors the app composes (D13).
@@ -216,38 +216,78 @@ Every command's accepted path and each declared rejection is executed by some st
 - **Checker:** `shared/tooling/vitest/outcomes.setup.ts`, `scripts/outcomes.ts`, `proofs/Outcomes.allow.ts`
 - **Reads:** The library's domain.commands metric after each test file.
 - **Assumes:** Every test runs on the default metric registry.
-- **Gaps:** Executing an outcome is not asserting it well; refusals raised by middleware before decide are not counted.
+- **Gaps:** Executing an outcome is not asserting it well; refusals raised by middleware before decide are not counted. All 109 declared outcomes execute since phase 5.
 - **Left to a reviewer:** Whether the stories assert invariants rather than restate decide.
 
 ### generated-files
 
 Generated files are never edited: handler registries, the web bindings and this document match their generators.
 
-- **Checker:** `shared/tooling/src/GeneratedFile.ts`, `party/web/scripts/bindings.ts`, `scripts/proofs.ts`
-- **Reads:** The file on disk against the generator's output; `bun run generated:check`.
+- **Checker:** `shared/tooling/src/GeneratedFile.ts`, `party/web/scripts/bindings.ts`, `scripts/proofs.ts`, `apps/practice/scripts/entries.ts`
+- **Reads:** The file on disk against the generator's output (registries, bindings, cluster entry modules, this document); `bun run generated:check`.
 - **Assumes:** Generators are deterministic.
 - **Gaps:** None known.
 - **Left to a reviewer:** Nothing mechanical.
 
+### cluster-upstream-conformance
+
+The host passes upstream's ten Domain conformance cases, with the vendored conformance model on the stack's pool.
+
+- **Checker:** `conformance/test/Upstream.conformance.ts`, `conformance/src/upstream/conformance.ts`
+- **Reads:** The deployed front over HTTP and WebSocket.
+- **Assumes:** The vendored files match upstream at 33c10dd except import paths.
+- **Gaps:** Two runners on one workstation; no network partitions.
+- **Left to a reviewer:** Nothing mechanical.
+- **Needs a live stack:** run with `bun run conformance` against a deployed stage.
+
+### cluster-idempotent-sends
+
+On the cluster, a command sent twice, or retried after a lost response, under one id commits once and its reaction happens once.
+
+- **Checker:** `conformance/test/Own.conformance.ts`
+- **Reads:** Receipts, the claim's view entries and the review run's state through the front.
+- **Assumes:** The client's timeout stands in for a lost response.
+- **Gaps:** Retries from another client, after the receipt's retention (none exists), are not covered.
+- **Left to a reviewer:** Nothing mechanical.
+- **Needs a live stack:** run with `bun run conformance` against a deployed stage.
+
+### cluster-faults
+
+A runner killed after a commit, a projection batch cut by a crash, a grant revoked mid-chain and a run waiting across a restart each end correctly: stored results, reactions once, refusals recorded, completion after approval.
+
+- **Checker:** `conformance/test/Own.conformance.ts`
+- **Reads:** The front's Apis, the runs-state route, and the cluster database through `docker exec psql`.
+- **Assumes:** `docker kill` of every runner models a crash; timing is not controlled, so a case may not hit its window.
+- **Gaps:** See notes/phase-5.md: kill-after-commit fails (stranded outbox). The projection window is approximated on the cluster.
+- **Left to a reviewer:** Whether each fault was really exercised (the evidence log says).
+- **Needs a live stack:** run with `bun run conformance` against a deployed stage.
+
+### cluster-two-runners
+
+Two runners never both commit to one instance (D38): a runner paused past its shard lock must not overwrite the commit of the runner that took over.
+
+- **Checker:** `conformance/test/Own.conformance.ts`, `conformance/src/TwoRunners.model.ts`
+- **Reads:** The slot's stored events in alchemy_domain_objects before and after unpausing.
+- **Assumes:** `docker pause` freezes the runner's shard-lock refresh as a long GC pause or partition would.
+- **Gaps:** One timing; not a model-checked proof.
+- **Left to a reviewer:** Whether the observed outcome is acceptable for every aggregate.
+- **Needs a live stack:** run with `bun run conformance` against a deployed stage.
+
+### cluster-backup-restore
+
+A pg_dump taken while a run waits for approval restores into a fresh stack with aggregates, views, the directory, receipts, the waiting run and scheduled work intact.
+
+- **Checker:** `conformance/test/Restore.conformance.ts`
+- **Reads:** The seeded expectations file and the restored stack through the front.
+- **Assumes:** Runners are scaled to zero around the dump and the restore.
+- **Gaps:** A volume-level restore (which needs the matching Alchemy state) is not exercised.
+- **Left to a reviewer:** What must be retained with a backup besides the database.
+- **Needs a live stack:** run with `bun run conformance` against a deployed stage.
+
 ## Outcome coverage gaps
 
-`bun run outcomes --check` lists 15 declared outcomes no story executes, each with its reason:
+`bun run outcomes --check` lists 0 declared outcomes no story executes, each with its reason:
 
-- `Grant.IssueGrant` GrantAlreadyIssued: authority refusal paths: the authority stories predate the outcome counter and were not extended in phase 4
-- `Grant.NarrowGrant` accepted: no story sends it directly: narrowing and revocation are exercised through DelegateGrant and RevokeGrant
-- `Grant.NarrowGrant` GrantNotActive: authority refusal paths: the authority stories predate the outcome counter and were not extended in phase 4
-- `Grant.NarrowGrant` TermsWiden: authority refusal paths: the authority stories predate the outcome counter and were not extended in phase 4
-- `Grant.NarrowGrant` MissingGrant: authority refusal paths: the authority stories predate the outcome counter and were not extended in phase 4
-- `Grant.RevokeGrant` GrantNotActive: authority refusal paths: the authority stories predate the outcome counter and were not extended in phase 4
-- `Grant.RevokeGrant` MissingGrant: authority refusal paths: the authority stories predate the outcome counter and were not extended in phase 4
-- `Grant.DelegateGrant` GrantNotActive: authority refusal paths: the authority stories predate the outcome counter and were not extended in phase 4
-- `Delegation.OpenDelegation` DelegationAlreadyOpen: authority refusal paths: the authority stories predate the outcome counter and were not extended in phase 4
-- `Delegation.NarrowDelegation` DelegationNotActive: authority refusal paths: the authority stories predate the outcome counter and were not extended in phase 4
-- `Delegation.RevokeDelegation` accepted: no story sends it directly: narrowing and revocation are exercised through DelegateGrant and RevokeGrant
-- `Delegation.RevokeDelegation` DelegationNotActive: authority refusal paths: the authority stories predate the outcome counter and were not extended in phase 4
-- `Delegation.RevokeDelegation` NotDelegator: authority refusal paths: the authority stories predate the outcome counter and were not extended in phase 4
-- `Delegation.DelegateFurther` DelegationNotActive: authority refusal paths: the authority stories predate the outcome counter and were not extended in phase 4
-- `Accountability.AssignAccountability` AccountabilityAlreadyAssigned: authority refusal paths: the authority stories predate the outcome counter and were not extended in phase 4
 
 ## Questions for an independent reviewer
 

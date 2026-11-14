@@ -3,6 +3,8 @@
   "include": [
     "src/**/*.ts",
     "test/**/*.ts",
+    "generated/**/*.ts",
+    "scripts/**/*.ts",
     "alchemy.run.ts",
     "vitest.config.ts"
   ]

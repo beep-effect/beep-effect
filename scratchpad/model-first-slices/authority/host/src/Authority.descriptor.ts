@@ -17,4 +17,13 @@ export const AuthorityDeployment = DeploymentDescriptor.make({
   ],
   publishes: [],
   consumes: [],
+  cluster: {
+    module: "@proto/authority-host/Authority.cluster",
+    export: "AuthorityCluster",
+    parts: [
+      { name: "AuthorityGateway", uses: [] },
+      { name: "Session", uses: [] },
+    ],
+    apis: [],
+  },
 });

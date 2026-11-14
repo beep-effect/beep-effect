@@ -6,7 +6,8 @@
     "status": "active",
     "stage": "shape",
     "openQuestions": [
-      "Phase 5 result: does the Postgres swarm host pass the conformance suite, restore included (D5, D16, D38)?",
+      "BLOCKED on upstream: conformance on the Postgres swarm host fails three cases on two library defects (research/13, issues 1 and 2); the D16 gate stays open until they are fixed and the suite is re-run.",
+      "Operator: file the upstream issues written out in research/13? None is filed.",
       "DEFERRED: browser session credentials, tenant and cache clearing (outside the D16 gate).",
       "Shape review: BRIEF.md and the artifact have not been confirmed in words by the operator."
     ],

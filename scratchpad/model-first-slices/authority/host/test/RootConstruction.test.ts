@@ -20,7 +20,13 @@ const packages = [
   "runs/host",
   "apps/practice",
 ];
-const boundary = ["authority/host/src/Boundary/Boundary.ts", "authority/host/src/Session.adapter.ts"];
+const boundary = [
+  "authority/host/src/Boundary/Boundary.ts",
+  "authority/host/src/Session.adapter.ts",
+  // Named exception: the conformance-only control route (phase 5), which issues grants as an
+  // org's owner at bootstrap on a deployed stack. Never mounted by a production front.
+  "authority/host/src/Control.route.ts",
+];
 
 it.effect("only the authority host's boundary builds or provides a root invocation", () =>
   Effect.gen(function* () {

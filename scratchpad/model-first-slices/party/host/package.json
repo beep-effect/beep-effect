@@ -6,11 +6,13 @@
   "exports": {
     "./Adapters": "./src/Adapters.ts",
     "./Authority.adapter": "./src/Authority.adapter.ts",
+    "./Directory/PgPartyDirectoryStore.adapter": "./src/Directory/PgPartyDirectoryStore.adapter.ts",
     "./Evidence/FixtureContactSource.adapter": "./src/Evidence/FixtureContactSource.adapter.ts",
     "./Evidence/MailboxPoller.handler": "./src/Evidence/MailboxPoller.handler.ts",
     "./Evidence/MailboxPoller.singleton": "./src/Evidence/MailboxPoller.singleton.ts",
     "./Facts/PartyFactsFeed.adapter": "./src/Facts/PartyFactsFeed.adapter.ts",
     "./Host": "./src/Host.ts",
+    "./Party.cluster": "./src/Party.cluster.ts",
     "./Party.descriptor": "./src/Party.descriptor.ts",
     "./Review/FixtureReasoner.adapter": "./src/Review/FixtureReasoner.adapter.ts",
     "./Review/ReasonerTape": "./src/Review/ReasonerTape.ts",
@@ -25,6 +27,7 @@
   "dependencies": {
     "@alchemy.run/domain": "2.0.0-beta.87",
     "@alchemy.run/effect-cluster": "2.0.0-beta.87",
+    "@effect/sql-pg": "4.1.4",
     "@proto/authority-contract": "workspace:*",
     "@proto/kernel": "workspace:*",
     "@proto/party-contract": "workspace:*",

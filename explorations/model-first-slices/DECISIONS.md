@@ -678,3 +678,40 @@ version. Recommended answer accepted.
 Where a browser session's credentials and tenant come from, and what clears atom caches on logout
 or tenant change, is deferred to the browser QA and HTTP wiring work. It is outside the D16 gate.
 The orchestrating session deferred it without asking; the operator may reopen it.
+
+## 2026-11-13 — Phase 5: the cluster run, and the D5 verdict
+
+The prototype ran on Effect Cluster with Postgres on a local Docker swarm (stage
+`mfs-conformance`: Postgres, two runners hosting the three models, one front). Notes are in
+`research/13-rework-phase5-notes.md`. In memory, 14 packages type-check and 133 tests pass, re-run
+by the orchestrating session.
+
+**D5 verdict: not yet.** The repo-owned Postgres platform is not retired (D5, D38).
+
+- Upstream's ten Domain conformance cases pass on this host.
+- Of the prototype's eight cases, five pass: a command sent twice under one id; a lost response
+  retried; a grant revoked (it landed before the first hop, not mid-run); two runners on one
+  instance (no overwrite, in one timing); backup and restore by `pg_dump` (everything restores).
+- Three fail, on two upstream defects:
+  - **A killed runner strands work.** A drain's 60-second lease outlives the killed runner, and the
+    one-shot 10-second backstop finds the lease held and gives up, so outbox rows and projection
+    input wait until that instance's next commit. Fails "runner killed right after a commit" and
+    "projection crash". The orchestrating session read the cited code
+    (`domain/src/DurableObjects.ts`, the `queue` function) and it matches.
+  - **Code on a runner cannot read a stream.** In runner mode a stream read goes over HTTP with an
+    empty URL (`InvalidUrl`), so an integration fact is published but cannot be consumed there.
+    Fails "a waiting run survives a runner restart and completes after approval".
+
+Also established: the cluster loader accepts generated entry modules (D13, D40); restore needs only
+a quiesced `pg_dump`, not Alchemy's state; the commit path still has no version check, so that
+proposal stands. Five upstream issues are written out in `research/13`, none filed.
+
+Two things differed from what the operator was told before the run. The front's port was reachable
+on all interfaces while the stack was up, because swarm cannot bind a published port to 127.0.0.1.
+And the runs inbox was built as a poller on every runner, not as a cluster singleton.
+
+Teardown was checked against a Docker baseline recorded before the run: the stack, the swarm and
+local state are gone, and containers, images, volumes and networks match the baseline by name.
+
+D16 gate: seven items proven in memory; conformance on the Postgres swarm host is run and not
+passing, waiting on the two upstream defects.

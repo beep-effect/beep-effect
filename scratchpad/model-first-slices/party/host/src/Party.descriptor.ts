@@ -25,4 +25,10 @@ export const PartyDeployment = DeploymentDescriptor.make({
     version: Number(version),
   })),
   consumes: [],
+  cluster: {
+    module: "@proto/party-host/Party.cluster",
+    export: "PartyCluster",
+    parts: [{ name: "PartyFactsFeed", uses: ["AuthorityGateway", "RunsGateway"] }],
+    apis: ["AuthorityGateway", "RunsGateway", "Session"],
+  },
 });

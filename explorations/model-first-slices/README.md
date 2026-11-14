@@ -17,10 +17,11 @@ system alongside people?
 
 ## Next Open Question
 
-The cluster phase: run the prototype on the Postgres Docker swarm host with a conformance suite,
-restore included (D5, D16). It needs `docker swarm init` on the workstation, which the operator
-has not yet approved, and the remote form of gateways (D31). Smaller questions left by phase 4 are
-at the end of `DECISIONS.md`. [`BRIEF.md`](./BRIEF.md) has not been confirmed in words.
+The graduation gate has one open item: conformance on the Postgres swarm host, which was run and
+fails three cases on two upstream defects (`research/13`, upstream issues 1 and 2). The packet
+cannot graduate until those are fixed upstream and the suite is re-run. Next: the operator decides
+whether to file the issues written out in `research/13` (none is filed), and whether a fifth draft
+of the artifact body is wanted now. [`BRIEF.md`](./BRIEF.md) has not been confirmed in words.
 
 ## Read This First
 
@@ -32,6 +33,9 @@ at the end of `DECISIONS.md`. [`BRIEF.md`](./BRIEF.md) has not been confirmed in
 
 ## Trail
 
+- 2026-11-13: phase 5 ran on a local Docker swarm and was torn down. Upstream's ten Domain cases
+  pass; three of the prototype's eight fail on two upstream defects (a killed runner strands its
+  outbox; a runner cannot read a stream). D5 verdict: not yet. Notes in `research/13`.
 - 2026-11-13: cluster run scoped (`research/12`): swarm required, the host's commit has no version
   check, upstream has no backup or restore. D37 to D40 settled; the operator approved
   `docker swarm init` on the workstation. Phase 5 (cluster conformance) launched.

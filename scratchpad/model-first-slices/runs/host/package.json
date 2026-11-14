@@ -10,11 +10,13 @@
     "./Inbox/ClaimDecided.inbox": "./src/Inbox/ClaimDecided.inbox.ts",
     "./Inbox/Inbox.store": "./src/Inbox/Inbox.store.ts",
     "./Lineage": "./src/Lineage.ts",
+    "./Runs.cluster": "./src/Runs.cluster.ts",
     "./Runs.descriptor": "./src/Runs.descriptor.ts",
     "./RunsGateway.adapter": "./src/RunsGateway.adapter.ts"
   },
   "dependencies": {
     "@alchemy.run/domain": "2.0.0-beta.87",
+    "@effect/sql-pg": "4.1.4",
     "@proto/authority-contract": "workspace:*",
     "@proto/kernel": "workspace:*",
     "@proto/party-contract": "workspace:*",

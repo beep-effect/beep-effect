@@ -1,4 +1,12 @@
 import { Story } from "@alchemy.run/domain/Story";
+import { AccountabilityAlreadyAssigned } from "@proto/authority-contract/Accountability/AssignAccountability.command";
+import { DelegateFurther as DelegateFurtherCommand } from "@proto/authority-contract/Delegation/DelegateFurther.command";
+import { DelegationNotActive } from "@proto/authority-contract/Delegation/DelegationNotActive.rejection";
+import { DelegationAlreadyOpen, OpenDelegation } from "@proto/authority-contract/Delegation/OpenDelegation.command";
+import { DelegationRevoked, RevokeDelegation } from "@proto/authority-contract/Delegation/RevokeDelegation.command";
+import { GrantNotActive } from "@proto/authority-contract/Grant/GrantNotActive.rejection";
+import { GrantAlreadyIssued } from "@proto/authority-contract/Grant/IssueGrant.command";
+import { GrantNarrowed, NarrowGrant } from "@proto/authority-contract/Grant/NarrowGrant.command";
 import { it } from "@effect/vitest";
 import {
   AccountabilityAssigned,
@@ -293,3 +301,91 @@ it.effect("a run delegates its delegation further, only narrower, and only as it
     ),
   );
 });
+
+// The refusal paths `bun run outcomes` found unexecuted, each met by the caller it is meant for.
+it.effect("a grant is issued once, narrowed only by an admin and only narrower, and refused once inactive", () => {
+  const narrower = terms({ operations: ["AcceptClaim"] });
+  const other = Grant.ref("g_2");
+  return story(
+    given(grant, issued),
+    as(admin),
+    when(grant, new IssueGrant({ holder: PrincipalId.make("p_rev"), terms: terms() })),
+    rejected(new GrantAlreadyIssued()),
+    as(reviewer),
+    when(grant, new NarrowGrant({ terms: narrower })),
+    rejected(new MissingGrant({ capability: AuthorityGrants.id, operation: "NarrowGrant" })),
+    when(grant, new RevokeGrant()),
+    rejected(new MissingGrant({ capability: AuthorityGrants.id, operation: "RevokeGrant" })),
+    as(admin),
+    when(grant, new NarrowGrant({ terms: terms({ expires: null }) })),
+    rejected(new TermsWiden({ dimension: "expires" })),
+    when(grant, new NarrowGrant({ terms: narrower })),
+    then(grant, new GrantNarrowed({ holder: PrincipalId.make("p_rev"), terms: narrower, provenance: provenanceOf(admin) })),
+    // A grant nobody issued, or one revoked, takes nothing more.
+    when(other, new RevokeGrant()),
+    rejected(new GrantNotActive({ status: "Unissued" })),
+    when(other, new NarrowGrant({ terms: narrower })),
+    rejected(new GrantNotActive({ status: "Unissued" })),
+    as(reviewer),
+    when(other, new DelegateGrant({ delegation: DelegationId.make("d_9"), to: run, terms: narrower })),
+    rejected(new GrantNotActive({ status: "Unissued" })),
+  );
+});
+
+it.effect("a delegation opens once; only its delegator revokes it; a revoked or unopened one takes nothing", () => {
+  const opened = new DelegationOpened({
+    parent: GrantId.make("g_1"),
+    parentDelegation: null,
+    holder: run,
+    delegator: PrincipalId.make("p_rev"),
+    terms: terms({ operations: ["AcceptClaim"] }),
+    provenance: provenanceOf(reviewer),
+  });
+  const unopened = Delegation.ref("d_none");
+  return story(
+    given(delegation, opened),
+    when(
+      delegation,
+      new OpenDelegation({
+        parent: GrantId.make("g_1"),
+        parentDelegation: null,
+        holder: run,
+        delegator: PrincipalId.make("p_rev"),
+        terms: terms({ operations: ["AcceptClaim"] }),
+        provenance: provenanceOf(reviewer),
+      }),
+    ),
+    rejected(new DelegationAlreadyOpen()),
+    as(humanRoot("p_eve")),
+    when(delegation, new RevokeDelegation()),
+    rejected(new NotDelegator()),
+    as(reviewer),
+    when(delegation, new RevokeDelegation()),
+    then(delegation, new DelegationRevoked({ holder: run, provenance: provenanceOf(reviewer) })),
+    when(delegation, new RevokeDelegation()),
+    rejected(new DelegationNotActive({ status: "Revoked" })),
+    when(unopened, new NarrowDelegation({ terms: terms({ operations: ["AcceptClaim"] }) })),
+    rejected(new DelegationNotActive({ status: "Unopened" })),
+    as(agent),
+    when(unopened, new DelegateFurtherCommand({ child: DelegationId.make("d_child"), to: RunId.make("run_9"), terms: terms() })),
+    rejected(new DelegationNotActive({ status: "Unopened" })),
+  );
+});
+
+it.effect("a run's accountability is assigned once", () =>
+  story(
+    as(reviewer),
+    when(Accountability.ref("run_7"), new AssignAccountability()),
+    then(
+      Accountability.ref("run_7"),
+      new AccountabilityAssigned({
+        run: RunId.make("run_7"),
+        accountable: PrincipalId.make("p_rev"),
+        onBehalfOf: PrincipalId.make("p_rev"),
+        provenance: provenanceOf(reviewer),
+      }),
+    ),
+    when(Accountability.ref("run_7"), new AssignAccountability()),
+    rejected(new AccountabilityAlreadyAssigned()),
+  ),
+);

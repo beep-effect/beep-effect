@@ -108,13 +108,21 @@ export const ClaimDecidedInboxLive = Layer.effect(
 ).pipe(Layer.provide(Digest.layerWebCrypto));
 
 /**
- * Drains the inbox on a schedule for as long as the Layer's scope lives.
+ * Drains the inbox on a schedule for as long as the Layer's scope lives. A
+ * failed drain is logged and retried on the next tick.
  *
  * @category layers
  * @since 0.0.0
  */
 export const ClaimDecidedInboxPoller = Layer.effectDiscard(
   Effect.flatMap(Effect.service(ClaimDecidedInbox), (inbox) =>
-    Effect.forkScoped(inbox.drain.pipe(Effect.repeat(Schedule.spaced("25 millis")))),
+    Effect.forkScoped(
+      inbox.drain.pipe(
+        Effect.tap((read) => (read > 0 ? Effect.logInfo(`ClaimDecided inbox: handled ${read} facts`) : Effect.void)),
+        // A failed drain is reported and retried on the next tick; it never stops the poller.
+        Effect.catchCause((cause) => Effect.logError("ClaimDecided inbox: drain failed", cause)),
+        Effect.repeat(Schedule.spaced("250 millis")),
+      ),
+    ),
   ),
 );

@@ -11,6 +11,7 @@
     "@effect/platform-node": "4.1.4",
     "@proto/authority-host": "workspace:*",
     "@proto/authority-model": "workspace:*",
+    "@proto/conformance": "workspace:*",
     "@proto/kernel": "workspace:*",
     "@proto/party-contract": "workspace:*",
     "@proto/party-host": "workspace:*",
@@ -22,7 +23,10 @@
     "effect": "4.1.4"
   },
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "entries": "bun scripts/entries.ts",
+    "deploy": "bun --bun ../../node_modules/.bin/alchemy deploy --stage mfs-conformance --no-input --yes",
+    "destroy": "bun --bun ../../node_modules/.bin/alchemy destroy --stage mfs-conformance --no-input --yes"
   },
   "devDependencies": {
     "@effect/vitest": "4.1.4",

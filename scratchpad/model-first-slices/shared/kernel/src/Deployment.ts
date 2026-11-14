@@ -29,6 +29,27 @@ export const ProcessKind = S.Literals(["gateway", "feed", "poller", "inbox", "se
 export type ProcessKind = typeof ProcessKind.Type;
 
 /**
+ * How a context is wired on a cluster (D13, D39): the module and export of
+ * its cluster wiring, each part it provides (a gateway, a feed, a process)
+ * with the parts it uses, and the parts its Apis use. The app's generator
+ * reads this to compose entry modules; it names no model itself.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ClusterWiring = S.Struct({
+  module: S.String,
+  export: S.String,
+  parts: S.Array(S.Struct({ name: S.String, uses: S.Array(S.String) })),
+  apis: S.Array(S.String),
+});
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export type ClusterWiring = typeof ClusterWiring.Type;
+
+/**
  * A deployment descriptor (D13, D34): what one context's host runs and how it
  * meets other contexts. Its models, its processes, the fact versions it
  * publishes and the fact versions it consumes. The app composes descriptors
@@ -45,6 +66,7 @@ export type ProcessKind = typeof ProcessKind.Type;
  *   processes: [{ name: "ClaimDecidedInbox", kind: "inbox" }],
  *   publishes: [],
  *   consumes: [{ producer: "party", contract: "ClaimDecided", version: 1 }],
+ *   cluster: { module: "@proto/runs-host/Runs.cluster", export: "RunsCluster", parts: [], apis: [] },
  * });
  * ```
  *
@@ -57,6 +79,7 @@ export const DeploymentDescriptor = S.Struct({
   processes: S.Array(S.Struct({ name: S.String, kind: ProcessKind })),
   publishes: S.Array(FactVersion),
   consumes: S.Array(FactVersion),
+  cluster: ClusterWiring,
 });
 /**
  * @category models

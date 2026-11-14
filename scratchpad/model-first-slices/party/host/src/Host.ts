@@ -1,4 +1,8 @@
 import { PartyHosted } from "@proto/party-model/Party.ports";
+import {
+  MemoryPartyDirectoryStore,
+  type PartyDirectoryStore,
+} from "@proto/party-model/Directory/PartyDirectory.store";
 import * as Layer from "effect/Layer";
 import { PartyAdapters } from "./Adapters.ts";
 
@@ -27,5 +31,7 @@ import { PartyAdapters } from "./Adapters.ts";
  * @category layers
  * @since 0.0.0
  */
-export const hostParty = <ROut, E, RIn>(platform: Layer.Layer<ROut, E, RIn>) =>
-  PartyHosted.pipe(Layer.provideMerge(PartyAdapters), Layer.provide(platform));
+export const hostParty = <ROut, E, RIn>(
+  platform: Layer.Layer<ROut, E, RIn>,
+  directory: Layer.Layer<PartyDirectoryStore> = MemoryPartyDirectoryStore,
+) => PartyHosted.pipe(Layer.provideMerge(PartyAdapters), Layer.provide(directory), Layer.provide(platform));

@@ -5,6 +5,7 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
+    "./Authority.cluster": "./src/Authority.cluster.ts",
     "./Authority.descriptor": "./src/Authority.descriptor.ts",
     "./AuthorityGateway.adapter": "./src/AuthorityGateway.adapter.ts",
     "./Boundary/Boundary": "./src/Boundary/Boundary.ts",
