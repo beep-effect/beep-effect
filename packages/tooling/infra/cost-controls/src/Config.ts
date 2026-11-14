@@ -101,8 +101,8 @@ export type CostControlsRegion = typeof CostControlsRegion.Type;
  * subscription: the state the stack runs in beside the Pulumi-owned budget
  * and subscription, so recipients are not mailed twice. `live` adds the
  * budget notifications and the anomaly subscription and needs the
- * recipient list. The prod phase flips to `live` in the PR that follows the
- * Pulumi cutover.
+ * recipient list. The prod phase went `live` before the Pulumi budget and
+ * subscription were destroyed (packet gate ruling, 2026-11-14).
  *
  * **Example** (Read the phases)
  *

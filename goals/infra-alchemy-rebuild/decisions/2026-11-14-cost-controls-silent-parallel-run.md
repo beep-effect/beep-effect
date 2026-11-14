@@ -2,7 +2,7 @@
 title: "Cost controls runs silent beside Pulumi and goes live after the cutover"
 date: 2026-11-14
 lane: "goals/infra-alchemy-rebuild-p3-cost-controls"
-reversal: "Set notifications to live in the prod configuration before the cutover (recipients then get every alert twice until the Pulumi budget and subscription are destroyed)."
+reversal: "Return prod to silent with one PR (notifications: silent); its plan deletes only the stack's own AnomalyAlerts subscription, the single delete the pre-deploy gate allows."
 ---
 
 Two budgets and two anomaly subscriptions would mail the same people twice, and on creation, not only on the next breach: month-to-date spend was $371.54 against the $200 limit on 2026-11-13, so all four live notifications (ACTUAL 50/80/100 %, FORECASTED 100 %) are in `ALARM`, and a new budget with the same thresholds alerts at once.

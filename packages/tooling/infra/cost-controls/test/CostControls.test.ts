@@ -19,6 +19,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as FakeAws from "./support/FakeAws.ts";
 
+const decodePlanEntries = S.decodeUnknownEffect(S.Array(PlanEntry));
+
 const liveAccountSettings = LiveSettings.make({
   costAllocationTags: A.map(["App", "beep-ci", "DataClass", "ghr:environment", "ManagedBy", "Project"], (TagKey) => ({
     TagKey,
@@ -204,7 +206,7 @@ describe("CostControls prod is live", () => {
       const planned = A.flatMap(R.toEntries(plan.resources), ([fqn, item]) =>
         item === undefined ? [] : [{ fqn, action: item.action, changedProperties: [] }]
       );
-      const entries = yield* S.decodeUnknownEffect(S.Array(PlanEntry))(planned);
+      const entries = yield* decodePlanEntries(planned);
       yield* checkPlan(entries, liveAccountSettings);
     })
   );

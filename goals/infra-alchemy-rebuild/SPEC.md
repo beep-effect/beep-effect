@@ -756,7 +756,7 @@ Superseded in part (packet gate ruling, 2026-11-14): the silent phase kept recip
 
 Lane goals/infra-alchemy-rebuild-p3-cost-controls
 
-Reverse: Set notifications to live in the prod configuration before the cutover (recipients then get every alert twice until the Pulumi budget and subscription are destroyed).
+Reverse: Return prod to silent with one PR (notifications: silent); its plan deletes only the stack's own AnomalyAlerts subscription, the single delete the pre-deploy gate allows.
 
 ### Cost controls configuration is a tracked schema; recipients come only from the environment, 2026-11-14
 
