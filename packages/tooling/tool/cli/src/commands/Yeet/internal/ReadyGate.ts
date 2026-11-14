@@ -88,8 +88,8 @@ import {
   parseAttributedCheck,
 } from "./MergeGate.ts";
 import { YEET_READY_COMMAND } from "./MonitorPolicy.ts";
-import { findLiveReadyMonitorJob } from "./ProofJob.ts";
-import { ProofJobLauncher } from "./ProofJobLauncher.ts";
+import { isLiveReadyMonitorJob } from "./ProofJob.ts";
+import { ProofJobLauncher, pickLiveReadyMonitor, readyMonitorRunnerStatus } from "./ProofJobLauncher.ts";
 import { admitPullRequestToHeavy } from "./PullRequest.ts";
 import { ReviewLaneFlipRow, ReviewLaneReadyTransition, YEET_REVIEW_LANE_SCHEMA_VERSION } from "./ReviewLane.schemas.ts";
 import { readYeetReviewLaneLedger, recordYeetReviewLaneRows } from "./ReviewLane.ts";
@@ -109,6 +109,7 @@ import type { FinalCheckReceipt } from "./FinalCheck.schemas.ts";
 import type { FinalCheckRefreshOwnChange, FinalCheckRefreshRefused } from "./FinalCheckRefresh.schemas.ts";
 import type { YeetOpenReadyHooks } from "./OpenReady.ts";
 import type { ProofJobRecord } from "./ProofJob.ts";
+import type { ReadyMonitorRunnerProbe } from "./ProofJobLauncher.ts";
 import type { SquashCommitlintReport } from "./SquashCommitlint.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ReadyGate");
@@ -557,25 +558,52 @@ const readPullRequestForReady = Effect.fn("Yeet.readPullRequestForReady")(functi
   return YeetReadyPullRequestRead.make({ remote: snapshot.remote, mergeReady: snapshot.mergeReady });
 });
 
-// The live `monitor --until-ready` job for the pull request, when one exists.
-// A registry read failure only loses the hint, never the flip.
-const findLiveMonitorForReady = (
-  context: RepoRunContext,
-  prNumber: number
-): Effect.Effect<
-  O.Option<ProofJobRecord>,
-  never,
+type ReadyGateMonitorRequirements =
   | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
-  | Digest.Digest
-> =>
-  ProofJobLauncher.make(context.repoRoot).pipe(
-    Effect.flatMap((launcher) => launcher.list),
-    Effect.map(findLiveReadyMonitorJob({ branch: context.branch, prNumber })),
+  | Digest.Digest;
+
+const listReadyGateJobs = (
+  context: RepoRunContext
+): Effect.Effect<ReadonlyArray<ProofJobRecord>, YeetCommandError, ReadyGateMonitorRequirements> =>
+  ProofJobLauncher.make(context.repoRoot).pipe(Effect.flatMap((launcher) => launcher.list));
+
+// The live `monitor --until-ready` job for the pull request, when one exists.
+// A record still reads `running` after its runner died without a finalizer, so
+// the runner is checked before the job is named as the watcher. A registry
+// read failure only loses the hint, never the flip.
+const findLiveMonitorForReady = Effect.fn("Yeet.findLiveMonitorForReady")(function* (
+  context: RepoRunContext,
+  prNumber: number,
+  listJobs: typeof listReadyGateJobs = listReadyGateJobs,
+  runnerStatus: ReadyMonitorRunnerProbe = readyMonitorRunnerStatus
+): Effect.fn.Return<O.Option<ProofJobRecord>, never, ReadyGateMonitorRequirements> {
+  return yield* listJobs(context).pipe(
+    Effect.flatMap((records) =>
+      pickLiveReadyMonitor(records, isLiveReadyMonitorJob({ branch: context.branch, prNumber }), runnerStatus)
+    ),
     Effect.catch(() => Effect.succeedNone)
   );
+});
+
+/**
+ * Find the detached readiness monitor `yeet ready` names as the watcher after
+ * a flip, with the registry listing and the runner probe injected.
+ *
+ * **Example** (Reference the lookup for a test)
+ *
+ * ```ts
+ * import { findLiveMonitorForReadyForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof findLiveMonitorForReadyForTesting) // "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const findLiveMonitorForReadyForTesting = findLiveMonitorForReady;
 
 const markReadyThroughBudget = (prNumber: number, confirmedHead: string) =>
   flipPullRequestReady(prNumber, confirmedHead).pipe(
