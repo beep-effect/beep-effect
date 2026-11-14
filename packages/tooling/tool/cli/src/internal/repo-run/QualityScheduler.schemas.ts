@@ -11,6 +11,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { ScopedPackageName } from "@beep/package-json/PackageName";
 import { OpaqueDefect } from "@beep/repo-cli-kit/schema/OpaqueDefect";
 import { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import { LiteralKit } from "@beep/schema";
@@ -20,6 +21,7 @@ import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import { ComputeProfile } from "./ComputeProfile.schemas.ts";
 import { GateRouteId } from "./GateRoute.schemas.ts";
 import { RunScopeRecord } from "./RunScope.schemas.ts";
@@ -53,6 +55,96 @@ export const AdmissionWorkKind = LiteralKit(["full-proof", "merged-preview", "re
  * @since 0.0.0
  */
 export type AdmissionWorkKind = typeof AdmissionWorkKind.Type;
+
+const isKnownAdmissionWorkKind = S.is(AdmissionWorkKind);
+
+/**
+ * A work kind this revision does not know, kept verbatim from a newer writer.
+ *
+ * **Details**
+ *
+ * Every checkout on the host shares one set of tickets, leases and journal
+ * rows, so a newer checkout may admit a kind this one has never seen. Reading
+ * it as an unrecognized kind keeps the record decodable: the lease stays
+ * charged by its `weightTokens` and sits outside the review-fix class cap,
+ * where a closed literal would quarantine the whole file and drop its tokens
+ * from capacity. A known kind never decodes as unrecognized.
+ *
+ * **Example** (Recognize a kind from a newer writer)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { UnrecognizedAdmissionWorkKind } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(S.is(UnrecognizedAdmissionWorkKind)("cache-qualification")) // true
+ * console.log(S.is(UnrecognizedAdmissionWorkKind)("full-proof")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const UnrecognizedAdmissionWorkKind = S.NonEmptyString.check(
+  S.makeFilter(
+    (kind: string) => !isKnownAdmissionWorkKind(kind),
+    $I.annote("UnrecognizedAdmissionWorkKindCheck", {
+      title: "Unrecognized admission work kind",
+      description: "The kind is not one of this revision's admission work kinds.",
+    })
+  )
+).pipe(
+  S.brand("UnrecognizedAdmissionWorkKind"),
+  $I.annoteSchema("UnrecognizedAdmissionWorkKind", {
+    description: "An admission work kind written by a newer revision and kept verbatim.",
+  })
+);
+
+/**
+ * An admission work kind written by a newer revision and kept verbatim.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type UnrecognizedAdmissionWorkKind = typeof UnrecognizedAdmissionWorkKind.Type;
+
+/**
+ * Work kind as recorded on a ticket, lease or journal row: known or unrecognized.
+ *
+ * **Details**
+ *
+ * This is the tolerant reader for the persisted `kind` field. Callers still
+ * request one of the known {@link AdmissionWorkKind} literals; only records
+ * read back from the shared admission root may carry an
+ * {@link UnrecognizedAdmissionWorkKind}.
+ *
+ * **Example** (Decode a known and a newer kind)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { RecordedAdmissionWorkKind } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const decode = S.decodeUnknownOption(RecordedAdmissionWorkKind)
+ * console.log(O.isSome(decode("review-fix"))) // true
+ * console.log(O.isSome(decode("cache-qualification"))) // true
+ * console.log(O.isSome(decode(""))) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const RecordedAdmissionWorkKind = S.Union([AdmissionWorkKind, UnrecognizedAdmissionWorkKind]).pipe(
+  $I.annoteSchema("RecordedAdmissionWorkKind", {
+    description: "Admission work kind recorded in shared scheduler state: a known kind or one from a newer writer.",
+  })
+);
+
+/**
+ * Admission work kind recorded in shared scheduler state.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RecordedAdmissionWorkKind = typeof RecordedAdmissionWorkKind.Type;
 
 /**
  * Queue ordering class for one admission request.
@@ -272,7 +364,7 @@ const admissionOwnerFields = {
   ...attemptInputFactFields,
   pid: S.Finite,
   procStart: S.String,
-  kind: AdmissionWorkKind,
+  kind: RecordedAdmissionWorkKind,
   weightTokens: S.Finite,
   priority: AdmissionPriority,
   originKey: S.String,
@@ -289,6 +381,194 @@ const admissionOwnerFields = {
 };
 
 /**
+ * The work one admission charges for: a whole tier, one lane or one package task.
+ *
+ * **Details**
+ *
+ * `tier` is the whole work kind as one unit, the grain every admission has
+ * today. `lane` is one gate family ({@link GateRouteId}). `package` is one
+ * Turbo task of one (scoped) workspace package; its Turbo task id is
+ * `<packageName>#<task>`. A record written before units existed carries no
+ * unit and reads as a whole tier.
+ *
+ * **Example** (Build a package unit)
+ *
+ * ```ts
+ * import { ScopedPackageName } from "@beep/package-json/PackageName"
+ * import { AdmissionUnit } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const unit = AdmissionUnit.cases.package.make({ packageName: ScopedPackageName.make("@beep/repo-cli"), task: "test" })
+ * console.log(AdmissionUnit.guards.package(unit)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionUnit = S.TaggedUnion({
+  tier: {},
+  lane: { lane: GateRouteId },
+  package: { packageName: ScopedPackageName, task: S.NonEmptyString },
+}).pipe(
+  $I.annoteSchema("AdmissionUnit", {
+    description: "The work one admission charges for: a whole tier, one gate-family lane, or one package Turbo task.",
+  })
+);
+
+/**
+ * The work one admission charges for.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionUnit = typeof AdmissionUnit.Type;
+
+/**
+ * Where an admission's token weight came from.
+ *
+ * **Details**
+ *
+ * `static-seed` is the per-kind table ({@link admissionTokenWeight}), which
+ * the scheduler may still clamp to the machine ceiling. `measured` is a weight
+ * calibrated from `sampleCount` observed memory envelopes.
+ * `conservative-fallback` is a conservative bound used when no qualifying
+ * measurement exists. A record written before weight sources existed carries
+ * none and reads as the static seed.
+ *
+ * **Example** (Recognize a measured weight)
+ *
+ * ```ts
+ * import { AdmissionWeightSource } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const source = AdmissionWeightSource.cases.measured.make({ sampleCount: 14 })
+ * console.log(AdmissionWeightSource.guards.measured(source)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionWeightSource = S.TaggedUnion({
+  "static-seed": {},
+  measured: { sampleCount: S.Int.check(S.isGreaterThan(0)) },
+  "conservative-fallback": {},
+}).pipe(
+  $I.annoteSchema("AdmissionWeightSource", {
+    description:
+      "Where an admission's token weight came from: the static seed, a measurement, or a conservative bound.",
+  })
+);
+
+/**
+ * Where an admission's token weight came from.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionWeightSource = typeof AdmissionWeightSource.Type;
+
+/**
+ * The proof that owns an admitted unit.
+ *
+ * **Details**
+ *
+ * `proofNonce` names the proof the unit belongs to; for a whole-tier unit it
+ * is the record's own nonce. The owner carries the attribution a journal row
+ * needs on its own (checkout, branch, origin, command, attempt), so a row can
+ * be attributed after the checkout's attempt journal is gone.
+ *
+ * **Example** (Construct an owner)
+ *
+ * ```ts
+ * import { AdmissionOwner } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const owner = AdmissionOwner.make({
+ *   proofNonce: "d0a7b0dc-54ec-4b51-95c7-6fafdc18d206",
+ *   pid: 1234,
+ *   procStart: "8241991",
+ *   originKey: "aaaabbbbcccc",
+ *   checkoutRoot: "/repo",
+ *   branch: "feat/x",
+ *   command: "bun run beep yeet verify"
+ * })
+ * console.log(owner.branch) // "feat/x"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AdmissionOwner extends S.Opaque<AdmissionOwner, { readonly brand: unique symbol }>()(
+  S.Struct({
+    proofNonce: S.String,
+    ...Struct.pick(admissionOwnerFields, ["attemptId", "pid", "procStart", "originKey", "checkoutRoot", "branch"]),
+    command: S.String,
+  }).pipe(
+    $I.annoteSchema("AdmissionOwner", {
+      description: "The proof that owns an admitted unit, with the attribution a journal row needs on its own.",
+    })
+  )
+) {}
+
+/**
+ * Encoded form of {@link AdmissionOwner}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace AdmissionOwner {
+  /**
+   * Encoded form of {@link AdmissionOwner}.
+   *
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AdmissionOwner.Encoded;
+}
+
+// A present value this revision cannot read (a newer unit variant, weight
+// source or owner shape) is dropped to None instead of failing the record.
+const unrecognizedAsNone = () => Effect.succeedSome(O.none());
+
+/**
+ * Admission-unit fields carried by tickets, leases and journal rows (SCHE-08).
+ *
+ * **Details**
+ *
+ * Each field is an optional key read as an `Option`. A record from before
+ * these fields existed reads `None` for all three: a whole-tier unit, the
+ * static-seed weight, and the record's own process as owner. A present value
+ * this revision cannot decode also reads `None`, so the record stays live and
+ * charged. Writers emit the keys only when the admission protocol's `units`
+ * gate is on; with it off every record is byte-identical to the pre-unit
+ * format.
+ *
+ * **Example** (Reuse the unit field group)
+ *
+ * ```ts
+ * import { admissionUnitFields } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(Object.keys(admissionUnitFields)) // ["unit", "weightSource", "owner"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const admissionUnitFields = {
+  unit: AdmissionUnit.pipe(
+    S.OptionFromOptionalKey,
+    S.catchDecoding(unrecognizedAsNone),
+    S.withConstructorDefault(Effect.succeedNone)
+  ),
+  weightSource: AdmissionWeightSource.pipe(
+    S.OptionFromOptionalKey,
+    S.catchDecoding(unrecognizedAsNone),
+    S.withConstructorDefault(Effect.succeedNone)
+  ),
+  owner: AdmissionOwner.pipe(
+    S.OptionFromOptionalKey,
+    S.catchDecoding(unrecognizedAsNone),
+    S.withConstructorDefault(Effect.succeedNone)
+  ),
+};
+
+/**
  * One active admission lease: heavy work currently charged against capacity.
  *
  * `pid` plus `procStart` (procfs on Linux, otherwise a prefixed platform
@@ -296,7 +576,9 @@ const admissionOwnerFields = {
  * are reaped only when the pid is dead or the recorded identity no longer
  * matches. The lease retains the originating
  * ticket identity (`nonce`) and queue instant (`enqueuedAtMillis`); legacy
- * lease files decode those fields with `""` and `0` sentinels.
+ * lease files decode those fields with `""` and `0` sentinels. The unit,
+ * weight source and owner ({@link admissionUnitFields}) are optional keys, and
+ * `kind` reads a newer writer's kind as unrecognized instead of failing.
  *
  * **Example** (Construct a lease value)
  *
@@ -341,6 +623,7 @@ export class YeetAdmissionLease extends S.Opaque<YeetAdmissionLease, { readonly 
     nonce: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefaultKey(Effect.succeed(""))),
     hotPaths: ArrayKeyDefaultEmpty(S.String),
     runScope: S.optionalKey(RunScopeRecord),
+    ...admissionUnitFields,
   }).pipe(
     $I.annoteSchema("YeetAdmissionLease", {
       description: "One machine-wide admission lease charging heavy repository work against memory capacity.",
@@ -365,6 +648,12 @@ export declare namespace YeetAdmissionLease {
 
 /**
  * One durable queue ticket: a contender waiting for admission.
+ *
+ * **Details**
+ *
+ * The unit, weight source and owner ({@link admissionUnitFields}) are optional
+ * keys written only behind the admission protocol's `units` gate; the lease
+ * and journal rows copy them from the ticket.
  *
  * **Example** (Construct a ticket value)
  *
@@ -402,6 +691,7 @@ export class YeetAdmissionTicket extends S.Opaque<YeetAdmissionTicket, { readonl
       S.withDecodingDefaultKey(Effect.succeed(0))
     ),
     nonce: S.String,
+    ...admissionUnitFields,
   }).pipe(
     $I.annoteSchema("YeetAdmissionTicket", {
       description: "One durable admission-queue ticket owned by a waiting contender process.",
@@ -682,6 +972,8 @@ export class AdmissionConfig extends S.Opaque<AdmissionConfig, { readonly brand:
  * `gateRoute` names the gate family the work proves, when the caller knows it.
  * On a `worker` compute profile a hosted-only route is refused unless
  * `forceLocal` is set; both default so existing callers are unchanged.
+ * `unit` defaults to the whole tier and `weightSource` to the static seed;
+ * the scheduler records them only behind the protocol's `units` gate.
  *
  * **Example** (Build a full-proof request)
  *
@@ -716,6 +1008,10 @@ export class AdmissionRequest extends S.Opaque<AdmissionRequest, { readonly bran
     command: S.String,
     gateRoute: GateRouteId.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     forceLocal: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    unit: AdmissionUnit.pipe(S.withConstructorDefault(Effect.succeed(AdmissionUnit.cases.tier.make({})))),
+    weightSource: AdmissionWeightSource.pipe(
+      S.withConstructorDefault(Effect.succeed(AdmissionWeightSource.cases["static-seed"].make({})))
+    ),
   }).pipe(
     $I.annoteSchema("AdmissionRequest", {
       description: "One admission request for heavyweight repository work.",

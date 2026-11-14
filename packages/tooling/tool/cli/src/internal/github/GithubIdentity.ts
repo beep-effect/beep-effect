@@ -482,6 +482,7 @@ export const layerGithubClientFor: {
               )
             : // KEEP (D-05): the gh login token is repo-cli identity policy, read on `@beep/commands`
               // `Run.text` through `readSecretOutput`; `@beep/github` takes only a token.
+              // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-05), reason above
               yield* readSecretOutput("gh", ["auth", "token"], cwd, "token-unavailable", "a gh login token");
         const tokenLabel = yield* resolveGithubIdentityLabel({ ...labelInput, token: O.some(token) });
         const fingerprint = yield* credentialFingerprint(token);

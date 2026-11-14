@@ -357,6 +357,7 @@ export const readYeetRulesetRequiredContexts = Effect.fn("Yeet.readYeetRulesetRe
   const base = baseBranchName(context.base);
   const readAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   // KEEP (D-13): the raw branch-rules payload has no kit resource.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
   const read = runRepoCommandCapture(
     "gh",
     ["api", `repos/{owner}/{repo}/rules/branches/${base}`],

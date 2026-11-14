@@ -32,17 +32,23 @@ loads. The package also owns the root oxlint custom plugin for repository-specif
 | `no-hand-built-identity-annotation` | error | all | No annotation object whose `identifier` is built from a `$I` composer; use `$I.annote(...)`. |
 | `prefer-exact-optional-key` | error | all | Schema fields use exact optional keys (EF-40). |
 | `no-hand-rolled-canonical-json` | error | `**/src/**` except `@beep/jsonc` | No JSON object text built as braces around a join of members; canonical bytes come from `JsoncFingerprint.canonicalizeResult` (`goals/canonical-digest-owner`). |
+| `no-citation-optional-invocation` | error | `packages/law-practice/server/src/internal/Citation/**` | Citation authority is explicit; no optional `serviceOption`/`getOption`/`getOrUndefined` lookups. |
+| `no-hand-rolled-git-gh-spawn` | error | repo-cli and ai-metrics `src/**` | No hand-rolled `git`/`gh` spawn (program literal plus argv, `{ command, args }` runner spec, Bun argv, `ghOutput`); use `@beep/git`, `@beep/github`, `@beep/commands`, or `biome-ignore ...: KEEP (D-nn): <reason>` (`goals/repo-cli-gh-git-consolidation`, D-23). |
+| `no-unrecorded-spawner-double` | error | repo-cli and ai-metrics `test/**` | No hand-rolled `ChildProcessSpawner.make(...)` double; use `ScriptedSpawner`, or `biome-ignore ...: Own double: <reason>` (D-14). Never-spawn `Effect.die` guards are exempt. |
 
 Scope is set where the root `biome.jsonc` registers the rule: the top-level
 `plugins` array for `all`, an `overrides` entry otherwise. The presets in
-`configs/` list every rule flat.
+`configs/` list the rules flat, except the rules scoped to one package's
+paths (`no-native-error`, `no-citation-optional-invocation`,
+`no-hand-rolled-git-gh-spawn`, `no-unrecorded-spawner-double`), whose scope a
+flat preset cannot express.
 
 ## Authoring GritQL rules
 
 - A new rule lands in five places: the `.grit` file, its entry in
   `src/index.ts` (`RULE_NAMES`, `RuleRegistrySchema`, `RULES`), its `SOURCES`
-  fixture in `test/sources.ts`, the presets in `configs/`, and the root
-  `biome.jsonc`. The registry test fails when the root config misses a rule.
+  fixture in `test/sources.ts`, the presets in `configs/` (unless
+  path-scoped), and the root `biome.jsonc`. The registry test fails when the root config misses a rule.
 - Messages read `Rule: … Why: … Fix: …`, and the fix names the replacement
   API or the command that migrates to it.
 - Exceptions: path scope lives in the root override, whose `includes` takes
@@ -56,7 +62,14 @@ Scope is set where the root `biome.jsonc` registers the rule: the top-level
   text as written (a template's backticks and `\n` escapes included), and a
   spread before one element matches (`pipe($..., $last)`). A spread before
   two adjacent elements (`flow($..., $a, $b, $...)`) matched only when `$a`
-  was the first argument; check adjacency with `some` over the argument list.
+  was the first argument; check adjacency with `some` over the argument list,
+  or spell each position as its own snippet (`$f($first, $a, $b, $...)`).
+- `$program` is a reserved GritQL variable (the file's root node): binding it
+  in a snippet fails with "Failed to compile the Grit plugin". Biome prints no
+  further detail, so bisect a failing rule by halves.
+- An `or { a, b } as $x where { ... }` commits to the first branch whose
+  pattern matches and does not retry the next one when the `where` fails; put
+  each branch's own conditions in a `where` on that branch.
 - Keep `within` and `contains` behind a rare match. Measure a rule with a
   config that loads only its plugin over `packages apps infra`, against the
   same config with no plugins.

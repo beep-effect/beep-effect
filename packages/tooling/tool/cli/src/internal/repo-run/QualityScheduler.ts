@@ -52,6 +52,8 @@ import {
   AdmissionJournalRouted,
   AdmissionJournalTicketEvictedV3,
   AdmissionJournalWithdrawn,
+  AdmissionProtocol,
+  AdmissionUnitEmission,
   acquireJournalFileLock,
   appendAdmissionEvictionJournalEvent,
   appendAdmissionJournalEvent,
@@ -73,6 +75,7 @@ import {
   AdmissionConfig,
   AdmissionCoordinationProtocol,
   AdmissionLeaseReapClaim,
+  AdmissionOwner,
   AdmissionPromotionPhase,
   AdmissionPromotionTransition,
   AdmissionReapClaim,
@@ -481,7 +484,35 @@ export const setAdmissionEvictionProtocol = Effect.fn("QualityScheduler.setAdmis
   eviction: AdmissionEvictionEmission
 ) {
   const directories = yield* ensureAdmissionDirectories();
-  return yield* writeAdmissionProtocol(directories.root, eviction);
+  return yield* writeAdmissionProtocol(directories.root, (current) => AdmissionProtocol.make({ ...current, eviction }));
+});
+
+/**
+ * Atomically change whether writers record admission-unit fields (SCHE-08).
+ *
+ * **Details**
+ *
+ * Turn it on only once every live checkout runs a revision that reads the unit,
+ * weight source and owner keys. The eviction gate keeps its state.
+ *
+ * **Example** (Reference the unit-gate writer)
+ *
+ * ```ts
+ * import { setAdmissionUnitProtocol } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof setAdmissionUnitProtocol) // "function"
+ * ```
+ *
+ * @param units - Desired admission-unit field emission state.
+ * @returns The protocol marker that was published.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const setAdmissionUnitProtocol = Effect.fn("QualityScheduler.setAdmissionUnitProtocol")(function* (
+  units: AdmissionUnitEmission
+) {
+  const directories = yield* ensureAdmissionDirectories();
+  return yield* writeAdmissionProtocol(directories.root, (current) => AdmissionProtocol.make({ ...current, units }));
 });
 
 // Staging siblings are named `<target>.tmp-<pid>[-<start identity>]-<uuid>`.
@@ -1441,6 +1472,9 @@ const promotionAdmissionEvent = (transition: AdmissionPromotionTransition): Admi
     enqueuedAtMillis: transition.ticket.enqueuedAtMillis,
     admittedAtMillis: transition.lease.admittedAtMillis,
     attemptId: transition.ticket.attemptId,
+    unit: transition.ticket.unit,
+    weightSource: transition.ticket.weightSource,
+    owner: transition.ticket.owner,
   });
 
 const readPromotionLease = Effect.fnUntraced(function* (
@@ -2045,6 +2079,9 @@ const stageSelfLease = Effect.fnUntraced(function* (
     computeProfile: ticket.computeProfile,
     stage: ticket.stage,
     forceLocal: ticket.forceLocal,
+    unit: ticket.unit,
+    weightSource: ticket.weightSource,
+    owner: ticket.owner,
   });
   const leasePath = path.join(directories.leases, `${ticket.nonce}-${ticket.pid}.lease.json`);
   const promotionPath = promotionTransitionPath(path, directories, ticket.nonce);
@@ -2361,6 +2398,9 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
           attemptId: admitted.lease.attemptId,
           checkoutRoot: admitted.lease.checkoutRoot,
           branch: admitted.lease.branch,
+          unit: admitted.lease.unit,
+          weightSource: admitted.lease.weightSource,
+          owner: admitted.lease.owner,
           ...OptionUtils.getSomesStruct({
             memoryPeakBytes: O.fromUndefinedOr(telemetry.memoryPeakBytes),
           }),
@@ -2423,6 +2463,15 @@ const workerProfileRefusal = (
     )
   );
 };
+
+// The admission-unit fields a new ticket carries (SCHE-08). They are recorded
+// only while the protocol's units gate is on; with it off every ticket, lease
+// and journal row keeps the pre-unit bytes. The lease and rows copy the ticket.
+const admissionUnitFieldsFor = (units: AdmissionUnitEmission, request: AdmissionRequest, owner: AdmissionOwner) =>
+  AdmissionUnitEmission.match(units, {
+    off: () => ({ unit: O.none(), weightSource: O.none(), owner: O.none() }),
+    on: () => ({ unit: O.some(request.unit), weightSource: O.some(request.weightSource), owner: O.some(owner) }),
+  });
 
 const workerBypassLine = (request: AdmissionRequest): string =>
   `[yeet] admission: compute-profile=worker${request.forceLocal ? " force-local=true" : ""}; coordinating ${request.kind} through the origin gate only`;
@@ -2612,6 +2661,18 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
   const nowMillis = yield* Clock.currentTimeMillis;
   const processStartIdentityForPid9 = yield* processStartIdentityForPid(process.pid);
   const procStart = O.getOrElse(processStartIdentityForPid9, () => "");
+  const nonce = yield* SecureRandom.SecureRandom.use((crypto) => crypto.uuidV4());
+  const protocol = yield* readAdmissionProtocol(directories.root);
+  const owner = AdmissionOwner.make({
+    proofNonce: nonce,
+    pid: process.pid,
+    procStart,
+    attemptId: admittedRequest.attemptId,
+    originKey: admittedRequest.originKey,
+    checkoutRoot: admittedRequest.checkoutRoot,
+    branch: admittedRequest.branch,
+    command: admittedRequest.command,
+  });
   const ticket = YeetAdmissionTicket.make({
     schemaVersion: "yeet-admission-ticket/v1",
     pid: process.pid,
@@ -2625,7 +2686,7 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
     coordinationProtocol: AdmissionCoordinationProtocol.Enum["scheduler-origin-concurrency/v1"],
     enqueuedAtMillis: nowMillis,
     heartbeatAtMillis: nowMillis,
-    nonce: yield* SecureRandom.SecureRandom.use((crypto) => crypto.uuidV4()),
+    nonce,
     attemptId: admittedRequest.attemptId,
     resolvedHeadSha: admittedRequest.resolvedHeadSha,
     diffFingerprint: admittedRequest.diffFingerprint,
@@ -2634,6 +2695,7 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
     computeProfile: O.some(computeProfile.profile),
     stage: admittedRequest.stage,
     forceLocal: admittedRequest.forceLocal,
+    ...admissionUnitFieldsFor(protocol.units, admittedRequest, owner),
   });
   const ticketPath = path.join(directories.queue, `${ticket.nonce}-${ticket.pid}.ticket.json`);
   return yield* Effect.uninterruptibleMask((restore) =>

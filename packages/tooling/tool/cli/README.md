@@ -617,6 +617,21 @@ The v3 lease eviction copies the last heartbeat from the lease saved in that
 claim, so delayed recovery retains the original observation. `evictedAtMillis`
 is the claim instant, not an asserted process death time.
 
+Tickets, leases and the enqueue, admission, v3 release and withdrawal rows may
+also carry three optional admission-unit keys (SCHE-08): `unit` (`tier`, a
+`lane` gate family, or a `package` with its Turbo task), `weightSource`
+(`static-seed`, `measured` with a sample count, or `conservative-fallback`) and
+`owner` (the owning proof's nonce, process, attempt, checkout, branch, origin
+and command). Writers add them only when `protocol.json` carries
+`units: "on"` (`bun run beep quality scheduler protocol --units on`); the key
+defaults to `off`, and with it off every record keeps its pre-unit bytes. Turn
+it on only once every live checkout runs a revision that reads the keys. An
+older checkout that rewrites the marker drops the key, which turns the fields
+off again. Readers treat an absent key as a whole-tier unit with the static
+seed, read a value they cannot decode as absent instead of failing the record,
+and read a work kind from a newer writer as an unrecognized kind that stays
+charged by its `weightTokens`.
+
 Preservation-era v1/v2 readers treat v3 rows as opaque: locked rewrites keep
 their original bytes and relative source order, including across ring trimming.
 The new reader decodes every supported version. Versioned releases and evictions
