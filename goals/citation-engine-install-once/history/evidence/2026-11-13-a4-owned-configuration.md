@@ -382,3 +382,45 @@ unchanged) and `CitationEngineLayer` (15/15). `package-verify --quick`,
 `lint:laws` (effect-fn 0), fallow audit vs `origin/main` (0 introduced),
 `docgen:local`, biome, typecheck and effect-vitest (0 introduced, 0
 resolved) pass.
+
+## Coverage floors after the test deletions
+
+Focused Bun/Istanbul runs, one small source-specific group at a time, `nice -n
+15`, `--maxWorkers=1`, with `--coverage.include` restricted to the named source.
+No package-wide coverage, baseline writer, floor changes or coverage ignores.
+Percentages below are functions / statements (and lines where gated), followed
+by the hosted floor. Each group passed.
+
+| File | Uncovered code and disposition | Focused result versus floor |
+| --- | --- | --- |
+| AnnotationEntry.ts | Dead configurationFailure mapper: typed limits and literal annotate cannot fail Unicode constructor decoding. Deleted mapper; retain the constructor validation as an invariant. | 100 / 100 >= 100 / 100 |
+| CleanerRegistry.ts | Dead hash-constructor runtime-failed and dictionary-constructor invalid-input mappers: both receive schema-valid fields from typed limits and fixed limit names. Deleted mappers; constructor validations remain invariants. Live byte-comparison branches remain. | 100 / 99.04 >= 98.52 / 98.59 |
+| ExtractorOrdering.ts | Dead missing-key/class mappers and set-failed fallback: key/class maps and selector use the same captured bindings; set keys come only from those maps, comparison only yields, and set limits come from typed limits. Deleted refusal callbacks; missing keys/limit metadata are invariants. Entry/iteration ceiling translation remains. | 100 / 100 >= 92.85 / 97.72 |
+| HelperConfigurations.ts | Live invalid-data and invalid-policy callbacks at the raw assembly boundary. Added malformed-bindings and malformed-policy test against the real helper with authenticated asset bytes; verifies failures and zero child processes. | 100 / 100; lines 100 >= 75 / 94.11; lines 93.75 |
+| MetadataYear.ts | Dead invalid-bound callback: SourceDateYear first validates 1..9999, so adding one always satisfies 2..10000. Deleted callback; retained bound range validation as an invariant and retained invalid-clock refusal. | 100 / 100; lines 100 >= 100 / 100; lines 100 |
+| RecognizerWorker.ts | Dead admission-install error mapper: prepareCitationAdmissionPolicy now only returns typed limits and normalized duration; removed its unused callback parameter and updated all four callers. Live source-limit translation is exercised by existing CitationExtractorControls backend-failure fixture. Consolidated lifecycle invalid-runtime thunk into the existing failure factory; lifecycle checks remain. | 100 / 100 >= 100 / 100 |
+| RegexWorker.ts | Same dead admission callback; consolidated lifecycle thunk while preserving its guard. Live generated descriptor binder now tested for duplicate refusal, successful binding, and bound evaluator quota refusal with no spawn. | 100 / 97.77 >= 90.9 / 93.93 |
+| RegexWorkerProtocol.ts | Dead job-preparer invalid-runtime mapper: typed limits and fixed roles cannot fail input construction. Deleted mapper, retaining constructor validation as invariant. Deleted impossible post-encode byte-count mismatch: immutable prepared carriers encode to the fixed ASCII header plus exact base64 lengths and newline already counted; full-envelope preflight and actual maximum refusal remain. | 100 / 100 >= 100 / 98.64 |
+
+Focused groups (test basenames, all under the server test directory):
+
+- AnnotationEntry: CitationAnnotationEntry, CitationAnnotationEntryCoverage,
+  CitationAnnotationFailure.
+- CleanerRegistry: CitationCleanerRegistry, CitationCleanerParentBudget,
+  CitationDocumentCleanerProtocols.
+- ExtractorOrdering: CitationExtractorOrdering.
+- HelperConfigurations: CitationHelperConfigurations.
+- MetadataYear: CitationMetadataYear.
+- RecognizerWorker: CitationRecognizerWorker, CitationExtractorControls
+  (the initial diagnostic group also included CitationRecognizerProgram).
+- RegexWorker: CitationRegexWorker (the diagnostic expansion also included
+  CitationReferenceTokenExtractionCoverage and CitationReferencePatternsCoverage).
+- RegexWorkerProtocol: CitationRegexWorkerProtocol.
+
+Validation: both edited test files pass individually; package typecheck and
+`lint:laws`, changed-file Biome, root oxlint, `package-verify --quick`,
+effect-vitest (zero introduced), `docgen:local`, and fallow audit against
+`origin/main` (zero introduced) pass. Effect-vitest's unrelated positional
+refresh was restored to HEAD; no inventory change is included.
+`CitationCanonicalFullSpan` passed 12/12 in 63.17 seconds: one construction
+detach, 291 evaluations and 291 child processes across ten calls remain pinned.

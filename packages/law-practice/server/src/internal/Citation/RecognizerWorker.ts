@@ -57,8 +57,7 @@ export class CitationRecognizerFailure extends S.TaggedError<
     description: "Source-free isolated recognition refusal.",
   })
 ) {}
-const fail = (reason: typeof Reason.Type) => CitationRecognizerFailure.make({ reason });
-const invalid = () => fail("invalid-runtime");
+const fail = (reason: typeof Reason.Type = "invalid-runtime") => CitationRecognizerFailure.make({ reason });
 const isFailure = S.is(CitationRecognizerFailure);
 const isSafety = S.is(CitationSafetyLimitExceeded);
 const isDriverFailure = S.is(EyeciteFailure);
@@ -74,7 +73,7 @@ export const makeCitationRecognizerWorker = Effect.fn("Citation.makeRecognizerWo
   const timing = yield* makeCitationRegexTiming(limits, false);
   const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
     CitationSafetyLimitExceeded.make({ operation: timing.operation, limit });
-  const admission = yield* captureCitationNativeAdmission(limits, invalid);
+  const admission = yield* captureCitationNativeAdmission(limits);
   const owner = yield* makeCitationNativeProcessOwner<CitationRecognizerFailure | CitationSafetyLimitExceeded>(
     limits,
     timing.operation,
@@ -114,7 +113,7 @@ export const makeCitationRecognizerWorker = Effect.fn("Citation.makeRecognizerWo
         return yield* withCitationNativeProcess(
           owner,
           acquireCitationNativeLease(admission, timing.operation, true, fail),
-          invalid,
+          fail,
           Effect.fnUntraced(function* (operation) {
             yield* operation.acquire;
             const child = yield* operation.start(command);

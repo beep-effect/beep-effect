@@ -68,14 +68,11 @@ export class CitationNativeProcessAdmission extends Context.Service<
 /** Capture the existing composed owner, or install the standalone fallback.
  * @internal @category operations @since 0.0.0
  */
-export const captureCitationNativeAdmission = Effect.fn("Citation.captureNativeAdmission")(function* <E>(
-  policy: CitationEngineLimits,
-  invalid: () => E
+export const captureCitationNativeAdmission = Effect.fn("Citation.captureNativeAdmission")(function* (
+  policy: CitationEngineLimits
 ) {
   const supplied = yield* Effect.serviceOption(CitationNativeProcessAdmission);
-  return O.isSome(supplied)
-    ? supplied.value
-    : yield* makeCitationNativeProcessAdmission(policy).pipe(Effect.mapError(invalid));
+  return O.isSome(supplied) ? supplied.value : yield* makeCitationNativeProcessAdmission(policy);
 });
 /** Preserve the existing total/regex acquisition and closed boundary translation.
  * @internal @category operations @since 0.0.0

@@ -77,7 +77,7 @@ export const makeCitationDiffWorker = Effect.fn("Citation.makeDiffWorker")(funct
     },
     engineOperation
   );
-  const admission = yield* captureCitationNativeAdmission(limits, () => failure("invalid-runtime"));
+  const admission = yield* captureCitationNativeAdmission(limits);
   const owner = yield* makeCitationNativeProcessOwner(limits, engineOperation, failure);
   const path = yield* Path.Path;
   const assetPath = yield* path

@@ -162,6 +162,24 @@ const assertModeCaptures = Effect.fn("RegexWorkerTest.assertModeCaptures")(funct
 });
 
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices: true })("owned native regex", (it) => {
+  it.effect("refuses duplicate generated descriptor bindings before spawning", () =>
+    Effect.gen(function* () {
+      const { worker, observed } = yield* setup([descriptor]);
+      const bindings = yield* ownCitationTestConfiguration(S.Array(CitationRegexPatternDescriptor), [
+        descriptor,
+        descriptor,
+      ]);
+      const duplicate = yield* worker.bindDescriptors(bindings).pipe(Effect.flip);
+      expect(duplicate).toMatchObject({ reason: "invalid-bindings" });
+      const generated = yield* worker.bindDescriptors(A.take(bindings, 1));
+      const { limits } = yield* defaultCitationEnginePolicy;
+      const bind = yield* makeCitationTestScaffoldBinding(limits);
+      const invalidQuota = yield* bind(generated.evaluate)(pattern, native("b ab"), 0, -1).pipe(Effect.flip);
+      expect(invalidQuota).toMatchObject({ reason: "invalid-runtime" });
+      const exits = yield* observed.snapshot;
+      expect(exits).toEqual({ spawned: 0, confirmed: 0 });
+    })
+  );
   it.effect("rejects malformed policy, runtime and match quotas before spawning", () =>
     Effect.gen(function* () {
       const { worker, observed } = yield* setup([descriptor]);

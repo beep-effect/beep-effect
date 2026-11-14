@@ -62,6 +62,24 @@ it.layer(citationTokenizerTestLayer)("production helper configurations", (it) =>
       { timeout: 60000 }
     );
   });
+  it.effect("refuses malformed bindings and policy at the raw assembly boundary", () =>
+    Effect.gen(function* () {
+      const expected = yield* installCitationExtractionLoopFixture("bun");
+      const bindings = expected.configuration.full.editions;
+      const invalidData = yield* makeCitationHelperConfigurations(expected.setup.limits, assetPath, null).pipe(
+        DateTime.withCurrentZoneOffset(0),
+        Effect.flip
+      );
+      expect(invalidData).toMatchObject({ reason: "invalid-data" });
+      const invalidPolicy = yield* makeCitationHelperConfigurations(null, assetPath, bindings).pipe(
+        DateTime.withCurrentZoneOffset(0),
+        Effect.flip
+      );
+      expect(invalidPolicy).toMatchObject({ _tag: "CitationMetadataYearFailure", reason: "invalid-policy" });
+      const observed = yield* expected.setup.observed.snapshot;
+      expect(observed).toEqual({ spawned: 0, confirmed: 0 });
+    })
+  );
   it.effect("refuses changed, truncated, appended and absent assets", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
