@@ -488,9 +488,8 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
       const dirty = yield* scan;
       expect([clean.totals.missingExportSince, dirty.totals.missingExportSince]).toEqual([0, 1]);
 
-      const exit = yield* Effect.exit(ratchet(false));
-      exit.pipe(Exit.isFailure, assertTrue);
-      expect(Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "").toContain("JSDoc totals regression baseline grew.");
+      const failure = yield* Effect.flip(ratchet(false));
+      expect(failure.message).toBe("JSDoc totals regression baseline grew.");
       const committedCopy = yield* fs.exists(path.join(repoRoot, "standards", "jsdoc-documentation.inventory.jsonc"));
       expect(committedCopy).toBe(false);
     })
