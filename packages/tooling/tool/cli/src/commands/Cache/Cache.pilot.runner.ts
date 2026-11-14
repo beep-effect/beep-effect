@@ -33,8 +33,9 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { AdmissionRequest } from "../../internal/repo-run/QualityScheduler.schemas.ts";
-import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo-run/QualityScheduler.ts";
+import { AdmissionRequest, admissionTokenWeight } from "../../internal/repo-run/QualityScheduler.schemas.ts";
+import { QualityScheduler } from "../../internal/repo-run/QualityScheduler.service.ts";
+import { noAdmissionOriginGate } from "../../internal/repo-run/QualityScheduler.ts";
 import { withCacheProducerAdapter } from "./Cache.adapter.ts";
 import { CacheConformanceProxyOptions, makeCacheConformanceSocketProxy } from "./Cache.conformance.proxy.ts";
 import { CacheConformanceTarget } from "./Cache.conformance.schemas.ts";
@@ -146,10 +147,11 @@ const withSignedPilotAdmission = Effect.fn("CachePilot.withAdmission")(function*
   runnerRoot: string,
   use: Effect.Effect<Success, Error, Requirements>
 ) {
-  return yield* withQualityAdmission(
+  const scheduler = yield* QualityScheduler;
+  return yield* scheduler.admit(
     AdmissionRequest.make({
-      kind: "review-fix",
-      weightTokens: 1,
+      kind: "cache",
+      weightTokens: admissionTokenWeight("cache"),
       priority: "verify",
       originKey: "",
       checkoutRoot: runnerRoot,
@@ -212,6 +214,7 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
       const node = yield* fs.realPath(request.pilot.nodeExecutable);
       const dependencies = yield* readCacheDependencyMaterialization(sourceRoot, request.pilot.dependencies);
       // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
+      // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
       const git = yield* runCapturedStreams({
         command: "/usr/bin/git",
         args: ["rev-parse", "--path-format=absolute", "--git-common-dir"],

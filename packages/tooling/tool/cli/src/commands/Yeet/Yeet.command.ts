@@ -74,17 +74,24 @@ import {
   ProofJobExitCode,
   ProofJobRecord,
   ProofJobRequest,
+  ProofJobRuntimeCapRequest,
   ProofJobServiceResult,
   ProofJobSubmission,
   ProofJobSubmitter,
   ProofJobSystemdResult,
   ProofJobWaitOptions,
   ProofJobWaitOutcome,
+  proofJobRuntimeCapSeconds,
   proofJobSettledWaitOutcome,
   proofJobUnitName,
   proofJobWaitExitFor,
 } from "./internal/ProofJob.ts";
-import { ProofJobLauncher, ProofJobWaitResult, reportProofJobCommand } from "./internal/ProofJobLauncher.ts";
+import {
+  ProofJobLauncher,
+  ProofJobWaitResult,
+  reportProofJobCommand,
+  submitProofJobReusingReadyMonitor,
+} from "./internal/ProofJobLauncher.ts";
 import { runYeetProofReportCommand } from "./internal/ProofShadow.ts";
 import { runYeetReady, yeetOpenReadyHooks } from "./internal/ReadyGate.ts";
 import { PositiveInt, ResumeOptions } from "./internal/Resume.schemas.ts";
@@ -469,7 +476,9 @@ const detachedFlags = {
   ),
   jobMaxRuntime: Flag.String("job-max-runtime").pipe(
     Flag.withDefault(""),
-    Flag.withDescription("Detached job runtime ceiling, for example '1 hour'")
+    Flag.withDescription(
+      "Detached job runtime ceiling, for example '1 hour'; 'none' asks for no ceiling, so a reused readiness monitor must have none"
+    )
   ),
 };
 
@@ -910,6 +919,51 @@ const durationMillis = Effect.fn("Yeet.jobDuration")(function* (text: string) {
     return yield* YeetCommandError.make({ message: "Job duration must be positive and finite." });
   return millis;
 });
+
+// The `--job-max-runtime` value that asks explicitly for no runtime cap.
+const YEET_JOB_MAX_RUNTIME_NONE = "none";
+
+/**
+ * Read `--job-max-runtime` as the runtime cap a detached job asks for.
+ *
+ * **Details**
+ *
+ * An empty value (the flag's default) asks for nothing, `none` asks explicitly
+ * for no cap, and any other value is a positive duration such as `6h` or
+ * `90 minutes`, rounded up to whole seconds for `RuntimeMaxSec`. A new job runs
+ * without a cap in the first two cases; they differ only when
+ * `monitor --until-ready --detach` would hand back a live monitor, which
+ * `none` refuses when that monitor has a cap.
+ *
+ * **Example** (Ask for six hours)
+ *
+ * ```ts
+ * import { yeetJobRuntimeCap } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = yeetJobRuntimeCap("6h")
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param text - The `--job-max-runtime` flag value.
+ * @returns The requested cap, or a typed command error for a value that is not a positive duration.
+ * @category codecs
+ * @since 0.0.0
+ */
+export const yeetJobRuntimeCap = Effect.fn("Yeet.jobRuntimeCap")(function* (
+  text: string
+): Effect.fn.Return<ProofJobRuntimeCapRequest, YeetCommandError> {
+  const parsed: Effect.Effect<ProofJobRuntimeCapRequest, YeetCommandError> = Match.value(text).pipe(
+    Match.when(Str.isEmpty, () => Effect.succeed(ProofJobRuntimeCapRequest.cases.unspecified.make({}))),
+    Match.when(YEET_JOB_MAX_RUNTIME_NONE, () => Effect.succeed(ProofJobRuntimeCapRequest.cases.uncapped.make({}))),
+    Match.orElse((value) =>
+      Effect.map(durationMillis(value), (millis) =>
+        ProofJobRuntimeCapRequest.cases.capped.make({ seconds: Math.ceil(millis / 1000) })
+      )
+    )
+  );
+  return yield* parsed;
+});
 const jobRoot = () => findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate job checkout.")));
 const renderJob = Effect.fn("Yeet.renderJob")(function* (record: ProofJobRecord, json: boolean) {
   if (json) {
@@ -949,11 +1003,12 @@ const submitDetachedProofJob = Effect.fn("Yeet.submitDetached")(function* (mode:
   const words = A.dropWhile(A.drop(process.argv, 2), (word) => word === "--");
   if (A.head(words).pipe(O.getOrElse(() => "")) !== "yeet")
     return yield* YeetCommandError.make({ message: "Cannot detach: original argv must begin with yeet." });
-  const maxRuntimeSeconds = Str.isEmpty(options.jobMaxRuntime)
-    ? O.none<number>()
-    : O.some(Math.ceil((yield* durationMillis(options.jobMaxRuntime)) / 1000));
+  const runtimeCap = yield* yeetJobRuntimeCap(options.jobMaxRuntime);
   const launcher = yield* ProofJobLauncher.make(root);
-  const record = yield* launcher.submit(
+  // A second `monitor --until-ready --detach` with the same readiness flags hands back the live job
+  // when its runtime cap is at least the one asked for.
+  const record = yield* submitProofJobReusingReadyMonitor(
+    launcher,
     ProofJobSubmission.make({
       request: ProofJobRequest.make({
         mode,
@@ -971,8 +1026,9 @@ const submitDetachedProofJob = Effect.fn("Yeet.submitDetached")(function* (mode:
       }),
       execPath: process.execPath,
       entrypoint: path.resolve(process.cwd(), entrypoint.value),
-      maxRuntimeSeconds,
-    })
+      maxRuntimeSeconds: proofJobRuntimeCapSeconds(runtimeCap),
+    }),
+    runtimeCap
   );
   yield* renderJob(record, options.json);
 });
@@ -1438,7 +1494,7 @@ const yeetReadyCommand = Command.make("ready", { ...porcelainFlags, inherited: r
 const finalCheckGatesFlag = Flag.String("gates").pipe(
   Flag.atMost(16),
   Flag.withDescription(
-    "Run only these final-check gates (comma separated or repeated); a subset writes an incomplete receipt that never admits yeet ready"
+    "Run only these final-check gates (comma separated or repeated); a subset writes an incomplete receipt to its own file under .beep/yeet/final-check/subsets/<head>/, never admits yeet ready, and leaves the head receipt as it was"
   )
 );
 

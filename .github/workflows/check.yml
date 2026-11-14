@@ -1417,8 +1417,23 @@ jobs:
           jobs_file="${RUNNER_TEMP}/coverage-producer-jobs.json"
           # Read every attempt explicitly: successful carried records have new
           # attempt numbers, but the original execution must remain available.
+          # GitHub answers 502 to a 100-job page of a rerun attempt's listing,
+          # every time; pages of 30 succeed. Other 5xx answers are retried.
+          read_attempt_jobs() {
+            local attempt="$1" try
+            for try in 1 2 3 4; do
+              if gh api --paginate --slurp "/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/attempts/${attempt}/jobs?per_page=30" > "${jobs_directory}/${attempt}.partial"; then
+                mv -- "${jobs_directory}/${attempt}.partial" "${jobs_directory}/${attempt}.json"
+                return 0
+              fi
+              rm -f -- "${jobs_directory}/${attempt}.partial"
+              if ((try < 4)); then sleep "$((try * 10))"; fi
+            done
+            echo "::error::The jobs of run ${GITHUB_RUN_ID} attempt ${attempt} could not be listed after 4 tries."
+            return 1
+          }
           for ((attempt=1; attempt<=GITHUB_RUN_ATTEMPT; attempt++)); do
-            gh api --paginate --slurp "/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/attempts/${attempt}/jobs?per_page=100" > "${jobs_directory}/${attempt}.json"
+            read_attempt_jobs "$attempt"
           done
           jq -s 'add' "${jobs_directory}/"*.json > "$jobs_file"
           labs_attempt="$(jq -er --argjson current "$GITHUB_RUN_ATTEMPT" '
@@ -1458,6 +1473,47 @@ jobs:
           pattern: unit-coverage-${{ github.run_id }}-*
           path: .beep/ci-coverage-inputs
           merge-multiple: false
+
+      # The action gives each artifact its own named directory only when two or
+      # more match: a lone match (Labs alone, when no Test Unit shard ran) is
+      # extracted straight into the path (download-artifact v8.0.2,
+      # src/download-artifact.ts). Move such files under the name the artifact
+      # was uploaded with, rebuilt from the manifest's own partition and identity,
+      # so the comparison below reads one layout. A manifest naming another run,
+      # an attempt not yet started or an unsafe partition is refused; the Labs
+      # check below still requires this run's exact producer attempt.
+      - name: Normalize coverage evidence layout
+        if: steps.lane-gate.outputs.should_run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          inputs=.beep/ci-coverage-inputs
+          # Several artifacts are already in named directories, and no artifact
+          # leaves no root manifest: the comparison then fails as it always has.
+          [[ -f "$inputs/manifest.json" ]] || exit 0
+          shopt -s dotglob nullglob
+          entries=("$inputs"/*)
+          for entry in "${entries[@]}"; do
+            if [[ -d "$entry" && "${entry##*/}" == unit-coverage-* ]]; then
+              echo "::error::Coverage evidence holds both a root manifest and the artifact directory ${entry##*/}."
+              exit 1
+            fi
+          done
+          name="$(jq -er --arg run "$GITHUB_RUN_ID" --argjson current "$GITHUB_RUN_ATTEMPT" '
+            if (.partitionId | type) == "string" and (.partitionId | test("^[a-z0-9]+(-[a-z0-9]+)*$"))
+              and .identity.runId == $run and (.identity.runAttempt | type) == "number"
+              and (.identity.runAttempt | floor) == .identity.runAttempt
+              and .identity.runAttempt >= 1 and .identity.runAttempt <= $current
+            then "unit-coverage-\($run)-\(.identity.runAttempt)-\(.partitionId)"
+            else error("The lone coverage artifact is not a partition manifest of this run") end
+          ' "$inputs/manifest.json")"
+          if [[ ! "$name" =~ ^unit-coverage-${GITHUB_RUN_ID}-[1-9][0-9]*-[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
+            echo "::error::Coverage artifact name ${name} is not a unit coverage artifact of run ${GITHUB_RUN_ID}."
+            exit 1
+          fi
+          mkdir "$inputs/$name"
+          mv -- "${entries[@]}" "$inputs/$name/"
+          echo "One coverage artifact was downloaded; its files now sit under $inputs/$name."
 
       - name: Compare coverage evidence
         if: steps.lane-gate.outputs.should_run == 'true'

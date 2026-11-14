@@ -12,7 +12,7 @@ import {
   catalogUsageReport,
   runCatalogUsageCheck,
 } from "@beep/repo-cli/test/Quality";
-import { MemoryStats } from "@beep/repo-cli/test/RepoRun";
+import { MemoryStats, QualitySchedulerLive } from "@beep/repo-cli/test/RepoRun";
 import { FsUtilsLive } from "@beep/repo-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -39,7 +39,6 @@ const [createPackageTemplateRoot] = CATALOG_USAGE_TEMPLATE_SOURCES;
 
 const CatalogUsageTestLayer = CatalogUsageSourceLive.pipe(Layer.provideMerge(NodeCommandTestLayer));
 
-// Own double: decorates the real platform spawner, failing only the generator-template listing.
 const failingTemplateListHandle = ChildProcessSpawner.makeHandle({
   all: Stream.empty,
   exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(128)),
@@ -61,6 +60,8 @@ const TemplateListFailureLayer = CatalogUsageSourceLive.pipe(
       ChildProcessSpawner.ChildProcessSpawner,
       Effect.gen(function* () {
         const real = yield* ChildProcessSpawner.ChildProcessSpawner;
+        // Own double: decorates the real platform spawner, failing only the generator-template listing.
+        // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
         return ChildProcessSpawner.make((command) =>
           ChildProcess.isStandardCommand(command) &&
           command.command === "git" &&
@@ -98,7 +99,8 @@ const QualityCommandTestLayer = Layer.mergeAll(
   Layer.succeed(
     MemoryStats,
     MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(128), ceilingGib: Effect.succeed(128) })
-  )
+  ),
+  QualitySchedulerLive
 );
 
 const findingKeys = (snapshot: CatalogUsageSnapshot): ReadonlyArray<string> =>

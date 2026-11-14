@@ -87,11 +87,28 @@ const PUBLIC_ORIGIN_PATTERN = new RegExp(
 );
 
 /**
- * Cheap pre-filter shared by every retired host: each one contains one of these
- * three names under the same case folding as the rule, so a file without them
- * cannot match.
+ * Rule 1's cheap pre-filter, generated from the retired-host rows.
+ *
+ * **Details**
+ *
+ * The pattern is the alternation of every row's escaped host under the rule's
+ * own `iu` flags. Every rule-1 match spells one of those hosts, so a file the
+ * pre-filter rejects cannot produce a finding, and adding a row widens both
+ * patterns at once.
+ *
+ * **Example** (Gate a text on the retired hosts)
+ *
+ * ```ts
+ * import { retiredIriAuthorityPrefilter } from "@beep/repo-cli/commands/Laws/RetiredIriAuthorities"
+ *
+ * console.log(retiredIriAuthorityPrefilter.test("nothing retired here")) // false
+ * console.log(retiredIriAuthorityPrefilter.flags) // "iu"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
  */
-const RETIRED_PREFILTER = /beep(?:-effect)?\.(?:dev|sh)/iu;
+export const retiredIriAuthorityPrefilter: RegExp = new RegExp(RETIRED_HOSTS, "iu");
 
 type RawMatch = {
   readonly index: number;
@@ -196,7 +213,7 @@ export const scanRetiredIriAuthorityText: {
   (content: string): (file: string) => ReadonlyArray<RetiredIriAuthorityFinding>;
   (file: string, content: string): ReadonlyArray<RetiredIriAuthorityFinding>;
 } = F.dual(2, (file: string, content: string): ReadonlyArray<RetiredIriAuthorityFinding> => {
-  if (!RETIRED_PREFILTER.test(content)) {
+  if (!retiredIriAuthorityPrefilter.test(content)) {
     return A.empty();
   }
   return A.match(collectMatches(content, RETIRED_AUTHORITY_PATTERN), {

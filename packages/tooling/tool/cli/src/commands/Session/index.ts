@@ -34,6 +34,7 @@ export * from "./Handoff.ts";
  * @category cli-commands
  * @since 0.0.0
  */
+export * from "./Presence.service.ts";
 export * from "./Register.command.ts";
 /**
  * Public orchestrator register schema exports.
@@ -49,6 +50,16 @@ export * from "./Register.schemas.ts";
  * @since 0.0.0
  */
 export * from "./Register.service.ts";
+/**
+ * Public orchestrator rulings service exports.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Resolve.command.ts";
+export * from "./Resolve.service.ts";
+export * from "./Route.schemas.ts";
+export * from "./RouteProbe.service.ts";
 /**
  * Public orchestrator rulings command exports.
  *
@@ -69,12 +80,6 @@ export * from "./Rulings.command.ts";
  * @since 0.0.0
  */
 export * from "./Rulings.schemas.ts";
-/**
- * Public orchestrator rulings service exports.
- *
- * @category cli-commands
- * @since 0.0.0
- */
 export * from "./Rulings.service.ts";
 export * from "./Session.command.ts";
 /**

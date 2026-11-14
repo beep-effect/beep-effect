@@ -4,13 +4,13 @@
     "id": "python-free-repo",
     "packetId": "goal-packet/v1:e03830a545f730500b63ddcb49c2a7c591ae16c4435af3e10eb7cc6a403e3b16",
     "title": "Remove Python from the repo, port photo-face to onnxruntime-node, and ban Python in tracked source",
-    "status": "paused",
+    "status": "active",
     "created": "2026-11-06",
     "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/python-free-repo",
-  "lifecycle": "paused",
+  "lifecycle": "active",
   "mission": "Remove Python from the repo, port photo-face to onnxruntime-node, and ban Python in tracked source (graduated from explorations/pulumi-to-alchemy).",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -34,7 +34,15 @@
     "goals/python-free-repo/GOAL.md",
     "goals/python-free-repo/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/photo-face-cache-request.json",
+    "research/photo-face-cache-review.md",
+    "research/photo-face-parity.md",
+    "research/r2-cache-port.md",
+    "research/triage.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -50,12 +58,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

@@ -7,7 +7,6 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as S from "effect/Schema";
-import * as Tuple from "effect/Tuple";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.adapter.schemas");
 
@@ -97,57 +96,137 @@ export class CacheAdapterRuntimeObservation extends S.Opaque<
   )
 ) {}
 
-const Ready = S.Struct({
-  status: S.tag("ready"),
-  observation: S.Struct({ ...CacheAdapterRuntimeObservation.fields, role: S.tag("writer"), phase: S.tag("ready") }),
-}).pipe($I.annoteSchema("CacheAdapterHostReady", { description: "The owned writer's live readiness observation." }));
-const AfterLoad = S.Struct({
-  status: S.tag("after-load"),
-  observation: S.Struct({
-    ...CacheAdapterRuntimeObservation.fields,
-    role: S.tag("writer"),
-    phase: S.tag("after-load"),
-  }),
-}).pipe(
-  $I.annoteSchema("CacheAdapterHostAfterLoad", {
-    description: "The same owned writer observed after the upload callback.",
-  })
-);
-const Cleaned = S.Struct({ status: S.tag("cleaned") }).pipe(
-  $I.annoteSchema("CacheAdapterHostCleaned", {
-    description: "The owning host completed exhaustive resource cleanup.",
-  })
-);
-
 /**
- * Fixed parent-pipe protocol emitted by the owned adapter host.
+ * The owned writer's live readiness observation.
  *
- * **Example** (Inspect the terminal phase)
+ * **Example** (Inspect the fixed writer phase)
  * ```ts
- * import { CacheAdapterHostEvent } from "@beep/repo-cli/test/Cache"
- * console.assert(CacheAdapterHostEvent.cases.cleaned.make({}).status === "cleaned")
+ * import { CacheAdapterWriterReady } from "@beep/repo-cli/test/Cache"
+ * console.assert("phase" in CacheAdapterWriterReady.fields)
  * ```
  *
  * @internal
  * @category schemas
  * @since 0.0.0
  */
-export const CacheAdapterHostEvent = LiteralKit(["ready", "after-load", "cleaned"])
-  .mapMembers(Tuple.evolve([() => Ready, () => AfterLoad, () => Cleaned]))
-  .pipe(
-    $I.annoteSchema("CacheAdapterHostEvent", {
-      description: "One ordered, bounded host-process event; tasks cannot submit observations through this pipe.",
-    }),
-    S.toTaggedUnion("status")
-  );
+export const CacheAdapterWriterReady = S.Struct({
+  ...CacheAdapterRuntimeObservation.fields,
+  role: S.tag("writer"),
+  phase: S.tag("ready"),
+}).pipe($I.annoteSchema("CacheAdapterWriterReady", { description: "The owned writer's live readiness observation." }));
+
 /**
- * Decoded parent-pipe event.
+ * Decoded writer readiness observation.
  *
  * @internal
  * @category models
  * @since 0.0.0
  */
-export type CacheAdapterHostEvent = typeof CacheAdapterHostEvent.Type;
+export type CacheAdapterWriterReady = typeof CacheAdapterWriterReady.Type;
+
+/**
+ * The same owned writer observed after the upload callback.
+ *
+ * **Example** (Inspect the fixed writer phase)
+ * ```ts
+ * import { CacheAdapterWriterAfterLoad } from "@beep/repo-cli/test/Cache"
+ * console.assert("phase" in CacheAdapterWriterAfterLoad.fields)
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CacheAdapterWriterAfterLoad = S.Struct({
+  ...CacheAdapterRuntimeObservation.fields,
+  role: S.tag("writer"),
+  phase: S.tag("after-load"),
+}).pipe(
+  $I.annoteSchema("CacheAdapterWriterAfterLoad", {
+    description: "The same owned writer observed after the upload callback.",
+  })
+);
+
+/**
+ * Decoded writer after-load observation.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export type CacheAdapterWriterAfterLoad = typeof CacheAdapterWriterAfterLoad.Type;
+
+/**
+ * Private startup input for one owned adapter unit.
+ *
+ * **Details**
+ * The owned host serializes this value only into the anonymous pipe of its
+ * transient user unit; it never reaches command arguments, unit properties or
+ * an environment file. `env` is the complete environment the adapter executes
+ * with, so it carries the storage credentials and the loopback bearer.
+ *
+ * **Example** (Inspect the fixed startup fields)
+ * ```ts
+ * import { CacheOwnedAdapterStartup } from "@beep/repo-cli/test/Cache"
+ * console.assert("env" in CacheOwnedAdapterStartup.fields)
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheOwnedAdapterStartup extends S.Opaque<CacheOwnedAdapterStartup, { readonly brand: unique symbol }>()(
+  S.Struct({ adapter: S.NonEmptyString, sha256: Sha256Hex, env: S.Record(S.String, S.String) }).pipe(
+    $I.annoteSchema("CacheOwnedAdapterStartup", {
+      description: "One private startup value consumed only through the owned unit's anonymous pipe.",
+    })
+  )
+) {}
+
+/**
+ * Raw kernel and user-manager facts read for one owned adapter observation.
+ *
+ * **Details**
+ * Each field is the unparsed text the Linux host reports for the unit's main
+ * process: its systemd properties, `/proc/<pid>` entries and cgroup v2 files.
+ * Observation logic judges a snapshot without further I/O, so recorded
+ * snapshots replay the same verdicts.
+ *
+ * **Example** (Inspect the listener inputs)
+ * ```ts
+ * import { CacheAdapterProcessSnapshot } from "@beep/repo-cli/test/Cache"
+ * console.assert("tcpTable" in CacheAdapterProcessSnapshot.fields)
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheAdapterProcessSnapshot extends S.Opaque<
+  CacheAdapterProcessSnapshot,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    mainPid: S.Int,
+    controlGroup: S.String,
+    executableSha256: S.String,
+    socketInodes: S.Array(S.String),
+    tcpTable: S.String,
+    environmentNames: S.Array(S.String),
+    cpuMax: S.String,
+    memoryMax: S.String,
+    pidsMax: S.String,
+    memoryPeak: S.String,
+    runtimeMaxUSec: S.String,
+    timeoutStopUSec: S.String,
+    killMode: S.String,
+    threadNames: S.Array(S.String),
+  }).pipe(
+    $I.annoteSchema("CacheAdapterProcessSnapshot", {
+      description: "Unparsed systemd, /proc and cgroup facts for one owned adapter process observation.",
+    })
+  )
+) {}
 
 /**
  * Actual backend lifecycle facts included in the issuer-authenticated bundle.
@@ -169,16 +248,53 @@ export class CacheProducerAdapterReceipt extends S.Opaque<
   S.Struct({
     backendSha256: Sha256Hex,
     targetSha256: Sha256Hex,
-    ready: S.Struct({ ...CacheAdapterRuntimeObservation.fields, role: S.tag("writer"), phase: S.tag("ready") }),
-    afterLoad: S.Struct({
-      ...CacheAdapterRuntimeObservation.fields,
-      role: S.tag("writer"),
-      phase: S.tag("after-load"),
-    }),
+    ready: CacheAdapterWriterReady,
+    afterLoad: CacheAdapterWriterAfterLoad,
     cleaned: S.tag(true),
   }).pipe(
     $I.annoteSchema("CacheProducerAdapterReceipt", {
       description: "Approved target/executable identities with actual writer lifecycle and successful owned cleanup.",
+    })
+  )
+) {}
+
+/**
+ * Expected identity of one owned adapter observation.
+ *
+ * **Example** (Describe a readiness expectation)
+ * ```ts
+ * import { CacheAdapterObservationExpectation } from "@beep/repo-cli/test/Cache"
+ * const expected = CacheAdapterObservationExpectation.make({
+ *   unit: "beep-cache-owned-0123456789ab-writer.service",
+ *   role: "writer",
+ *   phase: "ready",
+ *   sha256: "0".repeat(64),
+ *   environmentNames: ["PATH", "HOME"],
+ *   port: 19427,
+ *   pid: 4242
+ * })
+ * console.assert(expected.phase === "ready")
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheAdapterObservationExpectation extends S.Opaque<
+  CacheAdapterObservationExpectation,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    unit: S.String,
+    role: S.String,
+    phase: AdapterPhase,
+    sha256: S.String,
+    environmentNames: S.Array(S.String),
+    port: S.Int,
+    pid: S.Int,
+  }).pipe(
+    $I.annoteSchema("CacheAdapterObservationExpectation", {
+      description: "Owned unit, role, phase, executable digest, environment names, loopback port and stable PID.",
     })
   )
 ) {}

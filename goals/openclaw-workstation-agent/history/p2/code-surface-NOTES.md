@@ -1,6 +1,6 @@
 # P2 Evidence — Code Surface (2026-07-27)
 
-Scope: the unprivileged half of P2, landed on `goals/openclaw-p2-generation`
+Scope: the unprivileged half of P2, landed on the `openclaw-p2-generation` branch
 (stacked on `goals/openclaw-p1-driver` / PR #482 pending merge). The live
 proofs (slice deploy, rollback, drift demo, backups + restore drill) are
 operator-gated and scripted in

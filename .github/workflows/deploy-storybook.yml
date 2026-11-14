@@ -87,16 +87,29 @@ jobs:
       # iframe probe follows redirects. The bare probe is the slug without a
       # slash but with a query: the route must take it and the redirect must
       # keep the query. The apex probe proves the route took only the slug.
+      # A probe straight after a first deploy races edge propagation (run
+      # 43517423865: iframe 404 one second after the route was created, 200 a
+      # minute later), and curl's retries do not cover a 404. Poll every probe
+      # until all four hold or 120 seconds pass, then fail with the last values.
       - name: Smoke-check the public route
         shell: bash
         run: |
           set -euo pipefail
-          index="$(curl -sS -L -o /dev/null -w '%{http_code}' --retry 5 --retry-delay 5 --retry-all-errors https://beep-effect.com/storybook/)"
-          frame="$(curl -sS -L -o /dev/null -w '%{http_code}' --retry 5 --retry-delay 5 --retry-all-errors https://beep-effect.com/storybook/iframe.html)"
-          bare="$(curl -sS -L -o /dev/null -w '%{http_code} %{url_effective}' --retry 5 --retry-delay 5 --retry-all-errors 'https://beep-effect.com/storybook?path=/docs/smoke')"
-          apex="$(curl -sS -o /dev/null -w '%{http_code}' --retry 5 --retry-delay 5 --retry-all-errors https://beep-effect.com/)"
-          echo "index=${index} iframe=${frame} bare=${bare} apex=${apex}"
-          [[ "$index" == "200" ]]
-          [[ "$frame" == "200" ]]
-          [[ "$bare" == "200 https://beep-effect.com/storybook/?path=/docs/smoke" ]]
-          [[ "$apex" == "200" ]]
+          probe() { curl -sS -o /dev/null --max-time 20 "$@" || echo "curl-failed"; }
+          deadline=$((SECONDS + 120))
+          while :; do
+            index="$(probe -L -w '%{http_code}' https://beep-effect.com/storybook/)"
+            frame="$(probe -L -w '%{http_code}' https://beep-effect.com/storybook/iframe.html)"
+            bare="$(probe -L -w '%{http_code} %{url_effective}' 'https://beep-effect.com/storybook?path=/docs/smoke')"
+            apex="$(probe -w '%{http_code}' https://beep-effect.com/)"
+            echo "index=${index} iframe=${frame} bare=${bare} apex=${apex}"
+            if [[ "$index" == "200" && "$frame" == "200" \
+              && "$bare" == "200 https://beep-effect.com/storybook/?path=/docs/smoke" && "$apex" == "200" ]]; then
+              exit 0
+            fi
+            if (( SECONDS >= deadline )); then
+              echo "smoke check did not converge within 120s" >&2
+              exit 1
+            fi
+            sleep 5
+          done

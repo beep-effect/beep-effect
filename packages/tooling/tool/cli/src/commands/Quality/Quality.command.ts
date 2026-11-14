@@ -48,22 +48,18 @@ import {
   AdmissionConfig,
   AdmissionJournalEvent,
   AdmissionJournalHistory,
+  AdmissionUnitEmission,
   adaptGitKitError,
-  admissionJournalArchiveStatus,
-  admissionJournalHistory,
-  admissionProtocolStatus,
-  admissionStatus,
   GITHUB_CHECK_MODE_VALUES,
   installAgentRunsSlice,
   isAgedAdmissionJournalArchiveSegment,
   isAgedQuarantineEntry,
   QUARANTINE_ARCHIVE_DIRECTORY_NAME,
   QUARANTINE_ARCHIVE_MIN_AGE_MILLIS,
+  QualityScheduler,
   quarantinedAtMillisOf,
-  reapAdmissionState,
   reconcileAttemptJournalsForCheckout,
   renderAgentRunsSliceListing,
-  setAdmissionEvictionProtocol,
 } from "../../internal/repo-run/index.ts";
 import { cachePolicyCommand } from "../Cache/CachePolicy.command.ts";
 import { residueReapCommand, tmpfsReapCommand } from "../Worktree/Janitor.command.ts";
@@ -1010,8 +1006,9 @@ const currentBranch = Effect.fn("QualityScriptCommands.currentBranch")(function*
   QualityScriptCommandError,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
-  // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
   return yield* collectSuccessfulOutput(
+    // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
     QualityTaskStep.make({
       label: "git:branch",
       command: "git",
@@ -1033,8 +1030,9 @@ const ensureOriginMain = Effect.fn("QualityScriptCommands.ensureOriginMain")(fun
   // reuse), so a battery whose pin still matches leaves the ref alone.
   const pinned = pinnedLaneProofBaseSha();
   if (O.isSome(pinned)) {
-    // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
     const current = yield* collectSuccessfulOutput(
+      // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
+      // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
       QualityTaskStep.make({
         label: "git:origin-main",
         command: "git",
@@ -1053,8 +1051,9 @@ const ensureOriginMain = Effect.fn("QualityScriptCommands.ensureOriginMain")(fun
     );
   }
   yield* Console.log("[github-checks] refreshing origin/main");
-  // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
   const shallow = yield* collectSuccessfulOutput(
+    // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
     QualityTaskStep.make({
       label: "git:shallow",
       command: "git",
@@ -1065,10 +1064,12 @@ const ensureOriginMain = Effect.fn("QualityScriptCommands.ensureOriginMain")(fun
 
   if (shallow === "true") {
     // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
     yield* runFixedStep(repoRoot, "git:fetch:unshallow", "git", ["fetch", "origin", "--quiet", "--unshallow"]);
   }
 
   // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
   yield* runFixedStep(repoRoot, "git:fetch:origin-main", "git", [
     "fetch",
     "origin",
@@ -1397,8 +1398,9 @@ const runSecretScan = Effect.fn("QualityScriptCommands.runSecretScan")(function*
   QualityScriptCommandError,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
-  // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
   const mergeBase = yield* collectSuccessfulOutput(
+    // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
     QualityTaskStep.make({
       label: "secrets:merge-base",
       command: "git",
@@ -1444,6 +1446,15 @@ const runSecurityScan = Effect.fn("QualityScriptCommands.runSecurityScan")(funct
 });
 
 // Paired `ruleid:`/`ok:` cases for every rule in .semgrep/first-party.yml.
+// The absolute path of a repository-relative file, when it still exists on disk.
+const existingRepoPath = (fs: FileSystem.FileSystem, path: Path.Path, repoRoot: string, filePath: string) => {
+  const absolutePath = path.join(repoRoot, filePath);
+  return fs.exists(absolutePath).pipe(
+    Effect.orElseSucceed(thunkFalse),
+    Effect.map((exists) => O.liftPredicate(absolutePath, () => exists))
+  );
+};
+
 const firstPartySemgrepFixturePath = ".semgrep/first-party.ts";
 
 const SAST_CHANGED_FILES_RANGE = {
@@ -1512,11 +1523,11 @@ const runSastScan = Effect.fn("QualityScriptCommands.runSastScan")(function* (
   const semgrepFiles = yield* Effect.forEach(
     candidateFiles,
     Effect.fn(function* (filePath) {
-      const absolutePath = path.join(repoRoot, filePath);
-      const exists = yield* fs.exists(absolutePath).pipe(Effect.orElseSucceed(thunkFalse));
-      if (!exists) {
+      const existing = yield* existingRepoPath(fs, path, repoRoot, filePath);
+      if (O.isNone(existing)) {
         return O.none<string>();
       }
+      const absolutePath = existing.value;
 
       const symlinkTarget = yield* fs.readLink(absolutePath).pipe(Effect.option);
       if (O.isSome(symlinkTarget)) {
@@ -3349,8 +3360,9 @@ export const isModuleTagScannedPathForTesting =
 export const runJSDocModuleTagsCheck = Effect.fn("QualityScriptCommands.runJSDocModuleTagsCheck")(
   function* (): Effect.fn.Return<void, QualityScriptCommandError, QualityScriptEnvironment> {
     const { fs, path, repoRoot } = yield* qualityFileContext();
-    // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
     const result = yield* collectOutput(
+      // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
+      // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
       QualityTaskStep.make({
         label: "lint:jsdoc-module-tags:git-ls-files",
         command: "git",
@@ -3371,11 +3383,11 @@ export const runJSDocModuleTagsCheck = Effect.fn("QualityScriptCommands.runJSDoc
     const violations = yield* Effect.forEach(
       pipe(Str.split(result.output, "\n"), A.filter(Str.isNonEmpty), A.filter(isScannedPath)),
       Effect.fn(function* (filePath) {
-        const absolutePath = path.join(repoRoot, filePath);
-        const exists = yield* fs.exists(absolutePath).pipe(Effect.orElseSucceed(thunkFalse));
-        if (!exists) {
+        const existing = yield* existingRepoPath(fs, path, repoRoot, filePath);
+        if (O.isNone(existing)) {
           return A.empty<string>();
         }
+        const absolutePath = existing.value;
 
         const text = yield* fs
           .readFileString(absolutePath)
@@ -4066,7 +4078,8 @@ const schedulerStatusCommand = Command.make(
     ),
   },
   Effect.fn(function* ({ json }) {
-    const snapshot = yield* admissionStatus();
+    const scheduler = yield* QualityScheduler;
+    const snapshot = yield* scheduler.observe();
     if (json) {
       const rendered = yield* jsonStringifyPretty(snapshot);
       yield* printLines([rendered]);
@@ -4093,14 +4106,15 @@ const schedulerReapCommand = Command.make(
     ),
   },
   Effect.fn(function* ({ apply }) {
+    const scheduler = yield* QualityScheduler;
     // Read-only pre-scan: the aged set the reap pass is about to archive.
-    const before = apply ? yield* Effect.asSome(admissionStatus()) : O.none<AdmissionSnapshot>();
-    const archiveBefore = yield* Effect.result(admissionJournalArchiveStatus());
+    const before = apply ? yield* Effect.asSome(scheduler.observe()) : O.none<AdmissionSnapshot>();
+    const archiveBefore = yield* Effect.result(scheduler.archive);
     const beforeMillis = yield* Clock.currentTimeMillis;
-    const snapshot = yield* reapAdmissionState({ apply });
+    const snapshot = yield* scheduler.reap({ apply });
     const nowMillis = yield* Clock.currentTimeMillis;
     const archiveRemaining = apply
-      ? yield* Effect.result(Effect.map(admissionJournalArchiveStatus(), (archive) => archive.segments))
+      ? yield* Effect.result(Effect.map(scheduler.archive, (archive) => archive.segments))
       : Result.succeed(A.empty<string>());
     const pruneLine = renderAdmissionArchivePruneOutcome(apply, beforeMillis, archiveBefore, archiveRemaining);
     const reconciledAttempts = apply ? yield* reconcileCurrentCheckoutAttemptJournals() : 0;
@@ -4140,7 +4154,8 @@ const schedulerHistoryCommand = Command.make(
     ),
   },
   Effect.fn(function* ({ json }) {
-    const history = yield* admissionJournalHistory();
+    const scheduler = yield* QualityScheduler;
+    const history = yield* scheduler.history;
     if (json) {
       const encoded = yield* encodeAdmissionJournalHistory(history).pipe(
         QualityScriptCommandError.mapError("Failed to encode the admission history.")
@@ -4164,8 +4179,14 @@ const schedulerProtocolCommand = Command.make(
       Flag.withDefault(false),
       Flag.withDescription("Disable v2 eviction rows while mixed fleet revisions may still rewrite the journal")
     ),
+    units: Flag.Literals("units", AdmissionUnitEmission.literals).pipe(
+      Flag.optional,
+      Flag.withDescription(
+        "Turn admission-unit fields (unit, weight source, owner) and the cache work kind on, or off; on only once every live checkout runs SCHE-08 slice 6 or later"
+      )
+    ),
   },
-  Effect.fn(function* ({ disableEvictions, enableEvictions }) {
+  Effect.fn(function* ({ disableEvictions, enableEvictions, units }) {
     if (disableEvictions && enableEvictions) {
       return yield* QualityScriptCommandError.make({
         message: "Choose only one of --enable-evictions or --disable-evictions.",
@@ -4173,17 +4194,24 @@ const schedulerProtocolCommand = Command.make(
         exitCode: 1,
       });
     }
-    const protocol = enableEvictions
-      ? yield* setAdmissionEvictionProtocol("on")
+    const scheduler = yield* QualityScheduler;
+    const evictionProtocol = enableEvictions
+      ? yield* scheduler.setEvictionProtocol("on")
       : disableEvictions
-        ? yield* setAdmissionEvictionProtocol("off")
-        : yield* admissionProtocolStatus();
+        ? yield* scheduler.setEvictionProtocol("off")
+        : yield* scheduler.protocol;
+    const protocol = yield* O.match(units, {
+      onNone: () => Effect.succeed(evictionProtocol),
+      onSome: scheduler.setUnitProtocol,
+    });
     yield* printLines([
       `admission eviction rows: ${protocol.eviction}`,
       "Enable only after every live checkout runs the preservation release.",
+      `admission unit fields: ${protocol.units}`,
+      "Turn on only after every live checkout runs a revision that reads them (SCHE-08).",
     ]);
   })
-).pipe(Command.withDescription("Inspect or change the mixed-checkout eviction-row protocol gate"));
+).pipe(Command.withDescription("Inspect or change the mixed-checkout eviction-row and unit-field protocol gates"));
 
 const schedulerReconcileAttemptsCommand = Command.make(
   "reconcile-attempts",
@@ -4234,10 +4262,13 @@ const qualitySchedulerCommand = Command.make("scheduler", {}, () =>
     "- bun run beep quality scheduler protocol",
     "- bun run beep quality scheduler protocol --enable-evictions",
     "- bun run beep quality scheduler protocol --disable-evictions",
+    "- bun run beep quality scheduler protocol --units on",
+    "- bun run beep quality scheduler protocol --units off",
     "- bun run beep quality scheduler reconcile-attempts",
     "- bun run beep quality scheduler slice",
     "- bun run beep quality scheduler slice --install",
     "Eviction rows default off; enable only after every live checkout runs the preservation release.",
+    "Unit fields default off; turn on only after every live checkout reads them.",
   ])
 ).pipe(
   Command.withDescription("Inspect and repair machine-wide quality admission"),

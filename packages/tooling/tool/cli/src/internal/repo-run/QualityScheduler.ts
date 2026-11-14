@@ -34,6 +34,7 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { constant, dual, flow, identity, pipe } from "effect/Function";
 import * as HS from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -52,6 +53,8 @@ import {
   AdmissionJournalRouted,
   AdmissionJournalTicketEvictedV3,
   AdmissionJournalWithdrawn,
+  AdmissionProtocol,
+  AdmissionUnitEmission,
   acquireJournalFileLock,
   appendAdmissionEvictionJournalEvent,
   appendAdmissionJournalEvent,
@@ -73,6 +76,7 @@ import {
   AdmissionConfig,
   AdmissionCoordinationProtocol,
   AdmissionLeaseReapClaim,
+  AdmissionOwner,
   AdmissionPromotionPhase,
   AdmissionPromotionTransition,
   AdmissionReapClaim,
@@ -80,12 +84,14 @@ import {
   AdmissionRoute,
   AdmissionSnapshot,
   AdmissionTicketReapClaim,
+  AdmissionWorkKind,
   ComputeProfileRefusal,
   DeadLeaseScopePlan,
   QualitySchedulerError,
   YeetAdmissionLease,
   YeetAdmissionTicket,
 } from "./QualityScheduler.schemas.ts";
+import { QualityScheduler } from "./QualityScheduler.service.ts";
 import {
   isProofJobUnitName,
   RunScopeRecord,
@@ -481,7 +487,38 @@ export const setAdmissionEvictionProtocol = Effect.fn("QualityScheduler.setAdmis
   eviction: AdmissionEvictionEmission
 ) {
   const directories = yield* ensureAdmissionDirectories();
-  return yield* writeAdmissionProtocol(directories.root, eviction);
+  return yield* writeAdmissionProtocol(directories.root, (current) => AdmissionProtocol.make({ ...current, eviction }));
+});
+
+/**
+ * Atomically change whether writers record admission-unit fields (SCHE-08).
+ *
+ * **Details**
+ *
+ * Turn it on only once every live checkout runs SCHE-08 slice 6 or later. With
+ * the gate on, Cache tickets record the `cache` kind. A slice 3 checkout reads the
+ * unit, weight source and owner keys but not that kind: it keeps the lease charged
+ * yet leaves it out of its review-fix class cap, so it can admit one review-fix
+ * run too many. The eviction gate keeps its state.
+ *
+ * **Example** (Reference the unit-gate writer)
+ *
+ * ```ts
+ * import { setAdmissionUnitProtocol } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof setAdmissionUnitProtocol) // "function"
+ * ```
+ *
+ * @param units - Desired admission-unit field emission state.
+ * @returns The protocol marker that was published.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const setAdmissionUnitProtocol = Effect.fn("QualityScheduler.setAdmissionUnitProtocol")(function* (
+  units: AdmissionUnitEmission
+) {
+  const directories = yield* ensureAdmissionDirectories();
+  return yield* writeAdmissionProtocol(directories.root, (current) => AdmissionProtocol.make({ ...current, units }));
 });
 
 // Staging siblings are named `<target>.tmp-<pid>[-<start identity>]-<uuid>`.
@@ -1441,6 +1478,9 @@ const promotionAdmissionEvent = (transition: AdmissionPromotionTransition): Admi
     enqueuedAtMillis: transition.ticket.enqueuedAtMillis,
     admittedAtMillis: transition.lease.admittedAtMillis,
     attemptId: transition.ticket.attemptId,
+    unit: transition.ticket.unit,
+    weightSource: transition.ticket.weightSource,
+    owner: transition.ticket.owner,
   });
 
 const readPromotionLease = Effect.fnUntraced(function* (
@@ -1716,6 +1756,10 @@ const hasLegacySameOriginOwner = (state: LiveAdmissionState, ticket: YeetAdmissi
 const hasSameCheckoutLease = (state: LiveAdmissionState, ticket: YeetAdmissionTicket): boolean =>
   A.some(state.leases, ({ lease }) => lease.checkoutRoot === ticket.checkoutRoot);
 
+// Cache work stays in the review-fix class it borrowed before SCHE-08, so the
+// class cap admits exactly as it did while Cache commands requested `review-fix`.
+const isReviewFixClassKind = S.is(AdmissionWorkKind.pick(["review-fix", "cache"]));
+
 // A ticket is skippable (stays queued without blocking later tickets) when it
 // targets a checkout that already has admitted work, recently reported its
 // origin migration gate busy (held by a process on the previous Yeet release),
@@ -1738,8 +1782,8 @@ const isTicketSkippable = (
   if (!ignoreOriginStamp && stampFresh) {
     return true;
   }
-  if (ticket.kind === "review-fix") {
-    const activeReviewFix = A.length(A.filter(state.leases, ({ lease }) => lease.kind === "review-fix"));
+  if (isReviewFixClassKind(ticket.kind)) {
+    const activeReviewFix = A.length(A.filter(state.leases, ({ lease }) => isReviewFixClassKind(lease.kind)));
     return activeReviewFix >= config.reviewFixClassCap;
   }
   return false;
@@ -2045,6 +2089,9 @@ const stageSelfLease = Effect.fnUntraced(function* (
     computeProfile: ticket.computeProfile,
     stage: ticket.stage,
     forceLocal: ticket.forceLocal,
+    unit: ticket.unit,
+    weightSource: ticket.weightSource,
+    owner: ticket.owner,
   });
   const leasePath = path.join(directories.leases, `${ticket.nonce}-${ticket.pid}.lease.json`);
   const promotionPath = promotionTransitionPath(path, directories, ticket.nonce);
@@ -2361,6 +2408,9 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
           attemptId: admitted.lease.attemptId,
           checkoutRoot: admitted.lease.checkoutRoot,
           branch: admitted.lease.branch,
+          unit: admitted.lease.unit,
+          weightSource: admitted.lease.weightSource,
+          owner: admitted.lease.owner,
           ...OptionUtils.getSomesStruct({
             memoryPeakBytes: O.fromUndefinedOr(telemetry.memoryPeakBytes),
           }),
@@ -2423,6 +2473,33 @@ const workerProfileRefusal = (
     )
   );
 };
+
+// With the units gate off Cache work records the `review-fix` kind it borrowed
+// before, because no earlier reader counts `cache` correctly. A reader older than
+// SCHE-08 decodes a closed kind literal and quarantines a kind it does not know.
+// A slice 3 reader keeps the lease charged but leaves it out of its review-fix
+// class cap. So the gate goes on only once every live checkout runs slice 6.
+const preUnitAdmissionWorkKind = (kind: AdmissionWorkKind): AdmissionWorkKind =>
+  AdmissionWorkKind.is.cache(kind) ? AdmissionWorkKind.Enum["review-fix"] : kind;
+
+// The ticket fields the protocol's units gate decides (SCHE-08): the work kind
+// and the unit, weight source and owner. With the gate off every ticket, lease
+// and journal row keeps the pre-unit bytes. The lease and rows copy the ticket.
+const unitGatedTicketFieldsFor = (units: AdmissionUnitEmission, request: AdmissionRequest, owner: AdmissionOwner) =>
+  AdmissionUnitEmission.match(units, {
+    off: () => ({
+      kind: preUnitAdmissionWorkKind(request.kind),
+      unit: O.none(),
+      weightSource: O.none(),
+      owner: O.none(),
+    }),
+    on: () => ({
+      kind: request.kind,
+      unit: O.some(request.unit),
+      weightSource: O.some(request.weightSource),
+      owner: O.some(owner),
+    }),
+  });
 
 const workerBypassLine = (request: AdmissionRequest): string =>
   `[yeet] admission: compute-profile=worker${request.forceLocal ? " force-local=true" : ""}; coordinating ${request.kind} through the origin gate only`;
@@ -2612,11 +2689,22 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
   const nowMillis = yield* Clock.currentTimeMillis;
   const processStartIdentityForPid9 = yield* processStartIdentityForPid(process.pid);
   const procStart = O.getOrElse(processStartIdentityForPid9, () => "");
+  const nonce = yield* SecureRandom.SecureRandom.use((crypto) => crypto.uuidV4());
+  const protocol = yield* readAdmissionProtocol(directories.root);
+  const owner = AdmissionOwner.make({
+    proofNonce: nonce,
+    pid: process.pid,
+    procStart,
+    attemptId: admittedRequest.attemptId,
+    originKey: admittedRequest.originKey,
+    checkoutRoot: admittedRequest.checkoutRoot,
+    branch: admittedRequest.branch,
+    command: admittedRequest.command,
+  });
   const ticket = YeetAdmissionTicket.make({
     schemaVersion: "yeet-admission-ticket/v1",
     pid: process.pid,
     procStart,
-    kind: admittedRequest.kind,
     weightTokens: admittedRequest.weightTokens,
     priority: admittedRequest.priority,
     originKey: admittedRequest.originKey,
@@ -2625,7 +2713,7 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
     coordinationProtocol: AdmissionCoordinationProtocol.Enum["scheduler-origin-concurrency/v1"],
     enqueuedAtMillis: nowMillis,
     heartbeatAtMillis: nowMillis,
-    nonce: yield* SecureRandom.SecureRandom.use((crypto) => crypto.uuidV4()),
+    nonce,
     attemptId: admittedRequest.attemptId,
     resolvedHeadSha: admittedRequest.resolvedHeadSha,
     diffFingerprint: admittedRequest.diffFingerprint,
@@ -2634,6 +2722,7 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
     computeProfile: O.some(computeProfile.profile),
     stage: admittedRequest.stage,
     forceLocal: admittedRequest.forceLocal,
+    ...unitGatedTicketFieldsFor(protocol.units, admittedRequest, owner),
   });
   const ticketPath = path.join(directories.queue, `${ticket.nonce}-${ticket.pid}.ticket.json`);
   return yield* Effect.uninterruptibleMask((restore) =>
@@ -2926,3 +3015,53 @@ export const reapAdmissionState = Effect.fn("QualityScheduler.reapAdmissionState
     : A.empty<string>();
   return yield* snapshotAdmissionState(directories, AdmissionConfig.make({}), options.apply, retainedDeadLeasePaths);
 });
+
+/**
+ * Production {@link QualityScheduler} Layer over this module's scheduler.
+ *
+ * **Details**
+ *
+ * Each operation is the existing implementation: `admit` is
+ * {@link withQualityAdmission}, `observe` is {@link admissionStatus}, `reap` is
+ * {@link reapAdmissionState}, and the protocol, history, archive and route
+ * operations are their module functions. The Layer needs nothing; each
+ * operation reads its platform services and `MemoryStats` from the caller.
+ *
+ * **Example** (Admit work through the live scheduler)
+ *
+ * ```ts
+ * import { AdmissionRequest, noAdmissionOriginGate, QualityScheduler, QualitySchedulerLive } from "@beep/repo-cli/test/RepoRun"
+ * import * as Effect from "effect/Effect"
+ *
+ * const request = AdmissionRequest.make({
+ *   kind: "cache",
+ *   weightTokens: 1,
+ *   priority: "verify",
+ *   originKey: "",
+ *   checkoutRoot: "/repo",
+ *   branch: "",
+ *   command: "bun run beep cache pilot"
+ * })
+ * const admitted = QualityScheduler.use((scheduler) =>
+ *   scheduler.admit(request, noAdmissionOriginGate, Effect.succeed("ran"))
+ * ).pipe(Effect.provide(QualitySchedulerLive))
+ * console.log(Effect.isEffect(admitted)) // true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export const QualitySchedulerLive: Layer.Layer<QualityScheduler> = Layer.succeed(
+  QualityScheduler,
+  QualityScheduler.of({
+    admit: withQualityAdmission,
+    observe: admissionStatus,
+    reap: reapAdmissionState,
+    protocol: admissionProtocolStatus(),
+    setEvictionProtocol: setAdmissionEvictionProtocol,
+    setUnitProtocol: setAdmissionUnitProtocol,
+    history: admissionJournalHistory(),
+    archive: admissionJournalArchiveStatus(),
+    recordRoute: recordAdmissionRoute,
+  })
+);

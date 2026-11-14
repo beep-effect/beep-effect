@@ -37577,6 +37577,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.adapter.host.ts": {
+          "lines": 96.66,
+          "statements": 96.13,
+          "branches": 100,
+          "functions": 89.87,
+          "uncovered": {
+            "lines": 6,
+            "statements": 8,
+            "branches": 0,
+            "functions": 8
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts": {
           "lines": 39.66,
           "statements": 40,
@@ -37707,6 +37719,18 @@
             "statements": 47,
             "branches": 15,
             "functions": 12
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.diagnostics.ts": {
+          "lines": 98.59,
+          "statements": 97.33,
+          "branches": 94.24,
+          "functions": 94.48,
+          "uncovered": {
+            "lines": 7,
+            "statements": 16,
+            "branches": 16,
+            "functions": 8
           }
         },
         "packages/tooling/tool/cli/src/commands/Cache/Cache.entrypoints.schemas.ts": {
@@ -37970,6 +37994,42 @@
             "lines": 0,
             "statements": 0,
             "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.r2.command.ts": {
+          "lines": 100,
+          "statements": 96.15,
+          "branches": 100,
+          "functions": 85.71,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.r2.live.ts": {
+          "lines": 97.89,
+          "statements": 97.14,
+          "branches": 94.44,
+          "functions": 92.1,
+          "uncovered": {
+            "lines": 2,
+            "statements": 3,
+            "branches": 1,
+            "functions": 3
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.r2.ts": {
+          "lines": 100,
+          "statements": 99.35,
+          "branches": 91.66,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 4,
             "functions": 0
           }
         },
@@ -40145,6 +40205,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.inference.ts": {
+          "lines": 97.42,
+          "statements": 97.36,
+          "branches": 98.3,
+          "functions": 91.07,
+          "uncovered": {
+            "lines": 5,
+            "statements": 6,
+            "branches": 1,
+            "functions": 5
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.model-store.ts": {
           "lines": 84.43,
           "statements": 84.5,
@@ -40155,6 +40227,18 @@
             "statements": 33,
             "branches": 22,
             "functions": 21
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.onnx.ts": {
+          "lines": 100,
+          "statements": 99.56,
+          "branches": 93.44,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 4,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts": {
@@ -45195,6 +45279,30 @@
             "statements": 146,
             "branches": 130,
             "functions": 38
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReapDrain.ts": {
+          "lines": 96.35,
+          "statements": 92.99,
+          "branches": 82.02,
+          "functions": 91.83,
+          "uncovered": {
+            "lines": 13,
+            "statements": 29,
+            "branches": 32,
+            "functions": 12
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReapDrainLive.ts": {
+          "lines": 87.32,
+          "statements": 87.01,
+          "branches": 100,
+          "functions": 71.42,
+          "uncovered": {
+            "lines": 9,
+            "statements": 10,
+            "branches": 0,
+            "functions": 10
           }
         },
         "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.schemas.ts": {

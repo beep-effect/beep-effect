@@ -8,6 +8,7 @@ import {
   decodeAdmissionJournalEvent,
   makeComputeProfileProbe,
   provideRuntimeRootForTesting,
+  QualitySchedulerLive,
   RuntimeRootChoice,
 } from "@beep/repo-cli/test/RepoRun";
 import { UUID } from "@beep/repo-cli/test/SharedInternals";
@@ -20,10 +21,12 @@ import {
   FINAL_CHECK_ATTEMPT_MODE,
   FINAL_CHECK_RECEIPT_DIR,
   FINAL_CHECK_REUSED_STEP_REASON,
+  FINAL_CHECK_SUBSET_RECEIPT_DIR,
   FinalCheckGate,
   FinalCheckReceipt,
   FinalCheckStepResult,
   finalCheckAttemptTerminal,
+  findFinalCheckRefreshReceipt,
   RepoRunContext,
   readFinalCheckReceipt,
   runYeetFinalCheck,
@@ -51,6 +54,7 @@ import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
@@ -302,6 +306,18 @@ const admissionRoutes = Effect.fnUntraced(function* (runtimeRoot: RuntimeRootCho
   return A.filter(rows, AdmissionJournalEvent.guards["admission-routed"]);
 });
 
+const decodeReceiptJson = S.decodeUnknownEffect(S.fromJsonString(FinalCheckReceipt));
+
+// The `--gates` subset receipts a head holds, in run order: their ULID names sort by write time.
+const subsetReceipts = Effect.fnUntraced(function* (root: string, head: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const directory = `${root}/${FINAL_CHECK_SUBSET_RECEIPT_DIR}/${head}`;
+  const files = yield* fs.readDirectory(directory);
+  return yield* Effect.forEach(A.sort(files, Order.String), (file) =>
+    fs.readFileString(`${directory}/${file}`).pipe(Effect.flatMap(decodeReceiptJson))
+  );
+});
+
 const journalEvents = Effect.fnUntraced(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const journal = yield* attemptJournalPathForCheckout(root, "main");
@@ -312,7 +328,10 @@ const journalEvents = Effect.fnUntraced(function* (root: string) {
 });
 
 // The economics source reads the journals the runs wrote through the real filesystem.
-const JournalTestLayer = Layer.provideMerge(YeetEconomicsSource.layer, NodeCommandTestLayer);
+const JournalTestLayer = Layer.provideMerge(
+  Layer.merge(YeetEconomicsSource.layer, QualitySchedulerLive),
+  NodeCommandTestLayer
+);
 
 const finishedRows = A.filter(YeetAttemptJournalEvent.guards["attempt-finished"]);
 const startedRows = A.filter(YeetAttemptJournalEvent.guards["attempt-started"]);
@@ -361,16 +380,15 @@ it.layer(JournalTestLayer, { timeout: "60 seconds" })("final-check attempt journ
         ["failure", "handler-error", undefined],
       ]);
 
-      // The head receipt now holds the red subset run; the journal still holds
-      // the passing complete receipt the first run wrote on the same head.
+      // The head receipt still holds the passing complete run; the red subset
+      // run wrote its own receipt, and the journal holds both.
       const onHead = yield* readFinalCheckReceipt(root, head);
-      assertSome(
-        O.map(onHead, (receipt) => [receipt.verdict, receipt.complete]),
-        ["fail", false]
-      );
+      assertSome(onHead, passing);
+      const subsets = yield* subsetReceipts(root, head);
+      expect(A.map(subsets, (receipt) => [receipt.verdict, receipt.complete])).toEqual([["fail", false]]);
       deepStrictEqual(
         A.map(finishes, (row) => row.finalCheckReceipt),
-        [O.some(passing), onHead, O.none()]
+        [O.some(passing), A.head(subsets), O.none()]
       );
       expect(
         A.map(
@@ -474,31 +492,76 @@ it.layer(JournalTestLayer, { timeout: "60 seconds" })("final-check attempt journ
         markReady: () => Ref.update(flips, (count) => count + 1),
       });
 
+      const fs = yield* FileSystem.FileSystem;
+      const headReceipt = `${root}/${FINAL_CHECK_RECEIPT_DIR}/${head}.json`;
       yield* finalCheck({ skip: SKIP_SUBPROCESS_GATES });
+      const complete = yield* fs.readFileString(headReceipt);
       const flipped = yield* ready;
       expect(flipped._tag).toBe("flip");
       const flipsAfterPass = yield* Ref.get(flips);
       expect(flipsAfterPass).toBe(1);
 
-      // A later subset run overwrites the head receipt; the passing receipt
-      // survives in the journal and must not admit the flip.
+      // A later subset run, red or passing, writes its own receipt: the
+      // complete head receipt is byte-for-byte unchanged and still admits the flip.
       yield* finalCheck({ gates: ["repo-sanity"] }).pipe(Effect.flip);
-      const subset = yield* ready.pipe(Effect.flip);
-      expect(subset).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
-      assertInclude(subset.message, "the final-check receipt covers a --gates subset");
+      const passingSubsetRun = yield* finalCheck({ gates: ["expectation-rewrite"] });
+      const passingSubset = O.getOrThrow(passingSubsetRun);
+      expect([passingSubset.complete, passingSubset.verdict]).toEqual([false, "pass"]);
+      const afterSubsets = yield* fs.readFileString(headReceipt);
+      expect(afterSubsets).toBe(complete);
+      const flippedAgain = yield* ready;
+      expect(flippedAgain._tag).toBe("flip");
 
-      const fs = yield* FileSystem.FileSystem;
-      yield* fs.remove(`${root}/${FINAL_CHECK_RECEIPT_DIR}/${head}.json`);
+      // Without the head receipt, a passing subset receipt never admits the flip.
+      yield* fs.remove(headReceipt);
+      const subsets = yield* subsetReceipts(root, head);
+      expect(A.map(subsets, (receipt) => [receipt.complete, receipt.verdict])).toEqual([
+        [false, "fail"],
+        [false, "pass"],
+      ]);
       const missing = yield* ready.pipe(Effect.flip);
+      expect(missing).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
       assertInclude(missing.message, `no final-check receipt for head ${Str.slice(0, 12)(head)}`);
       const flipsAfterRefusals = yield* Ref.get(flips);
-      expect(flipsAfterRefusals).toBe(1);
+      expect(flipsAfterRefusals).toBe(2);
 
       const events = yield* journalEvents(root);
       const passingInJournal = A.filter(finishedRows(events), (row) =>
-        O.exists(row.finalCheckReceipt, (receipt) => receipt.headSha === head && receipt.verdict === "pass")
+        O.exists(
+          row.finalCheckReceipt,
+          (receipt) => receipt.headSha === head && receipt.verdict === "pass" && receipt.complete
+        )
       );
       expect(A.length(passingInJournal)).toBe(1);
+    })
+  );
+
+  it.effect(
+    "never offers a subset receipt to the refresh rule, and a full run still writes the head receipt",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* scratchRepository();
+      const parent = yield* git(root, ["rev-parse", "HEAD"]);
+      const subsetRun = yield* finalCheck({ gates: ["expectation-rewrite"] });
+      const subset = O.getOrThrow(subsetRun);
+      const parentReceipt = yield* readFinalCheckReceipt(root, parent);
+      assertNone(parentReceipt);
+
+      // The child's nearest ancestor holds only a subset receipt: no carry candidate.
+      yield* commitFile(root, "README.md", "child\n");
+      const child = yield* git(root, ["rev-parse", "HEAD"]);
+      const carried = yield* findFinalCheckRefreshReceipt(root, child);
+      assertNone(carried);
+
+      const fullRun = yield* finalCheck({ skip: SKIP_SUBPROCESS_GATES });
+      const full = O.getOrThrow(fullRun);
+      expect(full.complete).toBe(true);
+      const onChild = yield* readFinalCheckReceipt(root, child);
+      assertSome(onChild, full);
+      const childSubsets = yield* fs.exists(`${root}/${FINAL_CHECK_SUBSET_RECEIPT_DIR}/${child}`);
+      expect(childSubsets).toBe(false);
+      const parentSubsets = yield* subsetReceipts(root, parent);
+      deepStrictEqual(parentSubsets, [subset]);
     })
   );
 
@@ -564,10 +627,9 @@ it.layer(JournalTestLayer, { timeout: "60 seconds" })("final-check attempt journ
       const coverage = O.getOrThrow(A.findFirst(receipt.steps, (row) => row.gate === "coverage"));
       expect(Str.endsWith("bun run coverage --affected --concurrency=1")(coverage.command)).toBe(true);
       const onHead = yield* readFinalCheckReceipt(root, head);
-      assertSome(
-        O.map(onHead, (written) => written.forceLocal),
-        true
-      );
+      assertNone(onHead);
+      const written = yield* subsetReceipts(root, head);
+      deepStrictEqual(written, [receipt]);
       const logged = yield* TestConsole.logLines;
       const logLines = A.map(logged, String);
       const runsCoverage =
@@ -627,11 +689,8 @@ it.layer(JournalTestLayer, { timeout: "60 seconds" })("final-check attempt journ
       expect(A.map(receipt.steps, (row) => [row.gate, row.status, row.reason])).toEqual([
         ["fallow", "skipped", "compute-profile=worker"],
       ]);
-      const onHead = yield* readFinalCheckReceipt(root, head);
-      assertSome(
-        O.map(onHead, (written) => written.forceLocal),
-        false
-      );
+      const written = yield* subsetReceipts(root, head);
+      deepStrictEqual(written, [receipt]);
       const logged = yield* TestConsole.logLines;
       const forcedLines = A.filter(
         A.map(logged, String),
@@ -647,6 +706,43 @@ it.layer(JournalTestLayer, { timeout: "60 seconds" })("final-check attempt journ
       expect(A.map(routed, (row) => [O.getOrUndefined(row.gateRoute), row.outcome, row.forceLocal])).toEqual([
         ["fallow", "refusal", true],
       ]);
+    })
+  );
+
+  // The dankserver sequence (goals/compute-profile-gate-routing, 2026-11-13 worker-host acceptance
+  // "Host notes"): a refusal run after a forced coverage run on the same head used to replace the
+  // forced receipt. Each subset run now keeps its own receipt, in run order.
+  it.effect(
+    "keeps a forced coverage receipt readable after a refused forced gate runs on the same head",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const runtimeDir = yield* fs.makeTempDirectoryScoped();
+      const runtimeRoot = RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir });
+      const root = yield* coverageWorkspace();
+      const head = yield* git(root, ["rev-parse", "HEAD"]);
+
+      const forcedRun = yield* finalCheck({ gates: ["coverage"], forceLocal: true }, WORKER).pipe(
+        provideRuntimeRootForTesting(runtimeRoot)
+      );
+      const forced = O.getOrThrow(forcedRun);
+      const refusedRun = yield* finalCheck({ gates: ["fallow"], forceLocal: true }, WORKER).pipe(
+        provideRuntimeRootForTesting(runtimeRoot)
+      );
+      const refused = O.getOrThrow(refusedRun);
+
+      const written = yield* subsetReceipts(root, head);
+      deepStrictEqual(written, [forced, refused]);
+      expect(
+        A.map(written, (receipt) => [
+          receipt.forceLocal,
+          A.map(receipt.steps, (row) => [row.gate, row.status, row.reason]),
+        ])
+      ).toEqual([
+        [true, [["coverage", "passed", undefined]]],
+        [false, [["fallow", "skipped", "compute-profile=worker"]]],
+      ]);
+      const onHead = yield* readFinalCheckReceipt(root, head);
+      assertNone(onHead);
     })
   );
 });

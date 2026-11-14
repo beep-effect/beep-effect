@@ -14,11 +14,15 @@ import { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -1080,7 +1084,8 @@ export class ReadyMonitorTarget extends S.Opaque<ReadyMonitorTarget, { readonly 
  * requested: a `finished` record is a loop that already ended and only awaits
  * its finalizer, a settled record is history, and a job with a cancel request
  * is about to stop polling. The record alone cannot prove the runner process
- * is still alive; publish checks that separately before reusing a job. The job follows the target when it bound the same pull request
+ * is still alive; callers check that separately (`pickLiveReadyMonitor`) before
+ * reusing or naming a job. The job follows the target when it bound the same pull request
  * number, or, before `--until-ready` resolved and bound the pull request, when
  * it was submitted for the same branch. Publish uses this to reuse the running
  * monitor instead of submitting a second job that would poll the same pull
@@ -1109,15 +1114,464 @@ export const isLiveReadyMonitorJob: {
 } = dual(
   2,
   (record: LiveReadyMonitorCandidate, target: Pick<ReadyMonitorTarget, "branch" | "prNumber">): boolean =>
-    !isSettledProofJob(record) &&
-    record.phase !== "finished" &&
-    O.isNone(record.cancelRequestedAt) &&
-    record.request.mode === "monitor" &&
-    A.contains(record.request.argv, "--until-ready") &&
-    O.match(record.prNumber, {
-      onNone: () => record.request.branch === target.branch,
-      onSome: (prNumber) => prNumber === target.prNumber,
+    isPollingReadyMonitor(record) && followsReadyMonitorTarget(record, target.branch, O.some(target.prNumber))
+);
+
+/**
+ * Recognize a request for a `monitor --until-ready` job.
+ *
+ * **Example** (Only an until-ready monitor qualifies)
+ *
+ * ```ts
+ * import { isReadyMonitorRequest } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(isReadyMonitorRequest({ mode: "monitor", argv: ["monitor", "--until-ready"] })) // true
+ * console.log(isReadyMonitorRequest({ mode: "monitor", argv: ["monitor", "--until-merged"] })) // false
+ * ```
+ *
+ * @param request - Mode and replay words of the job request.
+ * @returns Whether the request runs the readiness monitor loop.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isReadyMonitorRequest = (request: Pick<ProofJobRequest, "mode" | "argv">): boolean =>
+  request.mode === "monitor" && A.contains(request.argv, "--until-ready");
+
+// Still polling: not settled, not a loop that already ended, no cancel pending.
+const isPollingReadyMonitor = (record: LiveReadyMonitorCandidate): boolean =>
+  !isSettledProofJob(record) &&
+  record.phase !== "finished" &&
+  O.isNone(record.cancelRequestedAt) &&
+  isReadyMonitorRequest(record.request);
+
+// Pull request numbers decide when the job bound one and the caller knows one;
+// otherwise the branch the job was submitted from does.
+const followsReadyMonitorTarget = (
+  record: LiveReadyMonitorCandidate,
+  branch: string,
+  prNumber: O.Option<number>
+): boolean =>
+  O.getOrElse(
+    O.zipWith(record.prNumber, prNumber, (bound, wanted) => bound === wanted),
+    () => record.request.branch === branch
+  );
+
+// Presentation (`--json`, `--summary`) and cadence (`--poll-interval`) change
+// how a monitor prints or how often it reads, never the verdict it reaches.
+const READY_MONITOR_ARGV_IGNORED_FLAGS = HashSet.make("--json", "--summary", "--poll-interval");
+
+// `--flag=value` reads as `--flag value`, so both spellings key alike.
+const splitInlineFlagValue = (word: string): ReadonlyArray<string> =>
+  Str.startsWith("--")(word)
+    ? O.getOrElse(
+        O.map(Str.indexOf("=")(word), (index) => [Str.slice(0, index)(word), Str.slice(index + 1)(word)]),
+        () => [word]
+      )
+    : [word];
+
+// Each flag opens an entry; the words up to the next flag are its value.
+const groupReadyMonitorArgv = (words: ReadonlyArray<string>): ReadonlyArray<A.NonEmptyReadonlyArray<string>> =>
+  A.reduce(words, A.empty<A.NonEmptyReadonlyArray<string>>(), (entries, word) =>
+    A.isReadonlyArrayNonEmpty(entries) && !Str.startsWith("--")(word)
+      ? A.modifyLastNonEmpty(entries, (entry) => A.append(entry, word))
+      : A.append(entries, A.of(word))
+  );
+
+/**
+ * Normalize a readiness monitor's replay words into the key reuse compares.
+ *
+ * **Details**
+ *
+ * Launch-only flags are removed as {@link stripProofJobSubmitFlags} removes
+ * them from a record, and presentation and cadence flags (`--json`,
+ * `--summary`, `--poll-interval`) are dropped because they never change the
+ * verdict. Every other flag stays with its value, `--flag=value` and
+ * `--flag value` read alike, and the entries are sorted so flag order does not
+ * matter. A flag this list does not know, such as a future requirement flag,
+ * stays in the key, so a request that adds one never matches a job without it.
+ *
+ * **Example** (Same readiness flags in another order and spelling)
+ *
+ * ```ts
+ * import { readyMonitorArgvKey } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(readyMonitorArgvKey(["monitor", "--until-ready", "--settle-timeout=20m", "--detach", "--json"]))
+ * // ["--settle-timeout 20m", "--until-ready", "monitor"]
+ * console.log(readyMonitorArgvKey(["monitor", "--settle-timeout", "20m", "--until-ready"]))
+ * // ["--settle-timeout 20m", "--until-ready", "monitor"]
+ * ```
+ *
+ * @param argv - Words after the yeet command name, as submitted or as recorded.
+ * @returns The sorted readiness entries.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const readyMonitorArgvKey = (argv: ReadonlyArray<string>): ReadonlyArray<string> =>
+  pipe(
+    stripProofJobSubmitFlags(argv),
+    A.flatMap(splitInlineFlagValue),
+    groupReadyMonitorArgv,
+    A.filter((entry) => !HashSet.has(READY_MONITOR_ARGV_IGNORED_FLAGS, A.headNonEmpty(entry))),
+    A.map(A.join(" ")),
+    A.sort(Str.Order)
+  );
+
+const readyMonitorArgvKeyEquivalence = A.makeEquivalence(Str.Equivalence);
+
+/**
+ * The runtime cap a detached job submission asks for with `--job-max-runtime`.
+ *
+ * **Details**
+ *
+ * `unspecified` is a submission without the flag, `capped` asks systemd to stop
+ * the job after `seconds` (`RuntimeMaxSec`), and `uncapped` is
+ * `--job-max-runtime none`, an explicit request for no cap. A new job runs
+ * without a cap in both the `unspecified` and `uncapped` cases; the difference
+ * matters only when a live readiness monitor would be reused instead
+ * ({@link readyMonitorRuntimeShortfall}).
+ *
+ * **Example** (A six-hour cap)
+ *
+ * ```ts
+ * import { ProofJobRuntimeCapRequest } from "@beep/repo-cli/test/Yeet"
+ *
+ * const cap = ProofJobRuntimeCapRequest.cases.capped.make({ seconds: 21600 })
+ * console.log(cap._tag) // "capped"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ProofJobRuntimeCapRequest = S.TaggedUnion({
+  unspecified: {},
+  capped: { seconds: S.Int },
+  uncapped: {},
+}).pipe(
+  $I.annoteSchema("ProofJobRuntimeCapRequest", {
+    description:
+      "The runtime cap a detached job submission asks for: none given, a cap in seconds, or explicitly no cap.",
+  })
+);
+
+/**
+ * Type represented by {@link ProofJobRuntimeCapRequest}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ProofJobRuntimeCapRequest = typeof ProofJobRuntimeCapRequest.Type;
+
+/**
+ * The `RuntimeMaxSec` a new job gets for a requested runtime cap.
+ *
+ * **Example** (Only a capped request sets a cap)
+ *
+ * ```ts
+ * import { ProofJobRuntimeCapRequest, proofJobRuntimeCapSeconds } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.getOrNull(proofJobRuntimeCapSeconds(ProofJobRuntimeCapRequest.cases.capped.make({ seconds: 3600 })))) // 3600
+ * console.log(O.isNone(proofJobRuntimeCapSeconds(ProofJobRuntimeCapRequest.cases.uncapped.make({})))) // true
+ * ```
+ *
+ * @param cap - The requested runtime cap.
+ * @returns The cap in seconds, or `None` for a job without one.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const proofJobRuntimeCapSeconds = (cap: ProofJobRuntimeCapRequest): O.Option<number> =>
+  ProofJobRuntimeCapRequest.match(cap, {
+    unspecified: () => O.none(),
+    capped: ({ seconds }) => O.some(seconds),
+    uncapped: () => O.none(),
+  });
+
+/**
+ * How long a live job may still run before systemd stops it under its
+ * runtime cap.
+ *
+ * **Details**
+ *
+ * `unlimited` is a job without a cap. `remaining` is its cap minus the time
+ * since it started, clamped between zero and the cap. `unknown` is a capped
+ * job whose record has no readable start time, so its time left cannot be
+ * known; it carries the configured cap for the message.
+ *
+ * **Example** (Ten minutes left)
+ *
+ * ```ts
+ * import { ReadyMonitorRuntimeLeft } from "@beep/repo-cli/test/Yeet"
+ * import * as Duration from "effect/Duration"
+ *
+ * const left = ReadyMonitorRuntimeLeft.cases.remaining.make({ left: Duration.minutes(10) })
+ * console.log(left._tag) // "remaining"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ReadyMonitorRuntimeLeft = S.TaggedUnion({
+  unlimited: {},
+  remaining: { left: S.Duration },
+  unknown: { cap: S.Duration },
+}).pipe(
+  $I.annoteSchema("ReadyMonitorRuntimeLeft", {
+    description:
+      "How long a live job may still run under its runtime cap: no cap, the time left, or unknown for a capped job without a readable start time.",
+  })
+);
+
+/**
+ * Type represented by {@link ReadyMonitorRuntimeLeft}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ReadyMonitorRuntimeLeft = typeof ReadyMonitorRuntimeLeft.Type;
+
+/**
+ * The job-record fields {@link readyMonitorRuntimeLeft} reads: the submit
+ * time, the runner's start, and the unit's runtime cap.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ReadyMonitorRuntimeCandidate = Pick<ProofJobRecord, "submittedAt" | "runner"> & {
+  readonly unit: Pick<ProofJobUnit, "maxRuntimeSeconds">;
+};
+
+// The submit time precedes the unit's start, so measuring from it never
+// undercounts the time systemd has charged against `RuntimeMaxSec`; the
+// runner's start stands in when the submit time does not parse.
+const readyMonitorStartedAt = (record: ReadyMonitorRuntimeCandidate): O.Option<DateTime.Utc> =>
+  O.orElse(DateTime.make(record.submittedAt), () =>
+    O.flatMap(record.runner, (runner) => DateTime.make(runner.startedAt))
+  );
+
+/**
+ * Work out how long a live job may still run before systemd stops it.
+ *
+ * **Details**
+ *
+ * systemd counts `RuntimeMaxSec` from when the unit started, so the time left
+ * is the cap minus the time since the job started. The start is the record's
+ * submit time, which comes before the unit starts, so the time left is never
+ * overstated; the runner's start is used when the submit time does not parse.
+ * The result is clamped between zero and the cap. A capped job with neither
+ * time readable is `unknown`.
+ *
+ * **Example** (A one-hour cap fifty minutes in)
+ *
+ * ```ts
+ * import { readyMonitorRuntimeLeft } from "@beep/repo-cli/test/Yeet"
+ * import * as DateTime from "effect/DateTime"
+ * import * as O from "effect/Option"
+ *
+ * const job = { submittedAt: "2026-11-14T10:00:00.000Z", runner: O.none(), unit: { maxRuntimeSeconds: O.some(3600) } }
+ * const left = readyMonitorRuntimeLeft(job, DateTime.makeUnsafe("2026-11-14T10:50:00.000Z"))
+ * console.log(left._tag) // "remaining" (ten minutes)
+ * ```
+ *
+ * @param record - The job's submit time, runner start and unit cap.
+ * @param now - The current instant, read from the Effect clock by the caller.
+ * @returns The job's time left. Data-last form takes `now` first.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const readyMonitorRuntimeLeft: {
+  (now: DateTime.Utc): (record: ReadyMonitorRuntimeCandidate) => ReadyMonitorRuntimeLeft;
+  (record: ReadyMonitorRuntimeCandidate, now: DateTime.Utc): ReadyMonitorRuntimeLeft;
+} = dual(
+  2,
+  (record: ReadyMonitorRuntimeCandidate, now: DateTime.Utc): ReadyMonitorRuntimeLeft =>
+    O.match(record.unit.maxRuntimeSeconds, {
+      onNone: () => ReadyMonitorRuntimeLeft.cases.unlimited.make({}),
+      onSome: (seconds) => {
+        const cap = Duration.seconds(seconds);
+        return O.getOrElse(
+          O.map(readyMonitorStartedAt(record), (started) =>
+            ReadyMonitorRuntimeLeft.cases.remaining.make({
+              left: Duration.clamp(Duration.subtract(cap, DateTime.distance(started, now)), {
+                minimum: Duration.zero,
+                maximum: cap,
+              }),
+            })
+          ),
+          () => ReadyMonitorRuntimeLeft.cases.unknown.make({ cap })
+        );
+      },
     })
+);
+
+// Whole seconds: a clock read a few milliseconds apart never changes the text.
+const formatRuntime = (time: Duration.Duration): string =>
+  Duration.format(Duration.seconds(Math.floor(Duration.toSeconds(time))));
+
+/**
+ * Describe a live job's time left for a reuse note or warning.
+ *
+ * **Example** (Ten minutes left)
+ *
+ * ```ts
+ * import { ReadyMonitorRuntimeLeft, renderReadyMonitorRuntimeLeft } from "@beep/repo-cli/test/Yeet"
+ * import * as Duration from "effect/Duration"
+ *
+ * console.log(renderReadyMonitorRuntimeLeft(ReadyMonitorRuntimeLeft.cases.remaining.make({ left: Duration.minutes(10) })))
+ * // "10m left before its runtime cap stops it"
+ * ```
+ *
+ * @param left - The job's time left.
+ * @returns A phrase that follows "the job has".
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderReadyMonitorRuntimeLeft = (left: ReadyMonitorRuntimeLeft): string =>
+  ReadyMonitorRuntimeLeft.match(left, {
+    unlimited: () => "no runtime cap",
+    remaining: (time) => `${formatRuntime(time.left)} left before its runtime cap stops it`,
+    unknown: ({ cap }) =>
+      `a runtime cap of ${formatRuntime(cap)} but no readable start time, so its time left is unknown`,
+  });
+
+/**
+ * Say why a live job's time left does not serve a request's runtime cap, or
+ * nothing when it does.
+ *
+ * **Details**
+ *
+ * A request without `--job-max-runtime` accepts any job. A capped request
+ * needs a job without a cap, or one whose time left is at least the requested
+ * cap; a time left equal to the request is enough, because it is measured from
+ * the submit time and so never overstated. It refuses a job whose time left is
+ * unknown. `--job-max-runtime none` needs a job without a cap.
+ *
+ * **Example** (Ten minutes left is not enough for thirty)
+ *
+ * ```ts
+ * import { ProofJobRuntimeCapRequest, ReadyMonitorRuntimeLeft, readyMonitorRuntimeShortfall } from "@beep/repo-cli/test/Yeet"
+ * import * as Duration from "effect/Duration"
+ * import * as O from "effect/Option"
+ *
+ * const left = ReadyMonitorRuntimeLeft.cases.remaining.make({ left: Duration.minutes(10) })
+ * const asked = ProofJobRuntimeCapRequest.cases.capped.make({ seconds: 1800 })
+ * console.log(O.getOrNull(readyMonitorRuntimeShortfall(left, asked)))
+ * // "10m left before its runtime cap stops it, less than the 30m asked for"
+ * ```
+ *
+ * @param left - The live job's time left.
+ * @param request - The runtime cap the request asks for.
+ * @returns The reason the job falls short, or `None` when it serves the request. Data-last form takes `request` first.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const readyMonitorRuntimeShortfall: {
+  (request: ProofJobRuntimeCapRequest): (left: ReadyMonitorRuntimeLeft) => O.Option<string>;
+  (left: ReadyMonitorRuntimeLeft, request: ProofJobRuntimeCapRequest): O.Option<string>;
+} = dual(
+  2,
+  (left: ReadyMonitorRuntimeLeft, request: ProofJobRuntimeCapRequest): O.Option<string> =>
+    ProofJobRuntimeCapRequest.match(request, {
+      unspecified: () => O.none(),
+      capped: ({ seconds }) => cappedRuntimeShortfall(left, Duration.seconds(seconds)),
+      uncapped: () =>
+        O.map(
+          O.liftPredicate(left, P.not(ReadyMonitorRuntimeLeft.guards.unlimited)),
+          (capped) =>
+            `${renderReadyMonitorRuntimeLeft(capped)}, but --job-max-runtime none asks for a job without a cap`
+        ),
+    })
+);
+
+const cappedRuntimeShortfall = (left: ReadyMonitorRuntimeLeft, asked: Duration.Duration): O.Option<string> =>
+  ReadyMonitorRuntimeLeft.match(left, {
+    unlimited: () => O.none(),
+    remaining: (time) =>
+      Duration.isGreaterThanOrEqualTo(time.left, asked)
+        ? O.none()
+        : O.some(`${renderReadyMonitorRuntimeLeft(time)}, less than the ${formatRuntime(asked)} asked for`),
+    unknown: (unknown) => O.some(renderReadyMonitorRuntimeLeft(unknown)),
+  });
+
+/**
+ * A readiness monitor a caller is about to submit: the branch it is submitted
+ * from, the pull request when the caller already knows it, its replay words,
+ * and the runtime cap it asks for (none given by default).
+ *
+ * **Example** (The request `monitor --until-ready --detach` makes)
+ *
+ * ```ts
+ * import { ReadyMonitorRequest } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const request = ReadyMonitorRequest.make({ branch: "feat/x", argv: ["monitor", "--until-ready", "--detach"] })
+ * console.log(O.isNone(request.prNumber), request.runtimeCap._tag) // true "unspecified"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReadyMonitorRequest extends S.Opaque<ReadyMonitorRequest, { readonly brand: unique symbol }>()(
+  S.Struct({
+    branch: S.String,
+    prNumber: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    argv: S.Array(S.String),
+    runtimeCap: ProofJobRuntimeCapRequest.pipe(
+      S.withConstructorDefault(Effect.sync(() => ProofJobRuntimeCapRequest.cases.unspecified.make({})))
+    ),
+  }).pipe(
+    $I.annoteSchema("ReadyMonitorRequest", {
+      description:
+        "A readiness monitor about to be submitted: its branch, the pull request when known, its replay words, and the runtime cap it asks for.",
+    })
+  )
+) {}
+
+/**
+ * Recognize a live readiness monitor that runs what a new request asks for:
+ * the same pull request and the same readiness argv.
+ *
+ * **Details**
+ *
+ * The job must still be polling (as for {@link isLiveReadyMonitorJob}), follow
+ * the same pull request, and carry the same {@link readyMonitorArgvKey}. When
+ * the request knows its pull request number and the job bound one, the numbers
+ * decide; otherwise the submitted branch does. Only an equal key matches: a
+ * request with an extra or different readiness flag is never satisfied by a
+ * job without it, and a looser request does not take over a stricter job.
+ * Two more checks come before a matching job is reused, because the record
+ * alone cannot settle them: whether its time left serves the request's runtime
+ * cap ({@link readyMonitorRuntimeShortfall}, which needs the current time) and
+ * whether its runner process is alive.
+ *
+ * **Example** (A stricter request is not satisfied by a looser job)
+ *
+ * ```ts
+ * import { matchesReadyMonitorRequest, ProofJobRequest, ReadyMonitorRequest } from "@beep/repo-cli/test/Yeet"
+ * import type { LiveReadyMonitorCandidate } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const request = ProofJobRequest.make({ mode: "monitor", argv: ["monitor", "--until-ready"], checkout: "/repo", branch: "feat/x", base: "origin/main", head: "0123456789abcdef0123456789abcdef01234567", forwardedEnvNames: [] })
+ * const job: LiveReadyMonitorCandidate = { phase: "running", systemd: O.none(), cancelRequestedAt: O.none(), request, prNumber: O.some(1427) }
+ * const argv = ["monitor", "--until-ready", "--detach"]
+ * console.log(matchesReadyMonitorRequest(job, ReadyMonitorRequest.make({ branch: "feat/x", argv }))) // true
+ * console.log(matchesReadyMonitorRequest(job, ReadyMonitorRequest.make({ branch: "feat/x", argv: [...argv, "--settle-timeout", "2h"] }))) // false
+ * ```
+ *
+ * @param record - Phase, finalization stamp, replayed request, and bound pull request of the job.
+ * @param request - The monitor the caller is about to submit.
+ * @returns Whether the job runs what the request asks for. Data-last form takes `request` first.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const matchesReadyMonitorRequest: {
+  (request: ReadyMonitorRequest): (record: LiveReadyMonitorCandidate) => boolean;
+  (record: LiveReadyMonitorCandidate, request: ReadyMonitorRequest): boolean;
+} = dual(
+  2,
+  (record: LiveReadyMonitorCandidate, request: ReadyMonitorRequest): boolean =>
+    isPollingReadyMonitor(record) &&
+    followsReadyMonitorTarget(record, request.branch, request.prNumber) &&
+    readyMonitorArgvKeyEquivalence(readyMonitorArgvKey(record.request.argv), readyMonitorArgvKey(request.argv))
 );
 
 /**

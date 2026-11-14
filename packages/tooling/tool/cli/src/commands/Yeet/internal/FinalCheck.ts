@@ -18,15 +18,18 @@
  * Steps run one at a time and every lane body carries its own Turbo
  * concurrency cap (2-4), so the whole run fits a 4-core worker.
  *
- * The run writes a head-pinned receipt under `.beep/yeet/final-check/`.
+ * A full run writes the head-pinned receipt `.beep/yeet/final-check/<head>.json`.
  * `yeet ready` refuses to flip a draft whose head has no complete passing
  * receipt. A gate that cannot run locally is skipped only with a recorded
  * reason (`--skip <gate>=<reason>`), which the receipt and the flip both show.
+ * A `--gates` subset run never writes the head receipt: each writes its own
+ * file under `.beep/yeet/final-check/subsets/<head>/`, so it neither replaces
+ * a complete receipt on the head nor an earlier subset run's receipt.
  *
  * Every run on a clean tree is also journaled as one attempt in the branch's
  * Yeet attempt journal (`.beep/yeet/runs/<runId>/attempts.ndjson`, mode
  * `final-check`), with the receipt it wrote. The head receipt is overwritten
- * by each run on that head; the journal keeps every run for economics.
+ * by each full run on that head; the journal keeps every run for economics.
  * `yeet ready` reads only the head receipt.
  *
  * @packageDocumentation
@@ -42,6 +45,7 @@ import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -63,7 +67,7 @@ import {
 } from "../../../internal/repo-run/GateRoute.schemas.ts";
 import { processStartIdentityForPid } from "../../../internal/repo-run/ProcessIdentity.ts";
 import { AdmissionRoute } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
-import { recordAdmissionRoute } from "../../../internal/repo-run/QualityScheduler.ts";
+import { QualityScheduler } from "../../../internal/repo-run/QualityScheduler.service.ts";
 import { repoRunArtifactId } from "../../../internal/repo-run/RepoRunArtifacts.ts";
 import { CiLocalStepPlan, ciLaneDispatchStep } from "../../Ci/CiLane.ts";
 import { ChangeAtomKind, RouteSentinel } from "../../Ci/Route.schemas.ts";
@@ -118,7 +122,6 @@ import {
 } from "./Inbox.ts";
 import { YeetFailureKind, YeetVerdict, YeetVerdictLane } from "./Verdict.ts";
 import type * as Digest from "effect/crypto/Digest";
-import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { ComputeProfile } from "../../../internal/repo-run/ComputeProfile.schemas.ts";
 import type { AdmissionRouteOutcome } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
@@ -239,6 +242,33 @@ export const finalCheckGateSetRefusal = (
  * @since 0.0.0
  */
 export const FINAL_CHECK_RECEIPT_DIR = ".beep/yeet/final-check";
+
+/**
+ * Repo-relative directory holding the receipts of `--gates` subset runs: one
+ * directory per head, one file per run.
+ *
+ * **Details**
+ *
+ * A subset run writes `subsets/<head>/<ulid>.json`, a {@link FinalCheckReceipt}
+ * marked incomplete, and never the head receipt `<head>.json`. A complete
+ * receipt already on the head therefore keeps admitting `yeet ready`, and a
+ * later subset run on the same head adds a file that sorts after the earlier
+ * one instead of replacing it. `yeet ready`, `yeet open` and the refresh rule
+ * read only `<head>.json` entries of {@link FINAL_CHECK_RECEIPT_DIR}; this
+ * directory is not one, so a subset receipt never admits a flip.
+ *
+ * **Example** (Locate a head's subset receipts)
+ *
+ * ```ts
+ * import { FINAL_CHECK_SUBSET_RECEIPT_DIR } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(`${FINAL_CHECK_SUBSET_RECEIPT_DIR}/${"a".repeat(40)}`.startsWith(".beep/yeet/final-check/subsets/")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const FINAL_CHECK_SUBSET_RECEIPT_DIR = `${FINAL_CHECK_RECEIPT_DIR}/subsets`;
 
 const decodeRouteSentinelText = S.decodeUnknownEffect(S.fromJsonString(RouteSentinel));
 
@@ -1068,11 +1098,24 @@ export const readFinalCheckReceipt = Effect.fn("Yeet.readFinalCheckReceipt")(fun
     .pipe(Effect.flatMap(decodeReceipt), Effect.asSome, Effect.orElseSucceed(O.none<FinalCheckReceipt>));
 });
 
+// `--gates` naming fewer than every gate; naming all of them is a full run.
+const isGateSubset = (gates: ReadonlyArray<FinalCheckGate>): boolean =>
+  A.length(gates) < A.length(FinalCheckGate.literals);
+
+// A full run owns the head receipt. A subset run gets a file of its own, named by a ULID so a
+// later run on the head sorts after it and leaves it readable.
+const receiptTarget = Effect.fnUntraced(function* (repoRoot: string, headSha: string, subset: boolean) {
+  if (!subset) return yield* receiptPath(repoRoot, headSha);
+  const path = yield* Path.Path;
+  const random = yield* SecureRandom.SecureRandom;
+  return path.join(repoRoot, FINAL_CHECK_SUBSET_RECEIPT_DIR, headSha, `${yield* random.ulid}.json`);
+});
+
 const writeReceipt = Effect.fn("Yeet.writeFinalCheckReceipt")(
-  function* (repoRoot: string, receipt: FinalCheckReceipt) {
+  function* (repoRoot: string, receipt: FinalCheckReceipt, subset: boolean) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const file = yield* receiptPath(repoRoot, receipt.headSha);
+    const file = yield* receiptTarget(repoRoot, receipt.headSha, subset);
     yield* fs.makeDirectory(path.dirname(file), { recursive: true });
     yield* fs.writeFileString(file, `${yield* encodeReceipt(receipt)}\n`);
     return file;
@@ -1815,11 +1858,12 @@ const recordWorkerFinalCheckRoutes = (
   A.match(routes, {
     onEmpty: () => Effect.void,
     onNonEmpty: Effect.fnUntraced(function* (decided) {
+      const scheduler = yield* QualityScheduler;
       const branch = yield* currentYeetBranch(repoRoot).pipe(Effect.orElseSucceed(constant("")));
       yield* Effect.forEach(
         decided,
         ([gate, outcome]) =>
-          recordAdmissionRoute(
+          scheduler.recordRoute(
             AdmissionRoute.make({
               checkoutRoot: repoRoot,
               branch,
@@ -1846,9 +1890,13 @@ const recordWorkerFinalCheckRoutes = (
  * re-reads HEAD and the tree after the gates: a commit or uncommitted edit
  * that landed during the run means no receipt is written. Gates run
  * in {@link FinalCheckGate} order; every gate runs unless `--fail-fast` stops
- * after the first red. A `--gates` subset still writes a receipt, marked
- * incomplete, so it can never admit `yeet ready`. `--dry-run` prints the plan
- * and runs nothing.
+ * after the first red. A `--gates` subset (fewer than every gate) writes its
+ * receipt, marked incomplete, to a file of its own under
+ * {@link FINAL_CHECK_SUBSET_RECEIPT_DIR} and leaves the head receipt as it
+ * was: a complete receipt already on the head still admits `yeet ready`, the
+ * subset receipt never does, and a later subset run on the head keeps it.
+ * A full run writes the head receipt. `--dry-run` prints the plan and runs
+ * nothing.
  *
  * A run past the dirty-tree refusal appends a start row and a terminal row
  * ({@link finalCheckAttemptTerminal}) to the branch attempt journal. A journal
@@ -1865,7 +1913,8 @@ const recordWorkerFinalCheckRoutes = (
  * ```
  *
  * @param options - Base ref, gate subset, recorded skips, dry run and fail-fast flags.
- * @returns The receipt written for the head; fails when the verdict is not pass.
+ * @returns The receipt the run wrote (the head receipt, or a subset run's own
+ * file); fails when the verdict is not pass.
  * @category use-cases
  * @since 0.0.0
  */
@@ -1880,6 +1929,7 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Git
+  | QualityScheduler
 > {
   const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate repo root.")));
   const gates = yield* parseFinalCheckGates(options.gates);
@@ -1971,7 +2021,7 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
       computeProfile,
       forceLocal: forced,
     });
-    const file = yield* writeReceipt(repoRoot, receipt);
+    const file = yield* writeReceipt(repoRoot, receipt, isGateSubset(gates));
     yield* Ref.set(ran, { steps, receipt: O.some(receipt) });
     yield* Console.log(renderSummary(receipt));
     yield* printProfileSkips(routedSkips);
