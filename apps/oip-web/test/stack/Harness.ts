@@ -107,3 +107,17 @@ export const renderPlanLog =
   (stage: string) =>
   (plan: Parameters<typeof formatPlanLines>[0]): string =>
     A.join([`Plan · ${stage}`, ...A.map(formatPlanLines(plan), Str.replace(ANSI, ""))], "\n");
+
+/**
+ * Remove one resource's row from every stage of the scratch state store, leaving the live object
+ * in place: the state a deploy leaves when that one resource failed (staging, 2026-11-14).
+ */
+export const dropStateRow = Effect.fn("dropStateRow")(function* (fqn: string) {
+  const store = yield* yield* State;
+  const stacks = yield* store.listStacks();
+  yield* Effect.forEach(stacks, (stack) =>
+    store
+      .listStages(stack)
+      .pipe(Effect.flatMap((stages) => Effect.forEach(stages, (stage) => store.delete({ stack, stage, fqn }))))
+  );
+});

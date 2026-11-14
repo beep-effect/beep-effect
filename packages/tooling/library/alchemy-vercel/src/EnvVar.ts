@@ -573,13 +573,43 @@ const requestBody = (news: EnvVarProps, value: Redacted.Redacted<string>) =>
   );
 
 /**
+ * The fields an in-place edit sends: the value always (it cannot be read back, so an edit is how a
+ * rotation and an adoption reach Vercel), the targets and branch only when they differ from what
+ * is stored, and a declared comment.
+ *
+ * **Gotchas**
+ *
+ * The edit never sends `key` or `type`. Vercel refuses any `key` on a sensitive variable, even the
+ * identical one ("You cannot change the key of a Sensitive Environment Variable", first armed
+ * OipWeb deploy, 2026-11-14), and does not convert a type in place. A key change is a replacement
+ * (see {@link replacesEnvVar}); a weaker stored type is removed and created again.
+ *
+ * @param news - The declared props.
+ * @param body - The encoded request body.
+ * @param existing - The variable already on Vercel.
+ * @returns The edit fields after the path and scope.
+ */
+const editFields = (news: EnvVarProps, body: typeof EnvVarRequestBody.Encoded, existing: EnvVarAttributes) => ({
+  value: body.value,
+  ...O.getSomesStruct({
+    target: sameTargets(existing.targets, body.target) ? O.none<Array<string>>() : O.some(A.copy(body.target)),
+    gitBranch:
+      (existing.gitBranch ?? null) === (news.gitBranch ?? null)
+        ? O.none<string | null>()
+        : O.some<string | null>(news.gitBranch ?? null),
+    comment: O.fromUndefinedOr(body.comment),
+  }),
+});
+
+/**
  * Create, edit or type-replace the variable so Vercel holds the declared value.
  *
  * **Details**
  *
  * Vercel does not promise to change a stored type in place (a sensitive value can never be
  * read back), so a variable stored weaker than declared is removed and created again. An
- * existing variable of equal or stronger type is edited without a type, so it keeps it.
+ * existing variable of equal or stronger type is edited with {@link editFields}, so it keeps its
+ * key and type.
  *
  * @param news - The declared props.
  * @param body - The encoded request body.
@@ -604,11 +634,7 @@ const writeEnv = Effect.fn("Vercel.EnvVar.write")(function* (
     idOrName: existing.projectId,
     id: existing.envId,
     ...scope,
-    key: body.key,
-    value: body.value,
-    target: A.copy(body.target),
-    gitBranch: news.gitBranch ?? null,
-    ...O.getSomesStruct({ comment: O.fromUndefinedOr(body.comment) }),
+    ...editFields(news, body, existing),
   });
 });
 
@@ -640,14 +666,18 @@ const readValueSourceWhilePlanning = Effect.fn("Vercel.EnvVar.readValueSourceWhi
 });
 
 /**
- * Whether a change replaces the variable: another project, team or storage type.
+ * Whether a change replaces the variable: another project, team, key or storage type. An edit
+ * never sends a key (Vercel refuses one on a sensitive variable), so a renamed key is a new variable.
  *
  * @param news - The declared props.
  * @param olds - The props of the deployed generation.
  * @returns `true` when the variable must be replaced.
  */
 const replacesEnvVar = (news: EnvVarProps, olds: EnvVarProps): boolean =>
-  news.project !== olds.project || news.teamId !== olds.teamId || storageTypeOf(news) !== storageTypeOf(olds);
+  news.project !== olds.project ||
+  news.teamId !== olds.teamId ||
+  news.key !== olds.key ||
+  storageTypeOf(news) !== storageTypeOf(olds);
 
 /**
  * Whether a `valueFrom` value changed since the last write. The value never reaches props,

@@ -107,6 +107,10 @@ const storedTypes = MutableHashMap.empty<string, string>();
  * file run concurrently, so assertions read one project's requests, never the whole log.
  */
 const requests: Array<{ readonly projectId: string; readonly call: string }> = [];
+/** The env body fields, alphabetical, as {@link FakeVercel.envPatchFieldsFor} reports them. */
+const envPatchFieldNames = ["comment", "gitBranch", "key", "target", "type", "value"] as const;
+/** Field names of every env PATCH body, per project, in order: what an in-place edit sent. */
+const envPatchFields: Array<{ readonly projectId: string; readonly fields: ReadonlyArray<string> }> = [];
 let sequence = 0;
 
 const nextId = (prefix: string): string => {
@@ -124,6 +128,12 @@ export const FakeVercel = {
       (env) => env.projectId === projectId
     ),
   domain: (name: string): O.Option<DomainRecord> => MutableHashMap.get(domainsByName, name),
+  /** Field names of each env PATCH body sent for one project, in order. */
+  envPatchFieldsFor: (projectId: string): ReadonlyArray<ReadonlyArray<string>> =>
+    A.map(
+      A.filter(envPatchFields, (entry) => entry.projectId === projectId),
+      (entry) => entry.fields
+    ),
   /** `METHOD Route` calls the fake answered for one project, in order. */
   requestsFor: (projectId: string): ReadonlyArray<string> =>
     A.map(
@@ -189,7 +199,10 @@ const respond = (request: HttpClientRequest.HttpClientRequest, status: number, b
     Effect.orDie
   );
 
-const error = (status: number, code: string) => ({ status, body: { error: { code, message: code } } });
+const error = (status: number, code: string, message: string = code) => ({
+  status,
+  body: { error: { code, message } },
+});
 const ok = (body: unknown) => ({ status: 200, body });
 const notFound = error(404, "not_found");
 
@@ -338,6 +351,31 @@ const upsertEnv = (project: ProjectRecord, body: typeof EnvBody.Type, upsert: bo
   return ok({ created: envResponse(record), failed: [] });
 };
 
+/**
+ * What the real `PATCH /v9/projects/{id}/env/{envId}` refuses, as observed or documented:
+ * - any `key` on a sensitive variable, even the identical key (observed 2026-11-14, run 43585534113);
+ * - a `type` on a sensitive variable that is not `sensitive` (no in-place conversion, Vercel docs);
+ * - a `gitBranch` without the `preview` target (the request schema's own constraint).
+ */
+const refuseSensitiveEdit = (env: EnvRecord, body: typeof EnvBody.Type) =>
+  env.type !== "sensitive"
+    ? O.none()
+    : body.key !== undefined
+      ? O.some(error(400, "bad_request", "You cannot change the key of a Sensitive Environment Variable."))
+      : body.type !== undefined && body.type !== "sensitive"
+        ? O.some(error(400, "bad_request", "You cannot change the type of a Sensitive Environment Variable."))
+        : O.none();
+
+const refuseBranchWithoutPreview = (env: EnvRecord, body: typeof EnvBody.Type) => {
+  const gitBranch = body.gitBranch === undefined ? env.gitBranch : body.gitBranch;
+  return P.isString(gitBranch) && !A.contains(body.target ?? env.target, "preview")
+    ? O.some(error(400, "bad_request", "gitBranch requires the preview target"))
+    : O.none();
+};
+
+const refuseEnvEdit = (env: EnvRecord, body: typeof EnvBody.Type) =>
+  O.orElse(refuseSensitiveEdit(env, body), () => refuseBranchWithoutPreview(env, body));
+
 const withProject = (idOrName: string, f: (project: ProjectRecord) => { status: number; body: unknown }) =>
   O.match(findProject(idOrName), { onNone: () => notFound, onSome: f });
 
@@ -385,6 +423,12 @@ const handle = (method: string, route: Route, query: URLSearchParams, body: unkn
                 MutableHashMap.remove(envsById, id);
                 return ok([]);
               }
+              envPatchFields.push({
+                projectId: project.id,
+                fields: A.filter(envPatchFieldNames, (field) => envBody[field] !== undefined),
+              });
+              const refusal = refuseEnvEdit(env, envBody);
+              if (O.isSome(refusal)) return refusal.value;
               const { gitBranch, ...rest } = envBody;
               const { gitBranch: _old, ...base } = env;
               const updated: EnvRecord = {

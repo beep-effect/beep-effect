@@ -10,7 +10,7 @@ import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Str from "effect/String";
 import { FakeVercel, TEAM_ID } from "./harness/FakeVercel.ts";
-import { failureTag, makeHarness, typed } from "./harness/Harness.ts";
+import { dropStateRow, failureTag, makeHarness, typed } from "./harness/Harness.ts";
 
 // The create path: a domain or variable whose `project` prop is another resource's output is not
 // resolved when the plan is made, so the engine cannot read it for adoption and plans `create`.
@@ -107,6 +107,7 @@ describe("the create path onto existing objects", { concurrent: false }, () => {
         const env = yield* stack.deploy(declare);
         const calls = A.drop(FakeVercel.requestsFor(live.id), before);
         expect(mutating(calls)).toEqual(["PATCH Env"]);
+        expect(FakeVercel.envPatchFieldsFor(live.id)).toEqual([["value"]]);
         expect(env.envId).toBe(seeded.id);
         const stored = A.filter(FakeVercel.envsOf(live.id), (record) => record.key === "NEXT_DISABLE_PWA");
         expect(
@@ -150,12 +151,113 @@ describe("the create path onto existing objects", { concurrent: false }, () => {
         const before = A.length(FakeVercel.requestsFor(live.id));
         const env = yield* stack.deploy(declare).pipe(config);
         const calls = A.drop(FakeVercel.requestsFor(live.id), before);
+        // The real API refuses any `key` on a sensitive variable (run 43585534113); the fake does too.
         expect(mutating(calls)).toEqual(["PATCH Env"]);
+        expect(FakeVercel.envPatchFieldsFor(live.id)).toEqual([["value"]]);
         expect(env.envId).toBe(seeded.id);
         const stored = A.filter(FakeVercel.envsOf(live.id), (record) => record.key === "CRM_HUBSPOT_SERVICE_KEY");
         expect(A.map(stored, (record) => [record.id, record.value, record.type, record.target])).toEqual([
           [seeded.id, "live-token", "sensitive", ["production"]],
         ]);
+      })
+  );
+
+  test.provider(
+    "Vercel.EnvVar edits a sensitive variable's value and targets in place, without key or type",
+    (scratch) =>
+      Effect.gen(function* () {
+        const stack = typed(scratch);
+        yield* stack.destroy();
+        const project = FakeVercel.seedProject("vt-sensitive-edit");
+        const declare = (targets: A.NonEmptyReadonlyArray<"production" | "preview">) =>
+          Vercel.EnvVar("Secret", {
+            project: project.id,
+            teamId: TEAM_ID,
+            key: "VT_SENSITIVE_EDIT",
+            valueFrom: { config: "VT_SENSITIVE_EDIT_TOKEN" },
+            targets,
+            type: "sensitive",
+          });
+        const created = yield* stack
+          .deploy(declare(["production"]))
+          .pipe(withConfig({ VT_SENSITIVE_EDIT_TOKEN: "one" }));
+        const rotated = yield* stack
+          .deploy(declare(["production"]))
+          .pipe(withConfig({ VT_SENSITIVE_EDIT_TOKEN: "two" }));
+        const retargeted = yield* stack
+          .deploy(declare(["production", "preview"]))
+          .pipe(withConfig({ VT_SENSITIVE_EDIT_TOKEN: "two" }));
+        expect([rotated.envId, retargeted.envId]).toEqual([created.envId, created.envId]);
+        expect(FakeVercel.envPatchFieldsFor(project.id)).toEqual([["value"], ["target", "value"]]);
+        expect(A.filter(mutating(FakeVercel.requestsFor(project.id)), (call) => call === "DELETE Env")).toEqual([]);
+        const stored = O.getOrThrow(FakeVercel.env(created.envId));
+        expect([stored.value, stored.type, A.sort(stored.target, Str.Order)]).toEqual([
+          "two",
+          "sensitive",
+          ["preview", "production"],
+        ]);
+      })
+  );
+
+  test.provider(
+    "Vercel.EnvVar replaces a sensitive variable whose key is renamed, deleting the old one first",
+    (scratch) =>
+      Effect.gen(function* () {
+        const stack = typed(scratch);
+        yield* stack.destroy();
+        const project = FakeVercel.seedProject("vt-sensitive-rename");
+        const declare = (key: string) =>
+          Vercel.EnvVar("Secret", {
+            project: project.id,
+            teamId: TEAM_ID,
+            key,
+            value: Redacted.make("token"),
+            targets: ["production"],
+            type: "sensitive",
+          });
+        const first = yield* stack.deploy(declare("VT_OLD_NAME"));
+        const plan = yield* stack.plan(declare("VT_NEW_NAME"));
+        expect(planLines(plan)).toContain("[Secret] replace");
+        const renamed = yield* stack.deploy(declare("VT_NEW_NAME"));
+        expect(renamed.envId).not.toBe(first.envId);
+        expect(FakeVercel.envPatchFieldsFor(project.id)).toEqual([]);
+        expect(A.map(FakeVercel.envsOf(project.id), (record) => record.key)).toEqual(["VT_NEW_NAME"]);
+      })
+  );
+
+  test.provider(
+    "Vercel.EnvVar adopts a sensitive variable whose row is missing with one value-only edit, then plans no changes",
+    (scratch) =>
+      Effect.gen(function* () {
+        // The staging re-run after run 43585534113: the project's row exists, the variable's does not.
+        const stack = typed(scratch);
+        yield* stack.destroy();
+        const declare = Effect.gen(function* () {
+          const project = yield* Vercel.Project("Web", { name: "vt-adopt-missing-row", teamId: TEAM_ID }).pipe(
+            adopt(true)
+          );
+          return yield* Vercel.EnvVar("Secret", {
+            project: project.projectId,
+            teamId: TEAM_ID,
+            key: "VT_ADOPT_MISSING_ROW",
+            valueFrom: { config: "VT_ADOPT_MISSING_ROW_TOKEN" },
+            targets: ["production"],
+            type: "sensitive",
+          }).pipe(adopt(true));
+        });
+        const config = withConfig({ VT_ADOPT_MISSING_ROW_TOKEN: "live-token" });
+        const first = yield* stack.deploy(declare).pipe(config);
+        yield* dropStateRow("Secret");
+        const projectId = O.getOrThrow(FakeVercel.project("vt-adopt-missing-row")).id;
+        const edits = A.length(FakeVercel.envPatchFieldsFor(projectId));
+
+        const plan = yield* stack.plan(declare).pipe(config);
+        expect(planLines(plan)).toContain("[Secret] adopted");
+        const adopted = yield* stack.deploy(declare).pipe(config);
+        expect(adopted.envId).toBe(first.envId);
+        expect(A.drop(FakeVercel.envPatchFieldsFor(projectId), edits)).toEqual([["value"]]);
+        const next = yield* stack.plan(declare).pipe(config);
+        expect(planLines(next)).toContain("[Secret] noop");
       })
   );
 });

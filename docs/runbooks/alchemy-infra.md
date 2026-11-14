@@ -444,6 +444,34 @@ It plans `[AssetsBucket]`, `[EnvHubSpotAccountId]`, `[EnvNextDisablePwa]` and `[
 as creates, all stage-named, and makes no Cloudflare call. `prod` and `staging` refuse to
 run without `CI=true`.
 
+### Live write rehearsal
+
+Run this before arming after any change to a write path of `@beep/alchemy-vercel`. The fake Vercel API
+only encodes rules someone has observed; the first arm failed on one it did not know (decision
+`2026-11-14-first-armed-oipweb-deploy-failed-on-a-sensitive-variable-edit`).
+
+- **Stack:** `apps/oip-web/test/live/rehearsal.alchemy.run.ts`, the `OipWebRehearsal` stack.
+- **Objects:** a scratch project `oip-web-rehearsal-<stage>` with three variables shaped like the stack's
+  (`encrypted` literal, `sensitive` `valueFrom`, `plain`).
+- **Stages:** it refuses `prod` and `staging`, and touches no domain, DNS record or Cloudflare object.
+
+Use the personal stage's environment above plus `OIP_WEB_REHEARSAL_SECRET`, a throwaway value that is
+never a real secret. Run each step with `bunx alchemy <plan|deploy|destroy> test/live/rehearsal.alchemy.run.ts
+--stage "dev_$USER"` from `apps/oip-web`:
+
+1. **Seed:** deploy. Expect 4 creates.
+2. **Adoption over existing objects:** `bunx alchemy state delete OipWebRehearsal/dev_$USER -r -c
+   test/live/rehearsal.alchemy.run.ts`, then deploy with `OIP_WEB_REHEARSAL_ADOPT=true`. Expect
+   `3 to create, 1 to adopted`, every write in place: same ids, no second variable.
+3. **Edits:** deploy with `OIP_WEB_REHEARSAL_PLAIN_PREVIEW=true` (plain target change), with a new
+   `OIP_WEB_REHEARSAL_SECRET` (rotation), and with `OIP_WEB_REHEARSAL_SENSITIVE_PREVIEW=true` (sensitive
+   target change). Expect one update each.
+4. **A missing row:** reseed, delete only `OipWebRehearsal/dev_$USER/EnvSensitive`, and deploy with
+   adoption. Expect `1 to adopted`, then `no changes`.
+5. **Teardown:** `destroy`, and confirm the scratch project is gone.
+
+Then deploy and destroy the real `OipWeb` personal stage, which covers its project, variables and bucket.
+
 ### Cutover from Pulumi
 
 Executed by the packet gate session after its rulings, never by a lane. Zero planned
@@ -477,7 +505,9 @@ PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/OIP_SECRETS/PULUMI_CONFIG_PASSPHRASE 
    plan `Plan: 8 to create, 5 to adopted` (lines in the expected-plan decision file): the
    project and the DNS records `adopted`, the bucket, the variables and the domains `create`.
    The plan guard refuses any other `create` before the deploy step runs; anything else that
-   differs is a stop. Check: both smoke steps pass; a second dispatch plans
+   differs is a stop. The first dispatch (run 43585534113) stopped on staging with eight of nine rows
+   written, so its re-run plans staging as `Plan: 1 to adopted` (`[EnvHubSpotServiceKey] adopted`,
+   every other row `noop`) and prod as above. Before any arm, run the live write rehearsal above. Check: both smoke steps pass; a second dispatch plans
    `no changes` for both stages; `alchemy drift --stage prod` exits 0. Rollback: unset the
    variable. The live objects are as they were apart from rewritten variable values (equal
    values), and Pulumi still holds them.
