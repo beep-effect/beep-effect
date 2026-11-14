@@ -431,7 +431,7 @@ A checkout is drainable only when all of these hold:
 | `owned-worktrees` | (clone) a worktree is still registered to it; lanes retire first |
 | `object-borrowers` | (clone) another clone reads its objects through `objects/info/alternates` |
 | `local-only-work` | never refuses; local-only branches, tags, stashes or a detached HEAD need a verified bundle first |
-| `clean-tree` | `git status` shows any change, untracked files included (gitignored secret and local-config paths are copied out at removal instead, see below; other ignored files such as `node_modules` are regenerable and removed) |
+| `clean-tree` | `git status` shows any change, untracked files included (ignored files are copied out at removal instead, see below; ignored directories other than `secrets/`, `.secrets/` and `*.local` are regenerable and removed) |
 | `grace-window` | it has not stayed drainable at one HEAD for `--drain-grace-days` (default 7) |
 
 Liveness reuses the fleet mirror's classifier with the reaper's process probe,
@@ -452,9 +452,10 @@ eligible are kept with reason `drain-opt-in`. An applied wave re-checks every
 eligible checkout immediately before removal, bundles its local-only work to
 `~/.local/state/beep/fleet/<repo-key>/drain-bundles/` (refused unless
 `git bundle verify` passes and every local-only commit is reachable from a
-bundled head), copies every gitignored secret or local-config path (`.env*`,
-`secrets.json`, `secrets/`, `.secrets/`, `*.local*`, and the machine-local
-`.idea` files `worktree new` seeds) to `<bundle>.local/` beside it, reads the checkout once more
+bundled head), copies every gitignored file (keys, `.env*`, credentials,
+machine-local config) and every ignored `secrets/`, `.secrets/` or `*.local`
+directory to `<bundle>.local/` beside it (refused above 512 MiB; other ignored
+directories such as `node_modules/`, `dist/` and `.turbo/` are regenerable), reads the checkout once more
 (same HEAD, still clean and dormant, no local-only commit outside the bundle),
 files its Yeet attempt journals, removes it (`git worktree
 remove` from the owning clone for a lane, an inode-bound tree removal for a

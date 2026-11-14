@@ -26,7 +26,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runRepoCommandCaptureRaw } from "../../../internal/repo-run/RepoRun.executor.ts";
 import { classifyFleetLiveness } from "../Fleet.service.ts";
-import { WORKTREE_LOCAL_FILE_ENTRIES } from "../Worktree.constants.ts";
 import { FleetLivenessReadings } from "../Worktree.schemas.ts";
 import { FleetDrainStatus, FleetRegistryRow, FleetSeatRole } from "./FleetRegistry.schemas.ts";
 import { fleetAdoptionRole } from "./FleetRegistry.ts";
@@ -758,20 +757,48 @@ const bundleLocalOnlyWork = Effect.fnUntraced(function* (
 
 const DRAIN_BUNDLES = "drain-bundles";
 
-// Gitignored paths that hold secrets or machine-local config: every `.env*` (`.env.local`,
-// `.env.keys`, `.envrc.local`), `secrets.json`, a `secrets/` or `.secrets/` directory, any
-// `*.local*` name (`settings.local.json`, `CLAUDE.local.md`), plus the files `worktree new` seeds.
-const LOCAL_SECRET_NAME = /^(?:\.env.*|secrets\.json|\.?secrets\/?|[^/]*\.local(?:\.[^/]*)?\/?)$/u;
+// Ignored directories kept whole: secret stores and machine-local config directories. Every other
+// ignored directory (`node_modules/`, `dist/`, `.turbo/`, `.beep/`, tool caches) is regenerable.
+const PRESERVED_DIRECTORY_NAME = /^(?:\.?secrets|[^/]*\.local(?:\.[^/]*)?)$/u;
+const PRESERVED_BYTES_CAP = 512 * 1024 ** 2;
 
-const isLocalOnlyIgnoredPath = (entry: string): boolean => {
+const entryName = (entry: string): string => {
   const trimmed = Str.replace(/\/$/u, "")(entry);
-  const name = O.getOrElse(A.last(Str.split("/")(trimmed)), () => trimmed);
-  return A.contains(WORKTREE_LOCAL_FILE_ENTRIES, trimmed) || LOCAL_SECRET_NAME.test(name);
+  return O.getOrElse(A.last(Str.split("/")(trimmed)), () => trimmed);
 };
 
-// Copy every gitignored secret or local-config path a checkout holds beside its bundle: `git status`
-// never reports them and no bundle carries them. Ignored directories are listed collapsed
-// (`--directory`), so `node_modules/` stays one entry and a `secrets/` directory is copied whole.
+// Bytes of one ignored path to preserve, or `None` for a symlink (it points elsewhere and loses
+// nothing) or a regenerable directory.
+const preservedBytes = Effect.fnUntraced(function* (root: string, entry: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const absolute = path.join(root, Str.replace(/\/$/u, "")(entry));
+  const link = yield* fs.readLink(absolute).pipe(Effect.option);
+  if (O.isSome(link)) return O.none<number>();
+  if (Str.endsWith("/")(entry)) {
+    if (!PRESERVED_DIRECTORY_NAME.test(entryName(entry))) return O.none<number>();
+    const capture = yield* runRepoCommandCaptureRaw("du", ["-B1", "--apparent-size", "-s", "--", absolute], root).pipe(
+      Effect.option
+    );
+    return O.some(
+      O.getOrElse(
+        O.flatMap(capture, (result) => O.flatMap(A.head(Str.split("\t")(Str.trim(result.output))), N.parse)),
+        () => PRESERVED_BYTES_CAP + 1
+      )
+    );
+  }
+  const info = yield* fs.stat(absolute).pipe(Effect.option);
+  return O.some(
+    O.getOrElse(
+      O.flatMap(info, (value) => O.some(Number(value.size))),
+      () => PRESERVED_BYTES_CAP + 1
+    )
+  );
+});
+
+// Copy every gitignored file a checkout holds, and its ignored secret or local-config directories,
+// beside its bundle: `git status` never reports them and no bundle carries them. Ignored
+// directories are listed collapsed (`--directory`), so `node_modules/` stays one regenerable entry.
 const preserveLocalFiles = Effect.fnUntraced(function* (layout: DrainLayout, stateDirectory: string, runId: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -784,10 +811,26 @@ const preserveLocalFiles = Effect.fnUntraced(function* (layout: DrainLayout, sta
     "-z",
   ]);
   if (O.isNone(listing)) return Result.fail("git ls-files could not list the ignored files");
-  const present = A.filter(A.filter(Str.split("\u0000")(listing.value), Str.isNonEmpty), isLocalOnlyIgnoredPath);
+  const entries = A.filter(Str.split("\u0000")(listing.value), Str.isNonEmpty);
+  const sized = yield* Effect.forEach(entries, (entry) =>
+    Effect.map(
+      preservedBytes(layout.real, entry),
+      O.map((bytes) => [entry, bytes] as const)
+    )
+  );
+  const present = A.getSomes(sized);
   if (A.isReadonlyArrayEmpty(present)) return Result.succeed(O.none<string>());
+  const total = A.reduce(present, 0, (sum, [, bytes]) => sum + bytes);
+  if (total > PRESERVED_BYTES_CAP) {
+    return Result.fail(
+      `ignored local files total ${total} bytes, above the ${PRESERVED_BYTES_CAP}-byte preservation cap: ${A.join(
+        A.map(present, ([entry]) => entry),
+        ", "
+      )}`
+    );
+  }
   const directory = path.join(stateDirectory, DRAIN_BUNDLES, `${bundleFileName(layout.real, runId)}.local`);
-  const copied = yield* Effect.forEach(present, (entry) => {
+  const copied = yield* Effect.forEach(present, ([entry]) => {
     const relative = Str.replace(/\/$/u, "")(entry);
     const target = path.join(directory, relative);
     return fs
@@ -796,7 +839,7 @@ const preserveLocalFiles = Effect.fnUntraced(function* (layout: DrainLayout, sta
   });
   return A.every(copied, O.isSome)
     ? Result.succeed(O.some(directory))
-    : Result.fail(`could not copy the local-only files ${A.join(present, ", ")} to ${directory}`);
+    : Result.fail(`could not copy the ignored local files to ${directory}`);
 });
 
 // After bundling and copying, the checkout must be exactly what was preserved: same HEAD, still
@@ -841,9 +884,9 @@ const settledAfterPreservation = Effect.fnUntraced(function* (
  * otherwise the result fails with `drain-blocked` and the fresh assessment.
  * Local-only work is then written to a bundle under the fleet state
  * directory's `drain-bundles/`, which must pass `git bundle verify` and cover
- * every local-only commit, and every gitignored secret or local-config path
- * (`.env*`, `secrets.json`, `secrets/`, `.secrets/`, `*.local*`, plus the files
- * `worktree new` seeds) is copied to `<bundle>.local/`; either failure
+ * every local-only commit, and every gitignored file plus any ignored
+ * `secrets/`, `.secrets/` or `*.local` directory is copied to `<bundle>.local/`
+ * (other ignored directories are regenerable; more than 512 MiB refuses); either failure
  * fails the result with `drain-bundle-failed`. Last, the checkout is read again:
  * a moved HEAD, a changed tree, a live process or a local-only commit no bundle
  * holds fails it with `drain-blocked`.
