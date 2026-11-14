@@ -9,6 +9,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as Runtime from "effect/Runtime";
 import * as Str from "effect/String";
 import { expect } from "vitest";
@@ -136,6 +137,51 @@ export const temporaryWorkingDirectory = Effect.gen(function* () {
   );
   return workingDirectory;
 }).pipe(Effect.withSpan("CommandTest.temporaryWorkingDirectory"));
+
+const FIXTURE_GIT_STEPS: ReadonlyArray<ReadonlyArray<string>> = [
+  ["init", "-q", "--template="],
+  ["config", "user.email", "fixture@example.invalid"],
+  ["config", "user.name", "Fixture"],
+  ["add", "-A"],
+];
+
+/**
+ * Turns a fixture directory into a git work tree: `git init`, a local identity, and every file present
+ * staged. Re-running it stages files written since; files written later and never staged stay
+ * untracked, which a git-visible listing still includes unless a `.gitignore` excludes them.
+ *
+ * **Example** (Stage a fixture tree)
+ * ```ts
+ * import { gitFixture } from "./CommandTest.ts";
+ * import * as Effect from "effect/Effect";
+ *
+ * console.log(Effect.isEffect(gitFixture("/tmp/fixture"))) // true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const gitFixture = Effect.fn("CommandTest.gitFixture")(function* (root: string) {
+  for (const args of FIXTURE_GIT_STEPS) {
+    const exitCode = yield* Effect.scoped(
+      Effect.flatMap(
+        ChildProcess.make("git", args, { cwd: root, stdin: "ignore", stdout: "ignore", stderr: "ignore" }),
+        (handle) => handle.exitCode
+      )
+    );
+    expect(exitCode).toBe(0);
+  }
+});
+
+/**
+ * {@link temporaryWorkingDirectory} as a git work tree (see {@link gitFixture}).
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const temporaryGitWorkingDirectory = Effect.tap(temporaryWorkingDirectory, gitFixture).pipe(
+  Effect.withSpan("CommandTest.temporaryGitWorkingDirectory")
+);
 
 /**
  * Runs a test body in an owned temporary directory, passing its absolute root to fixture builders.

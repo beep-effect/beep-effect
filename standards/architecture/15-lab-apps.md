@@ -116,8 +116,9 @@ waives a promotion gate.
 
 Delete through `beep delete-package`. The command refuses live dependents,
 inverts every declared registration surface, rebuilds writer-owned derived
-state, removes ignored artifacts, and runs doctor. `--force` never overrides a
-dependent.
+state, removes ignored artifacts, and runs doctor. No flag overrides a
+dependent; only reviewed `file-path` and `script` hits listed in a committed
+`--acknowledge` file are accepted.
 
 Labs use the pre-v1 retirement class: consumer migration and removal happen in
 the same PR, with no sunset window. This is the narrow D14 waiver to the general

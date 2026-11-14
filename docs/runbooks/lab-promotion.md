@@ -65,7 +65,10 @@ bun run beep delete-package <lab>             # execute the deletion
 bun run beep delete-package <lab> --check     # doctor: zero residue
 ```
 
-- `--force` never overrides a live dependent.
+- No flag overrides a live dependent. A reviewed `file-path` or `script` hit
+  that no rule can separate goes in a committed `--acknowledge <file>` JSONC
+  list (path, exact line text, reason); manifest and import edges can never
+  be acknowledged.
 - Manifest-declared Postgres state: deletion never drops the lab-owned
   `lab_<slug>` schema automatically. With explicit `--drop-data` consent it
   reports the exact manual `DROP SCHEMA` cleanup step; without consent it

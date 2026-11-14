@@ -17,6 +17,7 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
+import { listGitVisiblePaths } from "../../../Quality/internal/QualityArtifactSupport.ts";
 import { DeletePackageDataResource } from "../DataResource.ts";
 import { isCanonicalDeletionChangeset } from "../DeletionChangeset.ts";
 import { IDENTITY_SHAPE_TEST_PATH, shapeTestRowAccessor } from "../ShapeTestRow.ts";
@@ -28,6 +29,7 @@ import {
   RegistrationObservation,
   RegistrationSurface,
 } from "./RegistrationGeometry.schemas.ts";
+import type { GitCommandErrorAdapter } from "../../../../internal/repo-run/GitExec.ts";
 import type {
   DependentHitKind,
   RegistrationObservationStatus,
@@ -49,7 +51,9 @@ const SCAN_ROOTS = [
 ];
 // `.beep` holds machine-local operator state (yeet run artifacts, CI mirrors);
 // the runtime-artifact probe scans `.beep/ci` deliberately from inside that
-// root, so excluding the top-level entry here never reaches it.
+// root, so excluding the top-level entry here never reaches it. The git-visible
+// listing drops a path with any of these segments too, so a checkout that does
+// not ignore them reads the same set the walk did.
 const EXCLUDED_DIRECTORIES = HashSet.fromIterable([".git", "node_modules", "dist", "coverage", ".turbo", ".beep"]);
 const SOURCE_SUFFIXES = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"];
 const TEXT_SUFFIXES = [
@@ -72,6 +76,8 @@ const isSuffixIn =
   (file: string): boolean =>
     A.some(suffixes, (suffix) => Str.endsWith(suffix)(file));
 
+// Only the runtime-artifact probe walks the filesystem: `.beep/ci` is gitignored machine state, so
+// git never lists it. Every other scan reads the git-visible listing below.
 const collectFiles = Effect.fn("RegistrationGeometry.collectFiles")(function* (
   root: string,
   suffixes: ReadonlyArray<string>
@@ -100,6 +106,79 @@ const collectFiles = Effect.fn("RegistrationGeometry.collectFiles")(function* (
   const walk2 = yield* walk(root);
   return A.sort(walk2, Order.String);
 });
+
+const gitListingAdapter = (repoRoot: string): GitCommandErrorAdapter<RegistrationGeometryError> => ({
+  onSpawnFailure: (commandLine) =>
+    RegistrationGeometryError.newCause(`Cannot list git-visible files at ${repoRoot}: ${commandLine} did not run.`),
+  onNonZeroExit: ({ commandLine, exitCode, output }) =>
+    RegistrationGeometryError.make({
+      message: `Cannot list git-visible files at ${repoRoot}: delete-package scans only a git work tree and never falls back to a filesystem walk (${commandLine} exited ${exitCode}: ${Str.trim(output)}).`,
+      cause: O.none(),
+    }),
+  onTruncated: O.none(),
+});
+
+const hasExcludedSegment = (file: string): boolean =>
+  A.some(Str.split("/")(file), (segment) => HashSet.has(EXCLUDED_DIRECTORIES, segment));
+
+// The `git ls-files --cached --others --exclude-standard` set: tracked files plus untracked files git
+// does not ignore, so gitignored build output (docgen `docs/`, bundles, caches) is never read. A listed
+// path can be gone from disk (a deleted tree stays in the index until staged); readers skip it. A root
+// that is not a git work tree fails; there is no filesystem fallback, which would bring that output back.
+const gitVisibleFilesAt = Effect.fn("RegistrationGeometry.gitVisibleFilesAt")(function* (repoRoot: string) {
+  const files = yield* listGitVisiblePaths(repoRoot, A.empty(), gitListingAdapter(repoRoot));
+  return A.filter(files, (file) => !hasExcludedSegment(file));
+});
+
+const isUnderRoot =
+  (root: string) =>
+  (file: string): boolean =>
+    Str.startsWith(`${root}/`)(file);
+
+// The content of one git-visible file, or none when it no longer exists on disk or cannot be read.
+const readVisibleFile = Effect.fn("RegistrationGeometry.readVisibleFile")(function* (
+  repoRoot: string,
+  relativeFile: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  return yield* fs.readFileString(path.join(repoRoot, relativeFile)).pipe(Effect.option);
+});
+
+/**
+ * Whether a trimmed matched line in a repository-relative file is an
+ * acknowledged hit the doctor treats as clean.
+ *
+ * **Example** (Acknowledge nothing)
+ *
+ * ```ts
+ * import type { AcknowledgedLine } from "@beep/repo-cli/test/DeletePackage"
+ *
+ * const none: AcknowledgedLine = () => false
+ * console.log(none("package.json", '"kind": "deploy",')) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AcknowledgedLine = (file: string, text: string) => boolean;
+
+const noAcknowledgedLine: AcknowledgedLine = () => false;
+
+// A file is authored-reference evidence unless every line naming the target is acknowledged. A file
+// whose text matches but no single line does keeps counting, as it did before evidence was line-aware.
+const hasUnacknowledgedMention = (
+  file: string,
+  content: string,
+  mentionsNeedle: (text: string) => boolean,
+  isAcknowledgedLine: AcknowledgedLine
+): boolean => {
+  const mentioningLines = A.filter(Str.split("\n")(content), mentionsNeedle);
+  return (
+    A.isReadonlyArrayEmpty(mentioningLines) ||
+    A.some(mentioningLines, (line) => !isAcknowledgedLine(file, Str.trim(line)))
+  );
+};
 
 // The matcher for every search whose needle can be the target's package path. A needle equal to
 // `target.packagePath` skips the occurrences a sibling workspace path accounts for
@@ -155,6 +234,21 @@ const existingEvidence = Effect.fn("RegistrationGeometry.existingEvidence")(func
   return evidence;
 });
 
+// A pending changeset is residue when it names the package or reuses the deletion note's basename,
+// unless it is the canonical deletion note itself.
+const isPendingChangesetResidue = Effect.fn("RegistrationGeometry.isPendingChangesetResidue")(function* (
+  file: string,
+  content: string,
+  packageName: string
+) {
+  const path = yield* Path.Path;
+  const deletionNoteFile = `delete-${Str.replace("@beep/", Str.empty)(packageName)}.md`;
+  const hasDeletionNoteBasename = Str.equivalence(path.basename(file), deletionNoteFile);
+  if (!hasDeletionNoteBasename) return mentionsToken(packageName)(content);
+  const isCanonicalDeletionNote = yield* isCanonicalDeletionChangeset(file, content, packageName);
+  return !isCanonicalDeletionNote;
+});
+
 const observation = (
   surfaceId: string,
   status: RegistrationObservationStatus,
@@ -165,7 +259,9 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
   repoRoot: string,
   target: RegistrationTarget,
   surface: RegistrationSurface,
-  matchNeedles: NeedleMatcher
+  matchNeedles: NeedleMatcher,
+  visibleFiles: ReadonlyArray<string>,
+  isAcknowledgedLine: AcknowledgedLine
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -217,19 +313,22 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
       return observation(inventory.id, A.isReadonlyArrayNonEmpty(evidence) ? "residue" : "clean", evidence);
     }),
     "authored-reference": Effect.fn(function* (authored) {
-      const files = yield* collectFiles(repoRoot, TEXT_SUFFIXES);
       const mentionsNeedle = matchNeedles(authored.needles);
       let evidence = A.empty<string>();
-      for (const file of files) {
-        const relative = normalizePath(path.relative(repoRoot, file));
+      for (const relative of A.filter(visibleFiles, isSuffixIn(TEXT_SUFFIXES))) {
         if (
           Str.startsWith("research/")(relative) ||
           Str.startsWith("goals/")(relative) ||
           Str.startsWith(".changeset/")(relative)
         )
           continue;
-        const content = yield* fs.readFileString(file).pipe(Effect.orElseSucceed(() => Str.empty));
-        if (mentionsNeedle(content)) evidence = A.append(evidence, relative);
+        const content = yield* readVisibleFile(repoRoot, relative);
+        if (
+          O.isSome(content) &&
+          mentionsNeedle(content.value) &&
+          hasUnacknowledgedMention(relative, content.value, mentionsNeedle, isAcknowledgedLine)
+        )
+          evidence = A.append(evidence, relative);
       }
       return observation(
         authored.id,
@@ -238,27 +337,16 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
       );
     }),
     "pending-changeset": Effect.fn(function* (pending) {
-      const changesetRoot = path.join(repoRoot, ".changeset");
-      const files = yield* collectFiles(changesetRoot, [".md"]);
+      const files = A.filter(visibleFiles, (file) => isUnderRoot(".changeset")(file) && Str.endsWith(".md")(file));
       // The dedicated `{}` deletion note is the intentional record the delete
       // itself emits; only OTHER pending changesets naming the package are
       // residue.
-      const deletionNoteFile = `delete-${Str.replace("@beep/", Str.empty)(pending.packageName)}.md`;
-      const mentionsPackage = mentionsToken(pending.packageName);
       let evidence = A.empty<string>();
       for (const file of files) {
-        const content = yield* fs.readFileString(file).pipe(Effect.orElseSucceed(() => Str.empty));
-        const hasDeletionNoteBasename = Str.equivalence(path.basename(file), deletionNoteFile);
-        const isCanonicalDeletionNote =
-          hasDeletionNoteBasename &&
-          (yield* isCanonicalDeletionChangeset(
-            normalizePath(path.relative(repoRoot, file)),
-            content,
-            pending.packageName
-          ));
-        if (isCanonicalDeletionNote) continue;
-        if (hasDeletionNoteBasename || mentionsPackage(content))
-          evidence = A.append(evidence, normalizePath(path.relative(repoRoot, file)));
+        const read = yield* readVisibleFile(repoRoot, file);
+        if (O.isNone(read)) continue;
+        const residue = yield* isPendingChangesetResidue(file, read.value, pending.packageName);
+        if (residue) evidence = A.append(evidence, file);
       }
       return observation(
         pending.id,
@@ -297,14 +385,12 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
       );
     },
     "historical-record": Effect.fn(function* (historical) {
-      const files = yield* collectFiles(repoRoot, [".md", ".json", ".jsonc", ".tsv"]);
       const mentionsNeedle = matchNeedles(historical.needles);
       let evidence = A.empty<string>();
-      for (const file of files) {
-        const relative = normalizePath(path.relative(repoRoot, file));
+      for (const relative of A.filter(visibleFiles, isSuffixIn([".md", ".json", ".jsonc", ".tsv"]))) {
         if (!(Str.startsWith("research/")(relative) || Str.startsWith("goals/")(relative))) continue;
-        const content = yield* fs.readFileString(file).pipe(Effect.orElseSucceed(() => Str.empty));
-        if (mentionsNeedle(content)) evidence = A.append(evidence, relative);
+        const content = yield* readVisibleFile(repoRoot, relative);
+        if (O.exists(content, mentionsNeedle)) evidence = A.append(evidence, relative);
       }
       return observation(
         historical.id,
@@ -322,7 +408,17 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
  * **Details**
  *
  * Surfaces are inspected with a concurrency of 8; the result keeps surface
- * order. The Effect reads files only and requires `FileSystem` and `Path`.
+ * order. The Effect reads files only and requires `FileSystem`, `Path` and
+ * `Git`. Candidate files come from one git-visible listing (tracked plus
+ * untracked, not ignored), so gitignored build output is never evidence; only
+ * the runtime-artifact probe walks the gitignored `.beep/ci` tree. An
+ * `authored-reference` file whose only matching lines are acknowledged reads
+ * `clean`.
+ *
+ * **Gotchas**
+ *
+ * A `repoRoot` that is not a git work tree fails with a
+ * `RegistrationGeometryError` naming it; there is no filesystem fallback.
  *
  * **Example** (Collect doctor statuses)
  *
@@ -346,18 +442,21 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
  *
  * @param repoRoot - Absolute or working-directory-relative repository root.
  * @param target - Package whose surfaces are probed.
+ * @param isAcknowledgedLine - Acknowledged `(file, trimmed line)` pairs; none by default.
  * @category queries
  * @since 0.0.0
  */
 export const inspectTargetAtRoot = Effect.fn("RegistrationGeometry.inspectTargetAtRoot")(function* (
   repoRoot: string,
-  target: RegistrationTarget
+  target: RegistrationTarget,
+  isAcknowledgedLine: AcknowledgedLine = noAcknowledgedLine
 ) {
   const workspacePaths = yield* workspacePathsAt(repoRoot);
   const matchNeedles = needleMatcherFor(target, workspacePaths);
+  const visibleFiles = yield* gitVisibleFilesAt(repoRoot);
   return yield* Effect.forEach(
     surfacesForTarget(target),
-    (surface) => inspectSurface(repoRoot, target, surface, matchNeedles),
+    (surface) => inspectSurface(repoRoot, target, surface, matchNeedles, visibleFiles, isAcknowledgedLine),
     { concurrency: 8 }
   );
 });
@@ -415,13 +514,21 @@ const importHitsInFile = (
   target: RegistrationTarget
 ): ReadonlyArray<DependentHit> => {
   const source = project.createSourceFile(absoluteFile, content, { overwrite: true });
+  const lines = Str.split("\n")(content);
   let hits = A.empty<DependentHit>();
   const kind = importKindForFile(relativeFile);
 
   const append = (line: number): void => {
     hits = A.append(
       hits,
-      DependentHit.make({ kind, owner, file: PosixPath.make(relativeFile), line: O.some(line), direct: true })
+      DependentHit.make({
+        kind,
+        owner,
+        file: PosixPath.make(relativeFile),
+        line: O.some(line),
+        direct: true,
+        text: O.map(A.get(lines, line - 1), Str.trim),
+      })
     );
   };
 
@@ -448,7 +555,7 @@ const importKindForFile = (relativeFile: string): DependentHitKind =>
 const needleLineHits = (
   content: string,
   matchesLine: (line: string) => boolean,
-  hitForLine: (line: number) => DependentHit
+  hitForLine: (line: number, text: string) => DependentHit
 ): ReadonlyArray<DependentHit> => {
   const lines = Str.split("\n")(content);
   let hits = A.empty<DependentHit>();
@@ -457,7 +564,7 @@ const needleLineHits = (
       A.get(lines, index),
       O.getOrElse(() => Str.empty)
     );
-    if (matchesLine(line)) hits = A.append(hits, hitForLine(index + 1));
+    if (matchesLine(line)) hits = A.append(hits, hitForLine(index + 1, Str.trim(line)));
   }
   return hits;
 };
@@ -468,13 +575,14 @@ const accessorHitsInFile = (
   content: string,
   referencesAccessor: (line: string) => boolean
 ): ReadonlyArray<DependentHit> =>
-  needleLineHits(content, referencesAccessor, (line) =>
+  needleLineHits(content, referencesAccessor, (line, text) =>
     DependentHit.make({
       kind: importKindForFile(relativeFile),
       owner,
       file: PosixPath.make(relativeFile),
       line: O.some(line),
       direct: true,
+      text: O.some(text),
     })
   );
 
@@ -551,13 +659,14 @@ const rootScriptHits = (
   pipe(
     R.toEntries(scripts),
     A.filter(([, command]) => mentionsTarget(command)),
-    A.map(() =>
+    A.map(([, command]) =>
       DependentHit.make({
         kind: "script",
         owner: "@beep/root",
         file: PosixPath.make("package.json"),
         line: O.none(),
         direct: true,
+        text: O.some(Str.trim(command)),
       })
     )
   );
@@ -628,7 +737,11 @@ const dedupedSortedHits = (hits: ReadonlyArray<DependentHit>): ReadonlyArray<Dep
  *
  * Files inside the target package are omitted because a package's own imports
  * and path references must not block its removal. The returned Effect requires
- * filesystem, path, and workspace-discovery services from the caller.
+ * filesystem, path, git, and workspace-discovery services from the caller.
+ * Candidate files are the git-visible set (tracked plus untracked, not
+ * ignored), so gitignored build output is never a dependent; a listed file
+ * gone from disk is skipped, and a `repoRoot` that is not a git work tree
+ * fails with a `RegistrationGeometryError` naming it.
  *
  * **Example** (Build a dependency scan)
  *
@@ -655,7 +768,6 @@ export const dependentsOfAtRoot = Effect.fn("RegistrationGeometry.dependentsOfAt
   repoRoot: string,
   target: RegistrationTarget
 ) {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const workspaceDirectories3 = yield* workspaceDirectories(repoRoot);
   const workspaces = A.fromIterable(workspaceDirectories3);
@@ -747,28 +859,32 @@ export const dependentsOfAtRoot = Effect.fn("RegistrationGeometry.dependentsOfAt
     needleLineHits(
       content,
       (line) => mentionsTarget(line) && !isRemovedShapeTestRow(relativeFile, line),
-      (line) =>
+      (line, text) =>
         DependentHit.make({
           kind: authoredKindFor(relativeFile),
           owner,
           file: PosixPath.make(relativeFile),
           line: O.some(line),
           direct: true,
+          text: O.some(text),
         })
     );
-  const scanFile = Effect.fn("RegistrationGeometry.dependentsOfAtRoot.scanFile")(function* (absoluteFile: string) {
-    const relativeFile = normalizePath(path.relative(repoRoot, absoluteFile));
+  const scanFile = Effect.fn("RegistrationGeometry.dependentsOfAtRoot.scanFile")(function* (relativeFile: string) {
     if (Str.startsWith(`${target.packagePath}/`)(relativeFile)) return A.empty<DependentHit>();
-    const content = yield* fs.readFileString(absoluteFile).pipe(Effect.orElseSucceed(() => Str.empty));
+    const read = yield* readVisibleFile(repoRoot, relativeFile);
+    if (O.isNone(read)) return A.empty<DependentHit>();
+    const content = read.value;
     if (!mentionsTarget(content) && !mentionsAccessor(content)) return A.empty<DependentHit>();
+    const absoluteFile = path.join(repoRoot, relativeFile);
     const owner = ownerForFile(absoluteFile, workspaces);
     return A.appendAll(sourceHits(absoluteFile, relativeFile, owner, content), textHits(relativeFile, owner, content));
   });
 
+  const gitVisibleFiles = yield* gitVisibleFilesAt(repoRoot);
+  const visibleFiles = A.filter(gitVisibleFiles, isSuffixIn(TEXT_SUFFIXES));
   for (const root of SCAN_ROOTS) {
-    const files = yield* collectFiles(path.join(repoRoot, root), TEXT_SUFFIXES);
-    for (const absoluteFile of files) {
-      const scanFile4 = yield* scanFile(absoluteFile);
+    for (const relativeFile of A.filter(visibleFiles, isUnderRoot(root))) {
+      const scanFile4 = yield* scanFile(relativeFile);
       hits = A.appendAll(hits, scanFile4);
     }
   }
