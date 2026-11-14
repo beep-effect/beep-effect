@@ -148,6 +148,7 @@ export const encodeCitationRegexJob = Effect.fn("Citation.encodeRegexJob")(funct
   if (count > limit) return yield* exceeded();
   const text = yield* S.encodeEffect(JobJson)(job).pipe(Effect.mapError(invalid));
   const frame = encoder.encode(`${text}\n`);
+  if (frame.byteLength !== count) return yield* invalid();
   return frame;
 });
 // The request is flat. Reject structural amplification before JSON.parse or
@@ -180,9 +181,14 @@ export const makeCitationRegexJobPreparation = Effect.fn("Citation.makeRegexJobP
   limits: CitationEngineLimits,
   reserveCitationInvocationText: (units: number) => Effect.Effect<void, CitationSafetyLimitExceeded, R>
 ) {
+  const badRuntime = () => CitationRegexWorkerFailure.make({ reason: "invalid-runtime" });
   const { timed } = yield* makeCitationRegexTiming(limits, true);
-  const patternInput = yield* makeCitationRegexInput(limits, citationUnaccountedText, "pattern").pipe(Effect.orDie);
-  const sourceInput = yield* makeCitationRegexInput(limits, reserveCitationInvocationText).pipe(Effect.orDie);
+  const patternInput = yield* makeCitationRegexInput(limits, citationUnaccountedText, "pattern").pipe(
+    Effect.mapError(badRuntime)
+  );
+  const sourceInput = yield* makeCitationRegexInput(limits, reserveCitationInvocationText).pipe(
+    Effect.mapError(badRuntime)
+  );
   const prepare = Effect.fn("Citation.prepareRegexJob")(function* (
     pattern: unknown,
     source: unknown,

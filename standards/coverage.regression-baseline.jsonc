@@ -19804,14 +19804,14 @@
         },
         "packages/law-practice/server/src/internal/Citation/AnnotationEntry.ts": {
           "lines": 100,
-          "statements": 100,
+          "statements": 98.64,
           "branches": 100,
-          "functions": 100,
+          "functions": 94.44,
           "uncovered": {
             "lines": 0,
-            "statements": 0,
+            "statements": 1,
             "branches": 0,
-            "functions": 0
+            "functions": 1
           }
         },
         "packages/law-practice/server/src/internal/Citation/AnnotationFailure.ts": {
@@ -20152,14 +20152,14 @@
         },
         "packages/law-practice/server/src/internal/Citation/CleanerRegistry.ts": {
           "lines": 100,
-          "statements": 98.59,
+          "statements": 98.11,
           "branches": 87.67,
-          "functions": 98.52,
+          "functions": 97.05,
           "uncovered": {
             "lines": 0,
-            "statements": 3,
+            "statements": 4,
             "branches": 9,
-            "functions": 1
+            "functions": 2
           }
         },
         "packages/law-practice/server/src/internal/Citation/CleanerTextIdentity.ts": {
@@ -20500,14 +20500,14 @@
         },
         "packages/law-practice/server/src/internal/Citation/ExtractorOrdering.ts": {
           "lines": 100,
-          "statements": 97.72,
+          "statements": 92.5,
           "branches": 75,
-          "functions": 92.85,
+          "functions": 76.92,
           "uncovered": {
             "lines": 0,
-            "statements": 1,
+            "statements": 3,
             "branches": 1,
-            "functions": 1
+            "functions": 3
           }
         },
         "packages/law-practice/server/src/internal/Citation/ExtractorRecipes.ts": {
@@ -20871,15 +20871,15 @@
           }
         },
         "packages/law-practice/server/src/internal/Citation/MetadataYear.ts": {
-          "lines": 100,
-          "statements": 100,
+          "lines": 95.45,
+          "statements": 95.65,
           "branches": 100,
-          "functions": 100,
+          "functions": 87.5,
           "uncovered": {
-            "lines": 0,
-            "statements": 0,
+            "lines": 1,
+            "statements": 1,
             "branches": 0,
-            "functions": 0
+            "functions": 1
           }
         },
         "packages/law-practice/server/src/internal/Citation/NativeAdmission.ts": {
@@ -21460,14 +21460,14 @@
         },
         "packages/law-practice/server/src/internal/Citation/RegexWorkerProtocol.ts": {
           "lines": 100,
-          "statements": 98.64,
+          "statements": 97.26,
           "branches": 90,
-          "functions": 100,
+          "functions": 94.11,
           "uncovered": {
             "lines": 0,
-            "statements": 1,
+            "statements": 2,
             "branches": 1,
-            "functions": 0
+            "functions": 1
           }
         },
         "packages/law-practice/server/src/internal/Citation/RegexWorkerRpc.ts": {

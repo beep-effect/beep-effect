@@ -56,6 +56,7 @@ const RegistryEntry = S.Tuple([
 );
 type Failure = CitationCleanerFailure | CitationSafetyLimitExceeded;
 const fail = (reason: CitationCleanerFailure["reason"]) => CitationCleanerFailure.make({ reason });
+const invalidInput = () => fail("invalid-input");
 const unissuedValue = () => fail("unissued-value");
 const exceeded = () => CitationSafetyLimitExceeded.make({ operation: "clean", limit: "resolutionIterations" });
 /**
@@ -97,7 +98,7 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
   const values = yield* CitationCleanerValues;
   const builtins = yield* CitationBuiltinCleaners;
   const protocols = yield* CitationCleanerProtocols;
-  const hashes = yield* makeCitationPythonHash(limits).pipe(Effect.orDie);
+  const hashes = yield* makeCitationPythonHash(limits).pipe(Effect.mapError(() => fail("runtime-failed")));
   const clock = yield* Clock.Clock;
   const cleanMillis = Duration.toMillis(limits.cleanDeadline);
   const operationMillis = Duration.toMillis(limits.operationDeadline);
@@ -178,7 +179,7 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
       equal: (a, b) => capture(equal(a, b)),
       step: capture(step),
     }),
-    Effect.orDie
+    Effect.mapError(invalidInput)
   );
   const translate = (error: CitationRuntimeDictionaryFailure): Failure =>
     O.getOrElse(callbackFailure, () =>

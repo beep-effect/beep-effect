@@ -118,6 +118,7 @@ export class CitationAnnotationEntryResult extends S.Opaque<
   )
 ) {}
 const invalid = () => CitationAnnotationEntryFailure.make({ reason: "invalid-input" });
+const configurationFailure = () => CitationAnnotationEntryFailure.make({ reason: "invalid-configuration" });
 const nativeEqual = S.toEquivalence(S.toType(CitationPythonUnicodeStorage));
 /** Capture entry dependencies for composition inside an admitted parent.
  * @internal @category operations @since 0.0.0
@@ -151,7 +152,7 @@ export const ownCitationAnnotationReplacements = Effect.fn("Citation.ownAnnotati
   limits: CitationEngineLimits,
   raw: unknown
 ) {
-  const unicode = yield* makeCitationPythonUnicode(limits, "annotate").pipe(Effect.orDie);
+  const unicode = yield* makeCitationPythonUnicode(limits, "annotate").pipe(Effect.mapError(configurationFailure));
   const reserve = yield* captureCitationAnnotationReservation;
   const input = yield* S.decodeUnknownEffect(RowsProbe)(raw).pipe(Effect.mapError(invalid));
   if (input.replacements.length > limits.annotationReplacements)
@@ -184,7 +185,7 @@ const prepare = Effect.fn("Citation.prepareAnnotationEntry")(function* (
   raw: unknown
 ) {
   const mode = yield* S.decodeUnknownEffect(ModeProbe)(raw).pipe(Effect.mapError(invalid));
-  const unicode = yield* makeCitationPythonUnicode(limits, "annotate").pipe(Effect.orDie);
+  const unicode = yield* makeCitationPythonUnicode(limits, "annotate").pipe(Effect.mapError(configurationFailure));
   const reserve = yield* captureCitationAnnotationReservation;
   const word = Effect.fn("Citation.prepareAnnotationSourceWord")(function* (value: CitationPythonUnicodeStorage) {
     return yield* unicode

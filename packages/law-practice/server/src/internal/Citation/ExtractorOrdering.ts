@@ -9,15 +9,17 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { CitationExtractorSelectionBinding, makeCitationExtractorSelection } from "./ExtractorSelection.ts";
 import { makeCitationRegexTiming } from "./RegexPolicy.ts";
-import { CitationRuntimeDictionaryComparison, CitationRuntimeDictionaryKey } from "./RuntimeDictionary.ts";
+import {
+  CitationRuntimeDictionaryComparison,
+  CitationRuntimeDictionaryFailure,
+  CitationRuntimeDictionaryKey,
+} from "./RuntimeDictionary.ts";
 import { makeCitationRuntimeSet } from "./RuntimeSet.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
-import type { CitationRuntimeDictionaryFailure } from "./RuntimeDictionary.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ExtractorOrdering");
 /** @internal @category models @since 0.0.0 */
@@ -63,10 +65,13 @@ export class CitationOrderedExtractors extends S.Opaque<CitationOrderedExtractor
     })
   )
 ) {}
-// All keys come from bindings, comparison only yields, and limits are typed.
-// The set can therefore fail only on its entry or iteration ceiling.
+const fail = (reason: typeof Reason.Type) => CitationExtractorOrderingFailure.make({ reason });
+const invalidBindings = () => fail("invalid-bindings");
+const missing = () => CitationRuntimeDictionaryFailure.make({ reason: "invalid-input" });
 const setFailure = (failure: CitationRuntimeDictionaryFailure) =>
-  CitationSafetyLimitExceeded.make({ operation: "extract", limit: O.getOrThrow(O.fromUndefinedOr(failure.limit)) });
+  failure.reason === "limit-exceeded" && failure.limit !== undefined
+    ? CitationSafetyLimitExceeded.make({ operation: "extract", limit: failure.limit })
+    : fail("set-failed");
 
 /** Capture decoded trusted hash metadata and construct the source unfiltered
  * set. Each request copies that set and inserts each object's first match in
@@ -92,7 +97,7 @@ export const makeCitationExtractorOrdering = Effect.fn("Citation.makeExtractorOr
   );
   const selector = yield* makeCitationExtractorSelection(limits, bindings);
   const keyFor = Effect.fn("Citation.extractorOrderKey")((id: number) =>
-    Effect.fromOption(HashMap.get(keys, id)).pipe(Effect.orDie)
+    Effect.fromOption(HashMap.get(keys, id)).pipe(Effect.mapError(invalidBindings))
   );
   const comparison = CitationRuntimeDictionaryComparison.of({
     step: Effect.yieldNow,
@@ -100,7 +105,7 @@ export const makeCitationExtractorOrdering = Effect.fn("Citation.makeExtractorOr
       const a = yield* Effect.fromOption(HashMap.get(classes, left));
       const b = yield* Effect.fromOption(HashMap.get(classes, right));
       return a === b;
-    }, Effect.orDie),
+    }, Effect.mapError(missing)),
   });
   const initial = yield* makeCitationRuntimeSet({
     entries: limits.patterns,
