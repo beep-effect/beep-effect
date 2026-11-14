@@ -3,9 +3,11 @@
 Recorded 2026-11-13 on `perf/citation-owned-configuration`, based on
 `origin/main` at `2fd1c66ea55` (A3 merged as #3282).
 
-Status: in review with two stops (decisions below). The per-call rows are
-unchanged and the construction row moves from 10 configuration detaches to 2,
-not to the design's 1.
+Status: in review after owner round 2, with one stop (the default engine,
+decision below). The per-call rows are unchanged and the construction row moves
+from 10 configuration detaches to 2, not to the design's 1. Round 2 (section at
+the end) adds the reference-pattern authentication hoist and the leaf-helper
+typing, and re-states the default-engine stop after reading the loader chain.
 
 ## What moved
 
@@ -111,12 +113,12 @@ thirteen original full-span equalities hold.
 
 ## Stops and decisions
 
-- "Stop the default engine at two owns: engine-loaded assets cannot be minted
-  owned" (stop; proposed reshapes inside).
-- "Stop pattern fingerprints and artifact hashes at each installed call site"
-  (stop; every authentication kept).
-- "Keep leaf helper argument decoding and the per-request reference builder
-  decode" (scope).
+- "Stop the default engine at two owns: the tokenizer catalog is derived, not
+  decoded" (stop, re-stated in round 2 with what the loaders do).
+- "Keep fixed-pattern authentication at the installed call site, once per
+  engine" (owner ruling; replaces the round-1 fingerprint stop).
+- "Type the leaf helpers and drop their configuration decodes" (owner ruling;
+  replaces the round-1 decision to keep them).
 - "Assemble owned child configuration with ownedStruct".
 - "Assert configuration refusals at the boundary in direct-stage tests".
 
@@ -156,3 +158,95 @@ All local, one vitest process per file, `bunx --bun vitest run`.
 
 Not run locally: the whole law-practice suite, full `package-verify`,
 coverage and the integration cohort. Those are left to hosted CI.
+
+## Round 2 (owner rulings)
+
+Commits on top of `9b1a9086679`: `c488a9cefee` (ruling 2 and the re-stated
+ruling-1 stop) and `96cc4aad463` (ruling 3).
+
+### Ruling 1: stopped again
+
+`loadCitationJsonAsset` decodes sealed text through each asset's
+`S.toCodecJson` + `S.fromJsonString` codec, so a sealed-text route would be
+sound for the decoded assets. But the engine configuration is derived from
+them: `makeCitationCanonicalTokenizerCatalog` converts 6,805 regex texts to new
+native storage, fingerprints them and joins them with metadata, and
+`makeCitationHelperConfigurations` splices in a clock-computed year. Nothing
+types those fresh values owned without a mint for engine-built values, so the
+default engine still owns twice. `makeCitationDefaultEngineConfiguration`,
+`makeCitationEngineArtifact` and `makeCitationSixFormArtifact` keep their
+snapshots: each is a separately callable entry point with its own raw-input
+tests. Proposed reshapes are in the stop decision.
+
+### Ruling 2: reference-pattern authentication hoisted
+
+`installCitationReferencePatterns` authenticates the fixed patterns and
+computes the rejection fingerprint once per installed call site (twice per
+engine: pincited and markup), captures each with `Effect.exit`, and every
+request's `make` replays them where it used to compute them. The builder stays
+per request for its budget reservations; the authentication used an
+unaccounted pattern input, so `producedTextUtf16` and refusal order are
+unchanged. The full-span per-call rows are unchanged (the authentication spans
+are not counted columns).
+
+### Ruling 3: leaf helpers typed
+
+32 helper modules take typed limits, plus the evaluator install, the Diff, Xml,
+Html and Recognizer worker clients, the process owner, both admissions, the
+text budget, cleaners and document services; configuration arguments are typed
+too. `prepareCitationNativeRuntime` (a decode plus a limits codec round trip on
+every evaluator install and every Diff or Xml worker) is deleted. Guards, worker
+frame decodes and the raw entry points' own decodes stay (decision "Type the
+leaf helpers and drop their configuration decodes").
+
+One semantic note: the descriptor registry decoded raw bindings with
+`onExcessProperty: "error"`, refusing unknown capture-name keys, while the
+boundary decode drops them as the old engine snapshot did. In the engine,
+descriptors already passed the engine's default decode on main, so engine
+behavior is unchanged; the direct registry test keeps the strict decode in its
+boundary adapter.
+
+### Measured snapshot spans at construction after round 2
+
+| Span | After round 1 | After round 2 |
+| --- | --- | --- |
+| `Citation.ownConfiguration` (probe column) | 2 | 2 |
+| `Citation.captureSnapshot` | 1 | 1 (artifact descriptor) |
+| `Citation.snapshotValue` | 8 | 3 (the one inside that capture; build and limits in `makeCitationDefaultEngineConfiguration`) |
+| `Citation.captureOperationPolicy` | 0 | 0 |
+| `Citation.prepareNativeRuntime` | not measured | 0 (deleted) |
+
+The sealed-text route was not built, so there are no sealed-text owns to count.
+
+### Ownership check against the reference
+
+`ownCitationConfiguration` decodes with `S.toType(schema)`, encodes with
+`S.toCodecJson(schema)` and decodes the JSON value back. The old boundary did
+the same plus `S.fromJsonString`, which only adds a `JSON.stringify` and
+`JSON.parse` layer on top of the same codec (`Schema.ts` `fromJsonString` is
+`JsonString.pipe(decodeTo(schema, fromJsonString))`). `S.Uint8Array`'s JSON
+codec goes through a base64 string (`Schema.ts`: `toCodecJson` is
+`Base64String` with `uint8ArrayFromBase64String`), so the owned value gets a new
+buffer. `CitationConfigurationOwnership.test.ts` proves it: it mutates the
+caller's buffer after owning and the owned bytes are unchanged.
+
+### Round-2 wall time
+
+| Run | Load average (1/5/15 min) | Calls 1 to 10 | Total | Node call 1 |
+| --- | --- | --- | --- | --- |
+| After ruling 3 | 63.9 / 51.9 / 45.0 at start, 49.7 / 49.8 / 44.7 at end | 8697, 1839, 1890, 2869, 2433, 2055, 8442, 4439, 1973, 2246 | 36.9 s | 20692 |
+
+### Round-2 checks
+
+| Check | Result |
+| --- | --- |
+| Every Citation test file (233), one vitest process each | 224 pass first time; 9 failed and were fixed: seven fed malformed or range-invalid fixtures through the new adapters or mutated caller limits after install (now owned through the boundary first, same assertions), and the descriptor registry's exact-key strictness (kept in its test adapter). All 9 pass on rerun. |
+| `CitationCanonicalFullSpan.test.ts` | 12/12, twice (first in the sweep, then the wall-time run) |
+| Reference-pattern files | `CitationReferencePatterns`, `CitationReferencePatternsCoverage`, `CitationGeneratedReferences`: pass |
+| `package-verify --quick` | pass |
+| `lint:laws` | pass; effect-fn 0 |
+| fallow audit vs `origin/main` | 0 introduced, 39 inherited-adjacent |
+| `docgen:local` | pass |
+| effect-vitest | introduced 0, resolved 0; every changed inventory row is in a Citation test file this branch changed, the rest restored to the branch base |
+| biome, typecheck (source and tests), policy-fingerprint | pass, clean, current |
+| `beep models check` | fails on home-directory configuration only, as before |

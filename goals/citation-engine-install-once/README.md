@@ -31,10 +31,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Slice A4 in review: configuration owned once at the engine boundary
-(`CitationOwned`), with two stops awaiting a reshape (the default engine's
-second own and the fingerprints). A1 (#3253), A2 (#3265) and A3 (#3282) are
-merged.
+Slice A4 in review after owner round 2: configuration owned once at the
+engine boundary (`CitationOwned`), leaf helpers typed, reference-pattern
+authentication hoisted to install. One stop awaits a reshape: the default
+engine's second own. A1 (#3253), A2 (#3265) and A3 (#3282) are merged.
 
 ## Latest Evidence
 
