@@ -147,6 +147,24 @@ describe("PlanGuard fails closed", () => {
     })
   );
 
+  it.effect("on a summary line that is truncated or does not match the count grammar", () =>
+    Effect.gen(function* () {
+      yield* unreadable("Plan: 1 to\n");
+      yield* unreadable("Plan: 1 to update, 1 to\n[Project] update\n");
+      yield* unreadable("Plan: some changes\n");
+      yield* unreadable("Plan: 1 to update; 1 to create\n[Project] update\n[AssetsBucket] create\n");
+    })
+  );
+
+  it.effect("accepts the explicit empty summaries", () =>
+    Effect.gen(function* () {
+      const noResources = yield* checkPlan("Plan: no resources\n");
+      const noChanges = yield* checkPlan("Plan: no changes\n[Project] noop\n");
+      expect(noResources).toEqual([]);
+      expect(noChanges).toEqual([{ fqn: "Project", action: "noop" }]);
+    })
+  );
+
   it.effect("reads a logger prefix that carries a fiber id", () =>
     Effect.gen(function* () {
       const entries = yield* checkPlan(

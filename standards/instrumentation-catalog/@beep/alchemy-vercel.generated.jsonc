@@ -18,6 +18,7 @@
     {"name":"Vercel.EnvVar.provider.diff","owner":"@beep/alchemy-vercel","family":"tooling","conforms":false},
     {"name":"Vercel.EnvVar.provider.read","owner":"@beep/alchemy-vercel","family":"tooling","conforms":false},
     {"name":"Vercel.EnvVar.provider.reconcile","owner":"@beep/alchemy-vercel","family":"tooling","conforms":false},
+    {"name":"Vercel.EnvVar.readValueSourceWhilePlanning","owner":"@beep/alchemy-vercel","family":"tooling","conforms":true},
     {"name":"Vercel.EnvVar.resolveValue","owner":"@beep/alchemy-vercel","family":"tooling","conforms":true},
     {"name":"Vercel.EnvVar.valueDigest","owner":"@beep/alchemy-vercel","family":"tooling","conforms":true},
     {"name":"Vercel.EnvVar.valueFromRotated","owner":"@beep/alchemy-vercel","family":"tooling","conforms":true},

@@ -1,5 +1,6 @@
 import * as Vercel from "@beep/alchemy-vercel";
 import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { adopt, Unowned } from "alchemy/AdoptPolicy";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -279,6 +280,29 @@ describe("Vercel.EnvVar", () => {
       const afterRotation = yield* persistedStrings;
       expect(A.some(afterRotation, Str.includes("secret-from-env-two"))).toBe(false);
       yield* stack.destroy();
+    })
+  );
+
+  test.provider("fails a type change with a missing valueFrom key at diff, before deleting anything", (scratch) =>
+    Effect.gen(function* () {
+      const stack = typed(scratch);
+      yield* stack.destroy();
+      const declare = (type: "encrypted" | "sensitive") =>
+        stackWith("vt-env-replace-missing-key", {
+          key: "HUBSPOT_TOKEN",
+          valueFrom: { config: "VT_REPLACE_TOKEN" },
+          targets: ["production"],
+          type,
+        });
+      const created = yield* stack.deploy(declare("encrypted")).pipe(withConfig({ VT_REPLACE_TOKEN: "kept-value" }));
+      const before = A.length(FakeVercel.requestsFor(created.projectId));
+      // A type change replaces the variable delete-first; without the key the plan must fail first.
+      const refused = yield* Effect.exit(stack.deploy(declare("sensitive")).pipe(withConfig({})));
+      assertSome(failureTag(refused), "ConfigError");
+      const afterwards = A.drop(FakeVercel.requestsFor(created.projectId), before);
+      expect(A.filter(afterwards, Str.startsWith("DELETE"))).toEqual([]);
+      expect(O.getOrThrow(FakeVercel.env(created.envId)).value).toBe("kept-value");
+      yield* stack.destroy().pipe(withConfig({ VT_REPLACE_TOKEN: "kept-value" }));
     })
   );
 

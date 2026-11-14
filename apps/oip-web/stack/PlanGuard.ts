@@ -95,6 +95,30 @@ const resourceLinePattern = /^\[([^\]]+)\] /;
 /** One per-action count of the summary: `12 to adopted`. */
 const summaryCountPattern = /(\d+) to ([a-z]+)/g;
 
+/** The explicit empty summaries the renderer writes: `Plan: no resources`, `Plan: no changes`. */
+const emptySummaryPattern = /^Plan:\s+no (?:resources|changes)$/;
+
+/** A summary made only of per-action counts: `Plan: 1 to create, 12 to adopted`. */
+const countedSummaryPattern = /^Plan:\s+\d+ to [a-z]+(?:, \d+ to [a-z]+)*$/;
+
+/**
+ * The per-action counts of a summary line, or `None` when the whole line is not one of the
+ * supported shapes, so a truncated or reshaped summary (`Plan: 1 to`) never reads as empty.
+ *
+ * @param line - The summary line, color codes and logger prefix removed.
+ * @returns The `[action, count]` pairs; empty for an explicit empty summary.
+ */
+const readSummaryCounts = (line: string): O.Option<ReadonlyArray<readonly [string, number]>> => {
+  if (emptySummaryPattern.test(line)) return O.some([]);
+  if (!countedSummaryPattern.test(line)) return O.none();
+  return O.some(
+    A.map(
+      A.fromIterable(Str.matchAll(summaryCountPattern)(line)),
+      (match) => [match[2] ?? "", Number(match[1] ?? "0")] as const
+    )
+  );
+};
+
 /**
  * Remove terminal color codes; the CI renderer colors actions.
  *
@@ -237,10 +261,11 @@ export const checkPlan = Effect.fn("OipWeb.checkPlan")(function* (log: string) {
     return yield* PlanUnreadable.make({ reason: `unreadable resource line for ${A.join(unreadable, ", ")}` });
   }
   const entries = parsePlanLog(log);
-  const summaryCounts = A.map(
-    A.fromIterable(Str.matchAll(summaryCountPattern)(summary.value)),
-    (match) => [match[2] ?? "", Number(match[1] ?? "0")] as const
-  );
+  const parsedSummary = readSummaryCounts(summary.value);
+  if (O.isNone(parsedSummary)) {
+    return yield* PlanUnreadable.make({ reason: "the Plan: summary does not match the supported count grammar" });
+  }
+  const summaryCounts = parsedSummary.value;
   const unknownSummaryActions = A.filter(summaryCounts, ([action]) => !S.is(PlanAction)(action));
   if (A.isReadonlyArrayNonEmpty(unknownSummaryActions)) {
     return yield* PlanUnreadable.make({

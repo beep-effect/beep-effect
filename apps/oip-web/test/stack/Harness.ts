@@ -36,7 +36,7 @@ export const stageProgram = (stage: string) =>
 
 /** A scratch stack whose deploy and destroy carry a typed error channel. */
 export interface TypedStack {
-  deploy<A, R>(effect: Effect.Effect<A, never, R>): Effect.Effect<Input.Resolve<A>, Provider.ProviderError>;
+  deploy<A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<Input.Resolve<A>, Provider.ProviderError | E>;
   destroy(options?: { readonly include?: never }): Effect.Effect<void, Provider.ProviderError>;
 }
 

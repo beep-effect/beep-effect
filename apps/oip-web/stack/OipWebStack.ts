@@ -158,6 +158,13 @@ const declareDomain = (config: OipWebStackConfig, project: Input<string>) =>
  * @since 0.0.0
  */
 export const oipWebResources = Effect.fn("OipWeb.resources")(function* (config: OipWebStackConfig) {
+  // A live stage reads its secret's config key before declaring anything, so a missing key fails
+  // the deploy before any resource is planned or written (a provider would only see it once its
+  // upstream outputs resolve, after sibling writes). The value itself is read again by the
+  // provider at write time and never kept here.
+  if (config.hubSpotServiceKey !== undefined) {
+    yield* Config.Redacted(config.hubSpotServiceKey.config);
+  }
   // Only the project's identity is declared. Every field that shapes a build or a pull-request
   // check (git link, framework, commands, root directory, Node version, system variables,
   // deployment protection) is left out, so adopting the live project can never send one;

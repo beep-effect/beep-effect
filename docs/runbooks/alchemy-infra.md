@@ -348,8 +348,12 @@ PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/OIP_SECRETS/PULUMI_CONFIG_PASSPHRASE 
    `pulumi destroy --target <bucket urn> --target-dependents` to delete the empty buckets
    (decision file first, naming the archive). Then `pulumi stack rm`. Check:
    `aws s3api head-bucket --bucket assets.oip.law` returns 404, the smoke checks pass.
-   Rollback: `pulumi stack import --file <archive>` restores Pulumi's state; `pulumi up`
-   recreates an empty bucket under its old name if it is still free.
+   Rollback, per stack: `pulumi stack init <stack>` (the stack no longer exists after
+   `pulumi stack rm`), then `pulumi stack import --stack <stack> --file <archive>` restores
+   Pulumi's state. The archive still lists the deleted bucket as existing, so run
+   `pulumi refresh --stack <stack> --target <bucket urn> --target-dependents` before
+   `pulumi up --stack <stack>`, which then recreates the empty bucket under its old name if
+   it is still free.
 7. **Later.** `infra/oip-web`, `infra/src/OipWeb.ts` and `infra/src/Vercel.ts` leave with
    `infra/` in P6. Rewording the DNS comment to name Alchemy is its own deploy and needs
    DNS · Edit. To hand an object back without deleting it, `alchemy state delete` its row;

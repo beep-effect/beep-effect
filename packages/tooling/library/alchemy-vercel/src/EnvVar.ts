@@ -19,6 +19,7 @@ import * as Config from "effect/Config";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Equivalence from "effect/Equivalence";
+import { pipe } from "effect/Function";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -620,6 +621,25 @@ const writeEnv = Effect.fn("Vercel.EnvVar.write")(function* (
 const storageTypeOf = (props: EnvVarProps): EnvVarType => props.type ?? EnvVarType.Enum.encrypted;
 
 /**
+ * Read the `valueFrom` config key of declared props whose other inputs may not be resolved yet.
+ *
+ * **Details**
+ *
+ * `valueFrom` is always a literal, so it is decoded from the raw props; the read fails with the
+ * config error when the key is missing, and does nothing for a literal `value`.
+ *
+ * @param news - The declared props, possibly holding unresolved outputs.
+ * @returns An effect that fails when the `valueFrom` key cannot be read.
+ */
+const readValueSourceWhilePlanning = Effect.fn("Vercel.EnvVar.readValueSourceWhilePlanning")(function* (news: unknown) {
+  const source = pipe(
+    O.liftPredicate(news, P.hasProperty("valueFrom")),
+    O.flatMap((props) => S.decodeUnknownOption(EnvVarValueSource)(props.valueFrom))
+  );
+  if (O.isSome(source)) yield* Config.Redacted(source.value.config);
+});
+
+/**
  * Whether a change replaces the variable: another project, team or storage type.
  *
  * @param news - The declared props.
@@ -635,14 +655,15 @@ const replacesEnvVar = (news: EnvVarProps, olds: EnvVarProps): boolean =>
  *
  * @param news - The declared props.
  * @param output - The stored attributes, when the variable is deployed or adopted.
+ * @param value - The value resolved for this plan.
  * @returns `true` when the value must be written again.
  */
 const valueFromRotated = Effect.fn("Vercel.EnvVar.valueFromRotated")(function* (
   news: EnvVarProps,
-  output: EnvVarAttributes | undefined
+  output: EnvVarAttributes | undefined,
+  value: Redacted.Redacted<string>
 ) {
   if (news.valueFrom === undefined || output === undefined) return false;
-  const value = yield* resolveValue(news);
   const digest = yield* valueDigestOf(news, value);
   return !O.contains(digest, output.valueDigest ?? "");
 });
@@ -681,7 +702,15 @@ export const EnvVarProvider = Provider.succeed(EnvVarClass, {
     return output !== undefined || state.envId === previous?.envId ? observed : Unowned(observed);
   }),
   diff: Effect.fn("Vercel.EnvVar.provider.diff")(function* ({ news, olds, output }) {
+    // A `valueFrom` key is read while planning, before any other input resolves, so a missing key
+    // fails the plan before anything (this variable or a sibling resource) is written.
+    yield* readValueSourceWhilePlanning(news);
     if (!isResolved(news)) return undefined;
+    // Resolve the declared value before any outcome: a replacement deletes the old variable first and
+    // a weaker stored type is removed and recreated in reconcile, so a missing key or a value/valueFrom
+    // mix-up must fail the plan here, before anything is deleted. The value is only validated and
+    // digested, never kept.
+    const value = yield* resolveValue(news);
     if (replacesEnvVar(news, olds)) {
       // A same-project replacement would collide with the old key and targets, so it deletes first.
       return { action: "replace", deleteFirst: news.project === olds.project } as const;
@@ -689,7 +718,7 @@ export const EnvVarProvider = Provider.succeed(EnvVarClass, {
     // A stored type weaker than declared (an adopted variable) needs reconcile, which replaces it;
     // a rotated `valueFrom` value needs a write. A literal value, like every other prop, falls
     // through to the engine's prop comparison.
-    const rotated = yield* valueFromRotated(news, output);
+    const rotated = yield* valueFromRotated(news, output, value);
     return storedTypeWeaker(news, output) || rotated ? ({ action: "update" } as const) : undefined;
   }),
   reconcile: Effect.fn("Vercel.EnvVar.provider.reconcile")(function* ({ news, output, session }) {

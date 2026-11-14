@@ -886,7 +886,7 @@ The procedure is the runbook's "Cutover from Pulumi" (`docs/runbooks/alchemy-inf
 
 Lane goals/infra-alchemy-rebuild-p4-oip-web
 
-Reverse: Before step 6: unset OIP_WEB_INFRA_DEPLOY and keep Pulumi as owner. After step 6: pulumi stack import --file <archive> per stack.
+Reverse: Before step 6: unset OIP_WEB_INFRA_DEPLOY and keep Pulumi as owner. After step 6, per stack: pulumi stack init <stack>; pulumi stack import --stack <stack> --file <archive>; pulumi refresh --stack <stack> --target <bucket urn> --target-dependents; pulumi up --stack <stack>.
 
 ### OipWeb deploys from one armed workflow job; vercel-deploy.yml stays unedited, 2026-11-14
 

@@ -105,6 +105,10 @@ describe("OipWeb stack", { concurrent: false }, () => {
       expect(A.contains(first, "CRM_HUBSPOT_SERVICE_KEY")).toBe(true);
 
       yield* stack.deploy(stageProgram("prod")).pipe(withConfig({ CRM_HUBSPOT_SERVICE_KEY: "rotated-secret-value" }));
+      // The rotation reached Vercel, so the state check below is about a real second write.
+      expect(O.getOrThrow(FakeCloud.env(liveIds.prodProjectId, "CRM_HUBSPOT_SERVICE_KEY")).value).toBe(
+        "rotated-secret-value"
+      );
       const second = yield* persistedStrings;
       expect(A.some(second, Str.includes("rotated-secret-value"))).toBe(false);
     })
@@ -137,6 +141,8 @@ describe("OipWeb stack", { concurrent: false }, () => {
       FakeCloud.seedLive();
       const exit = yield* Effect.exit(stack.deploy(stageProgram("prod")).pipe(withConfig({})));
       assertSome(failureTag(exit), "ConfigError");
+      // The key is read while planning, so nothing was applied: no project, variable, domain, DNS or bucket write.
+      expect(FakeCloud.writes()).toEqual([]);
       expect(O.getOrThrow(FakeCloud.env(liveIds.prodProjectId, "CRM_HUBSPOT_SERVICE_KEY")).value).toBe(
         liveHubSpotSecret
       );

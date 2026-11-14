@@ -18,11 +18,13 @@ import * as Provider from "alchemy/Provider";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
+import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import { liveStageConfig, vercelTeamId, zoneIdOf } from "../../stack/OipWebConfig.ts";
 import { vercelApexTarget, vercelCnameTarget } from "../../stack/OipWebStack.ts";
@@ -183,6 +185,22 @@ const EnvVarFake = Provider.effect(
   Vercel.EnvVar,
   Effect.succeed({
     stables: ["envId", "projectId"],
+    // Like the real provider: a `valueFrom` key is read while planning, so a missing key fails the
+    // plan before anything is applied, and a changed value plans an update.
+    diff: Effect.fn("Fake.diff")(function* ({ news, output }) {
+      const source = pipe(
+        O.liftPredicate(news, P.hasProperty("valueFrom")),
+        O.flatMap((props) => S.decodeUnknownOption(Vercel.EnvVarValueSource)(props.valueFrom))
+      );
+      if (O.isNone(source)) return undefined;
+      const value = yield* Config.Redacted(source.value.config).pipe(Effect.map(Redacted.value));
+      if (!isResolved(news)) return undefined;
+      const stored = O.map(
+        MutableHashMap.get(envs, envKey(output?.projectId ?? news.project, news.key)),
+        (env) => env.value
+      );
+      return O.contains(stored, value) ? undefined : ({ action: "update" } as const);
+    }),
     read: ({ olds, output }) =>
       Effect.sync(() =>
         MutableHashMap.get(envs, envKey(output?.projectId ?? olds.project, olds.key)).pipe(
