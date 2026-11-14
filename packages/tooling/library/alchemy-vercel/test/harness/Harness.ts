@@ -95,3 +95,17 @@ export const persistedStrings = Effect.gen(function* () {
   );
   return leafStrings(rows);
 });
+
+/**
+ * Remove one resource's row from every stage of the scratch state store, leaving the live object:
+ * the state a deploy leaves when that one resource failed.
+ */
+export const dropStateRow = Effect.fn("dropStateRow")(function* (fqn: string) {
+  const store = yield* yield* State;
+  const stacks = yield* store.listStacks();
+  yield* Effect.forEach(stacks, (stack) =>
+    store
+      .listStages(stack)
+      .pipe(Effect.flatMap((stages) => Effect.forEach(stages, (stage) => store.delete({ stack, stage, fqn }))))
+  );
+});

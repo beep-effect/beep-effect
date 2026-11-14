@@ -33,6 +33,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import {
+  binaryReplay,
+  binarySha,
   fetchesOf,
   gitlinkReplay,
   gitlinkSha,
@@ -593,33 +595,61 @@ describe("base-merge fetch cost", () => {
   );
 });
 
+// One base merge `head` of `base` onto a branch created at `root`, read at 10:27.
+const readMergeOf = (replay: BaseMergeReplay, root: string, head: string, base: string) =>
+  readScene(
+    {
+      head,
+      base,
+      roots: [root],
+      activity: {
+        body: [
+          pushRow(root, head, MERGE_PUSHED_AT),
+          { activity_type: "branch_creation", before: Str.repeat(40)("0"), after: root, timestamp: ROOT_PUSHED_AT },
+        ],
+      },
+    },
+    local(replay),
+    "2026-11-13T10:27:00Z"
+  );
+
 describe("base-merge proof under submodule ignore settings", () => {
   it.effect("a PR whose only change moved a gitlink and was absorbed refuses, and its window re-arms", () =>
     Effect.gen(function* () {
       const verdict = yield* classifyBaseMerge(gitlinkReplay, gitlinkSha.B, gitlinkSha.H, gitlinkSha.M);
       expect(changeOf(verdict)).toBe("patch: The pull request's patch: raw entries differ at vendor/lib.");
-      const { window } = yield* readScene(
-        {
-          head: gitlinkSha.H,
-          base: gitlinkSha.M,
-          roots: [gitlinkSha.B],
-          activity: {
-            body: [
-              pushRow(gitlinkSha.B, gitlinkSha.H, MERGE_PUSHED_AT),
-              {
-                activity_type: "branch_creation",
-                before: Str.repeat(40)("0"),
-                after: gitlinkSha.B,
-                timestamp: ROOT_PUSHED_AT,
-              },
-            ],
-          },
-        },
-        local(gitlinkReplay),
-        "2026-11-13T10:27:00Z"
-      );
+      const { window } = yield* readMergeOf(gitlinkReplay, gitlinkSha.B, gitlinkSha.H, gitlinkSha.M);
       expect(window).toMatchObject({ _tag: "open", anchoredAt: "2026-11-13T10:20:00.000Z" });
       assertNone(carriedOf(window));
+    })
+  );
+});
+
+describe("base-merge proof over a file git diffs as binary", () => {
+  it.effect("a -diff file whose hunk context the base changed refuses, and its window re-arms", () =>
+    Effect.gen(function* () {
+      const verdict = yield* classifyBaseMerge(binaryReplay, binarySha.B, binarySha.HX, binarySha.MX);
+      expect(changeOf(verdict)).toBe("patch: The pull request's patch: data.txt differs.");
+      const { window } = yield* readMergeOf(binaryReplay, binarySha.B, binarySha.HX, binarySha.MX);
+      expect(window).toMatchObject({ _tag: "open", anchoredAt: "2026-11-13T10:20:00.000Z" });
+      assertNone(carriedOf(window));
+    })
+  );
+
+  it.effect("an unchanged patch the base only moved is carried under a hostile git config", () =>
+    Effect.gen(function* () {
+      const verdict = yield* classifyBaseMerge(binaryReplay, binarySha.B, binarySha.HS, binarySha.MS);
+      expect(verdict).toStrictEqual(
+        YeetBaseMergeUnchanged.make({
+          before: binarySha.B,
+          after: binarySha.HS,
+          base: binarySha.MS,
+          merged: binarySha.MS,
+        })
+      );
+      const { window } = yield* readMergeOf(binaryReplay, binarySha.B, binarySha.HS, binarySha.MS);
+      expect(window).toMatchObject({ _tag: "elapsed", anchoredAt: "2026-11-13T10:05:00.000Z" });
+      assertSome(carriedOf(window), YeetReviewWindowCarry.make({ rewrites: 0, merges: 1, rootSha: binarySha.B }));
     })
   );
 });

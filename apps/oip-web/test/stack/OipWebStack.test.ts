@@ -19,6 +19,7 @@ import { dnsRecordComment, oipWebResources, requireCiForLiveStage, servedHostnam
 import { checkPlan } from "../../stack/PlanGuard.ts";
 import { FakeCloud, liveHubSpotSecret, liveIds, liveProjectSettings } from "./FakeCloud.ts";
 import {
+  checkpointAsCreating,
   failureTag,
   makeHarness,
   persistedStrings,
@@ -297,4 +298,45 @@ describe("the first live plans pass the plan guard", { concurrent: false }, () =
       })
     );
   }
+});
+
+describe("the staging re-run after the 2026-11-14 partial deploy (run 43585534113)", { concurrent: false }, () => {
+  // Eight of nine rows were written; `EnvHubSpotServiceKey` failed after Alchemy committed its `creating`
+  // checkpoint (no attributes), and the live variable kept its id, type and value. The planner prints
+  // such a row as `create` and decides adoption at apply time; the re-run (run 43591525409) printed
+  // exactly this plan.
+  test.provider("plans one create, passes the guard, writes only that variable, then has no changes", (scratch) =>
+    Effect.gen(function* () {
+      const stack = typed(scratch);
+      FakeCloud.reset();
+      FakeCloud.seedLive();
+      yield* stack.deploy(stageProgram("staging")).pipe(withConfig(liveSecret));
+      yield* checkpointAsCreating("EnvHubSpotServiceKey");
+      const before = A.length(FakeCloud.writes());
+
+      const plan = yield* stack.plan(stageProgram("staging")).pipe(withConfig(liveSecret));
+      const log = renderPlanLog("staging")(plan);
+      expect(Str.split("\n")(log)).toEqual([
+        "Plan · staging",
+        "Plan: 1 to create",
+        "[AssetsBucket] noop",
+        "[Dns-staging-oip-law] noop",
+        "[Dns-staging-opip-law] noop",
+        "[Domain-staging-oip-law] noop",
+        "[Domain-staging-opip-law] noop",
+        "[EnvHubSpotAccountId] noop",
+        "[EnvHubSpotServiceKey] create",
+        "[EnvNextDisablePwa] noop",
+        "[Project] noop",
+      ]);
+      const entries = yield* checkPlan(log);
+      expect(A.length(entries)).toBe(9);
+      expect(A.length(FakeCloud.writes())).toBe(before);
+
+      yield* stack.deploy(stageProgram("staging")).pipe(withConfig(liveSecret));
+      expect(A.drop(FakeCloud.writes(), before)).toEqual(["Vercel.EnvVar CRM_HUBSPOT_SERVICE_KEY reconcile"]);
+      const next = yield* stack.plan(stageProgram("staging")).pipe(withConfig(liveSecret));
+      expect(renderPlanLog("staging")(next)).toContain("Plan: no changes");
+    })
+  );
 });

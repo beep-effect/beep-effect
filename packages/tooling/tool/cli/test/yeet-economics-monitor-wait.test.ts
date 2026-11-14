@@ -158,8 +158,8 @@ const MONITOR_RUNS: ReadonlyArray<Adjudicated> = [
     }),
     "red",
     "red",
-    O.some("unlocated"),
-    "a handler error: the monitor itself failed"
+    O.some("github:transport"),
+    "a handler error: the monitor's own GitHub poll failed, located since MEAS-03 slice 2"
   ),
   adjudicate(
     terminatedAttempt("monitor-unrecorded", "monitor", O.some("unrecorded-failure"), 0, 30 * SECOND),

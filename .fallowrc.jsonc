@@ -23,6 +23,8 @@
     // A second Alchemy entry file the CLI loads by path (`alchemy deploy <file>`),
     // e.g. the OpenClaw stack in @beep/infra-hosts.
     "packages/tooling/infra/*/*.alchemy.run.ts",
+    // The OipWeb live write rehearsal stack, loaded by path (`alchemy deploy <file>`) before an arm.
+    "apps/oip-web/test/live/rehearsal.alchemy.run.ts",
     // Preloaded by every infra Pulumi.yaml (runtime.options.nodeargs).
     "infra/pulumi-typescript6.cjs",
     "apps/*/src/main.tsx",

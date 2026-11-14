@@ -6,7 +6,7 @@ Actions, not from Vercel's Git integration. The workflow is
 
 This workflow owns builds only. The configuration around the two oip.law
 projects (project settings, environment variables, domains, their Cloudflare DNS
-records and the assets buckets) moves from the Pulumi project `opip-web` to the
+records and the assets buckets) moved on 2026-11-14 from the Pulumi project `opip-web` to the
 `OipWeb` Alchemy stack (`apps/oip-web/alchemy.run.ts`; runbook
 [Alchemy infrastructure](alchemy-infra.md#oipweb-oiplaw)). The stack adopts the
 live projects in place, so the project ids in this workflow do not change and

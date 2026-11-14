@@ -15800,18 +15800,6 @@
             "functions": 0
           }
         },
-        "infra/src/OipWeb.ts": {
-          "lines": 39.04,
-          "statements": 38.67,
-          "branches": 18.91,
-          "functions": 12.5,
-          "uncovered": {
-            "lines": 64,
-            "statements": 65,
-            "branches": 30,
-            "functions": 21
-          }
-        },
         "infra/src/OpenClaw.ts": {
           "lines": 80.88,
           "statements": 81.77,
@@ -15825,30 +15813,6 @@
           }
         },
         "infra/src/OpenClawArtifacts.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "infra/src/Storybook.ts": {
-          "lines": 70,
-          "statements": 67.74,
-          "branches": 75,
-          "functions": 57.14,
-          "uncovered": {
-            "lines": 9,
-            "statements": 10,
-            "branches": 1,
-            "functions": 3
-          }
-        },
-        "infra/src/Vercel.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -15920,18 +15884,6 @@
             "functions": 0
           }
         },
-        "infra/src/internal/oip-web-entry.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 6,
-            "statements": 6,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "infra/src/internal/openclaw-entry.ts": {
           "lines": 0,
           "statements": 0,
@@ -15940,30 +15892,6 @@
           "uncovered": {
             "lines": 19,
             "statements": 19,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "infra/src/internal/storybook-entry.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 5,
-            "statements": 5,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "infra/src/internal/turbo-cache-lab-entry.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 7,
-            "statements": 7,
             "branches": 0,
             "functions": 0
           }

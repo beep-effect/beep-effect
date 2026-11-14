@@ -2,7 +2,7 @@
  * Resources of the `OipWeb` Alchemy stack: the Vercel project, its
  * environment variables and domains, the Cloudflare DNS records that point
  * the domains at Vercel, and the S3 assets bucket. Replaces the Pulumi
- * program `infra/src/OipWeb.ts` (stacks `production` and `staging`).
+ * program infra/src/OipWeb.ts (removed in #3341) (stacks `production` and `staging`).
  *
  * @packageDocumentation
  * @since 0.0.0

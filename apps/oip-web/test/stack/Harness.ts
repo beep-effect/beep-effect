@@ -107,3 +107,33 @@ export const renderPlanLog =
   (stage: string) =>
   (plan: Parameters<typeof formatPlanLines>[0]): string =>
     A.join([`Plan · ${stage}`, ...A.map(formatPlanLines(plan), Str.replace(ANSI, ""))], "\n");
+
+/**
+ * Turn one resource's row into the checkpoint a failed create leaves: Alchemy commits a `creating`
+ * row without attributes before it calls the provider, and keeps it when the call fails (staging,
+ * run 43585534113). The live object stays in place.
+ */
+export const checkpointAsCreating = Effect.fn("checkpointAsCreating")(function* (fqn: string) {
+  const store = yield* yield* State;
+  const stacks = yield* store.listStacks();
+  yield* Effect.forEach(stacks, (stack) =>
+    store.listStages(stack).pipe(
+      Effect.flatMap((stages) =>
+        Effect.forEach(stages, (stage) =>
+          store.get({ stack, stage, fqn }).pipe(
+            Effect.flatMap((row) =>
+              row === undefined
+                ? Effect.void
+                : store.set({
+                    stack,
+                    stage,
+                    fqn,
+                    value: { ...row, status: "creating", attr: undefined } as typeof row,
+                  })
+            )
+          )
+        )
+      )
+    )
+  );
+});

@@ -33,7 +33,14 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { commit, FILE_B, stack } from "./support/YeetHeadMove.ts";
+import {
+  commit,
+  configureHostileGit,
+  FILE_B,
+  hostileGitConfig,
+  stack,
+  writeHostileGitAttributes,
+} from "./support/YeetHeadMove.ts";
 
 const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
 
@@ -930,41 +937,6 @@ const makeEditLane = Effect.fn("FinalCheckRefreshTest.makeEditLane")(function* (
   return { repoRoot, receiptHead, mergeHead };
 });
 
-const HOSTILE_ATTRIBUTES = ".git/hostile.attributes";
-
-// Every setting here changes what an unpinned `git diff` prints. `diff.relative` is a no-op at the
-// top level and stays in to prove it; the `hostile` driver reaches every path through the
-// attributes file.
-const hostileConfig = (repoRoot: string): ReadonlyArray<readonly [string, string]> => [
-  ["color.ui", "always"],
-  ["color.diff", "always"],
-  ["diff.renames", "copies"],
-  ["diff.relative", "true"],
-  ["diff.ignoreSubmodules", "all"],
-  ["diff.submodule", "log"],
-  ["diff.external", "true"],
-  ["diff.noprefix", "true"],
-  ["diff.mnemonicPrefix", "true"],
-  ["diff.context", "0"],
-  ["diff.interHunkContext", "10"],
-  ["diff.algorithm", "histogram"],
-  ["diff.indentHeuristic", "false"],
-  ["core.abbrev", "4"],
-  ["core.attributesFile", `${repoRoot}/${HOSTILE_ATTRIBUTES}`],
-  ["diff.hostile.textconv", "cksum <"],
-  ["diff.hostile.binary", "true"],
-  ["diff.hostile.algorithm", "patience"],
-];
-
-const writeHostileAttributes = (repoRoot: string) => writeFile(repoRoot, HOSTILE_ATTRIBUTES, "* diff=hostile\n");
-
-const configureHostile = Effect.fn("FinalCheckRefreshTest.configureHostile")(function* (repoRoot: string) {
-  yield* writeHostileAttributes(repoRoot);
-  yield* Effect.forEach(hostileConfig(repoRoot), ([key, value]) => git(repoRoot, ["config", key, value]), {
-    discard: true,
-  });
-});
-
 const collectText = <E>(stdout: Stream.Stream<Uint8Array, E>) => stdout.pipe(Stream.decodeText, Stream.mkString);
 
 // Each fixture makes one pin visible: myers against histogram and patience, the indent heuristic,
@@ -1024,7 +996,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const { repoRoot, receiptHead, mergeHead } = yield* makeEditLane("src/edited.ts", 110, 390);
         const clean = yield* refreshAt(repoRoot, mergeHead);
         assertTrue(clean._tag === "pass");
-        yield* configureHostile(repoRoot);
+        yield* configureHostileGit(repoRoot);
         const hostile = yield* refreshAt(repoRoot, mergeHead);
         assertTrue(hostile._tag === "pass");
         expect(hostile.receipt.headSha).toBe(receiptHead);
@@ -1037,7 +1009,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const { repoRoot, mergeHead } = yield* makeEditLane("src/edited.ts", 252, 250);
         const clean = yield* refreshAt(repoRoot, mergeHead);
         assertTrue(clean._tag === "refused");
-        yield* configureHostile(repoRoot);
+        yield* configureHostileGit(repoRoot);
         const hostile = yield* refreshAt(repoRoot, mergeHead);
         assertTrue(hostile._tag === "refused");
         expect(hostile.reason).toBe("own-change-outside-allowlist");
@@ -1073,8 +1045,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         yield* git(repoRoot, ["add", "--", ...A.map(PATCH_FIXTURES, ({ path }) => path)]);
         yield* moveGitlink(repoRoot, "2");
         const to = yield* commitIndex(repoRoot, ["-m", "after"]);
-        yield* writeHostileAttributes(repoRoot);
-        const hostile = A.flatMap(hostileConfig(repoRoot), ([key, value]) => ["-c", `${key}=${value}`]);
+        yield* writeHostileGitAttributes(repoRoot);
+        const hostile = A.flatMap(hostileGitConfig(repoRoot), ([key, value]) => ["-c", `${key}=${value}`]);
         const read = (config: ReadonlyArray<string>, path: string) =>
           runGitFoldedStdout(
             repoRoot,

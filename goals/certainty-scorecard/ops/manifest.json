@@ -6,7 +6,7 @@
     "title": "Certainty Scorecard",
     "status": "active",
     "created": "2026-11-09",
-    "updated": "2026-11-13",
+    "updated": "2026-11-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/certainty-scorecard",
@@ -34,7 +34,11 @@
     "goals/certainty-scorecard/GOAL.md",
     "goals/certainty-scorecard/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/slice-5b-cache-request.json",
+    "research/slice-5b-cache-review.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -85,5 +89,11 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "P1 Implement in progress. Merged: slice 1 (MEAS-01 slice 1 with MEAS-04, beep ci certainty) as #3118, with coverage rows fixed by #3121 and scoring by #3144, #3168 and #3181; slice 2 (ROUT-05 slice 1: every hosted job attributed to a lane, a support job or unknown, with a conservation census) as #3141; slice 3 (MEAS-02 with DEPS-10: refusals attributed by failure kind inside actionableLaneMix) as #3176; slice 4 (MEAS-01 slice 2, the certainty-nightly workflow) as #3266, live, with its first run (2026-11-12, certified) recorded by #3270 in history/certainty-nightly.md; slice 5 (SCHE-09 slice 1: trimmed admission rows archived and folded) as #3227, its pressure fields being slice 5b; slice 6 (MEAS-07: each yeet final-check run journaled as a final-check attempt) as #3228; slice 7 (PERIL-11 slice 1: every removal files the checkout's attempt journals in the workstation store, read by yeet economics --fleet as retained) as #3263; slice 10 (MEAS-03: terminations apart from reds, per-mode durations) as #3262; slice 11 (ROUT-05 slice 2: failed jobs keep their steps, uncharged reds become unknown) as #3257, its producer being slice 11b. In review: slice 8 (PERIL-11 slice 2): the T3 Code worktree root joins the intended roots.json list in docs/runbooks/fleet-roots-and-registry.md, yeet economics --fleet reads a checkout reachable through two roots once, and monitor waits are reported apart from local work in yeet-economics/v4. P2's seven certified nights start at 2026-11-14, the first whole UTC day after both baseline breaks (d8326d55935, declaration-only builds, and 3e822c71c5, check once). route-soundness-repair runs alongside; main-verdict-every-commit, heavy-pool-diet, hosted-setup-tax and local-proof-under-ten read their acceptance numbers from this goal."
+  "statusNote": "P1 Implement in progress. Merged: slice 1 (MEAS-01 slice 1 with MEAS-04, beep ci certainty) as #3118, with coverage rows fixed by #3121 and scoring by #3144, #3168 and #3181; slice 2 (ROUT-05 slice 1: every hosted job attributed to a lane, a support job or unknown, with a conservation census) as #3141; slice 3 (MEAS-02 with DEPS-10: refusals attributed by failure kind inside actionableLaneMix) as #3176; slice 4 (MEAS-01 slice 2, the certainty-nightly workflow) as #3266, live, with its first run (2026-11-12, certified) recorded by #3270 in history/certainty-nightly.md; slice 5 (SCHE-09 slice 1: trimmed admission rows archived and folded) as #3227, its pressure fields being slice 5b; slice 6 (MEAS-07: each yeet final-check run journaled as a final-check attempt) as #3228; slice 7 (PERIL-11 slice 1: every removal files the checkout's attempt journals in the workstation store, read by yeet economics --fleet as retained) as #3263; slice 10 (MEAS-03: terminations apart from reds, per-mode durations) as #3262; slice 11 (ROUT-05 slice 2: failed jobs keep their steps, uncharged reds become unknown) as #3257, its producer being slice 11b; slice 8 (PERIL-11 slice 2: the T3 Code worktree root joins the intended roots.json list in docs/runbooks/fleet-roots-and-registry.md, yeet economics --fleet reads a checkout reachable through two roots once, and monitor waits are reported apart from local work in yeet-economics/v4) as #3273; slice 14 (MEAS-05 slice 1: CI_LANE_DESCRIPTORS is the one job-name map the census, scorecard and admission joins read) as #3274; slice 10b (MEAS-03 slice 2: the handler errors slice 10 left unlocated are typed at the raise site and located as publish input and review-thread refusals, GitHub rate limits and other failed GitHub calls; on the workstation fleet 133 of the 160 unlocated reds now have a row and 27 stay in the unknown bucket) as #3342. Open as #3344: slice 5b (SCHE-09 slice 2): admitted and v3 released admission rows carry an optional capacity and host-pressure stamp, written only while the admission protocol's pressure key is on. P2's seven certified nights start at 2026-11-14, the first whole UTC day after both baseline breaks (d8326d55935, declaration-only builds, and 3e822c71c5, check once). route-soundness-repair runs alongside; main-verdict-every-commit, heavy-pool-diet, hosted-setup-tax and local-proof-under-ten read their acceptance numbers from this goal.",
+  "opsScripts": [
+    {
+      "path": "ops/admission-stamp-overhead.ts",
+      "purpose": "SCHE-09 slice 2 overhead micro-measurement: admit 100 full-proof requests one after another over a 600-row journal and report promotion and release p50 and p95 with the pressure gate off or on; runs on origin/main's code too, gate off."
+    }
+  ]
 }

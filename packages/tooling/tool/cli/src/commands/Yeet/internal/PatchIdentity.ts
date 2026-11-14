@@ -184,6 +184,9 @@ export const finalCheckPatchIdentityDigest = <E, R>(
  *
  * **Details**
  *
+ * The final-check refresh rule and the head-move classifier (rewrite and base
+ * merge proofs) both read their patches with this list.
+ *
  * Each flag overrides a default that config or attributes can change: colour,
  * renames, submodule visibility (`diff.ignoreSubmodules`, a submodule's
  * `ignore`) and format (`diff.submodule`), external diff and textconv, binary
