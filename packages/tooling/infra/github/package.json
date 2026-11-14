@@ -66,6 +66,7 @@
     "@alchemy.run/github": "catalog:",
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@distilled.cloud/github": "catalog:",
     "@effect/platform-bun": "catalog:",
     "alchemy": "catalog:",
     "effect": "catalog:"

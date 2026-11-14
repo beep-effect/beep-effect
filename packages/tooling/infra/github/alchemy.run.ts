@@ -1,11 +1,15 @@
 import * as AWS from "@alchemy.run/aws";
 import * as GitHub from "@alchemy.run/github";
 import * as Alchemy from "alchemy";
+import { Stage } from "alchemy/Stage";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import { productionConfig, productionStage } from "./src/Production.ts";
+import { readOnlyGitHubProviders } from "./src/ReadOnlyProviders.ts";
 import { decodeLiveRulesetJson, liveReviewerCheck } from "./src/RulesetGuard.ts";
+import { guardedRulesetProvider } from "./src/RulesetWriteGuard.ts";
 import { declareStack } from "./src/Stack.ts";
 
 /**
@@ -13,16 +17,36 @@ import { declareStack } from "./src/Stack.ts";
  * plan (`gh api repos/beep-effect/beep-effect/rulesets/10240248 > <file>`) and
  * named by `INFRA_GITHUB_LIVE_RULESET`. The stack carries its `beep-reviewer`
  * check through unchanged; the deploy workflow's guard step compares every
- * other guarded field against the same capture before anything is written.
+ * other guarded field against the same capture before anything is written,
+ * and the guarded ruleset provider re-reads the live ruleset inside its update
+ * path and refuses the PUT if it no longer equals this capture.
  */
-const liveReviewer = Effect.gen(function* () {
+const capture = Effect.gen(function* () {
   const path = yield* Config.String("INFRA_GITHUB_LIVE_RULESET");
   const fs = yield* FileSystem.FileSystem;
   // A missing capture, or one the strict decoder cannot read (an unknown key, rule type or value),
   // stops the plan: the stack never writes a ruleset it could not fully read.
-  const live = yield* fs.readFileString(path).pipe(Effect.flatMap(decodeLiveRulesetJson), Effect.orDie);
-  return liveReviewerCheck(live);
-});
+  return yield* fs.readFileString(path).pipe(Effect.flatMap(decodeLiveRulesetJson));
+}).pipe(Effect.orDie);
+
+const liveReviewer = Effect.map(capture, liveReviewerCheck);
+
+/**
+ * The GitHub providers for the stage. `prod` gets the shipped providers with
+ * the guarded ruleset provider (re-read before the PUT). Every other stage gets
+ * read-only providers: plan works, while create, update and delete fail with
+ * `PreviewStageIsReadOnly` before any request, so a preview stage cannot
+ * write to the live repository whatever token is in the environment. Both are
+ * layered over the `GitHub.providers()` collection, whose credentials they use.
+ */
+const providers = Layer.unwrap(
+  Effect.gen(function* () {
+    const stage = yield* Stage;
+    if (stage !== productionStage) return readOnlyGitHubProviders(stage);
+    const prodCapture = yield* capture;
+    return guardedRulesetProvider(prodCapture);
+  })
+).pipe(Layer.provideMerge(GitHub.providers()));
 
 /**
  * The shared Alchemy state store (goals/infra-alchemy-rebuild, D6 and D17):
@@ -43,10 +67,10 @@ export const state = AWS.state({
  * Every stage targets the live repository with the same configuration: the
  * repository, its ruleset and its labels are singletons, so nothing here may
  * derive a name from the stage. `prod` deploys only from CI. Any other stage
- * is a plan-only preview of `prod` and refuses to start unless
+ * is a plan-only preview of `prod`: its providers are read-only by construction
+ * (`readOnlyGitHubProviders`), and it also refuses to start unless
  * `INFRA_GITHUB_LIVE_PREVIEW=plan-only` acknowledges that it reads the live
- * repository; every resource is retained, so destroying a preview stage
- * deletes nothing on GitHub.
+ * repository. Every resource is retained, so destroying a stage deletes nothing.
  */
 export const program = Effect.gen(function* () {
   const stack = yield* Alchemy.Stack;
@@ -62,7 +86,7 @@ export const program = Effect.gen(function* () {
 export default Alchemy.Stack(
   "InfraGithub",
   {
-    providers: GitHub.providers(),
+    providers,
     state,
   },
   program

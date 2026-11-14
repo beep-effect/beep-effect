@@ -56,17 +56,20 @@ const appCases = {
   "beep-reviewer": {
     title: "beep-reviewer GitHub App",
     fieldCount: 4,
+    slug: "beep-reviewer",
     slugCheck: 'if (field("slug") !== undefined) process.exit(87);',
   },
   "beep-knowledge-mint": {
     title: "beep-knowledge-mint GitHub App",
     fieldCount: 5,
+    slug: "beep-knowledge-mint-2",
     slugCheck: 'if (field("slug")?.value !== "beep-knowledge-mint-2") process.exit(87);',
   },
   "beep-infra-github": {
     title: "beep-infra-github GitHub App",
     fieldCount: 5,
-    slugCheck: 'if (field("slug")?.value !== "beep-knowledge-mint-2") process.exit(87);',
+    slug: "beep-infra-github-3",
+    slugCheck: 'if (field("slug")?.value !== "beep-infra-github-3") process.exit(87);',
   },
 } as const;
 
@@ -79,7 +82,7 @@ const harness = Effect.fn("GitHubAppMintTest.harness")(function* (app: App, opEx
   const ambientPath = yield* Config.String("PATH");
   const bin = yield* fs.makeTempDirectoryScoped({ prefix: "github-app-mint-test-" });
   const doctorLog = path.join(bin, "op-doctor.log");
-  const { title, fieldCount, slugCheck } = appCases[app];
+  const { title, fieldCount, slug, slugCheck } = appCases[app];
   yield* fs.writeFileString(path.join(bin, "op"), fakeOp(opExit, title, fieldCount, slugCheck));
   yield* fs.chmod(path.join(bin, "op"), 0o700);
   yield* fs.writeFileString(path.join(bin, "op-doctor"), `#!/bin/sh\necho ran >> "${doctorLog}"\n`);
@@ -92,7 +95,7 @@ const harness = Effect.fn("GitHubAppMintTest.harness")(function* (app: App, opEx
   );
   const conversion = yield* encodeUnknownJson({
     id: 123,
-    slug: "beep-knowledge-mint-2",
+    slug,
     client_id: "fixture-client",
     pem: PLACEHOLDER,
   });
@@ -188,6 +191,27 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
     it.effect("knowledge mint reports a failed vault write by exit code and forbids a reload", () =>
       Effect.gen(function* () {
         const { callback, errors, doctorRuns } = yield* register("beep-knowledge-mint", 17, 201);
+        expect(callback.status).toBe(500);
+        expect(callback.text).toContain("Do not reload this page");
+        expect(errors).toContain("1Password item creation exited 17");
+        expect(doctorRuns).toBe(1);
+      })
+    );
+
+    it.effect("infra-github mint stores its own slugged template and reports only the slug", () =>
+      Effect.gen(function* () {
+        const { callback, logs, doctorRuns } = yield* register("beep-infra-github", 0, 201);
+        expect(callback.status).toBe(200);
+        expect(callback.text).toContain('Stored in 1Password as "beep-infra-github GitHub App"');
+        expect(logs).toContain('[infra-github] Stored "beep-infra-github GitHub App"');
+        expect(logs).toContain("App beep-infra-github-3 (app_id 123)");
+        expect(doctorRuns).toBe(0);
+      })
+    );
+
+    it.effect("infra-github mint reports a failed vault write by exit code and forbids a reload", () =>
+      Effect.gen(function* () {
+        const { callback, errors, doctorRuns } = yield* register("beep-infra-github", 17, 201);
         expect(callback.status).toBe(500);
         expect(callback.text).toContain("Do not reload this page");
         expect(errors).toContain("1Password item creation exited 17");

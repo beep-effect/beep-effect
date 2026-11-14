@@ -225,10 +225,13 @@ Rollback (decision "Cost controls cutover from Pulumi"):
 ## InfraGithub
 
 `InfraGithub` writes to the live repository from every stage, because the repository, its
-ruleset and its labels are singletons. `prod` deploys only from CI; any other stage is a
-plan-only preview and refuses to start without `INFRA_GITHUB_LIVE_PREVIEW=plan-only`. Never
-`deploy` a preview stage. Every resource is retained on removal and the repository and the
-`main` ruleset are protected, so a stray destroy deletes nothing:
+ruleset and its labels are singletons. `prod` deploys only from CI. Any other stage is a
+plan-only preview by construction: its GitHub providers are read-only
+(`src/ReadOnlyProviders.ts`), so plan works while create, update and delete fail with
+`PreviewStageIsReadOnly` before any request, whatever token is in the environment; it also
+refuses to start without `INFRA_GITHUB_LIVE_PREVIEW=plan-only`. Every resource is retained
+on removal and the repository and the `main` ruleset are protected, so a stray destroy
+deletes nothing:
 
 ```sh
 eval "$(aws configure export-credentials --profile elpresidank-vault --format env)"
@@ -267,6 +270,22 @@ whole body. Two rules keep a deploy a no-op on it:
   unknown rule type, a missing field, or a setting the provider never sends standing away
   from its default (required reviewers, an enabled dismissal restriction,
   `do_not_enforce_on_create`) refuses the deploy in both modes instead of being skipped.
+
+- The capture can go stale between the plan and the write: a `release` or `require`
+  landing in that gap would be overwritten. The `GitHub.Ruleset` provider is wrapped
+  (`src/RulesetWriteGuard.ts`): inside its update path, one API round-trip before the
+  PUT, it re-reads ruleset 10240248, compares it with the capture over the same strictly
+  decoded, server-fields-excluded fields, and fails with `RulesetChangedSinceCapture`,
+  sending no PUT, if anything differs.
+- The post-deploy check (`ruleset-guard.ts <after> --reviewer-from <before>`) compares the
+  ruleset read after the deploy with the body the deploy wrote, whose `beep-reviewer`
+  check came from the before capture. A switch flipped in the last round-trip before the
+  write fails it with "beep-reviewer changed during the deploy window": re-apply the
+  switch with `beep reviewer ruleset release|require --apply` and re-run the deploy.
+
+Do not flip the reviewer switch (`beep reviewer ruleset release|require --apply`) while a
+`Deploy infra-github` run is in progress. A run refused by either guard wrote nothing:
+re-run it, and it takes a fresh capture.
 
 Pre-arming evidence, read-only and with no App: print the field-by-field diff of planned
 against live. It must say `empty diff` before `INFRA_GITHUB_DEPLOY_ARMED` is switched:

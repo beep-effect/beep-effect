@@ -48,7 +48,7 @@ const LivePullRequest = S.Struct({
   dismiss_stale_reviews_on_push: S.Boolean,
   required_reviewers: Empty.pipe(S.optionalKey),
   require_code_owner_review: S.Boolean,
-  dismissal_restriction: S.Struct({ enabled: S.Literal(false), allowed_actors: Empty }).pipe(S.optionalKey),
+  dismissal_restriction: S.Struct({ enabled: S.tag(false), allowed_actors: Empty }).pipe(S.optionalKey),
   require_last_push_approval: S.Boolean,
   required_review_thread_resolution: S.Boolean,
   require_extra_approval_for_unattributed_changes: S.Boolean.pipe(S.optionalKey),
@@ -60,11 +60,11 @@ const LivePullRequest = S.Struct({
 );
 
 const LiveRule = S.Union([
-  S.Struct({ type: S.Literal("deletion") }),
-  S.Struct({ type: S.Literal("non_fast_forward") }),
-  S.Struct({ type: S.Literal("pull_request"), parameters: LivePullRequest }),
+  S.Struct({ type: S.tag("deletion") }),
+  S.Struct({ type: S.tag("non_fast_forward") }),
+  S.Struct({ type: S.tag("pull_request"), parameters: LivePullRequest }),
   S.Struct({
-    type: S.Literal("required_status_checks"),
+    type: S.tag("required_status_checks"),
     parameters: S.Struct({
       strict_required_status_checks_policy: S.Boolean,
       do_not_enforce_on_create: S.Literal(false).pipe(S.optionalKey),
@@ -109,7 +109,7 @@ export class LiveRuleset extends S.Opaque<LiveRuleset, { readonly brand: unique 
     current_user_can_bypass: S.String.pipe(S.optionalKey),
     _links: S.Unknown.pipe(S.optionalKey),
     name: S.String,
-    target: S.Literal("branch"),
+    target: S.tag("branch"),
     enforcement: RulesetEnforcement,
     conditions: S.Struct({ ref_name: S.Struct({ include: S.Array(S.String), exclude: S.Array(S.String) }) }),
     bypass_actors: S.Array(S.Struct({ actor_id: S.Int, actor_type: BypassActorType, bypass_mode: BypassMode })),
@@ -533,4 +533,82 @@ export const guardRuleset = Effect.fn("InfraGithub.guardRuleset")(function* (rul
   const diffs = yield* diffFields(plannedFields(ruleset, liveReviewerCheck(live)), liveFields(live));
   if (A.isReadonlyArrayNonEmpty(diffs)) return yield* RulesetDrift.make({ diffs });
   return diffs;
+});
+
+/**
+ * Raised by the post-deploy check when the only guarded difference is the
+ * `beep-reviewer` check: it moved between the capture the deploy wrote and the
+ * after-deploy read, so the switch must be re-applied.
+ *
+ * **Example** (Inspect the refusal)
+ *
+ * ```ts
+ * import { ReviewerChangedDuringDeploy } from "@beep/infra-github/RulesetGuard"
+ *
+ * const changed = ReviewerChangedDuringDeploy.make({ written: "required", live: "advisory" })
+ * console.log(changed._tag) // "ReviewerChangedDuringDeploy"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class ReviewerChangedDuringDeploy extends S.TaggedError<
+  ReviewerChangedDuringDeploy,
+  { readonly brand: unique symbol }
+>($I`ReviewerChangedDuringDeploy`)(
+  "ReviewerChangedDuringDeploy",
+  { written: S.String, live: S.String },
+  $I.annote("ReviewerChangedDuringDeploy", {
+    description: "The beep-reviewer check changed during the deploy window and must be re-applied.",
+  })
+) {}
+
+const reviewerPosition = (check: O.Option<RequiredCheck>) =>
+  O.match(check, { onNone: () => "advisory (absent)", onSome: (found) => `required (App ${found.integrationId})` });
+
+/**
+ * The post-deploy check: the ruleset read after the deploy must equal the body
+ * the deploy wrote, whose `beep-reviewer` check came from the `before` capture.
+ * A difference only in that check fails with {@link ReviewerChangedDuringDeploy}
+ * (the switch moved in the last round-trip); any other difference fails with
+ * {@link RulesetDrift}.
+ *
+ * **Example** (Compose the post-deploy check)
+ *
+ * ```ts
+ * import { productionConfig } from "@beep/infra-github/Production"
+ * import { decodeLiveRuleset, guardAfterDeploy } from "@beep/infra-github/RulesetGuard"
+ * import * as Effect from "effect/Effect"
+ *
+ * const live = Effect.runSync(decodeLiveRuleset({
+ *   name: "main", target: "branch", enforcement: "active",
+ *   conditions: { ref_name: { include: [], exclude: [] } }, bypass_actors: [], rules: [],
+ * }))
+ * console.log(Effect.isEffect(guardAfterDeploy(productionConfig.mainRuleset, live, live)))
+ * ```
+ *
+ * @param ruleset - The declared ruleset.
+ * @param before - The capture the deploy wrote from.
+ * @param after - The ruleset read after the deploy.
+ * @returns The (empty) diff on success.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const guardAfterDeploy = Effect.fn("InfraGithub.guardAfterDeploy")(function* (
+  ruleset: MainRuleset,
+  before: LiveRuleset,
+  after: LiveRuleset
+) {
+  const written = liveReviewerCheck(before);
+  const diffs = yield* diffFields(plannedFields(ruleset, written), liveFields(after));
+  if (!A.isReadonlyArrayNonEmpty(diffs)) return diffs;
+  const live = liveReviewerCheck(after);
+  const selfDiffs = yield* diffFields(plannedFields(ruleset, live), liveFields(after));
+  if (!A.isReadonlyArrayNonEmpty(selfDiffs)) {
+    return yield* ReviewerChangedDuringDeploy.make({
+      written: reviewerPosition(written),
+      live: reviewerPosition(live),
+    });
+  }
+  return yield* RulesetDrift.make({ diffs });
 });

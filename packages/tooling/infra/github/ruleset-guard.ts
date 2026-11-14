@@ -1,11 +1,14 @@
 #!/usr/bin/env bun
 /**
- * The pre-write guard for ruleset 10240248. It takes the path of a capture of
- * the live ruleset (`gh api repos/beep-effect/beep-effect/rulesets/10240248`),
+ * The pre-write and post-deploy guard for ruleset 10240248. It takes the path
+ * of a capture of the live ruleset (`gh api repos/beep-effect/beep-effect/rulesets/10240248`),
  * prints every guarded field whose planned value differs from the live one,
- * and exits non-zero on any difference. `--diff-only` prints the same diff and
- * exits zero: the read-only evidence an operator shows before arming. A capture
- * the strict decoder cannot read is refused in both modes.
+ * and exits non-zero on any difference. `--reviewer-from <before>` is the
+ * post-deploy mode: the planned body carries the `beep-reviewer` check of the
+ * capture the deploy wrote from, so a switch flipped during the deploy window
+ * fails with its own message. `--diff-only` prints the diff and exits zero:
+ * the read-only evidence an operator shows before arming. A capture the strict
+ * decoder cannot read is refused in every mode.
  *
  * @internal
  * @since 0.0.0
@@ -19,15 +22,38 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as O from "effect/Option";
 import { productionConfig } from "./src/Production.ts";
 import {
   decodeLiveRulesetJson,
   diffFields,
+  guardAfterDeploy,
+  guardRuleset,
   liveFields,
   liveReviewerCheck,
   plannedFields,
-  RulesetDrift,
 } from "./src/RulesetGuard.ts";
+import type { FieldDiff } from "./src/RulesetGuard.ts";
+
+const readCapture = Effect.fn("InfraGithub.readRulesetCapture")(function* (path: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const text = yield* fs.readFileString(path);
+  // Fail closed: a capture with any key, rule type or value the model does not know is refused.
+  return yield* decodeLiveRulesetJson(text).pipe(
+    Effect.tapError((error) =>
+      Console.error(`ruleset-guard: REFUSED; ${path} has a shape the guard cannot read.\n${error.message}`)
+    )
+  );
+});
+
+const printDiffs = (diffs: ReadonlyArray<FieldDiff>) =>
+  Effect.forEach(
+    diffs,
+    (diff) => Console.log(`DIFF ${diff.field}\n  planned: ${diff.planned}\n  live:    ${diff.live}`),
+    {
+      discard: true,
+    }
+  );
 
 const rulesetGuard = Command.make(
   "ruleset-guard",
@@ -37,36 +63,48 @@ const rulesetGuard = Command.make(
       Flag.withDefault(false),
       Flag.withDescription("Print the field-by-field diff and exit zero; never fails on a difference")
     ),
+    reviewerFrom: Flag.String("reviewer-from").pipe(
+      Flag.optional,
+      Flag.withDescription("Post-deploy mode: take the beep-reviewer check from this earlier capture")
+    ),
   },
-  Effect.fn("InfraGithub.rulesetGuardCli")(function* ({ live, diffOnly }) {
-    const fs = yield* FileSystem.FileSystem;
-    const text = yield* fs.readFileString(live);
-    // Fail closed: a capture with any key, rule type or value the model does not know is refused,
-    // in both modes, rather than compared on the fields that happened to parse.
-    const decoded = yield* decodeLiveRulesetJson(text).pipe(
+  Effect.fn("InfraGithub.rulesetGuardCli")(function* ({ live, diffOnly, reviewerFrom }) {
+    const decoded = yield* readCapture(live);
+    const before = yield* O.match(reviewerFrom, { onNone: () => Effect.succeed(decoded), onSome: readCapture });
+    if (diffOnly) {
+      const diffs = yield* diffFields(
+        plannedFields(productionConfig.mainRuleset, liveReviewerCheck(before)),
+        liveFields(decoded)
+      );
+      yield* printDiffs(diffs);
+      yield* Console.log(
+        A.isReadonlyArrayNonEmpty(diffs)
+          ? `ruleset-guard: ${diffs.length} guarded field(s) differ from ruleset 10240248`
+          : "ruleset-guard: empty diff; the planned body equals ruleset 10240248 in every guarded field"
+      );
+      return;
+    }
+    const checked = O.isSome(reviewerFrom)
+      ? guardAfterDeploy(productionConfig.mainRuleset, before, decoded)
+      : guardRuleset(productionConfig.mainRuleset, decoded);
+    yield* checked.pipe(
       Effect.tapError((error) =>
-        Console.error(
-          `ruleset-guard: REFUSED; the capture of ruleset 10240248 has a shape the guard cannot read.\n${error.message}`
-        )
+        error._tag === "ReviewerChangedDuringDeploy"
+          ? Console.error(
+              `ruleset-guard: beep-reviewer changed during the deploy window (written: ${error.written}; live now: ${error.live}). ` +
+                "Re-apply the switch with beep reviewer ruleset release|require --apply, then re-run Deploy infra-github."
+            )
+          : printDiffs(error.diffs).pipe(
+              Effect.andThen(
+                Console.error(
+                  "ruleset-guard: REFUSED; ruleset 10240248 differs from the declared body. Nothing was written by this check."
+                )
+              )
+            )
       )
     );
-    const diffs = yield* diffFields(
-      plannedFields(productionConfig.mainRuleset, liveReviewerCheck(decoded)),
-      liveFields(decoded)
-    );
-    for (const diff of diffs) {
-      yield* Console.log(`DIFF ${diff.field}\n  planned: ${diff.planned}\n  live:    ${diff.live}`);
-    }
-    if (A.isReadonlyArrayNonEmpty(diffs)) {
-      if (diffOnly) {
-        yield* Console.log(`ruleset-guard: ${diffs.length} guarded field(s) differ from ruleset 10240248`);
-        return;
-      }
-      yield* Console.error("ruleset-guard: REFUSED; the deploy would change ruleset 10240248. Nothing was written.");
-      return yield* RulesetDrift.make({ diffs });
-    }
     yield* Console.log("ruleset-guard: empty diff; the planned body equals ruleset 10240248 in every guarded field");
   })
-).pipe(Command.withDescription("Refuse an InfraGithub deploy that would change a guarded field of ruleset 10240248."));
+).pipe(Command.withDescription("Refuse an InfraGithub deploy that would change, or did change, ruleset 10240248."));
 
 Command.run(rulesetGuard, { version: "0.0.0" }).pipe(Effect.provide(BunServices.layer), BunRuntime.runMain);

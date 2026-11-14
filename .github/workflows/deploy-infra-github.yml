@@ -125,9 +125,11 @@ jobs:
           INFRA_GITHUB_LIVE_RULESET: ${{ runner.temp }}/ruleset-10240248.before.json
         run: bunx alchemy deploy --stage prod --yes --env-file /dev/null
 
-      # The ruleset read can lag the write, so poll: a fresh capture must pass
-      # the same guard (an empty diff against the declared body). Fails with
-      # the last diff after 120 seconds.
+      # The ruleset read can lag the write, so poll: a fresh capture must equal
+      # the body the deploy wrote, beep-reviewer check taken from the before
+      # capture, so a switch flipped in the last round-trip before the write is
+      # reported (and must be re-applied). Fails with the last diff after 120
+      # seconds.
       - name: Check the main ruleset after deploy
         working-directory: packages/tooling/infra/github
         shell: bash
@@ -139,7 +141,7 @@ jobs:
           deadline=$((SECONDS + 120))
           while :; do
             gh api repos/beep-effect/beep-effect/rulesets/10240248 > "$after"
-            if bun ruleset-guard.ts "$after"; then break; fi
+            if bun ruleset-guard.ts "$after" --reviewer-from "$RUNNER_TEMP/ruleset-10240248.before.json"; then break; fi
             if (( SECONDS >= deadline )); then exit 1; fi
             sleep 10
           done

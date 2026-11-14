@@ -2,6 +2,7 @@ import { productionConfig } from "@beep/infra-github/Production";
 import {
   decodeLiveRuleset,
   decodeLiveRulesetJson,
+  guardAfterDeploy,
   guardRuleset,
   liveReviewerCheck,
 } from "@beep/infra-github/RulesetGuard";
@@ -152,6 +153,33 @@ describe("the ruleset 10240248 guard", () => {
       }
       const text = yield* Effect.exit(decodeLiveRulesetJson("not json"));
       expect(text._tag).toBe("Failure");
+    })
+  );
+
+  it.effect("the post-deploy check names a reviewer switch flipped during the deploy, either way", () =>
+    Effect.gen(function* () {
+      const withReviewer = yield* decodeLive(withChecks([{ context: "beep-reviewer", integration_id: 5_321_138 }]));
+      const without = yield* decodeLive(liveMain);
+      // Nothing moved: the after read equals what was written.
+      const same = yield* Effect.exit(guardAfterDeploy(productionConfig.mainRuleset, withReviewer, withReviewer));
+      expect(same._tag).toBe("Success");
+      // Released during the window, then required during the window.
+      for (const [before, after] of [
+        [withReviewer, without],
+        [without, withReviewer],
+      ] as const) {
+        const failure = yield* Effect.flip(guardAfterDeploy(productionConfig.mainRuleset, before, after));
+        expect(failure._tag).toBe("ReviewerChangedDuringDeploy");
+      }
+      // Any other difference is ordinary drift.
+      const strict = yield* decodeLive(
+        editRule("required_status_checks", (parameters) => ({
+          ...parameters,
+          strict_required_status_checks_policy: true,
+        }))
+      );
+      const drift = yield* Effect.flip(guardAfterDeploy(productionConfig.mainRuleset, without, strict));
+      expect(drift._tag).toBe("RulesetDrift");
     })
   );
 });

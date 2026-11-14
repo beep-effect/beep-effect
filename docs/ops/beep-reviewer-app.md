@@ -285,9 +285,13 @@ The `InfraGithub` Alchemy stack (`packages/tooling/infra/github`) also writes th
 ruleset, as a whole body, once its deploy workflow is armed. It does not own the
 `beep-reviewer` entry: each deploy reads the live ruleset and writes that entry back
 exactly as `release` or `require` left it, so these commands remain the switch whether
-or not the stack is armed, and a deploy never undoes them. A pre-write guard refuses a
-deploy that would change any other required check, the strict policy, bypass actors,
-merge methods or conditions (`docs/runbooks/alchemy-infra.md`, InfraGithub section).
+or not the stack is armed. A deploy never silently undoes a switch: immediately before
+its write it re-reads the ruleset and refuses, writing nothing, if the switch moved
+after its capture; and its post-deploy check fails, telling you to re-apply the switch,
+if the switch moved in the last round-trip before the write. Do not flip the switch while
+a `Deploy infra-github` run is in progress. A pre-write guard also refuses a deploy that
+would change any other required check, the strict policy, bypass actors, merge methods or
+conditions (`docs/runbooks/alchemy-infra.md`, InfraGithub section).
 
 ## Acceptance on a scratch PR
 

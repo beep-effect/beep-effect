@@ -14,8 +14,8 @@ Design order is schema, typed configuration, then resources.
 
 1. **Schema** (`src/Config.ts`): `StackConfig` and its parts (`RepositorySettings`,
    `MainRuleset`, `EnvironmentSpec`, `VariableSpec`, `LabelSpec`, `UnmanagedObject`), with
-   `LiteralKit` domains for every literal set (`ReviewerCheck`, `MergeMethod`,
-   `BypassActorType`, `BypassMode`, `RulesetEnforcement`, `ObjectClass`).
+   `LiteralKit` domains for every literal set (`MergeMethod`, `BypassActorType`,
+   `BypassMode`, `RulesetEnforcement`, `ObjectClass`).
 2. **Configuration** (`src/Production.ts`): `productionConfig`, the live state captured
    2026-11-13 restricted to what the stack owns, plus `unmanaged`, every live object the
    stack leaves alone with its reason. The configuration does not depend on the stage.
@@ -90,7 +90,12 @@ deploy reads the live ruleset and writes its `beep-reviewer` entry back exactly 
 App binding included, so `beep reviewer ruleset release|require --apply` stays the only
 switch, armed or not. The ruleset is written as a whole body, so leaving the check out of it
 (option (a)) would remove it; carrying it is what the resource model supports. Tests prove a
-live check survives a deploy present and absent.
+live check survives a deploy present and absent. Because the body is built from a capture,
+`src/RulesetWriteGuard.ts` wraps the `GitHub.Ruleset` provider: immediately before the PUT
+it re-reads the live ruleset and refuses, writing nothing, if it no longer equals the
+capture (a switch flipped between capture and write). Tests cover the equal case and the
+check flipped either way. The post-deploy check (`--reviewer-from`) is the other half: if the
+switch moved in the last round-trip before the write, it fails and names the switch to re-apply.
 
 ### The ruleset 10240248 guard
 
@@ -112,7 +117,10 @@ empty.
 bun run test     # census snapshot + stack tests on an in-memory GitHub, no token
 ```
 
-Read-only preview against the live repository (never `deploy` a non-`prod` stage):
+Read-only preview against the live repository. A non-`prod` stage cannot write: its GitHub
+providers (`src/ReadOnlyProviders.ts`) keep read and diff and fail create, update and
+delete with `PreviewStageIsReadOnly` before any request, so `alchemy deploy` on it fails
+closed whatever token is present:
 
 ```sh
 eval "$(aws configure export-credentials --profile elpresidank-vault --format env)"
