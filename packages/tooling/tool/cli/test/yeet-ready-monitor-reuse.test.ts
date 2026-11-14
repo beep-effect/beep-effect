@@ -4,8 +4,8 @@ import { YeetCommandError } from "@beep/repo-cli/commands/Yeet";
 import {
   findLiveMonitorForReadyForTesting,
   isReadyMonitorRequest,
-  isReusableReadyMonitorJob,
   MONITOR_READY_SUBMIT_ARGV,
+  matchesReadyMonitorRequest,
   ProofJobRecord,
   ProofJobRequest,
   ProofJobRunner,
@@ -19,6 +19,9 @@ import {
   RepoRunContext,
   readyMonitorArgvKey,
   readyMonitorRunnerStatus,
+  readyMonitorRuntimeLeft,
+  readyMonitorRuntimeShortfall,
+  renderReadyMonitorRuntimeLeft,
   stripProofJobSubmitFlags,
   submitProofJobReusingReadyMonitor,
   TurboPlanSnapshot,
@@ -29,11 +32,14 @@ import { assertFalse, assertInclude, assertNone, assertSome, assertTrue, deepStr
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as SecureRandom from "effect/crypto/SecureRandom";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
+import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { ProofJobLauncherShape, ReadyMonitorRunnerProbe } from "@beep/repo-cli/test/Yeet";
 
@@ -50,6 +56,12 @@ const SUBMIT_IDS = [FIRST_SUBMIT_ID, "ff5d6bd3-4444-4aaa-8bbb-000000000004"];
 const CLI_ARGV = ["monitor", "--until-ready", "--detach"];
 const STRICTER_ARGV = ["monitor", "--until-ready", "--settle-timeout", "2h", "--detach"];
 const HOUR = 3600;
+const MINUTE = 60;
+const SUBMITTED_AT = "2026-11-14T10:00:00.000Z";
+const START = DateTime.makeUnsafe(SUBMITTED_AT);
+// The instant `minutes` after the fixtures' submit time.
+const at = (minutes: number) => DateTime.add(START, { minutes });
+const setClockAt = flow(at, DateTime.toEpochMillis, TestClock.setTime);
 const ANY_CAP = ProofJobRuntimeCapRequest.cases.unspecified.make({});
 const NO_CAP = ProofJobRuntimeCapRequest.cases.uncapped.make({});
 const capOf = (seconds: number) => ProofJobRuntimeCapRequest.cases.capped.make({ seconds });
@@ -68,13 +80,13 @@ const jobRequest = (argv: ReadonlyArray<string>, branch = BRANCH, mode: ProofJob
 const jobRecord = (
   jobId: string,
   request: ProofJobRequest,
-  fields: Partial<Pick<ProofJobRecord, "phase" | "prNumber" | "runner" | "cancelRequestedAt">> = {},
+  fields: Partial<Pick<ProofJobRecord, "phase" | "prNumber" | "runner" | "cancelRequestedAt" | "submittedAt">> = {},
   maxRuntimeSeconds: O.Option<number> = O.none()
 ) =>
   ProofJobRecord.make({
     jobId,
     phase: "running",
-    submittedAt: "2026-11-14T10:00:00.000Z",
+    submittedAt: SUBMITTED_AT,
     request,
     submitter: ProofJobSubmitter.make({ pid: 4242, cwd: "/repo" }),
     unit: ProofJobUnit.make({
@@ -201,26 +213,26 @@ describe("reusable readiness monitor", () => {
   const cli = ReadyMonitorRequest.make({ branch: BRANCH, argv: CLI_ARGV });
 
   it("reuses a polling job on the same branch with the same readiness argv", () => {
-    assertTrue(isReusableReadyMonitorJob(live, cli));
-    assertTrue(isReusableReadyMonitorJob(jobRecord(LIVE_ID, jobRequest(CLI_ARGV), { phase: "submitted" }), cli));
+    assertTrue(matchesReadyMonitorRequest(live, cli));
+    assertTrue(matchesReadyMonitorRequest(jobRecord(LIVE_ID, jobRequest(CLI_ARGV), { phase: "submitted" }), cli));
   });
 
   it("never lets a looser job satisfy a stricter request, or the reverse", () => {
-    assertFalse(isReusableReadyMonitorJob(live, ReadyMonitorRequest.make({ branch: BRANCH, argv: STRICTER_ARGV })));
+    assertFalse(matchesReadyMonitorRequest(live, ReadyMonitorRequest.make({ branch: BRANCH, argv: STRICTER_ARGV })));
     const stricterJob = jobRecord(OLDER_ID, jobRequest(stripProofJobSubmitFlags(STRICTER_ARGV)));
-    assertFalse(isReusableReadyMonitorJob(stricterJob, cli));
+    assertFalse(matchesReadyMonitorRequest(stricterJob, cli));
   });
 
   it("matches the pull request number when both sides know one, else the branch", () => {
     const publish = (prNumber: number, branch = BRANCH) =>
       ReadyMonitorRequest.make({ branch, prNumber: O.some(prNumber), argv: MONITOR_READY_SUBMIT_ARGV });
-    assertTrue(isReusableReadyMonitorJob(live, publish(1427)));
-    assertTrue(isReusableReadyMonitorJob(live, publish(1427, "renamed/branch")));
-    assertFalse(isReusableReadyMonitorJob(live, publish(99)));
-    assertFalse(isReusableReadyMonitorJob(live, ReadyMonitorRequest.make({ branch: "feat/other", argv: CLI_ARGV })));
+    assertTrue(matchesReadyMonitorRequest(live, publish(1427)));
+    assertTrue(matchesReadyMonitorRequest(live, publish(1427, "renamed/branch")));
+    assertFalse(matchesReadyMonitorRequest(live, publish(99)));
+    assertFalse(matchesReadyMonitorRequest(live, ReadyMonitorRequest.make({ branch: "feat/other", argv: CLI_ARGV })));
     const unbound = jobRecord(OLDER_ID, jobRequest(CLI_ARGV), { phase: "submitted" });
-    assertTrue(isReusableReadyMonitorJob(unbound, publish(1427)));
-    assertFalse(isReusableReadyMonitorJob(unbound, publish(1427, "feat/other")));
+    assertTrue(matchesReadyMonitorRequest(unbound, publish(1427)));
+    assertFalse(matchesReadyMonitorRequest(unbound, publish(1427, "feat/other")));
   });
 
   it("refuses a job that stopped polling or is not a readiness monitor", () => {
@@ -232,39 +244,90 @@ describe("reusable readiness monitor", () => {
         jobRecord(LIVE_ID, jobRequest(["verify"], BRANCH, "verify")),
         jobRecord(LIVE_ID, jobRequest(["monitor", "--until-merged"])),
       ],
-      isReusableReadyMonitorJob(cli)
+      matchesReadyMonitorRequest(cli)
     );
     deepStrictEqual(stopped, [false, false, false, false, false]);
   });
 });
 
-describe("readiness monitor runtime cap", () => {
-  // `--job-max-runtime` is a launch flag: it never enters the argv key, so a
-  // request that names one keys like one that does not.
-  const asking = (runtimeCap: ProofJobRuntimeCapRequest) =>
-    ReadyMonitorRequest.make({ branch: BRANCH, argv: [...CLI_ARGV, "--job-max-runtime", "6h"], runtimeCap });
+describe("readiness monitor runtime left", () => {
   const hourCapped = jobRecord(LIVE_ID, jobRequest(CLI_ARGV), {}, O.some(HOUR));
   const uncapped = jobRecord(OLDER_ID, jobRequest(CLI_ARGV));
+  const unreadable = jobRecord(LIVE_ID, jobRequest(CLI_ARGV), { submittedAt: "not a time" }, O.some(HOUR));
+  const leftAt = (minutes: number) => readyMonitorRuntimeLeft(hourCapped, at(minutes));
+  const shortfallAt = (minutes: number, cap: ProofJobRuntimeCapRequest) =>
+    readyMonitorRuntimeShortfall(leftAt(minutes), cap);
 
-  it("reuses a capped job for an equal, shorter or unspecified cap", () => {
+  it("counts a 60-minute cap down from the submit time, between zero and the cap", () => {
+    deepStrictEqual(A.map([50, 75, -5], flow(leftAt, renderReadyMonitorRuntimeLeft)), [
+      "10m left before its runtime cap stops it",
+      "0 left before its runtime cap stops it",
+      "1h left before its runtime cap stops it",
+    ]);
+  });
+
+  it("does not reuse a 60-minute job 50 minutes in for a 30-minute request", () => {
+    assertSome(
+      shortfallAt(50, capOf(30 * MINUTE)),
+      "10m left before its runtime cap stops it, less than the 30m asked for"
+    );
+  });
+
+  it("reuses that job for a 5-minute request, and when the time left equals the request", () => {
+    assertNone(shortfallAt(50, capOf(5 * MINUTE)));
+    // Boundary, pinned: ten minutes left serves a ten-minute request, one second more does not.
+    assertNone(shortfallAt(50, capOf(10 * MINUTE)));
+    assertSome(
+      shortfallAt(50, capOf(10 * MINUTE + 1)),
+      "10m left before its runtime cap stops it, less than the 10m 1s asked for"
+    );
+  });
+
+  it("refuses a capped request when no start time reads, and falls back to the runner start", () => {
+    const left = readyMonitorRuntimeLeft(unreadable, at(50));
+    const unknown = "a runtime cap of 1h but no readable start time, so its time left is unknown";
+    deepStrictEqual(renderReadyMonitorRuntimeLeft(left), unknown);
+    assertSome(readyMonitorRuntimeShortfall(left, capOf(MINUTE)), unknown);
+    const runnerStarted = jobRecord(
+      LIVE_ID,
+      jobRequest(CLI_ARGV),
+      {
+        submittedAt: "not a time",
+        runner: O.some(ProofJobRunner.make({ pid: 31337, startedAt: "2026-11-14T10:20:00.000Z" })),
+      },
+      O.some(HOUR)
+    );
     deepStrictEqual(
-      A.map([capOf(HOUR), capOf(HOUR / 2), ANY_CAP], (cap) => isReusableReadyMonitorJob(hourCapped, asking(cap))),
+      renderReadyMonitorRuntimeLeft(readyMonitorRuntimeLeft(runnerStarted, at(50))),
+      "30m left before its runtime cap stops it"
+    );
+  });
+
+  it("lets a request without a cap flag take any job", () => {
+    assertNone(shortfallAt(75, ANY_CAP));
+    assertNone(readyMonitorRuntimeShortfall(readyMonitorRuntimeLeft(unreadable, at(50)), ANY_CAP));
+  });
+
+  it("needs a job without a cap for --job-max-runtime none, and serves any request from one", () => {
+    assertSome(
+      shortfallAt(0, NO_CAP),
+      "1h left before its runtime cap stops it, but --job-max-runtime none asks for a job without a cap"
+    );
+    const unlimited = readyMonitorRuntimeLeft(uncapped, at(50));
+    deepStrictEqual(renderReadyMonitorRuntimeLeft(unlimited), "no runtime cap");
+    deepStrictEqual(
+      A.map([capOf(6 * HOUR), NO_CAP, ANY_CAP], (cap) => O.isNone(readyMonitorRuntimeShortfall(unlimited, cap))),
       [true, true, true]
     );
   });
 
-  it("does not reuse a capped job for a longer cap or an explicit none", () => {
-    deepStrictEqual(
-      A.map([capOf(6 * HOUR), NO_CAP], (cap) => isReusableReadyMonitorJob(hourCapped, asking(cap))),
-      [false, false]
-    );
-  });
-
-  it("reuses a job without a cap for any request", () => {
-    deepStrictEqual(
-      A.map([capOf(6 * HOUR), NO_CAP, ANY_CAP], (cap) => isReusableReadyMonitorJob(uncapped, asking(cap))),
-      [true, true, true]
-    );
+  it("keeps --job-max-runtime out of the argv key", () => {
+    const request = ReadyMonitorRequest.make({
+      branch: BRANCH,
+      argv: [...CLI_ARGV, "--job-max-runtime", "6h"],
+      runtimeCap: capOf(6 * HOUR),
+    });
+    assertTrue(matchesReadyMonitorRequest(hourCapped, request));
   });
 
   it("gives a new job a RuntimeMaxSec only for a capped request", () => {
@@ -395,13 +458,14 @@ it.layer(reuseTestLayer, { timeout: "30 seconds" })("monitor --until-ready --det
   );
 
   it.effect(
-    "hands back a capped monitor for a shorter cap and names its cap",
+    "hands back a capped monitor with enough time left and states the time left",
     Effect.fnUntraced(function* () {
+      yield* setClockAt(50);
       const fake = yield* fakeLauncher([jobRecord(LIVE_ID, jobRequest(CLI_ARGV), {}, O.some(HOUR))]);
       const record = yield* submitProofJobReusingReadyMonitor(
         fake.launcher,
-        submission([...CLI_ARGV, "--job-max-runtime", "30m"], "monitor", O.some(HOUR / 2)),
-        capOf(HOUR / 2),
+        submission([...CLI_ARGV, "--job-max-runtime", "5m"], "monitor", O.some(5 * MINUTE)),
+        capOf(5 * MINUTE),
         probe("alive")
       );
       const submitted = yield* Ref.get(fake.submitted);
@@ -409,34 +473,100 @@ it.layer(reuseTestLayer, { timeout: "30 seconds" })("monitor --until-ready --det
       deepStrictEqual([record.jobId, A.length(submitted)], [LIVE_ID, 0]);
       assertInclude(
         errors,
-        `readiness monitor job ${LIVE_ID} is already running for ${BRANCH} with the same readiness flags and a runtime cap of 1h; not re-submitted`
+        `readiness monitor job ${LIVE_ID} is already running for ${BRANCH} with the same readiness flags and 10m left before its runtime cap stops it; not re-submitted`
       );
     })
   );
 
   it.effect(
-    "submits a new monitor for a longer cap, and again for an explicit none",
+    "tells the caller which inbox rows an earlier job wait on the reused job already returned",
     Effect.fnUntraced(function* () {
-      const fake = yield* fakeLauncher([jobRecord(LIVE_ID, jobRequest(CLI_ARGV), {}, O.some(HOUR))]);
-      const longer = yield* submitProofJobReusingReadyMonitor(
-        fake.launcher,
-        submission([...CLI_ARGV, "--job-max-runtime", "6h"], "monitor", O.some(6 * HOUR)),
-        capOf(6 * HOUR),
-        probe("alive")
+      const waited = ProofJobRecord.make({
+        ...jobRecord(LIVE_ID, jobRequest(CLI_ARGV)),
+        returnedWaveRowIds: ["row-a", "row-b"],
+      });
+      const fake = yield* fakeLauncher([waited]);
+      yield* submitProofJobReusingReadyMonitor(fake.launcher, submission(CLI_ARGV), ANY_CAP, probe("alive"));
+      const errors = yield* errorText;
+      assertInclude(
+        errors,
+        `an earlier job wait on ${LIVE_ID} already returned 2 inbox row(s); job wait will not return them again, so read them with \`bun run beep yeet inbox list\``
       );
-      // The six-hour job just submitted is capped too, so `none` reuses neither.
-      const none = yield* submitProofJobReusingReadyMonitor(
+    })
+  );
+
+  it.effect(
+    "submits a new monitor when the live one has less time left than asked",
+    Effect.fnUntraced(function* () {
+      yield* setClockAt(50);
+      const probed = yield* Ref.make<ReadonlyArray<string>>([]);
+      const fake = yield* fakeLauncher([jobRecord(LIVE_ID, jobRequest(CLI_ARGV), {}, O.some(HOUR))]);
+      const record = yield* submitProofJobReusingReadyMonitor(
+        fake.launcher,
+        submission([...CLI_ARGV, "--job-max-runtime", "30m"], "monitor", O.some(30 * MINUTE)),
+        capOf(30 * MINUTE),
+        probe("alive", probed)
+      );
+      const submitted = yield* Ref.get(fake.submitted);
+      const probedIds = yield* Ref.get(probed);
+      const errors = yield* errorText;
+      // The runner of a job that falls short is never probed.
+      deepStrictEqual([record.jobId, A.length(submitted), A.length(probedIds)], [FIRST_SUBMIT_ID, 1, 0]);
+      assertInclude(
+        errors,
+        `readiness monitor job ${LIVE_ID} has 10m left before its runtime cap stops it, less than the 30m asked for; not reusing it`
+      );
+    })
+  );
+
+  it.effect(
+    "submits a new monitor for an explicit none while every live one is capped",
+    Effect.fnUntraced(function* () {
+      yield* setClockAt(0);
+      const fake = yield* fakeLauncher([jobRecord(LIVE_ID, jobRequest(CLI_ARGV), {}, O.some(HOUR))]);
+      const record = yield* submitProofJobReusingReadyMonitor(
         fake.launcher,
         submission([...CLI_ARGV, "--job-max-runtime", "none"]),
         NO_CAP,
         probe("alive")
       );
       const submitted = yield* Ref.get(fake.submitted);
-      deepStrictEqual([longer.jobId, none.jobId], SUBMIT_IDS);
+      const errors = yield* errorText;
       deepStrictEqual(
-        A.map(submitted, (next) => O.getOrNull(next.maxRuntimeSeconds)),
-        [6 * HOUR, null]
+        [record.jobId, A.map(submitted, (next) => O.getOrNull(next.maxRuntimeSeconds))],
+        [FIRST_SUBMIT_ID, [null]]
       );
+      assertInclude(
+        errors,
+        `readiness monitor job ${LIVE_ID} has 1h left before its runtime cap stops it, but --job-max-runtime none asks for a job without a cap; not reusing it`
+      );
+    })
+  );
+
+  it.effect(
+    "reuses a capped job without a readable start time only for a request without a cap",
+    Effect.fnUntraced(function* () {
+      yield* setClockAt(50);
+      const unreadable = jobRecord(LIVE_ID, jobRequest(CLI_ARGV), { submittedAt: "not a time" }, O.some(HOUR));
+      const unknown = "a runtime cap of 1h but no readable start time, so its time left is unknown";
+      const capped = yield* fakeLauncher([unreadable]);
+      const fresh = yield* submitProofJobReusingReadyMonitor(
+        capped.launcher,
+        submission([...CLI_ARGV, "--job-max-runtime", "5m"], "monitor", O.some(5 * MINUTE)),
+        capOf(5 * MINUTE),
+        probe("alive")
+      );
+      const any = yield* fakeLauncher([unreadable]);
+      const reused = yield* submitProofJobReusingReadyMonitor(
+        any.launcher,
+        submission(CLI_ARGV),
+        ANY_CAP,
+        probe("alive")
+      );
+      const errors = yield* errorText;
+      deepStrictEqual([fresh.jobId, reused.jobId], [FIRST_SUBMIT_ID, LIVE_ID]);
+      assertInclude(errors, `readiness monitor job ${LIVE_ID} has ${unknown}; not reusing it`);
+      assertInclude(errors, `with the same readiness flags and ${unknown}; not re-submitted`);
     })
   );
 
