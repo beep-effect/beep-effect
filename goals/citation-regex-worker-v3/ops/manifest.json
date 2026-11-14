@@ -37,7 +37,7 @@
     "explorations/citation-engine-install-and-worker-reuse/research/design-2026-11-12.md",
     "explorations/citation-engine-install-and-worker-reuse/research/design-review-2026-11-12.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
