@@ -20,6 +20,7 @@
     {"name":"Vercel.EnvVar.provider.reconcile","owner":"@beep/alchemy-vercel","family":"tooling","conforms":false},
     {"name":"Vercel.EnvVar.resolveValue","owner":"@beep/alchemy-vercel","family":"tooling","conforms":true},
     {"name":"Vercel.EnvVar.valueDigest","owner":"@beep/alchemy-vercel","family":"tooling","conforms":true},
+    {"name":"Vercel.EnvVar.valueFromRotated","owner":"@beep/alchemy-vercel","family":"tooling","conforms":true},
     {"name":"Vercel.EnvVar.write","owner":"@beep/alchemy-vercel","family":"tooling","conforms":true},
     {"name":"Vercel.Project.assertRepository","owner":"@beep/alchemy-vercel","family":"tooling","conforms":true},
     {"name":"Vercel.Project.name","owner":"@beep/alchemy-vercel","family":"tooling","conforms":true},

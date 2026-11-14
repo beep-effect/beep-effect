@@ -21,6 +21,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
 import * as Struct from "effect/Struct";
 import { liveStageConfig, vercelTeamId, zoneIdOf } from "../../stack/OipWebConfig.ts";
@@ -248,21 +249,26 @@ const DomainFake = Provider.effect(
   })
 );
 
+/** The store key of a record from its attributes or props: zone, name and type, when all are known. */
+const recordKeyOf = (
+  identity: { readonly zoneId?: unknown; readonly name?: string; readonly type?: string } | undefined
+): O.Option<string> =>
+  P.isString(identity?.zoneId) && identity.name !== undefined && identity.type !== undefined
+    ? O.some(dnsKey(identity.zoneId, identity.name, identity.type))
+    : O.none();
+
 const RecordFake = Provider.effect(
   Cloudflare.DNS.Record,
   Effect.succeed({
     stables: ["recordId", "zoneId"],
     read: ({ olds, output }) =>
-      Effect.sync(() => {
-        const zoneId = output?.zoneId ?? olds?.zoneId;
-        const name = output?.name ?? olds?.name;
-        const type = output?.type ?? olds?.type;
-        if (typeof zoneId !== "string" || name === undefined || type === undefined) return undefined;
-        return MutableHashMap.get(records, dnsKey(zoneId, name, type)).pipe(
+      Effect.sync(() =>
+        recordKeyOf(output ?? olds).pipe(
+          O.flatMap((key) => MutableHashMap.get(records, key)),
           O.map((record) => ownership(dnsAttributes(record), output !== undefined)),
           O.getOrUndefined
-        );
-      }),
+        )
+      ),
     reconcile: Effect.fn("Fake.reconcile")(function* ({ news, output }) {
       const zoneId = String(news.zoneId);
       const key = dnsKey(zoneId, news.name, news.type);

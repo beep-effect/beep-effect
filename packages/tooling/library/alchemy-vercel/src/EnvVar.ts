@@ -612,6 +612,42 @@ const writeEnv = Effect.fn("Vercel.EnvVar.write")(function* (
 });
 
 /**
+ * The declared or default storage type.
+ *
+ * @param props - Props of the variable.
+ * @returns Its storage type, `encrypted` when omitted.
+ */
+const storageTypeOf = (props: EnvVarProps): EnvVarType => props.type ?? EnvVarType.Enum.encrypted;
+
+/**
+ * Whether a change replaces the variable: another project, team or storage type.
+ *
+ * @param news - The declared props.
+ * @param olds - The props of the deployed generation.
+ * @returns `true` when the variable must be replaced.
+ */
+const replacesEnvVar = (news: EnvVarProps, olds: EnvVarProps): boolean =>
+  news.project !== olds.project || news.teamId !== olds.teamId || storageTypeOf(news) !== storageTypeOf(olds);
+
+/**
+ * Whether a `valueFrom` value changed since the last write. The value never reaches props,
+ * so a rotation shows only as a digest change; an adopted variable has no digest yet.
+ *
+ * @param news - The declared props.
+ * @param output - The stored attributes, when the variable is deployed or adopted.
+ * @returns `true` when the value must be written again.
+ */
+const valueFromRotated = Effect.fn("Vercel.EnvVar.valueFromRotated")(function* (
+  news: EnvVarProps,
+  output: EnvVarAttributes | undefined
+) {
+  if (news.valueFrom === undefined || output === undefined) return false;
+  const value = yield* resolveValue(news);
+  const digest = yield* valueDigestOf(news, value);
+  return !O.contains(digest, output.valueDigest ?? "");
+});
+
+/**
  * Provider layer for {@link EnvVar}.
  *
  * **Example** (Register the provider)
@@ -646,26 +682,15 @@ export const EnvVarProvider = Provider.succeed(EnvVarClass, {
   }),
   diff: Effect.fn("Vercel.EnvVar.provider.diff")(function* ({ news, olds, output }) {
     if (!isResolved(news)) return undefined;
-    if (
-      news.project !== olds.project ||
-      news.teamId !== olds.teamId ||
-      (news.type ?? EnvVarType.Enum.encrypted) !== (olds.type ?? EnvVarType.Enum.encrypted)
-    ) {
+    if (replacesEnvVar(news, olds)) {
       // A same-project replacement would collide with the old key and targets, so it deletes first.
       return { action: "replace", deleteFirst: news.project === olds.project } as const;
     }
-    // A stored type that differs from the declared one (an adopted variable) needs reconcile,
-    // which replaces it.
-    if (storedTypeWeaker(news, output)) return { action: "update" } as const;
-    // A `valueFrom` value never reaches props, so a rotation shows only as a digest change
-    // (an adopted variable has no digest yet). A literal value, like every other prop, falls
+    // A stored type weaker than declared (an adopted variable) needs reconcile, which replaces it;
+    // a rotated `valueFrom` value needs a write. A literal value, like every other prop, falls
     // through to the engine's prop comparison.
-    if (news.valueFrom !== undefined && output !== undefined) {
-      const value = yield* resolveValue(news);
-      const digest = yield* valueDigestOf(news, value);
-      if (!O.contains(digest, output.valueDigest ?? "")) return { action: "update" } as const;
-    }
-    return undefined;
+    const rotated = yield* valueFromRotated(news, output);
+    return storedTypeWeaker(news, output) || rotated ? ({ action: "update" } as const) : undefined;
   }),
   reconcile: Effect.fn("Vercel.EnvVar.provider.reconcile")(function* ({ news, output, session }) {
     const value = yield* resolveValue(news);

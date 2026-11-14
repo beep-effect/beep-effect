@@ -1,13 +1,11 @@
 // @vitest-environment node
 
-import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
+import { assertExitSuccess, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
-import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
-import * as Path from "effect/Path";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
@@ -123,9 +121,9 @@ describe("OipWeb stack", { concurrent: false }, () => {
         assetsBucketName: "oip-law-web-assets-renamed",
       });
       const replaced = yield* Effect.exit(stack.deploy(oipWebResources(renamed)).pipe(withConfig(liveSecret)));
-      expect(failureTag(replaced)).toEqual(O.some("ProtectedResource"));
+      assertSome(failureTag(replaced), "ProtectedResource");
       const destroyed = yield* Effect.exit(stack.destroy());
-      expect(failureTag(destroyed)).toEqual(O.some("ProtectedResource"));
+      assertSome(failureTag(destroyed), "ProtectedResource");
       expect(O.isSome(FakeCloud.project("oip-web"))).toBe(true);
       expect(O.isSome(FakeCloud.bucket("oip-law-web-assets-prod"))).toBe(true);
       expect(noDeletes(FakeCloud.writes())).toEqual([]);
@@ -138,7 +136,7 @@ describe("OipWeb stack", { concurrent: false }, () => {
       FakeCloud.reset();
       FakeCloud.seedLive();
       const exit = yield* Effect.exit(stack.deploy(stageProgram("prod")).pipe(withConfig({})));
-      expect(failureTag(exit)).toEqual(O.some("ConfigError"));
+      assertSome(failureTag(exit), "ConfigError");
       expect(O.getOrThrow(FakeCloud.env(liveIds.prodProjectId, "CRM_HUBSPOT_SERVICE_KEY")).value).toBe(
         liveHubSpotSecret
       );
@@ -154,10 +152,10 @@ describe("requireCiForLiveStage", () => {
       const stagingLocal = yield* Effect.exit(requireCiForLiveStage("staging").pipe(local));
       const personal = yield* Effect.exit(requireCiForLiveStage("dev_alice").pipe(local));
       const prodCi = yield* Effect.exit(requireCiForLiveStage("prod").pipe(withConfig({ CI: "true" })));
-      expect(failureTag(prodLocal)).toEqual(O.some("ConfigError"));
-      expect(failureTag(stagingLocal)).toEqual(O.some("ConfigError"));
-      expect(Exit.isSuccess(personal)).toBe(true);
-      expect(Exit.isSuccess(prodCi)).toBe(true);
+      assertSome(failureTag(prodLocal), "ConfigError");
+      assertSome(failureTag(stagingLocal), "ConfigError");
+      assertExitSuccess(personal, undefined);
+      assertExitSuccess(prodCi, undefined);
     })
   );
 });
@@ -211,7 +209,7 @@ describe("OipWeb leaves the pull-request surface alone", { concurrent: false }, 
         FakeCloud.seedLive();
         const outputs = yield* stack.deploy(stageProgram(stage)).pipe(withConfig(liveSecret));
         const destroyed = yield* Effect.exit(stack.destroy());
-        expect(failureTag(destroyed)).toEqual(O.some("ProtectedResource"));
+        assertSome(failureTag(destroyed), "ProtectedResource");
 
         const config = liveStageConfig[stage];
         expect(O.isSome(FakeCloud.project(config.projectName))).toBe(true);
@@ -229,23 +227,35 @@ describe("OipWeb leaves the pull-request surface alone", { concurrent: false }, 
   }
 });
 
+declare global {
+  interface ImportMeta {
+    glob<T>(
+      pattern: string,
+      options: { readonly query: "?raw"; readonly import: "default"; readonly eager: true }
+    ): Readonly<Record<string, T>>;
+  }
+}
+
+// The committed workflow's text, inlined by Vite at transform time: the subject is the file itself,
+// so no filesystem layer stands in for it.
+const vercelDeployWorkflow = A.join(
+  R.values(
+    import.meta.glob<string>("../../../../.github/workflows/vercel-deploy.yml", {
+      query: "?raw",
+      import: "default",
+      eager: true,
+    })
+  ),
+  "\n"
+);
+
 describe("vercel-deploy.yml", () => {
-  it.layer(NodeServices.layer)((it) => {
-    it.effect("hard-codes exactly the project ids the stack adopts", () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const workflow = yield* fs.readFileString(
-          path.join(import.meta.dirname, "..", "..", "..", "..", ".github", "workflows", "vercel-deploy.yml")
-        );
-        const projectIds = A.map(
-          A.fromIterable(Str.matchAll(/"projectId": "(prj_[A-Za-z0-9]+)"/g)(workflow)),
-          (m) => m[1]
-        );
-        expect(A.contains(projectIds, liveIds.prodProjectId)).toBe(true);
-        expect(A.contains(projectIds, liveIds.stagingProjectId)).toBe(true);
-        expect(workflow).toContain(`VERCEL_ORG_ID: ${TEAM}`);
-      })
-    );
+  it("hard-codes exactly the project ids the stack adopts", () => {
+    const workflow = vercelDeployWorkflow;
+    expect(workflow).toContain("VERCEL_APPS");
+    const projectIds = A.map(A.fromIterable(Str.matchAll(/"projectId": "(prj_[A-Za-z0-9]+)"/g)(workflow)), (m) => m[1]);
+    expect(A.contains(projectIds, liveIds.prodProjectId)).toBe(true);
+    expect(A.contains(projectIds, liveIds.stagingProjectId)).toBe(true);
+    expect(workflow).toContain(`VERCEL_ORG_ID: ${TEAM}`);
   });
 });

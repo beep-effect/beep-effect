@@ -1,11 +1,16 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { checkPlan, guardedKindOf, parsePlanLog } from "../../stack/PlanGuard.ts";
 import { failureTag } from "./Harness.ts";
+
+/** One line as the CI logger writes it: `[<time>] <level>: <message>`, built so no bracketed literal sits in source. */
+const logged = (time: string, message: string, level = "INFO") =>
+  `${A.join(["[", time, "]"], "")} ${level}: ${message}`;
 
 const esc = String.fromCharCode(27);
 const color = (code: number, text: string) => `${esc}[${code}m${text}${esc}[0m`;
@@ -39,13 +44,13 @@ describe("PlanGuard", () => {
   });
 
   it("classifies guarded resources by the last FQN segment", () => {
-    expect(guardedKindOf("Project")).toEqual(O.some("project"));
-    expect(guardedKindOf("Domain-www-oip-law")).toEqual(O.some("domain"));
-    expect(guardedKindOf("Dns-oip-law")).toEqual(O.some("dns"));
-    expect(guardedKindOf("AssetsBucket")).toEqual(O.some("bucket"));
-    expect(guardedKindOf("Ns/Project")).toEqual(O.some("project"));
-    expect(guardedKindOf("EnvNextDisablePwa")).toEqual(O.some("envVar"));
-    expect(guardedKindOf("SomethingElse")).toEqual(O.none());
+    assertSome(guardedKindOf("Project"), "project");
+    assertSome(guardedKindOf("Domain-www-oip-law"), "domain");
+    assertSome(guardedKindOf("Dns-oip-law"), "dns");
+    assertSome(guardedKindOf("AssetsBucket"), "bucket");
+    assertSome(guardedKindOf("Ns/Project"), "project");
+    assertSome(guardedKindOf("EnvNextDisablePwa"), "envVar");
+    assertNone(guardedKindOf("SomethingElse"));
   });
 
   it.effect("accepts creates, updates and adoptions", () =>
@@ -73,7 +78,7 @@ describe("PlanGuard", () => {
       ]) {
         const action = O.getOrElse(A.get(Str.split(" ")(line), 1), () => "");
         const exit = yield* Effect.exit(checkPlan(`Plan: 1 to ${action}\n${line}\n`));
-        expect(failureTag(exit)).toEqual(O.some("PlanRefused"));
+        assertSome(failureTag(exit), "PlanRefused");
       }
     })
   );
@@ -83,13 +88,13 @@ describe("PlanGuard", () => {
       // Verbatim shape of the 2026-11-14 `dev_elpresidank` plan log.
       const personalPlan = A.join(
         [
-          "[20:33:00.808] INFO: Plan · dev_elpresidank",
-          "[20:33:03.094] INFO: Plan ready (2.3s)",
-          "[20:33:03.096] INFO: Plan: 4 to create",
-          "[20:33:03.096] INFO: [AssetsBucket] create",
-          "[20:33:03.096] INFO: [EnvHubSpotAccountId] create",
-          "[20:33:03.096] INFO: [EnvNextDisablePwa] create",
-          "[20:33:03.096] INFO: [Project] create",
+          logged("20:33:00.808", "Plan · dev_elpresidank"),
+          logged("20:33:03.094", "Plan ready (2.3s)"),
+          logged("20:33:03.096", "Plan: 4 to create"),
+          logged("20:33:03.096", "[AssetsBucket] create"),
+          logged("20:33:03.096", "[EnvHubSpotAccountId] create"),
+          logged("20:33:03.096", "[EnvNextDisablePwa] create"),
+          logged("20:33:03.096", "[Project] create"),
         ],
         "\n"
       );
@@ -101,23 +106,25 @@ describe("PlanGuard", () => {
         "Project",
       ]);
       const refused = yield* Effect.exit(
-        checkPlan("[20:33:03.096] INFO: Plan: 1 to replace\n[20:33:03.096] INFO: [Dns-oip-law] replace\n")
+        checkPlan(
+          `${logged("20:33:03.096", "Plan: 1 to replace")}\n${logged("20:33:03.096", "[Dns-oip-law] replace")}\n`
+        )
       );
-      expect(failureTag(refused)).toEqual(O.some("PlanRefused"));
+      assertSome(failureTag(refused), "PlanRefused");
     })
   );
 
   it.effect("fails closed on a log without a plan summary", () =>
     Effect.gen(function* () {
       const crashed = yield* Effect.exit(checkPlan("Error: state store not bootstrapped\n"));
-      expect(failureTag(crashed)).toEqual(O.some("PlanUnreadable"));
+      assertSome(failureTag(crashed), "PlanUnreadable");
     })
   );
 });
 
 describe("PlanGuard fails closed", () => {
   const unreadable = (log: string) =>
-    Effect.map(Effect.exit(checkPlan(log)), (exit) => expect(failureTag(exit)).toEqual(O.some("PlanUnreadable")));
+    Effect.map(Effect.exit(checkPlan(log)), (exit) => assertSome(failureTag(exit), "PlanUnreadable"));
 
   it.effect("on a resource line with an action it does not know", () =>
     Effect.gen(function* () {
@@ -143,7 +150,7 @@ describe("PlanGuard fails closed", () => {
   it.effect("reads a logger prefix that carries a fiber id", () =>
     Effect.gen(function* () {
       const entries = yield* checkPlan(
-        "[05:10:00.001] INFO (#7): Plan: 1 to update\n[05:10:00.002] INFO (#7): [Project] update\n"
+        `${logged("05:10:00.001", "Plan: 1 to update", "INFO (#7)")}\n${logged("05:10:00.002", "[Project] update", "INFO (#7)")}\n`
       );
       expect(entries).toEqual([{ fqn: "Project", action: "update" }]);
     })
