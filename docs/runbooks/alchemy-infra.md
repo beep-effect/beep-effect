@@ -160,3 +160,91 @@ leaves, tests on the `@alchemy.run/test` harness, `package-verify` before
 handoff. Use the shipped primitive first; a repo-owned resource exists only
 where `goals/infra-alchemy-rebuild/research/use-this-never-roll-that.md`
 records a verified gap.
+
+## Turbo cache
+
+`@beep/infra-turbo-cache` (`packages/tooling/infra/turbo-cache`, stack
+`TurboCache`) is the Turborepo remote cache: a Worker over an R2 bucket at
+`https://beep-turbo-cache.beep-effect.workers.dev`, team `beep`. Policy,
+protocol and the cache-input review: the package README.
+
+### Deploy
+
+`prod` deploys from `main` through `.github/workflows/deploy-turbo-cache.yml`
+(environment `turbo-cache-prod`, concurrency group `alchemy-turbo-cache-prod`):
+package tests, plan, deploy, then a smoke check that the Worker answers an
+anonymous status request with 401 and an unknown path with 404. The
+workflow also takes a bare `workflow_dispatch`; never dispatch it in a loop
+during a busy hour, because each run takes a hosted runner slot (the condition
+the ci-lane-economics window-5 owner cleared it on). The
+environment holds `ALCHEMY_STATE_ROLE_ARN`, `CLOUDFLARE_API_TOKEN`,
+`CLOUDFLARE_ACCOUNT_ID` and, optionally, `TURBO_CACHE_ALERT_EMAIL` (comma
+separated; unset means no error alert).
+
+The Cloudflare token needs, beyond what the Worker stacks use (Workers Scripts
+Write, Account Settings Read), **Workers R2 Storage Write** for the bucket, and
+**Notifications Write** once `TURBO_CACHE_ALERT_EMAIL` is set.
+
+A personal stage, from the package directory:
+
+```sh
+eval "$(aws configure export-credentials --profile elpresidank-vault --format env)"
+export AWS_REGION=us-east-1
+CLOUDFLARE_API_TOKEN=op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_CLOUDFLARE_ALCHEMY_TOKEN \
+CLOUDFLARE_ACCOUNT_ID=op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_CLOUDFLARE_ACCOUNT_ID \
+  op run -- bunx alchemy deploy --stage dev_$USER --yes --env-file /dev/null
+# ... and the same with `destroy --stage dev_$USER --yes` afterwards.
+```
+
+`destroy` refuses a bucket that still holds artifacts (`BucketNotEmpty`;
+Alchemy's `R2.Bucket` has no empty-on-delete option): delete the personal
+stage's objects first, through the R2 objects API or the dashboard, and never
+touch another stage's bucket.
+
+Only `prod` pins its names (`beep-turbo-cache` for the bucket and the Worker)
+and retains the bucket and tokens on destroy; a personal stage gets generated
+names and is removed completely.
+
+### Issue a token
+
+Tokens are `Random` resources in state, one per policy principal; they never
+appear in a stack output or a log. `token.ts` reads one from state and writes
+it to a receiving command's stdin, printing only `TURBO_API` and `TURBO_TEAM`.
+Run it from the package directory with the state-store credentials exported
+(the first two lines above):
+
+```sh
+# CI writer: protected main pushes only.
+bun token.ts --stage prod --principal ci-main -- \
+  gh secret set TURBO_CACHE_WRITE_TOKEN --env turbo-cache-write --repo beep-effect/beep-effect
+# CI reader: same-repository pull requests (forks never receive secrets).
+bun token.ts --stage prod --principal ci-pr -- \
+  gh secret set TURBO_CACHE_READ_TOKEN --repo beep-effect/beep-effect
+```
+
+A trusted workstation's token goes into its 1Password item the same way: any
+receiver that reads the value from stdin and stores it works, and the vault
+write goes through the human `op-human` lane when the agent lane cannot write.
+
+The new secret names stand beside the live `TURBO_TOKEN`/`TURBO_READ_TOKEN`
+until CI is flipped to the Worker (cutover stage 2). `@beep/infra-github`
+takes these secrets over when it lands.
+
+### Rotate or revoke a token
+
+Raise the principal's `rotation` in `src/Worker.ts` (`cachePolicy`) and merge:
+the deploy creates a new token for that principal only and the old one stops
+working on the same deploy. Re-issue it with `token.ts`. To revoke a holder,
+remove its principal and merge. To add one (a new trusted workstation), add a
+principal with `access: "write"` (or `"read"`) and merge, then issue.
+
+### Enroll a client
+
+A client needs three values: `TURBO_API` (the Worker origin), `TURBO_TEAM`
+(`beep`) and `TURBO_TOKEN` (its principal's token). For CI, the setup action
+passes them from `vars`/`secrets`; for a workstation, put them in the
+checkout's environment from 1Password references (`op run`), never as raw
+values in a dotenv file. Verify with a remote round trip: `turbo run <task>
+--summarize` in a clean cache directory reports `"source": "REMOTE"` on the
+second run. A read token's upload is refused with `403 read_only`, so a PR job
+can never seed the cache.
