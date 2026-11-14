@@ -225,8 +225,11 @@ for the final run after checks. Final per-file results are appended below.
 
 ### Provider audit follow-through
 
-The transitive provider audit covers 168 individual unit files, 772 passing
-tests. It uses the requested `nice -n 19 bunx vitest run <file>`
+At owner head b749cd91e7e, after reverting the three out-of-scope parent-runtime
+edits, the historical provider audit has 165 green unit files containing 740
+passing tests.
+Three files are red under the Node parent: six passing and 26 failing tests
+across those files. That historical 168-file inventory contains 772 tests at the owner head; current-wave additions are recorded separately below. It uses the requested `nice -n 19 bunx vitest run <file>`
 command, whose Vitest parent is Node; each file retains its own Bun/Node child
 runtime matrix. No file ran concurrently with another test file. Each process had
 a 285-second cap, and every launch's five-minute load was below 128.
@@ -248,14 +251,17 @@ Additional failures found by this audit were fixed as follows:
   timer, quarantine and confirmed-exit assertions; both files pass unchanged counts.
 - Owner review reverted three out-of-scope test edits (configuration ownership, extractor
   controls, six-form projection) and a copied six-form oracle file. Those tests read
-  `Bun.version` and fail only under a Node parent runner; hosted CI runs them green, so
-  they are environment-only here and are unchanged from the base.
+  `Bun.version` and fail under a Node parent runner; the owner reports them green on
+  hosted CI. These tests remain unchanged from the owner-selected base.
 
 The first audit had six red files (annotation assembly, case metadata,
 configuration ownership, extractor controls, journal metadata and law metadata).
-All six pass their individual reruns. Configuration ownership and extractor controls are red only under the Node
-parent runner (see the owner note above). The table records the latest successful run
-of every audited file; it does not hide these earlier failures.
+The retained annotation, case, journal and law metadata repairs pass. The three
+reverted parent-runtime edits are not claimed as passing under Node: configuration
+ownership is 5/6, extractor controls 0/24 and six-form projection 1/2. Each failure
+occurs at the installation schema boundary where Bun.version is absent from the
+Node shim. Their rows below record the fresh Node-parent failures after the revert;
+the other rows retain the successful receipts from the earlier audit.
 
 ### Per-file audit receipts
 
@@ -307,7 +313,7 @@ of every audited file; it does not hide these earlier failures.
 | `test/CitationCleanerRegistry.test.ts` | 12/12 | 5.20 s |
 | `test/CitationCleanerUnicodeValues.test.ts` | 7/7 | 5.60 s |
 | `test/CitationCleanerValues.test.ts` | 8/8 | 3.53 s |
-| `test/CitationConfigurationOwnership.test.ts` | 6/6 | 18.09 s |
+| `test/CitationConfigurationOwnership.test.ts` | 5/6; Node-parent red (`Bun.version`); hosted green per owner | 17.97 s |
 | `test/CitationContextMatcher.test.ts` | 2/2 | 7.57 s |
 | `test/CitationCourtLookup.test.ts` | 8/8 | 13.75 s |
 | `test/CitationDefaultConfiguration.test.ts` | 3/3 | 10.93 s |
@@ -329,7 +335,7 @@ of every audited file; it does not hide these earlier failures.
 | `test/CitationExtractionLoop.test.ts` | 15/15 | 86.37 s |
 | `test/CitationExtractionReport.test.ts` | 1/1 | 7.75 s |
 | `test/CitationExtractionSelection.test.ts` | 1/1 | 2.57 s |
-| `test/CitationExtractorControls.test.ts` | 24/24 | 4.99 s |
+| `test/CitationExtractorControls.test.ts` | 0/24; Node-parent red (`Bun.version`); hosted green per owner | 4.35 s |
 | `test/CitationExtractorSelection.test.ts` | 5/5 | 2.14 s |
 | `test/CitationFullExtraction.test.ts` | 2/2 | 13.37 s |
 | `test/CitationFullExtractionCoverage.test.ts` | 1/1 | 2.65 s |
@@ -408,7 +414,7 @@ of every audited file; it does not hide these earlier failures.
 | `test/CitationSemanticProjection.test.ts` | 6/6 | 2.80 s |
 | `test/CitationSemanticProjectionCoverage.test.ts` | 3/3 | 2.52 s |
 | `test/CitationShortMissingPage.test.ts` | 3/3 | 21.23 s |
-| `test/CitationSixFormProjection.test.ts` | 2/2 | 6.07 s |
+| `test/CitationSixFormProjection.test.ts` | 1/2; Node-parent red (`Bun.version`); hosted green per owner | 7.06 s |
 | `test/CitationSixFormProjectionControls.test.ts` | 7/7 | 2.63 s |
 | `test/CitationSourceAnnotation.test.ts` | 6/6 | 4.82 s |
 | `test/CitationSourceAnnotationTiming.test.ts` | 2/2 | 3.02 s |
@@ -475,7 +481,342 @@ all rows, including the construction row and the Node first-call parity leg.
 | Construction evaluator installs | 26 | 26 |
 | Construction native owners / lane claims / children | 1 / 0 / 0 | 1 / 0 / 0 |
 
-Together: 170 distinct test files, 785/785 tests (168 audit files / 772 tests,
-one integration file / one test, and the final canonical file / twelve tests).
+Corrected after the owner revert: 170 distinct files in this inventory, 759
+passing / 26 Node-parent failures out of 785 tests. The 165 green audit files
+contain 740 tests; the three red files contain six passes / 26 failures. The
+integration file adds one pass and the canonical file twelve passes. Hosted
+green status for the three reverted files is the owner’s reported result, not
+a claim that their Node-parent runs pass.
 All test processes completed before commit/report. Local commits are for owner
 publication; PR #3336 remains at its previously published head until then.
+
+
+## Review follow-through after owner head b749cd91e7e
+
+The owner published the earlier repair wave, reverted three parent-runtime-only
+test edits and removed the copied six-form data/decision. Those files remain
+untouched in this round. The owner also restored the original HTML bytes producer
+recovery comment for the goal-data consumer census. Existing goal-path references
+are retained; this round adds no test reference to goal data.
+
+### Record-local quarantine
+
+Markup reap took a snapshot of records, then reset the entire quarantine count.
+A record registered after that snapshot could lose its quarantine without
+confirmation and later decrement the count below zero. Remove the aggregate reset.
+NativeProcess's confirmed retirement rechecks isRunning, closes the child Scope
+and runs binding.release. The standalone release then drains notification.confirm's
+listeners once. Markup's callback forgets that exact record and decrements only
+if its uncertain flag was set by that job's failed retirement. If acknowledgement
+wins first, the failed-retirement path does not increment. Otherwise exactly one
+increment is matched by one notification decrement. A successful reap therefore
+clears each captured record through its callback; no aggregate reset is needed.
+
+The direct markup-supervisor fixture uses real children and captures A in reap,
+pausing that retirement before
+B starts. B's cleanup deadline expires while its SIGKILL acknowledgement is held.
+After A confirms, quarantine remains one and starts are refused. B's late
+confirmation returns the count to zero; repeated reap remains zero, admission
+returns to baseline and spawned equals confirmed (2/2). Both Bun and Node child
+legs fail with the old reset restored (observed quarantine 0, expected 1), then
+pass with the fix. The final full HtmlWorker file rerun is listed below.
+
+### Deterministic request overlap
+
+Composition now gates its first two observing-spawner returns on a Deferred.
+Each child is physically spawned before the barrier; neither request proceeds
+until both children exist. The exact peak assertion remains two for two requests
+and one for a single request. The other peak-two lane proof already waits for
+both live child bodies at a Deferred; the remaining exact peaks are serial ones.
+No production scheduling or admission rule changes.
+
+### Corrected provider audit
+
+Fresh Node-parent reruns reproduce configuration ownership 5 passed / 1 failed,
+extractor controls 0 passed / 24 failed and six-form projection 1 passed / 1 failed.
+All failures occur constructing CitationExtractorConfiguration with Bun.version;
+the Node test shim has no version field. The six-form Node child leg passes.
+The historical table above is corrected to 165 green files / 740 tests, plus
+three red files with six passes / 26 failures. Hosted green status for those
+three files was supplied by the owner; fresh Bun-parent runs also pass 6/6, 24/24 and 2/2 respectively (17.37 s, 4.03 s and 5.65 s process wall time).
+
+The hosted repo-cli failure was the census assertion requiring the restored HTML
+bytes goal reference. Test Unit and Heavy Coverage Regression failed their
+upstream-unit gates. Their logs were read and their inbox rows attributed to the
+owner's restoring commit b749cd91e7e, rather than presented as new coverage data.
+
+
+### Coverage repair wave (owner extension)
+
+Hosted job [132419052799](https://github.com/beep-effect/beep-effect/actions/runs/43584788170/job/132419052799)
+measured head b749cd91e7e72065104d5f7c60d2b34157ebbdd4. Its complete
+regression list names CleanerPipeline, DiffWorker, HtmlWorker, MarkupWorker,
+NativeProcess and RegexWorker. NativeLane is the only new production source file
+relative to origin/main and was also below 100%; it is included here.
+
+All new measurements run one test file per process with --coverage and explicit
+source includes. No whole-package coverage or baseline edit is used. Each test
+has observable output, refusal, lifecycle or counter assertions. Single-file
+reports are partial by design. The following combined rows merge the eight
+hosted law-practice artifacts with those reports using Istanbul coverage maps
+for unchanged sources. MarkupWorker changed by deleting the reset; its combined
+row instead uses only current-source single-file HtmlWorker, XmlWorker and
+MarkupWorkerCoverage reports. This is an artifact union, not a newly measured
+whole-suite result and not a claim that hosted CI has rerun on the local commit.
+
+The coverage command is nice -n 19 bunx vitest run test/<File>.test.ts --coverage
+--coverage.include=src/internal/Citation/<Source>.ts --coverage.reporter=json
+--coverage.reporter=text, with a separate reports directory for each run.
+NativeLaneCoverage includes NativeLane and NativeProcess; HtmlWorker includes
+HtmlWorker and MarkupWorker; XmlWorker includes MarkupWorker. The remaining
+coverage test names map directly to the source rows in the path table below.
+
+Percentages below are lines / statements / branches / functions:
+
+| Source | Hosted job | Artifact union after tests |
+| --- | --- | --- |
+| CleanerPipeline | 99.30 / 99.37 / 100 / 97.91 | 100 / 100 / 100 / 100 |
+| DiffWorker | 93.50 / 89.65 / 66.66 / 80.55 | 97.40 / 95.40 / 100 / 88.88 |
+| HtmlWorker | 98.03 / 98.24 / 100 / 95.23 | 100 / 100 / 100 / 100 |
+| MarkupWorker | 93.58 / 93.33 / 83.33 / 93.93 | 100 / 100 / 100 / 100 |
+| NativeProcess | 100 / 99.21 / 97.29 / 100 | 100 / 100 / 100 / 100 |
+| RegexWorker | 93.10 / 91.93 / 73.33 / 85.18 | 98.27 / 98.38 / 100 / 96.29 |
+| NativeLane (new source) | 97.74 / 94.59 / 82 / 90.69 | 99.24 / 99.32 / 100 / 97.67 |
+
+Every reported regression floor is cleared by this union. Six invariant guard
+sites remain uncovered and are retained below. No typed refusal was converted
+to a defect; no guard, coverage baseline, default-parameter coverage trick or
+ignore directive was added/removed for coverage. The two intentional defect
+fixtures exercise the existing onRetired callback and lease-release defect
+boundaries with real children; they do not convert any typed refusal to a defect.
+
+### Each originally uncovered path
+
+Line numbers refer to the hosted source, except the removed Markup reset and
+following lines, which are identified explicitly. Test names below are exact
+unless a runtime substitution is shown.
+
+| Source and path | Test and observable proof |
+| --- | --- |
+| CleanerPipeline:239 lane-failure translation | CitationCleanerPipelineCoverage: maps a closed lane yield to a cleaner runtime refusal without invoking the host; runtime-failed, zero host calls, work closed with zero text |
+| DiffWorker:62 Boolean decode refusal | Retained typed-input guard; see guard table |
+| DiffWorker:91 closed installation | CitationDiffLaneCoverage: refuses a closed diff installation before reservation or spawn; closed, zero claims/spawns |
+| DiffWorker:100 failed-record duplicate branch; :103 lane-error translation; :118 nonempty reap | CitationDiffLaneCoverage: retries an unconfirmed real diff retirement without duplicating its quarantine; two failed retires leave one failed record, retry confirms 1/1 and clears it |
+| DiffWorker:115 child-error translation | CitationDiffLaneCoverage: translates a failed OS spawn through the exact child record; spawn-failed, no live record or unit |
+| DiffWorker:123 asset URL refusal | CitationDiffLaneCoverage: maps a kernel URL refusal before constructing an evaluator; invalid-runtime, one path lookup, zero spawns |
+| DiffWorker:129 Unicode deadline branch | CitationDiffLaneCoverage: translates the inner Unicode deadline while the enclosing timer is held; extractDeadline, at least two timer requests, zero spawns. An isolated test-name run confirms branch hits [1, 0] at :129 |
+| DiffWorker:131 Unicode input ceiling branch | CitationDiffLaneCoverage: refuses diffInputUtf16 before reserving or starting a child; uncharged budget, zero claims/spawns |
+| DiffWorker:148 lane-failure arm | CitationDiffLaneCoverage: translates a lane closed between reservation and spawn; actual closed lane, unit returned, zero children |
+| DiffWorker:148 safety-refusal arm | CitationDiffLaneCoverage: preserves a start-time queue refusal after an intervening cleaner yield; real external child and full shared queue, queuedOperations, blocker confirmed 1/1 |
+| DiffWorker:153 duplicate-transfer callback | Retained private-operation guard; see guard table |
+| DiffWorker:179-180 aggregate text ceiling | CitationDiffLaneCoverage: refuses producedTextUtf16 before reserving or starting a child; zero charge/claim/spawn |
+| DiffWorker:198-199 missing prepared values | Retained successful-preparation invariants; see guard table |
+| HtmlWorker:169 public reap | CitationHtmlWorker: executes the real bundled kernel and acknowledges cleanup before returning; reap is called before the existing zero-state assertion and independent PID checks |
+| MarkupWorker:85-92 reap loop, including forget | CitationHtmlWorker: keeps a concurrent bun/node quarantine when reap confirms an earlier record; real A/B race, count remains one, then zero, 2/2 exits. The blanket reset at old :92 is removed as the reviewed defect |
+| MarkupWorker:89 both error arms | CitationMarkupWorkerCoverage: preserves a live bun/node record when reap receives a lane/deadline refusal; exact translated tag, live record retained, then actual 1/1 confirmed cleanup |
+| MarkupWorker:171 acknowledged retirement branch (now :170) and :176 lane error arm (now :175) | CitationMarkupWorkerCoverage: does not quarantine an already acknowledged bun/node retirement error; actual retirement completes before injected adapter error, count stays zero, 1/1 exits |
+| MarkupWorker:136 start lane-failure arm (now :135) | CitationMarkupWorkerCoverage: translates a closed standalone starter and releases the untransferred private slot; closed, active/processes/quarantine all zero |
+| MarkupWorker:136 start safety arm (now :135) | CitationMarkupWorkerCoverage: returns its private slot when shared admission refuses the standalone start queue; real blocker, queuedOperations, private active zero, actual blocker 1/1 |
+| MarkupWorker:55 annotate deadline choice | CitationXmlWorker real Bun/Node balance and cleanup cases, measured separately against MarkupWorker |
+| NativeProcess:230 physical-owner quarantine refusal | CitationNativeLaneCoverage: refuses a quarantined bun/node physical owner until a retry confirms the exact child; unconfirmed retirement, no replacement, confirmed 1/1 retry and baseline capacity |
+| RegexWorker:93 ensureOpen error mapping | CitationRegexLaneCoverage: translates a lane closed before evaluation without spawning; actual closed Scope, worker closed refusal |
+| RegexWorker:97 lane-failure arm | CitationRegexLaneCoverage: translates a lane closed after reservation without spawning; reserved unit returned before actual closed start |
+| RegexWorker:97 safety-refusal arm | CitationRegexLaneCoverage: preserves a regex start-time queue refusal after an intervening cleaner yield; real blocker and full queue, queuedOperations, confirmed 1/1 blocker |
+| RegexWorker:106 retirement lane-error arm | CitationRegexLaneCoverage: translates an unconfirmed real regex retirement and settles it on Scope retry; cleanup-unconfirmed, quarantine retained, actual child confirmed 1/1 on retry |
+| RegexWorker:110 child-error mapping | CitationRegexLaneCoverage: translates an actual failed OS spawn and confirms the empty process record; spawn-failed, started/confirmed 0/0, capacity baseline |
+| RegexWorker:132 duplicate-transfer callback | Retained private-operation guard; see guard table |
+| RegexWorker:137 installed match ceiling | CitationRegexLaneCoverage: refuses an absolute-schema-valid match quota above the installed policy before reservation; patternMatches refusal, zero claims/spawns |
+| NativeLane:107 late retirement subscriber | CitationNativeLaneCoverage: settles a failed OS spawn and immediately notifies a late retirement subscriber once; callback fires once after confirmation and repeated retire cannot repeat it |
+| NativeLane:132 owner failure factory; :220/:235 failed-spawn arms | Same failed-OS-spawn lane test; real missing executable produces failed child Exit with no started/confirmed inflation |
+| NativeLane:188 closed admission after acquisition | CitationNativeLaneCoverage: returns the unit if admission closes immediately after a successful claim; actual admission Scope closes, successful claim count one, active zero |
+| NativeLane:191 missing private permit | Retained lock-protected invariant; see guard table |
+| NativeLane:195/:257/:279 closed entries | CitationNativeLaneCoverage: refuses every lane entry after its Scope closes without acquiring or spawning; start/reserve/ensureOpen/yield all refuse closed, zero claims/spawns |
+| NativeLane:218 duplicate-confirmation and :224 absent-permit guards | CitationNativeLaneCoverage: does not double-count confirmation or release an absent permit when a retirement listener defects; actual child confirms before listener defect, retry runs binding release again, started/confirmed remain 1/1 and callback once |
+| NativeLane:231 cleanup-defect handler | CitationNativeLaneCoverage: preserves interruption when returning an unspawned claim encounters a release defect; actual seeded child 1/1, second claim interrupted before spawn, Exit retains interruption without the cleanup defect, Scope retry settles capacity |
+| NativeLane:366 standalone failed-transfer release | CitationNativeLaneCoverage: releases a standalone claim when its physical owner closes before spawn; actual owner Scope closes after admission claim, closed refusal, zero child births and active zero |
+
+### Retained unreachable typed guards
+
+These are not deleted or forced through unsound input casts. Each listed site
+has zero statement/function hits in the artifact union. All branch metrics are
+100%; these residuals affect only the line/statement/function rows shown above.
+
+| Guard | Why current typed callers cannot reach it |
+| --- | --- |
+| DiffWorker:62 Boolean-decode mapper | makeCitationDiffWorker's useDmp parameter is Boolean; all internal typed callers supply a Boolean or omit it. The runtime boundary guard is retained for untyped/unsound callers |
+| DiffWorker:153 invalid transfer callback | The private evaluator's preflight calls operation.acquire once at :182 and operation.start once at :209, in that order. The invalid callback handles repeated acquire/start or a start without its permit; that operation object does not escape the private task |
+| DiffWorker:198 missing after-value mapper | Successful inner fromStorageReserved always runs the :187-190 tap assigning after. Failures short-circuit before :198. PythonUnicode:509-522 runs its reservation callback and receiving validation before returning success |
+| DiffWorker:199 missing measured-layout mapper | Success through the same preparation assigns measured at :183 after operation.acquire. Any earlier callback/refusal fails the task, so :199 cannot observe None after successful preparation |
+| RegexWorker:132 invalid transfer callback | The private job task supplies operation.acquire only as the preparation callback (:143) and calls operation.start once (:156). RegexWorkerProtocol:229 invokes beforeAllocate once after successful preflight; neither operation capability escapes to a caller |
+| NativeLane:191 missing permit mapper | Under the lane lock, acquire assigns Some at :181 when absent. The only intervening release is the bad admission-status path, which returns a failure at :188. No other fiber can clear the private permit before :190 |
+
+The remaining source rows are DiffWorker 97.40 / 95.40 / 100 / 88.88,
+RegexWorker 98.27 / 98.38 / 100 / 96.29, and new NativeLane
+99.24 / 99.32 / 100 / 97.67. They are reported to the owner as retained guard
+coverage, rather than hidden with ignores, weakened guards or a baseline edit.
+
+### Current-wave per-file receipts
+
+All tables name individual test-file processes. Source coverage was enabled only
+for the marked single-file runs. Times are process wall times unless marked V
+(Vitest wall time). No test file overlapped another test file.
+
+| Node-parent server file | Passed / total | Seconds |
+| --- | ---: | ---: |
+| `test/CitationAnnotationAssembly.test.ts` | 5/5 | 7.52 |
+| `test/CitationAnnotationCallback.test.ts` | 2/2 | 14.70 |
+| `test/CitationAnnotationCallbackBoundary.test.ts` | 2/2 | 3.12 |
+| `test/CitationAnnotationEntry.test.ts` | 5/5 | 5.77 |
+| `test/CitationAnnotationEntryCoverage.test.ts` | 2/2 | 3.28 |
+| `test/CitationAnnotationFailure.test.ts` | 2/2 | 2.41 |
+| `test/CitationAnnotationSkip.test.ts` | 1/1 | 11.47 |
+| `test/CitationAnnotationStyle.test.ts` | 2/2 | 5.90 |
+| `test/CitationAnnotationTemplate.test.ts` | 2/2 | 3.29 |
+| `test/CitationAnnotationWrap.test.ts` | 3/3 | 9.14 |
+| `test/CitationBuiltinCleaners.test.ts` | 2/2 | 5.47 |
+| `test/CitationBuiltinDiff.test.ts` | 6/6 | 23.24 |
+| `test/CitationCanonicalAnnotation.test.ts` | 2/2 | 26.83 |
+| `test/CitationCanonicalAnnotationWorkflow.test.ts` | 1/1 | 32.99 |
+| `test/CitationCanonicalCourts.test.ts` | 1/1 | 32.31 |
+| `test/CitationCanonicalExtraction.test.ts` | 7/7 | 45.62 |
+| `test/CitationCanonicalExtractionRanges.test.ts` | 6/6 | 3.14 |
+| `test/CitationCanonicalFullRendering.test.ts` | 2/2 | 24.85 |
+| `test/CitationCanonicalLongDiff.test.ts` | 2/2 | 19.77 |
+| `test/CitationCanonicalMissingConversion.test.ts` | 2/2 | 13.76 |
+| `test/CitationCanonicalPageCorrection.test.ts` | 2/2 | 27.05 |
+| `test/CitationCanonicalParsedEquality.test.ts` | 2/2 | 23.44 |
+| `test/CitationCanonicalParserOperations.test.ts` | 1/1 | 20.78 |
+| `test/CitationCanonicalPinSpan.test.ts` | 2/2 | 37.84 |
+| `test/CitationCanonicalRanges.test.ts` | 2/2 | 20.61 |
+| `test/CitationCanonicalReferenceMarkup.test.ts` | 2/2 | 26.39 |
+| `test/CitationCanonicalRemainingExtraction.test.ts` | 1/1 | 27.39 |
+| `test/CitationCapturedCleanerPlan.test.ts` | 2/2 | 19.89 |
+| `test/CitationCleanerCustomCorpus.test.ts` | 3/3 | 7.18 |
+| `test/CitationCleanerNamedCorpus.test.ts` | 1/1 | 5.90 |
+| `test/CitationCleanerOwnedInput.test.ts` | 4/4 | 2.82 |
+| `test/CitationCleanerParentBudget.test.ts` | 5/5 | 2.80 |
+| `test/CitationCleanerPipeline.test.ts` | 18/18 | 2.81 |
+| `test/CitationCleanerPipelineCoverage.test.ts` | 7/7 | 3.48 V, coverage |
+| `test/CitationCleanerRegistry.test.ts` | 12/12 | 3.37 |
+| `test/CitationCleanerUnicodeValues.test.ts` | 7/7 | 3.23 |
+| `test/CitationCleanerValues.test.ts` | 8/8 | 2.90 |
+| `test/CitationDiffLaneCoverage.test.ts` | 9/9 | 4.05 V, coverage |
+| `test/CitationDocumentCleanerProtocols.test.ts` | 10/10 | 3.25 |
+| `test/CitationEngineBoundaryRefusal.test.ts` | 2/2 | 14.90 |
+| `test/CitationEngineCorpus.test.ts` | 1/1 | 35.82 |
+| `test/CitationEngineLayer.test.ts` | 15/15 | 101.14 |
+| `test/CitationEngineResolution.test.ts` | 2/2 | 20.29 |
+| `test/CitationHtmlBytes.test.ts` | 2/2 | 32.73 |
+| `test/CitationHtmlCaseName.test.ts` | 3/3 | 10.87 |
+| `test/CitationHtmlCleanerStage.test.ts` | 3/3 | 3.96 |
+| `test/CitationHtmlCompletion.test.ts` | 3/3 | 2.28 |
+| `test/CitationHtmlDiscovery.test.ts` | 2/2 | 8.35 |
+| `test/CitationHtmlDiscoveryCoverage.test.ts` | 2/2 | 2.90 |
+| `test/CitationHtmlGeometryPreparation.test.ts` | 3/3 | 4.43 |
+| `test/CitationHtmlInput.test.ts` | 9/9 | 3.59 |
+| `test/CitationHtmlKernel.test.ts` | 18/18 | 3.38 |
+| `test/CitationHtmlNativeInput.test.ts` | 5/5 | 3.34 |
+| `test/CitationHtmlWorker.test.ts` | 13/13 | 4.34 V, coverage |
+| `test/CitationHtmlWorkerCorpus.test.ts` | 3/3 | 44.48 |
+| `test/CitationHtmlWorkerCoverage.test.ts` | 2/2 | 2.40 |
+| `test/CitationHtmlWorkerProgram.test.ts` | 5/5 | 2.50 |
+| `test/CitationHtmlWorkerProtocol.test.ts` | 6/6 | 2.65 |
+| `test/CitationHtmlWorkerRpc.test.ts` | 3/3 | 2.26 |
+| `test/CitationInputDocument.test.ts` | 1/1 | 5.13 |
+| `test/CitationInputDocumentCoverage.test.ts` | 2/2 | 8.84 |
+| `test/CitationLiteralUnicodeComposition.test.ts` | 4/4 | 6.32 |
+| `test/CitationMarkupWorkerCoverage.test.ts` | 8/8 | 3.02 V, coverage |
+| `test/CitationNativeLane.test.ts` | 16/16 | 3.35 |
+| `test/CitationNativeLaneCleaner.test.ts` | 2/2 | 15.09 |
+| `test/CitationNativeLaneComposition.test.ts` | 4/4 | 5.17 |
+| `test/CitationNativeLaneCoverage.test.ts` | 8/8 | 2.88 V, coverage |
+| `test/CitationNativeLaneReservation.test.ts` | 32/32 | 4.74 |
+| `test/CitationNativeLaneTransfer.test.ts` | 4/4 | 2.63 |
+| `test/CitationRegexLaneCoverage.test.ts` | 6/6 | 3.11 V, coverage |
+| `test/CitationShortMissingPage.test.ts` | 3/3 | 22.29 |
+| `test/CitationSourceAnnotation.test.ts` | 6/6 | 5.46 |
+| `test/CitationSourceAnnotationTiming.test.ts` | 2/2 | 3.09 |
+| `test/CitationSourceCleaning.test.ts` | 3/3 | 3.57 |
+| `test/CitationVerifiedExtraction.test.ts` | 1/1 | 36.07 |
+| `test/CitationXmlBalanceKernel.test.ts` | 2/2 | 2.74 |
+| `test/CitationXmlBalanceKernelCoverage.test.ts` | 3/3 | 2.51 |
+| `test/CitationXmlWorker.test.ts` | 3/3 | 5.92 V, coverage |
+| `test/CitationXmlWorkerProtocol.test.ts` | 2/2 | 2.25 |
+
+The Node-parent consumer/current-coverage cohort passes 79 files / 369
+tests. This includes the two new real-process reap regressions and every original
+markup/HTML/Xml/annotation-entry consumer selected by the direct factory/fixture
+import closure, plus cleaner and input-document callers.
+
+| Touched file, Bun parent | Passed / total | Process seconds |
+| --- | ---: | ---: |
+| `test/CitationNativeLaneCoverage.test.ts` | 8/8 | 2.16 |
+| `test/CitationMarkupWorkerCoverage.test.ts` | 8/8 | 3.04 |
+| `test/CitationRegexLaneCoverage.test.ts` | 6/6 | 2.65 |
+| `test/CitationDiffLaneCoverage.test.ts` | 9/9 | 2.20 |
+| `test/CitationCleanerPipelineCoverage.test.ts` | 7/7 | 3.83 |
+| `test/CitationHtmlWorker.test.ts` | 13/13 | 5.15 |
+| `test/CitationNativeLaneComposition.test.ts` | 4/4 | 4.84 |
+
+These 55 Bun-parent cases are parity reruns of the touched tests, not
+additional distinct test definitions.
+
+| Unchanged owner-reverted file | Node parent | Bun parent |
+| --- | --- | --- |
+| CitationConfigurationOwnership | 5 passed / 1 failed, 17.97 s | 6/6, 17.37 s |
+| CitationExtractorControls | 0 passed / 24 failed, 4.35 s | 24/24, 4.03 s |
+| CitationSixFormProjection | 1 passed / 1 failed, 7.06 s | 2/2, 5.65 s |
+
+The Node failures remain exactly the Bun.version schema-construction failures;
+no edits to these files or their old goal reference were made. Fresh Bun-parent
+proofs establish the difference locally, in addition to the owner's hosted report.
+
+| Additional file | Result |
+| --- | --- |
+| packages/tooling/tool/cli/test/goal-data-consumer-census.test.ts | 4/4, 6.54 s Vitest; restored producer reference retained exactly |
+| test/CitationCanonicalFullSpan.test.ts (last test process) | 12/12, 65.22 s process / 64.70 s Vitest; starting load 10.12 / 12.81 / 13.97 |
+
+This round ran 84 distinct test files. The current successful cohorts contain
+417 distinct test definitions (369 consumer/coverage, 32 unchanged files on Bun,
+4 census, 12 final canonical), with the seven touched files also passing all 55
+cases on the Bun parent. The three unchanged Node-parent runs remain explicitly
+red: six passes / 26 failures. No claim of universal Node-parent success is made.
+
+The new A/B regression was also run with the old blanket reset restored: both
+real-runtime cases failed at quarantine 0 versus expected 1. The source fix was
+restored before all final runs. Initial coverage-fixture failures were diagnosed:
+a forkChild waiter died with its preparation timer fiber and removed contention;
+forkScoped retains it until explicit cleanup. The first cooperative Unicode
+timer is released after yielding once while subsequent enclosing timers remain
+held; the isolated deadline test has the expected [1, 0] branch hits at Diff:129.
+No production timer or refusal was changed to make those fixtures pass.
+
+### Final verification and counts
+
+| Gate | Result |
+| --- | --- |
+| Server bun run check | Pass: source declarations and test typecheck |
+| Server package-verify --quick | Pass: lint 0.6 s / check 3.2 s |
+| Server lint:laws | Pass; existing terse-effect advisories only, zero enforced findings |
+| Root oxlint on all nine touched source/test/fixture files | Pass |
+| Biome on those files and the inventory | Pass: ten files, no changes |
+| Fallow audit against origin/main | Pass; zero introduced blocking findings, 19 clone groups advisory / 15 inherited findings excluded |
+| Effect Vitest full scan | Pass: 3,932 files, 640 findings, introduced 0 / resolved 1 |
+| Schema-first | Pass: no missing/stale entries or inventory changes |
+| Local docgen | Pass |
+| Decisions write | Pass; invalid 0 / drift 0 |
+
+Effect Vitest's new hook-budget and opaque-platform findings were fixed in code.
+One EV003 cleaner fixture is a reviewed exception under the existing per-request
+invocation policy: its open request budget and independently closed lane Scope
+cannot share a Layer lifetime. Only that touched test's rows changed; all other
+inventory rows were compared against HEAD and are unchanged.
+
+The final count gate still asserts 291 regex children and ten lane claims across
+ten plain-text calls. Construction remains installs 16, detaches 1, tokenizer
+builds 1, evaluators 26, native owners 1, lane claims 0 and child starts 0.
+The coverage regression baseline is unchanged. No whole-package suite/coverage
+or additional integration cohort was run; the requested consumer files were
+run separately, with each heavy process capped at 285 seconds. Hosted CI was
+read for attribution and artifacts; it has not rerun on these unpublished edits.
+The owner publishes the local commit and handles remote review resolution.

@@ -17,8 +17,10 @@ import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import * as Context from "effect/Context";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import { installCitationAnnotationEntryFixture } from "./CitationAnnotationEntry.fixtures.ts";
 import { makeCitationEngineProbe } from "./CitationEngineProbe.fixtures.ts";
 import { citationNativeNodeTestPlatform } from "./CitationNativeSpawner.fixtures.ts";
@@ -45,7 +47,22 @@ it.layer(
             };
             const admission = yield* makeCitationNativeProcessAdmission(limits);
             const operation = yield* makeCitationOperationAdmission(limits).pipe(Effect.provideContext(setup.provided));
+            const bothSpawned = yield* Deferred.make<void>();
+            let arrivals = 0;
+            const spawner = ChildProcessSpawner.of({
+              ...setup.observed.spawner,
+              spawn: Effect.fn("LaneCompositionTest.spawn")(function* (command) {
+                const child = yield* setup.observed.spawner.spawn(command);
+                arrivals++;
+                if (concurrency === 2 && arrivals <= 2) {
+                  if (arrivals === 2) yield* Deferred.succeed(bothSpawned, undefined);
+                  yield* Deferred.await(bothSpawned);
+                }
+                return child;
+              }),
+            });
             const context = setup.provided.pipe(
+              Context.add(ChildProcessSpawner, spawner),
               Context.add(CitationNativeProcessAdmission, admission),
               Context.add(CitationOperationAdmission, operation)
             );

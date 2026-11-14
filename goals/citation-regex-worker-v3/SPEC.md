@@ -159,6 +159,67 @@ B1 does not require hoisting Diff or Xml to engine construction. Their preparati
 
 Reverse: Hoist these objects only with an explicit replacement for their per-owner lifecycle and queue state.
 
+### Keep markup quarantine per record and synchronize concurrent lane proofs, 2026-11-14
+
+Each markup job owns its quarantine contribution. Remove reap's aggregate reset:
+a concurrently registered record must remain quarantined until its own confirmed
+retirement. NativeProcess retirement rechecks isRunning, closes the child Scope,
+then invokes binding.release; the standalone binding invokes notification.confirm,
+which drains its listeners once. A successful record.retire(true) therefore runs
+that record's Markup onRetired callback. The callback decrements only when the
+same record's uncertain flag was set by its failed retirement. If confirmation
+wins the race, acknowledged prevents the increment; otherwise one increment is
+matched by one callback decrement. No saturation clamp or blanket reset is needed.
+
+A real-process regression holds reap on captured record A, lets B's retirement
+expire, confirms A and checks B remains quarantined with starts refused. B's late
+confirmation restores zero; repeated reap stays zero and started equals confirmed.
+The test fails against the old reset for both Bun and Node children.
+
+Force the first two composition spawns through a test-only Deferred barrier so
+two admitted requests have live children before either proceeds. Keep exact peak
+2. The other lane peak-2 proof already gates its two live child bodies on a
+Deferred; serial peak-1 proofs do not depend on scheduling.
+
+Respect the owner's reverted parent-runtime tests and restored producer-recovery
+comment. Correct the evidence to 165 green Node-parent files / 740 tests, plus
+three Node-parent red files with six passes / 26 failures due to Bun.version.
+Existing goal references are retained; no new test goal-path reference is added.
+
+Reverse: Restore aggregate bookkeeping only with an equivalent per-record confirmation proof; retain deterministic overlap.
+
+### Prove reachable coverage paths and retain typed native invariants, 2026-11-14
+
+The owner extended this wave to hosted coverage job 132419052799 at b749cd91e7e.
+Measure one test file per process, with explicit source includes; never run
+whole-package coverage or edit the regression baseline. Merge the eight hosted
+law-practice artifacts with single-file reports only to assess unchanged source
+rows. MarkupWorker's current-source union uses its Html/Xml/adapter test reports,
+because deleting the reset changed its source map. Keep that evidence distinct
+from a fresh hosted producer run.
+
+Add real refusal, process retirement, Scope closure, listener and lease-defect
+assertions. The single-file tests reach every reported branch. No typed refusal
+is converted to a defect, and the intentionally defective onRetired/lease-release
+callbacks model the exact existing catchCause boundaries with real child records.
+A test-only queue helper forks its waiter in the caller's explicit Scope: a child
+fiber would disappear when the Unicode preparation timer fiber ends and remove
+the contention before start. Explicit cleanup interrupts that waiter before
+retiring the real blocker; its Scope finalizer preserves cleanup on every exit.
+
+Six guard sites remain unreachable through current typed control flow and stay:
+DiffWorker:62 Boolean decoder, :153 ownership transfer callback, :198-199 prepared
+Option invariants; RegexWorker:132 ownership transfer callback; NativeLane:191
+private permit invariant. Their source/line arguments and measured rows are in
+history/evidence/2026-11-14-b1-native-lane.md. The artifact union clears every
+reported regression floor. New NativeLane is 99.24/99.32/100/97.67 (L/S/B/F),
+with the retained permit mapper the only miss. Report these guards to the owner;
+never force them with casts, remove them or hide them with coverage directives.
+
+Effect Vitest identified one new EV003 request fixture. Retain it as a reviewed exception under the existing direct-invocation fixture policy: the cleaner test keeps an open request budget and separately closes its lane Scope to prove refusal mapping. A shared Layer would merge the authority being tested. Fix the other four findings with explicit 30-second layer hook budgets and the existing narrow tokenizer platform layer; preserve all inventory rows outside the touched cleaner test.
+
+Reverse: Rerun the same bounded coverage reports when callers or ownership invariants change; keep safety guards and baseline intact.
+
 ### Record policy v2 as breaking in the packet; the private workspace takes no changeset, 2026-11-14
 
 The design asks for a major changeset with policy v2. `repo-sanity:changeset-graph` forbids a changeset for a private workspace, and `@beep/law-practice-use-cases` is private, so the changeset is removed. The breaking change is recorded here and in the PR body: policy tag `citation-engine-policy/v2`; a policy with fewer regex process slots than operation slots, and any v1 payload, is refused. No limit field or default value changes.
