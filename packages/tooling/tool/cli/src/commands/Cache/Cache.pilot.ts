@@ -262,8 +262,9 @@ class PilotShadowScenario extends S.Opaque<PilotShadowScenario, { readonly brand
   )
 ) {}
 
-// KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
 const captureHost = Effect.fn("CachePilot.captureHost")(function* (root: string, args: ReadonlyArray<string>) {
+  // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
   const result = yield* runCapturedStreams({
     command: "/usr/bin/git",
     args,

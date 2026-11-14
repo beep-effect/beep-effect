@@ -2357,5 +2357,9 @@
   ],
   "@beep/alchemy-aws-extras/*": [
     "./packages/tooling/library/alchemy-aws-extras/src/*"
-  ]
+  ],
+  "@beep/alchemy-vercel": [
+    "./packages/tooling/library/alchemy-vercel/src/index.ts"
+  ],
+  "@beep/alchemy-vercel/*": ["./packages/tooling/library/alchemy-vercel/src/*"]
 }

@@ -175,8 +175,9 @@ it.effect("reports credential spawn failures without exposing output and handles
 it.effect("redacts credential output failures that have no exit status", () =>
   Effect.gen(function* () {
     const base = scriptedSpawner({ "gh auth token": { stdout: "fixture" } }).spawner;
-    // Own double: decorates the scripted `gh auth token` answer with a stdout past the 16 MiB bound,
-    // a per-spawn stream shape `ScriptedSpawner` cannot script.
+    // Own double: decorates the scripted `gh auth token` answer with a stdout past the 16 MiB bound, a
+    // per-spawn stream shape `ScriptedSpawner` cannot script.
+    // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
     const spawner = ChildProcessSpawner.make((command) =>
       base.spawn(command).pipe(
         Effect.map((handle) => ({

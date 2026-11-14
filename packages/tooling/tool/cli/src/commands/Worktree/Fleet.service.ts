@@ -432,6 +432,8 @@ const runGitProbe = Effect.fn("Fleet.runGitProbe")(function* (
   never,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
+  // KEEP funnel: `runGitProbe` runs the KEEP (D-20) probes below; each call site records its reason.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP funnel, reason above
   const captured = yield* runCapturedStreams({
     command: "git",
     args,

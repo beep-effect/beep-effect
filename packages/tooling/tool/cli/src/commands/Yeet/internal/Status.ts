@@ -716,6 +716,7 @@ export const collectRemoteChecks: {
   > {
     const args = ["pr", "checks", ...(required ? ["--required"] : []), "--json", YEET_STATUS_CHECK_FIELDS];
     // KEEP (D-13): `gh pr checks` gives the checks rollup with `bucket`, which no kit member does.
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
     const result = yield* runRepoCommandCapture("gh", args, context.repoRoot).pipe(
       Effect.mapError(YeetCommandError.new("Failed to inspect PR checks for yeet status."))
     );
@@ -827,7 +828,9 @@ export const collectRemoteWorkflowRuns = Effect.fn("YeetStatus.collectRemoteWork
   never,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
-  // KEEP (D-13): `gh run list --branch` feeds the failed-job collection beside the checks rollup, which no kit member reads.
+  // KEEP (D-13): `gh run list --branch` feeds the failed-job collection beside the checks rollup, which no
+  // kit member reads.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
   const result = yield* runRepoCommandCapture(
     "gh",
     ["run", "list", "--branch", context.branch, "--limit", "20", "--json", "databaseId,headSha,status,conclusion,name"],
@@ -1094,7 +1097,9 @@ export const yeetRerunDecisionText = (runName: string): string =>
 // Use the shared pushed-branch REST lookup after any failed GraphQL read.
 // Only a successful empty lookup proves absence; two failed reads stay unknown.
 const readRemotePullRequest = Effect.fn("YeetStatus.readRemotePullRequest")(function* (context: RepoRunContext) {
-  // KEEP (D-13): `mergeStateStatus` and `reviewDecision` are GraphQL-only fields `gh pr view` resolves from the branch.
+  // KEEP (D-13): `mergeStateStatus` and `reviewDecision` are GraphQL-only fields `gh pr view` resolves from
+  // the branch.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
   const primary = yield* ghOutput({
     args: [
       "pr",
@@ -1127,6 +1132,7 @@ const readRemotePullRequest = Effect.fn("YeetStatus.readRemotePullRequest")(func
     const found = yield* findOpenPullRequestViaRest(context).pipe(provideYeetGhLogin(context.repoRoot));
     if (O.isNone(found)) return O.none<GhStatusPullRequest>();
     // KEEP (D-13): the REST `pulls/{n}` fallback keeps gh's tri-state `mergeable` projection.
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
     const output = yield* ghOutput({
       args: [
         "api",

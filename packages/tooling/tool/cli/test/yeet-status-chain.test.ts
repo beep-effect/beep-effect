@@ -252,9 +252,10 @@ const withFakeRunner = (
   flow(
     provideLegacyGh,
     Effect.provideServiceEffect(Git, Git.make),
-    // Own double: each gh spawn sleeps on the live clock and counts in-flight calls.
     Effect.provideService(
       ChildProcessSpawner.ChildProcessSpawner,
+      // Own double: each gh spawn sleeps on the live clock and counts in-flight calls.
+      // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
       ChildProcessSpawner.make((command) => {
         if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
         const args = commandArgs(command);

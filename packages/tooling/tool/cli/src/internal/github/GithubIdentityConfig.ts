@@ -140,6 +140,7 @@ export const readGithubIdentityConfig: Effect.Effect<
 export const readGhCliLogin = Effect.fn("GithubIdentityConfig.readGhCliLogin")(function* (cwd: string) {
   // KEEP (D-05): the gh login's configured user is repo-cli identity policy; the read already runs on
   // `@beep/commands` `Run.text`, and `@beep/github` has no gh CLI configuration member.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-05), reason above
   return yield* Run.text(ChildProcess.make("gh", ["config", "get", "-h", "github.com", "user"], { cwd })).pipe(
     Effect.map((output) => O.flatMap(O.liftPredicate(Str.trim(output), S.is(GithubLogin)), userLabelOf)),
     Effect.orElseSucceed(O.none<GithubIdentityLabel>)
