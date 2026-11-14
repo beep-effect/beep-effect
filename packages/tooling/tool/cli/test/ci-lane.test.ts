@@ -1867,7 +1867,7 @@ describe("ciLaneStepsForTesting", () => {
     const steps = ciLaneStepsForTesting(
       REPO_ROOT,
       "jsdoc-ratchet",
-      CiLaneRunOptions.make({ ...baseOptions, inventory: "standards/jsdoc-documentation.inventory.jsonc" })
+      CiLaneRunOptions.make({ ...baseOptions, inventory: ".beep/prebuilt/jsdoc-documentation.inventory.jsonc" })
     );
     expect(A.map(steps, (step) => step.label)).toEqual(["ci:jsdoc-ratchet:ratchet"]);
     expect(steps[0]?.args).toEqual([
@@ -1876,7 +1876,7 @@ describe("ciLaneStepsForTesting", () => {
       "quality",
       "jsdoc-ratchet",
       "--inventory",
-      "standards/jsdoc-documentation.inventory.jsonc",
+      ".beep/prebuilt/jsdoc-documentation.inventory.jsonc",
     ]);
   });
 

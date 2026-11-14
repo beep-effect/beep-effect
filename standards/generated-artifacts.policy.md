@@ -10,9 +10,10 @@ refreshed **only in dedicated chore PRs**, never on feature branches.
 | --- | --- | --- |
 | `standards/schema-catalog/<package>.generated.jsonc` | `bun run beep lint schema-catalog --write`; the `schema-catalog` pre-commit hook runs it scoped to the staged sources' packages and stages the shards | one shard per owning package; gated by the `lint:schema-catalog` cheap gate and hosted Repo Sanity, so a PR refreshes the shards it changes |
 | `standards/instrumentation-catalog/<package>.generated.jsonc` | `bun run beep observability catalog --write`; the `instrumentation-catalog` pre-commit hook runs it scoped the same way | one shard per owning package; gated by the `observability:catalog-check` cheap gate and hosted Repo Sanity |
-| `standards/jsdoc-documentation.inventory.jsonc` | `bun run beep quality jsdoc-inventory` | whole-repo snapshot; regen absorbs every package's drift |
-| `standards/jsdoc-documentation.inventory.md` | same lane | small totals file; updating it in a feature PR is fine |
 | `goals/<slug>/ops/manifest.json` `researchReports` | `bun run beep goals manifest --write` | per-packet projection of `research/`; gated by the `research-reports-drift` finding of `goals:doctor`; the file sits on the `regenerate` merge driver, so a concurrent edit is left conflicted and the writer resolves it after the merge |
+
+The JSDoc documentation inventory and the effect-vitest census used to sit in
+this table. They are no longer committed; see "Uncommitted scans" below.
 
 Hand-maintained files (e.g. `standards/effect-laws.allowlist.jsonc`) are out of
 scope — they are edited, not regenerated.
@@ -78,10 +79,52 @@ observability standard's generated section no longer carries span counts.
   `standards/instrumentation-catalog/`, drop their `biome.jsonc` excludes
   (then `bun run beep cache profile --write`), and run both writers.
 
+## Uncommitted scans (2026-11-14)
+
+Decision: `bun run beep quality jsdoc-inventory` writes the JSDoc inventory
+JSONC and its Markdown report under .beep/ci/, and
+`bun run beep lint effect-vitest --census` writes the census under
+.beep/effect-vitest/. Both directories are gitignored. The committed copies
+that used to sit in standards/ (the JSDoc inventory pair and the effect-vitest
+census) are deleted.
+
+- Reason: no gate read the committed copies. Hosted `jsdoc-ratchet`
+  regenerates into `.beep/ci/` and compares totals with the committed
+  `standards/jsdoc-totals.regression-baseline.jsonc`. Nothing read the census.
+  But `beep:preflight`, `delete-package` and the yeet staleness hint all ran
+  the whole-file writers into `standards/`, so any lane that ran one picked up
+  every other lane's drift. Measured on `main` at `e051bd152f3`: the JSDoc
+  writer rewrote +38,526/−19,318 lines. It added 929 export and module rows and
+  removed 80 (25 of them in deleted files). Of the 31,780 rows on both sides,
+  1,607 differed only in `line`/`anchor` and 46 changed content, and 185 of
+  202 packages had a shifted `topoOrder`. The census rewrote +10,816/−4,124 lines: 1,031 new
+  files, 71 deleted files, 4 gitignored `dist/*.d.ts` rows from an earlier
+  build, and 1,642 rows whose byte or line counts changed. Neither writer is
+  nondeterministic apart from the JSDoc `generatedAt` stamp. All of that
+  drift was ordinary content change, which per-row checks do not see because
+  nothing checks these rows. The committed copy was a projection that went
+  stale on every merge.
+- Rejected: a row-scoped writer (it keeps a 717k-line file that nothing reads
+  and still conflicts when two PRs touch one package's rows) and refresh-only
+  chore PRs (the drift returns with the next merge, as it did after the
+  2026-07-25 decision above).
+- The small committed gate input stays: `jsdoc-totals.regression-baseline.jsonc`.
+  Refresh it with `bun run beep quality jsdoc-inventory && bun run beep quality
+  jsdoc-ratchet --write-baseline`; the ratchet's default `--inventory` is now
+  the `.beep/ci/` copy.
+- Reverse: set `outputJsonRelativePath` and
+  `defaultJSDocDocumentationInventoryMarkdownPath` in
+  `packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts`,
+  `defaultJSDocInventoryPath` in `JSDocRatchet.ts` and `EffectVitestCensusPath`
+  in `Lint/Lint.schemas.ts` back to their `standards/` paths. Restore the
+  `jsdoc-inventory` surface and writer step in `delete-package`, the
+  `FinalCheckRefresh` and `CoverageScope` rows and the `biome.jsonc` exclude
+  (then `bun run beep cache profile --write`). Then run both writers.
+
 ## Standing posture
 
 Regen *tooling* (a single `beep quality regen-generated` operator command) was
 evaluated and deliberately deferred: `goals/one-round-loop` C5 is `wont_fix`
 until median PR CI round-trips exceed one ([goals/one-round-loop/ops/progress.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/one-round-loop/ops/progress.json)).
-A changed-files-scoped `jsdoc-inventory` refresh is the wished-for improvement
-recorded in the reflection; adopt it there if that packet reopens.
+The changed-files-scoped `jsdoc-inventory` refresh wished for in that
+reflection is moot now that the inventory is not committed.

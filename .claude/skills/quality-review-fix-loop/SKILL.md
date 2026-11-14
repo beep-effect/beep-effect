@@ -48,8 +48,8 @@ reviewing; never review from generic taste:
 - `standards/effect-laws-v1.md`, `standards/effect-first-development.md`
 - `.patterns/jsdoc-documentation.md`
 - inventories/allowlists: `standards/schema-first.inventory.jsonc`,
-  `standards/jsdoc-documentation.inventory.md`,
-  `standards/effect-laws.allowlist.jsonc`
+  `standards/effect-laws.allowlist.jsonc`, and the JSDoc inventory report that
+  `bun run beep quality jsdoc-inventory` writes under the ignored .beep/ci/ directory
 - package READMEs; `packages/architecture-lab/*` and
   `apps/architecture-lab-proof/test/` as executable proof
 

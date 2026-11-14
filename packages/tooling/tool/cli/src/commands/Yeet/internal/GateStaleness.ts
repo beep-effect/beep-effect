@@ -394,7 +394,7 @@ export const YEET_GATE_ARTIFACT_DESCRIPTORS: ReadonlyArray<GateArtifactDescripto
  * ```ts
  * import { YEET_GATE_AUXILIARY_ARTIFACT_PATHS } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YEET_GATE_AUXILIARY_ARTIFACT_PATHS[0] === "standards/jsdoc-documentation.inventory.md") // true
+ * console.log(YEET_GATE_AUXILIARY_ARTIFACT_PATHS[0] === ".beep/ci/jsdoc-documentation.inventory.md") // true
  * ```
  *
  * @category configuration
