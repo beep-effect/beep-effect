@@ -45197,30 +45197,6 @@
             "functions": 38
           }
         },
-        "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReapDrain.ts": {
-          "lines": 93.69,
-          "statements": 88.57,
-          "branches": 71.34,
-          "functions": 85.38,
-          "uncovered": {
-            "lines": 21,
-            "statements": 44,
-            "branches": 47,
-            "functions": 19
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReapDrainLive.ts": {
-          "lines": 14.51,
-          "statements": 13.63,
-          "branches": 0,
-          "functions": 0,
-          "uncovered": {
-            "lines": 53,
-            "statements": 57,
-            "branches": 6,
-            "functions": 28
-          }
-        },
         "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.schemas.ts": {
           "lines": 100,
           "statements": 100,

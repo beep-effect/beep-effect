@@ -7,16 +7,20 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import { PullRequest } from "@beep/github/PullRequest";
 import { PageOptions } from "@beep/github/Rest";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Str from "effect/String";
 import { runRepoCommandCaptureRaw } from "../../../internal/repo-run/RepoRun.executor.ts";
 import { openSessionRows } from "../../Session/Session.schemas.ts";
@@ -30,10 +34,7 @@ import { FleetRegistryStore, FleetRegistryStoreLive } from "./FleetRegistry.ts";
 import { fleetStateDirectory } from "./FleetRoots.ts";
 import { ResidueDrainFleetFacts, ResidueDrainLivenessReadings } from "./ResidueReapDrain.schemas.ts";
 import { ResidueDrainProbe } from "./ResidueReapDrain.ts";
-import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
-import type * as SecureRandom from "effect/crypto/SecureRandom";
-import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { ResidueDrainProbeShape } from "./ResidueReapDrain.ts";
 
 type LiveRequirements =
@@ -52,7 +53,7 @@ const homeDirectory = Config.option(Config.String("HOME")).pipe(
 );
 
 // Head branch names of every open pull request; `None` when GitHub cannot answer.
-const openPullRequestHeads = (repoRoot: string) =>
+const liveOpenPullRequestHeads = (repoRoot: string) =>
   Layer.build(layerWorktreeGithub(repoRoot)).pipe(
     Effect.flatMap((context) =>
       Effect.provideContext(
@@ -65,8 +66,8 @@ const openPullRequestHeads = (repoRoot: string) =>
     Effect.option
   );
 
-// The `checkout=` of every active `beep-proof-*` unit; `None` when systemd cannot answer.
-const proofUnitCheckouts = (repoRoot: string) =>
+// `systemctl --user list-units` output for the active `beep-proof-*` units; `None` when systemd cannot answer.
+const liveProofUnitListing = (repoRoot: string) =>
   runRepoCommandCaptureRaw(
     "systemctl",
     [
@@ -82,20 +83,19 @@ const proofUnitCheckouts = (repoRoot: string) =>
     repoRoot
   ).pipe(
     Effect.option,
-    Effect.map(
-      O.flatMap((capture) =>
-        N.Equivalence(capture.exitCode, 0)
-          ? O.some(
-              A.getSomes(
-                A.map(Str.split("\n")(capture.output), (line) =>
-                  O.flatMap(Str.match(/checkout=(\S+)/u)(line), A.get(1))
-                )
-              )
-            )
-          : O.none()
-      )
-    )
+    Effect.map(O.flatMap((capture) => (N.Equivalence(capture.exitCode, 0) ? O.some(capture.output) : O.none())))
   );
+
+// The `checkout=` each proof unit's description names.
+const proofUnitCheckoutsOf = (listing: string): ReadonlyArray<string> =>
+  A.getSomes(A.map(Str.split("\n")(listing), (line) => O.flatMap(Str.match(/checkout=(\S+)/u)(line), A.get(1))));
+
+type OpenPullRequestHeads = (
+  repoRoot: string
+) => Effect.Effect<O.Option<ReadonlyArray<string>>, never, ChildProcessSpawner.ChildProcessSpawner>;
+type ProofUnitListing = (
+  repoRoot: string
+) => Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom>;
 
 const WORKING_DIRECTORY_LINE = /^\s*WorkingDirectory\s*=\s*-?(.+?)\s*$/u;
 
@@ -132,7 +132,11 @@ const timerDirectories = Effect.fnUntraced(function* (home: string) {
   );
 });
 
-const liveFacts = Effect.fnUntraced(function* (repoRoot: string) {
+const liveFacts = Effect.fnUntraced(function* (
+  repoRoot: string,
+  openPullRequestHeads: OpenPullRequestHeads,
+  proofUnitListing: ProofUnitListing
+) {
   const mirror = yield* FleetMirrorService;
   const store = yield* FleetRegistryStore;
   const ledger = yield* SessionLedger;
@@ -147,7 +151,7 @@ const liveFacts = Effect.fnUntraced(function* (repoRoot: string) {
   });
   const sessions = yield* ledger.list(repository).pipe(Effect.option);
   const heads = yield* openPullRequestHeads(repoRoot);
-  const proofs = yield* proofUnitCheckouts(repoRoot);
+  const proofs = yield* Effect.map(proofUnitListing(repoRoot), O.map(proofUnitCheckoutsOf));
   return ResidueDrainFleetFacts.make({
     roots,
     registry: registry.rows,
@@ -184,6 +188,10 @@ const liveUpdateRegistry = Effect.fnUntraced(function* (
  * every checkout its check reads; an unreadable registry, root list,
  * repository or state directory answers `None`. `livenessReadings` reuses the
  * fleet mirror's transcript, tree-mtime and session-registry readings.
+ * `openPullRequestHeads` and `proofUnitListing` default to GitHub REST and
+ * `systemctl --user list-units`; tests substitute fixture sources. The probe
+ * runs under the caller's `ConfigProvider`, which supplies `HOME` and the
+ * fleet state root.
  *
  * **Example** (Build the probe effect)
  *
@@ -194,30 +202,42 @@ const liveUpdateRegistry = Effect.fnUntraced(function* (
  * console.log(Effect.isEffect(makeResidueDrainProbe())) // true
  * ```
  *
+ * @param openPullRequestHeads - Source of every open pull request's head branch name.
+ * @param proofUnitListing - Source of the `systemctl --user list-units` text for active proof units.
  * @returns The probe service, capturing the services it reads.
  * @category constructors
  * @since 0.0.0
  */
-export const makeResidueDrainProbe = Effect.fnUntraced(function* (): Effect.fn.Return<
-  ResidueDrainProbeShape,
-  never,
-  LiveRequirements
-> {
-  const context = yield* Effect.context<LiveRequirements>();
+export const makeResidueDrainProbe = Effect.fnUntraced(function* (
+  openPullRequestHeads: OpenPullRequestHeads = liveOpenPullRequestHeads,
+  proofUnitListing: ProofUnitListing = liveProofUnitListing
+): Effect.fn.Return<ResidueDrainProbeShape, never, LiveRequirements> {
+  // Only the services the probe reads: the caller's ConfigProvider (HOME, the fleet state root) stays in effect.
+  const runtime = yield* Effect.context<LiveRequirements>();
+  const context = Context.pick(
+    FileSystem.FileSystem,
+    Path.Path,
+    SecureRandom.SecureRandom,
+    ChildProcessSpawner.ChildProcessSpawner,
+    Git,
+    FleetMirrorService,
+    FleetRegistryStore,
+    SessionLedger
+  )(runtime);
   return ResidueDrainProbe.of({
     facts: Effect.fn("ResidueDrainProbe.facts")((repoRoot: string) =>
-      liveFacts(repoRoot).pipe(Effect.option, Effect.provideContext(context))
+      liveFacts(repoRoot, openPullRequestHeads, proofUnitListing).pipe(Effect.option, Effect.provide(context))
     ),
     livenessReadings: Effect.fn("ResidueDrainProbe.livenessReadings")((checkout: string, nowMillis: number) =>
       homeDirectory.pipe(
         Effect.flatMap((home) => checkoutLivenessReadings(checkout, home, nowMillis)),
         Effect.map(ResidueDrainLivenessReadings.make),
-        Effect.provideContext(context)
+        Effect.provide(context)
       )
     ),
     updateRegistry: Effect.fn("ResidueDrainProbe.updateRegistry")(
       (repoRoot: string, transform: Parameters<ResidueDrainProbeShape["updateRegistry"]>[1]) =>
-        liveUpdateRegistry(repoRoot, transform).pipe(Effect.option, Effect.provideContext(context))
+        liveUpdateRegistry(repoRoot, transform).pipe(Effect.option, Effect.provide(context))
     ),
   });
 });

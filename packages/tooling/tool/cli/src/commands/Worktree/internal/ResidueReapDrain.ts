@@ -8,6 +8,7 @@
  */
 
 import { isPathWithinRoot } from "@beep/file-processing/PathSafety";
+import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { GitObjectId } from "@beep/schema/Conformance";
 import * as A from "effect/Array";
@@ -121,6 +122,7 @@ export const layerResidueDrainProbeTest = (shape: ResidueDrainProbeShape): Layer
   Layer.succeed(ResidueDrainProbe, ResidueDrainProbe.of(shape));
 
 type DrainRequirements =
+  | Git
   | FileSystem.FileSystem
   | Path.Path
   | SecureRandom.SecureRandom
@@ -158,7 +160,10 @@ type ResidueDrainContext = {
 };
 
 // Stdout of a successful git command; any failure or non-zero exit is `None`.
-const gitStdout = (cwd: string, args: ReadonlyArray<string>) =>
+// Only for the argv the Git kit does not cover: `rev-list --count` over pseudo-refs and `--not` sets,
+// `ls-files --others --ignored --directory`, and `bundle create|verify|list-heads`.
+const rawGit = (cwd: string, args: ReadonlyArray<string>) =>
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-23): the Git kit has no bundle member, its revListCount takes one range, and its lsFiles lists no ignored entries
   runRepoCommandCaptureRaw("git", ["--no-optional-locks", ...args], cwd).pipe(
     Effect.option,
     Effect.map(O.flatMap((capture) => (N.Equivalence(capture.exitCode, 0) ? O.some(capture.output) : O.none())))
@@ -174,26 +179,24 @@ const drainLayout = Effect.fnUntraced(function* (
 ): Effect.fn.Return<O.Option<DrainLayout>, never, DrainRequirements> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const git = yield* Git;
   const real = yield* fs.realPath(checkout).pipe(Effect.option);
   if (O.isNone(real)) return O.none();
-  const dirs = yield* gitStdout(real.value, ["rev-parse", "--path-format=absolute", "--git-dir", "--git-common-dir"]);
-  const lines = O.map(dirs, nonEmptyLines);
-  const gitDir = O.flatMap(lines, A.get(0));
-  const commonDirLexical = O.flatMap(lines, A.get(1));
-  if (O.isNone(gitDir) || O.isNone(commonDirLexical)) return O.none();
-  const gitDirReal = yield* fs.realPath(gitDir.value).pipe(Effect.option);
-  const commonDir = yield* fs.realPath(commonDirLexical.value).pipe(Effect.option);
+  // The kit answers as git does: a clone's dirs may be relative to the checkout.
+  const resolved = (dir: string) => fs.realPath(path.resolve(real.value, Str.trim(dir)));
+  const gitDirReal = yield* git.gitDir(real.value).pipe(Effect.flatMap(resolved), Effect.option);
+  const commonDir = yield* git.commonDir(real.value).pipe(Effect.flatMap(resolved), Effect.option);
   if (O.isNone(gitDirReal) || O.isNone(commonDir)) return O.none();
   const clone = Str.Equivalence(gitDirReal.value, commonDir.value);
-  const branch = yield* gitStdout(real.value, ["symbolic-ref", "--quiet", "--short", "HEAD"]);
-  const head = yield* gitStdout(real.value, ["rev-parse", "--verify", "--quiet", "HEAD"]);
+  const branch = yield* git.currentBranch(real.value).pipe(Effect.map(O.map(Str.trim)), Effect.orElseSucceed(O.none));
+  const head = yield* git.revParse(real.value, "HEAD", { quiet: true }).pipe(Effect.option);
   return O.some({
     checkout,
     real: real.value,
     kind: clone ? "clone" : "linked-worktree",
     commonDir: commonDir.value,
     owningClone: clone ? O.none() : O.some(path.dirname(commonDir.value)),
-    branch: trimmedNonEmpty(branch),
+    branch: O.filter(branch, Str.isNonEmpty),
     head: trimmedNonEmpty(head),
   });
 });
@@ -331,13 +334,15 @@ const livenessCheck = Effect.fnUntraced(function* (context: ResidueDrainContext,
 
 const ownedWorktreesCheck = Effect.fnUntraced(function* (layout: DrainLayout) {
   if (layout.kind !== "clone") return checkResult("owned-worktrees", "pass", "linked worktree owns no worktrees");
-  const listing = yield* gitStdout(layout.real, ["worktree", "list", "--porcelain"]);
+  const fs = yield* FileSystem.FileSystem;
+  const git = yield* Git;
+  const listing = yield* git.worktreeList(layout.real).pipe(Effect.option);
   if (O.isNone(listing)) return checkResult("owned-worktrees", "probe-failed", "git worktree list failed");
-  const blocks = A.filter(A.map(Str.split("\n\n")(listing.value), nonEmptyLines), (lines) =>
-    O.exists(A.head(lines), Str.startsWith("worktree "))
+  // Every entry but the clone itself; one whose directory is gone is prunable and holds nothing.
+  const registered = yield* Effect.filter(
+    A.filter(listing.value, (entry) => !entry.bare && !Str.Equivalence(entry.path, layout.real)),
+    (entry) => fs.exists(entry.path).pipe(Effect.orElseSucceed(() => true))
   );
-  // The first block is the clone itself; a prunable entry has lost its directory and holds nothing.
-  const registered = A.filter(A.drop(blocks, 1), (lines) => !A.some(lines, Str.startsWith("prunable")));
   return A.isReadonlyArrayEmpty(registered)
     ? checkResult("owned-worktrees", "pass", "no registered worktrees")
     : checkResult("owned-worktrees", "fail", `${A.length(registered)} registered worktree(s) still use this clone`);
@@ -377,19 +382,20 @@ const localOnlySpec = Effect.fnUntraced(function* (layout: DrainLayout) {
   if (layout.kind !== "clone") {
     return O.some<LocalOnlySpec>({ include: ["HEAD"], exclude: ["--remotes", "--branches", "--tags"], stashes: [] });
   }
-  const stashes = yield* gitStdout(layout.real, ["stash", "list", "--format=%H"]);
+  const git = yield* Git;
+  const stashes = yield* git.stashList(layout.real).pipe(Effect.option);
   return O.map(
     stashes,
-    (text): LocalOnlySpec => ({
+    (entries): LocalOnlySpec => ({
       include: ["--branches", "--tags", "HEAD"],
       exclude: ["--remotes"],
-      stashes: nonEmptyLines(text),
+      stashes: A.map(entries, (entry) => entry.sha),
     })
   );
 });
 
 const countRevisions = Effect.fnUntraced(function* (layout: DrainLayout, args: ReadonlyArray<string>) {
-  const counted = yield* gitStdout(layout.real, ["rev-list", "--count", ...args]);
+  const counted = yield* rawGit(layout.real, ["rev-list", "--count", ...args]);
   return O.flatMap(trimmedNonEmpty(counted), N.parse);
 });
 
@@ -416,17 +422,14 @@ const localOnlyCheck = Effect.fnUntraced(function* (layout: DrainLayout) {
 });
 
 const cleanTreeCheck = Effect.fnUntraced(function* (layout: DrainLayout) {
-  const status = yield* gitStdout(layout.real, [
-    "status",
-    "--porcelain=v1",
-    "-z",
-    "--untracked-files=all",
-    "--ignore-submodules=none",
-  ]);
+  const git = yield* Git;
+  const status = yield* git
+    .status(layout.real, { noOptionalLocks: true, untrackedFiles: "all", ignoreSubmodules: "none" })
+    .pipe(Effect.option);
   return O.match(status, {
     onNone: () => checkResult("clean-tree", "probe-failed", "git status failed"),
-    onSome: (text) => {
-      const changed = A.length(A.filter(Str.split("\u0000")(text), Str.isNonEmpty));
+    onSome: (entries) => {
+      const changed = A.length(entries);
       return N.Equivalence(changed, 0)
         ? checkResult("clean-tree", "pass", "clean")
         : checkResult("clean-tree", "fail", `${changed} changed path(s)`);
@@ -711,11 +714,11 @@ const writeBundle = Effect.fnUntraced(function* (
   file: string
 ): Effect.fn.Return<Result.Result<BundleWritten, string>, never, DrainRequirements> {
   const include = [...spec.include, ...spec.tempRefs];
-  const created = yield* gitStdout(layout.real, ["bundle", "create", file, ...include, "--not", ...spec.exclude]);
+  const created = yield* rawGit(layout.real, ["bundle", "create", file, ...include, "--not", ...spec.exclude]);
   if (O.isNone(created)) return Result.fail("git bundle create failed");
-  const verified = yield* gitStdout(layout.real, ["bundle", "verify", file]);
+  const verified = yield* rawGit(layout.real, ["bundle", "verify", file]);
   if (O.isNone(verified)) return Result.fail("git bundle verify failed");
-  const heads = yield* gitStdout(layout.real, ["bundle", "list-heads", file]);
+  const heads = yield* rawGit(layout.real, ["bundle", "list-heads", file]);
   const shas = A.getSomes(
     A.map(O.getOrElse(O.map(heads, nonEmptyLines), A.empty<string>), (line) => A.head(Str.split(" ")(line)))
   );
@@ -743,11 +746,13 @@ const bundleLocalOnlyWork = Effect.fnUntraced(function* (
   // Stash entries are reflog entries, not refs: name each under a temporary ref for the bundle.
   const tempRefs = A.map(spec.value.stashes, (_, index) => `refs/beep-drain/stash-${index}`);
   const named = yield* Effect.forEach(A.zip(tempRefs, spec.value.stashes), ([ref, sha]) =>
-    gitStdout(layout.real, ["update-ref", ref, sha])
+    Effect.flatMap(Git, (git) => git.updateRef(layout.real, ref, { create: sha })).pipe(Effect.option)
   );
-  const release = Effect.forEach(tempRefs, (ref) => gitStdout(layout.real, ["update-ref", "-d", ref]), {
-    discard: true,
-  });
+  const release = Effect.forEach(
+    A.zip(tempRefs, spec.value.stashes),
+    ([ref, sha]) => Effect.flatMap(Git, (git) => git.updateRef(layout.real, ref, { delete: sha })).pipe(Effect.option),
+    { discard: true }
+  );
   if (!A.every(named, O.isSome)) {
     yield* release;
     return Result.fail("could not name the stash entries for the bundle");
@@ -802,7 +807,7 @@ const preservedBytes = Effect.fnUntraced(function* (root: string, entry: string)
 const preserveLocalFiles = Effect.fnUntraced(function* (layout: DrainLayout, stateDirectory: string, runId: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const listing = yield* gitStdout(layout.real, [
+  const listing = yield* rawGit(layout.real, [
     "ls-files",
     "--others",
     "--ignored",

@@ -2,6 +2,7 @@ import { Git } from "@beep/git/Git";
 import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
 import {
   ConfiguredFleetRoots,
+  FleetRegistryRow,
   FleetRootEntry,
   layerResidueTerminalLaneProbeTest,
   ResidueDrainFleetFacts,
@@ -26,12 +27,13 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type {
-  FleetRegistryRow,
   ResidueDrainCheck,
   ResidueDrainProbeShape,
   ResidueReapClass,
   ResidueReapReport,
 } from "@beep/repo-cli/test/Worktree";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const NOW = 2_000_000_000_000;
 const DAY = Duration.toMillis(Duration.days(1));
@@ -100,7 +102,7 @@ const makeFleet = Effect.fn("ResidueDrainTest.makeFleet")(function* () {
   yield* fs.writeFileString(path.join(invoker, "README.md"), "fleet\n");
   yield* fs.writeFileString(
     path.join(invoker, ".gitignore"),
-    ".env\n.env.local\nsecrets/\nnode_modules/\n*.key\ncredentials.json\n"
+    ".env\n.env.local\nsecrets/\nnode_modules/\n*.key\ncredentials.json\n*.bin\n*.link\n"
   );
   yield* run(invoker, "git", ["add", "README.md", ".gitignore"]);
   yield* run(invoker, "git", ["commit", "--quiet", "-m", "seed"]);
@@ -130,11 +132,27 @@ const makeFleet = Effect.fn("ResidueDrainTest.makeFleet")(function* () {
 
 type Fleet = Effect.Success<ReturnType<typeof makeFleet>>;
 
-// A probe over a Ref-backed registry with every fleet-wide list readable and empty.
+type FleetLists = Pick<
+  ResidueDrainFleetFacts,
+  "openPullRequestHeads" | "proofUnitCheckouts" | "timerDirectories" | "openSessionCheckouts"
+>;
+
+const EMPTY_LISTS: FleetLists = {
+  openPullRequestHeads: [],
+  proofUnitCheckouts: [],
+  timerDirectories: [],
+  openSessionCheckouts: [],
+};
+
+// A probe over a Ref-backed registry; every fleet-wide list is readable and empty unless overridden.
 const fleetProbe = (
   fleet: Fleet,
   registry: Ref.Ref<ReadonlyArray<FleetRegistryRow>>,
-  readings: (checkout: string) => ResidueDrainLivenessReadings = () => DORMANT
+  options: {
+    readonly readings?: (checkout: string) => Effect.Effect<ResidueDrainLivenessReadings>;
+    readonly lists?: Partial<FleetLists>;
+    readonly registryWritable?: boolean;
+  } = {}
 ): ResidueDrainProbeShape => ({
   facts: () =>
     Effect.map(Ref.get(registry), (rows) =>
@@ -145,16 +163,16 @@ const fleetProbe = (
             roots: [FleetRootEntry.make({ path: fleet.projects })],
           }),
           registry: rows,
-          openPullRequestHeads: [],
-          proofUnitCheckouts: [],
-          timerDirectories: [],
-          openSessionCheckouts: [],
+          ...EMPTY_LISTS,
+          ...options.lists,
           stateDirectory: fleet.state,
         })
       )
     ),
-  livenessReadings: (checkout) => Effect.succeed(readings(checkout)),
-  updateRegistry: (_, transform) => Effect.asSome(Ref.updateAndGet(registry, transform)),
+  livenessReadings: (checkout) =>
+    options.readings === undefined ? Effect.succeed(DORMANT) : options.readings(checkout),
+  updateRegistry: (_, transform) =>
+    options.registryWritable === false ? Effect.succeedNone : Effect.asSome(Ref.updateAndGet(registry, transform)),
 });
 
 const reap = (
@@ -164,12 +182,13 @@ const reap = (
     readonly nowMillis: number;
     readonly apply?: boolean;
     readonly classes?: ReadonlyArray<ResidueReapClass>;
+    readonly extraCheckouts?: ReadonlyArray<string>;
   }
 ) =>
   runResidueReap({
     homeRoot: fleet.home,
     repoRoot: fleet.invoker,
-    checkoutRoots: [fleet.invoker, fleet.clone, fleet.lane, fleet.stray],
+    checkoutRoots: [fleet.invoker, fleet.clone, fleet.lane, fleet.stray, ...(options.extraCheckouts ?? [])],
     fleet: true,
     nowMillis: options.nowMillis,
     probeLiveCwd: noLiveCwd,
@@ -368,9 +387,9 @@ describe("residue reap drainable class", () => {
           `${path.join(fleet.stray, ".git", "objects")}\n`
         );
         const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
-        const probe = fleetProbe(fleet, registry, (checkout) =>
-          Str.Equivalence(checkout, fleet.lane) ? UNREADABLE_MTIME : DORMANT
-        );
+        const probe = fleetProbe(fleet, registry, {
+          readings: (checkout) => Effect.succeed(Str.Equivalence(checkout, fleet.lane) ? UNREADABLE_MTIME : DORMANT),
+        });
         yield* reap(fleet, probe, { nowMillis: NOW, classes: ["drainable"] });
         const report = yield* reap(fleet, probe, { nowMillis: NOW + 30 * DAY, apply: true, classes: ["drainable"] });
 
@@ -413,6 +432,175 @@ describe("residue reap drainable class", () => {
         const report = yield* reap(fleet, UNREADABLE_FACTS, { nowMillis: NOW, classes: ["drainable"] });
         expect(A.filter(report.candidates, (candidate) => candidate.reapClass === "drainable")).toEqual([]);
         expect(A.some(report.warnings, Str.includes("drainable was not assessed"))).toBe(true);
+      })
+    );
+
+    it.effect("refuses timer hosts, proof units, open pull requests, open session rows and authored seats", () =>
+      Effect.gen(function* () {
+        const fleet = yield* makeFleet();
+        const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([
+          FleetRegistryRow.make({ checkout: fleet.clone, seatRole: "main" }),
+          FleetRegistryRow.make({ checkout: fleet.stray, seatRole: "legacy", retentionExempt: true }),
+        ]);
+        const probe = fleetProbe(fleet, registry, {
+          lists: {
+            openPullRequestHeads: ["feat/lane"],
+            proofUnitCheckouts: [fleet.stray],
+            timerDirectories: [fleet.lane],
+            openSessionCheckouts: [fleet.clone],
+          },
+        });
+        const report = yield* reap(fleet, probe, { nowMillis: NOW, classes: ["drainable"] });
+        const lane = drainRow(report, fleet.lane);
+        expect(outcomeOf(lane, "timer-host")).toBe("fail");
+        expect(outcomeOf(lane, "open-pr")).toBe("fail");
+        const clone = drainRow(report, fleet.clone);
+        expect(outcomeOf(clone, "seat-role")).toBe("fail");
+        expect(outcomeOf(clone, "session-ledger")).toBe("fail");
+        const stray = drainRow(report, fleet.stray);
+        expect(outcomeOf(stray, "retention-exempt")).toBe("fail");
+        expect(outcomeOf(stray, "proof-unit")).toBe("fail");
+        expect(A.every([lane, clone, stray], (row) => row.skipReason === "drain-blocked")).toBe(true);
+      })
+    );
+
+    it.effect("fails closed on unreadable fleet lists, an unreadable checkout and a registry it cannot write", () =>
+      Effect.gen(function* () {
+        const fleet = yield* makeFleet();
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const notACheckout = path.join(fleet.projects, "beep-effect-plain");
+        yield* fs.makeDirectory(notACheckout, { recursive: true });
+        const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
+        const unreadable = fleetProbe(fleet, registry, {
+          lists: {
+            openPullRequestHeads: null,
+            proofUnitCheckouts: null,
+            timerDirectories: null,
+            openSessionCheckouts: null,
+          },
+        });
+        const report = yield* reap(fleet, unreadable, {
+          nowMillis: NOW,
+          classes: ["drainable"],
+          extraCheckouts: [notACheckout],
+        });
+        const lane = drainRow(report, fleet.lane);
+        expect(
+          A.map(["timer-host", "proof-unit", "open-pr", "session-ledger"] as const, (check) => outcomeOf(lane, check))
+        ).toEqual(["probe-failed", "probe-failed", "probe-failed", "probe-failed"]);
+        expect(drainRow(report, notACheckout).skipReason).toBe("git-probe-failed");
+
+        // Drainable, but the grace window cannot start while the registry refuses writes.
+        const readOnly = fleetProbe(fleet, registry, { registryWritable: false });
+        const blind = yield* reap(fleet, readOnly, { nowMillis: NOW, classes: ["drainable"] });
+        const blindLane = drainRow(blind, fleet.lane);
+        expect(blindLane.skipReason).toBe("drain-grace");
+        expect(outcomeOf(blindLane, "grace-window")).toBe("probe-failed");
+        expect(A.some(blind.warnings, Str.includes("could not record drain observations"))).toBe(true);
+      })
+    );
+
+    it.effect("refuses a checkout with live activity", () =>
+      Effect.gen(function* () {
+        const fleet = yield* makeFleet();
+        const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
+        const probe = fleetProbe(fleet, registry, {
+          readings: (checkout) =>
+            Effect.succeed(
+              Str.Equivalence(checkout, fleet.lane)
+                ? ResidueDrainLivenessReadings.make({
+                    transcript: { _tag: "absent" },
+                    worktreeMtime: { _tag: "measured", ageSeconds: 10 },
+                    sessionMatches: 0,
+                  })
+                : DORMANT
+            ),
+        });
+        const report = yield* reap(fleet, probe, { nowMillis: NOW, classes: ["drainable"] });
+        const lane = drainRow(report, fleet.lane);
+        expect(outcomeOf(lane, "liveness")).toBe("fail");
+        const liveness = A.findFirst(lane.drain?.checks ?? [], (result) => result.check === "liveness");
+        expect(O.getOrThrow(liveness).detail).toContain("worktree-mtime");
+      })
+    );
+
+    it.effect("skips ignored symlinks and refuses to preserve more than the cap", () =>
+      Effect.gen(function* () {
+        const fleet = yield* makeFleet();
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* fs.symlink(path.join(fleet.stray, "README.md"), path.join(fleet.stray, "readme.link"));
+        // Sparse: 513 MiB apparent, nothing written.
+        yield* run(fleet.stray, "truncate", ["-s", "513M", "big.bin"]);
+        const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
+        const probe = fleetProbe(fleet, registry);
+        yield* reap(fleet, probe, { nowMillis: NOW, classes: ["drainable"] });
+
+        const capped = yield* reap(fleet, probe, { nowMillis: NOW + 8 * DAY, apply: true, classes: ["drainable"] });
+        expect(drainRow(capped, fleet.stray).skipReason).toBe("drain-bundle-failed");
+        yield* expectExists(fleet.stray, true);
+
+        yield* fs.remove(path.join(fleet.stray, "big.bin"));
+        const wave = yield* reap(fleet, probe, { nowMillis: NOW + 8 * DAY, apply: true, classes: ["drainable"] });
+        const preserved = O.getOrThrow(O.fromNullishOr(drainRow(wave, fleet.stray).drain?.preserved));
+        yield* expectExists(fleet.stray, false);
+        yield* expectExists(path.join(preserved, ".env"), true);
+        yield* expectExists(path.join(preserved, "readme.link"), false);
+      })
+    );
+
+    it.effect("refuses a drain whose checkout goes live or moves HEAD while its work is preserved", () =>
+      Effect.gen(function* () {
+        const fleet = yield* makeFleet();
+        const services = yield* Effect.context<
+          FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+        >();
+        const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
+        const strayCalls = yield* Ref.make(0);
+        const armed = yield* Ref.make<"off" | "live" | "move-head">("off");
+        // Apply-time calls for the stray clone: discovery (1), the pre-bundle re-check (2), the post-preservation read (3).
+        const probe = fleetProbe(fleet, registry, {
+          readings: Effect.fn("ResidueDrainTest.windowReadings")(function* (checkout: string) {
+            const mode = yield* Ref.get(armed);
+            if (!Str.Equivalence(checkout, fleet.stray) || mode === "off") return DORMANT;
+            const call = yield* Ref.updateAndGet(strayCalls, (count) => count + 1);
+            if (mode === "move-head" && call === 2) {
+              yield* run(fleet.stray, "git", ["commit", "--quiet", "--allow-empty", "-m", "late work"]).pipe(
+                Effect.provideContext(services),
+                Effect.orDie
+              );
+            }
+            return mode === "live" && call === 3
+              ? ResidueDrainLivenessReadings.make({
+                  transcript: { _tag: "measured", ageSeconds: 5 },
+                  worktreeMtime: { _tag: "measured", ageSeconds: 86_400 },
+                  sessionMatches: 0,
+                })
+              : DORMANT;
+          }),
+        });
+        yield* reap(fleet, probe, { nowMillis: NOW, classes: ["drainable"] });
+
+        yield* Ref.set(armed, "live");
+        const wentLive = yield* reap(fleet, probe, { nowMillis: NOW + 8 * DAY, apply: true, classes: ["drainable"] });
+        expect(drainRow(wentLive, fleet.stray).skipReason).toBe("drain-blocked");
+        expect(A.some(wentLive.warnings, Str.includes("no longer dormant"))).toBe(true);
+        yield* expectExists(fleet.stray, true);
+
+        yield* Ref.set(strayCalls, 0);
+        yield* Ref.set(armed, "move-head");
+        const moved = yield* reap(fleet, probe, { nowMillis: NOW + 8 * DAY, apply: true, classes: ["drainable"] });
+        expect(drainRow(moved, fleet.stray).skipReason).toBe("drain-blocked");
+        expect(A.some(moved.warnings, Str.includes("HEAD moved while its work was being preserved"))).toBe(true);
+        yield* expectExists(fleet.stray, true);
+
+        const entries = yield* journal(fleet);
+        const refusals = A.filter(entries, (entry) => entry.checkout === fleet.stray);
+        expect(A.map(refusals, (entry) => [entry.outcome, entry.reason])).toEqual([
+          ["refused", "drain-blocked"],
+          ["refused", "drain-blocked"],
+        ]);
       })
     );
   });
