@@ -1,30 +1,20 @@
 import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
-import { ClaimReviewState } from "@proto/party-contract/Claim/ClaimReview.read";
+import { ClaimReviewState, proposalOf } from "@proto/party-contract/Claim/ClaimReview.read";
+import { dual } from "effect/Function";
 import * as Match from "effect/Match";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import { Receipt } from "../Bindings.ts";
 
-/**
- * The approval in flight: its command id, what it approves, the view
- * revision it was made from, how many times it was sent, and its receipt
- * once the command committed.
- *
- * @category models
- * @since 0.0.0
- */
-export const Pending = S.Struct({
+/** What every approval in flight carries: its command id, what it approves, the view revision it was made from, and how many times it was sent. */
+const inFlight = {
   commandId: S.String,
   digest: S.String,
   evidenceRevision: S.Int,
   baseRevision: S.Int,
   attempts: S.Int,
-  receipt: S.NullOr(Receipt),
-});
-/**
- * @category models
- * @since 0.0.0
- */
-export type Pending = typeof Pending.Type;
+};
 
 /**
  * What the screen last told the person about an approval.
@@ -44,18 +34,59 @@ export const Notice = S.TaggedUnion({
 export type Notice = typeof Notice.Type;
 
 /**
- * The claim review screen: the latest view with its revision and epoch, the
- * approval in flight, and the last notice.
+ * Where the person's approval stands: nothing asked, sent and waiting for
+ * its outcome, committed with its receipt and waiting for the view to catch
+ * up, or over, with what the screen told the person.
  *
  * @category models
  * @since 0.0.0
  */
-export const Screen = S.Struct({
-  claim: ClaimId,
-  view: S.NullOr(S.Struct({ review: S.NullOr(ClaimReviewState), revision: S.Int, epoch: S.Int })),
-  pending: S.NullOr(Pending),
-  notice: S.NullOr(Notice),
+export const Approval = S.TaggedUnion({
+  Idle: {},
+  Sending: inFlight,
+  Committed: { ...inFlight, receipt: Receipt },
+  Noticed: { notice: Notice },
 });
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export type Approval = typeof Approval.Type;
+/**
+ * An approval in flight: sent, or committed and waiting for the view.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const InFlight = S.Union([Approval.cases.Sending, Approval.cases.Committed]);
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export type InFlight = typeof InFlight.Type;
+
+/**
+ * The latest view the screen saw: the claim's review once it has one, with
+ * the view's revision and epoch.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const SeenView = S.Struct({ review: S.Option(ClaimReviewState), revision: S.Int, epoch: S.Int });
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export type SeenView = typeof SeenView.Type;
+
+/**
+ * The claim review screen: the latest view, once one arrived, and where the
+ * approval stands.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const Screen = S.Struct({ claim: ClaimId, view: S.Option(SeenView), approval: Approval });
 /**
  * @category models
  * @since 0.0.0
@@ -71,7 +102,7 @@ export type Screen = typeof Screen.Type;
  */
 export const Message = S.TaggedUnion({
   /** A state from the subscription. */
-  Snapshot: { review: S.NullOr(ClaimReviewState), revision: S.Int, epoch: S.Int },
+  Snapshot: { review: S.Option(ClaimReviewState), revision: S.Int, epoch: S.Int },
   /** The person pressed Approve; the controller minted the command id. */
   ApproveClicked: { commandId: S.String },
   /** The command committed. */
@@ -83,7 +114,7 @@ export const Message = S.TaggedUnion({
   /** Nobody knows whether it committed. */
   Unknown: { commandId: S.String },
   /** A read that waited for the command's receipt returned. */
-  CaughtUp: { commandId: S.String, review: S.NullOr(ClaimReviewState), revision: S.Int },
+  CaughtUp: { commandId: S.String, review: S.Option(ClaimReviewState), revision: S.Int },
 });
 /**
  * @category models
@@ -115,15 +146,20 @@ export type Intent = typeof Intent.Type;
  * @category constructors
  * @since 0.0.0
  */
-export const initial = (claim: ClaimId): Screen => ({ claim, view: null, pending: null, notice: null });
+export const initial = (claim: ClaimId): Screen => ({ claim, view: O.none(), approval: Approval.cases.Idle.make({}) });
 
 const emit = (screen: Screen, ...intents: ReadonlyArray<Intent>): readonly [Screen, ReadonlyArray<Intent>] => [
   screen,
   intents,
 ];
 const unchanged = (screen: Screen) => emit(screen);
-const isCurrent = (screen: Screen, commandId: string) => screen.pending?.commandId === commandId;
-const newer = (screen: Screen, revision: number) => screen.view === null || revision > screen.view.revision;
+const isInFlight = S.is(InFlight);
+/** The approval in flight under this command id, if that is the one in flight. */
+const current = (screen: Screen, commandId: string): O.Option<InFlight> =>
+  O.filter(O.liftPredicate(screen.approval, isInFlight), (approval) => approval.commandId === commandId);
+const newer = (screen: Screen, revision: number) =>
+  O.match(screen.view, { onNone: () => true, onSome: (view) => revision > view.revision });
+const noticed = (screen: Screen, notice: Notice): Screen => ({ ...screen, approval: Approval.cases.Noticed.make({ notice }) });
 
 /**
  * The screen's law, pure: the next screen and the intents to run.
@@ -153,61 +189,70 @@ const newer = (screen: Screen, revision: number) => screen.view === null || revi
  * @category transitions
  * @since 0.0.0
  */
-export const update = (screen: Screen, message: Message): readonly [Screen, ReadonlyArray<Intent>] =>
+export const update: {
+  (message: Message): (screen: Screen) => readonly [Screen, ReadonlyArray<Intent>];
+  (screen: Screen, message: Message): readonly [Screen, ReadonlyArray<Intent>];
+} = dual(2, (screen: Screen, message: Message): readonly [Screen, ReadonlyArray<Intent>] =>
   Match.value(message).pipe(
     Match.tagsExhaustive({
       Snapshot: ({ review, revision, epoch }) =>
-        newer(screen, revision) ? unchanged({ ...screen, view: { review, revision, epoch } }) : unchanged(screen),
+        newer(screen, revision) ? unchanged({ ...screen, view: O.some({ review, revision, epoch }) }) : unchanged(screen),
       ApproveClicked: ({ commandId }) => {
-        const proposal = screen.view?.review?.proposal ?? null;
-        if (screen.pending !== null || screen.view === null || proposal === null) return unchanged(screen);
-        const pending: Pending = {
-          commandId,
-          digest: proposal.digest,
-          evidenceRevision: proposal.evidenceRevision,
-          baseRevision: screen.view.revision,
-          attempts: 1,
-          receipt: null,
-        };
-        return emit(
-          { ...screen, pending, notice: null },
-          Intent.cases.Approve.make({ commandId, digest: pending.digest, evidenceRevision: pending.evidenceRevision }),
-        );
+        if (isInFlight(screen.approval) || O.isNone(screen.view)) return unchanged(screen);
+        const view = screen.view.value;
+        return O.match(O.flatMap(view.review, proposalOf), {
+          onNone: () => unchanged(screen),
+          onSome: (proposal) =>
+            emit(
+              {
+                ...screen,
+                approval: Approval.cases.Sending.make({
+                  commandId,
+                  digest: proposal.digest,
+                  evidenceRevision: proposal.evidenceRevision,
+                  baseRevision: view.revision,
+                  attempts: 1,
+                }),
+              },
+              Intent.cases.Approve.make({ commandId, digest: proposal.digest, evidenceRevision: proposal.evidenceRevision }),
+            ),
+        });
       },
       Accepted: ({ commandId, receipt }) =>
-        screen.pending === null || !isCurrent(screen, commandId) || screen.pending.receipt !== null
-          ? unchanged(screen)
-          : emit(
-              { ...screen, pending: { ...screen.pending, receipt } },
+        O.match(O.filter(current(screen, commandId), Approval.guards.Sending), {
+          onNone: () => unchanged(screen),
+          onSome: (sending) =>
+            emit(
+              { ...screen, approval: Approval.cases.Committed.make({ ...Struct.omit(sending, ["_tag"]), receipt }) },
               Intent.cases.ReadAfterWrite.make({ commandId, receipt }),
             ),
+        }),
       Rejected: ({ commandId, reason }) =>
-        isCurrent(screen, commandId)
-          ? unchanged({ ...screen, pending: null, notice: Notice.cases.Refused.make({ commandId, reason }) })
+        O.isSome(current(screen, commandId))
+          ? unchanged(noticed(screen, Notice.cases.Refused.make({ commandId, reason })))
           : unchanged(screen),
       Denied: ({ commandId, reason }) =>
-        isCurrent(screen, commandId)
-          ? unchanged({ ...screen, pending: null, notice: Notice.cases.Denied.make({ commandId, reason }) })
+        O.isSome(current(screen, commandId))
+          ? unchanged(noticed(screen, Notice.cases.Denied.make({ commandId, reason })))
           : unchanged(screen),
       Unknown: ({ commandId }) =>
-        screen.pending === null || !isCurrent(screen, commandId) || screen.pending.receipt !== null
-          ? unchanged(screen)
-          : emit(
-              { ...screen, pending: { ...screen.pending, attempts: screen.pending.attempts + 1 } },
-              Intent.cases.Approve.make({
-                commandId,
-                digest: screen.pending.digest,
-                evidenceRevision: screen.pending.evidenceRevision,
-              }),
+        O.match(O.filter(current(screen, commandId), Approval.guards.Sending), {
+          onNone: () => unchanged(screen),
+          onSome: (sending) =>
+            emit(
+              { ...screen, approval: { ...sending, attempts: sending.attempts + 1 } },
+              Intent.cases.Approve.make({ commandId, digest: sending.digest, evidenceRevision: sending.evidenceRevision }),
             ),
+        }),
       CaughtUp: ({ commandId, review, revision }) =>
-        screen.pending === null || !isCurrent(screen, commandId) || screen.pending.receipt === null
+        O.isNone(O.filter(current(screen, commandId), Approval.guards.Committed))
           ? unchanged(screen)
           : unchanged({
-              ...screen,
-              pending: null,
-              notice: Notice.cases.Approved.make({ commandId }),
-              view: newer(screen, revision) ? { review, revision, epoch: screen.view?.epoch ?? 0 } : screen.view,
+              ...noticed(screen, Notice.cases.Approved.make({ commandId })),
+              view: newer(screen, revision)
+                ? O.some({ review, revision, epoch: O.match(screen.view, { onNone: () => 0, onSome: (view) => view.epoch }) })
+                : screen.view,
             }),
     }),
-  );
+  ),
+);

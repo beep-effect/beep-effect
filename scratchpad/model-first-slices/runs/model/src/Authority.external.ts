@@ -10,7 +10,7 @@ import * as S from "effect/Schema";
  * @category errors
  * @since 0.0.0
  */
-export class GrantDenied extends S.TaggedError<GrantDenied>()("GrantDenied", { reason: S.String }) {}
+export class GrantDenied extends S.TaggedError<GrantDenied, { readonly brand: unique symbol }>()("GrantDenied", { reason: S.String }) {}
 
 /**
  * The runs context's port to the authority context: grant a run a narrowed

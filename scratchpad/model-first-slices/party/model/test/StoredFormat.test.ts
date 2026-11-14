@@ -16,7 +16,7 @@ import { MemoryPartyDirectoryStore } from "@proto/party-model/Directory/PartyDir
 import { PartyHandlers } from "@proto/party-model/Party.handlers";
 import { PartyModel } from "@proto/party-model/Party.model";
 import { Reasoner } from "@proto/party-model/Review/Reasoner.external";
-import { ReviewAssist, ReviewAssistActivities } from "@proto/party-model/Review/ReviewAssist.saga";
+import { ProposalSent, ReviewAssist, ReviewAssistActivities } from "@proto/party-model/Review/ReviewAssist.saga";
 import { ReviewRuns } from "@proto/party-model/Review/ReviewRuns.external";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -36,14 +36,14 @@ const decodeEvent = (json: unknown) => S.decodeUnknownEffect(S.toCodecJson(Store
 const decodeAs = <Schema extends S.Top>(schema: Schema) => S.decodeUnknownEffect(S.toCodecJson(schema));
 
 /** The stored bytes of a fixture, and the JSON they hold. */
-const stored = (name: string) =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const file = yield* path.fromFileUrl(new URL(`./stored/${name}`, import.meta.url));
-    const bytes = yield* fs.readFileString(file);
-    return { file, bytes, json: yield* S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(bytes) };
-  });
+const stored = Effect.fn("stored")(function* (name: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const file = yield* path.fromFileUrl(new URL(`./stored/${name}`, import.meta.url));
+  const bytes = yield* fs.readFileString(file);
+  const json = yield* S.decodeEffect(S.fromJsonString(S.Unknown))(bytes);
+  return { file, bytes, json };
+});
 const history = (name: string) =>
   Effect.flatMap(stored(name), ({ json }) =>
     Effect.forEach(json as ReadonlyArray<unknown>, decodeEvent),
@@ -55,90 +55,106 @@ const story = Story.make(PartyModel, {
   stub: [Reasoner, Authority, ReviewRuns],
 });
 
-it.effect("phase 2's stored events, state, receipt, saga payload and provenance decode to the values phase 3 expects", () =>
-  Effect.gen(function* () {
-    const claim1 = yield* history("claim_1.history.json");
-    // Renamed and added: `excerpt` reads as `quote`, and a missing `trust` as "normal".
-    expect(claim1[2]).toMatchObject({ signals: [{ source: "phone", quote: "confirmed by phone", trust: "normal" }] });
-    // Widened: the stored integer still reads.
-    expect(claim1[4]).toMatchObject({ _tag: "ProposalApproved", corroboration: 3 });
-    // Reshaped: the stored line of text reads as the structured reason.
-    expect(claim1[5]).toMatchObject({ reason: MergeRefusal.cases.Vetoed.make({ reason: "not-registered" }) });
+it.layer(NodeServices.layer)((it) => {
+  it.effect("phase 2's stored events, state, receipt, saga payload and provenance decode to the values phase 3 expects", () =>
+    Effect.gen(function* () {
+      const claim1 = yield* history("claim_1.history.json");
+      // Renamed and added: `excerpt` reads as `quote`, and a missing `trust` as "normal".
+      expect(claim1[2]).toMatchObject({ signals: [{ source: "phone", quote: "confirmed by phone", trust: "normal" }] });
+      // Widened: the stored integer still reads.
+      expect(claim1[4]).toMatchObject({ _tag: "ProposalApproved", corroboration: O.some(3) });
+      // Reshaped: the stored line of text reads as the structured reason.
+      expect(claim1[5]).toMatchObject({ reason: MergeRefusal.cases.Vetoed.make({ reason: "not-registered" }) });
 
-    const claim2 = yield* history("claim_2.history.json");
-    // Removed: the stored `corroboration` is ignored.
-    expect(claim2[2]).toMatchObject({ _tag: "ClaimAccepted" });
-    expect(P.hasProperty(claim2[2], "corroboration")).toBe(false);
-    expect(claim2[3]).toMatchObject({ reason: MergeRefusal.cases.Readmission.make({ reason: "lapsed" }) });
+      const claim2 = yield* history("claim_2.history.json");
+      // Removed: the stored `corroboration` is ignored.
+      expect(claim2[2]).toMatchObject({ _tag: "ClaimAccepted" });
+      expect(P.hasProperty(claim2[2], "corroboration")).toBe(false);
+      expect(claim2[3]).toMatchObject({ reason: MergeRefusal.cases.Readmission.make({ reason: "lapsed" }) });
 
-    const pending = yield* Effect.flatMap(stored("Claim.state.json"), ({ json }) => decodeAs(ClaimState)(json));
-    expect(pending).toMatchObject({ _tag: "Pending", revision: 2, signals: A.map([0, 1, 2], () => expect.objectContaining({ trust: "normal" })) });
+      const pending = yield* Effect.flatMap(stored("Claim.state.json"), ({ json }) => decodeAs(ClaimState)(json));
+      expect(pending).toMatchObject({ _tag: "Pending", revision: 2, signals: A.map([0, 1, 2], () => expect.objectContaining({ trust: "normal" })) });
 
-    const receipt = (yield* stored("AssertClaim.receipt.json")).json as {
-      readonly events: ReadonlyArray<unknown>;
-      readonly reply: unknown;
-    };
-    expect(yield* Effect.forEach(receipt.events, decodeEvent)).toHaveLength(2);
-    expect(yield* decodeAs(AssertClaim.reply!)(receipt.reply)).toEqual({ reviewRun: "review:claim_1:1" });
+      const receipt = (yield* stored("AssertClaim.receipt.json")).json as {
+        readonly events: ReadonlyArray<unknown>;
+        readonly reply: unknown;
+      };
+      const receiptEvents = yield* Effect.forEach(receipt.events, decodeEvent);
+      expect(receiptEvents).toHaveLength(2);
+      const reply = yield* decodeAs(AssertClaim.reply!)(receipt.reply);
+      expect(reply).toEqual({ reviewRun: O.some("review:claim_1:1") });
 
-    const payload = yield* Effect.flatMap(stored("ReviewAssist.payload.json"), ({ json }) =>
-      decodeAs(ReviewAssist.workflow.payloadSchema)(json),
-    );
-    expect(payload).toMatchObject({ key: "review:claim_1:1", signals: [{ quote: "From: Dana Smith <dana@acme.test>", trust: "normal" }, {}] });
+      const payload = yield* Effect.flatMap(stored("ReviewAssist.payload.json"), ({ json }) =>
+        decodeAs(ReviewAssist.workflow.payloadSchema)(json),
+      );
+      expect(payload).toMatchObject({ key: "review:claim_1:1", signals: [{ quote: "From: Dana Smith <dana@acme.test>", trust: "normal" }, {}] });
 
-    const provenance = yield* Effect.flatMap(stored("Provenance.json"), ({ json }) => decodeAs(Provenance)(json));
-    expect(provenance.chain).toEqual([{ by: { _tag: "Agent", run: "review:claim_1:1" }, cause: { _tag: "SagaStep", saga: "ReviewAssist", key: "review:claim_1:1", step: "propose" } }]);
-  }).pipe(Effect.provide(NodeServices.layer)),
-);
+      const provenance = yield* Effect.flatMap(stored("Provenance.json"), ({ json }) => decodeAs(Provenance)(json));
+      expect(provenance.chain).toEqual([{ by: { _tag: "Agent", run: "review:claim_1:1" }, cause: { _tag: "SagaStep", saga: "ReviewAssist", key: "review:claim_1:1", step: "propose" } }]);
+    }),
+  );
 
-it.effect("frozen history replays through today's evolve to the expected state and read model", () =>
-  Effect.gen(function* () {
-    const claim1 = yield* history("claim_1.history.json");
-    const claim2 = yield* history("claim_2.history.json");
-    yield* story(
-      given(Claim.ref("claim_1"), ...claim1),
-      given(Claim.ref("claim_2"), ...claim2),
-      state(Claim.ref("claim_1"), (current) => expect(current).toMatchObject({ _tag: "Accepted", org: "org_acme" })),
-      state(Claim.ref("claim_2"), (current) => expect(current).toMatchObject({ _tag: "Accepted", org: "org_acme" })),
-      // The read model renders the structured reason in the form readers already know.
-      view(ClaimReview, Claim.ref("claim_1"), { status: "accepted", sources: 3, notes: [{ _tag: "MergeRefused", reason: "vetoed:not-registered" }] }),
-      view(ClaimReview, Claim.ref("claim_2"), { status: "accepted", notes: [{ _tag: "MergeRefused", reason: "readmission:lapsed" }] }),
-    );
-  }).pipe(Effect.provide(NodeServices.layer)),
-);
+  it.effect("frozen history replays through today's evolve to the expected state and read model", () =>
+    Effect.gen(function* () {
+      const claim1 = yield* history("claim_1.history.json");
+      const claim2 = yield* history("claim_2.history.json");
+      yield* story(
+        given(Claim.ref("claim_1"), ...claim1),
+        given(Claim.ref("claim_2"), ...claim2),
+        state(Claim.ref("claim_1"), (current) => expect(current).toMatchObject({ _tag: "Accepted", org: "org_acme" })),
+        state(Claim.ref("claim_2"), (current) => expect(current).toMatchObject({ _tag: "Accepted", org: "org_acme" })),
+        // The read model renders the structured reason in the form readers already know.
+        view(ClaimReview, Claim.ref("claim_1"), { _tag: "Accepted", sources: 3, notes: [{ _tag: "MergeRefused", reason: "vetoed:not-registered" }] }),
+        view(ClaimReview, Claim.ref("claim_2"), { _tag: "Accepted", notes: [{ _tag: "MergeRefused", reason: "readmission:lapsed" }] }),
+      );
+    }),
+  );
 
-it.effect("a read converts in memory and never rewrites stored bytes; a new write uses the new form", () =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const names = ["claim_1.history.json", "claim_2.history.json", "Claim.state.json", "AssertClaim.receipt.json", "ReviewAssist.payload.json"];
-    const before = yield* Effect.forEach(names, stored);
-    const claim1 = yield* history("claim_1.history.json");
-    yield* history("claim_2.history.json");
-    for (const { file, bytes } of before) expect(yield* fs.readFileString(file)).toBe(bytes);
-    // Encoding what was read writes today's form: the structured reason, `excerpt` and `trust`.
-    const reencoded = yield* S.encodeUnknownEffect(S.toCodecJson(MergeRefused))(claim1[5]);
-    expect(reencoded).toMatchObject({ reason: { _tag: "Vetoed", reason: "not-registered" } });
-    const added = yield* S.encodeUnknownEffect(S.toCodecJson(EvidenceAdded))(claim1[2]);
-    expect(added).toMatchObject({ signals: [{ source: "phone", excerpt: "confirmed by phone", trust: "normal" }] });
-    expect(O.isSome(R.get(added as Record<string, unknown>, "signals"))).toBe(true);
-  }).pipe(Effect.provide(NodeServices.layer)),
-);
+  it.effect("a read converts in memory and never rewrites stored bytes; a new write uses the new form", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const names = ["claim_1.history.json", "claim_2.history.json", "Claim.state.json", "AssertClaim.receipt.json", "ReviewAssist.payload.json"];
+      const before = yield* Effect.forEach(names, stored);
+      const claim1 = yield* history("claim_1.history.json");
+      yield* history("claim_2.history.json");
+      for (const { file, bytes } of before) {
+        const after = yield* fs.readFileString(file);
+        expect(after).toBe(bytes);
+      }
+      // Encoding what was read writes today's form: the structured reason, `excerpt` and `trust`.
+      const reencoded = yield* S.encodeUnknownEffect(S.toCodecJson(MergeRefused))(claim1[5]);
+      expect(reencoded).toMatchObject({ reason: { _tag: "Vetoed", reason: "not-registered" } });
+      const added = yield* S.encodeUnknownEffect(S.toCodecJson(EvidenceAdded))(claim1[2]);
+      expect(added).toMatchObject({ signals: [{ source: "phone", excerpt: "confirmed by phone", trust: "normal" }] });
+      expect(O.isSome(R.get(added as Record<string, unknown>, "signals"))).toBe(true);
+    }),
+  );
 
-// D35: activity results are stored formats. Frozen before phase 4 added `usage.cachedUnits`.
-it.effect("the review saga's stored activity results decode with today's schemas, converting on read", () =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const { file, bytes, json } = yield* stored("ReviewAssist.activities.json");
-    const results = json as Record<keyof typeof ReviewAssistActivities, unknown>;
-    const exitOf = <Name extends keyof typeof ReviewAssistActivities>(name: Name) =>
-      S.decodeUnknownEffect(
-        S.toCodecJson(S.Exit(ReviewAssistActivities[name].success, ReviewAssistActivities[name].error, S.Defect())),
-      )(results[name]);
-    expect(yield* exitOf("assess")).toMatchObject({ _tag: "Success", value: { usage: { units: 12, cachedUnits: 0 } } });
-    expect(yield* exitOf("reserve")).toMatchObject({ _tag: "Success", value: { run: "review:claim_1:1" } });
-    const step = yield* exitOf("step");
-    expect(Exit.isFailure(step)).toBe(true);
-    expect(yield* exitOf("propose")).toEqual(Exit.succeed("readmission:lapsed"));
-    expect(yield* fs.readFileString(file)).toBe(bytes);
-  }).pipe(Effect.provide(NodeServices.layer)),
-);
+  // D35: activity results are stored formats. Frozen before phase 4 added `usage.cachedUnits`.
+  it.effect("the review saga's stored activity results decode with today's schemas, converting on read", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const { file, bytes, json } = yield* stored("ReviewAssist.activities.json");
+      const results = json as Record<keyof typeof ReviewAssistActivities, unknown>;
+      const codecOf = <Name extends keyof typeof ReviewAssistActivities>(name: Name) =>
+        S.toCodecJson(S.Exit(ReviewAssistActivities[name].success, ReviewAssistActivities[name].error, S.Defect()));
+      const exitOf = <Name extends keyof typeof ReviewAssistActivities>(name: Name) =>
+        S.decodeUnknownEffect(codecOf(name))(results[name]);
+      const assess = yield* exitOf("assess");
+      expect(assess).toMatchObject({ _tag: "Success", value: { usage: { units: 12, cachedUnits: 0 } } });
+      // Phase 7: the reservation reads as a union, from the same stored form, and writes it back unchanged.
+      const reserve = yield* exitOf("reserve");
+      expect(reserve).toMatchObject({ _tag: "Success", value: { _tag: "Reserved", live: { run: "review:claim_1:1" } } });
+      const reserveWritten = yield* S.encodeUnknownEffect(codecOf("reserve"))(reserve);
+      expect(reserveWritten).toEqual(results.reserve);
+      const step = yield* exitOf("step");
+      expect(Exit.isFailure(step)).toBe(true);
+      const propose = yield* exitOf("propose");
+      expect(propose).toEqual(Exit.succeed(ProposalSent.cases.Refused.make({ refusal: "readmission:lapsed" })));
+      const proposeWritten = yield* S.encodeUnknownEffect(codecOf("propose"))(propose);
+      expect(proposeWritten).toEqual(results.propose);
+      const after = yield* fs.readFileString(file);
+      expect(after).toBe(bytes);
+    }),
+  );
+});

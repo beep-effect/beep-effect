@@ -2,7 +2,7 @@ import * as Domain from "@alchemy.run/domain";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -16,7 +16,7 @@ import * as Str from "effect/String";
  * @category errors
  * @since 0.0.0
  */
-export class MissingHandler extends S.TaggedError<MissingHandler>()("MissingHandler", { member: S.String }) {}
+export class MissingHandler extends S.TaggedError<MissingHandler, { readonly brand: unique symbol }>()("MissingHandler", { member: S.String }) {}
 
 /**
  * A `.handler.ts` file names no member of the model.
@@ -24,7 +24,7 @@ export class MissingHandler extends S.TaggedError<MissingHandler>()("MissingHand
  * @category errors
  * @since 0.0.0
  */
-export class UnregisteredHandler extends S.TaggedError<UnregisteredHandler>()("UnregisteredHandler", {
+export class UnregisteredHandler extends S.TaggedError<UnregisteredHandler, { readonly brand: unique symbol }>()("UnregisteredHandler", {
   file: S.String,
 }) {}
 
@@ -34,7 +34,7 @@ export class UnregisteredHandler extends S.TaggedError<UnregisteredHandler>()("U
  * @category errors
  * @since 0.0.0
  */
-export class RegistryDrift extends S.TaggedError<RegistryDrift>()("RegistryDrift", { file: S.String }) {}
+export class RegistryDrift extends S.TaggedError<RegistryDrift, { readonly brand: unique symbol }>()("RegistryDrift", { file: S.String }) {}
 
 /**
  * A model as the generator reads it. `sagas` is read off the class: the
@@ -97,7 +97,8 @@ const render = (options: Options, entries: ReadonlyArray<{ readonly member: stri
     A.sort(Order.mapInput(Order.String, (entry: { readonly file: string }) => entry.file)),
     A.map(({ member, file }) => `import { ${member}Live } from "./${file}";`),
   );
-  return [
+  return A.join(
+    [
     `// Generated from ${options.modelExport} by scripts/handlers.ts. Do not edit:`,
     "// `bun run handlers` rewrites it, and `bun run handlers --check` fails on drift.",
     'import * as Layer from "effect/Layer";',
@@ -113,7 +114,9 @@ const render = (options: Options, entries: ReadonlyArray<{ readonly member: stri
     ...A.map(entries, ({ member }) => `  ${member}Live,`),
     ");",
     "",
-  ].join("\n");
+    ],
+    "\n",
+  );
 };
 
 /**
@@ -133,13 +136,13 @@ export const plan = Effect.fn("HandlerRegistry.plan")(function* (options: Option
   const members = handledMembers(options.model);
   const entries = yield* Effect.forEach(members, (member) =>
     O.match(HashMap.get(byMember, member), {
-      onNone: () => Effect.fail(new MissingHandler({ member })),
+      onNone: () => Effect.fail(MissingHandler.make({ member })),
       onSome: (file) => Effect.succeed({ member, file }),
     }),
   );
   yield* Effect.forEach(
     A.filter(handlerFiles, (file) => !A.contains(members, path.basename(file, HANDLER))),
-    (file) => Effect.fail(new UnregisteredHandler({ file })),
+    (file) => Effect.fail(UnregisteredHandler.make({ file })),
     { discard: true },
   );
   return render(options, entries);
@@ -154,7 +157,8 @@ export const plan = Effect.fn("HandlerRegistry.plan")(function* (options: Option
 export const write = Effect.fn("HandlerRegistry.write")(function* (options: Options) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  yield* fs.writeFileString(path.join(options.srcDir, options.output), yield* plan(options));
+  const registry = yield* plan(options);
+  yield* fs.writeFileString(path.join(options.srcDir, options.output), registry);
 });
 
 /**
@@ -170,7 +174,7 @@ export const check = Effect.fn("HandlerRegistry.check")(function* (options: Opti
   const file = path.join(options.srcDir, options.output);
   const expected = yield* plan(options);
   const actual = yield* fs.readFileString(file).pipe(Effect.orElseSucceed(() => ""));
-  return yield* actual === expected ? Effect.void : Effect.fail(new RegistryDrift({ file: options.output }));
+  return yield* actual === expected ? Effect.void : Effect.fail(RegistryDrift.make({ file: options.output }));
 });
 
 /**
@@ -179,5 +183,7 @@ export const check = Effect.fn("HandlerRegistry.check")(function* (options: Opti
  * @category generators
  * @since 0.0.0
  */
-export const main = (options: Options, argv: ReadonlyArray<string>) =>
-  A.contains(argv, "--check") ? check(options) : write(options);
+export const main: {
+  (argv: ReadonlyArray<string>): (options: Options) => ReturnType<typeof check> | ReturnType<typeof write>;
+  (options: Options, argv: ReadonlyArray<string>): ReturnType<typeof check> | ReturnType<typeof write>;
+} = dual(2, (options: Options, argv: ReadonlyArray<string>) => (A.contains(argv, "--check") ? check(options) : write(options)));

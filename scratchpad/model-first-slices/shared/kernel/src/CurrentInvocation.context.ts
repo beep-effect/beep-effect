@@ -56,5 +56,5 @@ export const requireGrant = Effect.fnUntraced(function* (
   const invocation = yield* CurrentInvocation;
   return yield* A.some(invocation.grants, allows({ capability, operation, resource, at }))
     ? Effect.succeed(invocation)
-    : Effect.fail(new MissingGrant({ capability: capability.id, operation }));
+    : Effect.fail(MissingGrant.make({ capability: capability.id, operation }));
 });

@@ -53,7 +53,7 @@ export const ClaimState = S.TaggedUnion({
     signals: S.Array(EvidenceSignal),
     revision: S.Int,
     reviews: S.Int,
-    proposal: S.NullOr(ProposalView),
+    proposal: S.OptionFromNullOr(ProposalView),
   },
   Accepted: { org: OrgId, proposition: Proposition },
   Retracted: { org: OrgId, reason: S.String },
@@ -98,11 +98,11 @@ export class Claim extends Domain.Aggregate(
       AssertClaim: Effect.fn(function* (state, command, { id, stream, now }) {
         // The org is the command's, so the grant is checked before existence is revealed.
         const invocation = yield* requireGrant(PartyIntake, command._tag, claimIn(command.org, stream), now);
-        if (state._tag !== "Unasserted") return yield* new ClaimAlreadyAsserted();
+        if (state._tag !== "Unasserted") return yield* ClaimAlreadyAsserted.make({});
         const provenance = provenanceOf(invocation);
         return [
-          new ClaimAsserted({ org: command.org, proposition: command.proposition, signals: command.signals, provenance }),
-          new ReviewRequested({
+          ClaimAsserted.make({ org: command.org, proposition: command.proposition, signals: command.signals, provenance }),
+          ReviewRequested.make({
             run: reviewRun(id, 1),
             org: command.org,
             proposition: command.proposition,
@@ -116,13 +116,13 @@ export class Claim extends Domain.Aggregate(
       ProposeDisposition: Effect.fn(function* (state, command, { stream, now }) {
         const run = yield* Effect.service(CurrentInvocation).pipe(
           Effect.map(operatorOf),
-          Effect.filterOrFail(Operator.guards.Agent, () => new NotAnAgent()),
+          Effect.filterOrFail(Operator.guards.Agent, () => NotAnAgent.make({})),
           Effect.map((agent) => agent.run),
         );
-        const invocation = yield* requireGranted(PartyPropose, command._tag, state, stream, now);
+        const invocation = yield* requireGranted({ capability: PartyPropose, operation: command._tag, state, stream, at: now });
         const pending = yield* requirePending(state);
         if (command.evidenceRevision !== pending.revision) {
-          return yield* new ProposalStale({ evidenceRevision: pending.revision });
+          return yield* ProposalStale.make({ evidenceRevision: pending.revision });
         }
         const proposal = {
           disposition: command.disposition,
@@ -131,28 +131,28 @@ export class Claim extends Domain.Aggregate(
           evidenceRevision: command.evidenceRevision,
         };
         return [
-          new DispositionProposed({ ...proposal, digest: proposalDigest(proposal), provenance: provenanceOf(invocation) }),
+          DispositionProposed.make({ ...proposal, digest: proposalDigest(proposal), provenance: provenanceOf(invocation) }),
         ];
       }),
 
       AcceptClaim: Effect.fn(function* (state, command, { stream, now }) {
-        const invocation = yield* requireGranted(PartyReview, command._tag, state, stream, now);
+        const invocation = yield* requireGranted({ capability: PartyReview, operation: command._tag, state, stream, at: now });
         const pending = yield* requirePending(state);
         yield* requireAdmission(pending);
-        return [new ClaimAccepted({ proposition: pending.proposition, provenance: provenanceOf(invocation) })];
+        return [ClaimAccepted.make({ proposition: pending.proposition, provenance: provenanceOf(invocation) })];
       }),
 
       RetractClaim: Effect.fn(function* (state, command, { stream, now }) {
-        const invocation = yield* requireGranted(PartyReview, command._tag, state, stream, now);
+        const invocation = yield* requireGranted({ capability: PartyReview, operation: command._tag, state, stream, at: now });
         yield* requirePending(state);
-        return [new ClaimRetracted({ reason: command.reason, provenance: provenanceOf(invocation) })];
+        return [ClaimRetracted.make({ reason: command.reason, provenance: provenanceOf(invocation) })];
       }),
 
       AddEvidence: Effect.fn(function* (state, command, { stream, now }) {
-        const invocation = yield* requireGranted(PartyIntake, command._tag, state, stream, now);
+        const invocation = yield* requireGranted({ capability: PartyIntake, operation: command._tag, state, stream, at: now });
         const pending = yield* requirePending(state);
         return [
-          new EvidenceAdded({
+          EvidenceAdded.make({
             signals: command.signals,
             revision: pending.revision + 1,
             provenance: provenanceOf(invocation),
@@ -161,10 +161,10 @@ export class Claim extends Domain.Aggregate(
       }),
 
       RequestReview: Effect.fn(function* (state, command, { id, stream, now }) {
-        const invocation = yield* requireGranted(PartyReview, command._tag, state, stream, now);
+        const invocation = yield* requireGranted({ capability: PartyReview, operation: command._tag, state, stream, at: now });
         const pending = yield* requirePending(state);
         return [
-          new ReviewRequested({
+          ReviewRequested.make({
             run: reviewRun(id, pending.reviews + 1),
             org: pending.org,
             proposition: pending.proposition,
@@ -179,27 +179,27 @@ export class Claim extends Domain.Aggregate(
         // A person approves, signed in and acting directly: never an agent root, never a relayed hop.
         const acting = yield* Effect.service(CurrentInvocation);
         if (!Root.guards.Human(acting.root) || !Operator.guards.Human(operatorOf(acting))) {
-          return yield* new HumanApprovalRequired();
+          return yield* HumanApprovalRequired.make({});
         }
-        const invocation = yield* requireGranted(PartyReview, command._tag, state, stream, now);
+        const invocation = yield* requireGranted({ capability: PartyReview, operation: command._tag, state, stream, at: now });
         const pending = yield* requirePending(state);
-        const proposal = pending.proposal;
-        if (proposal === null) return yield* new ProposalMismatch({ reason: "no-proposal" });
-        if (proposal.digest !== command.digest) return yield* new ProposalMismatch({ reason: "digest" });
+        if (O.isNone(pending.proposal)) return yield* ProposalMismatch.make({ reason: "no-proposal" });
+        const proposal = pending.proposal.value;
+        if (proposal.digest !== command.digest) return yield* ProposalMismatch.make({ reason: "digest" });
         if (proposal.evidenceRevision !== command.evidenceRevision || pending.revision !== command.evidenceRevision) {
-          return yield* new ProposalMismatch({ reason: "evidence-revision" });
+          return yield* ProposalMismatch.make({ reason: "evidence-revision" });
         }
         const corroboration =
           proposal.disposition === "accept" ? (yield* requireAdmission(pending)).have : admission(pending).have;
         return [
-          new ProposalApproved({
+          ProposalApproved.make({
             approval: ApprovalId.make(commandId),
             run: proposal.run,
             digest: proposal.digest,
             evidenceRevision: proposal.evidenceRevision,
             outcome: proposal.disposition === "accept" ? "accepted" : "retracted",
             proposition: pending.proposition,
-            corroboration,
+            corroboration: O.some(corroboration),
             provenance: provenanceOf(invocation),
           }),
         ];
@@ -207,10 +207,10 @@ export class Claim extends Domain.Aggregate(
 
       // Internal records: only the model's own policy and saga send them.
       RecordMergeRefused: (_, command) => [
-        new MergeRefused({ reason: command.reason, provenance: command.provenance }),
+        MergeRefused.make({ reason: command.reason, provenance: command.provenance }),
       ],
       RecordReviewRefused: (_, command) => [
-        new ReviewRefused({ run: command.run, reason: command.reason, provenance: command.provenance }),
+        ReviewRefused.make({ run: command.run, reason: command.reason, provenance: command.provenance }),
       ],
     },
     // Total: decide already refused what cannot happen, so a handler keeps any
@@ -223,7 +223,7 @@ export class Claim extends Domain.Aggregate(
           signals: event.signals,
           revision: 1,
           reviews: 0,
-          proposal: null,
+          proposal: O.none(),
         }),
       ReviewRequested: (state) =>
         ClaimState.matchOrElse(
@@ -237,13 +237,13 @@ export class Claim extends Domain.Aggregate(
           {
             Pending: (pending): ClaimState => ({
               ...pending,
-              proposal: {
+              proposal: O.some({
                 disposition: event.disposition,
                 rationale: event.rationale,
                 run: event.run,
                 evidenceRevision: event.evidenceRevision,
                 digest: event.digest,
-              },
+              }),
             }),
           },
           identity,
@@ -275,7 +275,7 @@ export class Claim extends Domain.Aggregate(
               ...pending,
               signals: A.appendAll(pending.signals, event.signals),
               revision: event.revision,
-              proposal: null,
+              proposal: O.none(),
             }),
           },
           identity,
@@ -297,9 +297,7 @@ export class Claim extends Domain.Aggregate(
     reply: {
       // The review run the assertion asked for, so a caller can follow it.
       AssertClaim: (_, events) => ({
-        reviewRun: O.getOrNull(
-          A.findFirst(events, (event) => (event._tag === "ReviewRequested" ? O.some(event.run) : O.none())),
-        ),
+        reviewRun: A.findFirst(events, (event) => (event._tag === "ReviewRequested" ? O.some(event.run) : O.none())),
       }),
     },
   },

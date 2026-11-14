@@ -10,7 +10,7 @@ import * as S from "effect/Schema";
  * @category errors
  * @since 0.0.0
  */
-export class RunRefused extends S.TaggedError<RunRefused>()("RunRefused", { reason: S.String }) {}
+export class RunRefused extends S.TaggedError<RunRefused, { readonly brand: unique symbol }>()("RunRefused", { reason: S.String }) {}
 
 /**
  * The run has ended (completed, cancelled, exhausted or rejected), for
@@ -19,7 +19,7 @@ export class RunRefused extends S.TaggedError<RunRefused>()("RunRefused", { reas
  * @category errors
  * @since 0.0.0
  */
-export class RunEnded extends S.TaggedError<RunEnded>()("RunEnded", { status: S.String }) {}
+export class RunEnded extends S.TaggedError<RunEnded, { readonly brand: unique symbol }>()("RunEnded", { status: S.String }) {}
 
 /**
  * The run's remaining allowance cannot cover the reservation.
@@ -27,7 +27,7 @@ export class RunEnded extends S.TaggedError<RunEnded>()("RunEnded", { status: S.
  * @category errors
  * @since 0.0.0
  */
-export class BudgetRefused extends S.TaggedError<BudgetRefused>()("BudgetRefused", { remaining: S.Int }) {}
+export class BudgetRefused extends S.TaggedError<BudgetRefused, { readonly brand: unique symbol }>()("BudgetRefused", { remaining: S.Int }) {}
 
 /**
  * The versions a review run records: prompt, model and tool contract.

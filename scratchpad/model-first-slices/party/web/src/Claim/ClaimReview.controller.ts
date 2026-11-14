@@ -2,6 +2,7 @@ import type { ClaimId } from "@proto/party-contract/Claim/Claim.id";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Match from "effect/Match";
+import * as O from "effect/Option";
 import * as Atom from "effect/reactivity/Atom";
 import * as Stream from "effect/Stream";
 import * as SubscriptionRef from "effect/SubscriptionRef";
@@ -62,7 +63,7 @@ export const makeClaimReviewController = Effect.fnUntraced(function* (claim: Cla
         ReadAfterWrite: ({ commandId, receipt }) =>
           Reviewer.ClaimReview.read(claim, receipt).pipe(
             Effect.flatMap((read) =>
-              dispatch(Message.cases.CaughtUp.make({ commandId, review: read.state, revision: read.revision })),
+              dispatch(Message.cases.CaughtUp.make({ commandId, review: O.fromNullOr(read.state), revision: read.revision })),
             ),
             // A read that timed out leaves the approval committed and not yet seen; the next snapshot shows it.
             Effect.ignore,
@@ -80,7 +81,9 @@ export const makeClaimReviewController = Effect.fnUntraced(function* (claim: Cla
   yield* Effect.forkIn(
     Reviewer.ClaimReview.subscribe(claim).pipe(
       Stream.runForEach((snapshot) =>
-        dispatch(Message.cases.Snapshot.make({ review: snapshot.state, revision: snapshot.revision, epoch: snapshot.epoch })),
+        dispatch(
+          Message.cases.Snapshot.make({ review: O.fromNullOr(snapshot.state), revision: snapshot.revision, epoch: snapshot.epoch }),
+        ),
       ),
       Effect.ignore,
     ),
@@ -113,7 +116,7 @@ export const claimReviewScreen = Atom.family((claim: ClaimId) =>
   partyRuntime.atom((get) =>
     Stream.unwrap(
       Effect.map(get.result(claimReviewController(claim)), (controller) =>
-        Stream.concat(Stream.fromEffect(SubscriptionRef.get(controller.screen)), SubscriptionRef.changes(controller.screen)),
+        controller.screen.pipe(SubscriptionRef.get, Stream.fromEffect, Stream.concat(SubscriptionRef.changes(controller.screen))),
       ),
     ),
   ),

@@ -1,7 +1,10 @@
 import * as RpcMiddleware from "effect/rpc/RpcMiddleware";
 import * as S from "effect/Schema";
 import { CurrentInvocation } from "./CurrentInvocation.context.ts";
+import { $KernelId } from "./Identity.ts";
 import { RunId } from "./Ids.ts";
+
+const $I = $KernelId.create("Session.middleware");
 
 /**
  * The request carries no credential the boundary accepts.
@@ -9,7 +12,7 @@ import { RunId } from "./Ids.ts";
  * @category errors
  * @since 0.0.0
  */
-export class Unauthorized extends S.TaggedError<Unauthorized>()("Unauthorized", {}, { httpApiStatus: 401 }) {}
+export class Unauthorized extends S.TaggedError<Unauthorized, { readonly brand: unique symbol }>()("Unauthorized", {}, { httpApiStatus: 401 }) {}
 
 /**
  * The caller is an agent run with no live accountable human, so the boundary
@@ -18,7 +21,7 @@ export class Unauthorized extends S.TaggedError<Unauthorized>()("Unauthorized", 
  * @category errors
  * @since 0.0.0
  */
-export class Unaccountable extends S.TaggedError<Unaccountable>()(
+export class Unaccountable extends S.TaggedError<Unaccountable, { readonly brand: unique symbol }>()(
   "Unaccountable",
   { run: RunId },
   { httpApiStatus: 403 },
@@ -33,6 +36,6 @@ export class Unaccountable extends S.TaggedError<Unaccountable>()(
  * @category middleware
  * @since 0.0.0
  */
-export class Session extends RpcMiddleware.Service<Session, { provides: CurrentInvocation }>()("Kernel/Session", {
+export class Session extends RpcMiddleware.Service<Session, { provides: CurrentInvocation }>()($I`Session`, {
   error: S.Union([Unauthorized, Unaccountable]),
 }) {}

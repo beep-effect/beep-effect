@@ -7,9 +7,7 @@
   "exports": {
     "./Conformance.cluster": "./src/Conformance.cluster.ts",
     "./Conformance.descriptor": "./src/Conformance.descriptor.ts",
-    "./TwoRunners.model": "./src/TwoRunners.model.ts",
-    "./upstream/app": "./src/upstream/app.ts",
-    "./upstream/model": "./src/upstream/model.ts"
+    "./TwoRunners.model": "./src/TwoRunners.model.ts"
   },
   "scripts": {
     "conformance": "vitest run --config vitest.config.ts",
@@ -17,6 +15,7 @@
   },
   "dependencies": {
     "@alchemy.run/domain": "2.0.0-beta.87",
+    "@proto/conformance-upstream": "workspace:*",
     "@proto/kernel": "workspace:*",
     "effect": "4.1.4"
   },

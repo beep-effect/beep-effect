@@ -1,5 +1,6 @@
 import { RunId } from "@proto/kernel/Ids";
 import type { ClaimId } from "@proto/party-contract/Claim/Claim.id";
+import { dual } from "effect/Function";
 import { ReviewVersions } from "./ReviewRuns.external.ts";
 
 /**
@@ -22,4 +23,7 @@ export const ReviewPlan = {
  * @category constructors
  * @since 0.0.0
  */
-export const reviewRun = (claim: ClaimId, n: number): RunId => RunId.make(`review:${claim}:${n}`);
+export const reviewRun: {
+  (n: number): (claim: ClaimId) => RunId;
+  (claim: ClaimId, n: number): RunId;
+} = dual(2, (claim: ClaimId, n: number): RunId => RunId.make(`review:${claim}:${n}`));

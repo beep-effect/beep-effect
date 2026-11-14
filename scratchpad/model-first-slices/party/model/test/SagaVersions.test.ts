@@ -45,25 +45,31 @@ const waitRunning = (status: Effect.Effect<{ readonly _tag: string }>) =>
 it.live("a run in flight finishes on the saga version it started, while new runs start on the next version", () =>
   Effect.gen(function* () {
     const platform = InMemory.make();
-    // Deploy 1: only V1. A run starts and waits.
+    // Deploy 1: only V1. A run starts and waits. Each deploy is built in a scope of its own.
     yield* Effect.scoped(
       Effect.gen(function* () {
-        const v1 = yield* WorkV1;
-        const run = yield* v1.start("job_1", {});
-        yield* waitRunning(run.status);
-      }).pipe(Effect.provide(Before.layer(WorkV1Live).pipe(Layer.provide(platform.layer)))),
+        const deployment = yield* Layer.build(Before.layer(WorkV1Live).pipe(Layer.provide(platform.layer)));
+        yield* Effect.gen(function* () {
+          const v1 = yield* WorkV1;
+          const run = yield* v1.start("job_1", {});
+          yield* waitRunning(run.status);
+        }).pipe(Effect.provideContext(deployment));
+      }),
     );
     // Deploy 2: V1 kept beside V2. The old run resumes on V1; a new run starts on V2.
     const [old, fresh] = yield* Effect.scoped(
       Effect.gen(function* () {
-        const v1 = yield* WorkV1;
-        const v2 = yield* WorkV2;
-        const next = yield* v2.start("job_2", {});
-        yield* waitRunning(next.status);
-        yield* v1.get("job_1").signal(Go, {});
-        yield* next.signal(Go, {});
-        return yield* Effect.all([v1.get("job_1").result, next.result]);
-      }).pipe(Effect.provide(After.layer(Layer.merge(WorkV1Live, WorkV2Live)).pipe(Layer.provide(platform.layer)))),
+        const deployment = yield* Layer.build(After.layer(Layer.merge(WorkV1Live, WorkV2Live)).pipe(Layer.provide(platform.layer)));
+        return yield* Effect.gen(function* () {
+          const v1 = yield* WorkV1;
+          const v2 = yield* WorkV2;
+          const next = yield* v2.start("job_2", {});
+          yield* waitRunning(next.status);
+          yield* v1.get("job_1").signal(Go, {});
+          yield* next.signal(Go, {});
+          return yield* Effect.all([v1.get("job_1").result, next.result]);
+        }).pipe(Effect.provideContext(deployment));
+      }),
     );
     expect(old).toEqual({ version: 1, prepared: true });
     expect(fresh).toEqual({ version: 2, prepared: "ready" });

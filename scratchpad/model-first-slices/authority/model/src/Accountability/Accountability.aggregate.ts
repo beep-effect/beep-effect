@@ -51,7 +51,7 @@ export class Accountability extends Domain.Aggregate(
     commands: [AssignAccountability, ReleaseAccountability],
     decide: {
       AssignAccountability: Effect.fn(function* (state, _command, { id }) {
-        if (state._tag !== "Unassigned") return yield* new AccountabilityAlreadyAssigned();
+        if (state._tag !== "Unassigned") return yield* AccountabilityAlreadyAssigned.make({});
         const invocation = yield* CurrentInvocation;
         // A human answers for the run; an agent root names its own accountable human.
         const accountable = Root.match(invocation.root, {
@@ -59,7 +59,7 @@ export class Accountability extends Domain.Aggregate(
           Agent: (agent) => agent.accountable,
         });
         return [
-          new AccountabilityAssigned({
+          AccountabilityAssigned.make({
             run: id,
             accountable,
             onBehalfOf: invocation.onBehalfOf,
@@ -74,8 +74,8 @@ export class Accountability extends Domain.Aggregate(
           AccountabilityState.guards.Live(state) &&
           Root.guards.Human(invocation.root) &&
           invocation.root.principal === state.accountable;
-        if (!answers) return yield* new NotAccountable();
-        return [new AccountabilityReleased({ run: id, accountable: state.accountable, provenance: provenanceOf(invocation) })];
+        if (!answers) return yield* NotAccountable.make({});
+        return [AccountabilityReleased.make({ run: id, accountable: state.accountable, provenance: provenanceOf(invocation) })];
       }),
     },
     evolve: {

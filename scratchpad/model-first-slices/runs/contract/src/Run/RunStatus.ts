@@ -1,4 +1,4 @@
-import * as S from "effect/Schema";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 
 /**
  * Where a run is, as readers see it.
@@ -6,7 +6,7 @@ import * as S from "effect/Schema";
  * @category models
  * @since 0.0.0
  */
-export const RunStatus = S.Literals([
+export const RunStatus = LiteralKit([
   "unrequested",
   "requested",
   "running",

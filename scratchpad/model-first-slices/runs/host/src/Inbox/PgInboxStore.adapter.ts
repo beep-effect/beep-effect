@@ -25,17 +25,19 @@ export const PgInboxStore = Layer.effect(
     );
     const withSql = <A, E>(f: (sql: SqlClient.SqlClient) => Effect.Effect<A, E>) => Effect.flatMap(connect, f);
     return InboxStore.of({
-      checkpoint: (producer) =>
+      checkpoint: Effect.fn("PgInboxStore.checkpoint")((producer: string) =>
         withSql((sql) => sql<{ readonly seq: number }>`SELECT seq FROM runs_inbox_checkpoints WHERE producer = ${producer}`.pipe(
           Effect.map((rows) => O.getOrElse(O.map(A.head(rows), (row) => row.seq), () => 0)),
           Effect.orDie,
         )),
-      seen: (key) =>
+      ),
+      seen: Effect.fn("PgInboxStore.seen")((key: string) =>
         withSql((sql) => sql`SELECT 1 FROM runs_inbox_seen WHERE key = ${key}`.pipe(
           Effect.map((rows) => rows.length > 0),
           Effect.orDie,
         )),
-      commit: (producer, key, seq) =>
+      ),
+      commit: Effect.fn("PgInboxStore.commit")((producer: string, key: O.Option<string>, seq: number) =>
         withSql((sql) => sql
           .withTransaction(
             Effect.gen(function* () {
@@ -45,6 +47,7 @@ export const PgInboxStore = Layer.effect(
             }),
           )
           .pipe(Effect.orDie)),
+      ),
     });
   }),
 );

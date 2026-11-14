@@ -1,7 +1,7 @@
 # model-first-slices
 
 A standalone prototype of the model-first slices design, reworked to
-`explorations/model-first-slices/DECISIONS.md` through phase 6 (phase 4 was the last in-memory phase; phase 5 ran it on Effect Cluster; phase 6 patched two library defects locally and ran it again):
+`explorations/model-first-slices/DECISIONS.md` through phase 7 (phase 4 was the last in-memory phase; phase 5 ran it on Effect Cluster; phase 6 patched two library defects locally and ran it again; phase 7 put `bun run check` on the Effect build of the compiler and applied the owner's review):
 file grammar, contract packages, the authority context, re-admission at each hop, the `runs`
 context, approval as an authenticated command, the Reasoner evaluation contract, an integration fact
 through an outbox and an inbox, a projection rebuild with no side effects, stored-format
@@ -15,7 +15,9 @@ run all three on one `Domain.InMemory`. The app is type-checked only.
 
 Phase notes: `FINDINGS.md` (phase 1), `notes/phase-2.md`, `notes/phase-3.md`, `notes/phase-4.md`,
 `notes/phase-5.md` (the cluster run, the conformance table and the D16 gate), `notes/phase-6.md` (the library patches, the
-conformance table before and after, the D38 overwrite). Every invariant and its checker: `PROOFS.md` (generated).
+conformance table before and after, the D38 overwrite), `notes/phase-7.md` (the Effect build of the compiler, the
+diagnostics before and after, lifecycle unions and `Option`s, stored-format changes, the review saga fix, and the
+findings left failing). Every invariant and its checker: `PROOFS.md` (generated).
 
 This directory is not part of the monorepo's bun workspace. It has its own `package.json` (with
 `workspaces`), `bun.lock` and `node_modules`, and the monorepo's `scratchpad/tsconfig.json` excludes it.
@@ -114,8 +116,9 @@ at request, narrowed, and only while a human answers for it.
     approval;
   - approval refused when agent-rooted or relayed, and refused when stale;
   - a second review is a second run, and budget exhaustion means no Reasoner call;
-  - a run's delegation revoked mid-run is recorded, a continued run is followed, and a decision
-    made mid-assessment ends the executor cleanly;
+  - a run's delegation revoked mid-run is recorded, at the proposal and (phase 7) before any report hop: reserve,
+    settle, step, release, exhaust or the wait; a continued run is followed, and a decision made mid-assessment
+    ends the executor cleanly;
   - two saga versions side by side across a redeploy, and stored activity results converting on
     read (D35);
   - the fact published for a direct decision, an approval and a retraction, and none for a
@@ -129,13 +132,14 @@ at request, narrowed, and only while a human answers for it.
 - `authority/model`: issuing, narrowing and delegating grants (a delegation never widens), a run
   delegating further, a scheduled expiry, revocation, accountability for runs and their children.
 - `runs/model`: a run granted at request or rejected, the budget ledger (no double spend), a child
-  with a share and a narrower grant that resumes its parent when it finishes, continuation at the
-  history bound with the session's chain, completion releasing reservations, conclusion from a
-  fact, the library's idempotency behaviour pinned (including its two hazards), stored formats,
-  `Domain.verify`, registry, parity.
+  with a share and a narrower grant that resumes its parent when it finishes (refused mid-run included),
+  continuation at the history bound with the session's chain, completion releasing reservations, a run refused
+  mid-run giving back its reservations, a request withdrawn before its grant, conclusion from a fact, the
+  library's idempotency behaviour pinned (including its two hazards), stored formats (phase 6's requested and
+  cancelled-before-grant states included), `Domain.verify`, registry, parity.
 - `runs/host`, with the real authority host: the gateway following a continuation (a carried
-  reservation settles there), the inbox (duplicate delivery, crash before the checkpoint, version 1
-  beside version 2), and the request-key guard.
+  reservation settles there), a hop refused after the grant is revoked and recorded without re-admission, the
+  inbox (duplicate delivery, crash before the checkpoint, version 1 beside version 2), and the request-key guard.
 - `authority/host`: through the real Session, agent admission and refusal, revocation dropping a
   delegation; re-admission never adds a grant and refuses when all lapse; `grantRun`; only the
   boundary builds roots (source scan).
@@ -172,7 +176,7 @@ Run from this directory. Bun is resolved through mise shims, never `zsh -ic`.
 export PATH="$HOME/.local/share/mise/shims:$PATH"
 
 bun install                 # standalone: writes ./bun.lock and ./node_modules only
-bun run check               # tsc --noEmit -p for the fifteen packages and scripts/ (TypeScript 7.1 native)
+bun run check               # the Effect build of tsrs (effect-tsgo tsrs -p) over all 17 projects, monorepo rules
 bun run test                # vitest in every package with tests (one worker each), then the outcome check
 bun run handlers            # regenerate the three models' handler registries
 bun run handlers:check      # fail if any registry drifted
@@ -182,9 +186,36 @@ bun run generated:check     # registries, bindings and PROOFS.md all match their
 bun run outcomes            # declared command outcomes the last test run did not execute
 
 # one package at a time
-./node_modules/.bin/tsc --noEmit -p runs/model
+./node_modules/.bin/effect-tsgo tsrs -p runs/model
 (cd runs/model && ../../node_modules/.bin/vitest run)
 ```
+
+## Compiler (phase 7)
+
+`bun run check` runs `effect-tsgo tsrs -p <project>` (@effect/tsgo 0.68.1, tsrs 0.24.0-ts7.1.0-beta, the
+monorepo's pins) over the fifteen packages, `conformance/upstream` and `scripts/`. Every project inherits the
+Effect language service rules from the monorepo's `tsconfig.base.json` unchanged. The exception is
+`conformance/upstream`: it holds upstream's vendored conformance files, byte for byte, and is checked for
+TypeScript errors only. `shared/tooling/test/Compiler.guard.test.ts` guards the wiring with three checks:
+
+- **Version.** The installed compiler matches the monorepo's pins, and `--version` names the Effect build.
+- **Canary.** `shared/tooling/canary` fails under the Effect build with one Effect-only finding, and passes
+  under stock `tsrs`.
+- **One directive.** The only inline diagnostics directive in the prototype is the generated front's
+  `strictEffectProvide:off`, on its deploy-time `Effect.provide(Database)`: an Alchemy class entry point.
+  `scripts/entries.ts` emits it with its reason, owner and exit.
+
+`bun run check` exits 0 with no finding. Three patterns from `notes/phase-7.md` keep it there:
+
+- **Rejections** are `S.TaggedError` classes with `$I.annote` identities, built with `X.make(...)`, as the
+  monorepo's documents slice declares them.
+- **Library values typed `any` or `unknown`** (the derived toolkit, the Durable Object stub) are narrowed
+  once, beside their use, to the types the library actually builds.
+- **Every `Layer` that outlives the effect that built it** is built into the caller's scope.
+
+`@beep/identity` (service keys, through `shared/kernel/src/Identity.ts`) and `@beep/schema` (`LiteralKit`) are
+`link:` dev dependencies onto the monorepo's own packages. They resolve to source and need the monorepo's
+`bun install` for their dependencies.
 
 ## Library patches (phase 6)
 

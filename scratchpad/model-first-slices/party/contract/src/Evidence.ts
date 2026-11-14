@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 
 /**
@@ -7,7 +8,7 @@ import * as S from "effect/Schema";
  * @category models
  * @since 0.0.0
  */
-export const Trust = S.Literals(["low", "normal", "high"]);
+export const Trust = LiteralKit(["low", "normal", "high"]);
 /**
  * @category models
  * @since 0.0.0

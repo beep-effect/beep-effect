@@ -3,6 +3,9 @@ import { GrantTerms } from "@proto/kernel/Capability";
 import { DelegationId, GrantId, PrincipalId, RunId } from "@proto/kernel/Ids";
 import { carry, Provenance } from "@proto/kernel/Invocation";
 import * as S from "effect/Schema";
+import { $AuthorityContractId } from "@proto/kernel/Identity";
+
+const $I = $AuthorityContractId.create("Delegation/OpenDelegation.command");
 
 /**
  * Refused: a delegation id is opened once.
@@ -10,10 +13,10 @@ import * as S from "effect/Schema";
  * @category rejections
  * @since 0.0.0
  */
-export class DelegationAlreadyOpen extends Domain.Rejection(
+export class DelegationAlreadyOpen extends S.TaggedError<DelegationAlreadyOpen, { readonly brand: unique symbol }>()(
   "DelegationAlreadyOpen",
   {},
-  { httpApiStatus: 409, description: "This delegation id was already opened." },
+  $I.annote("DelegationAlreadyOpen", { httpApiStatus: 409, description: "This delegation id was already opened." }),
 ) {}
 
 /**
@@ -27,7 +30,7 @@ export class DelegationOpened extends Domain.Event(
   "DelegationOpened",
   carry({
     parent: GrantId,
-    parentDelegation: S.NullOr(DelegationId),
+    parentDelegation: S.OptionFromNullOr(DelegationId),
     holder: RunId,
     delegator: PrincipalId,
     terms: GrantTerms,
@@ -48,7 +51,7 @@ export class OpenDelegation extends Domain.Command(
     target: DelegationId,
     input: {
       parent: GrantId,
-      parentDelegation: S.NullOr(DelegationId),
+      parentDelegation: S.OptionFromNullOr(DelegationId),
       holder: RunId,
       delegator: PrincipalId,
       terms: GrantTerms,

@@ -1,5 +1,7 @@
-import * as Domain from "@alchemy.run/domain";
 import * as S from "effect/Schema";
+import { $RunsContractId } from "@proto/kernel/Identity";
+
+const $I = $RunsContractId.create("Run/BudgetExceeded.rejection");
 
 /**
  * Refused: the run's remaining allowance does not cover the request.
@@ -7,8 +9,8 @@ import * as S from "effect/Schema";
  * @category rejections
  * @since 0.0.0
  */
-export class BudgetExceeded extends Domain.Rejection(
+export class BudgetExceeded extends S.TaggedError<BudgetExceeded, { readonly brand: unique symbol }>()(
   "BudgetExceeded",
   { requested: S.Int, remaining: S.Int },
-  { httpApiStatus: 409, description: "The run's remaining allowance does not cover this." },
+  $I.annote("BudgetExceeded", { httpApiStatus: 409, description: "The run's remaining allowance does not cover this." }),
 ) {}

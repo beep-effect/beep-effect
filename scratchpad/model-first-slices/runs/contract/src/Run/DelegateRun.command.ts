@@ -9,6 +9,9 @@ import { NotThisRun } from "./NotThisRun.rejection.ts";
 import { RunEvent } from "./RunEvent.ts";
 import { RunNotRunning } from "./RunNotRunning.rejection.ts";
 import { RunVersions } from "./RunVersions.ts";
+import { $RunsContractId } from "@proto/kernel/Identity";
+
+const $I = $RunsContractId.create("Run/DelegateRun.command");
 
 /**
  * Refused: the child's grant would reach further than the parent run's own.
@@ -16,10 +19,10 @@ import { RunVersions } from "./RunVersions.ts";
  * @category rejections
  * @since 0.0.0
  */
-export class ChildGrantWidens extends Domain.Rejection(
+export class ChildGrantWidens extends S.TaggedError<ChildGrantWidens, { readonly brand: unique symbol }>()(
   "ChildGrantWidens",
   { dimension: TermDimension },
-  { httpApiStatus: 422, description: "A child run's grant can only narrow its parent's." },
+  $I.annote("ChildGrantWidens", { httpApiStatus: 422, description: "A child run's grant can only narrow its parent's." }),
 ) {}
 
 /**

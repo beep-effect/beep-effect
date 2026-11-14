@@ -17,6 +17,9 @@ import { RunRejected } from "./RejectRun.command.ts";
 import { RunRequested } from "./RequestRun.command.ts";
 import { RunStatus } from "./RunStatus.ts";
 import { SessionId } from "./Session.id.ts";
+import { $RunsContractId } from "@proto/kernel/Identity";
+
+const $I = $RunsContractId.create("Run/SessionRuns.read");
 
 /**
  * Refused: the reader is neither a person who requested a run in this
@@ -25,10 +28,10 @@ import { SessionId } from "./Session.id.ts";
  * @category rejections
  * @since 0.0.0
  */
-export class NotInSession extends Domain.Rejection(
+export class NotInSession extends S.TaggedError<NotInSession, { readonly brand: unique symbol }>()(
   "NotInSession",
   {},
-  { httpApiStatus: 403, description: "The reader takes no part in this session." },
+  $I.annote("NotInSession", { httpApiStatus: 403, description: "The reader takes no part in this session." }),
 ) {}
 
 /**
@@ -40,8 +43,8 @@ export class NotInSession extends Domain.Rejection(
  */
 export const SessionRun = S.Struct({
   run: RunId,
-  previous: S.NullOr(RunId),
-  parent: S.NullOr(RunId),
+  previous: S.OptionFromNullOr(RunId),
+  parent: S.OptionFromNullOr(RunId),
   status: RunStatus,
 });
 /**

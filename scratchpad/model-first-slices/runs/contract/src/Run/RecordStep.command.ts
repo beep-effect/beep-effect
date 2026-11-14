@@ -33,7 +33,7 @@ export class RunContinued extends Domain.Event(
     next: RunId,
     lineage: RunId,
     generation: S.Int,
-    parent: Since.phase3(S.NullOr(RunId), null),
+    parent: Since.phase3(S.OptionFromNullOr(RunId), null),
     remaining: S.Int,
     reservations: Since.phase3(S.Array(HeldReservation), []),
     purpose: S.String,

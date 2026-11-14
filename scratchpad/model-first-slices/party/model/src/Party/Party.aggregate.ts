@@ -55,22 +55,22 @@ export class Party extends Domain.Aggregate(
           ResourceScope.cases.Record.make({ org: command.org, record: stream }),
           now,
         );
-        if (state._tag !== "Unregistered") return yield* new PartyAlreadyRegistered();
-        return [new PartyRegistered({ org: command.org, name: command.name, provenance: provenanceOf(invocation) })];
+        if (state._tag !== "Unregistered") return yield* PartyAlreadyRegistered.make({});
+        return [PartyRegistered.make({ org: command.org, name: command.name, provenance: provenanceOf(invocation) })];
       }),
 
       MergeParties: Effect.fn(function* (state, command, { id, stream, now }) {
-        if (state._tag !== "Active") return yield* new MergeVetoed({ reason: "not-registered" });
+        if (state._tag !== "Active") return yield* MergeVetoed.make({ reason: "not-registered" });
         const invocation = yield* requireGrant(
           PartyReview,
           command._tag,
           ResourceScope.cases.Record.make({ org: state.org, record: stream }),
           now,
         );
-        if (command.absorbed === id) return yield* new MergeVetoed({ reason: "self-merge" });
+        if (command.absorbed === id) return yield* MergeVetoed.make({ reason: "self-merge" });
         // Already absorbed: the state already is what the command asks for.
         if (A.contains(state.absorbed, command.absorbed)) return [];
-        return [new PartiesMerged({ absorbed: command.absorbed, provenance: provenanceOf(invocation) })];
+        return [PartiesMerged.make({ absorbed: command.absorbed, provenance: provenanceOf(invocation) })];
       }),
     },
     evolve: {

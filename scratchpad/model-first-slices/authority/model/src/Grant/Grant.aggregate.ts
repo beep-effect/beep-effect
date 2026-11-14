@@ -44,7 +44,7 @@ export type ActiveGrant = typeof GrantState.cases.Active.Type;
 const requireActive = (state: GrantState): Effect.Effect<ActiveGrant, GrantNotActive> =>
   Match.value(state).pipe(
     Match.tag("Active", (active) => Effect.succeed(active)),
-    Match.orElse((other) => Effect.fail(new GrantNotActive({ status: other._tag }))),
+    Match.orElse((other) => Effect.fail(GrantNotActive.make({ status: other._tag }))),
   );
 
 const orgOf = (terms: GrantTerms) => ResourceScope.cases.Org.make({ org: terms.resource.org });
@@ -52,7 +52,7 @@ const orgOf = (terms: GrantTerms) => ResourceScope.cases.Org.make({ org: terms.r
 const requireNarrower = (current: GrantTerms, next: GrantTerms): Effect.Effect<void, TermsWiden> =>
   O.match(widens(current, next), {
     onNone: () => Effect.void,
-    onSome: (dimension) => Effect.fail(new TermsWiden({ dimension })),
+    onSome: (dimension) => Effect.fail(TermsWiden.make({ dimension })),
   });
 
 /**
@@ -73,27 +73,27 @@ export class Grant extends Domain.Aggregate(
       IssueGrant: Effect.fn(function* (state, command, { now }) {
         // The org is the command's, so the grant is checked before existence is revealed.
         const invocation = yield* requireGrant(AuthorityGrants, command._tag, orgOf(command.terms), now);
-        if (state._tag !== "Unissued") return yield* new GrantAlreadyIssued();
-        return [new GrantIssued({ holder: command.holder, terms: command.terms, provenance: provenanceOf(invocation) })];
+        if (state._tag !== "Unissued") return yield* GrantAlreadyIssued.make({});
+        return [GrantIssued.make({ holder: command.holder, terms: command.terms, provenance: provenanceOf(invocation) })];
       }),
 
       NarrowGrant: Effect.fn(function* (state, command, { now }) {
         const active = yield* requireActive(state);
         const invocation = yield* requireGrant(AuthorityGrants, command._tag, orgOf(active.terms), now);
         yield* requireNarrower(active.terms, command.terms);
-        return [new GrantNarrowed({ holder: active.holder, terms: command.terms, provenance: provenanceOf(invocation) })];
+        return [GrantNarrowed.make({ holder: active.holder, terms: command.terms, provenance: provenanceOf(invocation) })];
       }),
 
       RevokeGrant: Effect.fn(function* (state, command, { now }) {
         const active = yield* requireActive(state);
         const invocation = yield* requireGrant(AuthorityGrants, command._tag, orgOf(active.terms), now);
-        return [new GrantRevoked({ holder: active.holder, provenance: provenanceOf(invocation) })];
+        return [GrantRevoked.make({ holder: active.holder, provenance: provenanceOf(invocation) })];
       }),
 
       // A deadline: records nothing unless the grant is active and its expiry has passed.
       ExpireGrant: (state, command, { now }) =>
         GrantState.guards.Active(state) && !inForce(state.terms, now)
-          ? [new GrantExpired({ holder: state.holder, provenance: command.provenance })]
+          ? [GrantExpired.make({ holder: state.holder, provenance: command.provenance })]
           : [],
 
       DelegateGrant: Effect.fn(function* (state, command) {
@@ -101,10 +101,10 @@ export class Grant extends Domain.Aggregate(
         const invocation = yield* CurrentInvocation;
         // Only the human holding the grant delegates it; an agent re-delegates its own delegation.
         const holds = Root.guards.Human(invocation.root) && invocation.root.principal === active.holder;
-        if (!holds) return yield* new NotHolder();
+        if (!holds) return yield* NotHolder.make({});
         yield* requireNarrower(active.terms, command.terms);
         return [
-          new GrantDelegated({
+          GrantDelegated.make({
             holder: active.holder,
             delegation: command.delegation,
             to: command.to,

@@ -5,6 +5,10 @@ import { carry } from "@proto/kernel/Invocation";
 import { Session } from "@proto/kernel/Session.middleware";
 import { TermsWiden } from "../TermsWiden.rejection.ts";
 import { GrantNotActive } from "./GrantNotActive.rejection.ts";
+import * as S from "effect/Schema";
+import { $AuthorityContractId } from "@proto/kernel/Identity";
+
+const $I = $AuthorityContractId.create("Grant/DelegateGrant.command");
 
 /**
  * Refused: only the person who holds a grant delegates it.
@@ -12,10 +16,10 @@ import { GrantNotActive } from "./GrantNotActive.rejection.ts";
  * @category rejections
  * @since 0.0.0
  */
-export class NotHolder extends Domain.Rejection(
+export class NotHolder extends S.TaggedError<NotHolder, { readonly brand: unique symbol }>()(
   "NotHolder",
   {},
-  { httpApiStatus: 403, description: "Only the human holding a grant may delegate it." },
+  $I.annote("NotHolder", { httpApiStatus: 403, description: "Only the human holding a grant may delegate it." }),
 ) {}
 
 /**

@@ -3,6 +3,7 @@ import { DelegationId, GrantId } from "@proto/kernel/Ids";
 import { byProcess, eventCause, extend } from "@proto/kernel/Invocation";
 import * as Effect from "effect/Effect";
 import * as Match from "effect/Match";
+import * as O from "effect/Option";
 import { Delegation } from "./Delegation.aggregate.ts";
 import { OpenOnDelegate } from "./OpenOnDelegate.policy.ts";
 
@@ -23,9 +24,9 @@ export const OpenOnDelegateLive = OpenOnDelegate.toLayer(
         Match.tagsExhaustive({
           GrantDelegated: (event) => ({
             id: event.delegation,
-            command: new OpenDelegation({
+            command: OpenDelegation.make({
               parent: GrantId.make(trigger.source.id),
-              parentDelegation: null,
+              parentDelegation: O.none(),
               holder: event.to,
               delegator: event.provenance.onBehalfOf,
               terms: event.terms,
@@ -34,9 +35,9 @@ export const OpenOnDelegateLive = OpenOnDelegate.toLayer(
           }),
           DelegationExtended: (event) => ({
             id: event.child,
-            command: new OpenDelegation({
+            command: OpenDelegation.make({
               parent: event.grant,
-              parentDelegation: DelegationId.make(trigger.source.id),
+              parentDelegation: O.some(DelegationId.make(trigger.source.id)),
               holder: event.to,
               delegator: event.provenance.onBehalfOf,
               terms: event.terms,

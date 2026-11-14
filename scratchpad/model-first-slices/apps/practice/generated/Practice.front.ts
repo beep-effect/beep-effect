@@ -2,9 +2,16 @@
 // `bun run entries` rewrites it, and `bun run entries --check` fails on drift.
 import * as Docker from "@alchemy.run/docker";
 import * as Cluster from "@alchemy.run/effect-cluster";
+import type { HttpEffect } from "alchemy/Http";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import { HttpServerRequest } from "effect/http/HttpServerRequest";
+import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as R from "effect/Record";
+import * as Str from "effect/String";
 import { Database } from "../src/Cluster.ts";
 import { AuthorityGateway, RunsGateway, Session, authority, conformance, party, runs } from "./Practice.entry.ts";
 
@@ -23,20 +30,30 @@ export default class PracticeFront extends Docker.Service<PracticeFront>()(
       // it imports does (notes/phase-5.md): bump FRONT_REVISION to force a new front image.
       env: { CLUSTER_DATABASE_URL: database.url, FRONT_REVISION: "3" },
     };
-  }).pipe(Effect.provide(Database)),
+  }).pipe(
+    // @effect-diagnostics-next-line strictEffectProvide:off -- the front class's deploy-time props are an Alchemy class entry point, and Alchemy provides a class's layers per deploy on purpose (alchemy Platform.ts provideClassLayer: a longer-lived build skips source registration on the next deploy). Owner: @proto/practice. Exit: when the stack provides Database through its providers instead, proved by a deploy.
+    Effect.provide(Database),
+  ),
   Effect.gen(function* () {
-    const routes: Readonly<Record<string, Effect.Effect<unknown, unknown, unknown>>> = {
+    // The parts the Apis call through, built once into the front's scope as each context builds its
+    // own model (D39): the Apis serve requests long after this effect returns.
+    const parts = yield* Layer.build(Layer.mergeAll(AuthorityGateway, RunsGateway, Session));
+    const routes: Readonly<Record<string, HttpEffect>> = {
       ...(yield* authority.apis),
-      ...(yield* party.apis.pipe(Effect.provide(Layer.mergeAll(AuthorityGateway, RunsGateway, Session)))),
-      ...(yield* runs.apis.pipe(Effect.provide(Layer.mergeAll(AuthorityGateway, Session)))),
+      ...(yield* party.apis.pipe(Effect.provideContext(parts))),
+      ...(yield* runs.apis.pipe(Effect.provideContext(parts))),
       ...(yield* conformance.apis),
     };
     return {
       fetch: Effect.gen(function* () {
         const request = yield* HttpServerRequest;
-        const segment = new URL(request.url, "http://front").pathname.split("/")[1] ?? "";
-        return yield* (routes[segment] ?? routes[""])!;
+        const segment = pipe(new URL(request.url, "http://front").pathname, Str.split("/"), A.get(1), O.getOrElse(() => ""));
+        // A path no context serves goes to the root app; with none, it is not found.
+        return yield* O.match(O.orElse(R.get(routes, segment), () => R.get(routes, "")), {
+          onNone: () => Effect.succeed(HttpServerResponse.empty({ status: 404 })),
+          onSome: (route) => route,
+        });
       }),
-    } as never;
+    };
   }),
 ) {}

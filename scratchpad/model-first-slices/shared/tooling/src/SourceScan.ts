@@ -1,7 +1,7 @@
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -42,7 +42,7 @@ export const rules: ReadonlyArray<{ readonly rule: string; readonly pattern: Reg
 
 // Comments (JSDoc examples included) are not code: strip them before matching.
 const code = (source: string): string =>
-  source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
+  pipe(source, Str.replace(/\/\*[\s\S]*?\*\//g, ""), Str.replace(/(^|[^:])\/\/.*$/gm, "$1"));
 
 /**
  * Every violation in one source text, comments ignored.
@@ -50,14 +50,17 @@ const code = (source: string): string =>
  * @category getters
  * @since 0.0.0
  */
-export const scanText = (file: string, source: string): ReadonlyArray<Violation> => {
+export const scanText: {
+  (source: string): (file: string) => ReadonlyArray<Violation>;
+  (file: string, source: string): ReadonlyArray<Violation>;
+} = dual(2, (file: string, source: string): ReadonlyArray<Violation> => {
   const text = code(source);
   return A.flatMap(rules, ({ rule, pattern, unless }) =>
     unless !== undefined && unless.test(text)
       ? []
-      : A.map(A.fromIterable(text.matchAll(pattern)), (match) => Violation.make({ file, rule, excerpt: match[0] })),
+      : A.map(A.fromIterable(pipe(text, Str.matchAll(pattern))), (match) => Violation.make({ file, rule, excerpt: match[0] })),
   );
-};
+});
 
 /**
  * Every violation under each package's `src`, except in the allowed files

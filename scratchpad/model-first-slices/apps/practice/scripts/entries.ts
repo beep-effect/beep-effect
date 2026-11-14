@@ -12,6 +12,9 @@ import { ConformanceStack } from "../src/Deployment.ts";
 // `bun scripts/entries.ts` writes generated/Practice.entry.ts (what every runner of the pool
 // loads) and generated/Practice.front.ts (the front service) from the composed deployment
 // descriptors (D13, D40); `--check` fails on drift. The app names no model or process here.
+/** A generated file's lines, joined. */
+const lines = A.join("\n");
+
 const header = [
   "// Generated from the composed deployment descriptors by scripts/entries.ts. Do not edit:",
   "// `bun run entries` rewrites it, and `bun run entries --check` fails on drift.",
@@ -42,7 +45,7 @@ const entry = (descriptors: ReadonlyArray<DeploymentDescriptor>) => {
       : `export const ${p.name} = ${p.owner}.parts.${p.name}.pipe(Layer.provide(Layer.mergeAll(${A.join(p.uses, ", ")})));`,
   );
   const names = A.map(ordered(descriptors), (p) => p.name);
-  return [
+  return lines([
     ...header,
     'import * as DomainCluster from "@alchemy.run/domain/EffectCluster";',
     'import * as Layer from "effect/Layer";',
@@ -68,23 +71,48 @@ const entry = (descriptors: ReadonlyArray<DeploymentDescriptor>) => {
     "",
     "export default PracticeLive;",
     "",
-  ].join("\n");
+  ]);
 };
+
+/**
+ * Why the front's deploy-time props provide `Database` with `Effect.provide`, in the repo's
+ * directive form (reason, owner, exit): Alchemy provides a class's layers per deploy on purpose.
+ */
+/** The directive's keyword, assembled so this generator's own source does not read as a directive. */
+const nextLineDirective = `@${"effect-diagnostics-next-line"}`;
+const frontPropsEntryReason =
+  "the front class's deploy-time props are an Alchemy class entry point, and Alchemy provides a class's layers per deploy on purpose (alchemy Platform.ts provideClassLayer: a longer-lived build skips source registration on the next deploy). Owner: @proto/practice. Exit: when the stack provides Database through its providers instead, proved by a deploy.";
 
 const front = (descriptors: ReadonlyArray<DeploymentDescriptor>) => {
   const used = A.dedupe(A.flatMap(descriptors, (d) => d.cluster.apis));
   const routes = A.map(descriptors, (d) =>
     A.isReadonlyArrayEmpty(d.cluster.apis)
       ? `      ...(yield* ${d.context}.apis),`
-      : `      ...(yield* ${d.context}.apis.pipe(Effect.provide(Layer.mergeAll(${A.join(d.cluster.apis, ", ")})))),`,
+      : `      ...(yield* ${d.context}.apis.pipe(Effect.provideContext(parts))),`,
   );
-  return [
+  // The parts the Apis call through, built once into the front's scope, as each context builds
+  // its own model (D39): the Apis serve requests long after the front's init returns.
+  const parts = A.isReadonlyArrayEmpty(used)
+    ? []
+    : [
+        "    // The parts the Apis call through, built once into the front's scope as each context builds its",
+        "    // own model (D39): the Apis serve requests long after this effect returns.",
+        `    const parts = yield* Layer.build(Layer.mergeAll(${A.join(used, ", ")}));`,
+      ];
+  return lines([
     ...header,
     'import * as Docker from "@alchemy.run/docker";',
     'import * as Cluster from "@alchemy.run/effect-cluster";',
+    'import type { HttpEffect } from "alchemy/Http";',
+    'import * as A from "effect/Array";',
     'import * as Effect from "effect/Effect";',
+    'import { pipe } from "effect/Function";',
     'import { HttpServerRequest } from "effect/http/HttpServerRequest";',
+    'import * as HttpServerResponse from "effect/http/HttpServerResponse";',
     'import * as Layer from "effect/Layer";',
+    'import * as O from "effect/Option";',
+    'import * as R from "effect/Record";',
+    'import * as Str from "effect/String";',
     'import { Database } from "../src/Cluster.ts";',
     `import { ${A.join(A.sort([...A.map(descriptors, (d) => d.context), ...used], Order.String), ", ")} } from "./Practice.entry.ts";`,
     "",
@@ -103,22 +131,31 @@ const front = (descriptors: ReadonlyArray<DeploymentDescriptor>) => {
     "      // it imports does (notes/phase-5.md): bump FRONT_REVISION to force a new front image.",
     "      env: { CLUSTER_DATABASE_URL: database.url, FRONT_REVISION: \"3\" },",
     "    };",
-    "  }).pipe(Effect.provide(Database)),",
+    "  }).pipe(",
+    // The prototype's one inline directive (phase 7): this line is a deploy-time entry point.
+    `    // ${nextLineDirective} strictEffectProvide:off -- ${frontPropsEntryReason}`,
+    "    Effect.provide(Database),",
+    "  ),",
     "  Effect.gen(function* () {",
-    "    const routes: Readonly<Record<string, Effect.Effect<unknown, unknown, unknown>>> = {",
+    ...parts,
+    "    const routes: Readonly<Record<string, HttpEffect>> = {",
     ...routes,
     "    };",
     "    return {",
     "      fetch: Effect.gen(function* () {",
     "        const request = yield* HttpServerRequest;",
-    '        const segment = new URL(request.url, "http://front").pathname.split("/")[1] ?? "";',
-    '        return yield* (routes[segment] ?? routes[""])!;',
+    '        const segment = pipe(new URL(request.url, "http://front").pathname, Str.split("/"), A.get(1), O.getOrElse(() => ""));',
+    "        // A path no context serves goes to the root app; with none, it is not found.",
+    '        return yield* O.match(O.orElse(R.get(routes, segment), () => R.get(routes, "")), {',
+    "          onNone: () => Effect.succeed(HttpServerResponse.empty({ status: 404 })),",
+    "          onSome: (route) => route,",
+    "        });",
     "      }),",
-    "    } as never;",
+    "    };",
     "  }),",
     ") {}",
     "",
-  ].join("\n");
+  ]);
 };
 
 Effect.gen(function* () {

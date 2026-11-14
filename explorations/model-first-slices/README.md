@@ -17,12 +17,12 @@ system alongside people?
 
 ## Next Open Question
 
-Wire `@effect/tsgo` into the prototype and clear every Effect diagnostic (operator request,
-2026-11-13); fix the review saga so a refused report is recorded and its reservation released.
-Then the operator decides: whether recovery after a killed runner may wait out the 60-second
-lease; whether the lost write (D38) is patched locally or only filed upstream; whether to open the
-two upstream pull requests saved under the prototype's `notes/upstream/`; and whether a pass with
-local patches counts toward the D16 gate. [`BRIEF.md`](./BRIEF.md) has not been confirmed in words.
+Re-run the cluster conformance suite on the phase 7 code (the saga fix, the remodelled state and
+the linked `@beep/*` packages are unproven in the cluster bundles). Then the operator decides:
+whether recovery after a killed runner may wait out the 60-second lease; whether the lost write
+(D38) is patched locally or only filed upstream; whether to open the two upstream pull requests
+saved under the prototype's `notes/upstream/`; and whether a pass with local patches counts toward
+the D16 gate. [`BRIEF.md`](./BRIEF.md) has not been confirmed in words.
 
 ## Read This First
 
@@ -34,6 +34,10 @@ local patches counts toward the D16 gate. [`BRIEF.md`](./BRIEF.md) has not been 
 
 ## Trail
 
+- 2026-11-13: phase 7 wired the Effect build into the prototype's check and cleared 981
+  diagnostics to zero; applied the operator's review (tagged-union state, `Option` by decode,
+  `@beep/identity` keys); fixed the review saga. 152 tests pass. Notes in `research/15`. The cluster
+  suite has not been re-run since.
 - 2026-11-13: phase 6 patched two library defects locally and reran conformance: fifteen of
   eighteen cases pass, and a new timing reproduced the lost write D38 describes. Notes in
   `research/14`. The Effect language-service rules were found never to have run on the prototype;

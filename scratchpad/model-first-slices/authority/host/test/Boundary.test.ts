@@ -15,6 +15,7 @@ import { ResourceScope } from "@proto/kernel/Capability";
 import { CurrentInvocation } from "@proto/kernel/CurrentInvocation.context";
 import { CapabilityId, DelegationId, GrantId, OrgId, PrincipalId, RunId } from "@proto/kernel/Ids";
 import { byProcess, Cause, GrantRef, Provenance, Root } from "@proto/kernel/Invocation";
+import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -39,13 +40,13 @@ const seed = Effect.gen(function* () {
   yield* grants
     .send(
       GrantId.make("g_rev"),
-      new IssueGrant({
+      IssueGrant.make({
         holder: rev,
         terms: {
           capability: CapabilityId.make("party.review"),
-          operations: null,
+          operations: O.none(),
           resource: ResourceScope.cases.Org.make({ org: acme }),
-          expires: null,
+          expires: O.none(),
         },
       }),
     )
@@ -64,174 +65,176 @@ const delegationsListed = (agentRun: RunId, count: number) =>
     ),
   );
 
-it.live("an agent with no live accountable human is refused at the boundary", () =>
-  Effect.gen(function* () {
-    const authority = yield* AuthorityApi.clientInProcess;
-    const refused = yield* authority.AssignAccountability(run, {}, asAgent(run)).pipe(Effect.flip);
-    expect(refused).toMatchObject({ _tag: "Unaccountable", run });
-    const anonymous = yield* authority.AssignAccountability(run).pipe(Effect.flip);
-    expect(anonymous._tag).toBe("Unauthorized");
-  }).pipe(Effect.scoped, Effect.provide(World)),
-);
+it.layer(World, { buildPerTest: true, excludeTestServices: true })((it) => {
+  it.effect("an agent with no live accountable human is refused at the boundary", () =>
+    Effect.gen(function* () {
+      const authority = yield* AuthorityApi.clientInProcess;
+      const refused = yield* authority.AssignAccountability(run, {}, asAgent(run)).pipe(Effect.flip);
+      expect(refused).toMatchObject({ _tag: "Unaccountable", run });
+      const anonymous = yield* authority.AssignAccountability(run).pipe(Effect.flip);
+      expect(anonymous._tag).toBe("Unauthorized");
+    }).pipe(Effect.scoped),
+  );
 
-it.live("an agent is admitted with an agent root and only its narrowed delegation, while a human answers for it", () =>
-  Effect.gen(function* () {
-    yield* seed;
-    const authority = yield* AuthorityApi.clientInProcess;
-    const narrowed = {
-      capability: CapabilityId.make("party.review"),
-      operations: ["AcceptClaim"],
-      resource: ResourceScope.cases.Record.make({ org: acme, record: "Claim/claim_1" }),
-      expires: null,
-    };
-    // The reviewer delegates part of the grant to the run, and answers for the run.
-    yield* authority.DelegateGrant(
-      GrantId.make("g_rev"),
-      { delegation: DelegationId.make("d_1"), to: run, terms: narrowed },
-      asRev,
-    );
-    yield* authority.AssignAccountability(run, {}, asRev);
-    yield* delegationsListed(run, 1);
+  it.effect("an agent is admitted with an agent root and only its narrowed delegation, while a human answers for it", () =>
+    Effect.gen(function* () {
+      yield* seed;
+      const authority = yield* AuthorityApi.clientInProcess;
+      const narrowed = {
+        capability: CapabilityId.make("party.review"),
+        operations: O.some(["AcceptClaim"]),
+        resource: ResourceScope.cases.Record.make({ org: acme, record: "Claim/claim_1" }),
+        expires: O.none(),
+      };
+      // The reviewer delegates part of the grant to the run, and answers for the run.
+      yield* authority.DelegateGrant(
+        GrantId.make("g_rev"),
+        { delegation: DelegationId.make("d_1"), to: run, terms: narrowed },
+        asRev,
+      );
+      yield* authority.AssignAccountability(run, {}, asRev);
+      yield* delegationsListed(run, 1);
 
-    const admitted = yield* admit(Credential.cases.Agent.make({ run }));
-    expect(admitted.root).toEqual(Root.cases.Agent.make({ run, accountable: rev }));
-    expect(admitted.onBehalfOf).toBe(rev);
-    expect(admitted.chain).toEqual([]);
-    expect(admitted.grants).toEqual([
-      { grant: "g_rev", delegation: "d_1", ...narrowed },
-    ]);
+      const admitted = yield* admit(Credential.cases.Agent.make({ run }));
+      expect(admitted.root).toEqual(Root.cases.Agent.make({ run, accountable: rev }));
+      expect(admitted.onBehalfOf).toBe(rev);
+      expect(admitted.chain).toEqual([]);
+      expect(admitted.grants).toEqual([
+        { grant: "g_rev", delegation: O.some("d_1"), ...narrowed },
+      ]);
 
-    // Released: the boundary refuses the run again.
-    yield* authority.ReleaseAccountability(run, {}, asRev);
-    const refused = yield* admit(Credential.cases.Agent.make({ run })).pipe(Effect.flip);
-    expect(refused).toMatchObject({ _tag: "Unaccountable", run });
-  }).pipe(Effect.scoped, Effect.provide(World)),
-);
+      // Released: the boundary refuses the run again.
+      yield* authority.ReleaseAccountability(run, {}, asRev);
+      const refused = yield* admit(Credential.cases.Agent.make({ run })).pipe(Effect.flip);
+      expect(refused).toMatchObject({ _tag: "Unaccountable", run });
+    }).pipe(Effect.scoped),
+  );
 
-it.live("revoking the parent grant drops its delegation at the boundary at once", () =>
-  Effect.gen(function* () {
-    yield* seed;
-    const authority = yield* AuthorityApi.clientInProcess;
-    const second = RunId.make("run_2");
-    yield* authority.DelegateGrant(
-      GrantId.make("g_rev"),
-      {
-        delegation: DelegationId.make("d_2"),
-        to: second,
-        terms: {
-          capability: CapabilityId.make("party.review"),
-          operations: null,
-          resource: ResourceScope.cases.Org.make({ org: acme }),
-          expires: null,
+  it.effect("revoking the parent grant drops its delegation at the boundary at once", () =>
+    Effect.gen(function* () {
+      yield* seed;
+      const authority = yield* AuthorityApi.clientInProcess;
+      const second = RunId.make("run_2");
+      yield* authority.DelegateGrant(
+        GrantId.make("g_rev"),
+        {
+          delegation: DelegationId.make("d_2"),
+          to: second,
+          terms: {
+            capability: CapabilityId.make("party.review"),
+            operations: O.none(),
+            resource: ResourceScope.cases.Org.make({ org: acme }),
+            expires: O.none(),
+          },
         },
-      },
-      asRev,
-    );
-    yield* authority.AssignAccountability(second, {}, asRev);
-    yield* delegationsListed(second, 1);
-    expect((yield* admit(Credential.cases.Agent.make({ run: second }))).grants).toHaveLength(1);
+        asRev,
+      );
+      yield* authority.AssignAccountability(second, {}, asRev);
+      yield* delegationsListed(second, 1);
+      expect((yield* admit(Credential.cases.Agent.make({ run: second }))).grants).toHaveLength(1);
 
-    const grants = yield* Grant;
-    yield* grants
-      .send(GrantId.make("g_rev"), new RevokeGrant())
-      .pipe(Effect.provideService(CurrentInvocation, bootstrap(PrincipalId.make("p_owner"), acme)));
-    // The delegation is still listed and still open; its parent is not in force, so it counts for nothing.
-    expect((yield* admit(Credential.cases.Agent.make({ run: second }))).grants).toEqual([]);
-    // And the reviewer no longer holds it either.
-    expect((yield* admit(Credential.cases.Human.make({ principal: rev }))).grants).toEqual([]);
-  }).pipe(Effect.scoped, Effect.provide(World)),
-);
+      const grants = yield* Grant;
+      yield* grants
+        .send(GrantId.make("g_rev"), RevokeGrant.make({}))
+        .pipe(Effect.provideService(CurrentInvocation, bootstrap(PrincipalId.make("p_owner"), acme)));
+      // The delegation is still listed and still open; its parent is not in force, so it counts for nothing.
+      expect((yield* admit(Credential.cases.Agent.make({ run: second }))).grants).toEqual([]);
+      // And the reviewer no longer holds it either.
+      expect((yield* admit(Credential.cases.Human.make({ principal: rev }))).grants).toEqual([]);
+    }).pipe(Effect.scoped),
+  );
 
-it.live("re-admission rebuilds from live grants: never adds one, drops a revoked one, refuses when all lapsed", () =>
-  Effect.gen(function* () {
-    const grants = yield* Grant;
-    const asOwner = Effect.provideService(CurrentInvocation, bootstrap(PrincipalId.make("p_owner"), acme));
-    const issue = (id: string, capability: string) =>
-      grants
-        .send(
-          GrantId.make(id),
-          new IssueGrant({
-            holder: rev,
-            terms: { capability: CapabilityId.make(capability), operations: null, resource: ResourceScope.cases.Org.make({ org: acme }), expires: null },
-          }),
-        )
-        .pipe(asOwner);
-    yield* issue("g_review", "party.review");
-    yield* issue("g_read", "party.read");
-    const gateway = yield* AuthorityGateway;
-    const hop = byProcess("SomePolicy", Cause.cases.Session.make({ scheme: "test" }));
-    const named = (...ids: ReadonlyArray<string>) =>
-      Provenance.make({
+  it.effect("re-admission rebuilds from live grants: never adds one, drops a revoked one, refuses when all lapsed", () =>
+    Effect.gen(function* () {
+      const grants = yield* Grant;
+      const asOwner = Effect.provideService(CurrentInvocation, bootstrap(PrincipalId.make("p_owner"), acme));
+      const issue = (id: string, capability: string) =>
+        grants
+          .send(
+            GrantId.make(id),
+            IssueGrant.make({
+              holder: rev,
+              terms: { capability: CapabilityId.make(capability), operations: O.none(), resource: ResourceScope.cases.Org.make({ org: acme }), expires: O.none() },
+            }),
+          )
+          .pipe(asOwner);
+      yield* issue("g_review", "party.review");
+      yield* issue("g_read", "party.read");
+      const gateway = yield* AuthorityGateway;
+      const hop = byProcess("SomePolicy", Cause.cases.Session.make({ scheme: "test" }));
+      const named = (...ids: ReadonlyArray<string>) =>
+        Provenance.make({
+          root: Root.cases.Human.make({ principal: rev }),
+          onBehalfOf: rev,
+          grants: A.map(ids, (id) => GrantRef.make({ grant: GrantId.make(id), delegation: O.none() })),
+          chain: [],
+        });
+      // Only the named grant comes back, though the reviewer holds two; the hop is appended.
+      const one = yield* gateway.readmit({ provenance: named("g_review"), hop });
+      expect(A.map(one.grants, (grant) => grant.grant)).toEqual(["g_review"]);
+      expect(one.chain).toEqual([hop]);
+      yield* grants.send(GrantId.make("g_review"), RevokeGrant.make({})).pipe(asOwner);
+      // Revoked: dropped at once; the other named grant still comes back.
+      const both = yield* gateway.readmit({ provenance: named("g_review", "g_read"), hop });
+      expect(A.map(both.grants, (grant) => grant.grant)).toEqual(["g_read"]);
+      // Every named grant lapsed: refused, naming them.
+      const refused = yield* gateway.readmit({ provenance: named("g_review"), hop }).pipe(Effect.flip);
+      expect(refused).toMatchObject({ _tag: "ReadmissionRefused", reason: "lapsed", lapsed: [{ grant: "g_review" }] });
+    }).pipe(Effect.scoped),
+  );
+
+  it.effect("a run is granted narrowed terms and an agent provenance; widening is refused; a released run is unaccountable", () =>
+    Effect.gen(function* () {
+      yield* seed;
+      const gateway = yield* AuthorityGateway;
+      const hop = byProcess("GrantOnRequest", Cause.cases.Session.make({ scheme: "test" }));
+      const requester = Provenance.make({
         root: Root.cases.Human.make({ principal: rev }),
         onBehalfOf: rev,
-        grants: ids.map((id) => GrantRef.make({ grant: GrantId.make(id), delegation: null })),
+        grants: [GrantRef.make({ grant: GrantId.make("g_rev"), delegation: O.none() })],
         chain: [],
       });
-    // Only the named grant comes back, though the reviewer holds two; the hop is appended.
-    const one = yield* gateway.readmit({ provenance: named("g_review"), hop });
-    expect(one.grants.map((grant) => grant.grant)).toEqual(["g_review"]);
-    expect(one.chain).toEqual([hop]);
-    yield* grants.send(GrantId.make("g_review"), new RevokeGrant()).pipe(asOwner);
-    // Revoked: dropped at once; the other named grant still comes back.
-    const both = yield* gateway.readmit({ provenance: named("g_review", "g_read"), hop });
-    expect(both.grants.map((grant) => grant.grant)).toEqual(["g_read"]);
-    // Every named grant lapsed: refused, naming them.
-    const refused = yield* gateway.readmit({ provenance: named("g_review"), hop }).pipe(Effect.flip);
-    expect(refused).toMatchObject({ _tag: "ReadmissionRefused", reason: "lapsed", lapsed: [{ grant: "g_review" }] });
-  }).pipe(Effect.scoped, Effect.provide(World)),
-);
-
-it.live("a run is granted narrowed terms and an agent provenance; widening is refused; a released run is unaccountable", () =>
-  Effect.gen(function* () {
-    yield* seed;
-    const gateway = yield* AuthorityGateway;
-    const hop = byProcess("GrantOnRequest", Cause.cases.Session.make({ scheme: "test" }));
-    const requester = Provenance.make({
-      root: Root.cases.Human.make({ principal: rev }),
-      onBehalfOf: rev,
-      grants: [GrantRef.make({ grant: GrantId.make("g_rev"), delegation: null })],
-      chain: [],
-    });
-    const narrowed = {
-      capability: CapabilityId.make("party.review"),
-      operations: ["AcceptClaim"],
-      resource: ResourceScope.cases.Record.make({ org: acme, record: "Claim/claim_1" }),
-      expires: null,
-    };
-    const source = GrantRef.make({ grant: GrantId.make("g_rev"), delegation: null });
-    const granted = yield* gateway.grantRun({
-      provenance: requester,
-      hop,
-      source,
-      delegation: DelegationId.make("d_run"),
-      run,
-      terms: narrowed,
-    });
-    expect(granted.provenance).toEqual({
-      root: { _tag: "Agent", run, accountable: rev },
-      onBehalfOf: rev,
-      grants: [{ grant: "g_rev", delegation: "d_run" }],
-      chain: [],
-    });
-    // The run's provenance re-admits to exactly its delegation's terms.
-    const asRun = yield* gateway.readmit({ provenance: granted.provenance, hop });
-    expect(asRun.grants).toEqual([{ grant: "g_rev", delegation: "d_run", ...narrowed }]);
-    // A child of the run cannot widen what the run holds.
-    const widened = yield* gateway
-      .grantRun({
-        provenance: granted.provenance,
+      const narrowed = {
+        capability: CapabilityId.make("party.review"),
+        operations: O.some(["AcceptClaim"]),
+        resource: ResourceScope.cases.Record.make({ org: acme, record: "Claim/claim_1" }),
+        expires: O.none(),
+      };
+      const source = GrantRef.make({ grant: GrantId.make("g_rev"), delegation: O.none() });
+      const granted = yield* gateway.grantRun({
+        provenance: requester,
         hop,
-        source: GrantRef.make({ grant: GrantId.make("g_rev"), delegation: DelegationId.make("d_run") }),
-        delegation: DelegationId.make("d_child"),
-        run: RunId.make("run_child"),
-        terms: { ...narrowed, operations: null },
-      })
-      .pipe(Effect.flip);
-    expect(widened).toMatchObject({ _tag: "RunGrantRefused", reason: "TermsWiden" });
-    // Released: the run's next hop is refused as unaccountable.
-    const authority = yield* AuthorityApi.clientInProcess;
-    yield* authority.ReleaseAccountability(run, {}, asRev);
-    const refused = yield* gateway.readmit({ provenance: granted.provenance, hop }).pipe(Effect.flip);
-    expect(refused).toMatchObject({ _tag: "ReadmissionRefused", reason: "unaccountable" });
-  }).pipe(Effect.scoped, Effect.provide(World)),
-);
+        source,
+        delegation: DelegationId.make("d_run"),
+        run,
+        terms: narrowed,
+      });
+      expect(granted.provenance).toEqual({
+        root: { _tag: "Agent", run, accountable: rev },
+        onBehalfOf: rev,
+        grants: [{ grant: "g_rev", delegation: O.some("d_run") }],
+        chain: [],
+      });
+      // The run's provenance re-admits to exactly its delegation's terms.
+      const asRun = yield* gateway.readmit({ provenance: granted.provenance, hop });
+      expect(asRun.grants).toEqual([{ grant: "g_rev", delegation: O.some("d_run"), ...narrowed }]);
+      // A child of the run cannot widen what the run holds.
+      const widened = yield* gateway
+        .grantRun({
+          provenance: granted.provenance,
+          hop,
+          source: GrantRef.make({ grant: GrantId.make("g_rev"), delegation: O.some(DelegationId.make("d_run")) }),
+          delegation: DelegationId.make("d_child"),
+          run: RunId.make("run_child"),
+          terms: { ...narrowed, operations: O.none() },
+        })
+        .pipe(Effect.flip);
+      expect(widened).toMatchObject({ _tag: "RunGrantRefused", reason: "TermsWiden" });
+      // Released: the run's next hop is refused as unaccountable.
+      const authority = yield* AuthorityApi.clientInProcess;
+      yield* authority.ReleaseAccountability(run, {}, asRev);
+      const refused = yield* gateway.readmit({ provenance: granted.provenance, hop }).pipe(Effect.flip);
+      expect(refused).toMatchObject({ _tag: "ReadmissionRefused", reason: "unaccountable" });
+    }).pipe(Effect.scoped),
+  );
+});

@@ -8,6 +8,8 @@ import * as Fiber from "effect/Fiber";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as Scope from "effect/Scope";
 import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
@@ -32,13 +34,25 @@ export interface SimHost {
 }
 
 const readKey = (id: string, key: string) => `${id}#${key}`;
+
+/**
+ * An instance method's call, as the library builds every one (`DurableObjects.ts`): wrapped in
+ * `reportDefects`, so it fails with nothing, and run with the instance's runtime and a scope. The
+ * library's types are loose here because `ObjectImpl` returns `Record<string, unknown>` and `Stub`
+ * types a call as `Effect<unknown, unknown>`.
+ */
+const isInstanceCall = (value: unknown): value is Effect.Effect<unknown, never, RuntimeContext | Scope.Scope> =>
+  Effect.isEffect(value);
+
+/** A method of a built instance: called with JSON arguments, it answers with its JSON result. */
+type Method = (...args: ReadonlyArray<unknown>) => Effect.Effect<unknown>;
 const endsWithLease = Str.endsWith("lease");
 
 /** Sorted key-value storage that counts reads of every key ending in `lease`. */
 const makeStorage = (id: string, reads: MutableHashMap.MutableHashMap<string, number>): DurableObjects.ObjectStorage => {
   let data = MutableHashMap.empty<string, unknown>();
   const clone = <T>(value: T): T => (value === undefined ? value : structuredClone(value));
-  const sortedKeys = () => A.sort(A.fromIterable(MutableHashMap.keys(data)), Order.String);
+  const sortedKeys = () => data.pipe(MutableHashMap.keys, A.fromIterable, A.sort(Order.String));
   const count = (key: string) => {
     if (!endsWithLease(key)) return;
     MutableHashMap.modifyAt(reads, readKey(id, key), (n) => O.some(O.getOrElse(n, () => 0) + 1));
@@ -52,7 +66,7 @@ const makeStorage = (id: string, reads: MutableHashMap.MutableHashMap<string, nu
     put: ((keyOrEntries: string | Readonly<Record<string, unknown>>, value?: unknown) =>
       Effect.sync(() => {
         if (typeof keyOrEntries === "string") MutableHashMap.set(data, keyOrEntries, clone(value));
-        else for (const [key, entry] of Object.entries(keyOrEntries)) MutableHashMap.set(data, key, clone(entry));
+        else for (const [key, entry] of R.toEntries(keyOrEntries)) MutableHashMap.set(data, key, clone(entry));
       })) as DurableObjects.ObjectStorage["put"],
     delete: ((keyOrKeys: string | ReadonlyArray<string>) =>
       Effect.sync(() => {
@@ -73,7 +87,7 @@ const makeStorage = (id: string, reads: MutableHashMap.MutableHashMap<string, nu
             (options.startAfter === undefined || key > options.startAfter) &&
             (options.end === undefined || key < options.end),
         );
-        if (options.reverse) keys = A.reverse(keys);
+        if (options.reverse === true) keys = A.reverse(keys);
         if (options.limit !== undefined) keys = A.take(keys, options.limit);
         // The storage contract returns a native Map.
         return new Map(A.map(keys, (key) => [key, clone(O.getOrUndefined(MutableHashMap.get(data, key)) as T)] as const));
@@ -83,12 +97,10 @@ const makeStorage = (id: string, reads: MutableHashMap.MutableHashMap<string, nu
       Effect.suspend(() => {
         const before = MutableHashMap.fromIterable(data);
         return effect.pipe(
-          Effect.onExit((exit) =>
-            Exit.isFailure(exit)
-              ? Effect.sync(() => {
-                  data = before;
-                })
-              : Effect.void,
+          Effect.onError(() =>
+            Effect.sync(() => {
+              data = before;
+            }),
           ),
         );
       }),
@@ -110,38 +122,38 @@ const makeStorage = (id: string, reads: MutableHashMap.MutableHashMap<string, nu
  */
 export const makeSimHost = (seed: (id: string, now: number) => Readonly<Record<string, unknown>>): SimHost => {
   const classes = MutableHashMap.empty<string, DurableObjects.ObjectImpl>();
-  const instances = MutableHashMap.empty<string, Effect.Effect<Record<string, unknown>>>();
+  const instances = MutableHashMap.empty<string, Effect.Effect<Record<string, Method>>>();
   const reads = MutableHashMap.empty<string, number>();
   const scopes = MutableHashMap.empty<string, Scope.Closeable>();
   const storages = MutableHashMap.empty<string, DurableObjects.ObjectStorage>();
 
-  const build = (cls: string, id: string): Effect.Effect<Record<string, unknown>> => {
+  const build = (cls: string, id: string): Effect.Effect<Record<string, Method>> => {
     const storage = makeStorage(id, reads);
     MutableHashMap.set(storages, id, storage);
     const gate = Semaphore.makeUnsafe(1);
     const scope = Scope.makeUnsafe();
     MutableHashMap.set(scopes, id, scope);
     return Effect.gen(function* () {
-      yield* storage.put(seed(id, yield* Clock.currentTimeMillis));
+      const builtAt = yield* Clock.currentTimeMillis;
+      yield* storage.put(seed(id, builtAt));
       let timer: { readonly at: number; readonly fiber: Fiber.Fiber<void> } | undefined;
       const callbacks = DurableObjects.alarmCallbacks(storage, {
         get: Effect.sync(() => timer?.at ?? null),
-        set: (at) =>
-          Effect.gen(function* () {
-            const previous = timer;
-            const now = yield* Clock.currentTimeMillis;
-            const fiber = yield* Effect.sleep(Math.max(0, at - now)).pipe(
-              Effect.andThen(
-                Effect.suspend(() => {
-                  timer = undefined;
-                  return callbacks.fire;
-                }),
-              ),
-              Effect.forkIn(scope),
-            );
-            timer = { at, fiber };
-            if (previous) yield* Fiber.interrupt(previous.fiber);
-          }),
+        set: Effect.fn("set")(function* (at: number) {
+          const previous = timer;
+          const now = yield* Clock.currentTimeMillis;
+          const fiber = yield* Effect.sleep(Math.max(0, at - now)).pipe(
+            Effect.andThen(
+              Effect.suspend(() => {
+                timer = undefined;
+                return callbacks.fire;
+              }),
+            ),
+            Effect.forkIn(scope),
+          );
+          timer = { at, fiber };
+          if (previous !== undefined) yield* Fiber.interrupt(previous.fiber);
+        }),
       });
       const state = {
         storage,
@@ -163,21 +175,15 @@ export const makeSimHost = (seed: (id: string, now: number) => Readonly<Record<s
         Effect.provideService(Scope.Scope, scope),
       );
       // Each call runs as its own event, with the instance's runtime.
-      const methods: Record<string, unknown> = {};
-      for (const [method, value] of Object.entries(record)) {
-        methods[method] =
-          typeof value === "function"
-            ? (...args: ReadonlyArray<unknown>) => {
-                const result = (value as (...args: ReadonlyArray<unknown>) => unknown)(...args);
-                return Effect.isEffect(result)
-                  ? Effect.scoped(
-                      (result as Effect.Effect<unknown, unknown, RuntimeContext>).pipe(
-                        Effect.provideService(RuntimeContext, runtime),
-                      ),
-                    )
-                  : result;
-              }
-            : value;
+      const methods: Record<string, Method> = {};
+      for (const [method, value] of R.toEntries(record)) {
+        if (!P.isFunction(value)) continue;
+        methods[method] = (...args) => {
+          const result: unknown = value(...args);
+          return isInstanceCall(result)
+            ? Effect.scoped(result.pipe(Effect.provideService(RuntimeContext, runtime)))
+            : Effect.die(`${id}.${method} returned no Effect`);
+        };
       }
       return methods;
     }).pipe(Effect.cached, Effect.runSync);
@@ -198,12 +204,15 @@ export const makeSimHost = (seed: (id: string, now: number) => Readonly<Record<s
         get:
           (_, method: string) =>
           (...args: ReadonlyArray<unknown>) =>
-            Effect.flatMap(instance(cls, name), (methods) => {
-              const call = methods[method] as (...args: ReadonlyArray<unknown>) => Effect.Effect<unknown, unknown>;
-              return call(...structuredClone(args)).pipe(
-                Effect.map((result) => (result === undefined ? result : structuredClone(result))),
-              );
-            }),
+            Effect.flatMap(instance(cls, name), (methods) =>
+              O.match(R.get(methods, method), {
+                onNone: () => Effect.die(`${cls}/${name} has no method ${method}`),
+                onSome: (call) =>
+                  call(...structuredClone(args)).pipe(
+                    Effect.map((result) => (result === undefined ? result : structuredClone(result))),
+                  ),
+              }),
+            ),
       }),
   });
 
@@ -219,12 +228,12 @@ export const makeSimHost = (seed: (id: string, now: number) => Readonly<Record<s
       claimKey: Effect.sync(() => ({})),
     },
     reads: (id, key) => O.getOrElse(MutableHashMap.get(reads, readKey(id, key)), () => 0),
-    ids: () => A.fromIterable(MutableHashMap.keys(instances)),
+    ids: () => instances.pipe(MutableHashMap.keys, A.fromIterable),
     write: (id, entries) =>
       Effect.flatMap(Effect.fromOption(MutableHashMap.get(storages, id)).pipe(Effect.orDie), (storage) =>
         storage.put(entries),
       ),
-    close: Effect.forEach(A.fromIterable(MutableHashMap.values(scopes)), (scope) => Scope.close(scope, Exit.void), {
+    close: Effect.forEach(scopes.pipe(MutableHashMap.values, A.fromIterable), (scope) => Scope.close(scope, Exit.void), {
       discard: true,
     }),
   };

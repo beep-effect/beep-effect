@@ -37,9 +37,10 @@ export const SessionLive = Layer.effect(
     return (effect, { headers }) =>
       Effect.gen(function* () {
         const credential = yield* Effect.fromOption(FixtureCredential.read(headers)).pipe(
-          Effect.mapError(() => new Unauthorized()),
+          Effect.mapError(() => Unauthorized.make({})),
         );
-        const invocation = yield* boundary.admit(credential, yield* DateTime.now);
+        const now = yield* DateTime.now;
+        const invocation = yield* boundary.admit(credential, now);
         return yield* Effect.provideService(effect, CurrentInvocation, invocation);
       });
   }),

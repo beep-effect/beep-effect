@@ -5,15 +5,16 @@ import type { RunStatus } from "@proto/runs-contract/Run/RunStatus";
 import { NotInSession, type SessionRun, SessionRunsState } from "@proto/runs-contract/Run/SessionRuns.read";
 import { SessionId } from "@proto/runs-contract/Run/Session.id";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import { AgentRun } from "./AgentRun.aggregate.ts";
 
-type State = typeof SessionRunsState.Type;
+type State = SessionRunsState;
 
 /** Add a run to the chain, or move it to a new status. */
 const upsert = (view: State, run: RunId, status: RunStatus, from: Partial<SessionRun> = {}): State =>
   A.some(view.runs, (entry) => entry.run === run)
     ? { ...view, runs: A.map(view.runs, (entry) => (entry.run === run ? { ...entry, status, ...from } : entry)) }
-    : { ...view, runs: A.append(view.runs, { run, previous: null, parent: null, status, ...from }) };
+    : { ...view, runs: A.append(view.runs, { run, previous: O.none(), parent: O.none(), status, ...from }) };
 
 /**
  * A session's chain of runs (D23): every run requested in it, every child
@@ -45,9 +46,10 @@ export class SessionRuns extends Domain.View(
       RunContinued: (view, _event, { source }) => upsert(view, source.id, "continued"),
       RunCancelled: (view, _event, { source }) => upsert(view, source.id, "cancelled"),
       ChildRequested: (view, _event, { source }) => upsert(view, source.id, "awaiting-child"),
-      ChildRunOpened: (view, event, { source }) => upsert(view, source.id, "running", { parent: event.parent }),
+      ChildRunOpened: (view, event, { source }) => upsert(view, source.id, "running", { parent: O.some(event.parent) }),
       ChildRunRefused: (view, _event, { source }) => upsert(view, source.id, "running"),
-      ContinuationOpened: (view, event, { source }) => upsert(view, source.id, "running", { previous: event.previous }),
+      ContinuationOpened: (view, event, { source }) =>
+        upsert(view, source.id, "running", { previous: O.some(event.previous) }),
       ChildRunFinished: (view, _event, { source }) => upsert(view, source.id, "running"),
     },
   },

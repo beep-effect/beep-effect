@@ -14,31 +14,32 @@ const forbidden = (relative: string): boolean =>
     Str.startsWith(prefix)(relative),
   ) || A.some([".aggregate.ts", ".handler.ts", ".model.ts", ".adapter.ts"], (suffix) => Str.endsWith(suffix)(relative));
 
-const closureOf = (packageName: string) =>
-  Effect.gen(function* () {
-    const path = yield* Path.Path;
-    const root = yield* path.fromFileUrl(new URL("../../../", import.meta.url));
-    const workspace = yield* ImportGraph.loadWorkspace(root);
-    const pkg = yield* Effect.fromOption(HashMap.get(workspace, packageName));
-    const files = yield* ImportGraph.reachable(workspace, ImportGraph.entriesOf(pkg, path.join));
-    return A.map(files, (file) => path.relative(root, file));
-  });
+const closureOf = Effect.fn("closureOf")(function* (packageName: string) {
+  const path = yield* Path.Path;
+  const root = yield* path.fromFileUrl(new URL("../../../", import.meta.url));
+  const workspace = yield* ImportGraph.loadWorkspace(root);
+  const pkg = yield* Effect.fromOption(HashMap.get(workspace, packageName));
+  const files = yield* ImportGraph.reachable(workspace, ImportGraph.entriesOf(pkg, path.join));
+  return A.map(files, (file) => path.relative(root, file));
+});
 
-it.effect("the contract's module graph reaches no model, host, aggregate or handler", () =>
-  Effect.gen(function* () {
-    const files = yield* closureOf("@proto/runs-contract");
-    // The walk is not vacuous: it reached the commands, the kernel and the contract kit.
-    expect(files).toContain("runs/contract/src/Run/ReserveBudget.command.ts");
-    expect(files).toContain("shared/kernel/src/Invocation.ts");
-    expect(files).toContain("shared/contract-kit/src/Catalog.ts");
-    expect(A.filter(files, forbidden)).toEqual([]);
-  }).pipe(Effect.provide(NodeServices.layer)),
-);
+it.layer(NodeServices.layer)((it) => {
+  it.effect("the contract's module graph reaches no model, host, aggregate or handler", () =>
+    Effect.gen(function* () {
+      const files = yield* closureOf("@proto/runs-contract");
+      // The walk is not vacuous: it reached the commands, the kernel and the contract kit.
+      expect(files).toContain("runs/contract/src/Run/ReserveBudget.command.ts");
+      expect(files).toContain("shared/kernel/src/Invocation.ts");
+      expect(files).toContain("shared/contract-kit/src/Catalog.ts");
+      expect(A.filter(files, forbidden)).toEqual([]);
+    }),
+  );
 
-it.effect("negative control: the same walk from the model's entries reaches its aggregates and handlers", () =>
-  Effect.gen(function* () {
-    const files = yield* closureOf("@proto/runs-model");
-    expect(files).toContain("runs/model/src/Run/AgentRun.aggregate.ts");
-    expect(files).toContain("runs/model/src/Run/GrantOnRequest.handler.ts");
-  }).pipe(Effect.provide(NodeServices.layer)),
-);
+  it.effect("negative control: the same walk from the model's entries reaches its aggregates and handlers", () =>
+    Effect.gen(function* () {
+      const files = yield* closureOf("@proto/runs-model");
+      expect(files).toContain("runs/model/src/Run/AgentRun.aggregate.ts");
+      expect(files).toContain("runs/model/src/Run/GrantOnRequest.handler.ts");
+    }),
+  );
+});

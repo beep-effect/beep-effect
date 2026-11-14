@@ -11,6 +11,7 @@ import * as HashSet from "effect/HashSet";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { encodedTagOf } from "@proto/tooling/RejectionClass";
 import { uncoveredOutcomes } from "../proofs/Outcomes.allow.ts";
 
 // `bun run outcomes`: which declared outcomes (every command's accepted path and each declared
@@ -18,19 +19,25 @@ import { uncoveredOutcomes } from "../proofs/Outcomes.allow.ts";
 // (shared/tooling/vitest/outcomes.setup.ts). `--check` fails on an unlisted gap, or on a listed
 // gap that is now covered.
 const Row = S.Struct({ aggregate: S.String, command: S.String, outcome: S.String });
+/** Outcome coverage drifted from proofs/Outcomes.allow.ts: unlisted gaps, or listed gaps now covered. */
+class OutcomeDrift extends S.TaggedError<OutcomeDrift, { readonly brand: unique symbol }>()("OutcomeDrift", {
+  unlisted: S.Int,
+  stale: S.Int,
+  message: S.String,
+}) {}
 const keyOf = (row: typeof Row.Type) => `${row.aggregate}.${row.command}:${row.outcome}`;
 
 type AnyAggregate = {
   readonly aggregateName: string;
   readonly definition: {
-    readonly commands: ReadonlyArray<{ readonly tag: string; readonly rejects: ReadonlyArray<{ readonly tag: string }> }>;
+    readonly commands: ReadonlyArray<{ readonly tag: string; readonly rejects: ReadonlyArray<S.Top> }>;
   };
 };
 
 const required = A.flatMap([PartyModel, RunsModel, AuthorityModel], (model) =>
   A.flatMap(model.aggregates as unknown as ReadonlyArray<AnyAggregate>, (aggregate) =>
     A.flatMap(aggregate.definition.commands, (command) =>
-      A.map(["accepted", ...A.map(command.rejects, (rejection) => rejection.tag)], (outcome) => ({
+      A.map(["accepted", ...A.getSomes(A.map(command.rejects, encodedTagOf))], (outcome) => ({
         aggregate: aggregate.aggregateName,
         command: command.tag,
         outcome,
@@ -47,7 +54,7 @@ const program = Effect.gen(function* () {
   const lines = yield* Effect.forEach(files, (file) => fs.readFileString(path.join(dir, file)));
   const executed = yield* Effect.forEach(
     A.filter(A.flatMap(lines, Str.split("\n")), Str.isNonEmpty),
-    (line) => S.decodeUnknownEffect(S.fromJsonString(Row))(line),
+    (line) => S.decodeEffect(S.fromJsonString(Row))(line),
   );
   const seen = HashSet.fromIterable(A.map(executed, keyOf));
   const listed = HashSet.fromIterable(A.map(uncoveredOutcomes, keyOf));
@@ -60,7 +67,11 @@ const program = Effect.gen(function* () {
   for (const row of unlisted) yield* Console.log(`  unlisted gap: ${keyOf(row)}`);
   for (const row of stale) yield* Console.log(`  listed but now covered: ${keyOf(row)}`);
   if (A.contains(process.argv, "--check") && (unlisted.length > 0 || stale.length > 0)) {
-    return yield* Effect.fail(new Error("outcome coverage drifted from proofs/Outcomes.allow.ts"));
+    return yield* OutcomeDrift.make({
+      unlisted: unlisted.length,
+      stale: stale.length,
+      message: "outcome coverage drifted from proofs/Outcomes.allow.ts",
+    });
   }
   if (A.isReadonlyArrayEmpty(files)) yield* Console.log("  no recorded outcomes: run `bun run test` first");
 });

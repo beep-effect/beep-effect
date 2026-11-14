@@ -1,17 +1,30 @@
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import type { ClaimId } from "@proto/party-contract/Claim/Claim.id";
+import { ClaimReviewState, proposalOf } from "@proto/party-contract/Claim/ClaimReview.read";
+import * as O from "effect/Option";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { approveClaim, claimReviewScreen } from "./ClaimReview.controller.ts";
-import { Notice, type Screen } from "./ClaimReview.machine.ts";
+import { Approval, Notice, type Screen } from "./ClaimReview.machine.ts";
 
-const noticeText = (screen: Screen): string | null =>
-  screen.notice === null
-    ? null
-    : Notice.match(screen.notice, {
+/** What the screen last told the person, once an approval is over. */
+const noticeText = (screen: Screen): O.Option<string> =>
+  O.map(
+    O.liftPredicate(screen.approval, Approval.guards.Noticed),
+    ({ notice }) =>
+      Notice.match(notice, {
         Approved: () => "Approved",
         Refused: ({ reason }) => `Refused: ${reason}`,
         Denied: ({ reason }) => `Denied: ${reason}`,
-      });
+      }),
+  );
+
+/** Where the claim stands, in the reviewer's words. */
+const standing = ClaimReviewState.match({
+  Unasserted: () => "unasserted",
+  Pending: () => "pending",
+  Accepted: () => "accepted",
+  Retracted: () => "retracted",
+});
 
 /**
  * Claim review and approval, rendered from the machine's screen state. The
@@ -36,21 +49,18 @@ export const ClaimReviewScreen = ({ claim }: { readonly claim: ClaimId }) => {
     onInitial: () => <p>Loading the review</p>,
     onFailure: () => <p role="alert">The review could not be read.</p>,
     onSuccess: ({ value: screen }) => {
-      const review = screen.view?.review ?? null;
-      const notice = noticeText(screen);
+      const review = O.flatMap(screen.view, (view) => view.review);
+      const proposal = O.flatMap(review, proposalOf);
+      const inFlight = Approval.guards.Sending(screen.approval) || Approval.guards.Committed(screen.approval);
       return (
         <section aria-label="Claim review">
-          <p>Status: {review?.status ?? "unknown"}</p>
-          {review?.proposal ? <p>Proposal: {review.proposal.disposition}</p> : null}
-          <button
-            type="button"
-            disabled={screen.pending !== null || !review?.proposal}
-            onClick={() => approve()}
-          >
+          <p>Status: {O.match(review, { onNone: () => "unknown", onSome: standing })}</p>
+          {O.match(proposal, { onNone: () => null, onSome: ({ disposition }) => <p>Proposal: {disposition}</p> })}
+          <button type="button" disabled={inFlight || O.isNone(proposal)} onClick={() => approve()}>
             Approve
           </button>
-          {screen.pending?.receipt ? <p role="status">Committed</p> : null}
-          {notice ? <p role="status">{notice}</p> : null}
+          {Approval.guards.Committed(screen.approval) ? <p role="status">Committed</p> : null}
+          {O.match(noticeText(screen), { onNone: () => null, onSome: (text) => <p role="status">{text}</p> })}
         </section>
       );
     },

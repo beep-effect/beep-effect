@@ -7,6 +7,9 @@ import * as S from "effect/Schema";
 import { Disposition } from "../Disposition.ts";
 import { ClaimId } from "./Claim.id.ts";
 import { ClaimNotPending } from "./ClaimNotPending.rejection.ts";
+import { $PartyContractId } from "@proto/kernel/Identity";
+
+const $I = $PartyContractId.create("Claim/ProposeDisposition.command");
 
 /**
  * Refused: only an agent run proposes; a person decides directly.
@@ -14,10 +17,10 @@ import { ClaimNotPending } from "./ClaimNotPending.rejection.ts";
  * @category rejections
  * @since 0.0.0
  */
-export class NotAnAgent extends Domain.Rejection(
+export class NotAnAgent extends S.TaggedError<NotAnAgent, { readonly brand: unique symbol }>()(
   "NotAnAgent",
   {},
-  { httpApiStatus: 403, description: "Only an agent run may propose a disposition." },
+  $I.annote("NotAnAgent", { httpApiStatus: 403, description: "Only an agent run may propose a disposition." }),
 ) {}
 
 /**
@@ -26,10 +29,10 @@ export class NotAnAgent extends Domain.Rejection(
  * @category rejections
  * @since 0.0.0
  */
-export class ProposalStale extends Domain.Rejection(
+export class ProposalStale extends S.TaggedError<ProposalStale, { readonly brand: unique symbol }>()(
   "ProposalStale",
   { evidenceRevision: S.Int },
-  { httpApiStatus: 409, description: "The evidence changed since the proposal's revision; assess it again." },
+  $I.annote("ProposalStale", { httpApiStatus: 409, description: "The evidence changed since the proposal's revision; assess it again." }),
 ) {}
 
 /**

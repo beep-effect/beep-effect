@@ -19,7 +19,7 @@ export const ReplayReasoner = Reasoner.toLayer(
           onSome: (entry) => Effect.succeed(entry.result),
           onNone: () =>
             Effect.fail(
-              new ReasonerUnavailable({ reason: `not recorded: ${request.promptVersion}/${request.idempotencyKey}` }),
+              ReasonerUnavailable.make({ reason: `not recorded: ${request.promptVersion}/${request.idempotencyKey}` }),
             ),
         }),
       ),

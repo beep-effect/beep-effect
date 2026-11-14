@@ -1,5 +1,6 @@
 import * as Domain from "@alchemy.run/domain";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
@@ -37,11 +38,12 @@ export class Slot extends Domain.Aggregate("Slot", {
   commands: [Write],
   decide: {
     Write: Effect.fn(function* (_, command) {
-      const runner = process.env.HOSTNAME ?? "unknown";
+      // The runner's container name, which the two-runners case reads back.
+      const runner = yield* Config.String("HOSTNAME").pipe(Config.withDefault("unknown"), Effect.orDie);
       yield* Effect.log(`Slot.Write deciding ${command.label} on ${runner}, holding ${command.holdMs} ms`);
       yield* Effect.sleep(command.holdMs);
       yield* Effect.log(`Slot.Write committing ${command.label} on ${runner}`);
-      return [new Written({ label: command.label, runner })];
+      return [Written.make({ label: command.label, runner })];
     }),
   },
   evolve: { Written: (state, event) => ({ labels: A.append(state.labels, event.label) }) },

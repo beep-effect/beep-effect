@@ -5,18 +5,30 @@ import { pipe } from "effect/Function";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-/** Encoded JSON with object keys in one order, so equal content gives equal text. */
-const canonical = (value: unknown): string =>
+/** One JSON value as text: the schema encoder, so a value JSON cannot hold fails instead of throwing. */
+const jsonText = S.encodeEffect(S.fromJsonString(S.Unknown));
+
+/**
+ * Encoded JSON with object keys in one order, so equal content gives equal text. A property
+ * whose value is `undefined` is written as `undefined`, as the first version of this function
+ * wrote it, so the ids it gave stay the same.
+ */
+const canonical = (value: unknown): Effect.Effect<string, S.SchemaError> =>
   A.isArray(value)
-    ? `[${A.join(A.map(value, canonical), ",")}]`
+    ? Effect.map(Effect.forEach(value, canonical), (parts) => `[${A.join(parts, ",")}]`)
     : P.isObject(value)
-      ? `{${A.join(
-          A.map(A.sort(R.keys(value), Order.String), (key) => `${JSON.stringify(key)}:${canonical(value[key])}`),
-          ",",
-        )}}`
-      : JSON.stringify(value);
+      ? Effect.map(
+          Effect.forEach(A.sort(R.keys(value), Order.String), (key) =>
+            Effect.zipWith(jsonText(key), canonical(value[key]), (name, text) => `${name}:${text}`),
+          ),
+          (parts) => `{${A.join(parts, ",")}}`,
+        )
+      : P.isUndefined(value)
+        ? Effect.succeed("undefined")
+        : jsonText(value);
 
 const encoder = new TextEncoder();
 
@@ -55,6 +67,8 @@ export const requestKey = Effect.fnUntraced(function* (request: {
   readonly payload: unknown;
 }) {
   const digest = yield* Digest.Digest;
-  const hex = yield* digest.digestHex(Digest.sha256, encoder.encode(canonical(request.payload)));
+  // A payload JSON cannot hold (a bigint, a cycle) is a defect, as it was when this threw.
+  const text = yield* Effect.orDie(canonical(request.payload));
+  const hex = yield* digest.digestHex(Digest.sha256, encoder.encode(text));
   return `${request.tenant}:${request.operation}:${pipe(hex, Str.slice(0, 32))}`;
 });

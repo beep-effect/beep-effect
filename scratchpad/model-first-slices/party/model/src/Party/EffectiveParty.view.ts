@@ -3,6 +3,7 @@ import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { Session } from "@proto/kernel/Session.middleware";
 import { EffectivePartyInitial, EffectivePartyState } from "@proto/party-contract/Party/EffectiveParty.read";
 import * as A from "effect/Array";
+import { identity } from "effect/Function";
 import { Party } from "./Party.aggregate.ts";
 
 /**
@@ -21,9 +22,23 @@ export class EffectiveParty extends Domain.View(
     rejects: [MissingGrant],
     state: EffectivePartyState,
     initial: EffectivePartyInitial,
+    // Phase 7: the state became a union of `Unregistered` and `Registered`.
+    version: 1,
     evolve: {
-      PartyRegistered: (view, event) => ({ ...view, org: event.org, name: event.name }),
-      PartiesMerged: (view, event) => ({ ...view, absorbed: A.append(view.absorbed, event.absorbed) }),
+      PartyRegistered: (view, event) =>
+        EffectivePartyState.cases.Registered.make({
+          org: event.org,
+          name: event.name,
+          absorbed: EffectivePartyState.guards.Registered(view) ? view.absorbed : [],
+        }),
+      PartiesMerged: (view, event) =>
+        EffectivePartyState.matchOrElse(
+          view,
+          {
+            Registered: (party): EffectivePartyState => ({ ...party, absorbed: A.append(party.absorbed, event.absorbed) }),
+          },
+          identity,
+        ),
     },
   },
   { description: "A party as it is now, with every duplicate merged into it." },

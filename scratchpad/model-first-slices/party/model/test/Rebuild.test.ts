@@ -42,9 +42,9 @@ const page = { after: undefined, take: 10 };
 /** Every port refuses, and counts the call: a rebuild must make none. */
 const countingPorts = (calls: Ref.Ref<number>) => {
   const refuse = <E>(error: E) => Effect.andThen(Ref.update(calls, (n) => n + 1), Effect.fail(error));
-  const refused = new RunRefused({ reason: "test" });
+  const refused = RunRefused.make({ reason: "test" });
   return Layer.mergeAll(
-    Authority.toLayer(Effect.succeed({ readmit: () => refuse(new ReadmissionRefused({ reason: "lapsed", lapsed: [] })) })),
+    Authority.toLayer(Effect.succeed({ readmit: () => refuse(ReadmissionRefused.make({ reason: "lapsed", lapsed: [] })) })),
     ReviewRuns.toLayer(
       Effect.succeed({
         open: () => refuse(refused),
@@ -57,8 +57,8 @@ const countingPorts = (calls: Ref.Ref<number>) => {
         refuse: () => refuse(refused),
       }),
     ),
-    Reasoner.toLayer(Effect.succeed({ assess: () => refuse(new ReasonerUnavailable({ reason: "test" })) })),
-    ContactSource.toLayer(Effect.succeed({ observe: () => refuse(new MailboxUnavailable({ mailbox: "test" })) })),
+    Reasoner.toLayer(Effect.succeed({ assess: () => refuse(ReasonerUnavailable.make({ reason: "test" })) })),
+    ContactSource.toLayer(Effect.succeed({ observe: () => refuse(MailboxUnavailable.make({ mailbox: "test" })) })),
   );
 };
 
@@ -80,30 +80,35 @@ const until = <A, E, R>(read: Effect.Effect<A, E, R>, done: (a: A) => boolean) =
 const history = Effect.gen(function* () {
   const parties = yield* Party;
   const claims = yield* Claim;
-  yield* as(intake)(parties.send(partyA, new RegisterParty({ org: acme, name: "Dana A" })));
-  yield* as(intake)(parties.send(partyB, new RegisterParty({ org: acme, name: "Dana B" })));
-  yield* as(reviewer)(parties.send(partyA, new MergeParties({ absorbed: partyB })));
+  yield* as(intake)(parties.send(partyA, RegisterParty.make({ org: acme, name: "Dana A" })));
+  yield* as(intake)(parties.send(partyB, RegisterParty.make({ org: acme, name: "Dana B" })));
+  yield* as(reviewer)(parties.send(partyA, MergeParties.make({ absorbed: partyB })));
   const proposition = Proposition.cases.HasIdentifier.make({ party: partyA, scheme: "email", value: "dana@acme.test" });
-  yield* as(intake)(claims.send(ClaimId.make("claim_1"), new AssertClaim({ org: acme, proposition, signals: twoSources })));
-  yield* as(reviewer)(claims.send(ClaimId.make("claim_1"), new AcceptClaim()));
+  yield* as(intake)(claims.send(ClaimId.make("claim_1"), AssertClaim.make({ org: acme, proposition, signals: twoSources })));
+  yield* as(reviewer)(claims.send(ClaimId.make("claim_1"), AcceptClaim.make({})));
 });
 
 it.live("a rebuild writes a new generation beside the old one, with zero side effects, and switches once caught up", () =>
   Effect.gen(function* () {
     const platform = InMemory.make();
     const calls = yield* Ref.make(0);
-    const store = Layer.succeedContext(yield* Layer.build(MemoryPartyDirectoryStore));
+    const storeContext = yield* Layer.build(MemoryPartyDirectoryStore);
+    const store = Layer.succeedContext(storeContext);
     const directory = Effect.flatMap(Effect.service(PartyDirectoryStore), (s) => s.search(acme, "dana", page));
     const facts = Effect.flatMap(Effect.service(PartyFacts), (s) => s.list("claims"));
 
     // Generation 0: the history, its policy's port call, its published fact and its directory.
+    // Each generation is one deployment: built in a scope of its own, torn down when it ends.
     const before = yield* Effect.scoped(
       Effect.gen(function* () {
-        yield* history;
-        const rows = yield* until(directory, (found) => found.entries.length === 2 && found.entries[0]!.absorbed.length === 1);
-        const published = yield* until(facts, (page) => page.entries.length === 2);
-        return { rows, published: published.entries };
-      }).pipe(Effect.provide(Layer.merge(deploy(platform, 0, store, calls), store))),
+        const deployment = yield* Layer.build(Layer.merge(deploy(platform, 0, store, calls), store));
+        return yield* Effect.gen(function* () {
+          yield* history;
+          const rows = yield* until(directory, (found) => found.entries.length === 2 && found.entries[0]!.absorbed.length === 1);
+          const published = yield* until(facts, (page) => page.entries.length === 2);
+          return { rows, published: published.entries };
+        }).pipe(Effect.provideContext(deployment));
+      }),
     );
     yield* until(Ref.get(calls), (n) => n >= 1);
     const commits = platform.control.commits.length;
@@ -112,21 +117,30 @@ it.live("a rebuild writes a new generation beside the old one, with zero side ef
     // Generation 1: the same platform and store, the projection's version bumped.
     yield* Effect.scoped(
       Effect.gen(function* () {
-        const s = yield* PartyDirectoryStore;
-        // Until the switch, queries read the old generation.
-        expect(yield* s.active).toEqual(O.some(0));
-        expect(yield* directory).toEqual(before.rows);
-        yield* switchWhenCaughtUp(1);
-        expect(yield* s.active).toEqual(O.some(1));
-        // The new generation replayed every party stream itself.
-        expect(HashMap.size(yield* s.checkpoints(1))).toBe(2);
-        expect(yield* directory).toEqual(before.rows);
-        // Nothing fired, called out, started or was published.
-        expect((yield* facts).entries).toEqual(before.published);
-      }).pipe(Effect.provide(Layer.merge(deploy(platform, 1, store, calls), store))),
+        const deployment = yield* Layer.build(Layer.merge(deploy(platform, 1, store, calls), store));
+        yield* Effect.gen(function* () {
+          const s = yield* PartyDirectoryStore;
+          // Until the switch, queries read the old generation.
+          const activeBefore = yield* s.active;
+          expect(activeBefore).toEqual(O.some(0));
+          const rowsBefore = yield* directory;
+          expect(rowsBefore).toEqual(before.rows);
+          yield* switchWhenCaughtUp(1);
+          const activeAfter = yield* s.active;
+          expect(activeAfter).toEqual(O.some(1));
+          // The new generation replayed every party stream itself.
+          const checkpoints = yield* s.checkpoints(1);
+          expect(HashMap.size(checkpoints)).toBe(2);
+          const rowsAfter = yield* directory;
+          expect(rowsAfter).toEqual(before.rows);
+          // Nothing fired, called out, started or was published.
+          expect((yield* facts).entries).toEqual(before.published);
+        }).pipe(Effect.provideContext(deployment));
+      }),
     );
     expect(platform.control.commits.length).toBe(commits);
-    expect(yield* Ref.get(calls)).toBe(callsBefore);
+    const callsAfter = yield* Ref.get(calls);
+    expect(callsAfter).toBe(callsBefore);
     expect(platform.control.deaths).toEqual([]);
     expect(platform.control.failures).toEqual([]);
   }).pipe(Effect.scoped),
@@ -153,23 +167,28 @@ it.live("a crash between the store write and the library's checkpoint: the repla
           ),
       })),
     ).pipe(Layer.provide(MemoryPartyDirectoryStore));
-    const store = Layer.succeedContext(yield* Layer.build(crashing));
+    const storeContext = yield* Layer.build(crashing);
+    const store = Layer.succeedContext(storeContext);
     const rows = yield* Effect.scoped(
       Effect.gen(function* () {
-        const parties = yield* Party;
-        yield* as(intake)(parties.send(partyA, new RegisterParty({ org: acme, name: "Dana A" })));
-        yield* until(Ref.get(crashed), (done) => done);
-        // The next event on the same key makes the library hand the unprocessed registration over again.
-        yield* as(intake)(parties.send(partyB, new RegisterParty({ org: acme, name: "Dana B" })));
-        yield* as(reviewer)(parties.send(partyA, new MergeParties({ absorbed: partyB })));
-        const s = yield* PartyDirectoryStore;
-        return yield* until(s.search(acme, "dana", page), (found) =>
-          found.entries.length === 2 && found.entries[0]!.absorbed.length === 1,
-        );
-      }).pipe(Effect.provide(Layer.merge(deploy(platform, 0, store, calls), store))),
+        const deployment = yield* Layer.build(Layer.merge(deploy(platform, 0, store, calls), store));
+        return yield* Effect.gen(function* () {
+          const parties = yield* Party;
+          yield* as(intake)(parties.send(partyA, RegisterParty.make({ org: acme, name: "Dana A" })));
+          yield* until(Ref.get(crashed), (done) => done);
+          // The next event on the same key makes the library hand the unprocessed registration over again.
+          yield* as(intake)(parties.send(partyB, RegisterParty.make({ org: acme, name: "Dana B" })));
+          yield* as(reviewer)(parties.send(partyA, MergeParties.make({ absorbed: partyB })));
+          const s = yield* PartyDirectoryStore;
+          return yield* until(s.search(acme, "dana", page), (found) =>
+            found.entries.length === 2 && found.entries[0]!.absorbed.length === 1,
+          );
+        }).pipe(Effect.provideContext(deployment));
+      }),
     );
     // The registration was handed over again with the merge, and refused as already applied.
-    expect(yield* Ref.get(applies)).toContainEqual({ writes: 2, applied: 1 });
+    const handed = yield* Ref.get(applies);
+    expect(handed).toContainEqual({ writes: 2, applied: 1 });
     expect(rows.entries).toEqual([
       { partyId: partyA, org: acme, name: "Dana A", absorbed: [partyB] },
       { partyId: partyB, org: acme, name: "Dana B", absorbed: [] },

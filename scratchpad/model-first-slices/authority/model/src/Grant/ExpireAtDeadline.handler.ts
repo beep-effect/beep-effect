@@ -17,13 +17,13 @@ export const ExpireAtDeadlineLive = ExpireAtDeadline.toLayer(
   Effect.gen(function* () {
     const grants = yield* Grant;
     return Effect.fn(function* (trigger) {
-      yield* O.match(O.fromNullishOr(trigger.event.terms.expires), {
+      yield* O.match(trigger.event.terms.expires, {
         onNone: () => Effect.void,
         onSome: (at) =>
           grants
             .schedule(
               trigger.source,
-              new ExpireGrant({
+              ExpireGrant.make({
                 provenance: extend(trigger.event.provenance, byProcess(ExpireAtDeadline.policyName, eventCause(trigger))),
               }),
               { at, commandId: `expire:${trigger.source.id}` },

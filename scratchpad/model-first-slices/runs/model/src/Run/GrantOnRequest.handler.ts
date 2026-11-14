@@ -36,7 +36,7 @@ export const GrantOnRequestLive = GrantOnRequest.toLayer(
           Effect.flatMap((granted) =>
             runs.send(
               run,
-              new ActivateRun({
+              ActivateRun.make({
                 delegation: granted.delegation,
                 accountable: granted.accountable,
                 runProvenance: granted.provenance,
@@ -45,7 +45,7 @@ export const GrantOnRequestLive = GrantOnRequest.toLayer(
             ),
           ),
           Effect.catchTag("GrantDenied", (denied) =>
-            runs.send(run, new RejectRun({ session: event.session, reason: `grant:${denied.reason}`, provenance })),
+            runs.send(run, RejectRun.make({ session: event.session, reason: `grant:${denied.reason}`, provenance })),
           ),
           Effect.asVoid,
         );

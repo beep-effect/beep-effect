@@ -2,6 +2,10 @@ import * as Domain from "@alchemy.run/domain";
 import { PrincipalId, RunId } from "@proto/kernel/Ids";
 import { carry } from "@proto/kernel/Invocation";
 import { Session } from "@proto/kernel/Session.middleware";
+import * as S from "effect/Schema";
+import { $AuthorityContractId } from "@proto/kernel/Identity";
+
+const $I = $AuthorityContractId.create("Accountability/ReleaseAccountability.command");
 
 /**
  * Refused: the caller is not the run's live accountable human.
@@ -9,10 +13,10 @@ import { Session } from "@proto/kernel/Session.middleware";
  * @category rejections
  * @since 0.0.0
  */
-export class NotAccountable extends Domain.Rejection(
+export class NotAccountable extends S.TaggedError<NotAccountable, { readonly brand: unique symbol }>()(
   "NotAccountable",
   {},
-  { httpApiStatus: 403, description: "The caller is not this run's live accountable human." },
+  $I.annote("NotAccountable", { httpApiStatus: 403, description: "The caller is not this run's live accountable human." }),
 ) {}
 
 /**

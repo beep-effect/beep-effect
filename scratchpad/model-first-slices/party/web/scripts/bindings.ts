@@ -25,10 +25,9 @@ type Served = { readonly kind: string; readonly tag?: string; readonly viewName?
 const render = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const manifest = yield* fs.readFileString(
-    yield* path.fromFileUrl(new URL("../../contract/package.json", import.meta.url)),
-  );
-  const { exports } = yield* S.decodeUnknownEffect(
+  const manifestFile = yield* path.fromFileUrl(new URL("../../contract/package.json", import.meta.url));
+  const manifest = yield* fs.readFileString(manifestFile);
+  const { exports } = yield* S.decodeEffect(
     S.fromJsonString(S.Struct({ exports: S.Record(S.String, S.String) })),
   )(manifest);
   // A command class lives in `<Module>/<Tag>.command.ts`; find its entry point.
@@ -37,8 +36,10 @@ const render = Effect.gen(function* () {
       R.keys(exports),
       A.findFirst(Str.endsWith(`/${tag}.command`)),
       Effect.fromOption,
-      Effect.map((entry) => `@proto/party-contract${pipe(entry, Str.slice(1))}`),
-      Effect.mapError(() => new Error(`no contract entry for command ${tag}`)),
+      Effect.mapBoth({
+        onSuccess: (entry) => `@proto/party-contract${pipe(entry, Str.slice(1))}`,
+        onFailure: () => new Error(`no contract entry for command ${tag}`),
+      }),
       Effect.orDie,
     );
   const imports: Array<string> = [];
@@ -53,7 +54,8 @@ const render = Effect.gen(function* () {
     const atoms: Array<string> = [];
     for (const entry of served) {
       if (entry.kind === "Command" && entry.tag !== undefined) {
-        imports.push(`import { ${entry.tag} } from "${yield* commandModule(entry.tag)}";`);
+        const commandEntry = yield* commandModule(entry.tag);
+        imports.push(`import { ${entry.tag} } from "${commandEntry}";`);
         lines.push(`  ${entry.tag}: Bindings.command(${exported}, ${entry.tag}, (client) => client.${entry.tag}),`);
         atoms.push(`  ${entry.tag}: commandAtom(${name}.${entry.tag}),`);
       } else if (entry.kind === "View" && entry.viewName !== undefined) {
@@ -64,7 +66,8 @@ const render = Effect.gen(function* () {
       }
     }
     blocks.push(
-      [
+      A.join(
+        [
         `/** Bindings for \`${exported}\`: each command, view and query it serves. */`,
         `export const ${name} = {`,
         ...lines,
@@ -74,10 +77,13 @@ const render = Effect.gen(function* () {
         `export const ${name}Atoms = {`,
         ...atoms,
         "} as const;",
-      ].join("\n"),
+        ],
+        "\n",
+      ),
     );
   }
-  return [
+  return A.join(
+    [
     "// Generated from the Party contract by scripts/bindings.ts. Do not edit:",
     "// `bun run bindings` rewrites it, and `bun run bindings --check` fails on drift.",
     ...A.sort(A.dedupe(imports), Order.String),
@@ -89,7 +95,9 @@ const render = Effect.gen(function* () {
     "/** Every generated binding, by contract: the file's designated primary export. */",
     `export const PartyBindings = { ${A.join(A.map(apis, (api) => api.name), ", ")} } as const;`,
     "",
-  ].join("\n");
+    ],
+    "\n",
+  );
 });
 
 Effect.gen(function* () {

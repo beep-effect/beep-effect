@@ -26,6 +26,7 @@ import { PartyModel } from "@proto/party-model/Party.model";
 import { Reasoner } from "@proto/party-model/Review/Reasoner.external";
 import { ReviewRuns } from "@proto/party-model/Review/ReviewRuns.external";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import { acme, agentRun, delegated, human, onOrg, twoSources } from "./fixtures.ts";
 
 const { given, provide, streamed, then, when } = Story;
@@ -48,13 +49,20 @@ const hasIdentifier = Proposition.cases.HasIdentifier.make({
 const proposal = { disposition: "accept" as const, rationale: "two sources agree", run: run1, evidenceRevision: 1 };
 const digest = proposalDigest(proposal);
 const asRun = agentRun(run1, "p_intake", [
-  delegated("g_intake_propose", `dlg:${run1}`, PartyPropose, acme, "Claim/claim_1", ["ProposeDisposition"]),
+  delegated({
+    grant: "g_intake_propose",
+    delegation: `dlg:${run1}`,
+    capability: PartyPropose,
+    org: acme,
+    record: "Claim/claim_1",
+    operations: ["ProposeDisposition"],
+  }),
 ]);
 
 const asserted = given(
   claim,
-  new ClaimAsserted({ org: acme, proposition: hasIdentifier, signals: twoSources, provenance: provenanceOf(intake) }),
-  new ReviewRequested({
+  ClaimAsserted.make({ org: acme, proposition: hasIdentifier, signals: twoSources, provenance: provenanceOf(intake) }),
+  ReviewRequested.make({
     run: run1,
     org: acme,
     proposition: hasIdentifier,
@@ -69,13 +77,13 @@ it.effect("a claim decided directly publishes ClaimDecided once, in both version
   story(
     asserted,
     as(reviewer),
-    when(claim, new AcceptClaim()),
-    then(claim, new ClaimAccepted({ proposition: hasIdentifier, provenance: provenanceOf(reviewer) })),
+    when(claim, AcceptClaim.make({})),
+    then(claim, ClaimAccepted.make({ proposition: hasIdentifier, provenance: provenanceOf(reviewer) })),
     streamed(
       PartyFacts,
       "claims",
-      new ClaimDecidedV1({ ...common, outcome: "accepted" }),
-      new ClaimDecidedV2({ ...common, decision: "accepted", basis: "direct", approval: null }),
+      ClaimDecidedV1.make({ ...common, outcome: "accepted" }),
+      ClaimDecidedV2.make({ ...common, decision: "accepted", basis: "direct", approval: O.none() }),
     ),
   ),
 );
@@ -83,31 +91,31 @@ it.effect("a claim decided directly publishes ClaimDecided once, in both version
 it.effect("an approved proposal publishes the decision with its approval", () =>
   story(
     asserted,
-    given(claim, new DispositionProposed({ ...proposal, digest, provenance: provenanceOf(asRun) })),
+    given(claim, DispositionProposed.make({ ...proposal, digest, provenance: provenanceOf(asRun) })),
     as(reviewer),
-    when(claim, new ApproveProposal({ digest, evidenceRevision: 1 }), { commandId: "approval_1" }),
+    when(claim, ApproveProposal.make({ digest, evidenceRevision: 1 }), { commandId: "approval_1" }),
     then(
       claim,
-      new ProposalApproved({
+      ProposalApproved.make({
         approval: ApprovalId.make("approval_1"),
         run: run1,
         digest,
         evidenceRevision: 1,
         outcome: "accepted",
         proposition: hasIdentifier,
-        corroboration: 2,
+        corroboration: O.some(2),
         provenance: provenanceOf(reviewer),
       }),
     ),
     streamed(
       PartyFacts,
       "claims",
-      new ClaimDecidedV1({ ...common, outcome: "accepted" }),
-      new ClaimDecidedV2({
+      ClaimDecidedV1.make({ ...common, outcome: "accepted" }),
+      ClaimDecidedV2.make({
         ...common,
         decision: "accepted",
         basis: "approval",
-        approval: ApprovalId.make("approval_1"),
+        approval: O.some(ApprovalId.make("approval_1")),
       }),
     ),
   ),
@@ -117,16 +125,16 @@ it.effect("a retraction is a decision too; a rejected command publishes nothing"
   story(
     asserted,
     as(reviewer),
-    when(claim, new RetractClaim({ reason: "wrong person" })),
-    then(claim, new ClaimRetracted({ reason: "wrong person", provenance: provenanceOf(reviewer) })),
+    when(claim, RetractClaim.make({ reason: "wrong person" })),
+    then(claim, ClaimRetracted.make({ reason: "wrong person", provenance: provenanceOf(reviewer) })),
     streamed(
       PartyFacts,
       "claims",
-      new ClaimDecidedV1({ ...common, outcome: "retracted" }),
-      new ClaimDecidedV2({ ...common, decision: "retracted", basis: "direct", approval: null }),
+      ClaimDecidedV1.make({ ...common, outcome: "retracted" }),
+      ClaimDecidedV2.make({ ...common, decision: "retracted", basis: "direct", approval: O.none() }),
     ),
-    when(claim, new RetractClaim({ reason: "again" })),
-    Story.rejected(new ClaimNotPending({ status: "Retracted" })),
+    when(claim, RetractClaim.make({ reason: "again" })),
+    Story.rejected(ClaimNotPending.make({ status: "Retracted" })),
     streamed(PartyFacts, "claims"),
   ),
 );

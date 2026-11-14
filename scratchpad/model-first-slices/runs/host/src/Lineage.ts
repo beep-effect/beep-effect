@@ -1,6 +1,7 @@
 import type { RunId } from "@proto/kernel/Ids";
 import type { AgentRunState } from "@proto/runs-model/Run/AgentRun.aggregate";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as Schedule from "effect/Schedule";
 
 /**
@@ -23,6 +24,7 @@ export const settling = { schedule: Schedule.spaced("10 millis"), times: 300 } a
  * import { AgentRun } from "@proto/runs-model/Run/AgentRun.aggregate";
  * import { liveRun } from "@proto/runs-host/Lineage";
  * import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
  *
  * const live = Effect.flatMap(Effect.service(AgentRun), (runs) => liveRun(runs, RunId.make("run_1")));
  * ```
@@ -30,15 +32,29 @@ export const settling = { schedule: Schedule.spaced("10 millis"), times: 300 } a
  * @category getters
  * @since 0.0.0
  */
-export const liveRun = (
-  runs: { readonly get: (run: RunId) => Effect.Effect<AgentRunState> },
-  run: RunId,
-): Effect.Effect<{ readonly run: RunId; readonly state: AgentRunState }> =>
-  Effect.flatMap(runs.get(run), (state) =>
-    state._tag !== "Continued"
-      ? Effect.succeed({ run, state })
-      : runs.get(state.next).pipe(
-          Effect.repeat({ ...settling, until: (next) => next._tag !== "Unrequested" }),
-          Effect.andThen(liveRun(runs, state.next)),
-        ),
-  );
+export const liveRun: {
+  (run: RunId): (runs: RunReader) => Effect.Effect<LiveRun>;
+  (runs: RunReader, run: RunId): Effect.Effect<LiveRun>;
+} = dual(
+  2,
+  (runs: RunReader, run: RunId): Effect.Effect<LiveRun> =>
+    Effect.flatMap(runs.get(run), (state) =>
+      state._tag !== "Continued"
+        ? Effect.succeed({ run, state })
+        : runs.get(state.next).pipe(
+            Effect.repeat({ ...settling, until: (next) => next._tag !== "Unrequested" }),
+            Effect.andThen(liveRun(runs, state.next)),
+          ),
+    ),
+);
+
+/** What {@link liveRun} reads: a run's state by id. */
+interface RunReader {
+  readonly get: (run: RunId) => Effect.Effect<AgentRunState>;
+}
+
+/** The run a lineage continues in now, with its state. */
+interface LiveRun {
+  readonly run: RunId;
+  readonly state: AgentRunState;
+}

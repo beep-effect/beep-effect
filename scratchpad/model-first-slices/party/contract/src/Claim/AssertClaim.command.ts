@@ -8,6 +8,9 @@ import { EvidenceSignal } from "../Evidence.ts";
 import { Proposition } from "../Proposition.ts";
 import { ClaimId } from "./Claim.id.ts";
 import { ReviewRequested } from "./ReviewRequested.event.ts";
+import { $PartyContractId } from "@proto/kernel/Identity";
+
+const $I = $PartyContractId.create("Claim/AssertClaim.command");
 
 /**
  * Refused: a claim id is asserted once.
@@ -15,10 +18,10 @@ import { ReviewRequested } from "./ReviewRequested.event.ts";
  * @category rejections
  * @since 0.0.0
  */
-export class ClaimAlreadyAsserted extends Domain.Rejection(
+export class ClaimAlreadyAsserted extends S.TaggedError<ClaimAlreadyAsserted, { readonly brand: unique symbol }>()(
   "ClaimAlreadyAsserted",
   {},
-  { httpApiStatus: 409, description: "This claim id was already asserted." },
+  $I.annote("ClaimAlreadyAsserted", { httpApiStatus: 409, description: "This claim id was already asserted." }),
 ) {}
 
 /**
@@ -48,7 +51,7 @@ export class AssertClaim extends Domain.Command(
     input: { org: OrgId, proposition: Proposition, signals: S.Array(EvidenceSignal) },
     events: [ClaimAsserted, ReviewRequested],
     rejects: [ClaimAlreadyAsserted, MissingGrant],
-    reply: { reviewRun: S.NullOr(RunId) },
+    reply: { reviewRun: S.OptionFromNullOr(RunId) },
   },
   { description: "Assert a proposition about parties in an organization, with its evidence, for review." },
 ) {}

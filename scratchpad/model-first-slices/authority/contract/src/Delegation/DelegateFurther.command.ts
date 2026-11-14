@@ -5,6 +5,10 @@ import { carry } from "@proto/kernel/Invocation";
 import { Session } from "@proto/kernel/Session.middleware";
 import { TermsWiden } from "../TermsWiden.rejection.ts";
 import { DelegationNotActive } from "./DelegationNotActive.rejection.ts";
+import * as S from "effect/Schema";
+import { $AuthorityContractId } from "@proto/kernel/Identity";
+
+const $I = $AuthorityContractId.create("Delegation/DelegateFurther.command");
 
 /**
  * Refused: only the agent run holding a delegation delegates it further.
@@ -12,10 +16,10 @@ import { DelegationNotActive } from "./DelegationNotActive.rejection.ts";
  * @category rejections
  * @since 0.0.0
  */
-export class NotDelegationHolder extends Domain.Rejection(
+export class NotDelegationHolder extends S.TaggedError<NotDelegationHolder, { readonly brand: unique symbol }>()(
   "NotDelegationHolder",
   {},
-  { httpApiStatus: 403, description: "Only the agent run holding a delegation may delegate it further." },
+  $I.annote("NotDelegationHolder", { httpApiStatus: 403, description: "Only the agent run holding a delegation may delegate it further." }),
 ) {}
 
 /**

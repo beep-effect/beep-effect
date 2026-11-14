@@ -1,8 +1,10 @@
+import type * as Domain from "@alchemy.run/domain";
 import type { OrgId } from "@proto/kernel/Ids";
 import type { DirectoryRow } from "@proto/party-contract/Directory/FindParties.read";
 import type { PartyId } from "@proto/party-contract/Party/Party.id";
 import {
   DirectoryChange,
+  type DirectoryWrite,
   GenerationBehind,
   PartyDirectoryStore,
 } from "@proto/party-model/Directory/PartyDirectory.store";
@@ -57,7 +59,7 @@ export const PgPartyDirectoryStore = Layer.effect(
       (rows) => O.map(A.head(rows), (row) => row.generation),
     );
     return PartyDirectoryStore.of({
-      apply: (generation, writes) =>
+      apply: Effect.fn("PgPartyDirectoryStore.apply")((generation: number, writes: ReadonlyArray<DirectoryWrite>) =>
         withSql((sql) => sql
           .withTransaction(
             Effect.gen(function* () {
@@ -91,14 +93,16 @@ export const PgPartyDirectoryStore = Layer.effect(
             }),
           )
           .pipe(Effect.orDie)),
+      ),
       active: withSql((sql) => Effect.orDie(activeGeneration(sql))),
-      checkpoints: (generation) =>
+      checkpoints: Effect.fn("PgPartyDirectoryStore.checkpoints")((generation: number) =>
         withSql((sql) => sql<{ readonly stream: string; readonly seq: number }>`
           SELECT stream, seq FROM party_directory_positions WHERE generation = ${generation}`.pipe(
           Effect.map((rows) => HashMap.fromIterable(A.map(rows, (row) => [row.stream, row.seq] as const))),
           Effect.orDie,
         )),
-      switchTo: (generation) =>
+      ),
+      switchTo: Effect.fn("PgPartyDirectoryStore.switchTo")((generation: number) =>
         withSql((sql) => sql
           .withTransaction(
             Effect.gen(function* () {
@@ -118,10 +122,11 @@ export const PgPartyDirectoryStore = Layer.effect(
           .pipe(
             Effect.orDie,
             Effect.flatMap((behind) =>
-              A.isReadonlyArrayEmpty(behind) ? Effect.void : Effect.fail(new GenerationBehind({ generation, behind })),
+              A.isReadonlyArrayEmpty(behind) ? Effect.void : Effect.fail(GenerationBehind.make({ generation, behind })),
             ),
           )),
-      search: (org: OrgId, text: string, { after, take }) =>
+      ),
+      search: Effect.fn("PgPartyDirectoryStore.search")((org: OrgId, text: string, { after, take }: Domain.Query.PageRequest) =>
         withSql((sql) => Effect.gen(function* () {
           const rows = yield* sql<{
             readonly party_id: string;
@@ -148,6 +153,7 @@ export const PgPartyDirectoryStore = Layer.effect(
             cursor: rows.length > take ? O.getOrNull(O.map(A.last(entries), (row) => row.partyId)) : null,
           };
         }).pipe(Effect.orDie)),
+      ),
     });
   }),
 );

@@ -1,12 +1,13 @@
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import { pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { isRejectionClass } from "./RejectionClass.ts";
 
 /**
  * A file that breaks the primary-export law, and how.
@@ -61,7 +62,8 @@ export const rules: Readonly<Record<string, Rule>> = {
   aggregate: { name: noun(""), is: domain("Aggregate"), onlyOne: true },
   command: { name: noun(""), is: domain("Command"), onlyOne: true },
   event: { name: noun(""), is: domain("Event"), onlyOne: true },
-  rejection: { name: noun(""), is: domain("Rejection"), onlyOne: true },
+  // A rejection is a tagged error class (`S.TaggedError`), which is what a command's `rejects` takes.
+  rejection: { name: noun(""), is: isRejectionClass, onlyOne: true },
   view: { name: noun(""), is: domain("View"), onlyOne: true },
   policy: { name: noun(""), is: domain("Policy"), onlyOne: true },
   saga: { name: noun(""), is: domain("Saga"), onlyOne: true },
@@ -131,32 +133,35 @@ export const exempt: Readonly<Record<string, string>> = {
  * @category checks
  * @since 0.0.0
  */
-export const violationsOf = (file: string, exports: Readonly<Record<string, unknown>>): ReadonlyArray<PrimaryExportViolation> => {
-  const base = pipe(file, Str.split("/"), A.last, O.getOrElse(() => file));
-  const parts = pipe(base, Str.split("."));
-  if (parts.length < 3) return [];
-  const kind = parts[parts.length - 2]!;
-  const n = parts[0]!;
-  if (R.has(exempt, kind)) return [];
-  const violation = (problem: string) => [{ file, kind, problem }];
-  const rule = R.get(rules, kind);
-  if (O.isNone(rule)) return violation(`unknown kind "${kind}": add a rule or an exemption`);
-  const { name, matches, is, onlyOne, requires } = rule.value;
-  const names = R.keys(exports);
-  const designated =
-    name !== undefined ? A.filter(names, (e) => e === name(n, exports)) : A.filter(names, (e) => matches?.(n, e) ?? false);
-  const primary = A.filter(designated, (e) => is(exports[e]));
-  return [
-    ...(primary.length === 1
-      ? []
-      : violation(
-          primary.length === 0
-            ? `no primary export ${name !== undefined ? `"${name(n, exports)}"` : "matching the noun"} of kind ${kind}`
-            : `${primary.length} exports could be the primary: ${A.join(primary, ", ")}`,
-        )),
-    ...(onlyOne === true && A.filter(names, (e) => is(exports[e])).length > 1
-      ? violation(`more than one export of kind ${kind}: ${A.join(A.filter(names, (e) => is(exports[e])), ", ")}`)
-      : []),
-    ...A.flatMap(requires ?? [], (required) => (R.has(exports, required) ? [] : violation(`missing required export ${required}`))),
-  ];
-};
+export const violationsOf: {
+  (exports: Readonly<Record<string, unknown>>): (file: string) => ReadonlyArray<PrimaryExportViolation>;
+  (file: string, exports: Readonly<Record<string, unknown>>): ReadonlyArray<PrimaryExportViolation>;
+} = dual(2, (file: string, exports: Readonly<Record<string, unknown>>): ReadonlyArray<PrimaryExportViolation> => {
+    const base = pipe(file, Str.split("/"), A.last, O.getOrElse(() => file));
+    const parts = pipe(base, Str.split("."));
+    if (parts.length < 3) return [];
+    const kind = parts[parts.length - 2]!;
+    const n = parts[0]!;
+    if (R.has(exempt, kind)) return [];
+    const violation = (problem: string) => [{ file, kind, problem }];
+    const rule = R.get(rules, kind);
+    if (O.isNone(rule)) return violation(`unknown kind "${kind}": add a rule or an exemption`);
+    const { name, matches, is, onlyOne, requires } = rule.value;
+    const names = R.keys(exports);
+    const designated =
+      name !== undefined ? A.filter(names, (e) => e === name(n, exports)) : A.filter(names, (e) => matches?.(n, e) ?? false);
+    const primary = A.filter(designated, (e) => is(exports[e]));
+    return [
+      ...(primary.length === 1
+        ? []
+        : violation(
+            primary.length === 0
+              ? `no primary export ${name !== undefined ? `"${name(n, exports)}"` : "matching the noun"} of kind ${kind}`
+              : `${primary.length} exports could be the primary: ${A.join(primary, ", ")}`,
+          )),
+      ...(onlyOne === true && A.filter(names, (e) => is(exports[e])).length > 1
+        ? violation(`more than one export of kind ${kind}: ${A.join(A.filter(names, (e) => is(exports[e])), ", ")}`)
+        : []),
+      ...A.flatMap(requires ?? [], (required) => (R.has(exports, required) ? [] : violation(`missing required export ${required}`))),
+    ];
+});

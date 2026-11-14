@@ -2,9 +2,12 @@ import { GrantTerms } from "@proto/kernel/Capability";
 import { DelegationId, PrincipalId, RunId } from "@proto/kernel/Ids";
 import { GrantRef, Hop, type Invocation, Provenance } from "@proto/kernel/Invocation";
 import type { ReadmissionRefused } from "@proto/kernel/ReadmissionRefused.rejection";
+import { $AuthorityContractId } from "@proto/kernel/Identity";
 import * as Context from "effect/Context";
 import type * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+
+const $I = $AuthorityContractId.create("Authority.gateway");
 
 /**
  * What a hop asks to be re-admitted with: the provenance it continues and the hop it adds.
@@ -52,7 +55,7 @@ export type RunGrant = typeof RunGrant.Type;
  * @category errors
  * @since 0.0.0
  */
-export class RunGrantRefused extends S.TaggedError<RunGrantRefused>()("RunGrantRefused", { reason: S.String }) {}
+export class RunGrantRefused extends S.TaggedError<RunGrantRefused, { readonly brand: unique symbol }>()("RunGrantRefused", { reason: S.String }) {}
 
 /**
  * The authority context's synchronous contract for other contexts' hosts.
@@ -91,4 +94,4 @@ export class AuthorityGateway extends Context.Service<
       readonly terms: GrantTerms;
     }) => Effect.Effect<RunGrant, RunGrantRefused | ReadmissionRefused>;
   }
->()("Authority/Gateway") {}
+>()($I`AuthorityGateway`) {}

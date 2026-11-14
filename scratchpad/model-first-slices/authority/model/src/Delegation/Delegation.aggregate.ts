@@ -35,7 +35,7 @@ export const DelegationState = S.TaggedUnion({
   Unopened: {},
   Active: {
     parent: GrantId,
-    parentDelegation: S.NullOr(DelegationId),
+    parentDelegation: S.OptionFromNullOr(DelegationId),
     holder: RunId,
     delegator: PrincipalId,
     terms: GrantTerms,
@@ -56,19 +56,19 @@ export type ActiveDelegation = typeof DelegationState.cases.Active.Type;
 const requireActive = (state: DelegationState): Effect.Effect<ActiveDelegation, DelegationNotActive> =>
   Match.value(state).pipe(
     Match.tag("Active", (active) => Effect.succeed(active)),
-    Match.orElse((other) => Effect.fail(new DelegationNotActive({ status: other._tag }))),
+    Match.orElse((other) => Effect.fail(DelegationNotActive.make({ status: other._tag }))),
   );
 
 /** Only the human the delegation acts for changes it. */
 const requireDelegator = (active: ActiveDelegation, invocation: Invocation): Effect.Effect<void, NotDelegator> =>
   Root.guards.Human(invocation.root) && invocation.root.principal === active.delegator
     ? Effect.void
-    : Effect.fail(new NotDelegator());
+    : Effect.fail(NotDelegator.make({}));
 
 const requireNarrower = (current: GrantTerms, next: GrantTerms): Effect.Effect<void, TermsWiden> =>
   O.match(widens(current, next), {
     onNone: () => Effect.void,
-    onSome: (dimension) => Effect.fail(new TermsWiden({ dimension })),
+    onSome: (dimension) => Effect.fail(TermsWiden.make({ dimension })),
   });
 
 /**
@@ -90,9 +90,9 @@ export class Delegation extends Domain.Aggregate(
     decide: {
       OpenDelegation: (state, command) =>
         state._tag !== "Unopened"
-          ? new DelegationAlreadyOpen()
+          ? DelegationAlreadyOpen.make({})
           : [
-              new DelegationOpened({
+              DelegationOpened.make({
                 parent: command.parent,
                 parentDelegation: command.parentDelegation,
                 holder: command.holder,
@@ -108,7 +108,7 @@ export class Delegation extends Domain.Aggregate(
         yield* requireDelegator(active, invocation);
         yield* requireNarrower(active.terms, command.terms);
         return [
-          new DelegationNarrowed({ holder: active.holder, terms: command.terms, provenance: provenanceOf(invocation) }),
+          DelegationNarrowed.make({ holder: active.holder, terms: command.terms, provenance: provenanceOf(invocation) }),
         ];
       }),
 
@@ -116,7 +116,7 @@ export class Delegation extends Domain.Aggregate(
         const active = yield* requireActive(state);
         const invocation = yield* CurrentInvocation;
         yield* requireDelegator(active, invocation);
-        return [new DelegationRevoked({ holder: active.holder, provenance: provenanceOf(invocation) })];
+        return [DelegationRevoked.make({ holder: active.holder, provenance: provenanceOf(invocation) })];
       }),
 
       DelegateFurther: Effect.fn(function* (state, command) {
@@ -124,10 +124,10 @@ export class Delegation extends Domain.Aggregate(
         const invocation = yield* CurrentInvocation;
         // Only the run holding the delegation, at the root of the invocation, passes it on.
         const holds = Root.guards.Agent(invocation.root) && invocation.root.run === active.holder;
-        if (!holds) return yield* new NotDelegationHolder();
+        if (!holds) return yield* NotDelegationHolder.make({});
         yield* requireNarrower(active.terms, command.terms);
         return [
-          new DelegationExtended({
+          DelegationExtended.make({
             holder: active.holder,
             grant: active.parent,
             child: command.child,

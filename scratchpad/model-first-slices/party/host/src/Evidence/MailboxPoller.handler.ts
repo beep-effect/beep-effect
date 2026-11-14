@@ -39,10 +39,10 @@ export const mailboxPollerLive = (options: {
 }) =>
   MailboxPoller.make(
     { main: options.main },
-    Effect.gen(function* () {
-      const source = yield* ContactSource;
-      const intake = yield* IntakeApi.Client;
-      const lastSeen = yield* Ref.make(0);
+    // The ports and the cursor, then the poll they drive.
+    Effect.map(
+      Effect.all({ source: Effect.service(ContactSource), intake: Effect.service(IntakeApi.Client), lastSeen: Ref.make(0) }),
+      ({ source, intake, lastSeen }) => {
       const org = OrgId.make(options.org);
       return Effect.gen(function* () {
         const since = yield* Ref.get(lastSeen);
@@ -62,5 +62,6 @@ export const mailboxPollerLive = (options: {
         );
         yield* Ref.set(lastSeen, now);
       }).pipe(Effect.repeat(Schedule.spaced("1 minute")), Effect.orDie);
-    }),
+      },
+    ),
   );

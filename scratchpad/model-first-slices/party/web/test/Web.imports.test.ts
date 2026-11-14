@@ -29,24 +29,24 @@ const workspace = Effect.gen(function* () {
 });
 
 /** The forbidden files each entry reaches, less what its listed exception allows. */
-const violations = (
+const violations = Effect.fn("violations")(function* (
   entries: ReadonlyArray<{ readonly entry: string; readonly file: string }>,
   exceptions: typeof predictExceptions,
-) =>
-  Effect.gen(function* () {
-    const { root, path, packages } = yield* workspace;
-    return yield* Effect.forEach(entries, ({ entry, file }) =>
-      Effect.map(ImportGraph.reachable(packages, [file]), (files) => {
-        const allowed = A.flatMap(exceptions, (exception) => (exception.entry === entry ? exception.allows : []));
-        return {
-          entry,
-          reached: files.length,
-          bad: A.filter(A.map(files, (f) => path.relative(root, f)), (f) => forbidden(f) && !A.contains(allowed, f)),
-        };
-      }),
-    );
-  });
+) {
+  const { root, path, packages } = yield* workspace;
+  return yield* Effect.forEach(entries, ({ entry, file }) =>
+    Effect.map(ImportGraph.reachable(packages, [file]), (files) => {
+      const allowed = A.flatMap(exceptions, (exception) => (exception.entry === entry ? exception.allows : []));
+      return {
+        entry,
+        reached: files.length,
+        bad: A.filter(A.map(files, (f) => path.relative(root, f)), (f) => forbidden(f) && !A.contains(allowed, f)),
+      };
+    }),
+  );
+});
 
+it.layer(NodeServices.layer)((it) => {
 it.effect("the web package's entries reach the contract, never a model or host file", () =>
   Effect.gen(function* () {
     const { path, packages } = yield* workspace;
@@ -57,7 +57,7 @@ it.effect("the web package's entries reach the contract, never a model or host f
     // Not vacuous: the bindings reach the contract's command classes.
     expect(A.some(found, (f) => f.reached > 20)).toBe(true);
     expect(A.filter(found, (f) => f.bad.length > 0)).toEqual([]);
-  }).pipe(Effect.provide(NodeServices.layer)),
+  }),
 );
 
 it.effect("the exception mechanism: a predicting screen fails unless it is listed with the files it may reach", () =>
@@ -72,5 +72,6 @@ it.effect("the exception mechanism: a predicting screen fails unless it is liste
       [{ entry: entry.entry, allows: unlisted?.bad ?? [], reason: "predicts ApproveProposal locally" }],
     );
     expect(listed?.bad).toEqual([]);
-  }).pipe(Effect.provide(NodeServices.layer)),
+  }),
 );
+});

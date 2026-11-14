@@ -2,6 +2,7 @@ import type * as Domain from "@alchemy.run/domain";
 import { OrgId } from "@proto/kernel/Ids";
 import { DirectoryRow } from "@proto/party-contract/Directory/FindParties.read";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
+import { $PartyModelId } from "@proto/kernel/Identity";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -13,6 +14,8 @@ import * as Order from "effect/Order";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const $I = $PartyModelId.create("Directory/PartyDirectory.store");
 
 /**
  * A change the projection writes. A projection from an aggregate sees only
@@ -53,7 +56,7 @@ export type DirectoryWrite = typeof DirectoryWrite.Type;
  * @category errors
  * @since 0.0.0
  */
-export class GenerationBehind extends S.TaggedError<GenerationBehind>()("GenerationBehind", {
+export class GenerationBehind extends S.TaggedError<GenerationBehind, { readonly brand: unique symbol }>()("GenerationBehind", {
   generation: S.Int,
   behind: S.Array(S.String),
 }) {}
@@ -98,7 +101,7 @@ export class PartyDirectoryStore extends Context.Service<
       page: Domain.Query.PageRequest,
     ) => Effect.Effect<Domain.Query.Page<DirectoryRow>>;
   }
->()("Party/PartyDirectoryStore") {}
+>()($I`PartyDirectoryStore`) {}
 
 const byPartyId = Order.mapInput(Order.String, (row: DirectoryRow) => row.partyId);
 
@@ -170,7 +173,7 @@ export const MemoryPartyDirectoryStore = Layer.effect(
   Effect.gen(function* () {
     const table = yield* Ref.make<Table>({ active: O.none(), generations: HashMap.empty() });
     return {
-      apply: (generation, writes) =>
+      apply: Effect.fn("PartyDirectoryStore.apply")((generation: number, writes: ReadonlyArray<DirectoryWrite>) =>
         Ref.modify(table, (current): readonly [number, Table] => {
           if (O.exists(current.active, (active) => generation < active)) return [0, current];
           const [applied, next] = A.reduce(writes, [0, generationOf(current, generation)] as const, applyWrite);
@@ -182,9 +185,12 @@ export const MemoryPartyDirectoryStore = Layer.effect(
             },
           ];
         }),
+      ),
       active: Effect.map(Ref.get(table), (current) => current.active),
-      checkpoints: (generation) => Effect.map(Ref.get(table), (current) => generationOf(current, generation).checkpoints),
-      switchTo: (generation) =>
+      checkpoints: Effect.fn("PartyDirectoryStore.checkpoints")((generation: number) =>
+        Effect.map(Ref.get(table), (current) => generationOf(current, generation).checkpoints),
+      ),
+      switchTo: Effect.fn("PartyDirectoryStore.switchTo")((generation: number) =>
         Effect.flatMap(
           Ref.modify(table, (current): readonly [ReadonlyArray<string>, Table] => {
             const candidate = generationOf(current, generation);
@@ -203,16 +209,18 @@ export const MemoryPartyDirectoryStore = Layer.effect(
               : [behind, current];
           }),
           (behind) =>
-            A.isReadonlyArrayEmpty(behind) ? Effect.void : Effect.fail(new GenerationBehind({ generation, behind })),
+            A.isReadonlyArrayEmpty(behind) ? Effect.void : Effect.fail(GenerationBehind.make({ generation, behind })),
         ),
-      search: (org, text, { after, take }) =>
+      ),
+      search: Effect.fn("PartyDirectoryStore.search")((org: OrgId, text: string, { after, take }: Domain.Query.PageRequest) =>
         Effect.map(Ref.get(table), (current) => {
           const rows = O.match(current.active, {
             onNone: () => HashMap.empty<PartyId, DirectoryRow>(),
             onSome: (active) => generationOf(current, active).rows,
           });
-          const matching = pipe(
-            A.fromIterable(HashMap.values(rows)),
+          const matching = rows.pipe(
+            HashMap.values,
+            A.fromIterable,
             A.filter((row) => row.org === org && pipe(Str.toLowerCase(row.name), Str.includes(Str.toLowerCase(text)))),
             A.sort(byPartyId),
             A.filter((row) => after === undefined || row.partyId > after),
@@ -223,6 +231,7 @@ export const MemoryPartyDirectoryStore = Layer.effect(
             cursor: matching.length > take ? O.getOrNull(O.map(A.last(entries), (row) => row.partyId)) : null,
           };
         }),
+      ),
     };
   }),
 );

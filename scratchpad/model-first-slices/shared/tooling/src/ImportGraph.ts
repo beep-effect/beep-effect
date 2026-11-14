@@ -1,7 +1,7 @@
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
@@ -30,10 +30,11 @@ export const WorkspacePackage = S.Struct({
  */
 export type WorkspacePackage = typeof WorkspacePackage.Type;
 
+/** A package.json, as the graph reads it: a missing `workspaces` or `exports` reads as empty. */
 const Manifest = S.Struct({
   name: S.String,
-  workspaces: S.optional(S.Array(S.String)),
-  exports: S.optional(S.Record(S.String, S.String)),
+  workspaces: S.String.pipe(S.Array, S.withDecodingDefaultKey(Effect.succeed([]))),
+  exports: S.Record(S.String, S.String).pipe(S.withDecodingDefaultKey(Effect.succeed({}))),
 });
 const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(Manifest));
 
@@ -43,7 +44,7 @@ const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(Manifest));
  * @category errors
  * @since 0.0.0
  */
-export class UnlistedEntry extends S.TaggedError<UnlistedEntry>()("UnlistedEntry", {
+export class UnlistedEntry extends S.TaggedError<UnlistedEntry, { readonly brand: unique symbol }>()("UnlistedEntry", {
   from: S.String,
   specifier: S.String,
 }) {}
@@ -59,10 +60,10 @@ export const loadWorkspace = Effect.fn("ImportGraph.loadWorkspace")(function* (r
   const path = yield* Path.Path;
   const manifestOf = (dir: string) => fs.readFileString(path.join(dir, "package.json")).pipe(Effect.flatMap(decodeManifest));
   const rootManifest = yield* manifestOf(root);
-  const packages = yield* Effect.forEach(rootManifest.workspaces ?? [], (workspace) => {
+  const packages = yield* Effect.forEach(rootManifest.workspaces, (workspace) => {
     const dir = path.join(root, workspace);
     return Effect.map(manifestOf(dir), (manifest) =>
-      WorkspacePackage.make({ name: manifest.name, dir, exports: manifest.exports ?? {} }),
+      WorkspacePackage.make({ name: manifest.name, dir, exports: manifest.exports }),
     );
   });
   return HashMap.fromIterable(A.map(packages, (pkg) => [pkg.name, pkg] as const));
@@ -80,7 +81,7 @@ const SPECIFIER = /(?:^|\n)\s*(?:import|export)\s[^'"]*?from\s*["']([^"']+)["']|
  */
 export const specifiersOf = (source: string): ReadonlyArray<string> =>
   pipe(
-    A.fromIterable(source.matchAll(SPECIFIER)),
+    A.fromIterable(pipe(source, Str.matchAll(SPECIFIER))),
     A.flatMap((match) => A.filter([match[1], match[2], match[3]], (s): s is string => s !== undefined)),
   );
 
@@ -106,14 +107,14 @@ export const reachable = Effect.fn("ImportGraph.reachable")(function* (
   const seen = MutableHashSet.empty<string>();
   const resolve = (from: string, specifier: string): Effect.Effect<O.Option<string>, UnlistedEntry> =>
     Str.startsWith(".")(specifier)
-      ? Effect.succeed(O.some(path.resolve(path.dirname(from), specifier)))
+      ? Effect.succeedSome(path.resolve(path.dirname(from), specifier))
       : O.match(HashMap.get(workspace, packageNameOf(specifier)), {
-          onNone: () => Effect.succeed(O.none()),
+          onNone: () => Effect.succeedNone,
           onSome: (pkg) => {
             const subpath = `.${Str.slice(pkg.name.length)(specifier)}`;
             return O.match(O.fromNullishOr(pkg.exports[subpath]), {
-              onNone: () => Effect.fail(new UnlistedEntry({ from, specifier })),
-              onSome: (target) => Effect.succeed(O.some(path.join(pkg.dir, target))),
+              onNone: () => Effect.fail(UnlistedEntry.make({ from, specifier })),
+              onSome: (target) => Effect.succeedSome(path.join(pkg.dir, target)),
             });
           },
         });
@@ -136,5 +137,9 @@ export const reachable = Effect.fn("ImportGraph.reachable")(function* (
  * @category getters
  * @since 0.0.0
  */
-export const entriesOf = (pkg: WorkspacePackage, join: (...parts: ReadonlyArray<string>) => string) =>
-  A.map(R.values(pkg.exports), (target) => join(pkg.dir, target));
+export const entriesOf: {
+  (join: (...parts: ReadonlyArray<string>) => string): (pkg: WorkspacePackage) => Array<string>;
+  (pkg: WorkspacePackage, join: (...parts: ReadonlyArray<string>) => string): Array<string>;
+} = dual(2, (pkg: WorkspacePackage, join: (...parts: ReadonlyArray<string>) => string): Array<string> =>
+  A.map(R.values(pkg.exports), (target) => join(pkg.dir, target)),
+);

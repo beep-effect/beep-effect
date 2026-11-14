@@ -1,5 +1,7 @@
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CapabilityId, DelegationId, GrantId, OrgId } from "./Ids.ts";
@@ -37,34 +39,44 @@ export type ResourceScope = typeof ResourceScope.Type;
  * ```ts
  * import { covers, ResourceScope } from "@proto/kernel/Capability";
  * import { OrgId } from "@proto/kernel/Ids";
+ * import { pipe } from "effect/Function";
  *
  * const acme = OrgId.make("org_acme");
- * const ok = covers(ResourceScope.cases.Org.make({ org: acme }), ResourceScope.cases.Record.make({ org: acme, record: "Claim/c1" }));
+ * const org = ResourceScope.cases.Org.make({ org: acme });
+ * const record = ResourceScope.cases.Record.make({ org: acme, record: "Claim/c1" });
+ * const ok = covers(org, record);
+ * const alsoOk = pipe(org, covers(record));
  * ```
  *
  * @category predicates
  * @since 0.0.0
  */
-export const covers = (granted: ResourceScope, wanted: ResourceScope): boolean =>
-  granted.org === wanted.org &&
-  ResourceScope.match(granted, {
-    Org: () => true,
-    Record: ({ record }) => ResourceScope.guards.Record(wanted) && wanted.record === record,
-  });
+export const covers: {
+  (wanted: ResourceScope): (granted: ResourceScope) => boolean;
+  (granted: ResourceScope, wanted: ResourceScope): boolean;
+} = dual(
+  2,
+  (granted: ResourceScope, wanted: ResourceScope): boolean =>
+    granted.org === wanted.org &&
+    ResourceScope.match(granted, {
+      Org: () => true,
+      Record: ({ record }) => ResourceScope.guards.Record(wanted) && wanted.record === record,
+    }),
+);
 
 /**
- * The terms of a grant: which capability, which of its operations (`null`
- * for every operation the capability declares), which resource, and until
- * when (`null` for no expiry).
+ * The terms of a grant: which capability, which of its operations (none for
+ * every operation the capability declares), which resource, and until when
+ * (none for no expiry). Stored and sent, an absent value is `null`.
  *
  * @category models
  * @since 0.0.0
  */
 export const GrantTerms = S.Struct({
   capability: CapabilityId,
-  operations: S.NullOr(S.Array(S.String)),
+  operations: S.String.pipe(S.Array, S.OptionFromNullOr),
   resource: ResourceScope,
-  expires: S.NullOr(S.DateTimeUtc),
+  expires: S.OptionFromNullOr(S.DateTimeUtc),
 });
 /**
  * @category models
@@ -74,13 +86,13 @@ export type GrantTerms = typeof GrantTerms.Type;
 
 /**
  * A grant as an invocation carries it: its id, the delegation it reached the
- * caller through (`null` when held directly), and its terms, as the trusted
+ * caller through (none when held directly), and its terms, as the trusted
  * boundary read them when it built the invocation.
  *
  * @category models
  * @since 0.0.0
  */
-export const CapabilityGrant = S.Struct({ grant: GrantId, delegation: S.NullOr(DelegationId), ...GrantTerms.fields });
+export const CapabilityGrant = S.Struct({ grant: GrantId, delegation: S.OptionFromNullOr(DelegationId), ...GrantTerms.fields });
 /**
  * @category models
  * @since 0.0.0
@@ -144,9 +156,9 @@ export const allows =
   (grant: CapabilityGrant): boolean =>
     grant.capability === need.capability.id &&
     A.contains(need.capability.operations, need.operation) &&
-    (grant.operations === null || A.contains(grant.operations, need.operation)) &&
+    O.match(grant.operations, { onNone: () => true, onSome: A.contains(need.operation) }) &&
     covers(grant.resource, need.resource) &&
-    (grant.expires === null || DateTime.isGreaterThan(grant.expires, need.at));
+    O.match(grant.expires, { onNone: () => true, onSome: (expires) => DateTime.isGreaterThan(expires, need.at) });
 
 /**
  * Which term of a grant a change would widen.
@@ -154,7 +166,7 @@ export const allows =
  * @category models
  * @since 0.0.0
  */
-export const TermDimension = S.Literals(["capability", "operations", "resource", "expires"]);
+export const TermDimension = LiteralKit(["capability", "operations", "resource", "expires"]);
 /**
  * @category models
  * @since 0.0.0
@@ -166,14 +178,20 @@ const within: ReadonlyArray<readonly [TermDimension, (parent: GrantTerms, child:
   [
     "operations",
     (parent, child) =>
-      parent.operations === null ||
-      (child.operations !== null && A.every(child.operations, (operation) => A.contains(parent.operations ?? [], operation))),
+      O.match(parent.operations, {
+        onNone: () => true,
+        onSome: (granted) =>
+          O.match(child.operations, { onNone: () => false, onSome: A.every((operation) => A.contains(granted, operation)) }),
+      }),
   ],
   ["resource", (parent, child) => covers(parent.resource, child.resource)],
   [
     "expires",
     (parent, child) =>
-      parent.expires === null || (child.expires !== null && DateTime.isLessThanOrEqualTo(child.expires, parent.expires)),
+      O.match(parent.expires, {
+        onNone: () => true,
+        onSome: (until) => O.match(child.expires, { onNone: () => false, onSome: DateTime.isLessThanOrEqualTo(until) }),
+      }),
   ],
 ];
 
@@ -187,17 +205,25 @@ const within: ReadonlyArray<readonly [TermDimension, (parent: GrantTerms, child:
  * **Example** (A delegation that outlives its parent widens)
  * ```ts
  * import { type GrantTerms, widens } from "@proto/kernel/Capability";
+ * import { pipe } from "effect/Function";
  *
  * declare const parent: GrantTerms;
  * declare const child: GrantTerms;
  * const dimension = widens(parent, child);
+ * const same = pipe(parent, widens(child));
  * ```
  *
  * @category predicates
  * @since 0.0.0
  */
-export const widens = (parent: GrantTerms, child: GrantTerms): O.Option<TermDimension> =>
-  A.findFirst(within, ([dimension, holds]) => (holds(parent, child) ? O.none() : O.some(dimension)));
+export const widens: {
+  (child: GrantTerms): (parent: GrantTerms) => O.Option<TermDimension>;
+  (parent: GrantTerms, child: GrantTerms): O.Option<TermDimension>;
+} = dual(
+  2,
+  (parent: GrantTerms, child: GrantTerms): O.Option<TermDimension> =>
+    A.findFirst(within, ([dimension, holds]) => (holds(parent, child) ? O.none() : O.some(dimension))),
+);
 
 /**
  * Whether terms are still in force at a time: no expiry, or an expiry after it.
@@ -205,5 +231,11 @@ export const widens = (parent: GrantTerms, child: GrantTerms): O.Option<TermDime
  * @category predicates
  * @since 0.0.0
  */
-export const inForce = (terms: GrantTerms, at: DateTime.Utc): boolean =>
-  terms.expires === null || DateTime.isGreaterThan(terms.expires, at);
+export const inForce: {
+  (at: DateTime.Utc): (terms: GrantTerms) => boolean;
+  (terms: GrantTerms, at: DateTime.Utc): boolean;
+} = dual(
+  2,
+  (terms: GrantTerms, at: DateTime.Utc): boolean =>
+    O.match(terms.expires, { onNone: () => true, onSome: (expires) => DateTime.isGreaterThan(expires, at) }),
+);

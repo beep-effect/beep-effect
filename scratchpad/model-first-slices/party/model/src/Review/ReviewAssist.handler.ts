@@ -8,14 +8,13 @@ import * as Activity from "effect/workflow/Activity";
 import { Authority } from "../Authority.external.ts";
 import { Claim } from "../Claim/Claim.aggregate.ts";
 import { Reasoner } from "./Reasoner.external.ts";
-import { ReviewAssist, ReviewAssistActivities } from "./ReviewAssist.saga.ts";
+import { ProposalSent, Reservation, ReviewAssist, ReviewAssistActivities } from "./ReviewAssist.saga.ts";
 import { ReviewPlan } from "./ReviewPlan.ts";
-import { type BudgetRefused, LiveRun, ReviewRuns, RunEnded, RunRefused } from "./ReviewRuns.external.ts";
+import { type BudgetRefused, type LiveRun, ReviewRuns, RunEnded, type RunRefused } from "./ReviewRuns.external.ts";
 
-/** How the proposal went, in memory only: the activity itself records `string | null`. */
+/** How the proposal went, in memory: what the activity recorded, or a claim already decided. */
 const Proposal = S.TaggedUnion({ Made: {}, Refused: { refusal: S.String }, AlreadyDecided: {} });
-
-
+type Proposal = typeof Proposal.Type;
 
 /**
  * The run. Each step is one activity, so a retried step does not apply
@@ -30,6 +29,11 @@ const Proposal = S.TaggedUnion({ Made: {}, Refused: { refusal: S.String }, Alrea
  * - The proposal is sent under the live run's provenance, re-admitted for
  *   this hop: a delegation revoked mid-run refuses here, and the refusal is
  *   recorded on the claim and on the run.
+ * - So is a report the runs context refuses (reserve, settle, step,
+ *   release, exhaust or the wait), for example because the delegation was
+ *   revoked before that hop: the refusal is recorded on the claim and on
+ *   the run, which gives back what its open reservation held, and the
+ *   executor stops there.
  * - A decision that lands while the run is still working ends it cleanly: a
  *   report to the concluded run answers `RunEnded`, a proposal on the decided
  *   claim answers `ClaimNotPending`, and the saga stops there without error.
@@ -52,6 +56,25 @@ export const ReviewAssistLive = ReviewAssist.toLayer(
       let live: LiveRun = { run, provenance };
       const hop = (step: string) => byAgent(live.run, sagaStep(ReviewAssist.sagaName, run, step));
       const as = (step: string) => ({ provenance: live.provenance, hop: hop(step), run: live.run });
+      /** Record a refusal on the claim and on the run; the run gives back what it holds. */
+      const recordRefusal = (refusal: string) =>
+        Activity.make({
+          name: "record-refusal",
+          ...ReviewAssistActivities["record-refusal"],
+          execute: claims
+            .send(
+              claim,
+              RecordReviewRefused.make({
+                run: live.run,
+                reason: refusal,
+                provenance: extend(live.provenance, hop("record-refusal")),
+              }),
+            )
+            .pipe(Effect.andThen(runs.refuse({ ...as("refuse"), reason: refusal })), Effect.asVoid),
+        });
+      /** A report the runs context refused is recorded, and the run has then ended: the executor stops. */
+      const recorded = (refused: RunRefused) =>
+        recordRefusal(refused.reason).pipe(Effect.andThen(Effect.fail(RunEnded.make({ status: "rejected" }))));
       const report = (
         name: "release" | "settle" | "step" | "exhaust" | "await",
         execute: Effect.Effect<LiveRun, RunRefused | RunEnded>,
@@ -62,22 +85,24 @@ export const ReviewAssistLive = ReviewAssist.toLayer(
               live = next;
             }),
           ),
+          Effect.catchTag("RunRefused", recorded),
         );
       const reservation = `${run}:assess`;
 
       const reserved = yield* Activity.make({
         name: "reserve",
         ...ReviewAssistActivities.reserve,
-        execute: runs
-          .reserve({ ...as("reserve"), reservation, units: ReviewPlan.maxPerCall })
-          .pipe(Effect.catchTag("BudgetRefused", (_: BudgetRefused) => Effect.succeed(null))),
-      });
-      if (reserved === null) {
+        execute: runs.reserve({ ...as("reserve"), reservation, units: ReviewPlan.maxPerCall }).pipe(
+          Effect.map((next) => Reservation.cases.Reserved.make({ live: next })),
+          Effect.catchTag("BudgetRefused", (_: BudgetRefused) => Effect.succeed(Reservation.cases.OutOfBudget.make({}))),
+        ),
+      }).pipe(Effect.catchTag("RunRefused", recorded));
+      if (Reservation.guards.OutOfBudget(reserved)) {
         // Out of budget: the run ends here, and no Reasoner call is made.
         yield* report("exhaust", runs.exhaust(as("exhaust")));
         return;
       }
-      live = reserved;
+      live = reserved.live;
 
       const assessed = yield* Activity.make({
         name: "assess",
@@ -103,33 +128,21 @@ export const ReviewAssistLive = ReviewAssist.toLayer(
         execute: authority.readmit({ provenance: live.provenance, hop: hop("propose") }).pipe(
           Effect.flatMap((invocation) =>
             claims
-              .send(claim, new ProposeDisposition({ ...assessed.assessment, evidenceRevision }))
+              .send(claim, ProposeDisposition.make({ ...assessed.assessment, evidenceRevision }))
               .pipe(Effect.provideService(CurrentInvocation, invocation)),
           ),
-          Effect.as(null),
-          Effect.catchTag("ReadmissionRefused", (refused) => Effect.succeed(`readmission:${refused.reason}`)),
+          Effect.as(ProposalSent.cases.Made.make({})),
+          Effect.catchTag("ReadmissionRefused", (refused) =>
+            Effect.succeed(ProposalSent.cases.Refused.make({ refusal: `readmission:${refused.reason}` })),
+          ),
         ),
       }).pipe(
-        Effect.map((refusal) => (refusal === null ? Proposal.cases.Made.make({}) : Proposal.cases.Refused.make({ refusal }))),
+        Effect.map((sent): Proposal => sent),
         Effect.catchTag("ClaimNotPending", () => Effect.succeed(Proposal.cases.AlreadyDecided.make({}))),
       );
       if (Proposal.guards.AlreadyDecided(proposed)) return;
       if (Proposal.guards.Refused(proposed)) {
-        const refusal = proposed.refusal;
-        yield* Activity.make({
-          name: "record-refusal",
-          ...ReviewAssistActivities["record-refusal"],
-          execute: claims
-            .send(
-              claim,
-              new RecordReviewRefused({
-                run: live.run,
-                reason: refusal,
-                provenance: extend(live.provenance, hop("record-refusal")),
-              }),
-            )
-            .pipe(Effect.andThen(runs.refuse({ ...as("refuse"), reason: refusal })), Effect.asVoid),
-        });
+        yield* recordRefusal(proposed.refusal);
         return;
       }
 

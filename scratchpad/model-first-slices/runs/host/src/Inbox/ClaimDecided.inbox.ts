@@ -5,6 +5,7 @@ import { ClaimDecided } from "@proto/party-contract/Facts/ClaimDecided.fact";
 import { PartyFactsFeed } from "@proto/party-contract/Facts/PartyFacts.gateway";
 import { ConcludeRun } from "@proto/runs-contract/Run/ConcludeRun.command";
 import { AgentRun } from "@proto/runs-model/Run/AgentRun.aggregate";
+import { $RunsHostId } from "@proto/kernel/Identity";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
@@ -15,6 +16,8 @@ import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import { liveRun } from "../Lineage.ts";
 import { InboxStore } from "./Inbox.store.ts";
+
+const $I = $RunsHostId.create("Inbox/ClaimDecided.inbox");
 
 /**
  * The one `ClaimDecided` version this inbox consumes. A producer adding
@@ -53,7 +56,7 @@ export class ClaimDecidedInbox extends Context.Service<
     /** Handle every fact after the checkpoint; returns how many were read. */
     readonly drain: Effect.Effect<number>;
   }
->()("Runs/ClaimDecidedInbox") {}
+>()($I`ClaimDecidedInbox`) {}
 
 /**
  * The inbox over Party's feed, the inbox store and the runs model.
@@ -89,7 +92,7 @@ export const ClaimDecidedInboxLive = Layer.effect(
               operation: ConcludeRun.tag,
               payload: { fact: key, run: live.run },
             }).pipe(Effect.provideService(Digest.Digest, digest));
-            yield* runs.send(live.run, new ConcludeRun({ outcome: fact.outcome, hop }), { commandId });
+            yield* runs.send(live.run, ConcludeRun.make({ outcome: fact.outcome, hop }), { commandId });
           }),
         { discard: true },
       );
@@ -114,15 +117,13 @@ export const ClaimDecidedInboxLive = Layer.effect(
  * @category layers
  * @since 0.0.0
  */
-export const ClaimDecidedInboxPoller = Layer.effectDiscard(
-  Effect.flatMap(Effect.service(ClaimDecidedInbox), (inbox) =>
-    Effect.forkScoped(
-      inbox.drain.pipe(
-        Effect.tap((read) => (read > 0 ? Effect.logInfo(`ClaimDecided inbox: handled ${read} facts`) : Effect.void)),
-        // A failed drain is reported and retried on the next tick; it never stops the poller.
-        Effect.catchCause((cause) => Effect.logError("ClaimDecided inbox: drain failed", cause)),
-        Effect.repeat(Schedule.spaced("250 millis")),
-      ),
+export const ClaimDecidedInboxPoller = Effect.flatMap(Effect.service(ClaimDecidedInbox), (inbox) =>
+  Effect.forkScoped(
+    inbox.drain.pipe(
+      Effect.tap((read) => (read > 0 ? Effect.logInfo(`ClaimDecided inbox: handled ${read} facts`) : Effect.void)),
+      // A failed drain is reported and retried on the next tick; it never stops the poller.
+      Effect.catchCause((cause) => Effect.logError("ClaimDecided inbox: drain failed", cause)),
+      Effect.repeat(Schedule.spaced("250 millis")),
     ),
   ),
-);
+).pipe(Layer.effectDiscard);

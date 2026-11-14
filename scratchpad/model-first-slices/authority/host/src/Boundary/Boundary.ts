@@ -23,13 +23,17 @@ import {
 } from "@proto/kernel/Invocation";
 import { ReadmissionRefused } from "@proto/kernel/ReadmissionRefused.rejection";
 import { Unaccountable } from "@proto/kernel/Session.middleware";
+import { $AuthorityHostId } from "@proto/kernel/Identity";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import type * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { Credential } from "./FixtureCredential.ts";
+
+const $I = $AuthorityHostId.create("Boundary/Boundary");
 
 /**
  * The trusted boundary: the only code that builds an invocation. It admits a
@@ -66,7 +70,7 @@ export class Boundary extends Context.Service<
       grant: GrantRef,
     ) => Provenance;
   }
->()("Authority/Boundary") {}
+>()($I`Boundary`) {}
 
 const listed = <S, A>(state: O.Option<S>, items: (state: S) => ReadonlyArray<A>): ReadonlyArray<A> =>
   O.match(state, { onNone: () => [], onSome: items });
@@ -114,10 +118,14 @@ export const BoundaryLive = Layer.effect(
           O.match(holder, { onNone: () => true, onSome: (run) => held.holder === run }) &&
           inForce(held.terms, at);
         if (!usable) return O.none();
-        const parentTerms =
-          held.parentDelegation === null
-            ? yield* grantInForce(held.parent, O.none(), at)
-            : O.map(yield* delegationInForce(held.parentDelegation, O.none(), at), (parent) => parent.terms);
+        const parentTerms = yield* O.match(held.parentDelegation, {
+          onNone: () => grantInForce(held.parent, O.none(), at),
+          onSome: (parentDelegation) =>
+            Effect.map(
+              delegationInForce(parentDelegation, O.none(), at),
+              O.map((parent) => parent.terms),
+            ),
+        });
         return O.flatMap(parentTerms, (parent) =>
           O.isNone(widens(parent, held.terms)) ? O.some({ grant: held.parent, terms: held.terms }) : O.none(),
         );
@@ -125,26 +133,31 @@ export const BoundaryLive = Layer.effect(
 
     const confirm = (ref: GrantRef, root: Root, at: DateTime.Utc): Effect.Effect<O.Option<CapabilityGrant>> =>
       Root.match(root, {
+        // A human holds grants directly; an agent run only through a delegation.
         Human: ({ principal }) =>
-          ref.delegation === null
-            ? Effect.map(grantInForce(ref.grant, O.some(principal), at), (terms) =>
-                O.map(terms, (t) => CapabilityGrant.make({ grant: ref.grant, delegation: null, ...t })),
-              )
-            : Effect.succeed(O.none()),
-        Agent: ({ run }) =>
-          ref.delegation === null
-            ? Effect.succeed(O.none())
-            : Effect.map(delegationInForce(ref.delegation, O.some(run), at), (found) =>
-                O.map(found, ({ grant, terms }) => CapabilityGrant.make({ grant, delegation: ref.delegation, ...terms })),
+          O.match(ref.delegation, {
+            onNone: () =>
+              Effect.map(grantInForce(ref.grant, O.some(principal), at), (terms) =>
+                O.map(terms, (t) => CapabilityGrant.make({ grant: ref.grant, delegation: O.none(), ...t })),
               ),
+            onSome: () => Effect.succeedNone,
+          }),
+        Agent: ({ run }) =>
+          O.match(ref.delegation, {
+            onNone: () => Effect.succeedNone,
+            onSome: (delegation) =>
+              Effect.map(delegationInForce(delegation, O.some(run), at), (found) =>
+                O.map(found, ({ grant, terms }) => CapabilityGrant.make({ grant, delegation: O.some(delegation), ...terms })),
+              ),
+          }),
       });
 
     const heldBy = Effect.fn("Boundary.heldBy")(function* (principal: PrincipalId, at: DateTime.Utc) {
-      const ids = listed(yield* Effect.orDie(holderGrants.get(principal)), (view) => view.grants);
+      const view = yield* Effect.orDie(holderGrants.get(principal));
+      const ids = listed(view, (held) => held.grants);
       const root = Root.cases.Human.make({ principal });
-      return A.getSomes(
-        yield* Effect.forEach(ids, (grant) => confirm(GrantRef.make({ grant, delegation: null }), root, at)),
-      );
+      const confirmed = yield* Effect.forEach(ids, (grant) => confirm(GrantRef.make({ grant, delegation: O.none() }), root, at));
+      return A.getSomes(confirmed);
     });
 
     const answerFor = (run: RunId) =>
@@ -155,17 +168,15 @@ export const BoundaryLive = Layer.effect(
       accountable: PrincipalId,
       at: DateTime.Utc,
     ) {
-      const ids = listed(yield* Effect.orDie(runDelegations.get(run)), (view) => view.delegations);
+      const view = yield* Effect.orDie(runDelegations.get(run));
+      const ids = listed(view, (held) => held.delegations);
       const root = Root.cases.Agent.make({ run, accountable });
-      return A.getSomes(
-        yield* Effect.forEach(ids, (delegation: DelegationId) =>
-          Effect.flatMap(delegations.get(delegation), (held) =>
-            held._tag === "Active"
-              ? confirm(GrantRef.make({ grant: held.parent, delegation }), root, at)
-              : Effect.succeed(O.none()),
-          ),
+      const confirmed = yield* Effect.forEach(ids, (delegation: DelegationId) =>
+        Effect.flatMap(delegations.get(delegation), (held) =>
+          held._tag === "Active" ? confirm(GrantRef.make({ grant: held.parent, delegation: O.some(delegation) }), root, at) : Effect.succeedNone,
         ),
       );
+      return A.getSomes(confirmed);
     });
 
     const humanRooted = (principal: PrincipalId, at: DateTime.Utc, chain: ReadonlyArray<Hop>) =>
@@ -173,53 +184,56 @@ export const BoundaryLive = Layer.effect(
         Invocation.make({ root: Root.cases.Human.make({ principal }), onBehalfOf: principal, grants: held, chain }),
       );
 
+    /** An agent run is admitted only while it has a live accountable human, with its delegations in force. */
+    const admitAgent = Effect.fn("Boundary.admitAgent")(function* (run: RunId, at: DateTime.Utc) {
+      const answerer = yield* answerFor(run);
+      if (O.isNone(answerer)) return yield* Unaccountable.make({ run });
+      const grants = yield* delegatedTo(run, answerer.value.accountable, at);
+      return Invocation.make({
+        root: Root.cases.Agent.make({ run, accountable: answerer.value.accountable }),
+        onBehalfOf: answerer.value.onBehalfOf,
+        grants,
+        chain: [],
+      });
+    });
+
     return {
-      admit: (credential, at) =>
+      admit: Effect.fn("Boundary.admit")((credential: Credential, at: DateTime.Utc) =>
         Credential.match(credential, {
           Human: ({ principal }) => humanRooted(principal, at, []),
           // A process acts for a human, and its first hop says so; a process is never a root.
           Process: ({ process, principal }) =>
             humanRooted(principal, at, [byProcess(process, Cause.cases.Session.make({ scheme: "fixture" }))]),
-          Agent: ({ run }) =>
-            Effect.gen(function* () {
-              const answerer = yield* answerFor(run);
-              if (O.isNone(answerer)) return yield* new Unaccountable({ run });
-              return Invocation.make({
-                root: Root.cases.Agent.make({ run, accountable: answerer.value.accountable }),
-                onBehalfOf: answerer.value.onBehalfOf,
-                grants: yield* delegatedTo(run, answerer.value.accountable, at),
-                chain: [],
-              });
-            }),
+          Agent: ({ run }) => admitAgent(run, at),
         }),
+      ),
 
-      readmit: (provenance, hop, at) =>
-        Effect.gen(function* () {
-          // The root is re-checked, not trusted: an agent root needs a live accountable human now.
-          const onBehalfOf = yield* Root.match(provenance.root, {
-            Human: ({ principal }) => Effect.succeed(principal),
-            Agent: ({ run, accountable }) =>
-              Effect.flatMap(answerFor(run), (answerer) =>
-                O.isSome(answerer) && answerer.value.accountable === accountable
-                  ? Effect.succeed(answerer.value.onBehalfOf)
-                  : Effect.fail(new ReadmissionRefused({ reason: "unaccountable", lapsed: [] })),
-              ),
-          });
-          const confirmed = yield* Effect.forEach(provenance.grants, (ref) =>
-            Effect.map(confirm(ref, provenance.root, at), (live) => ({ ref, live })),
-          );
-          const live = A.getSomes(A.map(confirmed, ({ live }) => live));
-          const lapsed = A.getSomes(A.map(confirmed, ({ ref, live }) => (O.isNone(live) ? O.some(ref) : O.none())));
-          if (A.isReadonlyArrayNonEmpty(provenance.grants) && A.isReadonlyArrayEmpty(live)) {
-            return yield* new ReadmissionRefused({ reason: "lapsed", lapsed });
-          }
-          return Invocation.make({
-            root: provenance.root,
-            onBehalfOf,
-            grants: live,
-            chain: A.append(provenance.chain, hop),
-          });
-        }),
+      readmit: Effect.fn("Boundary.readmit")(function* (provenance: Provenance, hop: Hop, at: DateTime.Utc) {
+        // The root is re-checked, not trusted: an agent root needs a live accountable human now.
+        const onBehalfOf = yield* Root.match(provenance.root, {
+          Human: ({ principal }) => Effect.succeed(principal),
+          Agent: ({ run, accountable }) =>
+            Effect.flatMap(answerFor(run), (answerer) =>
+              O.isSome(answerer) && answerer.value.accountable === accountable
+                ? Effect.succeed(answerer.value.onBehalfOf)
+                : Effect.fail(ReadmissionRefused.make({ reason: "unaccountable", lapsed: [] })),
+            ),
+        });
+        const confirmed = yield* Effect.forEach(provenance.grants, (ref) =>
+          Effect.map(confirm(ref, provenance.root, at), (live) => ({ ref, live })),
+        );
+        const live = A.getSomes(A.map(confirmed, ({ live }) => live));
+        const lapsed = A.getSomes(A.map(confirmed, ({ ref, live }) => (O.isNone(live) ? O.some(ref) : O.none())));
+        if (A.isReadonlyArrayNonEmpty(provenance.grants) && A.isReadonlyArrayEmpty(live)) {
+          return yield* ReadmissionRefused.make({ reason: "lapsed", lapsed });
+        }
+        return Invocation.make({
+          root: provenance.root,
+          onBehalfOf,
+          grants: live,
+          chain: A.append(provenance.chain, hop),
+        });
+      }),
 
       runProvenance: (run, accountable, onBehalfOf, grant) =>
         Provenance.make({
@@ -245,19 +259,23 @@ export const BoundaryLive = Layer.effect(
  * @category constructors
  * @since 0.0.0
  */
-export const bootstrap = (owner: PrincipalId, org: OrgId): Invocation =>
+export const bootstrap: {
+  (org: OrgId): (owner: PrincipalId) => Invocation;
+  (owner: PrincipalId, org: OrgId): Invocation;
+} = dual(2, (owner: PrincipalId, org: OrgId): Invocation =>
   Invocation.make({
     root: Root.cases.Human.make({ principal: owner }),
     onBehalfOf: owner,
     grants: [
       CapabilityGrant.make({
         grant: GrantId.make(`bootstrap:${org}`),
-        delegation: null,
+        delegation: O.none(),
         capability: CapabilityId.make("authority.grants"),
-        operations: null,
+        operations: O.none(),
         resource: ResourceScope.cases.Org.make({ org }),
-        expires: null,
+        expires: O.none(),
       }),
     ],
     chain: [],
-  });
+  }),
+);

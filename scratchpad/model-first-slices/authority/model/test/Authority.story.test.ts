@@ -42,6 +42,7 @@ import { CapabilityId, DelegationId, GrantId, OrgId, PrincipalId, RunId } from "
 import { byProcess, Cause, extend, Invocation, provenanceOf, Root } from "@proto/kernel/Invocation";
 import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import * as DateTime from "effect/DateTime";
+import * as O from "effect/Option";
 
 const { clock, given, provide, rejected, then, when } = Story;
 const as = (invocation: Invocation) => provide(CurrentInvocation, invocation);
@@ -61,11 +62,11 @@ const humanRoot = (principal: string, grants: ReadonlyArray<CapabilityGrant> = [
 const admin = humanRoot("p_admin", [
   CapabilityGrant.make({
     grant: GrantId.make("g_admin"),
-    delegation: null,
+    delegation: O.none(),
     capability: AuthorityGrants.id,
-    operations: null,
+    operations: O.none(),
     resource: ResourceScope.cases.Org.make({ org: acme }),
-    expires: null,
+    expires: O.none(),
   }),
 ]);
 const reviewer = humanRoot("p_rev");
@@ -80,35 +81,35 @@ const agent = Invocation.make({
 const review = CapabilityId.make("party.review");
 const terms = (overrides: Partial<GrantTerms> = {}): GrantTerms => ({
   capability: review,
-  operations: null,
+  operations: O.none(),
   resource: ResourceScope.cases.Org.make({ org: acme }),
-  expires: DateTime.makeUnsafe("2026-12-31T00:00:00Z"),
+  expires: O.some(DateTime.makeUnsafe("2026-12-31T00:00:00Z")),
   ...overrides,
 });
 
 const grant = Grant.ref("g_1");
 const delegation = Delegation.ref("d_1");
-const issued = new GrantIssued({ holder: PrincipalId.make("p_rev"), terms: terms(), provenance: provenanceOf(admin) });
+const issued = GrantIssued.make({ holder: PrincipalId.make("p_rev"), terms: terms(), provenance: provenanceOf(admin) });
 
 it.effect("issuing a grant needs authority.grants on the org", () =>
   story(
     as(reviewer),
-    when(grant, new IssueGrant({ holder: PrincipalId.make("p_rev"), terms: terms({ expires: null }) })),
-    rejected(new MissingGrant({ capability: AuthorityGrants.id, operation: "IssueGrant" })),
+    when(grant, IssueGrant.make({ holder: PrincipalId.make("p_rev"), terms: terms({ expires: O.none() }) })),
+    rejected(MissingGrant.make({ capability: AuthorityGrants.id, operation: "IssueGrant" })),
     as(admin),
-    when(grant, new IssueGrant({ holder: PrincipalId.make("p_rev"), terms: terms({ expires: null }) })),
-    then(grant, new GrantIssued({ holder: PrincipalId.make("p_rev"), terms: terms({ expires: null }), provenance: provenanceOf(admin) })),
+    when(grant, IssueGrant.make({ holder: PrincipalId.make("p_rev"), terms: terms({ expires: O.none() }) })),
+    then(grant, GrantIssued.make({ holder: PrincipalId.make("p_rev"), terms: terms({ expires: O.none() }), provenance: provenanceOf(admin) })),
   ),
 );
 
 it.effect("a delegated grant cannot widen: capability, operations, resource or expiry", () => {
   const narrower = terms({
-    operations: ["AcceptClaim"],
+    operations: O.some(["AcceptClaim"]),
     resource: ResourceScope.cases.Record.make({ org: acme, record: "Claim/claim_1" }),
-    expires: DateTime.makeUnsafe("2026-07-01T00:00:00Z"),
+    expires: O.some(DateTime.makeUnsafe("2026-07-01T00:00:00Z")),
   });
   const to = (delegated: GrantTerms) =>
-    new DelegateGrant({ delegation: DelegationId.make("d_1"), to: run, terms: delegated });
+    DelegateGrant.make({ delegation: DelegationId.make("d_1"), to: run, terms: delegated });
   const opened = extend(
     provenanceOf(reviewer),
     byProcess("OpenOnDelegate", Cause.cases.Event.make({ stream: "Grant/g_1", seq: 2, event: "GrantDelegated" })),
@@ -117,17 +118,17 @@ it.effect("a delegated grant cannot widen: capability, operations, resource or e
     given(grant, issued),
     as(reviewer),
     when(grant, to(terms({ capability: CapabilityId.make("party.intake") }))),
-    rejected(new TermsWiden({ dimension: "capability" })),
+    rejected(TermsWiden.make({ dimension: "capability" })),
     when(grant, to(terms({ resource: ResourceScope.cases.Org.make({ org: globex }) }))),
-    rejected(new TermsWiden({ dimension: "resource" })),
-    when(grant, to(terms({ expires: DateTime.makeUnsafe("2027-01-01T00:00:00Z") }))),
-    rejected(new TermsWiden({ dimension: "expires" })),
-    when(grant, to(terms({ expires: null }))),
-    rejected(new TermsWiden({ dimension: "expires" })),
+    rejected(TermsWiden.make({ dimension: "resource" })),
+    when(grant, to(terms({ expires: O.some(DateTime.makeUnsafe("2027-01-01T00:00:00Z")) }))),
+    rejected(TermsWiden.make({ dimension: "expires" })),
+    when(grant, to(terms({ expires: O.none() }))),
+    rejected(TermsWiden.make({ dimension: "expires" })),
     when(grant, to(narrower)),
     then(
       grant,
-      new GrantDelegated({
+      GrantDelegated.make({
         holder: PrincipalId.make("p_rev"),
         delegation: DelegationId.make("d_1"),
         to: run,
@@ -138,9 +139,9 @@ it.effect("a delegated grant cannot widen: capability, operations, resource or e
     // The model's own policy opens the delegation, relaying the holder's invocation.
     then(
       delegation,
-      new DelegationOpened({
+      DelegationOpened.make({
         parent: GrantId.make("g_1"),
-        parentDelegation: null,
+        parentDelegation: O.none(),
         holder: run,
         delegator: PrincipalId.make("p_rev"),
         terms: narrower,
@@ -151,44 +152,44 @@ it.effect("a delegated grant cannot widen: capability, operations, resource or e
 });
 
 it.effect("only the human holding a grant delegates it", () => {
-  const delegate = new DelegateGrant({ delegation: DelegationId.make("d_1"), to: run, terms: terms() });
+  const delegate = DelegateGrant.make({ delegation: DelegationId.make("d_1"), to: run, terms: terms() });
   return story(
     given(grant, issued),
     as(humanRoot("p_eve")),
     when(grant, delegate),
-    rejected(new NotHolder()),
+    rejected(NotHolder.make({})),
     // An agent acting for the holder re-delegates its own delegation, never the parent grant.
     as(agent),
     when(grant, delegate),
-    rejected(new NotHolder()),
+    rejected(NotHolder.make({})),
   );
 });
 
 it.effect("a delegation only narrows, and only its delegator changes it", () => {
-  const opened = new DelegationOpened({
+  const opened = DelegationOpened.make({
     parent: GrantId.make("g_1"),
-    parentDelegation: null,
+    parentDelegation: O.none(),
     holder: run,
     delegator: PrincipalId.make("p_rev"),
-    terms: terms({ operations: ["AcceptClaim", "RetractClaim"] }),
+    terms: terms({ operations: O.some(["AcceptClaim", "RetractClaim"]) }),
     provenance: provenanceOf(reviewer),
   });
-  const narrower = terms({ operations: ["AcceptClaim"] });
+  const narrower = terms({ operations: O.some(["AcceptClaim"]) });
   return story(
     given(delegation, opened),
     as(humanRoot("p_eve")),
-    when(delegation, new NarrowDelegation({ terms: narrower })),
-    rejected(new NotDelegator()),
+    when(delegation, NarrowDelegation.make({ terms: narrower })),
+    rejected(NotDelegator.make({})),
     as(reviewer),
-    when(delegation, new NarrowDelegation({ terms: terms({ operations: null }) })),
-    rejected(new TermsWiden({ dimension: "operations" })),
-    when(delegation, new NarrowDelegation({ terms: narrower })),
-    then(delegation, new DelegationNarrowed({ holder: run, terms: narrower, provenance: provenanceOf(reviewer) })),
+    when(delegation, NarrowDelegation.make({ terms: terms({ operations: O.none() }) })),
+    rejected(TermsWiden.make({ dimension: "operations" })),
+    when(delegation, NarrowDelegation.make({ terms: narrower })),
+    then(delegation, DelegationNarrowed.make({ holder: run, terms: narrower, provenance: provenanceOf(reviewer) })),
   );
 });
 
 it.effect("a grant expires at its deadline, scheduled by the model's own policy", () => {
-  const expiring = terms({ expires: DateTime.makeUnsafe("2026-02-01T00:00:00Z") });
+  const expiring = terms({ expires: O.some(DateTime.makeUnsafe("2026-02-01T00:00:00Z")) });
   const expiredBy = extend(
     provenanceOf(admin),
     byProcess("ExpireAtDeadline", Cause.cases.Event.make({ stream: "Grant/g_1", seq: 1, event: "GrantIssued" })),
@@ -196,10 +197,10 @@ it.effect("a grant expires at its deadline, scheduled by the model's own policy"
   return story(
     clock("2026-01-01T00:00:00Z"),
     as(admin),
-    when(grant, new IssueGrant({ holder: PrincipalId.make("p_rev"), terms: expiring })),
-    then(grant, new GrantIssued({ holder: PrincipalId.make("p_rev"), terms: expiring, provenance: provenanceOf(admin) })),
+    when(grant, IssueGrant.make({ holder: PrincipalId.make("p_rev"), terms: expiring })),
+    then(grant, GrantIssued.make({ holder: PrincipalId.make("p_rev"), terms: expiring, provenance: provenanceOf(admin) })),
     clock("2026-02-02T00:00:00Z"),
-    then(grant, new GrantExpired({ holder: PrincipalId.make("p_rev"), provenance: expiredBy })),
+    then(grant, GrantExpired.make({ holder: PrincipalId.make("p_rev"), provenance: expiredBy })),
   );
 });
 
@@ -207,8 +208,8 @@ it.effect("an admin revokes a grant", () =>
   story(
     given(grant, issued),
     as(admin),
-    when(grant, new RevokeGrant()),
-    then(grant, new GrantRevoked({ holder: PrincipalId.make("p_rev"), provenance: provenanceOf(admin) })),
+    when(grant, RevokeGrant.make({})),
+    then(grant, GrantRevoked.make({ holder: PrincipalId.make("p_rev"), provenance: provenanceOf(admin) })),
   ),
 );
 
@@ -218,10 +219,10 @@ it.effect("a human takes and releases accountability; a run's child answers to t
   return story(
     // An agent root names its own accountable human for the run it starts.
     as(agent),
-    when(child, new AssignAccountability()),
+    when(child, AssignAccountability.make({})),
     then(
       child,
-      new AccountabilityAssigned({
+      AccountabilityAssigned.make({
         run: RunId.make("run_2"),
         accountable: PrincipalId.make("p_rev"),
         onBehalfOf: PrincipalId.make("p_rev"),
@@ -229,10 +230,10 @@ it.effect("a human takes and releases accountability; a run's child answers to t
       }),
     ),
     as(reviewer),
-    when(accountability, new AssignAccountability()),
+    when(accountability, AssignAccountability.make({})),
     then(
       accountability,
-      new AccountabilityAssigned({
+      AccountabilityAssigned.make({
         run,
         accountable: PrincipalId.make("p_rev"),
         onBehalfOf: PrincipalId.make("p_rev"),
@@ -240,43 +241,43 @@ it.effect("a human takes and releases accountability; a run's child answers to t
       }),
     ),
     as(humanRoot("p_eve")),
-    when(accountability, new ReleaseAccountability()),
-    rejected(new NotAccountable()),
+    when(accountability, ReleaseAccountability.make({})),
+    rejected(NotAccountable.make({})),
     as(reviewer),
-    when(accountability, new ReleaseAccountability()),
+    when(accountability, ReleaseAccountability.make({})),
     then(
       accountability,
-      new AccountabilityReleased({ run, accountable: PrincipalId.make("p_rev"), provenance: provenanceOf(reviewer) }),
+      AccountabilityReleased.make({ run, accountable: PrincipalId.make("p_rev"), provenance: provenanceOf(reviewer) }),
     ),
   );
 });
 
 it.effect("a run delegates its delegation further, only narrower, and only as its holder", () => {
-  const held = new DelegationOpened({
+  const held = DelegationOpened.make({
     parent: GrantId.make("g_1"),
-    parentDelegation: null,
+    parentDelegation: O.none(),
     holder: run,
     delegator: PrincipalId.make("p_rev"),
-    terms: terms({ operations: ["AcceptClaim", "RetractClaim"] }),
+    terms: terms({ operations: O.some(["AcceptClaim", "RetractClaim"]) }),
     provenance: provenanceOf(reviewer),
   });
-  const narrower = terms({ operations: ["AcceptClaim"] });
+  const narrower = terms({ operations: O.some(["AcceptClaim"]) });
   const child = Delegation.ref("d_child");
   const further = (delegated: GrantTerms) =>
-    new DelegateFurther({ child: DelegationId.make("d_child"), to: RunId.make("run_2"), terms: delegated });
+    DelegateFurther.make({ child: DelegationId.make("d_child"), to: RunId.make("run_2"), terms: delegated });
   return story(
     given(delegation, held),
     // A human, even the delegator, does not hold the delegation: the run does.
     as(reviewer),
     when(delegation, further(narrower)),
-    rejected(new NotDelegationHolder()),
+    rejected(NotDelegationHolder.make({})),
     as(agent),
-    when(delegation, further(terms({ operations: null }))),
-    rejected(new TermsWiden({ dimension: "operations" })),
+    when(delegation, further(terms({ operations: O.none() }))),
+    rejected(TermsWiden.make({ dimension: "operations" })),
     when(delegation, further(narrower)),
     then(
       delegation,
-      new DelegationExtended({
+      DelegationExtended.make({
         holder: run,
         grant: GrantId.make("g_1"),
         child: DelegationId.make("d_child"),
@@ -287,9 +288,9 @@ it.effect("a run delegates its delegation further, only narrower, and only as it
     ),
     then(
       child,
-      new DelegationOpened({
+      DelegationOpened.make({
         parent: GrantId.make("g_1"),
-        parentDelegation: DelegationId.make("d_1"),
+        parentDelegation: O.some(DelegationId.make("d_1")),
         holder: RunId.make("run_2"),
         delegator: PrincipalId.make("p_rev"),
         terms: narrower,
@@ -304,41 +305,41 @@ it.effect("a run delegates its delegation further, only narrower, and only as it
 
 // The refusal paths `bun run outcomes` found unexecuted, each met by the caller it is meant for.
 it.effect("a grant is issued once, narrowed only by an admin and only narrower, and refused once inactive", () => {
-  const narrower = terms({ operations: ["AcceptClaim"] });
+  const narrower = terms({ operations: O.some(["AcceptClaim"]) });
   const other = Grant.ref("g_2");
   return story(
     given(grant, issued),
     as(admin),
-    when(grant, new IssueGrant({ holder: PrincipalId.make("p_rev"), terms: terms() })),
-    rejected(new GrantAlreadyIssued()),
+    when(grant, IssueGrant.make({ holder: PrincipalId.make("p_rev"), terms: terms() })),
+    rejected(GrantAlreadyIssued.make({})),
     as(reviewer),
-    when(grant, new NarrowGrant({ terms: narrower })),
-    rejected(new MissingGrant({ capability: AuthorityGrants.id, operation: "NarrowGrant" })),
-    when(grant, new RevokeGrant()),
-    rejected(new MissingGrant({ capability: AuthorityGrants.id, operation: "RevokeGrant" })),
+    when(grant, NarrowGrant.make({ terms: narrower })),
+    rejected(MissingGrant.make({ capability: AuthorityGrants.id, operation: "NarrowGrant" })),
+    when(grant, RevokeGrant.make({})),
+    rejected(MissingGrant.make({ capability: AuthorityGrants.id, operation: "RevokeGrant" })),
     as(admin),
-    when(grant, new NarrowGrant({ terms: terms({ expires: null }) })),
-    rejected(new TermsWiden({ dimension: "expires" })),
-    when(grant, new NarrowGrant({ terms: narrower })),
-    then(grant, new GrantNarrowed({ holder: PrincipalId.make("p_rev"), terms: narrower, provenance: provenanceOf(admin) })),
+    when(grant, NarrowGrant.make({ terms: terms({ expires: O.none() }) })),
+    rejected(TermsWiden.make({ dimension: "expires" })),
+    when(grant, NarrowGrant.make({ terms: narrower })),
+    then(grant, GrantNarrowed.make({ holder: PrincipalId.make("p_rev"), terms: narrower, provenance: provenanceOf(admin) })),
     // A grant nobody issued, or one revoked, takes nothing more.
-    when(other, new RevokeGrant()),
-    rejected(new GrantNotActive({ status: "Unissued" })),
-    when(other, new NarrowGrant({ terms: narrower })),
-    rejected(new GrantNotActive({ status: "Unissued" })),
+    when(other, RevokeGrant.make({})),
+    rejected(GrantNotActive.make({ status: "Unissued" })),
+    when(other, NarrowGrant.make({ terms: narrower })),
+    rejected(GrantNotActive.make({ status: "Unissued" })),
     as(reviewer),
-    when(other, new DelegateGrant({ delegation: DelegationId.make("d_9"), to: run, terms: narrower })),
-    rejected(new GrantNotActive({ status: "Unissued" })),
+    when(other, DelegateGrant.make({ delegation: DelegationId.make("d_9"), to: run, terms: narrower })),
+    rejected(GrantNotActive.make({ status: "Unissued" })),
   );
 });
 
 it.effect("a delegation opens once; only its delegator revokes it; a revoked or unopened one takes nothing", () => {
-  const opened = new DelegationOpened({
+  const opened = DelegationOpened.make({
     parent: GrantId.make("g_1"),
-    parentDelegation: null,
+    parentDelegation: O.none(),
     holder: run,
     delegator: PrincipalId.make("p_rev"),
-    terms: terms({ operations: ["AcceptClaim"] }),
+    terms: terms({ operations: O.some(["AcceptClaim"]) }),
     provenance: provenanceOf(reviewer),
   });
   const unopened = Delegation.ref("d_none");
@@ -346,46 +347,46 @@ it.effect("a delegation opens once; only its delegator revokes it; a revoked or 
     given(delegation, opened),
     when(
       delegation,
-      new OpenDelegation({
+      OpenDelegation.make({
         parent: GrantId.make("g_1"),
-        parentDelegation: null,
+        parentDelegation: O.none(),
         holder: run,
         delegator: PrincipalId.make("p_rev"),
-        terms: terms({ operations: ["AcceptClaim"] }),
+        terms: terms({ operations: O.some(["AcceptClaim"]) }),
         provenance: provenanceOf(reviewer),
       }),
     ),
-    rejected(new DelegationAlreadyOpen()),
+    rejected(DelegationAlreadyOpen.make({})),
     as(humanRoot("p_eve")),
-    when(delegation, new RevokeDelegation()),
-    rejected(new NotDelegator()),
+    when(delegation, RevokeDelegation.make({})),
+    rejected(NotDelegator.make({})),
     as(reviewer),
-    when(delegation, new RevokeDelegation()),
-    then(delegation, new DelegationRevoked({ holder: run, provenance: provenanceOf(reviewer) })),
-    when(delegation, new RevokeDelegation()),
-    rejected(new DelegationNotActive({ status: "Revoked" })),
-    when(unopened, new NarrowDelegation({ terms: terms({ operations: ["AcceptClaim"] }) })),
-    rejected(new DelegationNotActive({ status: "Unopened" })),
+    when(delegation, RevokeDelegation.make({})),
+    then(delegation, DelegationRevoked.make({ holder: run, provenance: provenanceOf(reviewer) })),
+    when(delegation, RevokeDelegation.make({})),
+    rejected(DelegationNotActive.make({ status: "Revoked" })),
+    when(unopened, NarrowDelegation.make({ terms: terms({ operations: O.some(["AcceptClaim"]) }) })),
+    rejected(DelegationNotActive.make({ status: "Unopened" })),
     as(agent),
-    when(unopened, new DelegateFurtherCommand({ child: DelegationId.make("d_child"), to: RunId.make("run_9"), terms: terms() })),
-    rejected(new DelegationNotActive({ status: "Unopened" })),
+    when(unopened, DelegateFurtherCommand.make({ child: DelegationId.make("d_child"), to: RunId.make("run_9"), terms: terms() })),
+    rejected(DelegationNotActive.make({ status: "Unopened" })),
   );
 });
 
 it.effect("a run's accountability is assigned once", () =>
   story(
     as(reviewer),
-    when(Accountability.ref("run_7"), new AssignAccountability()),
+    when(Accountability.ref("run_7"), AssignAccountability.make({})),
     then(
       Accountability.ref("run_7"),
-      new AccountabilityAssigned({
+      AccountabilityAssigned.make({
         run: RunId.make("run_7"),
         accountable: PrincipalId.make("p_rev"),
         onBehalfOf: PrincipalId.make("p_rev"),
         provenance: provenanceOf(reviewer),
       }),
     ),
-    when(Accountability.ref("run_7"), new AssignAccountability()),
-    rejected(new AccountabilityAlreadyAssigned()),
+    when(Accountability.ref("run_7"), AssignAccountability.make({})),
+    rejected(AccountabilityAlreadyAssigned.make({})),
   ),
 );

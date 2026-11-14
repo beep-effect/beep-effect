@@ -7,6 +7,9 @@ import * as S from "effect/Schema";
 import { RunEvent } from "./RunEvent.ts";
 import { RunVersions } from "./RunVersions.ts";
 import { SessionId } from "./Session.id.ts";
+import { $RunsContractId } from "@proto/kernel/Identity";
+
+const $I = $RunsContractId.create("Run/RequestRun.command");
 
 /**
  * Refused: a run id is requested once.
@@ -14,10 +17,10 @@ import { SessionId } from "./Session.id.ts";
  * @category rejections
  * @since 0.0.0
  */
-export class RunAlreadyExists extends Domain.Rejection(
+export class RunAlreadyExists extends S.TaggedError<RunAlreadyExists, { readonly brand: unique symbol }>()(
   "RunAlreadyExists",
   {},
-  { httpApiStatus: 409, description: "This run id is already in use." },
+  $I.annote("RunAlreadyExists", { httpApiStatus: 409, description: "This run id is already in use." }),
 ) {}
 
 /**
@@ -26,10 +29,10 @@ export class RunAlreadyExists extends Domain.Rejection(
  * @category rejections
  * @since 0.0.0
  */
-export class HumanOnly extends Domain.Rejection(
+export class HumanOnly extends S.TaggedError<HumanOnly, { readonly brand: unique symbol }>()(
   "HumanOnly",
   {},
-  { httpApiStatus: 403, description: "Only a person requests a top-level run." },
+  $I.annote("HumanOnly", { httpApiStatus: 403, description: "Only a person requests a top-level run." }),
 ) {}
 
 /**

@@ -2,6 +2,7 @@ import { streamOf } from "@alchemy.run/domain/Aggregate";
 import { ResourceScope } from "@proto/kernel/Capability";
 import { requireGrant } from "@proto/kernel/CurrentInvocation.context";
 import { PartyRead } from "@proto/party-contract/Party.capabilities";
+import { EffectivePartyState } from "@proto/party-contract/Party/EffectiveParty.read";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -18,7 +19,8 @@ export const EffectivePartyLive = EffectiveParty.toLayer(
   Effect.succeed(
     Effect.fn(function* (request, party) {
       const now = yield* DateTime.now;
-      yield* O.match(O.fromNullishOr(party?.org), {
+      const registered = O.filter(O.fromNullishOr(party), EffectivePartyState.guards.Registered);
+      yield* O.match(O.map(registered, (found) => found.org), {
         onNone: () => Effect.void,
         onSome: (org) =>
           requireGrant(

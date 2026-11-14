@@ -749,3 +749,44 @@ Conformance, eighteen cases plus one new timing:
 
 D5 verdict: still not yet. No host port was published this time: the conformance driver ran as a
 one-shot service on the stack's own network.
+
+## 2026-11-13 — Phase 7: the Effect rules, and the operator's review of the prototype
+
+The operator asked for `@effect/tsgo` to be wired into the prototype and fully passing, and had
+separately reviewed the prototype in the IDE: lifecycle state as tagged unions, absence decoded
+into `Option` by the schema, service keys from `@beep/identity` composers. Notes are in
+`research/15-rework-phase7-notes.md`.
+
+The prototype's `check` had been running the plain TypeScript compiler, which ignores the Effect
+language-service block it inherits from the monorepo's `tsconfig.base.json`. So no Effect rule had
+run on this code in phases 1 to 6, and every "type-checks" statement above meant TypeScript errors
+only.
+
+As built, re-run by the orchestrating session:
+
+- Every `check` step runs the Effect build (`effect-tsgo tsrs`, 7.1.0-beta+effect-tsgo.0.68.1)
+  over 17 projects, with the rule set inherited from the monorepo and nothing switched off.
+  Diagnostics went from 981 to 0. Two guards test that the compiler is the Effect build and that an
+  Effect-only finding fails the check.
+- One inline directive exists, on the generated front entry's deploy-time `Effect.provide`, in the
+  repo's entry-point form with a reason, an owner and an exit. A guard test fails on any other.
+- One project is exempt from the Effect rules: `conformance/upstream`, three files vendored from
+  alchemy at 33c10dd and unchanged apart from a provenance header and import paths. It is checked
+  for TypeScript errors only.
+- Rejections are declared as branded `S.TaggedError` classes with identity annotations, as the
+  monorepo's vault-sync slice does, and constructed with `.make`. The library on beta.87 reads the
+  tag from the encoded schema and none of `Domain.Rejection`'s statics; encoded shapes are
+  unchanged.
+- The run lifecycle, both view states and the web screen's approval state are tagged unions. About
+  twenty fields decode to `Option` with the stored JSON still `null`. Three stored shapes changed
+  and decode through declared conversions; no earlier fixture was regenerated.
+- `@beep/identity` and `@beep/schema` are linked from the monorepo as source. The prototype is no
+  longer fully standalone: it resolves those two packages and their dependencies from the monorepo.
+- The review saga now records a refused report step and releases its reservation (the defect phase
+  6's revocation case found). Two further defects were fixed: a child run refused mid-run never
+  resumed its parent, and some Layers were torn down while routes still used them.
+- 152 tests pass; 109 of 109 declared command outcomes are executed; the registry and generated-file
+  checks pass.
+
+Not re-run after this phase: the cluster conformance suite. The saga fix, the remodelled state and
+the linked `@beep/*` packages have not been exercised in the runner and front bundles.

@@ -1,3 +1,4 @@
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 
 /**
@@ -21,7 +22,7 @@ export type FactVersion = typeof FactVersion.Type;
  * @category models
  * @since 0.0.0
  */
-export const ProcessKind = S.Literals(["gateway", "feed", "poller", "inbox", "session"]);
+export const ProcessKind = LiteralKit(["gateway", "feed", "poller", "inbox", "session"]);
 /**
  * @category models
  * @since 0.0.0

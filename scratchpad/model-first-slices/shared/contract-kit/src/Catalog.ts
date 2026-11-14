@@ -23,7 +23,7 @@ import type * as Projection from "@alchemy.run/domain/Projection";
  * import * as S from "effect/Schema";
  *
  * class Ping extends Domain.Command("Ping", { target: S.String }) {}
- * const PingCatalog = Catalog.make("Ping", { commands: [Ping], views: [], queries: [] });
+ * const PingCatalog = Catalog.make({ name: "Ping", commands: [Ping], views: [], queries: [] });
  * class PingContract extends Domain.Api("PingContract", { model: PingCatalog, commands: ["Ping"], views: [], queries: [], streams: [] }) {}
  * ```
  *
@@ -35,10 +35,12 @@ export const make = <
   const C extends ReadonlyArray<Domain.Command.Any>,
   const V extends ReadonlyArray<Domain.View.Any>,
   const Q extends ReadonlyArray<Domain.Query.Any>,
->(
-  name: Name,
-  members: { readonly commands: C; readonly views: V; readonly queries: Q },
-) => {
+>(members: {
+  readonly name: Name;
+  readonly commands: C;
+  readonly views: V;
+  readonly queries: Q;
+}) => {
   const definitions: Kernel.Definitions = {
     aggregates: [],
     views: members.views,
@@ -50,7 +52,7 @@ export const make = <
   return {
     kind: "Model" as const,
     annotations: {},
-    modelName: name,
+    modelName: members.name,
     definitions,
     aggregates: [] as const,
     commands: members.commands,

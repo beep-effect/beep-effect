@@ -13,7 +13,7 @@ import * as S from "effect/Schema";
  * @category errors
  * @since 0.0.0
  */
-export class ReasonerUnavailable extends S.TaggedError<ReasonerUnavailable>()("ReasonerUnavailable", {
+export class ReasonerUnavailable extends S.TaggedError<ReasonerUnavailable, { readonly brand: unique symbol }>()("ReasonerUnavailable", {
   reason: S.String,
 }) {}
 

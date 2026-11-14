@@ -1,6 +1,8 @@
-import * as Domain from "@alchemy.run/domain";
 import * as S from "effect/Schema";
 import { GrantRef } from "./Invocation.ts";
+import { $KernelId } from "./Identity.ts";
+
+const $I = $KernelId.create("ReadmissionRefused.rejection");
 
 /**
  * Refused: the authority context will not re-admit this provenance for the
@@ -13,15 +15,16 @@ import { GrantRef } from "./Invocation.ts";
  * ```ts
  * import { GrantId } from "@proto/kernel/Ids";
  * import { ReadmissionRefused } from "@proto/kernel/ReadmissionRefused.rejection";
+ * import * as O from "effect/Option";
  *
- * const refusal = new ReadmissionRefused({ reason: "lapsed", lapsed: [{ grant: GrantId.make("g_rev"), delegation: null }] });
+ * const refusal = ReadmissionRefused.make({ reason: "lapsed", lapsed: [{ grant: GrantId.make("g_rev"), delegation: O.none() }] });
  * ```
  *
  * @category rejections
  * @since 0.0.0
  */
-export class ReadmissionRefused extends Domain.Rejection(
+export class ReadmissionRefused extends S.TaggedError<ReadmissionRefused, { readonly brand: unique symbol }>()(
   "ReadmissionRefused",
   { reason: S.Literals(["unaccountable", "lapsed"]), lapsed: S.Array(GrantRef) },
-  { httpApiStatus: 403, description: "The authority context will not re-admit this provenance for the next hop." },
+  $I.annote("ReadmissionRefused", { httpApiStatus: 403, description: "The authority context will not re-admit this provenance for the next hop." }),
 ) {}

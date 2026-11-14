@@ -5,8 +5,15 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 import { uncoveredOutcomes } from "../proofs/Outcomes.allow.ts";
 import { proofs, reviewQuestions } from "../proofs/Proofs.data.ts";
+
+/** A proof names a checker file that does not exist. */
+class MissingChecker extends S.TaggedError<MissingChecker, { readonly brand: unique symbol }>()("MissingChecker", {
+  files: S.Array(S.String),
+  message: S.String,
+}) {}
 
 // `bun run proofs` writes PROOFS.md from proofs/Proofs.data.ts; `--check` fails on drift, and
 // either way a checker path that does not exist fails the run.
@@ -17,9 +24,10 @@ const render = Effect.gen(function* () {
   const missing = yield* Effect.filter(A.flatMap(proofs, (proof) => proof.checkers), (file) =>
     Effect.map(fs.exists(path.join(root, file)), (exists) => !exists),
   );
-  if (missing.length > 0) return yield* Effect.fail(new Error(`checker paths not found: ${A.join(missing, ", ")}`));
+  if (missing.length > 0) return yield* MissingChecker.make({ files: missing, message: `checker paths not found: ${A.join(missing, ", ")}` });
   const sections = A.map(proofs, (proof) =>
-    [
+    A.join(
+      [
       `### ${proof.id}`,
       "",
       proof.invariant,
@@ -29,10 +37,13 @@ const render = Effect.gen(function* () {
       `- **Assumes:** ${proof.assumptions}`,
       `- **Gaps:** ${proof.gaps}`,
       `- **Left to a reviewer:** ${proof.reviewer}`,
-      ...(proof.live === true ? ["- **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README)."] : []),
-    ].join("\n"),
+      ...(proof.live ? ["- **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README)."] : []),
+      ],
+      "\n",
+    ),
   );
-  return [
+  return A.join(
+    [
     "# Proof inventory",
     "",
     "<!-- Generated from proofs/Proofs.data.ts by scripts/proofs.ts. Do not edit: `bun run proofs`",
@@ -56,7 +67,9 @@ const render = Effect.gen(function* () {
     "",
     ...A.map(reviewQuestions, (q) => `- **${q.topic}.** ${q.question}`),
     "",
-  ].join("\n");
+    ],
+    "\n",
+  );
 });
 
 Effect.gen(function* () {

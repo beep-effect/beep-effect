@@ -2,20 +2,22 @@ import * as Domain from "@alchemy.run/domain";
 import { carry } from "@proto/kernel/Invocation";
 import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { Session } from "@proto/kernel/Session.middleware";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 import { Proposition } from "../Proposition.ts";
 import { ClaimId } from "./Claim.id.ts";
 import { ClaimNotPending } from "./ClaimNotPending.rejection.ts";
+import { $PartyContractId } from "@proto/kernel/Identity";
+
+const $I = $PartyContractId.create("Claim/AcceptClaim.command");
 
 /**
  * The bar a proposition's evidence must clear before it may be accepted.
- * (`LiteralKit` in the design; `S.Literals` here, since the prototype does
- * not depend on `@beep/schema`.)
  *
  * @category models
  * @since 0.0.0
  */
-export const AdmissionGate = S.Literals(["independent-corroboration", "source-support"]);
+export const AdmissionGate = LiteralKit(["independent-corroboration", "source-support"]);
 /**
  * @category models
  * @since 0.0.0
@@ -28,10 +30,10 @@ export type AdmissionGate = typeof AdmissionGate.Type;
  * @category rejections
  * @since 0.0.0
  */
-export class AdmissionGateUnmet extends Domain.Rejection(
+export class AdmissionGateUnmet extends S.TaggedError<AdmissionGateUnmet, { readonly brand: unique symbol }>()(
   "AdmissionGateUnmet",
   { gate: AdmissionGate, have: S.Int, need: S.Int },
-  { httpApiStatus: 422, description: "The claim's evidence does not clear its admission gate." },
+  $I.annote("AdmissionGateUnmet", { httpApiStatus: 422, description: "The claim's evidence does not clear its admission gate." }),
 ) {}
 
 /**

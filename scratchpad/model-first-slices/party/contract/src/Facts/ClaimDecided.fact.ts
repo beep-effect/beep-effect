@@ -1,5 +1,6 @@
 import * as Domain from "@alchemy.run/domain";
 import { OrgId, RunId } from "@proto/kernel/Ids";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 import { ApprovalId } from "../Claim/Approval.id.ts";
 import { ClaimId } from "../Claim/Claim.id.ts";
@@ -10,7 +11,7 @@ import { ClaimId } from "../Claim/Claim.id.ts";
  * @category models
  * @since 0.0.0
  */
-export const Decision = S.Literals(["accepted", "retracted"]);
+export const Decision = LiteralKit(["accepted", "retracted"]);
 /**
  * @category models
  * @since 0.0.0
@@ -49,7 +50,7 @@ export class ClaimDecidedV2 extends Domain.Event("ClaimDecidedV2", {
   org: OrgId,
   decision: Decision,
   basis: S.Literals(["approval", "direct"]),
-  approval: S.NullOr(ApprovalId),
+  approval: S.OptionFromNullOr(ApprovalId),
   reviewRuns: S.Array(RunId),
 }) {}
 

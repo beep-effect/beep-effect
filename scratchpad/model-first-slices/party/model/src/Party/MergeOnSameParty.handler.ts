@@ -35,16 +35,16 @@ export const MergeOnSamePartyLive = MergeOnSameParty.toLayer(
           authority.readmit({ provenance: event.provenance, hop }).pipe(
             Effect.flatMap((invocation) =>
               parties
-                .send(survivor, new MergeParties({ absorbed }))
+                .send(survivor, MergeParties.make({ absorbed }))
                 .pipe(Effect.provideService(CurrentInvocation, invocation)),
             ),
             Effect.as(O.none<MergeRefusal>()),
             Effect.catchTags({
               ReadmissionRefused: (refused) =>
-                Effect.succeed(O.some(MergeRefusal.cases.Readmission.make({ reason: refused.reason }))),
-              MergeVetoed: (vetoed) => Effect.succeed(O.some(MergeRefusal.cases.Vetoed.make({ reason: vetoed.reason }))),
+                Effect.succeedSome(MergeRefusal.cases.Readmission.make({ reason: refused.reason })),
+              MergeVetoed: (vetoed) => Effect.succeedSome(MergeRefusal.cases.Vetoed.make({ reason: vetoed.reason })),
               MissingGrant: (missing) =>
-                Effect.succeed(O.some(MergeRefusal.cases.MissingGrant.make({ capability: missing.capability }))),
+                Effect.succeedSome(MergeRefusal.cases.MissingGrant.make({ capability: missing.capability })),
             }),
           ),
         HasIdentifier: () => Effect.succeed(O.none<MergeRefusal>()),
@@ -53,7 +53,7 @@ export const MergeOnSamePartyLive = MergeOnSameParty.toLayer(
         onNone: () => Effect.void,
         onSome: (reason) =>
           claims
-            .send(trigger.source, new RecordMergeRefused({ reason, provenance: extend(event.provenance, hop) }))
+            .send(trigger.source, RecordMergeRefused.make({ reason, provenance: extend(event.provenance, hop) }))
             .pipe(Effect.asVoid),
       });
     });

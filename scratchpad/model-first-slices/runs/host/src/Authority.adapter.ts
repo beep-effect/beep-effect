@@ -14,7 +14,7 @@ export const RunsAuthority = Authority.toLayer(
       gateway.grantRun(request).pipe(
         Effect.mapError(
           (refused) =>
-            new GrantDenied({
+            GrantDenied.make({
               reason: refused._tag === "RunGrantRefused" ? refused.reason : `readmission:${refused.reason}`,
             }),
         ),

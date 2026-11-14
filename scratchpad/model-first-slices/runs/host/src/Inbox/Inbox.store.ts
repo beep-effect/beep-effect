@@ -1,4 +1,5 @@
 import * as Context from "effect/Context";
+import { $RunsHostId } from "@proto/kernel/Identity";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
@@ -6,6 +7,8 @@ import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
+
+const $I = $RunsHostId.create("Inbox/Inbox.store");
 
 /**
  * Where an inbox keeps what it handled: one checkpoint per producer (the
@@ -25,7 +28,7 @@ export class InboxStore extends Context.Service<
     /** Record the fact acted on and move the checkpoint, in one write. */
     readonly commit: (producer: string, key: O.Option<string>, seq: number) => Effect.Effect<void>;
   }
->()("Runs/InboxStore") {}
+>()($I`InboxStore`) {}
 
 /**
  * The inbox store in memory: a fresh, empty store each time the Layer is

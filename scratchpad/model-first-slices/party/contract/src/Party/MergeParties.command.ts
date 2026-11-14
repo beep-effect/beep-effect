@@ -4,6 +4,9 @@ import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { Session } from "@proto/kernel/Session.middleware";
 import * as S from "effect/Schema";
 import { PartyId } from "./Party.id.ts";
+import { $PartyContractId } from "@proto/kernel/Identity";
+
+const $I = $PartyContractId.create("Party/MergeParties.command");
 
 /**
  * Refused: this merge cannot happen, and why. (Merging across orgs is now a
@@ -12,10 +15,10 @@ import { PartyId } from "./Party.id.ts";
  * @category rejections
  * @since 0.0.0
  */
-export class MergeVetoed extends Domain.Rejection(
+export class MergeVetoed extends S.TaggedError<MergeVetoed, { readonly brand: unique symbol }>()(
   "MergeVetoed",
   { reason: S.Literals(["not-registered", "self-merge"]) },
-  { httpApiStatus: 409, description: "The parties cannot be merged." },
+  $I.annote("MergeVetoed", { httpApiStatus: 409, description: "The parties cannot be merged." }),
 ) {}
 
 /**

@@ -1,5 +1,7 @@
-import * as Domain from "@alchemy.run/domain";
 import * as S from "effect/Schema";
+import { $AuthorityContractId } from "@proto/kernel/Identity";
+
+const $I = $AuthorityContractId.create("Delegation/DelegationNotActive.rejection");
 
 /**
  * Refused: the delegation is not active.
@@ -7,8 +9,8 @@ import * as S from "effect/Schema";
  * @category rejections
  * @since 0.0.0
  */
-export class DelegationNotActive extends Domain.Rejection(
+export class DelegationNotActive extends S.TaggedError<DelegationNotActive, { readonly brand: unique symbol }>()(
   "DelegationNotActive",
   { status: S.Literals(["Unopened", "Revoked"]) },
-  { httpApiStatus: 409, description: "The delegation is not active." },
+  $I.annote("DelegationNotActive", { httpApiStatus: 409, description: "The delegation is not active." }),
 ) {}

@@ -37,7 +37,7 @@ export const ReviewOnRequestLive = ReviewOnRequest.toLayer(
       const scope = ResourceScope.cases.Record.make({ org: event.org, record: trigger.envelope.stream });
       const refuse = (reason: string) =>
         claims
-          .send(claim, new RecordReviewRefused({ run: event.run, reason, provenance: extend(event.provenance, hop) }))
+          .send(claim, RecordReviewRefused.make({ run: event.run, reason, provenance: extend(event.provenance, hop) }))
           .pipe(Effect.asVoid);
       const now = yield* DateTime.now;
       yield* authority.readmit({ provenance: event.provenance, hop }).pipe(
@@ -64,9 +64,9 @@ export const ReviewOnRequestLive = ReviewOnRequest.toLayer(
                   source: GrantRef.make({ grant: source.grant, delegation: source.delegation }),
                   terms: {
                     capability: PartyPropose.id,
-                    operations: [ProposeDisposition.tag],
+                    operations: O.some([ProposeDisposition.tag]),
                     resource: scope,
-                    expires: null,
+                    expires: O.none(),
                   },
                 })
                 .pipe(

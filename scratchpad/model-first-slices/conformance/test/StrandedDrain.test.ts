@@ -17,30 +17,30 @@ import { makeSimHost, type SimHost } from "./SimHost.ts";
 // Without the patch all three cases fail: every drain that finds the lease held returns without
 // scheduling anything, so the rows stay staged after the lease has expired.
 
-class Booked extends Domain.Event("Booked", { n: Schema.Number }) {}
+class Booked extends Domain.Event("Booked", { n: Schema.Finite }) {}
 class BookMany extends Domain.Command("BookMany", {
   target: Schema.String,
-  input: { count: Schema.Number },
+  input: { count: Schema.Finite },
   events: [Booked],
 }) {}
 class Ledger extends Domain.Aggregate("Ledger", {
   id: Schema.String,
-  state: Schema.Struct({ count: Schema.Number }),
+  state: Schema.Struct({ count: Schema.Finite }),
   initial: { count: 0 },
   commands: [BookMany],
   decide: {
-    BookMany: (ledger, { count }) => A.makeBy(count, (i) => new Booked({ n: ledger.count + i + 1 })),
+    BookMany: (ledger, { count }) => A.makeBy(count, (i) => Booked.make({ n: ledger.count + i + 1 })),
   },
   evolve: { Booked: (_, e) => ({ count: e.n }) },
 }) {}
 class Totals extends Domain.View("Totals", {
   from: [Ledger],
   key: Ledger,
-  state: Schema.Struct({ count: Schema.Number }),
+  state: Schema.Struct({ count: Schema.Finite }),
   initial: { count: 0 },
   evolve: { Booked: (_, e) => ({ count: e.n }) },
 }) {}
-class Line extends Domain.Event("Line", { n: Schema.Number }) {}
+class Line extends Domain.Event("Line", { n: Schema.Finite }) {}
 class Lines extends Domain.Stream("Lines", { key: Ledger, entries: [Line] }) {}
 class LinesWriter extends Domain.Projection("LinesWriter", {
   from: [Ledger],
@@ -52,7 +52,7 @@ const LinesWriterLive = LinesWriter.toLayer(
   Effect.gen(function* () {
     const lines = yield* Lines;
     return Effect.fn(function* (batch) {
-      for (const input of batch) yield* lines.append(input, new Line({ n: input.event.n }));
+      for (const input of batch) yield* lines.append(input, Line.make({ n: input.event.n }));
     });
   }),
 );
@@ -78,22 +78,32 @@ const PROJECTION = "Books.LinesWriterProjection/main";
 /** The view's count and the stream's length for `main`. */
 const readMain = Effect.gen(function* () {
   const ledger = Ledger.ref("main");
-  return {
-    totals: O.map(yield* (yield* Totals).get(ledger), (s) => s.count),
-    lines: (yield* (yield* Lines).list(ledger)).entries.length,
-  };
+  const totals = yield* (yield* Totals).get(ledger);
+  const lines = yield* (yield* Lines).list(ledger);
+  return { totals: O.map(totals, (s) => s.count), lines: lines.entries.length };
 });
+
+/** Run a case on the simulated host, with the model built into the case's scope; the host closes first. */
+const onSimHost = <A, E, R>(sim: SimHost, body: Effect.Effect<A, E, R>) =>
+  onSim(sim).pipe(
+    Layer.build,
+    Effect.flatMap((context) => body.pipe(Effect.ensuring(sim.close), Effect.provideContext(context))),
+    Effect.scoped,
+  );
 
 /** Book one line on `main`, then read it inside the lease (past every 10 s backstop) and after it. */
 const bookAndStep = (sim: SimHost) =>
-  Effect.gen(function* () {
-    yield* (yield* Ledger).send(Ledger.ref("main"), new BookMany({ count: 1 }));
-    yield* TestClock.adjust("15 seconds");
-    const insideLease = yield* readMain;
-    yield* TestClock.adjust(`${LEASE_MS} millis`);
-    const afterLease = yield* readMain;
-    return { insideLease, afterLease };
-  }).pipe(Effect.ensuring(sim.close), Effect.scoped, Effect.provide(onSim(sim)));
+  onSimHost(
+    sim,
+    Effect.gen(function* () {
+      yield* (yield* Ledger).send(Ledger.ref("main"), BookMany.make({ count: 1 }));
+      yield* TestClock.adjust("15 seconds");
+      const insideLease = yield* readMain;
+      yield* TestClock.adjust(`${LEASE_MS} millis`);
+      const afterLease = yield* readMain;
+      return { insideLease, afterLease };
+    }),
+  );
 
 it.effect("an aggregate's outbox drain whose lease a dead instance left is taken over once the lease expires", () =>
   Effect.gen(function* () {
@@ -125,8 +135,8 @@ it.effect("a projection key's drain whose lease a dead instance left is taken ov
 it.effect("while live drains keep taking the lease, the backstop comes back once per lease, not in a loop", () =>
   Effect.gen(function* () {
     const sim = makeSimHost((id, now) => (id === AGGREGATE ? { "outbox-lease": now + LEASE_MS } : {}));
-    const result = yield* Effect.gen(function* () {
-      yield* (yield* Ledger).send(Ledger.ref("main"), new BookMany({ count: 1 }));
+    const result = yield* onSimHost(sim, Effect.gen(function* () {
+      yield* (yield* Ledger).send(Ledger.ref("main"), BookMany.make({ count: 1 }));
       // Five minutes of drains that each take a fresh lease 30 s into the last one.
       for (let step = 1; step <= 10; step++) {
         yield* TestClock.adjust("30 seconds");
@@ -136,8 +146,9 @@ it.effect("while live drains keep taking the lease, the backstop comes back once
       const readsWhileHeld = sim.reads(AGGREGATE, "outbox-lease");
       // The last of them dies with its lease.
       yield* TestClock.adjust(`${LEASE_MS + 1_000} millis`);
-      return { whileHeld, readsWhileHeld, after: yield* readMain };
-    }).pipe(Effect.ensuring(sim.close), Effect.scoped, Effect.provide(onSim(sim)));
+      const after = yield* readMain;
+      return { whileHeld, readsWhileHeld, after };
+    }));
     expect(result.whileHeld).toEqual({ totals: O.none(), lines: 0 });
     // The kick, then one return per lease (each a minute long): each finds the next one.
     expect(result.readsWhileHeld).toBeLessThanOrEqual(5);

@@ -1,10 +1,14 @@
 import { PartyHosted } from "@proto/party-model/Party.ports";
-import {
-  MemoryPartyDirectoryStore,
-  type PartyDirectoryStore,
-} from "@proto/party-model/Directory/PartyDirectory.store";
+import type { PartyDirectoryStore } from "@proto/party-model/Directory/PartyDirectory.store";
+import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import { PartyAdapters } from "./Adapters.ts";
+
+const hostPartyOn = <ROut, E, RIn>(platform: Layer.Layer<ROut, E, RIn>, directory: Layer.Layer<PartyDirectoryStore>) =>
+  PartyHosted.pipe(Layer.provideMerge(PartyAdapters), Layer.provide(directory), Layer.provide(platform));
+
+/** The hosted Party model on a platform: what {@link hostParty} returns. */
+type Hosted<ROut, E, RIn> = ReturnType<typeof hostPartyOn<ROut, E, RIn>>;
 
 /**
  * The Party model with its handlers and its adapters, on the platform you
@@ -24,14 +28,17 @@ import { PartyAdapters } from "./Adapters.ts";
  * ```ts
  * import * as Domain from "@alchemy.run/domain";
  * import { hostParty } from "@proto/party-host/Host";
+ * import { MemoryPartyDirectoryStore } from "@proto/party-model/Directory/PartyDirectory.store";
+ * import { pipe } from "effect/Function";
  *
- * const party = hostParty(Domain.InMemory);
+ * const party = hostParty(Domain.InMemory, MemoryPartyDirectoryStore);
+ * const same = pipe(Domain.InMemory, hostParty(MemoryPartyDirectoryStore));
  * ```
  *
  * @category layers
  * @since 0.0.0
  */
-export const hostParty = <ROut, E, RIn>(
-  platform: Layer.Layer<ROut, E, RIn>,
-  directory: Layer.Layer<PartyDirectoryStore> = MemoryPartyDirectoryStore,
-) => PartyHosted.pipe(Layer.provideMerge(PartyAdapters), Layer.provide(directory), Layer.provide(platform));
+export const hostParty: {
+  (directory: Layer.Layer<PartyDirectoryStore>): <ROut, E, RIn>(platform: Layer.Layer<ROut, E, RIn>) => Hosted<ROut, E, RIn>;
+  <ROut, E, RIn>(platform: Layer.Layer<ROut, E, RIn>, directory: Layer.Layer<PartyDirectoryStore>): Hosted<ROut, E, RIn>;
+} = dual(2, hostPartyOn);

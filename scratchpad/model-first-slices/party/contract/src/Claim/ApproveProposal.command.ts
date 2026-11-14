@@ -9,6 +9,9 @@ import { AdmissionGateUnmet } from "./AcceptClaim.command.ts";
 import { ApprovalId } from "./Approval.id.ts";
 import { ClaimId } from "./Claim.id.ts";
 import { ClaimNotPending } from "./ClaimNotPending.rejection.ts";
+import { $PartyContractId } from "@proto/kernel/Identity";
+
+const $I = $PartyContractId.create("Claim/ApproveProposal.command");
 
 /**
  * Refused: approval is a person's act. An agent-rooted invocation, or one a
@@ -17,10 +20,10 @@ import { ClaimNotPending } from "./ClaimNotPending.rejection.ts";
  * @category rejections
  * @since 0.0.0
  */
-export class HumanApprovalRequired extends Domain.Rejection(
+export class HumanApprovalRequired extends S.TaggedError<HumanApprovalRequired, { readonly brand: unique symbol }>()(
   "HumanApprovalRequired",
   {},
-  { httpApiStatus: 403, description: "Only a person, signed in and acting directly, may approve a proposal." },
+  $I.annote("HumanApprovalRequired", { httpApiStatus: 403, description: "Only a person, signed in and acting directly, may approve a proposal." }),
 ) {}
 
 /**
@@ -29,10 +32,10 @@ export class HumanApprovalRequired extends Domain.Rejection(
  * @category rejections
  * @since 0.0.0
  */
-export class ProposalMismatch extends Domain.Rejection(
+export class ProposalMismatch extends S.TaggedError<ProposalMismatch, { readonly brand: unique symbol }>()(
   "ProposalMismatch",
   { reason: S.Literals(["no-proposal", "digest", "evidence-revision"]) },
-  { httpApiStatus: 409, description: "The approval names a proposal or evidence revision the claim no longer holds." },
+  $I.annote("ProposalMismatch", { httpApiStatus: 409, description: "The approval names a proposal or evidence revision the claim no longer holds." }),
 ) {}
 
 /**
@@ -51,8 +54,8 @@ export class ProposalApproved extends Domain.Event(
     evidenceRevision: S.Int,
     outcome: S.Literals(["accepted", "retracted"]),
     proposition: Proposition,
-    // Widened in phase 3 (D22): every stored integer still reads.
-    corroboration: S.NullOr(S.Int),
+    // Widened in phase 3 (D22): every stored integer still reads; absent is stored as `null`.
+    corroboration: S.OptionFromNullOr(S.Int),
   }),
 ) {}
 

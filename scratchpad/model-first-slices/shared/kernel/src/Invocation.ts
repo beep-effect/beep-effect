@@ -1,5 +1,5 @@
 import * as A from "effect/Array";
-import { pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CapabilityGrant } from "./Capability.ts";
@@ -187,7 +187,7 @@ export const accountableOf = (invocation: Invocation): O.Option<PrincipalId> =>
  * @category models
  * @since 0.0.0
  */
-export const GrantRef = S.Struct({ grant: GrantId, delegation: S.NullOr(DelegationId) });
+export const GrantRef = S.Struct({ grant: GrantId, delegation: S.OptionFromNullOr(DelegationId) });
 /**
  * @category models
  * @since 0.0.0
@@ -237,8 +237,13 @@ export const provenanceOf = (invocation: Invocation): Provenance =>
  * @category constructors
  * @since 0.0.0
  */
-export const extend = (provenance: Provenance, hop: Hop): Provenance =>
-  Provenance.make({ ...provenance, chain: A.append(provenance.chain, hop) });
+export const extend: {
+  (hop: Hop): (provenance: Provenance) => Provenance;
+  (provenance: Provenance, hop: Hop): Provenance;
+} = dual(
+  2,
+  (provenance: Provenance, hop: Hop): Provenance => Provenance.make({ ...provenance, chain: A.append(provenance.chain, hop) }),
+);
 
 /**
  * The one helper an event uses to carry where its authority came from: the
@@ -268,8 +273,10 @@ export const carry = <const F extends S.Struct.Fields>(fields: F): F & { readonl
  * @category constructors
  * @since 0.0.0
  */
-export const byProcess = (process: string, cause: Cause): Hop =>
-  Hop.make({ by: Relayer.cases.Process.make({ process }), cause });
+export const byProcess: {
+  (cause: Cause): (process: string) => Hop;
+  (process: string, cause: Cause): Hop;
+} = dual(2, (process: string, cause: Cause): Hop => Hop.make({ by: Relayer.cases.Process.make({ process }), cause }));
 
 /**
  * A hop relayed by an agent run acting inside a process.
@@ -277,7 +284,10 @@ export const byProcess = (process: string, cause: Cause): Hop =>
  * @category constructors
  * @since 0.0.0
  */
-export const byAgent = (run: RunId, cause: Cause): Hop => Hop.make({ by: Relayer.cases.Agent.make({ run }), cause });
+export const byAgent: {
+  (cause: Cause): (run: RunId) => Hop;
+  (run: RunId, cause: Cause): Hop;
+} = dual(2, (run: RunId, cause: Cause): Hop => Hop.make({ by: Relayer.cases.Agent.make({ run }), cause }));
 
 /**
  * The cause of a hop a policy makes: the event it reacts to, by stream and sequence.
@@ -297,5 +307,7 @@ export const eventCause = (trigger: {
  * @category constructors
  * @since 0.0.0
  */
-export const sagaStep = (saga: string, key: string, step: string): Cause =>
-  Cause.cases.SagaStep.make({ saga, key, step });
+export const sagaStep: {
+  (key: string, step: string): (saga: string) => Cause;
+  (saga: string, key: string, step: string): Cause;
+} = dual(3, (saga: string, key: string, step: string): Cause => Cause.cases.SagaStep.make({ saga, key, step }));

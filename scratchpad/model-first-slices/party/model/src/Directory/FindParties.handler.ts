@@ -17,7 +17,8 @@ export const FindPartiesLive = FindParties.toLayer(
   Effect.gen(function* () {
     const store = yield* PartyDirectoryStore;
     return Effect.fn(function* ({ org, text }, page) {
-      yield* requireGrant(PartyRead, FindParties.queryName, ResourceScope.cases.Org.make({ org }), yield* DateTime.now);
+      const now = yield* DateTime.now;
+      yield* requireGrant(PartyRead, FindParties.queryName, ResourceScope.cases.Org.make({ org }), now);
       return yield* store.search(org, text, page);
     });
   }),

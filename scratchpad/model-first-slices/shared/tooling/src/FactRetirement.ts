@@ -10,7 +10,7 @@ import * as S from "effect/Schema";
  * @category errors
  * @since 0.0.0
  */
-export class UnpublishedFact extends S.TaggedError<UnpublishedFact>()("UnpublishedFact", {
+export class UnpublishedFact extends S.TaggedError<UnpublishedFact, { readonly brand: unique symbol }>()("UnpublishedFact", {
   missing: S.Array(S.Struct({ consumer: S.String, fact: FactVersion })),
 }) {}
 
@@ -78,5 +78,5 @@ export const checkFactRetirement = (
   const ledger = ledgerOf(descriptors);
   return A.isReadonlyArrayEmpty(ledger.missing)
     ? Effect.succeed(ledger.retirable)
-    : Effect.fail(new UnpublishedFact({ missing: ledger.missing }));
+    : Effect.fail(UnpublishedFact.make({ missing: ledger.missing }));
 };

@@ -21,4 +21,7 @@ export const Since = {
   /** Added in phase 3; older stored events read `absent`. */
   phase3: <Schema extends S.Top>(schema: Schema, absent: Schema["Encoded"]) =>
     schema.pipe(S.withDecodingDefaultKey(Effect.succeed(absent))),
+  /** Added in phase 7; older stored events read `absent`. */
+  phase7: <Schema extends S.Top>(schema: Schema, absent: Schema["Encoded"]) =>
+    schema.pipe(S.withDecodingDefaultKey(Effect.succeed(absent))),
 };

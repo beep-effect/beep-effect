@@ -1,4 +1,7 @@
 import * as Cluster from "@alchemy.run/effect-cluster";
+import { $PartyHostId } from "@proto/kernel/Identity";
+
+const $I = $PartyHostId.create("Evidence/MailboxPoller.singleton");
 
 /**
  * One poller across the whole cluster, however many runners there are. This
@@ -7,4 +10,4 @@ import * as Cluster from "@alchemy.run/effect-cluster";
  * @category cluster
  * @since 0.0.0
  */
-export class MailboxPoller extends Cluster.Singleton<MailboxPoller>()("PartyMailboxPoller") {}
+export class MailboxPoller extends Cluster.Singleton<MailboxPoller>()($I`MailboxPoller`) {}

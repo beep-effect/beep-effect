@@ -5,7 +5,7 @@ import * as Effect from "effect/Effect";
 import { registry } from "./Authority.registry.ts";
 
 // `bun scripts/handlers.ts` writes src/Authority.handlers.ts; `--check` fails on drift.
-Effect.flatMap(registry, (options) => HandlerRegistry.main(options, process.argv.slice(2))).pipe(
+Effect.flatMap(registry, HandlerRegistry.main(process.argv.slice(2))).pipe(
   Effect.provide(NodeServices.layer),
   NodeRuntime.runMain,
 );

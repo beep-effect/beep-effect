@@ -1,4 +1,7 @@
-import * as Domain from "@alchemy.run/domain";
+import * as S from "effect/Schema";
+import { $RunsContractId } from "@proto/kernel/Identity";
+
+const $I = $RunsContractId.create("Run/NotThisRun.rejection");
 
 /**
  * Refused: only the run itself, re-admitted under its own delegation, reports
@@ -7,8 +10,8 @@ import * as Domain from "@alchemy.run/domain";
  * @category rejections
  * @since 0.0.0
  */
-export class NotThisRun extends Domain.Rejection(
+export class NotThisRun extends S.TaggedError<NotThisRun, { readonly brand: unique symbol }>()(
   "NotThisRun",
   {},
-  { httpApiStatus: 403, description: "Only the run itself may report on this run." },
+  $I.annote("NotThisRun", { httpApiStatus: 403, description: "Only the run itself may report on this run." }),
 ) {}

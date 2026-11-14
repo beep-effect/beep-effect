@@ -1,4 +1,5 @@
 import { Assessed, AssessRequest } from "@proto/party-model/Review/Reasoner.external";
+import { $PartyHostId } from "@proto/kernel/Identity";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -7,6 +8,8 @@ import * as Layer from "effect/Layer";
 import type * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+
+const $I = $PartyHostId.create("Review/ReasonerTape");
 
 /**
  * One recorded Reasoner call: the request and the answer, keyed by prompt
@@ -28,7 +31,7 @@ export type TapeEntry = typeof TapeEntry.Type;
  * @category models
  * @since 0.0.0
  */
-export const TapeJson = S.fromJsonString(S.Array(TapeEntry));
+export const TapeJson = TapeEntry.pipe(S.Array, S.fromJsonString);
 
 /**
  * Where recorded Reasoner calls are kept.
@@ -43,7 +46,7 @@ export class ReasonerTape extends Context.Service<
     readonly find: (promptVersion: string, idempotencyKey: string) => Effect.Effect<O.Option<TapeEntry>>;
     readonly entries: Effect.Effect<ReadonlyArray<TapeEntry>>;
   }
->()("Party/ReasonerTape") {}
+>()($I`ReasonerTape`) {}
 
 const keyOf = (promptVersion: string, idempotencyKey: string) => `${promptVersion}\u0000${idempotencyKey}`;
 
@@ -71,9 +74,13 @@ export const memoryTape = (entries: ReadonlyArray<TapeEntry> = []) =>
         HashMap.fromIterable(A.map(entries, (entry) => [keyOf(entry.request.promptVersion, entry.request.idempotencyKey), entry] as const)),
       );
       return {
-        record: (entry) => Ref.update(tape, HashMap.set(keyOf(entry.request.promptVersion, entry.request.idempotencyKey), entry)),
-        find: (promptVersion, idempotencyKey) => Effect.map(Ref.get(tape), HashMap.get(keyOf(promptVersion, idempotencyKey))),
-        entries: Effect.map(Ref.get(tape), (map) => A.fromIterable(HashMap.values(map))),
+        record: Effect.fn("ReasonerTape.record")((entry: TapeEntry) =>
+          Ref.update(tape, HashMap.set(keyOf(entry.request.promptVersion, entry.request.idempotencyKey), entry)),
+        ),
+        find: Effect.fn("ReasonerTape.find")((promptVersion: string, idempotencyKey: string) =>
+          Effect.map(Ref.get(tape), HashMap.get(keyOf(promptVersion, idempotencyKey))),
+        ),
+        entries: Effect.map(Ref.get(tape), (map) => map.pipe(HashMap.values, A.fromIterable)),
       };
     }),
   );

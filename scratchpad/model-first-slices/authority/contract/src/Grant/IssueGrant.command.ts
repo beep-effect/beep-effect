@@ -4,6 +4,10 @@ import { GrantId, PrincipalId } from "@proto/kernel/Ids";
 import { carry } from "@proto/kernel/Invocation";
 import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { Session } from "@proto/kernel/Session.middleware";
+import * as S from "effect/Schema";
+import { $AuthorityContractId } from "@proto/kernel/Identity";
+
+const $I = $AuthorityContractId.create("Grant/IssueGrant.command");
 
 /**
  * Refused: a grant id is issued once.
@@ -11,10 +15,10 @@ import { Session } from "@proto/kernel/Session.middleware";
  * @category rejections
  * @since 0.0.0
  */
-export class GrantAlreadyIssued extends Domain.Rejection(
+export class GrantAlreadyIssued extends S.TaggedError<GrantAlreadyIssued, { readonly brand: unique symbol }>()(
   "GrantAlreadyIssued",
   {},
-  { httpApiStatus: 409, description: "This grant id was already issued." },
+  $I.annote("GrantAlreadyIssued", { httpApiStatus: 409, description: "This grant id was already issued." }),
 ) {}
 
 /**

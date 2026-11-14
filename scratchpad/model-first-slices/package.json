@@ -18,10 +18,11 @@
     "runs/model",
     "runs/host",
     "apps/practice",
-    "conformance"
+    "conformance",
+    "conformance/upstream"
   ],
   "scripts": {
-    "check": "tsc --noEmit -p shared/kernel && tsc --noEmit -p shared/contract-kit && tsc --noEmit -p shared/tooling && tsc --noEmit -p party/contract && tsc --noEmit -p party/model && tsc --noEmit -p party/host && tsc --noEmit -p party/web && tsc --noEmit -p authority/contract && tsc --noEmit -p authority/model && tsc --noEmit -p authority/host && tsc --noEmit -p runs/contract && tsc --noEmit -p runs/model && tsc --noEmit -p runs/host && tsc --noEmit -p apps/practice && tsc --noEmit -p conformance && tsc --noEmit -p scripts",
+    "check": "effect-tsgo tsrs -p shared/kernel && effect-tsgo tsrs -p shared/contract-kit && effect-tsgo tsrs -p shared/tooling && effect-tsgo tsrs -p party/contract && effect-tsgo tsrs -p party/model && effect-tsgo tsrs -p party/host && effect-tsgo tsrs -p party/web && effect-tsgo tsrs -p authority/contract && effect-tsgo tsrs -p authority/model && effect-tsgo tsrs -p authority/host && effect-tsgo tsrs -p runs/contract && effect-tsgo tsrs -p runs/model && effect-tsgo tsrs -p runs/host && effect-tsgo tsrs -p apps/practice && effect-tsgo tsrs -p conformance && effect-tsgo tsrs -p conformance/upstream && effect-tsgo tsrs -p scripts",
     "test": "rm -rf node_modules/.cache/proto-outcomes && bun run --cwd shared/tooling test && bun run --cwd party/contract test && bun run --cwd runs/contract test && bun run --cwd party/model test && bun run --cwd authority/model test && bun run --cwd runs/model test && bun run --cwd authority/host test && bun run --cwd runs/host test && bun run --cwd party/host test && bun run --cwd party/web test && bun run --cwd apps/practice test && bun run --cwd conformance test && bun scripts/outcomes.ts --check",
     "handlers": "bun run --cwd party/model handlers && bun run --cwd authority/model handlers && bun run --cwd runs/model handlers",
     "handlers:check": "bun run --cwd party/model handlers --check && bun run --cwd authority/model handlers --check && bun run --cwd runs/model handlers --check",
@@ -33,9 +34,12 @@
     "entries": "bun run --cwd apps/practice entries"
   },
   "devDependencies": {
+    "@beep/identity": "link:../../packages/foundation/modeling/identity",
+    "@beep/schema": "link:../../packages/foundation/modeling/schema",
+    "@effect/tsgo": "0.68.1",
     "@effect/vitest": "4.1.4",
     "@types/node": "26.6.5",
-    "typescript": "7.1.0-dev.20261105.1",
+    "tsrs": "0.24.0-ts7.1.0-beta",
     "vitest": "5.0.4"
   },
   "overrides": {

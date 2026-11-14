@@ -1,7 +1,10 @@
 import * as Context from "effect/Context";
+import { $PartyWebId } from "@proto/kernel/Identity";
 import * as Effect from "effect/Effect";
 import type * as Headers from "effect/http/Headers";
 import * as Layer from "effect/Layer";
+
+const $I = $PartyWebId.create("Credentials.context");
 
 /**
  * The signed-in caller's credentials, as the headers every binding sends.
@@ -13,7 +16,7 @@ import * as Layer from "effect/Layer";
 export class Credentials extends Context.Service<
   Credentials,
   { readonly headers: Effect.Effect<Headers.Input> }
->()("PartyWeb/Credentials") {}
+>()($I`Credentials`) {}
 
 /**
  * Fixed headers: what a test or a single-user page signs in with.

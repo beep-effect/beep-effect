@@ -34,6 +34,8 @@ import { identity } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as Struct from "effect/Struct";
 
 /**
  * A run's budget, in units: what it was allowed, what is held by open
@@ -50,10 +52,15 @@ export const Budget = S.Struct({ allowance: S.Int, reserved: S.Int, spent: S.Int
 export type Budget = typeof Budget.Type;
 
 /**
- * What every run records, whatever its state: its session and lineage, what
- * it is for and was made with, who asked and who answers, its grant, the
- * provenance it acts under, its budget and open reservations, and how far
- * it is from its history bound.
+ * What an active run records: its session and lineage (the run it continues
+ * and its parent, each when it has one), what it is for and was made with,
+ * who asked and who answers, its grant and the delegation the authority
+ * context opened for it, the provenance it acts under, its budget and open
+ * reservations, and how far it is from its history bound.
+ *
+ * **Details**
+ *
+ * The keys are stored in this order, as phases 2 to 6 stored them.
  *
  * @category models
  * @since 0.0.0
@@ -62,16 +69,16 @@ export const RunRecord = S.Struct({
   session: SessionId,
   lineage: RunId,
   generation: S.Int,
-  parent: S.NullOr(RunId),
-  previous: S.NullOr(RunId),
+  parent: S.OptionFromNullOr(RunId),
+  previous: S.OptionFromNullOr(RunId),
   purpose: S.String,
   versions: RunVersions,
   requester: PrincipalId,
-  accountable: S.NullOr(PrincipalId),
+  accountable: PrincipalId,
   source: GrantRef,
   terms: GrantTerms,
-  delegation: S.NullOr(DelegationId),
-  provenance: S.NullOr(Provenance),
+  delegation: DelegationId,
+  provenance: Provenance,
   budget: Budget,
   reservations: S.Array(HeldReservation),
   steps: S.Int,
@@ -84,20 +91,46 @@ export const RunRecord = S.Struct({
 export type RunRecord = typeof RunRecord.Type;
 
 /**
- * A run's lifecycle (D6, D23). `Requested` waits for its grant; the four
- * terminal-or-waiting states keep the record so a read can still show it.
+ * What a requested run records before its grant arrives: the active record
+ * without the person who answers for it, its delegation or the provenance it
+ * will act under, which the authority context supplies on activation.
+ *
+ * **Details**
+ *
+ * Phases 2 to 6 stored a requested run with those three keys as `null`; the
+ * keys are ignored on read, so those states still decode.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const RunRequest = RunRecord.mapFields(Struct.omit(["accountable", "delegation", "provenance"]));
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export type RunRequest = typeof RunRequest.Type;
+
+/**
+ * A run's lifecycle (D6, D23). `Requested` waits for its grant and keeps
+ * only the request; `Withdrawn` is a request cancelled before its grant
+ * arrived, and `Rejected` one whose grant was refused. Every state after
+ * activation keeps the active record, so a read can still show it;
+ * `Refused` is an active run that could not continue because a hop was
+ * refused, holding nothing open.
  *
  * @category models
  * @since 0.0.0
  */
 export const AgentRunState = S.TaggedUnion({
   Unrequested: {},
-  Requested: { run: RunRecord },
+  Requested: { run: RunRequest },
   Running: { run: RunRecord },
   AwaitingApproval: { run: RunRecord },
   AwaitingChild: { run: RunRecord, child: RunId, allowance: S.Int },
   Completed: { run: RunRecord, outcome: S.String },
   Rejected: { session: SessionId, reason: S.String },
+  Refused: { run: RunRecord, reason: S.String },
+  Withdrawn: { run: RunRequest, reason: S.String },
   Cancelled: { run: RunRecord, reason: S.String },
   Exhausted: { run: RunRecord },
   Continued: { run: RunRecord, next: RunId },
@@ -107,6 +140,38 @@ export const AgentRunState = S.TaggedUnion({
  * @since 0.0.0
  */
 export type AgentRunState = typeof AgentRunState.Type;
+
+/**
+ * Phases 2 to 6 stored a request cancelled before its grant as `Cancelled`,
+ * with `null` for the keys a request lacks. It reads as `Withdrawn` (D22).
+ */
+const CancelledBeforeGrant = S.TaggedStruct("Cancelled", {
+  run: RunRequest.mapFields(Struct.assign({ accountable: S.Null, delegation: S.Null, provenance: S.Null })),
+  reason: S.String,
+}).pipe(
+  S.decodeTo(
+    S.toType(AgentRunState.cases.Withdrawn),
+    SchemaTransformation.transform({
+      decode: ({ run, reason }) =>
+        AgentRunState.cases.Withdrawn.make({ run: Struct.omit(run, ["accountable", "delegation", "provenance"]), reason }),
+      encode: ({ run, reason }) => ({
+        _tag: "Cancelled" as const,
+        run: { ...run, accountable: null, delegation: null, provenance: null },
+        reason,
+      }),
+    }),
+  ),
+);
+
+/**
+ * How a run's state is stored: today's lifecycle, and the phase 2 to 6 form
+ * of a request cancelled before its grant, which reads as `Withdrawn`.
+ * Today's states are written in today's form.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const StoredAgentRunState = S.Union([AgentRunState, CancelledBeforeGrant]);
 
 /** What remains to reserve or allocate. */
 export const remaining = (budget: Budget): number => budget.allowance - budget.reserved - budget.spent - budget.allocated;
@@ -129,6 +194,8 @@ const statusOf = (state: AgentRunState): RunStatus =>
     AwaitingChild: () => "awaiting-child" as const,
     Completed: () => "completed" as const,
     Rejected: () => "rejected" as const,
+    Refused: () => "rejected" as const,
+    Withdrawn: () => "cancelled" as const,
     Cancelled: () => "cancelled" as const,
     Exhausted: () => "exhausted" as const,
     Continued: () => "continued" as const,
@@ -137,7 +204,7 @@ const statusOf = (state: AgentRunState): RunStatus =>
 const requireRunning = (state: AgentRunState): Effect.Effect<RunRecord, RunNotRunning> =>
   Match.value(state).pipe(
     Match.tag("Running", ({ run }) => Effect.succeed(run)),
-    Match.orElse((other) => Effect.fail(new RunNotRunning({ status: statusOf(other) }))),
+    Match.orElse((other) => Effect.fail(RunNotRunning.make({ status: statusOf(other) }))),
   );
 
 /** Only the run itself, re-admitted under its own delegation, reports on it. */
@@ -145,13 +212,13 @@ const requireSelf = (id: RunId): Effect.Effect<Invocation, NotThisRun, CurrentIn
   Effect.filterOrFail(
     Effect.service(CurrentInvocation),
     (invocation) => O.contains(runOf(invocation), id),
-    () => new NotThisRun(),
+    () => NotThisRun.make({}),
   );
 
 const reservationOf = (run: RunRecord, reservation: HeldReservation["reservation"]) =>
   A.findFirst(run.reservations, (held) => held.reservation === reservation);
 
-const mapRun = (state: AgentRunState, f: (run: RunRecord) => RunRecord): AgentRunState =>
+const mapRun = (state: AgentRunState, f: <Run extends RunRequest>(run: Run) => Run): AgentRunState =>
   AgentRunState.matchOrElse(
     state,
     {
@@ -163,13 +230,40 @@ const mapRun = (state: AgentRunState, f: (run: RunRecord) => RunRecord): AgentRu
     identity,
   );
 
-const withBudget = (run: RunRecord, budget: Partial<Budget>): RunRecord => ({ ...run, budget: { ...run.budget, ...budget } });
+const withBudget = <Run extends RunRequest>(run: Run, budget: Partial<Budget>): Run => ({
+  ...run,
+  budget: { ...run.budget, ...budget },
+});
 
 /** A finished run holds nothing open. */
 const releaseAll = (run: RunRecord): RunRecord => ({ ...withBudget(run, { reserved: 0 }), reservations: [] });
 
 /**
- * The record of a run in any state that keeps one.
+ * What a run in any state that keeps one was requested as: its lineage,
+ * purpose, requester, grant and budget. An active record is also a request.
+ *
+ * @category getters
+ * @since 0.0.0
+ */
+export const requestOf = (state: AgentRunState): O.Option<RunRequest> =>
+  AgentRunState.match(state, {
+    Unrequested: () => O.none(),
+    Rejected: () => O.none(),
+    Requested: ({ run }) => O.some(run),
+    Withdrawn: ({ run }) => O.some(run),
+    Refused: ({ run }) => O.some(run),
+    Running: ({ run }) => O.some(run),
+    AwaitingApproval: ({ run }) => O.some(run),
+    AwaitingChild: ({ run }) => O.some(run),
+    Completed: ({ run }) => O.some(run),
+    Cancelled: ({ run }) => O.some(run),
+    Exhausted: ({ run }) => O.some(run),
+    Continued: ({ run }) => O.some(run),
+  });
+
+/**
+ * The active record of a run that was granted and started, in any state
+ * after activation; none before its grant arrived or when it never had one.
  *
  * @category getters
  * @since 0.0.0
@@ -178,7 +272,9 @@ export const recordOf = (state: AgentRunState): O.Option<RunRecord> =>
   AgentRunState.match(state, {
     Unrequested: () => O.none(),
     Rejected: () => O.none(),
-    Requested: ({ run }) => O.some(run),
+    Requested: () => O.none(),
+    Withdrawn: () => O.none(),
+    Refused: ({ run }) => O.some(run),
     Running: ({ run }) => O.some(run),
     AwaitingApproval: ({ run }) => O.some(run),
     AwaitingChild: ({ run }) => O.some(run),
@@ -195,7 +291,7 @@ export const recordOf = (state: AgentRunState): O.Option<RunRecord> =>
  * @since 0.0.0
  */
 export const sessionOf = (state: AgentRunState): O.Option<SessionId> =>
-  AgentRunState.guards.Rejected(state) ? O.some(state.session) : O.map(recordOf(state), (run) => run.session);
+  AgentRunState.guards.Rejected(state) ? O.some(state.session) : O.map(requestOf(state), (run) => run.session);
 
 /**
  * One agent run: the system of record for a bounded piece of work (D6). It
@@ -209,7 +305,7 @@ export class AgentRun extends Domain.Aggregate(
   "AgentRun",
   {
     id: RunId,
-    state: AgentRunState,
+    state: StoredAgentRunState,
     initial: { _tag: "Unrequested" },
     commands: [
       RequestRun,
@@ -233,10 +329,10 @@ export class AgentRun extends Domain.Aggregate(
     decide: {
       RequestRun: Effect.fn(function* (state, command) {
         const invocation = yield* CurrentInvocation;
-        if (!Root.guards.Human(invocation.root)) return yield* new HumanOnly();
-        if (state._tag !== "Unrequested") return yield* new RunAlreadyExists();
+        if (!Root.guards.Human(invocation.root)) return yield* HumanOnly.make({});
+        if (state._tag !== "Unrequested") return yield* RunAlreadyExists.make({});
         return [
-          new RunRequested({
+          RunRequested.make({
             session: command.session,
             purpose: command.purpose,
             versions: command.versions,
@@ -255,7 +351,7 @@ export class AgentRun extends Domain.Aggregate(
         state._tag !== "Requested"
           ? []
           : [
-              new RunActivated({
+              RunActivated.make({
                 session: state.run.session,
                 delegation: command.delegation,
                 accountable: command.accountable,
@@ -263,8 +359,17 @@ export class AgentRun extends Domain.Aggregate(
                 provenance: command.provenance,
               }),
             ],
-      RejectRun: (_, command) => [
-        new RunRejected({ session: command.session, reason: command.reason, provenance: command.provenance }),
+      // A run refused mid-run gives back what its open reservations held.
+      RejectRun: (state, command) => [
+        RunRejected.make({
+          session: command.session,
+          reason: command.reason,
+          released: Match.value(state).pipe(
+            Match.tag("Running", "AwaitingApproval", "AwaitingChild", ({ run }) => run.budget.reserved),
+            Match.orElse(() => 0),
+          ),
+          provenance: command.provenance,
+        }),
       ],
 
       ReserveBudget: Effect.fn(function* (state, command, { id }) {
@@ -273,9 +378,9 @@ export class AgentRun extends Domain.Aggregate(
         // A redelivered reservation is the same reservation.
         if (O.isSome(reservationOf(run, command.reservation))) return [];
         const left = remaining(run.budget);
-        if (command.units > left) return yield* new BudgetExceeded({ requested: command.units, remaining: left });
+        if (command.units > left) return yield* BudgetExceeded.make({ requested: command.units, remaining: left });
         return [
-          new BudgetReserved({
+          BudgetReserved.make({
             session: run.session,
             reservation: command.reservation,
             units: command.units,
@@ -289,14 +394,14 @@ export class AgentRun extends Domain.Aggregate(
         const invocation = yield* requireSelf(id);
         const run = yield* requireRunning(state);
         const held = yield* Effect.fromOption(reservationOf(run, command.reservation)).pipe(
-          Effect.mapError(() => new UnknownReservation({ reservation: command.reservation })),
+          Effect.mapError(() => UnknownReservation.make({ reservation: command.reservation })),
         );
         const after = withBudget(run, {
           reserved: run.budget.reserved - held.units,
           spent: run.budget.spent + command.units,
         });
         return [
-          new UsageSettled({
+          UsageSettled.make({
             session: run.session,
             reservation: command.reservation,
             reserved: held.units,
@@ -311,10 +416,10 @@ export class AgentRun extends Domain.Aggregate(
         const invocation = yield* requireSelf(id);
         const run = yield* requireRunning(state);
         const held = yield* Effect.fromOption(reservationOf(run, command.reservation)).pipe(
-          Effect.mapError(() => new UnknownReservation({ reservation: command.reservation })),
+          Effect.mapError(() => UnknownReservation.make({ reservation: command.reservation })),
         );
         return [
-          new ReservationReleased({
+          ReservationReleased.make({
             session: run.session,
             reservation: command.reservation,
             units: held.units,
@@ -328,12 +433,12 @@ export class AgentRun extends Domain.Aggregate(
         const run = yield* requireRunning(state);
         const provenance = provenanceOf(invocation);
         const count = run.steps + 1;
-        const step = new StepRecorded({ session: run.session, step: command.step, count, provenance });
+        const step = StepRecorded.make({ session: run.session, step: command.step, count, provenance });
         if (count < run.historyBound) return [step];
         // At the bound: continue as a new run that carries the work forward (D23).
         return [
           step,
-          new RunContinued({
+          RunContinued.make({
             session: run.session,
             next: RunId.make(`${run.lineage}~${run.generation + 1}`),
             lineage: run.lineage,
@@ -344,7 +449,7 @@ export class AgentRun extends Domain.Aggregate(
             purpose: run.purpose,
             versions: run.versions,
             historyBound: run.historyBound,
-            source: GrantRef.make({ grant: run.source.grant, delegation: run.delegation }),
+            source: GrantRef.make({ grant: run.source.grant, delegation: O.some(run.delegation) }),
             terms: run.terms,
             requester: run.requester,
             provenance,
@@ -355,17 +460,17 @@ export class AgentRun extends Domain.Aggregate(
       AwaitApproval: Effect.fn(function* (state, _command, { id }) {
         const invocation = yield* requireSelf(id);
         const run = yield* requireRunning(state);
-        return [new RunAwaitingApproval({ session: run.session, provenance: provenanceOf(invocation) })];
+        return [RunAwaitingApproval.make({ session: run.session, provenance: provenanceOf(invocation) })];
       }),
 
       CompleteRun: Effect.fn(function* (state, command, { id }) {
         const invocation = yield* requireSelf(id);
         const run = yield* Match.value(state).pipe(
           Match.tag("Running", "AwaitingApproval", "AwaitingChild", ({ run }) => Effect.succeed(run)),
-          Match.orElse((other) => Effect.fail(new RunNotRunning({ status: statusOf(other) }))),
+          Match.orElse((other) => Effect.fail(RunNotRunning.make({ status: statusOf(other) }))),
         );
         return [
-          new RunCompleted({
+          RunCompleted.make({
             session: run.session,
             outcome: command.outcome,
             released: run.budget.reserved,
@@ -378,32 +483,36 @@ export class AgentRun extends Domain.Aggregate(
         const invocation = yield* requireSelf(id);
         const run = yield* requireRunning(state);
         return [
-          new RunExhausted({ session: run.session, remaining: remaining(run.budget), provenance: provenanceOf(invocation) }),
+          RunExhausted.make({ session: run.session, remaining: remaining(run.budget), provenance: provenanceOf(invocation) }),
         ];
       }),
 
       CancelRun: Effect.fn(function* (state, command) {
         const invocation = yield* CurrentInvocation;
         const run = yield* Match.value(state).pipe(
-          Match.tag("Requested", "Running", "AwaitingApproval", "AwaitingChild", ({ run }) => Effect.succeed(run)),
-          Match.orElse((other) => Effect.fail(new RunNotRunning({ status: statusOf(other) }))),
+          Match.tag("Requested", "Running", "AwaitingApproval", "AwaitingChild", ({ run }): Effect.Effect<RunRequest> =>
+            Effect.succeed(run),
+          ),
+          Match.orElse((other) => Effect.fail(RunNotRunning.make({ status: statusOf(other) }))),
         );
+        const { root } = invocation;
+        // A requested run has no one answering for it yet: only its requester owns it.
         const owns =
-          Root.guards.Human(invocation.root) &&
-          (invocation.root.principal === run.requester || invocation.root.principal === run.accountable);
-        if (!owns) return yield* new NotRunOwner();
-        return [new RunCancelled({ session: run.session, reason: command.reason, provenance: provenanceOf(invocation) })];
+          Root.guards.Human(root) &&
+          (root.principal === run.requester || O.exists(recordOf(state), (active) => active.accountable === root.principal));
+        if (!owns) return yield* NotRunOwner.make({});
+        return [RunCancelled.make({ session: run.session, reason: command.reason, provenance: provenanceOf(invocation) })];
       }),
 
       DelegateRun: Effect.fn(function* (state, command, { id }) {
         const invocation = yield* requireSelf(id);
         const run = yield* requireRunning(state);
         const left = remaining(run.budget);
-        if (command.allowance > left) return yield* new BudgetExceeded({ requested: command.allowance, remaining: left });
+        if (command.allowance > left) return yield* BudgetExceeded.make({ requested: command.allowance, remaining: left });
         const wider = widens(run.terms, command.terms);
-        if (O.isSome(wider)) return yield* new ChildGrantWidens({ dimension: wider.value });
+        if (O.isSome(wider)) return yield* ChildGrantWidens.make({ dimension: wider.value });
         return [
-          new ChildRequested({
+          ChildRequested.make({
             session: run.session,
             child: command.child,
             delegation: command.delegation,
@@ -412,7 +521,7 @@ export class AgentRun extends Domain.Aggregate(
             terms: command.terms,
             versions: run.versions,
             historyBound: run.historyBound,
-            source: GrantRef.make({ grant: run.source.grant, delegation: run.delegation }),
+            source: GrantRef.make({ grant: run.source.grant, delegation: O.some(run.delegation) }),
             provenance: provenanceOf(invocation),
           }),
         ];
@@ -422,7 +531,7 @@ export class AgentRun extends Domain.Aggregate(
         state._tag !== "Unrequested"
           ? []
           : [
-              new ChildRunOpened({
+              ChildRunOpened.make({
                 session: command.session,
                 parent: command.parent,
                 purpose: command.purpose,
@@ -443,7 +552,7 @@ export class AgentRun extends Domain.Aggregate(
         state._tag !== "AwaitingChild" || state.child !== command.child
           ? []
           : [
-              new ChildRunRefused({
+              ChildRunRefused.make({
                 session: state.run.session,
                 child: command.child,
                 allowance: state.allowance,
@@ -456,7 +565,7 @@ export class AgentRun extends Domain.Aggregate(
         state._tag !== "Unrequested"
           ? []
           : [
-              new ContinuationOpened({
+              ContinuationOpened.make({
                 session: command.session,
                 previous: command.previous,
                 lineage: command.lineage,
@@ -480,18 +589,14 @@ export class AgentRun extends Domain.Aggregate(
       // Internal: the runs host's inbox sends it when a fact decided the run's subject.
       ConcludeRun: (state, command) =>
         Match.value(state).pipe(
-          Match.tag("Running", "AwaitingApproval", "AwaitingChild", ({ run }) =>
-            run.provenance === null
-              ? []
-              : [
-                  new RunCompleted({
-                    session: run.session,
-                    outcome: command.outcome,
-                    released: run.budget.reserved,
-                    provenance: extend(run.provenance, command.hop),
-                  }),
-                ],
-          ),
+          Match.tag("Running", "AwaitingApproval", "AwaitingChild", ({ run }) => [
+            RunCompleted.make({
+              session: run.session,
+              outcome: command.outcome,
+              released: run.budget.reserved,
+              provenance: extend(run.provenance, command.hop),
+            }),
+          ]),
           Match.orElse(() => []),
         ),
 
@@ -500,7 +605,7 @@ export class AgentRun extends Domain.Aggregate(
         state._tag !== "AwaitingChild" || state.child !== command.child
           ? []
           : [
-              new ChildRunFinished({
+              ChildRunFinished.make({
                 session: state.run.session,
                 child: command.child,
                 allowance: state.allowance,
@@ -513,20 +618,17 @@ export class AgentRun extends Domain.Aggregate(
     evolve: {
       RunRequested: (_, event, { id }) =>
         AgentRunState.cases.Requested.make({
-          run: RunRecord.make({
+          run: RunRequest.make({
             session: event.session,
             lineage: id,
             generation: 0,
-            parent: null,
-            previous: null,
+            parent: O.none(),
+            previous: O.none(),
             purpose: event.purpose,
             versions: event.versions,
             requester: event.requester,
-            accountable: null,
             source: event.source,
             terms: event.terms,
-            delegation: null,
-            provenance: null,
             budget: { allowance: event.allowance, reserved: 0, spent: 0, allocated: 0 },
             reservations: [],
             steps: 0,
@@ -539,16 +641,32 @@ export class AgentRun extends Domain.Aggregate(
           {
             Requested: ({ run }): AgentRunState =>
               AgentRunState.cases.Running.make({
-                run: { ...run, delegation: event.delegation, accountable: event.accountable, provenance: event.runProvenance },
+                run: RunRecord.make({
+                  ...run,
+                  accountable: event.accountable,
+                  delegation: event.delegation,
+                  provenance: event.runProvenance,
+                }),
               }),
           },
           identity,
         ),
       RunRejected: (state, event) =>
-        AgentRunState.cases.Rejected.make({
-          session: O.match(recordOf(state), { onNone: () => event.session, onSome: (run) => run.session }),
-          reason: event.reason,
-        }),
+        AgentRunState.matchOrElse(
+          state,
+          {
+            Running: ({ run }): AgentRunState => AgentRunState.cases.Refused.make({ run: releaseAll(run), reason: event.reason }),
+            AwaitingApproval: ({ run }): AgentRunState =>
+              AgentRunState.cases.Refused.make({ run: releaseAll(run), reason: event.reason }),
+            AwaitingChild: ({ run }): AgentRunState =>
+              AgentRunState.cases.Refused.make({ run: releaseAll(run), reason: event.reason }),
+          },
+          (other): AgentRunState =>
+            AgentRunState.cases.Rejected.make({
+              session: O.match(requestOf(other), { onNone: () => event.session, onSome: (run) => run.session }),
+              reason: event.reason,
+            }),
+        ),
       BudgetReserved: (state, event) =>
         mapRun(state, (run) => ({
           ...withBudget(run, { reserved: run.budget.reserved + event.units }),
@@ -589,10 +707,16 @@ export class AgentRun extends Domain.Aggregate(
           identity,
         ),
       RunCancelled: (state, event) =>
-        O.match(recordOf(state), {
-          onNone: () => state,
-          onSome: (run) => AgentRunState.cases.Cancelled.make({ run, reason: event.reason }),
-        }),
+        AgentRunState.matchOrElse(
+          state,
+          {
+            Requested: ({ run }): AgentRunState => AgentRunState.cases.Withdrawn.make({ run, reason: event.reason }),
+            Running: ({ run }): AgentRunState => AgentRunState.cases.Cancelled.make({ run, reason: event.reason }),
+            AwaitingApproval: ({ run }): AgentRunState => AgentRunState.cases.Cancelled.make({ run, reason: event.reason }),
+            AwaitingChild: ({ run }): AgentRunState => AgentRunState.cases.Cancelled.make({ run, reason: event.reason }),
+          },
+          identity,
+        ),
       ChildRequested: (state, event) =>
         AgentRunState.matchOrElse(
           state,
@@ -612,8 +736,8 @@ export class AgentRun extends Domain.Aggregate(
             session: event.session,
             lineage: id,
             generation: 0,
-            parent: event.parent,
-            previous: null,
+            parent: O.some(event.parent),
+            previous: O.none(),
             purpose: event.purpose,
             versions: event.versions,
             requester: event.requester,
@@ -660,7 +784,7 @@ export class AgentRun extends Domain.Aggregate(
             lineage: event.lineage,
             generation: event.generation,
             parent: event.parent,
-            previous: event.previous,
+            previous: O.some(event.previous),
             purpose: event.purpose,
             versions: event.versions,
             requester: event.requester,
@@ -683,7 +807,7 @@ export class AgentRun extends Domain.Aggregate(
     },
     reply: {
       ReserveBudget: (state) => ({
-        remaining: O.match(recordOf(state), { onNone: () => 0, onSome: (run) => remaining(run.budget) }),
+        remaining: O.match(requestOf(state), { onNone: () => 0, onSome: (run) => remaining(run.budget) }),
       }),
     },
   },

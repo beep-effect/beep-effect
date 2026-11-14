@@ -1,13 +1,17 @@
 import { GrantTerms } from "@proto/kernel/Capability";
 import { RunId } from "@proto/kernel/Ids";
 import { GrantRef, Hop, Provenance } from "@proto/kernel/Invocation";
+import { $RunsContractId } from "@proto/kernel/Identity";
 import * as Context from "effect/Context";
 import type * as Effect from "effect/Effect";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 import { ReservationId } from "./Run/Reservation.id.ts";
 import { RunStatus } from "./Run/RunStatus.ts";
 import { RunVersions } from "./Run/RunVersions.ts";
 import { SessionId } from "./Run/Session.id.ts";
+
+const $I = $RunsContractId.create("Runs.gateway");
 
 /**
  * What a product context reports to a run, as the run: budget, steps and
@@ -75,20 +79,31 @@ export type CurrentRun = typeof CurrentRun.Type;
  * @category errors
  * @since 0.0.0
  */
-export class RunRequestRefused extends S.TaggedError<RunRequestRefused>()("RunRequestRefused", {
+export class RunRequestRefused extends S.TaggedError<RunRequestRefused, { readonly brand: unique symbol }>()("RunRequestRefused", {
   reason: S.String,
 }) {}
 
 /**
- * A report was refused, and why. `remaining` is set when the budget refused it.
+ * A report was refused, and why.
  *
  * @category errors
  * @since 0.0.0
  */
-export class RunReportRefused extends S.TaggedError<RunReportRefused>()("RunReportRefused", {
+export class RunReportRefused extends S.TaggedError<RunReportRefused, { readonly brand: unique symbol }>()("RunReportRefused", {
   reason: S.String,
-  remaining: S.NullOr(S.Int),
 }) {}
+
+/**
+ * A reservation was refused because the run's remaining allowance cannot
+ * cover it; `remaining` is what is left.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class RunBudgetExceeded extends S.TaggedError<RunBudgetExceeded, { readonly brand: unique symbol }>()(
+  "RunBudgetExceeded",
+  { remaining: S.Int },
+) {}
 
 /**
  * The run has ended (completed, cancelled, exhausted or rejected), so it
@@ -98,7 +113,7 @@ export class RunReportRefused extends S.TaggedError<RunReportRefused>()("RunRepo
  * @category errors
  * @since 0.0.0
  */
-export class RunEnded extends S.TaggedError<RunEnded>()("RunEnded", { status: RunStatus }) {}
+export class RunEnded extends S.TaggedError<RunEnded, { readonly brand: unique symbol }>()("RunEnded", { status: RunStatus }) {}
 
 /**
  * The statuses in which a run has ended.
@@ -106,7 +121,7 @@ export class RunEnded extends S.TaggedError<RunEnded>()("RunEnded", { status: Ru
  * @category models
  * @since 0.0.0
  */
-export const EndedStatus = S.Literals(["completed", "cancelled", "exhausted", "rejected"]);
+export const EndedStatus = LiteralKit(["completed", "cancelled", "exhausted", "rejected"]);
 
 /**
  * The runs context's synchronous contract for other contexts' hosts: start a
@@ -131,6 +146,6 @@ export class RunsGateway extends Context.Service<
       readonly hop: Hop;
       readonly run: RunId;
       readonly report: RunReport;
-    }) => Effect.Effect<CurrentRun, RunReportRefused | RunEnded>;
+    }) => Effect.Effect<CurrentRun, RunReportRefused | RunBudgetExceeded | RunEnded>;
   }
->()("Runs/Gateway") {}
+>()($I`RunsGateway`) {}

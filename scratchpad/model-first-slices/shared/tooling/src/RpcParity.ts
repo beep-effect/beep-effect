@@ -7,8 +7,9 @@ import * as RpcSchema from "effect/rpc/RpcSchema";
 import * as S from "effect/Schema";
 
 /**
- * One RPC as its wire sees it: the JSON Schema of the encoded payload,
- * success and error, whether it streams, and the middleware keys it runs.
+ * One RPC as its wire sees it: the JSON Schema documents of the encoded
+ * payload, success and error, whether it streams, and the middleware keys it
+ * runs. Two shapes are the same wire when they are deeply equal.
  *
  * @category models
  * @since 0.0.0
@@ -16,9 +17,9 @@ import * as S from "effect/Schema";
 export const RpcShape = S.Struct({
   tag: S.String,
   stream: S.Boolean,
-  payload: S.String,
-  success: S.String,
-  error: S.String,
+  payload: S.Unknown,
+  success: S.Unknown,
+  error: S.Unknown,
   middleware: S.Array(S.String),
 });
 /**
@@ -27,7 +28,7 @@ export const RpcShape = S.Struct({
  */
 export type RpcShape = typeof RpcShape.Type;
 
-const json = (schema: S.Constraint): string => JSON.stringify(S.toJsonSchemaDocument(schema));
+const json = (schema: S.Constraint): unknown => S.toJsonSchemaDocument(schema);
 
 /**
  * The wire shape of one RPC.

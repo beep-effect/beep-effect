@@ -39,7 +39,7 @@ export const ContinueAtBoundLive = ContinueAtBound.toLayer(
           Effect.flatMap((granted) =>
             runs.send(
               event.next,
-              new OpenContinuation({
+              OpenContinuation.make({
                 session: event.session,
                 previous,
                 lineage: event.lineage,
@@ -62,7 +62,7 @@ export const ContinueAtBoundLive = ContinueAtBound.toLayer(
             ),
           ),
           Effect.catchTag("GrantDenied", (denied) =>
-            runs.send(event.next, new RejectRun({ session: event.session, reason: `grant:${denied.reason}`, provenance })),
+            runs.send(event.next, RejectRun.make({ session: event.session, reason: `grant:${denied.reason}`, provenance })),
           ),
           Effect.asVoid,
         );

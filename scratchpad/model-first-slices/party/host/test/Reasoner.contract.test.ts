@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { expect, it } from "@effect/vitest";
 import { RunId } from "@proto/kernel/Ids";
 import { EvidenceSignal } from "@proto/party-contract/Evidence";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
@@ -30,24 +30,32 @@ const keys = [request("k-one", 1), request("k-two", 2), request("k-many", 12, 20
 
 /** The recorded tape a replay serves: the recording adapter's output, through its JSON fixture form. */
 const recordedTape = Effect.gen(function* () {
-  const recorded = yield* Effect.gen(function* () {
-    const reasoner = yield* Reasoner;
-    yield* Effect.forEach(keys, (call) => reasoner.assess(call), { discard: true });
-    return yield* (yield* ReasonerTape).entries;
-  }).pipe(Effect.provide(recordingReasoner(assessWithFixture).pipe(Layer.provideMerge(memoryTape()))));
+  const recorded = yield* Effect.scoped(
+    Effect.gen(function* () {
+      const recording = yield* Layer.build(recordingReasoner(assessWithFixture).pipe(Layer.provideMerge(memoryTape())));
+      return yield* Effect.gen(function* () {
+        const reasoner = yield* Reasoner;
+        yield* Effect.forEach(keys, (call) => reasoner.assess(call), { discard: true });
+        const tape = yield* ReasonerTape;
+        return yield* tape.entries;
+      }).pipe(Effect.provideContext(recording));
+    }),
+  );
   const fixture = yield* S.encodeEffect(TapeJson)(recorded);
-  return yield* S.decodeUnknownEffect(TapeJson)(fixture);
+  return yield* S.decodeEffect(TapeJson)(fixture);
 });
+const replayed = Layer.unwrap(Effect.map(recordedTape, (entries) => ReplayReasoner.pipe(Layer.provide(memoryTape(entries)))));
 
 const adapters = [
   ["fixture", FixtureReasoner],
   ["recording", recordingReasoner(assessWithFixture).pipe(Layer.provide(memoryTape()))],
-  ["replay", Layer.unwrap(Effect.map(recordedTape, (entries) => ReplayReasoner.pipe(Layer.provide(memoryTape(entries)))))],
+  ["replay", replayed],
 ] as const;
 
 // One contract, every adapter (D19): every call is checked against the port's schemas on the way in and out.
+// Each test builds its adapter afresh, as a provide per test did.
 for (const [name, adapter] of adapters) {
-  describe(`Reasoner contract: ${name}`, () => {
+  it.layer(adapter, { buildPerTest: true })(`Reasoner contract: ${name}`, (it) => {
     it.effect("usage stays within the call's allowance, and the receipt names the key and prompt version", () =>
       Effect.gen(function* () {
         const reasoner = yield* Reasoner;
@@ -56,7 +64,7 @@ for (const [name, adapter] of adapters) {
           expect(assessed.usage.units).toBeLessThanOrEqual(call.maxAllowance);
           expect(assessed.receipt).toMatchObject({ idempotencyKey: call.idempotencyKey, promptVersion: call.promptVersion });
         }
-      }).pipe(Effect.provide(adapter)),
+      }),
     );
 
     it.effect("a retried call with the same idempotency key returns the first answer", () =>
@@ -65,23 +73,27 @@ for (const [name, adapter] of adapters) {
         const first = yield* reasoner.assess(keys[1]!);
         const again = yield* reasoner.assess(keys[1]!);
         expect(again).toEqual(first);
-      }).pipe(Effect.provide(adapter)),
+      }),
     );
 
     it.effect("one source proposes reject, two independent sources propose accept", () =>
       Effect.gen(function* () {
         const reasoner = yield* Reasoner;
-        expect((yield* reasoner.assess(keys[0]!)).assessment.disposition).toBe("reject");
-        expect((yield* reasoner.assess(keys[1]!)).assessment.disposition).toBe("accept");
-      }).pipe(Effect.provide(adapter)),
+        const oneSource = yield* reasoner.assess(keys[0]!);
+        expect(oneSource.assessment.disposition).toBe("reject");
+        const twoSources = yield* reasoner.assess(keys[1]!);
+        expect(twoSources.assessment.disposition).toBe("accept");
+      }),
     );
   });
 }
 
-it.effect("replay refuses a call it never recorded, so a changed prompt cannot pass an evaluation silently", () =>
-  Effect.gen(function* () {
-    const reasoner = yield* Reasoner;
-    const changedPrompt = yield* reasoner.assess({ ...keys[0]!, promptVersion: "review-v2" }).pipe(Effect.flip);
-    expect(changedPrompt).toMatchObject({ _tag: "ReasonerUnavailable" });
-  }).pipe(Effect.provide(Layer.unwrap(Effect.map(recordedTape, (entries) => ReplayReasoner.pipe(Layer.provide(memoryTape(entries))))))),
-);
+it.layer(replayed)((it) => {
+  it.effect("replay refuses a call it never recorded, so a changed prompt cannot pass an evaluation silently", () =>
+    Effect.gen(function* () {
+      const reasoner = yield* Reasoner;
+      const changedPrompt = yield* reasoner.assess({ ...keys[0]!, promptVersion: "review-v2" }).pipe(Effect.flip);
+      expect(changedPrompt).toMatchObject({ _tag: "ReasonerUnavailable" });
+    }),
+  );
+});

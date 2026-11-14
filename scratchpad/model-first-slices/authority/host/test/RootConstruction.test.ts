@@ -1,6 +1,7 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
 import * as SourceScan from "@proto/tooling/SourceScan";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Path from "effect/Path";
 
@@ -28,24 +29,27 @@ const boundary = [
   "authority/host/src/Control.route.ts",
 ];
 
-it.effect("only the authority host's boundary builds or provides a root invocation", () =>
-  Effect.gen(function* () {
-    const path = yield* Path.Path;
-    const root = yield* path.fromFileUrl(new URL("../../../", import.meta.url));
-    const everywhere = yield* SourceScan.scan(root, packages, []);
-    // The boundary itself is found, so the scan is not vacuous.
-    expect(everywhere.map((violation) => violation.file)).toEqual(expect.arrayContaining(boundary));
-    expect(yield* SourceScan.scan(root, packages, boundary)).toEqual([]);
-  }).pipe(Effect.provide(NodeServices.layer)),
-);
+it.layer(NodeServices.layer)((it) => {
+  it.effect("only the authority host's boundary builds or provides a root invocation", () =>
+    Effect.gen(function* () {
+      const path = yield* Path.Path;
+      const root = yield* path.fromFileUrl(new URL("../../../", import.meta.url));
+      const everywhere = yield* SourceScan.scan(root, packages, []);
+      // The boundary itself is found, so the scan is not vacuous.
+      expect(A.map(everywhere, (violation) => violation.file)).toEqual(expect.arrayContaining(boundary));
+      const outside = yield* SourceScan.scan(root, packages, boundary);
+      expect(outside).toEqual([]);
+    }),
+  );
+});
 
 it("negative control: the scan flags a forged root and an invocation no re-admission produced", () => {
   const forged = [
     'const root = Root.cases.Human.make({ principal: "p_x" });',
     "effect.pipe(Effect.provideService(CurrentInvocation, someInvocation));",
     "Effect.provideService(effect, CurrentInvocation, { ...invocation, chain: [] });",
-  ].join("\n");
-  expect(SourceScan.scanText("forged.ts", forged).map((violation) => violation.rule)).toEqual([
+  ];
+  expect(A.map(SourceScan.scanText("forged.ts", A.join(forged, "\n")), (violation) => violation.rule)).toEqual([
     "builds a root",
     "builds an invocation",
     "provides an invocation no re-admission produced",

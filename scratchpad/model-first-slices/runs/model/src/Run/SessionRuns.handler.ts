@@ -21,7 +21,7 @@ export const SessionRunsLive = SessionRuns.toLayer(
         Human: ({ principal }) => A.contains(session.requesters, principal),
         Agent: ({ run }) => A.some(session.runs, (entry) => entry.run === run),
       });
-      if (!takesPart) return yield* new NotInSession();
+      if (!takesPart) return yield* NotInSession.make({});
     }),
   ),
 );

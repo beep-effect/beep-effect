@@ -1,6 +1,9 @@
 import { FactEnvelope } from "@proto/kernel/Fact";
+import { $PartyContractId } from "@proto/kernel/Identity";
 import * as Context from "effect/Context";
 import type * as Effect from "effect/Effect";
+
+const $I = $PartyContractId.create("Facts/PartyFacts.gateway");
 
 /**
  * Party's fact feed for other contexts' hosts: its published facts in the
@@ -18,6 +21,6 @@ export class PartyFactsFeed extends Context.Service<
     readonly read: (request: {
       readonly after: number;
       readonly take: number;
-    }) => Effect.Effect<ReadonlyArray<typeof FactEnvelope.Type>>;
+    }) => Effect.Effect<ReadonlyArray<FactEnvelope>>;
   }
->()("Party/FactsFeed") {}
+>()($I`PartyFactsFeed`) {}

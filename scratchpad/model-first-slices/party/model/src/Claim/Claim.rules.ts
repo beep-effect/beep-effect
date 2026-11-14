@@ -9,7 +9,7 @@ import { Proposition } from "@proto/party-contract/Proposition";
 import * as A from "effect/Array";
 import type * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import { flow } from "effect/Function";
+import { dual, flow } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 // Type-only back-edge: the aggregate imports these guards as values.
@@ -28,7 +28,7 @@ export const requirePending = (state: ClaimState): Effect.Effect<Pending, ClaimN
   // aggregate's file, which imports this one, so the dependency stays type-only.
   Match.value(state).pipe(
     Match.tag("Pending", (pending) => Effect.succeed(pending)),
-    Match.orElse((other) => Effect.fail(new ClaimNotPending({ status: other._tag }))),
+    Match.orElse((other) => Effect.fail(ClaimNotPending.make({ status: other._tag }))),
   );
 
 /**
@@ -39,15 +39,21 @@ export const requirePending = (state: ClaimState): Effect.Effect<Pending, ClaimN
  * @category guards
  * @since 0.0.0
  */
-export const requireGranted = (
-  capability: Capability,
-  operation: string,
-  state: ClaimState,
-  stream: string,
-  at: DateTime.Utc,
-): Effect.Effect<Invocation, ClaimNotPending | MissingGrant, CurrentInvocation> =>
+export const requireGranted = ({
+  capability,
+  operation,
+  state,
+  stream,
+  at,
+}: {
+  readonly capability: Capability;
+  readonly operation: string;
+  readonly state: ClaimState;
+  readonly stream: string;
+  readonly at: DateTime.Utc;
+}): Effect.Effect<Invocation, ClaimNotPending | MissingGrant, CurrentInvocation> =>
   Match.value(state).pipe(
-    Match.tag("Unasserted", () => Effect.fail(new ClaimNotPending({ status: "Unasserted" }))),
+    Match.tag("Unasserted", () => Effect.fail(ClaimNotPending.make({ status: "Unasserted" }))),
     Match.orElse((known) => requireGrant(capability, operation, claimIn(known.org, stream), at)),
   );
 
@@ -58,8 +64,10 @@ export const requireGranted = (
  * @category rules
  * @since 0.0.0
  */
-export const claimIn = (org: OrgId, stream: string): ResourceScope =>
-  ResourceScope.cases.Record.make({ org, record: stream });
+export const claimIn: {
+  (stream: string): (org: OrgId) => ResourceScope;
+  (org: OrgId, stream: string): ResourceScope;
+} = dual(2, (org: OrgId, stream: string): ResourceScope => ResourceScope.cases.Record.make({ org, record: stream }));
 
 /**
  * The admission gate a pending claim's proposition must clear: which gate,
@@ -92,6 +100,6 @@ export const requireAdmission: (
   Effect.succeed,
   Effect.filterOrFail(
     (gate) => gate.have >= gate.need,
-    (gate) => new AdmissionGateUnmet(gate),
+    (gate) => AdmissionGateUnmet.make(gate),
   ),
 );

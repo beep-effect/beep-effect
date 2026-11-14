@@ -1,5 +1,5 @@
 import { Story } from "@alchemy.run/domain/Story";
-import { it } from "@effect/vitest";
+import { describe, it } from "@effect/vitest";
 import { ResourceScope } from "@proto/kernel/Capability";
 import { CurrentInvocation } from "@proto/kernel/CurrentInvocation.context";
 import { GrantId, RunId } from "@proto/kernel/Ids";
@@ -33,11 +33,13 @@ import { ClaimReview } from "@proto/party-model/Claim/ClaimReview.view";
 import { MemoryPartyDirectoryStore } from "@proto/party-model/Directory/PartyDirectory.store";
 import { PartyHandlers } from "@proto/party-model/Party.handlers";
 import { PartyModel } from "@proto/party-model/Party.model";
-import { Reasoner } from "@proto/party-model/Review/Reasoner.external";
+import { Reasoner, ReasonerUnavailable } from "@proto/party-model/Review/Reasoner.external";
 import { ReviewAssist } from "@proto/party-model/Review/ReviewAssist.saga";
-import { BudgetRefused, ReviewRuns, RunEnded } from "@proto/party-model/Review/ReviewRuns.external";
+import { BudgetRefused, ReviewRuns, RunEnded, RunRefused } from "@proto/party-model/Review/ReviewRuns.external";
+import * as A from "effect/Array";
 import * as Layer from "effect/Layer";
 import { acme, agentRun, delegated, human, onOrg, oneSource, readmitted } from "./fixtures.ts";
+import * as O from "effect/Option";
 
 const { call, fail, given, provide, rejected, saga, succeed, then, view, when } = Story;
 const as = (invocation: Invocation) => provide(CurrentInvocation, invocation);
@@ -69,7 +71,7 @@ const run2 = RunId.make("review:claim_1:2");
 
 /** The narrowed delegation a review run acts under: propose, on this claim only. */
 const runGrant = (run: RunId, grant: string) =>
-  delegated(grant, `dlg:${run}`, PartyPropose, acme, "Claim/claim_1", ["ProposeDisposition"]);
+  delegated({ grant, delegation: `dlg:${run}`, capability: PartyPropose, org: acme, record: "Claim/claim_1", operations: ["ProposeDisposition"] });
 const runInvocation = (run: RunId, accountable: string, grant: string) =>
   agentRun(run, accountable, [runGrant(run, grant)]);
 const sagaHop = (run: RunId, step: string) => byAgent(run, sagaStep("ReviewAssist", run, step));
@@ -104,11 +106,11 @@ const assessUpToPropose = (run: RunId, live = liveAs(run, "p_intake", "g_intake_
 
 const assertedByIntake = [
   as(intake),
-  when(claim, new AssertClaim({ org: acme, proposition: hasIdentifier, signals: oneSource })),
+  when(claim, AssertClaim.make({ org: acme, proposition: hasIdentifier, signals: oneSource })),
   then(
     claim,
-    new ClaimAsserted({ org: acme, proposition: hasIdentifier, signals: oneSource, provenance: provenanceOf(intake) }),
-    new ReviewRequested({
+    ClaimAsserted.make({ org: acme, proposition: hasIdentifier, signals: oneSource, provenance: provenanceOf(intake) }),
+    ReviewRequested.make({
       run: run1,
       org: acme,
       proposition: hasIdentifier,
@@ -122,12 +124,12 @@ const assertedByIntake = [
   succeed(Authority.readmit, readmitted(intake, requestHop(2))),
   call(ReviewRuns.open, {
     run: run1,
-    source: { grant: GrantId.make("g_intake_propose"), delegation: null },
+    source: { grant: GrantId.make("g_intake_propose"), delegation: O.none() },
     terms: {
       capability: PartyPropose.id,
-      operations: ["ProposeDisposition"],
+      operations: O.some(["ProposeDisposition"]),
       resource: ResourceScope.cases.Record.make({ org: acme, record: "Claim/claim_1" }),
-      expires: null,
+      expires: O.none(),
     },
   }),
   succeed(ReviewRuns.open, { provenance: provenanceOf(runInvocation(run1, "p_intake", "g_intake_propose")) }),
@@ -142,37 +144,37 @@ it.effect("a review run proposes under its delegation and waits; a person's appr
     call(Authority.readmit, { provenance: runProvenance, hop: sagaHop(run1, "propose") }),
     succeed(Authority.readmit, proposing),
     // Rooted at the run and its accountable human; its only grant is the delegation.
-    then(claim, new DispositionProposed({ ...proposal, digest, provenance: provenanceOf(proposing) })),
+    then(claim, DispositionProposed.make({ ...proposal, digest, provenance: provenanceOf(proposing) })),
     call(ReviewRuns.awaitApproval, { run: run1 }),
     succeed(ReviewRuns.awaitApproval, liveAs(run1, "p_intake", "g_intake_propose")),
     // The executor's work ends at the wait; the runs context concludes the run from Party's fact.
     saga(ReviewAssist, run1, { _tag: "Completed", result: undefined }),
-    view(ClaimReview, claim, { status: "pending", reviews: [run1], proposal: { ...proposal, digest } }),
+    view(ClaimReview, claim, { _tag: "Pending", reviews: [run1], proposal: O.some({ ...proposal, digest }) }),
     // One authenticated human command decides the claim; no port call follows.
     as(reviewer),
-    when(claim, new ApproveProposal({ digest, evidenceRevision: 1 }), { commandId: "approval_1" }),
+    when(claim, ApproveProposal.make({ digest, evidenceRevision: 1 }), { commandId: "approval_1" }),
     then(
       claim,
-      new ProposalApproved({
+      ProposalApproved.make({
         approval: ApprovalId.make("approval_1"),
         run: run1,
         digest,
         evidenceRevision: 1,
         outcome: "accepted",
         proposition: hasIdentifier,
-        corroboration: 1,
+        corroboration: O.some(1),
         provenance: provenanceOf(reviewer),
       }),
     ),
-    view(ClaimReview, claim, { status: "accepted" }),
+    view(ClaimReview, claim, { _tag: "Accepted" }),
   );
 });
 
 const proposed = [
   given(
     claim,
-    new ClaimAsserted({ org: acme, proposition: hasIdentifier, signals: oneSource, provenance: provenanceOf(intake) }),
-    new ReviewRequested({
+    ClaimAsserted.make({ org: acme, proposition: hasIdentifier, signals: oneSource, provenance: provenanceOf(intake) }),
+    ReviewRequested.make({
       run: run1,
       org: acme,
       proposition: hasIdentifier,
@@ -180,7 +182,7 @@ const proposed = [
       evidenceRevision: 1,
       provenance: provenanceOf(intake),
     }),
-    new DispositionProposed({
+    DispositionProposed.make({
       ...proposal,
       digest,
       provenance: provenanceOf(runInvocation(run1, "p_intake", "g_intake_propose")),
@@ -193,12 +195,12 @@ it.effect("an agent-rooted approval, or one a process relays, is refused", () =>
     ...proposed,
     // An agent run holding a review grant still cannot approve.
     as(agentRun("run_x", "p_rev", [onOrg("g_x", PartyReview, acme)])),
-    when(claim, new ApproveProposal({ digest, evidenceRevision: 1 })),
-    rejected(new HumanApprovalRequired()),
+    when(claim, ApproveProposal.make({ digest, evidenceRevision: 1 })),
+    rejected(HumanApprovalRequired.make({})),
     // Nor can the reviewer's own authority relayed by a process.
     as(readmitted(reviewer, byProcess("SomePolicy", Cause.cases.Session.make({ scheme: "test" })))),
-    when(claim, new ApproveProposal({ digest, evidenceRevision: 1 })),
-    rejected(new HumanApprovalRequired()),
+    when(claim, ApproveProposal.make({ digest, evidenceRevision: 1 })),
+    rejected(HumanApprovalRequired.make({})),
   ),
 );
 
@@ -206,19 +208,19 @@ it.effect("an approval binds the proposal it read: digest and evidence revision"
   story(
     ...proposed,
     as(reviewer),
-    when(claim, new ApproveProposal({ digest: "p-other", evidenceRevision: 1 })),
-    rejected(new ProposalMismatch({ reason: "digest" })),
+    when(claim, ApproveProposal.make({ digest: "p-other", evidenceRevision: 1 })),
+    rejected(ProposalMismatch.make({ reason: "digest" })),
     // New evidence makes the proposal stale; the approval no longer names anything.
     as(intake),
-    when(claim, new AddEvidence({ signals: oneSource })),
-    then(claim, new EvidenceAdded({ signals: oneSource, revision: 2, provenance: provenanceOf(intake) })),
+    when(claim, AddEvidence.make({ signals: oneSource })),
+    then(claim, EvidenceAdded.make({ signals: oneSource, revision: 2, provenance: provenanceOf(intake) })),
     as(reviewer),
-    when(claim, new ApproveProposal({ digest, evidenceRevision: 1 })),
-    rejected(new ProposalMismatch({ reason: "no-proposal" })),
+    when(claim, ApproveProposal.make({ digest, evidenceRevision: 1 })),
+    rejected(ProposalMismatch.make({ reason: "no-proposal" })),
     // And a run's proposal against the old revision is refused.
     as(runInvocation(run1, "p_intake", "g_intake_propose")),
-    when(claim, new ProposeDisposition({ disposition: "accept", rationale, evidenceRevision: 1 })),
-    rejected(new ProposalStale({ evidenceRevision: 2 })),
+    when(claim, ProposeDisposition.make({ disposition: "accept", rationale, evidenceRevision: 1 })),
+    rejected(ProposalStale.make({ evidenceRevision: 2 })),
   ),
 );
 
@@ -227,10 +229,10 @@ it.effect("a second review of the same claim is a second run; out of budget, it 
   return story(
     ...proposed,
     as(reviewer),
-    when(claim, new RequestReview()),
+    when(claim, RequestReview.make({})),
     then(
       claim,
-      new ReviewRequested({
+      ReviewRequested.make({
         run: run2,
         org: acme,
         proposition: hasIdentifier,
@@ -241,11 +243,11 @@ it.effect("a second review of the same claim is a second run; out of budget, it 
     ),
     call(Authority.readmit, { provenance: provenanceOf(reviewer), hop: requestHop(4) }),
     succeed(Authority.readmit, readmitted(reviewer, requestHop(4))),
-    call(ReviewRuns.open, { run: run2, source: { grant: GrantId.make("g_rev_propose"), delegation: null } }),
+    call(ReviewRuns.open, { run: run2, source: { grant: GrantId.make("g_rev_propose"), delegation: O.none() } }),
     succeed(ReviewRuns.open, { provenance: run2Provenance }),
     // The reservation is refused, so the run ends exhausted and the story sees no Reasoner call.
     call(ReviewRuns.reserve, { run: run2, units: 40 }),
-    fail(ReviewRuns.reserve, new BudgetRefused({ remaining: 10 })),
+    fail(ReviewRuns.reserve, BudgetRefused.make({ remaining: 10 })),
     call(ReviewRuns.exhaust, { run: run2 }),
     succeed(ReviewRuns.exhaust, { run: run2, provenance: run2Provenance }),
     saga(ReviewAssist, run2, { _tag: "Completed", result: undefined }),
@@ -260,10 +262,10 @@ it.effect("a delegation revoked mid-run: the next hop is refused at re-admission
     ...assertedByIntake,
     ...assessUpToPropose(run1),
     call(Authority.readmit, { provenance: runProvenance, hop: sagaHop(run1, "propose") }),
-    fail(Authority.readmit, new ReadmissionRefused({ reason: "lapsed", lapsed })),
+    fail(Authority.readmit, ReadmissionRefused.make({ reason: "lapsed", lapsed })),
     then(
       claim,
-      new ReviewRefused({
+      ReviewRefused.make({
         run: run1,
         reason: "readmission:lapsed",
         provenance: extend(runProvenance, sagaHop(run1, "record-refusal")),
@@ -272,8 +274,81 @@ it.effect("a delegation revoked mid-run: the next hop is refused at re-admission
     call(ReviewRuns.refuse, { run: run1, reason: "readmission:lapsed" }),
     succeed(ReviewRuns.refuse, liveAs(run1, "p_intake", "g_intake_propose")),
     saga(ReviewAssist, run1, { _tag: "Completed", result: undefined }),
-    view(ClaimReview, claim, { status: "pending", notes: [{ _tag: "ReviewRefused", run: run1, reason: "readmission:lapsed" }] }),
+    view(ClaimReview, claim, { _tag: "Pending", notes: [{ _tag: "ReviewRefused", run: run1, reason: "readmission:lapsed" }] }),
   );
+});
+
+// Phase 7 (phase 6's P5): the delegation is revoked before a report hop, so the runs context
+// refuses that report at re-admission. The refusal is recorded on the claim and reported to the
+// run, which gives back its reservation (the runs model's stories prove the release), and the
+// executor stops there.
+describe("a delegation revoked before a report hop: the refused report is recorded, and the executor stops", () => {
+  const runProvenance = provenanceOf(runInvocation(run1, "p_intake", "g_intake_propose"));
+  const live = liveAs(run1, "p_intake", "g_intake_propose");
+  const lapsed = RunRefused.make({ reason: "readmission:lapsed" });
+  const refusalRecorded = [
+    then(
+      claim,
+      ReviewRefused.make({
+        run: run1,
+        reason: "readmission:lapsed",
+        provenance: extend(runProvenance, sagaHop(run1, "record-refusal")),
+      }),
+    ),
+    call(ReviewRuns.refuse, { run: run1, reason: "readmission:lapsed" }),
+    succeed(ReviewRuns.refuse, live),
+    saga(ReviewAssist, run1, { _tag: "Completed", result: undefined }),
+    view(ClaimReview, claim, {
+      _tag: "Pending",
+      proposal: O.none(),
+      notes: [{ _tag: "ReviewRefused", run: run1, reason: "readmission:lapsed" }],
+    }),
+  ];
+  const upTo = (count: number) => A.take(assessUpToPropose(run1), count);
+  const assessFails = [
+    ...upTo(3),
+    fail(Reasoner.assess, ReasonerUnavailable.make({ reason: "down" })),
+    call(ReviewRuns.release, { run: run1 }),
+  ];
+  const outOfBudget = [
+    call(ReviewRuns.reserve, { run: run1, units: 40 }),
+    fail(ReviewRuns.reserve, BudgetRefused.make({ remaining: 10 })),
+    call(ReviewRuns.exhaust, { run: run1 }),
+  ];
+
+  it.effect("before the reserve hop: no Reasoner call is made", () =>
+    story(...assertedByIntake, ...upTo(1), fail(ReviewRuns.reserve, lapsed), ...refusalRecorded),
+  );
+  it.effect("before the settle hop: the reservation it held is reported refused, not left open", () =>
+    story(...assertedByIntake, ...upTo(5), fail(ReviewRuns.settle, lapsed), ...refusalRecorded),
+  );
+  it.effect("before the step hop", () =>
+    story(...assertedByIntake, ...upTo(7), fail(ReviewRuns.step, lapsed), ...refusalRecorded),
+  );
+  it.effect("before the release hop, after the Reasoner failed", () =>
+    story(...assertedByIntake, ...assessFails, fail(ReviewRuns.release, lapsed), ...refusalRecorded),
+  );
+  it.effect("before the exhaust hop, out of budget", () =>
+    story(...assertedByIntake, ...outOfBudget, fail(ReviewRuns.exhaust, lapsed), ...refusalRecorded),
+  );
+  it.effect("before the wait, after the proposal was made: the proposal stands", () => {
+    const proposing = readmitted(runInvocation(run1, "p_intake", "g_intake_propose"), sagaHop(run1, "propose"));
+    return story(
+      ...assertedByIntake,
+      ...assessUpToPropose(run1),
+      call(Authority.readmit, { provenance: runProvenance, hop: sagaHop(run1, "propose") }),
+      succeed(Authority.readmit, proposing),
+      then(claim, DispositionProposed.make({ ...proposal, digest, provenance: provenanceOf(proposing) })),
+      call(ReviewRuns.awaitApproval, { run: run1 }),
+      fail(ReviewRuns.awaitApproval, lapsed),
+      ...A.take(refusalRecorded, 4),
+      view(ClaimReview, claim, {
+        _tag: "Pending",
+        proposal: O.some({ ...proposal, digest }),
+        notes: [{ _tag: "ReviewRefused", run: run1, reason: "readmission:lapsed" }],
+      }),
+    );
+  });
 });
 
 it.effect("a run that continues at its history bound is followed: the next step acts as the run it continued as", () => {
@@ -290,7 +365,7 @@ it.effect("a run that continues at its history bound is followed: the next step 
     // The proposal is made as the continuation, under its own delegation.
     call(Authority.readmit, { provenance: provenanceOf(nextRun), hop: proposeHop }),
     succeed(Authority.readmit, proposing),
-    then(claim, new DispositionProposed({ ...proposal, run: next, digest: proposalDigest({ ...proposal, run: next }), provenance: provenanceOf(proposing) })),
+    then(claim, DispositionProposed.make({ ...proposal, run: next, digest: proposalDigest({ ...proposal, run: next }), provenance: provenanceOf(proposing) })),
     call(ReviewRuns.awaitApproval, { run: next, provenance: provenanceOf(nextRun) }),
     succeed(ReviewRuns.awaitApproval, continued),
     saga(ReviewAssist, run1, { _tag: "Completed", result: undefined }),
@@ -310,7 +385,7 @@ it.effect("a decision that concluded the run while it was assessing ends the exe
     }),
     // The runs context concluded the run from Party's fact in the meantime.
     call(ReviewRuns.settle, { run: run1, units: 12 }),
-    fail(ReviewRuns.settle, new RunEnded({ status: "completed" })),
+    fail(ReviewRuns.settle, RunEnded.make({ status: "completed" })),
     // No step, no proposal, no wait: the saga completes without an error.
     saga(ReviewAssist, run1, { _tag: "Completed", result: undefined }),
   ),
@@ -325,8 +400,8 @@ it.effect("a claim decided before the proposal lands ends the executor cleanly, 
     call(Reasoner.assess, { run: run1 }),
     // While the Reasoner works, a reviewer decides the claim directly.
     as(reviewer),
-    when(claim, new RetractClaim({ reason: "duplicate" })),
-    then(claim, new ClaimRetracted({ reason: "duplicate", provenance: provenanceOf(reviewer) })),
+    when(claim, RetractClaim.make({ reason: "duplicate" })),
+    then(claim, ClaimRetracted.make({ reason: "duplicate", provenance: provenanceOf(reviewer) })),
     succeed(Reasoner.assess, {
       assessment: { disposition: "accept", rationale },
       usage: { units: 12, cachedUnits: 0 },
@@ -341,6 +416,6 @@ it.effect("a claim decided before the proposal lands ends the executor cleanly, 
     // The proposal answers ClaimNotPending: no refusal is recorded and no wait is reported.
     then(claim),
     saga(ReviewAssist, run1, { _tag: "Completed", result: undefined }),
-    view(ClaimReview, claim, { status: "retracted", notes: [] }),
+    view(ClaimReview, claim, { _tag: "Retracted", notes: [] }),
   );
 });

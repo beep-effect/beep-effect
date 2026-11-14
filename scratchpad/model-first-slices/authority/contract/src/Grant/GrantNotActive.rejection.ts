@@ -1,5 +1,7 @@
-import * as Domain from "@alchemy.run/domain";
 import * as S from "effect/Schema";
+import { $AuthorityContractId } from "@proto/kernel/Identity";
+
+const $I = $AuthorityContractId.create("Grant/GrantNotActive.rejection");
 
 /**
  * Refused: the grant is not active, so it cannot change or be delegated.
@@ -7,8 +9,8 @@ import * as S from "effect/Schema";
  * @category rejections
  * @since 0.0.0
  */
-export class GrantNotActive extends Domain.Rejection(
+export class GrantNotActive extends S.TaggedError<GrantNotActive, { readonly brand: unique symbol }>()(
   "GrantNotActive",
   { status: S.Literals(["Unissued", "Revoked", "Expired"]) },
-  { httpApiStatus: 409, description: "The grant is not active." },
+  $I.annote("GrantNotActive", { httpApiStatus: 409, description: "The grant is not active." }),
 ) {}

@@ -11,7 +11,8 @@ it.effect("the composed deployment publishes every fact version it consumes; the
   Effect.gen(function* () {
     expect(A.map(PracticeDeployment, (d) => d.context)).toEqual(["authority", "party", "runs"]);
     // Version 2 has no consumer yet, but it is Party's newest: being introduced, not retired (D40).
-    expect(yield* checkFactRetirement(PracticeDeployment)).toEqual([]);
+    const retirable = yield* checkFactRetirement(PracticeDeployment);
+    expect(retirable).toEqual([]);
   }),
 );
 
@@ -20,14 +21,12 @@ it.effect("a producer that stops publishing a version some descriptor consumes f
     const withoutV1 = A.map(PracticeDeployment, (d) =>
       d.context === "party" ? { ...PartyDeployment, publishes: [fact(2)] } : d,
     );
-    expect(yield* Effect.flip(checkFactRetirement(withoutV1))).toEqual(
-      new UnpublishedFact({ missing: [{ consumer: "runs", fact: fact(1) }] }),
-    );
+    const unpublished = yield* Effect.flip(checkFactRetirement(withoutV1));
+    expect(unpublished).toEqual(UnpublishedFact.make({ missing: [{ consumer: "runs", fact: fact(1) }] }));
     // Without the producer composed at all, the consumer's need is still caught.
     const withoutParty = A.filter(PracticeDeployment, (d) => d.context !== "party");
-    expect(yield* Effect.flip(checkFactRetirement(withoutParty))).toMatchObject({
-      missing: [{ consumer: "runs", fact: fact(1) }],
-    });
+    const unproduced = yield* Effect.flip(checkFactRetirement(withoutParty));
+    expect(unproduced).toMatchObject({ missing: [{ consumer: "runs", fact: fact(1) }] });
   }),
 );
 
@@ -36,8 +35,10 @@ it.effect("once no descriptor consumes version 1, the producer may retire it; ne
     const runsOnV2 = A.map(PracticeDeployment, (d) =>
       d.context === "runs" ? { ...d, consumes: [fact(2)] } : d,
     );
-    expect(yield* checkFactRetirement(runsOnV2)).toEqual([{ publisher: "party", fact: fact(1) }]);
+    const onV2 = yield* checkFactRetirement(runsOnV2);
+    expect(onV2).toEqual([{ publisher: "party", fact: fact(1) }]);
     const nobodyConsumes = A.map(PracticeDeployment, (d) => (d.context === "runs" ? { ...d, consumes: [] } : d));
-    expect(yield* checkFactRetirement(nobodyConsumes)).toEqual([{ publisher: "party", fact: fact(1) }]);
+    const unconsumed = yield* checkFactRetirement(nobodyConsumes);
+    expect(unconsumed).toEqual([{ publisher: "party", fact: fact(1) }]);
   }),
 );

@@ -10,7 +10,7 @@ import * as S from "effect/Schema";
  * @category errors
  * @since 0.0.0
  */
-export class MailboxUnavailable extends S.TaggedError<MailboxUnavailable>()("MailboxUnavailable", {
+export class MailboxUnavailable extends S.TaggedError<MailboxUnavailable, { readonly brand: unique symbol }>()("MailboxUnavailable", {
   mailbox: S.String,
 }) {}
 
@@ -45,7 +45,7 @@ export class ContactSource extends Domain.ExternalSystem(
   "ContactSource",
   {
     observe: {
-      args: { mailbox: S.String, since: S.Number },
+      args: { mailbox: S.String, since: S.Finite },
       success: { assertions: S.Array(SourceAssertion) },
       error: MailboxUnavailable,
     },

@@ -19,7 +19,8 @@ import { RegisterParty } from "./Party/RegisterParty.command.ts";
  * @category contracts
  * @since 0.0.0
  */
-export const PartyCatalog = Catalog.make("Party", {
+export const PartyCatalog = Catalog.make({
+  name: "Party",
   commands: [
     AssertClaim,
     ProposeDisposition,

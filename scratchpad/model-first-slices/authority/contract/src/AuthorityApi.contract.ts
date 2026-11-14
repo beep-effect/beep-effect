@@ -15,7 +15,8 @@ import { RevokeGrant } from "./Grant/RevokeGrant.command.ts";
  * @category contracts
  * @since 0.0.0
  */
-export const AuthorityCatalog = Catalog.make("Authority", {
+export const AuthorityCatalog = Catalog.make({
+  name: "Authority",
   commands: [
     IssueGrant,
     NarrowGrant,

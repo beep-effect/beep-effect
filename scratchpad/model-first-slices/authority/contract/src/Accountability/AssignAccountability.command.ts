@@ -2,6 +2,10 @@ import * as Domain from "@alchemy.run/domain";
 import { PrincipalId, RunId } from "@proto/kernel/Ids";
 import { carry } from "@proto/kernel/Invocation";
 import { Session } from "@proto/kernel/Session.middleware";
+import * as S from "effect/Schema";
+import { $AuthorityContractId } from "@proto/kernel/Identity";
+
+const $I = $AuthorityContractId.create("Accountability/AssignAccountability.command");
 
 /**
  * Refused: the run already has an accountable human.
@@ -9,10 +13,10 @@ import { Session } from "@proto/kernel/Session.middleware";
  * @category rejections
  * @since 0.0.0
  */
-export class AccountabilityAlreadyAssigned extends Domain.Rejection(
+export class AccountabilityAlreadyAssigned extends S.TaggedError<AccountabilityAlreadyAssigned, { readonly brand: unique symbol }>()(
   "AccountabilityAlreadyAssigned",
   {},
-  { httpApiStatus: 409, description: "This agent run already has an accountable human." },
+  $I.annote("AccountabilityAlreadyAssigned", { httpApiStatus: 409, description: "This agent run already has an accountable human." }),
 ) {}
 
 /**

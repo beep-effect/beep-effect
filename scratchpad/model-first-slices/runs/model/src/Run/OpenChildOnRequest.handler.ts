@@ -37,7 +37,7 @@ export const OpenChildOnRequestLive = OpenChildOnRequest.toLayer(
           Effect.flatMap((granted) =>
             runs.send(
               event.child,
-              new OpenChildRun({
+              OpenChildRun.make({
                 session: event.session,
                 parent,
                 purpose: event.purpose,
@@ -55,7 +55,7 @@ export const OpenChildOnRequestLive = OpenChildOnRequest.toLayer(
             ),
           ),
           Effect.catchTag("GrantDenied", (denied) =>
-            runs.send(parent, new RefuseChild({ child: event.child, reason: `grant:${denied.reason}`, provenance })),
+            runs.send(parent, RefuseChild.make({ child: event.child, reason: `grant:${denied.reason}`, provenance })),
           ),
           Effect.asVoid,
         );

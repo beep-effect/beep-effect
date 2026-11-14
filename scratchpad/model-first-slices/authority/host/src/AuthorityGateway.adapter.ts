@@ -10,6 +10,7 @@ import { GrantRef } from "@proto/kernel/Invocation";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Schedule from "effect/Schedule";
 import { Boundary, BoundaryLive } from "./Boundary/Boundary.ts";
 
@@ -35,29 +36,42 @@ export const AuthorityGatewayLive = Layer.effect(
     const delegations = yield* Delegation;
     const accountability = yield* Accountability;
 
-    const refused = (cause: { readonly _tag: string }) => new RunGrantRefused({ reason: cause._tag });
+    const refused = (cause: { readonly _tag: string }) => RunGrantRefused.make({ reason: cause._tag });
 
+    type Gateway = AuthorityGateway["Service"];
     return {
-      readmit: ({ provenance, hop }) =>
-        Effect.flatMap(DateTime.now, (now) => boundary.readmit(provenance, hop, now)),
+      readmit: Effect.fn("AuthorityGateway.readmit")(function* ({ provenance, hop }: Parameters<Gateway["readmit"]>[0]) {
+        const now = yield* DateTime.now;
+        return yield* boundary.readmit(provenance, hop, now);
+      }),
 
-      grantRun: ({ provenance, hop, source, delegation, run, terms }) =>
-        Effect.gen(function* () {
-          const invocation = yield* boundary.readmit(provenance, hop, yield* DateTime.now);
+      grantRun: Effect.fn("AuthorityGateway.grantRun")(function* ({
+        provenance,
+        hop,
+        source,
+        delegation,
+        run,
+        terms,
+      }: Parameters<Gateway["grantRun"]>[0]) {
+          const now = yield* DateTime.now;
+          const invocation = yield* boundary.readmit(provenance, hop, now);
           const asRequester = Effect.provideService(CurrentInvocation, invocation);
           // From a grant the requester holds, or from the delegation the requesting run holds.
-          yield* source.delegation === null
-            ? grants
-                .send(source.grant, new DelegateGrant({ delegation, to: run, terms }))
-                .pipe(asRequester, Effect.asVoid, Effect.mapError(refused))
-            : delegations
-                .send(source.delegation, new DelegateFurther({ child: delegation, to: run, terms }))
-                .pipe(asRequester, Effect.asVoid, Effect.mapError(refused));
+          yield* O.match(source.delegation, {
+            onNone: () =>
+              grants
+                .send(source.grant, DelegateGrant.make({ delegation, to: run, terms }))
+                .pipe(asRequester, Effect.asVoid, Effect.mapError(refused)),
+            onSome: (held) =>
+              delegations
+                .send(held, DelegateFurther.make({ child: delegation, to: run, terms }))
+                .pipe(asRequester, Effect.asVoid, Effect.mapError(refused)),
+          });
           yield* accountability
-            .send(run, new AssignAccountability())
+            .send(run, AssignAccountability.make({}))
             .pipe(asRequester, Effect.catchTag("AccountabilityAlreadyAssigned", () => Effect.void));
           const answerer = yield* accountability.get(run);
-          if (answerer._tag !== "Live") return yield* new RunGrantRefused({ reason: "NotAccountable" });
+          if (answerer._tag !== "Live") return yield* RunGrantRefused.make({ reason: "NotAccountable" });
           // The model's own policy opens the delegation; wait until it is.
           yield* delegations.get(delegation).pipe(
             Effect.repeat({ schedule: Schedule.spaced("10 millis"), until: (state) => state._tag !== "Unopened", times: 200 }),
@@ -69,10 +83,10 @@ export const AuthorityGatewayLive = Layer.effect(
               run,
               answerer.accountable,
               answerer.onBehalfOf,
-              GrantRef.make({ grant: source.grant, delegation }),
+              GrantRef.make({ grant: source.grant, delegation: O.some(delegation) }),
             ),
           });
-        }),
+      }),
     };
   }),
 ).pipe(Layer.provide(BoundaryLive));

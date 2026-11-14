@@ -1,4 +1,4 @@
-import * as S from "effect/Schema";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 
 /**
  * What a reviewer, or an agent proposing to one, wants done with a pending claim.
@@ -13,7 +13,7 @@ import * as S from "effect/Schema";
  * @category models
  * @since 0.0.0
  */
-export const Disposition = S.Literals(["accept", "reject"]);
+export const Disposition = LiteralKit(["accept", "reject"]);
 /**
  * @category models
  * @since 0.0.0

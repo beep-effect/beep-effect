@@ -1,6 +1,8 @@
-import * as Domain from "@alchemy.run/domain";
 import * as S from "effect/Schema";
+import { $KernelId } from "./Identity.ts";
 import { CapabilityId } from "./Ids.ts";
+
+const $I = $KernelId.create("MissingGrant.rejection");
 
 /**
  * Refused: no grant on the invocation covers this operation of this
@@ -12,14 +14,17 @@ import { CapabilityId } from "./Ids.ts";
  * import { CapabilityId } from "@proto/kernel/Ids";
  * import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
  *
- * const refusal = new MissingGrant({ capability: CapabilityId.make("party.review"), operation: "AcceptClaim" });
+ * const refusal = MissingGrant.make({ capability: CapabilityId.make("party.review"), operation: "AcceptClaim" });
  * ```
  *
  * @category rejections
  * @since 0.0.0
  */
-export class MissingGrant extends Domain.Rejection(
+export class MissingGrant extends S.TaggedError<MissingGrant, { readonly brand: unique symbol }>()(
   "MissingGrant",
   { capability: CapabilityId, operation: S.String },
-  { httpApiStatus: 403, description: "No grant on the invocation covers this operation on this resource." },
+  $I.annote("MissingGrant", {
+    httpApiStatus: 403,
+    description: "No grant on the invocation covers this operation on this resource.",
+  }),
 ) {}

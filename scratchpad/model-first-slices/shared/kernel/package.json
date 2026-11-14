@@ -9,6 +9,7 @@
     "./CurrentInvocation.context": "./src/CurrentInvocation.context.ts",
     "./Deployment": "./src/Deployment.ts",
     "./Fact": "./src/Fact.ts",
+    "./Identity": "./src/Identity.ts",
     "./Ids": "./src/Ids.ts",
     "./Invocation": "./src/Invocation.ts",
     "./MissingGrant.rejection": "./src/MissingGrant.rejection.ts",

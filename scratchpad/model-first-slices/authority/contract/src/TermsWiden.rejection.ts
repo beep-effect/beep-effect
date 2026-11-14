@@ -1,5 +1,8 @@
-import * as Domain from "@alchemy.run/domain";
 import { TermDimension } from "@proto/kernel/Capability";
+import * as S from "effect/Schema";
+import { $AuthorityContractId } from "@proto/kernel/Identity";
+
+const $I = $AuthorityContractId.create("TermsWiden.rejection");
 
 /**
  * Refused: the new terms reach further than the terms they derive from, in
@@ -10,14 +13,14 @@ import { TermDimension } from "@proto/kernel/Capability";
  * ```ts
  * import { TermsWiden } from "@proto/authority-contract/TermsWiden.rejection";
  *
- * const refusal = new TermsWiden({ dimension: "expires" });
+ * const refusal = TermsWiden.make({ dimension: "expires" });
  * ```
  *
  * @category rejections
  * @since 0.0.0
  */
-export class TermsWiden extends Domain.Rejection(
+export class TermsWiden extends S.TaggedError<TermsWiden, { readonly brand: unique symbol }>()(
   "TermsWiden",
   { dimension: TermDimension },
-  { httpApiStatus: 422, description: "The new terms reach further than the terms they derive from." },
+  $I.annote("TermsWiden", { httpApiStatus: 422, description: "The new terms reach further than the terms they derive from." }),
 ) {}

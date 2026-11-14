@@ -1,6 +1,6 @@
+import { Conformance } from "@proto/conformance-upstream/model";
 import { DeploymentDescriptor } from "@proto/kernel/Deployment";
 import { TwoRunnersModel } from "./TwoRunners.model.ts";
-import { Conformance } from "./upstream/model.ts";
 
 /**
  * The conformance models' deployment descriptor: upstream's conformance

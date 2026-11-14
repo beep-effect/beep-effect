@@ -10,7 +10,8 @@ import { SessionRunsRead } from "./Run/SessionRuns.read.ts";
  * @category contracts
  * @since 0.0.0
  */
-export const RunsCatalog = Catalog.make("Runs", {
+export const RunsCatalog = Catalog.make({
+  name: "Runs",
   commands: [RequestRun, CancelRun],
   views: [SessionRunsRead],
   queries: [],

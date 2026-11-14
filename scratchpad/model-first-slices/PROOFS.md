@@ -3,7 +3,7 @@
 <!-- Generated from proofs/Proofs.data.ts by scripts/proofs.ts. Do not edit: `bun run proofs`
      rewrites it, and `bun run proofs --check` fails on drift. -->
 
-Every invariant this prototype enforces (D8): 28 entries. Mechanical laws run in
+Every invariant this prototype enforces (D8): 31 entries. Mechanical laws run in
 `bun run check`, `bun run test` and `bun run generated:check`; semantic questions stay with a
 reviewer who did not write the change.
 
@@ -239,11 +239,41 @@ A queue or projection drain that finds its lease held comes back just after the 
 - **Gaps:** The cluster's wake delivery latency is not modelled (it adds seconds after the lease on Effect Cluster).
 - **Left to a reviewer:** Whether waiting out the lease is acceptable, or the lease should follow shard ownership.
 
+### compiler-effect-build
+
+`bun run check` runs the Effect build of tsrs at the monorepo's pinned @effect/tsgo and tsrs over every project, each taking its rules from the monorepo's base config, and exits 0; only the vendored upstream project drops the rules. The prototype holds one inline diagnostics directive: `strictEffectProvide:off` on the generated front's deploy-time `Effect.provide(Database)`, an Alchemy class entry point, emitted by apps/practice/scripts/entries.ts with its reason, owner (@proto/practice) and exit.
+
+- **Checker:** `shared/tooling/test/Compiler.guard.test.ts`
+- **Reads:** The root manifest's check script, the installed compiler manifests and `--version`, the monorepo catalog pins, each project's tsconfig extends chain, and every source file's comment lines for a diagnostics directive.
+- **Assumes:** The proxy's `--version` names the Effect build; a project's rules come only from its extends chain.
+- **Gaps:** It proves the wiring, not that every rule is right for the prototype; the rules are the monorepo's.
+- **Left to a reviewer:** Whether a new project was added to the check, whether a rule's finding was fixed by meaning, and whether the one directive's exit condition has been met.
+
+### compiler-canary
+
+An Effect-only finding (a floating Effect) fails the check: the canary project fails under the Effect build, with exactly one effect(floatingEffect) error and no unknown-rule warning.
+
+- **Checker:** `shared/tooling/test/Compiler.guard.test.ts`, `shared/tooling/canary/Canary.ts`
+- **Reads:** The compiler's output and exit code over the canary project.
+- **Assumes:** The canary's one finding is one the stock compiler cannot report.
+- **Gaps:** One rule; a rule the Effect build stopped reporting would pass unnoticed.
+- **Left to a reviewer:** Nothing beyond keeping the canary's finding Effect-only.
+
+### saga-refused-report-hop
+
+A report hop of the review run (reserve, settle, step, release, exhaust, the wait) the runs context refuses, for example after the delegation was revoked, is recorded on the claim and reported to the run, which gives back what its open reservations held; the executor stops there.
+
+- **Checker:** `party/model/test/Review.story.test.ts`, `runs/model/test/Runs.story.test.ts`, `runs/host/test/RunsHost.test.ts`
+- **Reads:** The saga's port calls and the claim's events (party), the run's RunRejected and Refused state (runs model), and the gateway over the real authority with the grant revoked before settle (runs host).
+- **Assumes:** The refusal report needs no re-admission, so it lands although the hop's grant lapsed.
+- **Gaps:** In memory only; the cluster case P5 is not re-run this phase (no Docker).
+- **Left to a reviewer:** Whether a refused report should end the run, or leave it for a person to resume.
+
 ### cluster-upstream-conformance
 
 The host passes upstream's ten Domain conformance cases, with the vendored conformance model on the stack's pool.
 
-- **Checker:** `conformance/test/Upstream.conformance.ts`, `conformance/src/upstream/conformance.ts`
+- **Checker:** `conformance/test/Upstream.conformance.ts`, `conformance/upstream/src/conformance.ts`
 - **Reads:** The deployed front over HTTP and WebSocket.
 - **Assumes:** The vendored files match upstream at 33c10dd except import paths.
 - **Gaps:** Two runners on one workstation; no network partitions.

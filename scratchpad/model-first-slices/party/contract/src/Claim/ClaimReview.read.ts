@@ -2,6 +2,7 @@ import * as Domain from "@alchemy.run/domain";
 import { OrgId, RunId } from "@proto/kernel/Ids";
 import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { Session } from "@proto/kernel/Session.middleware";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Disposition } from "../Disposition.ts";
 import { Proposition } from "../Proposition.ts";
@@ -53,29 +54,80 @@ export const ClaimNote = S.TaggedUnion({
  */
 export type ClaimNote = typeof ClaimNote.Type;
 
+/** What a reviewer sees of a claim once it is asserted, in every state after. */
+const asserted = {
+  org: OrgId,
+  proposition: Proposition,
+  sources: S.Int,
+  revision: S.Int,
+  reviews: S.Array(RunId),
+  proposal: S.OptionFromNullOr(ProposalView),
+  notes: S.Array(ClaimNote),
+};
+
 /**
- * One claim as a reviewer sees it: its org, where it stands, its
- * proposition, how many signals it has at which evidence revision, the
- * review runs asked for, the latest proposal, and recorded refusals.
+ * One claim as a reviewer sees it, by where it stands. Once asserted: its
+ * org, its proposition, how many signals it has at which evidence revision,
+ * the review runs asked for, the latest proposal when there is one, and
+ * recorded refusals. Before that, only refusals recorded against it.
+ *
+ * **Example** (Where a claim stands)
+ * ```ts
+ * import { ClaimReviewState } from "@proto/party-contract/Claim/ClaimReview.read";
+ *
+ * const standing = ClaimReviewState.match(ClaimReviewState.cases.Unasserted.make({ notes: [] }), {
+ *   Unasserted: () => "not asserted",
+ *   Pending: ({ revision }) => `pending at revision ${revision}`,
+ *   Accepted: () => "accepted",
+ *   Retracted: () => "retracted",
+ * });
+ * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const ClaimReviewState = S.Struct({
-  org: S.NullOr(OrgId),
-  status: S.Literals(["unasserted", "pending", "accepted", "retracted"]),
-  proposition: S.NullOr(Proposition),
-  sources: S.Int,
-  revision: S.Int,
-  reviews: S.Array(RunId),
-  proposal: S.NullOr(ProposalView),
-  notes: S.Array(ClaimNote),
+export const ClaimReviewState = S.TaggedUnion({
+  Unasserted: { notes: S.Array(ClaimNote) },
+  Pending: asserted,
+  Accepted: asserted,
+  Retracted: asserted,
 });
 /**
  * @category models
  * @since 0.0.0
  */
 export type ClaimReviewState = typeof ClaimReviewState.Type;
+/**
+ * A claim's review in any state after its assertion.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AssertedReview = Exclude<ClaimReviewState, { readonly _tag: "Unasserted" }>;
+
+/**
+ * The latest proposal on a claim's review, when there is one: none before
+ * the claim is asserted, or while no run has proposed since the evidence last
+ * changed.
+ *
+ * **Example** (The proposal a reviewer would approve)
+ * ```ts
+ * import { ClaimReviewState, proposalOf } from "@proto/party-contract/Claim/ClaimReview.read";
+ * import * as O from "effect/Option";
+ *
+ * const none = O.isNone(proposalOf(ClaimReviewState.cases.Unasserted.make({ notes: [] })));
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
+ */
+export const proposalOf = (review: ClaimReviewState): O.Option<ProposalView> =>
+  ClaimReviewState.match(review, {
+    Unasserted: () => O.none(),
+    Pending: ({ proposal }) => proposal,
+    Accepted: ({ proposal }) => proposal,
+    Retracted: ({ proposal }) => proposal,
+  });
 
 /**
  * The state of a claim nobody has asserted yet.
@@ -83,16 +135,7 @@ export type ClaimReviewState = typeof ClaimReviewState.Type;
  * @category models
  * @since 0.0.0
  */
-export const ClaimReviewInitial: ClaimReviewState = {
-  org: null,
-  status: "unasserted",
-  proposition: null,
-  sources: 0,
-  revision: 0,
-  reviews: [],
-  proposal: null,
-  notes: [],
-};
+export const ClaimReviewInitial: ClaimReviewState = ClaimReviewState.cases.Unasserted.make({ notes: [] });
 
 /**
  * The `ClaimReview` view's read contract, with no aggregate behind it: its

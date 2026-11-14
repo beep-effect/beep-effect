@@ -6,7 +6,7 @@ import * as Cause from "effect/Cause";
 import type * as Context from "effect/Context";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import type * as Headers from "effect/http/Headers";
 import * as Ref from "effect/Ref";
@@ -104,38 +104,46 @@ export interface CommandBinding<Id, Target, Input, Rejection> {
  * @category constructors
  * @since 0.0.0
  */
-export const command = <Id, Client, C extends Command.Any, Target, Input, E>(
-  api: { readonly Client: Context.Key<Id, Client> },
+export const command: {
+  <Id, Client, C extends Command.Any, Target, Input, E>(
+    cls: C,
+    select: CommandSelect<Client, Target, Input, E>,
+  ): (api: ContractApi<Id, Client>) => CommandBinding<Id, Target, Input, InstanceType<C["rejects"][number]>>;
+  <Id, Client, C extends Command.Any, Target, Input, E>(
+    api: ContractApi<Id, Client>,
+    cls: C,
+    select: CommandSelect<Client, Target, Input, E>,
+  ): CommandBinding<Id, Target, Input, InstanceType<C["rejects"][number]>>;
+} = dual(3, <Id, Client, C extends Command.Any, Target, Input, E>(
+  api: ContractApi<Id, Client>,
   cls: C,
-  select: (
-    client: Client,
-  ) => (
-    target: Target,
-    input: Input,
-    options?: { readonly commandId?: string; readonly headers?: Headers.Input },
-  ) => Effect.Effect<Receipt, E>,
+  select: CommandSelect<Client, Target, Input, E>,
 ): CommandBinding<Id, Target, Input, InstanceType<C["rejects"][number]>> => {
-  const declared = HashSet.fromIterable(
-    A.map(cls.rejects, (rejection) => (rejection as unknown as { readonly tag: string }).tag),
-  );
   type Rejection = InstanceType<C["rejects"][number]>;
+  // One of the command's declared rejections, matched by its schema as the library's Foldkit binding does.
+  const isDeclared = (error: unknown): error is Rejection => A.some(cls.rejects, (rejection) => S.is(rejection)(error));
   const classify = (commandId: string, error: unknown): CommandOutcome<Rejection> => {
     const tag = (error as { readonly _tag?: unknown } | null)?._tag;
     return typeof tag !== "string"
       ? { _tag: "Unknown", commandId, reason: String(error) }
       : HashSet.has(deniedTags, tag)
         ? { _tag: "Denied", commandId, reason: tag }
-        : HashSet.has(declared, tag)
-          ? { _tag: "Rejected", commandId, rejection: error as Rejection }
+        : isDeclared(error)
+          ? { _tag: "Rejected", commandId, rejection: error }
           : { _tag: "Unknown", commandId, reason: tag };
   };
   return {
     tag: cls.tag,
-    send: ({ target, input, commandId }) =>
-      Effect.gen(function* () {
-        const id = commandId ?? (yield* (yield* SecureRandom.SecureRandom).uuidV4());
+    send: Effect.fn(`Bindings.command.${cls.tag}`)(function* ({
+      target,
+      input,
+      commandId,
+    }: Parameters<CommandBinding<Id, Target, Input, Rejection>["send"]>[0]) {
+        const random = yield* SecureRandom.SecureRandom;
+        const id = commandId ?? (yield* random.uuidV4());
         const client = yield* Effect.service(api.Client);
-        const headers = yield* (yield* Credentials).headers;
+        const credentials = yield* Credentials;
+        const headers = yield* credentials.headers;
         return yield* select(client)(target, input, { commandId: id, headers }).pipe(
           Effect.map((receipt): CommandOutcome<Rejection> => ({
             _tag: "Accepted",
@@ -147,9 +155,23 @@ export const command = <Id, Client, C extends Command.Any, Target, Input, E>(
             Effect.succeed<CommandOutcome<Rejection>>({ _tag: "Unknown", commandId: id, reason: Cause.pretty(cause) }),
           ),
         );
-      }),
+    }),
   };
-};
+});
+
+/** A contract Api, as a binding needs it: the key of its typed client. */
+interface ContractApi<Id, Client> {
+  readonly Client: Context.Key<Id, Client>;
+}
+
+/** Picks a command's call off a contract's client. */
+type CommandSelect<Client, Target, Input, E> = (
+  client: Client,
+) => (
+  target: Target,
+  input: Input,
+  options?: { readonly commandId?: string; readonly headers?: Headers.Input },
+) => Effect.Effect<Receipt, E>;
 
 /** The two reads a view binding uses, as the library's view client declares them. */
 interface ViewReads<Key, S, Ev, E> {
@@ -160,7 +182,7 @@ interface ViewReads<Key, S, Ev, E> {
   readonly events: (
     key: Key,
     options?: { readonly headers?: Headers.Input; readonly after?: number },
-  ) => Stream.Stream<View.Entry<NonNullable<S>, Ev, Key> | typeof Read.CaughtUp.Type, E>;
+  ) => Stream.Stream<View.Entry<NonNullable<S>, Ev, Key> | Read.CaughtUp, E>;
 }
 
 /**
@@ -202,18 +224,27 @@ export interface ViewBinding<Id, Key, S, E> {
  * @category constructors
  * @since 0.0.0
  */
-export const view = <Id, Client, Key, St, Ev, E>(
-  api: { readonly Client: Context.Key<Id, Client> },
+export const view: {
+  <Id, Client, Key, St, Ev, E>(
+    select: (client: Client) => ViewReads<Key, St, Ev, E>,
+  ): (api: ContractApi<Id, Client>) => ViewBinding<Id, Key, St, E>;
+  <Id, Client, Key, St, Ev, E>(
+    api: ContractApi<Id, Client>,
+    select: (client: Client) => ViewReads<Key, St, Ev, E>,
+  ): ViewBinding<Id, Key, St, E>;
+} = dual(2, <Id, Client, Key, St, Ev, E>(
+  api: ContractApi<Id, Client>,
   select: (client: Client) => ViewReads<Key, St, Ev, E>,
 ): ViewBinding<Id, Key, St, E> => {
   const reads = Effect.map(Effect.service(api.Client), select);
   const headers = Effect.flatMap(Effect.service(Credentials), (credentials) => credentials.headers);
   return {
-    read: (key, atLeast) =>
-      Effect.gen(function* () {
-        const snapshot = yield* (yield* reads).snapshot(key, { headers: yield* headers, ...(atLeast ? { atLeast } : {}) });
-        return { state: snapshot.state, revision: snapshot.cursor, epoch: 0 };
-      }),
+    read: Effect.fn("Bindings.view.read")(function* (key: Key, atLeast?: Receipt) {
+      const view = yield* reads;
+      const auth = yield* headers;
+      const snapshot = yield* view.snapshot(key, { headers: auth, ...(atLeast !== undefined ? { atLeast } : {}) });
+      return { state: snapshot.state, revision: snapshot.cursor, epoch: 0 };
+    }),
     subscribe: (key) =>
       Stream.unwrap(
         Effect.map(Ref.make(0), (epochs) =>
@@ -238,7 +269,7 @@ export const view = <Id, Client, Key, St, Ev, E>(
         ),
       ),
   };
-};
+});
 
 /**
  * Bind one query of a contract Api: ask it, optionally after a receipt.
@@ -246,19 +277,30 @@ export const view = <Id, Client, Key, St, Ev, E>(
  * @category constructors
  * @since 0.0.0
  */
-export const query =
-  <Id, Client, Input, Result, E>(
-    api: { readonly Client: Context.Key<Id, Client> },
-    select: (
-      client: Client,
-    ) => (
-      input: Input,
-      options?: { readonly headers?: Headers.Input; readonly atLeast?: Receipt; readonly take?: number },
-    ) => Effect.Effect<Result, E>,
-  ) =>
-  (input: Input, options?: { readonly atLeast?: Receipt; readonly take?: number }) =>
-    Effect.gen(function* () {
+export const query: {
+  <Id, Client, Input, Result, E>(select: QuerySelect<Client, Input, Result, E>): (api: ContractApi<Id, Client>) => QueryBinding<Id, Input, Result, E>;
+  <Id, Client, Input, Result, E>(api: ContractApi<Id, Client>, select: QuerySelect<Client, Input, Result, E>): QueryBinding<Id, Input, Result, E>;
+} = dual(
+  2,
+  <Id, Client, Input, Result, E>(api: ContractApi<Id, Client>, select: QuerySelect<Client, Input, Result, E>): QueryBinding<Id, Input, Result, E> =>
+    Effect.fn("Bindings.query")(function* (input: Input, options?: { readonly atLeast?: Receipt; readonly take?: number }) {
       const client = yield* Effect.service(api.Client);
-      const headers = yield* (yield* Credentials).headers;
+      const credentials = yield* Credentials;
+      const headers = yield* credentials.headers;
       return yield* select(client)(input, { ...options, headers });
-    });
+    }),
+);
+
+/** Picks a query's call off a contract's client. */
+type QuerySelect<Client, Input, Result, E> = (
+  client: Client,
+) => (
+  input: Input,
+  options?: { readonly headers?: Headers.Input; readonly atLeast?: Receipt; readonly take?: number },
+) => Effect.Effect<Result, E>;
+
+/** A query's binding: ask it, optionally after a receipt or for a page size. */
+type QueryBinding<Id, Input, Result, E> = (
+  input: Input,
+  options?: { readonly atLeast?: Receipt; readonly take?: number },
+) => Effect.Effect<Result, E, Id | Credentials>;

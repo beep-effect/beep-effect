@@ -5,6 +5,9 @@ import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { Session } from "@proto/kernel/Session.middleware";
 import * as S from "effect/Schema";
 import { PartyId } from "./Party.id.ts";
+import { $PartyContractId } from "@proto/kernel/Identity";
+
+const $I = $PartyContractId.create("Party/RegisterParty.command");
 
 /**
  * Refused: a party id is registered once.
@@ -12,10 +15,10 @@ import { PartyId } from "./Party.id.ts";
  * @category rejections
  * @since 0.0.0
  */
-export class PartyAlreadyRegistered extends Domain.Rejection(
+export class PartyAlreadyRegistered extends S.TaggedError<PartyAlreadyRegistered, { readonly brand: unique symbol }>()(
   "PartyAlreadyRegistered",
   {},
-  { httpApiStatus: 409, description: "This party id is already registered." },
+  $I.annote("PartyAlreadyRegistered", { httpApiStatus: 409, description: "This party id is already registered." }),
 ) {}
 
 /**

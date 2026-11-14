@@ -3,7 +3,7 @@ import { byProcess, eventCause, extend } from "@proto/kernel/Invocation";
 import { ChildFinished } from "@proto/runs-contract/Run/ChildFinished.command";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { AgentRun, recordOf, unspent } from "./AgentRun.aggregate.ts";
+import { AgentRun, requestOf, unspent } from "./AgentRun.aggregate.ts";
 import { ResumeParent } from "./ResumeParent.policy.ts";
 
 /**
@@ -19,11 +19,12 @@ export const ResumeParentLive = ResumeParent.toLayer(
     const runs = yield* AgentRun;
     return Effect.fn(function* (trigger) {
       const finished = yield* runs.get(RunId.make(trigger.source.id));
-      const run = recordOf(finished);
-      if (O.isNone(run) || run.value.parent === null) return;
+      const run = requestOf(finished);
+      const parent = O.flatMap(run, (record) => record.parent);
+      if (O.isNone(run) || O.isNone(parent)) return;
       yield* runs.send(
-        run.value.parent,
-        new ChildFinished({
+        parent.value,
+        ChildFinished.make({
           child: run.value.lineage,
           returned: unspent(run.value.budget),
           outcome: trigger.event._tag === "RunCompleted" ? trigger.event.outcome : trigger.event._tag,

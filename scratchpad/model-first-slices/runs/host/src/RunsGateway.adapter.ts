@@ -16,15 +16,17 @@ import {
   RunReport,
   EndedStatus,
   RunEnded,
+  RunBudgetExceeded,
   RunReportRefused,
   RunRequestRefused,
   RunsGateway,
 } from "@proto/runs-contract/Runs.gateway";
-import { AgentRun, recordOf, sessionOf } from "@proto/runs-model/Run/AgentRun.aggregate";
+import { AgentRun, recordOf, requestOf, sessionOf } from "@proto/runs-model/Run/AgentRun.aggregate";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { liveRun, settling } from "./Lineage.ts";
 
@@ -77,18 +79,14 @@ export const RunsGatewayLive = Layer.effect(
       readonly reason?: unknown;
       readonly remaining?: unknown;
       readonly status?: unknown;
-    }): RunReportRefused | RunEnded =>
+    }): RunReportRefused | RunBudgetExceeded | RunEnded =>
       cause._tag === "RunNotRunning" && isEnded(cause.status)
-        ? new RunEnded({ status: cause.status })
-        : new RunReportRefused({
-        reason:
-          cause._tag === "BudgetExceeded"
-            ? "budget"
-            : cause._tag === "ReadmissionRefused"
-              ? `readmission:${String(cause.reason)}`
-              : cause._tag,
-        remaining: typeof cause.remaining === "number" ? cause.remaining : null,
-      });
+        ? RunEnded.make({ status: cause.status })
+        : cause._tag === "BudgetExceeded" && P.isNumber(cause.remaining)
+          ? RunBudgetExceeded.make({ remaining: cause.remaining })
+          : RunReportRefused.make({
+              reason: cause._tag === "ReadmissionRefused" ? `readmission:${String(cause.reason)}` : cause._tag,
+            });
 
     /**
      * The live run of the caller's lineage, with the provenance it acts under
@@ -98,25 +96,24 @@ export const RunsGatewayLive = Layer.effect(
       current: CurrentRun,
     ): Effect.Effect<{ readonly current: CurrentRun; readonly org: string }, RunReportRefused> =>
       Effect.flatMap(liveRun(runs, current.run), (live) => {
-        const record = recordOf(live.state);
         const org = O.getOrElse(
-          O.map(record, (run): string => run.terms.resource.org),
+          O.map(requestOf(live.state), (run): string => run.terms.resource.org),
           () => "unscoped",
         );
         return live.run === current.run
           ? Effect.succeed({ current, org })
           : O.match(
-              O.flatMapNullishOr(record, (run) => run.provenance),
+              O.map(recordOf(live.state), (run) => run.provenance),
               {
-                onNone: () =>
-                  Effect.fail(new RunReportRefused({ reason: `continuation:${live.state._tag}`, remaining: null })),
+                onNone: () => Effect.fail(RunReportRefused.make({ reason: `continuation:${live.state._tag}` })),
                 onSome: (provenance) => Effect.succeed({ current: { run: live.run, provenance }, org }),
               },
             );
       });
 
+    type Gateway = RunsGateway["Service"];
     return {
-      request: (request) =>
+      request: Effect.fn("RunsGateway.request")((request: Parameters<Gateway["request"]>[0]) =>
         commandIdOf({
           tenant: request.terms.resource.org,
           operation: "RequestRun",
@@ -128,7 +125,7 @@ export const RunsGatewayLive = Layer.effect(
               request.hop,
               runs.send(
                 request.run,
-                new RequestRun({
+                RequestRun.make({
                   session: request.session,
                   purpose: request.purpose,
                   versions: request.versions,
@@ -141,21 +138,21 @@ export const RunsGatewayLive = Layer.effect(
               ),
             ),
           ),
-          Effect.mapError((refused) => new RunRequestRefused({ reason: refused._tag })),
+          Effect.mapError((refused) => RunRequestRefused.make({ reason: refused._tag })),
           Effect.andThen(
             runs.get(request.run).pipe(
               Effect.repeat({ ...settling, until: (state) => state._tag !== "Requested" && state._tag !== "Unrequested" }),
             ),
           ),
           Effect.flatMap((state) =>
-            state._tag === "Running" && state.run.provenance !== null
+            state._tag === "Running"
               ? Effect.succeed({ provenance: state.run.provenance })
-              : Effect.fail(new RunRequestRefused({ reason: state._tag === "Rejected" ? state.reason : state._tag })),
+              : Effect.fail(RunRequestRefused.make({ reason: state._tag === "Rejected" ? state.reason : state._tag })),
           ),
         ),
+      ),
 
-      report: ({ provenance, hop, run, report }) =>
-        Effect.gen(function* () {
+      report: Effect.fn("RunsGateway.report")(function* ({ provenance, hop, run, report }: Parameters<Gateway["report"]>[0]) {
           const { current, org } = yield* follow({ run, provenance });
           const options = yield* commandIdOf({
             tenant: org,
@@ -169,22 +166,22 @@ export const RunsGatewayLive = Layer.effect(
             Refused: ({ reason }) =>
               Effect.flatMap(runs.get(current.run), (state) =>
                 O.match(sessionOf(state), {
-                  onNone: () => Effect.fail(new RunReportRefused({ reason: "unknown-run", remaining: null })),
+                  onNone: () => Effect.fail(RunReportRefused.make({ reason: "unknown-run" })),
                   onSome: (session) =>
                     runs
-                      .send(current.run, new RejectRun({ session, reason, provenance: extend(current.provenance, hop) }), options)
+                      .send(current.run, RejectRun.make({ session, reason, provenance: extend(current.provenance, hop) }), options)
                       .pipe(Effect.as(current)),
                 }),
               ),
-            Reserve: ({ reservation, units }) => send(runs.send(current.run, new ReserveBudget({ reservation, units }), options)),
-            Settle: ({ reservation, units }) => send(runs.send(current.run, new SettleUsage({ reservation, units }), options)),
-            Release: ({ reservation }) => send(runs.send(current.run, new ReleaseReservation({ reservation }), options)),
-            Step: ({ step }) => send(runs.send(current.run, new RecordStep({ step }), options)),
-            AwaitApproval: () => send(runs.send(current.run, new AwaitApproval(), options)),
-            Complete: ({ outcome }) => send(runs.send(current.run, new CompleteRun({ outcome }), options)),
-            Exhausted: () => send(runs.send(current.run, new ExhaustRun(), options)),
+            Reserve: ({ reservation, units }) => send(runs.send(current.run, ReserveBudget.make({ reservation, units }), options)),
+            Settle: ({ reservation, units }) => send(runs.send(current.run, SettleUsage.make({ reservation, units }), options)),
+            Release: ({ reservation }) => send(runs.send(current.run, ReleaseReservation.make({ reservation }), options)),
+            Step: ({ step }) => send(runs.send(current.run, RecordStep.make({ step }), options)),
+            AwaitApproval: () => send(runs.send(current.run, AwaitApproval.make({}), options)),
+            Complete: ({ outcome }) => send(runs.send(current.run, CompleteRun.make({ outcome }), options)),
+            Exhausted: () => send(runs.send(current.run, ExhaustRun.make({}), options)),
           });
-        }),
+      }),
     };
   }),
 ).pipe(Layer.provide(Digest.layerWebCrypto));

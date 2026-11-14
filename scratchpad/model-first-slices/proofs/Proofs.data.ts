@@ -1,3 +1,4 @@
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 /**
@@ -14,13 +15,13 @@ export const Proof = S.Struct({
   gaps: S.String,
   reviewer: S.String,
   /** The checker runs only against a deployed stack (`bun run conformance`), not in `bun run test`. */
-  live: S.optionalKey(S.Boolean),
+  live: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
 });
 export type Proof = typeof Proof.Type;
 
 /** The inventory. `bun run proofs` renders PROOFS.md from it; every checker path must exist. */
 export const proofs: ReadonlyArray<Proof> = [
-  {
+  Proof.make({
     id: "model-verify",
     invariant: "Each model's definition is structurally sound: no duplicate tags, every command handled, every event evolved.",
     checkers: ["party/model/test/Party.verify.test.ts", "runs/model/test/Runs.verify.test.ts", "authority/model/test/Authority.verify.test.ts"],
@@ -28,8 +29,8 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "The library's verifier is complete for what it claims.",
     gaps: "Structure only: it cannot tell that a transition is right, or that two evidence sources are independent.",
     reviewer: "Whether the states and transitions mean what the domain means.",
-  },
-  {
+  }),
+  Proof.make({
     id: "primary-export",
     invariant: "Each <Noun>.<kind>.ts file has one designated primary export of its kind, named from the noun; companions of other kinds are allowed.",
     checkers: ["shared/tooling/src/PrimaryExport.ts", "shared/tooling/test/PrimaryExport.test.ts"],
@@ -37,8 +38,8 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "The role suffix names the file's kind; a kind missing from the table fails as unknown.",
     gaps: "`.rules.ts` is exempt, with its reason. The names are conventions; the checker cannot tell a well-chosen noun.",
     reviewer: "Whether the noun names the concept the file holds.",
-  },
-  {
+  }),
+  Proof.make({
     id: "contract-closure",
     invariant: "A contract package's module graph reaches no model, host, aggregate or handler file.",
     checkers: ["party/contract/test/Contract.imports.test.ts", "runs/contract/test/Contract.imports.test.ts"],
@@ -46,8 +47,8 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "Specifiers are static; the regex finds every import and export-from.",
     gaps: "Dynamic imports built at run time are not followed. Ambient globals are not imports.",
     reviewer: "Whether a contract exposes only what other contexts should depend on.",
-  },
-  {
+  }),
+  Proof.make({
     id: "web-closure",
     invariant: "The web package imports the contract and never a model or host file, except a listed screen that opts into Aggregate.predict, for the files it lists.",
     checkers: ["party/web/test/Web.imports.test.ts"],
@@ -55,8 +56,8 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "As for contract closure.",
     gaps: "Test files are outside the closure, by design. The exception list is empty today.",
     reviewer: "Whether a screen that asks to predict really needs the model's decide.",
-  },
-  {
+  }),
+  Proof.make({
     id: "exact-exports",
     invariant: "A package is reached only through an entry its exports lists.",
     checkers: ["shared/tooling/src/ImportGraph.ts", "party/contract/test/Contract.imports.test.ts", "party/web/test/Web.imports.test.ts"],
@@ -64,8 +65,8 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "Every package declares its exports exactly (no wildcard entries).",
     gaps: "Checked only on the walks the closure tests make, and by tsc for type imports.",
     reviewer: "Whether each listed entry should be public.",
-  },
-  {
+  }),
+  Proof.make({
     id: "port-purity",
     invariant: "A hosted model needs only its declared ports and the platform: no other service leaks into its Layer.",
     checkers: ["party/model/src/Party.ports.ts", "runs/model/src/Runs.ports.ts", "authority/model/src/Authority.ports.ts"],
@@ -73,8 +74,8 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "Handlers reach the outside world only through Effect services.",
     gaps: "A handler can still call fetch, Date.now or a global; the type cannot see it (Astra 9).",
     reviewer: "Whether a handler hides an effect outside its ports.",
-  },
-  {
+  }),
+  Proof.make({
     id: "handler-registries",
     invariant: "Each model's handler registry is exactly what its model generates: every policy, saga, view and projection handled.",
     checkers: ["shared/tooling/src/HandlerRegistry.ts", "party/model/test/Party.handlers.test.ts", "runs/model/test/Runs.handlers.test.ts", "authority/model/test/Authority.handlers.test.ts"],
@@ -82,8 +83,8 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "Handler files follow the naming the generator expects.",
     gaps: "It checks presence, not behaviour.",
     reviewer: "Nothing mechanical; behaviour is the stories' job.",
-  },
-  {
+  }),
+  Proof.make({
     id: "contract-parity",
     invariant: "Each contract Api's RPC group equals the model Api's group, so the interim contract cannot drift from the model (D9).",
     checkers: ["shared/tooling/src/RpcParity.ts", "party/model/test/Api.parity.test.ts", "runs/model/test/RunsApi.parity.test.ts", "authority/model/test/AuthorityApi.parity.test.ts"],
@@ -91,8 +92,8 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "JSON Schema equality is wire equality for these schemas.",
     gaps: "Annotations that do not reach JSON Schema are not compared.",
     reviewer: "Whether a contract change is a breaking one.",
-  },
-  {
+  }),
+  Proof.make({
     id: "root-construction",
     invariant: "Only the authority boundary builds a root invocation or provides an invocation that no re-admission produced.",
     checkers: ["shared/tooling/src/SourceScan.ts", "authority/host/test/RootConstruction.test.ts"],
@@ -100,8 +101,8 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "Construction is spelled as the patterns expect.",
     gaps: "A text scan: an aliased import, a re-export or a constructed object literal passes. Tests are not scanned. Re-admission trusts the provenance it is handed (D25). One named exception besides the boundary: the conformance-only control route (Control.route.ts).",
     reviewer: "Any new code path that hands an invocation to a send.",
-  },
-  {
+  }),
+  Proof.make({
     id: "no-grant-terms-in-events",
     invariant: "Events carry provenance (grant ids, delegation ids, chain), never grant terms.",
     checkers: ["party/host/test/ReviewerApi.test.ts"],
@@ -109,8 +110,8 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "The read paths tested cover the event shapes that matter.",
     gaps: "No schema-level check over every event; a new event field holding terms would pass until a read test sees it.",
     reviewer: "What a new event field retains (see the questions below).",
-  },
-  {
+  }),
+  Proof.make({
     id: "readmission-adds-nothing",
     invariant: "Re-admission never adds a grant the provenance did not name, refuses when all lapse, and re-checks an agent's accountable human.",
     checkers: ["authority/host/test/Boundary.test.ts"],
@@ -118,8 +119,8 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "The fixture credential stands in for real authentication.",
     gaps: "Partial lapse returns the rest (D30); the provenance itself is trusted.",
     reviewer: "Capability scope of each grant a change asks for.",
-  },
-  {
+  }),
+  Proof.make({
     id: "fact-snapshots",
     invariant: "A published fact's shape changes only on purpose: each version's JSON Schema equals a frozen snapshot, and it carries no private field.",
     checkers: ["party/contract/test/ClaimDecided.snapshot.test.ts"],
@@ -127,8 +128,8 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "The listed public fields are the right ones.",
     gaps: "A new fact needs its own snapshot; nothing forces one to be added.",
     reviewer: "Which facts are public, and which fields of them.",
-  },
-  {
+  }),
+  Proof.make({
     id: "fact-retirement",
     invariant: "A producer publishes every fact version some composed descriptor consumes; versions nobody consumes are reported as retirable (D34), except each producer's newest (D40).",
     checkers: ["shared/tooling/src/FactRetirement.ts", "apps/practice/test/Deployment.test.ts"],
@@ -136,8 +137,8 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "Every consumer's descriptor is composed into some app; descriptors read their versions from code, not by hand.",
     gaps: "One app today; descriptors from other apps would need composing too.",
     reviewer: "Whether a retirable version may really go (consumers outside the repo).",
-  },
-  {
+  }),
+  Proof.make({
     id: "stored-formats",
     invariant: "Stored events, state, receipts with replies, saga payloads, activity results and provenance written by earlier declarations still decode and replay, converted on read, with bytes untouched (D22, D35).",
     checkers: ["party/model/test/StoredFormat.test.ts", "runs/model/test/StoredFormat.test.ts"],
@@ -145,8 +146,8 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "The fixtures are what the platform stores (they are encoded with the same codecs).",
     gaps: "Fixtures are produced by the prototype, not captured from a running platform; cluster storage is not covered.",
     reviewer: "Whether a change is compatible or needs a declared transform or a new saga version.",
-  },
-  {
+  }),
+  Proof.make({
     id: "saga-versions",
     invariant: "A saga run in flight finishes on the version it started while new runs start on the next (D35).",
     checkers: ["party/model/test/SagaVersions.test.ts"],
@@ -154,8 +155,8 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "In memory only; the cluster engine is not checked.",
     gaps: "No way to list runs in flight, so nothing proves an old version may be removed.",
     reviewer: "When an old saga version may be dropped.",
-  },
-  {
+  }),
+  Proof.make({
     id: "sink-positions",
     invariant: "The directory sink applies each source stream's changes once, in order, and refuses stale application, writes and checkpoints together.",
     checkers: ["party/model/test/PartyDirectory.sink.test.ts", "party/model/test/Rebuild.test.ts"],
@@ -163,8 +164,8 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "One store write is atomic (it is, in memory).",
     gaps: "A real database needs the same transaction; not shown.",
     reviewer: "Nothing beyond the store's transaction boundary.",
-  },
-  {
+  }),
+  Proof.make({
     id: "rebuild-no-side-effects",
     invariant: "A projection rebuild writes a new generation beside the old one, serves the old until caught up, and fires no policy, saga, external call or fact.",
     checkers: ["party/model/test/Rebuild.test.ts"],
@@ -172,8 +173,8 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "In memory; the library replays only the bumped projection.",
     gaps: "Cluster backfill is not exercised.",
     reviewer: "Nothing mechanical.",
-  },
-  {
+  }),
+  Proof.make({
     id: "command-id-reuse",
     invariant: "The library answers a reused command id from its receipt before any check (pinned); the prototype's own sends derive ids from org, operation and request (D36).",
     checkers: ["runs/model/test/Runs.story.test.ts", "runs/host/test/RunsHost.test.ts"],
@@ -181,8 +182,8 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "Clients of the Apis choose ids responsibly; the hazard stays upstream.",
     gaps: "A client choosing its own id is still answered from the receipt (upstream ask).",
     reviewer: "Any new send path that does not use requestKey.",
-  },
-  {
+  }),
+  Proof.make({
     id: "inbox-idempotency",
     invariant: "The inbox acts on each fact once: duplicates change nothing, a crash before the checkpoint is safe, a v1 consumer survives v2.",
     checkers: ["runs/host/test/RunsHost.test.ts"],
@@ -190,8 +191,8 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "The inbox store's commit is atomic.",
     gaps: "In process; a durable inbox store is cluster work.",
     reviewer: "What a fact-started command may do (D32).",
-  },
-  {
+  }),
+  Proof.make({
     id: "screen-causality",
     invariant: "The claim review machine correlates on command id, receipt and view revision: no second command while one is in flight, late and duplicate replies ignored, stale snapshots dropped, unknown outcomes retried under the same id.",
     checkers: ["party/web/test/ClaimReview.story.test.ts", "party/web/test/Bindings.test.ts", "party/web/test/Screens.render.test.tsx"],
@@ -199,8 +200,8 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "The library's view cursor orders a key's states.",
     gaps: "No browser: real input, timing, focus and layout are browser QA.",
     reviewer: "Whether the screen's notices say the right thing to a person.",
-  },
-  {
+  }),
+  Proof.make({
     id: "outcome-coverage",
     invariant: "Every command's accepted path and each declared rejection is executed by some story or test, counted at run time; gaps are listed with reasons.",
     checkers: ["shared/tooling/vitest/outcomes.setup.ts", "scripts/outcomes.ts", "proofs/Outcomes.allow.ts"],
@@ -208,8 +209,8 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "Every test runs on the default metric registry.",
     gaps: "Executing an outcome is not asserting it well; refusals raised by middleware before decide are not counted. All 109 declared outcomes execute since phase 5.",
     reviewer: "Whether the stories assert invariants rather than restate decide.",
-  },
-  {
+  }),
+  Proof.make({
     id: "generated-files",
     invariant: "Generated files are never edited: handler registries, the web bindings and this document match their generators.",
     checkers: ["shared/tooling/src/GeneratedFile.ts", "party/web/scripts/bindings.ts", "scripts/proofs.ts", "apps/practice/scripts/entries.ts"],
@@ -217,8 +218,8 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "Generators are deterministic.",
     gaps: "None known.",
     reviewer: "Nothing mechanical.",
-  },
-  {
+  }),
+  Proof.make({
     id: "drain-lease-takeover",
     invariant: "A queue or projection drain that finds its lease held comes back just after the lease expires, so rows a dead drain left are delivered; while live drains keep taking the lease it comes back once per lease, not in a loop.",
     checkers: ["conformance/test/StrandedDrain.test.ts", "conformance/test/SimHost.ts", "patches/@alchemy.run%2Fdomain@2.0.0-beta.87.patch"],
@@ -226,18 +227,45 @@ export const proofs: ReadonlyArray<Proof> = [
     assumptions: "The lease row is what a runner killed mid-drain leaves; the in-process alarm stands in for a host's.",
     gaps: "The cluster's wake delivery latency is not modelled (it adds seconds after the lease on Effect Cluster).",
     reviewer: "Whether waiting out the lease is acceptable, or the lease should follow shard ownership.",
-  },
-  {
+  }),
+  Proof.make({
+    id: "compiler-effect-build",
+    invariant: "`bun run check` runs the Effect build of tsrs at the monorepo's pinned @effect/tsgo and tsrs over every project, each taking its rules from the monorepo's base config, and exits 0; only the vendored upstream project drops the rules. The prototype holds one inline diagnostics directive: `strictEffectProvide:off` on the generated front's deploy-time `Effect.provide(Database)`, an Alchemy class entry point, emitted by apps/practice/scripts/entries.ts with its reason, owner (@proto/practice) and exit.",
+    checkers: ["shared/tooling/test/Compiler.guard.test.ts"],
+    reads: "The root manifest's check script, the installed compiler manifests and `--version`, the monorepo catalog pins, each project's tsconfig extends chain, and every source file's comment lines for a diagnostics directive.",
+    assumptions: "The proxy's `--version` names the Effect build; a project's rules come only from its extends chain.",
+    gaps: "It proves the wiring, not that every rule is right for the prototype; the rules are the monorepo's.",
+    reviewer: "Whether a new project was added to the check, whether a rule's finding was fixed by meaning, and whether the one directive's exit condition has been met.",
+  }),
+  Proof.make({
+    id: "compiler-canary",
+    invariant: "An Effect-only finding (a floating Effect) fails the check: the canary project fails under the Effect build, with exactly one effect(floatingEffect) error and no unknown-rule warning.",
+    checkers: ["shared/tooling/test/Compiler.guard.test.ts", "shared/tooling/canary/Canary.ts"],
+    reads: "The compiler's output and exit code over the canary project.",
+    assumptions: "The canary's one finding is one the stock compiler cannot report.",
+    gaps: "One rule; a rule the Effect build stopped reporting would pass unnoticed.",
+    reviewer: "Nothing beyond keeping the canary's finding Effect-only.",
+  }),
+  Proof.make({
+    id: "saga-refused-report-hop",
+    invariant: "A report hop of the review run (reserve, settle, step, release, exhaust, the wait) the runs context refuses, for example after the delegation was revoked, is recorded on the claim and reported to the run, which gives back what its open reservations held; the executor stops there.",
+    checkers: ["party/model/test/Review.story.test.ts", "runs/model/test/Runs.story.test.ts", "runs/host/test/RunsHost.test.ts"],
+    reads: "The saga's port calls and the claim's events (party), the run's RunRejected and Refused state (runs model), and the gateway over the real authority with the grant revoked before settle (runs host).",
+    assumptions: "The refusal report needs no re-admission, so it lands although the hop's grant lapsed.",
+    gaps: "In memory only; the cluster case P5 is not re-run this phase (no Docker).",
+    reviewer: "Whether a refused report should end the run, or leave it for a person to resume.",
+  }),
+  Proof.make({
     id: "cluster-upstream-conformance",
     invariant: "The host passes upstream's ten Domain conformance cases, with the vendored conformance model on the stack's pool.",
-    checkers: ["conformance/test/Upstream.conformance.ts", "conformance/src/upstream/conformance.ts"],
+    checkers: ["conformance/test/Upstream.conformance.ts", "conformance/upstream/src/conformance.ts"],
     reads: "The deployed front over HTTP and WebSocket.",
     assumptions: "The vendored files match upstream at 33c10dd except import paths.",
     gaps: "Two runners on one workstation; no network partitions.",
     reviewer: "Nothing mechanical.",
     live: true,
-  },
-  {
+  }),
+  Proof.make({
     id: "cluster-idempotent-sends",
     invariant: "On the cluster, a command sent twice, or retried after a lost response, under one id commits once and its reaction happens once.",
     checkers: ["conformance/test/Own.conformance.ts"],
@@ -246,8 +274,8 @@ export const proofs: ReadonlyArray<Proof> = [
     gaps: "Retries from another client, after the receipt's retention (none exists), are not covered.",
     reviewer: "Nothing mechanical.",
     live: true,
-  },
-  {
+  }),
+  Proof.make({
     id: "cluster-faults",
     invariant: "A runner killed after a commit, a projection batch cut by a crash, a grant revoked mid-chain and a run waiting across a restart each end correctly: stored results, reactions once, refusals recorded, completion after approval.",
     checkers: ["conformance/test/Own.conformance.ts"],
@@ -256,8 +284,8 @@ export const proofs: ReadonlyArray<Proof> = [
     gaps: "See notes/phase-6.md. With the patched library the kill-after-commit reactions happen once, after the dead drain's 60 s lease, which is later than the case's view read waits, so the case still fails as written. A revocation between two hops of a running chain is not recorded on the claim (the review saga ends on `RunRefused`).",
     reviewer: "Whether each fault was really exercised (the evidence log says).",
     live: true,
-  },
-  {
+  }),
+  Proof.make({
     id: "cluster-two-runners",
     invariant: "Two runners never both commit to one instance (D38): a runner paused past its shard lock must not overwrite the commit of the runner that took over.",
     checkers: ["conformance/test/Own.conformance.ts", "conformance/src/TwoRunners.model.ts"],
@@ -266,8 +294,8 @@ export const proofs: ReadonlyArray<Proof> = [
     gaps: "Two timings; not a model-checked proof. The second (paused inside the commit) overwrote the stale runner's acknowledged event: D38 is open (notes/phase-6.md).",
     reviewer: "Whether the observed outcome is acceptable for every aggregate.",
     live: true,
-  },
-  {
+  }),
+  Proof.make({
     id: "cluster-backup-restore",
     invariant: "A pg_dump taken while a run waits for approval restores into a fresh stack with aggregates, views, the directory, receipts, the waiting run and scheduled work intact.",
     checkers: ["conformance/test/Restore.conformance.ts"],
@@ -276,7 +304,7 @@ export const proofs: ReadonlyArray<Proof> = [
     gaps: "A volume-level restore (which needs the matching Alchemy state) is not exercised.",
     reviewer: "What must be retained with a backup besides the database.",
     live: true,
-  },
+  }),
 ];
 
 /** The semantic questions that stay with a reviewer who did not write the change (D8). */

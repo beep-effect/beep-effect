@@ -25,8 +25,15 @@ export const AuthorityCluster = <ROut, E, R>(platform: Layer.Layer<ROut, E, R>) 
       AuthorityGateway: AuthorityGatewayLive.pipe(Layer.provide(hosted)),
       Session: SessionLive.pipe(Layer.provide(hosted)),
     },
+    // Built into the caller's scope, not with `Effect.provide`: the Apis serve requests long after
+    // this effect returns, so the hosted model's scope must stay open with the caller's (D39).
     apis: Effect.gen(function* () {
-      return { authority: (yield* AuthorityApi).fetch, control: yield* controlRoute };
-    }).pipe(Effect.provide(Layer.merge(hosted, SessionLive.pipe(Layer.provide(hosted))))),
+      const context = yield* Layer.build(Layer.merge(hosted, SessionLive.pipe(Layer.provide(hosted))));
+      return yield* Effect.gen(function* () {
+        const authority = (yield* AuthorityApi).fetch;
+        const control = yield* controlRoute;
+        return { authority, control };
+      }).pipe(Effect.provideContext(context));
+    }),
   };
 };

@@ -1,5 +1,6 @@
 import { streamOf } from "@alchemy.run/domain/Aggregate";
 import { requireGrant } from "@proto/kernel/CurrentInvocation.context";
+import { ClaimReviewState } from "@proto/party-contract/Claim/ClaimReview.read";
 import { PartyRead } from "@proto/party-contract/Party.capabilities";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -19,7 +20,8 @@ export const ClaimReviewLive = ClaimReview.toLayer(
   Effect.succeed(
     Effect.fn(function* (request, review) {
       const now = yield* DateTime.now;
-      yield* O.match(O.fromNullishOr(review?.org), {
+      const asserted = O.filter(O.fromNullishOr(review), (found) => !ClaimReviewState.guards.Unasserted(found));
+      yield* O.match(O.map(asserted, (found) => found.org), {
         onNone: () => Effect.void,
         onSome: (org) =>
           requireGrant(PartyRead, ClaimReview.viewName, claimIn(org, streamOf(request.key)), now).pipe(Effect.asVoid),

@@ -1,4 +1,7 @@
-import * as Domain from "@alchemy.run/domain";
+import * as S from "effect/Schema";
+import { $AuthorityContractId } from "@proto/kernel/Identity";
+
+const $I = $AuthorityContractId.create("Delegation/NotDelegator.rejection");
 
 /**
  * Refused: only the human who delegated may narrow or revoke the delegation.
@@ -6,8 +9,8 @@ import * as Domain from "@alchemy.run/domain";
  * @category rejections
  * @since 0.0.0
  */
-export class NotDelegator extends Domain.Rejection(
+export class NotDelegator extends S.TaggedError<NotDelegator, { readonly brand: unique symbol }>()(
   "NotDelegator",
   {},
-  { httpApiStatus: 403, description: "Only the human who delegated may change the delegation." },
+  $I.annote("NotDelegator", { httpApiStatus: 403, description: "Only the human who delegated may change the delegation." }),
 ) {}
