@@ -64,7 +64,11 @@ profile; pass the token through `op run`.
   (`valueDigest`), and a changed digest plans an update. The value is never an
   attribute; every update writes the declared value. A variable with the same
   key and branch on any overlapping target counts as existing, because Vercel's upsert would
-  overwrite it. Storage types rank `plain` < `encrypted` <
+  overwrite it. Changing `project`, `teamId`, `key` or `type` replaces the variable;
+  an in-place edit sends the value and only the targets and branch that differ, never `key` or
+  `type` (Vercel refuses a `key` on a sensitive variable). A `type` change on the same project and
+  key deletes first, because old and new would collide; a renamed key creates the new variable
+  first, so a failed create leaves the old one in place. Storage types rank `plain` < `encrypted` <
   `sensitive`, and `type` is a minimum: a stored type that is equal or stronger
   satisfies it. Some teams store Production and Preview variables as
   `sensitive` whatever is requested; such a variable is accepted as is and

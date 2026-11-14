@@ -436,3 +436,15 @@ to the gap between the reference checkout (main) and the pinned release.
   readiness monitor followed the new head and the body kept its provenance footer), but outside Yeet.
 - **Would have prevented it:** `yeet publish` naming `yeet open` as the route for a committed head with a
   passing receipt on an already open PR, or accepting the receipt's recorded skips for its own cheap-gates run.
+
+## 2026-11-14: a fake more permissive than Vercel cleared the first OipWeb arm
+
+- **Doing:** P4 OipWeb, first armed deploy (workflow_dispatch run 43585534113).
+- **Evidence:** staging applied 8 of 9 resources. Then `[EnvHubSpotServiceKey] fail — BadRequest: You cannot
+  change the key of a Sensitive Environment Variable.` The provider's in-place edit sent `key`. The test
+  that cleared arming (`CreatePath.test.ts`, "one `PATCH Env`, no delete, no duplicate") ran against an
+  in-memory Vercel API that accepted the body.
+- **Would have prevented it:** a live write rehearsal on a scratch personal stage before the first arm,
+  covering create, adoption over existing objects and an in-place edit of each variable type (now the rule,
+  decision `2026-11-14-first-armed-oipweb-deploy-failed-on-a-sensitive-variable-edit`), and fakes that pin
+  each documented refusal of the real API with a test.
