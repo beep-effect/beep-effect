@@ -44,5 +44,9 @@ closeout.
 **Consequence.** Deleting the lab program and its script (#3341) loses no capability and strands no
 resource. To reverse it, restore the files from git history; there is nothing to redeploy.
 
-Source: the P6 retire inventory, revision 2 (commit `df9f18a3deccab94ecffdf016b6060ac407c498b`, the
-packet's research/p6-retire-inventory.md, entry Q6). Its wording agrees with this record on every fact.
+**Who gathered the evidence, and its limits.** The packet's P6 retire-inventory lane gathered it on
+2026-11-14. It read the lab program and the lab script, then made the seven read-only calls above
+under the operator workstation's AWS profile. The P6 inventory document is committed under the
+packet's research directory by a following packet PR. The check covers the lab's tag, name-prefix and
+parameter-path conventions as the lab script creates them; a resource created outside those
+conventions would not be found by it.
