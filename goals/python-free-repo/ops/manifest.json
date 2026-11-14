@@ -4,13 +4,13 @@
     "id": "python-free-repo",
     "packetId": "goal-packet/v1:e03830a545f730500b63ddcb49c2a7c591ae16c4435af3e10eb7cc6a403e3b16",
     "title": "Remove Python from the repo, port photo-face to onnxruntime-node, and ban Python in tracked source",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-06",
-    "updated": "2026-11-13",
+    "updated": "2026-11-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/python-free-repo",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Remove Python from the repo, port photo-face to onnxruntime-node, and ban Python in tracked source (graduated from explorations/pulumi-to-alchemy).",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -23,7 +23,13 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 3322,
+        "role": "final"
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -73,12 +79,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -93,5 +99,10 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): Hygiene work with no execution yet and no urgency. Resume with `bun run beep goals set-status python-free-repo active` when it is picked up."
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): Hygiene work with no execution yet and no urgency. Resume with `bun run beep goals set-status python-free-repo active` when it is picked up.",
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3322
+  },
+  "retentionReason": "Retained: the eleven per-packet history/2026-11-13-python-removed.md notes link to this packet's SPEC, and infra/r2-cache/README.md, the photo-face and no-tracked-python cache reviews and the coverage baseline cite its decisions and research (triage.md, r2-cache-port.md, photo-face-parity.md), so archiving it would break those references."
 }
