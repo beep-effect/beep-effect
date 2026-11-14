@@ -11,4 +11,4 @@ The live groundwork stack's reaper (`infra/src/CiRunners.ts`) terminates every i
 - Its role may describe instances and terminate only instances whose `ghr:environment` is one of those values. The live reaper's `beep-ci=runner` filter is not used: composite runners carry only `ghr:*` instance tags, and keying on `ghr:environment` means neither reaper can touch the other fleet's instances during the overlap.
 - One pass costs two `DescribeInstances` pages every five minutes (the live reaper costs one); scale-down already lists each pool every minute.
 
-The reaper's function name is pinned (`beep-fleet-<stage>-reaper`); its schedule and permission take generated names.
+The reaper's function name is pinned (`beep-fleet-<stage>-reaper`) in every stage; in `prod` its schedule rule is pinned too (`beep-fleet-prod-reaper`); the invoke permission is a statement inside the function's own policy.

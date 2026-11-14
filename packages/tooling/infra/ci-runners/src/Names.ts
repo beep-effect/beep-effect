@@ -25,9 +25,11 @@ const $I = $InfraCiRunnersId.create("Names");
  * `<fleet>-<pool>` and the termination watcher acts on instances whose
  * environment starts with `<fleet>`. The composite derives the KMS alias
  * (`alias/<fleet>-github-app`) and the SSM paths under `ssmRoot` from these;
- * its Lambdas, queues, roles and bucket take Alchemy-generated names
- * (`CiRunners-<logical id>-<stage>-<suffix>`), which start with the stack
- * name and so cannot equal a live object's name either.
+ * in `prod` the composite pins every other name it chooses under `<fleet>-`
+ * (`RunnerFleetProps.namePrefix`), and personal stages take Alchemy-generated
+ * names (`CiRunners-<logical id>-<stage>-<suffix>`). Lambda execution roles
+ * are generated in every stage; the stack-name prefix keeps them clear of
+ * live names.
  *
  * **Example** (Production names)
  *
@@ -54,6 +56,7 @@ export class PhysicalNames extends S.Opaque<PhysicalNames, { readonly brand: uni
     flowLog: S.String,
     flowLogRole: S.String,
     reaperFunction: S.String,
+    reaperSchedule: S.String,
     imdsDisablePolicy: S.String,
     runnerBoundaryPolicy: S.String,
     iamPath: S.String,
@@ -118,6 +121,7 @@ export const physicalNames = (stage: string): PhysicalNames => {
     flowLog: `${fleet}-flow-log`,
     flowLogRole: `${fleet}-flow-logs`,
     reaperFunction: `${fleet}-reaper`,
+    reaperSchedule: `${fleet}-reaper`,
     imdsDisablePolicy: `${fleet}-runner-imds-disable`,
     runnerBoundaryPolicy: `${fleet}-runner-boundary`,
     iamPath: `/beep-fleet/${slug}/`,
@@ -228,6 +232,7 @@ export const liveFleetOverlaps = (names: PhysicalNames): ReadonlyArray<string> =
       names.flowLog,
       names.flowLogRole,
       names.reaperFunction,
+      names.reaperSchedule,
       names.imdsDisablePolicy,
       names.runnerBoundaryPolicy,
       names.iamPath,

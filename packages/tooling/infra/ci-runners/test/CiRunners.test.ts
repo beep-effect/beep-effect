@@ -55,6 +55,70 @@ const declaredNames = (recorder: Recorder) =>
     })
   );
 
+// The prop each resource type pins its physical name with; types absent here get AWS-assigned ids.
+const nameKey: Readonly<Record<string, string>> = {
+  "Lambda.Function": "functionName",
+  "SQS.Queue": "queueName",
+  "IAM.Role": "roleName",
+  "IAM.Policy": "policyName",
+  "IAM.InstanceProfile": "instanceProfileName",
+  RunnerLaunchTemplate: "launchTemplateName",
+  "EventBridge.Rule": "name",
+  "S3.Bucket": "bucketName",
+  "Logs.LogGroup": "logGroupName",
+  "EC2.SecurityGroup": "groupName",
+};
+
+const physicalNamesOf = (recorder: Recorder) =>
+  A.map(
+    A.filter(recorder.reconciled, (entry) => R.has(nameKey, entry.type)),
+    (entry) => [entry.fqn, entry.news[nameKey[entry.type] ?? ""]] as const
+  );
+
+// Every physical name the prod stage chooses; the remaining resources take AWS-assigned ids.
+const productionPhysicalNames: Readonly<Record<string, string>> = {
+  FlowLogGroup: "/beep-fleet/prod/vpc-flow-logs",
+  FlowLogsRole: "beep-fleet-prod-flow-logs",
+  ImdsDisablePolicy: "beep-fleet-prod-runner-imds-disable",
+  Reaper: "beep-fleet-prod-reaper",
+  ReaperSchedule: "beep-fleet-prod-reaper",
+  RunnerBoundaryPolicy: "beep-fleet-prod-runner-boundary",
+  RunnerSecurityGroup: "beep-fleet-prod-runner",
+  "Runners/DeregisterRetryQueue": "beep-fleet-prod-deregister-retry",
+  "Runners/DeregisterRetryQueueDlq": "beep-fleet-prod-deregister-retry-dlq",
+  "Runners/InstanceStateChangeRule": "beep-fleet-prod-instance-state-change",
+  "Runners/Poolheavy/BuildQueue": "beep-fleet-prod-heavy-build",
+  "Runners/Poolheavy/BuildQueueDlq": "beep-fleet-prod-heavy-build-dlq",
+  "Runners/Poolheavy/JobRetry": "beep-fleet-prod-heavy-job-retry",
+  "Runners/Poolheavy/JobRetryQueue": "beep-fleet-prod-heavy-job-retry",
+  "Runners/Poolheavy/JobRetryQueueDlq": "beep-fleet-prod-heavy-job-retry-dlq",
+  "Runners/Poolheavy/LaunchTemplate": "beep-fleet-prod-heavy",
+  "Runners/Poolheavy/RunnerInstanceProfile": "beep-fleet-prod-heavy-runner",
+  "Runners/Poolheavy/RunnerRole": "beep-fleet-prod-heavy-runner",
+  "Runners/Poolheavy/ScaleDown": "beep-fleet-prod-heavy-scale-down",
+  "Runners/Poolheavy/ScaleDownSchedule": "beep-fleet-prod-heavy-scale-down",
+  "Runners/Poolheavy/ScaleUp": "beep-fleet-prod-heavy-scale-up",
+  "Runners/Pooloverflow/BuildQueue": "beep-fleet-prod-overflow-build",
+  "Runners/Pooloverflow/BuildQueueDlq": "beep-fleet-prod-overflow-build-dlq",
+  "Runners/Pooloverflow/JobRetry": "beep-fleet-prod-overflow-job-retry",
+  "Runners/Pooloverflow/JobRetryQueue": "beep-fleet-prod-overflow-job-retry",
+  "Runners/Pooloverflow/JobRetryQueueDlq": "beep-fleet-prod-overflow-job-retry-dlq",
+  "Runners/Pooloverflow/LaunchTemplate": "beep-fleet-prod-overflow",
+  "Runners/Pooloverflow/RunnerInstanceProfile": "beep-fleet-prod-overflow-runner",
+  "Runners/Pooloverflow/RunnerRole": "beep-fleet-prod-overflow-runner",
+  "Runners/Pooloverflow/ScaleDown": "beep-fleet-prod-overflow-scale-down",
+  "Runners/Pooloverflow/ScaleDownSchedule": "beep-fleet-prod-overflow-scale-down",
+  "Runners/Pooloverflow/ScaleUp": "beep-fleet-prod-overflow-scale-up",
+  "Runners/RunnerBinaries": "beep-fleet-prod-binaries-832907639880",
+  "Runners/RunnerBinariesSyncer": "beep-fleet-prod-binaries-syncer",
+  "Runners/RunnerBinariesSyncerSchedule": "beep-fleet-prod-binaries-syncer",
+  "Runners/SpotInterruptionRule": "beep-fleet-prod-spot-interruption",
+  "Runners/SsmHousekeeper": "beep-fleet-prod-ssm-housekeeper",
+  "Runners/SsmHousekeeperSchedule": "beep-fleet-prod-ssm-housekeeper",
+  "Runners/TerminationWatcher": "beep-fleet-prod-termination-watcher",
+  "Runners/Webhook": "beep-fleet-prod-webhook",
+};
+
 describe("CiRunners personal stage", () => {
   const personal = Fakes.harness({ stage: "dev_test" });
   personal.provider("creates the whole graph under fenced names with no way to register a runner", (stack) =>
@@ -166,6 +230,14 @@ describe("CiRunners production stage", () => {
       expect(overflow.pool.maximumCount).toBe(2);
       expect(overflow.pool.runnerGroup).toBe("beep-shard-overflow");
       expect(A.filter(declaredNames(recorder), touchesLiveFleet)).toEqual([]);
+    })
+  );
+
+  const pinnedNames = Fakes.harness({ stage: "prod" });
+  pinnedNames.provider("pins every production physical name under beep-fleet-prod", (stack) =>
+    Effect.gen(function* () {
+      yield* stack.deploy(program.pipe(environmentOf(productionSecrets)));
+      expect(R.fromEntries(physicalNamesOf(pinnedNames.recorder))).toStrictEqual(productionPhysicalNames);
     })
   );
 

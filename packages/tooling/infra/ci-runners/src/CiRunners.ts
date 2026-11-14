@@ -16,7 +16,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import { effectiveCap, PoolName, resolveStageConfig } from "./Config.ts";
+import { effectiveCap, PoolName, productionStage, resolveStageConfig } from "./Config.ts";
 import { stageCredentials } from "./Credentials.ts";
 import { requireCiForProduction, requireConfiguredTarget, requireFencedNames } from "./Guards.ts";
 import { physicalNames } from "./Names.ts";
@@ -192,6 +192,7 @@ export const declareCiRunners = Effect.fn("CiRunners.declare")(function* (input:
 }) {
   const { config, credentials } = input;
   const names = physicalNames(input.stage);
+  const production = input.stage === productionStage;
   const network = yield* declareNetwork(config.network, names);
   const policies = yield* runnerPolicies(names);
   const [firstSubnet, ...otherSubnets] = network.subnetIds;
@@ -200,6 +201,8 @@ export const declareCiRunners = Effect.fn("CiRunners.declare")(function* (input:
     RunnerFleetProps.make({
       id: "Runners",
       name: names.fleet,
+      // prod pins every composite name (a lost or moved state must not mint a second fleet); personal stages keep generated names.
+      ...(production ? { namePrefix: names.fleet } : {}),
       ssmRoot: names.ssmRoot,
       runnerType: config.runnerType,
       repositoryAllowList: config.repositoryAllowList,
@@ -235,6 +238,7 @@ export const declareCiRunners = Effect.fn("CiRunners.declare")(function* (input:
 
   yield* declareReaper({
     functionName: names.reaperFunction,
+    scheduleName: production ? O.some(names.reaperSchedule) : O.none(),
     config: ReaperRuntimeConfig.make({
       environments: [`${names.fleet}-${PoolName.Enum.heavy}`, `${names.fleet}-${PoolName.Enum.overflow}`],
       ttlMinutes: config.reaperTtlMinutes,

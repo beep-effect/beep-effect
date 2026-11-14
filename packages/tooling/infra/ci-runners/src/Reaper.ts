@@ -181,27 +181,31 @@ export const reapExpiredRunners = Effect.fn("CiRunners.reapExpiredRunners")(func
  * **Details**
  *
  * The role may describe instances and terminate only instances tagged
- * with one of the fleet's pool environments. The function name is pinned.
+ * with one of the fleet's pool environments. The function name is pinned;
+ * the schedule's name is pinned when `scheduleName` is given (`prod`).
  *
  * **Example** (Declare a reaper)
  *
  * ```ts
  * import { declareReaper, ReaperRuntimeConfig } from "@beep/infra-ci-runners/Reaper"
+ * import * as O from "effect/Option"
  *
  * const reaper = declareReaper({
  *   functionName: "beep-fleet-prod-reaper",
+ *   scheduleName: O.some("beep-fleet-prod-reaper"),
  *   config: ReaperRuntimeConfig.make({ environments: ["beep-fleet-prod-heavy"], ttlMinutes: 90 }),
  * })
  * console.log(typeof reaper) // "object"
  * ```
  *
- * @param input - The pinned function name and the runtime configuration.
+ * @param input - The pinned function name, the optional pinned schedule name and the runtime configuration.
  * @returns The reaper function.
  * @category resources
  * @since 0.0.0
  */
 export const declareReaper = Effect.fn("CiRunners.declareReaper")(function* (input: {
   readonly functionName: string;
+  readonly scheduleName: O.Option<string>;
   readonly config: ReaperRuntimeConfig;
 }) {
   const runtimeConfig = yield* encodeReaperConfig(input.config);
@@ -216,6 +220,7 @@ export const declareReaper = Effect.fn("CiRunners.declareReaper")(function* (inp
     env: { [runtimeConfigEnvName]: runtimeConfig },
   });
   const schedule = yield* EventBridge.Rule("ReaperSchedule", {
+    ...O.match(input.scheduleName, { onNone: () => ({}), onSome: (name) => ({ name }) }),
     scheduleExpression: "rate(5 minutes)",
     targets: [{ Id: "Reaper", Arn: reaper.functionArn }],
   });
