@@ -1,14 +1,20 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
+import { substituteCitationMetadataMatches } from "@beep/law-practice-server/internal/Citation/MetadataComposition";
 import { CitationRegexPatternProfile } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
 import { CitationRegexMatchMode } from "@beep/law-practice-server/internal/Citation/RegexWorkerProtocol";
+import { CitationStopWordsFailure } from "@beep/law-practice-server/internal/Citation/StopWords";
+import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { setupCitationRegexWorker } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
@@ -98,4 +104,32 @@ export const replayCitationRegexNullable = Effect.fn("NullableTest.replay")(func
   expect(observed).toEqual({ spawned: expected, confirmed: expected });
   const admission = yield* setup.admission.snapshot;
   expect(admission).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
+});
+
+/** Metadata substitution refuses an empty match: the nullable `a*` control's
+ * empty search match on empty input reaches the substitution's invalid-match
+ * refusal before any range is allocated.
+ * @internal @category testing @since 0.0.0
+ */
+export const refuseCitationEmptyMetadataSubstitution = Effect.fn("NullableTest.emptySubstitution")(function* (
+  kind: CitationNativeRuntimeKind
+) {
+  const corpus = yield* load();
+  const pattern = yield* Effect.fromOption(A.get(corpus.patterns, 3));
+  const row = yield* Effect.fromOption(A.head(pattern.cases));
+  const { patternSha256, flags, profile } = pattern;
+  const setup = yield* setupCitationRegexWorker([{ patternSha256, flags, profile }], kind);
+  const completed = yield* setup.worker.evaluate(pattern.pattern, row.source, flags, 1, "search");
+  expect(completed.result.matches).toBe(1);
+  const capture = yield* completed.result.capture(0, 0);
+  expect(capture).toEqual({ _tag: "Range", start: 0, end: 0 });
+  const invalid = () => CitationStopWordsFailure.make({ reason: "invalid-match" });
+  const refused = yield* withCitationTestInvocation(
+    Effect.flatMap(CitationInvocation, ({ budget }) =>
+      substituteCitationMetadataMatches(completed, O.none(), invalid).pipe(
+        Effect.provideService(CitationTextBudget, budget)
+      )
+    )
+  ).pipe(Effect.flip);
+  expect(refused).toMatchObject({ _tag: "CitationStopWordsFailure", reason: "invalid-match" });
 });

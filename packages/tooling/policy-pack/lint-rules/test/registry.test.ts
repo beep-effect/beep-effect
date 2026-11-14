@@ -125,7 +125,7 @@ describe("rule registry", () => {
           severity: "error",
           replaces: null,
           summary:
-            "Require explicit citation authority; reject optional serviceOption/getOption/getOrUndefined lookups. Local aliases and aliased named imports require semantic linting.",
+            "Require explicit citation authority; reject optional serviceOption/getOption/getOrUndefined and captured-context get/getUnsafe/getOrElse lookups of CitationTextBudget, CitationOperationAdmission and CitationInvocation. Not caught (syntactic rule): local aliases and aliased named imports, raw context map access, a picked or omitted Context passed along, and any Scope.Scope capture.",
           scope: "packages/law-practice/server/src/internal/Citation/**",
         },
         "no-file-url-pathname": {
