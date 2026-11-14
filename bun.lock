@@ -3956,6 +3956,7 @@
       },
       "devDependencies": {
         "@alchemy.run/test": "catalog:",
+        "@beep/memfs": "workspace:^",
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",

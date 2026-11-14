@@ -3132,6 +3132,7 @@
         "allow": [
           "@beep/identity",
           "@beep/infra-hosts",
+          "@beep/memfs",
           "@beep/openclaw",
           "@beep/schema",
           "@beep/test-runner",
@@ -3141,6 +3142,7 @@
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/infra-hosts",
+          "@beep/memfs",
           "@beep/openclaw",
           "@beep/schema",
           "@beep/test-runner",

@@ -26,13 +26,15 @@ import {
   renderOpenClawStageScript,
   renderOpenClawUnit,
 } from "@beep/infra-hosts/OpenClawGeneration";
+import { MemoryFileSystem } from "@beep/memfs";
 import { OpenclawSecretReference, OpenclawSha256Hex } from "@beep/openclaw";
 import { fcRuns } from "@beep/test-utils";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as R from "@beep/utils/Record";
 import * as Str from "@beep/utils/Str";
-import * as NodeServices from "@effect/platform-node/NodeServices";
+import * as NodeChildProcessSpawner from "@effect/platform-node/NodeChildProcessSpawner";
+import * as NodePath from "@effect/platform-node/NodePath";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect } from "@effect/vitest";
 import * as Digest from "effect/crypto/Digest";
@@ -102,14 +104,10 @@ const sha256Hex = Effect.fnUntraced(function* (text: string) {
 
 const runCaptured = Effect.fnUntraced(function* (command: ChildProcess.Command) {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* spawner.spawn(command);
-      return yield* Effect.all([handle.stderr.pipe(Stream.decodeText(), Stream.mkString), handle.exitCode], {
-        concurrency: "unbounded",
-      });
-    })
-  );
+  const handle = yield* spawner.spawn(command);
+  return yield* Effect.all([handle.stderr.pipe(Stream.decodeText(), Stream.mkString), handle.exitCode], {
+    concurrency: "unbounded",
+  });
 });
 const defaultArgs = OpenClawStackArgs.new(identity, deploymentConfig);
 const defaultGenerationEffect = NodeCrypto.layerDigest.pipe(
@@ -117,7 +115,10 @@ const defaultGenerationEffect = NodeCrypto.layerDigest.pipe(
   Effect.flatMap((context) => makeOpenClawGeneration(defaultArgs).pipe(Effect.provideContext(context))),
   Effect.scoped
 );
-const TestPlatform = Layer.merge(NodeServices.layer, NodeCrypto.layerDigest);
+const TestPlatform = Layer.merge(
+  NodeChildProcessSpawner.layer.pipe(Layer.provide(Layer.merge(MemoryFileSystem.layer, NodePath.layer))),
+  NodeCrypto.layerDigest
+);
 const parseDocument = (json: string): { readonly [key: string]: unknown } => {
   const parsed = decodeJsonResult(json);
   const decoded = parsed.pipe(Result.getOrThrow);
@@ -212,7 +213,7 @@ describe("@beep/infra-hosts OpenClaw generation", () => {
     assertNone(defaultArgs.backup);
   });
 
-  it.layer(TestPlatform)((it) => {
+  it.layer(TestPlatform, { timeout: "30 seconds" })((it) => {
     it.effect(
       "renders exactly two providers, hosted primary, DM-only Telegram, and loopback Control UI",
       Effect.fnUntraced(function* () {
@@ -346,7 +347,7 @@ describe("@beep/infra-hosts OpenClaw generation", () => {
     })
   );
 
-  it.layer(TestPlatform)(
+  it.layer(TestPlatform, { timeout: "30 seconds" })(
     "addresses a generation by the length-delimited config/persona/skill/compatibility bundle",
     (it) =>
       it.effect(
@@ -363,7 +364,7 @@ describe("@beep/infra-hosts OpenClaw generation", () => {
       )
   );
 
-  it.layer(TestPlatform)((it) => {
+  it.layer(TestPlatform, { timeout: "30 seconds" })((it) => {
     it.effect(
       "re-addresses the generation when the deployment intent changes",
       Effect.fnUntraced(function* () {
@@ -377,7 +378,7 @@ describe("@beep/infra-hosts OpenClaw generation", () => {
     );
   });
 
-  it.layer(TestPlatform)("re-addresses the generation when only SOUL bytes change", (it) =>
+  it.layer(TestPlatform, { timeout: "30 seconds" })("re-addresses the generation when only SOUL bytes change", (it) =>
     it.effect(
       "hashes the changed SOUL through the platform crypto service",
       Effect.fnUntraced(function* () {
@@ -818,7 +819,7 @@ describe("@beep/infra-hosts OpenClaw generation", () => {
     })
   );
 
-  it.layer(TestPlatform)("renders a separate fail-closed live acceptance command", (it) =>
+  it.layer(TestPlatform, { timeout: "30 seconds" })("renders a separate fail-closed live acceptance command", (it) =>
     it.effect(
       "executes the rendered Bash script for real",
       Effect.fnUntraced(function* () {

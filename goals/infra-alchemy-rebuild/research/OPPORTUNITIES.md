@@ -233,18 +233,17 @@ to the gap between the reference checkout (main) and the pinned release.
 - **Would have prevented it:** the `infra` package kind registering `*.alchemy.run.ts` entries with Fallow
   when it registers `alchemy.run.ts`.
 
-## 2026-11-13: the generated infra-kind tsconfig does not own `alchemy.run.ts`
+## 2026-11-13: code moved out of `infra/` meets the docs lint and JSDoc ratchet for the first time
 
-- **Doing:** the same lane, after the packet gate added `bun run beep lint deprecated-apis --full` and the
-  root docs lint to the lane checks (both had failed `Heavy / Lint Policy` on sibling PRs).
-- **Evidence:** `create-package --kind infra` on `main` writes `tsconfig.json` with `include: ["src"]` and
-  `rootDir: "src"`, so `lint deprecated-apis --full` answered `TypeScript files have no tsconfig owner:` for
-  both entry files; listing them in `tsconfig.test.json` did not help, because ownership is resolved from the
-  directory's `tsconfig.json` and its references. Fixed as the turbo-cache lane did (`include` the entry files,
-  `rootDir: "."`). Separately, about 30 functions moved from `infra/` carried JSDoc without `@param`/`@returns`;
-  the docs lint's zero-warning budget only saw them once they lived under `packages/`.
-- **Would have prevented it:** `create-package --kind infra` emitting the entry-file ownership, and
-  `package-verify` running the docs oxlint rules over the package so the budget fails before hosted CI.
+- **Doing:** P4 hosts lane, moving the OpenClaw renderers from `infra/src/OpenClaw.ts` into
+  `@beep/infra-hosts`.
+- **Evidence:** the root docs lint (`oxlint . --config .oxlintrc.docs.json --max-warnings=0`) reported about
+  30 functions without `@param`/`@returns`, and `jsdoc:ratchet:check` reported
+  `multiple-description-paragraphs: 167 > 157`; the same doc blocks had passed while they lived under `infra/`.
+  Fixed by adding the tags and a `**Details**` section (the ratchet then read 137).
+- **Would have prevented it:** `package-verify` running the docs oxlint rules and the package-scoped JSDoc
+  ratchet, so a move into `packages/` fails before hosted CI.
+
 ## 2026-11-14: the plan cannot show that an AWS services anomaly monitor is an account singleton
 
 - **Doing:** P3 cost controls stack (lane `goals/infra-alchemy-rebuild-p3-cost-controls`); the brief and the
@@ -288,3 +287,44 @@ to the gap between the reference checkout (main) and the pinned release.
 - **Would have prevented it:** a small shared test-kit for `@alchemy.run/test` suites (fake AWS
   environment layer, awsJson `HttpClient` from a route table, typed scratch-stack view, failure
   helpers) that every `@beep/alchemy-*` and `@beep/infra-*` package imports.
+
+## 2026-11-14: hosted Commitlint lints every commit in the PR range
+
+- **Doing:** P2 runner composite lane (`@beep/alchemy-github-runners`), recorded here for that retired lane.
+- **Evidence:** pushed `wip(...)` commits failed hosted Commitlint, which checks every commit in the range; a
+  pushed commit cannot be fixed without a force push, so #3313 was replaced by the squashed #3314.
+- **Would have prevented it:** a lane-local commit-type check before push, or `yeet open` refusing a range that
+  holds a disallowed type.
+
+## 2026-11-14: skipped repo-wide gates hide package-scoped law reds until hosted CI
+
+- **Doing:** the same runner lane, with the repo-wide `final-check` gates skipped under the disk-load rule.
+- **Evidence:** each of these cost a push: schema-first D1 (plain-data `S.Class` must be a branded
+  `S.Opaque`; an untracked advisory row also exits 1), the JSDoc ratchet (a titled Example on each new exported
+  schema; module docs with more than one paragraph), `semantic-delta` reading a backticked goal branch name as a
+  missing path, and oxlint `beep(no-inline-schema-compile)` in test code (#3320).
+- **Would have prevented it:** a cheap package-scoped law-check bundle that the constrained-compute rule allows.
+
+## 2026-11-14: two gates look green while checking nothing
+
+- **Doing:** the same runner lane.
+- **Evidence:** `bunx turbo run lint:schema-first --filter=<pkg>` runs zero tasks and exits 0, because the task is
+  root-declared; `jsdoc:ratchet:check` reads an untracked `.beep/ci` inventory that stays stale until it is
+  regenerated, so it passes or fails on old findings.
+- **Would have prevented it:** both commands refusing to report success when they evaluated nothing or read an
+  inventory older than the working tree.
+
+## 2026-11-14: `yeet open` took a sibling PR's title
+
+- **Doing:** the same runner lane, opening #3313.
+- **Evidence:** `yeet open` titled the PR from the first non-merge commit in the range, which belonged to a
+  sibling PR (#3313 got the title of #3291).
+- **Would have prevented it:** titling from the first commit unique to the head, not reachable from the base or
+  an open sibling.
+
+## 2026-11-14: an orphaned test fixture blocked `sweep --retire`
+
+- **Doing:** retiring the runner lane.
+- **Evidence:** a repo-cli test fixture process (`exchange-crash-writer.ts`) ignored SIGTERM, kept the lane
+  checkout busy and blocked `yeet sweep --retire`.
+- **Would have prevented it:** the fixture exiting on SIGTERM, or the retire fence naming the holding process.
