@@ -23,10 +23,6 @@
     {"file":"infra/src/CiTurboCache.ts","symbol":"CiTurboCachePulumiConfigValues","kind":"schema-class","owner":"@beep/infra","identity":"CiTurboCachePulumiConfigValues","description":"Validated Pulumi configuration for the asymmetric Turbo cache component."},
     {"file":"infra/src/CiTurboCache.ts","symbol":"CiTurboCacheRemediation","kind":"struct-const","owner":"@beep/infra","identity":"CiTurboCacheRemediation","description":"Optional evolved-incumbent settings; omitted fields keep the deployed values."},
     {"file":"infra/src/CiTurboCache.ts","symbol":"TurboCacheLabBucketsInput","kind":"struct-const","owner":"@beep/infra","identity":"TurboCacheLabBucketsInput","description":"Raw lab epoch and incumbent bucket name, validated by resolveTurboCacheLabBuckets."},
-    {"file":"infra/src/OpenClaw.ts","symbol":"OpenClawPulumiConfigValues","kind":"schema-class","owner":"@beep/infra","identity":"OpenClawPulumiConfigValues","description":"Configuration values for OpenClaw Pulumi resources"},
-    {"file":"infra/src/Storybook.ts","symbol":"StorybookPulumiConfigValues","kind":"schema-class","owner":"@beep/infra","identity":"StorybookPulumiConfigValues","description":"Optional Pulumi config values before Storybook deploy defaults are applied."},
-    {"file":"infra/src/Storybook.ts","symbol":"StorybookStackArgs","kind":"struct-const","owner":"@beep/infra","identity":"StorybookStackArgs","description":"Pulumi-facing args for the Storybook Vercel stack."},
-    {"file":"infra/src/Storybook.ts","symbol":"StorybookVercelProjectConfig","kind":"struct-const","owner":"@beep/infra","identity":"StorybookVercelProjectConfig","description":"Vercel project configuration for @beep/storybook."},
-    {"file":"infra/src/Vercel.ts","symbol":"VercelAuthenticationDeploymentType","kind":"literal-kit","owner":"@beep/infra","identity":"VercelAuthenticationDeploymentType","description":"Vercel deployment authentication modes accepted by infra-managed projects."}
+    {"file":"infra/src/OpenClaw.ts","symbol":"OpenClawPulumiConfigValues","kind":"schema-class","owner":"@beep/infra","identity":"OpenClawPulumiConfigValues","description":"Configuration values for OpenClaw Pulumi resources"}
   ]
 }

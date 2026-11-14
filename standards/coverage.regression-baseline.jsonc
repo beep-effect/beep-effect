@@ -15729,15 +15729,15 @@
     },
     "@beep/infra": {
       "path": "infra",
-      "lines": 85.46,
-      "statements": 85.64,
-      "branches": 98,
-      "functions": 92.12,
+      "lines": 86.9,
+      "statements": 87.2,
+      "branches": 100,
+      "functions": 94.16,
       "uncovered": {
-        "lines": 91,
-        "statements": 92,
-        "branches": 1,
-        "functions": 10
+        "lines": 77,
+        "statements": 77,
+        "branches": 0,
+        "functions": 7
       },
       "files": {
         "infra/src/AIMetrics.ts": {
@@ -15848,30 +15848,6 @@
             "functions": 0
           }
         },
-        "infra/src/Storybook.ts": {
-          "lines": 70,
-          "statements": 67.74,
-          "branches": 75,
-          "functions": 57.14,
-          "uncovered": {
-            "lines": 9,
-            "statements": 10,
-            "branches": 1,
-            "functions": 3
-          }
-        },
-        "infra/src/Vercel.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "infra/src/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -15940,18 +15916,6 @@
           "uncovered": {
             "lines": 19,
             "statements": 19,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "infra/src/internal/storybook-entry.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 5,
-            "statements": 5,
             "branches": 0,
             "functions": 0
           }

@@ -143,31 +143,3 @@ export * from "./OpenClaw.ts";
  * @since 0.0.0
  */
 export * from "./OpenClawArtifacts.ts";
-/**
- * Storybook Pulumi orchestration exports.
- *
- * @example
- * ```ts
- * import { StorybookStack } from "@beep/infra"
- *
- * console.log(StorybookStack)
- * ```
- *
- * @category resources
- * @since 0.0.0
- */
-export * from "./Storybook.ts";
-/**
- * Shared Vercel provider schemas for infra stacks.
- *
- * @example
- * ```ts
- * import { VercelAuthenticationDeploymentType } from "@beep/infra"
- *
- * console.log(VercelAuthenticationDeploymentType.Enum.none)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export * from "./Vercel.ts";

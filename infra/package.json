@@ -48,8 +48,7 @@
     "@pulumi/aws": "catalog:",
     "@pulumi/command": "catalog:",
     "@pulumi/gharunners": "file:ci-runners/sdks/ghaRunners",
-    "@pulumi/pulumi": "catalog:",
-    "@pulumiverse/vercel": "catalog:"
+    "@pulumi/pulumi": "catalog:"
   },
   "devDependencies": {
     "@beep/test-runner": "workspace:^",
