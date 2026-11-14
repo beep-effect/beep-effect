@@ -1116,3 +1116,41 @@ startup error; generation 1 is still served.
 D5 verdict: not met, by D41's standing half. Every case passes and D49's invariant holds, on six
 local patches that are not upstream. Open for the operator: the upstream set (D52), whether this
 pass meets the D16 gate, and the rule for a write sent to a frozen runner.
+
+## 2026-11-14 — D53 the graduation gate and the patched pass (settles D16's last item)
+
+**Question:** Every conformance case passes on the Postgres swarm host on one build, on six local
+patches to Alchemy that are not upstream. Does this pass meet the graduation gate?
+
+**Answer:** The gate is met; retirement waits. The patched pass counts as D16's conformance item,
+so the packet can move toward graduation. Retiring `@beep/alchemy-postgres` (D5) still waits until
+the fixes are in an upstream release, as D41 says.
+
+**Rationale:** `research/19`. The gate asks whether the design holds on a real host, and the
+patches show what the host needs for it to hold; retirement asks whether the repo can depend on
+what upstream ships. Rejected: holding the packet at shape until upstream lands; retiring the
+repo-owned platform on patches carried in the monorepo. Recommended answer accepted.
+
+## 2026-11-14 — D54 the upstream set is read before it is sent (follows D52)
+
+**Question:** Six patches and three write-ups are saved in the prototype. What next?
+
+**Answer:** Show the operator the set. A startup error for an unnamed runner pool is added to the
+fence first. Nothing is posted until the operator says so.
+
+**Rationale:** The fence refuses every commit on an unnamed pool, which is correct and silent; a
+maintainer should get a loud failure at start. Rejected: holding the set unread; stopping the lane.
+Recommended answer accepted.
+
+## 2026-11-14 — D55 a write sent to a frozen runner (beside D42)
+
+**Question:** A write sent to a runner while it is frozen waits for that runner: its client gave up
+at 60 s, and the write was stored exactly once after the runner resumed. What is the rule?
+
+**Answer:** State it as the guarantee. A write to a frozen runner completes or fails within the
+caller's retry budget, is never stored twice, and a retry under the same id gets its receipt. A
+case asserts exactly that. No library change.
+
+**Rationale:** The same reasoning as D42: the property that matters is no loss and no duplication
+within a stated bound. Rejected: changing the caller to resend a stuck write to the runner that
+holds the shard. Recommended answer accepted.

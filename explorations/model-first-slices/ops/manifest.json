@@ -6,9 +6,9 @@
     "status": "active",
     "stage": "shape",
     "openQuestions": [
-      "Operator: every conformance case now passes on the Postgres swarm host, on six local patches (research/19). Does that meet the D16 graduation gate, with D5's retirement of the repo-owned platform waiting on upstream?",
-      "Operator: the upstream set under the prototype's notes/upstream/ (patches 01 to 03 and 06 to 08, write-ups 04, 05 and 09). D52: the operator reads it before anything goes out. None is posted.",
-      "Operator: a write sent to a runner while it is paused waits for that runner and its client gives up at 60 s; it is stored once after the resume. State that as the guarantee, or reroute?",
+      "Operator: read the upstream set under the prototype's notes/upstream/ and say whether any of it is sent (D54). None is posted.",
+      "D16 gate met (D53). Next: bring BRIEF.md and the artifact up to D55 for the shape review, then decompose toward goal packets.",
+      "WAITING on upstream: retiring @beep/alchemy-postgres (D5) needs the six fixes in an Alchemy release.",
       "DEFERRED: browser session credentials, tenant and cache clearing (outside the D16 gate).",
       "Shape review: BRIEF.md and the artifact have not been confirmed in words by the operator."
     ],

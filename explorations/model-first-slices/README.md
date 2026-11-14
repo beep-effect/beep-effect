@@ -17,23 +17,25 @@ system alongside people?
 
 ## Next Open Question
 
-After phase 11 every conformance case passes on the Postgres swarm host on one build, and the
-commit fence's invariant held in six of six runs. The pass rests on six local patches, none sent
-upstream. Open for the operator: whether this pass meets the D16 graduation gate while D5's
-retirement of the repo-owned platform waits on upstream; the upstream set under the prototype's
-`notes/upstream/`, which the operator reads before anything goes out (D52); and the rule for a
-write sent to a frozen runner. [`BRIEF.md`](./BRIEF.md) has not been confirmed in words.
+The graduation gate is met (D53): every conformance case passes on the Postgres swarm host, on six
+local patches. Retiring the repo-owned platform (D5) waits on an upstream release. Next for the
+operator: read the upstream set under the prototype's `notes/upstream/` and say whether any of it
+is sent (D54). After that the shape review: [`BRIEF.md`](./BRIEF.md) and the artifact predate D24
+to D55 and have not been confirmed in words.
 
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
 2. [`CAPTURE.md`](./CAPTURE.md) - the operator's brief and ground rules.
 3. [`RESEARCH.md`](./RESEARCH.md) - the proposal, the prototype, the outside reviews.
-4. [`DECISIONS.md`](./DECISIONS.md) - grilling log, D1 to D52.
+4. [`DECISIONS.md`](./DECISIONS.md) - grilling log, D1 to D55.
 5. [`BRIEF.md`](./BRIEF.md) - shaped pitch, awaiting the operator's confirmation.
 
 ## Trail
 
+- 2026-11-14: D53 to D55: the patched pass meets the D16 gate while D5's retirement waits on
+  upstream; the operator reads the upstream set before anything is sent; a write to a frozen runner
+  is covered by a stated guarantee.
 - 2026-11-14: phase 11 built D49 to D51 and reran the cluster suite on one build. Naming the
   runner's pool makes the fence exact: the invariant held in six of six runs. The drain check reads
   any publisher's backlog, the retirement check allows retiring generation 1 (not done), and a real
