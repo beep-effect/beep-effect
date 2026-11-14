@@ -107,6 +107,22 @@ const requiredChecksJson = Result.getOrThrowWith(
   ]),
   identity
 );
+// A failing check whose own name and description quote an old gh's flag error.
+const quotedFlagErrorChecksJson = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))([
+    {
+      bucket: "fail",
+      completedAt: "2026-09-25T11:53:05Z",
+      description: "unknown flag: --json",
+      link,
+      name: "unknown flag: --json",
+      startedAt: "2026-09-25T11:27:04Z",
+      state: "FAILURE",
+      workflow: "Check",
+    },
+  ]),
+  identity
+);
 const threadsJson = Result.getOrThrowWith(
   S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
     data: {
@@ -323,6 +339,43 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("--until-ready check fidelity
         ["Check / Coverage", link, "Check", "fail", "FAILURE"],
         ["Vercel", null, null, "fail", "FAILURE"],
       ]);
+    })
+  );
+
+  it.effect("names a gh that rejects --json instead of returning an unreadable census", () =>
+    Effect.gen(function* () {
+      const root = yield* tempRoot();
+      // gh 2.46.0's own answer: the flag error, then its usage text, exit 1.
+      const oldGh = ScriptedSpawner.make((command, args) =>
+        command === "gh" && isPrChecks(args)
+          ? { stderr: "unknown flag: --json\n\nUsage:  gh pr checks [<number> | <url> | <branch>] [flags]\n", exit: 1 }
+          : {}
+      );
+      const failure = yield* collectRemoteChecksForTesting(contextFor(root), true).pipe(withGh(oldGh), Effect.flip);
+      expect(failure.message).toContain("gh pr checks --json");
+
+      // A head with no checks yet is still a complete, empty census.
+      const noChecks = ScriptedSpawner.make((command, args) =>
+        command === "gh" && isPrChecks(args)
+          ? { stderr: "no checks reported on the 'feature/fidelity' branch", exit: 1 }
+          : {}
+      );
+      const census = yield* collectRemoteChecksForTesting(contextFor(root), false).pipe(withGh(noChecks));
+      assertSome(census, []);
+
+      // A red check that quotes the flag error is still a census: JSON decodes
+      // first, and gh exits non-zero for any failing check.
+      const quoting = ScriptedSpawner.make((command, args) =>
+        command === "gh" && isPrChecks(args) ? { stdout: quotedFlagErrorChecksJson, exit: 1 } : {}
+      );
+      const quoted = yield* collectRemoteChecksForTesting(contextFor(root), false).pipe(withGh(quoting));
+      assertSome(
+        O.map(
+          quoted,
+          A.map((row) => row.name)
+        ),
+        ["unknown flag: --json"]
+      );
     })
   );
 });
