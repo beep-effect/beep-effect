@@ -264,9 +264,10 @@ anticipates the class (for example a `[.border-b]:pb-6` hook).
   The screenshot diff is what caught this; a `--text-*` token without a `cn` registration
   renders at the inherited size.
 - Adding a root script changes the scripts digest of every cached root task. Re-record
-  `standards/cache-qualification-baseline.json` through a reviewed `beep cache baseline --request`;
-  the review is stamped only on the subjects (packages or `//`) whose posture changed, so a PR
-  re-recording its own package merges cleanly with one that re-recorded another.
+  `standards/cache-baseline/` through a reviewed `beep cache baseline --request`; the review is
+  stamped only on the subjects (packages or `//`) whose posture changed, each subject has its own
+  file, and `previous` names only the digests of the files the request replaces, so a PR
+  re-recording its own package neither conflicts with nor invalidates one that re-recorded another.
 
 ## CI
 

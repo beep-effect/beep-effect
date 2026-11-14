@@ -47,7 +47,7 @@ const SAMPLE_CHANGED_FILES = [
   "standards/jsdoc-documentation.inventory.jsonc",
   "standards/schema-first.inventory.jsonc",
   "standards/policy-tools.fingerprint.json",
-  "standards/cache-qualification-baseline.json",
+  "standards/cache-baseline/@beep/identity.json",
   "standards/fallow.boundaries.generated.jsonc",
   "standards/check-census.regression-baseline.jsonc",
   "standards/root-package.projection.generated.json",
@@ -71,6 +71,25 @@ describe("coverage owners for generated standards inventories", () => {
         packageNames: ["@beep/repo-cli"],
         dependentPackageNames: [],
       });
+    });
+
+    it("routes every per-subject cache baseline file to @beep/repo-cli alone, as the single file was", () => {
+      const selected = { _tag: "selected", packageNames: ["@beep/repo-cli"], dependentPackageNames: [] };
+      for (const file of [
+        "standards/cache-baseline/_root.json",
+        "standards/cache-baseline/@beep/repo-configs.json",
+        "standards/cache-baseline/@beep/identity.json",
+      ]) {
+        expect(planCoverageAffectedScope(owners, [file])).toEqual(selected);
+      }
+      expect(
+        planCoverageAffectedScope(owners, [
+          "standards/cache-baseline/_root.json",
+          "standards/cache-baseline/@beep/identity.json",
+          "standards/policy-tools.fingerprint.json",
+        ])
+      ).toEqual(selected);
+      expect(planCoverageAffectedScope(owners, ["standards/cache-baseline.json"])._tag).toBe("full");
     });
 
     it("keeps an unmapped standards file on the full fallback", () => {
@@ -133,7 +152,7 @@ describe("coverage owners for generated standards inventories", () => {
       expect(
         coverageSourceReadsPath(
           source("a.ts", 'const tag = "cache-qualification-baseline/v2";'),
-          "standards/cache-qualification-baseline.json"
+          "standards/cache-baseline"
         )
       ).toBe(false);
     });

@@ -101,7 +101,7 @@ export const COVERAGE_GENERATED_STANDARDS_OWNER_ROWS: ReadonlyArray<readonly [st
   ["standards/jsdoc-documentation.inventory.jsonc", "standards/jsdoc-documentation.inventory.jsonc", "@beep/repo-cli"],
   ["standards/schema-first.inventory.jsonc", "standards/schema-first.inventory.jsonc", "@beep/repo-cli"],
   ["standards/policy-tools.fingerprint.json", "standards/policy-tools.fingerprint.json", "@beep/repo-cli"],
-  ["standards/cache-qualification-baseline.json", "standards/cache-qualification-baseline.json", "@beep/repo-cli"],
+  ["standards/cache-baseline", "standards/cache-baseline/**", "@beep/repo-cli"],
   ["standards/fallow.boundaries.generated.jsonc", "standards/fallow.boundaries.generated.jsonc", "@beep/repo-cli"],
   [
     "standards/check-census.regression-baseline.jsonc",

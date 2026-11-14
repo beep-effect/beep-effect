@@ -230,7 +230,7 @@ const defaultBaselineRequest = CacheBaselineRequest.make({
   profile: baseline.profile,
   epoch: baseline.epoch,
   subjects: O.none(),
-  previous: O.none(),
+  previous: {},
 });
 
 const consoleText = TestConsole.logLines.pipe(Effect.map(A.filter(P.isString)), Effect.map(A.join("\n")));

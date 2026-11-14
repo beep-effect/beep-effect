@@ -50,12 +50,12 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { writeCachePolicyBaselineFixture } from "./helpers/cache-baseline-files.ts";
 import { makePublishedAcceptanceFixture, PublishedContentClient } from "./helpers/cache-hosted-publication-fixture.ts";
 import { canaryInput, contractInput, input } from "./helpers/cache-producer-bundle-fixture.ts";
 
 const ActivationPreviewJson = S.fromJsonString(CacheActivationPreview);
 const AcceptanceReferenceJson = S.fromJsonString(CacheProducerAcceptanceReference);
-const PolicyBaselineJson = S.fromJsonString(CachePolicyBaseline);
 const QualificationStoreJson = S.fromJsonString(CacheQualificationStore);
 
 const platform = Layer.mergeAll(
@@ -284,9 +284,7 @@ it.layer(CacheQualificationLive.pipe(Layer.provideMerge(platform)), { timeout: "
             }),
           });
           yield* fs.makeDirectory(path.join(root, "standards"));
-          const argument = path.join(root, "standards/cache-qualification-baseline.json");
-          const value1 = yield* S.encodeEffect(PolicyBaselineJson)(baseline);
-          yield* fs.writeFileString(argument, value1);
+          yield* writeCachePolicyBaselineFixture(root, baseline);
           const candidate = CacheQualificationEntry.make({
             key: contract.key,
             status: { state: "candidate", contract, review },
