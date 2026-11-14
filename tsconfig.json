@@ -2534,6 +2534,12 @@
       ],
       "@beep/sqlite": ["./packages/drivers/sqlite/src/index.ts"],
       "@beep/sqlite/*": ["./packages/drivers/sqlite/src/*"],
+      "@beep/alchemy-aws-extras": [
+        "./packages/tooling/library/alchemy-aws-extras/src/index.ts"
+      ],
+      "@beep/alchemy-aws-extras/*": [
+        "./packages/tooling/library/alchemy-aws-extras/src/*"
+      ],
       "@beep/infra-turbo-cache": [
         "./packages/tooling/infra/turbo-cache/src/index.ts"
       ],

@@ -63,4 +63,21 @@ it.layer(citationTokenizerTestLayer)("captured extraction report timing", (it) =
       { timeout: 60000 }
     );
   });
+  it.effect("refuses a malformed source extraction configuration at installation", () =>
+    Effect.gen(function* () {
+      const { setup, provided } = yield* installCitationDefaultConfigurationFixture("bun");
+      const unused = SourceTextResolver.of({
+        resolve: Effect.fn("ExtractionReportTest.unusedSource")(() => Effect.die("resolver is not reached")),
+      });
+      const refused = yield* makeCitationSourceExtraction(setup.limits, setup.runtime, { extraction: null }).pipe(
+        Effect.provideContext(provided),
+        Effect.provideService(SourceTextResolver, unused),
+        DateTime.withCurrentZoneOffset(0),
+        Effect.flip
+      );
+      expect(refused).toMatchObject({ _tag: "CitationVerifiedExtractionFailure", reason: "invalid-configuration" });
+      const workers = yield* setup.observed.snapshot;
+      expect(workers).toEqual({ spawned: 0, confirmed: 0 });
+    })
+  );
 });

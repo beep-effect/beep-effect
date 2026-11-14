@@ -682,6 +682,7 @@
     "packages/tooling/library/ai-metrics/package.json",
     "packages/tooling/library/ai-sync/package.json",
     "packages/tooling/library/ai-sync/src/**",
+    "packages/tooling/library/alchemy-aws-extras/package.json",
     "packages/tooling/library/codegen-kit/package.json",
     "packages/tooling/library/mcpb-kit/package.json",
     "packages/tooling/library/palantiri/package.json",

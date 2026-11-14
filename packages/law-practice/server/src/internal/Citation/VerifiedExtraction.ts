@@ -88,10 +88,18 @@ export class CitationVerifiedExtractionResult extends S.Opaque<
 ) {}
 const own = Effect.fn("Citation.ownVerifiedExtraction")(function* (
   limits: CitationEngineLimits,
-  configuration: CitationVerifiedExtractionConfiguration
+  configuration: CitationVerifiedExtractionConfiguration,
+  runtime: CitationNativeProcessRuntime
 ) {
   const extracted = yield* ownCitationSemanticExtraction(limits, configuration.extraction);
-  return { ...extracted, engineArtifact: configuration.engineArtifact };
+  return yield* Effect.gen(function* () {
+    // Installed once; an install failure surfaces where each request used to install it.
+    const stage = yield* Effect.exit(makeCitationSemanticExtraction(limits, runtime, extracted.config));
+    const projection = yield* Effect.exit(
+      makeCitationOccurrenceProjection(limits, runtime, { engineArtifact: configuration.engineArtifact })
+    );
+    return { ...extracted, engineArtifact: configuration.engineArtifact, stage, projection };
+  }).pipe(Effect.provideContext(extracted.children));
 });
 const sourcesFor = (source: VerifiedSourceText, role: CitationSourceRole, companion: VerifiedSourceText | null) =>
   role === "plain" ? { plain: source, markup: companion } : { plain: companion, markup: source };
@@ -109,7 +117,7 @@ const parentFor = (sources: ReturnType<typeof sourcesFor>, fallback: VerifiedSou
   sources.markup !== null && !Str.isEmpty(sources.markup.sourceText) ? sources.markup : (sources.plain ?? fallback);
 const prepare = Effect.fn("Citation.extractVerifiedPrimitiveSource")(function* (
   limits: CitationEngineLimits,
-  runtime: CitationNativeProcessRuntime,
+  _runtime: CitationNativeProcessRuntime,
   owned: Effect.Success<ReturnType<typeof own>>,
   raw: unknown
 ) {
@@ -124,10 +132,8 @@ const prepare = Effect.fn("Citation.extractVerifiedPrimitiveSource")(function* (
         Effect.asSome
       );
   return yield* Effect.gen(function* () {
-    const stage = yield* makeCitationSemanticExtraction(limits, runtime, owned.config);
-    const projection = yield* makeCitationOccurrenceProjection(limits, runtime, {
-      engineArtifact: owned.engineArtifact,
-    });
+    const stage = yield* owned.stage;
+    const projection = yield* owned.projection;
     if (O.isNone(modes)) {
       const semantic = yield* stage.extract({ plain: "eyecite" });
       const source = yield* retainCitationCanonicalSource(identity.source);
