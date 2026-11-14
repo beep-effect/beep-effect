@@ -44,8 +44,8 @@ GATE C), research legs + adversarial review.
 ## Current Phase
 
 P2 Generation engine + applicator — **in progress: code surface landed**
-(`infra/src/OpenClaw.ts` + `infra/openclaw` project on
-`goals/openclaw-p2-generation`): pure generation renderers, the staged
+(`infra/src/OpenClaw.ts` + `infra/openclaw` project, landed from the
+`openclaw-p2-generation` branch in #490): pure generation renderers, the staged
 upgrade applicator (stopped-state WAL snapshot → atomic pointer switch →
 bounded health wait → restore-on-failure, `user_version` downgrade guard),
 fail-closed identity-binding preflight with armed-sudo assertion, alert-only

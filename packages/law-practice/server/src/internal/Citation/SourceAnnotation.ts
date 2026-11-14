@@ -82,9 +82,10 @@ export class CitationSourceAnnotationResult extends S.Opaque<
 ) {}
 const own = Effect.fn("Citation.ownSourceAnnotation")(function* (
   limits: CitationEngineLimits,
-  configuration: CitationAnnotationEntryConfiguration
+  configuration: CitationAnnotationEntryConfiguration,
+  runtime: CitationNativeProcessRuntime
 ) {
-  const annotation = yield* ownCitationAnnotationEntry(limits, configuration);
+  const annotation = yield* ownCitationAnnotationEntry(limits, configuration, runtime);
   const evidence = yield* makeCitationSourceEvidence(limits);
   return { annotation, evidence };
 });

@@ -1438,7 +1438,7 @@ const yeetReadyCommand = Command.make("ready", { ...porcelainFlags, inherited: r
 const finalCheckGatesFlag = Flag.String("gates").pipe(
   Flag.atMost(16),
   Flag.withDescription(
-    "Run only these final-check gates (comma separated or repeated); a subset writes an incomplete receipt that never admits yeet ready"
+    "Run only these final-check gates (comma separated or repeated); a subset writes an incomplete receipt to its own file under .beep/yeet/final-check/subsets/<head>/, never admits yeet ready, and leaves the head receipt as it was"
   )
 );
 

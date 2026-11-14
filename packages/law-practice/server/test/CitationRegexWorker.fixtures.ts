@@ -7,7 +7,7 @@ import {
   CitationNativeProcessAdmission,
   makeCitationNativeProcessAdmission,
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
-import { makeCitationRegexWorker } from "@beep/law-practice-server/internal/Citation/RegexWorker";
+import { installCitationRegexEvaluator } from "@beep/law-practice-server/internal/Citation/RegexWorker";
 import { CitationTokenContextInput } from "@beep/law-practice-server/internal/Citation/TokenContext";
 import { CitationPythonUnicodeStorage, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
@@ -192,7 +192,7 @@ export const setupCitationRegexWorker = Effect.fn("RegexWorkerTest.setup")(funct
     patternUtf16
   );
 
-  const worker = yield* makeCitationRegexWorker(limits, runtime, bindings, engineInput).pipe(
+  const worker = yield* installCitationRegexEvaluator(limits, runtime, bindings, engineInput).pipe(
     Effect.flatMap((stage) =>
       makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) })))
     ),

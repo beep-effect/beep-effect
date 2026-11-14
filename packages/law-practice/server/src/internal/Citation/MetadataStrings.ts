@@ -178,5 +178,5 @@ export const makeCitationMetadataStrings = Effect.fn("Citation.makeMetadataStrin
     });
     return matched.match !== null || source.value.pythonLength === 0 ? null : source.value.storage;
   }, timing.timed);
-  return { cleanPinCite, inspectPinCite, stripWhitespace, parenthetical, snapshot: year.snapshot };
+  return { cleanPinCite, inspectPinCite, stripWhitespace, parenthetical };
 });

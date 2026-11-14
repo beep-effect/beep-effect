@@ -255,7 +255,8 @@ const generatedComposers = $I.compose(
   "execution-authority-config",
   "eyecite",
   "agent-memory-store",
-  "sqlite"
+  "sqlite",
+  "alchemy-aws-extras"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -3806,3 +3807,20 @@ export const $AgentMemoryStoreId: Identity.IdentityComposer<"@beep/agent-memory-
  * @since 0.0.0
  */
 export const $SqliteId: Identity.IdentityComposer<"@beep/sqlite"> = composers.$SqliteId;
+
+/**
+ * Identity composer for `@beep/alchemy-aws-extras`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $AlchemyAwsExtrasId } from "@beep/identity/packages"
+ *
+ * const id = $AlchemyAwsExtrasId.make("AlchemyAwsExtras")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $AlchemyAwsExtrasId: Identity.IdentityComposer<"@beep/alchemy-aws-extras"> = composers.$AlchemyAwsExtrasId;
