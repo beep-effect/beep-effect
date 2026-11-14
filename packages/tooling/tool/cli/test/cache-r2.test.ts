@@ -637,9 +637,12 @@ const probeFileSystem = (state: { ran: boolean }, summary: string) =>
     chmod: () => Effect.void,
   });
 
-const acceptingFetch = (calls: Array<string>): typeof globalThis.fetch =>
+// A named fetch type keeps the global's name out of arrow-return position, where the isolation
+// census pattern would read the arrow as an assignment to that global.
+type FetchFunction = typeof globalThis.fetch;
+const acceptingFetch = (calls: Array<string>): FetchFunction =>
   Object.assign(
-    (input: Parameters<typeof globalThis.fetch>[0]) => {
+    (input: Parameters<FetchFunction>[0]) => {
       calls.push(input instanceof Request ? input.url : `${input}`);
       return Promise.resolve(new Response(null, { status: 201 }));
     },
