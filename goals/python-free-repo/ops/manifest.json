@@ -99,7 +99,7 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): Hygiene work with no execution yet and no urgency. Resume with `bun run beep goals set-status python-free-repo active` when it is picked up.",
+  "statusNote": "Completed 2026-11-14 by #3322 (final PR), after #3283, #3293 and #3296: no tracked Python remains and the no-tracked-python law bans it. Retained for the references other packets make to its SPEC, decisions and research.",
   "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 3322
