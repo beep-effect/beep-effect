@@ -40145,6 +40145,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.inference.ts": {
+          "lines": 97.42,
+          "statements": 97.36,
+          "branches": 98.3,
+          "functions": 91.07,
+          "uncovered": {
+            "lines": 5,
+            "statements": 6,
+            "branches": 1,
+            "functions": 5
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.model-store.ts": {
           "lines": 84.43,
           "statements": 84.5,
@@ -40155,6 +40167,18 @@
             "statements": 33,
             "branches": 22,
             "functions": 21
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.onnx.ts": {
+          "lines": 100,
+          "statements": 99.56,
+          "branches": 93.44,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 4,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts": {
