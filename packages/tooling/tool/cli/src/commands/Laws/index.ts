@@ -54,6 +54,20 @@ export * from "./MarkdownFences.model.ts";
  */
 export * from "./MarkdownFences.ts";
 /**
+ * No-tracked-python law schemas and the banned file extensions.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./NoTrackedPython.model.ts";
+/**
+ * No-tracked-python law: path predicate and git index runner.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./NoTrackedPython.ts";
+/**
  * Private home path law schemas, placeholder users, and sealed-archive exemptions.
  *
  * @category models
