@@ -83,6 +83,13 @@ load average was under 8 and more than 16 GiB was available, one at a time.
 
 ## P12/P11 opaque-roundtrips
 
+**Gate status: paid in part.** Paid: the aliased-assertion fixture
+(`packages/tooling/tool/cli/test/lint-opaque-roundtrips.test.ts`) and a pre/post digest over four
+sampled packages. **Not paid, and it stays open** on the SPEC LINT-04 lever row and acceptance item:
+the whole-repo pre-#3019 digest. The pre-change checker reached 14 GiB after 47 minutes on this
+31 GiB worker and was stopped. A run on a host with more than 21 GB free pays it. The sample
+below is not the full gate.
+
 - **Where the gate's numbers come from:** #3019's PR body ("a digest over 814 assertions (sorted
   scope, operand opaque names, raw flags), 42 diagnostics and the findings JSON is identical");
   the skeptic pass copied them with the truncated sha `44b7c59c9033de74`. Neither records the
