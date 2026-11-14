@@ -4,13 +4,13 @@
     "id": "citation-engine-install-once",
     "packetId": "goal-packet/v1:25b1edf0fdaf7e397929ffcc5d92187ab35670228ddf18f0c79ff5ac4ba7f6dd",
     "title": "Citation Engine Install Once",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-12",
     "updated": "2026-11-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/citation-engine-install-once",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Install the citation stage tree, tokenizer and regex evaluators once per engine, bind each request's budget, Scope and admission through one invocation service, and own configuration once at the engine boundary, with no change to extraction results.",
   "statusNote": "All four slices are merged: A1 #3253, A2 #3265, A3 #3282, A4 #3319. Per request the engine performs 0 stage installs, 0 tokenizer builds, 0 evaluator installs and 0 configuration detaches; engine construction performs 1 detach (10 at A3), 1 tokenizer build, 16 installs and 26 evaluator installs. Extraction output, the public engine shape and limit values are unchanged; 291 regex evaluations and child processes per ten calls remain for citation-regex-worker-v3. #3319 merged over one accepted red, Heavy / Coverage Regression (not a required check), on six re-baselined rows; see the 2026-11-14 re-baseline decision. Reflection: history/reflections/2026-11-14-claude.md.",
   "executionCapable": true,
@@ -24,7 +24,13 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 3335,
+        "role": "final"
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -73,7 +79,7 @@
     {
       "id": "P4",
       "name": "Close",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -87,5 +93,9 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3335
+  }
 }
