@@ -26,6 +26,7 @@ import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -71,6 +72,7 @@ import {
   knowledgeInSequenceOrder,
   materializeKnowledgeTree,
   materializeKnowledgeTreePaths,
+  materializeKnowledgeTreeWhere,
   readKnowledgeGitRefNames,
 } from "./Knowledge.service.ts";
 import {
@@ -86,6 +88,7 @@ import {
 import {
   cacheKnowledgeDoctorDomain,
   deriveKnowledgeDoctorDomain,
+  deriveKnowledgeDoctorDomainFromPaths,
   knowledgeDomainWithout,
   knowledgeDomainWitnessHolds,
 } from "./KnowledgeDoctor.domain.ts";
@@ -275,15 +278,25 @@ export interface KnowledgeEvaluator {
  * @since 0.0.0
  */
 export const makeKnowledgeTreeEntryIndex = (entries: ReadonlyArray<KnowledgeTrackedEntry>): KnowledgeTreeEntryIndex => {
-  const paths = HashSet.fromIterable(A.map(entries, (entry) => entry.path));
-  const directories = HashSet.fromIterable(
-    A.flatMap(entries, (entry) => {
-      const segments = A.dropRight(Str.split("/")(entry.path), 1);
-      return A.map(segments, (_, index) => A.join(A.take(segments, index + 1), "/"));
-    })
-  );
-  return { paths, directories };
+  const directories = MutableHashSet.empty<string>();
+  for (const entry of entries) {
+    // Walk the parent chain deepest first and stop at the first directory already indexed: it was
+    // added together with every one of its own parents, so the rest of the chain is present too.
+    let parent = parentTreeDirectory(entry.path);
+    while (O.isSome(parent) && !MutableHashSet.has(directories, parent.value)) {
+      MutableHashSet.add(directories, parent.value);
+      parent = parentTreeDirectory(parent.value);
+    }
+  }
+  return {
+    paths: HashSet.fromIterable(A.map(entries, (entry) => entry.path)),
+    directories: HashSet.fromIterable(directories),
+  };
 };
+
+// The directory that contains a tracked path: everything before its last `/`, or none at the top level.
+const parentTreeDirectory = (repoPath: string): O.Option<string> =>
+  O.map(Str.lastIndexOf("/")(repoPath), (index) => Str.slice(0, index)(repoPath));
 
 /**
  * The Effect CLI built-in global flags every `beep` command accepts.
@@ -963,15 +976,59 @@ export const KNOWLEDGE_DOCTOR_EVALUATORS: ReadonlyArray<KnowledgeEvaluator> = [
  * Counterfactual overlay and harness
  * ---------------------------------------------------------------------------------------------- */
 
-const withTrackedEntries = (
-  tree: KnowledgeDoctorTree,
-  entries: ReadonlyArray<KnowledgeTrackedEntry>
-): KnowledgeDoctorTree => ({
-  ...tree,
-  trackedEntries: entries,
-  entryIndex: makeKnowledgeTreeEntryIndex(entries),
-  domain: deriveKnowledgeDoctorDomain({ ...tree, trackedEntries: entries }),
-});
+const isAtOrBelowTreePath =
+  (repoPath: string) =>
+  (candidate: string): boolean =>
+    Str.equivalence(candidate, repoPath) || Str.startsWith(`${repoPath}/`)(candidate);
+
+// Removes one path and everything below it. The entry index is updated in place of a rebuild, so one
+// counterfactual costs a pass over the entry list rather than re-indexing every tracked path: the
+// removed entries leave `paths`, every directory at or below the removed path leaves `directories`
+// (all of its entries were removed), and an ancestor of the removed path stays exactly when some
+// kept entry still lies beneath it. `makeKnowledgeTreeEntryIndex(kept)` is the specification.
+const withoutTrackedPath = (tree: KnowledgeDoctorTree, removedPath: string): KnowledgeDoctorTree => {
+  const isRemoved = isAtOrBelowTreePath(removedPath);
+  const removed = A.filter(tree.trackedEntries, (entry) => isRemoved(entry.path));
+  if (A.isReadonlyArrayEmpty(removed)) {
+    return tree;
+  }
+  const kept = A.filter(tree.trackedEntries, (entry) => !isRemoved(entry.path));
+  const removedBelow = MutableHashSet.empty<string>();
+  for (const entry of removed) {
+    let parent = parentTreeDirectory(entry.path);
+    while (O.isSome(parent) && isRemoved(parent.value) && !MutableHashSet.has(removedBelow, parent.value)) {
+      MutableHashSet.add(removedBelow, parent.value);
+      parent = parentTreeDirectory(parent.value);
+    }
+  }
+  // Deepest ancestor first: once one still holds a kept entry, every shallower one does as well.
+  const emptiedAncestors: Array<string> = [];
+  let ancestor = parentTreeDirectory(removedPath);
+  while (O.isSome(ancestor)) {
+    const isBelow = Str.startsWith(`${ancestor.value}/`);
+    if (A.some(kept, (entry) => isBelow(entry.path))) {
+      break;
+    }
+    emptiedAncestors.push(ancestor.value);
+    ancestor = parentTreeDirectory(ancestor.value);
+  }
+  // Per-value removal touches one trie path each; `HashSet.difference` would re-filter the whole set.
+  const removeAll = (set: HashSet.HashSet<string>, values: Iterable<string>): HashSet.HashSet<string> =>
+    A.reduce(A.fromIterable(values), set, (rest, value) => HashSet.remove(rest, value));
+  const paths = removeAll(
+    tree.entryIndex.paths,
+    A.map(removed, (entry) => entry.path)
+  );
+  return {
+    ...tree,
+    trackedEntries: kept,
+    entryIndex: {
+      paths,
+      directories: removeAll(removeAll(tree.entryIndex.directories, removedBelow), emptiedAncestors),
+    },
+    domain: deriveKnowledgeDoctorDomainFromPaths({ ...tree, trackedEntries: kept }, paths),
+  };
+};
 
 const withoutCommandWitness = (tree: KnowledgeDoctorTree, witness: CommandNodeWitness): KnowledgeDoctorTree =>
   O.match(O.fromUndefinedOr(witness.option), {
@@ -1038,14 +1095,7 @@ export const overlayWithout: {
   2,
   (tree: KnowledgeDoctorTree, witness: ResolutionWitness): KnowledgeDoctorTree =>
     ResolutionWitness.match(witness, {
-      TreeEntryWitness: (entry) =>
-        withTrackedEntries(
-          tree,
-          A.filter(
-            tree.trackedEntries,
-            (tracked) => !Str.equivalence(tracked.path, entry.path) && !Str.startsWith(`${entry.path}/`)(tracked.path)
-          )
-        ),
+      TreeEntryWitness: (entry) => withoutTrackedPath(tree, entry.path),
       CommandNodeWitness: (command) => withoutCommandWitness(tree, command),
       ProducerWitness: (producer) => ({
         ...tree,
@@ -1911,6 +1961,51 @@ const liveDoctorTree = Effect.fn("KnowledgeDoctor.liveTree")(function* (
  */
 export const makeKnowledgeDoctorTree = Effect.fn("KnowledgeDoctor.makeTree")(function* (treeish: string) {
   const materialized = yield* materializeKnowledgeTree(treeish);
+  const gitRefNames = yield* readKnowledgeGitRefNames(materialized.repoRoot);
+  return yield* liveDoctorTree(materialized, gitRefNames, MutableHashMap.empty());
+});
+
+/**
+ * Materializes one commit-ish as a live doctor tree whose bytes cover only the named paths.
+ *
+ * **Details**
+ *
+ * The same archive, `git ls-tree` entry list, ref names, command surface, domain and history reads as
+ * {@link makeKnowledgeDoctorTree}, with extraction narrowed to `paths` plus the static command
+ * reader's inputs, so the command surface is still derived from the archive's own CLI sources. What
+ * it saves is writing every other tracked file to disk, which is most of the full tree's cost and
+ * grows with the repository.
+ *
+ * **Gotchas**
+ *
+ * `readBytes` of any other path fails loudly with an operational error, so a caller whose evaluators
+ * read bytes it did not name finds out at once rather than reading a file that was never extracted.
+ * Historical trees from `atCommit` stay full trees.
+ *
+ * **Example** (Build the tree of the working commit around one document)
+ *
+ * ```ts
+ * import { makeKnowledgeDoctorTreePaths } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.service"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(Effect.scoped(makeKnowledgeDoctorTreePaths("HEAD", ["AGENTS.md"])))) // true
+ * ```
+ *
+ * @param treeish - Any commit-ish.
+ * @param paths - Repository paths whose bytes the caller reads.
+ * @returns The live doctor tree over the whole tracked tree, with bytes for `paths` only.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const makeKnowledgeDoctorTreePaths = Effect.fn("KnowledgeDoctor.makeTreePaths")(function* (
+  treeish: string,
+  paths: ReadonlyArray<string>
+) {
+  const selected = HashSet.fromIterable(paths);
+  const materialized = yield* materializeKnowledgeTreeWhere(
+    treeish,
+    (repoPath) => HashSet.has(selected, repoPath) || KnowledgeCommandSurface.isStaticCommandTreeInput(repoPath)
+  );
   const gitRefNames = yield* readKnowledgeGitRefNames(materialized.repoRoot);
   return yield* liveDoctorTree(materialized, gitRefNames, MutableHashMap.empty());
 });

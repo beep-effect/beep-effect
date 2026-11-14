@@ -12,9 +12,11 @@ import {
   KNOWLEDGE_SPAN_CLASSIFICATION_RULES,
   KnowledgeSpan,
   KnowledgeSpanClass,
+  KnowledgeTrackedEntry,
   knowledgeCounterfactualVerdicts,
   makeKnowledgeDoctorMemoryTree,
-  makeKnowledgeDoctorTree,
+  makeKnowledgeDoctorTreePaths,
+  makeKnowledgeTreeEntryIndex,
   overlayWithout,
   ProducerWitness,
   scanKnowledgeDoctorTree,
@@ -696,6 +698,55 @@ describe("knowledge doctor counterfactual harness", () => {
   });
 });
 
+// The original split-and-join derivation of the directory index, kept as the specification.
+const referenceDirectories = (paths: ReadonlyArray<string>): ReadonlyArray<string> =>
+  A.dedupe(
+    A.flatMap(paths, (repoPath) => {
+      const segments = A.dropRight(Str.split("/")(repoPath), 1);
+      return A.map(segments, (_, index) => A.join(A.take(segments, index + 1), "/"));
+    })
+  );
+
+const sortedMembers = (set: HashSet.HashSet<string>): ReadonlyArray<string> => A.sort(A.fromIterable(set), Str.Order);
+
+const TreeSegments = S.NonEmptyArray(S.Literals(["a", "b", "c"]));
+
+describe("knowledge doctor tree entry index", () => {
+  it.effect.prop(
+    "indexes every path and exactly the directories that contain one",
+    { files: S.Array(TreeSegments) },
+    ({ files }) =>
+      Effect.sync(() => {
+        const paths = A.dedupe(A.map(files, (segments) => `${A.join(segments, "/")}.md`));
+        const index = makeKnowledgeTreeEntryIndex(
+          A.map(paths, (path) => KnowledgeTrackedEntry.make({ path, mode: "100644", objectId: CITED }))
+        );
+        assert.deepStrictEqual(sortedMembers(index.paths), A.sort(paths, Str.Order));
+        assert.deepStrictEqual(sortedMembers(index.directories), A.sort(referenceDirectories(paths), Str.Order));
+      }),
+    { arbitrary: fcRuns(200) }
+  );
+
+  it.effect.prop(
+    "an overlay that removes a path keeps the index a rebuild from the kept entries would give",
+    { files: S.Array(TreeSegments), removed: TreeSegments, asFile: S.Boolean },
+    ({ files, removed, asFile }) =>
+      Effect.gen(function* () {
+        const tree = yield* memoryTree({
+          files: R.fromEntries(A.map(files, (segments) => [`${A.join(segments, "/")}.md`, "x"] as const)),
+        });
+        const hidden = overlayWithout(
+          tree,
+          TreeEntryWitness.make({ path: `${A.join(removed, "/")}${asFile ? ".md" : ""}` })
+        );
+        const rebuilt = makeKnowledgeTreeEntryIndex(hidden.trackedEntries);
+        assert.deepStrictEqual(sortedMembers(hidden.entryIndex.paths), sortedMembers(rebuilt.paths));
+        assert.deepStrictEqual(sortedMembers(hidden.entryIndex.directories), sortedMembers(rebuilt.directories));
+      }),
+    { arbitrary: fcRuns(200) }
+  );
+});
+
 const ROOT_MODULE_PATH = "packages/tooling/tool/cli/src/commands/Root.ts";
 
 class RuntimeCommandFlags extends S.Opaque<RuntimeCommandFlags, { readonly brand: unique symbol }>()(
@@ -941,7 +992,9 @@ describe("knowledge doctor on this checkout", () => {
     it.effect(
       "reads HEAD and has no vacuous live witness",
       Effect.fnUntraced(function* () {
-        const tree: KnowledgeDoctorTree = yield* makeKnowledgeDoctorTree("HEAD");
+        // Only AGENTS.md (plus the command sources the surface is read from) is extracted: writing the
+        // whole archive to disk grew with the repository and timed hosted runners out.
+        const tree: KnowledgeDoctorTree = yield* makeKnowledgeDoctorTreePaths("HEAD", ["AGENTS.md"]);
         assert.isAbove(A.length(tree.trackedEntries), 0);
         const sample = yield* Effect.forEach(
           A.take(
