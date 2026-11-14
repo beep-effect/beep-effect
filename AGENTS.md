@@ -351,7 +351,10 @@ needed only for the escalation list below.
   (sibling root or the clone's `.claude/worktrees/<name>`; its archive fence
   grants the same invoker and `CLAUDE_PID` session exemption as `--retire`, so
   a desktop session removes its own lane), or from inside it after
-  the merge with `bun run beep yeet sweep --retire`.
+  the merge with `bun run beep yeet sweep --retire`. Never create another
+  `beep-effectN` clone; abandoned lanes and legacy clones drain through
+  `beep quality residue-reap --fleet --classes drainable --apply`
+  (`standards/git-worktrees.md`, "Seats, Lanes, Registry And Drain").
 
 ## Touch → Skill / Command
 

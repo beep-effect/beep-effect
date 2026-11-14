@@ -171,49 +171,56 @@ the CI goals driver through the orchestrator. The stack declares no budget
 action, SCP, quota change or anomaly response (no enforcement without a new
 ruling from the CI window owner).
 
-Phases. `prod` starts `silent`: the new budget has no notifications and there
-is no new anomaly subscription, so recipients are not mailed twice while the
-Pulumi budget and subscription still exist. The environment secret
+Phases. `prod` ran `silent` beside the Pulumi budget and subscription (the
+new budget without notifications, no new anomaly subscription) and is now
+`live`: the budget carries its four notifications and `AnomalyAlerts` mails
+the daily anomaly digest. The environment secret
 `COST_CONTROLS_NOTIFICATION_EMAILS` (comma-separated) is set at bootstrap,
 piped from the encrypted Pulumi config key `accountCostControls:notificationEmailAddresses`
-without printing it (deploy-role decision). After the cutover, one PR sets
-`notifications: "live"` in `src/Config.ts`; its deploy adds the four budget
-notifications and the daily anomaly subscription. Pulumi commands take the
+without printing it (deploy-role decision). Pulumi commands take the
 passphrase only as
 `PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE op run -- pulumi ...`.
-The first `prod` plan runs only in the workflow, never from a workstation.
+The `prod` plan runs only in the workflow, never from a workstation.
 
-Cutover from Pulumi (decision "Cost controls cutover from Pulumi"): export the
-`beep-ci-runners/production` stack to
-`~/.local/state/beep/infra-archives/pulumi-exports/`, unprotect the
-component's twelve state entries, `pulumi destroy --target` only the old
-budget and subscription (preview first: exactly two deletes), then
-`pulumi state delete` the monitor, the six tags, the two enrollments, the
-component provider and the component. Never `pulumi destroy` a tag, an
-enrollment or the monitor: Pulumi would deactivate the tag, opt the account
-out, or delete the services monitor Alchemy now owns. No step runs the
-program and none needs `pulumi up`; the PR deleting the component from the
-program must merge before the next `pulumi preview` of that stack.
+Cutover from Pulumi (decision "Cost controls cutover from Pulumi"), `live`
+first and the Pulumi destroy second (packet gate ruling, 2026-11-14), so the
+account, already over its budget, is never without alerts:
+
+1. Merge the `live` PR. Its deploy adds the budget notifications and creates
+   `AnomalyAlerts`; the gate accepts a budget update and an `AnomalyAlerts`
+   create while the nine singletons stay no-op.
+2. Verify: the gate step printed the nine singletons as `noop`, the budget
+   lists four notifications, and `beep-account-anomaly-alerts` exists beside
+   the old `beep-account-daily-anomalies`. Until step 3, recipients get one
+   duplicate burst: the new budget's threshold mails on creation and at most
+   one duplicate daily anomaly digest.
+3. The packet gate session exports `beep-ci-runners/production` to
+   `~/.local/state/beep/infra-archives/pulumi-exports/`, unprotects the
+   component's twelve state entries, `pulumi destroy --target`s only the old
+   budget and subscription (preview first: exactly two deletes), then
+   `pulumi state delete`s the monitor, the six tags, the two enrollments,
+   the component provider and the component. Never `pulumi destroy` a tag,
+   an enrollment or the monitor: Pulumi would deactivate the tag, opt the
+   account out, or delete the services monitor Alchemy now owns. No step
+   runs the program and none needs `pulumi up`.
+4. The PR deleting the component from the program merges after `live` has
+   been green for 24 hours, and before the next `pulumi preview` of that
+   stack.
 
 Rollback (decision "Cost controls cutover from Pulumi"):
 
-- Leave `live`: one PR back to `silent`. Its plan deletes the stack's own
-  `AnomalyAlerts` subscription, the only delete the gate allows (by logical
-  id, `delete` only); the nine adopted settings still may not change.
-- Restore the Pulumi budget and subscription before the component-removal PR
-  merges: `pulumi stack import` of the newest archive (state only), then
-  `pulumi refresh --target` the old budget and subscription URNs,
-  `pulumi preview --target` them and confirm exactly two creates,
-  `pulumi up --target` them, and check both exist in AWS. Then `prod` back to
-  `silent` and `aws budgets delete-budget` for the retained
-  `beep-account-monthly-cost`.
+- Before step 3, leave `live`: one PR back to `silent`. Its plan deletes the
+  stack's own `AnomalyAlerts` subscription, the only delete the gate allows
+  (by logical id, `delete` only); the nine adopted settings still may not
+  change. The Pulumi pair is still live, so nothing else is needed.
+- After step 3, before the component-removal PR merges, restore the Pulumi
+  budget and subscription: `pulumi stack import` of the newest archive
+  (state only), then `pulumi refresh --target` the old budget and
+  subscription URNs, `pulumi preview --target` them and confirm exactly two
+  creates, `pulumi up --target` them, and check both exist in AWS. Then take
+  `prod` back to `silent` (first case) so only one set mails.
 - After the component-removal PR merged, `pulumi up` no longer sees the old
   declarations: revert that PR first, then import, refresh, preview and up.
-
-Timing: the cutover's destroy step runs only once the `live` PR is open with
-its `final` posted and ready to merge. The gap without budget and anomaly mail
-is at most two hours from the destroy step; past that, run the restore. The
-component-removal PR merges only after `live` has been green for 24 hours.
 
 ## OipWeb (oip.law)
 
