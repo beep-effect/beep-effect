@@ -1,9 +1,11 @@
 # B2 regex session evidence
 
 The earlier receipts below are retained as history. The latest verification is
-[Review round 4](#review-round-4): all 277 Citation files, 1,323 passing tests,
-zero failures or skips and 25 distinct single-file coverage measurements.
+[Review round 5](#review-round-5): 25 unique focused/coverage-contributor files,
+256 passing tests, zero failures or skips and 25 single-file coverage runs.
 NativeLane, NativeProcess and all four session files reach 100% on every metric.
+The guarantee is a spawner hand-off fence; authorized lazy Effects can produce
+a later child, whose ownership and lease remain held through confirmed retirement.
 
 B2 is implemented on `feat/citation-regex-session` in
 `~/YeeBois/projects/beep-effect-worktrees/citation-regex-session`.
@@ -1891,7 +1893,7 @@ operations do not start an extra drain timer. The count fixture and session's
 separate startup/job timers retain their existing meaning.
 
 The caller's wait is bounded; unresolved ownership is retained. On expiry,
-no subsequent withUse callback or public start is admitted. A late admission
+no subsequent withUse callback runs, and no public start is handed to the spawner. A late admission
 returns its unspawned lease; a late successful spawn is assigned to the existing
 physical owner and retired by its existing parent SIGKILL/confirmation path.
 The invocation finalizer does not wait on an unresolved birth lock: it leaves
@@ -2406,11 +2408,14 @@ The fix has two layers:
 
 1. Admission revalidates closed/poisoned lane state and the exact call's live
    authority before claiming, after acquisition, after its accounting span and
-   after snapshot delivery. A stale healthy snapshot cannot authorize a birth.
+   after snapshot delivery. A stale healthy snapshot cannot authorize a new spawner hand-off.
 2. The concrete physical owner's optional typed fence runs after the birth-lock
    wait, owner checks, Scope/Ref/semaphore creation and ownership registration.
    The last authority read and call to the captured spawner are in **one
    synchronous Effect.suspend callback**. There is no Effect yield between them.
+   The returned platform Effect may still yield before OS birth; this is a
+   hand-off guarantee, as clarified by the round-5 ruling. Already-authorized
+   work remains owned through late birth and confirmed retirement.
    Real platform errors alone are mapped to spawn-failed; a fence's typed refusal
    remains the child's failure Exit. The lane retires that empty registered
    resource and returns capacity through the existing release path.
@@ -2428,7 +2433,8 @@ The permanent file has **eight cases**:
 | Call is revoked at snapshot delivery before the drain expires | Pass | Pass |
 | Call is revoked at an owner continuation before the drain expires | Pass | Pass |
 
-Each expiry case asserts zero spawner method hand-offs, **zero physical starts
+Each of these pre-hand-off expiry cases asserts zero spawner method hand-offs,
+**zero physical starts
 and zero confirmations**, exactly one lease return, refusal of later start and
 withUse calls, and no additional return on Scope closure. Token-only revocation
 cases prove the specific call authority matters even without lane poisoning.
@@ -2450,7 +2456,8 @@ Returning capacity or discarding the ownership record while a spawn or process
 is unresolved would permit an unaccounted child and violate confirmed retirement
 and the one-occupant invariant. If already-authorized work later resolves, the
 existing retirement path can confirm it and return capacity once. No subsequent
-start is permitted on the poisoned lane. This is the owner's explicitly accepted
+start is handed to the spawner on the poisoned lane; a previously authorized
+hand-off remains owned if its OS birth happens later. This is the owner's explicitly accepted
 limit, recorded in the round-4 fence decision as well as this receipt.
 
 Implementation: `8f848e9a2e9` (`fix(citation): fence physical spawn against revoked
@@ -2855,9 +2862,11 @@ obligations each assert started equals confirmed on both actual child runtimes:
 | Late spawn settlement and unconfirmed-first-retirement retry | Pass | Pass |
 
 The exact original names remain in the earlier tables and session file. Round-4
-fence cases add a distinct assertion: after a pre-hand-off refusal, no child is
-started at all, rather than starting one and subsequently confirming its death.
-Already-authorized hand-offs retain the existing late-resolution cleanup path.
+fence cases add a distinct assertion: a pre-hand-off refusal never calls the
+spawner, and those cases observe zero children. This does not exclude OS birth
+from an earlier authorized hand-off during lazy platform preparation. Such work
+retains its lease until SIGKILL and confirmed retirement, as the round-5 owner
+ruling clarifies.
 
 ### Required checks, development corrections and scope
 
@@ -2906,3 +2915,239 @@ Implementation commit: `8f848e9a2e9`. This evidence, the fence decision and the
 generated in-review checkpoint ship in the following documentation commit.
 Commits remain local and the lane is preserved for independent review; no push,
 merge, rebase or subagents.
+
+## Review round 5
+
+Review base: `ea4fc03bf56`, followed by the owner's committed ruling
+`a7b55238cda`. The rule is **no start is handed to the spawner after revocation,
+closure or poisoning**. This is not an OS-birth fence. The local Effect v4
+reference confirms that the returned platform Effect yields fs.access(cwd)
+before NodeChildProcess.spawn runs in a later callback; Bun re-exports that
+shared implementation. Commands retain cwd, and no repository spawner was added.
+
+### Wording and accepted guarantee
+
+NativeProcess's JSDoc/comment and the test group/names now identify the spawner
+method hand-off. Earlier decision dates, file names, counts and historical
+receipts remain; wording that treated all post-revocation births as forbidden
+was narrowed to hand-offs, and the round-5 ruling is explicit. Generated SPEC
+and PLAN projections were regenerated after the decision edits.
+
+An already-authorized hand-off remains owned from registration. Its returned
+Effect may later create a child after revocation or poisoning. The held lease
+is quarantined, the post-start authority check SIGKILLs and confirms that child
+through the existing path, capacity returns once after confirmation, and the
+lane refuses all later starts. Never-resolving work can retain its private Scope
+and quarantined capacity indefinitely: bounded caller wait does not guarantee
+eventual settlement. The earlier accepted limit remains unchanged.
+
+### Permanent real-process regression
+
+CitationNativeLaneFence now has **10 passing cases**. The new Bun and Node cases
+are named `retires an already-handed-off {runtime} child born after drain expiry`.
+The wrapper records one method hand-off and returns an Effect that waits on a
+Deferred before delegating to the real platform spawner. While parked, callback
+revocation and the controlled policy drain deadline produce typed
+CitationNativeLaneFailure/cleanup-unconfirmed. The test then checks:
+
+| Barrier | Physical starts / confirmations | Lease / hand-off assertions |
+| --- | --- | --- |
+| Lazy preparation parked after method hand-off | 0 / 0 | One hand-off, active = 1, quarantined = 1, zero returns; later start refuses without another hand-off |
+| Real child born, parent SIGKILL completed, confirmation acknowledgement parked | 1 / 0 | SIGKILL count = 1, PID gone, active = 1, quarantined = 1, zero returns |
+| Confirmation released | 1 / 1 | Lane started = confirmed = 1, active = 0, one return; later start/withUse refuse, no further hand-off or child |
+| Invocation Scope closed | 1 / 1 | Return count remains one |
+
+The kill-acknowledgement barrier uses the existing real observed-spawner helper;
+it does not fake a process handle or synthesize a death receipt. A /proc check
+also proves PID disappearance. The parent caller has already returned its typed
+failure after the policy Clock expires, before the lazy Effect is released.
+
+The eight existing before-fence cases remain. They pause snapshot delivery and
+every measured owner-side pre-hand-off scheduler boundary on both runtimes;
+revocation there yields **zero spawner hand-offs and zero children**. Thus the
+suite separately proves denial before hand-off and owned late birth after a
+previously authorized hand-off.
+
+Only production comments/JSDoc and tests changed; production executable code,
+cwd, configured limits, public engine shape and extraction expectations did not.
+The whole-directory rerun was therefore omitted under the owner's explicit
+round-5 scope. Focused files and coverage were run individually as recorded below.
+
+### Serial focused test receipts
+
+The 19 requested lane, session, NativeProcess and HtmlWorker-prefix files ran
+one at a time under the prescribed nice -n 19 Node-parent runner: **204 passing
+tests, zero failures or skips**. Coverage-only contributors are recorded in the
+next table. The final count gate is recorded separately below.
+
+| Test file | Passing tests |
+| --- | ---: |
+| CitationHtmlWorker.test.ts | 13 |
+| CitationHtmlWorkerCorpus.test.ts | 3 |
+| CitationHtmlWorkerCoverage.test.ts | 2 |
+| CitationHtmlWorkerProgram.test.ts | 5 |
+| CitationHtmlWorkerProtocol.test.ts | 6 |
+| CitationHtmlWorkerRpc.test.ts | 3 |
+| CitationNativeLane.test.ts | 16 |
+| CitationNativeLaneCleaner.test.ts | 2 |
+| CitationNativeLaneComposition.test.ts | 4 |
+| CitationNativeLaneCoverage.test.ts | 20 |
+| CitationNativeLaneFence.test.ts | 10 |
+| CitationNativeLaneReservation.test.ts | 32 |
+| CitationNativeLaneTransfer.test.ts | 4 |
+| CitationNativeProcess.test.ts | 5 |
+| CitationNativeProcessCoverage.test.ts | 3 |
+| CitationRegexSession.test.ts | 64 |
+| CitationRegexSessionProgram.test.ts | 3 |
+| CitationRegexSessionProtocol.test.ts | 5 |
+| CitationRegexSessionRpc.test.ts | 4 |
+
+### Single-file coverage union
+
+All 25 one-test-file/one-source-file Bun-parent runs pass. NativeLane and
+NativeProcess reach **100% lines, statements, functions and branches**. The
+four session files remain 100% in all four metrics; the unchanged descriptor
+file exceeds its existing floors. No guard was removed, baseline changed or
+ignore comment introduced. The contributor matrix includes the new lazy
+hand-off case under the Bun parent as well as the serial Node-parent result.
+
+| Source | Lines | Statements | Functions | Branches |
+| --- | ---: | ---: | ---: | ---: |
+| NativeLane.ts | 100% | 100% | 100% | 100% |
+| RegexSession.ts | 100% | 100% | 100% | 100% |
+| RegexSessionProtocol.ts | 100% | 100% | 100% | 100% |
+| RegexSessionRpc.ts | 100% | 100% | 100% | 100% |
+| RegexSessionProgram.ts | 100% | 100% | 100% | 100% |
+| RegexDescriptors.ts | 100% | 96.96% | 94.73% | 94.44% |
+| NativeProcess.ts | 100% | 100% | 100% | 100% |
+
+| Test file | Source measured | Passing tests |
+| --- | --- | ---: |
+| CitationNativeLaneCoverage.test.ts | NativeLane.ts | 20 |
+| CitationNativeLane.test.ts | NativeLane.ts | 16 |
+| CitationNativeLaneReservation.test.ts | NativeLane.ts | 32 |
+| CitationNativeLaneComposition.test.ts | NativeLane.ts | 4 |
+| CitationNativeLaneTransfer.test.ts | NativeLane.ts | 4 |
+| CitationRegexSession.test.ts | NativeLane.ts | 64 |
+| CitationRegexSession.test.ts | RegexSession.ts | 64 |
+| CitationRegexLaneCoverage.test.ts | RegexSession.ts | 6 |
+| CitationRegexSessionProtocol.test.ts | RegexSessionProtocol.ts | 5 |
+| CitationRegexSessionRpc.test.ts | RegexSessionRpc.ts | 4 |
+| CitationRegexSessionProgram.test.ts | RegexSessionProgram.ts | 3 |
+| CitationRegexDescriptors.test.ts | RegexDescriptors.ts | 10 |
+| CitationRegexSession.test.ts | RegexDescriptors.ts | 64 |
+| CitationCleanerPipelineCoverage.test.ts | NativeLane.ts | 7 |
+| CitationDiffLaneCoverage.test.ts | NativeLane.ts | 9 |
+| CitationHtmlWorker.test.ts | NativeLane.ts | 13 |
+| CitationMarkupWorkerCoverage.test.ts | NativeLane.ts | 8 |
+| CitationRegexLaneCoverage.test.ts | NativeLane.ts | 6 |
+| CitationNativeLaneFence.test.ts | NativeLane.ts | 10 |
+| CitationNativeLaneFence.test.ts | NativeProcess.ts | 10 |
+| CitationNativeProcess.test.ts | NativeProcess.ts | 5 |
+| CitationNativeProcessCoverage.test.ts | NativeProcess.ts | 3 |
+| CitationNativeLaneCoverage.test.ts | NativeProcess.ts | 20 |
+| CitationRegexSession.test.ts | NativeProcess.ts | 64 |
+| CitationNativeLane.test.ts | NativeProcess.ts | 16 |
+
+### Final count gate and process receipts
+
+| Final file | Passing tests | Parent |
+| --- | ---: | --- |
+| CitationCanonicalFullSpan.test.ts | 12 | Node, ten Bun calls and Node parity |
+
+FullSpan ran **last**, after focused tests and coverage, and passed **12/12**.
+The requested focused files plus this gate are **20 files / 216 tests**. Including
+five additional coverage-only contributor files gives **25 unique files / 256
+passing tests**, zero failures or skips. This does not claim a whole-directory
+run. FullSpan wall time was **30.41 seconds**, Vitest **29.98 seconds**, at load
+**3.26 / 5.44 / 4.19**; timing gates nothing.
+
+| Per ten plain-text Bun calls | B1 | ea4fc03bf56 | Round 5 |
+| --- | ---: | ---: | ---: |
+| Regex child processes | 291 | 10 | 10 |
+| Regex evaluations | 291 | 291 | 291 |
+| Metadata-operation installs | 0 | 0 | 0 |
+| Configuration detaches | 0 | 0 | 0 |
+| Tokenizer builds | 0 | 0 | 0 |
+| Regex evaluator constructions | 0 | 0 | 0 |
+| Descriptor bindings | 4 | 4 | 4 |
+| Physical native owners | 10 | 10 | 10 |
+| Native lane acquisitions | 10 | 10 | 10 |
+| Diff/Xml worker constructions | 0 | 0 | 0 |
+
+| Engine construction | B1 | Review base / Round 5 |
+| --- | ---: | ---: |
+| Metadata-operation installs | 16 | 16 |
+| Configuration detaches | 1 | 1 |
+| Tokenizer builds | 1 | 1 |
+| Regex evaluator constructions | 26 | 26 |
+| Regex evaluations | 0 | 0 |
+| Regex child processes | 0 | 0 |
+| Descriptor bindings | 0 | 0 |
+| Physical native owners | 1 | 1 |
+| Native lane acquisitions | 0 | 0 |
+| Diff/Xml worker constructions | 0 | 0 |
+
+The session file passes 64/64 under the focused Node parent and Bun-parent
+coverage. The original eight real-process proofs all pass on both actual child
+runtimes, asserting started equals confirmed for the owned jobs:
+
+| Obligation | Bun child | Node child |
+| --- | --- | --- |
+| Catastrophic deadline, responsive parent, confirmed death before return | Pass | Pass |
+| Job after kill fails closed without a further hand-off | Pass | Pass |
+| Wrong sequence kills and confirms | Pass | Pass |
+| Early EOF kills and confirms | Pass | Pass |
+| Oversize frame kills and confirms | Pass | Pass |
+| Frame while idle kills and confirms | Pass | Pass |
+| Sent interruption confirms death before acknowledgement | Pass | Pass |
+| Running interruption confirms death before acknowledgement | Pass | Pass |
+| Live stdout closure and paired real stdin proofs | Pass | Pass |
+| Mixed engines and schema-invalid engine | Pass | Pass |
+| Preparation/startup/write/read/retirement barriers | Pass | Pass |
+| Diff and cleaner handovers | Pass | Pass |
+| Already-authorized lazy Effect: late birth, SIGKILL, confirmed retirement, one lease return | Pass | Pass |
+| Revocation before hand-off: zero spawner hand-offs | Pass | Pass |
+
+The last two rows are deliberately distinct. Zero new hand-offs does not imply
+that a previously handed-off Effect cannot still create its one owned child.
+
+### Checks, scope and interpretations
+
+| Check | Result |
+| --- | --- |
+| Server bun run check | Pass, source and test typechecks |
+| quality package-verify @beep/law-practice-server --quick | Pass, lint and check |
+| Package lint:laws | Pass, strict laws zero; three inherited advisory findings |
+| Full bun run beep lint | Pass on corrected fixture |
+| Fallow audit --base origin/main | Pass, zero introduced; 35 inherited findings excluded |
+| bun run docgen:local --full | Pass, 188-package metadata check, generation and aggregate |
+| bun run beep lint effect-vitest | Pass, zero introduced, inventory unchanged |
+| bun run beep lint schema-first | Pass, zero introduced, inventory unchanged |
+| Root Oxlint on touched TypeScript/MJS | Pass |
+| git diff --check / commit hooks / goal decision projection | Pass |
+
+Fallow resolved origin/main to `6a9a7fbce4bd73ae59f4870f7950081e1a35f464`.
+The first root lint sweep read the initial resource-wrapper fixture shape and
+failed that one introduced finding. The fixture was corrected without inventory
+growth, scoped lint/typecheck passed, and the complete root sweep was rerun and
+passed. No safety assertion was removed to fix lint.
+
+No requested focused file or check was skipped. A whole-directory rerun was not
+needed under the owner's explicit scope: executable production code is unchanged;
+only comments/JSDoc, tests and goal wording changed. The earlier complete run is
+retained as history. No package-wide or parallel suite run, package-wide coverage
+or hosted CI is claimed. Dependency files are unchanged, so frozen-lockfile
+installation was not repeated. cwd was retained and no repository platform
+spawner implementation was introduced.
+
+B2 remains **in review**. The round-5 ruling is the binding interpretation and
+resolves the hand-off/OS-birth distinction; no further design conflict occurred.
+Earlier decision wording was narrowed where it stated the old claim as current
+behavior, without erasing its date, file identity, measured counts or history.
+No limit, engine shape, extraction result, guard or fingerprint changed.
+
+Test/comment commit: `f2b139c2d57`. This receipt, wording corrections and the
+round-5 in-review checkpoint ship in the following documentation commit. The
+lane remains local and preserved for independent review; no push, merge, rebase
+or subagents.
