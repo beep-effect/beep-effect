@@ -37,7 +37,8 @@ Use this command for execution-capable sessions:
 
 P1 Implement — in progress. P0 closed with the baseline checkpoint
 (`decisions/2026-11-10-p0-baseline.md`); slice 1 (PERIL-13) and slice 2 (PERIL-10 summary and archive) landed;
-slice 3 (SCHE-08) and slice 4 (the beep-heavy retirement) are next.
+slice 3 (SCHE-08, the admission unit schema) is implemented on `feat/local-proof-admission-unit`; slice 4 (the
+beep-heavy retirement) and slice 5 (PERIL-02) are next.
 
 ## Latest Evidence
 
@@ -55,6 +56,12 @@ slice 3 (SCHE-08) and slice 4 (the beep-heavy retirement) are next.
   (`goals/yeet-async-merge-and-stacks`, merged 2026-11-12) adds `Yeet/internal/PatchIdentity.ts` and carries the review window
   across GitHub-made unchanged rewrites (cascade, restack); merges fail closed there, so PERIL-09 (a
   diff-preserving merge of main) stays open and should build on that classifier.
+- 2026-11-13: slice 3 (SCHE-08) adds optional `unit`, `weightSource` and `owner` keys to tickets, leases and the
+  enqueue, admission, release and withdrawal rows, read by a tolerant decoder: a newer writer's work kind stays
+  charged instead of quarantined and an unreadable new key reads as absent. Writers add the keys only behind a
+  `units` key on `protocol.json` (`quality scheduler protocol --units on`), off by default; with it off the bytes
+  match origin/main's. The ciops frozen-journal replay stays 41 of 41, with and without the keys on every row.
+  SCHE-09 slice 1 (#3227) and MEAS-07 (#3228) landed on main.
 
 ## Notes
 

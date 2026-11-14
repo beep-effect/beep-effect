@@ -1754,6 +1754,62 @@
       "reason": "Deterministic byte-level regressions cover UTF-8/CRLF offsets, incomplete tails, persisted-cursor restart, truncation/replacement, copied occurrences, oversized/malformed lines and privacy. Codecs preserve exact fixture/cursor evidence for bounded incremental reading. Exit: a changed segmentation/identity algorithm motivates an independently designed partition-invariance property. Independent Astra review: intentional deterministic integration/regression coverage; no unverified property coverage elsewhere is claimed."
     },
     {
+      "file": "packages/tooling/library/alchemy-vercel/src/Domain.ts",
+      "symbol": "Domain",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/alchemy-vercel",
+      "reason": "Alchemy resource handle type (Resource<Type, Props, Attributes>): its members are Output accessors and bind methods the engine builds at runtime, not data; props and attributes are the annotated schemas beside it."
+    },
+    {
+      "file": "packages/tooling/library/alchemy-vercel/src/Domain.ts",
+      "symbol": "DomainProps",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/alchemy-vercel",
+      "reason": "Alchemy resource props are structural: stacks pass plain object literals whose fields may be Input<> outputs, and the engine round-trips them through state as JSON, so a branded S.Opaque would force every caller through .make and break Alchemy's provider convention (D14). The annotated struct is the schema of record."
+    },
+    {
+      "file": "packages/tooling/library/alchemy-vercel/src/EnvVar.ts",
+      "symbol": "EnvVar",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/alchemy-vercel",
+      "reason": "Alchemy resource handle type (Resource<Type, Props, Attributes>): its members are Output accessors and bind methods the engine builds at runtime, not data; props and attributes are the annotated schemas beside it."
+    },
+    {
+      "file": "packages/tooling/library/alchemy-vercel/src/EnvVar.ts",
+      "symbol": "EnvVarProps",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/alchemy-vercel",
+      "reason": "Alchemy resource props are structural: stacks pass plain object literals whose fields may be Input<> outputs, and the engine round-trips them through state as JSON, so a branded S.Opaque would force every caller through .make and break Alchemy's provider convention (D14). The annotated struct is the schema of record."
+    },
+    {
+      "file": "packages/tooling/library/alchemy-vercel/src/Project.ts",
+      "symbol": "Project",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/alchemy-vercel",
+      "reason": "Alchemy resource handle type (Resource<Type, Props, Attributes>): its members are Output accessors and bind methods the engine builds at runtime, not data; props and attributes are the annotated schemas beside it."
+    },
+    {
+      "file": "packages/tooling/library/alchemy-vercel/src/Project.ts",
+      "symbol": "ProjectGitRepository",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/alchemy-vercel",
+      "reason": "Nested Project prop: stacks write it as a plain object literal inside ProjectProps, so it stays structural for the same reason as ProjectProps."
+    },
+    {
+      "file": "packages/tooling/library/alchemy-vercel/src/Project.ts",
+      "symbol": "ProjectProps",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/alchemy-vercel",
+      "reason": "Alchemy resource props are structural: stacks pass plain object literals whose fields may be Input<> outputs, and the engine round-trips them through state as JSON, so a branded S.Opaque would force every caller through .make and break Alchemy's provider convention (D14). The annotated struct is the schema of record."
+    },
+    {
       "file": "packages/tooling/library/qa-capture/src/Collector.service.ts",
       "symbol": "CollectorRunning",
       "kind": "exported-interface",

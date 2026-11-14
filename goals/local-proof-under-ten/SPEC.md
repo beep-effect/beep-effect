@@ -416,6 +416,22 @@ Source: exploration `explorations/ten-minute-certainty/DECISIONS.md` (D13).
 
 Reverse: Un-pause goals/time-to-certainty by a new decision and move YEET-06, YEET-07 and the gate-order fixtures back to it.
 
+### SCHE-08 schema: unit, weight source and owner as optional keys behind a tolerant decoder, 2026-11-14
+
+Tickets, leases and the enqueue, admission, v3 release and withdrawal journal rows gain three optional keys, read as Options: `unit` (`AdmissionUnit`: `tier` for the whole work kind, `lane` for one `GateRouteId` gate family, `package` for one `ScopedPackageName` plus Turbo task name, whose Turbo task id is `<packageName>#<task>`), `weightSource` (`AdmissionWeightSource`: `static-seed`, `measured` with a positive `sampleCount`, `conservative-fallback`) and `owner` (`AdmissionOwner`: the owning proof's nonce, pid and process start, attempt, checkout, branch, origin and command). Eviction and routing rows are unchanged. An absent key is the legacy reading (a whole-tier unit, the static seed, the record's own process as owner), so `legacy` is absence rather than a variant. The decoder is tolerant in two ways: a present value this revision cannot decode (a newer unit variant, weight source or owner shape) reads as None through `Schema.catchDecoding` instead of failing the record, and the persisted `kind` is `RecordedAdmissionWorkKind` (a known `AdmissionWorkKind` or an `UnrecognizedAdmissionWorkKind` kept verbatim), so a lease from a newer writer stays live and charged by its `weightTokens` and sits outside the review-fix class cap. `AdmissionRequest.kind` stays closed; requests carry `unit` (default `tier`) and `weightSource` (default `static-seed`). Rejected: decoding defaults that fill `tier` and `legacy` (the keys would then be written whatever the gate says), a new lease or ticket `schemaVersion` (every pre-unit reader would quarantine every new file), keeping the closed kind (a newer kind quarantines the lease and drops its tokens from capacity, the failure behind the 2,068 quarantined files), and the scoped-or-unscoped `PackageName` (workspace packages are scoped and Turbo's root `//` task is not a package unit). Evidence: `packages/tooling/tool/cli/test/quality-scheduler-admission-unit.test.ts` (origin/main bytes decode and re-encode byte for byte; a pre-unit reader decodes gated records exactly as the pre-unit bytes; a newer kind and unit are charged, not quarantined) and the ciops frozen-journal replay at 41 of 41 with the keys on every row.
+
+Lane feat/local-proof-admission-unit
+
+Reverse: Revert the slice; records written with the units gate on still decode on older revisions, because pre-unit readers ignore the three keys.
+
+### Admission-unit fields are written only behind a units key on the v2 protocol marker, 2026-11-14
+
+The gate is an additive `units` key (`off` or `on`, default `off`) on the existing `yeet-admission-protocol/v2` marker in `protocol.json`, flipped with `bun run beep quality scheduler protocol --units on|off`. `withQualityAdmission` reads it once when it builds the ticket; the lease and the enqueue, admission, release and withdrawal rows copy the ticket, so one decision covers a whole lifecycle. With it off every ticket, lease and row is byte-identical to the pre-unit format (fixture captured from origin/main's encoder). Older readers ignore the key, and an older checkout that rewrites the marker drops it, which turns the fields off again (fail-safe). `writeAdmissionProtocol` now reads the current marker inside the journal lock and changes one gate, so flipping evictions keeps the units state and the reverse. The key means every live reader runs the SCHE-08 tolerant decoder; later slices (slice 6's Cache work kind, SCHE-02's gate units) write new work kinds and unit variants behind this same gate instead of adding another. There is no automatic census of live readers: no record carries a reader revision, so, as with the eviction gate, the operator turns it on once every live checkout runs this revision. Rejected: a v3 marker (older readers would fall back to the disabled default and turn eviction rows off), writing the fields unconditionally (safe for unit keys alone, but leaves no switch for the new kinds that pre-SCHE-08 readers quarantine), and a reader-revision census (needs a field nothing writes yet).
+
+Lane feat/local-proof-admission-unit
+
+Reverse: Run bun run beep quality scheduler protocol --units off; writers stop at once and records already written keep decoding.
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

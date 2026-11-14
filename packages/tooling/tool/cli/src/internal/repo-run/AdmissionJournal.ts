@@ -52,8 +52,9 @@ import {
 import {
   AdmissionPriority,
   AdmissionRoute,
-  AdmissionWorkKind,
+  admissionUnitFields,
   QualitySchedulerError,
+  RecordedAdmissionWorkKind,
   YeetAdmissionTicket,
 } from "./QualityScheduler.schemas.ts";
 import type * as SchemaAST from "effect/SchemaAST";
@@ -207,6 +208,41 @@ export const AdmissionEvictionEmission = LiteralKit(["off", "on"]).pipe(
 export type AdmissionEvictionEmission = typeof AdmissionEvictionEmission.Type;
 
 /**
+ * Whether scheduler writers may record admission-unit fields (SCHE-08).
+ *
+ * **Details**
+ *
+ * `on` lets writers add the unit, weight source and owner keys to tickets,
+ * leases and journal rows. Turn it on only once every live checkout runs a
+ * revision that reads those keys; `off` keeps every record in the pre-unit
+ * format.
+ *
+ * **Example** (Recognize the rollout-safe default)
+ *
+ * ```ts
+ * import { AdmissionUnitEmission } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionUnitEmission.is.off("off")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionUnitEmission = LiteralKit(["off", "on"]).pipe(
+  $I.annoteSchema("AdmissionUnitEmission", {
+    description: "Whether current scheduler writers may record admission-unit fields on tickets, leases and rows.",
+  })
+);
+
+/**
+ * Whether current scheduler writers may record admission-unit fields.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionUnitEmission = typeof AdmissionUnitEmission.Type;
+
+/**
  * Versioned mixed-checkout protocol marker stored in the admission root.
  *
  * **Details**
@@ -214,6 +250,10 @@ export type AdmissionEvictionEmission = typeof AdmissionEvictionEmission.Type;
  * Protocol v2 authorizes v3 eviction rows. Pre-v3 workers only decode protocol
  * v1, so they fail closed and defer recovery instead of duplicating a v3 receipt
  * they cannot recognize after an interrupted claim acknowledgment.
+ *
+ * `units` gates the admission-unit fields. It is an additive key: a marker
+ * without it reads `off`, older readers ignore it, and an older writer that
+ * rewrites the marker drops it, which turns the fields off again.
  *
  * **Example** (Construct the disabled protocol)
  *
@@ -224,7 +264,7 @@ export type AdmissionEvictionEmission = typeof AdmissionEvictionEmission.Type;
  *   schemaVersion: "yeet-admission-protocol/v2",
  *   eviction: "off",
  * })
- * console.log(protocol.eviction) // "off"
+ * console.log(protocol.units) // "off"
  * ```
  *
  * @category models
@@ -234,9 +274,13 @@ export class AdmissionProtocol extends S.Opaque<AdmissionProtocol, { readonly br
   S.Struct({
     schemaVersion: S.tag("yeet-admission-protocol/v2"),
     eviction: AdmissionEvictionEmission,
+    units: AdmissionUnitEmission.pipe(
+      S.withConstructorDefault(Effect.succeed(AdmissionUnitEmission.Enum.off)),
+      S.withDecodingDefaultKey(Effect.succeed(AdmissionUnitEmission.Enum.off))
+    ),
   }).pipe(
     $I.annoteSchema("AdmissionProtocol", {
-      description: "Versioned rollout marker controlling admission-journal eviction event emission.",
+      description: "Versioned rollout marker gating admission-journal eviction events and admission-unit fields.",
     })
   )
 ) {}
@@ -314,6 +358,11 @@ class AdmissionJournalLockReapAdopter extends S.Opaque<
 /**
  * Durable transition recorded when a queued ticket becomes an active lease.
  *
+ * **Details**
+ *
+ * The row copies the ticket's admission-unit fields ({@link admissionUnitFields}),
+ * which are optional keys, and reads a newer writer's kind as unrecognized.
+ *
  * **Example** (Reference an admitted transition)
  *
  * ```ts
@@ -332,13 +381,14 @@ export class AdmissionJournalAdmitted extends S.Opaque<AdmissionJournalAdmitted,
     nonce: S.String,
     pid: S.Finite,
     procStart: S.String,
-    kind: AdmissionWorkKind,
+    kind: RecordedAdmissionWorkKind,
     weightTokens: S.Finite,
     priority: AdmissionPriority,
     originKey: S.String,
     enqueuedAtMillis: S.Finite,
     admittedAtMillis: S.Finite,
     attemptId: UUID.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    ...admissionUnitFields,
   }).pipe(
     $I.annoteSchema("AdmissionJournalAdmitted", {
       description: "Durable transition recorded when a queued ticket becomes an active admission lease.",
@@ -532,6 +582,9 @@ class AdmissionJournalQueuedIdentity extends S.Class<AdmissionJournalQueuedIdent
       "checkoutRoot",
       "branch",
       "enqueuedAtMillis",
+      "unit",
+      "weightSource",
+      "owner",
     ]),
     schemaVersion: S.tag("yeet-admission-journal/v3"),
   },
@@ -615,7 +668,7 @@ class AdmissionJournalCheckoutIdentity extends S.Class<
 export class AdmissionJournalReleasedV3 extends AdmissionJournalCheckoutIdentity.extend<AdmissionJournalReleasedV3>(
   $I`AdmissionJournalReleasedV3`
 )(
-  { ...AdmissionJournalReleased.fields, schemaVersion: S.tag("yeet-admission-journal/v3") },
+  { ...AdmissionJournalReleased.fields, schemaVersion: S.tag("yeet-admission-journal/v3"), ...admissionUnitFields },
   $I.annote("AdmissionJournalReleasedV3", { description: "A released lease with direct checkout attribution." })
 ) {}
 
@@ -973,7 +1026,8 @@ export const admissionProtocolPath = Effect.fn("AdmissionJournal.protocolPath")(
  *
  * A missing, unreadable, or undecodable marker means the mixed-checkout
  * v3 recovery fence is not proven, so eviction rows remain disabled. A protocol
- * v1 marker is likewise disabled even when its eviction field is on.
+ * v1 marker is likewise disabled even when its eviction field is on. The same
+ * fallback keeps admission-unit fields off.
  *
  * **Example** (Read a protocol marker)
  *
@@ -1773,48 +1827,59 @@ export const withJournalFileLock = Effect.fnUntraced(function* <Success, Failure
 });
 
 /**
- * Atomically write the admission protocol marker under the fenced journal lock.
+ * Atomically change the admission protocol marker under the fenced journal lock.
+ *
+ * **Details**
+ *
+ * The current marker is read inside the lock (a missing or unreadable one reads
+ * as the disabled default) and `change` maps it to the marker to publish, so
+ * changing one gate keeps the other gate's state.
  *
  * **Example** (Enable eviction emission)
  *
  * ```ts
- * import { writeAdmissionProtocol } from "@beep/repo-cli/test/RepoRun"
+ * import { AdmissionProtocol, writeAdmissionProtocol } from "@beep/repo-cli/test/RepoRun"
  * import * as Effect from "effect/Effect";
- * console.log(Effect.isEffect(writeAdmissionProtocol("/tmp/admission", "on"))) // true
+ * const enable = writeAdmissionProtocol("/tmp/admission", (current) =>
+ *   AdmissionProtocol.make({ ...current, eviction: "on" })
+ * )
+ * console.log(Effect.isEffect(enable)) // true
  * ```
  *
  * @param root - Machine-wide admission root directory.
- * @param eviction - Desired eviction-event emission state.
+ * @param change - Maps the current marker to the marker to publish.
  * @returns The protocol that was durably published.
  * @category utilities
  * @since 0.0.0
  */
 export const writeAdmissionProtocol = Effect.fn("AdmissionJournal.writeProtocol")(function* (
   root: string,
-  eviction: AdmissionEvictionEmission
+  change: (current: AdmissionProtocol) => AdmissionProtocol
 ): Effect.fn.Return<
   AdmissionProtocol,
   QualitySchedulerError,
   FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
 > {
   const { lockPath, protocolPath } = yield* prepareAdmissionJournalPaths(root);
-  const protocol = AdmissionProtocol.make({ schemaVersion: "yeet-admission-protocol/v2", eviction });
-  const content = yield* encodeAdmissionProtocol(protocol).pipe(
-    Effect.mapError(QualitySchedulerError.new("Failed to encode the admission protocol marker."))
-  );
-  yield* withJournalFileLock(
+  return yield* withJournalFileLock(
     lockPath,
-    (lockToken) =>
-      publishJournalTextAtomically(
+    Effect.fnUntraced(function* (lockToken) {
+      const current = yield* readAdmissionProtocol(root);
+      const protocol = change(current);
+      const content = yield* encodeAdmissionProtocol(protocol).pipe(
+        Effect.mapError(QualitySchedulerError.new("Failed to encode the admission protocol marker."))
+      );
+      yield* publishJournalTextAtomically(
         protocolPath,
         `${content}\n`,
         "admission protocol marker",
         assertJournalFileLockOwned(lockPath, lockToken)
-      ),
+      );
+      return protocol;
+    }),
     LOCKED_OPERATION_RETRY_ATTEMPTS,
     `Admission journal lock "${lockPath}" stayed busy; could not change the protocol marker.`
   );
-  return protocol;
 });
 
 const publishJournalAtomic = Effect.fnUntraced(function* (

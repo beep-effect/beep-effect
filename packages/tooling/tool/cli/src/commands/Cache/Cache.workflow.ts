@@ -132,8 +132,9 @@ const hashDirectoryAlias = Effect.fn("CacheWorkflow.directoryAlias")(function* (
   return yield* digest(new TextEncoder().encode(`beep/cache-producer-directory/v1\0${manifest}`));
 });
 const bound = OutputBound.make({ maxChars: 4 * 1024 * 1024, truncatedNotice: "workflow inventory exceeded bound" });
-// KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
 const captureGit = Effect.fn("CacheWorkflow.git")(function* (root: string, args: ReadonlyArray<string>) {
+  // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
   const captured = yield* runCapturedStreams({
     command: "/usr/bin/git",
     args,

@@ -3,6 +3,104 @@
 Receipts recorded while the work happened. Secrets, home paths and machine
 identifiers are redacted.
 
+## 2026-11-13: Alchemy's provider shape trips two repo-wide Effect diagnostics
+
+- **Doing:** P2 `@beep/alchemy-vercel` (lane goals/infra-alchemy-rebuild-p2-vercel).
+- **Evidence:** `tsrs -p tsconfig.json` on the new package failed with
+  `effect(lazyEffect)` on every `XProvider = () => Provider.succeed(...)` and on
+  `providers = () => Layer...` (Alchemy's own convention), and with
+  `effect(missingPipeableSignature)` on `export const Project = Resource<Project>("Vercel.Project")`,
+  because Alchemy's resource constructor has an `(id, Effect<props>)` overload.
+  Both rules are `off` upstream and `error` in `tsconfig.base.json`, and
+  `@effect-diagnostics` directives are banned outside two root files. The
+  package exports constant layers and a narrowed `DeclaredResource<R>` type.
+- **Would have prevented it:** a documented repo pattern for exporting
+  third-party constructor shapes (Alchemy resources, platforms) that the
+  `missingPipeableSignature` rule cannot model, or a rule option that
+  ignores exported values typed by a dependency.
+
+## 2026-11-13: Vitest loads `alchemy` twice, so `Unowned` reads look owned
+
+- **Doing:** the adoption tests for the same package.
+- **Evidence:** `stack.deploy` over a seeded, never-deployed project
+  succeeded instead of failing with `OwnedBySomeoneElse`. The provider
+  (transformed by Vite) imported `alchemy/AdoptPolicy` through the `default`
+  export condition (`lib/*.js`), while the engine, loaded natively through
+  `@alchemy.run/test`, used the `bun` condition (`src/*.ts`); the `Unowned`
+  brand is a module-private symbol, so the engine never saw it. Fixed with
+  `server.deps.inline: [/alchemy/]` in the package's `vitest.config.ts`.
+- **Would have prevented it:** a shared vitest preset for packages that test
+  Alchemy providers (inline `alchemy` and `@alchemy.run/*`), or a note in the
+  alchemy-provider skill's testing section.
+
+## 2026-11-13: the test harness types every engine error as `any`
+
+- **Doing:** the same tests.
+- **Evidence:** `tsrs -p tsconfig.test.json` reported 29
+  `effect(anyUnknownInErrorContext)` errors on `stack.deploy(...)`,
+  `stack.destroy()` and `provider.read(...)`, whose error channels are `any`
+  in `@alchemy.run/test` and `alchemy/Provider`. The tests go through a typed
+  view (`test/harness/Harness.ts` `typed`, `test/harness/Readers.ts`).
+- **Would have prevented it:** a shared typed wrapper for the Alchemy test
+  harness in a test-kit package, reused by every `@beep/alchemy-*` library.
+
+## 2026-11-13: fallow ignores `test/fixtures/`, so test-only dependencies look unused
+
+- **Doing:** the same package's final-check.
+- **Evidence:** `fallow dead-code` reported `@alchemy.run/test` as an unused dev
+  dependency of `@beep/alchemy-vercel`; its only importer was
+  `test/fixtures/Harness.ts`, and `.fallowrc.jsonc` ignores `**/test/fixtures/**`.
+  The harness moved to `test/harness/`.
+- **Would have prevented it:** a note in the effect-vitest new-test-file
+  checklist that `test/fixtures/` is invisible to fallow, so shared harness
+  modules that import packages belong elsewhere.
+## 2026-11-13: `A.makeBy(0, f)` returns one element
+
+- **Doing:** P2 `@beep/alchemy-github-runners` scale-up tests (lane
+  goals/infra-alchemy-rebuild-p2-github-runners).
+- **Evidence:** the on-demand failover test failed with one `CreateFleet`
+  request instead of two. The fake EC2 launched `A.makeBy(count, f)` instances
+  and `A.makeBy(0, f)` returns `[f(0)]`: the result is a `NonEmptyArray`, so a
+  zero count is clamped to one. The fake reported a full launch and the
+  failover branch never ran.
+- **Would have prevented it:** a `Gotchas` line on `effect/Array.makeBy` in the
+  repo's Effect notes, or a lint that flags `makeBy` with a count that can be 0.
+
+## 2026-11-13: opaque schema classes do not satisfy `S.Codec<A, I>` inference
+
+- **Doing:** the same package, a generic Lambda-boundary helper that decodes a
+  runtime config with the schema it is given.
+- **Evidence:** typing the parameter `S.Codec<C, CI>` and passing an
+  `S.Opaque` class failed with `Property 'brand' is missing` (the inferred `C`
+  is the struct's type, not the opaque class). Typing it
+  `SC extends S.Codec<unknown, unknown, never, never>` and using `SC["Type"]`
+  works.
+- **Would have prevented it:** the schema-first skill showing the generic
+  signature for helpers that take an opaque schema.
+
+## 2026-11-13: distilled GitHub rc.18 has no App authentication
+
+- **Doing:** the GitHub App live layer of the same package.
+- **Evidence:** `@distilled.cloud/github@1.0.0-rc.18` exports `Credentials`
+  (bearer token only); the `App` module that mints JWTs and installation tokens
+  exists on distilled `main` but not in rc.18, so the package signs the RS256
+  JWT itself with WebCrypto, including a PKCS#1 to PKCS#8 key wrapper.
+- **Would have prevented it:** a distilled bump that ships the App module; the
+  package's `WebCrypto.signAppJwt` is then deleted (decision file
+  `2026-11-13-app-jwts-are-signed-with-webcrypto-...`).
+
+**Update, same day:** #3278 moved the distilled family to `1.0.0-rc.19`, which ships `@distilled.cloud/github/App`;
+the package now uses `App.appJwt` and the hand-rolled signer is gone. The receipt stands for the hours lost
+to the gap between the reference checkout (main) and the pinned release.
+
+## 2026-11-13: SAST flags a PEM template that wraps a test-generated key
+
+- **Doing:** PR #3291 hosted SAST.
+- **Evidence:** semgrep `beep-hardcoded-private-key` blocked on a test helper that formats a key generated at
+  test time (`crypto.subtle.generateKey`) into a PEM whose header and footer were string literals; no key
+  material was committed. Assembling the label at runtime clears it.
+- **Would have prevented it:** a local `sast` step in `package-verify`, or a note in the test checklist that PEM
+  header and footer literals trip the rule even around generated keys.
 ## 2026-11-13: vitest loads two copies of Alchemy, so `Unowned` stops refusing
 
 - **Doing:** P2 aws-extras lane, the adopt test for `RunnerLaunchTemplate`

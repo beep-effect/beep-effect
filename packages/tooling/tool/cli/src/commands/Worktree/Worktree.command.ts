@@ -387,15 +387,16 @@ const isUnderWorktreesRoot = (path: Path.Path, worktreesRoot: string, candidate:
 
 const ORIGIN_MAIN_REFSPEC = "+main:refs/remotes/origin/main";
 
-// KEEP (D-20): the doctor prints git's own "Removing worktrees/<id>: <reason>" prose
-// verbatim, which git writes to stderr; `WorktreeEntry.prunable` keeps the fact but drops
-// the reason by design, so this read stays a merged capture.
 const pruneDryRunOutput = Effect.fn("Worktree.pruneDryRunOutput")(function* (
   cwd: string
 ): Effect.fn.Return<string, WorktreeCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const args = ["worktree", "prune", "--dry-run"];
   const command = A.join(["git", ...args], " ");
   const failMessage = "Failed to compute prunable worktrees.";
+  // KEEP (D-20): the doctor prints git's own "Removing worktrees/<id>: <reason>" prose verbatim, which git
+  // writes to stderr; `WorktreeEntry.prunable` keeps the fact but drops the reason by design, so this read
+  // stays a merged capture.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-20), reason above
   const capture = yield* runRepoCommandCapture("git", args, cwd).pipe(
     Effect.mapError(WorktreeCommandError.new(failMessage, { command }))
   );

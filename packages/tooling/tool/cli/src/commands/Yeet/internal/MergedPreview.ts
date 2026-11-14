@@ -465,6 +465,9 @@ const gitCapture = Effect.fn("Yeet.mergedPreviewGitCapture")(function* (
   never,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
+  // KEEP funnel: `gitCapture` runs the KEEP (D-03) `commit-tree` call below; the call site records its
+  // reason.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP funnel, reason above
   const result = yield* runRepoCommandCapture("git", args, repoRoot).pipe(
     Effect.orElseSucceed(() => ({ exitCode: 128, output: "git could not be executed", truncated: false }))
   );
