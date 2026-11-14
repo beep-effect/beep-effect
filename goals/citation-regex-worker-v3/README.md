@@ -31,11 +31,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Not started. First slice: B1, the native lane, once slice A2 of `citation-engine-install-once` has merged.
+B1 stopped at the shared HTML cleaner Markup boundary. The independent limits-policy v2 schema step is committed; the lane is not implemented.
 
 ## Latest Evidence
 
-Not started.
+[B1 partial evidence and design stop](history/evidence/2026-11-14-b1-native-lane.md).
 
 ## Notes
 

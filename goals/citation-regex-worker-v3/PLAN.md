@@ -20,7 +20,7 @@ Each slice is one PR and runs the phases above. They land in order.
 
 | Slice | Status | Content | Count that must move |
 | --- | --- | --- | --- |
-| B1 | pending | `CitationNativeLane`; regex v2, Diff and Markup start through it; limits cross-field check; policy v2. | none; adds the markup interleave proofs |
+| B1 | blocked (design stop) | `CitationNativeLane`; regex v2, Diff and Markup start through it; limits cross-field check; policy v2. | none; adds the markup interleave proofs |
 | B2 | pending | Protocol v3 messages, looping worker, `CitationRegexSession`, sleep-counting clock, the real-process proofs; every regex call site switches. | regex processes 291 to 10 |
 | B3 | pending | Delete v2; rewrite spawn-count assertions; re-record shard timings; append isolation evidence. | none |
 
@@ -69,6 +69,13 @@ git diff --check -- goals/citation-regex-worker-v3
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug citation-regex-worker-v3`; add a `kind: checkpoint` file there, never edit this block._
 
-_No checkpoint files yet._
+### B1 schema complete and native wiring stopped at cleaner boundary, 2026-11-14
+
+Schema commit df7dbe7f5dc publishes policy v2 with the cross-field check and a major changeset. Seven schema tests pass on Bun and Node; both quick package checks, both law checks, Oxlint, docgen and Fallow pass. Fallow introduced count is zero. A4 counts are 291 regex children per ten plain-text calls, construction 16 installs, 1 detach, 1 tokenizer and 26 evaluators; no fresh replay was run. B1 is blocked, not in review: no lane rules or real-process proofs are implemented. Full evidence: history/evidence/2026-11-14-b1-native-lane.md.
+
+Final Effect Vitest full scan passed: 3,900 files, zero introduced, one resolved.
+Inventory churn was restored; no baseline exceptions were added.
+
+Reverse: Resume B1 after an amended binding design covers HTML cleaner lane authority.
 
 <!-- beep:decisions:end -->

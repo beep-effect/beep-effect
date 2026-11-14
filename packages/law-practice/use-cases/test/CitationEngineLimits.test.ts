@@ -55,7 +55,7 @@ describe("schema-owned citation safety budgets", () => {
         ...published,
         version: "citation-engine-policy/v1",
       }).pipe(Effect.exit);
-      expect(Exit.isFailure(old)).toBe(true);
+      old.pipe(Exit.isFailure, assertTrue);
     })
   );
   it.effect("decodes explicit fixtures with Duration values and exact millisecond round trips", () =>
