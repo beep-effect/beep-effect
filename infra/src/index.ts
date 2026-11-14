@@ -116,20 +116,6 @@ export * from "./CiShardOverflowPool.ts";
  */
 export * from "./CiTurboCache.ts";
 /**
- * OIP web Pulumi orchestration exports.
- *
- * @example
- * ```ts
- * import { OipWebStack } from "@beep/infra"
- *
- * console.log(OipWebStack)
- * ```
- *
- * @category resources
- * @since 0.0.0
- */
-export * from "./OipWeb.ts";
-/**
  * OpenClaw workstation Pulumi orchestration exports.
  *
  * @example

@@ -46,7 +46,6 @@
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
     "@pulumi/aws": "catalog:",
-    "@pulumi/cloudflare": "catalog:",
     "@pulumi/command": "catalog:",
     "@pulumi/gharunners": "file:ci-runners/sdks/ghaRunners",
     "@pulumi/pulumi": "catalog:",

@@ -707,7 +707,6 @@
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
         "@pulumi/aws": "catalog:",
-        "@pulumi/cloudflare": "catalog:",
         "@pulumi/command": "catalog:",
         "@pulumi/gharunners": "file:ci-runners/sdks/ghaRunners",
         "@pulumi/pulumi": "catalog:",
@@ -4851,7 +4850,6 @@
     "@pnpm/catalogs.resolver": "1100.1.2",
     "@pnpm/catalogs.types": "1100.0.1",
     "@pulumi/aws": "^7.54.0",
-    "@pulumi/cloudflare": "^6.24.0",
     "@pulumi/command": "^4.5.0",
     "@pulumi/pulumi": "3.276.0",
     "@pulumiverse/vercel": "^5.26.1",
@@ -6951,8 +6949,6 @@
     "@probe.gl/stats": ["@probe.gl/stats@4.1.1", "", {}, "sha512-4VpAyMHOqydSvPlEyHwXaE+AkIdR03nX+Qhlxsk2D/IW4OVmDZgIsvJB1cDzyEEtcfKcnaEbfXeiPgejBceT6g=="],
 
     "@pulumi/aws": ["@pulumi/aws@7.54.0", "", { "dependencies": { "@pulumi/pulumi": "^3.269.0", "mime": "^2.0.0" } }, "sha512-0asX0tYqnQFztv8k3kylli5ejXXXdttY0aVlVJ5CznEhecnQmE9Nt/XZjs/+4z5MXR7OYIdtomwwjPMt1+J8mw=="],
-
-    "@pulumi/cloudflare": ["@pulumi/cloudflare@6.24.0", "", { "dependencies": { "@pulumi/pulumi": "^3.269.0" } }, "sha512-UsgQbHLExQgIFLoGjACgpTeRp359khU6wCNyQ7CNqK6hzgRgyOWKRXg1GqZYOKLEXmA/nKv32p+2S3gM0Va1Vg=="],
 
     "@pulumi/command": ["@pulumi/command@4.5.0", "", { "dependencies": { "@pulumi/pulumi": "^3.0.0" } }, "sha512-o1omwSERsuqsAt7jhokjpF/TOrtx60oimc9u9YdwMIHG+s4WIzLokSDzlgiQMVNVkWWypFOZyWp1Dhvi32NXgQ=="],
 
