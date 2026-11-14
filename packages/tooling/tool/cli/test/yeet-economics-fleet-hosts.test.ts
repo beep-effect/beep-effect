@@ -57,6 +57,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
+import { NoPressure } from "./support/EconomicsPressure.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { FleetHostRoute, FleetHostShellShape } from "@beep/repo-cli/test/Yeet";
 
@@ -548,6 +549,7 @@ it.layer(Platform, { timeout: "30 seconds" })("fleet host source", (it) => {
 
 const CommandLayer = Layer.mergeAll(
   Layer.provideMerge(Layer.mergeAll(YeetEconomicsSource.layer, YeetReviewLaneSource.layer), Platform),
+  NoPressure,
   TestConsole.layer
 );
 

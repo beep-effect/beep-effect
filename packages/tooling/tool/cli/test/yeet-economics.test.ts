@@ -55,6 +55,7 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import { NoPressure } from "./support/EconomicsPressure.ts";
 import type { YeetEconomicsReport, YeetEconomicsSourceShape } from "@beep/repo-cli/test/Yeet";
 
 const BASE_MS = DateTime.toEpochMillis(DateTime.makeUnsafe("2026-09-25T00:00:00.000Z"));
@@ -75,7 +76,7 @@ const NoFleetHosts = Layer.succeed(
   })
 );
 const LiveSource = Layer.provideMerge(
-  Layer.mergeAll(YeetEconomicsSource.layer, YeetReviewLaneSource.layer, NoFleetHosts),
+  Layer.mergeAll(YeetEconomicsSource.layer, YeetReviewLaneSource.layer, NoFleetHosts, NoPressure),
   Platform
 );
 const LiveSourceWithConsole = Layer.mergeAll(LiveSource, TestConsole.layer);
@@ -306,6 +307,7 @@ const failingSource = (read: YeetEconomicsSourceShape["read"]) =>
       YeetReviewLaneSource.of({ read: Effect.fn("YeetReviewLaneSource.read")(() => Effect.succeed([])) })
     ),
     NoFleetHosts,
+    NoPressure,
     TestConsole.layer
   );
 

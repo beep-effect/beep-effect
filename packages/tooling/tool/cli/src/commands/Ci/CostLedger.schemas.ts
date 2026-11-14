@@ -24,6 +24,8 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import { CiLaneId } from "./CiLane.ts";
 import { CiWorkflowJob, CiWorkflowPartialRead, CiWorkflowWindowRun } from "./LaneTimings.ts";
@@ -41,9 +43,11 @@ const Share = S.Finite.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(
  * `hosted-jobs` is the per-attempt jobs listing of each run and `test-plan`
  * the run's `Test Plan` output (with the catch-all partition's own selection
  * line), the join behind the empty-leg row. `turbo-tasks` (MEAS-06),
- * `final-check` (MEAS-07 journals), `economics` (local Yeet attempt lanes) and
- * `psi` (MEAS-08) are the local and per-task sources the fold does not join
- * yet; they appear as `absent` rows.
+ * `final-check` (MEAS-07 journals) and `economics` (local Yeet attempt lanes)
+ * are the local and per-task sources the fold does not join yet. `psi` stays
+ * absent by design: the PSI recorder samples the workstation, never a hosted
+ * runner, so `yeet economics` joins it onto local attempts instead (MEAS-08).
+ * Each appears as an `absent` row.
  *
  * **Example** (List the ledger sources)
  *
@@ -110,6 +114,44 @@ export const CiLedgerSourceStatus = LiteralKit(["present", "partial", "absent"])
  * @since 0.0.0
  */
 export type CiLedgerSourceStatus = typeof CiLedgerSourceStatus.Type;
+
+/**
+ * Judge a source from how many of the parts it covers were read.
+ *
+ * **Details**
+ *
+ * `absent` when no part was read (a source with no parts included),
+ * `present` when every part was, `partial` otherwise. The ledger and the
+ * `yeet economics` pressure join share it, so a source reads `present` only
+ * when every part its note names was read.
+ *
+ * **Example** (One of three parts unread)
+ *
+ * ```ts
+ * import { ciLedgerSourceStatus } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(ciLedgerSourceStatus(2, 3)) // "partial"
+ * console.log(ciLedgerSourceStatus(0, 0)) // "absent"
+ * ```
+ *
+ * @param read - How many of the source's parts were read.
+ * @param total - How many parts the source covers, read or not.
+ * @returns `absent`, `partial` or `present`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const ciLedgerSourceStatus: {
+  (total: number): (read: number) => CiLedgerSourceStatus;
+  (read: number, total: number): CiLedgerSourceStatus;
+} = dual(
+  2,
+  (read: number, total: number): CiLedgerSourceStatus =>
+    Match.value({ none: read === 0, all: read === total }).pipe(
+      Match.when({ none: true }, (): CiLedgerSourceStatus => "absent"),
+      Match.when({ all: true }, (): CiLedgerSourceStatus => "present"),
+      Match.orElse((): CiLedgerSourceStatus => "partial")
+    )
+);
 
 /**
  * The lanes whose partitions `Test Plan` allocates.

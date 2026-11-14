@@ -227,6 +227,14 @@ Lane feat/certainty-ledger-fold-absent-sources
 
 Reverse: Delete this checkpoint so the previous checkpoint is the latest PLAN status note, and revert the slice-15 PR.
 
+### Slice 16: PSI samples joined, 2026-11-14
+
+Slice 16 (MEAS-08) adds a `pressure` section to `yeet economics` (decision `psi-join-onto-attempts`). It joins the PSI recorder samples (`safe-pressure.jsonl`) onto each local attempt by time window, and the SCHE-09 slice 2 stamps on admitted and released rows by attempt id, grouped into leases by nonce. Nothing new is sampled, stamped or written, and the closeout summary reads neither source. Each joined field is present or absent with its reason (remote host, source unread, untimed, outside the recorder span, no samples in the window, no admission row, no row for the transition, unstamped). The `psi-recorder` and `admission-journal` source rows read `present` only when every line or row was decoded, the cost ledger's rule, now shared as `ciLedgerSourceStatus`. Fleet-host attempts count as `remote-host` and are never listed. The ledger's `psi` row stays `absent`, with the reason that hosted runners are not the sampled host. Proof: `packages/tooling/tool/cli/test/yeet-economics-pressure.test.ts`, fixtures only, on Node and Bun. MEAS-08 is landed.
+
+Lane feat/certainty-join-psi-samples
+
+Reverse: Delete this checkpoint so the previous checkpoint is the latest PLAN status note, and revert the slice-16 PR.
+
 ### Slice 5b: capacity and host pressure on admission rows, 2026-11-14
 
 Slice 8 (PERIL-11 slice 2) merged as #3273 and slice 14 (MEAS-05 slice 1) as #3274. Slice 5b (SCHE-09 slice 2) is in review: admitted and v3 released rows carry an optional `pressure` stamp (capacity, active and queued tokens, MemAvailable, PSI some avg10 for cpu, memory and io, and unadmitted agent-runs.slice memory), written only while the admission protocol's new `pressure` key is on (`bun run beep quality scheduler protocol --pressure on`). `quality scheduler history` counts the stamped rows and `--json` lists them (decision `sche-09-pressure-stamps`). The key needs no reader census, because every revision ignores it and keeps the row's bytes, so it can go on once this slice merges. From then on local-proof-under-ten's scheduler levers (SCHE-01, SCHE-02, SCHE-04, SCHE-07) can read capacity at admit and release from the retained history. With 5b merged, both SCHE-09 PR slices have landed.

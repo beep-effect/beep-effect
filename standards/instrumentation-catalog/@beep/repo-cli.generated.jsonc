@@ -3749,6 +3749,7 @@
     {"name":"WorktreeRemovalService.validateRemovalRequest","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.Economics.read","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.Economics.readFleetHosts","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Yeet.Economics.readPressure","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.Economics.readReviewLane","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.ExpectationRewrite.classifyOnBase","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.ExpectationRewrite.diffTestFile","owner":"@beep/repo-cli","family":"tooling","conforms":true},
