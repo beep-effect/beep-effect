@@ -11,6 +11,7 @@ import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { sha256 } from "@noble/hashes/sha2.js";
+import * as Context from "effect/Context";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -26,10 +27,12 @@ import * as P from "effect/Predicate";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+import { unzipSync } from "fflate";
 import { canonicalizeFileTargetPath } from "./FileTransaction.ts";
 import { MatchPersonError } from "./MatchPerson.errors.ts";
+import { PersonMatchModelArtifact, PersonMatchModelComponent } from "./MatchPerson.schemas.ts";
 import type { MatchPersonModelAcquisitionError, MatchPersonModelIntegrityError } from "./MatchPerson.errors.ts";
-import type { PersonMatchModel, PersonMatchModelArtifact } from "./MatchPerson.schemas.ts";
+import type { PersonMatchModel } from "./MatchPerson.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Files/internal/MatchPerson.model-store");
 
@@ -108,6 +111,53 @@ const buffaloRecognizerArtifact = PinnedModelArtifact.make({
   url: "https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip",
 });
 
+const buffaloArchiveArtifact = PinnedModelArtifact.make({
+  ...detectorArtifact,
+  fileName: "buffalo_l.zip",
+  sizeBytes: PosInt.make(288621354),
+  sha256: Sha256Hex.make("80ffe37d8a5940d59a7384c201a2a38d4741f2f3c51eef46ebb28218a7b0ca2f"),
+});
+/**
+ * Model-store artifact pins, including the authenticated extraction archive.
+ *
+ * **Example** (Inspect models)
+ * ```ts
+ * import { BuffaloArtifactPins } from "@beep/repo-cli/test/Files"
+ * console.log(BuffaloArtifactPins.fields.archive)
+ * ```
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export class BuffaloArtifactPins extends S.Opaque<BuffaloArtifactPins, { readonly brand: unique symbol }>()(
+  S.Struct({ detector: PinnedModelArtifact, recognizer: PinnedModelArtifact, archive: PinnedModelArtifact }).pipe(
+    $I.annoteSchema("BuffaloArtifactPins", {
+      description: "Pinned Buffalo source archive and independently authenticated ONNX entries.",
+    })
+  )
+) {}
+/**
+ * Pin set consumed by the production installer.
+ *
+ * **Example** (Inspect services)
+ * ```ts
+ * import { PersonMatchBuffaloPins } from "@beep/repo-cli/test/Files"
+ * import * as Effect from "effect/Effect"
+ * const detector = Effect.gen(function* () { return (yield* PersonMatchBuffaloPins).detector.fileName })
+ * console.log(Effect.isEffect(detector))
+ * ```
+ * @internal
+ * @category services
+ * @since 0.0.0
+ */
+export const PersonMatchBuffaloPins = Context.Reference<BuffaloArtifactPins>($I`PersonMatchBuffaloPins`, {
+  defaultValue: () =>
+    BuffaloArtifactPins.make({
+      detector: detectorArtifact,
+      recognizer: buffaloRecognizerArtifact,
+      archive: buffaloArchiveArtifact,
+    }),
+});
 const pinnedArtifacts = [alignerArtifact, recognizerArtifact] as const;
 const pinnedComponents = ["aligner", "recognizer"] as const;
 
@@ -334,7 +384,7 @@ const acquireModelStoreLock = Effect.fn("Files.PersonMatchModelStore.acquireLock
     .pipe(
       Effect.mapError((cause) =>
         acquisitionError(
-          `Could not acquire the AdaFace model-store lock at "${lockPath}". Another acquisition may be active; remove the lock only after confirming it is idle.`,
+          `Could not acquire the person-match model-store lock at "${lockPath}". Another acquisition may be active; remove the lock only after confirming it is idle.`,
           cause
         )
       )
@@ -809,3 +859,157 @@ export const verifyPersonMatchModelArtifacts = Effect.fn("Files.PersonMatchModel
     );
   }
 );
+
+/**
+ * Verified model paths passed to native sessions.
+ *
+ * **Example** (Inspect models)
+ * ```ts
+ * import { PreparedOnnxModels } from "@beep/repo-cli/test/Files"
+ * console.log(PreparedOnnxModels.fields.detectorPath)
+ * ```
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export class PreparedOnnxModels extends S.Opaque<PreparedOnnxModels, { readonly brand: unique symbol }>()(
+  S.Struct({
+    detectorPath: S.NonEmptyString,
+    recognizerPath: S.NonEmptyString,
+    ada: PreparedAdaFaceArtifacts.pipe(S.Option),
+    components: S.Array(PersonMatchModelComponent),
+  }).pipe(
+    $I.annoteSchema("PreparedOnnxModels", {
+      description: "Verified ONNX and safetensors model paths with original component provenance.",
+    })
+  )
+) {}
+
+/**
+ * Publish verified model bytes with a same-directory atomic rename.
+ *
+ * **Example** (Stage verified bytes)
+ * ```ts
+ * import { writePersonMatchModelBytes } from "./MatchPerson.model-store.ts"
+ * console.log(writePersonMatchModelBytes("/cache/model.onnx", Uint8Array.of(1)))
+ * ```
+ * @internal
+ * @category model-store
+ * @since 0.0.0
+ */
+export const writePersonMatchModelBytes = Effect.fn("Files.writePersonMatchModelBytes")(function* (
+  target: string,
+  content: Uint8Array
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const canonical = yield* canonicalizeFileTargetPath(target, "model cache publication").pipe(
+    Effect.mapError((cause) => integrityError("Unsafe model cache publication path.", cause))
+  );
+  if (canonical !== target) return yield* integrityError("Refusing an aliased model cache path.");
+  yield* Effect.scoped(
+    Effect.gen(function* () {
+      const staged = yield* fs.makeTempFileScoped({ directory: path.dirname(target), prefix: ".beep-model-" });
+      yield* fs.writeFile(staged, content, { mode: 0o600 });
+      yield* fs.rename(staged, target);
+    })
+  ).pipe(Effect.mapError((cause) => acquisitionError("Cannot atomically publish model cache bytes.", cause)));
+});
+const installBuffaloArchive = Effect.fn("Files.installBuffaloArchive")(function* (
+  root: string,
+  directory: string,
+  required: ReadonlyArray<PinnedModelArtifact>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const pins = yield* PersonMatchBuffaloPins;
+  const archive = pins.archive;
+  const archivePath = path.join(root, archive.fileName);
+  yield* ensureArtifact(archive, archivePath, root);
+  const data = yield* fs
+    .readFile(archivePath)
+    .pipe(Effect.mapError((cause) => acquisitionError("Cannot read verified Buffalo archive.", cause)));
+  const extracted = yield* Effect.try({
+    try: () =>
+      unzipSync(data, {
+        filter: (entry) => A.some(required, (a) => a.fileName === entry.name) && entry.originalSize <= 175_000_000,
+      }),
+    catch: (cause) => integrityError("Cannot decode verified Buffalo archive.", cause),
+  });
+  for (const artifact of required) {
+    const content = extracted[artifact.fileName];
+    if (content === undefined) return yield* integrityError(`Archive omitted ${artifact.fileName}.`);
+    const digest = Hex.encode(sha256(content));
+    if (content.length !== artifact.sizeBytes || digest !== artifact.sha256)
+      return yield* integrityError(`Archive artifact mismatch: ${artifact.fileName}.`);
+    const destination = path.join(directory, artifact.fileName);
+    yield* writePersonMatchModelBytes(destination, content);
+  }
+});
+/**
+ * Acquire and verify the same Buffalo archive used by the former worker.
+ * **Example** (Reference model preparation)
+ * ```ts
+ * import { preparePersonMatchOnnxModels } from "./MatchPerson.model-store.ts"
+ * console.log(typeof preparePersonMatchOnnxModels)
+ * ```
+ * @internal
+ * @category model-store
+ * @since 0.0.0
+ */
+export const preparePersonMatchOnnxModels = Effect.fn("Files.preparePersonMatchOnnxModels")(function* (
+  modelRoot: string,
+  backend: "buffalo-l" | "adaface-kprpe"
+) {
+  const path = yield* Path.Path;
+  const pins = yield* PersonMatchBuffaloPins;
+  const root = yield* ensureCanonicalDirectory(modelRoot, "person-match model root");
+  const models = yield* ensureCanonicalDirectory(path.join(root, "models"), "ONNX models directory");
+  const directory = yield* ensureCanonicalDirectory(path.join(models, "beep_buffalo_l_v1"), "pinned ONNX directory");
+  const required = backend === "buffalo-l" ? [pins.detector, pins.recognizer] : [pins.detector];
+  const missingArtifacts = Effect.forEach(required, (artifact) =>
+    validateArtifactPath(artifact, path.join(directory, artifact.fileName)).pipe(Effect.isSuccess)
+  ).pipe(Effect.map((validation) => A.filter(required, (_, index) => validation[index] !== true)));
+  const missing = yield* missingArtifacts;
+  if (A.isReadonlyArrayNonEmpty(missing)) {
+    yield* Effect.acquireUseRelease(
+      acquireModelStoreLock(directory),
+      Effect.fnUntraced(function* () {
+        const remaining = yield* missingArtifacts;
+        if (A.isReadonlyArrayNonEmpty(remaining)) yield* installBuffaloArchive(root, directory, remaining);
+        for (const artifact of required) yield* validateArtifactPath(artifact, path.join(directory, artifact.fileName));
+      }),
+      releaseModelStoreLock
+    );
+  }
+  const ada =
+    backend === "adaface-kprpe"
+      ? yield* prepareAdaFaceArtifacts(root).pipe(Effect.asSome)
+      : O.none<PreparedAdaFaceArtifacts>();
+  const artifacts = backend === "adaface-kprpe" ? [pins.detector, alignerArtifact, recognizerArtifact] : required;
+  return PreparedOnnxModels.make({
+    detectorPath: path.join(directory, pins.detector.fileName),
+    recognizerPath: path.join(directory, pins.recognizer.fileName),
+    ada,
+    components: A.map(artifacts, (artifact) =>
+      PersonMatchModelComponent.make({
+        role: artifact.component,
+        name: artifact.name,
+        revision: artifact.revision,
+        source: artifact.url,
+        licenseNotice: artifact.licenseNotice,
+        artifacts: [
+          PersonMatchModelArtifact.make({
+            name: artifact.fileName,
+            path:
+              artifact.component === "detector" || backend === "buffalo-l"
+                ? path.join(directory, artifact.fileName)
+                : artifactPath(path, root, artifact),
+            sha256: artifact.sha256,
+            sizeBytes: artifact.sizeBytes,
+          }),
+        ],
+      })
+    ),
+  });
+});
