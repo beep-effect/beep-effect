@@ -816,7 +816,7 @@ Reverse: Set assetsBucketName to assets.oip.law / staging-assets.oip.law in live
 
 Ruled by the packet gate session, 2026-11-14: it runs these commands itself when the PR is about to open; no lane runs them. `@beep/infra-github` adopts the environment, variable and secrets when it lands (D20). Run on the operator workstation with the aws-vault session alive; values are piped from 1Password and never printed.
 
-**1. Deploy role** (state bucket read and write as the state role allows, every action on the two assets buckets, `s3:DeleteBucket` denied on them):
+**1. Deploy role** (least privilege on the shared state store, matching the cost-controls deploy role: bucket-level reads only, object read, write and delete under the stack's own `OipWeb/` prefix; every action on the two assets buckets, `s3:DeleteBucket` denied on them). The packet gate session created it 2026-11-14 05:10Z with this policy. No bucket-config writes are needed because the plan step fails on a missing or outdated store; every object a deploy touches is `OipWeb/<stage>/...` (resource rows, `__stack_output__.json`, `__lease__.json`; the store version is a code constant, and bucket-policy calls exist only in `alchemy state migrate`):
 
 ```sh
 export AWS_PROFILE=elpresidank-vault
@@ -826,8 +826,8 @@ cat > "$d/trust.json" <<'JSON'
 JSON
 cat > "$d/policy.json" <<'JSON'
 {"Version":"2012-10-17","Statement":[
- {"Sid":"StateBucketConfig","Effect":"Allow","Action":["s3:ListBucket","s3:GetBucketLocation","s3:GetBucketVersioning","s3:PutBucketVersioning","s3:GetBucketOwnershipControls","s3:PutBucketOwnershipControls","s3:GetBucketPublicAccessBlock","s3:PutBucketPublicAccessBlock","s3:GetEncryptionConfiguration","s3:PutEncryptionConfiguration"],"Resource":"arn:aws:s3:::alchemy-state-832907639880-us-east-1-an"},
- {"Sid":"StateObjects","Effect":"Allow","Action":["s3:GetObject","s3:PutObject","s3:DeleteObject"],"Resource":"arn:aws:s3:::alchemy-state-832907639880-us-east-1-an/*"},
+ {"Sid":"StateBucketRead","Effect":"Allow","Action":["s3:ListBucket","s3:GetBucketLocation","s3:GetBucketVersioning","s3:GetBucketOwnershipControls","s3:GetBucketPublicAccessBlock","s3:GetEncryptionConfiguration"],"Resource":"arn:aws:s3:::alchemy-state-832907639880-us-east-1-an"},
+ {"Sid":"StateObjects","Effect":"Allow","Action":["s3:GetObject","s3:PutObject","s3:DeleteObject"],"Resource":"arn:aws:s3:::alchemy-state-832907639880-us-east-1-an/OipWeb/*"},
  {"Sid":"AssetsBuckets","Effect":"Allow","Action":"s3:*","Resource":["arn:aws:s3:::oip-law-web-assets-prod","arn:aws:s3:::oip-law-web-assets-prod/*","arn:aws:s3:::oip-law-web-assets-staging","arn:aws:s3:::oip-law-web-assets-staging/*"]},
  {"Sid":"NeverDeleteAssetsBuckets","Effect":"Deny","Action":"s3:DeleteBucket","Resource":["arn:aws:s3:::oip-law-web-assets-prod","arn:aws:s3:::oip-law-web-assets-staging"]}
 ]}
@@ -861,7 +861,7 @@ One `CRM_HUBSPOT_SERVICE_KEY` secret serves both stages: the packet gate session
 
 **3. Cloudflare grant on the Alchemy token** (`op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_CLOUDFLARE_ALCHEMY_TOKEN`; never the account IaC token). The six records live in zones `oip.law` (id `144f81bdbe12b3a7530cdcc8d56b13cc`: `oip.law` A, `www.oip.law` CNAME, `staging.oip.law` CNAME) and `opip.law` (id `0d26e874202f4579081926dc38b3bf80`: `opip.law` A, `www.opip.law` CNAME, `staging.opip.law` CNAME). The token already reads both zones (`GET /zones/{zone_id}` returned 200) and is refused on their records (403). The first `prod` and `staging` deploys call, per record, `GET /zones/{zone_id}/dns_records?name.exact=<name>&type=<type>` at plan time and again in reconcile, and nothing else: content, TTL, proxy flag and the declared comment (`Managed by Pulumi for oip.law Vercel routing.`, the live text) all match, so the provider skips `PUT /zones/{zone_id}/dns_records/{id}`. `GET /zones/{zone_id}` is called only when a name lookup finds nothing. Needed now: **Zone · DNS · Read** (API permission group `DNS Read`) on both zones. Needed for any later record change (rewording the comment, a content change, a removal): **Zone · DNS · Edit** (API `DNS Write`) on the same zones. **Zone · Zone · Read** (API `Zone Read`) is already granted. Declaring no comment would not be a pure read: the provider then sends its default `Managed by Alchemy (<fqn>)`, which differs from the live comment and triggers the `PUT`.
 
-Checks after the bootstrap: the role ARN prints; the variable and five secret names list; with the widened token, `GET /zones/{zone_id}/dns_records` returns 200 on both zones.
+Checks after the bootstrap: the role ARN prints; the one variable and four secret names list; with the widened token, `GET /zones/{zone_id}/dns_records` returns 200 on both zones.
 
 Lane goals/infra-alchemy-rebuild-p4-oip-web
 

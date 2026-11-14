@@ -273,7 +273,7 @@ The `oip-web-infra-prod` environment (branch policy `main`) carries:
 
 | Name | Kind | Source |
 | --- | --- | --- |
-| `OIP_WEB_DEPLOY_ROLE_ARN` | variable | role `beep-alchemy-oip-web-deploy` (state bucket read and write; every action on the two `oip-law-web-assets-*` buckets except `s3:DeleteBucket`, which is denied; trust `repo:beep-effect/beep-effect:environment:oip-web-infra-prod`) |
+| `OIP_WEB_DEPLOY_ROLE_ARN` | variable | role `beep-alchemy-oip-web-deploy` (state bucket: bucket-level reads, object read, write and delete under `OipWeb/` only; every action on the two `oip-law-web-assets-*` buckets except `s3:DeleteBucket`, which is denied; trust `repo:beep-effect/beep-effect:environment:oip-web-infra-prod`) |
 | `VERCEL_TOKEN` | secret | `op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_VERCEL_TOKEN` (reads the team; `CLOUD_VERCEL_API_TOKEN` is refused) |
 | `CLOUDFLARE_API_TOKEN` | secret | `op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_CLOUDFLARE_ALCHEMY_TOKEN`, once it carries Zone · DNS · Read on zones `oip.law` and `opip.law` (DNS · Edit for any later record change) |
 | `CLOUDFLARE_ACCOUNT_ID` | secret | `op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_CLOUDFLARE_ACCOUNT_ID` |
