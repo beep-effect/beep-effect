@@ -60,8 +60,6 @@ const SAMPLES: Readonly<Record<string, string>> = {
   "^goals/time-to-certainty/research/economics\\.json$": "goals/time-to-certainty/research/economics.json",
   "^goals/time-to-certainty/research/gate-order-handoff\\.json$":
     "goals/time-to-certainty/research/gate-order-handoff.json",
-  "^goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics(\\.test)?\\.py$":
-    "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py",
   "^goals/speed-loop/ops/runner-burst/": "goals/speed-loop/ops/runner-burst/teardown-burst-runners.sh",
   "^explorations/beep-ci-operational-ontology/ontology/extraction/s6/(graphs/abox\\.ttl|snapshot/raw/journal\\.ndjson)$":
     "explorations/beep-ci-operational-ontology/ontology/extraction/s6/graphs/abox.ttl",

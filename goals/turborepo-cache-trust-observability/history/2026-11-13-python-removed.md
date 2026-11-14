@@ -14,3 +14,5 @@ ports it to TypeScript first; tracked Python is no longer admitted.
 | Deleted file | Recorded in (non-Python files that name it) |
 | --- | --- |
 | `research/saved-trial-storage-grants.py` | `goals/turborepo-cache-trust-observability/research/saved-storage-grants-checkpoint-2026-11-03.json`, `goals/turborepo-cache-trust-observability/research/SOURCES.md` |
+| `research/native-dependency-diagnostics.py` | Ported, not retired: `beep cache producer-diagnose` (`packages/tooling/tool/cli/src/commands/Cache/Cache.diagnostics.ts`, #3296), which `.github/workflows/heavy.yml` `producer-inspect` now calls. The Python stayed until #3296 merged because `heavy.yml` is consumed at `@main`; the python-free-repo final PR deletes it. |
+| `research/native-dependency-diagnostics.test.py` | Its cases were replayed in `packages/tooling/tool/cli/test/cache-dependency-diagnostics.test.ts` (#3296). |

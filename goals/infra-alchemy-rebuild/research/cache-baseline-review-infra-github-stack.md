@@ -14,11 +14,14 @@ What the package adds to their inputs beyond the generated shape:
   root), the shape of the sibling turbo cache and cost-controls stacks, so `build` and `check` typecheck the
   stack entry and the pre-write guard command;
 - `test/fixtures/census.json` is a committed snapshot of non-secret repository settings that `test` reads;
-- dependencies `@alchemy.run/aws`, `@alchemy.run/github`, `@effect/platform-bun` (the guard command's runtime),
+- dependencies `@alchemy.run/aws`, `@alchemy.run/github`, `@distilled.cloud/github` (the pre-write re-read of
+  the ruleset), `@effect/platform-bun` (the guard command's runtime),
   `alchemy`, `@beep/identity`, `@beep/schema`, `effect`, and dev dependency `@alchemy.run/test`.
 
-Re-recorded 2026-11-14 after merging `main` at Alchemy 2.0.0-beta.87: the merge took main's baseline, so
-both subjects are stamped again.
+Re-recorded 2026-11-14 after merging `main` at Alchemy 2.0.0-beta.87, and again after merging #3322 and #3299:
+each merge took main's baseline, so both subjects are stamped again. The review-round-1 wave adds the
+`@distilled.cloud/github` dependency and new source and test files inside the package's default inputs; no
+command, output or environment changes.
 
 No task reads the network or a credential: the stack tests serve GitHub from an in-memory fake, and nothing
 writes outside the declared outputs. Recording `@beep/infra-github` adds its computations to the reviewed
