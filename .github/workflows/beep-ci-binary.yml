@@ -292,34 +292,45 @@ jobs:
           bun run beep ci binary-pin --tag "$tag" --sha256 "$sha256" --write
           changed=false
           if ! git diff --quiet -- .github/actions/fetch-beep-ci/action.yml; then changed=true; fi
-          # create-pull-request resets an existing branch whenever main has moved,
-          # which would restart the open pull request's heavy Check on every main
-          # push until it merges. Touch the branch only when it does not already
-          # pin this release (tag and sha256): a newer release updates it, a main push
-          # alone does not.
-          # The bump is done only in its whole end state: the branch pins this
-          # tag and sha256, AND an open pull request from it exists, AND that
-          # pull request carries ready-for-heavy. create-pull-request pushes the
-          # branch before it opens the pull request and labels it, so a failure
-          # after the push leaves a current branch with no (labelled) pull
-          # request; any missing part runs the pull-request step again, which
-          # opens or repairs it. A missing branch reads as empty.
-          branch_current=false
+          # The newest release T is read from state, in this order (#3299 review):
+          # - a CLOSED, unmerged pin-bump pull request titled for T: the bump was
+          #   declined on purpose, so it stays parked (no push, no reopen) until a
+          #   newer release, which is a new bump;
+          # - the branch pins T's tag and sha256 AND an open pull request titled
+          #   for T carries ready-for-heavy: done, no push and no edit, so a main
+          #   push alone never restarts that pull request's heavy Check
+          #   (create-pull-request resets an existing branch whenever main moved);
+          # - anything else (no branch, a stale branch, no pull request because
+          #   creation failed after the push, a missing label, a re-run after a
+          #   failed pull-request step): run the pull-request step, which opens or
+          #   repairs the pull request and its label. A missing branch reads as empty.
+          bump=false
+          parked=false
           if [[ "$changed" == "true" ]]; then
+            title="ci: bump the beep CI binary pin to ${tag}"
+            pulls="$(gh pr list --head "$PIN_BRANCH" --state all --json number,state,title,labels 2>/dev/null || echo '[]')"
+            closed="$(jq --arg title "$title" \
+              '[.[] | select(.state == "CLOSED" and .title == $title)] | length' <<<"$pulls" 2>/dev/null || echo 0)"
+            open_labelled="$(jq --arg title "$title" \
+              '[.[] | select(.state == "OPEN" and .title == $title and any(.labels[]; .name == "ready-for-heavy"))] | length' \
+              <<<"$pulls" 2>/dev/null || echo 0)"
             branch_pin="$(gh api "repos/${GH_REPO}/contents/.github/actions/fetch-beep-ci/action.yml?ref=${PIN_BRANCH}" \
               --jq .content 2>/dev/null | base64 --decode 2>/dev/null || true)"
+            branch_current=false
             if grep -Eq "^[[:space:]]*BEEP_CI_RELEASE_TAG:[[:space:]]*${tag}[[:space:]]*$" <<<"$branch_pin" \
               && grep -Eq "^[[:space:]]*BEEP_CI_SHA256:[[:space:]]*${sha256}[[:space:]]*$" <<<"$branch_pin"; then
-              labelled="$(gh pr list --head "$PIN_BRANCH" --state open --json number,labels 2>/dev/null \
-                | jq '[.[] | select(any(.labels[]; .name == "ready-for-heavy"))] | length' 2>/dev/null || echo 0)"
-              if [[ "${labelled:-0}" -ge 1 ]]; then branch_current=true; fi
+              branch_current=true
+            fi
+            if [[ "${closed:-0}" -ge 1 ]]; then
+              parked=true
+            elif [[ "$branch_current" != "true" || "${open_labelled:-0}" -lt 1 ]]; then
+              bump=true
             fi
           fi
-          bump=false
-          if [[ "$changed" == "true" && "$branch_current" != "true" ]]; then bump=true; fi
           {
             echo "changed=$changed"
             echo "bump=$bump"
+            echo "parked=$parked"
             echo "tag=$tag"
             echo "sha256=$sha256"
             echo "digest=$digest"
@@ -333,8 +344,12 @@ jobs:
               echo "- main already pins it: no pin-bump pull request."
               exit 0
             fi
+            if [[ "$parked" == "true" ]]; then
+              echo "- main pins an older release, and a pin-bump pull request for \`$tag\` was closed unmerged: parked until a newer release; no push, no reopen."
+              exit 0
+            fi
             if [[ "$bump" != "true" ]]; then
-              echo "- main pins an older release, and \`$PIN_BRANCH\` already pins \`$tag\` and its sha256 and has an open \`ready-for-heavy\` pull request: no push, no pull-request edit."
+              echo "- main pins an older release, and \`$PIN_BRANCH\` already pins \`$tag\` and its sha256 with an open \`ready-for-heavy\` pull request: no push, no pull-request edit."
               exit 0
             fi
             echo "- main pins an older release: open or update the pin-bump pull request on \`$PIN_BRANCH\`."
@@ -377,13 +392,12 @@ jobs:
           # create-pull-request applies `ready-for-heavy` through the Issues labels API.
           permission-issues: write
 
-      # One fixed branch: this step runs only when the branch does not already
-      # pin the newest release, so an open pin-bump pull request is force-updated
-      # (and its title and body refreshed) by a newer release only, never by a
-      # main push alone, and a second one is never opened. A pin-bump pull request
-      # closed unmerged keeps its branch, so the bump stays parked until a newer
-      # release or until that branch is deleted. The repo's lefthook hooks are for
-      # people.
+      # One fixed branch: this step runs only when the bump for the newest release
+      # is neither done nor parked (see the pin step), so an open pin-bump pull
+      # request is force-updated (and its title and body refreshed) by a newer
+      # release or a repair only, never by a main push alone, and a second one is
+      # never opened. A pin-bump pull request closed unmerged parks that release
+      # until a newer one. The repo's lefthook hooks are for people.
       - name: Open or update the pin-bump pull request
         if: steps.pin.outputs.bump == 'true'
         env:
