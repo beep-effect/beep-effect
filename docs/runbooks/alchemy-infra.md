@@ -91,7 +91,8 @@ plan without `--adopt` fails on an `Unowned` read before the deploy runs.
 `ALCHEMY_STATE_ROLE_ARN` is an environment variable on each deploying GitHub
 environment. `--env-file /dev/null` stops the CLI loading a stray `.env`.
 Stacks that also manage AWS resources (cost controls, runner fleet) take a
-stack-scoped deploy role; the state role stays state-only.
+stack-scoped deploy role, and so does InfraGithub, whose role reaches only its own
+state objects (`beep-alchemy-infra-github-deploy`). The state role stays state-only.
 
 Adding a stack's environment: add its subject to the role trust policy and set
 the variable on the environment. Both are bootstrap singletons until
@@ -105,6 +106,7 @@ decision file per object).
 | `BeepEffectWeb` | `apps/beep-effect-web/alchemy.run.ts` | `deploy-beep-effect-web.yml` | `beep-effect-web-prod` | `https://beep-effect.com` (custom domain, `www` redirect) |
 | `Storybook` | `apps/storybook/alchemy.run.ts` | `deploy-storybook.yml` | `storybook-prod` | `https://beep-effect.com/storybook/` (zone route `beep-effect.com/storybook*` in front of the apex Worker) |
 | `CostControls` | `packages/tooling/infra/cost-controls/alchemy.run.ts` | `deploy-cost-controls.yml` | `cost-controls-prod` | AWS account budget, services anomaly monitor and subscription, cost allocation tags, Compute Optimizer and Cost Optimization Hub enrollment |
+| `InfraGithub` | `packages/tooling/infra/github/alchemy.run.ts` | `deploy-infra-github.yml` (disarmed) | `infra-github-prod` | settings, `main` ruleset, deploy environments, variables, labels of `beep-effect/beep-effect` |
 | `HostsAiMetrics` | `packages/tooling/infra/infra-hosts/alchemy.run.ts` | none (operator workstation only, D21) | none | Arize Phoenix on dankserver behind Tailscale Serve |
 | `HostsOpenClaw` | `packages/tooling/infra/infra-hosts/openclaw.alchemy.run.ts` | none (operator workstation only, D21) | none | the OpenClaw generation on the operator workstation |
 | `OipWeb` | `apps/oip-web/alchemy.run.ts` | `deploy-oip-web-infra.yml` (armed by repo variable `OIP_WEB_INFRA_DEPLOY=enabled`) | `oip-web-infra-prod` | oip.law Vercel project settings, variables and domains, their Cloudflare DNS records, the assets buckets (stages `staging` then `prod`) |
@@ -223,6 +225,243 @@ Rollback (decision "Cost controls cutover from Pulumi"):
   `prod` back to `silent` (first case) so only one set mails.
 - After the component-removal PR merged, `pulumi up` no longer sees the old
   declarations: revert that PR first, then import, refresh, preview and up.
+
+## InfraGithub
+
+`InfraGithub` writes to the live repository from every stage, because the repository, its
+ruleset and its labels are singletons. `prod` deploys only from CI. Any other stage is a
+plan-only preview by construction: its GitHub providers are read-only
+(`src/ReadOnlyProviders.ts`), so plan works while create, update and delete fail with
+`PreviewStageIsReadOnly` before any request, whatever token is in the environment; it also
+refuses to start without `INFRA_GITHUB_LIVE_PREVIEW=plan-only`. Every resource is retained
+on removal and the repository and the `main` ruleset are protected, so a stray destroy
+deletes nothing:
+
+```sh
+eval "$(aws configure export-credentials --profile elpresidank-vault --format env)"
+export AWS_REGION=us-east-1
+cd packages/tooling/infra/github
+mkdir -p ~/.local/state/beep/infra-github
+gh api repos/beep-effect/beep-effect/rulesets/10240248 > ~/.local/state/beep/infra-github/ruleset-10240248.live.json
+GITHUB_TOKEN="$(gh auth token)" INFRA_GITHUB_LIVE_PREVIEW=plan-only \
+  INFRA_GITHUB_LIVE_RULESET=~/.local/state/beep/infra-github/ruleset-10240248.live.json \
+  bunx alchemy plan --stage "preview_$USER" --env-file /dev/null
+```
+
+The first plan shows the `main` ruleset as `adopted` and every other object as
+`create`: `GitHub.Repository`, `Environment`, `Variable` and `Label` have no adoption
+probe in beta.86 or beta.87, and their reconcile observes the live object by name and updates it in
+place (the stack tests prove a first deploy issues no POST). Ownership, secrets and the
+beep-reviewer switch: `packages/tooling/infra/github/README.md`.
+
+### The prod create guard
+
+On `prod` a planned `create` is safe only where the provider converges an existing object
+by name. That holds for the repository (GET, then PATCH), environments (PUT by name),
+variables and labels (GET, then PATCH; POST only on a 404). It does not hold for the
+`main` ruleset: the shipped `GitHub.Ruleset` create path POSTs a new ruleset. So every
+`prod` provider is wrapped (`src/ProdWriteGuard.ts`, explicit list
+`productionCreateAllowList` in `src/Production.ts`):
+
+- Only the 36 listed logical ids may take the create path. `MainRuleset` is not listed, so
+  a plan whose name-based read cannot find ruleset 10240248 fails with `ProdChangeRefused`
+  instead of planning a second ruleset. The ruleset write guard also refuses any write not
+  aimed at the captured id (`RulesetTargetIsNotTheCapture`).
+- The repository's create path must find the live repository, so the plan fails instead
+  of reaching `POST /orgs/beep-effect/repos`.
+- A planned `replace` fails the plan. `precreate` and `delete` always fail.
+- Plan-time refusals (the ruleset, the repository, every `replace`) run in both the
+  `Plan prod stage` step and the plan inside `alchemy deploy`, before anything is written.
+  Kinds with no `read` (environments, variables, labels) are refused at their create path,
+  before that resource's request. The package tests run first in the deploy job. They
+  plan the committed declarations and fail unless the first plan's `create` set equals the
+  allow-list exactly. A new declaration is therefore refused before a token is minted until
+  it is added to the list.
+- Kinds with no `read` are refused only at their create path, so allowed writes earlier
+  in the same deploy may already have gone out. Their plan-time control is the package
+  test above: it plans the committed declarations and fails unless the `create` set equals
+  the allow-list and every listed id is a converge-by-name kind.
+- A removed declaration plans `orphaned` (every resource is retained), and its deploy sends
+  no mutating request (tested). The guard does not refuse it. A removed declaration leaves
+  the live object in place and unmanaged: removing a live object is a deliberate, attended
+  act outside the deploy job.
+
+### Ruleset 10240248 guard and the pre-arming evidence
+
+Ruleset 10240248 defines the 15 required merge checks, and the deploy rewrites it as a
+whole body. Two rules keep a deploy a no-op on it:
+
+- The stack does not own the `beep-reviewer` check. It reads the live one from a capture
+  of the ruleset taken right before the plan (`INFRA_GITHUB_LIVE_RULESET`) and writes it
+  back unchanged, so `beep reviewer ruleset release|require --apply` stays the only
+  switch, armed or not.
+- Before the deploy writes anything, `ruleset-guard.ts` (tested `src/RulesetGuard.ts`)
+  compares the body the stack will write with that capture over every field the PUT
+  writes: required checks (contexts and integration ids, in order), the strict up-to-date
+  setting, bypass actors, allowed merge methods and the other pull request settings, the
+  rule types, conditions, name, target and enforcement. Server-managed fields (ids, node
+  ids, timestamps, links) are not compared. Any difference fails the step and nothing is
+  written; after the deploy the same guard must pass on a fresh capture.
+- The guard fails closed: the capture is decoded strictly, so an unknown key, an
+  unknown rule type, a missing field, or a setting the provider never sends standing away
+  from its default (required reviewers, an enabled dismissal restriction,
+  `do_not_enforce_on_create`) refuses the deploy in both modes instead of being skipped.
+
+- The capture can go stale between the plan and the write: a `release` or `require`
+  landing in that gap would be overwritten. The `GitHub.Ruleset` provider is wrapped
+  (`src/RulesetWriteGuard.ts`): inside its update path, one API round-trip before the
+  PUT, it re-reads ruleset 10240248, compares it with the capture over the same strictly
+  decoded, server-fields-excluded fields, and fails with `RulesetChangedSinceCapture`,
+  sending no PUT, if anything differs.
+- The post-deploy check (`ruleset-guard.ts <after> --reviewer-from <before>`) compares the
+  ruleset read after the deploy with the body the deploy wrote, whose `beep-reviewer`
+  check came from the before capture. It fails when the ruleset differs from what the
+  deploy wrote, which means the ruleset moved after the write and nothing was undone;
+  confirm the switch position. The write guard closes the capture-to-PUT window except
+  for its single GET-to-PUT round-trip: a switch flipped inside that round-trip is
+  overwritten and not detected.
+
+Do not flip the reviewer switch (`beep reviewer ruleset release|require --apply`) while a
+`Deploy infra-github` run is in progress; this practice is what covers the one round-trip
+the write guard leaves open. After any `Deploy infra-github` run that overlapped a switch, read the ruleset
+(`gh api repos/beep-effect/beep-effect/rulesets/10240248`) and re-run
+`beep reviewer ruleset release|require --apply` if `beep-reviewer` is not in the intended state. The pre-deploy check runs
+before the deploy step, so a refusal there writes nothing. A refusal inside the deploy
+(`RulesetChangedSinceCapture`, `RulesetTargetIsNotTheCapture`, `ProdChangeRefused` at a create
+path) stops only that resource's request: writes other resources completed earlier in the same
+deploy stand. Before re-running, read the run log and inspect what the completed steps changed
+(labels, environments, variables, repository settings). Then re-run; it takes a fresh capture.
+
+Pre-arming evidence, read-only and with no App: print the field-by-field diff of planned
+against live. It must say `empty diff` before `INFRA_GITHUB_DEPLOY_ARMED` is switched:
+
+```sh
+cd packages/tooling/infra/github
+mkdir -p ~/.local/state/beep/infra-github
+gh api repos/beep-effect/beep-effect/rulesets/10240248 > ~/.local/state/beep/infra-github/ruleset-10240248.live.json
+bun ruleset-guard.ts ~/.local/state/beep/infra-github/ruleset-10240248.live.json --diff-only
+```
+
+Without `--diff-only` the same command exits non-zero on any difference (the deploy
+step's mode). Any intended change to a guarded field waits for the window-5 verdict
+(2026-11-20T20:10Z); until then the declared values follow live, never the reverse.
+
+### Before arming: the operator's one-time setup
+
+The deploy workflow stays disarmed until the packet gate says otherwise. Arming needs
+the App below, the reviewer-switch CLI change merged, and the orchestrator told first,
+because the stack rewrites the ruleset that gates every merge. The setup steps change
+live settings; run them only when the gate asks.
+
+1. Mint the App from its checked-in manifest (browser handoff, as `kriegcloud`):
+
+   ```sh
+   bun run beep github app mint beep-infra-github --dry-run   # review the manifest
+   bun run beep github app mint beep-infra-github
+   ```
+
+   Confirm the registration page lists exactly: Administration, Environments, Variables
+   and Issues read and write, Metadata read-only, no webhook. The launcher stores
+   `app_id`, `client_id`, `slug` and `private_key` in the 1Password item
+   `beep-infra-github GitHub App` (vault `BEEP_SECRETS`).
+2. Install the App on `beep-effect/beep-effect` only, and record the installation id in
+   the item's `installation_id` field.
+3. Create the deploy environment with a `main`-only branch policy:
+
+   ```sh
+   gh api -X PUT repos/beep-effect/beep-effect/environments/infra-github-prod \
+     -F 'deployment_branch_policy[protected_branches]=false' \
+     -F 'deployment_branch_policy[custom_branch_policies]=true'
+   gh api -X POST repos/beep-effect/beep-effect/environments/infra-github-prod/deployment-branch-policies \
+     -f name=main -f type=branch
+   ```
+
+4. Put the App id and key on it, piped from 1Password and never printed:
+
+   ```sh
+   gh variable set INFRA_GITHUB_APP_ID --env infra-github-prod \
+     --body "$(op read 'op://BEEP_SECRETS/beep-infra-github GitHub App/app_id')"
+   op read 'op://BEEP_SECRETS/beep-infra-github GitHub App/private_key' \
+     | gh secret set INFRA_GITHUB_APP_PRIVATE_KEY --env infra-github-prod
+   ```
+
+   The key is the one credential that enters CI for this stack (decision
+   `2026-11-14-packet-gate-ruling-the-infra-github-app-key-is-the-one-credential-that-enters-ci`).
+   It is an environment secret, never a repository secret, and only the token-mint step reads it.
+5. Create the stack-scoped deploy role `beep-alchemy-infra-github-deploy` under the aws-vault
+   profile, and point the environment at it. Its trust names only
+   `repo:beep-effect/beep-effect:environment:infra-github-prod`. Its policy reads the state
+   bucket's configuration and reads and writes state objects only under `InfraGithub/`; it
+   has nothing else in AWS. The exact commands and policy JSON are in decision
+   `2026-11-14-infra-github-deploy-role`. The shared `beep-alchemy-state-rw` gains no trust
+   subject. Then:
+
+   ```sh
+   gh variable set ALCHEMY_STATE_ROLE_ARN --env infra-github-prod \
+     --body arn:aws:iam::832907639880:role/beep-alchemy-infra-github-deploy
+   ```
+6. Show the orchestrator an empty `ruleset-guard.ts --diff-only` (section above). Then, only
+   on the gate's word: `gh variable set INFRA_GITHUB_DEPLOY_ARMED --body true`.
+
+### Rotating the App key
+
+1. In the App settings (`https://github.com/organizations/beep-effect/settings/apps/beep-infra-github`),
+   generate a new private key and store it in the 1Password item's `private_key` field.
+2. Replace the environment secret, piped and never printed:
+
+   ```sh
+   op read 'op://BEEP_SECRETS/beep-infra-github GitHub App/private_key' \
+     | gh secret set INFRA_GITHUB_APP_PRIVATE_KEY --env infra-github-prod
+   ```
+
+3. Dispatch `Deploy infra-github` or wait for the next run, and confirm the token-mint step passes.
+4. Delete the old key in the App settings. Until then, either key mints a token.
+
+### First deploy: capture, compare, roll back
+
+The `main` ruleset is rewritten on every deploy, so the first armed deploy is bracketed by
+a capture of ruleset 10240248. Before dispatching `Deploy infra-github`:
+
+```sh
+mkdir -p ~/.local/state/beep/infra-github
+gh api repos/beep-effect/beep-effect/rulesets/10240248 > ~/.local/state/beep/infra-github/ruleset-10240248.before.json
+```
+
+After the run is green, compare the two captures with `updated_at` and the `beep-reviewer`
+entry left out. The reviewer switch (`beep reviewer ruleset release|require --apply`) may
+legitimately move between the captures, so its position is read separately:
+
+```sh
+cd ~/.local/state/beep/infra-github
+gh api repos/beep-effect/beep-effect/rulesets/10240248 > ruleset-10240248.after.json
+strip='del(.updated_at) | .rules |= map(if .type == "required_status_checks"
+  then .parameters.required_status_checks |= map(select(.context != "beep-reviewer")) else . end)'
+diff <(jq -S "$strip" ruleset-10240248.before.json) <(jq -S "$strip" ruleset-10240248.after.json)
+jq -c '[.rules[] | select(.type == "required_status_checks") | .parameters.required_status_checks[]
+  | select(.context == "beep-reviewer")]' ruleset-10240248.after.json   # the switch position now
+```
+
+The diff must be empty, and the switch must be where the last `beep reviewer ruleset` command
+put it. Any other difference (a check, a bypass actor, a rule parameter) is a failed deploy:
+disarm (`gh variable set INFRA_GITHUB_DEPLOY_ARMED --body false`), then re-apply the capture
+with the `beep-reviewer` entry taken from a fresh live read, so a switch made in between is
+kept and not reverted:
+
+```sh
+cd ~/.local/state/beep/infra-github
+gh api repos/beep-effect/beep-effect/rulesets/10240248 > ruleset-10240248.live.json
+jq --slurpfile live ruleset-10240248.live.json '
+  [$live[0].rules[] | select(.type == "required_status_checks")
+    | .parameters.required_status_checks[] | select(.context == "beep-reviewer")] as $reviewer
+  | {name, target, enforcement, conditions, bypass_actors,
+     rules: (.rules | map(if .type == "required_status_checks"
+       then .parameters.required_status_checks =
+         ([.parameters.required_status_checks[] | select(.context != "beep-reviewer")] + $reviewer)
+       else . end))}' ruleset-10240248.before.json \
+  | gh api -X PUT repos/beep-effect/beep-effect/rulesets/10240248 --input -
+```
+
+and repeat the `after` capture and compare until the diff is empty again.
 
 ## Host stacks (`@beep/infra-hosts`, workstation only)
 

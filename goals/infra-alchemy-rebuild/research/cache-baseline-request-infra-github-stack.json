@@ -1,0 +1,15 @@
+{
+  "previous": "e43cac8b95a5d3d5c9371955a813ea3072b7b8dcf0498b3a7ea82cd6362b2819",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p3-github)",
+    "reason": "Record the new @beep/infra-github workspace (eight generated tooling tasks, an Alchemy stack entry in tsconfig, a committed census fixture) and the root manifest workspace and catalog entries it needs; no command, output or environment beyond the generated shape, no qualification granted.",
+    "basis": {
+      "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-infra-github-stack.md",
+      "sha256": "d9929969139e517901b2d9c6404e55b64e2599c70bbf68c8848445857efb99fb"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//", "@beep/infra-github"]
+}

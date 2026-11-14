@@ -3944,6 +3944,26 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/tooling/infra/github": {
+      "name": "@beep/infra-github",
+      "version": "0.0.0",
+      "dependencies": {
+        "@alchemy.run/aws": "catalog:",
+        "@alchemy.run/github": "catalog:",
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@distilled.cloud/github": "catalog:",
+        "@effect/platform-bun": "catalog:",
+        "alchemy": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@alchemy.run/test": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/tooling/infra/infra-hosts": {
       "name": "@beep/infra-hosts",
       "version": "0.0.0",
@@ -4755,6 +4775,7 @@
     "@alchemy.run/cloudflare": "2.0.0-beta.87",
     "@alchemy.run/docker": "2.0.0-beta.87",
     "@alchemy.run/domain": "2.0.0-beta.87",
+    "@alchemy.run/github": "2.0.0-beta.87",
     "@alchemy.run/test": "2.0.0-beta.87",
     "@arizeai/phoenix-client": "8.0.0",
     "@azure/core-http-compat": "2.5.0",
@@ -5033,6 +5054,8 @@
     "@alchemy.run/docker": ["@alchemy.run/docker@2.0.0-beta.87", "", { "dependencies": { "rolldown": "1.2.16" }, "peerDependencies": { "@effect/platform-bun": "^4.1.4", "alchemy": "2.0.0-beta.87", "effect": "^4.1.4" }, "optionalPeers": ["@effect/platform-bun"] }, "sha512-xs+5UV4FqvmeXf9aS2I66R11FJzGUKQtR6pIMdNIf5AYXO9gIBHSE6LSCjlUgcaJqiY98m4HyJQZi/2uREjOag=="],
 
     "@alchemy.run/domain": ["@alchemy.run/domain@2.0.0-beta.87", "", { "peerDependencies": { "@alchemy.run/cloudflare": "2.0.0-beta.87", "@alchemy.run/effect-cluster": "2.0.0-beta.87", "@alchemy.run/rivet": "2.0.0-beta.87", "@distilled.cloud/cloudflare": "1.0.0-rc.20", "@effect/sql-pg": "^4.1.4", "alchemy": "2.0.0-beta.87", "effect": "^4.1.4", "foldkit": "^0.170.0" }, "optionalPeers": ["@alchemy.run/cloudflare", "@alchemy.run/effect-cluster", "@alchemy.run/rivet", "@distilled.cloud/cloudflare", "@effect/sql-pg", "foldkit"] }, "sha512-kgnSf8k0qOBSh9Yisc/SxtkdmR7a5DRVvqq7VW9cGeSwyHg7YtmL1ai35tvXPHfSk+wiEfTOjm87wsArrrHI5Q=="],
+
+    "@alchemy.run/github": ["@alchemy.run/github@2.0.0-beta.87", "", { "dependencies": { "@distilled.cloud/core": "1.0.0-rc.20", "@distilled.cloud/github": "1.0.0-rc.20", "libsodium-wrappers": "^0.8.3" }, "peerDependencies": { "alchemy": "2.0.0-beta.87", "effect": "^4.1.4" } }, "sha512-6OjWZ+uaLkyUhBY5l8iuVj+3Mf0JNsSE+VHVR0TAALx7/GYiZbWjPHu9lM6BksGuHHamStIVZs16RJ33srPm9w=="],
 
     "@alchemy.run/kubernetes": ["@alchemy.run/kubernetes@2.0.0-beta.87", "", { "dependencies": { "@alchemy.run/docker": "2.0.0-beta.87", "yaml": "^2.9.1" }, "peerDependencies": { "@effect/platform-bun": "^4.1.4", "alchemy": "2.0.0-beta.87", "effect": "^4.1.4" }, "optionalPeers": ["@effect/platform-bun"] }, "sha512-DXNn23Ed5AhBwv15WNYxzD/4l625QytENFgvTZrb/29wBlNogHwq9i10kAqdKbAs7ao9xLB1NXWxUFsq5+i+0g=="],
 
@@ -5331,6 +5354,8 @@
     "@beep/infra": ["@beep/infra@workspace:infra"],
 
     "@beep/infra-cost-controls": ["@beep/infra-cost-controls@workspace:packages/tooling/infra/cost-controls"],
+
+    "@beep/infra-github": ["@beep/infra-github@workspace:packages/tooling/infra/github"],
 
     "@beep/infra-hosts": ["@beep/infra-hosts@workspace:packages/tooling/infra/infra-hosts"],
 
@@ -8525,6 +8550,10 @@
     "lib0": ["lib0@0.2.117", "", { "dependencies": { "isomorphic.js": "^0.2.4" }, "bin": { "0serve": "bin/0serve.js", "0gentesthtml": "bin/gentesthtml.js", "0ecdsa-generate-keypair": "bin/0ecdsa-generate-keypair.js" } }, "sha512-DeXj9X5xDCjgKLU/7RR+/HQEVzuuEUiwldwOGsHK/sfAfELGWEyTcf0x+uOvCvK3O2zPmZePXWL85vtia6GyZw=="],
 
     "libphonenumber-js": ["libphonenumber-js@1.13.16", "", {}, "sha512-tIOCM9yx2Go6d5/ZANe0K+G4AZek1Ymx81HxQpf19Sri4zMP95eQbKdnUGHAvFQ4nx0PeLhFqvAfisTADXj3tQ=="],
+
+    "libsodium": ["libsodium@0.8.4", "", {}, "sha512-lMcYaRi0zcs7tarATsQUYC7rstliIXZuoq0c6zXSgNtSNtdvBgkSegjWhpMJAXzKX3SUSwIp7+zEsob+j3LuRw=="],
+
+    "libsodium-wrappers": ["libsodium-wrappers@0.8.4", "", { "dependencies": { "libsodium": "^0.8.0" } }, "sha512-mu8aAWucZjTB5O/BtGXtW4e1agy7uHxNYG7zPthmmD1jU43LCDmSWZLN4JhflbdPXj3yDO4lxM1O9hLDgIOXDw=="],
 
     "lie": ["lie@3.3.0", "", { "dependencies": { "immediate": "~3.0.5" } }, "sha512-UaiMJzeWRlEujzAuw5LokY1L5ecNQYZKfmyZ9L7wDHb/p5etKaxXhohBcrw0EYby+G/NA52vRSN4N39dxHAIwQ=="],
 

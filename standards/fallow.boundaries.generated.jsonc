@@ -522,6 +522,12 @@
         ]
       },
       {
+        "name": "@beep/infra-github",
+        "patterns": [
+          "packages/tooling/infra/github/src/**"
+        ]
+      },
+      {
         "name": "@beep/infra-hosts",
         "patterns": [
           "packages/tooling/infra/infra-hosts/src/**"
@@ -3124,6 +3130,19 @@
           "@beep/alchemy-aws-extras",
           "@beep/identity",
           "@beep/infra-cost-controls",
+          "@beep/schema"
+        ]
+      },
+      {
+        "from": "@beep/infra-github",
+        "allow": [
+          "@beep/identity",
+          "@beep/infra-github",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/infra-github",
           "@beep/schema"
         ]
       },

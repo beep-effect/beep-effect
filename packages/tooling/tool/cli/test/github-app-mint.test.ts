@@ -31,6 +31,8 @@ const textEncoder = new TextEncoder();
 const ORIGINAL_MANIFEST_SHA256 = {
   "beep-reviewer": "8d33e82f78e2d341a70b096193079a3dd230bee5cce78163785ddb1da66cc18c",
   "beep-knowledge-mint": "921bbec705af05189744d649c0675db61b8216a574b4501347d3850168629cbf",
+  // Added in repo-configs directly (no scripts/ predecessor): the checked-in bytes at registration.
+  "beep-infra-github": "3cbdc34b0d235c8d9e47e09e5c22cd8f44ef94414dcf3676fed0aa91ba606195",
 } as const;
 
 // A fake `op` that accepts only a real pipe carrying the complete template.
@@ -54,12 +56,20 @@ const appCases = {
   "beep-reviewer": {
     title: "beep-reviewer GitHub App",
     fieldCount: 4,
+    slug: "beep-reviewer",
     slugCheck: 'if (field("slug") !== undefined) process.exit(87);',
   },
   "beep-knowledge-mint": {
     title: "beep-knowledge-mint GitHub App",
     fieldCount: 5,
+    slug: "beep-knowledge-mint-2",
     slugCheck: 'if (field("slug")?.value !== "beep-knowledge-mint-2") process.exit(87);',
+  },
+  "beep-infra-github": {
+    title: "beep-infra-github GitHub App",
+    fieldCount: 5,
+    slug: "beep-infra-github-3",
+    slugCheck: 'if (field("slug")?.value !== "beep-infra-github-3") process.exit(87);',
   },
 } as const;
 
@@ -72,7 +82,7 @@ const harness = Effect.fn("GitHubAppMintTest.harness")(function* (app: App, opEx
   const ambientPath = yield* Config.String("PATH");
   const bin = yield* fs.makeTempDirectoryScoped({ prefix: "github-app-mint-test-" });
   const doctorLog = path.join(bin, "op-doctor.log");
-  const { title, fieldCount, slugCheck } = appCases[app];
+  const { title, fieldCount, slug, slugCheck } = appCases[app];
   yield* fs.writeFileString(path.join(bin, "op"), fakeOp(opExit, title, fieldCount, slugCheck));
   yield* fs.chmod(path.join(bin, "op"), 0o700);
   yield* fs.writeFileString(path.join(bin, "op-doctor"), `#!/bin/sh\necho ran >> "${doctorLog}"\n`);
@@ -85,7 +95,7 @@ const harness = Effect.fn("GitHubAppMintTest.harness")(function* (app: App, opEx
   );
   const conversion = yield* encodeUnknownJson({
     id: 123,
-    slug: "beep-knowledge-mint-2",
+    slug,
     client_id: "fixture-client",
     pem: PLACEHOLDER,
   });
@@ -188,6 +198,27 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
       })
     );
 
+    it.effect("infra-github mint stores its own slugged template and reports only the slug", () =>
+      Effect.gen(function* () {
+        const { callback, logs, doctorRuns } = yield* register("beep-infra-github", 0, 201);
+        expect(callback.status).toBe(200);
+        expect(callback.text).toContain('Stored in 1Password as "beep-infra-github GitHub App"');
+        expect(logs).toContain('[infra-github] Stored "beep-infra-github GitHub App"');
+        expect(logs).toContain("App beep-infra-github-3 (app_id 123)");
+        expect(doctorRuns).toBe(0);
+      })
+    );
+
+    it.effect("infra-github mint reports a failed vault write by exit code and forbids a reload", () =>
+      Effect.gen(function* () {
+        const { callback, errors, doctorRuns } = yield* register("beep-infra-github", 17, 201);
+        expect(callback.status).toBe(500);
+        expect(callback.text).toContain("Do not reload this page");
+        expect(errors).toContain("1Password item creation exited 17");
+        expect(doctorRuns).toBe(1);
+      })
+    );
+
     it.effect("knowledge mint stores nothing when the manifest conversion is refused", () =>
       Effect.gen(function* () {
         const { callback, errors, doctorRuns } = yield* register("beep-knowledge-mint", 99, 422);
@@ -221,7 +252,7 @@ const DryRunLayer = Layer.unwrap(
 );
 
 it.layer(DryRunLayer, { timeout: "30 seconds" })("github app mint dry run", (it) => {
-  for (const app of ["beep-reviewer", "beep-knowledge-mint"] as const) {
+  for (const app of ["beep-reviewer", "beep-knowledge-mint", "beep-infra-github"] as const) {
     it.effect(`prints the ${app} manifest byte for byte`, () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;

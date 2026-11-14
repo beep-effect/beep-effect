@@ -285,6 +285,14 @@ Lane goals/infra-alchemy-rebuild-p3-turbo-cache
 
 Reverse: Add GitHub.Secret resources for TURBO_CACHE_WRITE_TOKEN and TURBO_CACHE_READ_TOKEN to alchemy.run.ts and a repository-admin GITHUB_TOKEN secret to turbo-cache-prod.
 
+### deploy-infra-github.yml ships disarmed behind INFRA_GITHUB_DEPLOY_ARMED, 2026-11-13
+
+`.github/workflows/deploy-infra-github.yml`: push to `main` filtered to `packages/tooling/infra/github/**` and the workflow file, plus a bare `workflow_dispatch`; one GitHub-hosted job `Deploy infra-github (prod)` on `ubuntu-24.04`, `timeout-minutes: 20`, environment `infra-github-prod`, concurrency group `alchemy-infra-github-prod` without cancellation, the OIDC state role for AWS. Steps: package tests (no token), App token mint, plan, deploy, then a ruleset check that polls for up to 120 seconds until ruleset 10240248 is `active` and lists `beep-reviewer` exactly when the committed switch says `required`. The job is disarmed: it runs only while the repository variable `INFRA_GITHUB_DEPLOY_ARMED` is `true`, so merging this package changes nothing live and creates no environment. Arming is the reviewed live-adoption step: mint the App, create `infra-github-prod` (branch policy `main`) with `INFRA_GITHUB_APP_ID`, `INFRA_GITHUB_APP_PRIVATE_KEY` and `ALCHEMY_STATE_ROLE_ARN`, add `repo:beep-effect/beep-effect:environment:infra-github-prod` to the `beep-alchemy-state-rw` trust policy, then set the variable. No change to `check.yml`, `heavy.yml`, `setup-monorepo-ci`, runner labels or any pull-request job; the job is in the explicit exemption list of `ci-runner-security.test.ts`.
+
+Lane goals/infra-alchemy-rebuild-p3-github
+
+Reverse: Delete .github/workflows/deploy-infra-github.yml and its exemption line in ci-runner-security.test.ts.
+
 ### Drop KmsGrant: the GitHub App KMS key delegates to IAM, 2026-11-13
 
 D19 left `KmsGrant` open until the key policy was read. It was read on 2026-11-13 (`aws kms get-key-policy --key-id 79ab38d9-2a9d-426b-b704-beb6fc5c971d`): the GitHub App KMS key has one statement, "Enable IAM User Permissions", granting `kms:*` to the account root principal. The key therefore delegates authorization to IAM. In the native runner composite the stack owns the termination-watcher roles, so an IAM inline policy granting `kms:Decrypt` with a `kms:EncryptionContext:PARAMETER_ARN` condition replaces the six `aws.kms.Grant` resources the Pulumi program carried for the upstream module (`infra/src/CiFleetController.ts`). `@beep/alchemy-aws-extras` ships no `KmsGrant`; the IAM policy belongs to `@beep/alchemy-github-runners`.
@@ -325,6 +333,30 @@ Lane goals/infra-alchemy-rebuild-p4-hosts
 
 Reverse: Merge both programs into one stack in alchemy.run.ts, or drop the rehearsal branch so non-prod stages refuse; delete WorkstationOnly once a runner holds a scoped dankserver deploy key (Exception Ledger).
 
+### infra-github deploys with a new beep-infra-github App, proposed and not minted, 2026-11-13
+
+`@alchemy.run/github` authenticates with `GITHUB_TOKEN`; the workflow's own token cannot administer rulesets, environments or variables, and no installed App has those permissions (`beep-ci-fleet-controller` has `administration: write` but is the runner fleet's identity, and widening it couples two blast radii). Proposed, not minted: a new GitHub App `beep-infra-github` registered by `bun run beep github app mint` from a checked-in manifest (D10, same shape as `beep-knowledge-mint.manifest.json`: private, webhook inactive, no events), installed on `beep-effect/beep-effect` only, repository permissions `administration: write`, `environments: write`, `variables: write`, `issues: write` (labels), `metadata: read`, and `secrets: write` only once a secret is managed. Its id is the `infra-github-prod` environment variable `INFRA_GITHUB_APP_ID`; its private key is that environment's secret `INFRA_GITHUB_APP_PRIVATE_KEY` (also kept in 1Password by the mint). The deploy job mints a one-hour installation token with `actions/create-github-app-token` (already pinned in this repository); `GitHub.fromApp` in beta.86 is the in-process alternative. The read-only plan ran with the operator's `gh` token (`repo`, `admin:org`, `workflow` scopes).
+
+Lane goals/infra-alchemy-rebuild-p3-github
+
+Reverse: Use another credential with the same permissions in the workflow's token step; nothing is minted yet.
+
+### infra-github manages no secret on day one; secret delivery waits for a ruling, 2026-11-13
+
+`GitHub.Secret` re-uploads its value on every deploy, so a secret is managed only when the deploy can read its value. On day one the stack manages no secret. With a 1Password source: `KNOWLEDGE_MINT_APP_PRIVATE_KEY` (item `beep-knowledge-mint GitHub App`, field `private_key`); `VERCEL_TOKEN` has two candidate fields (`CLOUD_VERCEL_TOKEN`, `CLOUD_VERCEL_API_TOKEN`) and no record of which one it holds. No known source: `APP_ENV`, `APP_LOG_FORMAT`, `APP_LOG_LEVEL`, `APP_NAME`, `NEXT_PUBLIC_ENV`. Produced by another stack and not duplicated: the repository `TURBO_R2_READ_ACCESS_KEY_ID`, `TURBO_R2_READ_SECRET_ACCESS_KEY`, `TURBO_READ_TOKEN`, `TURBO_TEAM` and the `turbo-cache-write` environment's `TURBO_R2_WRITE_ACCESS_KEY_ID`, `TURBO_R2_WRITE_SECRET_ACCESS_KEY`, `TURBO_TOKEN` (turbo cache), and `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` on `beep-effect-web-prod`, `storybook-prod` and `turbo-cache-prod` (each app stack's deploy credentials). A CI deploy cannot read a 1Password value without putting a new long-lived credential into the workflow; the smallest option is a 1Password service-account token, scoped to a vault holding only these items, as an `infra-github-prod` environment secret read by `op run` in the deploy step. That needs an operator ruling and is not built.
+
+Lane goals/infra-alchemy-rebuild-p3-github
+
+Reverse: Declare GitHub.Secret resources for the secrets with a value source once a delivery route is ruled.
+
+### infra-github owns the repository, main ruleset, deploy environments, two variables and every label; the rest stays unmanaged, 2026-11-13
+
+`@beep/infra-github` (stack `InfraGithub`) owns, from day one: the repository settings `GitHub.Repository` sends and the `main` ruleset (10240248), each adopted per object with `adopt(true)` and `protect()` (D20); the environments `beep-effect-web-prod`, `storybook-prod`, `turbo-cache-prod` and `turbo-cache-write` (branch policy `main`) with `ALCHEMY_STATE_ROLE_ARN` on the three `-prod` ones; the repository variables `KNOWLEDGE_MINT_APP_CLIENT_ID` and `KNOWLEDGE_MINT_APP_SLUG`; and all 26 labels, adopted by name. It leaves unmanaged, each listed with its reason in `productionConfig.unmanaged`: the `queue-lab` ruleset (26917133; `goals/merge-queue-lab` parks it and `merge-group-parity` re-arms it by a live edit, so owning it would revert that); repository settings the provider does not send (squash and merge commit title and message, update-branch, signoff, security and analysis) plus `description` and `visibility`; `professional-desktop-release` (tag deployment policy, which `GitHub.Environment` would recreate as a branch policy); the 22 environments the Vercel App created; `BEEP_SHARD_OVERFLOW` (an operator switch flipped live) and the `TURBO_*` variables (turbo cache cutover); every secret; the two runner-fleet `workflow_job` webhooks (ci-runners, P5); Actions permissions (no resource, verified gap). Every resource is retained on removal (`RemovalPolicy.retain()` over the stack), so a dropped declaration or a destroyed stage deletes nothing on GitHub. A census snapshot (`test/fixtures/census.json`, names and non-secret settings captured 2026-11-13) pins the configuration: a test fails when the two diverge or when a live object is neither owned nor listed.
+
+Lane goals/infra-alchemy-rebuild-p3-github
+
+Reverse: Drop the resource from declareStack (it is retained, so GitHub keeps the object) and add it to productionConfig.unmanaged with the reason.
+
 ### One webhook per fleet routes jobs to every pool's build queue, 2026-11-13
 
 The live fleet runs one terraform module per pool, so the heavy and shard-overflow pools each have a webhook and a webhook secret. The port follows upstream's multi-runner design instead: one webhook Lambda per fleet holds a matcher per pool (labels, match mode, build-queue URL), tries strict matchers (bidirectional or all-of) before any-of ones and sends the job to the first match. Two pools therefore need one App webhook URL and one secret; the overflow pool's separate secret parameter is not carried over.
@@ -348,6 +380,50 @@ The pure generation model and every applicator script (about 2,300 lines from `i
 Lane goals/infra-alchemy-rebuild-p4-hosts
 
 Reverse: Move src/OpenClawGeneration.ts and src/OpenClawArtifacts.ts back into infra/src and drop infra's @beep/infra-hosts dependency.
+
+### Packet gate ruling: a dedicated beep-infra-github App deploys infra-github; the operator mints it, 2026-11-13
+
+Ruling by the packet gate session, 2026-11-13, on the open question about the deploy credential. The proposal in the decision 'infra-github deploys with a new beep-infra-github App, proposed and not minted' is accepted as the design: a dedicated App `beep-infra-github`, installed on `beep-effect/beep-effect` only, repository permissions administration, environments, variables (`actions_variables`) and issues at write and metadata at read, no secrets permission while no secret is managed; its id (`INFRA_GITHUB_APP_ID`) and private key (`INFRA_GITHUB_APP_PRIVATE_KEY`) live on the `infra-github-prod` environment, and the deploy job mints a one-hour installation token. The mint itself is the operator's (`beep github app mint` is a browser handoff). Done in this lane: the manifest is checked in under the repo-configs policy data next to the two existing ones, `GitHubAppName` lists it and the mint command has its profile, so the mint is `bun run beep github app mint beep-infra-github`; the runbook's InfraGithub section carries the exact operator steps (mint, install, id and key, environment and its `ALCHEMY_STATE_ROLE_ARN` variable, the trust-policy subject). The permission key `actions_variables` is GitHub's name for the Variables repository permission; the operator confirms the registration page lists Variables before submitting. Nothing in the lane waits on the mint except arming.
+
+Lane goals/infra-alchemy-rebuild-p3-github
+
+Reverse: Remove beep-infra-github from GitHubAppName and the mint profile, delete its manifest, and choose another deploy credential in a new decision.
+
+### Packet gate ruling: beep reviewer ruleset edits the stack configuration once the stack is armed, 2026-11-13
+
+Ruling by the packet gate session, 2026-11-13: do the reviewer-switch change in this lane, since arming is blocked without it. Implemented in `@beep/repo-cli` (`commands/Reviewer/ReviewerRulesetOwner.ts`, wired into `updateReviewerRuleset`): after the `kriegcloud` login check, `release` and `require` read the repository variable `INFRA_GITHUB_DEPLOY_ARMED`. Absent or any value but exactly `true` (the deploy job's own condition): the command keeps its direct behavior and edits ruleset 10240248, so nothing changes for the repository today. `true`: the command never reads or writes the live ruleset; it sets `reviewerCheck` in `packages/tooling/infra/github/src/Production.ts` (`--apply` writes, otherwise it previews), refuses a `require` whose App id differs from the configuration's `beepReviewerAppId`, and prints the next steps (commit, a Yeet PR, the merge runs the deploy, and for `release` the admin bypass). An unreadable variable refuses before any ruleset read. Tests in `test/reviewer-ruleset-workflow.test.ts` cover both states, the unreadable variable, the dry run, the App-id refusal and the one-assignment rewrite. `docs/ops/beep-reviewer-app.md` documents the switch; a `release` raised while the reviewer is down merging through the repository-admin bypass is accepted.
+
+Lane goals/infra-alchemy-rebuild-p3-github
+
+Reverse: Delete the INFRA_GITHUB_DEPLOY_ARMED branch in updateReviewerRuleset (ReviewerRulesetOwner.ts) so the command always edits the live ruleset, and keep the workflow disarmed.
+
+### Packet gate ruling: every secret stays unmanaged and no new long-lived credential enters CI, 2026-11-13
+
+Ruling by the packet gate session, 2026-11-13, on the open question about secret delivery. All repository and environment secrets stay unmanaged on day one. No 1Password service-account token, and no other new long-lived credential, goes into CI for this stack. The README of `@beep/infra-github` keeps the table of secret names with and without a value source; a later decision works from it.
+
+Amended by `2026-11-14-packet-gate-ruling-the-infra-github-app-key-is-the-one-credential-that-enters-ci.md`: the secret-value ruling above stands, and the `beep-infra-github` App's private key, an environment secret on `infra-github-prod` that only the token-mint step reads, is the one credential that enters CI for this stack.
+
+Lane goals/infra-alchemy-rebuild-p3-github
+
+Reverse: A later decision names the secrets to manage and the delivery route the gate approves.
+
+### Packet gate ruling: the first infra-github plan is accepted; the first deploy is bracketed by a ruleset capture, 2026-11-13
+
+Ruling by the packet gate session, 2026-11-13, on the plan result. Accepted as it stands: the 36 provider-gap `create` entries are explained and the stack tests prove the first apply sends no create request; the work is not held on an upstream contribution, and the gap is recorded as friction with file evidence in `research/OPPORTUNITIES.md` so it can go upstream later. Added before any arming: because the `main` ruleset is rewritten on every deploy, the runbook's first-deploy procedure captures `gh api repos/beep-effect/beep-effect/rulesets/10240248` before and after the run under `~/.local/state/beep/infra-github/`, diffs them with `updated_at` removed (the diff must be empty), and on any other difference disarms and re-applies the captured JSON with `gh api -X PUT`.
+
+Amendment, 2026-11-14 (packet gate, on review thread discussion_r4572751669): the compare and the restore leave out the `beep-reviewer` required check. The captures are compared with `updated_at` and that entry removed, and the switch position is read separately. On any other difference the restore re-applies the captured JSON with `gh api -X PUT`, except the `beep-reviewer` entry, which is taken from a fresh live read and kept at its live state, so a switch made by `beep reviewer ruleset release|require --apply` between the captures is not reverted. The restore is a runbook `jq` step, not code.
+
+Lane goals/infra-alchemy-rebuild-p3-github
+
+Reverse: Remove the capture-and-compare step from the runbook's first-deploy procedure.
+
+### Packet gate ruling: VERCEL_TOKEN stays unmanaged with no source identified, 2026-11-13
+
+Ruling by the packet gate session, 2026-11-13: `VERCEL_TOKEN` stays unmanaged, and its source between `CLOUD_VERCEL_TOKEN` and `CLOUD_VERCEL_API_TOKEN` need not be identified now. Arming stays off until the gate says so: it needs the App, the reviewer-switch change merged, and the orchestrator told first, because the stack rewrites the ruleset that gates every merge during a CI measurement window.
+
+Lane goals/infra-alchemy-rebuild-p3-github
+
+Reverse: A later decision identifies the token's 1Password field and manages it.
 
 ### Personal-stage live proof of the turbo cache, after the Cloudflare token gained R2 access, 2026-11-13
 
@@ -475,6 +551,22 @@ Lane goals/infra-alchemy-rebuild-p2-github-runners
 
 Reverse: Add an EventBridge rule on the CloudTrail BidEvictedEvent and decode it in TerminationEvent.
 
+### The beep-reviewer switch is the committed reviewerCheck flag of infra-github, 2026-11-13
+
+D20's switch is `StackConfig.mainRuleset.reviewerCheck` (`ReviewerCheck` LiteralKit: `required` | `advisory`). `requiredChecks` appends `{ context: "beep-reviewer", integrationId: 5321138 }` for `required` and leaves the configured checks alone for `advisory`; the stack tests flip it both ways and prove every other check and both bypass actors survive. The committed value is `advisory`, the live position (the census ruleset lists no `beep-reviewer`). The flag is committed configuration, not a dispatch input: a workflow input would be reverted by the next push deploy, and the standing deploy-workflow shape allows only a bare `workflow_dispatch`. CLI change, designed and not in this head (not needed for the plan): once the stack is armed, `beep reviewer ruleset release|require` stops PUTting ruleset 10240248 and instead rewrites `reviewerCheck` in `packages/tooling/infra/github/src/Production.ts` and opens the PR through Yeet; `--apply` on the old path refuses while `INFRA_GITHUB_DEPLOY_ARMED` is `true`. A `release` PR raised because the reviewer is down cannot itself pass a required `beep-reviewer` check, so it merges through the repository-admin bypass the ruleset keeps.
+
+Lane goals/infra-alchemy-rebuild-p3-github
+
+Reverse: Remove the reviewer check from the stack's ruleset ownership (omit requiredStatusChecks handling for beep-reviewer) and keep the CLI's direct ruleset edit.
+
+### The first infra-github plan adopts the main ruleset and converges everything else by name, 2026-11-13
+
+Read-only `alchemy plan --stage preview_elpresidank` on 2026-11-13 against the shared S3 store (empty stage) and the live repository, configuration identical to `prod` (the stack derives no name from the stage; a non-`prod` stage needs `INFRA_GITHUB_LIVE_PREVIEW=plan-only`), `GITHUB_TOKEN` from `gh auth token` in that process only, AWS from the aws-vault export. Nothing was deployed; no live setting changed. Output (no secret material in it): `Plan: 36 to create, 1 to adopted`; `[MainRuleset] adopted`; `create` for `Repository`, 4 `Environment-*`, 3 `EnvironmentVariable-*-ALCHEMY_STATE_ROLE_ARN`, 2 `Variable-KNOWLEDGE_MINT_APP_*` and 26 `Label-*`; no replace, no delete. Why `create` is not a create: `GitHub.Repository`, `Environment`, `Variable` and `Label` have no `read` adoption probe in beta.86 (upstream main is the same), so an empty stage plans them as `create`; each reconcile observes the live object by name first and only updates (Repository GETs then PATCHes, Environment PUTs, Variable GETs and writes only on a value difference, Label GETs then PATCHes). The stack tests replay the first deploy against the census and assert zero POST and zero DELETE requests. Field by field, what the first apply would send: Repository PATCH with `name`, `homepage`, `has_issues`, `has_projects`, `has_wiki`, `has_discussions`, `is_template`, `allow_squash_merge`, `allow_merge_commit`, `allow_rebase_merge`, `allow_auto_merge`, `delete_branch_on_merge`, each equal to the census, and a topics PUT with the same 14 topics; the default branch is not sent because it already is `main`. Ruleset `main` (the forced post-adoption update) PUT with the same name, target, enforcement, conditions, bypass actors (admin role 5, App 5309624, `always`), the four rules and the 15 checks bound to App 15368; GitHub stores three fields the provider does not send (`required_reviewers: []` and `dismissal_restriction.enabled: false` in the pull request rule, `do_not_enforce_on_create: false` in the checks rule), each already at the default it falls back to, so the PUT rewrites them to their current values; this PUT recurs on every deploy because the provider compares the stored rules, extra keys included. Environments PUT with `deployment_branch_policy: { protected_branches: false, custom_branch_policies: true }` (live) and no wait timer or reviewers (none live); the custom policy `main` already exists, so no policy is created or deleted. Variables: value equal, no write. Labels: PATCH with the same color and description. Acceptance against the target: the one object with an adoption probe shows `adopted`, nothing shows replace, and every update is explained above; the `create` labels are a provider gap, closed upstream by giving those four providers a name-based `read`, after which the same plan shows `adopted` throughout.
+
+Lane goals/infra-alchemy-rebuild-p3-github
+
+Reverse: n/a (read-only evidence); delete the plan stage's empty state with alchemy state if one was written.
+
 ### The packet ran four open PRs on 2026-11-13, one over its cap, 2026-11-13
 
 #3289, #3290, #3291 and #3292 were open together because three P2 children were released at once under the operator's push ruling and raced the open-PR count. The orchestrator accepted the four as they stood rather than discard running hosted proofs; no fifth opened until the count fell below three.
@@ -554,6 +646,14 @@ The 14 provider tests use `@alchemy.run/test/Vitest` (`Test.make`, `test.provide
 Lane goals/infra-alchemy-rebuild-p2-vercel
 
 Reverse: Add an opt-in live suite behind an environment flag that creates and deletes a scratch project, never touching oip.law.
+
+### A tested pre-write guard holds every infra-github deploy to a no-op on ruleset 10240248, 2026-11-14
+
+Window-5 requirements 1 and 3 (window-5 owner via the packet gate, 2026-11-14). `src/RulesetGuard.ts` states the guarded fields of the body the stack writes for ruleset 10240248 (required checks with context names and integration ids in order, the strict up-to-date policy, bypass actors, allowed merge methods, ref include and exclude) and compares them with a capture of the live ruleset. It also compares the rest of what the PUT writes (name, target, enforcement, rule types in order, the other pull request settings), and it fails closed (PR #3323 review findings carried here): the capture is decoded strictly with excess keys refused at every level, so an unknown key, rule type or condition, a missing field, or a provider-unsent setting away from its default (required reviewers, an enabled dismissal restriction, `do_not_enforce_on_create`) refuses the deploy in both modes; server-managed fields (ids, node ids, timestamps, links, `current_user_can_bypass`) are never read. `ruleset-guard.ts <capture>` exits non-zero on any difference and prints each differing field with planned and live values; `--diff-only` prints the same diff and exits zero. The deploy workflow runs it between plan and deploy against the same capture the stack reads (nothing is written on a difference) and again after the deploy on a fresh capture, polled for 120 seconds. Tests cover the equal case, server fields ignored, the reviewer check carried in both positions, and each guarded field differing. Pre-arming evidence: the runbook's InfraGithub section gives the read-only command, which needs no App and no arming. Run 2026-11-14 against live: empty diff, so no declared value had to move; any intended change to a guarded field waits for the window-5 verdict (2026-11-20T20:10Z), and declared values follow live. Unarmed (`INFRA_GITHUB_DEPLOY_ARMED` not `true`), the job is skipped before any step: nothing is planned against the live rulesets and the App need not exist.
+
+Lane goals/infra-alchemy-rebuild-p3-github
+
+Reverse: Delete the Check the ruleset before deploy and after deploy steps from deploy-infra-github.yml and remove ruleset-guard.ts and src/RulesetGuard.ts.
 
 ### Cost controls adopts nine account singletons (D20), 2026-11-14
 
@@ -940,6 +1040,108 @@ Lane goals/infra-alchemy-rebuild-p4-oip-web-envvar-fix
 
 Reverse: Revert the EnvVar edit-field change; the rehearsal stack is test-only and can be deleted
 
+### infra-github carries the live beep-reviewer check; the reviewer CLI stays the only switch, 2026-11-14
+
+Window-5 requirement 2 (window-5 owner via the packet gate, 2026-11-14) asked for one of: (a) the stack does not own the `beep-reviewer` required check, or (b) it reads the live state of that check and carries it through unchanged. Chosen: (b). `GitHub.Ruleset` writes the ruleset as a whole body, so (a), leaving the check out of the body, would delete it on every deploy; carrying it is what the resource model supports cleanly. The workflow captures ruleset 10240248 once (`gh api repos/beep-effect/beep-effect/rulesets/10240248`) and hands the file to the stack as `INFRA_GITHUB_LIVE_RULESET`; `liveReviewerCheck` reads the `beep-reviewer` entry with its App binding and `requiredChecks` appends it after the 15 configured checks, where `beep reviewer ruleset require` puts it. Stack tests prove a live check survives a deploy present (bound to App 5321138) and absent. This supersedes the implementation of the packet-gate ruling 'beep reviewer ruleset edits the stack configuration once the stack is armed' (2026-11-13): with the live check carried, a committed `reviewerCheck` would be ignored and an armed CLI that edits it would silently do nothing, so the committed flag is removed and `beep reviewer ruleset release|require` keeps its direct edit of the live ruleset in every state. The hazard that ruling guarded against (a deploy writing back a stale switch position) is narrowed by the carry and the write guard below, not removed: a deploy does not undo the operator's switch except inside the write guard's single GET-to-PUT round-trip, which the runbook practice (no switch flips while a `Deploy infra-github` run is in progress) and its recovery step (read ruleset 10240248 after an overlapping run and re-apply the switch if it is not in the intended state) cover. Closing the capture-to-write window (window-5 owner via the packet gate, 2026-11-14): the body is built from a capture, so a `release` or `require --apply` landing between capture and write would be overwritten. Built in the provider, not as a workflow step: `src/RulesetWriteGuard.ts` registers a provider for `GitHub.Ruleset` directly (a direct registration takes precedence over the `GitHub.providers()` collection) that wraps the shipped `RulesetProvider`. For the ruleset named like the capture, its `reconcile` re-reads ruleset 10240248 through the same distilled client, decodes it with the guard's strict decoder, compares it with the capture over the guard's server-fields-excluded fields, and fails with `RulesetChangedSinceCapture` before the PUT if anything differs, so the gap is one API round-trip. A capture without an id fails closed (`CaptureWithoutId`). Tests (`test/RulesetWriteGuard.test.ts`): live equal to the capture writes (one PUT); `beep-reviewer` required, or released, after the capture refuses and sends no PUT. The runbook states that the switch is not flipped while a `Deploy infra-github` run is in progress and that a refused run is re-run with a fresh capture. `deploy-infra-github.yml` is unchanged by this. Exact guarantee (beep-reviewer round 2, 2026-11-14): the write guard closes the capture-to-PUT window except for the single GET-to-PUT round-trip; a switch flipped inside that round-trip is overwritten and not detected; the post-deploy check fails when the ruleset differs from what the deploy wrote, which means it moved after the write and nothing was undone. Window-5 owner ruling (2026-11-14): the write guard plus the runbook practice (the switch is not flipped while a `Deploy infra-github` run is in progress, with the recovery read-and-re-apply after any overlapping run) is sufficient for arming; no conditional update or further deploy-side refusal is required. Later improvement, not built: GitHub's ruleset `PUT /repos/{owner}/{repo}/rulesets/{ruleset_id}` documents no `If-Match` or other precondition parameter (checked in the REST API description, 2026-11-14), and the ruleset GET returns only a weak `ETag` meant for conditional GETs (`If-None-Match`, 304); if GitHub ever honours a precondition on the PUT, the wrapped provider could send it and close the round-trip.
+
+Lane goals/infra-alchemy-rebuild-p3-github
+
+Reverse: Re-add a committed reviewerCheck flag to MainRuleset and the armed-mode CLI branch (ReviewerRulesetOwner.ts in 0b8d6385b34), and drop the carry in requiredChecks.
+
+### InfraGithub deploys through a stack-scoped OIDC role, beep-alchemy-infra-github-deploy, 2026-11-14
+
+Ruling by the packet gate session, 2026-11-14: like the other stacks' deploy jobs, `Deploy infra-github` assumes a stack-scoped role, not the shared `beep-alchemy-state-rw`. The variable name (`ALCHEMY_STATE_ROLE_ARN` on `infra-github-prod`) and the workflow do not change; only the role it names does. The runbook step that added `repo:beep-effect/beep-effect:environment:infra-github-prod` to the trust policy of `beep-alchemy-state-rw` is dropped. The role is not created yet; the commands below are for the bootstrap, on the gate's word.
+
+What the store code touches (read at Alchemy 2.0.0-beta.87; `AWS.state({ backend: "s3", … })` in `alchemy.run.ts` sets no `prefix`; the stack name is `InfraGithub`):
+
+- Bucket `alchemy-state-832907639880-us-east-1-an` (`createStateBucketName(accountId, region)`).
+- Bucket configuration, `ensureStateBucket` in `@alchemy.run/aws` `src/StateStore/State.ts`. It calls `headBucket` (`s3:ListBucket`), then reads versioning, encryption, the public access block and ownership controls. It writes them only on drift. Under this role a drift therefore fails the deploy instead of being converged, which is the intended fail-closed behavior: the bucket is a bootstrap singleton.
+- Objects, `makeBucketState` in `alchemy` `src/State/BucketState.ts`. Every key is `{prefix}{stack}/{stage}/…`, so `InfraGithub/prod/{fqn}.json`, `InfraGithub/prod/__stack_output__.json` and `InfraGithub/prod/__lease__.json`:
+  - reads: `GetObject`;
+  - writes: `PutObject`, including the conditional lease write;
+  - deletes: `DeleteObject` and the batch `DeleteObjects`, which S3 authorizes as `s3:DeleteObject` per key; stale rows and the lease release.
+- Listings (`ListObjectsV2`, `s3:ListBucket`) use the stage prefix. Stack and stage enumeration lists bucket-level names but reads no object.
+- No key outside `InfraGithub/` is read, written or deleted.
+- Encryption is SSE-KMS with the AWS-managed `aws/s3` key. Its key policy grants use through S3 to principals in the account, so the role needs no KMS statement.
+
+Trust: the existing provider `token.actions.githubusercontent.com`, audience `sts.amazonaws.com`, subject exactly `repo:beep-effect/beep-effect:environment:infra-github-prod`. Session length one hour.
+
+Commands (operator workstation, `AWS_PROFILE=elpresidank-vault`), then the GitHub side:
+
+```sh
+export AWS_PROFILE=elpresidank-vault AWS_REGION=us-east-1
+D="$(mktemp -d)"
+cat > "$D/trust.json" <<'JSON'
+{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Federated":"arn:aws:iam::832907639880:oidc-provider/token.actions.githubusercontent.com"},"Action":"sts:AssumeRoleWithWebIdentity","Condition":{"StringEquals":{"token.actions.githubusercontent.com:aud":"sts.amazonaws.com","token.actions.githubusercontent.com:sub":"repo:beep-effect/beep-effect:environment:infra-github-prod"}}}]}
+JSON
+cat > "$D/policy.json" <<'JSON'
+{"Version":"2012-10-17","Statement":[
+{"Sid":"StateBucketRead","Effect":"Allow","Action":["s3:ListBucket","s3:GetBucketLocation","s3:GetBucketVersioning","s3:GetBucketOwnershipControls","s3:GetBucketPublicAccessBlock","s3:GetEncryptionConfiguration"],"Resource":"arn:aws:s3:::alchemy-state-832907639880-us-east-1-an"},
+{"Sid":"StateObjects","Effect":"Allow","Action":["s3:GetObject","s3:PutObject","s3:DeleteObject"],"Resource":"arn:aws:s3:::alchemy-state-832907639880-us-east-1-an/InfraGithub/*"}]}
+JSON
+aws iam create-role --role-name beep-alchemy-infra-github-deploy \
+  --assume-role-policy-document "file://$D/trust.json" --max-session-duration 3600 \
+  --description "GitHub OIDC deploy role for the InfraGithub Alchemy stack (infra-github-prod)" \
+  --tags Key=beep:owner,Value=infra-alchemy-rebuild Key=beep:bootstrap,Value=infra-github-deploy
+aws iam put-role-policy --role-name beep-alchemy-infra-github-deploy \
+  --policy-name infra-github-deploy --policy-document "file://$D/policy.json"
+aws iam get-role --role-name beep-alchemy-infra-github-deploy --query Role.Arn --output text
+rm -r "$D"
+
+gh variable set ALCHEMY_STATE_ROLE_ARN --env infra-github-prod --repo beep-effect/beep-effect \
+  --body arn:aws:iam::832907639880:role/beep-alchemy-infra-github-deploy
+```
+
+Checks after creation (`aws iam simulate-principal-policy --policy-source-arn <role arn>`):
+- `s3:PutObject` on `arn:aws:s3:::alchemy-state-832907639880-us-east-1-an/InfraGithub/prod/x.json` must say `allowed`;
+- `s3:PutObject` on `…/CostControls/prod/x.json` must say `implicitDeny`;
+- `s3:PutBucketVersioning` on the bucket must say `implicitDeny`.
+
+The role is a bootstrap singleton, like the state role, until `@beep/infra-ci-runners` adopts the OIDC roles.
+
+Lane goals/infra-alchemy-rebuild-p3-github
+
+Reverse: gh variable delete ALCHEMY_STATE_ROLE_ARN --env infra-github-prod --repo beep-effect/beep-effect; aws iam delete-role-policy --role-name beep-alchemy-infra-github-deploy --policy-name infra-github-deploy; aws iam delete-role --role-name beep-alchemy-infra-github-deploy
+
+### InfraGithub prod create guard lives in the providers, not in a plan-log step, 2026-11-14
+
+The packet gate asked what refuses an unexpected `create` on `prod`. Nothing did: the
+shipped `GitHub.Ruleset` create path POSTs a new ruleset when its name-based read misses,
+and the write guard re-read 10240248 and then handed off to that path.
+
+Decision: the guard wraps the `prod` providers (`src/ProdWriteGuard.ts`) and uses an
+explicit allow-list (`productionCreateAllowList`, 36 logical ids). `MainRuleset` is not on
+it. Off-list creates, any `replace`, a repository create path with no live repository,
+`precreate` and `delete` fail with `ProdChangeRefused`. Where the provider has a `read` or
+the change is a `replace`, the refusal comes at plan time. Otherwise it comes at the
+resource's create path, before its request. The ruleset write guard also refuses a write
+not aimed at the captured id.
+
+Why not a plan-log check (cost-controls' `PlanCheck`): `alchemy deploy` plans again
+internally and offers no hook between that plan and apply. A check of the separate
+`alchemy plan` log would bind a different plan from the one the deploy applies, and it
+needs `deploy-infra-github.yml` to save the log, which means asking the operator to approve
+the workflow again. The provider guard binds the deploy's own plan and leaves the workflow
+byte-identical.
+
+Kinds with no `read` (environments, variables, labels) are refused only when they reach
+the create path, after earlier allowed writes in the same deploy may have gone out. For
+those kinds the plan-time control is the package test, which runs first in the deploy job.
+It plans the committed stack declarations, not a copy of the list, and fails unless the
+`create` set equals `productionCreateAllowList` exactly. It also requires every listed id
+to be a converge-by-name kind (repository, environment, variable, label), so a kind whose
+create path makes a second object cannot be admitted by adding it to both the stack and the
+list.
+
+Accepted limit: a removed declaration plans `orphaned`, its deploy sends no mutating
+request (tested), and the guard does not refuse it. A removed declaration leaves the live
+object in place and unmanaged: removing a live object is a deliberate, attended act outside
+the deploy job. Refusing the orphan itself would need the plan-log check above.
+
+Lane goals/infra-alchemy-rebuild-p3-github-plan-guard
+
+Reverse: Drop prodGitHubProviders from alchemy.run.ts and return guardedRulesetProvider(capture) for prod again; delete src/ProdWriteGuard.ts, productionCreateAllowList and test/ProdWriteGuard.test.ts.
+
 ### JIT registration applies to ephemeral pools only; a failed runner start terminates, 2026-11-14
 
 beep-reviewer (#3313, P2) found that a non-ephemeral pool with the default `jitConfig: true` booted a runner that could not start: scale-up writes a JIT config only when `pool.ephemeral && pool.jitConfig`, but the user data keyed on `jitConfig` alone. Of the two ways out (refuse the combination in the pool schema, or make user data and scale-up agree), the port takes the second because it is what upstream does: v7.10.1 `start-runner.sh` runs `config.sh` whenever JIT is disabled or the runner is not ephemeral, so `jitConfig` is ignored for non-ephemeral runners rather than rejected. `renderRunnerUserData` now uses `ephemeral && jitConfig`, the same condition as scale-up, and its exit trap terminates the instance when the runner exits non-zero (upstream also terminates on a failed start), so a misconfigured non-ephemeral runner no longer stays up. Tests cover `ephemeral: false` with the default `jitConfig`.
@@ -1144,6 +1346,56 @@ Reverse: Run the archived script's rollback per stack from a checkout that still
 Lane goals/infra-alchemy-rebuild-p4-oip-web
 
 Reverse: Collapse liveStageConfig into the Pulumi-style config file per stage and drop the schema fences; no live object depends on the shape.
+
+### Packet gate ruling: the beep-infra-github App key is the one credential that enters CI for this stack, 2026-11-14
+
+Ruling by the packet gate session, 2026-11-14, on review thread discussion_r4572751666. It amends
+`2026-11-13-packet-gate-ruling-every-secret-stays-unmanaged-and-no-new-long-lived-credential-enters-ci.md`,
+whose reversal line anticipated this ("a later decision names … the delivery route the gate approves").
+
+What stands unchanged: the 2026-11-13 ruling was about delivering secret values. It kept a 1Password
+service-account token, which can read every secret, out of CI. So every repository and environment secret stays
+unmanaged by the stack.
+
+What is amended, for one credential only: the deploy identity. The private key of the `beep-infra-github` App is
+stored as an environment secret, `INFRA_GITHUB_APP_PRIVATE_KEY`, on `infra-github-prod`. It enters CI only in the
+token-mint step of `deploy-infra-github.yml` (`actions/create-github-app-token`), which exchanges it for a one-hour
+installation token.
+
+Why: the stack writes repository settings, rulesets, environments, variables and labels, and the Actions
+`GITHUB_TOKEN` can do none of that, so some administrative identity is unavoidable. The narrowest one available is
+an App that:
+- is installed on this one repository;
+- has only the permissions the stack needs;
+- has a key readable only by jobs on `main`, through a protected environment;
+- exchanges that key for a one-hour token on every run.
+
+The App and its environment:
+- **App permissions** (checked-in manifest
+  `packages/tooling/policy-pack/repo-configs/data/github-apps/beep-infra-github.manifest.json`): repository
+  `administration` write (settings and rulesets), `environments` write, `actions_variables` write, `issues` write
+  (labels), `metadata` read. No secrets permission, no events, webhook inactive.
+- **Installation:** `beep-effect/beep-effect` only.
+- **Mint step:** no `permission-*` inputs, so the token carries exactly the App's permissions.
+- **Environment `infra-github-prod`:** deployment branch policy `protected_branches: false`,
+  `custom_branch_policies: true`, with one branch policy, `main` (type `branch`). Only a job running on `main` can
+  read the secret.
+
+Alternative considered and not taken: keeping the key in AWS (SSM Parameter Store or Secrets Manager) and fetching
+it through the OIDC role. That keeps the key out of GitHub's secret store but not out of the job's reach, and it
+adds a second system to rotate.
+
+Controls:
+- The key is never a repository-level secret.
+- It reaches no step but the mint step. This is already true in the workflow (blob
+  `9b4af8a47264f24357b22016096c59689fca8fc3`), and the job-level `env` holds no secret.
+- Rotation (runbook, InfraGithub section): mint a new key in the App settings, replace the environment secret, then
+  delete the old key in the App settings.
+- The operator mints the App and stores the key, so the credential exists only by their act.
+
+Lane goals/infra-alchemy-rebuild-p3-github
+
+Reverse: Delete the environment secret INFRA_GITHUB_APP_PRIVATE_KEY on infra-github-prod and uninstall the beep-infra-github App; the stack then cannot deploy from CI.
 
 ### RunnerFleet declares each pool's RunnerLaunchTemplate from aws-extras, 2026-11-14
 

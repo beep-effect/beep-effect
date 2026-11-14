@@ -20,6 +20,8 @@
     "packages/tooling/infra/*/alchemy.run.ts",
     "packages/tooling/infra/turbo-cache/token.ts",
     "packages/tooling/infra/cost-controls/plan-check.ts",
+    // The infra-github deploy workflow runs ruleset-guard.ts before and after the deploy.
+    "packages/tooling/infra/github/ruleset-guard.ts",
     // A second Alchemy entry file the CLI loads by path (`alchemy deploy <file>`),
     // e.g. the OpenClaw stack in @beep/infra-hosts.
     "packages/tooling/infra/*/*.alchemy.run.ts",
