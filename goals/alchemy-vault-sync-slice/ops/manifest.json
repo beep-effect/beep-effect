@@ -122,7 +122,6 @@
     "research/04-vault-sync-domain-design.md",
     "research/05-pr3a-handoff.md",
     "research/06-api-session-design.md",
-    "research/06-pr3a-scoped-lints.py",
     "research/07-cutover-design.md",
     "research/08-pr3b1-handoff.md",
     "research/09-pr3b2-handoff.md",
@@ -165,8 +164,7 @@
     "research/cache-baseline-review-pr3c-main.md",
     "research/cache-baseline-review-pr3c-saga.md",
     "research/cache-baseline-review-pr3c.md",
-    "research/cache-baseline-review.md",
-    "research/pr3c-scoped-lints.py"
+    "research/cache-baseline-review.md"
   ],
   "agentLaunchers": [
     {

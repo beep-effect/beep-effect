@@ -342,6 +342,9 @@
       <excludeFolder url="file://$MODULE_DIR$/goals/t3code-harness-mcp" />
       <excludeFolder url="file://$MODULE_DIR$/goals/t3code-spill-routing" />
       <excludeFolder url="file://$MODULE_DIR$/goals/verification-route" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/citation-extraction-engine" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/outbox-draft-basis" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/packet-archive-mechanics" />
       <excludePattern pattern=".beep" />
       <excludePattern pattern=".next" />
       <excludePattern pattern=".turbo" />

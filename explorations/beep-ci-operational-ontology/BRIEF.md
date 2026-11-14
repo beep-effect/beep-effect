@@ -197,7 +197,7 @@ reads those surfaces as documents and never edits them.
   `explorations/` (`.gitleaks.toml`, `.gitignore`, `.fallowrc.jsonc`, both Biome configs, the
   lab's tests and scripts, a repo-cli test, two skill files). The other 23 sit under
   `goals/**` and `explorations/turborepo-quality-cache`, including the executable consumer
-  `goals/time-to-certainty/research/scripts/economics.py` (`DEFAULT_CORPUS` → `run2-fleet`).
+  goals/time-to-certainty/research/scripts/economics.py (removed; see `goals/time-to-certainty/history/2026-11-13-python-removed.md`) (`DEFAULT_CORPUS` → `run2-fleet`).
   The ontology tree does not move; the goal owns it by back-link (graduation Ruling 7).
 - **Seat-request clock coverage.** v3 `admission-enqueued` exists only from #1025
   (2026-09-09) onward. Windows before it fall back to attempt start under §1, and every

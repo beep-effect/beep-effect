@@ -80,7 +80,7 @@ jobs:
           R2_BUCKET: ${{ vars.TURBO_R2_BUCKET }}
           R2_READ_ACCESS_KEY_ID: ${{ secrets.TURBO_R2_READ_ACCESS_KEY_ID }}
           R2_READ_SECRET_ACCESS_KEY: ${{ secrets.TURBO_R2_READ_SECRET_ACCESS_KEY }}
-        run: python3 infra/r2-cache/probe.py ci --marker "$R2_MARKER"
+        run: bun run beep cache r2 probe ci --marker "$R2_MARKER"
 
       - name: Warm cache and write receipt
         if: ${{ !inputs.r2_probe }}

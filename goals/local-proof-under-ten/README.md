@@ -36,9 +36,10 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 P1 Implement — in progress. P0 closed with the baseline checkpoint
-(`decisions/2026-11-10-p0-baseline.md`); slice 1 (PERIL-13) and slice 2 (PERIL-10 summary and archive) landed;
-slice 3 (SCHE-08, the admission unit schema) is implemented on `feat/local-proof-admission-unit`; slice 4 (the
-beep-heavy retirement) and slice 5 (PERIL-02) are next.
+(`decisions/2026-11-10-p0-baseline.md`). Slices 1 (PERIL-13), 2 (PERIL-10 summary and archive), 3 (SCHE-08, the
+admission unit schema, #3308), 4 (the beep-heavy retirement, which completes PERIL-10, #3312) and 6 (SCHE-08, the
+scheduler service facade and the Cache work kind, #3317) are done; slice 5 (PERIL-02, one live readiness monitor
+per pull request and readiness argv) is open as #3316.
 
 ## Latest Evidence
 
@@ -62,6 +63,24 @@ beep-heavy retirement) and slice 5 (PERIL-02) are next.
   `units` key on `protocol.json` (`quality scheduler protocol --units on`), off by default; with it off the bytes
   match origin/main's. The ciops frozen-journal replay stays 41 of 41, with and without the keys on every row.
   SCHE-09 slice 1 (#3227) and MEAS-07 (#3228) landed on main.
+- 2026-11-14: slice 4 (PERIL-10) retires the `beep-heavy` wrapper rule. The orchestrate skill's gate poller and
+  hand-off use `systemd-run --user` or a T3 scheduled task; its "Where to launch" section says Yeet's proofs take
+  quality-scheduler admission on their own and other commands run directly. The practice-contacts runbook and
+  `goals/design-figure-review-loop`'s plan drop the wrapper. PERIL-10 is complete.
+- 2026-11-14: slice 5 (PERIL-02) makes `yeet monitor --until-ready --detach` hand back a live readiness monitor
+  submitted from the same branch with the same readiness argv instead of submitting a second job. The key drops
+  launch, output and cadence flags (`--detach`, `--job-max-runtime`, `--json`, `--summary`, `--poll-interval`)
+  and keeps every other flag, so a stricter request still gets its own job. A reused job's time left under its
+  runtime cap must be at least what `--job-max-runtime` asks for (`none` asks for no cap). A record whose runner process is gone
+  is skipped. Publish keys its reuse on the same argv, and `yeet ready` no longer names a dead-runner job as the
+  monitor still watching (the defect at the old `ReadyGate.ts:565`). Tests use a fake registry and runner probe,
+  on Node and Bun.
+- 2026-11-14: slice 6 (SCHE-08) puts the scheduler behind one `QualityScheduler` service (`admit`, `observe`,
+  `reap`, the protocol gates, history, archive, worker route rows) with a live Layer over the existing functions,
+  and moves Yeet, Cache, `quality scheduler`, Palantiri and the quality concurrency plan onto it. Cache commands
+  request their own `cache` kind at weight 1, kept in the review-fix class cap. With the units gate off a Cache
+  admission writes origin/main's `review-fix` bytes (fixture captured from its encoder); with it on, `cache`.
+  The scheduler suites pass on Node and Bun.
 
 ## Notes
 

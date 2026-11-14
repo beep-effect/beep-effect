@@ -122,14 +122,20 @@
     "research/alchemy-distilled-source-inventory.md",
     "research/alchemy-docs-catalog.md",
     "research/cache-baseline-request-alchemy-aws-extras.json",
+    "research/cache-baseline-request-alchemy-github-runners-composite.json",
     "research/cache-baseline-request-alchemy-github-runners.json",
     "research/cache-baseline-request-alchemy-vercel.json",
+    "research/cache-baseline-request-infra-cost-controls.json",
+    "research/cache-baseline-request-infra-turbo-cache.json",
     "research/cache-baseline-request-oip-web-alchemy-stack.json",
     "research/cache-baseline-request-storybook-alchemy-stack.json",
     "research/cache-baseline-request-turbo-cache-r2.json",
     "research/cache-baseline-review-alchemy-aws-extras.md",
+    "research/cache-baseline-review-alchemy-github-runners-composite.md",
     "research/cache-baseline-review-alchemy-github-runners.md",
     "research/cache-baseline-review-alchemy-vercel.md",
+    "research/cache-baseline-review-infra-cost-controls.md",
+    "research/cache-baseline-review-infra-turbo-cache.md",
     "research/cache-baseline-review-oip-web-alchemy-stack.md",
     "research/cache-baseline-review-storybook-alchemy-stack.md",
     "research/cache-baseline-review-turbo-cache-r2.md",
@@ -162,12 +168,12 @@
     {
       "id": "P2",
       "name": "Providers",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Low-risk stacks",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",

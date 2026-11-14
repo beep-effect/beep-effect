@@ -1,0 +1,144 @@
+name: Deploy cost controls
+
+# Deploys the `prod` stage of the Alchemy stack in
+# packages/tooling/infra/cost-controls: the AWS account budget, the services
+# anomaly monitor (adopted) and its subscription, six cost allocation tags and
+# the Compute Optimizer and Cost Optimization Hub enrollments. State lives in
+# the repo's shared AWS S3 state store (goals/infra-alchemy-rebuild); its stage
+# lease plus this concurrency group serialize every prod deploy and never
+# cancel one mid-apply. The plan step runs first without `--yes` and fails on a
+# missing or outdated store, so the store stays operator-bootstrapped.
+#
+# AWS credentials come from the stack-scoped GitHub OIDC deploy role
+# (vars.COST_CONTROLS_DEPLOY_ROLE_ARN on the cost-controls-prod environment),
+# which may touch only these cost APIs and the stack's state objects. The
+# recipient list is that environment's secret; the detailed plan goes to a
+# file and the deploy runs without `--detailed`, so no property value reaches
+# the log. A tested pre-deploy gate (plan-check.ts) stops the job unless the
+# nine adopted account settings plan with no change and nothing is deleted
+# or replaced.
+# Runbook: docs/runbooks/alchemy-infra.md.
+on:
+  push:
+    branches: [main]
+    paths:
+      - packages/tooling/infra/cost-controls/**
+      - packages/tooling/library/alchemy-aws-extras/src/**
+      - bun.lock
+      - .github/workflows/deploy-cost-controls.yml
+  workflow_dispatch:
+
+concurrency:
+  group: alchemy-cost-controls-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy cost controls (prod)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: cost-controls-prod
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+
+      - name: Configure AWS credentials (cost-controls deploy role)
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.COST_CONTROLS_DEPLOY_ROLE_ARN }}
+          role-session-name: alchemy-cost-controls-prod
+          aws-region: us-east-1
+
+      # The plan runs with --detailed so the gate below can see property
+      # changes, and writes to a file only: in the live phase the declared
+      # props include recipient addresses, so the raw log never reaches the
+      # job output. On failure only the non-property lines are printed.
+      - name: Plan prod stage
+        working-directory: packages/tooling/infra/cost-controls
+        shell: bash
+        env:
+          CI: "true"
+          ALCHEMY_TELEMETRY_DISABLED: "1"
+          COST_CONTROLS_NOTIFICATION_EMAILS: ${{ secrets.COST_CONTROLS_NOTIFICATION_EMAILS }}
+        run: |
+          set -euo pipefail
+          if ! bunx alchemy plan --stage prod --env-file /dev/null --no-input --detailed \
+            > "$RUNNER_TEMP/cost-controls-plan.log" 2>&1; then
+            grep -v -E 'INFO: {3}' "$RUNNER_TEMP/cost-controls-plan.log" || true
+            exit 1
+          fi
+
+      # Pre-deploy gate (window-5 ruling): the job stops here, before any
+      # deploy, unless the nine adopted account settings (six cost allocation
+      # tags, two enrollments, the services anomaly monitor) plan as adopt or
+      # no-op with no property change, their live values already equal the
+      # declared ones, and nothing plans a delete, replace or orphan (the one
+      # exception: deleting the stack's own AnomalyAlerts subscription, the
+      # live-to-silent rollback). The check is src/PlanCheck.ts (tested); it
+      # prints resources, actions and changed property names, never values.
+      # The AWS reads are passed raw and shaped in tested TypeScript
+      # (liveSettingsFromAws). Its printed lines are the acceptance record. A
+      # resource outside the stack stops the job for the CI goals driver
+      # (runbook: docs/runbooks/alchemy-infra.md, Cost controls).
+      - name: Check the plan before deploy
+        working-directory: packages/tooling/infra/cost-controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          aws ce list-cost-allocation-tags --tag-keys App beep-ci DataClass ghr:environment ManagedBy Project \
+            --output json > "$RUNNER_TEMP/cost-controls-tags.json"
+          aws compute-optimizer get-enrollment-status --output json > "$RUNNER_TEMP/cost-controls-compute-optimizer.json"
+          aws cost-optimization-hub list-enrollment-statuses --output json > "$RUNNER_TEMP/cost-controls-hub.json"
+          aws ce get-anomaly-monitors --output json > "$RUNNER_TEMP/cost-controls-monitors.json"
+          bun plan-check.ts "$RUNNER_TEMP/cost-controls-plan.log" "$RUNNER_TEMP/cost-controls-tags.json" \
+            "$RUNNER_TEMP/cost-controls-compute-optimizer.json" "$RUNNER_TEMP/cost-controls-hub.json" \
+            "$RUNNER_TEMP/cost-controls-monitors.json"
+
+      - name: Deploy prod stage
+        working-directory: packages/tooling/infra/cost-controls
+        shell: bash
+        env:
+          CI: "true"
+          ALCHEMY_TELEMETRY_DISABLED: "1"
+          COST_CONTROLS_NOTIFICATION_EMAILS: ${{ secrets.COST_CONTROLS_NOTIFICATION_EMAILS }}
+        run: bunx alchemy deploy --stage prod --yes --env-file /dev/null --no-input
+
+      # Budgets and Cost Explorer are eventually consistent, so the check polls
+      # (up to 10 tries, 15 s apart) for the budget at its pinned name and the
+      # services monitor carrying this stack's ownership tag, instead of
+      # probing once. Names only: no recipient is printed.
+      - name: Verify the account controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          account="$(aws sts get-caller-identity --query Account --output text)"
+          for attempt in $(seq 1 10); do
+            budget="$(aws budgets describe-budgets --account-id "$account" \
+              --query "Budgets[?BudgetName=='beep-account-monthly-cost'].BudgetName" --output text || true)"
+            monitor="$(aws ce get-anomaly-monitors \
+              --query "AnomalyMonitors[?MonitorName=='beep-account-services'].MonitorArn" --output text || true)"
+            owner=""
+            if [[ -n "$monitor" && "$monitor" != "None" ]]; then
+              owner="$(aws ce list-tags-for-resource --resource-arn "$monitor" \
+                --query "ResourceTags[?Key=='alchemy::stack'].Value" --output text || true)"
+            fi
+            echo "attempt=${attempt} budget=${budget:-none} monitor-owner=${owner:-none}"
+            if [[ "$budget" == "beep-account-monthly-cost" && "$owner" == "CostControls" ]]; then
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "::error::the budget or the adopted services monitor did not appear"
+          exit 1

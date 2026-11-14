@@ -25,3 +25,16 @@ task changes, and no task becomes cacheable.
 
 Re-recording `@beep/oip-web` adopts the new digest. No exception row is added; scope, profile and epoch are
 unchanged. `@beep/alchemy-vercel` changes only source, tests and its README, which the audit does not report.
+
+## Root subject `//`, inherited from `main` (re-review after merging `origin/main`, 2026-11-14)
+
+The lane merged `origin/main` at `5aeb4416e70`. Since this review's first recording (merge base `b65f4b56249`),
+#3296, #3317, #3310 and #3304 regenerated root `turbo.json`, which the audit reports as
+`REVIEW configuration-source-drift: turbo.json`. Comparing `turbo.json` at `b65f4b56249` with `5aeb4416e70`, only
+the generated `inputs` lists of eight root-declared tasks differ: `//#lint:policy-fingerprint` and
+`@beep/repo-cli#lint:policy-fingerprint:shared`, `:quality-bun-audit`, `:quality-changeset-graph`,
+`:quality-jsdoc-inventory`, `:quality-jsdoc-module-tags`, `:quality-jsdoc-ratchet` and `:quality-tsgo-rules`. The
+lists follow the manifests of the two new infra packages (`cost-controls`, `turbo-cache`) and the Cache command
+sources those PRs added under `packages/tooling/tool/cli/src/commands/Cache`. No task was added or removed, and no
+command, output, environment or dependency edge changed; everything outside `tasks` is identical. This lane's diff
+does not touch `turbo.json`. Re-recording `//` and `@beep/oip-web` adopts both digests; no qualification is granted.

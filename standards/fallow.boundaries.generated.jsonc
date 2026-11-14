@@ -516,6 +516,18 @@
         ]
       },
       {
+        "name": "@beep/infra-cost-controls",
+        "patterns": [
+          "packages/tooling/infra/cost-controls/src/**"
+        ]
+      },
+      {
+        "name": "@beep/infra-turbo-cache",
+        "patterns": [
+          "packages/tooling/infra/turbo-cache/src/**"
+        ]
+      },
+      {
         "name": "@beep/jsonc",
         "patterns": [
           "packages/foundation/modeling/jsonc/src/**"
@@ -1478,11 +1490,13 @@
       {
         "from": "@beep/alchemy-github-runners",
         "allow": [
+          "@beep/alchemy-aws-extras",
           "@beep/alchemy-github-runners",
           "@beep/identity",
           "@beep/schema"
         ],
         "allowTypeOnly": [
+          "@beep/alchemy-aws-extras",
           "@beep/alchemy-github-runners",
           "@beep/identity",
           "@beep/schema"
@@ -3088,6 +3102,36 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/infra-cost-controls",
+        "allow": [
+          "@beep/alchemy-aws-extras",
+          "@beep/identity",
+          "@beep/infra-cost-controls",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/alchemy-aws-extras",
+          "@beep/identity",
+          "@beep/infra-cost-controls",
+          "@beep/schema"
+        ]
+      },
+      {
+        "from": "@beep/infra-turbo-cache",
+        "allow": [
+          "@beep/identity",
+          "@beep/infra-turbo-cache",
+          "@beep/memfs",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/infra-turbo-cache",
+          "@beep/memfs",
+          "@beep/schema"
         ]
       },
       {

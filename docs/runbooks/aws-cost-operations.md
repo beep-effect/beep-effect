@@ -251,6 +251,15 @@ not an idle-resource cleanup.
 
 ## Implementation boundaries
 
+Successor: the Alchemy stack `CostControls` in
+`packages/tooling/infra/cost-controls` (`@beep/infra-cost-controls`) takes
+over these controls under the cutover in
+[Alchemy infrastructure](./alchemy-infra.md#cost-controls): same account
+guard, $200 budget, $10 anomaly threshold, six tags and both enrollments, a
+new budget and subscription name, the services monitor adopted. Until that
+cutover runs, the Pulumi component below remains the owner; the paragraphs
+that follow are its history.
+
 Use `AccountCostControls` in the existing infra package, composed beside the
 fleet and cache with a dedicated `us-east-1` provider restricted to the intended
 account. The installed provider supports budgets, allocation tags, both
