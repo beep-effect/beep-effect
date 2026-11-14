@@ -665,10 +665,11 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
         identity: "youtube:video",
       });
       const error = yield* acquireLibraryYoutube(fixture.root, video, "captures/no-metadata").pipe(
-        // Own double: decorates the real platform spawner, running `/usr/bin/true` for every spawn so the
-        // extractor exits 0 with no output; the acquisition reads the real child's streams.
         Effect.provideService(
           ChildProcessSpawner.ChildProcessSpawner,
+          // Own double: decorates the real platform spawner, running `/usr/bin/true` for every spawn so the
+          // extractor exits 0 with no output; the acquisition reads the real child's streams.
+          // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
           ChildProcessSpawner.make(() => spawner.spawn(ChildProcess.make("/usr/bin/true")))
         ),
         Effect.flip
@@ -1005,8 +1006,9 @@ const liveFirecrawl = (env: Record<string, unknown>, opBinary: "printf" | "false
     ChildProcessSpawner.ChildProcessSpawner,
     Effect.gen(function* () {
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-      // Own double: decorates the real platform spawner, recording each `op` argv and running a real
-      // `printf` or `false` in its place.
+      // Own double: decorates the real platform spawner, recording each `op` argv and running a real `printf`
+      // or `false` in its place.
+      // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
       return ChildProcessSpawner.make((command) => {
         opArgs.push(command._tag === "StandardCommand" ? command.args : []);
         return spawner.spawn(

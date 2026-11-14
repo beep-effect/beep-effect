@@ -26,6 +26,7 @@
     "@csstools/media-query-list-parser": "^5.0.2",
     "@distilled.cloud/aws": "1.0.0-rc.19",
     "@distilled.cloud/github": "1.0.0-rc.19",
+    "@distilled.cloud/vercel": "1.0.0-rc.19",
     "@duckdb/node-api": "2.0.0-r.1",
     "@effect/ai-anthropic": "4.1.4",
     "@effect/ai-openai": "4.1.4",

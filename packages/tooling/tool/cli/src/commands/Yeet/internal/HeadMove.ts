@@ -128,10 +128,11 @@ const ensureObjects = Effect.fn("Yeet.headMoveEnsureObjects")(function* (root: s
   );
   if (A.isReadonlyArrayEmpty(missing)) return;
   const sshEnv = yield* fetchSshEnvironment(root);
-  // KEEP (D-22): `Git.fetch` takes one ref and no `--no-auto-maintenance`, and the kit reads its
-  // environment once at `make`, so it cannot pass this fetch's per-call `GIT_TERMINAL_PROMPT` and
-  // BatchMode `GIT_SSH_COMMAND`.
   const args = ["fetch", "--no-tags", "--no-write-fetch-head", "--no-auto-maintenance", "origin", ...missing];
+  // KEEP (D-22): `Git.fetch` takes one ref and no `--no-auto-maintenance`, and the kit reads its environment
+  // once at `make`, so it cannot pass this fetch's per-call `GIT_TERMINAL_PROMPT` and BatchMode
+  // `GIT_SSH_COMMAND`.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-22), reason above
   const result = yield* runFoldedStdout({
     command: "git",
     args,
