@@ -20,7 +20,6 @@ import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import { resolveInfraArtifactPath } from "./internal/InfraArtifactPath.ts";
 import type { InfraPathEnv } from "./internal/InfraArtifactPath.ts";
 
@@ -180,88 +179,6 @@ type CiTurboCacheArgs = {
   readonly config: CiTurboCachePulumiConfigValues;
   readonly remediation?: CiTurboCacheRemediation;
   readonly throttleAlarmRecipients?: ReadonlyArray<pulumi.Input<string>>;
-};
-
-const TurboCacheLabEpoch = S.String.check(
-  S.isPattern(
-    /^[a-z0-9]{4,16}$/u,
-    $I.annote("TurboCacheLabEpochFormat", {
-      title: "Turbo Cache Lab Epoch Format",
-      description: "Four to sixteen lowercase alphanumerics naming one disposable lab epoch.",
-      message: "turboCacheLab:epoch must be 4-16 lowercase alphanumerics",
-    })
-  )
-).pipe($I.annoteSchema("TurboCacheLabEpoch", { description: "Disposable conformance-lab epoch identifier." }));
-
-/**
- * Input to {@link resolveTurboCacheLabBuckets}: a lab stack's raw epoch and bucket name.
- *
- * **Details**
- *
- * Both fields stay plain strings: the resolver validates them itself so an
- * invalid value surfaces as a Pulumi `RunError` with the stack-config message.
- *
- * **Example** (Describe a lab stack)
- *
- * ```ts
- * import { TurboCacheLabBucketsInput } from "@beep/infra"
- *
- * const input = TurboCacheLabBucketsInput.make({ epoch: "c1023a", bucketName: "beep-tcl-c1023a-123456789012" })
- * console.assert(input.epoch === "c1023a")
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class TurboCacheLabBucketsInput extends S.Opaque<TurboCacheLabBucketsInput, { readonly brand: unique symbol }>()(
-  S.Struct({
-    epoch: S.String.annotateKey({ description: "The `turboCacheLab:epoch` stack config value." }),
-    bucketName: S.String.annotateKey({ description: "The lab incumbent's configured bucket name." }),
-  }).pipe(
-    $I.annoteSchema("TurboCacheLabBucketsInput", {
-      description: "Raw lab epoch and incumbent bucket name, validated by resolveTurboCacheLabBuckets.",
-    })
-  )
-) {}
-
-/**
- * Validate a disposable lab's epoch and bucket name and derive its resource names.
- *
- * **Details**
- *
- * The lab bucket must carry the `beep-tcl-<epoch>-` prefix so no lab stack can
- * address a production bucket; the evolved incumbent's bucket inserts `-evo`
- * after that prefix. Invalid input throws a Pulumi `RunError`, like
- * {@link loadCiTurboCacheConfig}.
- *
- * **Example** (Derive lab names)
- *
- * ```ts
- * import { resolveTurboCacheLabBuckets, TurboCacheLabBucketsInput } from "@beep/infra"
- *
- * const names = resolveTurboCacheLabBuckets(
- *   TurboCacheLabBucketsInput.make({ epoch: "c1023a", bucketName: "beep-tcl-c1023a-123456789012" })
- * )
- * console.assert(names.evolvedBucket === "beep-tcl-c1023a-evo-123456789012")
- * ```
- *
- * @param input - The `turboCacheLab:epoch` stack config value and the lab incumbent's configured bucket name.
- * @returns The lab component prefix and the evolved incumbent's bucket name.
- * @category configuration
- * @since 0.0.0
- */
-export const resolveTurboCacheLabBuckets = ({ epoch, bucketName }: TurboCacheLabBucketsInput) => {
-  if (!S.is(TurboCacheLabEpoch)(epoch)) {
-    throw new pulumi.RunError("turboCacheLab:epoch must be 4-16 lowercase alphanumerics");
-  }
-  const prefix = `beep-tcl-${epoch}-`;
-  if (!Str.startsWith(prefix)(bucketName)) {
-    throw new pulumi.RunError("ciTurboCache:bucketName must carry the lab prefix beep-tcl-<epoch>-");
-  }
-  return {
-    componentPrefix: `beep-tcl-${epoch}`,
-    evolvedBucket: `beep-tcl-${epoch}-evo-${Str.slice(prefix.length)(bucketName)}`,
-  };
 };
 
 const ReservedConcurrency = S.Int.check(S.isBetween({ minimum: 1, maximum: 1000 })).pipe(
