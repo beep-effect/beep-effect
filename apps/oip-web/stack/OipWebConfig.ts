@@ -181,15 +181,6 @@ export const ReservedBucketName = LiteralKit([
 export const vercelTeamId = "team_0UZv1AlMu4u7ClZIEX4tpwy2";
 
 /**
- * Repository the live projects are linked to. `Vercel.Project` refuses to
- * adopt a project linked anywhere else.
- *
- * @category constants
- * @since 0.0.0
- */
-export const linkedRepository = "beep-effect/beep-effect";
-
-/**
  * Cloudflare zone id of each {@link OipZone}. Zone ids are not secret.
  *
  * @category constants

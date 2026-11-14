@@ -22,6 +22,7 @@ import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
+import * as Struct from "effect/Struct";
 import { liveStageConfig, vercelTeamId, zoneIdOf } from "../../stack/OipWebConfig.ts";
 import { vercelApexTarget, vercelCnameTarget } from "../../stack/OipWebStack.ts";
 
@@ -67,6 +68,7 @@ const domains = MutableHashMap.empty<string, DomainRecord>();
 const records = MutableHashMap.empty<string, DnsRecord>();
 const buckets = MutableHashMap.empty<string, BucketRecord>();
 let writes: ReadonlyArray<string> = [];
+let declaredProjectKeys: ReadonlyArray<string> = [];
 let sequence = 0;
 
 const nextId = (prefix: string): string => {
@@ -161,8 +163,10 @@ const ProjectFake = Provider.effect(
             () => nextId("prj")
           ),
         name,
-        props: news,
+        // Like the real provider's `projectPatch`: only declared fields are sent, the rest stay.
+        props: { ...O.getOrUndefined(O.map(MutableHashMap.get(projects, name), (p) => p.props)), ...news },
       };
+      declaredProjectKeys = A.appendAll(declaredProjectKeys, Struct.keys(news));
       MutableHashMap.set(projects, name, project);
       yield* log(`Vercel.Project ${name} reconcile`);
       return projectAttributes(project);
@@ -275,8 +279,13 @@ const RecordFake = Provider.effect(
         content: "content" in news && typeof news.content === "string" ? news.content : "",
         comment: news.comment ?? "",
       };
+      // Like the real provider: a record whose declared fields all match is not written.
+      const unchanged = O.exists(
+        MutableHashMap.get(records, key),
+        (live) => live.content === record.content && live.comment === record.comment
+      );
       MutableHashMap.set(records, key, record);
-      yield* log(`Cloudflare.DNS.Record ${news.name} reconcile`);
+      yield* log(`Cloudflare.DNS.Record ${news.name} ${unchanged ? "unchanged" : "write"}`);
       return dnsAttributes(record);
     }),
     delete: Effect.fn("Fake.delete")(function* ({ output }) {
@@ -323,6 +332,21 @@ export const FakeCloudProviders = Layer.mergeAll(
   Layer.effect(AWS.Providers, Provider.collection([AWS.S3.Bucket])).pipe(Layer.provide(BucketFake))
 );
 
+/**
+ * The live settings of both projects (census 2026-11-14): every field that shapes a build or a
+ * pull-request check. The stack must leave all of them as they are.
+ */
+export const liveProjectSettings = {
+  framework: "nextjs",
+  buildCommand: "cd ../.. && bun run --cwd apps/oip-web build:pwa",
+  installCommand: "cd ../.. && bun install",
+  rootDirectory: "apps/oip-web",
+  gitRepository: { type: "github", repo: "beep-effect/beep-effect" },
+  deploymentProtection: "none",
+  nodeVersion: "24.x",
+  autoExposeSystemEnvs: true,
+} as const satisfies Vercel.ProjectProps;
+
 /** Ids of the live objects as the 2026-11-14 census recorded them. */
 export const liveIds = {
   prodProjectId: "prj_J5xqp5jg7POGvoIwOj7e1axpoPxb",
@@ -341,6 +365,7 @@ export const FakeCloud = {
     MutableHashMap.clear(records);
     MutableHashMap.clear(buckets);
     writes = [];
+    declaredProjectKeys = [];
     sequence = 0;
   },
   /**
@@ -353,7 +378,7 @@ export const FakeCloud = {
       MutableHashMap.set(projects, config.projectName, {
         projectId,
         name: config.projectName,
-        props: { name: config.projectName, gitRepository: { type: "github", repo: "beep-effect/beep-effect" } },
+        props: { name: config.projectName, ...liveProjectSettings },
       });
       const env = (key: string, type: string, targets: ReadonlyArray<string>, value: string) =>
         MutableHashMap.set(envs, envKey(projectId, key), {
@@ -380,6 +405,7 @@ export const FakeCloud = {
           name: domain.name,
           type: domain.record,
           content: domain.record === "A" ? vercelApexTarget : vercelCnameTarget,
+          // The live comment, verbatim from the census.
           comment: "Managed by Pulumi for oip.law Vercel routing.",
         });
       }
@@ -397,4 +423,6 @@ export const FakeCloud = {
   bucket: (name: string) => MutableHashMap.get(buckets, name),
   projectCount: (): number => MutableHashMap.size(projects),
   writes: (): ReadonlyArray<string> => writes,
+  /** Every project prop key the stack declared, over all project reconciles since the reset. */
+  declaredProjectKeys: (): ReadonlyArray<string> => declaredProjectKeys,
 };

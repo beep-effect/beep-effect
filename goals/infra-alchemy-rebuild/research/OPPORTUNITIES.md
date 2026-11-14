@@ -169,6 +169,11 @@ to the gap between the reference checkout (main) and the pinned release.
 - **Would have prevented it:** a check that every Pulumi project's `encryptionsalt` decrypts with the
   1Password passphrase (run when the passphrase or a stack changes), and a 1Password field per runtime secret
   so the IaC copy is never the only one.
+- **Correction (packet gate session, 2026-11-14):** the oip-web stacks decrypt with
+  `op://BEEP_SECRETS/OIP_SECRETS/PULUMI_CONFIG_PASSPHRASE`; the `BEEP_SECRETS` item's passphrase belongs to
+  the runners stack. The live HubSpot token is `op://BEEP_SECRETS/OIP_SECRETS/CRM_HUBSPOT_SERVICE_KEY` and equals
+  the value both stacks held. The receipt stands as friction: the lane had no pointer from the Pulumi project to its
+  1Password item.
 
 ## 2026-11-14: Alchemy persists a `Redacted` prop's plain text in state
 

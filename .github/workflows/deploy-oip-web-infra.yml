@@ -21,8 +21,9 @@ name: Deploy oip-web infrastructure
 # HubSpot secret are that environment's secrets.
 #
 # The job runs only while the repository variable OIP_WEB_INFRA_DEPLOY is
-# `enabled`: merging this file deploys nothing, and setting the variable is the
-# cutover's arming step (unset it to disarm).
+# `enabled`: merging this file deploys nothing. Setting the variable is a
+# deploy act done by the packet gate session, never by a workflow or a lane,
+# after telling the orchestrator the time (unset it to disarm).
 # Runbook: docs/runbooks/alchemy-infra.md.
 on:
   push:
@@ -59,6 +60,8 @@ jobs:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      # One token serves both stages (it equals the value each Pulumi stack held).
+      CRM_HUBSPOT_SERVICE_KEY: ${{ secrets.CRM_HUBSPOT_SERVICE_KEY }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -79,8 +82,6 @@ jobs:
       - name: Plan staging stage
         working-directory: apps/oip-web
         shell: bash
-        env:
-          CRM_HUBSPOT_SERVICE_KEY: ${{ secrets.CRM_HUBSPOT_SERVICE_KEY_STAGING }}
         run: |
           set -euo pipefail
           bunx alchemy plan --stage staging --env-file /dev/null 2>&1 | tee "$RUNNER_TEMP/plan-staging.log"
@@ -92,8 +93,6 @@ jobs:
       - name: Deploy staging stage
         working-directory: apps/oip-web
         shell: bash
-        env:
-          CRM_HUBSPOT_SERVICE_KEY: ${{ secrets.CRM_HUBSPOT_SERVICE_KEY_STAGING }}
         run: bunx alchemy deploy --stage staging --yes --env-file /dev/null
 
       - name: Smoke-check staging hostnames
@@ -115,8 +114,6 @@ jobs:
       - name: Plan prod stage
         working-directory: apps/oip-web
         shell: bash
-        env:
-          CRM_HUBSPOT_SERVICE_KEY: ${{ secrets.CRM_HUBSPOT_SERVICE_KEY_PROD }}
         run: |
           set -euo pipefail
           bunx alchemy plan --stage prod --env-file /dev/null 2>&1 | tee "$RUNNER_TEMP/plan-prod.log"
@@ -128,8 +125,6 @@ jobs:
       - name: Deploy prod stage
         working-directory: apps/oip-web
         shell: bash
-        env:
-          CRM_HUBSPOT_SERVICE_KEY: ${{ secrets.CRM_HUBSPOT_SERVICE_KEY_PROD }}
         run: bunx alchemy deploy --stage prod --yes --env-file /dev/null
 
       - name: Smoke-check prod hostnames

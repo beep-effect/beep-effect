@@ -29,7 +29,7 @@ import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { LiveStage, linkedRepository, OipRecordType, vercelTeamId, zoneIdOf } from "./OipWebConfig.ts";
+import { LiveStage, OipRecordType, vercelTeamId, zoneIdOf } from "./OipWebConfig.ts";
 import type { Input } from "alchemy/Input";
 import type { OipDomain, OipWebStackConfig } from "./OipWebConfig.ts";
 
@@ -50,12 +50,21 @@ export const vercelApexTarget = "76.76.21.21";
 export const vercelCnameTarget = "cname.vercel-dns.com";
 
 /**
- * Comment written on every DNS record this stack owns.
+ * Comment on every DNS record this stack owns: the live records' comment, kept so
+ * adoption is a pure read.
  *
+ * **Details**
+ *
+ * The Cloudflare provider rewrites a record when any declared field differs,
+ * and an undeclared comment defaults to `Managed by Alchemy (<fqn>)`, which
+ * differs too. Keeping the live text means the first deploys only list the
+ * records (DNS Read). Rewording it later is its own deploy and needs DNS Edit.
+ *
+ * @category constants
  * @category constants
  * @since 0.0.0
  */
-export const dnsRecordComment = "Managed by Alchemy (apps/oip-web/alchemy.run.ts) for oip.law Vercel routing.";
+export const dnsRecordComment = "Managed by Pulumi for oip.law Vercel routing.";
 
 /**
  * Logical-id suffix of a hostname: `www.oip.law` becomes `www-oip-law`.
@@ -125,10 +134,10 @@ const declareDomain = (config: OipWebStackConfig, project: Input<string>) =>
  *
  * **Details**
  *
- * Project settings, variables, domains and records restate what the Pulumi
- * program set and what the live census showed, so the first `prod` and
- * `staging` deploys adopt the live objects and change only the DNS record
- * comments and the variables' recorded values. The assets bucket is new
+ * The project declares its name and team only; variables, domains and records
+ * restate the live census, so the first `prod` and `staging` deploys adopt the
+ * live objects without changing a project setting, a domain or a DNS record
+ * (the variables are rewritten with their current values). The assets bucket is new
  * (`oip-law-web-assets-<stage>`): the Pulumi buckets hold no objects and have
  * no reader. Vercel deployments stay with `.github/workflows/vercel-deploy.yml`;
  * this stack owns configuration, not builds.
@@ -150,22 +159,17 @@ const declareDomain = (config: OipWebStackConfig, project: Input<string>) =>
  * @since 0.0.0
  */
 export const oipWebResources = Effect.fn("OipWeb.resources")(function* (config: OipWebStackConfig) {
+  // Only the project's identity is declared. Every field that shapes a build or a pull-request
+  // check (git link, framework, commands, root directory, Node version, system variables,
+  // deployment protection) is left out, so adopting the live project can never send one;
+  // `git.deploymentEnabled` lives in vercel.json, which no resource touches.
   const project = yield* Vercel.Project(projectId, {
     name: config.projectName,
     teamId: vercelTeamId,
-    framework: "nextjs",
-    buildCommand: "cd ../.. && bun run --cwd apps/oip-web build:pwa",
-    installCommand: "cd ../.. && bun install",
-    rootDirectory: "apps/oip-web",
-    gitRepository: { type: "github", repo: linkedRepository },
-    deploymentProtection: "none",
-    nodeVersion: "24.x",
-    autoExposeSystemEnvs: true,
   }).pipe(liveObject(config.live));
 
-  // Public values: written as literals (Alchemy keeps a Redacted prop's text in state).
-  // Variables are adopted on live stages but not protected: a type-driven replacement
-  // of one is a brief gap in one value, not an outage.
+  // Public values: written as literals (Alchemy keeps a Redacted prop's text in state), equal
+  // to the live values. Like every adopted object they are protected on live stages.
   yield* Vercel.EnvVar("EnvNextDisablePwa", {
     project: project.projectId,
     teamId: vercelTeamId,
@@ -173,7 +177,7 @@ export const oipWebResources = Effect.fn("OipWeb.resources")(function* (config: 
     value: Redacted.make("0"),
     targets: ["production", "preview"],
     type: "encrypted",
-  }).pipe(adopt(config.live));
+  }).pipe(liveObject(config.live));
   yield* Vercel.EnvVar("EnvHubSpotAccountId", {
     project: project.projectId,
     teamId: vercelTeamId,
@@ -181,7 +185,7 @@ export const oipWebResources = Effect.fn("OipWeb.resources")(function* (config: 
     value: Redacted.make(config.hubSpotAccountId),
     targets: ["production", "preview"],
     type: "encrypted",
-  }).pipe(adopt(config.live));
+  }).pipe(liveObject(config.live));
   // The secret is read at deploy time and never reaches state.
   yield* pipe(
     O.fromUndefinedOr(config.hubSpotServiceKey),
@@ -195,7 +199,7 @@ export const oipWebResources = Effect.fn("OipWeb.resources")(function* (config: 
           valueFrom,
           targets: ["production"],
           type: "sensitive",
-        }).pipe(adopt(config.live), Effect.asVoid),
+        }).pipe(liveObject(config.live), Effect.asVoid),
     })
   );
 

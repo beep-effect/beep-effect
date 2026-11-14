@@ -66,12 +66,12 @@ Order: schema, then typed configuration, then resources.
 
 ### Greenfield or adopt, per object
 
-| Object | Recommendation | Why |
+| Object | Ruling (packet gate, 2026-11-14) | Why |
 | --- | --- | --- |
-| Vercel project | adopt in place | see below |
-| Environment variables | adopt with the project | they belong to the project id |
+| Vercel project | adopt in place, approved | see below |
+| Environment variables | adopt with the project, protected | they belong to the project id; values are rewritten unchanged |
 | Domains | adopt (D20) | a domain is on one project at a time; with the project adopted no move is needed |
-| DNS records | adopt (D20) | records are name-unique and carry no owner marker; only the comment changes |
+| DNS records | adopt (D20) | records are name-unique and carry no owner marker; the live comment is declared, so adoption only reads them |
 | Assets bucket | new bucket, `oip-law-web-assets-<stage>` | both Pulumi buckets hold no object and have no reader |
 
 **The Vercel project.** Two honest options.
@@ -86,18 +86,18 @@ Order: schema, then typed configuration, then resources.
   cutover must edit that file (the two `projectId` values on the `oip-web` and
   `oip-web-staging` rows), and it runs pull-request jobs. Rollback: move the domains
   back. Cost: none on the Hobby team (projects are not billed).
-- *Adopt the live project in place.* Downtime risk: none planned; adoption writes
-  settings identical to what the project already has (the census matched every field).
-  Preview URLs, deployment history and the git link stay as they are; the project is
-  already linked to `beep-effect/beep-effect`, which `Vercel.Project` requires. Deploy
+- *Adopt the live project in place.* Downtime risk: none planned; the stack declares only
+  the project's name and team, so adoption sends no setting at all. Preview URLs,
+  deployment history and the git link stay as they are. Deploy
   path: project ids are unchanged, so `vercel-deploy.yml` is not edited. Rollback: forget
   the state rows; nothing to move back. Cost: it is a per-object exception to D12, and
   `RemovalPolicy.protect()` must hold, because destroying the adopted stage would delete
   the live project.
 
-Recommendation: adopt in place. It is the only option that leaves `vercel-deploy.yml`
-untouched and carries no traffic flip. The stack is built that way; the cutover waits for
-the orchestrating session's ruling.
+Ruling: adopt in place (packet gate, 2026-11-14), a per-object exception to D12 in the
+spirit of D20. It is the only option that leaves `vercel-deploy.yml` and its pull-request
+checks untouched and carries no traffic flip. Every adopted object keeps
+`RemovalPolicy.protect()`, and the tests prove destroying either stage deletes none of them.
 
 **The assets bucket.** Adoption needs no copy and no reader switch; a new bucket needs
 neither either, because both buckets are empty (0 objects, 0 versions, 0 delete markers on
@@ -116,12 +116,14 @@ configuration, never derived from a state-held instance id.
 | --- | --- | --- |
 | `NEXT_DISABLE_PWA` | literal `0` in `infra/src/OipWeb.ts` | literal in `OipWebStack.ts` |
 | `CRM_HUBSPOT_ACCOUNT_ID` | plain Pulumi config (`246203876`) | literal in `OipWebConfig.ts` |
-| `CRM_HUBSPOT_SERVICE_KEY` | Pulumi `secure:` value (the 1Password passphrase no longer decrypts it) and Vercel `sensitive` | `valueFrom: { config: "CRM_HUBSPOT_SERVICE_KEY" }`: `op run` on a workstation, the `CRM_HUBSPOT_SERVICE_KEY_<STAGE>` environment secret in CI; state keeps the key name and a SHA-256 |
+| `CRM_HUBSPOT_SERVICE_KEY` | Pulumi `secure:` value (decrypts with `op://BEEP_SECRETS/OIP_SECRETS/PULUMI_CONFIG_PASSPHRASE`; the same token in both stacks) and Vercel `sensitive` | `valueFrom: { config: "CRM_HUBSPOT_SERVICE_KEY" }`: `op://BEEP_SECRETS/OIP_SECRETS/CRM_HUBSPOT_SERVICE_KEY` through `op run` on a workstation, the one `CRM_HUBSPOT_SERVICE_KEY` environment secret in CI; state keeps the key name and a SHA-256 |
 
 ### Tests
 
 `bun run test` includes `test/stack/`: the resource graph of both live stages and a
 personal stage against in-memory Vercel, Cloudflare and AWS fakes seeded with the live
-census, adoption of every live object, protection against replacement and destroy, no
-secret in state, the CI guard, configuration decoding and rejection, and the plan
+census, adoption of every live object, protection against replacement and destroy (no
+adopted object deleted on either stage), the pull-request surface (only name and team
+declared on the projects, every live setting kept, the project ids `vercel-deploy.yml`
+hard-codes, the DNS records only read), no secret in state, the CI guard, configuration decoding and rejection, and the plan
 guard's accept and refuse cases.

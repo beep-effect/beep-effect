@@ -142,11 +142,26 @@ Every name is pinned in `apps/oip-web/stack/OipWebConfig.ts`; none is derived fr
 state-held instance id. The configuration schema refuses a personal stage that names a
 live project, a live or retiring bucket, any domain or the HubSpot secret.
 
-On `prod` and `staging` every project, domain and DNS record is adopted per object
-(`adopt(true)`, D20) and every project, domain, record and bucket carries
-`RemovalPolicy.protect()`: a plan, deploy or `alchemy destroy` that would replace or
-delete one fails before anything is applied. Never try to work around it with `destroy`:
-after adoption a destroy would delete the live objects.
+On `prod` and `staging` every adopted object (the project, its three variables, the domains
+and the DNS records) is adopted per object (`adopt(true)`, D20) and, with the bucket, carries
+`RemovalPolicy.protect()`: a plan, deploy or `alchemy destroy` that would replace or delete
+one fails before anything is applied. Never try to work around it with `destroy`: after
+adoption a destroy would delete the live objects.
+
+What the first deploys can change on the live objects:
+
+- **Projects:** nothing. The stack declares only `name` and `teamId`; the git link,
+  framework, commands, root directory, Node version, system variables and deployment
+  protection are not declared, so the provider never sends them, and `git.deploymentEnabled`
+  lives in `apps/oip-web/vercel.json`, which no resource touches. Ids are kept, so
+  `vercel-deploy.yml` and its pull-request jobs are unaffected.
+- **Variables:** rewritten with the values they hold today (`NEXT_DISABLE_PWA=0`,
+  `CRM_HUBSPOT_ACCOUNT_ID`, and the HubSpot token, verified equal); a Vercel variable change
+  reaches new deployments only.
+- **Domains:** nothing (same project, same redirects).
+- **DNS records:** nothing. The stack declares the live comment
+  (`Managed by Pulumi for oip.law Vercel routing.`), so every declared field already
+  matches and the provider only lists the records.
 
 Variables: `NEXT_DISABLE_PWA` (`0`) and `CRM_HUBSPOT_ACCOUNT_ID` are public literals.
 `CRM_HUBSPOT_SERVICE_KEY` uses `valueFrom: { config: "CRM_HUBSPOT_SERVICE_KEY" }`: the
@@ -158,19 +173,22 @@ in `value`.
 
 One job, `staging` then `prod`, each: `alchemy plan` (log teed to a file), the pre-deploy
 check `bun apps/oip-web/stack/plan-guard.ts <log>` (refuses any replace, delete or orphan
-of a project, domain, DNS record or bucket, and a log with no `Plan:` line), `alchemy
-deploy --yes`, then a curl poll of every hostname for its expected status. The job runs
-only while the repository variable `OIP_WEB_INFRA_DEPLOY` is `enabled`.
+of the project, a variable, a domain, a DNS record or a bucket, and a log with no `Plan:`
+line), `alchemy deploy --yes`, then a curl poll of every hostname for its expected status.
+The job runs only while the repository variable `OIP_WEB_INFRA_DEPLOY` is `enabled`.
 
 The `oip-web-infra-prod` environment (branch policy `main`) carries:
 
 | Name | Kind | Source |
 | --- | --- | --- |
-| `OIP_WEB_DEPLOY_ROLE_ARN` | variable | role `beep-alchemy-oip-web-deploy` (state bucket read and write, bucket management on `oip-law-web-assets-*`, trust `repo:beep-effect/beep-effect:environment:oip-web-infra-prod`) |
+| `OIP_WEB_DEPLOY_ROLE_ARN` | variable | role `beep-alchemy-oip-web-deploy` (state bucket read and write; every action on the two `oip-law-web-assets-*` buckets except `s3:DeleteBucket`, which is denied; trust `repo:beep-effect/beep-effect:environment:oip-web-infra-prod`) |
 | `VERCEL_TOKEN` | secret | `op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_VERCEL_TOKEN` (reads the team; `CLOUD_VERCEL_API_TOKEN` is refused) |
-| `CLOUDFLARE_API_TOKEN` | secret | a token with DNS edit on zones `oip.law` and `opip.law` (`CLOUD_CLOUDFLARE_ACCOUNT_IAC_TOKEN` reads them; `CLOUD_CLOUDFLARE_ALCHEMY_TOKEN` cannot) |
+| `CLOUDFLARE_API_TOKEN` | secret | `op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_CLOUDFLARE_ALCHEMY_TOKEN`, once it carries Zone · DNS · Read on zones `oip.law` and `opip.law` (DNS · Edit for any later record change) |
 | `CLOUDFLARE_ACCOUNT_ID` | secret | `op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_CLOUDFLARE_ACCOUNT_ID` |
-| `CRM_HUBSPOT_SERVICE_KEY_PROD`, `CRM_HUBSPOT_SERVICE_KEY_STAGING` | secret | the HubSpot private-app token, from a 1Password field the operator names |
+| `CRM_HUBSPOT_SERVICE_KEY` | secret | `op://BEEP_SECRETS/OIP_SECRETS/CRM_HUBSPOT_SERVICE_KEY` (one token serves both stages) |
+
+The exact bootstrap commands and their reversal are in the decision file
+"OipWeb bootstrap: deploy role, environment, secrets and the Cloudflare grant".
 
 ### Personal stage
 
@@ -179,40 +197,50 @@ eval "$(aws configure export-credentials --profile elpresidank-vault --format en
 export AWS_REGION=us-east-1
 cd apps/oip-web
 VERCEL_TOKEN=op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_VERCEL_TOKEN \
-CLOUDFLARE_API_TOKEN=op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_CLOUDFLARE_ACCOUNT_IAC_TOKEN \
+CLOUDFLARE_API_TOKEN=op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_CLOUDFLARE_ALCHEMY_TOKEN \
 CLOUDFLARE_ACCOUNT_ID=op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_CLOUDFLARE_ACCOUNT_ID \
   op run -- bunx alchemy plan --stage "dev_$USER" --env-file /dev/null
 ```
 
 It plans `[AssetsBucket]`, `[EnvHubSpotAccountId]`, `[EnvNextDisablePwa]` and `[Project]`
-as creates, all stage-named. `prod` and `staging` refuse to run without `CI=true`.
+as creates, all stage-named, and makes no Cloudflare call. `prod` and `staging` refuse to
+run without `CI=true`.
 
 ### Cutover from Pulumi
 
-Executed by the orchestrating session after a ruling, never by a lane. Zero planned
-downtime: adoption rewrites settings that already hold, DNS records change only their
-comment, and a Vercel variable change reaches new deployments only.
+Executed by the packet gate session after its rulings, never by a lane. Zero planned
+downtime: no project, domain or DNS record changes, and a variable rewrite (same values)
+reaches new deployments only. Pulumi commands run from `infra/oip-web` with
+`AWS_PROFILE=elpresidank-vault`, `PULUMI_BACKEND_URL=s3://oip-law-pulumi-state` and the
+OIP passphrase:
 
-1. **Preconditions (read-only).** Store the HubSpot private-app token in a named
-   1Password field and prove it is the live one with a read that returns portal
-   `246203876` (the Pulumi copy cannot be decrypted and Vercel never returns a sensitive
-   value). Confirm the Cloudflare token's DNS edit scope on both zones with the token
-   verify endpoint. Check: both booleans true.
-2. **Archive Pulumi.** `pulumi stack export` both stacks to
-   `~/.local/state/beep/infra-archives/pulumi-exports/opip-web-<stack>-<date>.json`;
-   record size and sha256 in a decision file. Check: `jq '.deployment.resources | length'`
-   gives 22 and 18.
-3. **Bootstrap.** Create the deploy role and the environment with the table above.
-   Check: `aws iam get-role`, `gh variable list --env` and `gh secret list --env` show the
-   names. Rollback: delete them; nothing live changed.
+```sh
+PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/OIP_SECRETS/PULUMI_CONFIG_PASSPHRASE op run -- pulumi <command>
+```
+
+1. **Preconditions (read-only).** The HubSpot token at
+   `op://BEEP_SECRETS/OIP_SECRETS/CRM_HUBSPOT_SERVICE_KEY` returns HTTP 200 and portal
+   `246203876` from HubSpot's account-info endpoint (verified 2026-11-14); the Alchemy
+   Cloudflare token lists the records of both zones. Check: both booleans true.
+2. **Archive Pulumi.** `pulumi stack export --stack <stack> --file
+   ~/.local/state/beep/infra-archives/pulumi-exports/opip-web-<stack>-<date>.json` for both
+   stacks; record size and sha256 in a decision file. Check:
+   `jq '.deployment.resources | length'` gives 22 and 18.
+3. **Bootstrap.** Run the bootstrap decision's commands. Check: `aws iam get-role`,
+   `gh variable list --env oip-web-infra-prod` and `gh secret list --env oip-web-infra-prod`
+   show the names. Rollback: the decision's reversal; nothing live changed.
 4. **Freeze Pulumi.** No `pulumi up` on `opip-web` from here on.
-5. **Arm and run.** Set `OIP_WEB_INFRA_DEPLOY=enabled`, dispatch the workflow. The staging
-   plan must read `Plan: 1 to create, 8 to adopted` and the prod plan
-   `Plan: 1 to create, 12 to adopted` (lines listed in the expected-plan decision file);
+5. **Re-check the token, then arm.** Immediately before arming, repeat the account-info read
+   with the token the environment secret was set from (HTTP 200, portal `246203876`); a wrong
+   value would break the contact form on the next deployment. Arming is a deploy act: tell the
+   orchestrator the time first; the packet gate session sets `OIP_WEB_INFRA_DEPLOY=enabled`
+   itself, never a workflow or a lane. Then dispatch the workflow (or let the next filtered
+   push run it). The staging plan must read `Plan: 1 to create, 8 to adopted` and the prod
+   plan `Plan: 1 to create, 12 to adopted` (lines in the expected-plan decision file);
    anything else is a stop. Check: both smoke steps pass; a second dispatch plans
-   `no changes` for both stages; `alchemy drift --stage prod` exits 0. Rollback: unset
-   the variable. The live objects are unchanged apart from DNS comments and rewritten
-   variable values; Pulumi still holds them and `pulumi up` would restore its comments.
+   `no changes` for both stages; `alchemy drift --stage prod` exits 0. Rollback: unset the
+   variable. The live objects are as they were apart from rewritten variable values (equal
+   values), and Pulumi still holds them.
 6. **Detach Pulumi.** Per stack, `pulumi state delete <urn>` for the project, the three
    variables, the domains and the DNS records, so no later Pulumi destroy can reach them.
    Confirm the old buckets still hold no object version, then
@@ -223,8 +251,9 @@ comment, and a Vercel variable change reaches new deployments only.
    Rollback: `pulumi stack import --file <archive>` restores Pulumi's state; `pulumi up`
    recreates an empty bucket under its old name if it is still free.
 7. **Later.** `infra/oip-web`, `infra/src/OipWeb.ts` and `infra/src/Vercel.ts` leave with
-   `infra/` in P6. To hand an object back without deleting it, `alchemy state delete` its
-   row; never `alchemy destroy` a live stage.
+   `infra/` in P6. Rewording the DNS comment to name Alchemy is its own deploy and needs
+   DNS · Edit. To hand an object back without deleting it, `alchemy state delete` its row;
+   never `alchemy destroy` a live stage.
 
 ## Acceptance evidence
 

@@ -1,7 +1,7 @@
 /**
  * Pre-deploy check of an `alchemy plan` log for the `OipWeb` stack: refuses a
- * plan that would replace or delete the Vercel project, a domain, a DNS
- * record or the assets bucket.
+ * plan that would replace or delete the Vercel project, an environment
+ * variable, a domain, a DNS record or the assets bucket.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -29,14 +29,14 @@ const PlanAction = LiteralKit(["create", "update", "adopted", "replace", "delete
 const DestructiveAction = PlanAction.pick(["replace", "delete", "orphaned"]);
 
 /** Kinds of resource whose loss takes oip.law down or loses data. */
-const GuardedKind = LiteralKit(["project", "domain", "dns", "bucket"]).pipe(
+const GuardedKind = LiteralKit(["project", "envVar", "domain", "dns", "bucket"]).pipe(
   $I.annoteSchema("GuardedKind", {
     description: "Kind of OipWeb resource that a deploy may never replace or delete.",
   })
 );
 
 /**
- * Kind of resource a deploy may never replace or delete: `project`, `domain`, `dns` or `bucket`.
+ * Kind of resource a deploy may never replace or delete: `project`, `envVar`, `domain`, `dns` or `bucket`.
  *
  * @category models
  * @since 0.0.0
@@ -62,7 +62,8 @@ class PlanRefused extends S.TaggedError<PlanRefused, { readonly brand: unique sy
     refused: S.Array(PlanEntry).annotateKey({ description: "The guarded resources the plan would remove." }),
   },
   $I.annoteError<PlanRefused>("PlanRefused", {
-    description: "The plan replaces or deletes the OipWeb project, a domain, a DNS record or the assets bucket.",
+    description:
+      "The plan replaces or deletes the OipWeb project, a variable, a domain, a DNS record or the assets bucket.",
   })
 ) {}
 
@@ -148,7 +149,7 @@ export const parsePlanLog: (log: string) => ReadonlyArray<PlanEntry> = flow(
  * ```
  *
  * @param fqn - The resource FQN as the plan prints it.
- * @returns The kind, or `None` for a resource a deploy may replace (an environment variable).
+ * @returns The kind, or `None` for a resource outside the guarded set.
  * @category constructors
  * @since 0.0.0
  */
@@ -162,6 +163,7 @@ export const guardedKindOf = (fqn: string): O.Option<GuardedKind> => {
   if (id === "AssetsBucket") return O.some(GuardedKind.Enum.bucket);
   if (Str.startsWith("Domain-")(id)) return O.some(GuardedKind.Enum.domain);
   if (Str.startsWith("Dns-")(id)) return O.some(GuardedKind.Enum.dns);
+  if (Str.startsWith("Env")(id)) return O.some(GuardedKind.Enum.envVar);
   return O.none();
 };
 

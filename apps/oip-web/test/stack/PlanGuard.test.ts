@@ -43,22 +43,25 @@ describe("PlanGuard", () => {
     expect(guardedKindOf("Dns-oip-law")).toEqual(O.some("dns"));
     expect(guardedKindOf("AssetsBucket")).toEqual(O.some("bucket"));
     expect(guardedKindOf("Ns/Project")).toEqual(O.some("project"));
-    expect(guardedKindOf("EnvNextDisablePwa")).toEqual(O.none());
+    expect(guardedKindOf("EnvNextDisablePwa")).toEqual(O.some("envVar"));
+    expect(guardedKindOf("SomethingElse")).toEqual(O.none());
   });
 
-  it.effect("accepts creates, updates, adoptions and an environment variable replacement", () =>
+  it.effect("accepts creates, updates and adoptions", () =>
     Effect.gen(function* () {
-      const entries = yield* checkPlan(`${firstProdPlan}[EnvNextDisablePwa] replace\n[Dns-oip-law] update\n`);
+      const entries = yield* checkPlan(`${firstProdPlan}[EnvNextDisablePwa] update\n[Dns-oip-law] update\n`);
       expect(entries.length).toBe(8);
       const empty = yield* checkPlan("Plan: no resources\n");
       expect(empty).toEqual([]);
     })
   );
 
-  it.effect("refuses a replace, delete or orphan of a project, domain, DNS record or bucket", () =>
+  it.effect("refuses a replace, delete or orphan of a project, variable, domain, DNS record or bucket", () =>
     Effect.gen(function* () {
       for (const line of [
         "[Project] replace",
+        "[EnvNextDisablePwa] replace",
+        "[EnvHubSpotServiceKey] delete",
         "[Domain-oip-law] delete",
         "[Dns-www-opip-law] orphaned",
         "[AssetsBucket] replace",

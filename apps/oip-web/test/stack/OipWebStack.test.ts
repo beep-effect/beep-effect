@@ -1,14 +1,24 @@
 // @vitest-environment node
+
+import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { configForStage, liveStageConfig, OipWebStackConfig, zoneIdOf } from "../../stack/OipWebConfig.ts";
+import {
+  configForStage,
+  liveStageConfig,
+  OipWebStackConfig,
+  vercelTeamId as TEAM,
+  zoneIdOf,
+} from "../../stack/OipWebConfig.ts";
 import { dnsRecordComment, oipWebResources, requireCiForLiveStage, servedHostnames } from "../../stack/OipWebStack.ts";
-import { FakeCloud, liveHubSpotSecret, liveIds } from "./FakeCloud.ts";
+import { FakeCloud, liveHubSpotSecret, liveIds, liveProjectSettings } from "./FakeCloud.ts";
 import { failureTag, makeHarness, persistedStrings, stageProgram, typed, withConfig } from "./Harness.ts";
 
 const { test } = makeHarness();
@@ -161,4 +171,81 @@ describe("servedHostnames", () => {
       expect(servedHostnames(staging)).toEqual(["staging.oip.law"]);
     })
   );
+});
+
+// Window-5 condition 1: adopting the live projects may change nothing that runs or reports
+// on a pull request, and keeps the project ids vercel-deploy.yml hard-codes.
+describe("OipWeb leaves the pull-request surface alone", { concurrent: false }, () => {
+  const pullRequestSafeKeys = ["name", "teamId"];
+
+  for (const stage of ["prod", "staging"] as const) {
+    test.provider(`adopting the ${stage} project declares only name and team and keeps every live setting`, (scratch) =>
+      Effect.gen(function* () {
+        const stack = typed(scratch);
+        FakeCloud.reset();
+        FakeCloud.seedLive();
+        const config = liveStageConfig[stage];
+        const outputs = yield* stack.deploy(stageProgram(stage)).pipe(withConfig(liveSecret));
+
+        expect(outputs.projectId).toBe(stage === "prod" ? liveIds.prodProjectId : liveIds.stagingProjectId);
+        expect(A.isReadonlyArrayNonEmpty(FakeCloud.declaredProjectKeys())).toBe(true);
+        expect(A.every(FakeCloud.declaredProjectKeys(), (key) => A.contains(pullRequestSafeKeys, key))).toBe(true);
+        expect(O.getOrThrow(FakeCloud.project(config.projectName)).props).toEqual({
+          name: config.projectName,
+          ...liveProjectSettings,
+          teamId: TEAM,
+        });
+        // The live DNS records keep their content and comment, so the deploy only reads them.
+        expect(A.filter(FakeCloud.writes(), Str.startsWith("Cloudflare.DNS.Record"))).toEqual(
+          A.map(config.domains, (domain) => `Cloudflare.DNS.Record ${domain.name} unchanged`)
+        );
+      })
+    );
+  }
+
+  for (const stage of ["prod", "staging"] as const) {
+    test.provider(`destroying ${stage} deletes none of its adopted objects`, (scratch) =>
+      Effect.gen(function* () {
+        const stack = typed(scratch);
+        FakeCloud.reset();
+        FakeCloud.seedLive();
+        const outputs = yield* stack.deploy(stageProgram(stage)).pipe(withConfig(liveSecret));
+        const destroyed = yield* Effect.exit(stack.destroy());
+        expect(failureTag(destroyed)).toEqual(O.some("ProtectedResource"));
+
+        const config = liveStageConfig[stage];
+        expect(O.isSome(FakeCloud.project(config.projectName))).toBe(true);
+        for (const key of ["NEXT_DISABLE_PWA", "CRM_HUBSPOT_ACCOUNT_ID", "CRM_HUBSPOT_SERVICE_KEY"]) {
+          expect(O.isSome(FakeCloud.env(outputs.projectId, key))).toBe(true);
+        }
+        for (const domain of config.domains) {
+          expect(O.isSome(FakeCloud.domain(domain.name))).toBe(true);
+          expect(O.isSome(FakeCloud.record(zoneIdOf(domain), domain.name, domain.record))).toBe(true);
+        }
+        expect(O.isSome(FakeCloud.bucket(config.assetsBucketName))).toBe(true);
+        expect(noDeletes(FakeCloud.writes())).toEqual([]);
+      })
+    );
+  }
+});
+
+describe("vercel-deploy.yml", () => {
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("hard-codes exactly the project ids the stack adopts", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const workflow = yield* fs.readFileString(
+          path.join(import.meta.dirname, "..", "..", "..", "..", ".github", "workflows", "vercel-deploy.yml")
+        );
+        const projectIds = A.map(
+          A.fromIterable(Str.matchAll(/"projectId": "(prj_[A-Za-z0-9]+)"/g)(workflow)),
+          (m) => m[1]
+        );
+        expect(A.contains(projectIds, liveIds.prodProjectId)).toBe(true);
+        expect(A.contains(projectIds, liveIds.stagingProjectId)).toBe(true);
+        expect(workflow).toContain(`VERCEL_ORG_ID: ${TEAM}`);
+      })
+    );
+  });
 });
