@@ -1,11 +1,11 @@
 {
-  "previous": "7528486dea027212b047985027720bbe72a970c54fe0031acc023d3bd9d710f8",
+  "previous": "864483404cc6034c7d173a3b6c637df08a2f925c289fddfcfcbbac3d42cf982f",
   "review": {
     "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p4-hosts)",
     "reason": "Record the new @beep/infra-hosts subject with its generated scripts, re-record @beep/infra after it gains one workspace dependency on @beep/infra-hosts, and the root subject for the new workspace member and its @alchemy.run/docker catalog pin; no command, output or environment changes, no qualification granted.",
     "basis": {
       "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-infra-hosts.md",
-      "sha256": "024c9276892419634161e7b7e6505886211f211822e43b3c9c0a408b7284703e"
+      "sha256": "a9155c262f04ad7f2d780857dfd5757200de818ebf00b7a236cf4d0fc61f1217"
     }
   },
   "scope": ["@beep/identity#lint", "@beep/types#lint"],
