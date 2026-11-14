@@ -541,6 +541,9 @@
       "path": "packages/tooling/library/alchemy-github-runners"
     },
     {
+      "path": "packages/tooling/library/alchemy-vercel"
+    },
+    {
       "path": "packages/tooling/library/codegen-kit"
     },
     {

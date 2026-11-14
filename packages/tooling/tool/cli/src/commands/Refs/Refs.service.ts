@@ -182,6 +182,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
   ) {
     const ambientPath = yield* readAmbientPath(cwd);
     // KEEP (D-19): per-call HOME/PATH/CI with extendEnv off and a 15-minute deadline (O-23).
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
     return yield* runCapturedStreams({
       command: "git",
       args,
@@ -293,6 +294,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
           const memberRoot = path.join(canonicalRoot, member.name);
           if (yield* fs.exists(path.join(memberRoot, ".git"))) return `keep ${memberRoot}; existing checkout preserved`;
           // KEEP (D-19): per-call HOME/PATH/CI with extendEnv off and a 15-minute deadline (O-23).
+          // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
           yield* mustRun(home, canonicalRoot, "git", [
             "clone",
             "--quiet",

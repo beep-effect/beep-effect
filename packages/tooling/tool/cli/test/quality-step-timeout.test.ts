@@ -48,6 +48,7 @@ const makeNeverExitSpawner = Effect.fnUntraced(function* () {
   });
   // Own double: a handle that never exits until killed, to drive the capture timeout; `ScriptedSpawner`
   // completes every script.
+  // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
   return ChildProcessSpawner.make(() => Effect.succeed(handle));
 });
 

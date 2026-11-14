@@ -2549,6 +2549,12 @@
       "@beep/alchemy-aws-extras/*": [
         "./packages/tooling/library/alchemy-aws-extras/src/*"
       ],
+      "@beep/alchemy-vercel": [
+        "./packages/tooling/library/alchemy-vercel/src/index.ts"
+      ],
+      "@beep/alchemy-vercel/*": [
+        "./packages/tooling/library/alchemy-vercel/src/*"
+      ],
       "@beep/infra-cost-controls": [
         "./packages/tooling/infra/cost-controls/src/index.ts"
       ],

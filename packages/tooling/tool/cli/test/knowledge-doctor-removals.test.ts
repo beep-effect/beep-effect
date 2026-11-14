@@ -442,6 +442,7 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Git.layer.pipe(Layer.
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
       const spawned = yield* Ref.make(A.empty<ReadonlyArray<string>>());
       // Own double: decorates the real platform spawner (the walk needs real git), recording each argv.
+      // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
       const recording = ChildProcessSpawner.make((command) =>
         Ref.update(spawned, A.append(commandArgs(command))).pipe(Effect.andThen(spawner.spawn(command)))
       );

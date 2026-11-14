@@ -212,6 +212,7 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
       const node = yield* fs.realPath(request.pilot.nodeExecutable);
       const dependencies = yield* readCacheDependencyMaterialization(sourceRoot, request.pilot.dependencies);
       // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
+      // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
       const git = yield* runCapturedStreams({
         command: "/usr/bin/git",
         args: ["rev-parse", "--path-format=absolute", "--git-common-dir"],

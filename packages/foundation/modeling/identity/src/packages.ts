@@ -258,6 +258,7 @@ const generatedComposers = $I.compose(
   "sqlite",
   "alchemy-github-runners",
   "alchemy-aws-extras",
+  "alchemy-vercel",
   "infra-cost-controls"
 );
 
@@ -3844,6 +3845,23 @@ export const $AlchemyGithubRunnersId: Identity.IdentityComposer<"@beep/alchemy-g
  * @since 0.0.0
  */
 export const $AlchemyAwsExtrasId: Identity.IdentityComposer<"@beep/alchemy-aws-extras"> = composers.$AlchemyAwsExtrasId;
+
+/**
+ * Identity composer for `@beep/alchemy-vercel`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $AlchemyVercelId } from "@beep/identity/packages"
+ *
+ * const id = $AlchemyVercelId.make("AlchemyVercel")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $AlchemyVercelId: Identity.IdentityComposer<"@beep/alchemy-vercel"> = composers.$AlchemyVercelId;
 
 /**
  * Identity composer for `@beep/infra-cost-controls`.
