@@ -55,10 +55,27 @@ destroyed afterwards:
   4. A rotation of the sensitive value.
   5. A target change on the sensitive variable.
 - The staging re-run shape ran separately: the variable's row was dropped while the project's row
-  stayed, so the plan was `1 to adopted`, and the plan after it had no changes.
+  stayed, so the plan was `1 to adopted`, and the plan after it had no changes. A failed create does
+  not delete its row, though: it leaves a `creating` checkpoint, which plans as `create` (below).
 - The real `OipWeb` personal stage was deployed and destroyed, covering its project, two variables
   and bucket.
 - Every write succeeded in place: same ids, no duplicates, stored types unchanged.
+
+**The re-run.** After #3339 merged (`6e393d55c29`, 11:44:22Z) the gate re-armed at 11:45:21Z, and run
+43591525409 succeeded on both stages:
+- staging: `Plan: 1 to create` (`[EnvHubSpotServiceKey] create`, the eight others `noop`), then `Done: 1 succeeded`;
+- prod: `Plan: 8 to create, 5 to adopted`, then `Done: 13 succeeded`.
+
+Staging printed `create` rather than the probe's `adopted`. Alchemy commits a `creating` checkpoint
+without attributes before it calls the provider (`Apply.ts`), the failed call left it in state, and the
+planner prints such a row as `create`, deferring adoption to apply time (`Plan.ts`). The probe had
+deleted the row instead, a wrong model of a failed create.
+
+After the run, read-only:
+- All six live variables kept their pre-arming ids, types and targets, with one variable per key.
+- The six domains, six DNS records and both `*.vercel.app` domains were unchanged.
+- No log line carried a value or a `__redacted__` envelope.
+- Every `OipWeb` state row is `created` or `updated`.
 
 **Rule from now on.** A provider write path is exercised against the real API on a scratch stage
 before any live stage is armed. Fake-only evidence is not enough for a first arm. A fake encodes

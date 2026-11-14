@@ -360,8 +360,9 @@ snapshot); `alchemy destroy` leaves the workstation untouched by design.
 
 `apps/oip-web/alchemy.run.ts` owns the configuration around the oip.law site; Vercel
 deployments themselves stay with `.github/workflows/vercel-deploy.yml` (see
-[Vercel deploys](vercel-deploys.md)). It replaces the Pulumi project `opip-web`
-(stacks `production` and `staging`, backend `s3://oip-law-pulumi-state`). Design and
+[Vercel deploys](vercel-deploys.md)). It replaced the Pulumi project `opip-web`
+(stacks `production` and `staging`, backend `s3://oip-law-pulumi-state`; both stacks removed
+2026-11-14, see "Cutover from Pulumi" below). Design and
 rulings: the app README's "Infrastructure" section and the 2026-11-14 P4 decision files in
 `goals/infra-alchemy-rebuild/decisions/`.
 
@@ -468,67 +469,55 @@ never a real secret. Run each step with `bunx alchemy <plan|deploy|destroy> test
    target change). Expect one update each. Then deploy with `OIP_WEB_REHEARSAL_SENSITIVE_KEY=REHEARSAL_SENSITIVE_RENAMED`:
    expect `1 to replace`, with the new variable created before the old one is deleted.
 4. **A missing row:** reseed, delete only `OipWebRehearsal/dev_$USER/EnvSensitive`, and deploy with
-   adoption. Expect `1 to adopted`, then `no changes`.
+   adoption. Expect `1 to adopted`, then `no changes`. (A row a failed create left behind is a
+   `creating` checkpoint instead, which plans as `create`.)
 5. **Teardown:** `destroy`, and confirm the scratch project is gone.
 
 Then deploy and destroy the real `OipWeb` personal stage, which covers its project, variables and bucket.
 
-### Cutover from Pulumi
+### Cutover from Pulumi (done 2026-11-14)
 
-Executed by the packet gate session after its rulings, never by a lane. Zero planned
-downtime: no project, domain or DNS record changes, and a variable rewrite (same values)
-reaches new deployments only. Pulumi commands run from `infra/oip-web` with
-`AWS_PROFILE=elpresidank-vault`, `PULUMI_BACKEND_URL=s3://oip-law-pulumi-state` and the
-OIP passphrase:
+The packet gate session ran the cutover on 2026-11-14, staging first, with no downtime and no
+change to any project, domain or DNS record. Decision:
+`goals/infra-alchemy-rebuild/decisions/2026-11-14-oipweb-pulumi-cutover-done-both-stacks-removed.md`.
 
-```sh
-PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/OIP_SECRETS/PULUMI_CONFIG_PASSPHRASE op run -- pulumi <command>
-```
+1. **Archive.** Both Pulumi stacks were exported to
+   `~/.local/state/beep/infra-archives/pulumi-exports/opip-web-<stack>-2026-11-14.json`:
+   staging has 18 resources, production 22. The step snapshots, comparisons, destroy previews and
+   logs, and the cutover script (`oip-web-pulumi-cutover.sh`) and its steps file sit beside them.
+   They are kept until P6.
+2. **Arm and deploy.** The first dispatch (run 43585534113) stopped on staging at a sensitive
+   variable edit and was disarmed. After the fix (#3339), run 43591525409 deployed both stages:
+   - staging `Plan: 1 to create`. A failed create leaves a `creating` checkpoint, which plans as
+     `create` and is adopted at apply time.
+   - prod `Plan: 8 to create, 5 to adopted`.
 
-1. **Preconditions (read-only).** The HubSpot token at
-   `op://BEEP_SECRETS/OIP_SECRETS/CRM_HUBSPOT_SERVICE_KEY` returns HTTP 200 and portal
-   `246203876` from HubSpot's account-info endpoint (verified 2026-11-14); the Alchemy
-   Cloudflare token lists the records of both zones. Check: both booleans true.
-2. **Archive Pulumi.** `pulumi stack export --stack <stack> --file
-   ~/.local/state/beep/infra-archives/pulumi-exports/opip-web-<stack>-<date>.json` for both
-   stacks; record size and sha256 in a decision file. Check:
-   `jq '.deployment.resources | length'` gives 22 and 18.
-3. **Bootstrap.** Run the bootstrap decision's commands. Check: `aws iam get-role`,
-   `gh variable list --env oip-web-infra-prod` and `gh secret list --env oip-web-infra-prod`
-   show the names. Rollback: the decision's reversal; nothing live changed.
-4. **Freeze Pulumi.** No `pulumi up` on `opip-web` from here on.
-5. **Re-check the token, then arm.** Immediately before arming, repeat the account-info read
-   with the token the environment secret was set from (HTTP 200, portal `246203876`); a wrong
-   value would break the contact form on the next deployment. Arming is a deploy act: tell the
-   orchestrator the time first; the packet gate session sets `OIP_WEB_INFRA_DEPLOY=enabled`
-   itself, never a workflow or a lane. Then dispatch the workflow (or let the next filtered
-   push run it). The staging plan must read `Plan: 6 to create, 3 to adopted` and the prod
-   plan `Plan: 8 to create, 5 to adopted` (lines in the expected-plan decision file): the
-   project and the DNS records `adopted`, the bucket, the variables and the domains `create`.
-   The plan guard refuses any other `create` before the deploy step runs; anything else that
-   differs is a stop. The first dispatch (run 43585534113) stopped on staging with eight of nine rows
-   written, so its re-run plans staging as `Plan: 1 to adopted` (`[EnvHubSpotServiceKey] adopted`,
-   every other row `noop`) and prod as above. Before any arm, run the live write rehearsal above. Check: both smoke steps pass; a second dispatch plans
-   `no changes` for both stages; `alchemy drift --stage prod` exits 0. Rollback: unset the
-   variable. The live objects are as they were apart from rewritten variable values (equal
-   values), and Pulumi still holds them.
-6. **Detach Pulumi.** Per stack, `pulumi state delete <urn>` for the project, the three
-   variables, the domains and the DNS records, so no later Pulumi destroy can reach them.
-   Confirm the old buckets still hold no object version, then
-   `pulumi state unprotect <urn>` on the five bucket resources and
-   `pulumi destroy --target <bucket urn> --target-dependents` to delete the empty buckets
-   (decision file first, naming the archive). Then `pulumi stack rm`. Check:
-   `aws s3api head-bucket --bucket assets.oip.law` returns 404, the smoke checks pass.
-   Rollback, per stack: `pulumi stack init <stack>` (the stack no longer exists after
-   `pulumi stack rm`), then `pulumi stack import --stack <stack> --file <archive>` restores
-   Pulumi's state. The archive still lists the deleted bucket as existing, so run
-   `pulumi refresh --stack <stack> --target <bucket urn> --target-dependents` before
-   `pulumi up --stack <stack>`, which then recreates the empty bucket under its old name if
-   it is still free.
-7. **Later.** `infra/oip-web`, `infra/src/OipWeb.ts` and `infra/src/Vercel.ts` leave with
-   `infra/` in P6. Rewording the DNS comment to name Alchemy is its own deploy and needs
-   DNS · Edit. To hand an object back without deleting it, `alchemy state delete` its row;
-   never `alchemy destroy` a live stage.
+   `OIP_WEB_INFRA_DEPLOY` stays `enabled`: every matching push to `main` deploys.
+3. **Detach and remove.** Per stack:
+   - `pulumi state delete` of the adopted URNs: the DNS records, domains, variables and project.
+   - `pulumi state unprotect` and a targeted `pulumi destroy` of the empty old bucket
+     (`staging-assets.oip.law`, `assets.oip.law`) and its four dependents.
+   - `pulumi state delete` of the component, then `pulumi stack rm --force --preserve-config`.
+
+   Each step was checked against a fresh `pulumi stack export`. Afterwards `pulumi stack ls -a` on
+   `s3://oip-law-pulumi-state` lists only `organization/beep-ci-runners/production` (354 resources,
+   untouched). The Pulumi program (infra/oip-web (removed in #3341) and infra/src/OipWeb.ts (removed in #3341)) was deleted after the
+   cutover, together with the Storybook program and infra/src/Vercel.ts (removed in #3341).
+
+**Rollback** (re-creates Pulumi state; the live objects never left Alchemy):
+
+1. Disarm with `gh variable delete OIP_WEB_INFRA_DEPLOY -R beep-effect/beep-effect`.
+2. Check out a commit that still has infra/oip-web (removed in #3341), such as `6e393d55c29`.
+3. Run the archived script's `rollback <stack> --preview`, then `--apply --confirmed`. It runs
+   `pulumi stack init`, then `pulumi stack import` of the archive, then
+   `pulumi refresh --target <bucket urn> --target-dependents`, which drops the destroyed bucket
+   from state. `pulumi up` then recreates the empty bucket under its old name if that name is free.
+4. Leave Alchemy's `OipWeb/<stage>` rows in place unless Pulumi takes the objects over for good.
+   Then remove them state-only: `bunx alchemy state delete OipWeb/<stage> -r` from `apps/oip-web`.
+
+To hand one object back without deleting it, `alchemy state delete` its row. Never
+`alchemy destroy` a live stage. Rewording the DNS comment to name Alchemy is its own deploy and
+needs DNS · Edit.
 
 ## Acceptance evidence
 

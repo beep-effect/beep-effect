@@ -152,7 +152,7 @@ the operator's `scratchpad/turbo-cache-r2` Effect-native Worker port?
 **Answer:** The scratchpad module is moved (not copied) into `@beep/infra-turbo-cache` and the
 scratchpad module is deleted once moved. The AWS Lambda cache, `infra/lambda/turbo-cache`,
 `infra/r2-cache` (patches, Python labs, shell wrappers, frozen Alchemy tool clone) and
-`infra/turbo-cache-lab` are deleted. CI and workstations re-enroll against the Worker URL and
+infra/turbo-cache-lab (removed in #3341) are deleted. CI and workstations re-enroll against the Worker URL and
 per-team tokens. Carried over as requirements: signed-policy semantics, the cache-input baseline
 review, and the throttle alarm's intent.
 
