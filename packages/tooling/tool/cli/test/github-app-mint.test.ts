@@ -31,6 +31,8 @@ const textEncoder = new TextEncoder();
 const ORIGINAL_MANIFEST_SHA256 = {
   "beep-reviewer": "8d33e82f78e2d341a70b096193079a3dd230bee5cce78163785ddb1da66cc18c",
   "beep-knowledge-mint": "921bbec705af05189744d649c0675db61b8216a574b4501347d3850168629cbf",
+  // Added in repo-configs directly (no scripts/ predecessor): the checked-in bytes at registration.
+  "beep-infra-github": "3cbdc34b0d235c8d9e47e09e5c22cd8f44ef94414dcf3676fed0aa91ba606195",
 } as const;
 
 // A fake `op` that accepts only a real pipe carrying the complete template.
@@ -58,6 +60,11 @@ const appCases = {
   },
   "beep-knowledge-mint": {
     title: "beep-knowledge-mint GitHub App",
+    fieldCount: 5,
+    slugCheck: 'if (field("slug")?.value !== "beep-knowledge-mint-2") process.exit(87);',
+  },
+  "beep-infra-github": {
+    title: "beep-infra-github GitHub App",
     fieldCount: 5,
     slugCheck: 'if (field("slug")?.value !== "beep-knowledge-mint-2") process.exit(87);',
   },
@@ -220,7 +227,7 @@ const DryRunLayer = Layer.unwrap(
 );
 
 it.layer(DryRunLayer, { timeout: "30 seconds" })("github app mint dry run", (it) => {
-  for (const app of ["beep-reviewer", "beep-knowledge-mint"] as const) {
+  for (const app of ["beep-reviewer", "beep-knowledge-mint", "beep-infra-github"] as const) {
     it.effect(`prints the ${app} manifest byte for byte`, () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;

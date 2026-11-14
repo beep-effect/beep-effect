@@ -63,7 +63,7 @@ export const KnowledgeRefsRewriteRulesPath = `${DATA_ROOT}/knowledge-refs-rewrit
  * @category schemas
  * @since 0.0.0
  */
-export const GitHubAppName = LiteralKit(["beep-reviewer", "beep-knowledge-mint"]).pipe(
+export const GitHubAppName = LiteralKit(["beep-reviewer", "beep-knowledge-mint", "beep-infra-github"]).pipe(
   $I.annoteSchema("GitHubAppName", {
     description: "GitHub Apps whose registration manifest the repo-configs policy pack owns.",
   })

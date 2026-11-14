@@ -142,12 +142,88 @@ GITHUB_TOKEN="$(gh auth token)" INFRA_GITHUB_LIVE_PREVIEW=plan-only \
 The first plan shows the `main` ruleset as `adopted` and every other object as
 `create`: `GitHub.Repository`, `Environment`, `Variable` and `Label` have no adoption
 probe in beta.86, and their reconcile observes the live object by name and updates it in
-place (the stack tests prove a first deploy issues no POST). The deploy workflow stays
-disarmed until the reviewed live adoption: the repository variable
-`INFRA_GITHUB_DEPLOY_ARMED=true` arms it, after the `beep-infra-github` App exists, the
-`infra-github-prod` environment holds `INFRA_GITHUB_APP_ID`, `INFRA_GITHUB_APP_PRIVATE_KEY`
-and `ALCHEMY_STATE_ROLE_ARN`, and the state role trusts that environment's subject. Ownership,
-secrets and the beep-reviewer switch: `packages/tooling/infra/github/README.md`.
+place (the stack tests prove a first deploy issues no POST). Ownership, secrets and the
+beep-reviewer switch: `packages/tooling/infra/github/README.md`.
+
+#### Before arming: the operator's one-time setup
+
+The deploy workflow stays disarmed until the packet gate says otherwise. Arming needs
+the App below, the reviewer-switch CLI change merged, and the orchestrator told first,
+because the stack rewrites the ruleset that gates every merge. The setup steps change
+live settings; run them only when the gate asks.
+
+1. Mint the App from its checked-in manifest (browser handoff, as `kriegcloud`):
+
+   ```sh
+   bun run beep github app mint beep-infra-github --dry-run   # review the manifest
+   bun run beep github app mint beep-infra-github
+   ```
+
+   Confirm the registration page lists exactly: Administration, Environments, Variables
+   and Issues read and write, Metadata read-only, no webhook. The launcher stores
+   `app_id`, `client_id`, `slug` and `private_key` in the 1Password item
+   `beep-infra-github GitHub App` (vault `BEEP_SECRETS`).
+2. Install the App on `beep-effect/beep-effect` only, and record the installation id in
+   the item's `installation_id` field.
+3. Create the deploy environment with a `main`-only branch policy:
+
+   ```sh
+   gh api -X PUT repos/beep-effect/beep-effect/environments/infra-github-prod \
+     -F 'deployment_branch_policy[protected_branches]=false' \
+     -F 'deployment_branch_policy[custom_branch_policies]=true'
+   gh api -X POST repos/beep-effect/beep-effect/environments/infra-github-prod/deployment-branch-policies \
+     -f name=main -f type=branch
+   ```
+
+4. Put the App id and key on it, piped from 1Password and never printed:
+
+   ```sh
+   gh variable set INFRA_GITHUB_APP_ID --env infra-github-prod \
+     --body "$(op read 'op://BEEP_SECRETS/beep-infra-github GitHub App/app_id')"
+   op read 'op://BEEP_SECRETS/beep-infra-github GitHub App/private_key' \
+     | gh secret set INFRA_GITHUB_APP_PRIVATE_KEY --env infra-github-prod
+   gh variable set ALCHEMY_STATE_ROLE_ARN --env infra-github-prod \
+     --body arn:aws:iam::832907639880:role/beep-alchemy-state-rw
+   ```
+
+5. Add the environment's subject to the state role's trust policy, under the aws-vault
+   profile, so the OIDC token from that job can assume it:
+   `repo:beep-effect/beep-effect:environment:infra-github-prod` joins the `sub` condition
+   list of `beep-alchemy-state-rw` (`aws iam get-role`, edit the
+   `token.actions.githubusercontent.com:sub` list, `aws iam update-assume-role-policy`).
+6. Only on the gate's word: `gh variable set INFRA_GITHUB_DEPLOY_ARMED --body true`. From
+   then on `beep reviewer ruleset release|require` edits the stack configuration instead
+   of the live ruleset (`docs/ops/beep-reviewer-app.md`).
+
+#### First deploy: capture, compare, roll back
+
+The `main` ruleset is rewritten on every deploy, so the first armed deploy is bracketed by
+a capture of ruleset 10240248. Before dispatching `Deploy infra-github`:
+
+```sh
+mkdir -p ~/.local/state/beep/infra-github
+gh api repos/beep-effect/beep-effect/rulesets/10240248 > ~/.local/state/beep/infra-github/ruleset-10240248.before.json
+```
+
+After the run is green:
+
+```sh
+gh api repos/beep-effect/beep-effect/rulesets/10240248 > ~/.local/state/beep/infra-github/ruleset-10240248.after.json
+diff <(jq -S 'del(.updated_at)' ~/.local/state/beep/infra-github/ruleset-10240248.before.json) \
+     <(jq -S 'del(.updated_at)' ~/.local/state/beep/infra-github/ruleset-10240248.after.json)
+```
+
+The diff must be empty: `updated_at` is the only field allowed to change. Anything else
+(a check, a bypass actor, a rule parameter) is a failed deploy: disarm
+(`gh variable set INFRA_GITHUB_DEPLOY_ARMED --body false`), then re-apply the capture:
+
+```sh
+jq '{name, target, enforcement, conditions, rules, bypass_actors}' \
+  ~/.local/state/beep/infra-github/ruleset-10240248.before.json \
+  | gh api -X PUT repos/beep-effect/beep-effect/rulesets/10240248 --input -
+```
+
+and repeat the `after` capture and diff until it is empty again.
 
 ## Acceptance evidence
 

@@ -149,9 +149,49 @@ const knowledgeMintProfile: AppProfile = {
   }),
 };
 
+const infraGithubTitle = "beep-infra-github GitHub App";
+
+// The InfraGithub deploy identity (goals/infra-alchemy-rebuild). After the mint, the operator follows the
+// "InfraGithub" section of docs/runbooks/alchemy-infra.md: install, then the infra-github-prod environment.
+const infraGithubProfile: AppProfile = {
+  itemTitle: infraGithubTitle,
+  recordsSlug: true,
+  diagnoseBeforeReport: true,
+  listening: `[infra-github] Listening. Open http://localhost:${PORT} in Chrome as kriegcloud. The callback never displays credentials. Ctrl-C stops the server.`,
+  report: GitHubAppRegistrationOutcome.match({
+    Stored: (stored) => ({
+      line: Console.log(
+        `[infra-github] Stored "${infraGithubTitle}" in BEEP_SECRETS for App ${slugOf(stored.slug)} (app_id ${stored.appId}). Install it on beep-effect/beep-effect only, record installation_id, then press Ctrl-C and continue with the InfraGithub runbook section.`
+      ),
+      body: `Stored in 1Password as "${infraGithubTitle}" (App ${slugOf(stored.slug)}). Install it on beep-effect/beep-effect only, record installation_id, then stop the launcher with Ctrl-C.`,
+      status: 200,
+    }),
+    ConversionFailed: (failed) => ({
+      line: Console.error(`[infra-github] Manifest conversion returned HTTP ${failed.status}; nothing was stored.`),
+      body: `Manifest conversion returned HTTP ${failed.status}. Nothing was stored. Check the App registration page before starting over.`,
+      status: 500,
+    }),
+    StoreFailed: (failed) => ({
+      line: Console.error(
+        `[infra-github] App ${slugOf(failed.slug)} was registered, but 1Password item creation exited ${failed.exitCode}; secret diagnostics suppressed. Do not reload the callback.`
+      ),
+      body: `App ${slugOf(failed.slug)} was registered, but storing it in 1Password failed (exit ${failed.exitCode}). Do not reload this page: the code is single-use. Revoke the new App's generated private key, delete the uninstalled registration, then start the launcher again.`,
+      status: 500,
+    }),
+    Failed: () => ({
+      line: Console.error(
+        "[infra-github] Conversion or vault write failed; diagnostics suppressed. Do not reload the callback."
+      ),
+      body: "Conversion or vault write failed. No secret was printed or saved locally. Do not reload this page. Inspect the App settings, revoke any generated key, and delete an uninstalled new registration before retrying.",
+      status: 500,
+    }),
+  }),
+};
+
 const profileOf = GitHubAppName.match({
   "beep-reviewer": () => reviewerProfile,
   "beep-knowledge-mint": () => knowledgeMintProfile,
+  "beep-infra-github": () => infraGithubProfile,
 });
 
 const vaultTemplate = (profile: AppProfile, converted: GitHubAppManifestConversion, slug: O.Option<string>) =>

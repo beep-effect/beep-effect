@@ -17,4 +17,5 @@ export {
   reviewerWire,
 } from "./ReviewerModels.ts";
 export * from "./ReviewerRuleset.ts";
+export * from "./ReviewerRulesetOwner.ts";
 export * from "./ReviewerService.ts";

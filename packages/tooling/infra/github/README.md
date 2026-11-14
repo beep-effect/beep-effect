@@ -63,19 +63,21 @@ deploy can read its value. On day one the stack manages none:
   (turbo cache); `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` on
   `beep-effect-web-prod`, `storybook-prod`, `turbo-cache-prod` (each stack's deploy).
 
-A CI deploy cannot read 1Password without a new long-lived credential in the workflow
-(a service-account token as an environment secret). That is the smallest option, and it
-waits for a ruling; nothing here builds it.
+Ruling (packet gate, 2026-11-13): every secret stays unmanaged on day one, and no
+1Password service-account token or other new long-lived credential goes into CI for this
+stack. The lists above are what a later decision works from.
 
 ### Credential
 
 The workflow's own `GITHUB_TOKEN` cannot administer rulesets, environments or variables, and
 no installed App has those permissions (`beep-ci-fleet-controller` has administration but is
-the runner fleet's identity). Proposed: a new App `beep-infra-github`, minted by
-`bun run beep github app mint` from a checked-in manifest (D10), installed on
-`beep-effect/beep-effect` only, with repository permissions `administration: write`
-(settings, rulesets), `environments: write`, `variables: write`, `issues: write` (labels),
-`metadata: read`; `secrets: write` only once a secret is managed. Its id is the
+the runner fleet's identity). Accepted (packet gate, 2026-11-13): a dedicated App
+`beep-infra-github`, minted by `bun run beep github app mint beep-infra-github` from the
+manifest checked in under the repo-configs policy data (`github-apps/beep-infra-github.manifest.json`,
+D10), installed on `beep-effect/beep-effect` only, with repository permissions
+`administration` (settings, rulesets), `environments`, `actions_variables` and `issues`
+(labels) at write and `metadata` at read; no secrets permission while no secret is managed.
+The mint is the operator's; the steps are in the runbook's InfraGithub section. Its id is the
 `infra-github-prod` environment variable `INFRA_GITHUB_APP_ID` and its key the environment
 secret `INFRA_GITHUB_APP_PRIVATE_KEY`; the workflow mints a one-hour installation token with
 `actions/create-github-app-token`. `@alchemy.run/github` beta.86 also ships `GitHub.fromApp`,
@@ -87,9 +89,10 @@ which could mint in-process instead.
 `beep-reviewer` bound to App 5321138; every other check, the bypass actors and the rest of
 the ruleset are unaffected (tests prove both flips). The committed value is `advisory`, the
 live position. Once the stack owns the ruleset, `beep reviewer ruleset release|require`
-must stop PUTting the ruleset and instead rewrite `reviewerCheck` in `src/Production.ts`
-(the switch then lands through a PR and this workflow); until then the next stack deploy
-would revert a CLI flip. The CLI change is not needed for the plan and is not in this head.
+stop PUTting the ruleset: while `INFRA_GITHUB_DEPLOY_ARMED` is `true` they rewrite
+`reviewerCheck` in `src/Production.ts` instead (the switch then lands through a PR and this
+workflow), and they refuse when the variable cannot be read. Unarmed, they keep editing the
+live ruleset directly. Details: `docs/ops/beep-reviewer-app.md`.
 
 ## Commands
 

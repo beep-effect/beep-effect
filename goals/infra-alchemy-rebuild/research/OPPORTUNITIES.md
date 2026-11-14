@@ -44,5 +44,12 @@ identifiers are redacted.
   `Repository`, `Environment`, `Variable` and `Label` return nothing without prior state, so an empty stage
   shows `create` for objects whose reconcile only updates (stack tests assert zero POST). A reviewer reading
   the plan cannot tell a real create from a converge-by-name.
+- **File evidence (installed `@alchemy.run/github@2.0.0-beta.86`, same on Alchemy `main` at `33c10dd55f`):**
+  the engine probes adoption only through `provider.read` when a resource has no state
+  (`alchemy/src/Plan.ts:1749`). `src/Repository.ts:592` returns `undefined` from `read` whenever
+  `output` is undefined, so an empty stage never sees the live repository; `src/Label.ts`,
+  `src/Environment.ts` and `src/Variable.ts` define no `read` at all. `src/Ruleset.ts:651` is the
+  model to copy: it lists by name and returns `Unowned(attrs)`.
 - **Would have prevented it:** a name-based `read` in those four providers (upstream contribution); until
-  then the decision file explains each `create`.
+  then the decision file explains each `create`. Packet gate ruling 2026-11-13: accepted as is, not held
+  on the upstream change.
