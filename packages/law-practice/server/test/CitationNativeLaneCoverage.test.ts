@@ -113,7 +113,11 @@ it.layer(process.versions.bun === undefined ? citationNativeNodeTestPlatform : c
             .pipe(Effect.flip);
           expect(denied).toMatchObject({ reason: "closed" });
           yield* Deferred.succeed(release, undefined);
-          yield* waitForCitationNativeTest(admission.snapshot.pipe(Effect.map((state) => state.active === 0)));
+          yield* waitForCitationNativeTest(
+            lane.snapshot.pipe(Effect.map((state) => state.unitsAcquired === 1 && !state.acquired))
+          );
+          const settledCapacity = yield* admission.snapshot;
+          expect(settledCapacity).toMatchObject({ active: 0, quarantined: 0 });
           const result4 = yield* observed.snapshot;
           expect(result4).toEqual({ spawned: 0, confirmed: 0 });
         })
