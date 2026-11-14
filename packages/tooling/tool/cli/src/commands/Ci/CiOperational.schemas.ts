@@ -289,13 +289,6 @@ export const ciGoalDataConsumers: A.NonEmptyReadonlyArray<CiGoalDataConsumer> = 
     evidence: ["apps/labs/ciops/test/lane-plan.test.ts", "packages/tooling/tool/cli/turbo.json"],
   }),
   CiGoalDataConsumer.make({
-    pattern: "^goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics(\\.test)?\\.py$",
-    reference: "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics",
-    consumers: ["@beep/repo-cli"],
-    modes: ["turbo-input"],
-    evidence: ["packages/tooling/tool/cli/turbo.json"],
-  }),
-  CiGoalDataConsumer.make({
     pattern: "^goals/speed-loop/ops/runner-burst/",
     reference: "goals/speed-loop/ops/runner-burst",
     consumers: ["@beep/repo-cli"],

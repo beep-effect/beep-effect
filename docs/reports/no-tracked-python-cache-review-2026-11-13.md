@@ -24,3 +24,16 @@ The change is one new uncached root task. `//#lint:no-tracked-python` is
 `git ls-files`. No existing task command, cache flag, input glob, output glob
 or environment variable changed. Recording the new configuration grants no
 qualification.
+
+## `@beep/repo-cli` test inputs (final PR)
+
+The final PR also deletes the last two tracked Python files,
+`goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics{,.test}.py`.
+Their only consumer is now the `beep cache producer-diagnose` command, which #3296 merged.
+`packages/tooling/tool/cli/turbo.json` listed both files as inputs of the `test` and
+`test:property` tasks (and a third task), and those entries are removed. The
+`CiOperational` goal-data consumer row that cited them is removed with them. Removing two
+inputs that no longer exist leaves fewer tracked bytes in the hashes and nothing that could
+change a cached result, so `@beep/repo-cli#test` and `#test:property` are re-recorded as
+configuration drift. No command, cache flag, output glob or environment variable changed,
+and no qualification is granted.

@@ -9,10 +9,10 @@
   "reviews": {
     "//": {
       "reviewer": "Claude Opus 5.5 (python-free-repo law lane, chore/python-free-repo-law)",
-      "reason": "Record the root drift of the new uncached lint:no-tracked-python root script: the root package.json gained one script, so every cached root computation drifts on the manifest bytes. No existing command, cache flag, input, output or environment changed; no qualification is granted.",
+      "reason": "Record the root drift of the new uncached lint:no-tracked-python root script: the root package.json gained one script, so every cached root computation drifts on the manifest bytes. No existing command, cache flag, input, output or environment changed; no qualification is granted. Final PR: @beep/repo-cli test and test:property drop the two deleted native-dependency-diagnostics Python inputs.",
       "basis": {
         "path": "docs/reports/no-tracked-python-cache-review-2026-11-13.md",
-        "sha256": "83f92f8ac64c32cb055cc20bf5ea7e3fba27ddd5257309cad544e3c88f9ae8fd"
+        "sha256": "e7cac40e6bcec44184f3544a64b34290a2c06dca249bd90c81499fc2398d73e4"
       }
     },
     "@beep/acp": {
@@ -1272,11 +1272,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Codex GPT-6.1 Sol (photo-face lane input review)",
-      "reason": "Preserve the merged main lint pin and existing ONNX catalog entry; regenerated lockfile, unchanged cache posture and qualification.",
+      "reviewer": "Claude Opus 5.5 (python-free-repo law lane, chore/python-free-repo-law)",
+      "reason": "Record the root drift of the new uncached lint:no-tracked-python root script: the root package.json gained one script, so every cached root computation drifts on the manifest bytes. No existing command, cache flag, input, output or environment changed; no qualification is granted. Final PR: @beep/repo-cli test and test:property drop the two deleted native-dependency-diagnostics Python inputs.",
       "basis": {
-        "path": "goals/python-free-repo/research/photo-face-cache-review.md",
-        "sha256": "9154e259d18c60b32150cc6ffc3215e95ad0d225cecbbaa1ae3b4f23a84afc59"
+        "path": "docs/reports/no-tracked-python-cache-review-2026-11-13.md",
+        "sha256": "e7cac40e6bcec44184f3544a64b34290a2c06dca249bd90c81499fc2398d73e4"
       }
     },
     "@beep/repo-cli-kit": {
@@ -101917,8 +101917,6 @@
             "../../../../apps/architecture-lab-proof/**",
             "../../../../goals/time-to-certainty/research/economics.json",
             "../../../../goals/time-to-certainty/research/gate-order-handoff.json",
-            "../../../../goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py",
-            "../../../../goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py",
             "../../../../packages/_internal/db-admin/**",
             "../../../../packages/architecture-lab/**",
             "../../../../standards/root-package.projection.generated.json",
@@ -102638,8 +102636,6 @@
             "../../../../apps/architecture-lab-proof/**",
             "../../../../goals/time-to-certainty/research/economics.json",
             "../../../../goals/time-to-certainty/research/gate-order-handoff.json",
-            "../../../../goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py",
-            "../../../../goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py",
             "../../../../packages/_internal/db-admin/**",
             "../../../../packages/architecture-lab/**",
             "../../../../standards/root-package.projection.generated.json",
@@ -102782,8 +102778,6 @@
             "../../../../apps/architecture-lab-proof/**",
             "../../../../goals/time-to-certainty/research/economics.json",
             "../../../../goals/time-to-certainty/research/gate-order-handoff.json",
-            "../../../../goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py",
-            "../../../../goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py",
             "../../../../packages/_internal/db-admin/**",
             "../../../../packages/architecture-lab/**",
             "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
@@ -131975,11 +131969,11 @@
       },
       {
         "path": "packages/tooling/tool/cli/turbo.json",
-        "sha256": "74d8ac3e3ea89c40ed8c8104437866669b6f244d7634eb0aec70844756cfc1dd"
+        "sha256": "70c7a4aa97e36372abb933a30dddc0dfdf1b03af467cafdbe4cb22ec15754591"
       },
       {
         "path": "turbo.json",
-        "sha256": "366c796d6b4914cb1cab7ce20327f3937dd757182336672d3a414ac1332668be"
+        "sha256": "32ff198beed8839fb38ef50846c9a087063e299d58fcf017b00df58594da115b"
       }
     ]
   }
