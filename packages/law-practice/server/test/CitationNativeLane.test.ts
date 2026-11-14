@@ -11,6 +11,7 @@ import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
+import * as Clock from "effect/Clock";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -24,6 +25,7 @@ import {
   citationNativeNodeTestPlatform,
   citationNodeTestExecutable,
   makeCitationNativeAcknowledgementSpawner,
+  makeCitationNativeManualClock,
   makeCitationObservedSpawner,
   waitForCitationNativeTest,
 } from "./CitationNativeSpawner.fixtures.ts";
@@ -300,6 +302,73 @@ it.layer(process.versions.bun === undefined ? citationNativeNodeTestPlatform : c
         expect(released).toMatchObject({ active: 0, quarantined: 0, queued: 0 });
         const counts = yield* observed.snapshot;
         expect(counts).toEqual({ spawned: 1, confirmed: 1 });
+      })
+    );
+    it.effect(`fails both ${kind} yield entrants closed after unconfirmed transition retirement`, () =>
+      Effect.gen(function* () {
+        const base = (yield* defaultCitationEnginePolicy).limits;
+        const limits = { ...base, cleanupDeadline: Duration.millis(25) };
+        const timer = yield* makeCitationNativeManualClock(limits.cleanupDeadline);
+        const admission = yield* makeCitationNativeProcessAdmission(limits);
+        const killed = yield* Deferred.make<void>();
+        const acknowledge = yield* Deferred.make<void>();
+        const observed = yield* makeCitationNativeAcknowledgementSpawner(
+          Deferred.succeed(killed, undefined).pipe(Effect.andThen(Deferred.await(acknowledge)))
+        );
+        const scope = yield* Effect.acquireRelease(Scope.make(), (scope) => Scope.close(scope, Exit.void));
+        yield* Effect.addFinalizer(() => Deferred.succeed(acknowledge, undefined));
+        const lane = yield* makeCitationNativeLane(limits, "extract").pipe(
+          Effect.provideService(CitationNativeProcessAdmission, admission),
+          Effect.provideService(ChildProcessSpawner, observed.spawner),
+          Effect.provideService(Clock.Clock, timer.clock),
+          Effect.provideService(Scope.Scope, scope)
+        );
+        const cmd = yield* command;
+        const record = yield* lane.start("regex", cmd);
+        yield* record.child;
+        let cleanerCalls = 0;
+        const cleaner = Effect.sync(() => {
+          cleanerCalls++;
+        });
+        const first = yield* lane.yieldTo(cleaner).pipe(Effect.forkChild);
+        yield* Deferred.await(killed);
+        const attempted = yield* Deferred.make<void>();
+        const settled = yield* Deferred.make<void>();
+        const second = yield* Deferred.succeed(attempted, undefined).pipe(
+          Effect.andThen(lane.yieldTo(cleaner)),
+          Effect.onExit(() => Deferred.succeed(settled, undefined)),
+          Effect.forkChild
+        );
+        yield* Deferred.await(attempted);
+        yield* Effect.yieldNow;
+        const premature = yield* Deferred.isDone(settled);
+        expect(premature).toBe(false);
+        expect(cleanerCalls).toBe(0);
+        yield* timer.trigger;
+        const initialFailure = yield* Fiber.join(first).pipe(Effect.flip);
+        expect(initialFailure).toMatchObject({
+          _tag: "CitationSafetyLimitExceeded",
+          operation: "extract",
+          limit: "cleanupDeadline",
+        });
+        const waitingFailure = yield* Fiber.join(second).pipe(Effect.flip);
+        expect(waitingFailure).toMatchObject({ _tag: "CitationNativeLaneFailure", reason: "quarantined" });
+        const poisoned = yield* lane.ensureOpen.pipe(Effect.flip);
+        expect(poisoned).toMatchObject({ reason: "quarantined" });
+        expect(cleanerCalls).toBe(0);
+        const held = yield* lane.snapshot;
+        expect(held).toMatchObject({ started: 1, confirmed: 0, acquired: true, yieldDepth: 0 });
+        const quarantined = yield* admission.snapshot;
+        expect(quarantined).toMatchObject({ active: 1, quarantined: 1 });
+        yield* Deferred.succeed(acknowledge, undefined);
+        yield* waitForCitationNativeTest(Effect.map(admission.snapshot, (state) => state.active === 0));
+        const released = yield* lane.snapshot;
+        expect(released).toMatchObject({ started: 1, confirmed: 1, acquired: false, yieldDepth: 0 });
+        const counts = yield* observed.snapshot;
+        expect(counts).toEqual({ spawned: 1, confirmed: 1 });
+        yield* Scope.close(scope, Exit.void);
+        const baseline = yield* admission.snapshot;
+        expect(baseline).toMatchObject({ active: 0, queued: 0, quarantined: 0 });
       })
     );
     it.effect(`quarantines an unconfirmed ${kind} yield and refuses the cleaner`, () =>

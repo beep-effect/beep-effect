@@ -59,3 +59,12 @@ The four original lane proofs and the cleaner additions run against real Bun and
 Node children. New proof files also pass under a Node-parent Vitest runner using
 explicit Node platform services. Kill/retirement remains the existing physical
 owner's SIGKILL, isRunning re-check and child-Scope close before acknowledgement.
+
+Arbitrary host-cleaner parallelism is bounded by the shared admission but is not
+proved deadlock-free; the one-unit counting argument covers serial built-in calls.
+A recursive public engine call from a cleaner still needs a second operation
+permit, as on main; yielding native capacity does not release that outer permit.
+
+The private lane snapshot exposes the existing yield-depth counter so the combined
+two-entrant unconfirmed-retirement proof asserts depth zero directly. This adds
+an observation only; it changes no transition, failure or lane lifetime.

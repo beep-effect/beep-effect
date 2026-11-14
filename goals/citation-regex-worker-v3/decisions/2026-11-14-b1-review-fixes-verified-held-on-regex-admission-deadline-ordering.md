@@ -14,7 +14,7 @@ The new contention proof passes 32/32 under each parent (Bun and Node), covering
 all four kinds with both real child runtimes: queue-full, queue-expiry, quarantine
 before reservation and job deadline after reservation. The regex queue proof
 observes that regexDeadline has not started. Reservation/start counts one claim;
-unused reservations return on Scope close. NativeLane passes 14/14 per parent,
+unused reservations return on Scope close. NativeLane now passes 16/16 per parent,
 and the prior handover/interruption/cleaner/1-and-1/2-and-2 proofs remain green.
 
 The final full-span count replay passes 12/12 in 58.86 seconds, launch load
@@ -31,3 +31,8 @@ proof limits are in history/evidence/2026-11-14-b1-reservation.md.
 
 No stop remains. No push, PR, rebase, subagent, shared-stash operation, whole suite
 or whole-package coverage. The owner publishes and directs the later base update.
+
+Review round 2 qualifies base refusal equivalence to matching admission state and
+records the intentional external contention from lifetime-held idle units. The
+combined two-entrant unconfirmed-retirement proof passes on both parent runtimes,
+with neither cleaner body running, depth zero and late-confirmation release.

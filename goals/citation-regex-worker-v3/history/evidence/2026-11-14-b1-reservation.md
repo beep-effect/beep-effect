@@ -37,9 +37,14 @@ exit) and Effect.ts:7699,7735 (uninterruptible/mask). The outer job supervisor
 continues to mask acquire/record transfer, and native queue waits retain their
 existing explicit interruptibility; no deadline or cancellation guard is removed.
 
-## Base versus head
+## Base versus head for matching admission state
 
-| Kind | Base acquisition point | Head acquisition point | Enclosing timers, base = head | Refusal, base = head |
+This comparison concerns acquisition placement, error translation and timer
+enclosure for an acquisition that meets the same admission state. It does not
+claim that base and head present the same admission state between jobs: the
+base released each child lease, whereas the lane retains its invocation unit.
+
+| Kind | Base acquisition point | Head acquisition point | Enclosing timers, base = head | Refusal for matching admission state |
 | --- | --- | --- | --- | --- |
 | Regex | C/RegexWorker.ts:112 supplies the real lease; preparation invokes operation.acquire at 119, before the native timer at 129-143 | C/RegexWorker.ts:131 supplies lane.reserve; the same preparation callback invokes operation.acquire at 143, before the native timer at 155-169 | Admission/preparation under outer timed (base 147; head 174), with native admission's queueDeadline; regexDeadline covers spawn/startup/RPC, not admission | Safety { operation: extract, limit: queuedOperations or queueDeadline }; CitationRegexWorkerFailure { reason: quarantined }. After reservation the native timer returns Safety { operation: extract, limit: regexDeadline } |
 | Diff | C/DiffWorker.ts:131 acquires after source/text/frame preflight and text reservation, before payload copy | C/DiffWorker.ts:182 acquires at the same preflight point; its explicit reserve effect is installed at 152 | Admission, preparation, spawn and RPC under timed (base 161; head 212); full wrapper/retirement under operationTimed (base 162; head 213); native queue has queueDeadline | Safety { operation: extract, limit: queuedOperations or queueDeadline }; CitationDiffWorkerFailure { reason: quarantined }. Stage expiry remains Safety { operation: extract, limit: extractDeadline } for the tested stage-shorter-than-operation policy |
@@ -66,6 +71,36 @@ additional live-child retirement/wait on serial built-in v2 handover. Direct
 lane clients can start while an occupant is live; the existing real-process
 handover proof covers this required guard. Unconfirmed retirement fails and
 poisons the lane, never becoming a built-in retry or replacement-spawn path.
+
+## Behaviour that changes by design
+
+Design 3.2 rule 1 retains one native unit per admitted operation from first native
+need until its invocation Scope closes, except across a cleaner-port yield. The
+base returned the unit after each child's confirmed retirement. Consequently,
+external contention between jobs changes intentionally; matching acquisition
+placement and translation does not promise matching availability.
+
+Under the 1 and 1 policy, invocation A can finish a regex evaluation and keep
+doing non-native work longer than queueDeadline while retaining its idle unit.
+A direct host call to the exported HTML cleaner during that interval could
+acquire on the base, but at head can return CitationSafetyLimitExceeded
+{ operation: clean, limit: queueDeadline }. Under 2 and 2, two invocations holding
+idle units can similarly exhaust capacity for an external caller. The shared
+admission still enforces its ceiling. This lifetime reservation is intentional
+and is what goal B's protocol v3 session relies on; B1 does not shorten it.
+
+## PR-facing summary
+
+B1 adds invocation-native lanes with explicit reservation at the base's regex,
+Diff and Xml admission points, preserves per-job timer placement and confirmed
+SIGKILL retirement, and yields capacity across the closed cleaner boundary.
+Protocol v2 still starts one regex child per evaluation; the ten-call count
+remains 291. By design, a lane retains its unit between jobs until invocation
+Scope closure or cleaner yield. Direct external HTML cleaner calls can therefore
+queue or reach queueDeadline while admitted invocations hold idle units, where
+the base could admit them after the preceding child retired (one idle holder
+under 1/1, or two under 2/2). This is the design 3.2 rule 1 lifetime that the later
+protocol v3 session relies on, not blanket refusal equivalence with the base.
 
 ## Real-process proofs
 
@@ -179,3 +214,30 @@ direct-stage Clock isolation makes that proof precise without changing productio
 All runs completed before handoff. No whole-suite run, whole-package coverage,
 hosted CI, remote push/PR, rebase or base update was performed, as instructed.
 The prior stop is resolved by the owner ruling; no new stop remains.
+
+## Review round 2
+
+The base/head table is now explicitly conditional on matching admission state.
+The reservation decision and PR-facing summary record the intentional change in
+external contention while invocations retain idle units. Lane lifetime is unchanged.
+The cleaner-yield decision now records the limits of the serial counting argument
+and the unchanged second-operation-permit requirement for recursive engine calls.
+
+The combined real-process proof in CitationNativeLane.test.ts holds the first
+yield's retirement acknowledgement, starts a second entrant while the transition
+is locked, and confirms that neither body runs or completes prematurely. A manual
+cleanup timer makes the first entrant fail with its existing cleanupDeadline
+Safety failure, poisoning the lane; the waiting entrant fails with the lane's
+quarantined failure. ensureOpen also observes the poisoned state. The private
+snapshot exposes the existing yieldDepth counter so the test asserts depth=0,
+started=1, confirmed=0, acquired=true while admission is active=1/quarantined=1.
+After late acknowledgement it asserts started=confirmed=1, acquired=false,
+depth=0, observed spawned=confirmed=1 and admission baseline. No retirement,
+yield-depth transition or lifetime control logic changes.
+
+CitationNativeLane.test.ts passes 16/16 under the Bun parent (1.89 s Vitest file
+time) and 16/16 under the Node parent (2.93 s). Each parent exercises both real Bun
+and Node children. Launch-adjacent load was 6.55 / 11.45 / 13.93. Server quick
+package verification passes lint and source/test typechecks. Biome, decisions
+projection and Effect Vitest pass; no tracked inventory churn remains. This
+round runs the requested focused checks, not another full-span replay or suite.

@@ -212,6 +212,21 @@ timer of equal duration to isolate the worker's captured timer, leaving producti
 timer placement unchanged. Source references, exact refusals and runtime receipts
 are in history/evidence/2026-11-14-b1-reservation.md.
 
+## Behaviour that changes by design
+
+The base acquisition/error/timer comparison applies when an acquisition meets
+the same admission state. Design 3.2 rule 1 intentionally retains one native unit
+per admitted operation from first need until invocation Scope closure or cleaner
+yield; the base returned capacity after each child's confirmed retirement.
+
+Under 1/1, an invocation can finish regex and continue non-native work beyond the
+queue deadline while holding its idle unit. A direct host call to the exported
+HTML cleaner could acquire on the base but can now fail with
+CitationSafetyLimitExceeded { operation: clean, limit: queueDeadline }. Under
+2/2, two idle invocation holders cause the equivalent external contention.
+This lifetime is what goal B's protocol v3 session relies on. Keep it unchanged;
+reservation preserves placement and translation, not between-job availability.
+
 Reverse: Revert the reservation wiring only with an owner-approved replacement that preserves preflight, queue, timer and quarantine precedence.
 
 ### Pass native starters explicitly across closed cleaner boundaries, 2026-11-14
@@ -365,6 +380,15 @@ The four original lane proofs and the cleaner additions run against real Bun and
 Node children. New proof files also pass under a Node-parent Vitest runner using
 explicit Node platform services. Kill/retirement remains the existing physical
 owner's SIGKILL, isRunning re-check and child-Scope close before acknowledgement.
+
+Arbitrary host-cleaner parallelism is bounded by the shared admission but is not
+proved deadlock-free; the one-unit counting argument covers serial built-in calls.
+A recursive public engine call from a cleaner still needs a second operation
+permit, as on main; yielding native capacity does not release that outer permit.
+
+The private lane snapshot exposes the existing yield-depth counter so the combined
+two-entrant unconfirmed-retirement proof asserts depth zero directly. This adds
+an observation only; it changes no transition, failure or lane lifetime.
 
 Reverse: Restore request-long lane ownership only after replacing the cleaner boundary with an owner-approved explicit authority contract.
 

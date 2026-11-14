@@ -58,6 +58,7 @@ export class CitationNativeLaneSnapshot extends S.Opaque<
     occupied: S.Boolean,
     acquired: S.Boolean,
     unitsAcquired: S.Natural,
+    yieldDepth: S.Natural,
   }).pipe(
     $I.annoteSchema("CitationNativeLaneSnapshot", {
       description:
@@ -263,6 +264,7 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
         occupied: O.isSome(occupant) && started > confirmed,
         acquired: O.isSome(permit),
         unitsAcquired,
+        yieldDepth,
       })
     ),
     yieldTo: Effect.fn("Citation.yieldNativeLane")(function* (body) {
