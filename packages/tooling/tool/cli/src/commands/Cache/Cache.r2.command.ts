@@ -66,7 +66,7 @@ const cacheR2ProbeCommand = Command.make(
       // The command handler is this probe's entry point; the live layer needs the
       // tuple resolved above, so it is built here rather than at command wiring.
       const io = yield* Layer.build(
-        layerCacheR2ProbeIo(CacheR2ProbeTarget.make({ root: process.cwd(), ...tuple }))
+        layerCacheR2ProbeIo(CacheR2ProbeTarget.make({ root: process.cwd(), ...tuple }), process.env)
       ).pipe(CacheCommandError.mapError("Cannot prepare the qualification probe."));
       const receipt = yield* runCacheR2Probe(mode, checked).pipe(Effect.provideContext(io));
       const text = yield* encodeReceipt(receipt).pipe(

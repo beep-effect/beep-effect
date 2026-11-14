@@ -28,8 +28,13 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
+import * as P from "effect/Predicate";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { fakeSpawner } from "./helpers/cache-host-fakes.ts";
 import type { CacheDependencyDiagnosticCode } from "@beep/repo-cli/commands/Cache";
 
 const revision = A.join(A.replicate("a", 40), "");
@@ -484,6 +489,350 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("installed depend
       const recreated = yield* f.fs.exists(diagnostic);
       expect(sourceAfter).toBe("PRIVATE_SOURCE_SENTINEL");
       expect(recreated).toBe(false);
+    })
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Synthetic tar streams served by a faked `tar` child.
+// ---------------------------------------------------------------------------
+
+interface TarEntry {
+  readonly body?: string;
+  readonly corrupt?: boolean;
+  readonly fields?: Readonly<Record<number, Uint8Array>>;
+  readonly linkname?: string;
+  readonly name: string;
+  readonly nameBytes?: Uint8Array;
+  readonly prefix?: string;
+  readonly size?: number;
+  readonly type?: string;
+}
+
+const putField = (block: Uint8Array, offset: number, value: Uint8Array | string) =>
+  block.set(P.isString(value) ? utf8.encode(value) : value, offset);
+const octalField = (value: number, width: number) => `${Str.padStart(width - 1, "0")(value.toString(8))}\0`;
+
+const tarHeader = (entry: TarEntry, size: number) => {
+  const block = new Uint8Array(512);
+  putField(block, 0, entry.nameBytes ?? entry.name);
+  putField(block, 100, octalField(0o644, 8));
+  putField(block, 108, octalField(0, 8));
+  putField(block, 116, octalField(0, 8));
+  putField(block, 124, octalField(size, 12));
+  putField(block, 136, octalField(0, 12));
+  putField(block, 148, "        ");
+  putField(block, 156, entry.type ?? "0");
+  putField(block, 157, entry.linkname ?? "");
+  putField(block, 257, "ustar\u000000");
+  putField(block, 345, entry.prefix ?? "");
+  for (const [offset, value] of R.toEntries(entry.fields ?? {})) putField(block, Number(offset), value);
+  const sum = A.reduce(block, entry.corrupt === true ? 1 : 0, (total, byte) => total + byte);
+  putField(block, 148, `${Str.padStart(6, "0")(sum.toString(8))}\0 `);
+  return block;
+};
+
+const tarEntry = (entry: TarEntry): ReadonlyArray<Uint8Array> => {
+  const body = utf8.encode(entry.body ?? "");
+  const padded = new Uint8Array(Math.ceil(body.length / 512) * 512);
+  padded.set(body);
+  return [tarHeader(entry, entry.size ?? body.length), padded];
+};
+
+const tarArchive = (entries: ReadonlyArray<TarEntry>, end = true) =>
+  A.appendAll(A.flatMap(entries, tarEntry), end ? [new Uint8Array(1024)] : []);
+
+const paxLine = ([key, value]: readonly [string, string]) => {
+  const tail = ` ${key}=${value}\n`;
+  const length = utf8.encode(tail).length;
+  return `${length + `${length + `${length}`.length}`.length}${tail}`;
+};
+const paxEntry = (records: ReadonlyArray<readonly [string, string]>, type = "x"): TarEntry => ({
+  name: "PaxHeaders/entry",
+  type,
+  body: A.join(A.map(records, paxLine), ""),
+});
+const base256 = (...bytes: ReadonlyArray<number>) => Uint8Array.from(bytes);
+
+const tarRoot = Effect.fn("CacheDependencyDiagnosticsTest.tarRoot")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "dependency-diagnostic-tar-" });
+  yield* fs.makeDirectory(path.join(root, "node_modules"));
+  return root;
+}, Effect.orDie);
+
+const snapshotTar = Effect.fn("CacheDependencyDiagnosticsTest.snapshotTar")(function* (
+  chunks: ReadonlyArray<Uint8Array>,
+  limits = defaults,
+  exitCode = 0
+) {
+  const root = yield* tarRoot();
+  const deadline = yield* deadlineIn(10_000);
+  return yield* snapshotCacheDependencies(root, deadline, limits).pipe(
+    Effect.provideService(
+      ChildProcessSpawner.ChildProcessSpawner,
+      fakeSpawner(() => Effect.succeed({ chunks, exitCode }))
+    )
+  );
+});
+
+const richArchive = [
+  ...tarArchive(
+    [
+      { name: "node_modules/", type: "5" },
+      paxEntry([["comment", "global"]], "g"),
+      paxEntry([
+        ["path", "node_modules/renamed"],
+        ["path", "node_modules/pax/file.js/"],
+        ["uname", "alice"],
+        ["gname", "staff"],
+        ["uid", "1_000"],
+        ["gid", "not-a-number"],
+        ["mtime", "12.5"],
+        ["size", "5"],
+        ["linkpath", "unused"],
+        ["comment", "local"],
+      ]),
+      { name: "ignored", body: "hello" },
+      { name: "././@LongLink", type: "L", body: `node_modules/long/${Str.repeat(120)("n")}\0` },
+      { name: "placeholder", body: "x" },
+      { name: "././@LongLink", type: "K", body: Str.repeat(120)("t") },
+      { name: "node_modules/long/link", type: "2" },
+      { name: "././@LongLink", type: "L", body: "node_modules/long/dir/" },
+      { name: "dir", type: "5" },
+      { name: "file.js", prefix: "node_modules/prefixed", body: "p" },
+      {
+        name: "node_modules/numeric/file",
+        body: "n",
+        fields: {
+          108: base256(0x80, 0, 0, 0, 0, 0, 0x03, 0xe8),
+          116: base256(0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe),
+        },
+      },
+      { name: "node_modules/node-gyp/Makefile", body: "all:" },
+    ],
+    false
+  ),
+  new Uint8Array(0),
+  new Uint8Array(1024),
+  utf8.encode("bytes after the archive end"),
+];
+
+const V7_DIRECTORY = tarArchive([{ name: "node_modules/v7dir/", type: "\0" }]);
+
+const refusals: ReadonlyArray<
+  readonly [string, ReadonlyArray<Uint8Array>, CacheDependencyDiagnosticLimits, CacheDependencyDiagnosticCode]
+> = [
+  ["an empty stream", [], defaults, "archive-read-failed"],
+  ["a truncated header", [new Uint8Array(100)], defaults, "archive-read-failed"],
+  ["a corrupt first header", tarArchive([{ name: "node_modules/a", corrupt: true }]), defaults, "archive-read-failed"],
+  [
+    "a non-ASCII number",
+    tarArchive([{ name: "node_modules/a", fields: { 100: base256(0x37, 0xc0) } }]),
+    defaults,
+    "archive-read-failed",
+  ],
+  [
+    "a non-octal number",
+    tarArchive([{ name: "node_modules/a", fields: { 100: utf8.encode("9999999\0") } }]),
+    defaults,
+    "archive-read-failed",
+  ],
+  ["a non-UTF-8 name", tarArchive([{ name: "", nameBytes: base256(0x6e, 0xff) }]), defaults, "invalid-value-or-shape"],
+  [
+    "an oversized pax header",
+    tarArchive([paxEntry([["comment", Str.repeat(100)("x")]])]),
+    CacheDependencyDiagnosticLimits.make({ headerBytes: 64 }),
+    "archive-header-bound",
+  ],
+  ["a truncated pax header", tarArchive([{ ...paxEntry([]), size: 600 }], false), defaults, "archive-read-failed"],
+  ["a pax record without a length", tarArchive([{ ...paxEntry([]), body: "a=b\n" }]), defaults, "archive-read-failed"],
+  ["a short pax record", tarArchive([{ ...paxEntry([]), body: "3 a\n" }]), defaults, "archive-read-failed"],
+  [
+    "a pax record without a keyword",
+    tarArchive([{ ...paxEntry([]), body: "6 =ab\n" }]),
+    defaults,
+    "archive-read-failed",
+  ],
+  ["a pax header at the archive end", tarArchive([paxEntry([["comment", "x"]])]), defaults, "archive-read-failed"],
+  [
+    "a GNU sparse size",
+    tarArchive([
+      paxEntry([
+        ["GNU.sparse.name", "node_modules/sparse/file"],
+        ["GNU.sparse.realsize", "1"],
+        ["GNU.sparse.size", "1"],
+      ]),
+      { name: "placeholder", body: "s" },
+    ]),
+    defaults,
+    "archive-entry-bound",
+  ],
+  [
+    "a sparse 1.0 member",
+    tarArchive([
+      paxEntry([
+        ["GNU.sparse.major", "1"],
+        ["GNU.sparse.minor", "0"],
+      ]),
+      { name: "node_modules/s", body: "s" },
+    ]),
+    defaults,
+    "archive-entry-bound",
+  ],
+  [
+    "a sparse map",
+    tarArchive([paxEntry([["GNU.sparse.map", "0,1"]]), { name: "node_modules/s", body: "s" }]),
+    defaults,
+    "archive-entry-bound",
+  ],
+  [
+    "an invalid sparse size",
+    tarArchive([paxEntry([["GNU.sparse.size", "five"]]), { name: "node_modules/s", body: "s" }]),
+    defaults,
+    "invalid-value-or-shape",
+  ],
+  [
+    "too many entries",
+    tarArchive([
+      { name: "node_modules/a", body: "a" },
+      { name: "node_modules/b", body: "b" },
+    ]),
+    CacheDependencyDiagnosticLimits.make({ entries: 1 }),
+    "entry-bound",
+  ],
+  [
+    "a long link target",
+    tarArchive([{ name: "node_modules/a", type: "2", linkname: Str.repeat(90)("t") }]),
+    CacheDependencyDiagnosticLimits.make({ headerBytes: 64 }),
+    "archive-link-bound",
+  ],
+  [
+    "an oversized pax mapping",
+    tarArchive([paxEntry([["comment", Str.repeat(20)("x")]]), { name: "node_modules/a", body: "a" }]),
+    CacheDependencyDiagnosticLimits.make({ headerBytes: 33 }),
+    "archive-header-bound",
+  ],
+  ["a path outside node_modules", tarArchive([{ name: "other/file", body: "x" }]), defaults, "archive-path"],
+  ["a parent traversal", tarArchive([{ name: "node_modules/../x", body: "x" }]), defaults, "archive-path"],
+  [
+    "an oversized path",
+    tarArchive([{ name: `node_modules/${Str.repeat(80)("a")}`, body: "x" }]),
+    CacheDependencyDiagnosticLimits.make({ headerBytes: 64 }),
+    "archive-path-bound",
+  ],
+  ["a truncated payload", tarArchive([{ name: "node_modules/a", size: 600 }], false), defaults, "archive-read-failed"],
+  [
+    "truncated padding",
+    [tarHeader({ name: "node_modules/a" }, 5), utf8.encode("hello")],
+    defaults,
+    "archive-read-failed",
+  ],
+  [
+    "an unsupported entry type",
+    tarArchive([{ name: "node_modules/device", type: "3" }]),
+    defaults,
+    "archive-entry-type",
+  ],
+];
+
+const sourceDeclaration = (revisionValue: unknown, format: string, digest: string) => ({
+  schemaVersion: "cache-producer-workflow/v2",
+  revision: revisionValue,
+  toolchain: { installedDependencies: { format, sha256: digest } },
+});
+
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("synthetic dependency archives", (it) => {
+  it.effect("reads pax, GNU long-name, prefixed, base-256 and V7 members like tarfile", () =>
+    Effect.gen(function* () {
+      const observed = yield* snapshotTar(richArchive);
+      expect(A.map(observed.groups, (row) => row[0])).toEqual([".", "long", "node-gyp", "numeric", "pax", "prefixed"]);
+      const pax = O.getOrThrow(A.findFirst(observed.groups, (row) => row[0] === "pax"));
+      expect([pax[1], pax[2], pax[3]]).toEqual([1, 1, 5]);
+      const long = O.getOrThrow(A.findFirst(observed.groups, (row) => row[0] === "long"));
+      expect([long[1], long[2]]).toEqual([3, 1]);
+      const details = O.getOrThrow(O.fromUndefinedOr(observed.fileDetails));
+      expect(A.map(details.rows, (row) => row[1])).toEqual(["other"]);
+      const v7 = yield* snapshotTar(V7_DIRECTORY);
+      expect(A.map(v7.groups, (row) => [row[0], row[1], row[2]])).toEqual([["v7dir", 1, 0]]);
+    })
+  );
+
+  it.effect("ends at a later malformed header and drains the rest", () =>
+    Effect.gen(function* () {
+      const observed = yield* snapshotTar(
+        tarArchive([
+          { name: "node_modules/a/file", body: "a" },
+          { name: "node_modules/b/file", corrupt: true },
+        ])
+      );
+      expect(A.map(observed.groups, (row) => row[0])).toEqual(["a"]);
+    })
+  );
+
+  it.effect.each(refusals)("refuses %s", ([, chunks, limits, code]) =>
+    Effect.gen(function* () {
+      const refused = yield* refusalCode(snapshotTar(chunks, limits));
+      expect(refused).toBe(code);
+    })
+  );
+
+  it.effect("refuses a failing archive command and a spawn failure", () =>
+    Effect.gen(function* () {
+      const failed = yield* refusalCode(snapshotTar(tarArchive([]), defaults, 2));
+      const root = yield* tarRoot();
+      const deadline = yield* deadlineIn(10_000);
+      const unspawned = yield* refusalCode(
+        snapshotCacheDependencies(root, deadline, defaults).pipe(
+          Effect.provideService(
+            ChildProcessSpawner.ChildProcessSpawner,
+            fakeSpawner(() =>
+              Effect.fail(PlatformError.systemError({ _tag: "NotFound", module: "ChildProcess", method: "spawn" }))
+            )
+          )
+        )
+      );
+      expect([failed, unspawned]).toEqual(["archive-command-failed", "filesystem-or-process-failed"]);
+    })
+  );
+
+  it.effect.each([
+    [
+      "a non-string revision",
+      sourceDeclaration(5, "canonical-gnu-tar/v1", Str.repeat(64)("a")),
+      "invalid-value-or-shape",
+    ],
+    ["a malformed revision", sourceDeclaration("zz", "canonical-gnu-tar/v1", Str.repeat(64)("a")), "source-revision"],
+    ["another dependency format", sourceDeclaration(revision, "zip/v1", Str.repeat(64)("a")), "dependency-format"],
+    [
+      "a malformed dependency digest",
+      sourceDeclaration(revision, "canonical-gnu-tar/v1", "short"),
+      "dependency-digest",
+    ],
+  ] as const)("refuses a source report with %s", ([, declaration, code]) =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const body = yield* encodeSource(declaration);
+      yield* f.fs.writeFileString(f.source, body);
+      const refused = yield* refusalCode(observeCacheDependencies(f.root, f.source, revision, defaults));
+      expect(refused).toBe(code);
+    })
+  );
+
+  it.effect("refuses empty or missing source reports and never publishes empty files", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      yield* f.fs.writeFileString(f.source, "");
+      const empty = yield* refusalCode(readCacheDiagnosticSource(f.source, defaults));
+      const missing = yield* refusalCode(
+        compareCacheDiagnosticSource(f.path.join(f.root, "missing.json"), utf8.encode("{}"), defaults)
+      );
+      const diagnostic = f.path.join(f.root, "diagnostic.json");
+      yield* f.fs.writeFileString(diagnostic, "");
+      const plan = yield* planCacheDiagnosticPublication(f.source, diagnostic, defaults);
+      expect([empty, missing]).toEqual(["source-size-bound", "filesystem-or-process-failed"]);
+      expect([plan.source, plan.diagnostic]).toEqual([false, false]);
     })
   );
 });

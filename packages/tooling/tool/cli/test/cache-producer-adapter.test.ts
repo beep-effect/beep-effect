@@ -36,15 +36,22 @@ import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Cause from "effect/Cause";
+import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -55,6 +62,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import { bearers, targetFor } from "./cache-conformance-server.ts";
+import { fakeFileInfo, fakeSpawner } from "./helpers/cache-host-fakes.ts";
 import { input } from "./helpers/cache-producer-bundle-fixture.ts";
 import type { CacheOwnedAdapterHostShape } from "@beep/repo-cli/test/Cache";
 
@@ -667,4 +675,264 @@ describe.skipIf(currentHostPlatform !== "linux")("owned adapter startup input", 
       );
     }
   );
+});
+
+// ---------------------------------------------------------------------------
+// Live owned-adapter host over a faked user manager, /proc, cgroup and loopback.
+// ---------------------------------------------------------------------------
+
+const hostWork = "/fake/work";
+const hostAdapter = "/fake/adapter";
+const hostProc = "/proc/41337";
+const hostAdapterBytes = new TextEncoder().encode("inert reviewed executable fixture");
+const hostEnvironment: Readonly<Record<string, string>> = {
+  PATH: "/usr/bin",
+  HOME: hostWork,
+  HOST: "127.0.0.1",
+  PORT: "9427",
+  BEEP_CACHE_POLICY: "signed-v1",
+  BEEP_CACHE_ACCESS_ROLE: "writer",
+  S3_SECRET_KEY: "synthetic-storage-secret",
+};
+
+interface HostScenario {
+  readonly activeState?: string;
+  readonly exited?: boolean;
+  readonly health?: number;
+  readonly loadState?: string;
+  readonly mainPid?: string;
+  readonly stopExit?: number;
+  readonly stoppedLoadState?: string;
+  readonly unreadable?: string;
+}
+
+interface HostState {
+  readonly calls: Array<ReadonlyArray<string>>;
+  running: boolean;
+}
+
+const hostText: Readonly<Record<string, string>> = {
+  [`${hostProc}/net/tcp`]: recorded.tcpTable,
+  "cgroup/cpu.max": recorded.cpuMax,
+  "cgroup/memory.max": recorded.memoryMax,
+  "cgroup/pids.max": recorded.pidsMax,
+  "cgroup/memory.peak": recorded.memoryPeak,
+  ...R.fromEntries(A.map(recorded.threadNames, (name, index) => [`${hostProc}/task/${index}/comm`, `${name}\n`])),
+};
+const hostBinary: Readonly<Record<string, Uint8Array>> = {
+  [hostAdapter]: hostAdapterBytes,
+  [`${hostProc}/exe`]: hostAdapterBytes,
+  [`${hostProc}/environ`]: new TextEncoder().encode(
+    A.join(
+      A.map(R.keys(hostEnvironment), (name) => `${name}=x\0`),
+      ""
+    )
+  ),
+};
+const hostDirectories: Readonly<Record<string, ReadonlyArray<string>>> = {
+  [`${hostProc}/fd`]: ["3", "4", "5"],
+  [`${hostProc}/task`]: A.map(recorded.threadNames, (_, index) => `${index}`),
+};
+const hostLinks: Readonly<Record<string, string>> = {
+  [`${hostProc}/fd/3`]: "socket:[918273]",
+  [`${hostProc}/fd/4`]: "pipe:[7]",
+};
+
+const lookup = <A>(table: Readonly<Record<string, A>>, path: string) =>
+  Effect.fromOption(R.get(table, path)).pipe(
+    Effect.mapError(() =>
+      PlatformError.systemError({ _tag: "NotFound", module: "FileSystem", method: "read", pathOrDescriptor: path })
+    )
+  );
+
+// Cgroup facts are served by file name, so the fake needs no knowledge of the random unit.
+const cgroupKey = (path: string) =>
+  Str.startsWith("/sys/fs/cgroup/")(path) ? `cgroup/${O.getOrElse(A.last(Str.split(path, "/")), () => "")}` : path;
+
+const hostFileSystem = FileSystem.makeNoop({
+  realPath: Effect.succeed,
+  stat: () => Effect.succeed(fakeFileInfo(0o755)),
+  readFile: (path) => lookup(hostBinary, path),
+  readFileString: (path) => lookup(hostText, cgroupKey(path)),
+  readDirectory: (path) => lookup(hostDirectories, path).pipe(Effect.map(A.fromIterable)),
+  readLink: (path) => lookup(hostLinks, path),
+});
+
+const hostProperty = (scenario: HostScenario, state: HostState, unitName: string, name: string) => {
+  const stopped = A.some(state.calls, (call) => call[2] === "stop");
+  const properties: Readonly<Record<string, string>> = {
+    LoadState: stopped ? (scenario.stoppedLoadState ?? "not-found") : (scenario.loadState ?? "not-found"),
+    MainPID: scenario.mainPid ?? "41337",
+    ControlGroup: `/user.slice/user-1000.slice/user@1000.service/app.slice/${unitName}`,
+    RuntimeMaxUSec: "10min",
+    TimeoutStopUSec: "10s",
+    KillMode: "control-group",
+    ActiveState: scenario.activeState ?? "inactive",
+  };
+  return name === scenario.unreadable
+    ? { exitCode: 1 }
+    : { stdout: `${O.getOrElse(R.get(properties, name), () => "")}\n` };
+};
+
+const systemctlAnswer = (scenario: HostScenario, state: HostState, words: ReadonlyArray<string>) =>
+  Match.value(words[1]).pipe(
+    Match.when("stop", () => ({ exitCode: scenario.stopExit ?? 0 })),
+    Match.when("show", () => hostProperty(scenario, state, words[2] ?? "", words[4] ?? "")),
+    Match.orElse(() => ({}))
+  );
+
+// Cryptography comes from the block's layer; systemd, /proc and the health endpoint are fakes.
+const hostServices = (scenario: HostScenario, state: HostState) =>
+  pipe(
+    Context.make(FileSystem.FileSystem, hostFileSystem),
+    Context.add(
+      ChildProcessSpawner.ChildProcessSpawner,
+      fakeSpawner((command) =>
+        Effect.sync(() => {
+          const words = A.filter([command.command, ...command.args], P.isString);
+          state.calls.push(words);
+          return command.command === "/usr/bin/systemctl"
+            ? systemctlAnswer(scenario, state, A.drop(words, 1))
+            : { running: Effect.sync(() => state.running) };
+        })
+      )
+    ),
+    Context.add(
+      HttpClient.HttpClient,
+      HttpClient.make((request) =>
+        Effect.succeed(HttpClientResponse.fromWeb(request, new Response(null, { status: scenario.health ?? 200 })))
+      )
+    )
+  );
+
+const hostHarness = Effect.fnUntraced(function* (
+  scenario: HostScenario = {},
+  env: Readonly<Record<string, string>> = hostEnvironment
+) {
+  const state: HostState = { running: scenario.exited !== true, calls: [] };
+  const services = hostServices(scenario, state);
+  const sha256 = yield* hashBytes(hostAdapterBytes);
+  const start = cacheOwnedAdapterHostLive
+    .start(CacheOwnedAdapterStartup.make({ adapter: hostAdapter, sha256, env: { ...env } }), hostWork)
+    .pipe(Effect.provide(services));
+  const provide = <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.provide(effect, services);
+  return { state, start, provide };
+});
+
+describe("owned adapter live host", () => {
+  it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("faked user manager", (it) => {
+    it.effect("starts, observes, verifies and stops one owned unit", () =>
+      Effect.gen(function* () {
+        const h = yield* hostHarness();
+        const { ready, after } = yield* Effect.scoped(
+          Effect.gen(function* () {
+            const host = yield* h.start;
+            const verified = yield* h.provide(host.verify);
+            yield* h.provide(host.stop);
+            return { ready: host.ready, after: verified };
+          })
+        );
+        expect([ready.role, ready.phase, ready.passed]).toEqual(["writer", "ready", true]);
+        expect([after.phase, after.memoryPeakBytes, after.totalThreads]).toEqual(["after-load", 5_890_048, 6]);
+        const run = O.getOrThrow(A.findFirst(h.state.calls, (call) => call[0] === "/usr/bin/systemd-run"));
+        expect(run).toContain(`--working-directory=${hostWork}`);
+        expect(run).toContain("--property=KillMode=control-group");
+        expect(A.join(run, " ")).not.toContain("synthetic-storage-secret");
+        expect(
+          A.map(
+            A.filter(h.state.calls, (call) => call[2] !== "show"),
+            (call) => call[2]
+          )
+        ).toEqual(["--quiet", "stop", "reset-failed"]);
+      })
+    );
+
+    it.effect.each([
+      ["an existing unit", { loadState: "loaded" }, hostEnvironment, "Owned adapter unit already exists"],
+      ["an adapter that exits early", { exited: true }, hostEnvironment, "Owned adapter exited before readiness"],
+      ["no main PID", { mainPid: "0" }, hostEnvironment, "Runtime proof did not identify its owned adapter cgroup"],
+      [
+        "an unreadable property",
+        { unreadable: "ControlGroup" },
+        hostEnvironment,
+        "Cannot read the owned adapter ControlGroup.",
+      ],
+      ["no home", {}, R.remove(hostEnvironment, "HOME"), "Owned adapter input differs from its bounded signed profile"],
+      [
+        "oversized input",
+        {},
+        { ...hostEnvironment, S3_SECRET_KEY: Str.repeat(40_000)("x") },
+        "Owned adapter startup input exceeds its bound",
+      ],
+    ] as const)("refuses to start with %s", ([, scenario, env, message]) =>
+      Effect.gen(function* () {
+        const h = yield* hostHarness(scenario, env);
+        const exit = yield* Effect.scoped(h.start).pipe(Effect.exit);
+        expect(failureMessage(exit)).toContain(message);
+      })
+    );
+
+    it.layer(TestClock.layer(), { timeout: "30 seconds" })("isolated readiness clock", (it) => {
+      it.effect("gives up on an adapter that never answers its health check", () =>
+        Effect.gen(function* () {
+          const h = yield* hostHarness({ health: 503 });
+          const exit = yield* Effect.scoped(
+            Effect.gen(function* () {
+              const fiber = yield* h.start.pipe(Effect.exit, Effect.forkChild);
+              yield* TestClock.adjust(Duration.seconds(10));
+              return yield* Fiber.join(fiber);
+            })
+          );
+          expect(failureMessage(exit)).toContain("Owned adapter did not become ready");
+          expect(A.some(h.state.calls, (call) => call[2] === "stop")).toBe(true);
+        })
+      );
+    });
+
+    it.effect.each([
+      ["an unstoppable unit", { stopExit: 1, stoppedLoadState: "loaded" }, "failed in 1 operation(s)"],
+      ["a unit that stays active", { activeState: "active" }, "failed in 1 operation(s)"],
+      ["an already removed unit", { stopExit: 1, stoppedLoadState: "not-found" }, "succeeded"],
+    ] as const)("reports cleanup of %s", ([, scenario, message]) =>
+      Effect.gen(function* () {
+        const h = yield* hostHarness(scenario);
+        const exit = yield* Effect.scoped(Effect.flatMap(h.start, (host) => h.provide(host.stop))).pipe(Effect.exit);
+        expect(failureMessage(exit)).toContain(message);
+      })
+    );
+
+    it.effect("refuses to verify a backend that stopped", () =>
+      Effect.gen(function* () {
+        const h = yield* hostHarness();
+        const exit = yield* Effect.scoped(
+          Effect.gen(function* () {
+            const host = yield* h.start;
+            h.state.running = false;
+            return yield* h.provide(host.verify).pipe(Effect.exit);
+          })
+        );
+        expect(failureMessage(exit)).toContain("Owned backend stopped before the parent completed");
+      })
+    );
+
+    it.layer(TestClock.layer(), { timeout: "30 seconds" })("isolated backend cap clock", (it) => {
+      it.effect("refuses to verify a backend past its ten-minute cap", () =>
+        Effect.gen(function* () {
+          const h = yield* hostHarness();
+          const exit = yield* Effect.scoped(
+            Effect.gen(function* () {
+              const host = yield* h.start;
+              yield* TestClock.adjust(Duration.minutes(10));
+              return yield* h.provide(host.verify).pipe(Effect.exit);
+            })
+          );
+          expect(failureMessage(exit)).toContain("Owned backend stopped before the parent completed");
+        })
+      );
+    });
+
+    it("starts Bun without dotenv loading", () => {
+      expect(cacheOwnedAdapterLauncher({ runtime: "/usr/bin/bun", bun: true })).toContain("--no-env-file");
+    });
+  });
 });

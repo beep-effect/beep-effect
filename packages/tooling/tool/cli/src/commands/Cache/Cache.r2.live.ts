@@ -11,7 +11,7 @@ import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
@@ -59,7 +59,7 @@ const quote = (value: string) =>
     A.join("")
   );
 
-const definedEnvironment = (environment: NodeJS.ProcessEnv) =>
+const definedEnvironment = (environment: Readonly<Record<string, string | undefined>>) =>
   R.filterMap(environment, (value) => (value === undefined ? Result.failVoid : Result.succeed(value)));
 
 type Platform =
@@ -248,34 +248,9 @@ const makeWriteReceipt = (live: Live) =>
     yield* live.fs.chmod(file, 0o600);
   }, CacheCommandError.mapError("Cannot write the qualification receipt."));
 
-/**
- * Live probe side effects for a checkout root.
- *
- * **Details**
- * Requests carry the bearer and `x-artifact-duration: 1` with a 90-second
- * bound. Tasks run `bun run --bun turbo run <task> --summarize` with vault and
- * storage variables (`OP_*`, `R2_*`, `CLOUDFLARE_*`) removed and their output
- * captured only in a private log under `.beep/r2-cache`. The reader adapter is
- * `infra/r2-cache/adapter.sh serve` with the read-only storage grant on an
- * ephemeral loopback port.
- *
- * **Example** (Compose the live probe environment)
- * ```ts
- * import { CacheR2ProbeTarget, layerCacheR2ProbeIo } from "@beep/repo-cli/test/Cache"
- * import * as Layer from "effect/Layer"
- * const layer = layerCacheR2ProbeIo(
- *   CacheR2ProbeTarget.make({ root: "/repo", api: "http://127.0.0.1:9427", token: "t", team: "team_x" })
- * )
- * console.assert(Layer.isLayer(layer))
- * ```
- *
- * @internal
- * @param target - Checkout root and the resolved Turbo API, token and team.
- * @returns The live probe layer.
- * @category layers
- * @since 0.0.0
- */
-export const layerCacheR2ProbeIo = (target: CacheR2ProbeTarget) =>
+type ProbeEnvironment = Readonly<Record<string, string | undefined>>;
+
+const makeLayerCacheR2ProbeIo = (target: CacheR2ProbeTarget, environment: ProbeEnvironment) =>
   Layer.effect(
     CacheR2ProbeIo,
     Effect.gen(function* () {
@@ -285,15 +260,47 @@ export const layerCacheR2ProbeIo = (target: CacheR2ProbeTarget) =>
       const platform = yield* Effect.context<Platform>();
       const out = path.join(target.root, ".beep/r2-cache");
       yield* fs.makeDirectory(out, { recursive: true });
-      const environment = definedEnvironment(process.env);
+      const defined = definedEnvironment(environment);
       const runs = path.join(target.root, ".turbo/runs");
-      const live: Live = { target, fs, path, client, out, runs, environment, platform };
+      const live: Live = { target, fs, path, client, out, runs, environment: defined, platform };
       return CacheR2ProbeIo.of({
         request: makeRequest(live),
         task: makeTask(live),
         readerAdapter: readerAdapter(live),
         writeReceipt: makeWriteReceipt(live),
-        r2Active: O.contains(R.get(environment, "BEEP_CI_TURBO_R2_ACTIVE"), "true"),
+        r2Active: O.contains(R.get(defined, "BEEP_CI_TURBO_R2_ACTIVE"), "true"),
       });
     })
   );
+
+/**
+ * Live probe side effects for a checkout root.
+ *
+ * **Details**
+ * Requests carry the bearer and `x-artifact-duration: 1` with a 90-second
+ * bound. Tasks run `bun run --bun turbo run <task> --summarize` with vault and
+ * storage variables (`OP_*`, `R2_*`, `CLOUDFLARE_*`) removed and their output
+ * captured only in a private log under `.beep/r2-cache`. The reader adapter is
+ * `infra/r2-cache/adapter.sh serve` with the read-only storage grant on an
+ * ephemeral loopback port. The command passes `process.env` as the
+ * environment; tests pass a fixed record.
+ *
+ * **Example** (Compose the live probe environment)
+ * ```ts
+ * import { CacheR2ProbeTarget, layerCacheR2ProbeIo } from "@beep/repo-cli/test/Cache"
+ * import * as Layer from "effect/Layer"
+ * const layer = layerCacheR2ProbeIo(
+ *   CacheR2ProbeTarget.make({ root: "/repo", api: "http://127.0.0.1:9427", token: "t", team: "team_x" }),
+ *   { BEEP_CI_TURBO_R2_ACTIVE: "true" }
+ * )
+ * console.assert(Layer.isLayer(layer))
+ * ```
+ *
+ * @internal
+ * @category layers
+ * @since 0.0.0
+ */
+export const layerCacheR2ProbeIo: {
+  (environment: ProbeEnvironment): (target: CacheR2ProbeTarget) => ReturnType<typeof makeLayerCacheR2ProbeIo>;
+  (target: CacheR2ProbeTarget, environment: ProbeEnvironment): ReturnType<typeof makeLayerCacheR2ProbeIo>;
+} = dual(2, makeLayerCacheR2ProbeIo);
