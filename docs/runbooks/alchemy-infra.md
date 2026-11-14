@@ -468,7 +468,8 @@ never a real secret. Run each step with `bunx alchemy <plan|deploy|destroy> test
    target change). Expect one update each. Then deploy with `OIP_WEB_REHEARSAL_SENSITIVE_KEY=REHEARSAL_SENSITIVE_RENAMED`:
    expect `1 to replace`, with the new variable created before the old one is deleted.
 4. **A missing row:** reseed, delete only `OipWebRehearsal/dev_$USER/EnvSensitive`, and deploy with
-   adoption. Expect `1 to adopted`, then `no changes`.
+   adoption. Expect `1 to adopted`, then `no changes`. (A row a failed create left behind is a
+   `creating` checkpoint instead, which plans as `create`.)
 5. **Teardown:** `destroy`, and confirm the scratch project is gone.
 
 Then deploy and destroy the real `OipWeb` personal stage, which covers its project, variables and bucket.
@@ -506,9 +507,11 @@ PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/OIP_SECRETS/PULUMI_CONFIG_PASSPHRASE 
    plan `Plan: 8 to create, 5 to adopted` (lines in the expected-plan decision file): the
    project and the DNS records `adopted`, the bucket, the variables and the domains `create`.
    The plan guard refuses any other `create` before the deploy step runs; anything else that
-   differs is a stop. The first dispatch (run 43585534113) stopped on staging with eight of nine rows
-   written, so its re-run plans staging as `Plan: 1 to adopted` (`[EnvHubSpotServiceKey] adopted`,
-   every other row `noop`) and prod as above. Before any arm, run the live write rehearsal above. Check: both smoke steps pass; a second dispatch plans
+   differs is a stop. The first dispatch (run 43585534113) stopped on staging with eight of nine
+   rows written; its re-run (run 43591525409) printed staging `Plan: 1 to create`
+   (`[EnvHubSpotServiceKey] create`, every other row `noop`: a failed create leaves a `creating`
+   checkpoint, which plans as `create` and is adopted at apply time) and prod as above. Before
+   any arm, run the live write rehearsal above. Check: both smoke steps pass; a second dispatch plans
    `no changes` for both stages; `alchemy drift --stage prod` exits 0. Rollback: unset the
    variable. The live objects are as they were apart from rewritten variable values (equal
    values), and Pulumi still holds them.
