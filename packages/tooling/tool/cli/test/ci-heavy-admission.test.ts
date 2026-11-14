@@ -947,10 +947,14 @@ const pinnedDiffSpawner = (diff: O.Option<ReadonlyArray<string>>) =>
 const pinnedDiffSpawns = (spawner: ScriptedSpawner) =>
   A.filter(spawner.spawns, (spawn) => A.contains(spawn.args, "--no-renames"));
 const ALL_HEAVY_LANES = "build,check,docgen,doctest,lint-policy";
-// No `--github-output`: the command never writes, but its signature still names the service.
-const noGithubOutput = provideScopedLayer(ActionOutputs.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))));
+// No `--github-output`: the command never writes, but its signature still names the service, so the
+// block's shared layer supplies it once.
+const laneSkipsPlatform = ActionOutputs.layer.pipe(
+  Layer.provide(ActionEnvironment.layerTest({})),
+  Layer.provideMerge(platform)
+);
 
-it.layer(platform, { timeout: "30 seconds" })("HOST-06 heavy lane skips", (layerIt) => {
+it.layer(laneSkipsPlatform, { timeout: "30 seconds" })("HOST-06 heavy lane skips", (layerIt) => {
   for (const row of [
     // Markdown is Docgen-relevant (`\.md$`) and docs are not goals-only: every lane runs.
     { name: "documentation-only diff", paths: O.some(["docs/runbooks/ci.md"]), skips: "" },
@@ -992,7 +996,7 @@ it.layer(platform, { timeout: "30 seconds" })("HOST-06 heavy lane skips", (layer
               const path = yield* writeEvent(root, content);
               const admission = yield* runCiAdmission(
                 CiAdmissionInput.make({ eventName: O.some("pull_request"), eventPath: O.some(path), cwd: root })
-              ).pipe(Effect.provideService(ChangeClassifier, classifier), noGithubOutput, provideSpawner(spawner));
+              ).pipe(Effect.provideService(ChangeClassifier, classifier), provideSpawner(spawner));
               return R.fromEntries(heavyAdmissionGithubOutputs(admission));
             });
             // Without the pinned SHAs the lane-skip read is off: the outputs every caller read before.
@@ -1016,7 +1020,6 @@ it.layer(platform, { timeout: "30 seconds" })("HOST-06 heavy lane skips", (layer
       Effect.gen(function* () {
         const spawner = pinnedDiffSpawner(O.some(["goals/x/PLAN.md"]));
         const admission = yield* runCiAdmission(CiAdmissionInput.make({ eventName: O.some("push"), cwd: root })).pipe(
-          noGithubOutput,
           provideScriptedGit(spawner)
         );
         const outputs = R.fromEntries(heavyAdmissionGithubOutputs(admission));
