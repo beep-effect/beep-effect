@@ -31,7 +31,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-B1 stopped at the shared HTML cleaner Markup boundary. The independent limits-policy v2 schema step is committed; the lane is not implemented.
+B1 remains blocked after the explicit-starter ruling: the general live engine captures the exported closed CitationCleaner port, which carries no starter authority. The default assembly can use an internal entry, but the general host-supplied port needs a further contract ruling. The accepted limits-policy v2 step is committed; the lane is not implemented.
 
 ## Latest Evidence
 

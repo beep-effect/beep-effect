@@ -20,7 +20,7 @@ Each slice is one PR and runs the phases above. They land in order.
 
 | Slice | Status | Content | Count that must move |
 | --- | --- | --- | --- |
-| B1 | blocked (design stop) | `CitationNativeLane`; regex v2, Diff and Markup start through it; limits cross-field check; policy v2. | none; adds the markup interleave proofs |
+| B1 | blocked (public cleaner contract) | `CitationNativeLane`; regex v2, Diff and Markup start through it; limits cross-field check; policy v2. | none; adds the markup interleave proofs |
 | B2 | pending | Protocol v3 messages, looping worker, `CitationRegexSession`, sleep-counting clock, the real-process proofs; every regex call site switches. | regex processes 291 to 10 |
 | B3 | pending | Delete v2; rewrite spawn-count assertions; re-record shard timings; append isolation evidence. | none |
 
@@ -75,6 +75,16 @@ Schema commit df7dbe7f5dc publishes policy v2 with the cross-field check and a m
 
 Final Effect Vitest full scan passed: 3,900 files, zero introduced, one resolved.
 Inventory churn was restored; no baseline exceptions were added.
+
+Owner accepted the schema commit and ruled that native starter authority crosses
+closed boundaries explicitly. Follow-up source inspection found the general live
+engine captures the exported CitationCleaner service, whose invoke and public
+work argument have no starter. The default internal entry is feasible, but does
+not solve the arbitrary host port. Per ruling item 5, B1 remains blocked at that
+public contract, with no native changes. The rewritten explicit-starter decision
+records call paths, shared object identity and source execution order with lines.
+No tests were started for this documentation-only follow-up; prior check results
+above are retained evidence, not new runs.
 
 Reverse: Resume B1 after an amended binding design covers HTML cleaner lane authority.
 

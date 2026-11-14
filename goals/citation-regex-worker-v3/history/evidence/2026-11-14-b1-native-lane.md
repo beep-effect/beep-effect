@@ -55,3 +55,24 @@ owners, protocol v2, release assertions and count fixtures are unchanged.
 
 No native tests or canonical full-span replays were run: no native change was
 made after the design stop. No whole suite, coverage, push or PR command ran.
+
+## Owner ruling follow-up: exported host cleaner boundary
+
+The explicit-starter ruling is recorded in the rewritten decision. Source
+inspection traced the single production builtin invoke call through the registry
+and pipeline. The default assembly exposes the same registry runtime to both
+engine and host. Its internal entry can carry a starter, but CitationEngineLive
+accepts an arbitrary exported CitationCleaner whose closed invoke and work
+argument have no starter capability. The engine cannot replace or inspect that
+host implementation while preserving its semantics. Owner ruling item 5 therefore
+stops native wiring at this public boundary. No unseen host callback was observed
+spawning: the stop is the explicit argument route through the exported contract.
+
+The source trace also corrected an initial hypothesis: the six-form extractor
+uses Recognizer and does not enter the cleaner pipeline. Normal markup document
+extraction cleans before geometry regex/Diff, then tokenizes within one invocation.
+No built-in path was found entering cleaning with a prior regex/Diff/Xml occupant;
+host callback behavior is opaque. These are source findings, not process proofs.
+
+No code, count fixtures or tests changed in this follow-up. No new runtime tests
+were run. Counts and earlier verification remain as recorded above.
