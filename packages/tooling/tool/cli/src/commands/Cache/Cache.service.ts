@@ -258,7 +258,7 @@ const subjectFile = (
  * ```ts
  * import { splitCachePolicyBaseline } from "@beep/repo-cli/commands/Cache"
  * import * as Cache from "@beep/repo-configs/cache"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  * import * as Effect from "effect/Effect"
  * const digest = Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000")
  * const review = Cache.CacheReviewDecision.make({ reviewer: "fixture", reason: "empty", basis: Cache.CacheEvidenceReference.make({ path: "review.md", sha256: digest }) })
@@ -299,7 +299,7 @@ export const splitCachePolicyBaseline = Effect.fn("CacheBaseline.split")(functio
  * ```ts
  * import { assembleCachePolicyBaseline, splitCachePolicyBaseline } from "@beep/repo-cli/commands/Cache"
  * import * as Cache from "@beep/repo-configs/cache"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  * import * as Effect from "effect/Effect"
  * const digest = Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000")
  * const review = Cache.CacheReviewDecision.make({ reviewer: "fixture", reason: "empty", basis: Cache.CacheEvidenceReference.make({ path: "review.md", sha256: digest }) })
@@ -364,7 +364,7 @@ export const assembleCachePolicyBaseline = Effect.fn("CacheBaseline.assemble")(f
  * ```ts
  * import { encodeCachePolicyBaselineFiles } from "@beep/repo-cli/commands/Cache"
  * import * as Cache from "@beep/repo-configs/cache"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  * import * as Effect from "effect/Effect"
  * const digest = Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000")
  * const review = Cache.CacheReviewDecision.make({ reviewer: "fixture", reason: "empty", basis: Cache.CacheEvidenceReference.make({ path: "review.md", sha256: digest }) })
@@ -414,7 +414,7 @@ export const encodeCachePolicyBaselineFiles = Effect.fn("CacheBaseline.encodeFil
  * ```ts
  * import { decodeCachePolicyBaselineFiles, encodeCachePolicyBaselineFiles } from "@beep/repo-cli/commands/Cache"
  * import * as Cache from "@beep/repo-configs/cache"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  * import * as Effect from "effect/Effect"
  * const digest = Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000")
  * const review = Cache.CacheReviewDecision.make({ reviewer: "fixture", reason: "empty", basis: Cache.CacheEvidenceReference.make({ path: "review.md", sha256: digest }) })
@@ -557,7 +557,7 @@ export const readCommittedCachePolicyBaseline = Effect.fn("CacheBaseline.readCom
  * ```ts
  * import { encodeCachePolicyBaselineFiles, planCachePolicyBaselineReplacement } from "@beep/repo-cli/commands/Cache"
  * import * as Cache from "@beep/repo-configs/cache"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  * import * as Effect from "effect/Effect"
  * const digest = Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000")
  * const review = Cache.CacheReviewDecision.make({ reviewer: "fixture", reason: "empty", basis: Cache.CacheEvidenceReference.make({ path: "review.md", sha256: digest }) })

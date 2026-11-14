@@ -1,6 +1,7 @@
 import { Git } from "@beep/git/Git";
 import {
   CacheBaselineCommittedFile,
+  CacheBaselinePackageSubject,
   CacheBaselineRequest,
   CacheCensusNode,
   CacheCensusReport,
@@ -28,6 +29,7 @@ import {
 } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { afterEach, expect, it, vi } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
@@ -132,6 +134,17 @@ afterEach(() => {
 });
 
 it.layer(platform, { timeout: "60 seconds" })("cache baseline per-subject files", (it) => {
+  it.effect.prop(
+    "every package subject's path names that subject and no other",
+    [CacheBaselinePackageSubject],
+    ([subject]) =>
+      Effect.sync(() => {
+        assertSome(cacheBaselineSubjectOfPath(cacheBaselineSubjectPath(subject)), subject);
+        expect(cacheBaselineSubjectPath(subject)).not.toBe(cacheBaselineSubjectPath("//"));
+      }),
+    { arbitrary: fcRuns(50) }
+  );
+
   it.effect("the split reads back, subject for subject, to the migrated single-file baseline", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

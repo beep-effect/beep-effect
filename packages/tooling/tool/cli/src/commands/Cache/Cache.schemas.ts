@@ -893,7 +893,7 @@ export const CacheBaselinePackageSubject = CacheBaselineSubject.check(
 export class CacheBaselineRootFile extends S.Opaque<CacheBaselineRootFile, { readonly brand: unique symbol }>()(
   S.Struct({
     schemaVersion: S.tag("cache-baseline-root/v1"),
-    subject: S.Literal("//"),
+    subject: S.tag("//"),
     profile: CachePolicyBaseline.fields.profile,
     epoch: CachePolicyBaseline.fields.epoch,
     scope: CachePolicyBaseline.fields.scope,
