@@ -24,8 +24,10 @@
     "@effect/vitest": "4.1.4",
     "@proto/authority-host": "workspace:*",
     "@proto/party-contract": "workspace:*",
+    "@proto/party-host": "workspace:*",
     "@proto/party-model": "workspace:*",
     "@proto/runs-contract": "workspace:*",
+    "@proto/runs-host": "workspace:*",
     "@proto/tooling": "workspace:*",
     "alchemy": "2.0.0-beta.87",
     "vitest": "5.0.4"

@@ -1072,3 +1072,47 @@ operator then sees the full set before anything goes out.
 
 **Rationale:** The fence's patch and its evidence are about to change. Rejected: reading the drafts
 now; stopping the lane. Recommended answer accepted.
+
+## 2026-11-14 — Phase 11: D49 to D51 built, an upgrade, and the cluster suite a sixth time
+
+The operator's answer to D49 asked for a rerun of the whole suite, taken as the go-ahead for a
+sixth swarm session. Notes are in `research/19-rework-phase11-notes.md`. Teardown matched a sixth
+Docker baseline apart from 21.3 MB of build cache. In memory, the Effect check has zero
+diagnostics, 188 tests pass and 109 of 109 declared outcomes run, re-run by the orchestrating
+session.
+
+- **D49, the fence is exact (local patch 6, in `@alchemy.run/effect-cluster`).** The bootstrap
+  names the runner's pool `effect-cluster:<host>:<port>`, with a hashed form past Postgres's 63
+  bytes, and the fence accepts only a session of that name holding the shard's lock, with no
+  fallback. The reading the ruling rested on was confirmed: Effect reserves the lock session from
+  that pool. Only the two named lock sessions ever held locks in the cluster's namespace,
+  including after a lock connection was rebuilt.
+- **The invariant held in six of six paused-inside-commit attempts.** The paused commit was refused
+  every time, every write the resumed runner decided while it did not hold the shard was refused at
+  the fence's first read, and every refused write was stored once, the last 12.03 s after the
+  unpause against a derived bound of 33 s. Four attempts counted under the case's own rule (the
+  write sent at once reached the paused runner); in the other two a later write reached it and was
+  refused. The required three counting runs are met.
+- **D50, the generic backlog reader.** The drain check reads any publisher's backlog from the
+  host's rows: deliveries staged to the writer or to a view it reads, inputs accepted and not
+  processed, and an incomplete backfill run. It agreed with Party's own query in every comparison.
+  It cannot run on the in-memory platform, whose queue is out of reach; a library call is written
+  up as a proposal (`notes/upstream/09`).
+- **D51, the retirement check.** Stream pins gain a `Retired` state that keeps the generation's
+  length, and the check approves a retirement only when the four conditions hold. Run against the
+  cluster after the upgrade case, its verdict for generation 1 is allowed. Nothing was retired; the
+  retired feed ran in process only.
+- **A real upgrade on the cluster.** Phase 8's code was deployed, a decision was made with its fact
+  undelivered, and the drain check refused; once the publisher drained it passed. The current code
+  was deployed over the same data, the new generation was backfilled equal to the old, and the
+  review run concluded once. The data was fresh: one decision and one run.
+- Every case ran on one build. Upstream's ten and every case of the prototype's own pass.
+
+What falls short: a write sent to a runner while it is paused in `decide` waits for that runner
+(its client gave up at 60 s; it was stored once after the resume), which is a matter of liveness;
+the refusal on an unnamed pool follows from the SQL and was not observed, and should come with a
+startup error; generation 1 is still served.
+
+D5 verdict: not met, by D41's standing half. Every case passes and D49's invariant holds, on six
+local patches that are not upstream. Open for the operator: the upstream set (D52), whether this
+pass meets the D16 gate, and the rule for a write sent to a frozen runner.

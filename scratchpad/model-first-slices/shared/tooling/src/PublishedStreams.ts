@@ -28,10 +28,11 @@ export type LiveStream = typeof LiveStream.Type;
  * - `Changed`: an open generation's writer is not the one it was opened
  *   with: its version was bumped, a view it reads was bumped, its sources
  *   changed, or another projection writes it. Open a new generation.
- * - `Reopened`: a closed generation has a writer again.
+ * - `Reopened`: a closed or retired generation has a writer again.
  * - `Unwritten`: an open generation has no writer; pin it closed.
- * - `Undeclared`: a pinned generation is gone from the model, so what it
- *   published can no longer be served.
+ * - `Undeclared`: a served (open or closed) generation is gone from the
+ *   model, so what it published can no longer be served. A retired one may
+ *   leave the model: its pin keeps its positions.
  *
  * @category models
  * @since 0.0.0
@@ -74,6 +75,7 @@ const driftOfLive = (pins: ReadonlyArray<StreamPin>) => (live: LiveStream): O.Op
       onSome: (pin) =>
         StreamPin.match(pin, {
           Closed: () => O.map(live.writer, (writer) => StreamDrift.cases.Reopened.make({ stream: live.stream, writer })),
+          Retired: () => O.map(live.writer, (writer) => StreamDrift.cases.Reopened.make({ stream: live.stream, writer })),
           Open: ({ writer: pinned }) =>
             O.match(live.writer, {
               onNone: () => O.some(StreamDrift.cases.Unwritten.make({ stream: live.stream, pinned })),
@@ -114,7 +116,7 @@ export const driftOf: {
   ...A.getSomes(A.map(live, driftOfLive(pins))),
   ...pipe(
     pins,
-    A.filter((pin) => !A.some(live, (stream) => stream.stream === pin.stream)),
+    A.filter((pin) => !StreamPin.guards.Retired(pin) && !A.some(live, (stream) => stream.stream === pin.stream)),
     A.map((pin) => StreamDrift.cases.Undeclared.make({ stream: pin.stream })),
   ),
 ]);

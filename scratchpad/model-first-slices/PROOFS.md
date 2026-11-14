@@ -3,7 +3,7 @@
 <!-- Generated from proofs/Proofs.data.ts by scripts/proofs.ts. Do not edit: `bun run proofs`
      rewrites it, and `bun run proofs --check` fails on drift. -->
 
-Every invariant this prototype enforces (D8): 38 entries. Mechanical laws run in
+Every invariant this prototype enforces (D8): 40 entries. Mechanical laws run in
 `bun run check`, `bun run test` and `bun run generated:check`; semantic questions stay with a
 reviewer who did not write the change.
 
@@ -271,13 +271,13 @@ A commit is acknowledged only on the version its decide read: when the stored ve
 
 ### commit-fence
 
-A commit is acknowledged only if its runner held the instance's shard lock for the whole commit transaction: one whose runner lost the lock is refused with ShardLost and retried by its caller onto the owner (D45, patch 4).
+No commit is acknowledged from a runner whose own lock session does not hold the instance's shard for the whole commit transaction: one whose runner lost the lock, or never had it, is refused with ShardLost and retried by its caller onto the owner (D45, D49; patches 4 and 6).
 
-- **Checker:** `conformance/test/FencedCommit.test.ts`, `conformance/test/Own.conformance.ts`, `conformance/test/ShardOwnership.ts`, `patches/@alchemy.run%2Fdomain@2.0.0-beta.87.patch`
-- **Reads:** In process: two runners on one instance, the host refusing a transaction whose runner no longer serves the instance at commit. On the cluster: the shard lock's holder in pg_locks, the paused runner's open transaction, the stored events and the fence's log lines.
-- **Assumes:** Effect Cluster holds each shard as a session-level advisory lock on one reserved connection per runner (SqlRunnerStorage.ts); the fence identifies this runner's session by the name Effect would give it (proposal 08) or else by address.
-- **Gaps:** Not exact on this stack: every session reaches Postgres through the swarm load balancer's address with the same application name, so the fence cannot tell its runner's lock session from another's. It refused the paused runner's commit in all five counting runs, but in three of them a write queued to the paused runner was committed by it after its shard had moved (notes/phase-10.md). Exactness needs Effect to name the lock session (notes/upstream/08), which would be a sixth patch.
-- **Left to a reviewer:** Whether to ask Effect for the named lock session, or accept the narrower guarantee.
+- **Checker:** `conformance/test/FencedCommit.test.ts`, `conformance/test/Own.conformance.ts`, `conformance/test/ShardOwnership.ts`, `conformance/test/RecoveryBound.ts`, `conformance/test/RecoveryBound.test.ts`, `patches/@alchemy.run%2Fdomain@2.0.0-beta.87.patch`, `patches/@alchemy.run%2Feffect-cluster@2.0.0-beta.87.patch`
+- **Reads:** In process: two runners on one instance, the host refusing a transaction whose runner no longer serves the instance at commit. On the cluster: the shard lock's holder by session name in pg_locks and pg_stat_activity, sampled while paused and every half second after the unpause; the paused runner's open transaction; the stored events and the fence's log lines; every session holding a lock in the cluster's namespace.
+- **Assumes:** Effect Cluster holds each shard as a session-level advisory lock on one connection reserved from the runner's pool (SqlRunnerStorage.ts); the runner bootstrap names that pool effect-cluster:<host>:<port> from the runner address (patch 6), and the fence computes the same name. A pool that is not named has no session of its own, so every commit is refused.
+- **Gaps:** Phase 11, six attempts on one build: the invariant held in all six; four counted by the case's rule (a write queued at once reached the paused runner after the move) and the other two had a write sent after the move reach it. Refused writes landed once, the last 12.03 s after the unpause (bound 33 s, derived in RecoveryBound.ts). Holders after the unpause are sampled, not traced. The refusal on an unnamed pool follows from the SQL; no unnamed build was deployed to see it (notes/phase-11.md).
+- **Left to a reviewer:** Whether to send patches 07 and 08 together, with a startup error for an unnamed pool.
 - **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README).
 
 ### call-arguments
@@ -294,11 +294,31 @@ On Effect Cluster an object call's left-out optional arguments reach the object 
 
 A deploy that closes a published stream's generation, or gives it another writer, is refused while the outgoing publisher has anything unpublished; after it drains, the deploy passes, and the new writer republishes every review run of each earlier decision (D47).
 
-- **Checker:** `shared/tooling/src/PublisherHandover.ts`, `shared/tooling/test/PublisherHandover.test.ts`, `party/model/test/Handover.test.ts`, `runs/host/test/RunsHost.test.ts`, `conformance/test/Handover.conformance.ts`
-- **Reads:** The live code's pins and the next code's (StreamPins.ts); the outgoing publisher's backlog: decided claims whose fact the outgoing generation lacks, read from the live host (in memory through the model's clients, on the cluster through SQL over its storage).
-- **Assumes:** The live code's pins are given to the check (phase 8's here); the backlog query is Party's publisher's, not generic.
-- **Gaps:** On the cluster the drain itself is not exercised: no old code was deployed, so the check ran against phase 6's data with the runners stopped, as drained and with an undelivered decision added in a rolled-back transaction.
-- **Left to a reviewer:** Whether every published stream needs its own backlog reader, or the library should expose a writer's backlog.
+- **Checker:** `shared/tooling/src/PublisherHandover.ts`, `shared/tooling/test/PublisherHandover.test.ts`, `party/model/test/Handover.test.ts`, `runs/host/test/RunsHost.test.ts`, `conformance/test/Handover.conformance.ts`, `conformance/test/Upgrade.conformance.ts`
+- **Reads:** The live code's pins and the next code's (StreamPins.ts); the outgoing publisher's backlog from the generic reader (publisher-backlog).
+- **Assumes:** The live code's pins are given to the check (phase 8's here).
+- **Gaps:** Phase 11 ran the upgrade on the cluster: phase 8's code deployed, a decision held undelivered (refused), drained (passed), then the current code deployed over the same data, where the one review run concluded once. One decision and one run; the upgrade's data was fresh, not phase 6's.
+- **Left to a reviewer:** Nothing beyond publisher-backlog.
+
+### publisher-backlog
+
+The drain check reads any published stream's writer from the host's own records: deliveries staged to it, deliveries of events it consumes on their way through the views it reads (followed transitively), inputs accepted and not handled, and an incomplete backfill run; a delivery already taken in counts once (D50).
+
+- **Checker:** `shared/tooling/src/PublisherBacklog.ts`, `shared/tooling/test/PublisherBacklog.test.ts`, `conformance/test/HandoverBacklog.test.ts`, `conformance/test/HostBacklog.ts`, `conformance/test/Handover.conformance.ts`, `conformance/test/Upgrade.conformance.ts`
+- **Reads:** The Durable Object platform's rows (outbox:, meta, snapshot, run:), from an in-process host's storage or by SQL on the cluster; a hosted model's writer shape, or one written out for code no longer in the tree. Party's own query is the oracle.
+- **Assumes:** The storage layout of DurableObjects.ts, Platform.ts and Backfill.ts at 2.0.0-beta.87, cited in the reader; a view rebuilt in place keeps generation 0 storage (Kernel.ts classGenerationOf).
+- **Gaps:** The in-memory platform keeps its queue and partitions out of reach, so the reader cannot run there; the in-process comparison uses the Durable Object platform over an in-process host. The layout is private to the library (notes/upstream/09).
+- **Left to a reviewer:** Whether to ask the library for the backlog (notes/upstream/09).
+
+### generation-retirement
+
+A closed generation stops being served only when the retirement check approves the pin change against the live host: the next served generation holds every fact version it held with the same payload, every consumer in every deployment descriptor has read past it, the feed keeps later generations at the same positions, and D34 allows it (D51).
+
+- **Checker:** `shared/tooling/src/GenerationRetirement.ts`, `shared/tooling/test/GenerationRetirement.test.ts`, `party/host/test/PartyFactsFeed.test.ts`, `conformance/test/Retirement.conformance.ts`
+- **Reads:** The current and next pins (a Retired pin keeps its length), each generation's entries (position, fact id, version, payload) from the stream hosts or by SQL, each consumer's checkpoint from where it keeps it, and the composed deployment descriptors.
+- **Assumes:** The pins list one feed's generations in order and are append-only; a consumer's checkpoint is a feed position.
+- **Gaps:** On the cluster after P10 the verdict for generation 1 is allowed (notes/phase-11.md); it was not retired, so the retired feed ran in process only.
+- **Left to a reviewer:** When to retire generation 1, now that the check allows it.
 
 ### compiler-effect-build
 
@@ -370,7 +390,7 @@ Two runners never both commit to one instance (D38): a runner paused past its sh
 - **Checker:** `conformance/test/Own.conformance.ts`, `conformance/src/TwoRunners.model.ts`
 - **Reads:** The slot's stored events in alchemy_domain_objects before and after unpausing.
 - **Assumes:** `docker pause` freezes the runner's shard-lock refresh as a long GC pause or partition would; a row lock holds the stale runner inside its commit for the second timing.
-- **Gaps:** Two timings; not a model-checked proof. Phase 10: a shard moves about 30 s into a pause (the paused runner's heartbeat and lock session both lapse at the 35 s lock expiry), so all five paused-inside-commit attempts counted; the paused commit was refused every time, but a write queued to the paused runner was committed by it in three (commit-fence). Paused in decide, the shard moved this time and the stale runner's write was not committed (notes/phase-10.md).
+- **Gaps:** Two timings; not a model-checked proof. Phase 11: all six paused-inside-commit attempts took over (27.8 to 33.4 s) and held the commit-fence invariant. Paused in decide, the write it decided was refused at commit and never stored; a write sent during the pause waited for the paused runner and was committed once by it after it took its shard back (notes/phase-11.md).
 - **Left to a reviewer:** As commit-fence.
 - **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README).
 
@@ -392,8 +412,8 @@ State in the forms earlier phases stored decodes on the cluster under today's de
 - **Checker:** `conformance/test/StoredForms.conformance.ts`
 - **Reads:** Rows written straight into the cluster's object storage from the frozen run fixtures and phase 6's view form; phase 6's dump and restore record (RESTORE_PHASE=across).
 - **Assumes:** The object and key names are the cluster storage's as observed (Practice/<Context>.<Class>/<id>, meta, snapshot).
-- **Gaps:** Phase 10, with patch 5: generation 2 holds every decision, the one phase 6 made republished identical to generation 1's, and consumers saw each fact once. Generation 1 is still served (notes/phase-10.md says what would have to hold first).
-- **Left to a reviewer:** When generation 1 may stop being served.
+- **Gaps:** Phase 11: generation 2 holds every decision, the one phase 6 made republished identical to generation 1's, and consumers saw each fact once. Generation 1 is still served; the retirement check allows retiring it (generation-retirement).
+- **Left to a reviewer:** As generation-retirement.
 - **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README).
 
 ## Outcome coverage gaps

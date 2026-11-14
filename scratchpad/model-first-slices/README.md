@@ -1,7 +1,7 @@
 # model-first-slices
 
 A standalone prototype of the model-first slices design, reworked to
-`explorations/model-first-slices/DECISIONS.md` through phase 10 (phase 4 was the last in-memory phase; phase 5 ran it on Effect Cluster; phase 6 patched two library defects locally and ran it again; phase 7 put `bun run check` on the Effect build of the compiler and applied the owner's review; phase 8 ran the suite on the swarm against the phase 7 code; phase 9 built the rulings on its three failures, D41 to D43, and ran it again; phase 10 built D45 to D47 and ran it a fifth time):
+`explorations/model-first-slices/DECISIONS.md` through phase 11 (phase 4 was the last in-memory phase; phase 5 ran it on Effect Cluster; phase 6 patched two library defects locally and ran it again; phase 7 put `bun run check` on the Effect build of the compiler and applied the owner's review; phase 8 ran the suite on the swarm against the phase 7 code; phase 9 built the rulings on its three failures, D41 to D43, and ran it again; phase 10 built D45 to D47 and ran it a fifth time; phase 11 built D49 to D51 and ran it a sixth time, with an upgrade from phase 8's code):
 file grammar, contract packages, the authority context, re-admission at each hop, the `runs`
 context, approval as an authenticated command, the Reasoner evaluation contract, an integration fact
 through an outbox and an inbox, a projection rebuild with no side effects, stored-format
@@ -22,7 +22,9 @@ phase 6, stored forms and a restore across code versions, the D5 verdict), `note
 safety per host, the recovery case and its bound, the publisher on claim events with a second stream generation, the
 conformance table beside phase 8, the D5 verdict), `notes/phase-10.md` (how Effect Cluster records shard ownership, the
 commit fence and where it falls short, the call-argument fix, the publisher-drain check, the table beside phase 9, each
-counting paused-runner run, the D5 verdict). Every invariant and its checker: `PROOFS.md`
+counting paused-runner run, the D5 verdict), `notes/phase-11.md` (the runner pool named and the fence made strict, the
+generic backlog reader, the generation-retirement check, the upgrade from phase 8's code, the table beside phase 10, every
+paused-runner attempt, the D5 verdict). Every invariant and its checker: `PROOFS.md`
 (generated).
 
 This directory is not part of the monorepo's bun workspace. It has its own `package.json` (with
@@ -91,7 +93,7 @@ conformance            @proto/conformance         upstream's Domain conformance 
                                                   33c10dd), the two-runners slot (D38), the prototype's own cases
                                                   and backup/restore, run against a deployed stack only; an in-memory
                                                   host for the drain-lease test (bun run test)
-patches/                                          the local @alchemy.run/domain patch (phase 6)
+patches/                                          the local @alchemy.run/domain and @alchemy.run/effect-cluster patches
 scripts/, proofs/                                 proofs.ts renders PROOFS.md from proofs/Proofs.data.ts; outcomes.ts
                                                   checks executed outcomes against proofs/Outcomes.allow.ts
 ```
@@ -178,6 +180,13 @@ at request, narrowed, and only while a human answers for it.
   (`shared/tooling/test/PublisherHandover.test.ts`); an in-memory upgrade from phase 8's publisher with
   a decision held undelivered (`party/model/test/Handover.test.ts`); a fact republished in a new
   generation concludes every review run once (`runs/host/test/RunsHost.test.ts`).
+- Phase 11 (D50, D51): the drain check's backlog is read for any publisher from its host's rows
+  (`shared/tooling/test/PublisherBacklog.test.ts`) and agrees with Party's own query on an
+  in-process Durable Object host, held and drained (`conformance/test/HandoverBacklog.test.ts`); a
+  closed generation is retired only when the retirement check allows it, refused when a consumer is
+  behind, a fact is missing or differs, a pin moves or D34 refuses
+  (`shared/tooling/test/GenerationRetirement.test.ts`), and after an allowed retirement the feed keeps
+  every checkpoint's position and delivers no fact twice or never (`party/host/test/PartyFactsFeed.test.ts`).
 - `shared/tooling` and the root: every role file has one designated primary export; every declared
   command outcome is executed by some test, or listed with a reason (`bun run outcomes`); the stream-pin
   check fails on a bumped version, a changed source set, another writer, a reopened closed generation, an
@@ -243,13 +252,13 @@ TypeScript errors only. `shared/tooling/test/Compiler.guard.test.ts` guards the 
 `link:` dev dependencies onto the monorepo's own packages. They resolve to source and need the monorepo's
 `bun install` for their dependencies.
 
-## Library patches (phases 6, 9 and 10)
+## Library patches (phases 6, 9, 10 and 11)
 
-`@alchemy.run/domain` 2.0.0-beta.87 is patched in this workspace only, through `patchedDependencies`
-in `package.json` and `patches/@alchemy.run%2Fdomain@2.0.0-beta.87.patch` (`bun install` applies
-it). The patch changes both the package's `src` (resolved under the `bun` condition: the front's
-bundle and the CLI) and its built `lib` (the default condition: the runners' Node bundle and the
-tests under vitest):
+`@alchemy.run/domain` and `@alchemy.run/effect-cluster` 2.0.0-beta.87 are patched in this workspace
+only, through `patchedDependencies` in `package.json` and `patches/` (`bun install` applies them).
+Each patch changes both the package's `src` (resolved under the `bun` condition: the front's bundle
+and the CLI) and its built `lib` (the default condition: the runners' Node bundle and the tests under
+vitest). Five fixes in `@alchemy.run/domain`:
 
 1. A drain that finds its lease held comes back just after the lease expires, so rows left by a
    drain whose runner died are delivered (`DurableObjects.ts`).
@@ -260,22 +269,27 @@ tests under vitest):
    which the caller retries under the same command id. On Effect Cluster the transaction first takes
    the instance's advisory lock, so two runners' commits on one instance serialize
    (`DurableObjects.ts`, `EffectCluster/index.ts`).
-4. Phase 10 (D45): the commit fence. On Effect Cluster each transaction finds the session holding the
-   instance's shard lock that is its runner's, and a deferred constraint trigger checks at `COMMIT`
-   that the same session still holds it; otherwise the commit fails with `ShardLost` and is retried.
-   It cannot tell its runner's session from another's where every session has one address (this
-   swarm's load balancer), which it would need from Effect (`notes/upstream/08`).
+4. Phase 10 (D45), made strict in phase 11 (D49): the commit fence. On Effect Cluster each transaction
+   finds the session named after its runner that holds the instance's shard lock, and a deferred
+   constraint trigger checks at `COMMIT` that the same session still holds it; otherwise the commit
+   fails with `ShardLost` and is retried. With no session of its own (an unnamed pool) every commit is
+   refused.
 5. Phase 10 (D46): a call's trailing `undefined` arguments are left out of the JSON the cluster
    transport carries (`encodeCallArgs`), so they arrive as `undefined`, as on Durable Objects; the
    directory listing's first page, and so every backfill, now works on Effect Cluster.
 
-The same fixes as diffs against upstream at 33c10dd, with pull request text, are in
-`notes/upstream/` (`01`, `02`, `03`, `06`, `07`; `07` applies after `03`), with a proposal for leases
-that follow shard ownership (`04`), an issue for a rebuilt projection's dropped stream appends (`05`),
-and a proposal to Effect to name the session that holds a runner's shard locks (`08`); nothing is
-filed upstream (D48). `notes/phase-6.md`, `notes/phase-9.md` and `notes/phase-10.md` have the details.
+And one in `@alchemy.run/effect-cluster` (phase 11, D49): the runner bootstrap names the Postgres pool
+Effect reserves the shard-lock session from `effect-cluster:<host>:<port>` (`runnerPoolName`, with a
+hashed form for a name PostgreSQL would cut), so the fence can tell its runner's session apart.
 
-## Cluster stage and conformance (phases 5, 6, 8, 9 and 10)
+The same fixes as diffs against upstream at 33c10dd, with pull request text, are in
+`notes/upstream/` (`01`, `02`, `03`, `06`, `07`, `08`; `07` applies after `03` and compiles with
+`08`), with a proposal for leases that follow shard ownership (`04`), an issue for a rebuilt
+projection's dropped stream appends (`05`), and a proposal for a projection's backlog as a library
+call (`09`); nothing is filed upstream (D52). `notes/phase-6.md`, `notes/phase-9.md`,
+`notes/phase-10.md` and `notes/phase-11.md` have the details.
+
+## Cluster stage and conformance (phases 5, 6, 8, 9, 10 and 11)
 
 Only with the owner's approval: the stack creates Docker swarm services for Postgres (with a
 volume), a pool of two runners and the front, on one overlay network. Since phase 6 the front
@@ -335,6 +349,16 @@ phase 9's dump and checks that `SlotTally`, new in phase 10, holds every earlier
 runners stopped (or against the live old stack) before deploying code that closes a published stream's
 generation. Wait until the old containers are gone before a restore: `docker service scale
 --detach=false` returns before they have stopped.
+
+Phase 11 adds three. `RESTORE_PHASE=retirement` (`test/Retirement.conformance.ts`) runs the
+generation-retirement check against the stack's state after the `across` case and records its
+verdict for generation 1; it retires nothing. `RESTORE_PHASE=upgrade-decide` and `upgrade-after`
+(`test/Upgrade.conformance.ts`) are an upgrade's two halves: deploy phase 8's code (`git archive
+0d11b18590d`, extracted under `~/.cache/beep/`, with `packages/`, `node_modules/` and
+`tsconfig.base.json` linked beside it, then `bun install --frozen-lockfile` and `bun run deploy` there),
+run the decide half with `RESTORE_FILE` set, copy that tree's `apps/practice/.alchemy/state/` into this
+one's, deploy this code over it, and run the after half. A consumer's backfill run starts on the first
+call its model receives after a deploy, so the after half reads the claim first.
 
 Teardown, always: `(cd apps/practice && bun run destroy)`, check that no `practice-*` or driver
 service, container, network, volume or image remains, remove the image the deploy pulled by digest

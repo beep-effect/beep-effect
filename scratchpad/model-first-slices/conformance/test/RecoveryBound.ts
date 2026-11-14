@@ -45,3 +45,69 @@ export const ENTITY_MESSAGE_POLL_MS = 10_000;
  * @since 0.0.0
  */
 export const RECOVERY_BOUND_MS = LEASE_MS + 2 * ENTITY_MESSAGE_POLL_MS;
+
+/**
+ * Effect Cluster's lock refresh (`shardLockRefreshInterval`, 10 s): how long a runner that
+ * resumes from a stall can take to find that its lock session has gone (phase 11, D49).
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const SHARD_LOCK_REFRESH_MS = 10_000;
+
+/**
+ * Effect Cluster's assignment refresh (`refreshAssignmentsInterval`, 3 s): how long a runner
+ * takes to see the set of live runners change, and to try to take what it is assigned.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const REFRESH_ASSIGNMENTS_MS = 3_000;
+
+/**
+ * Effect Cluster's entity termination (`entityTerminationTimeout`, 15 s): the longest a runner
+ * keeps a shard it is giving up while that shard's entities stop.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const ENTITY_TERMINATION_MS = 15_000;
+
+/**
+ * The longest gap between two retries of a call in transit (`TRANSIT_RETRY` in the library's
+ * `DurableObjects.ts`: exponential from 100 ms, capped at 2 s, 35 times).
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const RETRY_SPACING_MS = 2_000;
+
+/**
+ * How long a caller keeps retrying a call in transit: `TRANSIT_RETRY`'s delays, 100, 200, 400,
+ * 800 and 1,600 ms, then 2 s for the other 30 of its 35 retries.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const TRANSIT_RETRY_BUDGET_MS = 100 + 200 + 400 + 800 + 1_600 + 30 * RETRY_SPACING_MS;
+
+/**
+ * D49's liveness bound: a write a fenced commit refused, on a runner that lost its shard while
+ * stalled, lands exactly once within this long of the runner resuming. The resumed runner finds
+ * its lock session gone at its next lock refresh; the current owner sees it live again at its
+ * next assignment refresh and hands the shard back once the shard's entities stop; the resumed
+ * runner takes the lock at its next assignment pass; the caller's next retry commits. A retry
+ * that reaches the current owner first commits sooner. It is within the caller's retry budget.
+ *
+ * **Example** (The deadline of a write refused when its runner resumed at `resumedAt`)
+ * ```ts
+ * import { REFUSED_WRITE_BOUND_MS } from "./RecoveryBound.ts";
+ *
+ * const deadline = (resumedAt: number) => resumedAt + REFUSED_WRITE_BOUND_MS;
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const REFUSED_WRITE_BOUND_MS =
+  SHARD_LOCK_REFRESH_MS + REFRESH_ASSIGNMENTS_MS + ENTITY_TERMINATION_MS + REFRESH_ASSIGNMENTS_MS + RETRY_SPACING_MS;

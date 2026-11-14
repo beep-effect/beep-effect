@@ -1,0 +1,132 @@
+diff --git a/lib/Host.d.ts b/lib/Host.d.ts
+index d5734e45fc9e98f51425d62618391d477cf38343..bbec70ef2771ddeafc73c3d80d1be090faaccdb7 100644
+--- a/lib/Host.d.ts
++++ b/lib/Host.d.ts
+@@ -57,4 +57,14 @@ declare const InstanceStorage_base: Context.ServiceClass<InstanceStorage, "Clust
+  */
+ export declare class InstanceStorage extends InstanceStorage_base {
+ }
++/**
++ * The `application_name` a runner's Postgres pool carries: `effect-cluster:<host>:<port>`,
++ * from the address the runner gives Effect Cluster. Effect's SQL runner storage reserves the
++ * session that holds the runner's shard locks from this pool, so the lock session carries it
++ * too, and any connection can tell which runner holds a shard (`pg_locks` joined to
++ * `pg_stat_activity`). PostgreSQL keeps 63 bytes of the name and replaces characters outside
++ * printable ASCII; a name that would be cut or changed is replaced by `effect-cluster:#` and
++ * an FNV-1a hash of `host:port`, so no two runners share a cut name.
++ */
++export declare const runnerPoolName: (host: string, port: number) => string;
+ //# sourceMappingURL=Host.d.ts.map
+\ No newline at end of file
+diff --git a/lib/Host.js b/lib/Host.js
+index cdbdf953270349a4ff7a84a2a81383592e62c4c9..5736b1280c26db402f4149ae502642ca19c2e123 100644
+--- a/lib/Host.js
++++ b/lib/Host.js
+@@ -28,4 +28,23 @@ export class RunnerHost extends Context.Service()("Cluster.RunnerHost") {
+  */
+ export class InstanceStorage extends Context.Service()("Cluster.InstanceStorage") {
+ }
++/**
++ * The `application_name` a runner's Postgres pool carries: `effect-cluster:<host>:<port>`,
++ * from the address the runner gives Effect Cluster. Effect's SQL runner storage reserves the
++ * session that holds the runner's shard locks from this pool, so the lock session carries it
++ * too, and any connection can tell which runner holds a shard (`pg_locks` joined to
++ * `pg_stat_activity`). PostgreSQL keeps 63 bytes of the name and replaces characters outside
++ * printable ASCII; a name that would be cut or changed is replaced by `effect-cluster:#` and
++ * an FNV-1a hash of `host:port`, so no two runners share a cut name.
++ */
++export const runnerPoolName = (host, port) => {
++    const full = `effect-cluster:${host}:${port}`;
++    const bytes = new TextEncoder().encode(full);
++    if (bytes.length <= 63 && /^[\x20-\x7e]*$/.test(full))
++        return full;
++    let hash = 0x811c9dc5;
++    for (const byte of new TextEncoder().encode(`${host}:${port}`))
++        hash = Math.imul(hash ^ byte, 0x01000193);
++    return `effect-cluster:#${(hash >>> 0).toString(16).padStart(8, "0")}`;
++};
+ //# sourceMappingURL=Host.js.map
+\ No newline at end of file
+diff --git a/lib/internal/Bootstrap.js b/lib/internal/Bootstrap.js
+index 461ff1825e4867daa8bc7d43c6a823144501c1dc..a5d91d67e8abeac03f9fc278395082dd234331ce 100644
+--- a/lib/internal/Bootstrap.js
++++ b/lib/internal/Bootstrap.js
+@@ -29,7 +29,7 @@ import * as Path from "effect/Path";
+ import * as Redacted from "effect/Redacted";
+ import * as Ref from "effect/Ref";
+ import { PlatformDeclaration } from "../Entity.js";
+-import { RunnerHost } from "../Host.js";
++import { RunnerHost, runnerPoolName } from "../Host.js";
+ import { GATEWAY_PORT, RUNNER_PORT, gatewayLayer } from "./Gateway.js";
+ import { HasNoPool } from "./HostedRuntime.js";
+ const env = (name) => process.env[name];
+@@ -218,7 +218,12 @@ export const bootstrap = (definitions) => {
+                 runnerListenAddress: Option.some(RunnerAddress.make(env("CLUSTER_LISTEN_HOST") ?? "0.0.0.0", RUNNER_PORT)),
+                 ...shardGroupsConfig(),
+             },
+-        }).pipe(Layer.provide(PgClient.layer({ url: Redacted.make(env("CLUSTER_DATABASE_URL")) })));
++        }).pipe(
++        // Named after the runner, so its shard-lock session can be told apart (`runnerPoolName`).
++        Layer.provide(PgClient.layer({
++            url: Redacted.make(env("CLUSTER_DATABASE_URL")),
++            applicationName: runnerPoolName(host, RUNNER_PORT),
++        })));
+         // Singletons and crons run in this pool's shard group too, each with
+         // the services its Construction phase had.
+         const scheduled = hosted.flatMap((entry) => entry.kind === "singleton"
+diff --git a/src/Host.ts b/src/Host.ts
+index f19a5426c933201bb3d2537322e34bc789fecaa8..fd8a63cbfd68063474008758556a9a3b3f2c4ed7 100644
+--- a/src/Host.ts
++++ b/src/Host.ts
+@@ -66,3 +66,21 @@ export class InstanceStorage extends Context.Service<
+     transaction<A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R>;
+   }
+ >()("Cluster.InstanceStorage") {}
++
++/**
++ * The `application_name` a runner's Postgres pool carries: `effect-cluster:<host>:<port>`,
++ * from the address the runner gives Effect Cluster. Effect's SQL runner storage reserves the
++ * session that holds the runner's shard locks from this pool, so the lock session carries it
++ * too, and any connection can tell which runner holds a shard (`pg_locks` joined to
++ * `pg_stat_activity`). PostgreSQL keeps 63 bytes of the name and replaces characters outside
++ * printable ASCII; a name that would be cut or changed is replaced by `effect-cluster:#` and
++ * an FNV-1a hash of `host:port`, so no two runners share a cut name.
++ */
++export const runnerPoolName = (host: string, port: number): string => {
++  const full = `effect-cluster:${host}:${port}`;
++  const bytes = new TextEncoder().encode(full);
++  if (bytes.length <= 63 && /^[\x20-\x7e]*$/.test(full)) return full;
++  let hash = 0x811c9dc5;
++  for (const byte of new TextEncoder().encode(`${host}:${port}`)) hash = Math.imul(hash ^ byte, 0x01000193);
++  return `effect-cluster:#${(hash >>> 0).toString(16).padStart(8, "0")}`;
++};
+diff --git a/src/internal/Bootstrap.ts b/src/internal/Bootstrap.ts
+index f16f6f36c8567af41f7b698dd1af54aa43200755..034ce2b24642a1848eaf7872647e2aed56bde8a7 100644
+--- a/src/internal/Bootstrap.ts
++++ b/src/internal/Bootstrap.ts
+@@ -44,7 +44,7 @@ import type { Rpc, RpcGroup } from "effect/rpc";
+ import type { Workflow as EffectWorkflow } from "effect/workflow";
+ import type { HostedCron } from "../Cron.ts";
+ import { PlatformDeclaration, type HostedEntity } from "../Entity.ts";
+-import { RunnerHost } from "../Host.ts";
++import { RunnerHost, runnerPoolName } from "../Host.ts";
+ import type { HostedSingleton } from "../Singleton.ts";
+ import type { HostedWorkflow } from "../Workflow.ts";
+ import { GATEWAY_PORT, RUNNER_PORT, gatewayLayer } from "./Gateway.ts";
+@@ -309,7 +309,15 @@ export const bootstrap = (
+         ),
+         ...shardGroupsConfig(),
+       },
+-    }).pipe(Layer.provide(PgClient.layer({ url: Redacted.make(env("CLUSTER_DATABASE_URL")!) })));
++    }).pipe(
++      // Named after the runner, so its shard-lock session can be told apart (`runnerPoolName`).
++      Layer.provide(
++        PgClient.layer({
++          url: Redacted.make(env("CLUSTER_DATABASE_URL")!),
++          applicationName: runnerPoolName(host, RUNNER_PORT),
++        }),
++      ),
++    );
+     // Singletons and crons run in this pool's shard group too, each with
+     // the services its Construction phase had.
+     const scheduled = hosted.flatMap((entry) =>

@@ -4,9 +4,14 @@ import { OrgId, RunId } from "@proto/kernel/Ids";
 import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
 import { ClaimDecidedV1, ClaimDecidedV2 } from "@proto/party-contract/Facts/ClaimDecided.fact";
 import { PartyFactsFeed } from "@proto/party-contract/Facts/PartyFacts.gateway";
-import { PartyFactsFeedLive } from "@proto/party-host/Facts/PartyFactsFeed.adapter";
+import { StreamPin } from "@proto/kernel/PublishedStream";
+import { liveGenerationOf, partyFactsFeedFor, PartyFactsFeedLive } from "@proto/party-host/Facts/PartyFactsFeed.adapter";
+import { PartyDeployment } from "@proto/party-host/Party.descriptor";
 import { PartyFacts } from "@proto/party-model/Facts/PartyFacts.stream";
 import { PartyFacts2 } from "@proto/party-model/Facts/PartyFacts2.stream";
+import { partyStreamPins } from "@proto/party-model/Facts/StreamPins";
+import { RunsDeployment } from "@proto/runs-host/Runs.descriptor";
+import { checkGenerationRetirement } from "@proto/tooling/GenerationRetirement";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -65,15 +70,15 @@ const host = (stream: string, facts: ReadonlyArray<Fact>) => {
   };
 };
 
-const feedOver = (closed: ReadonlyArray<Fact>, open: ReadonlyArray<Fact>) =>
-  PartyFactsFeedLive.pipe(
+const feedOver = (closed: ReadonlyArray<Fact>, open: ReadonlyArray<Fact>, feed = PartyFactsFeedLive) =>
+  feed.pipe(
     Layer.provide(Layer.succeed(PartyFacts, host("PartyFacts", closed))),
     Layer.provide(Layer.succeed(PartyFacts2, host("PartyFacts2", open))),
   );
 
 /** The feed over two generations, built in the test's scope. */
-const feedOf = (closed: ReadonlyArray<Fact>, open: ReadonlyArray<Fact>) =>
-  Effect.map(Layer.build(feedOver(closed, open)), Context.get(PartyFactsFeed));
+const feedOf = (closed: ReadonlyArray<Fact>, open: ReadonlyArray<Fact>, feed = PartyFactsFeedLive) =>
+  Effect.map(Layer.build(feedOver(closed, open, feed)), Context.get(PartyFactsFeed));
 
 /** The positions of a page. */
 const positions = (page: ReadonlyArray<FactEnvelope>) => A.map(page, (fact) => fact.seq);
@@ -122,5 +127,49 @@ it.effect("with nothing in the closed generation, generation 2's positions are i
     const feed = yield* feedOf([], decided("a"));
     const all = yield* feed.read({ after: 0, take: 50 });
     expect(positions(all)).toEqual([1, 2]);
+  }),
+);
+
+// Phase 11 (D51): generation 1 stops being served only when the retirement check approves it.
+it.effect("after an allowed retirement, checkpoints keep their positions and no fact is delivered twice or missed", () =>
+  Effect.gen(function* () {
+    const closedFacts = decided("a");
+    const openFacts = [...decided("a"), ...decided("b")];
+    const served = yield* feedOf(closedFacts, openFacts);
+    // What the live host holds, read as the check reads it, and the consumer's checkpoint: Runs has
+    // read through claim a's republished decision (position 4), not claim b's.
+    const generations = [
+      yield* liveGenerationOf("PartyFacts")(host("PartyFacts", closedFacts)),
+      yield* liveGenerationOf("PartyFacts2")(host("PartyFacts2", openFacts)),
+    ];
+    const next = [StreamPin.cases.Retired.make({ stream: "PartyFacts", length: 2 }), ...A.drop(partyStreamPins, 1)];
+    const approved = yield* checkGenerationRetirement({
+      feed: { producer: "party", contract: "ClaimDecided" },
+      current: partyStreamPins,
+      next,
+      descriptors: [PartyDeployment, RunsDeployment],
+      generations,
+      checkpoints: [{ consumer: "runs", position: 4 }],
+    });
+    expect(approved).toEqual([{ stream: "PartyFacts", from: 0, through: 2 }]);
+    const retired = yield* feedOf(closedFacts, openFacts, partyFactsFeedFor(next));
+    // Every checkpoint at or past the retired generation reads exactly what it read before.
+    const pages = (feed: PartyFactsFeed["Service"]) => Effect.forEach([2, 3, 4, 5, 6], (after) => feed.read({ after, take: 50 }));
+    const servedPages = yield* pages(served);
+    const retiredPages = yield* pages(retired);
+    expect(retiredPages).toEqual(servedPages);
+    // The consumer goes on from its checkpoint: claim b's two versions, nothing it had already handled.
+    const before = yield* served.read({ after: 0, take: 4 });
+    const after = yield* retired.read({ after: 4, take: 50 });
+    expect(positions(after)).toEqual([5, 6]);
+    const handled = HashSet.fromIterable(A.map(before, inboxKey));
+    expect(A.filter(after, (fact) => HashSet.has(handled, inboxKey(fact)))).toEqual([]);
+    expect(HashSet.size(HashSet.union(handled, HashSet.fromIterable(A.map(after, inboxKey))))).toBe(4);
+    // A consumer starting now reads every fact version once, at generation 2's old positions.
+    const fresh = yield* retired.read({ after: 0, take: 50 });
+    expect(positions(fresh)).toEqual([3, 4, 5, 6]);
+    expect(HashSet.size(HashSet.fromIterable(A.map(fresh, inboxKey)))).toBe(4);
+    const slow = yield* oneByOne(retired, 0, []);
+    expect(slow).toEqual([3, 4, 5, 6]);
   }),
 );

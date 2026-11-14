@@ -1,9 +1,11 @@
 import { FactEnvelope } from "@proto/kernel/Fact";
+import { type LiveGeneration, StreamPin } from "@proto/kernel/PublishedStream";
 import type { ClaimDecidedV1, ClaimDecidedV2 } from "@proto/party-contract/Facts/ClaimDecided.fact";
 import { ClaimDecided } from "@proto/party-contract/Facts/ClaimDecided.fact";
 import { PartyFactsFeed } from "@proto/party-contract/Facts/PartyFacts.gateway";
 import { PartyFacts } from "@proto/party-model/Facts/PartyFacts.stream";
 import { PartyFacts2 } from "@proto/party-model/Facts/PartyFacts2.stream";
+import { partyStreamPins } from "@proto/party-model/Facts/StreamPins";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -18,13 +20,18 @@ const encodeV2 = S.encodeEffect(S.toCodecJson(ClaimDecided.versions[2]));
 /** An entry of either generation, as both streams hold it. */
 type Entry = { readonly event: ClaimDecidedV1 | ClaimDecidedV2; readonly envelope: { readonly seq: number } };
 
-/** The envelope of an entry served at `offset` plus its stream position. */
-const envelopeAt = (offset: number) => ({ event, envelope }: Entry) =>
+/** An entry's version and payload, as that version encodes it. */
+const encoded = (event: ClaimDecidedV1 | ClaimDecidedV2) =>
   Match.value(event).pipe(
     Match.tagsExhaustive({
       ClaimDecidedV1: (fact) => Effect.map(encodeV1(fact), (payload) => ({ version: 1, payload })),
       ClaimDecidedV2: (fact) => Effect.map(encodeV2(fact), (payload) => ({ version: 2, payload })),
     }),
+  );
+
+/** The envelope of an entry served at `offset` plus its stream position. */
+const envelopeAt = (offset: number) => ({ event, envelope }: Entry) =>
+  encoded(event).pipe(
     Effect.map(({ version, payload }) =>
       FactEnvelope.make({
         producer: ClaimDecided.producer,
@@ -37,10 +44,55 @@ const envelopeAt = (offset: number) => ({ event, envelope }: Entry) =>
     ),
   );
 
+/** A stream's page reader, as both generations offer it. */
+type Pages = { readonly list: (key: "claims", options: { readonly after: number; readonly take: number }) => Effect.Effect<{ readonly entries: ReadonlyArray<Entry> }> };
+
+const allOf = (stream: Pages, after: number, read: ReadonlyArray<Entry>): Effect.Effect<ReadonlyArray<Entry>> =>
+  Effect.flatMap(stream.list("claims", { after, take: 100 }), ({ entries }) =>
+    O.match(A.last(entries), {
+      onNone: () => Effect.succeed(read),
+      onSome: (last) => allOf(stream, last.envelope.seq, A.appendAll(read, entries)),
+    }),
+  );
+
 /**
- * Party's fact feed over its outbox, both generations in order: each entry
- * becomes an envelope with the producer, the contract, the version its tag
- * names, the stable fact id, its feed position and the encoded payload.
+ * A generation's entries as the retirement check reads them (D51): each at
+ * its position in the generation, with its fact id and the payload its
+ * version encodes, as the feed serves it.
+ *
+ * **Example** (Reading generation 2 for the check)
+ * ```ts
+ * import { liveGenerationOf } from "@proto/party-host/Facts/PartyFactsFeed.adapter";
+ * import { PartyFacts2 } from "@proto/party-model/Facts/PartyFacts2.stream";
+ * import * as Effect from "effect/Effect";
+ *
+ * const generation = Effect.gen(function* () {
+ *   const stream = yield* PartyFacts2;
+ *   return yield* liveGenerationOf("PartyFacts2")(stream);
+ * });
+ * ```
+ *
+ * @category adapters
+ * @since 0.0.0
+ */
+export const liveGenerationOf = (name: string) => (stream: Pages): Effect.Effect<LiveGeneration> =>
+  Effect.flatMap(allOf(stream, 0, []), (entries) =>
+    Effect.map(
+      Effect.forEach(entries, ({ event, envelope }) =>
+        Effect.map(encoded(event), ({ version, payload }) => ({ position: envelope.seq, factId: event.factId, version, payload })),
+      ),
+      (read) => ({ stream: name, entries: read }),
+    ),
+  ).pipe(
+    // The outbox holds only what Party encoded itself.
+    Effect.orDie,
+  );
+
+/**
+ * Party's fact feed over its outbox, under `pins`, its generations in order:
+ * each entry becomes an envelope with the producer, the contract, the version
+ * its tag names, the stable fact id, its feed position and the encoded
+ * payload.
  *
  * **Details**
  *
@@ -49,23 +101,38 @@ const envelopeAt = (offset: number) => ({ event, envelope }: Entry) =>
  * follows at that length plus its own position. A checkpoint taken before
  * phase 9 therefore still means the same place. Generation 2 republishes the
  * decisions generation 1 holds, under the same fact ids; consumers drop
- * those by producer, fact id and version.
+ * those by producer, fact id and version. Once generation 1's pin is retired
+ * (D51), the feed no longer serves it, and its pin's length places
+ * generation 2 where it was.
+ *
+ * **Example** (The feed with generation 1 retired)
+ * ```ts
+ * import { StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
+ * import { partyFactsFeedFor } from "@proto/party-host/Facts/PartyFactsFeed.adapter";
+ *
+ * const feed = partyFactsFeedFor([
+ *   StreamPin.cases.Retired.make({ stream: "PartyFacts", length: 2 }),
+ *   StreamPin.cases.Open.make({ stream: "PartyFacts2", writer: StreamWriter.make({ projection: "ClaimDecisions", generation: 0, sources: ["Claim"] }) }),
+ * ]);
+ * ```
  *
  * @category adapters
  * @since 0.0.0
  */
-export const PartyFactsFeedLive = Layer.effect(
+export const partyFactsFeedFor = (pins: ReadonlyArray<StreamPin>) => Layer.effect(
   PartyFactsFeed,
   Effect.gen(function* () {
     const closed = yield* PartyFacts;
     const open = yield* PartyFacts2;
+    const retired = A.findFirst(pins, (pin) => StreamPin.guards.Retired(pin) && pin.stream === "PartyFacts" ? O.some(pin.length) : O.none());
     return {
       read: Effect.fn("PartyFactsFeed.read")(
         function* ({ after, take }) {
-          const closedLength = yield* closed.peek("claims").pipe(
-            Effect.map(O.match({ onNone: () => 0, onSome: (entry) => entry.envelope.seq })),
-          );
-          const first = after < closedLength ? (yield* closed.list("claims", { after, take })).entries : [];
+          const closedLength = yield* O.match(retired, {
+            onSome: Effect.succeed,
+            onNone: () => closed.peek("claims").pipe(Effect.map(O.match({ onNone: () => 0, onSome: (entry) => entry.envelope.seq }))),
+          });
+          const first = O.isNone(retired) && after < closedLength ? (yield* closed.list("claims", { after, take })).entries : [];
           const rest = take - A.length(first);
           const second = rest > 0 ? (yield* open.list("claims", { after: Num.max(after - closedLength, 0), take: rest })).entries : [];
           const served = yield* Effect.forEach(first, envelopeAt(0));
@@ -78,3 +145,11 @@ export const PartyFactsFeedLive = Layer.effect(
     };
   }),
 );
+
+/**
+ * Party's fact feed under its pins (`partyStreamPins`).
+ *
+ * @category adapters
+ * @since 0.0.0
+ */
+export const PartyFactsFeedLive = partyFactsFeedFor(partyStreamPins);

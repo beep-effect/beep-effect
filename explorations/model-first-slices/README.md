@@ -17,12 +17,12 @@ system alongside people?
 
 ## Next Open Question
 
-Phase 11 is building D49 to D51 (name the runner's lock session so the commit fence is exact, a
-drain check that reads any publisher's backlog, the rule for retiring a closed stream generation)
-and will rerun the whole cluster suite on one final build. After it, two things are for the
-operator: the upstream set under the prototype's `notes/upstream/` (D52 holds it), and whether a
-pass on local patches counts toward the D16 gate. [`BRIEF.md`](./BRIEF.md) has not been confirmed
-in words.
+After phase 11 every conformance case passes on the Postgres swarm host on one build, and the
+commit fence's invariant held in six of six runs. The pass rests on six local patches, none sent
+upstream. Open for the operator: whether this pass meets the D16 graduation gate while D5's
+retirement of the repo-owned platform waits on upstream; the upstream set under the prototype's
+`notes/upstream/`, which the operator reads before anything goes out (D52); and the rule for a
+write sent to a frozen runner. [`BRIEF.md`](./BRIEF.md) has not been confirmed in words.
 
 ## Read This First
 
@@ -34,6 +34,11 @@ in words.
 
 ## Trail
 
+- 2026-11-14: phase 11 built D49 to D51 and reran the cluster suite on one build. Naming the
+  runner's pool makes the fence exact: the invariant held in six of six runs. The drain check reads
+  any publisher's backlog, the retirement check allows retiring generation 1 (not done), and a real
+  upgrade from phase 8's code passed through the drain check. Every case passes, on six local
+  patches. Notes in `research/19`.
 - 2026-11-14: D49 to D52 settled phase 10's open points: name the runner's lock session so the
   fence is exact, make the drain check generic, retire a closed generation by a checker rule, hold
   upstream until the fence is settled. Phase 11 launched.

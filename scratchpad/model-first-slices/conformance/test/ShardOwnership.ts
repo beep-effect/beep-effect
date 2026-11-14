@@ -66,6 +66,37 @@ export const shardHolders = Effect.map(
 /** The session holding one shard's lock, if any. */
 export const holderOf = (shard: number) => Effect.map(shardHolders, HashMap.get(lockOf(shard)));
 
+/**
+ * The name of the session holding one shard's lock, if any (phase 11): since patch 6 a runner's
+ * pool, and so its lock session, is named `effect-cluster:<host>:<port>` after the runner.
+ */
+export const holderNameOf = (shard: number) =>
+  Effect.map(
+    psql(
+      `SELECT a.application_name FROM pg_locks l JOIN pg_stat_activity a ON a.pid = l.pid WHERE l.locktype = 'advisory' AND l.classid = ${lockNamespace} AND l.objid = ${lockOf(shard)} AND l.objsubid = 2 AND l.granted`,
+    ),
+    (out) => O.filter(O.some(Str.trim(out)), Str.isNonEmpty),
+  );
+
+/** Each session holding locks in the cluster's namespace: its name, and how many shards it holds. */
+export const lockSessions = psql(
+  `SELECT a.application_name, l.pid, count(*) FROM pg_locks l JOIN pg_stat_activity a ON a.pid = l.pid WHERE l.locktype = 'advisory' AND l.classid = ${lockNamespace} AND l.objsubid = 2 AND l.granted GROUP BY 1, 2 ORDER BY 1, 2`,
+);
+
+/** The name each running runner container's pool carries: `effect-cluster:` and the address it registered with. */
+export const runnerNames = Effect.gen(function* () {
+  const registered = yield* psql("SELECT address FROM cluster_runners");
+  const addresses = A.filter(Str.split(registered, "\n"), Str.isNonEmpty);
+  const ids = yield* containersOf(runnerService);
+  return yield* Effect.forEach(ids, (id) =>
+    Effect.map(docker("inspect", "-f", "{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}", id), (out) => {
+      const ips = A.filter(Str.split(out, " "), Str.isNonEmpty);
+      const address = A.findFirst(addresses, (registeredAt) => A.some(ips, (ip) => pipe(registeredAt, Str.startsWith(`${ip}:`))));
+      return { id, name: O.map(address, (at) => `effect-cluster:${at}`) };
+    }),
+  );
+});
+
 /** The runner containers whose log since `since` (ISO) has `line`. */
 export const runnerLogging: {
   (since: string): (line: string) => ReturnType<typeof loggingOf>;
@@ -81,18 +112,3 @@ const loggingOf = (line: string, since: string) =>
 
 /** The runners table's health flags. */
 export const runnerHealth = psql("SELECT address, healthy FROM cluster_runners ORDER BY address");
-
-/** Sessions waiting on a lock, with what they run. */
-export const lockWaiters = psql(
-  "SELECT a.pid, left(a.query, 80) FROM pg_stat_activity a WHERE a.wait_event_type = 'Lock' AND a.datname = 'cluster'",
-);
-
-/** A runner's log lines since `since` (ISO) where the commit fence refused a commit (patch 4). */
-export const fenceRefusals: {
-  (since: string): (container: string) => ReturnType<typeof refusalsOf>;
-  (container: string, since: string): ReturnType<typeof refusalsOf>;
-} = dual(2, (container: string, since: string) => refusalsOf(container, since));
-const refusalsOf = (container: string, since: string) =>
-  Effect.map(docker("logs", "--since", since, container), (out) =>
-    A.filter(Str.split(out, "\n"), (line) => pipe(line, Str.includes("commit fenced"))),
-  );

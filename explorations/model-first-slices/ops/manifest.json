@@ -6,8 +6,9 @@
     "status": "active",
     "stage": "shape",
     "openQuestions": [
-      "IN PROGRESS: phase 11 builds D49 (name the runner's lock session so the fence is exact), D50 (generic drain reader) and D51 (generation retirement rule), then reruns the whole cluster suite on one final build.",
-      "Operator, after the rerun: read the upstream set under the prototype's notes/upstream/ and decide whether to send it (D52 holds it). Does a pass on local patches count toward the D16 gate?",
+      "Operator: every conformance case now passes on the Postgres swarm host, on six local patches (research/19). Does that meet the D16 graduation gate, with D5's retirement of the repo-owned platform waiting on upstream?",
+      "Operator: the upstream set under the prototype's notes/upstream/ (patches 01 to 03 and 06 to 08, write-ups 04, 05 and 09). D52: the operator reads it before anything goes out. None is posted.",
+      "Operator: a write sent to a runner while it is paused waits for that runner and its client gives up at 60 s; it is stored once after the resume. State that as the guarantee, or reroute?",
       "DEFERRED: browser session credentials, tenant and cache clearing (outside the D16 gate).",
       "Shape review: BRIEF.md and the artifact have not been confirmed in words by the operator."
     ],
