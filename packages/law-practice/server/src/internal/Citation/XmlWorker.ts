@@ -80,7 +80,13 @@ export const makeCitationXmlWorker = Effect.fn("Citation.makeXmlWorker")(functio
           CitationXmlWorkerJob.make({ width: prepared.storage.width, bytes: prepared.storage.bytes }),
           limits.processMessageBytes
         );
-      }),
+      }).pipe(
+        Effect.tap(() =>
+          invocation.lane.reserve.pipe(
+            Effect.mapError((error) => (error._tag === "CitationNativeLaneFailure" ? failure(error.reason) : error))
+          )
+        )
+      ),
       invocation.lane.start
     );
   });

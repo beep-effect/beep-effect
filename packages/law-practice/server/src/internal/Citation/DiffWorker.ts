@@ -20,6 +20,7 @@ import {
   preflightCitationDiffJob,
 } from "./DiffWorkerProtocol.ts";
 import { CitationDiffWorkerStartup, callCitationDiffRpc, encodeCitationDiffStartup } from "./DiffWorkerRpc.ts";
+import { citationNativeJobReservation } from "./NativeLane.ts";
 import {
   CitationNativeProcessOwnerSnapshot,
   citationNativeProcessCommand,
@@ -28,7 +29,7 @@ import {
 import { CitationPythonSliceLayout, makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { makeCitationRegexTiming } from "./RegexPolicy.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
-import type { CitationNativeStart } from "./NativeLane.ts";
+import type { CitationNativeLane, CitationNativeStart } from "./NativeLane.ts";
 import type { CitationNativeProcessRuntime, CitationOwnedNativeProcess } from "./NativeProcess.ts";
 import type { CitationPythonUnicodeFailure, CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 
@@ -133,6 +134,7 @@ export const makeCitationDiffWorker = Effect.fn("Citation.makeDiffWorker")(funct
   const evaluate = Effect.fn("Citation.evaluateDiffProcess")(
     (
       start: CitationNativeStart,
+      reserveNative: CitationNativeLane["Service"]["reserve"],
       reserve: (units: number) => Effect.Effect<void, CitationSafetyLimitExceeded>,
       beforeInput: unknown,
       afterInput: unknown,
@@ -147,7 +149,7 @@ export const makeCitationDiffWorker = Effect.fn("Citation.makeDiffWorker")(funct
               Effect.flatMap(track)
             ),
         },
-        Effect.succeed({ release: Effect.void, quarantine: Effect.void }),
+        reserveNative.pipe(citationNativeJobReservation(failure)),
         () => failure("invalid-runtime"),
         (operation) =>
           Effect.gen(function* () {

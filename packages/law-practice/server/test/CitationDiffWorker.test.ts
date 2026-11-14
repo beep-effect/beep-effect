@@ -52,7 +52,14 @@ const makeCitationDiffWorker = Effect.fnUntraced(function* (
     ...stage,
     evaluate: Effect.fnUntraced(function* (before: unknown, after: unknown, maximum?: unknown) {
       const invocation = yield* CitationInvocation;
-      return yield* stage.evaluate(invocation.lane.start, invocation.budget.reserve, before, after, maximum);
+      return yield* stage.evaluate(
+        invocation.lane.start,
+        invocation.lane.reserve,
+        invocation.budget.reserve,
+        before,
+        after,
+        maximum
+      );
     }),
   };
 });

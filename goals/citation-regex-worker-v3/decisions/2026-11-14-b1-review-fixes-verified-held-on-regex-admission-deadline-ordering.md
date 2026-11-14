@@ -1,8 +1,33 @@
 ---
-title: "B1 review fixes verified; held on regex admission deadline ordering"
+title: "B1 explicit reservation verified and in review"
 date: 2026-11-14
 kind: checkpoint
-reversal: "Return B1 to review after an owner ruling resolves pre-timer lane reservation and the targeted refusal proof passes."
+reversal: "Return B1 to in progress if review finds an ownership, admission, timer or counting regression."
 ---
 
-Round 1 fixes the masked Markup ownership transfer and replaces the fiber-reentrant cleaner lock with short Semaphore transitions plus logical yield depth. Forked/concurrent nested plans and real spawn-return interruption proofs pass. Both parent runners pass the four NativeLane proof files; focused worker, pipeline, invocation and engine files pass independently. One fresh CanonicalFullSpan run passes 12/12 in 57.22 seconds at launch load 37.51 / 25.35 / 21.73; ten calls retain 291 regex children, zero per-call installs/detaches/tokenizer/evaluator builds, ten physical lane owners and ten lane acquisitions; construction remains 16/1/1/26 installs/detach/tokenizer/evaluators with one physical owner and zero children or lane claims. Quick server/use-cases/lint-rules verifications, source/test typechecks, both requested laws, root Oxlint, Biome, docgen, Effect Vitest and Fallow audit vs origin/main pass. The request-authority lint now covers CitationNativeLane with 24 new fixtures. B1 returns to in progress, held on the separate audit finding: real regex native admission moved inside regexDeadline, so external contention can change the selected refusal. No contract expansion or weakening guard is implemented. Evidence: history/evidence/2026-11-14-b1-review-round-1.md. No push, PR, rebase or stash operation.
+Owner ruling 3 resolves the admission/deadline stop. B1 is in review locally on
+feat/citation-native-lane. Explicit lane.reserve runs at the base's regex, Diff
+and Xml acquisition points; standalone HTML keeps its own placement. Both review
+race fixes remain. No public cleaner contract, limit value or protocol change.
+
+The new contention proof passes 32/32 under each parent (Bun and Node), covering
+all four kinds with both real child runtimes: queue-full, queue-expiry, quarantine
+before reservation and job deadline after reservation. The regex queue proof
+observes that regexDeadline has not started. Reservation/start counts one claim;
+unused reservations return on Scope close. NativeLane passes 14/14 per parent,
+and the prior handover/interruption/cleaner/1-and-1/2-and-2 proofs remain green.
+
+The final full-span count replay passes 12/12 in 58.86 seconds, launch load
+24.72 / 19.30 / 18.52. Ten plain-text Bun calls remain 291 regex children and
+291 evaluations, zero per-call installs/detaches/tokenizer/evaluator builds, ten
+physical lane owners and ten lane unit claims. Construction remains metadata
+16, detach 1, tokenizer 1, evaluators 26, physical owner 1, children/lane claims 0.
+
+Both quick package verifications/typechecks, both laws, root Oxlint, Biome,
+docgen:local, Effect Vitest and Fallow audit vs origin/main pass. Fallow has zero
+introduced findings; Effect Vitest has zero introduced findings and no inventory
+churn. Detailed base/head source references, exact refusals, file receipts and
+proof limits are in history/evidence/2026-11-14-b1-reservation.md.
+
+No stop remains. No push, PR, rebase, subagent, shared-stash operation, whole suite
+or whole-package coverage. The owner publishes and directs the later base update.

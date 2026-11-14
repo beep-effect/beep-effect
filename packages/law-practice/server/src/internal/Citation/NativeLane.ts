@@ -86,6 +86,7 @@ export class CitationNativeLane extends Context.Service<
   CitationNativeLane,
   {
     readonly start: CitationNativeStart;
+    readonly reserve: Effect.Effect<void, CitationNativeLaneFailure | CitationSafetyLimitExceeded>;
     readonly ensureOpen: Effect.Effect<void, CitationNativeLaneFailure>;
     readonly snapshot: Effect.Effect<CitationNativeLaneSnapshot>;
     readonly yieldTo: <A, E, R>(
@@ -113,7 +114,7 @@ const makeRetirementNotification = () => {
     }).pipe(Effect.uninterruptible),
   };
 };
-/** Bind native ownership to the invocation Scope; no unit is claimed until start.
+/** Bind native ownership to the invocation Scope; the first reservation or start claims one unit.
  * @internal @category constructors @since 0.0.0
  */
 export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(function* (
@@ -188,15 +189,20 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
       Effect.mapError(() => CitationNativeLaneFailure.make({ reason: "closed" }))
     );
   });
+  const availableOwner = Effect.gen(function* () {
+    if (closed) return yield* CitationNativeLaneFailure.make({ reason: "closed" });
+    if (poisoned) return yield* CitationNativeLaneFailure.make({ reason: "quarantined" });
+    if (yieldDepth > 0) return yield* CitationNativeLaneFailure.make({ reason: "invalid-runtime" });
+    const owner = yield* ownerFor;
+    yield* owner.ensureOpen;
+    return owner;
+  });
+  const reserve = lock.withPermit(availableOwner.pipe(Effect.andThen(acquire), Effect.asVoid, Effect.uninterruptible));
   const start: CitationNativeStart = Effect.fn("Citation.startNativeLane")(function* (_kind, command) {
     return yield* lock.withPermit(
       Effect.uninterruptible(
         Effect.gen(function* () {
-          if (closed) return yield* CitationNativeLaneFailure.make({ reason: "closed" });
-          if (poisoned) return yield* CitationNativeLaneFailure.make({ reason: "quarantined" });
-          if (yieldDepth > 0) return yield* CitationNativeLaneFailure.make({ reason: "invalid-runtime" });
-          const owner = yield* ownerFor;
-          yield* owner.ensureOpen;
+          const owner = yield* availableOwner;
           yield* retire;
           const lease = yield* acquire();
           returning = false;
@@ -243,6 +249,7 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
   });
   return CitationNativeLane.of({
     start,
+    reserve,
     ensureOpen: Effect.gen(function* () {
       if (closed) return yield* CitationNativeLaneFailure.make({ reason: "closed" });
       if (poisoned) return yield* CitationNativeLaneFailure.make({ reason: "quarantined" });
@@ -285,6 +292,29 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
     }),
   });
 });
+
+/** Adapt a real lane reservation to the existing per-job ownership supervisor.
+ *
+ * **Details**
+ * Admission runs when the supervisor's preparation callback acquires. Its ticket
+ * never returns capacity: only lane yield or request-Scope closure can do that.
+ *
+ * **Example** (Keeping capacity with the invocation)
+ * ```ts
+ * import { CitationNativeLane, citationNativeJobReservation } from "@beep/law-practice-server/internal/Citation/NativeLane";
+ * import * as Effect from "effect/Effect";
+ * const reservation = Effect.flatMap(CitationNativeLane, (lane) =>
+ *   lane.reserve.pipe(citationNativeJobReservation((reason) => ({ reason }))));
+ * ```
+ * @internal @category operations @since 0.0.0
+ */
+export const citationNativeJobReservation =
+  <E>(failure: (reason: CitationNativeLaneFailure["reason"]) => E) =>
+  (reserve: CitationNativeLane["Service"]["reserve"]) =>
+    reserve.pipe(
+      Effect.mapError((error) => (error._tag === "CitationNativeLaneFailure" ? failure(error.reason) : error)),
+      Effect.as({ release: Effect.void, quarantine: Effect.void })
+    );
 
 /** Run one protocol-v2 job and confirm retirement before returning its result.
  * @internal @category operations @since 0.0.0

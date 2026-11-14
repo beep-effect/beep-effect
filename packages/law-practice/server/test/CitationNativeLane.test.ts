@@ -64,6 +64,12 @@ it.layer(process.versions.bun === undefined ? citationNativeNodeTestPlatform : c
         );
         const empty = yield* admission.snapshot;
         expect(empty.active).toBe(0);
+        yield* lane.reserve;
+        yield* lane.reserve;
+        const reserved = yield* lane.snapshot;
+        expect(reserved).toMatchObject({ started: 0, confirmed: 0, acquired: true, unitsAcquired: 1 });
+        const beforeSpawn = yield* observed.snapshot;
+        expect(beforeSpawn).toEqual({ spawned: 0, confirmed: 0 });
         const first = yield* lane.start("regex", cmd);
         yield* first.child;
         const second = yield* lane.start("diff", cmd);
@@ -118,6 +124,8 @@ it.layer(process.versions.bun === undefined ? citationNativeNodeTestPlatform : c
         yield* lane.yieldTo(lane.yieldTo(child));
         const invalid = yield* lane.yieldTo(lane.start("regex", cmd)).pipe(Effect.flip);
         expect(invalid).toMatchObject({ reason: "invalid-runtime" });
+        const invalidReservation = yield* lane.yieldTo(lane.reserve).pipe(Effect.flip);
+        expect(invalidReservation).toMatchObject({ reason: "invalid-runtime" });
         const receipt = yield* lane.snapshot;
         expect(receipt).toMatchObject({ started: 0, confirmed: 0, unitsAcquired: 0 });
         const counts = yield* observed.snapshot;
@@ -182,6 +190,27 @@ it.layer(process.versions.bun === undefined ? citationNativeNodeTestPlatform : c
         expect(counts).toEqual({ spawned: 2, confirmed: 2 });
         const final = yield* admission.snapshot;
         expect(final).toMatchObject({ active: 0, quarantined: 0, queued: 0 });
+      })
+    );
+    it.effect(`returns an unused ${kind} reservation when its request Scope closes`, () =>
+      Effect.gen(function* () {
+        const { limits } = yield* defaultCitationEnginePolicy;
+        const admission = yield* makeCitationNativeProcessAdmission(limits);
+        const observed = yield* makeCitationObservedSpawner();
+        const scope = yield* Effect.acquireRelease(Scope.make(), (scope) => Scope.close(scope, Exit.void));
+        const lane = yield* makeCitationNativeLane(limits, "extract").pipe(
+          Effect.provideService(CitationNativeProcessAdmission, admission),
+          Effect.provideService(ChildProcessSpawner, observed.spawner),
+          Effect.provideService(Scope.Scope, scope)
+        );
+        yield* lane.reserve;
+        const held = yield* admission.snapshot;
+        expect(held.active).toBe(1);
+        yield* Scope.close(scope, Exit.void);
+        const returned = yield* admission.snapshot;
+        expect(returned).toMatchObject({ active: 0, queued: 0, quarantined: 0 });
+        const counts = yield* observed.snapshot;
+        expect(counts).toEqual({ spawned: 0, confirmed: 0 });
       })
     );
     it.effect(`releases the unused ${kind} unit when quarantine appears after acquisition`, () =>

@@ -123,6 +123,7 @@ export const installCitationHtmlGeometry = Effect.fn("Citation.installHtmlGeomet
     const invocation = yield* CitationInvocation;
     const forwardSteps = yield* diff.evaluate(
       invocation.lane.start,
+      invocation.lane.reserve,
       invocation.budget.reserve,
       plain.value.storage,
       placeholder.value.storage
@@ -145,6 +146,7 @@ export const installCitationHtmlGeometry = Effect.fn("Citation.installHtmlGeomet
     const invocation = yield* CitationInvocation;
     const backwardSteps = yield* prepared.diff.evaluate(
       invocation.lane.start,
+      invocation.lane.reserve,
       invocation.budget.reserve,
       prepared.source.value.storage,
       prepared.plain.value.storage

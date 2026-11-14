@@ -171,11 +171,48 @@ The explicit native start result carries onRetired registration. The existing ph
 
 Reverse: Remove the notification only if every owner-scope and late-retirement path settles the same private state.
 
-### Stop at regex admission moving inside the native job deadline, 2026-11-14
+### Reserve native lanes at the base admission points, 2026-11-14
 
-Review round 1 fixes the two MAJOR findings independently. Audit 3(b)-(c) finds a binding-design conflict: base 0e2b4c42e6d RegexWorker.ts:112,119 claims its real native lease in preparation, before the regexDeadline at 129-143. Head RegexWorker.ts:126,136 supplies a no-op lease, and actual lane acquisition occurs at NativeLane.ts:201 from RegexWorker.ts:147, inside regexDeadline at 146-160. NativeAdmission.ts:159-190 still permits external cleaner/Recognizer contention and waits under queueDeadline. Under that contention the new regex timer can win first, changing the visible CitationSafetyLimitExceeded limit. No claim of identical refusal selection is justified. STOP at this site: the binding start-only lazy-acquisition contract cannot preserve the old pre-timer admission point. Proposed reshape: an explicit lane reserve operation, serialized and masked with start/yield transitions and registered request finalization, called at the existing preparation acquisition callback. It claims no second unit, does not spawn, and leaves OS spawn/startup/RPC under the original regexDeadline. Keep all existing queue, quarantine, deadline and retirement guards. Do not implement this contract expansion without an owner ruling. Diff retains the same stage timer; Xml and HTML retain their Markup stage timer. Cleaner yield retirement is newly inside enclosing cleaner/invocation timers and its existing cleanupDeadline; normal built-in order has no occupant at that point. The two review fixes and independent authority lint extension proceed with focused checks; B1 remains held on this audit conflict.
+Owner ruling 3 resolves this stop and authorizes CitationNativeLane.reserve,
+including Diff. Reservation is the first native need: it claims the invocation's
+unit without spawning. The request finalizer is already installed. It uses the
+same short Semaphore and masked acquisition as start, and the same closed,
+quarantined and yielding guards. A held unit is reused; reserve followed by start
+counts one successful claim. Unused reservations return on Scope closure.
 
-Reverse: Authorize an explicit pre-timer lane reservation, or explicitly accept changed external-contention refusal ordering.
+Regex reserves through the existing preparation acquisition callback, before
+regexDeadline. Diff takes an explicit reservation effect alongside its explicit
+starter and reserves at the existing preflight acquisition point, before payload
+copying. Xml reserves after RPC preparation, at the old Markup acquisition point
+inside annotateDeadline. Markup and Diff perform no request-authority lookup.
+Standalone HTML keeps its own admission inside cleanDeadline at the existing
+point after preparation. No public CitationCleaner contract changes.
+
+The old no-op preparation acquisition is removed. The shared job supervisor's
+adapter now executes actual lane.reserve there. Its per-job bookkeeping ticket
+has non-releasing hooks because request Scope/yield owns the real native unit;
+it neither claims another unit nor impersonates a standalone native lease.
+
+Handover retirement remains inside start and its caller's job/stage timer. Under
+built-in protocol v2 each job confirms retirement before returning, so the next
+start can call retire on the retained previous record, but that call observes its
+already successful retirement task. There is no live-child handover retirement
+on the serial built-in v2 path. Direct lane clients can start with a live occupant;
+that guarded handover remains required and proved with real children. An
+unconfirmed job retirement fails the call and poisons the lane; it never becomes
+a built-in path to another spawn.
+
+Real Bun/Node child proofs cover queue-full and queue expiry for regex, Diff,
+Xml and standalone HTML; global quarantine before reservation starts no job
+child; a successful reservation followed by the captured job timer confirms
+physical death and retains/returns capacity according to the boundary. The regex
+queue proof observes that regexDeadline has not even started while admission is
+queued. The direct-stage deadline fixture suppresses only the enclosing invocation
+timer of equal duration to isolate the worker's captured timer, leaving production
+timer placement unchanged. Source references, exact refusals and runtime receipts
+are in history/evidence/2026-11-14-b1-reservation.md.
+
+Reverse: Revert the reservation wiring only with an owner-approved replacement that preserves preflight, queue, timer and quarantine precedence.
 
 ### Pass native starters explicitly across closed cleaner boundaries, 2026-11-14
 
