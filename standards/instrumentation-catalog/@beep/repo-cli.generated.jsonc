@@ -2134,7 +2134,7 @@
     {"name":"JSDocDocumentationInventory.build","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"JSDocDocumentationInventory.resolveOptions","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"JSDocDocumentationInventory.write","owner":"@beep/repo-cli","family":"tooling","conforms":true},
-    {"name":"JSDocDocumentationInventory.writeMirror","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"JSDocDocumentationInventory.writeOutput","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"JSDocRatchet.enforceComparison","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"JSDocRatchet.enforceZeroLegacy","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"JSDocRatchet.formatBaseline","owner":"@beep/repo-cli","family":"tooling","conforms":true},

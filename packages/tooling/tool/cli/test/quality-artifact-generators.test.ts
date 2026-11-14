@@ -425,6 +425,33 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
   );
 
   it.effect(
+    "creates the missing parent directory of each output, Markdown included",
+    Effect.fnUntraced(function* () {
+      const repoRoot = yield* acquireFixtureRepo();
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      // Separate, absent directories: a fresh clone has no ignored .beep/ci/,
+      // and the Markdown report may live apart from the JSONC inventory.
+      const outputJsonPath = path.join(repoRoot, "fresh", "json", "jsdoc.inventory.jsonc");
+      const outputMarkdownPath = path.join(repoRoot, "fresh", "markdown", "nested", "jsdoc.inventory.md");
+
+      yield* writeJSDocDocumentationInventory(
+        JSDocDocumentationInventoryOptions.make({
+          rootDir: repoRoot,
+          outputJsonPath,
+          outputMarkdownPath,
+          generatedAt: fixedGeneratedAt,
+        })
+      );
+
+      const written = yield* Effect.forEach([outputJsonPath, outputMarkdownPath], (file) => fs.exists(file));
+      expect(written).toEqual([true, true]);
+      const markdown = yield* fs.readFileString(outputMarkdownPath);
+      expect(markdown).toContain("# JSDoc Documentation Compliance Inventory");
+    })
+  );
+
+  it.effect(
     "mirrors the JSDoc inventory into the CI output paths from the same scan",
     Effect.fnUntraced(function* () {
       const repoRoot = yield* acquireFixtureRepo();
