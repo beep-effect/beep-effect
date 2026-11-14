@@ -7,10 +7,25 @@
  * The delete-package path, its registration-geometry probes and the identity
  * registry rewrite all search source text for one package. A plain substring
  * search lets `@beep/schema` match `@beep/schema-org` and `$SchemaId` match
- * `$SchemaIdentityId`, so this module owns the token rule once. A path has one
- * more collision: a short root path such as `deploy` also ends another
- * workspace's path (`packages/tooling/deploy/x`), so path searches skip the
- * occurrences that a sibling workspace path accounts for.
+ * `$SchemaIdentityId`, so this module owns the token rule once.
+ *
+ * A path has one more collision: a short root path such as `deploy` also
+ * ends another workspace's path (`packages/tooling/deploy/x`).
+ * {@link mentionsRepoPath} skips the occurrences that such a sibling path
+ * accounts for, using the prefixes {@link shadowPrefixesFor} derives from the
+ * workspace list. In delete-package it covers the target's package-path needle
+ * everywhere the target is searched for: the dependents scan (workspace files,
+ * root scripts and the root policy files) and the doctor surfaces that search
+ * for it (`derived-rebuild`, `authored-reference`, `historical-record`), so
+ * the plan, `--check` and the post-apply doctor agree with the dependents
+ * scan. Package names, identity accessors, membership keys and the quoted
+ * workspace literal stay on {@link mentionsToken}.
+ *
+ * **Gotchas**
+ *
+ * A bare one-segment path is still a plain word: a field value such as
+ * `"kind": "deploy"` or prose such as "a generic deploy" matches `deploy`, and no
+ * token rule can tell them from `"workspaces": ["deploy"]`.
  *
  * @internal
  * @packageDocumentation

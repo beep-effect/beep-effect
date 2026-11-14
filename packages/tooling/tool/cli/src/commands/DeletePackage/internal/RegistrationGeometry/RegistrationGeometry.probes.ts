@@ -101,14 +101,40 @@ const collectFiles = Effect.fn("RegistrationGeometry.collectFiles")(function* (
   return A.sort(walk2, Order.String);
 });
 
+// One matcher for every probe that searches for a target: the target's own path needle skips the
+// occurrences a sibling workspace path accounts for (`packages/tooling/deploy/x` does not name
+// `deploy`); every other needle (package name, identity accessor, membership key) is a whole token.
+// The dependents scan, the plan, `--check` and the post-apply doctor share it, so they agree.
+type NeedleMatcher = (needles: ReadonlyArray<string>) => (text: string) => boolean;
+
+const needleMatcherFor =
+  (target: RegistrationTarget, workspacePaths: ReadonlyArray<string>): NeedleMatcher =>
+  (needles) => {
+    const shadowPrefixes = shadowPrefixesFor(target.packagePath, workspacePaths);
+    const matchers = A.map(needles, (needle) =>
+      Str.equivalence(needle, target.packagePath) ? mentionsRepoPath(needle, shadowPrefixes) : mentionsToken(needle)
+    );
+    return (text) => A.some(matchers, (matches) => matches(text));
+  };
+
+// A repository with no root manifest declares no workspaces, so no sibling path can shadow the
+// target; any other discovery failure propagates.
+const workspacePathsAt = Effect.fn("RegistrationGeometry.workspacePathsAt")(function* (repoRoot: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const hasRootManifest = yield* fs.exists(path.join(repoRoot, "package.json")).pipe(Effect.orElseSucceed(thunkFalse));
+  if (!hasRootManifest) return A.empty<string>();
+  const directories = yield* workspaceDirectories(repoRoot);
+  return A.map(A.fromIterable(directories), ([, directory]) => normalizePath(path.relative(repoRoot, directory)));
+});
+
 const existingEvidence = Effect.fn("RegistrationGeometry.existingEvidence")(function* (
   repoRoot: string,
   relativeFiles: ReadonlyArray<string>,
-  needles: ReadonlyArray<string>
+  mentionsNeedle: (text: string) => boolean
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const mentionsNeedle = mentionsAnyToken(needles);
   let evidence = A.empty<string>();
 
   for (const relativeFile of relativeFiles) {
@@ -130,7 +156,8 @@ const observation = (
 const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function* (
   repoRoot: string,
   target: RegistrationTarget,
-  surface: RegistrationSurface
+  surface: RegistrationSurface,
+  matchNeedles: NeedleMatcher
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -141,23 +168,35 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
       return observation(owned.id, exists ? "residue" : "clean", exists ? [owned.root] : []);
     }),
     "workspace-literal": Effect.fn(function* (workspace) {
-      const evidence = yield* existingEvidence(repoRoot, [workspace.file], [`"${workspace.workspacePath}"`]);
+      const evidence = yield* existingEvidence(
+        repoRoot,
+        [workspace.file],
+        mentionsAnyToken([`"${workspace.workspacePath}"`])
+      );
       return observation(workspace.id, A.isReadonlyArrayNonEmpty(evidence) ? "residue" : "clean", evidence);
     }),
     "identity-segment": Effect.fn(function* (identity) {
       const registryEvidence = yield* existingEvidence(
         repoRoot,
         [identity.registryFile],
-        [`"${identity.slug}"`, identity.accessor]
+        mentionsAnyToken([`"${identity.slug}"`, identity.accessor])
       );
       // The deletion removes the accessor's shape-test rows too; any mention
       // left in that file names an export that no longer exists.
-      const shapeTestEvidence = yield* existingEvidence(repoRoot, [IDENTITY_SHAPE_TEST_PATH], [identity.accessor]);
+      const shapeTestEvidence = yield* existingEvidence(
+        repoRoot,
+        [IDENTITY_SHAPE_TEST_PATH],
+        mentionsToken(identity.accessor)
+      );
       const evidence = A.appendAll(registryEvidence, shapeTestEvidence);
       return observation(identity.id, A.isReadonlyArrayNonEmpty(evidence) ? "residue" : "clean", evidence);
     }),
     "derived-rebuild": Effect.fn(function* (derived) {
-      const evidence = yield* existingEvidence(repoRoot, derived.outputs, [target.packageName, target.packagePath]);
+      const evidence = yield* existingEvidence(
+        repoRoot,
+        derived.outputs,
+        matchNeedles([target.packageName, target.packagePath])
+      );
       // Labs are excluded from the root TS solution: a labs target referenced by
       // tsconfig.packages.json is registration residue, not rebuildable drift.
       const labsRootReference =
@@ -166,12 +205,12 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
       return observation(derived.id, A.isReadonlyArrayNonEmpty(evidence) ? dirtyStatus : "clean", evidence);
     }),
     "generated-inventory": Effect.fn(function* (inventory) {
-      const evidence = yield* existingEvidence(repoRoot, inventory.outputs, [inventory.membershipKey]);
+      const evidence = yield* existingEvidence(repoRoot, inventory.outputs, mentionsToken(inventory.membershipKey));
       return observation(inventory.id, A.isReadonlyArrayNonEmpty(evidence) ? "residue" : "clean", evidence);
     }),
     "authored-reference": Effect.fn(function* (authored) {
       const files = yield* collectFiles(repoRoot, TEXT_SUFFIXES);
-      const mentionsNeedle = mentionsAnyToken(authored.needles);
+      const mentionsNeedle = matchNeedles(authored.needles);
       let evidence = A.empty<string>();
       for (const file of files) {
         const relative = normalizePath(path.relative(repoRoot, file));
@@ -251,7 +290,7 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
     },
     "historical-record": Effect.fn(function* (historical) {
       const files = yield* collectFiles(repoRoot, [".md", ".json", ".jsonc", ".tsv"]);
-      const mentionsNeedle = mentionsAnyToken(historical.needles);
+      const mentionsNeedle = matchNeedles(historical.needles);
       let evidence = A.empty<string>();
       for (const file of files) {
         const relative = normalizePath(path.relative(repoRoot, file));
@@ -306,9 +345,13 @@ export const inspectTargetAtRoot = Effect.fn("RegistrationGeometry.inspectTarget
   repoRoot: string,
   target: RegistrationTarget
 ) {
-  return yield* Effect.forEach(surfacesForTarget(target), (surface) => inspectSurface(repoRoot, target, surface), {
-    concurrency: 8,
-  });
+  const workspacePaths = yield* workspacePathsAt(repoRoot);
+  const matchNeedles = needleMatcherFor(target, workspacePaths);
+  return yield* Effect.forEach(
+    surfacesForTarget(target),
+    (surface) => inspectSurface(repoRoot, target, surface, matchNeedles),
+    { concurrency: 8 }
+  );
 });
 
 const addReverseEdge = (
@@ -493,14 +536,6 @@ const collectWorkspaceEdges = Effect.fn("RegistrationGeometry.collectWorkspaceEd
   );
 });
 
-// The target is mentioned by its package name, or by its path anywhere except inside another
-// workspace's path that ends in it (`packages/tooling/deploy/x` does not name `deploy`).
-const targetMention = (target: RegistrationTarget, workspacePaths: ReadonlyArray<string>) => {
-  const mentionsName = mentionsToken(target.packageName);
-  const mentionsPath = mentionsRepoPath(target.packagePath, shadowPrefixesFor(target.packagePath, workspacePaths));
-  return (text: string): boolean => mentionsName(text) || mentionsPath(text);
-};
-
 const rootScriptHits = (
   scripts: Readonly<Record<string, string>>,
   mentionsTarget: (text: string) => boolean
@@ -664,10 +699,10 @@ export const dependentsOfAtRoot = Effect.fn("RegistrationGeometry.dependentsOfAt
   const project = new Project({ skipAddingFilesFromTsConfig: true });
   const identitySurface = A.findFirst(surfacesForTarget(target), RegistrationSurface.guards["identity-segment"]);
   const identityAccessor = O.map(identitySurface, (surface) => surface.accessor);
-  const mentionsTarget = targetMention(
+  const mentionsTarget = needleMatcherFor(
     target,
     A.map(workspaces, ([, directory]) => normalizePath(path.relative(repoRoot, directory)))
-  );
+  )([target.packageName, target.packagePath]);
   const mentionsAccessor: (text: string) => boolean = O.match(identityAccessor, {
     onNone: () => thunkFalse,
     onSome: mentionsToken,

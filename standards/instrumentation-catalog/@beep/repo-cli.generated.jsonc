@@ -3101,6 +3101,7 @@
     {"name":"RegistrationGeometry.inspectTargetAtRoot","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"RegistrationGeometry.makeService","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"RegistrationGeometry.rootPolicyFileHits","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"RegistrationGeometry.workspacePathsAt","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"RegistrationGeometryService.apply","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"RegistrationGeometryService.dependentsOf","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"RegistrationGeometryService.inspect","owner":"@beep/repo-cli","family":"tooling","conforms":true},
