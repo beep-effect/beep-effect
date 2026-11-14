@@ -1,0 +1,15 @@
+{
+  "previous": "04badd83193d15cbfc4f587d9a8467ad7158e9ab264796f41bdb3edadb5ff785",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p2-vercel)",
+    "reason": "Record the new package @beep/alchemy-vercel with its generated scripts block, and the root subject for turbo.json input-list regeneration inherited from main (#3263, #3271, #3274, #3276); no command, output or environment changes, no qualification granted.",
+    "basis": {
+      "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-alchemy-vercel.md",
+      "sha256": "4588513e9901e25c05dcd590539e60c04b5bfd02b18e2d86872f1689949fbc8b"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//", "@beep/alchemy-vercel"]
+}
