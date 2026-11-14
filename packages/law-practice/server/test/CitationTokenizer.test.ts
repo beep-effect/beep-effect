@@ -3,8 +3,15 @@ import {
   CitationAdmissionSnapshot,
   CitationOperationAdmission,
 } from "@beep/law-practice-server/internal/Citation/Admission";
-import { makeCitationExtractorOrdering } from "@beep/law-practice-server/internal/Citation/ExtractorOrdering";
-import { makeCitationTokenizer } from "@beep/law-practice-server/internal/Citation/Tokenizer";
+import {
+  CitationExtractorOrderingBinding,
+  makeCitationExtractorOrdering as makeOwnedCitationExtractorOrdering,
+} from "@beep/law-practice-server/internal/Citation/ExtractorOrdering";
+import {
+  CitationTokenizerConfiguration,
+  CitationTokenizerExtractor,
+  makeCitationTokenizer as makeOwnedCitationTokenizer,
+} from "@beep/law-practice-server/internal/Citation/Tokenizer";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -12,6 +19,12 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Order from "effect/Order";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import {
+  installCitationOwnedTestStage,
+  ownCitationTestConfiguration,
+} from "./CitationConfigurationOwnership.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import {
   makeCitationTestScaffoldBinding,
@@ -26,6 +39,20 @@ import {
   setupCitationTokenizer,
 } from "./CitationTokenizer.fixtures.ts";
 import { loadCitationTokenObjectsControls } from "./CitationTokenObjects.fixtures.ts";
+
+// Own the fixture configuration through the engine boundary before the direct install.
+const makeCitationExtractorOrdering = Effect.fnUntraced(function* (
+  a0: Parameters<typeof makeOwnedCitationExtractorOrdering>[0],
+  a1: unknown
+) {
+  const o1 = yield* ownCitationTestConfiguration(S.Array(CitationExtractorOrderingBinding), a1);
+  return yield* makeOwnedCitationExtractorOrdering(a0, o1);
+});
+
+const makeCitationTokenizer = installCitationOwnedTestStage({
+  schema: CitationTokenizerConfiguration,
+  install: makeOwnedCitationTokenizer,
+});
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned tokenizer composition", (it) => {
   it.effect("uses invocation admission instead of a closed install-time view", () =>
@@ -98,19 +125,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
   it.effect("rejects malformed policy, bindings and source without native work", () =>
     Effect.gen(function* () {
       const controls = yield* loadCitationTokenizerControls();
-      const runtime = yield* setupCitationMetadataRuntime("bun");
-      const invalidPolicy = yield* makeCitationTokenizer({}, runtime.runtime, controls.configuration).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding({}).pipe(
-            Effect.map((bind) => ({ ...stage, port: { ...stage.port, tokenize: bind(stage.port.tokenize) } }))
-          )
-        ),
-        Effect.provideContext(runtime.provided),
-        Effect.flip
-      );
-      expect(invalidPolicy).toMatchObject({ reason: "invalid-configuration" });
-      const invalidBindings = yield* setupCitationTokenizer("bun", {}).pipe(Effect.flip);
-      expect(invalidBindings).toMatchObject({ reason: "invalid-configuration" });
       const setup = yield* setupCitationTokenizer("bun", controls.configuration);
       for (const source of [{}, { width: 2, bytes: new Uint8Array([1]) }, { width: 3, bytes: new Uint8Array() }]) {
         const failed = yield* setup.tokenizer.port.tokenize(source).pipe(Effect.flip);
@@ -229,18 +243,32 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
       { timeout: 30000 }
     );
   }
-  it.effect("rejects incoherent or duplicate extractor configuration before execution", () =>
+  // The ExtractorIdentity rule ties ordering, recipe and descriptor identity together.
+  it.effect("refuses an extractor whose ordering, recipe and descriptor identities disagree", () =>
     Effect.gen(function* () {
       const controls = yield* loadCitationTokenizerControls();
       const first = A.getUnsafe(controls.configuration.extractors, 0);
-      const incoherent = { ...first, recipe: { ...first.recipe, id: 999 } };
-      for (const configuration of [
-        { ...controls.configuration, extractors: [incoherent] },
-        { ...controls.configuration, extractors: [first, first] },
+      const isExtractor = S.is(CitationTokenizerExtractor);
+      expect(isExtractor(first)).toBe(true);
+      const recipe = first.recipe;
+      // Each mismatch is shape-valid on its own, so only the cross-field rule refuses it.
+      for (const row of [
+        { ...first, recipe: { ...recipe, id: recipe.id + 1 } },
+        { ...first, descriptor: { ...first.descriptor, patternSha256: Str.repeat(64)("0") } },
       ]) {
-        const failure = yield* setupCitationTokenizer("bun", configuration).pipe(Effect.flip);
-        expect(failure).toMatchObject({ reason: "invalid-configuration" });
+        expect(isExtractor(row)).toBe(false);
       }
+    })
+  );
+  it.effect("rejects duplicate extractor configuration before execution", () =>
+    Effect.gen(function* () {
+      const controls = yield* loadCitationTokenizerControls();
+      const first = A.getUnsafe(controls.configuration.extractors, 0);
+      const failure = yield* setupCitationTokenizer("bun", {
+        ...controls.configuration,
+        extractors: [first, first],
+      }).pipe(Effect.flip);
+      expect(failure).toMatchObject({ reason: "invalid-configuration" });
     })
   );
   it.effect(

@@ -2570,6 +2570,10 @@
       "@beep/infra-cost-controls/*": [
         "./packages/tooling/infra/cost-controls/src/*"
       ],
+      "@beep/infra-hosts": [
+        "./packages/tooling/infra/infra-hosts/src/index.ts"
+      ],
+      "@beep/infra-hosts/*": ["./packages/tooling/infra/infra-hosts/src/*"],
       "@beep/infra-github": ["./packages/tooling/infra/github/src/index.ts"],
       "@beep/infra-github/*": ["./packages/tooling/infra/github/src/*"]
     }

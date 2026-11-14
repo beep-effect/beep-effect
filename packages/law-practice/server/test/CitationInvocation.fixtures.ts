@@ -44,7 +44,7 @@ const CitationTestScaffoldAdmission = Context.Reference<O.Option<CitationOperati
 /** Open a request for a direct stage, or an untimed test scaffold around several independently bound calls. */
 export const withCitationTestInvocation = Effect.fn("CitationInvocationTest.run")(function* <A, E, R>(
   body: Effect.Effect<A, E, R | CitationInvocation>,
-  policy?: unknown,
+  policy?: CitationEngineLimits,
   environment?: InvocationTestEnvironment
 ) {
   const defaults = yield* defaultCitationEnginePolicy.pipe(Effect.orDie);
@@ -129,7 +129,7 @@ export class CitationTestBudgetObservation extends Context.Service<
 
 /** Keep fixture receipts pointed at the budget created by openCitationInvocation. */
 export const makeCitationTestBudgetObservation = Effect.fn("CitationInvocationTest.observeBudget")(function* (
-  policy: unknown
+  policy: CitationEngineLimits
 ) {
   const initial = yield* makeCitationTextBudget(policy);
   const current = yield* Ref.make(initial);

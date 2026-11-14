@@ -427,6 +427,7 @@
         "packages/shared/use-cases/package.json",
         "packages/tooling/infra/cost-controls/package.json",
         "packages/tooling/infra/github/package.json",
+        "packages/tooling/infra/infra-hosts/package.json",
         "packages/tooling/infra/turbo-cache/package.json",
         "packages/tooling/library/agent-memory-store/package.json",
         "packages/tooling/library/ai-metrics/package.json",

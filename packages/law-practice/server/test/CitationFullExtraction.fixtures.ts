@@ -1,10 +1,14 @@
 /** Original full-citation constructor, selected class and final model state.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEditionRef } from "@beep/law-practice-domain/values";
 import { projectCitationExtractionSelection } from "@beep/law-practice-server/internal/Citation/ExtractionSelection";
-import { makeCitationFullExtraction } from "@beep/law-practice-server/internal/Citation/FullExtraction";
+import {
+  CitationFullExtractionConfiguration,
+  makeCitationFullExtraction as makeOwnedCitationFullExtraction,
+} from "@beep/law-practice-server/internal/Citation/FullExtraction";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -12,6 +16,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { readCitationCaseMetadataConfiguration } from "./CitationCaseMetadata.fixtures.ts";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationParallelAssertion } from "./CitationExtractionSelection.fixtures.ts";
 import { installCitationFrozenMetadataRuntime } from "./CitationFrozenEditions.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
@@ -26,6 +31,11 @@ import {
 } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationFullExtractionOutcome } from "@beep/law-practice-server/internal/Citation/FullExtraction";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+const makeCitationFullExtraction = installCitationOwnedTestStage({
+  schema: CitationFullExtractionConfiguration,
+  install: makeOwnedCitationFullExtraction,
+});
 
 const $I = $LawPracticeServerId.create("test/CitationFullExtraction");
 const Corpus = S.fromJsonString(

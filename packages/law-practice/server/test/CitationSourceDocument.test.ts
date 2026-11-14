@@ -2,9 +2,10 @@ import { ResolvedSourceText, SourceTextResolver } from "@beep/file-processing/So
 import { CitationDocument, citationAuthorityMentionIds } from "@beep/law-practice-domain/values";
 import { restoreCitationDocument } from "@beep/law-practice-server/internal/Citation/Document";
 import {
-  makeCitationSourceDocument,
-  makeCitationSourcePairDocument,
+  makeCitationSourceDocument as makeOwnedCitationSourceDocument,
+  makeCitationSourcePairDocument as makeOwnedCitationSourcePairDocument,
 } from "@beep/law-practice-server/internal/Citation/SourceDocument";
+import { CitationVerifiedExtractionConfiguration } from "@beep/law-practice-server/internal/Citation/VerifiedExtraction";
 import { CitationEngineExtractionResult, CitationExtractionDiagnostics } from "@beep/law-practice-use-cases/server";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { it } from "@beep/test-runner";
@@ -18,6 +19,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { installCitationSourceDocumentConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
@@ -26,6 +28,15 @@ import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 import type { CitationAdmissionFailure } from "@beep/law-practice-server/internal/Citation/Admission";
 import type { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import type { CitationEngineFailure } from "@beep/law-practice-use-cases/server";
+
+const makeCitationSourceDocument = installCitationOwnedTestStage({
+  schema: CitationVerifiedExtractionConfiguration,
+  install: makeOwnedCitationSourceDocument,
+});
+const makeCitationSourcePairDocument = installCitationOwnedTestStage({
+  schema: CitationVerifiedExtractionConfiguration,
+  install: makeOwnedCitationSourcePairDocument,
+});
 
 const ExtractionResultType = S.toType(CitationEngineExtractionResult);
 

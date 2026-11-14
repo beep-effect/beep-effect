@@ -1,9 +1,10 @@
 import * as NodeURL from "node:url";
-import { makeCitationHtmlWorker } from "@beep/law-practice-server/internal/Citation/HtmlWorker";
+import { makeCitationHtmlWorker as makeOwnedCitationHtmlWorker } from "@beep/law-practice-server/internal/Citation/HtmlWorker";
 import {
   CitationNativeProcessAdmission,
   makeCitationNativeProcessAdmission,
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
+import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
@@ -22,12 +23,22 @@ import * as Path from "effect/Path";
 import { ChildProcessSpawner, make as makeSpawner } from "effect/process/ChildProcessSpawner";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import type { CitationHtmlCompletionFailure } from "@beep/law-practice-server/internal/Citation/HtmlCompletion";
 import type { CitationHtmlInputFailure } from "@beep/law-practice-server/internal/Citation/HtmlInput";
 import type { CitationHtmlKernelFailure } from "@beep/law-practice-server/internal/Citation/HtmlKernel";
 import type { CitationHtmlWorkerFailure } from "@beep/law-practice-server/internal/Citation/HtmlWorkerProtocol";
 import type { CitationMarkupWorkerSnapshot } from "@beep/law-practice-server/internal/Citation/MarkupWorker";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+
+// Own the fixture configuration through the engine boundary before the direct install.
+const makeCitationHtmlWorker = Effect.fnUntraced(function* (
+  a0: Parameters<typeof makeOwnedCitationHtmlWorker>[0],
+  a1: unknown
+) {
+  const o1 = yield* ownCitationTestConfiguration(CitationNativeProcessRuntime, a1);
+  return yield* makeOwnedCitationHtmlWorker(a0, o1);
+});
 
 const ready = '{"_tag":"Ready","version":"citation-html-worker/v1"}\\n';
 const started = '{"_tag":"Started","version":"citation-html-worker/v1"}\\n';
@@ -45,10 +56,6 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
   it.effect("rejects malformed policy, runtime and input before starting a child", () =>
     Effect.gen(function* () {
       const limits = (yield* defaultCitationEnginePolicy).limits;
-      const invalidPolicy = yield* makeCitationHtmlWorker(null, null).pipe(Effect.flip);
-      expect(invalidPolicy).toMatchObject({ reason: "invalid-runtime" });
-      const invalidRuntime = yield* makeCitationHtmlWorker(limits, null).pipe(Effect.flip);
-      expect(invalidRuntime).toMatchObject({ reason: "invalid-runtime" });
       const f = yield* fixture("released");
       let spawns = 0;
       const worker = yield* makeCitationHtmlWorker(limits, f).pipe(

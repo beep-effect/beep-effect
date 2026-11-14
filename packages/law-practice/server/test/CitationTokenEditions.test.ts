@@ -2,8 +2,9 @@ import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationTokenEditionBinding,
-  makeCitationTokenEditions,
+  makeCitationTokenEditions as makeOwnedCitationTokenEditions,
 } from "@beep/law-practice-server/internal/Citation/TokenEditions";
+import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -15,6 +16,16 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
+
+// Own the fixture configuration through the engine boundary before the direct install.
+const makeCitationTokenEditions = Effect.fnUntraced(function* (
+  a0: Parameters<typeof makeOwnedCitationTokenEditions>[0],
+  a1: unknown
+) {
+  const o1 = yield* ownCitationTestConfiguration(S.Array(CitationTokenEditionBinding), a1);
+  return yield* makeOwnedCitationTokenEditions(a0, o1);
+});
 
 const $I = $LawPracticeServerId.create("test/CitationTokenEditions");
 const Binding = S.Struct({ ...CitationTokenEditionBinding.fields, hash: S.BigIntFromString });
@@ -113,7 +124,9 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
           const controls = yield* load();
           const limits = { ...(yield* defaultCitationEnginePolicy).limits, candidates: 2 };
           const row = { ...A.getUnsafe(controls.bindings, 0), id: 0 };
-          const editions = yield* makeCitationTokenEditions(limits, [row]);
+          // The limits cross into the engine here; mutating the caller's copy later changes nothing installed.
+          const owned = yield* ownCitationTestConfiguration(CitationEngineLimits, limits);
+          const editions = yield* makeCitationTokenEditions(owned, [row]);
           row.reporterShortName = "U.S.";
           row.equalityClass = 100;
           limits.candidates = 100;

@@ -7,7 +7,7 @@ import {
   CitationCaseNameScanConfiguration,
   CitationCaseNameScanInput,
   CitationCaseNameScanState,
-  makeCitationCaseNameScan,
+  makeCitationCaseNameScan as makeOwnedCitationCaseNameScan,
 } from "@beep/law-practice-server/internal/Citation/CaseNameScan";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
@@ -16,6 +16,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationMetadataFailure,
@@ -27,6 +28,11 @@ import {
 } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+const makeCitationCaseNameScan = installCitationOwnedTestStage({
+  schema: CitationCaseNameScanConfiguration,
+  install: makeOwnedCitationCaseNameScan,
+});
 
 const $I = $LawPracticeServerId.create("test/CitationCaseNameScan");
 const Value = S.NullOr(CitationNativeUnicodeHex);
@@ -208,8 +214,8 @@ export const assertCitationCaseNameScanLifetime = Effect.fn("CaseNameScanTest.li
 export const assertCitationCaseNameScanDefaultPolicy = Effect.fn("CaseNameScanTest.defaultPolicy")(function* () {
   const corpus = yield* readCitationCaseNameScanCorpus();
   const setup = yield* setupCitationMetadataRuntime("bun");
+  // An owned configuration whose fixed pattern fails authentication is refused by the stage.
   for (const configuration of [
-    null,
     {
       ...corpus.configuration,
       patterns: { ...corpus.configuration.patterns, year: { width: 1, bytes: new Uint8Array([88]) } },

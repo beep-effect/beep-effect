@@ -5,7 +5,10 @@ import {
   CitationFrozenEditionFailure,
   CitationFrozenEditions,
 } from "@beep/law-practice-server/internal/Citation/FrozenEditions";
-import { makeCitationTokenDispatch } from "@beep/law-practice-server/internal/Citation/TokenDispatch";
+import {
+  CitationTokenDispatchBindings,
+  makeCitationTokenDispatch as makeOwnedCitationTokenDispatch,
+} from "@beep/law-practice-server/internal/Citation/TokenDispatch";
 import { CitationTokenSeed } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { LiteralKit } from "@beep/schema";
@@ -21,7 +24,17 @@ import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { CitationTokenSeedHex } from "./CitationTokenSeed.fixtures.ts";
+
+// Own the fixture configuration through the engine boundary before the direct install.
+const makeCitationTokenDispatch = Effect.fnUntraced(function* (
+  a0: Parameters<typeof makeOwnedCitationTokenDispatch>[0],
+  a1: unknown
+) {
+  const o1 = yield* ownCitationTestConfiguration(CitationTokenDispatchBindings, a1);
+  return yield* makeOwnedCitationTokenDispatch(a0, o1);
+});
 
 const $I = $LawPracticeServerId.create("test/CitationTokenDispatch");
 const Expected = LiteralKit([
@@ -154,16 +167,6 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         const corpus = yield* load();
         const limits = { ...(yield* defaultCitationEnginePolicy).limits, candidates: 1 };
         const owner = CitationFrozenEditions.of({ source: unavailable, lookup: unavailable, lookupMany: unavailable });
-        const invalidPolicy = yield* makeCitationTokenDispatch(null, corpus.bindings).pipe(
-          Effect.provideService(CitationFrozenEditions, owner),
-          Effect.flip
-        );
-        expect(invalidPolicy).toMatchObject({ reason: "invalid-input" });
-        const invalidBindings = yield* makeCitationTokenDispatch(limits, null).pipe(
-          Effect.provideService(CitationFrozenEditions, owner),
-          Effect.flip
-        );
-        expect(invalidBindings).toMatchObject({ reason: "invalid-bindings" });
         const dispatch = yield* makeCitationTokenDispatch(limits, corpus.bindings).pipe(
           Effect.provideService(CitationFrozenEditions, owner)
         );

@@ -23,6 +23,10 @@ each merge took main's baseline, so both subjects are stamped again. The review-
 `@distilled.cloud/github` dependency and new source and test files inside the package's default inputs; no
 command, output or environment changes.
 
+Re-recorded again 2026-11-14 after merging `main` with #3325 (`@beep/infra-hosts`, 6d366333e22), which took main's
+baseline. The create-guard wave adds source and test files inside the package's default inputs only; no command,
+output or environment changes.
+
 No task reads the network or a credential: the stack tests serve GitHub from an in-memory fake, and nothing
 writes outside the declared outputs. Recording `@beep/infra-github` adds its computations to the reviewed
 baseline as legacy settings. No task becomes cacheable, no exception row is added, and scope, profile and

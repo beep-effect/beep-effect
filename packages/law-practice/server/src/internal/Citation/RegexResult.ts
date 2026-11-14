@@ -11,8 +11,9 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { preflightCitationNativeJson } from "./NativeJson.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationRegexWorkerFailure } from "./RegexWorkerProtocol.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RegexResult");
 const max = CitationEngineAbsoluteMaxima;
@@ -112,12 +113,11 @@ export const CitationRegexCapture = S.Union([CitationRegexCapturedRange, Citatio
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationRegexResult = Effect.fn("Citation.makeRegexResult")(function* (
-  policy: unknown,
+  limits: CitationEngineLimits,
   expectedGroupsInput: unknown,
   sourcePointsInput: unknown
 ) {
   const badRuntime = () => CitationRegexWorkerFailure.make({ reason: "invalid-runtime" });
-  const limits = yield* decodeCitationRegexPolicy(policy, badRuntime);
   const groups = yield* S.decodeUnknownEffect(Groups)(expectedGroupsInput).pipe(Effect.mapError(badRuntime));
   const sourcePoints = yield* S.decodeUnknownEffect(Position)(sourcePointsInput).pipe(Effect.mapError(badRuntime));
   const { timed } = yield* makeCitationRegexTiming(limits, false);

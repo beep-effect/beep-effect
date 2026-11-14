@@ -7,14 +7,13 @@ import {
   CitationEngineExtractionResult,
   CitationEngineReport,
   CitationExtractionDiagnostics,
-  CitationInputError,
 } from "@beep/law-practice-use-cases/server";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { CitationAuthorityEdition } from "./AuthorityIdentity.ts";
 import { failCitationExtractionBoundary } from "./EngineFailure.ts";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
-import { CitationRegexOperation, decodeCitationRegexPolicy } from "./RegexPolicy.ts";
+import { CitationRegexOperation } from "./RegexPolicy.ts";
 import { makeCitationRegisteredResolver } from "./RegisteredResolver.ts";
 import { makeCitationResolutionEditions } from "./ResolutionEditions.ts";
 import { CitationResourceBinding } from "./ResourceIdentity.ts";
@@ -24,13 +23,11 @@ import {
   prepareCitationSourcePairExtraction,
   projectCitationSourceExtractionReport,
 } from "./SourceExtraction.ts";
-import {
-  CitationVerifiedExtractionConfiguration,
-  CitationVerifiedExtractionFailure,
-  CitationVerifiedExtractionResult,
-} from "./VerifiedExtraction.ts";
+import { CitationVerifiedExtractionResult } from "./VerifiedExtraction.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
+import type { CitationVerifiedExtractionConfiguration } from "./VerifiedExtraction.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/SourceDocument");
 /** Complete connected extraction plus source-bound document and restoration
@@ -57,7 +54,7 @@ export class CitationExtractedDocumentResult extends S.Opaque<
 ) {}
 const own = Effect.fn("Citation.ownSourceDocument")(function* (
   limits: CitationEngineLimits,
-  configuration: CitationVerifiedExtractionConfiguration,
+  configuration: CitationOwned<CitationVerifiedExtractionConfiguration>,
   runtime: CitationNativeProcessRuntime
 ) {
   const extraction = yield* ownCitationSourceExtraction(limits, configuration, runtime);
@@ -110,8 +107,6 @@ const project = (patch: Effect.Success<ReturnType<ReturnType<typeof prepareSourc
     }),
   });
 const definition = {
-  schema: S.toType(CitationVerifiedExtractionConfiguration),
-  invalid: () => CitationVerifiedExtractionFailure.make({ reason: "invalid-configuration" }),
   own,
   project,
 };
@@ -137,8 +132,11 @@ const installPair = makeCitationMetadataStage({
 
 const closeMethod = (install: typeof installSingle) =>
   Effect.fn("Citation.installSourceDocumentBoundary")(
-    function* (policy: unknown, runtime: unknown, configuration: unknown) {
-      const limits = yield* decodeCitationRegexPolicy(policy, () => CitationInputError.make({ operation: "extract" }));
+    function* (
+      limits: CitationEngineLimits,
+      runtime: CitationNativeProcessRuntime,
+      configuration: CitationOwned<CitationVerifiedExtractionConfiguration>
+    ) {
       const stage = yield* install(limits, runtime, configuration);
       return {
         extract: Effect.fn("Citation.extractSourceDocumentBoundary")((raw: unknown) =>

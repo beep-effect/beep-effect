@@ -1,13 +1,23 @@
-import { citationCaseNameWordText, makeCitationCaseName } from "@beep/law-practice-server/internal/Citation/CaseName";
+import {
+  CitationCaseNameConfiguration,
+  citationCaseNameWordText,
+  makeCitationCaseName as makeOwnedCitationCaseName,
+} from "@beep/law-practice-server/internal/Citation/CaseName";
 import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import { deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import { readCitationCaseNameCorpus } from "./CitationCaseName.fixtures.ts";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
+
+const makeCitationCaseName = installCitationOwnedTestStage({
+  schema: CitationCaseNameConfiguration,
+  install: makeOwnedCitationCaseName,
+});
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("plain case-name refusals", (it) => {
   it.effect("spells a None token and keeps native text identity", () =>
@@ -18,19 +28,9 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("plain case-
     })
   );
 
-  it.effect("refuses malformed configuration and malformed requests before scanning", () =>
+  it.effect("refuses malformed requests before scanning", () =>
     Effect.gen(function* () {
       const setup = yield* setupCitationMetadataRuntime("bun", undefined, false, true, 8192);
-      const malformed = yield* makeCitationCaseName(setup.limits, setup.runtime, { scan: null }).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding(setup.limits).pipe(
-            Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-          )
-        ),
-        Effect.provideContext(setup.provided),
-        Effect.flip
-      );
-      expect(malformed).toMatchObject({ _tag: "CitationCaseNameScanFailure", reason: "invalid-configuration" });
       const loaded = yield* readCitationCaseNameCorpus();
       const stage = yield* makeCitationCaseName(setup.limits, setup.runtime, loaded.configuration).pipe(
         Effect.flatMap((stage) =>

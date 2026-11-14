@@ -1,15 +1,17 @@
 import * as NodeURL from "node:url";
-import { makeCitationDiffWorker } from "@beep/law-practice-server/internal/Citation/DiffWorker";
+import { makeCitationDiffWorker as makeOwnedCitationDiffWorker } from "@beep/law-practice-server/internal/Citation/DiffWorker";
 import {
   CitationNativeProcessAdmission,
   makeCitationNativeProcessAdmission,
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
+import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { readCitationDiffCorpus } from "./CitationDiffCorpus.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { makeCitationBundledTestRuntime, makeCitationObservedSpawner } from "./CitationNativeSpawner.fixtures.ts";
@@ -19,7 +21,17 @@ import type { CitationDiffWorkerFailure } from "@beep/law-practice-server/intern
 import type { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type { CitationSpanDiffStep } from "@beep/law-practice-server/internal/Citation/SpanOffsets";
-import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import type { CitationEngineLimits, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+
+// Own the fixture configuration through the engine boundary before the direct install.
+const makeCitationDiffWorker = Effect.fnUntraced(function* (
+  a0: Parameters<typeof makeOwnedCitationDiffWorker>[0],
+  a1: unknown,
+  a2?: Parameters<typeof makeOwnedCitationDiffWorker>[2]
+) {
+  const o1 = yield* ownCitationTestConfiguration(CitationNativeProcessRuntime, a1);
+  return yield* makeOwnedCitationDiffWorker(a0, o1, a2);
+});
 
 /** Prepare a trusted diff bundle in the caller's scoped directory using the actual selected executable.
  *
@@ -50,7 +62,7 @@ export const makeCitationDiffTestRuntime = Effect.fn("DiffWorkerTest.runtime")(
 );
 export const makeCitationDiffWorkerFixture = Effect.fn("DiffWorkerTest.fixture")(function* (
   kind: CitationNativeRuntimeKind,
-  policy: unknown,
+  policy: CitationEngineLimits,
   useDmp = true
 ) {
   const fs = yield* FileSystem.FileSystem;

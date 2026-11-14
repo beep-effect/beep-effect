@@ -4,7 +4,6 @@
 import { ResolvedSourceText, ResolveSourceTextRequest, SourceTextResolver } from "@beep/file-processing/SourceText";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
-  CitationEngineLimits,
   CitationInputError,
   CitationPrerequisiteError,
   CitationSafetyLimitExceeded,
@@ -15,14 +14,13 @@ import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { CitationRegexOperation, decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { CitationRegexOperation, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { snapshotCitationValue } from "./Snapshot.ts";
-import type { CitationEngineFailure } from "@beep/law-practice-use-cases/server";
+import type { CitationEngineFailure, CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 
 const $I = $LawPracticeServerId.create("internal/Citation/SourceEvidence");
 const SourceJson = SourceTextIdentity.pipe(S.toCodecJson, S.fromJsonString);
-const LimitsJson = CitationEngineLimits.pipe(S.toCodecJson, S.fromJsonString);
 const Input = S.Struct({ source: SourceTextIdentity, sourceText: S.String }).pipe(
   $I.annoteSchema("Input", {
     description: "Canonical source identity and primitive text before effective-size admission; no extraction options.",
@@ -35,13 +33,13 @@ const Input = S.Struct({ source: SourceTextIdentity, sourceText: S.String }).pip
  * implemented here. Every call returns a genuine proof with R=never.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationSourceEvidence = Effect.fn("Citation.makeSourceEvidence")(function* (policy: unknown) {
+export const makeCitationSourceEvidence = Effect.fn("Citation.makeSourceEvidence")(function* (
+  limits: CitationEngineLimits
+) {
   const operation = yield* CitationRegexOperation;
   const invalid = () => CitationInputError.make({ operation });
   const prerequisite = () => CitationPrerequisiteError.make({ operation, dependency: "source-evidence" });
   const safety = () => CitationSafetyLimitExceeded.make({ operation, limit: "sourceUtf16" });
-  const decoded = yield* decodeCitationRegexPolicy(policy, invalid);
-  const limits = yield* snapshotCitationValue(LimitsJson, decoded, invalid);
   const resolver = yield* SourceTextResolver;
   const digest = yield* Digest.Digest;
   const timing = yield* makeCitationRegexTiming(limits, true);

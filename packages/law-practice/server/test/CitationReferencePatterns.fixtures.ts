@@ -3,13 +3,21 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
-import { makeCitationReferencePatterns } from "@beep/law-practice-server/internal/Citation/ReferencePatterns";
+import {
+  CitationReferencePatternConfiguration,
+  installCitationReferencePatterns,
+  verifyCitationReferencePatternConfiguration,
+} from "@beep/law-practice-server/internal/Citation/ReferencePatterns";
 import {
   CitationRegexPatternDescriptor,
   makeCitationRegexDescriptorRegistry,
 } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
-import { CitationPythonUnicodeStorage, CitationTextBudget } from "@beep/law-practice-use-cases/server";
+import {
+  CitationEngineLimits,
+  CitationPythonUnicodeStorage,
+  CitationTextBudget,
+} from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -22,6 +30,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import {
   makeCitationReferenceNameMetadata,
   readCitationGeneratedReferenceSource,
@@ -108,6 +117,21 @@ export const citationReferenceMetadataFromSource = (m: CitationReferenceSourceNa
     resolvedCaseNameShort: ownName(m.resolved_case_name_short),
     resolvedCaseName: ownName(m.resolved_case_name),
   });
+/** Own valid fixture policy and configuration, authenticate the configuration as
+ * the installed stage does (`verifyCitationReferencePatternConfiguration`), install
+ * the reference patterns once and make one request's builder.
+ * @internal @category testing @since 0.0.0
+ */
+export const makeCitationReferencePatternsAtBoundary = Effect.fn("ReferencePatternsTest.atBoundary")(function* (
+  policy: unknown,
+  configuration: unknown
+) {
+  const limits = yield* ownCitationTestConfiguration(CitationEngineLimits, policy);
+  const owned = yield* ownCitationTestConfiguration(CitationReferencePatternConfiguration, configuration);
+  const verified = yield* verifyCitationReferencePatternConfiguration(limits, owned);
+  const installed = yield* installCitationReferencePatterns(limits, verified);
+  return yield* installed.make();
+});
 /** Compare every actually observed dynamic source pattern/profile and bind its compiler facts.
  * @internal @category testing @since 0.0.0
  */
@@ -117,7 +141,7 @@ export const replayCitationReferencePatterns = Effect.fn("ReferencePatternsTest.
   const limits = (yield* defaultCitationEnginePolicy).limits;
   const budget = yield* makeCitationTextBudget(limits);
   const configuration = { patterns: template.patterns, disallowedNames: corpus.disallowedNames };
-  const builder = yield* makeCitationReferencePatterns(limits, configuration).pipe(
+  const builder = yield* makeCitationReferencePatternsAtBoundary(limits, configuration).pipe(
     Effect.provideService(CitationTextBudget, budget)
   );
   const expected = HashMap.fromIterable(A.map(corpus.patterns, (row) => Tuple.make(row.id, row)));
@@ -183,9 +207,10 @@ export const replayCitationReferencePatterns = Effect.fn("ReferencePatternsTest.
   const absent = yield* builder.build(empty, "pin");
   expect(O.isNone(absent)).toBe(true);
   const maximum = A.reduce(R.values(template.patterns), 0, (n, p) => Num.max(n, p.bytes.length / p.width)) + 32;
-  const small = yield* makeCitationReferencePatterns({ ...limits, patternUtf16: maximum }, configuration).pipe(
-    Effect.provideService(CitationTextBudget, budget)
-  );
+  const small = yield* makeCitationReferencePatternsAtBoundary(
+    { ...limits, patternUtf16: maximum },
+    configuration
+  ).pipe(Effect.provideService(CitationTextBudget, budget));
   const unicode = yield* makeCitationPythonUnicode(limits);
   const long = yield* unicode.fromText(`A${Str.repeat(maximum - 2)("#")}`);
   const refused = yield* small

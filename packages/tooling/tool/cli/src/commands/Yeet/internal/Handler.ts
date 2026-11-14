@@ -80,7 +80,6 @@ import {
   collectUntrackedPaths,
   currentCommitSha,
   currentYeetBranch,
-  lockfileChangedSinceBase,
   refreshAndPinBaseRef,
   refreshBaseRef,
   resolveYeetMergeBase,
@@ -178,6 +177,7 @@ import { applyPublishLabels, ensurePullRequest, findOpenPullRequest, YeetPrBodyR
 import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
 import { linkYeetStackLayer, resolveYeetPublishStackLayer, YeetPublishStackLayer } from "./StackPublish.ts";
 import { collectRemoteChecks, collectYeetStatus, renderYeetStatusSummary, writeYeetStatusSnapshot } from "./Status.ts";
+import { decideTurboForce, turboForceReceiptFor } from "./TurboForce.ts";
 import { collectTurboPlanSnapshot } from "./TurboQuery.ts";
 import { BuildYeetVerdictInput, buildYeetVerdict, YeetExecutedStep, YeetVerdictJson } from "./Verdict.ts";
 import { classifyYeetCheckOutcome, YeetCheckSignal } from "./WatchStream.ts";
@@ -193,6 +193,7 @@ import type { ProofJobLauncherShape, ReadyMonitorRunnerProbe } from "./ProofJobL
 import type { YeetStackLayerDecision } from "./StackPublish.ts";
 import type { YeetStatusReviewThread } from "./Status.schemas.ts";
 import type { YeetStatusSnapshot } from "./Status.ts";
+import type { TurboForceReceipt } from "./TurboForce.ts";
 import type { YeetBaseFreshness, YeetMergeReady, YeetStashState, YeetVerdict } from "./Verdict.ts";
 
 const decodeGhPrViewJson = S.decodeEffect(S.fromJsonString(GhPrView));
@@ -2795,7 +2796,8 @@ const attemptComputeProfile = ComputeProfileProbe.use((probe) => probe.resolve).
 const makeYeetAttempt = Effect.fn("Yeet.makeAttempt")(function* (
   context: RepoRunContext,
   options: YeetRunOptions,
-  attemptId: YeetAttemptId
+  attemptId: YeetAttemptId,
+  turboForce: O.Option<TurboForceReceipt>
 ): Effect.fn.Return<
   YeetAttemptStarted,
   YeetCommandError,
@@ -2829,6 +2831,7 @@ const makeYeetAttempt = Effect.fn("Yeet.makeAttempt")(function* (
     computeProfile: yield* attemptComputeProfile,
     forceLocal: options.forceLocal ? O.some(true) : O.none(),
     stage: O.some(attemptStageFor(options)),
+    turboForce,
   });
 });
 
@@ -2851,7 +2854,8 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   plan: RepoRunPlan,
   options: YeetRunOptions,
   message: O.Option<string>,
-  providedAttempt: O.Option<YeetAttemptStarted> = O.none()
+  providedAttempt: O.Option<YeetAttemptStarted> = O.none(),
+  turboForce: O.Option<TurboForceReceipt> = O.none()
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
@@ -2870,7 +2874,9 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   const startedAtEpochMillis = yield* Clock.currentTimeMillis;
   const attempt = yield* O.match(providedAttempt, {
     onNone: () =>
-      Effect.flatMap(generateYeetAttemptId(), (attemptId) => makeYeetAttempt(plan.context, options, attemptId)),
+      Effect.flatMap(generateYeetAttemptId(), (attemptId) =>
+        makeYeetAttempt(plan.context, options, attemptId, turboForce)
+      ),
     onSome: Effect.succeed,
   });
   const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>(A.empty());
@@ -3077,7 +3083,8 @@ const runMergedVerify = Effect.fn("Yeet.runMergedVerify")(function* (
   options: YeetRunOptions,
   message: O.Option<string>,
   modeOptions: YeetRunPlanModeOptions,
-  attemptId: YeetAttemptId
+  attemptId: YeetAttemptId,
+  turboForce: O.Option<TurboForceReceipt>
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
@@ -3099,7 +3106,7 @@ const runMergedVerify = Effect.fn("Yeet.runMergedVerify")(function* (
         `[yeet] proving the merge preview ${pipe(preview.commitSha, Str.takeLeft(12))} (${context.branch} merged with ${context.base} at ${pipe(preview.baseSha, Str.takeLeft(12))})`
       );
       const previewContext = yeetMergedPreviewContext(context, preview, artifactDir);
-      const attempt = yield* makeYeetAttempt(previewContext, options, attemptId);
+      const attempt = yield* makeYeetAttempt(previewContext, options, attemptId, turboForce);
       return yield* runWithMergedPreviewAdmission(
         context,
         Effect.gen(function* () {
@@ -3171,20 +3178,12 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
   yield* validateMonitorGuards(context, options);
   // A bad --body-file fails here, before anything is committed or pushed.
   yield* readPrBodySummary(context, options.bodyFile);
-  const forceTurbo =
-    options.mode === "repair" || options.mode === "verify" || options.mode === "publish"
-      ? yield* lockfileChangedSinceBase(context)
-      : false;
-  if (forceTurbo) {
-    yield* Console.log(
-      `[yeet] bun.lock changed since ${context.base}; forcing dependency-sensitive lanes (TURBO_FORCE=true)`
-    );
-  }
+  const forceDecision = yield* decideTurboForce(context, options.mode);
   const modeOptions = YeetRunPlanModeOptions.make({
     amend: options.amend,
     ciParity: options.ciParity,
     collectAll: options.collectAll,
-    forceTurbo,
+    forceTurbo: A.isReadonlyArrayNonEmpty(forceDecision.reasons),
     hostedProof: options.hostedProof,
     mode: options.mode,
     monitor: options.monitor,
@@ -3202,12 +3201,14 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
     yield* renderPlan(plan, options.json);
     return yield* emptyPlanResult(context);
   }
+  // Recorded on the attempt row only; nothing reads it to plan or decide (ruling D14).
+  const turboForce = yield* turboForceReceiptFor(context, options.mode, forceDecision);
   if (options.merged) {
     const attemptId = yield* generateYeetAttemptId();
-    return yield* runMergedVerify(context, options, message, modeOptions, attemptId);
+    return yield* runMergedVerify(context, options, message, modeOptions, attemptId, turboForce);
   }
 
-  return yield* runPlanExecution(plan, options, message);
+  return yield* runPlanExecution(plan, options, message, O.none(), turboForce);
 });
 
 /**

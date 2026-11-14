@@ -88,7 +88,7 @@ export const replayCitationReferenceNames = Effect.fn("ReferenceNamesTest.replay
     "resolved_case_name",
   ]);
   expect(A.map(collected, (item) => item.value)).toEqual([roe.storage, wade.storage, roe.storage, wade.storage]);
-  const altered = A.modify(corpus.disallowedNames, 0, () => "different");
+  const altered = A.map(corpus.disallowedNames, (name, index) => (index === 0 ? "different" : name));
   const refusal = yield* makeCitationReferenceNames(limits, altered).pipe(
     Effect.flatMap((stage) =>
       makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, collect: bind(stage.collect) })))

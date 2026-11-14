@@ -17,7 +17,8 @@ import { citationNativeBase64Length, citationNativeBytes, makeCitationNativeJson
 import { CitationNativeProcessFailureReason } from "./NativeProcess.ts";
 import { CitationRegexSourceFlags } from "./RegexEngine.ts";
 import { CitationRegexInputLayout, citationUnaccountedText, makeCitationRegexInput } from "./RegexInput.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationPreparedRegexInput } from "./RegexInput.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RegexWorkerProtocol");
@@ -177,11 +178,10 @@ export const readCitationRegexFrames = makeCitationNativeFrameReader({
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationRegexJobPreparation = Effect.fn("Citation.makeRegexJobPreparation")(function* <R>(
-  policy: unknown,
+  limits: CitationEngineLimits,
   reserveCitationInvocationText: (units: number) => Effect.Effect<void, CitationSafetyLimitExceeded, R>
 ) {
   const badRuntime = () => CitationRegexWorkerFailure.make({ reason: "invalid-runtime" });
-  const limits = yield* decodeCitationRegexPolicy(policy, badRuntime);
   const { timed } = yield* makeCitationRegexTiming(limits, true);
   const patternInput = yield* makeCitationRegexInput(limits, citationUnaccountedText, "pattern").pipe(
     Effect.mapError(badRuntime)

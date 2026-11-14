@@ -2,6 +2,7 @@
  * eyecite 2.7.6, Free Law Project, BSD-2-Clause; see THIRD_PARTY_NOTICES.md.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationCleaner, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
@@ -10,6 +11,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CitationCleanerValues, copyCitationCleanerUnicode } from "./CleanerValues.ts";
+import { ownedField } from "./ConfigurationOwnership.ts";
 import { captureCitationExtractionChildren } from "./ExtractionChildren.ts";
 import { CitationHtmlGeometryPreparationConfiguration } from "./HtmlGeometryPreparation.ts";
 import {
@@ -18,7 +20,7 @@ import {
   CitationInputDocument,
   makeCitationInputDocument,
 } from "./InputDocument.ts";
-import { detachCitationMetadataConfiguration, makeCitationMetadataStage } from "./MetadataComposition.ts";
+import { makeCitationMetadataStage } from "./MetadataComposition.ts";
 import {
   CitationTokenizedExtractionConfiguration,
   CitationTokenizedExtractionInput,
@@ -26,6 +28,7 @@ import {
   makeCitationTokenizedExtraction,
 } from "./TokenizedExtraction.ts";
 import type { CitationCleanerObject, CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/DocumentExtraction");
@@ -108,19 +111,14 @@ const RetainedInput = S.Struct({
   })
 );
 const Input = S.toType(CitationDocumentExtractionInput);
-const Configuration = S.toType(CitationDocumentExtractionConfiguration);
-const ConfigurationJson = Configuration.pipe(S.toCodecJson);
 const empty = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array() });
-/** Snapshot configuration and capture existing live Document services.
+/** Take owned configuration and capture existing live Document services.
  * @internal @category operations @since 0.0.0
  */
 export const ownCitationDocumentExtraction = Effect.fn("Citation.ownDocumentExtraction")(function* (
   _limits: CitationEngineLimits,
-  configuration: CitationDocumentExtractionConfiguration
+  config: CitationOwned<CitationDocumentExtractionConfiguration>
 ) {
-  const config = yield* detachCitationMetadataConfiguration(ConfigurationJson, configuration, () =>
-    fail("invalid-configuration")
-  );
   const values = yield* CitationCleanerValues;
   const protocols = yield* CitationDocumentInputProtocols;
   const runtime = yield* CitationCleaner;
@@ -136,14 +134,18 @@ export const ownCitationDocumentExtraction = Effect.fn("Citation.ownDocumentExtr
  */
 const ownStages = Effect.fn("Citation.ownDocumentExtractionStages")(function* (
   limits: CitationEngineLimits,
-  configuration: CitationDocumentExtractionConfiguration,
+  configuration: CitationOwned<CitationDocumentExtractionConfiguration>,
   runtime: CitationNativeProcessRuntime
 ) {
   const owned = yield* ownCitationDocumentExtraction(limits, configuration);
   return yield* Effect.gen(function* () {
     // Installed once; an install failure surfaces where each request used to install it.
-    const tokenized = yield* Effect.exit(makeCitationTokenizedExtraction(limits, runtime, owned.config.extraction));
-    const initializer = yield* Effect.exit(makeCitationInputDocument(limits, runtime, owned.config.document));
+    const tokenized = yield* Effect.exit(
+      makeCitationTokenizedExtraction(limits, runtime, ownedField(owned.config, "extraction"))
+    );
+    const initializer = yield* Effect.exit(
+      makeCitationInputDocument(limits, runtime, ownedField(owned.config, "document"))
+    );
     return { ...owned, tokenized, initializer };
   }).pipe(Effect.provideContext(owned.children));
 });
@@ -215,7 +217,6 @@ const prepare = Effect.fn("Citation.extractLiveDocument")(
  * @internal @category operations @since 0.0.0
  */
 const definition = {
-  invalid: () => fail("invalid-configuration"),
   own: ownStages,
   project: (
     result: Effect.Success<ReturnType<typeof extractInitialized>>,
@@ -236,7 +237,6 @@ const definition = {
 export const makeCitationDocumentExtraction = makeCitationMetadataStage({
   ...definition,
   method: "extract",
-  schema: Configuration,
   prepare,
 });
 /** Reuse an initialized private Document without executing __post_init__ again.
@@ -248,6 +248,5 @@ export const makeCitationDocumentExtraction = makeCitationMetadataStage({
 export const makeCitationRetainedDocumentExtraction = makeCitationMetadataStage({
   ...definition,
   method: "extract",
-  schema: Configuration,
   prepare: prepareRetained,
 });
