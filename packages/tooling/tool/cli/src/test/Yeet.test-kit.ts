@@ -25,6 +25,8 @@ export * from "../commands/Yeet/internal/closeout/GreptileSignal.ts";
 export * from "../commands/Yeet/internal/closeout/WritePlan.ts";
 export * from "../commands/Yeet/internal/Economics.schemas.ts";
 export * from "../commands/Yeet/internal/Economics.ts";
+export * from "../commands/Yeet/internal/EconomicsPressure.schemas.ts";
+export * from "../commands/Yeet/internal/EconomicsPressure.ts";
 export * from "../commands/Yeet/internal/ExpectationRewrite.ts";
 export {
   FallowFeedbackAllowedRoot,
@@ -35,6 +37,8 @@ export * from "../commands/Yeet/internal/FinalCheck.schemas.ts";
 export * from "../commands/Yeet/internal/FinalCheck.ts";
 export * from "../commands/Yeet/internal/FinalCheckRefresh.schemas.ts";
 export * from "../commands/Yeet/internal/FinalCheckRefresh.ts";
+export * from "../commands/Yeet/internal/FleetHostRead.ts";
+export * from "../commands/Yeet/internal/FleetHosts.schemas.ts";
 export * from "../commands/Yeet/internal/GateStaleness.ts";
 export * from "../commands/Yeet/internal/GateTable.ts";
 export * from "../commands/Yeet/internal/GhOps.ts";

@@ -1664,6 +1664,12 @@ const yeetEconomicsCommand = Command.make(
         "Add every sibling beep-effect* checkout, beep-effect*-worktrees lane, and clone .claude/worktrees lane under the projects root"
       )
     ),
+    fleetHosts: Flag.Boolean("fleet-hosts").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "Also read the fleet hosts in the fleet's hosts.json, read-only over their existing SSH wrappers, one at a time (implies --fleet; each may ask for a YubiKey touch)"
+      )
+    ),
     packetDir: packetDirFlag,
   },
   runYeetEconomicsCommand

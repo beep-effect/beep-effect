@@ -88,6 +88,7 @@ import { readLintPolicySweeps, resolveAffectedCoverageScope } from "../../Qualit
 import { YeetCommandError } from "../Yeet.errors.ts";
 import {
   appendYeetAttemptJournalEventForCheckout,
+  currentYeetAttemptOrigin,
   generateYeetAttemptId,
   YeetAttemptFinished,
   YeetAttemptStarted,
@@ -1727,6 +1728,7 @@ const openFinalCheckAttempt = Effect.fn("Yeet.openFinalCheckAttempt")(
   function* (repoRoot: string, options: YeetFinalCheckOptions, headSha: string, computeProfile: ComputeProfile) {
     const branch = yield* currentYeetBranch(repoRoot);
     const now = yield* DateTime.now;
+    const origin = yield* currentYeetAttemptOrigin;
     const attempt = YeetAttemptStarted.make({
       schemaVersion: "yeet-attempt-journal/v1",
       _tag: "attempt-started",
@@ -1743,6 +1745,8 @@ const openFinalCheckAttempt = Effect.fn("Yeet.openFinalCheckAttempt")(
       envProfile: O.some("local"),
       computeProfile: O.some(computeProfile),
       forceLocal: options.forceLocal ? O.some(true) : O.none(),
+      host: origin.host,
+      seat: origin.seat,
     });
     yield* appendYeetAttemptJournalEventForCheckout(repoRoot, branch, attempt);
     return O.some<OpenFinalCheckAttempt>({ attempt, branch, startedMillis: DateTime.toEpochMillis(now) });
