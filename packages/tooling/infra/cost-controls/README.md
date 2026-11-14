@@ -81,9 +81,12 @@ switch from `silent` to `live` adds email notifications only.
 
 ### Pre-deploy gate (`src/PlanCheck.ts`, `plan-check.ts`)
 
-Between plan and deploy the workflow runs `bun plan-check.ts <plan.log>
-<live.json>`: it parses the detailed plan and the live values of the nine
-adopted settings and fails the job, before any deploy, unless every
+Between plan and deploy the workflow runs `plan-check.ts` with five paths:
+the detailed plan log, then the raw `--output json` results of
+`aws ce list-cost-allocation-tags`, `aws compute-optimizer get-enrollment-status`,
+`aws cost-optimization-hub list-enrollment-statuses` and
+`aws ce get-anomaly-monitors`, in that order. It parses the plan and shapes
+the live values of the nine adopted settings and fails the job, before any deploy, unless every
 singleton plans as an adopt or no-op with no property change, each live
 setting already equals the declared one (tags Active, both enrollments
 Active for this account only, exactly one `DIMENSIONAL`/`SERVICE` monitor

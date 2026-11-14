@@ -87,9 +87,9 @@ const MonitorSummary = S.Struct({
 });
 
 /**
- * The live values of the nine adopted settings, as the workflow reads them
- * with the AWS CLI (`list-cost-allocation-tags`, `get-enrollment-status`,
- * `list-enrollment-statuses`, `get-anomaly-monitors`) and joins with `jq`.
+ * The live values of the nine adopted settings, shaped by
+ * {@link liveSettingsFromAws} from the raw AWS CLI outputs the workflow
+ * passes to the gate.
  *
  * **Example** (Decode live settings)
  *
