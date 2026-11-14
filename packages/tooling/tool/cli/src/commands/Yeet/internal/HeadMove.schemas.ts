@@ -13,6 +13,15 @@ const $I = $RepoCliId.create("commands/Yeet/internal/HeadMove.schemas");
 /**
  * Why a head move cannot carry rewrite proof.
  *
+ * **Details**
+ *
+ * `not-base-merge` and `merge-conflict` refuse a base merge: the new head is
+ * not one two-parent merge on top of the old head, or the automatic merge of
+ * the base conflicts. A base merge also refuses with `base-mismatch` (the
+ * merged commit is not on the synchronized base), `replay-tree` (the pushed
+ * tree is not the clean merge) and `patch` (the pull request's own patch
+ * changed).
+ *
  * **Example** (YeetHeadMoveChange evidence)
  *
  * ```ts
@@ -34,6 +43,8 @@ export const YeetHeadMoveChange = LiteralKit([
   "metadata",
   "old-base-not-absorbed",
   "replay-tree",
+  "not-base-merge",
+  "merge-conflict",
 ]).pipe($I.annoteSchema("YeetHeadMoveChange", { description: "The failed invariant of a head rewrite." }));
 /** The failed rewrite invariant. @category type-level @since 0.0.0 */
 export type YeetHeadMoveChange = typeof YeetHeadMoveChange.Type;
@@ -147,3 +158,62 @@ export const YeetHeadMove = S.Union([YeetHeadMoveUnchanged, YeetHeadMoveChanged,
 );
 /** The exhaustive head-move verdict. @category type-level @since 0.0.0 */
 export type YeetHeadMove = typeof YeetHeadMove.Type;
+
+/**
+ * A proven merge of the synchronized base that leaves the pull request's own
+ * patch unchanged.
+ *
+ * **Details**
+ *
+ * `after` is one two-parent commit whose first parent is `before` and whose
+ * second parent, `merged`, is on `base`; its tree is the clean automatic merge,
+ * and the patch against the base has the same identity before and after.
+ *
+ * **Example** (YeetBaseMergeUnchanged evidence)
+ *
+ * ```ts
+ * import { YeetBaseMergeUnchanged } from "@beep/repo-cli/test/Yeet"
+ * const proof = YeetBaseMergeUnchanged.make({ before: "b", after: "h", base: "s", merged: "m" })
+ * console.log(proof.merged) // "m"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetBaseMergeUnchanged extends S.Opaque<YeetBaseMergeUnchanged, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("unchanged", {
+    before: S.NonEmptyString,
+    after: S.NonEmptyString,
+    base: S.NonEmptyString,
+    merged: S.NonEmptyString,
+  }).pipe(
+    $I.annoteSchema("YeetBaseMergeUnchanged", {
+      description: "A proven clean merge of the synchronized base that leaves the pull request's patch unchanged.",
+    })
+  )
+) {}
+
+/**
+ * Exhaustive verdict for a push that merges the base into the pull request.
+ *
+ * **Details**
+ *
+ * The refusal and unknown members are the head-move ones, so an unreadable
+ * base merge never carries, exactly as an unreadable rewrite does not.
+ *
+ * **Example** (YeetBaseMerge evidence)
+ *
+ * ```ts
+ * import { YeetBaseMerge } from "@beep/repo-cli/test/Yeet"
+ * console.log(YeetBaseMerge.guards.unknown({ _tag: "unknown", before: "b", after: "h", reason: "shallow" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const YeetBaseMerge = S.Union([YeetBaseMergeUnchanged, YeetHeadMoveChanged, YeetHeadMoveUnknown]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("YeetBaseMerge", { description: "Proof, refusal or unreadable evidence for a base merge." })
+);
+/** The exhaustive base-merge verdict. @category type-level @since 0.0.0 */
+export type YeetBaseMerge = typeof YeetBaseMerge.Type;

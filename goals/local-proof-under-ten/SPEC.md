@@ -161,7 +161,7 @@ every citation below was re-checked at c90929b1ff1). Ids are the rows in
 | TURB-10 | Attribute first-cold cross-host cache reuse on fleet hosts | open | Same-head hashes across hosts | D14, PERIL-11 fleet roots |
 | PERIL-02 | One readiness monitor per PR in a checkout, reuse keyed on normalized readiness argv | landed (slice 5: `monitor --until-ready --detach` hands back a live monitor with the same branch and `readyMonitorArgvKey` through `submitProofJobReusingReadyMonitor` in `ProofJobLauncher.ts`; publish keys its reuse on the same argv; `yeet ready`'s watcher hint, formerly `ReadyGate.ts:565`, runs the shared runner check `pickLiveReadyMonitor`) | Two submissions with the same PR and argv yield one job; stricter argv not reused; a dead-runner record skipped; `ReadyGate.ts:565` fixed in the same PR | none |
 | PERIL-03 | State-aware monitor cadence with a wake on a local ref change | partly landed (#3032, fda98a2c4bd: 90 s default at `MonitorLoop.ts:210`, rate-limit sleep in `MonitorRateLimit.ts`) | TestClock mutation fixtures: the first terminal after each mutation follows a full read taken after it; a dirty-file re-edit still flags stale gates; then a 7-day A/B of polls per monitor-hour | PERIL-02 |
-| PERIL-09 | Keep the review-window anchor across a diff-preserving merge of main | open (`ReviewWindow.ts` anchors on first check-suite receipt, a later force-push or the ready flip) | Ruling D12 (given); replay fixtures: clean merge keeps, conflict touching PR lines re-arms | none |
+| PERIL-09 | Keep the review-window anchor across a diff-preserving merge of main | landed (slice 7: `classifyBaseMerge` on #3130's `YeetHeadMoveClassifier` in `HeadMove.ts` proves a push only merged the synchronized base with the PR's patch identity unchanged, and `ReviewWindow.ts` walks the push anchor back across such merges; the monitor, status, merge gate, gate table and REST gate read that one anchor) | Ruling D12 (given); replay fixtures: clean merge keeps, conflict touching PR lines re-arms | none |
 | PERIL-10 | Summarize scheduler quarantine in status, archive-reap aged entries, retire the `beep-heavy` doctrine (merges SCHE-10) | landed (slice 2: `quality scheduler status` prints one quarantine summary line, and the reap pass archives entries older than 7 days to `<admission root>/quarantine-archive` before any delete; slice 4: the `beep-heavy` rule is retired from `.claude/skills/orchestrate/SKILL.md` and `docs/runbooks/practice-m365-contacts-seeding.md`) | Renderer and reaper age-gate tests, an archive-restore fixture; live lease count unchanged | none |
 | PERIL-13 | Mark merged-preview admission dormant | landed (dormancy note in `.claude/skills/yeet/references/gates-and-proof.md`) | Ruling D17 (given) | none |
 
@@ -278,7 +278,7 @@ certainty-scorecard and this goal consumes it.
       with a trace replay that preserves first-red identity; time-to-certainty's files are byte-identical.
 - [x] PERIL-02: two submissions with the same PR and argv yield one job (landed with PLAN.md slice 5).
 - [ ] PERIL-03: the 7-day A/B of polls per monitor-hour is recorded under `history/`.
-- [ ] PERIL-09 lands with its replay fixtures and the AGENTS.md amendment in the same PR.
+- [x] PERIL-09 lands with its replay fixtures and the AGENTS.md amendment in the same PR (PLAN.md slice 7).
 - [x] PERIL-10: `quality scheduler status` renders the quarantine as one summary line, aged entries are archived
       before reaping, the live lease count is unchanged, and the `beep-heavy` doctrine is retired from the
       orchestrate skill (landed with PLAN.md slices 2 and 4).
@@ -297,8 +297,8 @@ certainty-scorecard and this goal consumes it.
 | CLI package | `bun run beep quality package-verify @beep/repo-cli` | Passes |
 | Scheduler tests (Node) | `bunx vitest run packages/tooling/tool/cli/test/quality-scheduler.test.ts packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts packages/tooling/tool/cli/test/quality-scheduler-degraded-inputs.test.ts` | Passes |
 | Scheduler tests (Bun) | `cd packages/tooling/tool/cli && bunx --bun vitest run test/quality-scheduler.test.ts test/quality-scheduler-drift.test.ts test/quality-scheduler-degraded-inputs.test.ts` | Passes |
-| Yeet surfaces (Node) | `bunx vitest run packages/tooling/tool/cli/test/yeet-final-check.test.ts packages/tooling/tool/cli/test/yeet-monitor-loop.test.ts packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts packages/tooling/tool/cli/test/yeet-review-window.test.ts packages/tooling/tool/cli/test/proof-ledger.test.ts packages/tooling/tool/cli/test/proof-shadow.test.ts packages/tooling/tool/cli/test/gate-order-handoff.test.ts packages/tooling/tool/cli/test/yeet-merged-preview.test.ts` | Passes |
-| Yeet surfaces (Bun) | `cd packages/tooling/tool/cli && bunx --bun vitest run test/yeet-final-check.test.ts test/yeet-monitor-loop.test.ts test/yeet-monitor-ready.test.ts test/yeet-review-window.test.ts test/proof-ledger.test.ts test/proof-shadow.test.ts test/gate-order-handoff.test.ts test/yeet-merged-preview.test.ts` | Passes |
+| Yeet surfaces (Node) | `bunx vitest run packages/tooling/tool/cli/test/yeet-final-check.test.ts packages/tooling/tool/cli/test/yeet-monitor-loop.test.ts packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts packages/tooling/tool/cli/test/yeet-review-window.test.ts packages/tooling/tool/cli/test/yeet-review-window-base-merge.test.ts packages/tooling/tool/cli/test/proof-ledger.test.ts packages/tooling/tool/cli/test/proof-shadow.test.ts packages/tooling/tool/cli/test/gate-order-handoff.test.ts packages/tooling/tool/cli/test/yeet-merged-preview.test.ts` | Passes |
+| Yeet surfaces (Bun) | `cd packages/tooling/tool/cli && bunx --bun vitest run test/yeet-final-check.test.ts test/yeet-monitor-loop.test.ts test/yeet-monitor-ready.test.ts test/yeet-review-window.test.ts test/yeet-review-window-base-merge.test.ts test/proof-ledger.test.ts test/proof-shadow.test.ts test/gate-order-handoff.test.ts test/yeet-merged-preview.test.ts` | Passes |
 | Admission state | `bun run beep quality scheduler status --json` | Live leases unchanged by PERIL-10; new kinds and units decode |
 | Shadow bar | `bun run beep yeet proof-report --since <ruling 83 merge instant>` | Ready under ruling 80 before YEET-06 enforces |
 | Local economics | `bun run beep yeet economics --fleet --json` | Publish p95 and verify p50 per the acceptance; censoring stated |
@@ -415,6 +415,34 @@ Reverse: Re-shape the sequence through the exploration's MAP.md and record the c
 Source: exploration `explorations/ten-minute-certainty/DECISIONS.md` (D13).
 
 Reverse: Un-pause goals/time-to-certainty by a new decision and move YEET-06, YEET-07 and the gate-order fixtures back to it.
+
+### PERIL-09: the base-merge proof is a second method on the #3130 head-move classifier, 2026-11-14
+
+PERIL-09 reuses the head-move classifier #3130 added (`YeetHeadMoveClassifier` in `Yeet/internal/HeadMove.ts`) instead of writing a second one. The service gains `classifyBaseMerge`, which shares the classifier's object fetch, parent read, raw-entry comparison and streamed patch-identity digest (`PatchIdentity.ts`), and `isMergeCommit`, a local probe. `classify` is unchanged and still refuses every merge, so a final-check receipt never carries across a base merge; only the review window does.
+
+A base merge carries the window when four checks pass, in order: the new head is one two-parent commit whose first parent is the old head (`not-base-merge` otherwise); the merged commit is an ancestor of the synchronized base `base.sha` (`base-mismatch`); the pushed tree equals `git merge-tree`'s clean merge of the old head and the merged commit (`merge-conflict` when that merge conflicts, `replay-tree` when the merge commit was edited); and the pull request's patch against the base, GitHub's three-dot diff from `merge-base(base, head)`, has the same raw entries and per-file identity before and after (`patch`). A shallow checkout, a missing object or any failed read is `unknown`. SPEC states the rule as a conflict resolution that touches PR lines re-arming; the implementation re-arms on any conflicted automatic merge, which is SPEC's own parenthetical (a clean merge of origin/main keeps the anchor) and in practice the same set, because a resolved conflict always moves a removed or context line of a PR hunk.
+
+The carry record `YeetReviewWindowCarry` gains `merges` (constructor and decoding default 0); `rewrites` relaxes to a natural number and a struct check requires at least one step. Rejected: a separate base-merge classifier (two owners of one patch-identity rule) and widening `classify` to accept merges (it also gates final-check receipt carry).
+
+Lane feat/local-proof-review-window-anchor
+
+Reverse: Remove classifyBaseMerge and isMergeCommit from YeetHeadMoveClassifier and the base-merge walk from ReviewWindow.ts; every merge push re-arms the window again.
+
+### PERIL-09: base-merge carry stops at a GitHub rewrite and at a moved hunk context, 2026-11-14
+
+Two cases re-arm although the pull request's own lines did not change, both on purpose, because unknown is never unchanged. First, the merge walk follows only push rows and the rewrite walk only force-push rows, chosen by the head: a base merge on top of a GitHub-cascaded head counts from the cascade's push, not from the push before it, because the rewrite proof needs the cascade's own linear base and `base.sha` is the base at the merge's synchronization. Second, the patch identity keeps context lines, so a base change within three lines of a PR hunk changes the identity and re-arms (the recorded `HX` fixture). The reviewers' diff did change in both cases, only less than a fix push would. Rejected: carrying across a rewrite with an inferred base (one more inference on the merge path) and a context-free identity for merges only (a second patch-identity rule beside the one the rewrite proof and final-check refresh share in `PatchIdentity.ts`).
+
+Lane feat/local-proof-review-window-anchor
+
+Reverse: Compose the merge walk with the rewrite walk (merge-base of the root and base.sha as the rewrite base) or compare patches without context lines; both widen what carries.
+
+### PERIL-09: a base-merge carry spends GitHub reads only while the push holds the window, 2026-11-14
+
+The window is read on every monitor poll once it is the last blocker, and the REST budget is shared by every monitor (D16), so the base-merge carry must not add a read to ordinary pushes. `readYeetReviewWindowEvidence` first computes the uncarried push instant; only while that push still holds the window (less than the window length ago) does it run the classifier's local `isMergeCommit` probe on the head, and only a two-parent head reads the pull (when no caller supplied it) and the branch's ref activity. An elapsed window and a plain commit cost no extra GitHub read, and a GitHub rewrite keeps #3130's path unchanged (force pushes in the timeline still trigger it). The probe fetches a missing head object from origin, as the classifier already did, so a merge GitHub made with Update branch is proven from any checkout. Rejected: always reading the activity when a classifier is present (one or two extra REST calls per window poll on every pull request) and probing only local objects without a fetch (the merge gate runs from checkouts that lack other lanes' heads).
+
+Lane feat/local-proof-review-window-anchor
+
+Reverse: Drop the pushHolds and isMergeCommit gate in readWindowCarry so every window read with a classifier reads the pull and the ref activity.
 
 ### Readiness monitor reuse keys on the normalized replay argv; only an equal key is reused, 2026-11-14
 

@@ -37,9 +37,10 @@ Use this command for execution-capable sessions:
 
 P1 Implement — in progress. P0 closed with the baseline checkpoint
 (`decisions/2026-11-10-p0-baseline.md`). Slices 1 (PERIL-13), 2 (PERIL-10 summary and archive), 3 (SCHE-08, the
-admission unit schema, #3308), 4 (the beep-heavy retirement, which completes PERIL-10, #3312) and 6 (SCHE-08, the
-scheduler service facade and the Cache work kind, #3317) are done; slice 5 (PERIL-02, one live readiness monitor
-per pull request and readiness argv) is open as #3316.
+admission unit schema, #3308), 4 (the beep-heavy retirement, which completes PERIL-10, #3312), 5 (PERIL-02, one
+live readiness monitor per pull request and readiness argv, #3316) and 6 (SCHE-08, the scheduler service facade
+and the Cache work kind, #3317) are done. Slice 7 (PERIL-09, the review-window anchor kept across a push that only
+merges the base, with the AGENTS.md mergeable amendment) is built on `feat/local-proof-review-window-anchor`.
 
 ## Latest Evidence
 
@@ -81,6 +82,16 @@ per pull request and readiness argv) is open as #3316.
   request their own `cache` kind at weight 1, kept in the review-fix class cap. With the units gate off a Cache
   admission writes origin/main's `review-fix` bytes (fixture captured from its encoder); with it on, `cache`.
   The scheduler suites pass on Node and Bun.
+- 2026-11-14: slice 7 (PERIL-09) keeps the review-window anchor across a push that only merges the base.
+  #3130's `YeetHeadMoveClassifier` gains `classifyBaseMerge`: the head is one two-parent commit on the old head,
+  the merged commit is on `base.sha`, the pushed tree is git's clean automatic merge, and the PR's three-dot patch
+  has the same identity before and after. `ReviewWindow.ts` walks push rows back across such merges to the first
+  push that changed the patch, and probes only while the uncarried push still holds the window and the head is a
+  local merge commit, so ordinary pushes cost no extra GitHub read. A conflict resolution, an edited merge, a moved
+  hunk context, a force push, a shallow history, a failed read and any unknown verdict re-arm. AGENTS.md's
+  mergeable definition and the yeet and orchestrate skills state the rule. Replay fixtures recorded from git 2.56.1
+  (`test/support/YeetBaseMergeReplay.ts`) run the real classifier through `Git.layerTest` and a scripted spawner,
+  on Node and Bun.
 
 ## Notes
 

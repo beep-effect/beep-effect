@@ -13,7 +13,7 @@ import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import { flow } from "effect/Function";
+import { constFalse, constTrue, flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
@@ -22,10 +22,15 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runGitFoldedStdout } from "./GitExec.ts";
-import { YeetHeadMoveChanged, YeetHeadMoveUnchanged, YeetHeadMoveUnknown } from "./HeadMove.schemas.ts";
+import {
+  YeetBaseMergeUnchanged,
+  YeetHeadMoveChanged,
+  YeetHeadMoveUnchanged,
+  YeetHeadMoveUnknown,
+} from "./HeadMove.schemas.ts";
 import { finalCheckPatchIdentityDigest } from "./PatchIdentity.ts";
 import type * as DateTime from "effect/DateTime";
-import type { YeetHeadMove, YeetHeadMoveChange, YeetHeadMoveRequest } from "./HeadMove.schemas.ts";
+import type { YeetBaseMerge, YeetHeadMove, YeetHeadMoveChange, YeetHeadMoveRequest } from "./HeadMove.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/HeadMove");
 const GithubCommitter = S.String.check(
@@ -116,9 +121,9 @@ const fetchSshEnvironment = Effect.fn("Yeet.headMoveFetchSshEnvironment")(functi
 
 // Step 10 runs first. The object probes run on `Git.refExists` (`cat-file -e`, W8, SPEC D-22); a
 // failed probe reads as missing, as the capture it replaces did.
-const ensureObjects = Effect.fn("Yeet.headMoveEnsureObjects")(function* (root: string, request: YeetHeadMoveRequest) {
+const ensureShas = Effect.fn("Yeet.headMoveEnsureObjects")(function* (root: string, shas: ReadonlyArray<string>) {
   const git = yield* Git;
-  const refs = A.dedupe([request.before, request.after, request.base]);
+  const refs = A.dedupe(shas);
   yield* Effect.forEach(refs, guardLiteralArg);
   const missing = yield* Effect.filter(refs, (sha) =>
     git.refExists(root, `${sha}^{commit}`).pipe(
@@ -157,11 +162,16 @@ const ensureObjects = Effect.fn("Yeet.headMoveEnsureObjects")(function* (root: s
     )
   );
 });
+const ensureObjects = (root: string, request: YeetHeadMoveRequest) =>
+  ensureShas(root, [request.before, request.after, request.base]);
+// KEEP (D-22): `Git.commitInfo` and `Git.log` carry no parent list; `%P` is read raw.
+const readParents = Effect.fn("Yeet.headMoveReadParents")(function* (root: string, sha: string) {
+  const parentText = yield* read(root, ["show", "-s", "--format=%P", sha]);
+  return A.flatMap(lines(parentText), Str.split(" "));
+});
 const readCommit = Effect.fn("Yeet.headMoveReadCommit")(function* (root: string, sha: string) {
   const git = yield* Git;
-  // KEEP (D-22): `Git.commitInfo` and `Git.log` carry no parent list; `%P` is read raw.
-  const parentText = yield* read(root, ["show", "-s", "--format=%P", sha]);
-  const parentShas = A.flatMap(lines(parentText), Str.split(" "));
+  const parentShas = yield* readParents(root, sha);
   const tree = yield* git.revParse(root, `${sha}^{tree}`);
   const parentTree = yield* O.match(A.head(parentShas), {
     onNone: () => Effect.succeed(""),
@@ -251,7 +261,15 @@ const oldTail = Effect.fn("Yeet.headMoveOldTail")(function* (
   }
   return { tail: A.reverse(tail), base: at };
 });
-const rawEntries = Effect.fn("Yeet.headMoveRawEntries")(function* (root: string, commit: Commit) {
+class PatchRange extends S.Opaque<PatchRange, { readonly brand: unique symbol }>()(
+  S.Struct({ from: S.String, to: S.String }).pipe(
+    $I.annoteSchema("HeadMovePatchRange", {
+      description: "The two endpoints one patch is diffed between: a commit and its parent, or a base and a head.",
+    })
+  )
+) {}
+const commitRange = (commit: Commit) => PatchRange.make({ from: `${commit.sha}^`, to: commit.sha });
+const rawEntries = Effect.fn("Yeet.headMoveRawEntries")(function* (root: string, range: PatchRange) {
   // KEEP (D-22): `Git.nameStatus` drops the old and new modes this comparison reads from
   // `diff-tree --raw`.
   const entryText = yield* raw(root, [
@@ -262,8 +280,8 @@ const rawEntries = Effect.fn("Yeet.headMoveRawEntries")(function* (root: string,
     "--no-abbrev",
     "-r",
     "-z",
-    `${commit.sha}^`,
-    commit.sha,
+    range.from,
+    range.to,
     "--",
   ]);
   const tokens = Str.split(entryText, "\0");
@@ -279,7 +297,7 @@ const rawEntries = Effect.fn("Yeet.headMoveRawEntries")(function* (root: string,
 });
 // KEEP (D-22): the per-path patch identity is a streamed byte fold that keeps invalid UTF-8 (the
 // Y33 reason, D-18); the kit buffers decoded text.
-const patchDigest = Effect.fn("Yeet.headMovePatchDigest")((root: string, commit: Commit, path: string) =>
+const patchDigest = Effect.fn("Yeet.headMovePatchDigest")((root: string, range: PatchRange, path: string) =>
   runGitFoldedStdout(
     root,
     [
@@ -291,8 +309,8 @@ const patchDigest = Effect.fn("Yeet.headMovePatchDigest")((root: string, commit:
       "--no-textconv",
       "--binary",
       "--full-index",
-      `${commit.sha}^`,
-      commit.sha,
+      range.from,
+      range.to,
       "--",
       path,
     ],
@@ -309,33 +327,37 @@ const metadata = (request: YeetHeadMoveRequest, before: Commit, after: Commit, i
       YeetHeadMoveChanged.make({ ...request, change: "metadata", detail: `Commit ${index}: ${field} differs.` })
     )
   );
-// Step 7b: compare raw modes/status/paths, then each whitespace-exact patch digest.
-const patches = Effect.fn("Yeet.headMovePatches")(function* (
+// Step 7b: compare raw modes/status/paths, then each whitespace-exact patch digest. A rewrite's
+// new side always lists a path (it holds only non-empty commits); a base merge's may list none,
+// so the old side names the paths then.
+const samePatch = Effect.fn("Yeet.headMovePatches")(function* (
   root: string,
   request: YeetHeadMoveRequest,
-  before: Commit,
-  after: Commit,
-  index: number
+  older: PatchRange,
+  newer: PatchRange,
+  label: string
 ) {
-  const oldEntries = yield* rawEntries(root, before);
-  const newEntries = yield* rawEntries(root, after);
+  const oldEntries = yield* rawEntries(root, older);
+  const newEntries = yield* rawEntries(root, newer);
+  const named = A.isReadonlyArrayNonEmpty(newEntries) ? newEntries : oldEntries;
   if (!sameEntries(oldEntries, newEntries))
     return changed(
       request,
       "patch",
-      // `after` holds only non-empty commits, so the new side always lists at least one path.
-      `Commit ${index}: raw entries differ at ${A.join(
-        A.map(newEntries, (entry) => entry.path),
+      `${label}: raw entries differ at ${A.join(
+        A.map(named, (entry) => entry.path),
         ", "
       )}.`
     );
   for (const entry of newEntries) {
-    const oldDigest = yield* patchDigest(root, before, entry.path);
-    const newDigest = yield* patchDigest(root, after, entry.path);
-    if (oldDigest !== newDigest) return changed(request, "patch", `Commit ${index}: ${entry.path} differs.`);
+    const oldDigest = yield* patchDigest(root, older, entry.path);
+    const newDigest = yield* patchDigest(root, newer, entry.path);
+    if (oldDigest !== newDigest) return changed(request, "patch", `${label}: ${entry.path} differs.`);
   }
   return O.none();
 });
+const patches = (root: string, request: YeetHeadMoveRequest, before: Commit, after: Commit, index: number) =>
+  samePatch(root, request, commitRange(before), commitRange(after), `Commit ${index}`);
 const pairCommits = Effect.fn("Yeet.headMovePairCommits")(function* (
   root: string,
   request: YeetHeadMoveRequest,
@@ -410,8 +432,101 @@ const classifyKnown = Effect.fn("Yeet.headMoveClassifyKnown")(function* (
   return YeetHeadMoveUnchanged.make({ ...request, commits: A.length(own) });
 });
 
+// Base merge, step 1: exactly one two-parent merge whose first parent is the old head.
+const baseMergeShape = (request: YeetHeadMoveRequest, parents: ReadonlyArray<string>) =>
+  A.length(parents) === 2 && O.contains(A.head(parents), request.before)
+    ? O.none()
+    : changed(request, "not-base-merge", "The new head is not one merge commit on top of the old head.");
+// Base merge, step 2: the merged commit is on the synchronized base, so only base history comes in.
+const mergedFromBase = Effect.fn("Yeet.headMoveMergedFromBase")(function* (
+  root: string,
+  request: YeetHeadMoveRequest,
+  merged: string
+) {
+  const git = yield* Git;
+  return (yield* git.isAncestor(root, merged, request.base))
+    ? O.none()
+    : changed(request, "base-mismatch", "The merged commit is not on the synchronized base.");
+});
+// Base merge, step 3: the pushed tree is git's clean automatic merge, so no conflict was resolved
+// and nothing was edited inside the merge commit.
+const cleanBaseMerge = Effect.fn("Yeet.headMoveCleanBaseMerge")(function* (
+  root: string,
+  request: YeetHeadMoveRequest,
+  merged: string
+) {
+  const git = yield* Git;
+  const automatic = yield* git.mergeTree(root, request.before, merged);
+  if (automatic._tag === "conflicted")
+    return changed(request, "merge-conflict", "The automatic merge of the base conflicts.");
+  const actual = yield* git.revParse(root, `${request.after}^{tree}`);
+  return automatic.tree === actual
+    ? O.none()
+    : changed(request, "replay-tree", "The merge commit's tree differs from the clean merge of the base.");
+});
+// Base merge, step 4: the patch against the base (GitHub's three-dot diff) keeps its identity.
+const baseMergePatch = Effect.fn("Yeet.headMoveBaseMergePatch")(function* (root: string, request: YeetHeadMoveRequest) {
+  const git = yield* Git;
+  const oldBase = yield* git.mergeBase(root, request.base, request.before);
+  const newBase = yield* git.mergeBase(root, request.base, request.after);
+  return yield* samePatch(
+    root,
+    request,
+    PatchRange.make({ from: oldBase, to: request.before }),
+    PatchRange.make({ from: newBase, to: request.after }),
+    "The pull request's patch"
+  );
+});
+const classifyBaseMergeKnown = Effect.fn("Yeet.headMoveClassifyBaseMergeKnown")(function* (
+  root: string,
+  request: YeetHeadMoveRequest
+) {
+  const git = yield* Git;
+  yield* ensureObjects(root, request);
+  // A shallow boundary hides parents and merge bases, so the identity cannot be established.
+  const shallow = yield* git.isShallow(root);
+  if (shallow)
+    return yield* YeetCommandError.make({ message: "Base-merge evidence needs a full history.", exitCode: 1 });
+  const parents = yield* readParents(root, request.after);
+  yield* requireStep(baseMergeShape(request, parents));
+  // In bounds by construction: the shape step requires two parents.
+  const merged = yield* Effect.fromOption(A.get(parents, 1));
+  const onBase = yield* mergedFromBase(root, request, merged);
+  yield* requireStep(onBase);
+  const clean = yield* cleanBaseMerge(root, request, merged);
+  yield* requireStep(clean);
+  const patch = yield* baseMergePatch(root, request);
+  yield* requireStep(patch);
+  return YeetBaseMergeUnchanged.make({ ...request, merged });
+});
+
+// Failures and defects become the fallback evidence; interruption still propagates.
+const recoverEvidence =
+  <B>(fallback: (cause: Cause.Cause<unknown>) => B) =>
+  <A, E, R>(program: Effect.Effect<A, E, R>): Effect.Effect<A | B, never, R> =>
+    program.pipe(
+      Effect.catchCause((cause) =>
+        Cause.hasFails(cause) || Cause.hasDies(cause)
+          ? Effect.succeed(fallback(cause))
+          : Effect.failCause(Cause.fromReasons<never>(A.filter(cause.reasons, Cause.isInterruptReason)))
+      )
+    );
+const unknownMove = (request: YeetHeadMoveRequest) =>
+  recoverEvidence((cause) => YeetHeadMoveUnknown.make({ ...request, reason: Cause.pretty(cause) }));
+
 /**
  * Classifies pinned head moves without failing callers or trusting GitHub activity actors.
+ *
+ * **Details**
+ *
+ * `classify` proves a GitHub rewrite (cascade, restack) replayed the same
+ * commits; it refuses every merge. `classifyBaseMerge` proves a push that only
+ * merges the synchronized base: one two-parent commit on the old head, the
+ * merged commit on the base, the tree equal to git's clean automatic merge,
+ * and the same patch identity against the base before and after. A shallow
+ * checkout, a missing object or any failed read is `unknown`, never
+ * `unchanged`. `isMergeCommit` is the cheap local probe callers take before
+ * spending GitHub reads on a base merge; an unreadable commit is not one.
  *
  * **Example** (Classify with deterministic evidence)
  *
@@ -430,6 +545,8 @@ export class YeetHeadMoveClassifier extends Context.Service<
   {
     readonly committerInstant: (sha: string) => Effect.Effect<O.Option<DateTime.Utc>>;
     readonly classify: (request: YeetHeadMoveRequest) => Effect.Effect<YeetHeadMove>;
+    readonly classifyBaseMerge: (request: YeetHeadMoveRequest) => Effect.Effect<YeetBaseMerge>;
+    readonly isMergeCommit: (sha: string) => Effect.Effect<boolean>;
   }
 >()($I`YeetHeadMoveClassifier`) {
   /**
@@ -450,7 +567,10 @@ export class YeetHeadMoveClassifier extends Context.Service<
     Layer.effect(
       YeetHeadMoveClassifier,
       Effect.gen(function* () {
-        const dependencies = yield* Effect.context<Effect.Services<ReturnType<typeof classifyKnown>>>();
+        const dependencies =
+          yield* Effect.context<
+            Effect.Services<ReturnType<typeof classifyKnown> | ReturnType<typeof classifyBaseMergeKnown>>
+          >();
         // `Git.configGet` (W8, SPEC D-22): an unset key or a failed read is no local mailbox.
         const git = yield* Git;
         const localEmail = yield* git
@@ -473,11 +593,22 @@ export class YeetHeadMoveClassifier extends Context.Service<
           classify: Effect.fn("Yeet.classifyHeadMove")((request: YeetHeadMoveRequest) =>
             classifyKnown(repoRoot, request, localEmail).pipe(
               Effect.catchIf(isChanged, Effect.succeed),
-              Effect.catchCause((cause) =>
-                Cause.hasFails(cause) || Cause.hasDies(cause)
-                  ? Effect.succeed(YeetHeadMoveUnknown.make({ ...request, reason: Cause.pretty(cause) }))
-                  : Effect.failCause(Cause.fromReasons<never>(A.filter(cause.reasons, Cause.isInterruptReason)))
-              ),
+              unknownMove(request),
+              Effect.provideContext(dependencies)
+            )
+          ),
+          classifyBaseMerge: Effect.fn("Yeet.classifyBaseMerge")((request: YeetHeadMoveRequest) =>
+            classifyBaseMergeKnown(repoRoot, request).pipe(
+              Effect.catchIf(isChanged, Effect.succeed),
+              unknownMove(request),
+              Effect.provideContext(dependencies)
+            )
+          ),
+          isMergeCommit: Effect.fn("Yeet.isMergeCommit")((sha: string) =>
+            ensureShas(repoRoot, [sha]).pipe(
+              Effect.andThen(readParents(repoRoot, sha)),
+              Effect.map((parents) => A.length(parents) === 2),
+              recoverEvidence(() => false),
               Effect.provideContext(dependencies)
             )
           ),
@@ -486,8 +617,32 @@ export class YeetHeadMoveClassifier extends Context.Service<
     );
 }
 
+const testClassifier = (
+  lookup: (request: YeetHeadMoveRequest) => YeetHeadMove,
+  baseMerge: (request: YeetHeadMoveRequest) => YeetBaseMerge,
+  isMergeCommit: (sha: string) => boolean
+) =>
+  Layer.succeed(YeetHeadMoveClassifier, {
+    committerInstant: Effect.fn("Yeet.testCommitterInstant")((_sha: string) => Effect.succeedNone),
+    classify: Effect.fn("Yeet.testClassifyHeadMove")((request: YeetHeadMoveRequest) => Effect.succeed(lookup(request))),
+    classifyBaseMerge: Effect.fn("Yeet.testClassifyBaseMerge")((request: YeetHeadMoveRequest) =>
+      Effect.succeed(baseMerge(request))
+    ),
+    isMergeCommit: Effect.fn("Yeet.testIsMergeCommit")((sha: string) => Effect.succeed(isMergeCommit(sha))),
+  });
+
+const fixtureMissing =
+  (kind: string) =>
+  (request: YeetHeadMoveRequest): YeetHeadMoveUnknown =>
+    YeetHeadMoveUnknown.make({ ...request, reason: `no ${kind} fixture` });
+
 /**
  * Supply a pure request-to-verdict lookup for carry tests.
+ *
+ * **Details**
+ *
+ * No commit is a merge commit and every base merge is `unknown`, so a rewrite
+ * fixture never carries a base merge.
  *
  * **Example** (Return unreadable evidence)
  *
@@ -501,10 +656,32 @@ export class YeetHeadMoveClassifier extends Context.Service<
  * @since 0.0.0
  */
 export const layerYeetHeadMoveClassifierTest = (lookup: (request: YeetHeadMoveRequest) => YeetHeadMove) =>
-  Layer.succeed(YeetHeadMoveClassifier, {
-    committerInstant: Effect.fn("Yeet.testCommitterInstant")((_sha: string) => Effect.succeedNone),
-    classify: Effect.fn("Yeet.testClassifyHeadMove")((request: YeetHeadMoveRequest) => Effect.succeed(lookup(request))),
-  });
+  testClassifier(lookup, fixtureMissing("base-merge"), constFalse);
+
+/**
+ * Supply a pure base-merge lookup for review-window carry tests.
+ *
+ * **Details**
+ *
+ * Every commit reads as a merge commit, so the lookup alone decides which
+ * push rows carry; every rewrite is `unknown`.
+ *
+ * **Example** (Refuse every base merge)
+ *
+ * ```ts
+ * import { layerYeetBaseMergeClassifierTest, YeetHeadMoveChanged } from "@beep/repo-cli/test/Yeet"
+ * const layer = layerYeetBaseMergeClassifierTest((request) =>
+ *   YeetHeadMoveChanged.make({ ...request, change: "merge-conflict", detail: "fixture" })
+ * )
+ * console.log(layer)
+ * ```
+ * @param lookup - Deterministic request-to-verdict function for base merges.
+ * @returns A requirement-free test classifier layer.
+ * @category testing
+ * @since 0.0.0
+ */
+export const layerYeetBaseMergeClassifierTest = (lookup: (request: YeetHeadMoveRequest) => YeetBaseMerge) =>
+  testClassifier(fixtureMissing("rewrite"), lookup, constTrue);
 
 /**
  * Supply a checkout classifier at a window or ready-gate boundary.

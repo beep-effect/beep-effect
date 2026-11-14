@@ -124,7 +124,8 @@ checks and optional lanes (`Heavy / *`) never hold it. Otherwise it refuses
 with the first blocker named (`pr-open`, `no-required-red`,
 `threads-resolved`, `final-check`); skipped final-check gates are printed so
 the PR body can name them. There is no `--force`. Flip only when no further push is
-planned: a push after the flip restarts the review window. Squash-message advice: [`gh-rest.md`](gh-rest.md).
+planned: a push after the flip restarts the review window, unless it is a proven clean
+merge of the base (see the merge gate below). Squash-message advice: [`gh-rest.md`](gh-rest.md).
 
 ### Refresh after a main merge
 
@@ -177,6 +178,26 @@ is `review window unknown`, which blocks exactly like an open window.
 `BEEP_YEET_REVIEW_WINDOW` overrides the length with an Effect duration string
 (`"30 minutes"`); the default is `YEET_REVIEW_WINDOW_DEFAULT` in
 `internal/ReviewWindow.ts`. No reviewer has to post for the window to elapse.
+
+A push that leaves the PR's own patch unchanged keeps the earlier push as the anchor:
+a proven GitHub rewrite (cascade, restack; #3130) or a merge of the base (PERIL-09,
+ruling D12). For a base merge the head-move classifier (`classifyBaseMerge` in
+`internal/HeadMove.ts`) must prove that the new head is one two-parent commit whose
+first parent is the old head, and whose push row in the branch's activity moved the
+branch from it; that the merged commit is on the synchronized base (`base.sha`); that the
+pushed tree is git's clean automatic merge, so no conflict was resolved and nothing was
+edited inside the merge commit; and that the PR's patch against the base (GitHub's
+three-dot diff) has the same identity before and after, compared byte for byte with hunk
+line numbers erased. The anchor then walks back across every such merge to the first
+push that changed the patch, and the status line ends `carried across N base merge(s)
+from <sha>`. Anything else re-arms the window: a conflict resolution, an edit inside the
+merge, a base change that moves a context line of a PR hunk, a force push, a shallow
+checkout, a missing object, a failed activity read and any `unknown` verdict. The merge
+probe runs only while the uncarried push still holds the window and the head is a local
+merge commit, so an elapsed window or an ordinary push costs no extra REST read. Every
+surface (the monitor and its inbox rows, `yeet status --remote`, `yeet merge-gate`,
+`yeet gate-table`, `yeet gh pr status`) reads this one anchor. A base merge carries only
+the window; the final-check receipt follows the refresh rule above.
 
 The `beep-reviewer` check gates a merge only while `main`'s ruleset lists it as a
 required check: `yeet merge` and `yeet merge-gate` run `enforceReviewerGate`, which

@@ -253,7 +253,7 @@ needed only for the escalation list below.
   a passing receipt. The open applies `ready-for-heavy`, starts the review
   window and submits the detached readiness monitor; hosted CI is the
   authoritative proof and `yeet verify` is on-demand. One push per fully
-  addressed wave, never per file or comment; a push after the open restarts
+  addressed wave, never per file or comment; a fix push after the open restarts
   the review window (push-first-publish D1–D11).
 - "Final" means the head passed `bun run beep yeet final-check`: the scoped
   local replay of every hosted gate the cheap tier skips (Lint Policy, Lint,
@@ -315,7 +315,10 @@ needed only for the escalation list below.
     four-digit PR, because the header is `<title> (#n)`; and
   - the review window has elapsed: at least 20 minutes (`BEEP_YEET_REVIEW_WINDOW`)
     since the later of the latest "marked ready for review" event and the
-    latest push to the head. No reviewer has to post (review bots never gate);
+    latest push to the head. A push that only merges the base, or a GitHub
+    rewrite, keeps the earlier anchor when Yeet proves the PR's own patch
+    unchanged; a conflict resolution or an unproven identity re-arms it. No
+    reviewer has to post (review bots never gate);
     a window that cannot be read is unknown, never elapsed. The one exception
     is the `beep-reviewer` check, and only while `main`'s ruleset requires it;
     `beep reviewer ruleset release|require --apply` switches it off and on

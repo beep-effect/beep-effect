@@ -1,0 +1,12 @@
+---
+title: "PERIL-09: the base-merge proof is a second method on the #3130 head-move classifier"
+date: 2026-11-14
+lane: "feat/local-proof-review-window-anchor"
+reversal: "Remove classifyBaseMerge and isMergeCommit from YeetHeadMoveClassifier and the base-merge walk from ReviewWindow.ts; every merge push re-arms the window again."
+---
+
+PERIL-09 reuses the head-move classifier #3130 added (`YeetHeadMoveClassifier` in `Yeet/internal/HeadMove.ts`) instead of writing a second one. The service gains `classifyBaseMerge`, which shares the classifier's object fetch, parent read, raw-entry comparison and streamed patch-identity digest (`PatchIdentity.ts`), and `isMergeCommit`, a local probe. `classify` is unchanged and still refuses every merge, so a final-check receipt never carries across a base merge; only the review window does.
+
+A base merge carries the window when four checks pass, in order: the new head is one two-parent commit whose first parent is the old head (`not-base-merge` otherwise); the merged commit is an ancestor of the synchronized base `base.sha` (`base-mismatch`); the pushed tree equals `git merge-tree`'s clean merge of the old head and the merged commit (`merge-conflict` when that merge conflicts, `replay-tree` when the merge commit was edited); and the pull request's patch against the base, GitHub's three-dot diff from `merge-base(base, head)`, has the same raw entries and per-file identity before and after (`patch`). A shallow checkout, a missing object or any failed read is `unknown`. SPEC states the rule as a conflict resolution that touches PR lines re-arming; the implementation re-arms on any conflicted automatic merge, which is SPEC's own parenthetical (a clean merge of origin/main keeps the anchor) and in practice the same set, because a resolved conflict always moves a removed or context line of a PR hunk.
+
+The carry record `YeetReviewWindowCarry` gains `merges` (constructor and decoding default 0); `rewrites` relaxes to a natural number and a struct check requires at least one step. Rejected: a separate base-merge classifier (two owners of one patch-identity rule) and widening `classify` to accept merges (it also gates final-check receipt carry).
