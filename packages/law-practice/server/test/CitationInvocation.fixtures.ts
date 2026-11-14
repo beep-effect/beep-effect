@@ -11,15 +11,22 @@ import {
   CitationInvocationPolicy,
   openCitationInvocation,
 } from "@beep/law-practice-server/internal/Citation/Invocation";
+import {
+  CitationNativeProcessAdmission,
+  captureCitationNativeAdmission,
+} from "@beep/law-practice-server/internal/Citation/NativeAdmission";
 import { CitationRegexOperation } from "@beep/law-practice-server/internal/Citation/RegexPolicy";
 import { captureCitationSnapshot } from "@beep/law-practice-server/internal/Citation/Snapshot";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { CitationEngineLimits, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
+import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { citationInvocationScaffoldClock } from "./CitationNativeSpawner.fixtures.ts";
@@ -30,7 +37,9 @@ const $I = $LawPracticeServerId.create("test/CitationInvocation.fixtures");
 interface InvocationTestEnvironment {
   readonly admission: O.Option<CitationOperationAdmission["Service"]>;
   readonly clock: Clock.Clock;
+  readonly native: O.Option<CitationNativeProcessAdmission["Service"]>;
   readonly operation: CitationEngineOperation;
+  readonly spawner: O.Option<ChildProcessSpawner["Service"]>;
 }
 const CitationTestExplicitInvocation = Context.Reference<boolean>($I`CitationTestExplicitInvocation`, {
   defaultValue: () => false,
@@ -40,6 +49,20 @@ const CitationTestScaffoldAdmission = Context.Reference<O.Option<CitationOperati
   $I`CitationTestScaffoldAdmission`,
   { defaultValue: O.none }
 );
+
+const captureTestNativeEnvironment = Effect.fn("CitationInvocationTest.nativeEnvironment")(function* (
+  limits: CitationEngineLimits,
+  environment?: InvocationTestEnvironment
+) {
+  const native =
+    environment !== undefined && O.isSome(environment.native)
+      ? environment.native.value
+      : yield* captureCitationNativeAdmission(limits);
+  const supplied = environment === undefined ? yield* Effect.serviceOption(ChildProcessSpawner) : environment.spawner;
+  if (O.isSome(supplied)) return { native, spawner: supplied.value };
+  const platform = yield* Layer.build(NodeServices.layer);
+  return { native, spawner: Context.get(platform, ChildProcessSpawner) };
+});
 
 /** Open a request for a direct stage, or an untimed test scaffold around several independently bound calls. */
 export const withCitationTestInvocation = Effect.fn("CitationInvocationTest.run")(function* <A, E, R>(
@@ -58,6 +81,7 @@ export const withCitationTestInvocation = Effect.fn("CitationInvocationTest.run"
       const admission = O.isSome(supplied)
         ? supplied.value
         : yield* makeCitationOperationAdmission(limits).pipe(Effect.provideService(Clock.Clock, clock), Effect.orDie);
+      const { native, spawner } = yield* captureTestNativeEnvironment(limits, environment);
       return yield* openCitationInvocation(
         CitationInvocationPolicy.make({
           limits,
@@ -69,7 +93,12 @@ export const withCitationTestInvocation = Effect.fn("CitationInvocationTest.run"
           Effect.provideService(CitationTestExplicitInvocation, policy !== undefined),
           Effect.provideService(CitationTestScaffoldAdmission, policy === undefined ? O.some(admission) : O.none())
         )
-      ).pipe(Effect.provideService(CitationOperationAdmission, admission), Effect.provideService(Clock.Clock, clock));
+      ).pipe(
+        Effect.provideService(CitationOperationAdmission, admission),
+        Effect.provideService(Clock.Clock, clock),
+        Effect.provideService(CitationNativeProcessAdmission, native),
+        Effect.provideService(ChildProcessSpawner, spawner)
+      );
     })
   );
 });
@@ -94,7 +123,9 @@ export const makeCitationTestInvocationBinding = Effect.fn("CitationInvocationTe
     replaceScaffoldAdmission === true && O.isSome(supplied) && O.isSome(scaffold) && supplied.value === scaffold.value
       ? O.none<CitationOperationAdmission["Service"]>()
       : supplied;
-  const environment = { clock, operation, admission };
+  const spawner = yield* Effect.serviceOption(ChildProcessSpawner);
+  const native = yield* Effect.serviceOption(CitationNativeProcessAdmission);
+  const environment = { clock, operation, admission, spawner, native };
   return <Args extends ReadonlyArray<unknown>, A, E, R>(
     run: (...args: Args) => Effect.Effect<A, E, R | CitationInvocation>
   ) =>

@@ -24,6 +24,7 @@ import type {
   AdmissionEvictionEmission,
   AdmissionJournalArchive,
   AdmissionJournalHistory,
+  AdmissionPressureEmission,
   AdmissionProtocol,
   AdmissionUnitEmission,
 } from "./AdmissionJournal.ts";
@@ -78,7 +79,7 @@ export interface QualitySchedulerShape {
   readonly observe: (
     config?: AdmissionConfig
   ) => Effect.Effect<AdmissionSnapshot, QualitySchedulerError, AdmissionStateServices>;
-  /** Read the admission protocol marker (eviction and unit gates). */
+  /** Read the admission protocol marker (eviction, unit and pressure gates). */
   readonly protocol: Effect.Effect<AdmissionProtocol, QualitySchedulerError, AdmissionDirectoryServices>;
   /** Reap dead admission state; a dry run unless `apply` is set. */
   readonly reap: (options: {
@@ -89,6 +90,10 @@ export interface QualitySchedulerShape {
   /** Turn eviction rows on or off; the unit gate keeps its state. */
   readonly setEvictionProtocol: (
     eviction: AdmissionEvictionEmission
+  ) => Effect.Effect<AdmissionProtocol, QualitySchedulerError, AdmissionJournalServices>;
+  /** Turn the capacity and host-pressure stamp on admitted and released rows on or off. */
+  readonly setPressureProtocol: (
+    pressure: AdmissionPressureEmission
   ) => Effect.Effect<AdmissionProtocol, QualitySchedulerError, AdmissionJournalServices>;
   /** Turn admission-unit fields, and the work kinds written behind them, on or off. */
   readonly setUnitProtocol: (
@@ -130,6 +135,7 @@ export interface QualitySchedulerShape {
  *     protocol: Effect.die("unused"),
  *     setEvictionProtocol: () => Effect.die("unused"),
  *     setUnitProtocol: () => Effect.die("unused"),
+ *     setPressureProtocol: () => Effect.die("unused"),
  *     history: Effect.die("unused"),
  *     archive: Effect.die("unused"),
  *     recordRoute: () => Effect.void

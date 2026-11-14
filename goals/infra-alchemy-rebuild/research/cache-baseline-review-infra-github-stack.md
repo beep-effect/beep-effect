@@ -27,6 +27,10 @@ Re-recorded again 2026-11-14 after merging `main` with #3325 (`@beep/infra-hosts
 baseline. The create-guard wave adds source and test files inside the package's default inputs only; no command,
 output or environment changes.
 
+Re-recorded again 2026-11-14 after merging `main` with #3344 (9374859de92), which took main's baseline. Since the
+last record the package gained the fake's ruleset-validation test (`test/FakeGitHubRulesets.test.ts`) inside its default
+inputs only; no command, output or environment changes.
+
 No task reads the network or a credential: the stack tests serve GitHub from an in-memory fake, and nothing
 writes outside the declared outputs. Recording `@beep/infra-github` adds its computations to the reviewed
 baseline as legacy settings. No task becomes cacheable, no exception row is added, and scope, profile and

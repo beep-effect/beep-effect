@@ -19,6 +19,7 @@ import * as R from "effect/Record";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import { YeetAttemptTerminationReason } from "../../../internal/repo-run/AttemptTerminationJournal.ts";
+import { YeetHandlerErrorKind } from "../Yeet.errors.ts";
 import { DEFAULT_YEET_PACKET_DIR } from "./Planner.schemas.ts";
 import { YeetReviewerKind } from "./ReviewLane.schemas.ts";
 import { YeetFailureKind, YeetLaneStatus, YeetOutcome } from "./Verdict.ts";
@@ -584,8 +585,11 @@ export class EconomicsMonitorWait extends S.Opaque<EconomicsMonitorWait, { reado
  * `refusal:stale-base`, `refusal:moved-tree` for a final-check run whose
  * checkout changed while the gates ran, `refusal:closeout`), then names the
  * first failed inner lane, else the failed step of a `step-exit` failure, else
- * the first failed lane, else `unrecorded` (a red with no verdict), else
- * `unexecuted` (a handler error that ran no lane) or `unlocated`.
+ * the first failed lane, else the handler error's kind (the verdict's
+ * `handlerErrorKind`, else the kind its message names): `refusal:publish-input`,
+ * `refusal:review-threads`, `github:rate-limit` or `github:transport`. Then
+ * `unrecorded` (a red with no verdict), else `unexecuted` (a handler error that
+ * ran no lane) or `unlocated`, the bucket for every red nothing above locates.
  * Every red attempt is one row, so the mix total equals `redAttempts`;
  * `receiptProxyMix` classifies every red attempt with the A1 script's seven
  * proxy classes.
@@ -1517,7 +1521,9 @@ export class EconomicsLane extends S.Opaque<EconomicsLane, { readonly brand: uni
  * (`legacy-unowned-start`, `owner-dead`, `stale-unverifiable-owner`) is
  * stamped when the reconciler ran, not when the attempt died, so its
  * `elapsedMs` is none; its `endedAt` still orders it but never bounds a
- * right-censored streak.
+ * right-censored streak. `handlerErrorKind` is the verdict's
+ * `handlerErrorKind` when it is a kind this reader knows, else none (rows
+ * written before the key existed, or by a writer with a newer kind).
  *
  * **Example** (A green verify attempt)
  *
@@ -1566,6 +1572,7 @@ export class EconomicsAttempt extends S.Opaque<EconomicsAttempt, { readonly bran
     diffFingerprint: OptionalString,
     terminationReason: S.OptionFromNullOr(YeetAttemptTerminationReason),
     verdictSchemaVersion: OptionalString,
+    handlerErrorKind: S.OptionFromNullOr(YeetHandlerErrorKind).pipe(S.withConstructorDefault(Effect.succeedNone)),
     lanes: S.Array(EconomicsLane),
   }).pipe(
     $I.annoteSchema("EconomicsAttempt", {

@@ -707,11 +707,9 @@
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
         "@pulumi/aws": "catalog:",
-        "@pulumi/cloudflare": "catalog:",
         "@pulumi/command": "catalog:",
         "@pulumi/gharunners": "file:ci-runners/sdks/ghaRunners",
         "@pulumi/pulumi": "catalog:",
-        "@pulumiverse/vercel": "catalog:",
       },
       "devDependencies": {
         "@beep/test-runner": "workspace:^",
@@ -4872,10 +4870,8 @@
     "@pnpm/catalogs.resolver": "1100.1.2",
     "@pnpm/catalogs.types": "1100.0.1",
     "@pulumi/aws": "^7.54.0",
-    "@pulumi/cloudflare": "^6.24.0",
     "@pulumi/command": "^4.5.0",
     "@pulumi/pulumi": "3.276.0",
-    "@pulumiverse/vercel": "^5.26.1",
     "@rdfjs/data-model": "^2.1.2",
     "@rdfjs/dataset": "^2.0.3",
     "@react-three/drei": "^10.7.9",
@@ -6977,13 +6973,9 @@
 
     "@pulumi/aws": ["@pulumi/aws@7.54.0", "", { "dependencies": { "@pulumi/pulumi": "^3.269.0", "mime": "^2.0.0" } }, "sha512-0asX0tYqnQFztv8k3kylli5ejXXXdttY0aVlVJ5CznEhecnQmE9Nt/XZjs/+4z5MXR7OYIdtomwwjPMt1+J8mw=="],
 
-    "@pulumi/cloudflare": ["@pulumi/cloudflare@6.24.0", "", { "dependencies": { "@pulumi/pulumi": "^3.269.0" } }, "sha512-UsgQbHLExQgIFLoGjACgpTeRp359khU6wCNyQ7CNqK6hzgRgyOWKRXg1GqZYOKLEXmA/nKv32p+2S3gM0Va1Vg=="],
-
     "@pulumi/command": ["@pulumi/command@4.5.0", "", { "dependencies": { "@pulumi/pulumi": "^3.0.0" } }, "sha512-o1omwSERsuqsAt7jhokjpF/TOrtx60oimc9u9YdwMIHG+s4WIzLokSDzlgiQMVNVkWWypFOZyWp1Dhvi32NXgQ=="],
 
     "@pulumi/pulumi": ["@pulumi/pulumi@3.276.0", "", { "dependencies": { "@grpc/grpc-js": "^1.10.1", "@logdna/tail-file": "^2.0.6", "@opentelemetry/api": "~1.9", "@opentelemetry/core": "^2.9", "@opentelemetry/exporter-trace-otlp-grpc": "^0.220", "@opentelemetry/exporter-zipkin": "^2.9", "@opentelemetry/instrumentation": "^0.220", "@opentelemetry/instrumentation-grpc": "^0.220", "@opentelemetry/resources": "^2.9", "@opentelemetry/sdk-trace-base": "^2.9", "@opentelemetry/sdk-trace-node": "^2.9", "@opentelemetry/semantic-conventions": "^1.42", "@types/google-protobuf": "^3.15.5", "@types/semver": "^7.5.6", "execa": "^5.1.0", "google-protobuf": "^3.21.4", "ini": "^2.0.0", "js-yaml": "^4.3.2", "minimist": "^1.2.6", "normalize-package-data": "^6.0.0", "require-from-string": "^2.0.1", "semver": "^7.5.2", "source-map-support": "^0.5.6", "upath": "^1.1.0" }, "peerDependencies": { "ts-node": ">= 7.0.1 < 12", "typescript": ">= 3.8.3 < 7" }, "optionalPeers": ["ts-node", "typescript"] }, "sha512-8ThwjehdLmmSpcoCtQG/9uxXx5duAsFm1OeMZOEzj9b/V3VdST6baKu51K4HnSTwqRHgH84NDhM2AwAKapTtXQ=="],
-
-    "@pulumiverse/vercel": ["@pulumiverse/vercel@5.26.1", "", { "dependencies": { "@pulumi/pulumi": "^3.142.0" } }, "sha512-WnmEseSjXDxOnIb8n8HhoI4mg5drbhHJFNOx6/BSSyDUZSRBWogmy6cH49DHwIxQ76MIEs5W+2ssk/yWesF0Sg=="],
 
     "@puppeteer/browsers": ["@puppeteer/browsers@3.2.6", "", { "dependencies": { "modern-tar": "^0.8.6", "yargs": "^18.0.0" }, "peerDependencies": { "proxy-agent": ">=8.0.1", "yauzl": "^2.10.0 || ^3.4.0" }, "optionalPeers": ["proxy-agent", "yauzl"], "bin": { "browsers": "lib/main-cli.js" } }, "sha512-MJP29gVoHznmqmwhH1tlZqzfeQ3aylTpSSa6WKZXtkwYUH02i9imBmWGTyZrbnAou5paX78SE4jMAUqnEPf8ug=="],
 

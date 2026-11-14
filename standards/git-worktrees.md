@@ -173,7 +173,8 @@ introducing an older checkout; inspect the current state with
 leases and journal rows follow the same rule: turn them on with
 `bun run beep quality scheduler protocol --units on` only after every live
 checkout reads them, and back off with `--units off` before introducing an
-older checkout.
+older checkout. The capacity and host-pressure stamp on admitted and released
+rows (`--pressure on|off`) needs no such wait: every revision ignores it.
 
 ## Retiring a worktree
 

@@ -50,8 +50,9 @@ export const makeCitationXmlWorker = Effect.fn("Citation.makeXmlWorker")(functio
   const unicode = yield* makeCitationPythonUnicode({ ...limits, producedTextUtf16: limits.sourceUtf16 }, "annotate");
   const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
     CitationSafetyLimitExceeded.make({ operation: "annotate", limit });
-  const balance = Effect.fn("Citation.balanceXmlInWorker")((source: CitationPythonUnicodeStorage) =>
-    owner.run(
+  const balance = Effect.fn("Citation.balanceXmlInWorker")(function* (source: CitationPythonUnicodeStorage) {
+    const invocation = yield* CitationInvocation;
+    return yield* owner.run(
       Effect.gen(function* () {
         const { reserve } = (yield* CitationInvocation).budget;
         yield* preflightCitationXmlJob(source.width, source.bytes.byteLength, limits.processMessageBytes);
@@ -79,9 +80,16 @@ export const makeCitationXmlWorker = Effect.fn("Citation.makeXmlWorker")(functio
           CitationXmlWorkerJob.make({ width: prepared.storage.width, bytes: prepared.storage.bytes }),
           limits.processMessageBytes
         );
-      })
-    )
-  );
+      }).pipe(
+        Effect.tap(() =>
+          invocation.lane.reserve.pipe(
+            Effect.mapError((error) => (error._tag === "CitationNativeLaneFailure" ? failure(error.reason) : error))
+          )
+        )
+      ),
+      invocation.lane.start
+    );
+  });
   return { balance, snapshot: owner.snapshot, reap: owner.reap };
 });
 

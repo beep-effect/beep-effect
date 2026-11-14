@@ -43,7 +43,7 @@ publishing.
 ## Infrastructure
 
 `alchemy.run.ts` is the `OipWeb` Alchemy stack (goals/infra-alchemy-rebuild, P4). It
-replaces the Pulumi project `opip-web` and owns the configuration around the site: the
+replaced the Pulumi project `opip-web` (both stacks removed 2026-11-14) and owns the configuration around the site: the
 Vercel project's settings, its environment variables and domains, the Cloudflare DNS
 records that point the domains at Vercel, and an S3 assets bucket. Builds and
 deployments stay with `.github/workflows/vercel-deploy.yml`. Operating notes, the deploy
@@ -102,8 +102,8 @@ checks untouched and carries no traffic flip. Every adopted object keeps
 **The assets bucket.** Adoption needs no copy and no reader switch; a new bucket needs
 neither either, because both buckets are empty (0 objects, 0 versions, 0 delete markers on
 2026-11-14) and nothing in the repo reads or writes them. So the default from D12 applies
-at no cost: new pinned names, S3 bills storage only, and the Pulumi buckets are deleted
-empty after their resources are unprotected. Adoption stays a one-line change
+at no cost: new pinned names, S3 bills storage only, and the Pulumi buckets were deleted
+empty after their resources were unprotected (2026-11-14). Adoption stays a one-line change
 (`assetsBucketName: "assets.oip.law"`; the S3 provider adopts silently by name).
 
 ### Stages and secrets
@@ -114,7 +114,7 @@ configuration, never derived from a state-held instance id.
 
 | Variable | Today | Under the stack |
 | --- | --- | --- |
-| `NEXT_DISABLE_PWA` | literal `0` in `infra/src/OipWeb.ts` | literal in `OipWebStack.ts` |
+| `NEXT_DISABLE_PWA` | literal `0` in infra/src/OipWeb.ts (removed in #3341) | literal in `OipWebStack.ts` |
 | `CRM_HUBSPOT_ACCOUNT_ID` | plain Pulumi config (`246203876`) | literal in `OipWebConfig.ts` |
 | `CRM_HUBSPOT_SERVICE_KEY` | Pulumi `secure:` value (decrypts with `op://BEEP_SECRETS/OIP_SECRETS/PULUMI_CONFIG_PASSPHRASE`; the same token in both stacks) and Vercel `sensitive` | `valueFrom: { config: "CRM_HUBSPOT_SERVICE_KEY" }`: `op://BEEP_SECRETS/OIP_SECRETS/CRM_HUBSPOT_SERVICE_KEY` through `op run` on a workstation, the one `CRM_HUBSPOT_SERVICE_KEY` environment secret in CI; state keeps the key name and a SHA-256 |
 

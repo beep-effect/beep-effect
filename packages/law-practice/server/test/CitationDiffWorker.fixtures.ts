@@ -1,5 +1,6 @@
 import * as NodeURL from "node:url";
 import { makeCitationDiffWorker as makeOwnedCitationDiffWorker } from "@beep/law-practice-server/internal/Citation/DiffWorker";
+import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import {
   CitationNativeProcessAdmission,
   makeCitationNativeProcessAdmission,
@@ -18,7 +19,6 @@ import { makeCitationBundledTestRuntime, makeCitationObservedSpawner } from "./C
 import type { CitationAdmissionFailure } from "@beep/law-practice-server/internal/Citation/Admission";
 import type { CitationDiffKernelFailure } from "@beep/law-practice-server/internal/Citation/DiffKernel";
 import type { CitationDiffWorkerFailure } from "@beep/law-practice-server/internal/Citation/DiffWorkerProtocol";
-import type { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type { CitationSpanDiffStep } from "@beep/law-practice-server/internal/Citation/SpanOffsets";
 import type { CitationEngineLimits, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
@@ -30,7 +30,21 @@ const makeCitationDiffWorker = Effect.fnUntraced(function* (
   a2?: Parameters<typeof makeOwnedCitationDiffWorker>[2]
 ) {
   const o1 = yield* ownCitationTestConfiguration(CitationNativeProcessRuntime, a1);
-  return yield* makeOwnedCitationDiffWorker(a0, o1, a2);
+  const stage = yield* makeOwnedCitationDiffWorker(a0, o1, a2);
+  return {
+    ...stage,
+    evaluate: Effect.fnUntraced(function* (before: unknown, after: unknown, maximum?: unknown) {
+      const invocation = yield* CitationInvocation;
+      return yield* stage.evaluate(
+        invocation.lane.start,
+        invocation.lane.reserve,
+        invocation.budget.reserve,
+        before,
+        after,
+        maximum
+      );
+    }),
+  };
 });
 
 /** Prepare a trusted diff bundle in the caller's scoped directory using the actual selected executable.
