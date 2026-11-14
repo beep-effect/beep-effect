@@ -241,8 +241,28 @@ prints the exact `previous` object to review and use. Copy `scope`, `profile` an
 `epoch` unchanged from `_root.json`. Set `subjects` to only those named in the drift
 and the reviewed basis; bind `review.basis.path` and `review.basis.sha256` to
 the reviewed basis file's exact bytes. The request also names the reviewer
-and reason. See [goals/tsc-rs-gates/research/cache-baseline-request-2026-10-14.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/tsc-rs-gates/research/cache-baseline-request-2026-10-14.json)
-for the request shape, not current hashes or a reusable subject list.
+and reason. The current request shape (placeholders, not reusable hashes or a
+reusable subject list):
+
+```json
+{
+  "previous": { "@beep/md": "<sha256 of standards/cache-baseline/@beep/md.json>" },
+  "review": {
+    "reviewer": "<agent and lane>",
+    "reason": "<which inputs changed and why no qualification is granted>",
+    "basis": { "path": "docs/reports/<review>.md", "sha256": "<sha256 of that file>" }
+  },
+  "subjects": ["@beep/md"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "<profile from _root.json>",
+  "epoch": "<epoch from _root.json>"
+}
+```
+
+Requests archived before the per-subject split (for example under
+`docs/reports/` and in the goals archive) carry `previous` as one bare digest of
+the old single file; the writer no longer decodes that form, so copy only their
+`review`, `subjects`, `scope`, `profile` and `epoch` shape.
 
 S31b permits only drift-named subjects with changed inputs: no widened
 qualification, no new exception rows, and no standards debt or exception
