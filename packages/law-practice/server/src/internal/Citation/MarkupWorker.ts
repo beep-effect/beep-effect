@@ -4,21 +4,17 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
-import { captureCitationNativeAdmission } from "./NativeAdmission.ts";
-import {
-  CitationNativeProcessOwnerSnapshot,
-  citationNativeProcessCommand,
-  makeCitationNativeProcessOwner,
-} from "./NativeProcess.ts";
+import { CitationNativeProcessOwnerSnapshot, citationNativeProcessCommand } from "./NativeProcess.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { ChildProcessHandle } from "effect/process/ChildProcessSpawner";
-import type { CitationNativeProcessLease } from "./NativeAdmission.ts";
+import type { CitationNativeLaneFailure, CitationNativeStart } from "./NativeLane.ts";
 import type {
   CitationNativeProcessFailureReason,
   CitationNativeProcessRuntime,
@@ -59,32 +55,53 @@ export const makeCitationMarkupWorker = Effect.fn("Citation.makeMarkupWorker")(f
   const deadlineKey = operation === "clean" ? "cleanDeadline" : "annotateDeadline";
   const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
     CitationSafetyLimitExceeded.make({ operation, limit });
-  const nativeAdmission = yield* captureCitationNativeAdmission(limits);
   const slots = yield* Semaphore.make(limits.concurrentOperations);
   const queueSlots = yield* Semaphore.make(limits.queuedOperations);
-  const nativeOwner = yield* makeCitationNativeProcessOwner(limits, operation, failure);
-  const ensureOpen = nativeOwner.ensureOpen;
+  const closed = yield* Ref.make(false);
+  const records = yield* Ref.make<ReadonlyArray<CitationOwnedNativeProcess<CitationNativeLaneFailure>>>([]);
+  const quarantined = yield* Ref.make(0);
+  yield* Effect.addFinalizer(() => Ref.set(closed, true));
+  const ensureOpen = Effect.gen(function* () {
+    if (yield* Ref.get(closed)) return yield* Effect.fail(failure("closed"));
+    if ((yield* Ref.get(quarantined)) > 0) return yield* Effect.fail(failure("quarantined"));
+  });
   const active = yield* Ref.make(0);
   const queued = yield* Ref.make(0);
   const snapshot = Effect.gen(function* () {
     return CitationMarkupWorkerSnapshot.make({
-      ...(yield* nativeOwner.snapshot),
+      processes: (yield* Ref.get(records)).length,
+      closed: yield* Ref.get(closed),
+      quarantined: yield* Ref.get(quarantined),
       active: yield* Ref.get(active),
       queued: yield* Ref.get(queued),
     });
   });
-  const reap = nativeOwner.reap;
+  const forget = Effect.fnUntraced(function* (record: CitationOwnedNativeProcess<CitationNativeLaneFailure>) {
+    yield* Ref.update(
+      records,
+      A.filter((entry) => entry !== record)
+    );
+  });
+  const reap = Effect.fn("Citation.reapMarkupWorker")(function* () {
+    for (const record of yield* Ref.get(records)) {
+      yield* record
+        .retire(true)
+        .pipe(Effect.mapError((error) => (error._tag === "CitationNativeLaneFailure" ? failure(error.reason) : error)));
+      yield* forget(record);
+    }
+  });
   const run = Effect.fn("Citation.runMarkupWorker")(
-    function* <A, E, P, R>(prepare: Effect.Effect<(child: ChildProcessHandle) => Effect.Effect<A, E>, P, R>) {
+    function* <A, E, P, R>(
+      prepare: Effect.Effect<(child: ChildProcessHandle) => Effect.Effect<A, E>, P, R>,
+      start: CitationNativeStart
+    ) {
       return yield* Effect.uninterruptibleMask(
         Effect.fnUntraced(function* (restore) {
           yield* ensureOpen;
           const claimed = yield* Ref.make(false);
           const activate = Ref.set(claimed, true).pipe(Effect.andThen(Ref.update(active, (value) => value + 1)));
-          let nativeLease = O.none<CitationNativeProcessLease>();
           const release = Effect.gen(function* () {
             if (yield* Ref.getAndSet(claimed, false)) {
-              if (O.isSome(nativeLease)) yield* nativeLease.value.release;
               yield* Ref.update(active, (value) => value - 1);
               yield* slots.release(1);
             }
@@ -108,37 +125,31 @@ export const makeCitationMarkupWorker = Effect.fn("Citation.makeMarkupWorker")(f
               () => Ref.update(queued, (value) => value - 1).pipe(Effect.andThen(queueSlots.release(1)))
             );
           }).pipe(Effect.onError(() => release));
-          let lease = O.none<CitationOwnedNativeProcess<F>>();
+          let lease = O.none<CitationOwnedNativeProcess<CitationNativeLaneFailure>>();
+          let acknowledged = false;
+          let uncertain = false;
           const body = Effect.gen(function* () {
             yield* ensureOpen;
             const call = yield* prepare;
-            yield* nativeAdmission.acquire(operation).pipe(
-              Effect.mapError((error) =>
-                error._tag === "CitationSafetyLimitExceeded"
-                  ? error
-                  : failure(error.reason === "quarantined" ? "quarantined" : "closed")
-              ),
-              Effect.tap((permit) =>
-                Effect.sync(() => {
-                  nativeLease = O.some(permit);
+            const started = yield* start("markup", citationNativeProcessCommand(runtime, argument)).pipe(
+              Effect.mapError((error) => (error._tag === "CitationNativeLaneFailure" ? failure(error.reason) : error)),
+              Effect.tap(
+                Effect.fnUntraced(function* (record) {
+                  lease = O.some(record.process);
+                  yield* Ref.update(records, A.append(record.process));
+                  yield* record.onRetired(
+                    Effect.gen(function* () {
+                      acknowledged = true;
+                      yield* forget(record.process);
+                      yield* Ref.update(quarantined, (value) => (uncertain ? value - 1 : value));
+                      yield* release;
+                    })
+                  );
                 })
               ),
               Effect.uninterruptible
             );
-            const started = yield* nativeOwner
-              .start(citationNativeProcessCommand(runtime, argument), {
-                quarantine: Effect.suspend(() => (O.isSome(nativeLease) ? nativeLease.value.quarantine : Effect.void)),
-                release,
-              })
-              .pipe(
-                Effect.tap((started) =>
-                  Effect.sync(() => {
-                    lease = O.some(started.process);
-                  })
-                ),
-                Effect.uninterruptible
-              );
-            const resource = yield* started.child;
+            const resource = yield* started.child.pipe(Effect.mapError((error) => failure(error.reason)));
             return yield* call(resource);
           });
           const outcome = yield* Effect.exit(
@@ -151,8 +162,21 @@ export const makeCitationMarkupWorker = Effect.fn("Citation.makeMarkupWorker")(f
               )
             )
           );
-          if (O.isSome(lease)) yield* lease.value.retire(false);
-          else yield* release;
+          if (O.isSome(lease)) {
+            const record = lease.value;
+            yield* record.retire(false).pipe(
+              Effect.tapError(() =>
+                Ref.update(quarantined, (value) => {
+                  if (acknowledged) return value;
+                  uncertain = true;
+                  return value + 1;
+                })
+              ),
+              Effect.mapError((error) => (error._tag === "CitationNativeLaneFailure" ? failure(error.reason) : error))
+            );
+            yield* forget(record);
+          }
+          yield* release;
           return yield* outcome;
         })
       ).pipe(

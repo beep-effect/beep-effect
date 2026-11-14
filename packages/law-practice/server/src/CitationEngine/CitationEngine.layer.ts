@@ -14,6 +14,7 @@ import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import { CitationOperationAdmission } from "../internal/Citation/Admission.ts";
 import { CitationAnnotationEntryConfiguration } from "../internal/Citation/AnnotationEntry.ts";
@@ -91,7 +92,8 @@ const install = Effect.fn("Citation.installEngine")(function* (
   const engineArtifact = configuration.extraction.engineArtifact;
   // A host-provided shared owner is required, so private stage fallbacks cannot
   // silently create a second total native capacity in this composition.
-  yield* CitationNativeProcessAdmission;
+  const nativeAdmission = yield* CitationNativeProcessAdmission;
+  const nativeSpawner = yield* ChildProcessSpawner;
   // Null-page case hashing uses semantic-object identity. Require the trusted
   // owner at installation instead of refusing a valid citation on first use.
   yield* CitationMissingPageIdentityFactory;
@@ -145,6 +147,8 @@ const install = Effect.fn("Citation.installEngine")(function* (
       )
     ).pipe(
       Effect.provideService(CitationOperationAdmission, admission),
+      Effect.provideService(CitationNativeProcessAdmission, nativeAdmission),
+      Effect.provideService(ChildProcessSpawner, nativeSpawner),
       Effect.provideService(Clock.Clock, invocationClock)
     );
   return CitationEngine.of({

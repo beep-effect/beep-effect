@@ -80,7 +80,8 @@ export const replayCitationSkipAnnotations = Effect.fn("AnnotationSkipTest.repla
       makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
         Effect.map((bind) => ({ ...stage, assemble: bind(stage.assemble) }))
       )
-    )
+    ),
+    Effect.provideContext(setup.provided)
   );
   const rows = full ? corpus.cases : A.filter(corpus.cases, (row) => row.id % 7 === 2 || row.id % 7 === 5);
   let children = 0;

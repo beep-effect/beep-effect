@@ -189,9 +189,9 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
           const captured = yield* Effect.context<Scope.Scope | Digest.Digest | Path.Path>();
           // One request is served by one engine's spawner, so each runtime gets its own invocation.
           for (const kind of ["bun", "node"] as const) {
+            const setup = yield* setupCitationMetadataRuntime(kind, undefined, true);
             yield* withCitationTestInvocation(
               Effect.gen(function* () {
-                const setup = yield* setupCitationMetadataRuntime(kind, undefined, true);
                 const directory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-annotation-diff-" });
                 const diffRuntime = yield* makeCitationDiffTestRuntime(kind, directory);
                 const assembly = yield* makeCitationAnnotationAssembly(setup.limits).pipe(
@@ -230,13 +230,14 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
                   );
                   expect(output).toEqual(row.result);
                 }
-                yield* assertCitationWorkerCompositionReleased(
-                  setup.operation,
-                  setup.admission,
-                  setup.observed.snapshot,
-                  12
-                );
-              })
+              }),
+              setup.limits
+            ).pipe(Effect.provideContext(setup.provided));
+            yield* assertCitationWorkerCompositionReleased(
+              setup.operation,
+              setup.admission,
+              setup.observed.snapshot,
+              12
             );
           }
         }),
