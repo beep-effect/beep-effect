@@ -4,10 +4,12 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationPythonUnicodeStorage, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { sha256 } from "@noble/hashes/sha2.js";
 import * as A from "effect/Array";
 import * as Bytes from "effect/Bytes";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
+import * as Hex from "effect/encoding/Hex";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -90,6 +92,7 @@ const decodeProfile = S.decodeUnknownEffect(ProfileType);
 const decodeNative = S.decodeUnknownEffect(CitationPythonUnicodeStorage);
 const sameProfile = S.toEquivalence(CitationRegexPatternProfile);
 const fail = (reason: CitationRegexDescriptorFailure["reason"]) => CitationRegexDescriptorFailure.make({ reason });
+const fingerprintUnavailable = () => fail("fingerprint-unavailable");
 const key = (digest: string, flags: number) => `${flags}:${digest}`;
 /** Copy descriptor data without sharing the mutable name record.
  * @internal @category operations @since 0.0.0
@@ -131,7 +134,7 @@ export const makeCitationRegexDescriptorRegistry = Effect.fn("Citation.makeRegex
     const words = Bytes.concat([new Uint8Array([storage.width]), storage.bytes]);
     return yield* crypto
       .digestHex(Digest.sha256, words)
-      .pipe(Effect.catchDefect(() => Effect.fail(fail("fingerprint-unavailable"))));
+      .pipe(Effect.catchDefect(() => Effect.fail(fingerprintUnavailable())));
   });
   const select = Effect.fn("Citation.selectRegexDescriptor")(function* (nativePattern: unknown, flagsInput: unknown) {
     const flags = yield* decodeFlags(flagsInput).pipe(Effect.mapError(() => fail("unknown-pattern")));
@@ -140,7 +143,19 @@ export const makeCitationRegexDescriptorRegistry = Effect.fn("Citation.makeRegex
       return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "processMessageBytes" });
     if (storage.bytes.byteLength / storage.width > limits.patternUtf16)
       return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "patternUtf16" });
-    const digest = yield* fingerprint(storage);
+    // Routing only: authoritative verification still uses the captured Digest
+    // after preparation. Incremental hashing borrows input without a sized copy.
+    const digest = yield* Effect.try({
+      try: () =>
+        Hex.encode(
+          sha256
+            .create()
+            .update(new Uint8Array([storage.width]))
+            .update(storage.bytes)
+            .digest()
+        ),
+      catch: fingerprintUnavailable,
+    });
     const descriptor = yield* Effect.fromOption(MutableHashMap.get(installed, key(digest, flags))).pipe(
       Effect.mapError(() => fail("unknown-pattern"))
     );

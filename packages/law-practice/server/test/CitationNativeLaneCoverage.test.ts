@@ -17,6 +17,7 @@ import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
+import * as O from "effect/Option";
 import * as ChildProcess from "effect/process/ChildProcess";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as Scope from "effect/Scope";
@@ -31,6 +32,139 @@ it.layer(process.versions.bun === undefined ? citationNativeNodeTestPlatform : c
   excludeTestServices: true,
   timeout: "30 seconds",
 })("native lane refusal boundaries", (it) => {
+  it.effect("revokes a returned unlocked start and a forked late user before releasing the lane", () =>
+    Effect.gen(function* () {
+      const { limits } = yield* defaultCitationEnginePolicy;
+      const admission = yield* makeCitationNativeProcessAdmission(limits);
+      const observed = yield* makeCitationObservedSpawner();
+      const lane = yield* makeCitationNativeLane(limits, "extract").pipe(
+        Effect.provideService(CitationNativeProcessAdmission, admission),
+        Effect.provideService(ChildProcessSpawner, observed.spawner)
+      );
+      const fixture = yield* makeCitationNativeWorkerFixture("busy");
+      const command = citationNativeProcessCommand(CitationNativeProcessRuntime.make(fixture), "");
+      const escaped = yield* lane.withUse((start) => Effect.succeed(start));
+      const failed = yield* escaped("regex", command).pipe(Effect.flip);
+      expect(failed).toMatchObject({ _tag: "CitationNativeLaneFailure", reason: "closed" });
+      const release = yield* Deferred.make<void>();
+      const late = yield* lane.withUse((start) =>
+        Deferred.await(release).pipe(Effect.andThen(start("regex", command)), Effect.flip, Effect.forkChild)
+      );
+      yield* Deferred.succeed(release, undefined);
+      const refused = yield* Fiber.join(late);
+      expect(refused).toMatchObject({ _tag: "CitationNativeLaneFailure", reason: "closed" });
+      const reserve = yield* lane.withUse((_start, reserve) => Effect.succeed(reserve));
+      const refusedReserve = yield* reserve.pipe(Effect.flip);
+      expect(refusedReserve).toMatchObject({ reason: "closed" });
+      const retire = yield* lane.withUse((_start, _reserve, release) => Effect.succeed(release));
+      const refusedRelease = yield* retire.pipe(Effect.flip);
+      expect(refusedRelease).toMatchObject({ reason: "closed" });
+      const capacity = yield* admission.snapshot;
+      expect(capacity).toMatchObject({ active: 0, queued: 0, quarantined: 0 });
+      const counts = yield* observed.snapshot;
+      expect(counts).toEqual({ spawned: 0, confirmed: 0 });
+      const receipt = yield* lane.snapshot;
+      expect(receipt).toMatchObject({ acquired: false, unitsAcquired: 0, started: 0, confirmed: 0 });
+    })
+  );
+  it.effect("revokes capabilities even when the callback throws before returning an Effect", () =>
+    Effect.gen(function* () {
+      const { limits } = yield* defaultCitationEnginePolicy;
+      const admission = yield* makeCitationNativeProcessAdmission(limits);
+      const observed = yield* makeCitationObservedSpawner();
+      const lane = yield* makeCitationNativeLane(limits, "extract").pipe(
+        Effect.provideService(CitationNativeProcessAdmission, admission),
+        Effect.provideService(ChildProcessSpawner, observed.spawner)
+      );
+      const services = yield* Effect.context<never>();
+      let leaked = O.none<typeof lane.start>();
+      const outcome = yield* lane
+        .withUse((start): Effect.Effect<void> => {
+          leaked = O.some(start);
+          return Effect.runSyncWith(services)(Effect.die("synchronous callback defect"));
+        })
+        .pipe(Effect.exit);
+      expect(Exit.hasDies(outcome)).toBe(true);
+      const start = yield* Effect.fromOption(leaked);
+      const fixture = yield* makeCitationNativeWorkerFixture("busy");
+      const refused = yield* start(
+        "regex",
+        citationNativeProcessCommand(CitationNativeProcessRuntime.make(fixture), "")
+      ).pipe(Effect.flip);
+      expect(refused).toMatchObject({ reason: "closed" });
+      const counts = yield* observed.snapshot;
+      expect(counts).toEqual({ spawned: 0, confirmed: 0 });
+      const receipt = yield* lane.snapshot;
+      expect(receipt).toMatchObject({ unitsAcquired: 0, acquired: false });
+    })
+  );
+  for (const kind of ["bun", "node"] as const) {
+    it.effect(`holds handover until a concurrently admitted ${kind} operation finishes`, () =>
+      Effect.gen(function* () {
+        const { limits } = yield* defaultCitationEnginePolicy;
+        const admission = yield* makeCitationNativeProcessAdmission(limits);
+        const observed = yield* makeCitationObservedSpawner();
+        const entered = yield* Deferred.make<void>();
+        const proceed = yield* Deferred.make<void>();
+        const callbackDone = yield* Deferred.make<void>();
+        let interleaved = false;
+        let attempts = 0;
+        const spawner = ChildProcessSpawner.of({
+          ...observed.spawner,
+          spawn: Effect.fn("LaneLifetimeTest.spawn")(function* (command) {
+            attempts++;
+            if (attempts === 1) {
+              yield* Deferred.succeed(entered, undefined);
+              yield* Deferred.await(proceed);
+            }
+            return yield* observed.spawner.spawn(command);
+          }),
+        });
+        const scope = yield* Effect.acquireRelease(Scope.make(), (scope) => Scope.close(scope, Exit.void));
+        const lane = yield* makeCitationNativeLane(limits, "extract").pipe(
+          Effect.provideService(Scope.Scope, scope),
+          Effect.provideService(CitationNativeProcessAdmission, admission),
+          Effect.provideService(ChildProcessSpawner, spawner)
+        );
+        const fixture = yield* makeCitationNativeWorkerFixture("busy", "html", kind);
+        const command = citationNativeProcessCommand(CitationNativeProcessRuntime.make(fixture), "");
+        const using = yield* lane
+          .withUse((start) =>
+            Effect.gen(function* () {
+              yield* start("regex", command).pipe(Effect.forkChild);
+              yield* Deferred.await(entered);
+              yield* Deferred.succeed(callbackDone, undefined);
+            })
+          )
+          .pipe(Effect.forkChild);
+        yield* Deferred.await(callbackDone);
+        const evaluation = yield* lane
+          .withUse(() =>
+            Effect.sync(() => {
+              interleaved = true;
+            })
+          )
+          .pipe(Effect.forkChild);
+        const another = yield* lane.start("diff", command).pipe(Effect.forkChild);
+        yield* Effect.yieldNow;
+        const before = attempts;
+        const early = interleaved;
+        const pending = using.pollUnsafe();
+        yield* Deferred.succeed(proceed, undefined);
+        expect(before).toBe(1);
+        expect(early).toBe(false);
+        expect(pending).toBeUndefined();
+        yield* Fiber.join(using);
+        yield* Fiber.join(evaluation);
+        yield* Fiber.join(another);
+        expect(interleaved).toBe(true);
+        expect(attempts).toBe(2);
+        yield* Scope.close(scope, Exit.void);
+        const counts = yield* observed.snapshot;
+        expect(counts).toEqual({ spawned: 2, confirmed: 2 });
+      })
+    );
+  }
   it.effect("retains quarantine after Scope retirement cannot confirm a real child, then settles on retry", () =>
     Effect.gen(function* () {
       const { limits } = yield* defaultCitationEnginePolicy;

@@ -42,38 +42,39 @@ function finishEarly() {
   return false;
 }
 let sequence = 0;
-createInterface({ input: process.stdin }).on("line", () => {
-  if (finishEarly()) return;
-  const selected = mode === "wrong-sequence" ? sequence + 1 : sequence;
-  process.stdout.write(`{"_tag":"Started","version":"${version}","sequence":${selected}}\n`);
-  if (mode === "running") {
-    writeFileSync(`${file}.entered`, "entered");
-    /^(a+)+$/.test(`${"a".repeat(40)}!`);
-    return;
-  }
-  if (mode === "wrong-sequence") return;
-  if (mode === "failure") {
+if (mode !== "closed-stdin" && mode !== "blocked-stdin")
+  createInterface({ input: process.stdin }).on("line", () => {
+    if (finishEarly()) return;
+    const selected = mode === "wrong-sequence" ? sequence + 1 : sequence;
+    process.stdout.write(`{"_tag":"Started","version":"${version}","sequence":${selected}}\n`);
+    if (mode === "running") {
+      writeFileSync(`${file}.entered`, "entered");
+      /^(a+)+$/.test(`${"a".repeat(40)}!`);
+      return;
+    }
+    if (mode === "wrong-sequence") return;
+    if (mode === "failure") {
+      process.stdout.write(
+        `{"_tag":"Failure","version":"${version}","sequence":${sequence},"failure":{"_tag":"CitationSafetyLimitExceeded","operation":"extract","limit":"patternMatches"}}\n`
+      );
+      return;
+    }
+    if (mode === "result") {
+      const timer = setInterval(() => {
+        if (existsSync(`${file}.result-release`)) {
+          clearInterval(timer);
+          process.stdout.write(
+            `{"_tag":"Complete","version":"citation-regex-result/v1","sequence":${sequence},"groups":0,"matches":0,"spans":""}\n`
+          );
+        }
+      }, 5);
+      return;
+    }
     process.stdout.write(
-      `{"_tag":"Failure","version":"${version}","sequence":${sequence},"failure":{"_tag":"CitationSafetyLimitExceeded","operation":"extract","limit":"patternMatches"}}\n`
+      `{"_tag":"Complete","version":"citation-regex-result/v1","sequence":${sequence},"groups":0,"matches":0,"spans":""}\n`
     );
-    return;
-  }
-  if (mode === "result") {
-    const timer = setInterval(() => {
-      if (existsSync(`${file}.result-release`)) {
-        clearInterval(timer);
-        process.stdout.write(
-          `{"_tag":"Complete","version":"citation-regex-result/v1","sequence":${sequence},"groups":0,"matches":0,"spans":""}\n`
-        );
-      }
-    }, 5);
-    return;
-  }
-  process.stdout.write(
-    `{"_tag":"Complete","version":"citation-regex-result/v1","sequence":${sequence},"groups":0,"matches":0,"spans":""}\n`
-  );
-  sequence++;
-});
+    sequence++;
+  });
 if (mode === "idle") {
   const timer = setInterval(() => {
     if (existsSync(`${file}.release`)) {
@@ -82,3 +83,16 @@ if (mode === "idle") {
     }
   }, 5);
 }
+
+if (mode === "closed-stdin") {
+  const timer = setInterval(() => {
+    if (existsSync(`${file}.close-input`)) {
+      clearInterval(timer);
+      writeFileSync(`${file}.entered`, "closing-stdin");
+      closeCopies(0);
+      setInterval(() => {}, 1000);
+    }
+  }, 5);
+}
+
+if (mode === "blocked-stdin") setInterval(() => {}, 1000);

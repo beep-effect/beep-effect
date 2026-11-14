@@ -27,6 +27,8 @@ import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { identity } from "effect/Function";
+import * as Match from "effect/Match";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
@@ -47,6 +49,7 @@ import {
 } from "./CitationNativeSpawner.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type { CitationRegexEngine } from "@beep/law-practice-server/internal/Citation/RegexEngine";
+import type { ChildProcessHandle } from "effect/process/ChildProcessSpawner";
 
 const decodeDescriptor = S.decodeEffect(CitationRegexPatternDescriptor);
 const descriptor = decodeDescriptor({
@@ -61,6 +64,12 @@ const descriptor = decodeDescriptor({
   },
 });
 const native = (text: string) => ({ width: 1, bytes: new TextEncoder().encode(text) });
+const fixtureMessageBytes = (mode: string) =>
+  Match.value(mode).pipe(
+    Match.whenOr("closed-stdin", "blocked-stdin", () => 2097152),
+    Match.whenOr("oversize", "preflight", () => 1024),
+    Match.orElse(() => 8192)
+  );
 const setup = Effect.fn("RegexSessionTest.setup")(function* (
   kind: CitationNativeRuntimeKind,
   mode: string,
@@ -87,7 +96,8 @@ const setup = Effect.fn("RegexSessionTest.setup")(function* (
     ...(yield* defaultCitationEnginePolicy).limits,
     regexDeadline: Duration.millis(800),
     cleanupDeadline: Duration.seconds(2),
-    processMessageBytes: mode === "oversize" || mode === "preflight" ? 1024 : 8192,
+    sourceUtf16: 1000000,
+    processMessageBytes: fixtureMessageBytes(mode),
   };
   const owner = yield* makeCitationNativeProcessAdmission(limits);
   let returns = 0;
@@ -105,11 +115,37 @@ const setup = Effect.fn("RegexSessionTest.setup")(function* (
   });
   const observed = yield* makeCitationObservedSpawner();
   let liveSigkills = 0;
+  let writeBytes = 0;
   let pids = A.empty<number>();
   const wait =
     barrier === undefined
       ? Effect.void
       : Deferred.succeed(barrier.entered, undefined).pipe(Effect.andThen(Deferred.await(barrier.release)));
+  const observeInput = (input: ChildProcessHandle["stdin"]) => {
+    const control = barrier;
+    if (control === undefined) return input;
+    return Match.value(control.stage).pipe(
+      Match.when("blocked-write", () =>
+        input.pipe(
+          Sink.mapInputEffect((bytes: Uint8Array) =>
+            Effect.sync(() => {
+              writeBytes = bytes.byteLength;
+            }).pipe(Effect.andThen(Deferred.succeed(control.entered, undefined)), Effect.as(bytes))
+          ),
+          Sink.mapEffect(() => Deferred.succeed(control.release, undefined).pipe(Effect.asVoid))
+        )
+      ),
+      Match.when("write", () => input.pipe(Sink.mapInputEffect((bytes: Uint8Array) => wait.pipe(Effect.as(bytes))))),
+      Match.when("write-error", () =>
+        input.pipe(
+          Sink.mapInputEffect(() =>
+            Effect.fail(PlatformError.systemError({ module: "ChildProcessSpawner", method: "stdin", _tag: "Unknown" }))
+          )
+        )
+      ),
+      Match.orElse(() => input)
+    );
+  };
   const consumed = barrier?.consumed;
   const spawner = ChildProcessSpawner.of({
     ...observed.spawner,
@@ -125,18 +161,7 @@ const setup = Effect.fn("RegexSessionTest.setup")(function* (
                 Effect.flatMap((released) => (released ? handle.isRunning : Effect.succeed(true)))
               )
             : handle.isRunning,
-        stdin:
-          barrier?.stage === "write"
-            ? handle.stdin.pipe(Sink.mapInputEffect((bytes: Uint8Array) => wait.pipe(Effect.as(bytes))))
-            : barrier?.stage === "write-error"
-              ? handle.stdin.pipe(
-                  Sink.mapInputEffect(() =>
-                    Effect.fail(
-                      PlatformError.systemError({ module: "ChildProcessSpawner", method: "stdin", _tag: "Unknown" })
-                    )
-                  )
-                )
-              : handle.stdin,
+        stdin: observeInput(handle.stdin),
         stdout: handle.stdout.pipe(
           Stream.tap((bytes) =>
             barrier?.stage === "startup" ||
@@ -215,6 +240,7 @@ const setup = Effect.fn("RegexSessionTest.setup")(function* (
     observed,
     timer,
     liveSigkills: Effect.sync(() => liveSigkills),
+    writeBytes: Effect.sync(() => writeBytes),
   };
 });
 
@@ -334,6 +360,80 @@ it.layer(citationNativeNodeTestPlatform, { excludeTestServices: true, timeout: "
           }).pipe(Effect.ensuring(Deferred.succeed(release, undefined)));
         })
       );
+      it.effect(`confirms ${kind} death after a real large stdin write receives EPIPE`, () =>
+        Effect.gen(function* () {
+          const entered = yield* Deferred.make<void>();
+          const release = yield* Deferred.make<void>();
+          const fixture = yield* setup(kind, "closed-stdin", { stage: "blocked-write", entered, release });
+          const pending = yield* fixture
+            .evaluateJob("python-re", fixture.bound, native("(?P<maybe>a)?(b)"), native(Str.repeat(1000000)("a")))
+            .pipe(Effect.flip, Effect.forkChild);
+          yield* Deferred.await(entered);
+          const bytes = yield* fixture.writeBytes;
+          expect(bytes).toBeGreaterThan(1048576);
+          yield* Effect.sleep(Duration.millis(10));
+          const acknowledged = yield* Deferred.isDone(release);
+          expect(acknowledged).toBe(false);
+          yield* fixture.fs.writeFileString(`${fixture.workerFile}.close-input`, "close");
+          yield* waitForCitationNativeTest(fixture.fs.exists(`${fixture.workerFile}.entered`));
+          const early = yield* Fiber.join(pending).pipe(Effect.timeoutOption(Duration.millis(500)));
+          const failure = yield* O.match(early, {
+            onSome: (failure) => Effect.succeed(failure),
+            onNone: () => fixture.timer.triggerSleep(1).pipe(Effect.andThen(Fiber.join(pending))),
+          });
+          expect(failure).toMatchObject({ reason: "channel-failed" });
+          yield* assertRetired(fixture);
+          const kills = yield* fixture.liveSigkills;
+          expect(kills).toBe(1);
+          const returned = yield* fixture.returns;
+          expect(returned).toBe(1);
+          for (const pid of yield* fixture.pids) {
+            const alive = yield* fixture.fs.exists(`/proc/${pid}`);
+            expect(alive).toBe(false);
+          }
+          const next = yield* fixture.evaluate.pipe(Effect.flip);
+          expect(next).toEqual(failure);
+          yield* assertRetired(fixture);
+          yield* Scope.close(fixture.scope, Exit.void);
+          const after = yield* fixture.returns;
+          expect(after).toBe(1);
+        })
+      );
+      it.effect(`expires the job deadline while a large write to a real ${kind} child is blocked`, () =>
+        Effect.gen(function* () {
+          const entered = yield* Deferred.make<void>();
+          const release = yield* Deferred.make<void>();
+          const fixture = yield* setup(kind, "blocked-stdin", { stage: "blocked-write", entered, release });
+          const pending = yield* fixture
+            .evaluateJob("python-re", fixture.bound, native("(?P<maybe>a)?(b)"), native(Str.repeat(1000000)("a")))
+            .pipe(Effect.flip, Effect.forkChild);
+          yield* Deferred.await(entered);
+          const bytes = yield* fixture.writeBytes;
+          expect(bytes).toBeGreaterThan(1048576);
+          yield* Effect.sleep(Duration.millis(10));
+          const acknowledged = yield* Deferred.isDone(release);
+          expect(acknowledged).toBe(false);
+          expect(pending.pollUnsafe()).toBeUndefined();
+          yield* fixture.timer.triggerSleep(1);
+          const failure = yield* Fiber.join(pending);
+          expect(failure).toMatchObject({ limit: "regexDeadline" });
+          yield* assertRetired(fixture);
+          const kills = yield* fixture.liveSigkills;
+          expect(kills).toBe(1);
+          const returned = yield* fixture.returns;
+          expect(returned).toBe(1);
+          for (const pid of yield* fixture.pids) {
+            const alive = yield* fixture.fs.exists(`/proc/${pid}`);
+            expect(alive).toBe(false);
+          }
+          const next = yield* fixture.evaluate.pipe(Effect.flip);
+          expect(next).toEqual(failure);
+          yield* assertRetired(fixture);
+          yield* Scope.close(fixture.scope, Exit.void);
+          const after = yield* fixture.returns;
+          expect(after).toBe(1);
+        })
+      );
       it.effect(`fails closed after ${kind} reports a typed job failure`, () =>
         Effect.gen(function* () {
           const fixture = yield* setup(kind, "failure");
@@ -411,31 +511,49 @@ it.layer(citationNativeNodeTestPlatform, { excludeTestServices: true, timeout: "
             }),
           });
           const original = globalThis.Uint32Array;
+          const originalBytes = globalThis.Uint8Array;
+          const pattern = native("(?P<maybe>a)?(b)");
+          const source = native(Str.repeat(700)("a"));
+          let copies = 0;
           let allocations = 0;
           const outcome = yield* Effect.gen(function* () {
             globalThis.Uint32Array = new Proxy(original, {
               construct(target, args) {
-                allocations++;
+                if (args[0] === pattern.bytes.byteLength + 1 || args[0] === source.bytes.byteLength + 1) allocations++;
+                return Reflect.construct(target, args);
+              },
+            });
+            globalThis.Uint8Array = new Proxy(originalBytes, {
+              construct(target, args) {
+                if (
+                  args[0] === pattern.bytes ||
+                  args[0] === pattern.bytes.byteLength ||
+                  args[0] === pattern.bytes.byteLength + 1 ||
+                  args[0] === source.bytes.byteLength
+                )
+                  copies++;
                 return Reflect.construct(target, args);
               },
             });
             return yield* evaluator
-              .evaluate(native("(?P<maybe>a)?(b)"), native(Str.repeat(700)("a")), 0, 2)
+              .evaluate(pattern, source, 0, 2)
               .pipe(Effect.provideService(CitationInvocation, invocation), Effect.flip);
           }).pipe(
             Effect.ensuring(
               Effect.sync(() => {
                 globalThis.Uint32Array = original;
+                globalThis.Uint8Array = originalBytes;
               })
             )
           );
           expect(outcome).toMatchObject({ limit: "processMessageBytes" });
           expect(allocations).toBe(0);
+          expect(copies).toBe(0);
           const receipt = yield* fixture.lane.snapshot;
           expect(receipt).toMatchObject({ started: 0, unitsAcquired: 0, acquired: false });
         })
       );
-      it.effect(`rechecks ${kind} captured pattern identity after descriptor selection awaits`, () =>
+      it.effect(`owns the ${kind} prepared pattern through authoritative fingerprint awaits`, () =>
         Effect.gen(function* () {
           const fixture = yield* setup(kind, "real");
           const entered = yield* Deferred.make<void>();
@@ -477,10 +595,11 @@ it.layer(citationNativeNodeTestPlatform, { excludeTestServices: true, timeout: "
           yield* Deferred.await(entered);
           pattern.bytes.fill(97);
           yield* Deferred.succeed(release, undefined);
-          const failure = yield* Fiber.join(pending).pipe(Effect.flip);
-          expect(failure).toMatchObject({ reason: "unknown-pattern" });
+          const completed = yield* Fiber.join(pending);
+          expect(completed.result.matches).toBe(1);
+          yield* Scope.close(fixture.scope, Exit.void);
           const counts = yield* fixture.observed.snapshot;
-          expect(counts).toEqual({ spawned: 0, confirmed: 0 });
+          expect(counts).toEqual({ spawned: 1, confirmed: 1 });
           const capacity = yield* fixture.admission.snapshot;
           expect(capacity).toMatchObject({ active: 0, quarantined: 0 });
         })

@@ -83,7 +83,7 @@ export type CitationNativeStart = (
   CitationNativeLaneFailure | CitationSafetyLimitExceeded
 >;
 /** One native unit and one confirmed occupant at a time, yielded across cleaner calls.
- * withUse serializes preparation/dispatch against handover and supplies trusted
+ * withUse serializes preparation/dispatch against handover and supplies revocable
  * already-locked operations across preparation timer fibers. Cleaner work holds
  * only its logical yield depth; its body never holds the handover lock.
  * @internal @category services @since 0.0.0
@@ -273,7 +273,32 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
     spawner: nativeSpawner,
     start,
     withUse: Effect.fn("Citation.useNativeLane")((body) =>
-      lock.withPermit(Effect.suspend(() => body(startUnlocked, reserveUnlocked, release.pipe(Effect.uninterruptible))))
+      lock.withPermit(
+        Effect.uninterruptibleMask(
+          Effect.fnUntraced(function* (restore) {
+            // This permit tracks the one admitted operation. Revocation fences
+            // queued or escaped users; draining it precedes handover unlock.
+            const admitted = yield* Semaphore.make(1);
+            let live = true;
+            const guard = <A, E, R>(operation: Effect.Effect<A, E, R>) =>
+              admitted.withPermit(
+                Effect.suspend(
+                  (): Effect.Effect<A, E | CitationNativeLaneFailure, R> =>
+                    live ? operation : Effect.fail(CitationNativeLaneFailure.make({ reason: "closed" }))
+                )
+              );
+            const start: CitationNativeStart = (...args) => guard(startUnlocked(...args));
+            const outcome = yield* Effect.exit(
+              restore(
+                Effect.suspend(() => body(start, guard(reserveUnlocked), guard(release.pipe(Effect.uninterruptible))))
+              )
+            );
+            live = false;
+            yield* admitted.withPermit(Effect.void);
+            return yield* outcome;
+          })
+        )
+      )
     ),
     retire: lock.withPermit(release.pipe(Effect.uninterruptible)),
     reserve,
