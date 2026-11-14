@@ -807,6 +807,34 @@ export class GithubForcePushRecord extends S.Opaque<GithubForcePushRecord, { rea
   )
 ) {}
 
+/**
+ * A commit the pull request's timeline lists as pushed, with its parent ids in
+ * order.
+ *
+ * **Details**
+ *
+ * GitHub's `committed` timeline events carry each commit's parents, so a
+ * reader that already reads the timeline learns whether a head is a merge
+ * commit without another request or a local object.
+ *
+ * **Example** (GithubTimelineCommit evidence)
+ *
+ * ```ts
+ * import { GithubTimelineCommit } from "@beep/repo-cli/test/SharedInternals"
+ * console.log(GithubTimelineCommit.make({ sha: "h", parents: ["b", "m"] }).parents.length) // 2
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GithubTimelineCommit extends S.Opaque<GithubTimelineCommit, { readonly brand: unique symbol }>()(
+  S.Struct({ sha: S.String, parents: S.Array(S.String) }).pipe(
+    $I.annoteSchema("GithubTimelineCommit", {
+      description: "A commit the pull request's timeline lists as pushed, with its parent ids in order.",
+    })
+  )
+) {}
+
 const RefActivityWire = S.Struct({
   activity_type: GithubRefActivityType,
   before: S.String,
@@ -837,7 +865,21 @@ const TimelineEventWire = S.Struct({
   commit_id: S.String.pipe(S.NullOr, S.optionalKey),
   event: S.String.pipe(S.NullOr, S.optionalKey),
   created_at: S.String.pipe(S.NullOr, S.optionalKey),
+  // A `committed` event names its commit and the commit's parents.
+  sha: S.String.pipe(S.NullOr, S.optionalKey),
+  parents: S.Array(S.Struct({ sha: S.String })).pipe(S.NullOr, S.optionalKey),
 });
+
+const timelineCommits = (events: ReadonlyArray<typeof TimelineEventWire.Type>) =>
+  A.getSomes(
+    A.map(
+      A.filter(events, (event) => event.event === "committed"),
+      (event) =>
+        O.map(O.all({ sha: O.fromNullishOr(event.sha), parents: O.fromNullishOr(event.parents) }), ({ sha, parents }) =>
+          GithubTimelineCommit.make({ sha, parents: A.map(parents, (parent) => parent.sha) })
+        )
+    )
+  );
 
 const CheckSuitesWire = S.Struct({ check_suites: S.Array(S.Struct({ created_at: S.String })) });
 const CommentWire = S.Struct({ id: S.Int, html_url: S.String });
@@ -953,15 +995,18 @@ export interface GithubRestShape {
   /** Re-run the failed jobs of one workflow run. */
   readonly rerunFailedJobs: (runId: number) => Effect.Effect<void, GitHubError>;
   /**
-   * GitHub-owned ready and force-push timeline instants for the pull request.
+   * GitHub-owned ready and force-push timeline instants for the pull request,
+   * and the pushed commits the same pages list with their parents.
    * A ready or force-push event without a parseable instant fails the read
-   * (`decode`), so a merge gate reading it fails closed.
+   * (`decode`), so a merge gate reading it fails closed; a `committed` event
+   * without its id or parents is left out of `commits`.
    */
   readonly reviewTimeline: (number: number) => Effect.Effect<
     {
       readonly readyAt: O.Option<DateTime.Utc>;
       readonly forcedAt: O.Option<DateTime.Utc>;
       readonly forcePushes: ReadonlyArray<GithubForcePushRecord>;
+      readonly commits: ReadonlyArray<GithubTimelineCommit>;
     },
     GitHubError
   >;
@@ -1187,6 +1232,7 @@ const makeGithubRest = Effect.gen(function* () {
                 })
               )
           ),
+          commits: Effect.succeed(timelineCommits(events)),
         })
       )
     );
