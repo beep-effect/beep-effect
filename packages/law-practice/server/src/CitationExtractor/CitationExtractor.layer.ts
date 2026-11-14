@@ -20,11 +20,12 @@ import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import { CitationOperationAdmission } from "../internal/Citation/Admission.ts";
 import { ownCitationConfiguration } from "../internal/Citation/ConfigurationOwnership.ts";
 import { CitationInvocationPolicy, openCitationInvocation } from "../internal/Citation/Invocation.ts";
-import { makeCitationAdmissionOwners } from "../internal/Citation/NativeAdmission.ts";
+import { CitationNativeProcessAdmission, makeCitationAdmissionOwners } from "../internal/Citation/NativeAdmission.ts";
 import { CitationNativeProcessRuntime } from "../internal/Citation/NativeProcess.ts";
 import { makeCitationRecognizerWorker } from "../internal/Citation/RecognizerWorker.ts";
 import { CitationRegexOperation } from "../internal/Citation/RegexPolicy.ts";
@@ -78,6 +79,7 @@ const make = Effect.fn("Citation.makeExtractor")(function* (raw: unknown) {
   if (runtime.kind !== installation.runtime.kind) return yield* invalid();
   const digest = yield* Digest.Digest;
   const invocationClock = yield* Clock.Clock;
+  const nativeSpawner = yield* ChildProcessSpawner;
   const admissions = yield* makeCitationAdmissionOwners(limits).pipe(Effect.mapError(invalid));
   const owners = Context.add(admissions, CitationRegexOperation, "extract");
   const operation = Context.get(owners, CitationOperationAdmission);
@@ -134,6 +136,8 @@ const make = Effect.fn("Citation.makeExtractor")(function* (raw: unknown) {
       body
     ).pipe(
       Effect.provideService(CitationOperationAdmission, operation),
+      Effect.provideService(CitationNativeProcessAdmission, Context.get(admissions, CitationNativeProcessAdmission)),
+      Effect.provideService(ChildProcessSpawner, nativeSpawner),
       Effect.provideService(Clock.Clock, invocationClock),
       Effect.catchCause(normalize)
     );

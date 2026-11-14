@@ -23,7 +23,7 @@ const $I = $LawPracticeServerId.create("test/CitationEngineProbe");
  * `regexDescriptorBindings` counts per-call descriptor registries for
  * request-generated patterns, `nativeProcessOwners` physical process owners and
  * `diffXmlWorkerConstructions` Diff and Xml worker constructions. The goals
- * `citation-engine-install-once` and `citation-regex-worker-v3` move these
+ * installation and native-worker changes move these
  * numbers on purpose and update the recorded baseline in the same change.
  *
  * **Example** (A call that did no native work)
@@ -38,6 +38,7 @@ const $I = $LawPracticeServerId.create("test/CitationEngineProbe");
  *   nativeProcesses: 0,
  *   regexDescriptorBindings: 0,
  *   nativeProcessOwners: 0,
+ *   nativeLaneUnits: 0,
  *   diffXmlWorkerConstructions: 0,
  * });
  * ```
@@ -53,6 +54,7 @@ export class CitationEngineWorkCounts extends S.Opaque<CitationEngineWorkCounts,
     nativeProcesses: S.Natural,
     regexDescriptorBindings: S.Natural,
     nativeProcessOwners: S.Natural,
+    nativeLaneUnits: S.Natural,
     diffXmlWorkerConstructions: S.Natural,
   }).pipe(
     $I.annoteSchema("CitationEngineWorkCounts", {
@@ -70,6 +72,7 @@ const spanNames = {
   regexEvaluations: ["Citation.evaluateRegexProcess"],
   regexDescriptorBindings: ["Citation.bindRegexDescriptors"],
   nativeProcessOwners: ["Citation.makeNativeProcessOwner"],
+  nativeLaneUnits: ["Citation.acquireNativeLane"],
   diffXmlWorkerConstructions: ["Citation.makeDiffWorker", "Citation.makeXmlWorker"],
 } satisfies Record<Exclude<keyof typeof CitationEngineWorkCounts.fields, "nativeProcesses">, ReadonlyArray<string>>;
 const zero = constant(0);
@@ -119,6 +122,7 @@ export const makeCitationEngineProbe = Effect.fn("EngineProbeTest.make")(functio
       nativeProcesses: processes.spawned,
       regexDescriptorBindings: total(spanNames.regexDescriptorBindings),
       nativeProcessOwners: total(spanNames.nativeProcessOwners),
+      nativeLaneUnits: total(spanNames.nativeLaneUnits),
       diffXmlWorkerConstructions: total(spanNames.diffXmlWorkerConstructions),
     })
   );
@@ -135,6 +139,7 @@ export const makeCitationEngineProbe = Effect.fn("EngineProbeTest.make")(functio
       nativeProcesses: after.nativeProcesses - before.nativeProcesses,
       regexDescriptorBindings: after.regexDescriptorBindings - before.regexDescriptorBindings,
       nativeProcessOwners: after.nativeProcessOwners - before.nativeProcessOwners,
+      nativeLaneUnits: after.nativeLaneUnits - before.nativeLaneUnits,
       diffXmlWorkerConstructions: after.diffXmlWorkerConstructions - before.diffXmlWorkerConstructions,
     });
     return { value, counts, elapsedMillis: Duration.toMillis(elapsed) };

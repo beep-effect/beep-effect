@@ -21,7 +21,10 @@ import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 const $I = $LawPracticeServerId.create("internal/Citation/NativeAdmission");
 // Native ownership is external to a caller's retryable work. Public operations
 // must commit independently; only the owner's internal claim/retry steps compose.
-const outsideCallerTransaction = <A, E>(body: Effect.Effect<A, E>): Effect.Effect<A, E> =>
+/** Commit native ownership coordination independently of a caller transaction.
+ * @internal @category combinators @since 0.0.0
+ */
+export const outsideCallerTransaction = <A, E>(body: Effect.Effect<A, E>): Effect.Effect<A, E> =>
   Effect.updateContext(body, (context: Context.Context<never>) => context.pipe(Context.omit(Effect.Transaction)));
 /** Runtime authority: only the worker holding the exact child may acknowledge release.
  * These effects intentionally survive caller cancellation and owner Scope closure.
@@ -45,12 +48,13 @@ export class CitationNativeAdmissionSnapshot extends S.Opaque<
   }).pipe(
     $I.annoteSchema("CitationNativeAdmissionSnapshot", {
       description:
-        "Source-free shared native reservations, including unacknowledged retired children and their regex subset.",
+        "Source-free shared native units, legacy regex leases, waiters and quarantine. Invocation lanes reserve total units; occupant kinds are observed by lane snapshots.",
     })
   )
 ) {}
 /** Native leases transfer to retirement ownership, never automatically release
- * when an operation finishes. Regex reservations consume both concurrency bounds.
+ * when an operation finishes. Legacy regex reservations consume both bounds;
+ * policy-v2 invocation lanes reserve total units under the cross-field ceiling.
  * @internal @category services @since 0.0.0
  */
 export class CitationNativeProcessAdmission extends Context.Service<
