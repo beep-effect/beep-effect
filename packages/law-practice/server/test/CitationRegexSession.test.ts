@@ -7,6 +7,7 @@ import { makeCitationNativeLane } from "@beep/law-practice-server/internal/Citat
 import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { CitationRegexPatternDescriptor } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
 import { citationUnaccountedText } from "@beep/law-practice-server/internal/Citation/RegexInput";
+import { makeCitationRegexProgram } from "@beep/law-practice-server/internal/Citation/RegexProgram";
 import { makeCitationRegexSession } from "@beep/law-practice-server/internal/Citation/RegexSession";
 import { makeCitationRegexSessionPreparation } from "@beep/law-practice-server/internal/Citation/RegexSessionProtocol";
 import { CitationRegexWorkerFailure } from "@beep/law-practice-server/internal/Citation/RegexWorkerProtocol";
@@ -20,11 +21,13 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
+import * as Str from "effect/String";
 import {
   citationBunTestExecutable,
   citationNativeNodeTestPlatform,
@@ -35,8 +38,10 @@ import {
   waitForCitationNativeTest,
 } from "./CitationNativeSpawner.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import type { CitationRegexEngine } from "@beep/law-practice-server/internal/Citation/RegexEngine";
 
-const descriptor = S.decodeEffect(CitationRegexPatternDescriptor)({
+const decodeDescriptor = S.decodeEffect(CitationRegexPatternDescriptor);
+const descriptor = decodeDescriptor({
   patternSha256: "b07d89ba5ecfc4ef7c8c6208e879a81454b1cc89203805eceef7e16b55117bb7",
   flags: 0,
   profile: {
@@ -69,35 +74,73 @@ const setup = Effect.fn("RegexSessionTest.setup")(function* (kind: CitationNativ
   };
   const admission = yield* makeCitationNativeProcessAdmission(limits);
   const observed = yield* makeCitationObservedSpawner();
+  let liveSigkills = 0;
+  const spawner = ChildProcessSpawner.of({
+    ...observed.spawner,
+    spawn: Effect.fn("RegexSessionTest.observeLiveKill")(function* (command) {
+      const handle = yield* observed.spawner.spawn(command);
+      return {
+        ...handle,
+        kill: Effect.fn("RegexSessionTest.kill")(function* (options: Parameters<typeof handle.kill>[0]) {
+          if (options?.killSignal === "SIGKILL" && (yield* handle.isRunning)) liveSigkills++;
+          return yield* handle.kill(options);
+        }),
+      };
+    }),
+  });
   const scope = yield* Effect.acquireRelease(Scope.make(), (scope) => Scope.close(scope, Exit.void));
   const lane = yield* makeCitationNativeLane(limits, "extract").pipe(
     Effect.provideService(Scope.Scope, scope),
     Effect.provideService(Clock.Clock, timer.clock),
     Effect.provideService(CitationNativeProcessAdmission, admission),
-    Effect.provideService(ChildProcessSpawner, observed.spawner)
+    Effect.provideService(ChildProcessSpawner, spawner)
   );
   const session = yield* makeCitationRegexSession(limits, "extract", lane).pipe(
     Effect.provideService(Scope.Scope, scope)
   );
   const prepare = yield* makeCitationRegexSessionPreparation(limits, citationUnaccountedText);
   const bound = yield* descriptor;
-  const evaluate = session.evaluate(
-    runtime,
-    "python-re",
-    Effect.fnUntraced(function* (sequence, run) {
-      const job = yield* prepare.prepare(bound, sequence, native("(?P<maybe>a)?(b)"), native("ab b"), 0, 2, () =>
-        lane.reserve.pipe(
-          Effect.mapError((error) =>
-            error._tag === "CitationNativeLaneFailure"
-              ? CitationRegexWorkerFailure.make({ reason: error.reason })
-              : error
-          )
-        )
-      );
-      return yield* run(job.job, job.frame);
-    })
+  const evaluateJob = Effect.fn("RegexSessionTest.evaluateJob")(
+    (
+      engine: typeof CitationRegexEngine.Type,
+      selected: CitationRegexPatternDescriptor,
+      pattern: unknown,
+      source: unknown,
+      transformFrame: (frame: Uint8Array) => Uint8Array = identity
+    ) =>
+      session.evaluate(
+        runtime,
+        Effect.fnUntraced(function* (sequence, run) {
+          const job = yield* prepare.prepare(engine, selected, sequence, pattern, source, 0, 2, () =>
+            lane.reserve.pipe(
+              Effect.mapError((error) =>
+                error._tag === "CitationNativeLaneFailure"
+                  ? CitationRegexWorkerFailure.make({ reason: error.reason })
+                  : error
+              )
+            )
+          );
+          return yield* run(job.job, transformFrame(job.frame));
+        })
+      )
   );
-  return { fs, runtime, workerFile, evaluate, session, lane, scope, admission, observed, timer };
+  const evaluate = evaluateJob("python-re", bound, native("(?P<maybe>a)?(b)"), native("ab b"));
+  return {
+    fs,
+    runtime,
+    workerFile,
+    evaluate,
+    evaluateJob,
+    bound,
+    limits,
+    session,
+    lane,
+    scope,
+    admission,
+    observed,
+    timer,
+    liveSigkills: Effect.sync(() => liveSigkills),
+  };
 });
 
 const assertRetired = Effect.fn("RegexSessionTest.assertRetired")(function* (
@@ -133,6 +176,68 @@ it.layer(citationNativeNodeTestPlatform, { excludeTestServices: true, timeout: "
           expect(counts).toEqual({ spawned: 3, confirmed: 3 });
           const lane = yield* fixture.lane.snapshot;
           expect(lane).toMatchObject({ started: 3, confirmed: 3, occupied: false });
+        })
+      );
+
+      it.effect(`runs python-re then python-regex-v0 in one ${kind} process`, () =>
+        Effect.gen(function* () {
+          const fixture = yield* setup(kind, "real");
+          yield* fixture.evaluate;
+          const pattern = native("a(?i)b");
+          const compiler = yield* makeCitationRegexProgram(fixture.limits, "python-re");
+          const refusal = yield* compiler.compile(pattern, 0).pipe(Effect.flip);
+          expect(refusal).toMatchObject({ reason: "unsupported-syntax" });
+          const selected = yield* decodeDescriptor({
+            patternSha256: "b4a51cc851097ac7f4e51ea7bccb09a459faaa5aad15ee88aed0241d0e364048",
+            flags: 0,
+            profile: {
+              groups: 0,
+              names: {},
+              minimumWidthFloor: 2,
+              repeatedCaptures: false,
+              nullableMultiRepeat: false,
+            },
+          });
+          const body = yield* fixture.evaluateJob("python-regex-v0", selected, pattern, native("aB"));
+          const reply = yield* decodeCitationRegexReply(body);
+          expect(reply).toMatchObject({ _tag: "Complete", matches: 1 });
+          const active = yield* fixture.observed.snapshot;
+          expect(active).toEqual({ spawned: 1, confirmed: 0 });
+          const session = yield* fixture.session.snapshot;
+          expect(session).toMatchObject({ jobs: 2, sequence: 2, state: "idle" });
+          yield* Scope.close(fixture.scope, Exit.void);
+          yield* assertRetired(fixture);
+        })
+      );
+
+      it.effect(`kills a real ${kind} worker on a schema-invalid job engine`, () =>
+        Effect.gen(function* () {
+          const fixture = yield* setup(kind, "real");
+          const failed = yield* fixture
+            .evaluateJob("python-re", fixture.bound, native("(?P<maybe>a)?(b)"), native("ab b"), (frame) =>
+              new TextEncoder().encode(
+                Str.replace('"engine":"python-re"', '"engine":"invalid"')(new TextDecoder().decode(frame))
+              )
+            )
+            .pipe(Effect.flip);
+          expect(failed).toMatchObject({ reason: "invalid-frame" });
+          yield* assertRetired(fixture);
+          const again = yield* fixture.evaluate.pipe(Effect.flip);
+          expect(again).toEqual(failed);
+          yield* assertRetired(fixture);
+        })
+      );
+
+      it.effect(`SIGKILLs a live ${kind} child after stdout EOF and confirms death before return`, () =>
+        Effect.gen(function* () {
+          const fixture = yield* setup(kind, "eof-live");
+          const failed = yield* fixture.evaluate.pipe(Effect.flip);
+          expect(failed).toMatchObject({ reason: "invalid-frame" });
+          const entered = yield* fixture.fs.exists(`${fixture.workerFile}.entered`);
+          expect(entered).toBe(true);
+          const kills = yield* fixture.liveSigkills;
+          expect(kills).toBe(1);
+          yield* assertRetired(fixture);
         })
       );
 

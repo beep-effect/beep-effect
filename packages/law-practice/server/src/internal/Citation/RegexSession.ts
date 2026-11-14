@@ -32,7 +32,6 @@ import type { CitationEngineLimits, CitationEngineOperation } from "@beep/law-pr
 import type { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import type { CitationNativeLane, CitationNativeStart } from "./NativeLane.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
-import type { CitationRegexEngine } from "./RegexEngine.ts";
 import type { CitationRegexSessionJob } from "./RegexSessionProtocol.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RegexSession");
@@ -61,7 +60,6 @@ export class CitationRegexSession extends Context.Service<
     ) => Effect.Effect<void, CitationRegexWorkerFailure>;
     readonly evaluate: <A, E, R>(
       runtime: CitationNativeProcessRuntime,
-      engine: typeof CitationRegexEngine.Type,
       prepare: (
         sequence: number,
         evaluate: (
@@ -122,11 +120,8 @@ export const makeCitationRegexSession = Effect.fn("Citation.makeRegexSession")(f
       }),
       Effect.provideService(Clock.Clock, lane.clock)
     );
-  const start = Effect.fn("Citation.startRegexSession")(function* (
-    runtime: CitationNativeProcessRuntime,
-    engine: typeof CitationRegexEngine.Type
-  ) {
-    const argument = yield* encodeCitationRegexSessionStartup(CitationRegexSessionStartup.make({ limits, engine }));
+  const start = Effect.fn("Citation.startRegexSession")(function* (runtime: CitationNativeProcessRuntime) {
+    const argument = yield* encodeCitationRegexSessionStartup(CitationRegexSessionStartup.make({ limits }));
     const replies = yield* Queue.make<CitationRegexSessionReply, CitationRegexExecutionFailure>({ capacity: 1 });
     const failed = yield* Deferred.make<O.Option<CitationRegexExecutionFailure>>();
     let expectedRetirement = false;
@@ -196,7 +191,7 @@ export const makeCitationRegexSession = Effect.fn("Citation.makeRegexSession")(f
   }, Effect.uninterruptible);
   let transport = O.none<Effect.Success<ReturnType<typeof start>>>();
   const evaluate: CitationRegexSession["Service"]["evaluate"] = Effect.fn("Citation.evaluateRegexSession")(
-    function* (runtime, engine, prepare) {
+    function* (runtime, prepare) {
       return yield* lock.withPermit(
         Effect.gen(function* () {
           yield* ensureOpen;
@@ -206,7 +201,7 @@ export const makeCitationRegexSession = Effect.fn("Citation.makeRegexSession")(f
               Effect.fnUntraced(function* (restore) {
                 const work = Effect.gen(function* () {
                   if (O.isNone(transport)) {
-                    const started = yield* timeout(start(runtime, engine));
+                    const started = yield* timeout(start(runtime));
                     transport = O.some(started);
                   }
                   const connection = yield* Effect.fromOption(transport).pipe(Effect.mapError(invalid));

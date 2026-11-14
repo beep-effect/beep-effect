@@ -8,6 +8,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { makeCitationNativeJsonDecoder } from "./NativeJson.ts";
 import { CitationRegexPatternDescriptor, CitationRegexPatternProfile } from "./RegexDescriptors.ts";
+import { CitationRegexEngine } from "./RegexEngine.ts";
 import {
   CitationRegexWorkerFailure,
   CitationRegexWorkerJob,
@@ -31,6 +32,7 @@ export class CitationRegexSessionJob extends S.Opaque<CitationRegexSessionJob, {
     ...CitationRegexWorkerJob.fields,
     version: S.tag("citation-regex-worker/v3"),
     sequence: S.Natural,
+    engine: CitationRegexEngine,
     descriptor: CitationRegexPatternDescriptor,
   }).pipe(
     $I.annoteSchema("CitationRegexSessionJob", {
@@ -51,6 +53,7 @@ const encodeJob = S.encodeEffect(JobJson);
 
 const emptyJobHeader = Effect.fnUntraced(function* (
   maximum: number,
+  engine: typeof CitationRegexEngine.Type,
   descriptor: CitationRegexPatternDescriptor,
   sequence: number,
   patternWidth: CitationRegexSessionJob["patternWidth"],
@@ -66,6 +69,7 @@ const emptyJobHeader = Effect.fnUntraced(function* (
   }
   return yield* encodeJob(
     CitationRegexSessionJob.make({
+      engine,
       descriptor,
       sequence,
       patternWidth,
@@ -83,6 +87,7 @@ const emptyJobHeader = Effect.fnUntraced(function* (
  * @internal @category operations @since 0.0.0
  */
 export const preflightCitationRegexSessionJob = Effect.fn("Citation.preflightRegexJob")(function* (
+  engine: typeof CitationRegexEngine.Type,
   descriptor: CitationRegexPatternDescriptor,
   sequence: number,
   ...inputs: Parameters<typeof decodeCitationRegexFrameInputs>
@@ -91,6 +96,7 @@ export const preflightCitationRegexSessionJob = Effect.fn("Citation.preflightReg
   const { mode, pattern, source, flags, maxMatches, limit } = decoded;
   const header = yield* emptyJobHeader(
     limit,
+    engine,
     descriptor,
     sequence,
     pattern.width,
@@ -114,6 +120,7 @@ export const encodeCitationRegexSessionJob = makeCitationRegexJobEncoder({
   header: (job, maximum) =>
     emptyJobHeader(
       maximum,
+      job.engine,
       job.descriptor,
       job.sequence,
       job.patternWidth,
@@ -123,7 +130,7 @@ export const encodeCitationRegexSessionJob = makeCitationRegexJobEncoder({
       job.mode
     ),
 });
-// The request is flat. Reject structural amplification before JSON.parse or
+// Reject structural amplification before JSON parsing or
 // base64 decoding; punctuation inside quoted strings is not structure.
 /** Decode a complete bounded frame body. Structural and encoded-byte ceilings
  * precede variable decoding allocations; unknown properties are rejected.
@@ -149,6 +156,7 @@ export const makeCitationRegexSessionPreparation = Effect.fn("Citation.makeRegex
   const payload = yield* makeCitationRegexJobPreparationWith(limits, reserve);
   const prepare = Effect.fn("Citation.prepareRegexSessionJob")(
     (
+      engine: typeof CitationRegexEngine.Type,
       descriptor: CitationRegexPatternDescriptor,
       sequence: number,
       ...args: Parameters<typeof payload.prepare<CitationRegexSessionJob>> extends [unknown, ...infer Args]
@@ -158,9 +166,9 @@ export const makeCitationRegexSessionPreparation = Effect.fn("Citation.makeRegex
       payload.prepare(
         {
           make: (job) =>
-            CitationRegexSessionJob.make({ ...job, version: "citation-regex-worker/v3", descriptor, sequence }),
+            CitationRegexSessionJob.make({ ...job, version: "citation-regex-worker/v3", engine, descriptor, sequence }),
           encode: encodeCitationRegexSessionJob,
-          preflight: (...inputs) => preflightCitationRegexSessionJob(descriptor, sequence, ...inputs),
+          preflight: (...inputs) => preflightCitationRegexSessionJob(engine, descriptor, sequence, ...inputs),
         },
         ...args
       )

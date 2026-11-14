@@ -1,4 +1,4 @@
-import { existsSync, writeFileSync } from "node:fs";
+import { closeSync, existsSync, readdirSync, readlinkSync, writeFileSync } from "node:fs";
 import { basename } from "node:path";
 import { createInterface } from "node:readline";
 
@@ -8,11 +8,29 @@ const mode = basename(file, ".mjs");
 const version = "citation-regex-worker/v3";
 const ready = `{"_tag":"Ready","version":"${version}"}\n`;
 process.stdout.write(ready);
+function closeStdoutWhileAlive() {
+  const stdout = readlinkSync("/proc/self/fd/1");
+  const copies = readdirSync("/proc/self/fd").filter((fd) => {
+    try {
+      return readlinkSync(`/proc/self/fd/${fd}`) === stdout;
+    } catch {
+      return false;
+    }
+  });
+  writeFileSync(`${file}.entered`, "alive-before-stdout-close");
+  for (const fd of copies) closeSync(Number(fd));
+  setInterval(() => {}, 1000);
+}
+
 let sequence = 0;
 createInterface({ input: process.stdin }).on("line", () => {
   if (mode === "sent") return;
   if (mode === "eof") {
     process.exit(0);
+    return;
+  }
+  if (mode === "eof-live") {
+    closeStdoutWhileAlive();
     return;
   }
   if (mode === "oversize") {

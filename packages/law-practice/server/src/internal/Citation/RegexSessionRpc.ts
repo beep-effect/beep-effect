@@ -12,21 +12,20 @@ import * as Rpc from "effect/rpc/Rpc";
 import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as S from "effect/Schema";
 import { makeCitationNativeJsonDecoder } from "./NativeJson.ts";
-import { CitationRegexEngine } from "./RegexEngine.ts";
 import { CitationRegexResultEnvelope } from "./RegexResult.ts";
 import { CitationRegexSessionJob } from "./RegexSessionProtocol.ts";
 import { CitationRegexWorkerFailure } from "./RegexWorkerProtocol.ts";
 import { CitationRegexExecutionFailure } from "./RegexWorkerRpc.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RegexSessionRpc");
-/** Explicit limits and engine only; descriptors travel with jobs.
+/** Startup carries limits only; engine and descriptor travel with each job.
  * @internal @category models @since 0.0.0
  */
 export class CitationRegexSessionStartup extends S.Opaque<
   CitationRegexSessionStartup,
   { readonly brand: unique symbol }
 >()(
-  S.Struct({ limits: CitationEngineLimits, engine: CitationRegexEngine }).pipe(
+  S.Struct({ limits: CitationEngineLimits }).pipe(
     $I.annoteSchema("CitationRegexSessionStartup", {
       description: "Bounded source-free session startup configuration.",
     })

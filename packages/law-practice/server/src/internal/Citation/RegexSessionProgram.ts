@@ -61,7 +61,7 @@ export const citationRegexSessionProgram = Effect.gen(function* () {
       yield* send(CitationRegexSessionStarted.make({ sequence: job.sequence }));
       // Re-derive the program against this job's descriptor. No cross-job cache.
       const evaluator = yield* makeCitationRegexEvaluation(
-        CitationRegexWorkerStartup.make({ ...startup, descriptor: job.descriptor })
+        CitationRegexWorkerStartup.make({ ...startup, engine: job.engine, descriptor: job.descriptor })
       );
       const handlers = yield* CitationRegexSessionRpcs.toHandlers({
         Evaluate: (request) =>

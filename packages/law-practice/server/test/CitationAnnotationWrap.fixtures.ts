@@ -42,7 +42,6 @@ export const replayCitationNativeWrap = Effect.fn("AnnotationWrapTest.native")(f
   const wrapper = yield* makeCitationAnnotationWrap(setup.limits, setup.runtime).pipe(
     Effect.provideContext(setup.provided)
   );
-  let children = 0;
   const bind = yield* makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
     Effect.provideContext(setup.provided)
   );
@@ -62,11 +61,10 @@ export const replayCitationNativeWrap = Effect.fn("AnnotationWrapTest.native")(f
           CitationPythonUnicodeStorage.make(row.after)
         );
         yield* assertCitationAnnotationOutcome(output, row.result, `${kind}:${row.id}`);
-        if (row.result._tag === "Success") children++;
       }
     })
   )();
-  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, children);
+  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 1);
 });
 const $I = $LawPracticeServerId.create("test/CitationAnnotationWrap");
 const Check = S.Struct({ text: CitationNativeUnicodeHex, fast: S.Boolean, value: S.Boolean }).pipe(

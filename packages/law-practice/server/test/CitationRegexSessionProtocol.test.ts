@@ -33,10 +33,18 @@ it.effect("accepts the depth-four names object and preflights its exact descript
     const bound = yield* descriptor;
     const preparation = yield* makeCitationRegexSessionPreparation(limits, citationUnaccountedText);
     let measured = 0;
-    const job = yield* preparation.prepare(bound, 123, native("(?P<maybe>a)?(b)"), native("ab"), 0, 1, (bytes) =>
-      Effect.sync(() => {
-        measured = bytes;
-      })
+    const job = yield* preparation.prepare(
+      "python-re",
+      bound,
+      123,
+      native("(?P<maybe>a)?(b)"),
+      native("ab"),
+      0,
+      1,
+      (bytes) =>
+        Effect.sync(() => {
+          measured = bytes;
+        })
     );
     expect(measured).toBe(job.frame.byteLength);
     const decoded = yield* decodeCitationRegexSessionJob(job.frame.subarray(0, -1));
@@ -50,7 +58,7 @@ it.effect("refuses depth five in structural preflight before base64 payload allo
     // Invalid base64 would fail if decoding reached the payload. The nested names
     // value must be rejected by the structural guard first.
     const text =
-      '{"_tag":"Evaluate","version":"citation-regex-worker/v3","sequence":0,"descriptor":{"patternSha256":"b07d89ba5ecfc4ef7c8c6208e879a81454b1cc89203805eceef7e16b55117bb7","flags":0,"profile":{"groups":2,"names":{"maybe":{"deep":1}},"minimumWidthFloor":1,"repeatedCaptures":false,"nullableMultiRepeat":false}},"patternWidth":1,"patternBytes":"!","sourceWidth":1,"sourceBytes":"!","flags":0,"maxMatches":1,"mode":"finditer"}';
+      '{"_tag":"Evaluate","version":"citation-regex-worker/v3","sequence":0,"engine":"python-re","descriptor":{"patternSha256":"b07d89ba5ecfc4ef7c8c6208e879a81454b1cc89203805eceef7e16b55117bb7","flags":0,"profile":{"groups":2,"names":{"maybe":{"deep":1}},"minimumWidthFloor":1,"repeatedCaptures":false,"nullableMultiRepeat":false}},"patternWidth":1,"patternBytes":"!","sourceWidth":1,"sourceBytes":"!","flags":0,"maxMatches":1,"mode":"finditer"}';
     const failure = yield* decodeCitationRegexSessionJob(new TextEncoder().encode(text)).pipe(Effect.flip);
     expect(failure).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-frame" });
   })
@@ -70,7 +78,7 @@ it.effect("checks capture-name length against the effective frame ceiling before
       citationUnaccountedText
     );
     const failure = yield* preparation
-      .prepare(large, 0, native("a"), native("a"), 0, 1, () =>
+      .prepare("python-re", large, 0, native("a"), native("a"), 0, 1, () =>
         Effect.sync(() => {
           reserved = true;
         })
@@ -85,6 +93,7 @@ it.effect("rejects unknown properties after structural preflight and preserves t
   Effect.gen(function* () {
     const bound = yield* descriptor;
     const job = CitationRegexSessionJob.make({
+      engine: "python-re",
       descriptor: bound,
       sequence: 0,
       patternWidth: 1,

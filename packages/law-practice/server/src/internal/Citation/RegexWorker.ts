@@ -68,9 +68,9 @@ export const installCitationRegexEvaluator = Effect.fn("Citation.installRegexEva
         const bound = yield* registry.bind(pattern, flags);
         return yield* regex.evaluate(
           runtime,
-          registry.engine,
           Effect.fnUntraced(function* (sequence, evaluate) {
             const prepared = yield* preparation.prepare(
+              registry.engine,
               bound.descriptor,
               sequence,
               pattern,
