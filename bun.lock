@@ -4016,6 +4016,22 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/tooling/library/alchemy-github-runners": {
+      "name": "@beep/alchemy-github-runners",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@distilled.cloud/aws": "catalog:",
+        "@distilled.cloud/github": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/tooling/library/codegen-kit": {
       "name": "@beep/codegen-kit",
       "version": "0.0.0",
@@ -4669,6 +4685,7 @@
     "@csstools/css-tokenizer": "^4.0.2",
     "@csstools/media-query-list-parser": "^5.0.2",
     "@distilled.cloud/aws": "1.0.0-rc.19",
+    "@distilled.cloud/github": "1.0.0-rc.19",
     "@duckdb/node-api": "2.0.0-r.1",
     "@effect/ai-anthropic": "4.1.4",
     "@effect/ai-openai": "4.1.4",
@@ -5070,6 +5087,8 @@
     "@beep/ai-sync": ["@beep/ai-sync@workspace:packages/tooling/library/ai-sync"],
 
     "@beep/alchemy-aws-extras": ["@beep/alchemy-aws-extras@workspace:packages/tooling/library/alchemy-aws-extras"],
+
+    "@beep/alchemy-github-runners": ["@beep/alchemy-github-runners@workspace:packages/tooling/library/alchemy-github-runners"],
 
     "@beep/alchemy-postgres": ["@beep/alchemy-postgres@workspace:packages/drivers/alchemy-postgres"],
 
@@ -6106,6 +6125,8 @@
     "@distilled.cloud/cloudflare": ["@distilled.cloud/cloudflare@1.0.0-rc.19", "", { "dependencies": { "@distilled.cloud/core": "1.0.0-rc.19", "@distilled.cloud/s3": "1.0.0-rc.19" }, "peerDependencies": { "effect": "^4.1.2" } }, "sha512-J/pidhpALhW3t9L4FSQt4yt5cbIu3fEAQ/3z+a6ae6Zf8DAXSmMW8aNYX/NHKJ5KP1Qy4/Bq0gLbHILSY8EV7A=="],
 
     "@distilled.cloud/core": ["@distilled.cloud/core@1.0.0-rc.19", "", { "peerDependencies": { "effect": "^4.1.2" } }, "sha512-BO/Q8Q/9Zsv30RyLj8ZddDRBimlsQOGE6SZSVxJJxT0XARErZp/+Hr0xZTqvvhYHO0thSxUas5DteyEs5Z36rQ=="],
+
+    "@distilled.cloud/github": ["@distilled.cloud/github@1.0.0-rc.19", "", { "dependencies": { "@distilled.cloud/core": "1.0.0-rc.19" }, "peerDependencies": { "effect": "^4.1.2" } }, "sha512-N2QfwqrQN+UJkW8V1QrX9llAonVqnqPuBfz53lB7DyQEdzHgSvk188ixIalJmWPot4dDeJrTpWPBjeZRpdCk1Q=="],
 
     "@distilled.cloud/iceberg": ["@distilled.cloud/iceberg@1.0.0-rc.19", "", { "dependencies": { "@distilled.cloud/core": "1.0.0-rc.19" }, "peerDependencies": { "effect": "^4.1.2" } }, "sha512-vqnwGhofJqpZe/JWwCWXje6kZqK4dp7As90MeCZI5xLs5z05xxiQLn0MXCokvFk0k+7OWAVAAU4NQjv5w8tAxQ=="],
 

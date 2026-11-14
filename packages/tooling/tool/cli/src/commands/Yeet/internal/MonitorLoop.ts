@@ -1048,6 +1048,7 @@ const readFailedJobLog = Effect.fn("YeetMonitorLoop.readFailedJobLog")(function*
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | MonitorGithub
 > {
   // KEEP (D-15): gh cuts the failing steps out of the run's log archive (`--log-failed`).
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-15), reason above
   const primary = yield* runRepoCommandCapture(
     "gh",
     ["run", "view", "--job", `${jobDatabaseId}`, "--log-failed"],

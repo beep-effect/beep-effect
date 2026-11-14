@@ -2692,6 +2692,9 @@ const fallowCiLayer = (probe: FallowLaneProbe, failingTask?: string, released = 
   });
   const processLayer = Layer.succeed(
     ChildProcessSpawner.ChildProcessSpawner,
+    // Own double (D-14): exits held on a latch with an in-flight count (the Fallow sub-lane concurrency
+    // probe).
+    // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double (D-14), reason above
     ChildProcessSpawner.make((command) => {
       if (!ChildProcess.isStandardCommand(command)) {
         return Effect.die("the Fallow lane test never spawns a piped command");
