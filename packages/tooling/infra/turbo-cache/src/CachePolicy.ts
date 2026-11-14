@@ -15,6 +15,7 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const $I = $InfraTurboCacheId.create("CachePolicy");
@@ -229,6 +230,31 @@ export class Team extends S.Opaque<Team, { readonly brand: unique symbol }>()(
   }).pipe($I.annoteSchema("Team", { description: "A cache team: its slug and the principals that hold its tokens." }))
 ) {}
 
+// A token's resource id joins team slug and principal name with `-`, and both
+// allow `-`, so `beep-x`/`ci` and `beep`/`x-ci` would name one token. Alchemy
+// registers a repeated logical id once, so both holders would share a secret
+// (and the Worker would apply the first holder's team and access). Refuse the
+// policy instead of changing the id format, which would rotate every token.
+const tokenKeyCollisions = (teams: ReadonlyArray<Team>): true | string => {
+  const holders = A.flatMap(teams, ({ slug, principals }) =>
+    A.map(principals, ({ name }) => ({ key: `${slug}-${name}`, label: `${slug}/${name}` }))
+  );
+  const collisions = pipe(
+    A.groupBy(holders, ({ key }) => key),
+    R.values,
+    A.filter((group) => group.length > 1),
+    A.map((group) =>
+      A.join(
+        A.map(group, ({ label }) => label),
+        " and "
+      )
+    )
+  );
+  return A.isReadonlyArrayNonEmpty(collisions)
+    ? `Token ids collide: ${A.join(collisions, "; ")} would share one token. Rename a team or principal.`
+    : true;
+};
+
 /**
  * The whole cache policy: every team the Worker serves.
  *
@@ -252,7 +278,8 @@ export class CachePolicy extends S.Opaque<CachePolicy, { readonly brand: unique 
     teams: S.NonEmptyArray(Team).check(
       S.makeFilter((teams) => distinct(A.map(teams, ({ slug }) => slug)), {
         message: "Each team needs its own slug.",
-      })
+      }),
+      S.makeFilter(tokenKeyCollisions)
     ),
   }).pipe(
     $I.annoteSchema("CachePolicy", { description: "Every team the cache Worker serves and who holds its tokens." })

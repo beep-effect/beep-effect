@@ -53,6 +53,25 @@ describe("CachePolicy", () => {
     })
   );
 
+  it.effect("refuses team and principal pairs whose token ids collide, naming the pair", () =>
+    Effect.gen(function* () {
+      const failure = yield* decodePolicy({
+        teams: [
+          { slug: "beep-x", principals: [{ name: "ci", access: "read", rotation: 1 }] },
+          { slug: "beep", principals: [{ name: "x-ci", access: "write", rotation: 1 }] },
+        ],
+      }).pipe(Effect.flip);
+      expect(failure.message).toContain("beep-x/ci and beep/x-ci");
+      const distinctPairs = yield* decodePolicy({
+        teams: [
+          { slug: "beep-x", principals: [{ name: "ci", access: "read", rotation: 1 }] },
+          { slug: "beep", principals: [{ name: "ci", access: "write", rotation: 1 }] },
+        ],
+      }).pipe(Effect.result);
+      distinctPairs.pipe(Result.isSuccess, assertTrue);
+    })
+  );
+
   it.effect("refuses empty teams, bad slugs, bad principal names and rotation zero", () =>
     Effect.gen(function* () {
       const cases = [
