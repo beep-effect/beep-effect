@@ -9,13 +9,38 @@
  * search lets `@beep/schema` match `@beep/schema-org` and `$SchemaId` match
  * `$SchemaIdentityId`, so this module owns the token rule once.
  *
+ * A path has one more collision: a short root path such as `deploy` also
+ * ends another workspace's path (`packages/tooling/deploy/x`).
+ * {@link mentionsRepoPath} skips the occurrences that such a sibling path
+ * accounts for, using the prefixes {@link shadowPrefixesFor} derives from the
+ * workspace list. In delete-package it covers every search whose needle can be
+ * the target's package path: the dependents scan (workspace files, root
+ * scripts and the root policy files) and the doctor surfaces
+ * `derived-rebuild`, `generated-inventory` for the four path-keyed
+ * inventories (`fallow-health-baseline`, `fallow-dead-code-baseline`,
+ * `schema-first-inventory`, `schema-catalog`), `authored-reference` and
+ * `historical-record`. So `--dry-run`, `--check` and the post-apply doctor
+ * judge a path needle the same way. {@link mentionsToken} stays for every
+ * needle that cannot be a package path: package names, the identity slug and
+ * accessor, the membership keys of the name-keyed inventories
+ * (`jsdoc-inventory`, `coverage-baseline`, `instrumentation-catalog`,
+ * `test-typecheck-baseline`) and the quoted workspace literal.
+ *
+ * **Gotchas**
+ *
+ * A bare one-segment path is still a plain word: a field value such as
+ * `"kind": "deploy"` or prose such as "a generic deploy" matches `deploy`, and no
+ * token rule can tell them from `"workspaces": ["deploy"]`.
+ *
  * @internal
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import { A, Str } from "@beep/utils";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Regex from "effect/RegExp";
 
 /**
@@ -49,6 +74,92 @@ export const mentionsToken = (needle: string): ((text: string) => boolean) => {
   const pattern = new RegExp(`(?<![\\w$-])${Regex.escape(needle)}(?![\\w$-])`);
   return (text) => O.isSome(Str.match(pattern)(text));
 };
+
+/**
+ * Collect the prefixes under which another workspace's path ends in `repoPath`.
+ *
+ * **Details**
+ *
+ * A workspace path that contains `repoPath` as a whole trailing run of
+ * segments after a `/` (`packages/tooling/deploy/budget` for `deploy`)
+ * contributes the text before that run (`packages/tooling/`). An occurrence of
+ * `repoPath` right after such a prefix names the other workspace, not
+ * `repoPath`. The target's own path never contributes, and a segment that only
+ * starts with the path (`apps/deploy-console`) does not either. The result is
+ * deduplicated and sorted.
+ *
+ * **Example** (Find the prefix of a nested sibling)
+ *
+ * ```ts
+ * import { shadowPrefixesFor } from "@beep/repo-cli-kit/WholeToken"
+ *
+ * console.log(shadowPrefixesFor("deploy", ["deploy", "packages/tooling/deploy/hosts", "apps/deploy-console"]))
+ * // ["packages/tooling/"]
+ * ```
+ *
+ * @internal
+ * @param repoPath - Repository-relative path of the package being searched for.
+ * @param workspacePaths - Repository-relative paths of every workspace.
+ * @returns The sorted, distinct prefixes that turn an occurrence into another workspace's path.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const shadowPrefixesFor: {
+  (workspacePaths: ReadonlyArray<string>): (repoPath: string) => ReadonlyArray<string>;
+  (repoPath: string, workspacePaths: ReadonlyArray<string>): ReadonlyArray<string>;
+} = dual(2, (repoPath: string, workspacePaths: ReadonlyArray<string>): ReadonlyArray<string> => {
+  const pattern = new RegExp(`(?<=/)${Regex.escape(repoPath)}(?=/|$)`, "g");
+  return pipe(
+    workspacePaths,
+    A.filter((workspacePath) => !Str.equivalence(workspacePath, repoPath)),
+    A.flatMap((workspacePath) =>
+      A.map(A.fromIterable(Str.matchAll(pattern)(workspacePath)), (match) => Str.slice(0, match.index)(workspacePath))
+    ),
+    A.dedupe,
+    A.sort(Order.String)
+  );
+});
+
+/**
+ * Build a predicate that reports whether a text mentions a repository path,
+ * skipping occurrences that belong to a shadowing workspace path.
+ *
+ * **Details**
+ *
+ * Every occurrence must pass the {@link mentionsToken} rule. An occurrence
+ * that directly follows one of `shadowPrefixes` is part of another workspace's
+ * path and does not count; the text matches when any other occurrence
+ * remains. With no prefixes the predicate equals `mentionsToken(repoPath)`.
+ * Derive the prefixes with {@link shadowPrefixesFor}.
+ *
+ * **Example** (Ignore a nested sibling, keep a root reference)
+ *
+ * ```ts
+ * import { mentionsRepoPath } from "@beep/repo-cli-kit/WholeToken"
+ *
+ * const mentionsDeploy = mentionsRepoPath("deploy", ["packages/tooling/"])
+ * console.log(mentionsDeploy('"directory": "packages/tooling/deploy/hosts"')) // false
+ * console.log(mentionsDeploy('"path": "./deploy/src/index.ts"')) // true
+ * ```
+ *
+ * @internal
+ * @param repoPath - Repository-relative path of the package being searched for.
+ * @param shadowPrefixes - Prefixes from {@link shadowPrefixesFor}.
+ * @returns A predicate over the searched text.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const mentionsRepoPath: {
+  (shadowPrefixes: ReadonlyArray<string>): (repoPath: string) => (text: string) => boolean;
+  (repoPath: string, shadowPrefixes: ReadonlyArray<string>): (text: string) => boolean;
+} = dual(2, (repoPath: string, shadowPrefixes: ReadonlyArray<string>): ((text: string) => boolean) => {
+  const pattern = new RegExp(`(?<![\\w$-])${Regex.escape(repoPath)}(?![\\w$-])`, "g");
+  return (text) =>
+    A.some(A.fromIterable(Str.matchAll(pattern)(text)), (match) => {
+      const before = Str.slice(0, match.index)(text);
+      return !A.some(shadowPrefixes, (prefix) => Str.endsWith(prefix)(before));
+    });
+});
 
 /**
  * Build a predicate that reports whether a text mentions any needle as a whole token.

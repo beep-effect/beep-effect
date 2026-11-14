@@ -44,6 +44,107 @@ const temporaryDirectory = Effect.gen(function* () {
   return yield* fs.makeTempDirectoryScoped();
 });
 
+// A root `deploy` workspace beside `packages/tooling/deploy/x`, whose path ends in `deploy/x`: the
+// shape that made `delete-package @beep/deploy` count every `packages/tooling/deploy/**` line.
+const writeShadowedDeployFixture = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const repoRoot = yield* fs.realPath(".");
+  yield* fs.writeFileString(
+    "package.json",
+    '{ "name": "fixture", "private": true, "workspaces": ["deploy", "packages/tooling/deploy/x", "packages/consumer"] }\n'
+  );
+  yield* fs.writeFileString("bun.lock", "");
+  yield* fs.makeDirectory("deploy", { recursive: true });
+  yield* fs.makeDirectory(path.join("packages", "tooling", "deploy", "x"), { recursive: true });
+  yield* fs.makeDirectory(path.join("packages", "consumer"), { recursive: true });
+  yield* fs.writeFileString(path.join("deploy", "package.json"), '{ "name": "@beep/deploy", "private": true }\n');
+  yield* fs.writeFileString(
+    path.join("packages", "tooling", "deploy", "x", "package.json"),
+    A.join(
+      [
+        "{",
+        '  "name": "@beep/deploy-x",',
+        '  "private": true,',
+        '  "homepage": "https://github.com/beep-effect/beep-effect/tree/main/packages/tooling/deploy/x",',
+        '  "repository": { "directory": "packages/tooling/deploy/x" }',
+        "}",
+        "",
+      ],
+      "\n"
+    )
+  );
+  yield* fs.writeFileString(
+    path.join("packages", "consumer", "package.json"),
+    '{ "name": "@beep/consumer", "private": true }\n'
+  );
+  yield* fs.writeFileString(path.join("packages", "consumer", "README.md"), "Reads `deploy/src/index.ts`.\n");
+  yield* fs.writeFileString(
+    path.join("packages", "consumer", "notes.md"),
+    "Deploys from `packages/tooling/deploy/x/src`.\n"
+  );
+  return repoRoot;
+});
+
+const rootDeployTarget = RegistrationTarget.make({
+  packageName: "@beep/deploy",
+  packagePath: PosixPath.make("deploy"),
+  private: true,
+});
+
+// The tree after `delete-package @beep/deploy` applied: the root `deploy` workspace and its
+// workspace literal are gone, the sibling `packages/tooling/deploy/x` remains, plus `files`.
+const writeDeletedDeployLayout = Effect.fn("writeDeletedDeployLayout")(function* (
+  files: ReadonlyArray<readonly [string, string]>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const repoRoot = yield* fs.realPath(".");
+  yield* fs.writeFileString(
+    "package.json",
+    '{ "name": "fixture", "private": true, "workspaces": ["packages/tooling/deploy/x", "packages/consumer"] }\n'
+  );
+  yield* fs.writeFileString("bun.lock", "");
+  yield* fs.makeDirectory(path.join("packages", "tooling", "deploy", "x"), { recursive: true });
+  yield* fs.makeDirectory(path.join("packages", "consumer"), { recursive: true });
+  yield* fs.writeFileString(
+    path.join("packages", "tooling", "deploy", "x", "package.json"),
+    '{ "name": "@beep/deploy-x", "private": true, "repository": { "directory": "packages/tooling/deploy/x" } }\n'
+  );
+  yield* fs.writeFileString(
+    path.join("packages", "consumer", "package.json"),
+    '{ "name": "@beep/consumer", "private": true }\n'
+  );
+  yield* Effect.forEach(files, ([file, content]) =>
+    Effect.andThen(fs.makeDirectory(path.dirname(file), { recursive: true }), fs.writeFileString(file, content))
+  );
+  return repoRoot;
+});
+
+// The generated inventories keyed by file path (`membershipKey: target.packagePath`), each holding
+// one entry for `file`.
+const PATH_KEYED_INVENTORY_SURFACES = ["fallow-health-baseline", "fallow-dead-code-baseline", "schema-first-inventory"];
+
+const pathKeyedInventories = (file: string): ReadonlyArray<readonly [string, string]> => [
+  ["standards/fallow.health.regression-baseline.jsonc", `{ "files": { "${file}": { "cyclomatic": 3 } } }\n`],
+  ["standards/fallow.dead-code.regression-baseline.jsonc", `{ "unused_exports": ["${file}:helper"] }\n`],
+  ["standards/schema-first.inventory.jsonc", `{ "entries": [{ "file": "${file}", "symbol": "Stack" }] }\n`],
+];
+
+type ObservationRow = { readonly surfaceId: string; readonly status: string; readonly evidence: ReadonlyArray<string> };
+
+const observationOf = (observations: ReadonlyArray<ObservationRow>, surfaceId: string) =>
+  A.findFirst(observations, (item) => item.surfaceId === surfaceId);
+
+const statusOf = (observations: ReadonlyArray<ObservationRow>, surfaceId: string) =>
+  O.getOrUndefined(O.map(observationOf(observations, surfaceId), (item) => item.status));
+
+const evidenceOf = (observations: ReadonlyArray<ObservationRow>, surfaceId: string) =>
+  O.getOrElse(
+    O.map(observationOf(observations, surfaceId), (item) => item.evidence),
+    () => A.empty<string>()
+  );
+
 const target = RegistrationTarget.make({
   packageName: "@beep/courtlistener",
   packagePath: PosixPath.make("packages/drivers/courtlistener"),
@@ -247,6 +348,121 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
         Effect.provideServiceEffect(Console.Console, TestConsole.make)
       )
+    );
+
+    it.effect("ignores a sibling workspace path that only ends in the target's path", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const repoRoot = yield* writeShadowedDeployFixture;
+          const rootDeploy = RegistrationTarget.make({
+            packageName: "@beep/deploy",
+            packagePath: PosixPath.make("deploy"),
+            private: true,
+          });
+
+          const report = yield* dependentsOfAtRoot(repoRoot, rootDeploy);
+          const files = A.map(report.hits, (hit) => hit.file);
+          expect(files).toContain("packages/consumer/README.md");
+          expect(files).not.toContain("packages/tooling/deploy/x/package.json");
+          expect(files).not.toContain("packages/consumer/notes.md");
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("still finds dependents of a nested target that contains a sibling workspace's path", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const repoRoot = yield* writeShadowedDeployFixture;
+          const nested = RegistrationTarget.make({
+            packageName: "@beep/deploy-x",
+            packagePath: PosixPath.make("packages/tooling/deploy/x"),
+            private: true,
+          });
+
+          const report = yield* dependentsOfAtRoot(repoRoot, nested);
+          const files = A.map(report.hits, (hit) => hit.file);
+          expect(files).toContain("packages/consumer/notes.md");
+          expect(files).not.toContain("packages/consumer/README.md");
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("keeps the doctor clean when only sibling workspace paths end in the deleted path", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const repoRoot = yield* writeDeletedDeployLayout([
+            ["tsconfig.packages.json", '{ "references": [{ "path": "packages/tooling/deploy/x" }] }\n'],
+            ["packages/consumer/notes.md", "Deploys from `packages/tooling/deploy/x/src`.\n"],
+            ["goals/demo/history/notes.md", "Moved into `packages/tooling/deploy/x`.\n"],
+          ]);
+
+          const observations = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget);
+          expect(statusOf(observations, "tsconfig-sync")).toBe("clean");
+          expect(statusOf(observations, "authored-references")).toBe("clean");
+          expect(statusOf(observations, "historical-records")).toBe("clean");
+          expect(DeletePackagePolicyEvaluation.doctorIsClean(rootDeployTarget, observations)).toBe(true);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("keeps path-keyed inventories clean when only sibling workspace paths remain in them", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const repoRoot = yield* writeDeletedDeployLayout(
+            pathKeyedInventories("packages/tooling/deploy/x/src/Stack.ts")
+          );
+
+          const observations = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget);
+          expect(A.map(PATH_KEYED_INVENTORY_SURFACES, (surfaceId) => statusOf(observations, surfaceId))).toEqual([
+            "clean",
+            "clean",
+            "clean",
+          ]);
+          expect(DeletePackagePolicyEvaluation.doctorIsClean(rootDeployTarget, observations)).toBe(true);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("still reports a path-keyed inventory entry for the deleted path itself", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const repoRoot = yield* writeDeletedDeployLayout(pathKeyedInventories("deploy/src/Stack.ts"));
+
+          const observations = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget);
+          expect(A.map(PATH_KEYED_INVENTORY_SURFACES, (surfaceId) => statusOf(observations, surfaceId))).toEqual([
+            "residue",
+            "residue",
+            "residue",
+          ]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("still reports a real reference to the deleted path beside sibling workspace paths", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const repoRoot = yield* writeDeletedDeployLayout([
+            [
+              "tsconfig.packages.json",
+              '{ "references": [{ "path": "packages/tooling/deploy/x" }, { "path": "deploy" }] }\n',
+            ],
+            ["packages/consumer/notes.md", "Reads `packages/tooling/deploy/x/src` and `deploy/src/index.ts`.\n"],
+            ["goals/demo/history/notes.md", "Moved out of `deploy/src/Stack.ts`.\n"],
+          ]);
+
+          const observations = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget);
+          expect(statusOf(observations, "tsconfig-sync")).toBe("drift");
+          expect(evidenceOf(observations, "authored-references")).toContain("packages/consumer/notes.md");
+          expect(statusOf(observations, "historical-records")).toBe("historical");
+          expect(DeletePackagePolicyEvaluation.doctorIsClean(rootDeployTarget, observations)).toBe(false);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
     it.effect("classifies packet history and ledger references as historical, not live packet claims", () =>
