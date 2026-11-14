@@ -219,6 +219,14 @@ Lane fix/certainty-type-unlocated-errors
 
 Reverse: Delete this checkpoint so the previous checkpoint is the latest PLAN status note, and revert the slice-10b PR.
 
+### Slice 15: ledger fold with absent-source rows, 2026-11-14
+
+Slice 15 (MEAS-05 slice 2) adds `beep ci ledger`, a read-only fold of named workflow runs into rows at (lane, partition) grain over the slice-14 lane map, with the run's lane, support and unknown minutes summing to its total and every Test Unit and Test Integration partition row judged `selected`, `empty` or `undetermined` against the run's Test Plan output (decision `ledger-fold-absent-sources`). Rerun copies are dropped, skipped jobs and wrappers are counted apart, and an aggregate that ran is its own row beside its partitions, so no minute is counted twice. The local and per-task sources (turbo tasks, final-check journals, economics lanes, PSI) are `absent` rows. The admission gate holds on three Check runs read 2026-11-14 and committed as `packages/tooling/tool/cli/test/fixtures/ci-cost-ledger/reference-runs.json`: 43604442987 (full matrix, 307.1 job-minutes), 43585338714 (documentation only, 7.1) and 43605277972 (an empty `int-rest` leg of 1.97 min) each map 100% of their job-minutes to a lane or a named support job (lane share 99.4%, 78.2% and 98.2%), and `packages/tooling/tool/cli/test/ci-cost-ledger.test.ts` holds an umbrella, wrapper and rerun fixture with no double count. MEAS-08 can now join pressure samples onto ledger rows.
+
+Lane feat/certainty-ledger-fold-absent-sources
+
+Reverse: Delete this checkpoint so the previous checkpoint is the latest PLAN status note, and revert the slice-15 PR.
+
 ### Slice 5b: capacity and host pressure on admission rows, 2026-11-14
 
 Slice 8 (PERIL-11 slice 2) merged as #3273 and slice 14 (MEAS-05 slice 1) as #3274. Slice 5b (SCHE-09 slice 2) is in review: admitted and v3 released rows carry an optional `pressure` stamp (capacity, active and queued tokens, MemAvailable, PSI some avg10 for cpu, memory and io, and unadmitted agent-runs.slice memory), written only while the admission protocol's new `pressure` key is on (`bun run beep quality scheduler protocol --pressure on`). `quality scheduler history` counts the stamped rows and `--json` lists them (decision `sche-09-pressure-stamps`). The key needs no reader census, because every revision ignores it and keeps the row's bytes, so it can go on once this slice merges. From then on local-proof-under-ten's scheduler levers (SCHE-01, SCHE-02, SCHE-04, SCHE-07) can read capacity at admit and release from the retained history. With 5b merged, both SCHE-09 PR slices have landed.
@@ -226,5 +234,13 @@ Slice 8 (PERIL-11 slice 2) merged as #3273 and slice 14 (MEAS-05 slice 1) as #32
 Lane feat/certainty-admission-pressure-fields
 
 Reverse: Delete this checkpoint so the previous checkpoint is the latest PLAN status note, and revert the slice-5b PR.
+
+### Slice 9: host and seat fields, read-only fleet read, 2026-11-14
+
+Slices 10b (MEAS-03 slice 2) and 5b (SCHE-09 slice 2) merged as #3342 and #3344. Slice 9 (PERIL-11 slice 3) is built: attempt-started rows carry optional `host` (the writer's short host label) and `seat` (`codex`, `claude-code` or `unknown`, the provenance footer's harness vocabulary), every attempt mix gains `hostMix` and `seatMix` (`unrecorded` for older rows), and `yeet economics --fleet-hosts` reads the hosts in the fleet's `hosts.json` over their existing ordinary SSH wrappers, one at a time, with one read-only `find`/`tail` command each, folding the printed journals in memory and reporting only per-host receipts in `scope.hosts` (decision `peril-11-slice-3-host-seat-fleet-hosts`). An unreachable host is a receipt with its reason (`timeout`, `connection-failed`, `route-failed`, `spawn-failed`, `output-truncated`, `refused-command`) and never fails the read. The admission gate is `packages/tooling/tool/cli/test/yeet-attempt-journal-host-seat.test.ts` (a mixed-revision fixture with rows from origin/main's encoder: both revisions decode, origin/main's reader reads the new rows, retention keeps their bytes) and `packages/tooling/tool/cli/test/yeet-economics-fleet-hosts.test.ts` (a fake SSH executor that dies on any command but the exact read, five hosts covering every status, the store dedupe, branch narrowing, and a report that holds no raw row). No live fleet read was run; the workstation has no `hosts.json` yet. With slice 9, all three PERIL-11 PR slices are built; the fleet census across a lane retirement is P2 evidence.
+
+Lane feat/certainty-fleet-host-fields
+
+Reverse: Delete this checkpoint so the slice-5b checkpoint is the latest PLAN status note, and revert the slice-9 PR.
 
 <!-- beep:decisions:end -->

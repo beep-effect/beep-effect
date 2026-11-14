@@ -29,7 +29,7 @@ Scope:
   `.github/workflows/check.yml` and the other change-profile callers
   (heavy.yml, heavy-admit.yml, storybook.yml; PERIH-10);
   `scripts/cloud/bootstrap.sh` (COVE-03);
-  `standards/cache-qualification-baseline.json` and
+  `standards/cache-baseline/` and
   `standards/policy-tools.fingerprint.json` (TEST-10 re-record and reseal); AGENTS.md and yeet skill gate names; this
   packet. Levers: ROUT-03, ROUT-02, TEST-10, COVE-02, YEET-08, COVE-03,
   COVE-08, COVE-04, PERIH-10, ROUT-07.

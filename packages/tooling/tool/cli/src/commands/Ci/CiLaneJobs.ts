@@ -34,6 +34,7 @@ const CALLED_JOB_SEPARATOR = " / ";
 const PARTITION_OPEN = " (";
 const PARTITION_CLOSE = ")";
 const PARTITION_SUFFIX = / \([^()]*\)$/;
+const PARTITION_ID = / \(([^()]*)\)$/;
 
 /**
  * The name GitHub prints for a job of a called workflow: `<caller> / <job>`.
@@ -98,6 +99,35 @@ export const ciCallerJobName = (name: string): O.Option<string> =>
  */
 export const ciJobShardFamily = (name: string): O.Option<string> =>
   O.liftPredicate(Str.replace(PARTITION_SUFFIX, "")(name), (family) => !Str.Equivalence(family, name));
+
+const partitionOfName = (name: string): O.Option<string> =>
+  O.filter(
+    O.flatMap(Str.match(PARTITION_ID)(name), (groups) => O.fromUndefinedOr(groups[1])),
+    Str.isNonEmpty
+  );
+
+/**
+ * The partition a job reports for: its own ` (<partition>)` suffix or, for a
+ * job of a called workflow, its caller's.
+ *
+ * **Example** (Read the partition of three jobs)
+ *
+ * ```ts import.meta.vitest name="Read the partition of three jobs"
+ * import { ciJobPartition } from "@beep/repo-cli/commands/Ci/CiLaneJobs"
+ * import * as O from "effect/Option"
+ *
+ * O.getOrNull(ciJobPartition("Test Integration (int-rest)")) // => "int-rest"
+ * O.getOrNull(ciJobPartition("Test Unit (repo-cli-1) / Overflow")) // => "repo-cli-1"
+ * O.isNone(ciJobPartition("Heavy / Test Integration")) // => true
+ * ```
+ *
+ * @param name - A job name as GitHub lists it.
+ * @returns The partition id, or `None` for a job that reports for no partition.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const ciJobPartition = (name: string): O.Option<string> =>
+  O.orElse(partitionOfName(name), () => O.flatMap(ciCallerJobName(name), partitionOfName));
 
 /**
  * Hosted jobs that belong to no lane: the change profile, heavy admission and

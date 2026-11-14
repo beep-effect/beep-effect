@@ -183,7 +183,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           );
           yield* fs.makeDirectory(path.join(repoRoot, "standards"), { recursive: true });
           yield* fs.writeFileString(
-            path.join(repoRoot, "standards", "jsdoc-documentation.inventory.jsonc"),
+            path.join(repoRoot, "standards", "test-typecheck.blindspot-baseline.jsonc"),
             '{ "package": "@beep/courtlistener" }\n'
           );
           yield* fs.makeDirectory(path.join(repoRoot, ".changeset"), { recursive: true });
@@ -199,7 +199,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           const observations = yield* inspectTargetAtRoot(repoRoot, target);
           const byId = (id: string) => A.findFirst(observations, (item) => item.surfaceId === id);
 
-          expect(O.getOrThrow(byId("jsdoc-inventory")).status).toBe("residue");
+          expect(O.getOrThrow(byId("test-typecheck-baseline")).status).toBe("residue");
           const pendingChangesets = O.getOrThrow(byId("pending-changesets"));
           expect(pendingChangesets.status).toBe("residue");
           expect(pendingChangesets.evidence).toContain(".changeset/orphan-courtlistener.md");
@@ -259,7 +259,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           );
           yield* fs.makeDirectory("standards", { recursive: true });
           yield* fs.writeFileString(
-            "standards/jsdoc-documentation.inventory.jsonc",
+            "standards/test-typecheck.blindspot-baseline.jsonc",
             '{ "package": "@beep/courtlistener" }\n'
           );
           yield* fs.makeDirectory(".changeset", { recursive: true });
@@ -271,7 +271,12 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           const exit = yield* Effect.exit(runDeletePackage(["courtlistener", "--check"]));
           expectReportedExit(exit);
           const lines = yield* TestConsole.logLines;
-          for (const surfaceId of ["jsdoc-inventory", "pending-changesets", "identity-segment", "runtime-artifacts"]) {
+          for (const surfaceId of [
+            "test-typecheck-baseline",
+            "pending-changesets",
+            "identity-segment",
+            "runtime-artifacts",
+          ]) {
             expect(
               A.some(lines, (line) => P.isString(line) && Str.includes(`[check] ${surfaceId}: residue`)(line))
             ).toBe(true);
@@ -803,7 +808,6 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           "runtime-artifacts",
           "tsconfig-sync",
           "lockfile",
-          "jsdoc-inventory",
           "coverage-baseline",
         ])
       );
@@ -1010,7 +1014,6 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             "bun run beep fallow boundaries --write",
             "bun run fallow:health:baseline:write",
             "bun run fallow:dead-code:baseline:write",
-            "bun run beep quality jsdoc-inventory",
             "bun run beep lint schema-first --write",
             "bun run beep lint package-test-typecheck --write-baseline",
             "bun run beep lint schema-catalog --write",

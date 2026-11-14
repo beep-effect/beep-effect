@@ -114,7 +114,7 @@ Higher sources outrank lower sources when they conflict.
   on a change to the binary's closure (PERIH-11).
 - `.github/actions/fetch-beep-ci/action.yml`: the pin `beep-ci-d15ecf4ca610` (lines 20 and 21), unchanged since
   #2906 on 2026-11-07; bumped only by reviewed pin-bump PRs.
-- `standards/cache-qualification-baseline.json`: re-recorded in any slice that touches `turbo.json`, `bun.lock`
+- `standards/cache-baseline/`: re-recorded in any slice that touches `turbo.json`, `bun.lock`
   or a workflow file.
 - This packet (`goals/heavy-pool-diet/`).
 
@@ -190,7 +190,7 @@ heads named.
   layout owned by `ci-lane-economics` is at steady state.
 - **Cache-policy baseline:** any PR touching `turbo.json`, `bun.lock`, root `package.json` or a workflow file
   freezes coverage floors at base, escalates to a full matrix and re-records
-  `standards/cache-qualification-baseline.json` in the same PR. Batch workflow edits to keep full-matrix runs few.
+  `standards/cache-baseline/` in the same PR. Batch workflow edits to keep full-matrix runs few.
 - **Workflow PR merges:** the orchestrator's App token cannot merge workflow PRs, so slices that edit
   `.github/workflows/` plan a merge by an identity that can.
 - **Rollback:** every workflow slice names a tested revert in its PR body (PLAN, "Missing from the plan").

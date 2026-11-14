@@ -30,7 +30,7 @@ import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
 // Route-soundness-repair ROUT-02 (exploration ruling D8): a docs_only pull request never starts
 // Heavy / Lint Policy, so every root Turbo task that can fail on a docs-classified path must run in
 // the Docs Policy lane or carry a reason in DOCS_POLICY_EXCLUSIONS. Uncached root tasks are always
-// classified: only cached task inputs are certified (standards/cache-qualification-baseline.json).
+// classified: only cached task inputs are certified (standards/cache-baseline/).
 
 const TurboTask = S.Struct({
   inputs: S.String.pipe(S.Array, S.optionalKey),
