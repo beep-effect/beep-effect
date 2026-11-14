@@ -1,11 +1,11 @@
 {
-  "previous": "cee095d0e9c10408d09e50617d5b7d491995b58dde1590d97b31ba75304b2888",
+  "previous": "991d6fbd615ffd55d0361a13d374c541e045e9506b8a22d037c4d9d002ea7de0",
   "review": {
     "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p3-turbo-cache)",
     "reason": "Record the new @beep/infra-turbo-cache workspace, re-record @beep/scratchpad after the turbo-cache-r2 module and its script moved out, and the root subject for the new manifest in the policy-fingerprint inputs; no command, output or environment changes, no qualification granted.",
     "basis": {
       "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-infra-turbo-cache.md",
-      "sha256": "812ac2a79a863cf47e2d2114a02a320381c1388368b7199bbc88d6a96450a274"
+      "sha256": "2b9b77a00b005ba3f31c30f351c17887cc0ec929844ea7c98608d2e6be4211c5"
     }
   },
   "scope": ["@beep/identity#lint", "@beep/types#lint"],
