@@ -3,6 +3,8 @@
  * destroyed, terminates the instances and deregisters the runners the
  * scale-up Lambda created at runtime, which Alchemy never tracked.
  *
+ * **Details**
+ *
  * The delete-only pattern follows t3code's `PreviewTunnelSweep`
  * (`goals/infra-alchemy-rebuild/research/t3code-stack-patterns.md`).
  *
@@ -160,18 +162,28 @@ export const sweepRunners = Effect.fn("RunnerSweep.sweep")(function* (input: {
  *
  * **Details**
  *
- * `dependsOn` lists the scale-up function names. Alchemy deletes dependents
- * first, so the sweep runs before the Lambdas that launch runners are removed;
- * a runner launched in that window is the next destroy's to sweep.
+ * `dependsOn` lists everything the sweep reads or races at delete time: the
+ * scale-up function names, the termination watcher, the App id and key
+ * parameters and their KMS key. Alchemy deletes dependents first, so the sweep
+ * runs while those still exist; a runner launched in that window is the next
+ * destroy's to sweep.
  *
  * @category models
  * @since 0.0.0
  */
-export interface RunnerSweepProps {
-  readonly dependsOn: ReadonlyArray<string>;
-  readonly environments: ReadonlyArray<string>;
-  readonly tokenPaths: ReadonlyArray<string>;
-}
+export const RunnerSweepProps = S.Struct({
+  dependsOn: S.Array(S.String),
+  environments: S.Array(S.String),
+  tokenPaths: S.Array(S.String),
+}).pipe($I.annoteSchema("RunnerSweepProps", { description: "Props of the delete-only runner sweep." }));
+
+/**
+ * Decoded {@link RunnerSweepProps}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RunnerSweepProps = typeof RunnerSweepProps.Type;
 
 /**
  * Attributes of {@link RunnerSweep}: the props echoed back.
@@ -179,10 +191,20 @@ export interface RunnerSweepProps {
  * @category models
  * @since 0.0.0
  */
-export interface RunnerSweepAttributes {
-  readonly environments: ReadonlyArray<string>;
-  readonly tokenPaths: ReadonlyArray<string>;
-}
+export const RunnerSweepAttributes = S.Struct({
+  environments: S.Array(S.String),
+  tokenPaths: S.Array(S.String),
+}).pipe(
+  $I.annoteSchema("RunnerSweepAttributes", { description: "Attributes of the runner sweep: its props echoed back." })
+);
+
+/**
+ * Decoded {@link RunnerSweepAttributes}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RunnerSweepAttributes = typeof RunnerSweepAttributes.Type;
 
 /**
  * The delete-only sweep resource type.

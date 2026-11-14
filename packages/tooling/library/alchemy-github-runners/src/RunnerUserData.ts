@@ -1,7 +1,9 @@
 /**
  * The runner instance's user data: install the `actions/runner` tarball from
- * the fleet's S3 mirror, fetch the one-use JIT configuration from SSM, run
- * one job and terminate.
+ * the fleet's S3 mirror, fetch the one-use registration from SSM and run the
+ * runner.
+ *
+ * **Details**
  *
  * Ported from `modules/runners/templates/{user-data,install-runner,start-runner}.sh`
  * of github-aws-runners/terraform-aws-github-runner v7.10.1 (MIT); see the

@@ -2,6 +2,8 @@
  * `RunnerFleet`: one self-hosted GitHub Actions runner fleet declared out of
  * shipped Alchemy primitives under `Namespace.push(...)`.
  *
+ * **Details**
+ *
  * The resource graph reproduces the `multi-runner` composition of
  * github-aws-runners/terraform-aws-github-runner v7.10.1 (MIT; see the package
  * README): one webhook, a build queue, job-retry queue, scale-up, job-retry and
@@ -21,14 +23,17 @@ import * as S3 from "@alchemy.run/aws/S3";
 import * as SQS from "@alchemy.run/aws/SQS";
 import * as SSM from "@alchemy.run/aws/SSM";
 import { RunnerLaunchTemplate } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate";
+import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import * as Namespace from "alchemy/Namespace";
 import * as Output from "alchemy/Output";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { instanceStateChangeDetailType, spotInterruptionWarningDetailType } from "./Ec2Events.models.ts";
+import { RunnerPool, RunnerType } from "./RunnerPool.models.ts";
 import {
   HousekeeperRuntimeConfig,
   LaunchTemplateRef,
@@ -45,9 +50,24 @@ import { AppParameterNames, appParameterNames, poolConfigPath, poolTokenPath } f
 import type { RunnerLaunchTemplateProps } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate";
 import type { Input, PropsInput } from "alchemy/Input";
 import type * as Redacted from "effect/Redacted";
-import type { RunnerPool, RunnerType } from "./RunnerPool.models.ts";
 
 type Value<T> = T | Output.Output<T>;
+
+const $I = $AlchemyGithubRunnersId.create("RunnerFleet");
+
+// Fields that carry Alchemy outputs or inputs are declared, not decoded: the
+// composite passes them straight to the resources that resolve them.
+const StringValue = S.Union([S.String, S.declare((u): u is Output.Output<string> => Output.isOutput(u))]).pipe(
+  $I.annoteSchema("StringValue", { description: "A string or an Alchemy output of one." })
+);
+
+const DurationInput = S.declare(
+  (u): u is Duration.Input => P.isString(u) || P.isNumber(u) || P.isBigInt(u) || Duration.isDuration(u)
+).pipe($I.annoteSchema("DurationInput", { description: "Anything Duration accepts as input." }));
+
+const LaunchTemplateInput = S.declare((u): u is RunnerFleetLaunchTemplate => P.isObject(u)).pipe(
+  $I.annoteSchema("LaunchTemplateInput", { description: "The fleet-supplied launch-template props." })
+);
 
 const lambdaDir = `${import.meta.dirname}/internal/lambda`;
 const runnerTarballKey = "actions-runner-linux.tar.gz";
@@ -90,28 +110,36 @@ export type RunnerFleetLaunchTemplate = Pick<
  * @category models
  * @since 0.0.0
  */
-export interface RunnerFleetProps {
-  readonly app: {
-    readonly id: Redacted.Redacted<string>;
-    readonly keyBase64: Redacted.Redacted<string>;
-    readonly webhookSecret: Redacted.Redacted<string>;
-  };
-  readonly id: string;
-  readonly launchTemplate: RunnerFleetLaunchTemplate;
-  readonly logRetention?: Duration.Input | undefined;
-  readonly name: string;
-  readonly pools: A.NonEmptyReadonlyArray<RunnerPool>;
-  readonly postInstall?: string | undefined;
-  readonly preInstall?: string | undefined;
-  readonly repositoryAllowList: ReadonlyArray<string>;
-  readonly runAs?: string | undefined;
-  readonly runnerManagedPolicyArns?: ReadonlyArray<Value<string>> | undefined;
-  readonly runnerPermissionsBoundaryArn?: Value<string> | undefined;
-  readonly runnerType: RunnerType;
-  readonly ssmRoot: string;
-  readonly subnetIds: A.NonEmptyReadonlyArray<Value<string>>;
-  readonly tokenMinimumDaysOld?: number | undefined;
-}
+export const RunnerFleetProps = S.Struct({
+  app: S.Struct({
+    id: S.Redacted(S.String),
+    keyBase64: S.Redacted(S.String),
+    webhookSecret: S.Redacted(S.String),
+  }),
+  id: S.String,
+  launchTemplate: LaunchTemplateInput,
+  logRetention: S.optionalKey(DurationInput),
+  name: S.String,
+  pools: S.NonEmptyArray(RunnerPool),
+  postInstall: S.optionalKey(S.String),
+  preInstall: S.optionalKey(S.String),
+  repositoryAllowList: S.Array(S.String),
+  runAs: S.optionalKey(S.String),
+  runnerManagedPolicyArns: StringValue.pipe(S.Array, S.optionalKey),
+  runnerPermissionsBoundaryArn: S.optionalKey(StringValue),
+  runnerType: RunnerType,
+  ssmRoot: S.String,
+  subnetIds: S.NonEmptyArray(StringValue),
+  tokenMinimumDaysOld: S.optionalKey(S.Finite),
+}).pipe($I.annoteSchema("RunnerFleetProps", { description: "Props of one runner fleet." }));
+
+/**
+ * Decoded {@link RunnerFleetProps}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RunnerFleetProps = typeof RunnerFleetProps.Type;
 
 const encodeJson = <A, I>(schema: S.Codec<A, I>) => {
   const encode = S.encodeEffect(S.fromJsonString(schema));
