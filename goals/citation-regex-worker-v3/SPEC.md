@@ -167,6 +167,12 @@ Lane feat/citation-regex-session
 
 Reverse: Return the engine to startup only if every evaluator in an invocation is proved to use one dialect.
 
+### Fence physical spawn at the owner hand-off after all owner waits, 2026-11-14
+
+Round 4 revalidates lane closed/poisoned state and the specific withUse call after admission acquisition, its accounting span and its snapshot. The concrete physical owner's optional typed fence executes after the birth lock, owner checks, Scope/Ref/semaphore construction and record registration. The check and call to the captured spawner execute inside one synchronous Effect.suspend callback. Fence refusals remain typed child Exit failures; the lane retires the registered empty resource and returns its lease through the existing release path. An admitted hand-off that has already called the spawner retains the existing late-resolution retirement protocol. The permanent test failed on the review base with one real Bun/Node spawn, then passes with zero starts and exactly one return; it also revokes before drain expiry and sweeps every measured pre-hand-off owner scheduler boundary. Accepted limit: work that never resolves retains its private Scope and any quarantined capacity indefinitely. The guarantee is a bounded caller wait, not eventual settlement; releasing unresolved ownership would violate the one-occupant and confirmed-death guards.
+
+Reverse: Replace the synchronous fence only with an equivalent authority protocol that proves zero physical spawns after revocation at every admission and owner continuation.
+
 ### Keep Diff and Xml preparation per request and retain Markup private queues, 2026-11-14
 
 B1 does not require hoisting Diff or Xml to engine construction. Their preparation and per-job diagnostics remain per request. Markup private semaphores and queue/deadline guards remain: the default HTML cleaner serves the closed standalone port, whose callers need that queue. Xml passes lane.start explicitly. Diff receives both the starter and text reservation explicitly and performs no Invocation or native-admission lookup. No installed-stage, tokenizer, evaluator or detach count is moved.

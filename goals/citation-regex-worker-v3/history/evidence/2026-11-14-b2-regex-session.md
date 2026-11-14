@@ -1,9 +1,9 @@
 # B2 regex session evidence
 
 The earlier receipts below are retained as history. The latest verification is
-[Review round 3](#review-round-3): all 276 Citation files, 1,315 passing tests,
-zero failures or skips, 30 passing replay files and 18 passing single-file
-coverage runs. NativeLane and all four session files reach 100% on every metric.
+[Review round 4](#review-round-4): all 277 Citation files, 1,323 passing tests,
+zero failures or skips and 25 distinct single-file coverage measurements.
+NativeLane, NativeProcess and all four session files reach 100% on every metric.
 
 B2 is implemented on `feat/citation-regex-session` in
 `~/YeeBois/projects/beep-effect-worktrees/citation-regex-session`.
@@ -2384,3 +2384,525 @@ regressions), `8f287426980` (synchronous admission publication), and
 associated decisions and the generated checkpoint ship in the following docs
 commit. The lane is preserved locally for independent review; no push, merge,
 rebase or subagents.
+
+## Review round 4
+
+The review base is `fe714d0ecdb`. The accepted MAJOR was a retained start
+continuing from a delayed healthy admission snapshot after its lane had already
+been poisoned and its lease quarantined. The old continuation could still call
+the physical spawner, then retire that unnecessary child.
+
+### Reproduction, fence and permanent regression
+
+The reviewer's `race.test.ts` and configuration were read first. Before changing
+production code, the first four permanent cases in CitationNativeLaneFence ran
+against the review base: delayed snapshot and paused owner continuation on each
+Bun/Node runtime command. All four failed as expected, observing **spawned = 1,
+confirmed = 1** where zero was required. These were real observed spawners and
+real executable child commands, not fake process handles. The additional
+owner-side probe measured the old hand-off after its internal Effect steps.
+
+The fix has two layers:
+
+1. Admission revalidates closed/poisoned lane state and the exact call's live
+   authority before claiming, after acquisition, after its accounting span and
+   after snapshot delivery. A stale healthy snapshot cannot authorize a birth.
+2. The concrete physical owner's optional typed fence runs after the birth-lock
+   wait, owner checks, Scope/Ref/semaphore creation and ownership registration.
+   The last authority read and call to the captured spawner are in **one
+   synchronous Effect.suspend callback**. There is no Effect yield between them.
+   Real platform errors alone are mapped to spawn-failed; a fence's typed refusal
+   remains the child's failure Exit. The lane retires that empty registered
+   resource and returns capacity through the existing release path.
+
+The default two-argument physical-owner behavior and generic starter contract
+remain compatible. No limit value, public engine shape, extraction output,
+confirmation guard, protocol frame or fingerprint authority changed.
+
+The permanent file has **eight cases**:
+
+| Case family | Bun command | Node command |
+| --- | --- | --- |
+| Drain expires while a healthy snapshot's delivery is paused | Pass | Pass |
+| Drain expires at each measured pre-hand-off owner scheduler boundary | Pass | Pass |
+| Call is revoked at snapshot delivery before the drain expires | Pass | Pass |
+| Call is revoked at an owner continuation before the drain expires | Pass | Pass |
+
+Each expiry case asserts zero spawner method hand-offs, **zero physical starts
+and zero confirmations**, exactly one lease return, refusal of later start and
+withUse calls, and no additional return on Scope closure. Token-only revocation
+cases prove the specific call authority matters even without lane poisoning.
+
+The owner sweep calibrates the pre-hand-off Effect boundaries with a synchronous
+fence that refuses without calling the real spawner, asserts a positive boundary
+count, then parks each measured boundary in turn using the public v4 Scheduler
+and Tracer APIs plus a Deferred barrier. It therefore covers owner-side waits
+without hard-coding an interpreter operation count or adding a production test
+hook. Both parent runtimes exercise the same cases in the final serial and
+single-file coverage runs.
+
+### Explicit accepted limit
+
+**Work that never resolves at all keeps its private Scope and quarantined
+capacity indefinitely. The guarantee is a bounded caller wait, not eventual
+settlement.** There is no claim that every retained operation will finish.
+Returning capacity or discarding the ownership record while a spawn or process
+is unresolved would permit an unaccounted child and violate confirmed retirement
+and the one-occupant invariant. If already-authorized work later resolves, the
+existing retirement path can confirm it and return capacity once. No subsequent
+start is permitted on the poisoned lane. This is the owner's explicitly accepted
+limit, recorded in the round-4 fence decision as well as this receipt.
+
+Implementation: `8f848e9a2e9` (`fix(citation): fence physical spawn against revoked
+lane authority`). Work remains local; no push, merge, rebase or subagents.
+
+### Complete serial Citation run
+
+All 276 files other than the final FullSpan gate pass: **1,311 tests**, zero
+failures or skips. Each file ran individually with nice -n 19. The three files
+that require Bun.version used a Bun parent; all other files used the prescribed
+Node-parent bunx Vitest command. All integration corpora ran in full under their
+existing timeouts. There was no sampling or parallel whole-suite invocation.
+
+| Test file | Passing tests | Parent |
+| --- | ---: | --- |
+| CitationAdmission.test.ts | 7 | Node |
+| CitationAnnotationAssembly.test.ts | 5 | Node |
+| CitationAnnotationCallback.test.ts | 2 | Node |
+| CitationAnnotationCallbackBoundary.test.ts | 2 | Node |
+| CitationAnnotationEntry.test.ts | 5 | Node |
+| CitationAnnotationEntryCoverage.test.ts | 2 | Node |
+| CitationAnnotationFailure.test.ts | 2 | Node |
+| CitationAnnotationSkip.test.ts | 1 | Node |
+| CitationAnnotationStyle.test.ts | 2 | Node |
+| CitationAnnotationTemplate.test.ts | 2 | Node |
+| CitationAnnotationWrap.test.ts | 3 | Node |
+| CitationAssetCoverage.test.ts | 3 | Node |
+| CitationAuthorityIdentity.test.ts | 7 | Node |
+| CitationBuiltinCleaners.test.ts | 2 | Node |
+| CitationBuiltinDiff.test.ts | 6 | Node |
+| CitationCallbackMutations.test.ts | 2 | Node |
+| CitationCallbackRuntimeIndex.test.ts | 5 | Node |
+| CitationCallbackSession.test.ts | 16 | Node |
+| CitationCallbackSessionCoverage.test.ts | 5 | Node |
+| CitationCanonicalAnnotation.test.ts | 2 | Node |
+| CitationCanonicalAnnotationWorkflow.test.ts | 1 | Node |
+| CitationCanonicalCourts.test.ts | 1 | Node |
+| CitationCanonicalDefaultFactory.test.ts | 2 | Node |
+| CitationCanonicalDump.test.ts | 2 | Node |
+| CitationCanonicalEditionYears.test.ts | 1 | Node |
+| CitationCanonicalExtraction.test.ts | 7 | Node |
+| CitationCanonicalExtractionRanges.test.ts | 6 | Node |
+| CitationCanonicalFullRendering.test.ts | 2 | Node |
+| CitationCanonicalLongDiff.test.ts | 2 | Node |
+| CitationCanonicalMissingConversion.test.ts | 2 | Node |
+| CitationCanonicalPageCorrection.test.ts | 2 | Node |
+| CitationCanonicalParsedEquality.test.ts | 2 | Node |
+| CitationCanonicalParserOperations.test.ts | 1 | Node |
+| CitationCanonicalPinSpan.test.ts | 2 | Node |
+| CitationCanonicalRanges.test.ts | 2 | Node |
+| CitationCanonicalReferenceMarkup.test.ts | 2 | Node |
+| CitationCanonicalRemainingExtraction.test.ts | 1 | Node |
+| CitationCanonicalResourceComparison.test.ts | 1 | Node |
+| CitationCanonicalSource.test.ts | 1 | Node |
+| CitationCanonicalSourceCoverage.test.ts | 2 | Node |
+| CitationCanonicalStyle.test.ts | 1 | Node |
+| CitationCapturedCleanerPlan.test.ts | 2 | Node |
+| CitationCaseMetadata.test.ts | 2 | Node |
+| CitationCaseName.test.ts | 2 | Node |
+| CitationCaseNameCoverage.test.ts | 2 | Node |
+| CitationCaseNamePredicates.test.ts | 4 | Node |
+| CitationCaseNameProcess.test.ts | 5 | Node |
+| CitationCaseNameScan.test.ts | 4 | Node |
+| CitationCaseNameSelection.test.ts | 1 | Node |
+| CitationCaseResourceHash.test.ts | 4 | Node |
+| CitationCleanerCustomCorpus.test.ts | 3 | Node |
+| CitationCleanerNamedCorpus.test.ts | 1 | Node |
+| CitationCleanerOwnedInput.test.ts | 4 | Node |
+| CitationCleanerParentBudget.test.ts | 5 | Node |
+| CitationCleanerPipeline.test.ts | 18 | Node |
+| CitationCleanerPipelineCoverage.test.ts | 7 | Node |
+| CitationCleanerRegistry.test.ts | 12 | Node |
+| CitationCleanerUnicodeValues.test.ts | 7 | Node |
+| CitationCleanerValues.test.ts | 8 | Node |
+| CitationConfigurationOwnership.test.ts | 6 | Bun |
+| CitationContextMatcher.test.ts | 2 | Node |
+| CitationCourtLookup.test.ts | 8 | Node |
+| CitationDefaultCallbacks.test.ts | 10 | Node |
+| CitationDefaultConfiguration.test.ts | 3 | Node |
+| CitationDictionaryReentrancy.test.ts | 2 | Node |
+| CitationDiffKernel.test.ts | 13 | Node |
+| CitationDiffKernelCoverage.test.ts | 1 | Node |
+| CitationDiffLaneCoverage.test.ts | 9 | Node |
+| CitationDiffStepsCoverage.test.ts | 3 | Node |
+| CitationDiffWorker.input-admission.test.ts | 1 | Node |
+| CitationDiffWorker.test.ts | 14 | Node |
+| CitationDiffWorkerProtocol.test.ts | 4 | Node |
+| CitationDocumentCleanerProtocols.test.ts | 10 | Node |
+| CitationDocumentExtraction.test.ts | 1 | Node |
+| CitationDocumentExtractionCoverage.test.ts | 1 | Node |
+| CitationDocumentPersistence.test.ts | 18 | Node |
+| CitationDocumentServices.test.ts | 1 | Node |
+| CitationDump.test.ts | 9 | Node |
+| CitationDumpCoverage.test.ts | 4 | Node |
+| CitationEditionInference.test.ts | 3 | Node |
+| CitationEngineArtifact.test.ts | 3 | Node |
+| CitationEngineBoundaryRefusal.test.ts | 2 | Node |
+| CitationEngineCorpus.test.ts | 1 | Node |
+| CitationEngineFailure.test.ts | 2 | Node |
+| CitationEngineLayer.test.ts | 15 | Node |
+| CitationEngineResolution.test.ts | 2 | Node |
+| CitationExtractionContext.test.ts | 2 | Node |
+| CitationExtractionEntry.test.ts | 1 | Node |
+| CitationExtractionEntryCoverage.test.ts | 2 | Node |
+| CitationExtractionLoop.test.ts | 15 | Node |
+| CitationExtractionReport.test.ts | 1 | Node |
+| CitationExtractionSelection.test.ts | 1 | Node |
+| CitationExtractionShortcut.test.ts | 1 | Node |
+| CitationExtractorControls.test.ts | 24 | Bun |
+| CitationExtractorOrdering.test.ts | 2 | Node |
+| CitationExtractorRecipes.test.ts | 2 | Node |
+| CitationExtractorSelection.test.ts | 5 | Node |
+| CitationFrozenEditions.test.ts | 6 | Node |
+| CitationFullExtraction.test.ts | 2 | Node |
+| CitationFullExtractionCoverage.test.ts | 1 | Node |
+| CitationFullLawMetadata.test.ts | 2 | Node |
+| CitationGeneratedReferences.test.ts | 2 | Node |
+| CitationHelperConfigurations.test.ts | 3 | Node |
+| CitationHostResources.test.ts | 8 | Node |
+| CitationHtmlBytes.test.ts | 2 | Node |
+| CitationHtmlCaseName.test.ts | 3 | Node |
+| CitationHtmlCleanerStage.test.ts | 3 | Node |
+| CitationHtmlCompletion.test.ts | 3 | Node |
+| CitationHtmlDiscovery.test.ts | 2 | Node |
+| CitationHtmlDiscoveryCoverage.test.ts | 2 | Node |
+| CitationHtmlGeometryPreparation.test.ts | 3 | Node |
+| CitationHtmlInput.test.ts | 9 | Node |
+| CitationHtmlKernel.test.ts | 18 | Node |
+| CitationHtmlNativeInput.test.ts | 5 | Node |
+| CitationHtmlWorker.test.ts | 13 | Node |
+| CitationHtmlWorkerCorpus.test.ts | 3 | Node |
+| CitationHtmlWorkerCoverage.test.ts | 2 | Node |
+| CitationHtmlWorkerProgram.test.ts | 5 | Node |
+| CitationHtmlWorkerProtocol.test.ts | 6 | Node |
+| CitationHtmlWorkerRpc.test.ts | 3 | Node |
+| CitationInputDocument.test.ts | 1 | Node |
+| CitationInputDocumentCoverage.test.ts | 2 | Node |
+| CitationInvocation.test.ts | 4 | Node |
+| CitationJournalMetadata.test.ts | 4 | Node |
+| CitationLawMetadata.test.ts | 6 | Node |
+| CitationLiteralCleaners.test.ts | 8 | Node |
+| CitationLiteralUnicodeComposition.test.ts | 4 | Node |
+| CitationMarkupWorkerCoverage.test.ts | 8 | Node |
+| CitationMention.test.ts | 13 | Node |
+| CitationMentionIdentity.test.ts | 7 | Node |
+| CitationMetadataStrings.test.ts | 3 | Node |
+| CitationMetadataYear.test.ts | 5 | Node |
+| CitationMixedResourceObjects.test.ts | 2 | Node |
+| CitationModelMutation.test.ts | 2 | Node |
+| CitationNativeAdmission.test.ts | 13 | Node |
+| CitationNativeAdmissionCoverage.test.ts | 2 | Node |
+| CitationNativeLane.test.ts | 16 | Node |
+| CitationNativeLaneCleaner.test.ts | 2 | Node |
+| CitationNativeLaneComposition.test.ts | 4 | Node |
+| CitationNativeLaneCoverage.test.ts | 20 | Node |
+| CitationNativeLaneFence.test.ts | 8 | Node |
+| CitationNativeLaneReservation.test.ts | 32 | Node |
+| CitationNativeLaneTransfer.test.ts | 4 | Node |
+| CitationNativeProcess.test.ts | 5 | Node |
+| CitationNativeProcessCoverage.test.ts | 3 | Node |
+| CitationNativeRpc.test.ts | 6 | Node |
+| CitationNativeSlices.test.ts | 3 | Node |
+| CitationNativeSocket.test.ts | 12 | Node |
+| CitationOccurrenceProjectionCoverage.test.ts | 4 | Node |
+| CitationPairedSource.test.ts | 2 | Node |
+| CitationParserCatalog.test.ts | 2 | Node |
+| CitationPinExtraction.test.ts | 4 | Node |
+| CitationPortFailure.test.ts | 2 | Node |
+| CitationPostCaseMetadata.test.ts | 5 | Node |
+| CitationPreCaseMetadata.test.ts | 4 | Node |
+| CitationPriorFulls.test.ts | 2 | Node |
+| CitationPublicationResourceHash.test.ts | 5 | Node |
+| CitationPythonCase.test.ts | 4 | Node |
+| CitationPythonCaseCoverage.test.ts | 2 | Node |
+| CitationPythonHash.test.ts | 4 | Node |
+| CitationPythonRepr.test.ts | 5 | Node |
+| CitationPythonReprCoverage.test.ts | 2 | Node |
+| CitationPythonUnicode.test.ts | 7 | Node |
+| CitationPythonUnicodeCoverage.test.ts | 3 | Node |
+| CitationRecognizerProgram.test.ts | 3 | Node |
+| CitationRecognizerWorker.test.ts | 12 | Node |
+| CitationReferenceNames.test.ts | 1 | Node |
+| CitationReferencePatterns.test.ts | 1 | Node |
+| CitationReferencePatternsCoverage.test.ts | 4 | Node |
+| CitationReferenceToken.test.ts | 2 | Node |
+| CitationReferenceTokenExtractionCoverage.test.ts | 3 | Node |
+| CitationRegexAlphabet.test.ts | 8 | Node |
+| CitationRegexBoundaries.test.ts | 2 | Node |
+| CitationRegexCaptureReuse.test.ts | 2 | Node |
+| CitationRegexCaseFlags.test.ts | 2 | Node |
+| CitationRegexCharacters.test.ts | 2 | Node |
+| CitationRegexDescriptors.test.ts | 10 | Node |
+| CitationRegexEngine.test.ts | 4 | Node |
+| CitationRegexInput.test.ts | 11 | Node |
+| CitationRegexInputCoverage.test.ts | 2 | Node |
+| CitationRegexLaneCoverage.test.ts | 6 | Node |
+| CitationRegexLookahead.test.ts | 2 | Node |
+| CitationRegexNullable.test.ts | 2 | Node |
+| CitationRegexOperation.test.ts | 3 | Node |
+| CitationRegexPolicyCoverage.test.ts | 2 | Node |
+| CitationRegexProgram.test.ts | 14 | Node |
+| CitationRegexResult.test.ts | 13 | Node |
+| CitationRegexSession.test.ts | 64 | Node |
+| CitationRegexSessionProgram.test.ts | 3 | Node |
+| CitationRegexSessionProtocol.test.ts | 5 | Node |
+| CitationRegexSessionRpc.test.ts | 4 | Node |
+| CitationRegexTranslator.test.ts | 7 | Node |
+| CitationRegexVerbose.test.ts | 3 | Node |
+| CitationRegexWorker.test.ts | 19 | Node |
+| CitationRegexWorkerProtocol.test.ts | 15 | Node |
+| CitationRendering.test.ts | 5 | Node |
+| CitationRenderingOperation.test.ts | 1 | Node |
+| CitationReplayBudget.test.ts | 3 | Node |
+| CitationResolutionLimit.test.ts | 2 | Node |
+| CitationResolve.test.ts | 10 | Node |
+| CitationResolverBoundary.test.ts | 6 | Node |
+| CitationResolverText.test.ts | 4 | Node |
+| CitationResourceCorrection.test.ts | 9 | Node |
+| CitationResourceIdentity.test.ts | 5 | Node |
+| CitationResourceObjects.test.ts | 3 | Node |
+| CitationRuntimeDictionary.test.ts | 4 | Node |
+| CitationRuntimeDictionaryCoverage.test.ts | 2 | Node |
+| CitationRuntimeSet.test.ts | 6 | Node |
+| CitationSemanticExtraction.test.ts | 1 | Node |
+| CitationSemanticProjection.test.ts | 6 | Node |
+| CitationSemanticProjectionCoverage.test.ts | 3 | Node |
+| CitationSessionDescriptors.test.ts | 3 | Node |
+| CitationShortMissingPage.test.ts | 3 | Node |
+| CitationSixFormArtifact.test.ts | 4 | Node |
+| CitationSixFormProjection.test.ts | 2 | Bun |
+| CitationSixFormProjectionControls.test.ts | 7 | Node |
+| CitationSixFormResolution.test.ts | 9 | Node |
+| CitationSourceAnnotation.test.ts | 6 | Node |
+| CitationSourceAnnotationTiming.test.ts | 2 | Node |
+| CitationSourceCleaning.test.ts | 3 | Node |
+| CitationSourceDocument.test.ts | 4 | Node |
+| CitationSourceEvidence.test.ts | 3 | Node |
+| CitationSourceRequest.test.ts | 10 | Node |
+| CitationSpanOffsets.test.ts | 5 | Node |
+| CitationStopWords.test.ts | 3 | Node |
+| CitationTableCapacity.test.ts | 2 | Node |
+| CitationTextBudget.test.ts | 6 | Node |
+| CitationTextCapacity.test.ts | 4 | Node |
+| CitationTextNativeOrder.test.ts | 1 | Node |
+| CitationTokenAssembly.test.ts | 2 | Node |
+| CitationTokenCapture.test.ts | 3 | Node |
+| CitationTokenContext.test.ts | 3 | Node |
+| CitationTokenDispatch.test.ts | 3 | Node |
+| CitationTokenEditions.test.ts | 3 | Node |
+| CitationTokenEquality.test.ts | 2 | Node |
+| CitationTokenObjects.test.ts | 3 | Node |
+| CitationTokenText.test.ts | 4 | Node |
+| CitationTokenizedExtraction.test.ts | 1 | Node |
+| CitationTokenizedExtractionCoverage.test.ts | 1 | Node |
+| CitationTokenizer.test.ts | 11 | Node |
+| CitationTokenizerCatalog.test.ts | 3 | Node |
+| CitationUnicodeDictionary.test.ts | 4 | Node |
+| CitationVerifiedExtraction.test.ts | 1 | Node |
+| CitationXmlBalanceKernel.test.ts | 2 | Node |
+| CitationXmlBalanceKernelCoverage.test.ts | 3 | Node |
+| CitationXmlWorker.test.ts | 3 | Node |
+| CitationXmlWorkerProtocol.test.ts | 2 | Node |
+| integration/CitationCanonicalAnnotationWorkflow.test.ts | 4 | Node |
+| integration/CitationCanonicalCourts.test.ts | 3 | Node |
+| integration/CitationCanonicalExtraction.test.ts | 4 | Node |
+| integration/CitationCanonicalExtractionRange2.test.ts | 4 | Node |
+| integration/CitationCanonicalExtractionRange3.test.ts | 4 | Node |
+| integration/CitationCanonicalExtractionRange4.test.ts | 4 | Node |
+| integration/CitationCanonicalExtractionRange5.test.ts | 4 | Node |
+| integration/CitationCanonicalExtractionRange6.test.ts | 2 | Node |
+| integration/CitationCanonicalParserOperations.test.ts | 4 | Node |
+| integration/CitationCanonicalParserOperationsRange2.test.ts | 4 | Node |
+| integration/CitationCanonicalReferenceMarkup.test.ts | 2 | Node |
+| integration/CitationCanonicalRemainingExtraction.test.ts | 4 | Node |
+| integration/CitationCanonicalRemainingExtractionRange2.test.ts | 3 | Node |
+| integration/CitationCanonicalTokenizer.test.ts | 2 | Node |
+| integration/CitationCleanerNamedHtml.test.ts | 1 | Node |
+| integration/CitationCleanerNativeCustom.test.ts | 1 | Node |
+| integration/CitationDiffWorker.test.ts | 2 | Node |
+| integration/CitationEditionInference.test.ts | 1 | Node |
+| integration/CitationEngineCorpus.test.ts | 2 | Node |
+| integration/CitationExtractorSelection.test.ts | 1 | Node |
+| integration/CitationFullLawMetadata.test.ts | 1 | Node |
+| integration/CitationHtmlUnicode.test.ts | 1 | Node |
+| integration/CitationInputDocument.test.ts | 2 | Node |
+| integration/CitationJournalMetadata.test.ts | 1 | Node |
+| integration/CitationRegexBoundaries.test.ts | 16 | Node |
+| integration/CitationRegexCaseFlags.test.ts | 16 | Node |
+| integration/CitationRegexTranslator.test.ts | 2 | Node |
+| integration/CitationRegexTranslatorNode.test.ts | 2 | Node |
+| integration/CitationVerifiedExtraction.test.ts | 1 | Node |
+
+### Single-file coverage and floors
+
+The union uses 25 distinct one-test-file/one-source-file measurements, with
+additional replay of the fence file after fixture typing/assertion cleanup.
+Each test run passed. NativeLane, NativeProcess and all four session source
+files reach **100% on every metric**, including all new fence branches.
+The unchanged descriptor file remains above its existing floors. No baseline,
+ignore comment or safety guard was changed to obtain coverage.
+
+| Source | Lines | Statements | Functions | Branches |
+| --- | ---: | ---: | ---: | ---: |
+| NativeLane.ts | 100% | 100% | 100% | 100% |
+| RegexSession.ts | 100% | 100% | 100% | 100% |
+| RegexSessionProtocol.ts | 100% | 100% | 100% | 100% |
+| RegexSessionRpc.ts | 100% | 100% | 100% | 100% |
+| RegexSessionProgram.ts | 100% | 100% | 100% | 100% |
+| RegexDescriptors.ts | 100% | 96.96% | 94.73% | 94.44% |
+| NativeProcess.ts | 100% | 100% | 100% | 100% |
+
+No guard is uncovered in either changed source file or the four session files.
+The two unchanged descriptor defensive paths and their floors are described in
+round 2. The NativeLane union includes every direct lane-importing file plus
+composition and transfer; NativeProcess adds its direct coverage file and the
+cleanup-deadline paths in CitationNativeLane. The full contributor matrix is:
+
+| Test file | Source measured | Passing tests |
+| --- | --- | ---: |
+| CitationNativeLaneCoverage.test.ts | NativeLane.ts | 20 |
+| CitationNativeLane.test.ts | NativeLane.ts | 16 |
+| CitationNativeLaneReservation.test.ts | NativeLane.ts | 32 |
+| CitationNativeLaneComposition.test.ts | NativeLane.ts | 4 |
+| CitationNativeLaneTransfer.test.ts | NativeLane.ts | 4 |
+| CitationRegexSession.test.ts | NativeLane.ts | 64 |
+| CitationRegexSession.test.ts | RegexSession.ts | 64 |
+| CitationRegexLaneCoverage.test.ts | RegexSession.ts | 6 |
+| CitationRegexSessionProtocol.test.ts | RegexSessionProtocol.ts | 5 |
+| CitationRegexSessionRpc.test.ts | RegexSessionRpc.ts | 4 |
+| CitationRegexSessionProgram.test.ts | RegexSessionProgram.ts | 3 |
+| CitationRegexDescriptors.test.ts | RegexDescriptors.ts | 10 |
+| CitationRegexSession.test.ts | RegexDescriptors.ts | 64 |
+| CitationCleanerPipelineCoverage.test.ts | NativeLane.ts | 7 |
+| CitationDiffLaneCoverage.test.ts | NativeLane.ts | 9 |
+| CitationHtmlWorker.test.ts | NativeLane.ts | 13 |
+| CitationMarkupWorkerCoverage.test.ts | NativeLane.ts | 8 |
+| CitationRegexLaneCoverage.test.ts | NativeLane.ts | 6 |
+| CitationNativeLaneFence.test.ts | NativeLane.ts | 8 |
+| CitationNativeLaneFence.test.ts | NativeProcess.ts | 8 |
+| CitationNativeProcess.test.ts | NativeProcess.ts | 5 |
+| CitationNativeProcessCoverage.test.ts | NativeProcess.ts | 3 |
+| CitationNativeLaneCoverage.test.ts | NativeProcess.ts | 20 |
+| CitationRegexSession.test.ts | NativeProcess.ts | 64 |
+| CitationNativeLane.test.ts | NativeProcess.ts | 16 |
+
+### Final count gate and process obligations
+
+| Final test file | Passing tests | Parent |
+| --- | ---: | --- |
+| CitationCanonicalFullSpan.test.ts | 12 | Node, exercising ten Bun calls plus Node parity |
+
+FullSpan ran **last**, after all other files and coverage measurements, and
+passed **12/12**. Combined with the directory loop, the final receipt is
+**277 files, 1,323 passing tests, zero failures or skips**. Wall time was
+**30.59 seconds**, Vitest **30.17 seconds**, at load **1.86 / 2.98 / 3.94**.
+Timing gates nothing. All work-count assertions pass unchanged from the review
+base; no asserted count was rewritten.
+
+| Per ten plain-text Bun calls | B1 | fe714d0ecdb | Round 4 |
+| --- | ---: | ---: | ---: |
+| Regex child processes | 291 | 10 | 10 |
+| Regex evaluations | 291 | 291 | 291 |
+| Metadata-operation installs | 0 | 0 | 0 |
+| Configuration detaches | 0 | 0 | 0 |
+| Tokenizer builds | 0 | 0 | 0 |
+| Regex evaluator constructions | 0 | 0 | 0 |
+| Descriptor bindings | 4 | 4 | 4 |
+| Physical native owners | 10 | 10 | 10 |
+| Native lane acquisitions | 10 | 10 | 10 |
+| Diff/Xml worker constructions | 0 | 0 | 0 |
+
+| Engine construction | B1 | Review base / Round 4 |
+| --- | ---: | ---: |
+| Metadata-operation installs | 16 | 16 |
+| Configuration detaches | 1 | 1 |
+| Tokenizer builds | 1 | 1 |
+| Regex evaluator constructions | 26 | 26 |
+| Regex evaluations | 0 | 0 |
+| Regex child processes | 0 | 0 |
+| Descriptor bindings | 0 | 0 |
+| Physical native owners | 1 | 1 |
+| Native lane acquisitions | 0 | 0 |
+| Diff/Xml worker constructions | 0 | 0 |
+
+The 64-case session file passes again. Its original eight real-process
+obligations each assert started equals confirmed on both actual child runtimes:
+
+| Obligation | Bun child | Node child |
+| --- | --- | --- |
+| Catastrophic deadline, responsive parent, confirmed death before return | Pass | Pass |
+| Job after kill fails closed without spawn | Pass | Pass |
+| Wrong sequence kills and confirms | Pass | Pass |
+| Early EOF kills and confirms | Pass | Pass |
+| Oversize frame kills and confirms | Pass | Pass |
+| Frame while idle kills and confirms | Pass | Pass |
+| Sent interruption confirms death before acknowledgement | Pass | Pass |
+| Running interruption confirms death before acknowledgement | Pass | Pass |
+| Live stdout closure and paired real stdin proofs | Pass | Pass |
+| Mixed engines and schema-invalid engine | Pass | Pass |
+| Preparation/startup/write/read/retirement interruption barriers | Pass | Pass |
+| Diff start and cleaner yield handovers | Pass | Pass |
+| Late spawn settlement and unconfirmed-first-retirement retry | Pass | Pass |
+
+The exact original names remain in the earlier tables and session file. Round-4
+fence cases add a distinct assertion: after a pre-hand-off refusal, no child is
+started at all, rather than starting one and subsequently confirming its death.
+Already-authorized hand-offs retain the existing late-resolution cleanup path.
+
+### Required checks, development corrections and scope
+
+| Check | Final result |
+| --- | --- |
+| Server bun run check | Pass, source and test typechecks |
+| quality package-verify @beep/law-practice-server --quick | Pass, lint and check |
+| Package lint:laws | Pass, strict laws zero; three inherited advisory findings |
+| Full bun run beep lint | Pass |
+| Fallow audit --base origin/main | Pass, zero introduced; 35 inherited findings excluded |
+| bun run docgen:local --full | Pass, 188-package metadata check, generation and aggregate |
+| bun run beep lint effect-vitest | Pass, zero introduced, inventory unchanged |
+| bun run beep lint schema-first | Pass, zero introduced, inventory unchanged |
+| Root Oxlint on branch-touched TypeScript/MJS | Pass |
+| git diff --check and commit hooks | Pass |
+| Goal decision projection | Pass, regenerated after every decision edit |
+
+The final Fallow invocation resolved origin/main to `3d9b0df312e90b3fef5a0bce69f208e6ec7ec29e`.
+No merge or rebase was performed while the shared tracking ref advanced.
+
+The initial directory-launch attempt had a missing output directory: shell
+redirection failed before any Vitest process started. That orchestration attempt
+is not counted as a test run or 276 test failures. The report directory was
+created and the entire serial loop restarted; the table above is the completed
+real run. Early fixture typing and resource-wrapper lint issues were corrected
+without inventory growth; the final fixture uses the existing runtime-kind
+model and explicit required control parameters.
+
+Every requested Citation file ran, including all lane files and full integration
+qualification. The three Bun.version-dependent files ran under Bun, so there is
+no environment-only red. No parallel/package-wide suite invocation or
+package-wide coverage was run. Hosted CI is not claimed. Frozen-lockfile install
+was not repeated: manifests and lockfile are unchanged from the passing round-2
+install. No dependency or policy limit changed this round.
+
+B2 remains **in review**. Both original design stops remain resolved; no further
+conflict occurred. The implementation interprets physical authorization as the
+synchronous hand-off to the captured spawner after all owner waits. A hand-off
+already authorized before revocation can still resolve late and must retain
+ownership until existing retirement confirms it. A hand-off refused by the
+fence never invokes the spawner. The accepted indefinite-retention limit is
+stated plainly above. No safety guard, typed refusal or extraction assertion was
+removed or loosened.
+
+Implementation commit: `8f848e9a2e9`. This evidence, the fence decision and the
+generated in-review checkpoint ship in the following documentation commit.
+Commits remain local and the lane is preserved for independent review; no push,
+merge, rebase or subagents.

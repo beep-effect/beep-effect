@@ -1,0 +1,7 @@
+---
+title: "Fence physical spawn at the owner hand-off after all owner waits"
+date: 2026-11-14
+reversal: "Replace the synchronous fence only with an equivalent authority protocol that proves zero physical spawns after revocation at every admission and owner continuation."
+---
+
+Round 4 revalidates lane closed/poisoned state and the specific withUse call after admission acquisition, its accounting span and its snapshot. The concrete physical owner's optional typed fence executes after the birth lock, owner checks, Scope/Ref/semaphore construction and record registration. The check and call to the captured spawner execute inside one synchronous Effect.suspend callback. Fence refusals remain typed child Exit failures; the lane retires the registered empty resource and returns its lease through the existing release path. An admitted hand-off that has already called the spawner retains the existing late-resolution retirement protocol. The permanent test failed on the review base with one real Bun/Node spawn, then passes with zero starts and exactly one return; it also revokes before drain expiry and sweeps every measured pre-hand-off owner scheduler boundary. Accepted limit: work that never resolves retains its private Scope and any quarantined capacity indefinitely. The guarantee is a bounded caller wait, not eventual settlement; releasing unresolved ownership would violate the one-occupant and confirmed-death guards.
