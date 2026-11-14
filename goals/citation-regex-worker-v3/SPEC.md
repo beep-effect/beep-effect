@@ -159,6 +159,14 @@ B1 does not require hoisting Diff or Xml to engine construction. Their preparati
 
 Reverse: Hoist these objects only with an explicit replacement for their per-owner lifecycle and queue state.
 
+### Record policy v2 as breaking in the packet; the private workspace takes no changeset, 2026-11-14
+
+The design asks for a major changeset with policy v2. `repo-sanity:changeset-graph` forbids a changeset for a private workspace, and `@beep/law-practice-use-cases` is private, so the changeset is removed. The breaking change is recorded here and in the PR body: policy tag `citation-engine-policy/v2`; a policy with fewer regex process slots than operation slots, and any v1 payload, is refused. No limit field or default value changes.
+
+Lane feat/citation-native-lane
+
+Reverse: Add a major changeset for @beep/law-practice-use-cases if the package becomes publishable.
+
 ### Retain the regex identity adapter and move physical ownership into the lane, 2026-11-14
 
 regexOwner retains only the protocol-v2 start adapter and the evaluator spawner/Clock identity guard. It no longer creates a physical regex owner or claims native capacity. The lane owns the exact children. The existing per-job wrapper confirms retirement before returning a result, while its adapter has no independent lease. The lane and its physical owner are invocation-scoped; the lane unit and physical owner are lazy. The named standalone cleaner starter stays separate.

@@ -1265,7 +1265,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 333,
+      "line": 361,
       "owner": "@beep/law-practice-server",
       "reason": "Exercises a live registry cursor, membership-before-lookup and fixed source cleaner observations. The fixture codec only authenticates recorded input; stateful runtime callback ordering is tested explicitly. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
     },
