@@ -37,7 +37,7 @@ import { makeCitationSourceCleaning } from "../internal/Citation/SourceCleaning.
 import { makeCitationSourcePairDocument } from "../internal/Citation/SourceDocument.ts";
 import { makeCitationSourceResolution } from "../internal/Citation/SourceResolution.ts";
 import { CitationVerifiedExtractionConfiguration } from "../internal/Citation/VerifiedExtraction.ts";
-import type { CitationEngineOperation } from "@beep/law-practice-use-cases/server";
+import type { CitationEngineOperation, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import type { CitationInvocation } from "../internal/Citation/Invocation.ts";
 
 const $I = $LawPracticeServerId.create("CitationEngine/CitationEngine.layer");
@@ -72,6 +72,15 @@ export class CitationEngineConfiguration extends S.Opaque<
 ) {}
 const Configuration = S.toType(CitationEngineConfiguration);
 const ConfigurationJson = CitationEngineConfiguration.pipe(S.toCodecJson, S.fromJsonString);
+/** A stage tree is installed once, at engine construction, so its install must
+ * not read a request value (the invocation or its text budget). Pass `true`:
+ * an install that still requires one does not typecheck, so it fails at engine
+ * construction instead of capturing one request's value for every later request.
+ */
+const installedWithoutRequestValues = <A, E, R>(
+  install: Effect.Effect<A, E, R>,
+  _noRequestValues: [Extract<R, CitationInvocation | CitationTextBudget>] extends [never] ? true : false
+) => install;
 const make = Effect.fn("Citation.makeEngine")(function* (raw: unknown) {
   const invalid = () => CitationInputError.make({ operation: "extract" });
   const configuration = yield* captureCitationSnapshot(Configuration, ConfigurationJson, raw, invalid);
@@ -86,15 +95,14 @@ const make = Effect.fn("Citation.makeEngine")(function* (raw: unknown) {
   // Null-page case hashing uses semantic-object identity. Require the trusted
   // owner at installation instead of refusing a valid citation on first use.
   yield* CitationMissingPageIdentityFactory;
-  const cleaner = yield* makeCitationSourceCleaning(limits, engineArtifact).pipe(
+  const cleaner = yield* installedWithoutRequestValues(makeCitationSourceCleaning(limits, engineArtifact), true).pipe(
     Effect.updateContext((context: Context.Context<Effect.Services<ReturnType<typeof makeCitationSourceCleaning>>>) =>
       Context.omit(CitationOperationAdmission)(context)
     )
   );
-  const extraction = yield* makeCitationSourcePairDocument(
-    limits,
-    configuration.runtime,
-    configuration.extraction
+  const extraction = yield* installedWithoutRequestValues(
+    makeCitationSourcePairDocument(limits, configuration.runtime, configuration.extraction),
+    true
   ).pipe(
     Effect.updateContext(
       (context: Context.Context<Effect.Services<ReturnType<typeof makeCitationSourcePairDocument>>>) =>
@@ -102,16 +110,17 @@ const make = Effect.fn("Citation.makeEngine")(function* (raw: unknown) {
     ),
     Effect.catch(failCitationExtractionBoundary)
   );
-  const resolution = yield* makeCitationSourceResolution(limits, engineArtifact).pipe(
+  const resolution = yield* installedWithoutRequestValues(
+    makeCitationSourceResolution(limits, engineArtifact),
+    true
+  ).pipe(
     Effect.updateContext((context: Context.Context<Effect.Services<ReturnType<typeof makeCitationSourceResolution>>>) =>
       Context.omit(CitationOperationAdmission)(context)
     )
   );
-  const annotation = yield* makeCitationAnnotationOperation(
-    limits,
-    configuration.runtime,
-    configuration.annotation,
-    engineArtifact
+  const annotation = yield* installedWithoutRequestValues(
+    makeCitationAnnotationOperation(limits, configuration.runtime, configuration.annotation, engineArtifact),
+    true
   ).pipe(
     Effect.updateContext(
       (context: Context.Context<Effect.Services<ReturnType<typeof makeCitationAnnotationOperation>>>) =>

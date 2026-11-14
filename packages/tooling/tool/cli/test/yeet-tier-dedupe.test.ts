@@ -482,6 +482,7 @@ const withVirtualTreeCount = Effect.fn("TierDedupeTest.withVirtualTreeCount")(fu
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const count = yield* Ref.make(0);
   // Own double: decorates the real platform spawner, counting only the `write-tree` spawns.
+  // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
   const observed = ChildProcessSpawner.make(
     Effect.fnUntraced(function* (command) {
       if (command._tag === "StandardCommand" && command.command === "git" && A.contains(command.args, "write-tree")) {

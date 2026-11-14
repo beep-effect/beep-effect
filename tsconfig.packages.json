@@ -532,6 +532,12 @@
       "path": "packages/tooling/library/ai-sync"
     },
     {
+      "path": "packages/tooling/library/alchemy-aws-extras"
+    },
+    {
+      "path": "packages/tooling/library/alchemy-github-runners"
+    },
+    {
       "path": "packages/tooling/library/codegen-kit"
     },
     {

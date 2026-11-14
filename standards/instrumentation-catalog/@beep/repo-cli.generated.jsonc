@@ -2913,6 +2913,7 @@
     {"name":"QualityScheduler.reapAdmissionState","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityScheduler.recordAdmissionRoute","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityScheduler.setAdmissionEvictionProtocol","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"QualityScheduler.setAdmissionUnitProtocol","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityScheduler.withQualityAdmission","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityScriptCommands.collectDisabledEffectDiagnosticDirectives","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityScriptCommands.collectFiles","owner":"@beep/repo-cli","family":"tooling","conforms":true},

@@ -828,6 +828,8 @@ const fakeSeatHandle = (command: ChildProcess.StandardCommand) =>
     Match.orElse(() => command.pipe(seatOutput, seatHandle))
   );
 
+// Own double (D-14): never-ending streams whose piece split is asserted.
+// biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double (D-14), reason above
 const fakeSeats = ChildProcessSpawner.make((command) =>
   ChildProcess.isStandardCommand(command)
     ? Effect.sync(() => {

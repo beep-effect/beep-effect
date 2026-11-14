@@ -87,6 +87,7 @@ export const withCacheProducerAdapter = Effect.fn("CacheAdapter.withOwnedBackend
         return yield* CacheCommandError.new("Owned adapter executable differs from its independently approved pin.");
       const dependencies = yield* readCacheDependencyMaterialization(request.sourceRoot, request.pilot.dependencies);
       // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
+      // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
       const git = yield* runCapturedStreams({
         command: "/usr/bin/git",
         args: ["rev-parse", "--path-format=absolute", "--git-common-dir"],
