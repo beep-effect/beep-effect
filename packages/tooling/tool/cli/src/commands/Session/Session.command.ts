@@ -25,7 +25,9 @@ import { layerPalantiriSourcesHot } from "../Palantiri/Palantiri.service.ts";
 import { PrNumber } from "../Yeet/internal/Provenance.ts";
 import { sessionContinuityCommand } from "./Continuity.command.ts";
 import { sessionHandoffCommand } from "./Handoff.command.ts";
+import { layerSessionPresenceStoreLive, recordPresence } from "./Presence.service.ts";
 import { sessionRegisterCommand } from "./Register.command.ts";
+import { sessionPresenceCommand, sessionResolveCommand } from "./Resolve.command.ts";
 import { sessionRulingCommand } from "./Rulings.command.ts";
 import { reportSessionFailure, SessionLedgerError, sessionUsageError } from "./Session.errors.ts";
 import {
@@ -176,6 +178,9 @@ export const sessionNoteCommand = Command.make(
         summary: O.map(summary, Str.trim),
         pr: prNumber,
       });
+      // Presence rides every note, best effort, so a session that never ran a
+      // start hook still records its routes.
+      yield* sessionCheckoutFacts(process.cwd()).pipe(Effect.flatMap(recordPresence), Effect.ignore);
       yield* Console.log(
         `[session] noted ${row.state}${O.match(row.role, { onNone: () => "", onSome: (value) => ` [${value}]` })} for ${row.lane} (${row.branch}): ${row.next}`
       );
@@ -184,7 +189,7 @@ export const sessionNoteCommand = Command.make(
   })
 ).pipe(
   Command.withDescription("Append where this session stopped and what comes next to the workstation ledger"),
-  Command.provide(layerSessionLedgerLive)
+  Command.provide(Layer.mergeAll(layerSessionLedgerLive, layerSessionPresenceStoreLive))
 );
 
 /**
@@ -288,6 +293,8 @@ export const sessionCommand = Command.make("session", {}, () =>
         "Session commands:",
         '- bun run beep session note --state <open|blocked|done> --next "<one line>" [--summary "<one line>"] [--pr <n>] [--role orchestrator|member]',
         "- bun run beep session open [--json]",
+        "- bun run beep session resolve <pr|branch|lane|checkout> [--json]",
+        "- bun run beep session presence [--json]",
         "- bun run beep session continuity --input <manifest.json>",
         "- bun run beep session register add|list|convert",
         "- bun run beep session ruling add|list",
@@ -301,6 +308,8 @@ export const sessionCommand = Command.make("session", {}, () =>
   Command.withSubcommands([
     sessionNoteCommand,
     sessionOpenCommand,
+    sessionResolveCommand,
+    sessionPresenceCommand,
     sessionRegisterCommand,
     sessionRulingCommand,
     sessionHandoffCommand,
