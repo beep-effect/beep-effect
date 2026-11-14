@@ -17,7 +17,7 @@ import { guessCitationCaseCourt } from "./CaseMetadata.ts";
 import {
   CitationCaseNameSelectionConfiguration,
   copyCitationCaseNameSelectionConfiguration,
-  selectCitationCaseName,
+  installCitationCaseNameSelection,
 } from "./CaseNameSelection.ts";
 import {
   CitationEditionInferenceInput,
@@ -35,11 +35,12 @@ import {
   copyCitationMetadataPatternConfiguration,
   decodeCitationMetadataRuntimeConfiguration,
   decodeCitationMetadataWordRequest,
+  installCitationMetadataContextMatch,
   makeCitationMetadataOperation,
-  matchCitationMetadataContext,
   prepareCitationPublicationMetadata,
+  provideCitationStageAdmission,
 } from "./MetadataComposition.ts";
-import { extractCitationPinCite } from "./PinExtraction.ts";
+import { installCitationPinCiteExtraction } from "./PinExtraction.ts";
 import { CitationTokenContextInput } from "./TokenContext.ts";
 import { CitationTokenDispatchBindings } from "./TokenDispatch.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
@@ -152,118 +153,120 @@ const pinMetadata = (
   pinCite: CitationPythonUnicodeStorage | null,
   parenthetical: CitationPythonUnicodeStorage | null
 ) => ({ pinCite, parenthetical, pinCiteSpanStart: null, pinCiteSpanEnd: null });
-const prepare = Effect.fn("Citation.constructReferenceToken")(function* (
+const installPrepare = Effect.fn("Citation.installReferenceToken")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
   config: CitationReferenceTokenConfiguration,
   refs: HashMap.HashMap<number, CitationTokenDispatchBindings[number]["ref"]>,
   owner: CitationFrozenEditions["Service"],
-  inference: Effect.Success<ReturnType<typeof makeCitationEditionInference>>,
-  raw: unknown
+  inference: Effect.Success<ReturnType<typeof makeCitationEditionInference>>
 ) {
-  const request = yield* decodeCitationMetadataWordRequest(limits, S.toType(CitationTokenExtractionInput), raw, () =>
-    fail("invalid-input")
-  );
-  yield* validateCitationTokenWord(request, () => fail("invalid-input"));
-  const token = CitationTokenSeed.make(request.token);
-  const pin = Effect.fn("Citation.referenceTokenPin")((prefix: CitationPythonUnicodeStorage) =>
-    extractCitationPinCite(limits, runtime, config.pin, { ...request, tokenEnd: token.end, prefix })
-  );
-  const short = Effect.fn("Citation.constructShortCase")(function* () {
-    if (!token.short) return yield* fail("not-reference-token");
-    const page = yield* Effect.fromOption(R.get(token.groups, "page"), () => fail("missing-page"));
-    if (page === null) return yield* fail("missing-page");
-    const extracted = yield* pin(CitationPythonUnicodeStorage.make(page));
-    const spanEnd = extracted.pinCiteSpanEnd === null || extracted.pinCiteSpanEnd === 0 ? 0 : extracted.pinCiteSpanEnd;
-    const names = yield* selectCitationCaseName(limits, runtime, config.names, {
-      ...request,
-      mode: "Short",
-      currentName: null,
-      spanStart: token.start,
-    });
-    const resolve = (ids: ReadonlyArray<number>) =>
-      Effect.forEach(ids, (id) => Effect.fromOption(HashMap.get(refs, id), () => fail("missing-edition")), {
-        concurrency: 1,
-      });
-    const exact = yield* resolve(token.exact);
-    const variation = yield* resolve(token.variation);
-    const year = O.getOrNull(names.patch.numericYear);
-    const candidates = yield* prepareCitationEditionInferenceInput(limits, { exact, variation, year, prior: null });
-    // The short source constructor guesses edition before court.
-    const editionGuess = yield* inference.guess(candidates);
-    const court = yield* guessCitationCaseCourt(limits, owner, candidates, null);
-    return CitationReferenceTokenOutcome.cases.ShortCaseCitation.make({
-      spanEnd,
-      fullSpanStart: O.getOrNull(names.patch.fullSpanStart),
-      fullSpanEnd: spanEnd > token.end ? spanEnd : token.end,
-      year,
-      editionGuess,
-      metadata: {
-        ...pinMetadata(extracted.pinCite, extracted.parenthetical),
-        ...O.getSomesStruct({ plaintiff: names.patch.plaintiff }),
-        antecedentGuess: O.getOrNull(names.patch.antecedentGuess),
-        court,
-        year: O.getOrNull(names.patch.year),
-        month: null,
-        day: null,
-      },
-    });
-  });
-  const id = Effect.fn("Citation.constructIdCitation")(function* () {
-    const extracted = yield* pin(empty);
-    return CitationReferenceTokenOutcome.cases.IdCitation.make({
-      metadata: pinMetadata(extracted.pinCite, extracted.parenthetical),
-      spanEnd: extracted.pinCiteSpanEnd,
-      fullSpanStart: null,
-      fullSpanEnd: null,
-    });
-  });
-  const supra = Effect.fn("Citation.constructSupraCitation")(function* () {
-    const extracted = yield* pin(empty);
-    const matched = yield* matchCitationMetadataContext(
-      limits,
-      runtime,
-      config.supra,
-      CitationTokenContextInput.make({
-        words: request.words,
-        prefix: empty,
-        startIndex: request.index - 1,
-        forward: false,
-        stringsOnly: true,
-      }),
-      () => fail("missing-capture")
+  const extractPin = yield* installCitationPinCiteExtraction(limits, runtime, config.pin);
+  const selectCaseName = yield* installCitationCaseNameSelection(limits, runtime, config.names);
+  const matchSupra = yield* installCitationMetadataContextMatch(limits, runtime, config.supra);
+  return Effect.fn("Citation.constructReferenceToken")(function* (raw: unknown) {
+    const request = yield* decodeCitationMetadataWordRequest(limits, S.toType(CitationTokenExtractionInput), raw, () =>
+      fail("invalid-input")
     );
-    const antecedentGuess = O.isSome(matched) ? yield* matched.value.capture("antecedent") : null;
-    const volume = O.isSome(matched) ? yield* matched.value.capture("volume") : null;
-    const antecedentLength = O.isSome(matched) ? matched.value.end - matched.value.start : 0;
-    const spanEnd = extracted.pinCiteSpanEnd;
-    return CitationReferenceTokenOutcome.cases.SupraCitation.make({
-      metadata: { ...pinMetadata(extracted.pinCite, extracted.parenthetical), antecedentGuess, volume },
-      spanEnd,
-      fullSpanStart: token.start - antecedentLength,
-      fullSpanEnd: spanEnd === null || spanEnd === 0 ? token.end : spanEnd,
+    yield* validateCitationTokenWord(request, () => fail("invalid-input"));
+    const token = CitationTokenSeed.make(request.token);
+    const pin = Effect.fn("Citation.referenceTokenPin")((prefix: CitationPythonUnicodeStorage) =>
+      extractPin({ ...request, tokenEnd: token.end, prefix })
+    );
+    const short = Effect.fn("Citation.constructShortCase")(function* () {
+      if (!token.short) return yield* fail("not-reference-token");
+      const page = yield* Effect.fromOption(R.get(token.groups, "page"), () => fail("missing-page"));
+      if (page === null) return yield* fail("missing-page");
+      const extracted = yield* pin(CitationPythonUnicodeStorage.make(page));
+      const spanEnd =
+        extracted.pinCiteSpanEnd === null || extracted.pinCiteSpanEnd === 0 ? 0 : extracted.pinCiteSpanEnd;
+      const names = yield* selectCaseName({
+        ...request,
+        mode: "Short",
+        currentName: null,
+        spanStart: token.start,
+      });
+      const resolve = (ids: ReadonlyArray<number>) =>
+        Effect.forEach(ids, (id) => Effect.fromOption(HashMap.get(refs, id), () => fail("missing-edition")), {
+          concurrency: 1,
+        });
+      const exact = yield* resolve(token.exact);
+      const variation = yield* resolve(token.variation);
+      const year = O.getOrNull(names.patch.numericYear);
+      const candidates = yield* prepareCitationEditionInferenceInput(limits, { exact, variation, year, prior: null });
+      // The short source constructor guesses edition before court.
+      const editionGuess = yield* inference.guess(candidates);
+      const court = yield* guessCitationCaseCourt(limits, owner, candidates, null);
+      return CitationReferenceTokenOutcome.cases.ShortCaseCitation.make({
+        spanEnd,
+        fullSpanStart: O.getOrNull(names.patch.fullSpanStart),
+        fullSpanEnd: spanEnd > token.end ? spanEnd : token.end,
+        year,
+        editionGuess,
+        metadata: {
+          ...pinMetadata(extracted.pinCite, extracted.parenthetical),
+          ...O.getSomesStruct({ plaintiff: names.patch.plaintiff }),
+          antecedentGuess: O.getOrNull(names.patch.antecedentGuess),
+          court,
+          year: O.getOrNull(names.patch.year),
+          month: null,
+          day: null,
+        },
+      });
     });
+    const id = Effect.fn("Citation.constructIdCitation")(function* () {
+      const extracted = yield* pin(empty);
+      return CitationReferenceTokenOutcome.cases.IdCitation.make({
+        metadata: pinMetadata(extracted.pinCite, extracted.parenthetical),
+        spanEnd: extracted.pinCiteSpanEnd,
+        fullSpanStart: null,
+        fullSpanEnd: null,
+      });
+    });
+    const supra = Effect.fn("Citation.constructSupraCitation")(function* () {
+      const extracted = yield* pin(empty);
+      const matched = yield* matchSupra(
+        CitationTokenContextInput.make({
+          words: request.words,
+          prefix: empty,
+          startIndex: request.index - 1,
+          forward: false,
+          stringsOnly: true,
+        }),
+        () => fail("missing-capture")
+      );
+      const antecedentGuess = O.isSome(matched) ? yield* matched.value.capture("antecedent") : null;
+      const volume = O.isSome(matched) ? yield* matched.value.capture("volume") : null;
+      const antecedentLength = O.isSome(matched) ? matched.value.end - matched.value.start : 0;
+      const spanEnd = extracted.pinCiteSpanEnd;
+      return CitationReferenceTokenOutcome.cases.SupraCitation.make({
+        metadata: { ...pinMetadata(extracted.pinCite, extracted.parenthetical), antecedentGuess, volume },
+        spanEnd,
+        fullSpanStart: token.start - antecedentLength,
+        fullSpanEnd: spanEnd === null || spanEnd === 0 ? token.end : spanEnd,
+      });
+    });
+    const outcome: CitationReferenceTokenOutcome = yield* Match.value(token.kind).pipe(
+      Match.when("CitationToken", short),
+      Match.when("IdToken", id),
+      Match.when("SupraToken", supra),
+      Match.when("SectionToken", () =>
+        Effect.succeed(
+          CitationReferenceTokenOutcome.cases.UnknownCitation.make({
+            metadata: pinMetadata(null, null),
+            spanEnd: null,
+            fullSpanStart: null,
+            fullSpanEnd: null,
+          })
+        )
+      ),
+      Match.orElse(() => Effect.fail(fail("not-reference-token")))
+    );
+    // Short-form pin extraction consumes the original page prefix before the
+    // CitationBase constructor normalizes missing-page model groups.
+    const modelToken = yield* normalizeCitationModelPage(token);
+    return { index: request.index, token: modelToken, outcome };
   });
-  const outcome: CitationReferenceTokenOutcome = yield* Match.value(token.kind).pipe(
-    Match.when("CitationToken", short),
-    Match.when("IdToken", id),
-    Match.when("SupraToken", supra),
-    Match.when("SectionToken", () =>
-      Effect.succeed(
-        CitationReferenceTokenOutcome.cases.UnknownCitation.make({
-          metadata: pinMetadata(null, null),
-          spanEnd: null,
-          fullSpanStart: null,
-          fullSpanEnd: null,
-        })
-      )
-    ),
-    Match.orElse(() => Effect.fail(fail("not-reference-token")))
-  );
-  // Short-form pin extraction consumes the original page prefix before the
-  // CitationBase constructor normalizes missing-page model groups.
-  const modelToken = yield* normalizeCitationModelPage(token);
-  return { index: request.index, token: modelToken, outcome };
 });
 /** Preserve the original four constructor branches under one operation, Scope,
  * captured deadline and text authority. Returned extract has R=never; no host
@@ -286,40 +289,44 @@ export const makeCitationReferenceTokenExtraction = Effect.fn("Citation.makeRefe
     S.toType(CitationReferenceTokenConfiguration),
     () => fail("invalid-configuration")
   );
-  const pin = yield* prepareCitationPublicationMetadata(
+  return yield* provideCitationStageAdmission(
     limits,
-    runtime,
-    decoded.pin,
-    "3d1b06d98647ef244e02b08aee15ff80a0fb3971528a8a9c97854dd35916bb3d",
-    () => fail("invalid-configuration")
-  );
-  const names = yield* copyCitationCaseNameSelectionConfiguration(limits, decoded.names);
-  const supra = yield* copyCitationMetadataPatternConfiguration(
-    limits,
-    S.toType(S.Struct({ pattern: CitationPythonUnicodeStorage })),
-    { pattern: decoded.supra.pattern },
-    decoded.supra.bindings,
-    { pattern: "5e82e531e754da20a304f03d9a0ff46f1e5c89e30c9f2e661f8ec196e584e30d" },
-    () => fail("invalid-configuration")
-  );
-  const config = CitationReferenceTokenConfiguration.make({
-    pin: pin.config,
-    names,
-    supra: { pattern: supra.patterns.pattern, bindings: supra.bindings },
-    editions: A.map(decoded.editions, (row) => ({ ...row })),
-  });
-  const refs = HashMap.fromIterable(A.map(config.editions, (row) => Tuple.make(row.id, row.ref)));
-  if (HashMap.size(refs) !== config.editions.length) return yield* fail("invalid-configuration");
-  const owner = yield* CitationFrozenEditions;
-  const inference = yield* makeCitationEditionInference(limits);
-  const installed = yield* makeCitationMetadataOperation(limits, (raw: unknown) =>
-    prepare(limits, runtime, config, refs, owner, inference, raw)
-  );
-  const extract = Effect.fn("Citation.extractReferenceToken")((raw: unknown) =>
     Effect.gen(function* () {
-      const [result, reservedUnits] = yield* installed.run(raw);
-      return CitationReferenceTokenResult.make({ ...result, reservedUnits });
+      const pin = yield* prepareCitationPublicationMetadata(
+        limits,
+        runtime,
+        decoded.pin,
+        "3d1b06d98647ef244e02b08aee15ff80a0fb3971528a8a9c97854dd35916bb3d",
+        () => fail("invalid-configuration")
+      );
+      const names = yield* copyCitationCaseNameSelectionConfiguration(limits, decoded.names);
+      const supra = yield* copyCitationMetadataPatternConfiguration(
+        limits,
+        S.toType(S.Struct({ pattern: CitationPythonUnicodeStorage })),
+        { pattern: decoded.supra.pattern },
+        decoded.supra.bindings,
+        { pattern: "5e82e531e754da20a304f03d9a0ff46f1e5c89e30c9f2e661f8ec196e584e30d" },
+        () => fail("invalid-configuration")
+      );
+      const config = CitationReferenceTokenConfiguration.make({
+        pin: pin.config,
+        names,
+        supra: { pattern: supra.patterns.pattern, bindings: supra.bindings },
+        editions: A.map(decoded.editions, (row) => ({ ...row })),
+      });
+      const refs = HashMap.fromIterable(A.map(config.editions, (row) => Tuple.make(row.id, row.ref)));
+      if (HashMap.size(refs) !== config.editions.length) return yield* fail("invalid-configuration");
+      const owner = yield* CitationFrozenEditions;
+      const inference = yield* makeCitationEditionInference(limits);
+      const prepare = yield* installPrepare(limits, runtime, config, refs, owner, inference);
+      const installed = yield* makeCitationMetadataOperation(prepare);
+      const extract = Effect.fn("Citation.extractReferenceToken")((raw: unknown) =>
+        Effect.gen(function* () {
+          const [result, reservedUnits] = yield* installed.run(raw);
+          return CitationReferenceTokenResult.make({ ...result, reservedUnits });
+        })
+      );
+      return { extract };
     })
   );
-  return { extract };
 });

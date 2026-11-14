@@ -110,30 +110,30 @@ No new workspace package is planned. If one becomes necessary it is bootstrapped
 
 ## Acceptance Criteria
 
-- [ ] **First vertical slice:** a `yeet monitor --until-ready` run on this host produces ledger rows for every
+- [x] **First vertical slice:** a `yeet monitor --until-ready` run on this host produces ledger rows for every
       in-process GitHub request it makes, each carrying identity, resource, command, host, `limit`, `remaining`,
       `used` and `reset`, under `$XDG_STATE_HOME/beep/github/ledger`.
-- [ ] One `/rate_limit` sampler per configured identity adds fleet-wide `used` per identity x resource; the ledger
+- [x] One `/rate_limit` sampler per configured identity adds fleet-wide `used` per identity x resource; the ledger
       reports `unattributed = fleet used - attributed` per identity x resource and window. Adding a second identity
       is configuration only (tested with two fake identities).
-- [ ] `bun run beep session open` prints a `github-headroom` line: per-resource remaining and reset time, and this
+- [x] `bun run beep session open` prints a `github-headroom` line: per-resource remaining and reset time, and this
       host's top spenders by command. A missing or stale ledger renders as unknown with its age.
-- [ ] `gh` spawns made through `ghOutput` and `runRepoCommandCapture("gh")` are attributed to their command (count
+- [x] `gh` spawns made through `ghOutput` and `runRepoCommandCapture("gh")` are attributed to their command (count
       and, where the next `/rate_limit` sample allows, estimated cost). No PATH shim exists.
-- [ ] `GraphqlBudget` consults the ledger before spending a probe.
-- [ ] The ledger exposes a typed reserve signal (`ReserveState` `Below` / `Clear` / `Unknown` per identity x
+- [x] `GraphqlBudget` consults the ledger before spending a probe.
+- [x] The ledger exposes a typed reserve signal (`ReserveState` `Below` / `Clear` / `Unknown` per identity x
       resource, threshold 15% of that bucket's `limit`) with a test showing background callers see it and that one
       identity's low bucket does not signal another identity's. The signal carries no caller-priority logic:
       admitting interactive and merge-critical reads below the reserve belongs to its first consumer,
       [`github-state-worker`](../github-state-worker/SPEC.md) (decision 2026-11-10 "reserve priority moves to goal 2").
-- [ ] **Baseline recorded:** at least 24 h of ledger data on the hub (DankStation) summarised in
+- [x] **Baseline recorded:** at least 24 h of ledger data on the hub (DankStation) summarised in
       `history/` as requests and points per hour per resource, per command, with the unattributed remainder. This
       resolves or explains the 430-vs-720-1,440 GraphQL/h conflict and is the "before" for goals 2 and 3.
-- [ ] **T3 share threshold set:** a decision file records the threshold (a share of fleet GraphQL points/h
+- [x] **T3 share threshold set:** a decision file records the threshold (a share of fleet GraphQL points/h
       attributed or bounded to T3 Code) that fires the `t3-snapshot-consumer` gate, with the measured T3 share at
       the time and how it was measured.
-- [ ] No token, absolute home path or machine id appears in any ledger row, parcel or packet file.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No token, absolute home path or machine id appears in any ledger row, parcel or packet file.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
@@ -435,6 +435,23 @@ The independent D2c per-instance replay matches the report for core and GraphQL 
 Lane fix/github-ledger-concurrent-buckets
 
 Reverse: Revert this implementation; preserve raw rows and legacy rollups before any recalculation or migration
+
+### T3 share threshold: fire t3-snapshot-consumer above a 60% median share and 1,500 points/h, 2026-11-13
+
+The `t3-snapshot-consumer` gate (exploration MAP) fires when a 24 h window measured by the A19 method, run on the hub plus every reachable fleet host's `github ledger report --since 24h --json`, shows **both**:
+
+1. The hourly **median** T3 share bound of the user identity's `graphql` key above **60%** of fleet GraphQL points. The bound is the residual `fleetUsed(hub) - hub est - hub gh - sum over hosts (est + gh)`, floored at 0, over `fleetUsed`.
+2. The hourly **median** residual at or above **1,500 points/h**, 30% of one 5,000-point window.
+
+**Measured at the time** (baseline `history/2026-11-13-hub-baseline.md`, 24 complete hours 2026-11-12T21Z to 2026-11-13T21Z, hub plus tbk-worker and dankserver): median share 45.6%, p90 66.4%, median residual 1,194 points/h. **The gate does not fire.**
+
+**Why a share and an absolute floor.** The bound is an upper bound. It also holds raw agent `gh` and fleet hosts that were not reached, so a share threshold at or below today's 46% would fire on noise. The absolute floor covers the opposite failure. Once `github-state-worker` removes most `yeet monitor` spend (93% of the hub's attributed GraphQL points), T3's share rises mechanically while its spend stays the same. A large share of a small total is not a reason to patch the t3code fork. 1,500 points/h is about 25% above today's residual, so the gate fires only on real growth in T3 (or uncovered) spend.
+
+**When to re-measure.** After `github-state-worker` lands (its after-number) and after `yeet-monitor-app-identity` 3b moves monitors to the App identity. Each re-measurement uses the same method and records the numbers in that goal's packet.
+
+Lane goals/github-budget-ledger-final
+
+Reverse: Supersede with a decision that sets a new share or absolute floor, or open t3-snapshot-consumer directly by operator call.
 
 <!-- beep:decisions:end -->
 

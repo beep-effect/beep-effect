@@ -60,6 +60,12 @@
         ]
       },
       {
+        "name": "@beep/alchemy-aws-extras",
+        "patterns": [
+          "packages/tooling/library/alchemy-aws-extras/src/**"
+        ]
+      },
+      {
         "name": "@beep/alchemy-github-runners",
         "patterns": [
           "packages/tooling/library/alchemy-github-runners/src/**"
@@ -1445,6 +1451,21 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/alchemy-aws-extras",
+        "allow": [
+          "@beep/alchemy-aws-extras",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/alchemy-aws-extras",
+          "@beep/identity",
+          "@beep/schema",
           "@beep/utils"
         ]
       },
