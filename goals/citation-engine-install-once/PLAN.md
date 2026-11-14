@@ -2,17 +2,17 @@
 
 ## Status
 
-Status: `in-progress`
+Status: `completed-retained`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
-| P1 Implement | in-progress | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
-| P2 Verify | pending | Run required checks and capture evidence. | Verification is green or blockers are documented. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P1 Implement | complete | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
+| P2 Verify | complete | Run required checks and capture evidence. | Verification is green or blockers are documented. |
+| P3 Yeet: PR to mergeable | complete | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P4 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Slices
 
@@ -23,7 +23,7 @@ Each slice is one PR and runs the phases above. They land in order.
 | A1 | merged (#3253) | Measurement fixture and recorded baseline. Test-only. | none; records the baseline |
 | A2 | merged (#3265) | `CitationInvocation` binding: budget and admission read at call time, optional lookups deleted, lint rule. Children still installed per request. | optional lookups to 0 |
 | A3 | merged (#3282) | Hoist the stage tree, tokenizer and regex evaluators to engine construction. | per-request installs 14 to 0; tokenizer builds 10 to 1 |
-| A4 | in review | `CitationOwned` at the boundary; nested detaches, per-stage decodes and repeated fingerprints removed. | detaches 2 + 8 per call to 1 |
+| A4 | merged (#3319) | `CitationOwned` at the boundary; nested detaches, per-stage decodes and repeated fingerprints removed. | detaches 10 per engine to 1 (was 2 + 8 per call before A3) |
 
 First slice: A1, the measurement fixture and baseline.
 
@@ -97,5 +97,13 @@ A3 merged as #3282. A4 owns configuration once at each caller boundary (`ownCita
 Lane perf/citation-owned-configuration
 
 Reverse: Return A4 to in progress if review or hosted CI finds a result or accounting change.
+
+### All four slices merged; the packet is in closeout, 2026-11-14
+
+A4 merged as #3319 (76b653230c5) with one configuration detach per engine. #3319 merged over one accepted red, Heavy / Coverage Regression (job 132371763661), which is not a required check: the six re-baselined rows are judged at the base floor inside the PR that lowers them. All 15 required checks passed on its head 5ec0f6c284d. The closeout reflection is history/reflections/2026-11-14-claude.md.
+
+Lane docs/citation-install-once-closeout
+
+Reverse: Return the packet to in-progress if a merged slice is reverted.
 
 <!-- beep:decisions:end -->
