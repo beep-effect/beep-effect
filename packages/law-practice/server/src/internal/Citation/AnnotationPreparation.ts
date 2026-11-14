@@ -8,12 +8,10 @@ import * as Effect from "effect/Effect";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
-import { prepareCitationForwardHtmlMap } from "./HtmlGeometryPreparation.ts";
 import { citationPythonPointAt } from "./PythonUnicode.ts";
 import { makeCitationSpanOffsets } from "./SpanOffsets.ts";
 import type { CitationEngineLimits, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
-import type { CitationHtmlGeometryPreparationConfiguration } from "./HtmlGeometryPreparation.ts";
-import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
+import type { installCitationHtmlGeometry } from "./HtmlGeometryPreparation.ts";
 
 // JavaScript's UTF-16 lexical order is not Python's native code-point order.
 const nativeOrder = Order.make<CitationPythonUnicodeStorage>((left, right) => {
@@ -66,13 +64,12 @@ export const prepareCitationAnnotations = Effect.fn("Citation.prepareAnnotations
  */
 export const prepareCitationAnnotationSourceMap = Effect.fn("Citation.prepareAnnotationSourceMap")(function* (
   limits: CitationEngineLimits,
-  runtime: CitationNativeProcessRuntime,
-  config: CitationHtmlGeometryPreparationConfiguration,
+  html: Effect.Success<ReturnType<typeof installCitationHtmlGeometry>>,
   plain: CitationPythonUnicodeStorage,
   markup: CitationPythonUnicodeStorage,
   useDmp = true
 ) {
-  const forward = yield* prepareCitationForwardHtmlMap(limits, runtime, config, markup, Effect.succeed(plain), useDmp);
+  const forward = yield* html.forward(markup, Effect.succeed(plain), useDmp);
   const updater = yield* makeCitationSpanOffsets(limits, forward.forward);
   return { source: forward.source.value, updater };
 });
