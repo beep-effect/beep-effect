@@ -1,0 +1,15 @@
+{
+  "previous": "cee095d0e9c10408d09e50617d5b7d491995b58dde1590d97b31ba75304b2888",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p4-oip-web)",
+    "reason": "Re-record @beep/oip-web after the Alchemy stack adds stack sources, stack tests, the Alchemy dev dependencies and the @beep/alchemy-vercel edge; no command, output or environment changes, no qualification granted.",
+    "basis": {
+      "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-oip-web-alchemy-stack.md",
+      "sha256": "ff38baae885cfeb4682729470ea781be33b6410ce5ac4b01cda237c50e610540"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["@beep/oip-web"]
+}

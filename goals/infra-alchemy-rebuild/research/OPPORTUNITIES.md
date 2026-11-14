@@ -157,3 +157,45 @@ to the gap between the reference checkout (main) and the pinned release.
   the pushed head records the gate as skipped and hosted CI measures it.
 - **Would have prevented it:** scope the coverage replay by the workspaces whose resolved dependencies
   changed in the lockfile diff, not by the lockfile path alone.
+
+## 2026-11-14: the Pulumi passphrase in 1Password does not decrypt the oip-web stacks
+
+- **Doing:** P4 oip-web census (lane goals/infra-alchemy-rebuild-p4-oip-web), reading where the HubSpot
+  service key lives today.
+- **Evidence:** `pulumi config get oipWeb:hubSpotServiceKey --stack production` (and `staging`) under
+  `PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE op run --` exits 1 with
+  `error: incorrect passphrase`; plain config reads on the same stacks work. The value is also stored in
+  Vercel as `sensitive`, which the API never returns, so no recorded copy of the live key is readable.
+- **Would have prevented it:** a check that every Pulumi project's `encryptionsalt` decrypts with the
+  1Password passphrase (run when the passphrase or a stack changes), and a 1Password field per runtime secret
+  so the IaC copy is never the only one.
+
+## 2026-11-14: Alchemy persists a `Redacted` prop's plain text in state
+
+- **Doing:** the same lane, designing how the HubSpot key reaches Vercel without entering state.
+- **Evidence:** `alchemy/src/State/StateEncoding.ts` writes `Redacted<T>` as `{ "__redacted__": <inner> }`
+  "so the actual string is persisted rather than the `<redacted>` placeholder"; `@beep/alchemy-vercel`'s
+  `EnvVar.value` prop was documented as "redacted in state and logs". Any secret passed as `value` lands in
+  the state bucket in clear JSON (SSE-KMS at rest only). The lane added `valueFrom: { config }`, resolved in
+  `diff` and `reconcile`, with only a SHA-256 kept in state.
+- **Would have prevented it:** an Alchemy-level deferred secret input (resolved at apply time, digest in
+  state) so every provider gets the property, and a harness assertion in provider tests that no `Redacted`
+  value appears in persisted state.
+
+## 2026-11-14: `alchemy plan` lines in CI carry a logger prefix
+
+- **Doing:** the same lane, writing the pre-deploy plan check.
+- **Evidence:** the `dev_$USER` plan printed `[20:33:03.096] INFO: [Project] create`, not the bare
+  `[Project] create` that `formatPlanLines` renders; a parser anchored at line start found no `Plan:` summary
+  and failed closed. Only a real plan run showed it.
+- **Would have prevented it:** a machine-readable plan output (`alchemy plan --json`, or a documented
+  changes-pending exit code, open question 9 of the P0 matrix).
+
+## 2026-11-14: the Alchemy Cloudflare token cannot read the oip.law zones' DNS records
+
+- **Doing:** the same lane, census of the Pulumi-owned DNS records.
+- **Evidence:** with `CLOUD_CLOUDFLARE_ALCHEMY_TOKEN`, `GET /zones/<id>` succeeds for both zones and
+  `GET /zones/<id>/dns_records` returns 403; `CLOUD_CLOUDFLARE_ACCOUNT_IAC_TOKEN` reads them. Of the two
+  Vercel fields, `CLOUD_VERCEL_TOKEN` reads the team and `CLOUD_VERCEL_API_TOKEN` returns 403 on every call.
+- **Would have prevented it:** a token inventory naming each 1Password field's scope, checked by a
+  read-only probe per stack before a lane starts.

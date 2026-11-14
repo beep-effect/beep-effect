@@ -5,16 +5,21 @@
 
 import * as Test from "@alchemy.run/test/Vitest";
 import * as Vercel from "@beep/alchemy-vercel";
-import { inMemoryState } from "alchemy/State";
+import { inMemoryState, State } from "alchemy/State";
+import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import { FakeVercelLayer } from "./FakeVercel.ts";
 import type * as Provider from "alchemy/Provider";
 import type { ResourceLike } from "alchemy/Resource";
-import type * as Effect from "effect/Effect";
 
 /** A scratch stack whose deploy and destroy carry a typed error channel. */
 export interface TypedStack {
@@ -55,3 +60,34 @@ export const failureTag = <A, E>(exit: Exit.Exit<A, E>): O.Option<string> =>
         O.map((error) => error._tag)
       )
     : O.none();
+
+const leafStrings = (value: unknown): ReadonlyArray<string> => {
+  if (Redacted.isRedacted(value)) return pipe(value, Redacted.value, leafStrings);
+  if (P.isString(value)) return [value];
+  if (A.isArray(value)) return A.flatMap(value, leafStrings);
+  if (P.isObject(value)) return A.flatMap(R.values(value as Record<string, unknown>), leafStrings);
+  return [];
+};
+
+/**
+ * Every string persisted in the harness's state store, `Redacted` envelopes
+ * opened: what a reader of the state bucket would see.
+ */
+export const persistedStrings = Effect.gen(function* () {
+  const store = yield* yield* State;
+  const stacks = yield* store.listStacks();
+  const rows = yield* Effect.forEach(stacks, (stack) =>
+    store
+      .listStages(stack)
+      .pipe(
+        Effect.flatMap((stages) =>
+          Effect.forEach(stages, (stage) =>
+            store
+              .list({ stack, stage })
+              .pipe(Effect.flatMap((fqns) => Effect.forEach(fqns, (fqn) => store.get({ stack, stage, fqn }))))
+          )
+        )
+      )
+  );
+  return leafStrings(rows);
+});

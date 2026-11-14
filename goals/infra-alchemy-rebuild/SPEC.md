@@ -397,6 +397,70 @@ Lane goals/infra-alchemy-rebuild-p2-vercel
 
 Reverse: Add an opt-in live suite behind an environment flag that creates and deletes a scratch project, never touching oip.law.
 
+### OipWeb adopts the live Vercel projects in place (recommended; cutover awaits a ruling), 2026-11-14
+
+The 2026-11-14 census found the live projects `oip-web` (prj_J5xqp5jg7POGvoIwOj7e1axpoPxb) and `oip-web-staging` (prj_orJn2nvxflBiJqPF0VWLOD0RFAzE) with settings identical to `infra/src/OipWeb.ts` and linked to `beep-effect/beep-effect` (Pulumi state still records the pre-transfer `kriegcloud/beep-effect`). A new project beside each (D12) would need a READY production build before the domain move, would put previews and history on new hostnames, and would force an edit of `vercel-deploy.yml`, whose `VERCEL_APPS` env names both project ids and which runs pull-request jobs. Adopting in place (`adopt(true)` on `Vercel.Project`, a per-object exception to D12 in the spirit of D20) plans as `adopted` with no setting change, keeps ids, previews, history and the git link, and leaves that workflow unedited. The stack is built for adoption, with `RemovalPolicy.protect()` on both live projects because destroying an adopted stage would delete the live project. Neither option costs anything on the Hobby team. The cutover does not run until the orchestrating session rules on this.
+
+Lane goals/infra-alchemy-rebuild-p4-oip-web
+
+Reverse: Declare a new project per stage (projectName oip-web-<stage>-new), add moveFrom with the live project id to each Vercel.Domain, edit the two projectId values in vercel-deploy.yml VERCEL_APPS, and forget the adopted project rows with alchemy state delete.
+
+### OipWeb assets buckets are new; the Pulumi buckets are empty and unread, 2026-11-14
+
+`assets.oip.law` and `staging-assets.oip.law` hold 0 objects, 0 versions and 0 delete markers (census 2026-11-14), and no app, package or workflow reads or writes them. A new bucket therefore needs no copy and no reader switch, so D12's greenfield default applies at no cost: `oip-law-web-assets-prod` and `oip-law-web-assets-staging` (HeadBucket 404 on both names, so unclaimed), with the Pulumi baseline restated (versioning, AES256 with SSE-C blocked, full public-access block, BucketOwnerEnforced, DenyInsecureTransport policy) and `RemovalPolicy.protect()` on live stages. S3 bills storage and requests only, so an empty bucket costs nothing. The Pulumi buckets are deleted empty at cutover after `pulumi state unprotect` on their five protected resources each.
+
+Lane goals/infra-alchemy-rebuild-p4-oip-web
+
+Reverse: Set assetsBucketName to assets.oip.law / staging-assets.oip.law in liveStageConfig (the S3 provider adopts silently by name), skip the Pulumi bucket destroy and pulumi state delete the five bucket resources instead.
+
+### OipWeb cutover procedure from Pulumi, 2026-11-14
+
+The procedure is the runbook's "Cutover from Pulumi" (`docs/runbooks/alchemy-infra.md`), executed by the orchestrating session after the project ruling: (1) read-only preconditions, the HubSpot token proven live by a read that returns portal 246203876 and the Cloudflare token's DNS edit scope verified; (2) `pulumi stack export` of both stacks archived under `~/.local/state/beep/infra-archives/pulumi-exports/` with size and sha256 in a decision file; (3) deploy role and environment bootstrapped; (4) Pulumi frozen; (5) arm and dispatch, plans must match the expected-plan decision, smoke checks pass, a second dispatch plans no changes, drift exits 0; (6) `pulumi state delete` for every adopted object, then `pulumi state unprotect` and a targeted destroy of the empty old buckets, then `pulumi stack rm`. Expected visitor effect: none; adoption rewrites settings that already hold, DNS records change only their comment, variable writes reach new deployments only. Each step names its check and rollback in the runbook. The one live risk is a wrong HubSpot token, which would surface on the next production deployment as a failing contact form; step 1 removes it.
+
+Lane goals/infra-alchemy-rebuild-p4-oip-web
+
+Reverse: Before step 6: unset OIP_WEB_INFRA_DEPLOY and keep Pulumi as owner. After step 6: pulumi stack import --file <archive> per stack.
+
+### OipWeb deploys from one armed workflow job; vercel-deploy.yml stays unedited, 2026-11-14
+
+`.github/workflows/deploy-oip-web-infra.yml`: push to `main` filtered to the stack, the Vercel provider source and the workflow itself, plus a bare `workflow_dispatch`; one GitHub-hosted job (`timeout-minutes: 30`), environment `oip-web-infra-prod`, concurrency `alchemy-oip-web-infra` (never cancelled). Per stage, `staging` then `prod`: plan teed to a log, `bun apps/oip-web/stack/plan-guard.ts` (refuses replace, delete or orphan of a project, domain, DNS record or bucket and fails closed on a log without a `Plan:` line), deploy, then a curl poll of every hostname against today's responses (200 apex, 308 or 307 redirects). The job runs only while the repository variable `OIP_WEB_INFRA_DEPLOY` is `enabled`, so merging deploys nothing. It needs a stack-scoped OIDC role (`OIP_WEB_DEPLOY_ROLE_ARN`, state bucket plus `oip-law-web-assets-*`) because the state role is state-only. No change to `check.yml`, `heavy.yml`, `setup-monorepo-ci`, runner labels or any pull-request job. Because the projects are adopted in place, `vercel-deploy.yml` keeps its project ids and is not edited.
+
+Lane goals/infra-alchemy-rebuild-p4-oip-web
+
+Reverse: Delete .github/workflows/deploy-oip-web-infra.yml and its ci-runner-security exemption line; unset the OIP_WEB_INFRA_DEPLOY repository variable.
+
+### OipWeb domains and DNS records are adopted per object and protected, 2026-11-14
+
+Per D20 the six Vercel domains (`oip.law`, `www.oip.law`, `opip.law`, `www.opip.law` on prod; `staging.oip.law`, `staging.opip.law` on staging) and the six Cloudflare records Pulumi owns (ids matching state) are adopted with `adopt(true)`. With the project adopted in place the domains are already on the target project, so `moveFrom` is not needed. Redirect codes are kept (308 on prod, 307 on staging). Records keep content, `proxied: false` and automatic TTL; only the comment changes to name the Alchemy stack, an in-place update. Both carry `RemovalPolicy.protect()` on live stages, and the workflow's plan guard refuses any replace, delete or orphan of either.
+
+Lane goals/infra-alchemy-rebuild-p4-oip-web
+
+Reverse: Remove adopt(true) and RemovalPolicy.protect from the Domain and DNS declarations and delete-then-create each record during a maintenance window instead.
+
+### OipWeb plans: the personal stage planned as designed; first prod and staging plans predicted, 2026-11-14
+
+Read-only `alchemy plan --stage dev_elpresidank --env-file /dev/null` from `apps/oip-web` (aws-vault credentials exported, provider tokens through `op run`), 2026-11-14: exit 0, `Plan: 4 to create` with `[AssetsBucket]`, `[EnvHubSpotAccountId]`, `[EnvNextDisablePwa]` and `[Project]` as creates, all stage-named (`oip-web-dev-elpresidank`, `oip-law-web-assets-dev-elpresidank`); nothing adopted, moved or modified; no deploy. The run also showed that CI-style plan lines carry a `[HH:MM:SS.mmm] INFO: ` prefix, which the plan guard now strips (fixture in `test/stack/PlanGuard.test.ts`). Predicted from the census, not planned against live objects: the first prod plan is `Plan: 1 to create, 12 to adopted` with `[AssetsBucket] create` and `adopted` for `[Dns-oip-law]`, `[Dns-opip-law]`, `[Dns-www-oip-law]`, `[Dns-www-opip-law]`, `[Domain-oip-law]`, `[Domain-opip-law]`, `[Domain-www-oip-law]`, `[Domain-www-opip-law]`, `[EnvHubSpotAccountId]`, `[EnvHubSpotServiceKey]`, `[EnvNextDisablePwa]` and `[Project]`; the first staging plan is `Plan: 1 to create, 8 to adopted` with `[AssetsBucket] create` and `adopted` for `[Dns-staging-oip-law]`, `[Dns-staging-opip-law]`, `[Domain-staging-oip-law]`, `[Domain-staging-opip-law]`, the three variables and `[Project]` (adoption takes the declared props as the old props, so the planner reports `adopted`, not `update`). Stop signs: any `replace`, `delete` or `orphaned` line (the guard and `RemovalPolicy.protect` both refuse it); any `create` other than `[AssetsBucket]` (a live object was not found where the census put it); `OwnedBySomeoneElse`, `ProjectRepositoryMismatch` or `EnvVarTypeNotApplied`; a `ConfigError` on `CI` or `CRM_HUBSPOT_SERVICE_KEY`; a second dispatch that plans anything but no changes.
+
+Lane goals/infra-alchemy-rebuild-p4-oip-web
+
+Reverse: n/a (evidence record); a later plan that differs supersedes it with its own decision file.
+
+### OipWeb stages: prod and staging own the live objects, names are pinned, personal stages are fenced off, 2026-11-14
+
+`prod` and `staging` map to the Pulumi stacks `production` and `staging` and refuse to run without `CI=true`. Every physical name (project, bucket, hostnames, zone ids) is pinned in `apps/oip-web/stack/OipWebConfig.ts`; none is derived from a state-held instance id (the #3133 lesson). A personal stage (`dev_$USER`) gets `oip-web-<stage>` and `oip-law-web-assets-<stage>`, the two public variables, no domain, no DNS and no secret, and the `OipWebStackConfig` schema rejects a personal configuration that names a live project, a live or retiring bucket, a domain or the HubSpot secret source.
+
+Lane goals/infra-alchemy-rebuild-p4-oip-web
+
+Reverse: Collapse liveStageConfig into the Pulumi-style config file per stage and drop the schema fences; no live object depends on the shape.
+
+### Vercel.EnvVar gains valueFrom so a secret never enters Alchemy state, 2026-11-14
+
+Alchemy writes a `Redacted` prop as `{ "__redacted__": <plain text> }` in state (`alchemy/src/State/StateEncoding.ts`), so `EnvVar.value` put any secret in the state bucket in clear JSON, protected only by SSE-KMS at rest. `EnvVarProps` now takes exactly one of `value` (non-secret) and `valueFrom: { config }`; the provider reads the config key inside `diff` and `reconcile` (`Config.Redacted`), sends it only to Vercel, and stores `valueDigest` (SHA-256 hex, `effect/crypto/Digest`) so a rotated value plans an update. Neither or both fails with `EnvVarValueMissing`. Package tests prove the secret is absent from persisted state, that a literal `value` is present (the control), and that rotation is detected. The digest is unsalted: fine for a high-entropy token, guessable for a short value. The OipWeb stack uses `valueFrom` for `CRM_HUBSPOT_SERVICE_KEY`.
+
+Lane goals/infra-alchemy-rebuild-p4-oip-web
+
+Reverse: Remove valueFrom and valueDigest from @beep/alchemy-vercel EnvVar and pass secrets as value again, accepting plain text in the KMS-encrypted state bucket.
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger
