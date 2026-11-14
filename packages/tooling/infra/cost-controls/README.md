@@ -51,9 +51,9 @@ served from `us-east-1`, and Cost Optimization Hub answers only there.
 | `MonthlyBudget` | `AWS.Budgets.Budget` | `beep-account-monthly-cost` (personal: `-<stage>` suffix) | new, pinned name, retained in `prod` |
 | `AnomalyAlerts` | `AWS.CostExplorer.AnomalySubscription` | `beep-account-anomaly-alerts`, `prod` `live` phase only | new, pinned name |
 | `AccountServicesMonitor` | `AWS.CostExplorer.AnomalyMonitor` | `beep-account-services`, `prod` only | adopted singleton (`adopt(true)`, retained) |
-| `AppTag` … `ProjectTag` (6) | `BeepAWS.CostExplorer.CostAllocationTag` | tag keys `App`, `beep-ci`, `DataClass`, `ghr:environment`, `ManagedBy`, `Project` | adopted singletons (silent, retained) |
-| `ComputeOptimizer` | `BeepAWS.ComputeOptimizer.Enrollment` | account enrollment | adopted singleton (silent, retained) |
-| `CostOptimizationHub` | `BeepAWS.CostOptimizationHub.Enrollment` | account enrollment | adopted singleton (silent, retained) |
+| `AppTag` … `ProjectTag` (6) | `BeepAWS.CostExplorer.CostAllocationTag` | tag keys `App`, `beep-ci`, `DataClass`, `ghr:environment`, `ManagedBy`, `Project`, `prod` only | adopted singletons (silent, retained) |
+| `ComputeOptimizer` | `BeepAWS.ComputeOptimizer.Enrollment` | account enrollment, `prod` only | adopted singleton (silent, retained) |
+| `CostOptimizationHub` | `BeepAWS.CostOptimizationHub.Enrollment` | account enrollment, `prod` only | adopted singleton (silent, retained) |
 
 The budget and subscription names differ from the Pulumi-owned
 `Monthly Budget` and `beep-account-daily-anomalies`, so both sets run side by
@@ -90,8 +90,9 @@ Active for this account only, exactly one `DIMENSIONAL`/`SERVICE` monitor
 named `beep-account-services`), and nothing plans a delete or replace. A
 resource outside the stack stops the job with an instruction to ask the CI
 goals driver through the orchestrator. The gate prints resources, actions
-and changed property names, never values. It is meant for `prod`: a personal
-stage does not declare the monitor, so its plan is refused.
+and changed property names, never values. It applies to `prod` only:
+personal stages declare the budget alone and never adopt or write an account
+setting, so a workstation deploy cannot bypass the gate.
 
 ## Running it
 

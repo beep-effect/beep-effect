@@ -5,6 +5,7 @@ import {
   declareCostControls,
   PhysicalNames,
   program,
+  SingletonIds,
 } from "@beep/infra-cost-controls/CostControls";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -29,7 +30,7 @@ const allTagsActive = (account: FakeAws.FakeAccount) =>
 
 describe("CostControls personal stage", () => {
   const personal = FakeAws.harness({ seed: FakeAws.liveAccount, stage: "dev_test" });
-  personal.provider("creates a silent stage-suffixed budget and adopts the singletons without writes", (stack) =>
+  personal.provider("creates only a silent stage-suffixed budget and never touches an account setting", (stack) =>
     Effect.gen(function* () {
       const { account } = personal;
       const output = yield* stack.deploy(program.pipe(environmentOf({})));
@@ -38,21 +39,21 @@ describe("CostControls personal stage", () => {
       expect(output.notifications).toBe("silent");
       expect(output.anomalyMonitorArn).toBeUndefined();
       expect(output.anomalySubscriptionArn).toBeUndefined();
-      expect(output.costAllocationTags).toEqual([
-        "App",
-        "beep-ci",
-        "DataClass",
-        "ghr:environment",
-        "ManagedBy",
-        "Project",
-      ]);
-      expect(output.computeOptimizer).toBe("Active");
-      expect(output.costOptimizationHub).toBe("Active");
+      expect(output.costAllocationTags).toEqual([]);
+      expect(output.computeOptimizer).toBeUndefined();
+      expect(output.costOptimizationHub).toBeUndefined();
 
       expect(personal.budget(budgetName("dev_test"))?.notifications).toEqual([]);
       expect(personal.budget("Monthly Budget")?.budget.BudgetName).toBe("Monthly Budget");
       expect(FakeAws.mutations(account)).toEqual(["CreateBudget"]);
-      expect(FakeAws.operations(account)).not.toContain("GetAnomalyMonitors");
+      for (const operation of [
+        "GetAnomalyMonitors",
+        "ListCostAllocationTags",
+        "GetEnrollmentStatus",
+        "ListEnrollmentStatuses",
+      ]) {
+        expect(FakeAws.operations(account)).not.toContain(operation);
+      }
 
       account.calls.length = 0;
       yield* stack.destroy();
@@ -194,6 +195,28 @@ describe("CostControls guards", () => {
       const error = yield* FakeAws.deployFailure(stack)(declareCostControls(config, "prod").pipe(environmentOf({})));
       expect(FakeAws.failureTags(error)).toContain("ConfigError");
       expect(noRecipients.account.calls).toEqual([]);
+    })
+  );
+});
+
+describe("CostControls personal-stage graph", () => {
+  // Account-wide settings are adopted and written only by prod from CI,
+  // behind the pre-deploy gate; a workstation stage plans its budget alone.
+  const graph = FakeAws.harness({ seed: FakeAws.liveAccount, stage: "dev_test" });
+  graph.provider("plans no account singleton type, only the stage budget", (stack) =>
+    Effect.gen(function* () {
+      const plan = yield* stack.plan(program.pipe(environmentOf({})));
+      const planned = A.filter(R.values(plan.resources), (item) => item !== undefined);
+      const singletonTypes = [
+        "AWS.CostExplorer.AnomalyMonitor",
+        "BeepAWS.CostExplorer.CostAllocationTag",
+        "BeepAWS.ComputeOptimizer.Enrollment",
+        "BeepAWS.CostOptimizationHub.Enrollment",
+      ];
+
+      expect(A.map(planned, (item) => item?.resource.Type)).toEqual(["AWS.Budgets.Budget"]);
+      for (const item of planned) expect(singletonTypes).not.toContain(item?.resource.Type);
+      for (const id of SingletonIds) expect(R.keys(plan.resources)).not.toContain(id);
     })
   );
 });

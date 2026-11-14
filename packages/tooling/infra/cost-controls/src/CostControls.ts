@@ -203,9 +203,11 @@ const servicesMonitor = AWS.CostExplorer.AnomalyMonitor("AccountServicesMonitor"
  *
  * **Details**
  *
- * Every stage declares the budget and the eight account singletons. Only
- * `prod` declares the services anomaly monitor (an account singleton by
- * quota) and, in the `live` phase, the anomaly subscription. In the `silent`
+ * Every stage declares the budget. Only `prod` declares the nine account
+ * singletons (six cost allocation tags, two enrollments and the services
+ * anomaly monitor) and, in the `live` phase, the anomaly subscription:
+ * account-wide settings are adopted and reconciled only from CI, behind the
+ * pre-deploy gate, never by a personal stage. In the `silent`
  * phase the budget carries no notifications and the recipient variable is
  * not read. The budget is retained in `prod`, so a stack destroy cannot
  * remove the account budget.
@@ -243,7 +245,10 @@ export const declareCostControls = Effect.fn("CostControls.declare")(function* (
     notifications: A.isReadonlyArrayNonEmpty(recipients) ? budgetNotifications(recipients) : [],
   }).pipe(RemovalPolicy.retain(isProduction));
 
-  const singletons = yield* accountSingletons();
+  // Account-wide settings are adopted and reconciled only by `prod`, which
+  // deploys from CI behind the pre-deploy gate; a personal stage declares
+  // the budget alone and never claims or writes an account singleton.
+  const singletons = isProduction ? yield* accountSingletons() : undefined;
 
   const monitor = isProduction ? yield* servicesMonitor : undefined;
   const subscription =
@@ -271,9 +276,9 @@ export const declareCostControls = Effect.fn("CostControls.declare")(function* (
     notifications: config.notifications,
     anomalyMonitorArn: monitor?.monitorArn,
     anomalySubscriptionArn: subscription?.subscriptionArn,
-    costAllocationTags: A.map(singletons.tags, (tag) => tag.tagKey),
-    computeOptimizer: singletons.computeOptimizer.status,
-    costOptimizationHub: singletons.costOptimizationHub.status,
+    costAllocationTags: A.map(singletons?.tags ?? [], (tag) => tag.tagKey),
+    computeOptimizer: singletons?.computeOptimizer.status,
+    costOptimizationHub: singletons?.costOptimizationHub.status,
   };
 });
 

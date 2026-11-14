@@ -67,13 +67,14 @@ export type PlanAction = typeof PlanAction.Type;
  * @category models
  * @since 0.0.0
  */
-export class PlanEntry extends S.Class<PlanEntry, { readonly brand: unique symbol }>($I`PlanEntry`)(
-  {
+export class PlanEntry extends S.Opaque<PlanEntry, { readonly brand: unique symbol }>()(
+  S.Struct({
     fqn: S.String,
     action: PlanAction,
     changedProperties: S.Array(S.String),
-  },
-  $I.annote("PlanEntry", { description: "One resource of an alchemy plan and the property names it changes." })
+  }).pipe(
+    $I.annoteSchema("PlanEntry", { description: "One resource of an alchemy plan and the property names it changes." })
+  )
 ) {}
 
 /**
@@ -99,8 +100,8 @@ export class PlanEntry extends S.Class<PlanEntry, { readonly brand: unique symbo
  * @category models
  * @since 0.0.0
  */
-export class LiveSettings extends S.Class<LiveSettings, { readonly brand: unique symbol }>($I`LiveSettings`)(
-  {
+export class LiveSettings extends S.Opaque<LiveSettings, { readonly brand: unique symbol }>()(
+  S.Struct({
     costAllocationTags: S.Array(S.Struct({ TagKey: S.String, Status: S.String })),
     computeOptimizer: S.Struct({ status: S.String, memberAccountsEnrolled: S.optionalKey(S.Boolean) }),
     costOptimizationHub: S.Struct({
@@ -110,8 +111,9 @@ export class LiveSettings extends S.Class<LiveSettings, { readonly brand: unique
     anomalyMonitors: S.Array(
       S.Struct({ MonitorName: S.String, MonitorType: S.String, MonitorDimension: S.optionalKey(S.String) })
     ),
-  },
-  $I.annote("LiveSettings", { description: "Live values of the nine account settings the stack adopts." })
+  }).pipe(
+    $I.annoteSchema("LiveSettings", { description: "Live values of the nine account settings the stack adopts." })
+  )
 ) {}
 
 /**
@@ -138,6 +140,14 @@ export const ViolationReason = LiteralKit([
 ]).pipe($I.annoteSchema("ViolationReason", { description: "Why the pre-deploy gate refuses a plan." }));
 
 /**
+ * Decoded violation reason.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ViolationReason = typeof ViolationReason.Type;
+
+/**
  * One reason a plan may not deploy. Names resources and settings only,
  * never property values.
  *
@@ -153,13 +163,12 @@ export const ViolationReason = LiteralKit([
  * @category models
  * @since 0.0.0
  */
-export class PlanViolation extends S.Class<PlanViolation, { readonly brand: unique symbol }>($I`PlanViolation`)(
-  {
+export class PlanViolation extends S.Opaque<PlanViolation, { readonly brand: unique symbol }>()(
+  S.Struct({
     subject: S.String,
     reason: ViolationReason,
     detail: S.String,
-  },
-  $I.annote("PlanViolation", { description: "One reason the pre-deploy gate refuses a plan." })
+  }).pipe($I.annoteSchema("PlanViolation", { description: "One reason the pre-deploy gate refuses a plan." }))
 ) {}
 
 /**
@@ -249,8 +258,6 @@ const allowedResources = HashSet.fromIterable([...SingletonIds, "MonthlyBudget",
 const singletonSet = HashSet.fromIterable(SingletonIds);
 const violation = (subject: string, reason: ViolationReason, detail: string) =>
   PlanViolation.make({ subject, reason, detail });
-
-type ViolationReason = typeof ViolationReason.Type;
 
 const planViolations = (entries: ReadonlyArray<PlanEntry>): ReadonlyArray<PlanViolation> =>
   A.flatMap(entries, (entry) => {

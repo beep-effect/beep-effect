@@ -49,10 +49,10 @@ export const requireExpectedAccount = Effect.fn("CostControls.requireExpectedAcc
 ) {
   const environment = yield* AWSEnvironment.current;
   const target = S.Struct({
-    accountId: S.Literal(config.expectedAccountId).annotate({
+    accountId: S.tag(config.expectedAccountId).annotate({
       message: `CostControls deploys only to AWS account ${config.expectedAccountId}`,
     }),
-    region: S.Literal(config.region).annotate({ message: `CostControls deploys only to ${config.region}` }),
+    region: S.tag(config.region).annotate({ message: `CostControls deploys only to ${config.region}` }),
   }).pipe($I.annoteSchema("DeployTarget", { description: "The account and region the stack may touch." }));
   const verified = yield* S.decodeUnknownEffect(target)({
     accountId: environment.accountId,

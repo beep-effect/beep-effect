@@ -85,6 +85,14 @@ export const CostControlsRegion = LiteralKit(["us-east-1"]).pipe(
 );
 
 /**
+ * Decoded region.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CostControlsRegion = typeof CostControlsRegion.Type;
+
+/**
  * Whether the stack's budget and anomaly subscription mail anyone.
  *
  * **Details**
@@ -307,6 +315,14 @@ export const NotificationRecipients = S.String.pipe(
     description: "Comma-separated email recipients of budget and anomaly notifications.",
   })
 );
+
+/**
+ * Decoded recipient list.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export type NotificationRecipients = typeof NotificationRecipients.Type;
 
 /**
  * Environment variable that carries the recipient list.

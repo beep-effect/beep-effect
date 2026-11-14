@@ -10,12 +10,11 @@ import { requireCiForProduction } from "@beep/infra-cost-controls/Guards";
 import { describe, expect, it } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
 
 const withEnvironment = (values: Record<string, string>) =>
   Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(values));
-const decodeRecipients = S.decodeUnknownExit(NotificationRecipients);
+const decodeRecipients = S.decodeUnknownEffect(NotificationRecipients);
 
 describe("CostControlsConfig", () => {
   it.effect("resolves prod to the guarded account and its thresholds, silent", () =>
@@ -46,23 +45,26 @@ describe("CostControlsConfig", () => {
   ];
   it.effect.each(rejected)("rejects %s", ([, override]) =>
     Effect.gen(function* () {
-      const exit = yield* Effect.exit(decodeCostControlsConfig({ ...productionConfig, ...override }));
-      expect(Exit.isFailure(exit)).toBe(true);
+      const error = yield* Effect.flip(decodeCostControlsConfig({ ...productionConfig, ...override }));
+      expect(error._tag).toBe("SchemaError");
     })
   );
 });
 
 describe("NotificationRecipients", () => {
-  it("normalizes, trims and splits a comma-separated list", () => {
-    const exit = decodeRecipients(" Ops@Example.com ,billing@example.com,");
-    expect(exit).toStrictEqual(Exit.succeed(["ops@example.com", "billing@example.com"]));
-  });
+  it.effect("normalizes, trims and splits a comma-separated list", () =>
+    Effect.gen(function* () {
+      const recipients = yield* decodeRecipients(" Ops@Example.com ,billing@example.com,");
+      expect(recipients).toEqual(["ops@example.com", "billing@example.com"]);
+    })
+  );
 
-  it("rejects an empty list and an invalid address", () => {
-    expect(Exit.isFailure(decodeRecipients(""))).toBe(true);
-    expect(Exit.isFailure(decodeRecipients(" , "))).toBe(true);
-    expect(Exit.isFailure(decodeRecipients("ops@example.com,not-an-address"))).toBe(true);
-  });
+  it.effect.each(["", " , ", "ops@example.com,not-an-address"])("rejects %j", (input) =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(decodeRecipients(input));
+      expect(error._tag).toBe("SchemaError");
+    })
+  );
 
   it.effect("reads the environment variable and drops duplicates", () =>
     Effect.gen(function* () {
@@ -80,8 +82,8 @@ describe("requireCiForProduction", () => {
   it.effect("passes prod in CI and fails it outside", () =>
     Effect.gen(function* () {
       yield* requireCiForProduction("prod").pipe(withEnvironment({ CI: "true" }));
-      const exit = yield* Effect.exit(requireCiForProduction("prod").pipe(withEnvironment({})));
-      expect(Exit.isFailure(exit)).toBe(true);
+      const error = yield* Effect.flip(requireCiForProduction("prod").pipe(withEnvironment({})));
+      expect(error._tag).toBe("ConfigError");
     })
   );
 });

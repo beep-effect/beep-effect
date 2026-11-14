@@ -152,10 +152,11 @@ cd packages/tooling/infra/cost-controls
 bunx alchemy plan --stage "dev_$USER" --env-file /dev/null
 ```
 
-Expect one create (the stage-suffixed budget) and eight adopts (six tags, two
-enrollments) with no property changes. A personal deploy creates a free
-budget with no notifications; `destroy` deletes that budget and leaves every
-account setting untouched.
+Expect one create, the stage-suffixed budget, and nothing else: personal
+stages declare no account singleton, so only `prod` (CI, behind the
+pre-deploy gate) adopts or writes the tags, enrollments and monitor. A
+personal deploy creates a free budget with no notifications; `destroy`
+deletes that budget.
 
 Pre-deploy gate. Between plan and deploy, the workflow's "Check the plan
 before deploy" step (`plan-check.ts`, tested in `test/PlanCheck.test.ts`)
