@@ -17,7 +17,7 @@ import {
   verifyCitationHtmlDiscoveryConfiguration,
 } from "./HtmlDiscovery.ts";
 import { CitationHtmlTagGeometryInput } from "./HtmlTagGeometry.ts";
-import { reserveCitationInvocationText } from "./Invocation.ts";
+import { CitationInvocation, reserveCitationInvocationText } from "./Invocation.ts";
 import { makeCitationMetadataStage, ownCitationStageCall } from "./MetadataComposition.ts";
 import { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
@@ -120,7 +120,13 @@ export const installCitationHtmlGeometry = Effect.fn("Citation.installHtmlGeomet
     const plain = yield* input.prepareUnicode(plainValue, () => Effect.void);
     const placeholder = yield* input.prepareUnicode(masked.placeholder, () => Effect.void);
     const diff = yield* makeCitationDiffWorker(limits, config.diffRuntime, useDmp);
-    const forwardSteps = yield* diff.evaluate(plain.value.storage, placeholder.value.storage);
+    const invocation = yield* CitationInvocation;
+    const forwardSteps = yield* diff.evaluate(
+      invocation.lane.start,
+      invocation.budget.reserve,
+      plain.value.storage,
+      placeholder.value.storage
+    );
     return {
       diff,
       plain,
@@ -136,7 +142,13 @@ export const installCitationHtmlGeometry = Effect.fn("Citation.installHtmlGeomet
   ) {
     const prepared = yield* forward(markup, plainInput);
     const discovery = yield* installedDiscovery;
-    const backwardSteps = yield* prepared.diff.evaluate(prepared.source.value.storage, prepared.plain.value.storage);
+    const invocation = yield* CitationInvocation;
+    const backwardSteps = yield* prepared.diff.evaluate(
+      invocation.lane.start,
+      invocation.budget.reserve,
+      prepared.source.value.storage,
+      prepared.plain.value.storage
+    );
     const tags = yield* discovery.emphasis(prepared.source.value.storage);
     return CitationHtmlTagGeometryInput.make({
       plain: prepared.plain.value.storage,

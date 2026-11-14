@@ -1,78 +1,181 @@
-# B1 partial implementation and design stop
+# B1: invocation native lanes and cleaner-boundary yield
 
-Base: `0e2b4c42e6d`; branch: `feat/citation-native-lane`.
+Status: locally verified, in review; owner publishes after the predecessor lands.
+Branch: `feat/citation-native-lane`. Base: `0e2b4c42e6d` (A4).
+No push, PR, rebase, stash operation, whole-package suite or coverage run.
 
-Only the independent schema step is implemented. Policy v2 rejects a regex
-concurrency below operation concurrency, keeps all fields and values, and has a
-major changeset. The package is not in the Changesets ignore list.
+`C/` below means `packages/law-practice/server/src/internal/Citation/`.
+The limits policy v2 and major changeset are in accepted commit `df7dbe7f5dc`.
+The implementation follows both owner rulings; neither historical stop remains.
 
-## Stop
+## Count gate
 
-See decision `2026-11-14-stop-b1-at-the-shared-html-cleaner-markup-boundary.md`.
-The shared Markup worker also serves the closed HTML cleaner port. The design
-must specify lane authority across that boundary before all Markup starts can
-require CitationInvocation. No native implementation was changed.
+The same `CitationCanonicalFullSpan` fixture asserts every row on every call.
+Two complete file runs passed 12/12, including the ten-call Bun cohort, the Node
+first-call parity leg and construction. Their file wall times were 61.72 s and
+64.59 s. The latter run began at 23:23:03 local; load sampled immediately after
+launch was 20.27 / 22.31 / 18.30 (1/5/15 minutes). The first run's launch load was
+not sampled; the nearest recorded post-run observation was 12.88 / 12.07 / 13.96.
+These wall times include the Node parity leg and are not ten-call cohort times.
 
-## Counts
+A4's historical round-3 record reports a 36.5 s ten-call Bun cohort at starting
+load 15.2 / 33.5 / 41.8 and ending load 10.1 / 28.9 / 39.7. That is retained
+historical evidence, not a fresh baseline timing. The scopes and loads differ;
+no latency improvement is claimed. Counts are the acceptance gate.
 
-These are predecessor A4 recorded counts, not a fresh B1 measurement. The
-post-change column is deliberately unverified: no count replay was run after
-the design stop. Wall time and load for those predecessor counts were not
-recaptured. Host load during schema verification: 18.02 / 10.50 / 9.12
-(one/five/fifteen minutes); this is not a replay measurement.
-
-| Count | A4 recorded | B1 measured |
+| Per ten plain-text Bun calls | A4 | B1, both replays |
 | --- | --- | --- |
-| Regex processes per ten plain-text calls | 291 | not measured |
-| Construction metadata installs | 16 | not measured |
-| Construction configuration detaches | 1 | not measured |
-| Construction tokenizer builds | 1 | not measured |
-| Construction evaluator installs | 26 | not measured |
-| Per-call installs/detaches/tokenizer/evaluator installs | 0 each | not measured |
-| Lanes acquired | no lane exists | no lane implemented |
+| Regex evaluations | 291 | 291 |
+| Child processes | 291 | 291 |
+| Metadata-operation installs | 0 | 0 |
+| Configuration detaches | 0 | 0 |
+| Tokenizer builds | 0 | 0 |
+| Evaluator installs | 0 | 0 |
+| Native physical owners | 10 regex owners | 10 lane owners |
+| Successful lane unit acquisitions | no lane | 10 |
+| Diff/Xml worker constructions | 0 | 0 |
 
-All five lane rules and all four real-process proofs remain unimplemented and
-unverified on both runtimes. regexOwner, Markup semaphores, per-request Diff/Xml
-owners, protocol v2, release assertions and count fixtures are unchanged.
+| Construction count | A4 | B1, both replays |
+| --- | --- | --- |
+| Metadata-operation installs | 16 | 16 |
+| Configuration detaches | 1 | 1 |
+| Tokenizer builds | 1 | 1 |
+| Evaluator installs | 26 | 26 |
+| Child processes / regex evaluations | 0 / 0 | 0 / 0 |
+| Native physical owners | 1 | 1 |
+| Successful lane unit acquisitions | no lane | 0 |
+| Diff/Xml worker constructions | 0 | 0 |
 
-## Verification
+The new probe column counts successful unit claims, including reacquisitions
+following yields. `nativeProcessOwners` still counts physical owner construction;
+on plain-text calls its one owner is now the lane's. Per-job wrappers do not
+count as physical owners. The construction owner is still the standalone HTML
+cleaner's owner. The Node parity call retains 70 children and acquires one lane.
 
-- Frozen install and prerequisite Turbo build: passed (57 build tasks).
-- CitationEngineLimits.test.ts: seven tests pass on Bun (1.49 s final run) and
-  Node (2.38 s). An initial run caught the tightening fixture's now-incoherent
-  concurrency pair; it was corrected. A test typecheck caught a yield in an
-  assertion argument; it was corrected before the passing package verification.
-- Both quick package-verifies: passed, including source and test typechecks.
-- Both package lint:laws commands: passed.
-- Root lint:oxlint: passed.
-- docgen:local: passed.
-- Fallow audit against origin/main: passed, zero introduced, 37 inherited-adjacent.
-- Biome on changed TypeScript: passed.
-- Effect Vitest: initial scan found EV006 on the new failure assertion; replaced
-  it with the canonical assertTrue helper. Generated inventory churn was restored.
-  Final full scan passed: 3,900 files, 636 inherited findings, zero introduced,
-  one resolved. Scoped changed-file scan: zero findings.
+The direct markup annotation proof also uses the probe: each request starts
+three children (regex placeholder, Diff, Xml), constructs one physical lane owner
+and two preparation workers, and acquires one unit. Two concurrent requests
+start six children, construct two physical owners, and acquire two lane units.
+The observed maximum alive is respectively one and two. Before-markup owner
+counts were not replayed, so no measured before-markup timing/count is claimed.
 
-No native tests or canonical full-span replays were run: no native change was
-made after the design stop. No whole suite, coverage, push or PR command ran.
+## Six lane rules and real-process proof
 
-## Owner ruling follow-up: exported host cleaner boundary
+| Rule | Implementation | Proof |
+| --- | --- | --- |
+| Lazy unit, held to Scope close except cleaner yield | `C/Invocation.ts` constructs the lane in the request Scope; `C/NativeLane.ts` caches the physical owner lazily and claims a total unit only on start. | Empty lane uses zero; handover/yield test observes acquired true then false and lifetime units 1 then 2. |
+| One live occupant | Serialized start calls confirmed retirement before the next OS spawn. | Real regex/Diff/Xml annotation has max-alive 1 under 1/1; handover of real children also has max-alive 1. |
+| Release only after confirmation, otherwise quarantine | The unchanged NativeProcess retirement binding confirms death before notification/release; failed lane retirement is terminal. | Unconfirmed yield retains active=1 and quarantine=1, never calls the cleaner; acknowledgement returns capacity but both start and yield still refuse. |
+| Uninterruptible ownership and pre-spawn finalizer | Lane Scope finalizer is installed before any claim; acquisition/start is masked, with unused-unit release on failed start. | Real blocker quarantines between acquire/start: snapshot returns to blocker baseline, then zero. Synchronous interruption between acquire/spawn observes interrupted Exit, no second spawn, and zero leaked capacity. |
+| Bound and no inter-operation lane wait | Native admission total ceiling is concurrentOperations; one unit per admitted operation and policy-v2 cross-field check. | Actual markup requests complete under 1/1 and concurrently under 2/2, max alive 1 and 2, started equals confirmed. |
+| Yield to the closed cleaner boundary | `CleanerPipeline` invokes the port through lane.yieldTo; HTML passes the named standalone starter explicitly. | Engine HTML clean, direct host invocation, and deliberately reversed regex-then-HTML each complete under 1/1. Actual admission calls observe max active=1 and four successful claims for the four real children. Concurrent and same-fiber nested yields serialize, including caller transactions. |
 
-The explicit-starter ruling is recorded in the rewritten decision. Source
-inspection traced the single production builtin invoke call through the registry
-and pipeline. The default assembly exposes the same registry runtime to both
-engine and host. Its internal entry can carry a starter, but CitationEngineLive
-accepts an arbitrary exported CitationCleaner whose closed invoke and work
-argument have no starter capability. The engine cannot replace or inspect that
-host implementation while preserving its semantics. Owner ruling item 5 therefore
-stops native wiring at this public boundary. No unseen host callback was observed
-spawning: the stop is the explicit argument route through the exported contract.
+The reversed order is a direct-stage proof, not a built-in engine order. Normal
+HTML cleaning precedes the first lane acquisition, so its yield acquires nothing
+and adds no refusal or reordered work. Public cleaner contracts are unchanged.
 
-The source trace also corrected an initial hypothesis: the six-form extractor
-uses Recognizer and does not enter the cleaner pipeline. Normal markup document
-extraction cleans before geometry regex/Diff, then tokenizes within one invocation.
-No built-in path was found entering cleaning with a prior regex/Diff/Xml occupant;
-host callback behavior is opaque. These are source findings, not process proofs.
+All new proof files pass with both Bun and Node parent runners. Each file runs
+both real Bun and Node child-runtime legs. Native liveness observations check the
+actual OS process, not a fake spawner. For unconfirmed retirement, started and
+confirmed intentionally differ during quarantine; after explicit late OS death
+acknowledgement the proof observes equality and zero stranded capacity.
 
-No code, count fixtures or tests changed in this follow-up. No new runtime tests
-were run. Counts and earlier verification remain as recorded above.
+## Ownership and compatibility
+
+- `regexOwner` retains the protocol-v2 adapter and spawner/Clock identity guard,
+  not a physical owner or separate lease. Every regex evaluation still spawns
+  and confirms one child. No v3 messages, loop or process reuse were introduced.
+- Diff and Xml preparation remain per request. Diff accepts starter and text
+  reservation explicitly. Neither Diff nor Markup looks up Invocation or native
+  admission. Xml passes invocation.lane.start; HTML passes the named standalone.
+- Markup private semaphores, queue/refusal checks and timers remain. Hoisting
+  their mutable state is unnecessary for B1 and the closed HTML port still
+  needs its queue. Exact confirmation notifications settle these slots even
+  after a failed job's late acknowledgement or owner-Scope retirement.
+- NativeProcess.ts is unchanged: parent SIGKILL, isRunning re-check, child Scope
+  close, then confirmed release, or quarantine. Recognizer keeps its lease.
+- `regexActive` remains the legacy regex-lease subset. Lanes reserve total active
+  units; their occupant kinds and lifetime acquisitions are lane diagnostics.
+
+## Verification receipts
+
+Frozen install and prerequisite Turbo build passed earlier in this worktree
+(57 successful build tasks). Both quick package verifications pass, including
+source and test typechecks. Both package law checks pass (only existing advisory
+terse-effect findings), root Oxlint passes, local docgen passes, and Fallow audit
+against origin/main has zero introduced findings. The full Effect Vitest scan
+passes after adding explicit resource-hook deadlines to the three new test
+layers; generated inventory churn is restored with no new baseline exceptions.
+Biome and whitespace checks pass. Final gate results are also in the checkpoint.
+
+Each focused file ran in its own process under nice. The per-file cap was 285 s;
+no load admission exceeded the five-minute load cap of 128. The longest focused
+file was EngineLayer at about 125 s. Final results:
+
+| File under server/test | Tests | Vitest file duration |
+| --- | --- | --- |
+| `CitationNativeProcess.test.ts` | 4 passed | 1.72 s |
+| `CitationNativeProcessCoverage.test.ts` | 3 passed | 1.48 s |
+| `CitationNativeAdmission.test.ts` | 13 passed | 1.57 s |
+| `CitationNativeAdmissionCoverage.test.ts` | 2 passed | 1.54 s |
+| `CitationAdmission.test.ts` | 7 passed | 1.52 s |
+| `CitationNativeRpc.test.ts` | 6 passed | 0.355 s |
+| `CitationRegexWorker.test.ts` | 18 passed | 3.39 s |
+| `CitationRegexWorkerProtocol.test.ts` | 14 passed | 1.57 s |
+| `CitationDiffWorker.test.ts` | 14 passed | 2.61 s |
+| `CitationDiffWorker.input-admission.test.ts` | 1 passed | 1.64 s |
+| `CitationDiffWorkerProtocol.test.ts` | 4 passed | 1.59 s |
+| `CitationXmlWorker.test.ts` | 3 passed | 4.59 s |
+| `CitationXmlWorkerProtocol.test.ts` | 2 passed | 1.69 s |
+| `CitationHtmlWorker.test.ts` | 11 passed | 3.53 s |
+| `CitationHtmlWorkerCoverage.test.ts` | 2 passed | 1.59 s |
+| `CitationHtmlWorkerCorpus.test.ts` | 3 passed | 55.06 s |
+| `CitationHtmlWorkerProgram.test.ts` | 5 passed | 1.61 s |
+| `CitationHtmlWorkerProtocol.test.ts` | 6 passed | 1.79 s |
+| `CitationHtmlWorkerRpc.test.ts` | 3 passed | 1.53 s |
+| `CitationHtmlGeometryPreparation.test.ts` | 3 passed | 3.17 s |
+| `CitationBuiltinCleaners.test.ts` | 2 passed | 2.68 s |
+| `CitationAnnotationAssembly.test.ts` | 5 passed | 6.06 s |
+| `CitationAnnotationCallback.test.ts` | 2 passed | 16.84 s |
+| `CitationAnnotationCallbackBoundary.test.ts` | 2 passed | 1.83 s |
+| `CitationAnnotationEntry.test.ts` | 5 passed | 5.18 s |
+| `CitationAnnotationEntryCoverage.test.ts` | 2 passed | 2.73 s |
+| `CitationAnnotationFailure.test.ts` | 2 passed | 2.06 s |
+| `CitationAnnotationSkip.test.ts` | 1 passed | 9.97 s |
+| `CitationAnnotationStyle.test.ts` | 2 passed | 2.63 s |
+| `CitationAnnotationTemplate.test.ts` | 2 passed | 2.08 s |
+| `CitationAnnotationWrap.test.ts` | 3 passed | 7.04 s |
+| `CitationInvocation.test.ts` | 4 passed | 1.37 s |
+| `CitationEngineLayer.test.ts` | 15 passed | 123.46 s |
+| `CitationNativeLane.test.ts` | 10 passed | 2.69 s |
+| `CitationNativeLaneComposition.test.ts` | 4 passed | 4.54 s |
+| `CitationNativeLaneCleaner.test.ts` | 2 passed | 15.38 s |
+
+Additional files/runners:
+
+| File / runner | Result |
+| --- | --- |
+| `CitationCanonicalFullSpan.test.ts`, Bun parent | 12/12 twice, 61.72 s and 64.59 s |
+| `CitationCleanerPipeline.test.ts`, Bun parent | 17/17, 7.18 s |
+| `CitationBuiltinCleaners.test.ts`, post-yield-lock rerun | 2/2, 10.46 s |
+| `integration/CitationHtmlUnicode.test.ts`, Bun parent | 1/1, 58.15 s |
+| `integration/CitationDiffWorker.test.ts`, Bun parent | 2/2, 100.35 s |
+| `CitationNativeLane.test.ts`, Node parent | 10/10; real Bun and Node children |
+| `CitationNativeLaneComposition.test.ts`, Node parent | 4/4, 5.25 s; counted markup probe |
+| `CitationNativeLaneCleaner.test.ts`, Node parent | 2/2, 24.89 s |
+| `CitationEngineLimits.test.ts`, accepted schema commit | 7/7 on Bun and Node; unchanged in this continuation |
+
+Initial failures were attributed and fixed, not hidden: a legacy 2/1 corpus
+policy became coherent 2/2; direct annotation fixtures now open invocations with
+the installation's actual spawner/admission; release assertions run after the
+invocation closes rather than while its unit is intentionally held. Exact child
+counts are retained. Late acknowledgement tests exposed private-slot settlement,
+which is now driven by the exact confirmed-retirement notification. Fallow
+findings were fixed by sharing lease translation, a local record-removal helper,
+and separating the native unit claim from process start. No suppression was added.
+
+Not run: the whole law-practice suite, whole-package coverage/full package-verify,
+the five large serial replays, hosted CI, or remote-worker timing. The brief
+requires bounded file-level checks and quick package verification on this shared
+host. B2/B3 and publication remain with the owner; no production/hosted acceptance
+is implied by these local proofs.

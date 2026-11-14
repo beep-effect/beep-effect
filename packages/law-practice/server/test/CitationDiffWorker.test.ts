@@ -47,7 +47,14 @@ const makeCitationDiffWorker = Effect.fnUntraced(function* (
   a2?: Parameters<typeof makeOwnedCitationDiffWorker>[2]
 ) {
   const o1 = yield* ownCitationTestConfiguration(CitationNativeProcessRuntime, a1);
-  return yield* makeOwnedCitationDiffWorker(a0, o1, a2);
+  const stage = yield* makeOwnedCitationDiffWorker(a0, o1, a2);
+  return {
+    ...stage,
+    evaluate: Effect.fnUntraced(function* (before: unknown, after: unknown, maximum?: unknown) {
+      const invocation = yield* CitationInvocation;
+      return yield* stage.evaluate(invocation.lane.start, invocation.budget.reserve, before, after, maximum);
+    }),
+  };
 });
 
 const before = { width: 1, bytes: new Uint8Array([97]) };

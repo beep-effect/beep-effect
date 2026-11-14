@@ -489,7 +489,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
       })
     );
 
-    it.effect(`quarantines ${kind} total and regex capacity until late exit acknowledgement`, () =>
+    it.effect(`quarantines ${kind} lane capacity until late exit acknowledgement`, () =>
       Effect.gen(function* () {
         const acknowledged = yield* Deferred.make<void>();
         const { worker, admission, observed, fixture, timer } = yield* controlled(
@@ -506,7 +506,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
           limit: "cleanupDeadline",
         });
         const citationResult34 = yield* admission.snapshot;
-        expect(citationResult34).toMatchObject({ active: 1, regexActive: 1, quarantined: 1 });
+        expect(citationResult34).toMatchObject({ active: 1, regexActive: 0, quarantined: 1 });
         const citationResult35 = yield* worker.evaluate(pattern, native("replacement"), 0).pipe(Effect.flip);
         expect(citationResult35).toMatchObject({
           reason: "quarantined",

@@ -6,6 +6,7 @@ import * as Clock from "effect/Clock";
 import * as Digest from "effect/crypto/Digest";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
@@ -13,12 +14,7 @@ import * as Scope from "effect/Scope";
 import * as SynchronizedRef from "effect/SynchronizedRef";
 import * as Tuple from "effect/Tuple";
 import { CitationInvocation, reserveCitationInvocationText } from "./Invocation.ts";
-import { acquireCitationNativeLease, captureCitationNativeAdmission } from "./NativeAdmission.ts";
-import {
-  citationNativeProcessCommand,
-  makeCitationNativeProcessOwner,
-  withCitationNativeProcess,
-} from "./NativeProcess.ts";
+import { citationNativeProcessCommand, withCitationNativeProcess } from "./NativeProcess.ts";
 import { makeCitationRegexDescriptorRegistry } from "./RegexDescriptors.ts";
 import { CitationRegexOperation, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { makeCitationRegexResult } from "./RegexResult.ts";
@@ -39,7 +35,6 @@ import type { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import type { CitationRegexEngine } from "./RegexEngine.ts";
 
 const failure = (reason: CitationRegexWorkerFailure["reason"]) => CitationRegexWorkerFailure.make({ reason });
-const invalidRuntime = () => failure("invalid-runtime");
 /** Install the engine-constant half of the regex supervisor once per call site
  * and operation: snapshot limits and runtime, the descriptor registry, job
  * preparation, control-frame preflight, Clock, spawner and the shared native
@@ -65,7 +60,6 @@ export const installCitationRegexEvaluator = Effect.fn("Citation.installRegexEva
   const { operation: engineOperation, timed, failSafety } = yield* makeCitationRegexTiming(limits, false);
   const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
     CitationSafetyLimitExceeded.make({ operation: engineOperation, limit });
-  const admission = yield* captureCitationNativeAdmission(limits, invalidRuntime);
   const clock = yield* Clock.Clock;
   const spawner = yield* ChildProcessSpawner;
   const digest = yield* Digest.Digest;
@@ -82,10 +76,33 @@ export const installCitationRegexEvaluator = Effect.fn("Citation.installRegexEva
   yield* preflightCitationRegexControlFrames(limits.processMessageBytes);
   // The physical owner captures a Scope, so it belongs to the invocation, never the
   // engine: the request's first evaluation creates it and later ones reuse it.
-  const ownerFor = Effect.flatMap(CitationInvocation, ({ scope, regexOwner }) =>
-    SynchronizedRef.modifyEffect(regexOwner, (current) => {
+  const ownerFor = Effect.flatMap(CitationInvocation, (invocation) => {
+    const { scope, regexOwner } = invocation;
+    return SynchronizedRef.modifyEffect(regexOwner, (current) => {
       if (O.isNone(current))
-        return makeCitationNativeProcessOwner(limits, engineOperation, failure).pipe(
+        return Effect.succeed({
+          ensureOpen: invocation.lane.ensureOpen.pipe(Effect.mapError((error) => failure(error.reason))),
+          start: (command: import("effect/process/ChildProcess").Command) =>
+            invocation.lane.start("regex", command).pipe(
+              Effect.mapBoth({
+                onFailure: (error) => (error._tag === "CitationNativeLaneFailure" ? failure(error.reason) : error),
+                onSuccess: (record) => ({
+                  ...record,
+                  process: {
+                    retire: (retry: boolean) =>
+                      record.process
+                        .retire(retry)
+                        .pipe(
+                          Effect.mapError((error) =>
+                            error._tag === "CitationNativeLaneFailure" ? failure(error.reason) : error
+                          )
+                        ),
+                  },
+                  child: record.child.pipe(Exit.mapError((error) => failure(error.reason))),
+                }),
+              })
+            ),
+        }).pipe(
           Effect.provideService(Scope.Scope, scope),
           Effect.provideService(Clock.Clock, clock),
           Effect.provideService(ChildProcessSpawner, spawner),
@@ -95,8 +112,8 @@ export const installCitationRegexEvaluator = Effect.fn("Citation.installRegexEva
       return current.value.spawner === spawner && current.value.clock === clock
         ? Effect.succeed(Tuple.make(current.value.owner, current))
         : Effect.fail(failure("invalid-runtime"));
-    })
-  );
+    });
+  });
   const evaluateWith = (registry: Effect.Success<ReturnType<typeof makeRegistry>>) =>
     Effect.fn("Citation.evaluateRegexProcess")(
       (
@@ -109,7 +126,7 @@ export const installCitationRegexEvaluator = Effect.fn("Citation.installRegexEva
         Effect.flatMap(ownerFor, (owner) =>
           withCitationNativeProcess(
             owner,
-            acquireCitationNativeLease(admission, engineOperation, true, failure),
+            Effect.succeed({ release: Effect.void, quarantine: Effect.void }),
             () => failure("invalid-runtime"),
             Effect.fnUntraced(function* (operation) {
               const quota = yield* S.decodeUnknownEffect(CitationRegexWorkerJob.fields.maxMatches)(maximumMatches).pipe(

@@ -153,6 +153,24 @@ Lane explore/citation-engine-install-and-worker-reuse
 
 Reverse: Restore policy v1 and protocol v2.
 
+### Keep Diff and Xml preparation per request and retain Markup private queues, 2026-11-14
+
+B1 does not require hoisting Diff or Xml to engine construction. Their preparation and per-job diagnostics remain per request. Markup private semaphores and queue/deadline guards remain: the default HTML cleaner serves the closed standalone port, whose callers need that queue. Xml passes lane.start explicitly. Diff receives both the starter and text reservation explicitly and performs no Invocation or native-admission lookup. No installed-stage, tokenizer, evaluator or detach count is moved.
+
+Reverse: Hoist these objects only with an explicit replacement for their per-owner lifecycle and queue state.
+
+### Retain the regex identity adapter and move physical ownership into the lane, 2026-11-14
+
+regexOwner retains only the protocol-v2 start adapter and the evaluator spawner/Clock identity guard. It no longer creates a physical regex owner or claims native capacity. The lane owns the exact children. The existing per-job wrapper confirms retirement before returning a result, while its adapter has no independent lease. The lane and its physical owner are invocation-scoped; the lane unit and physical owner are lazy. The named standalone cleaner starter stays separate.
+
+Reverse: Replace the adapter with the protocol-v3 session in B2; restore per-job native leases only with a policy reversal.
+
+### Settle job bookkeeping on exact confirmed retirement, 2026-11-14
+
+The explicit native start result carries onRetired registration. The existing physical owner invokes it from its confirmed-retirement binding, after isRunning and child-Scope close. A late acknowledgement or owner-Scope reap therefore releases Markup private slots and clears Diff/Markup diagnostics even when the job fiber already failed. Registration after confirmation runs immediately. Notifications do not kill, acknowledge death themselves or return unconfirmed capacity. The native admission transaction-isolation combinator is shared with reentrant cleaner-yield coordination.
+
+Reverse: Remove the notification only if every owner-scope and late-retirement path settles the same private state.
+
 ### Pass native starters explicitly across closed cleaner boundaries, 2026-11-14
 
 Owner ruling: a native starter crosses a closed boundary as an explicit argument,
@@ -164,7 +182,11 @@ calls, retaining confirmed retirement and quarantine. The public cleaner port
 keeps its shape. This supersedes the earlier proposal to exempt engine HTML
 cleaning from lane accounting.
 
-## Required call-path facts (source inspection, no runtime claim)
+Owner ruling 2, recorded in the cleaner-yield decision, supersedes the earlier
+requirement that engine HTML cleaning use the lane starter directly. The closed
+port uses the standalone starter only after the lane yields its unit.
+
+## Historical call-path audit (at e607ca22cad, before B1 implementation)
 
 Paths below are relative to `packages/law-practice/`.
 
@@ -215,7 +237,7 @@ occupant. Host callback reentry and process use are opaque, not proved absent.
 Engine annotate does not call this cleaner pipeline; it has its own geometry/Xml
 path. Engine resolve does not call it either.
 
-## Second stop: exported cleaner port
+## Historical second stop: resolved by owner ruling 2
 
 The internal default assembly can be given an explicit-starter entry. That alone
 cannot satisfy the ruling for the general live engine: `SourceCleaning.ts:45`
@@ -243,11 +265,56 @@ amendment carrying starter authority. No such change is implemented here.
 
 Reverse: Replace the explicit starter route only through a new owner ruling with equivalent capacity proofs.
 
-### Stop explicit starter wiring at the exported host cleaner contract, 2026-11-14
+### Yield lane capacity across closed cleaner port calls, 2026-11-14
 
-Owner ruling item 5 applies. The general live engine captures the public CitationCleaner service at SourceCleaning.ts:45 and InputDocument.ts:143; CleanerPipeline.ts:236 calls its closed invoke. The service is exported at use-cases/src/server.ts:23, and its public work argument is exported at line 373. Neither carries a native starter. An internal default-assembly entry alone cannot bind an arbitrary host implementation without bypassing its semantics. Full paths, object identity and execution ordering are recorded in the explicit-starter decision. Stop before native implementation; accepted policy v2 commit remains intact. No runtime tests or process proofs were started for this source-inspection and documentation follow-up.
+Owner ruling 2 supersedes the second stop. CitationCleaner and CitationCleanerWork
+remain unchanged. The cleaner port is a separate boundary, like Recognizer: its
+native children use a named standalone starter and their own per-process leases.
+The default HTML cleaner passes that starter explicitly to MarkupWorker. Diff,
+regex and invocation-owned Xml use the invocation lane. Neither Diff nor Markup
+looks up an invocation, a lane or native admission.
 
-Reverse: Resume after the owner defines invocation-bound host cleaner installation or authorizes a public port amendment.
+Lane rule 1 is amended: one unit is held from the first native need until the
+invocation Scope closes, except while calling through the closed cleaner port.
+The pipeline wraps each invoke with lane.yieldTo, including nested cleaner plans.
+Yield confirms retirement of the current occupant, returns the unit, runs the
+port effect, and leaves the lane un-acquired. The next start acquires lazily.
+An unconfirmed retirement quarantines and prevents the port effect from running.
+There is no alternate spawn or graceful-exit path. A lane whose retirement was
+unconfirmed remains terminal even after late confirmation returns the unit; both
+start and yieldTo refuse further work in that invocation. The real-process proof
+checks this after acknowledgement as well as before it.
+
+NativeAdmission.ts uses concurrentOperations for the total active ceiling; the
+regex subset additionally checks concurrentRegexProcesses. Policy v2 requires
+that subset ceiling to be at least concurrentOperations (default 2/2; test 1/1).
+For admitted operations following this serial native-call contract, each holds
+at most one unit, in its lane or its cleaner call. Other admitted operations
+therefore cannot fill the final unit needed by this operation. The shared native
+admission still enforces its hard total ceiling across separate external callers;
+quarantine refuses native work rather than admitting a replacement.
+
+Normal built-in HTML cleaning precedes geometry/regex native work. Yield there
+has no held unit to return and performs no new admission or owner-open check.
+It preserves the port call's order and refusal. The reversed regex-then-HTML
+proof deliberately uses a direct-stage invocation because the built-in order
+does not exercise that transition. The snapshot and probe count cumulative
+successful unit acquisitions, so a later reacquisition is observable.
+
+Cleaner yields serialize reentrantly within one invocation using Effect's
+TxReentrantLock. This allows nested plans while preventing concurrent cleaner
+callbacks from taking two units. A start attempted during a cleaner yield fails
+closed. Lock acquisition/release reuse the native admission's transaction
+isolation combinator; the caller's port effect retains its original transaction
+Context. Real-process tests cover concurrent yields inside caller transactions,
+nested yields, and the rejected overlapping start.
+
+The four original lane proofs and the cleaner additions run against real Bun and
+Node children. New proof files also pass under a Node-parent Vitest runner using
+explicit Node platform services. Kill/retirement remains the existing physical
+owner's SIGKILL, isRunning re-check and child-Scope close before acknowledgement.
+
+Reverse: Restore request-long lane ownership only after replacing the cleaner boundary with an owner-approved explicit authority contract.
 
 <!-- beep:decisions:end -->
 

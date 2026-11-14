@@ -13,7 +13,11 @@ calls, retaining confirmed retirement and quarantine. The public cleaner port
 keeps its shape. This supersedes the earlier proposal to exempt engine HTML
 cleaning from lane accounting.
 
-## Required call-path facts (source inspection, no runtime claim)
+Owner ruling 2, recorded in the cleaner-yield decision, supersedes the earlier
+requirement that engine HTML cleaning use the lane starter directly. The closed
+port uses the standalone starter only after the lane yields its unit.
+
+## Historical call-path audit (at e607ca22cad, before B1 implementation)
 
 Paths below are relative to `packages/law-practice/`.
 
@@ -64,7 +68,7 @@ occupant. Host callback reentry and process use are opaque, not proved absent.
 Engine annotate does not call this cleaner pipeline; it has its own geometry/Xml
 path. Engine resolve does not call it either.
 
-## Second stop: exported cleaner port
+## Historical second stop: resolved by owner ruling 2
 
 The internal default assembly can be given an explicit-starter entry. That alone
 cannot satisfy the ruling for the general live engine: `SourceCleaning.ts:45`

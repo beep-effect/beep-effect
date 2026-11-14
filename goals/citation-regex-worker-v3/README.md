@@ -31,7 +31,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-B1 remains blocked after the explicit-starter ruling: the general live engine captures the exported closed CitationCleaner port, which carries no starter authority. The default assembly can use an internal entry, but the general host-supplied port needs a further contract ruling. The accepted limits-policy v2 step is committed; the lane is not implemented.
+B1 is locally verified and in review on `feat/citation-native-lane`. Policy v2,
+invocation lanes, the explicit standalone cleaner starter and cleaner-boundary
+yield are implemented. Both owner-ruling stops are resolved. The owner publishes
+after the predecessor lands and directs the base update; no PR exists for B1.
 
 ## Latest Evidence
 
