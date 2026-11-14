@@ -56,7 +56,7 @@ import {
   QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
   QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
 } from "../../Quality/Quality.schemas.ts";
-import { YeetCommandError } from "../Yeet.errors.ts";
+import { YeetCommandError, YeetHandlerErrorKind, yeetHandlerErrorKind } from "../Yeet.errors.ts";
 import {
   artifactDirForContext,
   runIdForContext,
@@ -941,6 +941,7 @@ const validatePublishCommitMessage = Effect.fn("Yeet.validatePublishCommitMessag
   return yield* YeetCommandError.make({
     message: "yeet publish requires --message with a conventional commit message for reviewed staged changes.",
     exitCode: 1,
+    handlerErrorKind: YeetHandlerErrorKind.Enum["publish-input"],
   });
 });
 
@@ -1938,6 +1939,7 @@ const assertNoUnresolvedReviewThreads = Effect.fn("Yeet.assertNoUnresolvedReview
     message: `Yeet merge readiness requires zero outstanding review threads; found ${outstanding} (${remote.unresolvedReviewThreadCount ?? 0} unresolved, ${remote.followUpThreadCount ?? 0} reviewer follow-up)${detail}`,
     command: "bun run beep yeet reply",
     exitCode: 1,
+    handlerErrorKind: YeetHandlerErrorKind.Enum["review-threads"],
   });
 });
 
@@ -2493,7 +2495,8 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
   extras: Ref.Ref<YeetVerdictExtras>,
   outcome: "success" | "failure",
   message: string,
-  artifacts: O.Option<YeetRunResult>
+  artifacts: O.Option<YeetRunResult>,
+  handlerErrorKind: O.Option<YeetHandlerErrorKind> = O.none()
 ): Effect.fn.Return<
   void,
   YeetCommandError,
@@ -2621,6 +2624,7 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
         mergeReady: extraState.mergeReady,
         stash: extraState.stash,
         failedStepId,
+        handlerErrorKind,
       }),
       ...(outcome === "failure" ? { failureKind: O.isSome(failedExecution) ? "step-exit" : "handler-error" } : {}),
     })
@@ -2982,7 +2986,8 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
             extras,
             "failure",
             error.message,
-            O.none()
+            O.none(),
+            yeetHandlerErrorKind(error)
           ).pipe(
             Effect.tap(() => Ref.set(terminalWritten, true)),
             Effect.uninterruptible,
