@@ -171,6 +171,12 @@ The explicit native start result carries onRetired registration. The existing ph
 
 Reverse: Remove the notification only if every owner-scope and late-retirement path settles the same private state.
 
+### Stop at regex admission moving inside the native job deadline, 2026-11-14
+
+Review round 1 fixes the two MAJOR findings independently. Audit 3(b)-(c) finds a binding-design conflict: base 0e2b4c42e6d RegexWorker.ts:112,119 claims its real native lease in preparation, before the regexDeadline at 129-143. Head RegexWorker.ts:126,136 supplies a no-op lease, and actual lane acquisition occurs at NativeLane.ts:201 from RegexWorker.ts:147, inside regexDeadline at 146-160. NativeAdmission.ts:159-190 still permits external cleaner/Recognizer contention and waits under queueDeadline. Under that contention the new regex timer can win first, changing the visible CitationSafetyLimitExceeded limit. No claim of identical refusal selection is justified. STOP at this site: the binding start-only lazy-acquisition contract cannot preserve the old pre-timer admission point. Proposed reshape: an explicit lane reserve operation, serialized and masked with start/yield transitions and registered request finalization, called at the existing preparation acquisition callback. It claims no second unit, does not spawn, and leaves OS spawn/startup/RPC under the original regexDeadline. Keep all existing queue, quarantine, deadline and retirement guards. Do not implement this contract expansion without an owner ruling. Diff retains the same stage timer; Xml and HTML retain their Markup stage timer. Cleaner yield retirement is newly inside enclosing cleaner/invocation timers and its existing cleanupDeadline; normal built-in order has no occupant at that point. The two review fixes and independent authority lint extension proceed with focused checks; B1 remains held on this audit conflict.
+
+Reverse: Authorize an explicit pre-timer lane reservation, or explicitly accept changed external-contention refusal ordering.
+
 ### Pass native starters explicitly across closed cleaner boundaries, 2026-11-14
 
 Owner ruling: a native starter crosses a closed boundary as an explicit argument,
@@ -301,13 +307,22 @@ proof deliberately uses a direct-stage invocation because the built-in order
 does not exercise that transition. The snapshot and probe count cumulative
 successful unit acquisitions, so a later reacquisition is observable.
 
-Cleaner yields serialize reentrantly within one invocation using Effect's
-TxReentrantLock. This allows nested plans while preventing concurrent cleaner
-callbacks from taking two units. A start attempted during a cleaner yield fails
-closed. Lock acquisition/release reuse the native admission's transaction
-isolation combinator; the caller's port effect retains its original transaction
-Context. Real-process tests cover concurrent yields inside caller transactions,
-nested yields, and the rejected overlapping start.
+Review round 1 corrects the initial fiber-reentrant lock implementation. No lock
+is held across the opaque cleaner effect. A one-permit Semaphore serializes only
+entry and exit against lane start/handover. On the depth 0 -> 1 transition,
+confirmed retirement and unit return finish before incrementing depth or running
+the effect. Other entrants cannot pass that transition until it finishes. Each
+successful entry increments logical depth; a masked finalizer decrements it on
+every exit. A start during any yield still fails closed. Unconfirmed retirement
+leaves depth unchanged, quarantines, and never runs the effect.
+
+This preserves forked and concurrent work.nested plans from any fiber. Independent
+host cleaner calls may themselves request multiple standalone children; the
+shared admission still bounds their total and applies its original queue policy.
+The one-unit-per-operation counting argument above applies to the serial built-in
+call path, not arbitrary host parallelism. Tests explicitly exercise concurrent
+yields with two real children under the 2/2 policy, without promising serialization
+of opaque host code. No transaction is held or introduced around that code.
 
 The four original lane proofs and the cleaner additions run against real Bun and
 Node children. New proof files also pass under a Node-parent Vitest runner using

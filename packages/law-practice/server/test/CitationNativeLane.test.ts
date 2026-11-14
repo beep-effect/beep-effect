@@ -88,7 +88,7 @@ it.layer(process.versions.bun === undefined ? citationNativeNodeTestPlatform : c
         expect(released).toMatchObject({ active: 0, queued: 0, quarantined: 0 });
       })
     );
-    it.effect(`serializes and nests ${kind} cleaner yields without taking a lane unit`, () =>
+    it.effect(`supports concurrent and nested ${kind} cleaner yields without taking a lane unit`, () =>
       Effect.gen(function* () {
         const base = (yield* defaultCitationEnginePolicy).limits;
         const limits = { ...base, concurrentOperations: 2, concurrentRegexProcesses: 2 };
@@ -103,8 +103,16 @@ it.layer(process.versions.bun === undefined ? citationNativeNodeTestPlatform : c
           Effect.provideService(ChildProcessSpawner, observed.spawner)
         );
         const cmd = yield* command;
-        const child = withCitationNativeStart(standalone.start, "markup", cmd, () => Effect.sleep(Duration.millis(5)));
-        yield* Effect.all([lane.yieldTo(child).pipe(Effect.tx), lane.yieldTo(child).pipe(Effect.tx)], {
+        const both = yield* Deferred.make<void>();
+        let entered = 0;
+        const child = withCitationNativeStart(standalone.start, "markup", cmd, () =>
+          Effect.gen(function* () {
+            entered++;
+            if (entered === 2) yield* Deferred.succeed(both, undefined);
+            if (entered <= 2) yield* Deferred.await(both);
+          })
+        );
+        yield* Effect.all([lane.yieldTo(child), lane.yieldTo(child)], {
           concurrency: 2,
         });
         yield* lane.yieldTo(lane.yieldTo(child));
@@ -115,9 +123,65 @@ it.layer(process.versions.bun === undefined ? citationNativeNodeTestPlatform : c
         const counts = yield* observed.snapshot;
         expect(counts).toEqual({ spawned: 3, confirmed: 3 });
         const maximum = yield* observed.maximumAlive;
-        expect(maximum).toBe(1);
+        expect(maximum).toBe(2);
         const state = yield* admission.snapshot;
         expect(state.active).toBe(0);
+      })
+    );
+    it.effect(`waits for ${kind} yield retirement and restores depth after interruption`, () =>
+      Effect.gen(function* () {
+        const base = (yield* defaultCitationEnginePolicy).limits;
+        const limits = { ...base, cleanupDeadline: Duration.seconds(5) };
+        const admission = yield* makeCitationNativeProcessAdmission(limits);
+        const killed = yield* Deferred.make<void>();
+        const acknowledge = yield* Deferred.make<void>();
+        const observed = yield* makeCitationNativeAcknowledgementSpawner(
+          Deferred.succeed(killed, undefined).pipe(Effect.andThen(Deferred.await(acknowledge)))
+        );
+        const lane = yield* makeCitationNativeLane(limits, "extract").pipe(
+          Effect.provideService(CitationNativeProcessAdmission, admission),
+          Effect.provideService(ChildProcessSpawner, observed.spawner)
+        );
+        const cmd = yield* command;
+        const record = yield* lane.start("regex", cmd);
+        yield* record.child;
+        const entered = yield* Deferred.make<void>();
+        const bothEntered = yield* Deferred.make<void>();
+        const attempted = yield* Deferred.make<void>();
+        let entries = 0;
+        const cleaner = lane.yieldTo(
+          Effect.gen(function* () {
+            entries++;
+            yield* Deferred.succeed(entered, undefined);
+            if (entries === 2) yield* Deferred.succeed(bothEntered, undefined);
+            return yield* Effect.never;
+          })
+        );
+        const first = yield* cleaner.pipe(Effect.forkChild);
+        yield* Deferred.await(killed);
+        const second = yield* Deferred.succeed(attempted, undefined).pipe(Effect.andThen(cleaner), Effect.forkChild);
+        yield* Deferred.await(attempted);
+        yield* Effect.yieldNow;
+        const premature = yield* Deferred.isDone(entered);
+        expect(premature).toBe(false);
+        const held = yield* admission.snapshot;
+        expect(held.active).toBe(1);
+        yield* Deferred.succeed(acknowledge, undefined);
+        yield* Deferred.await(bothEntered);
+        const returned = yield* admission.snapshot;
+        expect(returned.active).toBe(0);
+        yield* Fiber.interrupt(first);
+        yield* Fiber.interrupt(second);
+        const next = yield* lane.start("regex", cmd);
+        yield* next.child;
+        yield* next.process.retire(false);
+        yield* lane.yieldTo(Effect.void);
+        const receipt = yield* lane.snapshot;
+        expect(receipt).toMatchObject({ started: 2, confirmed: 2, unitsAcquired: 2, acquired: false });
+        const counts = yield* observed.snapshot;
+        expect(counts).toEqual({ spawned: 2, confirmed: 2 });
+        const final = yield* admission.snapshot;
+        expect(final).toMatchObject({ active: 0, quarantined: 0, queued: 0 });
       })
     );
     it.effect(`releases the unused ${kind} unit when quarantine appears after acquisition`, () =>

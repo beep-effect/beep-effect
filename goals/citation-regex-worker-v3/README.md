@@ -31,14 +31,16 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-B1 is locally verified and in review on `feat/citation-native-lane`. Policy v2,
-invocation lanes, the explicit standalone cleaner starter and cleaner-boundary
-yield are implemented. Both owner-ruling stops are resolved. The owner publishes
-after the predecessor lands and directs the base update; no PR exists for B1.
+B1 review round 1 fixes are locally verified on `feat/citation-native-lane`.
+The two MAJOR findings and the independent authority lint gap are fixed. B1 is
+in progress, held on the audit's regex admission/deadline conflict: preserving
+the base refusal ordering needs an owner ruling on pre-timer lane reservation.
+The previous two cleaner-boundary stops remain resolved. No B1 PR exists; the
+owner controls publication and the later base update.
 
 ## Latest Evidence
 
-[B1 partial evidence and design stop](history/evidence/2026-11-14-b1-native-lane.md).
+[Review round 1 fixes, proofs and admission audit](history/evidence/2026-11-14-b1-review-round-1.md).
 
 ## Notes
 

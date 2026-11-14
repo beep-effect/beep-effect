@@ -134,17 +134,21 @@ export const makeCitationMarkupWorker = Effect.fn("Citation.makeMarkupWorker")(f
             const call = yield* prepare;
             const started = yield* start("markup", citationNativeProcessCommand(runtime, argument)).pipe(
               Effect.mapError((error) => (error._tag === "CitationNativeLaneFailure" ? failure(error.reason) : error)),
+              Effect.tap(
+                Effect.fnUntraced(function* (record) {
+                  lease = O.some(record.process);
+                  yield* Ref.update(records, A.append(record.process));
+                  yield* record.onRetired(
+                    Effect.gen(function* () {
+                      acknowledged = true;
+                      yield* forget(record.process);
+                      yield* Ref.update(quarantined, (value) => (uncertain ? value - 1 : value));
+                      yield* release;
+                    })
+                  );
+                })
+              ),
               Effect.uninterruptible
-            );
-            lease = O.some(started.process);
-            yield* Ref.update(records, A.append(started.process));
-            yield* started.onRetired(
-              Effect.gen(function* () {
-                acknowledged = true;
-                yield* forget(started.process);
-                yield* Ref.update(quarantined, (value) => (uncertain ? value - 1 : value));
-                yield* release;
-              })
             );
             const resource = yield* started.child.pipe(Effect.mapError((error) => failure(error.reason)));
             return yield* call(resource);

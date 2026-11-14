@@ -6,11 +6,13 @@ pattern citation_authority() {
     `CitationTextBudget`,
     `CitationOperationAdmission`,
     `CitationInvocation`,
+    `CitationNativeLane`,
     `$_.$name` where {
       $name <: or {
         `CitationTextBudget`,
         `CitationOperationAdmission`,
-        `CitationInvocation`
+        `CitationInvocation`,
+        `CitationNativeLane`
       }
     }
   }

@@ -13,12 +13,10 @@ import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Semaphore from "effect/Semaphore";
-import * as TxReentrantLock from "effect/TxReentrantLock";
 import {
   acquireCitationNativeLease,
   CitationNativeProcessAdmission,
   captureCitationNativeAdmission,
-  outsideCallerTransaction,
 } from "./NativeAdmission.ts";
 import { CitationNativeProcessFailureReason, makeCitationNativeProcessOwner } from "./NativeProcess.ts";
 import type {
@@ -134,7 +132,6 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
     )
   );
   const lock = yield* Semaphore.make(1);
-  const cleanerLock = yield* TxReentrantLock.make();
   let permit = O.none<CitationNativeProcessLease>();
   let occupant = O.none<CitationOwnedNativeProcess<CitationNativeLaneFailure>>();
   let started = 0;
@@ -264,30 +261,24 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
     yieldTo: Effect.fn("Citation.yieldNativeLane")(function* (body) {
       return yield* Effect.uninterruptibleMask(
         Effect.fnUntraced(function* (restore) {
-          yield* restore(TxReentrantLock.acquireWrite(cleanerLock).pipe(outsideCallerTransaction));
-          const run = Effect.uninterruptibleMask(
-            Effect.fnUntraced(function* (resume) {
-              yield* lock.withPermit(
-                Effect.gen(function* () {
-                  if (closed) return yield* CitationNativeLaneFailure.make({ reason: "closed" });
-                  if (poisoned) return yield* CitationNativeLaneFailure.make({ reason: "quarantined" });
-                  yield* release;
-                  yieldDepth++;
-                })
-              );
-              return yield* resume(body).pipe(
-                Effect.ensuring(
-                  lock.withPermit(
-                    Effect.sync(() => {
-                      yieldDepth--;
-                    })
-                  )
-                )
-              );
+          // Serialize only entry/exit with start. Cleaner work can fork nested
+          // plans; its logical ownership is the depth, never a fiber-held lock.
+          yield* lock.withPermit(
+            Effect.gen(function* () {
+              if (closed) return yield* CitationNativeLaneFailure.make({ reason: "closed" });
+              if (poisoned) return yield* CitationNativeLaneFailure.make({ reason: "quarantined" });
+              if (yieldDepth === 0) yield* release;
+              yieldDepth++;
             })
           );
-          return yield* restore(run).pipe(
-            Effect.ensuring(TxReentrantLock.releaseWrite(cleanerLock).pipe(outsideCallerTransaction, Effect.asVoid))
+          return yield* restore(body).pipe(
+            Effect.ensuring(
+              lock.withPermit(
+                Effect.sync(() => {
+                  yieldDepth--;
+                })
+              )
+            )
           );
         })
       );

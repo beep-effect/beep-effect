@@ -38,13 +38,22 @@ proof deliberately uses a direct-stage invocation because the built-in order
 does not exercise that transition. The snapshot and probe count cumulative
 successful unit acquisitions, so a later reacquisition is observable.
 
-Cleaner yields serialize reentrantly within one invocation using Effect's
-TxReentrantLock. This allows nested plans while preventing concurrent cleaner
-callbacks from taking two units. A start attempted during a cleaner yield fails
-closed. Lock acquisition/release reuse the native admission's transaction
-isolation combinator; the caller's port effect retains its original transaction
-Context. Real-process tests cover concurrent yields inside caller transactions,
-nested yields, and the rejected overlapping start.
+Review round 1 corrects the initial fiber-reentrant lock implementation. No lock
+is held across the opaque cleaner effect. A one-permit Semaphore serializes only
+entry and exit against lane start/handover. On the depth 0 -> 1 transition,
+confirmed retirement and unit return finish before incrementing depth or running
+the effect. Other entrants cannot pass that transition until it finishes. Each
+successful entry increments logical depth; a masked finalizer decrements it on
+every exit. A start during any yield still fails closed. Unconfirmed retirement
+leaves depth unchanged, quarantines, and never runs the effect.
+
+This preserves forked and concurrent work.nested plans from any fiber. Independent
+host cleaner calls may themselves request multiple standalone children; the
+shared admission still bounds their total and applies its original queue policy.
+The one-unit-per-operation counting argument above applies to the serial built-in
+call path, not arbitrary host parallelism. Tests explicitly exercise concurrent
+yields with two real children under the 2/2 policy, without promising serialization
+of opaque host code. No transaction is held or introduced around that code.
 
 The four original lane proofs and the cleaner additions run against real Bun and
 Node children. New proof files also pass under a Node-parent Vitest runner using

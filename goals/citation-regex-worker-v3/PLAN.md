@@ -20,7 +20,7 @@ Each slice is one PR and runs the phases above. They land in order.
 
 | Slice | Status | Content | Count that must move |
 | --- | --- | --- | --- |
-| B1 | in review | `CitationNativeLane`; regex v2, Diff and Markup start through it; limits cross-field check; policy v2. | none; adds the markup interleave proofs |
+| B1 | in progress | `CitationNativeLane`; regex v2, Diff and Markup start through it; limits cross-field check; policy v2. | none; adds the markup interleave proofs |
 | B2 | pending | Protocol v3 messages, looping worker, `CitationRegexSession`, sleep-counting clock, the real-process proofs; every regex call site switches. | regex processes 291 to 10 |
 | B3 | pending | Delete v2; rewrite spawn-count assertions; re-record shard timings; append isolation evidence. | none |
 
@@ -68,6 +68,12 @@ git diff --check -- goals/citation-regex-worker-v3
 
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug citation-regex-worker-v3`; add a `kind: checkpoint` file there, never edit this block._
+
+### B1 review fixes verified; held on regex admission deadline ordering, 2026-11-14
+
+Round 1 fixes the masked Markup ownership transfer and replaces the fiber-reentrant cleaner lock with short Semaphore transitions plus logical yield depth. Forked/concurrent nested plans and real spawn-return interruption proofs pass. Both parent runners pass the four NativeLane proof files; focused worker, pipeline, invocation and engine files pass independently. One fresh CanonicalFullSpan run passes 12/12 in 57.22 seconds at launch load 37.51 / 25.35 / 21.73; ten calls retain 291 regex children, zero per-call installs/detaches/tokenizer/evaluator builds, ten physical lane owners and ten lane acquisitions; construction remains 16/1/1/26 installs/detach/tokenizer/evaluators with one physical owner and zero children or lane claims. Quick server/use-cases/lint-rules verifications, source/test typechecks, both requested laws, root Oxlint, Biome, docgen, Effect Vitest and Fallow audit vs origin/main pass. The request-authority lint now covers CitationNativeLane with 24 new fixtures. B1 returns to in progress, held on the separate audit finding: real regex native admission moved inside regexDeadline, so external contention can change the selected refusal. No contract expansion or weakening guard is implemented. Evidence: history/evidence/2026-11-14-b1-review-round-1.md. No push, PR, rebase or stash operation.
+
+Reverse: Return B1 to review after an owner ruling resolves pre-timer lane reservation and the targeted refusal proof passes.
 
 ### B1 locally verified with policy v2 and cleaner-boundary yield, 2026-11-14
 
