@@ -1,5 +1,5 @@
 import * as Test from "@alchemy.run/test/Vitest";
-import { AiMetricsHostConfig, aiMetricsConfigEnvKey } from "@beep/infra-hosts/AiMetricsConfig";
+import { AiMetricsHostConfig, aiMetricsConfigEnvKey, phoenixDataVolume } from "@beep/infra-hosts/AiMetricsConfig";
 import {
   aiMetricsStackName,
   aiMetricsStackProgram,
@@ -237,7 +237,7 @@ describe("AI metrics configuration", () => {
     Effect.gen(function* () {
       const config = yield* S.decodeEffect(AiMetricsHostConfig)(configBody);
       expect(config.phoenix.containerName).toBe("beep-ai-metrics-phoenix");
-      expect(config.phoenix.dataVolume).toBe(dataVolume);
+      expect(phoenixDataVolume(config)).toBe(dataVolume);
       expect(config.tailnet.httpsPort).toBe(8447);
       expect(config.legacyCompose.unitName).toBe("ai-metrics-phoenix.service");
       expect(renderRetireComposeCommand(config)).toContain("com.docker.compose.project");

@@ -29,7 +29,7 @@ import * as Alchemy from "alchemy";
 import * as Command from "alchemy/Command";
 import * as Output from "alchemy/Output";
 import * as Effect from "effect/Effect";
-import { AiMetricsHostConfig, aiMetricsConfigEnvKey } from "./AiMetricsConfig.ts";
+import { AiMetricsHostConfig, aiMetricsConfigEnvKey, phoenixDataVolume } from "./AiMetricsConfig.ts";
 import { loadHostConfigFile } from "./HostConfigFile.ts";
 import { HostsStageKind, stageKind, WorkstationOnly } from "./HostsStage.ts";
 import { overSsh, shellQuote } from "./internal/Shell.ts";
@@ -65,6 +65,8 @@ const userSystemdEnvironment = [
 
 const composeProjectTemplate = '{{ with index .Config.Labels "com.docker.compose.project" }}{{ . }}{{ end }}';
 
+const volumeProjectTemplate = '{{ with index .Labels "com.docker.compose.project" }}{{ . }}{{ end }}';
+
 const healthStatusTemplate = "{{ if .State.Health }}{{ .State.Health.Status }}{{ else }}none{{ end }}";
 
 const tailnetPortStatePath = (config: AiMetricsHostConfig): string =>
@@ -99,7 +101,9 @@ export const phoenixPublicUrl = (config: AiMetricsHostConfig): string =>
 
 /**
  * Preflight on the host: the tools every later step needs, a reachable Docker
- * engine and tailnet and, for `prod`, the existing Phoenix data volume.
+ * engine and tailnet; for `prod`, that the data volume exists and carries the
+ * configured Compose project; for a rehearsal, that its loopback port is free
+ * or already published by this stage's own container.
  *
  * **Example** (Render the prod preflight)
  * ```ts
@@ -114,7 +118,7 @@ export const phoenixPublicUrl = (config: AiMetricsHostConfig): string =>
  *   legacyCompose: { configRoot: "/srv/ai-metrics" },
  *   secretRefs: { hashSalt: "op://v/i/salt", rawArchiveKey: "op://v/i/key" }
  * })
- * console.log(renderPreflightCommand({ config, kind: "prod" }).startsWith("ssh ")) // true
+ * console.log(renderPreflightCommand({ config, containerName: "beep-ai-metrics-phoenix", kind: "prod" }).startsWith("ssh ")) // true
  * ```
  *
  * @returns The rendered command.
@@ -123,21 +127,36 @@ export const phoenixPublicUrl = (config: AiMetricsHostConfig): string =>
  */
 export const renderPreflightCommand = ({
   config,
+  containerName,
   kind,
 }: {
   readonly config: AiMetricsHostConfig;
+  readonly containerName: string;
   readonly kind: HostsStageKind;
 }): string =>
   overSsh({
     destination: config.sshDestination,
     lines: [
       "set -euo pipefail",
-      'for tool in docker curl systemctl tailscale; do command -v "${tool}" >/dev/null || { printf \'missing %s\\n\' "${tool}" >&2; exit 1; }; done',
+      'for tool in docker curl systemctl tailscale ss; do command -v "${tool}" >/dev/null || { printf \'missing %s\\n\' "${tool}" >&2; exit 1; }; done',
       "docker version --format '{{ .Server.Version }}' >/dev/null",
       "tailscale status --json >/dev/null",
       ...HostsStageKind.match(kind, {
-        prod: () => [`docker volume inspect ${shellQuote(config.phoenix.dataVolume)} >/dev/null`],
-        rehearsal: () => [],
+        prod: () => [
+          `volume=${shellQuote(phoenixDataVolume(config))}`,
+          `expected_project=${shellQuote(config.legacyCompose.composeProject)}`,
+          `volume_project="$(docker volume inspect -f ${shellQuote(volumeProjectTemplate)} "\${volume}")"`,
+          '[ "${volume_project}" = "${expected_project}" ] || { printf \'data volume %s carries Compose project "%s", expected "%s"; refusing\\n\' "${volume}" "${volume_project}" "${expected_project}" >&2; exit 1; }',
+        ],
+        // One rehearsal at a time per port on the engine: the port must be free
+        // or already published by this stage's own container.
+        rehearsal: () => [
+          `port=${shellQuote(String(config.phoenix.rehearsalPort))}`,
+          `own=${shellQuote(containerName)}`,
+          'holder="$(docker ps --filter "publish=${port}" --format \'{{ .Names }}\' | head -n 1)"',
+          'if [ -n "${holder}" ] && [ "${holder}" != "${own}" ]; then printf \'rehearsal port %s is held by container %s; one rehearsal at a time per port, set phoenix.rehearsalPort to run two\\n\' "${port}" "${holder}" >&2; exit 1; fi',
+          'if [ -z "${holder}" ] && [ -n "$(ss -ltnH "sport = :${port}")" ]; then printf \'rehearsal port %s is held by a process outside Docker; refusing\\n\' "${port}" >&2; exit 1; fi',
+        ],
       }),
       "printf 'AI metrics preflight passed\\n'",
     ],
@@ -186,13 +205,12 @@ export const renderRetireComposeCommand = (config: AiMetricsHostConfig): string 
       '  mv -f -- "${unit_path}" "${archive_dir}/${unit}"',
       "  systemctl --user daemon-reload",
       "fi",
-      `project="$(docker container inspect -f ${shellQuote(composeProjectTemplate)} ${shellQuote(
-        config.phoenix.containerName
-      )} 2>/dev/null || true)"`,
-      `[ -z "\${project}" ] || { printf 'Compose container %s (project %s) is still present; refusing to continue\\n' ${shellQuote(
-        config.phoenix.containerName
-      )} "\${project}" >&2; exit 1; }`,
-      `docker volume inspect ${shellQuote(config.phoenix.dataVolume)} >/dev/null`,
+      `container=${shellQuote(config.phoenix.containerName)}`,
+      `expected_project=${shellQuote(config.legacyCompose.composeProject)}`,
+      `found_project="$(docker container inspect -f ${shellQuote(composeProjectTemplate)} "\${container}" 2>/dev/null || true)"`,
+      'if [ "${found_project}" = "${expected_project}" ]; then printf \'Compose container %s of project "%s" survived compose down; refusing\\n\' "${container}" "${found_project}" >&2; exit 1; fi',
+      'if [ -n "${found_project}" ]; then printf \'container %s belongs to Compose project "%s", expected "%s"; refusing\\n\' "${container}" "${found_project}" "${expected_project}" >&2; exit 1; fi',
+      `docker volume inspect ${shellQuote(phoenixDataVolume(config))} >/dev/null`,
       "printf 'Compose deployment retired; data volume kept\\n'",
     ],
   });
@@ -297,6 +315,10 @@ export const renderHealthCommand = ({
       "  fi",
       "  sleep 5",
       "done",
+      // The port must be published by this stage's own container, so the curl
+      // below cannot be answered by another stage's Phoenix.
+      `published=${shellQuote(`127.0.0.1:${hostPort}`)}`,
+      `docker port "\${container}" ${shellQuote(`${config.phoenix.port}/tcp`)} | grep -Fqx "\${published}" || { printf 'port %s is not published by container %s; refusing to trust its answer\\n' "\${published}" "\${container}" >&2; exit 1; }`,
       `curl -fsS ${shellQuote(`http://127.0.0.1:${hostPort}`)} >/dev/null`,
       ...HostsStageKind.match(kind, {
         prod: () => [
@@ -406,7 +428,11 @@ const deployProd = Effect.fn("AiMetricsStack.deployProd")(function* (config: AiM
     description: "beep AI metrics host (managed by @beep/infra-hosts)",
   });
   const preflight = yield* Command.Exec("Preflight", {
-    command: renderPreflightCommand({ config, kind: HostsStageKind.Enum.prod }),
+    command: renderPreflightCommand({
+      config,
+      containerName: config.phoenix.containerName,
+      kind: HostsStageKind.Enum.prod,
+    }),
     shell,
     memo: commandOnlyMemo,
   });
@@ -421,7 +447,7 @@ const deployProd = Effect.fn("AiMetricsStack.deployProd")(function* (config: AiM
     name: config.phoenix.networkName,
     driver: "bridge",
   });
-  const data = Docker.Volume.lookup({ name: config.phoenix.dataVolume, context: context.name });
+  const data = Docker.Volume.lookup({ name: phoenixDataVolume(config), context: context.name });
   const phoenix = yield* Docker.Container("Phoenix", {
     context,
     name: config.phoenix.containerName,
@@ -467,7 +493,7 @@ const deployRehearsal = Effect.fn("AiMetricsStack.deployRehearsal")(function* (
     description: `beep AI metrics rehearsal stage ${stage} (managed by @beep/infra-hosts)`,
   });
   const preflight = yield* Command.Exec("Preflight", {
-    command: renderPreflightCommand({ config, kind: HostsStageKind.Enum.rehearsal }),
+    command: renderPreflightCommand({ config, containerName, kind: HostsStageKind.Enum.rehearsal }),
     shell,
     memo: commandOnlyMemo,
   });
@@ -476,7 +502,7 @@ const deployRehearsal = Effect.fn("AiMetricsStack.deployRehearsal")(function* (
     name: suffix(config.phoenix.networkName),
     driver: "bridge",
   });
-  const data = yield* Docker.Volume("RehearsalData", { context, name: suffix(config.phoenix.dataVolume) });
+  const data = yield* Docker.Volume("RehearsalData", { context, name: suffix(phoenixDataVolume(config)) });
   const phoenix = yield* Docker.Container("Phoenix", {
     context,
     name: containerName,

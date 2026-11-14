@@ -17,6 +17,7 @@
 import { $InfraHostsId } from "@beep/identity/packages";
 import { OpenclawSecretReference } from "@beep/openclaw";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const $I = $InfraHostsId.create("AiMetricsConfig");
@@ -128,7 +129,7 @@ export const PinnedImage = S.NonEmptyString.check(
  *
  * const phoenix = PhoenixContainerConfig.make({ image: "arizephoenix/phoenix:15.5.0" })
  * console.log(phoenix.containerName) // "beep-ai-metrics-phoenix"
- * console.log(phoenix.dataVolume) // "beep-ai-metrics-dankserver_phoenix_data"
+ * console.log(phoenix.rehearsalPort) // 16006
  * ```
  *
  * @category models
@@ -145,12 +146,9 @@ export class PhoenixContainerConfig extends S.Opaque<PhoenixContainerConfig, { r
       S.withConstructorDefault(Effect.succeed("beep-ai-metrics")),
       S.withDecodingDefaultTypeKey(Effect.succeed("beep-ai-metrics"))
     ).annotateKey({ description: "Bridge network the stack owns for Phoenix and later sibling services." }),
-    dataVolume: DockerName.pipe(
-      S.withConstructorDefault(Effect.succeed("beep-ai-metrics-dankserver_phoenix_data")),
-      S.withDecodingDefaultTypeKey(Effect.succeed("beep-ai-metrics-dankserver_phoenix_data"))
-    ).annotateKey({
+    dataVolume: S.OptionFromOptionalKey(DockerName).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description:
-        "Existing named volume holding Phoenix data (Compose project `beep-ai-metrics-dankserver`, volume `phoenix_data`). Looked up, never created or removed.",
+        "Existing named volume holding Phoenix data, looked up and never created or removed. Unset, it is Compose's name for the `phoenix_data` volume of `legacyCompose.composeProject`: `<composeProject>_phoenix_data`.",
     }),
     dataDir: AbsolutePosixPath.pipe(
       S.withConstructorDefault(Effect.succeed("/data")),
@@ -163,7 +161,10 @@ export class PhoenixContainerConfig extends S.Opaque<PhoenixContainerConfig, { r
     rehearsalPort: TcpPort.pipe(
       S.withConstructorDefault(Effect.succeed(16006)),
       S.withDecodingDefaultTypeKey(Effect.succeed(16006))
-    ).annotateKey({ description: "Host loopback port a rehearsal stage publishes its throwaway Phoenix on." }),
+    ).annotateKey({
+      description:
+        "Host loopback port a rehearsal stage publishes its throwaway Phoenix on. One rehearsal at a time per port: set a different port to run two.",
+    }),
   }).pipe(
     $I.annoteSchema("PhoenixContainerConfig", {
       description: "The Phoenix container, its network and its data volume.",
@@ -221,7 +222,10 @@ export class LegacyComposeConfig extends S.Opaque<LegacyComposeConfig, { readonl
     composeProject: DockerName.pipe(
       S.withConstructorDefault(Effect.succeed("beep-ai-metrics-dankserver")),
       S.withDecodingDefaultTypeKey(Effect.succeed("beep-ai-metrics-dankserver"))
-    ).annotateKey({ description: "Compose project name the legacy container and volume carry." }),
+    ).annotateKey({
+      description:
+        "Compose project the legacy container and data volume carry. RetireCompose compares the container's `com.docker.compose.project` label with it, and the data volume name defaults from it.",
+    }),
   }).pipe(
     $I.annoteSchema("LegacyComposeConfig", { description: "The Compose and systemd deployment retired at cutover." })
   )
@@ -300,3 +304,31 @@ export class AiMetricsHostConfig extends S.Opaque<AiMetricsHostConfig, { readonl
     secretRefs: AiMetricsSecretRefs,
   }).pipe($I.annoteSchema("AiMetricsHostConfig", { description: "Typed configuration for the AI metrics host stack." }))
 ) {}
+
+/**
+ * The Phoenix data volume the stack looks up: `phoenix.dataVolume` when the
+ * config file sets it, otherwise Compose's name for the `phoenix_data` volume
+ * of `legacyCompose.composeProject`.
+ *
+ * **Example** (Derive the default volume name)
+ * ```ts
+ * import { AiMetricsHostConfig, phoenixDataVolume } from "@beep/infra-hosts/AiMetricsConfig"
+ * import * as S from "effect/Schema"
+ *
+ * const config = S.decodeUnknownSync(AiMetricsHostConfig)({
+ *   sshDestination: "metrics-host",
+ *   phoenix: { image: "arizephoenix/phoenix:15.5.0" },
+ *   tailnet: { fqdn: "metrics-host.example.ts.net" },
+ *   legacyCompose: { configRoot: "/srv/ai-metrics" },
+ *   secretRefs: { hashSalt: "op://v/i/salt", rawArchiveKey: "op://v/i/key" }
+ * })
+ * console.log(phoenixDataVolume(config)) // "beep-ai-metrics-dankserver_phoenix_data"
+ * ```
+ *
+ * @param config - The decoded AI metrics host configuration.
+ * @returns The data volume name.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const phoenixDataVolume = (config: AiMetricsHostConfig): string =>
+  O.getOrElse(config.phoenix.dataVolume, () => `${config.legacyCompose.composeProject}_phoenix_data`);

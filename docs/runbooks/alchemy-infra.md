@@ -236,7 +236,10 @@ Two stacks, no deploy workflow (D21, SPEC Exception Ledger):
 `ConfigError` when `CI` is true, and the S3 stage lease stops a second
 concurrent deploy. Every other stage is a rehearsal that touches no
 production data (AI metrics: a throwaway Phoenix on stage-suffixed names and
-loopback port 16006; OpenClaw: renders the generation and runs nothing).
+loopback port `phoenix.rehearsalPort`, 16006 by default; OpenClaw: renders the
+generation and runs nothing). One AI metrics rehearsal at a time per port:
+Preflight refuses a port another container or process holds and names it; set
+`phoenix.rehearsalPort` in the config file to run two.
 Design and resource graphs: the package README and the 2026-11-13 decision
 files in `goals/infra-alchemy-rebuild/decisions/`.
 
@@ -252,8 +255,10 @@ rejects anything else before a resource is read.
   config pins `arizephoenix/phoenix:15.5.0`), `tailnet.fqdn`,
   `legacyCompose.configRoot` (the directory holding today's Compose file and the
   Tailscale port state file), `secretRefs.hashSalt` and
-  `secretRefs.rawArchiveKey`. Container, network, volume, unit and port fields
-  default to the Compose deployment's values.
+  `secretRefs.rawArchiveKey`. Container, network, unit and port fields default
+  to the Compose deployment's values; the data volume defaults to
+  `<legacyCompose.composeProject>_phoenix_data`, today
+  `beep-ai-metrics-dankserver_phoenix_data`.
 - OpenClaw (`OpenClawStackArgs`, encoded): `identity` (home, hostname,
   machine id, runtime dir, uid, username of the workstation), `deployment`
   (hosted and local provider, Telegram token reference), optional `backup`

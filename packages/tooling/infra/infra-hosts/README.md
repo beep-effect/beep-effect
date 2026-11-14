@@ -66,8 +66,17 @@ volume; rollback is `alchemy destroy` followed by the exported
 `rollbackToCompose` command, in that order.
 
 A rehearsal stage deploys a throwaway Phoenix on stage-suffixed context,
-network, volume and container names, published on loopback port 16006, with no
-Compose retirement and no Tailscale Serve.
+network, volume and container names, published on loopback port
+`phoenix.rehearsalPort` (16006 by default), with no Compose retirement and no
+Tailscale Serve. One rehearsal at a time per port: Preflight refuses a port that
+another container or process holds and names the holder, and Health checks that
+the port it probes is published by this stage's own container. Set
+`phoenix.rehearsalPort` to run two.
+
+The data volume name defaults from `legacyCompose.composeProject`
+(`<composeProject>_phoenix_data`, Compose's own naming); prod Preflight refuses a
+volume that carries another Compose project, and RetireCompose refuses a
+surviving container, naming the expected and the found project.
 
 ## OpenClaw
 
