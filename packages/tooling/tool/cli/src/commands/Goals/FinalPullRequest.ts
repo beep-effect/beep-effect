@@ -121,9 +121,10 @@ const makeGoalFinalPullRequestResolver: Effect.Effect<
   never,
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > = Effect.map(Effect.context<ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom>(), (context) => {
-  // KEEP (D-22): the branch's pull request in any state; the kit only has
-  // `openPullRequestForBranch`, and `PullRequest.list` filters one state per read.
   const forBranch = (root: string) =>
+    // KEEP (D-22): the branch's pull request in any state; the kit only has `openPullRequestForBranch`, and
+    // `PullRequest.list` filters one state per read.
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-22), reason above
     ghOutput({
       args: ["pr", "view", "--json", GH_PR_VIEW_FIELDS],
       cwd: root,

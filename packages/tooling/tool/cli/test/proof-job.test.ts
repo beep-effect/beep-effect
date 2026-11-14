@@ -2179,7 +2179,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
               originalArgv: [],
               turbo: Job.TurboPlanSnapshot.make({ graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }),
             });
-            // Own double: the /usr/bin/time spawn writes the RSS file on disk; ScriptedSpawner scripts are synchronous.
+            // Own double: the /usr/bin/time spawn writes the RSS file on disk; ScriptedSpawner scripts are
+            // synchronous.
+            // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
             const spawner = ChildProcessSpawner.make(
               Effect.fnUntraced(function* (command) {
                 if (!ChildProcess.isStandardCommand(command)) {

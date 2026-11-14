@@ -119,6 +119,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("github app mint callbac
       // The vault write exits 17; op-doctor then dies instead of failing, which `Effect.ignore` passes on.
       // Own double: decorates the scripted store, dying only on the `op-doctor` spawn (a defect, which
       // `ScriptedSpawner` cannot script).
+      // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
       const spawner = ChildProcessSpawner.make((command) =>
         ChildProcess.isStandardCommand(command) && command.command === "op-doctor"
           ? Effect.die("injected op-doctor defect")

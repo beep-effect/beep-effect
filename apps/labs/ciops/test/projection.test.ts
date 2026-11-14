@@ -340,6 +340,30 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
     })
   );
 
+  it.effect("property 5b: the frozen journal still replays 41 of 41 with SCHE-08 unit keys on every row", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const policy = yield* TestPolicy;
+      const journalSource = yield* fs
+        .readFileString(journalPath)
+        .pipe(Effect.mapError(() => PolicyDecodeError.make({ message: "Unable to read the frozen journal." })));
+      // The optional keys a scheduler writes once its protocol's `units` gate is on.
+      const unitKeys =
+        '"unit":{"_tag":"tier"},"weightSource":{"_tag":"static-seed"},"owner":{"proofNonce":"n","pid":1,"procStart":"1","originKey":"o","checkoutRoot":"/repo","branch":"main","command":"bun run beep yeet verify"}';
+      const gatedSource = A.join(A.map(Str.split("\n")(journalSource), Str.replace(/\}$/u, `,${unitKeys}}`)), "\n");
+      expect(gatedSource).not.toBe(journalSource);
+      const plainEvents = yield* decodeAdmissionJournal(journalSource);
+      const gatedEvents = yield* decodeAdmissionJournal(gatedSource);
+      const plainReport = yield* replayAdmissionJournal(policy, plainEvents, "frozen-policy", "frozen-journal");
+      const gatedReport = yield* replayAdmissionJournal(policy, gatedEvents, "frozen-policy", "frozen-journal").pipe(
+        Effect.flatMap(requireReplayMatch)
+      );
+
+      expect([gatedReport.admittedCount, A.length(gatedReport.mismatches)]).toStrictEqual([41, 0]);
+      expect(gatedReport).toStrictEqual(plainReport);
+    })
+  );
+
   it.effect("decodes a v2 lease eviction fixture and folds it as a release", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

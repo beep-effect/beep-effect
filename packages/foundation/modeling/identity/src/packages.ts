@@ -256,7 +256,9 @@ const generatedComposers = $I.compose(
   "eyecite",
   "agent-memory-store",
   "sqlite",
-  "alchemy-aws-extras"
+  "alchemy-github-runners",
+  "alchemy-aws-extras",
+  "alchemy-vercel"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -3809,6 +3811,24 @@ export const $AgentMemoryStoreId: Identity.IdentityComposer<"@beep/agent-memory-
 export const $SqliteId: Identity.IdentityComposer<"@beep/sqlite"> = composers.$SqliteId;
 
 /**
+ * Identity composer for `@beep/alchemy-github-runners`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $AlchemyGithubRunnersId } from "@beep/identity/packages"
+ *
+ * const id = $AlchemyGithubRunnersId.make("AlchemyGithubRunners")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $AlchemyGithubRunnersId: Identity.IdentityComposer<"@beep/alchemy-github-runners"> =
+  composers.$AlchemyGithubRunnersId;
+
+/**
  * Identity composer for `@beep/alchemy-aws-extras`.
  *
  * **Example** (Make package ID)
@@ -3824,3 +3844,20 @@ export const $SqliteId: Identity.IdentityComposer<"@beep/sqlite"> = composers.$S
  * @since 0.0.0
  */
 export const $AlchemyAwsExtrasId: Identity.IdentityComposer<"@beep/alchemy-aws-extras"> = composers.$AlchemyAwsExtrasId;
+
+/**
+ * Identity composer for `@beep/alchemy-vercel`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $AlchemyVercelId } from "@beep/identity/packages"
+ *
+ * const id = $AlchemyVercelId.make("AlchemyVercel")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $AlchemyVercelId: Identity.IdentityComposer<"@beep/alchemy-vercel"> = composers.$AlchemyVercelId;

@@ -611,6 +611,7 @@ const readPullRequestAuthor = Effect.fn("Yeet.ReadyGate.readPullRequestAuthor")(
   prNumber: number
 ): Effect.fn.Return<O.Option<string>, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   // KEEP (D-13): gh's GraphQL `author.login` comes without the `[bot]` suffix REST adds.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
   return yield* ghOutput({
     args: ["pr", "view", `${prNumber}`, "--json", "author", "--jq", ".author.login"],
     cwd: context.repoRoot,
@@ -895,6 +896,8 @@ const decodeReviewerResponse = Effect.fnUntraced(function* <T, I>(schema: S.Code
 });
 
 const reviewerRequestOutput = Effect.fnUntraced(function* (context: RepoRunContext, args: ReadonlyArray<string>) {
+  // KEEP funnel: `reviewerRequestOutput` runs the KEEP (D-22) reads below; each call site records its reason.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP funnel, reason above
   return yield* ghOutput({
     args,
     cwd: context.repoRoot,

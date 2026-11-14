@@ -1945,6 +1945,7 @@ const citationSkip = Effect.fnUntraced(function* (checkout: string, candidatePat
   const relative = path.relative(realRoot.value, realTarget.value);
   const excluded = Str.isEmpty(authority) ? A.empty<string>() : [`:(exclude,literal)${authority}`];
   // KEEP (D-20): single-consumer plumbing (D-03, P0 §5); the kit has no `grep` member.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-20), reason above
   const search = yield* runRepoCommandCapture(
     "git",
     [
@@ -2217,6 +2218,7 @@ const checkoutAuthoritySkip = Effect.fnUntraced(function* (
   )
     return O.some<ResidueReapSkipReason>("owner-ruling-required");
   // KEEP (D-20): single-consumer plumbing (D-03, P0 §5): `--literal-pathspecs` plus `--error-unmatch`'s exit.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-20), reason above
   const proof = yield* runRepoCommandCapture(
     "git",
     ["--literal-pathspecs", "ls-files", "--error-unmatch", "--", ruling.evidence],
@@ -2241,6 +2243,7 @@ const nestedCheckoutSkip = Effect.fnUntraced(function* (checkout: string, marker
   if (O.exists(dotgit, (stat) => Str.Equivalence(stat.type, "File")) || registered.value)
     return O.some<ResidueReapSkipReason>("protected-name");
   // KEEP (D-20): single-consumer plumbing (D-03, P0 §5); `worktreeList` has no `noOptionalLocks`.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-20), reason above
   const linked = yield* runRepoCommandCapture(
     "git",
     ["--no-optional-locks", "worktree", "list", "--porcelain"],
